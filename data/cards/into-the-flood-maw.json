@@ -1,0 +1,160 @@
+{
+  "faces": [
+    {
+      "keywords": [
+        {
+          "type": "Gift",
+          "value": {
+            "type": "TappedFish"
+          }
+        }
+      ],
+      "manaCost": [
+        {
+          "type": "OfType",
+          "value": {
+            "type": "Colored",
+            "value": {
+              "type": "Blue"
+            }
+          }
+        }
+      ],
+      "name": "Into the Flood Maw",
+      "oracleText": "Gift a tapped Fish (You may promise an opponent a gift as you cast this spell. If you do, they create a tapped 1/1 blue Fish creature token before its other effects.)\nReturn target creature an opponent controls to its owner's hand. If the gift was promised, instead return target nonland permanent an opponent controls to its owner's hand.",
+      "spell": {
+        "modes": [
+          {
+            "clauses": [
+              {
+                "condition": {
+                  "type": "Compares",
+                  "value": {
+                    "comparison": {
+                      "type": "Exactly"
+                    },
+                    "measured": {
+                      "type": "TimesPaid",
+                      "value": {
+                        "type": "OfKeyword",
+                        "value": {
+                          "type": "Gift",
+                          "value": {
+                            "type": "TappedFish"
+                          }
+                        }
+                      }
+                    },
+                    "threshold": {
+                      "type": "Literal",
+                      "value": 0
+                    }
+                  }
+                },
+                "effects": [
+                  {
+                    "type": "MoveToZone",
+                    "value": {
+                      "ref": {
+                        "type": "InSlot",
+                        "value": "creature"
+                      },
+                      "zone": {
+                        "type": "Hand"
+                      }
+                    }
+                  }
+                ]
+              },
+              {
+                "condition": {
+                  "type": "Compares",
+                  "value": {
+                    "comparison": {
+                      "type": "AtLeast"
+                    },
+                    "measured": {
+                      "type": "TimesPaid",
+                      "value": {
+                        "type": "OfKeyword",
+                        "value": {
+                          "type": "Gift",
+                          "value": {
+                            "type": "TappedFish"
+                          }
+                        }
+                      }
+                    },
+                    "threshold": {
+                      "type": "Literal",
+                      "value": 1
+                    }
+                  }
+                },
+                "effects": [
+                  {
+                    "type": "MoveToZone",
+                    "value": {
+                      "ref": {
+                        "type": "InSlot",
+                        "value": "permanent"
+                      },
+                      "zone": {
+                        "type": "Hand"
+                      }
+                    }
+                  }
+                ]
+              }
+            ],
+            "targetSlots": {
+              "creature": {
+                "filter": {
+                  "type": "ControlledBy",
+                  "value": {
+                    "type": "Opponent"
+                  }
+                },
+                "pool": {
+                  "type": "Creatures"
+                }
+              },
+              "permanent": {
+                "filter": {
+                  "type": "And",
+                  "value": [
+                    {
+                      "type": "Not",
+                      "value": {
+                        "type": "HasCardType",
+                        "value": {
+                          "type": "Land"
+                        }
+                      }
+                    },
+                    {
+                      "type": "ControlledBy",
+                      "value": {
+                        "type": "Opponent"
+                      }
+                    }
+                  ]
+                },
+                "pool": {
+                  "type": "Permanents"
+                }
+              }
+            }
+          }
+        ]
+      },
+      "typeLine": {
+        "types": [
+          {
+            "type": "Instant"
+          }
+        ]
+      }
+    }
+  ]
+}

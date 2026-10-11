@@ -982,7 +982,7 @@ entwineSpec s registry = Spec.describe s "Entwine" $ do
 -- Burst Lightning's one mode is "Burst Lightning deals 2 damage to any target",
 -- slot "target" (CR 702.33 / data/cards/burst-lightning.json), plus "Kicker {4}"
 -- and the CR 702.33e ability that reads it -- "if this spell was kicked, it deals
--- 4 damage instead", written as two clauses conditioned on Quantity.WasKicked.
+-- 4 damage instead", written as two clauses conditioned on Quantity.TimesPaid.
 --
 -- The board: alice has `mountains` untapped Mountains, bob has a Hill Giant, and
 -- Burst Lightning is in alice's hand. THREE toughness is what makes the kicked and
@@ -998,6 +998,52 @@ kickerBoard mountain burstLightning hillGiant mountains =
   let (giantId, gs1) = S.addPermanent hillGiant S.bob (S.landsInPlay mountain mountains)
       (gs, spellId) = S.handOne burstLightning gs1
    in (gs, spellId, giantId)
+
+-- Jilt (Scryfall, 2026-10-10): {1}{U} Instant, "Kicker {1}{R}. Return target
+-- creature to its owner's hand. If this spell was kicked, it deals 2 damage to
+-- another target creature." Alice has two Islands and two Mountains; bob has a
+-- Hill Giant and, when `bears`, a Grizzly Bears.
+jiltBoard :: (Monad m) => Spec.Spec m n -> Registry.Registry m -> Bool -> m (GameState.GameState, ObjectId.ObjectId, ObjectId.ObjectId, ObjectId.ObjectId)
+jiltBoard s registry bears = do
+  island <- S.printingOf s registry "Island"
+  mountain <- S.printingOf s registry "Mountain"
+  jilt <- S.printingOf s registry "Jilt"
+  hillGiant <- S.printingOf s registry "Hill Giant"
+  grizzlyBears <- S.printingOf s registry "Grizzly Bears"
+  let (giantId, withGiant) = S.addPermanent hillGiant S.bob (S.landsFor mountain S.alice 2 (S.landsInPlay island 2))
+      (bearsId, withBears) = if bears then S.addPermanent grizzlyBears S.bob withGiant else (giantId, withGiant)
+      (gs, spellId) = S.handOne jilt withBears
+  pure (gs, spellId, giantId, bearsId)
+
+-- Into the Flood Maw in alice's hand with one Island; bob has a Sol Ring and,
+-- when `bears`, a Grizzly Bears. The third id is the Bears if there is one, else
+-- the Sol Ring.
+floodMawBoard :: (Monad m) => Spec.Spec m n -> Registry.Registry m -> Bool -> m (GameState.GameState, ObjectId.ObjectId, ObjectId.ObjectId)
+floodMawBoard s registry bears = do
+  island <- S.printingOf s registry "Island"
+  maw <- S.printingOf s registry "Into the Flood Maw"
+  solRing <- S.printingOf s registry "Sol Ring"
+  grizzlyBears <- S.printingOf s registry "Grizzly Bears"
+  let (ringId, withRing) = S.addPermanent solRing S.bob (S.landsInPlay island 1)
+      (victim, withBears) = if bears then S.addPermanent grizzlyBears S.bob withRing else (ringId, withRing)
+      (gs, spellId) = S.handOne maw withBears
+  pure (gs, spellId, victim)
+
+-- Promises the gift `times` times and aims each slot at `victim`, FILTERED out
+-- of the offered set, since a Sol Ring is offered as a ToObject.
+floodMaws :: Natural -> ObjectId.ObjectId -> Prompt.Prompt r -> r
+floodMaws times victim p = case p of
+  Prompt.ChooseKicker {} -> KickerDecision.MkKickerDecision times
+  Prompt.ChooseTargets _ _ _ sets -> Map.map (Set.filter (`elem` [Recipient.ToCreature victim, Recipient.ToObject victim]) . snd) sets
+  _ -> S.identityAnswer p
+
+-- Kicks `times` times and pins each of Jilt's slots: "target" at `bounced`,
+-- "other" at `damaged`.
+jilts :: Natural -> ObjectId.ObjectId -> ObjectId.ObjectId -> Prompt.Prompt r -> r
+jilts times bounced damaged p = case p of
+  Prompt.ChooseKicker {} -> KickerDecision.MkKickerDecision times
+  Prompt.ChooseTargets _ _ _ sets -> Map.mapWithKey (\slot _ -> Set.singleton (Recipient.ToCreature (if slot == SlotName.MkSlotName (Text.pack "target") then bounced else damaged))) sets
+  _ -> S.identityAnswer p
 
 -- Answers CR 702.33a's kicker question with `decision` and aims the one target
 -- slot at `victim` -- PINNED to that id rather than searched for, so a mutation
@@ -1018,8 +1064,8 @@ bursts decision victim p = case p of
 kickerAnnouncements :: [Response.Response] -> [KickerDecision.KickerDecision]
 kickerAnnouncements = Maybe.mapMaybe (\response -> case response of Response.AnnouncedKicker d -> Just d; _ -> Nothing)
 
--- CR 702.33c: answers every kicker question with the same count. Everything else
--- defers to S.identityAnswer.
+-- CR 702.33c: answers every kicker question with the same count, CR 702.174a's
+-- gift promise among them. Everything else defers to S.identityAnswer.
 kicksTimes :: Natural -> Prompt.Prompt r -> r
 kicksTimes times p = case p of
   Prompt.ChooseKicker {} -> KickerDecision.MkKickerDecision times
@@ -1391,6 +1437,78 @@ kickerSpec s registry = Spec.describe s "Kicker" $ do
         (asked, _) = castAndResolve (bursts (KickerDecision.MkKickerDecision 1) giantId) gs spellId
     Spec.assertEqWith s "no kicker cost to offer" (fmap (Keyword.Engine.optionalCosts . Face.keywordSet) (Game.faceOf spellId gs)) (Just [])
     Spec.assertEqWith s "so no kicker question was put, on a board that could pay one" (kickerAnnouncements asked) []
+  -- CR 702.33g: Jilt's "another target creature" belongs to its kicked clause, so
+  -- unkicked it is cast as if it had no such target. One creature on the board,
+  -- which an unkicked Jilt can bounce and a two-target one could not be cast at.
+  Spec.it s "CR 702.33g unkicked Jilt needs no second target: the lone Hill Giant returns to bob's hand" $ do
+    (gs, spellId, giantId, _) <- jiltBoard s registry False
+    let (asked, after) = castAndResolve (jilts 0 giantId giantId) gs spellId
+        settled = S.settleSba after
+    Spec.assertEqWith s "the Giant is in bob's hand" (handSize S.bob settled) 1
+    Spec.assertEqWith s "the player was asked, and declined" (kickerAnnouncements asked) [KickerDecision.MkKickerDecision 0]
+    Spec.assertEqWith s "only {1}{U} was paid" (S.tappedCount S.alice settled) 2
+  -- The kicked half on a board with two creatures: the second target is chosen,
+  -- and takes the 2 damage.
+  Spec.it s "CR 702.33g kicked Jilt bounces the Hill Giant and deals 2 to the Grizzly Bears" $ do
+    (gs, spellId, giantId, bearsId) <- jiltBoard s registry True
+    let (_, after) = castAndResolve (jilts 1 giantId bearsId) gs spellId
+        settled = S.settleSba after
+    Spec.assertEqWith s "the Giant is in bob's hand" (handSize S.bob settled) 1
+    Spec.assertEqWith s "2 damage destroyed the Bears, the one card in bob's graveyard" (length (Game.zoneMembers Zone.Graveyard S.bob settled)) 1
+    Spec.assertEqWith s "{1}{U} plus the kicker {1}{R}: all four lands are tapped" (S.tappedCount S.alice settled) 4
+  -- "Another target creature": the Giant cannot be both targets, so a kicked
+  -- Jilt aimed twice at it is an illegal announcement (CR 601.2e).
+  Spec.it s "CR 702.33g kicked Jilt cannot aim both targets at the Hill Giant" $ do
+    (gs, spellId, giantId, _) <- jiltBoard s registry True
+    let (_, after) = castAndResolve (jilts 1 giantId giantId) gs spellId
+        settled = S.settleSba after
+    Spec.assertEqWith s "the Giant is still on the battlefield" (handSize S.bob settled) 0
+    Spec.assertEqWith s "and Jilt is back in alice's hand" (handSize S.alice settled) 1
+  -- Kicked over a lone creature, the second target has nothing to name: the
+  -- kicked announcement is illegal, though the unkicked one above is not.
+  Spec.it s "CR 702.33g kicked Jilt over a lone Hill Giant has no second target, so the cast is taken back" $ do
+    (gs, spellId, giantId, _) <- jiltBoard s registry False
+    let (_, after) = castAndResolve (jilts 1 giantId giantId) gs spellId
+        settled = S.settleSba after
+    Spec.assertEqWith s "the Giant is still on the battlefield" (handSize S.bob settled) 0
+    Spec.assertEqWith s "and Jilt is back in alice's hand" (handSize S.alice settled) 1
+  -- CR 702.174m, CR 702.33g's twin for gift: Valley Rally ({2}{R} Instant, "Gift
+  -- a Food. Creatures you control get +2/+0 until end of turn. If the gift was
+  -- promised, target creature you control gains first strike until end of turn",
+  -- Scryfall 2026-10-10) needs its target only if promised, so alice, with no
+  -- creature, can still cast it unpromised.
+  Spec.it s "CR 702.174m unpromised Valley Rally needs no target: it resolves with no creature on alice's side" $ do
+    mountain <- S.printingOf s registry "Mountain"
+    rally <- S.printingOf s registry "Valley Rally"
+    let (gs, spellId) = S.handOne rally (S.landsInPlay mountain 3)
+        (_, after) = castAndResolve (kicksTimes 0) gs spellId
+    Spec.assertEqWith s "Valley Rally resolved into alice's graveyard" (length (Game.zoneMembers Zone.Graveyard S.alice after)) 1
+    Spec.assertEqWith s "{2}{R} was paid" (S.tappedCount S.alice after) 3
+  Spec.it s "CR 702.174m promised Valley Rally gives alice's Grizzly Bears first strike as well as +2/+0" $ do
+    mountain <- S.printingOf s registry "Mountain"
+    rally <- S.printingOf s registry "Valley Rally"
+    grizzlyBears <- S.printingOf s registry "Grizzly Bears"
+    let (bearsId, withBears) = S.addPermanent grizzlyBears S.alice (S.landsInPlay mountain 3)
+        (gs, spellId) = S.handOne rally withBears
+        (_, after) = castAndResolve (kicksTimes 1) gs spellId
+    Spec.assertBool s (Projection.hasKeyword Keyword.FirstStrike bearsId after) "the Bears has first strike"
+    Spec.assertEqWith s "and is a 4/2" (S.powerToughnessOf bearsId after) (Just (4, 2))
+    Spec.assertEqWith s "CR 702.174d bob created a Food" (length (filter (\o -> Set.member Subtype.Food (Projection.subtypesOf o after)) (Game.zoneMembers Zone.Battlefield S.bob after))) 1
+  -- CR 601.2c's alternative targets: Into the Flood Maw ({U} Instant, "Gift a
+  -- tapped Fish. Return target creature an opponent controls to its owner's hand.
+  -- If the gift was promised, instead return target nonland permanent an opponent
+  -- controls to its owner's hand", Scryfall 2026-10-10). Bob has a Sol Ring and no
+  -- creature, so only the promised cast has a target -- and it is still offered.
+  Spec.it s "CR 601.2c promised Into the Flood Maw returns bob's Sol Ring though bob has no creature" $ do
+    (gs, spellId, ringId) <- floodMawBoard s registry False
+    let (_, after) = castAndResolve (floodMaws 1 ringId) gs spellId
+    Spec.assertEqWith s "the Sol Ring is in bob's hand" (handSize S.bob after) 1
+    Spec.assertEqWith s "and bob has the tapped Fish" (length (filter (\o -> Set.member Subtype.Fish (Projection.subtypesOf o after)) (Game.zoneMembers Zone.Battlefield S.bob after))) 1
+  Spec.it s "CR 601.2c unpromised Into the Flood Maw returns bob's Grizzly Bears, not the Sol Ring" $ do
+    (gs, spellId, bearsId) <- floodMawBoard s registry True
+    let (_, after) = castAndResolve (floodMaws 0 bearsId) gs spellId
+    Spec.assertEqWith s "the Bears is in bob's hand" (handSize S.bob after) 1
+    Spec.assertEqWith s "and the Sol Ring is still on the battlefield, with no Fish beside it" (length (Game.zoneMembers Zone.Battlefield S.bob after)) 1
   -- CR 702.33a's "an additional cost", singular: kicker is payable once, so an
   -- answer of two is text Burst Lightning does not have. Nine Mountains, which is
   -- {R} plus the {4} twice over, so nothing but the LIMIT can reject this cast --
