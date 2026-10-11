@@ -39,4 +39,6 @@ data View
     CommanderDamage
   | -- | CR 108.3 / 407.3: each card whose owner changed, as `[card, starting owner, owner]`.
     OwnershipChanges
+  | -- | CR 400.2 / 723.4: the seats that may see an object's face, in turn order.
+    Seers
   deriving (Bounded, Enum, Eq, Ord, Show)
