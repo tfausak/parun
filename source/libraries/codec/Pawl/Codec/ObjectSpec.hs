@@ -41,6 +41,7 @@ import qualified Pawl.Types.PlayPermissionOrigin as PlayPermissionOrigin
 import qualified Pawl.Types.PlayerId as PlayerId
 import qualified Pawl.Types.PrintingId as PrintingId
 import qualified Pawl.Types.Recipient as Recipient
+import qualified Pawl.Types.RevealWindow as RevealWindow
 import qualified Pawl.Types.RoomHalf as RoomHalf
 import qualified Pawl.Types.RoomIndex as RoomIndex
 import qualified Pawl.Types.Sickness as Sickness
@@ -190,6 +191,7 @@ spec s = Spec.describe s "Pawl.Codec.Object" $ do
           Object.castUsing = Just Keyword.JumpStart,
           Object.castGrant = Just Keyword.Retrace,
           Object.exileLookers = Set.singleton (ExileLooker.ThePlayer (PlayerId.MkPlayerId 27)),
+          Object.revealed = Just (RevealWindow.WhileOnStack (ObjectId.MkObjectId 32)),
           Object.detainedUntil = Set.singleton (PlayerId.MkPlayerId 21),
           Object.goadedBy = Set.singleton (PlayerId.MkPlayerId 22),
           Object.doesNotUntapFor = 2,
@@ -238,7 +240,9 @@ spec s = Spec.describe s "Pawl.Codec.Object" $ do
           <> ",\"announcedX\":20,\"castFrom\":{\"type\":\"Graveyard\"}"
           <> ",\"castUsing\":{\"type\":\"JumpStart\"}"
           <> ",\"castGrant\":{\"type\":\"Retrace\"}"
-          <> ",\"exileLookers\":[{\"type\":\"ThePlayer\",\"value\":27}],\"detainedUntil\":[21],\"goadedBy\":[22]"
+          <> ",\"exileLookers\":[{\"type\":\"ThePlayer\",\"value\":27}]"
+          <> ",\"revealed\":{\"type\":\"WhileOnStack\",\"value\":32}"
+          <> ",\"detainedUntil\":[21],\"goadedBy\":[22]"
           <> ",\"doesNotUntapFor\":2,\"exertedBy\":[23]"
           <> ",\"activatedOnce\":[{\"cost\":{\"mana\":[{\"type\":\"Generic\",\"value\":1}]}"
           <> ",\"modal\":{\"modes\":[{}]}}]} "

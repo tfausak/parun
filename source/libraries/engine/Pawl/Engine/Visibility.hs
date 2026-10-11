@@ -7,12 +7,17 @@ import qualified Pawl.Engine.Decide as Decide
 import qualified Pawl.Engine.Exile as Exile
 import qualified Pawl.Engine.Game as Game
 import qualified Pawl.Engine.Projection.View as View
+import qualified Pawl.Types.BeginningStep as BeginningStep
 import qualified Pawl.Types.Decider as Decider
 import qualified Pawl.Types.Facing as Facing
+import qualified Pawl.Types.GameEvent as GameEvent
 import qualified Pawl.Types.GameState as GameState
+import qualified Pawl.Types.LoggedEvent as LoggedEvent
 import qualified Pawl.Types.Object as Object
 import Pawl.Types.ObjectId (ObjectId)
+import qualified Pawl.Types.Phase as Phase
 import Pawl.Types.PlayerId (PlayerId)
+import qualified Pawl.Types.RevealWindow as RevealWindow
 import qualified Pawl.Types.Visibility as Visibility
 import qualified Pawl.Types.Zone as Zone
 
@@ -21,9 +26,25 @@ import qualified Pawl.Types.Zone as Zone
 -- outside the game (CR 400.11) is seen by its owner alone, never through
 -- control.
 sees :: PlayerId -> ObjectId -> GameState.GameState -> Visibility.Visibility
-sees pid oid gs = case Game.zoneOf oid gs of
-  Nothing -> base pid oid gs
-  Just _ -> foldMap (\seat -> base seat oid gs) (pid : controlledBy pid gs)
+sees pid oid gs =
+  revealedNow oid gs <> case Game.zoneOf oid gs of
+    Nothing -> base pid oid gs
+    Just _ -> foldMap (\seat -> base seat oid gs) (pid : controlledBy pid gs)
+
+-- | CR 701.20a: a card in a lasting reveal is seen by every player while its
+-- window is live.
+revealedNow :: ObjectId -> GameState.GameState -> Visibility.Visibility
+revealedNow oid gs =
+  let begun logged = case LoggedEvent.event logged of
+        GameEvent.StepBegan _ -> True
+        _ -> False
+      live window = case window of
+        RevealWindow.WhileOnStack sid -> Game.zoneOf sid gs == Just Zone.Stack -- CR 701.20a
+        RevealWindow.UntilFirstTurn -> GameState.turnNumber gs == 1 && not (any begun (GameState.events gs)) -- CR 103.6b
+        RevealWindow.DuringUpkeep turn -> GameState.turnNumber gs == turn && GameState.phase gs == Phase.Beginning BeginningStep.Upkeep -- CR 702.57b
+   in case Game.lookupObject oid gs >>= Object.revealed of
+        Nothing -> Visibility.Obscured
+        Just window -> visibleIf (live window)
 
 -- | CR 723.5: the players whose decisions this player makes, by the reading
 -- Pawl.Engine.Decide.deciderFor makes, so a dormant row waiting for its spell

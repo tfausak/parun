@@ -34,6 +34,7 @@ import qualified Pawl.Types.ObjectRef as ObjectRef
 import Pawl.Types.PlayerId (PlayerId)
 import qualified Pawl.Types.Prompt as Prompt
 import qualified Pawl.Types.Reveal as Reveal
+import qualified Pawl.Types.RevealWindow as RevealWindow
 import qualified Pawl.Types.Zone as Zone
 
 -- CR 103.5: the starting hand size. Deliberately NOT shared with CR 402.2's
@@ -168,11 +169,10 @@ revealsItself = any isSelfReveal . HandAction.effects
 -- and the CR 103.5b window must (No-Regrets Egret). See Pawl.Types.HandWindowCap
 -- for why the cap is per card and why it spares CR 103.6a's action.
 --
--- Not implemented: CR 103.6b's second sentence, "the card remains revealed until
--- the first turn begins". pawl's reveal is momentary and there is no per-object
--- revealed flag for it to set (#3045); with no hidden-information filter every
--- interpreter already sees every hand, so a lasting reveal and a momentary one
--- reach the same board.
+-- CR 103.6b's second sentence, "the card remains revealed until the first turn
+-- begins", is the stamp handWindowExcept writes after a reveal in the CR 103.6
+-- window alone. Proved by MulliganSpec's "CR 103.6b a card revealed from the
+-- opening hand stays revealed until the first turn begins".
 handWindow ::
   HandWindowCap.HandWindowCap ->
   (Face.Face Card.Card -> [HandAction.HandAction Card.Card]) ->
@@ -221,6 +221,8 @@ handWindowExcept cap revealed field question perform pid = do
           Nothing -> pure ()
           Just action -> do
             perform (fst key) pid (HandAction.effects action)
+            -- CR 103.6b: the CR 103.6 window's reveal lasts; CR 103.5b's does not.
+            Monad.when (cap == HandWindowCap.RevealOncePerCard && revealsItself action) (Event.stampReveal RevealWindow.UntilFirstTurn (fst key))
             let revealed2 = if revealsItself action then Set.insert (fst key) revealed else revealed
             handWindowExcept cap revealed2 field question perform pid
   where

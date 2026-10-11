@@ -534,6 +534,7 @@ import qualified Pawl.Codec.ReturnPermanentsSpec
 import qualified Pawl.Codec.ReturnWatchSpec
 import qualified Pawl.Codec.RevealCauseSpec
 import qualified Pawl.Codec.RevealSpec
+import qualified Pawl.Codec.RevealWindowSpec
 import qualified Pawl.Codec.RevealedSpec
 import qualified Pawl.Codec.RollDieSpec
 import qualified Pawl.Codec.RollModifierSpec
@@ -1396,6 +1397,7 @@ spec s registry = do
   Pawl.Codec.ReturnEndingSpec.spec s
   Pawl.Codec.ReturnWatchSpec.spec s
   Pawl.Codec.RevealCauseSpec.spec s
+  Pawl.Codec.RevealWindowSpec.spec s
   Pawl.Codec.RevealSpec.spec s
   Pawl.Codec.RevealedSpec.spec s
   Pawl.Codec.RollDieSpec.spec s

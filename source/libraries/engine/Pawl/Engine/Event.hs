@@ -216,6 +216,7 @@ import Pawl.Types.ReplacementCandidate (ReplacementCandidate)
 import qualified Pawl.Types.ReplacementCandidate as ReplacementCandidate
 import qualified Pawl.Types.ReplacementEffect as ReplacementEffect
 import qualified Pawl.Types.RevealCause as RevealCause
+import qualified Pawl.Types.RevealWindow as RevealWindow
 import qualified Pawl.Types.Revealed as Revealed
 import qualified Pawl.Types.RoomHalf as RoomHalf
 import qualified Pawl.Types.SacrificeAnyNumber as SacrificeAnyNumber
@@ -8951,6 +8952,10 @@ reveal :: RevealCause.RevealCause -> PlayerId -> ObjectId -> Game ()
 reveal cause pid oid = do
   gs <- State.get
   Monad.mapM_ (State.modify' . recordEvent) (revealedOn cause pid oid gs)
+
+-- | CR 701.20a: keep a revealed card revealed for a window.
+stampReveal :: RevealWindow.RevealWindow -> ObjectId -> Game ()
+stampReveal window oid = State.modify' (\gs -> gs {GameState.objects = Map.adjust (\obj -> obj {Object.revealed = Just window}) oid (GameState.objects gs)})
 
 -- `reveal`'s event, read off `gs` without recording it: Nothing when the object
 -- does not exist there. Pawl.Engine.Departure.objectsLeaveWith reads it on the
