@@ -74,17 +74,6 @@
     {
       "turn": 1,
       "step": "PrecombatMain",
-      "player": "bob",
-      "do": {
-        "Answer": {
-          "prompt": "ChooseCardFromAmong",
-          "with": "$bird-maiden"
-        }
-      }
-    },
-    {
-      "turn": 1,
-      "step": "PrecombatMain",
       "player": "alice",
       "do": {
         "Answer": {
@@ -278,8 +267,8 @@
           "player": "alice",
           "zone": "Graveyard",
           "is": [
-            "Bird Maiden",
             "Hill Giant",
+            "Bird Maiden",
             "Gifts Ungiven"
           ]
         }

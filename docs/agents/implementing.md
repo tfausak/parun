@@ -243,6 +243,12 @@ the WHOLE corpus load; grep the corpus for the old spelling rather than
 eyeballing your diff --- then re-run the load-bearing mutations, since a bad
 conflict resolution can neuter a test while leaving the suite green.
 
+A wire rewrite through a decode alias and a re-encode cannot see a field whose
+default changes meaning: a file that omits it decodes through the NEW codec
+(`Fields.object` ignores unknown keys, so the old sibling keys are dropped
+silently) and re-encodes as a new value the round trip then agrees with. List
+every file that omits the field beside an old key and check each by hand.
+
 ## Gameplay harness
 
 Prefer a scenario for a gameplay test whose state, decisions and checks it can

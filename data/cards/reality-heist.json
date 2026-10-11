@@ -76,8 +76,11 @@
                         "type": "ChosenCardFromAmong",
                         "value": {
                           "count": {
-                            "type": "Literal",
-                            "value": 2
+                            "type": "UpTo",
+                            "value": {
+                              "type": "Literal",
+                              "value": 2
+                            }
                           },
                           "filter": {
                             "type": "HasCardType",
@@ -85,8 +88,7 @@
                               "type": "Artifact"
                             }
                           },
-                          "slot": "looked",
-                          "upTo": true
+                          "slot": "looked"
                         }
                       },
                       "slot": "revealed"

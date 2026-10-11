@@ -74,8 +74,11 @@
                             "value": "opponent"
                           },
                           "count": {
-                            "type": "Literal",
-                            "value": 2
+                            "type": "Exactly",
+                            "value": {
+                              "type": "Literal",
+                              "value": 2
+                            }
                           },
                           "filter": {
                             "type": "And",
