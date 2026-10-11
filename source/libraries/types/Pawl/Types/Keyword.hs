@@ -341,7 +341,7 @@ data Keyword
     -- apply separately, which is that function's count.
     Absorb Natural.Natural
   | -- | 702.65a: aura swap [cost] -- "[Cost]: You may exchange this permanent
-    -- with an Aura card in your hand", minted as Effect.ExchangeWithCardInHand.
+    -- with an Aura card in your hand", minted as Effect.ExchangeCardZones.
     AuraSwap (Cost.Cost Keyword)
   | -- | 702.66a: for each generic mana in this spell's total cost you may exile a
     -- card from your graveyard rather than pay that mana. Convoke's neighbour

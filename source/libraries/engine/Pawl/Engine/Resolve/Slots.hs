@@ -112,10 +112,10 @@ import qualified Pawl.Types.EntryR as EntryR
 import qualified Pawl.Types.EntryRewrite as EntryRewrite
 import qualified Pawl.Types.EntryRiders as EntryRiders
 import qualified Pawl.Types.ExchangeBlocks as ExchangeBlocks
+import qualified Pawl.Types.ExchangeCardZones as ExchangeCardZones
 import qualified Pawl.Types.ExchangeOwnership as ExchangeOwnership
 import qualified Pawl.Types.ExchangeSides as ExchangeSides
 import qualified Pawl.Types.ExchangeValues as ExchangeValues
-import qualified Pawl.Types.ExchangeWithTopOfLibrary as ExchangeWithTopOfLibrary
 import qualified Pawl.Types.ExchangeZones as ExchangeZones
 import qualified Pawl.Types.ExchangedValue as ExchangedValue
 import qualified Pawl.Types.ExileHaunting as ExileHaunting
@@ -731,7 +731,7 @@ effectObjectRefs effect = case effect of
   Effect.ExchangeLifeTotals {} -> []
   Effect.ExchangeValues (ExchangeValues.MkExchangeValues one other _) -> foldMap exchangedObjectRefs [one, other]
   Effect.ExchangeZones {} -> []
-  Effect.ExchangeWithCardInHand chosen -> [ObjectRef.ChosenCardInHand chosen]
+  Effect.ExchangeCardZones (ExchangeCardZones.MkExchangeCardZones one other) -> [one, other]
   Effect.SetLifeTotal {} -> []
   Effect.LoseGame {} -> []
   Effect.WinGame {} -> []
@@ -882,7 +882,6 @@ effectObjectRefs effect = case effect of
   Effect.PutSticker (PutSticker.MkPutSticker _ ref _ _ _ _) -> [ref]
   Effect.SetOwner (SetOwner.MkSetOwner _ ref) -> [ref]
   Effect.ExchangeOwnership (ExchangeOwnership.MkExchangeOwnership one other) -> [one, other]
-  Effect.ExchangeWithTopOfLibrary (ExchangeWithTopOfLibrary.MkExchangeWithTopOfLibrary ref _) -> [ref]
   Effect.Shuffle {} -> []
   Effect.OfferCast (OfferCast.MkOfferCast ref _ _ _ _ _ _ _ _) -> [ref]
   Effect.OfferNamedCopy {} -> []
@@ -971,8 +970,8 @@ effectPlayerRefs effect = case effect of
   Effect.ExchangeLifeTotals {} -> []
   Effect.ExchangeValues (ExchangeValues.MkExchangeValues one other duration) -> foldMap exchangedPlayerRefs [one, other] <> durationPlayerRefs duration
   Effect.ExchangeZones x -> [ExchangeZones.player x]
-  -- The chooser is the ref's, objectRefPlayerRefs' half.
-  Effect.ExchangeWithCardInHand {} -> []
+  -- Each side's players are its ref's, objectRefPlayerRefs' half.
+  Effect.ExchangeCardZones {} -> []
   Effect.SetLifeTotal (PlayerQuantity.MkPlayerQuantity ref _) -> [ref]
   Effect.LoseGame ref -> [ref]
   Effect.WinGame ref -> [ref]
@@ -1100,7 +1099,6 @@ effectPlayerRefs effect = case effect of
   Effect.PutSticker (PutSticker.MkPutSticker player _ _ _ _ _) -> [player]
   Effect.SetOwner (SetOwner.MkSetOwner player _) -> [player]
   Effect.ExchangeOwnership {} -> []
-  Effect.ExchangeWithTopOfLibrary (ExchangeWithTopOfLibrary.MkExchangeWithTopOfLibrary _ player) -> [player]
   Effect.Shuffle ref -> [ref]
   Effect.OfferCast (OfferCast.MkOfferCast _ caster _ _ _ _ _ _ _) -> [caster]
   Effect.OfferNamedCopy {} -> []
@@ -1294,7 +1292,7 @@ slotsOf effect = joinTwo (joinTwo (joinSlots (fmap objectRefSlots (effectObjectR
   -- Both sides' references are effectObjectRefs' and effectPlayerRefs' halves.
   Effect.ExchangeValues x -> durationSlots (ExchangeValues.duration x)
   Effect.ExchangeZones {} -> Map.empty
-  Effect.ExchangeWithCardInHand {} -> Map.empty
+  Effect.ExchangeCardZones {} -> Map.empty
   Effect.SetLifeTotal (PlayerQuantity.MkPlayerQuantity _ quantity) -> quantitySlots quantity
   Effect.LoseGame {} -> Map.empty
   Effect.WinGame {} -> Map.empty
@@ -1505,7 +1503,6 @@ slotsOf effect = joinTwo (joinTwo (joinSlots (fmap objectRefSlots (effectObjectR
   Effect.PutSticker putSticker -> foldMap quantitySlots (PutSticker.ticketCap putSticker)
   Effect.SetOwner {} -> Map.empty
   Effect.ExchangeOwnership {} -> Map.empty
-  Effect.ExchangeWithTopOfLibrary {} -> Map.empty
   -- The arm above's library read, reported at the head; nothing is shuffled into
   -- it, so there is no ref beside it either.
   Effect.Shuffle {} -> Map.empty
@@ -2068,7 +2065,7 @@ ownSlotsAreExhaustive effect = case effect of
   Effect.ExchangeLifeTotals _ -> True
   Effect.ExchangeValues x -> durationSlotsAreExhaustive (ExchangeValues.duration x)
   Effect.ExchangeZones {} -> True
-  Effect.ExchangeWithCardInHand {} -> True
+  Effect.ExchangeCardZones {} -> True
   Effect.SetLifeTotal (PlayerQuantity.MkPlayerQuantity _ quantity) -> Quantity.slotsAreExhaustive quantity
   Effect.LoseGame {} -> True
   Effect.WinGame {} -> True
@@ -2208,7 +2205,6 @@ ownSlotsAreExhaustive effect = case effect of
   Effect.PutSticker putSticker -> all Quantity.slotsAreExhaustive (PutSticker.ticketCap putSticker)
   Effect.SetOwner {} -> True
   Effect.ExchangeOwnership {} -> True
-  Effect.ExchangeWithTopOfLibrary {} -> True
   Effect.Shuffle {} -> True
   Effect.OfferCast {} -> True
   Effect.OfferNamedCopy {} -> True
@@ -2352,7 +2348,7 @@ readsX =
         Effect.ExchangeLifeTotals _ -> False
         Effect.ExchangeValues _ -> False
         Effect.ExchangeZones _ -> False
-        Effect.ExchangeWithCardInHand _ -> False
+        Effect.ExchangeCardZones _ -> False
         Effect.SetLifeTotal (PlayerQuantity.MkPlayerQuantity _ quantity) -> Quantity.readsX quantity
         Effect.LoseGame {} -> False
         Effect.WinGame {} -> False
@@ -2457,7 +2453,6 @@ readsX =
         Effect.PutSticker putSticker -> any Quantity.readsX (PutSticker.ticketCap putSticker)
         Effect.SetOwner {} -> False
         Effect.ExchangeOwnership {} -> False
-        Effect.ExchangeWithTopOfLibrary {} -> False
         Effect.Shuffle {} -> False
         Effect.OfferCast offer -> any Quantity.readsX (repetitionQuantities (OfferCast.repetition offer))
         Effect.OfferNamedCopy {} -> False
@@ -2487,7 +2482,6 @@ boundSlots effect = case effect of
   Effect.PutSticker putSticker -> foldMap Set.singleton (PutSticker.bound putSticker)
   Effect.SetOwner {} -> Set.empty
   Effect.ExchangeOwnership {} -> Set.empty
-  Effect.ExchangeWithTopOfLibrary {} -> Set.empty
   -- The tokens this Create minted, for CR 603.7c's delayed trigger to name.
   Effect.Create (Create.MkCreate _ _ _ mSlot _) -> foldMap Set.singleton mSlot
   -- Create's reason: the conjured cards, for CR 603.7c.
@@ -2623,7 +2617,7 @@ boundSlots effect = case effect of
   Effect.ExchangeLifeTotals _ -> Set.empty
   Effect.ExchangeValues _ -> Set.empty
   Effect.ExchangeZones _ -> Set.empty
-  Effect.ExchangeWithCardInHand _ -> Set.empty
+  Effect.ExchangeCardZones _ -> Set.empty
   Effect.SetLifeTotal {} -> Set.empty
   Effect.LoseGame {} -> Set.empty
   Effect.WinGame {} -> Set.empty

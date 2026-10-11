@@ -106,9 +106,9 @@ import qualified Pawl.Types.Duration as Duration
 import qualified Pawl.Types.Earthbend as Earthbend
 import qualified Pawl.Types.Effect as Effect
 import qualified Pawl.Types.EntryRiders as EntryRiders
+import qualified Pawl.Types.ExchangeCardZones as ExchangeCardZones
 import qualified Pawl.Types.ExchangeOwnership as ExchangeOwnership
 import qualified Pawl.Types.ExchangeValues as ExchangeValues
-import qualified Pawl.Types.ExchangeWithTopOfLibrary as ExchangeWithTopOfLibrary
 import qualified Pawl.Types.ExileHaunting as ExileHaunting
 import qualified Pawl.Types.Face as Face
 import qualified Pawl.Types.FaceDownCharacteristics as FaceDownCharacteristics
@@ -321,7 +321,7 @@ ownQuantities effect = case effect of
   Effect.ExchangeLifeTotals _ -> []
   Effect.ExchangeValues x -> durationQuantities (ExchangeValues.duration x)
   Effect.ExchangeZones _ -> []
-  Effect.ExchangeWithCardInHand _ -> []
+  Effect.ExchangeCardZones _ -> []
   Effect.SetLifeTotal (PlayerQuantity.MkPlayerQuantity _ quantity) -> [quantity]
   Effect.LoseGame {} -> []
   Effect.WinGame {} -> []
@@ -425,7 +425,6 @@ ownQuantities effect = case effect of
   Effect.PutSticker putSticker -> Maybe.maybeToList (PutSticker.ticketCap putSticker)
   Effect.SetOwner {} -> []
   Effect.ExchangeOwnership {} -> []
-  Effect.ExchangeWithTopOfLibrary {} -> []
   Effect.Shuffle {} -> []
   Effect.OfferNamedCopy {} -> []
   Effect.OfferNotedCopy {} -> []
@@ -1394,7 +1393,9 @@ effectObjectRefs effect =
         Effect.ExchangeLifeTotals {} -> []
         Effect.ExchangeValues (ExchangeValues.MkExchangeValues one other _) -> read_ (foldMap Resolve.exchangedObjectRefs [one, other])
         Effect.ExchangeZones {} -> []
-        Effect.ExchangeWithCardInHand chosen -> [([CardInHand], ObjectRef.ChosenCardInHand chosen)]
+        -- The aura swap's hand card (CR 702.65a) is the one question a gameplay
+        -- test asks there, and only on the second side.
+        Effect.ExchangeCardZones (ExchangeCardZones.MkExchangeCardZones one other) -> [([], one), ([CardInHand], other)]
         Effect.SetLifeTotal {} -> []
         Effect.LoseGame {} -> []
         Effect.WinGame {} -> []
@@ -1525,7 +1526,6 @@ effectObjectRefs effect =
         Effect.PutSticker (PutSticker.MkPutSticker _ ref _ _ _ _) -> [(CardInGraveyard : permanentQuestions, ref)]
         Effect.SetOwner (SetOwner.MkSetOwner _ ref) -> read_ [ref]
         Effect.ExchangeOwnership (ExchangeOwnership.MkExchangeOwnership one other) -> read_ [one, other]
-        Effect.ExchangeWithTopOfLibrary (ExchangeWithTopOfLibrary.MkExchangeWithTopOfLibrary ref _) -> read_ [ref]
         -- No ObjectRef at all: the opcode names a library.
         Effect.Shuffle {} -> []
         -- Nor here: the opcode names cards by name.

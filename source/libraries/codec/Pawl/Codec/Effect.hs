@@ -31,7 +31,6 @@ import qualified Pawl.Codec.ChooseNumber as ChooseNumber
 import qualified Pawl.Codec.ChoosePermanents as ChoosePermanents
 import qualified Pawl.Codec.ChoosePlayer as ChoosePlayer
 import qualified Pawl.Codec.ChoosePlayerAtRandom as ChoosePlayerAtRandom
-import qualified Pawl.Codec.ChosenCardInHand as ChosenCardInHand
 import qualified Pawl.Codec.Conjure as Conjure
 import qualified Pawl.Codec.Connive as Connive
 import qualified Pawl.Codec.ControlPlayer as ControlPlayer
@@ -49,10 +48,10 @@ import qualified Pawl.Codec.DoesNotUntapNext as DoesNotUntapNext
 import qualified Pawl.Codec.Draw as Draw
 import qualified Pawl.Codec.Earthbend as Earthbend
 import qualified Pawl.Codec.ExchangeBlocks as ExchangeBlocks
+import qualified Pawl.Codec.ExchangeCardZones as ExchangeCardZones
 import qualified Pawl.Codec.ExchangeOwnership as ExchangeOwnership
 import qualified Pawl.Codec.ExchangeSides as ExchangeSides
 import qualified Pawl.Codec.ExchangeValues as ExchangeValues
-import qualified Pawl.Codec.ExchangeWithTopOfLibrary as ExchangeWithTopOfLibrary
 import qualified Pawl.Codec.ExchangeZones as ExchangeZones
 import qualified Pawl.Codec.ExileHaunting as ExileHaunting
 import qualified Pawl.Codec.ExtraPhase as ExtraPhase
@@ -202,7 +201,7 @@ codec cardCodec abilityCodec =
           Arm.payload "ExchangeLifeTotals" ExchangeSides.codec Effect.ExchangeLifeTotals (\x -> case x of Effect.ExchangeLifeTotals y -> Just y; _ -> Nothing),
           Arm.payload "ExchangeValues" ExchangeValues.codec Effect.ExchangeValues (\x -> case x of Effect.ExchangeValues y -> Just y; _ -> Nothing),
           Arm.payload "ExchangeZones" ExchangeZones.codec Effect.ExchangeZones (\x -> case x of Effect.ExchangeZones y -> Just y; _ -> Nothing),
-          Arm.payload "ExchangeWithCardInHand" ChosenCardInHand.codec Effect.ExchangeWithCardInHand (\x -> case x of Effect.ExchangeWithCardInHand y -> Just y; _ -> Nothing),
+          Arm.payload "ExchangeCardZones" ExchangeCardZones.codec Effect.ExchangeCardZones (\x -> case x of Effect.ExchangeCardZones y -> Just y; _ -> Nothing),
           Arm.payload "SetLifeTotal" PlayerQuantity.codec Effect.SetLifeTotal (\x -> case x of Effect.SetLifeTotal y -> Just y; _ -> Nothing),
           Arm.payload "LoseGame" PlayerRef.codec Effect.LoseGame (\x -> case x of Effect.LoseGame y -> Just y; _ -> Nothing),
           Arm.payload "WinGame" PlayerRef.codec Effect.WinGame (\x -> case x of Effect.WinGame y -> Just y; _ -> Nothing),
@@ -290,7 +289,6 @@ codec cardCodec abilityCodec =
           Arm.payload "PutSticker" PutSticker.codec Effect.PutSticker (\x -> case x of Effect.PutSticker y -> Just y; _ -> Nothing),
           Arm.payload "SetOwner" SetOwner.codec Effect.SetOwner (\x -> case x of Effect.SetOwner y -> Just y; _ -> Nothing),
           Arm.payload "ExchangeOwnership" ExchangeOwnership.codec Effect.ExchangeOwnership (\x -> case x of Effect.ExchangeOwnership y -> Just y; _ -> Nothing),
-          Arm.payload "ExchangeWithTopOfLibrary" ExchangeWithTopOfLibrary.codec Effect.ExchangeWithTopOfLibrary (\x -> case x of Effect.ExchangeWithTopOfLibrary y -> Just y; _ -> Nothing),
           Arm.payload "Shuffle" PlayerRef.codec Effect.Shuffle (\x -> case x of Effect.Shuffle y -> Just y; _ -> Nothing),
           Arm.payload "OfferCast" OfferCast.codec Effect.OfferCast (\x -> case x of Effect.OfferCast y -> Just y; _ -> Nothing),
           Arm.payload "OfferNamedCopy" (Common.nonEmpty CardName.codec) Effect.OfferNamedCopy (\x -> case x of Effect.OfferNamedCopy y -> Just y; _ -> Nothing),
@@ -376,7 +374,7 @@ tagOf x = case x of
   Effect.ExchangeLifeTotals {} -> "ExchangeLifeTotals"
   Effect.ExchangeValues {} -> "ExchangeValues"
   Effect.ExchangeZones {} -> "ExchangeZones"
-  Effect.ExchangeWithCardInHand {} -> "ExchangeWithCardInHand"
+  Effect.ExchangeCardZones {} -> "ExchangeCardZones"
   Effect.SetLifeTotal {} -> "SetLifeTotal"
   Effect.LoseGame {} -> "LoseGame"
   Effect.WinGame {} -> "WinGame"
@@ -464,7 +462,6 @@ tagOf x = case x of
   Effect.PutSticker {} -> "PutSticker"
   Effect.SetOwner {} -> "SetOwner"
   Effect.ExchangeOwnership {} -> "ExchangeOwnership"
-  Effect.ExchangeWithTopOfLibrary {} -> "ExchangeWithTopOfLibrary"
   Effect.Shuffle {} -> "Shuffle"
   Effect.OfferCast {} -> "OfferCast"
   Effect.OfferNamedCopy {} -> "OfferNamedCopy"
