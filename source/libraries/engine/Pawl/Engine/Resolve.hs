@@ -629,21 +629,20 @@ applyCipher oid controller = do
         _ -> False
       creature c = Projection.controllerOf c gs == Just controller && Set.member CardType.Creature (Projection.cardTypesOf c gs)
       offered = filter creature (Set.toList (GameState.battlefield gs))
-  case NonEmpty.nonEmpty offered of
-    Just candidates | represented && Map.member Keyword.Cipher (Projection.keywordsOf oid gs) -> do
-      answer <- Game.choose (Prompt.ChooseEncode (Decide.deciderFor controller gs) controller oid candidates)
-      -- Filtered, not trusted: an answer outside the offer declines.
-      case List.find (\c -> Just c == answer) offered of
-        Nothing -> pure False
-        Just chosen -> do
-          landed <- Event.changeZoneReturning oid Zone.Exile
-          -- CR 702.99b: the link is filed only where the card reached exile; a
-          -- replacement that sent it elsewhere leaves nothing encoded.
-          State.modify' $ \g ->
-            let arrived = filter (`Set.member` GameState.exile g) (Foldable.toList landed)
-             in g {GameState.encoded = foldr (`Map.insert` chosen) (GameState.encoded g) arrived}
-          pure (not (null landed))
-    _ -> pure False
+  picked <-
+    if represented && Map.member Keyword.Cipher (Projection.keywordsOf oid gs)
+      then Game.mayChooseAmong (\decider who -> Prompt.ChooseEncode decider who oid) controller offered
+      else pure Nothing
+  case picked of
+    Nothing -> pure False
+    Just chosen -> do
+      landed <- Event.changeZoneReturning oid Zone.Exile
+      -- CR 702.99b: the link is filed only where the card reached exile; a
+      -- replacement that sent it elsewhere leaves nothing encoded.
+      State.modify' $ \g ->
+        let arrived = filter (`Set.member` GameState.exile g) (Foldable.toList landed)
+         in g {GameState.encoded = foldr (`Map.insert` chosen) (GameState.encoded g) arrived}
+      pure (not (null landed))
 
 -- CR 608.2n / 702.27a / 702.88a / 715.3d / 720.3d: where the spell goes as the
 -- last part of its resolution -- its owner's graveyard, unless one of four riders

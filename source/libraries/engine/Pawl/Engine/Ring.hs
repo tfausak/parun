@@ -516,7 +516,7 @@ refreshTheRing pid =
         -- entries rather than one mutated in place.
         (printingId, interned) = Game.intern (Printing.ofCard card) gs
         rewrite :: ObjectId -> Map.Map ObjectId Object.Object -> Map.Map ObjectId Object.Object
-        rewrite = Map.adjust (\o -> o {Object.source = Source.OfEmblem printingId})
+        rewrite = Map.adjust (Game.setSource (Source.OfEmblem printingId))
      in interned {GameState.objects = foldr rewrite (GameState.objects interned) (theRings pid interned)}
 
 -- CR 701.54a: this creature becomes that player's Ring-bearer.

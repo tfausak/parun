@@ -404,32 +404,32 @@ import qualified Pawl.Types.ZoneChange as ZoneChange
 import qualified Pawl.Types.ZonePair as ZonePair
 import qualified Pawl.Types.ZoneScope as ZoneScope
 
--- CR 603.7c: bind the tokens a Create or a CreateCopy minted under the slot the
--- effect names, so a later effect of this resolution or a delayed ability it
--- arms can name them.
+-- CR 603.7c / 608.2c: bind the objects an instruction made, moved, drew or
+-- chose under the slot the effect names, so a later effect of this resolution
+-- or a delayed ability it arms can name them.
 --
--- EVERY token minted, whatever the card's printed count: the rulings on
--- Anointed Procession and Flamerush Rider both say a rider the creating effect
--- attached applies to each token CR 614.16 multiplied the count into, and Queen
--- Allenal of Ruadach's say the same of a token a replacement APPENDED. So the
--- word the card used -- "it" or "those tokens" -- changes nothing here and the
--- printed quantity is not consulted.
+-- For Create and CreateCopy, EVERY token minted, whatever the card's printed
+-- count: the rulings on Anointed Procession and Flamerush Rider both say a
+-- rider the creating effect attached applies to each token CR 614.16
+-- multiplied the count into, and Queen Allenal of Ruadach's say the same of a
+-- token a replacement APPENDED. So the word the card used -- "it" or "those
+-- tokens" -- changes nothing here and the printed quantity is not consulted.
 --
 -- The singular shape is kept for the single token, because that is the shape
 -- every reader sees: Resolve.slotOne and legalOne read Binding.targets, which a
 -- group never fills. A reader that must reduce a group to one object does it
 -- itself -- Effect.Attach through Attach.arbitrate, CR 301.5c.
-bindMinted :: ObjectId -> Maybe SlotName -> [ObjectId] -> Game ()
-bindMinted resolving mSlot minted = case (mSlot, minted) of
+bindObjects :: ObjectId -> Maybe SlotName -> [ObjectId] -> Game ()
+bindObjects resolving mSlot named = case (mSlot, named) of
   (Nothing, _) -> pure ()
-  -- Nothing was minted, so no slot names anything: an unevaluable or
-  -- non-positive count, a creator reference naming nobody (CR 101.3), a
-  -- creator who has left the game (CR 800.4b), or CR 111.5's prohibited
-  -- token, which createTokens refuses to mint at all.
+  -- Nothing was named, so no slot names an empty set: for Create an
+  -- unevaluable or non-positive count, a creator reference naming nobody (CR
+  -- 101.3), a creator who has left the game (CR 800.4b), or CR 111.5's
+  -- prohibited token, which createTokens refuses to mint at all.
   (Just _, []) -> pure ()
-  -- One token is the whole of what the effect created.
+  -- One object is the whole of what the instruction named.
   (Just slot, [only]) -> State.modify' (bindSlot resolving slot only)
-  -- CR 111.1: the slot holds every token this effect created.
+  -- Several take the group.
   (Just slot, several) -> State.modify' (bindObjectsSlot resolving slot (Seq.fromList several))
 
 -- CR 111.3: the values the creating effect defines become the token's text, so a
@@ -1396,11 +1396,9 @@ castableCopy caster original = do
         let (copyId, gs1) = Game.freshObjectId gs
             (ts, gs2) = Game.freshTimestamp gs1
             copy =
-              (Object.newIncarnation obj)
-                { Object.source = Source.OfCardCopy printingId,
-                  -- CR 707.12 / 108.2: a copy of a card is no card.
-                  Object.identity = Nothing,
-                  Object.owner = caster,
+              -- CR 707.12 / 108.2: a copy of a card is no card.
+              (Game.setSource (Source.OfCardCopy printingId) (Object.newIncarnation obj))
+                { Object.owner = caster,
                   Object.zone = zone,
                   Object.timestamp = ts,
                   Object.bindings = maybe Map.empty (\pc -> Binding.setCopy pc Map.empty) (Game.copyStampOf obj)
@@ -4365,10 +4363,7 @@ applyOneEffect runSubgame resolving source controller legal chosen effect = case
             State.modify' (reorderLibrary owner (Game.honourShuffle lib shuffleAnswer))
           -- CR 608.2c: "that card" in a later clause, or in a delayed ability
           -- this resolution arms (CR 603.7c), is what arrived.
-          Monad.forM_ foundSlot $ \slot -> case arrivals of
-            [] -> pure ()
-            [only] -> State.modify' (bindSlot resolving slot only)
-            several -> State.modify' (bindObjectsSlot resolving slot (Seq.fromList several))
+          bindObjects resolving foundSlot arrivals
   -- Exile every card in every graveyard as ONE event (CR 608.2f), so "one or
   -- more cards leave your graveyard" fires once (CR 603.2c). "Every graveyard"
   -- is CR 102.1's players still in the game, not the keys of
@@ -5134,16 +5129,6 @@ applyOneEffect runSubgame resolving source controller legal chosen effect = case
         -- card offering "a permanent card from among them" (Midnight Tilling)
         -- offers only what an earlier clause of this resolution named.
         chooseContext g = effectContext g controller source legal (slotBindings resolving g)
-        -- CR 400.7j: bind what arrived into the resolving object's live bindings,
-        -- where a later effect of this resolution or a delayed ability it arms
-        -- (CR 603.7c) can name it. The shape follows how many arrived: one takes
-        -- the single binding, which every reader sees; several take the group,
-        -- which the ObjectRef readers and Filter.IsBound see and slotOne does
-        -- not; none binds nothing, so no slot names an empty set.
-        bindArrivals slot arrived = case arrived of
-          [] -> pure ()
-          [only] -> State.modify' (bindSlot resolving slot only)
-          _ -> State.modify' (bindObjectsSlot resolving slot (Seq.fromList arrived))
      in do
           -- CR 610.3b: the specified event has already happened since this
           -- ability triggered, so the object doesn't move. CR 610.3a says the
@@ -5477,7 +5462,9 @@ applyOneEffect runSubgame resolving source controller legal chosen effect = case
                   -- separate moments.
                   Restamp.settle (GameState.nextTimestamp before) (concatMap Foldable.toList batch)
                   pure batch
-            Monad.mapM_ (\slot -> bindArrivals slot (concatMap Foldable.toList arrived)) mSlot
+            -- CR 400.7j: what arrived, for a later effect of this resolution or a
+            -- delayed ability it arms (CR 603.7c).
+            bindObjects resolving mSlot (concatMap Foldable.toList arrived)
   -- CR 701.12d / 701.12f: every named player's two zones swap their cards, an
   -- empty zone included. Both zones are the player's own (CR 400.3), so every
   -- card is owned by that player, which is CR 701.12d's condition. One CR
@@ -5634,10 +5621,7 @@ applyOneEffect runSubgame resolving source controller legal chosen effect = case
         targets = filter theirs (ListUtils.nubOrd named)
     Monad.unless (null targets) $ do
       arrivals <- Event.changeZonesTogether (fmap (\target -> (target, Zone.Ante)) targets)
-      Monad.forM_ mSlot $ \slot -> case concatMap Foldable.toList arrivals of
-        [] -> pure ()
-        [only] -> State.modify' (bindSlot resolving slot only)
-        several -> State.modify' (bindObjectsSlot resolving slot (Seq.fromList several))
+      bindObjects resolving mSlot (concatMap Foldable.toList arrivals)
   -- CR 123.3: each placer puts a sticker of an allowed kind on each named
   -- object, through Sticker.place, which holds CR 123.3b's owner gate, CR
   -- 123.6b's position and CR 123.3c's payment. Placing nothing writes nothing,
@@ -5685,8 +5669,8 @@ applyOneEffect runSubgame resolving source controller legal chosen effect = case
           ( \pid ->
               offerCast runSubgame context evaluate named pid optionality verb (if controlWhileResolving then Just controller else Nothing) repetition copied offer
           )
-    -- CR 400.7h: the rest of the effect names the spells, bindMinted's shape.
-    bindMinted resolving slot spells
+    -- CR 400.7h: the rest of the effect names the spells, bindObjects's shape.
+    bindObjects resolving slot spells
   -- CR 707.13 (Garth One-Eye): choose one of the listed names not yet chosen for
   -- this source, look the card up (CR 108.1), create a copy of it outside the
   -- game, and offer its controller the cast. The names are card data; nothing
@@ -6082,10 +6066,7 @@ applyOneEffect runSubgame resolving source controller legal chosen effect = case
     -- The one/many split is every other group binder's -- one card takes the
     -- SINGLE binding, which slotOne and every singular reader can see, and
     -- several take the group.
-    Monad.forM_ mSlot $ \slot -> case drawn of
-      [] -> pure ()
-      [only] -> State.modify' (bindSlot resolving slot only)
-      several -> State.modify' (bindObjectsSlot resolving slot (Seq.fromList several))
+    bindObjects resolving mSlot drawn
   Effect.Mill (Mill.MkMill ref quantity mTally mSlot) -> do
     gs <- State.get
     let viewOf = effectViewOf source legal gs
@@ -6132,10 +6113,7 @@ applyOneEffect runSubgame resolving source controller legal chosen effect = case
     -- the tally's own posture. The one/many split is every other group binder's:
     -- one milled card takes the SINGLE binding, which slotOne and every singular
     -- reader can see, and several take the group.
-    Monad.forM_ mSlot $ \slot -> case arrivals of
-      [] -> pure ()
-      [only] -> State.modify' (bindSlot resolving slot only)
-      several -> State.modify' (bindObjectsSlot resolving slot (Seq.fromList several))
+    bindObjects resolving mSlot arrivals
     -- The tally, read from the pre-move state because CR 400.7 has since minted
     -- new ids. Each milled card is judged by its own CR 613 projection: rule
     -- 613.1 starts from the actual object and names no zone, so a library card is
@@ -6195,10 +6173,7 @@ applyOneEffect runSubgame resolving source controller legal chosen effect = case
     -- reveal: LookAt's one-versus-many line. A lone card takes the SINGLE
     -- binding, which every reader sees; several take the group binding, which
     -- the ObjectRef readers and Filter.IsBound see and slotOne does not.
-    let bindShown named = Monad.forM_ mSlot $ \slot -> case named of
-          [] -> pure ()
-          [only] -> State.modify' (bindSlot resolving slot only)
-          several -> State.modify' (bindObjectsSlot resolving slot (Seq.fromList several))
+    let bindShown = bindObjects resolving mSlot
     case ref of
       -- A QUESTION rather than a read, so it is answered here, by
       -- randomCardsInHand -- the one asking read of the ref, shared with the
@@ -6250,12 +6225,9 @@ applyOneEffect runSubgame resolving source controller legal chosen effect = case
       _ -> do
         gs <- State.get
         pure (objectRefObjects legal resolving controller source gs ref)
-    case named of
-      [] -> pure ()
-      -- One card takes the SINGLE binding, which every reader sees; several take
-      -- the group, which Filter.IsBound reads as CR 701.20e's "among them".
-      [only] -> State.modify' (bindSlot resolving slot only)
-      several -> State.modify' (bindObjectsSlot resolving slot (Seq.fromList several))
+    -- Several cards take the group, which Filter.IsBound reads as CR 701.20e's
+    -- "among them".
+    bindObjects resolving (Just slot) named
   Effect.ArrangeInLibrary ref -> do
     gs <- State.get
     -- CR 608.2c: the cards are named as this instruction is reached, which for
@@ -7012,7 +6984,7 @@ applyOneEffect runSubgame resolving source controller legal chosen effect = case
               Monad.forM_ mBlocked (\blocked -> Monad.mapM_ (Combat.putOntoBattlefieldBlocking blocked) made)
               pure made
         _ -> pure []
-    bindMinted resolving mSlot minted
+    bindObjects resolving mSlot minted
   -- Alchemy's conjure keyword action. Digital-only, so there is no rule to cite;
   -- what the CR settles is that the result is a CARD and not CR 111.1's token,
   -- which is what Pawl.Engine.Event's conjure and conjureOntoBattlefield mint.
@@ -7154,7 +7126,7 @@ applyOneEffect runSubgame resolving source controller legal chosen effect = case
           Monad.when (ConjureEntry.attacking entry) (Monad.mapM_ (Combat.putOntoBattlefieldAttacking Combat.Any) made)
           pure made
     -- The cards conjured, bound for a later clause to name (CR 603.7c's "that
-    -- card"), Create's bindMinted.
+    -- card"), Create's bindObjects.
     conjured <- case evaluateForRecipient viewOf context gs resolving source controller quantity of
       Just n
         | n > 0 -> case destination of
@@ -7186,7 +7158,7 @@ applyOneEffect runSubgame resolving source controller legal chosen effect = case
               ConjureCards.Duplicate ref -> concat <$> Monad.mapM (onto entry n) (duplicatesOf ref)
               ConjureCards.Reference from -> referencePickers from 1 >>= fmap concat . Monad.mapM (\p -> p >>= fmap concat . Monad.mapM (onto entry n) . Maybe.maybeToList)
       _ -> pure []
-    bindMinted resolving mSlot conjured
+    bindObjects resolving mSlot conjured
   Effect.CreateCopy (CreateCopy.MkCreateCopy quantity ref entry mSlot exceptions) -> do
     gs <- State.get
     -- CR 707.2 / 111.3: this many tokens per named permanent, minted through the
@@ -7262,7 +7234,7 @@ applyOneEffect runSubgame resolving source controller legal chosen effect = case
                 Monad.forM_ mBlocked (\blocked -> Monad.mapM_ (Combat.putOntoBattlefieldBlocking blocked) made)
                 pure made
       _ -> pure []
-    bindMinted resolving mSlot minted
+    bindObjects resolving mSlot minted
   Effect.BecomeCopy (BecomeCopy.MkBecomeCopy original subjectRef duration exceptions newTargets) -> do
     -- CR 108.1: a NAMED original is the card the Oracle reference gives the
     -- name, looked up before the board below is read.
@@ -7499,11 +7471,9 @@ applyOneEffect runSubgame resolving source controller legal chosen effect = case
                   StackObjectKind.ActivatedAbility -> Binding.setThisAbility copyId
                   StackObjectKind.TriggeredAbility -> Binding.setThisAbility copyId
                 copy =
-                  obj
-                    { Object.source = copySource,
-                      -- CR 707.10: a copy of a spell is no card.
-                      Object.identity = Nothing,
-                      -- CR 707.10 puts the copy ONTO THE STACK, so the zone is the
+                  -- CR 707.10: a copy of a spell is no card.
+                  (Game.setSource copySource obj)
+                    { -- CR 707.10 puts the copy ONTO THE STACK, so the zone is the
                       -- opcode's own rather than the copied object's -- which the
                       -- guard above has already established was the stack.
                       Object.zone = Zone.Stack,
@@ -9289,20 +9259,13 @@ applyOneEffect runSubgame resolving source controller legal chosen effect = case
                       -- includes none, so moving the one kind and leaving it are
                       -- two different boards and the question is real.
                       MovedKinds.UpToOneChosen ->
-                        case Map.keys onFrom of
-                          [] -> pure Map.empty
-                          first : rest -> do
-                            let offered = first NonEmpty.:| rest
-                            answer <- Game.choose (Prompt.ChooseMovedCounterOrNone (Decide.deciderFor controller gs) controller from to offered)
-                            -- FILTERED, NOT TRUSTED: an answer naming a kind
-                            -- that is not on the object is read as declining,
-                            -- which is Chosen's filter under a wording where
-                            -- declining is itself legal -- there the answer had
-                            -- to fall back to a kind, since rule 122.5 moves a
-                            -- counter wherever it can.
-                            case answer of
-                              Just kind | Foldable.elem kind offered -> move kind 1
-                              _ -> pure Map.empty
+                        -- FILTERED, NOT TRUSTED: an answer naming a kind that is
+                        -- not on the object is read as declining, which is
+                        -- Chosen's filter under a wording where declining is
+                        -- itself legal -- there the answer had to fall back to a
+                        -- kind, since rule 122.5 moves a counter wherever it can.
+                        Game.mayChooseAmong (\decider who -> Prompt.ChooseMovedCounterOrNone decider who from to) controller (Map.keys onFrom)
+                          >>= maybe (pure Map.empty) (`move` 1)
           -- Rule 122.5's impossibilities above: THIS pair moves nothing and the
           -- others in the sweep are untouched, the rule's all-or-nothing being
           -- stated about one pair. A destination that resolves to no object at
@@ -9737,10 +9700,7 @@ applyOneEffect runSubgame resolving source controller legal chosen effect = case
     -- ACROSS blighters, the Effect.Mill slot's one/many split: one chosen creature
     -- takes the single binding every singular reader can see, several take the
     -- group. A seat that could not blight (rule 701.68b) contributes nothing.
-    Monad.forM_ mSlot $ \slot -> case blightedCreatures of
-      [] -> pure ()
-      [only] -> State.modify' (bindSlot resolving slot only)
-      several -> State.modify' (bindObjectsSlot resolving slot (Seq.fromList several))
+    bindObjects resolving mSlot blightedCreatures
   -- CR 701.54a: the Ring tempts the resolving controller; the keyword action is
   -- Pawl.Engine.Ring.tempt's.
   Effect.TemptWithTheRing -> Ring.tempt controller
@@ -9806,16 +9766,10 @@ applyOneEffect runSubgame resolving source controller legal chosen effect = case
         Just n
           | n > 0 ->
               -- CR 122: GainPlayerCounters' mirror, through no funnel for
-              -- Effect.RemoveCounters' reason. The floor is explicit, since
-              -- Natural subtraction would underflow. CR 810.10b: off the team's
-              -- shared count, which every sharer holds (Game.counterSharers).
-              -- The tally is what this player lost, Leeches' "that much".
+              -- Effect.RemoveCounters' reason. The tally is what this player
+              -- lost, Leeches' "that much".
               do
-                g <- State.get
-                let held = maybe 0 (Map.findWithDefault 0 kind . Player.counters) (Map.lookup pid (GameState.players g))
-                    lost = min held (Integer.toNaturalSaturating n)
-                    lose p = p {Player.counters = Map.adjust (\had -> had - min had lost) kind (Player.counters p)}
-                State.put g {GameState.players = List.foldl' (flip (Map.adjust lose)) (GameState.players g) (Game.counterSharers kind pid g)}
+                lost <- State.state (Game.removePlayerCounters kind pid (Integer.toNaturalSaturating n))
                 Monad.forM_ mTally $ \slot -> State.modify' (bindAmountSlot resolving source slot lost)
         _ -> pure ()
   -- CR 107.14: "you may pay any amount of {E}". The payer is the resolving

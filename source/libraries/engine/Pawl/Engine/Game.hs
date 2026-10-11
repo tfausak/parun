@@ -435,6 +435,17 @@ chooseAmong question chooser candidates = do
   gs <- State.get
   among choose (question (Decide.deciderFor chooser gs) chooser) candidates
 
+-- | chooseAmong's optional twin, for a choice the player may decline: Nothing at no
+-- candidate, and ASKED at one, since declining makes even one a real choice. The
+-- answer is FILTERED rather than trusted, an answer outside the offer declining.
+mayChooseAmong :: (Eq a) => (Decider.Decider -> PlayerId -> NonEmpty.NonEmpty a -> Prompt.Prompt (Maybe a)) -> PlayerId -> [a] -> Game (Maybe a)
+mayChooseAmong question chooser candidates = case NonEmpty.nonEmpty candidates of
+  Nothing -> pure Nothing
+  Just offered -> do
+    gs <- State.get
+    answer <- choose (question (Decide.deciderFor chooser gs) chooser offered)
+    pure (List.find (\candidate -> Just candidate == answer) candidates)
+
 -- | One of @candidates@ drawn at random through the prompt @question@ builds:
 -- chooseAmong's shape for RANDOMNESS, so through `ask` and not `choose` (CR
 -- 701.9b's "at random" is not "the player chooses"). Nothing at no candidate,
@@ -2268,11 +2279,27 @@ isToken oid gs = maybe False (sourceIsToken . Object.source) (lookupObject oid g
 -- not a token (CR 730.2d). A classification of the object's KIND, isToken's
 -- standing.
 isCardObject :: ObjectId -> GameState -> Bool
-isCardObject oid gs = case fmap Object.source (lookupObject oid gs) of
-  Just source@(Source.OfMerge _) -> not (sourceIsToken source)
-  Just (Source.OfCard _) -> True
-  Just (Source.OfMeld _) -> True
+isCardObject oid gs = maybe False (sourceIsCard . Object.source) (lookupObject oid gs)
+
+-- isCardObject's question of a bare Source.
+sourceIsCard :: Source.Source -> Bool
+sourceIsCard source = case source of
+  Source.OfMerge _ -> not (sourceIsToken source)
+  Source.OfCard _ -> True
+  Source.OfMeld _ -> True
   _ -> False
+
+-- CR 108.2: the object made to be represented by @source@. CR 108.3's identity
+-- is a card's, so it survives only where the new source is still a card: a token
+-- (CR 111.6) and a copy (CR 707.10, 707.12) carry none. CR 730.2's merge is
+-- the one rewrite that keeps it whatever the topmost component, since
+-- representComponent hands it back to a card component at CR 730.3's split.
+setSource :: Source.Source -> Object -> Object
+setSource source object =
+  object
+    { Object.source = source,
+      Object.identity = if sourceIsCard source then Object.identity object else Nothing
+    }
 
 -- The same question of a bare Source, which is what CR 608.2h's record keeps of
 -- an object that has ceased (LastKnown.source). One classification, so a live
@@ -2372,13 +2399,10 @@ sourceOfComponent component = case component of
 -- Pawl.Engine.Setup's CR 727.2 rebuild both take.
 representComponent :: MergeComponent.MergeComponent -> Object -> Object
 representComponent component object =
-  object
-    { Object.source = sourceOfComponent component,
-      -- CR 108.2: a card component is a card, and a token or copy component is
-      -- not one (CR 111.6, CR 707.10). Not implemented: each card component
-      -- keeping its own identity rather than the merged object's (#4848).
-      Object.identity = if componentIsCard component then Object.identity object else Nothing,
-      Object.duplicate = case component of
+  -- Not implemented: each card component keeping its own identity rather than
+  -- the merged object's (#4848).
+  (setSource (sourceOfComponent component) object)
+    { Object.duplicate = case component of
         MergeComponent.OfDuplicate duplicate -> Just (DuplicateCard.values duplicate)
         MergeComponent.OfCard _ -> Nothing
         MergeComponent.OfToken _ -> Nothing
@@ -2463,6 +2487,17 @@ lifeSharers pid gs =
 counterSharers :: PlayerCounterKind.PlayerCounterKind -> PlayerId -> GameState -> [PlayerId]
 counterSharers kind pid gs =
   pid : [other | kind == PlayerCounterKind.Poison, GameSettings.twoHeadedGiant (GameState.settings gs), other <- Map.keys (GameState.players gs), Teams.sameTeam (teams gs) pid other]
+
+-- CR 122.1 / 810.10b: remove up to this many counters of this kind from this
+-- player, floored at what they have, off the team's shared count where every
+-- sharer holds it (counterSharers). The count removed, then the result. Every
+-- removal of a player's counters goes through here.
+removePlayerCounters :: PlayerCounterKind.PlayerCounterKind -> PlayerId -> Natural -> GameState -> (Natural, GameState)
+removePlayerCounters kind pid n gs =
+  let held = maybe 0 (Map.findWithDefault 0 kind . Player.counters) (Map.lookup pid (GameState.players gs))
+      lost = min held n
+      lose p = p {Player.counters = Map.adjust (\had -> had - min had lost) kind (Player.counters p)}
+   in (lost, gs {GameState.players = List.foldl' (flip (Map.adjust lose)) (GameState.players gs) (counterSharers kind pid gs)})
 
 -- CR 119.3 / 810.9: move this player's life total by this much. The life
 -- event happens to the player and its result to their team's shared total,
@@ -2982,13 +3017,19 @@ currentIncarnation oid gs
 
 -- The one id a logged single-arrival move turned this id into.
 successorOf :: ObjectId -> GameState -> Maybe ObjectId
-successorOf oid gs =
-  Maybe.listToMaybe
-    [ arrival
-    | LoggedEvent.MkLoggedEvent _ (GameEvent.Moved m) <- Foldable.toList (GameState.events gs),
-      ZoneChange.departed (Moved.change m) == oid,
-      [arrival] <- [Foldable.toList (Moved.arrivals m)]
-    ]
+successorOf oid gs = case arrivalsOf oid gs of
+  [arrival] -> Just arrival
+  _ -> Nothing
+
+-- CR 400.7: the ids a logged Moved entry naming this one as its DEPARTURE
+-- arrived as -- none for CR 111.7's token, several for a melded or merged
+-- permanent's split.
+arrivalsOf :: ObjectId -> GameState -> [ObjectId]
+arrivalsOf oid gs =
+  let arrivedFrom event = case event of
+        GameEvent.Moved m | ZoneChange.departed (Moved.change m) == oid -> Foldable.toList (Moved.arrivals m)
+        _ -> []
+   in concatMap (arrivedFrom . LoggedEvent.event) (GameState.events gs)
 
 -- CR 400.7's zone change itself, whatever its ends -- the exhaustive case the two
 -- readers above share, so a new GameEvent constructor is classified once rather

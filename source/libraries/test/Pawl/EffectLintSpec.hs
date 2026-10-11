@@ -2096,12 +2096,12 @@ effectLintSpec s registry = Spec.describe s "Lint" $ do
           Effect.Discard (Discard.These (TheseDiscard.MkTheseDiscard _ mDiscarded)) -> Maybe.maybeToList mDiscarded
           Effect.Discard (Discard.AnyNumber (AnyNumberDiscard.MkAnyNumberDiscard _ _ mDiscarded)) -> Maybe.maybeToList mDiscarded
           -- CR 111.1's minted tokens. No count test and no seat test, unlike
-          -- the mill's and the draw's: Resolve.bindMinted binds every token the
+          -- the mill's and the draw's: Resolve.bindObjects binds every token the
           -- effect created whatever the printed count says, so CR 614.16 makes
           -- a literal one plural too -- a doubler, or Queen Allenal of Ruadach
           -- appending a Soldier.
           Effect.Create (Create.MkCreate _ _ _ mSlot _) -> Maybe.maybeToList mSlot
-          -- Create's arm and Create's test: Resolve.bindMinted binds both.
+          -- Create's arm and Create's test: Resolve.bindObjects binds both.
           Effect.CreateCopy (CreateCopy.MkCreateCopy _ _ _ mSlot _) -> Maybe.maybeToList mSlot
           _ -> []
         takesAtMostOne player quantity = case quantity of

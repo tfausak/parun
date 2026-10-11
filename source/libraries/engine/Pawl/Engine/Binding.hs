@@ -1469,7 +1469,7 @@ objectsIn = Map.mapMaybe Recipient.objectOf . oneBySlot
 -- Targets only, deliberately, where recipientsBySlot below reads the whole
 -- slot. The CR has no binding shape to choose between: a singular back
 -- reference ("that creature", CR 608.2c) has a singular antecedent, so each
--- binder writes one object as the single shape (Resolve.bindMinted) and a
+-- binder writes one object as the single shape (Resolve.bindObjects) and a
 -- group only where the instruction may produce several. A singular reader of
 -- a slot that can hold a group is therefore a card authored against the wrong
 -- antecedent, and Pawl.EffectLintSpec's "no card reads a slot a plural move

@@ -3097,7 +3097,7 @@ equipmentTokenSpec s registry = Spec.describe s "EquipmentToken" $ do
     Spec.assertEqWith s "and the Husk's own Germ is still a 1/1 wearing the Husk" (fmap (\oid -> S.powerToughnessOf oid settled) firstGerm) [Just (1, 1)]
     Spec.assertEqWith s "the copy really happened: it is a Flayer Husk by name (CR 707.2)" (fmap (\oid -> Projection.namesOf oid settled) metamorphIds) [Set.singleton (CardName.MkCardName (Text.pack "Flayer Husk"))]
   -- CR 614.16 doubles the create, so living weapon's "it" stands for two Germs
-  -- -- Pawl.Engine.Resolve.bindMinted binds BOTH, which is what the rulings on
+  -- -- Pawl.Engine.Resolve.bindObjects binds BOTH, which is what the rulings on
   -- Anointed Procession and Flamerush Rider require of every rider a creating
   -- effect attaches. The attach is the one reader that cannot take them all:
   -- CR 301.5c, "an Equipment can't equip more than one creature. If a spell or
