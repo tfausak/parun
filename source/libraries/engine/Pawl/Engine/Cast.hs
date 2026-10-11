@@ -398,9 +398,9 @@ targetable castFor pid oid name gs = case proposedFace oid name gs of
         -- only. The candidate's own tag answers it, which is why this gate is
         -- asked per candidate (candidateFillable below); the MODES are still
         -- judged.
-        modal = trimModalForCandidate castFor (Face.spell face)
         given = Map.union (Card.enchantSlotMapGiven (Projection.enchantOf oid gs)) (Card.mutateSlotMapGiven (maybe False Object.mutating (Game.lookupObject oid gs)))
-     in Modal.selectionPossible (Target.fillableModes (Just pid) Map.empty oid given modal gs) (Modal.Type.selection modal)
+        fillableWhen paid = Target.fillableModes (Just pid) Map.empty oid given (trimModalForCandidate castFor paid (Face.spell face)) gs
+     in Modal.selectionPossible (Set.unions (fmap fillableWhen paidReadings)) (Modal.Type.selection (Face.spell face))
 
 -- CR 601.2b's least X measured at CR 601.2f's total: a candidate cost is
 -- affordable when it is payable at the least X the caster may announce -- 0, or
@@ -2684,15 +2684,14 @@ followIntoPools old new gs =
    in gs {GameState.manaPool = fmap (Mana.Type.MkMana . fmap follow . Mana.Type.unwrap) (GameState.manaPool gs)}
 
 -- CR 601.2c's own scope ("only if an alternative or additional cost ... was
--- chosen"), with 702.33g, 702.113b, 702.166d and 702.174m its instances: a
--- Quantity naming a CAST-ANNOUNCEMENT fact rather than a board or resolution
--- one -- Quantity.TimesPaid (which optional additional costs CR 601.2b's
--- announcement declared, and how many times), Quantity.CastUsing (which
+-- chosen"), with 702.33g, 702.113b, 702.166d, 702.174m and 702.194c its
+-- instances: a Quantity naming a CAST-ANNOUNCEMENT fact rather than a board or
+-- resolution one -- Quantity.TimesPaid (which optional additional costs CR
+-- 601.2b's announcement declared, and how many times), Quantity.CastUsing (which
 -- ALTERNATIVE cost candidate it settled on -- awaken, cleave, overload and the
 -- other CR 601.3-listed candidates), and Quantity.Literal, the threshold side of
 -- every such comparison. Nothing else qualifies, on purpose: CR 601.2c narrows
--- targets for exactly these two readings, so a clash's coin
--- flip, a random flip, or a comparison against CR 601.2b's own X (not yet
+-- targets for exactly these two readings, so a clash's coin flip, a random flip, or a comparison against CR 601.2b's own X (not yet
 -- announced when trimModeTargetSlotsBy runs, see below) must NOT be treated as
 -- already decided here -- ClashSpec's, CoinSpec's and TargetSpec's joint-X
 -- group are what this line fixes over the first cut, which read every
@@ -2742,12 +2741,13 @@ clauseAppliesAt pid sid gs clause = case Clause.condition clause of
 -- Answered from that candidate alone rather than through Condition.holds/a
 -- GameState, since neither exists at this question's moment.
 --
---   * Quantity.TimesPaid reads 0 UNCONDITIONALLY -- every cost Object.paidCosts
---     records is optional under every candidate (CR 601.2b), so a paid-only
---     target must never be REQUIRED to offer a cast at all; the player may
---     always decline it. Cast.castProposed's own clauseAppliesAt (the live,
---     post-announcement read) is what judges a paid-only slot once the choice
---     is in.
+--   * Quantity.TimesPaid reads `paid`, asked once per paidReadings entry by
+--     the callers, which union the fillable modes: every cost Object.paidCosts
+--     records is optional (CR 118.8b), so a target only the declared branch or
+--     only the declined one needs must never be REQUIRED to offer the cast (CR
+--     601.2c's "alternative targets", Into the Flood Maw). Cast.castProposed's
+--     own clauseAppliesAt (the live, post-announcement read) judges the slots
+--     once the choice is in.
 --   * Quantity.CastUsing family reads 1 exactly when `castFor`'s own family
 --     matches, Pawl.Engine.Quantity's CastUsing arm's board read done here
 --     without a board: `familyOf =<< castFor`. This is what SUBSUMES
@@ -2755,13 +2755,13 @@ clauseAppliesAt pid sid gs clause = case Clause.condition clause of
 --     CastUsing Overload clauses (one at 0, one at >=1) trim the SAME way
 --     castOverloaded did, through the general mechanism rather than a keyword
 --     name.
-holdsForCandidate :: Maybe Keyword -> Condition.Type.Condition -> Bool
-holdsForCandidate castFor condition = case condition of
-  Condition.Type.Compares c -> case (candidateQuantity castFor (Compares.measured c), candidateQuantity castFor (Compares.threshold c)) of
+holdsForCandidate :: Maybe Keyword -> Integer -> Condition.Type.Condition -> Bool
+holdsForCandidate castFor paid condition = case condition of
+  Condition.Type.Compares c -> case (candidateQuantity castFor paid (Compares.measured c), candidateQuantity castFor paid (Compares.threshold c)) of
     (Just n, Just t) -> Filter.compares (Compares.comparison c) n t
     _ -> False
-  Condition.Type.Any conditions -> any (holdsForCandidate castFor) conditions
-  Condition.Type.All conditions -> all (holdsForCandidate castFor) conditions
+  Condition.Type.Any conditions -> any (holdsForCandidate castFor paid) conditions
+  Condition.Type.All conditions -> all (holdsForCandidate castFor paid) conditions
   -- Unreachable past isCastAnnouncementCondition; False is the Compares arm's
   -- answer for what it cannot read.
   Condition.Type.During _ -> False
@@ -2770,22 +2770,29 @@ holdsForCandidate castFor condition = case condition of
 -- isCastAnnouncementQuantity's three shapes -- everything else answers
 -- Nothing, which holdsForCandidate's Compares arm collapses to False exactly
 -- as Condition.holds' own undeterminable-quantity reading does.
-candidateQuantity :: Maybe Keyword -> Quantity.Quantity -> Maybe Integer
-candidateQuantity castFor q = case q of
+candidateQuantity :: Maybe Keyword -> Integer -> Quantity.Quantity -> Maybe Integer
+candidateQuantity castFor paid q = case q of
   Quantity.Literal n -> Just n
-  Quantity.TimesPaid _ -> Just 0
+  Quantity.TimesPaid _ -> Just paid
   Quantity.CastUsing family -> Just (if (Keyword.familyOf =<< castFor) == Just family then 1 else 0)
   _ -> Nothing
+
+-- The TimesPaid readings the pre-announcement gates union over: every optional
+-- additional cost declined, or each declared once. A count above one is not
+-- distinguished, nor is whether the declared cost is affordable; CR 601.2e takes
+-- back a cast whose announced branch then has no legal target.
+paidReadings :: [Integer]
+paidReadings = [0, 1]
 
 -- clauseAppliesAt's pre-announcement twin: a clause applies to a CANDIDATE when
 -- its condition either names nothing, or is answerable from that candidate
 -- alone (holdsForCandidate); anything else keeps the conservative "applies"
 -- default clauseAppliesAt documents.
-clauseAppliesForCandidate :: Maybe Keyword -> Clause.Clause Card.Type.Card (GrantedAbility.GrantedAbility Card.Type.Card) -> Bool
-clauseAppliesForCandidate castFor clause = case Clause.condition clause of
+clauseAppliesForCandidate :: Maybe Keyword -> Integer -> Clause.Clause Card.Type.Card (GrantedAbility.GrantedAbility Card.Type.Card) -> Bool
+clauseAppliesForCandidate castFor paid clause = case Clause.condition clause of
   Nothing -> True
   Just condition
-    | isCastAnnouncementCondition condition -> holdsForCandidate castFor condition
+    | isCastAnnouncementCondition condition -> holdsForCandidate castFor paid condition
     | otherwise -> True
 
 -- CR 702.33g's "that part of the ability includes any targets": the target slot
@@ -2875,8 +2882,8 @@ trimModeTargetSlots pid sid gs = trimModeTargetSlotsBy (clauseAppliesAt pid sid 
 
 -- Cast.targetable's and the CR 700.2a mode gate's own reader: trims by WHICH
 -- alternative-cost candidate is being asked about, not by a board.
-trimModeTargetSlotsForCandidate :: Maybe Keyword -> Mode.Mode Card.Type.Card (GrantedAbility.GrantedAbility Card.Type.Card) -> Mode.Mode Card.Type.Card (GrantedAbility.GrantedAbility Card.Type.Card)
-trimModeTargetSlotsForCandidate castFor = trimModeTargetSlotsBy (clauseAppliesForCandidate castFor)
+trimModeTargetSlotsForCandidate :: Maybe Keyword -> Integer -> Mode.Mode Card.Type.Card (GrantedAbility.GrantedAbility Card.Type.Card) -> Mode.Mode Card.Type.Card (GrantedAbility.GrantedAbility Card.Type.Card)
+trimModeTargetSlotsForCandidate castFor paid = trimModeTargetSlotsBy (clauseAppliesForCandidate castFor paid)
 
 -- trimModeTargetSlotsForCandidate over a whole Modal, Modal.untargeted's shape
 -- one level up -- CR 700.2a's own generalization: "if one of the modes would
@@ -2885,8 +2892,8 @@ trimModeTargetSlotsForCandidate castFor = trimModeTargetSlotsBy (clauseAppliesFo
 -- chosen before its cost is, and a mode illegal under the printed cost may be
 -- legal under an alternative one or vice versa (Cyclonic Rift overloaded,
 -- Part the Waterveil awakened).
-trimModalForCandidate :: Maybe Keyword -> Modal.Type.Modal Card.Type.Card (GrantedAbility.GrantedAbility Card.Type.Card) -> Modal.Type.Modal Card.Type.Card (GrantedAbility.GrantedAbility Card.Type.Card)
-trimModalForCandidate castFor modal = modal {Modal.Type.modes = fmap (trimModeTargetSlotsForCandidate castFor) (Modal.Type.modes modal)}
+trimModalForCandidate :: Maybe Keyword -> Integer -> Modal.Type.Modal Card.Type.Card (GrantedAbility.GrantedAbility Card.Type.Card) -> Modal.Type.Modal Card.Type.Card (GrantedAbility.GrantedAbility Card.Type.Card)
+trimModalForCandidate castFor paid modal = modal {Modal.Type.modes = fmap (trimModeTargetSlotsForCandidate castFor paid) (Modal.Type.modes modal)}
 
 -- CR 601.2b-i for a spell already on the stack -- castSpell's body once its CR
 -- 601.2a move has happened. `oid` is the card before that move, named only to
@@ -2939,7 +2946,7 @@ castProposed perform spending pid oid sid face castFrom preparedFor keywordsBefo
       -- reading drops "land" and is fillable, so the mode is legal and the cast is
       -- offered, though the awaken candidate's own reading still requires it and
       -- falls back to CR 601.2e if chosen where none exists.
-      legal = Set.unions (fmap (\candidate -> fillable (trimModalForCandidate (CandidateCost.keyword candidate) modal)) candidateCosts)
+      legal = Set.unions [fillable (trimModalForCandidate (CandidateCost.keyword candidate) paid modal) | candidate <- candidateCosts, paid <- paidReadings]
       -- CR 601.2e: an illegal proposal returns the game to the moment before the
       -- casting was proposed, which is the state before CR 601.2a's move. CR
       -- 601.6 says the same for a permission lost after the proposal completes.

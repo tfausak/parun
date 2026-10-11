@@ -2195,9 +2195,10 @@ rewriteQuantity pairs quantity = case quantity of
   Quantity.Type.WasForetold -> quantity
   Quantity.Type.TributeWasPaid -> quantity
   -- A LEAF like WasForetold above, and the Keyword it names is deliberately NOT
-  -- rewritten: Pawl.Engine.Cast keys the record it stamps off the PRINTED face
-  -- (Game.faceOf), so rewriting the identifier here would ask about a keyword
-  -- no announcement was ever recorded under.
+  -- rewritten: Pawl.Engine.Cast keys the record it stamps by the keyword the
+  -- spell had as CR 601.2b announced it (Cost.spellKeywords), and a later text
+  -- change does not reach that record, so rewriting the identifier here would
+  -- ask about a keyword no announcement was ever recorded under.
   Quantity.Type.TimesPaid _ -> quantity
   Quantity.Type.CastUsing _ -> quantity
   Quantity.Type.TagWasSpent {} -> quantity

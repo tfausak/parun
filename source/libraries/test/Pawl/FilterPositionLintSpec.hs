@@ -17,6 +17,7 @@ import qualified Pawl.Codec.Card as Card
 import qualified Pawl.Codec.Face as Face.Codec
 import qualified Pawl.Codec.Filter as Filter.Codec
 import qualified Pawl.Codec.Keyword as Keyword.Codec
+import qualified Pawl.Codec.KeywordDesignator as KeywordDesignator.Codec
 import qualified Pawl.Engine.Binding as Binding
 import qualified Pawl.Engine.Card as Card
 import qualified Pawl.Engine.Keyword as Keyword.Engine
@@ -98,6 +99,7 @@ import qualified Pawl.Types.GainControl as GainControl
 import qualified Pawl.Types.HandAction as HandAction
 import qualified Pawl.Types.InZone as InZone
 import qualified Pawl.Types.Keyword as Keyword
+import qualified Pawl.Types.KeywordDesignator as KeywordDesignator
 import qualified Pawl.Types.ManaCost as ManaCost
 import qualified Pawl.Types.ManaSymbol as ManaSymbol
 import qualified Pawl.Types.Measure as Measure
@@ -1139,23 +1141,26 @@ isBoundOffends card =
 timesPaidTag :: Text.Text
 timesPaidTag = Text.pack "TimesPaid"
 
--- Every keyword a Quantity.TimesPaid names in an ENCODED face, as the codec
--- wrote it. Read off the encoding for canHostSubjectOffends' reason turned to a
+-- Every designator a Quantity.TimesPaid carries in an ENCODED face, as the
+-- codec wrote it. Read off the encoding for canHostSubjectOffends' reason turned to a
 -- payload: this module's three Quantity traversals answer in Counts and Filters,
 -- neither of which can carry a Keyword, so the arm is invisible to all three.
 --
 -- The tagged arm and not the bare tag, jsonAtoms' distinction: only an object
 -- whose "type" is the tag contributes, and what it contributes is the "value"
--- beside it -- Pawl.JsonCodec.Common's shape for an Arm.payload -- taken once
--- for TimesPaid's designator and again for its OfKeyword arm.
-timesPaidKeywords :: Value.Value -> [Value.Value]
-timesPaidKeywords value = case value of
-  Value.Array a -> concatMap timesPaidKeywords (Array.unwrap a)
-  Value.Object o -> concatMap (taggedValues (Text.pack "OfKeyword")) (taggedValues timesPaidTag value) <> concatMap (timesPaidKeywords . Pair.value) (Object.unwrap o)
+-- beside it -- Pawl.JsonCodec.Common's shape for an Arm.payload.
+timesPaidDesignators :: Value.Value -> [Value.Value]
+timesPaidDesignators value = case value of
+  Value.Array a -> concatMap timesPaidDesignators (Array.unwrap a)
+  Value.Object o -> taggedValues timesPaidTag value <> concatMap (timesPaidDesignators . Pair.value) (Object.unwrap o)
   Value.String _ -> []
   Value.Null _ -> []
   Value.Boolean _ -> []
   Value.Number _ -> []
+
+-- The keywords those designators name whole, under their OfKeyword arm.
+timesPaidKeywords :: Value.Value -> [Value.Value]
+timesPaidKeywords = concatMap (taggedValues (Text.pack "OfKeyword")) . timesPaidDesignators
 
 -- The "value" of an object whose "type" is that tag, or nothing.
 taggedValues :: Text.Text -> Value.Value -> [Value.Value]
@@ -1185,10 +1190,15 @@ taggedValues tag value = case value of
 -- Stated about the PRINTED keywords, which is what a card file can be wrong
 -- about. Every Kicker or Multikicker in data/cards/ sits at a face's own
 -- `keywords`; Wicker Picker's granted StickerKicker is named by no TimesPaid.
+-- A PrintedKicker designator offends on a face printing no kicker it links to
+-- (CR 702.33e), since it too would read 0 for the life of the game.
 timesPaidOffends :: Face.Face Card.Type.Card -> Bool
 timesPaidOffends card =
-  let printed = fmap (Codec.encode Keyword.Codec.codec) (Keyword.Engine.optionalCosts (Face.keywordSet card))
-   in any (`notElem` printed) (timesPaidKeywords (Codec.encode (Face.Codec.codec Card.codec) card))
+  let encoded = Codec.encode (Face.Codec.codec Card.codec) card
+      printed = fmap (Codec.encode Keyword.Codec.codec) (Keyword.Engine.optionalCosts (Face.keywordSet card))
+      linked = any (Keyword.Engine.designates KeywordDesignator.PrintedKicker) (Face.keywordSet card)
+      printedKicker = Codec.encode (KeywordDesignator.Codec.codec Keyword.Codec.codec) KeywordDesignator.PrintedKicker
+   in any (`notElem` printed) (timesPaidKeywords encoded) || (not linked && elem printedKicker (timesPaidDesignators encoded))
 
 -- Two things a TriggerCondition.AnyOf may not contain, checked at every depth so
 -- that a nested one cannot smuggle either in.
@@ -1968,6 +1978,9 @@ filterPositionLintSpec s registry = Spec.describe s "Lint" $ do
     Spec.assertBool s (not (timesPaidOffends face)) "the control: Gnarlid Pack as printed is accepted"
     Spec.assertBool s (timesPaidOffends (face {Face.keywords = Map.mapKeys respell (Face.keywords face)})) "a reordered multikicker cost is rejected"
     Spec.assertBool s (timesPaidOffends (face {Face.keywords = Map.empty})) "and so is a face that counts a kicker it prints none of"
+    burst <- S.printingOf s registry "Burst Lightning"
+    Spec.assertBool s (not (timesPaidOffends (S.combinedFace burst))) "the control: Burst Lightning's PrintedKicker reading is accepted"
+    Spec.assertBool s (timesPaidOffends ((S.combinedFace burst) {Face.keywords = Map.empty})) "and rejected on a face printing no kicker"
   -- CR 702.122d's Filter.CantCrewVehicles is the one atom here that no card may
   -- write ANYWHERE, rather than one admitted at some positions: it is answerable
   -- only where Pawl.Engine.Cost.tapCandidates gathers the prohibition, and it is
