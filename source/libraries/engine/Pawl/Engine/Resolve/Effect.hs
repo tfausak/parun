@@ -718,19 +718,12 @@ chosenPermanents legal resolving controller source (ChosenPermanents.MkChosenPer
     (askedChooser source controller legal chooser)
     (\decider who -> Prompt.ChoosePermanent decider who source)
     (\decider who pool ceiling_ -> Prompt.ChooseAnyNumberOfPermanents decider who source pool ceiling_)
-    (countOf amount count)
+    amount
+    count
     candidates
 
--- A HowMany with its Quantity read.
-data Counted = ExactlyN Natural | UpToN (Maybe Natural)
-
-countOf :: (Quantity.Type.Quantity -> Natural) -> HowMany.HowMany -> Counted
-countOf amount count = case count of
-  HowMany.Exactly q -> ExactlyN (amount q)
-  HowMany.UpTo q -> UpToN (fmap amount q)
-
--- CR 608.2d's choice of objects out of candidates, at a count: the one place a
--- HowMany is asked, shared by chosenPermanents and chooseCardFromAmong. The
+-- CR 608.2d's choice of objects out of candidates, at a count read through
+-- `amount`: the one place a HowMany is asked, shared by chosenPermanents and chooseCardFromAmong. The
 -- chooser is named only where a real choice remains, so CR 800.4g's
 -- reassignment is never asked for a choice with one answer.
 --
@@ -750,19 +743,22 @@ pickCounted ::
   Game (Maybe PlayerId) ->
   (Decider.Decider -> PlayerId -> NonEmpty.NonEmpty ObjectId -> Prompt.Prompt ObjectId) ->
   (Decider.Decider -> PlayerId -> [ObjectId] -> Maybe Natural -> Prompt.Prompt (Set ObjectId)) ->
-  Counted ->
+  (Quantity.Type.Quantity -> Natural) ->
+  HowMany.HowMany ->
   [ObjectId] ->
   Game [ObjectId]
-pickCounted chooser one_ several count candidates = case count of
-  ExactlyN n
-    | Natural.length candidates <= n -> pure candidates
-    | otherwise -> asking (\who -> pick who n candidates)
-  UpToN ceiling_
+pickCounted chooser one_ several amount count candidates = case count of
+  HowMany.Exactly q
+    | Natural.length candidates <= amount q -> pure candidates
+    | otherwise -> asking (\who -> pick who (amount q) candidates)
+  HowMany.UpTo q
     | null candidates || ceiling_ == Just 0 -> pure []
     | otherwise -> asking $ \who -> do
         gs <- State.get
         answer <- Game.choose (several (Decide.deciderFor who gs) who candidates ceiling_)
         pure (maybe id (take . Natural.toIntSaturating) ceiling_ (filter (`Set.member` answer) candidates))
+    where
+      ceiling_ = fmap amount q
   where
     asking ask = chooser >>= maybe (pure []) ask
     pick who n available
@@ -2350,7 +2346,8 @@ chooseCardFromAmong resolving source controller legal chosen (ChosenCardFromAmon
     (\decider who -> Prompt.ChooseCardFromAmong decider who source)
     -- "Any number" is a ceiling of every candidate.
     (\decider who pool ceiling_ -> Prompt.ChooseCardsFromAmong decider who source pool (Maybe.fromMaybe (Natural.length pool) ceiling_))
-    (countOf amount count)
+    amount
+    count
     (matchingFromAmong legal resolving controller source gs filter_ members)
 
 -- CR 701.20a / 701.9b: the cards randomness names out of each hand the ref
