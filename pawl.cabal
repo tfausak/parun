@@ -2654,6 +2654,7 @@ library types
     Pawl.Types.Status
     Pawl.Types.StepBegan
     Pawl.Types.StepBegins
+    Pawl.Types.StickerContent
     Pawl.Types.StickerKind
     Pawl.Types.StickerPlacement
     Pawl.Types.StickerPut

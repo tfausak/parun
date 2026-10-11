@@ -58,11 +58,13 @@ import qualified Pawl.Types.PlayerDesignationTally as PlayerDesignationTally
 import qualified Pawl.Types.PlayerId as PlayerId
 import qualified Pawl.Types.PlayerRef as PlayerRef
 import qualified Pawl.Types.Plus as Plus
+import qualified Pawl.Types.PowerToughnessSticker as PowerToughnessSticker
 import Pawl.Types.Quantity (Quantity)
 import qualified Pawl.Types.Quantity as Quantity
 import qualified Pawl.Types.Rounding as Rounding
 import Pawl.Types.SlotName (SlotName)
 import qualified Pawl.Types.SpellWasCast as SpellWasCast
+import qualified Pawl.Types.StickerContent as StickerContent
 import qualified Pawl.Types.StoredResult as StoredResult
 import qualified Pawl.Types.Subtype as Subtype
 import qualified Pawl.Types.Teams as Teams
@@ -275,9 +277,9 @@ evaluateAgainst viewOf context gs announcedOn mOid mView quantity =
         -- unplaced sticker is an honest 0.
         Quantity.UniqueVowelsOnSticker slot -> case Map.lookup slot (Filter.slotStickers context) of
           Nothing -> Just 0
-          Just ref -> case Game.stickerWords ref gs of
-            Nothing -> Just 0
-            Just ws -> Just (toInteger (NameWords.uniqueVowels ws))
+          Just ref -> case Game.stickerContent ref gs of
+            Just (StickerContent.Name ws) -> Just (toInteger (NameWords.uniqueVowels ws))
+            _ -> Just 0
         -- CR 208.2: a bare star has no value of its own. Both readers of a
         -- characteristic-defining P/T substitute the object's quantity for it first,
         -- through Projection.seedCharacteristicPT at the projection's seed
@@ -554,10 +556,10 @@ evaluateAgainst viewOf context gs announcedOn mOid mView quantity =
         -- answer "it had no counters on it" wants rather than a Nothing.
         Quantity.ObjectCountersOfAnyKind -> fmap (toInteger . sum . Filter.counters) mView
         -- CR 123.6d off the view, ObjectCounters' posture.
-        Quantity.LettersOnNameStickers letters -> fmap (toInteger . sum . fmap (NameWords.letterCount letters) . Filter.nameStickers) mView
-        Quantity.NameStickers -> fmap (toInteger . length . Filter.nameStickers) mView
-        Quantity.PowerOfStickers -> fmap (sum . fmap fst . Filter.stickerPowerToughness) mView
-        Quantity.ToughnessOfStickers -> fmap (sum . fmap snd . Filter.stickerPowerToughness) mView
+        Quantity.LettersOnNameStickers letters -> fmap (\v -> toInteger (sum [NameWords.letterCount letters w | StickerContent.Name w <- Foldable.toList (Filter.stickers v)])) mView
+        Quantity.NameStickers -> fmap (\v -> toInteger (length [w | StickerContent.Name w <- Foldable.toList (Filter.stickers v)])) mView
+        Quantity.PowerOfStickers -> fmap (\v -> sum [PowerToughnessSticker.power pt | StickerContent.PowerToughness pt <- Foldable.toList (Filter.stickers v)]) mView
+        Quantity.ToughnessOfStickers -> fmap (\v -> sum [PowerToughnessSticker.toughness pt | StickerContent.PowerToughness pt <- Foldable.toList (Filter.stickers v)]) mView
         -- The designation as a 0/1, off the same view ObjectCounters reads -- so CR
         -- 608.2h's last known information answers for an object that is gone, which is
         -- what rule 702.112a's intervening "if" needs on resolution, and what CR 701.37a's

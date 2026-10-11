@@ -67,7 +67,6 @@ import qualified Pawl.Types.Object as Object
 import Pawl.Types.ObjectId (ObjectId)
 import qualified Pawl.Types.PlayerId as PlayerId
 import qualified Pawl.Types.Power as Power
-import qualified Pawl.Types.PowerToughnessSticker as PowerToughnessSticker
 import Pawl.Types.ProjectedCharacteristics (ProjectedCharacteristics)
 import qualified Pawl.Types.ProjectedCharacteristics as PC
 import qualified Pawl.Types.Prototype as Prototype
@@ -82,7 +81,6 @@ import qualified Pawl.Types.Source as Source
 import qualified Pawl.Types.SpecialAction as SpecialAction
 import qualified Pawl.Types.StaticAbility as StaticAbility
 import qualified Pawl.Types.StickerPlacement as StickerPlacement
-import qualified Pawl.Types.StickerRef as StickerRef
 import qualified Pawl.Types.Teams as Teams
 import Pawl.Types.Timestamp (Timestamp)
 import qualified Pawl.Types.Toughness as Toughness
@@ -253,9 +251,7 @@ viewOfCard face =
           -- builder describes a printed FACE, so there is nothing to be on.
           Filter.counters = Map.empty,
           -- CR 123.1: a printed face has no object to be on.
-          Filter.stickerKinds = Seq.empty,
-          Filter.nameStickers = Seq.empty,
-          Filter.stickerPowerToughness = Seq.empty,
+          Filter.stickers = Seq.empty,
           -- CR 701.54b: the designation rides an OBJECT, and CR 701.54a gives it
           -- only to a battlefield permanent.
           Filter.ringBearerFor = Nothing,
@@ -748,9 +744,7 @@ viewOfCharacteristics peers oid pc controller counters gs =
       Filter.counters = counters,
       -- CR 123.1: off the object, live, `designations`' posture. Not
       -- implemented: CR 608.2h's record of a departed object's stickers (#4890).
-      Filter.stickerKinds = foldMap (fmap (StickerRef.kind . StickerPlacement.sticker) . Object.stickers) (Game.lookupObject oid gs),
-      Filter.nameStickers = foldMap (Seq.fromList . Maybe.mapMaybe (\p -> Game.stickerWords (StickerPlacement.sticker p) gs) . Foldable.toList . Object.stickers) (Game.lookupObject oid gs),
-      Filter.stickerPowerToughness = foldMap (Seq.fromList . Maybe.mapMaybe (\p -> fmap (\pt -> (PowerToughnessSticker.power pt, PowerToughnessSticker.toughness pt)) (Game.powerToughnessStickerOf (StickerPlacement.sticker p) gs)) . Foldable.toList . Object.stickers) (Game.lookupObject oid gs),
+      Filter.stickers = foldMap (Seq.fromList . Maybe.mapMaybe (\p -> Game.stickerContent (StickerPlacement.sticker p) gs) . Foldable.toList . Object.stickers) (Game.lookupObject oid gs),
       -- CR 701.54b: a designation rather than a characteristic. Nothing for an id
       -- naming no object -- a designation dies with the permanent (CR 400.7).
       Filter.ringBearerFor = Game.lookupObject oid gs >>= Object.ringBearerFor,

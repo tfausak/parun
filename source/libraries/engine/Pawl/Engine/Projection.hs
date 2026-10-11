@@ -111,6 +111,7 @@ import qualified Pawl.Types.Source as Source
 import qualified Pawl.Types.SourceChoices as SourceChoices
 import qualified Pawl.Types.SpecialAction as SpecialAction
 import qualified Pawl.Types.StaticAbility as StaticAbility
+import qualified Pawl.Types.StickerContent as StickerContent
 import qualified Pawl.Types.StickerPlacement as StickerPlacement
 import qualified Pawl.Types.Subtype as Subtype.Type
 import qualified Pawl.Types.Supertype as Supertype
@@ -365,7 +366,7 @@ applyModification textBoxOf viewOf src stamp gs oid unitTypes affected m pc =
         -- GainKeyword or GainAbility arm, the receiver its source (CR 113.7).
         -- Pawl.StickerSpec's Shadowspear case proves it.
         Modification.GainAbilitiesOfStickers ->
-          let granted = foldMap (concatMap (\p -> foldMap stickerGrants (Game.abilityStickerOf (StickerPlacement.sticker p) gs)) . Object.stickers) (Game.lookupObject src gs)
+          let granted = foldMap (concatMap (\p -> [grant | Just (StickerContent.Ability sticker) <- [Game.stickerContent (StickerPlacement.sticker p) gs], grant <- stickerGrants sticker]) . Object.stickers) (Game.lookupObject src gs)
            in List.foldl' (flip (applyModification textBoxOf viewOf src stamp gs oid unitTypes affected)) pc granted
         -- CR 604.3: a CDA is a static ability, so this loses it too.
         Modification.LoseAllAbilities ->
@@ -3172,9 +3173,9 @@ honeAffected =
 -- and a P/T sticker's numbers in layer 7b (CR 613.4b). Every object: the name
 -- and ability stickers reach a card in any zone, the P/T sticker a creature or
 -- a creature or Vehicle card (setsPT), and a hidden-zone move has already
--- taken the sticker off (CR 123.5). The sticker's kind (CR 123.1) decides
--- which of Game's readers answers, and so the layer; what an ability sticker
--- grants is handed over unread (stickerGrants).
+-- taken the sticker off (CR 123.5). What the sticker says (CR 123.6-123.9,
+-- Game.stickerContent) decides the layer; what an ability sticker grants is
+-- handed over unread (stickerGrants).
 --
 -- Not implemented: a static, rule, player or self-cost ability on an ability
 -- sticker, or a keyword rule 702 states as a static ability, reaching the
@@ -3202,19 +3203,17 @@ stickerGathered gs =
                 Filter.Type.Or [Filter.Type.HasCardType CardType.Creature, Filter.Type.HasSubtype Subtype.Type.Vehicle]
               ]
           )
-      parts oid placement =
-        let ref = StickerPlacement.sticker placement
-            named =
-              [ at oid placement Layer.Text (itself oid) (Modification.InsertNameWords NameInsertion.MkNameInsertion {NameInsertion.word = ws, NameInsertion.after = k})
-              | Just k <- [StickerPlacement.position placement],
-                Just ws <- [Game.stickerWords ref gs]
-              ]
-            granted = fmap (at oid placement Layer.Ability (itself oid)) (foldMap stickerGrants (Game.abilityStickerOf ref gs))
-            sized =
-              [ at oid placement Layer.SetPT setsPT (Modification.SetBasePowerToughness (SetBasePowerToughness.MkSetBasePowerToughness (Just (Quantity.Type.Literal (PowerToughnessSticker.power pt))) (Just (Quantity.Type.Literal (PowerToughnessSticker.toughness pt)))))
-              | Just pt <- [Game.powerToughnessStickerOf ref gs]
-              ]
-         in named <> granted <> sized
+      parts oid placement = case Game.stickerContent (StickerPlacement.sticker placement) gs of
+        Just (StickerContent.Name ws) ->
+          [ at oid placement Layer.Text (itself oid) (Modification.InsertNameWords NameInsertion.MkNameInsertion {NameInsertion.word = ws, NameInsertion.after = k})
+          | Just k <- [StickerPlacement.position placement]
+          ]
+        Just (StickerContent.Ability sticker) -> fmap (at oid placement Layer.Ability (itself oid)) (stickerGrants sticker)
+        Just (StickerContent.PowerToughness pt) ->
+          [at oid placement Layer.SetPT setsPT (Modification.SetBasePowerToughness (SetBasePowerToughness.MkSetBasePowerToughness (Just (Quantity.Type.Literal (PowerToughnessSticker.power pt))) (Just (Quantity.Type.Literal (PowerToughnessSticker.toughness pt)))))]
+        -- CR 123.9.
+        Just StickerContent.Art -> []
+        Nothing -> []
    in [part | (oid, obj) <- Map.toList (GameState.objects gs), placement <- Foldable.toList (Object.stickers obj), part <- parts oid placement]
 
 -- CR 123.7 / 613.1f: an ability sticker's abilities as layer-6 grants, one per

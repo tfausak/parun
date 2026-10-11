@@ -8,7 +8,6 @@ import qualified Data.Map.Strict as Map
 import qualified Data.Maybe as Maybe
 import qualified Data.Sequence as Seq
 import qualified Data.Set as Set
-import qualified Data.Text as Text
 import qualified Numeric.Natural as Natural
 import qualified Pawl.Engine.Binding as Binding
 import qualified Pawl.Engine.Keyword as Keyword
@@ -60,6 +59,7 @@ import qualified Pawl.Types.Sacrifice as Sacrifice
 import qualified Pawl.Types.SlotArity as SlotArity
 import qualified Pawl.Types.SlotName as SlotName
 import qualified Pawl.Types.Splice as Splice
+import qualified Pawl.Types.StickerContent as StickerContent
 import qualified Pawl.Types.StickerKind as StickerKind
 import qualified Pawl.Types.StickerRef as StickerRef
 import qualified Pawl.Types.StoredResult as StoredResult
@@ -608,15 +608,9 @@ data View = MkView
     -- CARD shape is the exception and reads the object that ARRIVED, whose
     -- counters CR 122.2 has already emptied.
     counters :: Map.Map (CounterKind.CounterKind Keyword.Type.Keyword) Natural.Natural,
-    -- | CR 123.1 / 123.4: the kinds of the stickers on the candidate, one per
-    -- sticker. Off the object: CR 123.1 keeps stickers out of the copiable values.
-    stickerKinds :: Seq.Seq StickerKind.StickerKind,
-    -- | CR 123.6: the word on each name sticker on the candidate, in placement
-    -- order. Off the object, stickerKinds' posture.
-    nameStickers :: Seq.Seq Text.Text,
-    -- | CR 123.8a: the printed power and toughness on each P/T sticker on the
-    -- candidate, in placement order. Off the object, stickerKinds' posture.
-    stickerPowerToughness :: Seq.Seq (Integer, Integer),
+    -- | CR 123.1 / 123.4: what each sticker on the candidate says, in placement
+    -- order. Off the object: CR 123.1 keeps stickers out of the copiable values.
+    stickers :: Seq.Seq StickerContent.StickerContent,
     -- CR 701.54a-b: which player this candidate is the Ring-bearer FOR, or Nothing
     -- for the overwhelming majority of permanents, which carry no such
     -- designation. Read straight off Object.ringBearerFor -- CR 701.54b makes it a
@@ -958,9 +952,7 @@ playerView pid =
       -- OBJECT half, so a player view has none of it.
       counters = Map.empty,
       -- CR 123.1: a sticker is on an object, and CR 109.1 makes a player none.
-      stickerKinds = Seq.empty,
-      nameStickers = Seq.empty,
-      stickerPowerToughness = Seq.empty,
+      stickers = Seq.empty,
       -- CR 701.54b: Ring-bearer is a designation A PERMANENT can have, and a
       -- player is not one -- the same shape CR 725.1's monarch has with the two
       -- sides swapped.
@@ -2218,12 +2210,20 @@ matches context view predicate = case predicate of
   -- behaviour a board can show. Pawl.FilterSpec's own case says so at the site.
   Filter.HasCountersOfAnyKind -> any (> 0) (Map.elems (counters view))
   -- CR 123.6-123.9: read off the object, never a projection (CR 123.1).
-  Filter.HasSticker kind -> elem kind (stickerKinds view)
+  Filter.HasSticker kind -> any ((== kind) . stickerKindOf) (stickers view)
   -- CR 123.4.
-  Filter.Stickered -> not (null (stickerKinds view))
+  Filter.Stickered -> not (null (stickers view))
   Filter.And fs -> all (matches context view) fs
   Filter.Or fs -> any (matches context view) fs
   Filter.Not f -> not (matches context view f)
+
+-- | CR 123.6-123.9: a sticker's kind, from what it says.
+stickerKindOf :: StickerContent.StickerContent -> StickerKind.StickerKind
+stickerKindOf content = case content of
+  StickerContent.Name _ -> StickerKind.Name
+  StickerContent.Ability _ -> StickerKind.Ability
+  StickerContent.PowerToughness _ -> StickerKind.PowerToughness
+  StickerContent.Art -> StickerKind.Art
 
 -- CR 612.1: swap subtype words wherever they appear in a Filter. A text-changing
 -- effect reaches any word printed on the object, and a Filter carried by an
