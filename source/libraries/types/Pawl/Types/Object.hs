@@ -79,9 +79,9 @@ data Object = MkObject
     -- CR 708.9); the one move that must not forget it is CR 708.4's last
     -- sentence, which Event.changeZoneFaceDown carries.
     --
-    -- Not implemented: CR 708.5's "you can't look at face-down permanents
-    -- controlled by another player" -- Object.source still holds the printing
-    -- (#1412).
+    -- Pawl.Engine.Visibility.sees answers CR 708.5's who-may-look. Not
+    -- implemented: an answerer is still handed the printing, since Object.source
+    -- holds it (#1412).
     facing :: Facing.Facing,
     -- | CR 110.5: flipped or unflipped, another of that rule's status
     -- categories, beside `tapped` and `facing` above. CR 710.2 is what it does: "once a permanent is

@@ -9,9 +9,9 @@ import qualified Numeric.Natural as Natural
 -- The two are NOT the same number, which is why this is a record rather than a
 -- bare Natural. CR 103.5 bottoms one card per mulligan taken, but CR 103.5c
 -- exempts the first in a multiplayer game, so at three or more seats a player who
--- has taken one mulligan bottoms zero. An answerer sees only this payload, never
--- the GameState, so a raw count left it deciding with less information than the
--- rules give a player at a table.
+-- has taken one mulligan bottoms zero. The payload is what the prompt itself
+-- tells the player, so a raw count left it saying less than the rules give a
+-- player at a table.
 --
 -- Both fields are built by Pawl.Engine.Mulligan.offerFor, which is also what
 -- takeMulligan bottoms by, so the prompt and the cost cannot drift apart.

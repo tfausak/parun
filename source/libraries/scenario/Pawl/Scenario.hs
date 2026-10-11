@@ -46,6 +46,7 @@ import qualified Pawl.Engine.Projection.View as Projection
 import qualified Pawl.Engine.Script as Script
 import qualified Pawl.Engine.Setup as Setup
 import qualified Pawl.Engine.Turn as Turn
+import qualified Pawl.Engine.Visibility as Visibility
 import qualified Pawl.Extra.Int as Int
 import qualified Pawl.Extra.Natural as Natural
 import qualified Pawl.JsonCodec.Codec as Codec
@@ -138,6 +139,7 @@ import qualified Pawl.Types.TypeSwap as TypeSwap
 import qualified Pawl.Types.TypesAre as TypesAre
 import qualified Pawl.Types.View as View
 import qualified Pawl.Types.ViewIs as ViewIs
+import qualified Pawl.Types.Visibility as Visibility.Type
 import qualified Pawl.Types.When as When
 import qualified Pawl.Types.Zone as Zone
 import qualified Pawl.Types.ZoneChange as ZoneChange
@@ -1683,6 +1685,11 @@ renderView gs viewIs =
             toLabel <- labelOf to
             pure (ReplyType.Array (fmap ReplyType.Text [card, Label.unwrap fromLabel, Label.unwrap toLabel]))
           pure (ReplyType.Array rows)
+        View.Seers -> do
+          oid <- needObject
+          let seers = [pid | pid <- GameState.turnOrder gs, Visibility.sees pid oid gs == Visibility.Type.Visible]
+          labels <- mapM labelOf seers
+          pure (ReplyType.Array (fmap (ReplyType.Text . Label.unwrap) labels))
 
 -- | A value as its codec writes it, for a View to compare.
 encoded :: Codec.Codec a -> a -> ReplyType.Reply

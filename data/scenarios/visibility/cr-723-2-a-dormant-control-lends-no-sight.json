@@ -1,0 +1,25 @@
+{
+  "description": "CR 723.2 a control waiting for its spell lends no sight",
+  "note": "Word of Command makes bob cast Duress; while Duress waits on the stack alice does not control bob yet, so she does not see the Llanowar Elves left in his hand.",
+  "board": {
+    "seats": [
+      {"name": "alice", "battlefield": [{"card": "Swamp", "label": "swamp", "ready": true}, {"card": "Swamp", "label": "swamp-2", "ready": true}], "hand": [{"card": "Divination", "label": "divination", "ready": true}, {"card": "Lightning Bolt", "ready": true}, {"card": "Word of Command", "label": "word-of-command", "ready": true}]},
+      {"name": "bob", "battlefield": [{"card": "Swamp", "label": "swamp-3", "ready": true}], "hand": [{"card": "Llanowar Elves", "ready": true, "label": "elves"}, {"card": "Duress", "label": "duress", "ready": true}]}
+    ],
+    "active": "alice",
+    "step": "PrecombatMain"
+  },
+  "timeline": [
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": {"Cast": {"object": "$word-of-command", "targets": ["$bob"], "mana": ["$swamp", "$swamp-2"]}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": {"Answer": {"prompt": "ChooseCardInHand", "with": "$duress"}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": {"Answer": {"prompt": "ChooseTargets", "with": [["target", [["Player", "alice"]]]]}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": {"Answer": {"prompt": "ChooseManaSource", "with": "$swamp-3"}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": {"Answer": {"prompt": "ChooseCardFromAmong", "with": "$divination"}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "bob", "check": {"View": {"of": "Stack", "is": ["Word of Command"]}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "bob", "do": "Pass"},
+    {"turn": 1, "step": "PrecombatMain", "player": "bob", "check": {"View": {"of": "Stack", "is": ["Duress"]}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "bob", "check": {"View": {"of": "Seers", "object": "$elves", "is": ["bob"]}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "bob", "do": "Pass"},
+    {"turn": 1, "step": "PrecombatMain", "player": "bob", "check": {"View": {"of": "Stack", "is": []}}}
+  ]
+}

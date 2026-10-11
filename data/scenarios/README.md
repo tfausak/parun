@@ -120,7 +120,10 @@ subdirectory named for that spec; `docs/scenario-burndown.md` lists the ones sti
   (a `player`'s), `Daytime` (`null` before either), and `Protector`,
   `Designations`, `RingBearer` and `Supertypes` (of an `object`),
   `CommanderDamage` (a `player`'s, as `[name, amount]` pairs), `OwnershipChanges`
-  (each card whose owner changed, as `[card, starting owner, owner]`); an object is named as the
+  (each card whose owner changed, as `[card, starting owner, owner]`), `Seers`
+  (the seats that may see an `object`'s face, in turn order: CR 400.2's hidden
+  zones, CR 406.3's face-down exile, CR 708.5's face-down spells and
+  permanents, and CR 723.4's control of a player); an object is named as the
   runner's messages name it, by label while it keeps one, and an ability on
   the stack as `"trigger of $source"` or `"ability of $source"`. A seat is
   named bare: `"player": "alice"`.

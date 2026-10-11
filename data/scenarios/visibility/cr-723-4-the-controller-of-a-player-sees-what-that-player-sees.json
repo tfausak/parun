@@ -1,0 +1,30 @@
+{
+  "description": "CR 723.4 the controller of a player sees what that player sees",
+  "note": "Before bob's turn alice sees none of bob's hidden cards; while she controls him she sees his face-down creature and his hand, and still not his library.",
+  "board": {
+    "seats": [
+      { "name": "alice",
+        "battlefield": [
+          { "card": "Mindslaver", "label": "slaver", "ready": true },
+          { "card": "Mountain", "label": "m1", "ready": true }, { "card": "Mountain", "label": "m2", "ready": true },
+          { "card": "Mountain", "label": "m3", "ready": true }, { "card": "Mountain", "label": "m4", "ready": true } ],
+        "library": [ { "card": "Goblin Piker" } ] },
+      { "name": "bob",
+        "battlefield": [ { "card": "Goblin Piker", "label": "hidden", "faceDown": { "type": "Manifested" } } ],
+        "hand": [ { "card": "Hill Giant", "label": "b-hand" } ],
+        "library": [ { "card": "Goblin Piker" }, { "card": "Goblin Piker", "label": "b-top" } ] }
+    ],
+    "active": "alice",
+    "step": "PrecombatMain"
+  },
+  "timeline": [
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "check": { "View": { "of": "Seers", "object": "$hidden", "is": ["bob"] } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": { "Activate": { "object": "$slaver", "ability": 0, "targets": ["$bob"], "mana": ["$m1", "$m2", "$m3", "$m4"], "costOrder": [0, 1] } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass" },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "check": { "View": { "of": "Stack", "is": [] } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "check": { "View": { "of": "Seers", "object": "$hidden", "is": ["bob"] } } },
+    { "turn": 2, "step": "Upkeep", "player": "alice", "check": { "View": { "of": "Seers", "object": "$hidden", "is": ["alice", "bob"] } } },
+    { "turn": 2, "step": "Upkeep", "player": "alice", "check": { "View": { "of": "Seers", "object": "$b-hand", "is": ["alice", "bob"] } } },
+    { "turn": 2, "step": "Upkeep", "player": "alice", "check": { "View": { "of": "Seers", "object": "$b-top", "is": [] } } }
+  ]
+}
