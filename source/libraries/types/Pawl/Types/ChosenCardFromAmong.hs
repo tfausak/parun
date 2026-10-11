@@ -1,9 +1,9 @@
 module Pawl.Types.ChosenCardFromAmong where
 
 import qualified Pawl.Types.Filter as Filter
+import qualified Pawl.Types.HowMany as HowMany
 import qualified Pawl.Types.Keyword as Keyword
 import qualified Pawl.Types.PlayerRef as PlayerRef
-import qualified Pawl.Types.Quantity as Quantity
 import qualified Pawl.Types.SlotName as SlotName
 
 -- | The printed words "from among them", with a choice: which GROUP the
@@ -21,11 +21,10 @@ import qualified Pawl.Types.SlotName as SlotName
 -- Pawl.Types.ObjectRef.TopOfLibraryUntil's walk stops at the match that completes
 -- its count rather than collecting every one of them.
 --
--- The COUNT is a Quantity rather than a Natural, Pawl.Types.TopOfLibrary's reason:
--- Ancestral Memories' printed two sits beside a computed one. CR 609.3 covers the
--- shortfall -- a group holding fewer matches than the count gives what it has, and
--- one holding none yields nothing, that share of the instruction being ignored
--- (CR 101.3).
+-- The COUNT is Pawl.Types.ChosenPermanents' HowMany: Ancestral Memories' exact
+-- two, Uncovered Clues' "up to two". CR 609.3 covers the shortfall -- a group
+-- holding fewer matches than the count gives what it has, and one holding none
+-- yields nothing, that share of the instruction being ignored (CR 101.3).
 --
 -- The CHOOSER is a PlayerRef naming ONE seat, and CR 608.2c's default is the
 -- resolving controller, which is what Relative You spells. Animal Magnetism's "an
@@ -44,12 +43,7 @@ import qualified Pawl.Types.SlotName as SlotName
 data ChosenCardFromAmong = MkChosenCardFromAmong
   { slot :: SlotName.SlotName,
     filter :: Filter.Filter Keyword.Keyword,
-    count :: Quantity.Quantity,
-    chooser :: PlayerRef.PlayerRef,
-    -- | Whether the printed count says "up to", making it a ceiling the chooser
-    -- picks within, zero included, rather than one to fill (CR 608.2d) --
-    -- Uncovered Clues' "up to two". A Bool beside the count for
-    -- Pawl.Types.Search's upTo's reason.
-    upTo :: Bool
+    count :: HowMany.HowMany,
+    chooser :: PlayerRef.PlayerRef
   }
   deriving (Eq, Ord, Show)

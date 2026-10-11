@@ -21,7 +21,7 @@ import qualified Pawl.Types.ZoneScope as ZoneScope
 -- adding a roll -- Ghoulraiser's "a Zombie card at random" is one pick among the
 -- Zombies, not a pick that may miss.
 --
--- The COUNT is a Quantity for Pawl.Types.ChosenCardFromAmong's reason, is per
+-- The COUNT is a Quantity for Pawl.Types.TopOfLibrary's reason, is per
 -- graveyard, and counts DISTINCT cards: Make a Wish's "two cards at random" names
 -- two cards rather than making two picks that may coincide, so
 -- Pawl.Engine.Resolve.Effect.randomCardsInGraveyard drops each card it names from

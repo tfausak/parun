@@ -114,8 +114,11 @@
                         "type": "ChosenCardFromAmong",
                         "value": {
                           "count": {
-                            "type": "Literal",
-                            "value": 2
+                            "type": "UpTo",
+                            "value": {
+                              "type": "Literal",
+                              "value": 2
+                            }
                           },
                           "filter": {
                             "type": "And",
@@ -178,8 +181,7 @@
                               }
                             ]
                           },
-                          "slot": "looked",
-                          "upTo": true
+                          "slot": "looked"
                         }
                       },
                       "zone": {

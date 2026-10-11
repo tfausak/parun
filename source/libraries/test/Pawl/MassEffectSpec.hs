@@ -1465,6 +1465,62 @@ uncoveredCluesSpec s registry =
           Spec.assertEqWith s "nothing was revealed" revealed []
           Spec.assertEqWith s "all four are beneath the Island" (List.sort (drop 1 (namesIn Zone.Library S.alice after))) [named "Divination", named "Forest", named "Lightning Bolt", named "Murder"]
 
+-- Lead the Stampede {2}{G} Sorcery, "Look at the top five cards of your library.
+-- You may reveal any number of creature cards from among them and put the
+-- revealed cards into your hand. Put the rest on the bottom of your library in
+-- any order." (Oracle text checked against api.scryfall.com.) Uncovered Clues'
+-- shape with no ceiling: "any number" is HowMany.UpTo Nothing.
+--
+-- The top five, top first, are Grizzly Bears, Murder, Hill Giant, Bird Maiden
+-- and Swamp, so three creatures match -- more than any printed "up to" a test
+-- above uses -- and the Goblin Piker beneath them is never looked at.
+leadTheStampedeSpec :: (Monad m) => Spec.Spec m n -> Registry.Registry m -> n ()
+leadTheStampedeSpec s registry =
+  Spec.it s "CR 608.2d Lead the Stampede puts every creature card alice reveals into her hand" $ do
+    stampede <- S.printingOf s registry "Lead the Stampede"
+    forest <- S.printingOf s registry "Forest"
+    -- Bottom first, S.addLibraryCard putting each new card on top.
+    printings <- Monad.mapM (S.printingOf s registry) ["Goblin Piker", "Swamp", "Bird Maiden", "Hill Giant", "Murder", "Grizzly Bears"]
+    let named = Just . CardName.MkCardName . Text.pack
+        stocked = List.foldl' (\g p -> snd (S.addLibraryCard p S.alice g)) (S.landsFor forest S.alice 3 (Setup.emptyGame S.bothPlayers)) printings
+        (withSpell, spell) = S.handOne stampede stocked
+        answer :: Prompt.Prompt r -> r
+        answer p = case p of
+          -- Every card offered: the answer an uncapped count must honour whole.
+          Prompt.ChooseCardsFromAmong _ _ _ offered _ -> Set.fromList offered
+          _ -> S.identityAnswer p
+        after = S.runPure answer withSpell (S.cast S.alice spell >> Stack.resolveTop)
+    Spec.assertEqWith s "alice's hand holds all three creature cards" (List.sort (namesIn Zone.Hand S.alice after)) [named "Bird Maiden", named "Grizzly Bears", named "Hill Giant"]
+    Spec.assertEqWith s "and the unlooked Goblin Piker stays on top of her library" (take 1 (namesIn Zone.Library S.alice after)) [named "Goblin Piker"]
+
+-- Follow the Lumarets {1}{G} Sorcery, "Infusion -- Look at the top four cards
+-- of your library. You may reveal a creature or land card from among them and
+-- put it into your hand. If you gained life this turn, you may instead reveal
+-- two ... Put the rest on the bottom of your library in a random order."
+-- (Oracle text checked against api.scryfall.com.) With no life gained, the
+-- first branch's "may reveal a ... card" is "up to one": declining is an answer.
+--
+-- The top four, top first, are Grizzly Bears, Murder, Forest and Swamp, so two
+-- cards match and the one-card ask would have had to take one.
+followTheLumaretsSpec :: (Monad m) => Spec.Spec m n -> Registry.Registry m -> n ()
+followTheLumaretsSpec s registry =
+  Spec.it s "CR 608.2d Follow the Lumarets' may reveal can be declined" $ do
+    lumarets <- S.printingOf s registry "Follow the Lumarets"
+    forest <- S.printingOf s registry "Forest"
+    -- Bottom first, S.addLibraryCard putting each new card on top.
+    printings <- Monad.mapM (S.printingOf s registry) ["Goblin Piker", "Swamp", "Forest", "Murder", "Grizzly Bears"]
+    let named = Just . CardName.MkCardName . Text.pack
+        stocked = List.foldl' (\g p -> snd (S.addLibraryCard p S.alice g)) (S.landsFor forest S.alice 2 (Setup.emptyGame S.bothPlayers)) printings
+        (withSpell, spell) = S.handOne lumarets stocked
+        answer :: Prompt.Prompt r -> r
+        answer p = case p of
+          -- The declining answer.
+          Prompt.ChooseCardsFromAmong {} -> Set.empty
+          _ -> S.identityAnswer p
+        after = S.runPure answer withSpell (S.cast S.alice spell >> Stack.resolveTop)
+    Spec.assertEqWith s "alice's hand is empty" (namesIn Zone.Hand S.alice after) []
+    Spec.assertEqWith s "and the unlooked Goblin Piker stays on top of her library" (take 1 (namesIn Zone.Library S.alice after)) [named "Goblin Piker"]
+
 -- Zimone's Experiment {3}{G} Sorcery, "Look at the top five cards of your
 -- library. You may reveal up to two creature and/or land cards from among them,
 -- then put the rest on the bottom of your library in a random order. Put all
@@ -1658,6 +1714,8 @@ spec s registry = Spec.describe s "Pawl.Engine.Resolve" $ do
   openTheWaySpec s registry
   carthTheLionSpec s registry
   uncoveredCluesSpec s registry
+  leadTheStampedeSpec s registry
+  followTheLumaretsSpec s registry
   zimonesExperimentSpec s registry
   blossomingTortoiseSpec s registry
   timetwisterSpec s registry

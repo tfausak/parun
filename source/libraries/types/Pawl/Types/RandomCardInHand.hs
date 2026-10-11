@@ -17,7 +17,7 @@ import qualified Pawl.Types.Quantity as Quantity
 -- 701.20a or CR 402.3 forbids narrowing a pick out of a hidden zone, which is the
 -- argument ChosenCardInHand already makes over the same zone.
 --
--- The COUNT is a Quantity for Pawl.Types.ChosenCardFromAmong's reason, and it is
+-- The COUNT is a Quantity for Pawl.Types.TopOfLibrary's reason, and it is
 -- a count of DISTINCT cards: the printed "two cards at random" (Fall) names two
 -- cards rather than making two picks that may coincide, so
 -- Pawl.Engine.Resolve.Effect's reveal arm drops each card it names from the

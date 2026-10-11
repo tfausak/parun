@@ -1156,7 +1156,7 @@ rewriteObjectRef pairs ref = case ref of
   ObjectRef.TopOfGraveyard _ -> ref
   ObjectRef.ChosenCardInGraveyard (ChosenCardInGraveyard.MkChosenCardInGraveyard c s f n) -> ObjectRef.ChosenCardInGraveyard (ChosenCardInGraveyard.MkChosenCardInGraveyard c s (Filter.rewrite pairs f) (rewriteQuantity pairs n))
   ObjectRef.ChosenCardInHand (ChosenCardInHand.MkChosenCardInHand p f) -> ObjectRef.ChosenCardInHand (ChosenCardInHand.MkChosenCardInHand p (Filter.rewrite pairs f))
-  ObjectRef.ChosenCardFromAmong (ChosenCardFromAmong.MkChosenCardFromAmong n f c w u) -> ObjectRef.ChosenCardFromAmong (ChosenCardFromAmong.MkChosenCardFromAmong n (Filter.rewrite pairs f) (rewriteQuantity pairs c) w u)
+  ObjectRef.ChosenCardFromAmong (ChosenCardFromAmong.MkChosenCardFromAmong n f c w) -> ObjectRef.ChosenCardFromAmong (ChosenCardFromAmong.MkChosenCardFromAmong n (Filter.rewrite pairs f) (rewriteHowMany pairs c) w)
   ObjectRef.EachCardFromAmong (EachCardFromAmong.MkEachCardFromAmong n f) -> ObjectRef.EachCardFromAmong (EachCardFromAmong.MkEachCardFromAmong n (Filter.rewrite pairs f))
   -- A REGRESSION FENCE rather than proven behaviour, EachCardInYourLibrary's
   -- reason: no card in the pool narrows a random pick by a land type, and no
@@ -1173,13 +1173,16 @@ rewriteObjectRef pairs ref = case ref of
   ObjectRef.FromAnywhere slot -> ObjectRef.FromAnywhere slot
   ObjectRef.SourceAndChosenPermanent f -> ObjectRef.SourceAndChosenPermanent (Filter.rewrite pairs f)
 
--- CR 612.1 through a battlefield choice: its Filter and its ceiling are card
+-- CR 612.1 through a battlefield choice: its Filter and its count are card
 -- text, and its chooser names a seat, never a subtype.
 rewriteChosenPermanents :: [(Subtype.Type.Subtype, Subtype.Type.Subtype)] -> ChosenPermanents.ChosenPermanents -> ChosenPermanents.ChosenPermanents
 rewriteChosenPermanents pairs (ChosenPermanents.MkChosenPermanents f chooser count) =
-  ChosenPermanents.MkChosenPermanents (Filter.rewrite pairs f) chooser $ case count of
-    HowMany.One -> HowMany.One
-    HowMany.UpTo n -> HowMany.UpTo (fmap (rewriteQuantity pairs) n)
+  ChosenPermanents.MkChosenPermanents (Filter.rewrite pairs f) chooser (rewriteHowMany pairs count)
+
+rewriteHowMany :: [(Subtype.Type.Subtype, Subtype.Type.Subtype)] -> HowMany.HowMany -> HowMany.HowMany
+rewriteHowMany pairs count = case count of
+  HowMany.Exactly n -> HowMany.Exactly (rewriteQuantity pairs n)
+  HowMany.UpTo n -> HowMany.UpTo (fmap (rewriteQuantity pairs) n)
 
 -- CR 612.1 through CR 707.10d's description of the copies' candidates, which is
 -- card text like any other ref's. The other two answers name nothing a land-type
