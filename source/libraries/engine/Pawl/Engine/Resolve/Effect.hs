@@ -5372,7 +5372,11 @@ applyOneEffect runSubgame resolving source controller legal chosen effect = case
   --
   -- Whether BOTH halves can happen is decided before either does (CR 701.12a):
   -- two distinct cards in different zones, one owner for both (CR 701.12d), and
-  -- a card entering the battlefield can be attached as below. Then one CR 608.2f
+  -- a card entering the battlefield can be attached as below. A side naming no
+  -- card, as an empty library's top card, exchanges nothing: CR 701.12d's "even
+  -- if one zone is empty" is Effect.ExchangeZones', which trades a zone's whole
+  -- contents (data/scenarios/ante/ante-darkpact-empty-library-takes-the-card-but-exchanges-nothing.json).
+  -- Then one CR 608.2f
   -- event: each card to the other's zone, filed under its owner (CR 400.3), a
   -- permanent under the resolving controller (CR 110.2a), and a library card at
   -- the end the other left.
