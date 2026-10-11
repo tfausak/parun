@@ -527,6 +527,14 @@ craftMaterials = SlotName.MkSlotName (Text.pack "thoseCraftMaterials")
 craftLink :: AbilityName.AbilityName
 craftLink = AbilityName.MkAbilityName (Text.pack "thoseCraftMaterials")
 
+-- CR 607.2b / 614.14: the ExileLink.ability an as-enters exile's link carries
+-- (Pawl.Engine.Event's EntryRewrite.ExileFromGraveyard arm), so "target
+-- creature card exiled with it" reads the cards that replacement exiled and not
+-- what the permanent's other abilities exile (CR 607.1's "and not by any other
+-- ability"). Reserved, as craftLink is.
+entryExileLink :: AbilityName.AbilityName
+entryExileLink = AbilityName.MkAbilityName (Text.pack "exiledAsThisEntered")
+
 -- CR 602.5c: the name each activated ability a permanent acquires from one
 -- craft material carries, drawn from that material's id, so two identically
 -- worded abilities acquired from two materials are two abilities to a

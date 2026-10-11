@@ -811,16 +811,16 @@ isLastExiledWithSourceTag = Text.pack "LastExiled"
 isLastExiledWithSourceCounts :: Face.Face Card.Type.Card -> (Int, Int)
 isLastExiledWithSourceCounts = chosenValueCounts (== ManaRestrictionFramed) isLastExiledWithSourceTag
 
--- CR 614.14's any-exiled atom, spelled once: IsExiledWithSource's AnyExiled
--- payload, which no other type spells.
-isAnyExiledWithSourceTag :: Text.Text
-isAnyExiledWithSourceTag = Text.pack "AnyExiled"
+-- CR 607.2b / 614.14's as-it-entered atom, spelled once: IsExiledWithSource's
+-- ExiledAsItEntered payload, which no other type spells.
+exiledAsItEnteredTag :: Text.Text
+exiledAsItEnteredTag = Text.pack "ExiledAsItEntered"
 
 -- The atom is answerable only in a target slot, where Pawl.Engine.Target fills
 -- Filter.Context.sourceExiled (Mimeoplasm, Revered One); everywhere else it is
 -- a silent False.
-isAnyExiledWithSourceCounts :: Face.Face Card.Type.Card -> (Int, Int)
-isAnyExiledWithSourceCounts = chosenValueCounts (== InTargetSlot) isAnyExiledWithSourceTag
+exiledAsItEnteredCounts :: Face.Face Card.Type.Card -> (Int, Int)
+exiledAsItEnteredCounts = chosenValueCounts (== InTargetSlot) exiledAsItEnteredTag
 
 -- Two offences under one name, hasChosenNameOffends' two: an atom outside the
 -- admitted positions, or the traversal and the codec disagreeing about how many
@@ -3331,18 +3331,18 @@ filterPositionLintSpec s registry = Spec.describe s "Lint" $ do
       (chosenValueOffends isLastExiledWithSourceCounts isLastExiledWithSourceTag planted, isLastExiledWithSourceCounts planted)
       (True, (0, 1))
 
-  -- CR 614.14's any card exiled with the source: answerable in a target slot
-  -- alone. Mimeoplasm, Revered One is accepted rather than skipped, so the lint
-  -- is not vacuous.
-  Spec.it s "CR 614.14 no card asks IsExiledWithSource AnyExiled outside a target slot" $ do
+  -- CR 607.2b / 614.14: a card exiled as the source entered, answerable in a
+  -- target slot alone. Mimeoplasm, Revered One is accepted rather than skipped,
+  -- so the lint is not vacuous.
+  Spec.it s "CR 614.14 no card asks IsExiledWithSource ExiledAsItEntered outside a target slot" $ do
     ps <- S.allPrintings s
     Spec.assertEqWith
       s
       "the atom sits only in a target slot"
-      (fmap (S.nameOf . Printing.card) (filter (anyFace (chosenValueOffends isAnyExiledWithSourceCounts isAnyExiledWithSourceTag) . Printing.card) ps))
+      (fmap (S.nameOf . Printing.card) (filter (anyFace (chosenValueOffends exiledAsItEnteredCounts exiledAsItEnteredTag) . Printing.card) ps))
       []
     mimeoplasm <- S.printingOf s registry "Mimeoplasm, Revered One"
-    Spec.assertEqWith s "Mimeoplasm's atom is framed by a target slot" (isAnyExiledWithSourceCounts (S.combinedFace mimeoplasm)) (1, 0)
+    Spec.assertEqWith s "Mimeoplasm's atom is framed by a target slot" (exiledAsItEnteredCounts (S.combinedFace mimeoplasm)) (1, 0)
 
 spec :: (Monad n) => Spec.Spec IO n -> Registry.Registry IO -> n ()
 spec s registry = Spec.describe s "Pawl.Engine.Card" $ do

@@ -1,12 +1,12 @@
 module Pawl.Types.ExiledWith where
 
--- | Which of the cards exiled with a source (CR 607.2a / 614.14) a
+-- | Which of the cards exiled with a source a
 -- Pawl.Types.Filter.IsExiledWithSource candidate must be.
 data ExiledWith
-  = -- | The last one -- Ice Cauldron's "the last card exiled with this
-    -- artifact", baked onto a mana unit at production.
+  = -- | CR 607.2a: the last one -- Ice Cauldron's "the last card exiled with
+    -- this artifact", baked onto a mana unit at production.
     LastExiled
-  | -- | Any of them -- Mimeoplasm, Revered One's "target creature card exiled
-    -- with it".
-    AnyExiled
+  | -- | CR 607.2b / 614.14: any card the source's as-enters exile took --
+    -- Mimeoplasm, Revered One's "target creature card exiled with it".
+    ExiledAsItEntered
   deriving (Bounded, Enum, Eq, Ord, Show)

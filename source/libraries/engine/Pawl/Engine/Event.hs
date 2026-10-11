@@ -2952,7 +2952,7 @@ apply batch candidate event =
                 -- data/scenarios/entry-replacement proves it: Spirit Mascot fires once.
                 arrivals <- changeZonesTogether (fmap (\card -> (card, Zone.Exile)) chosen)
                 State.modify' $ \gs2 ->
-                  gs2 {GameState.exiledWith = foldr (\arrival -> Map.insert arrival ExileLink.MkExileLink {ExileLink.source = oid, ExileLink.ability = Nothing}) (GameState.exiledWith gs2) (foldMap Foldable.toList arrivals)}
+                  gs2 {GameState.exiledWith = foldr (\arrival -> Map.insert arrival ExileLink.MkExileLink {ExileLink.source = oid, ExileLink.ability = Just Binding.entryExileLink}) (GameState.exiledWith gs2) (foldMap Foldable.toList arrivals)}
                 -- "For each creature card exiled this way": the cards that reached
                 -- exile, one choice of kind each.
                 exiled <- State.gets (\gs2 -> filter (`Set.member` GameState.exile gs2) (foldMap Foldable.toList arrivals))

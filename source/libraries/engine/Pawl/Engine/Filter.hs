@@ -1523,8 +1523,8 @@ data Context = MkContext
     -- reason. Nothing everywhere else, so the atom is vacuously False there, and
     -- Pawl.FilterPositionLintSpec keeps a card to a mana restriction.
     sourceLastExiled :: Maybe ObjectId.ObjectId,
-    -- CR 607.2a / 614.14: every card in exile linked to the source, for
-    -- IsExiledWithSource AnyExiled. Filled where a target slot's filter is
+    -- CR 607.2b / 614.14: every card in exile the source's as-enters exile
+    -- linked to it, for IsExiledWithSource ExiledAsItEntered. Filled where a target slot's filter is
     -- judged (Pawl.Engine.Target), off GameState.exiledWith; empty everywhere
     -- else, so the atom is vacuously False there.
     sourceExiled :: Set.Set ObjectId.ObjectId
@@ -1893,7 +1893,7 @@ matches context view predicate = case predicate of
   -- CR 607.2a off the Context, which the mana-spending road alone fills: no
   -- card exiled with the source matches nothing.
   Filter.IsExiledWithSource ExiledWith.LastExiled -> maybe False (\card -> identity view == Just card) (sourceLastExiled context)
-  Filter.IsExiledWithSource ExiledWith.AnyExiled -> maybe False (`Set.member` sourceExiled context) (identity view)
+  Filter.IsExiledWithSource ExiledWith.ExiledAsItEntered -> maybe False (`Set.member` sourceExiled context) (identity view)
   -- CR 702.16k's two halves in one disjunction: what the chosen player CONTROLS,
   -- and what they OWN that no other player controls -- which is the second half's
   -- whole content, CR 108.4 leaving a card outside the battlefield and the stack

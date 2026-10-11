@@ -7,12 +7,12 @@ import qualified Pawl.Types.ExiledWith as ExiledWith
 
 spec :: (Monad m, Monad n) => Spec.Spec m n -> n ()
 spec s = Spec.describe s "Pawl.Codec.ExiledWith" $ do
-  Spec.it s "AnyExiled" $
+  Spec.it s "ExiledAsItEntered" $
     Common.assertCodec
       s
       ExiledWith.codec
-      ExiledWith.AnyExiled
-      " {\"type\":\"AnyExiled\"} "
+      ExiledWith.ExiledAsItEntered
+      " {\"type\":\"ExiledAsItEntered\"} "
   Spec.it s "round trips every constructor" $ Common.assertEnumCodec s ExiledWith.codec
   Spec.it s "has a schema" $
     Common.assertHasSchema s ExiledWith.codec
