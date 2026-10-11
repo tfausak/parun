@@ -76,6 +76,13 @@
                       "ref": {
                         "type": "ChosenCardFromAmong",
                         "value": {
+                          "count": {
+                            "type": "UpTo",
+                            "value": {
+                              "type": "Literal",
+                              "value": 1
+                            }
+                          },
                           "filter": {
                             "type": "Or",
                             "value": [
