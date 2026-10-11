@@ -3349,8 +3349,9 @@ effectIsImpossible resolving source controller legal gs effect = case effect of
   -- CR 701.12f: an exchange with an empty zone still happens.
   Effect.ExchangeZones {} -> False
   -- CR 701.12a: either side naming nothing it can exchange stops both -- a
-  -- source that has left the battlefield is gone (CR 400.7), and a hand holding
-  -- no card the filter admits offers nothing to exchange it with (CR 702.65b).
+  -- source that has left the battlefield or phased out is not exchangeable,
+  -- and a hand holding no card the filter admits offers nothing to exchange it
+  -- with (CR 702.65b).
   Effect.ExchangeCardZones (ExchangeCardZones.MkExchangeCardZones one other) -> any (\ref -> choosesFromNothing ref || namesOnlyTheGone ref) [one, other]
   Effect.SetLifeTotal {} -> False
   -- CR 608.2d: never impossible. Every player the reference can name is one
@@ -3619,10 +3620,10 @@ effectIsImpossible resolving source controller legal gs effect = case effect of
         mustPick count && maybe False (null . matchingFromAmong legal resolving controller source gs filter_) (fromAmongBound slot)
       ObjectRef.ChosenPermanents (ChosenPermanents.MkChosenPermanents filter_ _ count) -> mustPick count && null (battlefieldMatching legal resolving controller source gs filter_)
       _ -> False
-    -- A read that names objects, none of them still in the game (CR 400.7).
+    -- A read that names objects, none of them exchangeable.
     namesOnlyTheGone ref =
       let named = objectRefObjects legal resolving controller source gs ref
-       in not (null named) && all (\oid -> Maybe.isNothing (Game.lookupObject oid gs)) named
+       in not (null named) && not (any (`exchangeable` gs) named)
     positive quantity = maybe False (> 0) (Quantity.evaluateFor viewOf context gs resolving source quantity)
     -- An exact count of at least one; "up to" is satisfied by the empty answer.
     mustPick count = case count of
@@ -3635,6 +3636,14 @@ effectIsImpossible resolving source controller legal gs effect = case effect of
       Nothing
         | Map.member slot legal -> Just (Maybe.mapMaybe Recipient.objectOf (legalMany slot legal))
         | otherwise -> fmap (: []) (slotOne slot resolving gs)
+
+-- Whether an exchange of zones (CR 701.12d) can take this object: it is still
+-- in the game (CR 400.7) and not phased out, which CR 702.26b treats as though
+-- it doesn't exist. Shared by the ExchangeCardZones arm and effectIsImpossible,
+-- so the offer and the exchange cannot disagree. Pawl.AuraSpec's "CR 702.26b"
+-- AuraSwap case is the proof.
+exchangeable :: ObjectId -> GameState -> Bool
+exchangeable oid gs = Maybe.isJust (Game.lookupObject oid gs) && not (Phasing.isPhasedOut oid gs)
 
 -- CR 122.5's first and fourth impossibilities for one pair: the two objects
 -- differ and both are on the battlefield. Shared by the MoveCounters arm and
@@ -5364,8 +5373,9 @@ applyOneEffect runSubgame resolving source controller legal chosen effect = case
             exchanging
     Monad.void (Event.changeZonesTogether moves)
   -- CR 701.12d: the one card each ref names exchange zones, each going where
-  -- the other was. `other` is asked only once `one` has named a card still in
-  -- the game, so a source that has left (CR 400.7) asks nobody. The aura swap's
+  -- the other was. `other` is asked only once `one` has named a card
+  -- `exchangeable` admits, so a source that has left (CR 400.7) or phased out
+  -- (CR 702.26b) asks nobody. The aura swap's
   -- hand card is chosen from every card the filter admits, not only those that
   -- could enchant the host: an unattachable pick is a legal choice whose result
   -- is nothing (Arcanum Wings ruling, 2007-05-01, and CR 702.65b).
@@ -5399,7 +5409,7 @@ applyOneEffect runSubgame resolving source controller legal chosen effect = case
     ones <- askingObjects resolving source controller legal chosen one
     current <- State.get
     case ListUtils.nubOrd ones of
-      [a] | Maybe.isJust (Game.lookupObject a current) -> do
+      [a] | exchangeable a current -> do
         others <- askingObjects resolving source controller legal chosen other
         before <- State.get
         let -- What `card` enters with in place of `left`: Nothing when it
@@ -5425,6 +5435,7 @@ applyOneEffect runSubgame resolving source controller legal chosen effect = case
         case ListUtils.nubOrd others of
           [b]
             | a /= b,
+              exchangeable b before,
               Just zoneA <- zoneOf a,
               Just zoneB <- zoneOf b,
               zoneA /= zoneB,

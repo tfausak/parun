@@ -3891,6 +3891,30 @@ auraSwapSpec s registry =
               Spec.assertEqWith s "nobody was asked anything as the ability resolved" responses []
               Spec.assertEqWith s "Pacifism and Wild Growth are both still in alice's hand" (List.sort (handNames S.alice after)) (sorted ["Pacifism", "Wild Growth"])
             _ -> Spec.assertFailure s "Arcanum Wings has not exactly one ability"
+        -- CR 702.26b: Clever Concealment ({2}{W}{W} instant, convoke, "Any
+        -- number of target nonland permanents you control phase out.") in
+        -- response, on the Wings alone. A phased-out permanent is treated as
+        -- though it doesn't exist, so there is no permanent to exchange, though
+        -- its host is still there to take Pacifism.
+        Spec.it s "CR 702.26b an aura swap whose Wings have phased out asks nothing and exchanges nothing" $ do
+          (pikerId, wolvesId, wingsId, pacifismId, _, board) <- auraSwapBoard s registry S.alice
+          plains <- S.printingOf s registry "Plains"
+          concealment <- S.printingOf s registry "Clever Concealment"
+          let (concealmentId, gs) = S.addHandCard concealment S.alice (S.landsFor plains S.alice 4 board)
+              concealing :: Prompt.Prompt r -> r
+              concealing p = case p of
+                Prompt.ChooseTargets _ _ _ offers -> fmap (Set.filter ((== Just wingsId) . Recipient.objectOf) . snd) offers
+                _ -> answer pacifismId wolvesId p
+          case Projection.abilitiesOf wingsId gs of
+            [ability] -> do
+              let activated = S.runPure concealing gs (Activate.activateAbility S.alice wingsId ability)
+                  phased = S.runPure concealing activated {GameState.priority = Just S.alice} (S.cast S.alice concealmentId >> Stack.resolveTop)
+                  ((_, after), responses) = Replay.record (answer pacifismId wolvesId) phased Stack.resolveTop
+              Spec.assertEqWith s "Pacifism and Wild Growth are both still in alice's hand" (List.sort (handNames S.alice after)) (sorted ["Pacifism", "Wild Growth"])
+              Spec.assertEqWith s "the Wings, phased out, still enchant the Piker" (hostOf wingsId after) (Just pikerId)
+              Spec.assertEqWith s "nobody was asked anything as the ability resolved" responses []
+              Spec.assertBool s (Map.member wingsId (GameState.phasedOut phased) && Set.member pikerId (GameState.battlefield phased)) "the Wings alone had phased out before the swap resolved"
+            _ -> Spec.assertFailure s "Arcanum Wings has not exactly one ability"
         -- CR 612.1 through the MINT: rule 702.65a's own "an Aura card", changed
         -- by Synthetic Enchanted Evolution. Aura -> Background reaches the Wings'
         -- type line too, so CR 704.5p detaches them, and the swap must offer the
