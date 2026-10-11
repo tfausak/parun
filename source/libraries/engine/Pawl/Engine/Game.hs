@@ -188,8 +188,8 @@ beingCast gs candidate = case lookupObject candidate gs of
 -- characteristics. Asked of the zone too, so a card that leaves the hand
 -- leaves the mark behind with its old id (CR 400.7).
 --
--- Not implemented: CR 708.5's "you can't look at face-down cards in any other
--- zone" -- a prompt still names the card to its owner (#1412).
+-- Pawl.Engine.Visibility.sees answers CR 708.5's who-may-look. Not
+-- implemented: a prompt still names the card to its owner (#1412).
 keptFaceDown :: ObjectId -> GameState -> Bool
 keptFaceDown oid gs =
   maybe False (Map.member oid) (GameState.keptFaceDown gs)

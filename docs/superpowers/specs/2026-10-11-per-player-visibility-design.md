@@ -184,6 +184,9 @@ for the audience; CR 400.2's zone classification never changes. The omitted
 clauses in those cards' JSON are restored. CR 401.5's "the new top card isn't
 revealed until the spell becomes cast" is elided under a new issue.
 
+`Visible` wins and no term can veto, so the hand-revealed term must itself
+exclude a card CR 121.8 keeps face down in hand (`Game.keptFaceDown`).
+
 Proof: Sen Triplets (a card in bob's hand gains alice in `Seers`), Fblthp
 (bob's top card: bob alone), Garruk's Horde (everyone).
 

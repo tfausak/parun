@@ -3,7 +3,6 @@
 module Pawl.Engine.Visibility where
 
 import qualified Data.Map as Map
-import qualified Data.Set as Set
 import qualified Pawl.Engine.Decide as Decide
 import qualified Pawl.Engine.Exile as Exile
 import qualified Pawl.Engine.Game as Game
@@ -22,10 +21,9 @@ import qualified Pawl.Types.Zone as Zone
 -- outside the game (CR 400.11) is seen by its owner alone, never through
 -- control.
 sees :: PlayerId -> ObjectId -> GameState.GameState -> Visibility.Visibility
-sees pid oid gs =
-  if Set.member oid (GameState.outsideCopies gs)
-    then base pid oid gs
-    else foldMap (\seat -> base seat oid gs) (pid : controlledBy pid gs)
+sees pid oid gs = case Game.zoneOf oid gs of
+  Nothing -> base pid oid gs
+  Just _ -> foldMap (\seat -> base seat oid gs) (pid : controlledBy pid gs)
 
 -- | CR 723.5: the players whose decisions this player makes, by the reading
 -- Pawl.Engine.Decide.deciderFor makes, so a dormant row waiting for its spell
@@ -41,7 +39,8 @@ controlledBy pid gs =
 -- One player's own sight, before CR 723.4.
 --
 -- Not implemented: a card in an Attraction, planar or scheme deck is face down
--- (CR 314.6, 701.31b, 729.5a) but answers here as its facing does (#4990).
+-- (CR 314.6, 701.31b, 701.51b, 729.5a) but answers here as its facing does
+-- (#4990).
 base :: PlayerId -> ObjectId -> GameState.GameState -> Visibility.Visibility
 base pid oid gs = case Game.lookupObject oid gs of
   Nothing -> Visibility.Obscured

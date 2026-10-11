@@ -805,6 +805,7 @@ import qualified Pawl.UntapRestrictionSpec
 import qualified Pawl.Uri.FragmentSpec
 import qualified Pawl.VanguardSpec
 import qualified Pawl.VariableEffectSpec
+import qualified Pawl.VisibilitySpec
 import qualified Pawl.VoteSpec
 import qualified Pawl.ZoneChangeSpec
 import qualified Pawl.ZoneReplacementSpec
@@ -1676,6 +1677,7 @@ spec s registry = do
   Pawl.PlanechaseSpec.spec s registry
   Pawl.ArchenemySpec.spec s registry
   Pawl.VariableEffectSpec.spec s registry
+  Pawl.VisibilitySpec.spec s registry
   Pawl.VoteSpec.spec s registry
   Pawl.ZoneChangeSpec.spec s registry
   Pawl.ZoneReplacementSpec.spec s registry

@@ -6032,8 +6032,8 @@ applyOneEffect runSubgame resolving source controller legal chosen effect = case
     -- binding, and an empty library binds nothing. No event: a public
     -- GameEvent.Revealed would be a different rule (CR 701.20a).
     --
-    -- Not implemented: rule 701.20e shows the cards to one player, and pawl has
-    -- no per-player view to show them in (#1412), so WHO looks is not carried.
+    -- Not implemented: rule 701.20e shows the cards to one player, and nothing
+    -- records who looks (#4391).
     --
     -- The one PROMPT this arm raises is CR 608.2d's, not rule 701.20e's: Word of
     -- Command's "look at target opponent's hand and CHOOSE a card from it" names

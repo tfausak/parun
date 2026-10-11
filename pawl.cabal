@@ -1985,6 +1985,7 @@ library test
     Pawl.UntapRestrictionSpec
     Pawl.VanguardSpec
     Pawl.VariableEffectSpec
+    Pawl.VisibilitySpec
     Pawl.VoteSpec
     Pawl.ZoneChangeSpec
     Pawl.ZoneReplacementSpec
