@@ -1,0 +1,60 @@
+{
+  "description": "CR 701.3a / 707.2: a Phyrexian Metamorph copying Bruna, Light of Alabaster gathers Auras onto itself, not onto the Bruna it copied, as it blocks",
+  "note": "The Metamorph copies bob's Bruna on alice's turn and blocks on bob's, so the block half of the trigger is the one exercised. Seton's Desire moves off alice's Piker and Unholy Strength comes from her hand, both onto the Metamorph; bob's Bruna, the source the copy was made from, gets neither.",
+  "board": {
+    "active": "alice",
+    "step": "PrecombatMain",
+    "seats": [
+      {
+        "name": "alice",
+        "battlefield": [
+          { "card": "Island", "label": "i1" },
+          { "card": "Island", "label": "i2" },
+          { "card": "Island", "label": "i3" },
+          { "card": "Goblin Piker", "label": "piker" },
+          { "card": "Seton's Desire", "label": "desire", "attached": "piker" }
+        ],
+        "hand": [
+          { "card": "Phyrexian Metamorph", "label": "morph" },
+          { "card": "Unholy Strength", "label": "unholy" }
+        ],
+        "library": [{ "card": "Forest" }, { "card": "Forest" }]
+      },
+      {
+        "name": "bob",
+        "battlefield": [
+          { "card": "Bruna, Light of Alabaster", "label": "bob-bruna", "ready": true },
+          { "card": "Goblin Piker", "label": "bob-piker", "ready": true }
+        ],
+        "library": [{ "card": "Forest" }, { "card": "Forest" }]
+      }
+    ]
+  },
+  "timeline": [
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": { "Cast": { "object": "$morph", "mana": ["$i1", "$i2", "$i3"] } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass" },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": { "ChooseCopyTarget": "$bob-bruna" } },
+    { "turn": 2, "step": "DeclareAttackers", "player": "bob", "do": { "Attack": ["$bob-piker"] } },
+    { "turn": 2, "step": "DeclareBlockers", "player": "alice", "do": { "Block": { "Phyrexian Metamorph": ["$bob-piker"] } } },
+    { "turn": 2, "step": "DeclareBlockers", "player": "alice", "do": { "ChooseOptional": { "type": "Exercises" } } },
+    {
+      "turn": 2,
+      "step": "DeclareBlockers",
+      "player": "alice",
+      "do": { "Answer": { "prompt": "ChooseLoopMembers", "with": [["Object", "$desire"]] } }
+    },
+    { "turn": 2, "step": "DeclareBlockers", "player": "alice", "do": { "ChooseOptional": { "type": "Exercises" } } },
+    {
+      "turn": 2,
+      "step": "DeclareBlockers",
+      "player": "alice",
+      "do": { "Answer": { "prompt": "ChooseSearchZones", "with": [{ "type": "Graveyard" }, { "type": "Hand" }] } }
+    },
+    { "turn": 2, "step": "DeclareBlockers", "player": "alice", "do": { "Answer": { "prompt": "Search", "with": ["$unholy"] } } },
+    { "turn": 2, "step": "EndOfCombat", "player": "alice", "check": { "View": { "of": "AttachedTo", "object": "$desire", "is": "Phyrexian Metamorph" } } },
+    { "turn": 2, "step": "EndOfCombat", "player": "alice", "check": { "View": { "of": "AttachedTo", "object": "Unholy Strength", "is": "Phyrexian Metamorph" } } },
+    { "turn": 2, "step": "EndOfCombat", "player": "alice", "check": { "PowerToughness": { "object": "Phyrexian Metamorph", "power": 9, "toughness": 8 } } },
+    { "turn": 2, "step": "EndOfCombat", "player": "alice", "check": { "PowerToughness": { "object": "$bob-bruna", "power": 5, "toughness": 5 } } },
+    { "turn": 2, "step": "EndOfCombat", "player": "alice", "check": { "Count": { "player": "bob", "zone": "Graveyard", "card": "Goblin Piker", "count": 1 } } }
+  ]
+}

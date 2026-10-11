@@ -1,0 +1,46 @@
+{
+  "description": "CR 701.23a whole card: Ancient Vendetta's \"up to four\" lets alice leave the named cards in bob's public graveyard, and its \"and\" searches all three zones without asking which",
+  "note": "Two Chromatic Stars sit in bob's graveyard, a public zone, so only the card's own \"up to\" lets alice decline them; she takes the one in his hand alone. No ChooseSearchZones is scheduled, so a zone prompt would fail the run, and bob's library is shuffled because the card says so whatever was found there.",
+  "board": {
+    "active": "alice",
+    "step": "PrecombatMain",
+    "seats": [
+      {
+        "name": "alice",
+        "battlefield": [
+          { "card": "Swamp", "label": "swamp-1" },
+          { "card": "Swamp", "label": "swamp-2" },
+          { "card": "Swamp", "label": "swamp-3" },
+          { "card": "Swamp", "label": "swamp-4" }
+        ],
+        "hand": [{ "card": "Ancient Vendetta", "label": "vendetta" }]
+      },
+      {
+        "name": "bob",
+        "graveyard": [
+          { "card": "Chromatic Star", "label": "star-graveyard" },
+          { "card": "Chromatic Star", "label": "star-graveyard-2" }
+        ],
+        "hand": [{ "card": "Chromatic Star", "label": "star-hand" }],
+        "library": [{ "card": "Crucible of Worlds", "label": "crucible" }]
+      }
+    ]
+  },
+  "timeline": [
+    {
+      "turn": 1,
+      "step": "PrecombatMain",
+      "player": "alice",
+      "do": { "Cast": { "object": "$vendetta", "targets": ["$bob"], "mana": ["$swamp-1", "$swamp-2", "$swamp-3", "$swamp-4"] } }
+    },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass" },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": { "Answer": { "prompt": "ChooseCardName", "with": "Chromatic Star" } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": { "Answer": { "prompt": "Search", "with": ["$star-hand"] } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": { "Answer": { "prompt": "Shuffle", "with": ["$crucible"] } } }
+  ],
+  "final": [
+    { "View": { "of": "Zone", "player": "bob", "zone": "Graveyard", "is": ["$star-graveyard", "$star-graveyard-2"] } },
+    { "View": { "of": "Zone", "player": "bob", "zone": "Hand", "is": [] } },
+    { "Count": { "player": "bob", "zone": "Exile", "card": "Chromatic Star", "count": 1 } }
+  ]
+}

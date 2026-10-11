@@ -38,16 +38,17 @@ spec s = Spec.describe s "Pawl.Codec.Search" $ do
             Search.subject = Nothing,
             Search.slot = Just (SlotName.MkSlotName (Text.pack "found")),
             Search.differentIn = Set.fromList [DifferentIn.Names, DifferentIn.Powers],
-            Search.exactly = True
+            Search.exactly = True,
+            Search.andOr = True
           }
       )
-      " {\"searcher\":{\"type\":\"Relative\",\"value\":{\"type\":\"You\"}},\"owner\":{\"type\":\"InSlot\",\"value\":\"player\"},\"zones\":[{\"type\":\"Library\"},{\"type\":\"Graveyard\"}],\"outsideTheGame\":true,\"quantity\":{\"type\":\"Literal\",\"value\":1},\"filter\":{\"type\":\"HasCardType\",\"value\":{\"type\":\"Land\"}},\"upTo\":true,\"destination\":{\"type\":\"BattlefieldTapped\"},\"slot\":\"found\",\"differentIn\":[{\"type\":\"Names\"},{\"type\":\"Powers\"}],\"exactly\":true} "
+      " {\"searcher\":{\"type\":\"Relative\",\"value\":{\"type\":\"You\"}},\"owner\":{\"type\":\"InSlot\",\"value\":\"player\"},\"zones\":[{\"type\":\"Library\"},{\"type\":\"Graveyard\"}],\"outsideTheGame\":true,\"andOr\":true,\"quantity\":{\"type\":\"Literal\",\"value\":1},\"filter\":{\"type\":\"HasCardType\",\"value\":{\"type\":\"Land\"}},\"upTo\":true,\"destination\":{\"type\":\"BattlefieldTapped\"},\"slot\":\"found\",\"differentIn\":[{\"type\":\"Names\"},{\"type\":\"Powers\"}],\"exactly\":true} "
   -- The other reading of the same count: no "upTo" key means the quantity is a
   -- quota. Paired with the case above so each key's absence is asserted, not
   -- just its presence -- a required key would have made every card file
   -- rewrite. "zones" is the same shape: absent means the library alone, which is
   -- what every card file written before Delivery Moogle says.
-  Spec.it s "an absent upTo, zones, outsideTheGame, differentIn and exactly take their defaults and are not written back" $
+  Spec.it s "an absent upTo, zones, outsideTheGame, andOr, differentIn and exactly take their defaults and are not written back" $
     Common.assertCodec
       s
       Search.codec
@@ -63,7 +64,8 @@ spec s = Spec.describe s "Pawl.Codec.Search" $ do
             Search.subject = Nothing,
             Search.slot = Nothing,
             Search.differentIn = Set.empty,
-            Search.exactly = False
+            Search.exactly = False,
+            Search.andOr = False
           }
       )
       " {\"searcher\":{\"type\":\"Relative\",\"value\":{\"type\":\"You\"}},\"owner\":{\"type\":\"Relative\",\"value\":{\"type\":\"You\"}},\"quantity\":{\"type\":\"Literal\",\"value\":1},\"filter\":{\"type\":\"HasCardType\",\"value\":{\"type\":\"Land\"}},\"destination\":{\"type\":\"BattlefieldTapped\"}} "
@@ -87,7 +89,8 @@ spec s = Spec.describe s "Pawl.Codec.Search" $ do
             Search.subject = Nothing,
             Search.slot = Nothing,
             Search.differentIn = Set.empty,
-            Search.exactly = False
+            Search.exactly = False,
+            Search.andOr = False
           }
       )
       " {\"searcher\":{\"type\":\"Relative\",\"value\":{\"type\":\"You\"}},\"owner\":{\"type\":\"Relative\",\"value\":{\"type\":\"You\"}},\"quantity\":null,\"filter\":{\"type\":\"HasCardType\",\"value\":{\"type\":\"Land\"}},\"destination\":{\"type\":\"Exile\"}} "

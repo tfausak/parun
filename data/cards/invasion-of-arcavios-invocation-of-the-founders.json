@@ -42,6 +42,7 @@
                       {
                         "type": "Search",
                         "value": {
+                          "andOr": true,
                           "destination": {
                             "type": "RevealThenHand"
                           },

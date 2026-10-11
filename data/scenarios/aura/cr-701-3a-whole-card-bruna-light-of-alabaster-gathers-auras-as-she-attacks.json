@@ -1,0 +1,71 @@
+{
+  "description": "CR 701.3a whole card: Bruna, Light of Alabaster gathers chosen Auras from the battlefield, her graveyard and her hand as she attacks",
+  "note": "Bob's Unholy Strength separates Auras on the battlefield from Auras alice controls, and keeps bob as its controller (CR 303.4e). Wild Growth is chosen but enchants land, so it stays on the Forest (CR 303.4j). Seton's Desire is offered but not chosen. Consecrate Land in hand cannot enchant Bruna and the Pacifism in the library is in no zone the card names, so neither is offered to the search; the graveyard's Pacifism is offered and left.",
+  "board": {
+    "active": "alice",
+    "step": "BeginningOfCombat",
+    "seats": [
+      {
+        "name": "alice",
+        "battlefield": [
+          { "card": "Bruna, Light of Alabaster", "label": "bruna", "ready": true },
+          { "card": "Forest", "label": "forest" },
+          { "card": "Wild Growth", "label": "wild-growth", "attached": "forest" },
+          { "card": "Goblin Piker", "label": "piker" },
+          { "card": "Seton's Desire", "label": "desire", "attached": "piker" }
+        ],
+        "hand": [
+          { "card": "Lure", "label": "lure" },
+          { "card": "Consecrate Land", "label": "consecrate" }
+        ],
+        "graveyard": [
+          { "card": "Shattered Ego", "label": "ego" },
+          { "card": "Pacifism", "label": "pacifism" }
+        ],
+        "library": [
+          { "card": "Pacifism", "label": "library-pacifism" }
+        ]
+      },
+      {
+        "name": "bob",
+        "battlefield": [
+          { "card": "Goblin Piker", "label": "bob-piker" },
+          { "card": "Unholy Strength", "label": "unholy", "attached": "bob-piker" }
+        ]
+      }
+    ]
+  },
+  "timeline": [
+    { "turn": 1, "step": "DeclareAttackers", "player": "alice", "do": { "Attack": ["$bruna"] } },
+    { "turn": 1, "step": "DeclareAttackers", "player": "alice", "do": { "ChooseOptional": { "type": "Exercises" } } },
+    {
+      "turn": 1,
+      "step": "DeclareAttackers",
+      "player": "alice",
+      "do": { "Answer": { "prompt": "ChooseLoopMembers", "with": [["Object", "$unholy"], ["Object", "$wild-growth"]] } }
+    },
+    { "turn": 1, "step": "DeclareAttackers", "player": "alice", "do": { "ChooseOptional": { "type": "Exercises" } } },
+    {
+      "turn": 1,
+      "step": "DeclareAttackers",
+      "player": "alice",
+      "do": { "Answer": { "prompt": "ChooseSearchZones", "with": [{ "type": "Graveyard" }, { "type": "Hand" }] } }
+    },
+    { "turn": 1, "step": "DeclareAttackers", "player": "alice", "refuse": { "Answer": { "prompt": "Search", "with": ["$consecrate"] } } },
+    { "turn": 1, "step": "DeclareAttackers", "player": "alice", "refuse": { "Answer": { "prompt": "Search", "with": ["$library-pacifism"] } } },
+    { "turn": 1, "step": "DeclareAttackers", "player": "alice", "do": { "Answer": { "prompt": "Search", "with": ["$lure", "$ego"] } } },
+    { "turn": 1, "step": "DeclareBlockers", "player": "bob", "do": { "Block": {} } },
+    { "turn": 1, "step": "DeclareBlockers", "player": "alice", "check": { "View": { "of": "AttachedTo", "object": "$unholy", "is": "$bruna" } } },
+    { "turn": 1, "step": "DeclareBlockers", "player": "alice", "check": { "View": { "of": "Controller", "object": "$unholy", "is": "bob" } } },
+    { "turn": 1, "step": "DeclareBlockers", "player": "alice", "check": { "View": { "of": "AttachedTo", "object": "$wild-growth", "is": "$forest" } } },
+    { "turn": 1, "step": "DeclareBlockers", "player": "alice", "check": { "View": { "of": "AttachedTo", "object": "$desire", "is": "$piker" } } },
+    { "turn": 1, "step": "DeclareBlockers", "player": "alice", "check": { "View": { "of": "AttachedTo", "object": "Lure", "is": "$bruna" } } },
+    { "turn": 1, "step": "DeclareBlockers", "player": "alice", "check": { "View": { "of": "AttachedTo", "object": "Shattered Ego", "is": "$bruna" } } },
+    { "turn": 1, "step": "DeclareBlockers", "player": "alice", "check": { "View": { "of": "Controller", "object": "Lure", "is": "alice" } } },
+    { "turn": 1, "step": "DeclareBlockers", "player": "alice", "check": { "PowerToughness": { "object": "$bruna", "power": 4, "toughness": 6 } } },
+    { "turn": 1, "step": "DeclareBlockers", "player": "alice", "check": { "View": { "of": "Zone", "player": "alice", "zone": "Hand", "is": ["$consecrate"] } } },
+    { "turn": 1, "step": "DeclareBlockers", "player": "alice", "check": { "View": { "of": "Zone", "player": "alice", "zone": "Graveyard", "is": ["$pacifism"] } } },
+    { "turn": 1, "step": "DeclareBlockers", "player": "alice", "check": { "View": { "of": "Zone", "player": "alice", "zone": "Library", "is": ["$library-pacifism"] } } },
+    { "turn": 1, "step": "EndOfCombat", "player": "alice", "check": { "Life": { "player": "bob", "life": 16 } } }
+  ]
+}

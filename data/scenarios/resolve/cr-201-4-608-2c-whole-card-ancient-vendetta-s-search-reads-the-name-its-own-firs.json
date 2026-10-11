@@ -101,27 +101,6 @@
       "player": "alice",
       "do": {
         "Answer": {
-          "prompt": "ChooseSearchZones",
-          "with": [
-            {
-              "type": "Graveyard"
-            },
-            {
-              "type": "Hand"
-            },
-            {
-              "type": "Library"
-            }
-          ]
-        }
-      }
-    },
-    {
-      "turn": 1,
-      "step": "PrecombatMain",
-      "player": "alice",
-      "do": {
-        "Answer": {
           "prompt": "Search",
           "with": [
             "$star-graveyard",

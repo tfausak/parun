@@ -226,7 +226,7 @@ attachmentWith equippable src destination gs
 -- skipped.
 --
 -- The subtype, the CR 303.4d creature test and the enchant ability are all read
--- off `src`, which is a card in the library and is very much still there; only
+-- off `src`, which is a card in a searched zone and is very much still there; only
 -- the HOST is read through rule 608.2h. So this is attachmentFor's Aura branch
 -- with its last step -- membership of a live slot's candidate set -- replaced by
 -- Target.lastKnownAdmits, which asks the same slot the same question about an
