@@ -5,6 +5,7 @@ import qualified Data.Text as Text
 import qualified Pawl.Codec.PlayerEffect as PlayerEffect
 import qualified Pawl.JsonCodec.Common as Common
 import qualified Pawl.Spec as Spec
+import qualified Pawl.Types.Audience as Audience
 import qualified Pawl.Types.CantSearchLibraries as CantSearchLibraries
 import qualified Pawl.Types.CardName as CardName
 import qualified Pawl.Types.CardType as CardType
@@ -33,6 +34,8 @@ import qualified Pawl.Types.PlayerRelation as PlayerRelation
 import qualified Pawl.Types.PlayerScope as PlayerScope
 import qualified Pawl.Types.PlotFromZone as PlotFromZone
 import qualified Pawl.Types.RollModifier as RollModifier
+import qualified Pawl.Types.ShownCards as ShownCards
+import qualified Pawl.Types.Shows as Shows
 import qualified Pawl.Types.SlotName as SlotName
 import qualified Pawl.Types.SpendManaAsThough as SpendManaAsThough
 import qualified Pawl.Types.StatedFlip as StatedFlip
@@ -487,4 +490,11 @@ spec s = Spec.describe s "Pawl.Codec.PlayerEffect" $ do
       PlayerEffect.codec
       PlayerEffect.CantLoseLife
       " {\"type\":\"CantLoseLife\"} "
+  -- CR 400.2, a revealed hand.
+  Spec.it s "Shows, a hand to every player" $
+    Common.assertCodec
+      s
+      PlayerEffect.codec
+      (PlayerEffect.Shows (Shows.MkShows ShownCards.Hand Audience.Everyone))
+      " {\"type\":\"Shows\",\"value\":{\"cards\":{\"type\":\"Hand\"},\"to\":{\"type\":\"Everyone\"}}} "
   Spec.it s "has a schema" $ Common.assertHasSchema s PlayerEffect.codec

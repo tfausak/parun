@@ -207,6 +207,8 @@ library codec
     Pawl.Codec.AttackTargetRef
     Pawl.Codec.AttackTargetRefSpec
     Pawl.Codec.AttackTargetSpec
+    Pawl.Codec.Audience
+    Pawl.Codec.AudienceSpec
     Pawl.Codec.Backup
     Pawl.Codec.BackupSpec
     Pawl.Codec.BattlefieldCandidate
@@ -1201,6 +1203,10 @@ library codec
     Pawl.Codec.SetOwner
     Pawl.Codec.SetPowerToughness
     Pawl.Codec.SetPowerToughnessSpec
+    Pawl.Codec.ShownCards
+    Pawl.Codec.ShownCardsSpec
+    Pawl.Codec.Shows
+    Pawl.Codec.ShowsSpec
     Pawl.Codec.ShuffleIntoLibrary
     Pawl.Codec.ShuffleIntoLibrarySpec
     Pawl.Codec.Sickness
@@ -2075,6 +2081,7 @@ library types
     Pawl.Types.AttackTarget
     Pawl.Types.AttackTargetKind
     Pawl.Types.AttackTargetRef
+    Pawl.Types.Audience
     Pawl.Types.Backup
     Pawl.Types.BattlefieldCandidate
     Pawl.Types.BecameAttached
@@ -2645,6 +2652,8 @@ library types
     Pawl.Types.SetHalfLocked
     Pawl.Types.SetOwner
     Pawl.Types.SetPowerToughness
+    Pawl.Types.ShownCards
+    Pawl.Types.Shows
     Pawl.Types.ShuffleIntoLibrary
     Pawl.Types.Sickness
     Pawl.Types.SkipNextPhase
