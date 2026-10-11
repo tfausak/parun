@@ -1239,7 +1239,7 @@ forecastBoard piker plains stance active phase =
    in (stanceId, pikerId, g5 {GameState.activePlayer = active, GameState.phase = phase, GameState.priority = Just S.alice, GameState.remaining = Seq.empty})
 
 -- CR 702.57: forecast. The ability is PRINTED, stamped Keyword.Forecast, and the
--- keyword supplies the rest: CR 702.57a's hand (Keyword.printedZone) and CR
+-- keyword supplies the rest: CR 702.57a's hand (Keyword.statedZones) and CR
 -- 702.57b's two riders (Keyword.printedRiders).
 --
 -- Steeling Stance (Dissension) is the producer: "Forecast -- {W}, Reveal this

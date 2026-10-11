@@ -2101,7 +2101,7 @@ combineLoyalty components = case break numbered components of
 
 -- CR 113.6m's COST half: an ability whose cost moves the object it's on out of a
 -- particular zone functions only in that zone. The "or effect" half is
--- Pawl.Engine.EffectZone, and Activatable.zoneFunctionedFrom joins them.
+-- Pawl.Engine.EffectZone, and Activatable.zonesFunctionedIn joins them.
 --
 -- Nothing means the cost names no zone, leaving the effect half to answer and CR
 -- 113.6's battlefield default otherwise -- SacrificeThis' answer too, CR 701.21a

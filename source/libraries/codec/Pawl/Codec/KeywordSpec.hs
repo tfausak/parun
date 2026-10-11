@@ -32,6 +32,8 @@ import qualified Pawl.Types.ManaSymbol as ManaSymbol
 import qualified Pawl.Types.ManaType as ManaType
 import qualified Pawl.Types.Morph as Morph
 import qualified Pawl.Types.MorphVariant as MorphVariant
+import qualified Pawl.Types.Ninjutsu as Ninjutsu
+import qualified Pawl.Types.NinjutsuVariant as NinjutsuVariant
 import qualified Pawl.Types.PartnerText as PartnerText
 import qualified Pawl.Types.Protection as Protection
 import qualified Pawl.Types.Prototype as Prototype
@@ -549,17 +551,18 @@ spec s = Spec.describe s "Pawl.Codec.Keyword" $ do
       (fortify 3)
       " {\"type\":\"Fortify\",\"value\":{\"mana\":[{\"type\":\"Generic\",\"value\":3}]}} "
     Spec.assertBool s (Codec.encode Keyword.codec (fortify 3) /= Codec.encode Keyword.codec (Keyword.Equip (Equip.MkEquip (Cost.MkCost (Just (ManaCost.MkManaCost [ManaSymbol.Generic 3])) []) Nothing EquipTarget.Creature))) "and is not equip"
-  -- CR 702.49a's payload is a bare Cost, fortify's shape, and the arm is
+  -- CR 702.49a's payload is a cost and CR 702.49d's variant, and the arm is
   -- Arm.tagged: a Keyword constructor ships with no wire format and nothing red
   -- unless a case like this one is written (#1715).
-  Spec.it s "Ninjutsu carries its cost" $ do
-    let ninjutsu n = Keyword.Ninjutsu (Cost.MkCost (Just (ManaCost.MkManaCost [ManaSymbol.Generic n])) [])
+  Spec.it s "Ninjutsu carries its cost and variant" $ do
+    let ninjutsu n variant = Keyword.Ninjutsu (Ninjutsu.MkNinjutsu (Cost.MkCost (Just (ManaCost.MkManaCost [ManaSymbol.Generic n])) []) variant)
     Common.assertCodec
       s
       Keyword.codec
-      (ninjutsu 2)
-      " {\"type\":\"Ninjutsu\",\"value\":{\"mana\":[{\"type\":\"Generic\",\"value\":2}]}} "
-    Spec.assertBool s (Codec.encode Keyword.codec (ninjutsu 2) /= Codec.encode Keyword.codec (ninjutsu 3)) "the cost is part of the encoding"
+      (ninjutsu 2 NinjutsuVariant.Plain)
+      " {\"type\":\"Ninjutsu\",\"value\":{\"cost\":{\"mana\":[{\"type\":\"Generic\",\"value\":2}]},\"variant\":{\"type\":\"Plain\"}}} "
+    Spec.assertBool s (Codec.encode Keyword.codec (ninjutsu 2 NinjutsuVariant.Plain) /= Codec.encode Keyword.codec (ninjutsu 3 NinjutsuVariant.Plain)) "the cost is part of the encoding"
+    Spec.assertBool s (Codec.encode Keyword.codec (ninjutsu 2 NinjutsuVariant.Plain) /= Codec.encode Keyword.codec (ninjutsu 2 NinjutsuVariant.Commander)) "and so is the variant"
   -- CR 702.84a's payload is a Cost, LevelUp's shape below: the cost is the whole of
   -- what the card writes, rule 702.84a supplying the rest of the ability.
   Spec.it s "Unearth carries its cost" $ do

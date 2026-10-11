@@ -5,21 +5,26 @@
         {
           "type": "Ninjutsu",
           "value": {
-            "mana": [
-              {
-                "type": "Generic",
-                "value": 1
-              },
-              {
-                "type": "OfType",
-                "value": {
-                  "type": "Colored",
+            "cost": {
+              "mana": [
+                {
+                  "type": "Generic",
+                  "value": 1
+                },
+                {
+                  "type": "OfType",
                   "value": {
-                    "type": "Blue"
+                    "type": "Colored",
+                    "value": {
+                      "type": "Blue"
+                    }
                   }
                 }
-              }
-            ]
+              ]
+            },
+            "variant": {
+              "type": "Plain"
+            }
           }
         }
       ],

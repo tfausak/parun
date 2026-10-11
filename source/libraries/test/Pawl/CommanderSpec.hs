@@ -82,7 +82,10 @@ import qualified Data.Set as Set
 import qualified Data.Text as Text
 import Numeric.Natural (Natural)
 import qualified Pawl.Engine.Action as Action
+import qualified Pawl.Engine.Activatable as Activatable
+import qualified Pawl.Engine.Activate as Activate
 import qualified Pawl.Engine.Cast as Cast
+import qualified Pawl.Engine.Combat as Combat
 import qualified Pawl.Engine.Commander as Commander
 import qualified Pawl.Engine.Damage as Damage
 import qualified Pawl.Engine.Departure as Departure
@@ -98,8 +101,11 @@ import qualified Pawl.Spec as Spec
 import qualified Pawl.Support as S
 import qualified Pawl.Types.Action as A
 import qualified Pawl.Types.AnyNumberOf as AnyNumberOf
+import qualified Pawl.Types.AttackTarget as AttackTarget
 import qualified Pawl.Types.CardName as CardName
 import qualified Pawl.Types.CardType as CardType
+import qualified Pawl.Types.Combat as Combat.Type
+import qualified Pawl.Types.CombatStep as CombatStep
 import qualified Pawl.Types.CommandZoneDecision as CommandZoneDecision
 import qualified Pawl.Types.CounterKind as CounterKind
 import qualified Pawl.Types.DamageKind as DamageKind
@@ -177,6 +183,7 @@ spec s registry = Spec.describe s "Pawl.Engine.Commander" $ do
   brawlSpec s registry
   subgameSpec s registry
   restartSpec s registry
+  ninjutsuSpec s registry
 
 designationSpec :: (Monad m, Monad n) => Spec.Spec m n -> Registry.Registry m -> n ()
 designationSpec s registry = Spec.describe s "Designation" $ do
@@ -974,6 +981,116 @@ returningOnly oid p = case p of
   Prompt.ReturnCommander _ _ asked -> if asked == oid then CommandZoneDecision.Returns else CommandZoneDecision.Leaves
   Prompt.ChooseCommandZoneOfferFirst {} -> OptionalDecision.Declines
   _ -> S.identityAnswer p
+
+-- CR 702.49d's pool: Yuriko, the Tiger's Shadow -- {1}{U}{B} Legendary Creature
+-- -- Human Ninja 1/3, "Commander ninjutsu {U}{B}" and "Whenever a Ninja you
+-- control deals combat damage to a player, reveal the top card of your library
+-- and put that card into your hand. Each opponent loses life equal to that card's
+-- mana value." Ninja of the Deep Hours, whose ninjutsu is CR 702.49a's plain
+-- one, is the paired control.
+--
+-- Every board: alice attacks bob with two Goblin Pikers and nothing blocks
+-- them, and two Islands and two Swamps pay {U}{B} or Ninja of the Deep Hours'
+-- {1}{U} twice over -- so once one ninjutsu has resolved, a second unblocked
+-- attacker and the mana for a second activation are still there, and only the
+-- zone the ninja is in can withhold it.
+ninjutsuAttack :: (Monad m) => Spec.Spec m n -> Registry.Registry m -> m GameState.GameState
+ninjutsuAttack s registry = do
+  piker <- S.printingOf s registry "Goblin Piker"
+  island <- S.printingOf s registry "Island"
+  swamp <- S.printingOf s registry "Swamp"
+  let (g0, _, _) = S.combatBoardOf [piker, piker] []
+      lands = [island, island, swamp, swamp]
+  pure (List.foldl' (\g land -> snd (S.addPermanent land S.alice g)) g0 lands)
+
+-- The attack declared, and alice holding priority in the declare attackers step,
+-- where an unblocked attacker exists for rule 702.49's cost to return.
+declaredAttack :: GameState.GameState -> GameState.GameState
+declaredAttack gs = (S.runPure S.aggressiveAnswer gs (Combat.declareAttackers S.manaPerformer S.alice)) {GameState.priority = Just S.alice}
+
+-- ninjutsuAttack with `printing` in alice's hand, then moved to `zone` when that
+-- is not the hand. The same road for both cards, so the pair below differs in the
+-- card alone; CR 702.49d asks only where the card is, not whether it is a
+-- commander.
+ninjaIn :: (Monad m) => Spec.Spec m n -> Registry.Registry m -> String -> Zone.Zone -> m (ObjectId.ObjectId, GameState.GameState)
+ninjaIn s registry name zone = do
+  printing <- S.printingOf s registry name
+  board <- ninjutsuAttack s registry
+  let (inHand, g0) = S.addHandCard printing S.alice board
+      moved = if zone == Zone.Hand then g0 else S.runPure S.identityAnswer g0 (Event.changeZone inHand zone)
+      declared = declaredAttack moved
+  case [oid | oid <- Set.toList (Map.keysSet (GameState.objects declared)), fmap Object.zone (Game.lookupObject oid declared) == Just zone, fmap S.nameOf (Game.cardOf oid declared) == Just (S.nameOf (Printing.card printing))] of
+    [oid] -> pure (oid, declared)
+    _ -> Spec.assertFailure s ("setup: expected one " <> name <> " in " <> show zone)
+
+-- Activate the one ninjutsu ability `oid` offers and resolve it; the resolved
+-- board, and the id, name, attack target and tap state of what arrived on the
+-- battlefield.
+ninjutsuIn :: ObjectId.ObjectId -> GameState.GameState -> Maybe (GameState.GameState, [(ObjectId.ObjectId, (Maybe CardName.CardName, Maybe AttackTarget.AttackTarget, Maybe TapState.TapState))])
+ninjutsuIn oid gs = case Activatable.abilitiesFor oid gs of
+  [ability] ->
+    let activated = S.runPure S.aggressiveAnswer gs (Activate.activateAbility S.alice oid ability)
+        resolved = S.runPure S.aggressiveAnswer activated Stack.resolveTop
+        arrived = Set.toList (Set.difference (GameState.battlefield resolved) (GameState.battlefield activated))
+        describe new = (new, (fmap S.nameOf (Game.cardOf new resolved), Map.lookup new (Combat.Type.attackers (GameState.combat resolved)), fmap Object.tapped (Game.lookupObject new resolved)))
+     in Just (resolved, fmap describe arrived)
+  _ -> Nothing
+
+ninjutsuSpec :: (Monad m, Monad n) => Spec.Spec m n -> Registry.Registry m -> n ()
+ninjutsuSpec s registry = Spec.describe s "Commander ninjutsu" $ do
+  -- The real Commander road: Yuriko designated by Setup.createDeck and so started
+  -- in the command zone (CR 903.6), and Shimatsu ({3}{R}, mana value 4) on top
+  -- of alice's library for the combat-damage trigger. The arrival is asserted
+  -- first; the trigger's reveal and life loss follow once combat damage is dealt.
+  Spec.it s "CR 702.49d Yuriko ninjutsus in from the command zone for an unblocked attacker" $ do
+    yuriko <- S.printingOf s registry "Yuriko, the Tiger's Shadow"
+    shimatsu <- S.printingOf s registry "Shimatsu the Bloodcloaked"
+    piker <- S.printingOf s registry "Goblin Piker"
+    board <- ninjutsuAttack s registry
+    let deck = Deck.MkDeck {Deck.cards = Map.empty, Deck.commander = Set.singleton yuriko, Deck.vanguard = Nothing, Deck.dungeons = Set.empty, Deck.sideboard = Map.empty, Deck.conspiracies = Map.empty, Deck.attractions = Map.empty, Deck.planes = Set.empty, Deck.schemes = Map.empty, Deck.stickerSheets = Seq.empty}
+        seated = S.runPure S.identityAnswer board (Setup.createDeck S.alice deck)
+        (_, stocked) = S.addLibraryCard shimatsu S.alice seated
+        gs = declaredAttack stocked
+        yurikoName = S.nameOf (Printing.card yuriko)
+        outcome = case inCommandZone gs of
+          [yurikoId] -> ninjutsuIn yurikoId gs
+          _ -> Nothing
+    Spec.assertEqWith s "CR 702.49d Yuriko entered from the command zone tapped and attacking bob (CR 702.49c)" (fmap (fmap snd . snd) outcome) (Just [(Just yurikoName, Just (AttackTarget.OfPlayer S.bob), Just TapState.Tapped)])
+    case outcome of
+      Just (resolved, [(arrivedId, _)]) -> do
+        -- CR 702.49d's "also functions while the card ... is in the command
+        -- zone" is a hand and a command zone and nothing else: on the
+        -- battlefield, with the second Piker still unblocked and two lands
+        -- still untapped, Yuriko offers no ninjutsu (CR 113.6b).
+        Spec.assertBool s (not (any (isActivationOf arrivedId) (Action.legalActions S.alice resolved))) "CR 113.6b on the battlefield Yuriko offers no commander ninjutsu"
+        Spec.assertEqWith s "and is no longer in the command zone" (commandZoneNames resolved) []
+        Spec.assertEqWith s "one Piker went home to alice's hand" (handNames S.alice resolved) [S.nameOf (Printing.card piker)]
+        let damaged = S.runCombat S.aggressiveAnswer resolved {GameState.phase = Phase.Combat CombatStep.DeclareBlockers, GameState.remaining = S.phasesAfter (Phase.Combat CombatStep.DeclareBlockers)}
+        Spec.assertEqWith s "Yuriko's trigger: bob lost her 1 and the other Piker's 2 combat damage plus Shimatsu's mana value 4" (liftA2 (-) (S.lifeOf S.bob resolved) (S.lifeOf S.bob damaged)) (Just 7)
+        Spec.assertEqWith s "and Shimatsu went to alice's hand beside the Piker" (List.sort (handNames S.alice damaged)) (List.sort [S.nameOf (Printing.card piker), S.nameOf (Printing.card shimatsu)])
+      _ -> Spec.assertFailure s "expected Yuriko alone in the command zone, offering one ability"
+
+  -- The pair: the same road into the command zone for both cards, so the
+  -- variant is the one difference. Plain ninjutsu functions only from a hand (CR
+  -- 702.49a); commander ninjutsu also from the command zone (CR 702.49d).
+  Spec.it s "CR 702.49a plain ninjutsu is not offered from the command zone, where commander ninjutsu is" $ do
+    (ninjaId, ninjaBoard) <- ninjaIn s registry "Ninja of the Deep Hours" Zone.Command
+    (yurikoId, yurikoBoard) <- ninjaIn s registry "Yuriko, the Tiger's Shadow" Zone.Command
+    Spec.assertBool s (any (isActivationOf yurikoId) (Action.legalActions S.alice yurikoBoard)) "CR 702.49d Yuriko's commander ninjutsu is offered from the command zone"
+    Spec.assertBool s (not (any (isActivationOf ninjaId) (Action.legalActions S.alice ninjaBoard))) "CR 702.49a the Ninja's plain ninjutsu is not"
+
+  -- CR 702.49d's "from your hand or the command zone": the hand half still
+  -- works, though the move names no origin.
+  Spec.it s "CR 702.49d commander ninjutsu still functions from a hand" $ do
+    yuriko <- S.printingOf s registry "Yuriko, the Tiger's Shadow"
+    (yurikoId, gs) <- ninjaIn s registry "Yuriko, the Tiger's Shadow" Zone.Hand
+    Spec.assertEqWith s "Yuriko entered from alice's hand tapped and attacking bob" (fmap (fmap snd . snd) (ninjutsuIn yurikoId gs)) (Just [(Just (S.nameOf (Printing.card yuriko)), Just (AttackTarget.OfPlayer S.bob), Just TapState.Tapped)])
+
+-- Is this action an activation of an ability of `oid`?
+isActivationOf :: ObjectId.ObjectId -> A.Action -> Bool
+isActivationOf oid a = case a of
+  A.Activate o _ -> o == oid
+  _ -> False
 
 -- The printed names of the cards in the command zone, in id order. NAMES and not
 -- ids because CR 400.7 makes the object that arrives a different one from the

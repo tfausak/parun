@@ -243,6 +243,7 @@ import qualified Pawl.Types.MoveCounters as MoveCounters
 import qualified Pawl.Types.MoveMana as MoveMana
 import qualified Pawl.Types.MoveToZone as MoveToZone
 import qualified Pawl.Types.MovedKinds as MovedKinds
+import qualified Pawl.Types.Ninjutsu as Ninjutsu
 import Pawl.Types.ObjectId (ObjectId)
 import qualified Pawl.Types.ObjectRef as ObjectRef
 import qualified Pawl.Types.OfferCast as OfferCast
@@ -1674,7 +1675,7 @@ keywordNames asking x = case x of
   Keyword.Soulshift _natural -> False
   Keyword.Splice splice -> spliceNames asking (keywordNames asking) splice
   Keyword.Offering filter_ -> filterNames asking filter_
-  Keyword.Ninjutsu cost -> costNames asking (keywordNames asking) cost
+  Keyword.Ninjutsu (Ninjutsu.MkNinjutsu cost _variant) -> costNames asking (keywordNames asking) cost
   Keyword.Epic -> False
   Keyword.Paradigm -> False
   Keyword.Convoke -> False
