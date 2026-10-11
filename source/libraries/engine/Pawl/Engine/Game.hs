@@ -188,8 +188,8 @@ beingCast gs candidate = case lookupObject candidate gs of
 -- characteristics. Asked of the zone too, so a card that leaves the hand
 -- leaves the mark behind with its old id (CR 400.7).
 --
--- Not implemented: CR 708.5's "you can't look at face-down cards in any other
--- zone" -- a prompt still names the card to its owner (#1412).
+-- Pawl.Engine.Visibility.sees answers CR 708.5's who-may-look. Not
+-- implemented: a prompt still names the card to its owner (#1412).
 keptFaceDown :: ObjectId -> GameState -> Bool
 keptFaceDown oid gs =
   maybe False (Map.member oid) (GameState.keptFaceDown gs)
@@ -1404,9 +1404,9 @@ halvesOf = faceUpCopiable halvesCardOf
 -- Card.faceDownFace.
 --
 -- The object still HAS its card (Object.source), and faceUpFaceOf below is how
--- CR 702.37e reads the morph cost off it. Nothing hides the card from a reader
--- that goes looking, so CR 708.5's "you can't look at face-down permanents
--- controlled by another player" is unimplemented (#1412).
+-- CR 702.37e reads the morph cost off it. Pawl.Engine.Visibility.sees answers
+-- CR 708.5's who-may-look. Not implemented: an answerer is still handed the
+-- printing, which nothing hides from a reader that goes looking (#1412).
 faceOf :: ObjectId -> GameState -> Maybe (Face Card)
 faceOf oid gs = faceOfObject gs =<< lookupLayerOne oid gs
 

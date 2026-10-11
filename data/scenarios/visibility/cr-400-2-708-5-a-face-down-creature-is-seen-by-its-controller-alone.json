@@ -1,0 +1,33 @@
+{
+  "description": "CR 400.2 / 708.5 a face-down creature is seen by its controller alone",
+  "note": "Hand: its owner. Library: nobody. Graveyard: everyone. A face-down creature: its controller, not its owner, until Break Open turns it face up.",
+  "board": {
+    "seats": [
+      { "name": "alice",
+        "battlefield": [ { "card": "Mountain", "label": "m1", "ready": true }, { "card": "Mountain", "label": "m2", "ready": true } ],
+        "hand": [ { "card": "Break Open", "label": "break" } ],
+        "library": [ { "card": "Goblin Piker" } ] },
+      { "name": "bob",
+        "battlefield": [
+          { "card": "Ainok Tracker", "label": "victim", "faceDown": { "type": "Manifested" } },
+          { "card": "Goblin Piker", "label": "stolen", "controller": "alice", "faceDown": { "type": "Manifested" } } ],
+        "hand": [ { "card": "Hill Giant", "label": "b-hand" } ],
+        "graveyard": [ { "card": "Hill Giant", "label": "dead" } ],
+        "library": [ { "card": "Goblin Piker", "label": "b-top" } ] }
+    ],
+    "active": "alice",
+    "step": "PrecombatMain"
+  },
+  "timeline": [
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "check": { "View": { "of": "Seers", "object": "$victim", "is": ["bob"] } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "check": { "View": { "of": "Seers", "object": "$stolen", "is": ["alice"] } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "check": { "View": { "of": "Seers", "object": "$b-hand", "is": ["bob"] } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "check": { "View": { "of": "Seers", "object": "$b-top", "is": [] } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "check": { "View": { "of": "Seers", "object": "$dead", "is": ["alice", "bob"] } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "check": { "View": { "of": "Seers", "object": "$break", "is": ["alice"] } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": { "Cast": { "object": "$break", "targets": ["$victim"], "mana": ["$m1", "$m2"] } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass" },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "check": { "View": { "of": "Stack", "is": [] } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "check": { "View": { "of": "Seers", "object": "$victim", "is": ["alice", "bob"] } } }
+  ]
+}

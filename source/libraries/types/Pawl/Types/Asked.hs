@@ -19,8 +19,9 @@ import qualified Pawl.Types.Prompt as Prompt
 -- the same game as before"; the state answers that and every other question an
 -- interface has to ask about the game it is displaying.
 --
--- The state is the WHOLE state, filtered for nobody: what a given player may
--- see of it is not computed anywhere (#1412). This type makes CR 723.4's split
+-- The state is the WHOLE state, filtered for nobody. Pawl.Engine.Visibility.sees
+-- answers what a given player may see of it; not implemented: nothing redacts
+-- this state by that answer (#1412). This type makes CR 723.4's split
 -- decidable, not enforced.
 --
 -- 'Prompt' is deliberately untouched: it stays the vocabulary of questions, the
