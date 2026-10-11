@@ -17,7 +17,6 @@ import qualified Pawl.Engine.Game as Game
 import qualified Pawl.Engine.NameWords as NameWords
 import qualified Pawl.Engine.Projection as Projection
 import qualified Pawl.Engine.Projection.View as Projection
-import qualified Pawl.Extra.Natural as Natural
 import qualified Pawl.Types.AbilitySticker as AbilitySticker
 import Pawl.Types.Game (Game)
 import qualified Pawl.Types.GameEvent as GameEvent
@@ -30,6 +29,7 @@ import qualified Pawl.Types.PlayerCounterKind as PlayerCounterKind
 import Pawl.Types.PlayerId (PlayerId)
 import qualified Pawl.Types.PowerToughnessSticker as PowerToughnessSticker
 import qualified Pawl.Types.Prompt as Prompt
+import qualified Pawl.Types.StickerContent as StickerContent
 import qualified Pawl.Types.StickerKind as StickerKind
 import qualified Pawl.Types.StickerPlacement as StickerPlacement
 import qualified Pawl.Types.StickerPut as StickerPut
@@ -39,11 +39,10 @@ import qualified Pawl.Types.StickerSheet as StickerSheet
 -- | CR 123.3a: every sticker on one sheet, by position.
 refsOn :: PlayerId -> Natural -> StickerSheet.StickerSheet -> [StickerRef.StickerRef]
 refsOn pid slot sheet =
-  let refs kind n = [StickerRef.MkStickerRef {StickerRef.owner = pid, StickerRef.sheet = slot, StickerRef.kind = kind, StickerRef.index = i} | i <- List.genericTake n [0 :: Natural ..]]
-   in refs StickerKind.Name (Natural.length (StickerSheet.names sheet))
-        <> refs StickerKind.Ability (Natural.length (StickerSheet.abilities sheet))
-        <> refs StickerKind.PowerToughness (Natural.length (StickerSheet.powerToughness sheet))
-        <> refs StickerKind.Art (StickerSheet.art sheet)
+  [ StickerRef.MkStickerRef {StickerRef.owner = pid, StickerRef.sheet = slot, StickerRef.kind = kind, StickerRef.index = i}
+  | kind <- [minBound .. maxBound],
+    i <- takeWhile (Maybe.isJust . Game.sheetContent sheet kind) [0 ..]
+  ]
 
 -- | CR 123.3 / 123.2c: the stickers of these kinds on the player's chosen
 -- sheets that are on no object they own, in any zone.
@@ -67,11 +66,12 @@ available pid kinds gs = case Map.lookup pid (GameState.players gs) of
 -- | CR 123.3c / 107.17a: a sticker's ticket cost, printed on its sheet; a name
 -- or art sticker has none.
 ticketCost :: StickerRef.StickerRef -> GameState -> Natural
-ticketCost ref gs = case StickerRef.kind ref of
-  StickerKind.Ability -> maybe 0 AbilitySticker.tickets (Game.abilityStickerOf ref gs)
-  StickerKind.PowerToughness -> maybe 0 PowerToughnessSticker.tickets (Game.powerToughnessStickerOf ref gs)
-  StickerKind.Name -> 0
-  StickerKind.Art -> 0
+ticketCost ref gs = case Game.stickerContent ref gs of
+  Just (StickerContent.Ability sticker) -> AbilitySticker.tickets sticker
+  Just (StickerContent.PowerToughness sticker) -> PowerToughnessSticker.tickets sticker
+  Just (StickerContent.Name _) -> 0
+  Just StickerContent.Art -> 0
+  Nothing -> 0
 
 -- | CR 123.3 / 123.3c: the stickers `pid` may put on `oid`: `available`, less
 -- each whose ticket cost is above `cap` and, unless the placement is free,
@@ -121,11 +121,7 @@ place optional placer oid kinds cap free = do
           then Game.mayChooseAmong (\decider who -> Prompt.ChooseStickerOrNone decider who oid) placer candidates
           else Game.chooseAmong (\decider who -> Prompt.ChooseSticker decider who oid) placer candidates
   Monad.forM_ picked $ \ref -> do
-    position <- case StickerRef.kind ref of
-      StickerKind.Name -> fmap Just (namePosition oid)
-      StickerKind.Ability -> pure Nothing
-      StickerKind.PowerToughness -> pure Nothing
-      StickerKind.Art -> pure Nothing
+    position <- if StickerRef.kind ref == StickerKind.Name then fmap Just (namePosition oid) else pure Nothing
     Monad.unless free (State.modify' (payTickets oid ref))
     State.modify' (put placer oid ref position)
   pure picked
