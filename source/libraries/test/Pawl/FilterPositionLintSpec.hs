@@ -221,6 +221,7 @@ canHostSubjects predicate = case predicate of
     CounterKind.Stun -> 0
     CounterKind.Level -> 0
     CounterKind.Hone -> 0
+    CounterKind.UnsafePowerToughness _ _ -> 0
     CounterKind.Named _ -> 0
   -- Zero for the reason the FAMILY below is: this atom is payload-free, so there
   -- is no Filter position inside it for a card author to reach -- the descent

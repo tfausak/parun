@@ -96,6 +96,7 @@ import qualified Pawl.Types.ContinuousEffect as ContinuousEffect
 import qualified Pawl.Types.CounterCause as CounterCause
 import qualified Pawl.Types.CounterChange as CounterChange
 import qualified Pawl.Types.CounterKind as CounterKind
+import qualified Pawl.Types.CounterKindFor as CounterKindFor
 import qualified Pawl.Types.CounterR as CounterR
 import qualified Pawl.Types.Counterability as Counterability
 import qualified Pawl.Types.Countering as Countering
@@ -150,6 +151,7 @@ import qualified Pawl.Types.GrantedAbility as GrantedAbility.Type
 import qualified Pawl.Types.GraveyardArrangement as GraveyardArrangement
 import qualified Pawl.Types.GraveyardOrder as GraveyardOrder
 import qualified Pawl.Types.HalfUnlocked as HalfUnlocked
+import qualified Pawl.Types.HowMany as HowMany
 import qualified Pawl.Types.Keyword as Keyword.Type
 import qualified Pawl.Types.LastKnown as LastKnown
 import qualified Pawl.Types.Layout as Layout
@@ -2659,7 +2661,9 @@ apply batch candidate event =
       --
       -- That argument covers the costs no earlier choice can leave unpayable:
       -- this one is "any number", OrTapped's life may be declined, and the exile
-      -- (EntryRewrite.ExileFromGraveyard) does as much as it can (CR 101.3).
+      -- (EntryRewrite.ExileFromGraveyard) does as much as it can (CR 101.3) except
+      -- where it carries `orGraveyard`, whose count is an X that CR 107.3m makes 0
+      -- for every member of a batch (that arm says why).
       -- EntryRewrite.SacrificeToEnter's fixed count can be starved, so THIS
       -- answer is judged against the fixed costs of the members still to come
       -- (Replacement.jointlyPayable, the SacrificeToEnter arm's check). Judged,
@@ -2888,7 +2892,19 @@ apply batch candidate event =
       -- is the rule's own "a direct result of the replacement event caused by the
       -- first [ability]". The ARRIVALS are filed, never the graveyard id, since CR
       -- 400.7 mints a new object as the card changes zones.
-      EntryRewrite.ExileFromGraveyard (ExileFromGraveyard.MkExileFromGraveyard filter_ scope count) -> do
+      --
+      -- `orGraveyard` is Frankenstein's Monster's "If you can't, put this creature
+      -- into its owner's graveyard instead of onto the battlefield": too few
+      -- candidates for the Exactly count exiles nothing, and answering Nothing
+      -- unmakes the entry, the SacrificeToEnter arm's "if you don't" (CR 614.12).
+      -- That arm's CR 614.12b forward check has nothing to guard here: X is the
+      -- only count the one such card prints, and CR 107.3m makes it 0 for every
+      -- permanent but the one a resolving spell became, which enters alone.
+      --
+      -- `kinds` and `each` are what each card exiled buys -- one counter kind per
+      -- card, the controller's choice where there are several (CR 614.1c),
+      -- placed through addEnteringCounters for CR 614.16's reason.
+      EntryRewrite.ExileFromGraveyard (ExileFromGraveyard.MkExileFromGraveyard filter_ scope count orGraveyard kinds each) -> do
         Replacement.consume (ReplacementCandidate.identity candidate)
         gs <- State.get
         case Projection.controllerOf oid gs of
@@ -2906,30 +2922,52 @@ apply batch candidate event =
                 context = Replacement.candidateContext gs candidate
                 announcedX = Projection.announcedXOf oid gs
                 amount quantity = maybe 0 Integer.toNaturalSaturating (Quantity.evaluate viewOf context (Projection.boardAsEntering gs) oid (Quantity.substituteAnnouncedX announcedX quantity))
-            -- One card is asked through Game.chooseAmong: with no candidate
-            -- nothing is exiled, and with ONE the instruction names that card --
-            -- a forced selection rather than options a player could tell apart,
-            -- which is ObjectRef.ChosenCardInGraveyard's own elision (CR 101.3).
-            -- "Any number" is asked at one candidate, declining being a second
-            -- answer. FILTERED, NOT TRUSTED (#222), inside pickCounted: an answer
-            -- naming a card that was never offered would otherwise exile a card
-            -- the printed criterion excludes.
-            chosen <-
-              Game.pickCounted
-                True
-                (pure (Just controller))
-                (\decider asked candidates -> Prompt.ChooseCardInGraveyard decider asked oid candidates Seq.empty)
-                (\decider asked candidates ceiling_ -> Prompt.ChooseAnyNumber decider asked oid AnyNumberOf.ToExile candidates ceiling_)
-                amount
-                count
-                offered
-            -- ONE event (CR 608.2f): "exile any number of creature cards" is one
-            -- action on several objects. The Sutured Ghoul scenario in
-            -- data/scenarios/entry-replacement proves it: Spirit Mascot fires once.
-            arrivals <- changeZonesTogether (fmap (\card -> (card, Zone.Exile)) chosen)
-            State.modify' $ \gs2 ->
-              gs2 {GameState.exiledWith = foldr (\arrival -> Map.insert arrival ExileLink.MkExileLink {ExileLink.source = oid, ExileLink.ability = Nothing}) (GameState.exiledWith gs2) (foldMap Foldable.toList arrivals)}
-            pure (Just event)
+            -- CR 614.12: "If you can't" is too few candidates for the count, so
+            -- nothing is exiled and the entry is unmade.
+            let cannot = case count of
+                  HowMany.Exactly q -> orGraveyard && Natural.length offered < amount q
+                  HowMany.UpTo _ -> False
+            if cannot
+              then pure Nothing
+              else do
+                -- One card is asked through Game.chooseAmong: with no candidate
+                -- nothing is exiled, and with ONE the instruction names that card --
+                -- a forced selection rather than options a player could tell apart,
+                -- which is ObjectRef.ChosenCardInGraveyard's own elision (CR 101.3).
+                -- "Any number" is asked at one candidate, declining being a second
+                -- answer. FILTERED, NOT TRUSTED (#222), inside pickCounted: an answer
+                -- naming a card that was never offered would otherwise exile a card
+                -- the printed criterion excludes.
+                chosen <-
+                  Game.pickCounted
+                    True
+                    (pure (Just controller))
+                    (\decider asked candidates -> Prompt.ChooseCardInGraveyard decider asked oid candidates Seq.empty)
+                    (\decider asked candidates ceiling_ -> Prompt.ChooseAnyNumber decider asked oid AnyNumberOf.ToExile candidates ceiling_)
+                    amount
+                    count
+                    offered
+                -- ONE event (CR 608.2f): "exile any number of creature cards" is one
+                -- action on several objects. The Sutured Ghoul scenario in
+                -- data/scenarios/entry-replacement proves it: Spirit Mascot fires once.
+                arrivals <- changeZonesTogether (fmap (\card -> (card, Zone.Exile)) chosen)
+                State.modify' $ \gs2 ->
+                  gs2 {GameState.exiledWith = foldr (\arrival -> Map.insert arrival ExileLink.MkExileLink {ExileLink.source = oid, ExileLink.ability = Nothing}) (GameState.exiledWith gs2) (foldMap Foldable.toList arrivals)}
+                -- "For each creature card exiled this way": the cards that reached
+                -- exile, one choice of kind each.
+                exiled <- State.gets (\gs2 -> filter (`Set.member` GameState.exile gs2) (foldMap Foldable.toList arrivals))
+                Monad.forM_ (NonEmpty.nonEmpty kinds) $ \offeredKinds ->
+                  Monad.forM_ exiled $ \_ -> do
+                    gs2 <- State.get
+                    kind <-
+                      if length offeredKinds == 1
+                        then pure (NonEmpty.head offeredKinds)
+                        else do
+                          answer <- Game.choose (Prompt.ChooseCounterKind (Decide.deciderFor controller gs2) controller (CounterKindFor.EnteringWith oid) offeredKinds)
+                          -- FILTERED, NOT TRUSTED (#222).
+                          pure (if answer `elem` offeredKinds then answer else NonEmpty.head offeredKinds)
+                    addEnteringCounters oid kind (amount each)
+                pure (Just event)
       -- CR 614.1c with CR 301.5e: "as this Equipment enters, choose a creature
       -- you control it could be attached to. If you do, it enters attached to
       -- that creature" (Grifter's Blade).
@@ -4333,8 +4371,9 @@ copiedSnapshotWithLastKnown oid gs = case Game.lastKnownOf oid gs of
 --
 -- Answers Nothing when the object entered, and otherwise why it did not: CR
 -- 614.1a's "instead" from an EntryRewrite.SacrificeToEnter arm that could not be
--- paid, the one EntryR arm that answers `Nothing`, or CR 303.4g from
--- seatEnteringAura. Each caller unmakes the entry.
+-- paid, or CR 614.12's "if you can't" from an EntryRewrite.ExileFromGraveyard
+-- arm carrying `orGraveyard` -- the two EntryR arms that answer `Nothing` -- or
+-- CR 303.4g from seatEnteringAura. Each caller unmakes the entry.
 --
 -- Always the LIVE board (`Nothing`), even when the zone change containing this
 -- entry belongs to a CR 608.2f batch: the entering object is not on the
@@ -6636,8 +6675,9 @@ changeZoneWithCause discarded asOf batch oid requestedDest requestedPosition see
                     fallen <- case refusal of
                       Nothing -> pure Seq.empty
                       -- CR 614.1a: EntryRewrite.SacrificeToEnter's "if you don't, put
-                      -- it into its owner's graveyard", the entry unmade as CR
-                      -- 712.13a's is below. A card that was already in the graveyard
+                      -- it into its owner's graveyard", and CR 614.12's
+                      -- EntryRewrite.ExileFromGraveyard "if you can't", the entry
+                      -- unmade as CR 712.13a's is below. A card that was already in the graveyard
                       -- stays there.
                       Just EntryRefusal.Unpaid -> do
                         State.put unentered
@@ -7933,14 +7973,17 @@ createTokens controller card copy n tapped entering attached = do
               pure entered
 
 -- CR 614.1a on the two roads that MINT onto the battlefield: an object whose
--- EntryRewrite.SacrificeToEnter went unpaid never entered, so it is removed --
+-- EntryRewrite.SacrificeToEnter went unpaid, or whose ExileFromGraveyard with
+-- `orGraveyard` could not exile its count, never entered, so it is removed --
 -- as is one that became an Aura with nothing to enchant, which CR 303.4g's last
 -- sentence says "isn't created".
 -- Not implemented: putting a refused token or conjured card into its owner's
 -- graveyard, which only a "put into a graveyard from anywhere" trigger could
--- tell apart -- no card in data/cards/ creates or conjures a card carrying the
--- row (grep "SacrificeToEnter", 2026-09-29), and Heart of Yavimaya copied by a
--- token-copy effect would refute that.
+-- tell apart -- no card in data/cards/ creates or conjures a card carrying
+-- either row (grep "SacrificeToEnter" and "orGraveyard", 2026-10-11), and Heart
+-- of Yavimaya copied by a token-copy effect would refute that. A minted
+-- Frankenstein's Monster cannot: CR 107.3m makes its X 0, and exiling zero cards
+-- never falls short.
 unmake :: ObjectId -> Game ()
 unmake oid = State.modify' (Game.deleteObject oid)
 
@@ -8088,8 +8131,9 @@ meld controller victims resultCard = do
       -- simultaneously-entering sibling to exclude. createTokens' order exactly:
       -- the object is materialized first, because CR 614.12 asks for the
       -- characteristics it would have on the battlefield. The answer is dropped:
-      -- only EntryRewrite.SacrificeToEnter refuses an entry, and a melded
-      -- permanent's rows are its meld result's, none of which prints one.
+      -- only EntryRewrite.SacrificeToEnter and an ExileFromGraveyard carrying
+      -- `orGraveyard` refuse an entry, and a melded permanent's rows are its meld
+      -- result's, none of which prints either.
       Monad.void (runEntry Set.empty newId)
       -- CR 603.6a's enters-the-battlefield triggers scan this, and it is recorded
       -- after the entry loop so the snapshot describes a settled permanent --

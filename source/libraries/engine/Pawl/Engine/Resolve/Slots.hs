@@ -1722,7 +1722,7 @@ entryRewriteReads rewrite = case rewrite of
   EntryRewrite.Amplify _ -> ([], [])
   -- The cards the exile may take, and the count beside them, a Quantity read at
   -- the entry exactly as the WithCounters arm's above is.
-  EntryRewrite.ExileFromGraveyard exile -> ([ExileFromGraveyard.filter exile], Foldable.toList (HowMany.quantity (ExileFromGraveyard.count exile)))
+  EntryRewrite.ExileFromGraveyard exile -> ([ExileFromGraveyard.filter exile], Foldable.toList (HowMany.quantity (ExileFromGraveyard.count exile)) <> [ExileFromGraveyard.each exile])
   -- The destinations the entering permanent may arrive attached to, the arm
   -- above's shape one zone over: a Filter over battlefield permanents, reported
   -- here although an entry replacement has no resolution whose slots it could

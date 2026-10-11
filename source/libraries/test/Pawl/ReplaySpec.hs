@@ -34,6 +34,7 @@ import qualified Pawl.Types.Cost as Cost.Type
 import qualified Pawl.Types.CostAmount as CostAmount
 import qualified Pawl.Types.CostComponent as CostComponent
 import qualified Pawl.Types.CounterKind as CounterKind
+import qualified Pawl.Types.CounterKindFor as CounterKindFor
 import qualified Pawl.Types.CounterSpread as CounterSpread
 import qualified Pawl.Types.DamageEvent as DamageEvent
 import qualified Pawl.Types.DamageKind as DamageKind
@@ -338,6 +339,18 @@ combatReplaySpec s =
           Monad.forM_ [OptionalDecision.Declines, OptionalDecision.Exercises] $ \decision ->
             Spec.assertEqWith s "round trip" (Replay.decode p (Replay.encode p decision)) (Just decision)
           Spec.assertEqWith s "a printed may is not an answer to it" (Replay.decode p (Response.ChoseOptional OptionalDecision.Exercises)) Nothing
+        -- One prompt, one Response constructor per CounterKindFor: a move's
+        -- answer does not replay into an entry's choice, nor the other way.
+        Spec.it s "ChooseCounterKind records and replays each purpose, and rejects the other's answer" $ do
+          let purposes = [CounterKindFor.MovedBetween oid (ObjectId.MkObjectId 9), CounterKindFor.EnteringWith oid]
+              prompt for = Prompt.ChooseCounterKind decider S.alice for (CounterKind.PlusOnePlusOne NonEmpty.:| [CounterKind.Shield])
+          Monad.forM_ purposes $ \for ->
+            Monad.forM_ purposes $ \other ->
+              Spec.assertEqWith
+                s
+                (show other <> " answering " <> show for)
+                (Replay.decode (prompt for) (Replay.encode (prompt other) CounterKind.Shield))
+                (if other == for then Just CounterKind.Shield else Nothing)
         -- One prompt, one Response constructor per AnyNumberOf: each records and
         -- replays its own answer, and no other kind's answer replays into it, so
         -- a transcript cannot sacrifice what it should have revealed.
@@ -1583,10 +1596,10 @@ combatReplaySpec s =
             0
         -- CR 122.5: which KIND of counter a player moved is a decision like any
         -- other, and the only one whose answer is not an object at all.
-        Spec.it s "ChooseMovedCounter round-trips through the transcript" $ do
+        Spec.it s "ChooseCounterKind round-trips a move through the transcript" $ do
           let a = CounterKind.PlusOnePlusOne
               b = CounterKind.Shield
-              p = Prompt.ChooseMovedCounter decider S.alice oid (ObjectId.MkObjectId 9) (a NonEmpty.:| [b])
+              p = Prompt.ChooseCounterKind decider S.alice (CounterKindFor.MovedBetween oid (ObjectId.MkObjectId 9)) (a NonEmpty.:| [b])
           Spec.assertEqWith s "choosing the second round trips" (Replay.decode p (Replay.encode p b)) (Just b)
           Spec.assertEqWith s "choosing the first round trips" (Replay.decode p (Replay.encode p a)) (Just a)
         Spec.it s "a short moved-counter transcript returns the first kind offered" $
@@ -1595,11 +1608,11 @@ combatReplaySpec s =
           Spec.assertEqWith
             s
             "the head"
-            (Replay.defaultAnswer (Prompt.ChooseMovedCounter decider S.alice oid (ObjectId.MkObjectId 9) (CounterKind.PlusOnePlusOne NonEmpty.:| [CounterKind.Shield])))
+            (Replay.defaultAnswer (Prompt.ChooseCounterKind decider S.alice (CounterKindFor.MovedBetween oid (ObjectId.MkObjectId 9)) (CounterKind.PlusOnePlusOne NonEmpty.:| [CounterKind.Shield])))
             CounterKind.PlusOnePlusOne
         -- CR 122.5 again, for the move that names neither a kind nor a count: the
         -- answer is a tally PER KIND, so a transcript has to carry the whole map
-        -- and not the one kind ChooseMovedCounter's does.
+        -- and not the one kind a move's ChooseCounterKind does.
         Spec.it s "ChooseMovedCounters round-trips through the transcript" $ do
           let tally :: [(CounterKind.CounterKind Keyword.Keyword, Natural.Natural)] -> Map.Map (CounterKind.CounterKind Keyword.Keyword) Natural.Natural
               tally = Map.fromList
@@ -1670,7 +1683,7 @@ combatReplaySpec s =
           Spec.assertEqWith s "and that many of the first kind under one kind" (quiet (MoveSpread.OneKind 2)) (Map.singleton first (Map.singleton CounterKind.PlusOnePlusOne 2))
           Spec.assertEqWith s "and the empty distribution under up to one" (quiet MoveSpread.UpToOne) Map.empty
         -- CR 122.5 once more, for "up to one": the answer is a kind OR none, so a
-        -- transcript has to carry the declining half that ChooseMovedCounter's
+        -- transcript has to carry the declining half that a move's ChooseCounterKind
         -- cannot say.
         Spec.it s "ChooseMovedCounterOrNone round-trips through the transcript" $ do
           let a = CounterKind.PlusOnePlusOne

@@ -22,6 +22,7 @@ import qualified Pawl.Types.Concession as Concession
 import qualified Pawl.Types.Cost as Cost
 import qualified Pawl.Types.CostComponent as CostComponent
 import qualified Pawl.Types.CounterKind as CounterKind
+import qualified Pawl.Types.CounterKindFor as CounterKindFor
 import qualified Pawl.Types.CounterSpread as CounterSpread
 import qualified Pawl.Types.DamageEvent as DamageEvent
 import qualified Pawl.Types.Decider as Decider
@@ -290,9 +291,11 @@ data Prompt r where
   -- Power's time and knowledge). Not raised for one candidate, ChooseVote's
   -- reason.
   ChooseVoteWord :: Decider.Decider -> PlayerId.PlayerId -> ObjectId.ObjectId -> NonEmpty.NonEmpty SlotName.SlotName -> Prompt SlotName.SlotName
-  -- | CR 122.5: which kind of counter a move takes off the first object onto
-  -- the second, where the card leaves the kind open.
-  ChooseMovedCounter :: Decider.Decider -> PlayerId.PlayerId -> ObjectId.ObjectId -> ObjectId.ObjectId -> NonEmpty.NonEmpty (CounterKind.CounterKind Keyword.Keyword) -> Prompt (CounterKind.CounterKind Keyword.Keyword)
+  -- | Which one of these counter kinds, the CounterKindFor saying what for: a
+  -- CR 122.5 move or a CR 614.1c entry. Not raised for one kind.
+  -- Pawl.Engine.Replay answers each CounterKindFor with its own Response
+  -- constructor.
+  ChooseCounterKind :: Decider.Decider -> PlayerId.PlayerId -> CounterKindFor.CounterKindFor -> NonEmpty.NonEmpty (CounterKind.CounterKind Keyword.Keyword) -> Prompt (CounterKind.CounterKind Keyword.Keyword)
   -- | CR 122.5: how many counters of each kind a move takes off the first
   -- object onto the second, where the card leaves the count open; the Map is
   -- what the first object has, the answer clamped to it. Raised for one
@@ -305,7 +308,7 @@ data Prompt r where
   -- several destinations, the total the MoveSpread states; the sum comes off
   -- the first object, the tallies clamped in offered order.
   ChooseDistributedMovedCounters :: Decider.Decider -> PlayerId.PlayerId -> ObjectId.ObjectId -> MoveSpread.MoveSpread -> Map.Map (CounterKind.CounterKind Keyword.Keyword) Natural.Natural -> NonEmpty.NonEmpty ObjectId.ObjectId -> Prompt (Map.Map ObjectId.ObjectId (Map.Map (CounterKind.CounterKind Keyword.Keyword) Natural.Natural))
-  -- | CR 122.5: ChooseMovedCounter with declining added ("up to one"); raised
+  -- | CR 122.5: a move's ChooseCounterKind with declining added ("up to one"); raised
   -- for one candidate too, and an unoffered kind reads as declining.
   ChooseMovedCounterOrNone :: Decider.Decider -> PlayerId.PlayerId -> ObjectId.ObjectId -> ObjectId.ObjectId -> NonEmpty.NonEmpty (CounterKind.CounterKind Keyword.Keyword) -> Prompt (Maybe (CounterKind.CounterKind Keyword.Keyword))
   -- | CR 107.14: how much {E} the player pays to an Effect.PayAnyEnergy as

@@ -312,6 +312,10 @@ data Response
     -- is not even an object, so no counter-placing response could stand in for
     -- it.
     ChoseMovedCounter (CounterKind.CounterKind Keyword.Keyword)
+  | -- | CR 614.1c: the counter kind chosen for one card an as-enters exile took.
+    -- Its own constructor and not ChoseMovedCounter above, so a transcript
+    -- cannot replay a counter move into an entry.
+    ChoseEntryCounter (CounterKind.CounterKind Keyword.Keyword)
   | -- | CR 122.5: how many counters of each kind a player chose to move off the
     -- first object. Its own constructor and not ChoseMovedCounter above: one
     -- names a kind and the other a tally per kind, so a transcript of either

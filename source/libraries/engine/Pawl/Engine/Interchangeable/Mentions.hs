@@ -1015,6 +1015,7 @@ counterKindNames _asking onKeyword x = case x of
   CounterKind.Stun -> False
   CounterKind.Level -> False
   CounterKind.Hone -> False
+  CounterKind.UnsafePowerToughness _ _ -> False
   CounterKind.Named _counterName -> False
 
 counterPatternNames :: Asking -> CounterPattern.CounterPattern -> Bool
@@ -2509,7 +2510,7 @@ sacrificeNames asking x = case x of
 
 exileFromGraveyardNames :: Asking -> ExileFromGraveyard.ExileFromGraveyard -> Bool
 exileFromGraveyardNames asking x = case x of
-  ExileFromGraveyard.MkExileFromGraveyard filter_ _players count -> filterNames asking filter_ || any (quantityNames asking) (HowMany.quantity count)
+  ExileFromGraveyard.MkExileFromGraveyard filter_ _players count _orGraveyard kinds each -> filterNames asking filter_ || any (quantityNames asking) (HowMany.quantity count) || any (counterKindNames asking (keywordNames asking)) kinds || quantityNames asking each
 
 sacrificeAnyNumberNames :: Asking -> SacrificeAnyNumber.SacrificeAnyNumber -> Bool
 sacrificeAnyNumberNames asking x = case x of

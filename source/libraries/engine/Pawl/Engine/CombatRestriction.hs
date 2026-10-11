@@ -590,6 +590,7 @@ gathered gs =
         CounterKind.Stun -> False
         CounterKind.Level -> False
         CounterKind.Hone -> False
+        CounterKind.UnsafePowerToughness _ _ -> False
         CounterKind.Named _ -> False
       -- CR 701.60c: "a suspected permanent has menace and 'This creature can't
       -- block' for as long as it's suspected". Decayed's row (CR 702.147a) with

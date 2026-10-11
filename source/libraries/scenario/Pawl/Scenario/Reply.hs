@@ -321,7 +321,7 @@ shapeOf prompt = case prompt of
   Prompt.ChooseBehold {} -> object
   Prompt.ChooseVote {} -> object
   Prompt.ChooseVoteWord {} -> viaCodec Codec.SlotName.codec
-  Prompt.ChooseMovedCounter {} -> counterKind
+  Prompt.ChooseCounterKind {} -> counterKind
   Prompt.ChooseMovedCounters {} -> mapOf counterKind natural
   Prompt.ChooseStoredRerolls {} -> mapOf (viaCodec Codec.StoredResult.codec) natural
   Prompt.ChooseMovedCountersAtLeastOne {} -> mapOf counterKind natural

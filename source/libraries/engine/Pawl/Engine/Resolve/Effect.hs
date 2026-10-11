@@ -177,6 +177,7 @@ import qualified Pawl.Types.Counter as Counter
 import qualified Pawl.Types.CounterCause as CounterCause
 import qualified Pawl.Types.CounterDestination as CounterDestination
 import qualified Pawl.Types.CounterKind as CounterKind
+import qualified Pawl.Types.CounterKindFor as CounterKindFor
 import qualified Pawl.Types.CounterSpread as CounterSpread
 import qualified Pawl.Types.CounteredEnd as CounteredEnd
 import qualified Pawl.Types.Create as Create
@@ -8952,7 +8953,7 @@ applyOneEffect runSubgame resolving source controller legal chosen effect = case
                               else do
                                 -- Through Game.chooseAmong: one kind on the object
                                 -- leaves nothing to decide.
-                                picked <- Game.chooseAmong (\decider who -> Prompt.ChooseMovedCounter decider who from to) controller (Map.keys onFrom)
+                                picked <- Game.chooseAmong (\decider who -> Prompt.ChooseCounterKind decider who (CounterKindFor.MovedBetween from to)) controller (Map.keys onFrom)
                                 maybe (pure Map.empty) (`move` asked) picked
                       -- Resourceful Defense's "move any number of counters": the card
                       -- settles neither the kind nor the count, so ONE prompt asks for

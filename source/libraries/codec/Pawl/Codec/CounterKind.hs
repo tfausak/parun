@@ -4,6 +4,7 @@ import qualified Data.Typeable as Typeable
 import qualified Pawl.Codec.CounterName as CounterName
 import qualified Pawl.JsonCodec.Arm as Arm
 import qualified Pawl.JsonCodec.Codec as Codec
+import qualified Pawl.JsonCodec.Common as Common
 import qualified Pawl.Types.CounterKind as CounterKind
 
 -- | PARAMETRIC for Pawl.Types.CounterKind's reason: the keyword codec is
@@ -29,6 +30,7 @@ codec keywordCodec =
       Arm.nullary "Stun" CounterKind.Stun,
       Arm.nullary "Level" CounterKind.Level,
       Arm.nullary "Hone" CounterKind.Hone,
+      Arm.payload "PowerToughness" (Common.tuple Common.integer Common.integer) (uncurry CounterKind.powerToughness) (\x -> case x of CounterKind.UnsafePowerToughness p t -> Just (p, t); _ -> Nothing),
       Arm.payload "Named" CounterName.codec CounterKind.Named (\x -> case x of CounterKind.Named y -> Just y; _ -> Nothing)
     ]
 
@@ -48,4 +50,5 @@ tagOf x = case x of
   CounterKind.Stun {} -> "Stun"
   CounterKind.Level {} -> "Level"
   CounterKind.Hone {} -> "Hone"
+  CounterKind.UnsafePowerToughness {} -> "PowerToughness"
   CounterKind.Named {} -> "Named"

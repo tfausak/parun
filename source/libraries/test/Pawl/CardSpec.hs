@@ -3301,6 +3301,7 @@ counterKindFilters kind = case kind of
   CounterKind.Stun -> []
   CounterKind.Level -> []
   CounterKind.Hone -> []
+  CounterKind.UnsafePowerToughness _ _ -> []
   CounterKind.Named _ -> []
 
 -- A keyword's own Filters, tagged. Almost all of them are KeywordFramed, whose
@@ -4963,7 +4964,7 @@ entryRewriteFilters entryRewrite = case entryRewrite of
   -- CR 614.1c's as-enters exile carries a criterion over a CARD IN A GRAVEYARD
   -- (Living Lore's "an instant or sorcery card"), the reveal's axis one zone over
   -- and unframed with it.
-  EntryRewrite.ExileFromGraveyard (ExileFromGraveyard.MkExileFromGraveyard f _players count) -> unframed [f] <> foldMap quantityFilters (HowMany.quantity count)
+  EntryRewrite.ExileFromGraveyard (ExileFromGraveyard.MkExileFromGraveyard f _players count _orGraveyard kinds each) -> unframed [f] <> foldMap quantityFilters (HowMany.quantity count) <> concatMap counterKindFilters kinds <> quantityFilters each
   -- CR 614.1c's as-enters host choice, evaluated by Pawl.Engine.Attach.hostsFor
   -- against a view whose `canHostSubject` is filled in -- the same position
   -- Effect.AttachTarget's destination is, so the same Framing. The one arm of
@@ -7200,6 +7201,14 @@ lintSpec s registry = Spec.describe s "Lint" $ do
           or $ do
             ReplacementEffect.EntryR (EntryR.MkEntryR _ (EntryRewrite.RunEffects effects)) <- rows
             pure (Resolve.readsX (Foldable.toList effects))
+        -- The same rule's reader in a CR 614.1c as-enters exile: Frankenstein's
+        -- Monster's "exile X creature cards", through the count or the counters
+        -- each card buys.
+        entryExileReadsX rows =
+          or $ do
+            ReplacementEffect.EntryR (EntryR.MkEntryR _ (EntryRewrite.ExileFromGraveyard exile)) <- rows
+            q <- Foldable.toList (HowMany.quantity (ExileFromGraveyard.count exile)) <> [ExileFromGraveyard.each exile]
+            pure (Set.member Binding.variableX (QuantitySlot.slots q))
         -- CR 107.3m's third reader, the enters-the-battlefield TRIGGER beside the
         -- replacement effects above: Lost in the Maze's "tap X target creatures"
         -- names its count at the announcement made for the spell that became the
@@ -7221,6 +7230,7 @@ lintSpec s registry = Spec.describe s "Lint" $ do
             || Face.loyalty c == Just Loyalty.Variable
             || entryCountersReadX (fmap PrintedReplacement.effect (Face.replacementEffects c))
             || entryEffectsReadX (fmap PrintedReplacement.effect (Face.replacementEffects c))
+            || entryExileReadsX (fmap PrintedReplacement.effect (Face.replacementEffects c))
             || mintedCountersReadX c
             || any declaresVariable (payGateCostsOf (Face.spell c))
             || modalReadsAnnouncedX (Face.spell c)
