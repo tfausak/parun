@@ -699,10 +699,11 @@ hasChosenNameTag = Text.pack "HasChosenName"
 
 -- How many CR 201.4 chosen-name atoms this card carries inside one of the
 -- ADMITTED positions -- a CR 701.23 search's filter, a CR 701.17 mill's tally,
--- an EFFECT's ObjectRef, or a player effect's own Filter, printed or stored --
+-- an EFFECT's ObjectRef, a mode's target slot, or a player effect's own Filter,
+-- printed or stored --
 -- and how many anywhere else. The second number is the offence; the first is
 -- what Ancient Vendetta, Predict, Petra Sphinx, Conundrum Sphinx, Null Chamber,
--- Conjurer's Ban and Runed Halo legitimately have.
+-- Conjurer's Ban, Runed Halo and Declaration of Naught legitimately have.
 --
 -- SourceHostFramed and not `hostFramed`: since #3320 that tag means an effect's
 -- ObjectRef and nothing else, which is what makes it admissible here. The
@@ -718,12 +719,11 @@ hasChosenNameTag = Text.pack "HasChosenName"
 -- fact answer. Widen it when a card wants one of them.
 hasChosenNameCounts :: Face.Face Card.Type.Card -> (Int, Int)
 hasChosenNameCounts card =
-  let total wanted = sum (fmap (\(_, f) -> filterAtoms hasChosenNameTag f) (filter (\(framing, _) -> elem framing [SearchFramed, MillTallyFramed, SourceHostFramed, PlayerEffectFramed, StoredPlayerEffectFramed] == wanted) (cardFilters card)))
+  let total wanted = sum (fmap (\(_, f) -> filterAtoms hasChosenNameTag f) (filter (\(framing, _) -> elem framing [SearchFramed, MillTallyFramed, SourceHostFramed, InTargetSlot, PlayerEffectFramed, StoredPlayerEffectFramed] == wanted) (cardFilters card)))
    in (total True, total False)
 
 -- CR 201.4's chosen name is answerable only where Filter.Context.sourceChosenNames
--- is filled: every source-framed position (`sourceFramed`) but a target slot,
--- which Pawl.Engine.Target.slotContext empties for CR 601.2c's reason. Read
+-- is filled: every source-framed position (`sourceFramed`). Read
 -- through a bare Filter.contextFor it is a silent False rather than a rejected
 -- card, and this is where that is made loud.
 --
@@ -1434,6 +1434,12 @@ filterPositionLintSpec s registry = Spec.describe s "Lint" $ do
       "Conundrum Sphinx's one atom is framed by the ObjectRef its move names"
       (hasChosenNameCounts (S.combinedFace conundrum))
       (1, 0)
+    naught <- S.printingOf s registry "Declaration of Naught"
+    Spec.assertEqWith
+      s
+      "Declaration of Naught's one atom is framed by its activated ability's target slot"
+      (hasChosenNameCounts (S.combinedFace naught))
+      (1, 0)
     chamber <- S.printingOf s registry "Null Chamber"
     Spec.assertEqWith
       s
@@ -1466,9 +1472,9 @@ filterPositionLintSpec s registry = Spec.describe s "Lint" $ do
       (1, 0)
     Spec.assertEqWith
       s
-      "and the nine cards' atoms are the pool's only ones"
+      "and the ten cards' atoms are the pool's only ones"
       (sum (fmap (uncurry (+) . hasChosenNameCounts . S.combinedFace) ps))
-      11
+      12
   -- CR 702.16k's chosen player in the same frame one atom over: answerable only
   -- where a protection quality is read, and every one of those four positions
   -- takes its filter off a keyword. See ofChosenPlayerOffends for the two
@@ -3088,11 +3094,6 @@ filterPositionLintSpec s registry = Spec.describe s "Lint" $ do
   -- Ancient Vendetta only exercises the ACCEPTING one, and a card that offends a
   -- lint must not be loadable, so the offenders are hand-built rather than filed.
   --
-  -- The MODE'S TARGET SLOT is the fixture that separates this lint from the
-  -- SameNameAsBound one above: that atom's accepted position is exactly this
-  -- lint's offence, and vice versa, because CR 601.2c chooses targets before CR
-  -- 608.2c has chosen any name.
-  --
   -- Every fixture buries the atom under all three combinators, for the sibling's
   -- reason, and each is asserted through hasChosenNameCounts as well as the
   -- predicate.
@@ -3108,10 +3109,7 @@ filterPositionLintSpec s registry = Spec.describe s "Lint" $ do
           Mint.oneModeTargeting slots (Seq.fromList effects)
         searchFor f = Effect.Search Search.MkSearch {Search.searcher = PlayerRef.Relative PlayerRelation.You, Search.owner = PlayerRef.Relative PlayerRelation.You, Search.zones = Set.singleton Zone.Library, Search.outsideTheGame = False, Search.quantity = Just (Quantity.Type.Literal 1), Search.filter = f, Search.upTo = False, Search.destination = SearchDestination.Exile, Search.subject = Nothing, Search.slot = Nothing, Search.differentIn = Set.empty, Search.exactly = False, Search.andOr = False}
         planted =
-          [ ( "a mode's target slot",
-              base {Face.spell = spellOf [] (Map.singleton slot (TargetSlot.required Pool.Permanents (Just buried)))}
-            ),
-            ( "CR 303.4a's enchant ability",
+          [ ( "CR 303.4a's enchant ability",
               base {Face.enchant = [TargetSlot.required Pool.Permanents (Just buried)]}
             ),
             ( "a static ability's affected set",
@@ -3213,6 +3211,15 @@ filterPositionLintSpec s registry = Spec.describe s "Lint" $ do
       s
       "a buried atom in a mill's tally is accepted"
       (hasChosenNameOffends tallied, hasChosenNameCounts tallied)
+      (False, (1, 0))
+    -- A mode's target slot: Pawl.Engine.Target.slotContext frames it by its
+    -- source, so a name the source chose as it entered (CR 614.1c) answers
+    -- there -- Declaration of Naught's "target spell with the chosen name".
+    let targeting = base {Face.spell = spellOf [] (Map.singleton slot (TargetSlot.required Pool.Permanents (Just buried)))}
+    Spec.assertEqWith
+      s
+      "a buried atom in a mode's target slot is accepted"
+      (hasChosenNameOffends targeting, hasChosenNameCounts targeting)
       (False, (1, 0))
     -- And the third, see #2992: an ObjectRef's own Filter is matched through
     -- Resolve.Slots.objectRefObjects, which builds the same context, so Petra

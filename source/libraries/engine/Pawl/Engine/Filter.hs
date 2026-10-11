@@ -1403,8 +1403,8 @@ data Context = MkContext
     -- choice during a resolution -- Ancient Vendetta's search, Predict's tally,
     -- Petra Sphinx's revealed card) and a replacement row's, where rule
     -- 702.16e's MINTED shield writes it (CR 614.1c's as-enters choice, Runed
-    -- Halo), among them. Pawl.Engine.Target.slotContext empties it again: a
-    -- target slot is matched at CR 601.2c, before a resolution's choice.
+    -- Halo), and a target slot's (Declaration of Naught's "target spell with
+    -- the chosen name", chosen as it entered), among them.
     --
     -- The SOURCE's and not a slot's, which is what separates it from slotNames
     -- above: CR 201.4's name is not an object, so no slot ever holds it, and
