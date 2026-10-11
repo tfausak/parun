@@ -977,7 +977,7 @@ resolveSpec s registry = Spec.describe s "Resolve" $ do
     Spec.assertEqWith
       s
       "CR 608.2d one out of none is impossible, one out of one is not, and up to one is neither"
-      [impossible bare (choosing HowMany.One), impossible withBear (choosing HowMany.One), impossible bare (choosing (HowMany.UpTo Nothing))]
+      [impossible bare (choosing HowMany.one), impossible withBear (choosing HowMany.one), impossible bare (choosing (HowMany.UpTo Nothing))]
       [True, False, False]
   -- The control, the same board with three cards in hand: two can go, so the
   -- option is a real one, the pinned pair is discarded and the rider draws.

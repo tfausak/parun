@@ -22,7 +22,7 @@ codec :: Codec.Codec ChosenPermanents.ChosenPermanents
 codec = Fields.object $ do
   filter_ <- Fields.required "filter" (Filter.codec Keyword.codec) ChosenPermanents.filter
   chooser <- Fields.defaulted "chooser" (PlayerRef.Relative PlayerRelation.You) PlayerRef.codec ChosenPermanents.chooser
-  count <- Fields.defaulted "count" HowMany.One HowMany.codec ChosenPermanents.count
+  count <- Fields.defaulted "count" HowMany.one HowMany.codec ChosenPermanents.count
   pure
     ChosenPermanents.MkChosenPermanents
       { ChosenPermanents.filter = filter_,

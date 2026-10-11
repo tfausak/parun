@@ -1206,7 +1206,8 @@ storedPlayerScope effect = case effect of
 -- The resolution-time QUESTIONS an ObjectRef can put: the arms
 -- Pawl.Engine.Resolve.Effect.askingObjects asks, and exactly the ones
 -- Pawl.Engine.Resolve.Slots.objectRefObjects answers [] for. ChosenPermanents
--- splits on its count, since Effect.Pair takes one partner (CR 702.95a).
+-- splits on its count, since Effect.Pair takes one partner (CR 702.95a), and an
+-- exact count other than one is allowed nowhere: no gameplay test reaches it.
 data Question
   = CardInGraveyard
   | CardInHand
@@ -1215,6 +1216,7 @@ data Question
   | RandomInGraveyard
   | RandomInLibrary
   | OnePermanent
+  | SeveralPermanents
   | PermanentsUpTo
   | SourceAndPermanent
   deriving (Eq, Show, Enum, Bounded)
@@ -1259,7 +1261,8 @@ questionOf ref = case ref of
   ObjectRef.RandomCardInGraveyard {} -> Just RandomInGraveyard
   ObjectRef.RandomCardInLibrary {} -> Just RandomInLibrary
   ObjectRef.ChosenPermanents choice -> case ChosenPermanents.count choice of
-    HowMany.One -> Just OnePermanent
+    HowMany.Exactly (Quantity.Type.Literal 1) -> Just OnePermanent
+    HowMany.Exactly _ -> Just SeveralPermanents
     HowMany.UpTo _ -> Just PermanentsUpTo
   ObjectRef.SourceAndChosenPermanent {} -> Just SourceAndPermanent
   ObjectRef.AttachedToBound {} -> Nothing
@@ -1273,8 +1276,10 @@ chooserRef = Maybe.isJust . questionOf
 -- a gameplay test exercises there. askingObjects asks every one wherever it is
 -- reached, so this is the fence that keeps a card from loading a combination no
 -- test reaches. A position read through the pure objectRefObjects allows none.
-everyQuestion :: [Question]
-everyQuestion = [minBound .. maxBound]
+--
+-- A move's: every question but SeveralPermanents.
+movedQuestions :: [Question]
+movedQuestions = filter (/= SeveralPermanents) [minBound .. maxBound]
 
 -- The battlefield questions, for the opcodes that act on PERMANENTS -- Tovolar,
 -- Dire Overlord's transform, Teferi, Hero of Dominaria's untap, God-Eternal
@@ -1334,7 +1339,7 @@ effectObjectRefs effect =
         Effect.Earthbend (Earthbend.MkEarthbend _ ref) -> read_ [ref]
         -- CR 701.65a's objects are Effect.MoveToZone's: Pawl.Engine.Airbend.exile
         -- is a MoveToZone, and the arm hands this ref to it unchanged.
-        Effect.Airbend ref -> [(everyQuestion, ref)]
+        Effect.Airbend ref -> [(movedQuestions, ref)]
         Effect.TemptWithTheRing -> []
         Effect.OpenAttraction -> []
         Effect.Planeswalk -> []
@@ -1359,10 +1364,9 @@ effectObjectRefs effect =
         Effect.ControlPlayerThisResolution {} -> []
         Effect.Destroy (Destroy.MkDestroy ref _ _ _ _) -> read_ [ref]
         Effect.Sacrifice (SacrificeEffect.MkSacrificeEffect ref _ _) -> [(permanentQuestions, ref)]
-        -- Every question has a card under a move: Exhume, Elvish Piper, Commune
-        -- with the Gods, Elkin Lair, Ghoulraiser, the Gates' seek, Glorious
-        -- Protector, Hanweir Battlements.
-        Effect.MoveToZone (MoveToZone.MkMoveToZone ref _ _ _ _ _ _) -> [(everyQuestion, ref)]
+        -- Exhume, Elvish Piper, Commune with the Gods, Elkin Lair, Ghoulraiser,
+        -- the Gates' seek, Glorious Protector and Hanweir Battlements ask here.
+        Effect.MoveToZone (MoveToZone.MkMoveToZone ref _ _ _ _ _ _) -> [(movedQuestions, ref)]
         Effect.Draw {} -> []
         Effect.Mill {} -> []
         Effect.Reveal (Reveal.MkReveal ref _) -> [(shownQuestions, ref)]
@@ -1901,9 +1905,7 @@ effectLintSpec s registry = Spec.describe s "Lint" $ do
           -- PlayerRef above may name several hands. A COMPUTED count is plural
           -- here whatever the board would make it, TopOfLibrary's reading above
           -- and for its reason.
-          ObjectRef.ChosenCardFromAmong (ChosenCardFromAmong.MkChosenCardFromAmong _ _ count _ _) -> case count of
-            Quantity.Type.Literal n -> n <= 1
-            _ -> False
+          ObjectRef.ChosenCardFromAmong (ChosenCardFromAmong.MkChosenCardFromAmong _ _ count _) -> atMostOne count
           -- FALSE where the arm above is True, which is the whole difference
           -- between them: "all" takes every member that matches, and nothing
           -- about the ref bounds how many a group holds.
@@ -1933,10 +1935,7 @@ effectLintSpec s registry = Spec.describe s "Lint" $ do
           -- TRUE for one permanent however many match, and for a printed ceiling
           -- of one, TopOfLibrary's answer; FALSE, EachCardFromAmong's answer
           -- over the battlefield, where "any number" states no bound.
-          ObjectRef.ChosenPermanents (ChosenPermanents.MkChosenPermanents _ _ count) -> case count of
-            HowMany.One -> True
-            HowMany.UpTo (Just (Quantity.Type.Literal n)) -> n <= 1
-            HowMany.UpTo _ -> False
+          ObjectRef.ChosenPermanents (ChosenPermanents.MkChosenPermanents _ _ count) -> atMostOne count
           -- FALSE where the arm above is True: the ref names the source
           -- ALONGSIDE the one permanent it picks, so a per-player count over it
           -- moves two.
@@ -1945,6 +1944,12 @@ effectLintSpec s registry = Spec.describe s "Lint" $ do
           ObjectRef.AttachedToBound _ -> False
           -- TRUE, InSlot's answer: the slot's object, followed.
           ObjectRef.FromAnywhere _ -> True
+        -- Does a choice's count name at most one? A COMPUTED count is plural
+        -- whatever the board would make it, TopOfLibrary's reading above.
+        atMostOne count = case count of
+          HowMany.Exactly (Quantity.Type.Literal n) -> n <= 1
+          HowMany.UpTo (Just (Quantity.Type.Literal n)) -> n <= 1
+          _ -> False
         -- Does this PlayerRef name at most ONE seat? A per-player count over it
         -- -- a library's top card, a card chosen out of a hand -- moves at most
         -- one object exactly when it does.
@@ -2488,12 +2493,12 @@ effectLintSpec s registry = Spec.describe s "Lint" $ do
         group = SlotName.MkSlotName (Text.pack "revealed")
         inGraveyard = ObjectRef.ChosenCardInGraveyard (ChosenCardInGraveyard.MkChosenCardInGraveyard Chooser.TheController (ZoneScope.Scoped (PlayerScope.Related PlayerRelation.You)) anyCard (Quantity.Type.Literal 1))
         inHand = ObjectRef.ChosenCardInHand (ChosenCardInHand.MkChosenCardInHand (PlayerRef.Relative PlayerRelation.You) anyCard)
-        fromAmong = ObjectRef.ChosenCardFromAmong (ChosenCardFromAmong.MkChosenCardFromAmong group anyCard (Quantity.Type.Literal 1) (PlayerRef.Relative PlayerRelation.You) False)
+        fromAmong = ObjectRef.ChosenCardFromAmong (ChosenCardFromAmong.MkChosenCardFromAmong group anyCard HowMany.one (PlayerRef.Relative PlayerRelation.You))
         atRandom = ObjectRef.RandomCardInHand (RandomCardInHand.MkRandomCardInHand (PlayerRef.Relative PlayerRelation.You) anyCard (Quantity.Type.Literal 1))
         atRandomInGraveyard = ObjectRef.RandomCardInGraveyard (RandomCardInGraveyard.MkRandomCardInGraveyard (ZoneScope.Scoped (PlayerScope.Related PlayerRelation.You)) anyCard (Quantity.Type.Literal 1))
         sought = ObjectRef.RandomCardInLibrary (RandomCardInLibrary.MkRandomCardInLibrary (PlayerRef.Relative PlayerRelation.You) anyCard (Quantity.Type.Literal 1))
         anyNumber = ObjectRef.ChosenPermanents (ChosenPermanents.MkChosenPermanents anyCard (PlayerRef.Relative PlayerRelation.You) (HowMany.UpTo Nothing))
-        onePermanent = ObjectRef.ChosenPermanents (ChosenPermanents.MkChosenPermanents anyCard (PlayerRef.Relative PlayerRelation.You) HowMany.One)
+        onePermanent = ObjectRef.ChosenPermanents (ChosenPermanents.MkChosenPermanents anyCard (PlayerRef.Relative PlayerRelation.You) HowMany.one)
         sourceAndOne = ObjectRef.SourceAndChosenPermanent anyCard
         moves ref = Effect.MoveToZone (MoveToZone.MkMoveToZone ref Zone.Battlefield EntryRiders.defaultValue Nothing Nothing LibraryPlacement.defaultValue Nothing)
         reveals ref = Effect.Reveal (Reveal.MkReveal ref Nothing)
@@ -2540,6 +2545,9 @@ effectLintSpec s registry = Spec.describe s "Lint" $ do
       (inert [Effect.Transform onePermanent, moves onePermanent, Effect.Pair onePermanent, reveals onePermanent, Effect.Tap onePermanent])
       [False, False, False, True, True]
     Spec.assertBool s (not (null (inertChoosers (Effect.Pair anyNumber)))) "a pair allows no plural choice"
+    -- An exact count other than one has no gameplay test, so no site allows it.
+    let exactlyTwo = ObjectRef.ChosenPermanents (ChosenPermanents.MkChosenPermanents anyCard (PlayerRef.Relative PlayerRelation.You) (HowMany.Exactly (Quantity.Type.Literal 2)))
+    Spec.assertEqWith s "two exactly chosen permanents are allowed nowhere" (inert [moves exactlyTwo, Effect.Transform exactlyTwo, Effect.Untap exactlyTwo]) [True, True, True]
     -- The arm above with the source named alongside the choice, and the same row:
     -- Hanweir Battlements' "exile them" is a move, the only site allowing it.
     -- Asserted separately because the two arms are distinct constructors.

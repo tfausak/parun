@@ -10,11 +10,11 @@ codec :: Codec.Codec HowMany.HowMany
 codec =
   Arm.tagged
     tagOf
-    [ Arm.nullary "One" HowMany.One,
+    [ Arm.payload "Exactly" Quantity.codec HowMany.Exactly (\x -> case x of HowMany.Exactly y -> Just y; _ -> Nothing),
       Arm.optionalPayload "UpTo" Quantity.codec HowMany.UpTo (\x -> case x of HowMany.UpTo y -> Just y; _ -> Nothing)
     ]
 
 tagOf :: HowMany.HowMany -> String
 tagOf x = case x of
-  HowMany.One -> "One"
+  HowMany.Exactly {} -> "Exactly"
   HowMany.UpTo {} -> "UpTo"

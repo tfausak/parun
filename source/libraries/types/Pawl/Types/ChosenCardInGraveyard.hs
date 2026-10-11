@@ -13,7 +13,7 @@ import qualified Pawl.Types.ZoneScope as ZoneScope
 -- confuse -- "target opponent chooses a card in YOUR graveyard" names two
 -- different seats -- so they are named rather than positional.
 --
--- The COUNT is a Quantity rather than a Natural, Pawl.Types.ChosenCardFromAmong's
+-- The COUNT is a Quantity rather than a Natural, Pawl.Types.TopOfLibrary's
 -- reason, and is per CHOOSER: Fall of the Thran's "each player returns two land
 -- cards from their graveyard" is two each. It names DISTINCT cards, so each card
 -- picked is dropped from the candidates before the next ask (CR 608.2d). CR 609.3

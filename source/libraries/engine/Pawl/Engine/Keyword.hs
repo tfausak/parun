@@ -6082,7 +6082,7 @@ soulbondSelfEnters :: TriggeredAbility Card (GrantedAbility.GrantedAbility Card)
 soulbondSelfEnters =
   let clause =
         Mint.youMay
-          (Seq.singleton (Effect.Pair (ObjectRef.ChosenPermanents (ChosenPermanents.MkChosenPermanents unpairedOther (PlayerRef.Relative PlayerRelation.You) HowMany.One))))
+          (Seq.singleton (Effect.Pair (ObjectRef.ChosenPermanents (ChosenPermanents.MkChosenPermanents unpairedOther (PlayerRef.Relative PlayerRelation.You) HowMany.one))))
    in Mint.triggerOf
         TriggerCondition.SelfEnters
         ( Just
@@ -7514,7 +7514,7 @@ hideaway n =
       hide =
         Effect.MoveToZone
           ( MoveToZone.MkMoveToZone
-              (ObjectRef.ChosenCardFromAmong (ChosenCardFromAmong.MkChosenCardFromAmong hideawaySeen (Filter.And []) (Quantity.Literal 1) (PlayerRef.Relative PlayerRelation.You) False))
+              (ObjectRef.ChosenCardFromAmong (ChosenCardFromAmong.MkChosenCardFromAmong hideawaySeen (Filter.And []) HowMany.one (PlayerRef.Relative PlayerRelation.You)))
               Zone.Exile
               plain {EntryRiders.exiledFaceDown = True}
               (Just hideawayExiled)
@@ -8984,7 +8984,7 @@ championEnters quality =
           ( Seq.singleton
               ( Effect.MoveToZone
                   ( MoveToZone.MkMoveToZone
-                      (ObjectRef.ChosenPermanents (ChosenPermanents.MkChosenPermanents another (PlayerRef.Relative PlayerRelation.You) HowMany.One))
+                      (ObjectRef.ChosenPermanents (ChosenPermanents.MkChosenPermanents another (PlayerRef.Relative PlayerRelation.You) HowMany.one))
                       Zone.Exile
                       championRiders
                       Nothing

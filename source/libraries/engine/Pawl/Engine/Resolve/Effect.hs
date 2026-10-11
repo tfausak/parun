@@ -706,38 +706,72 @@ oneSeat legal controller gs ref = case playerRefPlayers legal controller gs ref 
 -- count leaves a real choice, so CR 800.4g's reassignment is never asked for a
 -- choice with one answer.
 --
--- One: skipped at fewer than two candidates, where CR 608.2d leaves one legal
--- announcement (Pawl.Types.Prompt.ChoosePermanent's posture). UpTo: skipped at
--- no candidate and at a ceiling of zero, where the empty set is the only answer
--- (CR 101.3, CR 609.3), and asked at ONE candidate: "any number" and "up to
--- two" both leave two distinguishable answers there. The ceiling is evaluated
--- here too -- Teferi, Hero of Dominaria's "up to two lands".
---
--- FILTERED, not trusted (#222): an answer naming a permanent that was never
--- offered would otherwise be acted on, and one naming more than the ceiling
--- keeps only its first that many. Filtering rather than taking the answer also
--- keeps CR 608.2f's APNAP order, which the candidate list carries and a Set does
--- not.
+-- The count is pickCounted's, read here -- Teferi, Hero of Dominaria's "up to
+-- two lands".
 chosenPermanents :: Map.Map SlotName (Set Recipient) -> ObjectId -> PlayerId -> ObjectId -> ChosenPermanents.ChosenPermanents -> Game [ObjectId]
 chosenPermanents legal resolving controller source (ChosenPermanents.MkChosenPermanents filter_ chooser count) = do
   gs <- State.get
   let candidates = battlefieldMatching legal resolving controller source gs filter_
       context = effectContext gs controller source legal (slotBindings resolving gs)
-      ceilingOf = maybe 0 Integer.toNaturalSaturating . Quantity.evaluateFor (effectViewOf source legal gs) context gs resolving source
-      asking ask = askedChooser source controller legal chooser >>= maybe (pure []) ask
-  case count of
-    HowMany.One -> case candidates of
-      _ : _ : _ -> asking (\who -> fmap Maybe.maybeToList (Game.chooseAmong (\decider answerer -> Prompt.ChoosePermanent decider answerer source) who candidates))
-      atMostOne -> pure atMostOne
-    HowMany.UpTo atMost ->
-      let ceiling_ = fmap ceilingOf atMost
-          capped = maybe id (take . Natural.toIntSaturating) ceiling_
-       in if null candidates || ceiling_ == Just 0
-            then pure []
-            else asking $ \who -> do
-              gs' <- State.get
-              answer <- Game.choose (Prompt.ChooseAnyNumberOfPermanents (Decide.deciderFor who gs') who source candidates ceiling_)
-              pure (capped (filter (`Set.member` answer) candidates))
+      amount = maybe 0 Integer.toNaturalSaturating . Quantity.evaluateFor (effectViewOf source legal gs) context gs resolving source
+  pickCounted
+    (askedChooser source controller legal chooser)
+    (\decider who -> Prompt.ChoosePermanent decider who source)
+    (\decider who pool ceiling_ -> Prompt.ChooseAnyNumberOfPermanents decider who source pool ceiling_)
+    (countOf amount count)
+    candidates
+
+-- A HowMany with its Quantity read.
+data Counted = ExactlyN Natural | UpToN (Maybe Natural)
+
+countOf :: (Quantity.Type.Quantity -> Natural) -> HowMany.HowMany -> Counted
+countOf amount count = case count of
+  HowMany.Exactly q -> ExactlyN (amount q)
+  HowMany.UpTo q -> UpToN (fmap amount q)
+
+-- CR 608.2d's choice of objects out of candidates, at a count: the one place a
+-- HowMany is asked, shared by chosenPermanents and chooseCardFromAmong. The
+-- chooser is named only where a real choice remains, so CR 800.4g's
+-- reassignment is never asked for a choice with one answer.
+--
+-- Exactly: every candidate where they number no more than the count (CR
+-- 609.3), and otherwise ONE ask per pick, each over the candidates the earlier
+-- picks left -- CR 608.2d cannot choose the same object twice. One seat
+-- answering several asks in sequence is the same decision as one simultaneous
+-- choice of that many, CR 101.4c leaving the order to that player.
+--
+-- UpTo: ONE ask over every candidate, skipped at none and at a ceiling of zero,
+-- where the empty set is the only answer (CR 101.3, CR 609.3), and asked at
+-- one, where declining is a second answer. FILTERED, not trusted: an answer
+-- naming an object never offered is dropped, and one naming more than the
+-- ceiling keeps its first that many in the offer's order, which carries CR
+-- 608.2f's APNAP order where a Set does not.
+pickCounted ::
+  Game (Maybe PlayerId) ->
+  (Decider.Decider -> PlayerId -> NonEmpty.NonEmpty ObjectId -> Prompt.Prompt ObjectId) ->
+  (Decider.Decider -> PlayerId -> [ObjectId] -> Maybe Natural -> Prompt.Prompt (Set ObjectId)) ->
+  Counted ->
+  [ObjectId] ->
+  Game [ObjectId]
+pickCounted chooser one_ several count candidates = case count of
+  ExactlyN n
+    | Natural.length candidates <= n -> pure candidates
+    | otherwise -> asking (\who -> pick who n candidates)
+  UpToN ceiling_
+    | null candidates || ceiling_ == Just 0 -> pure []
+    | otherwise -> asking $ \who -> do
+        gs <- State.get
+        answer <- Game.choose (several (Decide.deciderFor who gs) who candidates ceiling_)
+        pure (maybe id (take . Natural.toIntSaturating) ceiling_ (filter (`Set.member` answer) candidates))
+  where
+    asking ask = chooser >>= maybe (pure []) ask
+    pick who n available
+      | n <= (0 :: Natural) = pure []
+      | otherwise = do
+          picked <- Game.chooseAmong one_ who available
+          case picked of
+            Nothing -> pure []
+            Just taken -> (taken :) <$> pick who (n - 1) (List.delete taken available)
 
 askedChooser :: ObjectId -> PlayerId -> Map.Map SlotName (Set Recipient) -> PlayerRef -> Game (Maybe PlayerId)
 askedChooser source controller legal ref = do
@@ -807,7 +841,7 @@ askingObjects resolving source controller legal chosen ref = case ref of
   -- offered to anybody, and one that has left is not named (CR 101.3). CR
   -- 608.2c's default chooser, since the printed sentence names no other.
   ObjectRef.SourceAndChosenPermanent filter_ -> do
-    counterpart <- chosenPermanents legal resolving controller source (ChosenPermanents.MkChosenPermanents filter_ (PlayerRef.Relative PlayerRelation.You) HowMany.One)
+    counterpart <- chosenPermanents legal resolving controller source (ChosenPermanents.MkChosenPermanents filter_ (PlayerRef.Relative PlayerRelation.You) HowMany.one)
     gs <- State.get
     pure (counterpart <> battlefieldMatching legal resolving controller source gs Filter.Type.IsSource)
   _ -> do
@@ -2293,22 +2327,10 @@ chooseCardsInHand resolving source controller legal (ChosenCardInHand.MkChosenCa
 -- naming several asks nobody and so names no card (CR 101.3), and CR 800.4g
 -- hands the choice on where the seat it names has left the game.
 --
--- HOW MANY is the ref's Quantity, evaluated HERE (CR 608.2c) off the announcement
--- CR 601.2b left on the resolving object -- TopOfLibrary's reading, and its clamp:
--- a count that will not evaluate, or evaluates negative, is zero cards (CR
--- 107.1b). A group holding fewer matches than the count gives what it has (CR
--- 609.3) and the rest of the instruction is performed on that (CR 101.3).
---
--- ONE ask per card, each over the candidates the earlier asks have not taken --
--- CR 608.2d cannot choose the same card twice, "put two of them into your hand"
--- naming two cards. One seat answering several asks in sequence is the same
--- decision as one simultaneous choice of that many, CR 101.4c leaving the order
--- of a player's own simultaneous choices to that player. Each ask goes through
--- Game.chooseAmong (CR 101.3, CR 609.3).
---
--- An "up to" count (Uncovered Clues) is ONE ask over every candidate instead,
--- asked at one and answerable with none, since declining is an answer the
--- per-card ask cannot give.
+-- HOW MANY is the ref's count, read HERE (CR 608.2c) off the announcement CR
+-- 601.2b left on the resolving object -- TopOfLibrary's reading, and its clamp: a
+-- count that will not evaluate, or evaluates negative, is zero cards (CR
+-- 107.1b). pickCounted asks it.
 chooseCardFromAmong ::
   ObjectId ->
   ObjectId ->
@@ -2317,33 +2339,19 @@ chooseCardFromAmong ::
   Map.Map SlotName (Set Recipient) ->
   ChosenCardFromAmong.ChosenCardFromAmong ->
   Game [ObjectId]
-chooseCardFromAmong resolving source controller legal chosen (ChosenCardFromAmong.MkChosenCardFromAmong slot filter_ count chooser upTo) = do
+chooseCardFromAmong resolving source controller legal chosen (ChosenCardFromAmong.MkChosenCardFromAmong slot filter_ count chooser) = do
   members <- fromAmongMembers legal resolving chosen slot
   gs <- State.get
   let viewOf = effectViewOf source legal gs
       context = effectContext gs controller source legal (slotBindings resolving gs)
-      wanted = maybe 0 Integer.toNaturalSaturating (Quantity.evaluateFor viewOf context gs resolving source count)
-      candidates = matchingFromAmong legal resolving controller source gs filter_ members
-      pick asked n available
-        | n <= (0 :: Natural) = pure []
-        | otherwise = do
-            picked <- Game.chooseAmong (\decider who -> Prompt.ChooseCardFromAmong decider who source) asked available
-            case picked of
-              Nothing -> pure []
-              Just taken -> (taken :) <$> pick asked (n - 1) (List.delete taken available)
-      -- Filtered rather than trusted, and cut to the ceiling in the offer's
-      -- order.
-      pickUpTo asked
-        | wanted <= 0 || null candidates = pure []
-        | otherwise = do
-            answer <- Game.choose (Prompt.ChooseCardsFromAmong (Decide.deciderFor asked gs) asked source candidates wanted)
-            pure (List.genericTake wanted (filter (`Set.member` answer) candidates))
-  asked <- askedChooser source controller legal chooser
-  case asked of
-    Just who
-      | upTo -> pickUpTo who
-      | otherwise -> pick who wanted candidates
-    Nothing -> pure []
+      amount = maybe 0 Integer.toNaturalSaturating . Quantity.evaluateFor viewOf context gs resolving source
+  pickCounted
+    (askedChooser source controller legal chooser)
+    (\decider who -> Prompt.ChooseCardFromAmong decider who source)
+    -- "Any number" is a ceiling of every candidate.
+    (\decider who pool ceiling_ -> Prompt.ChooseCardsFromAmong decider who source pool (Maybe.fromMaybe (Natural.length pool) ceiling_))
+    (countOf amount count)
+    (matchingFromAmong legal resolving controller source gs filter_ members)
 
 -- CR 701.20a / 701.9b: the cards randomness names out of each hand the ref
 -- reaches -- askingObjects' RandomCardInHand arm (Fall, Hymn to Tourach, Elkin
@@ -3574,11 +3582,15 @@ effectIsImpossible resolving source controller legal gs effect = case effect of
             let scoped = Target.zoneScopePlayers (Just controller) legal scope gs
              in not (null scoped) && all (\pid -> null (graveyardCardsOf context gs pid filter_)) scoped
           Chooser.BoundInSlot _ -> False
-      ObjectRef.ChosenCardFromAmong (ChosenCardFromAmong.MkChosenCardFromAmong slot filter_ count _ _) ->
-        positive count && maybe False (null . matchingFromAmong legal resolving controller source gs filter_) (fromAmongBound slot)
-      ObjectRef.ChosenPermanents (ChosenPermanents.MkChosenPermanents filter_ _ HowMany.One) -> null (battlefieldMatching legal resolving controller source gs filter_)
+      ObjectRef.ChosenCardFromAmong (ChosenCardFromAmong.MkChosenCardFromAmong slot filter_ count _) ->
+        mustPick count && maybe False (null . matchingFromAmong legal resolving controller source gs filter_) (fromAmongBound slot)
+      ObjectRef.ChosenPermanents (ChosenPermanents.MkChosenPermanents filter_ _ count) -> mustPick count && null (battlefieldMatching legal resolving controller source gs filter_)
       _ -> False
     positive quantity = maybe False (> 0) (Quantity.evaluateFor viewOf context gs resolving source quantity)
+    -- An exact count of at least one; "up to" is satisfied by the empty answer.
+    mustPick count = case count of
+      HowMany.Exactly quantity -> positive quantity
+      HowMany.UpTo _ -> False
     -- fromAmongMembers' three reads, pure, with a fourth answer: a slot nothing
     -- has bound yet is Nothing, the naming-nobody case a sibling will define.
     fromAmongBound slot = case slotGroup slot resolving gs of

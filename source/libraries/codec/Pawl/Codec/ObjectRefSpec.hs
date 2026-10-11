@@ -332,7 +332,7 @@ spec s = Spec.describe s "Pawl.Codec.ObjectRef" $ do
     Common.assertCodec
       s
       ObjectRef.codec
-      (ObjectRef.ChosenCardFromAmong (ChosenCardFromAmong.MkChosenCardFromAmong (SlotName.MkSlotName (Text.pack "revealed")) (Filter.HasCardType CardType.Creature) (Quantity.Literal 1) (PlayerRef.Relative PlayerRelation.You) False))
+      (ObjectRef.ChosenCardFromAmong (ChosenCardFromAmong.MkChosenCardFromAmong (SlotName.MkSlotName (Text.pack "revealed")) (Filter.HasCardType CardType.Creature) HowMany.one (PlayerRef.Relative PlayerRelation.You)))
       " {\"type\":\"ChosenCardFromAmong\",\"value\":{\"slot\":\"revealed\",\"filter\":{\"type\":\"HasCardType\",\"value\":{\"type\":\"Creature\"}}}} "
   -- The bare slot name an InSlot takes is not a whole payload here: dropping the
   -- filter would make the two arms tell one story on the wire.
@@ -409,13 +409,13 @@ spec s = Spec.describe s "Pawl.Codec.ObjectRef" $ do
     Common.assertCodec
       s
       ObjectRef.codec
-      (ObjectRef.ChosenPermanents (ChosenPermanents.MkChosenPermanents (Filter.HasCardType CardType.Creature) (PlayerRef.Relative PlayerRelation.You) HowMany.One))
+      (ObjectRef.ChosenPermanents (ChosenPermanents.MkChosenPermanents (Filter.HasCardType CardType.Creature) (PlayerRef.Relative PlayerRelation.You) HowMany.one))
       " {\"type\":\"ChosenPermanents\",\"value\":{\"filter\":{\"type\":\"HasCardType\",\"value\":{\"type\":\"Creature\"}}}} "
   Spec.it s "ChosenPermanents carries a chooser other than the resolving controller" $
     Common.assertCodec
       s
       ObjectRef.codec
-      (ObjectRef.ChosenPermanents (ChosenPermanents.MkChosenPermanents (Filter.HasCardType CardType.Creature) (PlayerRef.InSlot (SlotName.MkSlotName (Text.pack "opponent"))) HowMany.One))
+      (ObjectRef.ChosenPermanents (ChosenPermanents.MkChosenPermanents (Filter.HasCardType CardType.Creature) (PlayerRef.InSlot (SlotName.MkSlotName (Text.pack "opponent"))) HowMany.one))
       " {\"type\":\"ChosenPermanents\",\"value\":{\"filter\":{\"type\":\"HasCardType\",\"value\":{\"type\":\"Creature\"}},\"chooser\":{\"type\":\"InSlot\",\"value\":\"opponent\"}}} "
   Spec.it s "ChosenPermanents takes any number" $
     Common.assertCodec
@@ -423,6 +423,13 @@ spec s = Spec.describe s "Pawl.Codec.ObjectRef" $ do
       ObjectRef.codec
       (ObjectRef.ChosenPermanents (ChosenPermanents.MkChosenPermanents (Filter.HasCardType CardType.Creature) (PlayerRef.Relative PlayerRelation.You) (HowMany.UpTo Nothing)))
       " {\"type\":\"ChosenPermanents\",\"value\":{\"filter\":{\"type\":\"HasCardType\",\"value\":{\"type\":\"Creature\"}},\"count\":{\"type\":\"UpTo\"}}} "
+  -- An exact count other than one, the arm the singular default leaves off.
+  Spec.it s "ChosenPermanents takes an exact count" $
+    Common.assertCodec
+      s
+      ObjectRef.codec
+      (ObjectRef.ChosenPermanents (ChosenPermanents.MkChosenPermanents (Filter.HasCardType CardType.Land) (PlayerRef.Relative PlayerRelation.You) (HowMany.Exactly (Quantity.Literal 2))))
+      " {\"type\":\"ChosenPermanents\",\"value\":{\"filter\":{\"type\":\"HasCardType\",\"value\":{\"type\":\"Land\"}},\"count\":{\"type\":\"Exactly\",\"value\":{\"type\":\"Literal\",\"value\":2}}}} "
   Spec.it s "ChosenPermanents takes up to a ceiling" $
     Common.assertCodec
       s
@@ -485,12 +492,12 @@ spec s = Spec.describe s "Pawl.Codec.ObjectRef" $ do
                 Codec.encode ObjectRef.codec (ObjectRef.TopOfGraveyard (PlayerRef.Relative PlayerRelation.You)),
                 Codec.encode ObjectRef.codec (ObjectRef.ChosenCardInGraveyard (ChosenCardInGraveyard.MkChosenCardInGraveyard Chooser.TheController (ZoneScope.Scoped (PlayerScope.Related PlayerRelation.AnyPlayer)) (Filter.HasCardType CardType.Creature) (Quantity.Literal 1))),
                 Codec.encode ObjectRef.codec (ObjectRef.ChosenCardInHand (ChosenCardInHand.MkChosenCardInHand (PlayerRef.Relative PlayerRelation.You) (Filter.HasCardType CardType.Creature))),
-                Codec.encode ObjectRef.codec (ObjectRef.ChosenCardFromAmong (ChosenCardFromAmong.MkChosenCardFromAmong (SlotName.MkSlotName (Text.pack "revealed")) (Filter.HasCardType CardType.Creature) (Quantity.Literal 1) (PlayerRef.Relative PlayerRelation.You) False)),
+                Codec.encode ObjectRef.codec (ObjectRef.ChosenCardFromAmong (ChosenCardFromAmong.MkChosenCardFromAmong (SlotName.MkSlotName (Text.pack "revealed")) (Filter.HasCardType CardType.Creature) HowMany.one (PlayerRef.Relative PlayerRelation.You))),
                 Codec.encode ObjectRef.codec (ObjectRef.EachCardFromAmong (EachCardFromAmong.MkEachCardFromAmong (SlotName.MkSlotName (Text.pack "revealed")) (Filter.HasCardType CardType.Land))),
                 Codec.encode ObjectRef.codec (ObjectRef.RandomCardInHand (RandomCardInHand.MkRandomCardInHand (PlayerRef.Relative PlayerRelation.You) (Filter.And []) (Quantity.Literal 1))),
                 Codec.encode ObjectRef.codec (ObjectRef.RandomCardInGraveyard (RandomCardInGraveyard.MkRandomCardInGraveyard (ZoneScope.Scoped (PlayerScope.Related PlayerRelation.You)) (Filter.And []) (Quantity.Literal 1))),
                 Codec.encode ObjectRef.codec (ObjectRef.RandomCardInLibrary (RandomCardInLibrary.MkRandomCardInLibrary (PlayerRef.Relative PlayerRelation.You) (Filter.And []) (Quantity.Literal 1))),
-                Codec.encode ObjectRef.codec (ObjectRef.ChosenPermanents (ChosenPermanents.MkChosenPermanents (Filter.HasCardType CardType.Creature) (PlayerRef.Relative PlayerRelation.You) HowMany.One)),
+                Codec.encode ObjectRef.codec (ObjectRef.ChosenPermanents (ChosenPermanents.MkChosenPermanents (Filter.HasCardType CardType.Creature) (PlayerRef.Relative PlayerRelation.You) HowMany.one)),
                 Codec.encode ObjectRef.codec (ObjectRef.SourceAndChosenPermanent (Filter.HasCardType CardType.Creature)),
                 Codec.encode ObjectRef.codec (ObjectRef.AttachedToBound (AttachedToBound.MkAttachedToBound (SlotName.MkSlotName (Text.pack "target")) (Filter.HasCardType CardType.Creature)))
               ]

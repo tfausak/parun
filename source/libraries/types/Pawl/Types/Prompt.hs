@@ -729,8 +729,9 @@ data Prompt r where
   -- where there is one; the arm above one zone over.
   ChooseAnyNumberToDiscard :: Decider.Decider -> PlayerId.PlayerId -> ObjectId.ObjectId -> [ObjectId.ObjectId] -> Maybe Natural.Natural -> Prompt (Set.Set ObjectId.ObjectId)
   -- | CR 608.2d: which one of the matching permanents a resolving effect acts
-  -- on (Pawl.Types.ChosenPermanents at HowMany.One); at none the instruction is
-  -- impossible (CR 101.3). Not ChooseTargets (CR 115.1, CR 115.10a). Also CR
+  -- on (Pawl.Types.ChosenPermanents at HowMany.Exactly), asked once per pick;
+  -- at none the instruction is impossible (CR 101.3). Not ChooseTargets (CR
+  -- 115.1, CR 115.10a). Also CR
   -- 509.4: which attacker a creature entering blocking blocks, the ObjectId
   -- then being that creature. Also CR 701.3a: the one destination a group of
   -- attachments moves to (Pawl.Types.Effect's AttachAll).

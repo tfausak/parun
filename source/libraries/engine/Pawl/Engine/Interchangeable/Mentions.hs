@@ -814,7 +814,7 @@ chooserNames asking x = case x of
 
 chosenCardFromAmongNames :: Asking -> ChosenCardFromAmong.ChosenCardFromAmong -> Bool
 chosenCardFromAmongNames asking x = case x of
-  ChosenCardFromAmong.MkChosenCardFromAmong slot filter_ count chooser _upTo -> slotNames asking slot || filterNames asking filter_ || quantityNames asking count || playerRefNames asking chooser
+  ChosenCardFromAmong.MkChosenCardFromAmong slot filter_ count chooser -> slotNames asking slot || filterNames asking filter_ || any (quantityNames asking) (HowMany.quantity count) || playerRefNames asking chooser
 
 chosenCardInGraveyardNames :: Asking -> ChosenCardInGraveyard.ChosenCardInGraveyard -> Bool
 chosenCardInGraveyardNames asking x = case x of

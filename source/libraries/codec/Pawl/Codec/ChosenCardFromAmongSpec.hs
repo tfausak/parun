@@ -7,6 +7,7 @@ import qualified Pawl.Spec as Spec
 import qualified Pawl.Types.CardType as CardType
 import qualified Pawl.Types.ChosenCardFromAmong as ChosenCardFromAmong
 import qualified Pawl.Types.Filter as Filter
+import qualified Pawl.Types.HowMany as HowMany
 import qualified Pawl.Types.PlayerRef as PlayerRef
 import qualified Pawl.Types.PlayerRelation as PlayerRelation
 import qualified Pawl.Types.Quantity as Quantity
@@ -24,25 +25,23 @@ spec s = Spec.describe s "Pawl.Codec.ChosenCardFromAmong" $ do
       ( ChosenCardFromAmong.MkChosenCardFromAmong
           { ChosenCardFromAmong.slot = SlotName.MkSlotName (Text.pack "revealed"),
             ChosenCardFromAmong.filter = Filter.HasCardType CardType.Creature,
-            ChosenCardFromAmong.count = Quantity.Literal 1,
-            ChosenCardFromAmong.chooser = PlayerRef.Relative PlayerRelation.You,
-            ChosenCardFromAmong.upTo = False
+            ChosenCardFromAmong.count = HowMany.one,
+            ChosenCardFromAmong.chooser = PlayerRef.Relative PlayerRelation.You
           }
       )
       " {\"slot\":\"revealed\",\"filter\":{\"type\":\"HasCardType\",\"value\":{\"type\":\"Creature\"}}} "
-  -- Ancestral Memories' two, Animal Magnetism's opponent and Uncovered Clues'
-  -- "up to": the three keys the defaults above leave off the wire entirely.
-  Spec.it s "MkChosenCardFromAmong, all five keys" $
+  -- Uncovered Clues' "up to two" and Animal Magnetism's opponent: the two keys
+  -- the defaults above leave off the wire entirely.
+  Spec.it s "MkChosenCardFromAmong, all four keys" $
     Common.assertCodec
       s
       ChosenCardFromAmong.codec
       ( ChosenCardFromAmong.MkChosenCardFromAmong
           { ChosenCardFromAmong.slot = SlotName.MkSlotName (Text.pack "revealed"),
             ChosenCardFromAmong.filter = Filter.HasCardType CardType.Creature,
-            ChosenCardFromAmong.count = Quantity.Literal 2,
-            ChosenCardFromAmong.chooser = PlayerRef.InSlot (SlotName.MkSlotName (Text.pack "opponent")),
-            ChosenCardFromAmong.upTo = True
+            ChosenCardFromAmong.count = HowMany.UpTo (Just (Quantity.Literal 2)),
+            ChosenCardFromAmong.chooser = PlayerRef.InSlot (SlotName.MkSlotName (Text.pack "opponent"))
           }
       )
-      " {\"slot\":\"revealed\",\"filter\":{\"type\":\"HasCardType\",\"value\":{\"type\":\"Creature\"}},\"count\":{\"type\":\"Literal\",\"value\":2},\"chooser\":{\"type\":\"InSlot\",\"value\":\"opponent\"},\"upTo\":true} "
+      " {\"slot\":\"revealed\",\"filter\":{\"type\":\"HasCardType\",\"value\":{\"type\":\"Creature\"}},\"count\":{\"type\":\"UpTo\",\"value\":{\"type\":\"Literal\",\"value\":2}},\"chooser\":{\"type\":\"InSlot\",\"value\":\"opponent\"}} "
   Spec.it s "has a schema" $ Common.assertHasSchema s ChosenCardFromAmong.codec
