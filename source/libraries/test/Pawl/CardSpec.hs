@@ -255,6 +255,7 @@ import qualified Pawl.Types.Morph as Morph
 import qualified Pawl.Types.MoveCounters as MoveCounters
 import qualified Pawl.Types.MoveToZone as MoveToZone
 import qualified Pawl.Types.MovedKinds as MovedKinds
+import qualified Pawl.Types.Ninjutsu as Ninjutsu
 import qualified Pawl.Types.ObjectId as ObjectId
 import qualified Pawl.Types.ObjectRef as ObjectRef
 import qualified Pawl.Types.OfferCast as OfferCast
@@ -3479,7 +3480,7 @@ keywordPayloadFilters keyword = case keyword of
   -- CR 702.49a carries a whole Cost, so a Filter inside it is the card's. The
   -- "unblocked attacking creature you control" filter its minted ability carries
   -- is the ENGINE's, never a card's.
-  Keyword.Ninjutsu cost -> costFilters cost
+  Keyword.Ninjutsu (Ninjutsu.MkNinjutsu cost _) -> costFilters cost
   -- CR 702.24a carries a whole Cost, so a Filter inside it is the card's.
   Keyword.CumulativeUpkeep cost -> costFilters cost
   Keyword.Echo cost -> costFilters cost

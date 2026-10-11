@@ -17,6 +17,7 @@ import qualified Pawl.Types.Impending as Impending
 import qualified Pawl.Types.KeywordCount as KeywordCount
 import qualified Pawl.Types.MadnessCost as MadnessCost
 import qualified Pawl.Types.Morph as Morph
+import qualified Pawl.Types.Ninjutsu as Ninjutsu
 import qualified Pawl.Types.PartnerText as PartnerText
 import qualified Pawl.Types.Protection as Protection
 import qualified Pawl.Types.Prototype as Prototype
@@ -237,17 +238,16 @@ data Keyword
     Offering (Filter.Filter Keyword)
   | -- | 702.49a: ninjutsu [cost] -- an activated ability functioning only from a
     -- hand, whose cost returns an unblocked attacker you control and whose effect
-    -- puts this card onto the battlefield tapped and attacking.
+    -- puts this card onto the battlefield tapped and attacking. CR 702.49d's
+    -- commander ninjutsu is its `variant`, which also functions from the command
+    -- zone.
     --
     -- Rule 702.49a's "Reveal this card from your hand" is not a component of the
     -- minted cost. CR 602.2a reveals the card anyway -- the ability is activated
     -- from a hidden zone -- and CR 701.20a gives the two reveals the same
     -- duration, so a second one would only reveal an already revealed card.
     -- Pawl.Engine.Activate.revealIfHidden is where it happens.
-    --
-    -- Not implemented: CR 702.49d's commander ninjutsu, which also functions
-    -- from the command zone (#3436).
-    Ninjutsu (Cost.Cost Keyword)
+    Ninjutsu (Ninjutsu.Ninjutsu Keyword)
   | -- | 702.50a: two spell abilities -- "for the rest of the game, you can't
     -- cast spells", and a delayed triggered ability that copies this spell
     -- except for its epic ability at the beginning of each of your upkeeps for
