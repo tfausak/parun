@@ -2452,7 +2452,7 @@ apply batch candidate event =
           -- conjuring a name, which the two arms above cannot do -- their
           -- fallbacks pick from a fixed five, and CR 201.4's offer is every card
           -- in the Oracle card reference.
-          Nothing -> pure Set.empty
+          Nothing -> pure Map.empty
           Just controller -> do
             -- CR 801.5a's offer of opponents, asked through Players.chooseOne.
             -- No opponent left (CR 104.2a) asks nobody and adds no second name.
@@ -2465,7 +2465,7 @@ apply batch candidate event =
                 ask made pid = do
                   name <- Game.choose (Prompt.ChooseCardName (Decide.deciderFor pid gs) pid oid restriction made) >>= Game.lookUpChosenName
                   pure (made Seq.|> (pid, name))
-            fmap (Set.fromList . fmap snd . Foldable.toList) (Monad.foldM ask Seq.empty choosers)
+            fmap (Map.fromList . Foldable.toList) (Monad.foldM ask Seq.empty choosers)
         Replacement.consume (ReplacementCandidate.identity candidate)
         State.modify' $ \g ->
           let stamp o = o {Object.chosenNames = picked}
@@ -2480,9 +2480,9 @@ apply batch candidate event =
           -- Unreachable, and defensive for the arm above's reason: names NOTHING
           -- rather than conjuring one, CR 201.4's offer being every card in the
           -- Oracle card reference.
-          Nothing -> pure Set.empty
+          Nothing -> pure Map.empty
           Just controller ->
-            fmap Set.singleton (Game.choose (Prompt.ChooseCardName (Decide.deciderFor controller gs) controller oid restriction Seq.empty) >>= Game.lookUpChosenName)
+            fmap (Map.singleton controller) (Game.choose (Prompt.ChooseCardName (Decide.deciderFor controller gs) controller oid restriction Seq.empty) >>= Game.lookUpChosenName)
         Replacement.consume (ReplacementCandidate.identity candidate)
         State.modify' $ \g ->
           let stamp o = o {Object.chosenNames = picked}

@@ -1,5 +1,6 @@
 module Pawl.Codec.ActivePlayerEffectSpec where
 
+import qualified Data.Map.Strict as Map
 import qualified Data.Set as Set
 import qualified Data.Text as Text
 import qualified Pawl.Codec.ActivePlayerEffect as ActivePlayerEffect
@@ -30,7 +31,7 @@ spec s = Spec.describe s "Pawl.Codec.ActivePlayerEffect" $ do
       ActivePlayerEffect.MkActivePlayerEffect
         { ActivePlayerEffect.source = ObjectId.MkObjectId 1,
           ActivePlayerEffect.controller = PlayerId.MkPlayerId 2,
-          ActivePlayerEffect.choices = SourceChoices.MkSourceChoices {SourceChoices.names = Set.empty, SourceChoices.colors = Set.empty, SourceChoices.subtype = Nothing},
+          ActivePlayerEffect.choices = SourceChoices.MkSourceChoices {SourceChoices.names = Map.empty, SourceChoices.colors = Set.empty, SourceChoices.subtype = Nothing},
           ActivePlayerEffect.timestamp = Timestamp.MkTimestamp 3,
           ActivePlayerEffect.expiry = Expiry.AtCleanup,
           ActivePlayerEffect.scope = AffectedPlayers.Scoped (PlayerScope.Related PlayerRelation.Opponent),
@@ -47,7 +48,7 @@ spec s = Spec.describe s "Pawl.Codec.ActivePlayerEffect" $ do
       ActivePlayerEffect.MkActivePlayerEffect
         { ActivePlayerEffect.source = ObjectId.MkObjectId 5,
           ActivePlayerEffect.controller = PlayerId.MkPlayerId 6,
-          ActivePlayerEffect.choices = SourceChoices.MkSourceChoices {SourceChoices.names = Set.empty, SourceChoices.colors = Set.empty, SourceChoices.subtype = Nothing},
+          ActivePlayerEffect.choices = SourceChoices.MkSourceChoices {SourceChoices.names = Map.empty, SourceChoices.colors = Set.empty, SourceChoices.subtype = Nothing},
           ActivePlayerEffect.timestamp = Timestamp.MkTimestamp 7,
           ActivePlayerEffect.expiry = Expiry.Never,
           ActivePlayerEffect.scope = AffectedPlayers.Named (PlayerId.MkPlayerId 8),
@@ -62,12 +63,12 @@ spec s = Spec.describe s "Pawl.Codec.ActivePlayerEffect" $ do
       ActivePlayerEffect.MkActivePlayerEffect
         { ActivePlayerEffect.source = ObjectId.MkObjectId 9,
           ActivePlayerEffect.controller = PlayerId.MkPlayerId 10,
-          ActivePlayerEffect.choices = SourceChoices.MkSourceChoices {SourceChoices.names = Set.singleton (CardName.MkCardName (Text.pack "Shock")), SourceChoices.colors = Set.empty, SourceChoices.subtype = Nothing},
+          ActivePlayerEffect.choices = SourceChoices.MkSourceChoices {SourceChoices.names = Map.singleton (PlayerId.MkPlayerId 12) (CardName.MkCardName (Text.pack "Shock")), SourceChoices.colors = Set.empty, SourceChoices.subtype = Nothing},
           ActivePlayerEffect.timestamp = Timestamp.MkTimestamp 11,
           ActivePlayerEffect.expiry = Expiry.AtCleanup,
           ActivePlayerEffect.scope = AffectedPlayers.Scoped (PlayerScope.Related PlayerRelation.AnyPlayer),
           ActivePlayerEffect.effect = PlayerEffect.CantCastSpells
         }
-      " {\"source\":9,\"controller\":10,\"choices\":{\"names\":[\"Shock\"]},\"timestamp\":11,\"expiry\":{\"type\":\"AtCleanup\"},\"scope\":{\"type\":\"Scoped\",\"value\":{\"type\":\"AnyPlayer\"}},\"effect\":{\"type\":\"CantCastSpells\"}} "
+      " {\"source\":9,\"controller\":10,\"choices\":{\"names\":{\"12\":\"Shock\"}},\"timestamp\":11,\"expiry\":{\"type\":\"AtCleanup\"},\"scope\":{\"type\":\"Scoped\",\"value\":{\"type\":\"AnyPlayer\"}},\"effect\":{\"type\":\"CantCastSpells\"}} "
   Spec.it s "has a schema" $
     Common.assertHasSchema s ActivePlayerEffect.codec

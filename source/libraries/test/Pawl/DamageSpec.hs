@@ -757,7 +757,7 @@ lastKnownRiderSpec s registry =
                     -- funnel, and nothing here reads the look-back.
                     LastKnown.attached = Set.empty,
                     -- CR 201.4: nothing named a card here.
-                    LastKnown.chosenNames = Set.empty,
+                    LastKnown.chosenNames = Map.empty,
                     -- CR 614.1c: nothing here chose a player.
                     LastKnown.chosenPlayer = Nothing,
                     -- CR 614.1c: nor a colour or a subtype.

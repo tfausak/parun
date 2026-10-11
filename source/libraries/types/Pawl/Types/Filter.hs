@@ -11,6 +11,7 @@ import qualified Pawl.Types.Expansion as Expansion
 import qualified Pawl.Types.KeywordDesignator as KeywordDesignator
 import qualified Pawl.Types.KeywordFamily as KeywordFamily
 import qualified Pawl.Types.Measures as Measures
+import qualified Pawl.Types.NameChooser as NameChooser
 import qualified Pawl.Types.ObjectId as ObjectId
 import qualified Pawl.Types.PlayerId as PlayerId
 import qualified Pawl.Types.PlayerRelation as PlayerRelation
@@ -223,10 +224,11 @@ data Filter keyword
   | -- | CR 205.3m: the candidate shares a creature type with the object this slot holds.
     SharesCreatureTypeWithBound SlotName.SlotName
   | -- | CR 201.4: the candidate has a name the SOURCE has chosen earlier in the
-    -- same resolution (CR 608.2c) -- Ancient Vendetta's "cards with that name".
-    -- Set intersection, for CR 201.4g's interchangeable names as much as CR
-    -- 709.4a's, and vacuously False where the source has chosen no name.
-    HasChosenName
+    -- same resolution (CR 608.2c) -- Ancient Vendetta's "cards with that name" --
+    -- by the chooser the NameChooser names. Set intersection, for CR 201.4g's
+    -- interchangeable names as much as CR 709.4a's, and vacuously False where
+    -- that chooser has chosen no name.
+    HasChosenName NameChooser.NameChooser
   | -- | CR 105.2: the candidate's colours include the one the SOURCE chose as it
     -- entered (CR 614.1c), the two abilities linked by CR 607.2d -- Gauntlet of
     -- Power's "creatures of the chosen color". HasColor above with the colour

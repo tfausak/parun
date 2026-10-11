@@ -21,6 +21,7 @@ import qualified Pawl.Types.KeywordDesignator as KeywordDesignator
 import qualified Pawl.Types.KeywordFamily as KeywordFamily
 import qualified Pawl.Types.Measure as Measure
 import qualified Pawl.Types.Measures as Measures
+import qualified Pawl.Types.NameChooser as NameChooser
 import qualified Pawl.Types.ObjectId as ObjectId
 import qualified Pawl.Types.Operand as Operand
 import qualified Pawl.Types.PlayerId as PlayerId
@@ -291,8 +292,8 @@ spec s = Spec.describe s "Pawl.Codec.Filter" $ do
     Common.assertCodec
       s
       codec
-      Filter.HasChosenName
-      " {\"type\":\"HasChosenName\"} "
+      (Filter.HasChosenName NameChooser.CandidateOwner)
+      " {\"type\":\"HasChosenName\",\"value\":{\"type\":\"CandidateOwner\"}} "
   Spec.it s "HasChosenColor" $
     Common.assertCodec
       s

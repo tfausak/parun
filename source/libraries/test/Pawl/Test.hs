@@ -414,6 +414,7 @@ import qualified Pawl.Codec.MoveToZoneSpec
 import qualified Pawl.Codec.MovedBetweenSpec
 import qualified Pawl.Codec.MovedKindsSpec
 import qualified Pawl.Codec.MovedSpec
+import qualified Pawl.Codec.NameChooserSpec
 import qualified Pawl.Codec.NamesAreSpec
 import qualified Pawl.Codec.ObjectIdSpec
 import qualified Pawl.Codec.ObjectRefSpec
@@ -1448,6 +1449,7 @@ spec s registry = do
   Pawl.Codec.AnswerSpec.spec s
   Pawl.Codec.ViewIsSpec.spec s
   Pawl.Codec.NamesAreSpec.spec s
+  Pawl.Codec.NameChooserSpec.spec s
   Pawl.Codec.SupertypeSpec.spec s
   Pawl.Codec.SuspendCountersSpec.spec s
   Pawl.Codec.SuspendSpec.spec s

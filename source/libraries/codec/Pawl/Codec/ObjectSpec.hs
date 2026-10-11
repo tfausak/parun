@@ -124,7 +124,7 @@ spec s = Spec.describe s "Pawl.Codec.Object" $ do
           Object.attachedTo = Just (Recipient.ToCreature (ObjectId.MkObjectId 8)),
           Object.chosenColors = Set.singleton Color.Red,
           Object.chosenSubtype = Just Subtype.Goblin,
-          Object.chosenNames = Set.singleton (CardName.MkCardName (Text.pack "Mountain")),
+          Object.chosenNames = Map.singleton (PlayerId.MkPlayerId 29) (CardName.MkCardName (Text.pack "Mountain")),
           Object.chosenPlayer = Just (PlayerId.MkPlayerId 9),
           Object.timestamp = Timestamp.MkTimestamp 10,
           Object.face = Just (CardName.MkCardName (Text.pack "Delver of Secrets")),
@@ -208,7 +208,7 @@ spec s = Spec.describe s "Pawl.Codec.Object" $ do
           <> ",\"counterTimestamps\":[{\"kind\":{\"type\":\"PlusOnePlusOne\"},\"timestamp\":7}]"
           <> ",\"attachedTo\":{\"type\":\"ToCreature\",\"value\":8}"
           <> ",\"chosenColors\":[{\"type\":\"Red\"}],\"chosenSubtype\":{\"type\":\"Goblin\"}"
-          <> ",\"chosenNames\":[\"Mountain\"],\"chosenPlayer\":9"
+          <> ",\"chosenNames\":{\"29\":\"Mountain\"},\"chosenPlayer\":9"
           <> ",\"timestamp\":10,\"face\":\"Delver of Secrets\",\"turnedOverAt\":11"
           <> ",\"worldSince\":12"
           <> ",\"playableFromExile\":{\"player\":13,\"source\":14,\"expiry\":{\"type\":\"AtCleanup\"}"

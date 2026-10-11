@@ -113,6 +113,7 @@ import qualified Pawl.Types.Modification as Modification
 import qualified Pawl.Types.ModifyPowerToughness as ModifyPowerToughness
 import qualified Pawl.Types.MoveCounters as MoveCounters
 import qualified Pawl.Types.MovedKinds as MovedKinds
+import qualified Pawl.Types.NameChooser as NameChooser
 import qualified Pawl.Types.ObjectId as ObjectId
 import qualified Pawl.Types.ObjectRef as ObjectRef
 import qualified Pawl.Types.Operand as Operand
@@ -276,7 +277,7 @@ canHostSubjects predicate = case predicate of
   Filter.Type.SameControllerAsBound _ -> 0
   Filter.Type.SameControllerAsHostOfBound _ -> 0
   Filter.Type.SharesCreatureTypeWithBound _ -> 0
-  Filter.Type.HasChosenName -> 0
+  Filter.Type.HasChosenName {} -> 0
   Filter.Type.HasChosenColor -> 0
   Filter.Type.HasChosenSubtype -> 0
   Filter.Type.IsExiledWithSource _ -> 0
@@ -700,8 +701,8 @@ hasChosenNameTag = Text.pack "HasChosenName"
 -- ADMITTED positions -- a CR 701.23 search's filter, a CR 701.17 mill's tally,
 -- an EFFECT's ObjectRef, or a player effect's own Filter, printed or stored --
 -- and how many anywhere else. The second number is the offence; the first is
--- what Ancient Vendetta, Predict, Petra Sphinx, Null Chamber, Conjurer's Ban and
--- Runed Halo legitimately have.
+-- what Ancient Vendetta, Predict, Petra Sphinx, Conundrum Sphinx, Null Chamber,
+-- Conjurer's Ban and Runed Halo legitimately have.
 --
 -- SourceHostFramed and not `hostFramed`: since #3320 that tag means an effect's
 -- ObjectRef and nothing else, which is what makes it admissible here. The
@@ -1427,6 +1428,12 @@ filterPositionLintSpec s registry = Spec.describe s "Lint" $ do
       "Petra Sphinx's one atom is framed by the ObjectRef its move names"
       (hasChosenNameCounts (S.combinedFace sphinx))
       (1, 0)
+    conundrum <- S.printingOf s registry "Conundrum Sphinx"
+    Spec.assertEqWith
+      s
+      "Conundrum Sphinx's one atom is framed by the ObjectRef its move names"
+      (hasChosenNameCounts (S.combinedFace conundrum))
+      (1, 0)
     chamber <- S.printingOf s registry "Null Chamber"
     Spec.assertEqWith
       s
@@ -1459,9 +1466,9 @@ filterPositionLintSpec s registry = Spec.describe s "Lint" $ do
       (1, 0)
     Spec.assertEqWith
       s
-      "and the eight cards' atoms are the pool's only ones"
+      "and the nine cards' atoms are the pool's only ones"
       (sum (fmap (uncurry (+) . hasChosenNameCounts . S.combinedFace) ps))
-      10
+      11
   -- CR 702.16k's chosen player in the same frame one atom over: answerable only
   -- where a protection quality is read, and every one of those four positions
   -- takes its filter off a keyword. See ofChosenPlayerOffends for the two
@@ -3095,7 +3102,7 @@ filterPositionLintSpec s registry = Spec.describe s "Lint" $ do
     vendetta <- S.printingOf s registry "Ancient Vendetta"
     let base = S.combinedFace piker
         slot = SlotName.MkSlotName (Text.pack "target")
-        atom = Filter.Type.HasChosenName
+        atom = Filter.Type.HasChosenName NameChooser.AnyChooser
         buried = Filter.Type.And [Filter.Type.Or [Filter.Type.HasCardType CardType.Creature, Filter.Type.Not atom]]
         spellOf effects slots =
           Mint.oneModeTargeting slots (Seq.fromList effects)

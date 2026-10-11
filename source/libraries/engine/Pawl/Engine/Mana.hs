@@ -792,7 +792,7 @@ sourceChoicesOf oid gs = case Game.lookupObject oid gs of
   Nothing -> Nothing
   Just _ ->
     let choices = SourceContext.choicesOf oid gs
-     in if Set.null (SourceChoices.names choices) && Set.null (SourceChoices.colors choices) && Maybe.isNothing (SourceChoices.subtype choices) then Nothing else Just choices
+     in if Map.null (SourceChoices.names choices) && Set.null (SourceChoices.colors choices) && Maybe.isNothing (SourceChoices.subtype choices) then Nothing else Just choices
 
 -- CR 607.2a's production-time capture, sourceChoicesOf's twin: the last
 -- card exiled with this source that is still in exile, baked onto every unit it

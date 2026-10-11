@@ -386,7 +386,7 @@ slotContext perspective unannounced bindings source amount gs =
             -- no chosen name here even for a source that will have one, and
             -- HasChosenName is vacuously False. Pawl.CardSpec's position lint is
             -- what keeps a card out of the slot.
-            Filter.sourceChosenNames = Set.empty,
+            Filter.sourceChosenNames = Map.empty,
             -- Nothing, for the reason one field up: CR 702.16k's chosen player is
             -- read off a PROTECTION quality, and a target slot's filter is
             -- neither of the four positions rule 702.16 reads one in.

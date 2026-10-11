@@ -1490,7 +1490,7 @@ addPlayerEffect expiry scope effect controller gs =
         ActivePlayerEffect.MkActivePlayerEffect
           { ActivePlayerEffect.source = ObjectId.MkObjectId 998,
             ActivePlayerEffect.controller = controller,
-            ActivePlayerEffect.choices = SourceChoices.MkSourceChoices {SourceChoices.names = Set.empty, SourceChoices.colors = Set.empty, SourceChoices.subtype = Nothing},
+            ActivePlayerEffect.choices = SourceChoices.MkSourceChoices {SourceChoices.names = Map.empty, SourceChoices.colors = Set.empty, SourceChoices.subtype = Nothing},
             ActivePlayerEffect.timestamp = ts,
             ActivePlayerEffect.expiry = expiry,
             ActivePlayerEffect.scope = scope,
