@@ -3452,10 +3452,57 @@ effectLintSpec s registry = Spec.describe s "Lint" $ do
     Spec.assertBool s (not (anyFace untilUsedOffends (Printing.card berserker))) "the real Hardened Berserker is accepted"
     Spec.assertBool s (untilUsedOffends (planted prohibition)) "a prohibition no cast uses up is rejected"
     Spec.assertBool s (untilUsedOffends (planted pump)) "a continuous effect on an object is rejected"
+  -- CR 611.2a, swept over the pool. See windowOffends.
+  Spec.it s "CR 611.2a no card writes a next-turn window where nothing asks whether it began" $ do
+    ps <- S.allPrintings s
+    let offenders = filter (anyFace windowOffends . Printing.card) ps
+    Spec.assertBool s (any (anyFace ((/= 0) . begunWindows) . Printing.card) ps) "the pool has a card writing a window"
+    Spec.assertEqWith s "a window sits only on a carrier that asks Expiry.begun" (fmap (S.nameOf . Printing.card) offenders) []
+  -- The REJECTING direction, against planted faces: the evasion and the
+  -- continuous effect, two carriers that never ask.
+  Spec.it s "the lint itself catches a window where nothing asks whether it began" $ do
+    taunt <- S.printingOf s registry "Taunt"
+    relay <- S.printingOf s registry "Galvanic Relay"
+    let planted effect = (vanillaFace "Planted" instantLine) {Face.spell = Mint.oneMode (Seq.singleton effect)}
+        creatures = Filter.Type.HasCardType CardType.Creature
+        evasion = Effect.ForbidBeingBlocked (ForbidBeingBlocked.MkForbidBeingBlocked Duration.DuringYourNextTurn creatures)
+        pump = Effect.ModifyTarget (ModifyTarget.MkModifyTarget Duration.DuringYourNextTurn (Modification.GainKeyword Keyword.Flying) (ObjectRef.EachMatching creatures) Nothing)
+    Spec.assertBool s (not (anyFace windowOffends (Printing.card taunt))) "the real Taunt is accepted"
+    Spec.assertBool s (not (anyFace windowOffends (Printing.card relay))) "the real Galvanic Relay is accepted"
+    Spec.assertBool s (windowOffends (planted evasion)) "an evasion is rejected"
+    Spec.assertBool s (windowOffends (planted pump)) "a continuous effect on an object is rejected"
 
 spec :: (Monad n) => Spec.Spec IO n -> Registry.Registry IO -> n ()
 spec s registry = Spec.describe s "Pawl.Engine.Card" $ do
   effectLintSpec s registry
+
+-- CR 611.2a: a "during X's next turn" duration arms a window that
+-- Pawl.Engine.Expiry.begun alone holds back until that turn. Four carriers ask
+-- it -- player effects, attack prohibitions, attack requirements and exile play
+-- permissions -- so a window on any other would apply from the moment it is
+-- stored, and offends. Counted against the ENCODED face for untilUsedOffends'
+-- reason.
+windowOffends :: Face.Face Card.Type.Card -> Bool
+windowOffends card =
+  let encoded = Codec.encode (Face.Codec.codec Card.Codec.codec) card
+   in sum (fmap (\tag -> jsonAtoms (Text.pack tag) encoded) ["DuringNextTurnOf", "DuringYourNextTurn", "DuringThatExtraTurn"]) /= begunWindows card
+
+-- How many window durations this face writes on a carrier that asks
+-- Expiry.begun.
+begunWindows :: Face.Face Card.Type.Card -> Int
+begunWindows card =
+  let asking effect = case effect of
+        Effect.AffectPlayers e -> Just (AffectPlayers.duration e)
+        Effect.ForbidAttack e -> Just (ForbidAttack.duration e)
+        Effect.RequireAttack e -> Just (RequireAttack.duration e)
+        Effect.GrantPlayFromExile e -> Just (GrantPlayFromExile.duration e)
+        _ -> Nothing
+      window duration = case duration of
+        Duration.DuringNextTurnOf _ -> True
+        Duration.DuringYourNextTurn -> True
+        Duration.DuringThatExtraTurn -> True
+        _ -> False
+   in length (filter (maybe False window . asking) (cardAuthoredEffects card))
 
 -- | The discard of the cards a ref names, binding nothing.
 discardsThese :: ObjectRef.ObjectRef -> Effect.Effect card ability

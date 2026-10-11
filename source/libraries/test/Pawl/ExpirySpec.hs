@@ -1966,8 +1966,8 @@ whenPaidSpec s = Spec.describe s "WhenPaid" $ do
         never = effectWith Expiry.Type.Never (Setup.emptyGame S.bothPlayers)
     Spec.assertEqWith s "the offer names the source, the price and the seat" (Expiry.paidExpiries armed) [(effectSource, blueOfferTo S.alice)]
     Spec.assertEqWith s "an indefinite effect from the same source offers nothing" (Expiry.paidExpiries never) []
-    Spec.assertEqWith s "and paying ends it" (GameState.continuousEffects (Expiry.dropWhenPaidBy effectSource armed)) []
-    Spec.assertEqWith s "while another object's payment does not" (length (GameState.continuousEffects (Expiry.dropWhenPaidBy S.noSource armed))) 1
+    Spec.assertEqWith s "and paying ends it" (GameState.continuousEffects (Expiry.sweep (Expiry.PaidFor effectSource) armed)) []
+    Spec.assertEqWith s "while another object's payment does not" (length (GameState.continuousEffects (Expiry.sweep (Expiry.PaidFor S.noSource) armed))) 1
 
 -- {U}, the price every Licid prints.
 blueCost :: Cost.Type.Cost Keyword.Keyword
