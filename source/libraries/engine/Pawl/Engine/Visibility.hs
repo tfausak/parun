@@ -19,7 +19,8 @@ import qualified Pawl.Types.Zone as Zone
 
 -- | Whether a player may see an object's face now. CR 723.4: for an object in
 -- the game, a player also sees what each player they control sees; a card
--- outside the game is seen as its own seats see it, never through control.
+-- outside the game (CR 400.11) is seen by its owner alone, never through
+-- control.
 sees :: PlayerId -> ObjectId -> GameState.GameState -> Visibility.Visibility
 sees pid oid gs =
   if Set.member oid (GameState.outsideCopies gs)
@@ -44,11 +45,12 @@ controlledBy pid gs =
 base :: PlayerId -> ObjectId -> GameState.GameState -> Visibility.Visibility
 base pid oid gs = case Game.lookupObject oid gs of
   Nothing -> Visibility.Obscured
-  Just obj -> case Object.zone obj of
-    Zone.Library -> Visibility.Obscured -- CR 401.2
-    Zone.Hand -> visibleIf (Object.owner obj == pid) -- CR 400.2
-    Zone.Exile -> visibleIf (Exile.mayLookAt pid oid gs) -- CR 406.3
-    zone -> case Object.facing obj of
+  Just obj -> case Game.zoneOf oid gs of
+    Nothing -> visibleIf (Object.owner obj == pid) -- CR 400.11
+    Just Zone.Library -> Visibility.Obscured -- CR 401.2
+    Just Zone.Hand -> visibleIf (Object.owner obj == pid) -- CR 400.2
+    Just Zone.Exile -> visibleIf (Exile.mayLookAt pid oid gs) -- CR 406.3
+    Just zone -> case Object.facing obj of
       Facing.FaceUp -> Visibility.Visible
       Facing.FaceDown _ ->
         if zone == Zone.Battlefield || zone == Zone.Stack
