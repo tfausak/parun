@@ -173,7 +173,8 @@
               },
               "restriction": {
                 "casts": {
-                  "type": "IsLastExiledWithSource"
+                  "type": "IsExiledWithSource",
+                  "value": { "type": "LastExiled" }
                 }
               },
               "rider": null,
@@ -194,7 +195,8 @@
               },
               "restriction": {
                 "casts": {
-                  "type": "IsLastExiledWithSource"
+                  "type": "IsExiledWithSource",
+                  "value": { "type": "LastExiled" }
                 }
               },
               "rider": null,

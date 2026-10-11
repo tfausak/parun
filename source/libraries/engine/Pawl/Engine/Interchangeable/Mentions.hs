@@ -463,7 +463,7 @@ filterNames asking criterion = case criterion of
   Filter.HasChosenName -> False
   Filter.HasChosenColor -> False
   Filter.HasChosenSubtype -> False
-  Filter.IsLastExiledWithSource -> False
+  Filter.IsExiledWithSource _ -> False
   Filter.OfChosenPlayer -> False
   Filter.OfRelatedPlayer _ -> False
   Filter.IsPlayer _relation -> False

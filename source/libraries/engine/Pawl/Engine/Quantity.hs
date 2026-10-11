@@ -338,6 +338,10 @@ evaluateAgainst viewOf context gs announcedOn mOid mView quantity =
         -- Every exiling ability of the source counts, whatever its name: this
         -- reference names none, so CR 607.4 links it to each of them.
         --
+        -- Not implemented: CR 607.5's narrowing for a reference a copy effect
+        -- brought, which sees only what its own copied pair exiled -- Mimeoplasm,
+        -- Revered One as a copy of Sutured Ghoul (#4985).
+        --
         -- Terminating: the payload is a strictly smaller subterm.
         Quantity.AgainstCardsExiledWith inner ->
           case Filter.source context of

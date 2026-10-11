@@ -1,0 +1,50 @@
+{
+  "description": "CR 607.1 a card Mimeoplasm exiles as Withered Wretch is not exiled with its copy ability",
+  "note": "Mimeoplasm exiles Withered Wretch and Goblin Piker as it enters, then becomes a copy of the Wretch and keeps its {2} ability. The Wretch's own '{1}: Exile target card from a graveyard' then exiles bob's Runeclaw Bear. The Bear is exiled with the same object but by a different ability, so CR 607.1's 'and not by any other ability' keeps it out of {2}'s reach (CR 607.2b, 614.14). The Piker, exiled as Mimeoplasm entered, is still a legal target.",
+  "board": {
+    "seats": [
+      {
+        "name": "alice",
+        "battlefield": [
+          { "card": "Swamp", "ready": true },
+          { "card": "Swamp", "ready": true },
+          { "card": "Swamp", "ready": true },
+          { "card": "Swamp", "ready": true },
+          { "card": "Swamp", "ready": true },
+          { "card": "Swamp", "ready": true },
+          { "card": "Swamp", "ready": true },
+          { "card": "Swamp", "ready": true },
+          { "card": "Forest", "ready": true },
+          { "card": "Island", "ready": true }
+        ],
+        "hand": [{ "card": "Mimeoplasm, Revered One", "label": "ooze" }],
+        "graveyard": [
+          { "card": "Withered Wretch", "label": "wretch" },
+          { "card": "Goblin Piker", "label": "piker" },
+          { "card": "Silent Arbiter" }
+        ]
+      },
+      {
+        "name": "bob",
+        "graveyard": [{ "card": "Runeclaw Bear" }]
+      }
+    ],
+    "active": "alice",
+    "step": "PrecombatMain"
+  },
+  "timeline": [
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": { "Cast": { "object": "$ooze", "x": 2, "mana": ["Swamp", "Forest", "Island", "Swamp#2", "Swamp#3", null] } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": { "Answer": { "prompt": "ChooseAnyNumberToExile", "with": ["$wretch", "$piker"] } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass" },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": { "Activate": { "object": "Mimeoplasm, Revered One", "ability": 0, "targets": ["Withered Wretch"], "mana": ["Swamp#4", "Swamp#5", null] } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass" },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "check": { "Names": { "object": "Mimeoplasm, Revered One", "names": ["Withered Wretch"] } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": { "Activate": { "object": "Mimeoplasm, Revered One", "ability": 0, "targets": ["Runeclaw Bear"], "mana": ["Swamp#6", null] } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass" },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "check": { "Count": { "player": "bob", "zone": "Exile", "card": "Runeclaw Bear", "count": 1 } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "refuse": { "Activate": { "object": "Mimeoplasm, Revered One", "ability": 1, "targets": ["Runeclaw Bear"], "mana": ["Swamp#7", "Swamp#8"] } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": { "Activate": { "object": "Mimeoplasm, Revered One", "ability": 1, "targets": ["Goblin Piker"], "mana": ["Swamp#7", "Swamp#8"] } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass" },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "check": { "Names": { "object": "Mimeoplasm, Revered One", "names": ["Goblin Piker"] } } }
+  ]
+}
