@@ -28,8 +28,8 @@ sees pid oid gs =
     else foldMap (\seat -> base seat oid gs) (pid : controlledBy pid gs)
 
 -- | CR 723.5: the players whose decisions this player makes, by the reading
--- Pawl.Engine.Decide.deciderFor makes, so a scheduled control that is not yet
--- working (CR 723.1) lends no sight.
+-- Pawl.Engine.Decide.deciderFor makes, so a dormant row waiting for its spell
+-- (CR 723.2) or one overwritten by a later control (CR 723.1a) lends no sight.
 controlledBy :: PlayerId -> GameState.GameState -> [PlayerId]
 controlledBy pid gs =
   [ seat
