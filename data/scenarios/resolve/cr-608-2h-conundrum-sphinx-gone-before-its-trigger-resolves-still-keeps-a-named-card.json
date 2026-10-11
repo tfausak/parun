@@ -1,0 +1,158 @@
+{
+  "description": "CR 608.2h Conundrum Sphinx gone before its trigger resolves still keeps a named card",
+  "note": "Alice returns the attacking Sphinx to her hand with its trigger on the stack, so the names are chosen for a source that has left. Alice names her own top card and keeps it; bob names something else and his goes to the bottom. Names written only to the live source would be lost and send both to the bottom.",
+  "board": {
+    "active": "alice",
+    "step": "DeclareAttackers",
+    "seats": [
+      {
+        "name": "alice",
+        "battlefield": [
+          {
+            "card": "Conundrum Sphinx",
+            "label": "sphinx",
+            "ready": true
+          },
+          {
+            "card": "Island",
+            "label": "island"
+          }
+        ],
+        "hand": [
+          {
+            "card": "Unsummon",
+            "label": "unsummon"
+          }
+        ],
+        "library": [
+          {
+            "card": "Crucible of Worlds"
+          },
+          {
+            "card": "Mountain"
+          }
+        ]
+      },
+      {
+        "name": "bob",
+        "library": [
+          {
+            "card": "Goblin Piker"
+          },
+          {
+            "card": "Plains"
+          }
+        ]
+      }
+    ]
+  },
+  "timeline": [
+    {
+      "turn": 1,
+      "step": "DeclareAttackers",
+      "player": "alice",
+      "do": {
+        "Attack": [
+          "$sphinx"
+        ]
+      }
+    },
+    {
+      "turn": 1,
+      "step": "DeclareAttackers",
+      "player": "alice",
+      "do": {
+        "Cast": {
+          "object": "$unsummon",
+          "targets": [
+            "$sphinx"
+          ],
+          "mana": [
+            "$island"
+          ]
+        }
+      }
+    },
+    {
+      "turn": 1,
+      "step": "DeclareAttackers",
+      "player": "alice",
+      "do": "Pass"
+    },
+    {
+      "turn": 1,
+      "step": "DeclareAttackers",
+      "player": "alice",
+      "check": {
+        "View": {
+          "of": "Zone",
+          "player": "alice",
+          "zone": "Hand",
+          "is": [
+            "Conundrum Sphinx"
+          ]
+        }
+      }
+    },
+    {
+      "turn": 1,
+      "step": "DeclareAttackers",
+      "player": "alice",
+      "do": "Pass"
+    },
+    {
+      "turn": 1,
+      "step": "DeclareAttackers",
+      "player": "alice",
+      "do": {
+        "Answer": {
+          "prompt": "ChooseCardName",
+          "with": "Crucible of Worlds"
+        }
+      }
+    },
+    {
+      "turn": 1,
+      "step": "DeclareAttackers",
+      "player": "bob",
+      "do": {
+        "Answer": {
+          "prompt": "ChooseCardName",
+          "with": "Hill Giant"
+        }
+      }
+    },
+    {
+      "turn": 1,
+      "step": "DeclareAttackers",
+      "player": "alice",
+      "check": {
+        "View": {
+          "of": "Zone",
+          "player": "alice",
+          "zone": "Hand",
+          "is": [
+            "Conundrum Sphinx",
+            "Crucible of Worlds"
+          ]
+        }
+      }
+    },
+    {
+      "turn": 1,
+      "step": "DeclareAttackers",
+      "player": "alice",
+      "check": {
+        "View": {
+          "of": "Zone",
+          "player": "bob",
+          "zone": "Library",
+          "is": [
+            "Plains",
+            "Goblin Piker"
+          ]
+        }
+      }
+    }
+  ]
+}

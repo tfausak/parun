@@ -251,6 +251,7 @@ import qualified Pawl.Types.InherentTriggerSource as InherentTriggerSource
 import qualified Pawl.Types.InitiativeTarget as InitiativeTarget
 import qualified Pawl.Types.Keyword as Keyword.Type
 import qualified Pawl.Types.KeywordFamily as KeywordFamily
+import qualified Pawl.Types.LastKnown as LastKnown
 import qualified Pawl.Types.LibraryDepth as LibraryDepth
 import qualified Pawl.Types.LibraryPlacement as LibraryPlacement
 import qualified Pawl.Types.LibraryPosition as LibraryPosition
@@ -8733,9 +8734,15 @@ applyOneEffect runSubgame resolving source controller legal chosen effect = case
     -- skipped rather than assigning the empty set -- which would clear a name an
     -- earlier instruction chose, and the assignment above is the whole reason
     -- that would now be visible.
+    --
+    -- A source that has LEFT its zone gets the names on its last known
+    -- information instead (CR 608.2h), which is where Game.chosenNamesWithLastKnown
+    -- reads them back: Conundrum Sphinx bounced with its trigger on the stack
+    -- still keeps a named card (its CR 608.2h scenario under data/scenarios).
     Monad.unless (Map.null picked) $ do
       let stamp o = o {Object.chosenNames = picked}
-      State.modify' $ \g -> g {GameState.objects = Map.adjust stamp source (GameState.objects g)}
+          remember lk = lk {LastKnown.chosenNames = picked}
+      State.modify' $ \g -> g {GameState.objects = Map.adjust stamp source (GameState.objects g), GameState.lastKnown = Map.adjust remember source (GameState.lastKnown g)}
   -- CR 400.11c: the resolving controller reveals a card they own from outside the
   -- game matching the filter and puts it into their hand -- Burning Wish.
   --
