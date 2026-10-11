@@ -1227,8 +1227,7 @@ framedBySlots gs recipients context =
           | (slot, named) <- Map.toList objects,
             Just oid <- [oneObject named],
             Just view <- [lastKnown oid],
-            measure <- [minBound .. maxBound],
-            Just n <- [Filter.measureOf measure view]
+            (measure, n) <- Map.toList (Filter.measuresOf view)
           ]
    in context
         { Filter.slotObjects = objects,

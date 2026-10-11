@@ -1605,7 +1605,8 @@ slotOneObject slot context = case Set.toList (Map.findWithDefault Set.empty slot
   [oid] -> Just oid
   _ -> Nothing
 
--- Every measure the view has, keyed by which: Context.sourceMeasures' filler.
+-- Every measure the view has, keyed by which: what Context.sourceMeasures and
+-- slotMeasures hold of one object.
 measuresOf :: View -> Map.Map Measure.Measure Integer
 measuresOf view = Map.fromList [(measure, n) | measure <- [minBound .. maxBound], Just n <- [measureOf measure view]]
 
