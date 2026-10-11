@@ -1404,9 +1404,9 @@ halvesOf = faceUpCopiable halvesCardOf
 -- Card.faceDownFace.
 --
 -- The object still HAS its card (Object.source), and faceUpFaceOf below is how
--- CR 702.37e reads the morph cost off it. Nothing hides the card from a reader
--- that goes looking, so CR 708.5's "you can't look at face-down permanents
--- controlled by another player" is unimplemented (#1412).
+-- CR 702.37e reads the morph cost off it. Pawl.Engine.Visibility.sees answers
+-- CR 708.5's who-may-look. Not implemented: an answerer is still handed the
+-- printing, which nothing hides from a reader that goes looking (#1412).
 faceOf :: ObjectId -> GameState -> Maybe (Face Card)
 faceOf oid gs = faceOfObject gs =<< lookupLayerOne oid gs
 

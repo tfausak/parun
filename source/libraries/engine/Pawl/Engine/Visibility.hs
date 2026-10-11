@@ -41,14 +41,17 @@ controlledBy pid gs =
 -- One player's own sight, before CR 723.4.
 --
 -- Not implemented: a card in an Attraction, planar or scheme deck is face down
--- (CR 701.31b, 729.5a) but answers here as its facing does (#N).
+-- (CR 314.6, 701.31b, 729.5a) but answers here as its facing does (#4990).
 base :: PlayerId -> ObjectId -> GameState.GameState -> Visibility.Visibility
 base pid oid gs = case Game.lookupObject oid gs of
   Nothing -> Visibility.Obscured
   Just obj -> case Game.zoneOf oid gs of
     Nothing -> visibleIf (Object.owner obj == pid) -- CR 400.11
     Just Zone.Library -> Visibility.Obscured -- CR 401.2
-    Just Zone.Hand -> visibleIf (Object.owner obj == pid) -- CR 400.2
+    Just Zone.Hand ->
+      if Game.keptFaceDown oid gs
+        then Visibility.Obscured -- CR 121.8, 708.5
+        else visibleIf (Object.owner obj == pid) -- CR 400.2
     Just Zone.Exile -> visibleIf (Exile.mayLookAt pid oid gs) -- CR 406.3
     Just zone -> case Object.facing obj of
       Facing.FaceUp -> Visibility.Visible
