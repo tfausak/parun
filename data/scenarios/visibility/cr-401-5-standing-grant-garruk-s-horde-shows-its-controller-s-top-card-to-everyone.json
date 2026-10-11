@@ -1,0 +1,19 @@
+{
+  "description": "CR 401.5 standing grant Garruk's Horde shows its controller's top card to everyone",
+  "note": "Garruk's Horde reveals alice's top card to every seat, and only that card: her second card and bob's top card stay hidden (CR 400.2).",
+  "board": {
+    "seats": [
+      { "name": "alice",
+        "battlefield": [ { "card": "Garruk's Horde", "ready": true } ],
+        "library": [ { "card": "Llanowar Elves", "label": "a-top" }, { "card": "Forest", "label": "a-second" } ] },
+      { "name": "bob", "library": [ { "card": "Island", "label": "b-top" } ] }
+    ],
+    "active": "alice",
+    "step": "PrecombatMain"
+  },
+  "timeline": [
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "check": { "View": { "of": "Seers", "object": "$a-top", "is": ["alice", "bob"] } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "check": { "View": { "of": "Seers", "object": "$a-second", "is": [] } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "check": { "View": { "of": "Seers", "object": "$b-top", "is": [] } } }
+  ]
+}

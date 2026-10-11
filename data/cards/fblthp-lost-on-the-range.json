@@ -45,6 +45,22 @@
       "playerAbilities": [
         {
           "effect": {
+            "type": "Shows",
+            "value": {
+              "cards": {
+                "type": "TopOfLibrary"
+              },
+              "to": {
+                "type": "ThatPlayer"
+              }
+            }
+          },
+          "scope": {
+            "type": "You"
+          }
+        },
+        {
+          "effect": {
             "type": "PlotFrom",
             "value": {
               "from": {

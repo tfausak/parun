@@ -1,0 +1,18 @@
+{
+  "description": "CR 401.5 standing grant Fblthp lets its controller alone look at the top card",
+  "note": "Fblthp's look is not a reveal: bob sees his own top card and alice does not, and alice's top card stays hidden from both (CR 400.2).",
+  "board": {
+    "seats": [
+      { "name": "alice", "library": [ { "card": "Forest", "label": "a-top" } ] },
+      { "name": "bob",
+        "battlefield": [ { "card": "Fblthp, Lost on the Range", "ready": true } ],
+        "library": [ { "card": "Island", "label": "b-top" } ] }
+    ],
+    "active": "alice",
+    "step": "PrecombatMain"
+  },
+  "timeline": [
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "check": { "View": { "of": "Seers", "object": "$b-top", "is": ["bob"] } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "check": { "View": { "of": "Seers", "object": "$a-top", "is": [] } } }
+  ]
+}
