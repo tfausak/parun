@@ -23,7 +23,10 @@
                                   "aggregation": {
                                     "type": "Total",
                                     "value": {
-                                      "type": "ManaValue"
+                                      "type": "Measure",
+                                      "value": {
+                                        "type": "ManaValue"
+                                      }
                                     }
                                   },
                                   "filter": {

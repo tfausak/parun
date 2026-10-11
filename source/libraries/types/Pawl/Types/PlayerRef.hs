@@ -91,7 +91,7 @@ data PlayerRef
     -- Malignus' "the highest life total among your opponents", where the life
     -- read is each candidate's rather than any one player's.
     --
-    -- Pawl.Types.Quantity.Power's position, one type over: the object-reading
+    -- Pawl.Types.Quantity.Measure's position, one type over: the object-reading
     -- arms name no object and read whichever one the evaluation is aimed at,
     -- and this names no player and reads whichever one it is aimed at. So it is
     -- resolved where the candidate is known -- Pawl.Engine.Quantity, off

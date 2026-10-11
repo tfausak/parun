@@ -4,7 +4,10 @@
       "characteristicPT": {
         "type": "AgainstCardsExiledWith",
         "value": {
-          "type": "ManaValue"
+          "type": "Measure",
+          "value": {
+            "type": "ManaValue"
+          }
         }
       },
       "manaCost": [

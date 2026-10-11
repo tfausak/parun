@@ -49,7 +49,10 @@
                     "aggregation": {
                       "type": "Greatest",
                       "value": {
-                        "type": "Power"
+                        "type": "Measure",
+                        "value": {
+                          "type": "Power"
+                        }
                       }
                     },
                     "filter": {
@@ -80,7 +83,10 @@
                     "aggregation": {
                       "type": "Greatest",
                       "value": {
-                        "type": "Power"
+                        "type": "Measure",
+                        "value": {
+                          "type": "Power"
+                        }
                       }
                     },
                     "filter": {

@@ -83,6 +83,7 @@ import qualified Pawl.Types.ManaRetention as ManaRetention
 import qualified Pawl.Types.ManaSymbol as ManaSymbol
 import qualified Pawl.Types.ManaType as ManaType
 import qualified Pawl.Types.ManaUnit as ManaUnit
+import qualified Pawl.Types.Measure as Measure
 import qualified Pawl.Types.Modal as Modal
 import qualified Pawl.Types.Mode as Mode
 import qualified Pawl.Types.Modification as Modification
@@ -1082,7 +1083,7 @@ spec s registry = Spec.describe s "Pawl.Engine.Projection" $ do
     Spec.assertEqWith
       s
       "read against the SOURCE, the Piker's power locks in at 2"
-      (freeze (Modification.ModifyPowerToughness (ModifyPowerToughness.MkModifyPowerToughness Quantity.Power Quantity.Power)))
+      (freeze (Modification.ModifyPowerToughness (ModifyPowerToughness.MkModifyPowerToughness (Quantity.Measure Measure.Power) (Quantity.Measure Measure.Power))))
       (Just (Modification.ModifyPowerToughness (ModifyPowerToughness.MkModifyPowerToughness (Quantity.Literal 2) (Quantity.Literal 2))))
     -- CR 208.2: a bare star has no value of its own -- the projection
     -- substitutes the object's characteristic-defining quantity for it at the
@@ -1681,7 +1682,7 @@ spec s registry = Spec.describe s "Pawl.Engine.Projection" $ do
     piker <- S.printingOf s registry "Goblin Piker"
     mountain <- S.printingOf s registry "Mountain"
     let (oid, gs0) = S.addPermanent piker S.bob (S.landsInPlay mountain 1)
-        gs = S.withEffectAt oid (Timestamp.MkTimestamp 100) (Modification.SetBasePowerToughness (SetBasePowerToughness.MkSetBasePowerToughness (Just Quantity.ManaValue) (Just Quantity.ManaValue))) gs0
+        gs = S.withEffectAt oid (Timestamp.MkTimestamp 100) (Modification.SetBasePowerToughness (SetBasePowerToughness.MkSetBasePowerToughness (Just (Quantity.Measure Measure.ManaValue)) (Just (Quantity.Measure Measure.ManaValue)))) gs0
     Spec.assertEqWith s "power = mana value" (Projection.powerOf oid gs) (Just 2)
     Spec.assertEqWith s "toughness = mana value" (Projection.toughnessOf oid gs) (Just 2)
 

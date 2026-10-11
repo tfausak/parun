@@ -23,9 +23,7 @@ substituteStar star quantity = case quantity of
   -- P/T box and its CDA carries the halving.
   Quantity.Arithmetic arithmetic -> Quantity.Arithmetic (fmap (substituteStar star) arithmetic)
   Quantity.Literal _ -> quantity
-  Quantity.ManaValue -> quantity
-  Quantity.Power -> quantity
-  Quantity.Toughness -> quantity
+  Quantity.Measure _ -> quantity
   Quantity.Intensity -> quantity
   Quantity.InSlot _ -> quantity
   Quantity.WasBound _ -> quantity

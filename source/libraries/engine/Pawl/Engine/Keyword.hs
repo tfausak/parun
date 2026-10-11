@@ -963,7 +963,7 @@ reinforceTarget = SlotName.MkSlotName (Text.pack "reinforced")
 -- THE FILTER is the one thing neither cycling nor reinforce needed -- "a card
 -- with the same mana value as the discarded card". The mana value compared
 -- Exactly against the OfSource operand reads Pawl.Engine.Filter.Context's
--- sourceManaValue, which
+-- sourceMeasures, which
 -- Pawl.Engine.Resolve.Slots.effectContext fills through CR 608.2h's last-known
 -- reader: the cost has already put the card in a graveyard as a new object (CR
 -- 400.7), so the live board answers nothing and the discarded card's own mana
@@ -1031,7 +1031,7 @@ craft spec =
 -- THE SACRIFICE is a cost component for the discard's reason, and reads back the
 -- same way: CR 701.21a has already put the permanent in a graveyard as a new
 -- object (CR 400.7), so "the same mana value as this permanent" is a CR 608.2h
--- reading of the sacrificed permanent, which effectContext's sourceManaValue is.
+-- reading of the sacrificed permanent, which effectContext's sourceMeasures is.
 --
 -- NO REVEAL in the destination, unlike transmute's: rule 702.71a states none,
 -- and CR 701.23e's reveal is only what a rule's own sentence asks for.
@@ -1606,7 +1606,7 @@ graveyardTokenCopy exceptions cost =
 -- THE TARGET is reinforce's shape: chosen at CR 601.2c, before CR 601.2h pays,
 -- so the ability outlives the card its own cost exiled (CR 113.7a).
 --
--- THE COUNT reads Quantity.Power off Binding.triggerSource, the card the cost
+-- THE COUNT reads power off Binding.triggerSource, the card the cost
 -- exiled. Rule 702.97a says "the card you exiled" where the printed reminder
 -- says "this card's power"; they name one object, and an AgainstSlot read goes
 -- through the injected view, which is what lets CR 608.2h answer for a card the
@@ -1618,7 +1618,7 @@ scavenge cost =
         Effect.PutCounters
           ( PutCounters.MkPutCounters
               CounterKind.PlusOnePlusOne
-              (Quantity.AgainstSlot (AgainstSlot.MkAgainstSlot Binding.triggerSource Quantity.Power))
+              (Quantity.AgainstSlot (AgainstSlot.MkAgainstSlot Binding.triggerSource (Quantity.Measure Measure.Power)))
               (ObjectRef.InSlot scavengeTarget)
           )
    in ActivatedAbility.MkActivatedAbility
@@ -5882,7 +5882,7 @@ mobilize n =
 keywordCount :: KeywordCount.KeywordCount Keyword -> Quantity.Quantity
 keywordCount n = case n of
   KeywordCount.Fixed k -> Quantity.Literal (toInteger k)
-  KeywordCount.Power -> Quantity.Power
+  KeywordCount.Power -> Quantity.Measure Measure.Power
   KeywordCount.Tally tally -> Quantity.Count Count.MkCount {Count.scope = KeywordTally.scope tally, Count.filter = KeywordTally.filter tally, Count.aggregation = Aggregation.Members}
   KeywordCount.PlayerCounters tally -> Quantity.PlayerCounters tally
 
@@ -6153,7 +6153,7 @@ evolve =
         ( TriggerCondition.PermanentEnters
             (Filter.And [Filter.HasCardType CardType.Creature, Filter.ControlledBy PlayerRelation.You])
         )
-        (Condition.Any [entrantExceeds Quantity.Power, entrantExceeds Quantity.Toughness])
+        (Condition.Any (fmap (entrantExceeds . Quantity.Measure) [Measure.Power, Measure.Toughness]))
         (Seq.singleton effect)
 
 -- CR 702.108a: whenever you cast a noncreature spell, this creature gets +1/+1
@@ -6263,7 +6263,7 @@ increment =
           )
    in Mint.triggerIf
         (Mint.spellCast (Filter.ControlledBy PlayerRelation.You))
-        (Condition.All [isCreature, Condition.Any [spentExceeds Quantity.Power, spentExceeds Quantity.Toughness]])
+        (Condition.All [isCreature, Condition.Any (fmap (spentExceeds . Quantity.Measure) [Measure.Power, Measure.Toughness])])
         (Seq.singleton grow)
 
 -- CR 702.121a, on battle cry's SelfAttacks condition with prowess' payload.
@@ -6426,7 +6426,7 @@ enlistReflexive =
         Effect.ModifyTarget
           ( ModifyTarget.MkModifyTarget
               Duration.UntilEndOfTurn
-              (Modification.ModifyPowerToughness (ModifyPowerToughness.MkModifyPowerToughness (Quantity.AgainstSlot (AgainstSlot.MkAgainstSlot Binding.tappedPermanent Quantity.Power)) (Quantity.Literal 0)))
+              (Modification.ModifyPowerToughness (ModifyPowerToughness.MkModifyPowerToughness (Quantity.AgainstSlot (AgainstSlot.MkAgainstSlot Binding.tappedPermanent (Quantity.Measure Measure.Power))) (Quantity.Literal 0)))
               (ObjectRef.EachMatching Filter.IsSource)
               Nothing
           )

@@ -545,21 +545,19 @@ cantCrewVehiclesTag = Text.pack "CantCrewVehicles"
 -- Pawl.Codec.ConjureCards, whose value carries the same two keys. Only that
 -- position's own "filter" subtree is counted, which is sound because a Filter
 -- holds neither: nothing nests below it to be double-counted.
---
--- Parameterized by the TAG for jsonAtoms' reason.
-amountedSlotAtoms :: Text.Text -> Value.Value -> Int
-amountedSlotAtoms tag value = case value of
-  Value.Array a -> sum (fmap (amountedSlotAtoms tag) (Array.unwrap a))
+amountedSlotAtoms :: Value.Value -> Int
+amountedSlotAtoms value = case value of
+  Value.Array a -> sum (fmap amountedSlotAtoms (Array.unwrap a))
   Value.Object o ->
     let pairs = Object.unwrap o
         keyed k = fmap Pair.value (filter (\pair -> String.unwrap (Pair.name pair) == Text.pack k) pairs)
         isReference = any (\v -> case v of Value.String t -> String.unwrap t == Text.pack "Reference"; _ -> False) (keyed "type")
-        referenceAtoms = sum (fmap (amountedReferenceAtoms tag) (if isReference then keyed "value" else []))
+        referenceAtoms = sum (fmap amountedReferenceAtoms (if isReference then keyed "value" else []))
         here =
           if null (keyed "pool") || null (keyed "amount")
             then referenceAtoms
-            else sum (fmap (jsonAtoms tag) (keyed "filter"))
-     in here + sum (fmap (amountedSlotAtoms tag . Pair.value) pairs)
+            else sum (fmap (jsonAtoms enclosingAmountTag) (keyed "filter"))
+     in here + sum (fmap (amountedSlotAtoms . Pair.value) pairs)
   Value.String _ -> 0
   Value.Null _ -> 0
   Value.Boolean _ -> 0
@@ -567,12 +565,12 @@ amountedSlotAtoms tag value = case value of
 
 -- A conjure reference pick's value: its "filter" subtree's atoms where an
 -- "amount" sits beside it, and none where it does not.
-amountedReferenceAtoms :: Text.Text -> Value.Value -> Int
-amountedReferenceAtoms tag value = case value of
+amountedReferenceAtoms :: Value.Value -> Int
+amountedReferenceAtoms value = case value of
   Value.Object o ->
     let pairs = Object.unwrap o
         keyed k = fmap Pair.value (filter (\pair -> String.unwrap (Pair.name pair) == Text.pack k) pairs)
-     in if null (keyed "amount") then 0 else sum (fmap (jsonAtoms tag) (keyed "filter"))
+     in if null (keyed "amount") then 0 else sum (fmap (jsonAtoms enclosingAmountTag) (keyed "filter"))
   _ -> 0
 
 -- How many CR 202.3 computed-bound operands this card carries in a target slot
@@ -585,18 +583,13 @@ amountedReferenceAtoms tag value = case value of
 -- an affected set, a search filter, a cost criterion -- is a silent False rather
 -- than a rejected card. This is where that is made loud.
 enclosingAmountCounts :: Face.Face Card.Type.Card -> (Int, Int)
-enclosingAmountCounts = amountedCounts enclosingAmountTag
+enclosingAmountCounts card =
+  let encoded = Codec.encode (Face.Codec.codec Card.codec) card
+      slotted = amountedSlotAtoms encoded
+   in (slotted, jsonAtoms enclosingAmountTag encoded - slotted)
 
 enclosingAmountOffends :: Face.Face Card.Type.Card -> Bool
 enclosingAmountOffends card = snd (enclosingAmountCounts card) /= 0
-
--- How many of `tag` sit in a slot that names an amount, and how many anywhere
--- else -- the second number being the offence.
-amountedCounts :: Text.Text -> Face.Face Card.Type.Card -> (Int, Int)
-amountedCounts tag card =
-  let encoded = Codec.encode (Face.Codec.codec Card.codec) card
-      slotted = amountedSlotAtoms tag encoded
-   in (slotted, jsonAtoms tag encoded - slotted)
 
 -- CR 701.3a is answerable only where an attach FRAMES the match, and
 -- Filter.CanHostSubject is vacuously False in every other Filter position. A card
@@ -2461,87 +2454,53 @@ filterPositionLintSpec s registry = Spec.describe s "Lint" $ do
         (ManaRestrictionFramed, [bound]),
         (TriggerConditionFramed, [bound])
       ]
-  -- A comparison against the SOURCE's measure is answerable only where the
-  -- CONTEXT supplies the source's power, toughness and mana value:
-  -- Pawl.Engine.Projection.withCharacteristicsOf fills all three, for every
-  -- context Projection.sourceContext frames and for CR 509.1b's pairwise walks,
-  -- and they are Nothing inside the CR 613 layer fold and in a bare
-  -- Filter.contextFor -- so the operand in a card's affected set or static
+  -- A comparison against the SOURCE's measures, names (CR 702.60a's ripple) or
+  -- colours (CR 702.78a's conspire) is answerable only where the CONTEXT
+  -- supplies them: Pawl.Engine.Projection.withCharacteristicsOf fills all three
+  -- together, for every context Projection.sourceContext frames and for CR
+  -- 509.1b's pairwise walks, and they are empty inside the CR 613 layer fold and
+  -- in a bare Filter.contextFor -- so the atom in a card's affected set or static
   -- condition would be a silent False. Outside a face's own pairwise position
   -- (Spitfire Handler's, Ironclaw Curse's), a wish's filter (Synthetic Wishful
   -- Djinn's) and a triggered ability's own condition (Kami of Mourning's), only
-  -- Pawl.Engine.Keyword's mentor, training, cascade, transmute and transfigure
-  -- and Pawl.Engine.Ring's emblem write it, and this is what keeps that true.
-  Spec.it s "CR 702.134a / CR 702.85a no card compares against the source outside the positions that fill it" $ do
+  -- Pawl.Engine.Keyword's keywords and Pawl.Engine.Ring's emblem write them, and
+  -- this is what keeps that true.
+  Spec.it s "CR 702.134a / 702.60a / 702.78a no card compares against the source outside the positions that fill it" $ do
     ps <- S.allPrintings s
-    let tag = Text.pack "OfSource"
+    let tags = fmap Text.pack ["OfSource", "SameNameAsSource", "SharesColorWithSource"]
         encoded = Codec.encode (Face.Codec.codec Card.codec)
-        pairwise c = sum (fmap (filterAtoms tag) (concatMap pairwiseFilters (Face.combatRestrictions c)))
+        pairwise tag c = sum (fmap (filterAtoms tag) (concatMap pairwiseFilters (Face.combatRestrictions c)))
         pairwiseFilters r = case r of
           CombatRestriction.CantBeBlockedBy x -> [CantBeBlockedBy.blockers x]
           CombatRestriction.CantBlockCreatures x -> [CantBlockCreatures.attackers x]
           _ -> []
-        admitted c = (pairwise c, wishFilterAtoms tag (encoded c), triggerConditionAtoms tag (encoded c))
-        outside c = let (p, w, t) = admitted c in jsonAtoms tag (encoded c) - p - w - t
-        offenders = filter (anyFace (\c -> outside c /= 0) . Printing.card) ps
-    Spec.assertEqWith s "the operand is written only where the source is filled" (fmap (S.nameOf . Printing.card) offenders) []
+        admitted tag c = (pairwise tag c, wishFilterAtoms tag (encoded c), triggerConditionAtoms tag (encoded c))
+        outside tag c = let (p, w, t) = admitted tag c in jsonAtoms tag (encoded c) - p - w - t
+        offenders = [(tag, S.nameOf (Printing.card p)) | tag <- tags, p <- ps, anyFace (\c -> outside tag c /= 0) (Printing.card p)]
+    Spec.assertEqWith s "the atoms are written only where the source is filled" offenders []
     -- NOT vacuous: each admitted position has its author, and each is accepted.
     djinn <- S.printingOf s registry "Synthetic Wishful Djinn"
     kami <- S.printingOf s registry "Kami of Mourning"
     spitfire <- S.printingOf s registry "Spitfire Handler"
+    let ofSource = Text.pack "OfSource"
     Spec.assertEqWith
       s
       "the Djinn's is in a wish, the Kami's in a trigger condition, the Handler's pairwise"
-      (fmap (\p -> (admitted (S.combinedFace p), outside (S.combinedFace p))) [djinn, kami, spitfire])
+      (fmap (\p -> (admitted ofSource (S.combinedFace p), outside ofSource (S.combinedFace p))) [djinn, kami, spitfire])
       [((0, 1, 0), 0), ((0, 0, 1), 0), ((1, 0, 0), 0)]
     -- NOT vacuous the other way either: the same counter over a hand-built face
-    -- that DOES carry the operand -- buried under all three combinators, in a
+    -- that DOES carry each atom -- buried under all three combinators, in a
     -- target slot, the one position a card author would reach for -- finds it.
     piker <- S.printingOf s registry "Goblin Piker"
-    let buried = Filter.Type.And [Filter.Type.Or [Filter.Type.HasCardType CardType.Creature, Filter.Type.Not (Filter.Type.Measures (Measures.MkMeasures Measure.Power Comparison.LessThan (Operand.OfSource Measure.Power)))]]
-        planted =
+    let atoms = [Filter.Type.Measures (Measures.MkMeasures Measure.Power Comparison.LessThan (Operand.OfSource Measure.Power)), Filter.Type.SameNameAsSource, Filter.Type.SharesColorWithSource]
+        planted atom =
           (S.combinedFace piker)
             { Face.spell =
-                Mint.oneModeTargeting (Map.singleton (SlotName.MkSlotName (Text.pack "target")) (TargetSlot.required Pool.Creatures (Just buried))) Seq.empty
+                Mint.oneModeTargeting
+                  (Map.singleton (SlotName.MkSlotName (Text.pack "target")) (TargetSlot.required Pool.Creatures (Just (Filter.Type.And [Filter.Type.Or [Filter.Type.HasCardType CardType.Creature, Filter.Type.Not atom]]))))
+                  Seq.empty
             }
-    Spec.assertEqWith s "a planted operand is seen" (outside planted) 1
-  -- CR 702.60a's comparison is filled by the same filler and empty in the same
-  -- positions. Only Pawl.Engine.Keyword writes it -- ripple -- and this is what
-  -- keeps that true.
-  Spec.it s "CR 702.60a no card writes a source-name comparison" $ do
-    ps <- S.allPrintings s
-    let atoms c = jsonAtoms (Text.pack "SameNameAsSource") (Codec.encode (Face.Codec.codec Card.codec) c)
-        offenders = filter (anyFace (\c -> atoms c /= 0) . Printing.card) ps
-    Spec.assertEqWith s "the atom is the engine's alone" (fmap (S.nameOf . Printing.card) offenders) []
-    -- NOT vacuous, the sweeps above's reason: the same counter over a hand-built
-    -- face that DOES carry the atom finds it.
-    piker <- S.printingOf s registry "Goblin Piker"
-    let buried = Filter.Type.And [Filter.Type.Or [Filter.Type.HasCardType CardType.Creature, Filter.Type.Not Filter.Type.SameNameAsSource]]
-        planted =
-          (S.combinedFace piker)
-            { Face.spell =
-                Mint.oneModeTargeting (Map.singleton (SlotName.MkSlotName (Text.pack "target")) (TargetSlot.required Pool.Creatures (Just buried))) Seq.empty
-            }
-    Spec.assertEqWith s "a planted atom is seen" (atoms planted) 1
-  -- CR 702.78a's comparison is the atom above's sibling one characteristic
-  -- over, filled by the same filler and empty in the same positions. Only
-  -- Pawl.Engine.Keyword writes it -- conspire -- and this is what keeps that
-  -- true.
-  Spec.it s "CR 702.78a no card writes a source-colour comparison" $ do
-    ps <- S.allPrintings s
-    let atoms c = jsonAtoms (Text.pack "SharesColorWithSource") (Codec.encode (Face.Codec.codec Card.codec) c)
-        offenders = filter (anyFace (\c -> atoms c /= 0) . Printing.card) ps
-    Spec.assertEqWith s "the atom is the engine's alone" (fmap (S.nameOf . Printing.card) offenders) []
-    -- NOT vacuous, the sweeps above's reason: the same counter over a hand-built
-    -- face that DOES carry the atom finds it.
-    piker <- S.printingOf s registry "Goblin Piker"
-    let buried = Filter.Type.And [Filter.Type.Or [Filter.Type.HasCardType CardType.Creature, Filter.Type.Not Filter.Type.SharesColorWithSource]]
-        planted =
-          (S.combinedFace piker)
-            { Face.spell =
-                Mint.oneModeTargeting (Map.singleton (SlotName.MkSlotName (Text.pack "target")) (TargetSlot.required Pool.Creatures (Just buried))) Seq.empty
-            }
-    Spec.assertEqWith s "a planted atom is seen" (atoms planted) 1
+    Spec.assertEqWith s "a planted atom is seen" (zipWith (\tag atom -> outside tag (planted atom)) tags atoms) [1, 1, 1]
   -- CR 702.140a's comparison is the source-name atom's sibling one characteristic over,
   -- and its one filler is Pawl.Engine.Target.slotContext -- so it is answerable
   -- only inside a TARGET SLOT's own filter and would be a silent False in an

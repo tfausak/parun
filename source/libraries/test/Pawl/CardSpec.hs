@@ -4089,9 +4089,7 @@ quantityFilters quantity = unframed (countFilters (quantityCounts quantity)) <> 
 quantityKindFilters :: Quantity.Type.Quantity -> [(Framing, Filter.Type.Filter Keyword.Keyword)]
 quantityKindFilters quantity = case quantity of
   Quantity.Type.Literal _ -> []
-  Quantity.Type.ManaValue -> []
-  Quantity.Type.Power -> []
-  Quantity.Type.Toughness -> []
+  Quantity.Type.Measure _ -> []
   Quantity.Type.Intensity -> []
   Quantity.Type.InSlot _ -> []
   Quantity.Type.WasBound _ -> []
@@ -6340,8 +6338,8 @@ activatedAbilityFilters ability =
     -- CR 603.4's intervening "if" one field over.
     <> frame Unframed (concatMap conditionFilters (Maybe.maybeToList (ActivatedAbility.condition ability)))
     -- CR 602.5's rider. Unframed because Pawl.Engine.ActivationRestriction's
-    -- OnlyIf arm reads no announcement: sourcePower and slotAmount are Nothing
-    -- there and slotObjects, slotNames and slotControllers are empty. The tag is
+    -- OnlyIf arm reads no announcement: slotAmount is Nothing there and
+    -- sourceMeasures, slotObjects, slotNames and slotControllers are empty. The tag is
     -- what FENCES the atoms that would read those rather than leaving them
     -- silent -- CR 709.4a's SameNameAsBound and CR 110.2's
     -- SameControllerAsBound, which belong to InTargetSlot and whose vacuous

@@ -60,10 +60,16 @@
               "type": "SetBasePowerToughness",
               "value": {
                 "power": {
-                  "type": "ManaValue"
+                  "type": "Measure",
+                  "value": {
+                    "type": "ManaValue"
+                  }
                 },
                 "toughness": {
-                  "type": "ManaValue"
+                  "type": "Measure",
+                  "value": {
+                    "type": "ManaValue"
+                  }
                 }
               }
             }

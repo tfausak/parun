@@ -8,6 +8,7 @@ import qualified Pawl.Spec as Spec
 import qualified Pawl.Types.AgainstLastCardExiledWith as AgainstLastCardExiledWith
 import qualified Pawl.Types.CardType as CardType
 import qualified Pawl.Types.Filter as Filter
+import qualified Pawl.Types.Measure as Measure
 import qualified Pawl.Types.Quantity as Quantity
 
 -- | Instantiated at 'Quantity.Quantity', the only concrete instantiation
@@ -24,8 +25,8 @@ spec s = Spec.describe s "Pawl.Codec.AgainstLastCardExiledWith" $ do
       codec
       ( AgainstLastCardExiledWith.MkAgainstLastCardExiledWith
           { AgainstLastCardExiledWith.filter = Filter.HasCardType CardType.Creature,
-            AgainstLastCardExiledWith.quantity = Quantity.Power
+            AgainstLastCardExiledWith.quantity = Quantity.Measure Measure.Power
           }
       )
-      " {\"filter\":{\"type\":\"HasCardType\",\"value\":{\"type\":\"Creature\"}},\"quantity\":{\"type\":\"Power\"}} "
+      " {\"filter\":{\"type\":\"HasCardType\",\"value\":{\"type\":\"Creature\"}},\"quantity\":{\"type\":\"Measure\",\"value\":{\"type\":\"Power\"}}} "
   Spec.it s "has a schema" $ Common.assertHasSchema s codec

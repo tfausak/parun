@@ -26,7 +26,10 @@
                           "parts": [
                             {
                               "quantity": {
-                                "type": "Power"
+                                "type": "Measure",
+                                "value": {
+                                  "type": "Power"
+                                }
                               },
                               "ref": {
                                 "type": "InSlot",

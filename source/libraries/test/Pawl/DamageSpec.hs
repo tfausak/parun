@@ -660,7 +660,7 @@ lifelinkSpec s registry =
 -- damage equal to its power to any target" pays a cost that removes the very
 -- object the riders are read off, so by resolution its id names nothing.
 -- Pawl.ActivateSpec's LastKnownInformation group proves the AMOUNT already
--- survives that (Quantity.Power goes through Projection.viewWithLastKnown); this
+-- survives that (Quantity.Measure Power goes through Projection.viewWithLastKnown); this
 -- group is the riders, which did not.
 --
 -- Basilisk Collar is what gives it riders to lose -- "Equipped creature has

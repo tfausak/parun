@@ -7,6 +7,7 @@ import qualified Pawl.JsonCodec.Codec as Codec
 import qualified Pawl.JsonCodec.Common as Common
 import qualified Pawl.Spec as Spec
 import qualified Pawl.Types.AgainstSlot as AgainstSlot
+import qualified Pawl.Types.Measure as Measure
 import qualified Pawl.Types.Quantity as Quantity
 import qualified Pawl.Types.SlotName as SlotName
 
@@ -24,8 +25,8 @@ spec s = Spec.describe s "Pawl.Codec.AgainstSlot" $ do
       codec
       ( AgainstSlot.MkAgainstSlot
           { AgainstSlot.slot = SlotName.MkSlotName (Text.pack "target"),
-            AgainstSlot.quantity = Quantity.Toughness
+            AgainstSlot.quantity = Quantity.Measure Measure.Toughness
           }
       )
-      " {\"slot\":\"target\",\"quantity\":{\"type\":\"Toughness\"}} "
+      " {\"slot\":\"target\",\"quantity\":{\"type\":\"Measure\",\"value\":{\"type\":\"Toughness\"}}} "
   Spec.it s "has a schema" $ Common.assertHasSchema s codec

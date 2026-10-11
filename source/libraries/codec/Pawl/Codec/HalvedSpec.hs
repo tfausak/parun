@@ -6,6 +6,7 @@ import qualified Pawl.JsonCodec.Codec as Codec
 import qualified Pawl.JsonCodec.Common as Common
 import qualified Pawl.Spec as Spec
 import qualified Pawl.Types.Halved as Halved
+import qualified Pawl.Types.Measure as Measure
 import qualified Pawl.Types.Quantity as Quantity
 import qualified Pawl.Types.Rounding as Rounding
 
@@ -23,8 +24,8 @@ spec s = Spec.describe s "Pawl.Codec.Halved" $ do
       codec
       ( Halved.MkHalved
           { Halved.rounding = Rounding.Up,
-            Halved.quantity = Quantity.Power
+            Halved.quantity = Quantity.Measure Measure.Power
           }
       )
-      " {\"rounding\":{\"type\":\"Up\"},\"quantity\":{\"type\":\"Power\"}} "
+      " {\"rounding\":{\"type\":\"Up\"},\"quantity\":{\"type\":\"Measure\",\"value\":{\"type\":\"Power\"}}} "
   Spec.it s "has a schema" $ Common.assertHasSchema s codec

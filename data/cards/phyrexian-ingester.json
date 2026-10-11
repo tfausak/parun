@@ -37,13 +37,19 @@
                 "power": {
                   "type": "AgainstCardsExiledWith",
                   "value": {
-                    "type": "Power"
+                    "type": "Measure",
+                    "value": {
+                      "type": "Power"
+                    }
                   }
                 },
                 "toughness": {
                   "type": "AgainstCardsExiledWith",
                   "value": {
-                    "type": "Toughness"
+                    "type": "Measure",
+                    "value": {
+                      "type": "Toughness"
+                    }
                   }
                 }
               }
