@@ -249,21 +249,7 @@ perSeat duration = case duration of
 -- Never answers False, which is the whole reason Perpetual is a separate arm:
 -- the two share a lifetime and differ here.
 follows :: Expiry -> Bool
-follows expiry = case expiry of
-  Expiry.Perpetual -> True
-  Expiry.AtCleanup -> False
-  Expiry.Never -> False
-  Expiry.While {} -> False
-  Expiry.AtTurnOf _ -> False
-  Expiry.AtUpkeepOf _ -> False
-  Expiry.AtEndOfTurnOf _ -> False
-  Expiry.DuringTurnOf _ -> False
-  Expiry.DuringTurnOfControllerOf _ -> False
-  Expiry.DuringExtraTurn _ -> False
-  Expiry.AtEndOf _ -> False
-  Expiry.AtEndOfCombatOn _ -> False
-  Expiry.WhenPaid _ -> False
-  Expiry.WhenUsed -> False
+follows = (== Expiry.Perpetual)
 
 -- CR 611.2a: has this duration's window BEGUN? Every arm but DuringTurnOf and
 -- DuringExtraTurn states only an end, so the answer for them is True from the
@@ -279,7 +265,7 @@ follows expiry = case expiry of
 --
 -- Asked by Pawl.Engine.CombatRestriction, Pawl.Engine.AttackRequirement,
 -- Pawl.Engine.Cast.permitsPlayFromExile and Pawl.Engine.PlayerEffect.applying;
--- Pawl.Types.Expiry says why no other carrier asks.
+-- Pawl.EffectLintSpec's windowOffends keeps a window off every other carrier.
 begun :: GameState -> Expiry -> Bool
 begun gs expiry = case expiry of
   Expiry.DuringTurnOf afterTurn ->
@@ -317,70 +303,109 @@ permissionOpen pid permission gs =
           (Condition.holds (Projection.fullView gs) (Projection.sourceContext gs (Just pid) source) gs source)
           (ExilePlayPermission.condition permission)
 
+-- CR 611.2: a moment at which a stored duration can end. Each sweep below names
+-- its moment, and endsAt alone says which expiries end there.
+data Moment
+  = -- | CR 514.2: the cleanup step.
+    Cleanup
+  | -- | CR 611.2a / 800.4m: this seat's turn begins, or would have.
+    TurnOf PlayerId
+  | -- | CR 503 / 611.2a: this player's upkeep step begins.
+    UpkeepOf PlayerId
+  | -- | CR 500.5: this step or phase ends.
+    EndOf PhaseSelector
+  | -- | CR 611.2b / 704.3: a settle re-reads every "for as long as" condition.
+    Settle
+  | -- | CR 116.2c: the pay-to-end price this object's effects state was paid.
+    -- Ends ALL of them: the printed sentence is the rule's grain, and Gliding
+    -- Licid's one sentence stores four.
+    PaidFor ObjectId
+  | -- | CR 611.2a: the effect was exercised (Quicken, Scout's Warning).
+    Used
+  deriving (Eq, Show)
+
+-- CR 611.2: does the expiry a row from `source` stores end at this moment? The
+-- ONE test every sweep and every early ending asks.
+endsAt :: GameState -> Moment -> ObjectId -> Expiry -> Bool
+endsAt gs moment source expiry = case expiry of
+  Expiry.AtCleanup -> moment == Cleanup
+  -- CR 611.2a: lasts until the end of the game, and so does Alchemy's
+  -- "perpetually".
+  Expiry.Never -> False
+  Expiry.Perpetual -> False
+  Expiry.While (While.MkWhile you cond) ->
+    moment == Settle && not (Condition.holds (Projection.fullView gs) (Projection.sourceContext gs (Just you) source) gs source cond)
+  Expiry.AtTurnOf p -> moment == TurnOf p
+  -- CR 800.4m's "a specific point in that turn": a departed player's upkeep
+  -- never begins, so the duration ends where that turn would have.
+  Expiry.AtUpkeepOf p -> moment == UpkeepOf p || departedTurnOf p
+  -- CR 611.2a: "until the end of your next turn" ends at that turn's cleanup
+  -- (CR 514.2), one NAMED turn later (see Pawl.Types.AfterTurn), so the turn the
+  -- duration began on is not its next turn. CR 800.4m ends it where a departed
+  -- player's next turn would have begun, since that turn's cleanup never runs.
+  Expiry.AtEndOfTurnOf afterTurn -> namedTurnEnds Cleanup afterTurn
+  -- CR 611.2a: "during that player's next turn" ends where the arm above ends,
+  -- by the same reading. Its BEGINNING is `begun`'s half: a row swept before it
+  -- began is one whose turn came and went. A departed player's window never
+  -- begins either, so CR 800.4m ends it at the same moment.
+  Expiry.DuringTurnOf afterTurn -> namedTurnEnds Cleanup afterTurn
+  -- Unpinned. Ended by the cleanup of a turn that was its window but had no
+  -- declare attackers step to pin it (CR 500.11, a skipped combat), and dropped
+  -- as hygiene once its object is gone. Named by an object, so no seat's turn
+  -- ends it.
+  Expiry.DuringTurnOfControllerOf afterObjectTurn ->
+    moment == Cleanup
+      && ( Maybe.isNothing (Game.lookupObject (AfterObjectTurn.object afterObjectTurn) gs)
+             || windowReached gs afterObjectTurn
+         )
+  -- CR 611.2a / 500.7: named by a turn rather than a seat, and kept while the
+  -- turn it names is pending, so the cleanup that ends that turn -- popped as it
+  -- began -- ends it, as does the first cleanup after CR 800.4k spent it
+  -- unbegun. Hygiene: `begun` alone decides whether the row applies.
+  Expiry.DuringExtraTurn stamp ->
+    moment == Cleanup && not (any ((== stamp) . ExtraTurn.createdAt) (GameState.extraTurns gs))
+  -- CR 500.5a: EQUALITY on the selector -- dropAtEndOf says why.
+  Expiry.AtEndOf window -> moment == EndOf window
+  -- CR 500.8: the FIRST combat phase of that turn to end ends it, so an added
+  -- combat phase after it finds nothing left. A turn with no combat phase takes
+  -- it at cleanup rather than handing it to a later turn of theirs.
+  Expiry.AtEndOfCombatOn afterTurn ->
+    namedTurnEnds (EndOf PhaseSelector.CombatPhase) afterTurn || namedTurnEnds Cleanup afterTurn
+  -- CR 116.2c: only a payment ends this, and CR 800.4m does not reach it -- the
+  -- offer goes with the departed player's objects.
+  Expiry.WhenPaid _ -> moment == PaidFor source
+  -- CR 611.2a: ended by its use (Pawl.Engine.PlayerEffect.spentGrants), and at
+  -- cleanup, since every printed producer also says "this turn".
+  Expiry.WhenUsed -> moment == Used || moment == Cleanup
+  where
+    departedTurnOf p = moment == TurnOf p && List.notElem p (Game.stillPlaying gs)
+    namedTurnEnds at afterTurn =
+      ( moment == at
+          && Turn.isActive gs (AfterTurn.player afterTurn)
+          && GameState.turnNumber gs > AfterTurn.turn afterTurn
+      )
+        || departedTurnOf (AfterTurn.player afterTurn)
+
+-- CR 611.2a: end every stored row whose expiry ends at this moment.
+-- Delete-and-recompute (design.md 2.5): dropping the stored entry makes the next
+-- projection revert -- nothing is explicitly undone.
+sweep :: Moment -> GameState -> GameState
+sweep moment gs = keepWhere (\source -> not . endsAt gs moment source) gs
+
 -- CR 514.2: "until end of turn" and "this turn" effects end during the cleanup
--- step. Delete-and-recompute (design.md 2.5): dropping the stored entry makes
--- the next projection revert -- nothing is explicitly undone.
+-- step.
 --
 -- A turn whose ENDING PHASE was skipped never reaches the cleanup step's
 -- turn-based actions, and Engine.cleanupSecondAction runs this there anyway: CR
 -- 611.2a ends the duration when the turn ends, whether or not the step that
 -- normally sweeps it happened.
+--
+-- CR 116.2d's ignores are among the rows swept: every printed one says until
+-- end of turn, so Leonin Arbiter stops the next turn's searches again, with
+-- nothing to reinstate.
 dropAtCleanup :: GameState -> GameState
 dropAtCleanup gs =
-  let survives expiry = case expiry of
-        Expiry.AtCleanup -> False
-        Expiry.Never -> True
-        -- Alchemy's "perpetually" lasts for the rest of the game, as Never does.
-        Expiry.Perpetual -> True
-        Expiry.While {} -> True
-        Expiry.AtTurnOf _ -> True
-        Expiry.AtUpkeepOf _ -> True
-        -- CR 611.2a: "until the end of your next turn" ends as that turn ends,
-        -- and the cleanup step is where a turn's effects end -- so the sweep
-        -- CR 514.2 runs for the until-end-of-turn ones ends this too, one NAMED
-        -- turn later. The turn is named by the pair (see Pawl.Types.AfterTurn):
-        -- this cleanup belongs to that player, and its number is above the one
-        -- the duration began on, so it is not the duration's own turn.
-        Expiry.AtEndOfTurnOf afterTurn ->
-          not (Turn.isActive gs (AfterTurn.player afterTurn))
-            || GameState.turnNumber gs <= AfterTurn.turn afterTurn
-        -- CR 611.2a: "during that player's next turn" ends where the arm above
-        -- ends, off the same pair and by the same reading -- the window it
-        -- states is that one turn, so the cleanup that ends the turn ends it.
-        -- The BEGINNING the arm also states is `begun`'s half and is not asked
-        -- here: a row swept before it ever began is a row whose turn came and
-        -- went, which is the cleanup this arm reaches.
-        Expiry.DuringTurnOf afterTurn ->
-          not (Turn.isActive gs (AfterTurn.player afterTurn))
-            || GameState.turnNumber gs <= AfterTurn.turn afterTurn
-        -- Unpinned. Ended by the cleanup of a turn that was its window but had
-        -- no declare attackers step to pin it (CR 500.11, a skipped combat);
-        -- otherwise kept while the object exists, and dropped as hygiene once
-        -- it does not.
-        Expiry.DuringTurnOfControllerOf afterObjectTurn ->
-          Maybe.isJust (Game.lookupObject (AfterObjectTurn.object afterObjectTurn) gs)
-            && not (windowReached gs afterObjectTurn)
-        -- CR 611.2a / 500.7: kept while the turn it names is still pending, so
-        -- the cleanup that ends that turn -- it was popped as it began -- ends
-        -- it, and so does the first cleanup after CR 800.4k spent it unbegun.
-        -- Hygiene: `begun` alone decides whether the row applies.
-        Expiry.DuringExtraTurn stamp -> any ((== stamp) . ExtraTurn.createdAt) (GameState.extraTurns gs)
-        Expiry.AtEndOf _ -> True
-        -- The named turn is over, so a turn that had no combat phase takes the
-        -- effect with it rather than handing it to a later turn of theirs, which
-        -- is not "your next turn".
-        Expiry.AtEndOfCombatOn afterTurn ->
-          not (Turn.isActive gs (AfterTurn.player afterTurn))
-            || GameState.turnNumber gs <= AfterTurn.turn afterTurn
-        -- CR 116.2c: only a payment ends this, and the cleanup step is not one.
-        Expiry.WhenPaid _ -> True
-        -- CR 611.2a: every printed producer also says "this turn", so cleanup
-        -- ends an unused grant exactly as it ends AtCleanup's.
-        Expiry.WhenUsed -> False
-      -- CR 116.2d's ignores are among the rows swept: every printed one says
-      -- until end of turn, so Leonin Arbiter stops the next turn's searches
-      -- again, with nothing to reinstate.
-      swept = keepSurvivors survives gs
+  let swept = sweep Cleanup gs
    in -- Rule 702.171b's mark holds no Expiry, so traverseExpiries does not walk it.
       swept {GameState.objects = clearedSaddles (GameState.objects swept)}
 
@@ -399,27 +424,8 @@ dropAtCleanup gs =
 sweepConditional :: Game Bool
 sweepConditional = do
   gs <- State.get
-  let survives source expiry = case expiry of
-        Expiry.While (While.MkWhile you cond) -> Condition.holds (Projection.fullView gs) (Projection.sourceContext gs (Just you) source) gs source cond
-        Expiry.AtCleanup -> True
-        Expiry.Never -> True
-        -- Alchemy's "perpetually" lasts for the rest of the game, as Never does.
-        Expiry.Perpetual -> True
-        Expiry.AtTurnOf _ -> True
-        Expiry.AtUpkeepOf _ -> True
-        Expiry.AtEndOfTurnOf _ -> True
-        Expiry.DuringTurnOf _ -> True
-        Expiry.DuringTurnOfControllerOf _ -> True
-        Expiry.DuringExtraTurn _ -> True
-        Expiry.AtEndOf _ -> True
-        Expiry.AtEndOfCombatOn _ -> True
-        -- CR 116.2c states a price, not a condition, so no board change ends it.
-        Expiry.WhenPaid _ -> True
-        -- Consumed only by Pawl.Engine.PlayerEffect.spentByCast/spentByLandPlay,
-        -- which run outside this sweep.
-        Expiry.WhenUsed -> True
-      changed = not (all (uncurry survives) (sourcedExpiries gs))
-  Monad.when changed $ State.put (keepWhere survives gs)
+  let changed = any (uncurry (endsAt gs Settle)) (sourcedExpiries gs)
+  Monad.when changed $ State.put (sweep Settle gs)
   pure changed
 
 -- CR 701.35a's duration, ended: a detain lasts "until the next turn of the
@@ -476,46 +482,7 @@ clearedSaddles objects =
 -- the difference. The first observation point is the upkeep step (CR 503.1).
 dropAtTurnOf :: PlayerId -> GameState -> GameState
 dropAtTurnOf pid gs =
-  let -- CR 800.4m: "or until a specific point in that turn". A departed player's
-      -- turn never begins, so the cleanup sweep that would end an
-      -- until-the-END-of-their-next-turn effect never runs and the effect would
-      -- last for the rest of the game. The rule ends it here instead, at the
-      -- point that turn would have begun -- the same moment, and the same call,
-      -- as the arm above. For a player still in the game this is the beginning of
-      -- a turn their effect is meant to survive, so it is left alone.
-      departed = List.notElem pid (Game.stillPlaying gs)
-      survives expiry = case expiry of
-        Expiry.AtTurnOf p -> p /= pid
-        -- CR 800.4m's "a specific point in that turn": a departed player's
-        -- upkeep never begins, so the duration ends where that turn would have.
-        Expiry.AtUpkeepOf p -> not (departed && p == pid)
-        Expiry.AtCleanup -> True
-        Expiry.Never -> True
-        -- Alchemy's "perpetually" lasts for the rest of the game, as Never does.
-        Expiry.Perpetual -> True
-        Expiry.While {} -> True
-        Expiry.AtEndOfTurnOf afterTurn -> not (departed && AfterTurn.player afterTurn == pid)
-        -- CR 800.4m reaches this arm for the arm above's reason and one more: a
-        -- departed player's turn never begins, so the window never begins either
-        -- and the effect could do nothing for the rest of the game. A player
-        -- still in the game keeps it, and this is the very moment `begun` starts
-        -- answering True for the turn it names.
-        Expiry.DuringTurnOf afterTurn -> not (departed && AfterTurn.player afterTurn == pid)
-        -- Pinned by dropAtEndOf rather than ended here.
-        Expiry.DuringTurnOfControllerOf _ -> True
-        -- Named by a turn rather than a seat, so no seat's handoff ends it; an
-        -- extra turn CR 800.4k spent unbegun is dropAtCleanup's to end.
-        Expiry.DuringExtraTurn _ -> True
-        -- CR 800.4m's "a specific point in that turn", for the two arms above' reason.
-        Expiry.AtEndOfCombatOn afterTurn -> not (departed && AfterTurn.player afterTurn == pid)
-        Expiry.AtEndOf _ -> True
-        -- CR 116.2c: no turn of anyone's ends it, and CR 800.4m does not reach it
-        -- either -- the offer goes away with the departed player's objects rather
-        -- than at a moment this sweep can name.
-        Expiry.WhenPaid _ -> True
-        -- No seat's turn beginning is a use.
-        Expiry.WhenUsed -> True
-      swept = keepSurvivors survives gs
+  let swept = sweep (TurnOf pid) gs
    in swept {GameState.objects = clearedGoads pid (clearedDetentions pid (GameState.objects swept))}
 
 -- CR 611.2a: "during its controller's next turn" pinned to a seat as a declare
@@ -637,60 +604,9 @@ keepWhere survives = editExpiries (\source expiry -> if survives source expiry t
 -- the first combat step it saw. Pawl.Engine.Turn.inWindow is the containment
 -- test, and it answers a different question for a different reader.
 dropAtEndOf :: PhaseSelector -> GameState -> GameState
-dropAtEndOf ending gs =
-  let survives expiry = case expiry of
-        Expiry.AtEndOf window -> window /= ending
-        -- CR 500.8: the FIRST combat phase of that turn to end ends it, so an
-        -- added combat phase after it finds nothing left.
-        Expiry.AtEndOfCombatOn afterTurn ->
-          ending /= PhaseSelector.CombatPhase
-            || not (Turn.isActive gs (AfterTurn.player afterTurn))
-            || GameState.turnNumber gs <= AfterTurn.turn afterTurn
-        Expiry.AtCleanup -> True
-        Expiry.Never -> True
-        -- Alchemy's "perpetually" lasts for the rest of the game, as Never does.
-        Expiry.Perpetual -> True
-        Expiry.While {} -> True
-        Expiry.AtTurnOf _ -> True
-        Expiry.AtUpkeepOf _ -> True
-        Expiry.AtEndOfTurnOf _ -> True
-        Expiry.DuringTurnOf _ -> True
-        Expiry.DuringTurnOfControllerOf _ -> True
-        Expiry.DuringExtraTurn _ -> True
-        -- CR 116.2c: no window of the turn ends it.
-        Expiry.WhenPaid _ -> True
-        -- No step or phase ending is a use.
-        Expiry.WhenUsed -> True
-   in (if ending == PhaseSelector.Step (Phase.Combat CombatStep.DeclareAttackers) then pinAfterDeclareAttackers else id) (keepSurvivors survives gs)
-
--- CR 503 / 611.2a: "until the beginning of your next upkeep" ends as that
--- upkeep step begins. Engine.runStepThatBegan calls this for every active
--- player (CR 805.4, a shared team turn) before anything triggered then is put on
--- the stack (CR 503.1a), so a permission it ends is gone by the time such a
--- trigger resolves. A skipped upkeep (CR 500.11) never begins, so the duration
--- runs on to the next upkeep that does.
-dropAtUpkeepOf :: PlayerId -> GameState -> GameState
-dropAtUpkeepOf pid =
-  keepSurvivors $ \expiry -> case expiry of
-    Expiry.AtUpkeepOf p -> p /= pid
-    Expiry.AtCleanup -> True
-    Expiry.Never -> True
-    Expiry.Perpetual -> True
-    Expiry.While {} -> True
-    Expiry.AtTurnOf _ -> True
-    Expiry.AtEndOfTurnOf _ -> True
-    Expiry.DuringTurnOf _ -> True
-    Expiry.DuringTurnOfControllerOf _ -> True
-    Expiry.DuringExtraTurn _ -> True
-    Expiry.AtEndOf _ -> True
-    Expiry.AtEndOfCombatOn _ -> True
-    Expiry.WhenPaid _ -> True
-    Expiry.WhenUsed -> True
-
--- CR 611.2a: keepWhere for a sweep whose survivors are named by the expiry
--- alone.
-keepSurvivors :: (Expiry -> Bool) -> GameState -> GameState
-keepSurvivors survives = keepWhere (const survives)
+dropAtEndOf ending =
+  (if ending == PhaseSelector.Step (Phase.Combat CombatStep.DeclareAttackers) then pinAfterDeclareAttackers else id)
+    . sweep (EndOf ending)
 
 -- CR 116.2c: every offer a payment could end right now, paired with the object
 -- that stored it. The one reader of Expiry.WhenPaid outside the sweeps, and the
@@ -704,78 +620,9 @@ keepSurvivors survives = keepWhere (const survives)
 -- is all CR 116.2c needs. WHICH of the source's effects is not asked, since one
 -- printed sentence stores several and the rule ends the sentence.
 paidExpiries :: GameState -> [(ObjectId, PaidExpiry.PaidExpiry)]
-paidExpiries gs =
-  let paid (source, expiry) = case expiry of
-        Expiry.WhenPaid paidExpiry -> [(source, paidExpiry)]
-        Expiry.AtCleanup -> []
-        Expiry.Never -> []
-        Expiry.Perpetual -> []
-        Expiry.While {} -> []
-        Expiry.AtTurnOf _ -> []
-        Expiry.AtUpkeepOf _ -> []
-        Expiry.AtEndOfTurnOf _ -> []
-        Expiry.DuringTurnOf _ -> []
-        Expiry.DuringTurnOfControllerOf _ -> []
-        Expiry.DuringExtraTurn _ -> []
-        Expiry.AtEndOf _ -> []
-        Expiry.AtEndOfCombatOn _ -> []
-        Expiry.WhenUsed -> []
-   in concatMap paid (sourcedExpiries gs)
+paidExpiries gs = [(source, paid) | (source, Expiry.WhenPaid paid) <- sourcedExpiries gs]
 
 -- Every stored expiry in the game, paired with the object it came from:
 -- traverseExpiries read rather than rebuilt.
 sourcedExpiries :: GameState -> [(ObjectId, Expiry)]
 sourcedExpiries = Const.getConst . traverseExpiries (\source expiry -> Const.Const [(source, expiry)])
-
--- CR 116.2c's payment, made: end every effect this object stored under a
--- pay-to-end duration. dropAtEndOf's shape, with the source in the test --
--- delete-and-recompute, so the next projection reverts and nothing is explicitly
--- undone (design.md 2.5).
---
--- ALL of them together, which is the rule's own grain: "that effect" is the
--- printed sentence, and Gliding Licid's one sentence stores four. Two live sets
--- from one object cannot coexist -- a Licid that has activated has lost the
--- ability and stopped being a creature, so it cannot activate a second time --
--- so the source is a sufficient key.
-dropWhenPaidBy :: ObjectId -> GameState -> GameState
-dropWhenPaidBy oid gs =
-  let survives source expiry = case expiry of
-        Expiry.WhenPaid _ -> source /= oid
-        Expiry.AtCleanup -> True
-        Expiry.Never -> True
-        -- Alchemy's "perpetually" lasts for the rest of the game, as Never does.
-        Expiry.Perpetual -> True
-        Expiry.While {} -> True
-        Expiry.AtTurnOf _ -> True
-        Expiry.AtUpkeepOf _ -> True
-        Expiry.AtEndOfTurnOf _ -> True
-        Expiry.DuringTurnOf _ -> True
-        Expiry.DuringTurnOfControllerOf _ -> True
-        Expiry.DuringExtraTurn _ -> True
-        Expiry.AtEndOf _ -> True
-        Expiry.AtEndOfCombatOn _ -> True
-        Expiry.WhenUsed -> True
-   in keepWhere survives gs
-
--- CR 611.2a: does this expiry end when the effect carrying it is exercised,
--- rather than only at a moment the clock or a payment could name? The one
--- reader is Pawl.Engine.PlayerEffect's spentGrants (spentByCast and
--- spentByLandPlay), which needs to know which stored rows are eligible for early removal without
--- themselves casing on Pawl.Types.Expiry -- the standing this module alone
--- holds.
-expiresWhenUsed :: Expiry -> Bool
-expiresWhenUsed expiry = case expiry of
-  Expiry.WhenUsed -> True
-  Expiry.AtCleanup -> False
-  Expiry.Never -> False
-  Expiry.Perpetual -> False
-  Expiry.While {} -> False
-  Expiry.AtTurnOf _ -> False
-  Expiry.AtUpkeepOf _ -> False
-  Expiry.AtEndOfTurnOf _ -> False
-  Expiry.DuringTurnOf _ -> False
-  Expiry.DuringTurnOfControllerOf _ -> False
-  Expiry.DuringExtraTurn _ -> False
-  Expiry.AtEndOf _ -> False
-  Expiry.AtEndOfCombatOn _ -> False
-  Expiry.WhenPaid _ -> False

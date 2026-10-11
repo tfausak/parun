@@ -67,12 +67,10 @@ data Expiry
     -- Four carriers ask `begun`: GameState.attackProhibitions (Wall of Dust),
     -- GameState.attackRequirements (Taunt, Gideon, Battle-Forged),
     -- GameState.playerEffects (Sphinx's Decree) and Object.playableFromExile
-    -- (Galvanic Relay). No printing states such a window on any other carrier
-    -- (Scryfall o:"during your next turn", o:"during that player's next turn",
-    -- o:"during its controller's next turn", o:"during target player's next
-    -- turn", o:"during their next turn", 2026-09-25; the rest are CR 723's
-    -- player control), and a row stored on one would apply from the moment it is
-    -- stored.
+    -- (Galvanic Relay). A row on any other would apply from the moment it is
+    -- stored, so Pawl.EffectLintSpec's windowOffends refuses a card writing one
+    -- (Scryfall o:/during [^.]*next turn/, 2026-10-11: every hit is one of the
+    -- four or CR 723's player control).
     DuringTurnOf AfterTurn.AfterTurn
   | -- | CR 611.2a: DuringTurnOf with its seat not yet known -- "during its
     -- controller's next turn", open on any later turn while that object's

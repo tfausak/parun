@@ -90,4 +90,4 @@ endEffect perform pid oid = do
     Nothing -> pure ()
     Just offer -> do
       paid <- Cost.payAction perform before PaymentSubject.ForNeither 0 pid oid (PaidExpiry.cost offer)
-      Monad.forM_ paid $ \_ -> State.modify' (Expiry.dropWhenPaidBy oid)
+      Monad.forM_ paid $ \_ -> State.modify' (Expiry.sweep (Expiry.PaidFor oid))

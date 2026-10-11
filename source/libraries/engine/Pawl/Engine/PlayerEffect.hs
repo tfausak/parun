@@ -3557,7 +3557,7 @@ spentGrants :: (PlayerEffect -> Maybe (Filter Keyword)) -> PlayerId -> ObjectId 
 spentGrants useOf pid oid gs =
   let spent active =
         applies pid (ActivePlayerEffect.controller active) gs (ActivePlayerEffect.scope active)
-          && Expiry.expiresWhenUsed (ActivePlayerEffect.expiry active)
+          && Expiry.endsAt gs Expiry.Used (ActivePlayerEffect.source active) (ActivePlayerEffect.expiry active)
           && maybe False (\criterion -> matchesObjectFrom (storedSource active) criterion oid gs) (useOf (ActivePlayerEffect.effect active))
    in filter spent (GameState.playerEffects gs)
 
