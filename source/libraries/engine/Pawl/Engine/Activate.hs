@@ -28,6 +28,7 @@ import Pawl.Types.Game (Game)
 import qualified Pawl.Types.GameEvent as GameEvent
 import qualified Pawl.Types.GameState as GameState
 import qualified Pawl.Types.GrantedAbility as GrantedAbility
+import qualified Pawl.Types.Keyword as Keyword.Type
 import qualified Pawl.Types.KeywordFamily as KeywordFamily
 import qualified Pawl.Types.ManaSpending as ManaSpending
 import qualified Pawl.Types.Modal as Modal.Type
@@ -41,6 +42,7 @@ import qualified Pawl.Types.Prompt as Prompt
 import qualified Pawl.Types.Recipient as Recipient
 import Pawl.Types.Result (Result)
 import qualified Pawl.Types.RevealCause as RevealCause
+import qualified Pawl.Types.RevealWindow as RevealWindow
 import qualified Pawl.Types.Saddling as Saddling
 import qualified Pawl.Types.Source as Source
 import qualified Pawl.Types.StackObjectKind as StackObjectKind
@@ -66,23 +68,27 @@ import qualified Pawl.Types.Zone as Zone
 -- This reveal is also what CR 702.49a's "Reveal this card from your hand" comes
 -- to. Rule 602.2a fires on the same activation and rule 701.20a gives the two one
 -- duration, so Pawl.Engine.Keyword.ninjutsu mints no reveal component of its own
--- and nothing in Pawl.Types.CostComponent reveals anything.
+-- and no component of its minted cost reveals the card.
 --
--- Not implemented: CR 701.20a's duration, revealed from announcement until the
--- ability leaves the stack. Nothing stores it, so a player deciding a response
--- cannot see the revealed card (#1408). Vacuous for cycling and reinforce, whose
--- minted costs discard the card (CR 702.29a, CR 702.77a) as Faerie Macabre's
--- authored one does (CR 113.6j), leaving it in a public graveyard a moment later.
--- NOT vacuous for ninjutsu, whose card stays in its owner's hand for the whole
--- window; Ninja of the Deep Hours is the first card in `data/cards/` this bites.
--- Nor CR 702.57b's longer duration for a forecast card, revealed in its hand
--- until it leaves or a step or phase other than an upkeep begins (#1408).
-revealIfHidden :: PlayerId -> ObjectId -> Game ()
+-- Answers whether it revealed, so the caller can stamp CR 701.20a's duration
+-- once the ability's stack object exists: `revealWindowFor`.
+revealIfHidden :: PlayerId -> ObjectId -> Game Bool
 revealIfHidden pid srcId = do
   gs <- State.get
   case fmap Object.zone (Game.lookupObject srcId gs) of
-    Just zone | Game.isHiddenZone zone -> Event.reveal RevealCause.Ordinary pid srcId
-    _ -> pure ()
+    Just zone | Game.isHiddenZone zone -> do
+      Event.reveal RevealCause.Ordinary pid srcId
+      pure True
+    _ -> pure False
+
+-- How long CR 602.2a's reveal lasts. CR 701.20a: until the ability leaves the
+-- stack, which is CR 702.49b's ninjutsu window too. CR 702.57b: a forecast card
+-- stays revealed while this upkeep lasts, or until it leaves its hand, which
+-- ends the window anyway (CR 400.7).
+revealWindowFor :: ActivatedAbility.ActivatedAbility Card.Card (GrantedAbility.GrantedAbility Card.Card) -> ObjectId -> GameState.GameState -> RevealWindow.RevealWindow
+revealWindowFor ability abilId gs = case ActivatedAbility.keyword ability of
+  Just Keyword.Type.Forecast -> RevealWindow.DuringUpkeep (GameState.turnNumber gs)
+  _ -> RevealWindow.WhileOnStack abilId
 
 -- The no-subgame activation (every test that activates directly): a triggered
 -- mana ability that plays a subgame while the cost is paid would draw. Engine's
@@ -114,7 +120,7 @@ activateAbilityWith runSubgame pid srcId ability = Event.announcing $ do
   before <- State.get
   -- CR 602.2a's own order: the reveal is part of announcing, and so precedes
   -- the ability becoming an object on the stack (the rest of that same rule).
-  revealIfHidden pid srcId
+  revealed <- revealIfHidden pid srcId
   gs <- State.get
   let (abilId, gs1) = Game.freshObjectId gs
       (ts, gs2) = Game.freshTimestamp gs1
@@ -149,6 +155,9 @@ activateAbilityWith runSubgame pid srcId ability = Event.announcing $ do
       -- payment alike (ActivationRestriction.SpendOnly).
       spendable = ActivationRestriction.spendableTypes srcId (ActivatedAbility.restrictions ability) gs
   State.put onStack
+  -- Stamped before the cost is paid, so every prompt from here on is asked with
+  -- the card revealed. Inside the rollback: every rejection restores `before`.
+  Monad.when revealed (Event.stampReveal (revealWindowFor ability abilId gs) srcId)
   -- Sorted on the way in, for the reason Cast.castProposed gives: printed order
   -- (CR 608.2c), with a repeated mode's instances adjacent (CR 700.2d).
   chosenModes <- case Modal.forcedSelection legal selection of
