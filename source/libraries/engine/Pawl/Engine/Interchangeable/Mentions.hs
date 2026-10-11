@@ -2542,7 +2542,7 @@ scryRNames asking x = case x of
 
 searchNames :: Asking -> Search.Search -> Bool
 searchNames asking x = case x of
-  Search.MkSearch searcher owner _zones _outsideTheGame quantity filter_ _upTo _destination subject slot _differentIn _exactly -> playerRefNames asking searcher || playerRefNames asking owner || any (quantityNames asking) quantity || filterNames asking filter_ || any (slotNames asking) subject || any (slotNames asking) slot
+  Search.MkSearch searcher owner _zones _outsideTheGame quantity filter_ _upTo _destination subject slot _differentIn _exactly _andOr -> playerRefNames asking searcher || playerRefNames asking owner || any (quantityNames asking) quantity || filterNames asking filter_ || any (slotNames asking) subject || any (slotNames asking) slot
 
 selfCountersReachedNames :: Asking -> SelfCountersReached.SelfCountersReached -> Bool
 selfCountersReachedNames asking x = case x of

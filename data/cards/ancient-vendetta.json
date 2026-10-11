@@ -66,6 +66,7 @@
                           "type": "You"
                         }
                       },
+                      "upTo": true,
                       "zones": [
                         {
                           "type": "Library"

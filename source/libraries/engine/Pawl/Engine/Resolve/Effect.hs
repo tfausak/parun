@@ -4030,7 +4030,7 @@ applyOneEffect runSubgame resolving source controller legal chosen effect = case
   Effect.MoveMana (MoveMana.MkMoveMana fromRef toRef) -> do
     gs <- State.get
     Mana.moveMana (apnapPlayersOf fromRef legal controller gs) (apnapPlayersOf toRef legal controller gs)
-  Effect.Search (Search.MkSearch searcherRef ownerRef zones outside quantity filter_ upTo destination subject foundSlot differentIn exactly) ->
+  Effect.Search (Search.MkSearch searcherRef ownerRef zones outside quantity filter_ upTo destination subject foundSlot differentIn exactly andOr) ->
     -- CR 701.23a: match each candidate through its own CR 613 projection --
     -- rule 613.1 names no zone, so a card in any of the searched zones is folded
     -- exactly as a permanent is, and CR 208.2a's characteristic-defining power
@@ -4165,8 +4165,9 @@ applyOneEffect runSubgame resolving source controller legal chosen effect = case
             -- Filtered, not trusted, and never empty: an answer naming a zone
             -- the card did not, or naming none at all, takes every named zone.
             -- Prompt.ChooseSearchZones says why the empty answer is not the
-            -- searcher's to give. Raised only where two or more zones make it a
-            -- real choice.
+            -- searcher's to give. Raised only where the card prints "and/or"
+            -- (Search.andOr) over two or more places: Ancient Vendetta's "and"
+            -- looks through every one.
             --
             -- Offered over the card's own zones rather than over the
             -- prohibition-filtered set just below, since CR 101.2 stops the
@@ -4180,7 +4181,7 @@ applyOneEffect runSubgame resolving source controller legal chosen effect = case
             -- of Arcavios's searcher may take it alone, and then shuffles
             -- nothing and is forced to find nothing.
             chosenPlaces <-
-              if Set.size places < 2
+              if Set.size places < 2 || not andOr
                 then pure places
                 else do
                   gsZones <- State.get
@@ -4266,21 +4267,20 @@ applyOneEffect runSubgame resolving source controller legal chosen effect = case
                   -- Only the FIRST of the three ways to decline is the rule's
                   -- and so scoped to a hidden zone: CR 701.23b's "isn't required
                   -- to find" for a filter stating a quality. Search.upTo -- a
-                  -- card's own "up to" over a quality-free filter -- and a search
+                  -- card's own "up to" -- and a search
                   -- stating no quantity are the CARD's own permissions, printed
                   -- over the whole instruction, so they hold in a public zone
                   -- too; CR 701.23d cannot force the second either, a search
                   -- stating no quantity not being one "simply for a quantity of
                   -- cards".
                   --
-                  -- The unbounded one is proven over a PUBLIC zone, where the
-                  -- first disjunct cannot answer for it: Bruna, Light of
-                  -- Alabaster's scenario (cr-701-3a-whole-card-bruna-light-of-
-                  -- alabaster-gathers-auras-as-she-attacks.json) leaves a Pacifism
-                  -- in her graveyard unchosen. Search.upTo is a REGRESSION FENCE
-                  -- rather than proven behaviour: no card in the pool prints "up
-                  -- to" over a zone that is not a library, so its zone scoping is
-                  -- unobservable.
+                  -- Both are proven over a PUBLIC zone, where the first disjunct
+                  -- cannot answer for them: Bruna, Light of Alabaster's scenario
+                  -- (cr-701-3a-whole-card-bruna-light-of-alabaster-gathers-auras-
+                  -- as-she-attacks.json) leaves a Pacifism in her graveyard
+                  -- unchosen, and Ancient Vendetta's (cr-701-23a-whole-card-
+                  -- ancient-vendetta-s-up-to-lets-alice-leave-the-named-cards-in-
+                  -- bob-s-graveyard.json) two named cards in bob's.
                   --
                   -- Search.exactly validated its answer above, which is then the
                   -- whole find: nothing completes it.

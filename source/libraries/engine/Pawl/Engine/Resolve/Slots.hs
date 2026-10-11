@@ -935,7 +935,7 @@ effectPlayerRefs effect = case effect of
   Effect.Firebend (ManaAddition.MkManaAddition ref _ _ _ _ _ _) -> [ref]
   Effect.ActivateManaAbilities (ActivateManaAbilities.MkActivateManaAbilities ref _) -> [ref]
   Effect.MoveMana (MoveMana.MkMoveMana from to) -> [from, to]
-  Effect.Search (Search.MkSearch searcher owner _ _ _ _ _ _ _ _ _ _) -> [searcher, owner]
+  Effect.Search (Search.MkSearch searcher owner _ _ _ _ _ _ _ _ _ _ _) -> [searcher, owner]
   Effect.ExileAllGraveyards -> []
   Effect.RestartGame {} -> []
   Effect.ControlPlayerNextTurn {} -> []
@@ -1163,6 +1163,12 @@ controlSidesSlots sides = case sides of
 -- The ObjectRefs and the PlayerRefs this effect holds are taken from
 -- effectObjectRefs and effectPlayerRefs at the head rather than arm by arm, so
 -- no arm of the case names either.
+-- slotsOf over an instruction sequence that runs with `defined` already bound:
+-- each instruction's reads, less `defined` and what the instructions ahead of
+-- it bind (CR 608.2c).
+sequenceSlots :: Set SlotName -> [Effect Card.Type.Card (GrantedAbility.GrantedAbility Card.Type.Card)] -> Map.Map SlotName SlotArity
+sequenceSlots defined = joinSlots . snd . List.mapAccumL (\seen effect -> (seen <> boundSlots effect, Map.withoutKeys (slotsOf effect) seen)) defined
+
 slotsOf :: Effect Card.Type.Card (GrantedAbility.GrantedAbility Card.Type.Card) -> Map.Map SlotName SlotArity
 slotsOf effect = joinTwo (joinTwo (joinSlots (fmap objectRefSlots (effectObjectRefs effect))) (joinSlots (fmap playerRefSlots (effectPlayerRefs effect)))) $ case effect of
   -- The dealer is a read like any other (CR 120.2b), and one object (CR 120.1).
@@ -1191,7 +1197,7 @@ slotsOf effect = joinTwo (joinTwo (joinSlots (fmap objectRefSlots (effectObjectR
   -- matches it in the resolution's own context -- Bifurcate's "with the same
   -- name as target nontoken creature" is the whole of what its target slot is
   -- for, so without this the D4 dataflow lint would call that slot unread.
-  Effect.Search (Search.MkSearch _ _ _ _ quantity filter_ _ _ subject _ _ _) ->
+  Effect.Search (Search.MkSearch _ _ _ _ quantity filter_ _ _ subject _ _ _ _) ->
     joinTwo
       (joinTwo (joinSlots (fmap quantitySlots (Maybe.maybeToList quantity))) (filterSlotsOf filter_))
       -- CR 701.3a's fixed host, read at arity ONE: a slot naming several objects
@@ -1515,11 +1521,15 @@ slotsOf effect = joinTwo (joinTwo (joinSlots (fmap objectRefSlots (effectObjectR
   Effect.OfferNamedCopy {} -> Map.empty
   Effect.OfferNotedCopy {} -> Map.empty
   Effect.GrantPlayFromExile grant -> joinTwo (durationSlots (GrantPlayFromExile.duration grant)) (maybe Map.empty conditionSlots (GrantPlayFromExile.condition grant))
-  -- Everything the BODY reads, and what its per-member gate reads (modeSlots'
-  -- payer, multiplier and basis). The loop's own slot is NOT subtracted as the
-  -- rider's reserved slot is: boundSlots below defines it.
-  Effect.ForEach (ForEach.MkForEach _ _ _ body _ gate) -> joinSlots (maybe Map.empty payGateSlots gate : fmap slotsOf (Foldable.toList body))
-  Effect.ForEachNumber (ForEachNumber.MkForEachNumber upTo _ body) -> joinTwo (quantitySlots upTo) (joinSlots (fmap slotsOf (Foldable.toList body)))
+  -- What the BODY reads from outside the loop, and what its per-member gate
+  -- reads (modeSlots' payer, multiplier and basis). The loop's own member slot
+  -- and what an earlier body instruction bound are the loop's own definitions
+  -- (boundSlots below), so they are no read: an optional clause holding only
+  -- such reads would otherwise be judged inert before the loop has run
+  -- (Pawl.Engine.Resolve.clauseIsInert, Bruna, Light of Alabaster's "you may
+  -- attach to it any number of Auras").
+  Effect.ForEach (ForEach.MkForEach _ _ slot body _ gate) -> joinTwo (maybe Map.empty payGateSlots gate) (sequenceSlots (Set.singleton slot) (Foldable.toList body))
+  Effect.ForEachNumber (ForEachNumber.MkForEachNumber upTo slot body) -> joinTwo (quantitySlots upTo) (sequenceSlots (Set.singleton slot) (Foldable.toList body))
   Effect.Repeat (Repeat.MkRepeat _ body gate) -> joinSlots (maybe Map.empty conditionSlots gate : fmap slotsOf (Foldable.toList body))
   -- What the process and the "if" read, and the condition itself: a read of
   -- what the process bound, which boundSlots below defines.
@@ -2004,7 +2014,7 @@ ownSlotsAreExhaustive effect = case effect of
   -- slotsOf reports them through Filter.boundSlots, the one walk that enumerates
   -- what a Filter reads, and no Filter atom carries a Quantity for
   -- Quantity.slotsAreExhaustive to be about.
-  Effect.Search (Search.MkSearch _ _ _ _ quantity _ _ _ _ _ _ _) -> all Quantity.slotsAreExhaustive quantity
+  Effect.Search (Search.MkSearch _ _ _ _ quantity _ _ _ _ _ _ _ _) -> all Quantity.slotsAreExhaustive quantity
   Effect.ExileAllGraveyards -> True
   Effect.Proliferate -> True
   Effect.Reroll -> True
@@ -2286,7 +2296,7 @@ readsX =
         Effect.Firebend _ -> False
         Effect.ActivateManaAbilities _ -> False
         Effect.MoveMana _ -> False
-        Effect.Search (Search.MkSearch _ _ _ _ quantity _ _ _ _ _ _ _) -> any Quantity.readsX quantity
+        Effect.Search (Search.MkSearch _ _ _ _ quantity _ _ _ _ _ _ _ _) -> any Quantity.readsX quantity
         Effect.ExileAllGraveyards -> False
         Effect.Proliferate -> False
         Effect.Reroll -> False

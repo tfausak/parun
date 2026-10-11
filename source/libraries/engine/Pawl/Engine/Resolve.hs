@@ -1345,12 +1345,6 @@ exercises resolving source controller idx cIdx bound legal announced committed c
 -- dead only when nothing has bound it. Reading `legal` alone would call a
 -- revealed-cards slot dead and silently decline Midnight Tilling's return.
 --
--- A slot the effect BINDS is no read of an earlier binding: a loop's member
--- (CR 608.2f) is named by the loop itself, so Bruna, Light of Alabaster's "you
--- may attach to it any number of Auras" would otherwise be judged dead before
--- the loop has swept anything, and declined unasked. Her two scenarios under
--- data/scenarios/aura/ prove it.
---
 -- An EMPTY clause is not inert: it has no effect to read a slot, so `all` would
 -- hold vacuously. Nothing in data/cards/ prints one, and reaching this ahead of
 -- CR 608.2b's fizzle needs a modal payload mixing a live mode with a dead one
@@ -1362,7 +1356,7 @@ clauseIsInert bound legal clause =
         Just recipients -> Set.null recipients
         Nothing -> not (Set.member name bound)
       inert effect =
-        let names = Map.keysSet (slotsOf effect) `Set.difference` boundSlots effect
+        let names = Map.keysSet (slotsOf effect)
          in slotsAreExhaustive effect && not (Set.null names) && all dead names
    in not (null effects) && all inert effects
 

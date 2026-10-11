@@ -889,7 +889,8 @@ cycling cost searchFor =
                 Search.subject = Nothing,
                 Search.slot = Nothing,
                 Search.differentIn = Set.empty,
-                Search.exactly = False
+                Search.exactly = False,
+                Search.andOr = False
               }
    in ActivatedAbility.MkActivatedAbility
         { ActivatedAbility.cost = cost {Cost.components = Cost.components cost <> [CostComponent.DiscardThis DiscardCause.ToPayCyclingCost]},
@@ -1067,7 +1068,8 @@ searchForSameManaValue cost filter_ destination =
               Search.subject = Nothing,
               Search.slot = Nothing,
               Search.differentIn = Set.empty,
-              Search.exactly = False
+              Search.exactly = False,
+              Search.andOr = False
             }
    in ActivatedAbility.MkActivatedAbility
         { ActivatedAbility.cost = cost,
@@ -7640,7 +7642,8 @@ partnerWith name =
               Search.subject = Nothing,
               Search.slot = Nothing,
               Search.differentIn = Set.empty,
-              Search.exactly = False
+              Search.exactly = False,
+              Search.andOr = False
             }
    in Mint.triggerOf
         TriggerCondition.SelfEnters

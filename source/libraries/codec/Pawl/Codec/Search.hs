@@ -31,6 +31,9 @@ codec = Fields.object $ do
   -- Defaulted: an absent key is a search that does not reach outside the game,
   -- which is every card file already written.
   outsideTheGame <- Fields.defaulted "outsideTheGame" False Common.boolean Search.outsideTheGame
+  -- Defaulted: an absent key is a card whose places are joined by "and", or
+  -- that names only one.
+  andOr <- Fields.defaulted "andOr" False Common.boolean Search.andOr
   -- Required but nullable, rather than defaulted-absent: a null is a card
   -- printing "any number of", and an absent key is a card file that forgot the
   -- count. Defaulting would read the second as the first.
@@ -66,5 +69,6 @@ codec = Fields.object $ do
         Search.subject = subject,
         Search.slot = slot,
         Search.differentIn = differentIn,
-        Search.exactly = exactly
+        Search.exactly = exactly,
+        Search.andOr = andOr
       }

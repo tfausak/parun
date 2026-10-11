@@ -49,9 +49,9 @@ data Search = MkSearch
     -- where the same search of a library need not (CR 701.23b's Splinter
     -- example).
     --
-    -- The zones the card NAMES, not the ones looked through: the printed
-    -- "and/or" makes that a choice the searcher is asked on resolution, and this
-    -- set is what Pawl.Types.Prompt.ChooseSearchZones offers them.
+    -- The zones the card NAMES, not the ones looked through: a printed "and/or"
+    -- (`andOr`) makes that a choice the searcher is asked on resolution, and
+    -- this set is what Pawl.Types.Prompt.ChooseSearchZones offers them.
     zones :: Set.Set Zone.Zone,
     -- | Whether the instruction also looks through the cards `owner` owns
     -- outside the game (CR 701.23j) -- Invasion of Arcavios's "your library,
@@ -134,6 +134,12 @@ data Search = MkSearch
     --
     -- Not implemented: cards outside the game (CR 701.23j) do not count toward
     -- how many it can give (#4295).
-    exactly :: Bool
+    exactly :: Bool,
+    -- | Whether the printed places are joined by "and/or" -- Delivery Moogle's
+    -- "your library and/or graveyard" -- so the searcher picks which of them to
+    -- look through (Pawl.Types.Prompt.ChooseSearchZones), or by "and", Ancient
+    -- Vendetta's "graveyard, hand, and library", which looks through every one
+    -- (CR 701.23a).
+    andOr :: Bool
   }
   deriving (Eq, Ord, Show)
