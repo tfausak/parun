@@ -4273,17 +4273,14 @@ applyOneEffect runSubgame resolving source controller legal chosen effect = case
                   -- stating no quantity not being one "simply for a quantity of
                   -- cards".
                   --
-                  -- Those two are REGRESSION FENCES rather than proven behaviour,
-                  -- twice over. No card in the pool prints "up to" or "any number
-                  -- of" over a zone that is not a library, so their zone scoping
-                  -- is unobservable; and every printing of "for any number of
-                  -- cards" also states a quality, so the first disjunct answers
-                  -- for all of them and removing the third reddens nothing
-                  -- (Scryfall o:"for any number of cards", 2026-08-23, 25 hits,
-                  -- every one of them qualified -- "named X", "with the chosen
-                  -- name", "that have mana value 9"). A card that said "search
-                  -- your library and graveyard for any number of cards" would
-                  -- refute both.
+                  -- The unbounded one is proven over a PUBLIC zone, where the
+                  -- first disjunct cannot answer for it: Bruna, Light of
+                  -- Alabaster's scenario (cr-701-3a-whole-card-bruna-light-of-
+                  -- alabaster-gathers-auras-as-she-attacks.json) leaves a Pacifism
+                  -- in her graveyard unchosen. Search.upTo is a REGRESSION FENCE
+                  -- rather than proven behaviour: no card in the pool prints "up
+                  -- to" over a zone that is not a library, so its zone scoping is
+                  -- unobservable.
                   --
                   -- Search.exactly validated its answer above, which is then the
                   -- whole find: nothing completes it.
