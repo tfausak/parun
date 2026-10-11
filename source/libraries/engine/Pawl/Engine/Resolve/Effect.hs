@@ -770,30 +770,75 @@ attachTogether movers recipient = do
   Foldable.for_ (ordered <> filter (not . restamped) movers) $ \mover ->
     Event.attach mover recipient
 
--- The permanents an ObjectRef names, for an instruction that acts on them
--- together: the one ref that is a CR 608.2d question rather than a read has to
--- be answered in the Game monad, and every other is objectRefObjects' pure
--- sweep. Shared by turnPermanentsOver, Effect.AttachAll, Effect.Unattach,
--- Effect.Untap, Effect.Sacrifice, Effect.ModifyTarget, Effect.Pair and
--- Effect.PutSticker.
-permanentsGathered ::
-  Map.Map SlotName (Set Recipient) ->
+-- The objects an ObjectRef names, for every opcode whose ref may be a CR 608.2d
+-- question: the asking arms are answered here in the Game monad, and every other
+-- arm is objectRefObjects' pure sweep, read off the board as it stands (CR
+-- 608.2c). The ONE asker, so no two opcodes can ask a ref differently; which
+-- (opcode, arm) pairs a card may write is Pawl.EffectLintSpec's inertChoosers.
+--
+-- Every ask reads its candidates off the board before the instruction acts and
+-- filters the answer rather than trusting it.
+askingObjects ::
+  ObjectId ->
   ObjectId ->
   PlayerId ->
-  ObjectId ->
+  Map.Map SlotName (Set Recipient) ->
+  Map.Map SlotName (Set Recipient) ->
   ObjectRef.ObjectRef ->
   Game [ObjectId]
-permanentsGathered legal resolving controller source ref = case ref of
-  -- CR 608.2d: "any number of Human Werewolves you control" is a choice made
-  -- while the effect is applied, so it is asked HERE. The candidates are
-  -- EachMatching's sweep of the same Filter, read live off the board before the
-  -- instruction acts (CR 608.2c) -- which for Tovolar is a board CR 702.145c has
-  -- already turned him over on, so his own back face is no longer a Human
-  -- Werewolf to offer. chosenPermanents is the ask.
+askingObjects resolving source controller legal chosen ref = case ref of
+  -- Fall of the Thran's "two land cards from their graveyard": the count per
+  -- chooser, DISTINCT cards (CR 608.2d), asked in APNAP order (CR 101.4).
+  ObjectRef.ChosenCardInGraveyard fromGraveyard -> chosenCardsInGraveyard legal resolving controller source fromGraveyard
+  -- The arm above over CR 400.2's hidden zone, CR 402.3 deciding who may be
+  -- asked.
+  ObjectRef.ChosenCardInHand inHand -> chooseCardsInHand resolving source controller legal inHand
+  -- The printed "from among them".
+  ObjectRef.ChosenCardFromAmong from -> chooseCardFromAmong resolving source controller legal chosen from
+  -- Randomness, asked of the interpreter.
+  ObjectRef.RandomCardInHand random -> randomCardsInHand resolving source controller legal random
+  ObjectRef.RandomCardInGraveyard random -> randomCardsInGraveyard resolving source controller legal random
+  ObjectRef.RandomCardInLibrary random -> randomCardsInLibrary resolving source controller legal random
+  -- Tovolar's "any number of Human Werewolves you control", read off a board CR
+  -- 702.145c has already turned him over on.
   ObjectRef.ChosenPermanents choice -> chosenPermanents legal resolving controller source choice
-  _ -> do
+  -- Hanweir Battlements' "exile them": the arm above's choice with the SOURCE
+  -- named alongside it, so the pair is one CR 608.2f batch. The source is not
+  -- offered to anybody, and one that has left is not named (CR 101.3). CR
+  -- 608.2c's default chooser, since the printed sentence names no other.
+  ObjectRef.SourceAndChosenPermanent filter_ -> do
+    counterpart <- chosenPermanents legal resolving controller source (ChosenPermanents.MkChosenPermanents filter_ (PlayerRef.Relative PlayerRelation.You) HowMany.One)
     gs <- State.get
-    pure (objectRefObjects legal resolving controller source gs ref)
+    pure (counterpart <> battlefieldMatching legal resolving controller source gs Filter.Type.IsSource)
+  -- Every other arm is a read. Exhaustive with no `_`, so a new arm has to say
+  -- which it is: one answered [] by objectRefObjects but falling through here
+  -- would name nothing.
+  ObjectRef.InSlot _ -> swept
+  ObjectRef.EachMatching _ -> swept
+  ObjectRef.EachCardInGraveyard _ -> swept
+  ObjectRef.EachCardInYourHand -> swept
+  ObjectRef.EachCardInHand _ -> swept
+  ObjectRef.EachCardInYourLibrary _ -> swept
+  ObjectRef.EachCardYouOwn _ -> swept
+  ObjectRef.EachCardExiledWithSource _ -> swept
+  ObjectRef.EachCardExiledWithAbility _ -> swept
+  ObjectRef.EachCardEncodedOnSource _ -> swept
+  ObjectRef.EachSpell _ -> swept
+  ObjectRef.EachAbility _ -> swept
+  ObjectRef.EachOnStack _ -> swept
+  ObjectRef.EachPlayer -> swept
+  ObjectRef.EachOpponent -> swept
+  ObjectRef.ChosenPlayer -> swept
+  ObjectRef.Players _ -> swept
+  ObjectRef.TopOfLibrary _ -> swept
+  ObjectRef.TopOfLibraryUntil _ -> swept
+  ObjectRef.TopOfGraveyard _ -> swept
+  ObjectRef.EachCardFromAmong _ -> swept
+  ObjectRef.AttachedToBound _ -> swept
+  ObjectRef.FromAnywhere _ -> swept
+  where
+    swept :: Game [ObjectId]
+    swept = State.gets (\gs -> objectRefObjects legal resolving controller source gs ref)
 
 -- CR 701.9a's move for every Effect.Discard arm, once the cards are named:
 -- each seat's cards through the shared discard funnel, so the discard is
@@ -843,14 +888,15 @@ buryDiscards resolving mDiscarded doomed = do
 -- transform lacks, nor miss one it has.
 turnPermanentsOver ::
   Map.Map SlotName (Set Recipient) ->
+  Map.Map SlotName (Set Recipient) ->
   ObjectId ->
   PlayerId ->
   ObjectId ->
   ObjectRef.ObjectRef ->
   Game ()
-turnPermanentsOver legal resolving controller source ref = do
+turnPermanentsOver legal chosen resolving controller source ref = do
   -- WHICH permanents turn over, gathered BEFORE the turn (CR 608.2f).
-  victims <- permanentsGathered legal resolving controller source ref
+  victims <- askingObjects resolving source controller legal chosen ref
   -- CR 613.7m: which of the swept victims will ACTUALLY take a stamp, ordered by
   -- their controllers. Asked BEFORE the write and off the pre-turn board, the
   -- gather's own reason (CR 608.2f), and `turnsOver` below is the whole
@@ -963,9 +1009,7 @@ graveyardCards :: Filter.Context -> Map.Map SlotName (Set Recipient) -> PlayerId
 graveyardCards context bindings controller gs scope filter_ =
   concatMap (\pid -> graveyardCardsOf context gs pid filter_) (Target.zoneScopePlayers (Just controller) bindings scope gs)
 
--- ChosenCardInGraveyard's ask, shared by every opcode that names one
--- (MoveToZone, PutSticker), so the candidates, the chooser and the count are
--- read one way.
+-- askingObjects' ChosenCardInGraveyard arm.
 chosenCardsInGraveyard :: Map.Map SlotName (Set Recipient) -> ObjectId -> PlayerId -> ObjectId -> ChosenCardInGraveyard.ChosenCardInGraveyard -> Game [ObjectId]
 chosenCardsInGraveyard legal resolving controller source (ChosenCardInGraveyard.MkChosenCardInGraveyard chooser scope filter_ count) = do
   gs <- State.get
@@ -1124,23 +1168,17 @@ objectRefRecipients legal resolving controller source gs ref = case ref of
   -- which for Deflecting Palm's ControllerOfBound is CR 108.4's controller of the
   -- object a slot holds, read through CR 608.2h's last known information.
   ObjectRef.Players playerRef -> fmap Recipient.ToPlayer (apnapPlayersOf playerRef legal controller gs)
-  -- No recipients: the answer needs the chooser asked, and only a gather in the
-  -- Game monad can ask.
+  -- No recipients: the answer needs the chooser asked, which askingObjects does.
   ObjectRef.ChosenCardInGraveyard {} -> []
   ObjectRef.ChosenCardInHand {} -> []
   ObjectRef.ChosenCardFromAmong {} -> []
   -- A read rather than a question, so the sweep above answers it -- and objects
   -- only, a group never holding a player.
   ObjectRef.EachCardFromAmong {} -> fmap Recipient.ToObject (objectRefObjects legal resolving controller source gs ref)
-  -- No recipients: only randomCardsInHand can ask the interpreter.
+  -- No recipients, for the same reason.
   ObjectRef.RandomCardInHand _ -> []
-  -- No recipients: the arm above's answer, for its reason -- only
-  -- randomCardsInGraveyard can ask.
   ObjectRef.RandomCardInGraveyard _ -> []
-  -- No recipients, for the same reason: only randomCardsInLibrary can ask.
   ObjectRef.RandomCardInLibrary _ -> []
-  -- No recipients: the answer needs the chooser asked, and only a gather that
-  -- reaches the Game monad can ask.
   ObjectRef.ChosenPermanents _ -> []
   ObjectRef.SourceAndChosenPermanent _ -> []
   -- A read, so the sweep answers it.
@@ -2239,12 +2277,7 @@ controlledTeam controller target gs =
 -- 608.2c), the asks run in APNAP order (CR 608.2e, CR 101.4) through
 -- handChoosers, through Game.chooseAmong (CR 101.3, CR 609.3).
 --
--- The ONE asking read of ObjectRef.ChosenCardInHand, shared by Effect.MoveToZone's
--- gather, Effect.LookAt and Effect.ExchangeWithCardInHand, so they cannot ask
--- differently. Every other position reads the ref through the pure
--- Slots.objectRefObjects, which answers [] for it -- Pawl.EffectLintSpec's "no
--- effect asks for a chosen card where nothing can ask" is what stops a card
--- writing one there.
+-- askingObjects' ChosenCardInHand arm.
 chooseCardsInHand ::
   ObjectId ->
   ObjectId ->
@@ -2339,10 +2372,8 @@ chooseCardFromAmong resolving source controller legal chosen (ChosenCardFromAmon
     Nothing -> pure []
 
 -- CR 701.20a / 701.9b: the cards randomness names out of each hand the ref
--- reaches, paired with the seat whose hand it is. The ONE asking read of
--- ObjectRef.RandomCardInHand, shared by Effect.Reveal (Fall), Effect.Discard
--- (Hymn to Tourach) and Effect.MoveToZone's gather (Elkin Lair), so no two of
--- them can ask differently.
+-- reaches -- askingObjects' RandomCardInHand arm (Fall, Hymn to Tourach, Elkin
+-- Lair).
 --
 -- The question goes to the INTERPRETER: the engine does not roll and no player
 -- picks. Filtered rather than trusted, so an answer naming a card never offered
@@ -2364,24 +2395,22 @@ randomCardsInHand ::
   PlayerId ->
   Map.Map SlotName (Set Recipient) ->
   RandomCardInHand.RandomCardInHand ->
-  Game [(PlayerId, ObjectId)]
+  Game [ObjectId]
 randomCardsInHand resolving source controller legal (RandomCardInHand.MkRandomCardInHand player filter_ count) = do
   gs <- State.get
   let viewOf = effectViewOf source legal gs
       context = effectContext gs controller source legal (slotBindings resolving gs)
       wanted = maybe 0 Integer.toNaturalSaturating (Quantity.evaluateFor viewOf context gs resolving source count)
-  fmap concat . Monad.mapM (\pid -> fmap (fmap ((,) pid)) (pickAtRandom wanted (handCardsOf context gs pid filter_))) $
+  fmap concat . Monad.mapM (\pid -> pickAtRandom wanted (handCardsOf context gs pid filter_)) $
     handChoosers legal controller gs player
 
 -- CR 404.1 / 608.2c: the cards randomness names out of each graveyard the ref
--- reaches. The ONE asking read of ObjectRef.RandomCardInGraveyard, made by
--- Effect.MoveToZone's gather alone.
+-- reaches -- askingObjects' RandomCardInGraveyard arm.
 --
 -- randomCardsInHand's posture over a PUBLIC zone (CR 400.2), and the differences
 -- all follow from that: the graveyards come from a ZoneScope rather than from
 -- handChoosers, since CR 402.3's bar on looking at another player's hand has no
--- counterpart over a graveyard, and the seat each card came from is not paired
--- back, since nobody has to carry the instruction out on their own zone.
+-- counterpart over a graveyard.
 --
 -- Unchanged from that function: the question goes to the INTERPRETER rather than
 -- to a player or to a roll the engine makes, the answer is FILTERED against the
@@ -2405,8 +2434,7 @@ randomCardsInGraveyard resolving source controller legal (RandomCardInGraveyard.
     Target.zoneScopePlayers (Just controller) legal scope gs
 
 -- Alchemy's seek: the cards randomness names out of each library the ref
--- reaches. The ONE asking read of ObjectRef.RandomCardInLibrary, made by
--- Effect.MoveToZone's gather alone.
+-- reaches -- askingObjects' RandomCardInLibrary arm.
 --
 -- randomCardsInHand's posture one hidden zone over, seats and all
 -- (handChoosers). What seek's Arena text leaves out is the point: nobody
@@ -3432,7 +3460,9 @@ effectIsImpossible resolving source controller legal gs effect = case effect of
   Effect.PlaySubgame {} -> False
   Effect.ChoosePlayer {} -> False
   Effect.ChoosePlayerAtRandom {} -> False
-  Effect.ChoosePermanents {} -> False
+  -- The ask askingObjects makes of the same choice, so "choose a creature"
+  -- over an empty board is impossible and "up to" never is.
+  Effect.ChoosePermanents (ChoosePermanents.MkChoosePermanents choice _) -> choosesFromNothing (ObjectRef.ChosenPermanents choice)
   Effect.RollDie {} -> False
   Effect.FlipCoin {} -> False
   Effect.ExileHandThenDraw {} -> False
@@ -3556,7 +3586,7 @@ effectIsImpossible resolving source controller legal gs effect = case effect of
     -- CR 608.2d for the refs that ASK rather than read: a chosen card or
     -- permanent is an instruction to choose one, and an empty pool leaves
     -- nothing to choose. Each pool is its asking arm's own read
-    -- (chooseCardsInHand, MoveToZone's ChosenCardInGraveyard gather,
+    -- (chooseCardsInHand, chosenCardsInGraveyard,
     -- chooseCardFromAmong, chosenPermanents); a ref naming no chooser, a choice
     -- the empty answer satisfies, and every ref that reads, answers False.
     choosesFromNothing ref = case ref of
@@ -3763,11 +3793,11 @@ applyOneEffect runSubgame resolving source controller legal chosen effect = case
     -- ObjectRef-taking opcode uses. Nothing to affect (an illegal slot per CR
     -- 608.2b, a set that matched nothing) arrives as the empty list.
     --
-    -- The CHOSEN ref is asked through permanentsGathered instead, Effect.Pair's
+    -- The CHOSEN ref is asked through askingObjects instead, Effect.Pair's
     -- reason: CR 608.2d's choice is an ask, which the pure sweep cannot make.
     -- Mirkwood Trapper's "that player chooses an attacking creature. It gets
     -- +2/+0" is the reader.
-    affected <- permanentsGathered legal resolving controller source ref
+    affected <- askingObjects resolving source controller legal chosen ref
     State.modify' $ \gs ->
       case frozenAffected gs affected of
         [] -> gs
@@ -4898,7 +4928,7 @@ applyOneEffect runSubgame resolving source controller legal chosen effect = case
     -- 701.21a): a sacrifice is not a destruction, so indestructible (CR 702.12b)
     -- and a regeneration shield leave it alone.
     --
-    -- The victims come from permanentsGathered, objectRefObjects' sweep plus
+    -- The victims come from askingObjects, objectRefObjects' sweep plus
     -- CR 608.2d's asked ref: Golgothian Sylex's EachMatching sweeps the
     -- battlefield, and God-Eternal Bontu's ChosenPermanents is asked here.
     -- Its InSlot arm keeps what a bare SlotName did: a slot a Create bound to a
@@ -4913,7 +4943,7 @@ applyOneEffect runSubgame resolving source controller legal chosen effect = case
     -- member's CR 616.1 loop reads the board the batch began on -- All Is Dust
     -- sacrificing Rest in Peace beside another coloured permanent exiles both.
     -- Pawl.EventSpec's All Is Dust case is the proof.
-    victims <- permanentsGathered legal resolving controller source ref
+    victims <- askingObjects resolving source controller legal chosen ref
     gs <- State.get
     Event.sacrificeAll (Maybe.mapMaybe (sacrificerFor sacrificer controller gs) victims)
     -- "That many" is what the funnel SACRIFICED, never what the sweep named: a
@@ -5164,129 +5194,6 @@ applyOneEffect runSubgame resolving source controller legal chosen effect = case
               -- rules live, shared with the two "from among them" refs so they
               -- cannot read the slot differently.
               ObjectRef.InSlot slot -> fromAmongMembers legal resolving chosen slot
-              -- Swept ONCE from the PRE-MOVE state (CR 608.2c, CR 608.2f), in APNAP
-              -- order, then moved one at a time, each judged against the board the
-              -- batch began on and against the siblings that have already arrived
-              -- (see moveOne). CR 400.3 files a hand arrival under Object.owner.
-              ObjectRef.EachMatching _ -> do
-                gs <- State.get
-                pure (objectRefObjects legal resolving controller source gs ref)
-              -- Swept once from the PRE-MOVE state (CR 608.2c, CR 608.2f). "Under
-              -- your control" needs nothing here: CR 110.2a hands a battlefield
-              -- arrival to the player the effect instructed.
-              ObjectRef.EachCardInGraveyard {} -> do
-                gs <- State.get
-                pure (objectRefObjects legal resolving controller source gs ref)
-              -- Swept once from the PRE-MOVE state (CR 608.2c, CR 608.2f). A
-              -- resolving spell is on the stack (CR 608.1), not in the hand.
-              ObjectRef.EachCardInYourHand -> do
-                gs <- State.get
-                pure (objectRefObjects legal resolving controller source gs ref)
-              -- Swept once from the PRE-MOVE state (CR 608.2c, CR 608.2f), the arm
-              -- above's answer over the wider scope.
-              ObjectRef.EachCardInHand {} -> do
-                gs <- State.get
-                pure (objectRefObjects legal resolving controller source gs ref)
-              -- Swept once from the PRE-MOVE state (CR 608.2c, CR 608.2f), the two
-              -- arms above's answer over CR 400.1's other hidden per-player zone.
-              -- A resolving spell is on the stack (CR 608.1), not in the library,
-              -- so Paradigm Shift does not sweep itself.
-              ObjectRef.EachCardInYourLibrary _ -> do
-                gs <- State.get
-                pure (objectRefObjects legal resolving controller source gs ref)
-              -- Swept once from the PRE-MOVE state (CR 608.2c, CR 608.2f).
-              ObjectRef.EachCardYouOwn _ -> do
-                gs <- State.get
-                pure (objectRefObjects legal resolving controller source gs ref)
-              -- CR 607.2a, swept once from the PRE-MOVE state (CR 608.2c, CR
-              -- 608.2f). CR 400.3 files a hand arrival under Object.owner.
-              ObjectRef.EachCardExiledWithSource {} -> do
-                gs <- State.get
-                pure (objectRefObjects legal resolving controller source gs ref)
-              -- The arm above's, narrowed to one named exiling ability.
-              ObjectRef.EachCardExiledWithAbility _ -> do
-                gs <- State.get
-                pure (objectRefObjects legal resolving controller source gs ref)
-              -- CR 702.99a, swept once from the PRE-MOVE state, the arm above's
-              -- reason.
-              ObjectRef.EachCardEncodedOnSource {} -> do
-                gs <- State.get
-                pure (objectRefObjects legal resolving controller source gs ref)
-              ObjectRef.EachSpell _ -> do
-                gs <- State.get
-                pure (objectRefObjects legal resolving controller source gs ref)
-              ObjectRef.EachAbility _ -> do
-                gs <- State.get
-                pure (objectRefObjects legal resolving controller source gs ref)
-              ObjectRef.EachOnStack _ -> do
-                gs <- State.get
-                pure (objectRefObjects legal resolving controller source gs ref)
-              ObjectRef.EachPlayer -> pure []
-              ObjectRef.EachOpponent -> pure []
-              ObjectRef.ChosenPlayer -> pure []
-              ObjectRef.Players _ -> pure []
-              -- Read from the pre-move state like the sweeps above: the whole batch
-              -- comes off one look at each library (CR 608.2c, CR 608.2f).
-              ObjectRef.TopOfLibrary {} -> do
-                gs <- State.get
-                pure (objectRefObjects legal resolving controller source gs ref)
-              -- The walked prefix, read from the PRE-MOVE state for the arm above's
-              -- reason: the whole batch comes off one walk of each library (CR
-              -- 608.2c, CR 608.2f).
-              ObjectRef.TopOfLibraryUntil {} -> do
-                gs <- State.get
-                pure (objectRefObjects legal resolving controller source gs ref)
-              -- CR 404.1's top card, read from the PRE-MOVE state for the two
-              -- arms above's reason: one look at each named graveyard (CR
-              -- 608.2c, CR 608.2f).
-              ObjectRef.TopOfGraveyard _ -> do
-                gs <- State.get
-                pure (objectRefObjects legal resolving controller source gs ref)
-              -- The ref's count of cards per chooser, and the only ref whose gather
-              -- asks a question rather than reading the board, which is why it is
-              -- answered here in the Game monad. Candidates come from the pre-move
-              -- state (CR 608.2c), so an earlier effect of this resolution -- Port of
-              -- Karfell's own mill -- has already put its cards in the graveyard.
-              --
-              -- WHO is asked is the ref's Chooser: the resolving controller (CR
-              -- 608.2d), or each player the scope names, asked about their own
-              -- graveyard alone. The asks run in APNAP order and all before any card
-              -- moves (CR 608.2e, CR 101.4). Elided at one candidate and skipped at
-              -- none (CR 101.3, CR 609.3), per player under EachInScope. Filtered,
-              -- not trusted: an answer naming a card never offered falls back to the
-              -- first candidate.
-              --
-              -- HOW MANY is the ref's Quantity, evaluated HERE (CR 608.2c) and clamped
-              -- at zero, chooseCardFromAmong's reading. ONE ask per card, each over
-              -- the candidates the earlier asks have not taken: CR 608.2d cannot
-              -- choose the same card twice, and Fall of the Thran's "two land cards"
-              -- names two cards. One seat answering several asks in sequence is the
-              -- same decision as one simultaneous choice of that many, CR 101.4c
-              -- leaving the order of a player's own simultaneous choices to that
-              -- player. A graveyard holding fewer matches than the count gives what it
-              -- has (CR 609.3).
-              ObjectRef.ChosenCardInGraveyard fromGraveyard -> chosenCardsInGraveyard legal resolving controller source fromGraveyard
-              -- The arm above over the hidden zone CR 400.2 makes a hand: what it
-              -- says about when the candidates are read (CR 608.2c), about the asks
-              -- running in APNAP order (CR 608.2e, CR 101.4) and about the answer
-              -- being filtered rather than trusted holds unchanged. What the hidden
-              -- zone changes is WHO may be asked, and chooseCardsInHand is where
-              -- CR 402.3's answer to that lives -- shared with Effect.LookAt, so
-              -- the two positions cannot ask differently.
-              ObjectRef.ChosenCardInHand chosenInHand -> chooseCardsInHand resolving source controller legal chosenInHand
-              -- The printed "from among them", a CR 608.2d choice, asked by
-              -- chooseCardFromAmong -- which is where the rule lives, this opcode,
-              -- CR 701.20a's reveal and CR 701.9a's discard being the three that
-              -- ask it. The candidates come off the pre-move state (CR 608.2c)
-              -- through the same slotBoundObjects the InSlot gather reads, so the
-              -- choice and "the rest" cannot see different groups.
-              --
-              -- What the group has left over is not named here at all. "The rest"
-              -- is the same slot read by ObjectRef.InSlot in a LATER clause, which
-              -- finds every chosen card gone -- CR 400.7 minted a new object for
-              -- each on the way to its new zone, and the ids the group still holds
-              -- resolve to nothing, so moveOne passes over them.
-              ObjectRef.ChosenCardFromAmong from -> chooseCardFromAmong resolving source controller legal chosen from
               -- Mulch's "all land cards revealed this way", the arm above's plural.
               -- NOT routed through objectRefObjects, for the InSlot arm's reason:
               -- the members come off slotBoundObjects, which reads the single
@@ -5299,72 +5206,16 @@ applyOneEffect runSubgame resolving source controller legal chosen effect = case
                 members <- fromAmongMembers legal resolving chosen slot
                 gs <- State.get
                 pure (matchingFromAmong legal resolving controller source gs filter_ members)
-              -- The asking read of the ref, the third site to make it after
-              -- Effect.Reveal and Effect.Discard: Elkin Lair's "that player
-              -- exiles a card at random from their hand". randomCardsInHand and
-              -- not a roll here, so the three sites cannot ask differently --
-              -- the seats it asks are the ref's own (the hand's owner, not this
-              -- controller), in APNAP order, off the pre-move state (CR 608.2c).
-              --
-              -- The seat each card came from is dropped, the move filing the
-              -- arrival under Object.owner (CR 400.3) as every sibling arm's
-              -- does.
-              ObjectRef.RandomCardInHand random -> fmap (fmap snd) (randomCardsInHand resolving source controller legal random)
-              -- The arm above over CR 400.2's public zone: Ghoulraiser's
-              -- "a Zombie card at random from your graveyard". The ONE
-              -- asking read of the ref -- no other opcode's gather reaches
-              -- it, because a graveyard's cards are neither revealed (they
-              -- are already face up, CR 400.2) nor discarded (CR 701.9a
-              -- moves a card out of a HAND).
-              ObjectRef.RandomCardInGraveyard random -> randomCardsInGraveyard resolving source controller legal random
-              -- Seek: the Gates' "seek a nonland card". The ONE asking read of
-              -- the ref, for the arm above's reason -- a sought card is not
-              -- revealed, and CR 701.9a discards out of a hand.
-              ObjectRef.RandomCardInLibrary random -> randomCardsInLibrary resolving source controller legal random
-              -- CR 608.2d: Glorious Protector's "any number of non-Angel creatures
-              -- you control" and Hanweir Battlements' "a creature named Hanweir
-              -- Garrison", announced while the effect is applied and so asked HERE
-              -- rather than read by objectRefObjects, through chosenPermanents --
-              -- turnPermanentsOver's posture, read off the pre-move board (CR
-              -- 608.2c).
-              ObjectRef.ChosenPermanents choice -> chosenPermanents legal resolving controller source choice
-              -- The arm above's choice with the SOURCE named alongside it: Hanweir
-              -- Battlements' "exile them", where "them" is this land and the
-              -- Garrison the Filter admits. One instruction over two objects, so
-              -- the two are gathered here and moved in the single batch CR 608.2f
-              -- makes them -- what two MoveToZone effects could not be, whichever
-              -- order they were written in.
-              --
-              -- The source is read off the PRE-MOVE board (CR 608.2c) through the
-              -- same battlefieldMatching sweep the counterpart comes from, filtered
-              -- by Filter.IsSource, which is what the card's "this land" is. So a
-              -- source that has left the battlefield is simply not named -- CR
-              -- 101.3 ignoring that much of the instruction, CR 609.3 leaving the
-              -- rest to do as much as it can. It is not offered to anybody: the printed sentence names it
-              -- outright, and the one choice here is WHICH counterpart.
-              --
-              -- The counterpart comes FIRST and the source second, which is the
-              -- order the two separate moves had. Nothing rests on it: CR 608.2f
-              -- makes the primary order APNAP, and both objects are the resolving
-              -- controller's, so its secondary sentence is reached only when the
-              -- action cannot be processed simultaneously -- and this one is.
-              --
-              -- CR 608.2c's default chooser, spelled here rather than carried on the
-              -- ref: this arm's own sentence prints no other seat, and no ref it
-              -- could is written.
-              ObjectRef.SourceAndChosenPermanent filter_ -> do
-                counterpart <- chosenPermanents legal resolving controller source (ChosenPermanents.MkChosenPermanents filter_ (PlayerRef.Relative PlayerRelation.You) HowMany.One)
-                gs <- State.get
-                pure (counterpart <> battlefieldMatching legal resolving controller source gs Filter.Type.IsSource)
-              -- Swept once from the PRE-MOVE state, EachMatching's reason.
-              ObjectRef.AttachedToBound _ -> do
-                gs <- State.get
-                pure (objectRefObjects legal resolving controller source gs ref)
-              -- A read of the slot's object where it is now, swept once from
-              -- the PRE-MOVE state, EachMatching's reason.
-              ObjectRef.FromAnywhere _ -> do
-                gs <- State.get
-                pure (objectRefObjects legal resolving controller source gs ref)
+              -- Every other ref is swept or asked ONCE off the PRE-MOVE state (CR
+              -- 608.2c, CR 608.2f) through askingObjects, then moved one at a time,
+              -- each judged against the board the batch began on and against the
+              -- siblings that have already arrived (see moveOne). CR 400.3 files a
+              -- hand arrival under Object.owner, and CR 110.2a hands a battlefield
+              -- arrival to the player the effect instructed. A ref naming players
+              -- names no object. askingObjects' match is exhaustive, so a new arm
+              -- is classified there; only a slot read needing fromAmongMembers'
+              -- single binding, as the two arms above do, belongs here.
+              _ -> askingObjects resolving source controller legal chosen ref
             -- CR 608.2h: a depth's amount is read once, off the pre-move board.
             depthBoard <- State.get
             let depthOf quantity =
@@ -5514,7 +5365,7 @@ applyOneEffect runSubgame resolving source controller legal chosen effect = case
   Effect.ExchangeWithCardInHand inHand -> do
     gs <- State.get
     Monad.when (Set.member source (GameState.battlefield gs)) $ do
-      picked <- chooseCardsInHand resolving source controller legal inHand
+      picked <- askingObjects resolving source controller legal chosen (ObjectRef.ChosenCardInHand inHand)
       before <- State.get
       let ownerOf oid = fmap Object.owner (Game.lookupObject oid before)
           host = Game.lookupObject source before >>= Object.attachedTo
@@ -5627,9 +5478,7 @@ applyOneEffect runSubgame resolving source controller legal chosen effect = case
   -- 123.6b's position and CR 123.3c's payment. Placing nothing writes nothing,
   -- so happenedBetween reads it as not having happened.
   Effect.PutSticker (PutSticker.MkPutSticker player ref kinds cap free bound) -> do
-    named <- case ref of
-      ObjectRef.ChosenCardInGraveyard fromGraveyard -> chosenCardsInGraveyard legal resolving controller source fromGraveyard
-      _ -> permanentsGathered legal resolving controller source ref
+    named <- askingObjects resolving source controller legal chosen ref
     placers <- State.gets (\gs -> playerRefPlayers legal controller gs player)
     Monad.forM_ placers $ \placer -> Monad.forM_ (ListUtils.nubOrd named) $ \oid -> do
       gs <- State.get
@@ -6174,39 +6023,23 @@ applyOneEffect runSubgame resolving source controller legal chosen effect = case
     -- binding, which every reader sees; several take the group binding, which
     -- the ObjectRef readers and Filter.IsBound see and slotOne does not.
     let bindShown = bindObjects resolving mSlot
-    case ref of
-      -- A QUESTION rather than a read, so it is answered here, by
-      -- randomCardsInHand -- the one asking read of the ref, shared with the
-      -- Discard arm and with Effect.MoveToZone's gather.
-      ObjectRef.RandomCardInHand random -> do
-        -- Every card named across every seat, so the binding below sees one group
-        -- rather than one write per seat -- Fall reads it back with an
-        -- EachCardFromAmong, which a per-seat single binding would answer with the
-        -- last card alone.
-        picked <- randomCardsInHand resolving source controller legal random
-        Monad.mapM_ (uncurry (Event.reveal RevealCause.Ordinary)) picked
-        bindShown (fmap snd picked)
-      -- CR 608.2d's "from among them", the ONE choice the printed "reveal ... and
-      -- put it into your hand" makes: chooseCardFromAmong asks it, this arm shows
-      -- what it named (CR 701.20a), and mSlot below is what a later clause moves
-      -- -- so the card revealed and the card moved cannot come apart. Asked here
-      -- rather than read, which is why it is not among the refs objectRefObjects
-      -- answers. Uncovered Clues' "put the revealed cards into your hand" reads
-      -- every card picked, which Pawl.MassEffectSpec's UncoveredClues group
-      -- proves.
-      ObjectRef.ChosenCardFromAmong from -> do
-        picked <- chooseCardFromAmong resolving source controller legal chosen from
-        Monad.mapM_ (Event.reveal RevealCause.Ordinary controller) picked
-        bindShown picked
-      _ -> do
-        let named = objectRefObjects legal resolving controller source gs ref
-            -- A card in a hand is shown by the seat whose hand it is -- Duress's
-            -- "target opponent reveals their hand" -- the random arm's reason.
-            shower oid = case Game.lookupObject oid gs of
-              Just obj | Object.zone obj == Zone.Hand -> Object.owner obj
-              _ -> controller
-        Monad.mapM_ (\oid -> Event.reveal RevealCause.Ordinary (shower oid) oid) named
-        bindShown named
+    -- Asked through askingObjects, so the card revealed and the card a later
+    -- clause moves through mSlot cannot come apart: Carth the Lion's "reveal a
+    -- planeswalker card from among them and put it into your hand" is ONE choice.
+    -- Every card named across every seat is bound as one group, which Fall reads
+    -- back with an EachCardFromAmong. Pawl.MassEffectSpec's UncoveredClues group
+    -- proves the binding.
+    named <- askingObjects resolving source controller legal chosen ref
+    let -- A card in a hand is shown by the seat whose hand it is -- Duress's
+        -- "target opponent reveals their hand", Fall's random cards. A card
+        -- picked "from among them" is shown by the resolving controller, who
+        -- carries the instruction out.
+        shower oid = case (ref, Game.lookupObject oid gs) of
+          (ObjectRef.ChosenCardFromAmong {}, _) -> controller
+          (_, Just obj) | Object.zone obj == Zone.Hand -> Object.owner obj
+          _ -> controller
+    Monad.mapM_ (\oid -> Event.reveal RevealCause.Ordinary (shower oid) oid) named
+    bindShown named
   Effect.LookAt (LookAt.MkLookAt ref slot) -> do
     -- CR 608.2c: the cards are named as this instruction is reached, and CR 701.20b
     -- (via rule 701.20e) leaves every one where it is -- so this whole arm is the
@@ -6218,13 +6051,8 @@ applyOneEffect runSubgame resolving source controller legal chosen effect = case
     --
     -- The one PROMPT this arm raises is CR 608.2d's, not rule 701.20e's: Word of
     -- Command's "look at target opponent's hand and CHOOSE a card from it" names
-    -- the hand and picks one, which is chooseCardsInHand's ask. Every other ref
-    -- is the pure read.
-    named <- case ref of
-      ObjectRef.ChosenCardInHand chosenInHand -> chooseCardsInHand resolving source controller legal chosenInHand
-      _ -> do
-        gs <- State.get
-        pure (objectRefObjects legal resolving controller source gs ref)
+    -- the hand and picks one, which askingObjects asks.
+    named <- askingObjects resolving source controller legal chosen ref
     -- Several cards take the group, which Filter.IsBound reads as CR 701.20e's
     -- "among them".
     bindObjects resolving (Just slot) named
@@ -6352,20 +6180,16 @@ applyOneEffect runSubgame resolving source controller legal chosen effect = case
   -- would land every card in the right graveyard and leave
   -- TriggerCondition.SelfDiscarded silent.
   --
-  -- CR 701.9b's two exceptions are the two refs that ASK rather than read: a
-  -- random discard (Hymn to Tourach) through randomCardsInHand, and a card
-  -- another player chooses (Duress) through chooseCardFromAmong over the hand an
-  -- earlier Reveal bound. Every other ref is the pure sweep.
+  -- CR 701.9b's two exceptions are refs that ASK rather than read, through
+  -- askingObjects: a random discard (Hymn to Tourach), and a card another player
+  -- chooses (Duress) from among the hand an earlier Reveal bound.
   --
   -- The discarding player is PER CARD: rule 701.9a moves a card from its OWNER's
   -- hand, and a ref over CR 400.1's per-player zone can name several owners'
   -- cards at once. A card whose owner cannot be read is skipped rather than
   -- filed under the controller.
   Effect.Discard (Discard.These (TheseDiscard.MkTheseDiscard ref mDiscarded)) -> do
-    named <- case ref of
-      ObjectRef.RandomCardInHand random -> fmap (fmap snd) (randomCardsInHand resolving source controller legal random)
-      ObjectRef.ChosenCardFromAmong from -> chooseCardFromAmong resolving source controller legal chosen from
-      _ -> State.gets (\gs -> objectRefObjects legal resolving controller source gs ref)
+    named <- askingObjects resolving source controller legal chosen ref
     gs <- State.get
     let owned oid = fmap (\obj -> (Object.owner obj, [oid])) (Game.lookupObject oid gs)
     -- One event group, CR 608.2f, through the other arms' burial, so what
@@ -8552,7 +8376,7 @@ applyOneEffect runSubgame resolving source controller legal chosen effect = case
   -- (CR 609.3). A mover that cannot go there stays put (CR 701.3b, CR 303.4j),
   -- which Event.attach applies.
   Effect.AttachAll (AttachAll.MkAttachAll ref filter_) -> do
-    movers <- permanentsGathered legal resolving controller source ref
+    movers <- askingObjects resolving source controller legal chosen ref
     gs <- State.get
     destination <- Game.chooseAmong (\decider who -> Prompt.ChoosePermanent decider who source) controller (Attach.groupHostsFor (effectContext gs controller source legal (slotBindings resolving gs)) movers filter_ gs)
     -- Proposed as a bare ToObject; Event.attach re-tags it per mover, as
@@ -8565,7 +8389,7 @@ applyOneEffect runSubgame resolving source controller legal chosen effect = case
   -- Equipment ends with the attachment, Keyword.reconfigured's affected set
   -- re-asking Object.attachedTo.
   Effect.Unattach ref -> do
-    movers <- permanentsGathered legal resolving controller source ref
+    movers <- askingObjects resolving source controller legal chosen ref
     Event.simultaneously (Monad.forM_ movers Event.detach)
   Effect.ExileHaunting (ExileHaunting.MkExileHaunting card slot) ->
     case legalOne slot legal of
@@ -9832,10 +9656,10 @@ applyOneEffect runSubgame resolving source controller legal chosen effect = case
   -- untapped" lives in that funnel, and CR 122.1d's replacement is offered the
   -- event there.
   --
-  -- Through permanentsGathered, so CR 608.2d's "untap up to two lands" (Teferi,
+  -- Through askingObjects, so CR 608.2d's "untap up to two lands" (Teferi,
   -- Hero of Dominaria) is asked rather than read.
   Effect.Untap ref -> do
-    victims <- permanentsGathered legal resolving controller source ref
+    victims <- askingObjects resolving source controller legal chosen ref
     Monad.forM_ victims Event.untap
   Effect.Detain ref ->
     State.modify' $ \gs ->
@@ -9862,9 +9686,9 @@ applyOneEffect runSubgame resolving source controller legal chosen effect = case
     -- limit are Soulbond.pair's, read off the board as the effect applies rather
     -- than off anything the trigger captured.
     --
-    -- The CHOSEN ref goes through permanentsGathered and not the pure sweep: CR
+    -- The CHOSEN ref goes through askingObjects and not the pure sweep: CR
     -- 608.2d's choice is an ask, which objectRefObjects cannot make.
-    partners <- permanentsGathered legal resolving controller source ref
+    partners <- askingObjects resolving source controller legal chosen ref
     State.modify' $ \gs -> case partners of
       [partner] -> Soulbond.pair controller source partner gs
       _ -> gs
@@ -9882,11 +9706,11 @@ applyOneEffect runSubgame resolving source controller legal chosen effect = case
             { GameState.objects =
                 foldr (Map.adjust mark) (GameState.objects gs) (objectRefObjects legal resolving controller source gs (DoesNotUntapNext.ref payload))
             }
-  Effect.Transform ref -> turnPermanentsOver legal resolving controller source ref
+  Effect.Transform ref -> turnPermanentsOver legal chosen resolving controller source ref
   -- CR 701.28a routes a convert through rules 701.27a-f unchanged, so it is the
   -- SAME call and not a similar one. The two opcodes stay distinct in the card
   -- data (Pawl.Types.Effect.Convert) and identical in behaviour here.
-  Effect.Convert ref -> turnPermanentsOver legal resolving controller source ref
+  Effect.Convert ref -> turnPermanentsOver legal chosen resolving controller source ref
   Effect.Flip ref ->
     State.modify' $ \gs ->
       -- CR 710.2: flip each named permanent, so its alternative characteristics

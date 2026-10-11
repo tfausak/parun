@@ -123,9 +123,9 @@ data ObjectRef
     -- DISTINCT -- Pawl.MassEffectSpec's "CR 608.2d each player returns two
     -- DISTINCT land cards from their own graveyard" is what proves it.
     --
-    -- A QUESTION rather than a read, so only an opcode whose gather reaches the
-    -- Game monad carries it out; Pawl.CardSpec's inertChoosers rejects the other
-    -- pairings, and it is the only thing that states that ragged matrix.
+    -- A QUESTION rather than a read, asked by
+    -- Pawl.Engine.Resolve.Effect.askingObjects; Pawl.EffectLintSpec's
+    -- inertChoosers states which opcodes may carry it.
     ChosenCardInGraveyard ChosenCardInGraveyard.ChosenCardInGraveyard
   | -- | CR 608.2d / 402.3 / Karn Liberated: a card in a hand matching the Filter,
     -- chosen as the effect runs by the seat whose hand it is -- which is why one
@@ -144,20 +144,17 @@ data ObjectRef
   | -- | CR 701.20a / 701.9b / Merfolk Spy, Fall, Hymn to Tourach: the cards
     -- randomness names out of the hands the PlayerRef names, asked of the
     -- interpreter through Prompt.RandomObject and filtered back against the
-    -- candidates. Carried out by Effect.Reveal, Effect.Discard and
-    -- Effect.MoveToZone's gather, all three through randomCardsInHand.
+    -- candidates.
     RandomCardInHand RandomCardInHand.RandomCardInHand
   | -- | CR 404.1 / 608.2c / Ghoulraiser, Make a Wish: the cards randomness names
     -- out of the graveyards the ZoneScope names, asked of the interpreter through
     -- Prompt.RandomObject and filtered back against the candidates. The arm above
     -- over a PUBLIC zone (CR 400.2), which is why a ZoneScope stands where that
-    -- arm's single PlayerRef does. Carried out by Effect.MoveToZone's gather,
-    -- through randomCardsInGraveyard.
+    -- arm's single PlayerRef does.
     RandomCardInGraveyard RandomCardInGraveyard.RandomCardInGraveyard
   | -- | Alchemy's seek / Gate to Seatower: the cards randomness names out of the
     -- library the PlayerRef names, asked of the interpreter through
-    -- Prompt.RandomObject -- no search, no reveal, no shuffle. Carried out by
-    -- Effect.MoveToZone's gather, through randomCardsInLibrary.
+    -- Prompt.RandomObject -- no search, no reveal, no shuffle.
     RandomCardInLibrary RandomCardInLibrary.RandomCardInLibrary
   | -- | CR 608.2d / 701.42a: the permanents on the battlefield matching the
     -- payload's Filter that its chooser picks as the effect runs, one or up to a
