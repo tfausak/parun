@@ -12,7 +12,6 @@ import qualified Data.Maybe as Maybe
 import qualified Data.Ord as Ord
 import qualified Data.Sequence as Seq
 import qualified Data.Set as Set
-import qualified Data.Text as Text
 import Numeric.Natural (Natural)
 import qualified Pawl.Engine.Binding as Binding
 import qualified Pawl.Engine.Card as Card
@@ -21,7 +20,6 @@ import qualified Pawl.Engine.Modal as Modal
 import qualified Pawl.Engine.Turn as Turn
 import qualified Pawl.Extra.Natural as Natural
 import qualified Pawl.Types.AbilityName as AbilityName
-import qualified Pawl.Types.AbilitySticker as AbilitySticker
 import qualified Pawl.Types.ActivatedAbilitySource as ActivatedAbilitySource
 import qualified Pawl.Types.ActiveCopy as ActiveCopy
 import qualified Pawl.Types.ActiveObjectProhibition as ActiveObjectProhibition
@@ -75,7 +73,6 @@ import qualified Pawl.Types.PlayerActed as PlayerActed
 import qualified Pawl.Types.PlayerAction as PlayerAction
 import qualified Pawl.Types.PlayerCounterKind as PlayerCounterKind
 import Pawl.Types.PlayerId (PlayerId)
-import qualified Pawl.Types.PowerToughnessSticker as PowerToughnessSticker
 import qualified Pawl.Types.Printing as Printing
 import qualified Pawl.Types.PrintingId as PrintingId
 import qualified Pawl.Types.Program as Program
@@ -88,6 +85,7 @@ import qualified Pawl.Types.SlotName as SlotName
 import qualified Pawl.Types.Source as Source
 import qualified Pawl.Types.SpellWasCast as SpellWasCast
 import qualified Pawl.Types.Status as Status
+import qualified Pawl.Types.StickerContent as StickerContent
 import qualified Pawl.Types.StickerKind as StickerKind
 import qualified Pawl.Types.StickerPlacement as StickerPlacement
 import qualified Pawl.Types.StickerRef as StickerRef
@@ -244,39 +242,22 @@ stickerSheetOf ref gs = do
   slot <- Natural.toInt (StickerRef.sheet ref)
   Seq.lookup slot (Player.stickerSheets player)
 
--- | CR 123.6: a name sticker's words; Nothing for every other kind.
-stickerWords :: StickerRef.StickerRef -> GameState -> Maybe Text.Text
-stickerWords ref gs = case StickerRef.kind ref of
-  StickerKind.Name -> do
-    sheet <- stickerSheetOf ref gs
-    i <- Natural.toInt (StickerRef.index ref)
-    Seq.lookup i (StickerSheet.names sheet)
-  StickerKind.Ability -> Nothing
-  StickerKind.PowerToughness -> Nothing
-  StickerKind.Art -> Nothing
+-- | CR 123.2 / 123.6-123.9: what a sticker says, read off its sheet.
+stickerContent :: StickerRef.StickerRef -> GameState -> Maybe StickerContent.StickerContent
+stickerContent ref gs = do
+  sheet <- stickerSheetOf ref gs
+  sheetContent sheet (StickerRef.kind ref) (StickerRef.index ref)
 
--- | CR 123.7: an ability sticker's printed abilities; Nothing for every other
--- kind.
-abilityStickerOf :: StickerRef.StickerRef -> GameState -> Maybe AbilitySticker.AbilitySticker
-abilityStickerOf ref gs = case StickerRef.kind ref of
-  StickerKind.Ability -> do
-    sheet <- stickerSheetOf ref gs
-    i <- Natural.toInt (StickerRef.index ref)
-    Seq.lookup i (StickerSheet.abilities sheet)
-  StickerKind.Name -> Nothing
-  StickerKind.PowerToughness -> Nothing
-  StickerKind.Art -> Nothing
-
--- | CR 123.8: a P/T sticker's printed numbers; Nothing for every other kind.
-powerToughnessStickerOf :: StickerRef.StickerRef -> GameState -> Maybe PowerToughnessSticker.PowerToughnessSticker
-powerToughnessStickerOf ref gs = case StickerRef.kind ref of
-  StickerKind.PowerToughness -> do
-    sheet <- stickerSheetOf ref gs
-    i <- Natural.toInt (StickerRef.index ref)
-    Seq.lookup i (StickerSheet.powerToughness sheet)
-  StickerKind.Name -> Nothing
-  StickerKind.Ability -> Nothing
-  StickerKind.Art -> Nothing
+-- | CR 123.3a: the sticker of that kind at that position on the sheet, if the
+-- sheet prints one.
+sheetContent :: StickerSheet.StickerSheet -> StickerKind.StickerKind -> Natural -> Maybe StickerContent.StickerContent
+sheetContent sheet kind index = do
+  i <- Natural.toInt index
+  case kind of
+    StickerKind.Name -> StickerContent.Name <$> Seq.lookup i (StickerSheet.names sheet)
+    StickerKind.Ability -> StickerContent.Ability <$> Seq.lookup i (StickerSheet.abilities sheet)
+    StickerKind.PowerToughness -> StickerContent.PowerToughness <$> Seq.lookup i (StickerSheet.powerToughness sheet)
+    StickerKind.Art -> StickerContent.Art <$ Monad.guard (index < StickerSheet.art sheet)
 
 freshPrintingId :: GameState -> (PrintingId.PrintingId, GameState)
 freshPrintingId gs =

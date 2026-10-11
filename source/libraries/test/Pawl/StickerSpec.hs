@@ -90,6 +90,7 @@ import qualified Pawl.Types.Regenerability as Regenerability
 import qualified Pawl.Types.SlotName as SlotName
 import qualified Pawl.Types.SpellWasCast as SpellWasCast
 import qualified Pawl.Types.StepBegan as StepBegan
+import qualified Pawl.Types.StickerContent as StickerContent
 import qualified Pawl.Types.StickerKind as StickerKind
 import qualified Pawl.Types.StickerPlacement as StickerPlacement
 import qualified Pawl.Types.StickerRef as StickerRef
@@ -675,8 +676,8 @@ spec s registry = Spec.describe s "Sticker" $ do
     sheets <- committedSheets
     let gs = withSheets sheets (Setup.gameWith GameSettings.plain S.bothPlayers)
         art = StickerRef.MkStickerRef S.alice 2 StickerKind.Art 0
-    Spec.assertEqWith s "Night, Slimy, Otter" (fmap (\ref -> Game.stickerWords ref gs) [night, slimy, otter]) (fmap (Just . Text.pack) ["Night", "Slimy", "Otter"])
-    Spec.assertEqWith s "an art sticker has none" (Game.stickerWords art gs) Nothing
+    Spec.assertEqWith s "Night, Slimy, Otter" (fmap (\ref -> Game.stickerContent ref gs) [night, slimy, otter]) (fmap (Just . StickerContent.Name . Text.pack) ["Night", "Slimy", "Otter"])
+    Spec.assertEqWith s "CR 123.9 an art sticker says nothing" (Game.stickerContent art gs) (Just StickerContent.Art)
   -- CR 123.6c's first example, with a committed word: Otter after Fae of
   -- Wishes' second word. Exile to stack to exile is public to public (CR 123.5).
   Spec.it s "CR 123.6c Fae of Otter Wishes is cast as Granted Otter and exiled as Fae of Otter Wishes again" $ do
@@ -929,9 +930,8 @@ spec s registry = Spec.describe s "Sticker" $ do
     let gs = withSheets sheets (Setup.gameWith GameSettings.plain S.bothPlayers)
     Spec.assertEqWith s "the five sheets load" (length sheets) 5
     Spec.assertEqWith s "CR 123.3c four, two, none and none" (fmap (\ref -> Sticker.ticketCost ref gs) [jugglerIndestructible, otterFiveOne, night, aliceSticker 2 StickerKind.Art 0]) [4, 2, 0, 0]
-    Spec.assertEqWith s "CR 123.8 Otter's sticker is a 5/1" (fmap (\pt -> (PowerToughnessSticker.power pt, PowerToughnessSticker.toughness pt)) (Game.powerToughnessStickerOf otterFiveOne gs)) (Just (5, 1))
-    Spec.assertEqWith s "CR 123.7 Juggler's second ability sticker is indestructible" (fmap (Map.keys . AbilitySticker.keywords) (Game.abilityStickerOf jugglerIndestructible gs)) (Just [Keyword.Indestructible])
-    Spec.assertEqWith s "and a P/T sticker has no abilities" (Game.abilityStickerOf otterFiveOne gs) Nothing
+    Spec.assertEqWith s "CR 123.8 Otter's sticker is a 5/1" (Game.stickerContent otterFiveOne gs) (Just (StickerContent.PowerToughness PowerToughnessSticker.MkPowerToughnessSticker {PowerToughnessSticker.tickets = 2, PowerToughnessSticker.power = 5, PowerToughnessSticker.toughness = 1}))
+    Spec.assertEqWith s "CR 123.7 Juggler's second ability sticker is indestructible" [Map.keys (AbilitySticker.keywords a) | Just (StickerContent.Ability a) <- [Game.stickerContent jugglerIndestructible gs]] [[Keyword.Indestructible]]
   -- #4934's tripwire: a static, rule, player or self-cost ability on an
   -- ability sticker, or a keyword rule 702 states as a static ability, does not
   -- reach the stickered object -- the first two join no list for a grant to
