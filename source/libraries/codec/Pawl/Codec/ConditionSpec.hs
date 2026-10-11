@@ -15,6 +15,7 @@ import qualified Pawl.Types.DuringPhase as DuringPhase
 import qualified Pawl.Types.EndingStep as EndingStep
 import qualified Pawl.Types.Filter as Filter
 import qualified Pawl.Types.InZone as InZone
+import qualified Pawl.Types.Measure as Measure
 import qualified Pawl.Types.Phase as Phase
 import qualified Pawl.Types.PhaseSelector as PhaseSelector
 import qualified Pawl.Types.PlayerRef as PlayerRef
@@ -43,16 +44,16 @@ spec s = Spec.describe s "Pawl.Codec.Condition" $ do
     Common.assertCodec
       s
       Condition.codec
-      (Condition.Any [Condition.Compares (Compares.MkCompares Quantity.Power Comparison.AtLeast (Quantity.Literal 1)), Condition.Compares (Compares.MkCompares Quantity.Toughness Comparison.AtMost (Quantity.Literal 2))])
-      " {\"type\":\"Any\",\"value\":[{\"type\":\"Compares\",\"value\":{\"measured\":{\"type\":\"Power\"},\"comparison\":{\"type\":\"AtLeast\"},\"threshold\":{\"type\":\"Literal\",\"value\":1}}},{\"type\":\"Compares\",\"value\":{\"measured\":{\"type\":\"Toughness\"},\"comparison\":{\"type\":\"AtMost\"},\"threshold\":{\"type\":\"Literal\",\"value\":2}}}]} "
+      (Condition.Any [Condition.Compares (Compares.MkCompares (Quantity.Measure Measure.Power) Comparison.AtLeast (Quantity.Literal 1)), Condition.Compares (Compares.MkCompares (Quantity.Measure Measure.Toughness) Comparison.AtMost (Quantity.Literal 2))])
+      " {\"type\":\"Any\",\"value\":[{\"type\":\"Compares\",\"value\":{\"measured\":{\"type\":\"Measure\",\"value\":{\"type\":\"Power\"}},\"comparison\":{\"type\":\"AtLeast\"},\"threshold\":{\"type\":\"Literal\",\"value\":1}}},{\"type\":\"Compares\",\"value\":{\"measured\":{\"type\":\"Measure\",\"value\":{\"type\":\"Toughness\"}},\"comparison\":{\"type\":\"AtMost\"},\"threshold\":{\"type\":\"Literal\",\"value\":2}}}]} "
   -- Nissa, Steward of Elements' conjunction. Two asymmetric conjuncts, for the
   -- disjunction's reason above.
   Spec.it s "All" $
     Common.assertCodec
       s
       Condition.codec
-      (Condition.All [Condition.Compares (Compares.MkCompares Quantity.Power Comparison.AtLeast (Quantity.Literal 1)), Condition.Compares (Compares.MkCompares Quantity.Toughness Comparison.AtMost (Quantity.Literal 2))])
-      " {\"type\":\"All\",\"value\":[{\"type\":\"Compares\",\"value\":{\"measured\":{\"type\":\"Power\"},\"comparison\":{\"type\":\"AtLeast\"},\"threshold\":{\"type\":\"Literal\",\"value\":1}}},{\"type\":\"Compares\",\"value\":{\"measured\":{\"type\":\"Toughness\"},\"comparison\":{\"type\":\"AtMost\"},\"threshold\":{\"type\":\"Literal\",\"value\":2}}}]} "
+      (Condition.All [Condition.Compares (Compares.MkCompares (Quantity.Measure Measure.Power) Comparison.AtLeast (Quantity.Literal 1)), Condition.Compares (Compares.MkCompares (Quantity.Measure Measure.Toughness) Comparison.AtMost (Quantity.Literal 2))])
+      " {\"type\":\"All\",\"value\":[{\"type\":\"Compares\",\"value\":{\"measured\":{\"type\":\"Measure\",\"value\":{\"type\":\"Power\"}},\"comparison\":{\"type\":\"AtLeast\"},\"threshold\":{\"type\":\"Literal\",\"value\":1}}},{\"type\":\"Compares\",\"value\":{\"measured\":{\"type\":\"Measure\",\"value\":{\"type\":\"Toughness\"}},\"comparison\":{\"type\":\"AtMost\"},\"threshold\":{\"type\":\"Literal\",\"value\":2}}}]} "
   -- Zurgo, Thunder's Decree's "during your end step": the window and the scope
   -- are both kept, as the activation rider's codec keeps them.
   Spec.it s "During" $
@@ -67,7 +68,7 @@ spec s = Spec.describe s "Pawl.Codec.Condition" $ do
   Spec.it s "rejects the untagged comparison shape" $
     Spec.assertBool
       s
-      (Either.isLeft (Common.parse (Text.pack " {\"measured\":{\"type\":\"Power\"},\"comparison\":{\"type\":\"AtLeast\"},\"threshold\":{\"type\":\"Literal\",\"value\":1}} ") >>= Codec.decode Condition.codec))
+      (Either.isLeft (Common.parse (Text.pack " {\"measured\":{\"type\":\"Measure\",\"value\":{\"type\":\"Power\"}},\"comparison\":{\"type\":\"AtLeast\"},\"threshold\":{\"type\":\"Literal\",\"value\":1}} ") >>= Codec.decode Condition.codec))
       "expected a decode failure"
   Spec.it s "rejects the untagged disjunction shape" $
     Spec.assertBool
@@ -97,7 +98,7 @@ spec s = Spec.describe s "Pawl.Codec.Condition" $ do
       [ Condition.Compares (Compares.MkCompares (Quantity.Count zeroSwamps) Comparison.Exactly (Quantity.Literal 0)),
         Condition.Compares (Compares.MkCompares (Quantity.Count zeroSwamps) Comparison.AtLeast (Quantity.Literal 3)),
         Condition.Compares (Compares.MkCompares (Quantity.Count zeroSwamps) Comparison.AtMost (Quantity.Literal 1)),
-        Condition.Compares (Compares.MkCompares Quantity.Power Comparison.AtLeast (Quantity.Literal 3))
+        Condition.Compares (Compares.MkCompares (Quantity.Measure Measure.Power) Comparison.AtLeast (Quantity.Literal 3))
       ]
 
 -- A count with every axis non-default, so a codec that drops one is caught. The

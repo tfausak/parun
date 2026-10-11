@@ -2171,9 +2171,7 @@ rewriteQuantity pairs quantity = case quantity of
         }
   Quantity.Type.Arithmetic arithmetic -> Quantity.Type.Arithmetic (fmap (rewriteQuantity pairs) arithmetic)
   Quantity.Type.Literal _ -> quantity
-  Quantity.Type.ManaValue -> quantity
-  Quantity.Type.Power -> quantity
-  Quantity.Type.Toughness -> quantity
+  Quantity.Type.Measure _ -> quantity
   Quantity.Type.Intensity -> quantity
   Quantity.Type.InSlot _ -> quantity
   Quantity.Type.WasBound _ -> quantity

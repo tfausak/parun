@@ -450,7 +450,7 @@ data View = MkView
     -- candidate ALONE, which is why it lives in the per-candidate View rather than
     -- in Context: it needs the subject's enchant ability (CR 702.5a) AND the
     -- candidate's projected characteristics, so it has a different answer per
-    -- candidate. Context.sourcePower is the other half of that division -- one
+    -- candidate. Context.sourceMeasures is the other half of that division -- one
     -- reading of the source, the same for every candidate in the match. Pawl.Engine.Attach.hostsAmong is the only
     -- site that fills it, from Attach.attachmentFor -- the same function that
     -- performs the move, so the offer and the move cannot disagree.
@@ -1014,37 +1014,32 @@ data Context = MkContext
     teams :: Teams.Teams,
     perspective :: Maybe PlayerId.PlayerId,
     source :: Maybe ObjectId.ObjectId,
-    -- CR 208.1: the SOURCE's power, for the Measures atom's OfSource operand
-    -- (CR 702.134a's mentor, CR 702.149a's training). Not derivable from
-    -- `source` here -- this module holds no game state and cannot project -- so
-    -- Pawl.Engine.Projection.withCharacteristicsOf fills it and the four fields
-    -- below together, through last known information (CR 608.2b's re-check,
-    -- CR 608.2h's effects): in every context Pawl.Engine.Projection.sourceContext
-    -- frames, and in CR 509.1b's pairwise restrictions, which frame by the
-    -- creature being compared (Projection.pairwiseContext, Spitfire Handler).
+    -- CR 202.3 / 208.1: the SOURCE's measures, for the Measures atom's OfSource
+    -- operand (CR 702.134a's mentor, CR 702.85a's cascade, Ironclaw Curse); a
+    -- measure the source lacks has no key, `slotMeasures` below's posture. Not
+    -- derivable from `source` here -- this module holds no game state and cannot
+    -- project -- so Pawl.Engine.Projection.withCharacteristicsOf fills it and the
+    -- two fields below together, through last known information (CR 608.2b's
+    -- re-check, CR 608.2h's effects): in every context
+    -- Pawl.Engine.Projection.sourceContext frames, and in CR 509.1b's pairwise
+    -- restrictions, which frame by the creature being compared
+    -- (Projection.pairwiseContext, Spitfire Handler).
     --
     -- LAZY, and load-bearingly so: filling it costs a projection of the source,
     -- and no filter that omits the operand ever forces it.
     --
-    -- Nothing in `contextFor` below and inside the CR 613 layer fold, whose
+    -- Empty in `contextFor` below and inside the CR 613 layer fold, whose
     -- contexts (Pawl.Engine.SourceContext) cannot project their own source; the
     -- operand then matches nothing, and Pawl.FilterPositionLintSpec keeps a card
     -- out of those positions.
-    sourcePower :: Maybe Integer,
-    -- CR 208.1: the SOURCE's toughness, for the same operand (Ironclaw Curse).
-    -- Filled with sourcePower.
-    sourceToughness :: Maybe Integer,
-    -- CR 202.3: the SOURCE's mana value, for the same operand (CR 702.85a's
-    -- cascade, CR 702.53a's transmute, CR 702.71a's transfigure, Kami of
-    -- Mourning). Filled with sourcePower.
-    sourceManaValue :: Maybe Integer,
+    sourceMeasures :: Map.Map Measure.Measure Integer,
     -- CR 105.2: the SOURCE's colours, for SharesColorWithSource (CR 702.78a's
-    -- conspire). Filled with sourcePower. A SET rather than a Maybe: empty is
+    -- conspire). Filled with sourceMeasures. A SET rather than a Maybe: empty is
     -- the right answer both where it is unfilled and for a colourless source.
     sourceColors :: Set.Set Color.Color,
     -- CR 201.1 / 709.4a: the NAMES of the SOURCE, for SameNameAsSource (CR
     -- 702.60a's ripple); `slotNames` below asks the same of a SLOT. Filled with
-    -- sourcePower, and a SET for sourceColors' reason (CR 708.2a's nameless
+    -- sourceMeasures, and a SET for sourceColors' reason (CR 708.2a's nameless
     -- object).
     sourceNames :: Set.Set CardName.CardName,
     -- CR 202.3, the computed half: the number the TARGET SLOT being matched
@@ -1060,7 +1055,7 @@ data Context = MkContext
     -- position, and Pawl.FilterPositionLintSpec's lint is what keeps a card out of
     -- them.
     --
-    -- LAZY like sourcePower, and load-bearingly so: filling it costs a whole
+    -- LAZY like sourceMeasures, and load-bearingly so: filling it costs a whole
     -- Quantity evaluation, and no filter that omits the atom ever forces it.
     slotAmount :: Maybe Integer,
     -- CR 601.2b: the slot NAMES a computed bound and the announcement that fixes
@@ -1087,11 +1082,11 @@ data Context = MkContext
     -- (ControlledByDefendingPlayer, CR 702.39a). One player for an attacking
     -- source; for a source with no attack to resolve it, CR 802.2a's every
     -- defending player the controller could choose (Yare). Supplied by the caller for
-    -- sourcePower's reason -- this module holds no game state and cannot read the
+    -- sourceMeasures's reason -- this module holds no game state and cannot read the
     -- combat record -- by Pawl.Engine.Target.admittedGiven for a target slot and
     -- by Pawl.Engine.CombatRestriction.inForce for a CR 508.1c gate.
     --
-    -- LAZY like sourcePower, and load-bearingly so: filling it costs a
+    -- LAZY like sourceMeasures, and load-bearingly so: filling it costs a
     -- control-grant walk, and no filter that omits the atom ever forces it.
     defendingPlayers :: [PlayerId.PlayerId],
     -- The player the surrounding effect is CURRENTLY BEING APPLIED TO, for the
@@ -1173,7 +1168,7 @@ data Context = MkContext
     slotObjects :: Map.Map SlotName.SlotName (Set.Set ObjectId.ObjectId),
     -- CR 702.122d / 101.2: the objects an effect in force says CAN'T CREW
     -- VEHICLES, for the one atom that asks (CantCrewVehicles). Supplied by the
-    -- caller for sourcePower's reason -- this module holds no game state and
+    -- caller for sourceMeasures's reason -- this module holds no game state and
     -- cannot gather another permanent's static abilities -- and by ONE caller,
     -- Pawl.Engine.Cost.tapCandidates, which is the single pool both CR 118.3's
     -- payability gate and rule 702.122a's payment prompt read.
@@ -1190,14 +1185,14 @@ data Context = MkContext
     -- CR 201.1 / 709.4a: the NAMES of the objects the surrounding announcement's
     -- slots hold, for the one atom that compares a candidate's against them
     -- (SameNameAsBound, Harness the Storm). Supplied by the caller for
-    -- sourcePower's reason -- this module holds no game state and cannot read an
+    -- sourceMeasures's reason -- this module holds no game state and cannot read an
     -- object's names -- through Pawl.Engine.Projection.framedBySlots, where a
     -- target slot's Filter is matched and where every one of a resolution's
     -- positions is (Bifurcate's search filter, Hour of Glory's hand sweep, Grim
     -- Reminder's life loss amount, an attach destination).
     --
     -- Separate from `slotObjects` above rather than derived from it, and that is
-    -- the same division sourcePower makes against `source`: an id is not a name
+    -- the same division sourceMeasures makes against `source`: an id is not a name
     -- until a board has been asked.
     --
     -- LAZY, and load-bearingly so: filling it costs one projection per bound
@@ -1212,7 +1207,7 @@ data Context = MkContext
     --
     -- What keeps a card out of those positions is Pawl.FilterPositionLintSpec's
     -- "CR 709.4a no card asks SameNameAsBound outside a mode's target slot, a search filter, a hand sweep or a life loss amount",
-    -- the sweep sourcePower's and defendingPlayer's siblings each have.
+    -- the sweep sourceMeasures's and defendingPlayer's siblings each have.
     slotNames :: Map.Map SlotName.SlotName (Set.Set CardName.CardName),
     -- CR 110.2: the CONTROLLERS of the objects the surrounding announcement's
     -- slots hold, for the one atom that compares a candidate's against them
@@ -1266,7 +1261,7 @@ data Context = MkContext
     -- Here rather than in the per-candidate View, where `canHostSubject` is, for
     -- the division that field's own note draws: this is one reading of the
     -- subject's host, the same for every candidate in the match, which is
-    -- `sourcePower`'s side of it. Keyed by nothing, because the subject is not a
+    -- `sourceMeasures`'s side of it. Keyed by nothing, because the subject is not a
     -- slot the caller bound but the permanent Pawl.Engine.Attach.hostsAmong was
     -- handed -- so hostsAmong fills it into the Context it took from its caller
     -- rather than the caller filling it, and hostsAmong is the one filler.
@@ -1369,7 +1364,7 @@ data Context = MkContext
     -- CR 303.4b's "enchanted": WHICH object the SOURCE is attached to, for the one
     -- atom that compares a candidate against it (IsHostOfSource). The id and not a
     -- view, because the answer is one reading of the source and the same for every
-    -- candidate -- the division sourcePower makes against `source`. View.attachedTo
+    -- candidate -- the division sourceMeasures makes against `source`. View.attachedTo
     -- is the same read in the other direction, per candidate.
     --
     -- Filled, live off the board (Pawl.Engine.Game.hostOf), by
@@ -1460,7 +1455,7 @@ data Context = MkContext
     -- but those four -- sourceAttachedTo's posture rather than slotControllers'.
     -- What keeps a card out of the other positions is Pawl.CardSpec's "CR 702.16k
     -- no card asks OfChosenPlayer outside a keyword's own filter", the sweep
-    -- sourcePower's, slotNames', sourceAttachedTo's and sourceChosenNames'
+    -- sourceMeasures's, slotNames', sourceAttachedTo's and sourceChosenNames'
     -- siblings each have.
     carrierChosenPlayer :: Maybe PlayerId.PlayerId,
     -- CR 702.16b / CR 702.16k: the controller of the spell or ability being
@@ -1592,7 +1587,7 @@ data Context = MkContext
 -- here owes both halves of the same pair: which way its unfilled read answers,
 -- and what holds a card to the positions that fill it.
 contextFor :: Teams.Teams -> Maybe PlayerId.PlayerId -> Maybe ObjectId.ObjectId -> Context
-contextFor t p s = MkContext {teams = t, perspective = p, source = s, sourcePower = Nothing, sourceToughness = Nothing, sourceManaValue = Nothing, sourceColors = Set.empty, sourceNames = Set.empty, slotAmount = Nothing, defendingPlayers = [], recipient = Nothing, slotObjects = Map.empty, cantCrewVehicles = Set.empty, slotNames = Map.empty, slotControllers = Map.empty, slotHostControllers = Map.empty, subjectHostCardTypes = Set.empty, slotCreatureTypes = Map.empty, slotMeasures = Map.empty, slotPlayers = Map.empty, boundAmounts = Map.empty, slotStickers = Map.empty, boundUnannounced = False, sourceAttachedTo = Nothing, evaluated = Nothing, sourceEntrants = Set.empty, sourceOwner = Nothing, sourceChosenNames = Set.empty, carrierChosenPlayer = Nothing, aimingController = Nothing, sourceChosenColors = Set.empty, sourceChosenSubtype = Nothing, sourceLastExiled = Nothing}
+contextFor t p s = MkContext {teams = t, perspective = p, source = s, sourceMeasures = Map.empty, sourceColors = Set.empty, sourceNames = Set.empty, slotAmount = Nothing, defendingPlayers = [], recipient = Nothing, slotObjects = Map.empty, cantCrewVehicles = Set.empty, slotNames = Map.empty, slotControllers = Map.empty, slotHostControllers = Map.empty, subjectHostCardTypes = Set.empty, slotCreatureTypes = Map.empty, slotMeasures = Map.empty, slotPlayers = Map.empty, boundAmounts = Map.empty, slotStickers = Map.empty, boundUnannounced = False, sourceAttachedTo = Nothing, evaluated = Nothing, sourceEntrants = Set.empty, sourceOwner = Nothing, sourceChosenNames = Set.empty, carrierChosenPlayer = Nothing, aimingController = Nothing, sourceChosenColors = Set.empty, sourceChosenSubtype = Nothing, sourceLastExiled = Nothing}
 
 -- The ONE object a slot names, for the readers that can take no more than one --
 -- Quantity.AgainstSlot's evaluation, Count's IsControllerOfBound. Nothing where
@@ -1610,6 +1605,10 @@ slotOneObject slot context = case Set.toList (Map.findWithDefault Set.empty slot
   [oid] -> Just oid
   _ -> Nothing
 
+-- Every measure the view has, keyed by which: Context.sourceMeasures' filler.
+measuresOf :: View -> Map.Map Measure.Measure Integer
+measuresOf view = Map.fromList [(measure, n) | measure <- [minBound .. maxBound], Just n <- [measureOf measure view]]
+
 -- CR 208.1 / 202.3: the number a Measure names on a view, Nothing where the
 -- object has none (CR 208.3's noncreature, a player).
 measureOf :: Measure.Measure -> View -> Maybe Integer
@@ -1624,10 +1623,7 @@ operandValue :: Context -> View -> Operand.Operand -> Maybe Integer
 operandValue context view operand = case operand of
   Operand.Literal n -> Just n
   Operand.Own measure -> measureOf measure view
-  Operand.OfSource measure -> case measure of
-    Measure.Power -> sourcePower context
-    Measure.Toughness -> sourceToughness context
-    Measure.ManaValue -> sourceManaValue context
+  Operand.OfSource measure -> Map.lookup measure (sourceMeasures context)
   Operand.OfBound bound -> Map.lookup (BoundMeasure.slot bound, BoundMeasure.measure bound) (slotMeasures context)
   Operand.AmountInSlot slot -> toInteger <$> Map.lookup slot (boundAmounts context)
   Operand.EnclosingAmount -> slotAmount context

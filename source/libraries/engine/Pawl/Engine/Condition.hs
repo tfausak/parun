@@ -58,7 +58,7 @@ holds viewOf context gs oid condition =
   let evaluate = Quantity.evaluate viewOf context gs oid
    in case condition of
         -- Both sides are evaluated against `oid` and with the same view, so a
-        -- Quantity.Power on either side reads the same object and a Quantity.Count on
+        -- Quantity.Measure on either side reads the same object and a Quantity.Count on
         -- either side sweeps the same board. Only the Comparison is oriented.
         Condition.Type.Compares c ->
           case (evaluate (Compares.measured c), evaluate (Compares.threshold c)) of

@@ -134,6 +134,7 @@ import qualified Pawl.Types.LookAt as LookAt
 import qualified Pawl.Types.MakeForetold as MakeForetold
 import qualified Pawl.Types.ManaAddition as ManaAddition
 import qualified Pawl.Types.ManaRestriction as ManaRestriction
+import qualified Pawl.Types.Measure as Measure
 import qualified Pawl.Types.Meld as Meld
 import qualified Pawl.Types.Mill as Mill
 import qualified Pawl.Types.Modal as Modal
@@ -454,9 +455,7 @@ printedBoxQuantity quantity = case quantity of
     Arithmetic.Halved {} -> False
     Arithmetic.Times {} -> False
     Arithmetic.Negate {} -> False
-  Quantity.Type.ManaValue -> False
-  Quantity.Type.Power -> False
-  Quantity.Type.Toughness -> False
+  Quantity.Type.Measure _ -> False
   Quantity.Type.Intensity -> False
   Quantity.Type.InSlot _ -> False
   Quantity.Type.WasBound _ -> False
@@ -2306,7 +2305,7 @@ effectLintSpec s registry = Spec.describe s "Lint" $ do
         -- Nothing about the opcode matters: what is on trial is the atom inside
         -- the number.
         counting quantity = Effect.Draw (Draw.MkDraw (PlayerRef.Relative PlayerRelation.You) quantity Nothing)
-        against slot = Quantity.Type.AgainstSlot (AgainstSlot.MkAgainstSlot slot Quantity.Type.Power)
+        against slot = Quantity.Type.AgainstSlot (AgainstSlot.MkAgainstSlot slot (Quantity.Type.Measure Measure.Power))
         -- The corpus half of the number leg: does any card read ANY slot inside a
         -- number? A presence probe over the traversal rather than over the arm,
         -- since an effectQuantities answering [] everywhere would leave the leg

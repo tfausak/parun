@@ -26,6 +26,7 @@ import qualified Pawl.Types.Keyword as Keyword
 import qualified Pawl.Types.KeywordFamily as KeywordFamily
 import qualified Pawl.Types.ManaCost as ManaCost
 import qualified Pawl.Types.ManaSymbol as ManaSymbol
+import qualified Pawl.Types.Measure as Measure
 import qualified Pawl.Types.PlayerCounterKind as PlayerCounterKind
 import qualified Pawl.Types.PlayerCounterTally as PlayerCounterTally
 import qualified Pawl.Types.PlayerDesignation as PlayerDesignation
@@ -49,28 +50,25 @@ spec s = Spec.describe s "Pawl.Codec.Quantity" $ do
       Quantity.codec
       (Quantity.Literal 5)
       " {\"type\":\"Literal\",\"value\":5} "
-  Spec.it s "ManaValue" $
+  -- CR 202.3 / 208.1: the measure on the wire as Pawl.Types.Filter's Measures
+  -- writes it.
+  Spec.it s "Measure" $ do
     Common.assertCodec
       s
       Quantity.codec
-      Quantity.ManaValue
-      " {\"type\":\"ManaValue\"} "
-  -- CR 208.1. Nullary like ManaValue, and NOT to be confused with the Power
-  -- newtype, which wraps a printed power/toughness box.
-  Spec.it s "Power" $
+      (Quantity.Measure Measure.ManaValue)
+      " {\"type\":\"Measure\",\"value\":{\"type\":\"ManaValue\"}} "
     Common.assertCodec
       s
       Quantity.codec
-      Quantity.Power
-      " {\"type\":\"Power\"} "
-  -- CR 208.1's other half, and Power's sibling on the wire as in the type.
-  Spec.it s "Toughness" $
+      (Quantity.Measure Measure.Power)
+      " {\"type\":\"Measure\",\"value\":{\"type\":\"Power\"}} "
     Common.assertCodec
       s
       Quantity.codec
-      Quantity.Toughness
-      " {\"type\":\"Toughness\"} "
-  -- Alchemy's intensity, a nullary leaf like the two above.
+      (Quantity.Measure Measure.Toughness)
+      " {\"type\":\"Measure\",\"value\":{\"type\":\"Toughness\"}} "
+  -- Alchemy's intensity, a nullary leaf.
   Spec.it s "Intensity" $
     Common.assertCodec
       s
@@ -769,8 +767,8 @@ spec s = Spec.describe s "Pawl.Codec.Quantity" $ do
     Common.assertCodec
       s
       Quantity.codec
-      (Quantity.AgainstSlot (AgainstSlot.MkAgainstSlot slot Quantity.Power))
-      " {\"type\":\"AgainstSlot\",\"value\":{\"slot\":\"creature\",\"quantity\":{\"type\":\"Power\"}}} "
+      (Quantity.AgainstSlot (AgainstSlot.MkAgainstSlot slot (Quantity.Measure Measure.Power)))
+      " {\"type\":\"AgainstSlot\",\"value\":{\"slot\":\"creature\",\"quantity\":{\"type\":\"Measure\",\"value\":{\"type\":\"Power\"}}}} "
     Common.assertCodec
       s
       Quantity.codec
@@ -784,28 +782,28 @@ spec s = Spec.describe s "Pawl.Codec.Quantity" $ do
     Common.assertCodec
       s
       Quantity.codec
-      (Quantity.AgainstCardsExiledWith Quantity.Power)
-      " {\"type\":\"AgainstCardsExiledWith\",\"value\":{\"type\":\"Power\"}} "
+      (Quantity.AgainstCardsExiledWith (Quantity.Measure Measure.Power))
+      " {\"type\":\"AgainstCardsExiledWith\",\"value\":{\"type\":\"Measure\",\"value\":{\"type\":\"Power\"}}} "
     Common.assertCodec
       s
       Quantity.codec
-      (Quantity.Arithmetic (Arithmetic.Plus (Plus.MkPlus (Quantity.Literal 1) (Quantity.AgainstCardsExiledWith Quantity.Toughness))))
-      " {\"type\":\"Plus\",\"value\":{\"left\":{\"type\":\"Literal\",\"value\":1},\"right\":{\"type\":\"AgainstCardsExiledWith\",\"value\":{\"type\":\"Toughness\"}}}} "
+      (Quantity.Arithmetic (Arithmetic.Plus (Plus.MkPlus (Quantity.Literal 1) (Quantity.AgainstCardsExiledWith (Quantity.Measure Measure.Toughness)))))
+      " {\"type\":\"Plus\",\"value\":{\"left\":{\"type\":\"Literal\",\"value\":1},\"right\":{\"type\":\"AgainstCardsExiledWith\",\"value\":{\"type\":\"Measure\",\"value\":{\"type\":\"Toughness\"}}}}} "
   -- CR 607.2a / 613.7d (Duplicant): the filter picking the card, then what to
   -- read off it.
   Spec.it s "AgainstLastCardExiledWith" $
     Common.assertCodec
       s
       Quantity.codec
-      (Quantity.AgainstLastCardExiledWith (AgainstLastCardExiledWith.MkAgainstLastCardExiledWith (Filter.HasCardType CardType.Creature) Quantity.Toughness))
-      " {\"type\":\"AgainstLastCardExiledWith\",\"value\":{\"filter\":{\"type\":\"HasCardType\",\"value\":{\"type\":\"Creature\"}},\"quantity\":{\"type\":\"Toughness\"}}} "
+      (Quantity.AgainstLastCardExiledWith (AgainstLastCardExiledWith.MkAgainstLastCardExiledWith (Filter.HasCardType CardType.Creature) (Quantity.Measure Measure.Toughness)))
+      " {\"type\":\"AgainstLastCardExiledWith\",\"value\":{\"filter\":{\"type\":\"HasCardType\",\"value\":{\"type\":\"Creature\"}},\"quantity\":{\"type\":\"Measure\",\"value\":{\"type\":\"Toughness\"}}}} "
   -- CR 702.167c: the arm above's shape, over the craft materials alone.
   Spec.it s "AgainstCraftMaterials" $
     Common.assertCodec
       s
       Quantity.codec
-      (Quantity.AgainstCraftMaterials Quantity.Power)
-      " {\"type\":\"AgainstCraftMaterials\",\"value\":{\"type\":\"Power\"}} "
+      (Quantity.AgainstCraftMaterials (Quantity.Measure Measure.Power))
+      " {\"type\":\"AgainstCraftMaterials\",\"value\":{\"type\":\"Measure\",\"value\":{\"type\":\"Power\"}}} "
   -- CR 107.1a's direction and the value it applies to, in that order. Nested
   -- once for AgainstSlot's reason -- a recursive decoder is where a payload gets
   -- lost -- and over a Count, which is the shape both producers print.

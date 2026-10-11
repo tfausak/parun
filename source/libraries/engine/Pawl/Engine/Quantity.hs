@@ -160,28 +160,22 @@ evaluateAgainst viewOf context gs announcedOn mOid mView quantity =
         pure zc
    in case quantity of
         Quantity.Literal n -> Just n
-        -- CR 202.3 read through the injected view, exactly as the Power arm below is
-        -- and for the extra reason that CR 707.2 makes mana cost copiable: layer 1
-        -- replaces it, so a Clone entering as a copy of Darksteel Myr has mana value 3
-        -- and not the 4 its own printed {3}{U} would give. Which face the printed cost
-        -- came off (CR 712.8e, CR 708.2a) is settled at the projection's seed.
+        -- CR 202.3 / 208.1 read through the injected view, so this arm never
+        -- learns whether it is looking at a live projection or a CR 608.2h snapshot
+        -- -- the caller decides that by which ViewOf it supplies
+        -- (Projection.fullView vs. Projection.viewWithLastKnown). Mana value too,
+        -- since CR 707.2 makes mana cost copiable: a Clone entering as a copy of
+        -- Darksteel Myr has mana value 3 and not the 4 its own printed {3}{U} would
+        -- give. Which face the printed cost came off (CR 712.8e, CR 708.2a) is
+        -- settled at the projection's seed.
         --
-        -- Nothing when the view cannot say, which is when there is no object to ask:
-        -- an ability on the stack answers CR 202.3a's 0 like any other object
-        -- (Projection.View.baseCharacteristics). WHICH view arrives is the caller's
-        -- choice rather than the zone's, and the view a reader holding an OBJECT
-        -- supplies is the CR 613 projection (Projection.fullView,
-        -- Projection.viewUpTo), which projects an object in any zone and so answers CR
-        -- 202.3 off the battlefield too.
-        Quantity.ManaValue -> mView >>= Filter.manaValue
-        -- CR 208.1 read through the injected view, so this arm never learns whether
-        -- it is looking at a live projection or a CR 608.2h snapshot -- the caller
-        -- decides that by which ViewOf it supplies (Projection.fullView vs.
-        -- Projection.viewWithLastKnown). Nothing when the object has no power: it is
-        -- not a creature, or it is gone and no last known information was kept.
-        Quantity.Power -> mView >>= Filter.power
-        -- CR 208.1's other half, read off the same view and Nothing in the same places.
-        Quantity.Toughness -> mView >>= Filter.toughness
+        -- Nothing when the view cannot say: no object to ask, no power or toughness
+        -- (not a creature), or gone with no last known information kept. An
+        -- ability on the stack answers CR 202.3a's 0 like any other object
+        -- (Projection.View.baseCharacteristics), and the CR 613 projection
+        -- (Projection.fullView, Projection.viewUpTo) projects an object in any
+        -- zone, so answers CR 202.3 off the battlefield too.
+        Quantity.Measure measure -> Filter.measureOf measure =<< mView
         -- Alchemy's intensity, read off the same view in every zone: Static
         -- Discharge reads its own on the stack.
         Quantity.Intensity -> mView >>= Filter.intensity
@@ -1269,9 +1263,7 @@ objectSlots quantity = case quantity of
   Quantity.BoundCount _ -> Set.empty
   Quantity.UniqueVowelsOnSticker _ -> Set.empty
   Quantity.Literal _ -> Set.empty
-  Quantity.ManaValue -> Set.empty
-  Quantity.Power -> Set.empty
-  Quantity.Toughness -> Set.empty
+  Quantity.Measure _ -> Set.empty
   Quantity.Intensity -> Set.empty
   Quantity.Star -> Set.empty
   -- DESCENT: a calculation's operands are card text like any other, and
@@ -1552,9 +1544,7 @@ readsX quantity = case quantity of
   -- IsActivePlayer's, PlayerCounters', Devotion's) are PlayerRefs, whose InSlot names a TARGET slot rather than an
   -- amount one, and X is only ever an amount.
   Quantity.Literal _ -> False
-  Quantity.ManaValue -> False
-  Quantity.Power -> False
-  Quantity.Toughness -> False
+  Quantity.Measure _ -> False
   Quantity.Intensity -> False
   Quantity.Star -> False
   Quantity.ManaCount _ -> False

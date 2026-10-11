@@ -50,7 +50,10 @@
                             "type": "AgainstSlot",
                             "value": {
                               "quantity": {
-                                "type": "Power"
+                                "type": "Measure",
+                                "value": {
+                                  "type": "Power"
+                                }
                               },
                               "slot": "thatSacrificedPermanent"
                             }
@@ -124,7 +127,10 @@
                         "type": "Amass",
                         "value": {
                           "quantity": {
-                            "type": "Power"
+                            "type": "Measure",
+                            "value": {
+                              "type": "Power"
+                            }
                           },
                           "subtype": {
                             "type": "Goblin"

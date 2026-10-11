@@ -40,7 +40,10 @@
             "aggregation": {
               "type": "Greatest",
               "value": {
-                "type": "Toughness"
+                "type": "Measure",
+                "value": {
+                  "type": "Toughness"
+                }
               }
             },
             "filter": {

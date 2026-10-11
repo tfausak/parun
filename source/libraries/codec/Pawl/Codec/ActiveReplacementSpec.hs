@@ -16,6 +16,7 @@ import qualified Pawl.Types.Effect as Effect
 import qualified Pawl.Types.Expiry as Expiry
 import qualified Pawl.Types.Filter as Filter
 import qualified Pawl.Types.LibraryPosition as LibraryPosition
+import qualified Pawl.Types.Measure as Measure
 import qualified Pawl.Types.ObjectId as ObjectId
 import qualified Pawl.Types.PlayerId as PlayerId
 import qualified Pawl.Types.PlayerRelation as PlayerRelation
@@ -98,7 +99,7 @@ spec s = Spec.describe s "Pawl.Codec.ActiveReplacement" $ do
           ActiveReplacement.uses = Uses.Once,
           ActiveReplacement.origin = ReplacementOrigin.SelfReplacement,
           ActiveReplacement.condition =
-            Just (Condition.Compares (Compares.MkCompares Quantity.Power Comparison.AtLeast (Quantity.Literal 7))),
+            Just (Condition.Compares (Compares.MkCompares (Quantity.Measure Measure.Power) Comparison.AtLeast (Quantity.Literal 7))),
           ActiveReplacement.rider =
             Just
               PreventionRider.MkPreventionRider
@@ -116,7 +117,7 @@ spec s = Spec.describe s "Pawl.Codec.ActiveReplacement" $ do
           <> effectJson
           <> ",\"source\":4,\"controller\":5,\"timestamp\":6,\"expiry\":{\"type\":\"Never\"}"
           <> ",\"uses\":{\"type\":\"Once\"},\"origin\":{\"type\":\"SelfReplacement\"}"
-          <> ",\"condition\":{\"type\":\"Compares\",\"value\":{\"measured\":{\"type\":\"Power\"},\"comparison\":{\"type\":\"AtLeast\"},\"threshold\":{\"type\":\"Literal\",\"value\":7}}}"
+          <> ",\"condition\":{\"type\":\"Compares\",\"value\":{\"measured\":{\"type\":\"Measure\",\"value\":{\"type\":\"Power\"}},\"comparison\":{\"type\":\"AtLeast\"},\"threshold\":{\"type\":\"Literal\",\"value\":7}}}"
           <> ",\"rider\":{\"effects\":[{\"type\":\"Proliferate\"}],\"targets\":{},\"controller\":5,\"source\":4}"
           <> ",\"slots\":{\"that spell\":[8,9]}} "
       )

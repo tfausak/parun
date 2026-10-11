@@ -58,6 +58,7 @@ import qualified Pawl.Types.Keyword as Keyword
 import qualified Pawl.Types.Loyalty as Loyalty
 import qualified Pawl.Types.ManaCost as ManaCost
 import qualified Pawl.Types.ManaSymbol as ManaSymbol
+import qualified Pawl.Types.Measure as Measure
 import qualified Pawl.Types.Modal as Modal
 import qualified Pawl.Types.Mode as Mode
 import qualified Pawl.Types.ModeIndex as ModeIndex
@@ -278,7 +279,7 @@ populatedFace =
       Face.castingPermissions = [CastingPermission.CastFromLibraryWhileSearching],
       Face.loyalty = Just (Loyalty.Literal 3),
       Face.colorIndicator = Set.singleton Color.White,
-      Face.characteristicPT = Just CharacteristicPT.MkCharacteristicPT {CharacteristicPT.power = Quantity.ManaValue, CharacteristicPT.toughness = Quantity.ManaValue},
+      Face.characteristicPT = Just CharacteristicPT.MkCharacteristicPT {CharacteristicPT.power = Quantity.Measure Measure.ManaValue, CharacteristicPT.toughness = Quantity.Measure Measure.ManaValue},
       Face.delayedAbilities = Map.singleton (AbilityName.MkAbilityName (Text.pack "trigger")) minimalTriggeredAbility,
       Face.rooms = Seq.empty,
       Face.dungeonEntryQuality = Nothing,
@@ -298,7 +299,7 @@ populatedFace =
       Face.additionalCosts = [CostComponent.TapThis],
       Face.additionalCostChoices = [],
       Face.modeCosts = Map.empty,
-      Face.maximumX = [Quantity.ManaValue],
+      Face.maximumX = [Quantity.Measure Measure.ManaValue],
       Face.minimumX = 1,
       Face.alternativeCosts = [AlternativeCost.MkAlternativeCost Nothing (Cost.MkCost (Just (ManaCost.MkManaCost [])) [])],
       Face.costReductions = [CostReduction.MkCostReduction (ManaCost.MkManaCost [ManaSymbol.Generic 3]) (Quantity.Literal 1) Nothing Nothing CostDirection.Less],
@@ -323,7 +324,7 @@ populatedFaceJson =
     <> "\"triggeredAbilities\":[{\"condition\":{\"type\":\"SelfEnters\"},"
     <> "\"modal\":{\"modes\":[{}]}}],"
     <> "\"castingPermissions\":[{\"type\":\"CastFromLibraryWhileSearching\"}],"
-    <> "\"loyalty\":{\"type\":\"Literal\",\"value\":3},\"colorIndicator\":[{\"type\":\"White\"}],\"characteristicPT\":{\"type\":\"ManaValue\"},"
+    <> "\"loyalty\":{\"type\":\"Literal\",\"value\":3},\"colorIndicator\":[{\"type\":\"White\"}],\"characteristicPT\":{\"type\":\"Measure\",\"value\":{\"type\":\"ManaValue\"}},"
     <> "\"delayedAbilities\":{\"trigger\":{\"condition\":{\"type\":\"SelfEnters\"},"
     <> "\"modal\":{\"modes\":[{}]}}},"
     <> "\"playerAbilities\":[{\"scope\":{\"type\":\"You\"},\"effect\":{\"type\":\"CantCastSpells\"}}],"
@@ -340,7 +341,7 @@ populatedFaceJson =
     <> "\"attackCosts\":[{\"subject\":{\"type\":\"Attached\"},\"perAttacker\":{\"type\":\"Fixed\",\"value\":{\"mana\":[{\"type\":\"Generic\",\"value\":2}]}},\"scope\":{\"type\":\"Controller\"}}],"
     <> "\"blockCosts\":[{\"subject\":{\"type\":\"Attached\"},\"perBlocker\":{\"type\":\"Fixed\",\"value\":{\"mana\":[{\"type\":\"Generic\",\"value\":3}]}}}],"
     <> "\"additionalCosts\":[{\"type\":\"TapThis\"}],"
-    <> "\"maximumX\":[{\"type\":\"ManaValue\"}],"
+    <> "\"maximumX\":[{\"type\":\"Measure\",\"value\":{\"type\":\"ManaValue\"}}],"
     <> "\"minimumX\":1,"
     <> "\"alternativeCosts\":[{\"cost\":{\"mana\":[]}}],"
     <> "\"costReductions\":[{\"amount\":[{\"type\":\"Generic\",\"value\":3}],\"perEach\":{\"type\":\"Literal\",\"value\":1}}],"
@@ -498,8 +499,8 @@ spec s = Spec.describe s "Pawl.Codec.Face" $ do
         s
         encodeFace
         decodeFace
-        baseFace {Face.characteristicPT = Just CharacteristicPT.MkCharacteristicPT {CharacteristicPT.power = Quantity.ManaValue, CharacteristicPT.toughness = Quantity.ManaValue}}
-        (init baseFaceJson <> ",\"characteristicPT\":{\"type\":\"ManaValue\"}}")
+        baseFace {Face.characteristicPT = Just CharacteristicPT.MkCharacteristicPT {CharacteristicPT.power = Quantity.Measure Measure.ManaValue, CharacteristicPT.toughness = Quantity.Measure Measure.ManaValue}}
+        (init baseFaceJson <> ",\"characteristicPT\":{\"type\":\"Measure\",\"value\":{\"type\":\"ManaValue\"}}}")
     Spec.it s "delayedAbilities" $
       Common.assertJsonCodec
         s

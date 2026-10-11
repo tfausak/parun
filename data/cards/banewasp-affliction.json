@@ -47,7 +47,10 @@
                             "type": "AgainstSlot",
                             "value": {
                               "quantity": {
-                                "type": "Toughness"
+                                "type": "Measure",
+                                "value": {
+                                  "type": "Toughness"
+                                }
                               },
                               "slot": "thatDepartedPermanent"
                             }

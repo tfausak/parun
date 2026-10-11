@@ -39,7 +39,10 @@
                           "aggregation": {
                             "type": "Greatest",
                             "value": {
-                              "type": "ManaValue"
+                              "type": "Measure",
+                              "value": {
+                                "type": "ManaValue"
+                              }
                             }
                           },
                           "filter": {

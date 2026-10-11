@@ -39,10 +39,16 @@
                                 "type": "Plus",
                                 "value": {
                                   "left": {
-                                    "type": "Power"
+                                    "type": "Measure",
+                                    "value": {
+                                      "type": "Power"
+                                    }
                                   },
                                   "right": {
-                                    "type": "Power"
+                                    "type": "Measure",
+                                    "value": {
+                                      "type": "Power"
+                                    }
                                   }
                                 }
                               },
@@ -56,10 +62,16 @@
                                 "type": "Plus",
                                 "value": {
                                   "left": {
-                                    "type": "Toughness"
+                                    "type": "Measure",
+                                    "value": {
+                                      "type": "Toughness"
+                                    }
                                   },
                                   "right": {
-                                    "type": "Toughness"
+                                    "type": "Measure",
+                                    "value": {
+                                      "type": "Toughness"
+                                    }
                                   }
                                 }
                               },

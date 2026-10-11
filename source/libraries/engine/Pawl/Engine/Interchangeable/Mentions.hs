@@ -2313,9 +2313,7 @@ putCountersFromNames asking x = case x of
 quantityNames :: Asking -> Quantity.Quantity -> Bool
 quantityNames asking x = case x of
   Quantity.Literal _integer -> False
-  Quantity.ManaValue -> False
-  Quantity.Power -> False
-  Quantity.Toughness -> False
+  Quantity.Measure _ -> False
   Quantity.Intensity -> False
   Quantity.InSlot slotName -> slotNames asking slotName
   Quantity.WasBound slotName -> slotNames asking slotName

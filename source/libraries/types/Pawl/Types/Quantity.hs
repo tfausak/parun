@@ -14,6 +14,7 @@ import qualified Pawl.Types.InZone as InZone
 import qualified Pawl.Types.Keyword as Keyword
 import qualified Pawl.Types.KeywordFamily as KeywordFamily
 import qualified Pawl.Types.ManaCount as ManaCount
+import qualified Pawl.Types.Measure as Measure
 import qualified Pawl.Types.PlayerCounterTally as PlayerCounterTally
 import qualified Pawl.Types.PlayerDesignationTally as PlayerDesignationTally
 import qualified Pawl.Types.PlayerRef as PlayerRef
@@ -26,21 +27,16 @@ import qualified Pawl.Types.SlotName as SlotName
 -- Infinite exist, and fromInteger would erase the distinction this type draws.
 -- Combining is explicit named functions; Arithmetic composes the printed values.
 --
--- Arms that name no object (Power, ObjectCounters, HasDesignation, ...) read
+-- Arms that name no object (Measure, ObjectCounters, HasDesignation, ...) read
 -- the object the evaluation is aimed at, most of them through the injected
 -- view, which is what lets CR 608.2h last known information answer for an
 -- object that is gone; AgainstSlot and AgainstCardsExiledWith are how a card
 -- aims them elsewhere.
 data Quantity
   = Literal Integer
-  | -- | CR 202.3: the mana value of the object this quantity is evaluated against.
-    ManaValue
-  | -- | CR 208.1: the projected power of the object this quantity is evaluated
-    -- against.
-    Power
-  | -- | CR 208.1: the projected toughness of the object this quantity is
-    -- evaluated against.
-    Toughness
+  | -- | CR 202.3 / 208.1: that projected characteristic of the object this
+    -- quantity is evaluated against.
+    Measure Measure.Measure
   | -- | Alchemy's intensity of the object this quantity is evaluated against
     -- (Static Discharge), which no CR rule names; see
     -- Pawl.Types.ProjectedCharacteristics.intensity.
@@ -342,7 +338,7 @@ data Quantity
     AgainstCraftMaterials Quantity
   | -- | CR 702.184c: the tapped creature's power, or its toughness where that is
     -- greater and the ability's controller controls a permanent carrying
-    -- Modification.GrantsStationToughness. Engine-only, a leaf like Power:
+    -- Modification.GrantsStationToughness. Engine-only, a leaf like Measure:
     -- Pawl.Engine.Keyword.station mints it and no card should author it.
     StationMeasure
   deriving (Eq, Ord, Show)

@@ -17,6 +17,7 @@ import qualified Pawl.Types.EntryRiders as EntryRiders
 import qualified Pawl.Types.FaceDownCharacteristics as FaceDownCharacteristics
 import qualified Pawl.Types.FaceDownReason as FaceDownReason
 import qualified Pawl.Types.FaceDownState as FaceDownState
+import qualified Pawl.Types.Measure as Measure
 import qualified Pawl.Types.Modification as Modification
 import qualified Pawl.Types.Quantity as Quantity
 import qualified Pawl.Types.SlotName as SlotName
@@ -79,8 +80,8 @@ spec s = Spec.describe s "Pawl.Codec.EntryRiders" $ do
     Common.assertCodec
       s
       (EntryRiders.codec Common.text)
-      EntryRiders.MkEntryRiders {EntryRiders.tapped = TapState.Untapped, EntryRiders.attacking = Nothing, EntryRiders.blocking = Nothing, EntryRiders.transformed = False, EntryRiders.counters = Map.singleton CounterKind.PlusOnePlusOne Quantity.Power, EntryRiders.underOwner = False, EntryRiders.exiledFaceDown = False, EntryRiders.attachedTo = Nothing, EntryRiders.faceDown = Nothing, EntryRiders.noted = False, EntryRiders.characteristics = Seq.empty}
-      " {\"counters\":[{\"kind\":{\"type\":\"PlusOnePlusOne\"},\"count\":{\"type\":\"Power\"}}]} "
+      EntryRiders.MkEntryRiders {EntryRiders.tapped = TapState.Untapped, EntryRiders.attacking = Nothing, EntryRiders.blocking = Nothing, EntryRiders.transformed = False, EntryRiders.counters = Map.singleton CounterKind.PlusOnePlusOne (Quantity.Measure Measure.Power), EntryRiders.underOwner = False, EntryRiders.exiledFaceDown = False, EntryRiders.attachedTo = Nothing, EntryRiders.faceDown = Nothing, EntryRiders.noted = False, EntryRiders.characteristics = Seq.empty}
+      " {\"counters\":[{\"kind\":{\"type\":\"PlusOnePlusOne\"},\"count\":{\"type\":\"Measure\",\"value\":{\"type\":\"Power\"}}}]} "
   -- A repeated kind is rejected rather than combined, which the multiset could
   -- not do: there a repeat was how a count was written.
   Spec.it s "MkEntryRiders, a repeated counter kind is a decode error" $

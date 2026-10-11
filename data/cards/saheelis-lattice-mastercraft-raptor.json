@@ -124,7 +124,10 @@
       "characteristicPT": {
         "type": "AgainstCraftMaterials",
         "value": {
-          "type": "Power"
+          "type": "Measure",
+          "value": {
+            "type": "Power"
+          }
         }
       },
       "colorIndicator": [

@@ -1,7 +1,8 @@
 module Pawl.Types.Measure where
 
--- | A numeric characteristic a Pawl.Types.Filter comparison reads off an
--- object's projected view (Pawl.Engine.Filter.measureOf).
+-- | A numeric characteristic read off an object's projected view
+-- (Pawl.Engine.Filter.measureOf), by a Pawl.Types.Filter comparison or a
+-- Pawl.Types.Quantity.
 data Measure
   = -- | CR 208.1: power.
     Power

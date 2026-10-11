@@ -13,6 +13,7 @@ import qualified Pawl.Codec.InZone as InZone
 import qualified Pawl.Codec.Keyword as Keyword
 import qualified Pawl.Codec.KeywordFamily as KeywordFamily
 import qualified Pawl.Codec.ManaCount as ManaCount
+import qualified Pawl.Codec.Measure as Measure
 import qualified Pawl.Codec.PlayerCounterTally as PlayerCounterTally
 import qualified Pawl.Codec.PlayerDesignationTally as PlayerDesignationTally
 import qualified Pawl.Codec.PlayerRef as PlayerRef
@@ -46,9 +47,7 @@ codec =
   Arm.tagged
     tagOf
     [ Arm.payload "Literal" Common.integer Quantity.Literal (\x -> case x of Quantity.Literal y -> Just y; _ -> Nothing),
-      Arm.nullary "ManaValue" Quantity.ManaValue,
-      Arm.nullary "Power" Quantity.Power,
-      Arm.nullary "Toughness" Quantity.Toughness,
+      Arm.payload "Measure" Measure.codec Quantity.Measure (\x -> case x of Quantity.Measure y -> Just y; _ -> Nothing),
       Arm.nullary "Intensity" Quantity.Intensity,
       Arm.payload "InSlot" SlotName.codec Quantity.InSlot (\x -> case x of Quantity.InSlot y -> Just y; _ -> Nothing),
       Arm.payload "WasBound" SlotName.codec Quantity.WasBound (\x -> case x of Quantity.WasBound y -> Just y; _ -> Nothing),
@@ -213,7 +212,7 @@ codec =
       -- clause is agentless.
       Arm.payload "WasCastFrom" CastFrom.codec Quantity.WasCastFrom (\x -> case x of Quantity.WasCastFrom y -> Just y; _ -> Nothing),
       -- CR 509.1h's declaration read against the object the quantity is aimed at,
-      -- so there is nothing on the wire at all -- Power's shape rather than
+      -- so there is nothing on the wire at all -- WasKicked's shape rather than
       -- ObjectCounters'.
       Arm.nullary "BlockersBeyondFirst" Quantity.BlockersBeyondFirst,
       -- A slot and a whole Quantity, in that order: which object to aim at, then
@@ -226,16 +225,14 @@ codec =
       Arm.payload "AgainstLastCardExiledWith" (AgainstLastCardExiledWith.codec codec) Quantity.AgainstLastCardExiledWith (\x -> case x of Quantity.AgainstLastCardExiledWith y -> Just y; _ -> Nothing),
       -- CR 702.167c: the arm above's shape, over the craft materials alone.
       Arm.payload "AgainstCraftMaterials" codec Quantity.AgainstCraftMaterials (\x -> case x of Quantity.AgainstCraftMaterials y -> Just y; _ -> Nothing),
-      -- CR 702.184c, engine-only: Power's shape, nothing on the wire.
+      -- CR 702.184c, engine-only: WasKicked's shape, nothing on the wire.
       Arm.nullary "StationMeasure" Quantity.StationMeasure
     ]
 
 tagOf :: Quantity.Quantity -> String
 tagOf x = case x of
   Quantity.Literal {} -> "Literal"
-  Quantity.ManaValue {} -> "ManaValue"
-  Quantity.Power {} -> "Power"
-  Quantity.Toughness {} -> "Toughness"
+  Quantity.Measure {} -> "Measure"
   Quantity.Intensity {} -> "Intensity"
   Quantity.InSlot {} -> "InSlot"
   Quantity.WasBound {} -> "WasBound"
