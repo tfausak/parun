@@ -2188,6 +2188,8 @@ playerEffectNames asking x = case x of
   PlayerEffect.CantSearchLibraries _cantSearchLibraries -> False
   PlayerEffect.CantBecomeMonarch -> False
   PlayerEffect.CantSetSchemesInMotion -> False
+  PlayerEffect.ControlledWhileSearching -> False
+  PlayerEffect.ExilesFoundWhileSearching -> False
   PlayerEffect.CantAttackWithCreatures -> False
   PlayerEffect.CantCastMatching filter_ -> filterNames asking filter_
   PlayerEffect.CastOnlyAtSorcerySpeed -> False

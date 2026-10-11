@@ -19,9 +19,11 @@ data OutsideDestination
     -- The END is in the constructor rather than a
     -- 'Pawl.Types.LibraryPosition.LibraryPosition' field, this type\'s "one arm
     -- per sentence" -- Scryfall @o:"outside the game"@, 2026-09-16, no printing
-    -- names the bottom, and the only other non-hand destination printed is
-    -- Research\'s shuffle, the arm below.
+    -- names the bottom.
     LibraryTop
   | -- | Research\'s "shuffle ... into your library", even with nothing brought (CR 701.24a, 701.24d).
     LibraryShuffled
+  | -- | Opposition Agent\'s "they exile each card they find", over a search that
+    -- also reaches outside the game (CR 701.23j).
+    Exile
   deriving (Bounded, Enum, Eq, Ord, Show)

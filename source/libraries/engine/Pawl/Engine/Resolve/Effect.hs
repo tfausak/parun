@@ -2252,6 +2252,25 @@ pushControl pid row gs =
   let after new old = old <> new
    in gs {GameState.control = Map.insertWith after pid (pure row) (GameState.control gs)}
 
+-- pushControl's inverse for a row its installer lifts itself: the latest
+-- matching row goes, and a player left with none loses the key.
+popControl :: PlayerId -> PlayerControl.PlayerControl -> GameState -> GameState
+popControl pid row gs =
+  let lift rows = NonEmpty.nonEmpty (reverse (List.delete row (reverse (NonEmpty.toList rows))))
+   in gs {GameState.control = Map.update lift pid (GameState.control gs)}
+
+-- Opposition Agent's "they exile each card they find": the cards a search put
+-- into exile in place of its own destination are linked to the object whose
+-- row exiled them (CR 607.2a), not to the searching ability, whose
+-- recordExiledWith keeps a link already filed. Bound to no slot: the ruling
+-- has an instruction naming the found cards fail to see them in exile.
+exileFoundFor :: ObjectId -> Seq.Seq ObjectId -> Game ()
+exileFoundFor agent exiled =
+  State.modify' $ \gs ->
+    let link = ExileLink.MkExileLink {ExileLink.source = agent, ExileLink.ability = Nothing}
+        file oid = Map.insert oid link
+     in gs {GameState.exiledWith = foldr file (GameState.exiledWith gs) exiled}
+
 -- CR 723.1 / 805.8: the players an effect making `controller` control `target`
 -- reaches -- `target`, and under the shared team turns option each of their
 -- teammates but `controller`, who cannot be made to control themselves through
@@ -4193,6 +4212,24 @@ applyOneEffect runSubgame resolving source controller legal chosen effect = case
                 -- CR 701.23j: "a card THEY own", so the pool is the searcher's,
                 -- whoever `owner` names. Read LIVE, the zones' reason above.
                 lookOutside = Set.member SearchPlace.OutsideTheGame chosenPlaces
+                -- "While they're searching their library" (Opposition Agent):
+                -- a searcher looking through their OWN library, which CR
+                -- 101.2's prohibition above can take away.
+                ownLibrary = searcher == owner && Set.member Zone.Library searchedZones
+            -- CR 723.2: for the rest of this searcher's pass, the player whose
+            -- row says so makes their decisions (CR 723.5) -- the find, and CR
+            -- 601.3's offer. A control row rather than a local decider, so every
+            -- prompt raised inside the pass, the offered cast's included, reads
+            -- it through Decide.deciderFor. Derived as the pass begins: nothing
+            -- inside one search instruction can end it, since state-based
+            -- actions wait for priority (CR 704.3) and the controlled player
+            -- pays only with their own resources (CR 723.5a).
+            (searchController, exiler) <-
+              if ownLibrary
+                then State.gets (\g -> (PlayerEffect.searchingController searcher g, PlayerEffect.exilerWhileSearching searcher g))
+                else pure (Nothing, Nothing)
+            let searchControl you = PlayerControl.MkPlayerControl {PlayerControl.decider = Decider.MkDecider you, PlayerControl.duration = ControlDuration.WhileSearching, PlayerControl.manaFromLandsOnly = False}
+            Foldable.for_ searchController (State.modify' . pushControl searcher . searchControl)
             outsideAvailable <-
               if lookOutside
                 then State.gets (Event.outsideOffer filter_ source searcher)
@@ -4311,7 +4348,8 @@ applyOneEffect runSubgame resolving source controller legal chosen effect = case
                     _ -> pure []
                   let room = capHere - min capHere (List.genericLength picked + List.genericLength outsidePicked)
                   pure (picked <> List.genericTake room filler, outsidePicked)
-            pure (searcher, owner, chosenZones, found, foundOutside)
+            Foldable.for_ searchController (State.modify' . popControl searcher . searchControl)
+            pure (searcher, owner, chosenZones, found, foundOutside, exiler)
           -- Where the cards go is the CARD's instruction, not rule 701.23's;
           -- CR 701.23e says the same of the reveal. The searcher is the
           -- revealer (CR 701.20a), and the cards go in the order the searcher
@@ -4334,7 +4372,7 @@ applyOneEffect runSubgame resolving source controller legal chosen effect = case
           -- observe each other, so removing the bracket or the board reddens
           -- nothing.
           before <- State.get
-          arrivals <- Event.simultaneously . Event.together . fmap concat . Monad.forM decisions $ \(searcher, owner, chosenZones, found, foundOutside) -> do
+          arrivals <- Event.simultaneously . Event.together . fmap concat . Monad.forM decisions $ \(searcher, owner, chosenZones, found, foundOutside, exiler) -> do
             -- Read HERE rather than when the arm was entered, the reason the
             -- context above is a function of the board: CR 608.2c carries the
             -- clauses out in order, so the slot an earlier clause bound is read
@@ -4343,12 +4381,16 @@ applyOneEffect runSubgame resolving source controller legal chosen effect = case
             let stillThere gs oid = any (\zone -> List.elem oid (Game.zoneMembers zone owner gs)) (Set.toList chosenZones)
             fromZones <- fmap concat . Monad.forM found $ \oid -> do
               present <- State.gets (`stillThere` oid)
-              if present then putFound before searcher host destination oid else pure []
+              case (present, exiler) of
+                (False, _) -> pure []
+                (True, Nothing) -> putFound before searcher host destination oid
+                (True, Just agent) -> [] <$ (exileFoundFor agent =<< Event.changeZoneInBatchReturning before oid Zone.Exile)
             -- CR 400.11b: a card found outside the game is brought in rather
             -- than moved, the reveal riding along as it arrives (#2450).
-            fromOutside <- case outsideArrival destination of
-              Nothing -> pure []
-              Just (arrival, revealIt) -> Event.bringChosen arrival revealIt searcher foundOutside
+            fromOutside <- case (outsideArrival destination, exiler) of
+              (Nothing, _) -> pure []
+              (Just (arrival, revealIt), Nothing) -> Event.bringChosen arrival revealIt searcher foundOutside
+              (Just _, Just agent) -> [] <$ (exileFoundFor agent . Seq.fromList =<< Event.bringChosen OutsideDestination.Exile False searcher foundOutside)
             pure (fromZones <> fromOutside)
           -- The shuffle is the CARD's instruction too (CR 701.23h, CR 701.24b).
           -- The library shuffled is the one that was READ, so the seat is the
@@ -4363,7 +4405,7 @@ applyOneEffect runSubgame resolving source controller legal chosen effect = case
           --
           -- ONCE per library, however many searchers read it: the card prints
           -- one "then shuffle" of that library, not one per searcher.
-          let shuffled = ListUtils.nubOrd [owner | (_, owner, chosenZones, _, _) <- decisions, Set.member Zone.Library chosenZones]
+          let shuffled = ListUtils.nubOrd [owner | (_, owner, chosenZones, _, _, _) <- decisions, Set.member Zone.Library chosenZones]
           Monad.forM_ shuffled $ \owner -> do
             lib <- State.gets (Game.zoneMembers Zone.Library owner)
             shuffleAnswer <- Game.ask (Prompt.Shuffle lib)

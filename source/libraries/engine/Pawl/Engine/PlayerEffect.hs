@@ -614,6 +614,8 @@ prohibitsCasting pid oid variable gs =
         PlayerEffect.HasProtectionFrom _ -> False
         PlayerEffect.CantBecomeMonarch -> False
         PlayerEffect.CantSetSchemesInMotion -> False
+        PlayerEffect.ControlledWhileSearching -> False
+        PlayerEffect.ExilesFoundWhileSearching -> False
         PlayerEffect.CantAttackWithCreatures -> False
         -- CR 601.3a's other quality shape: a Filter over the spell's own
         -- characteristics rather than over its name, read off the proposal's
@@ -780,6 +782,8 @@ prohibitsPlayingLand pid oid gs =
         PlayerEffect.HasProtectionFrom _ -> False
         PlayerEffect.CantBecomeMonarch -> False
         PlayerEffect.CantSetSchemesInMotion -> False
+        PlayerEffect.ControlledWhileSearching -> False
+        PlayerEffect.ExilesFoundWhileSearching -> False
         PlayerEffect.CantAttackWithCreatures -> False
         -- CR 305.1 once more: Damping Engine's own cast half stops no land play,
         -- however its Filter reads -- which is exactly why its one printed
@@ -822,6 +826,10 @@ prohibitsSearching pid owner causeController gs =
         -- CR 702.16 states no clause about searching, its consequences being
         -- targeting, enchanting, equipping, blocking and damage.
         PlayerEffect.HasProtectionFrom _ -> False
+        -- Opposition Agent's two rows say who decides a search and where its
+        -- finds go, never that it may not happen.
+        PlayerEffect.ControlledWhileSearching -> False
+        PlayerEffect.ExilesFoundWhileSearching -> False
         -- Every other arm is about casting, playing, targeting, countering,
         -- paying, keeping mana, gaining or losing life, or how a coin flip came
         -- out. CR 701.23's search is
@@ -868,6 +876,24 @@ prohibitsSearching pid owner causeController gs =
         PlayerEffect.CantGainLife -> False
         PlayerEffect.CantLoseLife -> False
    in any (prohibits . snd) (applying pid gs)
+
+-- CR 723.2 / 723.1a: who controls `pid` while they search their own library
+-- (Opposition Agent) -- CR 109.5's "you" of the latest such row, which in
+-- `applying`'s timestamp order is the last one created.
+searchingController :: PlayerId -> GameState -> Maybe PlayerId
+searchingController pid gs =
+  Maybe.listToMaybe (reverse [you | (source, PlayerEffect.ControlledWhileSearching) <- applying pid gs, Just oid <- [RowSource.object source], Just you <- [Projection.controllerOf oid gs]])
+
+-- CR 701.23 / Opposition Agent: the object whose row has `pid` exile each card
+-- they find while searching their own library, the latest such row. That object
+-- is the one the exiled cards are linked to (CR 607.2a).
+--
+-- Not implemented: where several rows apply, the ruling has the controlled
+-- player's controller choose which one's exile applies; the latest is taken
+-- (#4987).
+exilerWhileSearching :: PlayerId -> GameState -> Maybe ObjectId
+exilerWhileSearching pid gs =
+  Maybe.listToMaybe (reverse [oid | (source, PlayerEffect.ExilesFoundWhileSearching) <- applying pid gs, Just oid <- [RowSource.object source]])
 
 -- CR 101.2 with CR 122.1: does an effect in force right now say that `pid` CAN'T
 -- GET counters of `kind`? Solemnity's first sentence and Melira, Sylvok
@@ -916,6 +942,8 @@ prohibitsCounters pid kind gs =
         PlayerEffect.DamageCantBeRedirected _ -> False
         PlayerEffect.CantBecomeMonarch -> False
         PlayerEffect.CantSetSchemesInMotion -> False
+        PlayerEffect.ControlledWhileSearching -> False
+        PlayerEffect.ExilesFoundWhileSearching -> False
         PlayerEffect.CantAttackWithCreatures -> False
         PlayerEffect.CantCastMatching _ -> False
         PlayerEffect.CastOnlyAtSorcerySpeed -> False
@@ -951,6 +979,8 @@ prohibitsBecomingMonarch pid gs =
   let prohibits effect = case effect of
         PlayerEffect.CantBecomeMonarch -> True
         PlayerEffect.CantSetSchemesInMotion -> False
+        PlayerEffect.ControlledWhileSearching -> False
+        PlayerEffect.ExilesFoundWhileSearching -> False
         PlayerEffect.CantAttackWithCreatures -> False
         -- Every other arm is about casting, playing, targeting, countering,
         -- searching, paying, keeping mana, gaining or losing life, rule 702
@@ -1010,6 +1040,8 @@ schemesCantBeSetInMotion :: GameState -> Bool
 schemesCantBeSetInMotion gs =
   let prohibits effect = case effect of
         PlayerEffect.CantSetSchemesInMotion -> True
+        PlayerEffect.ControlledWhileSearching -> False
+        PlayerEffect.ExilesFoundWhileSearching -> False
         PlayerEffect.CantBecomeMonarch -> False
         PlayerEffect.CantAttackWithCreatures -> False
         PlayerEffect.CantCastSpells -> False
@@ -1061,6 +1093,8 @@ prohibitsAttackingWithCreatures pid gs =
         PlayerEffect.CantAttackWithCreatures -> True
         PlayerEffect.CantBecomeMonarch -> False
         PlayerEffect.CantSetSchemesInMotion -> False
+        PlayerEffect.ControlledWhileSearching -> False
+        PlayerEffect.ExilesFoundWhileSearching -> False
         PlayerEffect.CantCastSpells -> False
         PlayerEffect.CantActivateAbilities _ -> False
         PlayerEffect.CantCastMoreThan _ -> False
@@ -1665,6 +1699,8 @@ landPlayFlashGrant effect = case effect of
   PlayerEffect.HasProtectionFrom _ -> Nothing
   PlayerEffect.CantBecomeMonarch -> Nothing
   PlayerEffect.CantSetSchemesInMotion -> Nothing
+  PlayerEffect.ControlledWhileSearching -> Nothing
+  PlayerEffect.ExilesFoundWhileSearching -> Nothing
   PlayerEffect.CantAttackWithCreatures -> Nothing
   PlayerEffect.CantCastMatching _ -> Nothing
   PlayerEffect.CastOnlyAtSorcerySpeed -> Nothing
@@ -1902,6 +1938,8 @@ castPermissionsFrom pid zone oid gs =
         PlayerEffect.HasProtectionFrom _ -> False
         PlayerEffect.CantBecomeMonarch -> False
         PlayerEffect.CantSetSchemesInMotion -> False
+        PlayerEffect.ControlledWhileSearching -> False
+        PlayerEffect.ExilesFoundWhileSearching -> False
         PlayerEffect.CantAttackWithCreatures -> False
         -- A PROHIBITION, and CR 601.3 asks the two halves separately:
         -- prohibitsCasting above is where Damping Engine and Silence are read.
@@ -2182,6 +2220,8 @@ mayCastFromHandWithoutPayingManaCost pid oid gs =
         PlayerEffect.HasProtectionFrom _ -> False
         PlayerEffect.CantBecomeMonarch -> False
         PlayerEffect.CantSetSchemesInMotion -> False
+        PlayerEffect.ControlledWhileSearching -> False
+        PlayerEffect.ExilesFoundWhileSearching -> False
         PlayerEffect.CantAttackWithCreatures -> False
         -- The PROHIBITIONS, read at their own gate (prohibitsCasting above): CR
         -- 101.2 makes a "can't" beat any cost this offers, and folding them here
@@ -2251,6 +2291,8 @@ playLandPiles pid gs =
         PlayerEffect.HasProtectionFrom _ -> []
         PlayerEffect.CantBecomeMonarch -> []
         PlayerEffect.CantSetSchemesInMotion -> []
+        PlayerEffect.ControlledWhileSearching -> []
+        PlayerEffect.ExilesFoundWhileSearching -> []
         PlayerEffect.CantAttackWithCreatures -> []
         -- The PROHIBITIONS, which prohibitsPlayingLand above is what reads: CR
         -- 101.2 makes a "can't" beat this permission, and the two are folded at
@@ -2338,6 +2380,8 @@ protectedFromTargeting rows caster pid gs =
         PlayerEffect.HasProtectionFrom _ -> False
         PlayerEffect.CantBecomeMonarch -> False
         PlayerEffect.CantSetSchemesInMotion -> False
+        PlayerEffect.ControlledWhileSearching -> False
+        PlayerEffect.ExilesFoundWhileSearching -> False
         PlayerEffect.CantAttackWithCreatures -> False
         PlayerEffect.CantCastMatching _ -> False
         PlayerEffect.CastOnlyAtSorcerySpeed -> False
@@ -2433,6 +2477,8 @@ protectedFromGiven rows aimer oid gs =
         PlayerEffect.DamageCantBeRedirected _ -> False
         PlayerEffect.CantBecomeMonarch -> False
         PlayerEffect.CantSetSchemesInMotion -> False
+        PlayerEffect.ControlledWhileSearching -> False
+        PlayerEffect.ExilesFoundWhileSearching -> False
         PlayerEffect.CantAttackWithCreatures -> False
         PlayerEffect.CantCastMatching _ -> False
         PlayerEffect.CastOnlyAtSorcerySpeed -> False
@@ -2514,6 +2560,8 @@ protectionCarriers gs =
         PlayerEffect.DamageCantBeRedirected _ -> Nothing
         PlayerEffect.CantBecomeMonarch -> Nothing
         PlayerEffect.CantSetSchemesInMotion -> Nothing
+        PlayerEffect.ControlledWhileSearching -> Nothing
+        PlayerEffect.ExilesFoundWhileSearching -> Nothing
         PlayerEffect.CantAttackWithCreatures -> Nothing
         PlayerEffect.CantCastMatching _ -> Nothing
         PlayerEffect.CastOnlyAtSorcerySpeed -> Nothing
@@ -2585,6 +2633,8 @@ landPlaysAllowed pid gs =
         PlayerEffect.HasProtectionFrom _ -> Nothing
         PlayerEffect.CantBecomeMonarch -> Nothing
         PlayerEffect.CantSetSchemesInMotion -> Nothing
+        PlayerEffect.ControlledWhileSearching -> Nothing
+        PlayerEffect.ExilesFoundWhileSearching -> Nothing
         PlayerEffect.CantAttackWithCreatures -> Nothing
         PlayerEffect.CantCastMatching _ -> Nothing
         PlayerEffect.CastOnlyAtSorcerySpeed -> Nothing
@@ -2649,6 +2699,8 @@ votesAllowed pid gs =
         PlayerEffect.CantSearchLibraries {} -> Nothing
         PlayerEffect.CantBecomeMonarch -> Nothing
         PlayerEffect.CantSetSchemesInMotion -> Nothing
+        PlayerEffect.ControlledWhileSearching -> Nothing
+        PlayerEffect.ExilesFoundWhileSearching -> Nothing
         PlayerEffect.CantAttackWithCreatures -> Nothing
         PlayerEffect.CantCastMatching {} -> Nothing
         PlayerEffect.CastOnlyAtSorcerySpeed -> Nothing
@@ -2701,6 +2753,8 @@ surveilExtra pid gs =
         PlayerEffect.CantSearchLibraries {} -> Nothing
         PlayerEffect.CantBecomeMonarch -> Nothing
         PlayerEffect.CantSetSchemesInMotion -> Nothing
+        PlayerEffect.ControlledWhileSearching -> Nothing
+        PlayerEffect.ExilesFoundWhileSearching -> Nothing
         PlayerEffect.CantAttackWithCreatures -> Nothing
         PlayerEffect.CantCastMatching {} -> Nothing
         PlayerEffect.CastOnlyAtSorcerySpeed -> Nothing
@@ -2787,6 +2841,8 @@ maximumHandSize pid gs =
         PlayerEffect.HasProtectionFrom _ -> current
         PlayerEffect.CantBecomeMonarch -> current
         PlayerEffect.CantSetSchemesInMotion -> current
+        PlayerEffect.ControlledWhileSearching -> current
+        PlayerEffect.ExilesFoundWhileSearching -> current
         PlayerEffect.CantAttackWithCreatures -> current
         PlayerEffect.CantCastMatching _ -> current
         PlayerEffect.CastOnlyAtSorcerySpeed -> current
@@ -2858,6 +2914,8 @@ keepsUnspentMana pid gs =
         PlayerEffect.HasProtectionFrom _ -> Nothing
         PlayerEffect.CantBecomeMonarch -> Nothing
         PlayerEffect.CantSetSchemesInMotion -> Nothing
+        PlayerEffect.ControlledWhileSearching -> Nothing
+        PlayerEffect.ExilesFoundWhileSearching -> Nothing
         PlayerEffect.CantAttackWithCreatures -> Nothing
         PlayerEffect.CantCastMatching _ -> Nothing
         PlayerEffect.CastOnlyAtSorcerySpeed -> Nothing
@@ -2921,6 +2979,8 @@ losesLifeForUnspentMana pid gs =
         PlayerEffect.HasProtectionFrom _ -> False
         PlayerEffect.CantBecomeMonarch -> False
         PlayerEffect.CantSetSchemesInMotion -> False
+        PlayerEffect.ControlledWhileSearching -> False
+        PlayerEffect.ExilesFoundWhileSearching -> False
         PlayerEffect.CantAttackWithCreatures -> False
         PlayerEffect.CantCastMatching _ -> False
         PlayerEffect.CastOnlyAtSorcerySpeed -> False
@@ -2988,6 +3048,8 @@ prohibitsGainingLife pid gs =
         PlayerEffect.HasProtectionFrom _ -> False
         PlayerEffect.CantBecomeMonarch -> False
         PlayerEffect.CantSetSchemesInMotion -> False
+        PlayerEffect.ControlledWhileSearching -> False
+        PlayerEffect.ExilesFoundWhileSearching -> False
         PlayerEffect.CantAttackWithCreatures -> False
         PlayerEffect.CantCastMatching _ -> False
         PlayerEffect.CastOnlyAtSorcerySpeed -> False
@@ -3050,6 +3112,8 @@ prohibitsLosingLife pid gs =
         PlayerEffect.HasProtectionFrom _ -> False
         PlayerEffect.CantBecomeMonarch -> False
         PlayerEffect.CantSetSchemesInMotion -> False
+        PlayerEffect.ControlledWhileSearching -> False
+        PlayerEffect.ExilesFoundWhileSearching -> False
         PlayerEffect.CantAttackWithCreatures -> False
         PlayerEffect.CantCastMatching _ -> False
         PlayerEffect.CastOnlyAtSorcerySpeed -> False
@@ -3110,6 +3174,8 @@ spendManaAsThough pid gs =
         PlayerEffect.HasProtectionFrom _ -> Nothing
         PlayerEffect.CantBecomeMonarch -> Nothing
         PlayerEffect.CantSetSchemesInMotion -> Nothing
+        PlayerEffect.ControlledWhileSearching -> Nothing
+        PlayerEffect.ExilesFoundWhileSearching -> Nothing
         PlayerEffect.CantAttackWithCreatures -> Nothing
         PlayerEffect.CantCastMatching _ -> Nothing
         PlayerEffect.CastOnlyAtSorcerySpeed -> Nothing
@@ -3206,6 +3272,8 @@ cantBeCountered pid oid gs =
         PlayerEffect.HasProtectionFrom _ -> False
         PlayerEffect.CantBecomeMonarch -> False
         PlayerEffect.CantSetSchemesInMotion -> False
+        PlayerEffect.ControlledWhileSearching -> False
+        PlayerEffect.ExilesFoundWhileSearching -> False
         PlayerEffect.CantAttackWithCreatures -> False
         PlayerEffect.CantCastMatching _ -> False
         PlayerEffect.CastOnlyAtSorcerySpeed -> False
@@ -3274,6 +3342,8 @@ unpreventable gs =
         PlayerEffect.HasProtectionFrom _ -> Nothing
         PlayerEffect.CantBecomeMonarch -> Nothing
         PlayerEffect.CantSetSchemesInMotion -> Nothing
+        PlayerEffect.ControlledWhileSearching -> Nothing
+        PlayerEffect.ExilesFoundWhileSearching -> Nothing
         PlayerEffect.CantAttackWithCreatures -> Nothing
         PlayerEffect.CantCastMatching _ -> Nothing
         PlayerEffect.CastOnlyAtSorcerySpeed -> Nothing
@@ -3343,6 +3413,8 @@ unredirectable gs =
         PlayerEffect.HasProtectionFrom _ -> Nothing
         PlayerEffect.CantBecomeMonarch -> Nothing
         PlayerEffect.CantSetSchemesInMotion -> Nothing
+        PlayerEffect.ControlledWhileSearching -> Nothing
+        PlayerEffect.ExilesFoundWhileSearching -> Nothing
         PlayerEffect.CantAttackWithCreatures -> Nothing
         PlayerEffect.CantCastMatching _ -> Nothing
         PlayerEffect.CastOnlyAtSorcerySpeed -> Nothing
@@ -3434,6 +3506,8 @@ statedFlips pid gs =
         PlayerEffect.HasProtectionFrom _ -> Nothing
         PlayerEffect.CantBecomeMonarch -> Nothing
         PlayerEffect.CantSetSchemesInMotion -> Nothing
+        PlayerEffect.ControlledWhileSearching -> Nothing
+        PlayerEffect.ExilesFoundWhileSearching -> Nothing
         PlayerEffect.CantAttackWithCreatures -> Nothing
         PlayerEffect.CantCastMatching _ -> Nothing
         PlayerEffect.CastOnlyAtSorcerySpeed -> Nothing
@@ -3499,6 +3573,8 @@ rollModifiers pid gs =
         PlayerEffect.HasProtectionFrom _ -> Nothing
         PlayerEffect.CantBecomeMonarch -> Nothing
         PlayerEffect.CantSetSchemesInMotion -> Nothing
+        PlayerEffect.ControlledWhileSearching -> Nothing
+        PlayerEffect.ExilesFoundWhileSearching -> Nothing
         PlayerEffect.CantAttackWithCreatures -> Nothing
         PlayerEffect.CantCastMatching _ -> Nothing
         PlayerEffect.CastOnlyAtSorcerySpeed -> Nothing
@@ -3601,6 +3677,8 @@ overPlayerRefs f effect = case effect of
   PlayerEffect.CantSearchLibraries _ -> pure effect
   PlayerEffect.CantBecomeMonarch -> pure effect
   PlayerEffect.CantSetSchemesInMotion -> pure effect
+  PlayerEffect.ControlledWhileSearching -> pure effect
+  PlayerEffect.ExilesFoundWhileSearching -> pure effect
   PlayerEffect.CantAttackWithCreatures -> pure effect
   PlayerEffect.CantCastMatching _ -> pure effect
   PlayerEffect.CastOnlyAtSorcerySpeed -> pure effect
@@ -3668,6 +3746,8 @@ overDamagePatterns f effect = case effect of
   PlayerEffect.CantSearchLibraries _ -> pure effect
   PlayerEffect.CantBecomeMonarch -> pure effect
   PlayerEffect.CantSetSchemesInMotion -> pure effect
+  PlayerEffect.ControlledWhileSearching -> pure effect
+  PlayerEffect.ExilesFoundWhileSearching -> pure effect
   PlayerEffect.CantAttackWithCreatures -> pure effect
   PlayerEffect.CantCastMatching _ -> pure effect
   PlayerEffect.CastOnlyAtSorcerySpeed -> pure effect

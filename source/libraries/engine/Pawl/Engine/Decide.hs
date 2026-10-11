@@ -37,4 +37,5 @@ effective =
         ControlDuration.WhileResolving _ -> False
         ControlDuration.UntilTurnEnds -> True
         ControlDuration.UntilResolutionEnds -> True
+        ControlDuration.WhileSearching -> True
    in Maybe.listToMaybe . reverse . NonEmpty.filter awake

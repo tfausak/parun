@@ -67,6 +67,7 @@ import qualified Pawl.Types.CounterKind as CounterKind
 import qualified Pawl.Types.Deck as Deck
 import qualified Pawl.Types.DrawR as DrawR
 import qualified Pawl.Types.DrawRewrite as DrawRewrite
+import qualified Pawl.Types.ExileLink as ExileLink
 import qualified Pawl.Types.Face as Face
 import qualified Pawl.Types.Facing as Facing
 import qualified Pawl.Types.Filter as Filter
@@ -1379,6 +1380,18 @@ spec s registry = Spec.describe s "Pawl.Engine.Event (CR 400.11)" $ do
     let resolved = resolveArcavios (arcaviosAnswer [SearchPlace.OutsideTheGame] [] False) board
     Spec.assertEqWith s "CR 701.23j her hand is empty" (printingsIn Zone.Hand S.alice resolved) []
     Spec.assertEqWith s "and the graveyard's sorcery stayed" (printingsIn Zone.Graveyard S.alice resolved) [arcaviosSign board]
+  -- Opposition Agent's "they exile each card they find" reaches a card found
+  -- outside the game too: bob's Agent, and alice searching her library and
+  -- outside the game. The case above without the Agent puts the Fog in her hand.
+  Spec.it s "CR 701.23j an opponent's Opposition Agent exiles the card found outside the game, linked to the Agent" $ do
+    board <- arcaviosBoard s registry
+    agentCard <- S.printingOf s registry "Opposition Agent"
+    let (agentId, withAgent) = S.addPermanent agentCard S.bob (arcaviosState board)
+        resolved = resolveArcavios (arcaviosAnswer [SearchPlace.InZone Zone.Library, SearchPlace.OutsideTheGame] [] True) board {arcaviosState = withAgent}
+        exiled = Game.zoneMembers Zone.Exile S.alice resolved
+    Spec.assertEqWith s "the Fog from outside the game is in her exile" (printingsIn Zone.Exile S.alice resolved) [arcaviosFog board]
+    Spec.assertEqWith s "and her hand is empty" (printingsIn Zone.Hand S.alice resolved) []
+    Spec.assertEqWith s "CR 607.2a the exiled Fog is linked to the Agent" (fmap (\oid -> fmap ExileLink.source (Map.lookup oid (GameState.exiledWith resolved))) exiled) [Just agentId]
   -- Every place, and the library's instant named: the one count is filled from
   -- the zones, so nothing out there is taken whatever she would have answered,
   -- and the card's own "if you search your library this way, shuffle" follows.

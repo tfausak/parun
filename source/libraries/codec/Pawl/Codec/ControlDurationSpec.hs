@@ -26,4 +26,10 @@ spec s = Spec.describe s "Pawl.Codec.ControlDuration" $ do
       ControlDuration.codec
       (ControlDuration.WhileResolving (ObjectId.MkObjectId 7))
       " {\"type\":\"WhileResolving\",\"value\":7} "
+  Spec.it s "WhileSearching" $
+    Common.assertCodec
+      s
+      ControlDuration.codec
+      ControlDuration.WhileSearching
+      " {\"type\":\"WhileSearching\"} "
   Spec.it s "has a schema" $ Common.assertHasSchema s ControlDuration.codec
