@@ -810,9 +810,35 @@ askingObjects resolving source controller legal chosen ref = case ref of
     counterpart <- chosenPermanents legal resolving controller source (ChosenPermanents.MkChosenPermanents filter_ (PlayerRef.Relative PlayerRelation.You) HowMany.One)
     gs <- State.get
     pure (counterpart <> battlefieldMatching legal resolving controller source gs Filter.Type.IsSource)
-  _ -> do
-    gs <- State.get
-    pure (objectRefObjects legal resolving controller source gs ref)
+  -- Every other arm is a read. Exhaustive with no `_`, so a new arm has to say
+  -- which it is: one answered [] by objectRefObjects but falling through here
+  -- would name nothing.
+  ObjectRef.InSlot _ -> swept
+  ObjectRef.EachMatching _ -> swept
+  ObjectRef.EachCardInGraveyard _ -> swept
+  ObjectRef.EachCardInYourHand -> swept
+  ObjectRef.EachCardInHand _ -> swept
+  ObjectRef.EachCardInYourLibrary _ -> swept
+  ObjectRef.EachCardYouOwn _ -> swept
+  ObjectRef.EachCardExiledWithSource _ -> swept
+  ObjectRef.EachCardExiledWithAbility _ -> swept
+  ObjectRef.EachCardEncodedOnSource _ -> swept
+  ObjectRef.EachSpell _ -> swept
+  ObjectRef.EachAbility _ -> swept
+  ObjectRef.EachOnStack _ -> swept
+  ObjectRef.EachPlayer -> swept
+  ObjectRef.EachOpponent -> swept
+  ObjectRef.ChosenPlayer -> swept
+  ObjectRef.Players _ -> swept
+  ObjectRef.TopOfLibrary _ -> swept
+  ObjectRef.TopOfLibraryUntil _ -> swept
+  ObjectRef.TopOfGraveyard _ -> swept
+  ObjectRef.EachCardFromAmong _ -> swept
+  ObjectRef.AttachedToBound _ -> swept
+  ObjectRef.FromAnywhere _ -> swept
+  where
+    swept :: Game [ObjectId]
+    swept = State.gets (\gs -> objectRefObjects legal resolving controller source gs ref)
 
 -- CR 701.9a's move for every Effect.Discard arm, once the cards are named:
 -- each seat's cards through the shared discard funnel, so the discard is
@@ -5186,7 +5212,9 @@ applyOneEffect runSubgame resolving source controller legal chosen effect = case
               -- siblings that have already arrived (see moveOne). CR 400.3 files a
               -- hand arrival under Object.owner, and CR 110.2a hands a battlefield
               -- arrival to the player the effect instructed. A ref naming players
-              -- names no object.
+              -- names no object. askingObjects' match is exhaustive, so a new arm
+              -- is classified there; only a slot read needing fromAmongMembers'
+              -- single binding, as the two arms above do, belongs here.
               _ -> askingObjects resolving source controller legal chosen ref
             -- CR 608.2h: a depth's amount is read once, off the pre-move board.
             depthBoard <- State.get
