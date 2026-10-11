@@ -173,10 +173,10 @@ import qualified Pawl.Types.EntryRewrite as EntryRewrite
 import qualified Pawl.Types.EntryRiders as EntryRiders
 import qualified Pawl.Types.Equip as Equip
 import qualified Pawl.Types.ExchangeBlocks as ExchangeBlocks
+import qualified Pawl.Types.ExchangeCardZones as ExchangeCardZones
 import qualified Pawl.Types.ExchangeOwnership as ExchangeOwnership
 import qualified Pawl.Types.ExchangeSides as ExchangeSides
 import qualified Pawl.Types.ExchangeValues as ExchangeValues
-import qualified Pawl.Types.ExchangeWithTopOfLibrary as ExchangeWithTopOfLibrary
 import qualified Pawl.Types.ExchangeZones as ExchangeZones
 import qualified Pawl.Types.ExchangedValue as ExchangedValue
 import qualified Pawl.Types.ExileCardsFromGraveyard as ExileCardsFromGraveyard
@@ -1255,7 +1255,7 @@ effectNames asking onCard onAbility x = case x of
   Effect.ExchangeLifeTotals exchangeSides -> exchangeSidesNames asking exchangeSides
   Effect.ExchangeValues exchangeValues -> exchangeValuesNames asking exchangeValues
   Effect.ExchangeZones exchangeZones -> exchangeZonesNames asking exchangeZones
-  Effect.ExchangeWithCardInHand chosenCardInHand -> chosenCardInHandNames asking chosenCardInHand
+  Effect.ExchangeCardZones (ExchangeCardZones.MkExchangeCardZones one other) -> objectRefNames asking one || objectRefNames asking other
   Effect.SetLifeTotal playerQuantity -> playerQuantityNames asking playerQuantity
   Effect.LoseGame playerRef -> playerRefNames asking playerRef
   Effect.WinGame playerRef -> playerRefNames asking playerRef
@@ -1367,7 +1367,6 @@ effectNames asking onCard onAbility x = case x of
   Effect.PutSticker putSticker -> putStickerNames asking putSticker
   Effect.SetOwner (SetOwner.MkSetOwner player ref) -> playerRefNames asking player || objectRefNames asking ref
   Effect.ExchangeOwnership (ExchangeOwnership.MkExchangeOwnership one other) -> objectRefNames asking one || objectRefNames asking other
-  Effect.ExchangeWithTopOfLibrary (ExchangeWithTopOfLibrary.MkExchangeWithTopOfLibrary ref player) -> objectRefNames asking ref || playerRefNames asking player
   Effect.Shuffle playerRef -> playerRefNames asking playerRef
   Effect.OfferCast offerCast -> offerCastNames asking offerCast
   Effect.OfferNamedCopy _cardName -> False

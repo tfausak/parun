@@ -120,9 +120,9 @@ import qualified Pawl.Types.EntryR as EntryR
 import qualified Pawl.Types.EntryRestriction as EntryRestriction
 import qualified Pawl.Types.EntryRewrite as EntryRewrite
 import qualified Pawl.Types.EntryRiders as EntryRiders
+import qualified Pawl.Types.ExchangeCardZones as ExchangeCardZones
 import qualified Pawl.Types.ExchangeOwnership as ExchangeOwnership
 import qualified Pawl.Types.ExchangeValues as ExchangeValues
-import qualified Pawl.Types.ExchangeWithTopOfLibrary as ExchangeWithTopOfLibrary
 import qualified Pawl.Types.ExchangedValue as ExchangedValue
 import qualified Pawl.Types.Face as Face
 import qualified Pawl.Types.FaceDownCharacteristics as FaceDownCharacteristics
@@ -690,7 +690,7 @@ rewriteEffect pairs effect = case effect of
           ExchangedValue.Toughness ref -> ExchangedValue.Toughness (rewriteObjectRef pairs ref)
      in Effect.ExchangeValues (ExchangeValues.MkExchangeValues (side one) (side other) (rewriteDuration pairs duration))
   Effect.ExchangeZones {} -> effect
-  Effect.ExchangeWithCardInHand (ChosenCardInHand.MkChosenCardInHand p f) -> Effect.ExchangeWithCardInHand (ChosenCardInHand.MkChosenCardInHand p (Filter.rewrite pairs f))
+  Effect.ExchangeCardZones (ExchangeCardZones.MkExchangeCardZones one other) -> Effect.ExchangeCardZones (ExchangeCardZones.MkExchangeCardZones (rewriteObjectRef pairs one) (rewriteObjectRef pairs other))
   Effect.SetLifeTotal x -> Effect.SetLifeTotal (rewritePlayerQuantity pairs x)
   Effect.LoseGame {} -> effect
   Effect.WinGame {} -> effect
@@ -989,7 +989,6 @@ rewriteEffect pairs effect = case effect of
   Effect.PutSticker (PutSticker.MkPutSticker player ref kinds cap free bound) -> Effect.PutSticker (PutSticker.MkPutSticker player (rewriteObjectRef pairs ref) kinds (fmap (rewriteQuantity pairs) cap) free bound)
   Effect.SetOwner (SetOwner.MkSetOwner player ref) -> Effect.SetOwner (SetOwner.MkSetOwner player (rewriteObjectRef pairs ref))
   Effect.ExchangeOwnership (ExchangeOwnership.MkExchangeOwnership one other) -> Effect.ExchangeOwnership (ExchangeOwnership.MkExchangeOwnership (rewriteObjectRef pairs one) (rewriteObjectRef pairs other))
-  Effect.ExchangeWithTopOfLibrary (ExchangeWithTopOfLibrary.MkExchangeWithTopOfLibrary ref player) -> Effect.ExchangeWithTopOfLibrary (ExchangeWithTopOfLibrary.MkExchangeWithTopOfLibrary (rewriteObjectRef pairs ref) player)
   -- No ObjectRef to rewrite: the opcode names a library and no objects.
   Effect.Shuffle {} -> effect
   -- THREE places, and all three descend. A Filter the ObjectRef carries is card

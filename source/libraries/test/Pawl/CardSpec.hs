@@ -185,9 +185,9 @@ import qualified Pawl.Types.EntryRestriction as EntryRestriction
 import qualified Pawl.Types.EntryRewrite as EntryRewrite
 import qualified Pawl.Types.EntryRiders as EntryRiders
 import qualified Pawl.Types.Equip as Equip
+import qualified Pawl.Types.ExchangeCardZones as ExchangeCardZones
 import qualified Pawl.Types.ExchangeOwnership as ExchangeOwnership
 import qualified Pawl.Types.ExchangeValues as ExchangeValues
-import qualified Pawl.Types.ExchangeWithTopOfLibrary as ExchangeWithTopOfLibrary
 import qualified Pawl.Types.ExchangeZones as ExchangeZones
 import qualified Pawl.Types.ExchangedValue as ExchangedValue
 import qualified Pawl.Types.ExileCardsFromGraveyard as ExileCardsFromGraveyard
@@ -642,7 +642,6 @@ objectRefPositions =
         ("move-to-zone", Effect.MoveToZone (MoveToZone.MkMoveToZone (plantedRef "mz") Zone.Exile plainRiders Nothing Nothing LibraryPlacement.OwnerChooses Nothing), [plantedRef "mz"]),
         ("reveal", Effect.Reveal (Reveal.MkReveal (plantedRef "rv") Nothing), [plantedRef "rv"]),
         ("look-at", Effect.LookAt (LookAt.MkLookAt (plantedRef "la") (SlotName.MkSlotName (Text.pack "seen"))), [plantedRef "la"]),
-        ("exchange-with-card-in-hand", Effect.ExchangeWithCardInHand handChoice, [ObjectRef.ChosenCardInHand handChoice]),
         ("explore", Effect.Explore (plantedRef "ex"), [plantedRef "ex"]),
         ("arrange-in-library", Effect.ArrangeInLibrary (plantedRef "al"), [plantedRef "al"]),
         ("connive", Effect.Connive (Connive.MkConnive (Quantity.Type.Literal 1) (plantedRef "cn")), [plantedRef "cn"]),
@@ -688,7 +687,7 @@ objectRefPositions =
         ("put-sticker", Effect.PutSticker (PutSticker.MkPutSticker (PlayerRef.Relative PlayerRelation.You) (plantedRef "ps") (Set.singleton StickerKind.Art) Nothing False Nothing), [plantedRef "ps"]),
         ("set-owner", Effect.SetOwner (SetOwner.MkSetOwner (PlayerRef.Relative PlayerRelation.You) (plantedRef "so")), [plantedRef "so"]),
         ("exchange-ownership", Effect.ExchangeOwnership (ExchangeOwnership.MkExchangeOwnership (plantedRef "eo") (plantedRef "ep")), [plantedRef "eo", plantedRef "ep"]),
-        ("exchange-top", Effect.ExchangeWithTopOfLibrary (ExchangeWithTopOfLibrary.MkExchangeWithTopOfLibrary (plantedRef "et") (PlayerRef.Relative PlayerRelation.You)), [plantedRef "et"]),
+        ("exchange-card-zones", Effect.ExchangeCardZones (ExchangeCardZones.MkExchangeCardZones (plantedRef "ec") (ObjectRef.ChosenCardInHand handChoice)), [plantedRef "ec", ObjectRef.ChosenCardInHand handChoice]),
         ("offer-cast", Effect.OfferCast (OfferCast.MkOfferCast (plantedRef "oc") (PlayerRef.Relative PlayerRelation.You) CastObligation.Optional PermissionVerb.Cast CastOffer.defaultValue CastRepetition.Once False False Nothing), [plantedRef "oc"]),
         ("grant-play-from-exile", Effect.GrantPlayFromExile (GrantPlayFromExile.MkGrantPlayFromExile Duration.UntilEndOfTurn (PlayerRef.Relative PlayerRelation.You) (plantedRef "gp") ManaSpending.AsProduced Nothing Nothing PermissionVerb.Play 0 TapState.Untapped), [plantedRef "gp"]),
         ("grant-look-at-exiled", Effect.GrantLookAtExiled (GrantLookAtExiled.MkGrantLookAtExiled (plantedRef "gl") False), [plantedRef "gl"]),
@@ -747,7 +746,6 @@ playerRefPositions =
         ("ante", Effect.Ante (Ante.MkAnte (plantedPlayer "ap") (plantedRef "ap") Nothing), [plantedPlayer "ap"]),
         ("put-sticker", Effect.PutSticker (PutSticker.MkPutSticker (plantedPlayer "pp") (plantedRef "pp") (Set.singleton StickerKind.Art) Nothing False Nothing), [plantedPlayer "pp"]),
         ("set-owner", Effect.SetOwner (SetOwner.MkSetOwner (plantedPlayer "sp") (plantedRef "sp")), [plantedPlayer "sp"]),
-        ("exchange-top", Effect.ExchangeWithTopOfLibrary (ExchangeWithTopOfLibrary.MkExchangeWithTopOfLibrary (plantedRef "ep") (plantedPlayer "ep")), [plantedPlayer "ep"]),
         ("shuffle", Effect.Shuffle (plantedPlayer "sh"), [plantedPlayer "sh"]),
         ("cloak", Effect.Cloak (plantedPlayer "ck"), [plantedPlayer "ck"]),
         ("manifestDread", Effect.ManifestDread (plantedPlayer "md"), [plantedPlayer "md"]),
@@ -1318,7 +1316,7 @@ ownCounts effect = case effect of
   Effect.ExchangeLifeTotals _ -> []
   Effect.ExchangeValues x -> durationCounts (ExchangeValues.duration x)
   Effect.ExchangeZones _ -> []
-  Effect.ExchangeWithCardInHand _ -> []
+  Effect.ExchangeCardZones _ -> []
   Effect.SetLifeTotal (PlayerQuantity.MkPlayerQuantity _ quantity) -> quantityCounts quantity
   Effect.LoseGame {} -> []
   Effect.WinGame {} -> []
@@ -1448,7 +1446,6 @@ ownCounts effect = case effect of
   Effect.PutSticker putSticker -> foldMap quantityCounts (PutSticker.ticketCap putSticker)
   Effect.SetOwner {} -> []
   Effect.ExchangeOwnership {} -> []
-  Effect.ExchangeWithTopOfLibrary {} -> []
   Effect.Shuffle {} -> []
   Effect.OfferNamedCopy {} -> []
   Effect.OfferNotedCopy {} -> []
@@ -1839,7 +1836,7 @@ effectNestedEffects effect = case effect of
   Effect.ExchangeLifeTotals {} -> []
   Effect.ExchangeValues {} -> []
   Effect.ExchangeZones {} -> []
-  Effect.ExchangeWithCardInHand {} -> []
+  Effect.ExchangeCardZones {} -> []
   Effect.SetLifeTotal {} -> []
   Effect.LoseGame {} -> []
   Effect.WinGame {} -> []
@@ -1926,7 +1923,6 @@ effectNestedEffects effect = case effect of
   Effect.PutSticker {} -> []
   Effect.SetOwner {} -> []
   Effect.ExchangeOwnership {} -> []
-  Effect.ExchangeWithTopOfLibrary {} -> []
   Effect.Shuffle {} -> []
   Effect.OfferNamedCopy {} -> []
   Effect.OfferNotedCopy {} -> []
@@ -2376,7 +2372,7 @@ effectReplacements effect = case effect of
   Effect.ExchangeLifeTotals _ -> []
   Effect.ExchangeValues _ -> []
   Effect.ExchangeZones _ -> []
-  Effect.ExchangeWithCardInHand _ -> []
+  Effect.ExchangeCardZones _ -> []
   Effect.SetLifeTotal (PlayerQuantity.MkPlayerQuantity _ _) -> []
   Effect.LoseGame {} -> []
   Effect.WinGame {} -> []
@@ -2478,7 +2474,6 @@ effectReplacements effect = case effect of
   Effect.PutSticker {} -> []
   Effect.SetOwner {} -> []
   Effect.ExchangeOwnership {} -> []
-  Effect.ExchangeWithTopOfLibrary {} -> []
   Effect.Shuffle {} -> []
   Effect.OfferNamedCopy {} -> []
   Effect.OfferNotedCopy {} -> []
@@ -2895,7 +2890,7 @@ effectMintedFaces effect = case effect of
   Effect.ExchangeLifeTotals _ -> []
   Effect.ExchangeValues _ -> []
   Effect.ExchangeZones _ -> []
-  Effect.ExchangeWithCardInHand _ -> []
+  Effect.ExchangeCardZones _ -> []
   Effect.SetLifeTotal (PlayerQuantity.MkPlayerQuantity _ _) -> []
   Effect.LoseGame {} -> []
   Effect.WinGame {} -> []
@@ -2999,7 +2994,6 @@ effectMintedFaces effect = case effect of
   Effect.PutSticker {} -> []
   Effect.SetOwner {} -> []
   Effect.ExchangeOwnership {} -> []
-  Effect.ExchangeWithTopOfLibrary {} -> []
   Effect.Shuffle {} -> []
   Effect.OfferNamedCopy {} -> []
   Effect.OfferNotedCopy {} -> []
@@ -5830,7 +5824,7 @@ effectFilters effect = case effect of
   Effect.ExchangeLifeTotals _ -> []
   Effect.ExchangeValues (ExchangeValues.MkExchangeValues one other duration) -> frame Unframed (durationFilters duration) <> frame SourceHostFramed (foldMap objectRefFilters (foldMap Resolve.exchangedObjectRefs [one, other]))
   Effect.ExchangeZones _ -> []
-  Effect.ExchangeWithCardInHand chosen -> frame SourceHostFramed (objectRefFilters (ObjectRef.ChosenCardInHand chosen))
+  Effect.ExchangeCardZones (ExchangeCardZones.MkExchangeCardZones one other) -> frame SourceHostFramed (objectRefFilters one <> objectRefFilters other)
   Effect.SetLifeTotal (PlayerQuantity.MkPlayerQuantity _ quantity) -> frame Unframed (quantityFilters quantity)
   Effect.LoseGame {} -> []
   Effect.WinGame {} -> []
@@ -6019,7 +6013,6 @@ effectFilters effect = case effect of
   Effect.PutSticker (PutSticker.MkPutSticker _ ref _ cap _ _) -> frame SourceHostFramed (objectRefFilters ref) <> frame Unframed (foldMap quantityFilters cap)
   Effect.SetOwner (SetOwner.MkSetOwner _ ref) -> frame SourceHostFramed (objectRefFilters ref)
   Effect.ExchangeOwnership (ExchangeOwnership.MkExchangeOwnership one other) -> frame SourceHostFramed (objectRefFilters one <> objectRefFilters other)
-  Effect.ExchangeWithTopOfLibrary (ExchangeWithTopOfLibrary.MkExchangeWithTopOfLibrary ref _) -> frame SourceHostFramed (objectRefFilters ref)
   -- A PlayerRef carries no Filter, exactly as GainPlayerCounters' does not.
   Effect.Shuffle {} -> []
   -- Nor do card names.

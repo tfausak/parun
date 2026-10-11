@@ -210,10 +210,10 @@ import qualified Pawl.Types.EntryAttack as EntryAttack
 import qualified Pawl.Types.EntryBlock as EntryBlock
 import qualified Pawl.Types.EntryRiders as EntryRiders
 import qualified Pawl.Types.ExchangeBlocks as ExchangeBlocks
+import qualified Pawl.Types.ExchangeCardZones as ExchangeCardZones
 import qualified Pawl.Types.ExchangeOwnership as ExchangeOwnership
 import qualified Pawl.Types.ExchangeSides as ExchangeSides
 import qualified Pawl.Types.ExchangeValues as ExchangeValues
-import qualified Pawl.Types.ExchangeWithTopOfLibrary as ExchangeWithTopOfLibrary
 import qualified Pawl.Types.ExchangeZones as ExchangeZones
 import qualified Pawl.Types.ExchangedValue as ExchangedValue
 import qualified Pawl.Types.ExileHaunting as ExileHaunting
@@ -3348,11 +3348,11 @@ effectIsImpossible resolving source controller legal gs effect = case effect of
   Effect.ExchangeValues {} -> False
   -- CR 701.12f: an exchange with an empty zone still happens.
   Effect.ExchangeZones {} -> False
-  -- CR 400.7: a source that has left the battlefield is gone, so there is no
-  -- permanent to exchange; and a hand holding no card the filter admits offers
-  -- nothing to exchange it with (CR 702.65b).
-  Effect.ExchangeWithCardInHand chosen ->
-    Set.notMember source (GameState.battlefield gs) || choosesFromNothing (ObjectRef.ChosenCardInHand chosen)
+  -- CR 701.12a: either side naming nothing it can exchange stops both -- a
+  -- source that has left the battlefield or phased out is not exchangeable,
+  -- and a hand holding no card the filter admits offers nothing to exchange it
+  -- with (CR 702.65b).
+  Effect.ExchangeCardZones (ExchangeCardZones.MkExchangeCardZones one other) -> any (\ref -> choosesFromNothing ref || namesOnlyTheGone ref) [one, other]
   Effect.SetLifeTotal {} -> False
   -- CR 608.2d: never impossible. Every player the reference can name is one
   -- Game.stillPlaying answered, and a target who has already left the game is an
@@ -3447,7 +3447,6 @@ effectIsImpossible resolving source controller legal gs effect = case effect of
   Effect.ExchangeControl {} -> False
   Effect.SetOwner {} -> False
   Effect.ExchangeOwnership {} -> False
-  Effect.ExchangeWithTopOfLibrary {} -> False
   Effect.ArmDelayedTrigger {} -> False
   Effect.AffectPlayers {} -> False
   Effect.RequireBlock {} -> False
@@ -3621,6 +3620,10 @@ effectIsImpossible resolving source controller legal gs effect = case effect of
         mustPick count && maybe False (null . matchingFromAmong legal resolving controller source gs filter_) (fromAmongBound slot)
       ObjectRef.ChosenPermanents (ChosenPermanents.MkChosenPermanents filter_ _ count) -> mustPick count && null (battlefieldMatching legal resolving controller source gs filter_)
       _ -> False
+    -- A read that names objects, none of them exchangeable.
+    namesOnlyTheGone ref =
+      let named = objectRefObjects legal resolving controller source gs ref
+       in not (null named) && not (any (`exchangeable` gs) named)
     positive quantity = maybe False (> 0) (Quantity.evaluateFor viewOf context gs resolving source quantity)
     -- An exact count of at least one; "up to" is satisfied by the empty answer.
     mustPick count = case count of
@@ -3633,6 +3636,14 @@ effectIsImpossible resolving source controller legal gs effect = case effect of
       Nothing
         | Map.member slot legal -> Just (Maybe.mapMaybe Recipient.objectOf (legalMany slot legal))
         | otherwise -> fmap (: []) (slotOne slot resolving gs)
+
+-- Whether an exchange of zones (CR 701.12d) can take this object: it is still
+-- in the game (CR 400.7) and not phased out, which CR 702.26b treats as though
+-- it doesn't exist. Shared by the ExchangeCardZones arm and effectIsImpossible,
+-- so the offer and the exchange cannot disagree. Pawl.AuraSpec's "CR 702.26b"
+-- AuraSwap case is the proof.
+exchangeable :: ObjectId -> GameState -> Bool
+exchangeable oid gs = Maybe.isJust (Game.lookupObject oid gs) && not (Phasing.isPhasedOut oid gs)
 
 -- CR 122.5's first and fourth impossibilities for one pair: the two objects
 -- differ and both are on the battlefield. Shared by the MoveCounters arm and
@@ -5361,49 +5372,80 @@ applyOneEffect runSubgame resolving source controller legal chosen effect = case
             (\pid -> fmap (\oid -> (oid, other)) (Game.zoneMembers one pid before) <> fmap (\oid -> (oid, one)) (Game.zoneMembers other pid before))
             exchanging
     Monad.void (Event.changeZonesTogether moves)
-  -- CR 702.65a's exchange of this permanent with a card in hand, CR 701.12d's
-  -- cross-zone exchange. The card is chosen from every card the filter admits,
-  -- not only those that could enchant the host: an unattachable pick is a legal
-  -- choice whose result is nothing (Arcanum Wings ruling, 2007-05-01, and CR
-  -- 702.65b).
+  -- CR 701.12d: the one card each ref names exchange zones, each going where
+  -- the other was. `other` is asked only once `one` has named a card
+  -- `exchangeable` admits, so a source that has left (CR 400.7) or phased out
+  -- (CR 702.26b) asks nobody. The aura swap's
+  -- hand card is chosen from every card the filter admits, not only those that
+  -- could enchant the host: an unattachable pick is a legal choice whose result
+  -- is nothing (Arcanum Wings ruling, 2007-05-01, and CR 702.65b).
   --
   -- Whether BOTH halves can happen is decided before either does (CR 701.12a):
-  -- the two cards share an owner (CR 701.12d), and the chosen card can legally
-  -- enchant what the source is attached to (CR 303.4i, through attachmentFor
-  -- and the projection). Then one CR 608.2f event: the source goes to its
-  -- owner's hand, and the card enters attached to the source's former host (CR
-  -- 701.12e), so CR 303.4f asks nobody, under the resolving controller (CR
-  -- 110.2a). Pawl.AuraSpec's AuraSwap group is the proof.
+  -- two distinct cards in different zones, one owner for both (CR 701.12d), and
+  -- a card entering the battlefield can be attached as below. A side naming no
+  -- card, as an empty library's top card, exchanges nothing: CR 701.12d's "even
+  -- if one zone is empty" is Effect.ExchangeZones', which trades a zone's whole
+  -- contents (data/scenarios/ante/ante-darkpact-empty-library-takes-the-card-but-exchanges-nothing.json).
+  -- Then one CR 608.2f
+  -- event: each card to the other's zone, filed under its owner (CR 400.3), a
+  -- permanent under the resolving controller (CR 110.2a), and a library card at
+  -- the end the other left.
   --
-  -- An UNATTACHED source is one a text change made a non-Aura (CR 612.1 reaches
-  -- the type line, and CR 704.5p then detaches it), and CR 701.12e has no host to
-  -- hand on. A non-Aura card simply enters. An Aura card is CR 303.4f's, its
-  -- host chosen here rather than by the funnel so that CR 303.4g's "remains in
-  -- its current zone" stops the source's half too (CR 701.12a), and never the
-  -- leaving source itself. Pawl.AuraSpec's "CR 612.1" AuraSwap cases are the
+  -- A card entering in place of an attached permanent enters attached to that
+  -- permanent's host (CR 701.12e), so CR 303.4f asks nobody, and one that cannot
+  -- legally be (CR 303.4i, through attachmentFor) stops both halves. An Aura card
+  -- entering in place of an UNATTACHED permanent -- one a text change made a
+  -- non-Aura (CR 612.1 reaches the type line, and CR 704.5p then detaches it) --
+  -- is CR 303.4f's, its host chosen here rather than by the funnel so that CR
+  -- 303.4g's "remains in its current zone" stops the other half too, and never
+  -- the leaving permanent itself. Pawl.AuraSpec's AuraSwap group and
+  -- data/scenarios/ante/ante-darkpact-takes-an-opponents-ante-card.json are the
   -- proof; the no-host and self-host halves are fences, every Aura card those
   -- boards offer having a host other than the source.
-  Effect.ExchangeWithCardInHand inHand -> do
-    gs <- State.get
-    Monad.when (Set.member source (GameState.battlefield gs)) $ do
-      picked <- askingObjects resolving source controller legal chosen (ObjectRef.ChosenCardInHand inHand)
-      before <- State.get
-      let ownerOf oid = fmap Object.owner (Game.lookupObject oid before)
-          host = Game.lookupObject source before >>= Object.attachedTo
-          exchange card seed =
-            Event.simultaneously $ do
-              Event.changeZoneInBatch before source Zone.Hand
-              Monad.void (Event.changeZoneAttaching (Just before) Set.empty card Zone.Battlefield LibraryPosition.defaultValue seed TapState.Untapped Map.empty (Just controller) Nothing Facing.FaceUp False CarryOver.NotCarried False Seq.empty)
-      case picked of
-        [card] | ownerOf card == ownerOf source -> case host of
-          Just h -> maybe (pure ()) (exchange card . Just) (Attach.attachmentFor card h before)
-          Nothing
-            | Set.member Subtype.Aura (Projection.subtypesOf card before) -> do
-                let hosts = filter ((/= Just source) . Recipient.objectOf) (Attach.entryHostsFor (Projection.sourceContext before (Just controller) card) card before)
-                entryHost <- Attach.chooseEntryHost controller card hosts
-                maybe (pure ()) (exchange card . Just) (entryHost >>= \h -> Attach.attachmentFor card h before)
-            | otherwise -> exchange card Nothing
-        _ -> pure ()
+  --
+  -- Not implemented: a library card from neither end of its library, which
+  -- LibraryPosition cannot name, sends the other card to the bottom (#4974).
+  Effect.ExchangeCardZones (ExchangeCardZones.MkExchangeCardZones one other) -> do
+    ones <- askingObjects resolving source controller legal chosen one
+    current <- State.get
+    case ListUtils.nubOrd ones of
+      [a] | exchangeable a current -> do
+        others <- askingObjects resolving source controller legal chosen other
+        before <- State.get
+        let -- What `card` enters with in place of `left`: Nothing when it
+            -- cannot enter, else its attachment seed.
+            entering card left = case Game.lookupObject left before of
+              Just obj
+                | Object.zone obj == Zone.Battlefield -> case Object.attachedTo obj of
+                    Just host -> pure (fmap Just (Attach.attachmentFor card host before))
+                    Nothing
+                      | Set.member Subtype.Aura (Projection.subtypesOf card before) -> do
+                          let hosts = filter ((/= Just left) . Recipient.objectOf) (Attach.entryHostsFor (Projection.sourceContext before (Just controller) card) card before)
+                          entryHost <- Attach.chooseEntryHost controller card hosts
+                          pure (fmap Just (entryHost >>= \h -> Attach.attachmentFor card h before))
+                      | otherwise -> pure (Just Nothing)
+              _ -> pure (Just Nothing)
+            zoneOf oid = fmap Object.zone (Game.lookupObject oid before)
+            atTop oid = case Game.pileHolderOf oid before of
+              Just pid -> take 1 (Game.zoneMembers Zone.Library pid before) == [oid]
+              Nothing -> False
+            move card left to seed =
+              Event.changeZoneAttaching (Just before) Set.empty card to (if atTop left then LibraryPosition.Top else LibraryPosition.Bottom) seed TapState.Untapped Map.empty (if to == Zone.Battlefield then Just controller else Nothing) Nothing Facing.FaceUp False CarryOver.NotCarried False Seq.empty
+            ownerOf oid = fmap Object.owner (Game.lookupObject oid before)
+        case ListUtils.nubOrd others of
+          [b]
+            | a /= b,
+              exchangeable b before,
+              Just zoneA <- zoneOf a,
+              Just zoneB <- zoneOf b,
+              zoneA /= zoneB,
+              ownerOf a == ownerOf b -> do
+                seeds <- (,) <$> entering a b <*> entering b a
+                case seeds of
+                  (Just seedA, Just seedB) -> Event.simultaneously (move a b zoneB seedA >> Monad.void (move b a zoneA seedB))
+                  _ -> pure ()
+          _ -> pure ()
+      _ -> pure ()
   -- CR 701.24: shuffle the objects the refs name into their OWNERS' libraries. Two
   -- steps: CR 400.7's move through the same changeZone funnel every destination
   -- uses, so a library-entry replacement gets its CR 616.1 opportunity (CR 400.3
@@ -5454,28 +5496,6 @@ applyOneEffect runSubgame resolving source controller legal chosen effect = case
           Just ownerA <- ownerOf a,
           Just ownerB <- ownerOf b ->
             State.put (Game.setOwner b ownerA (Game.setOwner a ownerB gs))
-      _ -> pure ()
-  -- CR 701.12d: the one named card and the top card of the named player's
-  -- library exchange zones. All or nothing (CR 701.12a): one card named, a top
-  -- card that is another card (CR 701.12d's "even if one zone is empty" is for
-  -- exchanging zones' contents, and Darkpact names one card, "the top card"),
-  -- and one owner for both (CR 701.12d's "only if all the cards are owned by
-  -- the same player"). Then one event (CR 608.2f):
-  -- the named card onto the top of its owner's library (CR 400.3), the top card
-  -- into the zone the named card left.
-  Effect.ExchangeWithTopOfLibrary (ExchangeWithTopOfLibrary.MkExchangeWithTopOfLibrary ref player) -> do
-    before <- State.get
-    let named = ListUtils.nubOrd (objectRefObjects legal resolving controller source before ref)
-        ownerOf oid = fmap Object.owner (Game.lookupObject oid before)
-        zoneOf oid = fmap Object.zone (Game.lookupObject oid before)
-    case (named, playerRefPlayers legal controller before player) of
-      ([card], [pid]) -> case (Game.zoneMembers Zone.Library pid before, zoneOf card) of
-        (top : _, Just from)
-          | top /= card && ownerOf top == ownerOf card ->
-              Event.simultaneously $ do
-                Monad.void (Event.changeZoneAttaching (Just before) Set.empty card Zone.Library LibraryPosition.Top Nothing TapState.Untapped Map.empty Nothing Nothing Facing.FaceUp False CarryOver.NotCarried False Seq.empty)
-                Event.changeZoneInBatch before top from
-        _ -> pure ()
       _ -> pure ()
   -- CR 407.4: "the owner of an object is the only player who can ante that
   -- object". Each named object one of the named players owns moves to the

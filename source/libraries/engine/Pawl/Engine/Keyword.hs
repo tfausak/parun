@@ -100,6 +100,7 @@ import qualified Pawl.Types.EntryRewrite as EntryRewrite
 import qualified Pawl.Types.EntryRiders as EntryRiders
 import qualified Pawl.Types.Equip as Equip
 import qualified Pawl.Types.EquipTarget as EquipTarget
+import qualified Pawl.Types.ExchangeCardZones as ExchangeCardZones
 import qualified Pawl.Types.ExileHaunting as ExileHaunting
 import qualified Pawl.Types.Face as Face
 import Pawl.Types.Filter (Filter)
@@ -2484,11 +2485,12 @@ reconfigureOff cost =
 -- CR 702.65a: "[Cost]: You may exchange this permanent with an Aura card in
 -- your hand." No timing restriction, the rule stating none, and no target: the
 -- card and the "may" are both announced as the ability resolves (CR 608.2d),
--- by its controller (CR 109.5).
+-- by its controller (CR 109.5). "This permanent" is Binding.triggerSource,
+-- named and never TARGETED (CR 115.10a).
 auraSwap :: Cost Keyword -> ActivatedAbility Card (GrantedAbility.GrantedAbility Card)
 auraSwap cost =
   let chosen = ChosenCardInHand.MkChosenCardInHand (PlayerRef.Relative PlayerRelation.You) (Filter.HasSubtype Subtype.Aura)
-      effect = Effect.ExchangeWithCardInHand chosen
+      effect = Effect.ExchangeCardZones (ExchangeCardZones.MkExchangeCardZones (ObjectRef.InSlot Binding.triggerSource) (ObjectRef.ChosenCardInHand chosen))
    in ActivatedAbility.MkActivatedAbility
         { ActivatedAbility.cost = cost,
           ActivatedAbility.modal =

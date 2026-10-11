@@ -40,6 +40,7 @@ import qualified Pawl.Types.DealDamage as DealDamage
 import qualified Pawl.Types.Designate as Designate
 import Pawl.Types.Effect (Effect)
 import qualified Pawl.Types.Effect as Effect
+import qualified Pawl.Types.ExchangeCardZones as ExchangeCardZones
 import qualified Pawl.Types.ExchangeZones as ExchangeZones
 import qualified Pawl.Types.ForEach as ForEach
 import qualified Pawl.Types.ForEachNumber as ForEachNumber
@@ -370,7 +371,7 @@ manaProduced effect = case effect of
   Effect.ExchangeLifeTotals _ -> Nothing
   Effect.ExchangeValues _ -> Nothing
   Effect.ExchangeZones _ -> Nothing
-  Effect.ExchangeWithCardInHand _ -> Nothing
+  Effect.ExchangeCardZones _ -> Nothing
   Effect.SetLifeTotal {} -> Nothing
   Effect.LoseGame {} -> Nothing
   Effect.WinGame {} -> Nothing
@@ -465,7 +466,6 @@ manaProduced effect = case effect of
   Effect.PutSticker {} -> Nothing
   Effect.SetOwner {} -> Nothing
   Effect.ExchangeOwnership {} -> Nothing
-  Effect.ExchangeWithTopOfLibrary {} -> Nothing
   Effect.Shuffle {} -> Nothing
   Effect.OfferCast {} -> Nothing
   Effect.OfferNamedCopy {} -> Nothing
@@ -565,7 +565,7 @@ playerChoice effect = case effect of
   Effect.ExchangeLifeTotals _ -> Nothing
   Effect.ExchangeValues _ -> Nothing
   Effect.ExchangeZones _ -> Nothing
-  Effect.ExchangeWithCardInHand _ -> Nothing
+  Effect.ExchangeCardZones _ -> Nothing
   Effect.SetLifeTotal {} -> Nothing
   Effect.LoseGame {} -> Nothing
   Effect.WinGame {} -> Nothing
@@ -655,7 +655,6 @@ playerChoice effect = case effect of
   Effect.PutSticker {} -> Nothing
   Effect.SetOwner {} -> Nothing
   Effect.ExchangeOwnership {} -> Nothing
-  Effect.ExchangeWithTopOfLibrary {} -> Nothing
   Effect.Shuffle {} -> Nothing
   Effect.OfferCast {} -> Nothing
   Effect.OfferNamedCopy {} -> Nothing
@@ -716,9 +715,9 @@ movesLibraryCard effect = case effect of
   Effect.SetOwner {} -> False
   -- CR 108.3: nor does a trade of owners.
   Effect.ExchangeOwnership {} -> False
-  -- CR 701.12d: the top card of a library leaves it, and the named card enters
-  -- one.
-  Effect.ExchangeWithTopOfLibrary {} -> True
+  -- CR 701.12d: each card goes to the other's zone, so a library is reached
+  -- exactly when one side names a card in one.
+  Effect.ExchangeCardZones x -> refReachesLibrary (ExchangeCardZones.one x) || refReachesLibrary (ExchangeCardZones.other x)
   -- CR 701.24a randomises a library WITHIN itself, which is Scry's and Fateseal's
   -- answer above: no card crosses the zone's boundary in either direction.
   Effect.Shuffle {} -> False
@@ -814,8 +813,6 @@ movesLibraryCard effect = case effect of
   Effect.ExchangeZones x ->
     let (one, other) = ZonePair.zones (ExchangeZones.zones x)
      in one == Zone.Library || other == Zone.Library
-  -- A hand and the battlefield.
-  Effect.ExchangeWithCardInHand _ -> False
   Effect.SetLifeTotal {} -> False
   Effect.LoseGame {} -> False
   Effect.WinGame {} -> False

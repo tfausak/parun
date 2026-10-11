@@ -55,17 +55,26 @@
                     }
                   },
                   {
-                    "type": "ExchangeWithTopOfLibrary",
+                    "type": "ExchangeCardZones",
                     "value": {
-                      "player": {
-                        "type": "Relative",
-                        "value": {
-                          "type": "You"
-                        }
-                      },
-                      "ref": {
+                      "one": {
                         "type": "InSlot",
                         "value": "card"
+                      },
+                      "other": {
+                        "type": "TopOfLibrary",
+                        "value": {
+                          "count": {
+                            "type": "Literal",
+                            "value": 1
+                          },
+                          "player": {
+                            "type": "Relative",
+                            "value": {
+                              "type": "You"
+                            }
+                          }
+                        }
                       }
                     }
                   }
