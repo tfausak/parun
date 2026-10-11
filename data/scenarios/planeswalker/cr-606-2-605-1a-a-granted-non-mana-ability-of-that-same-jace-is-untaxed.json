@@ -1,0 +1,47 @@
+{
+  "description": "CR 606.2 / 605.1a a granted non-mana ability of that same Jace is untaxed while his +2 is",
+  "note": "Liquimetal Coating and March of the Machines make Jace a creature so Presence of Gond can enchant him; his {T} ability is then neither a loyalty ability nor a mana ability, so only a criterion reading CR 606.2 leaves it untaxed. Jace and the Coating are ready (CR 302.6), as both tap while creatures.",
+  "board": {
+    "seats": [
+      {
+        "name": "alice",
+        "battlefield": [
+          { "card": "Forest", "label": "f1" },
+          { "card": "Forest", "label": "f2" },
+          { "card": "Forest", "label": "f3" },
+          {
+            "card": "Jace Beleren",
+            "label": "jace",
+            "ready": true,
+            "counters": [{ "key": { "type": "Loyalty" }, "value": 3 }]
+          },
+          { "card": "Carth the Lion", "label": "carth", "ready": true },
+          { "card": "Liquimetal Coating", "label": "coating", "ready": true },
+          { "card": "March of the Machines", "label": "march" }
+        ],
+        "hand": [{ "card": "Presence of Gond", "label": "gond" }],
+        "library": [{ "card": "Island" }, { "card": "Island" }, { "card": "Island" }, { "card": "Island" }]
+      },
+      {
+        "name": "bob",
+        "library": [{ "card": "Island" }, { "card": "Island" }, { "card": "Island" }, { "card": "Island" }]
+      }
+    ],
+    "active": "alice",
+    "step": "PrecombatMain"
+  },
+  "timeline": [
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": { "Activate": { "object": "$coating", "targets": ["$jace"], "mana": [null] } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass" },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": { "Cast": { "object": "$gond", "targets": ["$jace"], "mana": ["$f1", "$f2", "$f3"] } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass" },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": { "Activate": { "object": "$jace", "ability": 3 } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass" },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "check": { "Counters": { "object": "$jace", "kind": { "type": "Loyalty" }, "count": 3 } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "check": { "Count": { "player": "alice", "zone": "Battlefield", "card": "Elf Warrior Token", "count": 1 } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "check": { "Tapped": { "object": "$jace", "tapped": true } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": { "Activate": { "object": "$jace", "ability": 0 } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass" },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "check": { "Counters": { "object": "$jace", "kind": { "type": "Loyalty" }, "count": 6 } } }
+  ]
+}
