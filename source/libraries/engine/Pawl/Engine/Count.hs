@@ -212,25 +212,16 @@ findableAfterMove gs oid = case Game.lookupObject oid gs of
   --
   -- Nothing when nothing arrived: CR 111.7's token, whose exile leaves nothing
   -- for this to find, keeps the False it had.
-  Nothing -> any (arrivedFindable gs) (arrivalsOf gs oid)
+  Nothing -> any (arrivedFindable gs) (Game.arrivalsOf oid gs)
   Just _ -> arrivedFindable gs oid
 
 -- The arm above's public-zone question about an id that IS live, asked directly
--- of a binding that holds the arrival and through arrivalsOf of one that holds
+-- of a binding that holds the arrival and through Game.arrivalsOf of one that holds
 -- the departure, so the two roads cannot answer differently.
 arrivedFindable :: GameState -> ObjectId -> Bool
 arrivedFindable gs oid = case Game.lookupObject oid gs of
   Nothing -> False
   Just object -> not (Game.isHiddenZone (Object.zone object)) || revealedArriving gs oid
-
--- revealedArriving's traversal turned around: the ids a Moved entry naming this
--- one as its DEPARTURE arrived as.
-arrivalsOf :: GameState -> ObjectId -> [ObjectId]
-arrivalsOf gs oid =
-  let arrivedFrom event = case event of
-        GameEvent.Moved m | ZoneChange.departed (Moved.change m) == oid -> Foldable.toList (Moved.arrivals m)
-        _ -> []
-   in concatMap (arrivedFrom . LoggedEvent.event) (GameState.events gs)
 
 -- Was the card revealed as it left the zone this incarnation arrived from?
 -- The Moved entry naming this id as its arrival gives the departed id; a

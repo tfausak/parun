@@ -2267,13 +2267,12 @@ attemptAttackDeclaration perform pid rejected = do
                     && Summoning.settledOrHastyGiven pcs you cid g
                     && isCreatureObjectGiven pcs cid g
                 enlistCandidates = filter enlistable (Projection.controlsGiven grants you g)
-            Monad.forM_ (NonEmpty.nonEmpty enlistCandidates) $ \enlistOffer -> do
-              answer <- Game.choose (Prompt.ChooseEnlist (Decide.deciderFor you g) you oid enlistOffer)
-              -- Reject-not-repair, Pawl.Engine.Cost's posture: an answer outside
-              -- the offer taps nobody and arms nothing.
-              Monad.forM_ (filter enlistable (Maybe.maybeToList answer)) $ \enlisted -> do
-                Event.tap enlisted
-                State.modify' (Event.armDelayed Keyword.Engine.enlistReflexive oid you (Map.singleton Binding.tappedPermanent (Binding.toObject enlisted)) Onset.Immediately Nothing)
+            -- Reject-not-repair, Pawl.Engine.Cost's posture: an answer outside
+            -- the offer taps nobody and arms nothing.
+            answer <- Game.mayChooseAmong (\enlistDecider who -> Prompt.ChooseEnlist enlistDecider who oid) you enlistCandidates
+            Monad.forM_ answer $ \enlisted -> do
+              Event.tap enlisted
+              State.modify' (Event.armDelayed Keyword.Engine.enlistReflexive oid you (Map.singleton Binding.tappedPermanent (Binding.toObject enlisted)) Onset.Immediately Nothing)
         gs1 <- State.get
         -- CR 508.1h: the total cost to attack is determined once and then LOCKED
         -- IN -- this `let`. Asking AttackCost.totalCost a second time is what the

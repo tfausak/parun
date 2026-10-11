@@ -16,9 +16,6 @@ module Pawl.Engine.Learn where
 
 import qualified Control.Monad as Monad
 import qualified Control.Monad.Trans.State.Strict as State
-import qualified Data.List as List
-import qualified Data.List.NonEmpty as NonEmpty
-import qualified Pawl.Engine.Decide as Decide
 import qualified Pawl.Engine.Event as Event
 import qualified Pawl.Engine.Game as Game
 import qualified Pawl.Types.DiscardCause as DiscardCause
@@ -89,11 +86,7 @@ learn pid resolving source = do
       offered =
         [LearnMode.DiscardAndDraw | not (null hand)]
           <> [LearnMode.TakeLesson | not (null lessons)]
-  mode <- case NonEmpty.nonEmpty offered of
-    Nothing -> pure Nothing
-    Just modes -> do
-      answer <- Game.choose (Prompt.ChooseLearn (Decide.deciderFor pid gs) pid resolving modes)
-      pure (if all (`List.elem` NonEmpty.toList modes) answer then answer else Nothing)
+  mode <- Game.mayChooseAmong (\decider who -> Prompt.ChooseLearn decider who resolving) pid offered
   case mode of
     Nothing -> pure ()
     Just LearnMode.TakeLesson -> Event.bringInto lessonFromOutside source pid
