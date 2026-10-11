@@ -13,6 +13,7 @@ import qualified Pawl.Types.Color as Color
 import qualified Pawl.Types.Comparison as Comparison
 import qualified Pawl.Types.CounterKind as CounterKind
 import qualified Pawl.Types.Designation as Designation
+import qualified Pawl.Types.ExiledWith as ExiledWith
 import qualified Pawl.Types.Expansion as Expansion
 import qualified Pawl.Types.Filter as Filter
 import qualified Pawl.Types.Keyword as Keyword
@@ -304,12 +305,12 @@ spec s = Spec.describe s "Pawl.Codec.Filter" $ do
       codec
       Filter.HasChosenSubtype
       " {\"type\":\"HasChosenSubtype\"} "
-  Spec.it s "IsLastExiledWithSource" $
+  Spec.it s "IsExiledWithSource" $
     Common.assertCodec
       s
       codec
-      Filter.IsLastExiledWithSource
-      " {\"type\":\"IsLastExiledWithSource\"} "
+      (Filter.IsExiledWithSource ExiledWith.LastExiled)
+      " {\"type\":\"IsExiledWithSource\",\"value\":{\"type\":\"LastExiled\"}} "
   Spec.it s "OfChosenPlayer" $
     Common.assertCodec
       s

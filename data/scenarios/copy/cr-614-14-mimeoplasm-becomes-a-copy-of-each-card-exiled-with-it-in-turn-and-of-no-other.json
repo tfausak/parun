@@ -1,0 +1,51 @@
+{
+  "description": "CR 614.14 Mimeoplasm becomes a copy of each card exiled with it in turn, and of no other",
+  "note": "X is 2: alice exiles Goblin Piker and Runeclaw Bear of three creature cards, so Mimeoplasm enters with six +1/+1 counters. {2} makes it a copy of the Piker, 0/0 by CR 707.9b, so the counters leave a 6/6. It kept the ability (CR 707.9a), and the Bear is still exiled with it, so a second {2} makes it a Bear. The Nessian Asp in exile was exiled with nothing, so it is no legal target.",
+  "board": {
+    "seats": [
+      {
+        "name": "alice",
+        "battlefield": [
+          { "card": "Swamp", "ready": true },
+          { "card": "Swamp", "ready": true },
+          { "card": "Swamp", "ready": true },
+          { "card": "Swamp", "ready": true },
+          { "card": "Swamp", "ready": true },
+          { "card": "Swamp", "ready": true },
+          { "card": "Swamp", "ready": true },
+          { "card": "Forest", "ready": true },
+          { "card": "Island", "ready": true }
+        ],
+        "hand": [{ "card": "Mimeoplasm, Revered One", "label": "ooze" }],
+        "graveyard": [
+          { "card": "Goblin Piker", "label": "piker" },
+          { "card": "Runeclaw Bear", "label": "bear" },
+          { "card": "Silent Arbiter" }
+        ],
+        "exile": [{ "card": "Nessian Asp" }]
+      },
+      {
+        "name": "bob"
+      }
+    ],
+    "active": "alice",
+    "step": "PrecombatMain"
+  },
+  "timeline": [
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": { "Cast": { "object": "$ooze", "x": 2, "mana": ["Swamp", "Forest", "Island", "Swamp#2", "Swamp#3", null] } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": { "Answer": { "prompt": "ChooseAnyNumberToExile", "with": ["$piker", "$bear"] } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass" },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "check": { "Counters": { "object": "Mimeoplasm, Revered One", "kind": { "type": "PlusOnePlusOne" }, "count": 6 } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "check": { "PowerToughness": { "object": "Mimeoplasm, Revered One", "power": 6, "toughness": 6 } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "check": { "Count": { "player": "alice", "zone": "Graveyard", "card": "Silent Arbiter", "count": 1 } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "refuse": { "Activate": { "object": "Mimeoplasm, Revered One", "ability": 0, "targets": ["Nessian Asp"], "mana": ["Swamp#4", "Swamp#5", null] } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": { "Activate": { "object": "Mimeoplasm, Revered One", "ability": 0, "targets": ["Goblin Piker"], "mana": ["Swamp#4", "Swamp#5", null] } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass" },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "check": { "Names": { "object": "Mimeoplasm, Revered One", "names": ["Goblin Piker"] } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "check": { "PowerToughness": { "object": "Mimeoplasm, Revered One", "power": 6, "toughness": 6 } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": { "Activate": { "object": "Mimeoplasm, Revered One", "ability": 0, "targets": ["Runeclaw Bear"], "mana": ["Swamp#6", "Swamp#7"] } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass" },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "check": { "Names": { "object": "Mimeoplasm, Revered One", "names": ["Runeclaw Bear"] } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "check": { "PowerToughness": { "object": "Mimeoplasm, Revered One", "power": 6, "toughness": 6 } } }
+  ]
+}

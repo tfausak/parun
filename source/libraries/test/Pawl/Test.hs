@@ -292,6 +292,7 @@ import qualified Pawl.Codec.ExileLookerSpec
 import qualified Pawl.Codec.ExileMaterialsSpec
 import qualified Pawl.Codec.ExilePermanentsSpec
 import qualified Pawl.Codec.ExilePlayPermissionSpec
+import qualified Pawl.Codec.ExiledWithSpec
 import qualified Pawl.Codec.ExpansionSpec
 import qualified Pawl.Codec.ExpirySpec
 import qualified Pawl.Codec.ExploitedSpec
@@ -1138,6 +1139,7 @@ spec s registry = do
   Pawl.Codec.ExileMaterialsSpec.spec s
   Pawl.Codec.ExileHauntingSpec.spec s
   Pawl.Codec.ExileLinkSpec.spec s
+  Pawl.Codec.ExiledWithSpec.spec s
   Pawl.Codec.ExileLookerSpec.spec s
   Pawl.Codec.ExilePlayPermissionSpec.spec s
   Pawl.Codec.ExpansionSpec.spec s

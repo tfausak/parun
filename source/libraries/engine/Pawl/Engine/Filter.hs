@@ -33,6 +33,7 @@ import qualified Pawl.Types.Equip as Equip
 import qualified Pawl.Types.ExileCardsFromGraveyard as ExileCardsFromGraveyard
 import qualified Pawl.Types.ExileMaterials as ExileMaterials
 import qualified Pawl.Types.ExilePermanents as ExilePermanents
+import qualified Pawl.Types.ExiledWith as ExiledWith
 import qualified Pawl.Types.Expansion as Expansion
 import qualified Pawl.Types.Filter as Filter
 import qualified Pawl.Types.ForetellCost as ForetellCost
@@ -1516,12 +1517,17 @@ data Context = MkContext
     -- Vacuously False everywhere else, sourceChosenColors's posture, and fenced by
     -- the same lint's subtype twin.
     sourceChosenSubtype :: Maybe Subtype.Subtype,
-    -- CR 607.2a: the last card exiled with the source, for IsLastExiledWithSource.
+    -- CR 607.2a: the last card exiled with the source, for IsExiledWithSource LastExiled.
     -- Filled by one caller only, Pawl.Engine.Mana.admitsUnder, off the MANA UNIT
     -- (Pawl.Types.ManaUnit.sourceLastExiled, Ice Cauldron) for sourceChosenSubtype's
     -- reason. Nothing everywhere else, so the atom is vacuously False there, and
     -- Pawl.FilterPositionLintSpec keeps a card to a mana restriction.
-    sourceLastExiled :: Maybe ObjectId.ObjectId
+    sourceLastExiled :: Maybe ObjectId.ObjectId,
+    -- CR 607.2a / 614.14: every card in exile linked to the source, for
+    -- IsExiledWithSource AnyExiled. Filled where a target slot's filter is
+    -- judged (Pawl.Engine.Target), off GameState.exiledWith; empty everywhere
+    -- else, so the atom is vacuously False there.
+    sourceExiled :: Set.Set ObjectId.ObjectId
   }
   deriving (Eq, Ord, Show)
 
@@ -1578,7 +1584,7 @@ data Context = MkContext
 -- here owes both halves of the same pair: which way its unfilled read answers,
 -- and what holds a card to the positions that fill it.
 contextFor :: Teams.Teams -> Maybe PlayerId.PlayerId -> Maybe ObjectId.ObjectId -> Context
-contextFor t p s = MkContext {teams = t, perspective = p, source = s, sourceMeasures = Map.empty, sourceColors = Set.empty, sourceNames = Set.empty, slotAmount = Nothing, defendingPlayers = [], recipient = Nothing, slotObjects = Map.empty, cantCrewVehicles = Set.empty, slotNames = Map.empty, slotControllers = Map.empty, slotHostControllers = Map.empty, subjectHostCardTypes = Set.empty, slotCreatureTypes = Map.empty, slotMeasures = Map.empty, slotPlayers = Map.empty, boundAmounts = Map.empty, slotStickers = Map.empty, boundUnannounced = False, sourceAttachedTo = Nothing, evaluated = Nothing, sourceEntrants = Set.empty, sourceOwner = Nothing, sourceChosenNames = Set.empty, carrierChosenPlayer = Nothing, aimingController = Nothing, sourceChosenColors = Set.empty, sourceChosenSubtype = Nothing, sourceLastExiled = Nothing}
+contextFor t p s = MkContext {teams = t, perspective = p, source = s, sourceMeasures = Map.empty, sourceColors = Set.empty, sourceNames = Set.empty, slotAmount = Nothing, defendingPlayers = [], recipient = Nothing, slotObjects = Map.empty, cantCrewVehicles = Set.empty, slotNames = Map.empty, slotControllers = Map.empty, slotHostControllers = Map.empty, subjectHostCardTypes = Set.empty, slotCreatureTypes = Map.empty, slotMeasures = Map.empty, slotPlayers = Map.empty, boundAmounts = Map.empty, slotStickers = Map.empty, boundUnannounced = False, sourceAttachedTo = Nothing, evaluated = Nothing, sourceEntrants = Set.empty, sourceOwner = Nothing, sourceChosenNames = Set.empty, carrierChosenPlayer = Nothing, aimingController = Nothing, sourceChosenColors = Set.empty, sourceChosenSubtype = Nothing, sourceLastExiled = Nothing, sourceExiled = Set.empty}
 
 -- The ONE object a slot names, for the readers that can take no more than one --
 -- Quantity.AgainstSlot's evaluation, Count's IsControllerOfBound. Nothing where
@@ -1886,7 +1892,8 @@ matches context view predicate = case predicate of
   Filter.HasChosenSubtype -> maybe False (`Set.member` subtypes view) (sourceChosenSubtype context)
   -- CR 607.2a off the Context, which the mana-spending road alone fills: no
   -- card exiled with the source matches nothing.
-  Filter.IsLastExiledWithSource -> maybe False (\card -> identity view == Just card) (sourceLastExiled context)
+  Filter.IsExiledWithSource ExiledWith.LastExiled -> maybe False (\card -> identity view == Just card) (sourceLastExiled context)
+  Filter.IsExiledWithSource ExiledWith.AnyExiled -> maybe False (`Set.member` sourceExiled context) (identity view)
   -- CR 702.16k's two halves in one disjunction: what the chosen player CONTROLS,
   -- and what they OWN that no other player controls -- which is the second half's
   -- whole content, CR 108.4 leaving a card outside the battlefield and the stack
@@ -2320,7 +2327,7 @@ rewrite pairs predicate = case predicate of
   Filter.HasChosenName -> predicate
   Filter.HasChosenColor -> predicate
   Filter.HasChosenSubtype -> predicate
-  Filter.IsLastExiledWithSource -> predicate
+  Filter.IsExiledWithSource _ -> predicate
   Filter.OfChosenPlayer -> predicate
   Filter.OfRelatedPlayer _ -> predicate
   Filter.IsPlayer _ -> predicate
@@ -3068,7 +3075,7 @@ bakeBound players predicate = case predicate of
   Filter.HasChosenName -> predicate
   Filter.HasChosenColor -> predicate
   Filter.HasChosenSubtype -> predicate
-  Filter.IsLastExiledWithSource -> predicate
+  Filter.IsExiledWithSource _ -> predicate
   Filter.OfChosenPlayer -> predicate
   Filter.OfRelatedPlayer _ -> predicate
   Filter.IsPlayer _ -> predicate
@@ -3242,7 +3249,7 @@ manaValueThresholds predicate = case predicate of
   Filter.HasChosenName -> []
   Filter.HasChosenColor -> []
   Filter.HasChosenSubtype -> []
-  Filter.IsLastExiledWithSource -> []
+  Filter.IsExiledWithSource _ -> []
   Filter.OfChosenPlayer -> []
   Filter.OfRelatedPlayer _ -> []
   Filter.IsPlayer _ -> []
@@ -3409,7 +3416,7 @@ statesAQuality predicate = case predicate of
   -- way the card arrived at it.
   Filter.HasChosenSubtype -> True
   -- IsObject's posture: the candidate is named by identity.
-  Filter.IsLastExiledWithSource -> True
+  Filter.IsExiledWithSource _ -> True
   -- CR 701.23b's "stated quality" too, and rule 702.16k's own "regardless of
   -- that object's characteristic values" is not a counter-argument: the rule
   -- excuses the PROTECTION from reading characteristics, where this predicate
@@ -3561,7 +3568,7 @@ readsSourceValues predicate = case predicate of
   Filter.HasChosenName -> True
   Filter.HasChosenColor -> True
   Filter.HasChosenSubtype -> True
-  Filter.IsLastExiledWithSource -> False
+  Filter.IsExiledWithSource _ -> False
   Filter.OfChosenPlayer -> False
   Filter.OfRelatedPlayer _ -> False
   Filter.IsPlayer _ -> False
@@ -3722,7 +3729,7 @@ overBoundSlotsWith f predicate = case predicate of
   Filter.HasChosenColor -> pure predicate
   -- Reads no slot either: CR 205.3's subtype arrives on Filter.Context.
   Filter.HasChosenSubtype -> pure predicate
-  Filter.IsLastExiledWithSource -> pure predicate
+  Filter.IsExiledWithSource _ -> pure predicate
   -- Reads no slot at all: rule 702.16k's player arrives on Filter.Context.
   Filter.OfChosenPlayer -> pure predicate
   Filter.OfRelatedPlayer _ -> pure predicate

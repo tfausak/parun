@@ -34,6 +34,7 @@ import qualified Pawl.Types.AgainstSlot as AgainstSlot
 import qualified Pawl.Types.Binding as Binding.Type
 import Pawl.Types.Card (Card)
 import qualified Pawl.Types.CardType as CardType
+import qualified Pawl.Types.ExileLink as ExileLink
 import qualified Pawl.Types.Filter as Filter.Type
 import Pawl.Types.Game (Game)
 import Pawl.Types.GameState (GameState)
@@ -397,7 +398,12 @@ slotContext perspective unannounced bindings source amount gs =
             -- against an aiming object -- so no atom here wants the aimer.
             Filter.aimingController = Nothing,
             -- CR 607.2a's last exiled card is the MANA unit's, never a slot's.
-            Filter.sourceLastExiled = Nothing
+            Filter.sourceLastExiled = Nothing,
+            -- CR 607.2a / 614.14: the cards in exile linked to the source, by the
+            -- object rather than the ability, ObjectRef.EachCardExiledWithSource's
+            -- relation -- Mimeoplasm, Revered One's "target creature card exiled
+            -- with it".
+            Filter.sourceExiled = Set.filter (\oid -> fmap ExileLink.source (Map.lookup oid (GameState.exiledWith gs)) == Just source) (GameState.exile gs)
           }
       -- CR 608.2h's last-known reader for an object the bound refers to but no
       -- slot TARGETS -- Nihiloor's tapped creature, a group its own effect bound
