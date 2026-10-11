@@ -5849,6 +5849,9 @@ matchesTriggerGiven bindings board gs bearer you cond event = case cond of
   -- a bearer standing on the battlefield sees every move, a hand's included, by
   -- CR 603.10's first sentence.
   --
+  -- Not implemented: a card revealed in a hidden zone (CR 701.20a) is one all
+  -- players can see too, but this reads the zone alone (#4996).
+  --
   -- The Filter reads each ARRIVAL, CardPutIntoGraveyard's posture, and not the
   -- object that departed: a merged permanent is one departure and one arrival
   -- per component (CR 730.3), and CR 730.2d makes it a token whenever its

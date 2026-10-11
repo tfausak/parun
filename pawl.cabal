@@ -1146,6 +1146,8 @@ library codec
     Pawl.Codec.Revealed
     Pawl.Codec.RevealedSpec
     Pawl.Codec.RevealSpec
+    Pawl.Codec.RevealWindow
+    Pawl.Codec.RevealWindowSpec
     Pawl.Codec.RollDie
     Pawl.Codec.RollDieSpec
     Pawl.Codec.RollModifier
@@ -2615,6 +2617,7 @@ library types
     Pawl.Types.Reveal
     Pawl.Types.RevealCause
     Pawl.Types.Revealed
+    Pawl.Types.RevealWindow
     Pawl.Types.RollAdjustment
     Pawl.Types.RollDie
     Pawl.Types.RollModifier

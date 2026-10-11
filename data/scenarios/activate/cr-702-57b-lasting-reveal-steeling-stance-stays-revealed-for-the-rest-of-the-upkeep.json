@@ -1,0 +1,156 @@
+{
+  "description": "CR 702.57b lasting reveal Steeling Stance stays revealed for the rest of the upkeep",
+  "note": "Forecast's reveal outlives its ability: the card stays revealed after the ability resolves while the upkeep lasts, and stops being revealed as the draw step begins.",
+  "board": {
+    "seats": [
+      {
+        "name": "alice",
+        "battlefield": [
+          {
+            "card": "Goblin Piker",
+            "label": "goblin-piker"
+          },
+          {
+            "card": "Plains",
+            "label": "plains",
+            "ready": true
+          }
+        ],
+        "hand": [
+          {
+            "card": "Steeling Stance",
+            "label": "stance"
+          }
+        ],
+        "library": [
+          {
+            "card": "Goblin Piker"
+          },
+          {
+            "card": "Goblin Piker"
+          }
+        ]
+      },
+      {
+        "name": "bob",
+        "library": [
+          {
+            "card": "Goblin Piker"
+          },
+          {
+            "card": "Goblin Piker"
+          }
+        ]
+      }
+    ],
+    "active": "alice",
+    "turn": 2,
+    "step": "Upkeep"
+  },
+  "timeline": [
+    {
+      "turn": 2,
+      "step": "Upkeep",
+      "player": "alice",
+      "check": {
+        "View": {
+          "of": "Seers",
+          "object": "$stance",
+          "is": [
+            "alice"
+          ]
+        }
+      }
+    },
+    {
+      "turn": 2,
+      "step": "Upkeep",
+      "player": "alice",
+      "do": {
+        "Activate": {
+          "object": "$stance",
+          "ability": 0,
+          "targets": [
+            "$goblin-piker"
+          ],
+          "mana": [
+            "$plains"
+          ]
+        }
+      }
+    },
+    {
+      "turn": 2,
+      "step": "Upkeep",
+      "player": "alice",
+      "check": {
+        "View": {
+          "of": "Seers",
+          "object": "$stance",
+          "is": [
+            "alice",
+            "bob"
+          ]
+        }
+      }
+    },
+    {
+      "turn": 2,
+      "step": "Upkeep",
+      "player": "alice",
+      "do": "Pass"
+    },
+    {
+      "turn": 2,
+      "step": "Upkeep",
+      "player": "alice",
+      "check": {
+        "View": {
+          "of": "Stack",
+          "is": []
+        }
+      }
+    },
+    {
+      "turn": 2,
+      "step": "Upkeep",
+      "player": "alice",
+      "check": {
+        "PowerToughness": {
+          "object": "$goblin-piker",
+          "power": 3,
+          "toughness": 2
+        }
+      }
+    },
+    {
+      "turn": 2,
+      "step": "Upkeep",
+      "player": "alice",
+      "check": {
+        "View": {
+          "of": "Seers",
+          "object": "$stance",
+          "is": [
+            "alice",
+            "bob"
+          ]
+        }
+      }
+    },
+    {
+      "turn": 2,
+      "step": "DrawStep",
+      "player": "alice",
+      "check": {
+        "View": {
+          "of": "Seers",
+          "object": "$stance",
+          "is": [
+            "alice"
+          ]
+        }
+      }
+    }
+  ]
+}

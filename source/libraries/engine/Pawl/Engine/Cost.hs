@@ -155,6 +155,7 @@ import qualified Pawl.Types.Quantity as Quantity.Type
 import qualified Pawl.Types.Recipient as Recipient
 import qualified Pawl.Types.ReturnPermanents as ReturnPermanents
 import qualified Pawl.Types.RevealCause as RevealCause
+import qualified Pawl.Types.RevealWindow as RevealWindow
 import qualified Pawl.Types.Revealed as Revealed
 import qualified Pawl.Types.Rounding as Rounding
 import Pawl.Types.RowSource (RowSource)
@@ -2401,8 +2402,8 @@ beholdCandidates slots pid oid criterion gs =
 --
 -- Each is revealed where it is in the hand, conditioned on the ZONE rather than
 -- on which half the answer came from, so the two halves cannot disagree.
-beholdObjects :: Map.Map SlotName.SlotName (Set.Set Recipient.Recipient) -> PlayerId -> ObjectId -> Natural -> Filter.Type.Filter Keyword.Type.Keyword -> Game (Maybe [ObjectId])
-beholdObjects slots pid oid n criterion = do
+beholdObjects :: Maybe ObjectId -> Map.Map SlotName.SlotName (Set.Set Recipient.Recipient) -> PlayerId -> ObjectId -> Natural -> Filter.Type.Filter Keyword.Type.Keyword -> Game (Maybe [ObjectId])
+beholdObjects paidFor slots pid oid n criterion = do
   gs <- State.get
   let pool = beholdCandidates slots pid oid criterion gs
       pick chosen owed
@@ -2416,8 +2417,20 @@ beholdObjects slots pid oid n criterion = do
             maybe (pure Nothing) (\one -> pick (one : chosen) (owed - 1)) picked
   beheld <- pick [] n
   Monad.forM_ (Maybe.fromMaybe [] beheld) $ \chosen ->
-    Monad.when (fmap Object.zone (Game.lookupObject chosen gs) == Just Zone.Hand) (Event.reveal RevealCause.Ordinary pid chosen)
+    Monad.when (fmap Object.zone (Game.lookupObject chosen gs) == Just Zone.Hand) (revealPaying paidFor pid chosen)
   pure beheld
+
+-- CR 701.20a: reveal a card as part of a cost, kept revealed from the
+-- announcement until `paidFor`, the spell or ability object paid for, leaves the
+-- stack. Nothing where no stack object exists -- a combat toll, a mana ability
+-- (CR 605.3a), a CR 116 special action (`payAction`) or CR 118.12's payment at
+-- resolution -- and then the reveal is the log entry alone.
+revealPaying :: Maybe ObjectId -> PlayerId -> ObjectId -> Game ()
+revealPaying paidFor pid card = do
+  Event.reveal RevealCause.Ordinary pid card
+  case paidFor of
+    Just sid -> Event.stampReveal (RevealWindow.WhileOnStack sid) card
+    Nothing -> pure ()
 
 -- The cards this player may exile to pay an ExileCardsFromGraveyard component:
 -- their OWN graveyard, in its own order, narrowed by the criterion. Per-owner by
@@ -4736,12 +4749,14 @@ announceSubstitutionsReading slots substituting pid oid cost = case Cost.mana co
 --
 -- `announced` is the object the announcement put on the stack -- CR 601.2a's
 -- spell, or CR 602.2a's ability object rather than the source `subject` carries
--- -- and nothing for every other payment. A third question again, read twice:
--- it is where CR 400.7d's record of the mana spent goes (`recordSpent` in
--- payManaExcept), and its Object.bindings are the targets CR 601.2c chose,
--- which CR 601.2h's payment comes after -- so a component's criterion can name
--- them (announcedSlots below). Both callers stamp the bindings before calling
--- this: Pawl.Engine.Cast.castProposed and Pawl.Engine.Activate.activateAbility.
+-- -- and nothing for every other payment. A third question again, read three
+-- times: it is where CR 400.7d's record of the mana spent goes (`recordSpent` in
+-- payManaExcept), its Object.bindings are the targets CR 601.2c chose, which CR
+-- 601.2h's payment comes after -- so a component's criterion can name them
+-- (announcedSlots below) -- and it is what CR 701.20a keeps a cost's revealed
+-- card revealed for (`revealPaying`). Both callers stamp the bindings before
+-- calling this: Pawl.Engine.Cast.castProposed and
+-- Pawl.Engine.Activate.activateAbility.
 --
 -- `perform` is CR 405.6c's executor, carried down to the mana window for a mana
 -- ability that has an effect beyond its mana (Pawl.Types.ManaAbilityPerformer).
@@ -4870,7 +4885,7 @@ paySubstitutingReading slots perform began earlier moment subject announced spen
       (paidMana, substitutes, own) <- payManaWindow perform Set.empty announced subject spending pid announceMana manaCost
       paidOwn <-
         if paidMana
-          then payComponents moment slots pid oid (Cost.components cost)
+          then payComponents moment announced slots pid oid (Cost.components cost)
           else pure Payment.Unpaid
       -- The convoking taps are paid as a group of their own so that their
       -- bindings stay apart (CR 702.51c), after the other substitutes. The
@@ -4880,11 +4895,11 @@ paySubstitutingReading slots perform began earlier moment subject announced spen
       (outcome, substituted) <- case paidOwn of
         Payment.Unpaid -> pure (Payment.Unpaid, Map.empty)
         Payment.Paid bound -> do
-          paidOthers <- payComponents moment slots pid oid (substituteComponents others)
+          paidOthers <- payComponents moment announced slots pid oid (substituteComponents others)
           case paidOthers of
             Payment.Unpaid -> pure (Payment.Unpaid, Map.empty)
             Payment.Paid _ -> do
-              paidConvoking <- payComponents moment slots pid oid (substituteComponents convoking)
+              paidConvoking <- payComponents moment announced slots pid oid (substituteComponents convoking)
               pure $ case paidConvoking of
                 Payment.Unpaid -> (Payment.Unpaid, Map.empty)
                 Payment.Paid convoked -> (mergeBound bound (mergeBound convoked paidOthers), convoked)
@@ -5130,7 +5145,7 @@ payTagged pid charges = case charges of
           [] -> pure (bindsNothing, reverse stretches)
           component : others -> do
             opened <- State.get
-            outcome <- payComponent PaymentMoment.OutsideResolution Map.empty pid oid component
+            outcome <- payComponent PaymentMoment.OutsideResolution Nothing Map.empty pid oid component
             closed <- State.get
             let kept = [unreversibleStretch pid oid opened closed | libraryMembershipChanged opened closed || revealsLibraryCard opened closed] <> stretches
             case outcome of
@@ -5198,18 +5213,18 @@ revealsLibraryCard opened closed =
 --
 -- FILTERED, NOT TRUSTED: Game.permute keeps the printed order for an answer that
 -- is not a permutation of the offered indices.
-payComponents :: PaymentMoment.PaymentMoment -> Map.Map SlotName.SlotName (Set.Set Recipient.Recipient) -> PlayerId -> ObjectId -> [CostComponent.CostComponent Keyword.Type.Keyword] -> Game Payment.Payment
-payComponents moment slots pid oid components = do
+payComponents :: PaymentMoment.PaymentMoment -> Maybe ObjectId -> Map.Map SlotName.SlotName (Set.Set Recipient.Recipient) -> PlayerId -> ObjectId -> [CostComponent.CostComponent Keyword.Type.Keyword] -> Game Payment.Payment
+payComponents moment paidFor slots pid oid components = do
   let (second, first) = List.partition paidInSecondPass components
-  outcome <- payPass moment slots pid oid first
+  outcome <- payPass moment paidFor slots pid oid first
   case outcome of
     Payment.Unpaid -> pure Payment.Unpaid
-    Payment.Paid bound -> fmap (mergeBound bound) (payPass moment slots pid oid second)
+    Payment.Paid bound -> fmap (mergeBound bound) (payPass moment paidFor slots pid oid second)
 
 -- ONE of CR 601.2h's two passes: the payer orders it where the order is
 -- observable, then it is paid in that order.
-payPass :: PaymentMoment.PaymentMoment -> Map.Map SlotName.SlotName (Set.Set Recipient.Recipient) -> PlayerId -> ObjectId -> [CostComponent.CostComponent Keyword.Type.Keyword] -> Game Payment.Payment
-payPass moment slots pid oid components = payInOrder moment slots pid oid =<< orderPass pid oid components
+payPass :: PaymentMoment.PaymentMoment -> Maybe ObjectId -> Map.Map SlotName.SlotName (Set.Set Recipient.Recipient) -> PlayerId -> ObjectId -> [CostComponent.CostComponent Keyword.Type.Keyword] -> Game Payment.Payment
+payPass moment paidFor slots pid oid components = payInOrder moment paidFor slots pid oid =<< orderPass pid oid components
 
 -- The payer's order for one pass, asked only where it is observable.
 orderPass :: PlayerId -> ObjectId -> [CostComponent.CostComponent Keyword.Type.Keyword] -> Game [CostComponent.CostComponent Keyword.Type.Keyword]
@@ -5293,14 +5308,14 @@ paidInSecondPass component = case component of
   -- library, so the header's first pass holds it.
   CostComponent.BeholdAndExile _ -> False
 
-payInOrder :: PaymentMoment.PaymentMoment -> Map.Map SlotName.SlotName (Set.Set Recipient.Recipient) -> PlayerId -> ObjectId -> [CostComponent.CostComponent Keyword.Type.Keyword] -> Game Payment.Payment
-payInOrder moment slots pid oid components = case components of
+payInOrder :: PaymentMoment.PaymentMoment -> Maybe ObjectId -> Map.Map SlotName.SlotName (Set.Set Recipient.Recipient) -> PlayerId -> ObjectId -> [CostComponent.CostComponent Keyword.Type.Keyword] -> Game Payment.Payment
+payInOrder moment paidFor slots pid oid components = case components of
   [] -> pure bindsNothing
   component : rest -> do
-    outcome <- payComponent moment slots pid oid component
+    outcome <- payComponent moment paidFor slots pid oid component
     case outcome of
       Payment.Unpaid -> pure Payment.Unpaid
-      Payment.Paid bound -> fmap (mergeBound bound) (payInOrder moment slots pid oid rest)
+      Payment.Paid bound -> fmap (mergeBound bound) (payInOrder moment paidFor slots pid oid rest)
 
 -- The slots two components of one cost bound, in one map: see
 -- Pawl.Engine.Binding.mergePaid.
@@ -6210,7 +6225,7 @@ payActivation perform inFlight pid oid cost = do
   -- No slots, by CR 605.1a rather than by this caller's position: a mana ability
   -- "doesn't require a target", so its announcement binds nothing a criterion
   -- could read.
-  outcome <- if paid then payComponents PaymentMoment.OutsideResolution Map.empty pid oid (Cost.components cost) else pure Payment.Unpaid
+  outcome <- if paid then payComponents PaymentMoment.OutsideResolution Nothing Map.empty pid oid (Cost.components cost) else pure Payment.Unpaid
   let settled = case outcome of
         Payment.Paid _ -> paid
         Payment.Unpaid -> False
@@ -6277,16 +6292,19 @@ stampChosenPlayer oid pid =
 -- Pawl.CostSpec's Hanweir Battlements, Ashnod's Altar, Brittle Effigy and
 -- Trumpeting Carnosaur groups and Pawl.ActivateSpec's "CR 601.2h energy an
 -- Aether Hub spends mid-payment is not there for Pay X {E}" are the proofs.
-payComponent :: PaymentMoment.PaymentMoment -> Map.Map SlotName.SlotName (Set.Set Recipient.Recipient) -> PlayerId -> ObjectId -> CostComponent.CostComponent Keyword.Type.Keyword -> Game Payment.Payment
-payComponent moment slots pid oid component = do
+--
+-- `paidFor` is the stack object the cost is paid for, `pay`'s `announced`, which
+-- a cost's reveal is kept for (`revealPaying`).
+payComponent :: PaymentMoment.PaymentMoment -> Maybe ObjectId -> Map.Map SlotName.SlotName (Set.Set Recipient.Recipient) -> PlayerId -> ObjectId -> CostComponent.CostComponent Keyword.Type.Keyword -> Game Payment.Payment
+payComponent moment paidFor slots pid oid component = do
   gs <- State.get
   if canPayComponent slots pid oid component gs
-    then payPayable moment slots pid oid component
+    then payPayable moment paidFor slots pid oid component
     else pure Payment.Unpaid
 
 -- `payComponent`'s arms, each reached only once CR 118.3 holds.
-payPayable :: PaymentMoment.PaymentMoment -> Map.Map SlotName.SlotName (Set.Set Recipient.Recipient) -> PlayerId -> ObjectId -> CostComponent.CostComponent Keyword.Type.Keyword -> Game Payment.Payment
-payPayable moment slots pid oid component = case component of
+payPayable :: PaymentMoment.PaymentMoment -> Maybe ObjectId -> Map.Map SlotName.SlotName (Set.Set Recipient.Recipient) -> PlayerId -> ObjectId -> CostComponent.CostComponent Keyword.Type.Keyword -> Game Payment.Payment
+payPayable moment paidFor slots pid oid component = case component of
   -- CR 701.26a through tapObject; CR 107.5's "already tapped" is `payComponent`'s
   -- guard.
   CostComponent.TapThis -> do
@@ -6334,7 +6352,7 @@ payPayable moment slots pid oid component = case component of
   -- no card in `data/cards/` adds a half-life cost that way.
   CostComponent.PayHalfLife rounding -> do
     gs <- State.get
-    payPayable moment slots pid oid (CostComponent.PayLife (CostAmount.Fixed (halfLifeOf rounding pid gs)))
+    payPayable moment paidFor slots pid oid (CostComponent.PayLife (CostAmount.Fixed (halfLifeOf rounding pid gs)))
   -- CR 701.17a: the top `n` cards of the PAYING player's own library (CR 400.3),
   -- moved to their graveyard. `canPayComponent` above has already refused a cost
   -- milling more than the library holds (CR 701.17b); a MillCountR row resizing
@@ -6356,7 +6374,7 @@ payPayable moment slots pid oid component = case component of
   -- prints this reads back what it showed.
   CostComponent.RevealTopOfLibrary n -> do
     gs <- State.get
-    Monad.mapM_ (Event.reveal RevealCause.Ordinary pid) (List.genericTake n (Game.zoneMembers Zone.Library pid gs))
+    Monad.mapM_ (revealPaying paidFor pid) (List.genericTake n (Game.zoneMembers Zone.Library pid gs))
     pure bindsNothing
   -- CR 701.21a: the player chooses which of their permanents dies, so this is a
   -- prompt. Elided only when forced -- exactly as many candidates as the count,
@@ -6611,24 +6629,24 @@ payPayable moment slots pid oid component = case component of
   -- read at resolution (Living Destiny); Pawl.Engine.Cast folds the payment's slots
   -- onto the spell.
   --
-  -- Not implemented: CR 701.20a's duration -- the card stays revealed until the
-  -- spell leaves the stack, and pawl's reveal is a one-off log entry (#1408).
-  -- Nothing observes that entry today either: neutralizing the Event.reveal call
-  -- leaves Pawl.CostSpec's Living Destiny cases green, since no printing in the
-  -- pool triggers on a reveal and every answerer already sees every hand. The
-  -- call stays because CR 701.20a is what makes this a reveal rather than a look
-  -- (CR 701.20e), and it is a fence rather than proven behaviour.
+  -- CR 701.20a keeps the card revealed while the spell is on the stack
+  -- (`revealPaying`); the scenario
+  -- cost/cr-701-20a-lasting-reveal-living-destiny-s-revealed-card-stays-revealed-while-it-is-cast
+  -- is the proof. An activated ability's cost is unproven (gap #4997).
   CostComponent.RevealCardFromHand criterion -> do
     gs <- State.get
     picked <- Game.chooseAmong (\decider who -> Prompt.ChooseCardInHand decider who oid) pid (revealFromHandCandidates slots pid oid criterion gs)
     case picked of
       Nothing -> pure Payment.Unpaid
       Just chosen -> do
-        Event.reveal RevealCause.Ordinary pid chosen
+        revealPaying paidFor pid chosen
         pure (Payment.Paid (Binding.paidObjects Binding.revealedCard (Set.singleton (Recipient.ToObject chosen))))
   -- CR 701.4a's two-zone choice through `beholdObjects`: this many distinct
   -- objects out of the payer's hand and the permanents they control taken
-  -- together, each revealed where it came out of the hand.
+  -- together, each revealed where it came out of the hand, and kept revealed
+  -- while the spell is on the stack (`revealPaying`): the scenario
+  -- cost/cr-701-20a-lasting-reveal-caustic-exhale-s-beheld-card-stays-revealed-while-it-is-cast
+  -- is the proof.
   --
   -- BINDS the objects under Binding.beheldObject, which is what CR 701.4b's "if a
   -- [quality] was beheld" is read off -- through Quantity.WasBound, which asks
@@ -6636,7 +6654,7 @@ payPayable moment slots pid oid component = case component of
   -- Osseous Exhale is the card, and Pawl.CostSpec's "CR 701.4b the quality is
   -- the one the object had when it was beheld" is the proof.
   CostComponent.Behold (Behold.MkBehold n criterion) -> do
-    beheld <- beholdObjects slots pid oid n criterion
+    beheld <- beholdObjects paidFor slots pid oid n criterion
     pure (maybe Payment.Unpaid (Payment.Paid . Binding.paidObjects Binding.beheldObject . Set.fromList . fmap Recipient.ToObject) beheld)
   -- CR 701.4a's behold of ONE object, `beholdObjects` as the arm above, then CR
   -- 406.2's exile of what was beheld through Event.changeZoneReturning.
@@ -6646,7 +6664,7 @@ payPayable moment slots pid oid component = case component of
   -- the link to the permanent the spell becomes. Pawl.CostSpec's Champion of the
   -- Weird group is the proof.
   CostComponent.BeholdAndExile criterion -> do
-    beheld <- beholdObjects slots pid oid 1 criterion
+    beheld <- beholdObjects paidFor slots pid oid 1 criterion
     case beheld of
       Just [chosen] -> do
         arrived <- Event.changeZoneReturning chosen Zone.Exile
@@ -7019,7 +7037,7 @@ payPayable moment slots pid oid component = case component of
   -- Necropsy's ruling, so a payment reaching here unfixed has no caller.
   CostComponent.CollectEvidenceOfTargets -> do
     gs <- State.get
-    payPayable moment slots pid oid (fixComputed slots gs component)
+    payPayable moment paidFor slots pid oid (fixComputed slots gs component)
   -- CR 406.2 with no prompt: CR 404.2's order determines the card. Unpaid where
   -- the graveyard holds no matching card, agreeing with canPayComponent above.
   CostComponent.ExileTopFromGraveyard criterion -> do

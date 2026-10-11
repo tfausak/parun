@@ -27,6 +27,7 @@ import qualified Pawl.Types.PlayerId as PlayerId
 import qualified Pawl.Types.PrintingId as PrintingId
 import qualified Pawl.Types.ProjectedCharacteristics as ProjectedCharacteristics
 import qualified Pawl.Types.Recipient as Recipient
+import qualified Pawl.Types.RevealWindow as RevealWindow
 import qualified Pawl.Types.RoomHalf as RoomHalf
 import qualified Pawl.Types.RoomIndex as RoomIndex
 import qualified Pawl.Types.Sickness as Sickness
@@ -148,6 +149,11 @@ data Object = MkObject
     -- Per-incarnation: reset by newIncarnation (CR 400.7), which is exactly the
     -- rule's "until it leaves the exile zone".
     exileLookers :: Set.Set ExileLooker.ExileLooker,
+    -- | CR 701.20a: how long this card stays revealed, if it is.
+    --
+    -- Per-incarnation: reset by newIncarnation (CR 400.7), which ends every
+    -- window when the card changes zones.
+    revealed :: Maybe RevealWindow.RevealWindow,
     -- | CR 120.3e: damage dealt to a creature is MARKED on it. A count and not a
     -- list of tagged units, every damage rider being consumed at deal time and CR
     -- 704.5g reading only the total. Removed at cleanup (CR 514.2), by a
@@ -915,6 +921,7 @@ new o s z t =
       -- is face up outright. Event.changeZoneEntering is the "otherwise".
       exiledFaceDown = False,
       exileLookers = Set.empty,
+      revealed = Nothing,
       damage = 0,
       sickness = Sickness.Sick,
       -- CR 702.30a read straight: the object that comes back came under its

@@ -20,6 +20,7 @@ import qualified Pawl.Engine.Mulligan as Mulligan
 import qualified Pawl.Engine.Replay as Replay
 import qualified Pawl.Engine.Resolve.Effect as Resolve
 import qualified Pawl.Engine.Setup as Setup
+import qualified Pawl.Engine.Visibility as Visibility
 import qualified Pawl.Registry as Registry
 import qualified Pawl.Spec as Spec
 import qualified Pawl.Support as S
@@ -46,6 +47,7 @@ import qualified Pawl.Types.ProjectedCharacteristics as PC
 import qualified Pawl.Types.Prompt as Prompt
 import qualified Pawl.Types.Response as Response
 import qualified Pawl.Types.Revealed as Revealed
+import qualified Pawl.Types.Visibility as Visibility.Type
 import qualified Pawl.Types.Zone as Zone
 
 -- Move every object a player owns onto their library (mirror of
@@ -705,6 +707,20 @@ spec s registry =
       Spec.assertEqWith s "CR 103.6b: one Goblin token, not one per taking" (goblins after) 1
       Spec.assertEqWith s "the capped card is not offered a second time" (length offers) 1
       Spec.assertEqWith s "CR 701.20a: and it was revealed once" (revealedNames afterWindow) ["Chancellor of the Forge"]
+    Spec.it s "CR 103.6b a card revealed from the opening hand stays revealed until the first turn begins" $ do
+      -- The reveal is a lasting one: bob sees the Chancellor in alice's hand
+      -- until the first turn begins, and not once its first step has begun.
+      chancellor <- S.printingOf s registry "Chancellor of the Forge"
+      mountain <- S.printingOf s registry "Mountain"
+      let gs0 = chancellorGame chancellor mountain 20
+          ((_, afterWindow), _offers) = State.runState (Engine.runGame (takeOpeningThenDecline 1) gs0 (Mulligan.openingHands S.performer [S.alice, S.bob])) []
+          begun = S.runPure S.identityAnswer afterWindow Engine.runStep
+          named oid = fmap S.nameOf (Game.cardOf oid afterWindow) == Just (CardName.MkCardName (Text.pack "Chancellor of the Forge"))
+      case filter named (Game.zoneMembers Zone.Hand S.alice afterWindow) of
+        [card] -> do
+          Spec.assertEqWith s "CR 103.6b: the opponent sees it before the first turn" (Visibility.sees S.bob card afterWindow) Visibility.Type.Visible
+          Spec.assertEqWith s "CR 103.6b: and not once the first turn's first step has begun" (Visibility.sees S.bob card begun) Visibility.Type.Obscured
+        cards -> Spec.assertEqWith s "one Chancellor in alice's hand" (length cards) 1
     Spec.it s "CR 103.6: a card revealed first may still begin the game on the battlefield" $ do
       -- The discriminating case for CR 103.6's "any such actions in any order":
       -- CR 103.6b caps the reveal and nothing else, so the battlefield action

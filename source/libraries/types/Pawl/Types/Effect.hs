@@ -219,10 +219,8 @@ data Effect card ability
     -- remembers how many counted, read back as Quantity.InSlot.
     Mill Mill.Mill
   | -- | CR 701.20a: the cards the ObjectRef names are revealed -- shown to all
-    -- players -- and nothing moves (CR 701.20b).
-    --
-    -- Not implemented: rule 701.20a keeps a revealed card revealed "for as long
-    -- as necessary", which pawl has nowhere to store (#1408).
+    -- players -- and nothing moves (CR 701.20b). Its "for as long as necessary"
+    -- ends inside the resolution, so it is the momentary Revealed event.
     Reveal Reveal.Reveal
   | -- | CR 400.11c: the resolving controller puts as many cards they own from
     -- outside the game as the payload's count allows where its destination

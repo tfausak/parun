@@ -240,7 +240,7 @@ doorSpec s registry =
     Spec.it s "CR 701.9a paying DiscardThis puts that card in the graveyard" $ do
       piker <- S.printingOf s registry "Goblin Piker"
       let (inHand, gs0) = S.addHandCard piker S.alice (Setup.emptyGame S.bothPlayers)
-          after = S.runPure S.identityAnswer gs0 (Cost.payComponent PaymentMoment.OutsideResolution Map.empty S.alice inHand (CostComponent.DiscardThis DiscardCause.Ordinary))
+          after = S.runPure S.identityAnswer gs0 (Cost.payComponent PaymentMoment.OutsideResolution Nothing Map.empty S.alice inHand (CostComponent.DiscardThis DiscardCause.Ordinary))
       Spec.assertEqWith s "the hand is empty" (length (Game.zoneMembers Zone.Hand S.alice after)) 0
       Spec.assertEqWith s "and the card is in the graveyard" (length (Game.zoneMembers Zone.Graveyard S.alice after)) 1
     -- CR 118.6 vs CR 118.5a: the distinction the Maybe carries. Nothing is an
@@ -335,7 +335,7 @@ doorSpec s registry =
       piker <- S.printingOf s registry "Goblin Piker"
       let (oid, gs0) = S.addPermanent piker S.alice (Setup.emptyGame S.bothPlayers)
           three = S.addPlayerCounter PlayerCounterKind.Energy 3 S.alice gs0
-          after = S.runPure S.identityAnswer three (Monad.void (Cost.payComponent PaymentMoment.OutsideResolution Map.empty S.alice oid (CostComponent.PayEnergy (CostAmount.Fixed 2))))
+          after = S.runPure S.identityAnswer three (Monad.void (Cost.payComponent PaymentMoment.OutsideResolution Nothing Map.empty S.alice oid (CostComponent.PayEnergy (CostAmount.Fixed 2))))
       Spec.assertEqWith s "one energy left" (S.playerCounterOf PlayerCounterKind.Energy S.alice after) 1
     -- CR 118.12's counter-placing cost (CR 701.63a's endure). The gate is the
     -- permanent still being on the battlefield to take the counters, and NOT
@@ -4584,7 +4584,7 @@ millikinSpec s registry =
       let (millikinId, board) = millikinBoard millikin 3
           ability = theAbility millikin
           ((_, after), asked) = State.runState (Engine.runGame recordingOrders board (Activate.activateAbility S.alice millikinId ability)) []
-          sharedPass = State.execState (Engine.runGame recordingOrders board (Cost.payComponents PaymentMoment.OutsideResolution Map.empty S.alice millikinId [CostComponent.TapThis, CostComponent.SacrificeThis])) []
+          sharedPass = State.execState (Engine.runGame recordingOrders board (Cost.payComponents PaymentMoment.OutsideResolution Nothing Map.empty S.alice millikinId [CostComponent.TapThis, CostComponent.SacrificeThis])) []
       Spec.assertEqWith s "CR 601.2h the payer was asked to order nothing" (length asked) 0
       Spec.assertEqWith s "CR 701.17a and both parts were still paid: one card is in the graveyard" (length (Game.zoneMembers Zone.Graveyard S.alice after)) 1
       Spec.assertEqWith s "CR 107.5 with Millikin tapped for the other part" (fmap Object.tapped (Game.lookupObject millikinId after)) (Just TapState.Tapped)
