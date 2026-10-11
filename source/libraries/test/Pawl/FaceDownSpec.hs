@@ -1281,14 +1281,14 @@ offerSpec s registry = Spec.describe s "Offer" $ do
         -- the Chamber's own entry replacement prompts for it, and this file is
         -- about rule 708 rather than about that prompt (Pawl.PlayerEffectSpec
         -- covers the choice itself).
-        gs = withChosenNames chamber (Set.singleton (S.printingName ainok)) withChamber
+        gs = withChosenNames chamber (Map.singleton S.alice (S.printingName ainok)) withChamber
         offered = Action.legalActions S.alice gs
         name = S.printingName ainok
     Spec.assertBool s (notElem (Action.Type.Cast oid name Facing.FaceUp) offered) "the named card cannot be cast face up"
     Spec.assertBool s (elem (Action.Type.Cast oid name (Facing.faceDown FaceDownReason.Morphed)) offered) "but the morph cast is nameless and still offered"
 
--- Put a set of chosen card names onto a permanent (CR 201.4 / 614.1c).
-withChosenNames :: ObjectId.ObjectId -> Set.Set CardName.CardName -> GameState.GameState -> GameState.GameState
+-- Put chosen card names, keyed by chooser, onto a permanent (CR 201.4 / 614.1c).
+withChosenNames :: ObjectId.ObjectId -> Map.Map PlayerId.PlayerId CardName.CardName -> GameState.GameState -> GameState.GameState
 withChosenNames oid names gs =
   gs {GameState.objects = Map.adjust (\o -> o {Object.chosenNames = names}) oid (GameState.objects gs)}
 

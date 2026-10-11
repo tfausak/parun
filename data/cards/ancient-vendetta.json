@@ -50,7 +50,10 @@
                         "type": "Exile"
                       },
                       "filter": {
-                        "type": "HasChosenName"
+                        "type": "HasChosenName",
+                        "value": {
+                          "type": "AnyChooser"
+                        }
                       },
                       "owner": {
                         "type": "InSlot",

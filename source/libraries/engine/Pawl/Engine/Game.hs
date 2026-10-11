@@ -680,9 +680,9 @@ chosenSubtypeWithLastKnown :: ObjectId -> GameState -> Maybe Subtype.Subtype
 chosenSubtypeWithLastKnown oid gs = Monad.join (liveOrLastKnown Object.chosenSubtype LastKnown.chosenSubtype oid gs)
 
 -- chosenColorsWithLastKnown for CR 201.4's chosen names (Object.chosenNames). The
--- empty set where neither the object nor its last known information exists.
-chosenNamesWithLastKnown :: ObjectId -> GameState -> Set.Set CardName.CardName
-chosenNamesWithLastKnown oid gs = Maybe.fromMaybe Set.empty (liveOrLastKnown Object.chosenNames LastKnown.chosenNames oid gs)
+-- empty map where neither the object nor its last known information exists.
+chosenNamesWithLastKnown :: ObjectId -> GameState -> Map.Map PlayerId CardName.CardName
+chosenNamesWithLastKnown oid gs = Maybe.fromMaybe Map.empty (liveOrLastKnown Object.chosenNames LastKnown.chosenNames oid gs)
 
 -- CR 509.1g: is this creature blocking? Combat.blockers is keyed by ATTACKER, so
 -- the answer is membership in some attacker's set rather than a key lookup, or

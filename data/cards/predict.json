@@ -56,7 +56,10 @@
                       },
                       "tally": {
                         "filter": {
-                          "type": "HasChosenName"
+                          "type": "HasChosenName",
+                          "value": {
+                            "type": "AnyChooser"
+                          }
                         },
                         "slot": "named"
                       }

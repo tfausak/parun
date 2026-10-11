@@ -460,7 +460,7 @@ filterNames asking criterion = case criterion of
   Filter.SameControllerAsBound slot -> slotNames asking slot
   Filter.SameControllerAsHostOfBound slot -> slotNames asking slot
   Filter.SharesCreatureTypeWithBound slot -> slotNames asking slot
-  Filter.HasChosenName -> False
+  Filter.HasChosenName {} -> False
   Filter.HasChosenColor -> False
   Filter.HasChosenSubtype -> False
   Filter.IsExiledWithSource _ -> False

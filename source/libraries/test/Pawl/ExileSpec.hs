@@ -961,7 +961,7 @@ windbriskHeights s registry = Spec.describe s "Windbrisk Heights" $ do
     let mutavault = CardName.MkCardName (Text.pack "Mutavault")
         naming name gs =
           let (chamber, withChamber) = S.addPermanent nullChamber S.alice gs
-           in withChamber {GameState.objects = Map.adjust (\o -> o {Object.chosenNames = Set.singleton name}) chamber (GameState.objects withChamber)}
+           in withChamber {GameState.objects = Map.adjust (\o -> o {Object.chosenNames = Map.singleton S.alice name}) chamber (GameState.objects withChamber)}
         mutavaults = S.countOnBattlefieldByName mutavault S.alice
         named = legWith (naming mutavault) 0 3 land
         unnamed = legWith (naming (CardName.MkCardName (Text.pack "Goblin Piker"))) 0 3 land

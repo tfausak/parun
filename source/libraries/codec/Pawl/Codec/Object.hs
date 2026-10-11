@@ -109,7 +109,7 @@ codec = Fields.object $ do
   attachedTo <- Fields.defaulted "attachedTo" (Object.attachedTo defaults) (Common.maybe Recipient.codec) Object.attachedTo
   chosenColors <- Fields.defaulted "chosenColors" (Object.chosenColors defaults) (Common.set Color.codec) Object.chosenColors
   chosenSubtype <- Fields.defaulted "chosenSubtype" (Object.chosenSubtype defaults) (Common.maybe Subtype.codec) Object.chosenSubtype
-  chosenNames <- Fields.defaulted "chosenNames" (Object.chosenNames defaults) (Common.set CardName.codec) Object.chosenNames
+  chosenNames <- Fields.defaulted "chosenNames" (Object.chosenNames defaults) (Common.naturalMap PlayerId.codec CardName.codec) Object.chosenNames
   chosenPlayer <- Fields.defaulted "chosenPlayer" (Object.chosenPlayer defaults) (Common.maybe PlayerId.codec) Object.chosenPlayer
   timestamp <- Fields.required "timestamp" Timestamp.codec Object.timestamp
   face <- Fields.defaulted "face" (Object.face defaults) (Common.maybe CardName.codec) Object.face
