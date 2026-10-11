@@ -2923,7 +2923,8 @@ apply batch candidate event =
                 count
                 offered
             -- ONE event (CR 608.2f): "exile any number of creature cards" is one
-            -- action on several objects.
+            -- action on several objects. The Sutured Ghoul scenario in
+            -- data/scenarios/entry-replacement proves it: Spirit Mascot fires once.
             arrivals <- changeZonesTogether (fmap (\card -> (card, Zone.Exile)) chosen)
             State.modify' $ \gs2 ->
               gs2 {GameState.exiledWith = foldr (\arrival -> Map.insert arrival ExileLink.MkExileLink {ExileLink.source = oid, ExileLink.ability = Nothing}) (GameState.exiledWith gs2) (foldMap Foldable.toList arrivals)}

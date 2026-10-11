@@ -1641,8 +1641,8 @@ sacrificeCandidates you slots pid source filter_ gs =
 -- departs), so the members still to come are sitting in the graveyard this reads.
 -- The `batch` set the entry loop carries does not name them: it holds the
 -- siblings that have already ARRIVED, whose CR 400.7 incarnations are on the
--- battlefield and so are no candidate here. data/scenarios/entry-replacement's
--- Sutured Ghoul pair proves it.
+-- battlefield and so are no candidate here. Pawl.PowerToughnessSpec's Sutured
+-- Ghoul pair proves it.
 graveyardCandidates :: PlayerId -> PlayerScope -> Filter.Type.Filter Keyword.Type.Keyword -> GameState -> [ObjectId]
 graveyardCandidates pid scope filter_ gs =
   let context = Filter.contextFor (Game.teams gs) (Just pid) Nothing
