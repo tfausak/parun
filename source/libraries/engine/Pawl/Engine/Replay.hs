@@ -23,6 +23,7 @@ import qualified Pawl.Types.CardName as CardName
 import qualified Pawl.Types.CoinFace as CoinFace
 import qualified Pawl.Types.CommandZoneDecision as CommandZoneDecision
 import qualified Pawl.Types.Concession as Concession
+import qualified Pawl.Types.CounterKindFor as CounterKindFor
 import qualified Pawl.Types.DamageEvent as DamageEvent
 import Pawl.Types.Desync (Desync)
 import qualified Pawl.Types.Desync as Desync
@@ -104,8 +105,9 @@ encode p answer = case p of
   Prompt.ChooseReadAheadChapter {} -> Response.ChoseReadAheadChapter answer
   Prompt.ChooseDamageSource {} -> Response.ChoseDamageSource answer
   Prompt.ChooseDelayedTriggerEvent {} -> Response.ChoseDelayedTriggerEvent answer
-  Prompt.ChooseMovedCounter {} -> Response.ChoseMovedCounter answer
-  Prompt.ChooseEntryCounter {} -> Response.ChoseEntryCounter answer
+  Prompt.ChooseCounterKind _ _ for _ -> case for of
+    CounterKindFor.MovedBetween _ _ -> Response.ChoseMovedCounter answer
+    CounterKindFor.EnteringWith _ -> Response.ChoseEntryCounter answer
   Prompt.ChooseMovedCounters {} -> Response.ChoseMovedCounters answer
   Prompt.ChooseStoredRerolls {} -> Response.ChoseStoredRerolls answer
   Prompt.ChooseMovedCountersAtLeastOne {} -> Response.ChoseMovedCountersAtLeastOne answer
@@ -381,11 +383,9 @@ decode p response = case p of
   Prompt.ChooseDelayedTriggerEvent {} -> case response of
     Response.ChoseDelayedTriggerEvent n -> Just n
     _ -> Nothing
-  Prompt.ChooseMovedCounter {} -> case response of
-    Response.ChoseMovedCounter kind -> Just kind
-    _ -> Nothing
-  Prompt.ChooseEntryCounter {} -> case response of
-    Response.ChoseEntryCounter kind -> Just kind
+  Prompt.ChooseCounterKind _ _ for _ -> case (for, response) of
+    (CounterKindFor.MovedBetween _ _, Response.ChoseMovedCounter kind) -> Just kind
+    (CounterKindFor.EnteringWith _, Response.ChoseEntryCounter kind) -> Just kind
     _ -> Nothing
   Prompt.ChooseMovedCounters {} -> case response of
     Response.ChoseMovedCounters counters -> Just counters
@@ -910,9 +910,9 @@ defaultAnswer p = case p of
   Prompt.ChooseDelayedTriggerEvent {} -> 0
   -- CR 122.5: the prompt is only raised with two or more kinds actually on the
   -- object the counter leaves, and every one of them is a legal choice.
-  Prompt.ChooseMovedCounter _ _ _ _ candidates -> NonEmpty.head candidates
-  -- CR 614.1c: every kind offered is a legal choice. The first printed.
-  Prompt.ChooseEntryCounter _ _ _ candidates -> NonEmpty.head candidates
+  -- CR 122.5 / 614.1c: every kind offered is a legal choice -- for a move, a
+  -- kind actually on the object the counter leaves.
+  Prompt.ChooseCounterKind _ _ _ candidates -> NonEmpty.head candidates
   -- CR 122.5 again: "any number" includes none, and moving nothing is the answer
   -- a transcript running short can always give. ChooseProliferate's posture, not
   -- the maximal one -- a default that emptied the first object would rewrite a

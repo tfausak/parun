@@ -2194,6 +2194,7 @@ library types
     Pawl.Types.Countering
     Pawl.Types.CounterKind
     Pawl.Types.CounterKindFamily
+    Pawl.Types.CounterKindFor
     Pawl.Types.CounterName
     Pawl.Types.CounterPattern
     Pawl.Types.CounterPlacement

@@ -6,6 +6,7 @@ module Pawl.Scenario.Prompt where
 
 import qualified Data.Text as Text
 import qualified Pawl.Types.AnyNumberOf as AnyNumberOf
+import qualified Pawl.Types.CounterKindFor as CounterKindFor
 import qualified Pawl.Types.Decider as Decider
 import qualified Pawl.Types.PlayerId as PlayerId
 import qualified Pawl.Types.Prompt as Prompt
@@ -69,8 +70,7 @@ deciderOf prompt = case prompt of
   Prompt.ChooseMixedCounterRemoval decider _ _ _ _ _ -> Just (Decider.unwrap decider)
   Prompt.ChooseVote decider _ _ _ -> Just (Decider.unwrap decider)
   Prompt.ChooseVoteWord decider _ _ _ -> Just (Decider.unwrap decider)
-  Prompt.ChooseMovedCounter decider _ _ _ _ -> Just (Decider.unwrap decider)
-  Prompt.ChooseEntryCounter decider _ _ _ -> Just (Decider.unwrap decider)
+  Prompt.ChooseCounterKind decider _ _ _ -> Just (Decider.unwrap decider)
   Prompt.ChooseMovedCounters decider _ _ _ _ -> Just (Decider.unwrap decider)
   Prompt.ChooseStoredRerolls decider _ _ _ -> Just (Decider.unwrap decider)
   Prompt.ChooseMovedCountersAtLeastOne decider _ _ _ _ -> Just (Decider.unwrap decider)
@@ -239,8 +239,10 @@ kindOf prompt = Text.pack $ case prompt of
   Prompt.ChooseMixedCounterRemoval {} -> "ChooseMixedCounterRemoval"
   Prompt.ChooseVote {} -> "ChooseVote"
   Prompt.ChooseVoteWord {} -> "ChooseVoteWord"
-  Prompt.ChooseMovedCounter {} -> "ChooseMovedCounter"
-  Prompt.ChooseEntryCounter {} -> "ChooseEntryCounter"
+  -- The names scenario files answer these by, one per CounterKindFor.
+  Prompt.ChooseCounterKind _ _ for _ -> case for of
+    CounterKindFor.MovedBetween _ _ -> "ChooseMovedCounter"
+    CounterKindFor.EnteringWith _ -> "ChooseEntryCounter"
   Prompt.ChooseMovedCounters {} -> "ChooseMovedCounters"
   Prompt.ChooseStoredRerolls {} -> "ChooseStoredRerolls"
   Prompt.ChooseMovedCountersAtLeastOne {} -> "ChooseMovedCountersAtLeastOne"

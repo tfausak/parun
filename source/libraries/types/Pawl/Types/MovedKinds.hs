@@ -11,7 +11,7 @@ import qualified Pawl.Types.Quantity as Quantity
 -- +1\/+1 counter", which settles the kind on the card, so nothing is asked --
 -- that is 'Named'. Agent's Toolkit says "move a counter", naming none, which
 -- leaves WHICH counter moves to the player (Pawl.Types.Prompt's
--- ChooseMovedCounter) -- that is 'Chosen'. Fate Transfer says "move all
+-- ChooseCounterKind) -- that is 'Chosen'. Fate Transfer says "move all
 -- counters", which names no kind and asks nothing either, because every kind
 -- crosses -- that is 'Every'. Resourceful Defense says "move any number of
 -- counters", which names neither a kind nor a count and asks for BOTH at once

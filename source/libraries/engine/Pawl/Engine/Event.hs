@@ -96,6 +96,7 @@ import qualified Pawl.Types.ContinuousEffect as ContinuousEffect
 import qualified Pawl.Types.CounterCause as CounterCause
 import qualified Pawl.Types.CounterChange as CounterChange
 import qualified Pawl.Types.CounterKind as CounterKind
+import qualified Pawl.Types.CounterKindFor as CounterKindFor
 import qualified Pawl.Types.CounterR as CounterR
 import qualified Pawl.Types.Counterability as Counterability
 import qualified Pawl.Types.Countering as Countering
@@ -2660,7 +2661,9 @@ apply batch candidate event =
       --
       -- That argument covers the costs no earlier choice can leave unpayable:
       -- this one is "any number", OrTapped's life may be declined, and the exile
-      -- (EntryRewrite.ExileFromGraveyard) does as much as it can (CR 101.3).
+      -- (EntryRewrite.ExileFromGraveyard) does as much as it can (CR 101.3) except
+      -- where it carries `orGraveyard`, whose count is an X that CR 107.3m makes 0
+      -- for every member of a batch (that arm says why).
       -- EntryRewrite.SacrificeToEnter's fixed count can be starved, so THIS
       -- answer is judged against the fixed costs of the members still to come
       -- (Replacement.jointlyPayable, the SacrificeToEnter arm's check). Judged,
@@ -2960,7 +2963,7 @@ apply batch candidate event =
                       if length offeredKinds == 1
                         then pure (NonEmpty.head offeredKinds)
                         else do
-                          answer <- Game.choose (Prompt.ChooseEntryCounter (Decide.deciderFor controller gs2) controller oid offeredKinds)
+                          answer <- Game.choose (Prompt.ChooseCounterKind (Decide.deciderFor controller gs2) controller (CounterKindFor.EnteringWith oid) offeredKinds)
                           -- FILTERED, NOT TRUSTED (#222).
                           pure (if answer `elem` offeredKinds then answer else NonEmpty.head offeredKinds)
                     addEnteringCounters oid kind (amount each)
@@ -4368,8 +4371,9 @@ copiedSnapshotWithLastKnown oid gs = case Game.lastKnownOf oid gs of
 --
 -- Answers Nothing when the object entered, and otherwise why it did not: CR
 -- 614.1a's "instead" from an EntryRewrite.SacrificeToEnter arm that could not be
--- paid, the one EntryR arm that answers `Nothing`, or CR 303.4g from
--- seatEnteringAura. Each caller unmakes the entry.
+-- paid, or CR 614.12's "if you can't" from an EntryRewrite.ExileFromGraveyard
+-- arm carrying `orGraveyard` -- the two EntryR arms that answer `Nothing` -- or
+-- CR 303.4g from seatEnteringAura. Each caller unmakes the entry.
 --
 -- Always the LIVE board (`Nothing`), even when the zone change containing this
 -- entry belongs to a CR 608.2f batch: the entering object is not on the
@@ -6671,8 +6675,9 @@ changeZoneWithCause discarded asOf batch oid requestedDest requestedPosition see
                     fallen <- case refusal of
                       Nothing -> pure Seq.empty
                       -- CR 614.1a: EntryRewrite.SacrificeToEnter's "if you don't, put
-                      -- it into its owner's graveyard", the entry unmade as CR
-                      -- 712.13a's is below. A card that was already in the graveyard
+                      -- it into its owner's graveyard", and CR 614.12's
+                      -- EntryRewrite.ExileFromGraveyard "if you can't", the entry
+                      -- unmade as CR 712.13a's is below. A card that was already in the graveyard
                       -- stays there.
                       Just EntryRefusal.Unpaid -> do
                         State.put unentered
@@ -7968,14 +7973,17 @@ createTokens controller card copy n tapped entering attached = do
               pure entered
 
 -- CR 614.1a on the two roads that MINT onto the battlefield: an object whose
--- EntryRewrite.SacrificeToEnter went unpaid never entered, so it is removed --
+-- EntryRewrite.SacrificeToEnter went unpaid, or whose ExileFromGraveyard with
+-- `orGraveyard` could not exile its count, never entered, so it is removed --
 -- as is one that became an Aura with nothing to enchant, which CR 303.4g's last
 -- sentence says "isn't created".
 -- Not implemented: putting a refused token or conjured card into its owner's
 -- graveyard, which only a "put into a graveyard from anywhere" trigger could
--- tell apart -- no card in data/cards/ creates or conjures a card carrying the
--- row (grep "SacrificeToEnter", 2026-09-29), and Heart of Yavimaya copied by a
--- token-copy effect would refute that.
+-- tell apart -- no card in data/cards/ creates or conjures a card carrying
+-- either row (grep "SacrificeToEnter" and "orGraveyard", 2026-10-11), and Heart
+-- of Yavimaya copied by a token-copy effect would refute that. A minted
+-- Frankenstein's Monster cannot: CR 107.3m makes its X 0, and exiling zero cards
+-- never falls short.
 unmake :: ObjectId -> Game ()
 unmake oid = State.modify' (Game.deleteObject oid)
 
@@ -8123,8 +8131,9 @@ meld controller victims resultCard = do
       -- simultaneously-entering sibling to exclude. createTokens' order exactly:
       -- the object is materialized first, because CR 614.12 asks for the
       -- characteristics it would have on the battlefield. The answer is dropped:
-      -- only EntryRewrite.SacrificeToEnter refuses an entry, and a melded
-      -- permanent's rows are its meld result's, none of which prints one.
+      -- only EntryRewrite.SacrificeToEnter and an ExileFromGraveyard carrying
+      -- `orGraveyard` refuse an entry, and a melded permanent's rows are its meld
+      -- result's, none of which prints either.
       Monad.void (runEntry Set.empty newId)
       -- CR 603.6a's enters-the-battlefield triggers scan this, and it is recorded
       -- after the entry loop so the snapshot describes a settled permanent --

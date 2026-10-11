@@ -26,6 +26,7 @@ import qualified Pawl.Support as S
 import qualified Pawl.Types.BeginningStep as BeginningStep
 import qualified Pawl.Types.CardName as CardName
 import qualified Pawl.Types.CounterKind as CounterKind
+import qualified Pawl.Types.CounterKindFor as CounterKindFor
 import qualified Pawl.Types.Facing as Facing
 import qualified Pawl.Types.GameEvent as GameEvent
 import qualified Pawl.Types.GameState as GameState
@@ -255,7 +256,7 @@ goldberryAnswer :: ObjectId.ObjectId -> Prompt.Prompt r -> State.State Int r
 goldberryAnswer giver p = case p of
   Prompt.ChooseTargets _ _ _ asked ->
     pure (Map.map (Set.filter ((==) (Just giver) . Recipient.objectOf) . snd) asked)
-  Prompt.ChooseMovedCounter {} -> do
+  Prompt.ChooseCounterKind _ _ (CounterKindFor.MovedBetween _ _) _ -> do
     State.modify' (+ 1)
     pure (S.identityAnswer p)
   Prompt.ChooseMovedCounters {} -> do
@@ -399,7 +400,7 @@ absentKindSpec s registry = Spec.describe s "CR 122.5 moving a counter of each k
 -- @Prompt r -> r@ could not say so.
 cannibalAnswer :: Prompt.Prompt r -> State.State Int r
 cannibalAnswer p = case p of
-  Prompt.ChooseMovedCounter {} -> do
+  Prompt.ChooseCounterKind _ _ (CounterKindFor.MovedBetween _ _) _ -> do
     State.modify' (+ 1)
     pure (S.identityAnswer p)
   Prompt.ChooseMovedCounters {} -> do
