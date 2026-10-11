@@ -430,7 +430,7 @@ attackAndBlock blocks attacker p = case p of
 -- this turn, you gain 4 life." (data/cards/fyndhorn-druid.json; Oracle text
 -- checked against api.scryfall.com, 2026-09-16.)
 --
--- Filter.IsBlocked cannot answer it and neither can a Pawl.Types.LastKnown field:
+-- Filter.HasBlockStatus cannot answer it and neither can a Pawl.Types.LastKnown field:
 -- the question is asked of an object that is gone, and the printed clause says
 -- THIS TURN rather than "as it died". Only the turn's GameEvent.AttackerBlocked
 -- log still holds it.

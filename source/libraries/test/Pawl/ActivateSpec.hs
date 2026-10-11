@@ -49,6 +49,7 @@ import qualified Pawl.Types.Activator as Activator
 import qualified Pawl.Types.ActiveReplacement as ActiveReplacement
 import qualified Pawl.Types.AttackTarget as AttackTarget
 import qualified Pawl.Types.BeginningStep as BeginningStep
+import qualified Pawl.Types.BlockStatus as BlockStatus
 import qualified Pawl.Types.Card as Card.Type
 import qualified Pawl.Types.CardName as CardName
 import qualified Pawl.Types.CardType as CardType
@@ -527,14 +528,21 @@ fluctuatorBoard forest mauler piker lands mFluctuator =
 -- "Ninjutsu {1}{U}" and a combat-damage draw trigger; the creature half is never
 -- cast below, so every test isolates the keyword.
 --
--- The board: alice attacks bob with a Goblin Piker and nothing blocks it, two
--- Islands pay the {1}{U}, and the Ninja is in her hand. bob controls nothing at
--- all, which is what leaves the Piker unblocked and is the one thing the negative
--- board changes back.
+-- The board: alice attacks bob with a Goblin Piker and, in the declare blockers
+-- step, nothing blocks it; two Islands pay the {1}{U}, and the Ninja is in her
+-- hand. bob controls nothing at all, which is what leaves the Piker unblocked.
 ninjutsuBoard :: (Monad m) => Spec.Spec m n -> Registry.Registry m -> m (ObjectId.ObjectId, ObjectId.ObjectId, GameState.GameState)
 ninjutsuBoard s registry = do
   (ninjaId, attackerId, gs) <- ninjutsuBeforeAttack s registry
-  pure (ninjaId, attackerId, (S.runPure S.aggressiveAnswer gs (Combat.declareAttackers S.manaPerformer S.alice)) {GameState.priority = Just S.alice})
+  pure (ninjaId, attackerId, withBlockersDeclared (S.runPure S.aggressiveAnswer gs (Combat.declareAttackers S.manaPerformer S.alice)))
+
+-- CR 509.1: the declare blockers step's turn-based action, under
+-- aggressiveAnswer, which blocks the first attacker with every creature bob has;
+-- then alice holds priority in that step (CR 509.2). Only now is an attacker
+-- blocked or unblocked (CR 509.1h).
+withBlockersDeclared :: GameState.GameState -> GameState.GameState
+withBlockersDeclared gs =
+  (S.runPure S.aggressiveAnswer gs {GameState.phase = Phase.Combat CombatStep.DeclareBlockers} (Combat.declareBlockers S.manaPerformer)) {GameState.priority = Just S.alice}
 
 -- ninjutsuBoard one turn-based action earlier: the same seats, the same mana and
 -- the same hand, with the attack not yet declared. The paired control for every
@@ -600,7 +608,7 @@ ninjutsuSpec s registry = Spec.describe s "Ninjutsu" $ do
     (ninjaId, jaceId, g0) <- ninjutsuJaceBoard s registry
     let atJace = AttackTarget.OfPlaneswalker jaceId
         atBob = AttackTarget.OfPlayer S.bob
-        declared aimed = (S.runPure (sendAt aimed) g0 (Combat.declareAttackers S.manaPerformer S.alice)) {GameState.priority = Just S.alice}
+        declared aimed = withBlockersDeclared (S.runPure (sendAt aimed) g0 (Combat.declareAttackers S.manaPerformer S.alice))
         ninjaTarget aimed asked =
           let gs = declared aimed
            in case Activatable.abilitiesFor ninjaId gs of
@@ -618,7 +626,7 @@ ninjutsuSpec s registry = Spec.describe s "Ninjutsu" $ do
   -- rather than being offered bob, which the answerer would take.
   Spec.it s "CR 508.4a the Ninja is not attacking when the Piker's Jace has left" $ do
     (ninjaId, jaceId, g0) <- ninjutsuJaceBoard s registry
-    let gs = (S.runPure (sendAt (AttackTarget.OfPlaneswalker jaceId)) g0 (Combat.declareAttackers S.manaPerformer S.alice)) {GameState.priority = Just S.alice}
+    let gs = withBlockersDeclared (S.runPure (sendAt (AttackTarget.OfPlaneswalker jaceId)) g0 (Combat.declareAttackers S.manaPerformer S.alice))
     case Activatable.abilitiesFor ninjaId gs of
       [ability] -> do
         let activated = S.runPure (sendAt (AttackTarget.OfPlayer S.bob)) gs (Activate.activateAbility S.alice ninjaId ability)
@@ -636,9 +644,34 @@ ninjutsuSpec s registry = Spec.describe s "Ninjutsu" $ do
     (ninjaId, _, gs) <- ninjutsuBeforeAttack s registry
     Spec.assertBool s (null (activationsOf ninjaId (Action.legalActions S.alice gs))) "no Activate offered before attackers are declared"
 
+  -- CR 509.1h and the glossary's "Unblocked Creature": an attacker becomes
+  -- unblocked only as blockers are declared, so "not blocked" is not enough.
+  -- Three boards with the same seats, mana and hand: the attack declared, then
+  -- blockers declared with none for the Piker, then with bob's Wall of Stone
+  -- blocking it. Only the middle one has an unblocked creature to return.
+  Spec.it s "CR 509.1h ninjutsu waits for blockers, and not for a blocked attacker" $ do
+    ninja <- S.printingOf s registry "Ninja of the Deep Hours"
+    piker <- S.printingOf s registry "Goblin Piker"
+    island <- S.printingOf s registry "Island"
+    wall <- S.printingOf s registry "Wall of Stone"
+    let attackedWith theirs =
+          let (g0, ours, _) = S.combatBoardOf [piker] theirs
+              (_, g1) = S.addPermanent island S.alice g0
+              (_, g2) = S.addPermanent island S.alice g1
+              (ninjaId, g3) = S.addHandCard ninja S.alice g2
+           in (ninjaId, ours, (S.runPure S.aggressiveAnswer g3 (Combat.declareAttackers S.manaPerformer S.alice)) {GameState.priority = Just S.alice})
+        offered ninjaId gs = not (null (activationsOf ninjaId (Action.legalActions S.alice gs)))
+        (openId, _, attacked) = attackedWith []
+        (walledId, walledPikers, walled) = attackedWith [wall]
+        blocked = withBlockersDeclared walled
+    Spec.assertBool s (not (offered openId attacked)) "CR 509.1h in the declare attackers step the Piker is not yet unblocked, so ninjutsu is not offered"
+    Spec.assertBool s (offered openId (withBlockersDeclared attacked)) "with blockers declared and none for it, the Piker is unblocked and ninjutsu is offered"
+    Spec.assertBool s (not (offered walledId blocked)) "with the Wall declared blocking it, the Piker is blocked and ninjutsu is not offered"
+    Spec.assertEqWith s "setup: the Piker attacked and the Wall blocked it" (fmap (`Combat.isBlocked` blocked) walledPikers) [True]
+
   -- The ability rule 702.49a MEANS: the printed {1}{U} plus the rule's return
   -- component. LAST in the group deliberately: it is a shape assertion, so any
-  -- mutation of the minted cost reddens it, and the three gameplay cases above
+  -- mutation of the minted cost reddens it, and the gameplay cases above
   -- have to be able to report first.
   --
   -- The reveal is NOT in the cost: CR 602.2a reveals a card whose ability is
@@ -663,7 +696,7 @@ ninjutsuSpec s registry = Spec.describe s "Ninjutsu" $ do
                           [ Filter.Type.HasCardType CardType.Creature,
                             Filter.Type.ControlledBy PlayerRelation.You,
                             Filter.Type.IsAttacking,
-                            Filter.Type.Not Filter.Type.IsBlocked
+                            Filter.Type.HasBlockStatus BlockStatus.Unblocked
                           ]
                       )
                   )

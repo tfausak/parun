@@ -6,6 +6,7 @@ import qualified Pawl.Codec.Keyword as Keyword
 import qualified Pawl.JsonCodec.Codec as Codec
 import qualified Pawl.JsonCodec.Common as Common
 import qualified Pawl.Spec as Spec
+import qualified Pawl.Types.BlockStatus as BlockStatus
 import qualified Pawl.Types.BoundMeasure as BoundMeasure
 import qualified Pawl.Types.CardName as CardName
 import qualified Pawl.Types.CardType as CardType
@@ -354,12 +355,12 @@ spec s = Spec.describe s "Pawl.Codec.Filter" $ do
       codec
       Filter.IsBlocking
       " {\"type\":\"IsBlocking\"} "
-  Spec.it s "IsBlocked" $
+  Spec.it s "HasBlockStatus" $
     Common.assertCodec
       s
       codec
-      Filter.IsBlocked
-      " {\"type\":\"IsBlocked\"} "
+      (Filter.HasBlockStatus BlockStatus.Unblocked)
+      " {\"type\":\"HasBlockStatus\",\"value\":{\"type\":\"Unblocked\"}} "
   Spec.it s "AttackedThisTurn" $
     Common.assertCodec
       s

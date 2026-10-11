@@ -13,6 +13,7 @@ import qualified Pawl.Engine.Binding as Binding
 import qualified Pawl.Engine.Keyword as Keyword
 import qualified Pawl.Engine.NameWords as NameWords
 import qualified Pawl.Types.Behold as Behold
+import qualified Pawl.Types.BlockStatus as BlockStatus
 import qualified Pawl.Types.BoundMeasure as BoundMeasure
 import qualified Pawl.Types.CardName as CardName
 import qualified Pawl.Types.CardType as CardType
@@ -295,11 +296,12 @@ data View = MkView
     -- Combat.blockers is keyed by attacker, and a blocking creature is a MEMBER
     -- of some attacker's set.
     blocking :: Bool,
-    -- CR 509.1h: is this candidate a BLOCKED creature right now? Read from
+    -- CR 509.1h: is this candidate a blocked or an unblocked creature right
+    -- now, or neither -- not attacking, or blockers not yet declared? Read from
     -- GameState.combat like the two above, and off the same map `blocking`
     -- reads -- but from its KEYS, which is Pawl.Engine.Combat.isBlocked's
     -- question and never `blocking`'s.
-    blocked :: Bool,
+    blockStatus :: Maybe BlockStatus.BlockStatus,
     -- CR 509.1g: the creatures blocking this candidate right now, the member set
     -- Combat.blockers keeps under its key. Empty wherever `blocked` is False.
     blockers :: Set.Set ObjectId.ObjectId,
@@ -866,9 +868,9 @@ playerView pid =
       declaredAttackedThisCombat = False,
       -- CR 509.1a: only a creature can block, either.
       blocking = False,
-      -- CR 509.1h: blocked-ness is a status of an ATTACKING creature, and by CR
+      -- CR 509.1h: block status is a status of an ATTACKING creature, and by CR
       -- 506.3 a player never is one.
-      blocked = False,
+      blockStatus = Nothing,
       blockers = Set.empty,
       -- CR 506.3 again: a player was never declared as an attacker either.
       attackedThisTurn = False,
@@ -1997,7 +1999,7 @@ matches context view predicate = case predicate of
   -- (Effect.BecomesBlocked). A live read of the same record, off the keys rather
   -- than the sets -- so this can be True with nothing at all blocking the
   -- creature, which is the case CR 510.1c gives no combat damage.
-  Filter.IsBlocked -> blocked view
+  Filter.HasBlockStatus status -> blockStatus view == Just status
   -- CR 608.2i: a look-back read of the turn's event log. Unlike IsAttacking it
   -- cannot stop being true within a turn -- nothing removes a GameEvent -- so a
   -- creature removed from combat (CR 506.4) still attacked, which is what
@@ -2354,7 +2356,7 @@ rewrite pairs predicate = case predicate of
   Filter.IsAttackingPlaneswalker _ -> predicate
   Filter.IsAttackingBattle _ -> predicate
   Filter.IsBlocking -> predicate
-  Filter.IsBlocked -> predicate
+  Filter.HasBlockStatus _ -> predicate
   Filter.AttackedThisTurn -> predicate
   Filter.DeclaredAttackerThisCombat -> predicate
   Filter.DeclaredAttackedThisCombat -> predicate
@@ -3102,7 +3104,7 @@ bakeBound players predicate = case predicate of
   Filter.IsAttackingPlaneswalker _ -> predicate
   Filter.IsAttackingBattle _ -> predicate
   Filter.IsBlocking -> predicate
-  Filter.IsBlocked -> predicate
+  Filter.HasBlockStatus _ -> predicate
   Filter.AttackedThisTurn -> predicate
   Filter.DeclaredAttackerThisCombat -> predicate
   Filter.DeclaredAttackedThisCombat -> predicate
@@ -3273,7 +3275,7 @@ manaValueThresholds predicate = case predicate of
   Filter.IsAttackingPlaneswalker _ -> []
   Filter.IsAttackingBattle _ -> []
   Filter.IsBlocking -> []
-  Filter.IsBlocked -> []
+  Filter.HasBlockStatus _ -> []
   Filter.AttackedThisTurn -> []
   Filter.DeclaredAttackerThisCombat -> []
   Filter.DeclaredAttackedThisCombat -> []
@@ -3443,7 +3445,7 @@ statesAQuality predicate = case predicate of
   Filter.IsAttackingPlaneswalker _ -> True
   Filter.IsAttackingBattle _ -> True
   Filter.IsBlocking -> True
-  Filter.IsBlocked -> True
+  Filter.HasBlockStatus _ -> True
   Filter.AttackedThisTurn -> True
   Filter.DeclaredAttackerThisCombat -> True
   Filter.DeclaredAttackedThisCombat -> True
@@ -3590,7 +3592,7 @@ readsSourceValues predicate = case predicate of
   Filter.IsAttackingPlaneswalker _ -> False
   Filter.IsAttackingBattle _ -> False
   Filter.IsBlocking -> False
-  Filter.IsBlocked -> False
+  Filter.HasBlockStatus _ -> False
   Filter.AttackedThisTurn -> False
   Filter.DeclaredAttackerThisCombat -> False
   Filter.DeclaredAttackedThisCombat -> False
@@ -3758,7 +3760,7 @@ overBoundSlotsWith f predicate = case predicate of
   Filter.IsAttackingBattle _ -> pure predicate
   Filter.DeclaredAttackedThisCombat -> pure predicate
   Filter.IsBlocking -> pure predicate
-  Filter.IsBlocked -> pure predicate
+  Filter.HasBlockStatus _ -> pure predicate
   Filter.DeclaredAttackerThisCombat -> pure predicate
   Filter.DeclaredBlockerThisCombat -> pure predicate
   Filter.AttackedThisTurn -> pure predicate

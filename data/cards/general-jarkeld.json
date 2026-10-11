@@ -40,7 +40,10 @@
                           "type": "IsAttacking"
                         },
                         {
-                          "type": "IsBlocked"
+                          "type": "HasBlockStatus",
+                          "value": {
+                            "type": "Blocked"
+                          }
                         }
                       ]
                     },

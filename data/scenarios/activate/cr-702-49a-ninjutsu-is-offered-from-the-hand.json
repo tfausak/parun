@@ -65,6 +65,22 @@
           "player": "alice",
           "is": [
             "Pass",
+            "ActivateManaAbility Island",
+            "ActivateManaAbility Island#2"
+          ]
+        }
+      }
+    },
+    {
+      "turn": 1,
+      "step": "DeclareBlockers",
+      "player": "alice",
+      "check": {
+        "View": {
+          "of": "Offered",
+          "player": "alice",
+          "is": [
+            "Pass",
             "Activate Ninja of the Deep Hours",
             "ActivateManaAbility Island",
             "ActivateManaAbility Island#2"
@@ -72,5 +88,6 @@
         }
       }
     }
-  ]
+  ],
+  "note": "CR 509.1h: the Piker becomes unblocked only as blockers are declared, so ninjutsu is not offered in the declare attackers step and is in the declare blockers step, once bob (no creatures) has declared none."
 }

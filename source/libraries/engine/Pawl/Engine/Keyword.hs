@@ -31,6 +31,7 @@ import qualified Pawl.Types.AttachRestriction as AttachRestriction
 import qualified Pawl.Types.AttackTargetRef as AttackTargetRef
 import qualified Pawl.Types.Backup as Backup
 import qualified Pawl.Types.BeginningStep as BeginningStep
+import qualified Pawl.Types.BlockStatus as BlockStatus
 import qualified Pawl.Types.CantBeBlockedBy as CantBeBlockedBy
 import Pawl.Types.Card (Card)
 import qualified Pawl.Types.Card as Card
@@ -1116,6 +1117,10 @@ searchForSameManaValue cost filter_ destination =
 -- CR 509.1h is why unblocked has to be asked beside attacking: a creature blocked
 -- at the declaration "remains blocked even if all the creatures blocking it are
 -- removed from combat", so it is attacking and not returnable at the same time.
+-- And UNBLOCKED rather than not blocked: rule 509.1h confers either status only
+-- as blockers are declared, so in the declare attackers step there is nothing
+-- to return. Pawl.ActivateSpec's "CR 509.1h ninjutsu waits for blockers" proves
+-- it.
 -- The creature conjunct is rule 702.49a's own word: CR 506.4 removes an attacking
 -- permanent from combat when it stops being a creature, so it is not redundant
 -- with IsAttacking so much as the same fact asked from the other side.
@@ -1142,7 +1147,7 @@ ninjutsu (Ninjutsu.MkNinjutsu cost variant) =
                 [ Filter.HasCardType CardType.Creature,
                   Filter.ControlledBy PlayerRelation.You,
                   Filter.IsAttacking,
-                  Filter.Not Filter.IsBlocked
+                  Filter.HasBlockStatus BlockStatus.Unblocked
                 ]
           }
       effect =
@@ -3171,7 +3176,7 @@ plainAlternativeCosts keywords =
         -- four conjuncts exactly: the CR's glossary entry for "unblocked creature"
         -- makes it an ATTACKING creature no blocker was declared for, so
         -- IsAttacking is not an extra reading but the definition, and CR 509.1h is
-        -- why Not IsBlocked has to be asked beside it.
+        -- why the Unblocked status has to be asked beside it.
         Keyword.Sneak cost ->
           Just
             ( keyword,
@@ -3180,7 +3185,7 @@ plainAlternativeCosts keywords =
                     [ Filter.HasCardType CardType.Creature,
                       Filter.ControlledBy PlayerRelation.You,
                       Filter.IsAttacking,
-                      Filter.Not Filter.IsBlocked
+                      Filter.HasBlockStatus BlockStatus.Unblocked
                     ]
                 )
                 cost

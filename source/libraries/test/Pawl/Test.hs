@@ -98,6 +98,7 @@ import qualified Pawl.Codec.BlockCostSpec
 import qualified Pawl.Codec.BlockPermissionSpec
 import qualified Pawl.Codec.BlockProducerSpec
 import qualified Pawl.Codec.BlockRequirementSpec
+import qualified Pawl.Codec.BlockStatusSpec
 import qualified Pawl.Codec.BlockersAreSpec
 import qualified Pawl.Codec.BlocksDeclaredSpec
 import qualified Pawl.Codec.BoardSpec
@@ -954,6 +955,7 @@ spec s registry = do
   Pawl.Codec.ConvokingSpec.spec s
   Pawl.Codec.CrewingSpec.spec s
   Pawl.Codec.SaddlingSpec.spec s
+  Pawl.Codec.BlockStatusSpec.spec s
   Pawl.Codec.BlocksDeclaredSpec.spec s
   Pawl.Codec.CandidateIdSpec.spec s
   Pawl.Codec.CantAttackPlayerSpec.spec s
