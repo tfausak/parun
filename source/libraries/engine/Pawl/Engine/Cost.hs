@@ -2423,8 +2423,8 @@ beholdObjects paidFor slots pid oid n criterion = do
 -- CR 701.20a: reveal a card as part of a cost, kept revealed from the
 -- announcement until `paidFor`, the spell or ability object paid for, leaves the
 -- stack. Nothing where no stack object exists -- a combat toll, a mana ability
--- (CR 605.3a) or CR 118.12's payment at resolution -- and then the reveal is the
--- log entry alone.
+-- (CR 605.3a), a CR 116 special action (`payAction`) or CR 118.12's payment at
+-- resolution -- and then the reveal is the log entry alone.
 revealPaying :: Maybe ObjectId -> PlayerId -> ObjectId -> Game ()
 revealPaying paidFor pid card = do
   Event.reveal RevealCause.Ordinary pid card
@@ -6632,7 +6632,7 @@ payPayable moment paidFor slots pid oid component = case component of
   -- CR 701.20a keeps the card revealed while the spell is on the stack
   -- (`revealPaying`); the scenario
   -- cost/cr-701-20a-lasting-reveal-living-destiny-s-revealed-card-stays-revealed-while-it-is-cast
-  -- is the proof.
+  -- is the proof. An activated ability's cost is unproven (gap #4997).
   CostComponent.RevealCardFromHand criterion -> do
     gs <- State.get
     picked <- Game.chooseAmong (\decider who -> Prompt.ChooseCardInHand decider who oid) pid (revealFromHandCandidates slots pid oid criterion gs)
@@ -6643,7 +6643,10 @@ payPayable moment paidFor slots pid oid component = case component of
         pure (Payment.Paid (Binding.paidObjects Binding.revealedCard (Set.singleton (Recipient.ToObject chosen))))
   -- CR 701.4a's two-zone choice through `beholdObjects`: this many distinct
   -- objects out of the payer's hand and the permanents they control taken
-  -- together, each revealed where it came out of the hand.
+  -- together, each revealed where it came out of the hand, and kept revealed
+  -- while the spell is on the stack (`revealPaying`): the scenario
+  -- cost/cr-701-20a-lasting-reveal-caustic-exhale-s-beheld-card-stays-revealed-while-it-is-cast
+  -- is the proof.
   --
   -- BINDS the objects under Binding.beheldObject, which is what CR 701.4b's "if a
   -- [quality] was beheld" is read off -- through Quantity.WasBound, which asks

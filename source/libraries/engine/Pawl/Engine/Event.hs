@@ -8741,9 +8741,9 @@ turnUpKeptDraws = do
 -- is the direction that is never admissible.
 --
 -- CR 121.9's "may look at that card as they draw it before choosing" is satisfied
--- by the prompt naming the card. pawl has no per-player hidden-information filter
--- at all (#1412), so nothing here could have shown the player less
--- than the rule allows.
+-- by the prompt naming the card. Not implemented: an answerer is handed the
+-- whole state, hidden cards included (#1412), so nothing here could have shown
+-- the player less than the rule allows.
 --
 -- The reveal goes through the ordinary funnel with CR 702.94a's cause, which is
 -- what makes the linked trigger (CR 603.11) findable: `eventTriggers`' hand source
@@ -8758,8 +8758,9 @@ turnUpKeptDraws = do
 -- here only once that is done (CR 121.8, `turnUpKeptDraws`).
 --
 -- CR 702.94b's lasting reveal -- the card stays revealed until the ability leaves
--- the stack -- is Engine.placeBorne's CR 701.20a stamp, made for every trigger a
--- Revealed event fires; the card leaving the hand ends it with the incarnation.
+-- the stack -- is Engine.placeBorne's CR 701.20a stamp, made for every trigger
+-- whose Revealed event names a card still in place; the card leaving the hand
+-- ends it with the incarnation.
 offerMiracleReveal :: PlayerId -> ObjectId -> Game ()
 offerMiracleReveal pid drawn = do
   gs <- State.get
@@ -8954,6 +8955,10 @@ reveal cause pid oid = do
   Monad.mapM_ (State.modify' . recordEvent) (revealedOn cause pid oid gs)
 
 -- | CR 701.20a: keep a revealed card revealed for a window.
+--
+-- Not implemented: more than one window at once. A stamp replaces the card's
+-- window, so one reveal firing two triggers ends when the first resolves, and a
+-- shorter window can cut a longer one short (#4998).
 stampReveal :: RevealWindow.RevealWindow -> ObjectId -> Game ()
 stampReveal window oid = State.modify' (\gs -> gs {GameState.objects = Map.adjust (\obj -> obj {Object.revealed = Just window}) oid (GameState.objects gs)})
 

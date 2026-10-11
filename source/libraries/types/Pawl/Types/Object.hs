@@ -151,8 +151,8 @@ data Object = MkObject
     exileLookers :: Set.Set ExileLooker.ExileLooker,
     -- | CR 701.20a: how long this card stays revealed, if it is.
     --
-    -- Per-incarnation: reset by newIncarnation (CR 400.7), which is each window's
-    -- "until it leaves the zone".
+    -- Per-incarnation: reset by newIncarnation (CR 400.7), which ends every
+    -- window when the card changes zones.
     revealed :: Maybe RevealWindow.RevealWindow,
     -- | CR 120.3e: damage dealt to a creature is MARKED on it. A count and not a
     -- list of tagged units, every damage rider being consumed at deal time and CR

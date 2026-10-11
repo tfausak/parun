@@ -219,10 +219,9 @@ data GameEvent
     -- card". Strict, for Moved's reason. The RevealCause is CR 702.94a's "this
     -- way".
     --
-    -- Not implemented: CR 701.20a's lasting cases -- a card revealed to pay a
-    -- cost, and one that stays revealed while a triggered ability it caused is on
-    -- the stack -- which need a per-object flag no card in the pool asks for
-    -- (#1408).
+    -- The momentary reveal only. CR 701.20a's lasting ones -- a cost's, an
+    -- activation's from a hidden zone (CR 602.2a), a trigger's -- are the card's
+    -- Pawl.Types.Object.revealed window.
     Revealed Revealed.Revealed
   | -- | CR 701.6a: a spell was COUNTERED. Emitted by Pawl.Engine.Event.counter,
     -- the one funnel every countering goes through, and distinct from the Moved
