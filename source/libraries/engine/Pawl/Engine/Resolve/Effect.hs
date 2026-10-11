@@ -1684,7 +1684,8 @@ offerCastOnce runSubgame context named caster optionality verb retake offer = do
             -- (Pawl.Engine.Stack.resolveTopWith). A reversed cast waits on
             -- nothing.
             case (retake, spell) of
-              (Just controller, Just sid) ->
+              (Just controller, Just sid) -> do
+                stamp <- State.state Game.freshTimestamp
                 State.modify' $
                   pushControl
                     caster
@@ -1693,7 +1694,8 @@ offerCastOnce runSubgame context named caster optionality verb retake offer = do
                         PlayerControl.duration = ControlDuration.WhileResolving sid,
                         -- CR 723.7: Word of Command's mana clause is
                         -- "while doing so", the playing of the card.
-                        PlayerControl.manaFromLandsOnly = False
+                        PlayerControl.manaFromLandsOnly = False,
+                        PlayerControl.timestamp = stamp
                       }
               _ -> pure ()
             pure (Just (oid, spell))
@@ -4228,7 +4230,7 @@ applyOneEffect runSubgame resolving source controller legal chosen effect = case
               if ownLibrary
                 then State.gets (\g -> (PlayerEffect.searchingController searcher g, PlayerEffect.exilerWhileSearching searcher g))
                 else pure (Nothing, Nothing)
-            let searchControl you = PlayerControl.MkPlayerControl {PlayerControl.decider = Decider.MkDecider you, PlayerControl.duration = ControlDuration.WhileSearching, PlayerControl.manaFromLandsOnly = False}
+            let searchControl (you, stamp) = PlayerControl.MkPlayerControl {PlayerControl.decider = Decider.MkDecider you, PlayerControl.duration = ControlDuration.WhileSearching, PlayerControl.manaFromLandsOnly = False, PlayerControl.timestamp = stamp}
             Foldable.for_ searchController (State.modify' . pushControl searcher . searchControl)
             outsideAvailable <-
               if lookOutside
@@ -4841,9 +4843,19 @@ applyOneEffect runSubgame resolving source controller legal chosen effect = case
       case legalOne slot legal of
         Just (Recipient.ToPlayer target) ->
           -- CR 723.1: schedule control of `target` by this ability's controller
-          -- (CR 723.5). Map.insert overwrites a prior pending control (CR 723.1a).
-          let schedule g pid = g {GameState.pendingControl = Map.insert pid (Decider.MkDecider controller) (GameState.pendingControl g)}
-           in List.foldl' schedule gs (controlledTeam controller target gs)
+          -- (CR 723.5). Map.insert overwrites a prior pending control (CR 723.1a),
+          -- and the row is stamped NOW, as the effect is created.
+          let (stamp, stamped) = Game.freshTimestamp gs
+              row =
+                PlayerControl.MkPlayerControl
+                  { PlayerControl.decider = Decider.MkDecider controller,
+                    PlayerControl.duration = ControlDuration.UntilTurnEnds,
+                    -- CR 723.7: Mindslaver prints no restriction.
+                    PlayerControl.manaFromLandsOnly = False,
+                    PlayerControl.timestamp = stamp
+                  }
+              schedule g pid = g {GameState.pendingControl = Map.insert pid row (GameState.pendingControl g)}
+           in List.foldl' schedule stamped (controlledTeam controller target stamped)
         -- Not a player recipient or an illegal slot (CR 608.2b): no-op.
         _ -> gs
   -- CR 723.2: control that takes hold NOW and lapses when this object finishes
@@ -4859,13 +4871,15 @@ applyOneEffect runSubgame resolving source controller legal chosen effect = case
     State.modify' $ \gs ->
       case legalOne slot legal of
         Just (Recipient.ToPlayer target) ->
-          let row =
+          let (stamp, stamped) = Game.freshTimestamp gs
+              row =
                 PlayerControl.MkPlayerControl
                   { PlayerControl.decider = Decider.MkDecider controller,
                     PlayerControl.duration = ControlDuration.UntilResolutionEnds,
-                    PlayerControl.manaFromLandsOnly = landsOnly
+                    PlayerControl.manaFromLandsOnly = landsOnly,
+                    PlayerControl.timestamp = stamp
                   }
-           in List.foldl' (\g pid -> pushControl pid row g) gs (controlledTeam controller target gs)
+           in List.foldl' (\g pid -> pushControl pid row g) stamped (controlledTeam controller target stamped)
         -- Not a player recipient or an illegal slot (CR 608.2b): no-op.
         _ -> gs
   Effect.Destroy (Destroy.MkDestroy ref regenerability mSlot mBuried mPermanents) -> do

@@ -78,7 +78,6 @@ import qualified Pawl.Types.CombatStep as CombatStep
 import qualified Pawl.Types.Concession as Concession
 import qualified Pawl.Types.ControlChanged as ControlChanged
 import qualified Pawl.Types.ControlClock as ControlClock
-import qualified Pawl.Types.ControlDuration as ControlDuration
 import qualified Pawl.Types.CounterCause as CounterCause
 import qualified Pawl.Types.CounterKind as CounterKind
 import qualified Pawl.Types.Decider as Decider
@@ -1643,10 +1642,10 @@ beginTurn extra pid gs =
       -- clears the entry at the departure itself; this guard answers otherwise.
       promotedFor taker = case Map.lookup taker (GameState.pendingControl gs) of
         Nothing -> Nothing
-        Just decider -> case decider of
+        Just row -> case PlayerControl.decider row of
           Decider.MkDecider d ->
             if List.elem d (Game.stillPlaying gs)
-              then Just decider
+              then Just row
               else Nothing
       -- CR 805.4: every player whose turn this is, `pid` alone without the
       -- shared team turns option.
@@ -1738,17 +1737,9 @@ beginTurn extra pid gs =
             -- scheduled for every teammate (Resolve.Effect.controlledTeam).
             GameState.control =
               Map.fromList
-                [ ( taker,
-                    pure
-                      PlayerControl.MkPlayerControl
-                        { PlayerControl.decider = decider,
-                          PlayerControl.duration = ControlDuration.UntilTurnEnds,
-                          -- CR 723.7: Mindslaver prints no restriction.
-                          PlayerControl.manaFromLandsOnly = False
-                        }
-                  )
+                [ (taker, pure row)
                 | taker <- takers,
-                  Just decider <- [promotedFor taker]
+                  Just row <- [promotedFor taker]
                 ],
             GameState.pendingControl = List.foldl' (flip Map.delete) (GameState.pendingControl gs) takers
           }

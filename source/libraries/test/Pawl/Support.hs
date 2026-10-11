@@ -358,16 +358,24 @@ threePlayerGame = Setup.emptyGame threePlayers
 -- `controlled`'s choices for a whole turn, with no CR 723.7 restriction. What
 -- Mindslaver installs, and what a test hand-building a controlled board wants.
 turnControl :: PlayerId.PlayerId -> PlayerId.PlayerId -> Map.Map PlayerId.PlayerId (NonEmpty.NonEmpty PlayerControl.PlayerControl)
-turnControl decider controlled =
-  Map.singleton
-    controlled
-    ( pure
-        PlayerControl.MkPlayerControl
-          { PlayerControl.decider = Decider.MkDecider decider,
-            PlayerControl.duration = ControlDuration.UntilTurnEnds,
-            PlayerControl.manaFromLandsOnly = False
-          }
-    )
+turnControl decider controlled = Map.singleton controlled (pure (turnControlRow decider))
+
+-- GameState.control with every row's creation stamp zeroed, so a board an
+-- effect stamped compares against turnControl's hand-built rows; the order the
+-- stamps give is asserted where CR 723.1a is the subject.
+unstamped :: Map.Map PlayerId.PlayerId (NonEmpty.NonEmpty PlayerControl.PlayerControl) -> Map.Map PlayerId.PlayerId (NonEmpty.NonEmpty PlayerControl.PlayerControl)
+unstamped = fmap (fmap (\row -> row {PlayerControl.timestamp = Timestamp.MkTimestamp 0}))
+
+-- turnControl's one row, unkeyed: also what GameState.pendingControl holds
+-- before the controlled player's turn promotes it (CR 723.1b).
+turnControlRow :: PlayerId.PlayerId -> PlayerControl.PlayerControl
+turnControlRow decider =
+  PlayerControl.MkPlayerControl
+    { PlayerControl.decider = Decider.MkDecider decider,
+      PlayerControl.duration = ControlDuration.UntilTurnEnds,
+      PlayerControl.manaFromLandsOnly = False,
+      PlayerControl.timestamp = Timestamp.MkTimestamp 0
+    }
 
 -- CR 723.2's row, the one Word of Command installs: `decider` decides for its
 -- key until the object that wrote it finishes resolving, and rule 723.7's mana
@@ -378,7 +386,8 @@ resolutionControl decider =
   PlayerControl.MkPlayerControl
     { PlayerControl.decider = Decider.MkDecider decider,
       PlayerControl.duration = ControlDuration.UntilResolutionEnds,
-      PlayerControl.manaFromLandsOnly = True
+      PlayerControl.manaFromLandsOnly = True,
+      PlayerControl.timestamp = Timestamp.MkTimestamp 0
     }
 
 -- Every attack option turned OFF, leaving CR 507.1's choice of ONE defending

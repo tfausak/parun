@@ -879,10 +879,12 @@ prohibitsSearching pid owner causeController gs =
 
 -- CR 723.2 / 723.1a: who controls `pid` while they search their own library
 -- (Opposition Agent) -- CR 109.5's "you" of the latest such row, which in
--- `applying`'s timestamp order is the last one created.
-searchingController :: PlayerId -> GameState -> Maybe PlayerId
+-- `applying`'s timestamp order is the last one created -- and that row's
+-- timestamp, its permanent's (CR 613.7a), which is what orders it against
+-- other control effects.
+searchingController :: PlayerId -> GameState -> Maybe (PlayerId, Timestamp)
 searchingController pid gs =
-  Maybe.listToMaybe (reverse [you | (source, PlayerEffect.ControlledWhileSearching) <- applying pid gs, Just oid <- [RowSource.object source], Just you <- [Projection.controllerOf oid gs]])
+  Maybe.listToMaybe (reverse [(you, Object.timestamp o) | (source, PlayerEffect.ControlledWhileSearching) <- applying pid gs, Just oid <- [RowSource.object source], Just you <- [Projection.controllerOf oid gs], Just o <- [Game.lookupObject oid gs]])
 
 -- CR 701.23 / Opposition Agent: the object whose row has `pid` exile each card
 -- they find while searching their own library, the latest such row. That object
