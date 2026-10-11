@@ -55,8 +55,8 @@
 -- 2026-09-06, three hits and all of them flip cards whose front face is the
 -- creature: no printing gives a planeswalker such an ability of its own, so a
 -- GRANTED one is the only board on which both halves of CR 606.2 sit on a single
--- permanent. Gideon Blackblade under Presence of Gond would refute that, and
--- would give the group a non-mana ability besides.
+-- permanent. Gideon Blackblade would refute that. Presence of Gond grants the
+-- non-mana one, on a Jace Liquimetal Coating and March of the Machines animate.
 module Pawl.PlaneswalkerSpec where
 
 import qualified Control.Monad as Monad
