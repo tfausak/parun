@@ -27,7 +27,10 @@
     },
     {
       "characteristicPT": {
-        "type": "ManaValue"
+        "type": "Measure",
+        "value": {
+          "type": "ManaValue"
+        }
       },
       "manaCost": [
         {

@@ -1227,8 +1227,7 @@ framedBySlots gs recipients context =
           | (slot, named) <- Map.toList objects,
             Just oid <- [oneObject named],
             Just view <- [lastKnown oid],
-            measure <- [minBound .. maxBound],
-            Just n <- [Filter.measureOf measure view]
+            (measure, n) <- Map.toList (Filter.measuresOf view)
           ]
    in context
         { Filter.slotObjects = objects,
@@ -1289,9 +1288,7 @@ withCharacteristicsOf :: ObjectId -> GameState -> Filter.Context -> Filter.Conte
 withCharacteristicsOf object gs context =
   let view = viewWithLastKnownAnywhere gs object
    in context
-        { Filter.sourcePower = Filter.power =<< view,
-          Filter.sourceToughness = Filter.toughness =<< view,
-          Filter.sourceManaValue = Filter.manaValue =<< view,
+        { Filter.sourceMeasures = foldMap Filter.measuresOf view,
           Filter.sourceColors = foldMap Filter.colors view,
           Filter.sourceNames = foldMap Filter.names view
         }
@@ -4281,12 +4278,11 @@ modificationReads m = case m of
 quantityReads :: Quantity.Type.Quantity -> Set Aspect
 quantityReads q = case q of
   Quantity.Type.Count c -> filterReads (Count.Type.filter c) <> aggregationReads (Count.Type.aggregation c)
-  Quantity.Type.Power -> Set.singleton PowerA
-  Quantity.Type.Toughness -> Set.singleton PowerA
+  Quantity.Type.Measure measure -> measureReads measure
   -- Intensity is not a characteristic, so no Aspect names it.
   Quantity.Type.Intensity -> Set.empty
-  -- Reads whichever of the two the substitution picks, so it reads PowerA
-  -- exactly as Power and Toughness do above.
+  -- Reads whichever of power and toughness the substitution picks, so it reads
+  -- PowerA exactly as either Measure does above.
   Quantity.Type.StationMeasure -> Set.singleton PowerA
   Quantity.Type.Arithmetic arithmetic -> foldMap quantityReads arithmetic
   Quantity.Type.AgainstSlot (AgainstSlot.MkAgainstSlot _ a) -> quantityReads a
@@ -4299,7 +4295,6 @@ quantityReads q = case q of
   -- CR 702.167c: AgainstCardsExiledWith's answer, over the craft link alone.
   Quantity.Type.AgainstCraftMaterials a -> quantityReads a
   Quantity.Type.Literal _ -> Set.empty
-  Quantity.Type.ManaValue -> Set.empty
   Quantity.Type.InSlot _ -> Set.empty
   -- InSlot's answer: a binding is not a projected aspect, so neither half of the
   -- slot reads one.

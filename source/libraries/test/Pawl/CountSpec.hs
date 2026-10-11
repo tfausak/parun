@@ -44,6 +44,7 @@ import qualified Pawl.Types.Filter as Filter.Type
 import qualified Pawl.Types.GameEvent as GameEvent
 import qualified Pawl.Types.GameState as GameState
 import qualified Pawl.Types.InZone as InZone
+import qualified Pawl.Types.Measure as Measure
 import qualified Pawl.Types.Moved as Moved
 import qualified Pawl.Types.MovedBetween as MovedBetween
 import qualified Pawl.Types.Object as Object
@@ -319,7 +320,7 @@ spec s registry = Spec.describe s "Pawl.Engine.Count" $ do
           Count.Type.MkCount
             (Scope.InZone (InZone.MkInZone Zone.Battlefield (PlayerRef.Relative PlayerRelation.AnyPlayer)))
             (Filter.Type.And [Filter.Type.HasSubtype Subtype.Swamp, Filter.Type.ControlledBy PlayerRelation.You])
-            (Aggregation.Greatest Quantity.Type.ManaValue)
+            (Aggregation.Greatest (Quantity.Type.Measure Measure.ManaValue))
     -- Alice keeps none of Bob's one Swamp, so the fold has no members. The
     -- same count with Aggregation.Members is Just 0 -- a count of nothing IS
     -- zero -- which is exactly the answer a maximum must NOT borrow.
@@ -346,7 +347,7 @@ spec s registry = Spec.describe s "Pawl.Engine.Count" $ do
           Count.Type.MkCount
             (Scope.InZone (InZone.MkInZone Zone.Battlefield (PlayerRef.Relative PlayerRelation.AnyPlayer)))
             (Filter.Type.And [Filter.Type.HasCardType CardType.Creature, Filter.Type.ControlledBy PlayerRelation.You])
-            (Aggregation.Greatest Quantity.Type.Power)
+            (Aggregation.Greatest (Quantity.Type.Measure Measure.Power))
         greatestPower g =
           S.countOf (\oid -> Just (Projection.viewOfObject oid g)) (Filter.contextFor Teams.none (Just S.alice) Nothing) g count
     Spec.assertEqWith s "the Mammoth's 3" (greatestPower printed) $ Just 3
@@ -365,7 +366,7 @@ spec s registry = Spec.describe s "Pawl.Engine.Count" $ do
           Count.Type.MkCount
             (Scope.InZone (InZone.MkInZone Zone.Battlefield (PlayerRef.Relative PlayerRelation.AnyPlayer)))
             (Filter.Type.ControlledBy PlayerRelation.You)
-            (Aggregation.Greatest Quantity.Type.Power)
+            (Aggregation.Greatest (Quantity.Type.Measure Measure.Power))
         viewOf = S.stubView [(a1, Set.singleton CardType.Land, Set.singleton Subtype.Swamp, Just S.alice)]
     Spec.assertEqWith s "undeterminable" (S.countOf viewOf (Filter.contextFor Teams.none (Just S.alice) Nothing) gs count) Nothing
 

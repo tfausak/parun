@@ -124,6 +124,7 @@ import qualified Pawl.Types.ManaRetention as ManaRetention
 import qualified Pawl.Types.ManaSpending as ManaSpending
 import qualified Pawl.Types.ManaSymbol as ManaSymbol
 import qualified Pawl.Types.ManaType as ManaType
+import qualified Pawl.Types.Measure as Measure
 import qualified Pawl.Types.Meld as Meld
 import qualified Pawl.Types.Mill as Mill
 import qualified Pawl.Types.MillTally as MillTally
@@ -1050,7 +1051,7 @@ spec s = Spec.describe s "Pawl.Codec.Effect" $ do
               ForEach.members = LoopMembers.Every,
               ForEach.slot = SlotName.MkSlotName (Text.pack "victim"),
               ForEach.body =
-                Seq.singleton (Effect.DealDamage (DealDamage.MkDealDamage (Seq.singleton (DamagePart.MkDamagePart (ObjectRef.InSlot (SlotName.MkSlotName (Text.pack "victim"))) (Quantity.AgainstSlot (AgainstSlot.MkAgainstSlot (SlotName.MkSlotName (Text.pack "exiled")) Quantity.ManaValue)))) Nothing Nothing)),
+                Seq.singleton (Effect.DealDamage (DealDamage.MkDealDamage (Seq.singleton (DamagePart.MkDamagePart (ObjectRef.InSlot (SlotName.MkSlotName (Text.pack "victim"))) (Quantity.AgainstSlot (AgainstSlot.MkAgainstSlot (SlotName.MkSlotName (Text.pack "exiled")) (Quantity.Measure Measure.ManaValue))))) Nothing Nothing)),
               -- CR 608.2f's second sentence, which that rule's own Soulfire
               -- Eruption example states: the library cannot be exiled from twice
               -- at the same time.
@@ -1058,7 +1059,7 @@ spec s = Spec.describe s "Pawl.Codec.Effect" $ do
               ForEach.payGate = Nothing
             }
       )
-      " {\"type\":\"ForEach\",\"value\":{\"ref\":{\"type\":\"InSlot\",\"value\":\"victims\"},\"slot\":\"victim\",\"body\":[{\"type\":\"DealDamage\",\"value\":{\"parts\":[{\"ref\":{\"type\":\"InSlot\",\"value\":\"victim\"},\"quantity\":{\"type\":\"AgainstSlot\",\"value\":{\"slot\":\"exiled\",\"quantity\":{\"type\":\"ManaValue\"}}}}]}}],\"individually\":true}} "
+      " {\"type\":\"ForEach\",\"value\":{\"ref\":{\"type\":\"InSlot\",\"value\":\"victims\"},\"slot\":\"victim\",\"body\":[{\"type\":\"DealDamage\",\"value\":{\"parts\":[{\"ref\":{\"type\":\"InSlot\",\"value\":\"victim\"},\"quantity\":{\"type\":\"AgainstSlot\",\"value\":{\"slot\":\"exiled\",\"quantity\":{\"type\":\"Measure\",\"value\":{\"type\":\"ManaValue\"}}}}}]}}],\"individually\":true}} "
   -- The number loop, its body reading the number it binds.
   Spec.it s "ForEachNumber" $
     Common.assertJsonCodec

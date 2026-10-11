@@ -88,9 +88,7 @@ overSlots f quantity =
   let recur = overSlots f
    in case quantity of
         Quantity.Literal _ -> pure quantity
-        Quantity.ManaValue -> pure quantity
-        Quantity.Power -> pure quantity
-        Quantity.Toughness -> pure quantity
+        Quantity.Measure _ -> pure quantity
         Quantity.Intensity -> pure quantity
         Quantity.InSlot slot -> fmap Quantity.InSlot (f slot)
         -- CR 701.4b's reader names a slot too, and is visited here for
@@ -298,9 +296,7 @@ renameRefSlots rename =
 nestedRefs :: Quantity -> Set (Either PlayerRef.PlayerRef SlotName)
 nestedRefs quantity = case quantity of
   Quantity.Literal _ -> Set.empty
-  Quantity.ManaValue -> Set.empty
-  Quantity.Power -> Set.empty
-  Quantity.Toughness -> Set.empty
+  Quantity.Measure _ -> Set.empty
   Quantity.Intensity -> Set.empty
   -- The amount reader, which `slots` above reports itself.
   Quantity.InSlot _ -> Set.empty
@@ -411,9 +407,7 @@ nestedRefs quantity = case quantity of
 nestedCounts :: Quantity -> [Count.Type.Count Quantity]
 nestedCounts quantity = case quantity of
   Quantity.Literal _ -> []
-  Quantity.ManaValue -> []
-  Quantity.Power -> []
-  Quantity.Toughness -> []
+  Quantity.Measure _ -> []
   Quantity.Intensity -> []
   -- A slot read, not a fold over game state: the value was bound by an earlier
   -- effect of the same resolution and there is no Count inside it.
@@ -668,9 +662,7 @@ mapPlayerRefs f intoCount quantity =
         -- slot rather than a player one, so nothing here substitutes it -- an amount an
         -- earlier effect bound is not a seat.
         Quantity.Literal _ -> quantity
-        Quantity.ManaValue -> quantity
-        Quantity.Power -> quantity
-        Quantity.Toughness -> quantity
+        Quantity.Measure _ -> quantity
         Quantity.Intensity -> quantity
         Quantity.InSlot _ -> quantity
         Quantity.WasBound _ -> quantity

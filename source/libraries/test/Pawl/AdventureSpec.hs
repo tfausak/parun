@@ -18,6 +18,7 @@ module Pawl.AdventureSpec where
 import qualified Control.Monad.Trans.State.Strict as State
 import qualified Data.List as List
 import qualified Data.List.NonEmpty as NonEmpty
+import qualified Data.Map.Strict as Map
 import qualified Data.Maybe as Maybe
 import qualified Data.Set as Set
 import qualified Data.Text as Text
@@ -406,7 +407,7 @@ spec s registry = Spec.describe s "Adventure" $ do
               CastOffer.restriction = Just (Filter.Type.Measures (Measures.MkMeasures Measure.ManaValue Comparison.LessThan (Operand.OfSource Measure.ManaValue))),
               CastOffer.offeredBy = Nothing
             }
-        context bound = (Filter.contextFor (Game.teams gs) (Just S.alice) Nothing) {Filter.sourceManaValue = Just bound}
+        context bound = (Filter.contextFor (Game.teams gs) (Just S.alice) Nothing) {Filter.sourceMeasures = Map.singleton Measure.ManaValue bound}
         under bound = S.runPure preferringTheCreature gs (Resolve.offerCast Resolve.noSubgame (context bound) (const Nothing) [exiledId] S.alice CastObligation.Optional PermissionVerb.Cast Nothing CastRepetition.Once False offer)
         resolved bound = S.runPure preferringTheCreature (under bound) Stack.resolveTop
         knights g = filter (\o -> Set.member Subtype.Knight (Projection.subtypesOf o g)) (Set.toList (GameState.battlefield g))

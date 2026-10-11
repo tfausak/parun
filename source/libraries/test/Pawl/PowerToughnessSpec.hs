@@ -1486,7 +1486,7 @@ boxesOfNamed name gs = fmap (`S.powerToughnessOf` gs) (Scenario.namedObjects (Ca
 -- ability that doubles its power resolves". So doubling needs no opcode of its
 -- own. It is Effect.ModifyTarget carrying CR 613.4c's layer-7c
 -- Modification.ModifyPowerToughness, with the power leg Quantity.AgainstSlot of
--- Quantity.Power and the toughness leg a literal 0 -- the pair Rush of Blood
+-- Quantity.Measure Power and the toughness leg a literal 0 -- the pair Rush of Blood
 -- already writes -- and CR 611.2d's freeze at resolution is exactly what "as the
 -- spell resolves" means. CR 701.10a is the same sentence read as a
 -- classification: the effect MODIFIES and does not set, which is what keeps it

@@ -38,7 +38,10 @@
                 "type": "AtLeast"
               },
               "measured": {
-                "type": "Power"
+                "type": "Measure",
+                "value": {
+                  "type": "Power"
+                }
               },
               "threshold": {
                 "type": "Literal",

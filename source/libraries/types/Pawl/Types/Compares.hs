@@ -10,7 +10,7 @@ import qualified Pawl.Types.Quantity as Quantity
 --
 -- BOTH SIDES are a full Quantity, and both are evaluated symmetrically --
 -- Pawl.Engine.Condition.holds passes each through Pawl.Engine.Quantity.evaluate
--- against the same object and view, so a Quantity.Power on either side reads the
+-- against the same object and view, so a Quantity.Measure on either side reads the
 -- same object. Only the Comparison is oriented, AtLeast meaning the measured side
 -- is at least the threshold. That width is what lets a condition read the object
 -- it is evaluated against rather than a set swept out of a zone, which CR 603.4's

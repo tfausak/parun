@@ -62,7 +62,10 @@
                       }
                     },
                     "quantity": {
-                      "type": "Power"
+                      "type": "Measure",
+                      "value": {
+                        "type": "Power"
+                      }
                     }
                   }
                 },
@@ -76,7 +79,10 @@
                       }
                     },
                     "quantity": {
-                      "type": "Toughness"
+                      "type": "Measure",
+                      "value": {
+                        "type": "Toughness"
+                      }
                     }
                   }
                 }

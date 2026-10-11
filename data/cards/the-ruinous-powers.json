@@ -43,7 +43,10 @@
                             "type": "AgainstSlot",
                             "value": {
                               "quantity": {
-                                "type": "ManaValue"
+                                "type": "Measure",
+                                "value": {
+                                  "type": "ManaValue"
+                                }
                               },
                               "slot": "exiled"
                             }

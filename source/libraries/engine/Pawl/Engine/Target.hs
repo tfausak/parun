@@ -412,7 +412,7 @@ slotContext perspective unannounced bindings source amount gs =
    in -- CR 202.3 / 601.2c: the slot's own computed bound, evaluated
       -- against the context above and handed to the Measures atom's
       -- EnclosingAmount operand.
-      -- THIS is the one site that fills it, sourcePower's and slotNames' sibling
+      -- THIS is the one site that fills it, sourceMeasures' and slotNames' sibling
       -- in that respect and for the same reason: the atom lives in a target
       -- slot's Filter, and this is where one is matched -- at both of CR 115's
       -- moments, so the bound is read again at CR 608.2b rather than frozen at
@@ -429,7 +429,7 @@ slotContext perspective unannounced bindings source amount gs =
       -- the amount of damage this creature dealt to that player" is the printed
       -- shape that needs it.
       --
-      -- A THUNK for sourcePower's reason: a slot naming an amount whose filter
+      -- A THUNK for sourceMeasures' reason: a slot naming an amount whose filter
       -- never asks pays for no evaluation.
       base
         { Filter.slotAmount = evaluated,

@@ -128,7 +128,10 @@
                                 "type": "AgainstSlot",
                                 "value": {
                                   "quantity": {
-                                    "type": "Power"
+                                    "type": "Measure",
+                                    "value": {
+                                      "type": "Power"
+                                    }
                                   },
                                   "slot": "thatDepartedPermanent"
                                 }

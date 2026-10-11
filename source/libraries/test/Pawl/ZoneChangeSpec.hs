@@ -1869,7 +1869,7 @@ redistributeLifeTotalsSpec s registry =
 -- "Draw cards equal to the greatest mana value among artifacts you control."
 -- Nothing but the fold is new -- the effect is the existing Draw, the scope and
 -- the filter were both already expressible, and the per-member quantity is the
--- existing Quantity.ManaValue (CR 202.3), the same read Karn, Legacy Reforged
+-- existing Quantity.Measure ManaValue (CR 202.3), the same read Karn, Legacy Reforged
 -- wants.
 --
 -- Alice's board is Bonesplitter ({1}), Serum Powder ({3}) and Mindslaver ({6}),

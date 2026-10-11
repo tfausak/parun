@@ -430,15 +430,15 @@ spec s = Spec.describe s "Pawl.Engine.Filter" $ do
       Spec.assertBool s (not (Filter.matches self blackCreature tougher)) "2 is not > 2"
       Spec.assertBool s (not (Filter.matches self (blackCreature {Filter.toughness = Nothing}) tougher)) "no toughness"
     -- The source's power is set apart from its toughness and mana value, so a
-    -- reading of the wrong field disagrees.
-    Spec.it s "OfSource reads the Context's field for the operand's measure" $ do
-      let sourced = self {Filter.sourcePower = Just 9, Filter.sourceToughness = Just 2, Filter.sourceManaValue = Just 4}
+    -- reading of the wrong measure disagrees.
+    Spec.it s "OfSource reads the Context's number for the operand's measure" $ do
+      let sourced = self {Filter.sourceMeasures = Map.fromList [(Measure.Power, 9), (Measure.Toughness, 2), (Measure.ManaValue, 4)]}
       Spec.assertBool s (Filter.matches sourced blackCreature (power Comparison.AtLeast (Operand.OfSource Measure.Toughness))) "2 >= the source's toughness 2"
       Spec.assertBool s (Filter.matches sourced blackCreature (power Comparison.LessThan (Operand.OfSource Measure.Power))) "2 < the source's power 9"
       Spec.assertBool s (Filter.matches sourced blackCreature (manaValue Comparison.LessThan (Operand.OfSource Measure.ManaValue))) "3 < the source's mana value 4"
       Spec.assertBool s (not (Filter.matches sourced blackCreature (manaValue Comparison.Exactly (Operand.OfSource Measure.ManaValue)))) "3 is not 4"
     Spec.it s "OfSource is False when either number is absent" $ do
-      let sourced = self {Filter.sourcePower = Just 3}
+      let sourced = self {Filter.sourceMeasures = Map.singleton Measure.Power 3}
       Spec.assertBool s (not (Filter.matches sourced noPower (power Comparison.LessThan (Operand.OfSource Measure.Power)))) "no candidate power"
       Spec.assertBool s (not (Filter.matches self blackCreature (power Comparison.LessThan (Operand.OfSource Measure.Power)))) "no source power"
       Spec.assertBool s (not (Filter.matches sourced aPlayer (power Comparison.LessThan (Operand.OfSource Measure.Power)))) "player"

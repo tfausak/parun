@@ -3328,7 +3328,7 @@ prizedAmalgamSpec s registry =
 -- differ in exactly that one thing.
 --
 -- Giant Spider (2/4) is the host because power and toughness differ: an arm
--- reading Quantity.Power off the same slot answers the same number as the
+-- reading Quantity.Measure Power off the same slot answers the same number as the
 -- toughness on a 3/3, and nothing else on the board would catch it.
 --
 -- AND IT CARRIES A +1/+1 COUNTER, which is what tells the DEPARTED permanent from

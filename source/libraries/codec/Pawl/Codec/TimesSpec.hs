@@ -5,6 +5,7 @@ import qualified Pawl.Codec.Times as Times
 import qualified Pawl.JsonCodec.Codec as Codec
 import qualified Pawl.JsonCodec.Common as Common
 import qualified Pawl.Spec as Spec
+import qualified Pawl.Types.Measure as Measure
 import qualified Pawl.Types.Quantity as Quantity
 import qualified Pawl.Types.Times as Times
 
@@ -22,8 +23,8 @@ spec s = Spec.describe s "Pawl.Codec.Times" $ do
       codec
       ( Times.MkTimes
           { Times.factor = 3,
-            Times.quantity = Quantity.Power
+            Times.quantity = Quantity.Measure Measure.Power
           }
       )
-      " {\"factor\":3,\"quantity\":{\"type\":\"Power\"}} "
+      " {\"factor\":3,\"quantity\":{\"type\":\"Measure\",\"value\":{\"type\":\"Power\"}}} "
   Spec.it s "has a schema" $ Common.assertHasSchema s codec

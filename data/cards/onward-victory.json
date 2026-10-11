@@ -34,7 +34,10 @@
                         "type": "ModifyPowerToughness",
                         "value": {
                           "power": {
-                            "type": "Power"
+                            "type": "Measure",
+                            "value": {
+                              "type": "Power"
+                            }
                           },
                           "toughness": {
                             "type": "Literal",
