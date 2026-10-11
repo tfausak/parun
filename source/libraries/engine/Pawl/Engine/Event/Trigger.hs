@@ -2287,11 +2287,11 @@ inherentTriggers held events gs =
 -- No COST half. CR 602.1 gives an activated ability "a cost and an effect";
 -- CR 603.1 gives a triggered one "a trigger condition and an effect", and no
 -- cost at all -- so Pawl.Engine.Cost, the other half of
--- Activatable.zoneFunctionedFrom, has nothing to be asked here. The CONDITION is
+-- Activatable.zonesFunctionedIn, has nothing to be asked here. The CONDITION is
 -- read instead, and only for the rule's own exception: `enchantedObjectLeaves`
 -- below.
 --
--- ALL MODES, in printed order, for Activatable.zoneFunctionedFrom's reason: CR
+-- ALL MODES, in printed order, for Activatable.zonesFunctionedIn's reason: CR
 -- 700.2 makes a modal ability's modes alternatives, so a zone stated by any of
 -- them is a zone the ability can move its object out of.
 --
@@ -2322,7 +2322,7 @@ inherentTriggers held events gs =
 --
 -- The clause's "a previous part of its cost or effect specifies that the object
 -- is put into that zone" half belongs to the fold below rather than here, and
--- the fold reads it by construction: Pawl.Engine.Activatable.zoneFunctionedFrom
+-- the fold reads it by construction: Pawl.Engine.Activatable.zonesFunctionedIn
 -- carries the argument, which is CR 400.7's fresh id -- a later part cannot
 -- name the reserved source slot for an object an earlier part already moved.
 -- See #2501.

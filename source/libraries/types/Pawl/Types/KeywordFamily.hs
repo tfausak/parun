@@ -105,7 +105,8 @@ data KeywordFamily
     Splice
   | -- | CR 702.48a: [quality] offering.
     Offering
-  | -- | CR 702.49a: ninjutsu [cost]. Silver-Fur Master's "ninjutsu abilities you
+  | -- | CR 702.49a: ninjutsu [cost], and CR 702.49d's commander ninjutsu, a
+    -- variant of it. Silver-Fur Master's "ninjutsu abilities you
     -- activate cost {1} less to activate" is the card asking, through
     -- Pawl.Types.ActivationCriteria's @grantedBy@ rather than through a Filter;
     -- it is not in the pool yet, and the family is owed at the keyword.

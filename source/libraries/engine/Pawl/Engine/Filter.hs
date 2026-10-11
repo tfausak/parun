@@ -47,6 +47,7 @@ import qualified Pawl.Types.Measure as Measure
 import qualified Pawl.Types.Measures as Measures
 import qualified Pawl.Types.Morph as Morph
 import qualified Pawl.Types.NameChooser as NameChooser
+import qualified Pawl.Types.Ninjutsu as Ninjutsu
 import qualified Pawl.Types.ObjectId as ObjectId
 import qualified Pawl.Types.Operand as Operand
 import qualified Pawl.Types.Pairing as Pairing
@@ -2726,7 +2727,7 @@ rewriteKeyword pairs keyword = case keyword of
   -- CR 702.49a's ninjutsu cost, fortify's shape: a Cost whose components can
   -- carry a Filter, and rule 702.49a's own return-an-unblocked-attacker component
   -- is minted rather than written, so nothing of the engine's descends here.
-  Keyword.Type.Ninjutsu cost -> Keyword.Type.Ninjutsu (rewriteCost pairs cost)
+  Keyword.Type.Ninjutsu (Ninjutsu.MkNinjutsu cost variant) -> Keyword.Type.Ninjutsu (Ninjutsu.MkNinjutsu (rewriteCost pairs cost) variant)
   Keyword.Type.CumulativeUpkeep cost -> Keyword.Type.CumulativeUpkeep (rewriteCost pairs cost)
   Keyword.Type.Echo cost -> Keyword.Type.Echo (rewriteCost pairs cost)
   Keyword.Type.LevelUp cost -> Keyword.Type.LevelUp (rewriteCost pairs cost)

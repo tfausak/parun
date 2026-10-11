@@ -417,6 +417,8 @@ import qualified Pawl.Codec.MovedKindsSpec
 import qualified Pawl.Codec.MovedSpec
 import qualified Pawl.Codec.NameChooserSpec
 import qualified Pawl.Codec.NamesAreSpec
+import qualified Pawl.Codec.NinjutsuSpec
+import qualified Pawl.Codec.NinjutsuVariantSpec
 import qualified Pawl.Codec.ObjectIdSpec
 import qualified Pawl.Codec.ObjectRefSpec
 import qualified Pawl.Codec.ObjectSnapshotSpec
@@ -1384,6 +1386,8 @@ spec s registry = do
   Pawl.Codec.RecipientSpec.spec s
   Pawl.Codec.RedirectDamageSpec.spec s
   Pawl.Codec.RegenerabilitySpec.spec s
+  Pawl.Codec.NinjutsuSpec.spec s
+  Pawl.Codec.NinjutsuVariantSpec.spec s
   Pawl.Codec.ReinforceSpec.spec s
   Pawl.Codec.RemoveCountersSpec.spec s
   Pawl.Codec.RemovePlayerCountersSpec.spec s

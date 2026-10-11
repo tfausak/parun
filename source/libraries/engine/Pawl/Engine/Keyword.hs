@@ -147,6 +147,8 @@ import qualified Pawl.Types.MorphVariant as MorphVariant
 import qualified Pawl.Types.MoveCounters as MoveCounters
 import qualified Pawl.Types.MoveToZone as MoveToZone
 import qualified Pawl.Types.MovedKinds as MovedKinds
+import qualified Pawl.Types.Ninjutsu as Ninjutsu
+import qualified Pawl.Types.NinjutsuVariant as NinjutsuVariant
 import Pawl.Types.ObjectId (ObjectId)
 import qualified Pawl.Types.ObjectRef as ObjectRef
 import qualified Pawl.Types.OfferCast as OfferCast
@@ -633,7 +635,7 @@ handAbilitiesFor :: Keyword -> [ActivatedAbility Card (GrantedAbility.GrantedAbi
 handAbilitiesFor keyword = fmap (mintedBy keyword) $ case keyword of
   Keyword.Cycling (Cycling.MkCycling cost searchFor) -> [cycling cost searchFor]
   Keyword.Reinforce (Reinforce.MkReinforce n cost) -> [reinforce n cost]
-  Keyword.Ninjutsu cost -> [ninjutsu cost]
+  Keyword.Ninjutsu payload -> [ninjutsu payload]
   -- CR 702.47a is a STATIC ability read by Pawl.Engine.Cast's CR 601.2b
   -- announcement, so it mints nothing here.
   Keyword.Splice _ -> []
@@ -1119,16 +1121,19 @@ searchForSameManaValue cost filter_ destination =
 -- with IsAttacking so much as the same fact asked from the other side.
 --
 -- THE EFFECT is Reassembling Skeleton's shape one zone over -- a MoveToZone of
--- the ability's own source, whose `origin` states the zone CR 113.6m functions it
--- in. That the origin is the HAND is also rule 702.49a's "functions only while
--- the card with ninjutsu is in a player's hand"; handAbilitiesFor is the roster
--- that offers it, so the restriction holds by construction there as well.
+-- the ability's own source, whose `origin` is each rule's own text: rule
+-- 702.49a's "from your hand", and none for CR 702.49d's commander ninjutsu,
+-- which moves the card from either zone it functions in. Nothing reads it:
+-- statedZones names those zones (CR 113.6b) and answers ahead of CR 113.6m's
+-- origin reading, which is what withholds either ability on the battlefield.
+-- handAbilitiesFor offers both from a hand, and commandZoneAbilitiesOf below
+-- commander ninjutsu from the command zone.
 --
 -- CR 702.49c is the `attacking` rider: the ninja attacks whatever the creature
 -- the cost returned was attacking, which the payment binds under
 -- Binding.returnedPermanent and CR 608.2h's last known information answers.
-ninjutsu :: Cost Keyword -> ActivatedAbility Card (GrantedAbility.GrantedAbility Card)
-ninjutsu cost =
+ninjutsu :: Ninjutsu.Ninjutsu Keyword -> ActivatedAbility Card (GrantedAbility.GrantedAbility Card)
+ninjutsu (Ninjutsu.MkNinjutsu cost variant) =
   let returned =
         ReturnPermanents.MkReturnPermanents
           { ReturnPermanents.count = 1,
@@ -1149,7 +1154,9 @@ ninjutsu cost =
                 EntryRiders.defaultValue {EntryRiders.tapped = TapState.Tapped, EntryRiders.attacking = Just (EntryAttack.SameAs Binding.returnedPermanent)},
               -- Nothing looks back at the move, so it binds no slot.
               MoveToZone.slot = Nothing,
-              MoveToZone.origin = Just Zone.Hand,
+              MoveToZone.origin = case variant of
+                NinjutsuVariant.Plain -> Just Zone.Hand
+                NinjutsuVariant.Commander -> Nothing,
               MoveToZone.placement = LibraryPlacement.defaultValue,
               -- CR 610.1's plain move; rule 702.49a states no "until".
               MoveToZone.duration = Nothing
@@ -1173,6 +1180,15 @@ ninjutsu cost =
           -- knows the keyword by identity rather than by reconstructing it.
           ActivatedAbility.keyword = Nothing
         }
+
+-- CR 113.6b: the minted hand abilities whose keyword states the command zone
+-- too (statedZones) -- CR 702.49d's commander ninjutsu. The same abilities
+-- handAbilitiesOf mints rather than a second copy of them, so an object HAS
+-- each once (activatedAbilitiesOf below); this only says where else they are
+-- offered. The keyword set is the caller's: Activatable.abilitiesForGiven's
+-- command-zone arm hands it the projection's.
+commandZoneAbilitiesOf :: Set Keyword -> [ActivatedAbility Card (GrantedAbility.GrantedAbility Card)]
+commandZoneAbilitiesOf = handAbilitiesOf . Set.filter (Set.member Zone.Command . statedZones)
 
 -- CR 602.1: the ACTIVATED abilities rule 702 gives a card in a GRAVEYARD,
 -- handAbilitiesOf's sibling one zone over: CR 702.84a's unearth, CR 702.97a's
@@ -5389,12 +5405,17 @@ reducesByManaCostOnEntry keyword = case keyword of
 restrictionsOf :: ActivatedAbility Card (GrantedAbility.GrantedAbility Card) -> [ActivationRestriction.ActivationRestriction]
 restrictionsOf ability = ActivatedAbility.restrictions ability <> foldMap printedRiders (ActivatedAbility.keyword ability)
 
--- CR 113.6b: the zone rule 702 says the printed ability a keyword is written on
--- functions from. CR 702.57a puts a forecast ability in a hand.
-printedZone :: Keyword -> Maybe Zone.Zone
-printedZone keyword = case keyword of
-  Keyword.Forecast -> Just Zone.Hand
-  _ -> Nothing
+-- CR 113.6b: the zones rule 702 says the ability a keyword stamps functions
+-- from, empty where it names none. CR 702.57a puts a printed forecast ability in
+-- a hand; CR 702.49a puts minted ninjutsu there, and CR 702.49d commander
+-- ninjutsu in a hand or the command zone.
+statedZones :: Keyword -> Set Zone.Zone
+statedZones keyword = case keyword of
+  Keyword.Forecast -> Set.singleton Zone.Hand
+  Keyword.Ninjutsu (Ninjutsu.MkNinjutsu _ variant) -> case variant of
+    NinjutsuVariant.Plain -> Set.singleton Zone.Hand
+    NinjutsuVariant.Commander -> Set.fromList [Zone.Hand, Zone.Command]
+  _ -> Set.empty
 
 -- CR 702: does a card's designator name this keyword? Asked of the stamp
 -- Pawl.Types.ActivatedAbility.keyword carries (ActivationCriteria.grantedBy) and

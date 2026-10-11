@@ -16,6 +16,7 @@ import qualified Pawl.Codec.Impending as Impending
 import qualified Pawl.Codec.KeywordCount as KeywordCount
 import qualified Pawl.Codec.MadnessCost as MadnessCost
 import qualified Pawl.Codec.Morph as Morph
+import qualified Pawl.Codec.Ninjutsu as Ninjutsu
 import qualified Pawl.Codec.PartnerText as PartnerText
 import qualified Pawl.Codec.Protection as Protection
 import qualified Pawl.Codec.Prototype as Prototype
@@ -119,7 +120,7 @@ codec =
       Arm.payload "Fortify" (Cost.codec codec) Keyword.Fortify (\x -> case x of Keyword.Fortify y -> Just y; _ -> Nothing),
       Arm.payload "Splice" (Splice.codec codec) Keyword.Splice (\x -> case x of Keyword.Splice y -> Just y; _ -> Nothing),
       Arm.payload "Offering" (Filter.codec codec) Keyword.Offering (\x -> case x of Keyword.Offering y -> Just y; _ -> Nothing),
-      Arm.payload "Ninjutsu" (Cost.codec codec) Keyword.Ninjutsu (\x -> case x of Keyword.Ninjutsu y -> Just y; _ -> Nothing),
+      Arm.payload "Ninjutsu" (Ninjutsu.codec codec) Keyword.Ninjutsu (\x -> case x of Keyword.Ninjutsu y -> Just y; _ -> Nothing),
       Arm.payload "Frenzy" Common.natural Keyword.Frenzy (\x -> case x of Keyword.Frenzy y -> Just y; _ -> Nothing),
       Arm.payload "Poisonous" Common.natural Keyword.Poisonous (\x -> case x of Keyword.Poisonous y -> Just y; _ -> Nothing),
       Arm.payload "Champion" (Filter.codec codec) Keyword.Champion (\x -> case x of Keyword.Champion y -> Just y; _ -> Nothing),

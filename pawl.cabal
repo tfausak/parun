@@ -891,6 +891,10 @@ library codec
     Pawl.Codec.NameInsertion
     Pawl.Codec.NamesAre
     Pawl.Codec.NamesAreSpec
+    Pawl.Codec.Ninjutsu
+    Pawl.Codec.NinjutsuSpec
+    Pawl.Codec.NinjutsuVariant
+    Pawl.Codec.NinjutsuVariantSpec
     Pawl.Codec.Object
     Pawl.Codec.ObjectId
     Pawl.Codec.ObjectIdSpec
@@ -2472,6 +2476,8 @@ library types
     Pawl.Types.NameChooser
     Pawl.Types.NameInsertion
     Pawl.Types.NamesAre
+    Pawl.Types.Ninjutsu
+    Pawl.Types.NinjutsuVariant
     Pawl.Types.Object
     Pawl.Types.ObjectId
     Pawl.Types.ObjectRef
