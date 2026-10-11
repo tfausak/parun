@@ -407,6 +407,7 @@ shapeOf prompt = case prompt of
   Prompt.ChooseCollectEvidence {} -> setOf object
   Prompt.ChooseAnyNumberToSacrifice {} -> setOf object
   Prompt.ChooseAnyNumberToReveal {} -> setOf object
+  Prompt.ChooseAnyNumberToExile {} -> setOf object
   Prompt.ChooseAnyNumberOfPermanents {} -> setOf object
   Prompt.ChooseAnyNumberToDiscard {} -> setOf object
   Prompt.ChoosePermanent {} -> object

@@ -29,6 +29,7 @@ import qualified Pawl.Codec.BlockRequirement as BlockRequirement
 import qualified Pawl.Codec.CardName as CardName
 import qualified Pawl.Codec.CastingPermission as CastingPermission
 import qualified Pawl.Codec.CastingRestriction as CastingRestriction
+import qualified Pawl.Codec.CharacteristicPT as CharacteristicPT
 import qualified Pawl.Codec.Color as Color
 import qualified Pawl.Codec.CombatRestriction as CombatRestriction
 import qualified Pawl.Codec.Cost as Cost
@@ -66,7 +67,6 @@ import qualified Pawl.Codec.Vanguard as Vanguard
 import qualified Pawl.JsonCodec.Codec as Codec
 import qualified Pawl.JsonCodec.Common as Common
 import qualified Pawl.JsonCodec.Fields as Fields
-import qualified Pawl.Types.CharacteristicPT as CharacteristicPT
 import qualified Pawl.Types.Counterability as Counterability.Type
 import qualified Pawl.Types.Face as Face
 import qualified Pawl.Types.Modal as Modal.Type
@@ -108,14 +108,10 @@ codec cardCodec = Fields.objectWith modeCostsInRange $ do
   startingIntensity <- Fields.defaulted "startingIntensity" Nothing (Common.maybe Common.natural) Face.startingIntensity
   -- CR 313.6 / 313.7: absent on every card but a vanguard.
   vanguard <- Fields.defaulted "vanguard" Nothing (Common.maybe Vanguard.codec) Face.vanguard
-  -- ONE quantity on the wire, where Face.characteristicPT holds a slot per box:
-  -- CR 208.2a's template is one ability, whether it defines one box or both, and
-  -- substituting it into a box that prints no star is the identity. The pair
-  -- exists for CR 709.4c's combined view of a split card, which
-  -- Pawl.Engine.Card.definedBox builds and nothing writes back to the wire, so
-  -- the encoder reads the power slot: a face this codec DECODED has the same
-  -- ability in both.
-  characteristicPT <- Fields.defaulted "characteristicPT" Nothing (Common.maybe Quantity.codec) (fmap CharacteristicPT.power . Face.characteristicPT)
+  -- A quantity per box, as Face.characteristicPT holds them: Sutured Ghoul's
+  -- power and toughness are two different totals (CR 208.2a). Substituting a
+  -- quantity into a box that prints no star is the identity.
+  characteristicPT <- Fields.defaulted "characteristicPT" Nothing (Common.maybe CharacteristicPT.codec) Face.characteristicPT
   enchant <- Fields.defaulted "enchant" [] (Common.list TargetSlot.codec) Face.enchant
   -- ONE ARRAY ENTRY PER INSTANCE (Common.repeats), which is how Apex Devastator
   -- prints it: "Cascade, cascade, cascade, cascade". A card naming each keyword
@@ -196,7 +192,7 @@ codec cardCodec = Fields.objectWith modeCostsInRange $ do
         Face.defense = defense,
         Face.startingIntensity = startingIntensity,
         Face.vanguard = vanguard,
-        Face.characteristicPT = fmap (\q -> CharacteristicPT.MkCharacteristicPT {CharacteristicPT.power = q, CharacteristicPT.toughness = q}) characteristicPT,
+        Face.characteristicPT = characteristicPT,
         Face.enchant = enchant,
         Face.keywords = keywords,
         Face.colorIndicator = colorIndicator,

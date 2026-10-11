@@ -19,11 +19,14 @@ import qualified Pawl.Types.EntryFlip as EntryFlip
 import qualified Pawl.Types.EntryOption as EntryOption
 import qualified Pawl.Types.EntryPrice as EntryPrice
 import qualified Pawl.Types.EntryRewrite as EntryRewrite
+import qualified Pawl.Types.ExileFromGraveyard as ExileFromGraveyard
 import qualified Pawl.Types.Filter as Filter
+import qualified Pawl.Types.HowMany as HowMany
 import qualified Pawl.Types.Keyword as Keyword
 import qualified Pawl.Types.Mill as Mill
 import qualified Pawl.Types.PlayerRef as PlayerRef
 import qualified Pawl.Types.PlayerRelation as PlayerRelation
+import qualified Pawl.Types.PlayerScope as PlayerScope
 import qualified Pawl.Types.Quantity as Quantity
 import qualified Pawl.Types.SacrificeAnyNumber as SacrificeAnyNumber
 import qualified Pawl.Types.SacrificeToEnter as SacrificeToEnter
@@ -307,15 +310,14 @@ spec s = Spec.describe s "Pawl.Codec.EntryRewrite" $ do
       (EntryRewrite.codec (GrantedAbility.codec Card.codec) (Effect.codec Card.codec (GrantedAbility.codec Card.codec)))
       (EntryRewrite.SacrificeToEnter (SacrificeToEnter.MkSacrificeToEnter 1 (Filter.HasSubtype Subtype.Forest)))
       " {\"type\":\"SacrificeToEnter\",\"value\":{\"count\":1,\"filter\":{\"type\":\"HasSubtype\",\"value\":{\"type\":\"Forest\"}}}} "
-  -- CR 614.1c / 614.14: an as-enters exile out of the controller's own graveyard,
-  -- carrying the criterion the exiled card must match -- Living Lore's "an
-  -- instant or sorcery card".
+  -- CR 614.1c / 614.14: an as-enters exile, carrying the criterion the exiled
+  -- card must match -- Living Lore's "an instant or sorcery card".
   Spec.it s "ExileFromGraveyard (Living Lore)" $
     Common.assertCodec
       s
       (EntryRewrite.codec (GrantedAbility.codec Card.codec) (Effect.codec Card.codec (GrantedAbility.codec Card.codec)))
-      (EntryRewrite.ExileFromGraveyard (Filter.Or [Filter.HasCardType CardType.Instant, Filter.HasCardType CardType.Sorcery]))
-      " {\"type\":\"ExileFromGraveyard\",\"value\":{\"type\":\"Or\",\"value\":[{\"type\":\"HasCardType\",\"value\":{\"type\":\"Instant\"}},{\"type\":\"HasCardType\",\"value\":{\"type\":\"Sorcery\"}}]}} "
+      (EntryRewrite.ExileFromGraveyard (ExileFromGraveyard.MkExileFromGraveyard {ExileFromGraveyard.filter = Filter.Or [Filter.HasCardType CardType.Instant, Filter.HasCardType CardType.Sorcery], ExileFromGraveyard.players = PlayerScope.Related PlayerRelation.You, ExileFromGraveyard.count = HowMany.one}))
+      " {\"type\":\"ExileFromGraveyard\",\"value\":{\"filter\":{\"type\":\"Or\",\"value\":[{\"type\":\"HasCardType\",\"value\":{\"type\":\"Instant\"}},{\"type\":\"HasCardType\",\"value\":{\"type\":\"Sorcery\"}}]}}} "
   -- CR 614.1c / 301.5e: an as-enters host choice, carrying the filter the host
   -- must match -- Grifter's Blade's "a creature you control it could be attached
   -- to", CR 701.3a's atom written by the card.

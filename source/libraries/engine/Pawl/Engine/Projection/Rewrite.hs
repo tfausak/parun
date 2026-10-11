@@ -124,6 +124,7 @@ import qualified Pawl.Types.ExchangeCardZones as ExchangeCardZones
 import qualified Pawl.Types.ExchangeOwnership as ExchangeOwnership
 import qualified Pawl.Types.ExchangeValues as ExchangeValues
 import qualified Pawl.Types.ExchangedValue as ExchangedValue
+import qualified Pawl.Types.ExileFromGraveyard as ExileFromGraveyard
 import qualified Pawl.Types.Face as Face
 import qualified Pawl.Types.FaceDownCharacteristics as FaceDownCharacteristics
 import qualified Pawl.Types.FaceDownState as FaceDownState
@@ -1740,7 +1741,7 @@ rewriteEntryRewrite pairs rewrite = case rewrite of
   -- instant or sorcery, card types CR 612.1 reaches. Latent for OrTapped's
   -- reason -- that EntryR matches Filter.IsSource, and CR 400.7 forbids carrying a
   -- text change onto the permanent before it entered.
-  EntryRewrite.ExileFromGraveyard f -> EntryRewrite.ExileFromGraveyard (Filter.rewrite pairs f)
+  EntryRewrite.ExileFromGraveyard exile -> EntryRewrite.ExileFromGraveyard exile {ExileFromGraveyard.filter = Filter.rewrite pairs (ExileFromGraveyard.filter exile), ExileFromGraveyard.count = rewriteHowMany pairs (ExileFromGraveyard.count exile)}
   -- CR 614.1a's "sacrifice a Forest instead": Heart of Yavimaya's names a land
   -- type CR 612.1 reaches. Latent for the arm above's reason.
   EntryRewrite.SacrificeToEnter s -> EntryRewrite.SacrificeToEnter s {SacrificeToEnter.filter = Filter.rewrite pairs (SacrificeToEnter.filter s)}

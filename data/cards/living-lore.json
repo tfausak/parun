@@ -2,11 +2,22 @@
   "faces": [
     {
       "characteristicPT": {
-        "type": "AgainstCardsExiledWith",
-        "value": {
-          "type": "Measure",
+        "power": {
+          "type": "AgainstCardsExiledWith",
           "value": {
-            "type": "ManaValue"
+            "type": "Measure",
+            "value": {
+              "type": "ManaValue"
+            }
+          }
+        },
+        "toughness": {
+          "type": "AgainstCardsExiledWith",
+          "value": {
+            "type": "Measure",
+            "value": {
+              "type": "ManaValue"
+            }
           }
         }
       },
@@ -41,21 +52,23 @@
               "rewrite": {
                 "type": "ExileFromGraveyard",
                 "value": {
-                  "type": "Or",
-                  "value": [
-                    {
-                      "type": "HasCardType",
-                      "value": {
-                        "type": "Instant"
+                  "filter": {
+                    "type": "Or",
+                    "value": [
+                      {
+                        "type": "HasCardType",
+                        "value": {
+                          "type": "Instant"
+                        }
+                      },
+                      {
+                        "type": "HasCardType",
+                        "value": {
+                          "type": "Sorcery"
+                        }
                       }
-                    },
-                    {
-                      "type": "HasCardType",
-                      "value": {
-                        "type": "Sorcery"
-                      }
-                    }
-                  ]
+                    ]
+                  }
                 }
               }
             }

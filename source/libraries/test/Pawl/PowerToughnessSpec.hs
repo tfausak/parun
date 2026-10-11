@@ -481,6 +481,7 @@ spec s registry = Spec.describe s "Pawl.Engine.PowerToughness" $ do
   fortifyingDraughtSpec s registry
   ingesterSpec s registry
   livingLoreSpec s registry
+  suturedGhoulSpec s registry
   unleashFurySpec s registry
   attachedToEachSpec s registry
 
@@ -1470,6 +1471,49 @@ livingLoreCombat s registry decision = do
   case newestNamed "Living Lore" entered of
     Nothing -> pure entered
     Just loreId -> pure (S.runCombat answer (ready loreId))
+
+-- Sutured Ghoul ({4}{B}{B}{B} Creature -- Zombie, printed */*), text: "Trample /
+-- As this creature enters, exile any number of creature cards from your
+-- graveyard. / Sutured Ghoul's power is equal to the total power of the exiled
+-- cards and its toughness is equal to their total toughness." Oracle text
+-- verified against Scryfall 2026-10-11.
+--
+-- CR 614.13a's own example: "If Sutured Ghoul and Runeclaw Bear enter the
+-- battlefield from your graveyard at the same time, you can't choose to exile
+-- either of them". Rise of the Dark Realms puts both onto the battlefield as one
+-- CR 608.2f sweep, the Ghoul moved first, so the Bear is still in the graveyard
+-- while the Ghoul's exile is offered. The answerer takes every card offered, so
+-- an offer that wrongly held the Bear would exile it.
+suturedGhoulSpec :: (Monad m, Monad n) => Spec.Spec m n -> Registry.Registry m -> n ()
+suturedGhoulSpec s registry = Spec.describe s "Sutured Ghoul" $ do
+  Spec.it s "CR 614.13a a creature card entering beside it is no candidate for its exile" $ do
+    ghoul <- S.printingOf s registry "Sutured Ghoul"
+    bear <- S.printingOf s registry "Runeclaw Bear"
+    rise <- S.printingOf s registry "Rise of the Dark Realms"
+    swamp <- S.printingOf s registry "Swamp"
+    let withGhoul = snd (S.addGraveyardCard ghoul S.alice (S.landsInPlay swamp 9))
+        (gs, held) = S.handOne rise (snd (S.addGraveyardCard bear S.alice withGhoul))
+        after = S.runPure exilingEveryOffer gs (S.cast S.alice held >> Stack.resolveTop >> Engine.settleForPriority)
+    Spec.assertEqWith s "the Bear entered: it was never offered to the Ghoul's exile" (S.countOnBattlefieldByName (CardName.MkCardName (Text.pack "Runeclaw Bear")) S.alice after) 1
+    Spec.assertEqWith s "nothing was exiled" (length (exiledNamed "Runeclaw Bear" after)) 0
+    Spec.assertEqWith s "so the Ghoul entered a 0/0 and died (CR 704.5f)" (length (graveyardNamed "Sutured Ghoul" after)) 1
+  -- The paired control, differing in how the Ghoul arrives: cast alone, with the
+  -- Bear left behind in the graveyard, the same answerer exiles it.
+  Spec.it s "CR 614.1c a creature card that is not entering is offered, and the Ghoul is its size" $ do
+    ghoul <- S.printingOf s registry "Sutured Ghoul"
+    bear <- S.printingOf s registry "Runeclaw Bear"
+    swamp <- S.printingOf s registry "Swamp"
+    let (gs, held) = S.handOne ghoul (snd (S.addGraveyardCard bear S.alice (S.landsInPlay swamp 7)))
+        after = S.runPure exilingEveryOffer gs (S.cast S.alice held >> Stack.resolveTop >> Engine.settleForPriority)
+    Spec.assertEqWith s "the Ghoul is a 2/2 off the exiled Bear" (fmap (`S.powerToughnessOf` after) (newestNamed "Sutured Ghoul" after)) (Just (Just (2, 2)))
+    Spec.assertEqWith s "and the Bear is in exile" (length (exiledNamed "Runeclaw Bear" after)) 1
+
+-- Answer the as-enters exile with every card offered, so what was offered is
+-- what is exiled.
+exilingEveryOffer :: Prompt.Prompt r -> r
+exilingEveryOffer p = case p of
+  Prompt.ChooseAnyNumberToExile _ _ _ offered _ -> Set.fromList offered
+  _ -> S.identityAnswer p
 
 -- The PROJECTED box -- the finished layer fold, never the printed values -- of
 -- every object whose card carries this name. A list rather than a Maybe so the

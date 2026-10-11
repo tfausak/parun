@@ -6,6 +6,7 @@ import qualified Pawl.Codec.EntersWith as EntersWith
 import qualified Pawl.Codec.EntryFlip as EntryFlip
 import qualified Pawl.Codec.EntryOption as EntryOption
 import qualified Pawl.Codec.EntryPrice as EntryPrice
+import qualified Pawl.Codec.ExileFromGraveyard as ExileFromGraveyard
 import qualified Pawl.Codec.Filter as Filter
 import qualified Pawl.Codec.Keyword as Keyword
 import qualified Pawl.Codec.SacrificeAnyNumber as SacrificeAnyNumber
@@ -59,7 +60,7 @@ codec abilityCodec effectCodec =
       Arm.payload "OrTapped" EntryPrice.codec EntryRewrite.OrTapped (\x -> case x of EntryRewrite.OrTapped y -> Just y; _ -> Nothing),
       Arm.payload "SacrificeAnyNumber" SacrificeAnyNumber.codec EntryRewrite.SacrificeAnyNumber (\x -> case x of EntryRewrite.SacrificeAnyNumber y -> Just y; _ -> Nothing),
       Arm.payload "SacrificeToEnter" SacrificeToEnter.codec EntryRewrite.SacrificeToEnter (\x -> case x of EntryRewrite.SacrificeToEnter y -> Just y; _ -> Nothing),
-      Arm.payload "ExileFromGraveyard" (Filter.codec Keyword.codec) EntryRewrite.ExileFromGraveyard (\x -> case x of EntryRewrite.ExileFromGraveyard y -> Just y; _ -> Nothing),
+      Arm.payload "ExileFromGraveyard" ExileFromGraveyard.codec EntryRewrite.ExileFromGraveyard (\x -> case x of EntryRewrite.ExileFromGraveyard y -> Just y; _ -> Nothing),
       Arm.payload "EntersAttachedTo" (Filter.codec Keyword.codec) EntryRewrite.EntersAttachedTo (\x -> case x of EntryRewrite.EntersAttachedTo y -> Just y; _ -> Nothing),
       Arm.payload "RunEffects" (Common.seq effectCodec) EntryRewrite.RunEffects (\x -> case x of EntryRewrite.RunEffects y -> Just y; _ -> Nothing)
     ]

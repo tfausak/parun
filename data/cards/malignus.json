@@ -2,37 +2,74 @@
   "faces": [
     {
       "characteristicPT": {
-        "type": "Halved",
-        "value": {
-          "quantity": {
-            "type": "Count",
-            "value": {
-              "aggregation": {
-                "type": "Greatest",
-                "value": {
-                  "type": "LifeTotal",
+        "power": {
+          "type": "Halved",
+          "value": {
+            "quantity": {
+              "type": "Count",
+              "value": {
+                "aggregation": {
+                  "type": "Greatest",
                   "value": {
-                    "type": "Candidate"
+                    "type": "LifeTotal",
+                    "value": {
+                      "type": "Candidate"
+                    }
                   }
-                }
-              },
-              "filter": {
-                "type": "And",
-                "value": []
-              },
-              "scope": {
-                "type": "OverPlayers",
-                "value": {
-                  "type": "Relative",
+                },
+                "filter": {
+                  "type": "And",
+                  "value": []
+                },
+                "scope": {
+                  "type": "OverPlayers",
                   "value": {
-                    "type": "Opponent"
+                    "type": "Relative",
+                    "value": {
+                      "type": "Opponent"
+                    }
                   }
                 }
               }
+            },
+            "rounding": {
+              "type": "Up"
             }
-          },
-          "rounding": {
-            "type": "Up"
+          }
+        },
+        "toughness": {
+          "type": "Halved",
+          "value": {
+            "quantity": {
+              "type": "Count",
+              "value": {
+                "aggregation": {
+                  "type": "Greatest",
+                  "value": {
+                    "type": "LifeTotal",
+                    "value": {
+                      "type": "Candidate"
+                    }
+                  }
+                },
+                "filter": {
+                  "type": "And",
+                  "value": []
+                },
+                "scope": {
+                  "type": "OverPlayers",
+                  "value": {
+                    "type": "Relative",
+                    "value": {
+                      "type": "Opponent"
+                    }
+                  }
+                }
+              }
+            },
+            "rounding": {
+              "type": "Up"
+            }
           }
         }
       },

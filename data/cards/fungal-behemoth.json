@@ -2,45 +2,92 @@
   "faces": [
     {
       "characteristicPT": {
-        "type": "Count",
-        "value": {
-          "aggregation": {
-            "type": "Total",
-            "value": {
-              "type": "ObjectCounters",
+        "power": {
+          "type": "Count",
+          "value": {
+            "aggregation": {
+              "type": "Total",
               "value": {
-                "type": "PlusOnePlusOne"
+                "type": "ObjectCounters",
+                "value": {
+                  "type": "PlusOnePlusOne"
+                }
+              }
+            },
+            "filter": {
+              "type": "And",
+              "value": [
+                {
+                  "type": "HasCardType",
+                  "value": {
+                    "type": "Creature"
+                  }
+                },
+                {
+                  "type": "ControlledBy",
+                  "value": {
+                    "type": "You"
+                  }
+                }
+              ]
+            },
+            "scope": {
+              "type": "InZone",
+              "value": {
+                "player": {
+                  "type": "Relative",
+                  "value": {
+                    "type": "AnyPlayer"
+                  }
+                },
+                "zone": {
+                  "type": "Battlefield"
+                }
               }
             }
-          },
-          "filter": {
-            "type": "And",
-            "value": [
-              {
-                "type": "HasCardType",
+          }
+        },
+        "toughness": {
+          "type": "Count",
+          "value": {
+            "aggregation": {
+              "type": "Total",
+              "value": {
+                "type": "ObjectCounters",
                 "value": {
-                  "type": "Creature"
-                }
-              },
-              {
-                "type": "ControlledBy",
-                "value": {
-                  "type": "You"
+                  "type": "PlusOnePlusOne"
                 }
               }
-            ]
-          },
-          "scope": {
-            "type": "InZone",
-            "value": {
-              "player": {
-                "type": "Relative",
-                "value": {
-                  "type": "AnyPlayer"
+            },
+            "filter": {
+              "type": "And",
+              "value": [
+                {
+                  "type": "HasCardType",
+                  "value": {
+                    "type": "Creature"
+                  }
+                },
+                {
+                  "type": "ControlledBy",
+                  "value": {
+                    "type": "You"
+                  }
                 }
-              },
-              "zone": {
-                "type": "Battlefield"
+              ]
+            },
+            "scope": {
+              "type": "InZone",
+              "value": {
+                "player": {
+                  "type": "Relative",
+                  "value": {
+                    "type": "AnyPlayer"
+                  }
+                },
+                "zone": {
+                  "type": "Battlefield"
+                }
               }
             }
           }

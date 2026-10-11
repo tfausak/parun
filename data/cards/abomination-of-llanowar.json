@@ -2,70 +2,144 @@
   "faces": [
     {
       "characteristicPT": {
-        "type": "Plus",
-        "value": {
-          "left": {
-            "type": "Count",
-            "value": {
-              "aggregation": {
-                "type": "Members"
-              },
-              "filter": {
-                "type": "And",
-                "value": [
-                  {
-                    "type": "HasSubtype",
-                    "value": {
-                      "type": "Elf"
+        "power": {
+          "type": "Plus",
+          "value": {
+            "left": {
+              "type": "Count",
+              "value": {
+                "aggregation": {
+                  "type": "Members"
+                },
+                "filter": {
+                  "type": "And",
+                  "value": [
+                    {
+                      "type": "HasSubtype",
+                      "value": {
+                        "type": "Elf"
+                      }
+                    },
+                    {
+                      "type": "ControlledBy",
+                      "value": {
+                        "type": "You"
+                      }
                     }
-                  },
-                  {
-                    "type": "ControlledBy",
-                    "value": {
-                      "type": "You"
+                  ]
+                },
+                "scope": {
+                  "type": "InZone",
+                  "value": {
+                    "player": {
+                      "type": "Relative",
+                      "value": {
+                        "type": "AnyPlayer"
+                      }
+                    },
+                    "zone": {
+                      "type": "Battlefield"
                     }
                   }
-                ]
-              },
-              "scope": {
-                "type": "InZone",
-                "value": {
-                  "player": {
-                    "type": "Relative",
-                    "value": {
-                      "type": "AnyPlayer"
+                }
+              }
+            },
+            "right": {
+              "type": "Count",
+              "value": {
+                "aggregation": {
+                  "type": "Members"
+                },
+                "filter": {
+                  "type": "HasSubtype",
+                  "value": {
+                    "type": "Elf"
+                  }
+                },
+                "scope": {
+                  "type": "InZone",
+                  "value": {
+                    "player": {
+                      "type": "Relative",
+                      "value": {
+                        "type": "You"
+                      }
+                    },
+                    "zone": {
+                      "type": "Graveyard"
                     }
-                  },
-                  "zone": {
-                    "type": "Battlefield"
                   }
                 }
               }
             }
-          },
-          "right": {
-            "type": "Count",
-            "value": {
-              "aggregation": {
-                "type": "Members"
-              },
-              "filter": {
-                "type": "HasSubtype",
-                "value": {
-                  "type": "Elf"
-                }
-              },
-              "scope": {
-                "type": "InZone",
-                "value": {
-                  "player": {
-                    "type": "Relative",
-                    "value": {
-                      "type": "You"
+          }
+        },
+        "toughness": {
+          "type": "Plus",
+          "value": {
+            "left": {
+              "type": "Count",
+              "value": {
+                "aggregation": {
+                  "type": "Members"
+                },
+                "filter": {
+                  "type": "And",
+                  "value": [
+                    {
+                      "type": "HasSubtype",
+                      "value": {
+                        "type": "Elf"
+                      }
+                    },
+                    {
+                      "type": "ControlledBy",
+                      "value": {
+                        "type": "You"
+                      }
                     }
-                  },
-                  "zone": {
-                    "type": "Graveyard"
+                  ]
+                },
+                "scope": {
+                  "type": "InZone",
+                  "value": {
+                    "player": {
+                      "type": "Relative",
+                      "value": {
+                        "type": "AnyPlayer"
+                      }
+                    },
+                    "zone": {
+                      "type": "Battlefield"
+                    }
+                  }
+                }
+              }
+            },
+            "right": {
+              "type": "Count",
+              "value": {
+                "aggregation": {
+                  "type": "Members"
+                },
+                "filter": {
+                  "type": "HasSubtype",
+                  "value": {
+                    "type": "Elf"
+                  }
+                },
+                "scope": {
+                  "type": "InZone",
+                  "value": {
+                    "player": {
+                      "type": "Relative",
+                      "value": {
+                        "type": "You"
+                      }
+                    },
+                    "zone": {
+                      "type": "Graveyard"
+                    }
                   }
                 }
               }

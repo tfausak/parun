@@ -122,11 +122,22 @@
     },
     {
       "characteristicPT": {
-        "type": "AgainstCraftMaterials",
-        "value": {
-          "type": "Measure",
+        "power": {
+          "type": "AgainstCraftMaterials",
           "value": {
-            "type": "Power"
+            "type": "Measure",
+            "value": {
+              "type": "Power"
+            }
+          }
+        },
+        "toughness": {
+          "type": "AgainstCraftMaterials",
+          "value": {
+            "type": "Measure",
+            "value": {
+              "type": "Power"
+            }
           }
         }
       },

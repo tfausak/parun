@@ -1,0 +1,44 @@
+{
+  "description": "CR 614.1c Sutured Ghoul exiles two creature cards and is their total power and toughness",
+  "note": "Alice's graveyard holds three creature cards and a sorcery. She exiles Goblin Piker (2/1) and Silent Arbiter (1/5) as the Ghoul enters, so it is a 3/6: the power and toughness are two different totals, which one quantity on both boxes could not say. Runeclaw Bear, not chosen, stays behind. The two cards leave in one event (CR 608.2f), so Spirit Mascot's \"one or more cards leave your graveyard\" fires once.",
+  "board": {
+    "seats": [
+      {
+        "name": "alice",
+        "battlefield": [
+          { "card": "Swamp", "ready": true },
+          { "card": "Swamp", "ready": true },
+          { "card": "Swamp", "ready": true },
+          { "card": "Swamp", "ready": true },
+          { "card": "Swamp", "ready": true },
+          { "card": "Swamp", "ready": true },
+          { "card": "Swamp", "ready": true },
+          { "card": "Spirit Mascot" }
+        ],
+        "hand": [{ "card": "Sutured Ghoul", "label": "ghoul" }],
+        "graveyard": [
+          { "card": "Goblin Piker", "label": "piker" },
+          { "card": "Silent Arbiter", "label": "arbiter" },
+          { "card": "Runeclaw Bear" },
+          { "card": "Day of Judgment" }
+        ]
+      },
+      {
+        "name": "bob"
+      }
+    ],
+    "active": "alice",
+    "step": "PrecombatMain"
+  },
+  "timeline": [
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": { "Answer": { "prompt": "ChooseAnyNumberToExile", "with": ["$piker", "$arbiter"] } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": { "Cast": { "object": "$ghoul", "mana": ["Swamp", "Swamp#2", "Swamp#3", "Swamp#4", "Swamp#5", "Swamp#6", "Swamp#7"] } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass" },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "check": { "PowerToughness": { "object": "Sutured Ghoul", "power": 3, "toughness": 6 } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "check": { "Count": { "player": "alice", "zone": "Exile", "card": "Goblin Piker", "count": 1 } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "check": { "Count": { "player": "alice", "zone": "Exile", "card": "Silent Arbiter", "count": 1 } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "check": { "Count": { "player": "alice", "zone": "Graveyard", "card": "Runeclaw Bear", "count": 1 } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "check": { "Keywords": { "object": "Sutured Ghoul", "keyword": { "type": "Trample" }, "count": 1 } } },
+    { "turn": 1, "step": "PostcombatMain", "player": "alice", "check": { "Counters": { "object": "Spirit Mascot", "kind": { "type": "PlusOnePlusOne" }, "count": 1 } } }
+  ]
+}

@@ -192,6 +192,7 @@ encode p answer = case p of
   Prompt.ChooseMaterials {} -> Response.ChoseMaterials answer
   Prompt.ChooseAnyNumberToSacrifice {} -> Response.ChoseSacrifices answer
   Prompt.ChooseAnyNumberToReveal {} -> Response.ChoseReveals answer
+  Prompt.ChooseAnyNumberToExile {} -> Response.ChoseExilesFromGraveyard answer
   Prompt.ChooseAnyNumberOfPermanents {} -> Response.ChoseAnyNumberOfPermanents answer
   Prompt.ChooseAnyNumberToDiscard {} -> Response.ChoseAnyNumberToDiscard answer
   Prompt.ChoosePermanent {} -> Response.ChosePermanent answer
@@ -603,6 +604,9 @@ decode p response = case p of
     _ -> Nothing
   Prompt.ChooseAnyNumberToReveal {} -> case response of
     Response.ChoseReveals ids -> Just ids
+    _ -> Nothing
+  Prompt.ChooseAnyNumberToExile {} -> case response of
+    Response.ChoseExilesFromGraveyard ids -> Just ids
     _ -> Nothing
   Prompt.ChooseAnyNumberOfPermanents {} -> case response of
     Response.ChoseAnyNumberOfPermanents ids -> Just ids
@@ -1205,6 +1209,10 @@ defaultAnswer p = case p of
   -- Every candidate, the arm above's maximal subset: CR 702.38a admits every
   -- subset here and revealing spends nothing, so no answer can be illegal.
   Prompt.ChooseAnyNumberToReveal _ _ _ candidates -> Set.fromList candidates
+  -- The first candidates up to the ceiling, the arm above's maximal subset: CR
+  -- 614.1c's "any number" admits every subset no larger than the ceiling, so no
+  -- answer can be illegal. A deterministic fallback, not a recommendation.
+  Prompt.ChooseAnyNumberToExile _ _ _ candidates atMost -> Set.fromList (maybe id (take . Natural.toIntSaturating) atMost candidates)
   -- The first candidates up to the ceiling, the arm above's maximal subset: CR
   -- 608.2d admits every subset no larger than the ceiling, so no answer can be
   -- illegal. A deterministic fallback, not a recommendation.

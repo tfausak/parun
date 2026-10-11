@@ -180,6 +180,7 @@ import qualified Pawl.Types.ExchangeValues as ExchangeValues
 import qualified Pawl.Types.ExchangeZones as ExchangeZones
 import qualified Pawl.Types.ExchangedValue as ExchangedValue
 import qualified Pawl.Types.ExileCardsFromGraveyard as ExileCardsFromGraveyard
+import qualified Pawl.Types.ExileFromGraveyard as ExileFromGraveyard
 import qualified Pawl.Types.ExileHaunting as ExileHaunting
 import qualified Pawl.Types.ExileMaterials as ExileMaterials
 import qualified Pawl.Types.ExilePermanents as ExilePermanents
@@ -1440,7 +1441,7 @@ entryRewriteNames asking onAbility onEffect x = case x of
   EntryRewrite.UnderSourceControl -> False
   EntryRewrite.SacrificeAnyNumber sacrificeAnyNumber -> sacrificeAnyNumberNames asking sacrificeAnyNumber
   EntryRewrite.SacrificeToEnter sacrificeToEnter -> sacrificeToEnterNames asking sacrificeToEnter
-  EntryRewrite.ExileFromGraveyard filter_ -> filterNames asking filter_
+  EntryRewrite.ExileFromGraveyard exileFromGraveyard -> exileFromGraveyardNames asking exileFromGraveyard
   EntryRewrite.EntersAttachedTo filter_ -> filterNames asking filter_
   EntryRewrite.Riot -> False
   EntryRewrite.ReadAhead -> False
@@ -2505,6 +2506,10 @@ ruleAbilitiesNames asking x = case x of
 sacrificeNames :: Asking -> Sacrifice.Sacrifice keyword -> Bool
 sacrificeNames asking x = case x of
   Sacrifice.MkSacrifice _count whichPermanents -> filterNames asking whichPermanents
+
+exileFromGraveyardNames :: Asking -> ExileFromGraveyard.ExileFromGraveyard -> Bool
+exileFromGraveyardNames asking x = case x of
+  ExileFromGraveyard.MkExileFromGraveyard filter_ _players count -> filterNames asking filter_ || any (quantityNames asking) (HowMany.quantity count)
 
 sacrificeAnyNumberNames :: Asking -> SacrificeAnyNumber.SacrificeAnyNumber -> Bool
 sacrificeAnyNumberNames asking x = case x of

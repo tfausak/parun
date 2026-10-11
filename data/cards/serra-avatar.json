@@ -2,11 +2,22 @@
   "faces": [
     {
       "characteristicPT": {
-        "type": "LifeTotal",
-        "value": {
-          "type": "Relative",
+        "power": {
+          "type": "LifeTotal",
           "value": {
-            "type": "You"
+            "type": "Relative",
+            "value": {
+              "type": "You"
+            }
+          }
+        },
+        "toughness": {
+          "type": "LifeTotal",
+          "value": {
+            "type": "Relative",
+            "value": {
+              "type": "You"
+            }
           }
         }
       },

@@ -2,51 +2,104 @@
   "faces": [
     {
       "characteristicPT": {
-        "type": "Count",
-        "value": {
-          "aggregation": {
-            "type": "Greatest",
-            "value": {
-              "type": "Measure",
+        "power": {
+          "type": "Count",
+          "value": {
+            "aggregation": {
+              "type": "Greatest",
               "value": {
-                "type": "Power"
+                "type": "Measure",
+                "value": {
+                  "type": "Power"
+                }
+              }
+            },
+            "filter": {
+              "type": "And",
+              "value": [
+                {
+                  "type": "HasCardType",
+                  "value": {
+                    "type": "Creature"
+                  }
+                },
+                {
+                  "type": "ControlledBy",
+                  "value": {
+                    "type": "You"
+                  }
+                },
+                {
+                  "type": "Not",
+                  "value": {
+                    "type": "IsSource"
+                  }
+                }
+              ]
+            },
+            "scope": {
+              "type": "InZone",
+              "value": {
+                "player": {
+                  "type": "Relative",
+                  "value": {
+                    "type": "AnyPlayer"
+                  }
+                },
+                "zone": {
+                  "type": "Battlefield"
+                }
               }
             }
-          },
-          "filter": {
-            "type": "And",
-            "value": [
-              {
-                "type": "HasCardType",
+          }
+        },
+        "toughness": {
+          "type": "Count",
+          "value": {
+            "aggregation": {
+              "type": "Greatest",
+              "value": {
+                "type": "Measure",
                 "value": {
-                  "type": "Creature"
-                }
-              },
-              {
-                "type": "ControlledBy",
-                "value": {
-                  "type": "You"
-                }
-              },
-              {
-                "type": "Not",
-                "value": {
-                  "type": "IsSource"
+                  "type": "Power"
                 }
               }
-            ]
-          },
-          "scope": {
-            "type": "InZone",
-            "value": {
-              "player": {
-                "type": "Relative",
-                "value": {
-                  "type": "AnyPlayer"
+            },
+            "filter": {
+              "type": "And",
+              "value": [
+                {
+                  "type": "HasCardType",
+                  "value": {
+                    "type": "Creature"
+                  }
+                },
+                {
+                  "type": "ControlledBy",
+                  "value": {
+                    "type": "You"
+                  }
+                },
+                {
+                  "type": "Not",
+                  "value": {
+                    "type": "IsSource"
+                  }
                 }
-              },
-              "zone": {
-                "type": "Battlefield"
+              ]
+            },
+            "scope": {
+              "type": "InZone",
+              "value": {
+                "player": {
+                  "type": "Relative",
+                  "value": {
+                    "type": "AnyPlayer"
+                  }
+                },
+                "zone": {
+                  "type": "Battlefield"
+                }
               }
             }
           }

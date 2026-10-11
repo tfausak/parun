@@ -27,9 +27,17 @@
     },
     {
       "characteristicPT": {
-        "type": "Measure",
-        "value": {
-          "type": "ManaValue"
+        "power": {
+          "type": "Measure",
+          "value": {
+            "type": "ManaValue"
+          }
+        },
+        "toughness": {
+          "type": "Measure",
+          "value": {
+            "type": "ManaValue"
+          }
         }
       },
       "manaCost": [

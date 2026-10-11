@@ -324,7 +324,7 @@ populatedFaceJson =
     <> "\"triggeredAbilities\":[{\"condition\":{\"type\":\"SelfEnters\"},"
     <> "\"modal\":{\"modes\":[{}]}}],"
     <> "\"castingPermissions\":[{\"type\":\"CastFromLibraryWhileSearching\"}],"
-    <> "\"loyalty\":{\"type\":\"Literal\",\"value\":3},\"colorIndicator\":[{\"type\":\"White\"}],\"characteristicPT\":{\"type\":\"Measure\",\"value\":{\"type\":\"ManaValue\"}},"
+    <> "\"loyalty\":{\"type\":\"Literal\",\"value\":3},\"colorIndicator\":[{\"type\":\"White\"}],\"characteristicPT\":{\"power\":{\"type\":\"Measure\",\"value\":{\"type\":\"ManaValue\"}},\"toughness\":{\"type\":\"Measure\",\"value\":{\"type\":\"ManaValue\"}}},"
     <> "\"delayedAbilities\":{\"trigger\":{\"condition\":{\"type\":\"SelfEnters\"},"
     <> "\"modal\":{\"modes\":[{}]}}},"
     <> "\"playerAbilities\":[{\"scope\":{\"type\":\"You\"},\"effect\":{\"type\":\"CantCastSpells\"}}],"
@@ -500,7 +500,7 @@ spec s = Spec.describe s "Pawl.Codec.Face" $ do
         encodeFace
         decodeFace
         baseFace {Face.characteristicPT = Just CharacteristicPT.MkCharacteristicPT {CharacteristicPT.power = Quantity.Measure Measure.ManaValue, CharacteristicPT.toughness = Quantity.Measure Measure.ManaValue}}
-        (init baseFaceJson <> ",\"characteristicPT\":{\"type\":\"Measure\",\"value\":{\"type\":\"ManaValue\"}}}")
+        (init baseFaceJson <> ",\"characteristicPT\":{\"power\":{\"type\":\"Measure\",\"value\":{\"type\":\"ManaValue\"}},\"toughness\":{\"type\":\"Measure\",\"value\":{\"type\":\"ManaValue\"}}}}")
     Spec.it s "delayedAbilities" $
       Common.assertJsonCodec
         s

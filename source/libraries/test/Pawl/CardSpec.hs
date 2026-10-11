@@ -191,6 +191,7 @@ import qualified Pawl.Types.ExchangeValues as ExchangeValues
 import qualified Pawl.Types.ExchangeZones as ExchangeZones
 import qualified Pawl.Types.ExchangedValue as ExchangedValue
 import qualified Pawl.Types.ExileCardsFromGraveyard as ExileCardsFromGraveyard
+import qualified Pawl.Types.ExileFromGraveyard as ExileFromGraveyard
 import qualified Pawl.Types.ExileMaterials as ExileMaterials
 import qualified Pawl.Types.ExilePermanents as ExilePermanents
 import qualified Pawl.Types.Face as Face
@@ -2006,19 +2007,15 @@ cardAuthoredEffects :: Face.Face Card.Type.Card -> [Effect.Effect Card.Type.Card
 cardAuthoredEffects card =
   cardResolutionEffects card <> concatMap effectWithNested (concat (handActions card))
 
--- Both slots of a face's characteristic-defining P/T: one printed ability, which
--- Pawl.Codec.Face writes into each box's slot, or -- on CR 709.4c's combined view
--- of a split card -- one half's ability per box (Pawl.Engine.Card.definedBox).
--- The walks below want the quantities themselves.
+-- Both slots of a face's characteristic-defining P/T, one quantity per box --
+-- Sutured Ghoul's two totals, or on CR 709.4c's combined view of a split card one
+-- half's ability per box (Pawl.Engine.Card.definedBox). Both even where they
+-- agree: the lints below compare a count of what a card mentions against a count
+-- of the atoms in its encoded JSON, and Pawl.Codec.Face writes each slot.
 characteristicQuantities :: Face.Face Card.Type.Card -> [Quantity.Type.Quantity]
 characteristicQuantities card = case Face.characteristicPT card of
   Nothing -> []
-  -- ONE quantity where the two slots agree, which every printed face's do: the
-  -- lints below compare a count of what a card mentions against a count of the
-  -- atoms in its encoded JSON, and the wire carries the ability once.
-  Just cda
-    | CharacteristicPT.power cda == CharacteristicPT.toughness cda -> [CharacteristicPT.power cda]
-    | otherwise -> [CharacteristicPT.power cda, CharacteristicPT.toughness cda]
+  Just cda -> [CharacteristicPT.power cda, CharacteristicPT.toughness cda]
 
 cardCounts :: Face.Face Card.Type.Card -> [Count.Type.Count Quantity.Type.Quantity]
 cardCounts card =
@@ -4966,7 +4963,7 @@ entryRewriteFilters entryRewrite = case entryRewrite of
   -- CR 614.1c's as-enters exile carries a criterion over a CARD IN A GRAVEYARD
   -- (Living Lore's "an instant or sorcery card"), the reveal's axis one zone over
   -- and unframed with it.
-  EntryRewrite.ExileFromGraveyard f -> unframed [f]
+  EntryRewrite.ExileFromGraveyard (ExileFromGraveyard.MkExileFromGraveyard f _players count) -> unframed [f] <> foldMap quantityFilters (HowMany.quantity count)
   -- CR 614.1c's as-enters host choice, evaluated by Pawl.Engine.Attach.hostsFor
   -- against a view whose `canHostSubject` is filled in -- the same position
   -- Effect.AttachTarget's destination is, so the same Framing. The one arm of

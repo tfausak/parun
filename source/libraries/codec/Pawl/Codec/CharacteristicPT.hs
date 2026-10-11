@@ -8,8 +8,8 @@ import qualified Pawl.JsonCodec.Fields as Fields
 import qualified Pawl.Types.CharacteristicPT as CharacteristicPT
 
 -- | A bare object keyed by the record's field names, replacing the
--- @[power, toughness]@ array this payload used to be. Runtime-only:
--- ProjectedCharacteristics serialises a projection, never card data.
+-- @[power, toughness]@ array this payload used to be. A card face's
+-- characteristic-defining pair and a projection's alike.
 codec :: Codec.Codec CharacteristicPT.CharacteristicPT
 codec = Fields.object $ do
   power <- Fields.required "power" Quantity.codec CharacteristicPT.power
