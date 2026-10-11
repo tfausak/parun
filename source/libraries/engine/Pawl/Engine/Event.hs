@@ -216,6 +216,7 @@ import Pawl.Types.ReplacementCandidate (ReplacementCandidate)
 import qualified Pawl.Types.ReplacementCandidate as ReplacementCandidate
 import qualified Pawl.Types.ReplacementEffect as ReplacementEffect
 import qualified Pawl.Types.RevealCause as RevealCause
+import qualified Pawl.Types.RevealWindow as RevealWindow
 import qualified Pawl.Types.Revealed as Revealed
 import qualified Pawl.Types.RoomHalf as RoomHalf
 import qualified Pawl.Types.SacrificeAnyNumber as SacrificeAnyNumber
@@ -8740,9 +8741,9 @@ turnUpKeptDraws = do
 -- is the direction that is never admissible.
 --
 -- CR 121.9's "may look at that card as they draw it before choosing" is satisfied
--- by the prompt naming the card. pawl has no per-player hidden-information filter
--- at all (#1412), so nothing here could have shown the player less
--- than the rule allows.
+-- by the prompt naming the card. Not implemented: an answerer is handed the
+-- whole state, hidden cards included (#1412), so nothing here could have shown
+-- the player less than the rule allows.
 --
 -- The reveal goes through the ordinary funnel with CR 702.94a's cause, which is
 -- what makes the linked trigger (CR 603.11) findable: `eventTriggers`' hand source
@@ -8756,9 +8757,10 @@ turnUpKeptDraws = do
 -- A card drawn while a spell is being cast or an ability activated is offered
 -- here only once that is done (CR 121.8, `turnUpKeptDraws`).
 --
--- Not implemented: CR 702.94b's LASTING reveal -- the card stays revealed until it
--- leaves the hand or the ability leaves the stack -- which needs a per-object
--- revealed flag (#1408).
+-- CR 702.94b's lasting reveal -- the card stays revealed until the ability leaves
+-- the stack -- is Engine.placeBorne's CR 701.20a stamp, made for every trigger
+-- whose Revealed event names a card still in place; the card leaving the hand
+-- ends it with the incarnation.
 offerMiracleReveal :: PlayerId -> ObjectId -> Game ()
 offerMiracleReveal pid drawn = do
   gs <- State.get
@@ -8951,6 +8953,14 @@ reveal :: RevealCause.RevealCause -> PlayerId -> ObjectId -> Game ()
 reveal cause pid oid = do
   gs <- State.get
   Monad.mapM_ (State.modify' . recordEvent) (revealedOn cause pid oid gs)
+
+-- | CR 701.20a: keep a revealed card revealed for a window.
+--
+-- Not implemented: more than one window at once. A stamp replaces the card's
+-- window, so one reveal firing two triggers ends when the first resolves, and a
+-- shorter window can cut a longer one short (#4998).
+stampReveal :: RevealWindow.RevealWindow -> ObjectId -> Game ()
+stampReveal window oid = State.modify' (\gs -> gs {GameState.objects = Map.adjust (\obj -> obj {Object.revealed = Just window}) oid (GameState.objects gs)})
 
 -- `reveal`'s event, read off `gs` without recording it: Nothing when the object
 -- does not exist there. Pawl.Engine.Departure.objectsLeaveWith reads it on the

@@ -116,6 +116,8 @@ import qualified Pawl.Types.RangeOfInfluence as RangeOfInfluence
 import qualified Pawl.Types.RestartSignal as RestartSignal
 import Pawl.Types.Result (Result)
 import qualified Pawl.Types.Result as Result
+import qualified Pawl.Types.RevealWindow as RevealWindow
+import qualified Pawl.Types.Revealed as Revealed
 import qualified Pawl.Types.Sickness as Sickness
 import qualified Pawl.Types.Source as Source
 import qualified Pawl.Types.StackObjectKind as StackObjectKind
@@ -920,6 +922,15 @@ placeBorne srcId pending = do
           Zone.Stack
           ts
   State.put (Game.putOnStack abilId gs2 {GameState.objects = Map.insert abilId obj (GameState.objects gs2)})
+  -- CR 701.20a: a card whose reveal caused this ability to trigger stays revealed
+  -- until the ability leaves the stack. Proven by the scenario
+  -- cr-702-94b-lasting-reveal-the-miracle-card-stays-revealed-while-its-trigger-is-on-the-stack.
+  --
+  -- Not implemented: the card is unmarked between the reveal and the trigger's
+  -- placement (#4998).
+  case PendingTrigger.firedBy pending of
+    Just (GameEvent.Revealed revealed) -> Event.stampReveal (RevealWindow.WhileOnStack abilId) (Revealed.card revealed)
+    _ -> pure ()
   if not (Modal.selectionPossible legal selection)
     then -- CR 603.3c: no selection satisfies the instruction.
       State.modify' (Game.cease abilId)

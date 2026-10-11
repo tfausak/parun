@@ -1,0 +1,128 @@
+{
+  "description": "CR 702.49b lasting reveal the ninja stays revealed while ninjutsu is on the stack",
+  "note": "Ninjutsu is activated in the declare blockers step, once bob (no creatures) has declared no blockers and the Piker is unblocked (CR 509.1h), and from a hidden zone, so CR 602.2a reveals the Ninja and CR 701.20a keeps it revealed until the ability leaves the stack. The last check reads the battlefield Ninja, a new object (CR 400.7), which every player sees face up.",
+  "board": {
+    "seats": [
+      {
+        "name": "alice",
+        "battlefield": [
+          {
+            "card": "Goblin Piker",
+            "label": "goblin-piker",
+            "ready": true
+          },
+          {
+            "card": "Island",
+            "label": "island",
+            "ready": true
+          },
+          {
+            "card": "Island",
+            "label": "island-2",
+            "ready": true
+          }
+        ],
+        "hand": [
+          {
+            "card": "Ninja of the Deep Hours",
+            "label": "ninja-of-the-deep-hours",
+            "ready": true
+          }
+        ]
+      },
+      {
+        "name": "bob"
+      }
+    ],
+    "active": "alice",
+    "step": "DeclareAttackers"
+  },
+  "timeline": [
+    {
+      "turn": 1,
+      "step": "DeclareAttackers",
+      "player": "alice",
+      "do": {
+        "Attack": [
+          "$goblin-piker"
+        ]
+      }
+    },
+    {
+      "turn": 1,
+      "step": "DeclareBlockers",
+      "player": "alice",
+      "check": {
+        "View": {
+          "of": "Seers",
+          "object": "$ninja-of-the-deep-hours",
+          "is": [
+            "alice"
+          ]
+        }
+      }
+    },
+    {
+      "turn": 1,
+      "step": "DeclareBlockers",
+      "player": "alice",
+      "do": {
+        "Activate": {
+          "object": "$ninja-of-the-deep-hours",
+          "ability": 0,
+          "mana": [
+            "$island",
+            "$island-2"
+          ]
+        }
+      }
+    },
+    {
+      "turn": 1,
+      "step": "DeclareBlockers",
+      "player": "alice",
+      "check": {
+        "View": {
+          "of": "Seers",
+          "object": "$ninja-of-the-deep-hours",
+          "is": [
+            "alice",
+            "bob"
+          ]
+        }
+      }
+    },
+    {
+      "turn": 1,
+      "step": "DeclareBlockers",
+      "player": "alice",
+      "do": "Pass"
+    },
+    {
+      "turn": 1,
+      "step": "DeclareBlockers",
+      "player": "alice",
+      "check": {
+        "View": {
+          "of": "Stack",
+          "is": []
+        }
+      }
+    },
+    {
+      "turn": 1,
+      "step": "DeclareBlockers",
+      "player": "alice",
+      "check": {
+        "View": {
+          "of": "Seers",
+          "object": "Ninja of the Deep Hours",
+          "is": [
+            "alice",
+            "bob"
+          ]
+        }
+      }
+    }
+  ]
+}

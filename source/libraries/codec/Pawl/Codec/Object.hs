@@ -26,6 +26,7 @@ import qualified Pawl.Codec.PlayerId as PlayerId
 import qualified Pawl.Codec.PrintingId as PrintingId
 import qualified Pawl.Codec.ProjectedCharacteristics as ProjectedCharacteristics
 import qualified Pawl.Codec.Recipient as Recipient
+import qualified Pawl.Codec.RevealWindow as RevealWindow
 import qualified Pawl.Codec.RoomHalf as RoomHalf
 import qualified Pawl.Codec.RoomIndex as RoomIndex
 import qualified Pawl.Codec.Sickness as Sickness
@@ -147,6 +148,7 @@ codec = Fields.object $ do
   castUsing <- Fields.defaulted "castUsing" (Object.castUsing defaults) (Common.maybe Keyword.codec) Object.castUsing
   castGrant <- Fields.defaulted "castGrant" (Object.castGrant defaults) (Common.maybe Keyword.codec) Object.castGrant
   exileLookers <- Fields.defaulted "exileLookers" (Object.exileLookers defaults) (Common.set ExileLooker.codec) Object.exileLookers
+  revealed <- Fields.defaulted "revealed" (Object.revealed defaults) (Common.maybe RevealWindow.codec) Object.revealed
   detainedUntil <- Fields.defaulted "detainedUntil" (Object.detainedUntil defaults) (Common.set PlayerId.codec) Object.detainedUntil
   goadedBy <- Fields.defaulted "goadedBy" (Object.goadedBy defaults) (Common.set PlayerId.codec) Object.goadedBy
   doesNotUntapFor <- Fields.defaulted "doesNotUntapFor" (Object.doesNotUntapFor defaults) Common.natural Object.doesNotUntapFor
@@ -212,6 +214,7 @@ codec = Fields.object $ do
         Object.castUsing = castUsing,
         Object.castGrant = castGrant,
         Object.exileLookers = exileLookers,
+        Object.revealed = revealed,
         Object.detainedUntil = detainedUntil,
         Object.goadedBy = goadedBy,
         Object.doesNotUntapFor = doesNotUntapFor,
