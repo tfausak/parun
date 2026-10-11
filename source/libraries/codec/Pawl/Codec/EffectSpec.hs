@@ -40,7 +40,6 @@ import qualified Pawl.Types.ChooseNumber as ChooseNumber
 import qualified Pawl.Types.ChoosePermanents as ChoosePermanents
 import qualified Pawl.Types.ChoosePlayer as ChoosePlayer
 import qualified Pawl.Types.ChoosePlayerAtRandom as ChoosePlayerAtRandom
-import qualified Pawl.Types.ChosenCardInHand as ChosenCardInHand
 import qualified Pawl.Types.ChosenPermanents as ChosenPermanents
 import qualified Pawl.Types.ClassLevel as ClassLevel
 import qualified Pawl.Types.CoinReading as CoinReading
@@ -86,10 +85,10 @@ import qualified Pawl.Types.Effect as Effect
 import qualified Pawl.Types.EntryAttack as EntryAttack
 import qualified Pawl.Types.EntryRiders as EntryRiders
 import qualified Pawl.Types.ExchangeBlocks as ExchangeBlocks
+import qualified Pawl.Types.ExchangeCardZones as ExchangeCardZones
 import qualified Pawl.Types.ExchangeOwnership as ExchangeOwnership
 import qualified Pawl.Types.ExchangeSides as ExchangeSides
 import qualified Pawl.Types.ExchangeValues as ExchangeValues
-import qualified Pawl.Types.ExchangeWithTopOfLibrary as ExchangeWithTopOfLibrary
 import qualified Pawl.Types.ExchangeZones as ExchangeZones
 import qualified Pawl.Types.ExchangedValue as ExchangedValue
 import qualified Pawl.Types.ExileHaunting as ExileHaunting
@@ -774,13 +773,6 @@ spec s = Spec.describe s "Pawl.Codec.Effect" $ do
       fromJson
       (Effect.ExchangeZones (ExchangeZones.MkExchangeZones (PlayerRef.Relative PlayerRelation.You) ZonePair.HandAndGraveyard))
       " {\"type\":\"ExchangeZones\",\"value\":{\"player\":{\"type\":\"Relative\",\"value\":{\"type\":\"You\"}},\"zones\":{\"type\":\"HandAndGraveyard\"}}} "
-  Spec.it s "ExchangeWithCardInHand" $
-    Common.assertJsonCodec
-      s
-      toJson
-      fromJson
-      (Effect.ExchangeWithCardInHand (ChosenCardInHand.MkChosenCardInHand (PlayerRef.Relative PlayerRelation.You) (Filter.HasSubtype Subtype.Aura)))
-      " {\"type\":\"ExchangeWithCardInHand\",\"value\":{\"player\":{\"type\":\"Relative\",\"value\":{\"type\":\"You\"}},\"filter\":{\"type\":\"HasSubtype\",\"value\":{\"type\":\"Aura\"}}}} "
   Spec.it s "SetLifeTotal" $
     Common.assertJsonCodec
       s
@@ -1234,14 +1226,14 @@ spec s = Spec.describe s "Pawl.Codec.Effect" $ do
       fromJson
       (Effect.ExchangeOwnership (ExchangeOwnership.MkExchangeOwnership (ObjectRef.InSlot (SlotName.MkSlotName (Text.pack "target"))) (ObjectRef.FromAnywhere (SlotName.MkSlotName (Text.pack "self")))))
       " {\"type\":\"ExchangeOwnership\",\"value\":{\"one\":{\"type\":\"InSlot\",\"value\":\"target\"},\"other\":{\"type\":\"FromAnywhere\",\"value\":\"self\"}}} "
-  -- CR 701.12d: the card and whose library's top card it trades places with.
-  Spec.it s "ExchangeWithTopOfLibrary" $
+  -- CR 701.12d: the card and the top card of a library trade zones.
+  Spec.it s "ExchangeCardZones" $
     Common.assertJsonCodec
       s
       toJson
       fromJson
-      (Effect.ExchangeWithTopOfLibrary (ExchangeWithTopOfLibrary.MkExchangeWithTopOfLibrary (ObjectRef.InSlot (SlotName.MkSlotName (Text.pack "card"))) (PlayerRef.Relative PlayerRelation.You)))
-      " {\"type\":\"ExchangeWithTopOfLibrary\",\"value\":{\"player\":{\"type\":\"Relative\",\"value\":{\"type\":\"You\"}},\"ref\":{\"type\":\"InSlot\",\"value\":\"card\"}}} "
+      (Effect.ExchangeCardZones (ExchangeCardZones.MkExchangeCardZones (ObjectRef.InSlot (SlotName.MkSlotName (Text.pack "card"))) (ObjectRef.TopOfLibrary (TopOfLibrary.MkTopOfLibrary (PlayerRef.Relative PlayerRelation.You) (Quantity.Literal 1)))))
+      " {\"type\":\"ExchangeCardZones\",\"value\":{\"one\":{\"type\":\"InSlot\",\"value\":\"card\"},\"other\":{\"type\":\"TopOfLibrary\",\"value\":{\"player\":{\"type\":\"Relative\",\"value\":{\"type\":\"You\"}},\"count\":{\"type\":\"Literal\",\"value\":1}}}}} "
   -- CR 701.24a on its own: the arm above with no ref at all, so the payload is a
   -- bare PlayerRef. Undercity's "then shuffle" is what writes it.
   Spec.it s "Shuffle" $
