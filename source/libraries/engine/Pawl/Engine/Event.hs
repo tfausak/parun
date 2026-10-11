@@ -5984,11 +5984,9 @@ changeZoneWithCause discarded asOf batch oid requestedDest requestedPosition see
               -- One-Eye's cast copy of Black Lotus ... resolves as a token"
               -- proves it.
               becomesToken printingId =
-                (Object.newIncarnation obj)
-                  { Object.source = Source.OfToken printingId,
-                    -- CR 111.6: a token is no card.
-                    Object.identity = Nothing,
-                    Object.bindings = foldMap (\pc -> Binding.setCopy pc Map.empty) (Game.copyStampOf obj)
+                -- CR 111.6: a token is no card.
+                (Game.setSource (Source.OfToken printingId) (Object.newIncarnation obj))
+                  { Object.bindings = foldMap (\pc -> Binding.setCopy pc Map.empty) (Game.copyStampOf obj)
                   }
               -- CR 400.7d and CR 107.3m: "the spell that became that permanent
               -- AS IT RESOLVED". Only a permanent spell's own resolution
@@ -6455,14 +6453,13 @@ changeZoneWithCause discarded asOf batch oid requestedDest requestedPosition see
               keeper <-
                 if Seq.null components || Seq.null (Object.stickers obj)
                   then pure Nothing
-                  else case keepers of
-                    [] -> pure Nothing
-                    first : rest -> case rest of
-                      [] -> pure (Just first)
-                      _ -> do
-                        asked <- State.get
-                        answer <- Game.choose (Prompt.ChooseStickerKeeper (Decide.deciderFor (Object.owner obj) asked) (Object.owner obj) (fmap printingOfKeeper (first NonEmpty.:| rest)))
-                        pure (Just (Maybe.fromMaybe first (Maybe.listToMaybe (List.genericDrop answer keepers))))
+                  else do
+                    asked <- State.get
+                    -- Game.among over the keepers' positions, the prompt naming
+                    -- each by its printing.
+                    let ask offered = Prompt.ChooseStickerKeeper (Decide.deciderFor (Object.owner obj) asked) (Object.owner obj) (fmap (printingOfKeeper . List.genericIndex keepers) offered)
+                    picked <- Game.among Game.choose ask (zipWith const [0 ..] keepers)
+                    pure (fmap (List.genericIndex keepers) picked)
               start <- State.gets GameState.nextTimestamp
               newId <- placeObject pid (asComponent (keeper == Just (Left 0)) dest leading) dest position
               -- CR 613.7k.

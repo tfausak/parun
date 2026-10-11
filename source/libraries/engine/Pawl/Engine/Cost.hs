@@ -7251,15 +7251,10 @@ applyAdjustments adjustments cost =
    in List.foldl' reduce (raise cost) reductions
 
 -- CR 107.14: pay this much {E} -- remove that many energy counters from the
--- player. Natural subtraction is PARTIAL, so the floor is explicit; every caller
--- has already measured against Game.energyOf, and the guard keeps this total anyway.
+-- player, through Game.removePlayerCounters. Every caller has already measured
+-- against Game.energyOf, and the floor keeps this total anyway.
 --
 -- The one writer, so Pawl.Engine.Resolve's Effect.PayAnyEnergy spends through
 -- exactly the same edit CostComponent.PayEnergy does.
 spendEnergy :: PlayerId -> Natural -> Game ()
-spendEnergy pid n =
-  let spend player =
-        let have = Map.findWithDefault 0 PlayerCounterKind.Energy (Player.counters player)
-            left = if have >= n then have - n else 0
-         in player {Player.counters = Map.insert PlayerCounterKind.Energy left (Player.counters player)}
-   in State.modify' (\gs -> gs {GameState.players = Map.adjust spend pid (GameState.players gs)})
+spendEnergy pid n = State.modify' (snd . Game.removePlayerCounters PlayerCounterKind.Energy pid n)

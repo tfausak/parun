@@ -7,13 +7,11 @@ import qualified Control.Monad as Monad
 import qualified Control.Monad.Trans.State.Strict as State
 import qualified Data.Foldable as Foldable
 import qualified Data.List as List
-import qualified Data.List.NonEmpty as NonEmpty
 import qualified Data.Map.Strict as Map
 import qualified Data.Maybe as Maybe
 import qualified Data.Sequence as Seq
 import qualified Data.Set as Set
 import Numeric.Natural (Natural)
-import qualified Pawl.Engine.Decide as Decide
 import qualified Pawl.Engine.Event as Event
 import qualified Pawl.Engine.Game as Game
 import qualified Pawl.Engine.NameWords as NameWords
@@ -88,14 +86,11 @@ offered pid oid kinds cap free gs =
    in filter fits (available pid kinds gs)
 
 -- | CR 123.3c / 107.17a: the owner of `oid` removes the sticker's ticket cost,
--- RemovePlayerCounters' road (Game.counterSharers).
+-- through Game.removePlayerCounters.
 payTickets :: ObjectId -> StickerRef.StickerRef -> GameState -> GameState
 payTickets oid ref gs = case fmap Object.owner (Game.lookupObject oid gs) of
   Nothing -> gs
-  Just owner ->
-    let cost = ticketCost ref gs
-        lose p = p {Player.counters = Map.adjust (\had -> had - min had cost) PlayerCounterKind.Ticket (Player.counters p)}
-     in gs {GameState.players = List.foldl' (flip (Map.adjust lose)) (GameState.players gs) (Game.counterSharers PlayerCounterKind.Ticket owner gs)}
+  Just owner -> snd (Game.removePlayerCounters PlayerCounterKind.Ticket owner (ticketCost ref gs) gs)
 
 -- | CR 123.3 / 613.7k: put the sticker on the object, stamped now, and record
 -- the placement for "whenever you place a sticker". CR 123.6b: @position@ is a
@@ -123,11 +118,7 @@ place optional placer oid kinds cap free = do
       then pure Nothing
       else
         if optional
-          then case NonEmpty.nonEmpty candidates of
-            Nothing -> pure Nothing
-            Just offers -> do
-              answer <- Game.choose (Prompt.ChooseStickerOrNone (Decide.deciderFor placer gs) placer oid offers)
-              pure (List.find (\ref -> Just ref == answer) candidates)
+          then Game.mayChooseAmong (\decider who -> Prompt.ChooseStickerOrNone decider who oid) placer candidates
           else Game.chooseAmong (\decider who -> Prompt.ChooseSticker decider who oid) placer candidates
   Monad.forM_ picked $ \ref -> do
     position <- case StickerRef.kind ref of
@@ -140,16 +131,14 @@ place optional placer oid kinds cap free = do
   pure picked
 
 -- | CR 123.6b: the object's CONTROLLER, or its owner for a card with none (CR
--- 108.4a), chooses where the word goes: the start, or after any number of the
--- words now in its name, the longest name's where it has several (gap #4901). An
--- object whose names hold no word has one position and is not asked.
+-- 108.4a, which Projection.controllerOf answers), chooses where the word goes:
+-- the start, or after any number of the words now in its name, the longest
+-- name's where it has several (gap #4901). An object whose names hold no word
+-- has one position and is not asked.
 namePosition :: ObjectId -> Game Natural
 namePosition oid = do
   gs <- State.get
   let most = List.foldl' max 0 (fmap NameWords.wordCount (Set.toList (Projection.namesOf oid gs)))
-      chooser = case Projection.controllerOf oid gs of
-        Just pid -> Just pid
-        Nothing -> fmap Object.owner (Game.lookupObject oid gs)
-  case chooser of
+  case Projection.controllerOf oid gs of
     Just pid | most > 0 -> Maybe.fromMaybe 0 <$> Game.chooseAmong (\decider who -> Prompt.ChooseNamePosition decider who oid) pid [0 .. most]
     _ -> pure 0

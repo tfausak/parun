@@ -1,0 +1,46 @@
+{
+  "description": "CR 707.12 / 108.3 alice wins bob's Lightning Bolt with Tempest Efreet, casts it, and casts a copy with Mizzix's Mastery; the copy is no card, so the ownership report lists the Bolt and not its copy",
+  "note": "The copy is alice's and was made from a card bob began the game with: a copy that kept the card's identity would be reported as a second card that changed owner.",
+  "board": {
+    "ante": true,
+    "active": "alice",
+    "step": "PrecombatMain",
+    "seats": [
+      {
+        "name": "alice",
+        "battlefield": [
+          { "card": "Tempest Efreet", "label": "efreet", "ready": true },
+          { "card": "Mountain", "label": "m1" },
+          { "card": "Mountain", "label": "m2" },
+          { "card": "Mountain", "label": "m3" },
+          { "card": "Mountain", "label": "m4" },
+          { "card": "Mountain", "label": "m5" }
+        ],
+        "hand": [{ "card": "Mizzix's Mastery", "label": "mastery" }],
+        "library": [{ "card": "Island" }, { "card": "Mountain" }]
+      },
+      {
+        "name": "bob",
+        "hand": [{ "card": "Lightning Bolt" }],
+        "library": [{ "card": "Mountain" }]
+      }
+    ]
+  },
+  "timeline": [
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": { "Activate": { "object": "$efreet", "ability": 0, "targets": ["$bob"], "costOrder": [0, 1], "mana": [null] } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass" },
+    { "turn": 1, "step": "PrecombatMain", "player": "bob", "do": { "ChooseToPay": { "decision": { "type": "Declines" } } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": { "Cast": { "object": "Lightning Bolt", "targets": ["$bob"], "mana": ["$m1", null] } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass" },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": { "Cast": { "object": "$mastery", "targets": ["Lightning Bolt"], "mana": ["$m2", "$m3", "$m4", "$m5"] } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass" },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": { "Answer": { "prompt": "OfferedCast", "with": { "type": "Exercises" } } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": { "ChooseTargets": { "target": ["$bob"] } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "check": { "View": { "of": "Stack", "is": ["Lightning Bolt#2"] } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "check": { "View": { "of": "OwnershipChanges", "is": [["Tempest Efreet", "alice", "bob"], ["Lightning Bolt", "bob", "alice"]] } } }
+  ],
+  "final": [
+    { "Life": { "player": "bob", "life": 14 } },
+    { "Count": { "player": "alice", "zone": "Exile", "card": "Lightning Bolt", "count": 1 } }
+  ]
+}

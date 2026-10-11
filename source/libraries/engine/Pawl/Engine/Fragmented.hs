@@ -176,7 +176,7 @@ identifiers text = case dropWhile (not . isIdentifier) text of
 -- Read sites needing none: the readers of the CURRENT action's own events
 -- (Pawl.Engine.Resolve.Effect, Pawl.Engine.Cost's reversal and mana
 -- triggers, the trigger scan, the CR 704.5h watermark); readers keyed by an
--- id that has moved (Pawl.Engine.Count.arrivalsOf, revealedArriving,
+-- id that has moved (Pawl.Engine.Game.arrivalsOf, revealedArriving,
 -- Pawl.Engine.MoveDuration.departedIn, Pawl.Engine.Event.Trigger.entryGroup),
 -- which a lap cannot move again under the same id; and
 -- Pawl.Engine.Engine.beginTurnOf's fold of the casts and attacks, which a

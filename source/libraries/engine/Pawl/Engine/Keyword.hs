@@ -7318,7 +7318,7 @@ attachToOwnToken token =
               Create.card = token,
               Create.riders =
                 EntryRiders.defaultValue,
-              -- The slot holds every token minted (Resolve.bindMinted), which
+              -- The slot holds every token minted (Resolve.bindObjects), which
               -- where CR 614.16 doubled the count is two Germs; CR 301.5c then
               -- gives the Equipment's controller the choice of which one it
               -- equips, and the Effect.Attach arm asks it.
