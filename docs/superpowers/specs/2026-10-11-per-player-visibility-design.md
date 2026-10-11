@@ -88,11 +88,11 @@ control sees: `sees p o = foldMap (\q -> base q o) (p : controlledBy p)`, with
 `effective` row, the same reading `deciderFor` makes. A card outside the game
 (`InAnotherGame`, `Player.outsideTheGame`) takes the base term only.
 
-`Exile.mayLookAt` stays, as the face-down-exile arm's implementation;
-`Exile.mayChoose` and the reads in `Pawl.Engine.Target` and `Pawl.Engine.Cast`
-move onto `sees`. Re-derive each caller: a caller asking CR 406.4's "may
-choose" is a visibility question; one asking something narrower keeps its own
-read.
+`Exile.mayLookAt` stays, as the face-down-exile arm's implementation, and
+its callers (`Exile.mayChoose`, `Pawl.Engine.Target`, `Pawl.Engine.Cast`)
+keep their reads: each asks CR 406.4's choosing question over exiled cards,
+where `sees` agrees by construction. Moving them onto `sees` would also hide
+an opponent's hand from target offering, which is unit 6's change.
 
 ### The `Seers` view
 
