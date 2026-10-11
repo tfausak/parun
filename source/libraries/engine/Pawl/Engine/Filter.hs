@@ -2436,6 +2436,7 @@ rewriteCounterKind pairs kind = case kind of
   CounterKind.Stun -> kind
   CounterKind.Level -> kind
   CounterKind.Hone -> kind
+  CounterKind.UnsafePowerToughness _ _ -> kind
   -- CR 612.1 swaps a WORD, and this pair is [(Subtype, Subtype)]. A counter's
   -- name is Text and never a Subtype, so no word swap can reach inside one --
   -- not an oversight, and the reason this stays exhaustive rather than becoming

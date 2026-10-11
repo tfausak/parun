@@ -45,7 +45,7 @@ unreserved =
 make :: Text.Text -> Either Text.Text CounterName.CounterName
 make text
   | Text.null text = Left (Text.pack "CounterName: a counter's name must not be empty")
-  | Set.member text reserved =
+  | Set.member text reserved || powerToughnessSpelling text =
       Left
         ( Text.pack "CounterName: CR 122.1 makes counters with the same name interchangeable, and Pawl.Types.CounterKind already names "
             <> text
@@ -79,9 +79,10 @@ reserved = foldMap spellings [minBound .. maxBound]
 -- the case is exhaustive and takes no wildcard, so a new family has to be
 -- spelled here before this module compiles.
 --
--- 'CounterKindFamily.Named' answers the empty set rather than a spelling, and it
--- is the only arm that may: those are the names 'make' checks, so reserving one
--- would reserve every name at once.
+-- 'CounterKindFamily.Named' answers the empty set rather than a spelling: those
+-- are the names 'make' checks, so reserving one would reserve every name at
+-- once. 'CounterKindFamily.PowerToughness' is the other empty arm, its open set
+-- of spellings rejected by 'powerToughnessSpelling' instead.
 spellings :: CounterKindFamily.CounterKindFamily -> Set.Set Text.Text
 spellings family =
   let one = Set.singleton . Text.pack
@@ -122,6 +123,9 @@ spellings family =
         CounterKindFamily.Stun -> one "stun"
         CounterKindFamily.Level -> one "level"
         CounterKindFamily.Hone -> one "hone"
+        -- CR 122.1a's +X/+Y is an open set of spellings, so 'make' rejects the
+        -- pattern instead ('powerToughnessSpelling').
+        CounterKindFamily.PowerToughness -> Set.empty
         CounterKindFamily.Named -> Set.empty
 
 -- | Pawl.Engine.Keyword.familyOf's twin, one layer down because 'reserved' is
@@ -154,4 +158,16 @@ familyOf kind = case kind of
   CounterKind.Stun -> CounterKindFamily.Stun
   CounterKind.Level -> CounterKindFamily.Level
   CounterKind.Hone -> CounterKindFamily.Hone
+  CounterKind.UnsafePowerToughness _ _ -> CounterKindFamily.PowerToughness
   CounterKind.Named _ -> CounterKindFamily.Named
+
+-- | CR 122.1a's "+X/+Y" or "-X/-Y" spelling, which
+-- 'Pawl.Types.CounterKind.powerToughness' already names whatever the numbers.
+powerToughnessSpelling :: Text.Text -> Bool
+powerToughnessSpelling text = case Text.splitOn (Text.pack "/") text of
+  [power, toughness] -> signed power && signed toughness
+  _ -> False
+  where
+    signed part = case Text.uncons part of
+      Just (sign, digits) -> elem sign "+-" && not (Text.null digits) && Text.all (`elem` "0123456789") digits
+      Nothing -> False

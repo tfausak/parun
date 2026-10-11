@@ -316,7 +316,7 @@ spec s = Spec.describe s "Pawl.Codec.EntryRewrite" $ do
     Common.assertCodec
       s
       (EntryRewrite.codec (GrantedAbility.codec Card.codec) (Effect.codec Card.codec (GrantedAbility.codec Card.codec)))
-      (EntryRewrite.ExileFromGraveyard (ExileFromGraveyard.MkExileFromGraveyard {ExileFromGraveyard.filter = Filter.Or [Filter.HasCardType CardType.Instant, Filter.HasCardType CardType.Sorcery], ExileFromGraveyard.players = PlayerScope.Related PlayerRelation.You, ExileFromGraveyard.count = HowMany.one}))
+      (EntryRewrite.ExileFromGraveyard (ExileFromGraveyard.MkExileFromGraveyard {ExileFromGraveyard.filter = Filter.Or [Filter.HasCardType CardType.Instant, Filter.HasCardType CardType.Sorcery], ExileFromGraveyard.players = PlayerScope.Related PlayerRelation.You, ExileFromGraveyard.count = HowMany.one, ExileFromGraveyard.orGraveyard = False, ExileFromGraveyard.kinds = [], ExileFromGraveyard.each = Quantity.Literal 1}))
       " {\"type\":\"ExileFromGraveyard\",\"value\":{\"filter\":{\"type\":\"Or\",\"value\":[{\"type\":\"HasCardType\",\"value\":{\"type\":\"Instant\"}},{\"type\":\"HasCardType\",\"value\":{\"type\":\"Sorcery\"}}]}}} "
   -- CR 614.1c / 301.5e: an as-enters host choice, carrying the filter the host
   -- must match -- Grifter's Blade's "a creature you control it could be attached

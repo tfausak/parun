@@ -55,8 +55,12 @@ data CounterKindFamily
     Level
   | -- | CR 122.1j: Pawl.Types.CounterKind.Hone.
     Hone
+  | -- | CR 122.1a: Pawl.Types.CounterKind.UnsafePowerToughness, whatever its
+    -- numbers.
+    PowerToughness
   | -- | CR 122.1: Pawl.Types.CounterKind.Named, whichever name it carries. The
-    -- open arm, and the only one that reserves no spelling -- the names it
-    -- carries are what the reserved set is checked AGAINST.
+    -- open arm, and with PowerToughness one of the two that reserve no
+    -- spelling -- the names it carries are what the reserved set is checked
+    -- AGAINST.
     Named
   deriving (Bounded, Enum, Eq, Ord, Show)

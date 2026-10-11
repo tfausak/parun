@@ -3260,7 +3260,13 @@ counterGathered gs =
                  in if d /= 0
                       then [at kind Layer.ModifyPT (Modification.ModifyPowerToughness (ModifyPowerToughness.MkModifyPowerToughness (Quantity.Type.Literal d) (Quantity.Type.Literal d)))]
                       else []
-              pt = deltaOf CounterKind.PlusOnePlusOne 1 <> deltaOf CounterKind.MinusOneMinusOne (-1)
+              pt = deltaOf CounterKind.PlusOnePlusOne 1 <> deltaOf CounterKind.MinusOneMinusOne (-1) <> concatMap otherPT (Map.toList cs)
+              -- CR 122.1a's other +X/+Y counters, one part per kind for the same
+              -- reason the two above are.
+              otherPT (kind, n) = case kind of
+                CounterKind.UnsafePowerToughness power toughness
+                  | n > 0 -> [at kind Layer.ModifyPT (Modification.ModifyPowerToughness (ModifyPowerToughness.MkModifyPowerToughness (Quantity.Type.Literal (power * toInteger n)) (Quantity.Type.Literal (toughness * toInteger n))))]
+                _ -> []
               -- CR 122.1j / 613.4c: a hone counter sits on the EQUIPMENT and gives
               -- +1/+0 to the creature that Equipment is attached to, so this is
               -- the one kind whose recipient is not its bearer. Not the bearer's
@@ -3305,6 +3311,8 @@ counterGathered gs =
                 -- CR 122.1j: emitted by `honed` above rather than here, because
                 -- what it modifies is another object's power.
                 CounterKind.Hone -> []
+                -- CR 122.1a: emitted by `pt` above.
+                CounterKind.UnsafePowerToughness _ _ -> []
                 -- CR 122.1c: a shield counter is not a keyword counter, so it must
                 -- make no grant here. shieldOf mints its effects instead.
                 CounterKind.Shield -> []

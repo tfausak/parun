@@ -105,6 +105,7 @@ encode p answer = case p of
   Prompt.ChooseDamageSource {} -> Response.ChoseDamageSource answer
   Prompt.ChooseDelayedTriggerEvent {} -> Response.ChoseDelayedTriggerEvent answer
   Prompt.ChooseMovedCounter {} -> Response.ChoseMovedCounter answer
+  Prompt.ChooseEntryCounter {} -> Response.ChoseEntryCounter answer
   Prompt.ChooseMovedCounters {} -> Response.ChoseMovedCounters answer
   Prompt.ChooseStoredRerolls {} -> Response.ChoseStoredRerolls answer
   Prompt.ChooseMovedCountersAtLeastOne {} -> Response.ChoseMovedCountersAtLeastOne answer
@@ -382,6 +383,9 @@ decode p response = case p of
     _ -> Nothing
   Prompt.ChooseMovedCounter {} -> case response of
     Response.ChoseMovedCounter kind -> Just kind
+    _ -> Nothing
+  Prompt.ChooseEntryCounter {} -> case response of
+    Response.ChoseEntryCounter kind -> Just kind
     _ -> Nothing
   Prompt.ChooseMovedCounters {} -> case response of
     Response.ChoseMovedCounters counters -> Just counters
@@ -907,6 +911,8 @@ defaultAnswer p = case p of
   -- CR 122.5: the prompt is only raised with two or more kinds actually on the
   -- object the counter leaves, and every one of them is a legal choice.
   Prompt.ChooseMovedCounter _ _ _ _ candidates -> NonEmpty.head candidates
+  -- CR 614.1c: every kind offered is a legal choice. The first printed.
+  Prompt.ChooseEntryCounter _ _ _ candidates -> NonEmpty.head candidates
   -- CR 122.5 again: "any number" includes none, and moving nothing is the answer
   -- a transcript running short can always give. ChooseProliferate's posture, not
   -- the maximal one -- a default that emptied the first object would rewrite a

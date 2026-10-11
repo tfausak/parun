@@ -150,6 +150,7 @@ import qualified Pawl.Types.GrantedAbility as GrantedAbility.Type
 import qualified Pawl.Types.GraveyardArrangement as GraveyardArrangement
 import qualified Pawl.Types.GraveyardOrder as GraveyardOrder
 import qualified Pawl.Types.HalfUnlocked as HalfUnlocked
+import qualified Pawl.Types.HowMany as HowMany
 import qualified Pawl.Types.Keyword as Keyword.Type
 import qualified Pawl.Types.LastKnown as LastKnown
 import qualified Pawl.Types.Layout as Layout
@@ -2888,7 +2889,19 @@ apply batch candidate event =
       -- is the rule's own "a direct result of the replacement event caused by the
       -- first [ability]". The ARRIVALS are filed, never the graveyard id, since CR
       -- 400.7 mints a new object as the card changes zones.
-      EntryRewrite.ExileFromGraveyard (ExileFromGraveyard.MkExileFromGraveyard filter_ scope count) -> do
+      --
+      -- `orGraveyard` is Frankenstein's Monster's "If you can't, put this creature
+      -- into its owner's graveyard instead of onto the battlefield": too few
+      -- candidates for the Exactly count exiles nothing, and answering Nothing
+      -- unmakes the entry, the SacrificeToEnter arm's "if you don't" (CR 614.12).
+      -- That arm's CR 614.12b forward check has nothing to guard here: X is the
+      -- only count the one such card prints, and CR 107.3m makes it 0 for every
+      -- permanent but the one a resolving spell became, which enters alone.
+      --
+      -- `kinds` and `each` are what each card exiled buys -- one counter kind per
+      -- card, the controller's choice where there are several (CR 614.1c),
+      -- placed through addEnteringCounters for CR 614.16's reason.
+      EntryRewrite.ExileFromGraveyard (ExileFromGraveyard.MkExileFromGraveyard filter_ scope count orGraveyard kinds each) -> do
         Replacement.consume (ReplacementCandidate.identity candidate)
         gs <- State.get
         case Projection.controllerOf oid gs of
@@ -2906,30 +2919,52 @@ apply batch candidate event =
                 context = Replacement.candidateContext gs candidate
                 announcedX = Projection.announcedXOf oid gs
                 amount quantity = maybe 0 Integer.toNaturalSaturating (Quantity.evaluate viewOf context (Projection.boardAsEntering gs) oid (Quantity.substituteAnnouncedX announcedX quantity))
-            -- One card is asked through Game.chooseAmong: with no candidate
-            -- nothing is exiled, and with ONE the instruction names that card --
-            -- a forced selection rather than options a player could tell apart,
-            -- which is ObjectRef.ChosenCardInGraveyard's own elision (CR 101.3).
-            -- "Any number" is asked at one candidate, declining being a second
-            -- answer. FILTERED, NOT TRUSTED (#222), inside pickCounted: an answer
-            -- naming a card that was never offered would otherwise exile a card
-            -- the printed criterion excludes.
-            chosen <-
-              Game.pickCounted
-                True
-                (pure (Just controller))
-                (\decider asked candidates -> Prompt.ChooseCardInGraveyard decider asked oid candidates Seq.empty)
-                (\decider asked candidates ceiling_ -> Prompt.ChooseAnyNumber decider asked oid AnyNumberOf.ToExile candidates ceiling_)
-                amount
-                count
-                offered
-            -- ONE event (CR 608.2f): "exile any number of creature cards" is one
-            -- action on several objects. The Sutured Ghoul scenario in
-            -- data/scenarios/entry-replacement proves it: Spirit Mascot fires once.
-            arrivals <- changeZonesTogether (fmap (\card -> (card, Zone.Exile)) chosen)
-            State.modify' $ \gs2 ->
-              gs2 {GameState.exiledWith = foldr (\arrival -> Map.insert arrival ExileLink.MkExileLink {ExileLink.source = oid, ExileLink.ability = Nothing}) (GameState.exiledWith gs2) (foldMap Foldable.toList arrivals)}
-            pure (Just event)
+            -- CR 614.12: "If you can't" is too few candidates for the count, so
+            -- nothing is exiled and the entry is unmade.
+            let cannot = case count of
+                  HowMany.Exactly q -> orGraveyard && Natural.length offered < amount q
+                  HowMany.UpTo _ -> False
+            if cannot
+              then pure Nothing
+              else do
+                -- One card is asked through Game.chooseAmong: with no candidate
+                -- nothing is exiled, and with ONE the instruction names that card --
+                -- a forced selection rather than options a player could tell apart,
+                -- which is ObjectRef.ChosenCardInGraveyard's own elision (CR 101.3).
+                -- "Any number" is asked at one candidate, declining being a second
+                -- answer. FILTERED, NOT TRUSTED (#222), inside pickCounted: an answer
+                -- naming a card that was never offered would otherwise exile a card
+                -- the printed criterion excludes.
+                chosen <-
+                  Game.pickCounted
+                    True
+                    (pure (Just controller))
+                    (\decider asked candidates -> Prompt.ChooseCardInGraveyard decider asked oid candidates Seq.empty)
+                    (\decider asked candidates ceiling_ -> Prompt.ChooseAnyNumber decider asked oid AnyNumberOf.ToExile candidates ceiling_)
+                    amount
+                    count
+                    offered
+                -- ONE event (CR 608.2f): "exile any number of creature cards" is one
+                -- action on several objects. The Sutured Ghoul scenario in
+                -- data/scenarios/entry-replacement proves it: Spirit Mascot fires once.
+                arrivals <- changeZonesTogether (fmap (\card -> (card, Zone.Exile)) chosen)
+                State.modify' $ \gs2 ->
+                  gs2 {GameState.exiledWith = foldr (\arrival -> Map.insert arrival ExileLink.MkExileLink {ExileLink.source = oid, ExileLink.ability = Nothing}) (GameState.exiledWith gs2) (foldMap Foldable.toList arrivals)}
+                -- "For each creature card exiled this way": the cards that reached
+                -- exile, one choice of kind each.
+                exiled <- State.gets (\gs2 -> filter (`Set.member` GameState.exile gs2) (foldMap Foldable.toList arrivals))
+                Monad.forM_ (NonEmpty.nonEmpty kinds) $ \offeredKinds ->
+                  Monad.forM_ exiled $ \_ -> do
+                    gs2 <- State.get
+                    kind <-
+                      if length offeredKinds == 1
+                        then pure (NonEmpty.head offeredKinds)
+                        else do
+                          answer <- Game.choose (Prompt.ChooseEntryCounter (Decide.deciderFor controller gs2) controller oid offeredKinds)
+                          -- FILTERED, NOT TRUSTED (#222).
+                          pure (if answer `elem` offeredKinds then answer else NonEmpty.head offeredKinds)
+                    addEnteringCounters oid kind (amount each)
+                pure (Just event)
       -- CR 614.1c with CR 301.5e: "as this Equipment enters, choose a creature
       -- you control it could be attached to. If you do, it enters attached to
       -- that creature" (Grifter's Blade).

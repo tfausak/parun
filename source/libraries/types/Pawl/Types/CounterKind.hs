@@ -194,6 +194,11 @@ data CounterKind keyword
     -- with it when it comes off, and the rule's two restrictions -- an Equipment
     -- bearing it, a creature receiving it -- are that set's filter.
     Hone
+  | -- | CR 122.1a: a +X/+Y counter other than +1/+1 and -1/-1 -- Frankenstein's
+    -- Monster's +2/+0 and +0/+2. Those two keep their own constructors because
+    -- CR 704.5q annihilates them against each other; 'powerToughness' and
+    -- Pawl.Codec.CounterKind send them there, so each counter has one spelling.
+    UnsafePowerToughness Integer Integer
   | -- | CR 122.1: a kind no rule in the CR reads, identified by the NAME the
     -- card prints -- Zhao, the Moon Slayer's conqueror counter, Gemstone
     -- Caverns' luck counter. Rule 122.1 letters none of them, so its own first
@@ -222,3 +227,10 @@ data CounterKind keyword
     -- a Pawl.Types.CounterKindFamily constructor and a spelling there.
     Named CounterName.CounterName
   deriving (Eq, Ord, Show)
+
+-- | CR 122.1a's +X/+Y counter, the one door into 'UnsafePowerToughness'.
+powerToughness :: Integer -> Integer -> CounterKind keyword
+powerToughness power toughness = case (power, toughness) of
+  (1, 1) -> PlusOnePlusOne
+  (-1, -1) -> MinusOneMinusOne
+  _ -> UnsafePowerToughness power toughness

@@ -114,6 +114,20 @@ spec s = Spec.describe s "Pawl.Codec.CounterKind" $ do
       (CounterKind.codec Keyword.codec)
       CounterKind.Hone
       " {\"type\":\"Hone\"} "
+  -- CR 122.1a's other +X/+Y counters, Frankenstein's Monster's +0/+2.
+  Spec.it s "PowerToughness" $
+    Common.assertCodec
+      s
+      (CounterKind.codec Keyword.codec)
+      (CounterKind.powerToughness 0 2)
+      " {\"type\":\"PowerToughness\",\"value\":[0,2]} "
+  -- One spelling per counter: +1/+1 written this way decodes to PlusOnePlusOne.
+  Spec.it s "PowerToughness 1 1 is PlusOnePlusOne" $
+    Spec.assertEqWith
+      s
+      "decoded"
+      (Codec.decode (CounterKind.codec Keyword.codec) (Codec.encode (CounterKind.codec Keyword.codec) (CounterKind.UnsafePowerToughness 1 1)))
+      (Right CounterKind.PlusOnePlusOne)
   -- CR 122.1's unlettered kinds, carrying the name the card prints rather than
   -- one constructor per printing.
   Spec.it s "Named carries the name the card prints" $

@@ -293,6 +293,10 @@ data Prompt r where
   -- | CR 122.5: which kind of counter a move takes off the first object onto
   -- the second, where the card leaves the kind open.
   ChooseMovedCounter :: Decider.Decider -> PlayerId.PlayerId -> ObjectId.ObjectId -> ObjectId.ObjectId -> NonEmpty.NonEmpty (CounterKind.CounterKind Keyword.Keyword) -> Prompt (CounterKind.CounterKind Keyword.Keyword)
+  -- | CR 614.1c: which kind of counter the entering object takes for one card
+  -- an as-enters exile took (Frankenstein's Monster's "a +2/+0, +1/+1, or +0/+2
+  -- counter"); not raised for one kind. Answers as Response.ChoseEntryCounter.
+  ChooseEntryCounter :: Decider.Decider -> PlayerId.PlayerId -> ObjectId.ObjectId -> NonEmpty.NonEmpty (CounterKind.CounterKind Keyword.Keyword) -> Prompt (CounterKind.CounterKind Keyword.Keyword)
   -- | CR 122.5: how many counters of each kind a move takes off the first
   -- object onto the second, where the card leaves the count open; the Map is
   -- what the first object has, the answer clamped to it. Raised for one
