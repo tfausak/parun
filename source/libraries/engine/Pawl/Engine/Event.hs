@@ -8757,9 +8757,9 @@ turnUpKeptDraws = do
 -- A card drawn while a spell is being cast or an ability activated is offered
 -- here only once that is done (CR 121.8, `turnUpKeptDraws`).
 --
--- Not implemented: CR 702.94b's LASTING reveal -- the card stays revealed until it
--- leaves the hand or the ability leaves the stack -- which needs a per-object
--- revealed flag (#1408).
+-- CR 702.94b's lasting reveal -- the card stays revealed until the ability leaves
+-- the stack -- is Engine.placeBorne's CR 701.20a stamp, made for every trigger a
+-- Revealed event fires; the card leaving the hand ends it with the incarnation.
 offerMiracleReveal :: PlayerId -> ObjectId -> Game ()
 offerMiracleReveal pid drawn = do
   gs <- State.get
