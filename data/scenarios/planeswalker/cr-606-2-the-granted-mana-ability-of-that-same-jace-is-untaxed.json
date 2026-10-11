@@ -1,6 +1,6 @@
 {
   "description": "CR 606.2 the granted mana ability of that same Jace is untaxed",
-  "note": "Jace is placed with his three loyalty counters and the Islands that paid for him tapped, as the Haskell test's board has them after his cast. The Haskell test pays a bare {R} from the pool; here the {R} is Lightning Bolt's. Not implemented: separating CR 605.1a. The untaxed ability is a mana ability as well as a non-loyalty one, so a criterion reading the ability's kind would answer alike on this board (gap #3323).",
+  "note": "Jace is placed with his three loyalty counters and the Islands that paid for him tapped, as the Haskell test's board has them after his cast. The Haskell test pays a bare {R} from the pool; here the {R} is Lightning Bolt's. The ability is a mana ability as well as a non-loyalty one; the sibling cr-606-2-605-1a scenario separates the two.",
   "board": {
     "seats": [
       {
