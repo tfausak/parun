@@ -59,6 +59,7 @@ import qualified Pawl.Engine.Stack as Stack
 import qualified Pawl.Registry as Registry
 import qualified Pawl.Spec as Spec
 import qualified Pawl.Support as S
+import qualified Pawl.Types.AnyNumberOf as AnyNumberOf
 import qualified Pawl.Types.BeginningStep as BeginningStep
 import qualified Pawl.Types.CardName as CardName
 import qualified Pawl.Types.Daytime as Daytime
@@ -467,19 +468,19 @@ afterOneCast gs = gs {GameState.castsLastTurn = Map.singleton S.alice 1}
 -- CHOOSER said, so the fixture has to say it.
 namingAll :: Prompt.Prompt r -> r
 namingAll p = case p of
-  Prompt.ChooseAnyNumberOfPermanents _ _ _ candidates _ -> Set.fromList candidates
+  Prompt.ChooseAnyNumber _ _ _ AnyNumberOf.Permanents candidates _ -> Set.fromList candidates
   _ -> S.identityAnswer p
 
 -- Names nothing, the empty answer CR 608.2d admits.
 namingNone :: Prompt.Prompt r -> r
 namingNone p = case p of
-  Prompt.ChooseAnyNumberOfPermanents {} -> Set.empty
+  Prompt.ChooseAnyNumber _ _ _ AnyNumberOf.Permanents _ _ -> Set.empty
   _ -> S.identityAnswer p
 
 -- Names exactly this set, whether or not it was offered.
 namingExactly :: Set.Set ObjectId.ObjectId -> Prompt.Prompt r -> r
 namingExactly wanted p = case p of
-  Prompt.ChooseAnyNumberOfPermanents {} -> wanted
+  Prompt.ChooseAnyNumber _ _ _ AnyNumberOf.Permanents _ _ -> wanted
   _ -> S.identityAnswer p
 
 untapCheckSpec :: (Monad m, Monad n) => Spec.Spec m n -> Registry.Registry m -> n ()

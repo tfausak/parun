@@ -16,6 +16,7 @@ import qualified Pawl.Engine.Cost as Cost
 import qualified Pawl.Engine.Modal as Modal
 import qualified Pawl.Extra.Natural as Natural
 import qualified Pawl.Types.Action as Action
+import qualified Pawl.Types.AnyNumberOf as AnyNumberOf
 import qualified Pawl.Types.Asked as Asked
 import qualified Pawl.Types.BuybackDecision as BuybackDecision
 import qualified Pawl.Types.CardName as CardName
@@ -35,6 +36,7 @@ import qualified Pawl.Types.LibraryPosition as LibraryPosition
 import qualified Pawl.Types.MoveSpread as MoveSpread
 import qualified Pawl.Types.MulliganDecision as MulliganDecision
 import qualified Pawl.Types.MutateSide as MutateSide
+import Pawl.Types.ObjectId (ObjectId)
 import qualified Pawl.Types.OptionalDecision as OptionalDecision
 import qualified Pawl.Types.PaymentDecision as PaymentDecision
 import qualified Pawl.Types.Program as Program
@@ -111,7 +113,7 @@ encode p answer = case p of
   Prompt.ChooseCardInGraveyard {} -> Response.ChoseCardInGraveyard answer
   Prompt.ChooseCardInHand {} -> Response.ChoseCardInHand answer
   Prompt.ChooseCardFromAmong {} -> Response.ChoseCardFromAmong answer
-  Prompt.ChooseCardsFromAmong {} -> Response.ChoseCardsFromAmong answer
+  Prompt.ChooseAnyNumber _ _ _ purpose _ _ -> anyNumberResponse purpose answer
   Prompt.ChooseDungeon {} -> Response.ChoseDungeon answer
   Prompt.ChooseSticker {} -> Response.ChoseSticker answer
   Prompt.ChooseStickerOrNone {} -> Response.ChoseStickerOrNone answer
@@ -190,11 +192,6 @@ encode p answer = case p of
   Prompt.ChooseExilesFromGraveyard {} -> Response.ChoseExilesFromGraveyard answer
   Prompt.ChooseCollectEvidence {} -> Response.ChoseExilesFromGraveyard answer
   Prompt.ChooseMaterials {} -> Response.ChoseMaterials answer
-  Prompt.ChooseAnyNumberToSacrifice {} -> Response.ChoseSacrifices answer
-  Prompt.ChooseAnyNumberToReveal {} -> Response.ChoseReveals answer
-  Prompt.ChooseAnyNumberToExile {} -> Response.ChoseExilesFromGraveyard answer
-  Prompt.ChooseAnyNumberOfPermanents {} -> Response.ChoseAnyNumberOfPermanents answer
-  Prompt.ChooseAnyNumberToDiscard {} -> Response.ChoseAnyNumberToDiscard answer
   Prompt.ChoosePermanent {} -> Response.ChosePermanent answer
   Prompt.ChooseTapsForTotalPower {} -> Response.ChoseTaps answer
   Prompt.ChooseTaps {} -> Response.ChoseTaps answer
@@ -410,8 +407,13 @@ decode p response = case p of
   Prompt.ChooseCardFromAmong {} -> case response of
     Response.ChoseCardFromAmong oid -> Just oid
     _ -> Nothing
-  Prompt.ChooseCardsFromAmong {} -> case response of
-    Response.ChoseCardsFromAmong ids -> Just ids
+  Prompt.ChooseAnyNumber _ _ _ purpose _ _ -> case (purpose, response) of
+    (AnyNumberOf.Permanents, Response.ChoseAnyNumberOfPermanents ids) -> Just ids
+    (AnyNumberOf.CardsFromAmong, Response.ChoseCardsFromAmong ids) -> Just ids
+    (AnyNumberOf.ToSacrifice, Response.ChoseSacrifices ids) -> Just ids
+    (AnyNumberOf.ToReveal, Response.ChoseReveals ids) -> Just ids
+    (AnyNumberOf.ToExile, Response.ChoseExilesFromGraveyard ids) -> Just ids
+    (AnyNumberOf.ToDiscard, Response.ChoseAnyNumberToDiscard ids) -> Just ids
     _ -> Nothing
   Prompt.ChooseDungeon {} -> case response of
     Response.ChoseDungeon printingId -> Just printingId
@@ -598,21 +600,6 @@ decode p response = case p of
     _ -> Nothing
   Prompt.ChooseMaterials {} -> case response of
     Response.ChoseMaterials ids -> Just ids
-    _ -> Nothing
-  Prompt.ChooseAnyNumberToSacrifice {} -> case response of
-    Response.ChoseSacrifices ids -> Just ids
-    _ -> Nothing
-  Prompt.ChooseAnyNumberToReveal {} -> case response of
-    Response.ChoseReveals ids -> Just ids
-    _ -> Nothing
-  Prompt.ChooseAnyNumberToExile {} -> case response of
-    Response.ChoseExilesFromGraveyard ids -> Just ids
-    _ -> Nothing
-  Prompt.ChooseAnyNumberOfPermanents {} -> case response of
-    Response.ChoseAnyNumberOfPermanents ids -> Just ids
-    _ -> Nothing
-  Prompt.ChooseAnyNumberToDiscard {} -> case response of
-    Response.ChoseAnyNumberToDiscard ids -> Just ids
     _ -> Nothing
   Prompt.ChoosePermanent {} -> case response of
     Response.ChosePermanent oid -> Just oid
@@ -963,10 +950,12 @@ defaultAnswer p = case p of
   -- CR 608.2d again: the prompt is only raised with two or more cards of the
   -- bound group matching, and every one of them is a legal choice.
   Prompt.ChooseCardFromAmong _ _ _ candidates -> NonEmpty.head candidates
-  -- The first candidates up to the ceiling, ChooseAnyNumberOfPermanents'
-  -- maximal subset: every subset no larger is legal. A deterministic fallback,
-  -- not a recommendation.
-  Prompt.ChooseCardsFromAmong _ _ _ candidates atMost -> Set.fromList (List.genericTake atMost candidates)
+  -- None for a discard: CR 107.1c admits zero, and discarding spends cards the
+  -- fallback has no reason to give up. Otherwise the first candidates up to the
+  -- ceiling, the maximal subset: every subset no larger is legal (CR 608.2d,
+  -- 614.1c, 702.38a). A deterministic fallback, not a recommendation.
+  Prompt.ChooseAnyNumber _ _ _ AnyNumberOf.ToDiscard _ _ -> Set.empty
+  Prompt.ChooseAnyNumber _ _ _ _ candidates atMost -> Set.fromList (maybe id (take . Natural.toIntSaturating) atMost candidates)
   -- CR 309.2a: the prompt is only raised where the player owns two or more
   -- dungeon cards, and every one of them is a dungeon they may bring in.
   Prompt.ChooseDungeon _ _ candidates -> NonEmpty.head candidates
@@ -1172,7 +1161,7 @@ defaultAnswer p = case p of
   -- order -- what pawl walked in before the intra-seat key became the resolving
   -- controller's to choose.
   Prompt.OrderForEach _ _ _ members -> zipWith const [0 ..] members
-  -- Every candidate, ChooseAnyNumberOfPermanents' maximal subset: CR 608.2d
+  -- Every candidate, ChooseAnyNumber's maximal subset: CR 608.2d
   -- admits every subset here, so no answer can be illegal. A deterministic
   -- fallback, not a recommendation.
   Prompt.ChooseLoopMembers _ _ _ candidates -> Set.fromList candidates
@@ -1203,23 +1192,6 @@ defaultAnswer p = case p of
   -- graveyard is a legal answer whenever the cost is payable at all. A
   -- deterministic fallback, not a recommendation.
   Prompt.ChooseCollectEvidence _ _ _ candidates _ -> Set.fromList candidates
-  -- Every candidate. The maximal subset, mirroring the arm above taking the first
-  -- `count` rather than the last: a deterministic fallback, not a recommendation.
-  Prompt.ChooseAnyNumberToSacrifice _ _ _ candidates -> Set.fromList candidates
-  -- Every candidate, the arm above's maximal subset: CR 702.38a admits every
-  -- subset here and revealing spends nothing, so no answer can be illegal.
-  Prompt.ChooseAnyNumberToReveal _ _ _ candidates -> Set.fromList candidates
-  -- The first candidates up to the ceiling, the arm above's maximal subset: CR
-  -- 614.1c's "any number" admits every subset no larger than the ceiling, so no
-  -- answer can be illegal. A deterministic fallback, not a recommendation.
-  Prompt.ChooseAnyNumberToExile _ _ _ candidates atMost -> Set.fromList (maybe id (take . Natural.toIntSaturating) atMost candidates)
-  -- The first candidates up to the ceiling, the arm above's maximal subset: CR
-  -- 608.2d admits every subset no larger than the ceiling, so no answer can be
-  -- illegal. A deterministic fallback, not a recommendation.
-  Prompt.ChooseAnyNumberOfPermanents _ _ _ candidates atMost -> Set.fromList (maybe id (take . Natural.toIntSaturating) atMost candidates)
-  -- None: CR 107.1c admits zero, and discarding spends cards the fallback has
-  -- no reason to give up. A deterministic fallback, not a recommendation.
-  Prompt.ChooseAnyNumberToDiscard {} -> Set.empty
   -- CR 608.2d: the head of the offer, ChooseCardInGraveyard's fallback. Every
   -- candidate was pre-filtered by the engine, so the head is a legal answer. A
   -- deterministic fallback, not a recommendation.
@@ -1416,3 +1388,15 @@ replay responses gs game =
       (outcome, (_, _, reported)) =
         State.runState (Program.foldProgramM (step . Asked.prompt) (State.runStateT game gs)) (0, responses, Nothing)
    in (outcome, reported)
+
+-- The Response a ChooseAnyNumber answer is recorded as: one constructor per
+-- AnyNumberOf, so replaying a transcript against the wrong kind of choice acts on
+-- nothing rather than sacrificing what should have been revealed.
+anyNumberResponse :: AnyNumberOf.AnyNumberOf -> Set.Set ObjectId -> Response
+anyNumberResponse purpose = case purpose of
+  AnyNumberOf.Permanents -> Response.ChoseAnyNumberOfPermanents
+  AnyNumberOf.CardsFromAmong -> Response.ChoseCardsFromAmong
+  AnyNumberOf.ToSacrifice -> Response.ChoseSacrifices
+  AnyNumberOf.ToReveal -> Response.ChoseReveals
+  AnyNumberOf.ToExile -> Response.ChoseExilesFromGraveyard
+  AnyNumberOf.ToDiscard -> Response.ChoseAnyNumberToDiscard

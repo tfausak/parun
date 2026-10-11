@@ -1581,7 +1581,7 @@ matchesPermanent viewOf gs you slots source filter_ oid =
    in Filter.matches context (viewOf oid) filter_
 
 -- CR 701.21a: the permanents this player may sacrifice for a Filter, ascending --
--- the order Prompt.ChooseSacrifices and Prompt.ChooseAnyNumberToSacrifice offer
+-- the order Prompt.ChooseSacrifices and Prompt.ChooseAnyNumber offer
 -- them in, which is what makes both the elision test and the transcript fallback
 -- deterministic.
 --
@@ -2013,10 +2013,11 @@ readsApplier re = case re of
   -- offer the same player the same cards.
   ReplacementEffect.EntryR (EntryR.MkEntryR _ (EntryRewrite.Amplify _)) -> False
   -- CR 614.1c: NO despite spending a card, for SacrificeAnyNumber's reason. The
-  -- graveyard looked at is the ENTERING object's controller's -- "your graveyard"
-  -- in an ability the permanent prints about itself -- read live off the board at
-  -- CR 614.12a's moment, and the criterion rides the effect. Two such rows would
-  -- offer the same player the same cards.
+  -- chooser is the ENTERING object's controller, and the graveyards looked at
+  -- are the ones the effect's scope names from that player's perspective (CR
+  -- 109.5) -- "your graveyard", "a graveyard" -- read live off the board at CR
+  -- 614.12a's moment; the criterion, scope and count ride the effect. Two such
+  -- rows would offer the same player the same cards.
   ReplacementEffect.EntryR (EntryR.MkEntryR _ (EntryRewrite.ExileFromGraveyard _)) -> False
   -- CR 614.1c: NO, for the arm above's reason. The chooser is the ENTERING
   -- object's controller -- "you control" in an ability the permanent prints

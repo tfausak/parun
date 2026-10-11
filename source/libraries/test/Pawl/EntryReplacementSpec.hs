@@ -35,6 +35,7 @@ import qualified Pawl.Registry as Registry
 import Pawl.ReplacementSpec (controlledNamed, declineLastRiot, riotAsks, riotBoard, riotChoosing, wasAskedForRiot)
 import qualified Pawl.Spec as Spec
 import qualified Pawl.Support as S
+import qualified Pawl.Types.AnyNumberOf as AnyNumberOf
 import qualified Pawl.Types.CardName as CardName
 import qualified Pawl.Types.Color as Color
 import qualified Pawl.Types.CounterKind as CounterKind
@@ -327,14 +328,14 @@ amplifyBoard forest throwback beasts sentry =
 -- answerer that searched for a legal card would find one again after a mutation.
 revealing :: [ObjectId.ObjectId] -> Prompt.Prompt r -> r
 revealing wanted p = case p of
-  Prompt.ChooseAnyNumberToReveal _ _ _ offered -> Set.fromList (filter (`List.elem` offered) wanted)
+  Prompt.ChooseAnyNumber _ _ _ AnyNumberOf.ToReveal offered _ -> Set.fromList (filter (`List.elem` offered) wanted)
   _ -> S.identityAnswer p
 
 -- Reveals every card the engine offered, which is what makes the offer itself
 -- observable on the board: one wrongly offered card is two more counters.
 revealingEverything :: Prompt.Prompt r -> r
 revealingEverything p = case p of
-  Prompt.ChooseAnyNumberToReveal _ _ _ offered -> Set.fromList offered
+  Prompt.ChooseAnyNumber _ _ _ AnyNumberOf.ToReveal offered _ -> Set.fromList offered
   _ -> S.identityAnswer p
 
 -- alice, in her precombat main phase, with priority. Applied by the fixture above

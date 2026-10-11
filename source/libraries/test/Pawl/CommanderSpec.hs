@@ -97,6 +97,7 @@ import qualified Pawl.Registry as Registry
 import qualified Pawl.Spec as Spec
 import qualified Pawl.Support as S
 import qualified Pawl.Types.Action as A
+import qualified Pawl.Types.AnyNumberOf as AnyNumberOf
 import qualified Pawl.Types.CardName as CardName
 import qualified Pawl.Types.CardType as CardType
 import qualified Pawl.Types.CommandZoneDecision as CommandZoneDecision
@@ -789,7 +790,7 @@ doctorsCompanionSpec s registry = Spec.describe s "Doctor's companion" $ do
 answering :: PlayerId.PlayerId -> Prompt.Prompt r -> r
 answering who p = case p of
   Prompt.ReturnCommander _ pid _ -> if pid == who then CommandZoneDecision.Returns else CommandZoneDecision.Leaves
-  Prompt.ChooseAnyNumberToSacrifice _ _ _ candidates -> Set.fromList (take 1 candidates)
+  Prompt.ChooseAnyNumber _ _ _ AnyNumberOf.ToSacrifice candidates _ -> Set.fromList (take 1 candidates)
   _ -> S.identityAnswer p
 
 -- alice's commander cast from the command zone and resolved, so it is a 1/1 on the

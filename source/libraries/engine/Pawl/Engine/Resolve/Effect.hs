@@ -114,6 +114,7 @@ import qualified Pawl.Types.Amass as Amass.Type
 import qualified Pawl.Types.Ante as Ante
 import qualified Pawl.Types.AnyNumberDiscard as AnyNumberDiscard
 import qualified Pawl.Types.AnyNumberMatching as AnyNumberMatching
+import qualified Pawl.Types.AnyNumberOf as AnyNumberOf
 import qualified Pawl.Types.ArmDelayedTrigger as ArmDelayedTrigger
 import qualified Pawl.Types.AttachAll as AttachAll
 import qualified Pawl.Types.AttachBound as AttachBound
@@ -718,7 +719,7 @@ chosenPermanents legal resolving controller source (ChosenPermanents.MkChosenPer
     (namesChooser legal controller gs chooser)
     (askedChooser source controller legal chooser)
     (\decider who -> Prompt.ChoosePermanent decider who source)
-    (\decider who pool ceiling_ -> Prompt.ChooseAnyNumberOfPermanents decider who source pool ceiling_)
+    (\decider who pool ceiling_ -> Prompt.ChooseAnyNumber decider who source AnyNumberOf.Permanents pool ceiling_)
     amount
     count
     candidates
@@ -2329,8 +2330,7 @@ chooseCardFromAmong resolving source controller legal chosen (ChosenCardFromAmon
     (namesChooser legal controller gs chooser)
     (askedChooser source controller legal chooser)
     (\decider who -> Prompt.ChooseCardFromAmong decider who source)
-    -- "Any number" is a ceiling of every candidate.
-    (\decider who pool ceiling_ -> Prompt.ChooseCardsFromAmong decider who source pool (Maybe.fromMaybe (Natural.length pool) ceiling_))
+    (\decider who pool ceiling_ -> Prompt.ChooseAnyNumber decider who source AnyNumberOf.CardsFromAmong pool ceiling_)
     amount
     count
     (matchingFromAmong legal resolving controller source gs filter_ members)
@@ -6258,7 +6258,7 @@ applyOneEffect runSubgame resolving source controller legal chosen effect = case
           if null candidates || ceiling_ == Just 0
             then pure (victim, [])
             else do
-              answer <- Game.choose (Prompt.ChooseAnyNumberToDiscard (Decide.deciderFor victim gs) victim source candidates ceiling_)
+              answer <- Game.choose (Prompt.ChooseAnyNumber (Decide.deciderFor victim gs) victim source AnyNumberOf.ToDiscard candidates ceiling_)
               pure (victim, capped (filter (`Set.member` answer) candidates))
     doomed <- traverse pickFor victims
     buryDiscards resolving mDiscarded doomed

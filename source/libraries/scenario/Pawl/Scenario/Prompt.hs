@@ -5,6 +5,7 @@
 module Pawl.Scenario.Prompt where
 
 import qualified Data.Text as Text
+import qualified Pawl.Types.AnyNumberOf as AnyNumberOf
 import qualified Pawl.Types.Decider as Decider
 import qualified Pawl.Types.PlayerId as PlayerId
 import qualified Pawl.Types.Prompt as Prompt
@@ -82,7 +83,7 @@ deciderOf prompt = case prompt of
   Prompt.ChooseCardInGraveyard decider _ _ _ _ -> Just (Decider.unwrap decider)
   Prompt.ChooseCardInHand decider _ _ _ -> Just (Decider.unwrap decider)
   Prompt.ChooseCardFromAmong decider _ _ _ -> Just (Decider.unwrap decider)
-  Prompt.ChooseCardsFromAmong decider _ _ _ _ -> Just (Decider.unwrap decider)
+  Prompt.ChooseAnyNumber decider _ _ _ _ _ -> Just (Decider.unwrap decider)
   Prompt.ChooseDungeon decider _ _ -> Just (Decider.unwrap decider)
   Prompt.ChooseSticker decider _ _ _ -> Just (Decider.unwrap decider)
   Prompt.ChooseStickerOrNone decider _ _ _ -> Just (Decider.unwrap decider)
@@ -152,11 +153,6 @@ deciderOf prompt = case prompt of
   Prompt.ChooseExilesFromGraveyard decider _ _ _ _ -> Just (Decider.unwrap decider)
   Prompt.ChooseMaterials decider _ _ _ _ _ -> Just (Decider.unwrap decider)
   Prompt.ChooseCollectEvidence decider _ _ _ _ -> Just (Decider.unwrap decider)
-  Prompt.ChooseAnyNumberToSacrifice decider _ _ _ -> Just (Decider.unwrap decider)
-  Prompt.ChooseAnyNumberToReveal decider _ _ _ -> Just (Decider.unwrap decider)
-  Prompt.ChooseAnyNumberToExile decider _ _ _ _ -> Just (Decider.unwrap decider)
-  Prompt.ChooseAnyNumberOfPermanents decider _ _ _ _ -> Just (Decider.unwrap decider)
-  Prompt.ChooseAnyNumberToDiscard decider _ _ _ _ -> Just (Decider.unwrap decider)
   Prompt.ChoosePermanent decider _ _ _ -> Just (Decider.unwrap decider)
   Prompt.ChooseTapsForTotalPower decider _ _ _ _ -> Just (Decider.unwrap decider)
   Prompt.ChooseTaps decider _ _ _ _ -> Just (Decider.unwrap decider)
@@ -256,7 +252,14 @@ kindOf prompt = Text.pack $ case prompt of
   Prompt.ChooseCardInGraveyard {} -> "ChooseCardInGraveyard"
   Prompt.ChooseCardInHand {} -> "ChooseCardInHand"
   Prompt.ChooseCardFromAmong {} -> "ChooseCardFromAmong"
-  Prompt.ChooseCardsFromAmong {} -> "ChooseCardsFromAmong"
+  -- The names scenario files answer these by, one per AnyNumberOf.
+  Prompt.ChooseAnyNumber _ _ _ purpose _ _ -> case purpose of
+    AnyNumberOf.Permanents -> "ChooseAnyNumberOfPermanents"
+    AnyNumberOf.CardsFromAmong -> "ChooseCardsFromAmong"
+    AnyNumberOf.ToSacrifice -> "ChooseAnyNumberToSacrifice"
+    AnyNumberOf.ToReveal -> "ChooseAnyNumberToReveal"
+    AnyNumberOf.ToExile -> "ChooseAnyNumberToExile"
+    AnyNumberOf.ToDiscard -> "ChooseAnyNumberToDiscard"
   Prompt.ChooseDungeon {} -> "ChooseDungeon"
   Prompt.ChooseSticker {} -> "ChooseSticker"
   Prompt.ChooseStickerOrNone {} -> "ChooseStickerOrNone"
@@ -326,11 +329,6 @@ kindOf prompt = Text.pack $ case prompt of
   Prompt.ChooseExilesFromGraveyard {} -> "ChooseExilesFromGraveyard"
   Prompt.ChooseMaterials {} -> "ChooseMaterials"
   Prompt.ChooseCollectEvidence {} -> "ChooseCollectEvidence"
-  Prompt.ChooseAnyNumberToSacrifice {} -> "ChooseAnyNumberToSacrifice"
-  Prompt.ChooseAnyNumberToReveal {} -> "ChooseAnyNumberToReveal"
-  Prompt.ChooseAnyNumberToExile {} -> "ChooseAnyNumberToExile"
-  Prompt.ChooseAnyNumberOfPermanents {} -> "ChooseAnyNumberOfPermanents"
-  Prompt.ChooseAnyNumberToDiscard {} -> "ChooseAnyNumberToDiscard"
   Prompt.ChoosePermanent {} -> "ChoosePermanent"
   Prompt.ChooseTapsForTotalPower {} -> "ChooseTapsForTotalPower"
   Prompt.ChooseTaps {} -> "ChooseTaps"

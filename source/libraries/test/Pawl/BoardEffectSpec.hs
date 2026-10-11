@@ -41,6 +41,7 @@ import qualified Pawl.Spec as Spec
 import qualified Pawl.Support as S
 import qualified Pawl.Types.Affected as Affected
 import qualified Pawl.Types.AfterTurn as AfterTurn
+import qualified Pawl.Types.AnyNumberOf as AnyNumberOf
 import qualified Pawl.Types.BeginningStep as BeginningStep
 import qualified Pawl.Types.Card as Card.Type
 import qualified Pawl.Types.CardName as CardName
@@ -1396,7 +1397,7 @@ gloriousProtectorSpec s registry =
       -- to agree would prove nothing.
       namingExactly :: Set.Set ObjectId.ObjectId -> Prompt.Prompt r -> r
       namingExactly wanted p = case p of
-        Prompt.ChooseAnyNumberOfPermanents {} -> wanted
+        Prompt.ChooseAnyNumber _ _ _ AnyNumberOf.Permanents _ _ -> wanted
         _ -> accepting p
       -- Was the subset actually put to a player? Read off the recorded responses
       -- rather than off the board, so "nobody was asked" and "asked and answered
@@ -2672,12 +2673,12 @@ teferiUntapSpec :: (Monad m) => Spec.Spec m n -> Registry.Registry m -> n ()
 teferiUntapSpec s registry =
   let endStep = Phase.Ending EndingStep.EndStep
       beginEndStep gs = Event.recordEvent (GameEvent.StepBegan (StepBegan.MkStepBegan endStep S.alice)) (gs {GameState.phase = endStep})
-      -- Records every ChooseAnyNumberOfPermanents as (candidates, ceiling) and
+      -- Records every ChooseAnyNumber over permanents as (candidates, ceiling) and
       -- answers it with `pick` of the candidates -- offered or not, so an
       -- engine that trusted the answer would act on it.
       answering :: ([ObjectId.ObjectId] -> [ObjectId.ObjectId]) -> Prompt.Prompt r -> State.State [([ObjectId.ObjectId], Maybe Natural)] r
       answering pick p = case p of
-        Prompt.ChooseAnyNumberOfPermanents _ _ _ candidates atMost -> do
+        Prompt.ChooseAnyNumber _ _ _ AnyNumberOf.Permanents candidates atMost -> do
           State.modify (<> [(candidates, atMost)])
           pure (Set.fromList (pick candidates))
         _ -> pure (S.identityAnswer p)
@@ -2731,11 +2732,11 @@ teferiUntapSpec s registry =
 archfiendOfDepravitySpec :: (Monad m) => Spec.Spec m n -> Registry.Registry m -> n ()
 archfiendOfDepravitySpec s registry =
   let endStep = Phase.Ending EndingStep.EndStep
-      -- Records every ChooseAnyNumberOfPermanents as (decider, candidates,
+      -- Records every ChooseAnyNumber over permanents as (decider, candidates,
       -- ceiling) and answers with the first and third candidates.
       answering :: Prompt.Prompt r -> State.State [(PlayerId.PlayerId, [ObjectId.ObjectId], Maybe Natural)] r
       answering p = case p of
-        Prompt.ChooseAnyNumberOfPermanents decider _ _ candidates atMost -> do
+        Prompt.ChooseAnyNumber decider _ _ AnyNumberOf.Permanents candidates atMost -> do
           State.modify (<> [(Decider.unwrap decider, candidates, atMost)])
           pure (Set.fromList [c | (i, c) <- zip [0 :: Int ..] candidates, i /= 1])
         _ -> pure (S.identityAnswer p)
@@ -2771,7 +2772,7 @@ covetousElegySpec :: (Monad m) => Spec.Spec m n -> Registry.Registry m -> n ()
 covetousElegySpec s registry =
   let answering :: Prompt.Prompt r -> State.State [(PlayerId.PlayerId, [ObjectId.ObjectId])] r
       answering p = case p of
-        Prompt.ChooseAnyNumberOfPermanents decider _ _ candidates _ -> do
+        Prompt.ChooseAnyNumber decider _ _ AnyNumberOf.Permanents candidates _ -> do
           State.modify (<> [(Decider.unwrap decider, candidates)])
           pure (Set.fromList [c | (i, c) <- zip [0 :: Int ..] candidates, i /= 1])
         _ -> pure (S.identityAnswer p)
@@ -3099,11 +3100,11 @@ avariceTotemSpec s registry = Spec.describe s "AvariceTotem" $ do
 -- where the offer is eight and every other permanent on the battlefield nine.
 godEternalBontuSpec :: (Monad m) => Spec.Spec m n -> Registry.Registry m -> n ()
 godEternalBontuSpec s registry =
-  let -- Records each ChooseAnyNumberOfPermanents' candidates and answers with
+  let -- Records each permanents ChooseAnyNumber's candidates and answers with
       -- exactly `wanted`, so the offer is read off the engine.
       answering :: Set.Set ObjectId.ObjectId -> Prompt.Prompt r -> State.State [[ObjectId.ObjectId]] r
       answering wanted p = case p of
-        Prompt.ChooseAnyNumberOfPermanents _ _ _ candidates _ -> do
+        Prompt.ChooseAnyNumber _ _ _ AnyNumberOf.Permanents candidates _ -> do
           State.modify (<> [candidates])
           pure wanted
         _ -> pure (S.identityAnswer p)
