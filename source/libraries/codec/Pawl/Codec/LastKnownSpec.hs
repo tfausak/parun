@@ -47,7 +47,7 @@ spec s = Spec.describe s "Pawl.Codec.LastKnown" $ do
           LastKnown.counters = Map.singleton CounterKind.PlusOnePlusOne 3,
           LastKnown.copiable = ProjectedCharacteristicsSpec.minimalCharacteristics,
           LastKnown.attached = Set.singleton (ObjectId.MkObjectId 9),
-          LastKnown.chosenNames = Set.singleton (CardName.MkCardName (Text.pack "Goblin Piker")),
+          LastKnown.chosenNames = Map.singleton (PlayerId.MkPlayerId 8) (CardName.MkCardName (Text.pack "Goblin Piker")),
           LastKnown.chosenPlayer = Just (PlayerId.MkPlayerId 3),
           LastKnown.chosenColors = Set.singleton Color.Green,
           LastKnown.chosenSubtype = Just Subtype.Goblin,
@@ -67,7 +67,7 @@ spec s = Spec.describe s "Pawl.Codec.LastKnown" $ do
           <> ",\"copiable\":"
           <> minimalJson
           <> ",\"attached\":[9]"
-          <> ",\"chosenNames\":[\"Goblin Piker\"],\"chosenPlayer\":3,\"chosenColors\":[{\"type\":\"Green\"}],\"chosenSubtype\":{\"type\":\"Goblin\"},\"attacking\":false,\"attackTarget\":null,\"blocking\":true,\"protector\":7"
+          <> ",\"chosenNames\":{\"8\":\"Goblin Piker\"},\"chosenPlayer\":3,\"chosenColors\":[{\"type\":\"Green\"}],\"chosenSubtype\":{\"type\":\"Goblin\"},\"attacking\":false,\"attackTarget\":null,\"blocking\":true,\"protector\":7"
           <> ",\"paidCosts\":[{\"key\":{\"type\":\"Offspring\",\"value\":{\"mana\":[{\"type\":\"Generic\",\"value\":2}]}},\"value\":1}]"
           <> ",\"controlClock\":[{\"player\":1,\"clock\":{\"type\":\"SinceLastUpkeep\"}}]"
           <> ",\"zone\":{\"type\":\"Battlefield\"},\"pile\":6} "
@@ -87,7 +87,7 @@ spec s = Spec.describe s "Pawl.Codec.LastKnown" $ do
           LastKnown.counters = Map.empty,
           LastKnown.copiable = ProjectedCharacteristicsSpec.minimalCharacteristics,
           LastKnown.attached = Set.empty,
-          LastKnown.chosenNames = Set.empty,
+          LastKnown.chosenNames = Map.empty,
           LastKnown.chosenPlayer = Nothing,
           LastKnown.chosenColors = Set.empty,
           LastKnown.chosenSubtype = Nothing,
@@ -107,7 +107,7 @@ spec s = Spec.describe s "Pawl.Codec.LastKnown" $ do
           <> ",\"copiable\":"
           <> minimalJson
           <> ",\"attached\":[]"
-          <> ",\"chosenNames\":[],\"attacking\":true,\"attackTarget\":{\"type\":\"OfPlaneswalker\",\"value\":8},\"blocking\":false,\"protector\":null"
+          <> ",\"chosenNames\":{},\"attacking\":true,\"attackTarget\":{\"type\":\"OfPlaneswalker\",\"value\":8},\"blocking\":false,\"protector\":null"
           <> ",\"zone\":{\"type\":\"Stack\"}} "
       )
   Spec.it s "has a schema" $

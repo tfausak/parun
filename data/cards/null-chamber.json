@@ -23,7 +23,10 @@
           "effect": {
             "type": "CantCastMatching",
             "value": {
-              "type": "HasChosenName"
+              "type": "HasChosenName",
+              "value": {
+                "type": "AnyChooser"
+              }
             }
           },
           "scope": {
@@ -34,7 +37,10 @@
           "effect": {
             "type": "CantPlayLands",
             "value": {
-              "type": "HasChosenName"
+              "type": "HasChosenName",
+              "value": {
+                "type": "AnyChooser"
+              }
             }
           },
           "scope": {

@@ -26,6 +26,7 @@ import qualified Pawl.Types.ManaSymbol as ManaSymbol
 import qualified Pawl.Types.ManaType as ManaType
 import qualified Pawl.Types.Measure as Measure
 import qualified Pawl.Types.Measures as Measures
+import qualified Pawl.Types.NameChooser as NameChooser
 import qualified Pawl.Types.ObjectId as ObjectId
 import qualified Pawl.Types.Operand as Operand
 import qualified Pawl.Types.PlayerId as PlayerId
@@ -1000,18 +1001,21 @@ spec s = Spec.describe s "Pawl.Engine.Filter" $ do
   -- two sides are set intersection, so CR 201.4g's interchangeable names and CR
   -- 709.4a's two-named objects each fall out.
   Spec.describe s "HasChosenName" $ do
-    let named ns = self {Filter.sourceChosenNames = Set.fromList (fmap (CardName.MkCardName . Text.pack) ns)}
+    let byChooser ns = self {Filter.sourceChosenNames = Map.fromList (zip (fmap PlayerId.MkPlayerId [0 ..]) (fmap (CardName.MkCardName . Text.pack) ns))}
+        named n = byChooser [n]
         called ns = blackCreature {Filter.names = Set.fromList (fmap (CardName.MkCardName . Text.pack) ns)}
+        anyone = Filter.Type.HasChosenName NameChooser.AnyChooser
+        owners = Filter.Type.HasChosenName NameChooser.CandidateOwner
     Spec.it s "matches a candidate whose name the source chose" $ do
-      Spec.assertBool s (Filter.matches (named ["Chromatic Star"]) (called ["Chromatic Star"]) Filter.Type.HasChosenName) "the chosen name"
+      Spec.assertBool s (Filter.matches (named "Chromatic Star") (called ["Chromatic Star"]) anyone) "the chosen name"
 
     Spec.it s "does not match a candidate with some other name" $ do
-      Spec.assertBool s (not (Filter.matches (named ["Chromatic Star"]) (called ["Crucible of Worlds"]) Filter.Type.HasChosenName)) "a different name"
+      Spec.assertBool s (not (Filter.matches (named "Chromatic Star") (called ["Crucible of Worlds"]) anyone)) "a different name"
 
     -- CR 709.4a's membership at the candidate's end: a split card off the stack
     -- shows two names, and sharing either is sharing one.
     Spec.it s "CR 709.4a matches a candidate showing the chosen name among others" $ do
-      Spec.assertBool s (Filter.matches (named ["Wax"]) (called ["Wax", "Wane"]) Filter.Type.HasChosenName) "one of two names"
+      Spec.assertBool s (Filter.matches (named "Wax") (called ["Wax", "Wane"]) anyone) "one of two names"
 
     -- This atom's vacuous direction, and the reason the position lint exists:
     -- outside the one context that fills the field this is False rather than an
@@ -1019,11 +1023,19 @@ spec s = Spec.describe s "Pawl.Engine.Filter" $ do
     -- SameControllerAsBound answers True on its unfilled read, which the
     -- SameControllerAsBound group above asserts.
     Spec.it s "a source that chose nothing is vacuously false" $ do
-      Spec.assertBool s (not (Filter.matches self (called ["Chromatic Star"]) Filter.Type.HasChosenName)) "contextFor leaves it empty"
+      Spec.assertBool s (not (Filter.matches self (called ["Chromatic Star"]) anyone)) "contextFor leaves it empty"
 
     -- CR 708.2a: a face-down object has no name at all, so it shares none.
     Spec.it s "a nameless candidate is vacuously false" $ do
-      Spec.assertBool s (not (Filter.matches (named ["Chromatic Star"]) blackCreature Filter.Type.HasChosenName)) "no names"
+      Spec.assertBool s (not (Filter.matches (named "Chromatic Star") blackCreature anyone)) "no names"
+
+    -- CR 201.4 per chooser: blackCreature is owned by seat 1. Seat 0 chose its
+    -- name and seat 1 another, so it is among the names chosen but not among the
+    -- ones its OWNER chose -- Conundrum Sphinx's "the name they chose".
+    Spec.it s "CandidateOwner reads the name the candidate's owner chose" $ do
+      Spec.assertBool s (Filter.matches (byChooser ["Crucible of Worlds", "Chromatic Star"]) (called ["Chromatic Star"]) owners) "the owner's name"
+      Spec.assertBool s (not (Filter.matches (byChooser ["Chromatic Star", "Crucible of Worlds"]) (called ["Chromatic Star"]) owners)) "another chooser's name"
+      Spec.assertBool s (Filter.matches (byChooser ["Chromatic Star", "Crucible of Worlds"]) (called ["Chromatic Star"]) anyone) "AnyChooser takes either"
 
   -- CR 105.2: what the SOURCE chose as it entered, against the colours the
   -- candidate wears. Membership, so a multicoloured candidate matches on any one

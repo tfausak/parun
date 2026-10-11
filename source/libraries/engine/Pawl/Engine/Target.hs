@@ -380,16 +380,9 @@ slotContext perspective unannounced bindings source amount gs =
             -- Nothing: a target slot's filter sits in no Quantity, so nothing
             -- aims it at an object.
             Filter.evaluated = Nothing,
-            -- Empty, overriding the source's frame: CR 201.4's name is
-            -- chosen while the spell RESOLVES (CR 608.2c), and a target slot is
-            -- matched at CR 601.2c, before any of that has happened. So there is
-            -- no chosen name here even for a source that will have one, and
-            -- HasChosenName is vacuously False. Pawl.CardSpec's position lint is
-            -- what keeps a card out of the slot.
-            Filter.sourceChosenNames = Set.empty,
-            -- Nothing, for the reason one field up: CR 702.16k's chosen player is
-            -- read off a PROTECTION quality, and a target slot's filter is
-            -- neither of the four positions rule 702.16 reads one in.
+            -- Nothing: CR 702.16k's chosen player is read off a PROTECTION
+            -- quality, and a target slot's filter is neither of the four
+            -- positions rule 702.16 reads one in.
             -- Pawl.CardSpec's position lint is what keeps a card out of the slot.
             Filter.carrierChosenPlayer = Nothing,
             -- Nothing, the field above's companion: rule 702.16k's targeting

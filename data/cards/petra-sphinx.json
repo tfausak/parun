@@ -64,7 +64,10 @@
                             "type": "EachCardFromAmong",
                             "value": {
                               "filter": {
-                                "type": "HasChosenName"
+                                "type": "HasChosenName",
+                                "value": {
+                                  "type": "AnyChooser"
+                                }
                               },
                               "slot": "revealed"
                             }

@@ -235,22 +235,22 @@ data Object = MkObject
     -- choice map, whose sum-typed value every reader would have to re-narrow. Not
     -- a copiable value and per-incarnation, for that field's reasons.
     chosenSubtype :: Maybe Subtype.Subtype,
-    -- | CR 201.4: the card names this object's controller has chosen. TWO moments
+    -- | CR 201.4: the card names chosen for this object, keyed by who chose each. TWO moments
     -- write it -- CR 614.1c's as-enters choice (Null Chamber) and CR 608.2c's
     -- on-resolution one (Ancient Vendetta) -- and both readers ask the effect's
     -- SOURCE, chosenColors's direction.
     --
-    -- A SET rather than one name or a name per chooser: Null Chamber has two
-    -- players each name a card and its prohibition asks only whether a name is
-    -- among them. Empty for everything that never chose, which matches no card at
-    -- all (CR 201.2a). Not a copiable value and per-incarnation, for chosenColors's
-    -- reasons.
+    -- A name PER CHOOSER: Null Chamber's prohibition asks whether a name is any
+    -- chooser's, Conundrum Sphinx's "the name they chose" asks after one
+    -- player's (Filter.HasChosenName's NameChooser). Empty for everything that
+    -- never chose, which matches no card at all (CR 201.2a). Not a copiable value
+    -- and per-incarnation, for chosenColors's reasons.
     --
     -- ASSIGNED by both writers and never added to, so CR 608.2c's scope holds for
     -- a PERMANENT that chooses on two separate resolutions: the later choice is
     -- the whole of what "the chosen name" then means (Petra Sphinx activated
     -- twice, Pawl.ResolveSpec).
-    chosenNames :: Set.Set CardName.CardName,
+    chosenNames :: Map.Map PlayerId.PlayerId CardName.CardName,
     -- | CR 614.1c: a player this object's controller chose as it entered (Stuffy
     -- Doll). Read by Pawl.Engine.Resolve's ObjectRef.ChosenPlayer arm off the
     -- effect's SOURCE -- a triggered ability's payload rather than a
@@ -934,7 +934,7 @@ new o s z t =
       enteredUnder = Nothing,
       chosenColors = Set.empty,
       chosenSubtype = Nothing,
-      chosenNames = Set.empty,
+      chosenNames = Map.empty,
       chosenPlayer = Nothing,
       face = Nothing,
       turnedOverAt = Nothing,

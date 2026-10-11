@@ -1,5 +1,6 @@
 module Pawl.Codec.ManaUnitSpec where
 
+import qualified Data.Map.Strict as Map
 import qualified Data.Set as Set
 import qualified Pawl.Codec.FaceSpec as FaceSpec
 import qualified Pawl.Codec.ManaUnit as ManaUnit
@@ -53,7 +54,7 @@ spec s = Spec.describe s "Pawl.Codec.ManaUnit" $ do
           ManaUnit.restriction = Just (ManaRestriction.onlyCasts (Filter.HasCardType CardType.Creature)),
           ManaUnit.rider = Nothing,
           ManaUnit.spendTrigger = Nothing,
-          ManaUnit.sourceChoices = Just SourceChoices.MkSourceChoices {SourceChoices.names = Set.empty, SourceChoices.colors = Set.singleton Color.Red, SourceChoices.subtype = Just Subtype.Goblin},
+          ManaUnit.sourceChoices = Just SourceChoices.MkSourceChoices {SourceChoices.names = Map.empty, SourceChoices.colors = Set.singleton Color.Red, SourceChoices.subtype = Just Subtype.Goblin},
           ManaUnit.sourceLastExiled = Just (ObjectId.MkObjectId 7)
         }
       " {\"manaType\":{\"type\":\"Colored\",\"value\":{\"type\":\"Red\"}},\"tags\":[{\"type\":\"Snow\"}],\"retention\":{\"type\":\"UntilEndOfTurn\"},\"restriction\":{\"casts\":{\"type\":\"HasCardType\",\"value\":{\"type\":\"Creature\"}}},\"rider\":null,\"sourceChoices\":{\"colors\":[{\"type\":\"Red\"}],\"subtype\":{\"type\":\"Goblin\"}},\"sourceLastExiled\":7} "

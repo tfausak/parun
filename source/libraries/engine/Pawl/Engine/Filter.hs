@@ -46,6 +46,7 @@ import qualified Pawl.Types.ManaCost as ManaCost
 import qualified Pawl.Types.Measure as Measure
 import qualified Pawl.Types.Measures as Measures
 import qualified Pawl.Types.Morph as Morph
+import qualified Pawl.Types.NameChooser as NameChooser
 import qualified Pawl.Types.ObjectId as ObjectId
 import qualified Pawl.Types.Operand as Operand
 import qualified Pawl.Types.Pairing as Pairing
@@ -1394,15 +1395,16 @@ data Context = MkContext
     -- Nothing in contextFor below and for a source the state no longer holds,
     -- and the atom answers False on that Nothing.
     sourceOwner :: Maybe PlayerId.PlayerId,
-    -- CR 201.4: the names the SOURCE has chosen, for the one atom that compares a
-    -- candidate's against them (HasChosenName, Ancient Vendetta). Filled by
+    -- CR 201.4: the names the SOURCE has chosen, keyed by the player who chose
+    -- each, for the one atom that compares a candidate's against them
+    -- (HasChosenName, Ancient Vendetta). Filled by
     -- Pawl.Engine.SourceContext with the source's other choices, so every
     -- position framed by its source answers it: a resolution's (CR 608.2c's
     -- choice during a resolution -- Ancient Vendetta's search, Predict's tally,
     -- Petra Sphinx's revealed card) and a replacement row's, where rule
     -- 702.16e's MINTED shield writes it (CR 614.1c's as-enters choice, Runed
-    -- Halo), among them. Pawl.Engine.Target.slotContext empties it again: a
-    -- target slot is matched at CR 601.2c, before a resolution's choice.
+    -- Halo), and a target slot's (Declaration of Naught's "target spell with
+    -- the chosen name", chosen as it entered), among them.
     --
     -- The SOURCE's and not a slot's, which is what separates it from slotNames
     -- above: CR 201.4's name is not an object, so no slot ever holds it, and
@@ -1423,7 +1425,7 @@ data Context = MkContext
     -- narrower than where this field is filled: it refuses every standing
     -- position, which is what Pawl.CardSpec's StandingHostFramed exists to keep
     -- apart from an effect's own ObjectRef.
-    sourceChosenNames :: Set.Set CardName.CardName,
+    sourceChosenNames :: Map.Map PlayerId.PlayerId CardName.CardName,
     -- CR 702.16k: the player chosen (CR 614.1c) by the permanent whose
     -- PROTECTION ability wrote the filter being matched, for the one atom that
     -- asks after them (OfChosenPlayer, True-Name Nemesis). Supplied by the
@@ -1584,7 +1586,7 @@ data Context = MkContext
 -- here owes both halves of the same pair: which way its unfilled read answers,
 -- and what holds a card to the positions that fill it.
 contextFor :: Teams.Teams -> Maybe PlayerId.PlayerId -> Maybe ObjectId.ObjectId -> Context
-contextFor t p s = MkContext {teams = t, perspective = p, source = s, sourceMeasures = Map.empty, sourceColors = Set.empty, sourceNames = Set.empty, slotAmount = Nothing, defendingPlayers = [], recipient = Nothing, slotObjects = Map.empty, cantCrewVehicles = Set.empty, slotNames = Map.empty, slotControllers = Map.empty, slotHostControllers = Map.empty, subjectHostCardTypes = Set.empty, slotCreatureTypes = Map.empty, slotMeasures = Map.empty, slotPlayers = Map.empty, boundAmounts = Map.empty, slotStickers = Map.empty, boundUnannounced = False, sourceAttachedTo = Nothing, evaluated = Nothing, sourceEntrants = Set.empty, sourceOwner = Nothing, sourceChosenNames = Set.empty, carrierChosenPlayer = Nothing, aimingController = Nothing, sourceChosenColors = Set.empty, sourceChosenSubtype = Nothing, sourceLastExiled = Nothing, sourceExiled = Set.empty}
+contextFor t p s = MkContext {teams = t, perspective = p, source = s, sourceMeasures = Map.empty, sourceColors = Set.empty, sourceNames = Set.empty, slotAmount = Nothing, defendingPlayers = [], recipient = Nothing, slotObjects = Map.empty, cantCrewVehicles = Set.empty, slotNames = Map.empty, slotControllers = Map.empty, slotHostControllers = Map.empty, subjectHostCardTypes = Set.empty, slotCreatureTypes = Map.empty, slotMeasures = Map.empty, slotPlayers = Map.empty, boundAmounts = Map.empty, slotStickers = Map.empty, boundUnannounced = False, sourceAttachedTo = Nothing, evaluated = Nothing, sourceEntrants = Set.empty, sourceOwner = Nothing, sourceChosenNames = Map.empty, carrierChosenPlayer = Nothing, aimingController = Nothing, sourceChosenColors = Set.empty, sourceChosenSubtype = Nothing, sourceLastExiled = Nothing, sourceExiled = Set.empty}
 
 -- The ONE object a slot names, for the readers that can take no more than one --
 -- Quantity.AgainstSlot's evaluation, Count's IsControllerOfBound. Nothing where
@@ -1878,7 +1880,15 @@ matches context view predicate = case predicate of
   -- each of them, so a candidate showing either matches. A source that has chosen
   -- nothing, and a candidate with no name at all (CR 708.2a), each leave one side
   -- empty and answer False without a case of their own.
-  Filter.HasChosenName -> not (Set.disjoint (names view) (sourceChosenNames context))
+  --
+  -- CandidateOwner narrows the chosen side to the one name the candidate's owner
+  -- chose, Conundrum Sphinx's "the name they chose" (CR 201.4); a candidate with
+  -- no owner, or whose owner chose nothing, answers False the same way.
+  Filter.HasChosenName chooser ->
+    let chosen = case chooser of
+          NameChooser.AnyChooser -> Map.elems (sourceChosenNames context)
+          NameChooser.CandidateOwner -> Maybe.maybeToList (owner view >>= \pid -> Map.lookup pid (sourceChosenNames context))
+     in any (`Set.member` names view) chosen
   -- CR 105.2 read off the PROJECTION, the HasColor arm above with the colour
   -- arriving on the Context: whatever layer 5 left the candidate wearing is what
   -- CR 607.2d's link is compared against, so Painter's Servant's blue reaches this
@@ -2324,7 +2334,7 @@ rewrite pairs predicate = case predicate of
   Filter.SameControllerAsBound _ -> predicate
   Filter.SameControllerAsHostOfBound _ -> predicate
   Filter.SharesCreatureTypeWithBound _ -> predicate
-  Filter.HasChosenName -> predicate
+  Filter.HasChosenName {} -> predicate
   Filter.HasChosenColor -> predicate
   Filter.HasChosenSubtype -> predicate
   Filter.IsExiledWithSource _ -> predicate
@@ -3072,7 +3082,7 @@ bakeBound players predicate = case predicate of
   Filter.SameControllerAsBound _ -> predicate
   Filter.SameControllerAsHostOfBound _ -> predicate
   Filter.SharesCreatureTypeWithBound _ -> predicate
-  Filter.HasChosenName -> predicate
+  Filter.HasChosenName {} -> predicate
   Filter.HasChosenColor -> predicate
   Filter.HasChosenSubtype -> predicate
   Filter.IsExiledWithSource _ -> predicate
@@ -3246,7 +3256,7 @@ manaValueThresholds predicate = case predicate of
   Filter.SameControllerAsBound _ -> []
   Filter.SameControllerAsHostOfBound _ -> []
   Filter.SharesCreatureTypeWithBound _ -> []
-  Filter.HasChosenName -> []
+  Filter.HasChosenName {} -> []
   Filter.HasChosenColor -> []
   Filter.HasChosenSubtype -> []
   Filter.IsExiledWithSource _ -> []
@@ -3408,7 +3418,7 @@ statesAQuality predicate = case predicate of
   -- CR 701.23b's "stated quality" for HasName's reason, one indirection along: the
   -- description is a card name whichever way the name was arrived at, so a search
   -- whose filter is this one may decline to find what it can see.
-  Filter.HasChosenName -> True
+  Filter.HasChosenName {} -> True
   -- CR 701.23b's "stated quality" for HasColor's reason, one indirection along:
   -- the description is a colour whichever way the colour was arrived at.
   Filter.HasChosenColor -> True
@@ -3565,7 +3575,7 @@ readsSourceValues predicate = case predicate of
   Filter.SameControllerAsBound _ -> False
   Filter.SameControllerAsHostOfBound _ -> False
   Filter.SharesCreatureTypeWithBound _ -> False
-  Filter.HasChosenName -> True
+  Filter.HasChosenName {} -> True
   Filter.HasChosenColor -> True
   Filter.HasChosenSubtype -> True
   Filter.IsExiledWithSource _ -> False
@@ -3724,7 +3734,7 @@ overBoundSlotsWith f predicate = case predicate of
   Filter.SameControllerAsHostOfBound slot -> fmap Filter.SameControllerAsHostOfBound (f SlotArity.Many slot)
   -- Reads the whole set too, off its own field.
   Filter.SharesCreatureTypeWithBound slot -> fmap Filter.SharesCreatureTypeWithBound (f SlotArity.Many slot)
-  Filter.HasChosenName -> pure predicate
+  Filter.HasChosenName {} -> pure predicate
   -- Reads no slot either: CR 105.2's colour arrives on Filter.Context.
   Filter.HasChosenColor -> pure predicate
   -- Reads no slot either: CR 205.3's subtype arrives on Filter.Context.

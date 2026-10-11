@@ -3672,7 +3672,7 @@ filterReads f = case f of
   Filter.Type.SharesCreatureTypeWithBound _ -> Set.singleton Subtypes
   -- Reads NAMES at both ends too, HasName's answer one indirection along: the
   -- chosen half is not a projection at all, and the other has no Aspect.
-  Filter.Type.HasChosenName -> Set.empty
+  Filter.Type.HasChosenName {} -> Set.empty
   -- Reads the candidate's COLOURS, HasColor's answer above: the chosen half is no
   -- projection at all, and CR 613.1e's layer writes the other, so an effect that
   -- recolours a creature (Painter's Servant) moves an affected set written with
@@ -3996,7 +3996,7 @@ filterReadsPeers f = case f of
   -- than through the candidate's `peers` view.
   Filter.Type.SameControllerAsHostOfBound _ -> False
   Filter.Type.SharesCreatureTypeWithBound _ -> False
-  Filter.Type.HasChosenName -> False
+  Filter.Type.HasChosenName {} -> False
   -- The source's chosen colour arrives on the Context, read off Object.chosenColors
   -- rather than off a projection; the candidate's own colours come from its
   -- partial, so no PEER is projected.

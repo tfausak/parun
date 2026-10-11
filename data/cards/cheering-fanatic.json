@@ -80,7 +80,10 @@
                                 }
                               },
                               "matching": {
-                                "type": "HasChosenName"
+                                "type": "HasChosenName",
+                                "value": {
+                                  "type": "AnyChooser"
+                                }
                               },
                               "subject": {
                                 "type": "Spells"

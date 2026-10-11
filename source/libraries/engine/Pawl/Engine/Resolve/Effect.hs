@@ -251,6 +251,7 @@ import qualified Pawl.Types.InherentTriggerSource as InherentTriggerSource
 import qualified Pawl.Types.InitiativeTarget as InitiativeTarget
 import qualified Pawl.Types.Keyword as Keyword.Type
 import qualified Pawl.Types.KeywordFamily as KeywordFamily
+import qualified Pawl.Types.LastKnown as LastKnown
 import qualified Pawl.Types.LibraryDepth as LibraryDepth
 import qualified Pawl.Types.LibraryPlacement as LibraryPlacement
 import qualified Pawl.Types.LibraryPosition as LibraryPosition
@@ -8675,8 +8676,9 @@ applyOneEffect runSubgame resolving source controller legal chosen effect = case
     Monad.unless (Map.null tally) . Event.simultaneously . Monad.forM_ targets $ \target ->
       Monad.forM_ (Map.toList tally) (uncurry (Event.putCounters (CounterCause.ByEffect controller) target))
   -- CR 201.4 via CR 608.2c: the players the PlayerRef names each name a card,
-  -- and the names are stamped on the SOURCE so a later clause of the same
-  -- resolution can read them (Ancient Vendetta, Petra Sphinx).
+  -- and the names are stamped on the SOURCE, each under its chooser, so a later
+  -- clause of the same resolution can read them (Ancient Vendetta, Petra Sphinx,
+  -- Conundrum Sphinx's "the name they chose").
   -- Object.chosenNames is the same store CR 614.1c's as-enters twin writes
   -- (Pawl.Engine.Event's EntryRewrite.ChooseCardNames arm), and
   -- Pawl.Engine.Filter's HasChosenName is the one reader on the match side.
@@ -8717,27 +8719,30 @@ applyOneEffect runSubgame resolving source controller legal chosen effect = case
   -- Written to the SOURCE and not to `resolving`: Pawl.Engine.PlayerEffect
   -- .contextFor and the resolution's own context both ask about a source (CR
   -- 113.7), and for a spell the two ids are the same object anyway.
-  --
-  -- Not implemented: SEVERAL choosers of ONE instruction kept apart. Their
-  -- answers union into the one set on the source, so Conundrum Sphinx's "the name
-  -- they chose" would read every chooser's (#3316).
   Effect.ChooseCardName (ChooseCardName.MkChooseCardName ref restriction) -> do
     gs <- State.get
     -- CR 101.4b: each chooser is told the names the choosers before them chose.
-    -- No test drives two choosers through this arm, so the payload is unproven
-    -- here; Null Chamber's entry twin in Pawl.Engine.Event is the proven one.
+    -- Conundrum Sphinx drives three choosers through this arm, but no test reads
+    -- the payload here; Null Chamber's entry twin in Pawl.Engine.Event is the
+    -- proven one.
     let ask made chooser = do
           g <- State.get
           name <- Game.choose (Prompt.ChooseCardName (Decide.deciderFor chooser g) chooser source restriction made) >>= Game.lookUpChosenName
           pure (made Seq.|> (chooser, name))
-    picked <- fmap (Set.fromList . fmap snd . Foldable.toList) (Monad.foldM ask Seq.empty (apnapDecidersOf ref legal controller gs))
+    picked <- fmap (Map.fromList . Foldable.toList) (Monad.foldM ask Seq.empty (apnapDecidersOf ref legal controller gs))
     -- CR 101.3: a reference naming NOBODY leaves nothing to do, so the write is
     -- skipped rather than assigning the empty set -- which would clear a name an
     -- earlier instruction chose, and the assignment above is the whole reason
     -- that would now be visible.
-    Monad.unless (Set.null picked) $ do
+    --
+    -- A source that has LEFT its zone gets the names on its last known
+    -- information instead (CR 608.2h), which is where Game.chosenNamesWithLastKnown
+    -- reads them back: Conundrum Sphinx bounced with its trigger on the stack
+    -- still keeps a named card (its CR 608.2h scenario under data/scenarios).
+    Monad.unless (Map.null picked) $ do
       let stamp o = o {Object.chosenNames = picked}
-      State.modify' $ \g -> g {GameState.objects = Map.adjust stamp source (GameState.objects g)}
+          remember lk = lk {LastKnown.chosenNames = picked}
+      State.modify' $ \g -> g {GameState.objects = Map.adjust stamp source (GameState.objects g), GameState.lastKnown = Map.adjust remember source (GameState.lastKnown g)}
   -- CR 400.11c: the resolving controller reveals a card they own from outside the
   -- game matching the filter and puts it into their hand -- Burning Wish.
   --

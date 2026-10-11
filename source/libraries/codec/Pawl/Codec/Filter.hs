@@ -12,6 +12,7 @@ import qualified Pawl.Codec.Expansion as Expansion
 import qualified Pawl.Codec.KeywordDesignator as KeywordDesignator
 import qualified Pawl.Codec.KeywordFamily as KeywordFamily
 import qualified Pawl.Codec.Measures as Measures
+import qualified Pawl.Codec.NameChooser as NameChooser
 import qualified Pawl.Codec.ObjectId as ObjectId
 import qualified Pawl.Codec.PlayerId as PlayerId
 import qualified Pawl.Codec.PlayerRelation as PlayerRelation
@@ -93,7 +94,7 @@ codec keywordCodec =
       Arm.payload "SameControllerAsBound" SlotName.codec Filter.SameControllerAsBound (\x -> case x of Filter.SameControllerAsBound y -> Just y; _ -> Nothing),
       Arm.payload "SameControllerAsHostOfBound" SlotName.codec Filter.SameControllerAsHostOfBound (\x -> case x of Filter.SameControllerAsHostOfBound y -> Just y; _ -> Nothing),
       Arm.payload "SharesCreatureTypeWithBound" SlotName.codec Filter.SharesCreatureTypeWithBound (\x -> case x of Filter.SharesCreatureTypeWithBound y -> Just y; _ -> Nothing),
-      Arm.nullary "HasChosenName" Filter.HasChosenName,
+      Arm.payload "HasChosenName" NameChooser.codec Filter.HasChosenName (\x -> case x of Filter.HasChosenName y -> Just y; _ -> Nothing),
       Arm.nullary "HasChosenColor" Filter.HasChosenColor,
       Arm.nullary "HasChosenSubtype" Filter.HasChosenSubtype,
       Arm.payload "IsExiledWithSource" ExiledWith.codec Filter.IsExiledWithSource (\x -> case x of Filter.IsExiledWithSource y -> Just y; _ -> Nothing),
