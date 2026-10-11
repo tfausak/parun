@@ -715,6 +715,7 @@ chosenPermanents legal resolving controller source (ChosenPermanents.MkChosenPer
       context = effectContext gs controller source legal (slotBindings resolving gs)
       amount = maybe 0 Integer.toNaturalSaturating . Quantity.evaluateFor (effectViewOf source legal gs) context gs resolving source
   pickCounted
+    (namesChooser legal controller gs chooser)
     (askedChooser source controller legal chooser)
     (\decider who -> Prompt.ChoosePermanent decider who source)
     (\decider who pool ceiling_ -> Prompt.ChooseAnyNumberOfPermanents decider who source pool ceiling_)
@@ -723,15 +724,19 @@ chosenPermanents legal resolving controller source (ChosenPermanents.MkChosenPer
     candidates
 
 -- CR 608.2d's choice of objects out of candidates, at a count read through
--- `amount`: the one place a HowMany is asked, shared by chosenPermanents and chooseCardFromAmong. The
--- chooser is named only where a real choice remains, so CR 800.4g's
--- reassignment is never asked for a choice with one answer.
+-- `amount`: the one place a HowMany is asked, shared by chosenPermanents and
+-- chooseCardFromAmong. A chooser ref naming no seat, or several, picks nothing
+-- (CR 101.3) whatever the count; one naming a seat is asked through `chooser`
+-- only where a real choice remains, so CR 800.4g's reassignment is never asked
+-- for a choice with one answer.
 --
--- Exactly: every candidate where they number no more than the count (CR
--- 609.3), and otherwise ONE ask per pick, each over the candidates the earlier
--- picks left -- CR 608.2d cannot choose the same object twice. One seat
--- answering several asks in sequence is the same decision as one simultaneous
--- choice of that many, CR 101.4c leaving the order to that player.
+-- Exactly: every candidate where there are as many as the count or fewer --
+-- CR 608.2d leaves one legal answer at as many, and CR 609.3 takes what there
+-- is at fewer -- and otherwise ONE ask per pick, each over the candidates the
+-- earlier picks left, since CR 608.2d cannot choose the same object twice.
+-- One seat answering several asks in sequence is the same decision as one
+-- simultaneous choice of that many, CR 101.4c leaving the order to that
+-- player.
 --
 -- UpTo: ONE ask over every candidate, skipped at none and at a ceiling of zero,
 -- where the empty set is the only answer (CR 101.3, CR 609.3), and asked at
@@ -740,6 +745,7 @@ chosenPermanents legal resolving controller source (ChosenPermanents.MkChosenPer
 -- ceiling keeps its first that many in the offer's order, which carries CR
 -- 608.2f's APNAP order where a Set does not.
 pickCounted ::
+  Bool ->
   Game (Maybe PlayerId) ->
   (Decider.Decider -> PlayerId -> NonEmpty.NonEmpty ObjectId -> Prompt.Prompt ObjectId) ->
   (Decider.Decider -> PlayerId -> [ObjectId] -> Maybe Natural -> Prompt.Prompt (Set ObjectId)) ->
@@ -747,8 +753,9 @@ pickCounted ::
   HowMany.HowMany ->
   [ObjectId] ->
   Game [ObjectId]
-pickCounted chooser one_ several amount count candidates = case count of
+pickCounted named chooser one_ several amount count candidates = case count of
   HowMany.Exactly q
+    | not named -> pure []
     | Natural.length candidates <= amount q -> pure candidates
     | otherwise -> asking (\who -> pick who (amount q) candidates)
   HowMany.UpTo q
@@ -768,6 +775,10 @@ pickCounted chooser one_ several amount count candidates = case count of
           case picked of
             Nothing -> pure []
             Just taken -> (taken :) <$> pick who (n - 1) (List.delete taken available)
+
+-- Whether a chooser ref names one seat, askedChooser's test without its ask.
+namesChooser :: Map.Map SlotName (Set Recipient) -> PlayerId -> GameState -> PlayerRef -> Bool
+namesChooser legal controller gs ref = length (decidersOf legal controller gs ref) == 1
 
 askedChooser :: ObjectId -> PlayerId -> Map.Map SlotName (Set Recipient) -> PlayerRef -> Game (Maybe PlayerId)
 askedChooser source controller legal ref = do
@@ -2368,6 +2379,7 @@ chooseCardFromAmong resolving source controller legal chosen (ChosenCardFromAmon
       context = effectContext gs controller source legal (slotBindings resolving gs)
       amount = maybe 0 Integer.toNaturalSaturating . Quantity.evaluateFor viewOf context gs resolving source
   pickCounted
+    (namesChooser legal controller gs chooser)
     (askedChooser source controller legal chooser)
     (\decider who -> Prompt.ChooseCardFromAmong decider who source)
     -- "Any number" is a ceiling of every candidate.

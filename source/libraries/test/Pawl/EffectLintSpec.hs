@@ -1208,10 +1208,13 @@ storedPlayerScope effect = case effect of
 -- Pawl.Engine.Resolve.Slots.objectRefObjects answers [] for. ChosenPermanents
 -- splits on its count, since Effect.Pair takes one partner (CR 702.95a), and an
 -- exact count other than one is allowed nowhere: no gameplay test reaches it.
+-- ChosenCardFromAmong splits off its uncapped "any number", which only a
+-- reveal's test reaches (Lead the Stampede).
 data Question
   = CardInGraveyard
   | CardInHand
   | CardFromAmong
+  | AnyCardsFromAmong
   | RandomInHand
   | RandomInGraveyard
   | RandomInLibrary
@@ -1256,7 +1259,9 @@ questionOf ref = case ref of
   ObjectRef.EachCardFromAmong {} -> Nothing
   ObjectRef.ChosenCardInGraveyard {} -> Just CardInGraveyard
   ObjectRef.ChosenCardInHand {} -> Just CardInHand
-  ObjectRef.ChosenCardFromAmong {} -> Just CardFromAmong
+  ObjectRef.ChosenCardFromAmong choice -> case ChosenCardFromAmong.count choice of
+    HowMany.UpTo Nothing -> Just AnyCardsFromAmong
+    _ -> Just CardFromAmong
   ObjectRef.RandomCardInHand {} -> Just RandomInHand
   ObjectRef.RandomCardInGraveyard {} -> Just RandomInGraveyard
   ObjectRef.RandomCardInLibrary {} -> Just RandomInLibrary
@@ -1277,9 +1282,9 @@ chooserRef = Maybe.isJust . questionOf
 -- reached, so this is the fence that keeps a card from loading a combination no
 -- test reaches. A position read through the pure objectRefObjects allows none.
 --
--- A move's: every question but SeveralPermanents.
+-- A move's: every question but SeveralPermanents and AnyCardsFromAmong.
 movedQuestions :: [Question]
-movedQuestions = filter (/= SeveralPermanents) [minBound .. maxBound]
+movedQuestions = filter (`notElem` [SeveralPermanents, AnyCardsFromAmong]) [minBound .. maxBound]
 
 -- The battlefield questions, for the opcodes that act on PERMANENTS -- Tovolar,
 -- Dire Overlord's transform, Teferi, Hero of Dominaria's untap, God-Eternal
@@ -1369,7 +1374,7 @@ effectObjectRefs effect =
         Effect.MoveToZone (MoveToZone.MkMoveToZone ref _ _ _ _ _ _) -> [(movedQuestions, ref)]
         Effect.Draw {} -> []
         Effect.Mill {} -> []
-        Effect.Reveal (Reveal.MkReveal ref _) -> [(shownQuestions, ref)]
+        Effect.Reveal (Reveal.MkReveal ref _) -> [(AnyCardsFromAmong : shownQuestions, ref)]
         -- Word of Command's "look at target opponent's hand and choose a card
         -- from it".
         Effect.LookAt (LookAt.MkLookAt ref _) -> [([CardInHand], ref)]
@@ -2545,6 +2550,9 @@ effectLintSpec s registry = Spec.describe s "Lint" $ do
       (inert [Effect.Transform onePermanent, moves onePermanent, Effect.Pair onePermanent, reveals onePermanent, Effect.Tap onePermanent])
       [False, False, False, True, True]
     Spec.assertBool s (not (null (inertChoosers (Effect.Pair anyNumber)))) "a pair allows no plural choice"
+    -- "Any number from among them" is tested under a reveal alone.
+    let anyFromAmong = ObjectRef.ChosenCardFromAmong (ChosenCardFromAmong.MkChosenCardFromAmong group anyCard (HowMany.UpTo Nothing) (PlayerRef.Relative PlayerRelation.You))
+    Spec.assertEqWith s "any number from among them is allowed by a reveal alone" (inert [reveals anyFromAmong, moves anyFromAmong, discardsThese anyFromAmong]) [False, True, True]
     -- An exact count other than one has no gameplay test, so no site allows it.
     let exactlyTwo = ObjectRef.ChosenPermanents (ChosenPermanents.MkChosenPermanents anyCard (PlayerRef.Relative PlayerRelation.You) (HowMany.Exactly (Quantity.Type.Literal 2)))
     Spec.assertEqWith s "two exactly chosen permanents are allowed nowhere" (inert [moves exactlyTwo, Effect.Transform exactlyTwo, Effect.Untap exactlyTwo]) [True, True, True]
