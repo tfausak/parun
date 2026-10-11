@@ -80,7 +80,10 @@
                 "type": "AtLeast"
               },
               "measured": {
-                "type": "WasKicked"
+                "type": "TimesPaid",
+                "value": {
+                  "type": "PrintedKicker"
+                }
               },
               "threshold": {
                 "type": "Literal",
