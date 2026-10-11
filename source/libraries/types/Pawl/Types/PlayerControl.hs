@@ -2,6 +2,7 @@ module Pawl.Types.PlayerControl where
 
 import qualified Pawl.Types.ControlDuration as ControlDuration
 import qualified Pawl.Types.Decider as Decider
+import qualified Pawl.Types.Timestamp as Timestamp
 
 -- | CR 723: one player being controlled by another -- who decides for them, for
 -- how long, and what rule 723.7's restriction says they may do.
@@ -21,6 +22,12 @@ data PlayerControl = MkPlayerControl
     -- of one printed clause, and rule 723.7 is open-ended enough that a second
     -- restriction would be a second field rather than another value of this one.
     -- False is rule 723.1's unrestricted control.
-    manaFromLandsOnly :: Bool
+    manaFromLandsOnly :: Bool,
+    -- | When the controlling effect was created, which is what CR 723.1a's
+    -- "the last one to be created is the one that works" orders by -- not when
+    -- its row took hold. A static ability's effect is as old as its permanent
+    -- (CR 613.7a), so an Opposition Agent already on the battlefield loses to a
+    -- Mindslaver activated after it.
+    timestamp :: Timestamp.Timestamp
   }
   deriving (Eq, Ord, Show)

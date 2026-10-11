@@ -356,7 +356,7 @@ controlEffectsEnd pid gs =
           -- playing is untouched (CR 723.1a then makes the topmost survivor the
           -- one that works). A stack with nothing left loses its key.
           GameState.control = Map.mapMaybe (NonEmpty.nonEmpty . NonEmpty.filter (not . heldBy . PlayerControl.decider)) (GameState.control gs),
-          GameState.pendingControl = Map.filter (not . heldBy) (GameState.pendingControl gs),
+          GameState.pendingControl = Map.filter (not . heldBy . PlayerControl.decider) (GameState.pendingControl gs),
           GameState.replacements = filter (not . givesControlOnEntryTo pid) (GameState.replacements gs)
         }
 

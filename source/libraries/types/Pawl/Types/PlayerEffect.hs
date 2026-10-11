@@ -129,6 +129,14 @@ data PlayerEffect
     CantBecomeMonarch
   | -- | CR 701.32 / 904.9 / All in Good Time: schemes can't be set in motion.
     CantSetSchemesInMotion
+  | -- | CR 723.2 / Opposition Agent: while this player searches their library,
+    -- CR 109.5's "you" of the row controls them.
+    ControlledWhileSearching
+  | -- | CR 701.23 / 601.3 / 609.4b / Opposition Agent: while this player
+    -- searches their library, they exile each card they find instead, and the
+    -- row's "you" may play those cards, spending mana as though it were mana of
+    -- any color.
+    ExilesFoundWhileSearching
   | -- | CR 508.1c / Angelic Arbiter: this player can't attack with creatures.
     CantAttackWithCreatures
   | -- | CR 601.3a / Damping Engine: this player can't cast a spell matching the

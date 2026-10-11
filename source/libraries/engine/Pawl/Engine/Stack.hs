@@ -107,6 +107,9 @@ outlivesResolution stack =
         ControlDuration.UntilTurnEnds -> True
         ControlDuration.UntilResolutionEnds -> False
         ControlDuration.WhileResolving oid -> elem oid stack
+        -- Lifted by the search that installed it, which ends inside the
+        -- resolution; none is left here to keep.
+        ControlDuration.WhileSearching -> False
    in NonEmpty.nonEmpty . NonEmpty.filter survives
 
 -- One object resolves. CR 729.1a's "the spell or ability that created the

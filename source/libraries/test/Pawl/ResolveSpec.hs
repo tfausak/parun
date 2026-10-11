@@ -105,6 +105,7 @@ import qualified Pawl.Types.OptionalDecision as OptionalDecision
 import qualified Pawl.Types.PayOffer as PayOffer
 import qualified Pawl.Types.PaymentDecision as PaymentDecision
 import qualified Pawl.Types.Phase as Phase
+import qualified Pawl.Types.PlayerControl as PlayerControl
 import qualified Pawl.Types.PlayerId as PlayerId
 import qualified Pawl.Types.PlayerRef as PlayerRef
 import qualified Pawl.Types.PlayerRelation as PlayerRelation
@@ -1345,8 +1346,8 @@ resolveSpec s registry = Spec.describe s "Resolve" $ do
         resolved = snd (Engine.runGamePure S.identityAnswer g4 Stack.resolveTop)
         bobsTurn = snd (Engine.runGamePure S.identityAnswer resolved Engine.handoffTurn)
         afterBob = snd (Engine.runGamePure S.identityAnswer bobsTurn Engine.handoffTurn)
-    Spec.assertEqWith s "control pending for bob" (Map.lookup S.bob (GameState.pendingControl resolved)) (Just (Decider.MkDecider S.alice))
-    Spec.assertEqWith s "promoted on bob's turn" (GameState.control bobsTurn) (S.turnControl S.alice S.bob)
+    Spec.assertEqWith s "control pending for bob" (fmap PlayerControl.decider (Map.lookup S.bob (GameState.pendingControl resolved))) (Just (Decider.MkDecider S.alice))
+    Spec.assertEqWith s "promoted on bob's turn" (S.unstamped (GameState.control bobsTurn)) (S.turnControl S.alice S.bob)
     Spec.assertEqWith s "bob's decisions route to alice" (Decide.deciderFor S.bob bobsTurn) (Decider.MkDecider S.alice)
     Spec.assertEqWith s "control expired after bob's turn" (Decide.deciderFor S.bob afterBob) (Decider.MkDecider S.bob)
   Spec.it s "CR 723.1a: a second player-controlling effect overwrites the first (last created wins)" $ do
@@ -1356,8 +1357,8 @@ resolveSpec s registry = Spec.describe s "Resolve" $ do
         afterAlice = installControlBy mindslaver S.alice S.bob base
         -- Then: bob controls bob (CR 723.9 self-control), created LATER.
         afterBob = installControlBy mindslaver S.bob S.bob afterAlice
-    Spec.assertEqWith s "the first effect installed alice as bob's decider" (Map.lookup S.bob (GameState.pendingControl afterAlice)) (Just (Decider.MkDecider S.alice))
-    Spec.assertEqWith s "CR 723.1a: the later effect overwrites — bob's own control wins" (Map.lookup S.bob (GameState.pendingControl afterBob)) (Just (Decider.MkDecider S.bob))
+    Spec.assertEqWith s "the first effect installed alice as bob's decider" (fmap PlayerControl.decider (Map.lookup S.bob (GameState.pendingControl afterAlice))) (Just (Decider.MkDecider S.alice))
+    Spec.assertEqWith s "CR 723.1a: the later effect overwrites — bob's own control wins" (fmap PlayerControl.decider (Map.lookup S.bob (GameState.pendingControl afterBob))) (Just (Decider.MkDecider S.bob))
   Spec.it s "CR 727.1a: resolving a RestartGame ability restarts with its controller as starting player" $ do
     mountain <- S.printingOf s registry "Mountain"
     let g0 = Setup.emptyGame S.bothPlayers

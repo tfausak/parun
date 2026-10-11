@@ -81,6 +81,7 @@ import qualified Pawl.Types.ObjectId as ObjectId
 import qualified Pawl.Types.OutsideObject as OutsideObject
 import qualified Pawl.Types.Phase as Phase
 import qualified Pawl.Types.Player as Player
+import qualified Pawl.Types.PlayerControl as PlayerControl
 import qualified Pawl.Types.PlayerCounterKind as PlayerCounterKind
 import qualified Pawl.Types.PlayerEffect as PlayerEffect.Type
 import qualified Pawl.Types.PlayerId as PlayerId
@@ -493,8 +494,8 @@ ruleSpec s registry = Spec.describe s "Rules" $ do
                 (namedIs (CardName.MkCardName $ Text.pack "Lightning Bolt") bobPlayed)
                 (fmap (\i -> Game.lookupObject i bobPlayed) (Game.zoneMembers Zone.Graveyard S.bob bobPlayed))
             )
-    Spec.assertEqWith s "CR 723.1: control pending for bob after activation" (Map.lookup S.bob (GameState.pendingControl afterActivation)) (Just (Decider.MkDecider S.alice))
-    Spec.assertEqWith s "CR 723.1: promoted to live control on bob's turn" (GameState.control bobsTurn) (S.turnControl S.alice S.bob)
+    Spec.assertEqWith s "CR 723.1: control pending for bob after activation" (fmap PlayerControl.decider (Map.lookup S.bob (GameState.pendingControl afterActivation))) (Just (Decider.MkDecider S.alice))
+    Spec.assertEqWith s "CR 723.1: promoted to live control on bob's turn" (S.unstamped (GameState.control bobsTurn)) (S.turnControl S.alice S.bob)
     Spec.assertEqWith s "CR 723.3: bob is still the active player while controlled" (GameState.activePlayer bobsTurn) S.bob
     Spec.assertEqWith s "CR 723.5: bob's decisions route to alice" (Decide.deciderFor S.bob bobsTurn) (Decider.MkDecider S.alice)
     Spec.assertEqWith s "alice's whole-turn choice moved bob's life" (S.lifeOf S.bob bobPlayed) (Just 17)
@@ -607,7 +608,7 @@ ruleSpec s registry = Spec.describe s "Rules" $ do
     -- overwritten-and-deleted CR 723.1 row would put BOB on the later ones.
     Spec.assertBool s (length (askedOf "ChooseAction" S.bob asks) >= 2) "bob was asked for priority both before and after the Word of Command resolution"
     Spec.assertEqWith s "CR 723.1a: alice still decides for bob once Word of Command has finished resolving" (ListUtils.nubOrd (askedOf "ChooseAction" S.bob asks)) [Just (Decider.MkDecider S.alice)]
-    Spec.assertEqWith s "and the Mindslaver row is what is left on the stack" (GameState.control afterWord) (S.turnControl S.alice S.bob)
+    Spec.assertEqWith s "and the Mindslaver row is what is left on the stack" (S.unstamped (GameState.control afterWord)) (S.turnControl S.alice S.bob)
     -- The CR 723.2 span really did happen: bob's own Bolt was chosen and cast.
     Spec.assertEqWith s "Word of Command made bob cast his own Bolt at himself" (S.lifeOf S.bob afterWord) (Just 17)
     Spec.assertEqWith s "CR 723.1: and it still ends at the next turn" (Decide.deciderFor S.bob afterBob) (Decider.MkDecider S.bob)
@@ -1465,7 +1466,7 @@ turnOrderSpec s registry = Spec.describe s "TurnOrder (CR 800.4)" $ do
     -- bob Mindslavered carol; bob then left the game. When carol's turn
     -- begins, she is NOT controlled: "If a player would be controlled by a
     -- player who has left the game, they aren't."
-    let armed = S.threePlayerGame {GameState.pendingControl = Map.singleton S.carol (Decider.MkDecider S.bob)}
+    let armed = S.threePlayerGame {GameState.pendingControl = Map.singleton S.carol (S.turnControlRow S.bob)}
         gone = S.departs Departure.Type.Conceded S.bob armed
         after = S.runPure S.identityAnswer gone Engine.handoffTurn
     Spec.assertEqWith s "CR 800.4a's second clause already cleared it at bob's departure" (GameState.pendingControl gone) Map.empty
@@ -1482,7 +1483,7 @@ turnOrderSpec s registry = Spec.describe s "TurnOrder (CR 800.4)" $ do
     -- unreachable in play and which therefore only the promotion guard can
     -- answer for.
     let gone = S.departs Departure.Type.Conceded S.bob S.threePlayerGame
-        armed = gone {GameState.pendingControl = Map.singleton S.carol (Decider.MkDecider S.bob)}
+        armed = gone {GameState.pendingControl = Map.singleton S.carol (S.turnControlRow S.bob)}
         after = S.runPure S.identityAnswer armed Engine.handoffTurn
     Spec.assertEqWith s "carol's turn began" (GameState.activePlayer after) S.carol
     Spec.assertEqWith s "she is uncontrolled" (GameState.control after) Map.empty
@@ -1491,7 +1492,7 @@ turnOrderSpec s registry = Spec.describe s "TurnOrder (CR 800.4)" $ do
   Spec.it s "CR 723.1b a pending control whose decider is still playing IS promoted" $ do
     -- The control assertion: the same board with bob still in the game. If
     -- this passed either way, the case above would prove nothing.
-    let armed = S.threePlayerGame {GameState.pendingControl = Map.singleton S.bob (Decider.MkDecider S.alice)}
+    let armed = S.threePlayerGame {GameState.pendingControl = Map.singleton S.bob (S.turnControlRow S.alice)}
         after = S.runPure S.identityAnswer armed Engine.handoffTurn
     Spec.assertEqWith s "bob's turn began" (GameState.activePlayer after) S.bob
     Spec.assertEqWith s "alice controls him" (GameState.control after) (S.turnControl S.alice S.bob)

@@ -26,7 +26,6 @@ import qualified Pawl.Types.Combat as Combat
 import qualified Pawl.Types.ContinuousEffect as ContinuousEffect
 import qualified Pawl.Types.CounterKind as CounterKind
 import qualified Pawl.Types.Daytime as Daytime
-import qualified Pawl.Types.Decider as Decider
 import qualified Pawl.Types.DelayedTrigger as DelayedTrigger
 import qualified Pawl.Types.EndTurnSignal as EndTurnSignal
 import qualified Pawl.Types.EnteringTogether as EnteringTogether
@@ -404,8 +403,8 @@ data GameState = MkGameState
     triggeredThisGame :: Seq.Seq AbilityTriggered.AbilityTriggered,
     -- | CR 723.1: pending player-controlling effects, keyed by the player to be
     -- controlled; last created wins (CR 723.1a), promoted into `control` at
-    -- that player's turn (CR 723.1b).
-    pendingControl :: Map.Map PlayerId.PlayerId Decider.Decider,
+    -- that player's turn (CR 723.1b) with the timestamp of its creation.
+    pendingControl :: Map.Map PlayerId.PlayerId PlayerControl.PlayerControl,
     -- | CR 723: who is being controlled right now, keyed by the controlled
     -- player. Keyed rather than a single slot for the active player because CR
     -- 723.2's control is not the active player's and does not last a turn

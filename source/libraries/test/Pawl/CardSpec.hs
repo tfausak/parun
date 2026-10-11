@@ -4864,6 +4864,8 @@ playerEffectFilters playerEffect = case playerEffect of
   -- Carthalion, True Heir).
   PlayerEffect.CantBecomeMonarch -> []
   PlayerEffect.CantSetSchemesInMotion -> []
+  PlayerEffect.ControlledWhileSearching -> []
+  PlayerEffect.ExilesFoundWhileSearching -> []
   PlayerEffect.CantAttackWithCreatures -> []
   -- CR 601.3a's Filter half, which is exactly a quality of the spell (Damping
   -- Engine's "artifact, creature, or enchantment spells").

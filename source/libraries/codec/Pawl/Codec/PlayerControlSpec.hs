@@ -7,6 +7,7 @@ import qualified Pawl.Types.ControlDuration as ControlDuration
 import qualified Pawl.Types.Decider as Decider
 import qualified Pawl.Types.PlayerControl as PlayerControl
 import qualified Pawl.Types.PlayerId as PlayerId
+import qualified Pawl.Types.Timestamp as Timestamp
 
 spec :: (Monad m, Monad n) => Spec.Spec m n -> n ()
 spec s = Spec.describe s "Pawl.Codec.PlayerControl" $ do
@@ -19,10 +20,11 @@ spec s = Spec.describe s "Pawl.Codec.PlayerControl" $ do
       ( PlayerControl.MkPlayerControl
           { PlayerControl.decider = Decider.MkDecider (PlayerId.MkPlayerId 1),
             PlayerControl.duration = ControlDuration.UntilTurnEnds,
-            PlayerControl.manaFromLandsOnly = False
+            PlayerControl.manaFromLandsOnly = False,
+            PlayerControl.timestamp = Timestamp.MkTimestamp 4
           }
       )
-      " {\"decider\":1,\"duration\":{\"type\":\"UntilTurnEnds\"}} "
+      " {\"decider\":1,\"duration\":{\"type\":\"UntilTurnEnds\"},\"timestamp\":4} "
   -- CR 723.2's, with rule 723.7's restriction written: Word of Command's row.
   Spec.it s "MkPlayerControl, restriction written" $
     Common.assertCodec
@@ -31,8 +33,9 @@ spec s = Spec.describe s "Pawl.Codec.PlayerControl" $ do
       ( PlayerControl.MkPlayerControl
           { PlayerControl.decider = Decider.MkDecider (PlayerId.MkPlayerId 2),
             PlayerControl.duration = ControlDuration.UntilResolutionEnds,
-            PlayerControl.manaFromLandsOnly = True
+            PlayerControl.manaFromLandsOnly = True,
+            PlayerControl.timestamp = Timestamp.MkTimestamp 9
           }
       )
-      " {\"decider\":2,\"duration\":{\"type\":\"UntilResolutionEnds\"},\"manaFromLandsOnly\":true} "
+      " {\"decider\":2,\"duration\":{\"type\":\"UntilResolutionEnds\"},\"manaFromLandsOnly\":true,\"timestamp\":9} "
   Spec.it s "has a schema" $ Common.assertHasSchema s PlayerControl.codec

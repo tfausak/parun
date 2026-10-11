@@ -4,6 +4,7 @@ module Pawl.Codec.PlayerControl where
 
 import qualified Pawl.Codec.ControlDuration as ControlDuration
 import qualified Pawl.Codec.Decider as Decider
+import qualified Pawl.Codec.Timestamp as Timestamp
 import qualified Pawl.JsonCodec.Codec as Codec
 import qualified Pawl.JsonCodec.Common as Common
 import qualified Pawl.JsonCodec.Fields as Fields
@@ -16,9 +17,11 @@ codec = Fields.object $ do
   decider <- Fields.required "decider" Decider.codec PlayerControl.decider
   duration <- Fields.required "duration" ControlDuration.codec PlayerControl.duration
   manaFromLandsOnly <- Fields.defaulted "manaFromLandsOnly" False Common.boolean PlayerControl.manaFromLandsOnly
+  timestamp <- Fields.required "timestamp" Timestamp.codec PlayerControl.timestamp
   pure
     PlayerControl.MkPlayerControl
       { PlayerControl.decider = decider,
         PlayerControl.duration = duration,
-        PlayerControl.manaFromLandsOnly = manaFromLandsOnly
+        PlayerControl.manaFromLandsOnly = manaFromLandsOnly,
+        PlayerControl.timestamp = timestamp
       }

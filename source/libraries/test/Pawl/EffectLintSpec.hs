@@ -1047,6 +1047,8 @@ unpreventableScopeOffends scope playerEffect = case playerEffect of
   PlayerEffect.HasProtectionFrom _ -> False
   PlayerEffect.CantBecomeMonarch -> False
   PlayerEffect.CantSetSchemesInMotion -> False
+  PlayerEffect.ControlledWhileSearching -> False
+  PlayerEffect.ExilesFoundWhileSearching -> False
   PlayerEffect.CantAttackWithCreatures -> False
   -- Every other arm IS asked about a player, so its scope is read exactly as
   -- written and any of the three is legitimate: Rule of Law and Thalia say
@@ -1117,6 +1119,8 @@ unpreventablePatternOffends playerEffect = case playerEffect of
   PlayerEffect.HasProtectionFrom _ -> False
   PlayerEffect.CantBecomeMonarch -> False
   PlayerEffect.CantSetSchemesInMotion -> False
+  PlayerEffect.ControlledWhileSearching -> False
+  PlayerEffect.ExilesFoundWhileSearching -> False
   PlayerEffect.CantAttackWithCreatures -> False
   PlayerEffect.ModifyCost {} -> False
   PlayerEffect.AlternativeActivationCost {} -> False
