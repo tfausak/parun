@@ -1203,55 +1203,23 @@ storedPlayerScope effect = case effect of
   Effect.AffectPlayers (AffectPlayers.MkAffectPlayers _ scope playerEffect) -> Just (scope, playerEffect)
   _ -> Nothing
 
--- Which chooser-shaped ObjectRef arms Pawl.Engine.Resolve can ASK for at the
--- position this tags. A CR 608.2d choice is announced while the effect is
--- applied, so an opcode that never reaches the Game monad for its objects cannot
--- make one -- and only some arms of Resolve do, over different subsets.
--- Named for those ARMS rather than for the opcodes: this is a property of
--- what Pawl.Engine.Resolve implements, not of the card's alphabet.
-data Asks
-  = -- | Read through Pawl.Engine.Resolve.Slots.objectRefObjects, which is pure and so
-    -- raises no prompt: every ObjectRef position but the ones below.
-    AsksNothing
-  | -- | Pawl.Engine.Resolve's Effect.MoveToZone gather, which runs in the Game
-    -- monad. The one site that asks EVERY choosing arm, the random one
-    -- (Elkin Lair) included.
-    AsksMoveGather
-  | -- | Pawl.Engine.Resolve's Effect.Reveal arm. It asks the from-among arm
-    -- through chooseCardFromAmong and the random arm through
-    -- Prompt.RandomObject, and falls through to the pure sweep for the two
-    -- zone-keyed chosen arms.
-    AsksRevealArm
-  | -- | Pawl.Engine.Resolve's Effect.Discard arm, over Discard.These: CR 701.9b's
-    -- two exceptions, the from-among arm (Duress) through chooseCardFromAmong and
-    -- the random arm (Hymn to Tourach) through randomCardsInHand. Every other
-    -- arm falls through to the pure sweep.
-    AsksDiscardArm
-  | -- | Pawl.Engine.Resolve's permanentsGathered, shared by Effect.Transform,
-    -- Effect.Convert, Effect.AttachAll, Effect.Unattach, Effect.Untap,
-    -- Effect.Sacrifice, Effect.ModifyTarget and Effect.Pair. It asks the
-    -- battlefield arm and nothing else: the four card-shaped chosen arms name
-    -- cards in a graveyard, a hand or a group, and these instructions act on
-    -- PERMANENTS.
-    AsksPermanentsGathered
-  | -- | Pawl.Engine.Resolve's Effect.LookAt arm. It asks the hand chooser --
-    -- Word of Command's "look at target opponent's hand and choose a card from
-    -- it" -- through the same chooseCardsInHand the move gather uses, and falls
-    -- through to the pure sweep for every other arm.
-    AsksLookAtArm
-  | -- | Pawl.Engine.Resolve's Effect.PutSticker arm: AsksPermanentsGathered's
-    -- gather (Proficient Pyrodancer's "a nonland permanent you own"),
-    -- plus chosenCardsInGraveyard (Scampire's "a creature card in your
-    -- graveyard").
-    AsksPutStickerArm
-  | -- | Pawl.Engine.Resolve's Effect.ExchangeWithCardInHand arm, which asks
-    -- its one hand chooser through chooseCardsInHand.
-    AsksExchangeArm
-  deriving (Eq, Show)
+-- The resolution-time QUESTIONS an ObjectRef can put: the arms
+-- Pawl.Engine.Resolve.Effect.askingObjects asks, and exactly the ones
+-- Pawl.Engine.Resolve.Slots.objectRefObjects answers [] for. ChosenPermanents
+-- splits on its count, since Effect.Pair takes one partner (CR 702.95a).
+data Question
+  = CardInGraveyard
+  | CardInHand
+  | CardFromAmong
+  | RandomInHand
+  | RandomInGraveyard
+  | RandomInLibrary
+  | OnePermanent
+  | PermanentsUpTo
+  | SourceAndPermanent
+  deriving (Eq, Show, Enum, Bounded)
 
--- Whether an ObjectRef arm is a resolution-time QUESTION rather than a read --
--- the arms Pawl.Types.ObjectRef documents as such, and exactly the ones
--- Pawl.Engine.Resolve.Slots.objectRefObjects answers [] for.
+-- Which question an ObjectRef arm puts, if any.
 --
 -- ObjectRef.ChosenPlayer is NOT one, despite the name: the seat was chosen on
 -- entry and is read out of stored state here. ObjectRef.EachCardFromAmong is not
@@ -1260,89 +1228,67 @@ data Asks
 --
 -- Exhaustive with no `_`, so a new arm has to be classified rather than
 -- defaulting to "a read".
-chooserRef :: ObjectRef.ObjectRef -> Bool
-chooserRef ref = case ref of
-  ObjectRef.InSlot {} -> False
-  ObjectRef.EachMatching {} -> False
-  ObjectRef.EachCardInGraveyard {} -> False
-  ObjectRef.EachCardInYourHand -> False
-  ObjectRef.EachCardInHand {} -> False
-  ObjectRef.EachCardInYourLibrary {} -> False
-  ObjectRef.EachCardYouOwn _ -> False
-  ObjectRef.EachCardExiledWithSource {} -> False
-  ObjectRef.EachCardExiledWithAbility _ -> False
-  ObjectRef.EachCardEncodedOnSource {} -> False
-  ObjectRef.EachSpell {} -> False
-  ObjectRef.EachAbility {} -> False
-  ObjectRef.EachOnStack {} -> False
-  ObjectRef.EachPlayer -> False
-  ObjectRef.EachOpponent -> False
-  ObjectRef.ChosenPlayer -> False
+questionOf :: ObjectRef.ObjectRef -> Maybe Question
+questionOf ref = case ref of
+  ObjectRef.InSlot {} -> Nothing
+  ObjectRef.EachMatching {} -> Nothing
+  ObjectRef.EachCardInGraveyard {} -> Nothing
+  ObjectRef.EachCardInYourHand -> Nothing
+  ObjectRef.EachCardInHand {} -> Nothing
+  ObjectRef.EachCardInYourLibrary {} -> Nothing
+  ObjectRef.EachCardYouOwn _ -> Nothing
+  ObjectRef.EachCardExiledWithSource {} -> Nothing
+  ObjectRef.EachCardExiledWithAbility _ -> Nothing
+  ObjectRef.EachCardEncodedOnSource {} -> Nothing
+  ObjectRef.EachSpell {} -> Nothing
+  ObjectRef.EachAbility {} -> Nothing
+  ObjectRef.EachOnStack {} -> Nothing
+  ObjectRef.EachPlayer -> Nothing
+  ObjectRef.EachOpponent -> Nothing
+  ObjectRef.ChosenPlayer -> Nothing
   -- Nor is an indirection to a seat: every PlayerRef arm is a read.
-  ObjectRef.Players _ -> False
-  ObjectRef.TopOfLibrary {} -> False
-  ObjectRef.TopOfLibraryUntil {} -> False
-  ObjectRef.TopOfGraveyard {} -> False
-  ObjectRef.EachCardFromAmong {} -> False
-  ObjectRef.ChosenCardInGraveyard {} -> True
-  ObjectRef.ChosenCardInHand {} -> True
-  ObjectRef.ChosenCardFromAmong {} -> True
-  ObjectRef.RandomCardInHand {} -> True
-  ObjectRef.RandomCardInGraveyard {} -> True
-  ObjectRef.RandomCardInLibrary {} -> True
-  ObjectRef.ChosenPermanents {} -> True
-  ObjectRef.SourceAndChosenPermanent {} -> True
-  ObjectRef.AttachedToBound {} -> False
-  ObjectRef.FromAnywhere {} -> False
+  ObjectRef.Players _ -> Nothing
+  ObjectRef.TopOfLibrary {} -> Nothing
+  ObjectRef.TopOfLibraryUntil {} -> Nothing
+  ObjectRef.TopOfGraveyard {} -> Nothing
+  ObjectRef.EachCardFromAmong {} -> Nothing
+  ObjectRef.ChosenCardInGraveyard {} -> Just CardInGraveyard
+  ObjectRef.ChosenCardInHand {} -> Just CardInHand
+  ObjectRef.ChosenCardFromAmong {} -> Just CardFromAmong
+  ObjectRef.RandomCardInHand {} -> Just RandomInHand
+  ObjectRef.RandomCardInGraveyard {} -> Just RandomInGraveyard
+  ObjectRef.RandomCardInLibrary {} -> Just RandomInLibrary
+  ObjectRef.ChosenPermanents choice -> case ChosenPermanents.count choice of
+    HowMany.One -> Just OnePermanent
+    HowMany.UpTo _ -> Just PermanentsUpTo
+  ObjectRef.SourceAndChosenPermanent {} -> Just SourceAndPermanent
+  ObjectRef.AttachedToBound {} -> Nothing
+  ObjectRef.FromAnywhere {} -> Nothing
 
--- The asking matrix itself: whether the site an Asks names asks THIS arm. A
--- per-(site, arm) pair and not a per-site or per-arm predicate, because both
--- coarser readings admit a ref that names nothing -- Reveal's arm does not ask
--- either zone-keyed chosen one, and the transform gather asks only the
--- battlefield subset.
-asksFor :: Asks -> ObjectRef.ObjectRef -> Bool
-asksFor asks ref = case asks of
-  AsksNothing -> False
-  AsksMoveGather -> case ref of
-    ObjectRef.ChosenCardInGraveyard {} -> True
-    ObjectRef.ChosenCardInHand {} -> True
-    ObjectRef.ChosenCardFromAmong {} -> True
-    ObjectRef.RandomCardInHand {} -> True
-    ObjectRef.RandomCardInGraveyard {} -> True
-    ObjectRef.RandomCardInLibrary {} -> True
-    ObjectRef.ChosenPermanents {} -> True
-    ObjectRef.SourceAndChosenPermanent {} -> True
-    _ -> False
-  AsksRevealArm -> case ref of
-    ObjectRef.ChosenCardFromAmong {} -> True
-    ObjectRef.RandomCardInHand {} -> True
-    _ -> False
-  AsksDiscardArm -> case ref of
-    ObjectRef.ChosenCardFromAmong {} -> True
-    ObjectRef.RandomCardInHand {} -> True
-    _ -> False
-  -- One arm and one only, which is what keeps the widening from weakening the
-  -- guarantee: this site asks for the battlefield subset and for nothing else,
-  -- so every (site, arm) pair the four arms above classify is unmoved.
-  AsksPermanentsGathered -> case ref of
-    ObjectRef.ChosenPermanents {} -> True
-    _ -> False
-  -- One arm and one only, for AsksPermanentsGathered's reason: Resolve's
-  -- Effect.LookAt arm routes the hand chooser through chooseCardsInHand and
-  -- falls through to the pure sweep for everything else.
-  AsksLookAtArm -> case ref of
-    ObjectRef.ChosenCardInHand {} -> True
-    _ -> False
-  AsksPutStickerArm -> case ref of
-    ObjectRef.ChosenPermanents {} -> True
-    ObjectRef.ChosenCardInGraveyard {} -> True
-    _ -> False
-  AsksExchangeArm -> case ref of
-    ObjectRef.ChosenCardInHand {} -> True
-    _ -> False
+-- Whether an ObjectRef arm is a resolution-time question rather than a read.
+chooserRef :: ObjectRef.ObjectRef -> Bool
+chooserRef = Maybe.isJust . questionOf
 
--- Every ObjectRef position one effect holds, each tagged with the asking site
--- that reads it. effectFilters' sibling one field shallower: that traversal takes
+-- The questions a card may write at a position that reaches askingObjects: those
+-- a gameplay test exercises there. askingObjects asks every one wherever it is
+-- reached, so this is the fence that keeps a card from loading a combination no
+-- test reaches. A position read through the pure objectRefObjects allows none.
+everyQuestion :: [Question]
+everyQuestion = [minBound .. maxBound]
+
+-- The battlefield questions, for the opcodes that act on PERMANENTS -- Tovolar,
+-- Dire Overlord's transform, Teferi, Hero of Dominaria's untap, God-Eternal
+-- Bontu's sacrifice, Mirkwood Trapper's modification.
+permanentQuestions :: [Question]
+permanentQuestions = [OnePermanent, PermanentsUpTo]
+
+-- CR 701.20a's reveal and CR 701.9b's discard: the from-among choice (Carth the
+-- Lion, Duress) and the random card in hand (Fall, Hymn to Tourach).
+shownQuestions :: [Question]
+shownQuestions = [CardFromAmong, RandomInHand]
+
+-- Every ObjectRef position one effect holds, each tagged with the questions a
+-- card may write there. effectFilters' sibling one field shallower: that traversal takes
 -- each ref's Filters, this one takes the ref.
 --
 -- NOT recursive into a nested effect list, unlike effectFilters: every caller
@@ -1350,25 +1296,23 @@ asksFor asks ref = case asks of
 -- nesting arms with effectWithNested, and recursing here would double-count.
 --
 -- Exhaustive and hand-maintained with effectFilters' caveat, and the missing `_`
--- is the whole point: a NEW opcode taking an ObjectRef is AsksNothing only by
--- being written so here, and the build breaks until somebody decides. The one
+-- is the whole point: a NEW opcode taking an ObjectRef allows no question only
+-- by being written so here, and the build breaks until somebody decides. The one
 -- thing -Werror cannot catch is an arm written `[]` that does hold a ref, which
 -- is what the cross-check against effectFilters below is for.
 -- The same positions Resolve.effectObjectRefs names, tagged: a position added
 -- to one belongs in the other, and the two lists are read side by side.
-effectObjectRefs :: Effect.Effect Card.Type.Card (GrantedAbility.GrantedAbility Card.Type.Card) -> [(Asks, ObjectRef.ObjectRef)]
+effectObjectRefs :: Effect.Effect Card.Type.Card (GrantedAbility.GrantedAbility Card.Type.Card) -> [([Question], ObjectRef.ObjectRef)]
 effectObjectRefs effect =
-  let read_ :: [ObjectRef.ObjectRef] -> [(Asks, ObjectRef.ObjectRef)]
-      read_ = fmap ((,) AsksNothing)
+  let read_ :: [ObjectRef.ObjectRef] -> [([Question], ObjectRef.ObjectRef)]
+      read_ = fmap ((,) [])
    in case effect of
         Effect.AttachTarget {} -> []
         Effect.AttachTargetToEach {} -> []
         Effect.AttachBound {} -> []
-        -- The movers' gather is turnPermanentsOver's, shared through
-        -- Resolve.permanentsGathered.
-        Effect.AttachAll (AttachAll.MkAttachAll ref _) -> [(AsksPermanentsGathered, ref)]
+        Effect.AttachAll (AttachAll.MkAttachAll ref _) -> [(permanentQuestions, ref)]
         Effect.DealDamage (DealDamage.MkDealDamage parts _ _) -> read_ (fmap DamagePart.ref (Foldable.toList parts))
-        Effect.ModifyTarget (ModifyTarget.MkModifyTarget _ _ ref _) -> [(AsksPermanentsGathered, ref)]
+        Effect.ModifyTarget (ModifyTarget.MkModifyTarget _ _ ref _) -> [(permanentQuestions, ref)]
         Effect.ChangeText {} -> []
         Effect.AddMana {} -> []
         Effect.Firebend {} -> []
@@ -1388,10 +1332,9 @@ effectObjectRefs effect =
         -- CR 701.66a's "target land you control" is an ordinary read, Detain's arm
         -- below: the animation and the counters act on it and nothing gathers.
         Effect.Earthbend (Earthbend.MkEarthbend _ ref) -> read_ [ref]
-        -- CR 701.65a's objects reach the SAME gather Effect.MoveToZone's ref does:
-        -- Pawl.Engine.Airbend.exile is a MoveToZone, and the arm hands this ref to
-        -- it unchanged.
-        Effect.Airbend ref -> [(AsksMoveGather, ref)]
+        -- CR 701.65a's objects are Effect.MoveToZone's: Pawl.Engine.Airbend.exile
+        -- is a MoveToZone, and the arm hands this ref to it unchanged.
+        Effect.Airbend ref -> [(everyQuestion, ref)]
         Effect.TemptWithTheRing -> []
         Effect.OpenAttraction -> []
         Effect.Planeswalk -> []
@@ -1415,14 +1358,17 @@ effectObjectRefs effect =
         Effect.ControlPlayerNextTurn {} -> []
         Effect.ControlPlayerThisResolution {} -> []
         Effect.Destroy (Destroy.MkDestroy ref _ _ _ _) -> read_ [ref]
-        Effect.Sacrifice (SacrificeEffect.MkSacrificeEffect ref _ _) -> [(AsksPermanentsGathered, ref)]
-        -- THE gather that asks every choosing arm.
-        Effect.MoveToZone (MoveToZone.MkMoveToZone ref _ _ _ _ _ _) -> [(AsksMoveGather, ref)]
+        Effect.Sacrifice (SacrificeEffect.MkSacrificeEffect ref _ _) -> [(permanentQuestions, ref)]
+        -- Every question has a card under a move: Exhume, Elvish Piper, Commune
+        -- with the Gods, Elkin Lair, Ghoulraiser, the Gates' seek, Glorious
+        -- Protector, Hanweir Battlements.
+        Effect.MoveToZone (MoveToZone.MkMoveToZone ref _ _ _ _ _ _) -> [(everyQuestion, ref)]
         Effect.Draw {} -> []
         Effect.Mill {} -> []
-        -- CR 701.20a's reveal, the other asking arm.
-        Effect.Reveal (Reveal.MkReveal ref _) -> [(AsksRevealArm, ref)]
-        Effect.LookAt (LookAt.MkLookAt ref _) -> [(AsksLookAtArm, ref)]
+        Effect.Reveal (Reveal.MkReveal ref _) -> [(shownQuestions, ref)]
+        -- Word of Command's "look at target opponent's hand and choose a card
+        -- from it".
+        Effect.LookAt (LookAt.MkLookAt ref _) -> [([CardInHand], ref)]
         Effect.Scry {} -> []
         Effect.Surveil {} -> []
         Effect.Fateseal {} -> []
@@ -1432,14 +1378,14 @@ effectObjectRefs effect =
         Effect.Connive (Connive.MkConnive _ ref) -> read_ [ref]
         Effect.Discard subject -> case subject of
           Discard.Counted {} -> []
-          Discard.These (TheseDiscard.MkTheseDiscard ref _) -> [(AsksDiscardArm, ref)]
+          Discard.These (TheseDiscard.MkTheseDiscard ref _) -> [(shownQuestions, ref)]
           Discard.AnyNumber {} -> []
         Effect.LoseLife {} -> []
         Effect.GainLife {} -> []
         Effect.ExchangeLifeTotals {} -> []
         Effect.ExchangeValues (ExchangeValues.MkExchangeValues one other _) -> read_ (foldMap Resolve.exchangedObjectRefs [one, other])
         Effect.ExchangeZones {} -> []
-        Effect.ExchangeWithCardInHand chosen -> [(AsksExchangeArm, ObjectRef.ChosenCardInHand chosen)]
+        Effect.ExchangeWithCardInHand chosen -> [([CardInHand], ObjectRef.ChosenCardInHand chosen)]
         Effect.SetLifeTotal {} -> []
         Effect.LoseGame {} -> []
         Effect.WinGame {} -> []
@@ -1498,20 +1444,21 @@ effectObjectRefs effect =
         Effect.PayAnyEnergy {} -> []
         Effect.ChooseNumber {} -> []
         Effect.Tap ref -> read_ [ref]
-        Effect.Untap ref -> [(AsksPermanentsGathered, ref)]
-        Effect.Unattach ref -> [(AsksPermanentsGathered, ref)]
+        Effect.Untap ref -> [(permanentQuestions, ref)]
+        Effect.Unattach ref -> [(permanentQuestions, ref)]
         Effect.Detain ref -> read_ [ref]
         Effect.Goad ref -> read_ [ref]
-        Effect.Pair ref -> [(AsksPermanentsGathered, ref)]
+        -- One partner (CR 702.95a): a ref picking several would pair nothing.
+        Effect.Pair ref -> [([OnePermanent], ref)]
         Effect.GrantLookAtExiled grant -> read_ [GrantLookAtExiled.cards grant]
         Effect.MakePlotted ref -> read_ [ref]
         Effect.MakeForetold x -> read_ [MakeForetold.cards x]
         Effect.MakeWarped ref -> read_ [ref]
         Effect.DoesNotUntapNext payload -> read_ [DoesNotUntapNext.ref payload]
-        Effect.Transform ref -> [(AsksPermanentsGathered, ref)]
+        Effect.Transform ref -> [(permanentQuestions, ref)]
         -- The SAME gather, CR 701.28a routing a convert through CR 701.27a-f and
         -- Pawl.Engine.Resolve applying both opcodes through one turnPermanentsOver.
-        Effect.Convert ref -> [(AsksPermanentsGathered, ref)]
+        Effect.Convert ref -> [(permanentQuestions, ref)]
         -- A plain READ, unlike the two above: CR 710 states no "any number" flip, and
         -- Pawl.Engine.Resolve's Flip arm sweeps the ref and asks nothing.
         Effect.Flip ref -> read_ [ref]
@@ -1564,7 +1511,9 @@ effectObjectRefs effect =
         Effect.TakeExtraTurn {} -> []
         Effect.ShuffleIntoLibrary (ShuffleIntoLibrary.MkShuffleIntoLibrary _ refs) -> read_ (NonEmpty.toList refs)
         Effect.Ante (Ante.MkAnte _ ref _) -> read_ [ref]
-        Effect.PutSticker (PutSticker.MkPutSticker _ ref _ _ _ _) -> [(AsksPutStickerArm, ref)]
+        -- Proficient Pyrodancer's "a nonland permanent you own" and Scampire's "a
+        -- creature card in your graveyard".
+        Effect.PutSticker (PutSticker.MkPutSticker _ ref _ _ _ _) -> [(CardInGraveyard : permanentQuestions, ref)]
         Effect.SetOwner (SetOwner.MkSetOwner _ ref) -> read_ [ref]
         Effect.ExchangeOwnership (ExchangeOwnership.MkExchangeOwnership one other) -> read_ [one, other]
         Effect.ExchangeWithTopOfLibrary (ExchangeWithTopOfLibrary.MkExchangeWithTopOfLibrary ref _) -> read_ [ref]
@@ -1583,13 +1532,13 @@ effectObjectRefs effect =
         Effect.ChooseNewTargets ref -> read_ [ref]
         Effect.ChangeTargets ref -> read_ [ref]
 
--- The chooser-shaped refs one effect writes where nothing can ask for them: the
--- lint's offenders. Each is a CR 608.2d choice nobody makes, so the ref names no
--- object, that share of the instruction is silently skipped, and the card is
--- weaker than printed with nothing on the wire to show it.
+-- The chooser-shaped refs one effect writes where its position does not allow
+-- them: the lint's offenders. At a read position the CR 608.2d choice is made by
+-- nobody, so the ref names no object and the card is silently weaker than
+-- printed; at an asking one, the combination is one no gameplay test reaches.
 inertChoosers :: Effect.Effect Card.Type.Card (GrantedAbility.GrantedAbility Card.Type.Card) -> [ObjectRef.ObjectRef]
 inertChoosers effect =
-  fmap snd (filter (\(asks, ref) -> chooserRef ref && not (asksFor asks ref)) (effectObjectRefs effect))
+  [ref | (allowed, ref) <- effectObjectRefs effect, Just question <- [questionOf ref], question `notElem` allowed]
 
 -- CR 709.4a: a card's faces are referred to BY NAME (Card.faceNamed), so two
 -- faces sharing a name make that reference ambiguous -- faceNamed would return
@@ -2509,12 +2458,10 @@ effectLintSpec s registry = Spec.describe s "Lint" $ do
     Spec.assertEqWith s "only a library has ends" (fmap (S.nameOf . Printing.card) offenders) []
   -- CR 608.2d: a choice an effect offers is announced while the effect is
   -- applied, so an opcode that gathers its objects through the pure
-  -- Pawl.Engine.Resolve.Slots.objectRefObjects cannot make one. Some arms of Resolve
-  -- reach the Game monad and ask instead, over DIFFERENT subsets -- see Asks --
-  -- and a chooser-shaped ref written anywhere else names no object, so that share
-  -- of the instruction is skipped (CR 101.3, CR 609.3) with nothing on the wire
-  -- to show it -- so the card is silently weaker than printed, which is what this
-  -- rejects at load time.
+  -- Pawl.Engine.Resolve.Slots.objectRefObjects cannot make one, and a
+  -- chooser-shaped ref written there names no object (CR 101.3, CR 609.3). The
+  -- opcodes that reach Resolve.askingObjects ask every question, and a card may
+  -- write only the ones a gameplay test exercises there -- see effectObjectRefs.
   Spec.it s "no effect asks for a chosen card where nothing can ask" $ do
     ps <- S.allPrintings s
     let offenders = filter (anyFace (not . all (null . inertChoosers) . cardAuthoredEffects) . Printing.card) ps
@@ -2530,14 +2477,11 @@ effectLintSpec s registry = Spec.describe s "Lint" $ do
   -- against hand-built effects (never a card file -- a misauthored card must not
   -- be loadable).
   --
-  -- Every asking arm gets an accept case AND a reject case, and the four
-  -- degenerate classifications this rules out are why. "Every pair asks" is ruled
-  -- out by Transform's four rejects; "the three chosen arms always ask, the
-  -- random one never does" by Reveal accepting the random arm and rejecting both
-  -- zone-keyed chosen ones, and Discard answering the same row; "the battlefield
-  -- subset asks everywhere" by the last assertion, which rejects it at two sites
-  -- and accepts it at two. MoveToZone's gather really does ask every choosing
-  -- arm, so its row is four accepts and rules nothing out on its own.
+  -- Every question gets an accept case AND a reject case, so no degenerate
+  -- classification passes: "every pair is allowed" is ruled out by Transform's
+  -- four rejects, "the card questions are allowed everywhere" by Reveal's and
+  -- Discard's, "the battlefield questions are allowed everywhere" by Reveal's and
+  -- Tap's. A move allows every question, so its row rules nothing out alone.
   Spec.it s "the lint itself catches a chosen card under an opcode that cannot ask" $ do
     exhume <- S.printingOf s registry "Exhume"
     let anyCard = Filter.Type.HasCardType CardType.Creature
@@ -2557,70 +2501,60 @@ effectLintSpec s registry = Spec.describe s "Lint" $ do
         inert = fmap (not . null . inertChoosers)
     Spec.assertEqWith
       s
-      "MoveToZone's gather asks the three chosen arms and the random one"
+      "a move allows the three chosen arms and the random one"
       (inert (fmap moves [inGraveyard, inHand, fromAmong, atRandom]))
       [False, False, False, False]
     Spec.assertEqWith
       s
-      "CR 701.20a's reveal asks from-among and at-random, and neither zone-keyed chosen arm"
+      "CR 701.20a's reveal allows from-among and at-random, and neither zone-keyed chosen arm"
       (inert (fmap reveals [inGraveyard, inHand, fromAmong, atRandom]))
       [True, True, False, False]
-    -- CR 701.9b's two exceptions, asked by the discard arm over Discard.These:
-    -- Duress's from-among and Hymn to Tourach's at-random.
+    -- CR 701.9b's two exceptions over Discard.These: Duress's from-among and
+    -- Hymn to Tourach's at-random.
     Spec.assertEqWith
       s
-      "CR 701.9b's discard asks from-among and at-random, and neither zone-keyed chosen arm"
+      "CR 701.9b's discard allows from-among and at-random, and neither zone-keyed chosen arm"
       (inert (fmap discardsThese [inGraveyard, inHand, fromAmong, atRandom]))
       [True, True, False, False]
-    -- Tovolar, Dire Overlord's opcode. CR 701.27a turns over PERMANENTS, so its
-    -- gather asks for the battlefield subset and for NONE of the four
-    -- card-shaped arms: a chosen card written here would still be inert.
+    -- Tovolar, Dire Overlord's opcode. CR 701.27a turns over PERMANENTS, so it
+    -- allows the battlefield questions and NONE of the four card-shaped arms.
     Spec.assertEqWith
       s
-      "the transform gather asks none of the four card-shaped chosen arms"
+      "a transform allows none of the four card-shaped chosen arms"
       (inert (fmap Effect.Transform [inGraveyard, inHand, fromAmong, atRandom]))
       [True, True, True, True]
-    -- The fourth degenerate classification, and the one widening the matrix for
-    -- #774 introduced: "the new arm asks everywhere". Accepted under the
-    -- gathers that ask it -- Transform's, MoveToZone's and Untap's (Teferi, Hero
-    -- of Dominaria) -- and rejected under Reveal's arm, which asks other arms but
-    -- not this one, and under Tap, an AsksNothing opcode. Without this leg an
-    -- asksFor row answering True for the new arm at every site would pass the
-    -- three assertions above unchanged.
+    -- "The battlefield questions are allowed everywhere": accepted under
+    -- Transform, MoveToZone and Untap (Teferi, Hero of Dominaria), rejected under
+    -- Reveal, which allows other questions, and under Tap, a read.
     Spec.assertEqWith
       s
-      "the battlefield subset is asked by the transform, move and untap gathers and by neither other site"
+      "the battlefield subset is allowed by transform, move and untap and by neither other site"
       (inert [Effect.Transform anyNumber, moves anyNumber, Effect.Untap anyNumber, reveals anyNumber, Effect.Tap anyNumber])
       [False, False, False, True, True]
     -- The singular of the arm above -- Hanweir Battlements' "exile them, then
-    -- meld them" -- is the same arm at a count of one, so the same sites ask it.
+    -- meld them" -- at the same sites, plus Pair, which allows ONLY the singular
+    -- (CR 702.95a's one partner).
     Spec.assertEqWith
       s
-      "one chosen permanent is asked by the transform and move gathers and by neither other site"
-      (inert [Effect.Transform onePermanent, moves onePermanent, reveals onePermanent, Effect.Tap onePermanent])
-      [False, False, True, True]
+      "one chosen permanent is allowed by transform, move and pair and by neither other site"
+      (inert [Effect.Transform onePermanent, moves onePermanent, Effect.Pair onePermanent, reveals onePermanent, Effect.Tap onePermanent])
+      [False, False, False, True, True]
+    Spec.assertBool s (not (null (inertChoosers (Effect.Pair anyNumber)))) "a pair allows no plural choice"
     -- The arm above with the source named alongside the choice, and the same row:
-    -- Hanweir Battlements' "exile them" is a move, so the MoveToZone gather is
-    -- again the only site that asks it. Asserted separately rather than folded
-    -- into the row above because the two arms are distinct constructors, and one
-    -- missing from chooserRef or from asksFor would answer False everywhere with
-    -- no -Werror to name it.
+    -- Hanweir Battlements' "exile them" is a move, the only site allowing it.
+    -- Asserted separately because the two arms are distinct constructors.
     Spec.assertEqWith
       s
-      "the source with one chosen permanent is asked by the move gather alone"
+      "the source with one chosen permanent is allowed by a move alone"
       (inert [Effect.Transform sourceAndOne, moves sourceAndOne, reveals sourceAndOne, Effect.Tap sourceAndOne])
       [True, False, True, True]
-    -- The at-random arm one zone over, asked by the MoveToZone gather alone --
-    -- Ghoulraiser's "return a Zombie card at random from your graveyard to your
-    -- hand". Rejected under the two sites that DO ask the hand's at-random arm:
-    -- CR 400.2's face-up pile is already shown, so rule 701.20a's reveal has
-    -- nothing to ask there, and CR 701.9a discards out of a HAND. Asserted
-    -- separately rather than folded into the rows above because the two random
-    -- arms are distinct constructors, and one missing from asksFor would answer
-    -- False everywhere with no -Werror to name it.
+    -- The at-random arm one zone over, allowed by a move alone -- Ghoulraiser's
+    -- "return a Zombie card at random from your graveyard to your hand".
+    -- Rejected under the two sites allowing the hand's at-random arm: CR 400.2's
+    -- face-up pile is already shown, and CR 701.9a discards out of a HAND.
     Spec.assertEqWith
       s
-      "a random graveyard card is asked by the move gather alone"
+      "a random graveyard card is allowed by a move alone"
       (inert [moves atRandomInGraveyard, reveals atRandomInGraveyard, discardsThese atRandomInGraveyard, Effect.Tap atRandomInGraveyard])
       [False, True, True, True]
     -- The at-random arm over a LIBRARY, the Gates' seek, and the same row for
@@ -2628,15 +2562,14 @@ effectLintSpec s registry = Spec.describe s "Lint" $ do
     -- HAND. Its own assertion for the row above's reason.
     Spec.assertEqWith
       s
-      "a sought card is asked by the move gather alone"
+      "a sought card is allowed by a move alone"
       (inert [moves sought, reveals sought, discardsThese sought, Effect.Tap sought])
       [False, True, True, True]
-    -- CR 701.28a's convert, classified with Transform because it IS Transform's
-    -- gather (Pawl.Engine.Resolve.Effect.turnPermanentsOver): the same four card-shaped
-    -- arms are inert under it and the same battlefield subset is asked.
+    -- CR 701.28a's convert, classified with Transform because it IS Transform
+    -- (Pawl.Engine.Resolve.Effect.turnPermanentsOver).
     Spec.assertEqWith
       s
-      "the convert gather answers exactly as the transform gather does"
+      "a convert answers exactly as a transform does"
       (inert (fmap Effect.Convert [inGraveyard, inHand, fromAmong, atRandom, anyNumber]))
       [True, True, True, True, False]
     -- The other direction on the same opcode: a ref that is a READ rather than a

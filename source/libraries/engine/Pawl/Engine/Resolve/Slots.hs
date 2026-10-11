@@ -638,11 +638,10 @@ objectRefPlayerRefs ref = case ref of
   -- The seat that picks out of the group -- Animal Magnetism's opponent, and by
   -- default CR 608.2c's resolving controller.
   --
-  -- The arm above's regression fence, for a different reason: the D4 dataflow lint
-  -- subtracts a slot the mode's own ChoosePlayer DEFINES from both sides of its
-  -- equality, so the only card whose chooser names a slot cannot observe this
-  -- report. A chooser naming a DECLARED target slot would, and no printing writes
-  -- one -- Pawl.Types.Chooser's BoundInSlot note says the same of its own.
+  -- No card observes this report: the D4 dataflow lint subtracts a slot the
+  -- mode's own ChoosePlayer DEFINES from both sides of its equality, and that is
+  -- the only kind of slot a printed chooser names. Pawl.CardSpec's planted
+  -- objectRefPlayerRefPositions pins it, and this arm's sibling below.
   ObjectRef.ChosenCardFromAmong (ChosenCardFromAmong.MkChosenCardFromAmong _ _ _ chooser _) -> [chooser]
   ObjectRef.EachCardFromAmong (EachCardFromAmong.MkEachCardFromAmong _ _) -> []
   ObjectRef.RandomCardInHand (RandomCardInHand.MkRandomCardInHand player _ _) -> [player]
@@ -652,10 +651,7 @@ objectRefPlayerRefs ref = case ref of
   -- RandomCardInHand's answer: the one seat whose library is reached.
   ObjectRef.RandomCardInLibrary (RandomCardInLibrary.MkRandomCardInLibrary player _ _) -> [player]
   -- The seat that picks off the battlefield -- Wormfang Crab's opponent, and
-  -- by default CR 608.2c's resolving controller. Reported for
-  -- ChosenCardFromAmong's reason above, and a regression fence for its reason too:
-  -- the only card whose chooser names a slot fills that slot with its own mode's
-  -- ChoosePlayer, which the D4 dataflow lint subtracts from both sides.
+  -- by default CR 608.2c's resolving controller. Pinned as the arm above is.
   ObjectRef.ChosenPermanents choice -> [ChosenPermanents.chooser choice]
   -- No chooser to report: the arm below names the source alongside ONE permanent,
   -- and CR 608.2c's resolving controller is the only seat that picks it.
@@ -2846,12 +2842,10 @@ objectRefObjects legal resolving controller source gs ref = case ref of
   ObjectRef.EachMatching filter_ -> battlefieldMatching legal resolving controller source gs filter_
   -- A CR 608.2d question, so this pure sweep answers nothing for it: the
   -- candidates are battlefieldMatching's, but WHICH of them the instruction names
-  -- is the chooser's, and two gathers reach the Game monad to ask --
-  -- Resolve.Effect.permanentsGathered, which the opcodes acting on permanents
-  -- share, and the Effect.MoveToZone gather. Under any other opcode this empty
-  -- answer is an inert card-data error, which Pawl.EffectLintSpec's
-  -- inertChoosers rejects at load time -- ChosenCardInGraveyard's note below is
-  -- the shape.
+  -- is the chooser's, and Resolve.Effect.askingObjects is where it is asked. Under
+  -- an opcode that never reaches that function this empty answer is an inert
+  -- card-data error, which Pawl.EffectLintSpec's inertChoosers rejects at load
+  -- time.
   ObjectRef.ChosenPermanents _ -> []
   -- The arm above's answer, for its reason: a CR 608.2d question, so this pure
   -- sweep answers nothing for it -- the source half included, which no reader may
@@ -3082,9 +3076,8 @@ objectRefObjects legal resolving controller source gs ref = case ref of
      in Maybe.mapMaybe
           (`Game.topOfGraveyard` gs)
           (filter (`elem` named) (Game.apnapOrder gs))
-  -- A card somebody CHOOSES is a QUESTION, and this function cannot ask one; the
-  -- MoveToZone arm's own gather does. Under any other opcode this empty answer is
-  -- an inert card-data error.
+  -- A card somebody CHOOSES is a QUESTION, and this function cannot ask one;
+  -- Resolve.Effect.askingObjects does, ChosenPermanents' note above.
   ObjectRef.ChosenCardInGraveyard {} -> []
   ObjectRef.ChosenCardInHand {} -> []
   ObjectRef.ChosenCardFromAmong {} -> []
@@ -3100,14 +3093,9 @@ objectRefObjects legal resolving controller source gs ref = case ref of
   ObjectRef.EachCardFromAmong (EachCardFromAmong.MkEachCardFromAmong slot filter_) ->
     matchingFromAmong legal resolving controller source gs filter_ $
       objectRefObjects legal resolving controller source gs (ObjectRef.InSlot slot)
-  -- Answered for real by randomCardsInHand, over the seats handChoosers names --
-  -- the Reveal arm, the Discard arm and Effect.MoveToZone's gather.
+  -- Randomness, answered for real by Resolve.Effect.askingObjects.
   ObjectRef.RandomCardInHand _ -> []
-  -- Answered for real by randomCardsInGraveyard, over the graveyards
-  -- Target.zoneScopePlayers names -- Effect.MoveToZone's gather, and that alone.
   ObjectRef.RandomCardInGraveyard _ -> []
-  -- Answered for real by randomCardsInLibrary -- Effect.MoveToZone's gather,
-  -- and that alone.
   ObjectRef.RandomCardInLibrary _ -> []
 
 -- The cards in ONE player's graveyard matching the filter, in ascending

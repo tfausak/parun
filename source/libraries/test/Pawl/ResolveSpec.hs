@@ -51,6 +51,8 @@ import qualified Pawl.Types.CardName as CardName
 import qualified Pawl.Types.CardType as CardType
 import qualified Pawl.Types.ChangeSubtypeWord as ChangeSubtypeWord
 import qualified Pawl.Types.ChangeText as ChangeText
+import qualified Pawl.Types.ChoosePermanents as ChoosePermanents
+import qualified Pawl.Types.ChosenPermanents as ChosenPermanents
 import qualified Pawl.Types.ClauseIndex as ClauseIndex
 import qualified Pawl.Types.Color as Color
 import qualified Pawl.Types.CombatStep as CombatStep
@@ -77,6 +79,7 @@ import Pawl.Types.Game (Game)
 import qualified Pawl.Types.GameEvent as GameEvent
 import qualified Pawl.Types.GameState as GameState
 import qualified Pawl.Types.GrantedAbility as GrantedAbility
+import qualified Pawl.Types.HowMany as HowMany
 import qualified Pawl.Types.InZone as InZone
 import qualified Pawl.Types.Keyword as Keyword
 import qualified Pawl.Types.Layout as Layout
@@ -959,6 +962,23 @@ resolveSpec s registry = Spec.describe s "Resolve" $ do
     Spec.assertEqWith s "and her library still holds all four Pikers" (length (Game.zoneMembers Zone.Library S.alice after)) 4
     Spec.assertEqWith s "CR 603.5's \"may\" was never put" (optionalsAnswered asked) []
     Spec.assertEqWith s "the control: the mandatory first clause still happened" (S.lifeOf S.alice after) (Just 22)
+  -- CR 608.2d: "choose a creature" over a board holding none is an action
+  -- nobody can take, and "up to one" never is, the empty answer being legal.
+  -- A pair of boards differing in the one creature. A regression fence rather
+  -- than a gameplay proof: no "may" in data/cards reaches Effect.ChoosePermanents
+  -- at a count of one.
+  Spec.it s "CR 608.2d choosing one permanent out of none is impossible, and up to one never is" $ do
+    forest <- S.printingOf s registry "Forest"
+    bears <- S.printingOf s registry "Grizzly Bears"
+    let (land, bare) = S.addPermanent forest S.alice (Setup.emptyGame S.bothPlayers)
+        (_, withBear) = S.addPermanent bears S.alice bare
+        choosing count = Effect.ChoosePermanents (ChoosePermanents.MkChoosePermanents (ChosenPermanents.MkChosenPermanents (Filter.Type.HasCardType CardType.Creature) (PlayerRef.Relative PlayerRelation.You) count) (SlotName.MkSlotName (Text.pack "chosen")))
+        impossible = Resolve.effectIsImpossible land land S.alice Map.empty
+    Spec.assertEqWith
+      s
+      "CR 608.2d one out of none is impossible, one out of one is not, and up to one is neither"
+      [impossible bare (choosing HowMany.One), impossible withBear (choosing HowMany.One), impossible bare (choosing (HowMany.UpTo Nothing))]
+      [True, False, False]
   -- The control, the same board with three cards in hand: two can go, so the
   -- option is a real one, the pinned pair is discarded and the rider draws.
   Spec.it s "CR 608.2d Thrilling Discovery's discard of two is offered over a three-card hand" $ do

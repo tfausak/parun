@@ -788,7 +788,11 @@ objectRefPlayerRefPositions =
     ("top-of-graveyard", ObjectRef.TopOfGraveyard (plantedPlayer "tg"), [plantedPlayer "tg"]),
     ("chosen-card-in-hand", ObjectRef.ChosenCardInHand (ChosenCardInHand.MkChosenCardInHand (plantedPlayer "ch") (Filter.Type.And [])), [plantedPlayer "ch"]),
     ("random-card-in-hand", ObjectRef.RandomCardInHand (RandomCardInHand.MkRandomCardInHand (plantedPlayer "rh") (Filter.Type.And []) (Quantity.Type.Literal 1)), [plantedPlayer "rh"]),
-    ("random-card-in-library", ObjectRef.RandomCardInLibrary (RandomCardInLibrary.MkRandomCardInLibrary (plantedPlayer "rl") (Filter.Type.And []) (Quantity.Type.Literal 1)), [plantedPlayer "rl"])
+    ("random-card-in-library", ObjectRef.RandomCardInLibrary (RandomCardInLibrary.MkRandomCardInLibrary (plantedPlayer "rl") (Filter.Type.And []) (Quantity.Type.Literal 1)), [plantedPlayer "rl"]),
+    -- And the two CHOOSERS, which name a seat without counting per seat --
+    -- Animal Magnetism's and Wormfang Crab's opponent.
+    ("chosen-card-from-among", ObjectRef.ChosenCardFromAmong (ChosenCardFromAmong.MkChosenCardFromAmong (SlotName.MkSlotName (Text.pack "group")) (Filter.Type.And []) (Quantity.Type.Literal 1) (plantedPlayer "cfa") False), [plantedPlayer "cfa"]),
+    ("chosen-permanents", ObjectRef.ChosenPermanents (ChosenPermanents.MkChosenPermanents (Filter.Type.And []) (plantedPlayer "cp") HowMany.One), [plantedPlayer "cp"])
   ]
 
 -- plantedRef's player half, named for its position for that function's reason.
