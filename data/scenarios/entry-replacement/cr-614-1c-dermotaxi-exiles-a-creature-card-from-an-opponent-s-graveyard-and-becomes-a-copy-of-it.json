@@ -1,0 +1,39 @@
+{
+  "description": "CR 614.1c Dermotaxi exiles a creature card from an opponent's graveyard and becomes a copy of it",
+  "note": "The only creature card in any graveyard is bob's Runeclaw Bear, so \"a graveyard\" reaches it where \"your graveyard\" would offer nothing. Tapping both Goblin Pikers turns Dermotaxi into a 2/2 Bear that is still a Vehicle artifact (CR 707.9b).",
+  "board": {
+    "seats": [
+      {
+        "name": "alice",
+        "battlefield": [
+          { "card": "Swamp", "ready": true },
+          { "card": "Swamp", "ready": true },
+          { "card": "Goblin Piker", "ready": true },
+          { "card": "Goblin Piker", "ready": true }
+        ],
+        "hand": [{ "card": "Dermotaxi", "label": "taxi" }],
+        "graveyard": [{ "card": "Day of Judgment" }]
+      },
+      {
+        "name": "bob",
+        "graveyard": [{ "card": "Runeclaw Bear" }]
+      }
+    ],
+    "active": "alice",
+    "step": "PrecombatMain"
+  },
+  "timeline": [
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": { "Cast": { "object": "$taxi", "mana": ["Swamp", "Swamp#2"] } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass" },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "check": { "Count": { "player": "bob", "zone": "Graveyard", "card": "Runeclaw Bear", "count": 0 } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "check": { "Count": { "player": "bob", "zone": "Exile", "card": "Runeclaw Bear", "count": 1 } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": { "Activate": { "object": "Dermotaxi", "ability": 0 } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass" },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "check": { "Names": { "object": "Dermotaxi", "names": ["Runeclaw Bear"] } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "check": { "PowerToughness": { "object": "Dermotaxi", "power": 2, "toughness": 2 } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "check": { "Types": { "object": "Dermotaxi", "types": ["Artifact", "Creature"] } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "check": { "Subtypes": { "object": "Dermotaxi", "subtypes": ["Bear", "Vehicle"] } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "check": { "Tapped": { "object": "Goblin Piker", "tapped": true } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "check": { "Tapped": { "object": "Goblin Piker#2", "tapped": true } } }
+  ]
+}

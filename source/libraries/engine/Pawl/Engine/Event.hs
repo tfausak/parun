@@ -129,6 +129,7 @@ import qualified Pawl.Types.EntryRefusal as EntryRefusal
 import qualified Pawl.Types.EntryRewrite as EntryRewrite
 import qualified Pawl.Types.EntryRiders as EntryRiders
 import qualified Pawl.Types.EventGroup as EventGroup
+import qualified Pawl.Types.ExileFromGraveyard as ExileFromGraveyard
 import qualified Pawl.Types.ExileLink as ExileLink
 import qualified Pawl.Types.Expiry as Expiry.Type
 import qualified Pawl.Types.ExtraTurn as ExtraTurn
@@ -2863,19 +2864,22 @@ apply batch candidate event =
             addEnteringCounters oid CounterKind.PlusOnePlusOne (n * Natural.length chosen)
             pure (Just event)
       -- CR 614.1c: "as this creature enters, exile an instant or sorcery card from
-      -- your graveyard" (Living Lore). The arm above one zone over -- what it
-      -- spends is a card in a graveyard rather than a permanent on the
-      -- battlefield -- and CR 614.12b's combined budget across a batch falls out
-      -- here for the same reason, the choice being made and paid inside the entry
-      -- loop before the next member of the batch runs its own (CR 614.13b). Only
-      -- CR 614.13b: rule 614.13a's exclusion of a card entering beside this one is
-      -- the half that does not fall out, and Replacement.graveyardCandidates is
-      -- where that is recorded.
+      -- your graveyard" (Living Lore), "exile any number of creature cards from
+      -- your graveyard" (Sutured Ghoul), "exile a creature card from a graveyard"
+      -- (Dermotaxi). The SacrificeAnyNumber arm one zone over -- what it spends is
+      -- a card in a graveyard rather than a permanent on the battlefield -- and
+      -- CR 614.12b's combined budget across a batch falls out here for the same
+      -- reason, the choice being made and paid inside the entry loop before the
+      -- next member of the batch runs its own (CR 614.13b). Rule 614.13a's
+      -- exclusion of a card entering beside this one does not fall out with it;
+      -- Replacement.graveyardCandidates writes it.
       --
-      -- MANDATORY, and so unlike the two "or tapped" arms there is no declining
-      -- half: the card prints no "may". An empty offer exiles nothing (CR 101.3),
-      -- which is not a failure -- rule 607.3's pile is then empty and a Living
-      -- Lore that found no card is 0/0.
+      -- MANDATORY at a fixed count, and so unlike the two "or tapped" arms there
+      -- is no declining half: Living Lore prints no "may". An empty offer exiles
+      -- nothing (CR 101.3), which is not a failure -- rule 607.3's pile is then
+      -- empty and a Living Lore that found no card is 0/0. The count is asked
+      -- through Game.pickCounted, the resolution-time funnel for a HowMany, and
+      -- read the way placeEntryCounters reads its amounts, for its reasons.
       --
       -- CR 614.14 is the link, filed here rather than by
       -- Resolve.recordExiledWith's diff, which watches a resolving effect's window
@@ -2883,7 +2887,7 @@ apply batch candidate event =
       -- is the rule's own "a direct result of the replacement event caused by the
       -- first [ability]". The ARRIVALS are filed, never the graveyard id, since CR
       -- 400.7 mints a new object as the card changes zones.
-      EntryRewrite.ExileFromGraveyard filter_ -> do
+      EntryRewrite.ExileFromGraveyard (ExileFromGraveyard.MkExileFromGraveyard filter_ scope count) -> do
         Replacement.consume (ReplacementCandidate.identity candidate)
         gs <- State.get
         case Projection.controllerOf oid gs of
@@ -2896,19 +2900,34 @@ apply batch candidate event =
             -- The graveyard is read HERE, at CR 614.12a's moment, for
             -- OrTapped's reveal reason: an entry replacement applied before this
             -- one can have moved a card (CR 614.13).
-            let offered = Replacement.graveyardCandidates controller filter_ gs
-            -- Asked through Game.chooseAmong: with no candidate nothing is
-            -- exiled, and with ONE the instruction names that card -- a forced
-            -- selection rather than options a player could tell apart, which
-            -- is ObjectRef.ChosenCardInGraveyard's own elision (CR 101.3).
-            -- FILTERED, NOT TRUSTED (#222): an answer naming a card that was
-            -- never offered would otherwise exile a card the printed criterion
-            -- excludes.
-            chosen <- Game.chooseAmong (\decider asked candidates -> Prompt.ChooseCardInGraveyard decider asked oid candidates Seq.empty) controller offered
-            Monad.forM_ chosen $ \card -> do
-              arrivals <- changeZoneReturning card Zone.Exile
-              State.modify' $ \gs2 ->
-                gs2 {GameState.exiledWith = foldr (\arrival -> Map.insert arrival ExileLink.MkExileLink {ExileLink.source = oid, ExileLink.ability = Nothing}) (GameState.exiledWith gs2) arrivals}
+            let offered = Replacement.graveyardCandidates controller scope filter_ gs
+                viewOf = Projection.viewWithLastKnown oid gs
+                context = Replacement.candidateContext gs candidate
+                announcedX = Projection.announcedXOf oid gs
+                amount quantity = maybe 0 Integer.toNaturalSaturating (Quantity.evaluate viewOf context (Projection.boardAsEntering gs) oid (Quantity.substituteAnnouncedX announcedX quantity))
+            -- One card is asked through Game.chooseAmong: with no candidate
+            -- nothing is exiled, and with ONE the instruction names that card --
+            -- a forced selection rather than options a player could tell apart,
+            -- which is ObjectRef.ChosenCardInGraveyard's own elision (CR 101.3).
+            -- "Any number" is asked at one candidate, declining being a second
+            -- answer. FILTERED, NOT TRUSTED (#222), inside pickCounted: an answer
+            -- naming a card that was never offered would otherwise exile a card
+            -- the printed criterion excludes.
+            chosen <-
+              Game.pickCounted
+                True
+                (pure (Just controller))
+                (\decider asked candidates -> Prompt.ChooseCardInGraveyard decider asked oid candidates Seq.empty)
+                (\decider asked candidates ceiling_ -> Prompt.ChooseAnyNumberToExile decider asked oid candidates ceiling_)
+                amount
+                count
+                offered
+            -- ONE event (CR 608.2f): "exile any number of creature cards" is one
+            -- action on several objects. The Sutured Ghoul scenario in
+            -- data/scenarios/entry-replacement proves it: Spirit Mascot fires once.
+            arrivals <- changeZonesTogether (fmap (\card -> (card, Zone.Exile)) chosen)
+            State.modify' $ \gs2 ->
+              gs2 {GameState.exiledWith = foldr (\arrival -> Map.insert arrival ExileLink.MkExileLink {ExileLink.source = oid, ExileLink.ability = Nothing}) (GameState.exiledWith gs2) (foldMap Foldable.toList arrivals)}
             pure (Just event)
       -- CR 614.1c with CR 301.5e: "as this Equipment enters, choose a creature
       -- you control it could be attached to. If you do, it enters attached to

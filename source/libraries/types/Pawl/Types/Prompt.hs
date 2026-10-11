@@ -718,6 +718,11 @@ data Prompt r where
   -- the arm above one zone over, and asked at one candidate for its reason.
   -- Answers as Response.ChoseReveals.
   ChooseAnyNumberToReveal :: Decider.Decider -> PlayerId.PlayerId -> ObjectId.ObjectId -> [ObjectId.ObjectId] -> Prompt (Set.Set ObjectId.ObjectId)
+  -- | CR 614.1c with CR 614.13a: any number of the offered graveyard cards
+  -- exiled as the permanent enters, at most the Natural where there is one;
+  -- ChooseAnyNumberToSacrifice's posture one zone over. Answers as
+  -- Response.ChoseExilesFromGraveyard.
+  ChooseAnyNumberToExile :: Decider.Decider -> PlayerId.PlayerId -> ObjectId.ObjectId -> [ObjectId.ObjectId] -> Maybe Natural.Natural -> Prompt (Set.Set ObjectId.ObjectId)
   -- | CR 608.2d: any number of the matching permanents a resolving effect acts
   -- on or binds (Pawl.Types.ChosenPermanents at HowMany.UpTo, whose chooser
   -- this PlayerId is), at most the Natural where there is one;

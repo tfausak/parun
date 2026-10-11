@@ -154,6 +154,7 @@ deciderOf prompt = case prompt of
   Prompt.ChooseCollectEvidence decider _ _ _ _ -> Just (Decider.unwrap decider)
   Prompt.ChooseAnyNumberToSacrifice decider _ _ _ -> Just (Decider.unwrap decider)
   Prompt.ChooseAnyNumberToReveal decider _ _ _ -> Just (Decider.unwrap decider)
+  Prompt.ChooseAnyNumberToExile decider _ _ _ _ -> Just (Decider.unwrap decider)
   Prompt.ChooseAnyNumberOfPermanents decider _ _ _ _ -> Just (Decider.unwrap decider)
   Prompt.ChooseAnyNumberToDiscard decider _ _ _ _ -> Just (Decider.unwrap decider)
   Prompt.ChoosePermanent decider _ _ _ -> Just (Decider.unwrap decider)
@@ -327,6 +328,7 @@ kindOf prompt = Text.pack $ case prompt of
   Prompt.ChooseCollectEvidence {} -> "ChooseCollectEvidence"
   Prompt.ChooseAnyNumberToSacrifice {} -> "ChooseAnyNumberToSacrifice"
   Prompt.ChooseAnyNumberToReveal {} -> "ChooseAnyNumberToReveal"
+  Prompt.ChooseAnyNumberToExile {} -> "ChooseAnyNumberToExile"
   Prompt.ChooseAnyNumberOfPermanents {} -> "ChooseAnyNumberOfPermanents"
   Prompt.ChooseAnyNumberToDiscard {} -> "ChooseAnyNumberToDiscard"
   Prompt.ChoosePermanent {} -> "ChoosePermanent"

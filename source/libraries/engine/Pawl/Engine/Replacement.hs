@@ -119,6 +119,7 @@ import qualified Pawl.Types.PlayerCounterKind as PlayerCounterKind
 import Pawl.Types.PlayerId (PlayerId)
 import qualified Pawl.Types.PlayerRef as PlayerRef
 import qualified Pawl.Types.PlayerRelation as PlayerRelation
+import Pawl.Types.PlayerScope (PlayerScope)
 import Pawl.Types.Prevention (Prevention)
 import qualified Pawl.Types.Prevention as Prevention
 import qualified Pawl.Types.PreventionRider as PreventionRider
@@ -1621,35 +1622,34 @@ sacrificeCandidates you slots pid source filter_ gs =
       forbidden = SacrificeRestriction.cantBeSacrificed matching gs
    in filter (\oid -> not (Set.member oid forbidden)) matching
 
--- CR 614.1c: the cards in this player's graveyard an as-enters exile may take,
--- ascending -- the order Prompt.ChooseCardInGraveyard offers them in, which is
--- what lets a test pin its answer by index (Pawl.PowerToughnessSpec's Living
--- Lore) and what makes the transcript fallback deterministic.
+-- CR 614.1c: the cards in the graveyards of the players `scope` names, read
+-- from this player's perspective (CR 109.5), that an as-enters exile may take,
+-- ascending -- the order the prompts offer them in, which is what lets a test
+-- pin its answer by index (Pawl.PowerToughnessSpec's Living Lore) and what
+-- makes the transcript fallback deterministic.
 --
 -- sacrificeCandidates' shape one zone over, and the two differences are the
 -- rules': CR 701.21a's restrictions are about sacrificing and reach no card in a
 -- graveyard, and the filter is matched against the CARD's projection there (CR
 -- 400.7) rather than against a permanent's.
 --
--- Not implemented: CR 614.13a's "or any other object entering the battlefield at
--- the same time", whose own example is a graveyard read -- Sutured Ghoul and
--- Runeclaw Bear entering together out of one graveyard. A batch bound for the
--- battlefield is moved one member at a time (Pawl.Engine.Resolve.Effect's
+-- MINUS GameState.enteringPending, which is CR 614.13a's "or any other object
+-- entering the battlefield at the same time" -- its own example is Sutured
+-- Ghoul and Runeclaw Bear entering together out of one graveyard. A batch bound
+-- for the battlefield is moved one member at a time (Pawl.Engine.Resolve.Effect's
 -- MoveToZone folds moveOne, each member's runEntry finishing before the next
--- departs), so the members still to come are sitting in the graveyard this reads
--- and are offered. The `batch` set the entry loop carries does not name them: it
--- holds the siblings that have already ARRIVED, whose CR 400.7 incarnations are
--- on the battlefield, which is why sacrificeCandidates' guard has nothing to do
--- here and no guard of that shape would fix it. The members still to come are
--- GameState.enteringPending, and excluding them lands with the widening
--- (#3293) -- unobservable until then, an instant or sorcery card being
--- the only thing this offer matches today and CR 110.4 keeping one off the
--- battlefield.
-graveyardCandidates :: PlayerId -> Filter.Type.Filter Keyword.Type.Keyword -> GameState -> [ObjectId]
-graveyardCandidates pid filter_ gs =
+-- departs), so the members still to come are sitting in the graveyard this reads.
+-- The `batch` set the entry loop carries does not name them: it holds the
+-- siblings that have already ARRIVED, whose CR 400.7 incarnations are on the
+-- battlefield and so are no candidate here. Pawl.PowerToughnessSpec's Sutured
+-- Ghoul pair proves it.
+graveyardCandidates :: PlayerId -> PlayerScope -> Filter.Type.Filter Keyword.Type.Keyword -> GameState -> [ObjectId]
+graveyardCandidates pid scope filter_ gs =
   let context = Filter.contextFor (Game.teams gs) (Just pid) Nothing
       viewOf = Projection.viewsOf gs
-   in List.sort (filter (\oid -> Filter.matches context (viewOf oid) filter_) (Game.zoneMembers Zone.Graveyard pid gs))
+      owners = Maybe.fromMaybe [] (PlayerEffect.playersInScope (Just pid) gs scope)
+      offered oid = not (Map.member oid (GameState.enteringPending gs)) && Filter.matches context (viewOf oid) filter_
+   in List.sort (concatMap (\owner -> filter offered (Game.zoneMembers Zone.Graveyard owner gs)) owners)
 
 -- CR 614.1a / 614.1c-d: does the event's subject satisfy this replacement's
 -- Filter? Both the ENTERING object of an entry replacement and the MOVING object

@@ -7,6 +7,7 @@ import qualified Pawl.Types.EntersWith as EntersWith
 import qualified Pawl.Types.EntryFlip as EntryFlip
 import qualified Pawl.Types.EntryOption as EntryOption
 import qualified Pawl.Types.EntryPrice as EntryPrice
+import qualified Pawl.Types.ExileFromGraveyard as ExileFromGraveyard
 import qualified Pawl.Types.Filter as Filter
 import qualified Pawl.Types.Keyword as Keyword
 import qualified Pawl.Types.SacrificeAnyNumber as SacrificeAnyNumber
@@ -33,9 +34,8 @@ import qualified Pawl.Types.WithCounters as WithCounters
 -- earlier one already spent (CR 614.13b). The first three cannot be left owing
 -- what they cannot pay; SacrificeToEnter's fixed count can, so its arm carries
 -- CR 614.12b's forward check -- Pawl.Engine.Event states it. CR 614.13a is a
--- separate exclusion and does NOT fall out with it -- see
--- Pawl.Engine.Replacement.graveyardCandidates for the half that is
--- unimplemented.
+-- separate exclusion and does NOT fall out with it --
+-- Pawl.Engine.Replacement.graveyardCandidates writes it.
 data EntryRewrite ability effect
   = -- | CR 707.5 / 614.1c / Clone, Vesuva: "you may have this permanent enter as a
     -- copy of ...", the payload carrying which permanents the printed noun phrase
@@ -112,17 +112,9 @@ data EntryRewrite ability effect
   | -- | CR 614.1a / 614.12 / Heart of Yavimaya: sacrifice a fixed count of
     -- permanents or be put into its owner's graveyard instead of entering.
     SacrificeToEnter SacrificeToEnter.SacrificeToEnter
-  | -- | CR 614.1c / 614.13 / Living Lore: exile one card matching the Filter out
-    -- of the entering permanent's controller's graveyard as it enters. CR 614.14
-    -- links the exiled card to the entering permanent, so a
-    -- Quantity.AgainstCardsExiledWith on the same card reads it back.
-    --
-    -- Not implemented: any number rather than one -- Sutured Ghoul's "exile any
-    -- number of creature cards from your graveyard" -- another player's
-    -- graveyard, which Dermotaxi's "exile a creature card from a graveyard"
-    -- prints, and CR 614.13a's exclusion of a card entering beside this one
-    -- (#3293).
-    ExileFromGraveyard (Filter.Filter Keyword.Keyword)
+  | -- | CR 614.1c / 614.13 / Living Lore, Sutured Ghoul, Dermotaxi: exile cards
+    -- out of a graveyard as this enters, linked to it by CR 614.14.
+    ExileFromGraveyard ExileFromGraveyard.ExileFromGraveyard
   | -- | CR 614.1c / 301.5e / Grifter's Blade: as this enters, its controller
     -- chooses a permanent matching the Filter, and it enters attached to that
     -- permanent.

@@ -2,8 +2,14 @@
   "faces": [
     {
       "characteristicPT": {
-        "type": "InSlot",
-        "value": "thatMany"
+        "power": {
+          "type": "InSlot",
+          "value": "thatMany"
+        },
+        "toughness": {
+          "type": "InSlot",
+          "value": "thatMany"
+        }
       },
       "manaCost": [
         {

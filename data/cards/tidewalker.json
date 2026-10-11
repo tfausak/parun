@@ -2,9 +2,17 @@
   "faces": [
     {
       "characteristicPT": {
-        "type": "ObjectCounters",
-        "value": {
-          "type": "Time"
+        "power": {
+          "type": "ObjectCounters",
+          "value": {
+            "type": "Time"
+          }
+        },
+        "toughness": {
+          "type": "ObjectCounters",
+          "value": {
+            "type": "Time"
+          }
         }
       },
       "keywords": [

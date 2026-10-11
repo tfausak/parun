@@ -2,26 +2,54 @@
   "faces": [
     {
       "characteristicPT": {
-        "type": "Count",
-        "value": {
-          "aggregation": {
-            "type": "DistinctCardTypes"
-          },
-          "filter": {
-            "type": "And",
-            "value": []
-          },
-          "scope": {
-            "type": "InZone",
-            "value": {
-              "player": {
-                "type": "Relative",
-                "value": {
-                  "type": "AnyPlayer"
+        "power": {
+          "type": "Count",
+          "value": {
+            "aggregation": {
+              "type": "DistinctCardTypes"
+            },
+            "filter": {
+              "type": "And",
+              "value": []
+            },
+            "scope": {
+              "type": "InZone",
+              "value": {
+                "player": {
+                  "type": "Relative",
+                  "value": {
+                    "type": "AnyPlayer"
+                  }
+                },
+                "zone": {
+                  "type": "Graveyard"
                 }
-              },
-              "zone": {
-                "type": "Graveyard"
+              }
+            }
+          }
+        },
+        "toughness": {
+          "type": "Count",
+          "value": {
+            "aggregation": {
+              "type": "DistinctCardTypes"
+            },
+            "filter": {
+              "type": "And",
+              "value": []
+            },
+            "scope": {
+              "type": "InZone",
+              "value": {
+                "player": {
+                  "type": "Relative",
+                  "value": {
+                    "type": "AnyPlayer"
+                  }
+                },
+                "zone": {
+                  "type": "Graveyard"
+                }
               }
             }
           }

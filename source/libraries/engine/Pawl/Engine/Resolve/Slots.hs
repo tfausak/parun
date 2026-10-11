@@ -118,6 +118,7 @@ import qualified Pawl.Types.ExchangeSides as ExchangeSides
 import qualified Pawl.Types.ExchangeValues as ExchangeValues
 import qualified Pawl.Types.ExchangeZones as ExchangeZones
 import qualified Pawl.Types.ExchangedValue as ExchangedValue
+import qualified Pawl.Types.ExileFromGraveyard as ExileFromGraveyard
 import qualified Pawl.Types.ExileHaunting as ExileHaunting
 import qualified Pawl.Types.ExileLink as ExileLink
 import qualified Pawl.Types.Face as Face
@@ -1719,7 +1720,9 @@ entryRewriteReads rewrite = case rewrite of
   -- CR 702.38a names no slot: its offer is a set of creature types read off the
   -- entering object's projection, never a Filter a resolution could bind.
   EntryRewrite.Amplify _ -> ([], [])
-  EntryRewrite.ExileFromGraveyard filter_ -> ([filter_], [])
+  -- The cards the exile may take, and the count beside them, a Quantity read at
+  -- the entry exactly as the WithCounters arm's above is.
+  EntryRewrite.ExileFromGraveyard exile -> ([ExileFromGraveyard.filter exile], Foldable.toList (HowMany.quantity (ExileFromGraveyard.count exile)))
   -- The destinations the entering permanent may arrive attached to, the arm
   -- above's shape one zone over: a Filter over battlefield permanents, reported
   -- here although an entry replacement has no resolution whose slots it could

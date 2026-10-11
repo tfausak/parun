@@ -714,7 +714,7 @@ chosenPermanents legal resolving controller source (ChosenPermanents.MkChosenPer
   let candidates = battlefieldMatching legal resolving controller source gs filter_
       context = effectContext gs controller source legal (slotBindings resolving gs)
       amount = maybe 0 Integer.toNaturalSaturating . Quantity.evaluateFor (effectViewOf source legal gs) context gs resolving source
-  pickCounted
+  Game.pickCounted
     (namesChooser legal controller gs chooser)
     (askedChooser source controller legal chooser)
     (\decider who -> Prompt.ChoosePermanent decider who source)
@@ -722,59 +722,6 @@ chosenPermanents legal resolving controller source (ChosenPermanents.MkChosenPer
     amount
     count
     candidates
-
--- CR 608.2d's choice of objects out of candidates, at a count read through
--- `amount`: the one place a HowMany is asked, shared by chosenPermanents and
--- chooseCardFromAmong. A chooser ref naming no seat, or several, picks nothing
--- (CR 101.3) whatever the count; one naming a seat is asked through `chooser`
--- only where a real choice remains, so CR 800.4g's reassignment is never asked
--- for a choice with one answer.
---
--- Exactly: every candidate where there are as many as the count or fewer --
--- CR 608.2d leaves one legal answer at as many, and CR 609.3 takes what there
--- is at fewer -- and otherwise ONE ask per pick, each over the candidates the
--- earlier picks left, since CR 608.2d cannot choose the same object twice.
--- One seat answering several asks in sequence is the same decision as one
--- simultaneous choice of that many, CR 101.4c leaving the order to that
--- player.
---
--- UpTo: ONE ask over every candidate, skipped at none and at a ceiling of zero,
--- where the empty set is the only answer (CR 101.3, CR 609.3), and asked at
--- one, where declining is a second answer. FILTERED, not trusted: an answer
--- naming an object never offered is dropped, and one naming more than the
--- ceiling keeps its first that many in the offer's order, which carries CR
--- 608.2f's APNAP order where a Set does not.
-pickCounted ::
-  Bool ->
-  Game (Maybe PlayerId) ->
-  (Decider.Decider -> PlayerId -> NonEmpty.NonEmpty ObjectId -> Prompt.Prompt ObjectId) ->
-  (Decider.Decider -> PlayerId -> [ObjectId] -> Maybe Natural -> Prompt.Prompt (Set ObjectId)) ->
-  (Quantity.Type.Quantity -> Natural) ->
-  HowMany.HowMany ->
-  [ObjectId] ->
-  Game [ObjectId]
-pickCounted named chooser one_ several amount count candidates = case count of
-  HowMany.Exactly q
-    | not named -> pure []
-    | Natural.length candidates <= amount q -> pure candidates
-    | otherwise -> asking (\who -> pick who (amount q) candidates)
-  HowMany.UpTo q
-    | null candidates || ceiling_ == Just 0 -> pure []
-    | otherwise -> asking $ \who -> do
-        gs <- State.get
-        answer <- Game.choose (several (Decide.deciderFor who gs) who candidates ceiling_)
-        pure (maybe id (take . Natural.toIntSaturating) ceiling_ (filter (`Set.member` answer) candidates))
-    where
-      ceiling_ = fmap amount q
-  where
-    asking ask = chooser >>= maybe (pure []) ask
-    pick who n available
-      | n <= (0 :: Natural) = pure []
-      | otherwise = do
-          picked <- Game.chooseAmong one_ who available
-          case picked of
-            Nothing -> pure []
-            Just taken -> (taken :) <$> pick who (n - 1) (List.delete taken available)
 
 -- Whether a chooser ref names one seat, askedChooser's test without its ask.
 namesChooser :: Map.Map SlotName (Set Recipient) -> PlayerId -> GameState -> PlayerRef -> Bool
@@ -2378,7 +2325,7 @@ chooseCardFromAmong resolving source controller legal chosen (ChosenCardFromAmon
   let viewOf = effectViewOf source legal gs
       context = effectContext gs controller source legal (slotBindings resolving gs)
       amount = maybe 0 Integer.toNaturalSaturating . Quantity.evaluateFor viewOf context gs resolving source
-  pickCounted
+  Game.pickCounted
     (namesChooser legal controller gs chooser)
     (askedChooser source controller legal chooser)
     (\decider who -> Prompt.ChooseCardFromAmong decider who source)

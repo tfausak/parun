@@ -2,42 +2,86 @@
   "faces": [
     {
       "characteristicPT": {
-        "type": "Count",
-        "value": {
-          "aggregation": {
-            "type": "Members"
-          },
-          "filter": {
-            "type": "And",
-            "value": [
-              {
-                "type": "HasCardType",
-                "value": {
-                  "type": "Land"
-                }
-              },
-              {
-                "type": "Not",
-                "value": {
-                  "type": "HasSupertype",
+        "power": {
+          "type": "Count",
+          "value": {
+            "aggregation": {
+              "type": "Members"
+            },
+            "filter": {
+              "type": "And",
+              "value": [
+                {
+                  "type": "HasCardType",
                   "value": {
-                    "type": "Basic"
+                    "type": "Land"
+                  }
+                },
+                {
+                  "type": "Not",
+                  "value": {
+                    "type": "HasSupertype",
+                    "value": {
+                      "type": "Basic"
+                    }
                   }
                 }
-              }
-            ]
-          },
-          "scope": {
-            "type": "InZone",
-            "value": {
-              "player": {
-                "type": "Relative",
-                "value": {
-                  "type": "Opponent"
+              ]
+            },
+            "scope": {
+              "type": "InZone",
+              "value": {
+                "player": {
+                  "type": "Relative",
+                  "value": {
+                    "type": "Opponent"
+                  }
+                },
+                "zone": {
+                  "type": "Graveyard"
                 }
-              },
-              "zone": {
-                "type": "Graveyard"
+              }
+            }
+          }
+        },
+        "toughness": {
+          "type": "Count",
+          "value": {
+            "aggregation": {
+              "type": "Members"
+            },
+            "filter": {
+              "type": "And",
+              "value": [
+                {
+                  "type": "HasCardType",
+                  "value": {
+                    "type": "Land"
+                  }
+                },
+                {
+                  "type": "Not",
+                  "value": {
+                    "type": "HasSupertype",
+                    "value": {
+                      "type": "Basic"
+                    }
+                  }
+                }
+              ]
+            },
+            "scope": {
+              "type": "InZone",
+              "value": {
+                "player": {
+                  "type": "Relative",
+                  "value": {
+                    "type": "Opponent"
+                  }
+                },
+                "zone": {
+                  "type": "Graveyard"
+                }
               }
             }
           }

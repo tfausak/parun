@@ -2,36 +2,74 @@
   "faces": [
     {
       "characteristicPT": {
-        "type": "Count",
-        "value": {
-          "aggregation": {
-            "type": "Members"
-          },
-          "filter": {
-            "type": "And",
-            "value": [
-              {
-                "type": "HasCardType",
-                "value": {
-                  "type": "Creature"
+        "power": {
+          "type": "Count",
+          "value": {
+            "aggregation": {
+              "type": "Members"
+            },
+            "filter": {
+              "type": "And",
+              "value": [
+                {
+                  "type": "HasCardType",
+                  "value": {
+                    "type": "Creature"
+                  }
+                },
+                {
+                  "type": "IsFaceDown"
                 }
-              },
-              {
-                "type": "IsFaceDown"
+              ]
+            },
+            "scope": {
+              "type": "InZone",
+              "value": {
+                "player": {
+                  "type": "Relative",
+                  "value": {
+                    "type": "AnyPlayer"
+                  }
+                },
+                "zone": {
+                  "type": "Battlefield"
+                }
               }
-            ]
-          },
-          "scope": {
-            "type": "InZone",
-            "value": {
-              "player": {
-                "type": "Relative",
-                "value": {
-                  "type": "AnyPlayer"
+            }
+          }
+        },
+        "toughness": {
+          "type": "Count",
+          "value": {
+            "aggregation": {
+              "type": "Members"
+            },
+            "filter": {
+              "type": "And",
+              "value": [
+                {
+                  "type": "HasCardType",
+                  "value": {
+                    "type": "Creature"
+                  }
+                },
+                {
+                  "type": "IsFaceDown"
                 }
-              },
-              "zone": {
-                "type": "Battlefield"
+              ]
+            },
+            "scope": {
+              "type": "InZone",
+              "value": {
+                "player": {
+                  "type": "Relative",
+                  "value": {
+                    "type": "AnyPlayer"
+                  }
+                },
+                "zone": {
+                  "type": "Battlefield"
+                }
               }
             }
           }

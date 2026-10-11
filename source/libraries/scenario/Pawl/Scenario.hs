@@ -870,6 +870,7 @@ withinOffer prompt chosen = case prompt of
   Prompt.Type.ChooseMaterials _ _ _ objects _ _ -> all (`elem` objects) chosen
   Prompt.Type.ChooseCollectEvidence _ _ _ cards _ -> all (`elem` cards) chosen
   Prompt.Type.ChooseAnyNumberToReveal _ _ _ cards -> all (`elem` cards) chosen
+  Prompt.Type.ChooseAnyNumberToExile _ _ _ cards _ -> all (`elem` cards) chosen
   Prompt.Type.ChooseAnyNumberOfPermanents _ _ _ objects _ -> all (`elem` objects) chosen
   Prompt.Type.ChooseAnyNumberToDiscard _ _ _ cards _ -> all (`elem` cards) chosen
   Prompt.Type.ChoosePermanent _ _ _ objects -> chosen `elem` objects

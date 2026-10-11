@@ -2,32 +2,66 @@
   "faces": [
     {
       "characteristicPT": {
-        "type": "Count",
-        "value": {
-          "aggregation": {
-            "type": "Greatest",
-            "value": {
-              "type": "Measure",
+        "power": {
+          "type": "Count",
+          "value": {
+            "aggregation": {
+              "type": "Greatest",
               "value": {
-                "type": "ManaValue"
+                "type": "Measure",
+                "value": {
+                  "type": "ManaValue"
+                }
+              }
+            },
+            "filter": {
+              "type": "And",
+              "value": []
+            },
+            "scope": {
+              "type": "InZone",
+              "value": {
+                "player": {
+                  "type": "Relative",
+                  "value": {
+                    "type": "You"
+                  }
+                },
+                "zone": {
+                  "type": "Graveyard"
+                }
               }
             }
-          },
-          "filter": {
-            "type": "And",
-            "value": []
-          },
-          "scope": {
-            "type": "InZone",
-            "value": {
-              "player": {
-                "type": "Relative",
+          }
+        },
+        "toughness": {
+          "type": "Count",
+          "value": {
+            "aggregation": {
+              "type": "Greatest",
+              "value": {
+                "type": "Measure",
                 "value": {
-                  "type": "You"
+                  "type": "ManaValue"
                 }
-              },
-              "zone": {
-                "type": "Graveyard"
+              }
+            },
+            "filter": {
+              "type": "And",
+              "value": []
+            },
+            "scope": {
+              "type": "InZone",
+              "value": {
+                "player": {
+                  "type": "Relative",
+                  "value": {
+                    "type": "You"
+                  }
+                },
+                "zone": {
+                  "type": "Graveyard"
+                }
               }
             }
           }
