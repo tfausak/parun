@@ -301,6 +301,20 @@ spec s = Spec.describe s "Pawl.Codec.PlayerEffect" $ do
       PlayerEffect.codec
       PlayerEffect.CantSetSchemesInMotion
       " {\"type\":\"CantSetSchemesInMotion\"} "
+  -- CR 723.2 / Opposition Agent.
+  Spec.it s "ControlledWhileSearching" $
+    Common.assertCodec
+      s
+      PlayerEffect.codec
+      PlayerEffect.ControlledWhileSearching
+      " {\"type\":\"ControlledWhileSearching\"} "
+  -- CR 701.23 / Opposition Agent.
+  Spec.it s "ExilesFoundWhileSearching" $
+    Common.assertCodec
+      s
+      PlayerEffect.codec
+      PlayerEffect.ExilesFoundWhileSearching
+      " {\"type\":\"ExilesFoundWhileSearching\"} "
   -- CR 508.1c / Angelic Arbiter.
   Spec.it s "CantAttackWithCreatures" $
     Common.assertCodec

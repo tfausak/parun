@@ -35,7 +35,6 @@ import qualified Pawl.Types.CardName as CardName
 import qualified Pawl.Types.Combat as Combat.Type
 import qualified Pawl.Types.CombatStep as CombatStep
 import qualified Pawl.Types.CounterKind as CounterKind
-import qualified Pawl.Types.Decider as Decider
 import qualified Pawl.Types.Departure as Departure.Type
 import qualified Pawl.Types.Game as Game.Type
 import qualified Pawl.Types.GameEvent as GameEvent
@@ -512,7 +511,7 @@ spec s registry = Spec.describe s "Pawl.Engine.Departure" $ do
   -- (CR 723.1/723.3). Both are effects giving the departing player control of
   -- a PLAYER, so both end.
   Spec.it s "CR 800.4a a Mindslaver controller departing releases their victim, pending and active alike" $ do
-    let pending = S.threePlayerGame {GameState.pendingControl = Map.singleton S.carol (Decider.MkDecider S.bob)}
+    let pending = S.threePlayerGame {GameState.pendingControl = Map.singleton S.carol (S.turnControlRow S.bob)}
         duringTurn =
           S.threePlayerGame
             { GameState.activePlayer = S.carol,

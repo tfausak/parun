@@ -503,6 +503,8 @@ rewritePlayerEffect pairs effect = case effect of
   PlayerEffect.CantSearchLibraries _ -> effect
   PlayerEffect.CantBecomeMonarch -> effect
   PlayerEffect.CantSetSchemesInMotion -> effect
+  PlayerEffect.ControlledWhileSearching -> effect
+  PlayerEffect.ExilesFoundWhileSearching -> effect
   PlayerEffect.CantAttackWithCreatures -> effect
   PlayerEffect.CastOnlyAtSorcerySpeed -> effect
   PlayerEffect.PlayLandsFrom _ -> effect

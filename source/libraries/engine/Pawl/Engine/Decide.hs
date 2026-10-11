@@ -1,8 +1,8 @@
 module Pawl.Engine.Decide where
 
+import qualified Data.List as List
 import qualified Data.List.NonEmpty as NonEmpty
 import qualified Data.Map.Strict as Map
-import qualified Data.Maybe as Maybe
 import qualified Pawl.Types.ControlDuration as ControlDuration
 import Pawl.Types.Decider (Decider)
 import qualified Pawl.Types.Decider as Decider
@@ -24,8 +24,10 @@ import Pawl.Types.PlayerId (PlayerId)
 deciderFor :: PlayerId -> GameState -> Decider
 deciderFor pid gs = maybe (Decider.MkDecider pid) PlayerControl.decider (Map.lookup pid (GameState.control gs) >>= effective)
 
--- CR 723.1a: "the last one to be created is the one that works", and the stack
--- is kept in creation order, so that is its last element. The row that WORKS,
+-- CR 723.1a: "the last one to be created is the one that works" -- the latest
+-- PlayerControl.timestamp, not the latest pushed, since an Opposition Agent's
+-- row is pushed when a search begins but was created when the Agent entered.
+-- Rows of one timestamp keep push order. The row that WORKS,
 -- which is also the row whose CR 723.7 restriction applies
 -- (Pawl.Engine.Mana.manaSourcesGiven).
 --
@@ -37,4 +39,9 @@ effective =
         ControlDuration.WhileResolving _ -> False
         ControlDuration.UntilTurnEnds -> True
         ControlDuration.UntilResolutionEnds -> True
-   in Maybe.listToMaybe . reverse . NonEmpty.filter awake
+        ControlDuration.WhileSearching -> True
+      -- The later of two rows of one stamp is the one pushed later.
+      later best row = case best of
+        Just kept | PlayerControl.timestamp kept > PlayerControl.timestamp row -> best
+        _ -> Just row
+   in List.foldl' later Nothing . NonEmpty.filter awake

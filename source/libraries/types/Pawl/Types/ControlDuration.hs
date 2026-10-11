@@ -19,4 +19,7 @@ data ControlDuration
   | -- | CR 723.2: only while the object resolves, and dormant until then (Word
     -- of Command's forced spell).
     WhileResolving ObjectId
+  | -- | CR 723.2: while the controlled player searches their library (Opposition
+    -- Agent), installed and lifted by the search itself.
+    WhileSearching
   deriving (Eq, Ord, Show)

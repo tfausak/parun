@@ -1,0 +1,184 @@
+{
+  "description": "CR 723.1a: alice's Mindslaver, activated after carol's Opposition Agent entered, is the newer control effect, so alice chooses what bob's Rampant Growth finds",
+  "note": "The Agent's control dates from when it entered (CR 613.7a), not from when bob's search began, so Mindslaver's later effect works and the Search prompt is alice's. The Agent's exile is a separate effect and still applies. The control file has carol cast the Agent after Mindslaver's activation, and then carol decides.",
+  "board": {
+    "active": "alice",
+    "step": "PrecombatMain",
+    "seats": [
+      {
+        "name": "alice",
+        "battlefield": [
+          {
+            "card": "Mindslaver",
+            "label": "slaver"
+          },
+          {
+            "card": "Island",
+            "label": "i1"
+          },
+          {
+            "card": "Island",
+            "label": "i2"
+          },
+          {
+            "card": "Island",
+            "label": "i3"
+          },
+          {
+            "card": "Island",
+            "label": "i4"
+          }
+        ],
+        "library": [
+          {
+            "card": "Plains"
+          },
+          {
+            "card": "Plains"
+          }
+        ]
+      },
+      {
+        "name": "bob",
+        "battlefield": [
+          {
+            "card": "Forest",
+            "label": "f1"
+          },
+          {
+            "card": "Forest",
+            "label": "f2"
+          }
+        ],
+        "hand": [
+          {
+            "card": "Rampant Growth",
+            "label": "growth"
+          }
+        ],
+        "library": [
+          {
+            "card": "Plains",
+            "label": "draw"
+          },
+          {
+            "card": "Forest",
+            "label": "forest"
+          },
+          {
+            "card": "Island",
+            "label": "island"
+          },
+          {
+            "card": "Goblin Piker",
+            "label": "piker"
+          }
+        ]
+      },
+      {
+        "name": "carol",
+        "library": [
+          {
+            "card": "Plains"
+          },
+          {
+            "card": "Plains"
+          }
+        ],
+        "battlefield": [
+          {
+            "card": "Opposition Agent",
+            "label": "agent"
+          }
+        ]
+      }
+    ]
+  },
+  "timeline": [
+    {
+      "turn": 1,
+      "step": "PrecombatMain",
+      "player": "alice",
+      "do": {
+        "Activate": {
+          "object": "$slaver",
+          "targets": [
+            "$bob"
+          ],
+          "mana": [
+            "$i1",
+            "$i2",
+            "$i3",
+            "$i4"
+          ],
+          "costOrder": [
+            0,
+            1
+          ]
+        }
+      }
+    },
+    {
+      "turn": 2,
+      "step": "PrecombatMain",
+      "player": "alice",
+      "do": {
+        "Cast": {
+          "object": "$growth",
+          "mana": [
+            "$f1",
+            "$f2"
+          ]
+        }
+      }
+    },
+    {
+      "turn": 2,
+      "step": "PrecombatMain",
+      "player": "alice",
+      "do": {
+        "Answer": {
+          "prompt": "Search",
+          "with": [
+            "$island"
+          ]
+        }
+      }
+    },
+    {
+      "turn": 2,
+      "step": "PrecombatMain",
+      "player": "bob",
+      "do": {
+        "Answer": {
+          "prompt": "Shuffle",
+          "with": [
+            "$piker",
+            "$forest"
+          ]
+        }
+      }
+    }
+  ],
+  "final": [
+    {
+      "Count": {
+        "player": "bob",
+        "zone": "Exile",
+        "card": "Island",
+        "count": 1
+      }
+    },
+    {
+      "View": {
+        "of": "Zone",
+        "player": "bob",
+        "zone": "Library",
+        "is": [
+          "$piker",
+          "$forest"
+        ]
+      }
+    }
+  ]
+}

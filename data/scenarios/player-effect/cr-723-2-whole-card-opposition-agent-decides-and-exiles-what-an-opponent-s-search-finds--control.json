@@ -1,0 +1,121 @@
+{
+  "description": "CR 723.2 whole card: bob's own Opposition Agent leaves his Rampant Growth search to him, and the land enters as the spell says",
+  "note": "The control file for the Agent scenario: the Agent is bob's, and he is no opponent of himself, so the Search prompt is his and the Island enters the battlefield tapped.",
+  "board": {
+    "active": "bob",
+    "step": "PrecombatMain",
+    "seats": [
+      {
+        "name": "alice",
+        "battlefield": []
+      },
+      {
+        "name": "bob",
+        "battlefield": [
+          {
+            "card": "Forest",
+            "label": "f1"
+          },
+          {
+            "card": "Forest",
+            "label": "f2"
+          },
+          {
+            "card": "Opposition Agent",
+            "label": "agent"
+          }
+        ],
+        "hand": [
+          {
+            "card": "Rampant Growth",
+            "label": "growth"
+          }
+        ],
+        "library": [
+          {
+            "card": "Forest",
+            "label": "forest"
+          },
+          {
+            "card": "Island",
+            "label": "island"
+          },
+          {
+            "card": "Goblin Piker",
+            "label": "piker"
+          }
+        ]
+      }
+    ]
+  },
+  "timeline": [
+    {
+      "turn": 1,
+      "step": "PrecombatMain",
+      "player": "bob",
+      "do": {
+        "Cast": {
+          "object": "$growth",
+          "mana": [
+            "$f1",
+            "$f2"
+          ]
+        }
+      }
+    },
+    {
+      "turn": 1,
+      "step": "PrecombatMain",
+      "player": "bob",
+      "do": {
+        "Answer": {
+          "prompt": "Search",
+          "with": [
+            "$island"
+          ]
+        }
+      }
+    },
+    {
+      "turn": 1,
+      "step": "PrecombatMain",
+      "player": "bob",
+      "do": {
+        "Answer": {
+          "prompt": "Shuffle",
+          "with": [
+            "$piker",
+            "$forest"
+          ]
+        }
+      }
+    }
+  ],
+  "final": [
+    {
+      "View": {
+        "of": "Zone",
+        "player": "bob",
+        "zone": "Exile",
+        "is": []
+      }
+    },
+    {
+      "Tapped": {
+        "object": "Island",
+        "tapped": true
+      }
+    },
+    {
+      "View": {
+        "of": "Zone",
+        "player": "bob",
+        "zone": "Library",
+        "is": [
+          "$piker",
+          "$forest"
+        ]
+      }
+    }
+  ]
+}

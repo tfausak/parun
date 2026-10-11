@@ -1390,6 +1390,7 @@ arrivalOf destination = case destination of
   OutsideDestination.LibraryTop -> (Zone.Library, LibraryPosition.Top)
   -- Any end: the shuffle `arrivalShuffles` asks for follows.
   OutsideDestination.LibraryShuffled -> (Zone.Library, LibraryPosition.Top)
+  OutsideDestination.Exile -> (Zone.Exile, LibraryPosition.defaultValue)
 
 -- CR 701.24a: whether a destination shuffles the library once the cards are in
 -- -- Research's "shuffle ... into your library".
@@ -1398,6 +1399,7 @@ arrivalShuffles destination = case destination of
   OutsideDestination.Hand -> False
   OutsideDestination.LibraryTop -> False
   OutsideDestination.LibraryShuffled -> True
+  OutsideDestination.Exile -> False
 
 -- CR 400.11b: take one copy of this printing out of the player's pool and mint
 -- the card where the destination says. Split out from `bringInto` above because

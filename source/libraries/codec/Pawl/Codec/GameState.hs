@@ -27,7 +27,6 @@ import qualified Pawl.Codec.Combat as Combat
 import qualified Pawl.Codec.ContinuousEffect as ContinuousEffect
 import qualified Pawl.Codec.CounterKind as CounterKind
 import qualified Pawl.Codec.Daytime as Daytime
-import qualified Pawl.Codec.Decider as Decider
 import qualified Pawl.Codec.DelayedTrigger as DelayedTrigger
 import qualified Pawl.Codec.EndTurnSignal as EndTurnSignal
 import qualified Pawl.Codec.EnteringTogether as EnteringTogether
@@ -199,7 +198,7 @@ codec resolve = Fields.object $ do
   castPermissionsUsedThisTurn <- Fields.defaulted "castPermissionsUsedThisTurn" Map.empty (Common.naturalMap ObjectId.codec (Common.set CastFromZone.codec)) GameState.castPermissionsUsedThisTurn
   rollModifiersUsedThisTurn <- Fields.defaulted "rollModifiersUsedThisTurn" Map.empty (Common.naturalMap ObjectId.codec (Common.set ModifiedRoll.codec)) GameState.rollModifiersUsedThisTurn
   triggeredThisGame <- Fields.defaulted "triggeredThisGame" Seq.empty (Common.seq AbilityTriggered.codec) GameState.triggeredThisGame
-  pendingControl <- Fields.defaulted "pendingControl" Map.empty (Common.naturalMap PlayerId.codec Decider.codec) GameState.pendingControl
+  pendingControl <- Fields.defaulted "pendingControl" Map.empty (Common.naturalMap PlayerId.codec PlayerControl.codec) GameState.pendingControl
   control <- Fields.defaulted "control" Map.empty (Common.naturalMap PlayerId.codec (Common.nonEmpty PlayerControl.codec)) GameState.control
   monarch <- Fields.defaulted "monarch" Nothing (Common.maybe PlayerId.codec) GameState.monarch
   initiative <- Fields.defaulted "initiative" Nothing (Common.maybe PlayerId.codec) GameState.initiative
