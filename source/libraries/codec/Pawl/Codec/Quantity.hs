@@ -212,7 +212,7 @@ codec =
       -- clause is agentless.
       Arm.payload "WasCastFrom" CastFrom.codec Quantity.WasCastFrom (\x -> case x of Quantity.WasCastFrom y -> Just y; _ -> Nothing),
       -- CR 509.1h's declaration read against the object the quantity is aimed at,
-      -- so there is nothing on the wire at all -- WasKicked's shape rather than
+      -- so there is nothing on the wire at all -- Intensity's shape rather than
       -- ObjectCounters'.
       Arm.nullary "BlockersBeyondFirst" Quantity.BlockersBeyondFirst,
       -- A slot and a whole Quantity, in that order: which object to aim at, then
@@ -225,7 +225,7 @@ codec =
       Arm.payload "AgainstLastCardExiledWith" (AgainstLastCardExiledWith.codec codec) Quantity.AgainstLastCardExiledWith (\x -> case x of Quantity.AgainstLastCardExiledWith y -> Just y; _ -> Nothing),
       -- CR 702.167c: the arm above's shape, over the craft materials alone.
       Arm.payload "AgainstCraftMaterials" codec Quantity.AgainstCraftMaterials (\x -> case x of Quantity.AgainstCraftMaterials y -> Just y; _ -> Nothing),
-      -- CR 702.184c, engine-only: WasKicked's shape, nothing on the wire.
+      -- CR 702.184c, engine-only: Intensity's shape, nothing on the wire.
       Arm.nullary "StationMeasure" Quantity.StationMeasure
     ]
 
