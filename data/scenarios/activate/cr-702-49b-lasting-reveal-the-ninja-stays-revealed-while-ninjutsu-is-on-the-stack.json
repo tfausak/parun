@@ -1,6 +1,6 @@
 {
   "description": "CR 702.49b lasting reveal the ninja stays revealed while ninjutsu is on the stack",
-  "note": "Ninjutsu is activated from a hidden zone, so CR 602.2a reveals the Ninja and CR 701.20a keeps it revealed until the ability leaves the stack. The last check reads the battlefield Ninja, a new object (CR 400.7), which every player sees face up.",
+  "note": "Ninjutsu is activated in the declare blockers step, once bob (no creatures) has declared no blockers and the Piker is unblocked (CR 509.1h), and from a hidden zone, so CR 602.2a reveals the Ninja and CR 701.20a keeps it revealed until the ability leaves the stack. The last check reads the battlefield Ninja, a new object (CR 400.7), which every player sees face up.",
   "board": {
     "seats": [
       {
@@ -50,7 +50,7 @@
     },
     {
       "turn": 1,
-      "step": "DeclareAttackers",
+      "step": "DeclareBlockers",
       "player": "alice",
       "check": {
         "View": {
@@ -64,7 +64,7 @@
     },
     {
       "turn": 1,
-      "step": "DeclareAttackers",
+      "step": "DeclareBlockers",
       "player": "alice",
       "do": {
         "Activate": {
@@ -79,7 +79,7 @@
     },
     {
       "turn": 1,
-      "step": "DeclareAttackers",
+      "step": "DeclareBlockers",
       "player": "alice",
       "check": {
         "View": {
@@ -94,13 +94,13 @@
     },
     {
       "turn": 1,
-      "step": "DeclareAttackers",
+      "step": "DeclareBlockers",
       "player": "alice",
       "do": "Pass"
     },
     {
       "turn": 1,
-      "step": "DeclareAttackers",
+      "step": "DeclareBlockers",
       "player": "alice",
       "check": {
         "View": {
@@ -111,7 +111,7 @@
     },
     {
       "turn": 1,
-      "step": "DeclareAttackers",
+      "step": "DeclareBlockers",
       "player": "alice",
       "check": {
         "View": {

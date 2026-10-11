@@ -923,9 +923,11 @@ placeBorne srcId pending = do
           ts
   State.put (Game.putOnStack abilId gs2 {GameState.objects = Map.insert abilId obj (GameState.objects gs2)})
   -- CR 701.20a: a card whose reveal caused this ability to trigger stays revealed
-  -- until the ability leaves the stack. Stamped at placement, since the card is
-  -- unmarked until a player would next receive priority. Proven by the scenario
+  -- until the ability leaves the stack. Proven by the scenario
   -- cr-702-94b-lasting-reveal-the-miracle-card-stays-revealed-while-its-trigger-is-on-the-stack.
+  --
+  -- Not implemented: the card is unmarked between the reveal and the trigger's
+  -- placement (#4998).
   case PendingTrigger.firedBy pending of
     Just (GameEvent.Revealed revealed) -> Event.stampReveal (RevealWindow.WhileOnStack abilId) (Revealed.card revealed)
     _ -> pure ()
