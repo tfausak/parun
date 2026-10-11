@@ -886,16 +886,13 @@ searchingController :: PlayerId -> GameState -> Maybe (PlayerId, Timestamp)
 searchingController pid gs =
   Maybe.listToMaybe (reverse [(you, Object.timestamp o) | (source, PlayerEffect.ControlledWhileSearching) <- applying pid gs, Just oid <- [RowSource.object source], Just you <- [Projection.controllerOf oid gs], Just o <- [Game.lookupObject oid gs]])
 
--- CR 701.23 / Opposition Agent: the object whose row has `pid` exile each card
--- they find while searching their own library, the latest such row. That object
--- is the one the exiled cards are linked to (CR 607.1c).
---
--- Not implemented: where several rows apply, the ruling has the controlled
--- player's controller choose which one's exile applies; the latest is taken
--- (#4987).
-exilerWhileSearching :: PlayerId -> GameState -> Maybe ObjectId
-exilerWhileSearching pid gs =
-  Maybe.listToMaybe (reverse [oid | (source, PlayerEffect.ExilesFoundWhileSearching) <- applying pid gs, Just oid <- [RowSource.object source]])
+-- CR 701.23 / Opposition Agent: the objects whose rows have `pid` exile each
+-- card they find while searching their own library, in timestamp order. Each is
+-- a replacement of where the finds go, so where there are several the affected
+-- cards' owner chooses one (CR 616.1) -- the searcher, or whoever controls them.
+exilersWhileSearching :: PlayerId -> GameState -> [ObjectId]
+exilersWhileSearching pid gs =
+  [oid | (source, PlayerEffect.ExilesFoundWhileSearching) <- applying pid gs, Just oid <- [RowSource.object source]]
 
 -- CR 101.2 with CR 122.1: does an effect in force right now say that `pid` CAN'T
 -- GET counters of `kind`? Solemnity's first sentence and Melira, Sylvok

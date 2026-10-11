@@ -2266,12 +2266,36 @@ popControl pid row gs =
 -- row exiled them (CR 607.1c), not to the searching ability, whose
 -- recordExiledWith keeps a link already filed. Bound to no slot: the ruling
 -- has an instruction naming the found cards fail to see them in exile.
+--
+-- The same sentence's "you may play those cards for as long as they remain
+-- exiled, and you may spend mana as though it were mana of any color to cast
+-- them": a permission on each card (CR 601.3) for the Agent's controller as
+-- the card is exiled, with CR 609.4b's rider. On the card rather than read off
+-- the Agent, since it outlasts the Agent and ends only as the card leaves
+-- exile (CR 400.7).
 exileFoundFor :: ObjectId -> Seq.Seq ObjectId -> Game ()
 exileFoundFor agent exiled =
   State.modify' $ \gs ->
     let link = ExileLink.MkExileLink {ExileLink.source = agent, ExileLink.ability = Nothing}
         file oid = Map.insert oid link
-     in gs {GameState.exiledWith = foldr file (GameState.exiledWith gs) exiled}
+        permission you =
+          ExilePlayPermission.MkExilePlayPermission
+            { ExilePlayPermission.player = you,
+              ExilePlayPermission.source = agent,
+              ExilePlayPermission.expiry = Expiry.Type.Never,
+              ExilePlayPermission.spending = ManaSpending.AnyColor,
+              ExilePlayPermission.alternativeCost = Nothing,
+              ExilePlayPermission.condition = Nothing,
+              ExilePlayPermission.origin = PlayPermissionOrigin.Granted,
+              ExilePlayPermission.verb = PermissionVerb.Play,
+              ExilePlayPermission.increase = 0,
+              ExilePlayPermission.landEnters = TapState.Untapped
+            }
+        grant you o = o {Object.playableFromExile = Just (permission you)}
+        granted = case Projection.controllerOf agent gs of
+          Just you -> foldr (Map.adjust (grant you)) (GameState.objects gs) exiled
+          Nothing -> GameState.objects gs
+     in gs {GameState.exiledWith = foldr file (GameState.exiledWith gs) exiled, GameState.objects = granted}
 
 -- CR 723.1 / 805.8: the players an effect making `controller` control `target`
 -- reaches -- `target`, and under the shared team turns option each of their
@@ -4226,12 +4250,19 @@ applyOneEffect runSubgame resolving source controller legal chosen effect = case
             -- inside one search instruction can end it, since state-based
             -- actions wait for priority (CR 704.3) and the controlled player
             -- pays only with their own resources (CR 723.5a).
-            (searchController, exiler) <-
+            searchController <-
               if ownLibrary
-                then State.gets (\g -> (PlayerEffect.searchingController searcher g, PlayerEffect.exilerWhileSearching searcher g))
-                else pure (Nothing, Nothing)
+                then State.gets (PlayerEffect.searchingController searcher)
+                else pure Nothing
             let searchControl (you, stamp) = PlayerControl.MkPlayerControl {PlayerControl.decider = Decider.MkDecider you, PlayerControl.duration = ControlDuration.WhileSearching, PlayerControl.manaFromLandsOnly = False, PlayerControl.timestamp = stamp}
             Foldable.for_ searchController (State.modify' . pushControl searcher . searchControl)
+            -- CR 616.1: which Opposition Agent's exile replaces where the finds
+            -- go, chosen by the searcher -- under the control row just pushed,
+            -- whoever decides for them -- and elided at one.
+            exiler <-
+              if ownLibrary
+                then State.gets (PlayerEffect.exilersWhileSearching searcher) >>= Game.chooseAmong (\decider who -> Prompt.ChoosePermanent decider who source) searcher
+                else pure Nothing
             outsideAvailable <-
               if lookOutside
                 then State.gets (Event.outsideOffer filter_ source searcher)

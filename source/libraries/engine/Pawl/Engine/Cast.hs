@@ -1353,7 +1353,7 @@ spendingFor pid oid gs = case Game.lookupObject oid gs >>= Object.playableFromEx
 -- permission above. Tinybones, the Pickpocket prints the offer's; Dire Fleet
 -- Daredevil prints the permission's.
 --
--- Either sentence alone is a permission, so AnyType wins -- rule 118.14 grants
+-- Either sentence alone is a permission, so the wider wins -- rule 118.14 grants
 -- and never restricts, and two grants are not a conflict CR 101.2 has to settle.
 -- Each ARGUMENT is proved: Pawl.CastSpec's PickpocketAnyType drives the offer's
 -- and Pawl.CastRestrictionSpec's Dire Fleet Daredevil group the permission's. The
@@ -1361,8 +1361,13 @@ spendingFor pid oid gs = case Game.lookupObject oid gs >>= Object.playableFromEx
 -- carrying an offer over a card that also holds the permission.
 spendingWith :: ManaSpending -> PlayerId -> ObjectId -> GameState -> ManaSpending
 spendingWith offered pid oid gs = case (offered, spendingFor pid oid gs) of
+  (ManaSpending.AnyType, _) -> ManaSpending.AnyType
+  (_, ManaSpending.AnyType) -> ManaSpending.AnyType
+  -- CR 609.4b's "any color" is narrower than CR 118.14's "any type": a {C}
+  -- demand keeps wanting colorless mana, so it is never widened to AnyType.
+  (ManaSpending.AnyColor, _) -> ManaSpending.AnyColor
+  (_, ManaSpending.AnyColor) -> ManaSpending.AnyColor
   (ManaSpending.AsProduced, ManaSpending.AsProduced) -> ManaSpending.AsProduced
-  _ -> ManaSpending.AnyType
 
 -- CR 702.170d: may this player cast this PLOTTED card? Four conjuncts, and the
 -- rule states each of them:
