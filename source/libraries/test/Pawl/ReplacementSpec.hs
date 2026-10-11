@@ -41,6 +41,7 @@ import qualified Pawl.Spec as Spec
 import qualified Pawl.Support as S
 import qualified Pawl.Types.ActivatedAbility as ActivatedAbility
 import qualified Pawl.Types.ActiveReplacement as ActiveReplacement
+import qualified Pawl.Types.AnyNumberOf as AnyNumberOf
 import qualified Pawl.Types.BecameAttached as BecameAttached
 import qualified Pawl.Types.Card as Card
 import qualified Pawl.Types.CardName as CardName
@@ -1332,8 +1333,8 @@ festivalAfter s registry top = do
       (_, gs) = S.addPermanent forest S.alice board1
       answer :: Prompt.Prompt r -> State.State Int r
       answer p = case p of
-        Prompt.ChooseCardsFromAmong _ _ _ offered _ -> pure (Set.fromList (filter (`List.elem` topIds) offered))
-        Prompt.ChooseAnyNumberToSacrifice _ _ _ candidates -> do
+        Prompt.ChooseAnyNumber _ _ _ AnyNumberOf.CardsFromAmong offered _ -> pure (Set.fromList (filter (`List.elem` topIds) offered))
+        Prompt.ChooseAnyNumber _ _ _ AnyNumberOf.ToSacrifice candidates _ -> do
           asked <- State.get
           State.put (asked + 1)
           pure (Set.fromList (if asked == 0 then candidates else filter (== firstForest) candidates))

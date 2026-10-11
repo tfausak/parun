@@ -52,6 +52,7 @@ import qualified Pawl.Scenario as Scenario
 import qualified Pawl.Spec as Spec
 import qualified Pawl.Support as S
 import qualified Pawl.Types.Aggregation as Aggregation
+import qualified Pawl.Types.AnyNumberOf as AnyNumberOf
 import qualified Pawl.Types.Arithmetic as Arithmetic
 import qualified Pawl.Types.CardName as CardName
 import qualified Pawl.Types.CharacteristicPT as CharacteristicPT
@@ -1512,7 +1513,7 @@ suturedGhoulSpec s registry = Spec.describe s "Sutured Ghoul" $ do
 -- what is exiled.
 exilingEveryOffer :: Prompt.Prompt r -> r
 exilingEveryOffer p = case p of
-  Prompt.ChooseAnyNumberToExile _ _ _ offered _ -> Set.fromList offered
+  Prompt.ChooseAnyNumber _ _ _ AnyNumberOf.ToExile offered _ -> Set.fromList offered
   _ -> S.identityAnswer p
 
 -- The PROJECTED box -- the finished layer fold, never the printed values -- of

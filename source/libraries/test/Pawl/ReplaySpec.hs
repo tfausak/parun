@@ -21,6 +21,7 @@ import qualified Pawl.Engine.Target as Target
 import qualified Pawl.Registry as Registry
 import qualified Pawl.Spec as Spec
 import qualified Pawl.Support as S
+import qualified Pawl.Types.AnyNumberOf as AnyNumberOf
 import qualified Pawl.Types.AttackTarget as AttackTarget
 import qualified Pawl.Types.CardName as CardName
 import qualified Pawl.Types.CardType as CardType
@@ -337,6 +338,20 @@ combatReplaySpec s =
           Monad.forM_ [OptionalDecision.Declines, OptionalDecision.Exercises] $ \decision ->
             Spec.assertEqWith s "round trip" (Replay.decode p (Replay.encode p decision)) (Just decision)
           Spec.assertEqWith s "a printed may is not an answer to it" (Replay.decode p (Response.ChoseOptional OptionalDecision.Exercises)) Nothing
+        -- One prompt, one Response constructor per AnyNumberOf: each records and
+        -- replays its own answer, and no other kind's answer replays into it, so
+        -- a transcript cannot sacrifice what it should have revealed.
+        Spec.it s "ChooseAnyNumber records and replays each kind, and rejects every other kind's answer" $ do
+          let answer = Set.fromList [oid]
+              prompt purpose = Prompt.ChooseAnyNumber decider S.alice oid purpose [oid] Nothing
+              purposes = [minBound .. maxBound] :: [AnyNumberOf.AnyNumberOf]
+          Monad.forM_ purposes $ \purpose ->
+            Monad.forM_ purposes $ \other ->
+              Spec.assertEqWith
+                s
+                (show other <> " answering " <> show purpose)
+                (Replay.decode (prompt purpose) (Replay.encode (prompt other) answer))
+                (if other == purpose then Just answer else Nothing)
         -- CR 608.2d: a repeat's "may" has the same payload as riot's, so its own
         -- constructor keeps one from replaying as the other; a short transcript
         -- stops the loop.

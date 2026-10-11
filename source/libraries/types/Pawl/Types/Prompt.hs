@@ -8,6 +8,7 @@ import qualified Data.Sequence as Seq
 import qualified Data.Set as Set
 import qualified Numeric.Natural as Natural
 import qualified Pawl.Types.Action as Action
+import qualified Pawl.Types.AnyNumberOf as AnyNumberOf
 import qualified Pawl.Types.AttackTarget as AttackTarget
 import qualified Pawl.Types.BuybackDecision as BuybackDecision
 import qualified Pawl.Types.Card as Card
@@ -345,10 +346,6 @@ data Prompt r where
   -- takes, asked once per card with what earlier asks did not take; the
   -- PlayerId is the ref's chooser.
   ChooseCardFromAmong :: Decider.Decider -> PlayerId.PlayerId -> ObjectId.ObjectId -> NonEmpty.NonEmpty ObjectId.ObjectId -> Prompt ObjectId.ObjectId
-  -- | CR 608.2d: which cards of a bound group an "up to" ChosenCardFromAmong
-  -- takes, at most the Natural and none included; asked at one candidate,
-  -- skipped at zero. The PlayerId is the ref's chooser.
-  ChooseCardsFromAmong :: Decider.Decider -> PlayerId.PlayerId -> ObjectId.ObjectId -> [ObjectId.ObjectId] -> Natural.Natural -> Prompt (Set.Set ObjectId.ObjectId)
   -- | CR 309.2a \/ 701.49a: which of the dungeon printings they own a venturing
   -- player brings in from outside the game (CR 400.11), there being no object
   -- for it yet.
@@ -709,30 +706,12 @@ data Prompt r where
   -- reason: whether the answer is forced is a question about subsets, so eliding
   -- it would decide for the player.
   ChooseCollectEvidence :: Decider.Decider -> PlayerId.PlayerId -> ObjectId.ObjectId -> [ObjectId.ObjectId] -> Natural.Natural -> Prompt (Set.Set ObjectId.ObjectId)
-  -- | CR 614.1c with CR 614.13a: any number of the candidates sacrificed as the
-  -- permanent enters, the empty set included; asked at one candidate, skipped
-  -- at zero. Answers as Response.ChoseSacrifices.
-  ChooseAnyNumberToSacrifice :: Decider.Decider -> PlayerId.PlayerId -> ObjectId.ObjectId -> [ObjectId.ObjectId] -> Prompt (Set.Set ObjectId.ObjectId)
-  -- | CR 702.38a with CR 701.20a: any number of the cards in the entering
-  -- object's controller's hand revealed as it enters, the empty set included;
-  -- the arm above one zone over, and asked at one candidate for its reason.
-  -- Answers as Response.ChoseReveals.
-  ChooseAnyNumberToReveal :: Decider.Decider -> PlayerId.PlayerId -> ObjectId.ObjectId -> [ObjectId.ObjectId] -> Prompt (Set.Set ObjectId.ObjectId)
-  -- | CR 614.1c with CR 614.13a: any number of the offered graveyard cards
-  -- exiled as the permanent enters, at most the Natural where there is one;
-  -- ChooseAnyNumberToSacrifice's posture one zone over. Answers as
-  -- Response.ChoseExilesFromGraveyard.
-  ChooseAnyNumberToExile :: Decider.Decider -> PlayerId.PlayerId -> ObjectId.ObjectId -> [ObjectId.ObjectId] -> Maybe Natural.Natural -> Prompt (Set.Set ObjectId.ObjectId)
-  -- | CR 608.2d: any number of the matching permanents a resolving effect acts
-  -- on or binds (Pawl.Types.ChosenPermanents at HowMany.UpTo, whose chooser
-  -- this PlayerId is), at most the Natural where there is one;
-  -- ChooseAnyNumberToSacrifice's shape. Not ChooseTargets (CR 115.1, CR
-  -- 115.10a).
-  ChooseAnyNumberOfPermanents :: Decider.Decider -> PlayerId.PlayerId -> ObjectId.ObjectId -> [ObjectId.ObjectId] -> Maybe Natural.Natural -> Prompt (Set.Set ObjectId.ObjectId)
-  -- | CR 701.9b / 107.1c: any number of the matching cards in the asked seat's
-  -- own hand that it discards (Pawl.Types.AnyNumberDiscard), at most the Natural
-  -- where there is one; the arm above one zone over.
-  ChooseAnyNumberToDiscard :: Decider.Decider -> PlayerId.PlayerId -> ObjectId.ObjectId -> [ObjectId.ObjectId] -> Maybe Natural.Natural -> Prompt (Set.Set ObjectId.ObjectId)
+  -- | Any number of the candidates, the empty set included, at most the Natural
+  -- where there is one; the AnyNumberOf says what they are and what is done to
+  -- them. Asked at one candidate, where declining is a second answer, and
+  -- skipped at zero. Pawl.Engine.Replay answers each AnyNumberOf with its own
+  -- Response constructor.
+  ChooseAnyNumber :: Decider.Decider -> PlayerId.PlayerId -> ObjectId.ObjectId -> AnyNumberOf.AnyNumberOf -> [ObjectId.ObjectId] -> Maybe Natural.Natural -> Prompt (Set.Set ObjectId.ObjectId)
   -- | CR 608.2d: which one of the matching permanents a resolving effect acts
   -- on (Pawl.Types.ChosenPermanents at HowMany.Exactly), asked once per pick;
   -- at none the instruction is impossible (CR 101.3). Not ChooseTargets (CR
@@ -841,7 +820,7 @@ data Prompt r where
   OrderForEach :: Decider.Decider -> PlayerId.PlayerId -> ObjectId.ObjectId -> [Recipient.Recipient] -> Prompt [Natural.Natural]
   -- | CR 608.2d: any number of the members a per-member loop swept, the ones
   -- its body then runs for (Pawl.Types.LoopMembers' AnyNumber); asked at one
-  -- candidate, skipped at zero. ChooseAnyNumberOfPermanents' shape over the
+  -- candidate, skipped at zero. ChooseAnyNumber's shape over the
   -- loop's own member type. Answers as Response.ChoseLoopMembers.
   ChooseLoopMembers :: Decider.Decider -> PlayerId.PlayerId -> ObjectId.ObjectId -> [Recipient.Recipient] -> Prompt (Set.Set Recipient.Recipient)
   -- | CR 608.2d: whether an Effect.Repeat runs its body again; the Natural is how

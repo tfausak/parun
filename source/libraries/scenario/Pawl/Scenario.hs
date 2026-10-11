@@ -816,7 +816,6 @@ withinOffer prompt chosen = case prompt of
   Prompt.Type.CastWhileSearching _ _ offers -> all (`elem` offers) chosen
   Prompt.Type.ChooseTimeTravel _ _ _ objects -> all (`elem` objects) (Map.keys chosen)
   Prompt.Type.ChooseSacrifices _ _ _ objects _ _ -> all (`elem` objects) chosen
-  Prompt.Type.ChooseAnyNumberToSacrifice _ _ _ objects -> all (`elem` objects) chosen
   Prompt.Type.ChooseOfferedCastSpell _ _ offers -> chosen `elem` offers
   Prompt.Type.RollDie sides -> 1 <= chosen && chosen <= sides
   Prompt.Type.ChooseMixedCounterRemoval _ _ _ _ _ bearers -> Map.isSubmapOfBy (Map.isSubmapOfBy (<=)) chosen bearers
@@ -844,7 +843,7 @@ withinOffer prompt chosen = case prompt of
   Prompt.Type.ChooseMovedCounterOrNone _ _ _ _ kinds -> all (`elem` kinds) chosen
   Prompt.Type.ChooseDamageSource _ _ _ objects -> chosen `elem` objects
   Prompt.Type.ChooseCardInHand _ _ _ cards -> chosen `elem` cards
-  Prompt.Type.ChooseCardsFromAmong _ _ _ cards _ -> all (`elem` cards) chosen
+  Prompt.Type.ChooseAnyNumber _ _ _ _ objects _ -> all (`elem` objects) chosen
   Prompt.Type.ChooseDungeon _ _ dungeons -> chosen `elem` dungeons
   Prompt.Type.ChooseSticker _ _ _ offered -> chosen `elem` offered
   Prompt.Type.ChooseStickerOrNone _ _ _ offered -> all (`elem` offered) chosen
@@ -869,10 +868,6 @@ withinOffer prompt chosen = case prompt of
   Prompt.Type.ChooseExilesFromGraveyard _ _ _ cards _ -> all (`elem` cards) chosen
   Prompt.Type.ChooseMaterials _ _ _ objects _ _ -> all (`elem` objects) chosen
   Prompt.Type.ChooseCollectEvidence _ _ _ cards _ -> all (`elem` cards) chosen
-  Prompt.Type.ChooseAnyNumberToReveal _ _ _ cards -> all (`elem` cards) chosen
-  Prompt.Type.ChooseAnyNumberToExile _ _ _ cards _ -> all (`elem` cards) chosen
-  Prompt.Type.ChooseAnyNumberOfPermanents _ _ _ objects _ -> all (`elem` objects) chosen
-  Prompt.Type.ChooseAnyNumberToDiscard _ _ _ cards _ -> all (`elem` cards) chosen
   Prompt.Type.ChoosePermanent _ _ _ objects -> chosen `elem` objects
   Prompt.Type.ChooseTapsForTotalPower _ _ _ objects _ -> all (`elem` objects) chosen
   Prompt.Type.ChooseTaps _ _ _ objects _ -> all (`elem` objects) chosen

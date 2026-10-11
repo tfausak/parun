@@ -2040,6 +2040,7 @@ library types
     Pawl.Types.Ante
     Pawl.Types.AnyNumberDiscard
     Pawl.Types.AnyNumberMatching
+    Pawl.Types.AnyNumberOf
     Pawl.Types.AppliedReduction
     Pawl.Types.Arithmetic
     Pawl.Types.ArmDelayedTrigger

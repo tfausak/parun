@@ -70,6 +70,7 @@ import qualified Pawl.Types.AbilityTriggered as AbilityTriggered
 import qualified Pawl.Types.ActiveCopy as ActiveCopy
 import qualified Pawl.Types.ActiveReplacement as ActiveReplacement
 import qualified Pawl.Types.Affected as Affected
+import qualified Pawl.Types.AnyNumberOf as AnyNumberOf
 import qualified Pawl.Types.Arrival as Arrival
 import qualified Pawl.Types.ArrivalEnd as ArrivalEnd
 import qualified Pawl.Types.AsCopy as AsCopy
@@ -2694,7 +2695,7 @@ apply batch candidate event =
                 legal chosen = Replacement.jointlyPayable chosen owed || not (Replacement.jointlyPayable Set.empty owed)
                 decider = Decide.deciderFor controller gs
                 ask rejected = do
-                  answer <- Game.choose (Prompt.ChooseAnyNumberToSacrifice decider controller oid offered)
+                  answer <- Game.choose (Prompt.ChooseAnyNumber decider controller oid AnyNumberOf.ToSacrifice offered Nothing)
                   -- FILTERED, NOT TRUSTED (#222): an answer naming a permanent
                   -- that was never offered would otherwise sacrifice it and pay
                   -- for a counter with it.
@@ -2848,12 +2849,12 @@ apply batch candidate event =
             chosen <-
               -- Where the rules leave nothing to ask, don't prompt: with no
               -- candidate the empty set is the only answer. ONE candidate is
-              -- still asked, ChooseAnyNumberToSacrifice's posture -- "any number"
+              -- still asked, the sacrifice's posture -- "any number"
               -- leaves two distinguishable answers there.
               if null offered
                 then pure Set.empty
                 else do
-                  answer <- Game.choose (Prompt.ChooseAnyNumberToReveal (Decide.deciderFor controller gs) controller oid offered)
+                  answer <- Game.choose (Prompt.ChooseAnyNumber (Decide.deciderFor controller gs) controller oid AnyNumberOf.ToReveal offered Nothing)
                   -- FILTERED, NOT TRUSTED (#222): an answer naming a card that
                   -- was never offered would otherwise buy counters with a card
                   -- sharing no creature type, or with a card in another hand.
@@ -2918,7 +2919,7 @@ apply batch candidate event =
                 True
                 (pure (Just controller))
                 (\decider asked candidates -> Prompt.ChooseCardInGraveyard decider asked oid candidates Seq.empty)
-                (\decider asked candidates ceiling_ -> Prompt.ChooseAnyNumberToExile decider asked oid candidates ceiling_)
+                (\decider asked candidates ceiling_ -> Prompt.ChooseAnyNumber decider asked oid AnyNumberOf.ToExile candidates ceiling_)
                 amount
                 count
                 offered

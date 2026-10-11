@@ -8,6 +8,7 @@ import qualified Data.Set as Set
 import Numeric.Natural (Natural)
 import qualified Pawl.Engine.Replay as Replay
 import qualified Pawl.Types.Action as Action
+import qualified Pawl.Types.AnyNumberOf as AnyNumberOf
 import Pawl.Types.Prompt (Prompt)
 import qualified Pawl.Types.Prompt as Prompt
 
@@ -43,7 +44,7 @@ discardNewest ids n = List.genericTake n (reverse ids)
 -- degrading gracefully and wrong for anything meant to develop a board.
 declining :: Prompt r -> r
 declining p = case p of
-  Prompt.ChooseAnyNumberToSacrifice {} -> Set.empty
+  Prompt.ChooseAnyNumber _ _ _ AnyNumberOf.ToSacrifice _ _ -> Set.empty
   _ -> Replay.defaultAnswer p
 
 -- What the whole-game scripts below share: 'declining', plus the discard a long

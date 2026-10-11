@@ -335,7 +335,7 @@ shapeOf prompt = case prompt of
   Prompt.ChooseCardInGraveyard {} -> object
   Prompt.ChooseCardInHand {} -> object
   Prompt.ChooseCardFromAmong {} -> object
-  Prompt.ChooseCardsFromAmong {} -> setOf object
+  Prompt.ChooseAnyNumber {} -> setOf object
   Prompt.ChooseDungeon {} -> viaCodec Codec.PrintingId.codec
   Prompt.ChooseSticker {} -> viaCodec Codec.StickerRef.codec
   Prompt.ChooseStickerOrNone {} -> maybeOf (viaCodec Codec.StickerRef.codec)
@@ -405,11 +405,6 @@ shapeOf prompt = case prompt of
   Prompt.ChooseExilesFromGraveyard {} -> setOf object
   Prompt.ChooseMaterials {} -> setOf object
   Prompt.ChooseCollectEvidence {} -> setOf object
-  Prompt.ChooseAnyNumberToSacrifice {} -> setOf object
-  Prompt.ChooseAnyNumberToReveal {} -> setOf object
-  Prompt.ChooseAnyNumberToExile {} -> setOf object
-  Prompt.ChooseAnyNumberOfPermanents {} -> setOf object
-  Prompt.ChooseAnyNumberToDiscard {} -> setOf object
   Prompt.ChoosePermanent {} -> object
   Prompt.ChooseTapsForTotalPower {} -> setOf object
   Prompt.ChooseTaps {} -> setOf object

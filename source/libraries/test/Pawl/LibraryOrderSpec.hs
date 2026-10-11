@@ -37,6 +37,7 @@ import qualified Pawl.Spec as Spec
 import qualified Pawl.Support as S
 import qualified Pawl.Types.ActivatedAbility as ActivatedAbility
 import qualified Pawl.Types.Activator as Activator
+import qualified Pawl.Types.AnyNumberOf as AnyNumberOf
 import qualified Pawl.Types.Asked as Asked
 import qualified Pawl.Types.BeginningStep as BeginningStep
 import qualified Pawl.Types.Card as Card.Type
@@ -1383,7 +1384,7 @@ creatureFilter = Filter.Type.HasCardType CardType.Creature
 namesInstead :: ObjectId.ObjectId -> Prompt.Prompt r -> r
 namesInstead wanted p = case p of
   Prompt.ChooseSacrifices {} -> Set.singleton wanted
-  Prompt.ChooseAnyNumberToSacrifice {} -> Set.empty
+  Prompt.ChooseAnyNumber _ _ _ AnyNumberOf.ToSacrifice _ _ -> Set.empty
   Prompt.ChooseTapsForTotalPower _ _ _ candidates _ -> Set.fromList candidates
   _ -> S.identityAnswer p
 
@@ -1394,7 +1395,7 @@ sacrifices :: ObjectId.ObjectId -> Prompt.Prompt r -> r
 sacrifices wanted p = case p of
   Prompt.ChooseSacrifices _ _ _ candidates _ _ ->
     if elem wanted candidates then Set.singleton wanted else Set.fromList (take 1 candidates)
-  Prompt.ChooseAnyNumberToSacrifice {} -> Set.empty
+  Prompt.ChooseAnyNumber _ _ _ AnyNumberOf.ToSacrifice _ _ -> Set.empty
   Prompt.ChooseTapsForTotalPower _ _ _ candidates _ -> Set.fromList candidates
   _ -> S.identityAnswer p
 
