@@ -1081,7 +1081,7 @@ data Context = MkContext
     -- (ControlledByDefendingPlayer, CR 702.39a). One player for an attacking
     -- source; for a source with no attack to resolve it, CR 802.2a's every
     -- defending player the controller could choose (Yare). Supplied by the caller for
-    -- sourceMeasures's reason -- this module holds no game state and cannot read the
+    -- sourceMeasures' reason -- this module holds no game state and cannot read the
     -- combat record -- by Pawl.Engine.Target.admittedGiven for a target slot and
     -- by Pawl.Engine.CombatRestriction.inForce for a CR 508.1c gate.
     --
@@ -1167,7 +1167,7 @@ data Context = MkContext
     slotObjects :: Map.Map SlotName.SlotName (Set.Set ObjectId.ObjectId),
     -- CR 702.122d / 101.2: the objects an effect in force says CAN'T CREW
     -- VEHICLES, for the one atom that asks (CantCrewVehicles). Supplied by the
-    -- caller for sourceMeasures's reason -- this module holds no game state and
+    -- caller for sourceMeasures' reason -- this module holds no game state and
     -- cannot gather another permanent's static abilities -- and by ONE caller,
     -- Pawl.Engine.Cost.tapCandidates, which is the single pool both CR 118.3's
     -- payability gate and rule 702.122a's payment prompt read.
@@ -1184,7 +1184,7 @@ data Context = MkContext
     -- CR 201.1 / 709.4a: the NAMES of the objects the surrounding announcement's
     -- slots hold, for the one atom that compares a candidate's against them
     -- (SameNameAsBound, Harness the Storm). Supplied by the caller for
-    -- sourceMeasures's reason -- this module holds no game state and cannot read an
+    -- sourceMeasures' reason -- this module holds no game state and cannot read an
     -- object's names -- through Pawl.Engine.Projection.framedBySlots, where a
     -- target slot's Filter is matched and where every one of a resolution's
     -- positions is (Bifurcate's search filter, Hour of Glory's hand sweep, Grim
@@ -1206,7 +1206,7 @@ data Context = MkContext
     --
     -- What keeps a card out of those positions is Pawl.FilterPositionLintSpec's
     -- "CR 709.4a no card asks SameNameAsBound outside a mode's target slot, a search filter, a hand sweep or a life loss amount",
-    -- the sweep sourceMeasures's and defendingPlayer's siblings each have.
+    -- the sweep sourceMeasures' and defendingPlayer's siblings each have.
     slotNames :: Map.Map SlotName.SlotName (Set.Set CardName.CardName),
     -- CR 110.2: the CONTROLLERS of the objects the surrounding announcement's
     -- slots hold, for the one atom that compares a candidate's against them
@@ -1454,7 +1454,7 @@ data Context = MkContext
     -- but those four -- sourceAttachedTo's posture rather than slotControllers'.
     -- What keeps a card out of the other positions is Pawl.CardSpec's "CR 702.16k
     -- no card asks OfChosenPlayer outside a keyword's own filter", the sweep
-    -- sourceMeasures's, slotNames', sourceAttachedTo's and sourceChosenNames'
+    -- sourceMeasures', slotNames', sourceAttachedTo's and sourceChosenNames'
     -- siblings each have.
     carrierChosenPlayer :: Maybe PlayerId.PlayerId,
     -- CR 702.16b / CR 702.16k: the controller of the spell or ability being
