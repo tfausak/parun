@@ -5406,12 +5406,12 @@ designates :: KeywordDesignator.KeywordDesignator Keyword -> Keyword -> Bool
 designates designator keyword = case designator of
   KeywordDesignator.OfFamily family -> familyOf keyword == Just family
   KeywordDesignator.OfKeyword whole -> whole == keyword
-  -- A sticker kicker is in the Kicker family but not linked (CR 702.33h,
-  -- Wicker Picker's ruling); Pawl.StickerSpec's Faerie Squadron case proves it.
+  -- The Kicker family, which familyOf assigns without a wildcard, less the
+  -- sticker kicker it holds but CR 702.33e does not link (CR 702.33h, Wicker
+  -- Picker's ruling); Pawl.StickerSpec's Faerie Squadron case proves it.
   KeywordDesignator.PrintedKicker -> case keyword of
-    Keyword.Kicker _ -> True
-    Keyword.Multikicker _ -> True
-    _ -> False
+    Keyword.StickerKicker _ -> False
+    _ -> familyOf keyword == Just KeywordFamily.Kicker
 
 -- | CR 601.2b: how many times the costs of the keywords a designator names were
 -- declared, summed over a paidCosts record -- Quantity.TimesPaid's count, and

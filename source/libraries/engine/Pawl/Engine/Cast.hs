@@ -71,7 +71,6 @@ import qualified Pawl.Types.GameState as GameState
 import qualified Pawl.Types.GrantedAbility as GrantedAbility
 import Pawl.Types.Keyword (Keyword)
 import qualified Pawl.Types.Keyword as Keyword.Type
-import qualified Pawl.Types.KeywordDesignator as KeywordDesignator
 import qualified Pawl.Types.KickerDecision as KickerDecision
 import qualified Pawl.Types.LandPlayed as LandPlayed
 import qualified Pawl.Types.Mana as Mana.Type
@@ -2684,32 +2683,25 @@ followIntoPools old new gs =
         | otherwise = unit
    in gs {GameState.manaPool = fmap (Mana.Type.MkMana . fmap follow . Mana.Type.unwrap) (GameState.manaPool gs)}
 
--- CR 702.33g/702.113b's own scope: a Quantity naming a CAST-ANNOUNCEMENT fact
--- rather than a board or resolution one -- Quantity.TimesPaid PrintedKicker (CR
--- 702.33d's "kicked" as CR 702.33e links it to kicker or multikicker, the only
--- reading a bare if-clause needs), Quantity.CastUsing (which ALTERNATIVE cost candidate CR
--- 601.2b's announcement settled on -- awaken, cleave, overload and the other
--- CR 601.3-listed candidates), and Quantity.Literal, the threshold side of
--- every such comparison. Nothing else qualifies, on purpose: rule 702.33g/113b
--- narrow CR 601.2c targets for exactly these two readings, so a clash's coin
+-- CR 601.2c's own scope ("only if an alternative or additional cost ... was
+-- chosen"), with 702.33g, 702.113b, 702.166d and 702.174m its instances: a
+-- Quantity naming a CAST-ANNOUNCEMENT fact rather than a board or resolution
+-- one -- Quantity.TimesPaid (which optional additional costs CR 601.2b's
+-- announcement declared, and how many times), Quantity.CastUsing (which
+-- ALTERNATIVE cost candidate it settled on -- awaken, cleave, overload and the
+-- other CR 601.3-listed candidates), and Quantity.Literal, the threshold side of
+-- every such comparison. Nothing else qualifies, on purpose: CR 601.2c narrows
+-- targets for exactly these two readings, so a clash's coin
 -- flip, a random flip, or a comparison against CR 601.2b's own X (not yet
 -- announced when trimModeTargetSlotsBy runs, see below) must NOT be treated as
 -- already decided here -- ClashSpec's, CoinSpec's and TargetSpec's joint-X
 -- group are what this line fixes over the first cut, which read every
--- Condition and wrongly collapsed all three to False.
---
--- Quantity.TimesPaid's other designators -- CR 702.33c's multikicker COUNT and
--- rule 702.33f's "if kicked with its [A] kicker" -- are deliberately excluded,
--- not merely unhandled: they answer a per-cost or per-count question this early
--- narrowing cannot yet ask (kicker's declaration is settled by CR 601.2c, but WHICH of
--- several named kicker costs, or how many times, is a detail this function
--- has no board to re-derive), so a clause built from it falls through to the
--- conservative "applies" default below rather than being misjudged. No card in
--- the pool conditions a target on it yet.
+-- Condition and wrongly collapsed all three to False. Pawl.CastSpec's Jilt
+-- (kicker) and Valley Rally (gift) cases prove the TimesPaid arm.
 isCastAnnouncementQuantity :: Quantity.Quantity -> Bool
 isCastAnnouncementQuantity q = case q of
   Quantity.Literal _ -> True
-  Quantity.TimesPaid KeywordDesignator.PrintedKicker -> True
+  Quantity.TimesPaid _ -> True
   Quantity.CastUsing _ -> True
   _ -> False
 
@@ -2726,8 +2718,8 @@ isCastAnnouncementCondition condition = case condition of
 -- CR 702.33g/702.113b: does a clause's printed "if" hold ALREADY, at CR
 -- 601.2c's step -- the same question Resolve.gateHolds asks a clause when it is
 -- REACHED, narrowed to what is answerable this early and to what rule 702.33g's
--- family actually covers (isCastAnnouncementCondition above). Kicker's and
--- awaken's announcements (stampPaidCosts, stampCastUsing) are both settled above
+-- family actually covers (isCastAnnouncementCondition above). The additional and
+-- alternative cost announcements (stampPaidCosts, stampCastUsing) are settled above
 -- this step, so a Quantity.TimesPaid or Quantity.CastUsing condition reads the
 -- real decision. Anything else -- a board read, a resolution-time random result,
 -- CR 601.2b's own X (announced only AFTER this step) -- is treated as APPLYING,
@@ -2750,11 +2742,12 @@ clauseAppliesAt pid sid gs clause = case Clause.condition clause of
 -- Answered from that candidate alone rather than through Condition.holds/a
 -- GameState, since neither exists at this question's moment.
 --
---   * Quantity.TimesPaid PrintedKicker reads 0 UNCONDITIONALLY -- CR 702.33a's kicker is
---     optional under every candidate (CR 118.9b), so a kicked-only target must
---     never be REQUIRED to offer a cast at all; the player may always decline
---     it. Cast.castProposed's own clauseAppliesAt (the live, post-announcement
---     read) is what judges a kicked-only slot once the choice is in.
+--   * Quantity.TimesPaid reads 0 UNCONDITIONALLY -- every cost Object.paidCosts
+--     records is optional under every candidate (CR 601.2b), so a paid-only
+--     target must never be REQUIRED to offer a cast at all; the player may
+--     always decline it. Cast.castProposed's own clauseAppliesAt (the live,
+--     post-announcement read) is what judges a paid-only slot once the choice
+--     is in.
 --   * Quantity.CastUsing family reads 1 exactly when `castFor`'s own family
 --     matches, Pawl.Engine.Quantity's CastUsing arm's board read done here
 --     without a board: `familyOf =<< castFor`. This is what SUBSUMES
@@ -2780,7 +2773,7 @@ holdsForCandidate castFor condition = case condition of
 candidateQuantity :: Maybe Keyword -> Quantity.Quantity -> Maybe Integer
 candidateQuantity castFor q = case q of
   Quantity.Literal n -> Just n
-  Quantity.TimesPaid KeywordDesignator.PrintedKicker -> Just 0
+  Quantity.TimesPaid _ -> Just 0
   Quantity.CastUsing family -> Just (if (Keyword.familyOf =<< castFor) == Just family then 1 else 0)
   _ -> Nothing
 

@@ -999,6 +999,30 @@ kickerBoard mountain burstLightning hillGiant mountains =
       (gs, spellId) = S.handOne burstLightning gs1
    in (gs, spellId, giantId)
 
+-- Jilt (Scryfall, 2026-10-10): {1}{U} Instant, "Kicker {1}{R}. Return target
+-- creature to its owner's hand. If this spell was kicked, it deals 2 damage to
+-- another target creature." Alice has two Islands and two Mountains; bob has a
+-- Hill Giant and, when `bears`, a Grizzly Bears.
+jiltBoard :: (Monad m) => Spec.Spec m n -> Registry.Registry m -> Bool -> m (GameState.GameState, ObjectId.ObjectId, ObjectId.ObjectId, ObjectId.ObjectId)
+jiltBoard s registry bears = do
+  island <- S.printingOf s registry "Island"
+  mountain <- S.printingOf s registry "Mountain"
+  jilt <- S.printingOf s registry "Jilt"
+  hillGiant <- S.printingOf s registry "Hill Giant"
+  grizzlyBears <- S.printingOf s registry "Grizzly Bears"
+  let (giantId, withGiant) = S.addPermanent hillGiant S.bob (S.landsFor mountain S.alice 2 (S.landsInPlay island 2))
+      (bearsId, withBears) = if bears then S.addPermanent grizzlyBears S.bob withGiant else (giantId, withGiant)
+      (gs, spellId) = S.handOne jilt withBears
+  pure (gs, spellId, giantId, bearsId)
+
+-- Kicks `times` times and pins each of Jilt's slots: "target" at `bounced`,
+-- "other" at `damaged`.
+jilts :: Natural -> ObjectId.ObjectId -> ObjectId.ObjectId -> Prompt.Prompt r -> r
+jilts times bounced damaged p = case p of
+  Prompt.ChooseKicker {} -> KickerDecision.MkKickerDecision times
+  Prompt.ChooseTargets _ _ _ sets -> Map.mapWithKey (\slot _ -> Set.singleton (Recipient.ToCreature (if slot == SlotName.MkSlotName (Text.pack "target") then bounced else damaged))) sets
+  _ -> S.identityAnswer p
+
 -- Answers CR 702.33a's kicker question with `decision` and aims the one target
 -- slot at `victim` -- PINNED to that id rather than searched for, so a mutation
 -- cannot be repaired by an answerer that finds another legal target. Everything
@@ -1018,8 +1042,8 @@ bursts decision victim p = case p of
 kickerAnnouncements :: [Response.Response] -> [KickerDecision.KickerDecision]
 kickerAnnouncements = Maybe.mapMaybe (\response -> case response of Response.AnnouncedKicker d -> Just d; _ -> Nothing)
 
--- CR 702.33c: answers every kicker question with the same count. Everything else
--- defers to S.identityAnswer.
+-- CR 702.33c: answers every kicker question with the same count, CR 702.174a's
+-- gift promise among them. Everything else defers to S.identityAnswer.
 kicksTimes :: Natural -> Prompt.Prompt r -> r
 kicksTimes times p = case p of
   Prompt.ChooseKicker {} -> KickerDecision.MkKickerDecision times
@@ -1391,6 +1415,46 @@ kickerSpec s registry = Spec.describe s "Kicker" $ do
         (asked, _) = castAndResolve (bursts (KickerDecision.MkKickerDecision 1) giantId) gs spellId
     Spec.assertEqWith s "no kicker cost to offer" (fmap (Keyword.Engine.optionalCosts . Face.keywordSet) (Game.faceOf spellId gs)) (Just [])
     Spec.assertEqWith s "so no kicker question was put, on a board that could pay one" (kickerAnnouncements asked) []
+  -- CR 702.33g: Jilt's "another target creature" belongs to its kicked clause, so
+  -- unkicked it is cast as if it had no such target. One creature on the board,
+  -- which an unkicked Jilt can bounce and a two-target one could not be cast at.
+  Spec.it s "CR 702.33g unkicked Jilt needs no second target: the lone Hill Giant returns to bob's hand" $ do
+    (gs, spellId, giantId, _) <- jiltBoard s registry False
+    let (asked, after) = castAndResolve (jilts 0 giantId giantId) gs spellId
+        settled = S.settleSba after
+    Spec.assertEqWith s "the Giant is in bob's hand" (handSize S.bob settled) 1
+    Spec.assertEqWith s "the player was asked, and declined" (kickerAnnouncements asked) [KickerDecision.MkKickerDecision 0]
+    Spec.assertEqWith s "only {1}{U} was paid" (S.tappedCount S.alice settled) 2
+  -- The kicked half on a board with two creatures: the second target is chosen,
+  -- and takes the 2 damage.
+  Spec.it s "CR 702.33g kicked Jilt bounces the Hill Giant and deals 2 to the Grizzly Bears" $ do
+    (gs, spellId, giantId, bearsId) <- jiltBoard s registry True
+    let (_, after) = castAndResolve (jilts 1 giantId bearsId) gs spellId
+        settled = S.settleSba after
+    Spec.assertEqWith s "the Giant is in bob's hand" (handSize S.bob settled) 1
+    Spec.assertEqWith s "2 damage destroyed the Bears, the one card in bob's graveyard" (length (Game.zoneMembers Zone.Graveyard S.bob settled)) 1
+    Spec.assertEqWith s "{1}{U} plus the kicker {1}{R}: all four lands are tapped" (S.tappedCount S.alice settled) 4
+  -- CR 702.174m, CR 702.33g's twin for gift: Valley Rally ({2}{R} Instant, "Gift
+  -- a Food. Creatures you control get +2/+0 until end of turn. If the gift was
+  -- promised, target creature you control gains first strike until end of turn",
+  -- Scryfall 2026-10-10) needs its target only if promised, so alice, with no
+  -- creature, can still cast it unpromised.
+  Spec.it s "CR 702.174m unpromised Valley Rally needs no target: it resolves with no creature on alice's side" $ do
+    mountain <- S.printingOf s registry "Mountain"
+    rally <- S.printingOf s registry "Valley Rally"
+    let (gs, spellId) = S.handOne rally (S.landsInPlay mountain 3)
+        (_, after) = castAndResolve (kicksTimes 0) gs spellId
+    Spec.assertEqWith s "Valley Rally resolved into alice's graveyard" (length (Game.zoneMembers Zone.Graveyard S.alice after)) 1
+    Spec.assertEqWith s "{2}{R} was paid" (S.tappedCount S.alice after) 3
+  Spec.it s "CR 702.174m promised Valley Rally gives alice's Grizzly Bears first strike as well as +2/+0" $ do
+    mountain <- S.printingOf s registry "Mountain"
+    rally <- S.printingOf s registry "Valley Rally"
+    grizzlyBears <- S.printingOf s registry "Grizzly Bears"
+    let (bearsId, withBears) = S.addPermanent grizzlyBears S.alice (S.landsInPlay mountain 3)
+        (gs, spellId) = S.handOne rally withBears
+        (_, after) = castAndResolve (kicksTimes 1) gs spellId
+    Spec.assertBool s (Projection.hasKeyword Keyword.FirstStrike bearsId after) "the Bears has first strike"
+    Spec.assertEqWith s "and is a 4/2" (S.powerToughnessOf bearsId after) (Just (4, 2))
   -- CR 702.33a's "an additional cost", singular: kicker is payable once, so an
   -- answer of two is text Burst Lightning does not have. Nine Mountains, which is
   -- {R} plus the {4} twice over, so nothing but the LIMIT can reject this cast --
