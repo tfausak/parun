@@ -289,7 +289,6 @@ codec cardCodec abilityCodec =
           Arm.payload "PutSticker" PutSticker.codec Effect.PutSticker (\x -> case x of Effect.PutSticker y -> Just y; _ -> Nothing),
           Arm.payload "SetOwner" SetOwner.codec Effect.SetOwner (\x -> case x of Effect.SetOwner y -> Just y; _ -> Nothing),
           Arm.payload "ExchangeOwnership" ExchangeOwnership.codec Effect.ExchangeOwnership (\x -> case x of Effect.ExchangeOwnership y -> Just y; _ -> Nothing),
-          Arm.payload "ExchangeWithTopOfLibrary" ExchangeCardZones.legacyTopOfLibrary Effect.ExchangeCardZones (const Nothing),
           Arm.payload "Shuffle" PlayerRef.codec Effect.Shuffle (\x -> case x of Effect.Shuffle y -> Just y; _ -> Nothing),
           Arm.payload "OfferCast" OfferCast.codec Effect.OfferCast (\x -> case x of Effect.OfferCast y -> Just y; _ -> Nothing),
           Arm.payload "OfferNamedCopy" (Common.nonEmpty CardName.codec) Effect.OfferNamedCopy (\x -> case x of Effect.OfferNamedCopy y -> Just y; _ -> Nothing),
