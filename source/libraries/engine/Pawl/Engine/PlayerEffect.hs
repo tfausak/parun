@@ -886,7 +886,7 @@ searchingController pid gs =
 
 -- CR 701.23 / Opposition Agent: the object whose row has `pid` exile each card
 -- they find while searching their own library, the latest such row. That object
--- is the one the exiled cards are linked to (CR 607.2a).
+-- is the one the exiled cards are linked to (CR 607.1c).
 --
 -- Not implemented: where several rows apply, the ruling has the controlled
 -- player's controller choose which one's exile applies; the latest is taken

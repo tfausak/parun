@@ -2261,7 +2261,7 @@ popControl pid row gs =
 
 -- Opposition Agent's "they exile each card they find": the cards a search put
 -- into exile in place of its own destination are linked to the object whose
--- row exiled them (CR 607.2a), not to the searching ability, whose
+-- row exiled them (CR 607.1c), not to the searching ability, whose
 -- recordExiledWith keeps a link already filed. Bound to no slot: the ruling
 -- has an instruction naming the found cards fail to see them in exile.
 exileFoundFor :: ObjectId -> Seq.Seq ObjectId -> Game ()

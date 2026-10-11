@@ -1391,7 +1391,7 @@ spec s registry = Spec.describe s "Pawl.Engine.Event (CR 400.11)" $ do
         exiled = Game.zoneMembers Zone.Exile S.alice resolved
     Spec.assertEqWith s "the Fog from outside the game is in her exile" (printingsIn Zone.Exile S.alice resolved) [arcaviosFog board]
     Spec.assertEqWith s "and her hand is empty" (printingsIn Zone.Hand S.alice resolved) []
-    Spec.assertEqWith s "CR 607.2a the exiled Fog is linked to the Agent" (fmap (\oid -> fmap ExileLink.source (Map.lookup oid (GameState.exiledWith resolved))) exiled) [Just agentId]
+    Spec.assertEqWith s "CR 607.1c the exiled Fog is linked to the Agent" (fmap (\oid -> fmap ExileLink.source (Map.lookup oid (GameState.exiledWith resolved))) exiled) [Just agentId]
   -- Every place, and the library's instant named: the one count is filled from
   -- the zones, so nothing out there is taken whatever she would have answered,
   -- and the card's own "if you search your library this way, shuffle" follows.
