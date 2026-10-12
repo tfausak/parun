@@ -4612,6 +4612,10 @@ composeReversal before windows keeps = case NonEmpty.nonEmpty windows of
 -- `since`'s value, since a carried-over entry may already hold a group
 -- `snapshot`'s own counter would otherwise repeat -- GameState.events' groups
 -- are non-decreasing along the log.
+--
+-- Not implemented: a GameEvent.Looked of a library card is dropped, here and by
+-- revealsLibraryCard, though CR 701.20e has a look follow a reveal's rules
+-- (#5010).
 keepingLibraryActions :: GameState -> GameState -> GameState
 keepingLibraryActions since snapshot =
   let keep pid held = case Map.lookup pid (GameState.library since) of

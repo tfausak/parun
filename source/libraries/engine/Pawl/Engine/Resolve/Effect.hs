@@ -4082,6 +4082,9 @@ applyOneEffect runSubgame resolving source controller legal chosen effect = case
     -- exactly as a permanent is, and CR 208.2a's characteristic-defining power
     -- rides along at layer 7a.
     --
+    -- Not implemented: rule 701.23a's look at the searched zone logs no
+    -- GameEvent.Looked (#5008).
+    --
     -- Through effectContext and NOT Filter.contextFor, so the resolution's own
     -- slots ride along and a search filter naming one is answerable: Bifurcate's
     -- "with the same name as target nontoken creature" is CR 201.2a's
@@ -6124,6 +6127,9 @@ applyOneEffect runSubgame resolving source controller legal chosen effect = case
     -- The one PROMPT this arm raises is CR 608.2d's, not rule 701.20e's: Word of
     -- Command's "look at target opponent's hand and CHOOSE a card from it" names
     -- the hand and picks one, which askingObjects asks.
+    --
+    -- Not implemented: Word of Command's look is logged for the chosen card
+    -- alone, not the whole hand rule 701.20e shows (#5009).
     named <- askingObjects resolving source controller legal chosen ref
     gs <- State.get
     Monad.forM_ named $ \oid ->
@@ -11317,6 +11323,8 @@ refill whole moving ordered =
 -- The library is REWRITTEN rather than funnelled through Event.changeZone:
 -- nothing crosses a zone boundary, so CR 400.7 mints no new incarnation and the
 -- ids the prompt named still move. Looking mints nothing either (CR 701.20b).
+--
+-- Not implemented: the look logs no GameEvent.Looked (#5008).
 decideScry :: Integer -> PlayerId -> Game (PlayerId, Maybe [ObjectId])
 decideScry n pid = do
   gs <- State.get
@@ -11397,6 +11405,8 @@ applySurveil (pid, decision) = Monad.forM_ decision $ \(kept, toGraveyard) -> do
 -- TWO choices, both the fatesealer's and in this order: which opponent, then how
 -- to split. The first is elided at one candidate (CR 102.2) and filtered rather
 -- than trusted (Players.chooseOne); the library's owner is asked neither.
+--
+-- Not implemented: the look logs no GameEvent.Looked (#5008).
 fatesealOne :: ObjectId -> Integer -> PlayerId -> Game ()
 fatesealOne source n pid = do
   gs <- State.get
