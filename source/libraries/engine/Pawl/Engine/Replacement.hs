@@ -2583,8 +2583,9 @@ legalCopyTargets batch filter_ zone self gs =
 
 -- CR 707.9g / 603.11: the triggered ability linked to a CR 707.5 entry
 -- replacement ("When you do, ..."), as the reflexive entry
--- Pawl.Engine.Event.becomeCopyAs arms where a copy was made. TriggerCondition.Reflexive, enlist's
--- posture for its own linked ability (Pawl.Engine.Keyword.enlistReflexive): the
+-- Pawl.Engine.Event.becomeCopyAs arms where a copy was made.
+-- TriggerCondition.Reflexive, enlist's posture for its own linked ability
+-- (Pawl.Engine.Keyword.enlistReflexive): the
 -- entry's existence is the "you do", and it fires at the next gather (CR 603.3),
 -- after the permanent has entered. Nothing for a row that links none.
 linkedCopyTrigger :: AsCopy.AsCopy ability (Effect.Effect Card (GrantedAbility.GrantedAbility Card)) -> Maybe (TriggeredAbility.TriggeredAbility Card (GrantedAbility.GrantedAbility Card))
