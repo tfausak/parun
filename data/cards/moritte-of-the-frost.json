@@ -1,0 +1,183 @@
+{
+  "faces": [
+    {
+      "keywords": [
+        {
+          "type": "Changeling"
+        }
+      ],
+      "manaCost": [
+        {
+          "type": "Generic",
+          "value": 2
+        },
+        {
+          "type": "OfType",
+          "value": {
+            "type": "Colored",
+            "value": {
+              "type": "Green"
+            }
+          }
+        },
+        {
+          "type": "OfType",
+          "value": {
+            "type": "Colored",
+            "value": {
+              "type": "Blue"
+            }
+          }
+        },
+        {
+          "type": "OfType",
+          "value": {
+            "type": "Colored",
+            "value": {
+              "type": "Blue"
+            }
+          }
+        }
+      ],
+      "name": "Moritte of the Frost",
+      "oracleText": "Changeling (This card is every creature type.)\nYou may have Moritte enter as a copy of a permanent you control, except it's legendary and snow in addition to its other types and, if it's a creature, it enters with two additional +1/+1 counters on it and has changeling.",
+      "power": {
+        "type": "Literal",
+        "value": 0
+      },
+      "replacementEffects": [
+        {
+          "effect": {
+            "type": "EntryR",
+            "value": {
+              "matching": {
+                "type": "IsSource"
+              },
+              "rewrite": {
+                "type": "AsCopy",
+                "value": {
+                  "conditional": [
+                    {
+                      "condition": {
+                        "type": "Compares",
+                        "value": {
+                          "comparison": {
+                            "type": "AtLeast"
+                          },
+                          "measured": {
+                            "type": "Count",
+                            "value": {
+                              "aggregation": {
+                                "type": "Members"
+                              },
+                              "filter": {
+                                "type": "And",
+                                "value": [
+                                  {
+                                    "type": "IsSource"
+                                  },
+                                  {
+                                    "type": "HasCardType",
+                                    "value": {
+                                      "type": "Creature"
+                                    }
+                                  }
+                                ]
+                              },
+                              "scope": {
+                                "type": "InZone",
+                                "value": {
+                                  "player": {
+                                    "type": "Relative",
+                                    "value": {
+                                      "type": "AnyPlayer"
+                                    }
+                                  },
+                                  "zone": {
+                                    "type": "Battlefield"
+                                  }
+                                }
+                              }
+                            }
+                          },
+                          "threshold": {
+                            "type": "Literal",
+                            "value": 1
+                          }
+                        }
+                      },
+                      "counters": [
+                        {
+                          "count": {
+                            "type": "Literal",
+                            "value": 2
+                          },
+                          "kind": {
+                            "type": "PlusOnePlusOne"
+                          }
+                        }
+                      ],
+                      "exceptions": [
+                        {
+                          "type": "GainKeywords",
+                          "value": [
+                            {
+                              "type": "Changeling"
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  ],
+                  "eligible": {
+                    "type": "ControlledBy",
+                    "value": {
+                      "type": "You"
+                    }
+                  },
+                  "exceptions": [
+                    {
+                      "type": "AddSupertypes",
+                      "value": [
+                        {
+                          "type": "Legendary"
+                        },
+                        {
+                          "type": "Snow"
+                        }
+                      ]
+                    }
+                  ]
+                }
+              }
+            }
+          }
+        }
+      ],
+      "toughness": {
+        "type": "Literal",
+        "value": 0
+      },
+      "typeLine": {
+        "subtypes": [
+          {
+            "type": "Shapeshifter"
+          }
+        ],
+        "supertypes": [
+          {
+            "type": "Legendary"
+          },
+          {
+            "type": "Snow"
+          }
+        ],
+        "types": [
+          {
+            "type": "Creature"
+          }
+        ]
+      }
+    }
+  ]
+}

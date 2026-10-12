@@ -1,6 +1,7 @@
 module Pawl.Types.AsCopy where
 
 import qualified Data.Sequence as Seq
+import qualified Pawl.Types.ConditionalException as ConditionalException
 import qualified Pawl.Types.CopyException as CopyException
 import qualified Pawl.Types.Duration as Duration
 import qualified Pawl.Types.Filter as Filter
@@ -72,6 +73,9 @@ data AsCopy ability effect = MkAsCopy
     -- applied to the same entry: the scenario "CR 707.9e a copy effect applied
     -- after Altered Ego's takes back its additional counters" proves it.
     counters :: Maybe WithCounters.WithCounters,
+    -- | CR 707.9f: the parts of the clause that apply only if a condition
+    -- holds (Spark Double, Vizier of Many Faces). Empty for a clause with none.
+    conditional :: [ConditionalException.ConditionalException ability],
     -- | CR 707.9g / 603.11: the triggered ability linked to this replacement,
     -- "When you do, ..." in the same paragraph (Wall of Stolen Identity). Empty
     -- for none. Its effects read the copied object under

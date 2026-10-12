@@ -4,6 +4,7 @@ module Pawl.Codec.AsCopy where
 
 import qualified Data.Sequence as Seq
 import qualified Data.Typeable as Typeable
+import qualified Pawl.Codec.ConditionalException as ConditionalException
 import qualified Pawl.Codec.CopyException as CopyException
 import qualified Pawl.Codec.Duration as Duration
 import qualified Pawl.Codec.Filter as Filter
@@ -25,14 +26,16 @@ import qualified Pawl.Types.Zone as Zone.Type
 -- such clause leaves out, and so is @whenYouDo@, CR 707.9g's linked trigger
 -- (Wall of Stolen Identity). @zone@ is defaulted to the battlefield, which is
 -- where every printing but Superior Spider-Man's looks. @duration@ is defaulted
--- to Nothing, the copy every printing but Vesuvan Shapeshifter's makes.
+-- to Nothing, the copy every printing but Vesuvan Shapeshifter's makes, and
+-- @conditional@ to empty, for a clause with no CR 707.9f condition in it.
 codec :: (Typeable.Typeable ability, Eq ability, Typeable.Typeable effect, Eq effect) => Codec.Codec ability -> Codec.Codec effect -> Codec.Codec (AsCopy.AsCopy ability effect)
 codec abilityCodec effectCodec = Fields.object $ do
   eligible <- Fields.required "eligible" (Filter.codec Keyword.codec) AsCopy.eligible
   exceptions <- Fields.defaulted "exceptions" [] (Common.list (CopyException.codec abilityCodec)) AsCopy.exceptions
   tapped <- Fields.defaulted "tapped" False Common.boolean AsCopy.tapped
   counters <- Fields.defaulted "counters" Nothing (Common.maybe WithCounters.codec) AsCopy.counters
+  conditional <- Fields.defaulted "conditional" [] (Common.list (ConditionalException.codec abilityCodec)) AsCopy.conditional
   whenYouDo <- Fields.defaulted "whenYouDo" Seq.empty (Common.seq effectCodec) AsCopy.whenYouDo
   zone <- Fields.defaulted "zone" Zone.Type.Battlefield Zone.codec AsCopy.zone
   duration <- Fields.defaulted "duration" Nothing (Common.maybe Duration.codec) AsCopy.duration
-  pure AsCopy.MkAsCopy {AsCopy.eligible = eligible, AsCopy.exceptions = exceptions, AsCopy.tapped = tapped, AsCopy.counters = counters, AsCopy.whenYouDo = whenYouDo, AsCopy.zone = zone, AsCopy.duration = duration}
+  pure AsCopy.MkAsCopy {AsCopy.eligible = eligible, AsCopy.exceptions = exceptions, AsCopy.tapped = tapped, AsCopy.counters = counters, AsCopy.conditional = conditional, AsCopy.whenYouDo = whenYouDo, AsCopy.zone = zone, AsCopy.duration = duration}

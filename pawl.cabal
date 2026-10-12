@@ -356,6 +356,8 @@ library codec
     Pawl.Codec.CompletedDungeon
     Pawl.Codec.CompletedDungeonSpec
     Pawl.Codec.Condition
+    Pawl.Codec.ConditionalException
+    Pawl.Codec.ConditionalExceptionSpec
     Pawl.Codec.ConditionSpec
     Pawl.Codec.Conjure
     Pawl.Codec.ConjureCards
@@ -2190,6 +2192,7 @@ library types
     Pawl.Types.CompletedDungeon
     Pawl.Types.Concession
     Pawl.Types.Condition
+    Pawl.Types.ConditionalException
     Pawl.Types.Conjure
     Pawl.Types.ConjureCards
     Pawl.Types.ConjureDestination

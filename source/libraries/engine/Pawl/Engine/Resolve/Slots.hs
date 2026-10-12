@@ -62,6 +62,7 @@ import qualified Pawl.Types.Clause as Clause
 import qualified Pawl.Types.CoinFlipR as CoinFlipR
 import qualified Pawl.Types.Compares as Compares
 import qualified Pawl.Types.Condition as Condition.Type
+import qualified Pawl.Types.ConditionalException as ConditionalException
 import qualified Pawl.Types.Conjure as Conjure
 import qualified Pawl.Types.ConjureCards as ConjureCards
 import qualified Pawl.Types.Connive as Connive
@@ -1779,10 +1780,23 @@ turnUpRewriteReads rewrite = case rewrite of
   TurnUpRewrite.AsCopy asCopy -> asCopyReads asCopy
 
 -- What a copy rewrite reads, on either event class: the eligible filter, and CR
--- 707.9e's additional counters beside it. The duration names no slot -- every
--- arm an AsCopy states is one durationSlots answers empty for.
+-- 707.9e's additional counters beside it, and each CR 707.9f conditional part's
+-- condition and counters. The duration names no slot -- every arm an AsCopy
+-- states is one durationSlots answers empty for.
 asCopyReads :: AsCopy.AsCopy ability effect -> ([Filter.Type.Filter Keyword.Type.Keyword], [Quantity.Type.Quantity])
-asCopyReads asCopy = ([AsCopy.eligible asCopy], foldMap (Map.elems . WithCounters.counters) (AsCopy.counters asCopy))
+asCopyReads asCopy =
+  let counted :: Maybe WithCounters.WithCounters -> [Quantity.Type.Quantity]
+      counted = foldMap (Map.elems . WithCounters.counters)
+      conditional part = conditionQuantities (ConditionalException.condition part) <> counted (ConditionalException.counters part)
+   in ([AsCopy.eligible asCopy], counted (AsCopy.counters asCopy) <> foldMap conditional (AsCopy.conditional asCopy))
+
+-- The Quantities a Condition compares, conditionSlots' descent as a list.
+conditionQuantities :: Condition.Type.Condition -> [Quantity.Type.Quantity]
+conditionQuantities condition = case condition of
+  Condition.Type.Compares c -> [Compares.measured c, Compares.threshold c]
+  Condition.Type.Any conditions -> foldMap conditionQuantities conditions
+  Condition.Type.All conditions -> foldMap conditionQuantities conditions
+  Condition.Type.During _ -> []
 
 -- What a DRAW rewrite reads. entryRewriteReads' discipline again, and the answer
 -- is SYNTACTIC rather than per-reader: CR 400.11c keeps a spell or ability from

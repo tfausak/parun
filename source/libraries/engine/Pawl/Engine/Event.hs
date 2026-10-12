@@ -42,6 +42,7 @@ import qualified Pawl.Engine.Binding as Binding
 import qualified Pawl.Engine.Card as Card
 import qualified Pawl.Engine.Coin as Coin
 import qualified Pawl.Engine.Commander as Commander
+import qualified Pawl.Engine.Condition as Condition
 import qualified Pawl.Engine.Conspiracy as Conspiracy
 import qualified Pawl.Engine.CounterRestriction as CounterRestriction
 import qualified Pawl.Engine.Decide as Decide
@@ -93,6 +94,7 @@ import qualified Pawl.Types.CoinFlipped as CoinFlipped
 import qualified Pawl.Types.Color as Color
 import qualified Pawl.Types.Combat as Combat
 import qualified Pawl.Types.CommandZoneDecision as CommandZoneDecision
+import qualified Pawl.Types.ConditionalException as ConditionalException
 import qualified Pawl.Types.ContinuousEffect as ContinuousEffect
 import qualified Pawl.Types.CounterCause as CounterCause
 import qualified Pawl.Types.CounterChange as CounterChange
@@ -108,6 +110,7 @@ import qualified Pawl.Types.DamageR as DamageR
 import qualified Pawl.Types.DamageRewrite as DamageRewrite
 import Pawl.Types.DelayedTrigger (DelayedTrigger)
 import qualified Pawl.Types.DelayedTrigger as DelayedTrigger
+import qualified Pawl.Types.Designation as Designation
 import qualified Pawl.Types.DestructionCause as DestructionCause
 import qualified Pawl.Types.DestructionR as DestructionR
 import qualified Pawl.Types.DestructionRewrite as DestructionRewrite
@@ -2158,7 +2161,7 @@ apply batch candidate event =
         made <- becomeCopyAs batch candidate asCopy oid
         case made of
           Nothing -> pure (Just event)
-          Just _ -> do
+          Just (_, conditionalCounters) -> do
             -- CR 614.1d, inside the same sentence: Vesuva enters TAPPED as a
             -- copy. On this branch alone -- a declined copy is a Vesuva that
             -- entered untapped, since the printed "may" governs both halves
@@ -2186,8 +2189,11 @@ apply batch candidate event =
             -- applied after it (Altered Ego copying an uncopied Quicksilver
             -- Gargantuan), so takeBackCopyException lifts its counters off
             -- the pending map before this row's own go on.
+            --
+            -- CR 707.9f's conditional parts that held place theirs the same
+            -- way (Spark Double), becomeCopyAs having judged them.
             takeBackCopyException oid
-            Foldable.for_ (AsCopy.counters asCopy) $ \withCounters -> do
+            Foldable.for_ (Maybe.maybeToList (AsCopy.counters asCopy) <> conditionalCounters) $ \withCounters -> do
               gs2 <- State.get
               let viewOf = Projection.viewWithLastKnown oid gs2
                   context = Replacement.candidateContext gs2 candidate
@@ -4242,8 +4248,8 @@ apply batch candidate event =
       -- face up, you may choose another creature ... it becomes a copy of that
       -- creature", through the entry arm's own copying process. Nothing enters,
       -- so no batch narrows the offer, and the entry riders (`tapped`,
-      -- `counters`) are not placed: Pawl.CardSpec holds no turn-up row states
-      -- them. Applied after the status write, so a copied creature's own "as
+      -- `counters`, a conditional part's counters) are not placed:
+      -- Pawl.EffectLintSpec holds that no turn-up row states them. Applied after the status write, so a copied creature's own "as
       -- this is turned face up" row is collected on the loop's next pass (CR
       -- 616.1f).
       TurnUpRewrite.AsCopy asCopy -> do
@@ -4255,13 +4261,14 @@ apply batch candidate event =
 -- CR 707.5 / 707.4: the copying process an AsCopy rewrite performs, on either
 -- event class it rides (CR 614.1c's entry, CR 614.1e's turning face up): the
 -- object's controller chooses what to copy, and the copiable values are written
--- onto it. Answers the copied object, or Nothing where no copy was made.
+-- onto it. Answers the copied object and the CR 707.9e counters of the CR
+-- 707.9f parts that held, or Nothing where no copy was made.
 -- Clone's "may" is real: Nothing leaves the object as its printed self (a 0/0,
 -- which CR 704.5f then buries).
 --
 -- `batch` is the entering siblings the offer excludes (CR 614.12a), empty for
 -- a turning-over.
-becomeCopyAs :: Set ObjectId -> ReplacementCandidate -> AsCopy.AsCopy (GrantedAbility.Type.GrantedAbility Card) (Effect.Type.Effect Card (GrantedAbility.Type.GrantedAbility Card)) -> ObjectId -> Game (Maybe ObjectId)
+becomeCopyAs :: Set ObjectId -> ReplacementCandidate -> AsCopy.AsCopy (GrantedAbility.Type.GrantedAbility Card) (Effect.Type.Effect Card (GrantedAbility.Type.GrantedAbility Card)) -> ObjectId -> Game (Maybe (ObjectId, [WithCounters.WithCounters]))
 becomeCopyAs batch candidate asCopy oid = do
   Replacement.consume (ReplacementCandidate.identity candidate)
   gs <- State.get
@@ -4295,8 +4302,10 @@ becomeCopyAs batch candidate asCopy oid = do
       let chosen = case answer of
             Just src | List.elem src legal -> Just src
             _ -> Nothing
-      Foldable.for_ chosen $ \src2 -> do
-        State.modify' $ \g ->
+      applying <- case chosen of
+        Nothing -> pure []
+        Just src2 -> do
+          g0 <- State.get
           -- CR 707.9: the exceptions are applied to the snapshot on the
           -- way in, so they are part of the copy's own copiable values
           -- (CR 707.9b) rather than an effect layered over them. Only on
@@ -4311,23 +4320,43 @@ becomeCopyAs batch candidate asCopy oid = do
           -- off the same board the copied snapshot is: an entering object is
           -- materialized with no copy binding yet, so this is its printed
           -- card's reading.
-          let stamped = Replacement.applyCopyExceptions Nothing (Just (copiedSnapshot oid g)) (AsCopy.exceptions asCopy) (copiedSnapshot src2 g)
-              stamp o = o {Object.bindings = Binding.setCopy stamped (Object.bindings o)}
-           in case AsCopy.duration asCopy of
-                -- CR 707.3: no stated ending, so the copiable values go onto
-                -- the object itself, over any stored row (CR 613.7).
-                Nothing -> Game.supersedeStoredCopies (Set.singleton oid) g {GameState.objects = Map.adjust stamp oid (GameState.objects g)}
-                -- CR 611.2a: a stated duration (Vesuvan Shapeshifter's "until
-                -- this creature is turned face down") stores the copy as a row
-                -- that can end, Effect.BecomeCopy's road. The object is the
-                -- row's source, which is "this creature".
-                Just stated -> case Expiry.arm Map.empty controller oid stated g of
-                  -- CR 611.2b: the duration never started.
-                  Nothing -> g
-                  Just expiry ->
-                    let (ts, g1) = Game.freshTimestamp g
-                        row = ActiveCopy.MkActiveCopy {ActiveCopy.source = oid, ActiveCopy.timestamp = ts, ActiveCopy.expiry = expiry, ActiveCopy.objects = Set.singleton oid, ActiveCopy.snapshot = stamped}
-                     in g1 {GameState.copyEffects = row : GameState.copyEffects g1}
+          let stampWith excepted = Replacement.applyCopyExceptions Nothing (Just (copiedSnapshot oid g0)) excepted (copiedSnapshot src2 g0)
+              -- CR 707.3: no stated ending, so the copiable values go onto
+              -- the object itself, over any stored row (CR 613.7).
+              stampOnto pc g = Game.supersedeStoredCopies (Set.singleton oid) g {GameState.objects = Map.adjust (\o -> o {Object.bindings = Binding.setCopy pc (Object.bindings o)}) oid (GameState.objects g)}
+              -- CR 707.9f: a conditional part applies only if its condition
+              -- holds of the permanent as the copy effect would make it
+              -- without that part, "taking into account any other exceptions
+              -- that effect includes" -- so judged on a board where the
+              -- unconditional ones are stamped and none of the conditional
+              -- ones is. That reads "other exceptions" as the unconditional
+              -- ones; the two agree wherever no conditional part changes what
+              -- another's condition reads, which holds of every one in
+              -- data/cards (Spark Double's and Moritte of the Frost's add
+              -- counters or changeling, which no condition there reads). The
+              -- source is this permanent, and Binding.copiedObject names what
+              -- it copies (Undercover Operative's "if you control that
+              -- creature").
+              hypothetical = stampOnto (stampWith (AsCopy.exceptions asCopy)) g0
+              framing = candidate {ReplacementCandidate.slots = Map.insert Binding.copiedObject (Set.singleton src2) (ReplacementCandidate.slots candidate)}
+              holds part = Condition.holds (Projection.fullView hypothetical) (Replacement.candidateContext hypothetical framing) hypothetical oid (ConditionalException.condition part)
+              held = filter holds (AsCopy.conditional asCopy)
+              stamped = stampWith (AsCopy.exceptions asCopy <> foldMap ConditionalException.exceptions held)
+          State.modify' $ \g -> case AsCopy.duration asCopy of
+            Nothing -> stampOnto stamped g
+            -- CR 611.2a: a stated duration (Vesuvan Shapeshifter's "until
+            -- this creature is turned face down") stores the copy as a row
+            -- that can end, Effect.BecomeCopy's road. The object is the
+            -- row's source, which is "this creature".
+            Just stated -> case Expiry.arm Map.empty controller oid stated g of
+              -- CR 611.2b: the duration never started.
+              Nothing -> g
+              Just expiry ->
+                let (ts, g1) = Game.freshTimestamp g
+                    row = ActiveCopy.MkActiveCopy {ActiveCopy.source = oid, ActiveCopy.timestamp = ts, ActiveCopy.expiry = expiry, ActiveCopy.objects = Set.singleton oid, ActiveCopy.snapshot = stamped}
+                 in g1 {GameState.copyEffects = row : GameState.copyEffects g1}
+          pure held
+      Foldable.for_ chosen $ \src2 -> do
         -- CR 707.9g: a linked trigger an EARLIER copy effect on this object
         -- armed no longer triggers, this one being applied after it; then
         -- this row's own is armed (Replacement.linkedCopyTrigger), on this
@@ -4336,7 +4365,7 @@ becomeCopyAs batch candidate asCopy oid = do
         State.modify' (\g -> g {GameState.delayedTriggers = Seq.filter (not . linkedEarlier) (GameState.delayedTriggers g)})
         Foldable.for_ (Replacement.linkedCopyTrigger asCopy) $ \linked ->
           State.modify' (armDelayed linked oid controller (Map.singleton Binding.copiedObject (Binding.toObject src2)) Onset.Immediately Nothing)
-      pure chosen
+      pure (fmap (\src2 -> (src2, Maybe.mapMaybe ConditionalException.counters applying)) chosen)
 
 -- CR 707.2 / 202.3b / 202.3c: the copiable values a copy takes off the object it
 -- copies. Projection.copiableCharacteristics answers all but one of them; the
@@ -7901,10 +7930,13 @@ sacrificeIn asOf victims = simultaneously $ do
 -- is undefined", which Preston Garvey reaches when the seat announces zero
 -- targets for its "up to one target land you control".
 --
+-- `marks` is CR 702.128b's embalmed, which the creating ability gives the
+-- tokens (Keyword.createdMarks); empty from every other creator.
+--
 -- Not an event bracket of its own: the caller is the one CR 608.2f event, and
 -- under Event.together the entries are recorded after this returns anyway.
-createTokens :: PlayerId -> Card -> Maybe PC.ProjectedCharacteristics -> Natural -> TapState.TapState -> Map.Map (CounterKind.CounterKind Keyword.Type.Keyword) Natural -> Maybe [Recipient.Recipient] -> Game [ObjectId]
-createTokens controller card copy n tapped entering attached = do
+createTokens :: PlayerId -> Card -> Maybe PC.ProjectedCharacteristics -> Natural -> TapState.TapState -> Map.Map (CounterKind.CounterKind Keyword.Type.Keyword) Natural -> Maybe [Recipient.Recipient] -> Set Designation.Designation -> Game [ObjectId]
+createTokens controller card copy n tapped entering attached marks = do
   gs <- State.get
   if List.notElem controller (Game.stillPlaying gs)
     then pure []
@@ -7944,7 +7976,11 @@ createTokens controller card copy n tapped entering attached = do
                       -- 614.12 asks for the characteristics the permanent would
                       -- have on the battlefield, and for this token those are the
                       -- copy's from the instant it exists.
-                      Object.bindings = maybe Map.empty (\pc -> Binding.setCopy pc Map.empty) (TokenLot.copy lot)
+                      Object.bindings = maybe Map.empty (\pc -> Binding.setCopy pc Map.empty) (TokenLot.copy lot),
+                      -- CR 702.128b: a mark the token has from its creation
+                      -- (embalmed), so its own CR 614.12 entry loop already
+                      -- reads it (Vizier of Many Faces).
+                      Object.designations = marks
                     }
             Monad.replicateM (Natural.toIntSaturating (TokenLot.count lot)) (placeObject owner mkObj Zone.Battlefield LibraryPosition.defaultValue)
           minted <- State.get

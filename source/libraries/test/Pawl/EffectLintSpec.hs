@@ -72,6 +72,7 @@ import qualified Pawl.Types.ChosenCardInGraveyard as ChosenCardInGraveyard
 import qualified Pawl.Types.ChosenCardInHand as ChosenCardInHand
 import qualified Pawl.Types.ChosenPermanents as ChosenPermanents
 import qualified Pawl.Types.Clause as Clause
+import qualified Pawl.Types.ConditionalException as ConditionalException
 import qualified Pawl.Types.Conjure as Conjure
 import qualified Pawl.Types.ConjureCards as ConjureCards
 import qualified Pawl.Types.Connive as Connive
@@ -826,7 +827,7 @@ turnUpRequiringOffends replacement = case replacement of
 -- silently weakened. A wildcard is right: this asks one rewrite one question.
 turnUpCopyRiderOffends :: ReplacementEffect.ReplacementEffect Card.Type.Card (GrantedAbility.GrantedAbility Card.Type.Card) (Effect.Effect Card.Type.Card (GrantedAbility.GrantedAbility Card.Type.Card)) -> Bool
 turnUpCopyRiderOffends replacement = case replacement of
-  ReplacementEffect.TurnUpR (TurnUpR.MkTurnUpR _ _ _ (TurnUpRewrite.AsCopy asCopy)) -> AsCopy.tapped asCopy || Maybe.isJust (AsCopy.counters asCopy)
+  ReplacementEffect.TurnUpR (TurnUpR.MkTurnUpR _ _ _ (TurnUpRewrite.AsCopy asCopy)) -> AsCopy.tapped asCopy || Maybe.isJust (AsCopy.counters asCopy) || any (Maybe.isJust . ConditionalException.counters) (AsCopy.conditional asCopy)
   _ -> False
 
 -- isPhaseR's twin: did the sweep above have anything to look at? A wildcard for

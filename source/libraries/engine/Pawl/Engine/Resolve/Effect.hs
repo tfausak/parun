@@ -3197,6 +3197,13 @@ rearmStackExile subject copied obj gs =
 -- The Source itself, unclassified: which of CR 113.3's arms carries an ability,
 -- and which list it joins, is Projection.View.applyCopyException's to say, and it
 -- says it by casing on the arm rather than on the ability.
+-- CR 702.128b: the marks a token has from being created by this resolving
+-- object, read off the keyword that minted it (ActivatedAbility.keyword).
+createdMarks :: ObjectId -> GameState -> Set.Set Designation.Designation
+createdMarks resolving gs = case thisAbilitySource resolving gs of
+  Just (Source.OfAbility minted) -> foldMap Keyword.createdMarks (ActivatedAbility.keyword (ActivatedAbilitySource.ability minted))
+  _ -> Set.empty
+
 thisAbilitySource :: ObjectId -> GameState -> Maybe Source.Source
 thisAbilitySource resolving gs = fmap Object.source (Game.lookupObject resolving gs)
 
@@ -6962,7 +6969,7 @@ applyOneEffect runSubgame resolving source controller legal chosen effect = case
               -- CR 122.6's counters ride along through that rule's own door, so a
               -- counter replacement reaches them, in the counts freezeRiders
               -- settled above.
-              made <- Event.createTokens creating (bakeTokenCharacteristics (Quantity.evaluateFor viewOf context gs resolving source) card) Nothing (Integer.toNaturalSaturating n) (EntryRiders.tapped entry) (EntryRiders.counters frozen) mAttached
+              made <- Event.createTokens creating (bakeTokenCharacteristics (Quantity.evaluateFor viewOf context gs resolving source) card) Nothing (Integer.toNaturalSaturating n) (EntryRiders.tapped entry) (EntryRiders.counters frozen) mAttached Set.empty
               -- CR 508.4: a creature put onto the battlefield attacking has its
               -- defending player chosen in Pawl.Engine.Combat, and CR 508.3a's
               -- attack triggers see nothing. After the entry loops rather than
@@ -7217,7 +7224,7 @@ applyOneEffect runSubgame resolving source controller legal chosen effect = case
                 -- Nothing for the subject's own copiable values: CR 707.9c's
                 -- retained original belongs to an object that already existed,
                 -- and a token minted by CR 707.1 did not.
-                made <- Event.createTokens controller card (Just (Replacement.applyCopyExceptions (thisAbilitySource resolving gs) Nothing exceptions (Event.copiedSnapshotWithLastKnown src gs))) (Integer.toNaturalSaturating n) (EntryRiders.tapped entry) (EntryRiders.counters frozen) Nothing
+                made <- Event.createTokens controller card (Just (Replacement.applyCopyExceptions (thisAbilitySource resolving gs) Nothing exceptions (Event.copiedSnapshotWithLastKnown src gs))) (Integer.toNaturalSaturating n) (EntryRiders.tapped entry) (EntryRiders.counters frozen) Nothing (createdMarks resolving gs)
                 -- CR 508.4, after the entry loop for Create's reason.
                 Monad.forM_ mAttack (\specified -> Monad.mapM_ (Combat.putOntoBattlefieldAttacking specified) made)
                 -- CR 509.4, the blocking twin one rule over, in the same place

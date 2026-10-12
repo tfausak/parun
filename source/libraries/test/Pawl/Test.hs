@@ -156,6 +156,7 @@ import qualified Pawl.Codec.ComparesSpec
 import qualified Pawl.Codec.ComparisonSpec
 import qualified Pawl.Codec.CompletedDungeonSpec
 import qualified Pawl.Codec.ConditionSpec
+import qualified Pawl.Codec.ConditionalExceptionSpec
 import qualified Pawl.Codec.ConjureCardsSpec
 import qualified Pawl.Codec.ConjureDestinationSpec
 import qualified Pawl.Codec.ConjureSelectionSpec
@@ -1027,6 +1028,7 @@ spec s registry = do
   Pawl.Codec.OperandSpec.spec s
   Pawl.Codec.CompletedDungeonSpec.spec s
   Pawl.Codec.ConditionSpec.spec s
+  Pawl.Codec.ConditionalExceptionSpec.spec s
   Pawl.Codec.ContinuousEffectSpec.spec s
   Pawl.Codec.ControlDurationSpec.spec s
   Pawl.Codec.ControlChangedSpec.spec s

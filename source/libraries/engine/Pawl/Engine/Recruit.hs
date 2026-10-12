@@ -181,4 +181,4 @@ recruit pid = do
   -- discarded this way. A hand that held only lands, or no cards at all, creates
   -- nothing.
   Monad.when (any nonland moved) $
-    Monad.void (Event.createTokens pid soldierToken Nothing 1 TapState.Untapped Map.empty Nothing)
+    Monad.void (Event.createTokens pid soldierToken Nothing 1 TapState.Untapped Map.empty Nothing Set.empty)
