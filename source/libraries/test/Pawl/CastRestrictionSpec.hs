@@ -1953,9 +1953,8 @@ withMagistrate magistrate gs = snd (S.addPermanent magistrate S.alice gs)
 -- every player's hand, and PlayerEffect.CastFrom's zone reference is what says
 -- whose. See #2169.
 --
--- Not implemented: the third clause, "plays with their hand revealed". Nothing in
--- pawl computes a per-player view of the board, so every answerer already sees
--- every hand and an arm stating it would have no reader (#3237).
+-- The third clause, "plays with their hand revealed", is proven by
+-- data/scenarios/visibility/cr-400-2-standing-grant-sen-triplets-reveals-the-target-s-hand-this-turn.json.
 --
 -- Think Twice {1}{U} Instant is the spell each seat holds, and an INSTANT so no
 -- seat's cast turns on whose turn it is: the trigger resolves in alice's upkeep,

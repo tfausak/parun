@@ -15,6 +15,7 @@ import qualified Pawl.Types.ModifiedRoll as ModifiedRoll
 import qualified Pawl.Types.PlayerCounterKind as PlayerCounterKind
 import qualified Pawl.Types.PlayerScope as PlayerScope
 import qualified Pawl.Types.PlotFromZone as PlotFromZone
+import qualified Pawl.Types.Shows as Shows
 import qualified Pawl.Types.SpendManaAsThough as SpendManaAsThough
 import qualified Pawl.Types.StatedFlip as StatedFlip
 
@@ -215,4 +216,6 @@ data PlayerEffect
     -- unpayable. Pawl.PlayerEffectSpec's PlatinumEmperion and GreedUnderEmperion
     -- groups prove the two.
     CantLoseLife
+  | -- | CR 401.5 / 400.2: cards of this player's that are shown, and to whom.
+    Shows Shows.Shows
   deriving (Eq, Ord, Show)

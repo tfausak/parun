@@ -104,6 +104,29 @@
                             "type": "UntilEndOfTurn"
                           },
                           "effect": {
+                            "type": "Shows",
+                            "value": {
+                              "cards": {
+                                "type": "Hand"
+                              },
+                              "to": {
+                                "type": "Everyone"
+                              }
+                            }
+                          },
+                          "players": {
+                            "type": "Named",
+                            "value": "opponent"
+                          }
+                        }
+                      },
+                      {
+                        "type": "AffectPlayers",
+                        "value": {
+                          "duration": {
+                            "type": "UntilEndOfTurn"
+                          },
+                          "effect": {
                             "type": "CastFrom",
                             "value": {
                               "from": {

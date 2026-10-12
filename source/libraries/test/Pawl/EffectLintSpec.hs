@@ -1087,6 +1087,7 @@ unpreventableScopeOffends scope playerEffect = case playerEffect of
   PlayerEffect.AdditionalSurveilCards _ -> False
   PlayerEffect.CantGainLife -> False
   PlayerEffect.CantLoseLife -> False
+  PlayerEffect.Shows _ -> False
 
 -- The OTHER half of the same carrier -- and of CR 614.9's twin beside it, whose
 -- narrowing rides in the same type -- now that the narrowing is a DamagePattern:
@@ -1155,6 +1156,7 @@ unpreventablePatternOffends playerEffect = case playerEffect of
   PlayerEffect.AdditionalSurveilCards _ -> False
   PlayerEffect.CantGainLife -> False
   PlayerEffect.CantLoseLife -> False
+  PlayerEffect.Shows _ -> False
 
 -- The non-vacuity half of both lints above: is this a damage-event prohibition
 -- at all -- CR 615.12's or CR 614.9's? A wildcard is right here, where it is not

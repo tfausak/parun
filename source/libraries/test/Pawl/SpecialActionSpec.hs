@@ -504,10 +504,8 @@ plotting s registry = Spec.describe s "CR 116.2k Djinn of Fool's Fall" $ do
 --
 -- `fblthp` is a Maybe so the paired board without it differs in exactly that.
 --
--- Not implemented: "You may look at the top card of your library any time",
--- which data/cards/fblthp-lost-on-the-range.json omits under the precedent
--- data/cards/garruks-horde.json sets -- pawl hands every answerer the whole game
--- already, so a looked-at card is indistinguishable from a hidden one (#1412).
+-- "You may look at the top card of your library any time" is proven by
+-- data/scenarios/visibility/cr-401-5-standing-grant-fblthp-lets-its-controller-alone-look-at-the-top-card.json.
 fblthpBoard ::
   Printing.Printing ->
   Maybe Printing.Printing ->
