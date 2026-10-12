@@ -770,6 +770,7 @@ lastKnownRiderSpec s registry =
                     -- CR 310.9a: the Sorcerer is no battle, so nobody protects it.
                     LastKnown.protector = Nothing,
                     LastKnown.paidCosts = Map.empty,
+                    LastKnown.prototyped = False,
                     -- CR 702.30a: nothing here asks about an echo window.
                     LastKnown.controlClock = Map.empty,
                     LastKnown.zone = Zone.Battlefield,

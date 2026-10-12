@@ -67,6 +67,7 @@ sampleSnapshot =
       PC.mergedDonors = [],
       PC.prepare = Nothing,
       PC.alternativeSpell = Nothing,
+      PC.prototyped = False,
       PC.spell = Face.defaultSpell,
       PC.flipped = Nothing
     }

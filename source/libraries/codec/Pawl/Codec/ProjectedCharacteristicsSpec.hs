@@ -127,6 +127,9 @@ testCharacteristics =
       PC.prepare = Just (NonEmpty.head (Card.Type.faces CardSpec.mountainCard)),
       -- Synthetic for prepare's reason (CR 715.2b).
       PC.alternativeSpell = Just (NonEmpty.head (Card.Type.faces CardSpec.mountainCard)),
+      -- Synthetic for prepare's reason: a Mountain is no prototype card (CR
+      -- 718.2a).
+      PC.prototyped = True,
       -- Two empty modes, off the default of one (CR 707.2).
       PC.spell = Face.Type.defaultSpell {Modal.modes = Modal.modes (Face.Type.defaultSpell :: Modal.Modal Card.Type.Card (GrantedAbility.GrantedAbility Card.Type.Card)) <> Modal.modes Face.Type.defaultSpell},
       -- The recursive field, carrying the all-default record so the nested
@@ -175,6 +178,7 @@ testCharacteristicsJson =
     <> "\"mergedDonors\":[{\"names\":[\"Mountain\"],\"cardTypes\":[{\"type\":\"Land\"}]}],"
     <> "\"prepare\":{\"name\":\"Mountain\",\"typeLine\":{\"supertypes\":[{\"type\":\"Basic\"}],\"types\":[{\"type\":\"Land\"}],\"subtypes\":[{\"type\":\"Mountain\"}]}},"
     <> "\"alternativeSpell\":{\"name\":\"Mountain\",\"typeLine\":{\"supertypes\":[{\"type\":\"Basic\"}],\"types\":[{\"type\":\"Land\"}],\"subtypes\":[{\"type\":\"Mountain\"}]}},"
+    <> "\"prototyped\":true,"
     <> "\"spell\":{\"modes\":[{},{}]},"
     <> "\"flipped\":{\"names\":[\"Mountain\"],\"cardTypes\":[{\"type\":\"Land\"}]}}"
 
@@ -227,6 +231,7 @@ minimalCharacteristics =
       PC.mergedDonors = [],
       PC.prepare = Nothing,
       PC.alternativeSpell = Nothing,
+      PC.prototyped = False,
       PC.spell = Face.Type.defaultSpell,
       PC.flipped = Nothing
     }

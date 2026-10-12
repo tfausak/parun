@@ -650,6 +650,13 @@ spec s = Spec.describe s "Pawl.Codec.Filter" $ do
       codec
       (Filter.Paid (KeywordDesignator.OfFamily KeywordFamily.Kicker))
       " {\"type\":\"Paid\",\"value\":{\"type\":\"OfFamily\",\"value\":{\"type\":\"Kicker\"}}} "
+  -- Synthetic Prototype Audit's "target prototyped spell".
+  Spec.it s "IsPrototyped" $
+    Common.assertCodec
+      s
+      codec
+      Filter.IsPrototyped
+      " {\"type\":\"IsPrototyped\"} "
   Spec.it s "HasDesignation Renowned" $
     Common.assertCodec
       s
