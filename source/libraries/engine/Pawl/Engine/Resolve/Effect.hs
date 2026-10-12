@@ -7090,7 +7090,7 @@ applyOneEffect runSubgame resolving source controller legal chosen effect = case
         -- `n` entries per named object on the duplicate road, the whole count
         -- per object as the battlefield road below mints it. `pure` rather than
         -- a prompt for a duplicate: the object was named before the conjure ran.
-        -- data/scenarios/conjure's Gyox case proves the count reaches exile.
+        -- Pawl.ConjureSpec's Gyox case proves the count reaches exile.
         pickers n = case cards of
           ConjureCards.Written written -> pure (replicate (Integer.toIntSaturating n) (fmap Just (pickWritten written)))
           ConjureCards.Duplicate ref -> pure (concatMap (replicate (Integer.toIntSaturating n) . pure . Just) (duplicatesOf ref))
