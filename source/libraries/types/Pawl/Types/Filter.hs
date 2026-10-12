@@ -1,6 +1,7 @@
 module Pawl.Types.Filter where
 
 import qualified Numeric.Natural as Natural
+import qualified Pawl.Types.BlockStatus as BlockStatus
 import qualified Pawl.Types.CardName as CardName
 import qualified Pawl.Types.CardType as CardType
 import qualified Pawl.Types.Color as Color
@@ -312,13 +313,13 @@ data Filter keyword
     -- CR 511.3 clears the record with the rest of the combat phase's.
     DeclaredAttackedThisCombat
   | -- | CR 509.1g: the candidate is a BLOCKING creature, not since removed under
-    -- CR 506.4. Not the question IsBlocked below asks: CR 509.1h keeps a creature
+    -- CR 506.4. Not the question HasBlockStatus below asks: CR 509.1h keeps a creature
     -- blocked once every blocker has left combat.
     IsBlocking
-  | -- | CR 509.1h: the candidate is a BLOCKED creature -- an attacking creature
-    -- one or more creatures were declared blocking, or that an effect said
-    -- becomes blocked. "Unblocked" is @Not IsBlocked@ (#163).
-    IsBlocked
+  | -- | CR 509.1h: the candidate is an attacking creature with this status.
+    -- "Unblocked" is not @Not@ "blocked": before blockers are declared an
+    -- attacker has neither.
+    HasBlockStatus BlockStatus.BlockStatus
   | -- | CR 508.1a: the candidate was DECLARED as an attacker THIS COMBAT PHASE,
     -- read off Combat.declaredAttackers, which CR 511.3 clears. Not IsAttacking:
     -- CR 506.4a leaves a removed attacker's declaration standing, and CR 508.1k

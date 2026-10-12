@@ -2,6 +2,7 @@ module Pawl.Codec.Filter where
 
 import qualified Data.Typeable as Typeable
 import qualified Numeric.Natural as Natural
+import qualified Pawl.Codec.BlockStatus as BlockStatus
 import qualified Pawl.Codec.CardName as CardName
 import qualified Pawl.Codec.CardType as CardType
 import qualified Pawl.Codec.Color as Color
@@ -106,7 +107,7 @@ codec keywordCodec =
       Arm.payload "IsAttackingBattle" PlayerRelation.codec Filter.IsAttackingBattle (\x -> case x of Filter.IsAttackingBattle y -> Just y; _ -> Nothing),
       Arm.nullary "DeclaredAttackedThisCombat" Filter.DeclaredAttackedThisCombat,
       Arm.nullary "IsBlocking" Filter.IsBlocking,
-      Arm.nullary "IsBlocked" Filter.IsBlocked,
+      Arm.payload "HasBlockStatus" BlockStatus.codec Filter.HasBlockStatus (\x -> case x of Filter.HasBlockStatus y -> Just y; _ -> Nothing),
       Arm.nullary "AttackedThisTurn" Filter.AttackedThisTurn,
       Arm.nullary "DeclaredAttackerThisCombat" Filter.DeclaredAttackerThisCombat,
       Arm.nullary "DeclaredBlockerThisCombat" Filter.DeclaredBlockerThisCombat,
@@ -230,7 +231,7 @@ tagOf x = case x of
   Filter.IsAttackingBattle {} -> "IsAttackingBattle"
   Filter.DeclaredAttackedThisCombat {} -> "DeclaredAttackedThisCombat"
   Filter.IsBlocking {} -> "IsBlocking"
-  Filter.IsBlocked {} -> "IsBlocked"
+  Filter.HasBlockStatus {} -> "HasBlockStatus"
   Filter.AttackedThisTurn {} -> "AttackedThisTurn"
   Filter.DeclaredAttackerThisCombat {} -> "DeclaredAttackerThisCombat"
   Filter.DeclaredBlockerThisCombat {} -> "DeclaredBlockerThisCombat"

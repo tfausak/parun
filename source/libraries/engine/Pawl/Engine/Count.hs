@@ -379,7 +379,7 @@ bakePerspective viewOf context gs candidate predicate =
         Filter.Type.IsAttackingBattle _ -> predicate
         Filter.Type.DeclaredAttackedThisCombat -> predicate
         Filter.Type.IsBlocking -> predicate
-        Filter.Type.IsBlocked -> predicate
+        Filter.Type.HasBlockStatus _ -> predicate
         Filter.Type.AttackedThisTurn -> predicate
         Filter.Type.DeclaredAttackerThisCombat -> predicate
         Filter.Type.DeclaredBlockerThisCombat -> predicate
@@ -886,7 +886,8 @@ orLastKnown live gs oid = Monad.join (Game.liveOrLastKnown (const (live oid)) (J
 -- combat lookup on to the attacked permanent -- attackingPlayer,
 -- attackingPlaneswalkerController and attackingBattleProtector -- answer
 -- Nothing, and Pawl.Types.LastKnown's `attacking` records the query behind
--- that; so does `blocked`, whose one printing asks a CR 608.2i question.
+-- that; so does `blockStatus`, Nothing too, whose one printing asks a CR 608.2i
+-- question.
 --
 -- `oid` is the id it had, so the turn's log still answers what it did while it
 -- existed (CR 608.2i) -- it attacked, it was dealt damage, it entered -- and
@@ -1133,7 +1134,7 @@ viewOfSnapshot deploy mController mOwner isToken counters snapshot =
       -- answer it with either.
       Filter.declaredAttackedThisCombat = False,
       Filter.blocking = False,
-      Filter.blocked = False,
+      Filter.blockStatus = Nothing,
       Filter.blockers = Set.empty,
       Filter.attackedThisTurn = False,
       -- CR 508.1a / 509.1a: a snapshot is CR 608.2h's record of an object, and
