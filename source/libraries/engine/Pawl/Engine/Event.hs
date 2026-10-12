@@ -228,6 +228,7 @@ import qualified Pawl.Types.SacrificeAnyNumber as SacrificeAnyNumber
 import qualified Pawl.Types.SacrificeToEnter as SacrificeToEnter
 import qualified Pawl.Types.ScryR as ScryR
 import qualified Pawl.Types.ScryRewrite as ScryRewrite
+import qualified Pawl.Types.ShownComponent as ShownComponent
 import qualified Pawl.Types.Sickness as Sickness
 import qualified Pawl.Types.SideDeck as SideDeck
 import qualified Pawl.Types.SlotName as SlotName
@@ -4355,7 +4356,7 @@ becomeCopyAs batch candidate asCopy oid = do
               Nothing -> g
               Just expiry ->
                 let (ts, g1) = Game.freshTimestamp g
-                    row = ActiveCopy.MkActiveCopy {ActiveCopy.source = oid, ActiveCopy.timestamp = ts, ActiveCopy.expiry = expiry, ActiveCopy.objects = Set.singleton oid, ActiveCopy.snapshot = stamped}
+                    row = ActiveCopy.MkActiveCopy {ActiveCopy.source = oid, ActiveCopy.timestamp = ts, ActiveCopy.expiry = expiry, ActiveCopy.objects = Set.singleton oid, ActiveCopy.snapshot = stamped, ActiveCopy.turned = Nothing}
                  in g1 {GameState.copyEffects = row : GameState.copyEffects g1}
           pure held
       Foldable.for_ chosen $ \src2 -> do
@@ -4424,7 +4425,7 @@ copiedReading :: ObjectId -> GameState -> PC.ProjectedCharacteristics
 copiedReading src gs =
   let snapshot = Projection.copiableCharacteristics src gs
       backFace = case (Game.lookupObject src gs, Game.cardOf src gs) of
-        (Just obj, Just card) -> Card.showsBackFace card (Object.face obj)
+        (Just obj, Just card) -> Card.showsBackFace card (Game.shownFace obj)
         _ -> False
       -- CR 202.3c's second sentence, the melded twin of CR 202.3b's: "if a
       -- permanent is a copy of a melded permanent (even if that copy is
@@ -8401,7 +8402,10 @@ meldable victims gs = do
 -- CR 730.2i's double-faced components are stamped as a THIRD reading, both
 -- sides read again through Projection.copiableCharacteristicsTurned, which
 -- Game.turnFaceOver swaps in when the merged permanent transforms -- for the
--- flipped reading's reason.
+-- flipped reading's reason -- and a FOURTH, that one flipped, which it swaps in
+-- for the flipped reading, since a flip component stays flipped (CR 710.4).
+-- Each component keeps the face it showed (Pawl.Types.ShownComponent), and
+-- Object.face is left to an unmerged permanent: Game.shownFace reads the pile's.
 --
 -- CR 123.5b / 613.7k: the spell's stickers join the host's, all restamped at
 -- the merge, in their old timestamp order across the two objects, which the rule
@@ -8411,8 +8415,10 @@ merge sid target side = do
   gs <- State.get
   case (Game.lookupObject sid gs, Game.lookupObject target gs) of
     (Just spell, Just permanent) -> case (mergingComponent spell, mergeComponents permanent) of
-      (Just component, Just existing) -> do
-        let merged = case side of
+      (Just merging, Just existing) -> do
+        let -- CR 712.13's face, the one the spell would have entered showing.
+            component = ShownComponent.MkShownComponent merging (Game.cardOf sid gs >>= \card -> Card.enteringFace card (Object.face spell))
+            merged = case side of
               MutateSide.Over -> component NonEmpty.:| existing
               MutateSide.Under -> case existing of
                 first : rest -> first NonEmpty.:| (rest <> [component])
@@ -8441,6 +8447,9 @@ merge sid target side = do
             resultingFlipped = reading Projection.copiableCharacteristicsFlipped unrowed
             -- CR 730.2i's reading: each double-faced component turned over.
             resultingTurned = reading Projection.copiableCharacteristicsTurned unrowed
+            -- CR 730.2h and CR 730.2i at once: turned over, then flipped.
+            turnedFlipped oid = Projection.copiableCharacteristicsFlipped oid . Game.withFaceTurned oid
+            resultingTurnedFlipped = reading turnedFlipped unrowed
             -- CR 613.7 / 611.2a: a stored copy row covering the permanent is
             -- earlier than the merge, so while it lasts the merge applies OVER
             -- it, and once it ends over the stamp above. Each row keeps its own
@@ -8452,13 +8461,17 @@ merge sid target side = do
             -- PC.flipped, the stamp's own slot for it, since a row has no
             -- Binding.flippedCopyOf beside it. Pawl.MutateSpec's "CR 730.2h a
             -- merge over Mirrorweave's copy of a flip card flips with the
-            -- abilities from under" proves it.
+            -- abilities from under" proves it. CR 730.2i's turned reading rides
+            -- as ActiveCopy.turned, flipped reading and all: Pawl.MutateSpec's
+            -- "CR 730.2i/613.7 a merged permanent transforms while
+            -- Mirrorweave's copy stands" proves it.
             alone row = row {ActiveCopy.objects = Set.singleton target}
+            withFlip up flipped = if flipped == up then up else up {PC.flipped = Just flipped}
             rewoven row =
               let board = unrowed {GameState.copyEffects = alone row : GameState.copyEffects unrowed}
-                  faceUp = reading Projection.copiableCharacteristicsFaceUp board
-                  flipped = reading Projection.copiableCharacteristicsFlipped board
-               in (alone row) {ActiveCopy.snapshot = if flipped == faceUp then faceUp else faceUp {PC.flipped = Just flipped}}
+                  snapshot = withFlip (reading Projection.copiableCharacteristicsFaceUp board) (reading Projection.copiableCharacteristicsFlipped board)
+                  turned = withFlip (reading Projection.copiableCharacteristicsTurned board) (reading turnedFlipped board)
+               in (alone row) {ActiveCopy.snapshot = snapshot, ActiveCopy.turned = if turned == snapshot then Nothing else Just turned}
             rows = fmap rewoven (filter (Set.member target . ActiveCopy.objects) (GameState.copyEffects gs))
         State.modify' (`forgetObject` sid)
         State.modify'
@@ -8471,8 +8484,9 @@ merge sid target side = do
                           ( \o ->
                               o
                                 { Object.source = Source.OfMerge merged,
+                                  Object.face = Nothing,
                                   Object.facing = facing,
-                                  Object.bindings = Binding.setMergeCopy resulting resultingFlipped resultingTurned (Object.bindings o),
+                                  Object.bindings = Binding.setMergeCopy resulting resultingFlipped resultingTurned resultingTurnedFlipped (Object.bindings o),
                                   Object.stickers = Seq.sortOn StickerPlacement.timestamp (Object.stickers o <> Object.stickers spell)
                                 }
                           )
@@ -8498,12 +8512,12 @@ merge sid target side = do
 -- answer -- Pawl.Types.MergeComponent's OfMeld arm derives it -- so a melded
 -- permanent that is mutated under keeps CR 712.8g's combined back face and one
 -- that is mutated over contributes that face's abilities (CR 702.140e).
-mergeComponents :: Object.Object -> Maybe [MergeComponent.MergeComponent]
+mergeComponents :: Object.Object -> Maybe [ShownComponent.ShownComponent]
 mergeComponents permanent = case Object.source permanent of
-  Source.OfCard pid -> Just [Game.cardComponentOf permanent pid]
+  Source.OfCard pid -> alone (Game.cardComponentOf permanent pid)
   Source.OfMerge components -> Just (NonEmpty.toList components)
-  Source.OfMeld melded -> Just [MergeComponent.OfMeld melded]
-  Source.OfToken pid -> Just [MergeComponent.OfToken pid]
+  Source.OfMeld melded -> alone (MergeComponent.OfMeld melded)
+  Source.OfToken pid -> alone (MergeComponent.OfToken pid)
   Source.OfAbility _ -> Nothing
   Source.OfTrigger _ -> Nothing
   Source.OfEmblem _ -> Nothing
@@ -8515,6 +8529,9 @@ mergeComponents permanent = case Object.source permanent of
   -- card offering a copy of a PERMANENT card would refute the first half.
   Source.OfCardCopy _ -> Nothing
   Source.OfInherentTrigger _ -> Nothing
+  where
+    -- The one component an unmerged permanent is, showing its own face.
+    alone component = Just [ShownComponent.MkShownComponent component (Object.face permanent)]
 
 -- CR 730.2's OTHER side: "the card or copy that represented that object", which
 -- is what the merging spell contributes to the component list. Two of rule

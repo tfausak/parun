@@ -4,8 +4,8 @@ import qualified Data.List.NonEmpty as NonEmpty
 import qualified Pawl.Types.ActivatedAbilitySource as ActivatedAbilitySource
 import qualified Pawl.Types.InherentTriggerSource as InherentTriggerSource
 import qualified Pawl.Types.MeldSource as MeldSource
-import qualified Pawl.Types.MergeComponent as MergeComponent
 import qualified Pawl.Types.PrintingId as PrintingId
+import qualified Pawl.Types.ShownComponent as ShownComponent
 import qualified Pawl.Types.TriggeredAbilitySource as TriggeredAbilitySource
 
 -- | What is behind an object. The card-shaped constructors name their printing
@@ -63,9 +63,10 @@ data Source
     -- either: what the flip reaches is decided at the merge, which stamps a
     -- second reading of it beside the first (Pawl.Engine.Binding.setMergeCopy).
     --
-    -- CR 730.2i's double-faced component is Object.face, and the merge stamps a
-    -- third reading for it (Pawl.Engine.Binding.turnMergeCopy).
-    OfMerge (NonEmpty.NonEmpty MergeComponent.MergeComponent)
+    -- CR 730.2i's double-faced components each show a face of their own, which
+    -- is why a component carries one here, and the merge stamps a third reading
+    -- for turning them over (Pawl.Engine.Binding.turnMergeCopy).
+    OfMerge (NonEmpty.NonEmpty ShownComponent.ShownComponent)
   | -- | CR 111.3/111.6: a token -- a permanent not represented by a card. Its
     -- characteristics ARE a Card (CR 111.3: effect-defined values are functionally
     -- equivalent to printed ones), interned like any other printing, and carrying

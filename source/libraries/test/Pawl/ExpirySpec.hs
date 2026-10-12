@@ -457,7 +457,7 @@ conditionalSpec s registry = Spec.describe s "Conditional" $ do
     warMammoth <- S.printingOf s registry "War Mammoth"
     let (srcId, targetId, gs) = board piker warMammoth
         (ts, gs1) = Game.freshTimestamp gs
-        stored = gs1 {GameState.copyEffects = [ActiveCopy.MkActiveCopy srcId ts Expiry.Type.WhenTurnedFaceDown (Set.singleton srcId) (Projection.project targetId gs)]}
+        stored = gs1 {GameState.copyEffects = [ActiveCopy.MkActiveCopy srcId ts Expiry.Type.WhenTurnedFaceDown (Set.singleton srcId) (Projection.project targetId gs) Nothing]}
         gone = S.runPure S.identityAnswer stored (Event.destroy Regenerability.Regenerable [srcId])
         (keptChanged, kept) = Engine.runGamePure S.identityAnswer stored Expiry.sweepConditional
         (goneChanged, swept) = Engine.runGamePure S.identityAnswer gone Expiry.sweepConditional

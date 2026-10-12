@@ -3160,7 +3160,7 @@ changeTargetsFor chooser controller oid = do
 -- Pawl.CopySpec's "CR 707.2 a spell that becomes a copy of a Bolt" proves it.
 acquireChoices :: Modal.Type.Modal Card.Type.Card (GrantedAbility.GrantedAbility Card.Type.Card) -> Maybe Object.Object -> Object.Object -> Object.Object
 acquireChoices copiedSpell mOriginal subject =
-  let own = Set.fromList [Binding.you, Binding.triggerSource, Binding.copySource, Binding.flippedMergeSource, Binding.turnedMergeSource]
+  let own = Set.fromList [Binding.you, Binding.triggerSource, Binding.copySource, Binding.flippedMergeSource, Binding.turnedMergeSource, Binding.turnedFlippedMergeSource]
       -- CR 700.2: a spell that is not modal has no mode to choose, so the copy
       -- of one from off the stack still resolves its text: the one selection
       -- the copied text forces (Modal.forcedSelection), where there is one.
@@ -7316,7 +7316,8 @@ applyOneEffect runSubgame resolving source controller legal chosen effect = case
                               ActiveCopy.timestamp = ts,
                               ActiveCopy.expiry = expiry,
                               ActiveCopy.objects = oids,
-                              ActiveCopy.snapshot = pc
+                              ActiveCopy.snapshot = pc,
+                              ActiveCopy.turned = Nothing
                             }
                         rows = fmap row . Map.toList . Map.fromListWith Set.union $ fmap (\subject -> (snapshotFor subject, Set.singleton subject)) subjects
                      in acquire gs1 {GameState.copyEffects = rows <> GameState.copyEffects gs1}

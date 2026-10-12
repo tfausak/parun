@@ -93,6 +93,7 @@ import qualified Pawl.Types.Prompt as Prompt
 import qualified Pawl.Types.Recipient as Recipient
 import qualified Pawl.Types.Response as Response
 import qualified Pawl.Types.Result as Result
+import qualified Pawl.Types.ShownComponent as ShownComponent
 import qualified Pawl.Types.Sickness as Sickness
 import qualified Pawl.Types.SlotName as SlotName
 import qualified Pawl.Types.Source as Source
@@ -2077,7 +2078,7 @@ namedIs wanted gs mo =
           Source.OfMeld meld -> named (MeldSource.result meld)
           -- CR 730.2a: the topmost component is where a merged permanent's name
           -- comes from, so the head of the list answers.
-          Source.OfMerge components -> named (Game.printingOfComponent (NonEmpty.head components))
+          Source.OfMerge components -> named (Game.printingOfComponent (ShownComponent.component (NonEmpty.head components)))
           Source.OfToken printingId -> named printingId
           Source.OfAbility _ -> False
           Source.OfTrigger _ -> False

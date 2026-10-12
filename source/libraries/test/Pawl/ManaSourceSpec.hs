@@ -1851,7 +1851,7 @@ interchangeableSourcesSpec s registry = Spec.describe s "Interchangeable mana so
   Spec.it s "CR 707.2 an Elf a stored copy effect names is a candidate of its own" $ do
     offers <- namedRowOffers s registry $ \bear elf gs ->
       let (ts, gs1) = Game.freshTimestamp gs
-       in gs1 {GameState.copyEffects = [ActiveCopy.MkActiveCopy bear ts Expiry.AtCleanup (Set.singleton elf) (Projection.project elf gs)]}
+       in gs1 {GameState.copyEffects = [ActiveCopy.MkActiveCopy bear ts Expiry.AtCleanup (Set.singleton elf) (Projection.project elf gs) Nothing]}
     Spec.assertEqWith s "asked once, with the named Elf beside the two that are alike" offers [2]
 
   -- CR 509.1b / 611.2c: Veiling Oddity's "creatures can't be blocked this turn"

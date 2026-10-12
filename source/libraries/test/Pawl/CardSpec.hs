@@ -2700,6 +2700,7 @@ reservedSlots =
       Binding.copySource,
       Binding.flippedMergeSource,
       Binding.turnedMergeSource,
+      Binding.turnedFlippedMergeSource,
       Binding.placedSourceCopy,
       Binding.triggerSource,
       Binding.you,

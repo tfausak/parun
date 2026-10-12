@@ -32,6 +32,12 @@
 -- Howler are the DOUBLE-FACED hosts CR 730.2i needs: the Thallid turns over by
 -- its own activated ability, the Werewolf by CR 702.145c/f's day and night.
 --
+-- Synthetic Graftling // Synthetic Graftbeast is the double-faced MUTATE card
+-- CR 730.2i's two-component cases need (Scryfall `keyword:mutate is:dfc
+-- include:extras`, 2026-10-12, no hit): a {1}{G} 2/2 Beast with "Mutate {G}" and "{2}{G}: Transform this
+-- permanent. Activate only as a sorcery.", whose back face is a 4/4 Beast with
+-- trample.
+--
 -- Falcon Abomination is the creature it merges with: {2}{U} 2\/2 Creature --
 -- Bird Zombie, flying, "When this creature enters, create a 2\/2 black Zombie
 -- creature token with decayed". Non-Human (CR 702.140a), a DIFFERENT name, box
@@ -100,6 +106,7 @@ import qualified Pawl.Types.Protection as Protection
 import qualified Pawl.Types.Recipient as Recipient
 import qualified Pawl.Types.Regenerability as Regenerability
 import qualified Pawl.Types.RoomHalf as RoomHalf
+import qualified Pawl.Types.ShownComponent as ShownComponent
 import qualified Pawl.Types.Source as Source
 import qualified Pawl.Types.Subtype as Subtype
 import qualified Pawl.Types.TapState as TapState
@@ -291,6 +298,108 @@ spec s registry = Spec.describe s "Mutate" $ do
     Spec.assertEqWith s "CR 730.2a and Cubwarden, a 3/5, throughout" (Projection.namesOf host night, S.powerToughnessOf host night) (Set.singleton (CardName.MkCardName (Text.pack "Cubwarden")), Just (3, 5))
     Spec.assertEqWith s "setup: nightbound after the merge" (bounds merged) (False, True)
     Spec.assertEqWith s "setup: it became day, then night" (GameState.daytime day, GameState.daytime night) (Just Daytime.Day, Just Daytime.Night)
+  -- CR 730.2i with TWO double-faced components: Synthetic Graftling transforms
+  -- by its own ability, unmerged, and a second Graftling then mutates OVER it.
+  -- The pile shows the top card's front and the transformed card's trample (CR
+  -- 702.140e); transforming it turns EACH component over, so the top shows its
+  -- back and the one under it its front, and a second transform turns both
+  -- back. The discriminator is a Clone's mana value: CR 712.8e makes a copy of
+  -- a back face 0, so a pile read as showing one face for both components gets
+  -- the copy of its top's FRONT face wrong.
+  Spec.it s "CR 730.2i each double-faced component of a merged permanent turns over on its own" $ do
+    forest <- S.printingOf s registry "Forest"
+    graftling <- S.printingOf s registry "Synthetic Graftling"
+    clone <- S.printingOf s registry "Clone"
+    let base = S.landsFor forest S.alice 1 (Setup.emptyGame S.bothPlayers)
+        (host, withHost) = S.addPermanent graftling S.alice base
+        (board, spellId) = S.handOne graftling withHost
+        cloneOf gs =
+          let (_, staged) = S.spellOnStack clone S.alice gs
+              copied = S.runPure (copying host) staged (Stack.resolveTop >> Engine.settleForPriority)
+           in fmap (\copy -> (Projection.namesOf copy copied, PC.manaValue (Projection.project copy copied))) (cloneOn copied)
+        reading gs = (Projection.namesOf host gs, S.powerToughnessOf host gs, Projection.hasKeyword Keyword.Trample host gs)
+    case transformedBy forest host board of
+      Nothing -> Spec.assertFailure s "expected the unmerged Graftling to offer exactly one activated ability"
+      Just alone -> do
+        let merged = merging MutateSide.Over host alone spellId
+        case transformedBy forest host merged of
+          Nothing -> Spec.assertFailure s "expected the merged permanent to offer exactly one activated ability"
+          Just turned -> case transformedBy forest host turned of
+            Nothing -> Spec.assertFailure s "expected the turned permanent to offer the bottom Graftling's activated ability"
+            Just back -> do
+              Spec.assertEqWith
+                s
+                "CR 730.2i/712.8e a Clone of the merged permanent copies its top's FRONT face, mana value 2"
+                (cloneOf merged)
+                (Just (Set.singleton graftlingName, Just 2))
+              Spec.assertEqWith s "CR 730.2i transformed, the top shows its back: a 4/4 Graftbeast with trample" (reading turned) (Set.singleton graftbeastName, Just (4, 4), True)
+              Spec.assertEqWith
+                s
+                "CR 712.8e a Clone of it then copies a back face, mana value 0"
+                (cloneOf turned)
+                (Just (Set.singleton graftbeastName, Just 0))
+              Spec.assertEqWith s "CR 730.2i transformed again, each component turns back" (reading back) (Set.singleton graftlingName, Just (2, 2), True)
+              Spec.assertEqWith s "setup: merged, a 2/2 Graftling with the transformed card's trample" (reading merged) (Set.singleton graftlingName, Just (2, 2), True)
+              Spec.assertEqWith s "setup: CR 701.27a the unmerged Graftling transformed into a 4/4 Graftbeast" (reading alone) (Set.singleton graftbeastName, Just (4, 4), True)
+              Spec.assertEqWith s "setup: two Graftlings represent one permanent" (componentNames host merged) [graftlingName, graftlingName]
+  -- CR 730.2h beside CR 730.2i: Synthetic Graftling mutates OVER an unflipped
+  -- Akki Lavarunner, the pile connects and Akki's printed trigger flips it, and
+  -- the Graftling's ability then transforms it. The flip component must stay
+  -- flipped while the double-faced one turns over, so the pile is a 4/4
+  -- Graftbeast with trample beside Tok-Tok's protection from red -- not the
+  -- flipped 2/2 Graftling it was before the transform.
+  Spec.it s "CR 730.2h/730.2i a flipped merged permanent transforms and stays flipped" $ do
+    forest <- S.printingOf s registry "Forest"
+    akki <- S.printingOf s registry "Akki Lavarunner"
+    graftling <- S.printingOf s registry "Synthetic Graftling"
+    let base = S.landsFor forest S.alice 1 (Setup.emptyGame S.bothPlayers)
+        (host, withHost) = S.addPermanent akki S.alice base
+        (board, spellId) = S.handOne graftling withHost
+        merged = merging MutateSide.Over host board spellId
+        flipped = S.runCombat S.aggressiveAnswer (intoCombat merged)
+        reading gs = (Projection.namesOf host gs, S.powerToughnessOf host gs, Projection.hasKeyword Keyword.Trample host gs, Projection.hasKeyword protectionFromRed host gs)
+    case transformedBy forest host flipped of
+      Nothing -> Spec.assertFailure s "expected the flipped merged permanent to offer exactly one activated ability"
+      Just after -> do
+        Spec.assertEqWith
+          s
+          "CR 730.2h/730.2i a 4/4 Graftbeast with trample and the flipped Tok-Tok's protection from red"
+          (reading after)
+          (Set.singleton graftbeastName, Just (4, 4), True, True)
+        Spec.assertEqWith s "setup: CR 110.5 still flipped" (fmap Object.flipped (Game.lookupObject host after)) (Just True)
+        Spec.assertEqWith s "setup: flipped, a 2/2 Graftling with Tok-Tok's protection from red" (reading flipped) (Set.singleton graftlingName, Just (2, 2), False, True)
+        Spec.assertEqWith s "setup: merged, a 2/2 Graftling without it" (reading merged) (Set.singleton graftlingName, Just (2, 2), False, False)
+        Spec.assertEqWith s "setup: the Graftling over Akki Lavarunner" (componentNames host merged) [graftlingName, CardName.MkCardName (Text.pack "Akki Lavarunner")]
+  -- CR 730.2i under a stored copy: Mirrorweave makes the Falcon Abomination a
+  -- Hill Giant until end of turn, Synthetic Graftling mutates over it, and the
+  -- Graftling's ability transforms the pile that same turn. The merge applies
+  -- over Mirrorweave's copy (CR 613.7), so the turned-over Graftling shows at
+  -- once -- a 4/4 Graftbeast with trample -- and once cleanup ends the copy, the
+  -- Falcon Abomination's flying joins it from under.
+  Spec.it s "CR 730.2i/613.7 a merged permanent transforms while Mirrorweave's copy stands" $ do
+    plains <- S.printingOf s registry "Plains"
+    forest <- S.printingOf s registry "Forest"
+    falcon <- S.printingOf s registry "Falcon Abomination"
+    hillGiant <- S.printingOf s registry "Hill Giant"
+    graftling <- S.printingOf s registry "Synthetic Graftling"
+    mirrorweave <- S.printingOf s registry "Mirrorweave"
+    let base = S.landsFor plains S.alice 4 (Setup.emptyGame S.bothPlayers)
+        (host, withHost) = S.addPermanent falcon S.alice base
+        (giant, withGiant) = S.addPermanent hillGiant S.alice withHost
+        (staged, weaveId) = S.handOne mirrorweave withGiant
+        woven = S.runPure (mutatingAt MutateSide.Over giant) staged (S.cast S.alice weaveId >> Stack.resolveTop >> Engine.settleForPriority)
+        (board, spellId) = S.handOne graftling (S.landsFor forest S.alice 1 woven)
+        merged = merging MutateSide.Over host board spellId
+        step g = S.runPure S.identityAnswer g Engine.runStep
+        cleanedUp gs = step (step (step gs {GameState.remaining = Seq.fromList [Phase.Ending EndingStep.EndStep, Phase.Ending EndingStep.Cleanup]}))
+        reading gs = (Projection.namesOf host gs, S.powerToughnessOf host gs, Projection.hasKeyword Keyword.Trample host gs, Projection.hasKeyword Keyword.Flying host gs)
+    case transformedBy forest host merged of
+      Nothing -> Spec.assertFailure s "expected the merged permanent to offer exactly one activated ability"
+      Just turned -> do
+        Spec.assertEqWith s "CR 730.2i/613.7 transformed under Mirrorweave's copy, it is a 4/4 Graftbeast with trample" (reading turned) (Set.singleton graftbeastName, Just (4, 4), True, False)
+        Spec.assertEqWith s "CR 611.2a after cleanup it is still the Graftbeast, with the Falcon Abomination's flying from under" (reading (cleanedUp turned)) (Set.singleton graftbeastName, Just (4, 4), True, True)
+        Spec.assertEqWith s "setup: merged under Mirrorweave's copy, a 2/2 Graftling with nothing from under" (reading merged) (Set.singleton graftlingName, Just (2, 2), False, False)
+        Spec.assertEqWith s "setup: under Mirrorweave the Falcon Abomination was the Hill Giant" (Projection.namesOf host board) (Set.singleton (CardName.MkCardName (Text.pack "Hill Giant")))
   -- The case above's STORED twin: the copy effect on the target has a duration.
   -- Mirrorweave makes the Falcon Abomination a Hill Giant until end of turn, and
   -- Cubwarden merges with it afterwards. CR 730.2a timestamps the merge then, so
@@ -971,6 +1080,24 @@ transformedMerge plains forest thallid cubwarden =
            in Just (host, merged, S.runPure S.identityAnswer activated (Monad.replicateM_ 4 (Stack.resolveTop >> Engine.settleForPriority)))
         _ -> Nothing
 
+-- Synthetic Graftling's "{2}{G}: Transform this permanent. Activate only as a
+-- sorcery." activated on `host` in alice's main phase, paid by three fresh
+-- Forests, and the stack drained. Nothing unless `host` offers exactly one
+-- activated ability.
+transformedBy :: Printing.Printing -> ObjectId.ObjectId -> GameState.GameState -> Maybe GameState.GameState
+transformedBy forest host gs =
+  let armed = (S.landsFor forest S.alice 3 gs) {GameState.phase = Phase.PrecombatMain, GameState.activePlayer = S.alice, GameState.priority = Just S.alice}
+   in case Activatable.abilitiesFor host armed of
+        [ability] ->
+          let activated = S.runPure S.identityAnswer armed (Activate.activateAbility S.alice host ability)
+           in Just (S.runPure S.identityAnswer activated (Monad.replicateM_ 4 (Stack.resolveTop >> Engine.settleForPriority)))
+        _ -> Nothing
+
+-- Synthetic Graftling's two faces.
+graftlingName, graftbeastName :: CardName.CardName
+graftlingName = CardName.MkCardName (Text.pack "Synthetic Graftling")
+graftbeastName = CardName.MkCardName (Text.pack "Synthetic Graftbeast")
+
 -- CR 502.2's day/night check, run as the untap step's turn-based actions with
 -- `n` spells on the previous turn's books -- Pawl.TransformSpec's own helper.
 untapStepAfter :: Natural.Natural -> GameState.GameState -> GameState.GameState
@@ -1140,7 +1267,7 @@ merging side host board spellId =
 mutatingAt :: MutateSide.MutateSide -> ObjectId.ObjectId -> Prompt.Prompt r -> r
 mutatingAt side host p = case p of
   Prompt.ChooseCost _ _ _ candidates ->
-    Maybe.fromMaybe (Cost.firstOffered candidates) (List.find ((== Just mutateCost) . Cost.Type.mana) candidates)
+    Maybe.fromMaybe (Cost.firstOffered candidates) (List.find ((`elem` [Just mutateCost, Just graftCost]) . Cost.Type.mana) candidates)
   Prompt.ChooseTargets _ _ _ sets -> fmap (Set.filter ((== Just host) . Recipient.objectOf) . snd) sets
   Prompt.ChooseMutateSide {} -> side
   _ -> S.identityAnswer p
@@ -1183,6 +1310,10 @@ componentKind component = case component of
 -- Cubwarden's mutate cost, {2}{W}{W}, written as the announcement names it.
 mutateCost :: ManaCost.ManaCost
 mutateCost = ManaCost.MkManaCost [ManaSymbol.Generic 2, theWhite, theWhite]
+
+-- Synthetic Graftling's, {G}.
+graftCost :: ManaCost.ManaCost
+graftCost = ManaCost.MkManaCost [ManaSymbol.OfType (ManaType.Colored Color.Green)]
 
 theWhite :: ManaSymbol.ManaSymbol
 theWhite = ManaSymbol.OfType (ManaType.Colored Color.White)
@@ -1284,7 +1415,7 @@ asMergeOfEveryKind oid pid gs =
   gs
     { GameState.objects =
         Map.adjust
-          (\o -> o {Object.source = Source.OfMerge (MergeComponent.OfCard pid NonEmpty.:| [MergeComponent.OfToken pid, MergeComponent.OfSpellCopy pid])})
+          (\o -> o {Object.source = Source.OfMerge (fmap (`ShownComponent.MkShownComponent` Nothing) (MergeComponent.OfCard pid NonEmpty.:| [MergeComponent.OfToken pid, MergeComponent.OfSpellCopy pid]))})
           oid
           (GameState.objects gs)
     }

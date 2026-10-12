@@ -25,8 +25,23 @@ spec s = Spec.describe s "Pawl.Codec.ActiveCopy" $ do
           ActiveCopy.timestamp = Timestamp.MkTimestamp 2,
           ActiveCopy.expiry = Expiry.AtCleanup,
           ActiveCopy.objects = Set.fromList [ObjectId.MkObjectId 3, ObjectId.MkObjectId 4],
-          ActiveCopy.snapshot = ProjectedCharacteristicsSpec.minimalCharacteristics
+          ActiveCopy.snapshot = ProjectedCharacteristicsSpec.minimalCharacteristics,
+          ActiveCopy.turned = Nothing
         }
       " {\"source\":1,\"timestamp\":2,\"expiry\":{\"type\":\"AtCleanup\"},\"objects\":[3,4],\"snapshot\":{\"names\":[\"Mountain\"],\"cardTypes\":[{\"type\":\"Land\"}]}} "
+  -- CR 730.2i: a merge applied over the row, with its turned-over reading.
+  Spec.it s "a merged permanent's row with its turned reading" $
+    Common.assertCodec
+      s
+      ActiveCopy.codec
+      ActiveCopy.MkActiveCopy
+        { ActiveCopy.source = ObjectId.MkObjectId 1,
+          ActiveCopy.timestamp = Timestamp.MkTimestamp 2,
+          ActiveCopy.expiry = Expiry.AtCleanup,
+          ActiveCopy.objects = Set.fromList [ObjectId.MkObjectId 3],
+          ActiveCopy.snapshot = ProjectedCharacteristicsSpec.minimalCharacteristics,
+          ActiveCopy.turned = Just ProjectedCharacteristicsSpec.minimalCharacteristics
+        }
+      " {\"source\":1,\"timestamp\":2,\"expiry\":{\"type\":\"AtCleanup\"},\"objects\":[3],\"snapshot\":{\"names\":[\"Mountain\"],\"cardTypes\":[{\"type\":\"Land\"}]},\"turned\":{\"names\":[\"Mountain\"],\"cardTypes\":[{\"type\":\"Land\"}]}} "
   Spec.it s "has a schema" $
     Common.assertHasSchema s ActiveCopy.codec

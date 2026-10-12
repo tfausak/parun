@@ -281,6 +281,9 @@ data Object = MkObject
     -- Per-incarnation: cleared by newIncarnation and set again only by a move
     -- that says which face the object arrives showing (CR 709.3a, CR 712.13).
     -- That clear is also CR 712.8a rather than only a forgetting.
+    --
+    -- Nothing for a MERGED permanent, whose components each show a face of
+    -- their own (CR 730.2i, Pawl.Types.ShownComponent).
     face :: Maybe CardName.CardName,
     -- | CR 701.27f: WHEN this permanent last turned over, so that "it hasn't
     -- transformed or converted since the ability was put onto the stack" is a
