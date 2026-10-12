@@ -975,8 +975,9 @@ barredBlocks blockers attackers gs =
 
 -- CR 509.1b / 611.2c: every (blocker, attacker) pair a stored,
 -- resolution-generated "can't be blocked" forbids -- Veiling Oddity's
--- "creatures can't be blocked this turn". Every blocker is barred from an
--- attacker the row's class matches, the class re-read against the LIVE board
+-- "creatures can't be blocked this turn". Every blocker the row's blocker filter
+-- matches is barred from an attacker its class matches, both re-read against
+-- the LIVE board
 -- here, so a creature that entered after the effect began is inside it:
 -- `storedSubjects`'s Matching arm and for its reasons, CR 109.5's "you" the
 -- STORED controller among them. Pawl.CombatSpec's StoredEvasion group is the

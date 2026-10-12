@@ -2,21 +2,23 @@ module Pawl.Types.Designation where
 
 -- | A designation A PERMANENT can have and nothing else about it: CR 702.112b's
 -- renowned, CR 701.37b's monstrous, CR 701.60b's suspected, CR 719.3b's solved,
--- CR 722.3b's prepared, CR 702.171b's saddled, CR 701.64b's harnessed and CR
--- 702.158b's three sectors. Every one of those rules words
+-- CR 722.3b's prepared, CR 702.171b's saddled and CR 701.64b's harnessed. Every
+-- one of those rules words
 -- the mark the same way -- only a permanent can have it, and it is "neither an
 -- ability nor part of the permanent's copiable values" -- so they are one
 -- payload rather than a field, an opcode and a read atom apiece
 -- (Pawl.Types.Object's `designations`, Effect.Designate,
--- Quantity.HasDesignation, Filter.HasDesignation).
+-- Quantity.HasDesignation, Filter.HasDesignation). CR 702.158b makes its three
+-- sectors permanent-only and not copiable too, so they join them.
 --
 -- WHERE THE MARK ENDS is the one axis they do not share, and it is a sweep
--- rather than a field: all but saddled last until the permanent leaves the
--- battlefield, which CR 400.7's new object gives for free, and CR 702.171b adds
--- "or the end of the turn" to saddled alone -- Pawl.Engine.Expiry.dropAtCleanup's
--- clearedSaddles. CR 702.158b ends the sectors when no player controls a space
--- sculptor any more, Pawl.Engine.SpaceSculptor.lapse. That is not the objection that keeps goaded out below, which is
--- per-PLAYER as well as expiring.
+-- rather than a field: all but saddled and the sectors last until the permanent
+-- leaves the battlefield, which CR 400.7's new object gives for free, and CR
+-- 702.171b adds "or the end of the turn" to saddled alone --
+-- Pawl.Engine.Expiry.dropAtCleanup's clearedSaddles. That is not the objection
+-- that keeps goaded out below, which is per-PLAYER as well as expiring. CR
+-- 702.158b ends a sector earlier still, once no player controls a space
+-- sculptor (Pawl.Engine.SpaceSculptor.lapse).
 --
 -- CR 701.37c's X rides alongside rather than inside: Object.designationValues
 -- keys a number by which mark set it, and Quantity.DesignationValue reads one

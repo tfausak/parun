@@ -8,8 +8,9 @@ import qualified Pawl.Types.PlayerId as PlayerId
 import qualified Pawl.Types.Timestamp as Timestamp
 
 -- | CR 509.1b / 611.2c: a stored, resolution-generated restriction that the
--- attackers 'affected' describes can't be blocked, held in GameState.evasions.
--- Veiling Oddity's "creatures can't be blocked this turn" is the producer.
+-- attackers 'affected' describes can't be blocked by the creatures 'blockers'
+-- describes, held in GameState.evasions. Veiling Oddity's "creatures can't be
+-- blocked this turn" and Space Beleren's +1 are the producers.
 --
 -- Read at Pawl.Engine.CombatRestriction.storedEvasions, which `barredBlocks`
 -- unions beside the printed Pawl.Types.CantBeBlockedBy rows, so
