@@ -82,7 +82,7 @@ data Object = MkObject
     --
     -- Pawl.Engine.Visibility.sees answers CR 708.5's who-may-look. Not
     -- implemented: an answerer is still handed the printing, since Object.source
-    -- holds it (#1412).
+    -- holds it (#10).
     facing :: Facing.Facing,
     -- | CR 110.5: flipped or unflipped, another of that rule's status
     -- categories, beside `tapped` and `facing` above. CR 710.2 is what it does: "once a permanent is

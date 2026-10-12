@@ -805,7 +805,7 @@ cyclingSpec s registry = Spec.describe s "Cycling" $ do
   -- goes from one hidden zone to another -- so the log entry is the only
   -- record that a Forest in Alice's hand is a fact Bob gets to play around.
   -- The log records the reveal; what an answerer is shown is still the whole
-  -- state (#1412).
+  -- state (#10).
   Spec.it s "CR 701.20a basic landcycling reveals the Forest it fetches" $ do
     barrens <- S.printingOf s registry "Ash Barrens"
     forest <- S.printingOf s registry "Forest"

@@ -8790,7 +8790,7 @@ turnUpKeptDraws = do
 -- CR 121.9's "may look at that card as they draw it before choosing" is logged
 -- as a look before the first offer, and only when there is an offer to make.
 -- Not implemented: an answerer is handed the whole state, hidden cards
--- included, and the prompt names the card regardless (#1412).
+-- included, and the prompt names the card regardless (#10).
 --
 -- The reveal goes through the ordinary funnel with CR 702.94a's cause, which is
 -- what makes the linked trigger (CR 603.11) findable: `eventTriggers`' hand source

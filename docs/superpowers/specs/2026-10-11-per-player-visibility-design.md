@@ -230,6 +230,9 @@ position or as "a card in bob's hand". It is the first prompt built from
 
 ## Unit 7 (sketch): redacted views (#1412)
 
+Tracked in #10 since 2026-10-12, when #1412 closed with units 1–5 landed: the
+view has no consumer until #10's clients exist.
+
 An allowlist `PlayerView` type, built from `sees` and `witnessed`, never from
 a copy of `GameState`, so every new field is a compile-time decision. Fresh
 view-level handles per incarnation and per shuffle, with the old-to-new link
