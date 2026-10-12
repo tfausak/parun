@@ -1,5 +1,6 @@
 module Pawl.Types.KeywordDesignator where
 
+import qualified Numeric.Natural as Natural
 import qualified Pawl.Types.KeywordFamily as KeywordFamily
 
 -- | CR 702: WHICH RULE-702 ABILITY a card's sentence names, when the sentence is
@@ -28,4 +29,7 @@ data KeywordDesignator keyword
   | -- | CR 702.33e: the kicker and multikicker abilities an object's "if it was
     -- kicked" is linked to, a sticker kicker's not among them (CR 702.33h).
     PrintedKicker
+  | -- | CR 702.56b / 702.157b: the nth of an object's identical instances of one
+    -- keyword, counting from 1, whose payments are its own.
+    OfInstance keyword Natural.Natural
   deriving (Eq, Ord, Show)

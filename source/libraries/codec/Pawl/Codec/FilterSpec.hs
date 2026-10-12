@@ -61,12 +61,6 @@ spec s = Spec.describe s "Pawl.Codec.Filter" $ do
       codec
       (Filter.HasColor Color.Black)
       " {\"type\":\"HasColor\",\"value\":{\"type\":\"Black\"}} "
-  Spec.it s "IsMonocolored" $
-    Common.assertCodec
-      s
-      codec
-      Filter.IsMonocolored
-      " {\"type\":\"IsMonocolored\"} "
   Spec.it s "HasSubtype" $
     Common.assertCodec
       s

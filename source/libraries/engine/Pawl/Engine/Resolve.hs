@@ -493,7 +493,7 @@ giftOnSpellResolution runSubgame oid controller = do
   let object = Game.lookupObject oid gs
       promised = maybe Map.empty Object.paidCosts object
       slots = maybe Map.empty (Binding.targetsOf . Object.bindings) object
-      gifts = [something | Keyword.Gift something <- Map.keys (Projection.keywordsOf oid gs), Map.findWithDefault 0 (Keyword.Gift something) promised > 0]
+      gifts = [something | Keyword.Gift something <- Map.keys (Projection.keywordsOf oid gs), any (> 0) (Map.findWithDefault Seq.empty (Keyword.Gift something) promised)]
       give something = applyEffectWith runSubgame oid oid controller slots slots (Keyword.Engine.giftEffect something)
   Monad.when (Keyword.Engine.isSpellCard (Projection.cardTypesOf oid gs) && not (null gifts)) $ do
     Monad.forM_ gifts give

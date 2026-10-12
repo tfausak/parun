@@ -432,7 +432,6 @@ filterNames asking criterion = case criterion of
   Filter.HasCardType _cardType -> False
   Filter.HasSupertype _supertype -> False
   Filter.HasColor _color -> False
-  Filter.IsMonocolored -> False
   Filter.SharesWithSource _trait -> False
   Filter.HasSubtype _subtype -> False
   Filter.HasName _name -> False
@@ -1848,6 +1847,7 @@ keywordDesignatorNames asking x = case x of
   KeywordDesignator.OfFamily _keywordFamily -> False
   KeywordDesignator.OfKeyword keyword -> keywordNames asking keyword
   KeywordDesignator.PrintedKicker -> False
+  KeywordDesignator.OfInstance keyword _ordinal -> keywordNames asking keyword
 
 keywordTallyNames :: Asking -> KeywordTally.KeywordTally keyword -> Bool
 keywordTallyNames asking x = case x of

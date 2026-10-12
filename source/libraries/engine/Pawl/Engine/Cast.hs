@@ -782,19 +782,23 @@ entwineOffer spending pid oid candidates gs = case Game.faceOf oid gs of
 -- CR 601.2f: one candidate cost with every optional additional payment announced
 -- so far added to it -- CR 118.8a's "any number of additional costs may be
 -- applied", so a cost declared N times is added N times (CR 702.33c, CR 702.157a).
-withOptionalPayments :: Map.Map Keyword Natural -> Cost Keyword -> Cost Keyword
+withOptionalPayments :: Map.Map Keyword (Seq.Seq Natural) -> Cost Keyword -> Cost Keyword
 withOptionalPayments paid candidate =
   Map.foldrWithKey
-    (\keyword times acc -> maybe acc (\(cost, _) -> List.foldl' Cost.plus acc (List.genericReplicate times cost)) (Keyword.optionalCost keyword))
+    (\keyword times acc -> maybe acc (\(cost, _) -> List.foldl' Cost.plus acc (List.genericReplicate (sum times) cost)) (Keyword.optionalCost keyword))
     candidate
     paid
 
 -- CR 601.2b: the announcement of this spell's optional additional costs -- CR
 -- 702.33a/b/c's kicker costs, CR 702.157a's squad, CR 702.175a's offspring, CR
 -- 702.56a's replicate and CR 702.153a's casualty --
--- one question per distinct keyword, answered as a count up to the limit across
--- its instances (Keyword.paymentLimit): the record CR 702.33d's designation is
--- made of, and empty for a player who declared none.
+-- each answered as a count: the record CR 702.33d's designation is made of, and
+-- empty for a player who declared none. A cost each instance pays at most once
+-- is one question for all the spell's instances of it, its answer how many were
+-- paid, recorded as the first that many (Keyword.paymentLimit says why that is
+-- no choice); an unlimited one Keyword.paidPerInstance names is a question per
+-- instance, each answer that instance's own (CR 702.56b, 702.157b), and any
+-- other is one question for its instances' combined count.
 --
 -- Two conditions per cost, and each is entwineOffer's above:
 --
@@ -824,16 +828,29 @@ withOptionalPayments paid candidate =
 -- together are payable. How high a multikicker count may go is not gated here at
 -- all -- the answer is honoured and then measured, which is Prompt.ChooseX's
 -- posture, and castProposed rejects a cast whose announced total nothing can pay.
-announceOptionalCosts :: Seq.Seq ModeIndex.ModeIndex -> ManaSpending -> PlayerId -> ObjectId -> [([ManaCost.ManaCost], Cost Keyword)] -> [(Keyword, Maybe Natural)] -> GameState -> Game (Map.Map Keyword Natural)
+announceOptionalCosts :: Seq.Seq ModeIndex.ModeIndex -> ManaSpending -> PlayerId -> ObjectId -> [([ManaCost.ManaCost], Cost Keyword)] -> [(Keyword, Natural)] -> GameState -> Game (Map.Map Keyword (Seq.Seq Natural))
 announceOptionalCosts modes spending pid sid candidates offers gs =
-  let ask paid (keyword, limit) = case Keyword.optionalCost keyword of
-        Just (cost, _)
-          | any (\(extra, candidate) -> payableCost (Just modes) extra spending pid sid gs (Cost.plus (withOptionalPayments paid candidate) cost)) candidates -> do
-              decision <- Game.choose (Prompt.ChooseKicker (Decide.deciderFor pid gs) pid sid keyword limit)
-              let times = KickerDecision.unwrap decision
-              pure (if times == 0 then paid else Map.insert keyword times paid)
+  let payable paid cost = any (\(extra, candidate) -> payableCost (Just modes) extra spending pid sid gs (Cost.plus (withOptionalPayments paid candidate) cost)) candidates
+      choose keyword limit = KickerDecision.unwrap <$> Game.choose (Prompt.ChooseKicker (Decide.deciderFor pid gs) pid sid keyword limit)
+      -- An instance asked nothing, its cost unpayable, still holds its place.
+      answer keyword cost paid = if payable paid cost then choose keyword Nothing else pure 0
+      perInstance keyword cost paid _ = do
+        times <- answer keyword cost paid
+        pure (Map.insertWith (flip (<>)) keyword (Seq.singleton times) paid)
+      -- A once-each cost's count is that many instances paid once; an unlimited
+      -- one asked together is one combined count.
+      recorded limit times = case limit of
+        Just _ -> Seq.fromList (List.genericReplicate times 1)
+        Nothing -> Seq.singleton times
+      ask paid (keyword, instances) = case Keyword.optionalCost keyword of
+        Just (cost, Nothing)
+          | Keyword.paidPerInstance keyword -> Monad.foldM (perInstance keyword cost) paid [1 .. instances]
+        Just (cost, limit)
+          | payable paid cost -> do
+              times <- choose keyword (Keyword.paymentLimit instances keyword)
+              pure (Map.insert keyword (recorded limit times) paid)
         _ -> pure paid
-   in Monad.foldM ask Map.empty offers
+   in Map.filter (any (> 0)) <$> Monad.foldM ask Map.empty offers
 
 -- CR 601.2b's record, written onto the spell's own stack incarnation -- CR
 -- 702.33d's "that spell has been kicked" among it. Read back by Quantity.TimesPaid
@@ -843,7 +860,7 @@ announceOptionalCosts modes spending pid sid candidates offers gs =
 -- A write of a field no layer computes, and one direction only: rule 702.33d gives
 -- no way to unkick a spell, and CR 400.7 ends the designation with the incarnation
 -- (Object.newIncarnation), so nothing has to clear it.
-stampPaidCosts :: Map.Map Keyword Natural -> ObjectId -> GameState -> GameState
+stampPaidCosts :: Map.Map Keyword (Seq.Seq Natural) -> ObjectId -> GameState -> GameState
 stampPaidCosts paid sid gs =
   gs
     { GameState.objects =
@@ -3045,10 +3062,9 @@ castProposed perform spending pid oid sid face castFrom preparedFor keywordsBefo
           announcedCandidates = fmap (fmap (withModeCost . withEscalate . withEntwine)) candidates
           -- CR 702.33a/b/c's, CR 702.157a's and CR 702.175a's costs, read ONCE off
           -- the spell's keywords: the announcement below and the limit it is
-          -- judged against are the same list. Each with its limit across every
-          -- instance the spell holds (Keyword.paymentLimit), so two offspring
-          -- {2} are two payments (CR 702.175b).
-          optionalOffers = fmap (\keyword -> (keyword, Keyword.paymentLimit (Map.findWithDefault 1 keyword instances) keyword)) (Keyword.optionalCosts keywords)
+          -- judged against are the same list. Each with how many instances the
+          -- spell holds, so two offspring {2} are two payments (CR 702.175b).
+          optionalOffers = fmap (\keyword -> (keyword, Map.findWithDefault 1 keyword instances)) (Keyword.optionalCosts keywords)
       -- CR 702.33a: kicker, asked HERE -- after the modes and before the cost, the
       -- variable and the targets -- because that is where CR 601.2b puts the
       -- announcement of an additional cost, and rule 702.33a bundles nothing else
@@ -3133,7 +3149,7 @@ castProposed perform spending pid oid sid face castFrom preparedFor keywordsBefo
       -- reason.
       let overKickerLimit =
             any
-              (\(keyword, limit) -> maybe False (Map.findWithDefault 0 keyword paid >) limit)
+              (\(keyword, count) -> maybe False (sum (Map.findWithDefault Seq.empty keyword paid) >) (Keyword.paymentLimit count keyword))
               optionalOffers
           withKicker = withOptionalPayments paid
           -- CR 702.27a's cost is additional too, so it rides the same fold.
@@ -3652,7 +3668,7 @@ castProposed perform spending pid oid sid face castFrom preparedFor keywordsBefo
                           -- CR 123.3b allows only on a spell they own (Sticker.place).
                           -- Before CR 601.2i's event, so a cast trigger sees it
                           -- (Wicker Picker's ruling).
-                          stickerKicks <- State.gets (maybe 0 (\o -> sum [n | (Keyword.Type.StickerKicker {}, n) <- Map.toList (Object.paidCosts o)]) . Game.lookupObject sid)
+                          stickerKicks <- State.gets (maybe 0 (\o -> sum [sum n | (Keyword.Type.StickerKicker {}, n) <- Map.toList (Object.paidCosts o)]) . Game.lookupObject sid)
                           Monad.forM_ [1 .. stickerKicks] $ \_ -> do
                             Monad.void (Event.putPlayerCounters (CounterCause.ByPayment pid) pid PlayerCounterKind.Ticket 1)
                             Monad.void (Sticker.place True pid sid (Set.fromList [minBound .. maxBound]) Nothing False)

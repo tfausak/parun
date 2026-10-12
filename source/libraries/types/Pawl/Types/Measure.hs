@@ -10,4 +10,6 @@ data Measure
     Toughness
   | -- | CR 202.3: mana value.
     ManaValue
+  | -- | CR 105.2: how many of the five colours the object is.
+    ColorCount
   deriving (Bounded, Enum, Eq, Ord, Show)

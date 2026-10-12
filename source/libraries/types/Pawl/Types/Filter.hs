@@ -41,7 +41,6 @@ data Filter keyword
   = HasCardType CardType.CardType -- CR 205 / 300: the object's card types include this one.
   | HasSupertype Supertype.Supertype -- CR 205.4: the object's supertypes include this one.
   | HasColor Color.Color -- CR 105.2: the object's colours include this one.
-  | IsMonocolored -- CR 105.2a: the object is exactly one of the five colours.
   | -- | The candidate shares this trait with the object the evaluation comes
     -- from (CR 113.7), read off Pawl.Engine.Filter.Context's source fields.
     SharesWithSource Trait.Trait
