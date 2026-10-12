@@ -1899,12 +1899,12 @@ baseCharacteristics oid gs = case Game.faceOf oid gs of
 -- how data/scenarios/prototype's "CR 718.2a / 718.3c a copy of the prototyped
 -- spell is a white 2/2 too" passes.
 --
--- PC.prototyped is set here for the same reason: it is the last sentence of CR
--- 718.3d, that a rule or effect referring to a permanent that was a prototyped
--- spell refers to its copy too, carried by the copiable values a copy freezes.
--- Filter.IsPrototyped reads it, and data/scenarios/prototype's "CR 718.3d
--- Synthetic Prototype Audit destroys a Clone of the prototyped Assembler" is
--- the proof.
+-- PC.prototyped is set here too, so a record taken of this object's values
+-- (an event snapshot, Count.viewOfSnapshot) says so. A copy's answer, the last
+-- sentence of CR 718.3d, comes from Pawl.Engine.Event.copiedReading, which also
+-- sets it from the copied object's own record. That is why a Clone already
+-- answers without this line, and why this line is a regression fence for
+-- snapshots alone.
 --
 -- CR 718.4 is not re-asked here. Object.prototyped is stamped only as the card
 -- is cast (Pawl.Engine.Cast.stampPrototyped) and survives only the

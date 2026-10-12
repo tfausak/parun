@@ -1202,6 +1202,20 @@ voidWinnowerSpec s registry =
       Spec.assertBool s (PlayerEffect.choiceCouldEscape S.bob (PlayerEffect.liveSource Nothing) cheap bobsDisaster VariableChoice.Announced board) "and a large enough X takes it out"
       Spec.assertBool s (not (PlayerEffect.choiceCouldEscape S.bob (PlayerEffect.liveSource Nothing) cheap bobsPiker VariableChoice.Announced board)) "while the fixed spell beside it has no choice to make"
 
+    -- CR 601.3b / 718.3: the prototype half of choiceCouldApply's search
+    -- stamps Object.prototyped on a hypothetical board, and Filter.IsPrototyped
+    -- reads that stamp. Only a card that offers rule 702.160a's choice may be
+    -- stamped, or a permission keyed on the atom would name Hill Giant. The
+    -- criterion is written by the test; no permission in the pool names it.
+    Spec.it s "CR 601.3b / 718.3 only a card with prototype could become a prototyped spell" $ do
+      plains <- S.printingOf s registry "Plains"
+      assembler <- S.printingOf s registry "Autonomous Assembler"
+      giant <- S.printingOf s registry "Hill Giant"
+      let (withAssembler, assemblerId) = S.handOne assembler (S.landsInPlay plains 2)
+          (board, giantId) = S.handOne giant withAssembler
+      Spec.assertBool s (not (PlayerEffect.choiceCouldApply (PlayerEffect.liveSource Nothing) Filter.Type.IsPrototyped giantId board)) "Hill Giant has no prototype to cast it with"
+      Spec.assertBool s (PlayerEffect.choiceCouldApply (PlayerEffect.liveSource Nothing) Filter.Type.IsPrototyped assemblerId board) "while the Assembler beside it does"
+
     -- CR 601.2e with CR 202.3e's second half: CR 601.3a let bob BEGIN, and the X
     -- he announces is then judged. X = 2 leaves {X}{R}{R} at mana value 4, even,
     -- so the cast is taken back; X = 3 makes it 5 on the stack. The Winnower gone
