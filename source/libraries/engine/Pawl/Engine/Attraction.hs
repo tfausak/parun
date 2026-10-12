@@ -1,8 +1,9 @@
 -- | CR 717 and CR 701.51: a player's Attraction deck and opening an Attraction
 -- from it, and the move off the top of a supplementary deck that the Unstable
--- FAQ's assemble shares with it (Pawl.Engine.Contraption). Rolling to visit (CR 701.52) is a die roll and lives with the CR 706
--- pipeline in Pawl.Engine.Resolve.Effect; Pawl.Engine.Engine runs it as CR
--- 703.4g's turn-based action.
+-- FAQ's assemble shares with it (Pawl.Engine.Contraption). Rolling to visit (CR
+-- 701.52) is a die roll and lives with the CR 706 pipeline in
+-- Pawl.Engine.Resolve.Effect; Pawl.Engine.Engine runs it as CR 703.4g's
+-- turn-based action.
 module Pawl.Engine.Attraction where
 
 import qualified Control.Monad as Monad
