@@ -1460,6 +1460,37 @@ casualtySpec s registry = Spec.describe s "Casualty" $ do
     Spec.assertEqWith s "one paid: alice drew two, one creature sacrificed" (S.handSize S.alice (after 1), fodder 1) (2, 1)
     Spec.assertEqWith s "CR 603.4 none paid: alice drew one, both creatures standing" (S.handSize S.alice (after 0), fodder 0) (1, 2)
 
+-- CR 702.175b: Coruscation Mage prints offspring {2} and Zinnia, Valley's Voice
+-- grants a second, so each is paid separately and triggers on its own payment.
+-- Three boards with the same six Mountains, differing in ONE answer. The
+-- data/scenarios/cast "cr-702-175b" pair states the order prompt; this group
+-- answers it with S.identityAnswer, so a wrong trigger count reaches the token
+-- count instead of stopping at the prompt.
+offspringSpec :: (Monad m) => Spec.Spec m n -> Registry.Registry m -> n ()
+offspringSpec s registry = Spec.describe s "Offspring" $ do
+  Spec.it s "CR 702.175b two offspring {2} on Coruscation Mage make one token per instance paid" $ do
+    mage <- S.printingOf s registry "Coruscation Mage"
+    mountain <- S.printingOf s registry "Mountain"
+    zinnia <- S.printingOf s registry "Zinnia, Valley's Voice"
+    let (_, withZinnia) = S.addPermanent zinnia S.alice (S.landsFor mountain S.alice 6 (Setup.emptyGame S.bothPlayers))
+        (spellId, g1) = S.addHandCard mage S.alice withZinnia
+        board =
+          g1
+            { GameState.activePlayer = S.alice,
+              GameState.phase = Phase.PrecombatMain,
+              GameState.priority = Just S.alice
+            }
+        answer :: Natural.Natural -> Prompt.Prompt r -> r
+        answer times p = case p of
+          Prompt.ChooseKicker {} -> KickerDecision.MkKickerDecision times
+          _ -> S.identityAnswer p
+        step times gs action = snd (Engine.runGamePure (answer times) gs (action >> Engine.settleForPriority))
+        resolveAll times gs = if null (GameState.stack gs) then gs else resolveAll times (step times gs Stack.resolveTop)
+        mages times = S.countOnBattlefieldByName (CardName.MkCardName (Text.pack "Coruscation Mage")) S.alice (resolveAll times (step times board (S.cast S.alice spellId)))
+    Spec.assertEqWith s "CR 702.175b both paid: the Mage and two tokens" (mages 2) 3
+    Spec.assertEqWith s "CR 702.175b one paid: the Mage and one token" (mages 1) 2
+    Spec.assertEqWith s "CR 603.4 none paid: the Mage alone" (mages 0) 1
+
 -- CR 702.69a's gravestorm: "When you cast this spell, copy it for each permanent
 -- that was put into a graveyard from the battlefield this turn."
 --
@@ -2693,6 +2724,7 @@ spec s registry = Spec.describe s "Pawl.Engine.Trigger" $ do
   stormSpec s registry
   replicateSpec s registry
   casualtySpec s registry
+  offspringSpec s registry
   gravestormSpec s
   conspireSpec s registry
   demonstrateSpec s registry

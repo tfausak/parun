@@ -3607,8 +3607,13 @@ optionalCost keyword = case keyword of
 -- keyword may declare its cost, Nothing for no limit. Each instance is its own
 -- ability offering its own cost (CR 702.56b, 702.78b, 702.153b, 702.157b,
 -- 702.175b), so optionalCost's limit is per instance. Object.paidCosts then
--- counts the instances paid, and which of identical instances those were is a
--- choice no rule or board can tell apart.
+-- counts the instances paid. Under those five rules each instance triggers on
+-- its own payment, so which of identical instances were paid changes nothing.
+-- Kicker's and bargain's payoffs instead link to the PRINTED instance (CR
+-- 702.33e, 702.166c), so a printed kicker beside an identical granted one would
+-- care which was paid, and this count cannot say. MTGJSON 2026-08-23 text search
+-- `(gains?|ha(ve|s)) (kicker|bargain)`, no hit; a card granting a spell kicker
+-- [cost] or bargain would refute it.
 --
 -- Not implemented: two identical gift instances paid separately, each with its
 -- own chosen opponent, where Object.chosenPlayer holds one (#5046).
