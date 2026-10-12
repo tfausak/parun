@@ -303,7 +303,8 @@ data View = MkView
     -- question and never `blocking`'s.
     blockStatus :: Maybe BlockStatus.BlockStatus,
     -- CR 509.1g: the creatures blocking this candidate right now, the member set
-    -- Combat.blockers keeps under its key. Empty wherever `blocked` is False.
+    -- Combat.blockers keeps under its key. Empty wherever `blockStatus` is not
+    -- Just Blocked.
     blockers :: Set.Set ObjectId.ObjectId,
     -- CR 608.2i: was this candidate declared as an attacker earlier this turn?
     -- Unlike `attacking` not even a present state: it is a look-back read of the

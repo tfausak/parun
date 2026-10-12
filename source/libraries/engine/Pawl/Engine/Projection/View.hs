@@ -603,6 +603,10 @@ viewOfCharacteristics peers oid pc controller counters gs =
       -- blocked creature stays blocked once every creature blocking it has left
       -- combat. Unblocked only once blockers are declared (CR 508.4d for one
       -- put onto the battlefield attacking afterwards).
+      --
+      -- Not implemented: CR 509.1h's "an effect says that it becomes
+      -- unblocked", which nothing writes, so a blocked attacker stays blocked
+      -- for the rest of combat (#5005).
       Filter.blockStatus =
         let c = GameState.combat gs
          in if Map.member oid (Combat.blockers c)

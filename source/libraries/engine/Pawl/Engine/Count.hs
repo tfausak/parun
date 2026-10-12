@@ -886,7 +886,8 @@ orLastKnown live gs oid = Monad.join (Game.liveOrLastKnown (const (live oid)) (J
 -- combat lookup on to the attacked permanent -- attackingPlayer,
 -- attackingPlaneswalkerController and attackingBattleProtector -- answer
 -- Nothing, and Pawl.Types.LastKnown's `attacking` records the query behind
--- that; so does `blocked`, whose one printing asks a CR 608.2i question.
+-- that; so does `blockStatus`, Nothing too, whose one printing asks a CR 608.2i
+-- question.
 --
 -- `oid` is the id it had, so the turn's log still answers what it did while it
 -- existed (CR 608.2i) -- it attacked, it was dealt damage, it entered -- and
