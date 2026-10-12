@@ -1,6 +1,7 @@
 module Pawl.Types.BallotChoice where
 
 import qualified Pawl.Types.ObjectSnapshot as ObjectSnapshot
+import qualified Pawl.Types.PlayerId as PlayerId
 import qualified Pawl.Types.SlotName as SlotName
 
 -- | What one vote was cast for (CR 701.38b).
@@ -9,4 +10,6 @@ data BallotChoice
     ForObject ObjectSnapshot.ObjectSnapshot
   | -- | A word with no rules meaning (CR 701.38b).
     ForWord SlotName.SlotName
+  | -- | A player (CR 701.38b).
+    ForPlayer PlayerId.PlayerId
   deriving (Eq, Ord, Show)

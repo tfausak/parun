@@ -1,0 +1,421 @@
+{
+  "faces": [
+    {
+      "manaCost": [
+        {
+          "type": "Generic",
+          "value": 5
+        },
+        {
+          "type": "OfType",
+          "value": {
+            "type": "Colored",
+            "value": {
+              "type": "White"
+            }
+          }
+        }
+      ],
+      "name": "Council Guardian",
+      "oracleText": "Will of the council — When this creature enters, starting with you, each player votes for blue, black, red, or green. This creature gains protection from each color with the most votes or tied for most votes.",
+      "power": {
+        "type": "Literal",
+        "value": 5
+      },
+      "toughness": {
+        "type": "Literal",
+        "value": 5
+      },
+      "triggeredAbilities": [
+        {
+          "condition": {
+            "type": "SelfEnters"
+          },
+          "modal": {
+            "modes": [
+              {
+                "clauses": [
+                  {
+                    "effects": [
+                      {
+                        "type": "Vote",
+                        "value": {
+                          "choices": {
+                            "type": "Words",
+                            "value": [
+                              "blue",
+                              "black",
+                              "red",
+                              "green"
+                            ]
+                          },
+                          "starter": {
+                            "type": "Relative",
+                            "value": {
+                              "type": "You"
+                            }
+                          }
+                        }
+                      }
+                    ]
+                  },
+                  {
+                    "condition": {
+                      "type": "All",
+                      "value": [
+                        {
+                          "type": "Compares",
+                          "value": {
+                            "comparison": {
+                              "type": "AtLeast"
+                            },
+                            "measured": {
+                              "type": "InSlot",
+                              "value": "blue"
+                            },
+                            "threshold": {
+                              "type": "InSlot",
+                              "value": "black"
+                            }
+                          }
+                        },
+                        {
+                          "type": "Compares",
+                          "value": {
+                            "comparison": {
+                              "type": "AtLeast"
+                            },
+                            "measured": {
+                              "type": "InSlot",
+                              "value": "blue"
+                            },
+                            "threshold": {
+                              "type": "InSlot",
+                              "value": "red"
+                            }
+                          }
+                        },
+                        {
+                          "type": "Compares",
+                          "value": {
+                            "comparison": {
+                              "type": "AtLeast"
+                            },
+                            "measured": {
+                              "type": "InSlot",
+                              "value": "blue"
+                            },
+                            "threshold": {
+                              "type": "InSlot",
+                              "value": "green"
+                            }
+                          }
+                        }
+                      ]
+                    },
+                    "effects": [
+                      {
+                        "type": "ModifyTarget",
+                        "value": {
+                          "duration": {
+                            "type": "Indefinite"
+                          },
+                          "modification": {
+                            "type": "GainKeyword",
+                            "value": {
+                              "type": "Protection",
+                              "value": {
+                                "quality": {
+                                  "type": "HasColor",
+                                  "value": {
+                                    "type": "Blue"
+                                  }
+                                },
+                                "spares": null
+                              }
+                            }
+                          },
+                          "ref": {
+                            "type": "InSlot",
+                            "value": "self"
+                          }
+                        }
+                      }
+                    ]
+                  },
+                  {
+                    "condition": {
+                      "type": "All",
+                      "value": [
+                        {
+                          "type": "Compares",
+                          "value": {
+                            "comparison": {
+                              "type": "AtLeast"
+                            },
+                            "measured": {
+                              "type": "InSlot",
+                              "value": "black"
+                            },
+                            "threshold": {
+                              "type": "InSlot",
+                              "value": "blue"
+                            }
+                          }
+                        },
+                        {
+                          "type": "Compares",
+                          "value": {
+                            "comparison": {
+                              "type": "AtLeast"
+                            },
+                            "measured": {
+                              "type": "InSlot",
+                              "value": "black"
+                            },
+                            "threshold": {
+                              "type": "InSlot",
+                              "value": "red"
+                            }
+                          }
+                        },
+                        {
+                          "type": "Compares",
+                          "value": {
+                            "comparison": {
+                              "type": "AtLeast"
+                            },
+                            "measured": {
+                              "type": "InSlot",
+                              "value": "black"
+                            },
+                            "threshold": {
+                              "type": "InSlot",
+                              "value": "green"
+                            }
+                          }
+                        }
+                      ]
+                    },
+                    "effects": [
+                      {
+                        "type": "ModifyTarget",
+                        "value": {
+                          "duration": {
+                            "type": "Indefinite"
+                          },
+                          "modification": {
+                            "type": "GainKeyword",
+                            "value": {
+                              "type": "Protection",
+                              "value": {
+                                "quality": {
+                                  "type": "HasColor",
+                                  "value": {
+                                    "type": "Black"
+                                  }
+                                },
+                                "spares": null
+                              }
+                            }
+                          },
+                          "ref": {
+                            "type": "InSlot",
+                            "value": "self"
+                          }
+                        }
+                      }
+                    ]
+                  },
+                  {
+                    "condition": {
+                      "type": "All",
+                      "value": [
+                        {
+                          "type": "Compares",
+                          "value": {
+                            "comparison": {
+                              "type": "AtLeast"
+                            },
+                            "measured": {
+                              "type": "InSlot",
+                              "value": "red"
+                            },
+                            "threshold": {
+                              "type": "InSlot",
+                              "value": "blue"
+                            }
+                          }
+                        },
+                        {
+                          "type": "Compares",
+                          "value": {
+                            "comparison": {
+                              "type": "AtLeast"
+                            },
+                            "measured": {
+                              "type": "InSlot",
+                              "value": "red"
+                            },
+                            "threshold": {
+                              "type": "InSlot",
+                              "value": "black"
+                            }
+                          }
+                        },
+                        {
+                          "type": "Compares",
+                          "value": {
+                            "comparison": {
+                              "type": "AtLeast"
+                            },
+                            "measured": {
+                              "type": "InSlot",
+                              "value": "red"
+                            },
+                            "threshold": {
+                              "type": "InSlot",
+                              "value": "green"
+                            }
+                          }
+                        }
+                      ]
+                    },
+                    "effects": [
+                      {
+                        "type": "ModifyTarget",
+                        "value": {
+                          "duration": {
+                            "type": "Indefinite"
+                          },
+                          "modification": {
+                            "type": "GainKeyword",
+                            "value": {
+                              "type": "Protection",
+                              "value": {
+                                "quality": {
+                                  "type": "HasColor",
+                                  "value": {
+                                    "type": "Red"
+                                  }
+                                },
+                                "spares": null
+                              }
+                            }
+                          },
+                          "ref": {
+                            "type": "InSlot",
+                            "value": "self"
+                          }
+                        }
+                      }
+                    ]
+                  },
+                  {
+                    "condition": {
+                      "type": "All",
+                      "value": [
+                        {
+                          "type": "Compares",
+                          "value": {
+                            "comparison": {
+                              "type": "AtLeast"
+                            },
+                            "measured": {
+                              "type": "InSlot",
+                              "value": "green"
+                            },
+                            "threshold": {
+                              "type": "InSlot",
+                              "value": "blue"
+                            }
+                          }
+                        },
+                        {
+                          "type": "Compares",
+                          "value": {
+                            "comparison": {
+                              "type": "AtLeast"
+                            },
+                            "measured": {
+                              "type": "InSlot",
+                              "value": "green"
+                            },
+                            "threshold": {
+                              "type": "InSlot",
+                              "value": "black"
+                            }
+                          }
+                        },
+                        {
+                          "type": "Compares",
+                          "value": {
+                            "comparison": {
+                              "type": "AtLeast"
+                            },
+                            "measured": {
+                              "type": "InSlot",
+                              "value": "green"
+                            },
+                            "threshold": {
+                              "type": "InSlot",
+                              "value": "red"
+                            }
+                          }
+                        }
+                      ]
+                    },
+                    "effects": [
+                      {
+                        "type": "ModifyTarget",
+                        "value": {
+                          "duration": {
+                            "type": "Indefinite"
+                          },
+                          "modification": {
+                            "type": "GainKeyword",
+                            "value": {
+                              "type": "Protection",
+                              "value": {
+                                "quality": {
+                                  "type": "HasColor",
+                                  "value": {
+                                    "type": "Green"
+                                  }
+                                },
+                                "spares": null
+                              }
+                            }
+                          },
+                          "ref": {
+                            "type": "InSlot",
+                            "value": "self"
+                          }
+                        }
+                      }
+                    ]
+                  }
+                ]
+              }
+            ]
+          }
+        }
+      ],
+      "typeLine": {
+        "subtypes": [
+          {
+            "type": "Giant"
+          },
+          {
+            "type": "Soldier"
+          }
+        ],
+        "types": [
+          {
+            "type": "Creature"
+          }
+        ]
+      }
+    }
+  ]
+}

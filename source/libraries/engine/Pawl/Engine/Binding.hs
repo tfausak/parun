@@ -1252,6 +1252,10 @@ toAmount n = Binding.empty {Binding.amount = Just n}
 toSticker :: StickerRef.StickerRef -> Binding
 toSticker ref = Binding.empty {Binding.sticker = Just ref}
 
+-- | A binding that holds one player vote's tally and nothing else (CR 701.38a).
+toVotes :: Map PlayerId Natural -> Binding
+toVotes tally = Binding.empty {Binding.votes = Just tally}
+
 -- Bind an object under the reserved triggerSource slot. Dedicated and
 -- single-purpose, so the insert cannot clobber another binding -- as below.
 setTriggerSource :: ObjectId -> Map SlotName Binding -> Map SlotName Binding
@@ -1642,7 +1646,8 @@ mergeBinding a b =
       Binding.modes = Binding.modes a <|> Binding.modes b,
       Binding.copy = Binding.copy a <|> Binding.copy b,
       Binding.objects = Binding.objects a <|> Binding.objects b,
-      Binding.sticker = Binding.sticker a <|> Binding.sticker b
+      Binding.sticker = Binding.sticker a <|> Binding.sticker b,
+      Binding.votes = Binding.votes a <|> Binding.votes b
     }
 
 -- CR 400.7h: `binding` with every naming of `old` renamed to `new`, each
@@ -1664,5 +1669,6 @@ renameObject old new binding =
           Binding.modes = Binding.modes binding,
           Binding.copy = Binding.copy binding,
           Binding.objects = fmap (fmap rename) (Binding.objects binding),
-          Binding.sticker = Binding.sticker binding
+          Binding.sticker = Binding.sticker binding,
+          Binding.votes = Binding.votes binding
         }

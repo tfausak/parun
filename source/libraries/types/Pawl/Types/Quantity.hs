@@ -21,6 +21,7 @@ import qualified Pawl.Types.PlayerDesignationTally as PlayerDesignationTally
 import qualified Pawl.Types.PlayerRef as PlayerRef
 import qualified Pawl.Types.ProductionTag as ProductionTag
 import qualified Pawl.Types.SlotName as SlotName
+import qualified Pawl.Types.VotesReceived as VotesReceived
 
 -- | A number that may not be a literal number.
 --
@@ -65,6 +66,9 @@ data Quantity
   | -- | CR 123.6e: the unique vowels on the sticker that slot holds; 0 when it
     -- holds none.
     UniqueVowelsOnSticker SlotName.SlotName
+  | -- | CR 701.38a: the votes a player received in the player vote whose tally a
+    -- slot holds; 0 for a player or slot the tally does not hold.
+    VotesReceived VotesReceived.VotesReceived
   | -- | CR 123.6d: how many of these letters, either case, are on the name
     -- stickers on the object this is evaluated against.
     LettersOnNameStickers Text.Text

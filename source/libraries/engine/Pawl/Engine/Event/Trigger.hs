@@ -343,12 +343,13 @@ participants event =
           else ZoneChange.object zc
       one oid = ([oid], [])
       player pid = ([], [pid])
-      -- CR 701.38a: the voter and, for CR 701.38b's object choice, what they
-      -- voted for.
+      -- CR 701.38a: the voter and, for CR 701.38b's object or player choice,
+      -- what they voted for.
       ballotParticipants ballot =
         player (Ballot.voter ballot) <> case Ballot.choice ballot of
           BallotChoice.ForObject snapshot -> one (ObjectSnapshot.object snapshot)
           BallotChoice.ForWord _ -> ([], [])
+          BallotChoice.ForPlayer pid -> player pid
    in case event of
         GameEvent.Moved m -> one (moved (Moved.change m))
         GameEvent.CardArrived zc -> one (moved zc)
@@ -3876,6 +3877,7 @@ resnapshot gs without event =
             (\pc -> ballot {Ballot.choice = BallotChoice.ForObject snapshot {ObjectSnapshot.characteristics = pc}})
             (reread (ObjectSnapshot.object snapshot) (ObjectSnapshot.characteristics snapshot))
         BallotChoice.ForWord _ -> Just ballot
+        BallotChoice.ForPlayer _ -> Just ballot
    in case event of
         GameEvent.Moved m -> fmap (\pc -> GameEvent.Moved m {Moved.characteristics = pc}) (reread (ZoneChange.departed (Moved.change m)) (Moved.characteristics m))
         GameEvent.SpellCast c -> fmap (\pc -> GameEvent.SpellCast c {SpellWasCast.characteristics = pc}) (reread (SpellWasCast.spell c) (SpellWasCast.characteristics c))

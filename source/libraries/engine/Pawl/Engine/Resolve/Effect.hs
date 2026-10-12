@@ -404,6 +404,7 @@ import qualified Pawl.Types.Uses as Uses
 import qualified Pawl.Types.Vote as Vote
 import qualified Pawl.Types.VoteChoices as VoteChoices
 import qualified Pawl.Types.VoteObjects as VoteObjects
+import qualified Pawl.Types.VotePlayers as VotePlayers
 import qualified Pawl.Types.Voted as Voted
 import qualified Pawl.Types.WhichCounters as WhichCounters
 import qualified Pawl.Types.Zone as Zone
@@ -573,7 +574,7 @@ applyClauseEffects resolving source applyOne =
 -- prunes both after EVERY instruction, and a card can leave exile off that
 -- road -- CR 704.5d ceasing a token -- so the prune of a stale key is no act;
 -- a real exile already shows in `exile` and `objects`), and every bound
--- AMOUNT, since a tally binds zero for an instruction that did nothing -- a
+-- AMOUNT and vote tally, since a tally binds zero for an instruction that did nothing -- a
 -- slot that holds nothing else is dropped, so a FIRST zero bind is not a
 -- difference either. Everything else is compared, so a new GameState field
 -- counts as state by default.
@@ -593,7 +594,7 @@ applyClauseEffects resolving source applyOne =
 happenedBetween :: GameState -> GameState -> Bool
 happenedBetween before after =
   let tallyless :: Map.Map SlotName Binding.Type.Binding -> Map.Map SlotName Binding.Type.Binding
-      tallyless = Map.filter (/= Binding.Type.empty) . Map.map (\binding -> binding {Binding.Type.amount = Nothing})
+      tallyless = Map.filter (/= Binding.Type.empty) . Map.map (\binding -> binding {Binding.Type.amount = Nothing, Binding.Type.votes = Nothing})
       objectTallyless :: Map.Map ObjectId Object.Object -> Map.Map ObjectId Object.Object
       objectTallyless = Map.map (\obj -> obj {Object.bindings = tallyless (Object.bindings obj)})
       comparable gs =
@@ -6851,6 +6852,18 @@ applyOneEffect runSubgame resolving source controller legal chosen effect = case
         -- which is why no tie is recorded anywhere.
         Foldable.for_ voteWords $ \word ->
           State.modify' (bindAmountSlot resolving source word (Natural.length (filter (== word) ballots)))
+      -- CR 701.38b's players: every player still in the game, less the voter
+      -- for Mob Verdict's "another player". A voter left with no candidate casts
+      -- no ballot, Objects' CR 101.3 answer.
+      --
+      -- The tally keys every candidate, zeros included, and is bound on the
+      -- resolving object, where effectContext's slotVotes reads it.
+      VoteChoices.Players (VotePlayers.MkVotePlayers another slot) -> do
+        let table = Players.table (Just controller) gs
+            candidatesFor voter = if another then filter (/= voter) table else table
+        picks <- cast (fmap BallotChoice.ForPlayer) $ \voter -> Game.chooseAmong (\decider who -> Prompt.ChooseVotePlayer decider who resolving) voter (candidatesFor voter)
+        let tally = Map.fromList (fmap (\pid -> (pid, Natural.length (filter (== Just pid) picks))) (concatMap candidatesFor voters))
+        State.modify' (overHolderBindings resolving (Map.insert slot (Binding.toVotes tally)))
   Effect.Create (Create.MkCreate quantity card entry mSlot creator) -> do
     gs <- State.get
     let viewOf = effectViewOf source legal gs

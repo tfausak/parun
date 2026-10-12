@@ -2,8 +2,9 @@
 {-# LANGUAGE RankNTypes #-}
 
 -- CR 701.38's vote: Pawl.Engine.Resolve.Effect's Effect.Vote arm, the
--- Pawl.Types.Vote payload it reads, Prompt.ChooseVote and Prompt.ChooseVoteWord,
--- Pawl.Engine.PlayerEffect's votesAllowed, and Pawl.Engine.Game's turnOrderFrom,
+-- Pawl.Types.Vote payload it reads, Prompt.ChooseVote, Prompt.ChooseVoteWord and
+-- Prompt.ChooseVotePlayer, Quantity.VotesReceived, Pawl.Engine.PlayerEffect's
+-- votesAllowed, and Pawl.Engine.Game's turnOrderFrom,
 -- which rule 701.38a's "starting with a specified player and proceeding in turn
 -- order" is the second reader of (CR 101.4 is the first).
 --
@@ -19,6 +20,9 @@
 -- Representative {2}{W} Creature -- Human Advisor: "While voting, you get an
 -- additional vote."
 --
+-- The player vote's is Mob Verdict {2}{R}{R} Sorcery: "Secret council -- Each
+-- player secretly votes for another player, then those votes are revealed. ..."
+--
 -- THREE SEATS, because on two a tally cannot have a strict winner and a strict
 -- loser at once, and the exile could follow the candidate list rather than the
 -- count without the board telling the difference. Three seats also make three
@@ -30,26 +34,42 @@ module Pawl.VoteSpec where
 import qualified Control.Monad.Trans.State.Strict as State
 import qualified Data.List as List
 import qualified Data.List.NonEmpty as NonEmpty
+import qualified Data.Map.Strict as Map
 import qualified Data.Text as Text
+import Numeric.Natural (Natural)
 import qualified Pawl.Engine.Engine as Engine
 import qualified Pawl.Engine.Game as Game
+import qualified Pawl.Engine.Quantity as Quantity
+import qualified Pawl.Engine.Resolve.Effect as Resolve
+import qualified Pawl.Engine.Resolve.Slots as Slots
 import qualified Pawl.Engine.Stack as Stack
 import qualified Pawl.Registry as Registry
 import qualified Pawl.Spec as Spec
 import qualified Pawl.Support as S
+import qualified Pawl.Types.Binding as Binding
 import qualified Pawl.Types.CardName as CardName
+import qualified Pawl.Types.Effect as Effect
 import qualified Pawl.Types.ExtraTurn as ExtraTurn
 import qualified Pawl.Types.GameState as GameState
+import qualified Pawl.Types.Object as Object
 import qualified Pawl.Types.ObjectId as ObjectId
 import qualified Pawl.Types.PlayerId as PlayerId
+import qualified Pawl.Types.PlayerRef as PlayerRef
+import qualified Pawl.Types.PlayerRelation as PlayerRelation
 import qualified Pawl.Types.Prompt as Prompt
+import qualified Pawl.Types.Quantity as Quantity.Type
 import qualified Pawl.Types.SlotName as SlotName
+import qualified Pawl.Types.Vote as Vote
+import qualified Pawl.Types.VoteChoices as VoteChoices
+import qualified Pawl.Types.VotePlayers as VotePlayers
+import qualified Pawl.Types.VotesReceived as VotesReceived
 import qualified Pawl.Types.Zone as Zone
 
 spec :: (Monad m, Monad n) => Spec.Spec m n -> Registry.Registry m -> n ()
 spec s registry = Spec.describe s "Pawl.Engine.Vote" $ do
   councilsJudgmentSpec s registry
   pleaForPowerSpec s registry
+  playerVoteSpec s registry
 
 -- Alice's Wall of Stone, a Mountain and a Goblin Piker under bob, Typhoid Rats
 -- under carol, three Plains for alice to cast with, and Council's Judgment in her
@@ -218,3 +238,91 @@ pleaForPowerSpec s registry = Spec.describe s "Plea for Power" $ do
       "alice is asked twice in a row and the other two seats once each"
       (fmap fst asked)
       [S.alice, S.alice, S.bob, S.carol]
+
+-- Answers Prompt.ChooseVotePlayer from a list of picks consumed in the order the
+-- prompts are raised, and records which seat each prompt named and what it was
+-- offered. Everything else defers to S.identityAnswer. Positional for
+-- votingWords' reason: CR 701.38d's second ballot is its own answer.
+votingPlayers ::
+  Prompt.Prompt r ->
+  State.State ([PlayerId.PlayerId], [(PlayerId.PlayerId, [PlayerId.PlayerId])]) r
+votingPlayers p = case p of
+  Prompt.ChooseVotePlayer _ pid _ offered -> do
+    (pending, asked) <- State.get
+    State.put (drop 1 pending, asked <> [(pid, NonEmpty.toList offered)])
+    pure (case pending of chosen : _ -> chosen; [] -> S.identityAnswer p)
+  _ -> pure (S.identityAnswer p)
+
+-- The slot Mob Verdict's tally is bound at.
+votesSlot :: SlotName.SlotName
+votesSlot = word "votes"
+
+-- Mob Verdict's "each player votes for another player", starting with alice,
+-- resolved by `resolving` for `source` under alice with `picks` as the ballots
+-- in voting order. Returns the seats asked with what each was offered, and the
+-- state after.
+playerVote ::
+  ObjectId.ObjectId ->
+  ObjectId.ObjectId ->
+  [PlayerId.PlayerId] ->
+  GameState.GameState ->
+  ([(PlayerId.PlayerId, [PlayerId.PlayerId])], GameState.GameState)
+playerVote resolving source picks gs =
+  let vote = Effect.Vote (Vote.MkVote (PlayerRef.Relative PlayerRelation.You) (VoteChoices.Players (VotePlayers.MkVotePlayers True votesSlot)) False)
+      ((_, after), (_, asked)) = State.runState (Engine.runGame votingPlayers gs (Resolve.applyEffect resolving source S.alice Map.empty Map.empty vote)) (picks, [])
+   in (asked, after)
+
+-- The tally map bound at the vote's slot on `holder`.
+boundTally :: ObjectId.ObjectId -> GameState.GameState -> Maybe (Map.Map PlayerId.PlayerId Natural)
+boundTally holder gs = Game.lookupObject holder gs >>= Map.lookup votesSlot . Object.bindings >>= Binding.votes
+
+-- Quantity.VotesReceived for one seat, read through the resolution's own
+-- evaluation context as a later clause of the same resolution reads it.
+received :: ObjectId.ObjectId -> ObjectId.ObjectId -> GameState.GameState -> PlayerId.PlayerId -> Maybe Integer
+received resolving source gs pid =
+  Quantity.evaluate
+    (Slots.effectViewOf source Map.empty gs)
+    (Slots.effectContext gs S.alice source Map.empty (Slots.slotBindings resolving gs))
+    gs
+    source
+    (Quantity.Type.VotesReceived (VotesReceived.MkVotesReceived votesSlot (PlayerRef.Specific pid)))
+
+-- CR 701.38b's third kind, a vote for a player (Mob Verdict). A Wall of Stone
+-- under alice stands in as the source.
+playerVoteSpec :: (Monad m, Monad n) => Spec.Spec m n -> Registry.Registry m -> n ()
+playerVoteSpec s registry = Spec.describe s "player vote" $ do
+  Spec.it s "a player vote binds each candidate's tally, zeros included" $ do
+    wall <- S.printingOf s registry "Wall of Stone"
+    let (source, gs) = S.addPermanent wall S.alice S.threePlayerGame
+        (_, after) = playerVote source source [S.carol, S.carol, S.alice] gs
+    Spec.assertEqWith s "the bound tally keys every seat, bob's zero included" (boundTally source after) (Just (Map.fromList [(S.alice, 1), (S.bob, 0), (S.carol, 2)]))
+    Spec.assertEqWith s "VotesReceived reads each seat's tally" (fmap (received source source after) [S.alice, S.bob, S.carol]) [Just 1, Just 0, Just 2]
+  Spec.it s "another player: a voter is never offered themself" $ do
+    wall <- S.printingOf s registry "Wall of Stone"
+    let (source, gs) = S.addPermanent wall S.alice S.threePlayerGame
+        (asked, _) = playerVote source source [S.carol, S.carol, S.alice] gs
+    Spec.assertEqWith
+      s
+      "each seat, from alice in turn order, is offered the other two seats"
+      asked
+      [(S.alice, [S.bob, S.carol]), (S.bob, [S.alice, S.carol]), (S.carol, [S.alice, S.bob])]
+  Spec.it s "an extra vote counts toward the tally (CR 701.38d)" $ do
+    wall <- S.printingOf s registry "Wall of Stone"
+    representative <- S.printingOf s registry "Brago's Representative"
+    let (source, g1) = S.addPermanent wall S.alice S.threePlayerGame
+        (_, gs) = S.addPermanent representative S.alice g1
+        (asked, after) = playerVote source source [S.bob, S.carol, S.carol, S.alice] gs
+    Spec.assertEqWith s "alice is asked twice in a row and the other two seats once each" (fmap fst asked) [S.alice, S.alice, S.bob, S.carol]
+    Spec.assertEqWith s "alice's second ballot counts: carol has two votes and bob one" (boundTally source after) (Just (Map.fromList [(S.alice, 1), (S.bob, 1), (S.carol, 2)]))
+  -- A stack object resolving the vote for a permanent source, as a triggered
+  -- ability's vote would: the tally lands on the resolving object, where
+  -- effectContext's slotBindings reads it, and not on the source.
+  Spec.it s "the tally is bound and read on the resolving object, not the source" $ do
+    wall <- S.printingOf s registry "Wall of Stone"
+    verdict <- S.printingOf s registry "Mob Verdict"
+    let (source, g1) = S.addPermanent wall S.alice S.threePlayerGame
+        (resolving, gs) = S.spellOnStack verdict S.alice g1
+        (_, after) = playerVote resolving source [S.carol, S.carol, S.alice] gs
+    Spec.assertEqWith s "VotesReceived, read through the resolving object, answers each seat's tally" (fmap (received resolving source after) [S.alice, S.bob, S.carol]) [Just 1, Just 0, Just 2]
+    Spec.assertEqWith s "the resolving object holds the tally" (boundTally resolving after) (Just (Map.fromList [(S.alice, 1), (S.bob, 0), (S.carol, 2)]))
+    Spec.assertEqWith s "and the source holds none" (boundTally source after) Nothing
