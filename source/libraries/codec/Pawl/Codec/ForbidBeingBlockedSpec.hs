@@ -7,6 +7,7 @@ import qualified Pawl.Types.CardType as CardType
 import qualified Pawl.Types.Duration as Duration
 import qualified Pawl.Types.Filter as Filter
 import qualified Pawl.Types.ForbidBeingBlocked as ForbidBeingBlocked
+import qualified Pawl.Types.Trait as Trait
 
 spec :: (Monad m, Monad n) => Spec.Spec m n -> n ()
 spec s = Spec.describe s "Pawl.Codec.ForbidBeingBlocked" $ do
@@ -18,8 +19,8 @@ spec s = Spec.describe s "Pawl.Codec.ForbidBeingBlocked" $ do
       ( ForbidBeingBlocked.MkForbidBeingBlocked
           { ForbidBeingBlocked.duration = Duration.UntilEndOfTurn,
             ForbidBeingBlocked.affected = Filter.HasCardType CardType.Creature,
-            ForbidBeingBlocked.blockers = Filter.Not Filter.SameSectorAsSource
+            ForbidBeingBlocked.blockers = Filter.Not (Filter.SharesWithSource Trait.Sector)
           }
       )
-      " {\"duration\":{\"type\":\"UntilEndOfTurn\"},\"affected\":{\"type\":\"HasCardType\",\"value\":{\"type\":\"Creature\"}},\"blockers\":{\"type\":\"Not\",\"value\":{\"type\":\"SameSectorAsSource\"}}} "
+      " {\"duration\":{\"type\":\"UntilEndOfTurn\"},\"affected\":{\"type\":\"HasCardType\",\"value\":{\"type\":\"Creature\"}},\"blockers\":{\"type\":\"Not\",\"value\":{\"type\":\"SharesWithSource\",\"value\":{\"type\":\"Sector\"}}}} "
   Spec.it s "has a schema" $ Common.assertHasSchema s ForbidBeingBlocked.codec

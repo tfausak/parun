@@ -430,8 +430,7 @@ filterNames asking criterion = case criterion of
   Filter.HasSupertype _supertype -> False
   Filter.HasColor _color -> False
   Filter.IsMonocolored -> False
-  Filter.SharesColorWithSource -> False
-  Filter.SameSectorAsSource -> False
+  Filter.SharesWithSource _trait -> False
   Filter.HasSubtype _subtype -> False
   Filter.HasName _name -> False
   Filter.NameWordsAtLeast _n -> False
@@ -457,8 +456,6 @@ filterNames asking criterion = case criterion of
   Filter.IsBound slot -> slotNames asking slot
   Filter.IsTarget -> slotNames asking Binding.Engine.announcedTargets
   Filter.SameNameAsBound slot -> slotNames asking slot
-  Filter.SameNameAsSource -> False
-  Filter.SameOwnerAsSource -> False
   Filter.SameControllerAsBound slot -> slotNames asking slot
   Filter.SameControllerAsHostOfBound slot -> slotNames asking slot
   Filter.SharesCreatureTypeWithBound slot -> slotNames asking slot

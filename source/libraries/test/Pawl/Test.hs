@@ -624,6 +624,7 @@ import qualified Pawl.Codec.TokenRSpec
 import qualified Pawl.Codec.TopOfLibrarySpec
 import qualified Pawl.Codec.TopOfLibraryUntilSpec
 import qualified Pawl.Codec.ToughnessSpec
+import qualified Pawl.Codec.TraitSpec
 import qualified Pawl.Codec.TransformedSpec
 import qualified Pawl.Codec.TriggerConditionSpec
 import qualified Pawl.Codec.TriggerFrequencySpec
@@ -1488,6 +1489,7 @@ spec s registry = do
   Pawl.Codec.TokenRSpec.spec s
   Pawl.Codec.TopOfLibrarySpec.spec s
   Pawl.Codec.TopOfLibraryUntilSpec.spec s
+  Pawl.Codec.TraitSpec.spec s
   Pawl.Codec.ToughnessSpec.spec s
   Pawl.Codec.TransformedSpec.spec s
   Pawl.Codec.TriggerConditionSpec.spec s

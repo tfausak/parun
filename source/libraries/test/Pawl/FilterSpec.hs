@@ -38,6 +38,7 @@ import qualified Pawl.Types.SlotName as SlotName
 import qualified Pawl.Types.Subtype as Subtype
 import qualified Pawl.Types.Supertype as Supertype
 import qualified Pawl.Types.Teams as Teams
+import qualified Pawl.Types.Trait as Trait
 import qualified Pawl.Types.Zone as Zone
 
 -- A projected black creature controlled by player 0.
@@ -559,40 +560,40 @@ spec s = Spec.describe s "Pawl.Engine.Filter" $ do
   -- shape over a SET of NAMES: CR 201.2 makes the comparison an intersection, so an
   -- object showing two names (CR 709.4a's split card) has the source's name if it
   -- shows either.
-  Spec.describe s "SameNameAsSource" $ do
+  Spec.describe s "SharesWithSource Name" $ do
     let sourced ns = self {Filter.sourceNames = Set.fromList (fmap (CardName.MkCardName . Text.pack) ns)}
         namedCreature ns = blackCreature {Filter.names = Set.fromList (fmap (CardName.MkCardName . Text.pack) ns)}
     Spec.it s "holds on any name in common and fails on none" $ do
-      Spec.assertBool s (Filter.matches (sourced ["Surging Dementia"]) (namedCreature ["Surging Dementia"]) Filter.Type.SameNameAsSource) "the same name"
-      Spec.assertBool s (not (Filter.matches (sourced ["Surging Dementia"]) (namedCreature ["Surging Might"]) Filter.Type.SameNameAsSource)) "a different name"
-      Spec.assertBool s (Filter.matches (sourced ["Surging Dementia"]) (namedCreature ["Surging Might", "Surging Dementia"]) Filter.Type.SameNameAsSource) "one of two names"
+      Spec.assertBool s (Filter.matches (sourced ["Surging Dementia"]) (namedCreature ["Surging Dementia"]) (Filter.Type.SharesWithSource Trait.Name)) "the same name"
+      Spec.assertBool s (not (Filter.matches (sourced ["Surging Dementia"]) (namedCreature ["Surging Might"]) (Filter.Type.SharesWithSource Trait.Name))) "a different name"
+      Spec.assertBool s (Filter.matches (sourced ["Surging Dementia"]) (namedCreature ["Surging Might", "Surging Dementia"]) (Filter.Type.SharesWithSource Trait.Name)) "one of two names"
 
-    -- CR 708.2a's no-name object on either side, SharesColorWithSource's vacuity
+    -- CR 708.2a's no-name object on either side, the colour trait's vacuity
     -- posture one characteristic over: an empty set intersects nothing, including
     -- another empty set.
     Spec.it s "is False when either side has no name" $ do
-      Spec.assertBool s (not (Filter.matches (sourced ["Surging Dementia"]) blackCreature Filter.Type.SameNameAsSource)) "no candidate name"
-      Spec.assertBool s (not (Filter.matches self (namedCreature ["Surging Dementia"]) Filter.Type.SameNameAsSource)) "no source names"
-      Spec.assertBool s (not (Filter.matches self blackCreature Filter.Type.SameNameAsSource)) "neither"
+      Spec.assertBool s (not (Filter.matches (sourced ["Surging Dementia"]) blackCreature (Filter.Type.SharesWithSource Trait.Name))) "no candidate name"
+      Spec.assertBool s (not (Filter.matches self (namedCreature ["Surging Dementia"]) (Filter.Type.SharesWithSource Trait.Name))) "no source names"
+      Spec.assertBool s (not (Filter.matches self blackCreature (Filter.Type.SharesWithSource Trait.Name))) "neither"
 
     Spec.it s "is False for a player" $
-      Spec.assertBool s (not (Filter.matches (sourced ["Surging Dementia"]) aPlayer Filter.Type.SameNameAsSource)) "player"
+      Spec.assertBool s (not (Filter.matches (sourced ["Surging Dementia"]) aPlayer (Filter.Type.SharesWithSource Trait.Name))) "player"
 
   -- CR 702.78a's comparison, the two arms above's shape over a SET: colour is a
   -- set (CR 105.2), so "shares a color" is a non-empty intersection rather than
   -- an ordering. blackCreature is mono-black.
-  Spec.describe s "SharesColorWithSource" $ do
+  Spec.describe s "SharesWithSource Color" $ do
     let sourced cs = self {Filter.sourceColors = Set.fromList cs}
     Spec.it s "holds on any colour in common and fails on none" $ do
-      Spec.assertBool s (Filter.matches (sourced [Color.Black, Color.Red]) blackCreature Filter.Type.SharesColorWithSource) "black shares black"
-      Spec.assertBool s (not (Filter.matches (sourced [Color.Red]) blackCreature Filter.Type.SharesColorWithSource)) "black shares nothing with red"
+      Spec.assertBool s (Filter.matches (sourced [Color.Black, Color.Red]) blackCreature (Filter.Type.SharesWithSource Trait.Color)) "black shares black"
+      Spec.assertBool s (not (Filter.matches (sourced [Color.Red]) blackCreature (Filter.Type.SharesWithSource Trait.Color))) "black shares nothing with red"
 
     -- CR 105.2's own reading rather than an absent-value convention: a colourless
     -- object shares no colour with anything, on either side.
     Spec.it s "is False when either side is colourless" $ do
       let colorless = blackCreature {Filter.colors = Set.empty}
-      Spec.assertBool s (not (Filter.matches (sourced [Color.Black]) colorless Filter.Type.SharesColorWithSource)) "colourless candidate"
-      Spec.assertBool s (not (Filter.matches self blackCreature Filter.Type.SharesColorWithSource)) "no source colours"
+      Spec.assertBool s (not (Filter.matches (sourced [Color.Black]) colorless (Filter.Type.SharesWithSource Trait.Color))) "colourless candidate"
+      Spec.assertBool s (not (Filter.matches self blackCreature (Filter.Type.SharesWithSource Trait.Color))) "no source colours"
 
   -- CR 202.3 read for parity: Void Winnower's "spells with even mana values",
   -- whose reminder text settles the boundary -- "(Zero is even.)"
@@ -690,24 +691,24 @@ spec s = Spec.describe s "Pawl.Engine.Filter" $ do
   -- two can disagree on -- controlled by player 0, owned by player 1 -- and every
   -- context here carries player 0 as its perspective, so the pair below is what
   -- separates this atom from OwnedBy You above.
-  Spec.describe s "SameOwnerAsSource" $ do
+  Spec.describe s "SharesWithSource Owner" $ do
     let sourceOwnedBy n = self {Filter.sourceOwner = Just (PlayerId.MkPlayerId n)}
     Spec.it s "CR 702.140a holds when the source's owner owns the candidate" $
-      Spec.assertBool s (Filter.matches (sourceOwnedBy 1) blackCreature Filter.Type.SameOwnerAsSource) "player 1 owns both"
+      Spec.assertBool s (Filter.matches (sourceOwnedBy 1) blackCreature (Filter.Type.SharesWithSource Trait.Owner)) "player 1 owns both"
 
     Spec.it s "CR 702.140a fails for the candidate's controller, whom OwnedBy You would take" $
-      Spec.assertBool s (not (Filter.matches (sourceOwnedBy 0) blackCreature Filter.Type.SameOwnerAsSource)) "player 0 controls it but does not own it"
+      Spec.assertBool s (not (Filter.matches (sourceOwnedBy 0) blackCreature (Filter.Type.SharesWithSource Trait.Owner))) "player 0 controls it but does not own it"
 
     -- The two vacuity postures, OwnedBy's above: no object behind the view, and
     -- no source owner for the comparison to be about.
     Spec.it s "CR 702.140a is False when the view has no owner" $
-      Spec.assertBool s (not (Filter.matches (sourceOwnedBy 1) devoidBigCreature Filter.Type.SameOwnerAsSource)) "no owner"
+      Spec.assertBool s (not (Filter.matches (sourceOwnedBy 1) devoidBigCreature (Filter.Type.SharesWithSource Trait.Owner))) "no owner"
 
     Spec.it s "CR 702.140a is False when no source owner was supplied" $
-      Spec.assertBool s (not (Filter.matches self blackCreature Filter.Type.SameOwnerAsSource)) "contextFor leaves it Nothing"
+      Spec.assertBool s (not (Filter.matches self blackCreature (Filter.Type.SharesWithSource Trait.Owner))) "contextFor leaves it Nothing"
 
     Spec.it s "CR 702.140a is False for a player" $
-      Spec.assertBool s (not (Filter.matches (sourceOwnedBy 1) aPlayer Filter.Type.SameOwnerAsSource)) "player"
+      Spec.assertBool s (not (Filter.matches (sourceOwnedBy 1) aPlayer (Filter.Type.SharesWithSource Trait.Owner))) "player"
 
   Spec.describe s "IsSource" $ do
     Spec.it s "matches the context's source" $ do

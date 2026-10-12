@@ -58,7 +58,10 @@
                           "blockers": {
                             "type": "Not",
                             "value": {
-                              "type": "SameSectorAsSource"
+                              "type": "SharesWithSource",
+                              "value": {
+                                "type": "Sector"
+                              }
                             }
                           },
                           "duration": {
