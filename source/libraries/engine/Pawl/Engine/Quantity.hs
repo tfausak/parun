@@ -641,7 +641,7 @@ evaluateAgainst viewOf context gs announcedOn mOid mView quantity =
         -- quantity is aimed at (Game.wasBlockedThisTurn), DamageDealtToThisTurn's
         -- posture. Fyndhorn Druid is the reader.
         --
-        -- Not Filter.blocked and not a Pawl.Types.LastKnown field, which is what
+        -- Not Filter.blockStatus and not a Pawl.Types.LastKnown field, which is what
         -- rule 509.1h's last sentence rules out: a creature stays blocked after
         -- every blocker leaves combat, and a snapshot taken as it dies has lost the
         -- blockers CR 400.7 already deleted along with it.
