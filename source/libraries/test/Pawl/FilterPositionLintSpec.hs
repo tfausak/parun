@@ -699,11 +699,12 @@ hasChosenNameTag = Text.pack "HasChosenName"
 
 -- How many CR 201.4 chosen-name atoms this card carries inside one of the
 -- ADMITTED positions -- a CR 701.23 search's filter, a CR 701.17 mill's tally,
--- an EFFECT's ObjectRef, a mode's target slot, or a player effect's own Filter,
--- printed or stored --
--- and how many anywhere else. The second number is the offence; the first is
+-- an EFFECT's ObjectRef, a mode's target slot, a player effect's own Filter,
+-- printed or stored, or a static ability's affected set (Projection.affectedContext)
+-- -- and how many anywhere else. The second number is the offence; the first is
 -- what Ancient Vendetta, Predict, Petra Sphinx, Conundrum Sphinx, Null Chamber,
--- Conjurer's Ban, Runed Halo and Declaration of Naught legitimately have.
+-- Conjurer's Ban, Runed Halo, Declaration of Naught and Immediate Action
+-- legitimately have.
 --
 -- SourceHostFramed and not `hostFramed`: since #3320 that tag means an effect's
 -- ObjectRef and nothing else, which is what makes it admissible here. The
@@ -719,7 +720,7 @@ hasChosenNameTag = Text.pack "HasChosenName"
 -- fact answer. Widen it when a card wants one of them.
 hasChosenNameCounts :: Face.Face Card.Type.Card -> (Int, Int)
 hasChosenNameCounts card =
-  let total wanted = sum (fmap (\(_, f) -> filterAtoms hasChosenNameTag f) (filter (\(framing, _) -> elem framing [SearchFramed, MillTallyFramed, SourceHostFramed, InTargetSlot, PlayerEffectFramed, StoredPlayerEffectFramed] == wanted) (cardFilters card)))
+  let total wanted = sum (fmap (\(_, f) -> filterAtoms hasChosenNameTag f) (filter (\(framing, _) -> elem framing [SearchFramed, MillTallyFramed, SourceHostFramed, InTargetSlot, PlayerEffectFramed, StoredPlayerEffectFramed, AffectedSetFramed] == wanted) (cardFilters card)))
    in (total True, total False)
 
 -- CR 201.4's chosen name is answerable only where Filter.Context.sourceChosenNames
@@ -1470,11 +1471,17 @@ filterPositionLintSpec s registry = Spec.describe s "Lint" $ do
       "Synthetic Name Ward's one atom is framed by its stored player effect"
       (hasChosenNameCounts (S.combinedFace ward))
       (1, 0)
+    action <- S.printingOf s registry "Immediate Action"
     Spec.assertEqWith
       s
-      "and the ten cards' atoms are the pool's only ones"
+      "Immediate Action's one atom is framed by its static ability's affected set"
+      (hasChosenNameCounts (S.combinedFace action))
+      (1, 0)
+    Spec.assertEqWith
+      s
+      "and the eleven cards' atoms are the pool's only ones"
       (sum (fmap (uncurry (+) . hasChosenNameCounts . S.combinedFace) ps))
-      12
+      13
   -- CR 702.16k's chosen player in the same frame one atom over: answerable only
   -- where a protection quality is read, and every one of those four positions
   -- takes its filter off a keyword. See ofChosenPlayerOffends for the two
@@ -3112,19 +3119,6 @@ filterPositionLintSpec s registry = Spec.describe s "Lint" $ do
           [ ( "CR 303.4a's enchant ability",
               base {Face.enchant = [TargetSlot.required Pool.Permanents (Just buried)]}
             ),
-            ( "a static ability's affected set",
-              base
-                { Face.staticAbilities =
-                    [ StaticAbility.MkStaticAbility
-                        (Affected.Matching buried)
-                        Nothing
-                        Set.empty
-                        Nothing
-                        Nothing
-                        (NonEmpty.singleton (Modification.ModifyPowerToughness (ModifyPowerToughness.MkModifyPowerToughness (Quantity.Type.Literal 1) (Quantity.Type.Literal 1))))
-                    ]
-                }
-            ),
             ( "CR 201.4a's own restriction on the choosing effect",
               base {Face.spell = spellOf [Effect.ChooseCardName (ChooseCardName.MkChooseCardName (PlayerRef.Relative PlayerRelation.You) buried)] Map.empty}
             ),
@@ -3230,6 +3224,26 @@ filterPositionLintSpec s registry = Spec.describe s "Lint" $ do
       s
       "a buried atom in an ObjectRef's own filter is accepted"
       (hasChosenNameOffends referenced, hasChosenNameCounts referenced)
+      (False, (1, 0))
+    -- And a static ability's affected set, Immediate Action's: matched through
+    -- Projection.affectedContext, which frames it by its source. This one was
+    -- among the rejections above until then.
+    let affected =
+          base
+            { Face.staticAbilities =
+                [ StaticAbility.MkStaticAbility
+                    (Affected.Matching buried)
+                    Nothing
+                    Set.empty
+                    Nothing
+                    Nothing
+                    (NonEmpty.singleton (Modification.ModifyPowerToughness (ModifyPowerToughness.MkModifyPowerToughness (Quantity.Type.Literal 1) (Quantity.Type.Literal 1))))
+                ]
+            }
+    Spec.assertEqWith
+      s
+      "a buried atom in a static ability's affected set is accepted"
+      (hasChosenNameOffends affected, hasChosenNameCounts affected)
       (False, (1, 0))
     Spec.assertEqWith
       s

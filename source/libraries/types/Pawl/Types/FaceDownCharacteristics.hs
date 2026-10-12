@@ -54,6 +54,23 @@ data FaceDownCharacteristics ability = MkFaceDownCharacteristics
   }
   deriving (Eq, Ord, Show)
 
+-- | CR 315.5b: "face-down conspiracy cards have no characteristics" -- no type,
+-- no power or toughness, no ability.
+noneValue :: FaceDownCharacteristics ability
+noneValue =
+  MkFaceDownCharacteristics
+    { typeLine =
+        TypeLine.MkTypeLine
+          { TypeLine.supertypes = Set.empty,
+            TypeLine.types = Set.empty,
+            TypeLine.subtypes = Set.empty
+          },
+      power = Nothing,
+      toughness = Nothing,
+      keywords = Set.empty,
+      abilities = []
+    }
+
 -- | CR 708.2a, which is the list for an ability or effect that names none: "it
 -- becomes a 2\/2 face-down creature with no text, no name, no subtypes, and no
 -- mana cost". Morph (CR 702.37c), manifest (CR 701.40a) and

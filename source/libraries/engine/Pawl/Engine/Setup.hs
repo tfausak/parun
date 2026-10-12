@@ -375,11 +375,13 @@ createDeck pid deck = do
     printingId <- State.state (Game.intern printing)
     Monad.void (createInCommandZone pid printingId)
   -- CR 315.2: "before decks are shuffled", the conspiracies this player chose
-  -- from their sideboard go face up into the command zone; CR 315.6 makes them
+  -- from their sideboard go into the command zone, face up unless CR
+  -- 702.106a's hidden agenda turns one face down and asks its secret name --
+  -- here, before the shuffle and so before any opening hand. CR 315.6 makes them
   -- this player's to own and control. Pawl.ConspiracySpec proves it.
   conspiracyIds <- Monad.mapM (\(printing, n) -> fmap (\i -> (i, n)) (State.state (Game.intern printing))) (Map.toAscList (Deck.conspiracies deck))
   Monad.forM_ conspiracyIds $ \(printingId, n) ->
-    Monad.replicateM_ (Natural.toIntSaturating n) (createInCommandZone pid printingId)
+    Monad.replicateM_ (Natural.toIntSaturating n) (createInCommandZone pid printingId >>= Conspiracy.hideAgenda pid)
   -- CR 903.7 / CR 103.4 / CR 103.4d / CR 902.4 / CR 810.4: the starting life
   -- total, which is the deck's business -- and the settings' and the seat
   -- count's and the vanguard's -- and so cannot be settled by emptyGame above.
@@ -684,7 +686,11 @@ startGameFromCards perform exemptions = do
       -- held back on the vanguard's terms.
       conspiracyIds = Map.keysSet (Map.filterWithKey (\oid _ -> Conspiracy.isConspiracy oid gs) rebuilt)
       inCommandIds = Set.unions [commanderIds, vanguardIds, conspiracyIds]
-      commandZoneCards = fmap toCommandCard (Map.restrictKeys rebuilt inCommandIds)
+      -- Nor is a held conspiracy put into the command zone anew, so CR
+      -- 702.106a does not run again: a face-down one stays face down, and its
+      -- name stays noted with it (CR 702.106b).
+      keepAgenda old new = new {Object.facing = Object.facing old, Object.chosenNames = Object.chosenNames old}
+      commandZoneCards = Map.mapWithKey (\oid obj -> (if Set.member oid conspiracyIds then keepAgenda obj else id) (toCommandCard obj)) (Map.restrictKeys rebuilt inCommandIds)
       -- CR 727.2 / 717.2: every Attraction card, wherever it was, begins the new
       -- game in its owner's Attraction deck; CR 729.2a's subgame pool holds only
       -- the decks.

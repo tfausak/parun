@@ -1,0 +1,58 @@
+{
+  "faces": [
+    {
+      "keywords": [
+        {
+          "type": "HiddenAgenda"
+        }
+      ],
+      "name": "Immediate Action",
+      "oracleText": "Hidden agenda (Start the game with this conspiracy face down in the command zone and secretly choose a card name. You may turn this conspiracy face up any time and reveal that name.)\nCreatures you control with the chosen name have haste.",
+      "staticAbilities": [
+        {
+          "affected": {
+            "type": "Matching",
+            "value": {
+              "type": "And",
+              "value": [
+                {
+                  "type": "HasCardType",
+                  "value": {
+                    "type": "Creature"
+                  }
+                },
+                {
+                  "type": "ControlledBy",
+                  "value": {
+                    "type": "You"
+                  }
+                },
+                {
+                  "type": "HasChosenName",
+                  "value": {
+                    "type": "AnyChooser"
+                  }
+                }
+              ]
+            }
+          },
+          "modifications": [
+            {
+              "type": "GainKeyword",
+              "value": {
+                "type": "Haste"
+              }
+            }
+          ]
+        }
+      ],
+      "typeLine": {
+        "types": [
+          {
+            "type": "Conspiracy"
+          }
+        ]
+      }
+    }
+  ]
+}

@@ -97,9 +97,11 @@ isVanguard oid gs = maybe False isVanguardFace (Game.faceOf oid gs)
 -- A CLASSIFICATION and never an identity: the emblem arm reads
 -- Pawl.Types.Source's own tag and the card arm reads the printed card type.
 --
--- Rule 902.7's and CR 315.5's "face-up" is not asked, and cannot come apart from
--- the card type: CR 902.3 and CR 315.2 place the card face up, and CR 313.2 and
--- CR 315.3 keep it in this zone, so no rule pawl implements can turn one over.
+-- Rule 902.7's "face-up" is not asked, and cannot come apart from the card
+-- type: CR 902.3 places the card face up and CR 313.2 keeps it in this zone, so
+-- no rule pawl implements can turn one over. CR 315.5's is asked, since CR
+-- 702.106a puts a conspiracy here face down. A regression fence: CR 315.5b
+-- already leaves a face-down one no ability to function (Card.faceDownFace).
 -- Pawl.ConspiracySpec's Sentinel Dispatch case proves the conspiracy arm.
 --
 -- A plane, phenomenon or scheme card's do only while it is face up (CR 901.7,
@@ -108,7 +110,7 @@ isVanguard oid gs = maybe False isVanguardFace (Game.faceOf oid gs)
 functionsFromCommandZone :: ObjectId -> GameState -> Bool
 functionsFromCommandZone oid gs = case fmap Object.source (Game.lookupObject oid gs) of
   Just (Source.OfEmblem _) -> True
-  Just (Source.OfCard _) -> isVanguard oid gs || Conspiracy.isConspiracy oid gs || ((Plane.isPlanarCard oid gs || Scheme.isScheme oid gs) && Set.member oid (GameState.command gs))
+  Just (Source.OfCard _) -> isVanguard oid gs || (Conspiracy.isConspiracy oid gs && not (Conspiracy.isFaceDownConspiracy oid gs)) || ((Plane.isPlanarCard oid gs || Scheme.isScheme oid gs) && Set.member oid (GameState.command gs))
   _ -> False
 
 -- | CR 902.3 \/ 902.6: this player's vanguard card, which is theirs to own and

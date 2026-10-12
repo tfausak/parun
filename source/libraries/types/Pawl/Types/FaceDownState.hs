@@ -23,6 +23,11 @@ data FaceDownState ability = MkFaceDownState
 -- specifies no characteristics of its own carries. Morph, manifest and
 -- Effect.TurnFaceDown's Backslide all take this; the ones that do not are
 -- disguise and cloak ('FaceDownCharacteristics.disguisedValue') and an entry
--- that lists its own (Pawl.Types.EntryRiders' faceDown).
+-- that lists its own (Pawl.Types.EntryRiders' faceDown). A hidden agenda's
+-- conspiracy lists less still: CR 315.5b gives it no characteristics at all.
 defaultFor :: FaceDownReason.FaceDownReason -> FaceDownState ability
-defaultFor r = MkFaceDownState {reason = r, listed = FaceDownCharacteristics.defaultValue}
+defaultFor r = MkFaceDownState {reason = r, listed = listing}
+  where
+    listing = case r of
+      FaceDownReason.HiddenAgenda -> FaceDownCharacteristics.noneValue
+      _ -> FaceDownCharacteristics.defaultValue

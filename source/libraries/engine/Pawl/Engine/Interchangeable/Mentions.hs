@@ -1725,6 +1725,7 @@ keywordNames asking x = case x of
   Keyword.Fuse -> False
   Keyword.Tribute _natural -> False
   Keyword.Dethrone -> False
+  Keyword.HiddenAgenda -> False
   Keyword.Outlast cost -> costNames asking (keywordNames asking) cost
   Keyword.Prowess -> False
   Keyword.Dash cost -> costNames asking (keywordNames asking) cost

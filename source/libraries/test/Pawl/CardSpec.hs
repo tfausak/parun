@@ -3650,6 +3650,7 @@ keywordPayloadFilters keyword = case keyword of
   -- CR 702.105a is payload-free too, and names no quality at all: what its minted
   -- ability compares is life totals, which no Filter reaches.
   Keyword.Dethrone -> []
+  Keyword.HiddenAgenda -> []
   -- CR 702.102a is payload-free: the permission names no quality, and the halves
   -- it fuses are the CARD's own faces rather than anything this value carries.
   Keyword.Fuse -> []

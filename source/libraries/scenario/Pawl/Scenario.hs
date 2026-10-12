@@ -1714,6 +1714,7 @@ describeAction gs action = case action of
   Action.TurnFaceUp oid procedure -> fmap (\named -> Text.pack "TurnFaceUp " <> named <> Text.pack (" " <> show procedure)) (describeObject gs oid)
   Action.Unlock oid half -> fmap (\named -> Text.pack "Unlock " <> named <> Text.pack " " <> CardName.unwrap half) (describeObject gs oid)
   Action.DiscardFromHand oid -> fmap (Text.pack "DiscardFromHand " <>) (describeObject gs oid)
+  Action.TurnConspiracyFaceUp oid -> fmap (Text.pack "TurnConspiracyFaceUp " <>) (describeObject gs oid)
   Action.Ignore oid _ -> fmap (Text.pack "Ignore " <>) (describeObject gs oid)
   Action.Plot oid _ -> fmap (Text.pack "Plot " <>) (describeObject gs oid)
   Action.Foretell oid -> fmap (Text.pack "Foretell " <>) (describeObject gs oid)

@@ -3,6 +3,7 @@
 module Pawl.Engine.Visibility where
 
 import qualified Data.Map as Map
+import qualified Pawl.Engine.Conspiracy as Conspiracy
 import qualified Pawl.Engine.Decide as Decide
 import qualified Pawl.Engine.Exile as Exile
 import qualified Pawl.Engine.Game as Game
@@ -82,10 +83,10 @@ base pid oid gs = case Game.lookupObject oid gs of
     Just Zone.Exile -> visibleIf (Exile.mayLookAt pid oid gs) -- CR 406.3
     Just zone -> case Object.facing obj of
       Facing.FaceUp -> Visibility.Visible
-      Facing.FaceDown _ ->
-        if zone == Zone.Battlefield || zone == Zone.Stack
-          then visibleIf (View.controllerOf oid gs == Just pid) -- CR 708.5
-          else Visibility.Obscured -- CR 708.5
+      Facing.FaceDown _
+        | zone == Zone.Battlefield || zone == Zone.Stack -> visibleIf (View.controllerOf oid gs == Just pid) -- CR 708.5
+        | Conspiracy.isFaceDownConspiracy oid gs -> visibleIf (View.controllerOf oid gs == Just pid) -- CR 315.7
+        | otherwise -> Visibility.Obscured -- CR 708.5
 
 -- | CR 401.5 / 400.2: a player effect showing the owner's hand or top card.
 shownTo :: PlayerId -> ObjectId -> GameState.GameState -> Visibility.Visibility

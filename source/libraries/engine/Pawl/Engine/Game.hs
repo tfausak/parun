@@ -1780,10 +1780,10 @@ lastKnownOf oid gs = Monad.join (liveOrLastKnown (const Nothing) Just oid gs)
 -- compares turnFaceOver's.
 --
 -- The STAMP is a permanent's, so it is written only on the battlefield (CR
--- 110.1); the facing is written wherever the object is. No road reaches a
--- non-battlefield object today -- both roads named above turn a permanent over --
--- and the gate is turnFaceOver's own, kept so that a road that later does cannot
--- silently restamp a face-down card in exile, whose stamp names its
+-- 110.1); the facing is written wherever the object is. CR 702.106's
+-- conspiracy in the command zone is the one road off it
+-- (Pawl.Engine.Conspiracy), and the gate is turnFaceOver's own, kept so that no
+-- road can silently restamp a face-down card in exile, whose stamp names its
 -- Pawl.Types.Pile.
 --
 -- CR 613.7k: the stickers on it take new timestamps right after its own.

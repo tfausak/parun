@@ -8573,12 +8573,13 @@ leaveTheGame asOf g oid = case lastKnownRecord asOf oid of
 
 -- | CR 708.9: the reveal a face-down permanent's or face-down spell's owner
 -- owes as it leaves the game, read off `asOf`, the board it is leaving; and CR
--- 702.143f's for a face-down foretold card in exile, a plain reveal. Nothing for
--- anything else, including a phased-out permanent (CR 702.26b,
--- GameState.battlefield membership). Pawl.FaceDownSpec's "CR 708.9 a face-down
--- spell is revealed when its owner leaves the game" and Pawl.ExileSpec's "CR
--- 702.143f a face-down foretold card is revealed when its owner leaves the
--- game" prove the two halves past permanents.
+-- 702.143f's for a face-down foretold card in exile and CR 702.106e's for a
+-- face-down conspiracy, plain reveals. Nothing for anything else, including a
+-- phased-out permanent (CR 702.26b, GameState.battlefield membership).
+-- Pawl.FaceDownSpec's "CR 708.9 a face-down spell is revealed when its owner
+-- leaves the game", Pawl.ExileSpec's "CR 702.143f a face-down foretold card is
+-- revealed when its owner leaves the game" and Pawl.ConspiracySpec's "CR
+-- 702.106e" case prove the halves past permanents.
 --
 -- Not implemented: a face-down component of a face-up merged permanent, which
 -- needs a status per component (#4878).
@@ -8590,6 +8591,7 @@ leavingReveal asOf oid = do
         | Set.member oid (GameState.battlefield asOf) && faceDown = Just RevealCause.LeavingFaceDown
         | Object.zone obj == Zone.Stack && faceDown = Just RevealCause.FaceDownSpell
         | Object.zone obj == Zone.Exile && Object.exiledFaceDown obj && Maybe.isJust (Object.foretold obj) = Just RevealCause.Ordinary
+        | Conspiracy.isFaceDownConspiracy oid asOf = Just RevealCause.Ordinary -- CR 702.106e
         | otherwise = Nothing
   cause <- causeOf
   revealedOn cause (Object.owner obj) oid asOf

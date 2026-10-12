@@ -499,6 +499,10 @@ data Keyword
     -- tied for most life, put a +1/+1 counter on it; each instance triggers
     -- separately (CR 702.105b).
     Dethrone
+  | -- | 702.106a: "as you put this conspiracy card into the command zone, turn
+    -- it face down and secretly choose a card name", read by
+    -- Pawl.Engine.Setup.createDeck.
+    HiddenAgenda
   | -- | 702.107a: "[Cost], {T}: Put a +1/+1 counter on this creature. Activate
     -- only as a sorcery."
     Outlast (Cost.Cost Keyword)

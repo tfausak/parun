@@ -1407,8 +1407,9 @@ data Context = MkContext
     -- choice during a resolution -- Ancient Vendetta's search, Predict's tally,
     -- Petra Sphinx's revealed card) and a replacement row's, where rule
     -- 702.16e's MINTED shield writes it (CR 614.1c's as-enters choice, Runed
-    -- Halo), and a target slot's (Declaration of Naught's "target spell with
-    -- the chosen name", chosen as it entered), among them.
+    -- Halo), a target slot's (Declaration of Naught's "target spell with
+    -- the chosen name", chosen as it entered) and a static ability's affected
+    -- set (Immediate Action's, chosen by CR 702.106a), among them.
     --
     -- The SOURCE's and not a slot's, which is what separates it from slotNames
     -- above: CR 201.4's name is not an object, so no slot ever holds it, and
@@ -1427,8 +1428,9 @@ data Context = MkContext
     -- positions is Pawl.FilterPositionLintSpec's "CR 201.4 no card asks
     -- HasChosenName outside an admitted position". That lint is an ALLOWLIST,
     -- narrower than where this field is filled: it refuses every standing
-    -- position, which is what Pawl.CardSpec's StandingHostFramed exists to keep
-    -- apart from an effect's own ObjectRef.
+    -- position but a static ability's affected set (Immediate Action), which is
+    -- what Pawl.CardSpec's StandingHostFramed exists to keep apart from an
+    -- effect's own ObjectRef.
     sourceChosenNames :: Map.Map PlayerId.PlayerId CardName.CardName,
     -- CR 702.16k: the player chosen (CR 614.1c) by the permanent whose
     -- PROTECTION ability wrote the filter being matched, for the one atom that
@@ -2719,6 +2721,7 @@ rewriteKeyword pairs keyword = case keyword of
   Keyword.Type.Evolve -> keyword
   Keyword.Type.Exploit -> keyword
   Keyword.Type.Dethrone -> keyword
+  Keyword.Type.HiddenAgenda -> keyword
   Keyword.Type.Fuse -> keyword
   -- CR 702.6a's equip cost, level up's and outlast's shape, plus CR 702.6c's
   -- quality, which is a Filter and so descends the way cycling's does. CR
