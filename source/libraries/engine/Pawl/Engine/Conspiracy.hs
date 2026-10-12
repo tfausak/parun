@@ -45,8 +45,7 @@ isConspiracyFace face = Set.member CardType.Conspiracy (TypeLine.types (Face.typ
 -- | CR 315.3: is this object a conspiracy card? Read off the card behind it
 -- (Game.faceUpFaceOf): CR 315.5b leaves a face-down one with no
 -- characteristics, yet it is still a conspiracy card that CR 315.3 holds in the
--- command zone. CR 315.3 keeps it there, where nothing can copy it or change
--- its type.
+-- command zone, where nothing can copy it or change its type.
 isConspiracy :: ObjectId -> GameState -> Bool
 isConspiracy oid gs = maybe False isConspiracyFace (Game.faceUpFaceOf oid gs)
 
