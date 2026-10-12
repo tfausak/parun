@@ -57,82 +57,67 @@
               {
                 "effects": [
                   {
-                    "type": "ForEach",
+                    "type": "DealDamage",
                     "value": {
-                      "body": [
+                      "parts": [
                         {
-                          "type": "DealDamage",
-                          "value": {
-                            "parts": [
-                              {
-                                "quantity": {
-                                  "type": "Times",
-                                  "value": {
-                                    "factor": 2,
-                                    "quantity": {
-                                      "type": "VotesReceived",
-                                      "value": {
-                                        "player": {
-                                          "type": "InSlot",
-                                          "value": "player"
-                                        },
-                                        "slot": "votes"
-                                      }
-                                    }
-                                  }
-                                },
-                                "ref": {
-                                  "type": "Players",
-                                  "value": {
-                                    "type": "InSlot",
-                                    "value": "player"
-                                  }
-                                }
-                              },
-                              {
-                                "quantity": {
-                                  "type": "Times",
-                                  "value": {
-                                    "factor": 2,
-                                    "quantity": {
-                                      "type": "VotesReceived",
-                                      "value": {
-                                        "player": {
-                                          "type": "InSlot",
-                                          "value": "player"
-                                        },
-                                        "slot": "votes"
-                                      }
-                                    }
-                                  }
-                                },
-                                "ref": {
-                                  "type": "EachMatching",
-                                  "value": {
-                                    "type": "And",
-                                    "value": [
-                                      {
-                                        "type": "HasCardType",
-                                        "value": {
-                                          "type": "Creature"
-                                        }
-                                      },
-                                      {
-                                        "type": "ControlledByBound",
-                                        "value": "player"
-                                      }
-                                    ]
-                                  }
+                          "quantity": {
+                            "type": "Times",
+                            "value": {
+                              "factor": 2,
+                              "quantity": {
+                                "type": "VotesReceived",
+                                "value": {
+                                  "player": {
+                                    "type": "Candidate"
+                                  },
+                                  "slot": "votes"
                                 }
                               }
-                            ]
+                            }
+                          },
+                          "ref": {
+                            "type": "EachOpponent"
+                          }
+                        },
+                        {
+                          "quantity": {
+                            "type": "Times",
+                            "value": {
+                              "factor": 2,
+                              "quantity": {
+                                "type": "VotesReceived",
+                                "value": {
+                                  "player": {
+                                    "type": "Candidate"
+                                  },
+                                  "slot": "votes"
+                                }
+                              }
+                            }
+                          },
+                          "ref": {
+                            "type": "EachMatching",
+                            "value": {
+                              "type": "And",
+                              "value": [
+                                {
+                                  "type": "HasCardType",
+                                  "value": {
+                                    "type": "Creature"
+                                  }
+                                },
+                                {
+                                  "type": "ControlledBy",
+                                  "value": {
+                                    "type": "Opponent"
+                                  }
+                                }
+                              ]
+                            }
                           }
                         }
-                      ],
-                      "ref": {
-                        "type": "EachOpponent"
-                      },
-                      "slot": "player"
+                      ]
                     }
                   }
                 ]

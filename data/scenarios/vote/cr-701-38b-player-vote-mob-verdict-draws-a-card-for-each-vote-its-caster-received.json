@@ -24,6 +24,10 @@
             "card": "Mountain",
             "label": "mountain-4",
             "ready": true
+          },
+          {
+            "card": "Hill Giant",
+            "label": "alice-giant"
           }
         ],
         "hand": [
@@ -71,6 +75,10 @@
           {
             "card": "Goblin Piker",
             "label": "goblin-piker"
+          },
+          {
+            "card": "Hill Giant",
+            "label": "carol-giant"
           }
         ],
         "library": [
@@ -194,6 +202,17 @@
       "step": "PrecombatMain",
       "player": "alice",
       "check": {
+        "Damage": {
+          "object": "$hill-giant",
+          "damage": 2
+        }
+      }
+    },
+    {
+      "turn": 1,
+      "step": "PrecombatMain",
+      "player": "alice",
+      "check": {
         "Life": {
           "player": "carol",
           "life": 20
@@ -218,9 +237,44 @@
       "step": "PrecombatMain",
       "player": "alice",
       "check": {
+        "Damage": {
+          "object": "$carol-giant",
+          "damage": 0
+        }
+      }
+    },
+    {
+      "turn": 1,
+      "step": "PrecombatMain",
+      "player": "alice",
+      "check": {
         "Life": {
           "player": "alice",
           "life": 20
+        }
+      }
+    },
+    {
+      "turn": 1,
+      "step": "PrecombatMain",
+      "player": "alice",
+      "check": {
+        "Count": {
+          "player": "alice",
+          "zone": "Battlefield",
+          "card": "Hill Giant",
+          "count": 1
+        }
+      }
+    },
+    {
+      "turn": 1,
+      "step": "PrecombatMain",
+      "player": "alice",
+      "check": {
+        "Damage": {
+          "object": "$alice-giant",
+          "damage": 0
         }
       }
     }
