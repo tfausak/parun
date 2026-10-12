@@ -637,6 +637,7 @@ prohibitsCasting pid oid variable gs =
         -- observes the difference.
         PlayerEffect.CantCastMatching criterion ->
           matchesObjectFor pid source criterion oid gs && not (choiceCouldEscape pid source criterion oid variable gs)
+        PlayerEffect.PutTappedAsYouCascade _ -> False
         -- CR 307.5 / Teferi, Mage of Zhalfir: outside that rule's moment this
         -- player casts nothing. Turn.sorcerySpeedWindow is CR 307.5's three
         -- conjuncts and the window CR 307.1 already shares, so there is one copy
@@ -791,6 +792,7 @@ prohibitsPlayingLand pid oid gs =
         -- however its Filter reads -- which is exactly why its one printed
         -- sentence declares two abilities.
         PlayerEffect.CantCastMatching _ -> False
+        PlayerEffect.PutTappedAsYouCascade _ -> False
         -- CR 118.9's alternative cost says what a SPELL pays, and a land is
         -- never cast (CR 305.1) -- so this permission neither allows nor
         -- prohibits a land play, whatever its Filter reads.
@@ -865,6 +867,7 @@ prohibitsSearching pid owner causeController gs =
         PlayerEffect.CantSetSchemesInMotion -> False
         PlayerEffect.CantAttackWithCreatures -> False
         PlayerEffect.CantCastMatching _ -> False
+        PlayerEffect.PutTappedAsYouCascade _ -> False
         PlayerEffect.CastOnlyAtSorcerySpeed -> False
         PlayerEffect.CantPlayLands _ -> False
         PlayerEffect.CastFrom _ -> False
@@ -949,6 +952,7 @@ prohibitsCounters pid kind gs =
         PlayerEffect.ExilesFoundWhileSearching -> False
         PlayerEffect.CantAttackWithCreatures -> False
         PlayerEffect.CantCastMatching _ -> False
+        PlayerEffect.PutTappedAsYouCascade _ -> False
         PlayerEffect.CastOnlyAtSorcerySpeed -> False
         PlayerEffect.CantPlayLands _ -> False
         PlayerEffect.CastFrom _ -> False
@@ -1021,6 +1025,7 @@ prohibitsBecomingMonarch pid gs =
         PlayerEffect.CantSearchLibraries _ -> False
         PlayerEffect.HasProtectionFrom _ -> False
         PlayerEffect.CantCastMatching _ -> False
+        PlayerEffect.PutTappedAsYouCascade _ -> False
         PlayerEffect.CastOnlyAtSorcerySpeed -> False
         PlayerEffect.CantPlayLands _ -> False
         PlayerEffect.CastFrom _ -> False
@@ -1073,6 +1078,7 @@ schemesCantBeSetInMotion gs =
         PlayerEffect.CantSearchLibraries _ -> False
         PlayerEffect.HasProtectionFrom _ -> False
         PlayerEffect.CantCastMatching _ -> False
+        PlayerEffect.PutTappedAsYouCascade _ -> False
         PlayerEffect.CastOnlyAtSorcerySpeed -> False
         PlayerEffect.CantPlayLands _ -> False
         PlayerEffect.CastFrom _ -> False
@@ -1125,6 +1131,7 @@ prohibitsAttackingWithCreatures pid gs =
         PlayerEffect.CantSearchLibraries _ -> False
         PlayerEffect.HasProtectionFrom _ -> False
         PlayerEffect.CantCastMatching _ -> False
+        PlayerEffect.PutTappedAsYouCascade _ -> False
         PlayerEffect.CastOnlyAtSorcerySpeed -> False
         PlayerEffect.CantPlayLands _ -> False
         PlayerEffect.CastFrom _ -> False
@@ -1710,6 +1717,7 @@ landPlayFlashGrant effect = case effect of
   PlayerEffect.ExilesFoundWhileSearching -> Nothing
   PlayerEffect.CantAttackWithCreatures -> Nothing
   PlayerEffect.CantCastMatching _ -> Nothing
+  PlayerEffect.PutTappedAsYouCascade _ -> Nothing
   PlayerEffect.CastOnlyAtSorcerySpeed -> Nothing
   PlayerEffect.CantPlayLands _ -> Nothing
   PlayerEffect.CastFrom _ -> Nothing
@@ -1954,6 +1962,7 @@ castPermissionsFrom pid zone oid gs =
         -- A PROHIBITION, and CR 601.3 asks the two halves separately:
         -- prohibitsCasting above is where Damping Engine and Silence are read.
         PlayerEffect.CantCastMatching _ -> False
+        PlayerEffect.PutTappedAsYouCascade _ -> False
         PlayerEffect.CastOnlyAtSorcerySpeed -> False
         PlayerEffect.CantPlayLands _ -> False
         -- The play-side twin can name the same ZONE and still answers nothing
@@ -2239,6 +2248,7 @@ mayCastFromHandWithoutPayingManaCost pid oid gs =
         -- 101.2 makes a "can't" beat any cost this offers, and folding them here
         -- would let a permission outvote one.
         PlayerEffect.CantCastMatching _ -> False
+        PlayerEffect.PutTappedAsYouCascade _ -> False
         PlayerEffect.CastOnlyAtSorcerySpeed -> False
         PlayerEffect.CantPlayLands _ -> False
    in inTheirOwnHand && any allows (applying pid gs)
@@ -2310,6 +2320,7 @@ playLandPiles pid gs =
         -- 101.2 makes a "can't" beat this permission, and the two are folded at
         -- separate gates so that neither can outvote the other by accident.
         PlayerEffect.CantCastMatching _ -> []
+        PlayerEffect.PutTappedAsYouCascade _ -> []
         PlayerEffect.CastOnlyAtSorcerySpeed -> []
         PlayerEffect.CantPlayLands _ -> []
         -- A cost, not a zone: CR 118.9's grant says what a spell PAYS and
@@ -2397,6 +2408,7 @@ protectedFromTargeting rows caster pid gs =
         PlayerEffect.ExilesFoundWhileSearching -> False
         PlayerEffect.CantAttackWithCreatures -> False
         PlayerEffect.CantCastMatching _ -> False
+        PlayerEffect.PutTappedAsYouCascade _ -> False
         PlayerEffect.CastOnlyAtSorcerySpeed -> False
         PlayerEffect.CantPlayLands _ -> False
         PlayerEffect.CastFrom _ -> False
@@ -2495,6 +2507,7 @@ protectedFromGiven rows aimer oid gs =
         PlayerEffect.ExilesFoundWhileSearching -> False
         PlayerEffect.CantAttackWithCreatures -> False
         PlayerEffect.CantCastMatching _ -> False
+        PlayerEffect.PutTappedAsYouCascade _ -> False
         PlayerEffect.CastOnlyAtSorcerySpeed -> False
         PlayerEffect.CantPlayLands _ -> False
         PlayerEffect.CastFrom _ -> False
@@ -2579,6 +2592,7 @@ protectionCarriers gs =
         PlayerEffect.ExilesFoundWhileSearching -> Nothing
         PlayerEffect.CantAttackWithCreatures -> Nothing
         PlayerEffect.CantCastMatching _ -> Nothing
+        PlayerEffect.PutTappedAsYouCascade _ -> Nothing
         PlayerEffect.CastOnlyAtSorcerySpeed -> Nothing
         PlayerEffect.CantPlayLands _ -> Nothing
         PlayerEffect.CastFrom _ -> Nothing
@@ -2653,6 +2667,7 @@ landPlaysAllowed pid gs =
         PlayerEffect.ExilesFoundWhileSearching -> Nothing
         PlayerEffect.CantAttackWithCreatures -> Nothing
         PlayerEffect.CantCastMatching _ -> Nothing
+        PlayerEffect.PutTappedAsYouCascade _ -> Nothing
         PlayerEffect.CastOnlyAtSorcerySpeed -> Nothing
         PlayerEffect.CantPlayLands _ -> Nothing
         PlayerEffect.CastFrom _ -> Nothing
@@ -2720,6 +2735,7 @@ votesAllowed pid gs =
         PlayerEffect.ExilesFoundWhileSearching -> Nothing
         PlayerEffect.CantAttackWithCreatures -> Nothing
         PlayerEffect.CantCastMatching {} -> Nothing
+        PlayerEffect.PutTappedAsYouCascade {} -> Nothing
         PlayerEffect.CastOnlyAtSorcerySpeed -> Nothing
         PlayerEffect.CantPlayLands {} -> Nothing
         PlayerEffect.CastFrom {} -> Nothing
@@ -2773,6 +2789,7 @@ surveilExtra pid gs =
         PlayerEffect.ExilesFoundWhileSearching -> Nothing
         PlayerEffect.CantAttackWithCreatures -> Nothing
         PlayerEffect.CantCastMatching {} -> Nothing
+        PlayerEffect.PutTappedAsYouCascade {} -> Nothing
         PlayerEffect.CastOnlyAtSorcerySpeed -> Nothing
         PlayerEffect.CantPlayLands {} -> Nothing
         PlayerEffect.CastFrom {} -> Nothing
@@ -2791,6 +2808,58 @@ surveilExtra pid gs =
         (Just oid, Just extra) -> Just (oid, extra)
         _ -> Nothing
    in Maybe.mapMaybe rowOf (applying pid gs)
+
+-- CR 702.85b: the "as you cascade" actions `pid` may take, each the Filter of
+-- the exiled card its row may put onto the battlefield tapped (Averna, the
+-- Chaos Bloom). One per row, in timestamp order, each asked on its own.
+cascadeActions :: PlayerId -> GameState -> [Filter Keyword]
+cascadeActions pid gs =
+  let grantOf effect = case effect of
+        PlayerEffect.CantCastSpells -> Nothing
+        PlayerEffect.CantActivateAbilities _ -> Nothing
+        PlayerEffect.CantCastMoreThan {} -> Nothing
+        PlayerEffect.ModifyCost {} -> Nothing
+        PlayerEffect.AlternativeActivationCost {} -> Nothing
+        PlayerEffect.PlayAdditionalLands {} -> Nothing
+        PlayerEffect.NoMaximumHandSize -> Nothing
+        PlayerEffect.SetMaximumHandSize {} -> Nothing
+        PlayerEffect.IncreaseMaximumHandSize {} -> Nothing
+        PlayerEffect.ReduceMaximumHandSize {} -> Nothing
+        PlayerEffect.DontLoseUnspentMana {} -> Nothing
+        PlayerEffect.LoseLifeForUnspentMana -> Nothing
+        PlayerEffect.SpendManaAsThough {} -> Nothing
+        PlayerEffect.CantBeTargetedBy {} -> Nothing
+        PlayerEffect.HasProtectionFrom {} -> Nothing
+        PlayerEffect.CastAsThoughItHadFlash {} -> Nothing
+        PlayerEffect.MayPlayAsThoughItHadFlash {} -> Nothing
+        PlayerEffect.ActivateKeywordAtInstantSpeed {} -> Nothing
+        PlayerEffect.ActivateLoyaltyAtInstantSpeed {} -> Nothing
+        PlayerEffect.CantBeCountered {} -> Nothing
+        PlayerEffect.DamageCantBePrevented {} -> Nothing
+        PlayerEffect.DamageCantBeRedirected {} -> Nothing
+        PlayerEffect.CantSearchLibraries {} -> Nothing
+        PlayerEffect.CantBecomeMonarch -> Nothing
+        PlayerEffect.CantSetSchemesInMotion -> Nothing
+        PlayerEffect.ControlledWhileSearching -> Nothing
+        PlayerEffect.ExilesFoundWhileSearching -> Nothing
+        PlayerEffect.CantAttackWithCreatures -> Nothing
+        PlayerEffect.CantCastMatching {} -> Nothing
+        PlayerEffect.PutTappedAsYouCascade criterion -> Just criterion
+        PlayerEffect.CastOnlyAtSorcerySpeed -> Nothing
+        PlayerEffect.CantPlayLands {} -> Nothing
+        PlayerEffect.CastFrom {} -> Nothing
+        PlayerEffect.PlayLandsFrom {} -> Nothing
+        PlayerEffect.PlotFrom {} -> Nothing
+        PlayerEffect.CastFromHandWithoutPayingManaCost {} -> Nothing
+        PlayerEffect.CantGetCounters {} -> Nothing
+        PlayerEffect.StateCoinFlip {} -> Nothing
+        PlayerEffect.ModifyDieRoll _ -> Nothing
+        PlayerEffect.AdditionalVotes _ -> Nothing
+        PlayerEffect.AdditionalSurveilCards _ -> Nothing
+        PlayerEffect.CantGainLife -> Nothing
+        PlayerEffect.CantLoseLife -> Nothing
+        PlayerEffect.Shows _ -> Nothing
+   in Maybe.mapMaybe (grantOf . snd) (applying pid gs)
 
 -- CR 401.5 / 400.2: the grants showing this player's hand or top card, each
 -- naming whom it shows them to. Read by Pawl.Engine.Visibility.shownTo.
@@ -2826,6 +2895,7 @@ shownGrants pid gs =
         PlayerEffect.ExilesFoundWhileSearching -> Nothing
         PlayerEffect.CantAttackWithCreatures -> Nothing
         PlayerEffect.CantCastMatching {} -> Nothing
+        PlayerEffect.PutTappedAsYouCascade {} -> Nothing
         PlayerEffect.CastOnlyAtSorcerySpeed -> Nothing
         PlayerEffect.CantPlayLands {} -> Nothing
         PlayerEffect.CastFrom {} -> Nothing
@@ -2915,6 +2985,7 @@ maximumHandSize pid gs =
         PlayerEffect.ExilesFoundWhileSearching -> current
         PlayerEffect.CantAttackWithCreatures -> current
         PlayerEffect.CantCastMatching _ -> current
+        PlayerEffect.PutTappedAsYouCascade _ -> current
         PlayerEffect.CastOnlyAtSorcerySpeed -> current
         PlayerEffect.CantPlayLands _ -> current
         PlayerEffect.CastFrom _ -> current
@@ -2989,6 +3060,7 @@ keepsUnspentMana pid gs =
         PlayerEffect.ExilesFoundWhileSearching -> Nothing
         PlayerEffect.CantAttackWithCreatures -> Nothing
         PlayerEffect.CantCastMatching _ -> Nothing
+        PlayerEffect.PutTappedAsYouCascade _ -> Nothing
         PlayerEffect.CastOnlyAtSorcerySpeed -> Nothing
         PlayerEffect.CantPlayLands _ -> Nothing
         PlayerEffect.CastFrom _ -> Nothing
@@ -3055,6 +3127,7 @@ losesLifeForUnspentMana pid gs =
         PlayerEffect.ExilesFoundWhileSearching -> False
         PlayerEffect.CantAttackWithCreatures -> False
         PlayerEffect.CantCastMatching _ -> False
+        PlayerEffect.PutTappedAsYouCascade _ -> False
         PlayerEffect.CastOnlyAtSorcerySpeed -> False
         PlayerEffect.CantPlayLands _ -> False
         PlayerEffect.CastFrom _ -> False
@@ -3125,6 +3198,7 @@ prohibitsGainingLife pid gs =
         PlayerEffect.ExilesFoundWhileSearching -> False
         PlayerEffect.CantAttackWithCreatures -> False
         PlayerEffect.CantCastMatching _ -> False
+        PlayerEffect.PutTappedAsYouCascade _ -> False
         PlayerEffect.CastOnlyAtSorcerySpeed -> False
         PlayerEffect.CantPlayLands _ -> False
         PlayerEffect.CastFrom _ -> False
@@ -3190,6 +3264,7 @@ prohibitsLosingLife pid gs =
         PlayerEffect.ExilesFoundWhileSearching -> False
         PlayerEffect.CantAttackWithCreatures -> False
         PlayerEffect.CantCastMatching _ -> False
+        PlayerEffect.PutTappedAsYouCascade _ -> False
         PlayerEffect.CastOnlyAtSorcerySpeed -> False
         PlayerEffect.CantPlayLands _ -> False
         PlayerEffect.CastFrom _ -> False
@@ -3253,6 +3328,7 @@ spendManaAsThough pid gs =
         PlayerEffect.ExilesFoundWhileSearching -> Nothing
         PlayerEffect.CantAttackWithCreatures -> Nothing
         PlayerEffect.CantCastMatching _ -> Nothing
+        PlayerEffect.PutTappedAsYouCascade _ -> Nothing
         PlayerEffect.CastOnlyAtSorcerySpeed -> Nothing
         PlayerEffect.CantPlayLands _ -> Nothing
         PlayerEffect.CastFrom _ -> Nothing
@@ -3352,6 +3428,7 @@ cantBeCountered pid oid gs =
         PlayerEffect.ExilesFoundWhileSearching -> False
         PlayerEffect.CantAttackWithCreatures -> False
         PlayerEffect.CantCastMatching _ -> False
+        PlayerEffect.PutTappedAsYouCascade _ -> False
         PlayerEffect.CastOnlyAtSorcerySpeed -> False
         PlayerEffect.CantPlayLands _ -> False
         PlayerEffect.CastFrom _ -> False
@@ -3423,6 +3500,7 @@ unpreventable gs =
         PlayerEffect.ExilesFoundWhileSearching -> Nothing
         PlayerEffect.CantAttackWithCreatures -> Nothing
         PlayerEffect.CantCastMatching _ -> Nothing
+        PlayerEffect.PutTappedAsYouCascade _ -> Nothing
         PlayerEffect.CastOnlyAtSorcerySpeed -> Nothing
         PlayerEffect.CantPlayLands _ -> Nothing
         PlayerEffect.CastFrom _ -> Nothing
@@ -3495,6 +3573,7 @@ unredirectable gs =
         PlayerEffect.ExilesFoundWhileSearching -> Nothing
         PlayerEffect.CantAttackWithCreatures -> Nothing
         PlayerEffect.CantCastMatching _ -> Nothing
+        PlayerEffect.PutTappedAsYouCascade _ -> Nothing
         PlayerEffect.CastOnlyAtSorcerySpeed -> Nothing
         PlayerEffect.CantPlayLands _ -> Nothing
         PlayerEffect.CastFrom _ -> Nothing
@@ -3590,6 +3669,7 @@ statedFlips pid gs =
         PlayerEffect.ExilesFoundWhileSearching -> Nothing
         PlayerEffect.CantAttackWithCreatures -> Nothing
         PlayerEffect.CantCastMatching _ -> Nothing
+        PlayerEffect.PutTappedAsYouCascade _ -> Nothing
         PlayerEffect.CastOnlyAtSorcerySpeed -> Nothing
         PlayerEffect.CantPlayLands _ -> Nothing
         PlayerEffect.CastFrom _ -> Nothing
@@ -3658,6 +3738,7 @@ rollModifiers pid gs =
         PlayerEffect.ExilesFoundWhileSearching -> Nothing
         PlayerEffect.CantAttackWithCreatures -> Nothing
         PlayerEffect.CantCastMatching _ -> Nothing
+        PlayerEffect.PutTappedAsYouCascade _ -> Nothing
         PlayerEffect.CastOnlyAtSorcerySpeed -> Nothing
         PlayerEffect.CantPlayLands _ -> Nothing
         PlayerEffect.CastFrom _ -> Nothing
@@ -3762,6 +3843,7 @@ overPlayerRefs f effect = case effect of
   PlayerEffect.ExilesFoundWhileSearching -> pure effect
   PlayerEffect.CantAttackWithCreatures -> pure effect
   PlayerEffect.CantCastMatching _ -> pure effect
+  PlayerEffect.PutTappedAsYouCascade _ -> pure effect
   PlayerEffect.CastOnlyAtSorcerySpeed -> pure effect
   PlayerEffect.CantPlayLands _ -> pure effect
   PlayerEffect.CastFrom grant ->
@@ -3832,6 +3914,7 @@ overDamagePatterns f effect = case effect of
   PlayerEffect.ExilesFoundWhileSearching -> pure effect
   PlayerEffect.CantAttackWithCreatures -> pure effect
   PlayerEffect.CantCastMatching _ -> pure effect
+  PlayerEffect.PutTappedAsYouCascade _ -> pure effect
   PlayerEffect.CastOnlyAtSorcerySpeed -> pure effect
   PlayerEffect.CantPlayLands _ -> pure effect
   PlayerEffect.CastFrom _ -> pure effect

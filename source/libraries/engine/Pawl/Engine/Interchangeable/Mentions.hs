@@ -1251,6 +1251,7 @@ effectNames asking onCard onAbility x = case x of
   Effect.Surveil playerQuantity -> playerQuantityNames asking playerQuantity
   Effect.Fateseal playerQuantity -> playerQuantityNames asking playerQuantity
   Effect.Clash slotName -> slotNames asking slotName
+  Effect.AsYouCascade slotName -> slotNames asking slotName
   Effect.Explore objectRef -> objectRefNames asking objectRef
   Effect.Assemble objectRef -> any (objectRefNames asking) objectRef
   Effect.Connive connive -> conniveNames asking connive
@@ -2209,6 +2210,7 @@ playerEffectNames asking x = case x of
   PlayerEffect.ModifyDieRoll modifiedRoll -> modifiedRollNames asking modifiedRoll
   PlayerEffect.AdditionalVotes _natural -> False
   PlayerEffect.AdditionalSurveilCards _natural -> False
+  PlayerEffect.PutTappedAsYouCascade filter_ -> filterNames asking filter_
   PlayerEffect.CantGainLife -> False
   PlayerEffect.CantLoseLife -> False
   PlayerEffect.Shows _shows -> False

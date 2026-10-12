@@ -274,6 +274,10 @@ data Effect card ability
     -- Effect.FlipCoin's shape, for a later clause of the same resolution to read
     -- as Quantity's InSlot -- Pulling Teeth's "if you win" and its "otherwise".
     Clash SlotName.SlotName
+  | -- | CR 702.85b: the resolving controller takes each "as you cascade" action
+    -- (Pawl.Types.PlayerEffect's PutTappedAsYouCascade) over the cards the slot
+    -- holds.
+    AsYouCascade SlotName.SlotName
   | -- | CR 701.44a: the permanents the ObjectRef names each explore, ordered
     -- across seats by CR 701.44d.
     Explore ObjectRef.ObjectRef

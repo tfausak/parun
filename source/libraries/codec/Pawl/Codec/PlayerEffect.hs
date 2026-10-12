@@ -69,6 +69,7 @@ codec =
           Arm.payload "ModifyDieRoll" ModifiedRoll.codec PlayerEffect.ModifyDieRoll (\x -> case x of PlayerEffect.ModifyDieRoll y -> Just y; _ -> Nothing),
           Arm.payload "AdditionalVotes" Common.natural PlayerEffect.AdditionalVotes (\x -> case x of PlayerEffect.AdditionalVotes y -> Just y; _ -> Nothing),
           Arm.payload "AdditionalSurveilCards" Common.natural PlayerEffect.AdditionalSurveilCards (\x -> case x of PlayerEffect.AdditionalSurveilCards y -> Just y; _ -> Nothing),
+          Arm.payload "PutTappedAsYouCascade" filterCodec PlayerEffect.PutTappedAsYouCascade (\x -> case x of PlayerEffect.PutTappedAsYouCascade y -> Just y; _ -> Nothing),
           Arm.nullary "CantGainLife" PlayerEffect.CantGainLife,
           Arm.nullary "CantLoseLife" PlayerEffect.CantLoseLife,
           Arm.payload "Shows" Shows.codec PlayerEffect.Shows (\x -> case x of PlayerEffect.Shows y -> Just y; _ -> Nothing)
@@ -105,6 +106,7 @@ tagOf x = case x of
   PlayerEffect.ExilesFoundWhileSearching {} -> "ExilesFoundWhileSearching"
   PlayerEffect.CantAttackWithCreatures {} -> "CantAttackWithCreatures"
   PlayerEffect.CantCastMatching {} -> "CantCastMatching"
+  PlayerEffect.PutTappedAsYouCascade {} -> "PutTappedAsYouCascade"
   PlayerEffect.CastOnlyAtSorcerySpeed {} -> "CastOnlyAtSorcerySpeed"
   PlayerEffect.CantPlayLands {} -> "CantPlayLands"
   PlayerEffect.CastFrom {} -> "CastFrom"

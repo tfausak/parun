@@ -8139,11 +8139,12 @@ demonstrateOpponent = SlotName.MkSlotName (Text.pack "demonstrated")
 -- exiled this way that weren't cast on the bottom of your library in a random
 -- order."
 --
--- THREE CLAUSES, hideaway's shape one zone and one opcode over: the walk that
--- ends AT its match is ObjectRef.TopOfLibraryUntil (Treasure Hunt's), the offer
--- is CR 608.2g's, and "the rest" needs no opcode of its own -- the third clause
--- reads the same slot and finds the cast card gone, casting having deleted the
--- exiled incarnation the way CR 400.7 deletes a moved one.
+-- THE WALK, THE OFFER AND THE REST, hideaway's shape one zone and one opcode
+-- over: the walk that ends AT its match is ObjectRef.TopOfLibraryUntil
+-- (Treasure Hunt's), the offer is CR 608.2g's, and "the rest" needs no opcode
+-- of its own -- the last clause reads the same slot and finds the cast card
+-- gone, casting having deleted the exiled incarnation the way CR 400.7 deletes
+-- a moved one.
 --
 -- ONE FILTER, written twice for two questions the rule asks separately: it ENDS
 -- the walk (so the match is the last card exiled, CR 702.85a's first sentence)
@@ -8157,9 +8158,10 @@ demonstrateOpponent = SlotName.MkSlotName (Text.pack "demonstrated")
 -- {X} spell granted cascade, whose mana value counts its announced X (CR
 -- 202.3e).
 --
--- Not implemented: CR 702.85b's "as you cascade" window, the action another
--- effect takes over the exiled batch between the walk and the cast decision
--- (#3580).
+-- CR 702.85b's "as you cascade" window is a fourth clause BETWEEN the walk and
+-- the offer, so an action another permanent grants (Averna, the Chaos Bloom)
+-- comes after the last card is exiled and before the cast decision -- or,
+-- where the walk found no match, before the bottoming.
 --
 -- The offer carries the SAME atom as CR 702.85a's second condition, and that is
 -- the whole of its work: the card's mana value is already less by the walk, so
@@ -8222,11 +8224,11 @@ cascade =
    in Mint.triggerOf
         TriggerCondition.SelfCast
         Nothing
-        (Mint.oneModeOf Map.empty (Seq.fromList [clause exile, clause offer, clause rest]))
+        (Mint.oneModeOf Map.empty (Seq.fromList [clause exile, clause (Effect.AsYouCascade cascadeExiled), clause offer, clause rest]))
 
 -- The slot rule 702.85a's walk binds every card it exiled into, the match
--- included -- hideawaySeen's position, read twice: once for the offer and once
--- for what goes to the bottom.
+-- included -- hideawaySeen's position, read by CR 702.85b's window, by the
+-- offer and by what goes to the bottom.
 cascadeExiled :: SlotName.SlotName
 cascadeExiled = SlotName.MkSlotName (Text.pack "cascaded")
 
@@ -8237,7 +8239,7 @@ cascadeExiled = SlotName.MkSlotName (Text.pack "cascaded")
 -- paying their mana costs, then put all revealed cards not cast this way on the
 -- bottom of your library in any order."
 --
--- THREE CLAUSES, `cascade` above's shape with each of its three opcodes one step
+-- THREE CLAUSES, `cascade` above's walk, offer and rest, each one step
 -- milder: the walk is a COUNT rather than a match (ObjectRef.TopOfLibrary, which
 -- CR 609.3 clamps to a shorter library -- the rule's own second sentence, so it
 -- needs no arm), the offer casts ANY NUMBER rather than one
@@ -8255,8 +8257,8 @@ cascadeExiled = SlotName.MkSlotName (Text.pack "cascaded")
 -- off the slot it binds rather than off a Clause.ifTaken ordinal: a declined
 -- reveal binds nothing, so the offer names no card and the remainder moves none.
 -- That is rule 702.60a's "if you reveal cards from your library this way" read
--- through CR 608.2c, and it is the posture cascade's third clause already takes
--- towards its own second.
+-- through CR 608.2c, and it is the posture cascade's last clause already takes
+-- towards its offer.
 --
 -- NO CastOffer.restriction, where cascade carries one: rule 702.85a states a
 -- second condition about the RESULTING spell and rule 702.60a states none -- the

@@ -202,6 +202,10 @@ data PlayerEffect
   | -- | CR 701.25b / Enhanced Surveillance: this player may look at this many
     -- more cards each time they surveil.
     AdditionalSurveilCards Natural.Natural
+  | -- | CR 702.85b / Averna, the Chaos Bloom: as this player cascades, they may
+    -- put a matching card from among the exiled cards onto the battlefield
+    -- tapped.
+    PutTappedAsYouCascade (Filter.Filter Keyword.Keyword)
   | -- | CR 119.7 / Giant Cindermaw, Platinum Emperion: this player can't gain
     -- life.
     --

@@ -1,0 +1,40 @@
+{
+  "description": "CR 702.85b with no nonland hit, Averna still puts an exiled land onto the battlefield before the rest go to the bottom",
+  "note": "The walk exiles the whole library without finding a nonland card under the Elf's mana value, so nothing is offered. Had the window come after the bottoming, the Forest would be in the library.",
+  "board": {
+    "seats": [
+      {
+        "name": "alice",
+        "battlefield": [
+          { "card": "Mountain", "label": "mountain", "ready": true },
+          { "card": "Mountain", "label": "mountain-2", "ready": true },
+          { "card": "Forest", "label": "forest", "ready": true },
+          { "card": "Forest", "label": "forest-2", "ready": true },
+          { "card": "Averna, the Chaos Bloom", "label": "averna", "ready": true }
+        ],
+        "hand": [
+          { "card": "Bloodbraid Elf", "label": "bloodbraid-elf", "ready": true }
+        ],
+        "library": [
+          { "card": "Forest" },
+          { "card": "Hill Giant" },
+          { "card": "Russet Wolves" }
+        ]
+      },
+      { "name": "bob" }
+    ],
+    "active": "alice",
+    "step": "PrecombatMain"
+  },
+  "timeline": [
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": { "Cast": { "object": "$bloodbraid-elf", "mana": ["$mountain", "$mountain-2", "$forest", "$forest-2"] } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": { "Answer": { "prompt": "ChooseCardsFromAmong", "with": ["Forest#3"] } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": { "Answer": { "prompt": "Shuffle", "with": ["Russet Wolves", "Hill Giant"] } } }
+  ],
+  "final": [
+    { "Tapped": { "object": "Forest#3", "tapped": true } },
+    { "View": { "of": "Zone", "player": "alice", "zone": "Battlefield", "is": ["$mountain", "$mountain-2", "$forest", "$forest-2", "$averna", "Forest#3", "Bloodbraid Elf"] } },
+    { "View": { "of": "Zone", "player": "alice", "zone": "Library", "is": ["Hill Giant", "Russet Wolves"] } },
+    { "View": { "of": "Zone", "player": "alice", "zone": "Exile", "is": [] } }
+  ]
+}

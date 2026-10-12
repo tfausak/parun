@@ -472,6 +472,7 @@ rewritePlayerEffect pairs effect = case effect of
   PlayerEffect.ActivateLoyaltyAtInstantSpeed f -> PlayerEffect.ActivateLoyaltyAtInstantSpeed (Filter.rewrite pairs f)
   PlayerEffect.CantBeCountered f -> PlayerEffect.CantBeCountered (Filter.rewrite pairs f)
   PlayerEffect.CantCastMatching f -> PlayerEffect.CantCastMatching (Filter.rewrite pairs f)
+  PlayerEffect.PutTappedAsYouCascade f -> PlayerEffect.PutTappedAsYouCascade (Filter.rewrite pairs f)
   -- CR 305.1's play-side prohibition, narrowed by the same kind of Filter.
   PlayerEffect.CantPlayLands f -> PlayerEffect.CantPlayLands (Filter.rewrite pairs f)
   PlayerEffect.CastFrom grant -> PlayerEffect.CastFrom grant {CastFromZone.matching = Filter.rewrite pairs (CastFromZone.matching grant), CastFromZone.additionalCosts = fmap (Filter.rewriteComponent pairs) (CastFromZone.additionalCosts grant)}
@@ -675,6 +676,7 @@ rewriteEffect pairs effect = case effect of
   Effect.Surveil x -> Effect.Surveil (rewritePlayerQuantity pairs x)
   Effect.Fateseal x -> Effect.Fateseal (rewritePlayerQuantity pairs x)
   Effect.Clash {} -> effect
+  Effect.AsYouCascade {} -> effect
   Effect.Explore ref -> Effect.Explore (rewriteObjectRef pairs ref)
   Effect.Assemble ref -> Effect.Assemble (fmap (rewriteObjectRef pairs) ref)
   Effect.ArrangeInLibrary ref -> Effect.ArrangeInLibrary (rewriteObjectRef pairs ref)

@@ -474,6 +474,14 @@ spec s = Spec.describe s "Pawl.Codec.PlayerEffect" $ do
       PlayerEffect.codec
       (PlayerEffect.AdditionalSurveilCards 2)
       " {\"type\":\"AdditionalSurveilCards\",\"value\":2} "
+  -- CR 702.85b as Averna, the Chaos Bloom prints it, and the wire form
+  -- data/cards/averna-the-chaos-bloom.json writes.
+  Spec.it s "PutTappedAsYouCascade, Averna's land card" $
+    Common.assertCodec
+      s
+      PlayerEffect.codec
+      (PlayerEffect.PutTappedAsYouCascade (Filter.HasCardType CardType.Land))
+      " {\"type\":\"PutTappedAsYouCascade\",\"value\":{\"type\":\"HasCardType\",\"value\":{\"type\":\"Land\"}}} "
   -- CR 119.7 as Giant Cindermaw prints it, and the wire form
   -- data/cards/giant-cindermaw.json writes.
   Spec.it s "CantGainLife, Giant Cindermaw's restriction" $

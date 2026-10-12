@@ -668,6 +668,15 @@ spec s = Spec.describe s "Pawl.Codec.Effect" $ do
       fromJson
       (Effect.Clash (SlotName.MkSlotName (Text.pack "won")))
       " {\"type\":\"Clash\",\"value\":\"won\"} "
+  -- CR 702.85b's window over the slot cascade's walk binds; only
+  -- Pawl.Engine.Keyword.cascade mints it.
+  Spec.it s "AsYouCascade" $
+    Common.assertJsonCodec
+      s
+      toJson
+      fromJson
+      (Effect.AsYouCascade (SlotName.MkSlotName (Text.pack "cascaded")))
+      " {\"type\":\"AsYouCascade\",\"value\":\"cascaded\"} "
   -- Merfolk Branchwalker's "it explores", against the trigger-source slot, and
   -- the swept-set shape the ObjectRef also admits.
   Spec.it s "Explore" $ do
