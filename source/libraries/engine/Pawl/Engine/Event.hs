@@ -8523,6 +8523,8 @@ lastKnownFrom gs oid obj =
     (Object.protector obj)
     -- CR 400.7d's cost record.
     (Object.paidCosts obj)
+    -- CR 718.3d's record, for the same reason.
+    (Object.prototyped obj)
     -- CR 702.30a's echo window: per-incarnation, so this is the last moment it
     -- exists.
     (Object.controlClock obj)

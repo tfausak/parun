@@ -3886,6 +3886,9 @@ filterReads f = case f of
   -- on this atom.
   Filter.Type.TagWasSpent _ -> Set.empty
   Filter.Type.Paid _ -> Set.empty
+  -- CR 718.2a: a copiable value, which only layer 1 writes and no Aspect names,
+  -- HasName's reason.
+  Filter.Type.IsPrototyped -> Set.empty
   -- Reads nothing: CR 701.54b keeps the ring-bearer designation off the copiable
   -- values, so no Modification writes Object.ringBearerFor.
   Filter.Type.IsRingBearer -> Set.empty
@@ -4061,6 +4064,7 @@ filterReadsPeers f = case f of
   Filter.Type.WasCastFrom _ -> False
   Filter.Type.TagWasSpent _ -> False
   Filter.Type.Paid _ -> False
+  Filter.Type.IsPrototyped -> False
   Filter.Type.IsRingBearer -> False
   Filter.Type.IsPaired -> False
   Filter.Type.IsPairedWithSource -> False

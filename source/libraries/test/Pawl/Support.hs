@@ -1943,6 +1943,7 @@ stubView table oid =
                 Filter.tributePaid = False,
                 Filter.castUsing = Nothing,
                 Filter.foretold = False,
+                Filter.prototyped = False,
                 Filter.manaSpentTagColors = Map.empty,
                 Filter.manaSpentAmount = 0,
                 -- CR 602.1: the table registers no abilities either, for the

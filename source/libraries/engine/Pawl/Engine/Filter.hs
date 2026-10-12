@@ -726,6 +726,13 @@ data View = MkView
     -- carries onto the stack, and False where there is no live object, as
     -- `castUsing` above. Pawl.Engine.Quantity's WasForetold arm is the reader.
     foretold :: Bool,
+    -- CR 718.3c / 718.3d: is this candidate a prototyped spell, or a permanent
+    -- that was one, or a copy of either? PC.prototyped off the projection, which
+    -- is how a Clone of one answers (its own Object.prototyped is False), or'd
+    -- with Object.prototyped, which a spell copy carries (CR 707.10) and which
+    -- answers for an original whose copiable values are something else's.
+    -- Filter.IsPrototyped is the reader.
+    prototyped :: Bool,
     -- CR 400.7d / CR 107.4h: the production tags of the mana that was spent to
     -- cast the spell this candidate is, or was, or to activate the CR 602.2a
     -- ability it is -- read off Object.manaSpent, and empty where there is no
@@ -983,6 +990,7 @@ playerView pid =
       tributePaid = False,
       castUsing = Nothing,
       foretold = False,
+      prototyped = False,
       -- CR 202.1a's mana cost is spent to cast a CARD, and CR 109.1's list of
       -- what an object is has no player in it -- `manaValue` above, same rule.
       manaSpentTagColors = Map.empty,
@@ -2185,6 +2193,7 @@ matches context view predicate = case predicate of
   -- everything nothing was ever paid for -- `manaSpentTagColors` is empty there.
   Filter.TagWasSpent tag -> Map.member tag (manaSpentTagColors view)
   Filter.Paid designator -> Keyword.timesPaid designator (paidCosts view) > 0
+  Filter.IsPrototyped -> prototyped view
   -- CR 701.54e's designation conjunct, asked of the perspective (CR 109.5's
   -- "you"). A live read of Object.ringBearerFor, never a stamp on the candidate:
   -- CR 701.54a ends the designation when another creature takes it, and the next
@@ -2424,6 +2433,7 @@ rewrite pairs predicate = case predicate of
   Filter.TagWasSpent _ -> predicate
   -- Untouched for Quantity.TimesPaid's reason (Pawl.Engine.Projection.Rewrite).
   Filter.Paid _ -> predicate
+  Filter.IsPrototyped -> predicate
   -- Rewritten THROUGH the kind, for the reason rewriteCounterKind gives.
   Filter.HasCounters kind -> Filter.HasCounters (rewriteCounterKind pairs kind)
   -- Left standing where the atom above is rewritten: CR 612.1 swaps WORDS, and a
@@ -3168,6 +3178,7 @@ bakeBound players predicate = case predicate of
   Filter.WasCastFrom _ -> predicate
   Filter.TagWasSpent _ -> predicate
   Filter.Paid _ -> predicate
+  Filter.IsPrototyped -> predicate
 
 -- The mana-value LITERALS a Filter compares against: every `n` a Measures atom
 -- compares the candidate's mana value with, at any depth.
@@ -3332,6 +3343,7 @@ manaValueThresholds predicate = case predicate of
   Filter.WasCastFrom _ -> []
   Filter.TagWasSpent _ -> []
   Filter.Paid _ -> []
+  Filter.IsPrototyped -> []
 
 -- CR 701.23b vs CR 701.23d: does this predicate state a QUALITY? A search whose
 -- filter states one may find fewer cards than it asks for, or none, even when the
@@ -3514,6 +3526,7 @@ statesAQuality predicate = case predicate of
   -- never paid for.
   Filter.TagWasSpent _ -> True
   Filter.Paid _ -> True
+  Filter.IsPrototyped -> True
 
 -- Does the Filter compare a candidate against anything Context holds about
 -- the SOURCE that a printed face can be told apart by -- its projected power,
@@ -3643,6 +3656,7 @@ readsSourceValues predicate = case predicate of
   Filter.WasCastFrom _ -> False
   Filter.TagWasSpent _ -> False
   Filter.Paid _ -> False
+  Filter.IsPrototyped -> False
 
 -- The slots a Filter READS. Pawl.Engine.Resolve.Slots.modeSlots folds this over a
 -- mode's target slots, which is what makes the card dataflow lint see a slot
@@ -3814,6 +3828,7 @@ overBoundSlotsWith f predicate = case predicate of
   Filter.WasCastFrom _ -> pure predicate
   Filter.TagWasSpent _ -> pure predicate
   Filter.Paid _ -> pure predicate
+  Filter.IsPrototyped -> pure predicate
   Filter.And fs -> fmap Filter.And (traverse (overBoundSlotsWith f) fs)
   Filter.Or fs -> fmap Filter.Or (traverse (overBoundSlotsWith f) fs)
   Filter.Not g -> fmap Filter.Not (overBoundSlotsWith f g)

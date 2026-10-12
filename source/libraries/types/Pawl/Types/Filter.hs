@@ -596,6 +596,11 @@ data Filter keyword
     -- candidate, Quantity.TimesPaid's read at least once -- Hallar's "if that
     -- spell was kicked" is CR 702.33d's whole family, sticker kicker among it.
     Paid (KeywordDesignator.KeywordDesignator keyword)
+  | -- | CR 718.3c / 718.3d: the candidate is a prototyped spell or a permanent
+    -- that was one, a copy of either included. Not Paid above: a Clone of a
+    -- kicked permanent was not kicked (CR 707.2), where CR 718.3d makes a copy
+    -- of a prototyped permanent answer as one.
+    IsPrototyped
   | And [Filter keyword]
   | Or [Filter keyword]
   | Not (Filter keyword)

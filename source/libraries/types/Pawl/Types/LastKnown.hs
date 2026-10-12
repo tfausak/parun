@@ -191,6 +191,10 @@ data LastKnown = MkLastKnown
     -- it -- Object.paidCosts as it left. Not a characteristic, and gone with the
     -- object, but CR 702.175a's trigger still asks after it on resolution.
     paidCosts :: !(Map.Map Keyword.Keyword Natural.Natural),
+    -- | CR 718.3d: was it a permanent that was a prototyped spell --
+    -- Object.prototyped as it left. Not a characteristic, so a face-down one's
+    -- `characteristics` above cannot say; Count.lastKnownView reads it.
+    prototyped :: !Bool,
     -- | CR 702.30a: how far each player's echo window had run on it --
     -- Object.controlClock as it left. Not a characteristic (CR 109.3's list has
     -- no clock), and per-INCARNATION, so CR 400.7 deletes the only copy of it

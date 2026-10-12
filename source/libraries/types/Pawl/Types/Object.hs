@@ -628,10 +628,8 @@ data Object = MkObject
     -- (Pawl.Engine.Event.changeZoneAttaching, `bestowed`'s line) and no other,
     -- CR 400.7's new incarnation taking it everywhere else.
     --
-    -- Not implemented: a rule or effect that REFERS to a prototyped spell or to
-    -- the permanent one became, which is the last sentence of CR 718.3c and of
-    -- CR 718.3d. No Pawl.Engine.Filter atom reads this field, so a card cannot
-    -- name either (#3549).
+    -- Filter.IsPrototyped reads it, beside the copiable PC.prototyped that
+    -- answers for a copy (CR 718.3c / 718.3d).
     prototyped :: Bool,
     -- | CR 702.27a: was this SPELL's buyback cost paid? Stamped by
     -- Pawl.Engine.Cast at CR 601.2b onto the stack incarnation, and read by

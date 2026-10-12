@@ -276,6 +276,9 @@ viewOfCard face =
           -- CR 702.143c asks about a card in exile or a spell, and this builder
           -- describes a printed face.
           Filter.foretold = False,
+          -- CR 718.3: a prototyped SPELL is cast, and this builder describes a
+          -- printed face.
+          Filter.prototyped = False,
           -- CR 601.2h pays the cost of a SPELL, and this builder describes a
           -- printed face.
           Filter.manaSpentTagColors = Map.empty,
@@ -786,6 +789,10 @@ viewOfCharacteristics peers oid pc controller counters gs =
       Filter.castUsing = Object.castUsing =<< Game.lookupObject oid gs,
       -- CR 702.143c: read live off the object, `castUsing`'s posture.
       Filter.foretold = any (Maybe.isJust . Object.foretold) (Game.lookupObject oid gs),
+      -- CR 718.3c / 718.3d: a copy's answer rides its copiable values (CR
+      -- 718.2a); the object's own flag answers for an original whose copiable
+      -- values are something else's, face down (CR 708.2) or a copy (CR 707.2).
+      Filter.prototyped = PC.prototyped pc || any Object.prototyped (Game.lookupObject oid gs),
       -- CR 400.7d / CR 107.4h: read live off the object like `castUsing`, and
       -- keyed by tag with CR 202.2's colours beside it, which is the whole of what
       -- the vocabulary asks (see the field's own comment in Pawl.Engine.Filter).
@@ -1670,6 +1677,8 @@ noCharacteristics =
       -- CR 722.2b, for the same reason one line up.
       PC.prepare = Nothing,
       PC.alternativeSpell = Nothing,
+      -- CR 718.2a: no card, so no inset frame either.
+      PC.prototyped = False,
       -- CR 113.3a: no card, so no spell ability either.
       PC.spell = Face.defaultSpell,
       -- CR 710.1b, for the same reason again.
@@ -1862,6 +1871,8 @@ baseCharacteristics oid gs = case Game.faceOf oid gs of
               PC.prepare = Game.prepareSpellOf oid gs,
               -- CR 715.2b / 720.2b: the Adventure or Omen half, prepare's reason.
               PC.alternativeSpell = Game.alternativeSpellOf oid gs,
+              -- CR 718.4: the printed values, which withPrototype overrides.
+              PC.prototyped = False,
               -- CR 707.2: rules text, so copiable, for enchant's reason.
               PC.spell = Face.spell face,
               -- CR 707.3: a copy stamp's alternative reading, which
@@ -1880,13 +1891,20 @@ baseCharacteristics oid gs = case Game.faceOf oid gs of
 -- IN THE SEED, which is what makes CR 718.2a fall out with no work of its own:
 -- "the existence and values of these alternative characteristics are part of the
 -- object's copiable values", and a copy freezes exactly this record
--- (Pawl.Engine.Event.copiedSnapshot over copiableCharacteristics). CR 718.3c's
--- copy reads the frozen values for that reason and needs nothing of its own,
--- which Pawl.PrototypeSpec's "CR 718.2a / 718.3c a copy of the prototyped spell
--- is a white 2/2 too" proves: the token Lithoform Engine leaves has
--- Object.prototyped False by construction, so its colours and box can only have
--- come from the snapshot. CR 718.3d's copy of a prototyped PERMANENT rides the
--- same read and has no producer in data/cards/, so it is a regression fence.
+-- (Pawl.Engine.Event.copiedSnapshot over copiableCharacteristics). CR 718.3d's
+-- copy of a prototyped PERMANENT -- a Clone, whose own Object.prototyped is
+-- False -- reads the frozen values for that reason. CR 718.3c's copy of the
+-- SPELL needs neither: Pawl.Engine.Resolve.Effect builds it from the original
+-- object, Object.prototyped included (CR 707.10's copied decisions), which is
+-- how data/scenarios/prototype's "CR 718.2a / 718.3c a copy of the prototyped
+-- spell is a white 2/2 too" passes.
+--
+-- PC.prototyped is set here for the same reason: it is the last sentence of CR
+-- 718.3d, that a rule or effect referring to a permanent that was a prototyped
+-- spell refers to its copy too, carried by the copiable values a copy freezes.
+-- Filter.IsPrototyped reads it, and data/scenarios/prototype's "CR 718.3d
+-- Synthetic Prototype Audit destroys a Clone of the prototyped Assembler" is
+-- the proof.
 --
 -- CR 718.4 is not re-asked here. Object.prototyped is stamped only as the card
 -- is cast (Pawl.Engine.Cast.stampPrototyped) and survives only the
@@ -1912,7 +1930,8 @@ withPrototype oid gs face pc = case (maybe False Object.prototyped (Game.lookupO
         -- shape, with the inset cost in place of the printed one: a colour
         -- indicator is a separate characteristic (CR 204.2) that rule 718.3b does
         -- not name, so it survives.
-        PC.colors = Set.union (Face.colorIndicator face) (manaCostColors (Just (Prototype.cost frame)))
+        PC.colors = Set.union (Face.colorIndicator face) (manaCostColors (Just (Prototype.cost frame))),
+        PC.prototyped = True
       }
   _ -> pc
 

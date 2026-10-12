@@ -426,6 +426,10 @@ data ProjectedCharacteristics = MkProjectedCharacteristics
     -- | CR 715.2b / 720.2b: the Adventure or Omen half this object has, copiable
     -- like `prepare`, and read by Game.castableFacesOf.
     alternativeSpell :: Maybe (Face.Face Card.Card),
+    -- | CR 718.2a / 718.3d: these copiable values are a prototyped
+    -- spell's or permanent's, set where Pawl.Engine.Projection.View.withPrototype
+    -- swaps the inset frame in, so a copy of one carries it.
+    prototyped :: Bool,
     -- | CR 707.2: the spell abilities of the face this object shows (CR 113.3a),
     -- copiable rules text, so a spell that becomes a copy resolves the copied
     -- text (Pawl.Engine.Projection.View.spellFaceOf).
