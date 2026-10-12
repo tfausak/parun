@@ -3617,7 +3617,8 @@ optionalCost keyword = case keyword of
 -- five rules each instance triggers on its own payment, so which of identical
 -- instances were paid changes nothing. An unlimited cost is asked per instance
 -- instead, since how its payments split is a real choice (CR 702.56b, 702.157b).
--- Kicker's and bargain's payoffs instead link to the PRINTED instance (CR
+--
+-- Kicker's and bargain's payoffs, though, link to the PRINTED instance (CR
 -- 702.33e, 702.166c), so a printed kicker beside an identical granted one would
 -- care which was paid, and this count cannot say. MTGJSON 2026-08-23 text search
 -- `(gains?|ha(ve|s)) (kicker|bargain)`, no hit; a card granting a spell kicker
