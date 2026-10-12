@@ -499,6 +499,10 @@ data Keyword
     -- tied for most life, put a +1/+1 counter on it; each instance triggers
     -- separately (CR 702.105b).
     Dethrone
+  | -- | 702.106a: "as you put this conspiracy card into the command zone, turn
+    -- it face down and secretly choose a card name", read by
+    -- Pawl.Engine.Setup.createDeck.
+    HiddenAgenda
   | -- | 702.107a: "[Cost], {T}: Put a +1/+1 counter on this creature. Activate
     -- only as a sorcery."
     Outlast (Cost.Cost Keyword)
@@ -733,6 +737,9 @@ data Keyword
   | -- | 702.157a: "As an additional cost to cast this spell, you may pay [cost]
     -- any number of times", and an enters trigger making a token copy per payment.
     Squad (Cost.Cost Keyword)
+  | -- | 702.158a: space sculptor, which makes CR 704.5u sort creatures into CR
+    -- 702.158b's sectors (Pawl.Engine.SpaceSculptor).
+    SpaceSculptor
   | -- | 702.160a: a second mana cost, power and toughness the caster may choose
     -- instead of the printed ones as the card is cast (CR 718.3).
     Prototype Prototype.Prototype

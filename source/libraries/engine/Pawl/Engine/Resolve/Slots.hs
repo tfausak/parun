@@ -847,6 +847,7 @@ effectObjectRefs effect = case effect of
   Effect.ChoosePlayer {} -> []
   Effect.ChoosePlayerAtRandom {} -> []
   Effect.ChoosePermanents {} -> []
+  Effect.ChooseSector {} -> []
   Effect.RollDie {} -> []
   Effect.FlipCoin {} -> []
   Effect.ExileHandThenDraw -> []
@@ -1061,6 +1062,7 @@ effectPlayerRefs effect = case effect of
   Effect.ChoosePlayerAtRandom {} -> []
   -- The seat that picks -- Archfiend of Depravity's "that player".
   Effect.ChoosePermanents choice -> [ChosenPermanents.chooser (ChoosePermanents.permanents choice)]
+  Effect.ChooseSector {} -> []
   Effect.RollDie {} -> []
   Effect.FlipCoin {} -> []
   Effect.ExileHandThenDraw -> []
@@ -1441,7 +1443,7 @@ slotsOf effect = joinTwo (joinTwo (joinSlots (fmap objectRefSlots (effectObjectR
   Effect.Prohibit {} -> Map.empty
   Effect.ForbidAttack {} -> Map.empty
   -- The class is a FILTER read, RequireAttack's Matching arm below.
-  Effect.ForbidBeingBlocked (ForbidBeingBlocked.MkForbidBeingBlocked duration f) -> joinTwo (durationSlots duration) (filterSlotsOf f)
+  Effect.ForbidBeingBlocked (ForbidBeingBlocked.MkForbidBeingBlocked duration f barred) -> joinTwo (durationSlots duration) (joinTwo (filterSlotsOf f) (filterSlotsOf barred))
   -- CR 508.1b's two sides are reported at the head when a ref names the
   -- creatures; a Matching class is a FILTER read, Search's, and the Duration is
   -- ModifyTarget's -- Taunt's "target player" is read by both and nothing else.
@@ -1486,6 +1488,7 @@ slotsOf effect = joinTwo (joinTwo (joinSlots (fmap objectRefSlots (effectObjectR
   Effect.PlaySubgame _ -> Map.empty
   -- A DEFINITION too: chosen as this effect is applied (CR 608.2d), never read.
   Effect.ChoosePlayer _ -> Map.empty
+  Effect.ChooseSector _ -> Map.empty
   Effect.ChoosePlayerAtRandom _ -> Map.empty
   -- The slot is a DEFINITION; the reads are the ceiling's and the Filter's, and
   -- the chooser is a PlayerRef, reported at the head with every other one.
@@ -2177,7 +2180,7 @@ ownSlotsAreExhaustive effect = case effect of
   -- slotsOf reports the Duration and the class's Filter, ModifyTarget's and
   -- Search's readings.
   Effect.RequireAttack (RequireAttack.MkRequireAttack duration _ _) -> durationSlotsAreExhaustive duration
-  Effect.ForbidBeingBlocked (ForbidBeingBlocked.MkForbidBeingBlocked duration _) -> durationSlotsAreExhaustive duration
+  Effect.ForbidBeingBlocked (ForbidBeingBlocked.MkForbidBeingBlocked duration _ _) -> durationSlotsAreExhaustive duration
   -- CR 114.2's emblem is minted with EMPTY bindings, so its card is literal text.
   Effect.CreateEmblem _ -> True
   Effect.BecomeMonarch MonarchTarget.TheController -> True
@@ -2208,6 +2211,7 @@ ownSlotsAreExhaustive effect = case effect of
   Effect.PlaySubgame _ -> True
   -- PlaySubgame's answer: a definition reads no slot.
   Effect.ChoosePlayer _ -> True
+  Effect.ChooseSector _ -> True
   Effect.ChoosePlayerAtRandom _ -> True
   Effect.ChoosePermanents choice -> all Quantity.slotsAreExhaustive (HowMany.quantity (ChosenPermanents.count (ChoosePermanents.permanents choice)))
   Effect.RollDie rollDie -> Quantity.slotsAreExhaustive (RollDie.count rollDie) && all Quantity.slotsAreExhaustive (RollDie.modifier rollDie)
@@ -2448,6 +2452,7 @@ readsX =
         Effect.AttachAll {} -> False
         Effect.PlaySubgame _ -> False
         Effect.ChoosePlayer _ -> False
+        Effect.ChooseSector _ -> False
         Effect.ChoosePlayerAtRandom _ -> False
         Effect.ChoosePermanents choice -> any Quantity.readsX (HowMany.quantity (ChosenPermanents.count (ChoosePermanents.permanents choice)))
         -- CR 706.2's modifier and CR 706.1's count are ordinary Quantities, so
@@ -2513,6 +2518,7 @@ boundSlots effect = case effect of
   Effect.ChoosePlayerAtRandom choice -> Set.singleton (ChoosePlayerAtRandom.slot choice)
   -- CR 608.2d: the permanents this effect's chooser picked.
   Effect.ChoosePermanents choice -> Set.singleton (ChoosePermanents.slot choice)
+  Effect.ChooseSector slot -> Set.singleton slot
   -- CR 706.4: the result the roller used, and, where the card reads it, the
   -- other result of the same instruction, for a later effect of this resolution
   -- to read as Quantity.InSlot.

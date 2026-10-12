@@ -80,6 +80,7 @@ import qualified Pawl.Engine.Restamp as Restamp
 import qualified Pawl.Engine.Ring as Ring
 import qualified Pawl.Engine.Room as Room
 import qualified Pawl.Engine.Sba as Sba
+import qualified Pawl.Engine.Sector as Sector
 import qualified Pawl.Engine.Setup as Setup
 import qualified Pawl.Engine.Soulbond as Soulbond
 import qualified Pawl.Engine.SourceContext as SourceContext
@@ -3472,6 +3473,7 @@ effectIsImpossible resolving source controller legal gs effect = case effect of
   Effect.ExileHaunting {} -> False
   Effect.PlaySubgame {} -> False
   Effect.ChoosePlayer {} -> False
+  Effect.ChooseSector {} -> False
   Effect.ChoosePlayerAtRandom {} -> False
   -- The ask askingObjects makes of the same choice, so "choose a creature"
   -- over an empty board is impossible and "up to" never is.
@@ -4583,6 +4585,19 @@ applyOneEffect runSubgame resolving source controller legal chosen effect = case
   Effect.ChoosePermanents (ChoosePermanents.MkChoosePermanents choice slot) -> do
     picked <- chosenPermanents legal resolving controller source choice
     Monad.unless (null picked) (State.modify' (bindObjectsSlot resolving slot (Seq.fromList picked)))
+  -- CR 702.158d: "choose one of the three sector designations, then perform
+  -- that action on each creature with that designation". The resolving
+  -- controller is asked -- three candidates, so never elided -- and the
+  -- permanents in the chosen sector are bound as a group, ChoosePermanents'
+  -- posture, for the following instruction's Filter.IsBound. An empty sector
+  -- binds nothing, so that instruction acts on nothing (CR 101.3).
+  Effect.ChooseSector slot -> do
+    picked <- Game.chooseAmong (\decider who -> Prompt.ChooseSector decider who source) controller (NonEmpty.toList Sector.sectors)
+    Monad.forM_ picked $ \sector -> do
+      gs <- State.get
+      let inSector oid = maybe False (Set.member sector . Object.designations) (Game.lookupObject oid gs)
+          members = filter inSector (Set.toList (GameState.battlefield gs))
+      Monad.unless (null members) (State.modify' (bindObjectsSlot resolving slot (Seq.fromList members)))
   -- CR 706.1: roll a die of the stated kind, and bind CR 706.4's result at the
   -- slot for a later effect of this same resolution to read (Ancient Copper
   -- Dragon's "roll a d20. You create a number of Treasure tokens equal to the
@@ -8062,7 +8077,7 @@ applyOneEffect runSubgame resolving source controller legal chosen effect = case
                     ActiveAttackProhibition.aimedAt = aim
                   }
          in gs1 {GameState.attackProhibitions = stored <> GameState.attackProhibitions gs1}
-  Effect.ForbidBeingBlocked (ForbidBeingBlocked.MkForbidBeingBlocked duration f) ->
+  Effect.ForbidBeingBlocked (ForbidBeingBlocked.MkForbidBeingBlocked duration f barred) ->
     -- CR 509.1b / 611.2c: store ONE row for the class, ForbidAttack's Matching
     -- arm and for its reasons -- not enumerated, so a creature that enters after
     -- this resolution is inside it; bound players baked now; CR 109.5's
@@ -8079,7 +8094,8 @@ applyOneEffect runSubgame resolving source controller legal chosen effect = case
                   ActiveEvasion.controller = controller,
                   ActiveEvasion.timestamp = ts,
                   ActiveEvasion.expiry = expiry,
-                  ActiveEvasion.affected = Filter.bakeBound (Binding.playersIn legal) f
+                  ActiveEvasion.affected = Filter.bakeBound (Binding.playersIn legal) f,
+                  ActiveEvasion.blockers = Filter.bakeBound (Binding.playersIn legal) barred
                 }
          in gs1 {GameState.evasions = stored : GameState.evasions gs1}
   Effect.RequireAttack (RequireAttack.MkRequireAttack duration attackerRef defenderRef) ->

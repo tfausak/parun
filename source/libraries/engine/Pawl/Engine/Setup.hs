@@ -375,11 +375,13 @@ createDeck pid deck = do
     printingId <- State.state (Game.intern printing)
     Monad.void (createInCommandZone pid printingId)
   -- CR 315.2: "before decks are shuffled", the conspiracies this player chose
-  -- from their sideboard go face up into the command zone; CR 315.6 makes them
+  -- from their sideboard go into the command zone, face up unless CR
+  -- 702.106a's hidden agenda turns one face down and asks its secret name --
+  -- here, before the shuffle and so before any opening hand. CR 315.6 makes them
   -- this player's to own and control. Pawl.ConspiracySpec proves it.
   conspiracyIds <- Monad.mapM (\(printing, n) -> fmap (\i -> (i, n)) (State.state (Game.intern printing))) (Map.toAscList (Deck.conspiracies deck))
   Monad.forM_ conspiracyIds $ \(printingId, n) ->
-    Monad.replicateM_ (Natural.toIntSaturating n) (createInCommandZone pid printingId)
+    Monad.replicateM_ (Natural.toIntSaturating n) (createInCommandZone pid printingId >>= Conspiracy.hideAgenda pid)
   -- CR 903.7 / CR 103.4 / CR 103.4d / CR 902.4 / CR 810.4: the starting life
   -- total, which is the deck's business -- and the settings' and the seat
   -- count's and the vanguard's -- and so cannot be settled by emptyGame above.
@@ -742,6 +744,13 @@ startGameFromCards perform exemptions = do
         GameState.stack = [],
         GameState.stackedIn = Map.empty
       }
+  -- CR 727.1 / 103.2e / 315.2: the new game places its conspiracies again,
+  -- before decks are shuffled, so CR 702.106a turns each hidden agenda face
+  -- down and asks a fresh name. Nothing done in the restarted game carries over:
+  -- a conspiracy turned face up there goes back face down.
+  -- Pawl.ConspiracySpec's restart case proves it.
+  Monad.forM_ owners $ \pid ->
+    Monad.forM_ (filter (\oid -> fmap Object.owner (Map.lookup oid rebuilt) == Just pid) (Set.toAscList conspiracyIds)) (Conspiracy.hideAgenda pid)
   Monad.forM_ owners Event.shuffleLibrary
   Monad.forM_ owners Event.shuffleAttractionDeck
   -- CR 103.3a / 729.2a.
@@ -820,8 +829,8 @@ claimStartingPlayer :: Game ()
 claimStartingPlayer = do
   gs <- State.get
   -- CR 315.6: a conspiracy's controller is its owner, so the owner-indexed
-  -- command zone is the controller's. The printed face, for
-  -- Pawl.Engine.Conspiracy.isConspiracy's reason (CR 315.3).
+  -- command zone is the controller's. The face the card shows (Game.faceOf),
+  -- so a face-down conspiracy claims nothing (CR 315.5, 315.5b).
   let claims pid = any (maybe False Face.claimsStartingPlayer . (`Game.faceOf` gs)) (Game.zoneMembers Zone.Command pid gs)
   starter <- Game.drawAmong Prompt.RandomFirstPlayer (filter claims (Game.stillPlayingInOrder gs))
   Monad.forM_ starter $ \pid ->
@@ -947,6 +956,10 @@ resetPlayers settings seats lifeModifier players =
 -- they are held back.
 restartGame :: HandActionPerformer -> Set.Set ObjectId -> PlayerId -> Game ()
 restartGame perform exempt starter = do
+  -- CR 727.1 / 104.1: the restarted game ends, so CR 708.9's end-of-game reveal
+  -- is owed. A regression fence: the new game's log starts empty below, so no
+  -- reader sees it.
+  State.modify' Event.endOfGameReveals
   State.modify' $ \gs ->
     -- CR 727.1: the rebuilt seating order is the players who were still in the
     -- game, in their seats, rotated to begin with `starter` (CR 727.1a).

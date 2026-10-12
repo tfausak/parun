@@ -235,10 +235,11 @@ data Object = MkObject
     -- choice map, whose sum-typed value every reader would have to re-narrow. Not
     -- a copiable value and per-incarnation, for that field's reasons.
     chosenSubtype :: Maybe Subtype.Subtype,
-    -- | CR 201.4: the card names chosen for this object, keyed by who chose each. TWO moments
-    -- write it -- CR 614.1c's as-enters choice (Null Chamber) and CR 608.2c's
-    -- on-resolution one (Ancient Vendetta) -- and both readers ask the effect's
-    -- SOURCE, chosenColors's direction.
+    -- | CR 201.4: the card names chosen for this object, keyed by who chose each. THREE moments
+    -- write it -- CR 614.1c's as-enters choice (Null Chamber), CR 608.2c's
+    -- on-resolution one (Ancient Vendetta) and CR 702.106a's hidden agenda
+    -- (Immediate Action) -- and every reader asks the effect's SOURCE,
+    -- chosenColors's direction.
     --
     -- A name PER CHOOSER: Null Chamber's prohibition asks whether a name is any
     -- chooser's, Conundrum Sphinx's "the name they chose" asks after one

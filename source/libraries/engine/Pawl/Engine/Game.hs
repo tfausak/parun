@@ -1779,12 +1779,12 @@ lastKnownOf oid gs = Monad.join (liveOrLastKnown (const Nothing) Just oid gs)
 -- turning-over, and nothing compares two of these stamps the way CR 701.27f
 -- compares turnFaceOver's.
 --
--- The STAMP is a permanent's, so it is written only on the battlefield (CR
--- 110.1); the facing is written wherever the object is. No road reaches a
--- non-battlefield object today -- both roads named above turn a permanent over --
--- and the gate is turnFaceOver's own, kept so that a road that later does cannot
--- silently restamp a face-down card in exile, whose stamp names its
--- Pawl.Types.Pile.
+-- The STAMP is written on the battlefield (CR 110.1) and, for CR 613.7j, on a
+-- command-zone card turning face up -- the conspiracy CR 702.106c turns up
+-- (Pawl.Engine.Conspiracy). The facing is written wherever the object is. The
+-- gate keeps any other road from silently restamping a face-down card in exile,
+-- whose stamp names its Pawl.Types.Pile. Pawl.ConspiracySpec's "CR 613.7j"
+-- case proves the command-zone stamp.
 --
 -- CR 613.7k: the stickers on it take new timestamps right after its own.
 -- Pawl.StickerSpec's "a turned-up permanent's name sticker restamps after an
@@ -1792,7 +1792,7 @@ lastKnownOf oid gs = Monad.join (liveOrLastKnown (const Nothing) Just oid gs)
 turnFacing :: Facing.Facing -> ObjectId -> GameState -> GameState
 turnFacing facing oid gs =
   let (ts, stamped) = freshTimestamp gs
-      restamps = Set.member oid (GameState.battlefield gs)
+      restamps = Set.member oid (GameState.battlefield gs) || (Set.member oid (GameState.command gs) && facing == Facing.FaceUp)
       next = if restamps then stamped else gs
       adjust o = o {Object.facing = facing, Object.timestamp = if restamps then ts else Object.timestamp o}
       turned = next {GameState.objects = Map.adjust adjust oid (GameState.objects next)}

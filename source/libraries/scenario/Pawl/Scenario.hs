@@ -873,6 +873,7 @@ withinOffer prompt chosen = case prompt of
   Prompt.Type.ChooseRevealOnEntry _ _ _ cards -> all (`elem` cards) chosen
   Prompt.Type.ChooseManaType _ _ _ types -> chosen `elem` types
   Prompt.Type.ChooseColor _ _ _ colors -> chosen `elem` colors
+  Prompt.Type.ChooseSector _ _ _ sectors -> chosen `elem` sectors
   Prompt.Type.ChooseProtector _ _ _ players -> chosen `elem` players
   Prompt.Type.ChooseActivePlayer _ _ players -> chosen `elem` players
   Prompt.Type.ChooseExilesFromGraveyard _ _ _ cards _ -> all (`elem` cards) chosen
@@ -1741,6 +1742,7 @@ describeAction gs action = case action of
   Action.TurnFaceUp oid procedure -> fmap (\named -> Text.pack "TurnFaceUp " <> named <> Text.pack (" " <> show procedure)) (describeObject gs oid)
   Action.Unlock oid half -> fmap (\named -> Text.pack "Unlock " <> named <> Text.pack " " <> CardName.unwrap half) (describeObject gs oid)
   Action.DiscardFromHand oid -> fmap (Text.pack "DiscardFromHand " <>) (describeObject gs oid)
+  Action.TurnConspiracyFaceUp oid -> fmap (Text.pack "TurnConspiracyFaceUp " <>) (describeObject gs oid)
   Action.Ignore oid _ -> fmap (Text.pack "Ignore " <>) (describeObject gs oid)
   Action.Plot oid _ -> fmap (Text.pack "Plot " <>) (describeObject gs oid)
   Action.Foretell oid -> fmap (Text.pack "Foretell " <>) (describeObject gs oid)

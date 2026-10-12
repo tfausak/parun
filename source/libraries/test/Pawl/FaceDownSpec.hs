@@ -2825,6 +2825,23 @@ unmaskingSpec s registry = Spec.describe s "Revealed as it leaves (CR 708.9)" $ 
     Spec.assertEqWith s "a face-up Forest leaving with bob draws nothing" (libraryCount faceUpBoard - libraryCount control) 0
     Spec.assertEqWith s "CR 708.9 bob, the owner, revealed it" (departureReveals left) [S.bob]
 
+  -- CR 708.9's last sentence: at the end of each game every face-down permanent
+  -- is revealed, whoever owns it. bob concedes with alice's face-down Ainok
+  -- Tracker on the battlefield; on two seats that ends the game, on three it
+  -- does not, and the legs differ in nothing else that reaches the Tracker.
+  Spec.it s "CR 708.9 the end of the game reveals every face-down permanent" $ do
+    tracker <- S.printingOf s registry "Ainok Tracker"
+    let downOn seats =
+          let (oid, placed) = S.addPermanent tracker S.alice (Setup.emptyGame seats)
+           in (oid, placed {GameState.objects = Map.adjust (\o -> o {Object.facing = Facing.faceDown FaceDownReason.Morphed}) oid (GameState.objects placed)})
+        concede board = S.runPure S.identityAnswer board (Departure.leaveGame Departure.Type.Conceded S.bob)
+        reveals board = [(Revealed.player r, Revealed.card r) | GameEvent.Revealed r <- S.eventsOf board]
+        (ended, endedBoard) = downOn S.bothPlayers
+        (_, goesOn) = downOn S.threePlayers
+    Spec.assertEqWith s "CR 708.9 the game ending reveals alice's face-down Tracker" (reveals (concede endedBoard)) [(S.alice, ended)]
+    Spec.assertEqWith s "a game that goes on reveals nothing of hers" (reveals (concede goesOn)) []
+    Spec.assertBool s (Maybe.isJust (GameState.result (concede endedBoard))) "setup: bob conceding ended the two-player game"
+
   -- CR 708.9's third sentence: a face-down SPELL owned by a departing player is
   -- revealed too. alice casts Ainok Tracker face down in a three-player game and
   -- concedes with it on the stack; the negative leg casts it face up.

@@ -26,6 +26,7 @@ import qualified Pawl.Engine.Projection.View as Projection
 import qualified Pawl.Engine.SacrificeRestriction as SacrificeRestriction
 import qualified Pawl.Engine.Saga as Saga
 import qualified Pawl.Engine.Snapshot as Snapshot
+import qualified Pawl.Engine.SpaceSculptor as SpaceSculptor
 import qualified Pawl.Engine.Speed as Speed
 import qualified Pawl.Engine.Target as Target
 import qualified Pawl.Extra.Int as Int
@@ -872,6 +873,11 @@ checkOnce = do
   -- and not an event: CR 310.9a's designation is a mark on the object, and neither
   -- rule 704.5x nor 704.5y makes it trigger anything.
   State.modify' (\g -> g {GameState.objects = List.foldl' (\m (oid, picked) -> Map.adjust (\o -> o {Object.protector = picked}) oid m) (GameState.objects g) redesignated})
+  -- CR 704.5u: another state-based action that ASKS, in the same window and for
+  -- the same reason as the legend rule: each creature in no sector, while a
+  -- space sculptor is on the battlefield, is given one by its controller. Lives
+  -- in Pawl.Engine.SpaceSculptor with the rest of rule 702.158.
+  sectored <- SpaceSculptor.assign Event.recordEvent pcs gs
   -- CR 903.9a: the THIRD state-based action that asks, in the same window and for
   -- the same reason as the two above -- a commander that reached a graveyard or
   -- exile since the last check, offered to its owner for the command zone.
@@ -1104,7 +1110,7 @@ checkOnce = do
       -- named something. A regenerated creature still counts as destroyed, which
       -- the CR 704.3 settle loop re-checks and -- because the regen healed the
       -- damage -- terminates.
-      acted = not (null legendVictims) || not (null worldLosers) || not (null toGraveyard) || not (null toDestroy) || not (null leaving) || not (null vanishing) || not (null annihilations) || not (null unattachedAuras) || not (null unbestowing) || not (null detaching) || not (null revving) || not (null told) || not (null undefended) || not (null returningCommanders) || not (null finishedDungeons) || not (null spentSchemes) || not (null routed)
+      acted = not (null legendVictims) || not (null worldLosers) || not (null toGraveyard) || not (null toDestroy) || not (null leaving) || not (null vanishing) || not (null annihilations) || not (null unattachedAuras) || not (null unbestowing) || not (null detaching) || not (null revving) || not (null told) || not (null undefended) || not (null returningCommanders) || not (null finishedDungeons) || not (null spentSchemes) || not (null routed) || sectored
   -- CR 104.1: a game ends the moment a result is reached, so a later pass may
   -- not replace one. The existing result therefore wins; this pass only settles
   -- an outcome when the game did not already have one. Departure.settle is

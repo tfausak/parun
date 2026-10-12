@@ -62,6 +62,7 @@ import qualified Pawl.Engine.Replacement as Replacement
 import qualified Pawl.Engine.Restamp as Restamp
 import qualified Pawl.Engine.SacrificeRestriction as SacrificeRestriction
 import qualified Pawl.Engine.Saga as Saga
+import qualified Pawl.Engine.SpaceSculptor as SpaceSculptor
 import qualified Pawl.Engine.Subtype as Subtype.Engine
 import qualified Pawl.Engine.Turn as Turn
 import qualified Pawl.Extra.Integer as Integer
@@ -6422,6 +6423,10 @@ changeZoneWithCause discarded asOf batch oid requestedDest requestedPosition see
                             then Map.insertWith (\_ old -> old) oid (obj {Object.bindings = Binding.setCopy (copiedSnapshot oid gs) (Object.bindings obj)}) (GameState.stackArchive g1)
                             else GameState.stackArchive g1
                       }
+              -- CR 702.158b: a space sculptor leaving can end every sector at
+              -- this moment, before anything the same resolution does next --
+              -- returning the sculptor included. See SpaceSculptor.lapse.
+              Monad.when (fromZone == Zone.Battlefield) (State.modify' SpaceSculptor.lapse)
               -- CR 712.21: "If a melded permanent leaves the battlefield, one
               -- permanent leaves the battlefield and two cards are put into the
               -- appropriate zone." So the leave is one event and the arrival is
@@ -8580,12 +8585,13 @@ leaveTheGame asOf g oid = case lastKnownRecord asOf oid of
 
 -- | CR 708.9: the reveal a face-down permanent's or face-down spell's owner
 -- owes as it leaves the game, read off `asOf`, the board it is leaving; and CR
--- 702.143f's for a face-down foretold card in exile, a plain reveal. Nothing for
--- anything else, including a phased-out permanent (CR 702.26b,
--- GameState.battlefield membership). Pawl.FaceDownSpec's "CR 708.9 a face-down
--- spell is revealed when its owner leaves the game" and Pawl.ExileSpec's "CR
--- 702.143f a face-down foretold card is revealed when its owner leaves the
--- game" prove the two halves past permanents.
+-- 702.143f's for a face-down foretold card in exile and CR 702.106e's for a
+-- face-down conspiracy, plain reveals. Nothing for anything else, including a
+-- phased-out permanent (CR 702.26b, GameState.battlefield membership).
+-- Pawl.FaceDownSpec's "CR 708.9 a face-down spell is revealed when its owner
+-- leaves the game", Pawl.ExileSpec's "CR 702.143f a face-down foretold card is
+-- revealed when its owner leaves the game" and Pawl.ConspiracySpec's "CR
+-- 702.106e" case prove the halves past permanents.
 --
 -- Not implemented: a face-down component of a face-up merged permanent, which
 -- needs a status per component (#4878).
@@ -8597,9 +8603,19 @@ leavingReveal asOf oid = do
         | Set.member oid (GameState.battlefield asOf) && faceDown = Just RevealCause.LeavingFaceDown
         | Object.zone obj == Zone.Stack && faceDown = Just RevealCause.FaceDownSpell
         | Object.zone obj == Zone.Exile && Object.exiledFaceDown obj && Maybe.isJust (Object.foretold obj) = Just RevealCause.Ordinary
+        | Conspiracy.isFaceDownConspiracy oid asOf = Just RevealCause.Ordinary -- CR 702.106e
         | otherwise = Nothing
   cause <- causeOf
   revealedOn cause (Object.owner obj) oid asOf
+
+-- | CR 708.9 / 702.143f / 702.106e, each rule's last sentence: at the end of
+-- each game, the reveals leavingReveal names for one departing owner are owed
+-- for every owner at once, recorded as one event group. Pawl.FaceDownSpec's
+-- "CR 708.9 the end of the game reveals" case proves it.
+endOfGameReveals :: GameState -> GameState
+endOfGameReveals gs = case Maybe.mapMaybe (leavingReveal gs) (Map.keys (GameState.objects gs)) of
+  [] -> gs
+  revealed -> simultaneouslyPure (\g -> List.foldl' (flip recordEvent) g revealed) gs
 
 -- CR 119.3: move one player's life total by this much, and record the CR 608.2i
 -- event of the matching sign. The write LoseLife, GainLife and

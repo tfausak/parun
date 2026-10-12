@@ -931,8 +931,8 @@ rewriteEffect pairs effect = case effect of
           RestrictedCreatures.Matching f -> RestrictedCreatures.Matching (Filter.rewrite pairs f)
      in Effect.ForbidAttack (ForbidAttack.MkForbidAttack (rewriteDuration pairs duration) rewritten aimedAt)
   -- CR 612.1 reaches the class's words, ForbidAttack's Matching arm.
-  Effect.ForbidBeingBlocked (ForbidBeingBlocked.MkForbidBeingBlocked duration f) ->
-    Effect.ForbidBeingBlocked (ForbidBeingBlocked.MkForbidBeingBlocked (rewriteDuration pairs duration) (Filter.rewrite pairs f))
+  Effect.ForbidBeingBlocked (ForbidBeingBlocked.MkForbidBeingBlocked duration f barred) ->
+    Effect.ForbidBeingBlocked (ForbidBeingBlocked.MkForbidBeingBlocked (rewriteDuration pairs duration) (Filter.rewrite pairs f) (Filter.rewrite pairs barred))
   -- CR 612.1 reaches the creatures on either arm, ForbidAttack's reading, and a
   -- defender only where it names permanents: a PlayerRef prints no word a
   -- Filter could name (Alluring Siren's "you").
@@ -969,6 +969,7 @@ rewriteEffect pairs effect = case effect of
   Effect.AttachAll (AttachAll.MkAttachAll ref destination) -> Effect.AttachAll (AttachAll.MkAttachAll (rewriteObjectRef pairs ref) (Filter.rewrite pairs destination))
   Effect.PlaySubgame _ -> effect
   Effect.ChoosePlayer _ -> effect
+  Effect.ChooseSector _ -> effect
   Effect.ChoosePlayerAtRandom _ -> effect
   Effect.ChoosePermanents (ChoosePermanents.MkChoosePermanents choice slot) ->
     Effect.ChoosePermanents (ChoosePermanents.MkChoosePermanents (rewriteChosenPermanents pairs choice) slot)

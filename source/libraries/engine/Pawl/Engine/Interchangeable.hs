@@ -347,8 +347,8 @@ aimedAtNames aimed = case aimed of
 
 evasionNames :: ObjectId -> ActiveEvasion.ActiveEvasion -> Bool
 evasionNames oid row = case row of
-  ActiveEvasion.MkActiveEvasion source _controller _timestamp expiry affected ->
-    source == oid || Mentions.expiryNames (unread oid) expiry || Mentions.filterNames (unread oid) affected
+  ActiveEvasion.MkActiveEvasion source _controller _timestamp expiry affected barred ->
+    source == oid || Mentions.expiryNames (unread oid) expiry || Mentions.filterNames (unread oid) affected || Mentions.filterNames (unread oid) barred
 
 -- CR 116.2d: the ignored ability is its source's, so the source is the subject.
 ignoredNames :: ObjectId -> IgnoredAbility.IgnoredAbility -> Bool

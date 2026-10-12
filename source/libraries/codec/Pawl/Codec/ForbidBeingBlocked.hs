@@ -16,8 +16,10 @@ codec :: Codec.Codec ForbidBeingBlocked.ForbidBeingBlocked
 codec = Fields.object $ do
   duration <- Fields.required "duration" Duration.codec ForbidBeingBlocked.duration
   affected <- Fields.required "affected" (Filter.codec Keyword.codec) ForbidBeingBlocked.affected
+  blockers <- Fields.required "blockers" (Filter.codec Keyword.codec) ForbidBeingBlocked.blockers
   pure
     ForbidBeingBlocked.MkForbidBeingBlocked
       { ForbidBeingBlocked.duration = duration,
-        ForbidBeingBlocked.affected = affected
+        ForbidBeingBlocked.affected = affected,
+        ForbidBeingBlocked.blockers = blockers
       }

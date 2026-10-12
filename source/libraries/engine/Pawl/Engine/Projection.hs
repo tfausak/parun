@@ -31,6 +31,7 @@ import Pawl.Engine.Projection.View (ControlGrant, abilitiesFromCharacteristics, 
 import qualified Pawl.Engine.Quantity as Quantity
 import qualified Pawl.Engine.RuleAbilities as RuleAbilities.Engine
 import qualified Pawl.Engine.Saga as Saga
+import qualified Pawl.Engine.Sector as Sector
 import qualified Pawl.Engine.SourceContext as SourceContext
 import qualified Pawl.Engine.Subtype as Subtype
 import qualified Pawl.Engine.Vanguard as Vanguard
@@ -118,6 +119,7 @@ import qualified Pawl.Types.Subtype as Subtype.Type
 import qualified Pawl.Types.Supertype as Supertype
 import qualified Pawl.Types.TargetSlot as TargetSlot
 import Pawl.Types.Timestamp (Timestamp (MkTimestamp))
+import qualified Pawl.Types.Trait as Trait
 import Pawl.Types.TriggeredAbility (TriggeredAbility)
 import qualified Pawl.Types.TriggeredAbility as TriggeredAbility
 import qualified Pawl.Types.TriggeredAbilitySource as TriggeredAbilitySource
@@ -1279,10 +1281,10 @@ framedWith choices source gs = withCharacteristicsOf source gs . SourceContext.f
 -- names as the source's (CR 613), through its last known information once it
 -- has left (viewWithLastKnownAnywhere): CR 608.2b's re-check and CR 608.2h's
 -- effects alike: the fields the source-comparison atoms read (Filter.Measures'
--- OfSource operand, Filter.SharesColorWithSource, Filter.SameNameAsSource and
--- their siblings). Leaves every other field alone, so CR 509.1b's pairwise
--- restrictions, framed by the creature being compared rather than by an
--- ability's source, take these and not its choices.
+-- OfSource operand and Filter.SharesWithSource's colours, names and sectors).
+-- Leaves every other field alone, so CR 509.1b's pairwise restrictions, framed
+-- by the creature being compared rather than by an ability's source, take these
+-- and not its choices.
 --
 -- All thunks over one view: a filter naming none of the atoms projects
 -- nothing. pairwiseContext is the CR 509.1b framing.
@@ -1292,6 +1294,7 @@ withCharacteristicsOf object gs context =
    in context
         { Filter.sourceMeasures = foldMap Filter.measuresOf view,
           Filter.sourceColors = foldMap Filter.colors view,
+          Filter.sourceSectors = foldMap (Sector.sectorsIn . Filter.designations) view,
           Filter.sourceNames = foldMap Filter.names view
         }
 
@@ -3612,7 +3615,15 @@ filterReads f = case f of
   Filter.Type.HasSupertype _ -> Set.singleton Supertypes
   Filter.Type.HasColor _ -> Set.singleton Colors
   Filter.Type.IsMonocolored -> Set.singleton Colors
-  Filter.Type.SharesColorWithSource -> Set.singleton Colors
+  Filter.Type.SharesWithSource trait -> case trait of
+    Trait.Color -> Set.singleton Colors
+    -- NAMES at both ends, which have no Aspect, HasName's reason; the source's
+    -- arrive on the Context.
+    Trait.Name -> Set.empty
+    -- An OWNER at both ends, which CR 108.3 fixes when the game starts and no
+    -- Modification writes.
+    Trait.Owner -> Set.empty
+    Trait.Sector -> Set.empty
   Filter.Type.HasSubtype _ -> Set.singleton Subtypes
   -- Reads no aspect: CR 201.1's names have no Aspect, so CR 613.8a's dependency
   -- cannot turn on the layer-3 writes of them (AddNamesMatching, SetName,
@@ -3666,11 +3677,6 @@ filterReads f = case f of
   Filter.Type.IsTarget -> Set.empty
   -- Reads NAMES at both ends, which have no Aspect, HasName's reason.
   Filter.Type.SameNameAsBound _ -> Set.empty
-  -- Reads NAMES at both ends too, the source's arriving on the Context.
-  Filter.Type.SameNameAsSource -> Set.empty
-  -- Reads an OWNER at both ends, which CR 108.3 fixes when the game starts and
-  -- no Modification writes.
-  Filter.Type.SameOwnerAsSource -> Set.empty
   -- Reads the CANDIDATE's controller, where its sibling above reads names: the
   -- bound object's controller arrives on the Context, already projected.
   Filter.Type.SameControllerAsBound _ -> Set.singleton Controller
@@ -3966,7 +3972,10 @@ filterReadsPeers f = case f of
   Filter.Type.HasSupertype _ -> False
   Filter.Type.HasColor _ -> False
   Filter.Type.IsMonocolored -> False
-  Filter.Type.SharesColorWithSource -> False
+  -- The source's traits arrive on the Context -- an owner read off Object.owner
+  -- rather than off a projection -- and the candidate's own come from its
+  -- partial, so no PEER is projected.
+  Filter.Type.SharesWithSource _ -> False
   Filter.Type.HasSubtype _ -> False
   Filter.Type.HasName _ -> False
   Filter.Type.NameWordsAtLeast _ -> False
@@ -3992,11 +4001,6 @@ filterReadsPeers f = case f of
   Filter.Type.IsBound _ -> False
   Filter.Type.IsTarget -> False
   Filter.Type.SameNameAsBound _ -> False
-  Filter.Type.SameNameAsSource -> False
-  -- The source's owner arrives on the Context, read off Object.owner rather than
-  -- off a projection; the candidate's own owner comes from its partial, so no
-  -- PEER is projected.
-  Filter.Type.SameOwnerAsSource -> False
   -- The bound object's controller arrives on the Context, filled by
   -- Pawl.Engine.Target.slotContext -- no peer projection is read here.
   Filter.Type.SameControllerAsBound _ -> False

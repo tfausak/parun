@@ -15,8 +15,8 @@ import qualified Pawl.Types.TurnUpProcedure as TurnUpProcedure
 -- are here are CR 116.2a's land play, CR 116.2b's turning a face-down permanent
 -- face up, CR 116.2c's paying to end a continuous effect, CR 116.2d's ignoring a
 -- static ability's effect, CR 116.2e's Circling Vultures discard, CR 116.2h's
--- foretell, CR 116.2f's suspend, CR 116.2i's planar die, CR 116.2k's plot and
--- CR 116.2m's unlock cost. CR 116.2j's conspiracy is #3497. Grows.
+-- foretell, CR 116.2f's suspend, CR 116.2i's planar die, CR 116.2j's
+-- conspiracy, CR 116.2k's plot and CR 116.2m's unlock cost. Grows.
 data Action
   = Pass
   | -- | CR 305.1's special action: put this land card onto the battlefield. The
@@ -94,6 +94,11 @@ data Action
     -- asks (Prompt.ChooseCost) only when the card prints two morph costs. Nor is the RESULT one -- turning
     -- face up reveals what the card is, and the card is already decided.
     TurnFaceUp ObjectId.ObjectId TurnUpProcedure.TurnUpProcedure
+  | -- | CR 116.2j / 702.106c: turn a face-down conspiracy you control face up,
+    -- revealing its chosen name. Not a TurnFaceUp procedure: CR 116.2b and CR
+    -- 116.2j are separate special actions, 116.2b's subject is a permanent, and a
+    -- conspiracy is never one (CR 315.3).
+    TurnConspiracyFaceUp ObjectId.ObjectId
   | -- | CR 116.2m / 709.5e: pay a locked half's mana cost to give this permanent
     -- the matching unlocked designation. "A player can take this action any time
     -- they have priority and the stack is empty during a main phase of their

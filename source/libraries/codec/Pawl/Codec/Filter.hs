@@ -22,6 +22,7 @@ import qualified Pawl.Codec.SlotName as SlotName
 import qualified Pawl.Codec.StickerKind as StickerKind
 import qualified Pawl.Codec.Subtype as Subtype
 import qualified Pawl.Codec.Supertype as Supertype
+import qualified Pawl.Codec.Trait as Trait
 import qualified Pawl.Codec.Zone as Zone
 import qualified Pawl.JsonCodec.Arm as Arm
 import qualified Pawl.JsonCodec.Codec as Codec
@@ -66,7 +67,7 @@ codec keywordCodec =
       -- Modification.SetController's baked PlayerId gets.
       Arm.payload "ControlledByPlayer" PlayerId.codec Filter.ControlledByPlayer (\x -> case x of Filter.ControlledByPlayer y -> Just y; _ -> Nothing),
       Arm.nullary "ControlledByRecipient" Filter.ControlledByRecipient,
-      Arm.nullary "SharesColorWithSource" Filter.SharesColorWithSource,
+      Arm.payload "SharesWithSource" Trait.codec Filter.SharesWithSource (\x -> case x of Filter.SharesWithSource y -> Just y; _ -> Nothing),
       Arm.nullary "ManaValueIsEven" Filter.ManaValueIsEven,
       Arm.payload "ControlledBy" PlayerRelation.codec Filter.ControlledBy (\x -> case x of Filter.ControlledBy y -> Just y; _ -> Nothing),
       Arm.payload "OwnedBy" PlayerRelation.codec Filter.OwnedBy (\x -> case x of Filter.OwnedBy y -> Just y; _ -> Nothing),
@@ -90,8 +91,6 @@ codec keywordCodec =
       Arm.payload "IsBound" SlotName.codec Filter.IsBound (\x -> case x of Filter.IsBound y -> Just y; _ -> Nothing),
       Arm.nullary "IsTarget" Filter.IsTarget,
       Arm.payload "SameNameAsBound" SlotName.codec Filter.SameNameAsBound (\x -> case x of Filter.SameNameAsBound y -> Just y; _ -> Nothing),
-      Arm.nullary "SameNameAsSource" Filter.SameNameAsSource,
-      Arm.nullary "SameOwnerAsSource" Filter.SameOwnerAsSource,
       Arm.payload "SameControllerAsBound" SlotName.codec Filter.SameControllerAsBound (\x -> case x of Filter.SameControllerAsBound y -> Just y; _ -> Nothing),
       Arm.payload "SameControllerAsHostOfBound" SlotName.codec Filter.SameControllerAsHostOfBound (\x -> case x of Filter.SameControllerAsHostOfBound y -> Just y; _ -> Nothing),
       Arm.payload "SharesCreatureTypeWithBound" SlotName.codec Filter.SharesCreatureTypeWithBound (\x -> case x of Filter.SharesCreatureTypeWithBound y -> Just y; _ -> Nothing),
@@ -195,7 +194,7 @@ tagOf x = case x of
   Filter.ControlledByBound {} -> "ControlledByBound"
   Filter.ControlledByPlayer {} -> "ControlledByPlayer"
   Filter.ControlledByRecipient {} -> "ControlledByRecipient"
-  Filter.SharesColorWithSource {} -> "SharesColorWithSource"
+  Filter.SharesWithSource {} -> "SharesWithSource"
   Filter.ManaValueIsEven {} -> "ManaValueIsEven"
   Filter.ControlledBy {} -> "ControlledBy"
   Filter.OwnedBy {} -> "OwnedBy"
@@ -214,8 +213,6 @@ tagOf x = case x of
   Filter.IsBound {} -> "IsBound"
   Filter.IsTarget {} -> "IsTarget"
   Filter.SameNameAsBound {} -> "SameNameAsBound"
-  Filter.SameNameAsSource {} -> "SameNameAsSource"
-  Filter.SameOwnerAsSource {} -> "SameOwnerAsSource"
   Filter.SameControllerAsBound {} -> "SameControllerAsBound"
   Filter.SameControllerAsHostOfBound {} -> "SameControllerAsHostOfBound"
   Filter.SharesCreatureTypeWithBound {} -> "SharesCreatureTypeWithBound"

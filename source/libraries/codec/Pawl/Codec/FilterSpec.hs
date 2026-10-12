@@ -32,6 +32,7 @@ import qualified Pawl.Types.SlotName as SlotName
 import qualified Pawl.Types.StickerKind as StickerKind
 import qualified Pawl.Types.Subtype as Subtype
 import qualified Pawl.Types.Supertype as Supertype
+import qualified Pawl.Types.Trait as Trait
 import qualified Pawl.Types.Zone as Zone
 
 -- | The `keyword` parameter is instantiated at 'Keyword.Keyword', the only
@@ -103,12 +104,13 @@ spec s = Spec.describe s "Pawl.Codec.Filter" $ do
       s
       (Codec.encode codec (Filter.HasKeywordFamily KeywordFamily.Toxic) /= Codec.encode codec (Filter.HasKeyword (Keyword.Toxic 2)))
       "the toxic family filter is not the toxic 2 filter"
-  Spec.it s "SharesColorWithSource" $
+  Spec.it s "SharesWithSource" $ do
     Common.assertCodec
       s
       codec
-      Filter.SharesColorWithSource
-      " {\"type\":\"SharesColorWithSource\"} "
+      (Filter.SharesWithSource Trait.Sector)
+      " {\"type\":\"SharesWithSource\",\"value\":{\"type\":\"Sector\"}} "
+    Spec.assertNeWith s "CR 702.60a's source is not CR 709.4a's slot" (Codec.encode codec (Filter.SharesWithSource Trait.Name)) (Codec.encode codec (Filter.SameNameAsBound (SlotName.MkSlotName (Text.pack "castSpell"))))
   Spec.it s "ControlledByDefendingPlayer" $
     Common.assertCodec
       s
@@ -250,20 +252,6 @@ spec s = Spec.describe s "Pawl.Codec.Filter" $ do
       codec
       (Filter.SameNameAsBound (SlotName.MkSlotName (Text.pack "castSpell")))
       " {\"type\":\"SameNameAsBound\",\"value\":\"castSpell\"} "
-  Spec.it s "SameNameAsSource" $ do
-    Common.assertCodec
-      s
-      codec
-      Filter.SameNameAsSource
-      " {\"type\":\"SameNameAsSource\"} "
-    Spec.assertNeWith s "CR 702.60a's source is not CR 709.4a's slot" (Codec.encode codec Filter.SameNameAsSource) (Codec.encode codec (Filter.SameNameAsBound (SlotName.MkSlotName (Text.pack "castSpell"))))
-  Spec.it s "SameOwnerAsSource" $ do
-    Common.assertCodec
-      s
-      codec
-      Filter.SameOwnerAsSource
-      " {\"type\":\"SameOwnerAsSource\"} "
-    Spec.assertNeWith s "CR 702.140a's owner is not CR 702.60a's name" (Codec.encode codec Filter.SameOwnerAsSource) (Codec.encode codec Filter.SameNameAsSource)
   Spec.it s "SameControllerAsBound" $
     Common.assertCodec
       s

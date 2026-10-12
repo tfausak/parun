@@ -1409,7 +1409,7 @@ ownCounts effect = case effect of
   Effect.RequireBlock (RequireBlock.MkRequireBlock duration _ _) -> durationCounts duration
   Effect.Prohibit (Prohibit.MkProhibit _ duration _) -> durationCounts duration
   Effect.ForbidAttack (ForbidAttack.MkForbidAttack duration _ _) -> durationCounts duration
-  Effect.ForbidBeingBlocked (ForbidBeingBlocked.MkForbidBeingBlocked duration _) -> durationCounts duration
+  Effect.ForbidBeingBlocked (ForbidBeingBlocked.MkForbidBeingBlocked duration _ _) -> durationCounts duration
   Effect.RequireAttack (RequireAttack.MkRequireAttack duration _ _) -> durationCounts duration
   Effect.CreateEmblem card -> overFaces cardCounts card
   Effect.BecomeMonarch _ -> []
@@ -1437,6 +1437,7 @@ ownCounts effect = case effect of
   Effect.ChoosePlayer _ -> []
   Effect.ChoosePlayerAtRandom _ -> []
   Effect.ChoosePermanents choice -> foldMap quantityCounts (HowMany.quantity (ChosenPermanents.count (ChoosePermanents.permanents choice)))
+  Effect.ChooseSector _ -> []
   -- CR 706.2's modifier and CR 706.1's count are Quantities, so their Counts
   -- are reachable here.
   Effect.RollDie rollDie -> quantityCounts (RollDie.count rollDie) <> foldMap quantityCounts (RollDie.modifier rollDie)
@@ -1909,6 +1910,7 @@ effectNestedEffects effect = case effect of
   Effect.ChoosePlayer {} -> []
   Effect.ChoosePlayerAtRandom {} -> []
   Effect.ChoosePermanents {} -> []
+  Effect.ChooseSector {} -> []
   Effect.RollDie {} -> []
   Effect.FlipCoin {} -> []
   -- CR 603.7a: the delayed ability an arm carries, as Face.delayedAbilities'
@@ -2465,6 +2467,7 @@ effectReplacements effect = case effect of
   Effect.ChoosePlayer _ -> []
   Effect.ChoosePlayerAtRandom _ -> []
   Effect.ChoosePermanents _ -> []
+  Effect.ChooseSector _ -> []
   Effect.RollDie {} -> []
   Effect.FlipCoin {} -> []
   Effect.TakeExtraTurn {} -> []
@@ -2985,6 +2988,7 @@ effectMintedFaces effect = case effect of
   Effect.ChoosePlayer _ -> []
   Effect.ChoosePlayerAtRandom _ -> []
   Effect.ChoosePermanents _ -> []
+  Effect.ChooseSector _ -> []
   Effect.RollDie {} -> []
   Effect.FlipCoin {} -> []
   Effect.TakeExtraTurn {} -> []
@@ -3435,6 +3439,7 @@ keywordPayloadFilters keyword = case keyword of
   -- CR 702.118b names no quality either: the comparison is against the skulking
   -- creature's own power, written into the rule rather than into the keyword.
   Keyword.Skulk -> []
+  Keyword.SpaceSculptor -> []
   -- CR 702.124h, CR 702.124i, CR 702.124k and CR 702.124m name no quality
   -- either: all four are read before the game begins, by
   -- Pawl.Engine.Commander.designations, and mint no Filter at all.
@@ -3651,6 +3656,7 @@ keywordPayloadFilters keyword = case keyword of
   -- CR 702.105a is payload-free too, and names no quality at all: what its minted
   -- ability compares is life totals, which no Filter reaches.
   Keyword.Dethrone -> []
+  Keyword.HiddenAgenda -> []
   -- CR 702.102a is payload-free: the permission names no quality, and the halves
   -- it fuses are the CARD's own faces rather than anything this value carries.
   Keyword.Fuse -> []
@@ -5962,7 +5968,7 @@ effectFilters effect = case effect of
       RestrictedCreatures.Matching f -> unframed [f]
   -- ForbidAttack's Matching arm, read at
   -- Pawl.Engine.CombatRestriction.storedEvasions.
-  Effect.ForbidBeingBlocked (ForbidBeingBlocked.MkForbidBeingBlocked duration f) -> frame Unframed (durationFilters duration) <> unframed [f]
+  Effect.ForbidBeingBlocked (ForbidBeingBlocked.MkForbidBeingBlocked duration f barred) -> frame Unframed (durationFilters duration) <> unframed [f, barred]
   -- ForbidAttack's arm: the Matching class is read through a bare
   -- Filter.contextFor at Pawl.Engine.AttackRequirement. A defender naming
   -- players carries no Filter; one naming permanents is an ObjectRef like the
@@ -6004,6 +6010,7 @@ effectFilters effect = case effect of
   Effect.PlaySubgame _ -> []
   Effect.ChoosePlayer _ -> []
   Effect.ChoosePlayerAtRandom _ -> []
+  Effect.ChooseSector _ -> []
   Effect.ChoosePermanents (ChoosePermanents.MkChoosePermanents (ChosenPermanents.MkChosenPermanents f _ count) _) -> unframed [f] <> frame Unframed (foldMap quantityFilters (HowMany.quantity count))
   -- CR 706.2's modifier is a Quantity, so its filters are reachable here.
   Effect.RollDie rollDie -> frame Unframed (quantityFilters (RollDie.count rollDie) <> foldMap quantityFilters (RollDie.modifier rollDie))

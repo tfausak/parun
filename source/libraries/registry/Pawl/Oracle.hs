@@ -216,6 +216,7 @@ printed keyword = case keyword of
   Keyword.Fuse -> Just (Text.pack "Fuse")
   Keyword.Tribute {} -> Nothing
   Keyword.Dethrone -> Just (Text.pack "Dethrone")
+  Keyword.HiddenAgenda -> Just (Text.pack "Hidden agenda")
   Keyword.Outlast {} -> Nothing
   Keyword.Prowess -> Just (Text.pack "Prowess")
   Keyword.Dash {} -> Nothing
@@ -228,6 +229,7 @@ printed keyword = case keyword of
   Keyword.Myriad -> Just (Text.pack "Myriad")
   Keyword.Surge {} -> Nothing
   Keyword.Skulk -> Just (Text.pack "Skulk")
+  Keyword.SpaceSculptor -> Just (Text.pack "Space sculptor")
   Keyword.Emerge {} -> Nothing
   Keyword.Escalate {} -> Nothing
   Keyword.Melee -> Just (Text.pack "Melee")
@@ -370,6 +372,7 @@ standalone =
     Keyword.Extort,
     Keyword.Fuse,
     Keyword.Dethrone,
+    Keyword.HiddenAgenda,
     Keyword.Prowess,
     Keyword.Exploit,
     Keyword.Menace,
@@ -399,6 +402,7 @@ standalone =
     Keyword.Ravenous,
     Keyword.ForMirrodin,
     Keyword.Bargain,
+    Keyword.SpaceSculptor,
     Keyword.Spree,
     Keyword.Exhaust,
     Keyword.Boast,

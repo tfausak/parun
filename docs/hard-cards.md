@@ -65,7 +65,7 @@ not repeated.
 | CR 207.5 | Cryptic Spires | Gap (#884) |
 | CR 612.5, 701.12h | Exchange of Words | Tested in `ProjectionSpec`, `data/scenarios/projection/` |
 | CR 612.7 | Spy Kit | Tested in `CastProhibitionSpec`, `DamageSpec` |
-| CR 702.158 | Space Beleren | Gap (#3522) |
+| CR 702.158 | Space Beleren | Tested in `SpaceSculptorSpec` |
 | CR 706.5 | Celebr-8000 | Tested in `data/scenarios/dice/cr-706-5-*` |
 | CR 706.8 | Centaur of Attention | Tested in `data/scenarios/dice/cr-706-8-*` |
 | CR 707.13 | Garth One-Eye | Tested in `CopySpec`, `data/scenarios/copy/cr-400-11-*` |

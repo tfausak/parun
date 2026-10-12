@@ -6,6 +6,7 @@ import qualified Data.Maybe as Maybe
 import qualified Pawl.Engine.Activatable as Activatable
 import qualified Pawl.Engine.Cast as Cast
 import qualified Pawl.Engine.Companion as Companion
+import qualified Pawl.Engine.Conspiracy as Conspiracy
 import qualified Pawl.Engine.Cost as Cost
 import qualified Pawl.Engine.EndEffect as EndEffect
 import qualified Pawl.Engine.FaceDown as FaceDown
@@ -268,6 +269,8 @@ legalActions pid gs =
       -- CR 116.2i / 901.9: rolling the planar die, on CR 116.2a's window with a
       -- cost that rises each time. Both are asked inside Planechase.canRoll.
       planarRolls = if Planechase.canRoll pid gs then [Action.RollPlanarDie] else []
+      -- CR 116.2j / 702.106c: any time they have priority, CR 116.2b's window.
+      conspiracies = fmap Action.TurnConspiracyFaceUp (Conspiracy.turnable pid gs)
       -- CR 702.29a: a HAND is a source of activations too, not just the
       -- battlefield -- cycling functions only while the card is in a player's
       -- hand. So is a GRAVEYARD, by CR 113.6m: Loxodon Surveyor's "{3}, Exile
@@ -355,4 +358,4 @@ legalActions pid gs =
       -- Pawl.ManaSpec's "the menu carries one activation per untapped source" is
       -- the proof.
       manaAbilityActivations = fmap Action.ActivateManaAbility manaSources
-   in Action.Pass : lands <> spells <> turnUps <> unlocks <> discards <> ignores <> endings <> plots <> foretells <> suspends <> companions <> planarRolls <> activations <> manaAbilityActivations
+   in Action.Pass : lands <> spells <> turnUps <> unlocks <> discards <> ignores <> endings <> plots <> foretells <> suspends <> companions <> planarRolls <> conspiracies <> activations <> manaAbilityActivations

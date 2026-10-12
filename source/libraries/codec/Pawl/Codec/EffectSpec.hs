@@ -2073,8 +2073,8 @@ spec s = Spec.describe s "Pawl.Codec.Effect" $ do
     Common.assertCodec
       s
       codec
-      (Effect.ForbidBeingBlocked (ForbidBeingBlocked.MkForbidBeingBlocked Duration.UntilEndOfTurn (Filter.HasCardType CardType.Creature)))
-      " {\"type\":\"ForbidBeingBlocked\",\"value\":{\"duration\":{\"type\":\"UntilEndOfTurn\"},\"affected\":{\"type\":\"HasCardType\",\"value\":{\"type\":\"Creature\"}}}} "
+      (Effect.ForbidBeingBlocked (ForbidBeingBlocked.MkForbidBeingBlocked Duration.UntilEndOfTurn (Filter.HasCardType CardType.Creature) (Filter.HasCardType CardType.Creature)))
+      " {\"type\":\"ForbidBeingBlocked\",\"value\":{\"duration\":{\"type\":\"UntilEndOfTurn\"},\"affected\":{\"type\":\"HasCardType\",\"value\":{\"type\":\"Creature\"}},\"blockers\":{\"type\":\"HasCardType\",\"value\":{\"type\":\"Creature\"}}}} "
   Spec.it s "CreateEmblem" $
     Common.assertJsonCodec
       s
@@ -2255,6 +2255,13 @@ spec s = Spec.describe s "Pawl.Codec.Effect" $ do
       fromJson
       (Effect.ChoosePermanents (ChoosePermanents.MkChoosePermanents (ChosenPermanents.MkChosenPermanents (Filter.HasCardType CardType.Creature) (PlayerRef.InSlot (SlotName.MkSlotName (Text.pack "thatPlayer"))) (HowMany.UpTo (Just (Quantity.Literal 2)))) (SlotName.MkSlotName (Text.pack "chosen"))))
       " {\"type\":\"ChoosePermanents\",\"value\":{\"permanents\":{\"filter\":{\"type\":\"HasCardType\",\"value\":{\"type\":\"Creature\"}},\"chooser\":{\"type\":\"InSlot\",\"value\":\"thatPlayer\"},\"count\":{\"type\":\"UpTo\",\"value\":{\"type\":\"Literal\",\"value\":2}}},\"slot\":\"chosen\"}} "
+  Spec.it s "ChooseSector" $
+    Common.assertJsonCodec
+      s
+      toJson
+      fromJson
+      (Effect.ChooseSector (SlotName.MkSlotName (Text.pack "sector")))
+      " {\"type\":\"ChooseSector\",\"value\":\"sector\"} "
   Spec.it s "RollDie" $
     Common.assertJsonCodec
       s

@@ -1325,6 +1325,8 @@ library codec
     Pawl.Codec.TopOfLibraryUntilSpec
     Pawl.Codec.Toughness
     Pawl.Codec.ToughnessSpec
+    Pawl.Codec.Trait
+    Pawl.Codec.TraitSpec
     Pawl.Codec.Transformed
     Pawl.Codec.TransformedSpec
     Pawl.Codec.TriggerCondition
@@ -1550,10 +1552,12 @@ library engine
     Pawl.Engine.Sba
     Pawl.Engine.Scheme
     Pawl.Engine.Script
+    Pawl.Engine.Sector
     Pawl.Engine.Setup
     Pawl.Engine.Snapshot
     Pawl.Engine.Soulbond
     Pawl.Engine.SourceContext
+    Pawl.Engine.SpaceSculptor
     Pawl.Engine.Speed
     Pawl.Engine.SplitSecond
     Pawl.Engine.Stack
@@ -1991,6 +1995,7 @@ library test
     Pawl.ScenarioSpec
     Pawl.SetupSpec
     Pawl.ShieldCounterSpec
+    Pawl.SpaceSculptorSpec
     Pawl.SpecialActionSpec
     Pawl.SpeedSpec
     Pawl.SplitSecondSpec
@@ -2735,6 +2740,7 @@ library types
     Pawl.Types.TopOfLibrary
     Pawl.Types.TopOfLibraryUntil
     Pawl.Types.Toughness
+    Pawl.Types.Trait
     Pawl.Types.Transformed
     Pawl.Types.TriggerCondition
     Pawl.Types.TriggeredAbility

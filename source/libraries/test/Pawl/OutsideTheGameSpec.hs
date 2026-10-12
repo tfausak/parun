@@ -98,6 +98,7 @@ import qualified Pawl.Types.ReplacementEntry as ReplacementEntry
 import qualified Pawl.Types.SearchPlace as SearchPlace
 import qualified Pawl.Types.SlotName as SlotName
 import qualified Pawl.Types.Source as Source
+import qualified Pawl.Types.Trait as Trait
 import qualified Pawl.Types.Zone as Zone
 import qualified Pawl.Types.ZoneChange as ZoneChange
 
@@ -1116,7 +1117,7 @@ spec s registry = Spec.describe s "Pawl.Engine.Event (CR 400.11)" $ do
     Spec.assertBool s (not (wasAskedToReplace (answersFor S.identityAnswer twice (Event.drawCard S.alice)))) "no ChooseReplacement was raised"
     Spec.assertEqWith s "CR 400.11c and the card she owns outside the game reached her hand" (printingsIn Zone.Hand S.alice (S.runPure S.identityAnswer twice (Event.drawCard S.alice))) [signInBlood]
   -- The two Rings' rows again, each re-aimed at a filter reading the source's
-  -- COLOURS (Filter.SharesColorWithSource) and re-sourced onto a red Goblin
+  -- COLOURS (Filter.SharesWithSource Trait.Color) and re-sourced onto a red Goblin
   -- Piker and a blue Coral Merfolk. A direct board: no card writes
   -- that atom into a wish. The pool holds one Hill Giant (red): through the
   -- Piker's row it arrives, through the Merfolk's nothing does, so treating the
@@ -1136,7 +1137,7 @@ spec s registry = Spec.describe s "Pawl.Engine.Event (CR 400.11)" $ do
         (blue, g3) = S.addPermanent merfolk S.alice g2
         sharing row = case ActiveReplacement.effect row of
           ReplacementEffect.DrawR (DrawR.MkDrawR w (DrawRewrite.FromOutsideTheGame p)) ->
-            row {ActiveReplacement.effect = ReplacementEffect.DrawR (DrawR.MkDrawR w (DrawRewrite.FromOutsideTheGame p {FromOutsideTheGame.filter = Filter.SharesColorWithSource}))}
+            row {ActiveReplacement.effect = ReplacementEffect.DrawR (DrawR.MkDrawR w (DrawRewrite.FromOutsideTheGame p {FromOutsideTheGame.filter = Filter.SharesWithSource Trait.Color}))}
           _ -> row
         board = g3 {GameState.replacements = zipWith (\src row -> (sharing row) {ActiveReplacement.source = src}) [red, blue] (GameState.replacements g3)}
         drawn preferred = S.runPure (preferringRow preferred) board (Event.drawCard S.alice)

@@ -12,6 +12,7 @@ import qualified Numeric.Natural as Natural
 import qualified Pawl.Engine.Binding as Binding
 import qualified Pawl.Engine.Keyword as Keyword
 import qualified Pawl.Engine.NameWords as NameWords
+import qualified Pawl.Engine.Sector as Sector
 import qualified Pawl.Types.Behold as Behold
 import qualified Pawl.Types.BlockStatus as BlockStatus
 import qualified Pawl.Types.BoundMeasure as BoundMeasure
@@ -73,6 +74,7 @@ import qualified Pawl.Types.Suspend as Suspend
 import qualified Pawl.Types.TapForTotalPower as TapForTotalPower
 import qualified Pawl.Types.TapPermanents as TapPermanents
 import qualified Pawl.Types.Teams as Teams
+import qualified Pawl.Types.Trait as Trait
 import qualified Pawl.Types.Ward as Ward
 import qualified Pawl.Types.WhichCounters as WhichCounters
 import qualified Pawl.Types.Zone as Zone
@@ -1030,14 +1032,19 @@ data Context = MkContext
     -- operand then matches nothing, and Pawl.FilterPositionLintSpec keeps a card
     -- out of those positions.
     sourceMeasures :: Map.Map Measure.Measure Integer,
-    -- CR 105.2: the SOURCE's colours, for SharesColorWithSource (CR 702.78a's
-    -- conspire). Filled with sourceMeasures. A SET rather than a Maybe: empty is
-    -- the right answer both where it is unfilled and for a colourless source.
+    -- CR 105.2: the SOURCE's colours, for SharesWithSource Trait.Color (CR
+    -- 702.78a's conspire). Filled with sourceMeasures. A SET rather than a Maybe:
+    -- empty is the right answer both where it is unfilled and for a colourless
+    -- source.
     sourceColors :: Set.Set Color.Color,
-    -- CR 201.1 / 709.4a: the NAMES of the SOURCE, for SameNameAsSource (CR
-    -- 702.60a's ripple); `slotNames` below asks the same of a SLOT. Filled with
-    -- sourceMeasures, and a SET for sourceColors' reason (CR 708.2a's nameless
-    -- object).
+    -- | CR 702.158e: the SOURCE's sector designations, for SharesWithSource
+    -- Trait.Sector. Filled with sourceMeasures; empty where unfilled and for a
+    -- source in no sector alike.
+    sourceSectors :: Set.Set Designation.Designation,
+    -- CR 201.1 / 709.4a: the NAMES of the SOURCE, for SharesWithSource
+    -- Trait.Name (CR 702.60a's ripple); `slotNames` below asks the same of a
+    -- SLOT. Filled with sourceMeasures, and a SET for sourceColors' reason (CR
+    -- 708.2a's nameless object).
     sourceNames :: Set.Set CardName.CardName,
     -- CR 202.3, the computed half: the number the TARGET SLOT being matched
     -- names as its bound, for the Measures atom's EnclosingAmount operand --
@@ -1387,9 +1394,9 @@ data Context = MkContext
     -- below, and the atom then matches nothing. LAZY: filling it scans the
     -- relation.
     sourceEntrants :: Set.Set ObjectId.ObjectId,
-    -- CR 108.3: the OWNER of the SOURCE, for the one atom that compares a
-    -- candidate's owner against it (SameOwnerAsSource, CR 702.140a's "with the
-    -- same owner as this spell"). Off Object.owner rather than off `perspective`:
+    -- CR 108.3: the OWNER of the SOURCE, for SharesWithSource Trait.Owner (CR
+    -- 702.140a's "with the same owner as this spell"). Off Object.owner rather
+    -- than off `perspective`:
     -- CR 109.5's "you" is the CONTROLLER, a different player for a spell cast off
     -- somebody else's card. Filled by Pawl.Engine.SourceContext; the atom is
     -- MINTED by the rule (Pawl.Engine.Keyword.mutateTarget) into a target slot,
@@ -1407,8 +1414,9 @@ data Context = MkContext
     -- choice during a resolution -- Ancient Vendetta's search, Predict's tally,
     -- Petra Sphinx's revealed card) and a replacement row's, where rule
     -- 702.16e's MINTED shield writes it (CR 614.1c's as-enters choice, Runed
-    -- Halo), and a target slot's (Declaration of Naught's "target spell with
-    -- the chosen name", chosen as it entered), among them.
+    -- Halo), a target slot's (Declaration of Naught's "target spell with
+    -- the chosen name", chosen as it entered) and a static ability's affected
+    -- set (Immediate Action's, chosen by CR 702.106a), among them.
     --
     -- The SOURCE's and not a slot's, which is what separates it from slotNames
     -- above: CR 201.4's name is not an object, so no slot ever holds it, and
@@ -1427,8 +1435,9 @@ data Context = MkContext
     -- positions is Pawl.FilterPositionLintSpec's "CR 201.4 no card asks
     -- HasChosenName outside an admitted position". That lint is an ALLOWLIST,
     -- narrower than where this field is filled: it refuses every standing
-    -- position, which is what Pawl.CardSpec's StandingHostFramed exists to keep
-    -- apart from an effect's own ObjectRef.
+    -- position but a static ability's affected set (Immediate Action), which is
+    -- what Pawl.CardSpec's StandingHostFramed exists to keep apart from an
+    -- effect's own ObjectRef.
     sourceChosenNames :: Map.Map PlayerId.PlayerId CardName.CardName,
     -- CR 702.16k: the player chosen (CR 614.1c) by the permanent whose
     -- PROTECTION ability wrote the filter being matched, for the one atom that
@@ -1590,7 +1599,7 @@ data Context = MkContext
 -- here owes both halves of the same pair: which way its unfilled read answers,
 -- and what holds a card to the positions that fill it.
 contextFor :: Teams.Teams -> Maybe PlayerId.PlayerId -> Maybe ObjectId.ObjectId -> Context
-contextFor t p s = MkContext {teams = t, perspective = p, source = s, sourceMeasures = Map.empty, sourceColors = Set.empty, sourceNames = Set.empty, slotAmount = Nothing, defendingPlayers = [], recipient = Nothing, slotObjects = Map.empty, cantCrewVehicles = Set.empty, slotNames = Map.empty, slotControllers = Map.empty, slotHostControllers = Map.empty, subjectHostCardTypes = Set.empty, slotCreatureTypes = Map.empty, slotMeasures = Map.empty, slotPlayers = Map.empty, boundAmounts = Map.empty, slotStickers = Map.empty, boundUnannounced = False, sourceAttachedTo = Nothing, evaluated = Nothing, sourceEntrants = Set.empty, sourceOwner = Nothing, sourceChosenNames = Map.empty, carrierChosenPlayer = Nothing, aimingController = Nothing, sourceChosenColors = Set.empty, sourceChosenSubtype = Nothing, sourceLastExiled = Nothing, sourceExiled = Set.empty}
+contextFor t p s = MkContext {teams = t, perspective = p, source = s, sourceMeasures = Map.empty, sourceColors = Set.empty, sourceSectors = Set.empty, sourceNames = Set.empty, slotAmount = Nothing, defendingPlayers = [], recipient = Nothing, slotObjects = Map.empty, cantCrewVehicles = Set.empty, slotNames = Map.empty, slotControllers = Map.empty, slotHostControllers = Map.empty, subjectHostCardTypes = Set.empty, slotCreatureTypes = Map.empty, slotMeasures = Map.empty, slotPlayers = Map.empty, boundAmounts = Map.empty, slotStickers = Map.empty, boundUnannounced = False, sourceAttachedTo = Nothing, evaluated = Nothing, sourceEntrants = Set.empty, sourceOwner = Nothing, sourceChosenNames = Map.empty, carrierChosenPlayer = Nothing, aimingController = Nothing, sourceChosenColors = Set.empty, sourceChosenSubtype = Nothing, sourceLastExiled = Nothing, sourceExiled = Set.empty}
 
 -- The ONE object a slot names, for the readers that can take no more than one --
 -- Quantity.AgainstSlot's evaluation, Count's IsControllerOfBound. Nothing where
@@ -1651,12 +1660,18 @@ matches context view predicate = case predicate of
   Filter.HasSupertype s -> Set.member s (supertypes view)
   Filter.HasColor c -> Set.member c (colors view)
   Filter.IsMonocolored -> Set.size (colors view) == 1
-  -- CR 702.78a's "share a color with it", the arm above asked of two objects:
-  -- CR 105.2 makes colour a SET, so sharing is a non-empty intersection. False
-  -- where either side is colourless, which is that reading rather than an
-  -- absent-value convention -- a colourless object shares no colour with
-  -- anything, and a context that supplied no colours names none to share.
-  Filter.SharesColorWithSource -> not (Set.disjoint (colors view) (sourceColors context))
+  -- One comparison for every trait: a non-empty INTERSECTION of the
+  -- candidate's values with the source's. CR 105.2 and CR 709.4a make colours
+  -- and names sets, CR 702.158e asks for a shared sector designation, and an
+  -- owner is a set of at most one. A side with no value -- a colourless object,
+  -- a nameless one (CR 708.2a), a player, which has no owner, one in no sector,
+  -- or a source the context did not supply -- leaves its set empty and answers
+  -- False without a case of its own.
+  Filter.SharesWithSource trait -> case trait of
+    Trait.Color -> not (Set.disjoint (colors view) (sourceColors context))
+    Trait.Name -> not (Set.disjoint (names view) (sourceNames context))
+    Trait.Owner -> not (Set.disjoint (foldMap Set.singleton (owner view)) (foldMap Set.singleton (sourceOwner context)))
+    Trait.Sector -> not (Set.disjoint (Sector.sectorsIn (designations view)) (sourceSectors context))
   Filter.HasSubtype s -> Set.member s (subtypes view)
   -- CR 709.4a's own test, said the way that rule says it: membership, so an
   -- object showing several names matches on any one of them.
@@ -1838,19 +1853,6 @@ matches context view predicate = case predicate of
   -- naming nothing, and a bound object with no name (CR 708.2a), each leave the
   -- other side empty and answer False without a case of their own.
   Filter.SameNameAsBound slot -> not (Set.disjoint (names view) (Map.findWithDefault Set.empty slot (slotNames context)))
-  -- CR 709.4a at both ends again, one operand over: the candidate has the
-  -- source's name if the two name sets INTERSECT. A source nothing supplied, and
-  -- a source with no name (CR 708.2a), each leave the other side empty and
-  -- answer False without a case of their own.
-  Filter.SameNameAsSource -> not (Set.disjoint (names view) (sourceNames context))
-  -- CR 108.3 compared across the candidate and the SOURCE rather than against CR
-  -- 109.5's perspective, which is what separates it from OwnedBy above: rule
-  -- 702.140a's mutate slot asks whose card the SPELL is, and a spell cast off
-  -- somebody else's card answers a different player than its controller. A source
-  -- nothing supplied, and a candidate with no owner (CR 109.1), each answer False.
-  Filter.SameOwnerAsSource -> case (owner view, sourceOwner context) of
-    (Just o, Just p) -> o == p
-    _ -> False
   -- CR 110.2 compared across two of one announcement's targets, and the one atom
   -- here that is vacuously TRUE rather than False: a slot the context has no key
   -- for is one nothing has named yet, and a relation with only one party to it
@@ -2275,7 +2277,7 @@ rewrite pairs predicate = case predicate of
   Filter.HasSupertype _ -> predicate
   Filter.HasColor _ -> predicate
   Filter.IsMonocolored -> predicate
-  Filter.SharesColorWithSource -> predicate
+  Filter.SharesWithSource _ -> predicate
   -- Untouched, and CR 612.2 says so outright: "an effect that changes a color
   -- word or a subtype can't change a card name, even if that name contains a
   -- word ... that is the same as a Magic color word, basic land type, or
@@ -2333,8 +2335,6 @@ rewrite pairs predicate = case predicate of
   Filter.IsBound _ -> predicate
   Filter.IsTarget -> predicate
   Filter.SameNameAsBound _ -> predicate
-  Filter.SameNameAsSource -> predicate
-  Filter.SameOwnerAsSource -> predicate
   Filter.SameControllerAsBound _ -> predicate
   Filter.SameControllerAsHostOfBound _ -> predicate
   Filter.SharesCreatureTypeWithBound _ -> predicate
@@ -2536,6 +2536,7 @@ rewriteKeyword pairs keyword = case keyword of
   Keyword.Type.Shadow -> keyword
   Keyword.Type.Horsemanship -> keyword
   Keyword.Type.Skulk -> keyword
+  Keyword.Type.SpaceSculptor -> keyword
   Keyword.Type.Melee -> keyword
   -- CR 702.124h and CR 702.124i name no colour, type or quality CR 612.2 could
   -- swap; CR 702.124k names only the Background enchantment type, and CR
@@ -2719,6 +2720,7 @@ rewriteKeyword pairs keyword = case keyword of
   Keyword.Type.Evolve -> keyword
   Keyword.Type.Exploit -> keyword
   Keyword.Type.Dethrone -> keyword
+  Keyword.Type.HiddenAgenda -> keyword
   Keyword.Type.Fuse -> keyword
   -- CR 702.6a's equip cost, level up's and outlast's shape, plus CR 702.6c's
   -- quality, which is a Filter and so descends the way cycling's does. CR
@@ -3046,7 +3048,7 @@ bakeBound players predicate = case predicate of
   Filter.HasSupertype _ -> predicate
   Filter.HasColor _ -> predicate
   Filter.IsMonocolored -> predicate
-  Filter.SharesColorWithSource -> predicate
+  Filter.SharesWithSource _ -> predicate
   Filter.HasSubtype _ -> predicate
   Filter.HasName _ -> predicate
   Filter.NameWordsAtLeast _ -> predicate
@@ -3081,8 +3083,6 @@ bakeBound players predicate = case predicate of
   Filter.IsBound _ -> predicate
   Filter.IsTarget -> predicate
   Filter.SameNameAsBound _ -> predicate
-  Filter.SameNameAsSource -> predicate
-  Filter.SameOwnerAsSource -> predicate
   Filter.SameControllerAsBound _ -> predicate
   Filter.SameControllerAsHostOfBound _ -> predicate
   Filter.SharesCreatureTypeWithBound _ -> predicate
@@ -3229,7 +3229,7 @@ manaValueThresholds predicate = case predicate of
   Filter.HasSupertype _ -> []
   Filter.HasColor _ -> []
   Filter.IsMonocolored -> []
-  Filter.SharesColorWithSource -> []
+  Filter.SharesWithSource _ -> []
   Filter.HasSubtype _ -> []
   Filter.HasName _ -> []
   Filter.NameWordsAtLeast _ -> []
@@ -3255,8 +3255,6 @@ manaValueThresholds predicate = case predicate of
   Filter.IsBound _ -> []
   Filter.IsTarget -> []
   Filter.SameNameAsBound _ -> []
-  Filter.SameNameAsSource -> []
-  Filter.SameOwnerAsSource -> []
   Filter.SameControllerAsBound _ -> []
   Filter.SameControllerAsHostOfBound _ -> []
   Filter.SharesCreatureTypeWithBound _ -> []
@@ -3383,7 +3381,7 @@ statesAQuality predicate = case predicate of
   Filter.HasSupertype _ -> True
   Filter.HasColor _ -> True
   Filter.IsMonocolored -> True
-  Filter.SharesColorWithSource -> True
+  Filter.SharesWithSource _ -> True
   Filter.HasSubtype _ -> True
   -- CR 701.23b's "stated quality" at its sharpest -- a named card is the most
   -- specific description a search can give -- so the searcher may decline to
@@ -3414,8 +3412,6 @@ statesAQuality predicate = case predicate of
   Filter.IsBound _ -> True
   Filter.IsTarget -> True
   Filter.SameNameAsBound _ -> True
-  Filter.SameNameAsSource -> True
-  Filter.SameOwnerAsSource -> True
   Filter.SameControllerAsBound _ -> True
   Filter.SameControllerAsHostOfBound _ -> True
   Filter.SharesCreatureTypeWithBound _ -> True
@@ -3548,7 +3544,14 @@ readsSourceValues predicate = case predicate of
   Filter.HasSupertype _ -> False
   Filter.HasColor _ -> False
   Filter.IsMonocolored -> False
-  Filter.SharesColorWithSource -> True
+  -- Colours and names, which a printed face carries; not an owner, which a card
+  -- outside the game lacks, nor a sector, which CR 702.158b gives only a
+  -- permanent.
+  Filter.SharesWithSource trait -> case trait of
+    Trait.Color -> True
+    Trait.Name -> True
+    Trait.Owner -> False
+    Trait.Sector -> False
   Filter.HasSubtype _ -> False
   Filter.HasName _ -> False
   Filter.NameWordsAtLeast _ -> False
@@ -3574,8 +3577,6 @@ readsSourceValues predicate = case predicate of
   Filter.IsBound _ -> False
   Filter.IsTarget -> False
   Filter.SameNameAsBound _ -> False
-  Filter.SameNameAsSource -> True
-  Filter.SameOwnerAsSource -> False
   Filter.SameControllerAsBound _ -> False
   Filter.SameControllerAsHostOfBound _ -> False
   Filter.SharesCreatureTypeWithBound _ -> False
@@ -3681,7 +3682,7 @@ overBoundSlotsWith f predicate = case predicate of
   Filter.HasSupertype _ -> pure predicate
   Filter.HasColor _ -> pure predicate
   Filter.IsMonocolored -> pure predicate
-  Filter.SharesColorWithSource -> pure predicate
+  Filter.SharesWithSource _ -> pure predicate
   Filter.HasSubtype _ -> pure predicate
   Filter.HasName _ -> pure predicate
   Filter.HasNameOriginallyPrintedIn _ -> pure predicate
@@ -3729,8 +3730,6 @@ overBoundSlotsWith f predicate = case predicate of
   Filter.SameNameAsBound slot -> fmap Filter.SameNameAsBound (f SlotArity.Many slot)
   -- Names no slot at all: CR 702.60a's comparison is against the SOURCE, whose
   -- names arrive on Filter.Context.
-  Filter.SameNameAsSource -> pure predicate
-  Filter.SameOwnerAsSource -> pure predicate
   -- Reads the whole set too, one field further over.
   Filter.SameControllerAsBound slot -> fmap Filter.SameControllerAsBound (f SlotArity.Many slot)
   -- Reads the whole set too, off its own field: a slot naming a group answers

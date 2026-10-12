@@ -525,6 +525,7 @@ isActivateOf oid action = case action of
   Action.Type.TurnFaceUp {} -> False
   Action.Type.Unlock _ _ -> False
   Action.Type.DiscardFromHand _ -> False
+  Action.Type.TurnConspiracyFaceUp _ -> False
   Action.Type.Plot {} -> False
   Action.Type.Foretell _ -> False
   Action.Type.Suspend _ -> False
@@ -2097,7 +2098,7 @@ unregeneratable source oid gs =
 evasion :: ObjectId.ObjectId -> Filter.Filter Keyword.Keyword -> GameState.GameState -> GameState.GameState
 evasion source affected gs =
   let (ts, gs1) = Game.freshTimestamp gs
-      row = ActiveEvasion.MkActiveEvasion {ActiveEvasion.source = source, ActiveEvasion.controller = S.alice, ActiveEvasion.timestamp = ts, ActiveEvasion.expiry = Expiry.AtCleanup, ActiveEvasion.affected = affected}
+      row = ActiveEvasion.MkActiveEvasion {ActiveEvasion.source = source, ActiveEvasion.controller = S.alice, ActiveEvasion.timestamp = ts, ActiveEvasion.expiry = Expiry.AtCleanup, ActiveEvasion.affected = affected, ActiveEvasion.blockers = Filter.HasCardType CardType.Creature}
    in gs1 {GameState.evasions = row : GameState.evasions gs1}
 
 -- Bob's attacker declared at alice and, when given, the creature blocking it

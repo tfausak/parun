@@ -622,10 +622,12 @@ outcomeAfterLeaving leaving gs = case Game.stillPlaying gs of
 
 -- CR 104.1: the one door GameState.result is set through. A game ends the
 -- moment a result is reached, so a result already set is kept. A result is paid
--- out as it is set (CR 407.2, Ante.payOut).
+-- out as it is set (CR 407.2, Ante.payOut), and every face-down card is
+-- revealed as the game ends (CR 708.9, Event.endOfGameReveals) -- a subgame's
+-- too, since its end comes through here.
 settle :: Maybe Result -> GameState -> GameState
 settle outcome gs = case (GameState.result gs, outcome) of
-  (Nothing, Just result) -> Ante.payOut gs {GameState.result = Just result}
+  (Nothing, Just result) -> Ante.payOut (Event.endOfGameReveals gs) {GameState.result = Just result}
   _ -> gs
 
 -- CR 104.3a: leave the game IMMEDIATELY, and settle CR 104.2a right now rather

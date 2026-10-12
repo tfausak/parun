@@ -624,6 +624,7 @@ import qualified Pawl.Codec.TokenRSpec
 import qualified Pawl.Codec.TopOfLibrarySpec
 import qualified Pawl.Codec.TopOfLibraryUntilSpec
 import qualified Pawl.Codec.ToughnessSpec
+import qualified Pawl.Codec.TraitSpec
 import qualified Pawl.Codec.TransformedSpec
 import qualified Pawl.Codec.TriggerConditionSpec
 import qualified Pawl.Codec.TriggerFrequencySpec
@@ -798,6 +799,7 @@ import qualified Pawl.ScenarioSpec
 import qualified Pawl.SetupSpec
 import qualified Pawl.ShieldCounterSpec
 import qualified Pawl.SlugSpec
+import qualified Pawl.SpaceSculptorSpec
 import qualified Pawl.Spec as Spec
 import qualified Pawl.SpecialActionSpec
 import qualified Pawl.SpeedSpec
@@ -1488,6 +1490,7 @@ spec s registry = do
   Pawl.Codec.TokenRSpec.spec s
   Pawl.Codec.TopOfLibrarySpec.spec s
   Pawl.Codec.TopOfLibraryUntilSpec.spec s
+  Pawl.Codec.TraitSpec.spec s
   Pawl.Codec.ToughnessSpec.spec s
   Pawl.Codec.TransformedSpec.spec s
   Pawl.Codec.TriggerConditionSpec.spec s
@@ -1593,6 +1596,7 @@ spec s registry = do
   Pawl.GameSpec.spec s registry
   Pawl.GoadSpec.spec s registry
   Pawl.HarnessSpec.spec s registry
+  Pawl.SpaceSculptorSpec.spec s registry
   Pawl.HealSpec.spec s registry
   Pawl.Json.ArraySpec.spec s
   Pawl.Json.BooleanSpec.spec s

@@ -176,6 +176,7 @@ codec =
       Arm.nullary "Evolve" Keyword.Evolve,
       Arm.payload "Tribute" Common.natural Keyword.Tribute (\x -> case x of Keyword.Tribute y -> Just y; _ -> Nothing),
       Arm.nullary "Dethrone" Keyword.Dethrone,
+      Arm.nullary "HiddenAgenda" Keyword.HiddenAgenda,
       Arm.nullary "Extort" Keyword.Extort,
       Arm.nullary "Fuse" Keyword.Fuse,
       Arm.nullary "Increment" Keyword.Increment,
@@ -190,6 +191,7 @@ codec =
       Arm.nullary "Ingest" Keyword.Ingest,
       Arm.nullary "Myriad" Keyword.Myriad,
       Arm.nullary "Skulk" Keyword.Skulk,
+      Arm.nullary "SpaceSculptor" Keyword.SpaceSculptor,
       Arm.payload "Escalate" (Cost.codec codec) Keyword.Escalate (\x -> case x of Keyword.Escalate y -> Just y; _ -> Nothing),
       Arm.nullary "Melee" Keyword.Melee,
       Arm.payload "Crew" Common.natural Keyword.Crew (\x -> case x of Keyword.Crew y -> Just y; _ -> Nothing),
@@ -379,6 +381,7 @@ tagOf x = case x of
   Keyword.Evolve {} -> "Evolve"
   Keyword.Tribute {} -> "Tribute"
   Keyword.Dethrone {} -> "Dethrone"
+  Keyword.HiddenAgenda {} -> "HiddenAgenda"
   Keyword.Extort {} -> "Extort"
   Keyword.Fuse {} -> "Fuse"
   Keyword.Increment {} -> "Increment"
@@ -393,6 +396,7 @@ tagOf x = case x of
   Keyword.Ingest {} -> "Ingest"
   Keyword.Myriad {} -> "Myriad"
   Keyword.Skulk {} -> "Skulk"
+  Keyword.SpaceSculptor {} -> "SpaceSculptor"
   Keyword.Escalate {} -> "Escalate"
   Keyword.Melee {} -> "Melee"
   Keyword.Crew {} -> "Crew"

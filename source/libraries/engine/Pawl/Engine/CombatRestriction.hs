@@ -975,8 +975,9 @@ barredBlocks blockers attackers gs =
 
 -- CR 509.1b / 611.2c: every (blocker, attacker) pair a stored,
 -- resolution-generated "can't be blocked" forbids -- Veiling Oddity's
--- "creatures can't be blocked this turn". Every blocker is barred from an
--- attacker the row's class matches, the class re-read against the LIVE board
+-- "creatures can't be blocked this turn". Every blocker the row's blocker filter
+-- matches is barred from an attacker its class matches, both re-read against
+-- the LIVE board
 -- here, so a creature that entered after the effect began is inside it:
 -- `storedSubjects`'s Matching arm and for its reasons, CR 109.5's "you" the
 -- STORED controller among them. Pawl.CombatSpec's StoredEvasion group is the
@@ -985,13 +986,19 @@ barredBlocks blockers attackers gs =
 -- Unioned beside the printed rows rather than gathered by `inForce`, for
 -- `blockProhibited`'s reasons: the row has outlived its source, names no
 -- Pawl.Types.Affected, and Pawl.Types.ForbidBeingBlocked states no "unless".
+--
+-- PAIRWISE, `cantBeBlockedBy`'s shape: the row's blocker filter is matched in
+-- the ATTACKER's context (Projection.pairwiseContext), so Space Beleren's "only
+-- by creatures in the same sector" compares each blocker with the attacker it
+-- would block. Pawl.SpaceSculptorSpec's "CR 702.158e Space Beleren's +1 lets a
+-- creature be blocked only from its own sector" is the proof.
 storedEvasions :: [ObjectId] -> [ObjectId] -> GameState -> Set (ObjectId, ObjectId)
 storedEvasions blockers attackers gs =
   let evading active =
         let context = Projection.sourceContext gs (Just (ActiveEvasion.controller active)) (ActiveEvasion.source active)
-         in filter (\oid -> Filter.matches context (Projection.viewOfObject oid gs) (ActiveEvasion.affected active)) attackers
-      evaders = concatMap evading (GameState.evasions gs)
-   in Set.fromList [(blocker, attacker) | attacker <- evaders, blocker <- blockers]
+            barredFrom attacker = filter (\blocker -> Filter.matches (Projection.pairwiseContext gs attacker) (Projection.viewOfObject blocker gs) (ActiveEvasion.blockers active)) blockers
+         in [(blocker, attacker) | attacker <- filter (\oid -> Filter.matches context (Projection.viewOfObject oid gs) (ActiveEvasion.affected active)) attackers, blocker <- barredFrom attacker]
+   in Set.fromList (concatMap evading (GameState.evasions gs))
 
 -- CR 509.1b: which (blocker, attacker) pairs a restriction written from the
 -- BLOCKER's side forbids -- Brassclaw Orcs' "can't block creatures with power 2

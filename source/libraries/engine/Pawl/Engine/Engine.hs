@@ -21,6 +21,7 @@ import qualified Pawl.Engine.Binding as Binding
 import qualified Pawl.Engine.Cast as Cast
 import qualified Pawl.Engine.Combat as Combat
 import qualified Pawl.Engine.Companion as Companion
+import qualified Pawl.Engine.Conspiracy as Conspiracy
 import qualified Pawl.Engine.Cost as Cost
 import qualified Pawl.Engine.Damage as Damage
 import qualified Pawl.Engine.Daytime as Daytime
@@ -61,6 +62,7 @@ import qualified Pawl.Engine.Saga as Saga
 import qualified Pawl.Engine.Sba as Sba
 import qualified Pawl.Engine.Setup as Setup
 import qualified Pawl.Engine.Soulbond as Soulbond
+import qualified Pawl.Engine.SpaceSculptor as SpaceSculptor
 import qualified Pawl.Engine.Speed as Speed
 import qualified Pawl.Engine.Stack as Stack
 import qualified Pawl.Engine.Suspend as Suspend
@@ -1206,6 +1208,12 @@ performSettle = do
   -- than survive to the next. Inside the recursion guard for the same reason as
   -- PlayerDesignation.settle -- an ending makes work.
   unpaired <- Soulbond.endWhenBroken
+  -- CR 702.158b, checked here for CR 704.3's reason and not because it is a
+  -- state-based action: a sector lasts "until no player controls" a space
+  -- sculptor. Before the SBA pass, so CR 704.5u assigns afresh on THIS pass when
+  -- a sculptor is still on the battlefield, and inside the recursion guard for
+  -- Soulbond's reason.
+  unsectored <- SpaceSculptor.settle
   acted <- Sba.performStateBasedActions
   placed <- placePendingTriggers
   -- Last, and for the same reason the conditional sweep runs first: all three read
@@ -1221,7 +1229,7 @@ performSettle = do
   State.modify' Combat.removeChanged
   checkControlContinuity
   Ring.endOnControlChange
-  more <- if swept || returned || orphaned || dayNight || designated || sampledControl || unpaired || acted || placed then performSettle else pure False
+  more <- if swept || returned || orphaned || dayNight || designated || sampledControl || unpaired || unsectored || acted || placed then performSettle else pure False
   pure (acted || placed || more)
 
 -- CR 104.4b: how many events may happen with no player able to decide anything
@@ -1487,6 +1495,12 @@ priorityLoop = do
                               -- priority afterwards whatever the die shows.
                               Action.Type.RollPlanarDie -> do
                                 Planechase.roll performManaAbility p
+                                State.modify' (\g -> g {GameState.passed = Set.empty, GameState.priority = Just p})
+                                settleForPriority
+                                loop trail'
+                              -- CR 116.2j / 702.106c: a special action too.
+                              Action.Type.TurnConspiracyFaceUp oid -> do
+                                Conspiracy.turnFaceUp p oid
                                 State.modify' (\g -> g {GameState.passed = Set.empty, GameState.priority = Just p})
                                 settleForPriority
                                 loop trail'
