@@ -8,8 +8,9 @@ import qualified Pawl.Types.Timestamp as Timestamp
 
 -- | CR 613.1a / 611.2: a stored, resolution-generated COPY EFFECT with a stated
 -- duration, held in GameState.copyEffects. Mirrorweave's "each other creature
--- becomes a copy of target nonlegendary creature until end of turn" is the
--- producer.
+-- becomes a copy of target nonlegendary creature until end of turn" is one
+-- producer, and Vesuvan Shapeshifter's "until this creature is turned face
+-- down" (Pawl.Types.AsCopy's `duration`) the other.
 --
 -- Read at Pawl.Engine.Projection.View.stampedSnapshotOf, which layers a live row
 -- over the copy stamp underneath it -- so every one of the seven readers that

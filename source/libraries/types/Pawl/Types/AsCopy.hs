@@ -2,6 +2,7 @@ module Pawl.Types.AsCopy where
 
 import qualified Data.Sequence as Seq
 import qualified Pawl.Types.CopyException as CopyException
+import qualified Pawl.Types.Duration as Duration
 import qualified Pawl.Types.Filter as Filter
 import qualified Pawl.Types.Keyword as Keyword
 import qualified Pawl.Types.WithCounters as WithCounters
@@ -9,7 +10,8 @@ import qualified Pawl.Types.Zone as Zone
 
 -- | CR 707.5 / 614.1c: the payload of Pawl.Types.EntryRewrite's @AsCopy@ arm --
 -- "you may have this permanent enter as a copy of [any enchantment on the
--- battlefield]".
+-- battlefield]" -- and of Pawl.Types.TurnUpRewrite's, CR 614.1e's "as this
+-- creature is turned face up ... it becomes a copy" (Vesuvan Shapeshifter).
 --
 -- The Filter is the printed noun phrase after "a copy of", read as a quality of
 -- the candidate: Clone's "any creature", Copy Enchantment's "any enchantment",
@@ -77,12 +79,19 @@ data AsCopy ability effect = MkAsCopy
     --
     -- Effects rather than a printed triggered ability, because the copy
     -- overwrites the permanent's abilities (CR 707.2) and the ability is not
-    -- one it has afterwards: it rides the replacement, and Pawl.Engine.Event's
-    -- AsCopy arm arms it as a reflexive entry only where a copy was made.
+    -- one it has afterwards: it rides the replacement, and
+    -- Pawl.Engine.Event.becomeCopyAs arms it as a reflexive entry only where a
+    -- copy was made.
     whenYouDo :: Seq.Seq effect,
     -- | CR 707.5's domain: Battlefield for "any creature on the battlefield"
     -- (Clone), Graveyard for "any creature card in a graveyard" (Superior
     -- Spider-Man), every player's graveyard alike.
-    zone :: Zone.Zone
+    zone :: Zone.Zone,
+    -- | CR 611.2a: how long the copy lasts (Vesuvan Shapeshifter's "until this
+    -- creature is turned face down"), Nothing for a printing stating none.
+    -- BecomeCopy.duration's field and read the same way: Nothing stamps the
+    -- copy, a stated duration stores it as a Pawl.Types.ActiveCopy row that can
+    -- end.
+    duration :: Maybe Duration.Duration
   }
   deriving (Eq, Ord, Show)

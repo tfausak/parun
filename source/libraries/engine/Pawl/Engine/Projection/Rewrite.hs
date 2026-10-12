@@ -1570,6 +1570,7 @@ rewriteReplacementEffect pairs effect = case effect of
           TurnUpR.rewrite = case TurnUpR.rewrite r of
             TurnUpRewrite.WithCounters w -> TurnUpRewrite.WithCounters (rewriteWithCounters pairs w)
             TurnUpRewrite.MayAttachTo f -> TurnUpRewrite.MayAttachTo (Filter.rewrite pairs f)
+            TurnUpRewrite.AsCopy c -> TurnUpRewrite.AsCopy (rewriteAsCopy pairs c)
         }
   -- A PhasePattern is a PhaseSelector and a baked seat (CR 614.1b / 500.11), both
   -- rules categories rather than printed words.
@@ -1678,27 +1679,32 @@ rewriteCopyException pairs exception = case exception of
   -- A quoted ability is card text like any other, so its subtype words move.
   CopyException.GainAbility granted -> CopyException.GainAbility (rewriteGrantedAbility pairs granted)
 
+-- CR 612.1 through a copy rewrite, on either event class it rides (CR 614.1c,
+-- 614.1e). The "which permanents" clause names a word, and so does CR 707.9a's
+-- gained ability -- a keyword, and a keyword may carry one
+-- (rewriteCopyException). CR 707.9e's additional counters take
+-- rewriteWithCounters' descent, the same one the CR 614.1c row gets: the amount
+-- is a Quantity and the kind may be a whole keyword. A REGRESSION FENCE, the
+-- Create arm's reason: Altered Ego's amount is CR 601.2b's X and its kind is
+-- +1/+1, neither of which holds a word, so neutralizing this half leaves the
+-- suite green. The `tapped` flag and `zone` are passed through and hold no word
+-- (Vesuva). CR 707.9g's linked trigger takes rewriteEffect's descent, and the
+-- duration rewriteDuration's.
+rewriteAsCopy :: [(Subtype.Type.Subtype, Subtype.Type.Subtype)] -> AsCopy.AsCopy (GrantedAbility.GrantedAbility Card.Type.Card) (Effect.Effect Card.Type.Card (GrantedAbility.GrantedAbility Card.Type.Card)) -> AsCopy.AsCopy (GrantedAbility.GrantedAbility Card.Type.Card) (Effect.Effect Card.Type.Card (GrantedAbility.GrantedAbility Card.Type.Card))
+rewriteAsCopy pairs c =
+  c
+    { AsCopy.eligible = Filter.rewrite pairs (AsCopy.eligible c),
+      AsCopy.exceptions = fmap (rewriteCopyException pairs) (AsCopy.exceptions c),
+      AsCopy.counters = fmap (rewriteWithCounters pairs) (AsCopy.counters c),
+      AsCopy.whenYouDo = fmap (rewriteEffect pairs) (AsCopy.whenYouDo c),
+      AsCopy.duration = fmap (rewriteDuration pairs) (AsCopy.duration c)
+    }
+
 -- CR 612.1 through what a CR 614.1c/614.1d entry replacement does. Exhaustive for
 -- rewriteReplacementEffect's reason.
 rewriteEntryRewrite :: [(Subtype.Type.Subtype, Subtype.Type.Subtype)] -> EntryRewrite.EntryRewrite (GrantedAbility.GrantedAbility Card.Type.Card) (Effect.Effect Card.Type.Card (GrantedAbility.GrantedAbility Card.Type.Card)) -> EntryRewrite.EntryRewrite (GrantedAbility.GrantedAbility Card.Type.Card) (Effect.Effect Card.Type.Card (GrantedAbility.GrantedAbility Card.Type.Card))
 rewriteEntryRewrite pairs rewrite = case rewrite of
-  -- The "which permanents" clause names a word, and so does CR 707.9a's gained
-  -- ability -- a keyword, and a keyword may carry one (rewriteCopyException).
-  -- CR 707.9e's additional counters take rewriteWithCounters' descent, the same
-  -- one the CR 614.1c row below gets: the amount is a Quantity and the kind may
-  -- be a whole keyword. A REGRESSION FENCE, the Create arm's reason: Altered
-  -- Ego's amount is CR 601.2b's X and its kind is +1/+1, neither of which holds
-  -- a word, so neutralizing this half leaves the suite green. The `tapped` flag
-  -- is the one field passed through, and holds no word (Vesuva). CR 707.9g's
-  -- linked trigger takes RunEffects' descent below.
-  EntryRewrite.AsCopy c ->
-    EntryRewrite.AsCopy
-      c
-        { AsCopy.eligible = Filter.rewrite pairs (AsCopy.eligible c),
-          AsCopy.exceptions = fmap (rewriteCopyException pairs) (AsCopy.exceptions c),
-          AsCopy.counters = fmap (rewriteWithCounters pairs) (AsCopy.counters c),
-          AsCopy.whenYouDo = fmap (rewriteEffect pairs) (AsCopy.whenYouDo c)
-        }
+  EntryRewrite.AsCopy c -> EntryRewrite.AsCopy (rewriteAsCopy pairs c)
   -- CR 702.14a's word again, this time inside a keyword an option grants.
   EntryRewrite.ChoiceOf os -> EntryRewrite.ChoiceOf (fmap (\o -> o {EntryOption.keywords = Set.map (Filter.rewriteKeyword pairs) (EntryOption.keywords o)}) os)
   -- The same word again, in an option a coin picks rather than a player. NO
@@ -2139,6 +2145,7 @@ rewriteDuration pairs duration = case duration of
   -- non-mana components hold are matched where the cost is paid.
   Duration.UntilPaid _ -> duration
   Duration.UntilUsed -> duration
+  Duration.UntilTurnedFaceDown -> duration
 
 -- CR 612.1 through the counters a CR 122.5 move carries: the count, and the
 -- kind wherever the CARD names one (MovedKinds.kindOf's three arms), since CR

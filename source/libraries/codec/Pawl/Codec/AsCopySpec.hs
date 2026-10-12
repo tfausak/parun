@@ -9,6 +9,7 @@ import qualified Pawl.Types.AsCopy as AsCopy
 import qualified Pawl.Types.CardType as CardType
 import qualified Pawl.Types.CopyException as CopyException
 import qualified Pawl.Types.CounterKind as CounterKind
+import qualified Pawl.Types.Duration as Duration
 import qualified Pawl.Types.Filter as Filter
 import qualified Pawl.Types.Quantity as Quantity
 import qualified Pawl.Types.SetPowerToughness as SetPowerToughness
@@ -24,7 +25,7 @@ spec s = Spec.describe s "Pawl.Codec.AsCopy" $ do
     Common.assertCodec
       s
       (AsCopy.codec Common.text Common.text)
-      (AsCopy.MkAsCopy (Filter.HasCardType CardType.Creature) [] False Nothing Seq.empty Zone.Battlefield)
+      (AsCopy.MkAsCopy (Filter.HasCardType CardType.Creature) [] False Nothing Seq.empty Zone.Battlefield Nothing)
       " {\"eligible\":{\"type\":\"HasCardType\",\"value\":{\"type\":\"Creature\"}}} "
   -- CR 707.9d: Quicksilver Gargantuan's "except it's 7/7", beside the same
   -- eligible set.
@@ -32,14 +33,14 @@ spec s = Spec.describe s "Pawl.Codec.AsCopy" $ do
     Common.assertCodec
       s
       (AsCopy.codec Common.text Common.text)
-      (AsCopy.MkAsCopy (Filter.HasCardType CardType.Creature) [CopyException.SetPowerToughness (SetPowerToughness.MkSetPowerToughness 7 7)] False Nothing Seq.empty Zone.Battlefield)
+      (AsCopy.MkAsCopy (Filter.HasCardType CardType.Creature) [CopyException.SetPowerToughness (SetPowerToughness.MkSetPowerToughness 7 7)] False Nothing Seq.empty Zone.Battlefield Nothing)
       " {\"eligible\":{\"type\":\"HasCardType\",\"value\":{\"type\":\"Creature\"}},\"exceptions\":[{\"type\":\"SetPowerToughness\",\"value\":{\"power\":7,\"toughness\":7}}]} "
   -- CR 614.1d inside CR 614.1c: Vesuva's "enter tapped as a copy".
   Spec.it s "MkAsCopy, entering tapped (Vesuva)" $
     Common.assertCodec
       s
       (AsCopy.codec Common.text Common.text)
-      (AsCopy.MkAsCopy (Filter.HasCardType CardType.Land) [] True Nothing Seq.empty Zone.Battlefield)
+      (AsCopy.MkAsCopy (Filter.HasCardType CardType.Land) [] True Nothing Seq.empty Zone.Battlefield Nothing)
       " {\"eligible\":{\"type\":\"HasCardType\",\"value\":{\"type\":\"Land\"}},\"tapped\":true} "
   -- CR 707.9e: Altered Ego's "except it enters with X additional +1/+1 counters
   -- on it", the exception that is an additional effect. CR 107.3m's X is the
@@ -49,7 +50,7 @@ spec s = Spec.describe s "Pawl.Codec.AsCopy" $ do
     Common.assertCodec
       s
       (AsCopy.codec Common.text Common.text)
-      (AsCopy.MkAsCopy (Filter.HasCardType CardType.Creature) [] False (Just (WithCounters.one CounterKind.PlusOnePlusOne (Quantity.InSlot (SlotName.MkSlotName (Text.pack "X"))))) Seq.empty Zone.Battlefield)
+      (AsCopy.MkAsCopy (Filter.HasCardType CardType.Creature) [] False (Just (WithCounters.one CounterKind.PlusOnePlusOne (Quantity.InSlot (SlotName.MkSlotName (Text.pack "X"))))) Seq.empty Zone.Battlefield Nothing)
       " {\"eligible\":{\"type\":\"HasCardType\",\"value\":{\"type\":\"Creature\"}},\"counters\":[{\"kind\":{\"type\":\"PlusOnePlusOne\"},\"count\":{\"type\":\"InSlot\",\"value\":\"X\"}}]} "
   -- CR 707.9g: the linked "when you do" trigger's effects, Wall of Stolen
   -- Identity's; the effect codec is a parameter, so text stands in for it.
@@ -57,14 +58,21 @@ spec s = Spec.describe s "Pawl.Codec.AsCopy" $ do
     Common.assertCodec
       s
       (AsCopy.codec Common.text Common.text)
-      (AsCopy.MkAsCopy (Filter.HasCardType CardType.Creature) [] False Nothing (Seq.fromList [Text.pack "tap", Text.pack "forbid"]) Zone.Battlefield)
+      (AsCopy.MkAsCopy (Filter.HasCardType CardType.Creature) [] False Nothing (Seq.fromList [Text.pack "tap", Text.pack "forbid"]) Zone.Battlefield Nothing)
       " {\"eligible\":{\"type\":\"HasCardType\",\"value\":{\"type\":\"Creature\"}},\"whenYouDo\":[\"tap\",\"forbid\"]} "
   -- CR 707.5 over a graveyard: Superior Spider-Man's "any creature card in a
   -- graveyard".
+  -- CR 611.2a: Vesuvan Shapeshifter's "until this creature is turned face down".
+  Spec.it s "MkAsCopy, with a duration (Vesuvan Shapeshifter)" $
+    Common.assertCodec
+      s
+      (AsCopy.codec Common.text Common.text)
+      (AsCopy.MkAsCopy (Filter.HasCardType CardType.Creature) [] False Nothing Seq.empty Zone.Battlefield (Just Duration.UntilTurnedFaceDown))
+      " {\"eligible\":{\"type\":\"HasCardType\",\"value\":{\"type\":\"Creature\"}},\"duration\":{\"type\":\"UntilTurnedFaceDown\"}} "
   Spec.it s "MkAsCopy, from a graveyard (Superior Spider-Man)" $
     Common.assertCodec
       s
       (AsCopy.codec Common.text Common.text)
-      (AsCopy.MkAsCopy (Filter.HasCardType CardType.Creature) [] False Nothing Seq.empty Zone.Graveyard)
+      (AsCopy.MkAsCopy (Filter.HasCardType CardType.Creature) [] False Nothing Seq.empty Zone.Graveyard Nothing)
       " {\"eligible\":{\"type\":\"HasCardType\",\"value\":{\"type\":\"Creature\"}},\"zone\":{\"type\":\"Graveyard\"}} "
   Spec.it s "has a schema" $ Common.assertHasSchema s (AsCopy.codec Common.text Common.text)

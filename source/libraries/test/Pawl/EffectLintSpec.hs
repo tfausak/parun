@@ -54,6 +54,7 @@ import qualified Pawl.Types.Ante as Ante
 import qualified Pawl.Types.AnyNumberDiscard as AnyNumberDiscard
 import qualified Pawl.Types.AnyNumberMatching as AnyNumberMatching
 import qualified Pawl.Types.Arithmetic as Arithmetic
+import qualified Pawl.Types.AsCopy as AsCopy
 import qualified Pawl.Types.AttachAll as AttachAll
 import qualified Pawl.Types.AttachBound as AttachBound
 import qualified Pawl.Types.AttachTarget as AttachTarget
@@ -219,6 +220,7 @@ import qualified Pawl.Types.TriggeredAbility as TriggeredAbility
 import qualified Pawl.Types.TurnFaceDown as TurnFaceDown
 import qualified Pawl.Types.TurnUpProcedure as TurnUpProcedure
 import qualified Pawl.Types.TurnUpR as TurnUpR
+import qualified Pawl.Types.TurnUpRewrite as TurnUpRewrite
 import qualified Pawl.Types.TypeLine as TypeLine
 import qualified Pawl.Types.UntapR as UntapR
 import qualified Pawl.Types.UntapRewrite as UntapRewrite
@@ -816,6 +818,16 @@ turnUpRequiringOffends replacement = case replacement of
   ReplacementEffect.VillainousChoiceR {} -> False
   ReplacementEffect.AssembleR {} -> False
   ReplacementEffect.PhaseR _ -> False
+
+-- CR 614.1d and CR 707.9e are ENTRY riders -- "enters tapped", "enters with
+-- additional counters" -- so a copy made as a permanent turns face up (CR
+-- 614.1e) has nowhere to put them, and Pawl.Engine.Event's TurnUpR AsCopy arm
+-- places neither. A turn-up copy row stating one is refused here rather than
+-- silently weakened. A wildcard is right: this asks one rewrite one question.
+turnUpCopyRiderOffends :: ReplacementEffect.ReplacementEffect Card.Type.Card (GrantedAbility.GrantedAbility Card.Type.Card) (Effect.Effect Card.Type.Card (GrantedAbility.GrantedAbility Card.Type.Card)) -> Bool
+turnUpCopyRiderOffends replacement = case replacement of
+  ReplacementEffect.TurnUpR (TurnUpR.MkTurnUpR _ _ _ (TurnUpRewrite.AsCopy asCopy)) -> AsCopy.tapped asCopy || Maybe.isJust (AsCopy.counters asCopy)
+  _ -> False
 
 -- isPhaseR's twin: did the sweep above have anything to look at? A wildcard for
 -- the same reason.
@@ -2873,6 +2885,22 @@ effectLintSpec s registry = Spec.describe s "Lint" $ do
         baked = card {Face.replacementEffects = fmap (\pr -> pr {PrintedReplacement.effect = bake (PrintedReplacement.effect pr)}) (Face.replacementEffects card)}
     Spec.assertBool s (not (any turnUpRequiringOffends (cardReplacementEffects card))) "the real Bubble Smuggler names no procedure and is accepted"
     Spec.assertBool s (any turnUpRequiringOffends (cardReplacementEffects baked)) "and the same card naming CR 702.37e's is rejected"
+  -- turnUpCopyRiderOffends over the pool, and its rejecting direction against
+  -- Vesuvan Shapeshifter with Vesuva's `tapped` baked into its turn-up row,
+  -- the pair above's shape.
+  Spec.it s "no turn-up copy states an entry rider (CR 614.1d, 707.9e)" $ do
+    ps <- S.allPrintings s
+    vesuvan <- S.printingOf s registry "Vesuvan Shapeshifter"
+    let writes p = anyFace (any p . cardReplacementEffects) . Printing.card
+        card = S.combinedFace vesuvan
+        bake replacement = case replacement of
+          ReplacementEffect.TurnUpR (TurnUpR.MkTurnUpR m r c (TurnUpRewrite.AsCopy asCopy)) ->
+            ReplacementEffect.TurnUpR (TurnUpR.MkTurnUpR m r c (TurnUpRewrite.AsCopy asCopy {AsCopy.tapped = True}))
+          other -> other
+        baked = card {Face.replacementEffects = fmap (\pr -> pr {PrintedReplacement.effect = bake (PrintedReplacement.effect pr)}) (Face.replacementEffects card)}
+    Spec.assertEqWith s "no printing states one" (fmap (S.nameOf . Printing.card) (filter (writes turnUpCopyRiderOffends) ps)) []
+    Spec.assertBool s (not (any turnUpCopyRiderOffends (cardReplacementEffects card))) "the real Vesuvan Shapeshifter states none and is accepted"
+    Spec.assertBool s (any turnUpCopyRiderOffends (cardReplacementEffects baked)) "and the same card entering tapped is rejected"
   -- The sibling of the lint above, for the OTHER PlayerId the engine bakes and
   -- the codec accepts. See phasePatternOffends for why a card cannot name a
   -- player, and for why this is a lint rather than a type split (#437).

@@ -41,6 +41,7 @@ import qualified Pawl.Spec as Spec
 import qualified Pawl.Support as S
 import qualified Pawl.Types.Action as A
 import qualified Pawl.Types.ActivatedAbility as ActivatedAbility
+import qualified Pawl.Types.ActiveCopy as ActiveCopy
 import qualified Pawl.Types.ActiveReplacement as ActiveReplacement
 import qualified Pawl.Types.Affected as Affected
 import qualified Pawl.Types.AffectedPlayers as AffectedPlayers
@@ -448,6 +449,22 @@ conditionalSpec s registry = Spec.describe s "Conditional" $ do
     let (_, _, gs) = board piker warMammoth
         (changed, _) = Engine.runGamePure S.identityAnswer gs Expiry.sweepConditional
     Spec.assertBool s (not changed) "no change"
+  -- A pair of boards differing only in whether the copy row's source still
+  -- exists. Pawl.Engine.Interchangeable reads every stored row's timestamp, so
+  -- a row that can never end again must not outlive its source (CR 400.7).
+  Spec.it s "CR 611.2a a copy lasting until its source turns face down is dropped once that source is gone" $ do
+    piker <- S.printingOf s registry "Goblin Piker"
+    warMammoth <- S.printingOf s registry "War Mammoth"
+    let (srcId, targetId, gs) = board piker warMammoth
+        (ts, gs1) = Game.freshTimestamp gs
+        stored = gs1 {GameState.copyEffects = [ActiveCopy.MkActiveCopy srcId ts Expiry.Type.WhenTurnedFaceDown (Set.singleton srcId) (Projection.project targetId gs)]}
+        gone = S.runPure S.identityAnswer stored (Event.destroy Regenerability.Regenerable [srcId])
+        (keptChanged, kept) = Engine.runGamePure S.identityAnswer stored Expiry.sweepConditional
+        (goneChanged, swept) = Engine.runGamePure S.identityAnswer gone Expiry.sweepConditional
+    Spec.assertEqWith s "the source gone, the row is dropped" (length (GameState.copyEffects swept)) 0
+    Spec.assertBool s goneChanged "and the sweep reports it"
+    Spec.assertEqWith s "the source standing, the row stays" (length (GameState.copyEffects kept)) 1
+    Spec.assertBool s (not keptChanged) "and the sweep reports nothing"
   Spec.it s "CR 704.3 settleForPriority runs the sweep" $ do
     piker <- S.printingOf s registry "Goblin Piker"
     warMammoth <- S.printingOf s registry "War Mammoth"

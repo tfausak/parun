@@ -187,6 +187,9 @@ arm targets controller source duration gs = case duration of
   -- axes, so Pawl.EffectLintSpec refuses the duration on every other carrier
   -- and axis.
   Duration.UntilUsed -> Just Expiry.WhenUsed
+  -- CR 611.2a / 701.27b: nothing to bake; the source is the row's own, and
+  -- Pawl.Engine.Resolve.Effect's TurnFaceDown arm sweeps the moment that ends it.
+  Duration.UntilTurnedFaceDown -> Just Expiry.WhenTurnedFaceDown
 
 -- The ONE seat a Duration.UntilEndOfNextTurnOf or DuringNextTurnOf reference
 -- names, sampled as the window begins. One stored row names one turn, so a
@@ -238,6 +241,7 @@ perSeat duration = case duration of
   Duration.UntilEndOfCombatOnYourNextTurn -> Nothing
   Duration.UntilPaid _ -> Nothing
   Duration.UntilUsed -> Nothing
+  Duration.UntilTurnedFaceDown -> Nothing
 
 -- Does a stored effect under this duration FOLLOW its objects across a zone
 -- change? CR 400.7's default is no -- the object that arrives is a new object
@@ -286,6 +290,7 @@ begun gs expiry = case expiry of
   Expiry.AtEndOfCombatOn _ -> True
   Expiry.WhenPaid _ -> True
   Expiry.WhenUsed -> True
+  Expiry.WhenTurnedFaceDown -> True
 
 -- CR 601.3: may this player use this object's exile permission right now? It
 -- names them, its duration's window has begun (`begun`), and its own condition
@@ -322,6 +327,9 @@ data Moment
     PaidFor ObjectId
   | -- | CR 611.2a: the effect was exercised (Quicken, Scout's Warning).
     Used
+  | -- | CR 701.27b: this object was turned face down. Ends the effects it is
+    -- the source of, PaidFor's grain.
+    TurnedFaceDown ObjectId
   deriving (Eq, Show)
 
 -- CR 611.2: does the expiry a row from `source` stores end at this moment? The
@@ -377,6 +385,12 @@ endsAt gs moment source expiry = case expiry of
   -- CR 611.2a: ended by its use (Pawl.Engine.PlayerEffect.spentGrants), and at
   -- cleanup, since every printed producer also says "this turn".
   Expiry.WhenUsed -> moment == Used || moment == Cleanup
+  -- CR 611.2a / 701.27b: ended by its source turning face down. A source that
+  -- has left the game's objects (CR 400.7) can never turn face down, so the row
+  -- is dropped at the next settle instead: it covers only that old id, but
+  -- Pawl.Engine.Interchangeable still reads every row's timestamp.
+  Expiry.WhenTurnedFaceDown ->
+    moment == TurnedFaceDown source || (moment == Settle && Maybe.isNothing (Game.lookupObject source gs))
   where
     departedTurnOf p = moment == TurnOf p && List.notElem p (Game.stillPlaying gs)
     namedTurnEnds at afterTurn =

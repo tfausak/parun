@@ -907,6 +907,7 @@ durationConditions duration = case duration of
   -- exactly that split (activatedAbilityCounts against activatedAbilityFilters).
   Duration.UntilPaid _ -> []
   Duration.UntilUsed -> []
+  Duration.UntilTurnedFaceDown -> []
 
 -- Every Count reachable from a Duration, off the enumeration above.
 durationCounts :: Duration.Duration -> [Count.Type.Count Quantity.Type.Quantity]
@@ -2228,6 +2229,8 @@ replacementRewriteEffects replacement = case replacement of
   ReplacementEffect.ZoneChangeR {} -> []
   ReplacementEffect.DestructionR _ -> []
   ReplacementEffect.TokenR {} -> []
+  -- The same linked trigger, on the copy a turning face up makes.
+  ReplacementEffect.TurnUpR (TurnUpR.MkTurnUpR _ _ _ (TurnUpRewrite.AsCopy asCopy)) -> Foldable.toList (AsCopy.whenYouDo asCopy)
   ReplacementEffect.TurnUpR {} -> []
   ReplacementEffect.UntapR _ -> []
   ReplacementEffect.LifeLossR {} -> []
@@ -4250,6 +4253,7 @@ durationFilters duration =
           Duration.UntilEndOfCombat -> []
           Duration.UntilEndOfCombatOnYourNextTurn -> []
           Duration.UntilUsed -> []
+          Duration.UntilTurnedFaceDown -> []
       )
 
 -- A Modification reaches a Filter two ways: through its layer-7 quantities (a
@@ -5000,16 +5004,8 @@ entryRewriteFilters entryRewrite = case entryRewrite of
   EntryRewrite.EntersAttachedTo f -> [(EntryAttachDestination, f)]
   -- CR 707.5's eligible set -- Clone's "any creature", Copy Enchantment's "any
   -- enchantment" -- is a criterion over permanents on the battlefield, so it
-  -- belongs in this walk. So do CR 707.9's exceptions beside it, which reach a
-  -- Filter through a KEYWORD rather than by stating a criterion of their own:
-  -- CR 707.9a's gained ability is a Pawl.Types.Keyword, and CR 702.14c's
-  -- landwalk is one that holds a Filter. The CR 614.1d `tapped` flag beside them
-  -- holds none (Vesuva).
-  -- CR 707.9e's additional counters ride the same payload, and their kinds and
-  -- amounts hold card text on the WithCounters arm's axis below.
-  -- CR 707.9g's linked trigger is effects, walked as such by
-  -- replacementRewriteEffects.
-  EntryRewrite.AsCopy (AsCopy.MkAsCopy f exceptions _ counters _ _) -> unframed [f] <> concatMap copyExceptionFilters exceptions <> foldMap withCountersFilters counters
+  -- belongs in this walk; asCopyFilters says what else the payload holds.
+  EntryRewrite.AsCopy asCopy -> asCopyFilters asCopy
   -- CR 208.2b's options grant KEYWORDS, and a keyword may carry a Filter of its
   -- own (CR 702.14c's landwalk) -- the axis the AsCopy arm above reaches through
   -- CR 707.9a, on the payload beside it. Vacuous over `data/cards/` while Primal
@@ -5067,7 +5063,7 @@ entryRewriteFilters entryRewrite = case entryRewrite of
 -- writing Filter.CanHostSubject here would be stating a rule rather than its own
 -- text. That is why this position is tagged like any other rather than as an
 -- attach destination.
-turnUpRewriteFilters :: TurnUpRewrite.TurnUpRewrite -> [(Framing, Filter.Type.Filter Keyword.Keyword)]
+turnUpRewriteFilters :: TurnUpRewrite.TurnUpRewrite (GrantedAbility.GrantedAbility Card.Type.Card) (Effect.Effect Card.Type.Card (GrantedAbility.GrantedAbility Card.Type.Card)) -> [(Framing, Filter.Type.Filter Keyword.Keyword)]
 turnUpRewriteFilters turnUpRewrite = case turnUpRewrite of
   -- entryRewriteFilters' WithCounters arm, on the rewrite that shares the payload.
   -- Vacuous over `data/cards/` while Bubble Smuggler's four +1/+1 counters are the
@@ -5076,6 +5072,23 @@ turnUpRewriteFilters turnUpRewrite = case turnUpRewrite of
   -- two halves of one payload cannot be swept differently.
   TurnUpRewrite.WithCounters w -> withCountersFilters w
   TurnUpRewrite.MayAttachTo f -> unframed [f]
+  TurnUpRewrite.AsCopy asCopy -> asCopyFilters asCopy
+
+-- The Filters a copy rewrite carries, on either event class (CR 614.1c,
+-- 614.1e): the printed noun phrase after "a copy of", and CR 707.9's exceptions,
+-- which reach a Filter through a KEYWORD rather than by stating a criterion of
+-- their own -- CR 707.9a's gained ability is a Pawl.Types.Keyword, and CR
+-- 702.14c's landwalk is one that holds a Filter. The CR 614.1d `tapped` flag
+-- holds none (Vesuva). CR 707.9e's additional counters hold card text on the
+-- WithCounters arm's axis. CR 707.9g's linked trigger is effects, walked as
+-- such by replacementRewriteEffects. The duration's condition, if any, is
+-- durationFilters'.
+asCopyFilters :: AsCopy.AsCopy (GrantedAbility.GrantedAbility Card.Type.Card) (Effect.Effect Card.Type.Card (GrantedAbility.GrantedAbility Card.Type.Card)) -> [(Framing, Filter.Type.Filter Keyword.Keyword)]
+asCopyFilters asCopy =
+  unframed [AsCopy.eligible asCopy]
+    <> concatMap copyExceptionFilters (AsCopy.exceptions asCopy)
+    <> foldMap withCountersFilters (AsCopy.counters asCopy)
+    <> foldMap durationFilters (AsCopy.duration asCopy)
 
 -- CR 614.1c-e: four replacement patterns narrow by a Filter. CounterPattern.onWhat
 -- is "one or more counters would be put on a creature YOU control"; EntryR's
@@ -6312,10 +6325,12 @@ entryQuotedAbilities replacement = case replacement of
   ReplacementEffect.EntryR (EntryR.MkEntryR _ (EntryRewrite.EntersWith e)) -> fmap Modification.GainAbility (Foldable.toList (EntersWith.abilities e))
   _ -> []
 
--- The copy exceptions a replacement carries: CR 707.5's AsCopy is the one arm.
+-- The copy exceptions a replacement carries: the AsCopy payload, on either
+-- event class that carries it (CR 614.1c, 614.1e).
 replacementCopyExceptions :: ReplacementEffect.ReplacementEffect Card.Type.Card (GrantedAbility.GrantedAbility Card.Type.Card) (Effect.Effect Card.Type.Card (GrantedAbility.GrantedAbility Card.Type.Card)) -> [CopyException.CopyException (GrantedAbility.GrantedAbility Card.Type.Card)]
 replacementCopyExceptions replacement = case replacement of
   ReplacementEffect.EntryR (EntryR.MkEntryR _ (EntryRewrite.AsCopy asCopy)) -> AsCopy.exceptions asCopy
+  ReplacementEffect.TurnUpR (TurnUpR.MkTurnUpR _ _ _ (TurnUpRewrite.AsCopy asCopy)) -> AsCopy.exceptions asCopy
   _ -> []
 
 -- The enchant slots this face GRANTS rather than prints: CR 613.1f layer 6's

@@ -9,7 +9,7 @@ import qualified Pawl.Types.TurnUpRewrite as TurnUpRewrite
 -- | The payload of Pawl.Types.ReplacementEffect's TurnUpR arm (#1305): which
 -- permanents being turned face up are intercepted (CR 614.1e), and how the
 -- turning-over is rewritten.
-data TurnUpR = MkTurnUpR
+data TurnUpR ability effect = MkTurnUpR
   { matching :: Filter.Filter Keyword.Keyword,
     -- | WHICH of CR 708.7's procedures the row is conditional on, or Nothing for
     -- every road up. A RULE's condition and never a card's: CR 702.37b's second
@@ -34,6 +34,6 @@ data TurnUpR = MkTurnUpR
     -- 702.37b's "its MEGAMORPH cost", where CR 702.37e's procedure may pay a
     -- plain morph cost instead. Engine-baked, `requiring`'s posture.
     paying :: Maybe (Cost.Cost Keyword.Keyword),
-    rewrite :: TurnUpRewrite.TurnUpRewrite
+    rewrite :: TurnUpRewrite.TurnUpRewrite ability effect
   }
   deriving (Eq, Ord, Show)

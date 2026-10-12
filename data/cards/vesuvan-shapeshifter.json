@@ -1,0 +1,229 @@
+{
+  "faces": [
+    {
+      "keywords": [
+        {
+          "type": "Morph",
+          "value": {
+            "cost": {
+              "mana": [
+                {
+                  "type": "Generic",
+                  "value": 1
+                },
+                {
+                  "type": "OfType",
+                  "value": {
+                    "type": "Colored",
+                    "value": {
+                      "type": "Blue"
+                    }
+                  }
+                }
+              ]
+            },
+            "variant": {
+              "type": "Plain"
+            }
+          }
+        }
+      ],
+      "manaCost": [
+        {
+          "type": "Generic",
+          "value": 3
+        },
+        {
+          "type": "OfType",
+          "value": {
+            "type": "Colored",
+            "value": {
+              "type": "Blue"
+            }
+          }
+        },
+        {
+          "type": "OfType",
+          "value": {
+            "type": "Colored",
+            "value": {
+              "type": "Blue"
+            }
+          }
+        }
+      ],
+      "name": "Vesuvan Shapeshifter",
+      "oracleText": "As this creature enters or is turned face up, you may choose another creature on the battlefield. If you do, until this creature is turned face down, it becomes a copy of that creature, except it has \"At the beginning of your upkeep, you may turn this creature face down.\"\nMorph {1}{U}",
+      "power": {
+        "type": "Literal",
+        "value": 0
+      },
+      "replacementEffects": [
+        {
+          "effect": {
+            "type": "EntryR",
+            "value": {
+              "matching": {
+                "type": "IsSource"
+              },
+              "rewrite": {
+                "type": "AsCopy",
+                "value": {
+                  "duration": {
+                    "type": "UntilTurnedFaceDown"
+                  },
+                  "eligible": {
+                    "type": "HasCardType",
+                    "value": {
+                      "type": "Creature"
+                    }
+                  },
+                  "exceptions": [
+                    {
+                      "type": "GainAbility",
+                      "value": {
+                        "type": "Triggered",
+                        "value": {
+                          "condition": {
+                            "type": "StepBegins",
+                            "value": {
+                              "phase": {
+                                "type": "Beginning",
+                                "value": {
+                                  "type": "Upkeep"
+                                }
+                              },
+                              "scope": {
+                                "type": "ControllersTurn"
+                              }
+                            }
+                          },
+                          "modal": {
+                            "modes": [
+                              {
+                                "clauses": [
+                                  {
+                                    "effects": [
+                                      {
+                                        "type": "TurnFaceDown",
+                                        "value": {
+                                          "ref": {
+                                            "type": "EachMatching",
+                                            "value": {
+                                              "type": "IsSource"
+                                            }
+                                          }
+                                        }
+                                      }
+                                    ],
+                                    "optionality": {
+                                      "type": "Optional"
+                                    }
+                                  }
+                                ]
+                              }
+                            ]
+                          }
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          }
+        },
+        {
+          "effect": {
+            "type": "TurnUpR",
+            "value": {
+              "matching": {
+                "type": "IsSource"
+              },
+              "rewrite": {
+                "type": "AsCopy",
+                "value": {
+                  "duration": {
+                    "type": "UntilTurnedFaceDown"
+                  },
+                  "eligible": {
+                    "type": "HasCardType",
+                    "value": {
+                      "type": "Creature"
+                    }
+                  },
+                  "exceptions": [
+                    {
+                      "type": "GainAbility",
+                      "value": {
+                        "type": "Triggered",
+                        "value": {
+                          "condition": {
+                            "type": "StepBegins",
+                            "value": {
+                              "phase": {
+                                "type": "Beginning",
+                                "value": {
+                                  "type": "Upkeep"
+                                }
+                              },
+                              "scope": {
+                                "type": "ControllersTurn"
+                              }
+                            }
+                          },
+                          "modal": {
+                            "modes": [
+                              {
+                                "clauses": [
+                                  {
+                                    "effects": [
+                                      {
+                                        "type": "TurnFaceDown",
+                                        "value": {
+                                          "ref": {
+                                            "type": "EachMatching",
+                                            "value": {
+                                              "type": "IsSource"
+                                            }
+                                          }
+                                        }
+                                      }
+                                    ],
+                                    "optionality": {
+                                      "type": "Optional"
+                                    }
+                                  }
+                                ]
+                              }
+                            ]
+                          }
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          }
+        }
+      ],
+      "toughness": {
+        "type": "Literal",
+        "value": 0
+      },
+      "typeLine": {
+        "subtypes": [
+          {
+            "type": "Shapeshifter"
+          }
+        ],
+        "types": [
+          {
+            "type": "Creature"
+          }
+        ]
+      }
+    }
+  ]
+}

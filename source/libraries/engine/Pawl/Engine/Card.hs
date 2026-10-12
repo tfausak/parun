@@ -1377,7 +1377,7 @@ enteringFace card shown = case Card.layout card of
 -- Only CR 202.3b's FIRST sentence, which is about the object itself. Its second
 -- -- a copy of that back face has mana value 0 -- is a question about copying
 -- that this function has no way to ask, so `showsBackFace` below answers the
--- classification and Pawl.Engine.Event's AsCopy arm spends it on the snapshot.
+-- classification and Pawl.Engine.Event.becomeCopyAs spends it on the snapshot.
 manaCostFace :: Card.Card -> Face.Face Card.Card -> Face.Face Card.Card
 manaCostFace card live = case Card.layout card of
   Layout.Normal -> live
@@ -1421,7 +1421,7 @@ manaCostFace card live = case Card.layout card of
 -- that copy is itself a double-faced card), the mana value of the copy is 0."
 --
 -- The classification only. WHOSE mana value that makes 0 is a question about
--- copying, which is Pawl.Engine.Event's AsCopy arm -- the one place a copiable
+-- copying, which is Pawl.Engine.Event.becomeCopyAs -- the one place a copiable
 -- snapshot is stamped -- and this answers about one card and the face it shows,
 -- the way every other function in this module does.
 --

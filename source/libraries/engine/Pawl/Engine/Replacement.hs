@@ -33,6 +33,7 @@ import qualified Data.List as List
 import qualified Data.List.NonEmpty as NonEmpty
 import qualified Data.Map.Strict as Map
 import qualified Data.Maybe as Maybe
+import qualified Data.Ord as Ord
 import qualified Data.Sequence as Seq
 import Data.Set (Set)
 import qualified Data.Set as Set
@@ -54,6 +55,7 @@ import qualified Pawl.Engine.SourceContext as SourceContext
 import qualified Pawl.Engine.Turn as Turn
 import qualified Pawl.Extra.Int as Int
 import qualified Pawl.Extra.Natural as Natural
+import qualified Pawl.Types.ActiveCopy as ActiveCopy
 import qualified Pawl.Types.ActiveReplacement as ActiveReplacement
 import qualified Pawl.Types.AsCopy as AsCopy
 import Pawl.Types.CandidateId (CandidateId)
@@ -1915,8 +1917,9 @@ bucketOfEffect re = case re of
   ReplacementEffect.DestructionR _ -> ReplacementBucket.Other
   ReplacementEffect.CounterR {} -> ReplacementBucket.Other
   ReplacementEffect.TokenR {} -> ReplacementBucket.Other
-  -- CR 616.1a-d are all about entering the battlefield and copying; turning face
-  -- up is neither, so CR 616.1e.
+  -- CR 616.1a-d are all about entering the battlefield; turning face up is not,
+  -- so CR 616.1e -- for the copy rewrite too, since CR 616.1c's copy is one made
+  -- "as it enters the battlefield".
   ReplacementEffect.TurnUpR {} -> ReplacementBucket.Other
   -- CR 616.1a-d are all about entering the battlefield and copying; becoming
   -- untapped is neither, so CR 616.1e.
@@ -2131,6 +2134,9 @@ readsApplier re = case re of
   -- same question to the same player. The destination Filter is the effect's own
   -- field, inside `choose`'s comparison already.
   ReplacementEffect.TurnUpR (TurnUpR.MkTurnUpR _ _ _ (TurnUpRewrite.MayAttachTo _)) -> False
+  -- CR 707.4 / 109.5: the EntryR AsCopy arm's answer on the other event class --
+  -- the chooser is the turning permanent's controller, read off the event.
+  ReplacementEffect.TurnUpR (TurnUpR.MkTurnUpR _ _ _ (TurnUpRewrite.AsCopy _)) -> False
   -- CR 122.1d acts on the permanent becoming untapped and names no player -- CR
   -- 701.19a's answer one event class over, and for its reason.
   ReplacementEffect.UntapR _ -> False
@@ -2484,6 +2490,13 @@ affectedChooserOf gs event = case event of
 -- already there, which is what Primal Plasma's own Gatherer ruling requires -- a
 -- 1/6 with flying and defender is only reachable if the choice ADDS defender to
 -- a snapshot that already carries flying from the copy.
+--
+-- WHERE it is written follows layer 1a's reading: a stored copy row covering
+-- the object (Vesuvan Shapeshifter's copy, which can end) outranks the stamp, so
+-- the choice goes into the newest such row, carved out for this object alone,
+-- and ends with it (CR 611.2a). The stamp otherwise. data/scenarios/copy's
+-- "CR 616.2 a Vesuvan Shapeshifter copying a 2/2-flying Plasma" proves the row
+-- road.
 applyEntryOption :: ObjectId -> EntryOption.EntryOption -> GameState -> GameState
 applyEntryOption oid option gs =
   let base = Projection.copiableCharacteristics oid gs
@@ -2501,7 +2514,14 @@ applyEntryOption oid option gs =
             PC.keywords = Map.unionWith (+) (PC.keywords base) (Map.fromSet (const 1) (EntryOption.keywords option))
           }
       write o = o {Object.bindings = Binding.setCopy stamped (Object.bindings o)}
-   in gs {GameState.objects = Map.adjust write oid (GameState.objects gs)}
+      covering = List.sortOn (Ord.Down . ActiveCopy.timestamp) (filter (Set.member oid . ActiveCopy.objects) (GameState.copyEffects gs))
+   in case covering of
+        newest : _ ->
+          let others = filter (/= newest) (GameState.copyEffects gs)
+              rest = newest {ActiveCopy.objects = Set.delete oid (ActiveCopy.objects newest)}
+              alone = newest {ActiveCopy.objects = Set.singleton oid, ActiveCopy.snapshot = stamped}
+           in gs {GameState.copyEffects = alone : [rest | not (Set.null (ActiveCopy.objects rest))] <> others}
+        [] -> gs {GameState.objects = Map.adjust write oid (GameState.objects gs)}
 
 -- CR 707.9: fold a copy effect's "except ..." clauses into the snapshot the copy
 -- is about to be stamped with. Left fold, so a later clause overrides an earlier
@@ -2578,9 +2598,10 @@ legalCopyTargets batch filter_ zone self gs =
    in filter eligible domain
 
 -- CR 707.9g / 603.11: the triggered ability linked to a CR 707.5 entry
--- replacement ("When you do, ..."), as the reflexive entry Pawl.Engine.Event's
--- AsCopy arm arms where a copy was made. TriggerCondition.Reflexive, enlist's
--- posture for its own linked ability (Pawl.Engine.Keyword.enlistReflexive): the
+-- replacement ("When you do, ..."), as the reflexive entry
+-- Pawl.Engine.Event.becomeCopyAs arms where a copy was made.
+-- TriggerCondition.Reflexive, enlist's posture for its own linked ability
+-- (Pawl.Engine.Keyword.enlistReflexive): the
 -- entry's existence is the "you do", and it fires at the next gather (CR 603.3),
 -- after the permanent has entered. Nothing for a row that links none.
 linkedCopyTrigger :: AsCopy.AsCopy ability (Effect.Effect Card (GrantedAbility.GrantedAbility Card)) -> Maybe (TriggeredAbility.TriggeredAbility Card (GrantedAbility.GrantedAbility Card))

@@ -1,0 +1,50 @@
+{
+  "description": "CR 616.2 a Vesuvan Shapeshifter copying a 2/2-flying Plasma that picks 1/6 is 1/6 with flying and defender",
+  "note": "The Clone scenario's board (replacement/cr-616-2-a-clone-of-a-2-2-flying-plasma-...) with the Shapeshifter in the Clone's place. Its copy has a stated duration, so it is stored as a row that can end rather than stamped (CR 611.2a), and the copied Plasma's own entry choice must land in that row: 1/6 with flying (copied) and defender (its own choice). Turned face down at the next upkeep, the row and the choice in it end together, so the permanent is the nameless 2/2.",
+  "board": {
+    "active": "alice",
+    "step": "PrecombatMain",
+    "seats": [
+      {
+        "name": "alice",
+        "battlefield": [
+          { "card": "Island", "ready": true },
+          { "card": "Island", "ready": true },
+          { "card": "Island", "ready": true },
+          { "card": "Island", "ready": true },
+          { "card": "Island", "ready": true },
+          { "card": "Island", "ready": true },
+          { "card": "Island", "ready": true },
+          { "card": "Island", "ready": true },
+          { "card": "Island", "ready": true }
+        ],
+        "hand": [
+          { "card": "Primal Plasma", "label": "plasma" },
+          { "card": "Vesuvan Shapeshifter", "label": "vesuvan" }
+        ],
+        "library": [{ "card": "Island" }, { "card": "Island" }]
+      },
+      {
+        "name": "bob",
+        "library": [{ "card": "Island" }, { "card": "Island" }]
+      }
+    ]
+  },
+  "timeline": [
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": { "Answer": { "prompt": "ChooseEntryOption", "with": 1 } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": { "Cast": { "object": "$plasma", "mana": ["Island", "Island#2", "Island#3", "Island#4", null] } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass" },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": { "Cast": { "object": "$vesuvan", "faceDown": false, "mana": ["Island#5", "Island#6", "Island#7", "Island#8", "Island#9"] } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass" },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": { "ChooseCopyTarget": "Primal Plasma" } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": { "Answer": { "prompt": "ChooseEntryOption", "with": 2 } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "check": { "PowerToughness": { "object": "Vesuvan Shapeshifter", "power": 1, "toughness": 6 } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "check": { "Keywords": { "object": "Vesuvan Shapeshifter", "keyword": { "type": "Flying" }, "count": 1 } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "check": { "Keywords": { "object": "Vesuvan Shapeshifter", "keyword": { "type": "Defender" }, "count": 1 } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "check": { "PowerToughness": { "object": "Primal Plasma", "power": 2, "toughness": 2 } } },
+    { "turn": 3, "step": "Upkeep", "player": "alice", "do": "Pass" },
+    { "turn": 3, "step": "Upkeep", "player": "alice", "do": { "ChooseOptional": { "type": "Exercises" } }, "source": "Vesuvan Shapeshifter" },
+    { "turn": 3, "step": "Upkeep", "player": "alice", "check": { "PowerToughness": { "object": "Vesuvan Shapeshifter", "power": 2, "toughness": 2 } } },
+    { "turn": 3, "step": "Upkeep", "player": "alice", "check": { "Keywords": { "object": "Vesuvan Shapeshifter", "keyword": { "type": "Defender" }, "count": 0 } } }
+  ]
+}
