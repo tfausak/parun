@@ -321,6 +321,21 @@ spec s registry = Spec.describe s "Conspiracy" $ do
           Spec.assertEqWith s "carol reveals it as she leaves" (revealsIn (concede gs)) [(S.carol, agenda)]
           Spec.assertEqWith s "and had she turned it face up, there is nothing to reveal" (revealsIn (concede up)) []
 
+    -- CR 702.106e's second sentence: on two seats bob's concession ends the
+    -- game, and alice's face-down conspiracy is revealed with it.
+    Spec.it s "CR 702.106e a face-down conspiracy is revealed at the end of the game" $ do
+      mountain <- S.printingOf s registry "Mountain"
+      action <- S.printingOf s registry "Immediate Action"
+      let (gs, _) = started 0 ((S.alice, deckOf mountain [action]) NonEmpty.:| [(S.bob, deckOf mountain [])])
+          ended board = S.runPure S.identityAnswer board (Departure.leaveGame Departure.Type.Conceded S.bob)
+          revealsIn board = [(Revealed.player r, Revealed.card r) | GameEvent.Revealed r <- S.eventsOf board]
+      case commandCard S.alice gs of
+        Nothing -> Spec.assertFailure s "setup: Immediate Action is not alone in alice's command zone"
+        Just agenda -> do
+          let up = S.runPure S.identityAnswer gs (Conspiracy.turnFaceUp S.alice agenda)
+          Spec.assertEqWith s "alice reveals it as the game ends" (revealsIn (ended gs)) [(S.alice, agenda)]
+          Spec.assertEqWith s "and had she turned it face up, there is nothing to reveal" (revealsIn (ended up)) []
+
     -- CR 727.1 / 103.2e / 315.2: the new game places its conspiracies again,
     -- so hidden agenda turns the card face down and asks again -- even one alice
     -- turned face up in the restarted game, since nothing done there carries

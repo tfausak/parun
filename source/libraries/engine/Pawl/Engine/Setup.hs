@@ -956,6 +956,10 @@ resetPlayers settings seats lifeModifier players =
 -- they are held back.
 restartGame :: HandActionPerformer -> Set.Set ObjectId -> PlayerId -> Game ()
 restartGame perform exempt starter = do
+  -- CR 727.1 / 104.1: the restarted game ends, so CR 708.9's end-of-game reveal
+  -- is owed. A regression fence: the new game's log starts empty below, so no
+  -- reader sees it.
+  State.modify' Event.endOfGameReveals
   State.modify' $ \gs ->
     -- CR 727.1: the rebuilt seating order is the players who were still in the
     -- game, in their seats, rotated to begin with `starter` (CR 727.1a).

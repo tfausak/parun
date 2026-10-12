@@ -10,7 +10,6 @@
 -- WHAT IS NOT IMPLEMENTED:
 --
 --   * CR 702.106f's double agenda (#5014).
---   * CR 702.106e's reveal at the end of each game (#5015).
 module Pawl.Engine.Conspiracy where
 
 import qualified Control.Monad as Monad
