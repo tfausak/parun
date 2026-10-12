@@ -102,6 +102,7 @@ import qualified Pawl.Types.ControlPlayer as ControlPlayer
 import qualified Pawl.Types.ControlSides as ControlSides
 import qualified Pawl.Types.ControlSlots as ControlSlots
 import qualified Pawl.Types.ControllerRelation as ControllerRelation
+import qualified Pawl.Types.CopyClause as CopyClause
 import qualified Pawl.Types.CopyException as CopyException
 import qualified Pawl.Types.CopyOriginal as CopyOriginal
 import qualified Pawl.Types.CopyStackObject as CopyStackObject
@@ -651,7 +652,7 @@ armDelayedTriggerNames asking onAbility x = case x of
 
 asCopyNames :: Asking -> (ability -> Bool) -> (effect -> Bool) -> AsCopy.AsCopy ability effect -> Bool
 asCopyNames asking onAbility onEffect x = case x of
-  AsCopy.MkAsCopy eligible exceptions _tapped counters whenYouDo _zone duration -> filterNames asking eligible || any (copyExceptionNames asking onAbility) exceptions || any (withCountersNames asking) counters || any onEffect whenYouDo || any (durationNames asking) duration
+  AsCopy.MkAsCopy eligible clauses _tapped whenYouDo _zone duration -> filterNames asking eligible || any (copyClauseNames asking onAbility) clauses || any onEffect whenYouDo || any (durationNames asking) duration
 
 attachAllNames :: Asking -> AttachAll.AttachAll -> Bool
 attachAllNames asking x = case x of
@@ -895,6 +896,10 @@ controllerRelationNames asking x = case x of
   ControllerRelation.EnchantedPlayers -> False
   ControllerRelation.InSlot slotName -> slotNames asking slotName
   ControllerRelation.Among _playerId -> False
+
+copyClauseNames :: Asking -> (ability -> Bool) -> CopyClause.CopyClause ability -> Bool
+copyClauseNames asking onAbility x = case x of
+  CopyClause.MkCopyClause condition exceptions counters -> any (conditionNames asking) condition || any (copyExceptionNames asking onAbility) exceptions || any (withCountersNames asking) counters
 
 copyExceptionNames :: Asking -> (ability -> Bool) -> CopyException.CopyException ability -> Bool
 copyExceptionNames asking onAbility x = case x of

@@ -72,6 +72,7 @@ import qualified Pawl.Types.Condition as Condition.Type
 import qualified Pawl.Types.Conjure as Conjure
 import qualified Pawl.Types.ConjureCards as ConjureCards
 import qualified Pawl.Types.Connive as Connive
+import qualified Pawl.Types.CopyClause as CopyClause
 import qualified Pawl.Types.CopyException as CopyException
 import qualified Pawl.Types.CopyOriginal as CopyOriginal
 import qualified Pawl.Types.CopyStackObject as CopyStackObject
@@ -1688,17 +1689,23 @@ rewriteCopyException pairs exception = case exception of
 -- Create arm's reason: Altered Ego's amount is CR 601.2b's X and its kind is
 -- +1/+1, neither of which holds a word, so neutralizing this half leaves the
 -- suite green. The `tapped` flag and `zone` are passed through and hold no word
--- (Vesuva). CR 707.9g's linked trigger takes rewriteEffect's descent, and the
--- duration rewriteDuration's.
+-- (Vesuva). CR 707.9g's linked trigger takes rewriteEffect's descent, the
+-- duration rewriteDuration's, and the clauses rewriteCopyClause's.
 rewriteAsCopy :: [(Subtype.Type.Subtype, Subtype.Type.Subtype)] -> AsCopy.AsCopy (GrantedAbility.GrantedAbility Card.Type.Card) (Effect.Effect Card.Type.Card (GrantedAbility.GrantedAbility Card.Type.Card)) -> AsCopy.AsCopy (GrantedAbility.GrantedAbility Card.Type.Card) (Effect.Effect Card.Type.Card (GrantedAbility.GrantedAbility Card.Type.Card))
 rewriteAsCopy pairs c =
   c
     { AsCopy.eligible = Filter.rewrite pairs (AsCopy.eligible c),
-      AsCopy.exceptions = fmap (rewriteCopyException pairs) (AsCopy.exceptions c),
-      AsCopy.counters = fmap (rewriteWithCounters pairs) (AsCopy.counters c),
+      AsCopy.clauses = fmap (rewriteCopyClause pairs) (AsCopy.clauses c),
       AsCopy.whenYouDo = fmap (rewriteEffect pairs) (AsCopy.whenYouDo c),
       AsCopy.duration = fmap (rewriteDuration pairs) (AsCopy.duration c)
     }
+
+-- CR 612.1 through one clause of a copy exception: its CR 707.9f condition,
+-- its exceptions (rewriteCopyException) and its CR 707.9e counters
+-- (rewriteWithCounters).
+rewriteCopyClause :: [(Subtype.Type.Subtype, Subtype.Type.Subtype)] -> CopyClause.CopyClause (GrantedAbility.GrantedAbility Card.Type.Card) -> CopyClause.CopyClause (GrantedAbility.GrantedAbility Card.Type.Card)
+rewriteCopyClause pairs (CopyClause.MkCopyClause condition exceptions counters) =
+  CopyClause.MkCopyClause (fmap (rewriteCondition pairs) condition) (fmap (rewriteCopyException pairs) exceptions) (fmap (rewriteWithCounters pairs) counters)
 
 -- CR 612.1 through what a CR 614.1c/614.1d entry replacement does. Exhaustive for
 -- rewriteReplacementEffect's reason.

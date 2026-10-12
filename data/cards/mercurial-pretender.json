@@ -33,6 +33,70 @@
               "rewrite": {
                 "type": "AsCopy",
                 "value": {
+                  "clauses": [
+                    {
+                      "exceptions": [
+                        {
+                          "type": "GainAbility",
+                          "value": {
+                            "type": "Activated",
+                            "value": {
+                              "cost": {
+                                "mana": [
+                                  {
+                                    "type": "Generic",
+                                    "value": 2
+                                  },
+                                  {
+                                    "type": "OfType",
+                                    "value": {
+                                      "type": "Colored",
+                                      "value": {
+                                        "type": "Blue"
+                                      }
+                                    }
+                                  },
+                                  {
+                                    "type": "OfType",
+                                    "value": {
+                                      "type": "Colored",
+                                      "value": {
+                                        "type": "Blue"
+                                      }
+                                    }
+                                  }
+                                ]
+                              },
+                              "modal": {
+                                "modes": [
+                                  {
+                                    "clauses": [
+                                      {
+                                        "effects": [
+                                          {
+                                            "type": "MoveToZone",
+                                            "value": {
+                                              "ref": {
+                                                "type": "InSlot",
+                                                "value": "self"
+                                              },
+                                              "zone": {
+                                                "type": "Hand"
+                                              }
+                                            }
+                                          }
+                                        ]
+                                      }
+                                    ]
+                                  }
+                                ]
+                              }
+                            }
+                          }
+                        }
+                      ]
+                    }
+                  ],
                   "eligible": {
                     "type": "And",
                     "value": [
@@ -49,67 +113,7 @@
                         }
                       }
                     ]
-                  },
-                  "exceptions": [
-                    {
-                      "type": "GainAbility",
-                      "value": {
-                        "type": "Activated",
-                        "value": {
-                          "cost": {
-                            "mana": [
-                              {
-                                "type": "Generic",
-                                "value": 2
-                              },
-                              {
-                                "type": "OfType",
-                                "value": {
-                                  "type": "Colored",
-                                  "value": {
-                                    "type": "Blue"
-                                  }
-                                }
-                              },
-                              {
-                                "type": "OfType",
-                                "value": {
-                                  "type": "Colored",
-                                  "value": {
-                                    "type": "Blue"
-                                  }
-                                }
-                              }
-                            ]
-                          },
-                          "modal": {
-                            "modes": [
-                              {
-                                "clauses": [
-                                  {
-                                    "effects": [
-                                      {
-                                        "type": "MoveToZone",
-                                        "value": {
-                                          "ref": {
-                                            "type": "InSlot",
-                                            "value": "self"
-                                          },
-                                          "zone": {
-                                            "type": "Hand"
-                                          }
-                                        }
-                                      }
-                                    ]
-                                  }
-                                ]
-                              }
-                            ]
-                          }
-                        }
-                      }
-                    }
-                  ]
+                  }
                 }
               }
             }

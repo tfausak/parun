@@ -184,7 +184,7 @@ amass pid source resolving subtype n = do
   -- CR 701.47a, first: the token, and only if they control no Army creature.
   Monad.when (null (armiesOf pid gs0))
     . Monad.void
-    $ Event.createTokens pid (armyToken subtype) Nothing 1 TapState.Untapped Map.empty Nothing
+    $ Event.createTokens pid (armyToken subtype) Nothing 1 TapState.Untapped Map.empty Nothing Set.empty
   gs1 <- State.get
   -- CR 701.47b: an impossible choice is not a failed amass. Rule 701.47a is
   -- not a "may".

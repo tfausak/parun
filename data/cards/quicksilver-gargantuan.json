@@ -42,21 +42,25 @@
               "rewrite": {
                 "type": "AsCopy",
                 "value": {
+                  "clauses": [
+                    {
+                      "exceptions": [
+                        {
+                          "type": "SetPowerToughness",
+                          "value": {
+                            "power": 7,
+                            "toughness": 7
+                          }
+                        }
+                      ]
+                    }
+                  ],
                   "eligible": {
                     "type": "HasCardType",
                     "value": {
                       "type": "Creature"
                     }
-                  },
-                  "exceptions": [
-                    {
-                      "type": "SetPowerToughness",
-                      "value": {
-                        "power": 7,
-                        "toughness": 7
-                      }
-                    }
-                  ]
+                  }
                 }
               }
             }

@@ -49,6 +49,12 @@ spec s = Spec.describe s "Pawl.Codec.Designation" $ do
       Designation.codec
       Designation.Harnessed
       " {\"type\":\"Harnessed\"} "
+  Spec.it s "Embalmed" $
+    Common.assertCodec
+      s
+      Designation.codec
+      Designation.Embalmed
+      " {\"type\":\"Embalmed\"} "
   Spec.it s "Sprocket1" $
     Common.assertCodec
       s

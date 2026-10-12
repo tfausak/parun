@@ -1,0 +1,104 @@
+{
+  "description": "CR 707.9f Undercover Operative copying a creature you control enters with a shield counter",
+  "note": "alice's Operative copies her own Hill Giant, so the condition holds. The control file has bob control the Giant and nothing else differs.",
+  "board": {
+    "seats": [
+      {
+        "name": "alice",
+        "battlefield": [
+          {
+            "card": "Hill Giant",
+            "label": "giant"
+          },
+          {
+            "card": "Island",
+            "ready": true
+          },
+          {
+            "card": "Island",
+            "ready": true
+          },
+          {
+            "card": "Island",
+            "ready": true
+          },
+          {
+            "card": "Island",
+            "ready": true
+          }
+        ],
+        "hand": [
+          {
+            "card": "Undercover Operative",
+            "label": "operative"
+          }
+        ]
+      },
+      {
+        "name": "bob",
+        "battlefield": []
+      }
+    ],
+    "active": "alice",
+    "step": "PrecombatMain"
+  },
+  "timeline": [
+    {
+      "turn": 1,
+      "step": "PrecombatMain",
+      "player": "alice",
+      "do": {
+        "Cast": {
+          "object": "$operative",
+          "mana": [
+            "Island",
+            "Island#2",
+            "Island#3",
+            "Island#4"
+          ]
+        }
+      }
+    },
+    {
+      "turn": 1,
+      "step": "PrecombatMain",
+      "player": "alice",
+      "do": "Pass"
+    },
+    {
+      "turn": 1,
+      "step": "PrecombatMain",
+      "player": "alice",
+      "do": {
+        "ChooseCopyTarget": "$giant"
+      }
+    },
+    {
+      "turn": 1,
+      "step": "PrecombatMain",
+      "player": "alice",
+      "check": {
+        "Counters": {
+          "object": "Undercover Operative",
+          "kind": {
+            "type": "Shield"
+          },
+          "count": 1
+        }
+      }
+    },
+    {
+      "turn": 1,
+      "step": "PrecombatMain",
+      "player": "alice",
+      "check": {
+        "Names": {
+          "object": "Undercover Operative",
+          "names": [
+            "Hill Giant"
+          ]
+        }
+      }
+    }
+  ]
+}

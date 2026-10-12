@@ -387,6 +387,8 @@ library codec
     Pawl.Codec.ControlSlotsSpec
     Pawl.Codec.Convoking
     Pawl.Codec.ConvokingSpec
+    Pawl.Codec.CopyClause
+    Pawl.Codec.CopyClauseSpec
     Pawl.Codec.CopyException
     Pawl.Codec.CopyExceptionSpec
     Pawl.Codec.CopyOriginal
@@ -2206,6 +2208,7 @@ library types
     Pawl.Types.ControlSides
     Pawl.Types.ControlSlots
     Pawl.Types.Convoking
+    Pawl.Types.CopyClause
     Pawl.Types.CopyException
     Pawl.Types.CopyOriginal
     Pawl.Types.CopyStackObject

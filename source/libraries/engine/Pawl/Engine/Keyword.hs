@@ -1572,6 +1572,14 @@ embalm =
       CopyException.AddSubtypes (Set.singleton Subtype.Zombie)
     ]
 
+-- CR 702.128b: a token created by a resolving embalm ability is embalmed. The
+-- marks a token has from the keyword whose ability created it; no other rule of
+-- CR 702 names one (eternalize's CR 702.129 states no "eternalized").
+createdMarks :: Keyword -> Set Designation.Designation
+createdMarks keyword = case keyword of
+  Keyword.Embalm _ -> Set.singleton Designation.Embalmed
+  _ -> Set.empty
+
 -- CR 702.129a: eternalize's is black and 4/4 as well, in the rule's order.
 eternalize :: Cost Keyword -> ActivatedAbility Card (GrantedAbility.GrantedAbility Card)
 eternalize =

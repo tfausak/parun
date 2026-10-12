@@ -79,6 +79,9 @@ mayGain designation oid gs = case designation of
   Designation.Saddled -> True
   Designation.Prepared -> hasPrepareSpell oid gs
   Designation.Harnessed -> True
+  -- CR 702.128b: only the token's creation by a resolving embalm ability makes
+  -- it embalmed, so no instruction can mark a permanent afterwards.
+  Designation.Embalmed -> False
   Designation.AlphaSector -> True
   Designation.BetaSector -> True
   Designation.GammaSector -> True

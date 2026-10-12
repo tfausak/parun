@@ -1,11 +1,10 @@
 module Pawl.Types.AsCopy where
 
 import qualified Data.Sequence as Seq
-import qualified Pawl.Types.CopyException as CopyException
+import qualified Pawl.Types.CopyClause as CopyClause
 import qualified Pawl.Types.Duration as Duration
 import qualified Pawl.Types.Filter as Filter
 import qualified Pawl.Types.Keyword as Keyword
-import qualified Pawl.Types.WithCounters as WithCounters
 import qualified Pawl.Types.Zone as Zone
 
 -- | CR 707.5 / 614.1c: the payload of Pawl.Types.EntryRewrite's @AsCopy@ arm --
@@ -32,7 +31,10 @@ import qualified Pawl.Types.Zone as Zone
 -- self and no exception applies.
 data AsCopy ability effect = MkAsCopy
   { eligible :: Filter.Filter Keyword.Keyword,
-    exceptions :: [CopyException.CopyException ability],
+    -- | CR 707.9: the parts of the "except ..." clause, each applying always
+    -- or under a CR 707.9f condition (Pawl.Types.CopyClause). Empty for a plain
+    -- Clone.
+    clauses :: [CopyClause.CopyClause ability],
     -- | CR 614.1d inside CR 614.1c's sentence: Vesuva's "you may have this land
     -- enter TAPPED as a copy of any land on the battlefield". One replacement
     -- doing two things, so the status rides the rewrite rather than sitting in a
@@ -43,35 +45,6 @@ data AsCopy ability effect = MkAsCopy
     -- this may not be written into the snapshot. It goes onto the object through
     -- Pawl.Engine.Event.enterTapped, the same write EntryRewrite.Tapped makes.
     tapped :: Bool,
-    -- | CR 707.9e: the exception that is an ADDITIONAL EFFECT rather than a
-    -- modification of a characteristic -- Altered Ego's "except it enters with X
-    -- additional +1\/+1 counters on it". Nothing for a clause stating none.
-    --
-    -- Not a CopyException, for `tapped`'s reason one rule over: every arm of that
-    -- type writes a characteristic into the copiable snapshot (CR 707.9a, CR
-    -- 707.9b), and CR 122.1 makes a counter a marker placed ON an object rather
-    -- than one of its characteristics, so there is nothing to write. The same
-    -- sentence over CR 707.1's token mint is Littjara Mirrorlake's, and it is
-    -- CreateCopy's `riders` rather than one of its `exceptions` for exactly this
-    -- reason.
-    --
-    -- The WithCounters payload EntryRewrite's own CR 614.1c row carries, rather
-    -- than an EntryRiders record: the other riders are already said elsewhere or
-    -- cannot be said here -- `tapped` above is CR 614.1d's own field, and no
-    -- printed copy exception puts a permanent onto the battlefield attacking,
-    -- blocking, transformed or face down. So the narrow payload is the whole
-    -- sayable clause, and Pawl.Engine.Event's AsCopy arm places it through
-    -- addEnteringCounters (by way of addCopyExceptionCounters), the same funnel
-    -- the CR 614.1c row uses, so CR 614.16 sees it (Doubling Season).
-    --
-    -- Placed only where the copy is actually MADE, `exceptions`' reason: CR 707.9
-    -- makes the clause a modification of the copying process, so declining
-    -- Clone's "may" leaves the permanent its printed self and no counters.
-    --
-    -- CR 707.9e's second sentence takes them back when a later copy effect is
-    -- applied to the same entry: the scenario "CR 707.9e a copy effect applied
-    -- after Altered Ego's takes back its additional counters" proves it.
-    counters :: Maybe WithCounters.WithCounters,
     -- | CR 707.9g / 603.11: the triggered ability linked to this replacement,
     -- "When you do, ..." in the same paragraph (Wall of Stolen Identity). Empty
     -- for none. Its effects read the copied object under

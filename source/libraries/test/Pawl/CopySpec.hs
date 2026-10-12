@@ -140,6 +140,7 @@ import qualified Pawl.Types.Cost as Cost.Type
 import qualified Pawl.Types.CounterKind as CounterKind
 import qualified Pawl.Types.DamageEvent as DamageEvent
 import qualified Pawl.Types.DamageKind as DamageKind
+import qualified Pawl.Types.Designation as Designation
 import qualified Pawl.Types.EndingStep as EndingStep
 import qualified Pawl.Types.Face as Face
 import qualified Pawl.Types.Facing as Facing
@@ -2101,8 +2102,13 @@ graveyardCopyBoard card land lands twins =
 -- is matched on exactly one ability, so a board that offered none or two comes
 -- back unchanged and fails the token match rather than passing elsewhere.
 activateFromGraveyard :: ObjectId -> GameState.GameState -> GameState.GameState
-activateFromGraveyard gyId gs = case Activatable.abilitiesFor gyId gs of
-  [ability] -> S.runPure S.identityAnswer gs (Activate.activateAbility S.alice gyId ability >> Stack.resolveTop)
+activateFromGraveyard = activateFromGraveyardWith S.identityAnswer
+
+-- activateFromGraveyard under a given answerer, for a token whose own entry
+-- asks something (Vizier of Many Faces' copy choice).
+activateFromGraveyardWith :: (forall r. Prompt.Prompt r -> r) -> ObjectId -> GameState.GameState -> GameState.GameState
+activateFromGraveyardWith answer gyId gs = case Activatable.abilitiesFor gyId gs of
+  [ability] -> S.runPure answer gs (Activate.activateAbility S.alice gyId ability >> Stack.resolveTop)
   _ -> gs
 
 isActivationOf :: ObjectId -> A.Action -> Bool
@@ -2203,6 +2209,52 @@ graveyardTokenCopySpec s registry = Spec.describe s "Pawl.Engine.Copy" $ do
             Spec.assertEqWith s "and has mana value 0" (PC.manaValue (Projection.project cloneId cloned)) (Just 0)
           Nothing -> Spec.assertFailure s "the Clone should be on the battlefield"
       tokens -> Spec.assertFailure s ("expected exactly one token, got " <> show (length tokens))
+
+  -- CR 702.128b / 707.9f on Vizier of Many Faces {2}{U}{U}, "You may have this
+  -- creature enter as a copy of any creature on the battlefield, except if this
+  -- creature was embalmed, the token has no mana cost, it's white, and it's a
+  -- Zombie in addition to its other types. / Embalm {3}{U}{U}" (Oracle text and
+  -- rulings checked on Scryfall, 2026-10-12). The red {3}{R} Hill Giant is what
+  -- every Vizier copies, so each excepted characteristic differs from the
+  -- copied one.
+  --
+  -- The cast Vizier is the control: the same copy of the same Giant, its
+  -- condition failing. A Clone of the embalmed token is the copiable-values
+  -- tripwire (CR 707.9b): the excepted values ride along, the embalmed mark does
+  -- not (CR 109.3 makes it no characteristic).
+  Spec.it s "CR 707.9f Vizier of Many Faces' embalmed token is a white Zombie copy with no mana cost, a cast Vizier's copy is not, and a Clone of the token keeps the exceptions" $ do
+    island <- S.printingOf s registry "Island"
+    vizier <- S.printingOf s registry "Vizier of Many Faces"
+    giant <- S.printingOf s registry "Hill Giant"
+    clone <- S.printingOf s registry "Clone"
+    let (gyId, _, bare) = graveyardCopyBoard vizier island 13 0
+        (giantId, board) = S.addPermanent giant S.alice bare
+        embalmed = activateFromGraveyardWith (copyNamed giantId) gyId board
+        cast = castAndResolve (copyNamed giantId) vizier board
+        giantName = Set.singleton (CardName.MkCardName (Text.pack "Hill Giant"))
+        designationsOf oid gs = fmap Object.designations (Game.lookupObject oid gs)
+    case (tokensOnBattlefield embalmed, printedOnBattlefield "Vizier of Many Faces" cast) of
+      ([tokenId], [castId]) -> do
+        Spec.assertEqWith s "CR 707.9f the embalmed token's copy is white, not the Giant's red" (Projection.colorsOf tokenId embalmed) (Set.singleton Color.White)
+        Spec.assertEqWith s "CR 707.9f and has no mana cost" (PC.manaCost (Projection.project tokenId embalmed)) Nothing
+        Spec.assertEqWith s "CR 707.9f and is a Zombie in addition" (Projection.subtypesOf tokenId embalmed) (Set.fromList [Subtype.Giant, Subtype.Zombie])
+        Spec.assertEqWith s "CR 707.2 otherwise the Giant: its name" (PC.names (Projection.project tokenId embalmed)) giantName
+        Spec.assertEqWith s "CR 707.2 and its 3/3" (S.powerToughnessOf tokenId embalmed) (Just (3, 3))
+        Spec.assertEqWith s "CR 702.128b the token is embalmed" (designationsOf tokenId embalmed) (Just (Set.singleton Designation.Embalmed))
+        Spec.assertEqWith s "CR 707.9f a cast Vizier's copy keeps the Giant's red" (Projection.colorsOf castId cast) (Set.singleton Color.Red)
+        Spec.assertEqWith s "and its mana value 4" (PC.manaValue (Projection.project castId cast)) (Just 4)
+        Spec.assertEqWith s "and is no Zombie" (Projection.subtypesOf castId cast) (Set.singleton Subtype.Giant)
+        Spec.assertEqWith s "but it is the Giant" (PC.names (Projection.project castId cast)) giantName
+        Spec.assertEqWith s "and is not embalmed" (designationsOf castId cast) (Just Set.empty)
+        let cloned = castAndResolve (copyNamed tokenId) clone embalmed
+        case cloneOnBattlefield cloned of
+          Just cloneId -> do
+            Spec.assertEqWith s "CR 707.9b a Clone of the token is white" (Projection.colorsOf cloneId cloned) (Set.singleton Color.White)
+            Spec.assertEqWith s "CR 707.9b with no mana cost" (PC.manaCost (Projection.project cloneId cloned)) Nothing
+            Spec.assertEqWith s "CR 707.9b and a Zombie" (Projection.subtypesOf cloneId cloned) (Set.fromList [Subtype.Giant, Subtype.Zombie])
+            Spec.assertEqWith s "CR 109.3 but not embalmed" (designationsOf cloneId cloned) (Just Set.empty)
+          Nothing -> Spec.assertFailure s "the Clone should be on the battlefield"
+      (tokens, casts) -> Spec.assertFailure s ("expected one token and one cast Vizier, got " <> show (length tokens, length casts))
 
 -- CR 707.2's token copy entering tapped and attacking (CR 110.5b, CR 508.4), and
 -- named later in the same resolution (CR 603.7c): Flamerush Rider, "Whenever this

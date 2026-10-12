@@ -35,7 +35,7 @@ spec s = Spec.describe s "Pawl.Codec.TurnUpRewrite" $ do
     Common.assertCodec
       s
       (TurnUpRewrite.codec Common.text Common.text)
-      (TurnUpRewrite.AsCopy (AsCopy.MkAsCopy (Filter.HasCardType CardType.Creature) [] False Nothing Seq.empty Zone.Battlefield (Just Duration.UntilTurnedFaceDown)))
+      (TurnUpRewrite.AsCopy (AsCopy.MkAsCopy (Filter.HasCardType CardType.Creature) [] False Seq.empty Zone.Battlefield (Just Duration.UntilTurnedFaceDown)))
       " {\"type\":\"AsCopy\",\"value\":{\"eligible\":{\"type\":\"HasCardType\",\"value\":{\"type\":\"Creature\"}},\"duration\":{\"type\":\"UntilTurnedFaceDown\"}}} "
   Spec.it s "has a schema" $
     Common.assertHasSchema s (TurnUpRewrite.codec Common.text Common.text)

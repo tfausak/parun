@@ -11,6 +11,7 @@ import qualified Pawl.JsonCodec.Common as Common
 import qualified Pawl.Spec as Spec
 import qualified Pawl.Types.AsCopy as AsCopy
 import qualified Pawl.Types.CardType as CardType
+import qualified Pawl.Types.CopyClause as CopyClause
 import qualified Pawl.Types.CopyException as CopyException
 import qualified Pawl.Types.CounterKind as CounterKind
 import qualified Pawl.Types.Effect as Effect.Type
@@ -44,22 +45,22 @@ spec s = Spec.describe s "Pawl.Codec.EntryRewrite" $ do
     Common.assertCodec
       s
       (EntryRewrite.codec (GrantedAbility.codec Card.codec) (Effect.codec Card.codec (GrantedAbility.codec Card.codec)))
-      (EntryRewrite.AsCopy (AsCopy.MkAsCopy (Filter.HasCardType CardType.Creature) [] False Nothing Seq.empty Zone.Battlefield Nothing))
+      (EntryRewrite.AsCopy (AsCopy.MkAsCopy (Filter.HasCardType CardType.Creature) [] False Seq.empty Zone.Battlefield Nothing))
       " {\"type\":\"AsCopy\",\"value\":{\"eligible\":{\"type\":\"HasCardType\",\"value\":{\"type\":\"Creature\"}}}} "
   -- CR 707.9b / 707.9d: Quicksilver Gargantuan's "except it's 7/7".
   Spec.it s "AsCopy with an exception (Quicksilver Gargantuan)" $
     Common.assertCodec
       s
       (EntryRewrite.codec (GrantedAbility.codec Card.codec) (Effect.codec Card.codec (GrantedAbility.codec Card.codec)))
-      (EntryRewrite.AsCopy (AsCopy.MkAsCopy (Filter.HasCardType CardType.Creature) [CopyException.SetPowerToughness (SetPowerToughness.MkSetPowerToughness 7 7)] False Nothing Seq.empty Zone.Battlefield Nothing))
-      " {\"type\":\"AsCopy\",\"value\":{\"eligible\":{\"type\":\"HasCardType\",\"value\":{\"type\":\"Creature\"}},\"exceptions\":[{\"type\":\"SetPowerToughness\",\"value\":{\"power\":7,\"toughness\":7}}]}} "
+      (EntryRewrite.AsCopy (AsCopy.MkAsCopy (Filter.HasCardType CardType.Creature) [CopyClause.MkCopyClause Nothing [CopyException.SetPowerToughness (SetPowerToughness.MkSetPowerToughness 7 7)] Nothing] False Seq.empty Zone.Battlefield Nothing))
+      " {\"type\":\"AsCopy\",\"value\":{\"eligible\":{\"type\":\"HasCardType\",\"value\":{\"type\":\"Creature\"}},\"clauses\":[{\"exceptions\":[{\"type\":\"SetPowerToughness\",\"value\":{\"power\":7,\"toughness\":7}}]}]}} "
   -- The narrowed set the widening exists for (#1512): Copy Enchantment's "any
   -- enchantment", where Clone's is "any creature".
   Spec.it s "AsCopy with a narrower eligible set (Copy Enchantment)" $
     Common.assertCodec
       s
       (EntryRewrite.codec (GrantedAbility.codec Card.codec) (Effect.codec Card.codec (GrantedAbility.codec Card.codec)))
-      (EntryRewrite.AsCopy (AsCopy.MkAsCopy (Filter.HasCardType CardType.Enchantment) [] False Nothing Seq.empty Zone.Battlefield Nothing))
+      (EntryRewrite.AsCopy (AsCopy.MkAsCopy (Filter.HasCardType CardType.Enchantment) [] False Seq.empty Zone.Battlefield Nothing))
       " {\"type\":\"AsCopy\",\"value\":{\"eligible\":{\"type\":\"HasCardType\",\"value\":{\"type\":\"Enchantment\"}}}} "
   -- CR 208.2b: two P/T-and-keyword choices, enough to show the keyword union
   -- isn't lost on the wire.

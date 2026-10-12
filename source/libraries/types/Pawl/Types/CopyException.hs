@@ -15,10 +15,10 @@ import qualified Pawl.Types.Supertype as Supertype
 -- 707.9a's; Phyrexian Metamorph's "except it's an artifact in addition to its
 -- other types" is the carve-out CR 707.9d's last two sentences make.
 --
--- A LIST of these rides EntryRewrite.AsCopy, Pawl.Types.BecomeCopy and
--- Pawl.Types.CreateCopy rather than one: the printed clauses are joined by "and"
--- (Moritte of the Frost states three), and CR 707.9f reads "any other exceptions
--- that effect includes" -- plural, of one effect.
+-- A LIST of these rides EntryRewrite.AsCopy (one per Pawl.Types.CopyClause),
+-- Pawl.Types.BecomeCopy and Pawl.Types.CreateCopy rather than one: the printed
+-- clauses are joined by "and" (Moritte of the Frost states three), and CR 707.9f
+-- reads "any other exceptions that effect includes" -- plural, of one effect.
 --
 -- ALL THREE CARRIERS take the same list, since CR 707.9 is a rider on the copying
 -- process rather than on the door the copy arrives by: Copycrook's "except it
@@ -37,7 +37,7 @@ import qualified Pawl.Types.Supertype as Supertype
 -- CR 707.9e's exception -- one that is an ADDITIONAL EFFECT rather than a
 -- characteristic (Altered Ego's additional +1\/+1 counters) -- is not an arm here
 -- and cannot be, for the reason above: it writes no characteristic. It rides the
--- carriers instead, as AsCopy's `counters` and CreateCopy's `riders`.
+-- carriers instead, as CopyClause's `counters` and CreateCopy's `riders`.
 --
 -- Parametric in the ABILITY for GainAbility's payload: a quoted ability is a
 -- Pawl.Types.GrantedAbility, which reaches Pawl.Types.Effect and so this module,

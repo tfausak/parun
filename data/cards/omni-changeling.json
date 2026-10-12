@@ -50,22 +50,26 @@
               "rewrite": {
                 "type": "AsCopy",
                 "value": {
+                  "clauses": [
+                    {
+                      "exceptions": [
+                        {
+                          "type": "GainKeywords",
+                          "value": [
+                            {
+                              "type": "Changeling"
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  ],
                   "eligible": {
                     "type": "HasCardType",
                     "value": {
                       "type": "Creature"
                     }
-                  },
-                  "exceptions": [
-                    {
-                      "type": "GainKeywords",
-                      "value": [
-                        {
-                          "type": "Changeling"
-                        }
-                      ]
-                    }
-                  ]
+                  }
                 }
               }
             }

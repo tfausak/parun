@@ -170,6 +170,7 @@ import qualified Pawl.Codec.ControlSlotsSpec
 import qualified Pawl.Codec.ControllerBecomesTargetSpec
 import qualified Pawl.Codec.ControllerRelationSpec
 import qualified Pawl.Codec.ConvokingSpec
+import qualified Pawl.Codec.CopyClauseSpec
 import qualified Pawl.Codec.CopyExceptionSpec
 import qualified Pawl.Codec.CopyOriginalSpec
 import qualified Pawl.Codec.CopyStackObjectSpec
@@ -1036,6 +1037,7 @@ spec s registry = do
   Pawl.Codec.ControlSlotsSpec.spec s
   Pawl.Codec.ControllerBecomesTargetSpec.spec s
   Pawl.Codec.ControllerRelationSpec.spec s
+  Pawl.Codec.CopyClauseSpec.spec s
   Pawl.Codec.CopyExceptionSpec.spec s
   Pawl.Codec.CostBasisSpec.spec s
   Pawl.Codec.CostChoiceSpec.spec s

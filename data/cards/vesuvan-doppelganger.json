@@ -42,87 +42,91 @@
               "rewrite": {
                 "type": "AsCopy",
                 "value": {
+                  "clauses": [
+                    {
+                      "exceptions": [
+                        {
+                          "type": "DontCopyColors"
+                        },
+                        {
+                          "type": "GainAbility",
+                          "value": {
+                            "type": "Triggered",
+                            "value": {
+                              "condition": {
+                                "type": "StepBegins",
+                                "value": {
+                                  "phase": {
+                                    "type": "Beginning",
+                                    "value": {
+                                      "type": "Upkeep"
+                                    }
+                                  },
+                                  "scope": {
+                                    "type": "ControllersTurn"
+                                  }
+                                }
+                              },
+                              "modal": {
+                                "modes": [
+                                  {
+                                    "clauses": [
+                                      {
+                                        "effects": [
+                                          {
+                                            "type": "BecomeCopy",
+                                            "value": {
+                                              "exceptions": [
+                                                {
+                                                  "type": "DontCopyColors"
+                                                },
+                                                {
+                                                  "type": "GainThisAbility"
+                                                }
+                                              ],
+                                              "original": {
+                                                "type": "OfObject",
+                                                "value": {
+                                                  "type": "InSlot",
+                                                  "value": "copied"
+                                                }
+                                              },
+                                              "subject": {
+                                                "type": "EachMatching",
+                                                "value": {
+                                                  "type": "IsSource"
+                                                }
+                                              }
+                                            }
+                                          }
+                                        ],
+                                        "optionality": {
+                                          "type": "Optional"
+                                        }
+                                      }
+                                    ],
+                                    "targetSlots": {
+                                      "copied": {
+                                        "pool": {
+                                          "type": "Creatures"
+                                        }
+                                      }
+                                    }
+                                  }
+                                ]
+                              }
+                            }
+                          }
+                        }
+                      ]
+                    }
+                  ],
                   "eligible": {
                     "type": "HasCardType",
                     "value": {
                       "type": "Creature"
                     }
-                  },
-                  "exceptions": [
-                    {
-                      "type": "DontCopyColors"
-                    },
-                    {
-                      "type": "GainAbility",
-                      "value": {
-                        "type": "Triggered",
-                        "value": {
-                          "condition": {
-                            "type": "StepBegins",
-                            "value": {
-                              "phase": {
-                                "type": "Beginning",
-                                "value": {
-                                  "type": "Upkeep"
-                                }
-                              },
-                              "scope": {
-                                "type": "ControllersTurn"
-                              }
-                            }
-                          },
-                          "modal": {
-                            "modes": [
-                              {
-                                "clauses": [
-                                  {
-                                    "effects": [
-                                      {
-                                        "type": "BecomeCopy",
-                                        "value": {
-                                          "exceptions": [
-                                            {
-                                              "type": "DontCopyColors"
-                                            },
-                                            {
-                                              "type": "GainThisAbility"
-                                            }
-                                          ],
-                                          "original": {
-                                            "type": "OfObject",
-                                            "value": {
-                                              "type": "InSlot",
-                                              "value": "copied"
-                                            }
-                                          },
-                                          "subject": {
-                                            "type": "EachMatching",
-                                            "value": {
-                                              "type": "IsSource"
-                                            }
-                                          }
-                                        }
-                                      }
-                                    ],
-                                    "optionality": {
-                                      "type": "Optional"
-                                    }
-                                  }
-                                ],
-                                "targetSlots": {
-                                  "copied": {
-                                    "pool": {
-                                      "type": "Creatures"
-                                    }
-                                  }
-                                }
-                              }
-                            ]
-                          }
-                        }
-                      }
-                    }
-                  ]
+                  }
                 }
               }
             }

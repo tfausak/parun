@@ -30,6 +30,20 @@
               "rewrite": {
                 "type": "AsCopy",
                 "value": {
+                  "clauses": [
+                    {
+                      "exceptions": [
+                        {
+                          "type": "AddCardTypes",
+                          "value": [
+                            {
+                              "type": "Artifact"
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  ],
                   "eligible": {
                     "type": "Or",
                     "value": [
@@ -46,17 +60,7 @@
                         }
                       }
                     ]
-                  },
-                  "exceptions": [
-                    {
-                      "type": "AddCardTypes",
-                      "value": [
-                        {
-                          "type": "Artifact"
-                        }
-                      ]
-                    }
-                  ]
+                  }
                 }
               }
             }

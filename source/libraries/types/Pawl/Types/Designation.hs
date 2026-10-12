@@ -10,7 +10,9 @@ module Pawl.Types.Designation where
 -- (Pawl.Types.Object's `designations`, Effect.Designate,
 -- Quantity.HasDesignation, Filter.HasDesignation). CR 702.158b makes its three
 -- sectors permanent-only and not copiable too, so they join them, and so do the
--- Unstable FAQ's three sprockets, which only an assembled Contraption has.
+-- Unstable FAQ's three sprockets, which only an assembled Contraption has. CR
+-- 702.128b's embalmed is no characteristic (CR 109.3) and so not copiable
+-- either, and joins them on that ground.
 --
 -- WHERE THE MARK ENDS is the one axis they do not share, and it is a sweep
 -- rather than a field: all but saddled and the sectors last until the permanent
@@ -108,6 +110,8 @@ data Designation
   | -- | CR 701.64b: harnessed, which CR 701.64a's harness instruction sets and CR
     -- 702.186b's infinity ability is gated on.
     Harnessed
+  | -- | CR 702.128b: embalmed, set as a resolving embalm ability creates the token.
+    Embalmed
   | -- | CR 702.158b: the alpha sector, one of the three CR 704.5u assigns.
     AlphaSector
   | -- | CR 702.158b: the beta sector.

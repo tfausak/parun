@@ -20,6 +20,7 @@ import qualified Control.Monad as Monad
 import qualified Control.Monad.Trans.State.Strict as State
 import qualified Data.List as List
 import qualified Data.Map.Strict as Map
+import qualified Data.Set as Set
 import qualified Pawl.Engine.Event as Event
 import qualified Pawl.Engine.Game as Game
 import qualified Pawl.Engine.Projection as Projection
@@ -73,4 +74,4 @@ populate pid resolving = do
     -- the state from before the prompt would drop that.
     minting <- State.get
     Monad.forM_ (Game.cardOfWithLastKnown token minting) $ \card ->
-      Monad.void (Event.createTokens pid card (Just (Event.copiedSnapshotWithLastKnown token minting)) 1 TapState.Untapped Map.empty Nothing)
+      Monad.void (Event.createTokens pid card (Just (Event.copiedSnapshotWithLastKnown token minting)) 1 TapState.Untapped Map.empty Nothing Set.empty)

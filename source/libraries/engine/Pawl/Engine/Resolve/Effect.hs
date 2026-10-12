@@ -3189,6 +3189,13 @@ rearmStackExile subject copied obj gs =
       eligible = if Object.castFrom obj == Just Zone.Graveyard then keywords else Set.delete Keyword.Type.Aftermath keywords
    in Cast.installCastFromGraveyard (Projection.defaultControllerOf obj) eligible (Object.castUsing obj) subject gs {GameState.replacements = filter (not . armed) (GameState.replacements gs)}
 
+-- CR 702.128b: the marks a token has from being created by this resolving
+-- object, read off the keyword that minted it (ActivatedAbility.keyword).
+resolvingMarks :: ObjectId -> GameState -> Set.Set Designation.Designation
+resolvingMarks resolving gs = case thisAbilitySource resolving gs of
+  Just (Source.OfAbility minted) -> foldMap Keyword.createdMarks (ActivatedAbility.keyword (ActivatedAbilitySource.ability minted))
+  _ -> Set.empty
+
 -- The carrier CR 707.9a's "this ability" points at: the RESOLVING object's own
 -- Pawl.Types.Source, since rule 602.2a and rule 603.3 both put the ability's text
 -- on the stack object, so the words point at a value already in hand rather than
@@ -6962,7 +6969,7 @@ applyOneEffect runSubgame resolving source controller legal chosen effect = case
               -- CR 122.6's counters ride along through that rule's own door, so a
               -- counter replacement reaches them, in the counts freezeRiders
               -- settled above.
-              made <- Event.createTokens creating (bakeTokenCharacteristics (Quantity.evaluateFor viewOf context gs resolving source) card) Nothing (Integer.toNaturalSaturating n) (EntryRiders.tapped entry) (EntryRiders.counters frozen) mAttached
+              made <- Event.createTokens creating (bakeTokenCharacteristics (Quantity.evaluateFor viewOf context gs resolving source) card) Nothing (Integer.toNaturalSaturating n) (EntryRiders.tapped entry) (EntryRiders.counters frozen) mAttached (resolvingMarks resolving gs)
               -- CR 508.4: a creature put onto the battlefield attacking has its
               -- defending player chosen in Pawl.Engine.Combat, and CR 508.3a's
               -- attack triggers see nothing. After the entry loops rather than
@@ -7217,7 +7224,7 @@ applyOneEffect runSubgame resolving source controller legal chosen effect = case
                 -- Nothing for the subject's own copiable values: CR 707.9c's
                 -- retained original belongs to an object that already existed,
                 -- and a token minted by CR 707.1 did not.
-                made <- Event.createTokens controller card (Just (Replacement.applyCopyExceptions (thisAbilitySource resolving gs) Nothing exceptions (Event.copiedSnapshotWithLastKnown src gs))) (Integer.toNaturalSaturating n) (EntryRiders.tapped entry) (EntryRiders.counters frozen) Nothing
+                made <- Event.createTokens controller card (Just (Replacement.applyCopyExceptions (thisAbilitySource resolving gs) Nothing exceptions (Event.copiedSnapshotWithLastKnown src gs))) (Integer.toNaturalSaturating n) (EntryRiders.tapped entry) (EntryRiders.counters frozen) Nothing (resolvingMarks resolving gs)
                 -- CR 508.4, after the entry loop for Create's reason.
                 Monad.forM_ mAttack (\specified -> Monad.mapM_ (Combat.putOntoBattlefieldAttacking specified) made)
                 -- CR 509.4, the blocking twin one rule over, in the same place

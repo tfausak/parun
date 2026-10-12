@@ -42,39 +42,43 @@
               "rewrite": {
                 "type": "AsCopy",
                 "value": {
+                  "clauses": [
+                    {
+                      "exceptions": [
+                        {
+                          "type": "SetName",
+                          "value": "Superior Spider-Man"
+                        },
+                        {
+                          "type": "SetPowerToughness",
+                          "value": {
+                            "power": 4,
+                            "toughness": 4
+                          }
+                        },
+                        {
+                          "type": "AddSubtypes",
+                          "value": [
+                            {
+                              "type": "Hero"
+                            },
+                            {
+                              "type": "Human"
+                            },
+                            {
+                              "type": "Spider"
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  ],
                   "eligible": {
                     "type": "HasCardType",
                     "value": {
                       "type": "Creature"
                     }
                   },
-                  "exceptions": [
-                    {
-                      "type": "SetName",
-                      "value": "Superior Spider-Man"
-                    },
-                    {
-                      "type": "SetPowerToughness",
-                      "value": {
-                        "power": 4,
-                        "toughness": 4
-                      }
-                    },
-                    {
-                      "type": "AddSubtypes",
-                      "value": [
-                        {
-                          "type": "Hero"
-                        },
-                        {
-                          "type": "Human"
-                        },
-                        {
-                          "type": "Spider"
-                        }
-                      ]
-                    }
-                  ],
                   "whenYouDo": [
                     {
                       "type": "MoveToZone",
