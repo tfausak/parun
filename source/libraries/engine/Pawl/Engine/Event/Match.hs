@@ -308,6 +308,7 @@ countersRemovedFrom bearer wanted event = case event of
   GameEvent.Discarded {} -> Nothing
   GameEvent.Drew {} -> Nothing
   GameEvent.Revealed {} -> Nothing
+  GameEvent.Looked {} -> Nothing
   GameEvent.AttackerDeclared {} -> Nothing
   GameEvent.BecameBlocking {} -> Nothing
   GameEvent.BlocksDeclared {} -> Nothing
@@ -361,6 +362,7 @@ boundDeparts bindings destinations slot event = case event of
   GameEvent.Discarded {} -> False
   GameEvent.Drew {} -> False
   GameEvent.Revealed {} -> False
+  GameEvent.Looked {} -> False
   GameEvent.AttackerDeclared {} -> False
   GameEvent.BecameBlocking {} -> False
   GameEvent.BlocksDeclared {} -> False
@@ -467,6 +469,7 @@ matchesTriggerGiven bindings board gs bearer you cond event = case cond of
     GameEvent.Discarded {} -> False
     GameEvent.Drew {} -> False
     GameEvent.Revealed {} -> False
+    GameEvent.Looked {} -> False
     GameEvent.AttackerDeclared {} -> False
     GameEvent.BecameBlocking {} -> False
     GameEvent.BlocksDeclared {} -> False
@@ -550,6 +553,7 @@ matchesTriggerGiven bindings board gs bearer you cond event = case cond of
     GameEvent.Discarded {} -> False
     GameEvent.Drew {} -> False
     GameEvent.Revealed {} -> False
+    GameEvent.Looked {} -> False
     GameEvent.AttackerDeclared {} -> False
     GameEvent.BecameBlocking {} -> False
     GameEvent.BlocksDeclared {} -> False
@@ -623,6 +627,7 @@ matchesTriggerGiven bindings board gs bearer you cond event = case cond of
     GameEvent.Discarded {} -> False
     GameEvent.Drew {} -> False
     GameEvent.Revealed {} -> False
+    GameEvent.Looked {} -> False
     GameEvent.AttackerDeclared {} -> False
     GameEvent.BecameBlocking {} -> False
     GameEvent.BlocksDeclared {} -> False
@@ -694,6 +699,7 @@ matchesTriggerGiven bindings board gs bearer you cond event = case cond of
     GameEvent.Discarded {} -> False
     GameEvent.Drew {} -> False
     GameEvent.Revealed {} -> False
+    GameEvent.Looked {} -> False
     GameEvent.AttackerDeclared {} -> False
     GameEvent.BecameBlocking {} -> False
     GameEvent.BlocksDeclared {} -> False
@@ -773,6 +779,7 @@ matchesTriggerGiven bindings board gs bearer you cond event = case cond of
     GameEvent.Discarded {} -> False
     GameEvent.Drew {} -> False
     GameEvent.Revealed {} -> False
+    GameEvent.Looked {} -> False
     GameEvent.AttackerDeclared {} -> False
     GameEvent.BecameBlocking {} -> False
     GameEvent.BlocksDeclared {} -> False
@@ -853,6 +860,7 @@ matchesTriggerGiven bindings board gs bearer you cond event = case cond of
     GameEvent.Discarded {} -> False
     GameEvent.Drew {} -> False
     GameEvent.Revealed {} -> False
+    GameEvent.Looked {} -> False
     GameEvent.AttackerDeclared {} -> False
     GameEvent.BecameBlocking {} -> False
     GameEvent.BlocksDeclared {} -> False
@@ -922,6 +930,7 @@ matchesTriggerGiven bindings board gs bearer you cond event = case cond of
     GameEvent.Discarded {} -> False
     GameEvent.Drew {} -> False
     GameEvent.Revealed {} -> False
+    GameEvent.Looked {} -> False
     GameEvent.AttackerDeclared {} -> False
     GameEvent.BecameBlocking {} -> False
     GameEvent.BlocksDeclared {} -> False
@@ -1000,6 +1009,7 @@ matchesTriggerGiven bindings board gs bearer you cond event = case cond of
     GameEvent.Discarded {} -> False
     GameEvent.Drew {} -> False
     GameEvent.Revealed {} -> False
+    GameEvent.Looked {} -> False
     GameEvent.AttackerDeclared {} -> False
     GameEvent.BecameBlocking {} -> False
     GameEvent.BlocksDeclared {} -> False
@@ -1088,6 +1098,7 @@ matchesTriggerGiven bindings board gs bearer you cond event = case cond of
     GameEvent.Discarded {} -> False
     GameEvent.Drew {} -> False
     GameEvent.Revealed {} -> False
+    GameEvent.Looked {} -> False
     GameEvent.AttackerDeclared {} -> False
     GameEvent.BecameBlocking {} -> False
     GameEvent.BlocksDeclared {} -> False
@@ -1156,6 +1167,7 @@ matchesTriggerGiven bindings board gs bearer you cond event = case cond of
     GameEvent.Discarded {} -> False
     GameEvent.Drew {} -> False
     GameEvent.Revealed {} -> False
+    GameEvent.Looked {} -> False
     GameEvent.AttackerDeclared {} -> False
     GameEvent.BecameBlocking {} -> False
     GameEvent.BlocksDeclared {} -> False
@@ -1225,6 +1237,7 @@ matchesTriggerGiven bindings board gs bearer you cond event = case cond of
     GameEvent.Discarded {} -> False
     GameEvent.Drew {} -> False
     GameEvent.Revealed {} -> False
+    GameEvent.Looked {} -> False
     GameEvent.AttackerDeclared {} -> False
     GameEvent.BecameBlocking {} -> False
     GameEvent.BlocksDeclared {} -> False
@@ -1293,6 +1306,7 @@ matchesTriggerGiven bindings board gs bearer you cond event = case cond of
     GameEvent.Discarded {} -> False
     GameEvent.Drew {} -> False
     GameEvent.Revealed {} -> False
+    GameEvent.Looked {} -> False
     GameEvent.AttackerDeclared {} -> False
     GameEvent.BecameBlocking {} -> False
     GameEvent.BlocksDeclared {} -> False
@@ -1362,6 +1376,7 @@ matchesTriggerGiven bindings board gs bearer you cond event = case cond of
     GameEvent.Discarded {} -> False
     GameEvent.Drew {} -> False
     GameEvent.Revealed {} -> False
+    GameEvent.Looked {} -> False
     GameEvent.AttackerDeclared {} -> False
     GameEvent.BecameBlocking {} -> False
     GameEvent.BlocksDeclared {} -> False
@@ -1443,6 +1458,7 @@ matchesTriggerGiven bindings board gs bearer you cond event = case cond of
     GameEvent.BecameMonarch _ -> False
     GameEvent.TookInitiative _ -> False
     GameEvent.Revealed {} -> False
+    GameEvent.Looked {} -> False
     GameEvent.AttackerDeclared {} -> False
     GameEvent.BecameBlocking {} -> False
     GameEvent.BlocksDeclared {} -> False
@@ -1524,6 +1540,8 @@ matchesTriggerGiven bindings board gs bearer you cond event = case cond of
     GameEvent.Revealed (Revealed.MkRevealed _ _ RevealCause.Ordinary _) -> False
     GameEvent.Revealed (Revealed.MkRevealed _ _ RevealCause.LeavingFaceDown _) -> False
     GameEvent.Revealed (Revealed.MkRevealed _ _ RevealCause.FaceDownSpell _) -> False
+    -- CR 702.94a: a miracle card is revealed, never merely looked at.
+    GameEvent.Looked {} -> False
     GameEvent.Discarded {} -> False
     GameEvent.Drew {} -> False
     GameEvent.Moved {} -> False
@@ -1610,6 +1628,7 @@ matchesTriggerGiven bindings board gs bearer you cond event = case cond of
     GameEvent.BecameMonarch _ -> False
     GameEvent.TookInitiative _ -> False
     GameEvent.Revealed {} -> False
+    GameEvent.Looked {} -> False
     GameEvent.AttackerDeclared {} -> False
     GameEvent.BecameBlocking {} -> False
     GameEvent.BlocksDeclared {} -> False
@@ -1685,6 +1704,7 @@ matchesTriggerGiven bindings board gs bearer you cond event = case cond of
     GameEvent.BecameMonarch _ -> False
     GameEvent.TookInitiative _ -> False
     GameEvent.Revealed {} -> False
+    GameEvent.Looked {} -> False
     GameEvent.AttackerDeclared {} -> False
     GameEvent.BecameBlocking {} -> False
     GameEvent.BlocksDeclared {} -> False
@@ -1769,6 +1789,7 @@ matchesTriggerGiven bindings board gs bearer you cond event = case cond of
     GameEvent.BecameMonarch _ -> False
     GameEvent.TookInitiative _ -> False
     GameEvent.Revealed {} -> False
+    GameEvent.Looked {} -> False
     GameEvent.AttackerDeclared {} -> False
     GameEvent.BecameBlocking {} -> False
     GameEvent.BlocksDeclared {} -> False
@@ -1854,6 +1875,7 @@ matchesTriggerGiven bindings board gs bearer you cond event = case cond of
     GameEvent.BecameMonarch _ -> False
     GameEvent.TookInitiative _ -> False
     GameEvent.Revealed {} -> False
+    GameEvent.Looked {} -> False
     GameEvent.AttackerDeclared {} -> False
     GameEvent.BecameBlocking {} -> False
     GameEvent.BlocksDeclared {} -> False
@@ -1935,6 +1957,7 @@ matchesTriggerGiven bindings board gs bearer you cond event = case cond of
     GameEvent.BecameMonarch _ -> False
     GameEvent.TookInitiative _ -> False
     GameEvent.Revealed {} -> False
+    GameEvent.Looked {} -> False
     GameEvent.AttackerDeclared {} -> False
     GameEvent.BecameBlocking {} -> False
     GameEvent.BlocksDeclared {} -> False
@@ -2015,6 +2038,7 @@ matchesTriggerGiven bindings board gs bearer you cond event = case cond of
     GameEvent.Discarded {} -> False
     GameEvent.Drew {} -> False
     GameEvent.Revealed {} -> False
+    GameEvent.Looked {} -> False
     GameEvent.AttackerDeclared {} -> False
     GameEvent.BecameBlocking {} -> False
     GameEvent.BlocksDeclared {} -> False
@@ -2101,6 +2125,7 @@ matchesTriggerGiven bindings board gs bearer you cond event = case cond of
     GameEvent.Discarded {} -> False
     GameEvent.Drew {} -> False
     GameEvent.Revealed {} -> False
+    GameEvent.Looked {} -> False
     GameEvent.SpellCountered _ -> False
     GameEvent.AbilityCountered _ -> False
     GameEvent.HalfUnlocked {} -> False
@@ -2195,6 +2220,7 @@ matchesTriggerGiven bindings board gs bearer you cond event = case cond of
     GameEvent.Discarded {} -> False
     GameEvent.Drew {} -> False
     GameEvent.Revealed {} -> False
+    GameEvent.Looked {} -> False
     GameEvent.SpellCountered _ -> False
     GameEvent.AbilityCountered _ -> False
     GameEvent.HalfUnlocked {} -> False
@@ -2286,6 +2312,7 @@ matchesTriggerGiven bindings board gs bearer you cond event = case cond of
     GameEvent.Discarded {} -> False
     GameEvent.Drew {} -> False
     GameEvent.Revealed {} -> False
+    GameEvent.Looked {} -> False
     GameEvent.SpellCountered _ -> False
     GameEvent.AbilityCountered _ -> False
     GameEvent.HalfUnlocked {} -> False
@@ -2369,6 +2396,7 @@ matchesTriggerGiven bindings board gs bearer you cond event = case cond of
     GameEvent.Discarded {} -> False
     GameEvent.Drew {} -> False
     GameEvent.Revealed {} -> False
+    GameEvent.Looked {} -> False
     GameEvent.SpellCountered _ -> False
     GameEvent.AbilityCountered _ -> False
     GameEvent.HalfUnlocked {} -> False
@@ -2450,6 +2478,7 @@ matchesTriggerGiven bindings board gs bearer you cond event = case cond of
     GameEvent.Discarded {} -> False
     GameEvent.Drew {} -> False
     GameEvent.Revealed {} -> False
+    GameEvent.Looked {} -> False
     GameEvent.SpellCountered _ -> False
     GameEvent.AbilityCountered _ -> False
     GameEvent.HalfUnlocked {} -> False
@@ -2526,6 +2555,7 @@ matchesTriggerGiven bindings board gs bearer you cond event = case cond of
     GameEvent.Discarded {} -> False
     GameEvent.Drew {} -> False
     GameEvent.Revealed {} -> False
+    GameEvent.Looked {} -> False
     GameEvent.SpellCountered _ -> False
     GameEvent.AbilityCountered _ -> False
     GameEvent.HalfUnlocked {} -> False
@@ -2635,6 +2665,7 @@ matchesTriggerGiven bindings board gs bearer you cond event = case cond of
     GameEvent.Discarded {} -> False
     GameEvent.Drew {} -> False
     GameEvent.Revealed {} -> False
+    GameEvent.Looked {} -> False
     GameEvent.SpellCountered _ -> False
     GameEvent.AbilityCountered _ -> False
     GameEvent.HalfUnlocked {} -> False
@@ -2737,6 +2768,7 @@ matchesTriggerGiven bindings board gs bearer you cond event = case cond of
     GameEvent.Discarded {} -> False
     GameEvent.Drew {} -> False
     GameEvent.Revealed {} -> False
+    GameEvent.Looked {} -> False
     GameEvent.SpellCountered _ -> False
     GameEvent.AbilityCountered _ -> False
     GameEvent.HalfUnlocked {} -> False
@@ -2810,6 +2842,7 @@ matchesTriggerGiven bindings board gs bearer you cond event = case cond of
     GameEvent.Discarded {} -> False
     GameEvent.Drew {} -> False
     GameEvent.Revealed {} -> False
+    GameEvent.Looked {} -> False
     GameEvent.SpellCountered _ -> False
     GameEvent.AbilityCountered _ -> False
     GameEvent.HalfUnlocked {} -> False
@@ -2892,6 +2925,7 @@ matchesTriggerGiven bindings board gs bearer you cond event = case cond of
     GameEvent.Discarded {} -> False
     GameEvent.Drew {} -> False
     GameEvent.Revealed {} -> False
+    GameEvent.Looked {} -> False
     GameEvent.SpellCountered _ -> False
     GameEvent.AbilityCountered _ -> False
     GameEvent.HalfUnlocked {} -> False
@@ -2999,6 +3033,7 @@ matchesTriggerGiven bindings board gs bearer you cond event = case cond of
     GameEvent.Discarded {} -> False
     GameEvent.Drew {} -> False
     GameEvent.Revealed {} -> False
+    GameEvent.Looked {} -> False
     GameEvent.SpellCountered _ -> False
     GameEvent.AbilityCountered _ -> False
     GameEvent.HalfUnlocked {} -> False
@@ -3085,6 +3120,7 @@ matchesTriggerGiven bindings board gs bearer you cond event = case cond of
     GameEvent.Discarded {} -> False
     GameEvent.Drew {} -> False
     GameEvent.Revealed {} -> False
+    GameEvent.Looked {} -> False
     GameEvent.SpellCountered _ -> False
     GameEvent.AbilityCountered _ -> False
     GameEvent.HalfUnlocked {} -> False
@@ -3183,6 +3219,7 @@ matchesTriggerGiven bindings board gs bearer you cond event = case cond of
     GameEvent.Discarded {} -> False
     GameEvent.Drew {} -> False
     GameEvent.Revealed {} -> False
+    GameEvent.Looked {} -> False
     GameEvent.SpellCountered _ -> False
     GameEvent.AbilityCountered _ -> False
     GameEvent.HalfUnlocked {} -> False
@@ -3251,6 +3288,7 @@ matchesTriggerGiven bindings board gs bearer you cond event = case cond of
     GameEvent.Discarded {} -> False
     GameEvent.Drew {} -> False
     GameEvent.Revealed {} -> False
+    GameEvent.Looked {} -> False
     GameEvent.SpellCountered _ -> False
     GameEvent.AbilityCountered _ -> False
     GameEvent.HalfUnlocked {} -> False
@@ -3323,6 +3361,7 @@ matchesTriggerGiven bindings board gs bearer you cond event = case cond of
     GameEvent.Discarded {} -> False
     GameEvent.Drew {} -> False
     GameEvent.Revealed {} -> False
+    GameEvent.Looked {} -> False
     GameEvent.SpellCountered _ -> False
     GameEvent.AbilityCountered _ -> False
     GameEvent.HalfUnlocked {} -> False
@@ -3419,6 +3458,7 @@ matchesTriggerGiven bindings board gs bearer you cond event = case cond of
     GameEvent.Discarded {} -> False
     GameEvent.Drew {} -> False
     GameEvent.Revealed {} -> False
+    GameEvent.Looked {} -> False
     GameEvent.SpellCountered _ -> False
     GameEvent.AbilityCountered _ -> False
     GameEvent.HalfUnlocked {} -> False
@@ -3493,6 +3533,7 @@ matchesTriggerGiven bindings board gs bearer you cond event = case cond of
     GameEvent.Discarded {} -> False
     GameEvent.Drew {} -> False
     GameEvent.Revealed {} -> False
+    GameEvent.Looked {} -> False
     GameEvent.SpellCountered _ -> False
     GameEvent.AbilityCountered _ -> False
     GameEvent.HalfUnlocked {} -> False
@@ -3584,6 +3625,7 @@ matchesTriggerGiven bindings board gs bearer you cond event = case cond of
     GameEvent.Discarded {} -> False
     GameEvent.Drew {} -> False
     GameEvent.Revealed {} -> False
+    GameEvent.Looked {} -> False
     GameEvent.SpellCountered _ -> False
     GameEvent.AbilityCountered _ -> False
     GameEvent.HalfUnlocked {} -> False
@@ -3662,6 +3704,7 @@ matchesTriggerGiven bindings board gs bearer you cond event = case cond of
     GameEvent.Discarded {} -> False
     GameEvent.Drew {} -> False
     GameEvent.Revealed {} -> False
+    GameEvent.Looked {} -> False
     GameEvent.SpellCountered _ -> False
     GameEvent.AbilityCountered _ -> False
     GameEvent.HalfUnlocked {} -> False
@@ -3751,6 +3794,7 @@ matchesTriggerGiven bindings board gs bearer you cond event = case cond of
     GameEvent.Discarded {} -> False
     GameEvent.Drew {} -> False
     GameEvent.Revealed {} -> False
+    GameEvent.Looked {} -> False
     GameEvent.SpellCountered _ -> False
     GameEvent.AbilityCountered _ -> False
     GameEvent.HalfUnlocked {} -> False
@@ -3835,6 +3879,7 @@ matchesTriggerGiven bindings board gs bearer you cond event = case cond of
     GameEvent.Discarded {} -> False
     GameEvent.Drew {} -> False
     GameEvent.Revealed {} -> False
+    GameEvent.Looked {} -> False
     GameEvent.SpellCountered _ -> False
     GameEvent.AbilityCountered _ -> False
     GameEvent.HalfUnlocked {} -> False
@@ -3980,6 +4025,7 @@ matchesTriggerGiven bindings board gs bearer you cond event = case cond of
           GameEvent.Discarded {} -> False
           GameEvent.Drew {} -> False
           GameEvent.Revealed {} -> False
+          GameEvent.Looked {} -> False
           GameEvent.SpellCountered _ -> False
           GameEvent.AbilityCountered _ -> False
           GameEvent.HalfUnlocked {} -> False
@@ -4128,6 +4174,7 @@ matchesTriggerGiven bindings board gs bearer you cond event = case cond of
           GameEvent.Discarded {} -> False
           GameEvent.Drew {} -> False
           GameEvent.Revealed {} -> False
+          GameEvent.Looked {} -> False
           GameEvent.SpellCountered _ -> False
           GameEvent.AbilityCountered _ -> False
           GameEvent.HalfUnlocked {} -> False
@@ -4204,6 +4251,7 @@ matchesTriggerGiven bindings board gs bearer you cond event = case cond of
     GameEvent.Discarded {} -> False
     GameEvent.Drew {} -> False
     GameEvent.Revealed {} -> False
+    GameEvent.Looked {} -> False
     GameEvent.SpellCountered _ -> False
     GameEvent.AbilityCountered _ -> False
     GameEvent.HalfUnlocked {} -> False
@@ -4275,6 +4323,7 @@ matchesTriggerGiven bindings board gs bearer you cond event = case cond of
     GameEvent.Discarded {} -> False
     GameEvent.Drew {} -> False
     GameEvent.Revealed {} -> False
+    GameEvent.Looked {} -> False
     GameEvent.AttackerDeclared {} -> False
     GameEvent.BecameBlocking {} -> False
     GameEvent.BlocksDeclared {} -> False
@@ -4352,6 +4401,7 @@ matchesTriggerGiven bindings board gs bearer you cond event = case cond of
     GameEvent.Discarded {} -> False
     GameEvent.Drew {} -> False
     GameEvent.Revealed {} -> False
+    GameEvent.Looked {} -> False
     GameEvent.AttackerDeclared {} -> False
     GameEvent.BecameBlocking {} -> False
     GameEvent.BlocksDeclared {} -> False
@@ -4434,6 +4484,7 @@ matchesTriggerGiven bindings board gs bearer you cond event = case cond of
     GameEvent.Discarded {} -> False
     GameEvent.Drew {} -> False
     GameEvent.Revealed {} -> False
+    GameEvent.Looked {} -> False
     GameEvent.AttackerDeclared {} -> False
     GameEvent.BecameBlocking {} -> False
     GameEvent.BlocksDeclared {} -> False
@@ -4524,6 +4575,7 @@ matchesTriggerGiven bindings board gs bearer you cond event = case cond of
     GameEvent.Discarded {} -> False
     GameEvent.Drew {} -> False
     GameEvent.Revealed {} -> False
+    GameEvent.Looked {} -> False
     GameEvent.AttackerDeclared {} -> False
     GameEvent.BecameBlocking {} -> False
     GameEvent.BlocksDeclared {} -> False
@@ -4642,6 +4694,7 @@ matchesTriggerGiven bindings board gs bearer you cond event = case cond of
           GameEvent.Discarded {} -> False
           GameEvent.Drew {} -> False
           GameEvent.Revealed {} -> False
+          GameEvent.Looked {} -> False
           GameEvent.AttackerDeclared {} -> False
           GameEvent.BecameBlocking {} -> False
           GameEvent.BlocksDeclared {} -> False
@@ -4853,6 +4906,7 @@ matchesTriggerGiven bindings board gs bearer you cond event = case cond of
     GameEvent.Discarded {} -> False
     GameEvent.Drew {} -> False
     GameEvent.Revealed {} -> False
+    GameEvent.Looked {} -> False
     GameEvent.AttackerDeclared {} -> False
     GameEvent.BecameBlocking {} -> False
     GameEvent.BlocksDeclared {} -> False
@@ -4924,6 +4978,7 @@ matchesTriggerGiven bindings board gs bearer you cond event = case cond of
     GameEvent.Discarded {} -> False
     GameEvent.Drew {} -> False
     GameEvent.Revealed {} -> False
+    GameEvent.Looked {} -> False
     GameEvent.AttackerDeclared {} -> False
     GameEvent.BecameBlocking {} -> False
     GameEvent.BlocksDeclared {} -> False
@@ -5041,6 +5096,7 @@ matchesTriggerGiven bindings board gs bearer you cond event = case cond of
     GameEvent.Discarded {} -> False
     GameEvent.Drew {} -> False
     GameEvent.Revealed {} -> False
+    GameEvent.Looked {} -> False
     GameEvent.AttackerDeclared {} -> False
     GameEvent.BecameBlocking {} -> False
     GameEvent.BlocksDeclared {} -> False
@@ -5076,6 +5132,7 @@ matchesTriggerGiven bindings board gs bearer you cond event = case cond of
     GameEvent.Discarded {} -> False
     GameEvent.Drew {} -> False
     GameEvent.Revealed {} -> False
+    GameEvent.Looked {} -> False
     GameEvent.AttackerDeclared {} -> False
     GameEvent.BecameBlocking {} -> False
     GameEvent.BlocksDeclared {} -> False
@@ -5172,6 +5229,7 @@ matchesTriggerGiven bindings board gs bearer you cond event = case cond of
     GameEvent.Discarded {} -> False
     GameEvent.Drew {} -> False
     GameEvent.Revealed {} -> False
+    GameEvent.Looked {} -> False
     GameEvent.AttackerDeclared {} -> False
     GameEvent.BecameBlocking {} -> False
     GameEvent.BlocksDeclared {} -> False
@@ -5247,6 +5305,7 @@ matchesTriggerGiven bindings board gs bearer you cond event = case cond of
     GameEvent.Discarded {} -> False
     GameEvent.Drew {} -> False
     GameEvent.Revealed {} -> False
+    GameEvent.Looked {} -> False
     GameEvent.AttackerDeclared {} -> False
     GameEvent.BecameBlocking {} -> False
     GameEvent.BlocksDeclared {} -> False
@@ -5325,6 +5384,7 @@ matchesTriggerGiven bindings board gs bearer you cond event = case cond of
     GameEvent.Discarded {} -> False
     GameEvent.Drew {} -> False
     GameEvent.Revealed {} -> False
+    GameEvent.Looked {} -> False
     GameEvent.AttackerDeclared {} -> False
     GameEvent.BecameBlocking {} -> False
     GameEvent.BlocksDeclared {} -> False
@@ -5434,6 +5494,7 @@ matchesTriggerGiven bindings board gs bearer you cond event = case cond of
     GameEvent.Discarded {} -> False
     GameEvent.Drew {} -> False
     GameEvent.Revealed {} -> False
+    GameEvent.Looked {} -> False
     GameEvent.AttackerDeclared {} -> False
     GameEvent.BecameBlocking {} -> False
     GameEvent.BlocksDeclared {} -> False
@@ -5511,6 +5572,7 @@ matchesTriggerGiven bindings board gs bearer you cond event = case cond of
     GameEvent.Discarded {} -> False
     GameEvent.Drew {} -> False
     GameEvent.Revealed {} -> False
+    GameEvent.Looked {} -> False
     GameEvent.AttackerDeclared {} -> False
     GameEvent.BecameBlocking {} -> False
     GameEvent.BlocksDeclared {} -> False
@@ -5594,6 +5656,7 @@ matchesTriggerGiven bindings board gs bearer you cond event = case cond of
           GameEvent.Discarded {} -> False
           GameEvent.Drew {} -> False
           GameEvent.Revealed {} -> False
+          GameEvent.Looked {} -> False
           GameEvent.AttackerDeclared {} -> False
           GameEvent.BecameBlocking {} -> False
           GameEvent.BlocksDeclared {} -> False
@@ -5687,6 +5750,7 @@ matchesTriggerGiven bindings board gs bearer you cond event = case cond of
           GameEvent.Discarded {} -> False
           GameEvent.Drew {} -> False
           GameEvent.Revealed {} -> False
+          GameEvent.Looked {} -> False
           GameEvent.AttackerDeclared {} -> False
           GameEvent.BecameBlocking {} -> False
           GameEvent.BlocksDeclared {} -> False
@@ -5801,6 +5865,7 @@ matchesTriggerGiven bindings board gs bearer you cond event = case cond of
           GameEvent.Discarded {} -> False
           GameEvent.Drew {} -> False
           GameEvent.Revealed {} -> False
+          GameEvent.Looked {} -> False
           GameEvent.AttackerDeclared {} -> False
           GameEvent.BecameBlocking {} -> False
           GameEvent.BlocksDeclared {} -> False
@@ -5881,6 +5946,7 @@ matchesTriggerGiven bindings board gs bearer you cond event = case cond of
           GameEvent.Discarded {} -> False
           GameEvent.Drew {} -> False
           GameEvent.Revealed {} -> False
+          GameEvent.Looked {} -> False
           GameEvent.AttackerDeclared {} -> False
           GameEvent.BecameBlocking {} -> False
           GameEvent.BlocksDeclared {} -> False
@@ -5963,6 +6029,7 @@ matchesTriggerGiven bindings board gs bearer you cond event = case cond of
     GameEvent.Discarded {} -> False
     GameEvent.Drew {} -> False
     GameEvent.Revealed {} -> False
+    GameEvent.Looked {} -> False
     GameEvent.AttackerDeclared {} -> False
     GameEvent.BecameBlocking {} -> False
     GameEvent.BlocksDeclared {} -> False
@@ -6042,6 +6109,7 @@ matchesTriggerGiven bindings board gs bearer you cond event = case cond of
     GameEvent.Discarded {} -> False
     GameEvent.Drew {} -> False
     GameEvent.Revealed {} -> False
+    GameEvent.Looked {} -> False
     GameEvent.AttackerDeclared {} -> False
     GameEvent.BecameBlocking {} -> False
     GameEvent.BlocksDeclared {} -> False
@@ -6141,6 +6209,7 @@ matchesTriggerGiven bindings board gs bearer you cond event = case cond of
     GameEvent.Discarded {} -> False
     GameEvent.Drew {} -> False
     GameEvent.Revealed {} -> False
+    GameEvent.Looked {} -> False
     GameEvent.AttackerDeclared {} -> False
     GameEvent.BecameBlocking {} -> False
     GameEvent.BlocksDeclared {} -> False
@@ -6234,6 +6303,7 @@ matchesTriggerGiven bindings board gs bearer you cond event = case cond of
     GameEvent.Discarded {} -> False
     GameEvent.Drew {} -> False
     GameEvent.Revealed {} -> False
+    GameEvent.Looked {} -> False
     GameEvent.AttackerDeclared {} -> False
     GameEvent.BecameBlocking {} -> False
     GameEvent.BlocksDeclared {} -> False
@@ -6324,6 +6394,7 @@ matchesTriggerGiven bindings board gs bearer you cond event = case cond of
     GameEvent.Discarded {} -> False
     GameEvent.Drew {} -> False
     GameEvent.Revealed {} -> False
+    GameEvent.Looked {} -> False
     GameEvent.AttackerDeclared {} -> False
     GameEvent.BecameBlocking {} -> False
     GameEvent.BlocksDeclared {} -> False
@@ -6413,6 +6484,7 @@ matchesTriggerGiven bindings board gs bearer you cond event = case cond of
     GameEvent.Discarded {} -> False
     GameEvent.Drew {} -> False
     GameEvent.Revealed {} -> False
+    GameEvent.Looked {} -> False
     GameEvent.AttackerDeclared {} -> False
     GameEvent.BecameBlocking {} -> False
     GameEvent.BlocksDeclared {} -> False
@@ -6537,6 +6609,7 @@ matchesTriggerGiven bindings board gs bearer you cond event = case cond of
     GameEvent.Discarded {} -> False
     GameEvent.Drew {} -> False
     GameEvent.Revealed {} -> False
+    GameEvent.Looked {} -> False
     GameEvent.AttackerDeclared {} -> False
     GameEvent.BecameBlocking {} -> False
     GameEvent.BlocksDeclared {} -> False
@@ -6623,6 +6696,7 @@ matchesTriggerGiven bindings board gs bearer you cond event = case cond of
     GameEvent.Discarded {} -> False
     GameEvent.Drew {} -> False
     GameEvent.Revealed {} -> False
+    GameEvent.Looked {} -> False
     GameEvent.AttackerDeclared {} -> False
     GameEvent.BecameBlocking {} -> False
     GameEvent.BlocksDeclared {} -> False
@@ -6743,6 +6817,7 @@ matchesTriggerGiven bindings board gs bearer you cond event = case cond of
     GameEvent.Discarded {} -> False
     GameEvent.Drew {} -> False
     GameEvent.Revealed {} -> False
+    GameEvent.Looked {} -> False
     GameEvent.AttackerDeclared {} -> False
     GameEvent.BecameBlocking {} -> False
     GameEvent.BlocksDeclared {} -> False
@@ -6883,6 +6958,7 @@ matchesTriggerGiven bindings board gs bearer you cond event = case cond of
           GameEvent.Discarded {} -> False
           GameEvent.Drew {} -> False
           GameEvent.Revealed {} -> False
+          GameEvent.Looked {} -> False
           GameEvent.AttackerDeclared {} -> False
           GameEvent.BecameBlocking {} -> False
           GameEvent.BlocksDeclared {} -> False
@@ -6917,6 +6993,7 @@ matchesTriggerGiven bindings board gs bearer you cond event = case cond of
     GameEvent.BecameMonarch _ -> False
     GameEvent.TookInitiative _ -> False
     GameEvent.Revealed {} -> False
+    GameEvent.Looked {} -> False
     GameEvent.AttackerDeclared {} -> False
     GameEvent.BecameBlocking {} -> False
     GameEvent.BlocksDeclared {} -> False
@@ -7025,6 +7102,7 @@ matchesTriggerGiven bindings board gs bearer you cond event = case cond of
     GameEvent.BecameMonarch _ -> False
     GameEvent.TookInitiative _ -> False
     GameEvent.Revealed {} -> False
+    GameEvent.Looked {} -> False
     GameEvent.AttackerDeclared {} -> False
     GameEvent.BecameBlocking {} -> False
     GameEvent.BlocksDeclared {} -> False
@@ -7111,6 +7189,7 @@ matchesTriggerGiven bindings board gs bearer you cond event = case cond of
     GameEvent.BecameMonarch _ -> False
     GameEvent.TookInitiative _ -> False
     GameEvent.Revealed {} -> False
+    GameEvent.Looked {} -> False
     GameEvent.AttackerDeclared {} -> False
     GameEvent.BecameBlocking {} -> False
     GameEvent.BlocksDeclared {} -> False
@@ -7207,6 +7286,7 @@ matchesTriggerGiven bindings board gs bearer you cond event = case cond of
     GameEvent.BecameMonarch _ -> False
     GameEvent.TookInitiative _ -> False
     GameEvent.Revealed {} -> False
+    GameEvent.Looked {} -> False
     GameEvent.AttackerDeclared {} -> False
     GameEvent.BecameBlocking {} -> False
     GameEvent.BlocksDeclared {} -> False
@@ -7300,6 +7380,7 @@ matchesTriggerGiven bindings board gs bearer you cond event = case cond of
     GameEvent.Discarded {} -> False
     GameEvent.Drew {} -> False
     GameEvent.Revealed {} -> False
+    GameEvent.Looked {} -> False
     GameEvent.AttackerDeclared {} -> False
     GameEvent.BecameBlocking {} -> False
     GameEvent.BlocksDeclared {} -> False
@@ -7379,6 +7460,7 @@ matchesTriggerGiven bindings board gs bearer you cond event = case cond of
     GameEvent.Discarded {} -> False
     GameEvent.Drew {} -> False
     GameEvent.Revealed {} -> False
+    GameEvent.Looked {} -> False
     GameEvent.AttackerDeclared {} -> False
     GameEvent.BecameBlocking {} -> False
     GameEvent.BlocksDeclared {} -> False
@@ -7460,6 +7542,7 @@ matchesTriggerGiven bindings board gs bearer you cond event = case cond of
     GameEvent.Discarded {} -> False
     GameEvent.Drew {} -> False
     GameEvent.Revealed {} -> False
+    GameEvent.Looked {} -> False
     GameEvent.AttackerDeclared {} -> False
     GameEvent.BecameBlocking {} -> False
     GameEvent.BlocksDeclared {} -> False
@@ -7575,6 +7658,7 @@ matchesTriggerGiven bindings board gs bearer you cond event = case cond of
     GameEvent.Discarded {} -> False
     GameEvent.Drew {} -> False
     GameEvent.Revealed {} -> False
+    GameEvent.Looked {} -> False
     GameEvent.AttackerDeclared {} -> False
     GameEvent.BecameBlocking {} -> False
     GameEvent.BlocksDeclared {} -> False
@@ -7672,6 +7756,7 @@ matchesTriggerGiven bindings board gs bearer you cond event = case cond of
     GameEvent.Discarded {} -> False
     GameEvent.Drew {} -> False
     GameEvent.Revealed {} -> False
+    GameEvent.Looked {} -> False
     GameEvent.AttackerDeclared {} -> False
     GameEvent.BecameBlocking {} -> False
     GameEvent.BlocksDeclared {} -> False
@@ -7712,6 +7797,7 @@ matchesTriggerGiven bindings board gs bearer you cond event = case cond of
     GameEvent.Discarded {} -> False
     GameEvent.Drew {} -> False
     GameEvent.Revealed {} -> False
+    GameEvent.Looked {} -> False
     GameEvent.AttackerDeclared {} -> False
     GameEvent.BecameBlocking {} -> False
     GameEvent.BlocksDeclared {} -> False
@@ -7824,6 +7910,8 @@ matchesTriggerGiven bindings board gs bearer you cond event = case cond of
     GameEvent.Discarded {} -> False
     GameEvent.Drew {} -> False
     GameEvent.Revealed r -> Revealed.cause r == RevealCause.LeavingFaceDown
+    -- CR 708.9: the departure reveals the card to everyone; a look is not it.
+    GameEvent.Looked {} -> False
     GameEvent.AttackerDeclared {} -> False
     GameEvent.BecameBlocking {} -> False
     GameEvent.BlocksDeclared {} -> False
@@ -7905,6 +7993,7 @@ matchesTriggerGiven bindings board gs bearer you cond event = case cond of
     GameEvent.Discarded {} -> False
     GameEvent.Drew {} -> False
     GameEvent.Revealed {} -> False
+    GameEvent.Looked {} -> False
     GameEvent.AttackerDeclared {} -> False
     GameEvent.BecameBlocking {} -> False
     GameEvent.BlocksDeclared {} -> False
@@ -7978,6 +8067,7 @@ matchesTriggerGiven bindings board gs bearer you cond event = case cond of
     GameEvent.Discarded {} -> False
     GameEvent.Drew {} -> False
     GameEvent.Revealed {} -> False
+    GameEvent.Looked {} -> False
     -- Nor the declaration rule 702.149a's own trigger reads: training FIRES on an
     -- attack and this condition fires on that ability resolving, so an ability
     -- removed before it resolves (CR 608.2b) trains nothing.
@@ -8058,6 +8148,7 @@ matchesTriggerGiven bindings board gs bearer you cond event = case cond of
     GameEvent.Discarded {} -> False
     GameEvent.Drew {} -> False
     GameEvent.Revealed {} -> False
+    GameEvent.Looked {} -> False
     GameEvent.AttackerDeclared {} -> False
     GameEvent.BecameBlocking {} -> False
     GameEvent.BlocksDeclared {} -> False
@@ -8136,6 +8227,7 @@ matchesTriggerGiven bindings board gs bearer you cond event = case cond of
     GameEvent.Discarded {} -> False
     GameEvent.Drew {} -> False
     GameEvent.Revealed {} -> False
+    GameEvent.Looked {} -> False
     GameEvent.AttackerDeclared {} -> False
     GameEvent.BecameBlocking {} -> False
     GameEvent.BlocksDeclared {} -> False
@@ -8210,6 +8302,7 @@ matchesTriggerGiven bindings board gs bearer you cond event = case cond of
     GameEvent.Discarded {} -> False
     GameEvent.Drew {} -> False
     GameEvent.Revealed {} -> False
+    GameEvent.Looked {} -> False
     GameEvent.AttackerDeclared {} -> False
     GameEvent.BecameBlocking {} -> False
     GameEvent.BlocksDeclared {} -> False
@@ -8288,6 +8381,7 @@ matchesTriggerGiven bindings board gs bearer you cond event = case cond of
     GameEvent.Discarded {} -> False
     GameEvent.Drew {} -> False
     GameEvent.Revealed {} -> False
+    GameEvent.Looked {} -> False
     GameEvent.AttackerDeclared {} -> False
     GameEvent.BecameBlocking {} -> False
     GameEvent.BlocksDeclared {} -> False
@@ -8374,6 +8468,7 @@ matchesTriggerGiven bindings board gs bearer you cond event = case cond of
     GameEvent.Discarded {} -> False
     GameEvent.Drew {} -> False
     GameEvent.Revealed {} -> False
+    GameEvent.Looked {} -> False
     GameEvent.AttackerDeclared {} -> False
     GameEvent.BecameBlocking {} -> False
     GameEvent.BlocksDeclared {} -> False
@@ -8469,6 +8564,7 @@ matchesTriggerGiven bindings board gs bearer you cond event = case cond of
     GameEvent.Discarded {} -> False
     GameEvent.Drew {} -> False
     GameEvent.Revealed {} -> False
+    GameEvent.Looked {} -> False
     GameEvent.AttackerDeclared {} -> False
     GameEvent.BecameBlocking {} -> False
     GameEvent.BlocksDeclared {} -> False
@@ -8585,6 +8681,7 @@ matchesTriggerGiven bindings board gs bearer you cond event = case cond of
     GameEvent.Discarded {} -> False
     GameEvent.Drew {} -> False
     GameEvent.Revealed {} -> False
+    GameEvent.Looked {} -> False
     GameEvent.AttackerDeclared {} -> False
     GameEvent.BecameBlocking {} -> False
     GameEvent.BlocksDeclared {} -> False
@@ -8673,6 +8770,7 @@ matchesTriggerGiven bindings board gs bearer you cond event = case cond of
     GameEvent.Discarded {} -> False
     GameEvent.Drew {} -> False
     GameEvent.Revealed {} -> False
+    GameEvent.Looked {} -> False
     GameEvent.AttackerDeclared {} -> False
     GameEvent.BecameBlocking {} -> False
     GameEvent.BlocksDeclared {} -> False
@@ -8745,6 +8843,7 @@ matchesTriggerGiven bindings board gs bearer you cond event = case cond of
     GameEvent.Discarded {} -> False
     GameEvent.Drew {} -> False
     GameEvent.Revealed {} -> False
+    GameEvent.Looked {} -> False
     GameEvent.AttackerDeclared {} -> False
     GameEvent.BecameBlocking {} -> False
     GameEvent.BlocksDeclared {} -> False
@@ -8775,6 +8874,7 @@ matchesTriggerGiven bindings board gs bearer you cond event = case cond of
     GameEvent.Discarded {} -> False
     GameEvent.Drew {} -> False
     GameEvent.Revealed {} -> False
+    GameEvent.Looked {} -> False
     GameEvent.AttackerDeclared {} -> False
     GameEvent.BecameBlocking {} -> False
     GameEvent.BlocksDeclared {} -> False
@@ -8845,6 +8945,7 @@ matchesTriggerGiven bindings board gs bearer you cond event = case cond of
     GameEvent.Discarded {} -> False
     GameEvent.Drew {} -> False
     GameEvent.Revealed {} -> False
+    GameEvent.Looked {} -> False
     GameEvent.AttackerDeclared {} -> False
     GameEvent.BecameBlocking {} -> False
     GameEvent.BlocksDeclared {} -> False
@@ -8914,6 +9015,7 @@ matchesTriggerGiven bindings board gs bearer you cond event = case cond of
     GameEvent.Discarded {} -> False
     GameEvent.Drew {} -> False
     GameEvent.Revealed {} -> False
+    GameEvent.Looked {} -> False
     GameEvent.AttackerDeclared {} -> False
     GameEvent.BecameBlocking {} -> False
     GameEvent.BlocksDeclared {} -> False
@@ -8989,6 +9091,7 @@ matchesTriggerGiven bindings board gs bearer you cond event = case cond of
     GameEvent.Discarded {} -> False
     GameEvent.Drew {} -> False
     GameEvent.Revealed {} -> False
+    GameEvent.Looked {} -> False
     GameEvent.AttackerDeclared {} -> False
     GameEvent.BecameBlocking {} -> False
     GameEvent.BlocksDeclared {} -> False
@@ -9058,6 +9161,7 @@ matchesTriggerGiven bindings board gs bearer you cond event = case cond of
     GameEvent.Discarded {} -> False
     GameEvent.Drew {} -> False
     GameEvent.Revealed {} -> False
+    GameEvent.Looked {} -> False
     GameEvent.AttackerDeclared {} -> False
     GameEvent.BecameBlocking {} -> False
     GameEvent.BlocksDeclared {} -> False
@@ -9130,6 +9234,7 @@ matchesTriggerGiven bindings board gs bearer you cond event = case cond of
     GameEvent.Discarded {} -> False
     GameEvent.Drew {} -> False
     GameEvent.Revealed {} -> False
+    GameEvent.Looked {} -> False
     GameEvent.AttackerDeclared {} -> False
     GameEvent.BecameBlocking {} -> False
     GameEvent.BlocksDeclared {} -> False
@@ -9201,6 +9306,7 @@ matchesTriggerGiven bindings board gs bearer you cond event = case cond of
     GameEvent.Discarded {} -> False
     GameEvent.Drew {} -> False
     GameEvent.Revealed {} -> False
+    GameEvent.Looked {} -> False
     GameEvent.AttackerDeclared {} -> False
     GameEvent.BecameBlocking {} -> False
     GameEvent.BlocksDeclared {} -> False
@@ -9269,6 +9375,7 @@ matchesTriggerGiven bindings board gs bearer you cond event = case cond of
     GameEvent.Discarded {} -> False
     GameEvent.Drew {} -> False
     GameEvent.Revealed {} -> False
+    GameEvent.Looked {} -> False
     GameEvent.AttackerDeclared {} -> False
     GameEvent.BecameBlocking {} -> False
     GameEvent.BlocksDeclared {} -> False
@@ -9337,6 +9444,7 @@ matchesTriggerGiven bindings board gs bearer you cond event = case cond of
     GameEvent.Discarded {} -> False
     GameEvent.Drew {} -> False
     GameEvent.Revealed {} -> False
+    GameEvent.Looked {} -> False
     GameEvent.AttackerDeclared {} -> False
     GameEvent.BecameBlocking {} -> False
     GameEvent.BlocksDeclared {} -> False
@@ -9411,6 +9519,7 @@ matchesTriggerGiven bindings board gs bearer you cond event = case cond of
     GameEvent.Discarded {} -> False
     GameEvent.Drew {} -> False
     GameEvent.Revealed {} -> False
+    GameEvent.Looked {} -> False
     GameEvent.AttackerDeclared {} -> False
     GameEvent.BecameBlocking {} -> False
     GameEvent.BlocksDeclared {} -> False
@@ -9485,6 +9594,7 @@ matchesTriggerGiven bindings board gs bearer you cond event = case cond of
     GameEvent.Discarded {} -> False
     GameEvent.Drew {} -> False
     GameEvent.Revealed {} -> False
+    GameEvent.Looked {} -> False
     GameEvent.AttackerDeclared {} -> False
     GameEvent.BecameBlocking {} -> False
     GameEvent.BlocksDeclared {} -> False
@@ -9559,6 +9669,7 @@ matchesTriggerGiven bindings board gs bearer you cond event = case cond of
     GameEvent.Discarded {} -> False
     GameEvent.Drew {} -> False
     GameEvent.Revealed {} -> False
+    GameEvent.Looked {} -> False
     GameEvent.AttackerDeclared {} -> False
     GameEvent.BecameBlocking {} -> False
     GameEvent.BlocksDeclared {} -> False
@@ -9641,6 +9752,7 @@ matchesTriggerGiven bindings board gs bearer you cond event = case cond of
     GameEvent.Discarded {} -> False
     GameEvent.Drew {} -> False
     GameEvent.Revealed {} -> False
+    GameEvent.Looked {} -> False
     GameEvent.AttackerDeclared {} -> False
     GameEvent.BecameBlocking {} -> False
     GameEvent.BlocksDeclared {} -> False
@@ -9725,6 +9837,7 @@ matchesTriggerGiven bindings board gs bearer you cond event = case cond of
     GameEvent.Discarded {} -> False
     GameEvent.Drew {} -> False
     GameEvent.Revealed {} -> False
+    GameEvent.Looked {} -> False
     GameEvent.AttackerDeclared {} -> False
     GameEvent.BecameBlocking {} -> False
     GameEvent.BlocksDeclared {} -> False
@@ -9806,6 +9919,7 @@ matchesTriggerGiven bindings board gs bearer you cond event = case cond of
     GameEvent.Discarded {} -> False
     GameEvent.Drew {} -> False
     GameEvent.Revealed {} -> False
+    GameEvent.Looked {} -> False
     GameEvent.AttackerDeclared {} -> False
     GameEvent.BecameBlocking {} -> False
     GameEvent.BlocksDeclared {} -> False
@@ -9881,6 +9995,7 @@ matchesTriggerGiven bindings board gs bearer you cond event = case cond of
     GameEvent.Discarded {} -> False
     GameEvent.Drew {} -> False
     GameEvent.Revealed {} -> False
+    GameEvent.Looked {} -> False
     GameEvent.AttackerDeclared {} -> False
     GameEvent.BecameBlocking {} -> False
     GameEvent.BlocksDeclared {} -> False

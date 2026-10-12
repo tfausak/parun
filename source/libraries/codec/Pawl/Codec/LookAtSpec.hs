@@ -22,6 +22,18 @@ spec s = Spec.describe s "Pawl.Codec.LookAt" $ do
       ( LookAt.MkLookAt
           (ObjectRef.TopOfLibrary (TopOfLibrary.MkTopOfLibrary (PlayerRef.Relative PlayerRelation.You) (Quantity.Literal 1)))
           (SlotName.MkSlotName (Text.pack "looked"))
+          (PlayerRef.Relative PlayerRelation.You)
       )
       " {\"ref\":{\"type\":\"TopOfLibrary\",\"value\":{\"count\":{\"type\":\"Literal\",\"value\":1},\"player\":{\"type\":\"Relative\",\"value\":{\"type\":\"You\"}}}},\"slot\":\"looked\"} "
+  -- A non-default looker is written out; nothing in the pool has one yet.
+  Spec.it s "MkLookAt, a named looker" $
+    Common.assertCodec
+      s
+      LookAt.codec
+      ( LookAt.MkLookAt
+          (ObjectRef.TopOfLibrary (TopOfLibrary.MkTopOfLibrary (PlayerRef.Relative PlayerRelation.You) (Quantity.Literal 1)))
+          (SlotName.MkSlotName (Text.pack "looked"))
+          (PlayerRef.Relative PlayerRelation.Opponent)
+      )
+      " {\"looker\":{\"type\":\"Relative\",\"value\":{\"type\":\"Opponent\"}},\"ref\":{\"type\":\"TopOfLibrary\",\"value\":{\"count\":{\"type\":\"Literal\",\"value\":1},\"player\":{\"type\":\"Relative\",\"value\":{\"type\":\"You\"}}}},\"slot\":\"looked\"} "
   Spec.it s "has a schema" $ Common.assertHasSchema s LookAt.codec

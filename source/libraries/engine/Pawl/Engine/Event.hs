@@ -105,6 +105,7 @@ import qualified Pawl.Types.DamageEvent as DamageEvent
 import qualified Pawl.Types.DamagePattern as DamagePattern
 import qualified Pawl.Types.DamageR as DamageR
 import qualified Pawl.Types.DamageRewrite as DamageRewrite
+import qualified Pawl.Types.Decider as Decider
 import Pawl.Types.DelayedTrigger (DelayedTrigger)
 import qualified Pawl.Types.DelayedTrigger as DelayedTrigger
 import qualified Pawl.Types.DestructionCause as DestructionCause
@@ -163,6 +164,7 @@ import qualified Pawl.Types.LifeLossCause as LifeLossCause
 import qualified Pawl.Types.LifeLossR as LifeLossR
 import qualified Pawl.Types.LifeLossRewrite as LifeLossRewrite
 import qualified Pawl.Types.LoggedEvent as LoggedEvent
+import qualified Pawl.Types.Looked as Looked
 import qualified Pawl.Types.MadnessCost as MadnessCost
 import qualified Pawl.Types.Mana as Mana
 import qualified Pawl.Types.MeldSource as MeldSource
@@ -755,6 +757,7 @@ damageOf event = case event of
   GameEvent.Discarded {} -> Nothing
   GameEvent.Drew {} -> Nothing
   GameEvent.Revealed {} -> Nothing
+  GameEvent.Looked {} -> Nothing
   GameEvent.AttackerDeclared {} -> Nothing
   GameEvent.BecameBlocking {} -> Nothing
   GameEvent.BlocksDeclared {} -> Nothing
@@ -814,6 +817,7 @@ damageOf event = case event of
 revealOf :: GameEvent -> Maybe (PlayerId, PC.ProjectedCharacteristics)
 revealOf event = case event of
   GameEvent.Revealed (Revealed.MkRevealed pid _ _ snapshot) -> Just (pid, snapshot)
+  GameEvent.Looked {} -> Nothing
   GameEvent.Moved {} -> Nothing
   GameEvent.DamageDealt _ -> Nothing
   GameEvent.DamagePrevented {} -> Nothing
@@ -8742,10 +8746,10 @@ turnUpKeptDraws = do
 -- carries. Dropping it would make pawl's miracle cards WEAKER than printed, which
 -- is the direction that is never admissible.
 --
--- CR 121.9's "may look at that card as they draw it before choosing" is satisfied
--- by the prompt naming the card. Not implemented: an answerer is handed the
--- whole state, hidden cards included (#1412), so nothing here could have shown
--- the player less than the rule allows.
+-- CR 121.9's "may look at that card as they draw it before choosing" is logged
+-- as a look before the first offer, and only when there is an offer to make.
+-- Not implemented: an answerer is handed the whole state, hidden cards
+-- included, and the prompt names the card regardless (#1412).
 --
 -- The reveal goes through the ordinary funnel with CR 702.94a's cause, which is
 -- what makes the linked trigger (CR 603.11) findable: `eventTriggers`' hand source
@@ -8778,7 +8782,11 @@ offerMiracleReveal pid drawn = do
               case decision of
                 OptionalDecision.Declines -> offer rest
                 OptionalDecision.Exercises -> reveal (RevealCause.ForMiracle cost) pid drawn
-      offer (Keyword.miracleCosts (Map.keysSet (Projection.keywordsOf drawn gs)))
+      case Keyword.miracleCosts (Map.keysSet (Projection.keywordsOf drawn gs)) of
+        [] -> pure ()
+        costs -> do
+          look pid drawn
+          offer costs
     Nothing -> pure ()
 
 -- The single discard funnel (CR 701.9a). `pid` is the discarding player, whom that
@@ -8947,14 +8955,24 @@ shuffleAttractionDeck pid = do
 -- and the read is Pawl.Types.Filter's RepresentedByCard -- Hauntwoods Shrieker's
 -- "if it's a creature card", proved at Pawl.FaceDownSpec's CR 708.12 group.
 --
--- CR 708.9's departure reveal records the same projection, which is CR 708.2's
--- face-down one while the permanent is still on the battlefield. Its only
--- reader, FaceDownPermanentLeavesRevealed, reads the cause and never the
--- snapshot.
+-- A face-down permanent's reveal -- CR 708.9's departure, or Hauntwoods
+-- Shrieker's -- records the same projection, which is CR 708.2's nameless one.
+-- FaceDownPermanentLeavesRevealed reads only the cause, but the scenario view
+-- Witnessed reads the snapshot. Not implemented: the snapshot is that face
+-- rather than the card shown, so the log names nothing (#5013).
 reveal :: RevealCause.RevealCause -> PlayerId -> ObjectId -> Game ()
 reveal cause pid oid = do
   gs <- State.get
   Monad.mapM_ (State.modify' . recordEvent) (revealedOn cause pid oid gs)
+
+-- | CR 701.20e: a player looks at a card, shown to them and, per CR 723.4, to
+-- the player making their decisions. Records nothing when the object is gone.
+look :: PlayerId -> ObjectId -> Game ()
+look pid oid = do
+  gs <- State.get
+  let audience = Set.fromList [pid, Decider.unwrap (Decide.deciderFor pid gs)]
+  Monad.forM_ (Game.lookupObject oid gs) $ \_ ->
+    State.modify' (recordEvent (GameEvent.Looked (Looked.MkLooked oid (Projection.project oid gs) audience)))
 
 -- | CR 701.20a: keep a revealed card revealed for a window.
 --
@@ -9559,6 +9577,7 @@ abilityTriggeredOf event = case event of
   GameEvent.Discarded {} -> Nothing
   GameEvent.Drew {} -> Nothing
   GameEvent.Revealed {} -> Nothing
+  GameEvent.Looked {} -> Nothing
   GameEvent.AttackerDeclared {} -> Nothing
   GameEvent.BecameBlocking {} -> Nothing
   GameEvent.BlocksDeclared {} -> Nothing

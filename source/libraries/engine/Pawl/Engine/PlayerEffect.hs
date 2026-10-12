@@ -2734,14 +2734,12 @@ votesAllowed pid gs =
         PlayerEffect.Shows _ -> Nothing
    in defaultVotes + sum (Maybe.mapMaybe (grantOf . snd) (applying pid gs))
 
--- CR 701.25b: how many cards beyond the instruction's own N `pid` looks at
--- when they surveil (Enhanced Surveillance). A SUM over every applicable
--- grant, votesAllowed's posture: rule 701.25b makes no two such effects
--- redundant, and the card's own ruling (2018-10-05) makes two of them four.
---
--- Not implemented: the card's "may" is not asked; the extra cards are always
--- looked at (#4391).
-surveilExtra :: PlayerId -> GameState -> Natural
+-- CR 701.25b: the grants letting `pid` look at cards beyond a surveil's own N
+-- (Enhanced Surveillance), each its source and its count. One per grant, so
+-- each "may" is asked on its own: the card's ruling (2018-10-05) has both of
+-- two copies apply, making the extra cards four. Every
+-- row's source is an object, so the Maybe dropped here drops nothing.
+surveilExtra :: PlayerId -> GameState -> [(ObjectId, Natural)]
 surveilExtra pid gs =
   let grantOf effect = case effect of
         PlayerEffect.CantCastSpells -> Nothing
@@ -2787,7 +2785,10 @@ surveilExtra pid gs =
         PlayerEffect.CantGainLife -> Nothing
         PlayerEffect.CantLoseLife -> Nothing
         PlayerEffect.Shows _ -> Nothing
-   in sum (Maybe.mapMaybe (grantOf . snd) (applying pid gs))
+      rowOf (source, effect) = case (RowSource.object source, grantOf effect) of
+        (Just oid, Just extra) -> Just (oid, extra)
+        _ -> Nothing
+   in Maybe.mapMaybe rowOf (applying pid gs)
 
 -- CR 401.5 / 400.2: the grants showing this player's hand or top card, each
 -- naming whom it shows them to. Read by Pawl.Engine.Visibility.shownTo.

@@ -41,4 +41,6 @@ data View
     OwnershipChanges
   | -- | CR 400.2 / 723.4: the seats that may see an object's face, in turn order.
     Seers
+  | -- | CR 701.20a / 701.20e: this turn's cards a player was shown, by name, in order.
+    Witnessed
   deriving (Bounded, Enum, Eq, Ord, Show)

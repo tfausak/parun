@@ -715,7 +715,7 @@ effectObjectRefs effect = case effect of
   Effect.Reveal (Reveal.MkReveal ref _) -> [ref]
   Effect.FromOutsideTheGame {} -> []
   Effect.ExileThisSpell -> []
-  Effect.LookAt (LookAt.MkLookAt ref _) -> [ref]
+  Effect.LookAt (LookAt.MkLookAt ref _ _) -> [ref]
   Effect.Scry {} -> []
   Effect.Surveil {} -> []
   Effect.Fateseal {} -> []
@@ -954,7 +954,7 @@ effectPlayerRefs effect = case effect of
   Effect.Reveal {} -> []
   Effect.FromOutsideTheGame {} -> []
   Effect.ExileThisSpell -> []
-  Effect.LookAt {} -> []
+  Effect.LookAt (LookAt.MkLookAt _ _ looker) -> [looker]
   Effect.Scry (PlayerQuantity.MkPlayerQuantity ref _) -> [ref]
   Effect.Surveil (PlayerQuantity.MkPlayerQuantity ref _) -> [ref]
   Effect.Fateseal (PlayerQuantity.MkPlayerQuantity ref _) -> [ref]
@@ -2538,7 +2538,7 @@ boundSlots effect = case effect of
   -- where LookAt's is not: the GameEvent.Revealed in the log is a record already.
   Effect.Reveal (Reveal.MkReveal _ mSlot) -> foldMap Set.singleton mSlot
   -- The cards CR 701.20e's look showed, for a later clause to name.
-  Effect.LookAt (LookAt.MkLookAt _ slot) -> Set.singleton slot
+  Effect.LookAt (LookAt.MkLookAt _ slot _) -> Set.singleton slot
   Effect.Scry {} -> Set.empty
   Effect.Surveil {} -> Set.empty
   Effect.Fateseal {} -> Set.empty

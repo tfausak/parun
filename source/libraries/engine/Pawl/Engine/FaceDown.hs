@@ -245,9 +245,8 @@ turnableFaceUp pid gs =
 -- the same game action -- the rules differ only in what they showed and what they
 -- charged, which is `costOf` and nothing else.
 --
--- The SHOWING is not modelled. Nothing in pawl hides a face-down permanent's
--- card from a reader in the first place, so there is no concealment for a reveal
--- to lift (#1412).
+-- Not implemented: the SHOWING logs nothing, which a refused payment would
+-- expose by leaving the permanent face down (#5013).
 --
 -- REJECT-NOT-REPAIR, the posture Cast.castSpell and Activate.activateAbility
 -- both take: a payment that fails restores the state from before it was
@@ -299,10 +298,11 @@ turnFaceUp perform pid procedure oid = do
 -- 708.2a has left the permanent itself with no card type at all, so a projected
 -- read would answer about the 2/2 rather than about the card.
 --
--- The REVEAL is not modelled, for the reason the procedures' showing is not:
--- nothing in pawl hides a face-down permanent's card from a reader, so there is
--- no concealment for it to lift (#1412). What is left of the rule is the second
--- half of its first sentence, and its second sentence.
+-- What is modelled is the second half of the rule's first sentence, and its
+-- second sentence.
+--
+-- Not implemented: the REVEAL logs no GameEvent.Revealed, so the card stays
+-- hidden from the other players' record (#5013).
 --
 -- EnteredFaceDown joins them on Magar of the Magic Strings' ruling (2022-10-07),
 -- which gives its face-down instant or sorcery card the same treatment. Yedora,
@@ -440,8 +440,8 @@ performTurnFaceUp road announcedX oid = do
 -- turning-over rather than about the road.
 --
 -- No controller argument: the effect's controller is who resolved it, and
--- nothing left here reads a player -- CR 701.40g's reveal is the permanent's own
--- controller's and is not modelled (#1412).
+-- nothing left here reads a player. Not implemented: CR 701.40g's reveal, which
+-- would be the permanent's own controller's (#5013).
 turnFaceUpByEffect :: ObjectId -> Game ()
 turnFaceUpByEffect oid = do
   gs <- State.get

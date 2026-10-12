@@ -86,6 +86,7 @@ import qualified Pawl.Types.FaceDownReason as FaceDownReason
 import qualified Pawl.Types.FaceDownState as FaceDownState
 import qualified Pawl.Types.Facing as Facing
 import qualified Pawl.Types.Game as Game.Type
+import qualified Pawl.Types.GameEvent as GameEvent
 import qualified Pawl.Types.GameSettings as GameSettings
 import qualified Pawl.Types.GameState as GameState
 import qualified Pawl.Types.GrantedAbility as GrantedAbility
@@ -93,6 +94,7 @@ import qualified Pawl.Types.KeywordsAre as KeywordsAre
 import qualified Pawl.Types.Label as Label
 import qualified Pawl.Types.LifeIs as LifeIs
 import qualified Pawl.Types.LoggedEvent as LoggedEvent
+import qualified Pawl.Types.Looked as Looked
 import qualified Pawl.Types.Mana as Mana.Type
 import qualified Pawl.Types.ManaRetention as ManaRetention
 import qualified Pawl.Types.ManaType as ManaType
@@ -111,6 +113,7 @@ import qualified Pawl.Types.PlayerCountersAre as PlayerCountersAre
 import qualified Pawl.Types.PlayerId as PlayerId
 import qualified Pawl.Types.PowerToughnessIs as PowerToughnessIs
 import qualified Pawl.Types.Printing as Printing
+import qualified Pawl.Types.ProjectedCharacteristics as ProjectedCharacteristics
 import qualified Pawl.Types.Prompt as Prompt.Type
 import qualified Pawl.Types.RangeOfInfluence as RangeOfInfluence
 import qualified Pawl.Types.Readiness as Readiness
@@ -118,6 +121,7 @@ import qualified Pawl.Types.Recipient as Recipient
 import qualified Pawl.Types.Reference as Reference
 import qualified Pawl.Types.Reply as ReplyType
 import qualified Pawl.Types.Result as Result
+import qualified Pawl.Types.Revealed as Revealed
 import qualified Pawl.Types.Scenario as Scenario
 import qualified Pawl.Types.ScenarioFailure as Failure
 import qualified Pawl.Types.Seat as Seat
@@ -958,6 +962,7 @@ withinOffer prompt chosen = case prompt of
   Prompt.Type.ChooseLibraryEnd {} -> True
   Prompt.Type.OfferedCast {} -> True
   Prompt.Type.OfferedMiracleReveal {} -> True
+  Prompt.Type.OfferedExtraLook {} -> True
   Prompt.Type.RerollDie {} -> True
   Prompt.Type.ReverseManaAbilities {} -> True
   Prompt.Type.ReturnCommander {} -> True
@@ -1690,6 +1695,15 @@ renderView gs viewIs =
           let seers = [pid | pid <- GameState.turnOrder gs, Visibility.sees pid oid gs == Visibility.Type.Visible]
           labels <- mapM labelOf seers
           pure (ReplyType.Array (fmap (ReplyType.Text . Label.unwrap) labels))
+        View.Witnessed -> do
+          pid <- needPlayer
+          let shown logged = case LoggedEvent.event logged of
+                GameEvent.Revealed revealed -> Just (Revealed.characteristics revealed)
+                GameEvent.Looked looked -> Just (Looked.characteristics looked)
+                _ -> Nothing
+              nameOf snapshot = Text.intercalate (Text.pack " // ") (fmap CardName.unwrap (Set.toAscList (ProjectedCharacteristics.names snapshot)))
+              seen = [nameOf snapshot | logged <- Foldable.toList (GameState.events gs), Visibility.witnessed pid logged == Visibility.Type.Visible, Just snapshot <- [shown logged]]
+          texts (pure seen)
 
 -- | A value as its codec writes it, for a View to compare.
 encoded :: Codec.Codec a -> a -> ReplyType.Reply

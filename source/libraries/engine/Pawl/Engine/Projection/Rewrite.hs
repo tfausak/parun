@@ -667,7 +667,7 @@ rewriteEffect pairs effect = case effect of
   Effect.Mill (Mill.MkMill ref quantity mTally mSlot) ->
     Effect.Mill (Mill.MkMill ref (rewriteQuantity pairs quantity) (fmap (\t -> t {MillTally.filter = Filter.rewrite pairs (MillTally.filter t)}) mTally) mSlot)
   Effect.Reveal (Reveal.MkReveal ref slot) -> Effect.Reveal (Reveal.MkReveal (rewriteObjectRef pairs ref) slot)
-  Effect.LookAt (LookAt.MkLookAt ref slot) -> Effect.LookAt (LookAt.MkLookAt (rewriteObjectRef pairs ref) slot)
+  Effect.LookAt (LookAt.MkLookAt ref slot looker) -> Effect.LookAt (LookAt.MkLookAt (rewriteObjectRef pairs ref) slot looker)
   Effect.Scry x -> Effect.Scry (rewritePlayerQuantity pairs x)
   Effect.Surveil x -> Effect.Surveil (rewritePlayerQuantity pairs x)
   Effect.Fateseal x -> Effect.Fateseal (rewritePlayerQuantity pairs x)

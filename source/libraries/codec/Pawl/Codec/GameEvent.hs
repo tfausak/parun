@@ -34,6 +34,7 @@ import qualified Pawl.Codec.HalfUnlocked as HalfUnlocked
 import qualified Pawl.Codec.LandPlayed as LandPlayed
 import qualified Pawl.Codec.LeftTheGame as LeftTheGame
 import qualified Pawl.Codec.LifeChange as LifeChange
+import qualified Pawl.Codec.Looked as Looked
 import qualified Pawl.Codec.ManaAbilityResolved as ManaAbilityResolved
 import qualified Pawl.Codec.ManaAdded as ManaAdded
 import qualified Pawl.Codec.ManifestedDread as ManifestedDread
@@ -90,6 +91,7 @@ codec =
       Arm.payload "AttackerUnblocked" ObjectId.codec GameEvent.AttackerUnblocked (\x -> case x of GameEvent.AttackerUnblocked y -> Just y; _ -> Nothing),
       Arm.payload "BlocksDeclared" BlocksDeclared.codec GameEvent.BlocksDeclared (\x -> case x of GameEvent.BlocksDeclared y -> Just y; _ -> Nothing),
       Arm.payload "Revealed" Revealed.codec GameEvent.Revealed (\x -> case x of GameEvent.Revealed y -> Just y; _ -> Nothing),
+      Arm.payload "Looked" Looked.codec GameEvent.Looked (\x -> case x of GameEvent.Looked y -> Just y; _ -> Nothing),
       Arm.payload "SpellCountered" Countering.codec GameEvent.SpellCountered (\x -> case x of GameEvent.SpellCountered y -> Just y; _ -> Nothing),
       Arm.payload "AbilityCountered" Countering.codec GameEvent.AbilityCountered (\x -> case x of GameEvent.AbilityCountered y -> Just y; _ -> Nothing),
       Arm.payload "LifeLost" LifeChange.codec GameEvent.LifeLost (\x -> case x of GameEvent.LifeLost y -> Just y; _ -> Nothing),
@@ -162,6 +164,7 @@ tagOf x = case x of
   GameEvent.AttackerUnblocked {} -> "AttackerUnblocked"
   GameEvent.BlocksDeclared {} -> "BlocksDeclared"
   GameEvent.Revealed {} -> "Revealed"
+  GameEvent.Looked {} -> "Looked"
   GameEvent.SpellCountered {} -> "SpellCountered"
   GameEvent.AbilityCountered {} -> "AbilityCountered"
   GameEvent.LifeLost {} -> "LifeLost"

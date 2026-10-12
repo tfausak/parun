@@ -181,6 +181,7 @@ deciderOf prompt = case prompt of
   Prompt.OfferedCast decider _ _ _ -> Just (Decider.unwrap decider)
   Prompt.ChooseOfferedCastSpell decider _ _ -> Just (Decider.unwrap decider)
   Prompt.OfferedMiracleReveal decider _ _ _ _ -> Just (Decider.unwrap decider)
+  Prompt.OfferedExtraLook decider _ _ _ -> Just (Decider.unwrap decider)
   Prompt.ChooseToPay decider _ _ _ _ _ -> Just (Decider.unwrap decider)
   Prompt.AnnouncePhyrexianPayment decider _ _ _ _ -> Just (Decider.unwrap decider)
   Prompt.AnnounceHybridPayment decider _ _ _ _ -> Just (Decider.unwrap decider)
@@ -360,6 +361,7 @@ kindOf prompt = Text.pack $ case prompt of
   Prompt.OfferedCast {} -> "OfferedCast"
   Prompt.ChooseOfferedCastSpell {} -> "ChooseOfferedCastSpell"
   Prompt.OfferedMiracleReveal {} -> "OfferedMiracleReveal"
+  Prompt.OfferedExtraLook {} -> "OfferedExtraLook"
   Prompt.ChooseToPay {} -> "ChooseToPay"
   Prompt.AnnouncePhyrexianPayment {} -> "AnnouncePhyrexianPayment"
   Prompt.AnnounceHybridPayment {} -> "AnnounceHybridPayment"
