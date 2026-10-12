@@ -2,6 +2,7 @@ module Pawl.Codec.TriggeredAbilitySourceSpec where
 
 import qualified Data.Map.Strict as Map
 import qualified Data.Sequence as Seq
+import qualified Data.Set as Set
 import qualified Data.Text as Text
 import qualified Pawl.Codec.TriggeredAbilitySource as TriggeredAbilitySource
 import qualified Pawl.JsonCodec.Common as Common
@@ -32,7 +33,8 @@ ability =
           (ModeSelection.ChooseExactly 1),
       TriggeredAbility.intervening = Nothing,
       TriggeredAbility.name = Nothing,
-      TriggeredAbility.limit = TriggerLimit.Unlimited
+      TriggeredAbility.limit = TriggerLimit.Unlimited,
+      TriggeredAbility.functionsFrom = Set.empty
     }
 
 spec :: (Monad m, Monad n) => Spec.Spec m n -> n ()

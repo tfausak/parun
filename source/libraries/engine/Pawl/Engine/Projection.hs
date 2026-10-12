@@ -2208,7 +2208,7 @@ anyConditional gs =
         Just face -> any carriesCondition (Face.staticAbilities face)
       conditionalStating zone oid = case Game.lookupObject oid gs of
         Nothing -> False
-        Just obj | not (mayStateZone gs zone obj) -> False
+        Just obj | not (mayStateZone (staticStatesZone zone) gs obj) -> False
         Just obj -> case abilityFaceOf oid obj gs of
           Nothing -> False
           Just face -> any (\sa -> carriesCondition sa && statesZone zone sa) (Face.staticAbilities face)
@@ -2479,7 +2479,7 @@ gatherGiven stripped functioning seed gs =
       fromStatingCard zone cardId = case Game.lookupObject cardId gs of
         Nothing -> []
         Just cardObj | Object.exiledFaceDown cardObj -> []
-        Just cardObj | not (mayStateZone gs zone cardObj) -> []
+        Just cardObj | not (mayStateZone (staticStatesZone zone) gs cardObj) -> []
         Just cardObj -> case abilityFaceOf cardId cardObj gs of
           Nothing -> []
           Just face ->
@@ -2603,14 +2603,17 @@ staticGrantRounds = 8
 statesZone :: Zone.Zone -> StaticAbility.StaticAbility card -> Bool
 statesZone zone = Set.member zone . StaticAbility.functionsFrom
 
--- statesZone asked of an object's CARD rather than of the face it is showing:
--- could any face this object might be showing state `zone`?
+-- A zone-stating question asked of an object's CARD rather than of the face it
+-- is showing: could any face this object might be showing answer `states`?
+-- `staticStatesZone` asks it of the static abilities, `statesZoneOfRow` of the
+-- printed replacement rows, and Pawl.Engine.Event.Trigger of the triggered
+-- abilities (CR 113.6b throughout).
 --
 -- A SUPERSET, and that is the whole of its correctness argument. Every face an
 -- object shows is one of its card's faces (CR 709.3b, CR 712.8a, CR 715.4) or a
 -- merge of several (CR 709.4's combined view, CR 709.5's subtracted one), and
 -- Card.merge2 builds a merge out of the halves' own fields -- so no shown face
--- carries a static ability that no printed face carries. A True answer decides
+-- carries an ability that no printed face carries. A True answer decides
 -- nothing; a False answer means the exact test below cannot keep anything.
 --
 -- Here because it is CHEAP where the exact test is not: a field read and a fold
@@ -2625,13 +2628,18 @@ statesZone zone = Set.member zone . StaticAbility.functionsFrom
 -- rather than from its card, so this answers True and leaves the work to the
 -- exact test in gatherGiven. An object carrying a COPY STAMP is the other: its
 -- abilities are the stamp's (abilityFaceOf), which no printed face bounds.
-mayStateZone :: GameState -> Zone.Zone -> Object.Object -> Bool
-mayStateZone gs zone obj = case Object.facing obj of
+mayStateZone :: (Face.Face Card.Type.Card -> Bool) -> GameState -> Object.Object -> Bool
+mayStateZone states gs obj = case Object.facing obj of
   Facing.FaceDown _ -> True
   Facing.FaceUp | Maybe.isJust (Game.copyStampOf obj) -> True
   Facing.FaceUp -> case Game.cardOfSource gs (Just (Object.source obj)) of
     Nothing -> False
-    Just card -> any (any (statesZone zone) . Face.staticAbilities) (Card.Type.faces card)
+    Just card -> any states (Card.Type.faces card)
+
+-- Does any static ability of this face state `zone`? mayStateZone's question
+-- for the static walks.
+staticStatesZone :: Zone.Zone -> Face.Face card -> Bool
+staticStatesZone zone = any (statesZone zone) . Face.staticAbilities
 
 -- Fold over every card in one per-player zone, across every player, WITHOUT
 -- materializing the ids: gatherGiven walks the two hidden zones on every
@@ -5291,18 +5299,6 @@ functionsFromZoneOfRow zone pr =
 statesZoneOfRow :: Zone.Zone -> PrintedReplacement.PrintedReplacement card ability effect -> Bool
 statesZoneOfRow zone = Set.member zone . PrintedReplacement.functionsFrom
 
--- mayStateZone's twin for printed replacement rows, and cheap for its reason: a
--- fold over the base card's faces against building the face the object shows.
--- A superset, on that function's argument, and it narrows neither a face-down
--- object nor a stamped one, for that function's reasons.
-mayStateZoneOfRow :: GameState -> Zone.Zone -> Object.Object -> Bool
-mayStateZoneOfRow gs zone obj = case Object.facing obj of
-  Facing.FaceDown _ -> True
-  Facing.FaceUp | Maybe.isJust (Game.copyStampOf obj) -> True
-  Facing.FaceUp -> case Game.cardOfSource gs (Just (Object.source obj)) of
-    Nothing -> False
-    Just card -> any (any (statesZoneOfRow zone) . Face.replacementEffects) (Card.Type.faces card)
-
 -- CR 107.3m: the value of X for this object's enters-the-battlefield replacement
 -- effects, and 0 for every object no such spell stands behind. Read off the
 -- OBJECT, not the projection: an announcement is not a characteristic, so no CR
@@ -5716,7 +5712,7 @@ replacementsAffecting gs =
       statedFrom zone oid = case Game.lookupObject oid gs of
         Nothing -> []
         Just obj | Object.exiledFaceDown obj -> []
-        Just obj | not (mayStateZoneOfRow gs zone obj) -> []
+        Just obj | not (mayStateZone (any (statesZoneOfRow zone) . Face.replacementEffects) gs obj) -> []
         Just obj -> case abilityFaceOf oid obj gs of
           Nothing -> []
           Just face ->
@@ -5729,7 +5725,7 @@ replacementsAffecting gs =
       -- stated set overrides that in both directions. gatherGiven's fromSpell is
       -- the same pair on a static ability, down to reading the card TYPES off the
       -- ability face -- a classification rather than an identity -- and this arm
-      -- takes no mayStateZoneOfRow prefilter for the same reason it takes the
+      -- takes no mayStateZone prefilter for the same reason it takes the
       -- default: an unstated row belongs here, and the stack is short.
       fromSpellRow oid = case Game.lookupObject oid gs of
         Nothing -> []
@@ -5778,7 +5774,7 @@ replacementsAffecting gs =
       -- card is projected only when mintsOffBattlefield lets it: its ability face
       -- has such a keyword, or some grantor writes one (`graveyardGrantInForce`).
       --
-      -- No mayStateZoneOfRow prefilter beside it, `mintedInHand`'s posture: a
+      -- No mayStateZone prefilter beside it, `mintedInHand`'s posture: a
       -- MINTED row is not printed in a face's list, so there is no
       -- functions-from set on it to consult -- rule 702.52a states the zone
       -- itself, and this walk is the zone.
@@ -5800,7 +5796,7 @@ replacementsAffecting gs =
           <> concatMap (statedFrom Zone.Exile) (Set.toList (GameState.exile gs))
           <> concatMap (statedFrom Zone.Command) statingCommand
       -- The short-circuit guards the two walks that PROJECT, and nothing else:
-      -- `stated` reads ability faces, behind mayStateZoneOfRow everywhere but the
+      -- `stated` reads ability faces, behind mayStateZone everywhere but the
       -- stack, so it costs what gatherGiven's stating walks cost and answers []
       -- on a board with no such row without any of the reads baseHas makes.
       onBoard =
@@ -5935,7 +5931,7 @@ elsewhereGrants p gs =
         Just face -> any (\sa -> functionsFromZone zone sa && writes sa) (Face.staticAbilities face)
       grantsStating zone oid = case Game.lookupObject oid gs of
         Nothing -> False
-        Just obj | not (mayStateZone gs zone obj) -> False
+        Just obj | not (mayStateZone (staticStatesZone zone) gs obj) -> False
         Just obj -> case abilityFaceOf oid obj gs of
           Nothing -> False
           Just face -> any (\sa -> statesZone zone sa && writes sa) (Face.staticAbilities face)

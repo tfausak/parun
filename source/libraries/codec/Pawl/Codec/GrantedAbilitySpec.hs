@@ -90,6 +90,7 @@ spec s = Spec.describe s "Pawl.Codec.GrantedAbility" $ do
               Nothing
               Nothing
               TriggerLimit.Unlimited
+              Set.empty
           )
       )
       " {\"type\":\"Triggered\",\"value\":{\"condition\":{\"type\":\"SelfDealsCombatDamageToPlayer\",\"value\":{\"type\":\"AnyPlayer\"}},\"modal\":{\"modes\":[{}]}}} "

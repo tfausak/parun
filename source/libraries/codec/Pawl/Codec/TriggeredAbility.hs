@@ -3,12 +3,14 @@
 module Pawl.Codec.TriggeredAbility where
 
 import qualified Data.Map.Strict as Map
+import qualified Data.Set as Set
 import qualified Data.Typeable as Typeable
 import qualified Pawl.Codec.AbilityName as AbilityNameCodec
 import qualified Pawl.Codec.Condition as Condition
 import qualified Pawl.Codec.Modal as Modal
 import qualified Pawl.Codec.TriggerCondition as TriggerCondition
 import qualified Pawl.Codec.TriggerLimit as TriggerLimit
+import qualified Pawl.Codec.Zone as Zone
 import qualified Pawl.JsonCodec.Codec as Codec
 import qualified Pawl.JsonCodec.Common as Common
 import qualified Pawl.JsonCodec.Fields as Fields
@@ -25,13 +27,15 @@ codec cardCodec abilityCodec = Fields.object $ do
   intervening <- Fields.defaulted "intervening" Nothing (Common.maybe Condition.codec) TriggeredAbility.intervening
   name <- Fields.defaulted "name" Nothing (Common.maybe AbilityNameCodec.codec) TriggeredAbility.name
   limit <- Fields.defaulted "limit" TriggerLimit.Unlimited TriggerLimit.codec TriggeredAbility.limit
+  functionsFrom <- Fields.defaulted "functionsFrom" Set.empty (Common.set Zone.codec) TriggeredAbility.functionsFrom
   pure
     TriggeredAbility.MkTriggeredAbility
       { TriggeredAbility.condition = condition,
         TriggeredAbility.modal = modal,
         TriggeredAbility.intervening = intervening,
         TriggeredAbility.name = name,
-        TriggeredAbility.limit = limit
+        TriggeredAbility.limit = limit,
+        TriggeredAbility.functionsFrom = functionsFrom
       }
 
 -- | A name-keyed map as a JSON OBJECT keyed by the ability name.

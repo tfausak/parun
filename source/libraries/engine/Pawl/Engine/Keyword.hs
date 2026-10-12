@@ -217,6 +217,7 @@ import qualified Pawl.Types.Toughness as Toughness
 import qualified Pawl.Types.TriggerCondition as TriggerCondition
 import qualified Pawl.Types.TriggerFrequency as TriggerFrequency
 import Pawl.Types.TriggeredAbility (TriggeredAbility)
+import qualified Pawl.Types.TriggeredAbility as TriggeredAbility
 import qualified Pawl.Types.TurnScope as TurnScope
 import qualified Pawl.Types.TurnUpProcedure as TurnUpProcedure
 import qualified Pawl.Types.TurnUpR as TurnUpR
@@ -7804,7 +7805,7 @@ handTriggeredAbilitiesOf = triggeredAbilitiesOf . Map.fromSet (const 1)
 -- UNGATED BY CR 113.6, which is the whole reason it is its own function: rule
 -- 702.62a states the zone itself, so the exile scan takes this list without
 -- asking `functionsIn` -- where the same scan does ask it of the card's PRINTED
--- abilities, which function in exile only where their condition states it (CR
+-- abilities, which function in exile only where the ability states it (CR
 -- 113.6b, Benalish Commander's "while it's exiled").
 --
 -- Suspend's pair is ordered as rule 702.62a prints them, which is also the
@@ -8333,7 +8334,7 @@ suspendedNow = Condition.Compares (Compares.MkCompares (Quantity.ObjectCounters 
 -- exiled with no time counters at all has nothing to trigger, which is CR
 -- 702.62b read from the other side.
 --
--- The condition states exile, rule 702.62a's zone. Unread in practice: the
+-- The ability states exile, rule 702.62a's zone. Unread in practice: the
 -- exile scan takes `exileTriggeredAbilitiesOf` without asking `functionsIn`.
 --
 -- ONE MANDATORY clause: the "you may" governs the PLAY alone, which is
@@ -8379,10 +8380,13 @@ suspendLastCounter keyword =
               OfferCast.controlWhileResolving = False,
               OfferCast.slot = Nothing
             }
-   in Mint.triggerIf
-        (TriggerCondition.SelfLastCounterRemoved (SelfCountersRemoved.MkSelfCountersRemoved {SelfCountersRemoved.kind = CounterKind.Time, SelfCountersRemoved.zone = Zone.Exile}))
-        stillExiled
-        (Seq.singleton effect)
+   in ( Mint.triggerIf
+          (TriggerCondition.SelfLastCounterRemoved (SelfCountersRemoved.MkSelfCountersRemoved {SelfCountersRemoved.kind = CounterKind.Time}))
+          stillExiled
+          (Seq.singleton effect)
+      )
+        { TriggeredAbility.functionsFrom = Set.singleton Zone.Exile
+        }
 
 -- CR 702.62a's "if it's exiled", cumulativeUpkeep's onBattlefield one zone over:
 -- a count of the exile zone kept by Filter.IsSource, which is at least one
@@ -8791,7 +8795,7 @@ timeCounterUpkeep =
 vanishingLastCounter :: TriggeredAbility Card (GrantedAbility.GrantedAbility Card)
 vanishingLastCounter =
   let effect = Effect.Sacrifice SacrificeEffect.MkSacrificeEffect {SacrificeEffect.ref = ObjectRef.InSlot Binding.triggerSource, SacrificeEffect.sacrificer = Sacrificer.EffectController, SacrificeEffect.sacrificed = Nothing}
-   in Mint.trigger (TriggerCondition.SelfLastCounterRemoved (SelfCountersRemoved.MkSelfCountersRemoved {SelfCountersRemoved.kind = CounterKind.Time, SelfCountersRemoved.zone = Zone.Battlefield})) (Seq.singleton effect)
+   in Mint.trigger (TriggerCondition.SelfLastCounterRemoved (SelfCountersRemoved.MkSelfCountersRemoved {SelfCountersRemoved.kind = CounterKind.Time})) (Seq.singleton effect)
 
 -- CR 702.176a's FOURTH ability: "at the beginning of your end step, if this
 -- permanent's impending cost was paid and it has a time counter on it, remove a
