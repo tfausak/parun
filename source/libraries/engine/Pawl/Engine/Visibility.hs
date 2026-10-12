@@ -103,7 +103,10 @@ shownTo seat oid gs = case Game.lookupObject oid gs of
           (ShownCards.Hand, Just Zone.Hand) -> True
           (ShownCards.TopOfLibrary, Just Zone.Library) -> isTop
           _ -> False
-     in visibleIf (any (\grant -> covers grant && reaches grant) (PlayerEffect.shownGrants owner gs))
+     in -- Only the top card of a library can be shown, so skip the grants below it.
+        if Game.zoneOf oid gs == Just Zone.Library && not isTop
+          then Visibility.Obscured
+          else visibleIf (any (\grant -> covers grant && reaches grant) (PlayerEffect.shownGrants owner gs))
 
 visibleIf :: Bool -> Visibility.Visibility
 visibleIf seen = if seen then Visibility.Visible else Visibility.Obscured
