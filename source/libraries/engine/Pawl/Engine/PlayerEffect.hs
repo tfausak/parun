@@ -1757,8 +1757,9 @@ castFlashGrant effect = case effect of
 -- Prototype is the third: CR 718.3a/b and 601.3e judge a prototyped spell by its
 -- inset cost, and so its colour and mana value. The hypothetical stamps
 -- Object.prototyped onto a state that is only read, which is how
--- Projection.View.withPrototype is asked; a card with no prototype views the
--- same either way. Pawl.CastPermissionSpec's "CR 601.3b / 718.3b Yeva lets Rust
+-- Projection.View.withPrototype is asked, and only for a card whose projected
+-- keywords offer rule 702.160a's choice (`bestowable`'s gate): Filter.IsPrototyped
+-- reads the stamp itself, so ungated it would name any card. Pawl.CastPermissionSpec's "CR 601.3b / 718.3b Yeva lets Rust
 -- Goliath begin prototyped on the opponent's turn" is the proof.
 --
 -- A HYPOTHETICAL here where CR 601.3a's prohibition side takes the stamp instead,
@@ -1787,10 +1788,11 @@ castFlashGrant effect = case effect of
 choiceCouldApply :: RowSource -> Filter Keyword -> ObjectId -> GameState -> Bool
 choiceCouldApply src criterion oid gs =
   let bestowable = not (null (Keyword.bestowCosts (Map.keysSet (Projection.keywordsOf oid gs))))
+      prototypable = not (null (Keyword.prototypes (Map.keysSet (Projection.keywordsOf oid gs))))
       prototyped = gs {GameState.objects = Map.adjust (\o -> o {Object.prototyped = True}) oid (GameState.objects gs)}
    in (bestowable && Filter.matches (contextFrom src oid gs) (Projection.bestowedView oid gs) criterion)
         || xCouldApply src criterion oid VariableChoice.Announced gs
-        || matchesObjectFrom src criterion oid prototyped
+        || (prototypable && matchesObjectFrom src criterion oid prototyped)
 
 -- choiceCouldApply's X half: could some X the candidate lets its caster announce
 -- (CR 107.3b fixes it at 0 under FixedAtZero) make `criterion` name `oid`?

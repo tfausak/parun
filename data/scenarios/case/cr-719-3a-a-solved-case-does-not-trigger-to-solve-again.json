@@ -1,0 +1,383 @@
+{
+  "description": "CR 719.3a a solved Case does not trigger to solve again",
+  "board": {
+    "seats": [
+      {
+        "name": "alice",
+        "battlefield": [
+          {
+            "card": "Forest",
+            "label": "f1",
+            "ready": true
+          },
+          {
+            "card": "Forest",
+            "label": "f2",
+            "ready": true
+          },
+          {
+            "card": "Forest",
+            "label": "f3",
+            "ready": true
+          },
+          {
+            "card": "Forest",
+            "label": "f4",
+            "ready": true
+          },
+          {
+            "card": "Forest",
+            "label": "f5",
+            "ready": true
+          },
+          {
+            "card": "Forest",
+            "label": "f6",
+            "ready": true
+          },
+          {
+            "card": "Forest",
+            "label": "f7",
+            "ready": true
+          },
+          {
+            "card": "Forest",
+            "label": "f8",
+            "ready": true
+          },
+          {
+            "card": "Forest",
+            "label": "f9",
+            "ready": true
+          },
+          {
+            "card": "Forest",
+            "label": "f10",
+            "ready": true
+          },
+          {
+            "card": "Forest",
+            "label": "f11",
+            "ready": true
+          },
+          {
+            "card": "Forest",
+            "label": "f12",
+            "ready": true
+          },
+          {
+            "card": "Case of the Ransacked Lab",
+            "label": "case"
+          }
+        ],
+        "hand": [
+          {
+            "card": "Fog",
+            "label": "fog1"
+          },
+          {
+            "card": "Fog",
+            "label": "fog2"
+          },
+          {
+            "card": "Fog",
+            "label": "fog3"
+          },
+          {
+            "card": "Fog",
+            "label": "fog4"
+          },
+          {
+            "card": "Fog",
+            "label": "fog5"
+          },
+          {
+            "card": "Fog",
+            "label": "fog6"
+          },
+          {
+            "card": "Fog",
+            "label": "fog7"
+          },
+          {
+            "card": "Fog",
+            "label": "fog8"
+          }
+        ],
+        "library": [
+          {
+            "card": "Fog"
+          },
+          {
+            "card": "Fog"
+          },
+          {
+            "card": "Fog"
+          },
+          {
+            "card": "Fog"
+          },
+          {
+            "card": "Fog"
+          },
+          {
+            "card": "Fog"
+          },
+          {
+            "card": "Fog"
+          },
+          {
+            "card": "Fog"
+          },
+          {
+            "card": "Fog"
+          },
+          {
+            "card": "Fog"
+          }
+        ]
+      },
+      {
+        "name": "bob",
+        "library": [
+          {
+            "card": "Forest"
+          },
+          {
+            "card": "Forest"
+          },
+          {
+            "card": "Forest"
+          }
+        ]
+      }
+    ],
+    "active": "alice",
+    "step": "PrecombatMain"
+  },
+  "timeline": [
+    {
+      "turn": 1,
+      "step": "PrecombatMain",
+      "player": "alice",
+      "do": {
+        "Cast": {
+          "object": "$fog1",
+          "mana": [
+            "$f1",
+            null
+          ]
+        }
+      }
+    },
+    {
+      "turn": 1,
+      "step": "PrecombatMain",
+      "player": "alice",
+      "do": "Pass"
+    },
+    {
+      "turn": 1,
+      "step": "PrecombatMain",
+      "player": "alice",
+      "do": {
+        "Cast": {
+          "object": "$fog2",
+          "mana": [
+            "$f2",
+            null
+          ]
+        }
+      }
+    },
+    {
+      "turn": 1,
+      "step": "PrecombatMain",
+      "player": "alice",
+      "do": "Pass"
+    },
+    {
+      "turn": 1,
+      "step": "PrecombatMain",
+      "player": "alice",
+      "do": {
+        "Cast": {
+          "object": "$fog3",
+          "mana": [
+            "$f3",
+            null
+          ]
+        }
+      }
+    },
+    {
+      "turn": 1,
+      "step": "PrecombatMain",
+      "player": "alice",
+      "do": "Pass"
+    },
+    {
+      "turn": 1,
+      "step": "PrecombatMain",
+      "player": "alice",
+      "do": {
+        "Cast": {
+          "object": "$fog4",
+          "mana": [
+            "$f4",
+            null
+          ]
+        }
+      }
+    },
+    {
+      "turn": 1,
+      "step": "PrecombatMain",
+      "player": "alice",
+      "do": "Pass"
+    },
+    {
+      "turn": 1,
+      "step": "EndStep",
+      "player": "alice",
+      "check": {
+        "View": {
+          "of": "Stack",
+          "is": [
+            "trigger of $case"
+          ]
+        }
+      }
+    },
+    {
+      "turn": 1,
+      "step": "EndStep",
+      "player": "alice",
+      "do": "Pass"
+    },
+    {
+      "turn": 1,
+      "step": "EndStep",
+      "player": "alice",
+      "check": {
+        "View": {
+          "of": "Designations",
+          "object": "$case",
+          "is": [
+            {
+              "type": "Solved"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "turn": 3,
+      "step": "PrecombatMain",
+      "player": "alice",
+      "do": {
+        "Cast": {
+          "object": "$fog5",
+          "mana": [
+            "$f1",
+            null
+          ]
+        }
+      }
+    },
+    {
+      "turn": 3,
+      "step": "PrecombatMain",
+      "player": "alice",
+      "do": "Pass"
+    },
+    {
+      "turn": 3,
+      "step": "PrecombatMain",
+      "player": "alice",
+      "do": {
+        "Cast": {
+          "object": "$fog6",
+          "mana": [
+            "$f2",
+            null
+          ]
+        }
+      }
+    },
+    {
+      "turn": 3,
+      "step": "PrecombatMain",
+      "player": "alice",
+      "do": "Pass"
+    },
+    {
+      "turn": 3,
+      "step": "PrecombatMain",
+      "player": "alice",
+      "do": {
+        "Cast": {
+          "object": "$fog7",
+          "mana": [
+            "$f3",
+            null
+          ]
+        }
+      }
+    },
+    {
+      "turn": 3,
+      "step": "PrecombatMain",
+      "player": "alice",
+      "do": "Pass"
+    },
+    {
+      "turn": 3,
+      "step": "PrecombatMain",
+      "player": "alice",
+      "do": {
+        "Cast": {
+          "object": "$fog8",
+          "mana": [
+            "$f4",
+            null
+          ]
+        }
+      }
+    },
+    {
+      "turn": 3,
+      "step": "PrecombatMain",
+      "player": "alice",
+      "do": "Pass"
+    },
+    {
+      "turn": 3,
+      "step": "EndStep",
+      "player": "alice",
+      "check": {
+        "View": {
+          "of": "Stack",
+          "is": []
+        }
+      }
+    },
+    {
+      "turn": 3,
+      "step": "EndStep",
+      "player": "alice",
+      "check": {
+        "View": {
+          "of": "Designations",
+          "object": "$case",
+          "is": [
+            {
+              "type": "Solved"
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "note": "The to-solve condition is met on turn 1 and again on turn 3. The turn-1 end step shows the trigger on the stack; the turn-3 one, with the Case already solved, shows nothing."
+}

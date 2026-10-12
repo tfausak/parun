@@ -93,6 +93,7 @@ codec = Fields.object $ do
   mergedDonors <- Fields.defaulted "mergedDonors" [] (Common.list codec) PC.mergedDonors
   prepare <- Fields.defaulted "prepare" Nothing (Common.maybe (Face.codec Card.codec)) PC.prepare
   alternativeSpell <- Fields.defaulted "alternativeSpell" Nothing (Common.maybe (Face.codec Card.codec)) PC.alternativeSpell
+  prototyped <- Fields.defaulted "prototyped" False Common.boolean PC.prototyped
   spell <- Fields.defaulted "spell" Face.Type.defaultSpell (Modal.codec Card.codec (GrantedAbility.codec Card.codec)) PC.spell
   flipped <- Fields.defaulted "flipped" Nothing (Common.maybe codec) PC.flipped
   pure
@@ -142,6 +143,7 @@ codec = Fields.object $ do
         PC.mergedDonors = mergedDonors,
         PC.prepare = prepare,
         PC.alternativeSpell = alternativeSpell,
+        PC.prototyped = prototyped,
         PC.spell = spell,
         PC.flipped = flipped
       }

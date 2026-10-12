@@ -4353,7 +4353,13 @@ copiedReading src gs =
       -- topmost component's mana value like its every other characteristic, so
       -- a copy of one has that number rather than 0.
       melded = maybe False (not . Seq.null . Game.meldComponentsOf . Object.source) (Game.lookupObject src gs)
-   in if backFace || melded then snapshot {PC.manaValue = Just 0} else snapshot
+      -- CR 718.3d's last sentence, read whole: a copy of a permanent that was a
+      -- prototyped spell answers as one whatever values it copied, so a Clone
+      -- of one that is face down (CR 708.2) or a copy of something else (CR
+      -- 707.2) is one too. The copied object's own record rides the snapshot
+      -- beside the frame withPrototype marks.
+      marked = snapshot {PC.prototyped = PC.prototyped snapshot || any Object.prototyped (Game.lookupObject src gs)}
+   in if backFace || melded then marked {PC.manaValue = Just 0} else marked
 
 -- CR 608.2h: `copiedSnapshot` for an object that may already be gone -- the
 -- record filed as it ceased, which is the same value this function would have
@@ -8526,6 +8532,8 @@ lastKnownFrom gs oid obj =
     (Object.protector obj)
     -- CR 400.7d's cost record.
     (Object.paidCosts obj)
+    -- CR 718.3d's record, for the same reason.
+    (Object.prototyped obj)
     -- CR 702.30a's echo window: per-incarnation, so this is the last moment it
     -- exists.
     (Object.controlClock obj)

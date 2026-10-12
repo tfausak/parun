@@ -446,6 +446,7 @@ bakePerspective viewOf context gs candidate predicate =
         Filter.Type.WasCastFrom _ -> predicate
         Filter.Type.TagWasSpent _ -> predicate
         Filter.Type.Paid _ -> predicate
+        Filter.Type.IsPrototyped -> predicate
 
 -- A baked answer as a Filter. `And []` is the trivial predicate by
 -- Pawl.Types.Filter's own note, so its negation is the trivially false one --
@@ -912,6 +913,9 @@ lastKnownView peers oid gs lastKnown =
       Filter.attacking = LastKnown.attacking lastKnown,
       Filter.blocking = LastKnown.blocking lastKnown,
       Filter.paidCosts = LastKnown.paidCosts lastKnown,
+      -- CR 718.3d: the copiable record or the object's own, viewOfCharacteristics'
+      -- disjunction. A regression fence: no card asks it of a departed object.
+      Filter.prototyped = PC.prototyped (LastKnown.characteristics lastKnown) || LastKnown.prototyped lastKnown,
       Filter.attackedThisTurn = attackedThisTurn oid gs,
       Filter.declaredAttackerThisCombat = declaredAttackerThisCombat oid gs,
       Filter.declaredAttackedThisCombat = declaredAttackedThisCombat oid gs,
@@ -1252,6 +1256,10 @@ viewOfSnapshot deploy mController mOwner isToken counters snapshot =
       Filter.castUsing = Nothing,
       -- CR 702.143c's record is a field of an OBJECT -- `tributePaid` above.
       Filter.foretold = False,
+      -- CR 718.3c / 718.3d off the snapshot, which carries a copy's answer. The
+      -- object's own flag is a field of an OBJECT, which lastKnownView adds. A
+      -- regression fence: no card asks it of a snapshot.
+      Filter.prototyped = PC.prototyped snapshot,
       -- CR 400.7d's mana record is a field of an OBJECT, which a
       -- ProjectedCharacteristics does not carry -- `designations` above, same
       -- sentence -- so a past event reports none.

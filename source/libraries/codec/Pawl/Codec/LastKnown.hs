@@ -41,6 +41,7 @@ codec = Fields.object $ do
   blocking <- Fields.required "blocking" Common.boolean LastKnown.blocking
   protector <- Fields.required "protector" (Common.maybe PlayerId.codec) LastKnown.protector
   paidCosts <- Fields.defaulted "paidCosts" Map.empty (Common.multiset Keyword.codec) LastKnown.paidCosts
+  prototyped <- Fields.defaulted "prototyped" False Common.boolean LastKnown.prototyped
   controlClock <- Fields.defaulted "controlClock" Map.empty (Common.keyedList ControlClock.entry) LastKnown.controlClock
   zone <- Fields.required "zone" Zone.codec LastKnown.zone
   pile <- Fields.defaulted "pile" Nothing (Common.maybe PlayerId.codec) LastKnown.pile
@@ -62,6 +63,7 @@ codec = Fields.object $ do
         LastKnown.blocking = blocking,
         LastKnown.protector = protector,
         LastKnown.paidCosts = paidCosts,
+        LastKnown.prototyped = prototyped,
         LastKnown.controlClock = controlClock,
         LastKnown.zone = zone,
         LastKnown.pile = pile

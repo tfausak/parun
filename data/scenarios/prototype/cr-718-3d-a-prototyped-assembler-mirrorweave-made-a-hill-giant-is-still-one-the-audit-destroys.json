@@ -1,0 +1,228 @@
+{
+  "description": "CR 718.3d the prototyped Assembler made a copy of Hill Giant by Mirrorweave is still a permanent that was a prototyped spell",
+  "note": "Mirrorweave replaces the Assembler's copiable values with the Giant's, which carry no prototype: what the Audit reads is the Assembler's own record of how it was cast. The 3/3 check is the precondition that the copy effect applies.",
+  "board": {
+    "seats": [
+      {
+        "name": "alice",
+        "battlefield": [
+          {
+            "card": "Plains",
+            "label": "plains",
+            "ready": true
+          },
+          {
+            "card": "Plains",
+            "label": "plains-2",
+            "ready": true
+          },
+          {
+            "card": "Plains",
+            "label": "plains-3",
+            "ready": true
+          },
+          {
+            "card": "Plains",
+            "label": "plains-4",
+            "ready": true
+          },
+          {
+            "card": "Plains",
+            "label": "plains-5",
+            "ready": true
+          },
+          {
+            "card": "Plains",
+            "label": "plains-6",
+            "ready": true
+          }
+        ],
+        "hand": [
+          {
+            "card": "Autonomous Assembler",
+            "label": "autonomous-assembler"
+          },
+          {
+            "card": "Mirrorweave",
+            "label": "mirrorweave"
+          }
+        ]
+      },
+      {
+        "name": "bob",
+        "battlefield": [
+          {
+            "card": "Hill Giant",
+            "label": "giant",
+            "ready": true
+          },
+          {
+            "card": "Island",
+            "label": "island",
+            "ready": true
+          },
+          {
+            "card": "Island",
+            "label": "island-2",
+            "ready": true
+          }
+        ],
+        "hand": [
+          {
+            "card": "Synthetic Prototype Audit",
+            "label": "audit"
+          }
+        ]
+      }
+    ],
+    "active": "alice",
+    "step": "PrecombatMain"
+  },
+  "timeline": [
+    {
+      "turn": 1,
+      "step": "PrecombatMain",
+      "player": "alice",
+      "do": {
+        "Cast": {
+          "object": "$autonomous-assembler",
+          "cost": [
+            {
+              "type": "Generic",
+              "value": 1
+            },
+            {
+              "type": "OfType",
+              "value": {
+                "type": "Colored",
+                "value": {
+                  "type": "White"
+                }
+              }
+            }
+          ],
+          "mana": [
+            "$plains",
+            "$plains-2",
+            null
+          ]
+        }
+      }
+    },
+    {
+      "turn": 1,
+      "step": "PrecombatMain",
+      "player": "alice",
+      "do": "Pass"
+    },
+    {
+      "turn": 1,
+      "step": "PrecombatMain",
+      "player": "bob",
+      "do": "Pass"
+    },
+    {
+      "turn": 1,
+      "step": "PrecombatMain",
+      "player": "alice",
+      "do": {
+        "Cast": {
+          "object": "$mirrorweave",
+          "targets": [
+            "$giant"
+          ],
+          "mana": [
+            "$plains-3",
+            "$plains-4",
+            "$plains-5",
+            "$plains-6"
+          ]
+        }
+      }
+    },
+    {
+      "turn": 1,
+      "step": "PrecombatMain",
+      "player": "alice",
+      "do": "Pass"
+    },
+    {
+      "turn": 1,
+      "step": "PrecombatMain",
+      "player": "bob",
+      "do": "Pass"
+    },
+    {
+      "turn": 1,
+      "step": "PrecombatMain",
+      "player": "alice",
+      "check": {
+        "PowerToughness": {
+          "object": "Autonomous Assembler",
+          "power": 3,
+          "toughness": 3
+        }
+      }
+    },
+    {
+      "turn": 1,
+      "step": "PrecombatMain",
+      "player": "alice",
+      "do": "Pass"
+    },
+    {
+      "turn": 1,
+      "step": "PrecombatMain",
+      "player": "bob",
+      "do": {
+        "Cast": {
+          "object": "$audit",
+          "targets": [
+            "Autonomous Assembler"
+          ],
+          "mana": [
+            "$island",
+            "$island-2"
+          ]
+        }
+      }
+    },
+    {
+      "turn": 1,
+      "step": "PrecombatMain",
+      "player": "alice",
+      "do": "Pass"
+    },
+    {
+      "turn": 1,
+      "step": "PrecombatMain",
+      "player": "alice",
+      "check": {
+        "Count": {
+          "player": "alice",
+          "zone": "Graveyard",
+          "card": "Autonomous Assembler",
+          "count": 1
+        }
+      }
+    }
+  ],
+  "final": [
+    {
+      "Count": {
+        "player": "bob",
+        "zone": "Battlefield",
+        "card": "Hill Giant",
+        "count": 1
+      }
+    },
+    {
+      "Count": {
+        "player": "bob",
+        "zone": "Graveyard",
+        "card": "Synthetic Prototype Audit",
+        "count": 1
+      }
+    }
+  ]
+}
