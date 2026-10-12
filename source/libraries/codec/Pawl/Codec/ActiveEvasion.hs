@@ -19,11 +19,13 @@ codec = Fields.object $ do
   timestamp <- Fields.required "timestamp" Timestamp.codec ActiveEvasion.timestamp
   expiry <- Fields.required "expiry" Expiry.codec ActiveEvasion.expiry
   affected <- Fields.required "affected" (Filter.codec Keyword.codec) ActiveEvasion.affected
+  blockers <- Fields.required "blockers" (Filter.codec Keyword.codec) ActiveEvasion.blockers
   pure
     ActiveEvasion.MkActiveEvasion
       { ActiveEvasion.source = source,
         ActiveEvasion.controller = controller,
         ActiveEvasion.timestamp = timestamp,
         ActiveEvasion.expiry = expiry,
-        ActiveEvasion.affected = affected
+        ActiveEvasion.affected = affected,
+        ActiveEvasion.blockers = blockers
       }

@@ -23,8 +23,9 @@ spec s = Spec.describe s "Pawl.Codec.ActiveEvasion" $ do
           ActiveEvasion.controller = PlayerId.MkPlayerId 4,
           ActiveEvasion.timestamp = Timestamp.MkTimestamp 2,
           ActiveEvasion.expiry = Expiry.AtCleanup,
-          ActiveEvasion.affected = Filter.HasCardType CardType.Creature
+          ActiveEvasion.affected = Filter.HasCardType CardType.Creature,
+          ActiveEvasion.blockers = Filter.Not Filter.SameSectorAsSource
         }
-      " {\"source\":1,\"controller\":4,\"timestamp\":2,\"expiry\":{\"type\":\"AtCleanup\"},\"affected\":{\"type\":\"HasCardType\",\"value\":{\"type\":\"Creature\"}}} "
+      " {\"source\":1,\"controller\":4,\"timestamp\":2,\"expiry\":{\"type\":\"AtCleanup\"},\"affected\":{\"type\":\"HasCardType\",\"value\":{\"type\":\"Creature\"}},\"blockers\":{\"type\":\"Not\",\"value\":{\"type\":\"SameSectorAsSource\"}}} "
   Spec.it s "has a schema" $
     Common.assertHasSchema s ActiveEvasion.codec

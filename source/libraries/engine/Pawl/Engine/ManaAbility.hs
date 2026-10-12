@@ -458,6 +458,7 @@ manaProduced effect = case effect of
   Effect.ChoosePlayer _ -> Nothing
   Effect.ChoosePlayerAtRandom _ -> Nothing
   Effect.ChoosePermanents _ -> Nothing
+  Effect.ChooseSector _ -> Nothing
   Effect.RollDie {} -> Nothing
   Effect.FlipCoin {} -> Nothing
   Effect.TakeExtraTurn {} -> Nothing
@@ -647,6 +648,7 @@ playerChoice effect = case effect of
   Effect.ChoosePlayer choice -> Just choice
   Effect.ChoosePlayerAtRandom _ -> Nothing
   Effect.ChoosePermanents _ -> Nothing
+  Effect.ChooseSector _ -> Nothing
   Effect.RollDie {} -> Nothing
   Effect.FlipCoin {} -> Nothing
   Effect.TakeExtraTurn {} -> Nothing
@@ -928,6 +930,7 @@ movesLibraryCard effect = case effect of
   Effect.ChoosePlayer _ -> False
   Effect.ChoosePlayerAtRandom _ -> False
   Effect.ChoosePermanents _ -> False
+  Effect.ChooseSector _ -> False
   Effect.RollDie {} -> False
   Effect.FlipCoin {} -> False
   -- The card is wherever the slot bound it, which the opcode itself never

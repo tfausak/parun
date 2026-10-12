@@ -103,6 +103,12 @@ spec s = Spec.describe s "Pawl.Codec.Filter" $ do
       s
       (Codec.encode codec (Filter.HasKeywordFamily KeywordFamily.Toxic) /= Codec.encode codec (Filter.HasKeyword (Keyword.Toxic 2)))
       "the toxic family filter is not the toxic 2 filter"
+  Spec.it s "SameSectorAsSource" $
+    Common.assertCodec
+      s
+      codec
+      Filter.SameSectorAsSource
+      " {\"type\":\"SameSectorAsSource\"} "
   Spec.it s "SharesColorWithSource" $
     Common.assertCodec
       s

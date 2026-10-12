@@ -31,6 +31,7 @@ import Pawl.Engine.Projection.View (ControlGrant, abilitiesFromCharacteristics, 
 import qualified Pawl.Engine.Quantity as Quantity
 import qualified Pawl.Engine.RuleAbilities as RuleAbilities.Engine
 import qualified Pawl.Engine.Saga as Saga
+import qualified Pawl.Engine.Sector as Sector
 import qualified Pawl.Engine.SourceContext as SourceContext
 import qualified Pawl.Engine.Subtype as Subtype
 import qualified Pawl.Engine.Vanguard as Vanguard
@@ -1278,7 +1279,8 @@ framedWith choices source gs = withCharacteristicsOf source gs . SourceContext.f
 -- names as the source's (CR 613), through its last known information once it
 -- has left (viewWithLastKnownAnywhere): CR 608.2b's re-check and CR 608.2h's
 -- effects alike: the fields the source-comparison atoms read (Filter.Measures'
--- OfSource operand, Filter.SharesColorWithSource, Filter.SameNameAsSource and
+-- OfSource operand, Filter.SharesColorWithSource, Filter.SameSectorAsSource,
+-- Filter.SameNameAsSource and
 -- their siblings). Leaves every other field alone, so CR 509.1b's pairwise
 -- restrictions, framed by the creature being compared rather than by an
 -- ability's source, take these and not its choices.
@@ -1291,6 +1293,7 @@ withCharacteristicsOf object gs context =
    in context
         { Filter.sourceMeasures = foldMap Filter.measuresOf view,
           Filter.sourceColors = foldMap Filter.colors view,
+          Filter.sourceSectors = foldMap (Sector.sectorsIn . Filter.designations) view,
           Filter.sourceNames = foldMap Filter.names view
         }
 
@@ -3612,6 +3615,7 @@ filterReads f = case f of
   Filter.Type.HasColor _ -> Set.singleton Colors
   Filter.Type.IsMonocolored -> Set.singleton Colors
   Filter.Type.SharesColorWithSource -> Set.singleton Colors
+  Filter.Type.SameSectorAsSource -> Set.empty
   Filter.Type.HasSubtype _ -> Set.singleton Subtypes
   -- Reads no aspect: CR 201.1's names have no Aspect, so CR 613.8a's dependency
   -- cannot turn on the layer-3 writes of them (AddNamesMatching, SetName,
@@ -3966,6 +3970,7 @@ filterReadsPeers f = case f of
   Filter.Type.HasColor _ -> False
   Filter.Type.IsMonocolored -> False
   Filter.Type.SharesColorWithSource -> False
+  Filter.Type.SameSectorAsSource -> False
   Filter.Type.HasSubtype _ -> False
   Filter.Type.HasName _ -> False
   Filter.Type.NameWordsAtLeast _ -> False

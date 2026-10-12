@@ -239,6 +239,7 @@ canHostSubjects predicate = case predicate of
   Filter.Type.HasColor _ -> 0
   Filter.Type.IsMonocolored -> 0
   Filter.Type.SharesColorWithSource -> 0
+  Filter.Type.SameSectorAsSource -> 0
   Filter.Type.HasSubtype _ -> 0
   Filter.Type.HasName _ -> 0
   Filter.Type.NameWordsAtLeast _ -> 0
@@ -445,6 +446,28 @@ triggerConditionAtoms tag value = case value of
         rest = sum [triggerConditionAtoms tag (Pair.value p) | p <- pairs, not (triggered && String.unwrap (Pair.name p) == Text.pack "condition")]
      in own + rest
   Value.Array a -> sum (fmap (triggerConditionAtoms tag) (Array.unwrap a))
+  Value.String _ -> 0
+  Value.Null _ -> 0
+  Value.Boolean _ -> 0
+  Value.Number _ -> 0
+
+-- How many `tag` atoms sit in a resolved "can't be blocked" row's BLOCKER
+-- filter -- the "blockers" of a "ForbidBeingBlocked" payload -- which
+-- Pawl.Engine.CombatRestriction.storedEvasions matches in the attacker's
+-- pairwise context (Space Beleren).
+evasionBlockerAtoms :: Text.Text -> Value.Value -> Int
+evasionBlockerAtoms tag value = case value of
+  Value.Object o ->
+    let pairs = Object.unwrap o
+        named k = [Pair.value p | p <- pairs, String.unwrap (Pair.name p) == Text.pack k]
+        isEvasion = any (\v -> case v of Value.String t -> String.unwrap t == Text.pack "ForbidBeingBlocked"; _ -> False) (named "type")
+        blockersOf v = case v of
+          Value.Object inner -> sum [jsonAtoms tag (Pair.value p) | p <- Object.unwrap inner, String.unwrap (Pair.name p) == Text.pack "blockers"]
+          _ -> 0
+     in if isEvasion
+          then sum (fmap blockersOf (named "value"))
+          else sum (fmap (evasionBlockerAtoms tag . Pair.value) pairs)
+  Value.Array a -> sum (fmap (evasionBlockerAtoms tag) (Array.unwrap a))
   Value.String _ -> 0
   Value.Null _ -> 0
   Value.Boolean _ -> 0
@@ -2506,9 +2529,9 @@ filterPositionLintSpec s registry = Spec.describe s "Lint" $ do
   -- this is what keeps that true.
   Spec.it s "CR 702.134a / 702.60a / 702.78a no card compares against the source outside the positions that fill it" $ do
     ps <- S.allPrintings s
-    let tags = fmap Text.pack ["OfSource", "SameNameAsSource", "SharesColorWithSource"]
+    let tags = fmap Text.pack ["OfSource", "SameNameAsSource", "SharesColorWithSource", "SameSectorAsSource"]
         encoded = Codec.encode (Face.Codec.codec Card.codec)
-        pairwise tag c = sum (fmap (filterAtoms tag) (concatMap pairwiseFilters (Face.combatRestrictions c)))
+        pairwise tag c = sum (fmap (filterAtoms tag) (concatMap pairwiseFilters (Face.combatRestrictions c))) + evasionBlockerAtoms tag (encoded c)
         pairwiseFilters r = case r of
           CombatRestriction.CantBeBlockedBy x -> [CantBeBlockedBy.blockers x]
           CombatRestriction.CantBlockCreatures x -> [CantBlockCreatures.attackers x]
@@ -2527,11 +2550,16 @@ filterPositionLintSpec s registry = Spec.describe s "Lint" $ do
       "the Djinn's is in a wish, the Kami's in a trigger condition, the Handler's pairwise"
       (fmap (\p -> (admitted ofSource (S.combinedFace p), outside ofSource (S.combinedFace p))) [djinn, kami, spitfire])
       [((0, 1, 0), 0), ((0, 0, 1), 0), ((1, 0, 0), 0)]
+    -- The resolved row's blocker filter is pairwise too, and Space Beleren's +1
+    -- writes one there.
+    beleren <- S.printingOf s registry "Space Beleren"
+    let sameSector = Text.pack "SameSectorAsSource"
+    Spec.assertEqWith s "Space Beleren's is in a resolved evasion's blocker filter" (admitted sameSector (S.combinedFace beleren), outside sameSector (S.combinedFace beleren)) ((1, 0, 0), 0)
     -- NOT vacuous the other way either: the same counter over a hand-built face
     -- that DOES carry each atom -- buried under all three combinators, in a
     -- target slot, the one position a card author would reach for -- finds it.
     piker <- S.printingOf s registry "Goblin Piker"
-    let atoms = [Filter.Type.Measures (Measures.MkMeasures Measure.Power Comparison.LessThan (Operand.OfSource Measure.Power)), Filter.Type.SameNameAsSource, Filter.Type.SharesColorWithSource]
+    let atoms = [Filter.Type.Measures (Measures.MkMeasures Measure.Power Comparison.LessThan (Operand.OfSource Measure.Power)), Filter.Type.SameNameAsSource, Filter.Type.SharesColorWithSource, Filter.Type.SameSectorAsSource]
         planted atom =
           (S.combinedFace piker)
             { Face.spell =
@@ -2539,7 +2567,7 @@ filterPositionLintSpec s registry = Spec.describe s "Lint" $ do
                   (Map.singleton (SlotName.MkSlotName (Text.pack "target")) (TargetSlot.required Pool.Creatures (Just (Filter.Type.And [Filter.Type.Or [Filter.Type.HasCardType CardType.Creature, Filter.Type.Not atom]]))))
                   Seq.empty
             }
-    Spec.assertEqWith s "a planted atom is seen" (zipWith (\tag atom -> outside tag (planted atom)) tags atoms) [1, 1, 1]
+    Spec.assertEqWith s "a planted atom is seen" (zipWith (\tag atom -> outside tag (planted atom)) tags atoms) [1, 1, 1, 1]
   -- CR 702.140a's comparison is the source-name atom's sibling one characteristic over,
   -- and its one filler is Pawl.Engine.Target.slotContext -- so it is answerable
   -- only inside a TARGET SLOT's own filter and would be a silent False in an

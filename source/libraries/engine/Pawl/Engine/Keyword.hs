@@ -472,6 +472,7 @@ abilitiesFor keyword count = case keyword of
   Keyword.Reinforce {} -> []
   Keyword.Devoid -> []
   Keyword.Skulk -> []
+  Keyword.SpaceSculptor -> []
   Keyword.Offering _ -> []
   Keyword.Emerge _ -> []
   -- CR 702.124a: deck-construction abilities, which function before the game
@@ -760,6 +761,7 @@ handAbilitiesFor keyword = fmap (mintedBy keyword) $ case keyword of
   Keyword.Ingest -> []
   Keyword.Myriad -> []
   Keyword.Skulk -> []
+  Keyword.SpaceSculptor -> []
   Keyword.Emerge _ -> []
   -- CR 702.124a: deck-construction abilities, which function before the game
   -- begins and mint nothing in it. Pawl.Engine.Commander.designations reads them.
@@ -1334,6 +1336,7 @@ graveyardAbilitiesFor keyword = fmap (mintedBy keyword) $ case keyword of
   Keyword.Ingest -> []
   Keyword.Myriad -> []
   Keyword.Skulk -> []
+  Keyword.SpaceSculptor -> []
   Keyword.Emerge _ -> []
   Keyword.Partner -> []
   Keyword.PartnerText _ -> []
@@ -1954,6 +1957,7 @@ battlefieldAbilitiesFor keyword count = fmap (mintedBy keyword) $ case keyword o
   Keyword.Ingest -> []
   Keyword.Myriad -> []
   Keyword.Skulk -> []
+  Keyword.SpaceSculptor -> []
   Keyword.Emerge _ -> []
   -- CR 702.124a: deck-construction abilities, which function before the game
   -- begins and mint nothing in it. Pawl.Engine.Commander.designations reads them.
@@ -2707,6 +2711,7 @@ permissionsFor cardTypes keyword = case keyword of
   Keyword.Ingest -> []
   Keyword.Myriad -> []
   Keyword.Skulk -> []
+  Keyword.SpaceSculptor -> []
   Keyword.Emerge _ -> []
   -- CR 702.124a: deck-construction abilities, which function before the game
   -- begins and mint nothing in it. Pawl.Engine.Commander.designations reads them.
@@ -4590,6 +4595,7 @@ mintedReplacementsFor keyword count = case keyword of
   Keyword.Ingest -> []
   Keyword.Myriad -> []
   Keyword.Skulk -> []
+  Keyword.SpaceSculptor -> []
   Keyword.Emerge _ -> []
   -- CR 702.124a: deck-construction abilities, which function before the game
   -- begins and mint nothing in it. Pawl.Engine.Commander.designations reads them.
@@ -4914,6 +4920,7 @@ mintedCombatRestrictionsFor keyword = case keyword of
   Keyword.Ingest -> []
   Keyword.Myriad -> []
   Keyword.Skulk -> []
+  Keyword.SpaceSculptor -> []
   Keyword.Emerge _ -> []
   -- CR 702.124a: deck-construction abilities, which function before the game
   -- begins and mint nothing in it. Pawl.Engine.Commander.designations reads them.
@@ -5265,6 +5272,7 @@ mintedAttachRestrictionsFor keyword = case keyword of
   Keyword.Ingest -> []
   Keyword.Myriad -> []
   Keyword.Skulk -> []
+  Keyword.SpaceSculptor -> []
   Keyword.Emerge _ -> []
   -- CR 702.124a: deck-construction abilities, which function before the game
   -- begins and mint nothing in it. Pawl.Engine.Commander.designations reads them.
@@ -5625,6 +5633,7 @@ familyOf keyword = case keyword of
   Keyword.Ingest -> Nothing
   Keyword.Myriad -> Nothing
   Keyword.Skulk -> Nothing
+  Keyword.SpaceSculptor -> Nothing
   Keyword.Emerge _ -> Just KeywordFamily.Emerge
   -- CR 702.124h carries no parameter, so there is no family to name it by.
   Keyword.Partner -> Nothing

@@ -281,6 +281,7 @@ codec cardCodec abilityCodec =
           Arm.payload "ChoosePlayer" ChoosePlayer.codec Effect.ChoosePlayer (\x -> case x of Effect.ChoosePlayer y -> Just y; _ -> Nothing),
           Arm.payload "ChoosePlayerAtRandom" ChoosePlayerAtRandom.codec Effect.ChoosePlayerAtRandom (\x -> case x of Effect.ChoosePlayerAtRandom y -> Just y; _ -> Nothing),
           Arm.payload "ChoosePermanents" ChoosePermanents.codec Effect.ChoosePermanents (\x -> case x of Effect.ChoosePermanents y -> Just y; _ -> Nothing),
+          Arm.payload "ChooseSector" SlotName.codec Effect.ChooseSector (\x -> case x of Effect.ChooseSector y -> Just y; _ -> Nothing),
           Arm.payload "RollDie" RollDie.codec Effect.RollDie (\x -> case x of Effect.RollDie y -> Just y; _ -> Nothing),
           Arm.payload "FlipCoin" FlipCoin.codec Effect.FlipCoin (\x -> case x of Effect.FlipCoin y -> Just y; _ -> Nothing),
           Arm.payload "TakeExtraTurn" TakeExtraTurn.codec Effect.TakeExtraTurn (\x -> case x of Effect.TakeExtraTurn y -> Just y; _ -> Nothing),
@@ -454,6 +455,7 @@ tagOf x = case x of
   Effect.ChoosePlayer {} -> "ChoosePlayer"
   Effect.ChoosePlayerAtRandom {} -> "ChoosePlayerAtRandom"
   Effect.ChoosePermanents {} -> "ChoosePermanents"
+  Effect.ChooseSector {} -> "ChooseSector"
   Effect.RollDie {} -> "RollDie"
   Effect.FlipCoin {} -> "FlipCoin"
   Effect.TakeExtraTurn {} -> "TakeExtraTurn"

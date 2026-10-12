@@ -48,6 +48,9 @@ data Filter keyword
     -- either side is colourless, which CR 105.2's set reading already makes the
     -- answer for a colourless source.
     SharesColorWithSource
+  | -- | CR 702.158e: the candidate is in the same sector as the object the
+    -- evaluation comes from (Pawl.Engine.Filter.Context's sourceSectors).
+    SameSectorAsSource
   | HasSubtype Subtype.Subtype -- CR 205.3: the object's subtypes include this one.
   | -- | CR 201.2: the object's names include this LITERAL one. Membership, as CR
     -- 709.4a states the test -- a split card off the stack and a Room with both

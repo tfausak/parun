@@ -1250,6 +1250,12 @@ spec s = Spec.describe s "Pawl.Codec.Keyword" $ do
       Keyword.codec
       Keyword.Myriad
       " {\"type\":\"Myriad\"} "
+  Spec.it s "SpaceSculptor" $
+    Common.assertCodec
+      s
+      Keyword.codec
+      Keyword.SpaceSculptor
+      " {\"type\":\"SpaceSculptor\"} "
   Spec.it s "Skulk" $
     Common.assertCodec
       s

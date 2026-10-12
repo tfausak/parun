@@ -62,6 +62,7 @@ import qualified Pawl.Engine.Replacement as Replacement
 import qualified Pawl.Engine.Restamp as Restamp
 import qualified Pawl.Engine.SacrificeRestriction as SacrificeRestriction
 import qualified Pawl.Engine.Saga as Saga
+import qualified Pawl.Engine.SpaceSculptor as SpaceSculptor
 import qualified Pawl.Engine.Subtype as Subtype.Engine
 import qualified Pawl.Engine.Turn as Turn
 import qualified Pawl.Extra.Integer as Integer
@@ -6419,6 +6420,10 @@ changeZoneWithCause discarded asOf batch oid requestedDest requestedPosition see
                             then Map.insertWith (\_ old -> old) oid (obj {Object.bindings = Binding.setCopy (copiedSnapshot oid gs) (Object.bindings obj)}) (GameState.stackArchive g1)
                             else GameState.stackArchive g1
                       }
+              -- CR 702.158b: a space sculptor leaving can end every sector at
+              -- this moment, before anything the same resolution does next --
+              -- returning the sculptor included. See SpaceSculptor.lapse.
+              Monad.when (fromZone == Zone.Battlefield) (State.modify' SpaceSculptor.lapse)
               -- CR 712.21: "If a melded permanent leaves the battlefield, one
               -- permanent leaves the battlefield and two cards are put into the
               -- appropriate zone." So the leave is one event and the arrival is
