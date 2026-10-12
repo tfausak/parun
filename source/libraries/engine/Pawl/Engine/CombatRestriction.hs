@@ -989,7 +989,8 @@ barredBlocks blockers attackers gs =
 -- PAIRWISE, `cantBeBlockedBy`'s shape: the row's blocker filter is matched in
 -- the ATTACKER's context (Projection.pairwiseContext), so Space Beleren's "only
 -- by creatures in the same sector" compares each blocker with the attacker it
--- would block. Pawl.SpaceSculptorSpec's "+1" case is the proof.
+-- would block. Pawl.SpaceSculptorSpec's "CR 702.158e Space Beleren's +1 lets a
+-- creature be blocked only from its own sector" is the proof.
 storedEvasions :: [ObjectId] -> [ObjectId] -> GameState -> Set (ObjectId, ObjectId)
 storedEvasions blockers attackers gs =
   let evading active =

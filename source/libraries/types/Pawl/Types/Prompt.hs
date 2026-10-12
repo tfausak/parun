@@ -609,8 +609,8 @@ data Prompt r where
   -- | CR 614.1c: a colour an entering object's controller chooses, from those
   -- (CR 105.1) not already chosen for it.
   ChooseColor :: Decider.Decider -> PlayerId.PlayerId -> ObjectId.ObjectId -> NonEmpty.NonEmpty Color.Color -> Prompt Color.Color
-  -- | CR 702.158b: a sector, for the creature CR 704.5u assigns one to or for
-  -- CR 702.158d's "choose a sector" as the object names resolves.
+  -- | CR 702.158b: a sector, for the creature CR 704.5u assigns or the ability
+  -- source whose CR 702.158d choice it is.
   ChooseSector :: Decider.Decider -> PlayerId.PlayerId -> ObjectId.ObjectId -> NonEmpty.NonEmpty Designation.Designation -> Prompt Designation.Designation
   -- | CR 105.4 / 106.3: which mana a resolving object adds when the type it
   -- names is not settled, from Pawl.Engine.Mana.produced.

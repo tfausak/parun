@@ -69,7 +69,8 @@ inASector = any Sector.isSector . Object.designations
 -- zone-change funnel as a permanent leaves the battlefield, because the
 -- condition can fail for a moment the settle never sees: a sculptor flickered by
 -- one resolution (Felidar Guardian) leaves, and nothing sustains the sectors,
--- before it comes back. Pawl.SpaceSculptorSpec's flicker case is the proof.
+-- before it comes back. Pawl.SpaceSculptorSpec's "CR 702.158b the sectors end
+-- when no player controls a sculptor, even for a moment" is the proof.
 lapse :: GameState -> GameState
 lapse gs = if lapses gs then strip gs else gs
 
@@ -106,7 +107,8 @@ settle = do
 -- which is what choosing in turn is for. `record` is the CR 603.2 event funnel,
 -- Pawl.Engine.Event.recordEvent, passed in because that module calls `lapse`.
 --
--- Reports whether any creature was waiting.
+-- Reports whether anyone was asked: a creature no seat controls asks nobody, and
+-- reporting it would keep CR 704.3's loop from coming to rest.
 assign :: (GameEvent.GameEvent -> GameState -> GameState) -> Map.Map ObjectId PC.ProjectedCharacteristics -> GameState -> Game Bool
 assign record pcs gs =
   let field = Set.toList (GameState.battlefield gs)
@@ -118,14 +120,15 @@ assign record pcs gs =
       controllerOf oid = Projection.controllerOfGiven grants oid gs
       sculpting = Set.fromList (Maybe.mapMaybe controllerOf sculptors)
       (others, sculptorControllers) = List.partition (`Set.notMember` sculpting) (Game.apnapOrder gs)
+      order = others <> sculptorControllers
       theirs pid = filter (\oid -> controllerOf oid == Just pid) waiting
       stamp oid sector g =
         record
           (GameEvent.BecameDesignated (BecameDesignated.MkBecameDesignated sector oid))
           g {GameState.objects = Map.adjust (\o -> o {Object.designations = Set.insert sector (Object.designations o)}) oid (GameState.objects g)}
    in do
-        Monad.forM_ (others <> sculptorControllers) $ \pid ->
+        Monad.forM_ order $ \pid ->
           Monad.forM_ (theirs pid) $ \oid -> do
             picked <- Game.chooseAmong (\decider who -> Prompt.ChooseSector decider who oid) pid (NonEmpty.toList Sector.sectors)
             Monad.forM_ picked (State.modify' . stamp oid)
-        pure (not (null waiting))
+        pure (not (all (null . theirs) order))
