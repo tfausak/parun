@@ -60,7 +60,7 @@ isFaceDownConspiracy oid gs =
 -- 702.106d's linked ability sees this choice and no other.
 --
 -- Not implemented: the name is written where every answerer can read it, and a
--- later chooser's answerer sees an earlier player's name (#1412).
+-- later chooser's answerer sees an earlier player's name (#10).
 hideAgenda :: PlayerId -> ObjectId -> Game ()
 hideAgenda pid oid = do
   gs <- State.get

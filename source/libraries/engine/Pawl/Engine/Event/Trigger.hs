@@ -1909,7 +1909,7 @@ eventTriggers events gs =
       -- it (CR 113.8's first).
       --
       -- Not implemented: Arena keeps a covercast trigger from a hidden zone
-      -- hidden from opponents; here it is put on the stack in the open (#1412).
+      -- hidden from opponents; here it is put on the stack in the open (#10).
       statesHere zone = any (Set.member zone . TriggeredAbility.functionsFrom) . Face.triggeredAbilities
       statedCandidate zone oid = case Game.lookupObject oid gs of
         Just obj
