@@ -219,8 +219,8 @@ the pool reaching it).
 A free-standing secret choice is logged as an event the chooser alone
 witnesses until every choice is made, then one reveal event makes them all
 public; the prompt to a later chooser omits the earlier choices. Secret council
-(Mob Verdict) is the producer; it needs #3717's player votes, and the card is
-not in the pool, so adding it is the unit's work.
+(Truth or Consequences, a vote between two words) is the producer, added to the
+pool by unit 5b; Mob Verdict follows once #3717's player votes land.
 
 ## Unit 6 (sketch): hidden-zone targets (#559)
 

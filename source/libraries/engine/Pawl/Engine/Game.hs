@@ -2706,6 +2706,8 @@ castOf event = case event of
   GameEvent.Drew {} -> Nothing
   GameEvent.Revealed {} -> Nothing
   GameEvent.Looked {} -> Nothing
+  GameEvent.Voted {} -> Nothing
+  GameEvent.VotesRevealed {} -> Nothing
   GameEvent.AttackerDeclared {} -> Nothing
   GameEvent.BecameBlocking {} -> Nothing
   GameEvent.BlocksDeclared {} -> Nothing
@@ -2812,6 +2814,8 @@ abilityResolved event = case event of
   GameEvent.Drew {} -> Nothing
   GameEvent.Revealed {} -> Nothing
   GameEvent.Looked {} -> Nothing
+  GameEvent.Voted {} -> Nothing
+  GameEvent.VotesRevealed {} -> Nothing
   GameEvent.AttackerDeclared {} -> Nothing
   GameEvent.BecameBlocking {} -> Nothing
   GameEvent.BlocksDeclared {} -> Nothing
@@ -2896,6 +2900,8 @@ discardOf event = case event of
   GameEvent.TookInitiative _ -> Nothing
   GameEvent.Revealed {} -> Nothing
   GameEvent.Looked {} -> Nothing
+  GameEvent.Voted {} -> Nothing
+  GameEvent.VotesRevealed {} -> Nothing
   GameEvent.AttackerDeclared {} -> Nothing
   GameEvent.BecameBlocking {} -> Nothing
   GameEvent.BlocksDeclared {} -> Nothing
@@ -3047,6 +3053,8 @@ movedChange event = case event of
   GameEvent.TookInitiative _ -> Nothing
   GameEvent.Revealed {} -> Nothing
   GameEvent.Looked {} -> Nothing
+  GameEvent.Voted {} -> Nothing
+  GameEvent.VotesRevealed {} -> Nothing
   GameEvent.AttackerDeclared {} -> Nothing
   GameEvent.BecameBlocking {} -> Nothing
   GameEvent.BlocksDeclared {} -> Nothing
@@ -3152,6 +3160,8 @@ damageDealt event = case event of
   GameEvent.TookInitiative _ -> Nothing
   GameEvent.Revealed {} -> Nothing
   GameEvent.Looked {} -> Nothing
+  GameEvent.Voted {} -> Nothing
+  GameEvent.VotesRevealed {} -> Nothing
   GameEvent.AttackerDeclared {} -> Nothing
   GameEvent.BecameBlocking {} -> Nothing
   GameEvent.BlocksDeclared {} -> Nothing
@@ -3420,6 +3430,8 @@ lifeGainOf event = case event of
   GameEvent.TookInitiative _ -> Nothing
   GameEvent.Revealed {} -> Nothing
   GameEvent.Looked {} -> Nothing
+  GameEvent.Voted {} -> Nothing
+  GameEvent.VotesRevealed {} -> Nothing
   GameEvent.AttackerDeclared {} -> Nothing
   GameEvent.BecameBlocking {} -> Nothing
   GameEvent.BlocksDeclared {} -> Nothing

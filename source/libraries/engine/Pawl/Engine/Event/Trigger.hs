@@ -40,6 +40,8 @@ import qualified Pawl.Types.ActivatedAbilitySource as ActivatedAbilitySource
 import qualified Pawl.Types.AttackTarget as AttackTarget
 import qualified Pawl.Types.AttackerBlocked as AttackerBlocked
 import qualified Pawl.Types.AttackerDeclared as AttackerDeclared
+import qualified Pawl.Types.Ballot as Ballot
+import qualified Pawl.Types.BallotChoice as BallotChoice
 import qualified Pawl.Types.BattlefieldCandidate as BattlefieldCandidate
 import qualified Pawl.Types.BecameAttached as BecameAttached
 import qualified Pawl.Types.BecameAttacked as BecameAttacked
@@ -93,6 +95,7 @@ import qualified Pawl.Types.Modification as Modification
 import qualified Pawl.Types.Moved as Moved
 import qualified Pawl.Types.Object as Object
 import Pawl.Types.ObjectId (ObjectId)
+import qualified Pawl.Types.ObjectSnapshot as ObjectSnapshot
 import qualified Pawl.Types.OwnedZone as OwnedZone
 import Pawl.Types.PendingTrigger (PendingTrigger)
 import qualified Pawl.Types.PendingTrigger as PendingTrigger
@@ -130,6 +133,7 @@ import qualified Pawl.Types.TurnWindow as TurnWindow
 import qualified Pawl.Types.TurnedFaceUp as TurnedFaceUp
 import qualified Pawl.Types.TypeLine as TypeLine
 import qualified Pawl.Types.VentureMarkerEntered as VentureMarkerEntered
+import qualified Pawl.Types.Voted as Voted
 import Pawl.Types.Zone (Zone)
 import qualified Pawl.Types.Zone as Zone
 import Pawl.Types.ZoneChange (ZoneChange)
@@ -218,6 +222,8 @@ movedOf event = case event of
   -- make one.
   GameEvent.Revealed {} -> Nothing
   GameEvent.Looked {} -> Nothing
+  GameEvent.Voted {} -> Nothing
+  GameEvent.VotesRevealed {} -> Nothing
   GameEvent.AttackerDeclared {} -> Nothing
   GameEvent.BecameBlocking {} -> Nothing
   GameEvent.BlocksDeclared {} -> Nothing
@@ -337,6 +343,12 @@ participants event =
           else ZoneChange.object zc
       one oid = ([oid], [])
       player pid = ([], [pid])
+      -- CR 701.38a: the voter and, for CR 701.38b's object choice, what they
+      -- voted for.
+      ballotParticipants ballot =
+        player (Ballot.voter ballot) <> case Ballot.choice ballot of
+          BallotChoice.ForObject snapshot -> one (ObjectSnapshot.object snapshot)
+          BallotChoice.ForWord _ -> ([], [])
    in case event of
         GameEvent.Moved m -> one (moved (Moved.change m))
         GameEvent.CardArrived zc -> one (moved zc)
@@ -359,6 +371,8 @@ participants event =
         GameEvent.BlocksDeclared b -> one (BlocksDeclared.blocker b)
         GameEvent.Revealed r -> ([Revealed.card r], [Revealed.player r])
         GameEvent.Looked l -> ([Looked.card l], Set.toList (Looked.audience l))
+        GameEvent.Voted v -> ballotParticipants (Voted.ballot v)
+        GameEvent.VotesRevealed ballots -> foldMap ballotParticipants ballots
         GameEvent.SpellCountered c -> ([Countering.countered c, Countering.source c], [])
         GameEvent.AbilityCountered c -> ([Countering.countered c, Countering.source c], [])
         GameEvent.LifeLost c -> player (LifeChange.player c)
@@ -1328,6 +1342,8 @@ eventTriggers events gs =
         GameEvent.Drew {} -> Map.empty
         GameEvent.Revealed {} -> Map.empty
         GameEvent.Looked {} -> Map.empty
+        GameEvent.Voted {} -> Map.empty
+        GameEvent.VotesRevealed {} -> Map.empty
         GameEvent.AttackerDeclared {} -> Map.empty
         GameEvent.BecameBlocking {} -> Map.empty
         GameEvent.BlocksDeclared {} -> Map.empty
@@ -1616,6 +1632,8 @@ eventTriggers events gs =
         -- what hangs an ability on the card a reveal names.
         GameEvent.Revealed {} -> Map.empty
         GameEvent.Looked {} -> Map.empty
+        GameEvent.Voted {} -> Map.empty
+        GameEvent.VotesRevealed {} -> Map.empty
         GameEvent.AttackerDeclared {} -> Map.empty
         GameEvent.BecameBlocking {} -> Map.empty
         GameEvent.BlocksDeclared {} -> Map.empty
@@ -1983,6 +2001,8 @@ eventTriggers events gs =
         GameEvent.TookInitiative _ -> Map.empty
         GameEvent.Revealed {} -> Map.empty
         GameEvent.Looked {} -> Map.empty
+        GameEvent.Voted {} -> Map.empty
+        GameEvent.VotesRevealed {} -> Map.empty
         GameEvent.AttackerDeclared {} -> Map.empty
         GameEvent.BecameBlocking {} -> Map.empty
         GameEvent.BlocksDeclared {} -> Map.empty
@@ -2129,6 +2149,8 @@ eventTriggers events gs =
         GameEvent.Revealed (Revealed.MkRevealed _ _ RevealCause.LeavingFaceDown _) -> Map.empty
         GameEvent.Revealed (Revealed.MkRevealed _ _ RevealCause.FaceDownSpell _) -> Map.empty
         GameEvent.Looked {} -> Map.empty
+        GameEvent.Voted {} -> Map.empty
+        GameEvent.VotesRevealed {} -> Map.empty
         GameEvent.Discarded {} -> Map.empty
         GameEvent.Drew {} -> Map.empty
         GameEvent.Moved {} -> Map.empty
@@ -3848,11 +3870,19 @@ resnapshot gs without event =
          in if not (Map.member oid (GameState.objects gs)) || before == after
               then Just pc
               else if before == pc then Just after else Nothing
+      rereadBallot ballot = case Ballot.choice ballot of
+        BallotChoice.ForObject snapshot ->
+          fmap
+            (\pc -> ballot {Ballot.choice = BallotChoice.ForObject snapshot {ObjectSnapshot.characteristics = pc}})
+            (reread (ObjectSnapshot.object snapshot) (ObjectSnapshot.characteristics snapshot))
+        BallotChoice.ForWord _ -> Just ballot
    in case event of
         GameEvent.Moved m -> fmap (\pc -> GameEvent.Moved m {Moved.characteristics = pc}) (reread (ZoneChange.departed (Moved.change m)) (Moved.characteristics m))
         GameEvent.SpellCast c -> fmap (\pc -> GameEvent.SpellCast c {SpellWasCast.characteristics = pc}) (reread (SpellWasCast.spell c) (SpellWasCast.characteristics c))
         GameEvent.Revealed r -> fmap (\pc -> GameEvent.Revealed r {Revealed.characteristics = pc}) (reread (Revealed.card r) (Revealed.characteristics r))
         GameEvent.Looked l -> fmap (\pc -> GameEvent.Looked l {Looked.characteristics = pc}) (reread (Looked.card l) (Looked.characteristics l))
+        GameEvent.Voted v -> fmap (\b -> GameEvent.Voted v {Voted.ballot = b}) (rereadBallot (Voted.ballot v))
+        GameEvent.VotesRevealed ballots -> fmap GameEvent.VotesRevealed (traverse rereadBallot ballots)
         GameEvent.Transformed t -> fmap (\pc -> GameEvent.Transformed t {Transformed.characteristics = pc}) (reread (Transformed.object t) (Transformed.characteristics t))
         GameEvent.CardArrived {} -> Just event
         GameEvent.SpellCopied {} -> Just event

@@ -625,12 +625,12 @@ rewriteEffect pairs effect = case effect of
   Effect.ExileHandThenDraw -> effect
   Effect.NoteManaSpent -> effect
   Effect.PlayerSacrifices (PlayerSacrifices.MkPlayerSacrifices players filter_ quantity) -> Effect.PlayerSacrifices (PlayerSacrifices.MkPlayerSacrifices players (Filter.rewrite pairs filter_) (rewriteQuantity pairs quantity))
-  Effect.Vote (Vote.MkVote starter choices) ->
-    Effect.Vote . Vote.MkVote starter $ case choices of
-      VoteChoices.Objects objects -> VoteChoices.Objects objects {VoteObjects.filter = Filter.rewrite pairs (VoteObjects.filter objects)}
+  Effect.Vote vote ->
+    Effect.Vote $ case Vote.choices vote of
+      VoteChoices.Objects objects -> vote {Vote.choices = VoteChoices.Objects objects {VoteObjects.filter = Filter.rewrite pairs (VoteObjects.filter objects)}}
       -- The Blight arm's answer: rule 701.38b's words are slot names, this
       -- card's own namespace rather than printed text CR 612.1 can reach.
-      VoteChoices.Words _ -> choices
+      VoteChoices.Words _ -> vote
   Effect.RestartGame exempt -> Effect.RestartGame (fmap (rewriteObjectRef pairs) exempt)
   Effect.ControlPlayerNextTurn _ -> effect
   Effect.ControlPlayerThisResolution _ -> effect
