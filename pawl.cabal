@@ -776,6 +776,8 @@ library codec
     Pawl.Codec.LoggedEventSpec
     Pawl.Codec.LookAt
     Pawl.Codec.LookAtSpec
+    Pawl.Codec.Looked
+    Pawl.Codec.LookedSpec
     Pawl.Codec.LoopMembers
     Pawl.Codec.LoopMembersSpec
     Pawl.Codec.Loyalty
@@ -2409,6 +2411,7 @@ library types
     Pawl.Types.LimitUnless
     Pawl.Types.LoggedEvent
     Pawl.Types.LookAt
+    Pawl.Types.Looked
     Pawl.Types.LoopMembers
     Pawl.Types.LoopTrail
     Pawl.Types.Loyalty

@@ -707,6 +707,8 @@ snapshotView viewOf gs shape event = case event of
   -- and is still Nothing here: no EventShape names revealing. This becomes a
   -- real view the day one does (#162).
   GameEvent.Revealed {} -> Nothing
+  -- A look (CR 701.20e) likewise: no EventShape names looking.
+  GameEvent.Looked {} -> Nothing
   -- The same reason, with no snapshot to offer either: no EventShape names an
   -- attacker being declared (CR 508.2b).
   GameEvent.AttackerDeclared {} -> Nothing

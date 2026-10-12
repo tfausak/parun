@@ -105,6 +105,35 @@
       "step": "DrawStep",
       "player": "alice",
       "check": {
+        "View": {
+          "of": "Witnessed",
+          "player": "alice",
+          "is": [
+            "Thunderous Wrath",
+            "Thunderous Wrath"
+          ]
+        }
+      }
+    },
+    {
+      "turn": 2,
+      "step": "DrawStep",
+      "player": "alice",
+      "check": {
+        "View": {
+          "of": "Witnessed",
+          "player": "bob",
+          "is": [
+            "Thunderous Wrath"
+          ]
+        }
+      }
+    },
+    {
+      "turn": 2,
+      "step": "DrawStep",
+      "player": "alice",
+      "check": {
         "Count": {
           "player": "alice",
           "zone": "Library",

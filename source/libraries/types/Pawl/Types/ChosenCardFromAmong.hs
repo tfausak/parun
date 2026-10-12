@@ -35,9 +35,10 @@ import qualified Pawl.Types.SlotName as SlotName
 -- however many seats are in play.
 --
 -- Nothing here says the chooser has SEEN the group. A reveal is public (CR
--- 701.20a) and a look is not (CR 701.20e), so an opponent-chooser over a
--- looked-at group would show cards that rule hides -- which pawl cannot represent
--- either way (#1412).
+-- 701.20a) and a look is not (CR 701.20e): a GameEvent.Looked names its
+-- audience, so an opponent-chooser over a looked-at group chooses among cards
+-- its log never showed it. Not implemented: the prompt names them to it
+-- regardless (#1412).
 --
 -- The fields are named rather than positional for ChosenCardInHand's reason.
 data ChosenCardFromAmong = MkChosenCardFromAmong

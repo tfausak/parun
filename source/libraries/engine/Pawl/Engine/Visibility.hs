@@ -3,6 +3,7 @@
 module Pawl.Engine.Visibility where
 
 import qualified Data.Map as Map
+import qualified Data.Set as Set
 import qualified Pawl.Engine.Decide as Decide
 import qualified Pawl.Engine.Exile as Exile
 import qualified Pawl.Engine.Game as Game
@@ -15,6 +16,7 @@ import qualified Pawl.Types.Facing as Facing
 import qualified Pawl.Types.GameEvent as GameEvent
 import qualified Pawl.Types.GameState as GameState
 import qualified Pawl.Types.LoggedEvent as LoggedEvent
+import qualified Pawl.Types.Looked as Looked
 import qualified Pawl.Types.Object as Object
 import Pawl.Types.ObjectId (ObjectId)
 import qualified Pawl.Types.Phase as Phase
@@ -49,6 +51,14 @@ revealedNow oid gs =
    in case Game.lookupObject oid gs >>= Object.revealed of
         Nothing -> Visibility.Obscured
         Just window -> visibleIf (live window)
+
+-- | Whether a player saw the card a logged event showed: everyone sees a reveal
+-- (CR 701.20a), only its audience a look (CR 701.20e, 723.4).
+witnessed :: PlayerId -> LoggedEvent.LoggedEvent -> Visibility.Visibility
+witnessed pid logged = case LoggedEvent.event logged of
+  GameEvent.Revealed _ -> Visibility.Visible
+  GameEvent.Looked looked -> visibleIf (Set.member pid (Looked.audience looked))
+  _ -> Visibility.Obscured
 
 -- | CR 723.5: the players whose decisions this player makes, by the reading
 -- Pawl.Engine.Decide.deciderFor makes, so a dormant row waiting for its spell

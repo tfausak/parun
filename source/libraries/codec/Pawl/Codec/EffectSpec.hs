@@ -619,6 +619,7 @@ spec s = Spec.describe s "Pawl.Codec.Effect" $ do
           ( LookAt.MkLookAt
               (ObjectRef.TopOfLibrary (TopOfLibrary.MkTopOfLibrary (PlayerRef.Relative PlayerRelation.You) (Quantity.Literal 1)))
               (SlotName.MkSlotName (Text.pack "looked"))
+              (PlayerRef.Relative PlayerRelation.You)
           )
       )
       " {\"type\":\"LookAt\",\"value\":{\"ref\":{\"type\":\"TopOfLibrary\",\"value\":{\"count\":{\"type\":\"Literal\",\"value\":1},\"player\":{\"type\":\"Relative\",\"value\":{\"type\":\"You\"}}}},\"slot\":\"looked\"}} "

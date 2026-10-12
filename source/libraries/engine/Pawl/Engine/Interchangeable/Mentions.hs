@@ -1870,7 +1870,7 @@ limitUnlessNames asking x = case x of
 
 lookAtNames :: Asking -> LookAt.LookAt -> Bool
 lookAtNames asking x = case x of
-  LookAt.MkLookAt ref slot -> objectRefNames asking ref || slotNames asking slot
+  LookAt.MkLookAt ref slot looker -> objectRefNames asking ref || slotNames asking slot || playerRefNames asking looker
 
 madnessCostNames :: Asking -> (keyword -> Bool) -> MadnessCost.MadnessCost keyword -> Bool
 madnessCostNames asking onKeyword x = case x of

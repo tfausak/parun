@@ -55,7 +55,8 @@ riders =
 -- Which card is manifested is the player's choice (CR 608.2d), asked as
 -- Prompt.ChooseCardFromAmong through Game.chooseAmong; one card is no choice
 -- (the Paranormal Analyst ruling: a one-card library manifests that card) and
--- none is nothing to do.
+-- none is nothing to do. Both cards are looked at first (CR 701.20e), so the
+-- choice is made among cards already seen.
 --
 -- "Not manifested this way" is read off the board after the manifest: a looked-at
 -- card still in the library is one the manifest did not take, which is CR
@@ -70,6 +71,7 @@ manifestDread :: ObjectId -> PlayerId -> Game ()
 manifestDread source pid = do
   gs <- State.get
   let looked = take 2 (Game.zoneMembers Zone.Library pid gs)
+  Monad.mapM_ (Event.look pid) looked
   chosen <- Game.chooseAmong (\decider asked -> Prompt.ChooseCardFromAmong decider asked source) pid looked
   Monad.forM_ chosen $ \card ->
     Event.simultaneously (Monad.void (Event.changeZoneEntering card Zone.Battlefield LibraryPosition.defaultValue riders (Just pid)))

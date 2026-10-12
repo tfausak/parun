@@ -3308,7 +3308,7 @@ effectIsImpossible resolving source controller legal gs effect = case effect of
   Effect.Reveal (Reveal.MkReveal ref _) -> choosesFromNothing ref
   Effect.FromOutsideTheGame {} -> False
   Effect.ExileThisSpell {} -> False
-  Effect.LookAt (LookAt.MkLookAt ref _) -> choosesFromNothing ref
+  Effect.LookAt (LookAt.MkLookAt ref _ _) -> choosesFromNothing ref
   Effect.ArrangeInLibrary {} -> False
   Effect.Scry {} -> False
   Effect.Surveil {} -> False
@@ -4081,6 +4081,9 @@ applyOneEffect runSubgame resolving source controller legal chosen effect = case
     -- rule 613.1 names no zone, so a card in any of the searched zones is folded
     -- exactly as a permanent is, and CR 208.2a's characteristic-defining power
     -- rides along at layer 7a.
+    --
+    -- Not implemented: rule 701.23a's look at the searched zone logs no
+    -- GameEvent.Looked (#5008).
     --
     -- Through effectContext and NOT Filter.contextFor, so the resolution's own
     -- slots ride along and a search filter naming one is answerable: Bifurcate's
@@ -6114,19 +6117,23 @@ applyOneEffect runSubgame resolving source controller legal chosen effect = case
           _ -> controller
     Monad.mapM_ (\oid -> Event.reveal RevealCause.Ordinary (shower oid) oid) named
     bindShown named
-  Effect.LookAt (LookAt.MkLookAt ref slot) -> do
+  Effect.LookAt (LookAt.MkLookAt ref slot looker) -> do
     -- CR 608.2c: the cards are named as this instruction is reached, and CR 701.20b
-    -- (via rule 701.20e) leaves every one where it is -- so this whole arm is the
-    -- binding, and an empty library binds nothing. No event: a public
-    -- GameEvent.Revealed would be a different rule (CR 701.20a).
-    --
-    -- Not implemented: rule 701.20e shows the cards to one player, and nothing
-    -- records who looks (#4391).
+    -- (via rule 701.20e) leaves every one where it is -- so the arm is the
+    -- binding plus a GameEvent.Looked per card and looker, and an empty library
+    -- binds and records nothing. A public GameEvent.Revealed would be a different
+    -- rule (CR 701.20a).
     --
     -- The one PROMPT this arm raises is CR 608.2d's, not rule 701.20e's: Word of
     -- Command's "look at target opponent's hand and CHOOSE a card from it" names
     -- the hand and picks one, which askingObjects asks.
+    --
+    -- Not implemented: Word of Command's look is logged for the chosen card
+    -- alone, not the whole hand rule 701.20e shows (#5009).
     named <- askingObjects resolving source controller legal chosen ref
+    gs <- State.get
+    Monad.forM_ named $ \oid ->
+      Monad.forM_ (playerRefPlayers legal controller gs looker) $ \pid -> Event.look pid oid
     -- Several cards take the group, which Filter.IsBound reads as CR 701.20e's
     -- "among them".
     bindObjects resolving (Just slot) named
@@ -6187,9 +6194,15 @@ applyOneEffect runSubgame resolving source controller legal chosen effect = case
       fmap Maybe.catMaybes . Monad.forM surveillers $ \pid ->
         case evaluateForRecipient viewOf context gs resolving source pid quantity of
           -- CR 701.25c: surveil 0 is not a surveil at all, so nothing widens
-          -- it. CR 701.25b's extra cards join the ones looked at, read off the
-          -- board the surveil begins on.
-          Just n | n > 0 -> fmap Just (decideSurveil (n + toInteger (PlayerEffect.surveilExtra pid gs)) pid)
+          -- it. CR 701.25b's extra cards join the ones looked at, each grant's
+          -- "may" asked on its own, read off the board the surveil begins on.
+          Just n | n > 0 -> do
+            extras <- Monad.forM (PlayerEffect.surveilExtra pid gs) $ \(grant, count) -> do
+              answer <- Game.choose (Prompt.OfferedExtraLook (Decide.deciderFor pid gs) pid grant count)
+              case answer of
+                OptionalDecision.Exercises -> pure count
+                OptionalDecision.Declines -> pure 0
+            fmap Just (decideSurveil (n + toInteger (sum extras)) pid)
           _ -> pure Nothing
     Monad.mapM_ applySurveil decided
     -- CR 701.25d, scry's placement and for its rule.
@@ -11310,6 +11323,8 @@ refill whole moving ordered =
 -- The library is REWRITTEN rather than funnelled through Event.changeZone:
 -- nothing crosses a zone boundary, so CR 400.7 mints no new incarnation and the
 -- ids the prompt named still move. Looking mints nothing either (CR 701.20b).
+--
+-- Not implemented: the look logs no GameEvent.Looked (#5008).
 decideScry :: Integer -> PlayerId -> Game (PlayerId, Maybe [ObjectId])
 decideScry n pid = do
   gs <- State.get
@@ -11361,6 +11376,8 @@ decideSurveil n pid = do
   if null looked
     then pure (pid, Nothing)
     else do
+      -- CR 701.25a: the cards are looked at before the split is chosen.
+      Monad.mapM_ (Event.look pid) looked
       answer <- Game.choose (Prompt.ChooseSurveil (Decide.deciderFor pid gs) pid looked)
       let (toGraveyard, onTop) = splitLooked looked answer
       pure (pid, Just (onTop <> beneath, toGraveyard))
@@ -11388,6 +11405,8 @@ applySurveil (pid, decision) = Monad.forM_ decision $ \(kept, toGraveyard) -> do
 -- TWO choices, both the fatesealer's and in this order: which opponent, then how
 -- to split. The first is elided at one candidate (CR 102.2) and filtered rather
 -- than trusted (Players.chooseOne); the library's owner is asked neither.
+--
+-- Not implemented: the look logs no GameEvent.Looked (#5008).
 fatesealOne :: ObjectId -> Integer -> PlayerId -> Game ()
 fatesealOne source n pid = do
   gs <- State.get

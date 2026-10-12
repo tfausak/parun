@@ -1382,7 +1382,7 @@ effectObjectRefs effect =
         Effect.Reveal (Reveal.MkReveal ref _) -> [(AnyCardsFromAmong : shownQuestions, ref)]
         -- Word of Command's "look at target opponent's hand and choose a card
         -- from it".
-        Effect.LookAt (LookAt.MkLookAt ref _) -> [([CardInHand], ref)]
+        Effect.LookAt (LookAt.MkLookAt ref _ _) -> [([CardInHand], ref)]
         Effect.Scry {} -> []
         Effect.Surveil {} -> []
         Effect.Fateseal {} -> []
@@ -2030,7 +2030,7 @@ effectLintSpec s registry = Spec.describe s "Lint" $ do
         -- one to Resolve means coming back here by hand.
         boundPlurally effect = case effect of
           Effect.MoveToZone (MoveToZone.MkMoveToZone ref _ _ mSlot _ _ _) | not (movesAtMostOne ref) -> Maybe.maybeToList mSlot
-          Effect.LookAt (LookAt.MkLookAt ref slot) | not (movesAtMostOne ref) -> [slot]
+          Effect.LookAt (LookAt.MkLookAt ref slot _) | not (movesAtMostOne ref) -> [slot]
           Effect.Reveal (Reveal.MkReveal ref mSlot) | not (movesAtMostOne ref) -> Maybe.maybeToList mSlot
           -- CR 701.17c's slot, plural at every depth and every seat count: a
           -- MillCountR row resizes the INSTRUCTION (Bruvac the Grandiloquent

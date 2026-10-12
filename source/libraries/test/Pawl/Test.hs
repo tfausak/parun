@@ -360,6 +360,7 @@ import qualified Pawl.Codec.LifeLossSpec
 import qualified Pawl.Codec.LimitUnlessSpec
 import qualified Pawl.Codec.LoggedEventSpec
 import qualified Pawl.Codec.LookAtSpec
+import qualified Pawl.Codec.LookedSpec
 import qualified Pawl.Codec.LoopMembersSpec
 import qualified Pawl.Codec.LoyaltyKindSpec
 import qualified Pawl.Codec.LoyaltySpec
@@ -1217,6 +1218,7 @@ spec s registry = do
   Pawl.Codec.LimitUnlessSpec.spec s
   Pawl.Codec.LoggedEventSpec.spec s
   Pawl.Codec.LookAtSpec.spec s
+  Pawl.Codec.LookedSpec.spec s
   Pawl.Codec.LoopMembersSpec.spec s
   Pawl.Codec.LoyaltySpec.spec s
   Pawl.Codec.MakeForetoldSpec.spec s

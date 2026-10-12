@@ -219,6 +219,21 @@
           ]
         }
       }
+    },
+    {
+      "turn": 1,
+      "step": "PrecombatMain",
+      "player": "alice",
+      "check": {
+        "View": {
+          "of": "Witnessed",
+          "player": "alice",
+          "is": [
+            "Goblin Piker",
+            "Bird Maiden"
+          ]
+        }
+      }
     }
   ]
 }

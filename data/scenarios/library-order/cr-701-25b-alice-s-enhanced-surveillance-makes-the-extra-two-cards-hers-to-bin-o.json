@@ -67,6 +67,19 @@
       "player": "alice",
       "do": {
         "Answer": {
+          "prompt": "OfferedExtraLook",
+          "with": {
+            "type": "Exercises"
+          }
+        }
+      }
+    },
+    {
+      "turn": 1,
+      "step": "PrecombatMain",
+      "player": "alice",
+      "do": {
+        "Answer": {
           "prompt": "ChooseSurveil",
           "with": [
             [
@@ -240,6 +253,35 @@
             "Forest",
             "Curate"
           ]
+        }
+      }
+    },
+    {
+      "turn": 1,
+      "step": "PrecombatMain",
+      "player": "alice",
+      "check": {
+        "View": {
+          "of": "Witnessed",
+          "player": "alice",
+          "is": [
+            "Goblin Piker",
+            "Bird Maiden",
+            "Mountain",
+            "Forest"
+          ]
+        }
+      }
+    },
+    {
+      "turn": 1,
+      "step": "PrecombatMain",
+      "player": "alice",
+      "check": {
+        "View": {
+          "of": "Witnessed",
+          "player": "bob",
+          "is": []
         }
       }
     }
