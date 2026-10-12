@@ -6260,16 +6260,16 @@ applyOneEffect runSubgame resolving source controller legal chosen effect = case
   -- over the exiled batch before the cast decision. Each is "you may put a
   -- matching card from among them onto the battlefield tapped", so its choice
   -- is ChosenCardFromAmong's up-to-one: the empty answer declines, and two
-  -- matching cards are a real choice. The row's Filter is matched in this
-  -- resolution's context, which is the row's own for a row scoped to its
-  -- controller, as Averna's is.
+  -- matching cards are a real choice. The row's SOURCE is the move's, so its
+  -- Filter is read in the row's context and the prompt names the row's
+  -- permanent; `resolving` stays the cascade ability, where the batch is bound.
   Effect.AsYouCascade slot -> do
     gs <- State.get
-    Monad.forM_ (PlayerEffect.cascadeActions controller gs) $ \criterion ->
+    Monad.forM_ (PlayerEffect.cascadeActions controller gs) $ \(rowSource, criterion) ->
       applyOneEffect
         runSubgame
         resolving
-        source
+        (Maybe.fromMaybe source rowSource)
         controller
         legal
         chosen

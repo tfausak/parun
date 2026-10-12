@@ -2809,10 +2809,11 @@ surveilExtra pid gs =
         _ -> Nothing
    in Maybe.mapMaybe rowOf (applying pid gs)
 
--- CR 702.85b: the "as you cascade" actions `pid` may take, each the Filter of
--- the exiled card its row may put onto the battlefield tapped (Averna, the
--- Chaos Bloom). One per row, in timestamp order, each asked on its own.
-cascadeActions :: PlayerId -> GameState -> [Filter Keyword]
+-- CR 702.85b: the "as you cascade" actions `pid` may take, each its row's
+-- source and the Filter of the exiled card it may put onto the battlefield
+-- tapped (Averna, the Chaos Bloom). One per row, in timestamp order, each asked
+-- on its own.
+cascadeActions :: PlayerId -> GameState -> [(Maybe ObjectId, Filter Keyword)]
 cascadeActions pid gs =
   let grantOf effect = case effect of
         PlayerEffect.CantCastSpells -> Nothing
@@ -2859,7 +2860,7 @@ cascadeActions pid gs =
         PlayerEffect.CantGainLife -> Nothing
         PlayerEffect.CantLoseLife -> Nothing
         PlayerEffect.Shows _ -> Nothing
-   in Maybe.mapMaybe (grantOf . snd) (applying pid gs)
+   in Maybe.mapMaybe (\(source, effect) -> fmap ((,) (RowSource.object source)) (grantOf effect)) (applying pid gs)
 
 -- CR 401.5 / 400.2: the grants showing this player's hand or top card, each
 -- naming whom it shows them to. Read by Pawl.Engine.Visibility.shownTo.
