@@ -2553,7 +2553,7 @@ selfCountersReachedNames asking x = case x of
 
 selfCountersRemovedNames :: Asking -> SelfCountersRemoved.SelfCountersRemoved -> Bool
 selfCountersRemovedNames asking x = case x of
-  SelfCountersRemoved.MkSelfCountersRemoved kind _zone -> counterKindNames asking (keywordNames asking) kind
+  SelfCountersRemoved.MkSelfCountersRemoved kind -> counterKindNames asking (keywordNames asking) kind
 
 setBasePowerToughnessNames :: Asking -> SetBasePowerToughness.SetBasePowerToughness -> Bool
 setBasePowerToughnessNames asking x = case x of
@@ -2813,7 +2813,7 @@ triggerConditionNames asking x = case x of
 
 triggeredAbilityNames :: Asking -> (card -> Bool) -> (ability -> Bool) -> TriggeredAbility.TriggeredAbility card ability -> Bool
 triggeredAbilityNames asking onCard onAbility x = case x of
-  TriggeredAbility.MkTriggeredAbility condition modal intervening _name _limit -> triggerConditionNames asking condition || modalNames asking onCard onAbility modal || any (conditionNames asking) intervening
+  TriggeredAbility.MkTriggeredAbility condition modal intervening _name _limit _functionsFrom -> triggerConditionNames asking condition || modalNames asking onCard onAbility modal || any (conditionNames asking) intervening
 
 turnFaceDownNames :: Asking -> (ability -> Bool) -> TurnFaceDown.TurnFaceDown ability -> Bool
 turnFaceDownNames asking onAbility x = case x of

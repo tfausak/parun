@@ -88,7 +88,6 @@ import qualified Pawl.Types.TeamId as TeamId
 import qualified Pawl.Types.Teams as Teams
 import qualified Pawl.Types.TriggerCondition as TriggerCondition
 import qualified Pawl.Types.TriggeredAbility as TriggeredAbility
-import qualified Pawl.Types.Zone as Zone
 
 spec :: (Monad m, Monad n) => Spec.Spec m n -> Registry.Registry m -> n ()
 spec s registry = Spec.describe s "Battle" $ do
@@ -346,7 +345,7 @@ defeatSpec s registry = Spec.describe s "Defeat" $ do
       s
       "one ability, conditioned on the last defense counter"
       (fmap TriggeredAbility.condition (Battle.triggeredAbilitiesOf siege))
-      [TriggerCondition.SelfLastCounterRemoved (SelfCountersRemoved.MkSelfCountersRemoved CounterKind.Defense Zone.Battlefield)]
+      [TriggerCondition.SelfLastCounterRemoved (SelfCountersRemoved.MkSelfCountersRemoved CounterKind.Defense)]
   Spec.it s "CR 310.12b a battle with no battle types does not" $ do
     -- Rule 310.12b says "Sieges", not "battles", and this is the falsifier for
     -- gating the mint on the card type instead: the same real projection with its

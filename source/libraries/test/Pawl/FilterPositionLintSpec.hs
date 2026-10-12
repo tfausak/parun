@@ -2328,9 +2328,9 @@ filterPositionLintSpec s registry = Spec.describe s "Lint" $ do
             ("Effect.PutCountersFrom' kind", holds (effectFilters (Effect.PutCountersFrom (PutCountersFrom.MkPutCountersFrom slot (Just kind) anywhere)))),
             ("Quantity.ObjectCounters' kind", holds (quantityFilters (Quantity.Type.ObjectCounters kind))),
             ("CR 714.2b's threshold", holds (triggerConditionFilters (TriggerCondition.SelfCountersReached (SelfCountersReached.MkSelfCountersReached kind 2)))),
-            ("CR 310.12b's last removal", holds (triggerConditionFilters (TriggerCondition.SelfLastCounterRemoved (SelfCountersRemoved.MkSelfCountersRemoved kind Zone.Battlefield)))),
-            ("its any-amount mirror", holds (triggerConditionFilters (TriggerCondition.SelfCountersRemoved (SelfCountersRemoved.MkSelfCountersRemoved kind Zone.Battlefield)))),
-            ("its per-counter reading", holds (triggerConditionFilters (TriggerCondition.SelfCounterRemoved (SelfCountersRemoved.MkSelfCountersRemoved kind Zone.Battlefield)))),
+            ("CR 310.12b's last removal", holds (triggerConditionFilters (TriggerCondition.SelfLastCounterRemoved (SelfCountersRemoved.MkSelfCountersRemoved kind)))),
+            ("its any-amount mirror", holds (triggerConditionFilters (TriggerCondition.SelfCountersRemoved (SelfCountersRemoved.MkSelfCountersRemoved kind)))),
+            ("its per-counter reading", holds (triggerConditionFilters (TriggerCondition.SelfCounterRemoved (SelfCountersRemoved.MkSelfCountersRemoved kind)))),
             ("CR 603.2c's per-permanent placement", holds (triggerConditionFilters (TriggerCondition.PermanentGetsCounters (CounterPlacement.MkCounterPlacement kind (Filter.Type.HasCardType CardType.Creature))))),
             ("CR 603.2c's batch placement", holds (triggerConditionFilters (TriggerCondition.PermanentsGetCounters (CounterPlacement.MkCounterPlacement kind (Filter.Type.HasCardType CardType.Creature))))),
             ("CR 614.1's scaling pattern", holds (replacementEffectFilters (ReplacementEffect.CounterR (CounterR.MkCounterR (CounterPattern.MkCounterPattern (Just kind) CounterSubject.ByAnything (ControllerRelation.Related PlayerRelation.You) (Filter.Type.HasCardType CardType.Creature) Nothing) (Scaling.AddMore 1))))),
@@ -2373,7 +2373,7 @@ filterPositionLintSpec s registry = Spec.describe s "Lint" $ do
       ( counterKindFilters plain,
         effectFilters (Effect.RemoveCounters (RemoveCounters.MkRemoveCounters plain one slot Nothing)),
         quantityFilters (Quantity.Type.ObjectCounters plain),
-        triggerConditionFilters (TriggerCondition.SelfLastCounterRemoved (SelfCountersRemoved.MkSelfCountersRemoved plain Zone.Battlefield))
+        triggerConditionFilters (TriggerCondition.SelfLastCounterRemoved (SelfCountersRemoved.MkSelfCountersRemoved plain))
       )
       ([], [], [], [])
     -- The same pair over the three number-shaped roads: a plain kind inside the

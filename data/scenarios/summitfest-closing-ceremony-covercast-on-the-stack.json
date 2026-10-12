@@ -1,0 +1,384 @@
+{
+  "description": "Covercast (CR 113.6b): a Summitfest Closing Ceremony on the stack intensifies when a second one is cast in response, and resolves at the higher intensity",
+  "note": "Casting the first copy triggers the second in hand; casting the second in response triggers the first on the stack, whose trigger resolves above both. The second resolves at its starting 3, then the first adds 4 of each on top.",
+  "board": {
+    "active": "alice",
+    "step": "PrecombatMain",
+    "seats": [
+      {
+        "name": "alice",
+        "battlefield": [
+          {
+            "card": "Island",
+            "label": "i1"
+          },
+          {
+            "card": "Mountain",
+            "label": "m1"
+          },
+          {
+            "card": "Island",
+            "label": "i2"
+          },
+          {
+            "card": "Island",
+            "label": "i3"
+          },
+          {
+            "card": "Island",
+            "label": "i4"
+          },
+          {
+            "card": "Island",
+            "label": "i5"
+          },
+          {
+            "card": "Mountain",
+            "label": "m2"
+          },
+          {
+            "card": "Mountain",
+            "label": "m3"
+          },
+          {
+            "card": "Mountain",
+            "label": "m4"
+          },
+          {
+            "card": "Mountain",
+            "label": "m5"
+          }
+        ],
+        "hand": [
+          {
+            "card": "Summitfest Closing Ceremony",
+            "label": "first"
+          },
+          {
+            "card": "Summitfest Closing Ceremony",
+            "label": "second"
+          }
+        ],
+        "library": [
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          }
+        ]
+      },
+      {
+        "name": "bob",
+        "library": [
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          }
+        ]
+      }
+    ]
+  },
+  "timeline": [
+    {
+      "turn": 1,
+      "step": "PrecombatMain",
+      "player": "alice",
+      "do": {
+        "Cast": {
+          "object": "$first",
+          "mana": [
+            "$i1",
+            "$m1",
+            "$i2",
+            "$i3",
+            "$i4",
+            null
+          ]
+        }
+      }
+    },
+    {
+      "turn": 1,
+      "step": "PrecombatMain",
+      "player": "alice",
+      "do": {
+        "Cast": {
+          "object": "$second",
+          "mana": [
+            "$i5",
+            "$m2",
+            "$m3",
+            "$m4",
+            "$m5"
+          ]
+        }
+      }
+    },
+    {
+      "turn": 1,
+      "step": "PrecombatMain",
+      "player": "alice",
+      "check": {
+        "View": {
+          "of": "Stack",
+          "is": [
+            "trigger of Summitfest Closing Ceremony",
+            "Summitfest Closing Ceremony#2",
+            "trigger of $second",
+            "Summitfest Closing Ceremony"
+          ]
+        }
+      }
+    },
+    {
+      "turn": 1,
+      "step": "PrecombatMain",
+      "player": "alice",
+      "do": "Pass"
+    },
+    {
+      "turn": 1,
+      "step": "PrecombatMain",
+      "player": "alice",
+      "do": "Pass"
+    },
+    {
+      "turn": 1,
+      "step": "PrecombatMain",
+      "player": "alice",
+      "do": "Pass"
+    },
+    {
+      "turn": 1,
+      "step": "PrecombatMain",
+      "player": "alice",
+      "do": "Pass"
+    },
+    {
+      "turn": 1,
+      "step": "PrecombatMain",
+      "player": "alice",
+      "check": {
+        "View": {
+          "of": "ManaPool",
+          "player": "alice",
+          "is": [
+            {
+              "manaType": {
+                "type": "Colored",
+                "value": {
+                  "type": "Blue"
+                }
+              },
+              "tags": [],
+              "retention": {
+                "type": "Ordinary"
+              },
+              "restriction": null,
+              "rider": null,
+              "sourceChoices": null
+            },
+            {
+              "manaType": {
+                "type": "Colored",
+                "value": {
+                  "type": "Blue"
+                }
+              },
+              "tags": [],
+              "retention": {
+                "type": "Ordinary"
+              },
+              "restriction": null,
+              "rider": null,
+              "sourceChoices": null
+            },
+            {
+              "manaType": {
+                "type": "Colored",
+                "value": {
+                  "type": "Blue"
+                }
+              },
+              "tags": [],
+              "retention": {
+                "type": "Ordinary"
+              },
+              "restriction": null,
+              "rider": null,
+              "sourceChoices": null
+            },
+            {
+              "manaType": {
+                "type": "Colored",
+                "value": {
+                  "type": "Red"
+                }
+              },
+              "tags": [],
+              "retention": {
+                "type": "Ordinary"
+              },
+              "restriction": null,
+              "rider": null,
+              "sourceChoices": null
+            },
+            {
+              "manaType": {
+                "type": "Colored",
+                "value": {
+                  "type": "Red"
+                }
+              },
+              "tags": [],
+              "retention": {
+                "type": "Ordinary"
+              },
+              "restriction": null,
+              "rider": null,
+              "sourceChoices": null
+            },
+            {
+              "manaType": {
+                "type": "Colored",
+                "value": {
+                  "type": "Red"
+                }
+              },
+              "tags": [],
+              "retention": {
+                "type": "Ordinary"
+              },
+              "restriction": null,
+              "rider": null,
+              "sourceChoices": null
+            },
+            {
+              "manaType": {
+                "type": "Colored",
+                "value": {
+                  "type": "Blue"
+                }
+              },
+              "tags": [],
+              "retention": {
+                "type": "Ordinary"
+              },
+              "restriction": null,
+              "rider": null,
+              "sourceChoices": null
+            },
+            {
+              "manaType": {
+                "type": "Colored",
+                "value": {
+                  "type": "Blue"
+                }
+              },
+              "tags": [],
+              "retention": {
+                "type": "Ordinary"
+              },
+              "restriction": null,
+              "rider": null,
+              "sourceChoices": null
+            },
+            {
+              "manaType": {
+                "type": "Colored",
+                "value": {
+                  "type": "Blue"
+                }
+              },
+              "tags": [],
+              "retention": {
+                "type": "Ordinary"
+              },
+              "restriction": null,
+              "rider": null,
+              "sourceChoices": null
+            },
+            {
+              "manaType": {
+                "type": "Colored",
+                "value": {
+                  "type": "Blue"
+                }
+              },
+              "tags": [],
+              "retention": {
+                "type": "Ordinary"
+              },
+              "restriction": null,
+              "rider": null,
+              "sourceChoices": null
+            },
+            {
+              "manaType": {
+                "type": "Colored",
+                "value": {
+                  "type": "Red"
+                }
+              },
+              "tags": [],
+              "retention": {
+                "type": "Ordinary"
+              },
+              "restriction": null,
+              "rider": null,
+              "sourceChoices": null
+            },
+            {
+              "manaType": {
+                "type": "Colored",
+                "value": {
+                  "type": "Red"
+                }
+              },
+              "tags": [],
+              "retention": {
+                "type": "Ordinary"
+              },
+              "restriction": null,
+              "rider": null,
+              "sourceChoices": null
+            },
+            {
+              "manaType": {
+                "type": "Colored",
+                "value": {
+                  "type": "Red"
+                }
+              },
+              "tags": [],
+              "retention": {
+                "type": "Ordinary"
+              },
+              "restriction": null,
+              "rider": null,
+              "sourceChoices": null
+            },
+            {
+              "manaType": {
+                "type": "Colored",
+                "value": {
+                  "type": "Red"
+                }
+              },
+              "tags": [],
+              "retention": {
+                "type": "Ordinary"
+              },
+              "restriction": null,
+              "rider": null,
+              "sourceChoices": null
+            }
+          ]
+        }
+      }
+    }
+  ]
+}

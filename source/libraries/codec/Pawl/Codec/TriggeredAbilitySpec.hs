@@ -2,6 +2,7 @@ module Pawl.Codec.TriggeredAbilitySpec where
 
 import qualified Data.Map.Strict as Map
 import qualified Data.Sequence as Seq
+import qualified Data.Set as Set
 import qualified Data.Text as Text
 import qualified Pawl.Codec.TriggeredAbility as TriggeredAbility
 import qualified Pawl.Json.Value as Value
@@ -83,7 +84,8 @@ spec s = Spec.describe s "Pawl.Codec.TriggeredAbility" $ do
                 (ModeSelection.ChooseExactly 1),
             TriggeredAbility.intervening = Nothing,
             TriggeredAbility.name = Nothing,
-            TriggeredAbility.limit = TriggerLimit.Unlimited
+            TriggeredAbility.limit = TriggerLimit.Unlimited,
+            TriggeredAbility.functionsFrom = Set.empty
           }
       )
       " {\"condition\":{\"type\":\"SelfEnters\"},\"modal\":{\"modes\":[{\"clauses\":[{\"effects\":[{\"type\":\"Create\",\"value\":{\"quantity\":{\"type\":\"Literal\",\"value\":1},\"card\":\"Zombie Token\"}}]}]}]}} "
@@ -110,7 +112,8 @@ spec s = Spec.describe s "Pawl.Codec.TriggeredAbility" $ do
                     )
                 ),
             TriggeredAbility.name = Nothing,
-            TriggeredAbility.limit = TriggerLimit.Unlimited
+            TriggeredAbility.limit = TriggerLimit.Unlimited,
+            TriggeredAbility.functionsFrom = Set.empty
           }
       )
       " {\"condition\":{\"type\":\"StepBegins\",\"value\":{\"phase\":{\"type\":\"Beginning\",\"value\":{\"type\":\"Upkeep\"}},\"scope\":{\"type\":\"ControllersTurn\"}}},\"modal\":{\"modes\":[{\"clauses\":[{\"effects\":[{\"type\":\"DealDamage\",\"value\":{\"parts\":[{\"ref\":{\"type\":\"InSlot\",\"value\":\"you\"},\"quantity\":{\"type\":\"Literal\",\"value\":1}}]}}]}]}]},\"intervening\":{\"type\":\"Compares\",\"value\":{\"measured\":{\"type\":\"Count\",\"value\":{\"scope\":{\"type\":\"InZone\",\"value\":{\"zone\":{\"type\":\"Battlefield\"},\"player\":{\"type\":\"Relative\",\"value\":{\"type\":\"AnyPlayer\"}}}},\"filter\":{\"type\":\"HasSubtype\",\"value\":{\"type\":\"Zombie\"}},\"aggregation\":{\"type\":\"Members\"}}},\"comparison\":{\"type\":\"Exactly\"},\"threshold\":{\"type\":\"Literal\",\"value\":0}}}} "
@@ -133,7 +136,8 @@ spec s = Spec.describe s "Pawl.Codec.TriggeredAbility" $ do
                       (ModeSelection.ChooseExactly 1),
                   TriggeredAbility.intervening = Nothing,
                   TriggeredAbility.name = Nothing,
-                  TriggeredAbility.limit = TriggerLimit.Unlimited
+                  TriggeredAbility.limit = TriggerLimit.Unlimited,
+                  TriggeredAbility.functionsFrom = Set.empty
                 }
             ),
             ( AbilityName.MkAbilityName (Text.pack "each combat"),
@@ -145,7 +149,8 @@ spec s = Spec.describe s "Pawl.Codec.TriggeredAbility" $ do
                       (ModeSelection.ChooseExactly 1),
                   TriggeredAbility.intervening = Nothing,
                   TriggeredAbility.name = Nothing,
-                  TriggeredAbility.limit = TriggerLimit.Unlimited
+                  TriggeredAbility.limit = TriggerLimit.Unlimited,
+                  TriggeredAbility.functionsFrom = Set.empty
                 }
             )
           ]
@@ -166,7 +171,8 @@ spec s = Spec.describe s "Pawl.Codec.TriggeredAbility" $ do
               (ModeSelection.ChooseExactly 1),
           TriggeredAbility.intervening = Nothing,
           TriggeredAbility.name = Nothing,
-          TriggeredAbility.limit = TriggerLimit.Unlimited
+          TriggeredAbility.limit = TriggerLimit.Unlimited,
+          TriggeredAbility.functionsFrom = Set.empty
         }
       " {\"condition\":{\"type\":\"SelfEnters\"},\"modal\":{\"modes\":[{}]}} "
   -- CR 613.1f: the name a LoseNamedAbility removal joins to.
@@ -183,6 +189,25 @@ spec s = Spec.describe s "Pawl.Codec.TriggeredAbility" $ do
               (ModeSelection.ChooseExactly 1),
           TriggeredAbility.intervening = Nothing,
           TriggeredAbility.name = Just (AbilityName.MkAbilityName (Text.pack "vigil")),
-          TriggeredAbility.limit = TriggerLimit.Unlimited
+          TriggeredAbility.limit = TriggerLimit.Unlimited,
+          TriggeredAbility.functionsFrom = Set.empty
         }
       " {\"condition\":{\"type\":\"SelfEnters\"},\"modal\":{\"modes\":[{}]},\"name\":\"vigil\"} "
+  -- CR 113.6b: the zones an ability states it functions in.
+  Spec.it s "an ability stating its zones carries them" $
+    Common.assertJsonCodec
+      s
+      toJson
+      fromJson
+      TriggeredAbility.MkTriggeredAbility
+        { TriggeredAbility.condition = TriggerCondition.SelfEnters,
+          TriggeredAbility.modal =
+            Modal.MkModal
+              (Seq.singleton (Mode.MkMode Seq.empty Map.empty))
+              (ModeSelection.ChooseExactly 1),
+          TriggeredAbility.intervening = Nothing,
+          TriggeredAbility.name = Nothing,
+          TriggeredAbility.limit = TriggerLimit.Unlimited,
+          TriggeredAbility.functionsFrom = Set.fromList [Zone.Library, Zone.Hand]
+        }
+      " {\"condition\":{\"type\":\"SelfEnters\"},\"functionsFrom\":[{\"type\":\"Library\"},{\"type\":\"Hand\"}],\"modal\":{\"modes\":[{}]}} "

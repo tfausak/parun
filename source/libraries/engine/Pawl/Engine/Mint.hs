@@ -5,6 +5,7 @@ module Pawl.Engine.Mint where
 
 import qualified Data.Map.Strict as Map
 import qualified Data.Sequence as Seq
+import qualified Data.Set as Set
 import qualified Pawl.Types.BeginningStep as BeginningStep
 import qualified Pawl.Types.Clause as Clause
 import Pawl.Types.Condition (Condition)
@@ -89,7 +90,8 @@ triggerOf condition intervening modal =
       TriggeredAbility.modal = modal,
       TriggeredAbility.intervening = intervening,
       TriggeredAbility.name = Nothing,
-      TriggeredAbility.limit = TriggerLimit.Unlimited
+      TriggeredAbility.limit = TriggerLimit.Unlimited,
+      TriggeredAbility.functionsFrom = Set.empty
     }
 
 -- | "At the beginning of your upkeep" (CR 503.1): ControllersTurn with the

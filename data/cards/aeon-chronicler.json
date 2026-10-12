@@ -125,12 +125,14 @@
             "value": {
               "kind": {
                 "type": "Time"
-              },
-              "zone": {
-                "type": "Exile"
               }
             }
           },
+          "functionsFrom": [
+            {
+              "type": "Exile"
+            }
+          ],
           "modal": {
             "modes": [
               {

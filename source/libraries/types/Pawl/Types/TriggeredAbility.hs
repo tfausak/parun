@@ -1,10 +1,12 @@
 module Pawl.Types.TriggeredAbility where
 
+import qualified Data.Set as Set
 import qualified Pawl.Types.AbilityName as AbilityName
 import qualified Pawl.Types.Condition as Condition
 import qualified Pawl.Types.Modal as Modal
 import qualified Pawl.Types.TriggerCondition as TriggerCondition
 import qualified Pawl.Types.TriggerLimit as TriggerLimit
+import qualified Pawl.Types.Zone as Zone
 
 -- | CR 603.1 / 700.2b / 603.3c: "[condition], [effect]", modal-capable and
 -- parametric in `card` for the reason ActivatedAbility is. On the stack it shares
@@ -32,6 +34,12 @@ data TriggeredAbility card ability = MkTriggeredAbility
     -- Enforced at Pawl.Engine.Event.withinTriggerLimit, off the turn-scoped log
     -- for the per-turn rider and off Pawl.Types.GameState.triggeredThisGame for
     -- the per-game one.
-    limit :: TriggerLimit.TriggerLimit
+    limit :: TriggerLimit.TriggerLimit,
+    -- | CR 113.6b: the zones this ability states it functions in, overriding
+    -- every condition's own classification (Summitfest Closing Ceremony's
+    -- covercast). Empty for an ability that states none, which leaves CR 113.6's
+    -- default and CR 113.6k / 113.6m to decide; Pawl.Types.StaticAbility's
+    -- field of the same name is the static twin.
+    functionsFrom :: Set.Set Zone.Zone
   }
   deriving (Eq, Ord, Show)
