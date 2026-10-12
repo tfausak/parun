@@ -1519,7 +1519,7 @@ zoneCandidates zone pid gs = case zone of
 -- visible (Garruk's Horde reveals it, Bolas's Citadel looks at it), so the offer
 -- is the permission's own. Pawl.Engine.Visibility hides the top card from a
 -- player no such clause lets see it, but an answerer is still handed the whole
--- state (#1412).
+-- state (#10).
 pileCandidates :: Zone.Zone -> PlayerId -> GameState -> [ObjectId]
 pileCandidates zone owner gs = case zone of
   Zone.Library -> take 1 (Game.zoneMembers zone owner gs)
