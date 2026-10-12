@@ -8600,6 +8600,15 @@ leavingReveal asOf oid = do
   cause <- causeOf
   revealedOn cause (Object.owner obj) oid asOf
 
+-- | CR 708.9 / 702.143f / 702.106e, each rule's last sentence: at the end of
+-- each game, the reveals leavingReveal names for one departing owner are owed
+-- for every owner at once, recorded as one event group. Pawl.FaceDownSpec's
+-- "CR 708.9 the end of the game reveals" case proves it.
+endOfGameReveals :: GameState -> GameState
+endOfGameReveals gs = case Maybe.mapMaybe (leavingReveal gs) (Map.keys (GameState.objects gs)) of
+  [] -> gs
+  revealed -> simultaneouslyPure (\g -> List.foldl' (flip recordEvent) g revealed) gs
+
 -- CR 119.3: move one player's life total by this much, and record the CR 608.2i
 -- event of the matching sign. The write LoseLife, GainLife and
 -- ExchangeLifeTotals share; the total itself moves in Game.adjustLife, which
