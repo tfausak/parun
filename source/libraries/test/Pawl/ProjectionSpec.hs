@@ -1079,7 +1079,7 @@ spec s registry = Spec.describe s "Pawl.Engine.Projection" $ do
         -- answer for quantities that name no slot. Resolve's caller supplies the
         -- resolution's own bindings instead, which Pawl.ResolveSpec's Rush of
         -- Blood case is the gameplay-level proof of.
-        freeze = Projection.freezeQuantities gs pikerId pikerId (Filter.contextFor Teams.none (Just S.alice) (Just pikerId))
+        freeze = Projection.freezeQuantities (Projection.fullView gs) gs pikerId pikerId (Filter.contextFor Teams.none (Just S.alice) (Just pikerId))
     Spec.assertEqWith
       s
       "read against the SOURCE, the Piker's power locks in at 2"

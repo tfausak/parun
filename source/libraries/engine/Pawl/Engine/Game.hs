@@ -467,6 +467,16 @@ mayChooseAmong question chooser candidates = case NonEmpty.nonEmpty candidates o
 drawAmong :: (Eq a) => (NonEmpty.NonEmpty a -> Prompt.Prompt a) -> [a] -> Game (Maybe a)
 drawAmong = among ask
 
+-- | Up to @count@ of @candidates@, drawn one at a time through drawAmong and
+-- each dropped before the next draw, so no candidate is drawn twice. Stops
+-- early when the candidates run out (CR 609.3).
+drawDistinct :: (Eq a) => (NonEmpty.NonEmpty a -> Prompt.Prompt a) -> Natural -> [a] -> Game [a]
+drawDistinct question count candidates
+  | count <= 0 = pure []
+  | otherwise =
+      drawAmong question candidates
+        >>= maybe (pure []) (\drawn -> (drawn :) <$> drawDistinct question (count - 1) (filter (/= drawn) candidates))
+
 -- chooseAmong and drawAmong's shared none / one / ask / check, @put@ being how
 -- the question is put.
 among :: (Eq a) => (Prompt.Prompt a -> Game a) -> (NonEmpty.NonEmpty a -> Prompt.Prompt a) -> [a] -> Game (Maybe a)

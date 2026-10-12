@@ -787,14 +787,7 @@ drawStickerSheets seated = Monad.forM_ seated $ \pid -> do
   gs <- State.get
   let brought = foldMap Player.stickerSheets (Map.lookup pid (GameState.players gs))
       slots = zipWith const [0 :: Natural ..] (Foldable.toList brought)
-      drawThree n remaining chosen
-        | n > (0 :: Int) = do
-            drawn <- Game.drawAmong Prompt.RandomStickerSheet remaining
-            case drawn of
-              Nothing -> pure chosen
-              Just picked -> drawThree (n - 1) (List.delete picked remaining) (Set.insert picked chosen)
-        | otherwise = pure chosen
-  chosen <- if length slots <= 3 then pure (Set.fromList slots) else drawThree 3 slots Set.empty
+  chosen <- if length slots <= 3 then pure (Set.fromList slots) else Set.fromList <$> Game.drawDistinct Prompt.RandomStickerSheet 3 slots
   State.modify' (\g -> g {GameState.players = Map.adjust (\p -> p {Player.chosenStickerSheets = chosen}) pid (GameState.players g)})
 
 -- CR 103.1c: rotate the turn order to begin with the player whose command zone
