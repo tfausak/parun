@@ -925,6 +925,54 @@ spec s registry = Spec.describe s "Sticker" $ do
           Nothing -> False
         (_, after, _) = entersNaming splash ((placingAt Nothing (nameSticker 0 1) 0) {namingPrefers = bobs}) g2
     Spec.assertEqWith s "CR 123.6d one Piker is tapped" (S.tappedCount S.bob after) 1
+  -- A Good Day to Pie's return names the graveyard it moves the card out of, so
+  -- CR 113.6m pins the ability there. _____ Goblin naming itself is the name
+  -- sticker on a creature; its own "may" is the one every board below asks.
+  Spec.it s "CR 113.6m A Good Day to Pie returns from alice's graveyard when _____ Goblin takes a name sticker" $ do
+    sheets <- committedSheets
+    pie <- S.printingOf s registry "A Good Day to Pie"
+    goblin <- S.printingOf s registry "_____ Goblin"
+    let (pieId, board) = S.addGraveyardCard pie S.alice (withSheets sheets (Setup.gameWith GameSettings.plain S.bothPlayers))
+        (_, after, offers) = pyrodancerEnters goblin Nothing board
+    Spec.assertEqWith s "CR 113.6m the Pie left alice's graveyard for her hand" (List.elem pieId (Game.zoneMembers Zone.Graveyard S.alice after), length (Game.zoneMembers Zone.Hand S.alice after)) (False, 1)
+    Spec.assertEqWith s "after the Goblin's may and the Pie's" (mays offers) 2
+  Spec.it s "CR 113.6m A Good Day to Pie in alice's hand does not trigger" $ do
+    sheets <- committedSheets
+    pie <- S.printingOf s registry "A Good Day to Pie"
+    goblin <- S.printingOf s registry "_____ Goblin"
+    let (pieId, board) = S.addHandCard pie S.alice (withSheets sheets (Setup.gameWith GameSettings.plain S.bothPlayers))
+        (_, after, offers) = pyrodancerEnters goblin Nothing board
+    Spec.assertEqWith s "CR 113.6m only the Goblin's may is asked" (mays offers) 1
+    Spec.assertEqWith s "and the Pie is still in alice's hand" (Game.zoneMembers Zone.Hand S.alice after) [pieId]
+  Spec.it s "CR 123.9 A Good Day to Pie stays in the graveyard for Pyrodancer's art sticker" $ do
+    sheets <- committedSheets
+    pie <- S.printingOf s registry "A Good Day to Pie"
+    pyrodancer <- S.printingOf s registry "Proficient Pyrodancer"
+    let (pieId, board) = S.addGraveyardCard pie S.alice (withSheets sheets (Setup.gameWith GameSettings.plain S.bothPlayers))
+        (pyro, after, offers) = pyrodancerEnters pyrodancer Nothing board
+    Spec.assertEqWith s "the Pie is still in alice's graveyard" (Game.zoneMembers Zone.Graveyard S.alice after) [pieId]
+    Spec.assertEqWith s "with the art sticker on Pyrodancer and only its may asked" (stickerKindsOn pyro after, mays offers) ([StickerKind.Art], 1)
+  -- Tusk and Whiskers' pair below, one board each, differing only in where the
+  -- Bears is.
+  Spec.it s "CR 109.2 A Good Day to Pie triggers for a name sticker on a creature permanent, not a creature card in a graveyard" $ do
+    sheets <- committedSheets
+    pie <- S.printingOf s registry "A Good Day to Pie"
+    bears <- S.printingOf s registry "Grizzly Bears"
+    let (_, base) = S.addGraveyardCard pie S.alice (withSheets sheets (Setup.gameWith GameSettings.plain S.bothPlayers))
+        triggered add =
+          let (bearsId, g1) = add bears S.alice base
+              settled = S.runPure S.identityAnswer (Sticker.put S.alice bearsId otter Nothing g1) Engine.settleForPriority
+           in length (GameState.stack settled)
+    Spec.assertEqWith s "CR 109.2 nothing triggers for the card in the graveyard" (triggered S.addGraveyardCard) 0
+    Spec.assertEqWith s "and the Pie triggers for the permanent" (triggered S.addPermanent) 1
+  Spec.it s "A Good Day to Pie stays in the graveyard for a name sticker on an enchantment" $ do
+    sheets <- committedSheets
+    pie <- S.printingOf s registry "A Good Day to Pie"
+    splash <- S.printingOf s registry "Make a _____ Splash"
+    let (pieId, board) = S.addGraveyardCard pie S.alice (withSheets sheets (Setup.gameWith GameSettings.plain S.bothPlayers))
+        (splashId, after, _) = pyrodancerEnters splash Nothing board
+    Spec.assertEqWith s "the Pie is still in alice's graveyard" (Game.zoneMembers Zone.Graveyard S.alice after) [pieId]
+    Spec.assertEqWith s "with the name sticker on the Splash" (stickerKindsOn splashId after) [StickerKind.Name]
   Spec.it s "CR 123.3c/107.17a a sticker's ticket cost is printed on its sheet, and name and art stickers cost nothing" $ do
     sheets <- withJuggler
     let gs = withSheets sheets (Setup.gameWith GameSettings.plain S.bothPlayers)

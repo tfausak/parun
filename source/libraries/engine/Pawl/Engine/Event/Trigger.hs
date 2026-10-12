@@ -2647,6 +2647,9 @@ zonesTriggeredFrom cond =
         -- object that isn't on the battlefield can't be exerted, so a Self bearer is
         -- standing there when its own exert is recorded.
         TriggerCondition.PermanentActs _ -> battlefield
+        -- CR 113.6's default. A Good Day to Pie functions from the graveyard by
+        -- CR 113.6m instead, its return naming that zone; Pawl.StickerSpec's
+        -- A Good Day to Pie group proves it.
         TriggerCondition.PlacesSticker _ -> battlefield
         -- CR 113.6's default again: nothing about rolling a die is a condition
         -- that cannot trigger from the battlefield.
