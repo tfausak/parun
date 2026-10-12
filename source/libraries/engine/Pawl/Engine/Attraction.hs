@@ -6,11 +6,10 @@ module Pawl.Engine.Attraction where
 
 import qualified Control.Monad as Monad
 import qualified Control.Monad.Trans.State.Strict as State
-import qualified Data.Foldable as Foldable
-import qualified Data.Map.Strict as Map
 import qualified Data.Set as Set
 import Numeric.Natural (Natural)
 import qualified Pawl.Engine.Event as Event
+import qualified Pawl.Engine.Game as Game
 import qualified Pawl.Engine.Projection as Projection
 import qualified Pawl.Types.EntryRiders as EntryRiders
 import Pawl.Types.Game (Game)
@@ -21,12 +20,13 @@ import Pawl.Types.ObjectId (ObjectId)
 import qualified Pawl.Types.PlayerActed as PlayerActed
 import qualified Pawl.Types.PlayerAction as PlayerAction
 import Pawl.Types.PlayerId (PlayerId)
+import qualified Pawl.Types.SideDeck as SideDeck
 import qualified Pawl.Types.Subtype as Subtype
 import qualified Pawl.Types.Zone as Zone
 
 -- | CR 717.2: this player's Attraction deck, top card first.
 deckOf :: PlayerId -> GameState.GameState -> [ObjectId]
-deckOf pid gs = foldMap Foldable.toList (Map.lookup pid (GameState.attractionDecks gs))
+deckOf = Game.sideDeckOf SideDeck.Attraction
 
 -- | CR 717.4: does this player control an Attraction? Read off the projection,
 -- the subtype being a characteristic.

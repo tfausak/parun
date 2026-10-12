@@ -360,9 +360,7 @@ spec s registry = Spec.describe s "Pawl.Engine.Event (CR 400.11)" $ do
               Deck.dungeons = Set.empty,
               Deck.sideboard = Map.fromList [(signInBlood, 2), (dragon, 1)],
               Deck.conspiracies = Map.empty,
-              Deck.attractions = Map.empty,
-              Deck.planes = Set.empty,
-              Deck.schemes = Map.empty,
+              Deck.sideDecks = Map.empty,
               Deck.stickerSheets = Seq.empty
             }
         after = S.runPure S.identityAnswer (Setup.emptyGame S.bothPlayers) (Setup.createDeck S.alice deck)

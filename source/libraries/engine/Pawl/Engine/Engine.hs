@@ -2183,9 +2183,7 @@ playSubgame = do
   seated <- State.gets Game.stillPlayingInOrder
   Monad.forM_ seated Event.shuffleLibrary
   -- CR 729.5a: and their supplementary decks.
-  Monad.forM_ seated Event.shuffleAttractionDeck
-  Monad.forM_ seated Planechase.shufflePlanarDeck
-  Monad.forM_ seated Archenemy.shuffleSchemeDeck
+  Monad.forM_ seated (\pid -> Monad.forM_ [minBound .. maxBound] (`Game.shuffleSideDeck` pid))
   pure result
 
 -- CR 405.6c / 605.4a: the mana-ability performer every payment the live loop

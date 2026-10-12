@@ -35,6 +35,7 @@ import qualified Pawl.Types.Phase as Phase
 import qualified Pawl.Types.PlayerCounterKind as PlayerCounterKind
 import qualified Pawl.Types.PlayerId as PlayerId
 import qualified Pawl.Types.Regenerability as Regenerability
+import qualified Pawl.Types.SideDeck as SideDeck
 import qualified Pawl.Types.Zone as Zone
 
 spec :: (Monad m, Monad n) => Spec.Spec m n -> Registry.Registry m -> n ()
@@ -45,7 +46,7 @@ spec s registry = Spec.describe s "Pawl.Engine.Archenemy" $ do
     forest <- S.printingOf s registry "Forest"
     look <- S.printingOf s registry "Look Skyward and Despair"
     soil <- S.printingOf s registry "The Very Soil Shall Shake"
-    let alices = (Deck.fromCards (Map.singleton forest 20)) {Deck.schemes = Map.fromList [(look, 2), (soil, 1)]}
+    let alices = (Deck.fromCards (Map.singleton forest 20)) {Deck.sideDecks = Map.singleton SideDeck.Scheme (Map.fromList [(look, 2), (soil, 1)])}
         bobs = Deck.fromCards (Map.singleton forest 20)
         started = S.runPure S.identityAnswer (Setup.emptyGame S.bothPlayers) (Setup.newGame (Resolve.performHandAction Resolve.noSubgame) ((S.alice, alices) NonEmpty.:| [(S.bob, bobs)]))
     Spec.assertEqWith s "CR 904.5 alice has 40 life and bob 20" (S.lifeOf S.alice started, S.lifeOf S.bob started) (Just 40, Just 20)
@@ -60,7 +61,7 @@ spec s registry = Spec.describe s "Pawl.Engine.Archenemy" $ do
     forest <- S.printingOf s registry "Forest"
     look <- S.printingOf s registry "Look Skyward and Despair"
     let plain = Deck.fromCards (Map.singleton forest 20)
-        schemer = plain {Deck.schemes = Map.singleton look 2}
+        schemer = plain {Deck.sideDecks = Map.singleton SideDeck.Scheme (Map.singleton look 2)}
         started bobs = S.runPure S.identityAnswer (Setup.emptyGame S.threePlayers) (Setup.newGame (Resolve.performHandAction Resolve.noSubgame) ((S.alice, plain) NonEmpty.:| [(S.bob, bobs), (S.carol, schemer)]))
         sides gs = (fmap (`Game.opponentsOf` gs) [S.alice, S.bob, S.carol], Turn.sharesTurn gs S.alice S.bob)
     Spec.assertEqWith s "CR 904.6 carol takes the first turn, the cyclic order kept" (GameState.activePlayer (started plain), GameState.turnOrder (started plain)) (S.carol, [S.carol, S.alice, S.bob])
@@ -78,7 +79,7 @@ spec s registry = Spec.describe s "Pawl.Engine.Archenemy" $ do
     look <- S.printingOf s registry "Look Skyward and Despair"
     shimatsu <- S.printingOf s registry "Shimatsu the Bloodcloaked"
     let commanderDeck = (Deck.fromCards (Map.singleton forest 20)) {Deck.commander = Set.singleton shimatsu}
-        alices = commanderDeck {Deck.schemes = Map.singleton look 2}
+        alices = commanderDeck {Deck.sideDecks = Map.singleton SideDeck.Scheme (Map.singleton look 2)}
         teamed shared =
           let gs = Setup.emptyGame S.threePlayers
            in gs {GameState.settings = (GameState.settings gs) {GameSettings.sharedTeamLife = shared}}
@@ -157,11 +158,11 @@ schemeBoard :: (Monad m) => Spec.Spec m n -> Registry.Registry m -> [String] -> 
 schemeBoard s registry order = do
   forest <- S.printingOf s registry "Forest"
   schemes <- traverse (S.printingOf s registry) order
-  let alices = (Deck.fromCards (Map.singleton forest 20)) {Deck.schemes = Map.fromList (fmap (\p -> (p, 1)) schemes)}
+  let alices = (Deck.fromCards (Map.singleton forest 20)) {Deck.sideDecks = Map.singleton SideDeck.Scheme (Map.fromList (fmap (\p -> (p, 1)) schemes))}
       bobs = Deck.fromCards (Map.singleton forest 20)
       built = S.runPure S.identityAnswer (Setup.emptyGame S.bothPlayers) (Setup.createDeck S.alice alices >> Setup.createDeck S.bob bobs)
       rank oid = maybe (length order) (\face -> Maybe.fromMaybe (length order) (List.elemIndex (Face.name face) (fmap (CardName.MkCardName . Text.pack) order))) (Game.faceOf oid built)
-  pure built {GameState.schemeDecks = Map.adjust (Seq.sortOn rank) S.alice (GameState.schemeDecks built)}
+  pure (Game.overSideDecks SideDeck.Scheme (Map.adjust (Seq.sortOn rank) S.alice) built)
 
 -- Step the game until the turn under way has ended and the next has begun.
 -- Bounded, so a schedule that never hands off stops rather than looping.

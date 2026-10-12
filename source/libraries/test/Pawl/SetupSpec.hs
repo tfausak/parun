@@ -77,6 +77,7 @@ import qualified Pawl.Types.Recipient as Recipient
 import qualified Pawl.Types.Result as Result
 import qualified Pawl.Types.RoomHalf as RoomHalf
 import qualified Pawl.Types.Sickness as Sickness
+import qualified Pawl.Types.SideDeck as SideDeck
 import qualified Pawl.Types.SlotName as SlotName
 import qualified Pawl.Types.Source as Source
 import qualified Pawl.Types.Status as Status
@@ -251,7 +252,7 @@ setupSpec s registry = Spec.describe s "Setup" $ do
     shimatsu <- S.printingOf s registry "Shimatsu the Bloodcloaked"
     let build commander =
           S.runPure S.identityAnswer (Setup.emptyGame S.bothPlayers) $
-            Setup.createDeck S.alice Deck.MkDeck {Deck.cards = Map.empty, Deck.commander = commander, Deck.vanguard = Nothing, Deck.dungeons = Set.empty, Deck.sideboard = Map.empty, Deck.conspiracies = Map.empty, Deck.attractions = Map.empty, Deck.planes = Set.empty, Deck.schemes = Map.empty, Deck.stickerSheets = Seq.empty}
+            Setup.createDeck S.alice Deck.MkDeck {Deck.cards = Map.empty, Deck.commander = commander, Deck.vanguard = Nothing, Deck.dungeons = Set.empty, Deck.sideboard = Map.empty, Deck.conspiracies = Map.empty, Deck.sideDecks = Map.empty, Deck.stickerSheets = Seq.empty}
     Spec.assertEqWith s "forty with a commander" (S.lifeOf S.alice (build (Set.singleton shimatsu))) (Just 40)
     Spec.assertEqWith s "twenty without" (S.lifeOf S.alice (build Set.empty)) (Just 20)
     Spec.assertEqWith s "and bob, whose deck was never built, keeps CR 103.4's twenty" (S.lifeOf S.bob (build (Set.singleton shimatsu))) (Just 20)
@@ -264,7 +265,7 @@ setupSpec s registry = Spec.describe s "Setup" $ do
     shimatsu <- S.printingOf s registry "Shimatsu the Bloodcloaked"
     let build seats brawl =
           S.runPure S.identityAnswer (Setup.gameWith (settingsOf brawl) seats) $
-            Setup.createDeck S.alice Deck.MkDeck {Deck.cards = Map.empty, Deck.commander = Set.singleton shimatsu, Deck.vanguard = Nothing, Deck.dungeons = Set.empty, Deck.sideboard = Map.empty, Deck.conspiracies = Map.empty, Deck.attractions = Map.empty, Deck.planes = Set.empty, Deck.schemes = Map.empty, Deck.stickerSheets = Seq.empty}
+            Setup.createDeck S.alice Deck.MkDeck {Deck.cards = Map.empty, Deck.commander = Set.singleton shimatsu, Deck.vanguard = Nothing, Deck.dungeons = Set.empty, Deck.sideboard = Map.empty, Deck.conspiracies = Map.empty, Deck.sideDecks = Map.empty, Deck.stickerSheets = Seq.empty}
     Spec.assertEqWith s "two-player Brawl: 25" (S.lifeOf S.alice (build S.bothPlayers True)) (Just 25)
     Spec.assertEqWith s "multiplayer Brawl: 30" (S.lifeOf S.alice (build S.threePlayers True)) (Just 30)
     Spec.assertEqWith s "the same deck outside Brawl: CR 903.7's forty" (S.lifeOf S.alice (build S.bothPlayers False)) (Just 40)
@@ -276,7 +277,7 @@ setupSpec s registry = Spec.describe s "Setup" $ do
   Spec.it s "CR 810.4 a team sharing a life total starts at 30, and CR 810.11 at 45 with three members" $ do
     let build teams shared =
           S.runPure S.identityAnswer (S.inTeams teams (Setup.gameWith GameSettings.plain {GameSettings.sharedTeamLife = shared} S.fourPlayers)) $
-            Setup.createDeck S.alice Deck.MkDeck {Deck.cards = Map.empty, Deck.commander = Set.empty, Deck.vanguard = Nothing, Deck.dungeons = Set.empty, Deck.sideboard = Map.empty, Deck.conspiracies = Map.empty, Deck.attractions = Map.empty, Deck.planes = Set.empty, Deck.schemes = Map.empty, Deck.stickerSheets = Seq.empty}
+            Setup.createDeck S.alice Deck.MkDeck {Deck.cards = Map.empty, Deck.commander = Set.empty, Deck.vanguard = Nothing, Deck.dungeons = Set.empty, Deck.sideboard = Map.empty, Deck.conspiracies = Map.empty, Deck.sideDecks = Map.empty, Deck.stickerSheets = Seq.empty}
     Spec.assertEqWith s "CR 810.4 two heads: 30" (S.lifeOf S.alice (build [[S.alice, S.bob], [S.carol, S.dave]] True)) (Just 30)
     Spec.assertEqWith s "CR 810.11 three heads: 45" (S.lifeOf S.alice (build [[S.alice, S.bob, S.carol], [S.dave]] True)) (Just 45)
     Spec.assertEqWith s "the same teams without the option: CR 103.4's twenty" (S.lifeOf S.alice (build [[S.alice, S.bob], [S.carol, S.dave]] False)) (Just 20)
@@ -290,7 +291,7 @@ setupSpec s registry = Spec.describe s "Setup" $ do
   Spec.it s "CR 727.1 / 729.2 a rebuilt Brawl game is still a Brawl game" $ do
     shimatsu <- S.printingOf s registry "Shimatsu the Bloodcloaked"
     mountain <- S.printingOf s registry "Mountain"
-    let deck = Deck.MkDeck {Deck.cards = Map.singleton mountain 10, Deck.commander = Set.singleton shimatsu, Deck.vanguard = Nothing, Deck.dungeons = Set.empty, Deck.sideboard = Map.empty, Deck.conspiracies = Map.empty, Deck.attractions = Map.empty, Deck.planes = Set.empty, Deck.schemes = Map.empty, Deck.stickerSheets = Seq.empty}
+    let deck = Deck.MkDeck {Deck.cards = Map.singleton mountain 10, Deck.commander = Set.singleton shimatsu, Deck.vanguard = Nothing, Deck.dungeons = Set.empty, Deck.sideboard = Map.empty, Deck.conspiracies = Map.empty, Deck.sideDecks = Map.empty, Deck.stickerSheets = Seq.empty}
         built brawl =
           S.runPure S.identityAnswer (Setup.gameWith (settingsOf brawl) S.bothPlayers) $
             Setup.createDeck S.alice deck
@@ -307,7 +308,7 @@ setupSpec s registry = Spec.describe s "Setup" $ do
   Spec.it s "CR 103.4 the starting life total is recorded by setup, a restart and a subgame" $ do
     shimatsu <- S.printingOf s registry "Shimatsu the Bloodcloaked"
     mountain <- S.printingOf s registry "Mountain"
-    let deck = Deck.MkDeck {Deck.cards = Map.singleton mountain 10, Deck.commander = Set.singleton shimatsu, Deck.vanguard = Nothing, Deck.dungeons = Set.empty, Deck.sideboard = Map.empty, Deck.conspiracies = Map.empty, Deck.attractions = Map.empty, Deck.planes = Set.empty, Deck.schemes = Map.empty, Deck.stickerSheets = Seq.empty}
+    let deck = Deck.MkDeck {Deck.cards = Map.singleton mountain 10, Deck.commander = Set.singleton shimatsu, Deck.vanguard = Nothing, Deck.dungeons = Set.empty, Deck.sideboard = Map.empty, Deck.conspiracies = Map.empty, Deck.sideDecks = Map.empty, Deck.stickerSheets = Seq.empty}
         built = S.runPure S.identityAnswer (Setup.gameWith (settingsOf True) S.bothPlayers) (Setup.createDeck S.alice deck)
         knocked = built {GameState.players = Map.adjust (\p -> p {Player.life = 7, Player.startingLife = 99}) S.alice (GameState.players built)}
         restarted = S.runPure S.identityAnswer knocked (Setup.restartGame S.performer Set.empty S.alice)
@@ -1194,7 +1195,7 @@ supplementaryDeckSpec s registry = Spec.describe s "supplementary decks" $ do
     academy <- S.printingOf s registry "Academy at Tolaria West"
     tazeem <- S.printingOf s registry "Tazeem"
     karn <- S.printingOf s registry "Karn Liberated"
-    board <- supplementaryBoard s registry (\d -> d {Deck.planes = Set.singleton academy}) (\d -> d {Deck.planes = Set.singleton tazeem})
+    board <- supplementaryBoard s registry (\d -> d {Deck.sideDecks = Map.singleton SideDeck.Planar (Map.fromSet (const 1) (Set.singleton academy))}) (\d -> d {Deck.sideDecks = Map.singleton SideDeck.Planar (Map.fromSet (const 1) (Set.singleton tazeem))})
     let started = S.runPure S.identityAnswer board (Planechase.setStartingPlane S.alice)
         (karnId, withKarn) = S.addPermanent karn S.bob started
         before = (S.addCounter CounterKind.Loyalty 14 karnId withKarn) {GameState.activePlayer = S.bob, GameState.phase = Phase.PrecombatMain, GameState.priority = Just S.bob}
@@ -1210,7 +1211,7 @@ supplementaryDeckSpec s registry = Spec.describe s "supplementary decks" $ do
     look <- S.printingOf s registry "Look Skyward and Despair"
     soil <- S.printingOf s registry "The Very Soil Shall Shake"
     karn <- S.printingOf s registry "Karn Liberated"
-    board <- supplementaryBoard s registry (\d -> d {Deck.schemes = Map.fromList [(look, 1), (soil, 1)]}) id
+    board <- supplementaryBoard s registry (\d -> d {Deck.sideDecks = Map.singleton SideDeck.Scheme (Map.fromList [(look, 1), (soil, 1)])}) id
     let set = turnUp "The Very Soil Shall Shake" board
         (karnId, withKarn) = S.addPermanent karn S.bob set
         before = (S.addCounter CounterKind.Loyalty 14 karnId withKarn) {GameState.activePlayer = S.bob, GameState.phase = Phase.PrecombatMain, GameState.priority = Just S.bob}
@@ -1229,7 +1230,7 @@ supplementaryDeckSpec s registry = Spec.describe s "supplementary decks" $ do
   Spec.it s "CR 729.2a the planar deck plays the subgame and comes back" $ do
     academy <- S.printingOf s registry "Academy at Tolaria West"
     tazeem <- S.printingOf s registry "Tazeem"
-    let planes d = d {Deck.planes = Set.fromList [academy, tazeem]}
+    let planes d = d {Deck.sideDecks = Map.singleton SideDeck.Planar (Map.fromSet (const 1) (Set.fromList [academy, tazeem]))}
     board <- supplementaryBoard s registry planes planes
     before <- withShahrazad s registry (S.runPure S.identityAnswer board (Planechase.setStartingPlane S.alice))
     let ((_, after), asks) = State.runState (Engine.runGameAsked recordAsked before Engine.priorityLoop) []
@@ -1251,7 +1252,7 @@ supplementaryDeckSpec s registry = Spec.describe s "supplementary decks" $ do
   Spec.it s "CR 729.2a the scheme deck plays the subgame and comes back" $ do
     look <- S.printingOf s registry "Look Skyward and Despair"
     soil <- S.printingOf s registry "The Very Soil Shall Shake"
-    board <- supplementaryBoard s registry (\d -> d {Deck.schemes = Map.fromList [(look, 2), (soil, 1)]}) id
+    board <- supplementaryBoard s registry (\d -> d {Deck.sideDecks = Map.singleton SideDeck.Scheme (Map.fromList [(look, 2), (soil, 1)])}) id
     before <- withShahrazad s registry (turnUp "The Very Soil Shall Shake" board)
     let ((_, after), asks) = State.runState (Engine.runGameAsked recordAsked before Engine.priorityLoop) []
         subStates = [g | (depth, g, _) <- asks, depth == 1]
@@ -1286,7 +1287,7 @@ withShahrazad s registry gs = do
 turnUp :: String -> GameState.GameState -> GameState.GameState
 turnUp name gs = case filter (\oid -> cardNames [oid] gs == [name]) (Archenemy.deckOf S.alice gs) of
   [] -> gs
-  oid : _ -> gs {GameState.schemeDecks = Map.adjust (Seq.filter (/= oid)) S.alice (GameState.schemeDecks gs), GameState.command = Set.insert oid (GameState.command gs)}
+  oid : _ -> (Game.overSideDecks SideDeck.Scheme (Map.adjust (Seq.filter (/= oid)) S.alice) gs) {GameState.command = Set.insert oid (GameState.command gs)}
 
 cardNames :: [ObjectId.ObjectId] -> GameState.GameState -> [String]
 cardNames oids gs = Maybe.mapMaybe (\oid -> fmap (Text.unpack . CardName.unwrap . Face.name) (Game.faceOf oid gs)) oids

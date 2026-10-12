@@ -62,6 +62,7 @@ import qualified Pawl.Types.Prompt as Prompt
 import qualified Pawl.Types.Recipient as Recipient
 import qualified Pawl.Types.ReplacementEffect as ReplacementEffect
 import qualified Pawl.Types.ReplacementOrigin as ReplacementOrigin
+import qualified Pawl.Types.SideDeck as SideDeck
 import qualified Pawl.Types.Subtype as Subtype
 import qualified Pawl.Types.Timestamp as Timestamp
 import qualified Pawl.Types.Uses as Uses
@@ -93,7 +94,7 @@ carsF = lit [4, 5, 6]
 -- `pid` brings these Attractions, and nothing else.
 withAttractions :: PlayerId -> [Printing.Printing] -> GameState.GameState -> GameState.GameState
 withAttractions pid printings gs =
-  S.runPure S.identityAnswer gs (Setup.createDeck pid (Deck.fromCards Map.empty) {Deck.attractions = Map.fromListWith (+) [(p, 1) | p <- printings]})
+  S.runPure S.identityAnswer gs (Setup.createDeck pid (Deck.fromCards Map.empty) {Deck.sideDecks = Map.singleton SideDeck.Attraction (Map.fromListWith (+) [(p, 1) | p <- printings])})
 
 -- CR 701.51: opening an Attraction.
 openSpec :: (Monad m, Monad n) => Spec.Spec m n -> Registry.Registry m -> n ()
@@ -134,7 +135,7 @@ openSpec s registry = Spec.describe s "Open an Attraction" $ do
 -- every shuffle by reversing it. Answers the final board and every shuffle asked.
 started :: Printing.Printing -> [Printing.Printing] -> (GameState.GameState, [[ObjectId]])
 started swamp attractions =
-  let deck = (Deck.fromCards (Map.singleton swamp 10)) {Deck.attractions = Map.fromListWith (+) [(p, 1) | p <- attractions]}
+  let deck = (Deck.fromCards (Map.singleton swamp 10)) {Deck.sideDecks = Map.singleton SideDeck.Attraction (Map.fromListWith (+) [(p, 1) | p <- attractions])}
       answering :: Prompt.Prompt r -> State.State [[ObjectId]] r
       answering p = case p of
         Prompt.Shuffle ids -> State.modify' (ids :) >> pure (reverse ids)

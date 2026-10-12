@@ -58,27 +58,18 @@ import qualified Pawl.Types.PlayerAction as PlayerAction
 import Pawl.Types.PlayerId (PlayerId)
 import qualified Pawl.Types.PlayerRelation as PlayerRelation
 import qualified Pawl.Types.Prompt as Prompt
+import qualified Pawl.Types.SideDeck as SideDeck
 import qualified Pawl.Types.Source as Source
 import qualified Pawl.Types.TriggerCondition as TriggerCondition
 import Pawl.Types.TriggeredAbility (TriggeredAbility)
 
 -- | CR 901.3: this player's planar deck, top first.
 deckOf :: PlayerId -> GameState -> [ObjectId]
-deckOf pid gs = foldMap Foldable.toList (Map.lookup pid (GameState.planarDecks gs))
-
--- | CR 103.3a: shuffle this player's planar deck.
-shufflePlanarDeck :: PlayerId -> Game ()
-shufflePlanarDeck pid = do
-  gs <- State.get
-  let ids = deckOf pid gs
-  Monad.unless (null ids) $ do
-    answer <- Game.ask (Prompt.Shuffle ids)
-    let shuffled = Game.honourShuffle ids answer
-    State.modify' (\g -> g {GameState.planarDecks = Map.insert pid (Seq.fromList shuffled) (GameState.planarDecks g)})
+deckOf = Game.sideDeckOf SideDeck.Planar
 
 -- | CR 901.1: is this a Planechase game? Some player brought a planar deck.
 isPlanechase :: GameState -> Bool
-isPlanechase gs = not (Map.null (GameState.planarDecks gs))
+isPlanechase gs = not (Map.null (Game.sideDecksOf SideDeck.Planar gs))
 
 -- | CR 901.4: the face-up plane and phenomenon cards.
 faceUp :: GameState -> [ObjectId]
@@ -153,9 +144,8 @@ turnUpTop pid = do
     top : rest -> do
       ts <- State.state Game.freshTimestamp
       State.modify' $ \g ->
-        g
-          { GameState.planarDecks = Map.insert pid (Seq.fromList rest) (GameState.planarDecks g),
-            GameState.command = Set.insert top (GameState.command g),
+        (Game.overSideDecks SideDeck.Planar (Map.insert pid (Seq.fromList rest)) g)
+          { GameState.command = Set.insert top (GameState.command g),
             GameState.objects = Map.adjust (\o -> o {Object.timestamp = ts}) top (GameState.objects g)
           }
       pure (Just top)
@@ -171,10 +161,9 @@ toBottom oid = do
       fresh <- State.state Game.freshObjectId
       let owner = Object.owner obj
       State.modify' $ \g ->
-        g
+        (Game.overSideDecks SideDeck.Planar (Map.insertWith (flip (Seq.><)) owner (Seq.singleton fresh)) g)
           { GameState.command = Set.delete oid (GameState.command g),
-            GameState.objects = Map.insert fresh (Object.newIncarnation obj) (Map.delete oid (GameState.objects g)),
-            GameState.planarDecks = Map.insertWith (flip (Seq.><)) owner (Seq.singleton fresh) (GameState.planarDecks g)
+            GameState.objects = Map.insert fresh (Object.newIncarnation obj) (Map.delete oid (GameState.objects g))
           }
 
 -- | CR 901.9: how many times this player has rolled the planar die this turn.

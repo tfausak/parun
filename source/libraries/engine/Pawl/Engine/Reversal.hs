@@ -67,9 +67,7 @@ withoutAnnouncement before entry closed = do
   exile <- setOf GameState.exile
   command <- setOf GameState.command
   ante <- setOf GameState.ante
-  attractionDecks <- libraries GameState.attractionDecks
-  planarDecks <- libraries GameState.planarDecks
-  schemeDecks <- libraries GameState.schemeDecks
+  sideDecks <- mapWith pilesOf (GameState.sideDecks before) (GameState.sideDecks entry) (GameState.sideDecks closed)
   stack <- listOf GameState.stack
   stackedIn <- mapOf GameState.stackedIn
   players <- mapWith playerWith (GameState.players before) (GameState.players entry) (GameState.players closed)
@@ -186,9 +184,7 @@ withoutAnnouncement before entry closed = do
         GameState.exile = exile,
         GameState.command = command,
         GameState.ante = ante,
-        GameState.attractionDecks = attractionDecks,
-        GameState.planarDecks = planarDecks,
-        GameState.schemeDecks = schemeDecks,
+        GameState.sideDecks = sideDecks,
         GameState.stack = stack,
         GameState.stackedIn = stackedIn,
         GameState.players = players,
@@ -320,7 +316,11 @@ withoutAnnouncement before entry closed = do
     -- and so the stack exception. A card the announcement took returns at the
     -- index it held, and a card it added goes.
     libraries :: (Ord k, Eq a) => (GameState -> Map.Map k (Seq.Seq a)) -> Maybe (Map.Map k (Seq.Seq a))
-    libraries field = mapWith (\b e c -> Just (Seq.fromList (libraryOrder (Foldable.toList b) (Foldable.toList e) (Foldable.toList c)))) (field before) (field entry) (field closed)
+    libraries field = pilesOf (field before) (field entry) (field closed)
+    -- `libraries` for one map of piles; a supplementary deck is reversed as a
+    -- library is, its order being a shuffle's too (CR 103.3a).
+    pilesOf :: (Ord k, Eq a) => Map.Map k (Seq.Seq a) -> Map.Map k (Seq.Seq a) -> Map.Map k (Seq.Seq a) -> Maybe (Map.Map k (Seq.Seq a))
+    pilesOf = mapWith (\b e c -> Just (Seq.fromList (libraryOrder (Foldable.toList b) (Foldable.toList e) (Foldable.toList c))))
     -- CR 733.1: "no abilities trigger and no effects apply as a result of an
     -- undone action", so the announcement's own segment of the log goes and the
     -- window's stands. The log only grows, so that segment is the one between

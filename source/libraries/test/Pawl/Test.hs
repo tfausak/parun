@@ -574,6 +574,7 @@ import qualified Pawl.Codec.ShownCardsSpec
 import qualified Pawl.Codec.ShowsSpec
 import qualified Pawl.Codec.ShuffleIntoLibrarySpec
 import qualified Pawl.Codec.SicknessSpec
+import qualified Pawl.Codec.SideDeckSpec
 import qualified Pawl.Codec.SkipNextPhaseSpec
 import qualified Pawl.Codec.SlotCountSpec
 import qualified Pawl.Codec.SlotNameSpec
@@ -1444,6 +1445,7 @@ spec s registry = do
   Pawl.Codec.ShownCardsSpec.spec s
   Pawl.Codec.ShowsSpec.spec s
   Pawl.Codec.ShuffleIntoLibrarySpec.spec s
+  Pawl.Codec.SideDeckSpec.spec s
   Pawl.Codec.SicknessSpec.spec s
   Pawl.Codec.SkipNextPhaseSpec.spec s
   Pawl.Codec.SlotCountSpec.spec s
