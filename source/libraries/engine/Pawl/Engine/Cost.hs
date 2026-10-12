@@ -906,8 +906,8 @@ candidateCostsGiven permitted pid name oid gs =
                       -- Tenacious Underdog's "cast this card from your graveyard
                       -- using its blitz ability" -- opens only the candidates a
                       -- keyword of that family offers, never the printed cost.
-                      -- Pawl.CastSpec's "Tenacious Underdog" group proves both
-                      -- halves.
+                      -- Pawl.CastSpec's "Blitz from a graveyard" group proves
+                      -- both halves.
                       usingFamilies = [family | CastingPermission.CastFromGraveyard (Just family) <- permissionsOf oid face gs]
                       usingPermitted candidate = any (\family -> (CandidateCost.keyword candidate >>= Keyword.familyOf) == Just family) usingFamilies
                    in fmap flashback (Keyword.flashbackCosts keywords)

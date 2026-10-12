@@ -1579,9 +1579,9 @@ controlsLegendaryCreatureOrPlaneswalker pid gs =
 -- Troops' "only during the declare attackers step and only if you've been
 -- attacked this step".
 --
--- The exact counterweight to Pawl.Engine.Cost.permissionsOf, but read off the card rather
--- than through the projection (CR 113.6e; an effect granting or removing a
--- printed restriction there is missed, #4707).
+-- The exact counterweight to Pawl.Engine.Cost.permissionsOf, but read off the
+-- card rather than through the projection (CR 113.6e; an effect granting or
+-- removing a printed restriction there is missed, #4707).
 -- ALL of them must hold, which is what CR 601.3's "no ... prohibits"
 -- means; one permission, by contrast, suffices.
 --
