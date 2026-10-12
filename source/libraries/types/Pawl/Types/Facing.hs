@@ -13,9 +13,10 @@ import qualified Pawl.Types.GrantedAbility as GrantedAbility
 --
 -- CR 110.5d scopes the STATUS to permanents, but this field is not so scoped:
 -- CR 708.4 has an object turned face down BEFORE it is put onto the stack, so a
--- face-down SPELL carries the same value while it waits there. What CR 110.5d
--- rules out -- a face-down card in a hand, a library or a graveyard -- is ruled
--- out by nothing writing FaceDown there, and CR 400.7's new incarnation
+-- face-down SPELL carries the same value while it waits there, and CR 702.106a
+-- puts a face-down CONSPIRACY in the command zone. What CR 110.5d rules out -- a
+-- face-down card in a hand, a library or a graveyard -- is ruled out by nothing
+-- writing FaceDown there, and CR 400.7's new incarnation
 -- (Object.newIncarnation) is what puts every such card back to FaceUp.
 --
 -- Face-down EXILE is a different thing wearing the same words, and this type is

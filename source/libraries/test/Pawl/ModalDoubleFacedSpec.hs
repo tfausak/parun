@@ -135,6 +135,7 @@ landPlays actions =
         A.Unlock _ _ -> Nothing
         A.Activate _ _ -> Nothing
         A.DiscardFromHand _ -> Nothing
+        A.TurnConspiracyFaceUp _ -> Nothing
         A.Plot {} -> Nothing
         A.Foretell _ -> Nothing
         A.Suspend _ -> Nothing

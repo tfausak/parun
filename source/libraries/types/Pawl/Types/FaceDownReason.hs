@@ -71,4 +71,9 @@ data FaceDownReason
     -- turnable by those, and Pawl.Types.TurnUpProcedure has no arm this one
     -- opens.
     EnteredFaceDown
+  | -- | CR 702.106a: a conspiracy card put into the command zone face down by its
+    -- hidden agenda. CR 702.106c is its own way back up
+    -- (Pawl.Types.Action.TurnConspiracyFaceUp), so no
+    -- Pawl.Types.TurnUpProcedure arm opens for it.
+    HiddenAgenda
   deriving (Bounded, Enum, Eq, Ord, Show)

@@ -3955,6 +3955,7 @@ activationsIn =
         A.TurnFaceUp {} -> False
         A.Unlock _ _ -> False
         A.DiscardFromHand _ -> False
+        A.TurnConspiracyFaceUp _ -> False
         A.Plot {} -> False
         A.Foretell _ -> False
         A.Suspend _ -> False

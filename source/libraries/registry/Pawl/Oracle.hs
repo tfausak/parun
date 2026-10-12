@@ -216,6 +216,7 @@ printed keyword = case keyword of
   Keyword.Fuse -> Just (Text.pack "Fuse")
   Keyword.Tribute {} -> Nothing
   Keyword.Dethrone -> Just (Text.pack "Dethrone")
+  Keyword.HiddenAgenda -> Just (Text.pack "Hidden agenda")
   Keyword.Outlast {} -> Nothing
   Keyword.Prowess -> Just (Text.pack "Prowess")
   Keyword.Dash {} -> Nothing
@@ -370,6 +371,7 @@ standalone =
     Keyword.Extort,
     Keyword.Fuse,
     Keyword.Dethrone,
+    Keyword.HiddenAgenda,
     Keyword.Prowess,
     Keyword.Exploit,
     Keyword.Menace,

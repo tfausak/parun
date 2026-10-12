@@ -21,6 +21,7 @@ import qualified Pawl.Engine.Binding as Binding
 import qualified Pawl.Engine.Cast as Cast
 import qualified Pawl.Engine.Combat as Combat
 import qualified Pawl.Engine.Companion as Companion
+import qualified Pawl.Engine.Conspiracy as Conspiracy
 import qualified Pawl.Engine.Cost as Cost
 import qualified Pawl.Engine.Damage as Damage
 import qualified Pawl.Engine.Daytime as Daytime
@@ -1487,6 +1488,12 @@ priorityLoop = do
                               -- priority afterwards whatever the die shows.
                               Action.Type.RollPlanarDie -> do
                                 Planechase.roll performManaAbility p
+                                State.modify' (\g -> g {GameState.passed = Set.empty, GameState.priority = Just p})
+                                settleForPriority
+                                loop trail'
+                              -- CR 116.2j / 702.106c: a special action too.
+                              Action.Type.TurnConspiracyFaceUp oid -> do
+                                Conspiracy.turnFaceUp p oid
                                 State.modify' (\g -> g {GameState.passed = Set.empty, GameState.priority = Just p})
                                 settleForPriority
                                 loop trail'

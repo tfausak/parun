@@ -375,6 +375,7 @@ abilitiesFor keyword count = case keyword of
   Keyword.Tribute _ -> []
   -- CR 702.105b: each instance triggers separately.
   Keyword.Dethrone -> List.genericReplicate count dethrone
+  Keyword.HiddenAgenda -> []
   Keyword.Fuse -> []
   Keyword.LevelUp _ -> []
   Keyword.Outlast _ -> []
@@ -728,6 +729,7 @@ handAbilitiesFor keyword = fmap (mintedBy keyword) $ case keyword of
   Keyword.Exploit -> []
   Keyword.Tribute _ -> []
   Keyword.Dethrone -> []
+  Keyword.HiddenAgenda -> []
   Keyword.Fuse -> []
   Keyword.LevelUp _ -> []
   Keyword.Outlast _ -> []
@@ -1304,6 +1306,7 @@ graveyardAbilitiesFor keyword = fmap (mintedBy keyword) $ case keyword of
   Keyword.Exploit -> []
   Keyword.Tribute _ -> []
   Keyword.Dethrone -> []
+  Keyword.HiddenAgenda -> []
   Keyword.Fuse -> []
   Keyword.LevelUp _ -> []
   Keyword.Outlast _ -> []
@@ -1921,6 +1924,7 @@ battlefieldAbilitiesFor keyword count = fmap (mintedBy keyword) $ case keyword o
   Keyword.Exploit -> []
   Keyword.Tribute _ -> []
   Keyword.Dethrone -> []
+  Keyword.HiddenAgenda -> []
   Keyword.Fuse -> []
   Keyword.LevelUp cost -> List.genericReplicate count (levelUp cost)
   Keyword.Outlast cost -> List.genericReplicate count (outlast cost)
@@ -2669,6 +2673,7 @@ permissionsFor cardTypes keyword = case keyword of
   Keyword.Exploit -> []
   Keyword.Tribute _ -> []
   Keyword.Dethrone -> []
+  Keyword.HiddenAgenda -> []
   Keyword.Fuse -> []
   Keyword.LevelUp _ -> []
   Keyword.Outlast _ -> []
@@ -4520,6 +4525,7 @@ mintedReplacementsFor keyword count = case keyword of
   -- board's, read where the row applies (Pawl.Engine.Event).
   Keyword.Tribute n -> List.genericReplicate count (ReplacementEffect.EntryR (EntryR.MkEntryR Filter.IsSource (EntryRewrite.Tribute n)))
   Keyword.Dethrone -> []
+  Keyword.HiddenAgenda -> []
   Keyword.Fuse -> []
   Keyword.LevelUp _ -> []
   Keyword.Outlast _ -> []
@@ -4881,6 +4887,7 @@ mintedCombatRestrictionsFor keyword = case keyword of
   Keyword.Exploit -> []
   Keyword.Tribute _ -> []
   Keyword.Dethrone -> []
+  Keyword.HiddenAgenda -> []
   Keyword.Fuse -> []
   Keyword.LevelUp _ -> []
   Keyword.Outlast _ -> []
@@ -5231,6 +5238,7 @@ mintedAttachRestrictionsFor keyword = case keyword of
   Keyword.Exploit -> []
   Keyword.Tribute _ -> []
   Keyword.Dethrone -> []
+  Keyword.HiddenAgenda -> []
   Keyword.Fuse -> []
   Keyword.LevelUp _ -> []
   Keyword.Outlast _ -> []
@@ -5598,6 +5606,7 @@ familyOf keyword = case keyword of
   Keyword.Exploit -> Nothing
   Keyword.Tribute _ -> Just KeywordFamily.Tribute
   Keyword.Dethrone -> Nothing
+  Keyword.HiddenAgenda -> Nothing
   Keyword.Fuse -> Nothing
   Keyword.LevelUp _ -> Just KeywordFamily.LevelUp
   Keyword.Outlast _ -> Just KeywordFamily.Outlast

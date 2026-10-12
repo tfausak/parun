@@ -1204,6 +1204,14 @@ spec s = Spec.describe s "Pawl.Codec.Keyword" $ do
       Keyword.codec
       Keyword.Dethrone
       " {\"type\":\"Dethrone\"} "
+  -- CR 702.106a's hidden agenda is nullary: the name it chooses is the
+  -- object's, never the keyword's.
+  Spec.it s "HiddenAgenda" $
+    Common.assertCodec
+      s
+      Keyword.codec
+      Keyword.HiddenAgenda
+      " {\"type\":\"HiddenAgenda\"} "
   -- CR 702.102a's fuse is nullary too: the rule states a permission and names no
   -- value, so the arm carries no payload.
   Spec.it s "Fuse" $
