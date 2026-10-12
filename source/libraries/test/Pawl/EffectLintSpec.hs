@@ -29,7 +29,7 @@ import qualified Data.Maybe as Maybe
 import qualified Data.Sequence as Seq
 import qualified Data.Set as Set
 import qualified Data.Text as Text
-import Pawl.CardSpec (Framing (SourceHostFramed), MintedKind (MintedEmblem), anyFace, cardAuthoredEffects, cardFilters, cardReplacementEffects, cardResolutionEffects, conditionQuantities, copyTargetsRefs, delayedDeclarations, durationConditions, effectFilters, effectMintedFaces, effectWithNested, enchantSlots, faceModals, frame, framedSlotsReadSingly, grantedActivatedAbilities, grantedModifications, grantedTriggeredAbilities, instantLine, mintedFaces, mintedFacesTagged, objectRefFilters, oneFaced, overFaces, replacementEffectRiders, restrictionFilters, spellLine, triggerConditionFilters, triggerConditionSlots, vanillaFace)
+import Pawl.CardSpec (Framing (SourceHostFramed), MintedKind (MintedEmblem), anyFace, cardAuthoredEffects, cardFilters, cardReplacementEffects, cardResolutionEffects, copyTargetsRefs, delayedDeclarations, durationConditions, effectFilters, effectMintedFaces, effectWithNested, enchantSlots, faceModals, frame, framedSlotsReadSingly, grantedActivatedAbilities, grantedModifications, grantedTriggeredAbilities, instantLine, mintedFaces, mintedFacesTagged, objectRefFilters, oneFaced, overFaces, replacementEffectRiders, restrictionFilters, spellLine, triggerConditionFilters, triggerConditionSlots, vanillaFace)
 import qualified Pawl.Codec.Card as Card.Codec
 import qualified Pawl.Codec.Face as Face.Codec
 import qualified Pawl.Engine.Card as Card
@@ -72,13 +72,13 @@ import qualified Pawl.Types.ChosenCardInGraveyard as ChosenCardInGraveyard
 import qualified Pawl.Types.ChosenCardInHand as ChosenCardInHand
 import qualified Pawl.Types.ChosenPermanents as ChosenPermanents
 import qualified Pawl.Types.Clause as Clause
-import qualified Pawl.Types.ConditionalException as ConditionalException
 import qualified Pawl.Types.Conjure as Conjure
 import qualified Pawl.Types.ConjureCards as ConjureCards
 import qualified Pawl.Types.Connive as Connive
 import qualified Pawl.Types.ControlSides as ControlSides
 import qualified Pawl.Types.ControlSlots as ControlSlots
 import qualified Pawl.Types.ControllerRelation as ControllerRelation
+import qualified Pawl.Types.CopyClause as CopyClause
 import qualified Pawl.Types.CopyOriginal as CopyOriginal
 import qualified Pawl.Types.CopyStackObject as CopyStackObject
 import qualified Pawl.Types.Cost as Cost.Type
@@ -233,7 +233,7 @@ import qualified Pawl.Types.ZoneScope as ZoneScope
 -- twin, for the readers that need the Quantity itself rather than the Counts
 -- under it.
 durationQuantities :: Duration.Duration -> [Quantity.Type.Quantity]
-durationQuantities = concatMap conditionQuantities . durationConditions
+durationQuantities = concatMap Resolve.conditionQuantities . durationConditions
 
 -- Every Quantity one effect carries: the ones nested in its ObjectRefs, and the
 -- ones its own fields hold. ownCounts above is the Count twin, and neither
@@ -343,7 +343,7 @@ ownQuantities effect = case effect of
   Effect.CreateCopy (CreateCopy.MkCreateCopy quantity _ riders _ _) -> quantity : Resolve.riderQuantities riders
   Effect.BecomeCopy (BecomeCopy.MkBecomeCopy _ _ duration _ _) -> foldMap durationQuantities duration
   Effect.CopyStackObject (CopyStackObject.MkCopyStackObject _ _ quantity _ _) -> [quantity]
-  Effect.Replace (Replace.MkReplace duration _ _ condition _) -> durationQuantities duration <> foldMap conditionQuantities condition
+  Effect.Replace (Replace.MkReplace duration _ _ condition _) -> durationQuantities duration <> foldMap Resolve.conditionQuantities condition
   Effect.SkipNextPhase (SkipNextPhase.MkSkipNextPhase _ _) -> []
   Effect.PreventNextDamage (PreventNextDamage.MkPreventNextDamage duration _ _ _ _ _ quantity _) -> quantity : durationQuantities duration
   Effect.PreventAllDamage (PreventAllDamage.MkPreventAllDamage duration _ _ _ _ _ _ _ _) -> durationQuantities duration
@@ -438,8 +438,8 @@ ownQuantities effect = case effect of
   Effect.GrantPlayFromExile grant -> durationQuantities (GrantPlayFromExile.duration grant)
   Effect.ForEach {} -> []
   Effect.ForEachNumber loop -> [ForEachNumber.upTo loop]
-  Effect.Repeat loop -> foldMap conditionQuantities (Repeat.gate loop)
-  Effect.RepeatIf loop -> conditionQuantities (RepeatIf.condition loop)
+  Effect.Repeat loop -> foldMap Resolve.conditionQuantities (Repeat.gate loop)
+  Effect.RepeatIf loop -> Resolve.conditionQuantities (RepeatIf.condition loop)
   Effect.Heal _ -> []
   Effect.ChooseNewTargets _ -> []
   Effect.ChangeTargets _ -> []
@@ -827,7 +827,7 @@ turnUpRequiringOffends replacement = case replacement of
 -- silently weakened. A wildcard is right: this asks one rewrite one question.
 turnUpCopyRiderOffends :: ReplacementEffect.ReplacementEffect Card.Type.Card (GrantedAbility.GrantedAbility Card.Type.Card) (Effect.Effect Card.Type.Card (GrantedAbility.GrantedAbility Card.Type.Card)) -> Bool
 turnUpCopyRiderOffends replacement = case replacement of
-  ReplacementEffect.TurnUpR (TurnUpR.MkTurnUpR _ _ _ (TurnUpRewrite.AsCopy asCopy)) -> AsCopy.tapped asCopy || Maybe.isJust (AsCopy.counters asCopy) || any (Maybe.isJust . ConditionalException.counters) (AsCopy.conditional asCopy)
+  ReplacementEffect.TurnUpR (TurnUpR.MkTurnUpR _ _ _ (TurnUpRewrite.AsCopy asCopy)) -> AsCopy.tapped asCopy || any (Maybe.isJust . CopyClause.counters) (AsCopy.clauses asCopy)
   _ -> False
 
 -- isPhaseR's twin: did the sweep above have anything to look at? A wildcard for

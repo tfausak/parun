@@ -33,30 +33,34 @@
               "rewrite": {
                 "type": "AsCopy",
                 "value": {
+                  "clauses": [
+                    {
+                      "exceptions": [
+                        {
+                          "type": "GainKeywords",
+                          "value": [
+                            {
+                              "type": "Defender"
+                            }
+                          ]
+                        },
+                        {
+                          "type": "AddSubtypes",
+                          "value": [
+                            {
+                              "type": "Wall"
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  ],
                   "eligible": {
                     "type": "HasCardType",
                     "value": {
                       "type": "Creature"
                     }
                   },
-                  "exceptions": [
-                    {
-                      "type": "GainKeywords",
-                      "value": [
-                        {
-                          "type": "Defender"
-                        }
-                      ]
-                    },
-                    {
-                      "type": "AddSubtypes",
-                      "value": [
-                        {
-                          "type": "Wall"
-                        }
-                      ]
-                    }
-                  ],
                   "whenYouDo": [
                     {
                       "type": "Tap",

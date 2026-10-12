@@ -94,8 +94,8 @@ import qualified Pawl.Types.CoinFlipped as CoinFlipped
 import qualified Pawl.Types.Color as Color
 import qualified Pawl.Types.Combat as Combat
 import qualified Pawl.Types.CommandZoneDecision as CommandZoneDecision
-import qualified Pawl.Types.ConditionalException as ConditionalException
 import qualified Pawl.Types.ContinuousEffect as ContinuousEffect
+import qualified Pawl.Types.CopyClause as CopyClause
 import qualified Pawl.Types.CounterCause as CounterCause
 import qualified Pawl.Types.CounterChange as CounterChange
 import qualified Pawl.Types.CounterKind as CounterKind
@@ -2161,7 +2161,7 @@ apply batch candidate event =
         made <- becomeCopyAs batch candidate asCopy oid
         case made of
           Nothing -> pure (Just event)
-          Just (_, conditionalCounters) -> do
+          Just (_, heldCounters) -> do
             -- CR 614.1d, inside the same sentence: Vesuva enters TAPPED as a
             -- copy. On this branch alone -- a declined copy is a Vesuva that
             -- entered untapped, since the printed "may" governs both halves
@@ -2190,10 +2190,10 @@ apply batch candidate event =
             -- Gargantuan), so takeBackCopyException lifts its counters off
             -- the pending map before this row's own go on.
             --
-            -- CR 707.9f's conditional parts that held place theirs the same
-            -- way (Spark Double), becomeCopyAs having judged them.
+            -- Only the clauses that applied: becomeCopyAs judged CR 707.9f's
+            -- conditions (Spark Double).
             takeBackCopyException oid
-            Foldable.for_ (Maybe.maybeToList (AsCopy.counters asCopy) <> conditionalCounters) $ \withCounters -> do
+            Foldable.for_ heldCounters $ \withCounters -> do
               gs2 <- State.get
               let viewOf = Projection.viewWithLastKnown oid gs2
                   context = Replacement.candidateContext gs2 candidate
@@ -4248,7 +4248,7 @@ apply batch candidate event =
       -- face up, you may choose another creature ... it becomes a copy of that
       -- creature", through the entry arm's own copying process. Nothing enters,
       -- so no batch narrows the offer, and the entry riders (`tapped`,
-      -- `counters`, a conditional part's counters) are not placed:
+      -- a clause's `counters`) are not placed:
       -- Pawl.EffectLintSpec holds that no turn-up row states them. Applied
       -- after the status write, so a copied creature's own "as this is turned
       -- face up" row is collected on the loop's next pass (CR 616.1f).
@@ -4261,8 +4261,8 @@ apply batch candidate event =
 -- CR 707.5 / 707.4: the copying process an AsCopy rewrite performs, on either
 -- event class it rides (CR 614.1c's entry, CR 614.1e's turning face up): the
 -- object's controller chooses what to copy, and the copiable values are written
--- onto it. Answers the copied object and the CR 707.9e counters of the CR
--- 707.9f parts that held, or Nothing where no copy was made.
+-- onto it. Answers the copied object and the CR 707.9e counters of the clauses
+-- that applied, or Nothing where no copy was made.
 -- Clone's "may" is real: Nothing leaves the object as its printed self (a 0/0,
 -- which CR 704.5f then buries).
 --
@@ -4324,24 +4324,26 @@ becomeCopyAs batch candidate asCopy oid = do
               -- CR 707.3: no stated ending, so the copiable values go onto
               -- the object itself, over any stored row (CR 613.7).
               stampOnto pc g = Game.supersedeStoredCopies (Set.singleton oid) g {GameState.objects = Map.adjust (\o -> o {Object.bindings = Binding.setCopy pc (Object.bindings o)}) oid (GameState.objects g)}
-              -- CR 707.9f: a conditional part applies only if its condition
+              clauses = AsCopy.clauses asCopy
+              -- CR 707.9f: a conditional clause applies only if its condition
               -- holds of the permanent as the copy effect would make it
-              -- without that part, "taking into account any other exceptions
+              -- without that clause, "taking into account any other exceptions
               -- that effect includes" -- so judged on a board where the
-              -- unconditional ones are stamped and none of the conditional
+              -- unconditional clauses are stamped and none of the conditional
               -- ones is. That reads "other exceptions" as the unconditional
-              -- ones; the two agree wherever no conditional part changes what
+              -- ones; the two agree wherever no conditional clause changes what
               -- another's condition reads, which holds of every one in
               -- data/cards (Spark Double's and Moritte of the Frost's add
               -- counters or changeling, which no condition there reads). The
               -- source is this permanent, and Binding.copiedObject names what
               -- it copies (Undercover Operative's "if you control that
               -- creature").
-              hypothetical = stampOnto (stampWith (AsCopy.exceptions asCopy)) g0
+              hypothetical = stampOnto (stampWith (foldMap CopyClause.exceptions (filter (Maybe.isNothing . CopyClause.condition) clauses))) g0
               framing = candidate {ReplacementCandidate.slots = Map.insert Binding.copiedObject (Set.singleton src2) (ReplacementCandidate.slots candidate)}
-              holds part = Condition.holds (Projection.fullView hypothetical) (Replacement.candidateContext hypothetical framing) hypothetical oid (ConditionalException.condition part)
-              held = filter holds (AsCopy.conditional asCopy)
-              stamped = stampWith (AsCopy.exceptions asCopy <> foldMap ConditionalException.exceptions held)
+              holds = Condition.holds (Projection.fullView hypothetical) (Replacement.candidateContext hypothetical framing) hypothetical oid
+              applies clause = all holds (CopyClause.condition clause)
+              held = filter applies clauses
+              stamped = stampWith (foldMap CopyClause.exceptions held)
           State.modify' $ \g -> case AsCopy.duration asCopy of
             Nothing -> stampOnto stamped g
             -- CR 611.2a: a stated duration (Vesuvan Shapeshifter's "until
@@ -4365,7 +4367,7 @@ becomeCopyAs batch candidate asCopy oid = do
         State.modify' (\g -> g {GameState.delayedTriggers = Seq.filter (not . linkedEarlier) (GameState.delayedTriggers g)})
         Foldable.for_ (Replacement.linkedCopyTrigger asCopy) $ \linked ->
           State.modify' (armDelayed linked oid controller (Map.singleton Binding.copiedObject (Binding.toObject src2)) Onset.Immediately Nothing)
-      pure (fmap (\src2 -> (src2, Maybe.mapMaybe ConditionalException.counters applying)) chosen)
+      pure (fmap (\src2 -> (src2, Maybe.mapMaybe CopyClause.counters applying)) chosen)
 
 -- CR 707.2 / 202.3b / 202.3c: the copiable values a copy takes off the object it
 -- copies. Projection.copiableCharacteristics answers all but one of them; the

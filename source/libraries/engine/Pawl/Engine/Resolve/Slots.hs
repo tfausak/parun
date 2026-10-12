@@ -62,7 +62,6 @@ import qualified Pawl.Types.Clause as Clause
 import qualified Pawl.Types.CoinFlipR as CoinFlipR
 import qualified Pawl.Types.Compares as Compares
 import qualified Pawl.Types.Condition as Condition.Type
-import qualified Pawl.Types.ConditionalException as ConditionalException
 import qualified Pawl.Types.Conjure as Conjure
 import qualified Pawl.Types.ConjureCards as ConjureCards
 import qualified Pawl.Types.Connive as Connive
@@ -70,6 +69,7 @@ import qualified Pawl.Types.ControlPlayer as ControlPlayer
 import qualified Pawl.Types.ControlSides as ControlSides
 import qualified Pawl.Types.ControlSlots as ControlSlots
 import qualified Pawl.Types.ControllerRelation as ControllerRelation
+import qualified Pawl.Types.CopyClause as CopyClause
 import qualified Pawl.Types.CopyOriginal as CopyOriginal
 import qualified Pawl.Types.CopyStackObject as CopyStackObject
 import qualified Pawl.Types.CopyTargets as CopyTargets
@@ -1779,18 +1779,22 @@ turnUpRewriteReads rewrite = case rewrite of
   TurnUpRewrite.MayAttachTo filter_ -> ([filter_], [])
   TurnUpRewrite.AsCopy asCopy -> asCopyReads asCopy
 
--- What a copy rewrite reads, on either event class: the eligible filter, and CR
--- 707.9e's additional counters beside it, and each CR 707.9f conditional part's
--- condition and counters. The duration names no slot -- every arm an AsCopy
--- states is one durationSlots answers empty for.
+-- What a copy rewrite reads, on either event class: the eligible filter, and
+-- each clause's CR 707.9f condition and CR 707.9e counters. The duration names
+-- no slot -- every arm an AsCopy states is one durationSlots answers empty for.
 asCopyReads :: AsCopy.AsCopy ability effect -> ([Filter.Type.Filter Keyword.Type.Keyword], [Quantity.Type.Quantity])
 asCopyReads asCopy =
-  let counted :: Maybe WithCounters.WithCounters -> [Quantity.Type.Quantity]
-      counted = foldMap (Map.elems . WithCounters.counters)
-      conditional part = conditionQuantities (ConditionalException.condition part) <> counted (ConditionalException.counters part)
-   in ([AsCopy.eligible asCopy], counted (AsCopy.counters asCopy) <> foldMap conditional (AsCopy.conditional asCopy))
+  let clause part = foldMap conditionQuantities (CopyClause.condition part) <> foldMap (Map.elems . WithCounters.counters) (CopyClause.counters part)
+   in ([AsCopy.eligible asCopy], foldMap clause (AsCopy.clauses asCopy))
 
--- The Quantities a Condition compares, conditionSlots' descent as a list.
+-- Every Quantity a Condition holds: both sides of a comparison, plus whatever a
+-- disjunction or a conjunction nests (Pawl.Types.Condition).
+--
+-- ONE enumeration, which Pawl.CardSpec's conditionCounts and conditionFilters
+-- both take from too. A Quantity carries card text on two axes -- the Filter of
+-- every Count under it, and the Filter a CR 122.1b keyword counter hides under
+-- its CounterKind -- so a traversal that reaches a Condition's Counts directly
+-- reaches only the first (#2740).
 conditionQuantities :: Condition.Type.Condition -> [Quantity.Type.Quantity]
 conditionQuantities condition = case condition of
   Condition.Type.Compares c -> [Compares.measured c, Compares.threshold c]

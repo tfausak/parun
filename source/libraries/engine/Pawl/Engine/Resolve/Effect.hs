@@ -3189,6 +3189,13 @@ rearmStackExile subject copied obj gs =
       eligible = if Object.castFrom obj == Just Zone.Graveyard then keywords else Set.delete Keyword.Type.Aftermath keywords
    in Cast.installCastFromGraveyard (Projection.defaultControllerOf obj) eligible (Object.castUsing obj) subject gs {GameState.replacements = filter (not . armed) (GameState.replacements gs)}
 
+-- CR 702.128b: the marks a token has from being created by this resolving
+-- object, read off the keyword that minted it (ActivatedAbility.keyword).
+resolvingMarks :: ObjectId -> GameState -> Set.Set Designation.Designation
+resolvingMarks resolving gs = case thisAbilitySource resolving gs of
+  Just (Source.OfAbility minted) -> foldMap Keyword.createdMarks (ActivatedAbility.keyword (ActivatedAbilitySource.ability minted))
+  _ -> Set.empty
+
 -- The carrier CR 707.9a's "this ability" points at: the RESOLVING object's own
 -- Pawl.Types.Source, since rule 602.2a and rule 603.3 both put the ability's text
 -- on the stack object, so the words point at a value already in hand rather than
@@ -3197,13 +3204,6 @@ rearmStackExile subject copied obj gs =
 -- The Source itself, unclassified: which of CR 113.3's arms carries an ability,
 -- and which list it joins, is Projection.View.applyCopyException's to say, and it
 -- says it by casing on the arm rather than on the ability.
--- CR 702.128b: the marks a token has from being created by this resolving
--- object, read off the keyword that minted it (ActivatedAbility.keyword).
-resolvingMarks :: ObjectId -> GameState -> Set.Set Designation.Designation
-resolvingMarks resolving gs = case thisAbilitySource resolving gs of
-  Just (Source.OfAbility minted) -> foldMap Keyword.createdMarks (ActivatedAbility.keyword (ActivatedAbilitySource.ability minted))
-  _ -> Set.empty
-
 thisAbilitySource :: ObjectId -> GameState -> Maybe Source.Source
 thisAbilitySource resolving gs = fmap Object.source (Game.lookupObject resolving gs)
 

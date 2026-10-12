@@ -42,121 +42,125 @@
               "rewrite": {
                 "type": "AsCopy",
                 "value": {
-                  "eligible": {
-                    "type": "HasCardType",
-                    "value": {
-                      "type": "Creature"
-                    }
-                  },
-                  "exceptions": [
+                  "clauses": [
                     {
-                      "type": "SetName",
-                      "value": "Sakashima the Impostor"
-                    },
-                    {
-                      "type": "AddSupertypes",
-                      "value": [
+                      "exceptions": [
                         {
-                          "type": "Legendary"
-                        }
-                      ]
-                    },
-                    {
-                      "type": "GainAbility",
-                      "value": {
-                        "type": "Activated",
-                        "value": {
-                          "cost": {
-                            "mana": [
-                              {
-                                "type": "Generic",
-                                "value": 2
-                              },
-                              {
-                                "type": "OfType",
-                                "value": {
-                                  "type": "Colored",
-                                  "value": {
-                                    "type": "Blue"
-                                  }
-                                }
-                              },
-                              {
-                                "type": "OfType",
-                                "value": {
-                                  "type": "Colored",
-                                  "value": {
-                                    "type": "Blue"
-                                  }
-                                }
-                              }
-                            ]
-                          },
-                          "modal": {
-                            "modes": [
-                              {
-                                "clauses": [
+                          "type": "SetName",
+                          "value": "Sakashima the Impostor"
+                        },
+                        {
+                          "type": "AddSupertypes",
+                          "value": [
+                            {
+                              "type": "Legendary"
+                            }
+                          ]
+                        },
+                        {
+                          "type": "GainAbility",
+                          "value": {
+                            "type": "Activated",
+                            "value": {
+                              "cost": {
+                                "mana": [
                                   {
-                                    "effects": [
+                                    "type": "Generic",
+                                    "value": 2
+                                  },
+                                  {
+                                    "type": "OfType",
+                                    "value": {
+                                      "type": "Colored",
+                                      "value": {
+                                        "type": "Blue"
+                                      }
+                                    }
+                                  },
+                                  {
+                                    "type": "OfType",
+                                    "value": {
+                                      "type": "Colored",
+                                      "value": {
+                                        "type": "Blue"
+                                      }
+                                    }
+                                  }
+                                ]
+                              },
+                              "modal": {
+                                "modes": [
+                                  {
+                                    "clauses": [
                                       {
-                                        "type": "ArmDelayedTrigger",
-                                        "value": {
-                                          "ability": {
-                                            "type": "Triggered",
+                                        "effects": [
+                                          {
+                                            "type": "ArmDelayedTrigger",
                                             "value": {
-                                              "condition": {
-                                                "type": "StepBegins",
+                                              "ability": {
+                                                "type": "Triggered",
                                                 "value": {
-                                                  "phase": {
-                                                    "type": "Ending",
+                                                  "condition": {
+                                                    "type": "StepBegins",
                                                     "value": {
-                                                      "type": "EndStep"
+                                                      "phase": {
+                                                        "type": "Ending",
+                                                        "value": {
+                                                          "type": "EndStep"
+                                                        }
+                                                      },
+                                                      "scope": {
+                                                        "type": "EachTurn"
+                                                      }
                                                     }
                                                   },
-                                                  "scope": {
-                                                    "type": "EachTurn"
-                                                  }
-                                                }
-                                              },
-                                              "modal": {
-                                                "modes": [
-                                                  {
-                                                    "clauses": [
+                                                  "modal": {
+                                                    "modes": [
                                                       {
-                                                        "effects": [
+                                                        "clauses": [
                                                           {
-                                                            "type": "MoveToZone",
-                                                            "value": {
-                                                              "ref": {
-                                                                "type": "InSlot",
-                                                                "value": "self"
-                                                              },
-                                                              "zone": {
-                                                                "type": "Hand"
+                                                            "effects": [
+                                                              {
+                                                                "type": "MoveToZone",
+                                                                "value": {
+                                                                  "ref": {
+                                                                    "type": "InSlot",
+                                                                    "value": "self"
+                                                                  },
+                                                                  "zone": {
+                                                                    "type": "Hand"
+                                                                  }
+                                                                }
                                                               }
-                                                            }
+                                                            ]
                                                           }
                                                         ]
                                                       }
                                                     ]
                                                   }
-                                                ]
-                                              }
+                                                }
+                                              },
+                                              "name": "return sakashima"
                                             }
-                                          },
-                                          "name": "return sakashima"
-                                        }
+                                          }
+                                        ]
                                       }
                                     ]
                                   }
                                 ]
                               }
-                            ]
+                            }
                           }
                         }
-                      }
+                      ]
                     }
-                  ]
+                  ],
+                  "eligible": {
+                    "type": "HasCardType",
+                    "value": {
+                      "type": "Creature"
+                    }
+                  }
                 }
               }
             }

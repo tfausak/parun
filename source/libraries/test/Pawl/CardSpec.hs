@@ -116,13 +116,12 @@ import qualified Pawl.Types.Clause as Clause
 import qualified Pawl.Types.ClauseIndex as ClauseIndex
 import qualified Pawl.Types.Color as Color
 import qualified Pawl.Types.CombatRestriction as CombatRestriction
-import qualified Pawl.Types.Compares as Compares
 import qualified Pawl.Types.Condition as Condition.Type
-import qualified Pawl.Types.ConditionalException as ConditionalException
 import qualified Pawl.Types.Conjure as Conjure
 import qualified Pawl.Types.ConjureCards as ConjureCards
 import qualified Pawl.Types.ConjureDestination as ConjureDestination
 import qualified Pawl.Types.Connive as Connive
+import qualified Pawl.Types.CopyClause as CopyClause
 import qualified Pawl.Types.CopyException as CopyException
 import qualified Pawl.Types.CopyOriginal as CopyOriginal
 import qualified Pawl.Types.CopyStackObject as CopyStackObject
@@ -823,30 +822,15 @@ countQuantities count = case Count.Type.aggregation count of
   Aggregation.Greatest quantity -> [quantity]
   Aggregation.Total quantity -> [quantity]
 
--- Every Quantity a Condition holds: both sides of a comparison, plus whatever a
--- disjunction or a conjunction nests (Pawl.Types.Condition).
---
--- ONE enumeration, and conditionCounts below and conditionFilters further down
--- both take from it. A Quantity carries card text on two axes -- the Filter of
--- every Count under it, and the Filter a CR 122.1b keyword counter hides under
--- its CounterKind -- so a traversal that reaches a Condition's Counts directly
--- reaches only the first, which is how the second went unswept here (#2740).
-conditionQuantities :: Condition.Type.Condition -> [Quantity.Type.Quantity]
-conditionQuantities condition = case condition of
-  Condition.Type.Compares (Compares.MkCompares measured _ threshold) -> [measured, threshold]
-  Condition.Type.Any conditions -> concatMap conditionQuantities conditions
-  Condition.Type.All conditions -> concatMap conditionQuantities conditions
-  Condition.Type.During _ -> []
-
--- Every Count reachable from a Condition, off the enumeration above.
+-- Every Count reachable from a Condition, off Resolve.conditionQuantities.
 conditionCounts :: Condition.Type.Condition -> [Count.Type.Count Quantity.Type.Quantity]
-conditionCounts = concatMap quantityCounts . conditionQuantities
+conditionCounts = concatMap quantityCounts . Resolve.conditionQuantities
 
 -- Every Condition an "activate only ..." clause holds: only CR 602.5's OnlyIf
 -- carries one, the rest naming a window or, for CR 602.5b's counted rider, a
 -- record of past activations, whether for the game or for the turn. Both card
 -- sweeps take from it,
--- conditionQuantities' role one type up.
+-- Resolve.conditionQuantities' role one type up.
 restrictionConditions :: ActivationRestriction.ActivationRestriction -> [Condition.Type.Condition]
 restrictionConditions restriction = case restriction of
   ActivationRestriction.SorcerySpeed -> []
@@ -883,7 +867,7 @@ modalPayGateQuantities =
     . Modal.modes
 
 -- Every Condition a Duration holds: only ForAsLongAs (CR 611.2b) carries one.
--- conditionQuantities' role one type up -- durationCounts below and
+-- Resolve.conditionQuantities' role one type up -- durationCounts below and
 -- durationFilters further down both take from it, so the CR 122.1b kind under a
 -- "for as long as" clause's number cannot be dropped where its Count is kept
 -- (#2740).
@@ -4207,12 +4191,12 @@ quantityKindFilters quantity = case quantity of
   -- CR 702.167c: AgainstCardsExiledWith's answer, over the craft link alone.
   Quantity.Type.AgainstCraftMaterials inner -> quantityKindFilters inner
 
--- BOTH axes of every Quantity a Condition compares, off conditionQuantities
+-- BOTH axes of every Quantity a Condition compares, off Resolve.conditionQuantities
 -- above rather than off conditionCounts beside it: reading the Counts alone drops
 -- the Filter a CR 122.1b keyword counter hides under an ObjectCounters kind
 -- (#2740). TAGGED for that reason -- a path from here reaches keywordFilters.
 conditionFilters :: Condition.Type.Condition -> [(Framing, Filter.Type.Filter Keyword.Keyword)]
-conditionFilters = concatMap quantityFilters . conditionQuantities
+conditionFilters = concatMap quantityFilters . Resolve.conditionQuantities
 
 -- CR 103.5b / CR 103.6: the Filter positions one hand action holds -- its effects'
 -- and its own gate's. The gate is a Condition like any other, so it is reached
@@ -5081,25 +5065,24 @@ turnUpRewriteFilters turnUpRewrite = case turnUpRewrite of
 -- their own -- CR 707.9a's gained ability is a Pawl.Types.Keyword, and CR
 -- 702.14c's landwalk is one that holds a Filter. The CR 614.1d `tapped` flag
 -- holds none (Vesuva). CR 707.9e's additional counters hold card text on the
--- WithCounters arm's axis, and so do CR 707.9f's conditional parts'. CR 707.9g's
--- linked trigger is effects, walked as such by replacementRewriteEffects. The duration's condition, if any, is
+-- WithCounters arm's axis, and CR 707.9f's conditions are Conditions. CR
+-- 707.9g's linked trigger is effects, walked as such by
+-- replacementRewriteEffects. The duration's condition, if any, is
 -- durationFilters'.
 asCopyFilters :: AsCopy.AsCopy (GrantedAbility.GrantedAbility Card.Type.Card) (Effect.Effect Card.Type.Card (GrantedAbility.GrantedAbility Card.Type.Card)) -> [(Framing, Filter.Type.Filter Keyword.Keyword)]
 asCopyFilters asCopy =
   unframed [AsCopy.eligible asCopy]
-    <> concatMap copyExceptionFilters (AsCopy.exceptions asCopy)
-    <> foldMap withCountersFilters (AsCopy.counters asCopy)
-    <> foldMap conditionalExceptionFilters (AsCopy.conditional asCopy)
+    <> foldMap copyClauseFilters (AsCopy.clauses asCopy)
     <> foldMap durationFilters (AsCopy.duration asCopy)
 
--- A CR 707.9f conditional part: its condition, judged in the copy row's own
--- context (Pawl.Engine.Replacement.candidateContext), and asCopyFilters' two
--- halves beside it.
-conditionalExceptionFilters :: ConditionalException.ConditionalException (GrantedAbility.GrantedAbility Card.Type.Card) -> [(Framing, Filter.Type.Filter Keyword.Keyword)]
-conditionalExceptionFilters part =
-  conditionFilters (ConditionalException.condition part)
-    <> concatMap copyExceptionFilters (ConditionalException.exceptions part)
-    <> foldMap withCountersFilters (ConditionalException.counters part)
+-- One clause of a copy exception: its CR 707.9f condition, judged in the copy
+-- row's own context (Pawl.Engine.Replacement.candidateContext), its exceptions
+-- and its CR 707.9e counters.
+copyClauseFilters :: CopyClause.CopyClause (GrantedAbility.GrantedAbility Card.Type.Card) -> [(Framing, Filter.Type.Filter Keyword.Keyword)]
+copyClauseFilters part =
+  foldMap conditionFilters (CopyClause.condition part)
+    <> concatMap copyExceptionFilters (CopyClause.exceptions part)
+    <> foldMap withCountersFilters (CopyClause.counters part)
 
 -- CR 614.1c-e: four replacement patterns narrow by a Filter. CounterPattern.onWhat
 -- is "one or more counters would be put on a creature YOU control"; EntryR's
@@ -6344,10 +6327,9 @@ replacementCopyExceptions replacement = case replacement of
   ReplacementEffect.TurnUpR (TurnUpR.MkTurnUpR _ _ _ (TurnUpRewrite.AsCopy asCopy)) -> asCopyExceptions asCopy
   _ -> []
 
--- Every exception an AsCopy can apply: its own, and each CR 707.9f conditional
--- part's.
+-- Every exception an AsCopy can apply, conditional or not.
 asCopyExceptions :: AsCopy.AsCopy ability effect -> [CopyException.CopyException ability]
-asCopyExceptions asCopy = AsCopy.exceptions asCopy <> foldMap ConditionalException.exceptions (AsCopy.conditional asCopy)
+asCopyExceptions = foldMap CopyClause.exceptions . AsCopy.clauses
 
 -- The enchant slots this face GRANTS rather than prints: CR 613.1f layer 6's
 -- Modification.GainEnchant, which Cloudform and Gliding Licid write and CR
@@ -7255,7 +7237,7 @@ lintSpec s registry = Spec.describe s "Lint" $ do
               -- funnel (Pawl.Engine.Event's placeEntryCounters), so an X in it is
               -- read at the entry too.
               EntryRewrite.EntersWith e -> Maybe.maybeToList (EntersWith.counters e)
-              EntryRewrite.AsCopy asCopy -> Maybe.maybeToList (AsCopy.counters asCopy) <> Maybe.mapMaybe ConditionalException.counters (AsCopy.conditional asCopy)
+              EntryRewrite.AsCopy asCopy -> Maybe.mapMaybe CopyClause.counters (AsCopy.clauses asCopy)
               _ -> []
             q <- Map.elems (WithCounters.counters wc)
             pure (Set.member Binding.variableX (QuantitySlot.slots q))

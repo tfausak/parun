@@ -42,25 +42,29 @@
               "rewrite": {
                 "type": "AsCopy",
                 "value": {
+                  "clauses": [
+                    {
+                      "exceptions": [
+                        {
+                          "type": "GainKeywords",
+                          "value": [
+                            {
+                              "type": "Haste"
+                            },
+                            {
+                              "type": "Dethrone"
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  ],
                   "eligible": {
                     "type": "HasCardType",
                     "value": {
                       "type": "Creature"
                     }
-                  },
-                  "exceptions": [
-                    {
-                      "type": "GainKeywords",
-                      "value": [
-                        {
-                          "type": "Haste"
-                        },
-                        {
-                          "type": "Dethrone"
-                        }
-                      ]
-                    }
-                  ]
+                  }
                 }
               }
             }

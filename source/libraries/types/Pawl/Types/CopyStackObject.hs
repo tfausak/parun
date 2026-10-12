@@ -52,7 +52,7 @@ data CopyStackObject ability = MkCopyStackObject
     -- its new target" proves it.
     copier :: PlayerRef.PlayerRef,
     -- | CR 707.9's "except ..." clause, empty for a copy effect that states none.
-    -- The SAME list EntryRewrite.AsCopy, Pawl.Types.BecomeCopy and
+    -- The SAME list EntryRewrite.AsCopy's clauses, Pawl.Types.BecomeCopy and
     -- Pawl.Types.CreateCopy carry, applied by the same fold
     -- (Pawl.Engine.Replacement.applyCopyExceptions) into the copiable snapshot
     -- the executor stamps on the copy -- Double Major's "except it isn't

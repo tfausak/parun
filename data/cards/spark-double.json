@@ -33,7 +33,19 @@
               "rewrite": {
                 "type": "AsCopy",
                 "value": {
-                  "conditional": [
+                  "clauses": [
+                    {
+                      "exceptions": [
+                        {
+                          "type": "RemoveSupertypes",
+                          "value": [
+                            {
+                              "type": "Legendary"
+                            }
+                          ]
+                        }
+                      ]
+                    },
                     {
                       "condition": {
                         "type": "Compares",
@@ -184,17 +196,7 @@
                         }
                       }
                     ]
-                  },
-                  "exceptions": [
-                    {
-                      "type": "RemoveSupertypes",
-                      "value": [
-                        {
-                          "type": "Legendary"
-                        }
-                      ]
-                    }
-                  ]
+                  }
                 }
               }
             }

@@ -56,7 +56,22 @@
               "rewrite": {
                 "type": "AsCopy",
                 "value": {
-                  "conditional": [
+                  "clauses": [
+                    {
+                      "exceptions": [
+                        {
+                          "type": "AddSupertypes",
+                          "value": [
+                            {
+                              "type": "Legendary"
+                            },
+                            {
+                              "type": "Snow"
+                            }
+                          ]
+                        }
+                      ]
+                    },
                     {
                       "condition": {
                         "type": "Compares",
@@ -134,20 +149,7 @@
                     "value": {
                       "type": "You"
                     }
-                  },
-                  "exceptions": [
-                    {
-                      "type": "AddSupertypes",
-                      "value": [
-                        {
-                          "type": "Legendary"
-                        },
-                        {
-                          "type": "Snow"
-                        }
-                      ]
-                    }
-                  ]
+                  }
                 }
               }
             }

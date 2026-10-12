@@ -48,15 +48,19 @@
               "rewrite": {
                 "type": "AsCopy",
                 "value": {
-                  "counters": [
+                  "clauses": [
                     {
-                      "count": {
-                        "type": "InSlot",
-                        "value": "X"
-                      },
-                      "kind": {
-                        "type": "PlusOnePlusOne"
-                      }
+                      "counters": [
+                        {
+                          "count": {
+                            "type": "InSlot",
+                            "value": "X"
+                          },
+                          "kind": {
+                            "type": "PlusOnePlusOne"
+                          }
+                        }
+                      ]
                     }
                   ],
                   "eligible": {

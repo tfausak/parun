@@ -42,7 +42,7 @@
               "rewrite": {
                 "type": "AsCopy",
                 "value": {
-                  "conditional": [
+                  "clauses": [
                     {
                       "condition": {
                         "type": "Compares",

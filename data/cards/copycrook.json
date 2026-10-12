@@ -42,53 +42,57 @@
               "rewrite": {
                 "type": "AsCopy",
                 "value": {
-                  "eligible": {
-                    "type": "HasCardType",
-                    "value": {
-                      "type": "Creature"
-                    }
-                  },
-                  "exceptions": [
+                  "clauses": [
                     {
-                      "type": "GainAbility",
-                      "value": {
-                        "type": "Triggered",
-                        "value": {
-                          "condition": {
-                            "type": "SelfAttacks",
+                      "exceptions": [
+                        {
+                          "type": "GainAbility",
+                          "value": {
+                            "type": "Triggered",
                             "value": {
-                              "type": "EveryTime"
-                            }
-                          },
-                          "modal": {
-                            "modes": [
-                              {
-                                "clauses": [
+                              "condition": {
+                                "type": "SelfAttacks",
+                                "value": {
+                                  "type": "EveryTime"
+                                }
+                              },
+                              "modal": {
+                                "modes": [
                                   {
-                                    "effects": [
+                                    "clauses": [
                                       {
-                                        "type": "Connive",
-                                        "value": {
-                                          "quantity": {
-                                            "type": "Literal",
-                                            "value": 1
-                                          },
-                                          "ref": {
-                                            "type": "InSlot",
-                                            "value": "self"
+                                        "effects": [
+                                          {
+                                            "type": "Connive",
+                                            "value": {
+                                              "quantity": {
+                                                "type": "Literal",
+                                                "value": 1
+                                              },
+                                              "ref": {
+                                                "type": "InSlot",
+                                                "value": "self"
+                                              }
+                                            }
                                           }
-                                        }
+                                        ]
                                       }
                                     ]
                                   }
                                 ]
                               }
-                            ]
+                            }
                           }
                         }
-                      }
+                      ]
                     }
-                  ]
+                  ],
+                  "eligible": {
+                    "type": "HasCardType",
+                    "value": {
+                      "type": "Creature"
+                    }
+                  }
                 }
               }
             }
