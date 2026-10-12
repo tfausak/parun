@@ -5771,7 +5771,7 @@ effectFilters effect = case effect of
   -- Unframed, PlayerSacrifices' answer and for its reason: rule 701.38b's
   -- listed choices are judged against each candidate on the battlefield, which
   -- is neither an attach destination nor a target slot.
-  Effect.Vote (Vote.MkVote _ choices) -> case choices of
+  Effect.Vote (Vote.MkVote _ choices _) -> case choices of
     VoteChoices.Objects objects -> unframed [VoteObjects.filter objects]
     -- Rule 701.38b's words carry no filter to frame.
     VoteChoices.Words _ -> []

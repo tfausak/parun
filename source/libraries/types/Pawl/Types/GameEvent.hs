@@ -1,9 +1,11 @@
 module Pawl.Types.GameEvent where
 
+import Data.Sequence (Seq)
 import qualified Pawl.Types.AbilityTriggered as AbilityTriggered
 import qualified Pawl.Types.ActivatedAbilitySource as ActivatedAbilitySource
 import qualified Pawl.Types.AttackerBlocked as AttackerBlocked
 import qualified Pawl.Types.AttackerDeclared as AttackerDeclared
+import qualified Pawl.Types.Ballot as Ballot
 import qualified Pawl.Types.BecameAttached as BecameAttached
 import qualified Pawl.Types.BecameAttacked as BecameAttacked
 import qualified Pawl.Types.BecameBlocking as BecameBlocking
@@ -53,6 +55,7 @@ import qualified Pawl.Types.Transformed as Transformed
 import qualified Pawl.Types.TriggeredAbilitySource as TriggeredAbilitySource
 import qualified Pawl.Types.TurnedFaceUp as TurnedFaceUp
 import qualified Pawl.Types.VentureMarkerEntered as VentureMarkerEntered
+import qualified Pawl.Types.Voted as Voted
 import qualified Pawl.Types.ZoneChange as ZoneChange
 
 -- | CR 608.2i: one entry of the turn-scoped record of what happened. Effects
@@ -227,6 +230,12 @@ data GameEvent
   | -- | CR 701.20e: a card was looked at, shown to its audience alone; never a
     -- reveal (CR 701.20a).
     Looked Looked.Looked
+  | -- | CR 701.38a: a ballot was cast, shown to its audience alone; never a
+    -- reveal (CR 701.20a).
+    Voted Voted.Voted
+  | -- | Secret council (CR 207.2c): every ballot of a secret vote, revealed at
+    -- once in voting order.
+    VotesRevealed (Seq Ballot.Ballot)
   | -- | CR 701.6a: a spell was COUNTERED. Emitted by Pawl.Engine.Event.counter,
     -- the one funnel every countering goes through, and distinct from the Moved
     -- event the same removal records: CR 608.2n sends a resolved spell to the

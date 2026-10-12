@@ -758,6 +758,8 @@ damageOf event = case event of
   GameEvent.Drew {} -> Nothing
   GameEvent.Revealed {} -> Nothing
   GameEvent.Looked {} -> Nothing
+  GameEvent.Voted {} -> Nothing
+  GameEvent.VotesRevealed {} -> Nothing
   GameEvent.AttackerDeclared {} -> Nothing
   GameEvent.BecameBlocking {} -> Nothing
   GameEvent.BlocksDeclared {} -> Nothing
@@ -818,6 +820,8 @@ revealOf :: GameEvent -> Maybe (PlayerId, PC.ProjectedCharacteristics)
 revealOf event = case event of
   GameEvent.Revealed (Revealed.MkRevealed pid _ _ snapshot) -> Just (pid, snapshot)
   GameEvent.Looked {} -> Nothing
+  GameEvent.Voted {} -> Nothing
+  GameEvent.VotesRevealed {} -> Nothing
   GameEvent.Moved {} -> Nothing
   GameEvent.DamageDealt _ -> Nothing
   GameEvent.DamagePrevented {} -> Nothing
@@ -9576,6 +9580,8 @@ abilityTriggeredOf event = case event of
   GameEvent.Drew {} -> Nothing
   GameEvent.Revealed {} -> Nothing
   GameEvent.Looked {} -> Nothing
+  GameEvent.Voted {} -> Nothing
+  GameEvent.VotesRevealed {} -> Nothing
   GameEvent.AttackerDeclared {} -> Nothing
   GameEvent.BecameBlocking {} -> Nothing
   GameEvent.BlocksDeclared {} -> Nothing

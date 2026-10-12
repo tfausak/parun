@@ -121,6 +121,8 @@ import qualified Pawl.Types.AttachBound as AttachBound
 import qualified Pawl.Types.AttachTarget as AttachTarget
 import qualified Pawl.Types.AttackTarget as AttackTarget
 import qualified Pawl.Types.AttackTargetRef as AttackTargetRef
+import qualified Pawl.Types.Ballot as Ballot
+import qualified Pawl.Types.BallotChoice as BallotChoice
 import qualified Pawl.Types.BecameDesignated as BecameDesignated
 import qualified Pawl.Types.BecomeCopy as BecomeCopy
 import qualified Pawl.Types.Binding as Binding.Type
@@ -401,6 +403,7 @@ import qualified Pawl.Types.Uses as Uses
 import qualified Pawl.Types.Vote as Vote
 import qualified Pawl.Types.VoteChoices as VoteChoices
 import qualified Pawl.Types.VoteObjects as VoteObjects
+import qualified Pawl.Types.Voted as Voted
 import qualified Pawl.Types.WhichCounters as WhichCounters
 import qualified Pawl.Types.Zone as Zone
 import qualified Pawl.Types.ZoneChange as ZoneChange
@@ -6770,7 +6773,7 @@ applyOneEffect runSubgame resolving source controller legal chosen effect = case
   -- Nothing on the board changes while the seats vote, so the decider, the
   -- candidate list and rule 701.38d's ballot counts are all read off this one
   -- `gs`.
-  Effect.Vote (Vote.MkVote starter choices) -> do
+  Effect.Vote (Vote.MkVote starter choices secret) -> do
     gs <- State.get
     let -- Rule 701.38a's "specified player". A reference naming several names the
         -- first in PlayerId order, and one naming nobody falls back to CR 109.5's
@@ -6787,7 +6790,17 @@ applyOneEffect runSubgame resolving source controller legal chosen effect = case
         -- reminder text has the votes go to different choices or the same one, so
         -- nothing lets the engine answer the second from the first.
         ballotsOf ask voter = Monad.replicateM (Natural.toIntSaturating (PlayerEffect.votesAllowed voter gs)) (ask voter)
-        cast ask = fmap concat (Monad.forM voters (ballotsOf ask))
+        -- Each ballot is logged as it is cast, and a secret vote's are revealed
+        -- together once the last is in, in voting order.
+        cast choiceOf ask = do
+          let logged voter = do
+                picked <- ask voter
+                let ballot = fmap (Ballot.MkBallot voter) (choiceOf picked)
+                Monad.forM_ ballot (logBallot secret voters)
+                pure (picked, ballot)
+          ballots <- fmap concat (Monad.forM voters (ballotsOf logged))
+          Monad.when secret (State.modify' (Event.recordEvent (GameEvent.VotesRevealed (Seq.fromList (Maybe.mapMaybe snd ballots)))))
+          pure (fmap fst ballots)
     case choices of
       VoteChoices.Objects objects -> do
         let candidates = battlefieldMatching legal resolving controller source gs (VoteObjects.filter objects)
@@ -6796,7 +6809,8 @@ applyOneEffect runSubgame resolving source controller legal chosen effect = case
           [] -> pure ()
           first : _ -> do
             -- Through Game.chooseAmong, rule 701.38a stating no way to abstain.
-            ballots <- cast $ \voter -> Maybe.fromMaybe first <$> Game.chooseAmong (\decider who -> Prompt.ChooseVote decider who resolving) voter candidates
+            let choiceOf oid = BallotChoice.ForObject <$> ActivationRestriction.snapshot oid gs
+            ballots <- cast choiceOf $ \voter -> Maybe.fromMaybe first <$> Game.chooseAmong (\decider who -> Prompt.ChooseVote decider who resolving) voter candidates
             let tallyOf oid = List.length (filter (== oid) ballots)
                 best = List.maximum (0 : fmap tallyOf candidates)
                 -- Every candidate on the winning tally, and none at all where nobody
@@ -6809,7 +6823,7 @@ applyOneEffect runSubgame resolving source controller legal chosen effect = case
       -- battlefield sweep can.
       VoteChoices.Words voteWords -> do
         let offered = NonEmpty.toList voteWords
-        ballots <- cast $ \voter -> Maybe.fromMaybe (NonEmpty.head voteWords) <$> Game.chooseAmong (\decider who -> Prompt.ChooseVoteWord decider who resolving) voter offered
+        ballots <- cast (Just . BallotChoice.ForWord) $ \voter -> Maybe.fromMaybe (NonEmpty.head voteWords) <$> Game.chooseAmong (\decider who -> Prompt.ChooseVoteWord decider who resolving) voter offered
         -- The aspect rule 701.38a's vote determines here is a NUMBER per word,
         -- bound on the SOURCE as Effect.FlipCoin's tallies are, for the clause
         -- rule 701.38b connects to that word to read as Quantity.InSlot.
@@ -10129,6 +10143,18 @@ applyOneEffect runSubgame resolving source controller legal chosen effect = case
            in g1 {GameState.extraTurns = entry : GameState.extraTurns g1}
         pushRound g = List.foldl' push g takers
     State.modify' (\g -> List.foldl' (\acc _ -> pushRound acc) g [1 .. turns])
+
+-- | CR 701.38a: log one ballot, shown to every voter in an open vote and, in a
+-- secret one, to the voter and the player making their decisions (CR 723.4).
+logBallot :: Bool -> [PlayerId] -> Ballot.Ballot -> Game ()
+logBallot secret voters ballot = do
+  gs <- State.get
+  let voter = Ballot.voter ballot
+      audience =
+        if secret
+          then Set.fromList [voter, Decider.unwrap (Decide.deciderFor voter gs)]
+          else Set.fromList voters
+  State.modify' (Event.recordEvent (GameEvent.Voted (Voted.MkVoted ballot audience)))
 
 -- CR 701.34a: one proliferate by `controller`. The Effect.Proliferate arm's
 -- body, once per proliferate its CR 614.1a replacements left standing.

@@ -125,7 +125,10 @@ subdirectory named for that spec; `docs/scenario-burndown.md` lists the ones sti
   zones, CR 406.3's face-down exile, CR 708.5's face-down spells and
   permanents, and CR 723.4's control of a player), `Witnessed` (the names of this turn's
   cards a `player` was shown, in order: every reveal, and each look whose
-  audience held the player, CR 701.20e and CR 723.4); an object is named as the
+  audience held the player, CR 701.20e and CR 723.4; and each ballot it showed
+  them, CR 701.38a, as `"alice voted Hill Giant"` -- an object by its name as
+  voted for, a word bare -- with a secret vote's reveal one such entry per
+  ballot, in voting order); an object is named as the
   runner's messages name it, by label while it keeps one, and an ability on
   the stack as `"trigger of $source"` or `"ability of $source"`. A seat is
   named bare: `"player": "alice"`.

@@ -1093,7 +1093,7 @@ effectPlayerRefs effect = case effect of
   Effect.Venture {} -> []
   Effect.PlayerSacrifices (PlayerSacrifices.MkPlayerSacrifices players _ _) -> [players]
   -- CR 701.38a's specified player, the seat the vote starts with.
-  Effect.Vote (Vote.MkVote starter _) -> [starter]
+  Effect.Vote (Vote.MkVote starter _ _) -> [starter]
   Effect.TakeExtraTurn takeExtraTurn -> [TakeExtraTurn.player takeExtraTurn]
   Effect.ShuffleIntoLibrary (ShuffleIntoLibrary.MkShuffleIntoLibrary named _) -> Maybe.maybeToList named
   Effect.Ante (Ante.MkAnte player _ _) -> [player]
@@ -1247,7 +1247,7 @@ slotsOf effect = joinTwo (joinTwo (joinSlots (fmap objectRefSlots (effectObjectR
   -- is effectPlayerRefs' half, joined at the head above, and the slot this
   -- WRITES is boundSlots' half. A word vote reads no slot at all -- its words
   -- are the slots it writes.
-  Effect.Vote (Vote.MkVote _ choices) -> case choices of
+  Effect.Vote (Vote.MkVote _ choices _) -> case choices of
     VoteChoices.Objects objects -> filterSlotsOf (VoteObjects.filter objects)
     VoteChoices.Words _ -> Map.empty
   Effect.RestartGame _ -> Map.empty
@@ -2598,7 +2598,7 @@ boundSlots effect = case effect of
   -- acts on them (Council's Judgment's exile). For a word vote it is one slot
   -- per word, each holding that word's tally for the clause connected to it
   -- (CR 701.38b, Plea for Power).
-  Effect.Vote (Vote.MkVote _ choices) -> case choices of
+  Effect.Vote (Vote.MkVote _ choices _) -> case choices of
     VoteChoices.Objects objects -> Set.singleton (VoteObjects.slot objects)
     VoteChoices.Words voteWords -> Set.fromList (NonEmpty.toList voteWords)
   Effect.RestartGame _ -> Set.empty

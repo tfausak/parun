@@ -651,6 +651,7 @@ import qualified Pawl.Codec.ViewIsSpec
 import qualified Pawl.Codec.VillainousChoiceRSpec
 import qualified Pawl.Codec.VillainousChoiceRewriteSpec
 import qualified Pawl.Codec.VoteSpec
+import qualified Pawl.Codec.VotedSpec
 import qualified Pawl.Codec.WardSpec
 import qualified Pawl.Codec.WhenSpec
 import qualified Pawl.Codec.WhenSpentSpec
@@ -1511,6 +1512,7 @@ spec s registry = do
   Pawl.Codec.VanguardSpec.spec s
   Pawl.Codec.VentureMarkerEnteredSpec.spec s
   Pawl.Codec.VoteSpec.spec s
+  Pawl.Codec.VotedSpec.spec s
   Pawl.Codec.WardSpec.spec s
   Pawl.Codec.WhichCountersSpec.spec s
   Pawl.Codec.WhileSpec.spec s

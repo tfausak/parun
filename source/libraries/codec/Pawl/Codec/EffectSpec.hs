@@ -2563,7 +2563,7 @@ spec s = Spec.describe s "Pawl.Codec.Effect" $ do
       s
       toJson
       fromJson
-      (Effect.Vote (Vote.MkVote (PlayerRef.Relative PlayerRelation.You) (VoteChoices.Objects (VoteObjects.MkVoteObjects (Filter.HasCardType CardType.Creature) (SlotName.MkSlotName (Text.pack "elected"))))))
+      (Effect.Vote (Vote.MkVote (PlayerRef.Relative PlayerRelation.You) (VoteChoices.Objects (VoteObjects.MkVoteObjects (Filter.HasCardType CardType.Creature) (SlotName.MkSlotName (Text.pack "elected")))) False))
       " {\"type\":\"Vote\",\"value\":{\"starter\":{\"type\":\"Relative\",\"value\":{\"type\":\"You\"}},\"choices\":{\"type\":\"Objects\",\"value\":{\"filter\":{\"type\":\"HasCardType\",\"value\":{\"type\":\"Creature\"}},\"slot\":\"elected\"}}}} "
   -- CR 500.7: a slot read with an empty skip set, a self-scoped arm carrying
   -- CR 500.11's skip of one step, and a two-member set.

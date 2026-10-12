@@ -10,6 +10,7 @@ import qualified Pawl.Codec.AbilityTriggered as AbilityTriggered
 import qualified Pawl.Codec.ActivatedAbilitySource as ActivatedAbilitySource
 import qualified Pawl.Codec.AttackerBlocked as AttackerBlocked
 import qualified Pawl.Codec.AttackerDeclared as AttackerDeclared
+import qualified Pawl.Codec.Ballot as Ballot
 import qualified Pawl.Codec.BecameAttached as BecameAttached
 import qualified Pawl.Codec.BecameAttacked as BecameAttacked
 import qualified Pawl.Codec.BecameBlocking as BecameBlocking
@@ -59,9 +60,11 @@ import qualified Pawl.Codec.Transformed as Transformed
 import qualified Pawl.Codec.TriggeredAbilitySource as TriggeredAbilitySource
 import qualified Pawl.Codec.TurnedFaceUp as TurnedFaceUp
 import qualified Pawl.Codec.VentureMarkerEntered as VentureMarkerEntered
+import qualified Pawl.Codec.Voted as Voted
 import qualified Pawl.Codec.ZoneChange as ZoneChange
 import qualified Pawl.JsonCodec.Arm as Arm
 import qualified Pawl.JsonCodec.Codec as Codec
+import qualified Pawl.JsonCodec.Common as Common
 import qualified Pawl.Types.GameEvent as GameEvent
 
 codec :: Codec.Codec GameEvent.GameEvent
@@ -92,6 +95,8 @@ codec =
       Arm.payload "BlocksDeclared" BlocksDeclared.codec GameEvent.BlocksDeclared (\x -> case x of GameEvent.BlocksDeclared y -> Just y; _ -> Nothing),
       Arm.payload "Revealed" Revealed.codec GameEvent.Revealed (\x -> case x of GameEvent.Revealed y -> Just y; _ -> Nothing),
       Arm.payload "Looked" Looked.codec GameEvent.Looked (\x -> case x of GameEvent.Looked y -> Just y; _ -> Nothing),
+      Arm.payload "Voted" Voted.codec GameEvent.Voted (\x -> case x of GameEvent.Voted y -> Just y; _ -> Nothing),
+      Arm.payload "VotesRevealed" (Common.seq Ballot.codec) GameEvent.VotesRevealed (\x -> case x of GameEvent.VotesRevealed y -> Just y; _ -> Nothing),
       Arm.payload "SpellCountered" Countering.codec GameEvent.SpellCountered (\x -> case x of GameEvent.SpellCountered y -> Just y; _ -> Nothing),
       Arm.payload "AbilityCountered" Countering.codec GameEvent.AbilityCountered (\x -> case x of GameEvent.AbilityCountered y -> Just y; _ -> Nothing),
       Arm.payload "LifeLost" LifeChange.codec GameEvent.LifeLost (\x -> case x of GameEvent.LifeLost y -> Just y; _ -> Nothing),
@@ -165,6 +170,8 @@ tagOf x = case x of
   GameEvent.BlocksDeclared {} -> "BlocksDeclared"
   GameEvent.Revealed {} -> "Revealed"
   GameEvent.Looked {} -> "Looked"
+  GameEvent.Voted {} -> "Voted"
+  GameEvent.VotesRevealed {} -> "VotesRevealed"
   GameEvent.SpellCountered {} -> "SpellCountered"
   GameEvent.AbilityCountered {} -> "AbilityCountered"
   GameEvent.LifeLost {} -> "LifeLost"

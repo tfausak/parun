@@ -211,6 +211,8 @@ library codec
     Pawl.Codec.AudienceSpec
     Pawl.Codec.Backup
     Pawl.Codec.BackupSpec
+    Pawl.Codec.Ballot
+    Pawl.Codec.BallotChoice
     Pawl.Codec.BattlefieldCandidate
     Pawl.Codec.BattlefieldCandidateSpec
     Pawl.Codec.BecameAttached
@@ -1377,6 +1379,8 @@ library codec
     Pawl.Codec.VillainousChoiceRSpec
     Pawl.Codec.Vote
     Pawl.Codec.VoteChoices
+    Pawl.Codec.Voted
+    Pawl.Codec.VotedSpec
     Pawl.Codec.VoteObjects
     Pawl.Codec.VoteSpec
     Pawl.Codec.Ward
@@ -2091,6 +2095,8 @@ library types
     Pawl.Types.AttackTargetRef
     Pawl.Types.Audience
     Pawl.Types.Backup
+    Pawl.Types.Ballot
+    Pawl.Types.BallotChoice
     Pawl.Types.BattlefieldCandidate
     Pawl.Types.BecameAttached
     Pawl.Types.BecameAttacked
@@ -2761,6 +2767,7 @@ library types
     Pawl.Types.Visibility
     Pawl.Types.Vote
     Pawl.Types.VoteChoices
+    Pawl.Types.Voted
     Pawl.Types.VoteObjects
     Pawl.Types.Ward
     Pawl.Types.When

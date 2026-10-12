@@ -298,28 +298,32 @@ recordActivation srcId ability gs =
 -- abilities have. Tezzeret, Betrayer of Flesh would observe the mana road.
 logActivation :: GameState -> PlayerId -> ObjectId -> Maybe Keyword.Type.Keyword -> AbilityKind.AbilityKind -> Set.Set ObjectId -> GameState -> GameState
 logActivation asOf pid srcId stamp kind targets gs =
-  let snapshotOf oid =
-        fmap
-          ( \o ->
-              ObjectSnapshot.MkObjectSnapshot
-                { ObjectSnapshot.object = oid,
-                  ObjectSnapshot.characteristics = Projection.project oid asOf,
-                  ObjectSnapshot.controller = Projection.controllerOf oid asOf,
-                  ObjectSnapshot.owner = Object.owner o
-                }
-          )
-          (Game.lookupObject oid asOf)
-      logged source =
+  let logged source =
         PastActivation.MkPastActivation
           { PastActivation.activator = pid,
             PastActivation.source = source,
             PastActivation.keyword = stamp,
             PastActivation.kind = kind,
-            PastActivation.targets = Maybe.mapMaybe snapshotOf (Set.toList targets)
+            PastActivation.targets = Maybe.mapMaybe (\oid -> snapshot oid asOf) (Set.toList targets)
           }
-   in case snapshotOf srcId of
+   in case snapshot srcId asOf of
         Nothing -> gs
         Just source -> gs {GameState.activationsThisTurn = GameState.activationsThisTurn gs Seq.|> logged source}
+
+-- | One object as it stands on this board, through the projection; Nothing
+-- where it does not exist.
+snapshot :: ObjectId -> GameState -> Maybe ObjectSnapshot.ObjectSnapshot
+snapshot oid gs =
+  fmap
+    ( \o ->
+        ObjectSnapshot.MkObjectSnapshot
+          { ObjectSnapshot.object = oid,
+            ObjectSnapshot.characteristics = Projection.project oid gs,
+            ObjectSnapshot.controller = Projection.controllerOf oid gs,
+            ObjectSnapshot.owner = Object.owner o
+          }
+    )
+    (Game.lookupObject oid gs)
 
 -- CR 307.5's empty-stack conjunct asked ABOUT THE RIDER rather than about the
 -- board: does this clause need an empty stack to be met?

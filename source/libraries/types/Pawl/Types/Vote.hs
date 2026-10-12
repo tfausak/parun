@@ -11,6 +11,9 @@ data Vote = MkVote
   { -- | CR 701.38a's "specified player", the seat the vote starts with.
     starter :: PlayerRef.PlayerRef,
     -- | CR 701.38b: the listed choices.
-    choices :: VoteChoices.VoteChoices
+    choices :: VoteChoices.VoteChoices,
+    -- | Whether each ballot is shown to its voter alone until every ballot is
+    -- revealed at once (secret council, CR 207.2c).
+    secret :: Bool
   }
   deriving (Eq, Ord, Show)
