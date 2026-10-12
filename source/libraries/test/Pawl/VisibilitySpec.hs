@@ -88,7 +88,7 @@ spec s registry = Spec.describe s "Pawl.Engine.Visibility" $ do
     let plain = Staged.state built
         controlled = plain {GameState.control = S.turnControl S.alice S.bob}
         ballot = Ballot.MkBallot S.bob (BallotChoice.ForWord (SlotName.MkSlotName (Text.pack "truth")))
-        lastLogged gs = case Seq.viewr (GameState.events (S.runPure S.identityAnswer gs (Resolve.logBallot True [S.alice, S.bob, S.carol] ballot))) of
+        lastLogged gs = case Seq.viewr (GameState.events (S.runPure S.identityAnswer gs (Resolve.logBallot True ballot))) of
           _ Seq.:> logged -> pure logged
           Seq.EmptyR -> Spec.assertFailure s "no event logged"
     uncontrolledVote <- lastLogged plain
@@ -101,6 +101,16 @@ spec s registry = Spec.describe s "Pawl.Engine.Visibility" $ do
     Spec.assertEqWith s "carol witnesses the reveal" (Visibility.witnessed S.carol revealed) Visibility.Type.Visible
     Spec.assertEqWith s "alice witnesses the reveal" (Visibility.witnessed S.alice revealed) Visibility.Type.Visible
     Spec.assertEqWith s "bob witnesses the reveal" (Visibility.witnessed S.bob revealed) Visibility.Type.Visible
+  -- CR 801.2 / 801.11: range of influence limits what a player can affect and
+  -- what a spell reads, not what a player sees, so carol, two seats away at
+  -- range 1, still sees alice's open ballot.
+  Spec.it s "an open ballot is witnessed by every player, in range or not" $ do
+    built <- S.buildBoardOrFail s registry (S.board (S.playerSetup S.alice NonEmpty.:| [S.playerSetup S.bob, S.playerSetup S.carol, S.playerSetup S.dave]) S.alice S.precombatMain)
+    let ballot = Ballot.MkBallot S.alice (BallotChoice.ForWord (SlotName.MkSlotName (Text.pack "truth")))
+    logged <- case Seq.viewr (GameState.events (S.runPure S.identityAnswer (S.withRange 1 (Staged.state built)) (Resolve.logBallot False ballot))) of
+      _ Seq.:> entry -> pure entry
+      Seq.EmptyR -> Spec.assertFailure s "no event logged"
+    Spec.assertEqWith s "carol, out of alice's range, witnesses her open ballot" (Visibility.witnessed S.carol logged) Visibility.Type.Visible
 
 -- Alice holds one card and has two in her library; bob has nothing.
 shownBoard :: (Monad m) => Spec.Spec m n -> Registry.Registry m -> m (GameState.GameState, ObjectId.ObjectId, ObjectId.ObjectId, ObjectId.ObjectId)

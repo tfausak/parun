@@ -31,7 +31,6 @@ import qualified Pawl.Engine.Condition as Condition
 import qualified Pawl.Engine.Game as Game
 import qualified Pawl.Engine.Keyword as Keyword
 import qualified Pawl.Engine.Projection as Projection
-import qualified Pawl.Engine.Projection.View as Projection
 import qualified Pawl.Engine.Turn as Turn
 import qualified Pawl.Types.AbilityKind as AbilityKind
 import qualified Pawl.Types.ActivatedAbility as ActivatedAbility
@@ -46,7 +45,6 @@ import qualified Pawl.Types.ManaSpecification as ManaSpecification
 import qualified Pawl.Types.ManaType as ManaType
 import qualified Pawl.Types.Object as Object
 import Pawl.Types.ObjectId (ObjectId)
-import qualified Pawl.Types.ObjectSnapshot as ObjectSnapshot
 import qualified Pawl.Types.PastActivation as PastActivation
 import Pawl.Types.PlayerId (PlayerId)
 
@@ -304,26 +302,11 @@ logActivation asOf pid srcId stamp kind targets gs =
             PastActivation.source = source,
             PastActivation.keyword = stamp,
             PastActivation.kind = kind,
-            PastActivation.targets = Maybe.mapMaybe (\oid -> snapshot oid asOf) (Set.toList targets)
+            PastActivation.targets = Maybe.mapMaybe (\oid -> Projection.objectSnapshot oid asOf) (Set.toList targets)
           }
-   in case snapshot srcId asOf of
+   in case Projection.objectSnapshot srcId asOf of
         Nothing -> gs
         Just source -> gs {GameState.activationsThisTurn = GameState.activationsThisTurn gs Seq.|> logged source}
-
--- | One object as it stands on this board, through the projection; Nothing
--- where it does not exist.
-snapshot :: ObjectId -> GameState -> Maybe ObjectSnapshot.ObjectSnapshot
-snapshot oid gs =
-  fmap
-    ( \o ->
-        ObjectSnapshot.MkObjectSnapshot
-          { ObjectSnapshot.object = oid,
-            ObjectSnapshot.characteristics = Projection.project oid gs,
-            ObjectSnapshot.controller = Projection.controllerOf oid gs,
-            ObjectSnapshot.owner = Object.owner o
-          }
-    )
-    (Game.lookupObject oid gs)
 
 -- CR 307.5's empty-stack conjunct asked ABOUT THE RIDER rather than about the
 -- board: does this clause need an empty stack to be met?

@@ -91,6 +91,7 @@ import qualified Pawl.Types.ModifyPowerToughness as ModifyPowerToughness
 import qualified Pawl.Types.NameInsertion as NameInsertion
 import qualified Pawl.Types.Object as Object
 import Pawl.Types.ObjectId (ObjectId)
+import qualified Pawl.Types.ObjectSnapshot as ObjectSnapshot
 import qualified Pawl.Types.Operand as Operand
 import qualified Pawl.Types.PlayerId as PlayerId
 import qualified Pawl.Types.PlayerRelation as PlayerRelation
@@ -4498,6 +4499,21 @@ definingReads cda = quantityReads (CharacteristicPT.power cda) <> quantityReads 
 -- rather than the reorder. design.md section 2.5.
 project :: ObjectId -> GameState -> ProjectedCharacteristics
 project oid gs = projectFrom (gather gs) oid gs
+
+-- | One object as it stands on this board, through the projection; Nothing
+-- where it does not exist.
+objectSnapshot :: ObjectId -> GameState -> Maybe ObjectSnapshot.ObjectSnapshot
+objectSnapshot oid gs =
+  fmap
+    ( \o ->
+        ObjectSnapshot.MkObjectSnapshot
+          { ObjectSnapshot.object = oid,
+            ObjectSnapshot.characteristics = project oid gs,
+            ObjectSnapshot.controller = controllerOf oid gs,
+            ObjectSnapshot.owner = Object.owner o
+          }
+    )
+    (Game.lookupObject oid gs)
 
 -- CR 613.4a layer 7a: apply the object's own characteristic-defining P/T
 -- ability, read from the PARTIAL projection (post-layer-6) so LoseAllAbilities

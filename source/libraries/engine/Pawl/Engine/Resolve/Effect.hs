@@ -6796,7 +6796,7 @@ applyOneEffect runSubgame resolving source controller legal chosen effect = case
           let logged voter = do
                 picked <- ask voter
                 let ballot = fmap (Ballot.MkBallot voter) (choiceOf picked)
-                Monad.forM_ ballot (logBallot secret voters)
+                Monad.forM_ ballot (logBallot secret)
                 pure (picked, ballot)
           ballots <- fmap concat (Monad.forM voters (ballotsOf logged))
           Monad.when secret (State.modify' (Event.recordEvent (GameEvent.VotesRevealed (Seq.fromList (Maybe.mapMaybe snd ballots)))))
@@ -6809,7 +6809,7 @@ applyOneEffect runSubgame resolving source controller legal chosen effect = case
           [] -> pure ()
           first : _ -> do
             -- Through Game.chooseAmong, rule 701.38a stating no way to abstain.
-            let choiceOf oid = BallotChoice.ForObject <$> ActivationRestriction.snapshot oid gs
+            let choiceOf oid = BallotChoice.ForObject <$> Projection.objectSnapshot oid gs
             ballots <- cast choiceOf $ \voter -> Maybe.fromMaybe first <$> Game.chooseAmong (\decider who -> Prompt.ChooseVote decider who resolving) voter candidates
             let tallyOf oid = List.length (filter (== oid) ballots)
                 best = List.maximum (0 : fmap tallyOf candidates)
@@ -10144,16 +10144,16 @@ applyOneEffect runSubgame resolving source controller legal chosen effect = case
         pushRound g = List.foldl' push g takers
     State.modify' (\g -> List.foldl' (\acc _ -> pushRound acc) g [1 .. turns])
 
--- | CR 701.38a: log one ballot, shown to every voter in an open vote and, in a
--- secret one, to the voter and the player making their decisions (CR 723.4).
-logBallot :: Bool -> [PlayerId] -> Ballot.Ballot -> Game ()
-logBallot secret voters ballot = do
+-- | CR 701.38a: log one ballot, shown to every player still in the game in an
+-- open vote and, in a secret one, to the voter and the player making their
+-- decisions (CR 723.4).
+logBallot :: Bool -> Ballot.Ballot -> Game ()
+logBallot secret ballot = do
   gs <- State.get
-  let voter = Ballot.voter ballot
-      audience =
+  let audience =
         if secret
-          then Set.fromList [voter, Decider.unwrap (Decide.deciderFor voter gs)]
-          else Set.fromList voters
+          then Decide.privyTo (Ballot.voter ballot) gs
+          else Set.fromList (Game.stillPlaying gs)
   State.modify' (Event.recordEvent (GameEvent.Voted (Voted.MkVoted ballot audience)))
 
 -- CR 701.34a: one proliferate by `controller`. The Effect.Proliferate arm's
