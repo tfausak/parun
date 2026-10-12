@@ -14,6 +14,7 @@ import qualified Pawl.Codec.ModifiedRoll as ModifiedRoll
 import qualified Pawl.Codec.PlayerCounterKind as PlayerCounterKind
 import qualified Pawl.Codec.PlayerScope as PlayerScope
 import qualified Pawl.Codec.PlotFromZone as PlotFromZone
+import qualified Pawl.Codec.Shows as Shows
 import qualified Pawl.Codec.SpendManaAsThough as SpendManaAsThough
 import qualified Pawl.Codec.StatedFlip as StatedFlip
 import qualified Pawl.JsonCodec.Arm as Arm
@@ -69,7 +70,8 @@ codec =
           Arm.payload "AdditionalVotes" Common.natural PlayerEffect.AdditionalVotes (\x -> case x of PlayerEffect.AdditionalVotes y -> Just y; _ -> Nothing),
           Arm.payload "AdditionalSurveilCards" Common.natural PlayerEffect.AdditionalSurveilCards (\x -> case x of PlayerEffect.AdditionalSurveilCards y -> Just y; _ -> Nothing),
           Arm.nullary "CantGainLife" PlayerEffect.CantGainLife,
-          Arm.nullary "CantLoseLife" PlayerEffect.CantLoseLife
+          Arm.nullary "CantLoseLife" PlayerEffect.CantLoseLife,
+          Arm.payload "Shows" Shows.codec PlayerEffect.Shows (\x -> case x of PlayerEffect.Shows y -> Just y; _ -> Nothing)
         ]
 
 tagOf :: PlayerEffect.PlayerEffect -> String
@@ -116,3 +118,4 @@ tagOf x = case x of
   PlayerEffect.AdditionalSurveilCards {} -> "AdditionalSurveilCards"
   PlayerEffect.CantGainLife {} -> "CantGainLife"
   PlayerEffect.CantLoseLife {} -> "CantLoseLife"
+  PlayerEffect.Shows {} -> "Shows"

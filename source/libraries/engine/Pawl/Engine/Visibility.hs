@@ -6,7 +6,9 @@ import qualified Data.Map as Map
 import qualified Pawl.Engine.Decide as Decide
 import qualified Pawl.Engine.Exile as Exile
 import qualified Pawl.Engine.Game as Game
+import qualified Pawl.Engine.PlayerEffect as PlayerEffect
 import qualified Pawl.Engine.Projection.View as View
+import qualified Pawl.Types.Audience as Audience
 import qualified Pawl.Types.BeginningStep as BeginningStep
 import qualified Pawl.Types.Decider as Decider
 import qualified Pawl.Types.Facing as Facing
@@ -18,6 +20,8 @@ import Pawl.Types.ObjectId (ObjectId)
 import qualified Pawl.Types.Phase as Phase
 import Pawl.Types.PlayerId (PlayerId)
 import qualified Pawl.Types.RevealWindow as RevealWindow
+import qualified Pawl.Types.ShownCards as ShownCards
+import qualified Pawl.Types.Shows as Shows
 import qualified Pawl.Types.Visibility as Visibility
 import qualified Pawl.Types.Zone as Zone
 
@@ -67,11 +71,14 @@ base pid oid gs = case Game.lookupObject oid gs of
   Nothing -> Visibility.Obscured
   Just obj -> case Game.zoneOf oid gs of
     Nothing -> visibleIf (Object.owner obj == pid) -- CR 400.11
-    Just Zone.Library -> Visibility.Obscured -- CR 401.2
+    -- Not implemented: CR 401.5's new top card, changed while a spell is being
+    -- cast or an ability activated or a special action taken, is shown at once
+    -- rather than after (#5003).
+    Just Zone.Library -> shownTo pid oid gs -- CR 401.2, 401.5
     Just Zone.Hand ->
       if Game.keptFaceDown oid gs
         then Visibility.Obscured -- CR 121.8, 708.5
-        else visibleIf (Object.owner obj == pid) -- CR 400.2
+        else visibleIf (Object.owner obj == pid) <> shownTo pid oid gs -- CR 400.2
     Just Zone.Exile -> visibleIf (Exile.mayLookAt pid oid gs) -- CR 406.3
     Just zone -> case Object.facing obj of
       Facing.FaceUp -> Visibility.Visible
@@ -79,6 +86,27 @@ base pid oid gs = case Game.lookupObject oid gs of
         if zone == Zone.Battlefield || zone == Zone.Stack
           then visibleIf (View.controllerOf oid gs == Just pid) -- CR 708.5
           else Visibility.Obscured -- CR 708.5
+
+-- | CR 401.5 / 400.2: a player effect showing the owner's hand or top card.
+shownTo :: PlayerId -> ObjectId -> GameState.GameState -> Visibility.Visibility
+shownTo seat oid gs = case Game.lookupObject oid gs of
+  Nothing -> Visibility.Obscured
+  Just obj ->
+    let owner = Object.owner obj
+        isTop = case Game.zoneMembers Zone.Library owner gs of
+          top : _ -> top == oid
+          [] -> False
+        reaches grant = case Shows.to grant of
+          Audience.Everyone -> True
+          Audience.ThatPlayer -> seat == owner
+        covers grant = case (Shows.cards grant, Game.zoneOf oid gs) of
+          (ShownCards.Hand, Just Zone.Hand) -> True
+          (ShownCards.TopOfLibrary, Just Zone.Library) -> isTop
+          _ -> False
+     in -- Only the top card of a library can be shown, so skip the grants below it.
+        if Game.zoneOf oid gs == Just Zone.Library && not isTop
+          then Visibility.Obscured
+          else visibleIf (any (\grant -> covers grant && reaches grant) (PlayerEffect.shownGrants owner gs))
 
 visibleIf :: Bool -> Visibility.Visibility
 visibleIf seen = if seen then Visibility.Visible else Visibility.Obscured

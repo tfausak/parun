@@ -687,11 +687,8 @@ hordeBoard forest horde elves rampant top present =
 -- the two halves separately -- the second creature one card down is the one that
 -- can tell them apart.
 --
--- Not implemented: "Play with the top card of your library revealed", which
--- data/cards/garruks-horde.json omits -- pawl hands every answerer the whole
--- game already, so a revealed card is indistinguishable from a hidden one
--- (#1412). Neither stricter nor weaker than printed, and no case below rests on
--- it.
+-- "Play with the top card of your library revealed" is proven by
+-- data/scenarios/visibility/cr-401-5-standing-grant-garruk-s-horde-shows-its-controller-s-top-card-to-everyone.json.
 garruksHordeSpec :: (Monad m, Monad n) => Spec.Spec m n -> Registry.Registry m -> n ()
 garruksHordeSpec s registry =
   let board top present = do
@@ -821,11 +818,6 @@ futureSightBoard swamp mountain forest island plains sight present =
 -- narrowing Pawl.Engine.Cast.pileCandidates states has to be read by
 -- Pawl.Engine.Action.playableLands too. The land ONE CARD DOWN is what tells that
 -- narrowing from the permission itself.
---
--- Not implemented: "Play with the top card of your library revealed", which
--- data/cards/future-sight.json omits -- pawl hands every answerer the whole game
--- already, so a revealed card is indistinguishable from a hidden one (#1412).
--- Neither stricter nor weaker than printed, and no case below rests on it.
 futureSightSpec :: (Monad m, Monad n) => Spec.Spec m n -> Registry.Registry m -> n ()
 futureSightSpec s registry =
   let board present = do
@@ -937,12 +929,6 @@ johannBoard forest fog granting =
 -- The producer of PermissionLimit.OnceEachTurn, and the budgeted twin of Future
 -- Sight below it: one CR 601.3 permission naming the top of a library, told from
 -- the unlimited one by how many casts a turn it is good for.
---
--- Not implemented: "You may look at the top card of your library any time",
--- which data/cards/johann-apprentice-sorcerer.json omits under the precedent
--- data/cards/garruks-horde.json sets -- pawl hands every answerer the whole game
--- already, so a looked-at card is indistinguishable from a hidden one (#1412).
--- Neither stricter nor weaker than printed, and no case below rests on it.
 johannSpec :: (Monad m, Monad n) => Spec.Spec m n -> Registry.Registry m -> n ()
 johannSpec s registry =
   let board granting = do

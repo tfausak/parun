@@ -1517,8 +1517,9 @@ zoneCandidates zone pid gs = case zone of
 -- CR 401.2 keeps a library hidden, and pawl offers this card anyway: every
 -- printing of the permission pairs it with a clause that makes the top card
 -- visible (Garruk's Horde reveals it, Bolas's Citadel looks at it), so the offer
--- is the permission's own. What an ANSWERER sees is a separate matter, and pawl
--- hides nothing from one yet (#1412).
+-- is the permission's own. Pawl.Engine.Visibility hides the top card from a
+-- player no such clause lets see it, but an answerer is still handed the whole
+-- state (#1412).
 pileCandidates :: Zone.Zone -> PlayerId -> GameState -> [ObjectId]
 pileCandidates zone owner gs = case zone of
   Zone.Library -> take 1 (Game.zoneMembers zone owner gs)

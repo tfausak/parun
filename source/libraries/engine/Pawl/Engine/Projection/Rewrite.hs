@@ -522,6 +522,7 @@ rewritePlayerEffect pairs effect = case effect of
   PlayerEffect.AdditionalSurveilCards _ -> effect
   PlayerEffect.CantGainLife -> effect
   PlayerEffect.CantLoseLife -> effect
+  PlayerEffect.Shows _ -> effect
 
 -- CR 612.1: AddMana's and Firebend's shared payload, each quantity and Filter
 -- in it rewritten.

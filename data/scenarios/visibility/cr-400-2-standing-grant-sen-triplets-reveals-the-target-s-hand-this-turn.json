@@ -1,0 +1,26 @@
+{
+  "description": "CR 400.2 standing grant Sen Triplets reveals the target's hand this turn",
+  "note": "The board starts in alice's untap step so her upkeep trigger fires. Bob's hand is his alone until the trigger resolves, every seat's for the rest of that turn, and his alone again on his own turn.",
+  "board": {
+    "seats": [
+      { "name": "alice",
+        "battlefield": [ { "card": "Sen Triplets", "ready": true } ],
+        "library": [ { "card": "Island" }, { "card": "Island" } ] },
+      { "name": "bob",
+        "hand": [ { "card": "Island", "label": "b-hand" } ],
+        "library": [ { "card": "Island" }, { "card": "Island" } ] }
+    ],
+    "active": "alice",
+    "step": "Untap"
+  },
+  "timeline": [
+    { "turn": 1, "step": "Upkeep", "player": "alice", "do": { "ChooseTargets": { "opponent": ["$bob"] } } },
+    { "turn": 1, "step": "Upkeep", "player": "alice", "check": { "View": { "of": "Stack", "is": ["trigger of Sen Triplets"] } } },
+    { "turn": 1, "step": "Upkeep", "player": "alice", "check": { "View": { "of": "Seers", "object": "$b-hand", "is": ["bob"] } } },
+    { "turn": 1, "step": "Upkeep", "player": "alice", "do": "Pass" },
+    { "turn": 1, "step": "Upkeep", "player": "alice", "check": { "View": { "of": "Stack", "is": [] } } },
+    { "turn": 1, "step": "Upkeep", "player": "alice", "check": { "View": { "of": "Seers", "object": "$b-hand", "is": ["alice", "bob"] } } },
+    { "turn": 1, "step": "DeclareAttackers", "player": "alice", "do": { "Attack": [] } },
+    { "turn": 2, "step": "Upkeep", "player": "bob", "check": { "View": { "of": "Seers", "object": "$b-hand", "is": ["bob"] } } }
+  ]
+}

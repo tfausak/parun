@@ -85,6 +85,7 @@ import qualified Pawl.Codec.AttackerBlockedSpec
 import qualified Pawl.Codec.AttackerDeclaredSpec
 import qualified Pawl.Codec.AttackersAreSpec
 import qualified Pawl.Codec.AttackingPlayersSpec
+import qualified Pawl.Codec.AudienceSpec
 import qualified Pawl.Codec.BackupSpec
 import qualified Pawl.Codec.BattlefieldCandidateSpec
 import qualified Pawl.Codec.BecameAttackedSpec
@@ -568,6 +569,8 @@ import qualified Pawl.Codec.SetBasePowerToughnessSpec
 import qualified Pawl.Codec.SetClassLevelSpec
 import qualified Pawl.Codec.SetHalfLockedSpec
 import qualified Pawl.Codec.SetPowerToughnessSpec
+import qualified Pawl.Codec.ShownCardsSpec
+import qualified Pawl.Codec.ShowsSpec
 import qualified Pawl.Codec.ShuffleIntoLibrarySpec
 import qualified Pawl.Codec.SicknessSpec
 import qualified Pawl.Codec.SkipNextPhaseSpec
@@ -938,6 +941,7 @@ spec s registry = do
   Pawl.Codec.AttackerBlockedSpec.spec s
   Pawl.Codec.AttackerDeclaredSpec.spec s
   Pawl.Codec.AttackingPlayersSpec.spec s
+  Pawl.Codec.AudienceSpec.spec s
   Pawl.Codec.BattlefieldCandidateSpec.spec s
   Pawl.Codec.PastActivationSpec.spec s
   Pawl.Codec.ObjectSnapshotSpec.spec s
@@ -1432,6 +1436,8 @@ spec s registry = do
   Pawl.Codec.SetClassLevelSpec.spec s
   Pawl.Codec.SetHalfLockedSpec.spec s
   Pawl.Codec.SetPowerToughnessSpec.spec s
+  Pawl.Codec.ShownCardsSpec.spec s
+  Pawl.Codec.ShowsSpec.spec s
   Pawl.Codec.ShuffleIntoLibrarySpec.spec s
   Pawl.Codec.SicknessSpec.spec s
   Pawl.Codec.SkipNextPhaseSpec.spec s

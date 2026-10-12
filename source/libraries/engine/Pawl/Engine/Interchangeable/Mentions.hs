@@ -2206,6 +2206,7 @@ playerEffectNames asking x = case x of
   PlayerEffect.AdditionalSurveilCards _natural -> False
   PlayerEffect.CantGainLife -> False
   PlayerEffect.CantLoseLife -> False
+  PlayerEffect.Shows _shows -> False
 
 playerQuantityNames :: Asking -> PlayerQuantity.PlayerQuantity -> Bool
 playerQuantityNames asking x = case x of
