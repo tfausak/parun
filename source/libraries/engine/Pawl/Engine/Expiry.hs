@@ -385,10 +385,12 @@ endsAt gs moment source expiry = case expiry of
   -- CR 611.2a: ended by its use (Pawl.Engine.PlayerEffect.spentGrants), and at
   -- cleanup, since every printed producer also says "this turn".
   Expiry.WhenUsed -> moment == Used || moment == Cleanup
-  -- CR 611.2a / 701.27b: ended by its source turning face down, and by nothing
-  -- else. A source that leaves the battlefield leaves the row covering only its
-  -- old id (CR 400.7), which nothing reads again.
-  Expiry.WhenTurnedFaceDown -> moment == TurnedFaceDown source
+  -- CR 611.2a / 701.27b: ended by its source turning face down. A source that
+  -- has left the game's objects (CR 400.7) can never turn face down, so the row
+  -- is dropped at the next settle instead: it covers only that old id, but
+  -- Pawl.Engine.Interchangeable still reads every row's timestamp.
+  Expiry.WhenTurnedFaceDown ->
+    moment == TurnedFaceDown source || (moment == Settle && Maybe.isNothing (Game.lookupObject source gs))
   where
     departedTurnOf p = moment == TurnOf p && List.notElem p (Game.stillPlaying gs)
     namedTurnEnds at afterTurn =
