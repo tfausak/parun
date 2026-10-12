@@ -3,8 +3,8 @@
 -- Covers CR 702.158's space sculptor (Pawl.Engine.SpaceSculptor and
 -- Pawl.Engine.Sector): CR 704.5u's sector assignment and its choice order, CR
 -- 702.158b's ending, CR 702.158d's "choose a sector" (Effect.ChooseSector) and
--- CR 702.158e's "same sector" (Filter.SameSectorAsSource), all through Space
--- Beleren.
+-- CR 702.158e's "same sector" (Filter.SharesWithSource Trait.Sector), all
+-- through Space Beleren.
 --
 -- A test-local answerer rather than the scenario harness, because the subject
 -- is the ORDER the sector prompts are put in, which the answerer logs.

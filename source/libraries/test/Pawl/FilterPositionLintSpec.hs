@@ -160,6 +160,7 @@ import qualified Pawl.Types.Supertype as Supertype
 import qualified Pawl.Types.TargetSlot as TargetSlot
 import qualified Pawl.Types.TopOfLibrary as TopOfLibrary
 import qualified Pawl.Types.TopOfLibraryUntil as TopOfLibraryUntil
+import qualified Pawl.Types.Trait as Trait
 import qualified Pawl.Types.TriggerCondition as TriggerCondition
 import qualified Pawl.Types.TriggeredAbility as TriggeredAbility
 import qualified Pawl.Types.TurnUpRewrite as TurnUpRewrite
@@ -238,8 +239,7 @@ canHostSubjects predicate = case predicate of
   Filter.Type.HasSupertype _ -> 0
   Filter.Type.HasColor _ -> 0
   Filter.Type.IsMonocolored -> 0
-  Filter.Type.SharesColorWithSource -> 0
-  Filter.Type.SameSectorAsSource -> 0
+  Filter.Type.SharesWithSource _ -> 0
   Filter.Type.HasSubtype _ -> 0
   Filter.Type.HasName _ -> 0
   Filter.Type.NameWordsAtLeast _ -> 0
@@ -273,8 +273,6 @@ canHostSubjects predicate = case predicate of
   Filter.Type.IsBound _ -> 0
   Filter.Type.IsTarget -> 0
   Filter.Type.SameNameAsBound _ -> 0
-  Filter.Type.SameNameAsSource -> 0
-  Filter.Type.SameOwnerAsSource -> 0
   Filter.Type.SameControllerAsBound _ -> 0
   Filter.Type.SameControllerAsHostOfBound _ -> 0
   Filter.Type.SharesCreatureTypeWithBound _ -> 0
@@ -425,67 +423,79 @@ canHostSubjectCounts card =
 -- operand, which a card may carry only in a wish, a trigger condition or a
 -- pairwise combat restriction.
 jsonAtoms :: Text.Text -> Value.Value -> Int
-jsonAtoms tag value = case value of
-  Value.String s -> if String.unwrap s == tag then 1 else 0
-  Value.Array a -> sum (fmap (jsonAtoms tag) (Array.unwrap a))
-  Value.Object o -> sum (fmap (jsonAtoms tag . Pair.value) (Object.unwrap o))
-  Value.Null _ -> 0
-  Value.Boolean _ -> 0
-  Value.Number _ -> 0
+jsonAtoms = occurrences . Value.String . String.MkString
 
--- How many `tag` atoms sit in a TRIGGERED ability's own condition -- an object
+-- How many subtrees of a card's encoding equal `needle`: a bare tag string
+-- (jsonAtoms), or a whole encoded atom where its payload is what tells two apart
+-- -- Filter.SharesWithSource's trait.
+occurrences :: Value.Value -> Value.Value -> Int
+occurrences needle value
+  | value == needle = 1
+  | otherwise = case value of
+      Value.Array a -> sum (fmap (occurrences needle) (Array.unwrap a))
+      Value.Object o -> sum (fmap (occurrences needle . Pair.value) (Object.unwrap o))
+      Value.String _ -> 0
+      Value.Null _ -> 0
+      Value.Boolean _ -> 0
+      Value.Number _ -> 0
+
+-- An atom's own encoding, as a needle for `occurrences`.
+atomJson :: Filter.Type.Filter Keyword.Keyword -> Value.Value
+atomJson = Codec.encode (Filter.Codec.codec Keyword.Codec.codec)
+
+-- How many copies of `needle` sit in a TRIGGERED ability's own condition -- an object
 -- carrying both a "condition" and a "modal", printed or granted -- counted off
 -- the encoding so a grant nested inside an effect is reached too.
-triggerConditionAtoms :: Text.Text -> Value.Value -> Int
-triggerConditionAtoms tag value = case value of
+triggerConditionAtoms :: Value.Value -> Value.Value -> Int
+triggerConditionAtoms needle value = case value of
   Value.Object o ->
     let pairs = Object.unwrap o
         named k = [Pair.value p | p <- pairs, String.unwrap (Pair.name p) == Text.pack k]
         triggered = not (null (named "modal"))
-        own = if triggered then sum (fmap (jsonAtoms tag) (named "condition")) else 0
-        rest = sum [triggerConditionAtoms tag (Pair.value p) | p <- pairs, not (triggered && String.unwrap (Pair.name p) == Text.pack "condition")]
+        own = if triggered then sum (fmap (occurrences needle) (named "condition")) else 0
+        rest = sum [triggerConditionAtoms needle (Pair.value p) | p <- pairs, not (triggered && String.unwrap (Pair.name p) == Text.pack "condition")]
      in own + rest
-  Value.Array a -> sum (fmap (triggerConditionAtoms tag) (Array.unwrap a))
+  Value.Array a -> sum (fmap (triggerConditionAtoms needle) (Array.unwrap a))
   Value.String _ -> 0
   Value.Null _ -> 0
   Value.Boolean _ -> 0
   Value.Number _ -> 0
 
--- How many `tag` atoms sit in a resolved "can't be blocked" row's BLOCKER
+-- How many copies of `needle` sit in a resolved "can't be blocked" row's BLOCKER
 -- filter -- the "blockers" of a "ForbidBeingBlocked" payload -- which
 -- Pawl.Engine.CombatRestriction.storedEvasions matches in the attacker's
 -- pairwise context (Space Beleren).
-evasionBlockerAtoms :: Text.Text -> Value.Value -> Int
-evasionBlockerAtoms tag value = case value of
+evasionBlockerAtoms :: Value.Value -> Value.Value -> Int
+evasionBlockerAtoms needle value = case value of
   Value.Object o ->
     let pairs = Object.unwrap o
         named k = [Pair.value p | p <- pairs, String.unwrap (Pair.name p) == Text.pack k]
         isEvasion = any (\v -> case v of Value.String t -> String.unwrap t == Text.pack "ForbidBeingBlocked"; _ -> False) (named "type")
         blockersOf v = case v of
-          Value.Object inner -> sum [jsonAtoms tag (Pair.value p) | p <- Object.unwrap inner, String.unwrap (Pair.name p) == Text.pack "blockers"]
+          Value.Object inner -> sum [occurrences needle (Pair.value p) | p <- Object.unwrap inner, String.unwrap (Pair.name p) == Text.pack "blockers"]
           _ -> 0
      in if isEvasion
           then sum (fmap blockersOf (named "value"))
-          else sum (fmap (evasionBlockerAtoms tag . Pair.value) pairs)
-  Value.Array a -> sum (fmap (evasionBlockerAtoms tag) (Array.unwrap a))
+          else sum (fmap (evasionBlockerAtoms needle . Pair.value) pairs)
+  Value.Array a -> sum (fmap (evasionBlockerAtoms needle) (Array.unwrap a))
   Value.String _ -> 0
   Value.Null _ -> 0
   Value.Boolean _ -> 0
   Value.Number _ -> 0
 
--- How many `tag` atoms sit in a wish's filter -- the payload of a
+-- How many copies of `needle` sit in a wish's filter -- the payload of a
 -- "FromOutsideTheGame" arm, an effect's or a draw rewrite's -- the position
 -- Pawl.Engine.Event.eligible matches (Synthetic Wishful Djinn).
-wishFilterAtoms :: Text.Text -> Value.Value -> Int
-wishFilterAtoms tag value = case value of
+wishFilterAtoms :: Value.Value -> Value.Value -> Int
+wishFilterAtoms needle value = case value of
   Value.Object o ->
     let pairs = Object.unwrap o
         named k = [Pair.value p | p <- pairs, String.unwrap (Pair.name p) == Text.pack k]
         isWish = any (\v -> case v of Value.String t -> String.unwrap t == Text.pack "FromOutsideTheGame"; _ -> False) (named "type")
      in if isWish
-          then sum (fmap (jsonAtoms tag) (named "value"))
-          else sum (fmap (wishFilterAtoms tag . Pair.value) pairs)
-  Value.Array a -> sum (fmap (wishFilterAtoms tag) (Array.unwrap a))
+          then sum (fmap (occurrences needle) (named "value"))
+          else sum (fmap (wishFilterAtoms needle . Pair.value) pairs)
+  Value.Array a -> sum (fmap (wishFilterAtoms needle) (Array.unwrap a))
   Value.String _ -> 0
   Value.Null _ -> 0
   Value.Boolean _ -> 0
@@ -651,7 +661,7 @@ canHostSubjectOffends card =
 -- encoding verbatim, so the sum over cardFilters' positions and jsonAtoms over
 -- the whole encoded face are counting the same occurrences.
 filterAtoms :: Text.Text -> Filter.Type.Filter Keyword.Keyword -> Int
-filterAtoms tag = jsonAtoms tag . Codec.encode (Filter.Codec.codec Keyword.Codec.codec)
+filterAtoms tag = jsonAtoms tag . atomJson
 
 -- The CR 701.3a candidate-side tag, spelled once.
 canAttachToSubjectTag :: Text.Text
@@ -2529,22 +2539,22 @@ filterPositionLintSpec s registry = Spec.describe s "Lint" $ do
   -- this is what keeps that true.
   Spec.it s "CR 702.134a / 702.60a / 702.78a no card compares against the source outside the positions that fill it" $ do
     ps <- S.allPrintings s
-    let tags = fmap Text.pack ["OfSource", "SameNameAsSource", "SharesColorWithSource", "SameSectorAsSource"]
+    let ofSource = Value.String (String.MkString (Text.pack "OfSource"))
+        needles = ofSource : fmap (atomJson . Filter.Type.SharesWithSource) [Trait.Name, Trait.Color, Trait.Sector]
         encoded = Codec.encode (Face.Codec.codec Card.codec)
-        pairwise tag c = sum (fmap (filterAtoms tag) (concatMap pairwiseFilters (Face.combatRestrictions c))) + evasionBlockerAtoms tag (encoded c)
+        pairwise needle c = sum (fmap (occurrences needle . atomJson) (concatMap pairwiseFilters (Face.combatRestrictions c))) + evasionBlockerAtoms needle (encoded c)
         pairwiseFilters r = case r of
           CombatRestriction.CantBeBlockedBy x -> [CantBeBlockedBy.blockers x]
           CombatRestriction.CantBlockCreatures x -> [CantBlockCreatures.attackers x]
           _ -> []
-        admitted tag c = (pairwise tag c, wishFilterAtoms tag (encoded c), triggerConditionAtoms tag (encoded c))
-        outside tag c = let (p, w, t) = admitted tag c in jsonAtoms tag (encoded c) - p - w - t
-        offenders = [(tag, S.nameOf (Printing.card p)) | tag <- tags, p <- ps, anyFace (\c -> outside tag c /= 0) (Printing.card p)]
+        admitted needle c = (pairwise needle c, wishFilterAtoms needle (encoded c), triggerConditionAtoms needle (encoded c))
+        outside needle c = let (p, w, t) = admitted needle c in occurrences needle (encoded c) - p - w - t
+        offenders = [(needle, S.nameOf (Printing.card p)) | needle <- needles, p <- ps, anyFace (\c -> outside needle c /= 0) (Printing.card p)]
     Spec.assertEqWith s "the atoms are written only where the source is filled" offenders []
     -- NOT vacuous: each admitted position has its author, and each is accepted.
     djinn <- S.printingOf s registry "Synthetic Wishful Djinn"
     kami <- S.printingOf s registry "Kami of Mourning"
     spitfire <- S.printingOf s registry "Spitfire Handler"
-    let ofSource = Text.pack "OfSource"
     Spec.assertEqWith
       s
       "the Djinn's is in a wish, the Kami's in a trigger condition, the Handler's pairwise"
@@ -2553,13 +2563,13 @@ filterPositionLintSpec s registry = Spec.describe s "Lint" $ do
     -- The resolved row's blocker filter is pairwise too, and Space Beleren's +1
     -- writes one there.
     beleren <- S.printingOf s registry "Space Beleren"
-    let sameSector = Text.pack "SameSectorAsSource"
+    let sameSector = atomJson (Filter.Type.SharesWithSource Trait.Sector)
     Spec.assertEqWith s "Space Beleren's is in a resolved evasion's blocker filter" (admitted sameSector (S.combinedFace beleren), outside sameSector (S.combinedFace beleren)) ((1, 0, 0), 0)
     -- NOT vacuous the other way either: the same counter over a hand-built face
     -- that DOES carry each atom -- buried under all three combinators, in a
     -- target slot, the one position a card author would reach for -- finds it.
     piker <- S.printingOf s registry "Goblin Piker"
-    let atoms = [Filter.Type.Measures (Measures.MkMeasures Measure.Power Comparison.LessThan (Operand.OfSource Measure.Power)), Filter.Type.SameNameAsSource, Filter.Type.SharesColorWithSource, Filter.Type.SameSectorAsSource]
+    let atoms = [Filter.Type.Measures (Measures.MkMeasures Measure.Power Comparison.LessThan (Operand.OfSource Measure.Power)), Filter.Type.SharesWithSource Trait.Name, Filter.Type.SharesWithSource Trait.Color, Filter.Type.SharesWithSource Trait.Sector]
         planted atom =
           (S.combinedFace piker)
             { Face.spell =
@@ -2567,7 +2577,7 @@ filterPositionLintSpec s registry = Spec.describe s "Lint" $ do
                   (Map.singleton (SlotName.MkSlotName (Text.pack "target")) (TargetSlot.required Pool.Creatures (Just (Filter.Type.And [Filter.Type.Or [Filter.Type.HasCardType CardType.Creature, Filter.Type.Not atom]]))))
                   Seq.empty
             }
-    Spec.assertEqWith s "a planted atom is seen" (zipWith (\tag atom -> outside tag (planted atom)) tags atoms) [1, 1, 1, 1]
+    Spec.assertEqWith s "a planted atom is seen" (zipWith (\needle atom -> outside needle (planted atom)) needles atoms) [1, 1, 1, 1]
   -- CR 702.140a's comparison is the source-name atom's sibling one characteristic over,
   -- and its one filler is Pawl.Engine.Target.slotContext -- so it is answerable
   -- only inside a TARGET SLOT's own filter and would be a silent False in an
@@ -2577,13 +2587,13 @@ filterPositionLintSpec s registry = Spec.describe s "Lint" $ do
   -- alike.
   Spec.it s "CR 702.140a no card writes a source-owner comparison" $ do
     ps <- S.allPrintings s
-    let atoms c = jsonAtoms (Text.pack "SameOwnerAsSource") (Codec.encode (Face.Codec.codec Card.codec) c)
+    let atoms c = occurrences (atomJson (Filter.Type.SharesWithSource Trait.Owner)) (Codec.encode (Face.Codec.codec Card.codec) c)
         offenders = filter (anyFace (\c -> atoms c /= 0) . Printing.card) ps
     Spec.assertEqWith s "the atom is the engine's alone" (fmap (S.nameOf . Printing.card) offenders) []
     -- NOT vacuous, the sweeps above's reason: the same counter over a hand-built
     -- face that DOES carry the atom finds it.
     piker <- S.printingOf s registry "Goblin Piker"
-    let buried = Filter.Type.And [Filter.Type.Or [Filter.Type.HasCardType CardType.Creature, Filter.Type.Not Filter.Type.SameOwnerAsSource]]
+    let buried = Filter.Type.And [Filter.Type.Or [Filter.Type.HasCardType CardType.Creature, Filter.Type.Not (Filter.Type.SharesWithSource Trait.Owner)]]
         planted =
           (S.combinedFace piker)
             { Face.spell =

@@ -214,6 +214,7 @@ import qualified Pawl.Types.Times as Times
 import qualified Pawl.Types.TopOfLibrary as TopOfLibrary
 import qualified Pawl.Types.TopOfLibraryUntil as TopOfLibraryUntil
 import qualified Pawl.Types.Toughness as Toughness
+import qualified Pawl.Types.Trait as Trait
 import qualified Pawl.Types.TriggerCondition as TriggerCondition
 import qualified Pawl.Types.TriggerFrequency as TriggerFrequency
 import Pawl.Types.TriggeredAbility (TriggeredAbility)
@@ -3490,10 +3491,10 @@ mutateCosts keywords =
 -- prints no "up to", so the slot is required (TargetSlot.required), which is
 -- what makes CR 702.140b's "if its target is illegal" a question with an answer.
 --
--- The owner conjunct is Filter.SameOwnerAsSource and NOT Filter.OwnedBy You: rule
--- 702.140a names the SPELL's owner, where CR 109.5's "you" is the spell's
--- controller at CR 601.2c and CR 608.2b. The two part for a spell cast off a card
--- its caster does not own (Hostage Taker's permission). See Pawl.MutateSpec's "CR
+-- The owner conjunct is Filter.SharesWithSource Trait.Owner and NOT
+-- Filter.OwnedBy You: rule 702.140a names the SPELL's owner, where CR 109.5's
+-- "you" is the spell's controller at CR 601.2c and CR 608.2b. The two part for a
+-- spell cast off a card its caster does not own (Hostage Taker's permission). See Pawl.MutateSpec's "CR
 -- 702.140a a stolen mutate spell may target the owner's creature and not the
 -- caster's".
 --
@@ -3504,7 +3505,7 @@ mutateTarget :: TargetSlot.TargetSlot
 mutateTarget =
   TargetSlot.required
     Pool.Creatures
-    (Just (Filter.And [Filter.Not (Filter.HasSubtype Subtype.Human), Filter.SameOwnerAsSource]))
+    (Just (Filter.And [Filter.Not (Filter.HasSubtype Subtype.Human), Filter.SharesWithSource Trait.Owner]))
 
 -- CR 702.37a / 702.37e: the MORPH costs -- what a face-down permanent's controller
 -- pays to turn it face up as CR 116.2b's special action -- empty when the
@@ -3685,10 +3686,10 @@ teamworkCost n =
 -- 702.78a counts creatures where rule 702.194a counts power.
 --
 -- "It" is the SPELL, which is the object the cost is being paid for, so the
--- colour comparison is Filter.SharesColorWithSource rather than an atom naming a
--- slot; Pawl.Engine.Cost.tapCandidates is what supplies the source's colours.
--- The untapped and control clauses are the rule's own, teamworkCost's reading
--- exactly, and CR 302.6 does not reach the cost for that function's reason.
+-- colour comparison is Filter.SharesWithSource Trait.Color rather than an atom
+-- naming a slot; Pawl.Engine.Cost.tapCandidates is what supplies the source's
+-- colours. The untapped and control clauses are the rule's own, teamworkCost's
+-- reading exactly, and CR 302.6 does not reach the cost for that function's reason.
 --
 -- An EMPTY mana part, casualtyCost's reason.
 conspireCost :: Cost Keyword
@@ -3703,7 +3704,7 @@ conspireCost =
                     [ Filter.HasCardType CardType.Creature,
                       Filter.Not Filter.IsTapped,
                       Filter.ControlledBy PlayerRelation.You,
-                      Filter.SharesColorWithSource
+                      Filter.SharesWithSource Trait.Color
                     ]
                 )
                 False
@@ -8262,7 +8263,7 @@ cascadeExiled = SlotName.MkSlotName (Text.pack "cascaded")
 -- whole of what it asks is a property of the card, which the offer's own
 -- EachCardFromAmong filter already asks.
 --
--- Filter.SameNameAsSource and not a slot comparison, because
+-- Filter.SharesWithSource Trait.Name and not a slot comparison, because
 -- TriggerCondition.SelfCast binds nothing: "this spell" is CR 113.7's source.
 -- Written ONCE where cascade writes its filter twice, since the reveal above is a
 -- COUNT: nothing here asks the filter to end a walk, so its only job is picking
@@ -8280,7 +8281,7 @@ ripple n =
       offer =
         Effect.OfferCast
           OfferCast.MkOfferCast
-            { OfferCast.ref = ObjectRef.EachCardFromAmong (EachCardFromAmong.MkEachCardFromAmong rippleRevealed Filter.SameNameAsSource),
+            { OfferCast.ref = ObjectRef.EachCardFromAmong (EachCardFromAmong.MkEachCardFromAmong rippleRevealed (Filter.SharesWithSource Trait.Name)),
               -- Rule 702.60a's "YOU may cast": the caster, who is the trigger's
               -- controller.
               OfferCast.caster = PlayerRef.Relative PlayerRelation.You,

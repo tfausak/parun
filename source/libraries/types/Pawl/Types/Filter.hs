@@ -21,6 +21,7 @@ import qualified Pawl.Types.SlotName as SlotName
 import qualified Pawl.Types.StickerKind as StickerKind
 import qualified Pawl.Types.Subtype as Subtype
 import qualified Pawl.Types.Supertype as Supertype
+import qualified Pawl.Types.Trait as Trait
 import qualified Pawl.Types.Zone as Zone
 
 -- | A first-order predicate over one candidate -- an object, or (CR 115.1) a
@@ -41,16 +42,9 @@ data Filter keyword
   | HasSupertype Supertype.Supertype -- CR 205.4: the object's supertypes include this one.
   | HasColor Color.Color -- CR 105.2: the object's colours include this one.
   | IsMonocolored -- CR 105.2a: the object is exactly one of the five colours.
-  | -- | CR 105.2 asked of TWO objects: the candidate's colours intersect the
-    -- colours of the object the evaluation comes from (CR 702.78a's conspire).
-    -- The Measures atom's OfSource shape one characteristic over -- read off
-    -- Pawl.Engine.Filter.Context's sourceColors -- and vacuously False where
-    -- either side is colourless, which CR 105.2's set reading already makes the
-    -- answer for a colourless source.
-    SharesColorWithSource
-  | -- | CR 702.158e: the candidate is in the same sector as the object the
-    -- evaluation comes from (Pawl.Engine.Filter.Context's sourceSectors).
-    SameSectorAsSource
+  | -- | The candidate shares this trait with the object the evaluation comes
+    -- from (CR 113.7), read off Pawl.Engine.Filter.Context's source fields.
+    SharesWithSource Trait.Trait
   | HasSubtype Subtype.Subtype -- CR 205.3: the object's subtypes include this one.
   | -- | CR 201.2: the object's names include this LITERAL one. Membership, as CR
     -- 709.4a states the test -- a split card off the stack and a Room with both
@@ -178,30 +172,6 @@ data Filter keyword
     -- has the same name as one showing either; vacuously False where the slot
     -- names no object or the bound object has no name (CR 708.2a).
     SameNameAsBound SlotName.SlotName
-  | -- | CR 201.2 / 709.4a asked of the candidate and the SOURCE rather than a
-    -- slot: the candidate shares a name with the object the evaluation comes
-    -- from (CR 702.60a's "with the same name as this spell"). SameNameAsBound's
-    -- comparison with the OfSource operand's other end -- read off
-    -- Pawl.Engine.Filter.Context's sourceNames, and vacuously False where the
-    -- source has no name (CR 708.2a) or none was supplied.
-    --
-    -- A SOURCE atom and not a slot one because CR 702.60a's trigger binds
-    -- nothing to compare against: TriggerCondition.SelfCast names no slot, and
-    -- the spell the rule points at is CR 113.7's source.
-    SameNameAsSource
-  | -- | CR 108.3 asked of the candidate and the SOURCE rather than of the
-    -- perspective: the candidate has the same owner as the object the evaluation
-    -- comes from (CR 702.140a's "with the same owner as this spell"). OwnedBy's
-    -- comparison with SameNameAsSource's other operand -- read off
-    -- Pawl.Engine.Filter.Context's sourceOwner, and vacuously False where the
-    -- candidate has no owner (CR 109.1) or none was supplied.
-    --
-    -- Never OwnedBy You, which is CR 109.5's perspective -- the spell's
-    -- CONTROLLER at CR 601.2c and CR 608.2b. The two part the moment a player
-    -- casts a card another player owns (Hostage Taker's permission), which is
-    -- what Pawl.MutateSpec's "CR 702.140a a stolen mutate spell may target the
-    -- owner's creature and not the caster's" proves.
-    SameOwnerAsSource
   | -- | CR 110.2 asked of TWO objects: the candidate has the same controller as
     -- the object this slot holds -- Bioshift's "another target creature with the
     -- same controller".

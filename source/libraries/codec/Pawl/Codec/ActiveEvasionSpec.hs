@@ -10,6 +10,7 @@ import qualified Pawl.Types.Filter as Filter
 import qualified Pawl.Types.ObjectId as ObjectId
 import qualified Pawl.Types.PlayerId as PlayerId
 import qualified Pawl.Types.Timestamp as Timestamp
+import qualified Pawl.Types.Trait as Trait
 
 spec :: (Monad m, Monad n) => Spec.Spec m n -> n ()
 spec s = Spec.describe s "Pawl.Codec.ActiveEvasion" $ do
@@ -24,8 +25,8 @@ spec s = Spec.describe s "Pawl.Codec.ActiveEvasion" $ do
           ActiveEvasion.timestamp = Timestamp.MkTimestamp 2,
           ActiveEvasion.expiry = Expiry.AtCleanup,
           ActiveEvasion.affected = Filter.HasCardType CardType.Creature,
-          ActiveEvasion.blockers = Filter.Not Filter.SameSectorAsSource
+          ActiveEvasion.blockers = Filter.Not (Filter.SharesWithSource Trait.Sector)
         }
-      " {\"source\":1,\"controller\":4,\"timestamp\":2,\"expiry\":{\"type\":\"AtCleanup\"},\"affected\":{\"type\":\"HasCardType\",\"value\":{\"type\":\"Creature\"}},\"blockers\":{\"type\":\"Not\",\"value\":{\"type\":\"SameSectorAsSource\"}}} "
+      " {\"source\":1,\"controller\":4,\"timestamp\":2,\"expiry\":{\"type\":\"AtCleanup\"},\"affected\":{\"type\":\"HasCardType\",\"value\":{\"type\":\"Creature\"}},\"blockers\":{\"type\":\"Not\",\"value\":{\"type\":\"SharesWithSource\",\"value\":{\"type\":\"Sector\"}}}} "
   Spec.it s "has a schema" $
     Common.assertHasSchema s ActiveEvasion.codec

@@ -326,8 +326,7 @@ bakePerspective viewOf context gs candidate predicate =
         Filter.Type.HasSupertype _ -> predicate
         Filter.Type.HasColor _ -> predicate
         Filter.Type.IsMonocolored -> predicate
-        Filter.Type.SharesColorWithSource -> predicate
-        Filter.Type.SameSectorAsSource -> predicate
+        Filter.Type.SharesWithSource _ -> predicate
         Filter.Type.HasSubtype _ -> predicate
         Filter.Type.HasName _ -> predicate
         Filter.Type.NameWordsAtLeast _ -> predicate
@@ -358,8 +357,6 @@ bakePerspective viewOf context gs candidate predicate =
         Filter.Type.IsBound _ -> predicate
         Filter.Type.IsTarget -> predicate
         Filter.Type.SameNameAsBound _ -> predicate
-        Filter.Type.SameNameAsSource -> predicate
-        Filter.Type.SameOwnerAsSource -> predicate
         Filter.Type.SameControllerAsBound _ -> predicate
         Filter.Type.SameControllerAsHostOfBound _ -> predicate
         Filter.Type.SharesCreatureTypeWithBound _ -> predicate
