@@ -47,6 +47,7 @@ import qualified Pawl.Types.GainControl as GainControl
 import qualified Pawl.Types.GameEvent as GameEvent
 import qualified Pawl.Types.GameState as GameState
 import qualified Pawl.Types.GrantedAbility as GrantedAbility
+import qualified Pawl.Types.Looked as Looked
 import qualified Pawl.Types.Modal as Modal.Type
 import qualified Pawl.Types.Mode as Mode
 import qualified Pawl.Types.MoveToZone as MoveToZone
@@ -1241,9 +1242,10 @@ openTheWaySpec s registry =
 -- the printed "and" forbids -- so the reveal event and the card in hand must name
 -- the SAME object, which is what the second assertion of each case below checks.
 --
--- The look records nothing (CR 701.20e is private, #1412), so exactly one
--- GameEvent.Revealed is the whole of what the trigger shows -- the six cards left
--- over stay unrevealed however public the bottoming makes their destination.
+-- The look logs a GameEvent.Looked shown to its controller alone (CR 701.20e),
+-- and exactly one GameEvent.Revealed is the whole of what the trigger shows --
+-- the six cards left over stay unrevealed however public the bottoming makes
+-- their destination.
 --
 -- THE RANDOMNESS IS THE ANSWERER'S, as it is for Endurance above: the fixture
 -- names a permutation built from the OBJECT IDS, so the resulting library is
@@ -1276,12 +1278,20 @@ carthTheLionSpec s registry =
         Prompt.ChooseCardFromAmong _ _ _ offered -> nth (Maybe.fromMaybe 0 mTake) offered
         Prompt.Shuffle offered -> Maybe.fromMaybe offered order
         _ -> S.identityAnswer p
-      -- Which objects a CR 701.20a reveal has shown so far. A look shows nobody
-      -- anything and appends no event, so this counts the reveal alone.
+      -- Which objects a CR 701.20a reveal has shown so far. A look is not a
+      -- reveal, so this counts the Revealed events alone.
       revealed gs =
         Maybe.mapMaybe
           ( \event -> case event of
               GameEvent.Revealed (Revealed.MkRevealed _ oid _ _) -> Just oid
+              _ -> Nothing
+          )
+          (S.eventsOf gs)
+      -- Each CR 701.20e look so far: the card and who it was shown to.
+      looked gs =
+        Maybe.mapMaybe
+          ( \event -> case event of
+              GameEvent.Looked l -> Just (Looked.card l, Looked.audience l)
               _ -> Nothing
           )
           (S.eventsOf gs)
@@ -1302,6 +1312,11 @@ carthTheLionSpec s registry =
               after = S.runPure answer placed Stack.resolveTop
           Spec.assertEqWith s "the second planeswalker card among the seven is the one in alice's hand" (namesIn Zone.Hand S.alice after) [named "Chandra, Fire Artisan"]
           Spec.assertEqWith s "and it is the one object the trigger revealed -- one reveal, not seven" (revealed after) [idOf ids "Chandra, Fire Artisan"]
+          Spec.assertEqWith
+            s
+            "and the look showed the top seven to alice alone"
+            (List.sort (looked after))
+            (List.sort (fmap (\name -> (idOf ids name, Set.singleton S.alice)) (drop 1 stockNames)))
           Spec.assertEqWith
             s
             "alice's library, top first, is the card the look never reached and then the six left over in the named order"

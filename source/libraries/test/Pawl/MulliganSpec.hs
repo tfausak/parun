@@ -326,8 +326,8 @@ takeThenDecline k p = case p of
   _ -> pure (S.identityAnswer p)
 
 -- The names of the cards alice REVEALED (CR 701.20a), in event order. CR
--- 701.20e's look is not one of them -- it is private and records no event --
--- which is what keeps this a count of the reveals alone.
+-- 701.20e's look logs a Looked, never a Revealed, so this counts the reveals
+-- alone.
 revealedNames :: GameState.GameState -> [String]
 revealedNames gs =
   let revealedName event = case event of

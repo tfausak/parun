@@ -8744,10 +8744,10 @@ turnUpKeptDraws = do
 -- carries. Dropping it would make pawl's miracle cards WEAKER than printed, which
 -- is the direction that is never admissible.
 --
--- CR 121.9's "may look at that card as they draw it before choosing" is satisfied
--- by the prompt naming the card. Not implemented: an answerer is handed the
--- whole state, hidden cards included (#1412), so nothing here could have shown
--- the player less than the rule allows.
+-- CR 121.9's "may look at that card as they draw it before choosing" is logged
+-- as a look before the first offer, and only when there is an offer to make.
+-- Not implemented: an answerer is handed the whole state, hidden cards
+-- included, and the prompt names the card regardless (#1412).
 --
 -- The reveal goes through the ordinary funnel with CR 702.94a's cause, which is
 -- what makes the linked trigger (CR 603.11) findable: `eventTriggers`' hand source
@@ -8780,7 +8780,11 @@ offerMiracleReveal pid drawn = do
               case decision of
                 OptionalDecision.Declines -> offer rest
                 OptionalDecision.Exercises -> reveal (RevealCause.ForMiracle cost) pid drawn
-      offer (Keyword.miracleCosts (Map.keysSet (Projection.keywordsOf drawn gs)))
+      case Keyword.miracleCosts (Map.keysSet (Projection.keywordsOf drawn gs)) of
+        [] -> pure ()
+        costs -> do
+          look pid drawn
+          offer costs
     Nothing -> pure ()
 
 -- The single discard funnel (CR 701.9a). `pid` is the discarding player, whom that
