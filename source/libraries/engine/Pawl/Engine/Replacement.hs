@@ -961,8 +961,12 @@ matchesPrinted viewOf gs event candidate =
         -- the row's Filter (Steamflogger Boss's "a Rigger you control"). An
         -- instruction a player carries out names no permanent, so no row of
         -- this shape reaches it. No `admits`: doubling always changes the count.
+        --
+        -- Read through last known information (CR 608.2h): a Rigger that left
+        -- before its "it assembles" resolved still assembles, as the Rigger it
+        -- last was -- matchesDamageSource's fallback.
         (ReplacementEffect.AssembleR matching, ProposedEvent.WouldAssemble (Just oid) _ _) ->
-          matchesFiltered viewOf gs candidate matching oid
+          Filter.matches (candidateContext gs candidate) (Maybe.fromMaybe (viewOf oid) (Projection.viewWithLastKnownAnywhere gs oid)) matching
         -- Every row below falls through to False because an arm ABOVE already
         -- matches every event of that class: a row below fires only for a
         -- MISMATCHED class, where False is the correct answer rather than a

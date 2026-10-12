@@ -910,6 +910,9 @@ resetPlayers settings seats lifeModifier players =
               -- this function's callers' games a new one, so the once-per-game
               -- action is available again.
               Player.companionTaken = False,
+              -- The Unstable FAQ: "at the start of the game, put a CRANK!
+              -- counter on Sprocket 3", and both callers' games are new ones.
+              Player.crankCounter = Designation.Sprocket3,
               -- CR 103.2b: nobody has revealed a companion in the new game yet.
               -- startGameFromCards records its starting deck and puts the reveal
               -- round again.
