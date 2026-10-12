@@ -148,7 +148,7 @@ spec s registry = Spec.describe s "SpaceSculptor" $ do
 -- who was asked about what, in order. Everything else is S.identityAnswer.
 sectoring :: Map.Map ObjectId.ObjectId Designation.Designation -> Prompt.Prompt r -> State.State [(PlayerId.PlayerId, ObjectId.ObjectId)] r
 sectoring picks p = case p of
-  Prompt.ChooseSector _ who oid offered -> do
+  Prompt.ChooseDesignation _ who oid offered -> do
     State.modify' (<> [(who, oid)])
     pure (Maybe.fromMaybe (NonEmpty.head offered) (Map.lookup oid picks))
   _ -> pure (S.identityAnswer p)

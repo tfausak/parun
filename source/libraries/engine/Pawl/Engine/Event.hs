@@ -2010,6 +2010,7 @@ shufflesAfter candidate = case ReplacementCandidate.effect candidate of
   ReplacementEffect.ProliferateR {} -> False
   ReplacementEffect.ScryR {} -> False
   ReplacementEffect.VillainousChoiceR {} -> False
+  ReplacementEffect.AssembleR {} -> False
   ReplacementEffect.PhaseR _ -> False
 
 -- CR 615.12: apply one chosen PREVENTION effect to damage that can't be
@@ -4112,6 +4113,14 @@ apply batch candidate event =
     -- Unreachable: `applies` admits VillainousChoiceR only against
     -- WouldFaceVillainousChoice.
     (ReplacementEffect.VillainousChoiceR {}, _) -> pure (Just event)
+    -- The Unstable FAQ with CR 614.1a: Steamflogger Boss's "it assembles two
+    -- Contraptions instead" leaves the event STANDING at a doubled count, the
+    -- ProliferateR arm above for its reason.
+    (ReplacementEffect.AssembleR _, ProposedEvent.WouldAssemble assembler pid n) -> do
+      Replacement.consume (ReplacementCandidate.identity candidate)
+      pure (Just (ProposedEvent.WouldAssemble assembler pid (n * 2)))
+    -- Unreachable: `applies` admits AssembleR only against WouldAssemble.
+    (ReplacementEffect.AssembleR {}, _) -> pure (Just event)
     -- CR 122.6/614.1: Hardened Scales/Doubling Season scale a counter placement.
     (ReplacementEffect.CounterR (CounterR.MkCounterR _ scaling), ProposedEvent.WouldPutCounters cause oid kind n) -> do
       Replacement.consume (ReplacementCandidate.identity candidate)

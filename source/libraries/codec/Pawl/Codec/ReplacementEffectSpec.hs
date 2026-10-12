@@ -56,6 +56,7 @@ import qualified Pawl.Types.ReplacementEffect as ReplacementEffect
 import qualified Pawl.Types.Scaling as Scaling
 import qualified Pawl.Types.ScryR as ScryR
 import qualified Pawl.Types.ScryRewrite as ScryRewrite
+import qualified Pawl.Types.Subtype as Subtype
 import qualified Pawl.Types.TokenPattern as TokenPattern
 import qualified Pawl.Types.TokenR as TokenR
 import qualified Pawl.Types.TurnUpProcedure as TurnUpProcedure
@@ -254,6 +255,13 @@ spec s =
             codec
             (ReplacementEffect.DieRollR (DieRollR.MkDieRollR (ControllerRelation.Related PlayerRelation.You) DieRollRewrite.ExtraIgnoringLowest))
             " {\"type\":\"DieRollR\",\"value\":{\"whose\":{\"type\":\"You\"},\"rewrite\":{\"type\":\"ExtraIgnoringLowest\"}}} "
+        -- The Unstable FAQ: Steamflogger Boss.
+        Spec.it s "AssembleR (Steamflogger Boss)" $
+          Common.assertCodec
+            s
+            codec
+            (ReplacementEffect.AssembleR (Filter.HasSubtype Subtype.Rigger))
+            " {\"type\":\"AssembleR\",\"value\":{\"type\":\"HasSubtype\",\"value\":{\"type\":\"Rigger\"}}} "
         -- CR 701.34a: Tekuthal, Inquiry Dominus.
         Spec.it s "ProliferateR (Tekuthal, Inquiry Dominus)" $
           Common.assertCodec

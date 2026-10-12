@@ -645,6 +645,7 @@ objectRefPositions =
         ("reveal", Effect.Reveal (Reveal.MkReveal (plantedRef "rv") Nothing), [plantedRef "rv"]),
         ("look-at", Effect.LookAt (LookAt.MkLookAt (plantedRef "la") (SlotName.MkSlotName (Text.pack "seen")) (PlayerRef.Relative PlayerRelation.You)), [plantedRef "la"]),
         ("explore", Effect.Explore (plantedRef "ex"), [plantedRef "ex"]),
+        ("assemble", Effect.Assemble (Just (plantedRef "as")), [plantedRef "as"]),
         ("arrange-in-library", Effect.ArrangeInLibrary (plantedRef "al"), [plantedRef "al"]),
         ("connive", Effect.Connive (Connive.MkConnive (Quantity.Type.Literal 1) (plantedRef "cn")), [plantedRef "cn"]),
         ("discard-these", Effect.Discard (Discard.These (TheseDiscard.MkTheseDiscard (plantedRef "di") Nothing)), [plantedRef "di"]),
@@ -1306,6 +1307,7 @@ ownCounts effect = case effect of
   -- No Quantity at all: rule 701.44a's counter is a literal one and its card is
   -- the one on top, so there is no number a card author writes.
   Effect.Explore {} -> []
+  Effect.Assemble {} -> []
   Effect.ArrangeInLibrary {} -> []
   -- Connive's N is a Quantity like the Search's above, so its Counts are
   -- reachable from here.
@@ -1832,6 +1834,7 @@ effectNestedEffects effect = case effect of
   Effect.Fateseal {} -> []
   Effect.Clash {} -> []
   Effect.Explore {} -> []
+  Effect.Assemble {} -> []
   Effect.ArrangeInLibrary {} -> []
   Effect.Connive {} -> []
   Effect.Discard {} -> []
@@ -2235,6 +2238,7 @@ replacementRewriteEffects replacement = case replacement of
   ReplacementEffect.ProliferateR {} -> []
   ReplacementEffect.ScryR {} -> []
   ReplacementEffect.VillainousChoiceR {} -> []
+  ReplacementEffect.AssembleR {} -> []
   ReplacementEffect.PhaseR _ -> []
 
 -- CR 615.5: the additional effect a replacement PRINTS -- DamageR's riders, and
@@ -2265,6 +2269,7 @@ replacementEffectRiders replacement = case replacement of
   ReplacementEffect.ProliferateR {} -> []
   ReplacementEffect.ScryR {} -> []
   ReplacementEffect.VillainousChoiceR {} -> []
+  ReplacementEffect.AssembleR {} -> []
   ReplacementEffect.PhaseR _ -> []
 
 -- CR 111.1's token a replacement MINTS: TokenR's appended token (Queen Allenal
@@ -2293,6 +2298,7 @@ replacementMintedCards replacement = case replacement of
   ReplacementEffect.ProliferateR {} -> []
   ReplacementEffect.ScryR {} -> []
   ReplacementEffect.VillainousChoiceR {} -> []
+  ReplacementEffect.AssembleR {} -> []
   ReplacementEffect.PhaseR _ -> []
 
 -- Every ReplacementEffect one effect authors: the one an Effect.Replace installs
@@ -2365,6 +2371,7 @@ effectReplacements effect = case effect of
   Effect.Fateseal {} -> []
   Effect.Clash {} -> []
   Effect.Explore {} -> []
+  Effect.Assemble {} -> []
   Effect.ArrangeInLibrary {} -> []
   Effect.Connive {} -> []
   Effect.Discard {} -> []
@@ -2884,6 +2891,7 @@ effectMintedFaces effect = case effect of
   Effect.Fateseal {} -> []
   Effect.Clash {} -> []
   Effect.Explore {} -> []
+  Effect.Assemble {} -> []
   Effect.ArrangeInLibrary {} -> []
   Effect.Connive {} -> []
   Effect.Discard {} -> []
@@ -5120,6 +5128,7 @@ replacementEffectFilters replacementEffect = case replacementEffect of
   ReplacementEffect.ProliferateR {} -> []
   ReplacementEffect.ScryR {} -> []
   ReplacementEffect.VillainousChoiceR {} -> []
+  ReplacementEffect.AssembleR {} -> []
   ReplacementEffect.PhaseR _ -> []
 
 -- CR 614.9's printed destination, the one Filter a damage REWRITE carries.
@@ -5818,6 +5827,7 @@ effectFilters effect = case effect of
   -- The ObjectRef's Filter is a position a card author writes, so the lint
   -- reaches it, as PutCounters' does.
   Effect.Explore ref -> frame SourceHostFramed (objectRefFilters ref)
+  Effect.Assemble ref -> foldMap (frame SourceHostFramed . objectRefFilters) ref
   Effect.ArrangeInLibrary ref -> frame SourceHostFramed (objectRefFilters ref)
   Effect.Connive (Connive.MkConnive quantity ref) -> frame Unframed (quantityFilters quantity) <> frame SourceHostFramed (objectRefFilters ref)
   -- The These arm's ref carries a Filter a card author writes -- Amnesia's

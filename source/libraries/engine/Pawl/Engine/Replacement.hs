@@ -187,6 +187,7 @@ asZoneChange event = case event of
   ProposedEvent.WouldFlipCoin {} -> Nothing
   ProposedEvent.WouldRollDice _ -> Nothing
   ProposedEvent.WouldProliferate {} -> Nothing
+  ProposedEvent.WouldAssemble {} -> Nothing
   ProposedEvent.WouldScry {} -> Nothing
   ProposedEvent.WouldFaceVillainousChoice {} -> Nothing
 
@@ -719,6 +720,7 @@ affected event = case event of
   ProposedEvent.WouldFlipCoin pid _ -> ([], [pid])
   ProposedEvent.WouldRollDice roll -> ([], [DiceRoll.roller roll])
   ProposedEvent.WouldProliferate pid _ -> ([], [pid])
+  ProposedEvent.WouldAssemble assembler pid _ -> (Maybe.maybeToList assembler, [pid])
   ProposedEvent.WouldScry pid _ -> ([], [pid])
   ProposedEvent.WouldFaceVillainousChoice pid _ -> ([], [pid])
 
@@ -955,6 +957,12 @@ matchesPrinted viewOf gs event candidate =
         -- VillainousChoiceRewrite.AdditionalTime always changes the count.
         (ReplacementEffect.VillainousChoiceR (VillainousChoiceR.MkVillainousChoiceR whose _), ProposedEvent.WouldFaceVillainousChoice pid _) ->
           matchesPlayer gs candidate whose pid
+        -- The Unstable FAQ with CR 614.1a: the permanent assembling, judged by
+        -- the row's Filter (Steamflogger Boss's "a Rigger you control"). An
+        -- instruction a player carries out names no permanent, so no row of
+        -- this shape reaches it. No `admits`: doubling always changes the count.
+        (ReplacementEffect.AssembleR matching, ProposedEvent.WouldAssemble (Just oid) _ _) ->
+          matchesFiltered viewOf gs candidate matching oid
         -- Every row below falls through to False because an arm ABOVE already
         -- matches every event of that class: a row below fires only for a
         -- MISMATCHED class, where False is the correct answer rather than a
@@ -977,6 +985,7 @@ matchesPrinted viewOf gs event candidate =
         (ReplacementEffect.ProliferateR {}, _) -> False
         (ReplacementEffect.ScryR {}, _) -> False
         (ReplacementEffect.VillainousChoiceR {}, _) -> False
+        (ReplacementEffect.AssembleR {}, _) -> False
         (ReplacementEffect.PhaseR _, _) -> False
 
 -- CR 614.1a: would this rewrite actually change the loss? `admits` and `unspent`
@@ -1932,6 +1941,7 @@ bucketOfEffect re = case re of
   ReplacementEffect.ProliferateR {} -> ReplacementBucket.Other
   ReplacementEffect.ScryR {} -> ReplacementBucket.Other
   ReplacementEffect.VillainousChoiceR {} -> ReplacementBucket.Other
+  ReplacementEffect.AssembleR {} -> ReplacementBucket.Other
   -- CR 616.1a-d are all about entries and copies; a skip is none of those, so it
   -- falls to CR 616.1e.
   ReplacementEffect.PhaseR _ -> ReplacementBucket.Other
@@ -2211,6 +2221,7 @@ readsApplier re = case re of
   -- The facing seat is the one the EVENT named and the extra facing is the
   -- effect's own field. ProliferateR's answer, and for its reason.
   ReplacementEffect.VillainousChoiceR (VillainousChoiceR.MkVillainousChoiceR _ VillainousChoiceRewrite.AdditionalTime) -> False
+  ReplacementEffect.AssembleR {} -> False
   -- CR 614.10: a skip replaces the step or phase with nothing. The player it is
   -- ABOUT is baked into PhasePattern.whosePhase, on the EFFECT, where this
   -- comparison already sees it.
@@ -2269,6 +2280,7 @@ readsSource effect = case effect of
   ReplacementEffect.ProliferateR {} -> False
   ReplacementEffect.ScryR {} -> False
   ReplacementEffect.VillainousChoiceR {} -> False
+  ReplacementEffect.AssembleR {} -> False
   ReplacementEffect.PhaseR _ -> False
 
 -- CR 616.1: the affected object's controller (or its owner if it has none), or
@@ -2458,6 +2470,10 @@ affectedChooserOf gs event = case event of
   ProposedEvent.WouldScry pid _ -> Just pid
   -- CR 616.1 / 701.55a: the player facing the choice, WouldScry's answer.
   ProposedEvent.WouldFaceVillainousChoice pid _ -> Just pid
+  -- CR 616.1 with the Unstable FAQ: the assembling player, whose Contraption
+  -- deck and sprockets the instruction is about -- the Rigger's controller where
+  -- a Rigger assembles.
+  ProposedEvent.WouldAssemble _ pid _ -> Just pid
 
 -- CR 208.2b / 707.2: stamp a chosen entry shape into the object's copiable
 -- snapshot. Power and toughness are SET; keywords are UNIONED into whatever is
@@ -3682,6 +3698,7 @@ contestedResource gs candidate = case ReplacementCandidate.effect candidate of
   ReplacementEffect.ProliferateR {} -> Nothing
   ReplacementEffect.ScryR {} -> Nothing
   ReplacementEffect.VillainousChoiceR {} -> Nothing
+  ReplacementEffect.AssembleR {} -> Nothing
   ReplacementEffect.PhaseR _ -> Nothing
 
 asDamageEvent :: ProposedEvent -> Maybe DamageEvent.DamageEvent
@@ -3704,6 +3721,7 @@ asDamageEvent event = case event of
   ProposedEvent.WouldFlipCoin {} -> Nothing
   ProposedEvent.WouldRollDice _ -> Nothing
   ProposedEvent.WouldProliferate {} -> Nothing
+  ProposedEvent.WouldAssemble {} -> Nothing
   ProposedEvent.WouldScry {} -> Nothing
   ProposedEvent.WouldFaceVillainousChoice {} -> Nothing
 
@@ -3727,6 +3745,7 @@ asDestruction event = case event of
   ProposedEvent.WouldFlipCoin {} -> Nothing
   ProposedEvent.WouldRollDice _ -> Nothing
   ProposedEvent.WouldProliferate {} -> Nothing
+  ProposedEvent.WouldAssemble {} -> Nothing
   ProposedEvent.WouldScry {} -> Nothing
   ProposedEvent.WouldFaceVillainousChoice {} -> Nothing
 
@@ -3752,6 +3771,7 @@ asUntap event = case event of
   ProposedEvent.WouldFlipCoin {} -> Nothing
   ProposedEvent.WouldRollDice _ -> Nothing
   ProposedEvent.WouldProliferate {} -> Nothing
+  ProposedEvent.WouldAssemble {} -> Nothing
   ProposedEvent.WouldScry {} -> Nothing
   ProposedEvent.WouldFaceVillainousChoice {} -> Nothing
 
@@ -3765,6 +3785,7 @@ asDraw event = case event of
   ProposedEvent.WouldFlipCoin {} -> Nothing
   ProposedEvent.WouldRollDice _ -> Nothing
   ProposedEvent.WouldProliferate {} -> Nothing
+  ProposedEvent.WouldAssemble {} -> Nothing
   ProposedEvent.WouldScry {} -> Nothing
   ProposedEvent.WouldFaceVillainousChoice {} -> Nothing
   ProposedEvent.WouldChangeZone {} -> Nothing
@@ -3790,6 +3811,7 @@ asDrawCount event = case event of
   ProposedEvent.WouldFlipCoin {} -> Nothing
   ProposedEvent.WouldRollDice _ -> Nothing
   ProposedEvent.WouldProliferate {} -> Nothing
+  ProposedEvent.WouldAssemble {} -> Nothing
   ProposedEvent.WouldScry {} -> Nothing
   ProposedEvent.WouldFaceVillainousChoice {} -> Nothing
   ProposedEvent.WouldDraw _ -> Nothing
@@ -3819,6 +3841,7 @@ asMillCount event = case event of
   ProposedEvent.WouldFlipCoin {} -> Nothing
   ProposedEvent.WouldRollDice _ -> Nothing
   ProposedEvent.WouldProliferate {} -> Nothing
+  ProposedEvent.WouldAssemble {} -> Nothing
   ProposedEvent.WouldScry {} -> Nothing
   ProposedEvent.WouldFaceVillainousChoice {} -> Nothing
   ProposedEvent.WouldDraw _ -> Nothing
@@ -3840,6 +3863,7 @@ asCoinFlip event = case event of
   ProposedEvent.WouldFlipCoin pid n -> Just (pid, n)
   ProposedEvent.WouldRollDice _ -> Nothing
   ProposedEvent.WouldProliferate {} -> Nothing
+  ProposedEvent.WouldAssemble {} -> Nothing
   ProposedEvent.WouldScry {} -> Nothing
   ProposedEvent.WouldFaceVillainousChoice {} -> Nothing
   ProposedEvent.WouldDrawCards {} -> Nothing
@@ -3866,6 +3890,7 @@ asDiceRoll event = case event of
   ProposedEvent.WouldRollDice roll -> Just roll
   ProposedEvent.WouldFlipCoin {} -> Nothing
   ProposedEvent.WouldProliferate {} -> Nothing
+  ProposedEvent.WouldAssemble {} -> Nothing
   ProposedEvent.WouldScry {} -> Nothing
   ProposedEvent.WouldFaceVillainousChoice {} -> Nothing
   ProposedEvent.WouldDrawCards {} -> Nothing
@@ -3890,6 +3915,7 @@ asScry :: ProposedEvent -> Maybe (PlayerId, Natural)
 asScry event = case event of
   ProposedEvent.WouldScry pid n -> Just (pid, n)
   ProposedEvent.WouldProliferate {} -> Nothing
+  ProposedEvent.WouldAssemble {} -> Nothing
   ProposedEvent.WouldFaceVillainousChoice {} -> Nothing
   ProposedEvent.WouldRollDice _ -> Nothing
   ProposedEvent.WouldFlipCoin {} -> Nothing
@@ -3914,8 +3940,36 @@ asScry event = case event of
 asProliferate :: ProposedEvent -> Maybe (PlayerId, Natural)
 asProliferate event = case event of
   ProposedEvent.WouldProliferate pid n -> Just (pid, n)
+  ProposedEvent.WouldAssemble {} -> Nothing
   ProposedEvent.WouldScry {} -> Nothing
   ProposedEvent.WouldFaceVillainousChoice {} -> Nothing
+  ProposedEvent.WouldRollDice _ -> Nothing
+  ProposedEvent.WouldFlipCoin {} -> Nothing
+  ProposedEvent.WouldDrawCards {} -> Nothing
+  ProposedEvent.WouldMillCards {} -> Nothing
+  ProposedEvent.WouldDraw _ -> Nothing
+  ProposedEvent.WouldChangeZone {} -> Nothing
+  ProposedEvent.WouldEnter _ -> Nothing
+  ProposedEvent.WouldDealDamage _ -> Nothing
+  ProposedEvent.WouldBeDestroyed {} -> Nothing
+  ProposedEvent.WouldPutCounters {} -> Nothing
+  ProposedEvent.WouldPutPlayerCounters {} -> Nothing
+  ProposedEvent.WouldCreateTokens {} -> Nothing
+  ProposedEvent.WouldBeginPhase {} -> Nothing
+  ProposedEvent.WouldTurnFaceUp {} -> Nothing
+  ProposedEvent.WouldUntap _ -> Nothing
+  ProposedEvent.WouldLoseLife {} -> Nothing
+  ProposedEvent.WouldGainLife {} -> Nothing
+
+-- The Unstable FAQ: the assembling permanent, the assembling player and how many
+-- Contraptions they assemble once CR 616.1's loop has settled the instruction.
+-- asProliferate's shape.
+asAssemble :: ProposedEvent -> Maybe (Maybe ObjectId, PlayerId, Natural)
+asAssemble event = case event of
+  ProposedEvent.WouldAssemble assembler pid n -> Just (assembler, pid, n)
+  ProposedEvent.WouldFaceVillainousChoice {} -> Nothing
+  ProposedEvent.WouldProliferate {} -> Nothing
+  ProposedEvent.WouldScry {} -> Nothing
   ProposedEvent.WouldRollDice _ -> Nothing
   ProposedEvent.WouldFlipCoin {} -> Nothing
   ProposedEvent.WouldDrawCards {} -> Nothing
@@ -3940,6 +3994,7 @@ asVillainousChoice :: ProposedEvent -> Maybe (PlayerId, Natural)
 asVillainousChoice event = case event of
   ProposedEvent.WouldFaceVillainousChoice pid n -> Just (pid, n)
   ProposedEvent.WouldProliferate {} -> Nothing
+  ProposedEvent.WouldAssemble {} -> Nothing
   ProposedEvent.WouldScry {} -> Nothing
   ProposedEvent.WouldRollDice _ -> Nothing
   ProposedEvent.WouldFlipCoin {} -> Nothing
@@ -3979,6 +4034,7 @@ asCounters event = case event of
   ProposedEvent.WouldFlipCoin {} -> Nothing
   ProposedEvent.WouldRollDice _ -> Nothing
   ProposedEvent.WouldProliferate {} -> Nothing
+  ProposedEvent.WouldAssemble {} -> Nothing
   ProposedEvent.WouldScry {} -> Nothing
   ProposedEvent.WouldFaceVillainousChoice {} -> Nothing
 
@@ -4005,6 +4061,7 @@ asPlayerCounters event = case event of
   ProposedEvent.WouldFlipCoin {} -> Nothing
   ProposedEvent.WouldRollDice _ -> Nothing
   ProposedEvent.WouldProliferate {} -> Nothing
+  ProposedEvent.WouldAssemble {} -> Nothing
   ProposedEvent.WouldScry {} -> Nothing
   ProposedEvent.WouldFaceVillainousChoice {} -> Nothing
 
@@ -4033,6 +4090,7 @@ asLifeLoss event = case event of
   ProposedEvent.WouldFlipCoin {} -> Nothing
   ProposedEvent.WouldRollDice _ -> Nothing
   ProposedEvent.WouldProliferate {} -> Nothing
+  ProposedEvent.WouldAssemble {} -> Nothing
   ProposedEvent.WouldScry {} -> Nothing
   ProposedEvent.WouldFaceVillainousChoice {} -> Nothing
 
@@ -4058,6 +4116,7 @@ asLifeGain event = case event of
   ProposedEvent.WouldFlipCoin {} -> Nothing
   ProposedEvent.WouldRollDice _ -> Nothing
   ProposedEvent.WouldProliferate {} -> Nothing
+  ProposedEvent.WouldAssemble {} -> Nothing
   ProposedEvent.WouldScry {} -> Nothing
   ProposedEvent.WouldFaceVillainousChoice {} -> Nothing
 
@@ -4081,6 +4140,7 @@ asTokens event = case event of
   ProposedEvent.WouldFlipCoin {} -> Nothing
   ProposedEvent.WouldRollDice _ -> Nothing
   ProposedEvent.WouldProliferate {} -> Nothing
+  ProposedEvent.WouldAssemble {} -> Nothing
   ProposedEvent.WouldScry {} -> Nothing
   ProposedEvent.WouldFaceVillainousChoice {} -> Nothing
 
@@ -4285,5 +4345,6 @@ asPhaseBegin event = case event of
   ProposedEvent.WouldFlipCoin {} -> Nothing
   ProposedEvent.WouldRollDice _ -> Nothing
   ProposedEvent.WouldProliferate {} -> Nothing
+  ProposedEvent.WouldAssemble {} -> Nothing
   ProposedEvent.WouldScry {} -> Nothing
   ProposedEvent.WouldFaceVillainousChoice {} -> Nothing

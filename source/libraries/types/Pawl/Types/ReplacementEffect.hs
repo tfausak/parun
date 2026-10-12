@@ -8,6 +8,8 @@ import qualified Pawl.Types.DieRollR as DieRollR
 import qualified Pawl.Types.DrawCountR as DrawCountR
 import qualified Pawl.Types.DrawR as DrawR
 import qualified Pawl.Types.EntryR as EntryR
+import qualified Pawl.Types.Filter as Filter
+import qualified Pawl.Types.Keyword as Keyword
 import qualified Pawl.Types.LifeGainR as LifeGainR
 import qualified Pawl.Types.LifeLossR as LifeLossR
 import qualified Pawl.Types.MillCountR as MillCountR
@@ -206,5 +208,11 @@ data ReplacementEffect card ability effect
   | -- | CR 701.55c / 614.1a: "if an opponent would face a villainous choice, they
     -- face that choice an additional time" (The Valeyard).
     VillainousChoiceR VillainousChoiceR.VillainousChoiceR
+  | -- | The Unstable FAQ with CR 614.1a: "if a Rigger you control would assemble
+    -- a Contraption, it assembles two Contraptions instead" (Steamflogger Boss),
+    -- the Filter judging the permanent that assembles. No rewrite field: the
+    -- doubling is the one rewrite any card prints for the event (Scryfall
+    -- o:"would assemble", 2026-10-12, Steamflogger Boss alone).
+    AssembleR (Filter.Filter Keyword.Keyword)
   | PhaseR PhasePattern.PhasePattern
   deriving (Eq, Ord, Show)

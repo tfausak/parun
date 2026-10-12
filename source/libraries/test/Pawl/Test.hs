@@ -677,6 +677,7 @@ import qualified Pawl.CompanionSpec
 import qualified Pawl.ConditionSpec
 import qualified Pawl.ConjureSpec
 import qualified Pawl.ConspiracySpec
+import qualified Pawl.ContraptionSpec
 import qualified Pawl.CopySpec
 import qualified Pawl.CoreSpec
 import qualified Pawl.CostSpec
@@ -1540,6 +1541,7 @@ spec s registry = do
   Pawl.ConditionSpec.spec s registry
   Pawl.ConjureSpec.spec s registry
   Pawl.ConspiracySpec.spec s registry
+  Pawl.ContraptionSpec.spec s registry
   Pawl.AnteSpec.spec s registry
   Pawl.StickerSpec.spec s registry
   Pawl.CopySpec.spec s registry

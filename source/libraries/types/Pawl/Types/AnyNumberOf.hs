@@ -19,4 +19,7 @@ data AnyNumberOf
   | -- | CR 701.9b / 107.1c: the cards in the asked seat's own hand it discards
     -- (Pawl.Types.AnyNumberDiscard).
     ToDiscard
+  | -- | The Unstable FAQ: the Contraptions on the sprocket the CRANK! counter
+    -- reached that their controller cranks.
+    ToCrank
   deriving (Bounded, Enum, Eq, Ord, Show)

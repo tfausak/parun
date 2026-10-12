@@ -129,6 +129,6 @@ assign record pcs gs =
    in do
         Monad.forM_ order $ \pid ->
           Monad.forM_ (theirs pid) $ \oid -> do
-            picked <- Game.chooseAmong (\decider who -> Prompt.ChooseSector decider who oid) pid (NonEmpty.toList Sector.sectors)
+            picked <- Game.chooseAmong (\decider who -> Prompt.ChooseDesignation decider who oid) pid (NonEmpty.toList Sector.sectors)
             Monad.forM_ picked (State.modify' . stamp oid)
         pure (not (all (null . theirs) order))

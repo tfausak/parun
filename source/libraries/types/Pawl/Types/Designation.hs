@@ -9,7 +9,8 @@ module Pawl.Types.Designation where
 -- payload rather than a field, an opcode and a read atom apiece
 -- (Pawl.Types.Object's `designations`, Effect.Designate,
 -- Quantity.HasDesignation, Filter.HasDesignation). CR 702.158b makes its three
--- sectors permanent-only and not copiable too, so they join them.
+-- sectors permanent-only and not copiable too, so they join them, and so do the
+-- Unstable FAQ's three sprockets, which only an assembled Contraption has.
 --
 -- WHERE THE MARK ENDS is the one axis they do not share, and it is a sweep
 -- rather than a field: all but saddled and the sectors last until the permanent
@@ -113,4 +114,11 @@ data Designation
     BetaSector
   | -- | CR 702.158b: the gamma sector.
     GammaSector
+  | -- | The Unstable FAQ's first sprocket, which a Contraption is assembled
+    -- onto; CR 701.45a leaves it out of the rules.
+    Sprocket1
+  | -- | The Unstable FAQ's second sprocket.
+    Sprocket2
+  | -- | The Unstable FAQ's third sprocket, where the CRANK! counter starts.
+    Sprocket3
   deriving (Bounded, Enum, Eq, Ord, Show)

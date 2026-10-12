@@ -673,6 +673,7 @@ rewriteEffect pairs effect = case effect of
   Effect.Fateseal x -> Effect.Fateseal (rewritePlayerQuantity pairs x)
   Effect.Clash {} -> effect
   Effect.Explore ref -> Effect.Explore (rewriteObjectRef pairs ref)
+  Effect.Assemble ref -> Effect.Assemble (fmap (rewriteObjectRef pairs) ref)
   Effect.ArrangeInLibrary ref -> Effect.ArrangeInLibrary (rewriteObjectRef pairs ref)
   Effect.Connive (Connive.MkConnive quantity ref) -> Effect.Connive (Connive.MkConnive (rewriteQuantity pairs quantity) (rewriteObjectRef pairs ref))
   -- The These arm's ref carries a Filter, so rule 612's text change reaches it
@@ -1525,6 +1526,9 @@ rewriteReplacementEffect pairs effect = case effect of
   ReplacementEffect.ProliferateR {} -> effect
   ReplacementEffect.ScryR {} -> effect
   ReplacementEffect.VillainousChoiceR {} -> effect
+  -- The Unstable FAQ: an AssembleR's Filter names a subtype (Steamflogger Boss's
+  -- Rigger), which CR 612.1's text change reaches.
+  ReplacementEffect.AssembleR matching -> ReplacementEffect.AssembleR (Filter.rewrite pairs matching)
   -- A DrawR's pattern is one CR 109.5 relation, but the REWRITE can hold CR 400.11c's
   -- wish filter, which rewriteEffect's own Effect.FromOutsideTheGame arm swaps on
   -- the resolution road -- so it has to be swapped here too, or the same sentence

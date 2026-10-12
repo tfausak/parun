@@ -27,6 +27,7 @@ import qualified Pawl.Engine.Vanguard as Vanguard
 import qualified Pawl.Extra.Natural as Natural
 import qualified Pawl.Types.CardIdentity as CardIdentity
 import qualified Pawl.Types.Deck as Deck
+import qualified Pawl.Types.Designation as Designation
 import qualified Pawl.Types.Emperors as Emperors
 import qualified Pawl.Types.EndTurnSignal as EndTurnSignal
 import qualified Pawl.Types.EventGroup as EventGroup
@@ -209,7 +210,10 @@ gameWith settings order =
               -- CR 116.2g's "only if they haven't done so yet this game": nobody
               -- has, the game not having started.
               Player.companionTaken = False,
-              Player.graveyardOrder = GraveyardOrder.Indifferent
+              Player.graveyardOrder = GraveyardOrder.Indifferent,
+              -- The Unstable FAQ: "at the start of the game, put a CRANK!
+              -- counter on Sprocket 3".
+              Player.crankCounter = Designation.Sprocket3
             }
         )
    in GameState.MkGameState

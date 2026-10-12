@@ -21,4 +21,7 @@ data PermanentAction
     Connive
   | -- | CR 701.27b: a face-up permanent was turned face down (CR 708.2).
     TurnFaceDown
+  | -- | The Unstable FAQ: its controller cranked this Contraption, as the CRANK!
+    -- counter reached its sprocket (Pawl.Engine.Contraption.crank).
+    Crank
   deriving (Bounded, Enum, Eq, Ord, Show)

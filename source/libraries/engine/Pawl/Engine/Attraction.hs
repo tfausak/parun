@@ -1,11 +1,13 @@
 -- | CR 717 and CR 701.51: a player's Attraction deck and opening an Attraction
--- from it. Rolling to visit (CR 701.52) is a die roll and lives with the CR 706
+-- from it, and the move off the top of a supplementary deck that the Unstable
+-- FAQ's assemble shares with it (Pawl.Engine.Contraption). Rolling to visit (CR 701.52) is a die roll and lives with the CR 706
 -- pipeline in Pawl.Engine.Resolve.Effect; Pawl.Engine.Engine runs it as CR
 -- 703.4g's turn-based action.
 module Pawl.Engine.Attraction where
 
 import qualified Control.Monad as Monad
 import qualified Control.Monad.Trans.State.Strict as State
+import qualified Data.Foldable as Foldable
 import qualified Data.Set as Set
 import Numeric.Natural (Natural)
 import qualified Pawl.Engine.Event as Event
@@ -28,30 +30,39 @@ import qualified Pawl.Types.Zone as Zone
 deckOf :: PlayerId -> GameState.GameState -> [ObjectId]
 deckOf = Game.sideDeckOf SideDeck.Attraction
 
--- | CR 717.4: does this player control an Attraction? Read off the projection,
--- the subtype being a characteristic.
-controlsAttraction :: PlayerId -> GameState.GameState -> Bool
-controlsAttraction pid gs = any (\oid -> Set.member Subtype.Attraction (Projection.subtypesOf oid gs)) (Projection.controls pid gs)
+-- | CR 717.4 and the Unstable FAQ: does this player control a permanent of this
+-- subtype -- an Attraction for the roll to visit, a Contraption for the crank?
+-- Read off the projection, the subtype being a characteristic.
+controlsSubtype :: Subtype.Subtype -> PlayerId -> GameState.GameState -> Bool
+controlsSubtype subtype pid gs = any (\oid -> Set.member subtype (Projection.subtypesOf oid gs)) (Projection.controls pid gs)
 
 -- | CR 701.51b: move the top card of this player's Attraction deck onto the
--- battlefield under their control. Through Event.changeZoneEntering, so an
--- entry replacement or prohibition applies as to any other entry (CR 701.51c).
--- An empty deck opens nothing (CR 609.3). GameEvent.PlayerActed is
--- recorded only when the card reached the battlefield, since an entry prevented
--- or replaced opens nothing that triggers (CR 701.51c).
+-- battlefield under their control. GameEvent.PlayerActed is recorded only when
+-- the card reached the battlefield, since an entry prevented or replaced opens
+-- nothing that triggers (CR 701.51c).
 open :: PlayerId -> Game ()
 open pid = do
+  entered <- enterTop SideDeck.Attraction pid
+  Monad.unless (null entered) $
+    State.modify' (Event.recordEvent (GameEvent.PlayerActed (PlayerActed.MkPlayerActed PlayerAction.OpenAttraction pid)))
+
+-- | CR 701.51b and the Unstable FAQ's assemble: move the top card of this
+-- player's deck of this kind onto the battlefield under their control, answering
+-- what reached it. Through Event.changeZoneEntering, so an entry replacement or
+-- prohibition applies as to any other entry (CR 701.51c). An empty deck moves
+-- nothing (CR 609.3; the FAQ for an empty Contraption deck).
+enterTop :: SideDeck.SideDeck -> PlayerId -> Game [ObjectId]
+enterTop kind pid = do
   gs <- State.get
-  case deckOf pid gs of
-    [] -> pure ()
+  case Game.sideDeckOf kind pid gs of
+    [] -> pure []
     top : _ -> do
       entered <- Event.changeZoneEntering top Zone.Battlefield LibraryPosition.defaultValue riders (Just pid)
       after <- State.get
-      Monad.when (any (`Set.member` GameState.battlefield after) entered) $
-        State.modify' (Event.recordEvent (GameEvent.PlayerActed (PlayerActed.MkPlayerActed PlayerAction.OpenAttraction pid)))
+      pure (filter (`Set.member` GameState.battlefield after) (Foldable.toList entered))
 
--- CR 701.51b states no riders: the Attraction enters untapped, face up and
--- with no counters.
+-- CR 701.51b states no riders, nor does the FAQ's assemble: the card enters
+-- untapped, face up and with no counters.
 riders :: EntryRiders.EntryRiders Natural ability
 riders =
   EntryRiders.defaultValue

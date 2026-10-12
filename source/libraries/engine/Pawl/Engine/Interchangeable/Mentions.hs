@@ -1250,6 +1250,7 @@ effectNames asking onCard onAbility x = case x of
   Effect.Fateseal playerQuantity -> playerQuantityNames asking playerQuantity
   Effect.Clash slotName -> slotNames asking slotName
   Effect.Explore objectRef -> objectRefNames asking objectRef
+  Effect.Assemble objectRef -> any (objectRefNames asking) objectRef
   Effect.Connive connive -> conniveNames asking connive
   Effect.Discard discard -> discardNames asking discard
   Effect.LoseLife lifeLoss -> lifeLossNames asking lifeLoss
@@ -2475,6 +2476,7 @@ replacementEffectNames asking onCard onAbility onEffect x = case x of
   ReplacementEffect.ProliferateR proliferateR -> proliferateRNames asking proliferateR
   ReplacementEffect.ScryR scryR -> scryRNames asking scryR
   ReplacementEffect.VillainousChoiceR villainousChoiceR -> villainousChoiceRNames asking villainousChoiceR
+  ReplacementEffect.AssembleR matching -> filterNames asking matching
   ReplacementEffect.PhaseR _phasePattern -> False
 
 requireAttackNames :: Asking -> RequireAttack.RequireAttack -> Bool

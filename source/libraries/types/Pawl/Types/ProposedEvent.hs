@@ -261,4 +261,8 @@ data ProposedEvent
   | -- | CR 701.55a / 701.55c: this player would face a villainous choice this many
     -- times. Raised once per facing seat by Pawl.Engine.Resolve.villainousPass.
     WouldFaceVillainousChoice PlayerId.PlayerId Natural.Natural
+  | -- | The Unstable FAQ: this player would assemble this many Contraptions, the
+    -- permanent assembling them named where one is (a Rigger's "it assembles").
+    -- Raised once per instruction by Pawl.Engine.Contraption.assemble.
+    WouldAssemble (Maybe ObjectId.ObjectId) PlayerId.PlayerId Natural.Natural
   deriving (Eq, Ord, Show)

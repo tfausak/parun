@@ -35,6 +35,7 @@ import qualified Pawl.Engine.Cloak as Cloak
 import qualified Pawl.Engine.Coin as Coin
 import qualified Pawl.Engine.Combat as Combat
 import qualified Pawl.Engine.Condition as Condition
+import qualified Pawl.Engine.Contraption as Contraption
 import qualified Pawl.Engine.Cost as Cost
 import qualified Pawl.Engine.CounterRestriction as CounterRestriction
 import qualified Pawl.Engine.Damage as Damage
@@ -378,6 +379,7 @@ import qualified Pawl.Types.SetHalfLocked as SetHalfLocked
 import qualified Pawl.Types.SetOwner as SetOwner
 import qualified Pawl.Types.ShuffleIntoLibrary as ShuffleIntoLibrary
 import qualified Pawl.Types.Sickness as Sickness
+import qualified Pawl.Types.SideDeck as SideDeck
 import qualified Pawl.Types.SkipNextPhase as SkipNextPhase
 import Pawl.Types.SlotName (SlotName)
 import qualified Pawl.Types.Source as Source
@@ -2057,6 +2059,7 @@ referentsOfReplacement re = case re of
   ReplacementEffect.ProliferateR _ -> []
   ReplacementEffect.ScryR _ -> []
   ReplacementEffect.VillainousChoiceR _ -> []
+  ReplacementEffect.AssembleR _ -> []
   ReplacementEffect.PhaseR _ -> []
 
 -- The recipients a damage REWRITE bakes, which is CR 614.9's redirect destination
@@ -3494,6 +3497,8 @@ effectIsImpossible resolving source controller legal gs effect = case effect of
   Effect.TemptWithTheRing {} -> False
   -- CR 609.3: an empty Attraction deck opens nothing.
   Effect.OpenAttraction -> null (Attraction.deckOf controller gs)
+  -- The Unstable FAQ: assembling from an empty Contraption deck does nothing.
+  Effect.Assemble _ -> null (Game.sideDeckOf SideDeck.Contraption controller gs)
   -- CR 701.31a: only the planar controller of a Planechase game planeswalks.
   Effect.Planeswalk -> not (Planechase.canPlaneswalk controller gs)
   -- CR 701.33a: only a face-up ongoing scheme may be abandoned.
@@ -4592,7 +4597,7 @@ applyOneEffect runSubgame resolving source controller legal chosen effect = case
   -- posture, for the following instruction's Filter.IsBound. An empty sector
   -- binds nothing, so that instruction acts on nothing (CR 101.3).
   Effect.ChooseSector slot -> do
-    picked <- Game.chooseAmong (\decider who -> Prompt.ChooseSector decider who source) controller (NonEmpty.toList Sector.sectors)
+    picked <- Game.chooseAmong (\decider who -> Prompt.ChooseDesignation decider who source) controller (NonEmpty.toList Sector.sectors)
     Monad.forM_ picked $ \sector -> do
       gs <- State.get
       let inSector oid = maybe False (Set.member sector . Object.designations) (Game.lookupObject oid gs)
@@ -9650,6 +9655,13 @@ applyOneEffect runSubgame resolving source controller legal chosen effect = case
   -- Pawl.Engine.Ring.tempt's.
   Effect.TemptWithTheRing -> Ring.tempt controller
   Effect.OpenAttraction -> Attraction.open controller
+  -- The Unstable FAQ: the assembling permanent is the one the ObjectRef names
+  -- as this instruction is reached (CR 608.2c), or none where the player
+  -- assembles; Steamflogger Boss's row reads it.
+  Effect.Assemble ref -> do
+    gs <- State.get
+    let assembler = ref >>= \r -> Maybe.listToMaybe (Maybe.mapMaybe Recipient.objectOf (objectRefRecipients legal resolving controller source gs r))
+    Contraption.assemble assembler controller
   Effect.Planeswalk -> Planechase.planeswalk controller
   Effect.Abandon -> Archenemy.abandon source
   -- CR 702.159b: the prize's actions are the effects after this one, so the
