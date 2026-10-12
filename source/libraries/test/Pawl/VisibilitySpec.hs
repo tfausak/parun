@@ -57,8 +57,9 @@ spec s registry = Spec.describe s "Pawl.Engine.Visibility" $ do
     Spec.assertEqWith s "alice sees her top card" (Visibility.sees S.alice top looked) Visibility.Type.Visible
     Spec.assertEqWith s "bob does not see alice's top card" (Visibility.sees S.bob top looked) Visibility.Type.Obscured
     Spec.assertEqWith s "alice does not see her second card" (Visibility.sees S.alice second looked) Visibility.Type.Obscured
-  -- CR 723.4: no priority point reaches a look made while controlled, so the
-  -- control row is written onto the state directly.
+  -- CR 723.4: a scenario reaches this only through Mindslaver and bob's next
+  -- turn, so the control row is written onto the state directly and the case
+  -- pins the look's audience alone.
   Spec.it s "a look while controlled is witnessed by the controller too" $ do
     let bob = (S.playerSetup S.bob) {Seat.library = Seq.fromList [S.aliased "top" (S.cardSetup "Grizzly Bears")]}
     built <- S.buildBoardOrFail s registry (S.board (S.playerSetup S.alice NonEmpty.:| [bob, S.playerSetup S.carol]) S.alice S.precombatMain)

@@ -2736,8 +2736,8 @@ votesAllowed pid gs =
 
 -- CR 701.25b: the grants letting `pid` look at cards beyond a surveil's own N
 -- (Enhanced Surveillance), each its source and its count. One per grant, so
--- each "may" is asked on its own: rule 701.25b makes no two such effects
--- redundant, and the card's ruling (2018-10-05) makes two of them four. Every
+-- each "may" is asked on its own: the card's ruling (2018-10-05) has both of
+-- two copies apply, making the extra cards four. Every
 -- row's source is an object, so the Maybe dropped here drops nothing.
 surveilExtra :: PlayerId -> GameState -> [(ObjectId, Natural)]
 surveilExtra pid gs =

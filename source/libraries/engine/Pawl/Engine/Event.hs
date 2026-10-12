@@ -8953,10 +8953,11 @@ shuffleAttractionDeck pid = do
 -- and the read is Pawl.Types.Filter's RepresentedByCard -- Hauntwoods Shrieker's
 -- "if it's a creature card", proved at Pawl.FaceDownSpec's CR 708.12 group.
 --
--- CR 708.9's departure reveal records the same projection, which is CR 708.2's
--- face-down one while the permanent is still on the battlefield. Its only
--- reader, FaceDownPermanentLeavesRevealed, reads the cause and never the
--- snapshot.
+-- A face-down permanent's reveal -- CR 708.9's departure, or Hauntwoods
+-- Shrieker's -- records the same projection, which is CR 708.2's nameless one.
+-- FaceDownPermanentLeavesRevealed reads only the cause, but the scenario view
+-- Witnessed reads the snapshot. Not implemented: the snapshot is that face
+-- rather than the card shown, so the log names nothing (#5013).
 reveal :: RevealCause.RevealCause -> PlayerId -> ObjectId -> Game ()
 reveal cause pid oid = do
   gs <- State.get
