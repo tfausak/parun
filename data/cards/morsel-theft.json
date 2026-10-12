@@ -95,7 +95,10 @@
                     "measured": {
                       "type": "CastUsing",
                       "value": {
-                        "type": "Prowl"
+                        "type": "OfFamily",
+                        "value": {
+                          "type": "Prowl"
+                        }
                       }
                     },
                     "threshold": {

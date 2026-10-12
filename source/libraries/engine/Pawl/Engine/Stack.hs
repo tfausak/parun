@@ -9,12 +9,14 @@ import qualified Data.Map.Strict as Map
 import qualified Data.Maybe as Maybe
 import qualified Data.Sequence as Seq
 import qualified Data.Set as Set
+import qualified Pawl.Engine.Activatable as Activatable
 import qualified Pawl.Engine.Binding as Binding
 import qualified Pawl.Engine.Card as Card
 import qualified Pawl.Engine.Combat as Combat
 import qualified Pawl.Engine.Condition as Condition
 import qualified Pawl.Engine.Decide as Decide
 import qualified Pawl.Engine.Event as Event
+import qualified Pawl.Engine.Event.Trigger as Trigger
 import qualified Pawl.Engine.Expiry as Expiry
 import qualified Pawl.Engine.Filter as Filter
 import qualified Pawl.Engine.Game as Game
@@ -26,16 +28,20 @@ import qualified Pawl.Engine.Resolve as Resolve
 import qualified Pawl.Engine.Resolve.Effect as Resolve
 import qualified Pawl.Types.ActivatedAbilitySource as ActivatedAbilitySource
 import qualified Pawl.Types.Affected as Affected
+import qualified Pawl.Types.Card as Card.Type
 import qualified Pawl.Types.CardType as CardType
 import qualified Pawl.Types.CarryOver as CarryOver
 import qualified Pawl.Types.Condition as Condition.Type
 import qualified Pawl.Types.ContinuousEffect as ContinuousEffect
 import qualified Pawl.Types.ControlDuration as ControlDuration
+import qualified Pawl.Types.Cost as Cost
 import qualified Pawl.Types.Duration as Duration
 import qualified Pawl.Types.EntryRiders as EntryRiders
+import qualified Pawl.Types.Expiry as Expiry.Type
 import qualified Pawl.Types.Facing as Facing
 import Pawl.Types.Game (Game)
 import qualified Pawl.Types.GameState as GameState
+import qualified Pawl.Types.GrantedAbility as GrantedAbility
 import qualified Pawl.Types.InherentTriggerSource as InherentTriggerSource
 import qualified Pawl.Types.Keyword as Keyword.Type
 import qualified Pawl.Types.LibraryPosition as LibraryPosition
@@ -438,6 +444,10 @@ resolveCardBacked runSubgame oid rest printingId = do
           -- status, the two things those branches differ in.
           entersAs seed facing = do
             Monad.void (Resolve.noteResolved oid (Resolve.spellController obj oid gs1))
+            -- CR 400.7b, stored against the spell so the move's CarryOver.Carried
+            -- re-keys it onto the permanent before CR 614.12's entry loop reads
+            -- it.
+            State.modify' (carryGrants oid)
             arrivals <- Event.changeZoneAttaching Nothing Set.empty oid Zone.Battlefield LibraryPosition.defaultValue seed (maybe TapState.Untapped EntryRiders.tapped sneak) Map.empty (Just controller) entering facing False CarryOver.Carried False Seq.empty
             -- AFTER the move, ninjutsu's ordering one opcode over
             -- (Pawl.Engine.Resolve.Effect's MoveToZone arm): the permanent has
@@ -541,6 +551,60 @@ resolveCardBacked runSubgame oid rest printingId = do
                           entersAs (enchantedBy oid gs1) Facing.FaceUp
     _ -> State.put gs {GameState.stack = rest}
 
+-- CR 400.7b: "effects from static abilities that grant an ability to a permanent
+-- spell that functions on the battlefield continue to apply to the permanent
+-- that spell becomes". Each such grant another object's static ability is making
+-- to the resolving spell is STORED against it, at that ability's timestamp (CR
+-- 613.7a), for Event.carryOver to re-key across the move -- the road a
+-- permission's rider already takes (Event.permissionRiders).
+--
+-- Expiry.Never is CR 611.3d's "if no duration is stated, it lasts until the
+-- end of the game": the grant outlives its source leaving, and a static
+-- ability states no duration of its own.
+--
+-- Only a grant `functionsOnBattlefield` passes is stored, which is the rule's
+-- "that functions on the battlefield": a prowl or a split second a spell was
+-- given stays behind. Pawl.PlanechaseSpec's "CR 400.7b" group proves both
+-- halves.
+carryGrants :: ObjectId -> GameState.GameState -> GameState.GameState
+carryGrants oid gs =
+  let subtypes = Projection.subtypesOf oid gs
+      row (src, ts, modification) =
+        ContinuousEffect.MkContinuousEffect
+          { ContinuousEffect.source = src,
+            ContinuousEffect.timestamp = ts,
+            ContinuousEffect.expiry = Expiry.Type.Never,
+            ContinuousEffect.modification = modification,
+            ContinuousEffect.affected = Affected.TheseObjects (Set.singleton oid)
+          }
+      rows = fmap row (filter (\(_, _, modification) -> functionsOnBattlefield subtypes modification) (Projection.staticPartsOn oid gs))
+   in if null rows then gs else gs {GameState.continuousEffects = GameState.continuousEffects gs <> rows}
+
+-- CR 400.7b's "an ability ... that functions on the battlefield", asked of one
+-- part of a grant. A keyword by Keyword.functionsOnBattlefield; a whole quoted
+-- ability by the CR 113.6 zone each of its kinds already answers -- a triggered
+-- ability's trigger conditions and effect (Trigger.zonesFunctionedIn), an
+-- activated ability's cost and effect (Activatable.functionsIn), a static
+-- ability's or replacement's stated zones -- with the default battlefield for a
+-- rules or player ability, and the stack for the three CR 113.6d puts there.
+-- Anything that is not an ability (a colour, a power) stops at the move: CR
+-- 400.7a carries only what spells and activated or triggered abilities did.
+functionsOnBattlefield :: Set.Set Subtype.Subtype -> Modification.Modification (GrantedAbility.GrantedAbility Card.Type.Card) -> Bool
+functionsOnBattlefield subtypes modification = case modification of
+  Modification.GainKeyword keyword -> Keyword.functionsOnBattlefield keyword
+  Modification.GainKeywordAtManaCost keyword -> Keyword.functionsOnBattlefield (Keyword.withCost keyword (Cost.MkCost Nothing []))
+  Modification.GainAbility ability -> case ability of
+    GrantedAbility.Triggered triggered -> Set.member Zone.Battlefield (Trigger.zonesFunctionedIn subtypes Map.empty triggered)
+    GrantedAbility.Activated activated -> Activatable.functionsIn Map.empty Zone.Battlefield activated
+    GrantedAbility.Static static -> Projection.functionsFromZone Zone.Battlefield static
+    GrantedAbility.Replacement replacement -> Projection.functionsFromZoneOfRow Zone.Battlefield replacement
+    GrantedAbility.Rules _ -> True
+    GrantedAbility.Player _ -> True
+    GrantedAbility.SelfCostReduction _ -> False
+    GrantedAbility.SelfAlternativeCost _ -> False
+    GrantedAbility.SelfSpendManaAsThough _ -> False
+  _ -> False
+
 -- What a spell's Object.castUsing record buys the permanent it becomes: CR
 -- 702.109a's, CR 702.152a's and CR 702.185a's delayed ability, and CR 702.62a's
 -- haste.
@@ -559,11 +623,18 @@ resolveCardBacked runSubgame oid rest printingId = do
 -- permanent and arms nothing, and the Aura branch arms like the other: both are
 -- rule 702.109a written out and unobserved, no dash, blitz or warp card in
 -- data/cards/ being an Aura or entering elsewhere.
+--
+-- ONLY WHILE THE SPELL STILL HAS THE KEYWORD IT WAS CAST FOR, read off its
+-- projection on the pre-move board: the delayed ability is that keyword's own
+-- static ability's, so a copy of a spell whose blitz an effect granted the
+-- original (CR 707.2) and a spell that lost its granted blitz before resolving
+-- arm nothing. Pawl.PlanechaseSpec's Double Major case proves it.
 armBecame :: ObjectId -> Object.Object -> GameState.GameState -> Seq.Seq ObjectId -> Game ()
 armBecame oid obj gs1 arrivals = do
   gs <- State.get
   let permanents = filter (\arrival -> fmap Object.zone (Game.lookupObject arrival gs) == Just Zone.Battlefield) (Foldable.toList arrivals)
-      ability = Keyword.resolutionDelayedAbility (Object.castUsing obj) >>= Keyword.mintedDelayedAbility
+      stillHas keyword = Map.member keyword (Projection.keywordsOf oid gs1)
+      ability = Keyword.resolutionDelayedAbility (Monad.mfilter stillHas (Object.castUsing obj)) >>= Keyword.mintedDelayedAbility
       arm delayed permanent = Event.armDelayed delayed oid (Resolve.spellController obj oid gs1) (Map.singleton Keyword.becameSlot (Binding.toObject permanent)) Onset.Immediately Nothing
   Foldable.for_ ability (\delayed -> State.modify' (\g -> List.foldl' (flip (arm delayed)) g permanents))
   -- CR 702.62a's last sentence, off the same record and at the same moment the

@@ -1012,6 +1012,20 @@ effectSourcesOn oids gs =
       applies oid c = affects (gSource c) oid (gAffected c) (project oid gs) gs
    in ListUtils.nubOrd [gSource c | oid <- oids, Maybe.isJust (Map.lookup oid (GameState.objects gs)), c <- cands, applies oid c]
 
+-- CR 400.7b: the parts OTHER objects' static abilities apply to `oid` right
+-- now, each with its source and the timestamp CR 613.7a gave it -- what a
+-- permanent spell is being granted as it resolves (Pawl.Engine.Stack.carryGrants).
+-- A stored effect (gEffect Nothing) is CR 400.7a's question, not this one's.
+staticPartsOn :: ObjectId -> GameState -> [(ObjectId, Timestamp, Modification)]
+staticPartsOn oid gs =
+  let pc = project oid gs
+   in [ (src, gTimestamp c, gModification c)
+      | c <- gather gs,
+        Just (src, _) <- [gEffect c],
+        src /= oid,
+        affects src oid (gAffected c) pc gs
+      ]
+
 -- CR 611.2c / 613: does the effect from `source` apply to `oid`, given the
 -- PARTIAL projection built by the layers below this one? CR 109.5: an
 -- affected-set filter's "you" is the SOURCE's controller. For callers OUTSIDE the

@@ -2367,7 +2367,7 @@ quantityNames asking x = case x of
   Quantity.WasForetold -> False
   Quantity.TributeWasPaid -> False
   Quantity.TimesPaid designator -> keywordDesignatorNames asking designator
-  Quantity.CastUsing _keywordFamily -> False
+  Quantity.CastUsing designator -> keywordDesignatorNames asking designator
   Quantity.TagWasSpent _productionTag -> False
   Quantity.TagWasSpentOfOwnColor _productionTag -> False
   Quantity.ChosenColorsItIs -> False

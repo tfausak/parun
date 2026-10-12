@@ -112,7 +112,7 @@ codec =
       Arm.payload "TimesPaid" (KeywordDesignator.codec Keyword.codec) Quantity.TimesPaid (\x -> case x of Quantity.TimesPaid y -> Just y; _ -> Nothing),
       -- CR 601.2b's candidate, with the keyword FAMILY on the wire: "if its evoke
       -- cost was paid" names the ability and never its cost.
-      Arm.payload "CastUsing" KeywordFamily.codec Quantity.CastUsing (\x -> case x of Quantity.CastUsing y -> Just y; _ -> Nothing),
+      Arm.payload "CastUsing" (KeywordDesignator.codec Keyword.codec) Quantity.CastUsing (\x -> case x of Quantity.CastUsing y -> Just y; _ -> Nothing),
       -- CR 107.4h's third sentence, with the TAG on the wire and the object
       -- still implicit: which production tag is asked about is the whole of what
       -- the card names, and the object is whichever one the quantity is

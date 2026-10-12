@@ -7490,6 +7490,10 @@ applyOneEffect runSubgame resolving source controller legal chosen effect = case
                       -- CR 707.10 copies the alternative cost, but a copy isn't
                       -- CAST, so it keeps evoke's record and not escape's.
                       Object.castUsing = Keyword.copiedCastUsing (Object.castUsing obj),
+                      -- CR 707.10: a copy isn't cast, so it was cast from no zone
+                      -- (Filter.WasCastFrom). Pawl.PlanechaseSpec's Double Major
+                      -- case is the proof.
+                      Object.castFrom = Nothing,
                       -- CR 702.143c's foretold spell is one that "was a foretold
                       -- card before it was cast", and a copy was neither a card
                       -- nor cast (CR 707.10), so it was not foretold.

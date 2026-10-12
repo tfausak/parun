@@ -72,7 +72,10 @@
                     "measured": {
                       "type": "CastUsing",
                       "value": {
-                        "type": "Overload"
+                        "type": "OfFamily",
+                        "value": {
+                          "type": "Overload"
+                        }
                       }
                     },
                     "threshold": {
@@ -107,7 +110,10 @@
                     "measured": {
                       "type": "CastUsing",
                       "value": {
-                        "type": "Overload"
+                        "type": "OfFamily",
+                        "value": {
+                          "type": "Overload"
+                        }
                       }
                     },
                     "threshold": {

@@ -2742,9 +2742,10 @@ clauseAppliesAt pid sid gs clause = case Clause.condition clause of
 --     601.2c's "alternative targets", Into the Flood Maw). Cast.castProposed's
 --     own clauseAppliesAt (the live, post-announcement read) judges the slots
 --     once the choice is in.
---   * Quantity.CastUsing family reads 1 exactly when `castFor`'s own family
---     matches, Pawl.Engine.Quantity's CastUsing arm's board read done here
---     without a board: `familyOf =<< castFor`. This is what SUBSUMES
+--   * Quantity.CastUsing reads 1 exactly when its designator names
+--     `castFor` -- by family, or the one instance (Keyword.designates) --
+--     Pawl.Engine.Quantity's CastUsing arm's board read done here without a
+--     board. This is what SUBSUMES
 --     Keyword.castOverloaded's old special case below -- Cyclonic Rift's two
 --     CastUsing Overload clauses (one at 0, one at >=1) trim the SAME way
 --     castOverloaded did, through the general mechanism rather than a keyword
@@ -2768,7 +2769,7 @@ candidateQuantity :: Maybe Keyword -> Integer -> Quantity.Quantity -> Maybe Inte
 candidateQuantity castFor paid q = case q of
   Quantity.Literal n -> Just n
   Quantity.TimesPaid _ -> Just paid
-  Quantity.CastUsing family -> Just (if (Keyword.familyOf =<< castFor) == Just family then 1 else 0)
+  Quantity.CastUsing designator -> Just (if any (Keyword.designates designator) castFor then 1 else 0)
   _ -> Nothing
 
 -- The TimesPaid readings the pre-announcement gates union over: every optional
@@ -3183,13 +3184,16 @@ castProposed perform spending pid oid sid face castFrom preparedFor keywordsBefo
                   -- candidates.
                   --
                   -- The FIRST match, and two candidates can only tie by being
-                  -- the same cost: a player choosing between two identical
-                  -- costs is making no choice pawl or the rules can tell apart
-                  -- (CR 601.2b announces a cost, not a candidate). Aftermath is
-                  -- the one shape that ties -- CR 702.127a's candidate is the
-                  -- printed cost, which a CR 601.3 permission offers again --
-                  -- and its exile is conditioned on the ZONE rather than on
-                  -- this tag, so the tie changes no answer.
+                  -- the same cost. In the pool aftermath is the one shape that
+                  -- ties -- CR 702.127a's candidate is the printed cost, which a
+                  -- CR 601.3 permission offers again -- and its exile is
+                  -- conditioned on the ZONE rather than on this tag, so that
+                  -- tie changes no answer.
+                  --
+                  -- Not implemented: telling apart two equal costs whose tags
+                  -- differ in consequence -- Henzie "Toolbox" Torre's blitz at
+                  -- the spell's own mana cost beside the printed cost -- which
+                  -- the prompt answers with a bare cost (#5044).
                   chosenCandidate = List.find ((== chosenCost) . CandidateCost.cost) payableCandidates
                   castFor = CandidateCost.keyword =<< chosenCandidate
                   -- CR 601.3 / 702.138a: a candidate the card's OWN zone

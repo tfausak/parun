@@ -7072,9 +7072,9 @@ arrangeComponents pid dest components =
 --
 -- CR 607.2q rides it as well: `relink` below.
 --
--- Not implemented: CR 400.7b for a static grant to spells that is no
--- permission's rider (Henzie "Toolbox" Torre's blitz, Zinnia, Valley's Voice's
--- offspring): nothing stores one, so there is no row here to re-key (#5042).
+-- So does a static ability's grant to the spell (The Caldaia's blitz):
+-- Pawl.Engine.Stack.carryGrants stores it against the spell just before the
+-- move, and this re-keys it. Pawl.PlanechaseSpec's "CR 400.7b" group proves it.
 --
 -- CR 400.7g is implemented on Pawl.Engine.Cast.keywordsBefore and
 -- Pawl.Types.Object.castGrant, and CR 400.7i for an exile permission's rider

@@ -6,6 +6,7 @@
 -- ChaosEnsues and Pawl.Types.Effect's Planeswalk.
 module Pawl.PlanechaseSpec where
 
+import qualified Control.Monad as Monad
 import qualified Data.List as List
 import qualified Data.List.NonEmpty as NonEmpty
 import qualified Data.Map.Strict as Map
@@ -16,26 +17,36 @@ import qualified Data.Text as Text
 import Numeric.Natural (Natural)
 import qualified Pawl.Engine.Action as Action
 import qualified Pawl.Engine.CombatRestriction as CombatRestriction
+import qualified Pawl.Engine.Cost as Cost
 import qualified Pawl.Engine.Engine as Engine
 import qualified Pawl.Engine.Event as Event
 import qualified Pawl.Engine.Game as Game
 import qualified Pawl.Engine.Planechase as Planechase
+import qualified Pawl.Engine.Projection as Projection
 import qualified Pawl.Engine.Projection.View as Projection
 import qualified Pawl.Engine.Resolve.Effect as Resolve
 import qualified Pawl.Engine.Setup as Setup
+import qualified Pawl.Engine.Stack as Stack
 import qualified Pawl.Registry as Registry
 import qualified Pawl.Spec as Spec
 import qualified Pawl.Support as S
 import qualified Pawl.Types.Action as Action.Type
 import qualified Pawl.Types.CardName as CardName
+import qualified Pawl.Types.Color as Color
 import qualified Pawl.Types.Concession as Concession
+import qualified Pawl.Types.Cost as Cost.Type
 import qualified Pawl.Types.Deck as Deck
 import qualified Pawl.Types.EndingStep as EndingStep
 import qualified Pawl.Types.Face as Face
 import qualified Pawl.Types.GameEvent as GameEvent
 import qualified Pawl.Types.GameState as GameState
 import qualified Pawl.Types.InherentTriggerSource as InherentTriggerSource
+import qualified Pawl.Types.Keyword as Keyword
+import qualified Pawl.Types.ManaCost as ManaCost
+import qualified Pawl.Types.ManaSymbol as ManaSymbol
+import qualified Pawl.Types.ManaType as ManaType
 import qualified Pawl.Types.Object as Object
+import qualified Pawl.Types.ObjectId as ObjectId
 import qualified Pawl.Types.Phase as Phase
 import qualified Pawl.Types.PlayerActed as PlayerActed
 import qualified Pawl.Types.PlayerAction as PlayerAction
@@ -176,6 +187,120 @@ spec s registry = Spec.describe s "Pawl.Engine.Planechase" $ do
     Spec.assertEqWith s "CR 901.10a bob's Tazeem is still the face-up plane" names [Just (CardName.MkCardName (Text.pack "Tazeem"))]
     Spec.assertEqWith s "and his Academy is still in his planar deck" (length (Planechase.deckOf S.bob gone)) 1
     Spec.assertBool s (notElem S.alice (Game.stillPlaying gone)) "alice has left the game"
+  carrySpec s registry
+
+-- CR 400.7b / 611.3d on The Caldaia, Plane -- Capenna, "Creature spells you cast
+-- from your hand have blitz {3}." (Oracle text checked on Scryfall,
+-- 2026-10-12). The plane grants blitz to the SPELL; CR 400.7b keeps the grant on
+-- the permanent, where CR 702.152a's haste and draw function. Hunting
+-- Velociraptor's prowl, which functions only on the stack (CR 702.76a), is the
+-- grant that stays behind; Sabin, Master Monk is the creature holding a blitz
+-- of its own beside the plane's (CR 702.152b).
+--
+-- Every board has The Caldaia face up, six Mountains and the creature in
+-- alice's hand, so a negative cannot be a shortage.
+carrySpec :: (Monad m, Monad n) => Spec.Spec m n -> Registry.Registry m -> n ()
+carrySpec s registry = Spec.describe s "CR 400.7b" $ do
+  Spec.it s "CR 400.7b a Hill Giant cast for The Caldaia's blitz has haste, is sacrificed at the end step and draws; hard-cast it does neither" $ do
+    (giantId, board) <- caldaiaBoard s registry "Hill Giant" []
+    let blitzed = throughEndStep 8 (castPaying [ManaSymbol.Generic 3] giantId board)
+        hardCast = throughEndStep 8 (castPaying [ManaSymbol.Generic 3, theRed] giantId board)
+    Spec.assertEqWith s "CR 400.7b / 702.152a the blitzed Giant attacked bob for 3" (S.lifeOf S.bob blitzed) (Just 17)
+    Spec.assertEqWith s "CR 702.152a it was sacrificed at the end step and drew a card as it died" (named "Hill Giant" blitzed, drawn blitzed) ([], 1)
+    Spec.assertEqWith s "hard-cast, it neither attacked nor was sacrificed" (S.lifeOf S.bob hardCast, length (named "Hill Giant" hardCast), drawn hardCast) (Just 20, 1, 0)
+  Spec.it s "CR 400.7b a Ridgetop Raptor keeps The Caldaia's blitz and not Hunting Velociraptor's prowl" $ do
+    (raptorId, board) <- caldaiaBoard s registry "Ridgetop Raptor" ["Hunting Velociraptor"]
+    let onStack = S.runPure (paying [ManaSymbol.Generic 3]) board (S.cast S.alice raptorId)
+        resolved = S.runPure (paying []) onStack (Stack.resolveTop >> Engine.settleForPriority)
+        spellKeywords = foldMap (\o -> Map.keysSet (Projection.keywordsOf o onStack)) (filter (\o -> Game.zoneOf o onStack == Just Zone.Stack) (Map.keys (GameState.objects onStack)))
+        keywordsOf = case named "Ridgetop Raptor" resolved of
+          [permanent] -> Map.keysSet (Projection.keywordsOf permanent resolved)
+          _ -> Set.empty
+        has keywords = (Set.member caldaiaBlitz keywords, Set.member velociraptorProwl keywords)
+    Spec.assertEqWith s "CR 601.2a the spell had both grants" (has spellKeywords) (True, True)
+    Spec.assertEqWith s "CR 400.7b the permanent keeps the blitz and not the prowl" (has keywordsOf) (True, False)
+  -- CR 707.10 / 707.2 on Double Major {G}{U}, "Copy target creature spell you
+  -- control, except it isn't legendary if the spell is legendary." The copy was
+  -- not cast, so The Caldaia's "from your hand" does not reach it, and its
+  -- record of the blitz paid arms no sacrifice once it holds no blitz to say so.
+  Spec.it s "CR 707.10 a Double Major copy of a Giant cast for The Caldaia's blitz gets neither haste nor the sacrifice" $ do
+    (giantId, board) <- caldaiaBoard s registry "Hill Giant" []
+    forest <- S.printingOf s registry "Forest"
+    island <- S.printingOf s registry "Island"
+    major <- S.printingOf s registry "Double Major"
+    let onStack = S.runPure (paying [ManaSymbol.Generic 3]) board (S.cast S.alice giantId)
+        (majorId, withMajor) = S.addHandCard major S.alice (S.landsFor island S.alice 1 (S.landsFor forest S.alice 1 onStack))
+        resolved = S.runPure (paying []) withMajor (S.cast S.alice majorId >> Monad.replicateM_ (3 :: Int) (Engine.settleForPriority >> Stack.resolveTop) >> Engine.settleForPriority)
+        after = throughEndStep 8 resolved
+    Spec.assertEqWith s "CR 707.10 only the cast Giant attacked bob, for 3" (S.lifeOf S.bob after) (Just 17)
+    Spec.assertEqWith s "CR 702.152a only the cast Giant was sacrificed and drew; the token copy stayed" (length (named "Hill Giant" after), drawn after) (1, 1)
+  -- CR 702.85a's cascade "functions only while the spell with cascade is on the
+  -- stack": Imoti, Celebrant of Bounty's grant to a Trained Orgg {6}{R} is a
+  -- trigger of the stack, which Keyword.functionsOnBattlefield reads off the
+  -- roster it is minted into.
+  Spec.it s "CR 400.7b a Trained Orgg keeps The Caldaia's blitz and not Imoti's cascade" $ do
+    (orggId, board) <- caldaiaBoard s registry "Trained Orgg" ["Imoti, Celebrant of Bounty"]
+    let onStack = S.runPure (paying [ManaSymbol.Generic 3]) board (S.cast S.alice orggId)
+        resolved = S.runPure (paying []) onStack (Monad.replicateM_ (2 :: Int) (Stack.resolveTop >> Engine.settleForPriority))
+        keywordsOf = case named "Trained Orgg" resolved of
+          [permanent] -> Map.keysSet (Projection.keywordsOf permanent resolved)
+          _ -> Set.empty
+    Spec.assertEqWith s "CR 400.7b the permanent keeps the blitz and not the cascade" (Set.member caldaiaBlitz keywordsOf, Set.member Keyword.Cascade keywordsOf) (True, False)
+  Spec.it s "CR 702.152b Sabin under The Caldaia draws once for whichever blitz was paid, and not at all hard-cast" $ do
+    (sabinId, board) <- caldaiaBoard s registry "Sabin, Master Monk" []
+    let -- Double strike adds CR 510.4's first-strike damage step.
+        through wanted = throughEndStep 9 (castPaying wanted sabinId board)
+        plane = through [ManaSymbol.Generic 3]
+        own = through [ManaSymbol.Generic 2, theRed, theRed]
+        printed = through [ManaSymbol.Generic 4, theRed]
+    Spec.assertEqWith s "CR 702.152b paid the plane's blitz, Sabin drew one card" (drawn plane) 1
+    Spec.assertEqWith s "CR 702.152b paid its own blitz, Sabin drew one card" (drawn own) 1
+    Spec.assertEqWith s "hard-cast, with both blitz abilities unpaid, it drew nothing and stayed" (drawn printed, length (named "Sabin, Master Monk" printed)) (0, 1)
+
+-- alice on turn with The Caldaia face up, six Mountains, `creature` and a
+-- Mountain to discard in hand, and `others` on her battlefield.
+caldaiaBoard :: (Monad m) => Spec.Spec m n -> Registry.Registry m -> String -> [String] -> m (ObjectId.ObjectId, GameState.GameState)
+caldaiaBoard s registry creature others = do
+  mountain <- S.printingOf s registry "Mountain"
+  card <- S.printingOf s registry creature
+  permanents <- traverse (S.printingOf s registry) others
+  board <- planarBoard s registry ["The Caldaia"]
+  let (creatureId, gs1) = S.addHandCard card S.alice (S.landsFor mountain S.alice 6 board)
+      (_, gs2) = S.addHandCard mountain S.alice gs1
+      gs3 = List.foldl' (\g p -> snd (S.addPermanent p S.alice g)) gs2 permanents
+  pure (creatureId, (inMain S.alice gs3) {GameState.remaining = S.phasesAfter Phase.PrecombatMain})
+
+-- CR 601.2b answered with `wanted`'s mana, and every attack with everything.
+paying :: [ManaSymbol.ManaSymbol] -> Prompt.Prompt r -> r
+paying wanted p = case p of
+  Prompt.ChooseCost _ _ _ candidates -> Maybe.fromMaybe (Cost.firstOffered candidates) (List.find ((== Just (ManaCost.MkManaCost wanted)) . Cost.Type.mana) candidates)
+  Prompt.DeclareAttackers {} -> S.aggressiveAnswer p
+  _ -> S.identityAnswer p
+
+-- Cast `oid` for alice paying `wanted`, and resolve it.
+castPaying :: [ManaSymbol.ManaSymbol] -> ObjectId.ObjectId -> GameState.GameState -> GameState.GameState
+castPaying wanted oid gs = S.runPure (paying wanted) (S.runPure (paying wanted) gs (S.cast S.alice oid)) (Stack.resolveTop >> Engine.settleForPriority)
+
+-- `n` steps on from the precombat main phase, attacking with everything: eight
+-- reach the end step and resolve its delayed triggers.
+throughEndStep :: Int -> GameState.GameState -> GameState.GameState
+throughEndStep n gs = List.foldl' (\g _ -> S.runPure (paying []) g Engine.runStep) gs [1 .. n]
+
+named :: String -> GameState.GameState -> [ObjectId.ObjectId]
+named name gs = filter (\o -> Projection.hasName (CardName.MkCardName (Text.pack name)) o gs) (Set.toList (GameState.battlefield gs))
+
+-- The cards alice drew: her library starts at twenty.
+drawn :: GameState.GameState -> Int
+drawn gs = 20 - length (Game.zoneMembers Zone.Library S.alice gs)
+
+theRed :: ManaSymbol.ManaSymbol
+theRed = ManaSymbol.OfType (ManaType.Colored Color.Red)
+
+caldaiaBlitz :: Keyword.Keyword
+caldaiaBlitz = Keyword.Blitz (Cost.Type.MkCost (Just (ManaCost.MkManaCost [ManaSymbol.Generic 3])) [])
+
+velociraptorProwl :: Keyword.Keyword
+velociraptorProwl = Keyword.Prowl (Cost.Type.MkCost (Just (ManaCost.MkManaCost [ManaSymbol.Generic 2, theRed])) [])
 
 -- A two-player board with alice's planar deck stacked in the order named, top
 -- first, the top one face up (CR 103.7), and twenty Forests in each library.

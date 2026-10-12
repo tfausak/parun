@@ -97,7 +97,10 @@
                     "measured": {
                       "type": "CastUsing",
                       "value": {
-                        "type": "Awaken"
+                        "type": "OfFamily",
+                        "value": {
+                          "type": "Awaken"
+                        }
                       }
                     },
                     "threshold": {
