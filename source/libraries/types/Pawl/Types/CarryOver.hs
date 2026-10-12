@@ -18,12 +18,9 @@ module Pawl.Types.CarryOver where
 -- at every move, gated on the effect's own duration rather than on the move.
 --
 -- CR 400.7b rides Carried where a permission's rider granted the ability, since
--- that grant is stored as the spell is cast (Pawl.Engine.Event.permissionRiders).
---
--- Not implemented: CR 400.7b for a static grant to spells that is no
--- permission's rider (Henzie "Toolbox" Torre's blitz, Zinnia, Valley's Voice's
--- offspring): nothing stores one, so no constructor here could carry it
--- (#5042).
+-- that grant is stored as the spell is cast (Pawl.Engine.Event.permissionRiders),
+-- and where another object's static ability granted it, since
+-- Pawl.Engine.Stack.carryGrants stores that grant just before the move.
 --
 -- CR 400.7g's carriers are Pawl.Engine.Cast.keywordsBefore and
 -- Pawl.Types.Object.castGrant, and CR 400.7i's for an exile permission's rider

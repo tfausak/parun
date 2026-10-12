@@ -159,8 +159,9 @@ data Quantity
   | -- | CR 601.2b / 400.7d: 1 if the spell this quantity is evaluated against, or
     -- the spell that became it, was cast for the cost that keyword ability
     -- offers -- CR 702.74a's "if its evoke cost was paid", CR 702.138b's
-    -- "escaped" -- else 0.
-    CastUsing KeywordFamily.KeywordFamily
+    -- "escaped" -- else 0. The keyword itself where an instance asks only of its
+    -- own payment (CR 702.152b).
+    CastUsing (KeywordDesignator.KeywordDesignator Keyword.Keyword)
   | -- | CR 107.4h: 1 if mana carrying that production tag was spent to pay for
     -- the object this quantity is evaluated against, else 0.
     --

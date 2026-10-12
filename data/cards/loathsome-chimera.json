@@ -67,7 +67,10 @@
               "measured": {
                 "type": "CastUsing",
                 "value": {
-                  "type": "Escape"
+                  "type": "OfFamily",
+                  "value": {
+                    "type": "Escape"
+                  }
                 }
               },
               "threshold": {

@@ -351,19 +351,25 @@ spec s = Spec.describe s "Pawl.Codec.Quantity" $ do
       Quantity.codec
       (Quantity.TimesPaid (KeywordDesignator.OfKeyword (Keyword.Kicker (Cost.MkCost (Just (ManaCost.MkManaCost [ManaSymbol.Generic 2])) []))))
       " {\"type\":\"TimesPaid\",\"value\":{\"type\":\"OfKeyword\",\"value\":{\"type\":\"Kicker\",\"value\":{\"mana\":[{\"type\":\"Generic\",\"value\":2}]}}}} "
-  -- CR 702.74a / 702.138b, with the keyword FAMILY on the wire. Both families,
-  -- so a payload codec that ignored its argument cannot round-trip them.
+  -- CR 702.74a / 702.138b / 702.152b, with the keyword designator on the wire:
+  -- two families, so a payload codec that ignored its argument cannot
+  -- round-trip them, and one whole keyword.
   Spec.it s "CastUsing" $ do
     Common.assertCodec
       s
       Quantity.codec
-      (Quantity.CastUsing KeywordFamily.Evoke)
-      " {\"type\":\"CastUsing\",\"value\":{\"type\":\"Evoke\"}} "
+      (Quantity.CastUsing (KeywordDesignator.OfFamily KeywordFamily.Evoke))
+      " {\"type\":\"CastUsing\",\"value\":{\"type\":\"OfFamily\",\"value\":{\"type\":\"Evoke\"}}} "
     Common.assertCodec
       s
       Quantity.codec
-      (Quantity.CastUsing KeywordFamily.Escape)
-      " {\"type\":\"CastUsing\",\"value\":{\"type\":\"Escape\"}} "
+      (Quantity.CastUsing (KeywordDesignator.OfFamily KeywordFamily.Escape))
+      " {\"type\":\"CastUsing\",\"value\":{\"type\":\"OfFamily\",\"value\":{\"type\":\"Escape\"}}} "
+    Common.assertCodec
+      s
+      Quantity.codec
+      (Quantity.CastUsing (KeywordDesignator.OfKeyword Keyword.Retrace))
+      " {\"type\":\"CastUsing\",\"value\":{\"type\":\"OfKeyword\",\"value\":{\"type\":\"Retrace\"}}} "
   -- CR 107.4h's third sentence, with the tag on the wire and the object still
   -- implicit for WasForetold's reason. BOTH tags, since the wire shape is the whole
   -- of what this arm adds and a payload codec that ignored its argument would

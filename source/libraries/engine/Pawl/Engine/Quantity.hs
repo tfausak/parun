@@ -607,7 +607,7 @@ evaluateAgainst viewOf context gs announcedOn mOid mView quantity =
         Quantity.TimesPaid designator -> fmap (toInteger . Keyword.timesPaid designator . Filter.paidCosts) mView
         -- CR 601.2b / 400.7d: was the candidate this object was cast for
         -- offered by that family's keyword? Off the view, WasForetold's read.
-        Quantity.CastUsing family -> fmap (\view -> if fmap Keyword.familyOf (Filter.castUsing view) == Just (Just family) then 1 else 0) mView
+        Quantity.CastUsing designator -> fmap (\view -> if any (Keyword.designates designator) (Filter.castUsing view) then 1 else 0) mView
         -- CR 107.4h's third sentence as a 0/1, WasForetold's arm in every respect --
         -- including the object it reads, which for Berg Strider is the PERMANENT the
         -- spell became (CR 400.7d) and for Forsworn Paladin is the CR 602.2a ability

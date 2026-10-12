@@ -154,7 +154,10 @@
                     "measured": {
                       "type": "CastUsing",
                       "value": {
-                        "type": "Cleave"
+                        "type": "OfFamily",
+                        "value": {
+                          "type": "Cleave"
+                        }
                       }
                     },
                     "threshold": {

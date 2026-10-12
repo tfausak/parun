@@ -4109,8 +4109,8 @@ mintedStaticAbilitiesOf :: Set Keyword -> [StaticAbility.StaticAbility (GrantedA
 mintedStaticAbilitiesOf =
   let staticsOf keyword = case keyword of
         Keyword.LivingMetal -> [livingMetal]
-        Keyword.Dash _ -> [whilePaid KeywordFamily.Dash (NonEmpty.singleton (Modification.GainKeyword Keyword.Haste))]
-        Keyword.Blitz _ -> [whilePaid KeywordFamily.Blitz (Modification.GainKeyword Keyword.Haste NonEmpty.:| [Modification.GainAbility (GrantedAbility.Triggered blitzDraw)])]
+        Keyword.Dash _ -> [whilePaid (KeywordDesignator.OfFamily KeywordFamily.Dash) (NonEmpty.singleton (Modification.GainKeyword Keyword.Haste))]
+        Keyword.Blitz _ -> [whilePaid (KeywordDesignator.OfKeyword keyword) (Modification.GainKeyword Keyword.Haste NonEmpty.:| [Modification.GainAbility (GrantedAbility.Triggered blitzDraw)])]
         Keyword.Reconfigure _ -> [reconfigured]
         Keyword.Impending _ -> [impendingNotCreature]
         _ -> []
@@ -4118,14 +4118,21 @@ mintedStaticAbilitiesOf =
 
 -- CR 702.109a's and CR 702.152a's "as long as this permanent's [dash or blitz]
 -- cost was paid", a condition re-asked on every projection.
+--
+-- Blitz asks of its OWN instance, CR 702.152b's "each one refers only to
+-- payments made for that blitz ability", so of two blitz abilities only the one
+-- paid grants haste and the draw (Pawl.PlanechaseSpec's "CR 400.7b" group,
+-- Sabin under The Caldaia). Dash asks of its family: rule 702.109 states no such
+-- partition, and a second haste is redundant whichever instance grants it.
+--
 -- Quantity.CastUsing reads Object.castUsing, which CR 400.7 clears on any other
 -- zone change and CR 707.2 does not copy, so a flickered permanent and a Clone of
 -- this one both fail it. Pawl.CastSpec's "Dash" group proves both.
-whilePaid :: KeywordFamily.KeywordFamily -> NonEmpty.NonEmpty (Modification.Modification (GrantedAbility.GrantedAbility Card)) -> StaticAbility.StaticAbility (GrantedAbility.GrantedAbility Card)
-whilePaid family modifications =
+whilePaid :: KeywordDesignator.KeywordDesignator Keyword -> NonEmpty.NonEmpty (Modification.Modification (GrantedAbility.GrantedAbility Card)) -> StaticAbility.StaticAbility (GrantedAbility.GrantedAbility Card)
+whilePaid paid modifications =
   StaticAbility.MkStaticAbility
     { StaticAbility.affected = Affected.Matching Filter.IsSource,
-      StaticAbility.condition = Just (Condition.Compares (Compares.MkCompares (Quantity.CastUsing family) Comparison.AtLeast (Quantity.Literal 1))),
+      StaticAbility.condition = Just (Condition.Compares (Compares.MkCompares (Quantity.CastUsing paid) Comparison.AtLeast (Quantity.Literal 1))),
       StaticAbility.functionsFrom = Set.empty,
       StaticAbility.lingers = Nothing,
       StaticAbility.name = Nothing,
@@ -4234,7 +4241,7 @@ impendingNotCreature =
 impendingHolds :: Condition.Condition
 impendingHolds =
   Condition.All
-    [ Condition.Compares (Compares.MkCompares (Quantity.CastUsing KeywordFamily.Impending) Comparison.AtLeast (Quantity.Literal 1)),
+    [ Condition.Compares (Compares.MkCompares (Quantity.CastUsing (KeywordDesignator.OfFamily KeywordFamily.Impending)) Comparison.AtLeast (Quantity.Literal 1)),
       Condition.Compares (Compares.MkCompares (Quantity.ObjectCounters CounterKind.Time) Comparison.AtLeast (Quantity.Literal 1))
     ]
 
@@ -5439,14 +5446,96 @@ restrictionsOf ability = ActivatedAbility.restrictions ability <> foldMap printe
 -- CR 113.6b: the zones rule 702 says the ability a keyword stamps functions
 -- from, empty where it names none. CR 702.57a puts a printed forecast ability in
 -- a hand; CR 702.49a puts minted ninjutsu there, and CR 702.49d commander
--- ninjutsu in a hand or the command zone.
+-- ninjutsu in a hand or the command zone. CR 702.61a's split second "functions
+-- only while the spell with split second is on the stack", and mints nothing
+-- whose own zone could say so (functionsOnBattlefield).
 statedZones :: Keyword -> Set Zone.Zone
 statedZones keyword = case keyword of
   Keyword.Forecast -> Set.singleton Zone.Hand
   Keyword.Ninjutsu (Ninjutsu.MkNinjutsu _ variant) -> case variant of
     NinjutsuVariant.Plain -> Set.singleton Zone.Hand
     NinjutsuVariant.Commander -> Set.fromList [Zone.Hand, Zone.Command]
+  Keyword.SplitSecond -> Set.singleton Zone.Stack
   _ -> Set.empty
+
+-- CR 400.7b / 113.6: does any ability this keyword represents function on the
+-- battlefield? The question CR 400.7b asks of an ability a static ability grants
+-- a permanent SPELL, whose answer decides whether the grant goes on applying to
+-- the permanent the spell becomes.
+--
+-- Classified, never listed. CR 113.6b first: a zone rule 702 states
+-- (statedZones) is the whole answer. Then the rosters this module mints by zone:
+-- a keyword minting anything the BATTLEFIELD reads -- a triggered, activated or
+-- static ability, a replacement, a combat or attach restriction -- functions
+-- there, whatever else it does (blitz's haste-and-draw static, offspring's and
+-- evoke's entry triggers). One minting only for another zone (cascade's stack
+-- trigger, cycling's hand ability, a graveyard permission), or offering only
+-- something CR 113.6d and 113.6e put on the stack -- a cost to cast it, a
+-- reduction of that cost, a way to pay it (prowl, convoke, affinity, casualty's
+-- additional cost) -- does not. A keyword doing neither is one the rules core
+-- reads directly (flying), and CR 113.6's default puts a permanent's abilities
+-- on the battlefield.
+--
+-- The casting readers are a WILDCARD over this module's offers, morphCosts'
+-- caveat: a new keyword offering a cost owes its reader a disjunct here, and
+-- -Werror will not ask for it. Pawl.PlanechaseSpec's "CR 400.7b" group proves
+-- both answers, through The Caldaia's blitz and Hunting Velociraptor's prowl.
+functionsOnBattlefield :: Keyword -> Bool
+functionsOnBattlefield keyword =
+  let one = Set.singleton keyword
+      counted = Map.singleton keyword (1 :: Natural)
+      some xs = not (null xs)
+      battlefield =
+        some (triggeredAbilitiesOf counted)
+          || some (battlefieldAbilitiesOf counted)
+          || some (mintedStaticAbilitiesOf one)
+          || some (mintedReplacementsOf counted)
+          || some (mintedCombatRestrictionsOf counted)
+          || some (mintedAttachRestrictionsOf counted)
+          || some (mintedRemovalRestrictionsOf counted)
+      elsewhere =
+        some (stackTriggeredAbilitiesOf counted)
+          || some (exileTriggeredAbilitiesOf one)
+          || some (handAbilitiesOf one)
+          || some (graveyardAbilitiesOf one)
+          || some (handReplacementsOf one)
+          || some (graveyardReplacementsOf one)
+          || some (castingPermissionsOf (Set.fromList [minBound .. maxBound]) one)
+      symbols = ManaSymbol.Generic 1 : fmap (ManaSymbol.OfType . ManaType.Colored) [minBound .. maxBound]
+      casting =
+        some (plainAlternativeCosts one)
+          || some (prowlCosts one)
+          || some (surgeCosts one)
+          || some (spectacleCosts one)
+          || some (freerunningCosts one)
+          || some (warpCosts one)
+          || some (mutateCosts one)
+          || some (emergeCosts one)
+          || some (bestowCosts one)
+          || some (prototypes one)
+          || some (moreThanMeetsTheEyeCosts one)
+          || some (disturbCosts one)
+          || some (morphCosts one)
+          || some (disguiseCosts one)
+          || some (optionalCosts one)
+          || some (entwineCosts one)
+          || some (escalateCosts one)
+          || some (splices one)
+          || some (madnessCosts one)
+          || some (foretellCosts one)
+          || some (plotCosts one)
+          || some (offeringQualities one)
+          || some (selfCostReductionsFor keyword)
+          || any (\symbol -> some (manaSubstitutesFor symbol one)) symbols
+          || Maybe.isJust (buybackCost one)
+          || Maybe.isJust (suspend one)
+          || hasFlash one
+          || hasFuse one
+          || hasSneak one
+      stated = statedZones keyword
+   in if not (Set.null stated)
+        then Set.member Zone.Battlefield stated
+        else battlefield || not (elsewhere || casting)
 
 -- CR 702: does a card's designator name this keyword? Asked of the stamp
 -- Pawl.Types.ActivatedAbility.keyword carries (ActivationCriteria.grantedBy) and
@@ -6912,7 +7001,7 @@ evoke =
   let effect = Effect.Sacrifice SacrificeEffect.MkSacrificeEffect {SacrificeEffect.ref = ObjectRef.InSlot Binding.triggerSource, SacrificeEffect.sacrificer = Sacrificer.PermanentController, SacrificeEffect.sacrificed = Nothing}
    in Mint.triggerIf
         TriggerCondition.SelfEnters
-        (Condition.Compares (Compares.MkCompares (Quantity.CastUsing KeywordFamily.Evoke) Comparison.AtLeast (Quantity.Literal 1)))
+        (Condition.Compares (Compares.MkCompares (Quantity.CastUsing (KeywordDesignator.OfFamily KeywordFamily.Evoke)) Comparison.AtLeast (Quantity.Literal 1)))
         (Seq.singleton effect)
 
 -- CR 702.157a's triggered ability: "When this creature enters, if its squad cost
