@@ -708,7 +708,7 @@ data View = MkView
     -- those do: the reader holds a view and not a board. It is nonetheless filled
     -- for a permanent a kicked spell became, which is CR 400.7d's exception to
     -- the forgetting (see Pawl.Types.Object).
-    paidCosts :: Map.Map Keyword.Type.Keyword Natural.Natural,
+    paidCosts :: Map.Map Keyword.Type.Keyword (Seq.Seq Natural.Natural),
     -- CR 702.104b: did the opponent rule 702.104a's tribute ability let this
     -- candidate's controller choose have it enter with the +1/+1 counters? Read
     -- off Object.tributePaid, and False where there is no live object -- rule

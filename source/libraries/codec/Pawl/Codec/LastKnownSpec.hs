@@ -1,6 +1,7 @@
 module Pawl.Codec.LastKnownSpec where
 
 import qualified Data.Map.Strict as Map
+import qualified Data.Sequence as Seq
 import qualified Data.Set as Set
 import qualified Data.Text as Text
 import qualified Pawl.Codec.LastKnown as LastKnown
@@ -55,7 +56,7 @@ spec s = Spec.describe s "Pawl.Codec.LastKnown" $ do
           LastKnown.attackTarget = Nothing,
           LastKnown.blocking = True,
           LastKnown.protector = Just (PlayerId.MkPlayerId 7),
-          LastKnown.paidCosts = Map.singleton (Keyword.Offspring (Cost.MkCost (Just (ManaCost.MkManaCost [ManaSymbol.Generic 2])) [])) 1,
+          LastKnown.paidCosts = Map.singleton (Keyword.Offspring (Cost.MkCost (Just (ManaCost.MkManaCost [ManaSymbol.Generic 2])) [])) (Seq.singleton 1),
           LastKnown.prototyped = True,
           LastKnown.controlClock = Map.singleton (PlayerId.MkPlayerId 1) ControlClock.SinceLastUpkeep,
           LastKnown.zone = Zone.Battlefield,
@@ -69,7 +70,7 @@ spec s = Spec.describe s "Pawl.Codec.LastKnown" $ do
           <> minimalJson
           <> ",\"attached\":[9]"
           <> ",\"chosenNames\":{\"8\":\"Goblin Piker\"},\"chosenPlayer\":3,\"chosenColors\":[{\"type\":\"Green\"}],\"chosenSubtype\":{\"type\":\"Goblin\"},\"attacking\":false,\"attackTarget\":null,\"blocking\":true,\"protector\":7"
-          <> ",\"paidCosts\":[{\"key\":{\"type\":\"Offspring\",\"value\":{\"mana\":[{\"type\":\"Generic\",\"value\":2}]}},\"value\":1}]"
+          <> ",\"paidCosts\":[{\"key\":{\"type\":\"Offspring\",\"value\":{\"mana\":[{\"type\":\"Generic\",\"value\":2}]}},\"value\":[1]}]"
           <> ",\"prototyped\":true"
           <> ",\"controlClock\":[{\"player\":1,\"clock\":{\"type\":\"SinceLastUpkeep\"}}]"
           <> ",\"zone\":{\"type\":\"Battlefield\"},\"pile\":6} "

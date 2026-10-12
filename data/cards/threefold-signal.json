@@ -1,0 +1,539 @@
+{
+  "faces": [
+    {
+      "manaCost": [
+        {
+          "type": "Generic",
+          "value": 3
+        }
+      ],
+      "name": "Threefold Signal",
+      "oracleText": "When this artifact enters, scry 3.\nEach spell you cast that's exactly three colors has replicate {3}. (When you cast it, copy it for each time you paid its replicate cost. You may choose new targets for the copies. A copy of a permanent spell becomes a token.)",
+      "staticAbilities": [
+        {
+          "affected": {
+            "type": "MatchingOffBattlefield",
+            "value": {
+              "type": "And",
+              "value": [
+                {
+                  "type": "Or",
+                  "value": [
+                    {
+                      "type": "WasCastFrom",
+                      "value": {
+                        "type": "Library"
+                      }
+                    },
+                    {
+                      "type": "WasCastFrom",
+                      "value": {
+                        "type": "Hand"
+                      }
+                    },
+                    {
+                      "type": "WasCastFrom",
+                      "value": {
+                        "type": "Graveyard"
+                      }
+                    },
+                    {
+                      "type": "WasCastFrom",
+                      "value": {
+                        "type": "Exile"
+                      }
+                    },
+                    {
+                      "type": "WasCastFrom",
+                      "value": {
+                        "type": "Command"
+                      }
+                    }
+                  ]
+                },
+                {
+                  "type": "ControlledBy",
+                  "value": {
+                    "type": "You"
+                  }
+                },
+                {
+                  "type": "Or",
+                  "value": [
+                    {
+                      "type": "And",
+                      "value": [
+                        {
+                          "type": "HasColor",
+                          "value": {
+                            "type": "White"
+                          }
+                        },
+                        {
+                          "type": "HasColor",
+                          "value": {
+                            "type": "Blue"
+                          }
+                        },
+                        {
+                          "type": "HasColor",
+                          "value": {
+                            "type": "Black"
+                          }
+                        },
+                        {
+                          "type": "Not",
+                          "value": {
+                            "type": "HasColor",
+                            "value": {
+                              "type": "Red"
+                            }
+                          }
+                        },
+                        {
+                          "type": "Not",
+                          "value": {
+                            "type": "HasColor",
+                            "value": {
+                              "type": "Green"
+                            }
+                          }
+                        }
+                      ]
+                    },
+                    {
+                      "type": "And",
+                      "value": [
+                        {
+                          "type": "HasColor",
+                          "value": {
+                            "type": "White"
+                          }
+                        },
+                        {
+                          "type": "HasColor",
+                          "value": {
+                            "type": "Blue"
+                          }
+                        },
+                        {
+                          "type": "HasColor",
+                          "value": {
+                            "type": "Red"
+                          }
+                        },
+                        {
+                          "type": "Not",
+                          "value": {
+                            "type": "HasColor",
+                            "value": {
+                              "type": "Black"
+                            }
+                          }
+                        },
+                        {
+                          "type": "Not",
+                          "value": {
+                            "type": "HasColor",
+                            "value": {
+                              "type": "Green"
+                            }
+                          }
+                        }
+                      ]
+                    },
+                    {
+                      "type": "And",
+                      "value": [
+                        {
+                          "type": "HasColor",
+                          "value": {
+                            "type": "White"
+                          }
+                        },
+                        {
+                          "type": "HasColor",
+                          "value": {
+                            "type": "Blue"
+                          }
+                        },
+                        {
+                          "type": "HasColor",
+                          "value": {
+                            "type": "Green"
+                          }
+                        },
+                        {
+                          "type": "Not",
+                          "value": {
+                            "type": "HasColor",
+                            "value": {
+                              "type": "Black"
+                            }
+                          }
+                        },
+                        {
+                          "type": "Not",
+                          "value": {
+                            "type": "HasColor",
+                            "value": {
+                              "type": "Red"
+                            }
+                          }
+                        }
+                      ]
+                    },
+                    {
+                      "type": "And",
+                      "value": [
+                        {
+                          "type": "HasColor",
+                          "value": {
+                            "type": "White"
+                          }
+                        },
+                        {
+                          "type": "HasColor",
+                          "value": {
+                            "type": "Black"
+                          }
+                        },
+                        {
+                          "type": "HasColor",
+                          "value": {
+                            "type": "Red"
+                          }
+                        },
+                        {
+                          "type": "Not",
+                          "value": {
+                            "type": "HasColor",
+                            "value": {
+                              "type": "Blue"
+                            }
+                          }
+                        },
+                        {
+                          "type": "Not",
+                          "value": {
+                            "type": "HasColor",
+                            "value": {
+                              "type": "Green"
+                            }
+                          }
+                        }
+                      ]
+                    },
+                    {
+                      "type": "And",
+                      "value": [
+                        {
+                          "type": "HasColor",
+                          "value": {
+                            "type": "White"
+                          }
+                        },
+                        {
+                          "type": "HasColor",
+                          "value": {
+                            "type": "Black"
+                          }
+                        },
+                        {
+                          "type": "HasColor",
+                          "value": {
+                            "type": "Green"
+                          }
+                        },
+                        {
+                          "type": "Not",
+                          "value": {
+                            "type": "HasColor",
+                            "value": {
+                              "type": "Blue"
+                            }
+                          }
+                        },
+                        {
+                          "type": "Not",
+                          "value": {
+                            "type": "HasColor",
+                            "value": {
+                              "type": "Red"
+                            }
+                          }
+                        }
+                      ]
+                    },
+                    {
+                      "type": "And",
+                      "value": [
+                        {
+                          "type": "HasColor",
+                          "value": {
+                            "type": "White"
+                          }
+                        },
+                        {
+                          "type": "HasColor",
+                          "value": {
+                            "type": "Red"
+                          }
+                        },
+                        {
+                          "type": "HasColor",
+                          "value": {
+                            "type": "Green"
+                          }
+                        },
+                        {
+                          "type": "Not",
+                          "value": {
+                            "type": "HasColor",
+                            "value": {
+                              "type": "Blue"
+                            }
+                          }
+                        },
+                        {
+                          "type": "Not",
+                          "value": {
+                            "type": "HasColor",
+                            "value": {
+                              "type": "Black"
+                            }
+                          }
+                        }
+                      ]
+                    },
+                    {
+                      "type": "And",
+                      "value": [
+                        {
+                          "type": "HasColor",
+                          "value": {
+                            "type": "Blue"
+                          }
+                        },
+                        {
+                          "type": "HasColor",
+                          "value": {
+                            "type": "Black"
+                          }
+                        },
+                        {
+                          "type": "HasColor",
+                          "value": {
+                            "type": "Red"
+                          }
+                        },
+                        {
+                          "type": "Not",
+                          "value": {
+                            "type": "HasColor",
+                            "value": {
+                              "type": "White"
+                            }
+                          }
+                        },
+                        {
+                          "type": "Not",
+                          "value": {
+                            "type": "HasColor",
+                            "value": {
+                              "type": "Green"
+                            }
+                          }
+                        }
+                      ]
+                    },
+                    {
+                      "type": "And",
+                      "value": [
+                        {
+                          "type": "HasColor",
+                          "value": {
+                            "type": "Blue"
+                          }
+                        },
+                        {
+                          "type": "HasColor",
+                          "value": {
+                            "type": "Black"
+                          }
+                        },
+                        {
+                          "type": "HasColor",
+                          "value": {
+                            "type": "Green"
+                          }
+                        },
+                        {
+                          "type": "Not",
+                          "value": {
+                            "type": "HasColor",
+                            "value": {
+                              "type": "White"
+                            }
+                          }
+                        },
+                        {
+                          "type": "Not",
+                          "value": {
+                            "type": "HasColor",
+                            "value": {
+                              "type": "Red"
+                            }
+                          }
+                        }
+                      ]
+                    },
+                    {
+                      "type": "And",
+                      "value": [
+                        {
+                          "type": "HasColor",
+                          "value": {
+                            "type": "Blue"
+                          }
+                        },
+                        {
+                          "type": "HasColor",
+                          "value": {
+                            "type": "Red"
+                          }
+                        },
+                        {
+                          "type": "HasColor",
+                          "value": {
+                            "type": "Green"
+                          }
+                        },
+                        {
+                          "type": "Not",
+                          "value": {
+                            "type": "HasColor",
+                            "value": {
+                              "type": "White"
+                            }
+                          }
+                        },
+                        {
+                          "type": "Not",
+                          "value": {
+                            "type": "HasColor",
+                            "value": {
+                              "type": "Black"
+                            }
+                          }
+                        }
+                      ]
+                    },
+                    {
+                      "type": "And",
+                      "value": [
+                        {
+                          "type": "HasColor",
+                          "value": {
+                            "type": "Black"
+                          }
+                        },
+                        {
+                          "type": "HasColor",
+                          "value": {
+                            "type": "Red"
+                          }
+                        },
+                        {
+                          "type": "HasColor",
+                          "value": {
+                            "type": "Green"
+                          }
+                        },
+                        {
+                          "type": "Not",
+                          "value": {
+                            "type": "HasColor",
+                            "value": {
+                              "type": "White"
+                            }
+                          }
+                        },
+                        {
+                          "type": "Not",
+                          "value": {
+                            "type": "HasColor",
+                            "value": {
+                              "type": "Blue"
+                            }
+                          }
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            }
+          },
+          "modifications": [
+            {
+              "type": "GainKeyword",
+              "value": {
+                "type": "Replicate",
+                "value": {
+                  "mana": [
+                    {
+                      "type": "Generic",
+                      "value": 3
+                    }
+                  ]
+                }
+              }
+            }
+          ]
+        }
+      ],
+      "triggeredAbilities": [
+        {
+          "condition": {
+            "type": "SelfEnters"
+          },
+          "modal": {
+            "modes": [
+              {
+                "clauses": [
+                  {
+                    "effects": [
+                      {
+                        "type": "Scry",
+                        "value": {
+                          "player": {
+                            "type": "Relative",
+                            "value": {
+                              "type": "You"
+                            }
+                          },
+                          "quantity": {
+                            "type": "Literal",
+                            "value": 3
+                          }
+                        }
+                      }
+                    ]
+                  }
+                ]
+              }
+            ]
+          }
+        }
+      ],
+      "typeLine": {
+        "types": [
+          {
+            "type": "Artifact"
+          }
+        ]
+      }
+    }
+  ]
+}

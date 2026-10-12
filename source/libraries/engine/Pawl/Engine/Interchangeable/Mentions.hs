@@ -1848,6 +1848,7 @@ keywordDesignatorNames asking x = case x of
   KeywordDesignator.OfFamily _keywordFamily -> False
   KeywordDesignator.OfKeyword keyword -> keywordNames asking keyword
   KeywordDesignator.PrintedKicker -> False
+  KeywordDesignator.OfInstance keyword _ordinal -> keywordNames asking keyword
 
 keywordTallyNames :: Asking -> KeywordTally.KeywordTally keyword -> Bool
 keywordTallyNames asking x = case x of

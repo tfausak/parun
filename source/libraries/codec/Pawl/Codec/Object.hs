@@ -133,7 +133,7 @@ codec = Fields.object $ do
   designations <- Fields.defaulted "designations" (Object.designations defaults) (Common.set Designation.codec) Object.designations
   designationValues <- Fields.defaulted "designationValues" (Object.designationValues defaults) (Common.keyedList designationValue) Object.designationValues
   storedResults <- Fields.defaulted "storedResults" (Object.storedResults defaults) (Common.multiset StoredResult.codec) Object.storedResults
-  paidCosts <- Fields.defaulted "paidCosts" (Object.paidCosts defaults) (Common.multiset Keyword.codec) Object.paidCosts
+  paidCosts <- Fields.defaulted "paidCosts" (Object.paidCosts defaults) (Common.keyedList (Common.keyValue Keyword.codec (Common.seq Common.natural))) Object.paidCosts
   tributePaid <- Fields.defaulted "tributePaid" (Object.tributePaid defaults) Common.boolean Object.tributePaid
   bestowed <- Fields.defaulted "bestowed" (Object.bestowed defaults) Common.boolean Object.bestowed
   mutating <- Fields.defaulted "mutating" (Object.mutating defaults) Common.boolean Object.mutating

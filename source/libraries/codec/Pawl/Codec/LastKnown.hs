@@ -40,7 +40,7 @@ codec = Fields.object $ do
   attackTarget <- Fields.required "attackTarget" (Common.maybe AttackTarget.codec) LastKnown.attackTarget
   blocking <- Fields.required "blocking" Common.boolean LastKnown.blocking
   protector <- Fields.required "protector" (Common.maybe PlayerId.codec) LastKnown.protector
-  paidCosts <- Fields.defaulted "paidCosts" Map.empty (Common.multiset Keyword.codec) LastKnown.paidCosts
+  paidCosts <- Fields.defaulted "paidCosts" Map.empty (Common.keyedList (Common.keyValue Keyword.codec (Common.seq Common.natural))) LastKnown.paidCosts
   prototyped <- Fields.defaulted "prototyped" False Common.boolean LastKnown.prototyped
   controlClock <- Fields.defaulted "controlClock" Map.empty (Common.keyedList ControlClock.entry) LastKnown.controlClock
   zone <- Fields.required "zone" Zone.codec LastKnown.zone

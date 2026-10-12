@@ -1365,12 +1365,58 @@ stormSpec s _ = Spec.describe s "Storm" $ do
 -- Six Mountains: the printed {1}{R} and the replicate cost twice. Three damage to
 -- bob is the original plus TWO copies; one copy whatever the count leaves him at
 -- 18, and no trigger at all at 19.
-replicateSpec :: (Monad m) => Spec.Spec m n -> Registry.Registry m -> n ()
-replicateSpec s _ = Spec.describe s "Replicate" $ do
+replicateSpec :: (Monad m, Monad n) => Spec.Spec m n -> Registry.Registry m -> n ()
+replicateSpec s registry = Spec.describe s "Replicate" $ do
   Spec.it s "CR 702.56a replicate's trigger is minted for a spell on the stack and nowhere else" $ do
     let keyword = Keyword.Type.Replicate (Cost.MkCost Nothing [])
     Spec.assertEqWith s "the stack roster mints one" (length (Keyword.stackTriggeredAbilitiesOf (Map.singleton keyword 1))) 1
     Spec.assertEqWith s "and the battlefield roster mints none" (Keyword.triggeredAbilitiesOf (Map.singleton keyword 1)) []
+
+  -- CR 702.56b: two Threefold Signals give Defibrillating Current, a
+  -- three-colour spell, two replicate {3}, each paid separately and copying for
+  -- its own payments. Bob Stifles the top replicate trigger, so the split shows:
+  -- paid one each, the other trigger still copies once; paid twice into one,
+  -- nothing is left to copy. Unstifled, both splits copy twice. Every
+  -- resolution gains alice 2 life, its 4 damage landing on her indestructible
+  -- Darksteel Myr so no copy loses its target. A Plains, a Swamp and seven
+  -- Mountains pay the spell and both payments on every board.
+  Spec.it s "CR 702.56b two replicate {3} instances are paid separately and each copies for its own payments" $ do
+    signal <- S.printingOf s registry "Threefold Signal"
+    current <- S.printingOf s registry "Defibrillating Current"
+    myr <- S.printingOf s registry "Darksteel Myr"
+    stifle <- S.printingOf s registry "Stifle"
+    mountain <- S.printingOf s registry "Mountain"
+    island <- S.printingOf s registry "Island"
+    plains <- S.printingOf s registry "Plains"
+    swamp <- S.printingOf s registry "Swamp"
+    let lands = S.landsFor plains S.alice 1 (S.landsFor swamp S.alice 1 (S.landsFor mountain S.alice 7 (Setup.emptyGame S.bothPlayers)))
+        (_, g1) = S.addPermanent signal S.alice (S.landsFor island S.bob 1 lands)
+        (_, g2) = S.addPermanent signal S.alice g1
+        (myrId, g3) = S.addPermanent myr S.alice g2
+        (stifleId, g4) = S.addHandCard stifle S.bob g3
+        (spellId, g5) = S.addHandCard current S.alice g4
+        board = g5 {GameState.activePlayer = S.alice, GameState.phase = Phase.PrecombatMain, GameState.priority = Just S.alice}
+        -- Each ChooseKicker takes the next answer, so the two identical
+        -- questions get different ones; every target is the Myr, or the Stifle's.
+        answering :: Maybe ObjectId.ObjectId -> Prompt.Prompt r -> State.State [Natural.Natural] r
+        answering stifled p = case p of
+          Prompt.ChooseKicker {} -> do
+            answers <- State.get
+            case answers of
+              next : rest -> KickerDecision.MkKickerDecision next <$ State.put rest
+              [] -> pure (KickerDecision.MkKickerDecision 0)
+          Prompt.ChooseTargets _ _ _ asked -> pure (fmap (\(_, offered) -> Set.filter ((== Just (Maybe.fromMaybe myrId stifled)) . Recipient.objectOf) offered) asked)
+          _ -> pure (S.identityAnswer p)
+        run stifled answers gs action = fst (State.runState (fmap snd (Engine.runGame (answering stifled) gs (action >> Engine.settleForPriority))) answers)
+        resolveAll gs = if null (GameState.stack gs) then gs else resolveAll (run Nothing [] gs Stack.resolveTop)
+        cast answers = run Nothing answers board (S.cast S.alice spellId)
+        stifling gs = case GameState.stack gs of
+          top : _ -> run (Just top) [] gs {GameState.priority = Just S.bob} (S.cast S.bob stifleId)
+          [] -> gs
+        gained answers stifled = fmap (subtract 20) (S.lifeOf S.alice (resolveAll ((if stifled then stifling else id) (cast answers))))
+    Spec.assertEqWith s "CR 702.56b paid once each, one trigger Stifled: the other still copies, two resolutions" (gained [1, 1] True) (Just 4)
+    Spec.assertEqWith s "paid twice into one instance, that trigger Stifled: the original alone" (gained [2, 0] True) (Just 2)
+    Spec.assertEqWith s "unstifled, either split copies twice" (gained [1, 1] False, gained [2, 0] False) (Just 6, Just 6)
 
 -- CR 702.153a's casualty: "As an additional cost to cast this spell, you may
 -- sacrifice a creature with power N or greater" and "When you cast this spell, if

@@ -4,6 +4,7 @@ import qualified Data.Typeable as Typeable
 import qualified Pawl.Codec.KeywordFamily as KeywordFamily
 import qualified Pawl.JsonCodec.Arm as Arm
 import qualified Pawl.JsonCodec.Codec as Codec
+import qualified Pawl.JsonCodec.Common as Common
 import qualified Pawl.Types.KeywordDesignator as KeywordDesignator
 
 -- | Tagged, so `{"type":"OfFamily","value":{"type":"Cycling"}}` names CR 702.29a's
@@ -15,7 +16,8 @@ codec keywordCodec =
     tagOf
     [ Arm.payload "OfFamily" KeywordFamily.codec KeywordDesignator.OfFamily (\x -> case x of KeywordDesignator.OfFamily y -> Just y; _ -> Nothing),
       Arm.payload "OfKeyword" keywordCodec KeywordDesignator.OfKeyword (\x -> case x of KeywordDesignator.OfKeyword y -> Just y; _ -> Nothing),
-      Arm.nullary "PrintedKicker" KeywordDesignator.PrintedKicker
+      Arm.nullary "PrintedKicker" KeywordDesignator.PrintedKicker,
+      Arm.payload "OfInstance" (Common.tuple keywordCodec Common.natural) (uncurry KeywordDesignator.OfInstance) (\x -> case x of KeywordDesignator.OfInstance k n -> Just (k, n); _ -> Nothing)
     ]
 
 tagOf :: KeywordDesignator.KeywordDesignator keyword -> String
@@ -23,3 +25,4 @@ tagOf x = case x of
   KeywordDesignator.OfFamily {} -> "OfFamily"
   KeywordDesignator.OfKeyword {} -> "OfKeyword"
   KeywordDesignator.PrintedKicker {} -> "PrintedKicker"
+  KeywordDesignator.OfInstance {} -> "OfInstance"

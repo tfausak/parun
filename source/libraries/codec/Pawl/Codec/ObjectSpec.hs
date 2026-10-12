@@ -165,7 +165,7 @@ spec s = Spec.describe s "Pawl.Codec.Object" $ do
           Object.paidCosts =
             Map.singleton
               (Keyword.Squad Cost.MkCost {Cost.mana = Just (ManaCost.MkManaCost [ManaSymbol.Generic 24]), Cost.components = []})
-              25,
+              (Seq.fromList [25, 0, 3]),
           Object.tributePaid = True,
           Object.bestowed = True,
           Object.mutating = True,
@@ -227,7 +227,7 @@ spec s = Spec.describe s "Pawl.Codec.Object" $ do
           <> ",\"designations\":[{\"type\":\"Renowned\"}]"
           <> ",\"designationValues\":[{\"designation\":{\"type\":\"Monstrous\"},\"value\":26}]"
           <> ",\"storedResults\":[{\"key\":{\"sides\":6,\"value\":4},\"value\":2}]"
-          <> ",\"paidCosts\":[{\"key\":{\"type\":\"Squad\",\"value\":{\"mana\":[{\"type\":\"Generic\",\"value\":24}]}},\"value\":25}]"
+          <> ",\"paidCosts\":[{\"key\":{\"type\":\"Squad\",\"value\":{\"mana\":[{\"type\":\"Generic\",\"value\":24}]}},\"value\":[25,0,3]}]"
           <> ",\"tributePaid\":true"
           <> ",\"bestowed\":true"
           <> ",\"mutating\":true"

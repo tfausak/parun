@@ -38,6 +38,15 @@ spec s = Spec.describe s "Pawl.Codec.KeywordDesignator" $ do
       KeywordDesignator.PrintedKicker
       " {\"type\":\"PrintedKicker\"} "
 
+  -- CR 702.56b: the second of a spell's identical replicate instances, which a
+  -- minted replicate trigger names.
+  Spec.it s "OfInstance" $
+    Common.assertCodec
+      s
+      codec
+      (KeywordDesignator.OfInstance Keyword.Exhaust 2)
+      " {\"type\":\"OfInstance\",\"value\":[{\"type\":\"Exhaust\"},2]} "
+
   -- The arms must stay distinguishable on the wire: a family and a keyword can
   -- share a spelling (`{"type":"Cycling"}` under either tag), so the outer tag
   -- is the whole of the difference.
