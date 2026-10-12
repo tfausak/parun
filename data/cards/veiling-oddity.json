@@ -84,6 +84,12 @@
                               "type": "Creature"
                             }
                           },
+                          "blockers": {
+                            "type": "HasCardType",
+                            "value": {
+                              "type": "Creature"
+                            }
+                          },
                           "duration": {
                             "type": "UntilEndOfTurn"
                           }

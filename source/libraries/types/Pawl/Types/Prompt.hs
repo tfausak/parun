@@ -26,6 +26,7 @@ import qualified Pawl.Types.CounterKindFor as CounterKindFor
 import qualified Pawl.Types.CounterSpread as CounterSpread
 import qualified Pawl.Types.DamageEvent as DamageEvent
 import qualified Pawl.Types.Decider as Decider
+import qualified Pawl.Types.Designation as Designation
 import qualified Pawl.Types.EntryOption as EntryOption
 import qualified Pawl.Types.EntwineDecision as EntwineDecision
 import qualified Pawl.Types.Facing as Facing
@@ -608,6 +609,9 @@ data Prompt r where
   -- | CR 614.1c: a colour an entering object's controller chooses, from those
   -- (CR 105.1) not already chosen for it.
   ChooseColor :: Decider.Decider -> PlayerId.PlayerId -> ObjectId.ObjectId -> NonEmpty.NonEmpty Color.Color -> Prompt Color.Color
+  -- | CR 702.158b: a sector, for the creature CR 704.5u assigns one to or for
+  -- CR 702.158d's "choose a sector" as the object names resolves.
+  ChooseSector :: Decider.Decider -> PlayerId.PlayerId -> ObjectId.ObjectId -> NonEmpty.NonEmpty Designation.Designation -> Prompt Designation.Designation
   -- | CR 105.4 / 106.3: which mana a resolving object adds when the type it
   -- names is not settled, from Pawl.Engine.Mana.produced.
   ChooseManaType :: Decider.Decider -> PlayerId.PlayerId -> ObjectId.ObjectId -> NonEmpty.NonEmpty ManaType.ManaType -> Prompt ManaType.ManaType

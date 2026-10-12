@@ -191,6 +191,7 @@ codec =
       Arm.nullary "Ingest" Keyword.Ingest,
       Arm.nullary "Myriad" Keyword.Myriad,
       Arm.nullary "Skulk" Keyword.Skulk,
+      Arm.nullary "SpaceSculptor" Keyword.SpaceSculptor,
       Arm.payload "Escalate" (Cost.codec codec) Keyword.Escalate (\x -> case x of Keyword.Escalate y -> Just y; _ -> Nothing),
       Arm.nullary "Melee" Keyword.Melee,
       Arm.payload "Crew" Common.natural Keyword.Crew (\x -> case x of Keyword.Crew y -> Just y; _ -> Nothing),
@@ -395,6 +396,7 @@ tagOf x = case x of
   Keyword.Ingest {} -> "Ingest"
   Keyword.Myriad {} -> "Myriad"
   Keyword.Skulk {} -> "Skulk"
+  Keyword.SpaceSculptor {} -> "SpaceSculptor"
   Keyword.Escalate {} -> "Escalate"
   Keyword.Melee {} -> "Melee"
   Keyword.Crew {} -> "Crew"

@@ -390,7 +390,7 @@ ownQuantities effect = case effect of
   Effect.RequireBlock (RequireBlock.MkRequireBlock duration _ _) -> durationQuantities duration
   Effect.Prohibit (Prohibit.MkProhibit _ duration _) -> durationQuantities duration
   Effect.ForbidAttack (ForbidAttack.MkForbidAttack duration _ _) -> durationQuantities duration
-  Effect.ForbidBeingBlocked (ForbidBeingBlocked.MkForbidBeingBlocked duration _) -> durationQuantities duration
+  Effect.ForbidBeingBlocked (ForbidBeingBlocked.MkForbidBeingBlocked duration _ _) -> durationQuantities duration
   Effect.RequireAttack (RequireAttack.MkRequireAttack duration _ _) -> durationQuantities duration
   Effect.CreateEmblem _ -> []
   Effect.BecomeMonarch _ -> []
@@ -417,6 +417,7 @@ ownQuantities effect = case effect of
   Effect.ChoosePlayer _ -> []
   Effect.ChoosePlayerAtRandom _ -> []
   Effect.ChoosePermanents choice -> Foldable.toList (HowMany.quantity (ChosenPermanents.count (ChoosePermanents.permanents choice)))
+  Effect.ChooseSector _ -> []
   Effect.RollDie rollDie -> RollDie.count rollDie : Maybe.maybeToList (RollDie.modifier rollDie)
   Effect.FlipCoin flipCoin -> [FlipCoin.count flipCoin]
   Effect.TakeExtraTurn takeExtraTurn -> [TakeExtraTurn.count takeExtraTurn]
@@ -1522,6 +1523,7 @@ effectObjectRefs effect =
         Effect.ChoosePlayer {} -> []
         Effect.ChoosePlayerAtRandom {} -> []
         Effect.ChoosePermanents {} -> []
+        Effect.ChooseSector {} -> []
         Effect.RollDie {} -> []
         Effect.FlipCoin {} -> []
         Effect.TakeExtraTurn {} -> []
@@ -3471,7 +3473,7 @@ effectLintSpec s registry = Spec.describe s "Lint" $ do
     relay <- S.printingOf s registry "Galvanic Relay"
     let planted effect = (vanillaFace "Planted" instantLine) {Face.spell = Mint.oneMode (Seq.singleton effect)}
         creatures = Filter.Type.HasCardType CardType.Creature
-        evasion = Effect.ForbidBeingBlocked (ForbidBeingBlocked.MkForbidBeingBlocked Duration.DuringYourNextTurn creatures)
+        evasion = Effect.ForbidBeingBlocked (ForbidBeingBlocked.MkForbidBeingBlocked Duration.DuringYourNextTurn creatures creatures)
         pump = Effect.ModifyTarget (ModifyTarget.MkModifyTarget Duration.DuringYourNextTurn (Modification.GainKeyword Keyword.Flying) (ObjectRef.EachMatching creatures) Nothing)
     Spec.assertBool s (not (anyFace windowOffends (Printing.card taunt))) "the real Taunt is accepted"
     Spec.assertBool s (not (anyFace windowOffends (Printing.card relay))) "the real Galvanic Relay is accepted"

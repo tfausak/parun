@@ -79,6 +79,9 @@ mayGain designation oid gs = case designation of
   Designation.Saddled -> True
   Designation.Prepared -> hasPrepareSpell oid gs
   Designation.Harnessed -> True
+  Designation.AlphaSector -> True
+  Designation.BetaSector -> True
+  Designation.GammaSector -> True
 
 -- CR 722.3c, run immediately after the designation is written: "its controller
 -- creates a copy of that object in exile, except that copy has only the

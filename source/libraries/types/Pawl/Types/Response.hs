@@ -17,6 +17,7 @@ import qualified Pawl.Types.CommandZoneDecision as CommandZoneDecision
 import qualified Pawl.Types.Concession as Concession
 import qualified Pawl.Types.Cost as Cost
 import qualified Pawl.Types.CounterKind as CounterKind
+import qualified Pawl.Types.Designation as Designation
 import qualified Pawl.Types.EntwineDecision as EntwineDecision
 import qualified Pawl.Types.Facing as Facing
 import qualified Pawl.Types.ForageMode as ForageMode
@@ -534,6 +535,8 @@ data Response
     ChoseTurnUpAttachment OptionalDecision.OptionalDecision
   | -- | CR 614.1c: the colour a player chose as an object entered.
     ChoseColor Color.Color
+  | -- | CR 702.158b: the sector a player chose.
+    ChoseSector Designation.Designation
   | -- | CR 105.4 / 106.3: the mana a player chose to add as a spell or ability
     -- that named no settled type resolved. Distinct from ChoseColor above for
     -- the reason Prompt.ChooseManaType gives, and it carries a ManaType rather

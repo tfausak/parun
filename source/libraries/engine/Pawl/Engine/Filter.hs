@@ -12,6 +12,7 @@ import qualified Numeric.Natural as Natural
 import qualified Pawl.Engine.Binding as Binding
 import qualified Pawl.Engine.Keyword as Keyword
 import qualified Pawl.Engine.NameWords as NameWords
+import qualified Pawl.Engine.Sector as Sector
 import qualified Pawl.Types.Behold as Behold
 import qualified Pawl.Types.BlockStatus as BlockStatus
 import qualified Pawl.Types.BoundMeasure as BoundMeasure
@@ -1034,6 +1035,10 @@ data Context = MkContext
     -- conspire). Filled with sourceMeasures. A SET rather than a Maybe: empty is
     -- the right answer both where it is unfilled and for a colourless source.
     sourceColors :: Set.Set Color.Color,
+    -- | CR 702.158e: the SOURCE's sector designations, for SameSectorAsSource.
+    -- Filled with sourceMeasures; empty where unfilled and for a source in no
+    -- sector alike.
+    sourceSectors :: Set.Set Designation.Designation,
     -- CR 201.1 / 709.4a: the NAMES of the SOURCE, for SameNameAsSource (CR
     -- 702.60a's ripple); `slotNames` below asks the same of a SLOT. Filled with
     -- sourceMeasures, and a SET for sourceColors' reason (CR 708.2a's nameless
@@ -1592,7 +1597,7 @@ data Context = MkContext
 -- here owes both halves of the same pair: which way its unfilled read answers,
 -- and what holds a card to the positions that fill it.
 contextFor :: Teams.Teams -> Maybe PlayerId.PlayerId -> Maybe ObjectId.ObjectId -> Context
-contextFor t p s = MkContext {teams = t, perspective = p, source = s, sourceMeasures = Map.empty, sourceColors = Set.empty, sourceNames = Set.empty, slotAmount = Nothing, defendingPlayers = [], recipient = Nothing, slotObjects = Map.empty, cantCrewVehicles = Set.empty, slotNames = Map.empty, slotControllers = Map.empty, slotHostControllers = Map.empty, subjectHostCardTypes = Set.empty, slotCreatureTypes = Map.empty, slotMeasures = Map.empty, slotPlayers = Map.empty, boundAmounts = Map.empty, slotStickers = Map.empty, boundUnannounced = False, sourceAttachedTo = Nothing, evaluated = Nothing, sourceEntrants = Set.empty, sourceOwner = Nothing, sourceChosenNames = Map.empty, carrierChosenPlayer = Nothing, aimingController = Nothing, sourceChosenColors = Set.empty, sourceChosenSubtype = Nothing, sourceLastExiled = Nothing, sourceExiled = Set.empty}
+contextFor t p s = MkContext {teams = t, perspective = p, source = s, sourceMeasures = Map.empty, sourceColors = Set.empty, sourceSectors = Set.empty, sourceNames = Set.empty, slotAmount = Nothing, defendingPlayers = [], recipient = Nothing, slotObjects = Map.empty, cantCrewVehicles = Set.empty, slotNames = Map.empty, slotControllers = Map.empty, slotHostControllers = Map.empty, subjectHostCardTypes = Set.empty, slotCreatureTypes = Map.empty, slotMeasures = Map.empty, slotPlayers = Map.empty, boundAmounts = Map.empty, slotStickers = Map.empty, boundUnannounced = False, sourceAttachedTo = Nothing, evaluated = Nothing, sourceEntrants = Set.empty, sourceOwner = Nothing, sourceChosenNames = Map.empty, carrierChosenPlayer = Nothing, aimingController = Nothing, sourceChosenColors = Set.empty, sourceChosenSubtype = Nothing, sourceLastExiled = Nothing, sourceExiled = Set.empty}
 
 -- The ONE object a slot names, for the readers that can take no more than one --
 -- Quantity.AgainstSlot's evaluation, Count's IsControllerOfBound. Nothing where
@@ -1659,6 +1664,9 @@ matches context view predicate = case predicate of
   -- absent-value convention -- a colourless object shares no colour with
   -- anything, and a context that supplied no colours names none to share.
   Filter.SharesColorWithSource -> not (Set.disjoint (colors view) (sourceColors context))
+  -- CR 702.158e: "Two permanents are in the same sector if each has the same
+  -- sector designation", so a candidate in no sector shares none.
+  Filter.SameSectorAsSource -> not (Set.disjoint (Sector.sectorsIn (designations view)) (sourceSectors context))
   Filter.HasSubtype s -> Set.member s (subtypes view)
   -- CR 709.4a's own test, said the way that rule says it: membership, so an
   -- object showing several names matches on any one of them.
@@ -2278,6 +2286,7 @@ rewrite pairs predicate = case predicate of
   Filter.HasColor _ -> predicate
   Filter.IsMonocolored -> predicate
   Filter.SharesColorWithSource -> predicate
+  Filter.SameSectorAsSource -> predicate
   -- Untouched, and CR 612.2 says so outright: "an effect that changes a color
   -- word or a subtype can't change a card name, even if that name contains a
   -- word ... that is the same as a Magic color word, basic land type, or
@@ -2538,6 +2547,7 @@ rewriteKeyword pairs keyword = case keyword of
   Keyword.Type.Shadow -> keyword
   Keyword.Type.Horsemanship -> keyword
   Keyword.Type.Skulk -> keyword
+  Keyword.Type.SpaceSculptor -> keyword
   Keyword.Type.Melee -> keyword
   -- CR 702.124h and CR 702.124i name no colour, type or quality CR 612.2 could
   -- swap; CR 702.124k names only the Background enchantment type, and CR
@@ -3050,6 +3060,7 @@ bakeBound players predicate = case predicate of
   Filter.HasColor _ -> predicate
   Filter.IsMonocolored -> predicate
   Filter.SharesColorWithSource -> predicate
+  Filter.SameSectorAsSource -> predicate
   Filter.HasSubtype _ -> predicate
   Filter.HasName _ -> predicate
   Filter.NameWordsAtLeast _ -> predicate
@@ -3233,6 +3244,7 @@ manaValueThresholds predicate = case predicate of
   Filter.HasColor _ -> []
   Filter.IsMonocolored -> []
   Filter.SharesColorWithSource -> []
+  Filter.SameSectorAsSource -> []
   Filter.HasSubtype _ -> []
   Filter.HasName _ -> []
   Filter.NameWordsAtLeast _ -> []
@@ -3387,6 +3399,7 @@ statesAQuality predicate = case predicate of
   Filter.HasColor _ -> True
   Filter.IsMonocolored -> True
   Filter.SharesColorWithSource -> True
+  Filter.SameSectorAsSource -> True
   Filter.HasSubtype _ -> True
   -- CR 701.23b's "stated quality" at its sharpest -- a named card is the most
   -- specific description a search can give -- so the searcher may decline to
@@ -3552,6 +3565,8 @@ readsSourceValues predicate = case predicate of
   Filter.HasColor _ -> False
   Filter.IsMonocolored -> False
   Filter.SharesColorWithSource -> True
+  -- CR 702.158b: a card outside the game is in no sector.
+  Filter.SameSectorAsSource -> False
   Filter.HasSubtype _ -> False
   Filter.HasName _ -> False
   Filter.NameWordsAtLeast _ -> False
@@ -3685,6 +3700,7 @@ overBoundSlotsWith f predicate = case predicate of
   Filter.HasColor _ -> pure predicate
   Filter.IsMonocolored -> pure predicate
   Filter.SharesColorWithSource -> pure predicate
+  Filter.SameSectorAsSource -> pure predicate
   Filter.HasSubtype _ -> pure predicate
   Filter.HasName _ -> pure predicate
   Filter.HasNameOriginallyPrintedIn _ -> pure predicate

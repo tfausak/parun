@@ -48,6 +48,13 @@ data Filter keyword
     -- either side is colourless, which CR 105.2's set reading already makes the
     -- answer for a colourless source.
     SharesColorWithSource
+  | -- | CR 702.158e asked of TWO objects: the candidate is in the same sector as
+    -- the object the evaluation comes from -- Space Beleren's "can be blocked
+    -- this turn only by creatures in the same sector", whose source is the
+    -- attacker (Pawl.Engine.Projection.pairwiseContext). Read off
+    -- Pawl.Engine.Filter.Context's sourceSectors, and False where either side is
+    -- in no sector.
+    SameSectorAsSource
   | HasSubtype Subtype.Subtype -- CR 205.3: the object's subtypes include this one.
   | -- | CR 201.2: the object's names include this LITERAL one. Membership, as CR
     -- 709.4a states the test -- a split card off the stack and a Room with both

@@ -67,6 +67,7 @@ codec keywordCodec =
       Arm.payload "ControlledByPlayer" PlayerId.codec Filter.ControlledByPlayer (\x -> case x of Filter.ControlledByPlayer y -> Just y; _ -> Nothing),
       Arm.nullary "ControlledByRecipient" Filter.ControlledByRecipient,
       Arm.nullary "SharesColorWithSource" Filter.SharesColorWithSource,
+      Arm.nullary "SameSectorAsSource" Filter.SameSectorAsSource,
       Arm.nullary "ManaValueIsEven" Filter.ManaValueIsEven,
       Arm.payload "ControlledBy" PlayerRelation.codec Filter.ControlledBy (\x -> case x of Filter.ControlledBy y -> Just y; _ -> Nothing),
       Arm.payload "OwnedBy" PlayerRelation.codec Filter.OwnedBy (\x -> case x of Filter.OwnedBy y -> Just y; _ -> Nothing),
@@ -196,6 +197,7 @@ tagOf x = case x of
   Filter.ControlledByPlayer {} -> "ControlledByPlayer"
   Filter.ControlledByRecipient {} -> "ControlledByRecipient"
   Filter.SharesColorWithSource {} -> "SharesColorWithSource"
+  Filter.SameSectorAsSource {} -> "SameSectorAsSource"
   Filter.ManaValueIsEven {} -> "ManaValueIsEven"
   Filter.ControlledBy {} -> "ControlledBy"
   Filter.OwnedBy {} -> "OwnedBy"

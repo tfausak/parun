@@ -140,6 +140,7 @@ deciderOf prompt = case prompt of
   Prompt.ChooseEnlist decider _ _ _ -> Just (Decider.unwrap decider)
   Prompt.ChooseEncode decider _ _ _ -> Just (Decider.unwrap decider)
   Prompt.ChooseColor decider _ _ _ -> Just (Decider.unwrap decider)
+  Prompt.ChooseSector decider _ _ _ -> Just (Decider.unwrap decider)
   Prompt.ChooseManaType decider _ _ _ -> Just (Decider.unwrap decider)
   Prompt.ChooseCardName decider _ _ _ _ -> Just (Decider.unwrap decider)
   Prompt.ChooseOpponent decider _ _ _ -> Just (Decider.unwrap decider)
@@ -320,6 +321,7 @@ kindOf prompt = Text.pack $ case prompt of
   Prompt.ChooseEnlist {} -> "ChooseEnlist"
   Prompt.ChooseEncode {} -> "ChooseEncode"
   Prompt.ChooseColor {} -> "ChooseColor"
+  Prompt.ChooseSector {} -> "ChooseSector"
   Prompt.ChooseManaType {} -> "ChooseManaType"
   Prompt.ChooseCardName {} -> "ChooseCardName"
   Prompt.ChooseOpponent {} -> "ChooseOpponent"

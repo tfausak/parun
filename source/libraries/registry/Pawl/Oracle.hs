@@ -229,6 +229,7 @@ printed keyword = case keyword of
   Keyword.Myriad -> Just (Text.pack "Myriad")
   Keyword.Surge {} -> Nothing
   Keyword.Skulk -> Just (Text.pack "Skulk")
+  Keyword.SpaceSculptor -> Just (Text.pack "Space sculptor")
   Keyword.Emerge {} -> Nothing
   Keyword.Escalate {} -> Nothing
   Keyword.Melee -> Just (Text.pack "Melee")
@@ -401,6 +402,7 @@ standalone =
     Keyword.Ravenous,
     Keyword.ForMirrodin,
     Keyword.Bargain,
+    Keyword.SpaceSculptor,
     Keyword.Spree,
     Keyword.Exhaust,
     Keyword.Boast,

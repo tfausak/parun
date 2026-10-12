@@ -737,6 +737,9 @@ data Keyword
   | -- | 702.157a: "As an additional cost to cast this spell, you may pay [cost]
     -- any number of times", and an enters trigger making a token copy per payment.
     Squad (Cost.Cost Keyword)
+  | -- | 702.158a: space sculptor, which makes CR 704.5u sort creatures into CR
+    -- 702.158b's sectors (Pawl.Engine.SpaceSculptor).
+    SpaceSculptor
   | -- | 702.160a: a second mana cost, power and toughness the caster may choose
     -- instead of the printed ones as the card is cast (CR 718.3).
     Prototype Prototype.Prototype

@@ -431,6 +431,7 @@ filterNames asking criterion = case criterion of
   Filter.HasColor _color -> False
   Filter.IsMonocolored -> False
   Filter.SharesColorWithSource -> False
+  Filter.SameSectorAsSource -> False
   Filter.HasSubtype _subtype -> False
   Filter.HasName _name -> False
   Filter.NameWordsAtLeast _n -> False
@@ -1336,6 +1337,7 @@ effectNames asking onCard onAbility x = case x of
   Effect.ChoosePlayer choosePlayer -> choosePlayerNames asking choosePlayer
   Effect.ChoosePlayerAtRandom choosePlayerAtRandom -> choosePlayerAtRandomNames asking choosePlayerAtRandom
   Effect.ChoosePermanents choosePermanents -> choosePermanentsNames asking choosePermanents
+  Effect.ChooseSector slot -> slotNames asking slot
   Effect.RollDie rollDie -> rollDieNames asking rollDie
   Effect.Reroll -> False
   Effect.RerollStoredResults slotName -> slotNames asking slotName
@@ -1557,7 +1559,7 @@ forbidAttackNames asking x = case x of
 
 forbidBeingBlockedNames :: Asking -> ForbidBeingBlocked.ForbidBeingBlocked -> Bool
 forbidBeingBlockedNames asking x = case x of
-  ForbidBeingBlocked.MkForbidBeingBlocked duration affected -> durationNames asking duration || filterNames asking affected
+  ForbidBeingBlocked.MkForbidBeingBlocked duration affected barred -> durationNames asking duration || filterNames asking affected || filterNames asking barred
 
 foretellCostNames :: Asking -> (keyword -> Bool) -> ForetellCost.ForetellCost keyword -> Bool
 foretellCostNames asking onKeyword x = case x of
@@ -1738,6 +1740,7 @@ keywordNames asking x = case x of
   Keyword.Myriad -> False
   Keyword.Surge cost -> costNames asking (keywordNames asking) cost
   Keyword.Skulk -> False
+  Keyword.SpaceSculptor -> False
   Keyword.Emerge emerge -> emergeNames asking (keywordNames asking) emerge
   Keyword.Escalate cost -> costNames asking (keywordNames asking) cost
   Keyword.Melee -> False

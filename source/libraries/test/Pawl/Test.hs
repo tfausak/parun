@@ -797,6 +797,7 @@ import qualified Pawl.ScenarioSpec
 import qualified Pawl.SetupSpec
 import qualified Pawl.ShieldCounterSpec
 import qualified Pawl.SlugSpec
+import qualified Pawl.SpaceSculptorSpec
 import qualified Pawl.Spec as Spec
 import qualified Pawl.SpecialActionSpec
 import qualified Pawl.SpeedSpec
@@ -1591,6 +1592,7 @@ spec s registry = do
   Pawl.GameSpec.spec s registry
   Pawl.GoadSpec.spec s registry
   Pawl.HarnessSpec.spec s registry
+  Pawl.SpaceSculptorSpec.spec s registry
   Pawl.HealSpec.spec s registry
   Pawl.Json.ArraySpec.spec s
   Pawl.Json.BooleanSpec.spec s

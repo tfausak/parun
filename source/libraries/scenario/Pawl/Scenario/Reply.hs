@@ -19,6 +19,7 @@ import qualified Pawl.Codec.CastFromZone as Codec.CastFromZone
 import qualified Pawl.Codec.CoinFace as Codec.CoinFace
 import qualified Pawl.Codec.Color as Codec.Color
 import qualified Pawl.Codec.CounterKind as Codec.CounterKind
+import qualified Pawl.Codec.Designation as Codec.Designation
 import qualified Pawl.Codec.Facing as Codec.Facing
 import qualified Pawl.Codec.Keyword as Codec.Keyword
 import qualified Pawl.Codec.LibraryPosition as Codec.LibraryPosition
@@ -389,6 +390,7 @@ shapeOf prompt = case prompt of
   Prompt.ChoosePayLifeOnEntry {} -> viaCodec Codec.OptionalDecision.codec
   Prompt.ChooseRevealOnEntry {} -> maybeOf object
   Prompt.ChooseColor {} -> viaCodec Codec.Color.codec
+  Prompt.ChooseSector {} -> viaCodec Codec.Designation.codec
   Prompt.ChooseManaType {} -> viaCodec Codec.ManaType.codec
   Prompt.ChooseCardName {} -> viaCodec Codec.CardName.codec
   Prompt.ChooseOpponent {} -> player

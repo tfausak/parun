@@ -29,6 +29,9 @@ data ActiveEvasion = MkActiveEvasion
     controller :: PlayerId.PlayerId,
     timestamp :: Timestamp.Timestamp,
     expiry :: Expiry.Expiry,
-    affected :: Filter.Filter Keyword.Keyword
+    affected :: Filter.Filter Keyword.Keyword,
+    -- | The blockers barred from each such attacker, matched in the attacker's
+    -- context (Pawl.Types.ForbidBeingBlocked's 'blockers').
+    blockers :: Filter.Filter Keyword.Keyword
   }
   deriving (Eq, Ord, Show)

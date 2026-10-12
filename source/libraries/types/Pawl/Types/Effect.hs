@@ -637,6 +637,10 @@ data Effect card ability
   | -- | CR 608.2d: the payload's chooser picks matching permanents, bound into
     -- its slot for a later effect of the same resolution to act on.
     ChoosePermanents ChoosePermanents.ChoosePermanents
+  | -- | CR 702.158d: the resolving controller chooses a sector, and every
+    -- permanent in it is bound into the slot for a later effect of the same
+    -- resolution to act on (Space Beleren).
+    ChooseSector SlotName.SlotName
   | -- | CR 706.1: roll dice of the stated kind and number, and bind the result
     -- as an amount at the payload's slot for a later effect to read as
     -- Quantity.InSlot (Ancient Copper Dragon, Valiant Endeavor).
