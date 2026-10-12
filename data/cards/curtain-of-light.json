@@ -60,9 +60,9 @@
                       "type": "IsAttacking"
                     },
                     {
-                      "type": "Not",
+                      "type": "HasBlockStatus",
                       "value": {
-                        "type": "IsBlocked"
+                        "type": "Unblocked"
                       }
                     }
                   ]

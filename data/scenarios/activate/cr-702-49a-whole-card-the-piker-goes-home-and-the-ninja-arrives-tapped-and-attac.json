@@ -49,7 +49,7 @@
     },
     {
       "turn": 1,
-      "step": "DeclareAttackers",
+      "step": "DeclareBlockers",
       "player": "alice",
       "do": {
         "Activate": {
@@ -64,7 +64,7 @@
     },
     {
       "turn": 1,
-      "step": "DeclareAttackers",
+      "step": "DeclareBlockers",
       "player": "alice",
       "check": {
         "View": {
@@ -80,7 +80,7 @@
     },
     {
       "turn": 1,
-      "step": "DeclareAttackers",
+      "step": "DeclareBlockers",
       "player": "alice",
       "check": {
         "Count": {
@@ -93,13 +93,13 @@
     },
     {
       "turn": 1,
-      "step": "DeclareAttackers",
+      "step": "DeclareBlockers",
       "player": "alice",
       "do": "Pass"
     },
     {
       "turn": 1,
-      "step": "DeclareAttackers",
+      "step": "DeclareBlockers",
       "player": "alice",
       "check": {
         "Attackers": {
@@ -111,7 +111,7 @@
     },
     {
       "turn": 1,
-      "step": "DeclareAttackers",
+      "step": "DeclareBlockers",
       "player": "alice",
       "check": {
         "View": {

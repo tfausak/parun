@@ -243,6 +243,8 @@ library codec
     Pawl.Codec.BlockRequirementSpec
     Pawl.Codec.BlocksDeclared
     Pawl.Codec.BlocksDeclaredSpec
+    Pawl.Codec.BlockStatus
+    Pawl.Codec.BlockStatusSpec
     Pawl.Codec.Board
     Pawl.Codec.BoardSpec
     Pawl.Codec.BoundMeasure
@@ -2105,6 +2107,7 @@ library types
     Pawl.Types.BlockProducer
     Pawl.Types.BlockRequirement
     Pawl.Types.BlocksDeclared
+    Pawl.Types.BlockStatus
     Pawl.Types.Board
     Pawl.Types.BoundMeasure
     Pawl.Types.BuybackDecision

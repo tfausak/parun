@@ -39,6 +39,7 @@ import qualified Pawl.Types.ActivatedAbility as ActivatedAbility
 import qualified Pawl.Types.ActivatedAbilitySource as ActivatedAbilitySource
 import qualified Pawl.Types.Affected as Affected
 import qualified Pawl.Types.AttackTarget as AttackTarget
+import qualified Pawl.Types.BlockStatus as BlockStatus
 import qualified Pawl.Types.Card as Card.Type
 import qualified Pawl.Types.CardType as CardType
 import qualified Pawl.Types.CharacteristicPT as CharacteristicPT
@@ -164,7 +165,7 @@ viewOfCard face =
           -- CR 310.9d: nor any battle, for the same reason.
           Filter.attackingBattleProtector = Nothing,
           Filter.blocking = False,
-          Filter.blocked = False,
+          Filter.blockStatus = Nothing,
           Filter.blockers = Set.empty,
           Filter.attackedThisTurn = False,
           -- CR 508.1a / 509.1a: a printed face is in no combat, for the reason
@@ -598,9 +599,22 @@ viewOfCharacteristics peers oid pc controller counters gs =
       -- a departed creature out of the record, so Count.lastKnownView gives
       -- CR 608.2h's answer over this one too.
       Filter.blocking = Game.isBlocking oid gs,
-      -- CR 509.1h: the key lookup the line above is careful not to be. Stays True
-      -- once every creature blocking it has left combat.
-      Filter.blocked = Map.member oid (Combat.blockers (GameState.combat gs)),
+      -- CR 509.1h: the key lookup the line above is careful not to be, so a
+      -- blocked creature stays blocked once every creature blocking it has left
+      -- combat. Unblocked only once blockers are declared (CR 508.4d for one
+      -- put onto the battlefield attacking afterwards).
+      --
+      -- Not implemented: CR 509.1h's "an effect says that it becomes
+      -- unblocked", which nothing writes, so a blocked attacker stays blocked
+      -- for the rest of combat (#5005).
+      Filter.blockStatus =
+        let c = GameState.combat gs
+         in if Map.member oid (Combat.blockers c)
+              then Just BlockStatus.Blocked
+              else
+                if Map.member oid (Combat.attackers c) && Combat.blockersDeclared c
+                  then Just BlockStatus.Unblocked
+                  else Nothing,
       Filter.blockers = Map.findWithDefault Set.empty oid (Combat.blockers (GameState.combat gs)),
       -- CR 608.2i: what this object did this turn and this combat, off the
       -- turn's log and the combat record. Each reader is shared with

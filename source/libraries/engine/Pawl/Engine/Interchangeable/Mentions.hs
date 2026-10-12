@@ -477,7 +477,7 @@ filterNames asking criterion = case criterion of
   Filter.IsAttackingBattle _relation -> False
   Filter.DeclaredAttackedThisCombat -> False
   Filter.IsBlocking -> False
-  Filter.IsBlocked -> False
+  Filter.HasBlockStatus _ -> False
   Filter.DeclaredAttackerThisCombat -> False
   Filter.DeclaredBlockerThisCombat -> False
   Filter.AttackedThisTurn -> True

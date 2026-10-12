@@ -1003,10 +1003,13 @@ ninjutsuAttack s registry = do
       lands = [island, island, swamp, swamp]
   pure (List.foldl' (\g land -> snd (S.addPermanent land S.alice g)) g0 lands)
 
--- The attack declared, and alice holding priority in the declare attackers step,
--- where an unblocked attacker exists for rule 702.49's cost to return.
+-- The attack declared, bob declaring no blockers (he has no creatures), and
+-- alice holding priority in the declare blockers step, where the Pikers are
+-- unblocked creatures (CR 509.1h) for rule 702.49's cost to return.
 declaredAttack :: GameState.GameState -> GameState.GameState
-declaredAttack gs = (S.runPure S.aggressiveAnswer gs (Combat.declareAttackers S.manaPerformer S.alice)) {GameState.priority = Just S.alice}
+declaredAttack gs =
+  let attacked = S.runPure S.aggressiveAnswer gs (Combat.declareAttackers S.manaPerformer S.alice)
+   in (S.runPure S.aggressiveAnswer attacked {GameState.phase = Phase.Combat CombatStep.DeclareBlockers} (Combat.declareBlockers S.manaPerformer)) {GameState.priority = Just S.alice}
 
 -- ninjutsuAttack with `printing` in alice's hand, then moved to `zone` when that
 -- is not the hand. The same road for both cards, so the pair below differs in the
@@ -1065,7 +1068,7 @@ ninjutsuSpec s registry = Spec.describe s "Commander ninjutsu" $ do
         Spec.assertBool s (not (any (isActivationOf arrivedId) (Action.legalActions S.alice resolved))) "CR 113.6b on the battlefield Yuriko offers no commander ninjutsu"
         Spec.assertEqWith s "and is no longer in the command zone" (commandZoneNames resolved) []
         Spec.assertEqWith s "one Piker went home to alice's hand" (handNames S.alice resolved) [S.nameOf (Printing.card piker)]
-        let damaged = S.runCombat S.aggressiveAnswer resolved {GameState.phase = Phase.Combat CombatStep.DeclareBlockers, GameState.remaining = S.phasesAfter (Phase.Combat CombatStep.DeclareBlockers)}
+        let damaged = S.runCombat S.aggressiveAnswer resolved {GameState.phase = Phase.Combat CombatStep.CombatDamage, GameState.remaining = S.phasesAfter (Phase.Combat CombatStep.CombatDamage)}
         Spec.assertEqWith s "Yuriko's trigger: bob lost her 1 and the other Piker's 2 combat damage plus Shimatsu's mana value 4" (liftA2 (-) (S.lifeOf S.bob resolved) (S.lifeOf S.bob damaged)) (Just 7)
         Spec.assertEqWith s "and Shimatsu went to alice's hand beside the Piker" (List.sort (handNames S.alice damaged)) (List.sort [S.nameOf (Printing.card piker), S.nameOf (Printing.card shimatsu)])
       _ -> Spec.assertFailure s "expected Yuriko alone in the command zone, offering one ability"
