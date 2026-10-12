@@ -3168,9 +3168,10 @@ protectionFromEach :: Set.Set CardName.CardName
 protectionFromEach = Set.fromList (fmap (CardName.MkCardName . Text.pack) ["Iridescent Angel", "Spectra Ward"])
 
 -- CR 702.16g's "protection from [A] and from [B]": the cards printing a list,
--- which any subset of the domain satisfies.
+-- which any subset of the domain satisfies. Council Guardian's per-colour
+-- grants, each gated on that colour's votes, are listed the same way.
 protectionListed :: Set.Set CardName.CardName
-protectionListed = Set.fromList (fmap (CardName.MkCardName . Text.pack) ["Paladin en-Vec"])
+protectionListed = Set.fromList (fmap (CardName.MkCardName . Text.pack) ["Council Guardian", "Paladin en-Vec"])
 
 -- The qualities of each protection group a face prints: its own keywords, each
 -- static ability's grants, and every grant its resolution effects make.
