@@ -175,3 +175,10 @@ spec s = Spec.describe s "Pawl.Codec.Expiry" $ do
       Expiry.codec
       Expiry.WhenUsed
       " {\"type\":\"WhenUsed\"} "
+  -- CR 611.2a / 701.27b: what Duration.UntilTurnedFaceDown arms into.
+  Spec.it s "WhenTurnedFaceDown" $
+    Common.assertCodec
+      s
+      Expiry.codec
+      Expiry.WhenTurnedFaceDown
+      " {\"type\":\"WhenTurnedFaceDown\"} "

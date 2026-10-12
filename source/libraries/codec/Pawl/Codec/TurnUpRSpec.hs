@@ -21,7 +21,7 @@ spec s = Spec.describe s "Pawl.Codec.TurnUpR" $ do
   Spec.it s "MkTurnUpR" $
     Common.assertCodec
       s
-      TurnUpR.codec
+      (TurnUpR.codec Common.text Common.text)
       ( TurnUpR.MkTurnUpR
           { TurnUpR.matching = Filter.IsSource,
             TurnUpR.requiring = Nothing,
@@ -38,7 +38,7 @@ spec s = Spec.describe s "Pawl.Codec.TurnUpR" $ do
   Spec.it s "megamorph's baked requiring (CR 702.37b)" $
     Common.assertCodec
       s
-      TurnUpR.codec
+      (TurnUpR.codec Common.text Common.text)
       ( TurnUpR.MkTurnUpR
           { TurnUpR.matching = Filter.IsSource,
             TurnUpR.requiring = Just TurnUpProcedure.Morph,
@@ -49,4 +49,4 @@ spec s = Spec.describe s "Pawl.Codec.TurnUpR" $ do
           }
       )
       " {\"matching\":{\"type\":\"IsSource\"},\"requiring\":{\"type\":\"Morph\"},\"paying\":{\"mana\":[{\"type\":\"Generic\",\"value\":4}]},\"rewrite\":{\"type\":\"WithCounters\",\"value\":[{\"kind\":{\"type\":\"PlusOnePlusOne\"},\"count\":{\"type\":\"Literal\",\"value\":1}}]}} "
-  Spec.it s "has a schema" $ Common.assertHasSchema s TurnUpR.codec
+  Spec.it s "has a schema" $ Common.assertHasSchema s (TurnUpR.codec Common.text Common.text)

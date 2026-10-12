@@ -651,7 +651,7 @@ armDelayedTriggerNames asking onAbility x = case x of
 
 asCopyNames :: Asking -> (ability -> Bool) -> (effect -> Bool) -> AsCopy.AsCopy ability effect -> Bool
 asCopyNames asking onAbility onEffect x = case x of
-  AsCopy.MkAsCopy eligible exceptions _tapped counters whenYouDo _zone -> filterNames asking eligible || any (copyExceptionNames asking onAbility) exceptions || any (withCountersNames asking) counters || any onEffect whenYouDo
+  AsCopy.MkAsCopy eligible exceptions _tapped counters whenYouDo _zone duration -> filterNames asking eligible || any (copyExceptionNames asking onAbility) exceptions || any (withCountersNames asking) counters || any onEffect whenYouDo || any (durationNames asking) duration
 
 attachAllNames :: Asking -> AttachAll.AttachAll -> Bool
 attachAllNames asking x = case x of
@@ -1199,6 +1199,7 @@ durationNames asking x = case x of
   Duration.UntilEndOfCombatOnYourNextTurn -> False
   Duration.UntilPaid cost -> costNames asking (keywordNames asking) cost
   Duration.UntilUsed -> False
+  Duration.UntilTurnedFaceDown -> False
 
 eachCardFromAmongNames :: Asking -> EachCardFromAmong.EachCardFromAmong -> Bool
 eachCardFromAmongNames asking x = case x of
@@ -1522,6 +1523,7 @@ expiryNames asking x = case x of
   Expiry.AtEndOfCombatOn _afterTurn -> False
   Expiry.WhenPaid paidExpiry -> paidExpiryNames asking paidExpiry
   Expiry.WhenUsed -> False
+  Expiry.WhenTurnedFaceDown -> False
 
 faceNames :: Asking -> (card -> Bool) -> Face.Face card -> Bool
 faceNames asking onCard x = case x of
@@ -2469,7 +2471,7 @@ replacementEffectNames asking onCard onAbility onEffect x = case x of
   ReplacementEffect.DestructionR destructionR -> destructionRNames asking destructionR
   ReplacementEffect.CounterR counterR -> counterRNames asking counterR
   ReplacementEffect.TokenR tokenR -> tokenRNames asking onCard tokenR
-  ReplacementEffect.TurnUpR turnUpR -> turnUpRNames asking turnUpR
+  ReplacementEffect.TurnUpR turnUpR -> turnUpRNames asking onAbility onEffect turnUpR
   ReplacementEffect.UntapR untapR -> untapRNames asking untapR
   ReplacementEffect.LifeLossR lifeLossR -> lifeLossRNames asking lifeLossR
   ReplacementEffect.LifeGainR lifeGainR -> lifeGainRNames asking lifeGainR
@@ -2829,14 +2831,15 @@ turnFaceDownNames :: Asking -> (ability -> Bool) -> TurnFaceDown.TurnFaceDown ab
 turnFaceDownNames asking onAbility x = case x of
   TurnFaceDown.MkTurnFaceDown ref characteristics -> objectRefNames asking ref || faceDownCharacteristicsNames asking onAbility characteristics
 
-turnUpRNames :: Asking -> TurnUpR.TurnUpR -> Bool
-turnUpRNames asking x = case x of
-  TurnUpR.MkTurnUpR matching _requiring paying rewrite -> filterNames asking matching || any (costNames asking (keywordNames asking)) paying || turnUpRewriteNames asking rewrite
+turnUpRNames :: Asking -> (ability -> Bool) -> (effect -> Bool) -> TurnUpR.TurnUpR ability effect -> Bool
+turnUpRNames asking onAbility onEffect x = case x of
+  TurnUpR.MkTurnUpR matching _requiring paying rewrite -> filterNames asking matching || any (costNames asking (keywordNames asking)) paying || turnUpRewriteNames asking onAbility onEffect rewrite
 
-turnUpRewriteNames :: Asking -> TurnUpRewrite.TurnUpRewrite -> Bool
-turnUpRewriteNames asking x = case x of
+turnUpRewriteNames :: Asking -> (ability -> Bool) -> (effect -> Bool) -> TurnUpRewrite.TurnUpRewrite ability effect -> Bool
+turnUpRewriteNames asking onAbility onEffect x = case x of
   TurnUpRewrite.WithCounters withCounters -> withCountersNames asking withCounters
   TurnUpRewrite.MayAttachTo filter_ -> filterNames asking filter_
+  TurnUpRewrite.AsCopy asCopy -> asCopyNames asking onAbility onEffect asCopy
 
 untapRNames :: Asking -> UntapR.UntapR -> Bool
 untapRNames asking x = case x of

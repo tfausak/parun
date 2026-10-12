@@ -28,7 +28,8 @@ codec =
       Arm.nullary "UntilEndOfCombat" Duration.UntilEndOfCombat,
       Arm.nullary "UntilEndOfCombatOnYourNextTurn" Duration.UntilEndOfCombatOnYourNextTurn,
       Arm.payload "UntilPaid" (Cost.codec Keyword.codec) Duration.UntilPaid (\x -> case x of Duration.UntilPaid y -> Just y; _ -> Nothing),
-      Arm.nullary "UntilUsed" Duration.UntilUsed
+      Arm.nullary "UntilUsed" Duration.UntilUsed,
+      Arm.nullary "UntilTurnedFaceDown" Duration.UntilTurnedFaceDown
     ]
 
 tagOf :: Duration.Duration -> String
@@ -48,3 +49,4 @@ tagOf x = case x of
   Duration.UntilEndOfCombatOnYourNextTurn {} -> "UntilEndOfCombatOnYourNextTurn"
   Duration.UntilPaid {} -> "UntilPaid"
   Duration.UntilUsed {} -> "UntilUsed"
+  Duration.UntilTurnedFaceDown {} -> "UntilTurnedFaceDown"

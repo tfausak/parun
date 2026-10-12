@@ -1915,8 +1915,9 @@ bucketOfEffect re = case re of
   ReplacementEffect.DestructionR _ -> ReplacementBucket.Other
   ReplacementEffect.CounterR {} -> ReplacementBucket.Other
   ReplacementEffect.TokenR {} -> ReplacementBucket.Other
-  -- CR 616.1a-d are all about entering the battlefield and copying; turning face
-  -- up is neither, so CR 616.1e.
+  -- CR 616.1a-d are all about entering the battlefield; turning face up is not,
+  -- so CR 616.1e -- for the copy rewrite too, since CR 616.1c's copy is one made
+  -- "as it enters the battlefield".
   ReplacementEffect.TurnUpR {} -> ReplacementBucket.Other
   -- CR 616.1a-d are all about entering the battlefield and copying; becoming
   -- untapped is neither, so CR 616.1e.
@@ -2131,6 +2132,9 @@ readsApplier re = case re of
   -- same question to the same player. The destination Filter is the effect's own
   -- field, inside `choose`'s comparison already.
   ReplacementEffect.TurnUpR (TurnUpR.MkTurnUpR _ _ _ (TurnUpRewrite.MayAttachTo _)) -> False
+  -- CR 707.4 / 109.5: the EntryR AsCopy arm's answer on the other event class --
+  -- the chooser is the turning permanent's controller, read off the event.
+  ReplacementEffect.TurnUpR (TurnUpR.MkTurnUpR _ _ _ (TurnUpRewrite.AsCopy _)) -> False
   -- CR 122.1d acts on the permanent becoming untapped and names no player -- CR
   -- 701.19a's answer one event class over, and for its reason.
   ReplacementEffect.UntapR _ -> False
@@ -2578,8 +2582,8 @@ legalCopyTargets batch filter_ zone self gs =
    in filter eligible domain
 
 -- CR 707.9g / 603.11: the triggered ability linked to a CR 707.5 entry
--- replacement ("When you do, ..."), as the reflexive entry Pawl.Engine.Event's
--- AsCopy arm arms where a copy was made. TriggerCondition.Reflexive, enlist's
+-- replacement ("When you do, ..."), as the reflexive entry
+-- Pawl.Engine.Event.becomeCopyAs arms where a copy was made. TriggerCondition.Reflexive, enlist's
 -- posture for its own linked ability (Pawl.Engine.Keyword.enlistReflexive): the
 -- entry's existence is the "you do", and it fires at the next gather (CR 603.3),
 -- after the permanent has entered. Nothing for a row that links none.

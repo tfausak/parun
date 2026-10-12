@@ -5104,6 +5104,10 @@ applyOneEffect runSubgame resolving source controller legal chosen effect = case
     -- CR 701.27b: one event per permanent that actually turned, after the writes,
     -- so a trigger's Filter reads the face-down permanent (CR 603.10).
     Monad.mapM_ (State.modify' . Event.recordEvent . GameEvent.PermanentActed . PermanentActed.MkPermanentActed PermanentAction.TurnFaceDown) ordered
+    -- CR 611.2a: "until this creature is turned face down" (Vesuvan
+    -- Shapeshifter) ends here, for each permanent that actually turned. This
+    -- arm is the only road that turns a permanent face down.
+    Monad.mapM_ (State.modify' . Expiry.sweep . Expiry.TurnedFaceDown) ordered
   -- CR 708 through FaceDown.turnFaceUpByEffect, the funnel CR 116.2b's special
   -- action shares: this arm decides only WHICH permanent, never what turning it
   -- over does. CR 701.40g lives inside that funnel and so applies here without

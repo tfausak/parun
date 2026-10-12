@@ -1576,6 +1576,7 @@ durationPlayerRefs duration = case duration of
   Duration.UntilEndOfCombat -> []
   Duration.UntilEndOfCombatOnYourNextTurn -> []
   Duration.UntilUsed -> []
+  Duration.UntilTurnedFaceDown -> []
 
 -- CR 611.2b: only ForAsLongAs carries a Quantity, through its Condition.
 durationSlots :: Duration.Duration -> Map.Map SlotName SlotArity
@@ -1603,6 +1604,7 @@ durationSlots duration = case duration of
   -- walked wherever that effect's payload is (Pawl.Engine.PlayerEffect), not
   -- here.
   Duration.UntilUsed -> Map.empty
+  Duration.UntilTurnedFaceDown -> Map.empty
 
 -- Both sides of a comparison are a Quantity, and either may read a slot.
 conditionSlots :: Condition.Type.Condition -> Map.Map SlotName SlotArity
@@ -1714,7 +1716,7 @@ entryRewriteReads :: EntryRewrite.EntryRewrite (GrantedAbility.GrantedAbility Ca
 entryRewriteReads rewrite = case rewrite of
   -- CR 707.9e's additional counters are Quantities beside the eligible filter,
   -- and read at the entry exactly as the CR 614.1c row's below are.
-  EntryRewrite.AsCopy asCopy -> ([AsCopy.eligible asCopy], foldMap (Map.elems . WithCounters.counters) (AsCopy.counters asCopy))
+  EntryRewrite.AsCopy asCopy -> asCopyReads asCopy
   EntryRewrite.ChoiceOf _ -> ([], [])
   EntryRewrite.ChoiceByCoinFlip _ -> ([], [])
   EntryRewrite.ChooseColors {} -> ([], [])
@@ -1770,10 +1772,17 @@ entryRewriteReads rewrite = case rewrite of
 -- What a TURN-UP rewrite reads. entryRewriteReads' two shapes and its discipline:
 -- CR 702.37b's count is evaluated against the row's Context, and CR 303.4k's host
 -- description is a Filter.
-turnUpRewriteReads :: TurnUpRewrite.TurnUpRewrite -> ([Filter.Type.Filter Keyword.Type.Keyword], [Quantity.Type.Quantity])
+turnUpRewriteReads :: TurnUpRewrite.TurnUpRewrite ability effect -> ([Filter.Type.Filter Keyword.Type.Keyword], [Quantity.Type.Quantity])
 turnUpRewriteReads rewrite = case rewrite of
   TurnUpRewrite.WithCounters counters -> ([], Map.elems (WithCounters.counters counters))
   TurnUpRewrite.MayAttachTo filter_ -> ([filter_], [])
+  TurnUpRewrite.AsCopy asCopy -> asCopyReads asCopy
+
+-- What a copy rewrite reads, on either event class: the eligible filter, and CR
+-- 707.9e's additional counters beside it. The duration names no slot -- every
+-- arm an AsCopy states is one durationSlots answers empty for.
+asCopyReads :: AsCopy.AsCopy ability effect -> ([Filter.Type.Filter Keyword.Type.Keyword], [Quantity.Type.Quantity])
+asCopyReads asCopy = ([AsCopy.eligible asCopy], foldMap (Map.elems . WithCounters.counters) (AsCopy.counters asCopy))
 
 -- What a DRAW rewrite reads. entryRewriteReads' discipline again, and the answer
 -- is SYNTACTIC rather than per-reader: CR 400.11c keeps a spell or ability from
@@ -1910,7 +1919,7 @@ entryRewriteEffects :: EntryRewrite.EntryRewrite (GrantedAbility.GrantedAbility 
 entryRewriteEffects rewrite = case rewrite of
   EntryRewrite.RunEffects effects -> Foldable.toList effects
   -- CR 707.9g's linked trigger is not run by the rewrite: it resolves as its own
-  -- ability, under the bindings Pawl.Engine.Event's AsCopy arm stamps on it, so
+  -- ability, under the bindings Pawl.Engine.Event.becomeCopyAs stamps on it, so
   -- nothing it reads is the row's to capture.
   EntryRewrite.AsCopy _ -> []
   EntryRewrite.ChoiceOf _ -> []
@@ -2272,6 +2281,7 @@ durationSlotsAreExhaustive duration = case duration of
   Duration.UntilEndOfCombat -> True
   Duration.UntilEndOfCombatOnYourNextTurn -> True
   Duration.UntilUsed -> True
+  Duration.UntilTurnedFaceDown -> True
 
 -- conditionSlots' mirror: both sides are a Quantity.
 conditionSlotsAreExhaustive :: Condition.Type.Condition -> Bool

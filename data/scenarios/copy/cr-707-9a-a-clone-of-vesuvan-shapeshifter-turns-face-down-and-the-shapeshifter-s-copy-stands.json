@@ -1,0 +1,53 @@
+{
+  "description": "CR 707.9a a Clone of Vesuvan Shapeshifter has its upkeep trigger, and turning the Clone face down leaves the Shapeshifter's copy standing",
+  "note": "The Shapeshifter enters as a copy of the Blind-Spot Giant (4/3); a Clone entering as a copy of the Shapeshifter is the Giant too, and per the Shapeshifter's rulings it also has the quoted upkeep trigger (CR 707.2, 707.9a). At alice's upkeep the Clone's trigger turns the Clone face down and the Shapeshifter declines its own. Only the Shapeshifter's copy is 'until THIS creature is turned face down', so it stands: the Shapeshifter is still the 4/3 Giant, where ending every such copy would leave a 0/0 for CR 704.5f. The face-down Clone has no morph ability (the rulings' last paragraph), so nothing offers to turn it face up.",
+  "board": {
+    "seats": [
+      {
+        "name": "alice",
+        "battlefield": [
+          { "card": "Blind-Spot Giant", "label": "giant" },
+          { "card": "Island", "ready": true },
+          { "card": "Island", "ready": true },
+          { "card": "Island", "ready": true },
+          { "card": "Island", "ready": true },
+          { "card": "Island", "ready": true },
+          { "card": "Island", "ready": true },
+          { "card": "Island", "ready": true },
+          { "card": "Island", "ready": true },
+          { "card": "Island", "ready": true }
+        ],
+        "hand": [
+          { "card": "Vesuvan Shapeshifter", "label": "vesuvan" },
+          { "card": "Clone", "label": "clone" }
+        ],
+        "library": [{ "card": "Goblin Piker" }, { "card": "Goblin Piker" }]
+      },
+      {
+        "name": "bob",
+        "library": [{ "card": "Island" }, { "card": "Island" }]
+      }
+    ],
+    "active": "alice",
+    "step": "PrecombatMain"
+  },
+  "timeline": [
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": { "Cast": { "object": "$vesuvan", "faceDown": false, "mana": ["Island", "Island#2", "Island#3", "Island#4", "Island#5", null] } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass" },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": { "ChooseCopyTarget": "$giant" } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": { "Cast": { "object": "$clone", "mana": ["Island#6", "Island#7", "Island#8", "Island#9"] } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass" },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": { "ChooseCopyTarget": "Vesuvan Shapeshifter" } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "check": { "PowerToughness": { "object": "Clone", "power": 4, "toughness": 3 } } },
+    { "turn": 3, "step": "Upkeep", "player": "alice", "do": { "OrderTriggers": ["Vesuvan Shapeshifter", "Clone"] } },
+    { "turn": 3, "step": "Upkeep", "player": "alice", "do": "Pass" },
+    { "turn": 3, "step": "Upkeep", "player": "alice", "do": { "ChooseOptional": { "type": "Exercises" } }, "source": "Clone" },
+    { "turn": 3, "step": "Upkeep", "player": "alice", "check": { "PowerToughness": { "object": "Vesuvan Shapeshifter", "power": 4, "toughness": 3 } } },
+    { "turn": 3, "step": "Upkeep", "player": "alice", "check": { "Names": { "object": "Vesuvan Shapeshifter", "names": ["Blind-Spot Giant"] } } },
+    { "turn": 3, "step": "Upkeep", "player": "alice", "do": "Pass" },
+    { "turn": 3, "step": "Upkeep", "player": "alice", "do": { "ChooseOptional": { "type": "Declines" } }, "source": "Vesuvan Shapeshifter" },
+    { "turn": 3, "step": "Upkeep", "player": "alice", "check": { "PowerToughness": { "object": "Clone", "power": 2, "toughness": 2 } } },
+    { "turn": 3, "step": "Upkeep", "player": "alice", "check": { "Names": { "object": "Clone", "names": [] } } },
+    { "turn": 3, "step": "PrecombatMain", "player": "alice", "check": { "View": { "of": "Offered", "player": "alice", "is": ["Pass", "ActivateManaAbility Island", "ActivateManaAbility Island#2", "ActivateManaAbility Island#3", "ActivateManaAbility Island#4", "ActivateManaAbility Island#5", "ActivateManaAbility Island#6", "ActivateManaAbility Island#7", "ActivateManaAbility Island#8", "ActivateManaAbility Island#9"] } } }
+  ]
+}

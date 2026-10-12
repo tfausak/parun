@@ -114,7 +114,7 @@ data ReplacementEffect card ability effect
     -- while that permanent is being turned face up, not afterward" --
     -- Pawl.Engine.FaceDown.performTurnFaceUp raises the event between the status write
     -- and the CR 708.7 record.
-    TurnUpR TurnUpR.TurnUpR
+    TurnUpR (TurnUpR.TurnUpR ability effect)
   | -- | CR 614.1a / 122.1d: "If a permanent with a stun counter on it would
     -- become untapped, instead remove a stun counter from it." A separate arm
     -- from every other because becoming untapped is its own event class: CR

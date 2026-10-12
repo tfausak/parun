@@ -110,4 +110,8 @@ data Duration
     -- Expiry.WhenUsed. Nullary: no printed sentence in the pool narrows WHICH
     -- use ends it beyond the effect's own Filter.
     UntilUsed
+  | -- | CR 611.2a: "until this creature is turned face down" (Vesuvan
+    -- Shapeshifter), stored as Expiry.WhenTurnedFaceDown and ended by CR
+    -- 701.27b's event on the effect's source.
+    UntilTurnedFaceDown
   deriving (Eq, Ord, Show)

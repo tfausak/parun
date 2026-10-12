@@ -2,6 +2,7 @@
 
 module Pawl.Codec.TurnUpR where
 
+import qualified Data.Typeable as Typeable
 import qualified Pawl.Codec.Cost as Cost
 import qualified Pawl.Codec.Filter as Filter
 import qualified Pawl.Codec.Keyword as Keyword
@@ -18,12 +19,16 @@ import qualified Pawl.Types.TurnUpR as TurnUpR
 -- `requiring` and `paying` are engine-baked -- Pawl.Types.TurnUpR says why -- so
 -- each defaults to Nothing and no card file writes either, the posture
 -- Pawl.Codec.PhasePattern's whosePhase takes.
-codec :: Codec.Codec TurnUpR.TurnUpR
-codec = Fields.object $ do
+codec ::
+  (Typeable.Typeable ability, Eq ability, Typeable.Typeable effect, Eq effect) =>
+  Codec.Codec ability ->
+  Codec.Codec effect ->
+  Codec.Codec (TurnUpR.TurnUpR ability effect)
+codec abilityCodec effectCodec = Fields.object $ do
   matching <- Fields.required "matching" (Filter.codec Keyword.codec) TurnUpR.matching
   requiring <- Fields.defaulted "requiring" Nothing (Common.maybe TurnUpProcedure.codec) TurnUpR.requiring
   paying <- Fields.defaulted "paying" Nothing (Common.maybe (Cost.codec Keyword.codec)) TurnUpR.paying
-  rewrite <- Fields.required "rewrite" TurnUpRewrite.codec TurnUpR.rewrite
+  rewrite <- Fields.required "rewrite" (TurnUpRewrite.codec abilityCodec effectCodec) TurnUpR.rewrite
   pure
     TurnUpR.MkTurnUpR
       { TurnUpR.matching = matching,

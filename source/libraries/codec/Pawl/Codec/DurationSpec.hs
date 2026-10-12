@@ -135,4 +135,11 @@ spec s = Spec.describe s "Pawl.Codec.Duration" $ do
       Duration.codec
       Duration.UntilUsed
       " {\"type\":\"UntilUsed\"} "
+  -- CR 611.2a / Vesuvan Shapeshifter: "until this creature is turned face down".
+  Spec.it s "UntilTurnedFaceDown" $
+    Common.assertCodec
+      s
+      Duration.codec
+      Duration.UntilTurnedFaceDown
+      " {\"type\":\"UntilTurnedFaceDown\"} "
   Spec.it s "has a schema" $ Common.assertHasSchema s Duration.codec

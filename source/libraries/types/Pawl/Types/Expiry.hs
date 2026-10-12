@@ -128,4 +128,8 @@ data Expiry
     -- turn"; Pawl.Engine.PlayerEffect.spentByCast/spentByLandPlay are the only
     -- readers that end it early.
     WhenUsed
+  | -- | CR 611.2a / 701.27b: Duration.UntilTurnedFaceDown, stored. Ends when the
+    -- effect's source is turned face down, and never resumes: turning it face up
+    -- again by other means does not bring the effect back.
+    WhenTurnedFaceDown
   deriving (Eq, Ord, Show)

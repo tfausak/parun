@@ -1,0 +1,48 @@
+{
+  "description": "CR 611.2a Vesuvan Shapeshifter's copy ends when it turns face down, so declining a new one leaves a 0/0 that dies",
+  "note": "The twin of the file turning up as a copy of Bubble Smuggler, declining the choice instead. Were the Giant copy only masked by the face-down status (CR 708.10) rather than ended (CR 611.2a), the Shapeshifter would turn face up as the 4/3 Giant again; ended, it is its printed 0/0 and CR 704.5f buries it.",
+  "board": {
+    "seats": [
+      {
+        "name": "alice",
+        "battlefield": [
+          { "card": "Blind-Spot Giant", "label": "giant" },
+          { "card": "Bubble Smuggler", "label": "smuggler" },
+          { "card": "Island", "ready": true },
+          { "card": "Island", "ready": true },
+          { "card": "Island", "ready": true },
+          { "card": "Island", "ready": true },
+          { "card": "Island", "ready": true },
+          { "card": "Island", "ready": true },
+          { "card": "Island", "ready": true }
+        ],
+        "hand": [{ "card": "Vesuvan Shapeshifter", "label": "vesuvan" }],
+        "library": [{ "card": "Island" }, { "card": "Island" }]
+      },
+      {
+        "name": "bob",
+        "library": [{ "card": "Island" }, { "card": "Island" }]
+      }
+    ],
+    "active": "alice",
+    "step": "PrecombatMain"
+  },
+  "timeline": [
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": { "Cast": { "object": "$vesuvan", "faceDown": false, "mana": ["Island", "Island#2", "Island#3", "Island#4", "Island#5", null] } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass" },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": { "ChooseCopyTarget": "$giant" } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "check": { "Names": { "object": "Vesuvan Shapeshifter", "names": ["Blind-Spot Giant"] } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "check": { "PowerToughness": { "object": "Vesuvan Shapeshifter", "power": 4, "toughness": 3 } } },
+    { "turn": 3, "step": "Upkeep", "player": "alice", "do": "Pass" },
+    { "turn": 3, "step": "Upkeep", "player": "alice", "do": { "ChooseOptional": { "type": "Exercises" } }, "source": "Vesuvan Shapeshifter" },
+    { "turn": 3, "step": "Upkeep", "player": "alice", "check": { "Names": { "object": "Vesuvan Shapeshifter", "names": [] } } },
+    { "turn": 3, "step": "Upkeep", "player": "alice", "check": { "PowerToughness": { "object": "Vesuvan Shapeshifter", "power": 2, "toughness": 2 } } },
+    { "turn": 3, "step": "PrecombatMain", "player": "alice", "do": { "Take": { "action": "TurnFaceUp Vesuvan Shapeshifter Morph", "mana": ["Island", "Island#2", null] } } },
+    { "turn": 3, "step": "PrecombatMain", "player": "alice", "do": { "ChooseCopyTarget": null } }
+  ],
+  "final": [
+    { "Count": { "player": "alice", "zone": "Battlefield", "card": "Vesuvan Shapeshifter", "count": 0 } },
+    { "Count": { "player": "alice", "zone": "Graveyard", "card": "Vesuvan Shapeshifter", "count": 1 } },
+    { "PowerToughness": { "object": "$giant", "power": 4, "toughness": 3 } }
+  ]
+}

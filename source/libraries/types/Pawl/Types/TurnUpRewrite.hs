@@ -1,5 +1,6 @@
 module Pawl.Types.TurnUpRewrite where
 
+import qualified Pawl.Types.AsCopy as AsCopy
 import qualified Pawl.Types.Filter as Filter
 import qualified Pawl.Types.Keyword as Keyword
 import qualified Pawl.Types.WithCounters as WithCounters
@@ -7,15 +8,16 @@ import qualified Pawl.Types.WithCounters as WithCounters
 -- | CR 614.1e: how an "As [this permanent] is turned face up . . ." replacement
 -- modifies the turning-over. EntryRewrite's twin one event class over, and a
 -- separate type rather than a reuse of it: CR 614.1c's rewrites include entering
--- as a copy (CR 707.5), entering under another player's control (CR 616.1b) and
--- entering tapped (CR 110.5b), none of which a permanent already on the
--- battlefield can be made to do by turning over.
+-- under another player's control (CR 616.1b) and entering tapped (CR 110.5b),
+-- neither of which a permanent already on the battlefield can be made to do by
+-- turning over. Becoming a copy it can (CR 707.4), so that arm shares
+-- EntryRewrite's payload.
 --
--- TWO constructors, one per shape the pool prints. CR 208.2b names a third the
+-- One constructor per shape the pool prints. CR 208.2b names another the
 -- rules allow -- a static ability that "sets the creature's power and toughness
 -- ... as it enters the battlefield or is turned face up" -- and that is a
 -- constructor here plus a layer-1a write, not a change to either of these.
-data TurnUpRewrite
+data TurnUpRewrite ability effect
   = -- | CR 702.37b: "put a +1/+1 counter on it". The kind and the count ride the
     -- constructor, as EntryRewrite.WithCounters' do, and the counters are placed
     -- through Pawl.Engine.Event.putCounters -- CR 122.6's funnel -- so CR 614.16
@@ -40,4 +42,10 @@ data TurnUpRewrite
     -- flag, because that is the only form CR 303.4k's producer takes. A
     -- mandatory one would be a second constructor.
     MayAttachTo (Filter.Filter Keyword.Keyword)
+  | -- | CR 707.4 / 708.11: "as this creature is turned face up, you may choose
+    -- another creature ... it becomes a copy of that creature" (Vesuvan
+    -- Shapeshifter). EntryRewrite.AsCopy's payload, read the same way except
+    -- that nothing enters: CR 614.1d's `tapped` and CR 707.9e's `counters`
+    -- are entry riders, which Pawl.CardSpec holds no turn-up row states.
+    AsCopy (AsCopy.AsCopy ability effect)
   deriving (Eq, Ord, Show)

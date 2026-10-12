@@ -1,0 +1,46 @@
+{
+  "description": "CR 611.2a Vesuvan Shapeshifter's copy ends when it turns face down, and it turns face up as a copy of another creature",
+  "note": "The Shapeshifter enters as a copy of the Blind-Spot Giant (4/3). At alice's next upkeep its quoted trigger (CR 707.9a) turns it face down, so it is CR 708.2a's nameless 2/2. Turned face up for its morph cost, it chooses Bubble Smuggler (2/1), and per the Shapeshifter's rulings and CR 708.11 the Smuggler's own 'as this creature is turned face up' row then applies too: four +1/+1 counters, so 6/5. Distinct printed pairs (0/0, 4/3, 2/1) so no reading is a coincidence. The declined twin of this file is what proves the first copy ENDED rather than being masked by the face-down status.",
+  "board": {
+    "seats": [
+      {
+        "name": "alice",
+        "battlefield": [
+          { "card": "Blind-Spot Giant", "label": "giant" },
+          { "card": "Bubble Smuggler", "label": "smuggler" },
+          { "card": "Island", "ready": true },
+          { "card": "Island", "ready": true },
+          { "card": "Island", "ready": true },
+          { "card": "Island", "ready": true },
+          { "card": "Island", "ready": true },
+          { "card": "Island", "ready": true },
+          { "card": "Island", "ready": true }
+        ],
+        "hand": [{ "card": "Vesuvan Shapeshifter", "label": "vesuvan" }],
+        "library": [{ "card": "Island" }, { "card": "Island" }]
+      },
+      {
+        "name": "bob",
+        "library": [{ "card": "Island" }, { "card": "Island" }]
+      }
+    ],
+    "active": "alice",
+    "step": "PrecombatMain"
+  },
+  "timeline": [
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": { "Cast": { "object": "$vesuvan", "faceDown": false, "mana": ["Island", "Island#2", "Island#3", "Island#4", "Island#5", null] } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass" },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": { "ChooseCopyTarget": "$giant" } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "check": { "Names": { "object": "Vesuvan Shapeshifter", "names": ["Blind-Spot Giant"] } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "check": { "PowerToughness": { "object": "Vesuvan Shapeshifter", "power": 4, "toughness": 3 } } },
+    { "turn": 3, "step": "Upkeep", "player": "alice", "do": "Pass" },
+    { "turn": 3, "step": "Upkeep", "player": "alice", "do": { "ChooseOptional": { "type": "Exercises" } }, "source": "Vesuvan Shapeshifter" },
+    { "turn": 3, "step": "Upkeep", "player": "alice", "check": { "Names": { "object": "Vesuvan Shapeshifter", "names": [] } } },
+    { "turn": 3, "step": "Upkeep", "player": "alice", "check": { "PowerToughness": { "object": "Vesuvan Shapeshifter", "power": 2, "toughness": 2 } } },
+    { "turn": 3, "step": "PrecombatMain", "player": "alice", "do": { "Take": { "action": "TurnFaceUp Vesuvan Shapeshifter Morph", "mana": ["Island", "Island#2", null] } } },
+    { "turn": 3, "step": "PrecombatMain", "player": "alice", "do": { "ChooseCopyTarget": "$smuggler" } },
+    { "turn": 3, "step": "PrecombatMain", "player": "alice", "check": { "Names": { "object": "Vesuvan Shapeshifter", "names": ["Bubble Smuggler"] } } },
+    { "turn": 3, "step": "PrecombatMain", "player": "alice", "check": { "Counters": { "object": "Vesuvan Shapeshifter", "kind": { "type": "PlusOnePlusOne" }, "count": 4 } } },
+    { "turn": 3, "step": "PrecombatMain", "player": "alice", "check": { "PowerToughness": { "object": "Vesuvan Shapeshifter", "power": 6, "toughness": 5 } } }
+  ]
+}

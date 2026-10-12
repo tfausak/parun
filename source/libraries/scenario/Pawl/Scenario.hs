@@ -1078,7 +1078,8 @@ actionsMatching :: GameState.GameState -> Move.Move -> [Action.Action] -> Run [A
 actionsMatching gs verb actions = case verb of
   Move.Cast casting -> do
     oid <- resolveObject (Casting.object casting) gs
-    pure (filter (\action -> case action of Action.Cast candidate _ _ -> candidate == oid; _ -> False) actions)
+    let facingMatches facing = all (== Facing.isFaceDown facing) (Casting.faceDown casting)
+    pure (filter (\action -> case action of Action.Cast candidate _ facing -> candidate == oid && facingMatches facing; _ -> False) actions)
   Move.PlayLand ref -> do
     oid <- resolveObject ref gs
     pure (filter (\action -> case action of Action.Play candidate _ -> candidate == oid; _ -> False) actions)
