@@ -1,0 +1,127 @@
+{
+  "faces": [
+    {
+      "manaCost": [
+        {
+          "type": "Generic",
+          "value": 1
+        },
+        {
+          "type": "OfType",
+          "value": {
+            "type": "Colored",
+            "value": {
+              "type": "White"
+            }
+          }
+        }
+      ],
+      "name": "A Good Day to Pie",
+      "oracleText": "Tap up to two target creatures.\nWhenever you put a name sticker on a creature, you may return this card from your graveyard to your hand.",
+      "spell": {
+        "modes": [
+          {
+            "clauses": [
+              {
+                "effects": [
+                  {
+                    "type": "Tap",
+                    "value": {
+                      "type": "InSlot",
+                      "value": "creatures"
+                    }
+                  }
+                ]
+              }
+            ],
+            "targetSlots": {
+              "creatures": {
+                "count": {
+                  "type": "Printed",
+                  "value": {
+                    "least": 0,
+                    "most": 2
+                  }
+                },
+                "pool": {
+                  "type": "Creatures"
+                }
+              }
+            }
+          }
+        ]
+      },
+      "triggeredAbilities": [
+        {
+          "condition": {
+            "type": "PlacesSticker",
+            "value": {
+              "kinds": [
+                {
+                  "type": "Name"
+                }
+              ],
+              "object": {
+                "type": "And",
+                "value": [
+                  {
+                    "type": "HasCardType",
+                    "value": {
+                      "type": "Creature"
+                    }
+                  },
+                  {
+                    "type": "IsInZone",
+                    "value": {
+                      "type": "Battlefield"
+                    }
+                  }
+                ]
+              },
+              "placer": {
+                "type": "You"
+              }
+            }
+          },
+          "modal": {
+            "modes": [
+              {
+                "clauses": [
+                  {
+                    "effects": [
+                      {
+                        "type": "MoveToZone",
+                        "value": {
+                          "origin": {
+                            "type": "Graveyard"
+                          },
+                          "ref": {
+                            "type": "InSlot",
+                            "value": "self"
+                          },
+                          "zone": {
+                            "type": "Hand"
+                          }
+                        }
+                      }
+                    ],
+                    "optionality": {
+                      "type": "Optional"
+                    }
+                  }
+                ]
+              }
+            ]
+          }
+        }
+      ],
+      "typeLine": {
+        "types": [
+          {
+            "type": "Instant"
+          }
+        ]
+      }
+    }
+  ]
+}
