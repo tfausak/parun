@@ -5,12 +5,13 @@ import qualified Data.Sequence as Seq
 import qualified Data.Set as Set
 import qualified Numeric.Natural as Natural
 import qualified Pawl.Types.Printing as Printing
+import qualified Pawl.Types.SideDeck as SideDeck
 import qualified Pawl.Types.StickerSheet as StickerSheet
 
 -- | A deck: the multiset of printings a player's library is built from, plus the
 -- things a player brings alongside it -- CR 903.3's commander designation, CR
 -- 902.3's vanguard card, CR 309.2's dungeon cards, CR 100.4's sideboard and CR
--- 315.2's conspiracies and CR 717.2's Attraction deck.
+-- 315.2's conspiracies and the supplementary decks of Pawl.Types.SideDeck.
 --
 -- The cards are a multiset because a shuffle erases any order among them, so
 -- counts are the honest model. `Printing` and everything beneath it derive `Ord`,
@@ -102,16 +103,15 @@ data Deck = MkDeck
     -- A multiset for `sideboard`'s reason: two copies of one conspiracy are two
     -- cards, and each functions (CR 315.5).
     conspiracies :: Map.Map Printing.Printing Natural.Natural,
-    -- | CR 717.2: the supplementary Attraction deck, which begins in the command
-    -- zone rather than among `cards`. A multiset: CR 717.2b lets a limited deck
-    -- repeat a name.
-    attractions :: Map.Map Printing.Printing Natural.Natural,
-    -- | CR 901.3: the planar deck, plane and phenomenon cards. A set, since
-    -- each card in it must have a different English name.
-    planes :: Set.Set Printing.Printing,
-    -- | CR 904.3: the scheme deck. A multiset: CR 904.3 allows two cards of a
-    -- name.
-    schemes :: Map.Map Printing.Printing Natural.Natural,
+    -- | CR 717.2 \/ 901.3 \/ 904.3 and the Unstable FAQ: the supplementary
+    -- decks, which begin in the command zone rather than among `cards`, keyed
+    -- by which deck (Pawl.Types.SideDeck). A multiset apiece: CR 717.2b lets a
+    -- limited Attraction deck repeat a name, CR 904.3 two schemes of a name,
+    -- and the FAQ a limited Contraption deck its duplicates. CR 901.3's
+    -- one-of-each planar deck is deck construction, which this type does not
+    -- judge (a Set of printings could not either, two printings sharing a
+    -- name).
+    sideDecks :: Map.Map SideDeck.SideDeck (Map.Map Printing.Printing Natural.Natural),
     -- | CR 123.2: the sticker sheets this player brings. A Seq, not a Set:
     -- CR 123.2b lets a limited player bring two of one sheet, and CR 123.3a
     -- keeps their stickers apart.
@@ -120,8 +120,8 @@ data Deck = MkDeck
   deriving (Eq, Ord, Show)
 
 -- | A deck with no commander, no vanguard, no dungeons, no sideboard, no
--- conspiracies and no Attractions -- every format but Commander and Vanguard,
+-- conspiracies and no supplementary decks -- every format but Commander and Vanguard,
 -- every game nobody ventures in, every game nobody wishes in, and every game
 -- outside Conspiracy Draft.
 fromCards :: Map.Map Printing.Printing Natural.Natural -> Deck
-fromCards m = MkDeck {cards = m, commander = Set.empty, vanguard = Nothing, dungeons = Set.empty, sideboard = Map.empty, conspiracies = Map.empty, attractions = Map.empty, planes = Set.empty, schemes = Map.empty, stickerSheets = Seq.empty}
+fromCards m = MkDeck {cards = m, commander = Set.empty, vanguard = Nothing, dungeons = Set.empty, sideboard = Map.empty, conspiracies = Map.empty, sideDecks = Map.empty, stickerSheets = Seq.empty}

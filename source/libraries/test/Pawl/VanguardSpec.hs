@@ -61,9 +61,7 @@ deckOf mountain vanguard =
       Deck.dungeons = Set.empty,
       Deck.sideboard = Map.empty,
       Deck.conspiracies = Map.empty,
-      Deck.attractions = Map.empty,
-      Deck.planes = Set.empty,
-      Deck.schemes = Map.empty,
+      Deck.sideDecks = Map.empty,
       Deck.stickerSheets = Seq.empty
     }
 

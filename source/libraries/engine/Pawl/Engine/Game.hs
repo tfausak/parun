@@ -83,6 +83,7 @@ import qualified Pawl.Types.Prompt as Prompt
 import qualified Pawl.Types.Quantity as Quantity
 import qualified Pawl.Types.RangeOfInfluence as RangeOfInfluence
 import qualified Pawl.Types.Recipient as Recipient
+import qualified Pawl.Types.SideDeck as SideDeck
 import qualified Pawl.Types.SlotName as SlotName
 import qualified Pawl.Types.Source as Source
 import qualified Pawl.Types.SpellWasCast as SpellWasCast
@@ -331,6 +332,32 @@ printingOfObject oid gs = case fmap Object.source (lookupObject oid gs) of
   Just (Source.OfCardCopy pid) -> printingOf pid gs
   Just (Source.OfInherentTrigger _) -> Nothing
 
+-- | CR 717.2 / 901.3 / 904.3: every player's supplementary deck of this kind.
+sideDecksOf :: SideDeck.SideDeck -> GameState -> Map.Map PlayerId (Seq.Seq ObjectId)
+sideDecksOf kind gs = Map.findWithDefault Map.empty kind (GameState.sideDecks gs)
+
+-- | This player's supplementary deck of this kind, top first.
+sideDeckOf :: SideDeck.SideDeck -> PlayerId -> GameState -> [ObjectId]
+sideDeckOf kind pid gs = foldMap Foldable.toList (Map.lookup pid (sideDecksOf kind gs))
+
+-- | Rewrite every player's supplementary deck of this kind, dropping the kind
+-- once nobody holds one.
+overSideDecks :: SideDeck.SideDeck -> (Map.Map PlayerId (Seq.Seq ObjectId) -> Map.Map PlayerId (Seq.Seq ObjectId)) -> GameState -> GameState
+overSideDecks kind f gs =
+  let rewritten = f (sideDecksOf kind gs)
+   in gs {GameState.sideDecks = if Map.null rewritten then Map.delete kind (GameState.sideDecks gs) else Map.insert kind rewritten (GameState.sideDecks gs)}
+
+-- | CR 103.3a: shuffle this player's supplementary deck of this kind. A player
+-- with none is not asked: there is nothing to shuffle.
+shuffleSideDeck :: SideDeck.SideDeck -> PlayerId -> Game ()
+shuffleSideDeck kind pid = do
+  gs <- State.get
+  let ids = sideDeckOf kind pid gs
+  Monad.unless (null ids) $ do
+    answer <- ask (Prompt.Shuffle ids)
+    let shuffled = honourShuffle ids answer
+    State.modify' (overSideDecks kind (Map.insert pid (Seq.fromList shuffled)))
+
 -- | CR 717.1: the numbers lit up on this object's card, empty for anything that
 -- is not a card. The PHYSICAL card's printing, never the projection: CR 109.3
 -- makes the lights no characteristic, so a copy of an Attraction lights nothing.
@@ -339,14 +366,17 @@ lightsOf oid gs = case fmap Object.source (lookupObject oid gs) of
   Just (Source.OfCard pid) -> foldMap Printing.lights (printingOf pid gs)
   _ -> Set.empty
 
--- | CR 717.1 / 717.6: is this object a card with an Astrotorium back? Every
--- Attraction card has one, so the printed type line is the answer; the
--- projection is not, the back being the physical card's.
-astrotoriumBack :: ObjectId -> GameState -> Bool
-astrotoriumBack oid gs = case fmap Object.source (lookupObject oid gs) of
+-- | CR 717.1 / 717.6 and the Unstable FAQ: the supplementary deck this
+-- object's card back belongs to, Nothing for a traditional back or for no card.
+-- Every Attraction card has an Astrotorium back and every Contraption card a
+-- Contraption back, so the printed type line is the answer; the projection is
+-- not, the back being the physical card's.
+sideDeckBack :: ObjectId -> GameState -> Maybe SideDeck.SideDeck
+sideDeckBack oid gs = case fmap Object.source (lookupObject oid gs) of
   Just (Source.OfCard pid) ->
-    any (any (Set.member Subtype.Attraction . TypeLine.subtypes . Face.typeLine) . Card.Type.faces . Printing.card) (printingOf pid gs)
-  _ -> False
+    let printed subtype = any (any (Set.member subtype . TypeLine.subtypes . Face.typeLine) . Card.Type.faces . Printing.card) (printingOf pid gs)
+     in Maybe.listToMaybe [kind | (subtype, kind) <- [(Subtype.Attraction, SideDeck.Attraction), (Subtype.Contraption, SideDeck.Contraption)], printed subtype]
+  _ -> Nothing
 
 -- Reject-not-repair, as payment already does: only a genuine permutation of the
 -- offered indices is honoured. Anything else -- a short answer, a duplicate, an
@@ -810,9 +840,7 @@ removeFromZones oid gs =
           GameState.exile = Set.delete oid (GameState.exile gs),
           GameState.command = Set.delete oid (GameState.command gs),
           GameState.ante = Set.delete oid (GameState.ante gs),
-          GameState.attractionDecks = fromPile Zone.Command (GameState.attractionDecks gs),
-          GameState.planarDecks = fromPile Zone.Command (GameState.planarDecks gs),
-          GameState.schemeDecks = fromPile Zone.Command (GameState.schemeDecks gs),
+          GameState.sideDecks = fmap (fromPile Zone.Command) (GameState.sideDecks gs),
           GameState.stack = filter (/= oid) (GameState.stack gs)
         }
 

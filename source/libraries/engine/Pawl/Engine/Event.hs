@@ -226,6 +226,7 @@ import qualified Pawl.Types.SacrificeToEnter as SacrificeToEnter
 import qualified Pawl.Types.ScryR as ScryR
 import qualified Pawl.Types.ScryRewrite as ScryRewrite
 import qualified Pawl.Types.Sickness as Sickness
+import qualified Pawl.Types.SideDeck as SideDeck
 import qualified Pawl.Types.SlotName as SlotName
 import qualified Pawl.Types.Source as Source
 import qualified Pawl.Types.SpellCast as SpellCast
@@ -1527,13 +1528,19 @@ resolveZoneChange asOf discarded requestedPosition resolving zc = do
 
 -- CR 717.6: a card with an Astrotorium back bound anywhere but the battlefield,
 -- exile or the command zone goes to the command zone instead, where it is face
--- up in its owner's junkyard (CR 717.6a). A rules step on the settled
--- destination, offerCommandZone's posture below and for its reason; mandatory,
--- so nothing is asked.
+-- up in its owner's junkyard (CR 717.6a). The Unstable FAQ's scrapyard is the
+-- same step for a card with a Contraption back, narrower in where it reaches:
+-- only one leaving the battlefield for anywhere but exile, and the scrapyard is
+-- held as the junkyard is. A rules step on the settled destination,
+-- offerCommandZone's posture below and for its reason; mandatory, so nothing is
+-- asked.
 toJunkyard :: GameState -> ZoneChange -> ZoneChange
-toJunkyard gs zc
-  | Game.astrotoriumBack (ZoneChange.departed zc) gs && notElem (ZoneChange.to zc) [Zone.Battlefield, Zone.Exile, Zone.Command] = zc {ZoneChange.to = Zone.Command}
-  | otherwise = zc
+toJunkyard gs zc = case Game.sideDeckBack (ZoneChange.departed zc) gs of
+  Just SideDeck.Attraction
+    | notElem (ZoneChange.to zc) [Zone.Battlefield, Zone.Exile, Zone.Command] -> zc {ZoneChange.to = Zone.Command}
+  Just SideDeck.Contraption
+    | ZoneChange.from zc == Zone.Battlefield && notElem (ZoneChange.to zc) [Zone.Battlefield, Zone.Exile, Zone.Command] -> zc {ZoneChange.to = Zone.Command}
+  _ -> zc
 
 -- CR 903.9b: "if a commander would be put into its owner's hand or library from
 -- anywhere, its owner may put it into the command zone instead". The question;
@@ -2003,6 +2010,7 @@ shufflesAfter candidate = case ReplacementCandidate.effect candidate of
   ReplacementEffect.ProliferateR {} -> False
   ReplacementEffect.ScryR {} -> False
   ReplacementEffect.VillainousChoiceR {} -> False
+  ReplacementEffect.AssembleR {} -> False
   ReplacementEffect.PhaseR _ -> False
 
 -- CR 615.12: apply one chosen PREVENTION effect to damage that can't be
@@ -4105,6 +4113,14 @@ apply batch candidate event =
     -- Unreachable: `applies` admits VillainousChoiceR only against
     -- WouldFaceVillainousChoice.
     (ReplacementEffect.VillainousChoiceR {}, _) -> pure (Just event)
+    -- The Unstable FAQ with CR 614.1a: Steamflogger Boss's "it assembles two
+    -- Contraptions instead" leaves the event STANDING at a doubled count, the
+    -- ProliferateR arm above for its reason.
+    (ReplacementEffect.AssembleR _, ProposedEvent.WouldAssemble assembler pid n) -> do
+      Replacement.consume (ReplacementCandidate.identity candidate)
+      pure (Just (ProposedEvent.WouldAssemble assembler pid (n * 2)))
+    -- Unreachable: `applies` admits AssembleR only against WouldAssemble.
+    (ReplacementEffect.AssembleR {}, _) -> pure (Just event)
     -- CR 122.6/614.1: Hardened Scales/Doubling Season scale a counter placement.
     (ReplacementEffect.CounterR (CounterR.MkCounterR _ scaling), ProposedEvent.WouldPutCounters cause oid kind n) -> do
       Replacement.consume (ReplacementCandidate.identity candidate)
@@ -8945,17 +8961,6 @@ shuffleLibrary pid = do
   -- does not (Prompt.Shuffle is bare, being randomness rather than a choice),
   -- so this is defending the invariant rather than fixing a live bug.
   State.modify' (\g -> g {GameState.library = Map.insert pid (Seq.fromList shuffled) (GameState.library g)})
-
--- CR 717.2 / 103.3a: shuffleLibrary's shuffle, of the Attraction deck. A player
--- with none is not asked: there is nothing to shuffle.
-shuffleAttractionDeck :: PlayerId -> Game ()
-shuffleAttractionDeck pid = do
-  gs <- State.get
-  let ids = foldMap Foldable.toList (Map.lookup pid (GameState.attractionDecks gs))
-  Monad.unless (null ids) $ do
-    answer <- Game.ask (Prompt.Shuffle ids)
-    let shuffled = Game.honourShuffle ids answer
-    State.modify' (\g -> g {GameState.attractionDecks = Map.insert pid (Seq.fromList shuffled) (GameState.attractionDecks g)})
 
 -- The single reveal funnel (CR 701.20a): `pid` shows `oid` to all players, which
 -- here means appending what was shown to the public log. No-op for an unknown id.

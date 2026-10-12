@@ -710,6 +710,12 @@ data Effect card ability
   | -- | CR 701.51b: the resolving controller opens an Attraction, performed by
     -- Pawl.Engine.Attraction.open.
     OpenAttraction
+  | -- | The Unstable FAQ's assemble, which CR 701.45a leaves out of the rules:
+    -- the resolving controller puts the top card of their Contraption deck onto
+    -- a sprocket they choose, performed by Pawl.Engine.Contraption.assemble. The
+    -- ObjectRef is the permanent that assembles it (Wrench-Rigger's "it
+    -- assembles"), Nothing where the player does (First Pick).
+    Assemble (Maybe ObjectRef.ObjectRef)
   | -- | CR 701.31: the resolving controller planeswalks, performed by
     -- Pawl.Engine.Planechase.planeswalk.
     Planeswalk

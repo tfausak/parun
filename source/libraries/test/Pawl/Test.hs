@@ -574,6 +574,7 @@ import qualified Pawl.Codec.ShownCardsSpec
 import qualified Pawl.Codec.ShowsSpec
 import qualified Pawl.Codec.ShuffleIntoLibrarySpec
 import qualified Pawl.Codec.SicknessSpec
+import qualified Pawl.Codec.SideDeckSpec
 import qualified Pawl.Codec.SkipNextPhaseSpec
 import qualified Pawl.Codec.SlotCountSpec
 import qualified Pawl.Codec.SlotNameSpec
@@ -676,6 +677,7 @@ import qualified Pawl.CompanionSpec
 import qualified Pawl.ConditionSpec
 import qualified Pawl.ConjureSpec
 import qualified Pawl.ConspiracySpec
+import qualified Pawl.ContraptionSpec
 import qualified Pawl.CopySpec
 import qualified Pawl.CoreSpec
 import qualified Pawl.CostSpec
@@ -1444,6 +1446,7 @@ spec s registry = do
   Pawl.Codec.ShownCardsSpec.spec s
   Pawl.Codec.ShowsSpec.spec s
   Pawl.Codec.ShuffleIntoLibrarySpec.spec s
+  Pawl.Codec.SideDeckSpec.spec s
   Pawl.Codec.SicknessSpec.spec s
   Pawl.Codec.SkipNextPhaseSpec.spec s
   Pawl.Codec.SlotCountSpec.spec s
@@ -1538,6 +1541,7 @@ spec s registry = do
   Pawl.ConditionSpec.spec s registry
   Pawl.ConjureSpec.spec s registry
   Pawl.ConspiracySpec.spec s registry
+  Pawl.ContraptionSpec.spec s registry
   Pawl.AnteSpec.spec s registry
   Pawl.StickerSpec.spec s registry
   Pawl.CopySpec.spec s registry

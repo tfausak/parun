@@ -155,6 +155,7 @@ codec cardCodec abilityCodec =
           Arm.payload "Blight" Blight.codec Effect.Blight (\x -> case x of Effect.Blight y -> Just y; _ -> Nothing),
           Arm.nullary "TemptWithTheRing" Effect.TemptWithTheRing,
           Arm.nullary "OpenAttraction" Effect.OpenAttraction,
+          Arm.payload "Assemble" (Common.maybe ObjectRef.codec) Effect.Assemble (\x -> case x of Effect.Assemble y -> Just y; _ -> Nothing),
           Arm.nullary "Planeswalk" Effect.Planeswalk,
           Arm.nullary "Abandon" Effect.Abandon,
           Arm.nullary "ClaimPrize" Effect.ClaimPrize,
@@ -329,6 +330,7 @@ tagOf x = case x of
   Effect.Blight {} -> "Blight"
   Effect.TemptWithTheRing {} -> "TemptWithTheRing"
   Effect.OpenAttraction {} -> "OpenAttraction"
+  Effect.Assemble {} -> "Assemble"
   Effect.Planeswalk {} -> "Planeswalk"
   Effect.Abandon {} -> "Abandon"
   Effect.ClaimPrize {} -> "ClaimPrize"

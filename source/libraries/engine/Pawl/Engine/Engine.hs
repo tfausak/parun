@@ -22,6 +22,7 @@ import qualified Pawl.Engine.Cast as Cast
 import qualified Pawl.Engine.Combat as Combat
 import qualified Pawl.Engine.Companion as Companion
 import qualified Pawl.Engine.Conspiracy as Conspiracy
+import qualified Pawl.Engine.Contraption as Contraption
 import qualified Pawl.Engine.Cost as Cost
 import qualified Pawl.Engine.Damage as Damage
 import qualified Pawl.Engine.Daytime as Daytime
@@ -124,6 +125,7 @@ import qualified Pawl.Types.Sickness as Sickness
 import qualified Pawl.Types.Source as Source
 import qualified Pawl.Types.StackObjectKind as StackObjectKind
 import qualified Pawl.Types.StepBegan as StepBegan
+import qualified Pawl.Types.Subtype as Subtype
 import qualified Pawl.Types.Supertype as Supertype
 import qualified Pawl.Types.Timestamp as Timestamp
 import qualified Pawl.Types.TriggerCondition as TriggerCondition
@@ -519,6 +521,10 @@ runTurnBasedActions phase = do
           -- "has played none" has one representation.
           gs {GameState.landsPlayed = Map.delete pid (GameState.landsPlayed gs)}
     -- CR 805.4b: each player on the active team draws.
+    -- CR 503.1 gives the upkeep no turn-based action; the Unstable FAQ adds the
+    -- crank (CR 701.45a leaving it out of the rules), the active player's, so
+    -- it takes the CR 800.4j guard.
+    Phase.Beginning BeginningStep.Upkeep -> Monad.mapM_ Contraption.crank live
     Phase.Beginning BeginningStep.DrawStep -> do
       skip <- State.gets skipsDraw
       Monad.unless skip (Monad.mapM_ Event.drawCard live)
@@ -557,7 +563,7 @@ runTurnBasedActions phase = do
         Monad.when archenemy (Archenemy.setInMotion pid)
       Monad.mapM_ advanceSagas live
       Monad.forM_ live $ \pid -> do
-        visits <- State.gets (Attraction.controlsAttraction pid)
+        visits <- State.gets (Attraction.controlsSubtype Subtype.Attraction pid)
         Monad.when visits (Resolve.rollToVisit playSubgame pid)
     -- CR 511.1: the end of combat step has no turn-based actions, so no arm here.
     -- CR 511.3's removal from combat is an end-of-STEP action; runStep does it.
@@ -2183,9 +2189,7 @@ playSubgame = do
   seated <- State.gets Game.stillPlayingInOrder
   Monad.forM_ seated Event.shuffleLibrary
   -- CR 729.5a: and their supplementary decks.
-  Monad.forM_ seated Event.shuffleAttractionDeck
-  Monad.forM_ seated Planechase.shufflePlanarDeck
-  Monad.forM_ seated Archenemy.shuffleSchemeDeck
+  Monad.forM_ seated (\pid -> Monad.forM_ [minBound .. maxBound] (`Game.shuffleSideDeck` pid))
   pure result
 
 -- CR 405.6c / 605.4a: the mana-ability performer every payment the live loop

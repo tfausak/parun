@@ -89,7 +89,8 @@ spec s = Spec.describe s "Pawl.Codec.Layout" $ do
       "expected a bare Meld tag to fail to decode"
   -- Card layouts name more frames than have landed. A file naming one must
   -- fail loudly rather than fall back to Normal. A plane card needs no layout:
-  -- Deck.planes is what puts it in the planar deck (CR 901.3).
+  -- Deck.sideDecks' SideDeck.Planar entry is what puts it in the planar deck
+  -- (CR 901.3).
   Spec.it s "a layout that has not landed is rejected" $
     Spec.assertBool
       s

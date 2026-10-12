@@ -14,7 +14,6 @@ module Pawl.Engine.Archenemy where
 
 import qualified Control.Monad as Monad
 import qualified Control.Monad.Trans.State.Strict as State
-import qualified Data.Foldable as Foldable
 import qualified Data.Map.Strict as Map
 import qualified Data.Sequence as Seq
 import qualified Data.Set as Set
@@ -34,8 +33,8 @@ import qualified Pawl.Types.Object as Object
 import Pawl.Types.ObjectId (ObjectId)
 import qualified Pawl.Types.PendingTrigger as PendingTrigger
 import Pawl.Types.PlayerId (PlayerId)
-import qualified Pawl.Types.Prompt as Prompt
 import qualified Pawl.Types.SchemeSetInMotion as SchemeSetInMotion
+import qualified Pawl.Types.SideDeck as SideDeck
 import qualified Pawl.Types.Source as Source
 import qualified Pawl.Types.TeamId as TeamId
 import qualified Pawl.Types.Teams as Teams
@@ -44,19 +43,19 @@ import qualified Pawl.Types.TriggeredAbilitySource as TriggeredAbilitySource
 
 -- | CR 904.3: this player's scheme deck, top first.
 deckOf :: PlayerId -> GameState -> [ObjectId]
-deckOf pid gs = foldMap Foldable.toList (Map.lookup pid (GameState.schemeDecks gs))
+deckOf = Game.sideDeckOf SideDeck.Scheme
 
 -- | CR 904.2a / 904.12b: is this player an archenemy? They brought a scheme
 -- deck.
 isArchenemy :: PlayerId -> GameState -> Bool
-isArchenemy pid gs = Map.member pid (GameState.schemeDecks gs)
+isArchenemy pid gs = Map.member pid (Game.sideDecksOf SideDeck.Scheme gs)
 
 -- | CR 904.2a: the one player of this matchup bringing a scheme deck, when
 -- exactly one does. Nothing for CR 904.12's Supervillain Rumble, whose every
 -- player is an archenemy and which keeps a random starting player (CR
 -- 904.12c), nor for a game with no archenemy.
 sole :: [(PlayerId, Deck.Deck)] -> Maybe PlayerId
-sole matchup = case [pid | (pid, deck) <- matchup, not (Map.null (Deck.schemes deck))] of
+sole matchup = case [pid | (pid, deck) <- matchup, not (Map.null (Map.findWithDefault Map.empty SideDeck.Scheme (Deck.sideDecks deck)))] of
   [pid] -> Just pid
   _ -> Nothing
 
@@ -85,16 +84,6 @@ lifeBonus = 20
 faceUp :: GameState -> [ObjectId]
 faceUp gs = filter (`Scheme.isScheme` gs) (Set.toAscList (GameState.command gs))
 
--- | CR 103.3a: shuffle this player's scheme deck.
-shuffleSchemeDeck :: PlayerId -> Game ()
-shuffleSchemeDeck pid = do
-  gs <- State.get
-  let ids = deckOf pid gs
-  Monad.unless (null ids) $ do
-    answer <- Game.ask (Prompt.Shuffle ids)
-    let shuffled = Game.honourShuffle ids answer
-    State.modify' (\g -> g {GameState.schemeDecks = Map.insert pid (Seq.fromList shuffled) (GameState.schemeDecks g)})
-
 -- | CR 701.32b / 904.9: move the top card of this archenemy's scheme deck off it
 -- and turn it face up, which is joining GameState.command. The event is what
 -- CR 904.9's "When you set this scheme in motion" triggers on. A fresh
@@ -113,9 +102,8 @@ setInMotion pid = do
       State.modify' $ \g ->
         Event.recordEvent
           (GameEvent.SchemeSetInMotion (SchemeSetInMotion.MkSchemeSetInMotion pid top))
-          g
-            { GameState.schemeDecks = Map.insert pid (Seq.fromList rest) (GameState.schemeDecks g),
-              GameState.command = Set.insert top (GameState.command g),
+          (Game.overSideDecks SideDeck.Scheme (Map.insert pid (Seq.fromList rest)) g)
+            { GameState.command = Set.insert top (GameState.command g),
               GameState.objects = Map.adjust (\o -> o {Object.timestamp = ts}) top (GameState.objects g)
             }
 
@@ -137,9 +125,8 @@ toBottom :: ObjectId -> GameState -> GameState
 toBottom oid gs = case Game.lookupObject oid gs of
   Nothing -> gs
   Just obj ->
-    gs
-      { GameState.command = Set.delete oid (GameState.command gs),
-        GameState.schemeDecks = Map.insertWith (flip (Seq.><)) (Object.owner obj) (Seq.singleton oid) (GameState.schemeDecks gs)
+    (Game.overSideDecks SideDeck.Scheme (Map.insertWith (flip (Seq.><)) (Object.owner obj) (Seq.singleton oid)) gs)
+      { GameState.command = Set.delete oid (GameState.command gs)
       }
 
 -- | CR 704.6e / 314.6: the face-up non-ongoing schemes to put on the bottom of

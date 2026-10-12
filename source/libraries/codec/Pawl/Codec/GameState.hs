@@ -61,6 +61,7 @@ import qualified Pawl.Codec.ProjectedCharacteristics as ProjectedCharacteristics
 import qualified Pawl.Codec.RestartSignal as RestartSignal
 import qualified Pawl.Codec.Result as Result
 import qualified Pawl.Codec.ReturnWatch as ReturnWatch
+import qualified Pawl.Codec.SideDeck as SideDeck
 import qualified Pawl.Codec.SpellWasCast as SpellWasCast
 import qualified Pawl.Codec.Timestamp as Timestamp
 import qualified Pawl.JsonCodec.Codec as Codec
@@ -120,9 +121,7 @@ codec resolve = Fields.object $ do
   exile <- Fields.defaulted "exile" Set.empty (Common.set ObjectId.codec) GameState.exile
   command <- Fields.defaulted "command" Set.empty (Common.set ObjectId.codec) GameState.command
   ante <- Fields.defaulted "ante" Set.empty (Common.set ObjectId.codec) GameState.ante
-  attractionDecks <- Fields.defaulted "attractionDecks" Map.empty (Common.naturalMap PlayerId.codec (Common.seq ObjectId.codec)) GameState.attractionDecks
-  planarDecks <- Fields.defaulted "planarDecks" Map.empty (Common.naturalMap PlayerId.codec (Common.seq ObjectId.codec)) GameState.planarDecks
-  schemeDecks <- Fields.defaulted "schemeDecks" Map.empty (Common.naturalMap PlayerId.codec (Common.seq ObjectId.codec)) GameState.schemeDecks
+  sideDecks <- Fields.defaulted "sideDecks" Map.empty (Common.keyedList (Common.keyValue SideDeck.codec (Common.naturalMap PlayerId.codec (Common.seq ObjectId.codec)))) GameState.sideDecks
   stack <- Fields.defaulted "stack" [] (Common.list ObjectId.codec) GameState.stack
   stackedIn <- Fields.defaulted "stackedIn" Map.empty (Common.naturalMap ObjectId.codec EventGroup.codec) GameState.stackedIn
   players <- Fields.required "players" (Common.naturalMap PlayerId.codec Player.codec) GameState.players
@@ -232,9 +231,7 @@ codec resolve = Fields.object $ do
         GameState.exile = exile,
         GameState.command = command,
         GameState.ante = ante,
-        GameState.attractionDecks = attractionDecks,
-        GameState.planarDecks = planarDecks,
-        GameState.schemeDecks = schemeDecks,
+        GameState.sideDecks = sideDecks,
         GameState.stack = stack,
         GameState.stackedIn = stackedIn,
         GameState.players = players,

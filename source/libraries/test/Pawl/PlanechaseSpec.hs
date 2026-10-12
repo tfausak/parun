@@ -41,6 +41,7 @@ import qualified Pawl.Types.PlayerActed as PlayerActed
 import qualified Pawl.Types.PlayerAction as PlayerAction
 import qualified Pawl.Types.PlayerId as PlayerId
 import qualified Pawl.Types.Prompt as Prompt
+import qualified Pawl.Types.SideDeck as SideDeck
 import qualified Pawl.Types.Source as Source
 import qualified Pawl.Types.StepBegan as StepBegan
 import qualified Pawl.Types.Zone as Zone
@@ -53,7 +54,7 @@ spec s registry = Spec.describe s "Pawl.Engine.Planechase" $ do
     forest <- S.printingOf s registry "Forest"
     academy <- S.printingOf s registry "Academy at Tolaria West"
     tazeem <- S.printingOf s registry "Tazeem"
-    let alices = (Deck.fromCards (Map.singleton forest 20)) {Deck.planes = Set.fromList [academy, tazeem]}
+    let alices = (Deck.fromCards (Map.singleton forest 20)) {Deck.sideDecks = Map.singleton SideDeck.Planar (Map.fromSet (const 1) (Set.fromList [academy, tazeem]))}
         bobs = Deck.fromCards (Map.singleton forest 20)
         started = S.runPure S.identityAnswer (Setup.emptyGame S.bothPlayers) (Setup.newGame (Resolve.performHandAction Resolve.noSubgame) ((S.alice, alices) NonEmpty.:| [(S.bob, bobs)]))
     Spec.assertEqWith s "one plane is face up" (length (Planechase.faceUp started)) 1
@@ -183,11 +184,11 @@ planarBoard :: (Monad m) => Spec.Spec m n -> Registry.Registry m -> [String] -> 
 planarBoard s registry order = do
   forest <- S.printingOf s registry "Forest"
   planes <- traverse (S.printingOf s registry) order
-  let alices = (Deck.fromCards (Map.singleton forest 20)) {Deck.planes = Set.fromList planes}
+  let alices = (Deck.fromCards (Map.singleton forest 20)) {Deck.sideDecks = Map.singleton SideDeck.Planar (Map.fromSet (const 1) (Set.fromList planes))}
       bobs = Deck.fromCards (Map.singleton forest 20)
       built = S.runPure S.identityAnswer (Setup.emptyGame S.bothPlayers) (Setup.createDeck S.alice alices >> Setup.createDeck S.bob bobs)
       rank oid = maybe (length order) (\face -> Maybe.fromMaybe (length order) (List.elemIndex (Face.name face) (fmap (CardName.MkCardName . Text.pack) order))) (Game.faceOf oid built)
-      stacked = built {GameState.planarDecks = Map.adjust (Seq.sortOn rank) S.alice (GameState.planarDecks built)}
+      stacked = Game.overSideDecks SideDeck.Planar (Map.adjust (Seq.sortOn rank) S.alice) built
   pure (S.runPure S.identityAnswer stacked (Planechase.setStartingPlane S.alice))
 
 -- A three-player board, each seat's planar deck stacked in the order named,
@@ -196,10 +197,10 @@ planarBoard s registry order = do
 seatedPlanarBoard :: (Monad m) => Spec.Spec m n -> Registry.Registry m -> PlayerId.PlayerId -> [(PlayerId.PlayerId, [String])] -> m GameState.GameState
 seatedPlanarBoard s registry starter seats = do
   forest <- S.printingOf s registry "Forest"
-  decks <- traverse (\(pid, order) -> (\planes -> (pid, (Deck.fromCards (Map.singleton forest 20)) {Deck.planes = Set.fromList planes})) <$> traverse (S.printingOf s registry) order) seats
+  decks <- traverse (\(pid, order) -> (\planes -> (pid, (Deck.fromCards (Map.singleton forest 20)) {Deck.sideDecks = Map.singleton SideDeck.Planar (Map.fromSet (const 1) (Set.fromList planes))})) <$> traverse (S.printingOf s registry) order) seats
   let built = S.runPure S.identityAnswer (Setup.emptyGame S.threePlayers) (mapM_ (uncurry Setup.createDeck) decks)
       rank order oid = maybe (length order) (\face -> Maybe.fromMaybe (length order) (List.elemIndex (Face.name face) (fmap (CardName.MkCardName . Text.pack) order))) (Game.faceOf oid built)
-      stacked = built {GameState.planarDecks = Map.mapWithKey (\pid deck -> maybe deck (\order -> Seq.sortOn (rank order) deck) (List.lookup pid seats)) (GameState.planarDecks built)}
+      stacked = Game.overSideDecks SideDeck.Planar (Map.mapWithKey (\pid deck -> maybe deck (\order -> Seq.sortOn (rank order) deck) (List.lookup pid seats))) built
   pure (S.runPure S.identityAnswer stacked (Planechase.setStartingPlane starter))
 
 -- `who` concedes when asked; everyone else plays on, and every other prompt is

@@ -5,6 +5,7 @@ import qualified Data.Sequence as Seq
 import qualified Data.Set as Set
 import qualified Numeric.Natural as Natural
 import qualified Pawl.Types.CardName as CardName
+import qualified Pawl.Types.Designation as Designation
 import qualified Pawl.Types.GraveyardOrder as GraveyardOrder
 import qualified Pawl.Types.OutsideCard as OutsideCard
 import qualified Pawl.Types.PlayerCounterKind as PlayerCounterKind
@@ -286,6 +287,13 @@ data Player = MkPlayer
     companionTaken :: Bool,
     -- | CR 404.3: whether this player arranges the cards put into their
     -- graveyard together, their own standing setting (Pawl.Types.GraveyardOrder).
-    graveyardOrder :: GraveyardOrder.GraveyardOrder
+    graveyardOrder :: GraveyardOrder.GraveyardOrder,
+    -- | The Unstable FAQ: the sprocket this player's CRANK! counter is on,
+    -- which starts the game on the third and moves on at the beginning of each
+    -- of their upkeeps in which they control a Contraption
+    -- (Pawl.Engine.Contraption.crank). Not a PlayerCounterKind, for `speed`'s
+    -- reason: a marker no effect adds or removes, which proliferate (CR
+    -- 701.34a) would find if it were one.
+    crankCounter :: Designation.Designation
   }
   deriving (Eq, Ord, Show)

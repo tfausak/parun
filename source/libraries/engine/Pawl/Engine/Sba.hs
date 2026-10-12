@@ -14,6 +14,7 @@ import qualified Pawl.Engine.AttachRestriction as AttachRestriction
 import qualified Pawl.Engine.Battle as Battle
 import qualified Pawl.Engine.Card as Card
 import qualified Pawl.Engine.Commander as Commander
+import qualified Pawl.Engine.Contraption as Contraption
 import qualified Pawl.Engine.Decide as Decide
 import qualified Pawl.Engine.Departure as Departure
 import qualified Pawl.Engine.Dungeon as Dungeon
@@ -792,6 +793,12 @@ checkOnce = do
       -- triggered but not yet left the stack, and a trigger this settle has not
       -- scanned is on no stack yet.
       finishedDungeons = Dungeon.finished gs
+      -- The Unstable FAQ's unassembled Contraption, from the SAME pre-pass
+      -- state, and put into its owner's graveyard with the batch below:
+      -- Event.toJunkyard then sends a Contraption card on to the scrapyard, and
+      -- any other card -- a copy's -- stays in the graveyard, as the FAQ says.
+      -- Lives in Pawl.Engine.Contraption with the rest of the FAQ's rules.
+      unassembled = Contraption.unassembled pcs gs
       -- CR 704.6e / 314.6: face-up non-ongoing schemes with no scheme ability
       -- pending.
       spentSchemes = Archenemy.abandonedBySba gs
@@ -906,7 +913,8 @@ checkOnce = do
   -- CR 704.5f (toughness <= 0), CR 704.5i (loyalty 0), CR 704.5j (the legend
   -- rule's losers), CR 704.5k (the world rule's), CR 704.5m (an Aura attached to
   -- nothing), CR 704.5z (a superseded Role), CR 704.5v/704.5w (a battle at
-  -- defense 0) and CR 704.5x/704.5y (a battle no player can protect). None of
+  -- defense 0), CR 704.5x/704.5y (a battle no player can protect) and the
+  -- Unstable FAQ's unassembled Contraption. None of
   -- them is a destruction, so none consults indestructible or a regeneration
   -- shield.
   --
@@ -922,7 +930,7 @@ checkOnce = do
   -- from the board the pass began in, so an animated Rest in Peace this pass is
   -- itself burying still exiles the cards the rest of the batch would put into
   -- graveyards. See Pawl.Engine.Replacement's applyReplacementsIn.
-  Monad.mapM_ (\oid -> Event.changeZoneInBatch gs oid Zone.Graveyard) (ListUtils.nubOrd (toGraveyard <> legendVictims <> worldLosers <> supersededRoles <> unattachedAuras <> undefendable <> routed))
+  Monad.mapM_ (\oid -> Event.changeZoneInBatch gs oid Zone.Graveyard) (ListUtils.nubOrd (toGraveyard <> legendVictims <> worldLosers <> supersededRoles <> unattachedAuras <> undefendable <> routed <> unassembled))
   -- CR 903.9a's ACTION half: "its owner may put it into the command zone". A real
   -- zone change (CR 400.7 mints a fresh incarnation), so it goes through the same
   -- batch funnel as the buries above rather than editing the zone sets -- a

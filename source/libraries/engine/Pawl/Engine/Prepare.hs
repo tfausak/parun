@@ -82,6 +82,9 @@ mayGain designation oid gs = case designation of
   Designation.AlphaSector -> True
   Designation.BetaSector -> True
   Designation.GammaSector -> True
+  Designation.Sprocket1 -> True
+  Designation.Sprocket2 -> True
+  Designation.Sprocket3 -> True
 
 -- CR 722.3c, run immediately after the designation is written: "its controller
 -- creates a copy of that object in exile, except that copy has only the

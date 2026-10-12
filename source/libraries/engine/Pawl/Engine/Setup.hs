@@ -1,5 +1,6 @@
 module Pawl.Engine.Setup where
 
+import qualified Control.Applicative as Applicative
 import qualified Control.Monad as Monad
 import qualified Control.Monad.Trans.State.Strict as State
 import qualified Data.Foldable as Foldable
@@ -26,6 +27,7 @@ import qualified Pawl.Engine.Vanguard as Vanguard
 import qualified Pawl.Extra.Natural as Natural
 import qualified Pawl.Types.CardIdentity as CardIdentity
 import qualified Pawl.Types.Deck as Deck
+import qualified Pawl.Types.Designation as Designation
 import qualified Pawl.Types.Emperors as Emperors
 import qualified Pawl.Types.EndTurnSignal as EndTurnSignal
 import qualified Pawl.Types.EventGroup as EventGroup
@@ -48,6 +50,7 @@ import Pawl.Types.PlayerId (PlayerId)
 import qualified Pawl.Types.PrintingId as PrintingId
 import qualified Pawl.Types.Prompt as Prompt
 import qualified Pawl.Types.RestartSignal as RestartSignal
+import qualified Pawl.Types.SideDeck as SideDeck
 import qualified Pawl.Types.Source as Source
 import qualified Pawl.Types.Status as Status
 import qualified Pawl.Types.Teams as Teams
@@ -207,7 +210,10 @@ gameWith settings order =
               -- CR 116.2g's "only if they haven't done so yet this game": nobody
               -- has, the game not having started.
               Player.companionTaken = False,
-              Player.graveyardOrder = GraveyardOrder.Indifferent
+              Player.graveyardOrder = GraveyardOrder.Indifferent,
+              -- The Unstable FAQ: "at the start of the game, put a CRANK!
+              -- counter on Sprocket 3".
+              Player.crankCounter = Designation.Sprocket3
             }
         )
    in GameState.MkGameState
@@ -221,9 +227,7 @@ gameWith settings order =
           GameState.exile = mempty,
           GameState.command = mempty,
           GameState.ante = mempty,
-          GameState.attractionDecks = Map.empty,
-          GameState.planarDecks = Map.empty,
-          GameState.schemeDecks = Map.empty,
+          GameState.sideDecks = Map.empty,
           GameState.stack = [],
           GameState.stackedIn = Map.empty,
           GameState.players = Map.fromList (fmap newPlayer order_),
@@ -395,22 +399,16 @@ createDeck pid deck = do
           -- CR 400.11a: the sideboard is recorded on the player for the same
           -- reason and no object is minted for it either. CR 400.11c is what
           -- keeps anything else from reaching these until a card brings one in.
-          let total = startingLifeOf (GameState.settings gs) (length (GameState.turnOrder gs)) pid (Deck.commander deck) (Vanguard.lifeModifierOf pid gs + (if Map.null (Deck.schemes deck) then 0 else Archenemy.lifeBonus))
+          let total = startingLifeOf (GameState.settings gs) (length (GameState.turnOrder gs)) pid (Deck.commander deck) (Vanguard.lifeModifierOf pid gs + (if Map.null (Map.findWithDefault Map.empty SideDeck.Scheme (Deck.sideDecks deck)) then 0 else Archenemy.lifeBonus))
            in Map.adjust (\p -> p {Player.life = total, Player.startingLife = total, Player.dungeons = Set.fromList dungeonIds, Player.outsideTheGame = Map.fromList sideboardIds, Player.stickerSheets = Deck.stickerSheets deck}) pid (GameState.players gs)
       }
-  -- CR 717.2: the Attraction deck begins in the command zone, and is neither in
-  -- the library nor, below, in the starting deck.
-  attractionIds <- Monad.mapM (\(printing, n) -> fmap (\i -> (i, n)) (State.state (Game.intern printing))) (Map.toAscList (Deck.attractions deck))
-  Monad.forM_ attractionIds $ \(printingId, n) ->
-    Monad.replicateM_ (Natural.toIntSaturating n) (createInAttractionDeck pid printingId)
-  -- CR 901.3 / 901.4: the planar deck, likewise in the command zone and not
-  -- in the library.
-  planeIds <- Monad.mapM (State.state . Game.intern) (Set.toAscList (Deck.planes deck))
-  Monad.forM_ planeIds (createInPlanarDeck pid)
-  -- CR 904.3 / 904.4: the scheme deck, likewise.
-  schemeIds <- Monad.mapM (\(printing, n) -> fmap (\i -> (i, n)) (State.state (Game.intern printing))) (Map.toAscList (Deck.schemes deck))
-  Monad.forM_ schemeIds $ \(printingId, n) ->
-    Monad.replicateM_ (Natural.toIntSaturating n) (createInSchemeDeck pid printingId)
+  -- CR 717.2 / 901.4 / 904.4 and the Unstable FAQ: each supplementary deck
+  -- begins in the command zone, and is neither in the library nor, below, in
+  -- the starting deck.
+  Monad.forM_ (Map.toAscList (Deck.sideDecks deck)) $ \(kind, printings) -> do
+    sideIds <- Monad.mapM (\(printing, n) -> fmap (\i -> (i, n)) (State.state (Game.intern printing))) (Map.toAscList printings)
+    Monad.forM_ sideIds $ \(printingId, n) ->
+      Monad.replicateM_ (Natural.toIntSaturating n) (createInSideDeck kind pid printingId)
   cardIds <- Monad.mapM (\(printing, n) -> fmap (\i -> (i, n)) (State.state (Game.intern printing))) (Map.toAscList (Deck.cards deck))
   Monad.forM_ cardIds $ \(printingId, n) ->
     Monad.replicateM_ (Natural.toIntSaturating n) (createCard pid printingId)
@@ -470,41 +468,20 @@ createInCommandZone pid printingId = do
           }
   pure oid
 
--- CR 717.2: mint one of this player's Attraction cards onto the bottom of their
--- Attraction deck, createInCommandZone's hand-written move and for its reason.
-createInAttractionDeck :: PlayerId -> PrintingId.PrintingId -> Game ()
-createInAttractionDeck pid printingId = do
+-- CR 717.2 / 901.3 / 904.3: mint one of this player's cards onto the bottom of
+-- their supplementary deck of this kind, createInCommandZone's hand-written move
+-- and for its reason.
+createInSideDeck :: SideDeck.SideDeck -> PlayerId -> PrintingId.PrintingId -> Game ()
+createInSideDeck kind pid printingId = do
   oid <- createCard pid printingId
   State.modify' $ \gs ->
     let moved = Game.removeFromZones oid gs
-     in moved
-          { GameState.objects = Map.adjust (\o -> o {Object.zone = Zone.Command}) oid (GameState.objects moved),
-            GameState.attractionDecks = Map.insertWith (flip (Seq.><)) pid (Seq.singleton oid) (GameState.attractionDecks moved)
-          }
-
--- CR 901.3: mint one of this player's plane or phenomenon cards onto the
--- bottom of their planar deck, createInAttractionDeck's move and for its reason.
-createInPlanarDeck :: PlayerId -> PrintingId.PrintingId -> Game ()
-createInPlanarDeck pid printingId = do
-  oid <- createCard pid printingId
-  State.modify' $ \gs ->
-    let moved = Game.removeFromZones oid gs
-     in moved
-          { GameState.objects = Map.adjust (\o -> o {Object.zone = Zone.Command}) oid (GameState.objects moved),
-            GameState.planarDecks = Map.insertWith (flip (Seq.><)) pid (Seq.singleton oid) (GameState.planarDecks moved)
-          }
-
--- CR 904.3: mint one of this player's scheme cards onto the bottom of their
--- scheme deck, createInPlanarDeck's move and for its reason.
-createInSchemeDeck :: PlayerId -> PrintingId.PrintingId -> Game ()
-createInSchemeDeck pid printingId = do
-  oid <- createCard pid printingId
-  State.modify' $ \gs ->
-    let moved = Game.removeFromZones oid gs
-     in moved
-          { GameState.objects = Map.adjust (\o -> o {Object.zone = Zone.Command}) oid (GameState.objects moved),
-            GameState.schemeDecks = Map.insertWith (flip (Seq.><)) pid (Seq.singleton oid) (GameState.schemeDecks moved)
-          }
+     in Game.overSideDecks
+          kind
+          (Map.insertWith (flip (Seq.><)) pid (Seq.singleton oid))
+          moved
+            { GameState.objects = Map.adjust (\o -> o {Object.zone = Zone.Command}) oid (GameState.objects moved)
+            }
 
 newGame :: HandActionPerformer -> NonEmpty.NonEmpty (PlayerId, Deck.Deck) -> Game ()
 newGame perform matchup = do
@@ -519,12 +496,8 @@ newGame perform matchup = do
   Monad.forM_ (NonEmpty.toList matchup) $ \(pid, deck) -> do
     createDeck pid deck
     Event.shuffleLibrary pid
-    -- CR 717.2 / 103.3a.
-    Event.shuffleAttractionDeck pid
-    -- CR 901.3 / 103.3a.
-    Planechase.shufflePlanarDeck pid
-    -- CR 904.3 / 103.3a.
-    Archenemy.shuffleSchemeDeck pid
+    -- CR 717.2 / 901.3 / 904.3 / 103.3a.
+    Monad.forM_ [minBound .. maxBound] (`Game.shuffleSideDeck` pid)
   -- CR 809.4, ahead of CR 103.1c's claim.
   randomEmperorFirst
   -- CR 103.1c, once every conspiracy is in its command zone (CR 315.2).
@@ -688,16 +661,17 @@ startGameFromCards perform exemptions = do
       inCommandIds = Set.unions [commanderIds, vanguardIds, conspiracyIds]
       commandZoneCards = fmap toCommandCard (Map.restrictKeys rebuilt inCommandIds)
       -- CR 727.2 / 717.2: every Attraction card, wherever it was, begins the new
-      -- game in its owner's Attraction deck; CR 729.2a's subgame pool holds only
-      -- the decks.
-      attractionCards = fmap toCommandCard (Map.filterWithKey (\oid _ -> Game.astrotoriumBack oid gs) (Map.withoutKeys rebuilt inCommandIds))
+      -- game in its owner's Attraction deck, and a Contraption card in its
+      -- owner's Contraption deck by the same reading of the Unstable FAQ; CR
+      -- 729.2a's subgame pool holds only the decks.
+      backedCards = fmap toCommandCard (Map.filterWithKey (\oid _ -> Maybe.isJust (Game.sideDeckBack oid gs)) (Map.withoutKeys rebuilt inCommandIds))
       -- CR 311.2 / 312.2 / 314.2: a plane, phenomenon or scheme card never
       -- leaves the command zone, and CR 727.2 / 103.3a start the new game with
       -- each in its owner's supplementary deck, face up or not. A subgame's pool
       -- holds only the decks (CR 729.2a).
       planarCards = fmap toCommandCard (Map.filterWithKey (\oid _ -> Plane.isPlanarCard oid gs) (Map.withoutKeys rebuilt inCommandIds))
       schemeCards = fmap toCommandCard (Map.filterWithKey (\oid _ -> Scheme.isScheme oid gs) (Map.withoutKeys rebuilt inCommandIds))
-      supplementary = Set.unions [Map.keysSet attractionCards, Map.keysSet planarCards, Map.keysSet schemeCards]
+      supplementary = Set.unions [Map.keysSet backedCards, Map.keysSet planarCards, Map.keysSet schemeCards]
       -- CR 800.4n / 727.2: a departed player's ante card stayed in the game,
       -- and its owner has no library in the new one, so it begins the new game
       -- in the ante.
@@ -705,7 +679,7 @@ startGameFromCards perform exemptions = do
       cards = fmap toLibraryCard (Map.withoutKeys rebuilt (Set.unions [inCommandIds, supplementary, Map.keysSet strandedAnte]))
       ownedIn pool pid = Seq.fromList (Map.keys (Map.filter (\obj -> Object.owner obj == pid) pool))
       libraryOf = ownedIn cards
-      attractionDeckOf = ownedIn attractionCards
+      backedDecks kind = Map.filter (not . Seq.null) (Map.fromList [(pid, ownedIn (Map.filterWithKey (\oid _ -> Game.sideDeckBack oid gs == Just kind) backedCards) pid) | pid <- owners])
       -- Keyed by who had a deck as well as by who owns a card in one, so an
       -- archenemy whose scheme deck moved into a subgame empty is still one
       -- (Archenemy.isArchenemy).
@@ -727,11 +701,18 @@ startGameFromCards perform exemptions = do
   State.put
     gs
       { GameState.players = Map.mapWithKey withStartingDeck (GameState.players gs),
-        GameState.objects = Map.unions [Map.restrictKeys (GameState.objects gs) exempt, cards, commandZoneCards, attractionCards, planarCards, schemeCards, strandedAnte],
+        GameState.objects = Map.unions [Map.restrictKeys (GameState.objects gs) exempt, cards, commandZoneCards, backedCards, planarCards, schemeCards, strandedAnte],
         GameState.library = Map.fromList (fmap (\pid -> (pid, libraryOf pid)) owners),
-        GameState.attractionDecks = Map.filter (not . Seq.null) (Map.fromList (fmap (\pid -> (pid, attractionDeckOf pid)) owners)),
-        GameState.planarDecks = decksOf (GameState.planarDecks gs) planarCards,
-        GameState.schemeDecks = decksOf (GameState.schemeDecks gs) schemeCards,
+        GameState.sideDecks =
+          Map.filter
+            (not . Map.null)
+            ( Map.fromList
+                [ (SideDeck.Attraction, backedDecks SideDeck.Attraction),
+                  (SideDeck.Contraption, backedDecks SideDeck.Contraption),
+                  (SideDeck.Planar, decksOf (Game.sideDecksOf SideDeck.Planar gs) planarCards),
+                  (SideDeck.Scheme, decksOf (Game.sideDecksOf SideDeck.Scheme gs) schemeCards)
+                ]
+            ),
         GameState.hand = Map.empty,
         GameState.graveyard = Map.empty,
         GameState.battlefield = mempty,
@@ -752,10 +733,8 @@ startGameFromCards perform exemptions = do
   Monad.forM_ owners $ \pid ->
     Monad.forM_ (filter (\oid -> fmap Object.owner (Map.lookup oid rebuilt) == Just pid) (Set.toAscList conspiracyIds)) (Conspiracy.hideAgenda pid)
   Monad.forM_ owners Event.shuffleLibrary
-  Monad.forM_ owners Event.shuffleAttractionDeck
   -- CR 103.3a / 729.2a.
-  Monad.forM_ owners Planechase.shufflePlanarDeck
-  Monad.forM_ owners Archenemy.shuffleSchemeDeck
+  Monad.forM_ owners (\pid -> Monad.forM_ [minBound .. maxBound] (`Game.shuffleSideDeck` pid))
   -- CR 103.1c after CR 727.1a's determination: a conspiracy stays in the
   -- command zone through a restart (CR 315.3), so it claims again.
   claimStartingPlayer
@@ -931,6 +910,9 @@ resetPlayers settings seats lifeModifier players =
               -- this function's callers' games a new one, so the once-per-game
               -- action is available again.
               Player.companionTaken = False,
+              -- The Unstable FAQ: "at the start of the game, put a CRANK!
+              -- counter on Sprocket 3", and both callers' games are new ones.
+              Player.crankCounter = Designation.Sprocket3,
               -- CR 103.2b: nobody has revealed a companion in the new game yet.
               -- startGameFromCards records its starting deck and puts the reveal
               -- round again.
@@ -1094,10 +1076,10 @@ restartGame perform exempt starter = do
   startGameFromCards perform exempt
 
 -- CR 100.2d / 729.2a: every card in every player's Attraction (CR 717.2),
--- planar (CR 901.3) and scheme (CR 904.3) deck.
+-- Contraption (the Unstable FAQ), planar (CR 901.3) and scheme (CR 904.3) deck.
 supplementaryDeckIds :: GameState -> Set.Set ObjectId
 supplementaryDeckIds gs =
-  Set.fromList (foldMap Foldable.toList (GameState.attractionDecks gs) <> foldMap Foldable.toList (GameState.planarDecks gs) <> foldMap Foldable.toList (GameState.schemeDecks gs))
+  Set.fromList (foldMap (foldMap Foldable.toList) (GameState.sideDecks gs))
 
 -- CR 729.2: build a fresh subgame state from the parent's LIBRARY cards, plus
 -- CR 729.2a's supplementary decks, CR 729.2b's vanguards and CR 729.2c's
@@ -1125,8 +1107,8 @@ subgameStateFrom starter parent =
       -- Nothing ELSE in the main-game command zone moves -- CR 729.2's "no other
       -- cards in a main-game zone are moved" -- and their remaining sibling has no
       -- format here but one: CR 729.2a's supplementary decks of nontraditional
-      -- cards are the Attraction, planar and scheme decks CR 100.2d names
-      -- (`suppIds` below).
+      -- cards are the Attraction, planar and scheme decks CR 100.2d names, and
+      -- the Unstable FAQ's Contraption deck (`suppIds` below).
       --
       -- The other command-zone residents pawl DOES have -- an emblem, a
       -- conspiracy, and a dungeon a player has ventured into -- stay in the
@@ -1144,7 +1126,8 @@ subgameStateFrom starter parent =
       -- all along.
       cmdIds = Set.filter (\oid -> Commander.isCommander oid parent || Vanguard.isVanguard oid parent) (GameState.command parent)
       -- CR 729.2a: each supplementary deck moves in, and startGameFromCards
-      -- shuffles it. The face-up Attractions, planes and schemes stay behind.
+      -- shuffles it. The face-up Attractions, Contraptions, planes and schemes
+      -- stay behind.
       suppIds = supplementaryDeckIds parent
       movedObjects = Map.restrictKeys (GameState.objects parent) (Set.unions [libIds, cmdIds, suppIds])
       -- Invariant: `libIds` here and funnelBack's `oldLibIds` MUST compute the
@@ -1554,11 +1537,11 @@ funnelBack finalSub parent =
       -- anyway (CR 903.9a, CR 313.2, CR 311.2, CR 314.2), and an emblem there is
       -- not a card and never was in scope.
       subCmdIds = GameState.command finalSub
-      -- CR 729.5a: every Attraction, plane, phenomenon and scheme card in the
-      -- subgame began it in a supplementary deck (subgameStateFrom's
+      -- CR 729.5a: every Attraction, Contraption, plane, phenomenon and scheme
+      -- card in the subgame began it in a supplementary deck (subgameStateFrom's
       -- `suppIds`), and goes back to it -- a face-up plane or scheme included,
       -- turned face down.
-      subAttractions = Map.filterWithKey (\oid obj -> isCard obj && Game.astrotoriumBack oid finalSub) (Map.withoutKeys subObjects subCmdIds)
+      subBacked = Map.filterWithKey (\oid obj -> isCard obj && Maybe.isJust (Game.sideDeckBack oid finalSub)) (Map.withoutKeys subObjects subCmdIds)
       subPlanar = Map.filterWithKey (\oid obj -> isCard obj && Plane.isPlanarCard oid finalSub) subObjects
       subSchemes = Map.filterWithKey (\oid obj -> isCard obj && Scheme.isScheme oid finalSub) subObjects
       backFromSub =
@@ -1599,17 +1582,18 @@ funnelBack finalSub parent =
         Just identity -> Set.member identity identitiesInSub
         Nothing -> False
       recoveredIds = Set.filter (not . survived) departedIds
-      returned = fmap toLibraryCard (Map.filter isCard (Map.withoutKeys subObjects (Set.unions [subCmdIds, Map.keysSet subAttractions, Map.keysSet subPlanar, Map.keysSet subSchemes])))
+      returned = fmap toLibraryCard (Map.filter isCard (Map.withoutKeys subObjects (Set.unions [subCmdIds, Map.keysSet subBacked, Map.keysSet subPlanar, Map.keysSet subSchemes])))
       recovered = fmap toLibraryCard (Map.restrictKeys (GameState.objects parent) (Set.difference recoveredIds (Set.union oldCmdIds oldSuppIds)))
       -- A supplementary deck whose owner departed inside the subgame goes back
       -- to being their deck, the commander's reason below.
       recoveredSupp = Map.restrictKeys (GameState.objects parent) (Set.intersection recoveredIds oldSuppIds)
       backTo sub isKind = fmap toCommandCard (Map.union sub (Map.filterWithKey (\oid _ -> isKind oid parent) recoveredSupp))
-      attractionsBack = backTo subAttractions Game.astrotoriumBack
+      backedBack = backTo subBacked (\oid g -> Maybe.isJust (Game.sideDeckBack oid g))
       planarBack = backTo subPlanar Plane.isPlanarCard
       schemesBack = backTo subSchemes Scheme.isScheme
       ownedIn pool pid = Seq.fromList (Map.keys (Map.filter (\obj -> Object.owner obj == pid) pool))
-      attractionDeckOf = ownedIn attractionsBack
+      backKind oid = Game.sideDeckBack oid finalSub Applicative.<|> Game.sideDeckBack oid parent
+      backedDecks kind = Map.filter (not . Seq.null) (Map.fromList [(pid, ownedIn (Map.filterWithKey (\oid _ -> backKind oid == Just kind) backedBack) pid) | pid <- GameState.turnOrder parent])
       -- A commander whose owner departed INSIDE the subgame is recovered to the
       -- zone it left the parent from, not to a library: CR 729.1b keeps the
       -- subgame's departure from meaning anything in the main game, where that
@@ -1698,13 +1682,20 @@ funnelBack finalSub parent =
           Status.Departed _ -> player {Player.outsideTheGame = Map.filter (> 0) (Map.mapWithKey (spendKept pid (Player.outsideTheGame inSub)) (Player.outsideTheGame player))}
           Status.Playing -> player {Player.outsideTheGame = Player.outsideTheGame inSub}
    in parent
-        { GameState.objects = Map.unions [allReturned, toCommand, attractionsBack, planarBack, schemesBack, keptParentObjects],
+        { GameState.objects = Map.unions [allReturned, toCommand, backedBack, planarBack, schemesBack, keptParentObjects],
           GameState.players = carriedPools,
           GameState.library = Map.fromList (fmap (\pid -> (pid, libraryOf pid)) (GameState.turnOrder parent)),
           -- CR 729.5a; Engine.playSubgame shuffles them.
-          GameState.attractionDecks = Map.filter (not . Seq.null) (Map.fromList (fmap (\pid -> (pid, attractionDeckOf pid)) (GameState.turnOrder parent))),
-          GameState.planarDecks = Map.mapWithKey (\pid _ -> ownedIn planarBack pid) (GameState.planarDecks parent),
-          GameState.schemeDecks = Map.mapWithKey (\pid _ -> ownedIn schemesBack pid) (GameState.schemeDecks parent),
+          GameState.sideDecks =
+            Map.filter
+              (not . Map.null)
+              ( Map.fromList
+                  [ (SideDeck.Attraction, backedDecks SideDeck.Attraction),
+                    (SideDeck.Contraption, backedDecks SideDeck.Contraption),
+                    (SideDeck.Planar, Map.mapWithKey (\pid _ -> ownedIn planarBack pid) (Game.sideDecksOf SideDeck.Planar parent)),
+                    (SideDeck.Scheme, Map.mapWithKey (\pid _ -> ownedIn schemesBack pid) (Game.sideDecksOf SideDeck.Scheme parent))
+                  ]
+              ),
           -- CR 729.5c. The parent's other command-zone residents are untouched:
           -- CR 729.2c moved only the commanders, so only they can come back.
           GameState.command = Set.union (Set.difference (GameState.command parent) oldCmdIds) (Map.keysSet toCommand),

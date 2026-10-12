@@ -195,6 +195,7 @@ zoneFunctionedAgainst itself delayed effect = case effect of
   Effect.Fateseal {} -> Nothing
   Effect.Clash {} -> Nothing
   Effect.Explore {} -> Nothing
+  Effect.Assemble {} -> Nothing
   Effect.Connive {} -> Nothing
   Effect.Discard {} -> Nothing
   Effect.LoseLife {} -> Nothing

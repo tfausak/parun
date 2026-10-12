@@ -722,6 +722,7 @@ effectObjectRefs effect = case effect of
   Effect.Fateseal {} -> []
   Effect.Clash {} -> []
   Effect.Explore ref -> [ref]
+  Effect.Assemble ref -> Maybe.maybeToList ref
   Effect.ArrangeInLibrary ref -> [ref]
   Effect.Connive (Connive.MkConnive _ ref) -> [ref]
   Effect.Discard subject -> case subject of
@@ -962,6 +963,7 @@ effectPlayerRefs effect = case effect of
   Effect.Fateseal (PlayerQuantity.MkPlayerQuantity ref _) -> [ref]
   Effect.Clash {} -> []
   Effect.Explore {} -> []
+  Effect.Assemble {} -> []
   Effect.ArrangeInLibrary {} -> []
   Effect.Connive {} -> []
   Effect.Discard subject -> case subject of
@@ -1285,6 +1287,7 @@ slotsOf effect = joinTwo (joinTwo (joinSlots (fmap objectRefSlots (effectObjectR
   Effect.Fateseal (PlayerQuantity.MkPlayerQuantity _ quantity) -> quantitySlots quantity
   Effect.Clash {} -> Map.empty
   Effect.Explore _ -> Map.empty
+  Effect.Assemble _ -> Map.empty
   Effect.ArrangeInLibrary _ -> Map.empty
   Effect.Connive (Connive.MkConnive quantity _) -> quantitySlots quantity
   Effect.Discard subject -> case subject of
@@ -1682,6 +1685,7 @@ replacementRowReads re = case re of
   ReplacementEffect.ProliferateR {} -> ([], [])
   ReplacementEffect.ScryR {} -> ([], [])
   ReplacementEffect.VillainousChoiceR {} -> ([], [])
+  ReplacementEffect.AssembleR matching -> ([matching], [])
   ReplacementEffect.PhaseR _ -> ([], [])
 
 -- A row's pattern Filter joined onto what its rewrite reads.
@@ -1838,6 +1842,7 @@ overRelations f re = case re of
   ReplacementEffect.ProliferateR r -> (\w -> ReplacementEffect.ProliferateR r {ProliferateR.whose = w}) <$> f (ProliferateR.whose r)
   ReplacementEffect.ScryR r -> (\w -> ReplacementEffect.ScryR r {ScryR.whose = w}) <$> f (ScryR.whose r)
   ReplacementEffect.VillainousChoiceR r -> (\w -> ReplacementEffect.VillainousChoiceR r {VillainousChoiceR.whose = w}) <$> f (VillainousChoiceR.whose r)
+  ReplacementEffect.AssembleR _ -> pure re
   -- CR 109.5's relation rides EntryR's Filter (Filter.ControlledBy) and DamageR's
   -- PlayerRelation; the other four name no player at all.
   ReplacementEffect.EntryR _ -> pure re
@@ -1892,6 +1897,7 @@ replacementRowEffects re = case re of
   ReplacementEffect.ProliferateR _ -> []
   ReplacementEffect.ScryR _ -> []
   ReplacementEffect.VillainousChoiceR _ -> []
+  ReplacementEffect.AssembleR _ -> []
   ReplacementEffect.PhaseR _ -> []
 
 -- The program an ENTRY rewrite runs. entryRewriteReads' discipline: no wildcard,
@@ -2072,6 +2078,7 @@ ownSlotsAreExhaustive effect = case effect of
   Effect.Fateseal (PlayerQuantity.MkPlayerQuantity _ quantity) -> Quantity.slotsAreExhaustive quantity
   Effect.Clash {} -> True
   Effect.Explore {} -> True
+  Effect.Assemble {} -> True
   Effect.ArrangeInLibrary {} -> True
   Effect.Connive (Connive.MkConnive quantity _) -> Quantity.slotsAreExhaustive quantity
   Effect.Discard subject -> case subject of
@@ -2356,6 +2363,7 @@ readsX =
         Effect.Fateseal (PlayerQuantity.MkPlayerQuantity _ quantity) -> Quantity.readsX quantity
         Effect.Clash {} -> False
         Effect.Explore {} -> False
+        Effect.Assemble {} -> False
         Effect.ArrangeInLibrary {} -> False
         Effect.Connive (Connive.MkConnive quantity _) -> Quantity.readsX quantity
         Effect.Discard subject -> case subject of
@@ -2552,6 +2560,7 @@ boundSlots effect = case effect of
   Effect.Fateseal {} -> Set.empty
   Effect.Clash slot -> Set.singleton slot
   Effect.Explore {} -> Set.empty
+  Effect.Assemble {} -> Set.empty
   Effect.ArrangeInLibrary {} -> Set.empty
   Effect.Connive {} -> Set.empty
   Effect.DealDamage {} -> Set.empty

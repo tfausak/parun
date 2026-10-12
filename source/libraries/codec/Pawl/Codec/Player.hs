@@ -6,6 +6,7 @@ import qualified Data.Map.Strict as Map
 import qualified Data.Sequence as Seq
 import qualified Data.Set as Set
 import qualified Pawl.Codec.CardName as CardName
+import qualified Pawl.Codec.Designation as Designation
 import qualified Pawl.Codec.GraveyardOrder as GraveyardOrder
 import qualified Pawl.Codec.OutsideCard as OutsideCard
 import qualified Pawl.Codec.PlayerCounterKind as PlayerCounterKind
@@ -16,6 +17,7 @@ import qualified Pawl.Codec.StickerSheet as StickerSheet
 import qualified Pawl.JsonCodec.Codec as Codec
 import qualified Pawl.JsonCodec.Common as Common
 import qualified Pawl.JsonCodec.Fields as Fields
+import qualified Pawl.Types.Designation as Designation.Type
 import qualified Pawl.Types.GraveyardOrder as GraveyardOrder.Type
 import qualified Pawl.Types.Player as Player
 import qualified Pawl.Types.Status as Status.Type
@@ -56,6 +58,7 @@ codec = Fields.object $ do
   companion <- Fields.defaulted "companion" Nothing (Common.maybe OutsideCard.codec) Player.companion
   companionTaken <- Fields.defaulted "companionTaken" False Common.boolean Player.companionTaken
   graveyardOrder <- Fields.defaulted "graveyardOrder" GraveyardOrder.Type.Indifferent GraveyardOrder.codec Player.graveyardOrder
+  crankCounter <- Fields.defaulted "crankCounter" Designation.Type.Sprocket3 Designation.codec Player.crankCounter
   pure
     Player.MkPlayer
       { Player.life = life,
@@ -77,5 +80,6 @@ codec = Fields.object $ do
         Player.startingDeck = startingDeck,
         Player.companion = companion,
         Player.companionTaken = companionTaken,
-        Player.graveyardOrder = graveyardOrder
+        Player.graveyardOrder = graveyardOrder,
+        Player.crankCounter = crankCounter
       }

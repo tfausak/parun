@@ -874,7 +874,7 @@ withinOffer prompt chosen = case prompt of
   Prompt.Type.ChooseRevealOnEntry _ _ _ cards -> all (`elem` cards) chosen
   Prompt.Type.ChooseManaType _ _ _ types -> chosen `elem` types
   Prompt.Type.ChooseColor _ _ _ colors -> chosen `elem` colors
-  Prompt.Type.ChooseSector _ _ _ sectors -> chosen `elem` sectors
+  Prompt.Type.ChooseDesignation _ _ _ sectors -> chosen `elem` sectors
   Prompt.Type.ChooseProtector _ _ _ players -> chosen `elem` players
   Prompt.Type.ChooseActivePlayer _ _ players -> chosen `elem` players
   Prompt.Type.ChooseExilesFromGraveyard _ _ _ cards _ -> all (`elem` cards) chosen

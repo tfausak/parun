@@ -2408,6 +2408,20 @@ spec s = Spec.describe s "Pawl.Codec.Effect" $ do
       fromJson
       Effect.OpenAttraction
       " {\"type\":\"OpenAttraction\"} "
+  -- The Unstable FAQ: the assembling permanent, or null for the player.
+  Spec.it s "Assemble" $ do
+    Common.assertJsonCodec
+      s
+      toJson
+      fromJson
+      (Effect.Assemble (Just (ObjectRef.InSlot (SlotName.MkSlotName (Text.pack "self")))))
+      " {\"type\":\"Assemble\",\"value\":{\"type\":\"InSlot\",\"value\":\"self\"}} "
+    Common.assertJsonCodec
+      s
+      toJson
+      fromJson
+      (Effect.Assemble Nothing)
+      " {\"type\":\"Assemble\",\"value\":null} "
   -- CR 701.33: nullary, "this scheme" being the effect's source (CR 314.7).
   Spec.it s "Abandon" $
     Common.assertJsonCodec

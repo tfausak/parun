@@ -60,6 +60,7 @@ import qualified Pawl.Types.ProjectedCharacteristics as ProjectedCharacteristics
 import qualified Pawl.Types.RestartSignal as RestartSignal
 import qualified Pawl.Types.Result as Result
 import qualified Pawl.Types.ReturnWatch as ReturnWatch
+import qualified Pawl.Types.SideDeck as SideDeck
 import qualified Pawl.Types.SlotName as SlotName
 import qualified Pawl.Types.SpellWasCast as SpellWasCast
 import qualified Pawl.Types.Timestamp as Timestamp
@@ -85,17 +86,15 @@ data GameState = MkGameState
     command :: Set.Set ObjectId.ObjectId,
     -- | CR 400.1 / 407: the ante zone, shared rather than per-player.
     ante :: Set.Set ObjectId.ObjectId,
-    -- | CR 717.2: each player's Attraction deck, head on top. Its cards are in
-    -- the command zone (Object.zone) but not in `command`, which holds what is
-    -- face up there.
-    attractionDecks :: Map.Map PlayerId.PlayerId (Seq.Seq ObjectId.ObjectId),
-    -- | CR 901.3 / 901.4: each player's planar deck, head on top, held as the
-    -- Attraction deck above is: in the command zone but not in `command`,
-    -- which holds the face-up plane.
-    planarDecks :: Map.Map PlayerId.PlayerId (Seq.Seq ObjectId.ObjectId),
-    -- | CR 314.2 / 904.4: each archenemy's scheme deck, head on top, held as
-    -- the planar deck above is.
-    schemeDecks :: Map.Map PlayerId.PlayerId (Seq.Seq ObjectId.ObjectId),
+    -- | CR 717.2 / 901.3 / 904.3 and the Unstable FAQ: each player's
+    -- supplementary decks, keyed by which deck (Pawl.Types.SideDeck), head on
+    -- top. Their cards are in the command zone (Object.zone, CR 717.2 / 901.4 /
+    -- 904.4) but not in `command`, which holds what is face up there. A player
+    -- keyed with an empty deck is one who brought that deck
+    -- (Pawl.Engine.Archenemy.isArchenemy). Pawl.Engine.Game.overSideDecks drops
+    -- a kind nobody holds, so a board that never had one compares equal to one
+    -- that has emptied it.
+    sideDecks :: Map.Map SideDeck.SideDeck (Map.Map PlayerId.PlayerId (Seq.Seq ObjectId.ObjectId)),
     stack :: [ObjectId.ObjectId],
     -- | CR 610.3a / 610.3b: the event group current as each object was put on
     -- the stack, so an event logged in it or a later one happened after that.

@@ -52,6 +52,7 @@ import qualified Pawl.Types.DamagePattern as DamagePattern
 import qualified Pawl.Types.DamageR as DamageR
 import qualified Pawl.Types.DamageRewrite as DamageRewrite
 import qualified Pawl.Types.Departure as Departure.Type
+import qualified Pawl.Types.Designation as Designation
 import qualified Pawl.Types.EndingStep as EndingStep
 import qualified Pawl.Types.Expiry as Expiry.Type
 import qualified Pawl.Types.Face as Face
@@ -1432,7 +1433,7 @@ sbaSpec s =
        in Spec.assertEqWith s "bob won" (GameState.result after) (Just (Result.Won S.bob))
 
     Spec.it s "life <= 0 loses" $
-      let gs = sbaBase {GameState.players = Map.insert S.alice (Player.MkPlayer {Player.life = 0, Player.startingLife = 20, Player.status = Status.Playing, Player.counters = Map.empty, Player.ringTemptations = 0, Player.speed = Nothing, Player.designations = Set.empty, Player.commander = Set.empty, Player.commanderCasts = Map.empty, Player.commanderDamage = Map.empty, Player.dungeons = Set.empty, Player.outsideTheGame = Map.empty, Player.stickerSheets = Seq.empty, Player.chosenStickerSheets = Set.empty, Player.completedDungeons = 0, Player.completedDungeonNames = Set.empty, Player.startingDeck = Map.empty, Player.companion = Nothing, Player.companionTaken = False, Player.graveyardOrder = GraveyardOrder.Indifferent}) (GameState.players sbaBase)}
+      let gs = sbaBase {GameState.players = Map.insert S.alice (Player.MkPlayer {Player.life = 0, Player.startingLife = 20, Player.status = Status.Playing, Player.counters = Map.empty, Player.ringTemptations = 0, Player.speed = Nothing, Player.designations = Set.empty, Player.commander = Set.empty, Player.commanderCasts = Map.empty, Player.commanderDamage = Map.empty, Player.dungeons = Set.empty, Player.outsideTheGame = Map.empty, Player.stickerSheets = Seq.empty, Player.chosenStickerSheets = Set.empty, Player.completedDungeons = 0, Player.completedDungeonNames = Set.empty, Player.startingDeck = Map.empty, Player.companion = Nothing, Player.companionTaken = False, Player.graveyardOrder = GraveyardOrder.Indifferent, Player.crankCounter = Designation.Sprocket3}) (GameState.players sbaBase)}
        in Spec.assertEqWith s "bob won" (GameState.result (S.settleSba gs)) (Just (Result.Won S.bob))
 
     Spec.it s "simultaneous last departures draw" $

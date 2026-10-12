@@ -171,7 +171,7 @@ encode p answer = case p of
   Prompt.ChooseEnlist {} -> Response.ChoseEnlist answer
   Prompt.ChooseEncode {} -> Response.ChoseEncode answer
   Prompt.ChooseColor {} -> Response.ChoseColor answer
-  Prompt.ChooseSector {} -> Response.ChoseSector answer
+  Prompt.ChooseDesignation {} -> Response.ChoseDesignation answer
   Prompt.ChooseManaType {} -> Response.ChoseManaType answer
   Prompt.ChooseCardName {} -> Response.ChoseCardName answer
   Prompt.ChooseOpponent {} -> Response.ChoseOpponent answer
@@ -424,6 +424,7 @@ decode p response = case p of
     (AnyNumberOf.ToReveal, Response.ChoseReveals ids) -> Just ids
     (AnyNumberOf.ToExile, Response.ChoseExilesFromGraveyard ids) -> Just ids
     (AnyNumberOf.ToDiscard, Response.ChoseAnyNumberToDiscard ids) -> Just ids
+    (AnyNumberOf.ToCrank, Response.ChoseCranks ids) -> Just ids
     _ -> Nothing
   Prompt.ChooseDungeon {} -> case response of
     Response.ChoseDungeon printingId -> Just printingId
@@ -533,8 +534,8 @@ decode p response = case p of
   Prompt.ChooseColor {} -> case response of
     Response.ChoseColor c -> Just c
     _ -> Nothing
-  Prompt.ChooseSector {} -> case response of
-    Response.ChoseSector d -> Just d
+  Prompt.ChooseDesignation {} -> case response of
+    Response.ChoseDesignation d -> Just d
     _ -> Nothing
   Prompt.ChooseManaType {} -> case response of
     Response.ChoseManaType t -> Just t
@@ -1123,7 +1124,7 @@ defaultAnswer p = case p of
   Prompt.ChooseEncode {} -> Nothing
   -- CR 105.1: any of the five colours is a legal answer.
   Prompt.ChooseColor _ _ _ colors -> NonEmpty.head colors
-  Prompt.ChooseSector _ _ _ sectors -> NonEmpty.head sectors
+  Prompt.ChooseDesignation _ _ _ sectors -> NonEmpty.head sectors
   -- CR 105.4: every candidate is a type Mana.produced offered, so the head
   -- is legal -- the same filter-not-trust fallback Resolve's arm applies to a
   -- wrong answer.
@@ -1425,3 +1426,4 @@ anyNumberResponse purpose = case purpose of
   AnyNumberOf.ToReveal -> Response.ChoseReveals
   AnyNumberOf.ToExile -> Response.ChoseExilesFromGraveyard
   AnyNumberOf.ToDiscard -> Response.ChoseAnyNumberToDiscard
+  AnyNumberOf.ToCrank -> Response.ChoseCranks

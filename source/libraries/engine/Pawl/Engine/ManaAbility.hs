@@ -364,6 +364,7 @@ manaProduced effect = case effect of
   Effect.Fateseal {} -> Nothing
   Effect.Clash {} -> Nothing
   Effect.Explore {} -> Nothing
+  Effect.Assemble {} -> Nothing
   Effect.Connive {} -> Nothing
   Effect.Discard {} -> Nothing
   Effect.LoseLife {} -> Nothing
@@ -559,6 +560,7 @@ playerChoice effect = case effect of
   Effect.Fateseal {} -> Nothing
   Effect.Clash {} -> Nothing
   Effect.Explore {} -> Nothing
+  Effect.Assemble {} -> Nothing
   Effect.Connive {} -> Nothing
   Effect.Discard {} -> Nothing
   Effect.LoseLife {} -> Nothing
@@ -768,6 +770,7 @@ movesLibraryCard effect = case effect of
   Effect.Airbend _ -> False
   Effect.TemptWithTheRing -> False
   Effect.OpenAttraction -> False
+  Effect.Assemble {} -> False
   Effect.Planeswalk -> False
   Effect.Abandon -> False
   Effect.ClaimPrize -> False

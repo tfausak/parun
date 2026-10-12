@@ -537,8 +537,8 @@ data Response
     ChoseTurnUpAttachment OptionalDecision.OptionalDecision
   | -- | CR 614.1c: the colour a player chose as an object entered.
     ChoseColor Color.Color
-  | -- | CR 702.158b: the sector a player chose.
-    ChoseSector Designation.Designation
+  | -- | CR 702.158b: the sector a player chose, or the Unstable FAQ's sprocket.
+    ChoseDesignation Designation.Designation
   | -- | CR 105.4 / 106.3: the mana a player chose to add as a spell or ability
     -- that named no settled type resolved. Distinct from ChoseColor above for
     -- the reason Prompt.ChooseManaType gives, and it carries a ManaType rather
@@ -672,6 +672,9 @@ data Response
     -- where the effect stated no count. A separate constructor from
     -- ChoseAnyNumberOfPermanents above, for ChoseTaps' reason.
     ChoseAnyNumberToDiscard (Set.Set ObjectId.ObjectId)
+  | -- | The Unstable FAQ: the Contraptions a player cranked. A separate
+    -- constructor from ChoseAnyNumberOfPermanents above, for ChoseTaps' reason.
+    ChoseCranks (Set.Set ObjectId.ObjectId)
   | -- | CR 701.20a: the cards a player chose to reveal from their hand as a
     -- permanent entered (CR 702.38a). A separate constructor from
     -- ChoseAnyNumberOfPermanents above, though the payload has the same shape,

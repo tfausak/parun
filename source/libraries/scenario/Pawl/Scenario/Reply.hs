@@ -391,7 +391,7 @@ shapeOf prompt = case prompt of
   Prompt.ChoosePayLifeOnEntry {} -> viaCodec Codec.OptionalDecision.codec
   Prompt.ChooseRevealOnEntry {} -> maybeOf object
   Prompt.ChooseColor {} -> viaCodec Codec.Color.codec
-  Prompt.ChooseSector {} -> viaCodec Codec.Designation.codec
+  Prompt.ChooseDesignation {} -> viaCodec Codec.Designation.codec
   Prompt.ChooseManaType {} -> viaCodec Codec.ManaType.codec
   Prompt.ChooseCardName {} -> viaCodec Codec.CardName.codec
   Prompt.ChooseOpponent {} -> player
