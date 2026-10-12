@@ -110,8 +110,7 @@ data Designation
   | -- | CR 701.64b: harnessed, which CR 701.64a's harness instruction sets and CR
     -- 702.186b's infinity ability is gated on.
     Harnessed
-  | -- | CR 702.128b: embalmed, which a token has from its creation by a
-    -- resolving embalm ability (Pawl.Engine.Keyword.createdMarks).
+  | -- | CR 702.128b: embalmed, set as a resolving embalm ability creates the token.
     Embalmed
   | -- | CR 702.158b: the alpha sector, one of the three CR 704.5u assigns.
     AlphaSector

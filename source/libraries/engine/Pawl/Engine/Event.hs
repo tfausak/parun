@@ -4249,9 +4249,9 @@ apply batch candidate event =
       -- creature", through the entry arm's own copying process. Nothing enters,
       -- so no batch narrows the offer, and the entry riders (`tapped`,
       -- `counters`, a conditional part's counters) are not placed:
-      -- Pawl.EffectLintSpec holds that no turn-up row states them. Applied after the status write, so a copied creature's own "as
-      -- this is turned face up" row is collected on the loop's next pass (CR
-      -- 616.1f).
+      -- Pawl.EffectLintSpec holds that no turn-up row states them. Applied
+      -- after the status write, so a copied creature's own "as this is turned
+      -- face up" row is collected on the loop's next pass (CR 616.1f).
       TurnUpRewrite.AsCopy asCopy -> do
         _ <- becomeCopyAs Set.empty candidate asCopy oid
         pure (Just event)

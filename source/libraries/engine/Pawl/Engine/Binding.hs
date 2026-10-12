@@ -586,8 +586,8 @@ tappedPermanent = SlotName.MkSlotName (Text.pack "thatTappedPermanent")
 -- linked to that replacement -- Wall of Stolen Identity's "the copied
 -- creature". Stamped by Pawl.Engine.Event.becomeCopyAs as it arms the ability,
 -- and framed there for a CR 707.9f conditional part's condition too (Undercover
--- Operative's "that creature"). Not a target, so the same "no card's targetSlots may name it" sweep as
--- tappedPermanent above.
+-- Operative's "that creature"). Not a target, so the same "no card's
+-- targetSlots may name it" sweep as tappedPermanent above.
 copiedObject :: SlotName
 copiedObject = SlotName.MkSlotName (Text.pack "thatCopiedObject")
 
