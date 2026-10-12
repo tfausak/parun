@@ -18,7 +18,7 @@ spec :: (Monad m, Monad n) => Spec.Spec m n -> n ()
 spec s = Spec.describe s "Pawl.Codec.Vote" $ do
   -- CR 701.38a: the starter is the seat the vote begins with, and rule 701.38b's
   -- listed choices are the tagged half. Pawl.Codec.VoteChoices and
-  -- Pawl.Codec.VoteObjects have no spec of their own; these two cases are it.
+  -- Pawl.Codec.VoteObjects have no spec of their own; these cases are it.
   Spec.it s "MkVote, Council's Judgment's object vote" $
     Common.assertCodec
       s
@@ -30,7 +30,8 @@ spec s = Spec.describe s "Pawl.Codec.Vote" $ do
                 VoteObjects.MkVoteObjects
                   { VoteObjects.filter = Filter.HasCardType CardType.Creature,
                     VoteObjects.slot = SlotName.MkSlotName (Text.pack "elected")
-                  }
+                  },
+            Vote.secret = False
           }
       )
       " {\"starter\":{\"type\":\"Relative\",\"value\":{\"type\":\"You\"}},\"choices\":{\"type\":\"Objects\",\"value\":{\"filter\":{\"type\":\"HasCardType\",\"value\":{\"type\":\"Creature\"}},\"slot\":\"elected\"}}} "
@@ -44,8 +45,25 @@ spec s = Spec.describe s "Pawl.Codec.Vote" $ do
               VoteChoices.Words
                 ( SlotName.MkSlotName (Text.pack "time")
                     NonEmpty.:| [SlotName.MkSlotName (Text.pack "knowledge")]
-                )
+                ),
+            Vote.secret = False
           }
       )
       " {\"starter\":{\"type\":\"Relative\",\"value\":{\"type\":\"You\"}},\"choices\":{\"type\":\"Words\",\"value\":[\"time\",\"knowledge\"]}} "
+  -- Secret council (CR 207.2c): the one vote written with the key.
+  Spec.it s "MkVote, Truth or Consequences' secret word vote" $
+    Common.assertCodec
+      s
+      Vote.codec
+      ( Vote.MkVote
+          { Vote.starter = PlayerRef.Relative PlayerRelation.You,
+            Vote.choices =
+              VoteChoices.Words
+                ( SlotName.MkSlotName (Text.pack "truth")
+                    NonEmpty.:| [SlotName.MkSlotName (Text.pack "consequences")]
+                ),
+            Vote.secret = True
+          }
+      )
+      " {\"starter\":{\"type\":\"Relative\",\"value\":{\"type\":\"You\"}},\"choices\":{\"type\":\"Words\",\"value\":[\"truth\",\"consequences\"]},\"secret\":true} "
   Spec.it s "has a schema" $ Common.assertHasSchema s Vote.codec

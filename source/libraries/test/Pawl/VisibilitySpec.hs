@@ -8,15 +8,20 @@ import qualified Data.Map as Map
 import qualified Data.Sequence as Seq
 import qualified Data.Text as Text
 import qualified Pawl.Engine.Event as Event
+import qualified Pawl.Engine.Resolve.Effect as Resolve
 import qualified Pawl.Engine.Visibility as Visibility
 import qualified Pawl.Registry as Registry
 import qualified Pawl.Spec as Spec
 import qualified Pawl.Support as S
 import qualified Pawl.Types.AffectedPlayers as AffectedPlayers
 import qualified Pawl.Types.Audience as Audience
+import qualified Pawl.Types.Ballot as Ballot
+import qualified Pawl.Types.BallotChoice as BallotChoice
 import qualified Pawl.Types.Expiry as Expiry
+import qualified Pawl.Types.GameEvent as GameEvent
 import qualified Pawl.Types.GameState as GameState
 import qualified Pawl.Types.Label as Label
+import qualified Pawl.Types.LoggedEvent as LoggedEvent
 import qualified Pawl.Types.ObjectId as ObjectId
 import qualified Pawl.Types.PlayerEffect as PlayerEffect
 import qualified Pawl.Types.PlayerRelation as PlayerRelation
@@ -24,6 +29,7 @@ import qualified Pawl.Types.PlayerScope as PlayerScope
 import qualified Pawl.Types.Seat as Seat
 import qualified Pawl.Types.ShownCards as ShownCards
 import qualified Pawl.Types.Shows as Shows
+import qualified Pawl.Types.SlotName as SlotName
 import qualified Pawl.Types.Staged as Staged
 import qualified Pawl.Types.Visibility as Visibility.Type
 
@@ -75,6 +81,36 @@ spec s registry = Spec.describe s "Pawl.Engine.Visibility" $ do
     Spec.assertEqWith s "controlling bob, alice witnesses his look" (Visibility.witnessed S.alice controlledLook) Visibility.Type.Visible
     Spec.assertEqWith s "bob witnesses his own look" (Visibility.witnessed S.bob controlledLook) Visibility.Type.Visible
     Spec.assertEqWith s "carol does not witness it" (Visibility.witnessed S.carol controlledLook) Visibility.Type.Obscured
+  -- CR 701.38a / 723.4: the control row is written onto the state directly, as
+  -- above, and the ballot logged through the Vote arm's own logger.
+  Spec.it s "a secret ballot is witnessed by its voter and the voter's controller" $ do
+    built <- S.buildBoardOrFail s registry (S.board (S.playerSetup S.alice NonEmpty.:| [S.playerSetup S.bob, S.playerSetup S.carol]) S.alice S.precombatMain)
+    let plain = Staged.state built
+        controlled = plain {GameState.control = S.turnControl S.alice S.bob}
+        ballot = Ballot.MkBallot S.bob (BallotChoice.ForWord (SlotName.MkSlotName (Text.pack "truth")))
+        lastLogged gs = case Seq.viewr (GameState.events (S.runPure S.identityAnswer gs (Resolve.logBallot True ballot))) of
+          _ Seq.:> logged -> pure logged
+          Seq.EmptyR -> Spec.assertFailure s "no event logged"
+    uncontrolledVote <- lastLogged plain
+    controlledVote <- lastLogged controlled
+    let revealed = controlledVote {LoggedEvent.event = GameEvent.VotesRevealed (Seq.fromList [ballot])}
+    Spec.assertEqWith s "the control: uncontrolled, alice does not witness bob's ballot" (Visibility.witnessed S.alice uncontrolledVote) Visibility.Type.Obscured
+    Spec.assertEqWith s "controlling bob, alice witnesses his ballot" (Visibility.witnessed S.alice controlledVote) Visibility.Type.Visible
+    Spec.assertEqWith s "bob witnesses his own ballot" (Visibility.witnessed S.bob controlledVote) Visibility.Type.Visible
+    Spec.assertEqWith s "carol does not witness it" (Visibility.witnessed S.carol controlledVote) Visibility.Type.Obscured
+    Spec.assertEqWith s "carol witnesses the reveal" (Visibility.witnessed S.carol revealed) Visibility.Type.Visible
+    Spec.assertEqWith s "alice witnesses the reveal" (Visibility.witnessed S.alice revealed) Visibility.Type.Visible
+    Spec.assertEqWith s "bob witnesses the reveal" (Visibility.witnessed S.bob revealed) Visibility.Type.Visible
+  -- CR 801.2 / 801.11: range of influence limits what a player can affect and
+  -- what a spell reads, not what a player sees, so carol, two seats away at
+  -- range 1, still sees alice's open ballot.
+  Spec.it s "an open ballot is witnessed by every player, in range or not" $ do
+    built <- S.buildBoardOrFail s registry (S.board (S.playerSetup S.alice NonEmpty.:| [S.playerSetup S.bob, S.playerSetup S.carol, S.playerSetup S.dave]) S.alice S.precombatMain)
+    let ballot = Ballot.MkBallot S.alice (BallotChoice.ForWord (SlotName.MkSlotName (Text.pack "truth")))
+    logged <- case Seq.viewr (GameState.events (S.runPure S.identityAnswer (S.withRange 1 (Staged.state built)) (Resolve.logBallot False ballot))) of
+      _ Seq.:> entry -> pure entry
+      Seq.EmptyR -> Spec.assertFailure s "no event logged"
+    Spec.assertEqWith s "carol, out of alice's range, witnesses her open ballot" (Visibility.witnessed S.carol logged) Visibility.Type.Visible
 
 -- Alice holds one card and has two in her library; bob has nothing.
 shownBoard :: (Monad m) => Spec.Spec m n -> Registry.Registry m -> m (GameState.GameState, ObjectId.ObjectId, ObjectId.ObjectId, ObjectId.ObjectId)

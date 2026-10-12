@@ -62,6 +62,8 @@ import qualified Pawl.Types.Answer as Answer
 import qualified Pawl.Types.Asked as Asked
 import qualified Pawl.Types.AttackTarget as AttackTarget
 import qualified Pawl.Types.AttackersAre as AttackersAre
+import qualified Pawl.Types.Ballot as Ballot
+import qualified Pawl.Types.BallotChoice as BallotChoice
 import qualified Pawl.Types.BlockersAre as BlockersAre
 import qualified Pawl.Types.Board as Board
 import qualified Pawl.Types.Card as Card
@@ -104,6 +106,7 @@ import qualified Pawl.Types.Move as Move
 import qualified Pawl.Types.NamesAre as NamesAre
 import qualified Pawl.Types.Object as Object
 import qualified Pawl.Types.ObjectId as ObjectId
+import qualified Pawl.Types.ObjectSnapshot as ObjectSnapshot
 import qualified Pawl.Types.Paying as Paying
 import qualified Pawl.Types.PaymentDecision as PaymentDecision
 import qualified Pawl.Types.Phase as Phase
@@ -144,6 +147,7 @@ import qualified Pawl.Types.TypesAre as TypesAre
 import qualified Pawl.Types.View as View
 import qualified Pawl.Types.ViewIs as ViewIs
 import qualified Pawl.Types.Visibility as Visibility.Type
+import qualified Pawl.Types.Voted as Voted
 import qualified Pawl.Types.When as When
 import qualified Pawl.Types.Zone as Zone
 import qualified Pawl.Types.ZoneChange as ZoneChange
@@ -1698,13 +1702,22 @@ renderView gs viewIs =
           pure (ReplyType.Array (fmap (ReplyType.Text . Label.unwrap) labels))
         View.Witnessed -> do
           pid <- needPlayer
-          let shown logged = case LoggedEvent.event logged of
-                GameEvent.Revealed revealed -> Just (Revealed.characteristics revealed)
-                GameEvent.Looked looked -> Just (Looked.characteristics looked)
-                _ -> Nothing
-              nameOf snapshot = Text.intercalate (Text.pack " // ") (fmap CardName.unwrap (Set.toAscList (ProjectedCharacteristics.names snapshot)))
-              seen = [nameOf snapshot | logged <- Foldable.toList (GameState.events gs), Visibility.witnessed pid logged == Visibility.Type.Visible, Just snapshot <- [shown logged]]
-          texts (pure seen)
+          let nameOf snapshot = Text.intercalate (Text.pack " // ") (fmap CardName.unwrap (Set.toAscList (ProjectedCharacteristics.names snapshot)))
+              -- CR 701.38a: "<voter> voted <choice>", an object by its name as
+              -- voted for, so one that has since left still names itself.
+              voted ballot = do
+                voter <- labelOf (Ballot.voter ballot)
+                let choice = case Ballot.choice ballot of
+                      BallotChoice.ForObject snapshot -> nameOf (ObjectSnapshot.characteristics snapshot)
+                      BallotChoice.ForWord word -> SlotName.unwrap word
+                pure (Label.unwrap voter <> Text.pack " voted " <> choice)
+              shown logged = case LoggedEvent.event logged of
+                GameEvent.Revealed revealed -> pure [nameOf (Revealed.characteristics revealed)]
+                GameEvent.Looked looked -> pure [nameOf (Looked.characteristics looked)]
+                GameEvent.Voted vote -> fmap pure (voted (Voted.ballot vote))
+                GameEvent.VotesRevealed ballots -> mapM voted (Foldable.toList ballots)
+                _ -> pure []
+          texts (concat <$> mapM shown [logged | logged <- Foldable.toList (GameState.events gs), Visibility.witnessed pid logged == Visibility.Type.Visible])
 
 -- | A value as its codec writes it, for a View to compare.
 encoded :: Codec.Codec a -> a -> ReplyType.Reply

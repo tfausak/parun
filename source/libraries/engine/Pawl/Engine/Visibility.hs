@@ -26,6 +26,7 @@ import qualified Pawl.Types.RevealWindow as RevealWindow
 import qualified Pawl.Types.ShownCards as ShownCards
 import qualified Pawl.Types.Shows as Shows
 import qualified Pawl.Types.Visibility as Visibility
+import qualified Pawl.Types.Voted as Voted
 import qualified Pawl.Types.Zone as Zone
 
 -- | Whether a player may see an object's face now. CR 723.4: for an object in
@@ -53,12 +54,15 @@ revealedNow oid gs =
         Nothing -> Visibility.Obscured
         Just window -> visibleIf (live window)
 
--- | Whether a player saw the card a logged event showed: everyone sees a reveal
--- (CR 701.20a), only its audience a look (CR 701.20e, 723.4).
+-- | Whether a player saw what a logged event showed: everyone sees a reveal
+-- (CR 701.20a), only its audience a look (CR 701.20e, 723.4) or a ballot (CR
+-- 701.38a), and everyone a secret vote's ballots once revealed.
 witnessed :: PlayerId -> LoggedEvent.LoggedEvent -> Visibility.Visibility
 witnessed pid logged = case LoggedEvent.event logged of
   GameEvent.Revealed _ -> Visibility.Visible
   GameEvent.Looked looked -> visibleIf (Set.member pid (Looked.audience looked))
+  GameEvent.Voted voted -> visibleIf (Set.member pid (Voted.audience voted))
+  GameEvent.VotesRevealed _ -> Visibility.Visible
   _ -> Visibility.Obscured
 
 -- | CR 723.5: the players whose decisions this player makes, by the reading

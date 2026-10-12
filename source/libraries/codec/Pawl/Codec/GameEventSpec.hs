@@ -16,6 +16,8 @@ import qualified Pawl.Types.ActivatedAbilitySource as ActivatedAbilitySource
 import qualified Pawl.Types.AttackTarget as AttackTarget
 import qualified Pawl.Types.AttackerBlocked as AttackerBlocked
 import qualified Pawl.Types.AttackerDeclared as AttackerDeclared
+import qualified Pawl.Types.Ballot as Ballot
+import qualified Pawl.Types.BallotChoice as BallotChoice
 import qualified Pawl.Types.BecameAttached as BecameAttached
 import qualified Pawl.Types.BecameAttacked as BecameAttacked
 import qualified Pawl.Types.BecameBlocking as BecameBlocking
@@ -79,6 +81,7 @@ import qualified Pawl.Types.Revealed as Revealed
 import qualified Pawl.Types.RoomIndex as RoomIndex
 import qualified Pawl.Types.Saddling as Saddling
 import qualified Pawl.Types.SchemeSetInMotion as SchemeSetInMotion
+import qualified Pawl.Types.SlotName as SlotName
 import qualified Pawl.Types.SpellWasCast as SpellWasCast
 import qualified Pawl.Types.SpellWasCopied as SpellWasCopied
 import qualified Pawl.Types.StackObjectKind as StackObjectKind
@@ -92,6 +95,7 @@ import qualified Pawl.Types.TriggerSource as TriggerSource
 import qualified Pawl.Types.TriggeredAbilitySource as TriggeredAbilitySource
 import qualified Pawl.Types.TurnedFaceUp as TurnedFaceUp
 import qualified Pawl.Types.VentureMarkerEntered as VentureMarkerEntered
+import qualified Pawl.Types.Voted as Voted
 import qualified Pawl.Types.Zone as Zone
 import qualified Pawl.Types.ZoneChange as ZoneChange
 
@@ -202,6 +206,19 @@ spec s = Spec.describe s "Pawl.Codec.GameEvent" $ do
       GameEvent.codec
       (GameEvent.Looked (Looked.MkLooked (ObjectId.MkObjectId 7) ProjectedCharacteristicsSpec.testCharacteristics (Set.fromList [PlayerId.MkPlayerId 0, PlayerId.MkPlayerId 2])))
       ("{\"type\":\"Looked\",\"value\":{\"card\":7,\"characteristics\":" <> ProjectedCharacteristicsSpec.testCharacteristicsJson <> ",\"audience\":[0,2]}}")
+  Spec.it s "Voted" $
+    Common.assertCodec
+      s
+      GameEvent.codec
+      (GameEvent.Voted (Voted.MkVoted (Ballot.MkBallot (PlayerId.MkPlayerId 1) (BallotChoice.ForWord (SlotName.MkSlotName (Text.pack "truth")))) (Set.fromList [PlayerId.MkPlayerId 1, PlayerId.MkPlayerId 2])))
+      " {\"type\":\"Voted\",\"value\":{\"ballot\":{\"voter\":1,\"choice\":{\"type\":\"ForWord\",\"value\":\"truth\"}},\"audience\":[1,2]}} "
+  -- Two ballots, so a codec that reordered them would fail.
+  Spec.it s "VotesRevealed" $
+    Common.assertCodec
+      s
+      GameEvent.codec
+      (GameEvent.VotesRevealed (Seq.fromList [Ballot.MkBallot (PlayerId.MkPlayerId 1) (BallotChoice.ForWord (SlotName.MkSlotName (Text.pack "truth"))), Ballot.MkBallot (PlayerId.MkPlayerId 0) (BallotChoice.ForWord (SlotName.MkSlotName (Text.pack "consequences")))]))
+      " {\"type\":\"VotesRevealed\",\"value\":[{\"voter\":1,\"choice\":{\"type\":\"ForWord\",\"value\":\"truth\"}},{\"voter\":0,\"choice\":{\"type\":\"ForWord\",\"value\":\"consequences\"}}]} "
   -- An object, a player, CR 508.1b's announcement and CR 506.5's declaration
   -- size. Distinct numbers throughout, so a codec that permuted them would fail,
   -- and the announcement is a PLANESWALKER rather than the defending player: the

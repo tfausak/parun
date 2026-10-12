@@ -31,7 +31,6 @@ import qualified Pawl.Engine.Condition as Condition
 import qualified Pawl.Engine.Game as Game
 import qualified Pawl.Engine.Keyword as Keyword
 import qualified Pawl.Engine.Projection as Projection
-import qualified Pawl.Engine.Projection.View as Projection
 import qualified Pawl.Engine.Turn as Turn
 import qualified Pawl.Types.AbilityKind as AbilityKind
 import qualified Pawl.Types.ActivatedAbility as ActivatedAbility
@@ -46,7 +45,6 @@ import qualified Pawl.Types.ManaSpecification as ManaSpecification
 import qualified Pawl.Types.ManaType as ManaType
 import qualified Pawl.Types.Object as Object
 import Pawl.Types.ObjectId (ObjectId)
-import qualified Pawl.Types.ObjectSnapshot as ObjectSnapshot
 import qualified Pawl.Types.PastActivation as PastActivation
 import Pawl.Types.PlayerId (PlayerId)
 
@@ -298,26 +296,15 @@ recordActivation srcId ability gs =
 -- abilities have. Tezzeret, Betrayer of Flesh would observe the mana road.
 logActivation :: GameState -> PlayerId -> ObjectId -> Maybe Keyword.Type.Keyword -> AbilityKind.AbilityKind -> Set.Set ObjectId -> GameState -> GameState
 logActivation asOf pid srcId stamp kind targets gs =
-  let snapshotOf oid =
-        fmap
-          ( \o ->
-              ObjectSnapshot.MkObjectSnapshot
-                { ObjectSnapshot.object = oid,
-                  ObjectSnapshot.characteristics = Projection.project oid asOf,
-                  ObjectSnapshot.controller = Projection.controllerOf oid asOf,
-                  ObjectSnapshot.owner = Object.owner o
-                }
-          )
-          (Game.lookupObject oid asOf)
-      logged source =
+  let logged source =
         PastActivation.MkPastActivation
           { PastActivation.activator = pid,
             PastActivation.source = source,
             PastActivation.keyword = stamp,
             PastActivation.kind = kind,
-            PastActivation.targets = Maybe.mapMaybe snapshotOf (Set.toList targets)
+            PastActivation.targets = Maybe.mapMaybe (\oid -> Projection.objectSnapshot oid asOf) (Set.toList targets)
           }
-   in case snapshotOf srcId of
+   in case Projection.objectSnapshot srcId asOf of
         Nothing -> gs
         Just source -> gs {GameState.activationsThisTurn = GameState.activationsThisTurn gs Seq.|> logged source}
 

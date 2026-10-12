@@ -106,7 +106,6 @@ import qualified Pawl.Types.DamageEvent as DamageEvent
 import qualified Pawl.Types.DamagePattern as DamagePattern
 import qualified Pawl.Types.DamageR as DamageR
 import qualified Pawl.Types.DamageRewrite as DamageRewrite
-import qualified Pawl.Types.Decider as Decider
 import Pawl.Types.DelayedTrigger (DelayedTrigger)
 import qualified Pawl.Types.DelayedTrigger as DelayedTrigger
 import qualified Pawl.Types.DestructionCause as DestructionCause
@@ -759,6 +758,8 @@ damageOf event = case event of
   GameEvent.Drew {} -> Nothing
   GameEvent.Revealed {} -> Nothing
   GameEvent.Looked {} -> Nothing
+  GameEvent.Voted {} -> Nothing
+  GameEvent.VotesRevealed {} -> Nothing
   GameEvent.AttackerDeclared {} -> Nothing
   GameEvent.BecameBlocking {} -> Nothing
   GameEvent.BlocksDeclared {} -> Nothing
@@ -819,6 +820,8 @@ revealOf :: GameEvent -> Maybe (PlayerId, PC.ProjectedCharacteristics)
 revealOf event = case event of
   GameEvent.Revealed (Revealed.MkRevealed pid _ _ snapshot) -> Just (pid, snapshot)
   GameEvent.Looked {} -> Nothing
+  GameEvent.Voted {} -> Nothing
+  GameEvent.VotesRevealed {} -> Nothing
   GameEvent.Moved {} -> Nothing
   GameEvent.DamageDealt _ -> Nothing
   GameEvent.DamagePrevented {} -> Nothing
@@ -8986,9 +8989,8 @@ reveal cause pid oid = do
 look :: PlayerId -> ObjectId -> Game ()
 look pid oid = do
   gs <- State.get
-  let audience = Set.fromList [pid, Decider.unwrap (Decide.deciderFor pid gs)]
   Monad.forM_ (Game.lookupObject oid gs) $ \_ ->
-    State.modify' (recordEvent (GameEvent.Looked (Looked.MkLooked oid (Projection.project oid gs) audience)))
+    State.modify' (recordEvent (GameEvent.Looked (Looked.MkLooked oid (Projection.project oid gs) (Decide.privyTo pid gs))))
 
 -- | CR 701.20a: keep a revealed card revealed for a window.
 --
@@ -9594,6 +9596,8 @@ abilityTriggeredOf event = case event of
   GameEvent.Drew {} -> Nothing
   GameEvent.Revealed {} -> Nothing
   GameEvent.Looked {} -> Nothing
+  GameEvent.Voted {} -> Nothing
+  GameEvent.VotesRevealed {} -> Nothing
   GameEvent.AttackerDeclared {} -> Nothing
   GameEvent.BecameBlocking {} -> Nothing
   GameEvent.BlocksDeclared {} -> Nothing

@@ -3,6 +3,8 @@ module Pawl.Engine.Decide where
 import qualified Data.List as List
 import qualified Data.List.NonEmpty as NonEmpty
 import qualified Data.Map.Strict as Map
+import Data.Set (Set)
+import qualified Data.Set as Set
 import qualified Pawl.Types.ControlDuration as ControlDuration
 import Pawl.Types.Decider (Decider)
 import qualified Pawl.Types.Decider as Decider
@@ -23,6 +25,11 @@ import Pawl.Types.PlayerId (PlayerId)
 -- resolution.
 deciderFor :: PlayerId -> GameState -> Decider
 deciderFor pid gs = maybe (Decider.MkDecider pid) PlayerControl.decider (Map.lookup pid (GameState.control gs) >>= effective)
+
+-- | CR 723.4: who sees what a player privately sees -- the player and whoever
+-- makes their decisions.
+privyTo :: PlayerId -> GameState -> Set PlayerId
+privyTo pid gs = Set.fromList [pid, Decider.unwrap (deciderFor pid gs)]
 
 -- CR 723.1a: "the last one to be created is the one that works" -- the latest
 -- PlayerControl.timestamp, not the latest pushed, since an Opposition Agent's

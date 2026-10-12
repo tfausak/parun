@@ -2850,7 +2850,7 @@ villainousChoiceRNames asking x = case x of
 
 voteNames :: Asking -> Vote.Vote -> Bool
 voteNames asking x = case x of
-  Vote.MkVote starter choices -> playerRefNames asking starter || voteChoicesNames asking choices
+  Vote.MkVote starter choices _ -> playerRefNames asking starter || voteChoicesNames asking choices
 
 voteChoicesNames :: Asking -> VoteChoices.VoteChoices -> Bool
 voteChoicesNames asking x = case x of
