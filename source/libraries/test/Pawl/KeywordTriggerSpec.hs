@@ -1422,6 +1422,75 @@ casualtySpec s registry = Spec.describe s "Casualty" $ do
     Spec.assertEqWith s "and Jedit was the sacrifice, Silverquill still standing" (S.countOnBattlefieldByName (CardName.MkCardName (Text.pack "Jedit Ojanen")) S.alice (after 1), S.countOnBattlefieldByName (CardName.MkCardName (Text.pack "Silverquill, the Disputant")) S.alice (after 1)) (0, 1)
     Spec.assertEqWith s "CR 603.4 unpaid, the original's 3 alone beside Jedit" (S.lifeOf S.bob (after 0), S.countOnBattlefieldByName (CardName.MkCardName (Text.pack "Jedit Ojanen")) S.alice (after 0)) (Just 17, 1)
 
+  -- CR 702.153b: Rooftop Nuisance prints casualty 1 and Silverquill grants a
+  -- second, so the two are paid separately and each copies on its own payment.
+  -- Three boards differing in ONE answer: both paid draws alice three cards off
+  -- the original and two copies, one paid two, none one. Jedit Ojanen and Hill
+  -- Giant are the fodder; bob's Grizzly Bears is every target.
+  Spec.it s "CR 702.153b two casualty 1 instances on Rooftop Nuisance are paid separately, each copying once" $ do
+    nuisance <- S.printingOf s registry "Rooftop Nuisance"
+    island <- S.printingOf s registry "Island"
+    jedit <- S.printingOf s registry "Jedit Ojanen"
+    giant <- S.printingOf s registry "Hill Giant"
+    bears <- S.printingOf s registry "Grizzly Bears"
+    silverquill <- S.printingOf s registry "Silverquill, the Disputant"
+    let (_, withSilverquill) = S.addPermanent silverquill S.alice (S.landsFor island S.alice 3 (Setup.emptyGame S.bothPlayers))
+        (jeditId, withJedit) = S.addPermanent jedit S.alice withSilverquill
+        (giantId, withGiant) = S.addPermanent giant S.alice withJedit
+        (_, withBears) = S.addPermanent bears S.bob withGiant
+        stocked = List.foldl' (\g _ -> snd (S.addLibraryCard island S.alice g)) withBears [1 .. 5 :: Int]
+        (spellId, g1) = S.addHandCard nuisance S.alice stocked
+        board =
+          g1
+            { GameState.activePlayer = S.alice,
+              GameState.phase = Phase.PrecombatMain,
+              GameState.priority = Just S.alice
+            }
+        answer :: Natural.Natural -> Prompt.Prompt r -> r
+        answer times p = case p of
+          Prompt.ChooseKicker {} -> KickerDecision.MkKickerDecision times
+          Prompt.ChooseSacrifices _ _ _ candidates n _ -> Set.fromList (List.genericTake n (filter (`elem` [jeditId, giantId]) candidates))
+          _ -> S.identityAnswer p
+        step times gs action = snd (Engine.runGamePure (answer times) gs (action >> Engine.settleForPriority))
+        resolveAll times gs = if null (GameState.stack gs) then gs else resolveAll times (step times gs Stack.resolveTop)
+        after :: Natural.Natural -> GameState.GameState
+        after times = resolveAll times (step times board (S.cast S.alice spellId))
+        fodder times = S.countOnBattlefieldByName (CardName.MkCardName (Text.pack "Jedit Ojanen")) S.alice (after times) + S.countOnBattlefieldByName (CardName.MkCardName (Text.pack "Hill Giant")) S.alice (after times)
+    Spec.assertEqWith s "CR 702.153b both paid: alice drew three, Jedit and the Giant sacrificed" (S.handSize S.alice (after 2), fodder 2) (3, 0)
+    Spec.assertEqWith s "one paid: alice drew two, one creature sacrificed" (S.handSize S.alice (after 1), fodder 1) (2, 1)
+    Spec.assertEqWith s "CR 603.4 none paid: alice drew one, both creatures standing" (S.handSize S.alice (after 0), fodder 0) (1, 2)
+
+-- CR 702.175b: Coruscation Mage prints offspring {2} and Zinnia, Valley's Voice
+-- grants a second, so each is paid separately and triggers on its own payment.
+-- Three boards with the same six Mountains, differing in ONE answer. The
+-- data/scenarios/cast "cr-702-175b" pair states the order prompt; this group
+-- answers it with S.identityAnswer, so a wrong trigger count reaches the token
+-- count instead of stopping at the prompt.
+offspringSpec :: (Monad m) => Spec.Spec m n -> Registry.Registry m -> n ()
+offspringSpec s registry = Spec.describe s "Offspring" $ do
+  Spec.it s "CR 702.175b two offspring {2} on Coruscation Mage make one token per instance paid" $ do
+    mage <- S.printingOf s registry "Coruscation Mage"
+    mountain <- S.printingOf s registry "Mountain"
+    zinnia <- S.printingOf s registry "Zinnia, Valley's Voice"
+    let (_, withZinnia) = S.addPermanent zinnia S.alice (S.landsFor mountain S.alice 6 (Setup.emptyGame S.bothPlayers))
+        (spellId, g1) = S.addHandCard mage S.alice withZinnia
+        board =
+          g1
+            { GameState.activePlayer = S.alice,
+              GameState.phase = Phase.PrecombatMain,
+              GameState.priority = Just S.alice
+            }
+        answer :: Natural.Natural -> Prompt.Prompt r -> r
+        answer times p = case p of
+          Prompt.ChooseKicker {} -> KickerDecision.MkKickerDecision times
+          _ -> S.identityAnswer p
+        step times gs action = snd (Engine.runGamePure (answer times) gs (action >> Engine.settleForPriority))
+        resolveAll times gs = if null (GameState.stack gs) then gs else resolveAll times (step times gs Stack.resolveTop)
+        mages times = S.countOnBattlefieldByName (CardName.MkCardName (Text.pack "Coruscation Mage")) S.alice (resolveAll times (step times board (S.cast S.alice spellId)))
+    Spec.assertEqWith s "CR 702.175b both paid: the Mage and two tokens" (mages 2) 3
+    Spec.assertEqWith s "CR 702.175b one paid: the Mage and one token" (mages 1) 2
+    Spec.assertEqWith s "CR 603.4 none paid: the Mage alone" (mages 0) 1
+
 -- CR 702.69a's gravestorm: "When you cast this spell, copy it for each permanent
 -- that was put into a graveyard from the battlefield this turn."
 --
@@ -2655,6 +2724,7 @@ spec s registry = Spec.describe s "Pawl.Engine.Trigger" $ do
   stormSpec s registry
   replicateSpec s registry
   casualtySpec s registry
+  offspringSpec s registry
   gravestormSpec s
   conspireSpec s registry
   demonstrateSpec s registry

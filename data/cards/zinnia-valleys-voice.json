@@ -1,0 +1,145 @@
+{
+  "faces": [
+    {
+      "keywords": [
+        {
+          "type": "Flying"
+        }
+      ],
+      "manaCost": [
+        {
+          "type": "OfType",
+          "value": {
+            "type": "Colored",
+            "value": {
+              "type": "Blue"
+            }
+          }
+        },
+        {
+          "type": "OfType",
+          "value": {
+            "type": "Colored",
+            "value": {
+              "type": "Red"
+            }
+          }
+        },
+        {
+          "type": "OfType",
+          "value": {
+            "type": "Colored",
+            "value": {
+              "type": "White"
+            }
+          }
+        }
+      ],
+      "name": "Zinnia, Valley's Voice",
+      "oracleText": "Flying\nZinnia gets +X/+0, where X is the number of other creatures you control with base power 1.\nCreature spells you cast gain offspring {2} as you cast them. (You may pay an additional {2} as you cast a creature spell. If you do, when that creature enters, create a 1/1 token copy of it.)",
+      "power": {
+        "type": "Literal",
+        "value": 1
+      },
+      "staticAbilities": [
+        {
+          "affected": {
+            "type": "MatchingOffBattlefield",
+            "value": {
+              "type": "And",
+              "value": [
+                {
+                  "type": "Or",
+                  "value": [
+                    {
+                      "type": "WasCastFrom",
+                      "value": {
+                        "type": "Library"
+                      }
+                    },
+                    {
+                      "type": "WasCastFrom",
+                      "value": {
+                        "type": "Hand"
+                      }
+                    },
+                    {
+                      "type": "WasCastFrom",
+                      "value": {
+                        "type": "Graveyard"
+                      }
+                    },
+                    {
+                      "type": "WasCastFrom",
+                      "value": {
+                        "type": "Exile"
+                      }
+                    },
+                    {
+                      "type": "WasCastFrom",
+                      "value": {
+                        "type": "Command"
+                      }
+                    }
+                  ]
+                },
+                {
+                  "type": "ControlledBy",
+                  "value": {
+                    "type": "You"
+                  }
+                },
+                {
+                  "type": "HasCardType",
+                  "value": {
+                    "type": "Creature"
+                  }
+                }
+              ]
+            }
+          },
+          "modifications": [
+            {
+              "type": "GainKeyword",
+              "value": {
+                "type": "Offspring",
+                "value": {
+                  "mana": [
+                    {
+                      "type": "Generic",
+                      "value": 2
+                    }
+                  ]
+                }
+              }
+            }
+          ]
+        }
+      ],
+      "toughness": {
+        "type": "Literal",
+        "value": 3
+      },
+      "typeLine": {
+        "subtypes": [
+          {
+            "type": "Bard"
+          },
+          {
+            "type": "Bird"
+          }
+        ],
+        "supertypes": [
+          {
+            "type": "Legendary"
+          }
+        ],
+        "types": [
+          {
+            "type": "Creature"
+          }
+        ]
+      }
+    }
+  ]
+}

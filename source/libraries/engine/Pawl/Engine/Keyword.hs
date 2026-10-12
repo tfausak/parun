@@ -540,22 +540,16 @@ abilitiesFor keyword count = case keyword of
   Keyword.Backup n -> List.genericReplicate count (backup n)
   Keyword.Disguise _ -> []
   Keyword.Plot _ -> []
-  -- CR 702.157a's and CR 702.175a's enters triggers, one per distinct keyword:
-  -- Object.paidCosts keys a payment by the keyword, so a count past one mints
-  -- one ability reading that one key.
-  --
-  -- Not implemented: CR 702.157b's and CR 702.175b's identical instances, each
-  -- paid separately and triggering on its own payments (#3635).
   -- CR 702.156a's triggered half. Rule 702.156a states no redundancy clause,
   -- so each instance is its own ability; no printing carries two, which makes
   -- the count a regression fence rather than proved behaviour.
   Keyword.Ravenous -> List.genericReplicate count ravenous
-  Keyword.Squad cost -> List.genericReplicate (min 1 count) (squad cost)
-  Keyword.Offspring cost -> List.genericReplicate (min 1 count) (offspring cost)
-  -- CR 702.174b's enters trigger, one per distinct keyword for squad's and
-  -- offspring's reason above: Object.paidCosts keys a payment by the keyword.
-  -- Rule 702.174 states no redundancy clause and no printing carries two gift
-  -- abilities, which makes the collapse a fence rather than proved behaviour.
+  -- CR 702.157a's and CR 702.175a's enters triggers, one per instance paid
+  -- (perPayment). The data/scenarios/cast "cr-702-175b" pair proves offspring's.
+  Keyword.Squad cost -> perPayment keyword count (squad cost)
+  Keyword.Offspring cost -> perPayment keyword count (offspring cost)
+  -- CR 702.174b's enters trigger, one per distinct keyword, since paymentLimit
+  -- holds two identical gift instances to one payment.
   --
   -- Rule 702.174b's INSTANT AND SORCERY half is a spell ability rather than a
   -- triggered one, so nothing is minted for it here; it is performed by
@@ -3567,9 +3561,10 @@ disguiseCosts keywords =
    in Set.toAscList (Set.fromList (Maybe.mapMaybe costOf (Set.toAscList keywords)))
 
 -- CR 601.2b: the OPTIONAL additional cost this keyword ability lets its spell's
--- controller pay as they cast it, paired with how many times its rule lets it be
--- paid -- Just 1 for kicker (CR 702.33a), offspring (CR 702.175a), casualty (CR
--- 702.153a), bargain (CR 702.166a) and teamwork (CR 702.194a), Nothing for
+-- controller pay as they cast it, paired with how many times its rule lets ONE
+-- instance be paid (paymentLimit counts the instances) -- Just 1 for kicker (CR
+-- 702.33a), offspring (CR 702.175a), casualty (CR 702.153a), bargain (CR
+-- 702.166a) and teamwork (CR 702.194a), Nothing for
 -- multikicker (CR 702.33c), squad (CR 702.157a) and replicate (CR 702.56a),
 -- which their rules make payable "any number of times" -- and Nothing for every
 -- other keyword. Rule 702.194a's "any number" counts CREATURES within one
@@ -3607,6 +3602,38 @@ optionalCost keyword = case keyword of
   -- out what is tapped and the card prints conspire bare.
   Keyword.Conspire -> Just (conspireCost, Just 1)
   _ -> Nothing
+
+-- CR 601.2b / 118.8a: how many times a spell holding `count` instances of this
+-- keyword may declare its cost, Nothing for no limit. Each instance is its own
+-- ability offering its own cost (CR 702.56b, 702.78b, 702.153b, 702.157b,
+-- 702.175b), so optionalCost's limit is per instance. Object.paidCosts then
+-- counts the instances paid. Under those five rules each instance triggers on
+-- its own payment, so which of identical instances were paid changes nothing.
+-- Kicker's and bargain's payoffs instead link to the PRINTED instance (CR
+-- 702.33e, 702.166c), so a printed kicker beside an identical granted one would
+-- care which was paid, and this count cannot say. MTGJSON 2026-08-23 text search
+-- `(gains?|ha(ve|s)) (kicker|bargain)`, no hit; a card granting a spell kicker
+-- [cost] or bargain would refute it.
+--
+-- Not implemented: two identical gift instances paid separately, each with its
+-- own chosen opponent, where Object.chosenPlayer holds one (#5046).
+paymentLimit :: Natural -> Keyword -> Maybe Natural
+paymentLimit count keyword = case keyword of
+  Keyword.Gift _ -> snd =<< optionalCost keyword
+  _ -> fmap (* count) (snd =<< optionalCost keyword)
+
+-- One triggered ability per instance of a keyword whose cost an instance pays at
+-- most once, the ith firing when at least i were paid: paymentLimit's count of
+-- instances paid, read without knowing which (CR 702.56b, 702.78b, 702.153b,
+-- 702.157b, 702.175b). `mint` takes that ordinal.
+--
+-- Not implemented: an unlimited cost's split between identical instances --
+-- squad's or replicate's -- each triggering on its own payments; one ability
+-- reads their total (#5046).
+perPayment :: Keyword -> Natural -> (Natural -> a) -> [a]
+perPayment keyword count mint = case paymentLimit count keyword of
+  Just limit -> fmap mint [1 .. limit]
+  Nothing -> [mint 1 | count > 0]
 
 -- CR 702.153a's additional cost: "you may sacrifice a creature with power N or
 -- greater". One permanent, and CR 701.21a leaves WHICH creature to the payer --
@@ -7151,13 +7178,13 @@ evoke =
 -- CR 702.157a's triggered ability: "When this creature enters, if its squad cost
 -- was paid, create a token that's a copy of it for each time its squad cost was
 -- paid."
-squad :: Cost Keyword -> TriggeredAbility Card (GrantedAbility.GrantedAbility Card)
+squad :: Cost Keyword -> Natural -> TriggeredAbility Card (GrantedAbility.GrantedAbility Card)
 squad cost = paidTokenCopies (Keyword.Squad cost) (Quantity.TimesPaid (KeywordDesignator.OfKeyword (Keyword.Squad cost))) []
 
 -- CR 702.175a's triggered ability: "When this permanent enters, if its offspring
 -- cost was paid, create a token that's a copy of it, except it's 1/1." CR 707.9b
 -- makes the 1/1 part of the token's copiable values.
-offspring :: Cost Keyword -> TriggeredAbility Card (GrantedAbility.GrantedAbility Card)
+offspring :: Cost Keyword -> Natural -> TriggeredAbility Card (GrantedAbility.GrantedAbility Card)
 offspring cost = paidTokenCopies (Keyword.Offspring cost) (Quantity.Literal 1) [CopyException.SetPowerToughness (SetPowerToughness.MkSetPowerToughness 1 1)]
 
 -- CR 702.174b's triggered ability on a permanent: "When this permanent enters,
@@ -7236,8 +7263,11 @@ octopusToken = creatureToken (Text.pack "Octopus Token") (Set.singleton Subtype.
 -- `paidCosts`), and CreateCopy copies what it last was, as graveyardTokenCopy's --
 -- Pawl.CastSpec's "CR 608.2h a Mage killed in response still leaves its token"
 -- proves that half.
-paidTokenCopies :: Keyword -> Quantity.Quantity -> [CopyException.CopyException (GrantedAbility.GrantedAbility Card)] -> TriggeredAbility Card (GrantedAbility.GrantedAbility Card)
-paidTokenCopies keyword quantity exceptions =
+--
+-- `ordinal` is perPayment's: this instance fires when at least that many were
+-- paid.
+paidTokenCopies :: Keyword -> Quantity.Quantity -> [CopyException.CopyException (GrantedAbility.GrantedAbility Card)] -> Natural -> TriggeredAbility Card (GrantedAbility.GrantedAbility Card)
+paidTokenCopies keyword quantity exceptions ordinal =
   let copied =
         Effect.CreateCopy
           CreateCopy.MkCreateCopy
@@ -7250,7 +7280,7 @@ paidTokenCopies keyword quantity exceptions =
             }
    in Mint.triggerIf
         TriggerCondition.SelfEnters
-        (Condition.Compares (Compares.MkCompares (Quantity.TimesPaid (KeywordDesignator.OfKeyword keyword)) Comparison.AtLeast (Quantity.Literal 1)))
+        (Condition.Compares (Compares.MkCompares (Quantity.TimesPaid (KeywordDesignator.OfKeyword keyword)) Comparison.AtLeast (Quantity.Literal (toInteger ordinal))))
         (Seq.singleton copied)
 
 -- CR 702.135a: afterlife N, on the same CR 700.4 dies event `returns` watches.
@@ -8189,8 +8219,8 @@ recover cost =
 -- cascades are four abilities (Pawl.KeywordTriggerSpec's Cascade group). The PARAMETERIZED
 -- members already got one trigger per distinct PAYLOAD, which is CR 702.56b's
 -- and CR 702.153b's "each is paid separately and triggers based on the payments
--- made for it"; counting adds the repeats of one payload to that, except for
--- the copy triggers reading a payment, below.
+-- made for it"; counting adds the repeats of one payload to that, the copy
+-- triggers reading a payment through perPayment, below.
 stackTriggeredAbilitiesOf :: Map Keyword Natural -> [TriggeredAbility Card (GrantedAbility.GrantedAbility Card)]
 stackTriggeredAbilitiesOf counts =
   concatMap (uncurry stackAbilitiesFor) (Map.toAscList counts)
@@ -8205,12 +8235,9 @@ stackAbilitiesFor keyword count = case keyword of
   Keyword.Storm -> List.genericReplicate count storm
   Keyword.Gravestorm -> List.genericReplicate count gravestorm
   Keyword.Demonstrate -> List.genericReplicate count demonstrate
-  -- One per distinct keyword, squad's and offspring's reason in abilitiesFor:
-  -- Object.paidCosts keys a payment by the keyword, so a second instance would
-  -- copy again off the same payment. Not implemented: CR 702.56b's and CR
-  -- 702.153b's identical instances, each paid separately and triggering on its
-  -- own payments (#3635).
-  _ -> List.genericReplicate (min 1 count) =<< Maybe.maybeToList (stackCopyTrigger keyword)
+  -- One per instance paid, squad's and offspring's reading in abilitiesFor
+  -- (perPayment, CR 702.56b, 702.78b, 702.153b).
+  _ -> foldMap (perPayment keyword count) (stackCopyTrigger keyword)
 
 -- The arm of `stackTriggeredAbilitiesOf` above that reads a keyword's PAYLOAD,
 -- so it cannot be a membership test: rule 702.56a counts the payments made for
@@ -8220,7 +8247,7 @@ stackAbilitiesFor keyword count = case keyword of
 -- it needs is the KEYWORD, which Quantity.TimesPaid names to find the payment.
 --
 -- A wildcard rather than an exhaustive case, entwineCosts' reason.
-stackCopyTrigger :: Keyword -> Maybe (TriggeredAbility Card (GrantedAbility.GrantedAbility Card))
+stackCopyTrigger :: Keyword -> Maybe (Natural -> TriggeredAbility Card (GrantedAbility.GrantedAbility Card))
 stackCopyTrigger keyword = case keyword of
   Keyword.Replicate _ -> Just (paidSpellCopies keyword (Quantity.TimesPaid (KeywordDesignator.OfKeyword keyword)))
   Keyword.Casualty _ -> Just (paidSpellCopies keyword (Quantity.Literal 1))
@@ -8271,11 +8298,13 @@ copiesOf quantity =
 -- The intervening "if" is CR 603.4's, evoke's reading: Quantity.TimesPaid reads
 -- Object.paidCosts off the SPELL, which CR 601.2b stamped as it was announced,
 -- so a spell nobody paid the cost for never puts the ability on the stack.
-paidSpellCopies :: Keyword -> Quantity.Quantity -> TriggeredAbility Card (GrantedAbility.GrantedAbility Card)
-paidSpellCopies keyword quantity =
+--
+-- `ordinal` is perPayment's, paidTokenCopies' reading.
+paidSpellCopies :: Keyword -> Quantity.Quantity -> Natural -> TriggeredAbility Card (GrantedAbility.GrantedAbility Card)
+paidSpellCopies keyword quantity ordinal =
   Mint.triggerOf
     TriggerCondition.SelfCast
-    (Just (Condition.Compares (Compares.MkCompares (Quantity.TimesPaid (KeywordDesignator.OfKeyword keyword)) Comparison.AtLeast (Quantity.Literal 1))))
+    (Just (Condition.Compares (Compares.MkCompares (Quantity.TimesPaid (KeywordDesignator.OfKeyword keyword)) Comparison.AtLeast (Quantity.Literal (toInteger ordinal)))))
     (copiesOf quantity)
 
 -- CR 702.40a: "When you cast this spell, copy it for each other spell that was

@@ -522,7 +522,8 @@ data Prompt r where
   -- kicker, multikicker, squad, offspring, replicate or casualty (CR 702.33a/c,
   -- 702.157a, 702.175a, 702.56a, 702.153a) --
   -- is paid, after ChooseModes and before ChooseCost; the Maybe Natural is the
-  -- limit, Nothing for "any number of times", and an answer past it is rejected.
+  -- limit across the spell's instances of it, Nothing for "any number of
+  -- times", and an answer past it is rejected.
   ChooseKicker :: Decider.Decider -> PlayerId.PlayerId -> ObjectId.ObjectId -> Keyword.Keyword -> Maybe Natural.Natural -> Prompt KickerDecision.KickerDecision
   -- | CR 702.27a: whether the spell's buyback cost is paid, after ChooseKicker
   -- and before ChooseCost (CR 601.2b); the Cost is what buying back adds (CR

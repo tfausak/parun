@@ -543,8 +543,12 @@ data Object = MkObject
     -- characteristic, and so NOT a copiable value (CR 707.2): Pawl.CastSpec's
     -- "CR 707.2 a Clone of a paid Mage makes no token" is the proof.
     --
-    -- Not implemented: two IDENTICAL instances of one keyword, which CR 702.157b
-    -- and CR 702.175b pay separately and this map keys as one (#3635).
+    -- Two IDENTICAL instances of one keyword share a key, the count being the
+    -- payments across them (Pawl.Engine.Keyword.paymentLimit).
+    --
+    -- Not implemented: how an unlimited cost's payments split between identical
+    -- instances, which CR 702.56b and CR 702.157b make each instance's own
+    -- (#5046).
     --
     -- Per-incarnation, save for CR 400.7d's exception -- "an ability of a
     -- permanent can reference information about the spell that became that
