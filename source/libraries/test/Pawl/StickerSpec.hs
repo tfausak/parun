@@ -1311,6 +1311,23 @@ spec s registry = Spec.describe s "Sticker" $ do
         (cast, _, _) = castKicking stickerKick (Just art) card board
         spellKinds = concatMap (\spell -> stickerKindsOn spell cast) (GameState.stack cast)
     Spec.assertEqWith s "CR 702.33h alice got one ticket and the Bears spell has the art sticker" (S.playerCounterOf PlayerCounterKind.Ticket S.alice cast, spellKinds) (1, [StickerKind.Art])
+  -- Wicker Picker's ruling: two of them grant two sticker kicker {1}, each paid
+  -- separately. Five Forests pay the Bears and three kicks alike, so the third
+  -- is refused by the limit and not the mana.
+  Spec.it s "CR 702.33h two Wicker Pickers' sticker kickers are paid twice for two tickets, not three times" $ do
+    sheets <- committedSheets
+    picker <- S.printingOf s registry "Wicker Picker"
+    bears <- S.printingOf s registry "Grizzly Bears"
+    forest <- S.printingOf s registry "Forest"
+    let (card, g1) = pickerBoard sheets picker forest 5 0 bears
+        (_, board) = S.addPermanent picker S.alice g1
+        times n keyword = case keyword of
+          Keyword.StickerKicker _ -> n
+          _ -> 0
+        (twice, _, asked) = castKicking (times 2) Nothing card board
+        (thrice, _, _) = castKicking (times 3) Nothing card board
+    Spec.assertEqWith s "CR 702.33h alice got two tickets and was asked for two stickers" (S.playerCounterOf PlayerCounterKind.Ticket S.alice twice, asked) (2, 2)
+    Spec.assertEqWith s "a third payment rejects the cast: no ticket, the Bears still in hand" (S.playerCounterOf PlayerCounterKind.Ticket S.alice thrice, namedIn Zone.Hand bears thrice) (0, [card])
   -- Otter's 5/1 costs two tickets: alice's one and the kicker's.
   Spec.it s "CR 702.33h the sticker is on the spell when it becomes cast, and on the Bears it becomes" $ do
     sheets <- committedSheets

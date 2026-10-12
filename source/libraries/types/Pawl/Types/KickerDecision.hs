@@ -11,12 +11,12 @@ import qualified Numeric.Natural as Natural
 -- A COUNT and not a yes-or-no, because rule 702.33c's multikicker offers the same
 -- cost "any number of times" and rule 702.33c's last sentence makes that cost a
 -- kicker cost like any other. Zero is the decline every kicker offer admits; a
--- CR 702.33a kicker is asked with a limit of one (Pawl.Types.Prompt's
+-- CR 702.33a kicker is asked with a limit of one per instance (Pawl.Types.Prompt's
 -- ChooseKicker), and an answer past the limit rejects the cast rather than being
 -- clamped, which is Prompt.ChooseX's posture (Pawl.Engine.Cast).
 --
 -- The same answer serves CR 702.157a's squad, payable "any number of times", and
--- CR 702.175a's offspring, payable once: both are optional additional costs
+-- CR 702.175a's offspring, payable once per instance: both are optional additional costs
 -- announced at CR 601.2b, as kicker is. Only a kicker answer makes a spell
 -- kicked.
 --

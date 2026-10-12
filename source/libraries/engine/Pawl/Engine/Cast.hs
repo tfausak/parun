@@ -792,7 +792,8 @@ withOptionalPayments paid candidate =
 -- CR 601.2b: the announcement of this spell's optional additional costs -- CR
 -- 702.33a/b/c's kicker costs, CR 702.157a's squad, CR 702.175a's offspring, CR
 -- 702.56a's replicate and CR 702.153a's casualty --
--- one question per keyword and each answered as a count: the record CR 702.33d's
+-- one question per distinct keyword, answered as a count up to the limit across
+-- its instances (Keyword.paymentLimit): the record CR 702.33d's
 -- designation is made of, and empty for a player who declared none.
 --
 -- Two conditions per cost, and each is entwineOffer's above:
@@ -823,10 +824,10 @@ withOptionalPayments paid candidate =
 -- together are payable. How high a multikicker count may go is not gated here at
 -- all -- the answer is honoured and then measured, which is Prompt.ChooseX's
 -- posture, and castProposed rejects a cast whose announced total nothing can pay.
-announceOptionalCosts :: Seq.Seq ModeIndex.ModeIndex -> ManaSpending -> PlayerId -> ObjectId -> [([ManaCost.ManaCost], Cost Keyword)] -> [Keyword] -> GameState -> Game (Map.Map Keyword Natural)
+announceOptionalCosts :: Seq.Seq ModeIndex.ModeIndex -> ManaSpending -> PlayerId -> ObjectId -> [([ManaCost.ManaCost], Cost Keyword)] -> [(Keyword, Maybe Natural)] -> GameState -> Game (Map.Map Keyword Natural)
 announceOptionalCosts modes spending pid sid candidates offers gs =
-  let ask paid keyword = case Keyword.optionalCost keyword of
-        Just (cost, limit)
+  let ask paid (keyword, limit) = case Keyword.optionalCost keyword of
+        Just (cost, _)
           | any (\(extra, candidate) -> payableCost (Just modes) extra spending pid sid gs (Cost.plus (withOptionalPayments paid candidate) cost)) candidates -> do
               decision <- Game.choose (Prompt.ChooseKicker (Decide.deciderFor pid gs) pid sid keyword limit)
               let times = KickerDecision.unwrap decision
@@ -2920,7 +2921,8 @@ castProposed perform spending pid oid sid face castFrom preparedFor keywordsBefo
       decider = Decide.deciderFor pid gs
       -- CR 601.2a: the spell's keywords as it stands on the stack, printed and
       -- granted (Cost.spellKeywords), which every announcement below reads.
-      keywords = Map.keysSet (Cost.spellKeywords pid sid gs)
+      instances = Cost.spellKeywords pid sid gs
+      keywords = Map.keysSet instances
       modal = Face.spell face
       fillable m = Target.fillableModes (Just pid) Map.empty sid (Card.enchantSlotMap face) m gs
       -- CR 700.2a asked one step before CR 601.2b's cost is announced, which is
@@ -3043,8 +3045,10 @@ castProposed perform spending pid oid sid face castFrom preparedFor keywordsBefo
           announcedCandidates = fmap (fmap (withModeCost . withEscalate . withEntwine)) candidates
           -- CR 702.33a/b/c's, CR 702.157a's and CR 702.175a's costs, read ONCE off
           -- the spell's keywords: the announcement below and the limit it is
-          -- judged against are the same list.
-          optionalOffers = Keyword.optionalCosts keywords
+          -- judged against are the same list. Each with its limit across every
+          -- instance the spell holds (Keyword.paymentLimit), so two offspring
+          -- {2} are two payments (CR 702.175b).
+          optionalOffers = fmap (\keyword -> (keyword, Keyword.paymentLimit (Map.findWithDefault 1 keyword instances) keyword)) (Keyword.optionalCosts keywords)
       -- CR 702.33a: kicker, asked HERE -- after the modes and before the cost, the
       -- variable and the targets -- because that is where CR 601.2b puts the
       -- announcement of an additional cost, and rule 702.33a bundles nothing else
@@ -3121,14 +3125,15 @@ castProposed perform spending pid oid sid face castFrom preparedFor keywordsBefo
       -- cast below rather than being repaired.
       let spliceCosts = Maybe.mapMaybe (`lookup` spliceOffers) spliced
           spliceValid = Set.size (Set.fromList spliced) == length spliced && length spliceCosts == length spliced
-      -- CR 702.33a's and CR 702.175a's additional costs are payable ONCE, where
-      -- rule 702.33c's multikicker and rule 702.157a's squad state no limit. An
+      -- CR 702.33a's and CR 702.175a's additional costs are payable ONCE per
+      -- instance (Keyword.paymentLimit), where rule 702.33c's multikicker and
+      -- rule 702.157a's squad state no limit. An
       -- answer past a stated limit is text the card does not have, so it rejects
       -- the cast below rather than being clamped -- Prompt.ChooseX's
       -- reject-not-repair posture, and for its reason.
       let overKickerLimit =
             any
-              (\keyword -> maybe False (\limit -> Map.findWithDefault 0 keyword paid > limit) (snd =<< Keyword.optionalCost keyword))
+              (\(keyword, limit) -> maybe False (Map.findWithDefault 0 keyword paid >) limit)
               optionalOffers
           withKicker = withOptionalPayments paid
           -- CR 702.27a's cost is additional too, so it rides the same fold.
@@ -3646,8 +3651,7 @@ castProposed perform spending pid oid sid face castFrom preparedFor keywordsBefo
                           -- gets {TK}, then may put a sticker on the spell, which
                           -- CR 123.3b allows only on a spell they own (Sticker.place).
                           -- Before CR 601.2i's event, so a cast trigger sees it
-                          -- (Wicker Picker's ruling). Two sticker kickers of one cost
-                          -- are offered as one (gap #3635).
+                          -- (Wicker Picker's ruling).
                           stickerKicks <- State.gets (maybe 0 (\o -> sum [n | (Keyword.Type.StickerKicker {}, n) <- Map.toList (Object.paidCosts o)]) . Game.lookupObject sid)
                           Monad.forM_ [1 .. stickerKicks] $ \_ -> do
                             Monad.void (Event.putPlayerCounters (CounterCause.ByPayment pid) pid PlayerCounterKind.Ticket 1)
