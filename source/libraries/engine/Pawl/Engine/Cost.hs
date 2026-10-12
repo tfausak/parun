@@ -76,6 +76,7 @@ import qualified Pawl.Types.CandidateCost as CandidateCost
 import qualified Pawl.Types.Card as Card.Type
 import qualified Pawl.Types.CardName as CardName
 import qualified Pawl.Types.CardType as CardType
+import qualified Pawl.Types.CastingPermission as CastingPermission
 import Pawl.Types.Claim (Claim)
 import qualified Pawl.Types.Claim as Claim.Type
 import qualified Pawl.Types.ClaimAxis as ClaimAxis
@@ -169,6 +170,7 @@ import qualified Pawl.Types.TapPermanents as TapPermanents
 import qualified Pawl.Types.TapState as TapState
 import qualified Pawl.Types.TappedForMana as TappedForMana
 import qualified Pawl.Types.Threshold as Threshold
+import qualified Pawl.Types.TypeLine as TypeLine
 import qualified Pawl.Types.VariableChoice as VariableChoice
 import qualified Pawl.Types.WhichCounters as WhichCounters
 import qualified Pawl.Types.Zone as Zone
@@ -336,6 +338,28 @@ costsFor pid name oid gs = fmap CandidateCost.cost (candidateCostsFor pid name o
 -- 702.127a's aftermath asks about the ZONE instead and needs no tag of its own.
 candidateCostsFor :: PlayerId -> CardName.CardName -> ObjectId -> GameState -> [CandidateCost.CandidateCost]
 candidateCostsFor = candidateCostsGiven False
+
+-- Every casting permission a card has where it lies (CR 113.6, 613.1f): the ones
+-- its projection carries -- printed (Panglacial Wurm) or granted
+-- (Modification.GainCastingPermission) -- plus the ones rule 702 gives it for
+-- its projected keywords. Both are read off the OBJECT, so the CR 709.3a half
+-- the caller stamped is the one projected. Pawl.CastSpec's "CR 601.3 a granted
+-- permission lets a creature card be cast while searching" proves the grant
+-- reaches a library.
+--
+-- The face's own type line is what answers rule 702.34a's "if the resulting
+-- spell is an instant or sorcery spell", and it is the PROPOSED face's because
+-- the caller has already narrowed to one. CR 601.3e's Melek example is that same
+-- reading one zone over: under "you may cast instant and sorcery spells from the
+-- top of your library", an adventurer card offers its instant Adventure half and
+-- not its creature half.
+--
+-- Here rather than in Pawl.Engine.Cast, whose gates read it, because
+-- candidateCostsGiven's graveyard arm prices a permission that names its cost.
+permissionsOf :: ObjectId -> Face.Face Card.Type.Card -> GameState -> [CastingPermission.CastingPermission]
+permissionsOf oid face gs =
+  PC.castingPermissions (Projection.project oid gs)
+    <> Keyword.castingPermissionsOf (TypeLine.types (Face.typeLine face)) (Map.keysSet (Projection.keywordsOf oid gs))
 
 -- CR 712.11d / 613.1f: the keywords a double-faced card's FRONT face has where
 -- the card lies -- its projection with the object stamped as that face, face up
@@ -878,6 +902,14 @@ candidateCostsGiven permitted pid name oid gs =
                          in concatMap
                               (\cost -> tappingNone cost : fmap (tappingOne cost) tappable)
                               (Keyword.harmonizeCosts keywords)
+                      -- CR 601.3: a permission naming the cost it admits --
+                      -- Tenacious Underdog's "cast this card from your graveyard
+                      -- using its blitz ability" -- opens only the candidates a
+                      -- keyword of that family offers, never the printed cost.
+                      -- Pawl.CastSpec's "Blitz from a graveyard" group proves
+                      -- both halves.
+                      usingFamilies = [family | CastingPermission.CastFromGraveyard (Just family) <- permissionsOf oid face gs]
+                      usingPermitted candidate = any (\family -> (CandidateCost.keyword candidate >>= Keyword.familyOf) == Just family) usingFamilies
                    in fmap flashback (Keyword.flashbackCosts keywords)
                         <> fmap escape (Keyword.escapeCosts keywords)
                         <> (if Game.discardedThisTurnBy pid oid gs then fmap mayhem (Keyword.mayhemCosts keywords) else [])
@@ -911,7 +943,10 @@ candidateCostsGiven permitted pid name oid gs =
                         -- regression fence: its one printing is a land, which is
                         -- played rather than cast (MTGJSON 2026-08-23, text
                         -- "Mayhem (You may play": Oscorp Industries alone).
-                        <> (if permitted || PlayerEffect.mayCastFrom pid Zone.Graveyard oid gs || PlayerEffect.mayPlayByMayhem pid oid gs then ordinary else [])
+                        <> ( if permitted || PlayerEffect.mayCastFrom pid Zone.Graveyard oid gs || PlayerEffect.mayPlayByMayhem pid oid gs
+                               then ordinary
+                               else filter usingPermitted ordinary
+                           )
                 -- CR 702.170d: a PLOTTED card is cast "without paying its mana
                 -- cost", CR 118.9's alternative cost. INSTEAD of the printed cost,
                 -- rule 702.170d being the only thing permitting this cast. CR

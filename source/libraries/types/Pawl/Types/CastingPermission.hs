@@ -1,5 +1,7 @@
 module Pawl.Types.CastingPermission where
 
+import qualified Pawl.Types.KeywordFamily as KeywordFamily
+
 -- | CR 113.6 / 601.3: a static permission to cast a card from a zone or under a
 -- condition it normally could not. CastFromLibraryWhileSearching is Panglacial
 -- Wurm's "while you're searching your library, you may cast this from your
@@ -18,13 +20,15 @@ module Pawl.Types.CastingPermission where
 -- Pawl.Engine.Cast.permitsCastFromGraveyard reads the two beside each other.
 data CastingPermission
   = CastFromLibraryWhileSearching
-  | -- | CR 702.34a's first static ability, the half functioning while the card is
-    -- in a graveyard, and with it CR 702.81a's, CR 702.127a's, CR 702.133a's, CR
-    -- 702.138a's and CR 702.187b's.
-    -- Produced by Pawl.Engine.Keyword.castingPermissionsOf from the keyword that
-    -- grants it, not printed in card JSON -- but a constructor here
-    -- rather than a keyword read at the gate, so Pawl.Engine.Cast keeps asking
-    -- "may this be cast from the graveyard?" and never "does this have
-    -- flashback?".
-    CastFromGraveyard
-  deriving (Bounded, Enum, Eq, Ord, Show)
+  | -- | CR 601.3: cast this card from its owner's graveyard, using only the
+    -- alternative costs a keyword of the named family offers (Tenacious
+    -- Underdog's "using its blitz ability"); Nothing where the keyword granting
+    -- the permission prices the cast itself, as CR 702.34a's, 702.81a's,
+    -- 702.127a's, 702.133a's, 702.138a's and 702.187b's do.
+    --
+    -- Those keywords' permissions come from Pawl.Engine.Keyword.castingPermissionsOf,
+    -- a constructor here rather than a keyword read at the gate, so
+    -- Pawl.Engine.Cast keeps asking "may this be cast from the graveyard?" and
+    -- never "does this have flashback?".
+    CastFromGraveyard (Maybe KeywordFamily.KeywordFamily)
+  deriving (Eq, Ord, Show)

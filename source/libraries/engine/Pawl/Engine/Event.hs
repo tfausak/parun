@@ -7073,8 +7073,8 @@ arrangeComponents pid dest components =
 -- CR 607.2q rides it as well: `relink` below.
 --
 -- Not implemented: CR 400.7b for a static grant to spells that is no
--- permission's rider (Zinnia, Valley's Voice's offspring): nothing stores one,
--- so there is no row here to re-key (gap #3635).
+-- permission's rider (Henzie "Toolbox" Torre's blitz, Zinnia, Valley's Voice's
+-- offspring): nothing stores one, so there is no row here to re-key (#5042).
 --
 -- CR 400.7g is implemented on Pawl.Engine.Cast.keywordsBefore and
 -- Pawl.Types.Object.castGrant, and CR 400.7i for an exile permission's rider

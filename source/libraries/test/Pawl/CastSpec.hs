@@ -3411,6 +3411,62 @@ blitzSpec s registry = Spec.describe s "Blitz" $ do
     Spec.assertEqWith s "CR 702.152a and drew a card as it died" (drew blitzed) 1
     Spec.assertEqWith s "cast for {1}{R} and bolted, it died and made its Treasure without drawing" (drew bolted, dead bolted) (0, (0, 1))
 
+-- CR 601.3 / 702.152a on Tenacious Underdog {1}{B} 3/2 Creature -- Human
+-- Warrior, "Blitz--{2}{B}{B}, Pay 2 life. / You may cast this card from your
+-- graveyard using its blitz ability." and Sabin, Master Monk {4}{R} 4/3,
+-- "Double strike / Blitz--{2}{R}{R}, Discard a card. / You may cast this card
+-- from your graveyard using its blitz ability." (Oracle text checked on
+-- Scryfall, 2026-10-12).
+--
+-- ONE board per card, four lands of its colour that pay either cost, so a
+-- negative cannot be a shortage.
+graveyardBlitzSpec :: (Monad m, Monad n) => Spec.Spec m n -> Registry.Registry m -> n ()
+graveyardBlitzSpec s registry = Spec.describe s "Blitz from a graveyard" $ do
+  Spec.it s "CR 601.3 / 702.152a the Underdog is cast from the graveyard for its blitz cost, attacks, is sacrificed at the end step and draws" $ do
+    (underdogId, board) <- underdogBoard s registry
+    let blitzed = throughEndStep (castResolved (payingAttacking underdogBlitzCost) underdogId board)
+    Spec.assertBool s (S.castable S.alice underdogId board) "CR 601.3 the Underdog is castable from the graveyard"
+    Spec.assertEqWith s "CR 702.152a the hasty Underdog attacked bob for 3 and alice paid 2 life" (S.lifeOf S.bob blitzed, S.lifeOf S.alice blitzed) (Just 17, Just 18)
+    Spec.assertEqWith s "CR 702.152a it was sacrificed at the end step and drew a card as it died" (namedOnBattlefield "Tenacious Underdog" blitzed, inGraveyardNamed "Tenacious Underdog" blitzed, 3 - length (Game.zoneMembers Zone.Library S.alice blitzed)) ([], 1, 1)
+  -- An answerer asking for the printed {1}{B} takes it whenever it is offered
+  -- (payingFor), so the blitz cost being paid anyway is the printed cost not
+  -- being offered from the graveyard.
+  Spec.it s "CR 601.3 asked for its printed {1}{B}, the Underdog cast from the graveyard still costs its blitz" $ do
+    (underdogId, board) <- underdogBoard s registry
+    let cast = castResolved (payingAttacking [ManaSymbol.Generic 1, theBlack]) underdogId board
+    Spec.assertEqWith s "CR 601.3 alice paid the blitz cost's 2 life and four Swamps" (S.lifeOf S.alice cast, S.tappedCount S.alice cast) (Just 18, 4)
+  Spec.it s "CR 601.3 a Requisitioner, whose blitz names no zone, is not castable from the graveyard" $ do
+    mountain <- S.printingOf s registry "Mountain"
+    requisitioner <- S.printingOf s registry "Riveteers Requisitioner"
+    let (oid, gs) = inGraveyardWith mountain requisitioner 4
+    Spec.assertBool s (not (S.castable S.alice oid gs)) "not castable"
+  Spec.it s "CR 601.3 / 702.152a Sabin is cast from the graveyard for its blitz cost, discarding a card, and attacks for 8" $ do
+    mountain <- S.printingOf s registry "Mountain"
+    sabin <- S.printingOf s registry "Sabin, Master Monk"
+    let (sabinId, gs1) = inGraveyardWith mountain sabin 4
+        (_, gs2) = S.addHandCard mountain S.alice gs1
+        board = scheduled (List.foldl' (\g _ -> snd (S.addLibraryCard mountain S.alice g)) gs2 [1 :: Int .. 3])
+        -- One step past throughEndStep's eight: double strike adds CR 510.4's
+        -- first-strike combat damage step.
+        blitzed = S.runPure (payingAttacking []) (throughEndStep (castResolved (payingAttacking [ManaSymbol.Generic 2, theRed, theRed]) sabinId board)) Engine.runStep
+    Spec.assertEqWith s "CR 702.4b / 702.152a the hasty double-striking Sabin dealt bob 8" (S.lifeOf S.bob blitzed) (Just 12)
+    Spec.assertEqWith s "CR 702.152a Sabin and the discarded Mountain are in the graveyard, and Sabin drew as it died" (inGraveyardNamed "Sabin, Master Monk" blitzed, inGraveyardNamed "Mountain" blitzed, inHandNamed "Mountain" blitzed) (1, 1, 1)
+
+-- alice on turn with four Swamps, Tenacious Underdog in her graveyard and three
+-- library cards, the rest of the turn scheduled.
+underdogBoard :: (Monad m) => Spec.Spec m n -> Registry.Registry m -> m (ObjectId.ObjectId, GameState.GameState)
+underdogBoard s registry = do
+  swamp <- S.printingOf s registry "Swamp"
+  underdog <- S.printingOf s registry "Tenacious Underdog"
+  let (underdogId, gs) = inGraveyardWith swamp underdog 4
+  pure (underdogId, scheduled (List.foldl' (\g _ -> snd (S.addLibraryCard swamp S.alice g)) gs [1 :: Int .. 3]))
+
+underdogBlitzCost :: [ManaSymbol.ManaSymbol]
+underdogBlitzCost = [ManaSymbol.Generic 2, theBlack, theBlack]
+
+inGraveyardNamed :: String -> GameState.GameState -> Int
+inGraveyardNamed name gs = length (filter (nameOnStack (CardName.MkCardName $ Text.pack name) gs) (Game.zoneMembers Zone.Graveyard S.alice gs))
+
 -- CR 702.113a on Part the Waterveil {4}{U}{U} Sorcery, "Take an extra turn after
 -- this one. Exile Part the Waterveil. / Awaken 6--{6}{U}{U}{U}" (Oracle text
 -- checked on Scryfall, 2026-09-17).
@@ -3899,12 +3955,12 @@ jumpStartSpec s registry = Spec.describe s "JumpStart" $ do
       s
       "a sorcery gets the permission"
       (Keyword.Engine.permissionsFor (Set.singleton CardType.Sorcery) Keyword.JumpStart)
-      [CastingPermission.CastFromGraveyard]
+      [CastingPermission.CastFromGraveyard Nothing]
     Spec.assertEqWith
       s
       "an instant does too"
       (Keyword.Engine.permissionsFor (Set.singleton CardType.Instant) Keyword.JumpStart)
-      [CastingPermission.CastFromGraveyard]
+      [CastingPermission.CastFromGraveyard Nothing]
     Spec.assertEqWith
       s
       "a creature does not"
@@ -4686,6 +4742,7 @@ spec s registry = Spec.describe s "Pawl.Engine.Cast" $ do
   harmonizeSpec s registry
   dashSpec s registry
   blitzSpec s registry
+  graveyardBlitzSpec s registry
   awakenSpec s registry
   cleaveSpec s registry
   overloadSpec s registry
