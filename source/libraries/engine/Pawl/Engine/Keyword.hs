@@ -2550,7 +2550,7 @@ auraSwap cost =
 -- CR 601.3: the casting permissions rule 702 gives a card for holding a keyword.
 -- A card's own printed permissions are a separate, additive list.
 --
--- The keyword set is the caller's: Pawl.Engine.Cast.permissionsOf reads it
+-- The keyword set is the caller's: Pawl.Engine.Cost.permissionsOf reads it
 -- through the projection, so a granted flashback grants its permission too.
 --
 -- The card types come along because rule 702.34a's permission is CONDITIONAL on
@@ -2572,7 +2572,7 @@ permissionsFor cardTypes keyword = case keyword of
   -- flashback's clause.
   Keyword.Flashback _
     | Set.member CardType.Instant cardTypes || Set.member CardType.Sorcery cardTypes ->
-        [CastingPermission.CastFromGraveyard]
+        [CastingPermission.CastFromGraveyard Nothing]
     | otherwise -> []
   -- CR 702.103a grants no permission either, and it is flashback's near miss:
   -- both offer an alternative cost through CR 601.2b and 601.2f-h, but rule
@@ -2625,13 +2625,13 @@ permissionsFor cardTypes keyword = case keyword of
   -- rule 702.127a's own first sentence already confining aftermath to split cards.
   -- Its SECOND ability, "can't be cast from any zone other than a graveyard", is a
   -- PROHIBITION and so Pawl.Engine.Cast's, at its Zone.Hand arm.
-  Keyword.Aftermath -> [CastingPermission.CastFromGraveyard]
+  Keyword.Aftermath -> [CastingPermission.CastFromGraveyard Nothing]
   -- CR 702.133a's FIRST static ability, gated exactly as flashback's arm above.
   -- What the two rules do NOT share is the cost -- flashback replaces the mana
   -- cost and this one adds a discard to it -- and that half is Cost.costsFor's.
   Keyword.JumpStart
     | Set.member CardType.Instant cardTypes || Set.member CardType.Sorcery cardTypes ->
-        [CastingPermission.CastFromGraveyard]
+        [CastingPermission.CastFromGraveyard Nothing]
     | otherwise -> []
   Keyword.Afflict _ -> []
   Keyword.Fear -> []
@@ -2743,7 +2743,7 @@ permissionsFor cardTypes keyword = case keyword of
   -- permitted (Pawl.CastSpec's "Escape" group). The cost half is
   -- Pawl.Engine.Cost.candidateCostsFor's, and rule 702.138a grants no exile
   -- replacement, so castFromGraveyardReplacementsOf stays flashback's.
-  Keyword.Escape _ -> [CastingPermission.CastFromGraveyard]
+  Keyword.Escape _ -> [CastingPermission.CastFromGraveyard Nothing]
   -- CR 702.74a, 702.76a, 702.96a, 702.109a, 702.117a, 702.137a, 702.148a,
   -- 702.152a and 702.173a state an alternative cost and no permission: the card
   -- is cast from wherever something else lets it be.
@@ -2775,7 +2775,7 @@ permissionsFor cardTypes keyword = case keyword of
   -- names no card type. The cost half, tapped creature and reduction included,
   -- is Pawl.Engine.Cost.candidateCostsGiven's; the third ability's exile is
   -- castFromGraveyardReplacementsOf's.
-  Keyword.Harmonize _ -> [CastingPermission.CastFromGraveyard]
+  Keyword.Harmonize _ -> [CastingPermission.CastFromGraveyard Nothing]
   Keyword.Cleave _ -> []
   Keyword.Overload _ -> []
   Keyword.Awaken _ -> []
@@ -2861,7 +2861,7 @@ permissionsFor cardTypes keyword = case keyword of
   -- 702.34a's kind, so a card of any type with retrace may be cast from its
   -- owner's graveyard. What the rule ADDS is the land discard, and that half is
   -- Pawl.Engine.Cost.candidateCostsGiven's.
-  Keyword.Retrace -> [CastingPermission.CastFromGraveyard]
+  Keyword.Retrace -> [CastingPermission.CastFromGraveyard Nothing]
   -- CR 702.187b's permission. Its "as long as you discarded this card this turn"
   -- is not asked here: the clause reads the turn's event log, which this function
   -- is not given, so it gates the COST offer instead
@@ -2873,7 +2873,7 @@ permissionsFor cardTypes keyword = case keyword of
   -- ordinary costs where the same discard gates them (candidateCostsGiven's
   -- graveyard arm); its land half is a play, not a cast
   -- (Pawl.Engine.PlayerEffect.mayPlayByMayhem).
-  Keyword.Mayhem _ -> [CastingPermission.CastFromGraveyard]
+  Keyword.Mayhem _ -> [CastingPermission.CastFromGraveyard Nothing]
   -- CR 702.35a states no standing permission: the cast is offered by rule
   -- 702.35a's own triggered ability, which carries its cost as CR 608.2g's
   -- offer (Pawl.Engine.Resolve.Effect.offerCast) rather than as a zone this

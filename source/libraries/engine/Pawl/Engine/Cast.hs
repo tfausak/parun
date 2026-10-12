@@ -107,7 +107,6 @@ import qualified Pawl.Types.StackObjectKind as StackObjectKind
 import qualified Pawl.Types.Supertype as Supertype
 import qualified Pawl.Types.TapState as TapState
 import qualified Pawl.Types.TargetSlot as TargetSlot
-import qualified Pawl.Types.TypeLine as TypeLine
 import qualified Pawl.Types.Uses as Uses
 import qualified Pawl.Types.VariableChoice as VariableChoice
 import qualified Pawl.Types.Zone as Zone
@@ -1580,7 +1579,7 @@ controlsLegendaryCreatureOrPlaneswalker pid gs =
 -- Troops' "only during the declare attackers step and only if you've been
 -- attacked this step".
 --
--- The exact counterweight to permissionsOf below, but read off the card rather
+-- The exact counterweight to Pawl.Engine.Cost.permissionsOf, but read off the card rather
 -- than through the projection (CR 113.6e; an effect granting or removing a
 -- printed restriction there is missed, #4707).
 -- ALL of them must hold, which is what CR 601.3's "no ... prohibits"
@@ -1988,7 +1987,14 @@ fusedFaceOf oid gs = do
 -- permissions -- a classification, never card identity.
 permitsCastWhileSearching :: ObjectId -> Face.Face Card.Type.Card -> GameState -> Bool
 permitsCastWhileSearching oid face gs =
-  elem CastingPermission.CastFromLibraryWhileSearching (permissionsOf oid face gs)
+  elem CastingPermission.CastFromLibraryWhileSearching (Cost.permissionsOf oid face gs)
+
+-- Any graveyard permission, whichever cost it admits: Cost.candidateCostsGiven
+-- prices the cast, and offers nothing where the permission admits nothing.
+isGraveyardPermission :: CastingPermission.CastingPermission -> Bool
+isGraveyardPermission permission = case permission of
+  CastingPermission.CastFromGraveyard _ -> True
+  CastingPermission.CastFromLibraryWhileSearching -> False
 
 -- CR 601.3 / 702.34a: may this player cast this card from the graveyard it lies
 -- in?
@@ -2007,7 +2013,7 @@ permitsCastWhileSearching oid face gs =
 -- to say "for this player".
 permitsCastFromGraveyard :: PlayerId -> ObjectId -> Face.Face Card.Type.Card -> GameState -> Bool
 permitsCastFromGraveyard pid oid face gs =
-  (ownedBy pid oid gs && (elem CastingPermission.CastFromGraveyard (permissionsOf oid face gs) || permitsDisturb oid face gs))
+  (ownedBy pid oid gs && (any isGraveyardPermission (Cost.permissionsOf oid face gs) || permitsDisturb oid face gs))
     || PlayerEffect.mayCastFrom pid Zone.Graveyard oid gs
 
 -- CR 702.146a's permission, which is the one rule 702 permission no keyword set
@@ -2084,24 +2090,6 @@ ownedBy pid oid gs = fmap Object.owner (Game.lookupObject oid gs) == Just pid
 -- takes for the cost half of the same sentence.
 projectedKeywords :: ObjectId -> GameState -> Set Keyword
 projectedKeywords oid gs = Map.keysSet (Projection.keywordsOf oid gs)
-
--- Every casting permission a card has where it lies (CR 113.6, 613.1f): the ones
--- its projection carries -- printed (Panglacial Wurm) or granted
--- (Modification.GainCastingPermission) -- plus the ones rule 702 gives it for
--- its projected keywords. Both are read off the OBJECT for projectedKeywords'
--- reason. Pawl.CastSpec's "CR 601.3 a granted permission lets a creature card
--- be cast while searching" proves the grant reaches a library.
---
--- The face's own type line is what answers rule 702.34a's "if the resulting
--- spell is an instant or sorcery spell", and it is the PROPOSED face's because
--- the caller has already narrowed to one (proposedFace). CR 601.3e's Melek
--- example is that same reading one zone over: under "you may cast instant and
--- sorcery spells from the top of your library", an adventurer card offers its
--- instant Adventure half and not its creature half.
-permissionsOf :: ObjectId -> Face.Face Card.Type.Card -> GameState -> [CastingPermission.CastingPermission]
-permissionsOf oid face gs =
-  PC.castingPermissions (Projection.project oid gs)
-    <> Keyword.castingPermissionsOf (TypeLine.types (Face.typeLine face)) (projectedKeywords oid gs)
 
 -- The library cards this player may cast while searching their own library:
 -- permitted, not prohibited, affordable, and with a fillable target set.
