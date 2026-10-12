@@ -13,7 +13,8 @@ data Vote = MkVote
     -- | CR 701.38b: the listed choices.
     choices :: VoteChoices.VoteChoices,
     -- | Whether each ballot is shown to its voter alone until every ballot is
-    -- revealed at once (secret council, CR 207.2c).
+    -- revealed at once: secret council's card text; the ability word has no
+    -- rules meaning (CR 207.2c).
     secret :: Bool
   }
   deriving (Eq, Ord, Show)

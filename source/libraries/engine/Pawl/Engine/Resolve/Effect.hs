@@ -10144,8 +10144,8 @@ applyOneEffect runSubgame resolving source controller legal chosen effect = case
         pushRound g = List.foldl' push g takers
     State.modify' (\g -> List.foldl' (\acc _ -> pushRound acc) g [1 .. turns])
 
--- | CR 701.38a: log one ballot, shown to every player still in the game in an
--- open vote and, in a secret one, to the voter and the player making their
+-- | Log one ballot, shown to every player still in the game in an open vote
+-- (CR 101.4b) and, in a secret one, to the voter and the player making their
 -- decisions (CR 723.4).
 logBallot :: Bool -> Ballot.Ballot -> Game ()
 logBallot secret ballot = do

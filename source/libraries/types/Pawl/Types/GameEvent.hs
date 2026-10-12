@@ -233,8 +233,8 @@ data GameEvent
   | -- | CR 701.38a: a ballot was cast, shown to its audience alone; never a
     -- reveal (CR 701.20a).
     Voted Voted.Voted
-  | -- | Secret council (CR 207.2c): every ballot of a secret vote, revealed at
-    -- once in voting order.
+  | -- | Every ballot of a secret vote, revealed at once in voting order: secret
+    -- council's card text; the ability word has no rules meaning (CR 207.2c).
     VotesRevealed (Seq Ballot.Ballot)
   | -- | CR 701.6a: a spell was COUNTERED. Emitted by Pawl.Engine.Event.counter,
     -- the one funnel every countering goes through, and distinct from the Moved
