@@ -901,7 +901,7 @@ turnPermanentsOver legal chosen resolving controller source ref = do
   -- membership question, so a permanent this instruction cannot turn over is no
   -- part of anybody's choice.
   gs0 <- State.get
-  ordered <- Restamp.order (filter (turnsOver (Projection.projectAll gs0) resolving gs0) victims)
+  ordered <- Restamp.orderTurning (filter (turnsOver (Projection.projectAll gs0) resolving gs0) victims)
   State.modify' $ \gs ->
     -- CR 701.27a: turn each victim over -- one assignment to Object.face, which
     -- is all a turn IS here, every characteristic read already resolving
@@ -914,7 +914,7 @@ turnPermanentsOver legal chosen resolving controller source ref = do
     --
     -- CR 701.27b: turning over is its own game action, so it records its own
     -- event -- Event.recordTransformed, over the victims that ACTUALLY turned
-    -- rather than the ones this instruction named, since the four ways a turn
+    -- rather than the ones this instruction named, since the ways a turn
     -- is withheld leave nothing for CR 603.2 to fire on.
     --
     -- AFTER the fold, and the order is load-bearing: Pawl.Engine.Card gives a
@@ -3160,7 +3160,7 @@ changeTargetsFor chooser controller oid = do
 -- Pawl.CopySpec's "CR 707.2 a spell that becomes a copy of a Bolt" proves it.
 acquireChoices :: Modal.Type.Modal Card.Type.Card (GrantedAbility.GrantedAbility Card.Type.Card) -> Maybe Object.Object -> Object.Object -> Object.Object
 acquireChoices copiedSpell mOriginal subject =
-  let own = Set.fromList [Binding.you, Binding.triggerSource, Binding.copySource, Binding.flippedMergeSource, Binding.turnedMergeSource, Binding.turnedFlippedMergeSource]
+  let own = Set.fromList [Binding.you, Binding.triggerSource, Binding.copySource, Binding.turnedMergeSource]
       -- CR 700.2: a spell that is not modal has no mode to choose, so the copy
       -- of one from off the stack still resolves its text: the one selection
       -- the copied text forces (Modal.forcedSelection), where there is one.

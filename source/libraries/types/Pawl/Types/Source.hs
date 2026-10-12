@@ -60,11 +60,11 @@ data Source
     -- represents it is turned face down" said once.
     --
     -- CR 730.2h's flip components are Object.flipped and not a field here
-    -- either: what the flip reaches is decided at the merge, which stamps a
-    -- second reading of it beside the first (Pawl.Engine.Binding.setMergeCopy).
+    -- either: what the flip reaches is decided at the merge, which nests a
+    -- flipped reading in its stamp (Pawl.Engine.Binding.setMergeCopy).
     --
     -- CR 730.2i's double-faced components each show a face of their own, which
-    -- is why a component carries one here, and the merge stamps a third reading
+    -- is why a component carries one here, and the merge stamps a turned reading
     -- for turning them over (Pawl.Engine.Binding.turnMergeCopy).
     OfMerge (NonEmpty.NonEmpty ShownComponent.ShownComponent)
   | -- | CR 111.3/111.6: a token -- a permanent not represented by a card. Its

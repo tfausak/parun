@@ -1883,12 +1883,26 @@ isDoubleFacedPermanent oid gs = case lookupObject oid gs of
 --
 -- CR 613.7k: the stickers on it take new timestamps right after its own. A
 -- regression fence: no test transforms a stickered permanent.
+--
+-- A MERGED permanent takes neither: CR 613.7g stamps a double-faced permanent,
+-- and CR 730.2i says a merged permanent is not one (`takesTurnStamp`).
 turnFaceOver :: Timestamp.Timestamp -> ObjectId -> GameState -> GameState
 turnFaceOver now oid gs = case turnsTo oid gs of
-  Just turned ->
-    let (ts, stamped) = freshTimestamp gs
-     in restampStickers oid (turnStoredCopies oid stamped) {GameState.objects = Map.insert oid turned {Object.turnedOverAt = Just now, Object.timestamp = ts} (GameState.objects stamped)}
+  Just turned
+    | takesTurnStamp oid gs ->
+        let (ts, stamped) = freshTimestamp gs
+         in restampStickers oid stamped {GameState.objects = Map.insert oid turned {Object.turnedOverAt = Just now, Object.timestamp = ts} (GameState.objects stamped)}
+    | otherwise -> (turnStoredCopies oid gs) {GameState.objects = Map.insert oid turned {Object.turnedOverAt = Just now} (GameState.objects gs)}
   Nothing -> gs
+
+-- CR 613.7g: does turning this permanent over give it a new timestamp? Every
+-- double-faced permanent's does, and a merged permanent's does not, CR 730.2i
+-- saying it is not one. Pawl.MutateSpec's "CR 730.2i each double-faced
+-- component of a merged permanent turns over on its own" proves it.
+takesTurnStamp :: ObjectId -> GameState -> Bool
+takesTurnStamp oid gs = case fmap Object.source (lookupObject oid gs) of
+  Just (Source.OfMerge _) -> False
+  _ -> True
 
 -- `turnFaceOver`'s write as a counterfactual board, with no battlefield gate and
 -- no stamp: this object with its double-faced card turned over, or the board
@@ -2005,11 +2019,11 @@ supersedeStoredCopies oids gs =
   gs {GameState.copyEffects = fmap (\row -> row {ActiveCopy.objects = Set.difference (ActiveCopy.objects row) oids}) (GameState.copyEffects gs)}
 
 -- | CR 710.1b / 707.3: do this object's COPIABLE values include a flip card's
--- alternative half? Its copy snapshot's answer when it has one -- the merge's
--- flipped reading (CR 730.2h) or the copy's (PC.flipped) -- and its printed
--- card's otherwise (faceUpCopiable). A copy of anything else has none whatever
--- card is printed underneath it, and a stored copy effect's row replaces the
--- merge's flipped reading as it does the merge's stamp (Binding.setCopy):
+-- alternative half? Its copy snapshot's answer when it has one -- the flipped
+-- reading it nests as PC.flipped, a merge's (CR 730.2h) or a copy's -- and its
+-- printed card's otherwise (faceUpCopiable). A copy of anything else has none
+-- whatever card is printed underneath it, and a stored copy effect's row
+-- replaces the merge's stamp, flipped reading and all (Binding.setCopy):
 -- Pawl.MutateSpec's "CR 707.3 Mirrorweave makes a flipped merged permanent a
 -- copy of a creature with no flip half" proves it.
 --
@@ -2018,7 +2032,7 @@ supersedeStoredCopies oids gs =
 hasFlipHalf :: ObjectId -> GameState -> Bool
 hasFlipHalf oid gs = Maybe.isJust (faceUpCopiable flipHalf oid gs)
   where
-    flipHalf obj = copiableOf (\stamp -> Monad.void (Binding.flippedCopyOf (Object.bindings obj) Applicative.<|> PC.flipped stamp)) (Monad.void . Card.flippedFace) obj
+    flipHalf = copiableOf (Monad.void . PC.flipped) (Monad.void . Card.flippedFace)
 
 -- CR 110.5: this board with `oid`'s flipped status set to `status`, and no other
 -- change. `flipPermanent`'s write, and the counterfactual board
@@ -2029,7 +2043,7 @@ withFlipped status oid gs = gs {GameState.objects = Map.adjust (\o -> o {Object.
 
 -- | CR 701.27a asked rather than performed: this permanent as it WOULD be once
 -- turned over, or Nothing where the turn is declined. `turnFaceOver` above is
--- the only performer and asks this, so the four ways nothing happens are stated
+-- the only performer and asks this, so the five ways nothing happens are stated
 -- once, and none of them is an error:
 --
 --   * the id names nothing on the BATTLEFIELD. CR 701.27a transforms a
@@ -2040,6 +2054,7 @@ withFlipped status oid gs = gs {GameState.objects = Map.adjust (\o -> o {Object.
 --     component of a merged permanent (CR 730.2i).
 --   * CR 712.4c / 712.9: the permanent is melded, and so neither transformable
 --     nor convertible.
+--   * CR 712.15a: the permanent is face down.
 --
 -- Read ahead of the act by every road that restamps a batch, which must know
 -- which of the ids it swept will actually take a CR 613.7m stamp before it asks
@@ -2085,6 +2100,11 @@ turnedObject object gs
   -- card would allow", which melds into a double-faced card -- card data the
   -- opcode carries -- so that this guard is the only thing refusing.
   | not (Seq.null (meldComponentsOf (Object.source object))) = Nothing
+  -- CR 712.15a: "while face down, a double-faced permanent can't transform or
+  -- convert", and a face-down merged permanent's components are face down with
+  -- it (CR 730.2f). Pawl.TransformSpec's "CR 712.15a Moonmist does not
+  -- transform a face-down Thallid that Maskwood Nexus made a Human" proves it.
+  | Facing.isFaceDown (Object.facing object) = Nothing
   | otherwise = case Object.source object of
       Source.OfMerge components ->
         let turns = fmap (\shown -> (shown, componentTurnsTo shown gs)) components
@@ -2131,9 +2151,10 @@ frontFaceQuestion object gs = case Object.source object of
   source -> fmap ((,) (Object.face object)) (cardOfSource gs (Just source))
 
 -- CR 701.27a over a swept set, from the other side: which of these ids ACTUALLY
--- turned over. `turnFaceOver` above declines five ways -- an id naming nothing on
+-- turned over. `turnFaceOver` above declines six ways -- an id naming nothing on
 -- the battlefield, no card behind it, CR 701.27c's card that is not double-faced,
--- CR 701.27d's instant or sorcery face, CR 712.4c's melded permanent -- and
+-- CR 701.27d's instant or sorcery face, CR 712.4c's melded permanent, CR
+-- 712.15a's face-down one -- and
 -- Pawl.Engine.Resolve's `turnOver` adds CR 701.27f and CR 702.145b on top. A
 -- turn that did not happen is not an event, so both roads read the answer here
 -- rather than each keeping its own list, and neither can come to disagree with
@@ -2168,12 +2189,14 @@ facesTurned before after =
 -- way.
 --
 -- The face is `frontFaceQuestion`'s, so a merged permanent answers for its
--- topmost double-faced component and not its topmost one (CR 730.2i). CR
--- 730.2i makes a merged permanent no double-faced permanent, and names no
--- component for this question where two show different faces; the topmost is
--- the reading taken. Proved by Pawl.MutateSpec's
+-- topmost double-faced component and not its topmost one (CR 730.2i). Proved by
+-- Pawl.MutateSpec's
 -- "CR 730.2i/702.145c a Cubwarden over a nightbound Werewolf turns with the day
 -- and back with the night".
+--
+-- Not implemented: a ruling on which component answers for a merged permanent
+-- whose double-faced components show different faces, which the CR leaves
+-- undefined (#5037).
 isFrontFaceUp :: ObjectId -> GameState -> Bool
 isFrontFaceUp oid gs = case lookupObject oid gs of
   Nothing -> True

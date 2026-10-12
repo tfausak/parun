@@ -329,7 +329,7 @@ spec s registry = Spec.describe s "Mutate" $ do
             Just back -> do
               Spec.assertEqWith
                 s
-                "CR 730.2i/712.8e a Clone of the merged permanent copies its top's FRONT face, mana value 2"
+                "CR 730.2i/707.2 a Clone of the merged permanent copies its top's FRONT face, mana value 2 (CR 202.3)"
                 (cloneOf merged)
                 (Just (Set.singleton graftlingName, Just 2))
               Spec.assertEqWith s "CR 730.2i transformed, the top shows its back: a 4/4 Graftbeast with trample" (reading turned) (Set.singleton graftbeastName, Just (4, 4), True)
@@ -339,6 +339,11 @@ spec s registry = Spec.describe s "Mutate" $ do
                 (cloneOf turned)
                 (Just (Set.singleton graftbeastName, Just 0))
               Spec.assertEqWith s "CR 730.2i transformed again, each component turns back" (reading back) (Set.singleton graftlingName, Just (2, 2), True)
+              Spec.assertEqWith
+                s
+                "CR 613.7g/730.2i a merged permanent is no double-faced permanent, so it keeps its timestamp"
+                (fmap Object.timestamp (Game.lookupObject host turned))
+                (fmap Object.timestamp (Game.lookupObject host merged))
               Spec.assertEqWith s "setup: merged, a 2/2 Graftling with the transformed card's trample" (reading merged) (Set.singleton graftlingName, Just (2, 2), True)
               Spec.assertEqWith s "setup: CR 701.27a the unmerged Graftling transformed into a 4/4 Graftbeast" (reading alone) (Set.singleton graftbeastName, Just (4, 4), True)
               Spec.assertEqWith s "setup: two Graftlings represent one permanent" (componentNames host merged) [graftlingName, graftlingName]

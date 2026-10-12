@@ -2179,6 +2179,30 @@ graveyardTokenCopySpec s registry = Spec.describe s "Pawl.Engine.Copy" $ do
           _ -> Spec.assertFailure s "both Clones should be on the battlefield"
       (tokens, _) -> Spec.assertFailure s ("expected exactly one token, got " <> show (length tokens))
 
+  -- CR 202.3b asks whether a copy copies a BACK FACE, which is the copiable
+  -- values' question and not the printed card's: a transformed Blightreaper
+  -- Thallid that Mirrorweave then makes a Hill Giant has the Hill Giant's
+  -- copiable values (CR 707.2), so a Clone of it is a Hill Giant with mana value
+  -- 4. The same board without Mirrorweave is the pair: a Clone of the
+  -- transformed Thallid copies its back face and has mana value 0.
+  Spec.it s "CR 202.3b a Clone of a transformed Thallid that Mirrorweave made a Hill Giant has mana value 4" $ do
+    thallid <- S.printingOf s registry "Blightreaper Thallid"
+    hillGiant <- S.printingOf s registry "Hill Giant"
+    mirrorweave <- S.printingOf s registry "Mirrorweave"
+    clone <- S.printingOf s registry "Clone"
+    plains <- S.printingOf s registry "Plains"
+    let (thallidId, withThallid) = S.addPermanent thallid S.alice (S.landsFor plains S.alice 4 (Setup.emptyGame S.bothPlayers))
+        (giant, withGiant) = S.addPermanent hillGiant S.alice withThallid
+        -- PLACED back face up, as Pawl.MutateSpec places its Werewolf.
+        transformed = withGiant {GameState.objects = Map.adjust (\o -> o {Object.face = Just (CardName.MkCardName (Text.pack "Blightsower Thallid"))}) thallidId (GameState.objects withGiant)}
+        (staged, weaveId) = S.handOne mirrorweave transformed
+        woven = snd (Engine.runGamePure (targetingCard giant) staged (S.cast S.alice weaveId >> Stack.resolveTop >> Engine.settleForPriority))
+        cloneOf board =
+          let cloned = cloneOnto clone thallidId board
+           in fmap (\copy -> (Projection.namesOf copy cloned, PC.manaValue (Projection.project copy cloned))) (cloneOnBattlefield cloned)
+    Spec.assertEqWith s "CR 707.2 the Clone is a Hill Giant, mana value 4" (cloneOf woven) (Just (Set.singleton (CardName.MkCardName (Text.pack "Hill Giant")), Just 4))
+    Spec.assertEqWith s "CR 202.3b without Mirrorweave it copies the back face, mana value 0" (cloneOf transformed) (Just (Set.singleton (CardName.MkCardName (Text.pack "Blightsower Thallid")), Just 0))
+    Spec.assertEqWith s "setup: Mirrorweave made the transformed Thallid a Hill Giant" (Projection.namesOf thallidId woven) (Set.singleton (CardName.MkCardName (Text.pack "Hill Giant")))
   -- Doom Blade is the gameplay reader for colour: "Destroy target nonblack
   -- creature" has a target only while something on the board is not black. The
   -- two boards differ in one Proven Combatant on the battlefield, which is what

@@ -4424,8 +4424,18 @@ copiedSnapshot src gs =
 copiedReading :: ObjectId -> GameState -> PC.ProjectedCharacteristics
 copiedReading src gs =
   let snapshot = Projection.copiableCharacteristics src gs
+      -- CR 202.3b asks whether the copiable values ARE the back face, so a
+      -- copy effect over the object -- a stored row, or a stamp on an unmerged
+      -- one, whose own mana value was settled when it was stamped -- leaves its
+      -- shown face out of it. A merge's stamp is the exception, since its
+      -- topmost component's face is what it copies (CR 730.2a).
+      -- Pawl.CopySpec's "CR 202.3b a Clone of a transformed Thallid that
+      -- Mirrorweave made a Hill Giant has mana value 4" proves it.
+      copiedOver obj = case Object.source obj of
+        Source.OfMerge _ -> Maybe.isJust (Game.storedCopyOf src gs)
+        _ -> Maybe.isJust (Game.lookupLayerOne src gs >>= Game.copyStampOf)
       backFace = case (Game.lookupObject src gs, Game.cardOf src gs) of
-        (Just obj, Just card) -> Card.showsBackFace card (Game.shownFace obj)
+        (Just obj, Just card) -> not (copiedOver obj) && Card.showsBackFace card (Game.shownFace obj)
         _ -> False
       -- CR 202.3c's second sentence, the melded twin of CR 202.3b's: "if a
       -- permanent is a copy of a melded permanent (even if that copy is
@@ -8391,19 +8401,20 @@ meldable victims gs = do
 -- applies to the resulting PERMANENT rather than to any component of it.
 --
 -- CR 730.2h's flip components are stamped as a SECOND reading of the same merge,
--- both sides read again through Projection.copiableCharacteristicsFlipped, and
--- Projection.stampedSnapshotOf spends it once the merged permanent is flipped --
--- off a rewoven stored copy row's PC.flipped while one covers the permanent.
--- Two readings rather than one because CR 110.5a keeps status out of the
+-- both sides read again through Projection.copiableCharacteristicsFlipped and
+-- nested in the stamp as PC.flipped, and Projection.stampedSnapshotOf spends it
+-- once the merged permanent is flipped -- off a rewoven stored copy row's
+-- PC.flipped while one covers the permanent. Two readings rather than one because CR 110.5a keeps status out of the
 -- characteristics: flipping is no CR 613 layer to fold in later, and CR 730.2a
 -- fixes this stamp's timestamp at the merge, so what the flip may reach is
 -- decided here or nowhere.
 --
--- CR 730.2i's double-faced components are stamped as a THIRD reading, both
--- sides read again through Projection.copiableCharacteristicsTurned, which
--- Game.turnFaceOver swaps in when the merged permanent transforms -- for the
--- flipped reading's reason -- and a FOURTH, that one flipped, which it swaps in
--- for the flipped reading, since a flip component stays flipped (CR 710.4).
+-- CR 730.2i's double-faced components are stamped as a TURNED reading beside
+-- it, both sides read again through Projection.copiableCharacteristicsTurned
+-- with its own flipped reading nested the same way, which Game.turnFaceOver
+-- swaps in when the merged permanent transforms -- for the flipped reading's
+-- reason, and flipped reading and all, since a flip component stays flipped (CR
+-- 710.4).
 -- Each component keeps the face it showed (Pawl.Types.ShownComponent), and
 -- Object.face is left to an unmerged permanent: Game.shownFace reads the pile's.
 --
@@ -8440,16 +8451,23 @@ merge sid target side = do
             -- earlier copy effect gave it one and its printed seed otherwise.
             unrowed = Game.supersedeStoredCopies (Set.singleton target) gs
             reading ask board = fold (ask sid board) (ask target board)
-            resulting = reading Projection.copiableCharacteristicsFaceUp unrowed
-            -- CR 730.2h's reading of the same two sides: each flip component's
-            -- alternative characteristics in place of its normal ones, and every
-            -- other component's record unchanged.
-            resultingFlipped = reading Projection.copiableCharacteristicsFlipped unrowed
-            -- CR 730.2i's reading: each double-faced component turned over.
-            resultingTurned = reading Projection.copiableCharacteristicsTurned unrowed
-            -- CR 730.2h and CR 730.2i at once: turned over, then flipped.
-            turnedFlipped oid = Projection.copiableCharacteristicsFlipped oid . Game.withFaceTurned oid
-            resultingTurnedFlipped = reading turnedFlipped unrowed
+            -- CR 730.2h's reading of the same two sides, nested as PC.flipped:
+            -- each flip component's alternative characteristics in place of its
+            -- normal ones, and every other component's record unchanged. CR
+            -- 730.2i's reading beside it, each double-faced component turned
+            -- over, with its own flipped reading nested the same way.
+            readings board =
+              ( readingOf Projection.copiableCharacteristicsFaceUp Projection.copiableCharacteristicsFlipped board,
+                readingOf Projection.copiableCharacteristicsTurned (\oid -> Projection.copiableCharacteristicsFlipped oid . Game.withFaceTurned oid) board
+              )
+            readingOf up flippedAsk board = withFlip (reading up board) (reading flippedAsk board)
+            -- A reading with its flipped one nested, where the two differ; any
+            -- nesting a side's own reading carried is that side's, not this
+            -- merge's, so it is dropped first.
+            withFlip up down =
+              let plain pc = pc {PC.flipped = Nothing}
+               in if plain down == plain up then plain up else (plain up) {PC.flipped = Just (plain down)}
+            (resulting, resultingTurned) = readings unrowed
             -- CR 613.7 / 611.2a: a stored copy row covering the permanent is
             -- earlier than the merge, so while it lasts the merge applies OVER
             -- it, and once it ends over the stamp above. Each row keeps its own
@@ -8458,19 +8476,15 @@ merge sid target side = do
             -- copy at once and is recomputed when it ends" proves both.
             --
             -- The row carries CR 730.2h's flipped reading of the merge as its
-            -- PC.flipped, the stamp's own slot for it, since a row has no
-            -- Binding.flippedCopyOf beside it. Pawl.MutateSpec's "CR 730.2h a
+            -- PC.flipped, as the binding does. Pawl.MutateSpec's "CR 730.2h a
             -- merge over Mirrorweave's copy of a flip card flips with the
             -- abilities from under" proves it. CR 730.2i's turned reading rides
             -- as ActiveCopy.turned, flipped reading and all: Pawl.MutateSpec's
             -- "CR 730.2i/613.7 a merged permanent transforms while
             -- Mirrorweave's copy stands" proves it.
             alone row = row {ActiveCopy.objects = Set.singleton target}
-            withFlip up flipped = if flipped == up then up else up {PC.flipped = Just flipped}
             rewoven row =
-              let board = unrowed {GameState.copyEffects = alone row : GameState.copyEffects unrowed}
-                  snapshot = withFlip (reading Projection.copiableCharacteristicsFaceUp board) (reading Projection.copiableCharacteristicsFlipped board)
-                  turned = withFlip (reading Projection.copiableCharacteristicsTurned board) (reading turnedFlipped board)
+              let (snapshot, turned) = readings (unrowed {GameState.copyEffects = alone row : GameState.copyEffects unrowed})
                in (alone row) {ActiveCopy.snapshot = snapshot, ActiveCopy.turned = if turned == snapshot then Nothing else Just turned}
             rows = fmap rewoven (filter (Set.member target . ActiveCopy.objects) (GameState.copyEffects gs))
         State.modify' (`forgetObject` sid)
@@ -8486,7 +8500,7 @@ merge sid target side = do
                                 { Object.source = Source.OfMerge merged,
                                   Object.face = Nothing,
                                   Object.facing = facing,
-                                  Object.bindings = Binding.setMergeCopy resulting resultingFlipped resultingTurned resultingTurnedFlipped (Object.bindings o),
+                                  Object.bindings = Binding.setMergeCopy resulting resultingTurned (Object.bindings o),
                                   Object.stickers = Seq.sortOn StickerPlacement.timestamp (Object.stickers o <> Object.stickers spell)
                                 }
                           )
