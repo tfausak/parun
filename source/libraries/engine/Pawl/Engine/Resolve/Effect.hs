@@ -6188,9 +6188,15 @@ applyOneEffect runSubgame resolving source controller legal chosen effect = case
       fmap Maybe.catMaybes . Monad.forM surveillers $ \pid ->
         case evaluateForRecipient viewOf context gs resolving source pid quantity of
           -- CR 701.25c: surveil 0 is not a surveil at all, so nothing widens
-          -- it. CR 701.25b's extra cards join the ones looked at, read off the
-          -- board the surveil begins on.
-          Just n | n > 0 -> fmap Just (decideSurveil (n + toInteger (PlayerEffect.surveilExtra pid gs)) pid)
+          -- it. CR 701.25b's extra cards join the ones looked at, each grant's
+          -- "may" asked on its own, read off the board the surveil begins on.
+          Just n | n > 0 -> do
+            extras <- Monad.forM (PlayerEffect.surveilExtra pid gs) $ \(grant, count) -> do
+              answer <- Game.choose (Prompt.OfferedExtraLook (Decide.deciderFor pid gs) pid grant count)
+              case answer of
+                OptionalDecision.Exercises -> pure count
+                OptionalDecision.Declines -> pure 0
+            fmap Just (decideSurveil (n + toInteger (sum extras)) pid)
           _ -> pure Nothing
     Monad.mapM_ applySurveil decided
     -- CR 701.25d, scry's placement and for its rule.
@@ -11362,6 +11368,8 @@ decideSurveil n pid = do
   if null looked
     then pure (pid, Nothing)
     else do
+      -- CR 701.25a: the cards are looked at before the split is chosen.
+      Monad.mapM_ (Event.look pid) looked
       answer <- Game.choose (Prompt.ChooseSurveil (Decide.deciderFor pid gs) pid looked)
       let (toGraveyard, onTop) = splitLooked looked answer
       pure (pid, Just (onTop <> beneath, toGraveyard))

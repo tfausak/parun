@@ -896,6 +896,9 @@ data Prompt r where
   -- cast being OfferedCast's separate "may"; asked once per miracle ability,
   -- named by its cost, until one is taken (CR 702.94b).
   OfferedMiracleReveal :: Decider.Decider -> PlayerId.PlayerId -> ObjectId.ObjectId -> CardName.CardName -> Cost.Cost Keyword.Keyword -> Prompt OptionalDecision.OptionalDecision
+  -- | CR 701.25b: whether the surveilling player looks at the N extra cards the
+  -- permanent's static ability lets them; asked once per such ability.
+  OfferedExtraLook :: Decider.Decider -> PlayerId.PlayerId -> ObjectId.ObjectId -> Natural.Natural -> Prompt OptionalDecision.OptionalDecision
   -- | CR 118.12 / 118.12a: whether the named player -- the one the effects are
   -- aimed at, not the resolving controller -- pays the cost a resolving object
   -- offers, once per payment in APNAP order. Not asked where CR 118.3 leaves
