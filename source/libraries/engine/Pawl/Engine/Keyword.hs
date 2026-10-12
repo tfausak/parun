@@ -7540,6 +7540,7 @@ hideaway n =
           ( LookAt.MkLookAt
               (ObjectRef.TopOfLibrary (TopOfLibrary.MkTopOfLibrary (PlayerRef.Relative PlayerRelation.You) (Quantity.Literal (toInteger n))))
               hideawaySeen
+              (PlayerRef.Relative PlayerRelation.You)
           )
       hide =
         Effect.MoveToZone

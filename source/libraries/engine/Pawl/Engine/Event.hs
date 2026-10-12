@@ -105,6 +105,7 @@ import qualified Pawl.Types.DamageEvent as DamageEvent
 import qualified Pawl.Types.DamagePattern as DamagePattern
 import qualified Pawl.Types.DamageR as DamageR
 import qualified Pawl.Types.DamageRewrite as DamageRewrite
+import qualified Pawl.Types.Decider as Decider
 import Pawl.Types.DelayedTrigger (DelayedTrigger)
 import qualified Pawl.Types.DelayedTrigger as DelayedTrigger
 import qualified Pawl.Types.DestructionCause as DestructionCause
@@ -163,6 +164,7 @@ import qualified Pawl.Types.LifeLossCause as LifeLossCause
 import qualified Pawl.Types.LifeLossR as LifeLossR
 import qualified Pawl.Types.LifeLossRewrite as LifeLossRewrite
 import qualified Pawl.Types.LoggedEvent as LoggedEvent
+import qualified Pawl.Types.Looked as Looked
 import qualified Pawl.Types.MadnessCost as MadnessCost
 import qualified Pawl.Types.Mana as Mana
 import qualified Pawl.Types.MeldSource as MeldSource
@@ -755,6 +757,7 @@ damageOf event = case event of
   GameEvent.Discarded {} -> Nothing
   GameEvent.Drew {} -> Nothing
   GameEvent.Revealed {} -> Nothing
+  GameEvent.Looked {} -> Nothing
   GameEvent.AttackerDeclared {} -> Nothing
   GameEvent.BecameBlocking {} -> Nothing
   GameEvent.BlocksDeclared {} -> Nothing
@@ -814,6 +817,7 @@ damageOf event = case event of
 revealOf :: GameEvent -> Maybe (PlayerId, PC.ProjectedCharacteristics)
 revealOf event = case event of
   GameEvent.Revealed (Revealed.MkRevealed pid _ _ snapshot) -> Just (pid, snapshot)
+  GameEvent.Looked {} -> Nothing
   GameEvent.Moved {} -> Nothing
   GameEvent.DamageDealt _ -> Nothing
   GameEvent.DamagePrevented {} -> Nothing
@@ -8954,6 +8958,15 @@ reveal cause pid oid = do
   gs <- State.get
   Monad.mapM_ (State.modify' . recordEvent) (revealedOn cause pid oid gs)
 
+-- | CR 701.20e: a player looks at a card, shown to them and, per CR 723.4, to
+-- the player making their decisions. Records nothing when the object is gone.
+look :: PlayerId -> ObjectId -> Game ()
+look pid oid = do
+  gs <- State.get
+  let audience = Set.fromList [pid, Decider.unwrap (Decide.deciderFor pid gs)]
+  Monad.forM_ (Game.lookupObject oid gs) $ \_ ->
+    State.modify' (recordEvent (GameEvent.Looked (Looked.MkLooked oid (Projection.project oid gs) audience)))
+
 -- | CR 701.20a: keep a revealed card revealed for a window.
 --
 -- Not implemented: more than one window at once. A stamp replaces the card's
@@ -9557,6 +9570,7 @@ abilityTriggeredOf event = case event of
   GameEvent.Discarded {} -> Nothing
   GameEvent.Drew {} -> Nothing
   GameEvent.Revealed {} -> Nothing
+  GameEvent.Looked {} -> Nothing
   GameEvent.AttackerDeclared {} -> Nothing
   GameEvent.BecameBlocking {} -> Nothing
   GameEvent.BlocksDeclared {} -> Nothing

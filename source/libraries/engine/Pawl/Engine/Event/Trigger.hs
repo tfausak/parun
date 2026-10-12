@@ -83,6 +83,7 @@ import qualified Pawl.Types.LastKnown as LastKnown
 import qualified Pawl.Types.LeftTheGame as LeftTheGame
 import qualified Pawl.Types.LifeChange as LifeChange
 import qualified Pawl.Types.LoggedEvent as LoggedEvent
+import qualified Pawl.Types.Looked as Looked
 import qualified Pawl.Types.ManaAbilityResolved as ManaAbilityResolved
 import qualified Pawl.Types.ManaAdded as ManaAdded
 import qualified Pawl.Types.ManifestedDread as ManifestedDread
@@ -215,6 +216,7 @@ movedOf event = case event of
   -- CR 701.20b: a reveal is never a zone change, even when the card is about to
   -- make one.
   GameEvent.Revealed {} -> Nothing
+  GameEvent.Looked {} -> Nothing
   GameEvent.AttackerDeclared {} -> Nothing
   GameEvent.BecameBlocking {} -> Nothing
   GameEvent.BlocksDeclared {} -> Nothing
@@ -355,6 +357,7 @@ participants event =
         GameEvent.AttackerUnblocked oid -> one oid
         GameEvent.BlocksDeclared b -> one (BlocksDeclared.blocker b)
         GameEvent.Revealed r -> ([Revealed.card r], [Revealed.player r])
+        GameEvent.Looked l -> ([Looked.card l], Set.toList (Looked.audience l))
         GameEvent.SpellCountered c -> ([Countering.countered c, Countering.source c], [])
         GameEvent.AbilityCountered c -> ([Countering.countered c, Countering.source c], [])
         GameEvent.LifeLost c -> player (LifeChange.player c)
@@ -1323,6 +1326,7 @@ eventTriggers events gs =
         GameEvent.Discarded {} -> Map.empty
         GameEvent.Drew {} -> Map.empty
         GameEvent.Revealed {} -> Map.empty
+        GameEvent.Looked {} -> Map.empty
         GameEvent.AttackerDeclared {} -> Map.empty
         GameEvent.BecameBlocking {} -> Map.empty
         GameEvent.BlocksDeclared {} -> Map.empty
@@ -1610,6 +1614,7 @@ eventTriggers events gs =
         -- A reveal is not a cycling, whatever it showed. `revealedInHand` below is
         -- what hangs an ability on the card a reveal names.
         GameEvent.Revealed {} -> Map.empty
+        GameEvent.Looked {} -> Map.empty
         GameEvent.AttackerDeclared {} -> Map.empty
         GameEvent.BecameBlocking {} -> Map.empty
         GameEvent.BlocksDeclared {} -> Map.empty
@@ -1920,6 +1925,7 @@ eventTriggers events gs =
         GameEvent.BecameMonarch _ -> Map.empty
         GameEvent.TookInitiative _ -> Map.empty
         GameEvent.Revealed {} -> Map.empty
+        GameEvent.Looked {} -> Map.empty
         GameEvent.AttackerDeclared {} -> Map.empty
         GameEvent.BecameBlocking {} -> Map.empty
         GameEvent.BlocksDeclared {} -> Map.empty
@@ -2066,6 +2072,7 @@ eventTriggers events gs =
         GameEvent.Revealed (Revealed.MkRevealed _ _ RevealCause.Ordinary _) -> Map.empty
         GameEvent.Revealed (Revealed.MkRevealed _ _ RevealCause.LeavingFaceDown _) -> Map.empty
         GameEvent.Revealed (Revealed.MkRevealed _ _ RevealCause.FaceDownSpell _) -> Map.empty
+        GameEvent.Looked {} -> Map.empty
         GameEvent.Discarded {} -> Map.empty
         GameEvent.Drew {} -> Map.empty
         GameEvent.Moved {} -> Map.empty
@@ -3777,6 +3784,7 @@ resnapshot gs without event =
         GameEvent.Moved m -> fmap (\pc -> GameEvent.Moved m {Moved.characteristics = pc}) (reread (ZoneChange.departed (Moved.change m)) (Moved.characteristics m))
         GameEvent.SpellCast c -> fmap (\pc -> GameEvent.SpellCast c {SpellWasCast.characteristics = pc}) (reread (SpellWasCast.spell c) (SpellWasCast.characteristics c))
         GameEvent.Revealed r -> fmap (\pc -> GameEvent.Revealed r {Revealed.characteristics = pc}) (reread (Revealed.card r) (Revealed.characteristics r))
+        GameEvent.Looked l -> fmap (\pc -> GameEvent.Looked l {Looked.characteristics = pc}) (reread (Looked.card l) (Looked.characteristics l))
         GameEvent.Transformed t -> fmap (\pc -> GameEvent.Transformed t {Transformed.characteristics = pc}) (reread (Transformed.object t) (Transformed.characteristics t))
         GameEvent.CardArrived {} -> Just event
         GameEvent.SpellCopied {} -> Just event

@@ -240,9 +240,6 @@ data Effect card ability
   | -- | CR 701.20e: the cards the ObjectRef names are looked at -- shown to one
     -- player rather than all -- and bound into the slot, so a later clause of
     -- the same resolution can act on what was seen (Into the Wilds).
-    --
-    -- Not implemented: nothing records who looks (#4391), so the binding is the
-    -- whole of the look.
     LookAt LookAt.LookAt
   | -- | CR 401.4: the cards the ObjectRef names go back into their owner's
     -- library at the positions they already occupy, in an order that owner

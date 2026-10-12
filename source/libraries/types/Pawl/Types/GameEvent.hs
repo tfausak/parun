@@ -28,6 +28,7 @@ import qualified Pawl.Types.HalfUnlocked as HalfUnlocked
 import qualified Pawl.Types.LandPlayed as LandPlayed
 import qualified Pawl.Types.LeftTheGame as LeftTheGame
 import qualified Pawl.Types.LifeChange as LifeChange
+import qualified Pawl.Types.Looked as Looked
 import qualified Pawl.Types.ManaAbilityResolved as ManaAbilityResolved
 import qualified Pawl.Types.ManaAdded as ManaAdded
 import qualified Pawl.Types.ManifestedDread as ManifestedDread
@@ -223,6 +224,9 @@ data GameEvent
     -- activation's from a hidden zone (CR 602.2a), a trigger's -- are the card's
     -- Pawl.Types.Object.revealed window.
     Revealed Revealed.Revealed
+  | -- | CR 701.20e: a card was looked at, shown to its audience alone; never a
+    -- reveal (CR 701.20a).
+    Looked Looked.Looked
   | -- | CR 701.6a: a spell was COUNTERED. Emitted by Pawl.Engine.Event.counter,
     -- the one funnel every countering goes through, and distinct from the Moved
     -- event the same removal records: CR 608.2n sends a resolved spell to the

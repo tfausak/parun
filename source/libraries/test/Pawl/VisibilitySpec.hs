@@ -7,6 +7,7 @@ import qualified Data.List.NonEmpty as NonEmpty
 import qualified Data.Map as Map
 import qualified Data.Sequence as Seq
 import qualified Data.Text as Text
+import qualified Pawl.Engine.Event as Event
 import qualified Pawl.Engine.Visibility as Visibility
 import qualified Pawl.Registry as Registry
 import qualified Pawl.Spec as Spec
@@ -56,6 +57,23 @@ spec s registry = Spec.describe s "Pawl.Engine.Visibility" $ do
     Spec.assertEqWith s "alice sees her top card" (Visibility.sees S.alice top looked) Visibility.Type.Visible
     Spec.assertEqWith s "bob does not see alice's top card" (Visibility.sees S.bob top looked) Visibility.Type.Obscured
     Spec.assertEqWith s "alice does not see her second card" (Visibility.sees S.alice second looked) Visibility.Type.Obscured
+  -- CR 723.4: no priority point reaches a look made while controlled, so the
+  -- control row is written onto the state directly.
+  Spec.it s "a look while controlled is witnessed by the controller too" $ do
+    let bob = (S.playerSetup S.bob) {Seat.library = Seq.fromList [S.aliased "top" (S.cardSetup "Grizzly Bears")]}
+    built <- S.buildBoardOrFail s registry (S.board (S.playerSetup S.alice NonEmpty.:| [bob, S.playerSetup S.carol]) S.alice S.precombatMain)
+    top <- maybe (Spec.assertFailure s "no top") pure (Map.lookup (Label.MkLabel (Text.pack "top")) (Staged.objects built))
+    let plain = Staged.state built
+        controlled = plain {GameState.control = S.turnControl S.alice S.bob}
+        lastLogged gs = case Seq.viewr (GameState.events (S.runPure S.identityAnswer gs (Event.look S.bob top))) of
+          _ Seq.:> logged -> pure logged
+          Seq.EmptyR -> Spec.assertFailure s "no event logged"
+    uncontrolledLook <- lastLogged plain
+    controlledLook <- lastLogged controlled
+    Spec.assertEqWith s "the control: uncontrolled, alice does not witness bob's look" (Visibility.witnessed S.alice uncontrolledLook) Visibility.Type.Obscured
+    Spec.assertEqWith s "controlling bob, alice witnesses his look" (Visibility.witnessed S.alice controlledLook) Visibility.Type.Visible
+    Spec.assertEqWith s "bob witnesses his own look" (Visibility.witnessed S.bob controlledLook) Visibility.Type.Visible
+    Spec.assertEqWith s "carol does not witness it" (Visibility.witnessed S.carol controlledLook) Visibility.Type.Obscured
 
 -- Alice holds one card and has two in her library; bob has nothing.
 shownBoard :: (Monad m) => Spec.Spec m n -> Registry.Registry m -> m (GameState.GameState, ObjectId.ObjectId, ObjectId.ObjectId, ObjectId.ObjectId)

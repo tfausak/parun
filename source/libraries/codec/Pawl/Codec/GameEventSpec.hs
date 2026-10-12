@@ -53,6 +53,7 @@ import qualified Pawl.Types.HalfUnlocked as HalfUnlocked
 import qualified Pawl.Types.LandPlayed as LandPlayed
 import qualified Pawl.Types.LeftTheGame as LeftTheGame
 import qualified Pawl.Types.LifeChange as LifeChange
+import qualified Pawl.Types.Looked as Looked
 import qualified Pawl.Types.ManaAbilityResolved as ManaAbilityResolved
 import qualified Pawl.Types.ManaAdded as ManaAdded
 import qualified Pawl.Types.ManaAddedCause as ManaAddedCause
@@ -195,6 +196,12 @@ spec s = Spec.describe s "Pawl.Codec.GameEvent" $ do
       GameEvent.codec
       (GameEvent.Revealed (Revealed.MkRevealed (PlayerId.MkPlayerId 0) (ObjectId.MkObjectId 7) (RevealCause.ForMiracle (Cost.MkCost {Cost.mana = Just (ManaCost.MkManaCost []), Cost.components = []})) ProjectedCharacteristicsSpec.testCharacteristics))
       ("{\"type\":\"Revealed\",\"value\":{\"player\":0,\"card\":7,\"cause\":{\"type\":\"ForMiracle\",\"value\":{\"mana\":[]}},\"characteristics\":" <> ProjectedCharacteristicsSpec.testCharacteristicsJson <> "}}")
+  Spec.it s "Looked" $
+    Common.assertCodec
+      s
+      GameEvent.codec
+      (GameEvent.Looked (Looked.MkLooked (ObjectId.MkObjectId 7) ProjectedCharacteristicsSpec.testCharacteristics (Set.fromList [PlayerId.MkPlayerId 0, PlayerId.MkPlayerId 2])))
+      ("{\"type\":\"Looked\",\"value\":{\"card\":7,\"characteristics\":" <> ProjectedCharacteristicsSpec.testCharacteristicsJson <> ",\"audience\":[0,2]}}")
   -- An object, a player, CR 508.1b's announcement and CR 506.5's declaration
   -- size. Distinct numbers throughout, so a codec that permuted them would fail,
   -- and the announcement is a PLANESWALKER rather than the defending player: the

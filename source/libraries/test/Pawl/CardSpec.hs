@@ -643,7 +643,7 @@ objectRefPositions =
         ("attach-all", Effect.AttachAll (AttachAll.MkAttachAll (plantedRef "aa") Filter.Type.IsSource), [plantedRef "aa"]),
         ("move-to-zone", Effect.MoveToZone (MoveToZone.MkMoveToZone (plantedRef "mz") Zone.Exile plainRiders Nothing Nothing LibraryPlacement.OwnerChooses Nothing), [plantedRef "mz"]),
         ("reveal", Effect.Reveal (Reveal.MkReveal (plantedRef "rv") Nothing), [plantedRef "rv"]),
-        ("look-at", Effect.LookAt (LookAt.MkLookAt (plantedRef "la") (SlotName.MkSlotName (Text.pack "seen"))), [plantedRef "la"]),
+        ("look-at", Effect.LookAt (LookAt.MkLookAt (plantedRef "la") (SlotName.MkSlotName (Text.pack "seen")) (PlayerRef.Relative PlayerRelation.You)), [plantedRef "la"]),
         ("explore", Effect.Explore (plantedRef "ex"), [plantedRef "ex"]),
         ("arrange-in-library", Effect.ArrangeInLibrary (plantedRef "al"), [plantedRef "al"]),
         ("connive", Effect.Connive (Connive.MkConnive (Quantity.Type.Literal 1) (plantedRef "cn")), [plantedRef "cn"]),
@@ -727,6 +727,7 @@ playerRefPositions =
         ("scry", Effect.Scry (playerQuantity "sc"), [plantedPlayer "sc"]),
         ("surveil", Effect.Surveil (playerQuantity "su"), [plantedPlayer "su"]),
         ("fateseal", Effect.Fateseal (playerQuantity "fs"), [plantedPlayer "fs"]),
+        ("look-at", Effect.LookAt (LookAt.MkLookAt (plantedRef "la") (SlotName.MkSlotName (Text.pack "seen")) (plantedPlayer "lk")), [plantedPlayer "lk"]),
         ("lose-life", Effect.LoseLife (LifeLoss.MkLifeLoss (plantedPlayer "ll") one LifeLossCause.ByEffect Nothing), [plantedPlayer "ll"]),
         ("gain-life", Effect.GainLife (playerQuantity "gl"), [plantedPlayer "gl"]),
         ("set-life-total", Effect.SetLifeTotal (playerQuantity "sl"), [plantedPlayer "sl"]),
@@ -5803,7 +5804,7 @@ effectFilters effect = case effect of
   -- The ObjectRef's Filter is a position a card author writes, so the lint
   -- reaches it, as Explore's does. Both halves of CR 701.20 answer alike.
   Effect.Reveal (Reveal.MkReveal ref _) -> frame SourceHostFramed (objectRefFilters ref)
-  Effect.LookAt (LookAt.MkLookAt ref _) -> frame SourceHostFramed (objectRefFilters ref)
+  Effect.LookAt (LookAt.MkLookAt ref _ _) -> frame SourceHostFramed (objectRefFilters ref)
   Effect.Scry (PlayerQuantity.MkPlayerQuantity _ quantity) -> frame Unframed (quantityFilters quantity)
   Effect.Surveil (PlayerQuantity.MkPlayerQuantity _ quantity) -> frame Unframed (quantityFilters quantity)
   Effect.Fateseal (PlayerQuantity.MkPlayerQuantity _ quantity) -> frame Unframed (quantityFilters quantity)

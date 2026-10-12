@@ -3308,7 +3308,7 @@ effectIsImpossible resolving source controller legal gs effect = case effect of
   Effect.Reveal (Reveal.MkReveal ref _) -> choosesFromNothing ref
   Effect.FromOutsideTheGame {} -> False
   Effect.ExileThisSpell {} -> False
-  Effect.LookAt (LookAt.MkLookAt ref _) -> choosesFromNothing ref
+  Effect.LookAt (LookAt.MkLookAt ref _ _) -> choosesFromNothing ref
   Effect.ArrangeInLibrary {} -> False
   Effect.Scry {} -> False
   Effect.Surveil {} -> False
@@ -6114,19 +6114,20 @@ applyOneEffect runSubgame resolving source controller legal chosen effect = case
           _ -> controller
     Monad.mapM_ (\oid -> Event.reveal RevealCause.Ordinary (shower oid) oid) named
     bindShown named
-  Effect.LookAt (LookAt.MkLookAt ref slot) -> do
+  Effect.LookAt (LookAt.MkLookAt ref slot looker) -> do
     -- CR 608.2c: the cards are named as this instruction is reached, and CR 701.20b
-    -- (via rule 701.20e) leaves every one where it is -- so this whole arm is the
-    -- binding, and an empty library binds nothing. No event: a public
-    -- GameEvent.Revealed would be a different rule (CR 701.20a).
-    --
-    -- Not implemented: rule 701.20e shows the cards to one player, and nothing
-    -- records who looks (#4391).
+    -- (via rule 701.20e) leaves every one where it is -- so the arm is the
+    -- binding plus a GameEvent.Looked per card and looker, and an empty library
+    -- binds and records nothing. A public GameEvent.Revealed would be a different
+    -- rule (CR 701.20a).
     --
     -- The one PROMPT this arm raises is CR 608.2d's, not rule 701.20e's: Word of
     -- Command's "look at target opponent's hand and CHOOSE a card from it" names
     -- the hand and picks one, which askingObjects asks.
     named <- askingObjects resolving source controller legal chosen ref
+    gs <- State.get
+    Monad.forM_ named $ \oid ->
+      Monad.forM_ (playerRefPlayers legal controller gs looker) $ \pid -> Event.look pid oid
     -- Several cards take the group, which Filter.IsBound reads as CR 701.20e's
     -- "among them".
     bindObjects resolving (Just slot) named
