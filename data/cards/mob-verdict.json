@@ -1,0 +1,180 @@
+{
+  "faces": [
+    {
+      "manaCost": [
+        {
+          "type": "Generic",
+          "value": 2
+        },
+        {
+          "type": "OfType",
+          "value": {
+            "type": "Colored",
+            "value": {
+              "type": "Red"
+            }
+          }
+        },
+        {
+          "type": "OfType",
+          "value": {
+            "type": "Colored",
+            "value": {
+              "type": "Red"
+            }
+          }
+        }
+      ],
+      "name": "Mob Verdict",
+      "oracleText": "Secret council — Each player secretly votes for another player, then those votes are revealed. For each vote an opponent received, Mob Verdict deals 2 damage to that player and each creature that player controls. For each vote you received, draw a card.",
+      "spell": {
+        "modes": [
+          {
+            "clauses": [
+              {
+                "effects": [
+                  {
+                    "type": "Vote",
+                    "value": {
+                      "choices": {
+                        "type": "Players",
+                        "value": {
+                          "another": true,
+                          "slot": "votes"
+                        }
+                      },
+                      "secret": true,
+                      "starter": {
+                        "type": "Relative",
+                        "value": {
+                          "type": "You"
+                        }
+                      }
+                    }
+                  }
+                ]
+              },
+              {
+                "effects": [
+                  {
+                    "type": "ForEach",
+                    "value": {
+                      "body": [
+                        {
+                          "type": "DealDamage",
+                          "value": {
+                            "parts": [
+                              {
+                                "quantity": {
+                                  "type": "Times",
+                                  "value": {
+                                    "factor": 2,
+                                    "quantity": {
+                                      "type": "VotesReceived",
+                                      "value": {
+                                        "player": {
+                                          "type": "InSlot",
+                                          "value": "player"
+                                        },
+                                        "slot": "votes"
+                                      }
+                                    }
+                                  }
+                                },
+                                "ref": {
+                                  "type": "Players",
+                                  "value": {
+                                    "type": "InSlot",
+                                    "value": "player"
+                                  }
+                                }
+                              },
+                              {
+                                "quantity": {
+                                  "type": "Times",
+                                  "value": {
+                                    "factor": 2,
+                                    "quantity": {
+                                      "type": "VotesReceived",
+                                      "value": {
+                                        "player": {
+                                          "type": "InSlot",
+                                          "value": "player"
+                                        },
+                                        "slot": "votes"
+                                      }
+                                    }
+                                  }
+                                },
+                                "ref": {
+                                  "type": "EachMatching",
+                                  "value": {
+                                    "type": "And",
+                                    "value": [
+                                      {
+                                        "type": "HasCardType",
+                                        "value": {
+                                          "type": "Creature"
+                                        }
+                                      },
+                                      {
+                                        "type": "ControlledByBound",
+                                        "value": "player"
+                                      }
+                                    ]
+                                  }
+                                }
+                              }
+                            ]
+                          }
+                        }
+                      ],
+                      "ref": {
+                        "type": "EachOpponent"
+                      },
+                      "slot": "player"
+                    }
+                  }
+                ]
+              },
+              {
+                "effects": [
+                  {
+                    "type": "Draw",
+                    "value": {
+                      "player": {
+                        "type": "Relative",
+                        "value": {
+                          "type": "You"
+                        }
+                      },
+                      "quantity": {
+                        "type": "VotesReceived",
+                        "value": {
+                          "player": {
+                            "type": "Relative",
+                            "value": {
+                              "type": "You"
+                            }
+                          },
+                          "slot": "votes"
+                        }
+                      }
+                    }
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      "typeLine": {
+        "types": [
+          {
+            "type": "Sorcery"
+          }
+        ]
+      }
+    }
+  ]
+}

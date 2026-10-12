@@ -6862,7 +6862,7 @@ applyOneEffect runSubgame resolving source controller legal chosen effect = case
         let table = Players.table (Just controller) gs
             candidatesFor voter = if another then filter (/= voter) table else table
         picks <- cast (fmap BallotChoice.ForPlayer) $ \voter -> Game.chooseAmong (\decider who -> Prompt.ChooseVotePlayer decider who resolving) voter (candidatesFor voter)
-        let tally = Map.fromList [(pid, Natural.length (filter (== Just pid) picks)) | pid <- concatMap candidatesFor voters]
+        let tally = Map.fromList (fmap (\pid -> (pid, Natural.length (filter (== Just pid) picks))) (concatMap candidatesFor voters))
         State.modify' (overHolderBindings resolving (Map.insert slot (Binding.toVotes tally)))
   Effect.Create (Create.MkCreate quantity card entry mSlot creator) -> do
     gs <- State.get

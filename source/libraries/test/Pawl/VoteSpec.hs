@@ -258,29 +258,31 @@ votesSlot :: SlotName.SlotName
 votesSlot = word "votes"
 
 -- Mob Verdict's "each player votes for another player", starting with alice,
--- applied from `source` under alice with `picks` as the ballots in voting order.
--- Returns the seats asked with what each was offered, and the state after.
+-- resolved by `resolving` for `source` under alice with `picks` as the ballots
+-- in voting order. Returns the seats asked with what each was offered, and the
+-- state after.
 playerVote ::
+  ObjectId.ObjectId ->
   ObjectId.ObjectId ->
   [PlayerId.PlayerId] ->
   GameState.GameState ->
   ([(PlayerId.PlayerId, [PlayerId.PlayerId])], GameState.GameState)
-playerVote source picks gs =
+playerVote resolving source picks gs =
   let vote = Effect.Vote (Vote.MkVote (PlayerRef.Relative PlayerRelation.You) (VoteChoices.Players (VotePlayers.MkVotePlayers True votesSlot)) False)
-      ((_, after), (_, asked)) = State.runState (Engine.runGame votingPlayers gs (Resolve.applyEffect source source S.alice Map.empty Map.empty vote)) (picks, [])
+      ((_, after), (_, asked)) = State.runState (Engine.runGame votingPlayers gs (Resolve.applyEffect resolving source S.alice Map.empty Map.empty vote)) (picks, [])
    in (asked, after)
 
--- The tally map bound at the vote's slot on `source`.
+-- The tally map bound at the vote's slot on `holder`.
 boundTally :: ObjectId.ObjectId -> GameState.GameState -> Maybe (Map.Map PlayerId.PlayerId Natural)
-boundTally source gs = Game.lookupObject source gs >>= Map.lookup votesSlot . Object.bindings >>= Binding.votes
+boundTally holder gs = Game.lookupObject holder gs >>= Map.lookup votesSlot . Object.bindings >>= Binding.votes
 
 -- Quantity.VotesReceived for one seat, read through the resolution's own
 -- evaluation context as a later clause of the same resolution reads it.
-received :: ObjectId.ObjectId -> GameState.GameState -> PlayerId.PlayerId -> Maybe Integer
-received source gs pid =
+received :: ObjectId.ObjectId -> ObjectId.ObjectId -> GameState.GameState -> PlayerId.PlayerId -> Maybe Integer
+received resolving source gs pid =
   Quantity.evaluate
     (Slots.effectViewOf source Map.empty gs)
-    (Slots.effectContext gs S.alice source Map.empty (Slots.slotBindings source gs))
+    (Slots.effectContext gs S.alice source Map.empty (Slots.slotBindings resolving gs))
     gs
     source
     (Quantity.Type.VotesReceived (VotesReceived.MkVotesReceived votesSlot (PlayerRef.Specific pid)))
@@ -292,13 +294,13 @@ playerVoteSpec s registry = Spec.describe s "player vote" $ do
   Spec.it s "a player vote binds each candidate's tally, zeros included" $ do
     wall <- S.printingOf s registry "Wall of Stone"
     let (source, gs) = S.addPermanent wall S.alice S.threePlayerGame
-        (_, after) = playerVote source [S.carol, S.carol, S.alice] gs
+        (_, after) = playerVote source source [S.carol, S.carol, S.alice] gs
     Spec.assertEqWith s "the bound tally keys every seat, bob's zero included" (boundTally source after) (Just (Map.fromList [(S.alice, 1), (S.bob, 0), (S.carol, 2)]))
-    Spec.assertEqWith s "VotesReceived reads each seat's tally" (fmap (received source after) [S.alice, S.bob, S.carol]) [Just 1, Just 0, Just 2]
+    Spec.assertEqWith s "VotesReceived reads each seat's tally" (fmap (received source source after) [S.alice, S.bob, S.carol]) [Just 1, Just 0, Just 2]
   Spec.it s "another player: a voter is never offered themself" $ do
     wall <- S.printingOf s registry "Wall of Stone"
     let (source, gs) = S.addPermanent wall S.alice S.threePlayerGame
-        (asked, _) = playerVote source [S.carol, S.carol, S.alice] gs
+        (asked, _) = playerVote source source [S.carol, S.carol, S.alice] gs
     Spec.assertEqWith
       s
       "each seat, from alice in turn order, is offered the other two seats"
@@ -309,6 +311,18 @@ playerVoteSpec s registry = Spec.describe s "player vote" $ do
     representative <- S.printingOf s registry "Brago's Representative"
     let (source, g1) = S.addPermanent wall S.alice S.threePlayerGame
         (_, gs) = S.addPermanent representative S.alice g1
-        (asked, after) = playerVote source [S.bob, S.carol, S.carol, S.alice] gs
+        (asked, after) = playerVote source source [S.bob, S.carol, S.carol, S.alice] gs
     Spec.assertEqWith s "alice is asked twice in a row and the other two seats once each" (fmap fst asked) [S.alice, S.alice, S.bob, S.carol]
     Spec.assertEqWith s "alice's second ballot counts: carol has two votes and bob one" (boundTally source after) (Just (Map.fromList [(S.alice, 1), (S.bob, 1), (S.carol, 2)]))
+  -- A stack object resolving the vote for a permanent source, as a triggered
+  -- ability's vote would: the tally lands on the resolving object, where
+  -- effectContext's slotBindings reads it, and not on the source.
+  Spec.it s "the tally is bound and read on the resolving object, not the source" $ do
+    wall <- S.printingOf s registry "Wall of Stone"
+    verdict <- S.printingOf s registry "Mob Verdict"
+    let (source, g1) = S.addPermanent wall S.alice S.threePlayerGame
+        (resolving, gs) = S.spellOnStack verdict S.alice g1
+        (_, after) = playerVote resolving source [S.carol, S.carol, S.alice] gs
+    Spec.assertEqWith s "VotesReceived, read through the resolving object, answers each seat's tally" (fmap (received resolving source after) [S.alice, S.bob, S.carol]) [Just 1, Just 0, Just 2]
+    Spec.assertEqWith s "the resolving object holds the tally" (boundTally resolving after) (Just (Map.fromList [(S.alice, 1), (S.bob, 0), (S.carol, 2)]))
+    Spec.assertEqWith s "and the source holds none" (boundTally source after) Nothing
