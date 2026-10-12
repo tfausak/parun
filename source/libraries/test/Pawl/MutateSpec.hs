@@ -74,6 +74,7 @@ import qualified Pawl.Engine.Stack as Stack
 import qualified Pawl.Registry as Registry
 import qualified Pawl.Spec as Spec
 import qualified Pawl.Support as S
+import qualified Pawl.Types.ActivatedAbility as ActivatedAbility
 import qualified Pawl.Types.BeginningStep as BeginningStep
 import qualified Pawl.Types.CardName as CardName
 import qualified Pawl.Types.Color as Color
@@ -347,6 +348,58 @@ spec s registry = Spec.describe s "Mutate" $ do
               Spec.assertEqWith s "setup: merged, a 2/2 Graftling with the transformed card's trample" (reading merged) (Set.singleton graftlingName, Just (2, 2), True)
               Spec.assertEqWith s "setup: CR 701.27a the unmerged Graftling transformed into a 4/4 Graftbeast" (reading alone) (Set.singleton graftbeastName, Just (4, 4), True)
               Spec.assertEqWith s "setup: two Graftlings represent one permanent" (componentNames host merged) [graftlingName, graftlingName]
+  -- CR 730.2i over a merge onto a FACE-DOWN permanent: a manifested Blightreaper
+  -- Thallid, Synthetic Graftling mutated UNDER it, so the pile stays face down
+  -- (CR 730.2e); turned face up (CR 730.2f), the Graftling's ability transforms
+  -- it, and both components turn over. The merge's turned reading was taken
+  -- while the Thallid was face down, so a reading that refused a face-down turn
+  -- (CR 712.15a) would leave the pile a 2/2 Blightreaper.
+  Spec.it s "CR 730.2i a merged permanent that was face down transforms once turned face up" $ do
+    forest <- S.printingOf s registry "Forest"
+    thallid <- S.printingOf s registry "Blightreaper Thallid"
+    graftling <- S.printingOf s registry "Synthetic Graftling"
+    let base = S.landsFor forest S.alice 1 (Setup.emptyGame S.bothPlayers)
+        (host, withHost) = S.addPermanent thallid S.alice base
+        manifested = withHost {GameState.objects = Map.adjust (\o -> o {Object.facing = Facing.faceDown FaceDownReason.Manifested}) host (GameState.objects withHost)}
+        (board, spellId) = S.handOne graftling manifested
+        merged = merging MutateSide.Under host board spellId
+        turnedUp = S.runPure S.identityAnswer merged (FaceDown.performTurnFaceUp Nothing Nothing host)
+        reading gs = (Projection.namesOf host gs, S.powerToughnessOf host gs, Projection.hasKeyword Keyword.Trample host gs)
+    case transformedBy forest host turnedUp of
+      Nothing -> Spec.assertFailure s "expected the pile to offer the Graftling's activated ability"
+      Just after -> do
+        Spec.assertEqWith s "CR 730.2i a 3/3 Blightsower Thallid with the turned Graftling's trample" (reading after) (Set.singleton blightsower, Just (3, 3), True)
+        Spec.assertEqWith s "setup: turned face up, a 2/2 Blightreaper Thallid" (reading turnedUp) (Set.singleton (CardName.MkCardName (Text.pack "Blightreaper Thallid")), Just (2, 2), False)
+        Spec.assertBool s (maybe False (Facing.isFaceDown . Object.facing) (Game.lookupObject host merged)) "setup: CR 730.2e the pile was face down after the merge"
+  -- CR 202.3b over a merge a later copy effect replaced: Synthetic Graftling
+  -- mutates over Unstable Shapeshifter, the pile transforms, and a Hill Giant
+  -- entering makes it a copy of the Hill Giant through the trigger it carries
+  -- from under (CR 702.140e). Its copiable values are the Hill Giant's now, not
+  -- a back face, so a Clone of it has mana value 4.
+  Spec.it s "CR 202.3b a Clone of a transformed pile that became a Hill Giant has mana value 4" $ do
+    forest <- S.printingOf s registry "Forest"
+    shapeshifter <- S.printingOf s registry "Unstable Shapeshifter"
+    graftling <- S.printingOf s registry "Synthetic Graftling"
+    hillGiant <- S.printingOf s registry "Hill Giant"
+    clone <- S.printingOf s registry "Clone"
+    let base = S.landsFor forest S.alice 1 (Setup.emptyGame S.bothPlayers)
+        (host, withHost) = S.addPermanent shapeshifter S.alice base
+        (board, spellId) = S.handOne graftling withHost
+        merged = merging MutateSide.Over host board spellId
+        entering gs =
+          let (_, staged) = S.spellOnStack hillGiant S.alice gs
+           in S.runPure S.identityAnswer staged (Monad.replicateM_ 3 (Stack.resolveTop >> Engine.settleForPriority))
+        cloneOf gs =
+          let (_, staged) = S.spellOnStack clone S.alice gs
+              copied = S.runPure (copying host) staged (Stack.resolveTop >> Engine.settleForPriority)
+           in fmap (\copy -> PC.manaValue (Projection.project copy copied)) (cloneOn copied)
+    case transformedBy forest host merged of
+      Nothing -> Spec.assertFailure s "expected the pile to offer the Graftling's activated ability"
+      Just turned -> do
+        let copied = entering turned
+        Spec.assertEqWith s "CR 202.3b a Clone of it has the Hill Giant's mana value 4" (cloneOf copied) (Just (Just 4))
+        Spec.assertEqWith s "setup: the pile became a copy of the Hill Giant" (Projection.namesOf host copied) (Set.singleton (CardName.MkCardName (Text.pack "Hill Giant")))
+        Spec.assertEqWith s "setup: CR 712.8e before that, a Clone of the transformed pile copied a back face, mana value 0" (cloneOf turned) (Just (Just 0))
   -- CR 730.2h beside CR 730.2i: Synthetic Graftling mutates OVER an unflipped
   -- Akki Lavarunner, the pile connects and Akki's printed trigger flips it, and
   -- the Graftling's ability then transforms it. The flip component must stay
@@ -1088,11 +1141,12 @@ transformedMerge plains forest thallid cubwarden =
 -- Synthetic Graftling's "{2}{G}: Transform this permanent. Activate only as a
 -- sorcery." activated on `host` in alice's main phase, paid by three fresh
 -- Forests, and the stack drained. Nothing unless `host` offers exactly one
--- activated ability.
+-- activated ability at that {2}{G}.
 transformedBy :: Printing.Printing -> ObjectId.ObjectId -> GameState.GameState -> Maybe GameState.GameState
 transformedBy forest host gs =
   let armed = (S.landsFor forest S.alice 3 gs) {GameState.phase = Phase.PrecombatMain, GameState.activePlayer = S.alice, GameState.priority = Just S.alice}
-   in case Activatable.abilitiesFor host armed of
+      graftTransform = ManaCost.MkManaCost [ManaSymbol.Generic 2, ManaSymbol.OfType (ManaType.Colored Color.Green)]
+   in case filter ((== Just graftTransform) . Cost.Type.mana . ActivatedAbility.cost) (Activatable.abilitiesFor host armed) of
         [ability] ->
           let activated = S.runPure S.identityAnswer armed (Activate.activateAbility S.alice host ability)
            in Just (S.runPure S.identityAnswer activated (Monad.replicateM_ 4 (Stack.resolveTop >> Engine.settleForPriority)))

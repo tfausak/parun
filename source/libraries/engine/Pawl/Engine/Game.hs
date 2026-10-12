@@ -1907,10 +1907,19 @@ takesTurnStamp oid gs = case fmap Object.source (lookupObject oid gs) of
 -- `turnFaceOver`'s write as a counterfactual board, with no battlefield gate and
 -- no stamp: this object with its double-faced card turned over, or the board
 -- unchanged. Pawl.Engine.Event.merge's CR 730.2i reading asks it of both sides.
+--
+-- Asked of the object FACE UP, the posture of the layer-1a read it feeds
+-- (Pawl.Engine.Projection.View.copiableCharacteristicsFaceUp): a face-down
+-- merge target turns face up before it can transform (CR 730.2f), so CR
+-- 712.15a's refusal in `turnedObject` is not this reading's. Pawl.MutateSpec's
+-- "CR 730.2i a merged permanent that was face down transforms once turned face
+-- up" proves it.
 withFaceTurned :: ObjectId -> GameState -> GameState
-withFaceTurned oid gs = case lookupObject oid gs >>= \object -> turnedObject object gs of
-  Just turned -> (turnStoredCopies oid gs) {GameState.objects = Map.insert oid turned (GameState.objects gs)}
-  Nothing -> gs
+withFaceTurned oid gs =
+  let up = gs {GameState.objects = Map.adjust (\o -> o {Object.facing = Facing.FaceUp}) oid (GameState.objects gs)}
+   in case lookupObject oid up >>= \object -> turnedObject object up of
+        Just turned -> (turnStoredCopies oid up) {GameState.objects = Map.insert oid turned (GameState.objects up)}
+        Nothing -> up
 
 -- CR 730.2i under a stored copy row: a merge applied over the row turns with
 -- the permanent, so each row covering `oid` that carries a turned reading
@@ -2118,6 +2127,9 @@ turnedObject object gs
 -- its printed card, `turnsTo`'s footing. Nothing for a melded component, which
 -- CR 712.4c keeps from turning -- a regression fence, since no printed combined
 -- face is double-faced.
+--
+-- Not implemented: a status per component, so a face-down double-faced
+-- component under a face-up topmost one turns over against CR 712.15a (#5040).
 componentTurnsTo :: ShownComponent.ShownComponent -> GameState -> Maybe CardName.CardName
 componentTurnsTo shown gs = case ShownComponent.component shown of
   MergeComponent.OfMeld _ -> Nothing

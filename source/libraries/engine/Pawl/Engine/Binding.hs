@@ -1581,23 +1581,26 @@ setCopy pc = Map.insert copySource (Binding.empty {Binding.copy = Just pc}) . Ma
 -- CR 730.2a with CR 730.2i: two readings of one merge, the current one under
 -- copySource and the turned-over one beside it, each carrying its CR 730.2h
 -- flipped reading as PC.flipped, as a stored copy row does. The turned reading
--- is stamped only where it DIFFERS from the current one, so an object carrying
--- no double-faced component is left exactly as `setCopy` above leaves it.
+-- is stamped even where it equals the current one, so its slot is also the
+-- record that the merge's stamp is still the one in force (`mergeStampHolds`):
+-- a later copy effect's `setCopy` drops it.
 setMergeCopy :: ProjectedCharacteristics -> ProjectedCharacteristics -> Map SlotName Binding -> Map SlotName Binding
-setMergeCopy pc turnedPc m =
-  if turnedPc == pc
-    then setCopy pc m
-    else Map.insert turnedMergeSource (Binding.empty {Binding.copy = Just turnedPc}) (setCopy pc m)
+setMergeCopy pc turnedPc = Map.insert turnedMergeSource (Binding.empty {Binding.copy = Just turnedPc}) . setCopy pc
 
 -- CR 730.2i: a merged permanent transforms, so each double-faced component turns
 -- over and the turned reading of its merge becomes the current one, its flipped
 -- reading with it, since CR 730.2h's flip component stays flipped (CR 710.4). A
 -- SWAP, so turning it back restores the reading it had. A no-op for an object
--- with no turned reading.
+-- whose merge stamp a later copy effect replaced.
 turnMergeCopy :: Map SlotName Binding -> Map SlotName Binding
 turnMergeCopy m = case (copyOf m, Binding.copy =<< Map.lookup turnedMergeSource m) of
   (Just current, Just turned) -> setMergeCopy turned current m
   _ -> m
+
+-- CR 613.7 / 730.2a: is this merged permanent's copy stamp still its merge's,
+-- rather than a later copy effect's that replaced it?
+mergeStampHolds :: Map SlotName Binding -> Bool
+mergeStampHolds = Map.member turnedMergeSource
 
 -- Build the binding environment stamped on a stack object at cast: the chosen
 -- targets, the chosen X under variableX, and any chosen modes under

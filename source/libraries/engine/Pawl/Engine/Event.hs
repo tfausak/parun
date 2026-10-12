@@ -4428,11 +4428,13 @@ copiedReading src gs =
       -- copy effect over the object -- a stored row, or a stamp on an unmerged
       -- one, whose own mana value was settled when it was stamped -- leaves its
       -- shown face out of it. A merge's stamp is the exception, since its
-      -- topmost component's face is what it copies (CR 730.2a).
-      -- Pawl.CopySpec's "CR 202.3b a Clone of a transformed Thallid that
-      -- Mirrorweave made a Hill Giant has mana value 4" proves it.
+      -- topmost component's face is what it copies (CR 730.2a), until a later
+      -- copy effect replaces it. Pawl.CopySpec's "CR 202.3b a Clone of a
+      -- transformed Thallid that Mirrorweave made a Hill Giant has mana value 4"
+      -- and Pawl.MutateSpec's "CR 202.3b a Clone of a transformed pile that
+      -- became a Hill Giant has mana value 4" prove it.
       copiedOver obj = case Object.source obj of
-        Source.OfMerge _ -> Maybe.isJust (Game.storedCopyOf src gs)
+        Source.OfMerge _ -> Maybe.isJust (Game.storedCopyOf src gs) || not (Binding.mergeStampHolds (Object.bindings obj))
         _ -> Maybe.isJust (Game.lookupLayerOne src gs >>= Game.copyStampOf)
       backFace = case (Game.lookupObject src gs, Game.cardOf src gs) of
         (Just obj, Just card) -> not (copiedOver obj) && Card.showsBackFace card (Game.shownFace obj)
