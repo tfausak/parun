@@ -34,6 +34,7 @@ import qualified Pawl.Types.PermanentActed as PermanentActed
 import qualified Pawl.Types.PermanentAction as PermanentAction
 import qualified Pawl.Types.Player as Player
 import Pawl.Types.PlayerId (PlayerId)
+import qualified Pawl.Types.ProjectedCharacteristics as PC
 import qualified Pawl.Types.Prompt as Prompt
 import qualified Pawl.Types.ProposedEvent as ProposedEvent
 import qualified Pawl.Types.SideDeck as SideDeck
@@ -67,6 +68,19 @@ putOnSprocket :: ObjectId -> Designation.Designation -> GameState -> GameState
 putOnSprocket oid sprocket gs =
   let move o = o {Object.designations = Set.insert sprocket (Set.filter (not . Sector.isSprocket) (Object.designations o))}
    in gs {GameState.objects = Map.adjust move oid (GameState.objects gs)}
+
+-- | The FAQ: "any Contraption that's on the battlefield and wasn't assembled
+-- immediately heads to the scrapyard" -- a Contraption on no sprocket, judged
+-- against the projection a state-based pass took (Pawl.Engine.Sba). Only
+-- assemble puts one on a sprocket, so a copy (Phyrexian Metamorph's) and a
+-- Contraption that left and came back are on none.
+unassembled :: Map.Map ObjectId PC.ProjectedCharacteristics -> GameState -> [ObjectId]
+unassembled pcs gs =
+  [ oid
+  | oid <- Set.toList (GameState.battlefield gs),
+    maybe False (Set.member Subtype.Contraption . PC.subtypes) (Map.lookup oid pcs),
+    maybe False (not . any Sector.isSprocket . Object.designations) (Game.lookupObject oid gs)
+  ]
 
 -- | Which sprocket this player's CRANK! counter is on.
 crankCounterOf :: PlayerId -> GameState -> Designation.Designation

@@ -78,9 +78,9 @@ controlledBy pid gs =
 
 -- One player's own sight, before CR 723.4.
 --
--- Not implemented: a card in an Attraction, planar or scheme deck is face down
--- (CR 314.6, 701.31b, 701.51b, 729.5a) but answers here as its facing does
--- (#4990).
+-- Not implemented: a card in an Attraction, Contraption, planar or scheme deck is
+-- face down (CR 314.6, 701.31b, 701.51b, 729.5a; the Unstable FAQ's Contraption
+-- back) but answers here as its facing does (#4990).
 base :: PlayerId -> ObjectId -> GameState.GameState -> Visibility.Visibility
 base pid oid gs = case Game.lookupObject oid gs of
   Nothing -> Visibility.Obscured

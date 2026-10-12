@@ -23,7 +23,10 @@ import qualified Pawl.Engine.Engine as Engine
 import qualified Pawl.Engine.Event as Event
 import qualified Pawl.Engine.Game as Game
 import qualified Pawl.Engine.Projection as Projection
+import qualified Pawl.Engine.Resolve.Effect as Resolve
+import qualified Pawl.Engine.Sba as Sba
 import qualified Pawl.Engine.Setup as Setup
+import qualified Pawl.Engine.Stack as Stack
 import qualified Pawl.Registry as Registry
 import qualified Pawl.Spec as Spec
 import qualified Pawl.Support as S
@@ -52,6 +55,7 @@ spec s registry = Spec.describe s "Contraption" $ do
   crankSpec s registry
   bossSpec s registry
   scrapyardSpec s registry
+  newGameSpec s registry
 
 armsDepot :: CardName.CardName
 armsDepot = CardName.MkCardName (Text.pack "Arms Depot")
@@ -209,6 +213,16 @@ bossSpec s registry = Spec.describe s "Steamflogger Boss" $ do
     Spec.assertEqWith s "one Depot without the Boss" (depotsOn without) [Set.singleton Designation.Sprocket2]
     Spec.assertEqWith s "a sprocket asked for each" (fmap length (sprocketsOffered askedWith), fmap length (sprocketsOffered askedWithout)) ([3, 3], [3])
     Spec.assertEqWith s "one card left in the deck under the Boss" (length (Game.sideDeckOf SideDeck.Contraption S.alice withBoss)) 1
+  Spec.it s "an opponent's Boss does not double alice's Rigger" $ do
+    boss <- S.printingOf s registry "Steamflogger Boss"
+    rigger <- S.printingOf s registry "Wrench-Rigger"
+    depot <- S.printingOf s registry "Arms Depot"
+    mountain <- S.printingOf s registry "Mountain"
+    -- The first case's Boss board, differing only in who controls the Boss.
+    let board = snd (S.addPermanent boss S.bob (withDepots depot 3 S.alice (S.landsInPlay mountain 1)))
+        (gs, spellId) = S.handOne rigger board
+        (after, _) = driving [Designation.Sprocket2, Designation.Sprocket1] id Nothing gs (S.cast S.alice spellId >> Engine.priorityLoop)
+    Spec.assertEqWith s "alice's Rigger, out of reach of bob's Boss: one Depot" (depotsOn after) [Set.singleton Designation.Sprocket2]
   Spec.it s "the Boss does not double a player's assembly" $ do
     boss <- S.printingOf s registry "Steamflogger Boss"
     pick <- S.printingOf s registry "First Pick"
@@ -233,7 +247,7 @@ bossSpec s registry = Spec.describe s "Steamflogger Boss" $ do
     Spec.assertEqWith s "bob's Rigger is 1/1" (Projection.powerOf bobsRigger gs) (Just 1)
 
 -- The Unstable FAQ's scrapyard.
-scrapyardSpec :: (Monad m) => Spec.Spec m n -> Registry.Registry m -> n ()
+scrapyardSpec :: (Monad m, Monad n) => Spec.Spec m n -> Registry.Registry m -> n ()
 scrapyardSpec s registry = Spec.describe s "Scrapyard" $ do
   Spec.it s "a Contraption leaving the battlefield for the graveyard goes to the scrapyard" $ do
     depot <- S.printingOf s registry "Arms Depot"
@@ -243,3 +257,51 @@ scrapyardSpec s registry = Spec.describe s "Scrapyard" $ do
     Spec.assertEqWith s "nothing in the graveyard" (Game.zoneMembers Zone.Graveyard S.alice binned) []
     Spec.assertEqWith s "one card in the command zone" (Set.size (GameState.command binned)) 1
     Spec.assertEqWith s "but exile is exile" (Set.size (GameState.exile exiled)) 1
+  Spec.it s "a Contraption on no sprocket heads to the scrapyard as state is next checked" $ do
+    depot <- S.printingOf s registry "Arms Depot"
+    let (unassembledId, g1) = S.addPermanent depot S.alice (Setup.emptyGame S.bothPlayers)
+        (assembledId, gs) = S.addPermanent depot S.alice g1
+        onOne = gs {GameState.objects = Map.adjust (\o -> o {Object.designations = Set.insert Designation.Sprocket1 (Object.designations o)}) assembledId (GameState.objects gs)}
+        checked = S.runPure S.identityAnswer onOne Sba.checkStateBasedActions
+    Spec.assertBool s (not (Set.member unassembledId (GameState.battlefield checked))) "the Depot on no sprocket left the battlefield"
+    Spec.assertEqWith s "for the scrapyard" (Set.size (GameState.command checked)) 1
+    Spec.assertBool s (Set.member assembledId (GameState.battlefield checked)) "and the one on a sprocket stayed"
+  Spec.it s "a copy of a Contraption was not assembled, and its card goes to the graveyard" $ do
+    depot <- S.printingOf s registry "Arms Depot"
+    metamorph <- S.printingOf s registry "Phyrexian Metamorph"
+    let (original, board) = S.addPermanent depot S.alice (Setup.emptyGame S.bothPlayers)
+        assembled = board {GameState.objects = Map.adjust (\o -> o {Object.designations = Set.insert Designation.Sprocket1 (Object.designations o)}) original (GameState.objects board)}
+        copyAnswer :: Prompt.Prompt r -> r
+        copyAnswer p = case p of
+          Prompt.ChooseCopyTarget {} -> Just original
+          _ -> S.identityAnswer p
+        (_, staged) = S.spellOnStack metamorph S.alice assembled
+        entered = S.runPure copyAnswer staged (Stack.resolveTop >> Sba.checkStateBasedActions)
+    Spec.assertEqWith s "the Metamorph card is in alice's graveyard" (length (Game.zoneMembers Zone.Graveyard S.alice entered)) 1
+    Spec.assertEqWith s "nothing went to the scrapyard" (GameState.command entered) Set.empty
+    Spec.assertBool s (Set.member original (GameState.battlefield entered)) "and the assembled Depot stayed"
+
+-- The Contraption deck across CR 727's restart and CR 729's subgames, read as
+-- CR 727.2 and CR 729.2a / 729.5a read the Attraction deck.
+newGameSpec :: (Monad m, Monad n) => Spec.Spec m n -> Registry.Registry m -> n ()
+newGameSpec s registry = Spec.describe s "A new game" $ do
+  Spec.it s "CR 727.2 a restart puts every Contraption card back in its owner's Contraption deck" $ do
+    depot <- S.printingOf s registry "Arms Depot"
+    piker <- S.printingOf s registry "Goblin Piker"
+    let (gs, _, _) = crankBoard depot piker Designation.Sprocket1
+        board = withDepots depot 1 S.alice gs
+        restarted = S.runPure S.identityAnswer board (Setup.restartGame (Resolve.performHandAction Resolve.noSubgame) Set.empty S.alice)
+    Spec.assertEqWith s "both Depots are in alice's Contraption deck" (length (Game.sideDeckOf SideDeck.Contraption S.alice restarted)) 2
+    Spec.assertEqWith s "and neither is on the battlefield" (S.countOnBattlefieldByName armsDepot S.alice restarted) 0
+    Spec.assertEqWith s "the CRANK! counter is back on the third sprocket" (Contraption.crankCounterOf S.alice restarted) Designation.Sprocket3
+  Spec.it s "CR 729.2a a subgame takes the Contraption deck, and CR 729.5a gives it back" $ do
+    depot <- S.printingOf s registry "Arms Depot"
+    piker <- S.printingOf s registry "Goblin Piker"
+    let (gs, assembled, _) = crankBoard depot piker Designation.Sprocket1
+        parent = withDepots depot 1 S.alice gs
+        sub = S.runPure S.identityAnswer (Setup.subgameStateFrom S.alice parent) (Setup.startGameFromCards (Resolve.performHandAction Resolve.noSubgame) Set.empty)
+        back = Setup.funnelBack sub parent
+    Spec.assertEqWith s "CR 729.2a: the deck is in the subgame" (length (Game.sideDeckOf SideDeck.Contraption S.alice sub)) 1
+    Spec.assertBool s (Maybe.isNothing (Game.lookupObject assembled sub)) "and the assembled one stayed behind"
+    Spec.assertEqWith s "CR 729.5a: the deck is back" (length (Game.sideDeckOf SideDeck.Contraption S.alice back)) 1
+    Spec.assertEqWith s "and the assembled one never moved" (Game.zoneOf assembled back) (Just Zone.Battlefield)

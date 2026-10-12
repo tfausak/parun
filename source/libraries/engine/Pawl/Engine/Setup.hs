@@ -1104,8 +1104,8 @@ subgameStateFrom starter parent =
       -- Nothing ELSE in the main-game command zone moves -- CR 729.2's "no other
       -- cards in a main-game zone are moved" -- and their remaining sibling has no
       -- format here but one: CR 729.2a's supplementary decks of nontraditional
-      -- cards are the Attraction, planar and scheme decks CR 100.2d names
-      -- (`suppIds` below).
+      -- cards are the Attraction, planar and scheme decks CR 100.2d names, and
+      -- the Unstable FAQ's Contraption deck (`suppIds` below).
       --
       -- The other command-zone residents pawl DOES have -- an emblem, a
       -- conspiracy, and a dungeon a player has ventured into -- stay in the
@@ -1123,7 +1123,8 @@ subgameStateFrom starter parent =
       -- all along.
       cmdIds = Set.filter (\oid -> Commander.isCommander oid parent || Vanguard.isVanguard oid parent) (GameState.command parent)
       -- CR 729.2a: each supplementary deck moves in, and startGameFromCards
-      -- shuffles it. The face-up Attractions, planes and schemes stay behind.
+      -- shuffles it. The face-up Attractions, Contraptions, planes and schemes
+      -- stay behind.
       suppIds = supplementaryDeckIds parent
       movedObjects = Map.restrictKeys (GameState.objects parent) (Set.unions [libIds, cmdIds, suppIds])
       -- Invariant: `libIds` here and funnelBack's `oldLibIds` MUST compute the
