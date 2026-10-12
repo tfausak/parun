@@ -119,7 +119,8 @@ spec s registry = Spec.describe s "SpaceSculptor" $ do
 
   -- The +1, read through Combat.pairAllowed, CR 509.1c's "able to block". Bob's
   -- alpha creature may block alice's alpha attacker and his beta one may not;
-  -- before the +1 resolves, both may.
+  -- before the +1 resolves, both may. A creature in no sector is unrestricted
+  -- as an attacker and barred as a blocker.
   Spec.it s "CR 702.158e Space Beleren's +1 lets a creature be blocked only from its own sector" $ do
     (board0, beleren, bears) <- belerenBoard s registry 3
     let (mine, g1) = S.addPermanent bears S.alice board0
@@ -130,7 +131,16 @@ spec s registry = Spec.describe s "SpaceSculptor" $ do
           (_, sectored) = run picks board Engine.settleForPriority
           (_, restricted) = run picks sectored (Activate.activateAbility S.alice beleren plus1 >> Stack.resolveTop >> Engine.settleForPriority)
           able gs blocker = Combat.pairAllowed [bobsAlpha, bobsBeta] [mine] blocker mine gs
+          -- A creature in no sector, placed after the +1 with no settle between,
+          -- so CR 704.5u has not yet given it one: alice's as an attacker, bob's
+          -- as a blocker. The rule's "creatures in each sector" leaves the first
+          -- unrestricted; the second shares no sector with alice's alpha one.
+          (loose, withLoose) = S.addPermanent bears S.alice restricted
+          (bobsLoose, withBoth) = S.addPermanent bears S.bob withLoose
+          ableAgainst attacker blocker = Combat.pairAllowed [bobsAlpha, bobsBeta, bobsLoose] [mine, loose] blocker attacker withBoth
       Spec.assertEqWith s "after the +1, only the alpha creature may block the alpha attacker" (fmap (able restricted) [bobsAlpha, bobsBeta]) [True, False]
+      Spec.assertEqWith s "an attacker in no sector may still be blocked by any creature" (fmap (ableAgainst loose) [bobsAlpha, bobsBeta, bobsLoose]) [True, True, True]
+      Spec.assertEqWith s "a creature in no sector may not block the alpha attacker" (ableAgainst mine bobsLoose) False
       Spec.assertEqWith s "before it, both may" (fmap (able sectored) [bobsAlpha, bobsBeta]) [True, True]
 
 -- Answers every sector prompt from `picks` by the object it names -- the
