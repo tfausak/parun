@@ -3607,13 +3607,15 @@ data Aspect
 everyAspect :: Set Aspect
 everyAspect = Set.fromList [minBound .. maxBound]
 
--- CR 208.1 / 613.4: power and toughness are layer 7's; CR 202.3 reads the
--- printed mana cost, which no Modification writes.
+-- CR 208.1 / 613.4: power and toughness are layer 7's, and CR 105.2's colours
+-- layer 5's (CR 613.1e); CR 202.3 reads the printed mana cost, which no
+-- Modification writes.
 measureReads :: Measure.Measure -> Set Aspect
 measureReads measure = case measure of
   Measure.Power -> Set.singleton PowerA
   Measure.Toughness -> Set.singleton PowerA
   Measure.ManaValue -> Set.empty
+  Measure.ColorCount -> Set.singleton Colors
 
 -- Which aspects a Filter reads. Exhaustive on purpose: a new Filter arm reading
 -- a projected characteristic must be classified here, or CR 613.8a would
@@ -3628,7 +3630,6 @@ filterReads f = case f of
   Filter.Type.HasCardType _ -> Set.singleton Types
   Filter.Type.HasSupertype _ -> Set.singleton Supertypes
   Filter.Type.HasColor _ -> Set.singleton Colors
-  Filter.Type.IsMonocolored -> Set.singleton Colors
   Filter.Type.SharesWithSource trait -> case trait of
     Trait.Color -> Set.singleton Colors
     -- NAMES at both ends, which have no Aspect, HasName's reason; the source's
@@ -3988,7 +3989,6 @@ filterReadsPeers f = case f of
   Filter.Type.HasCardType _ -> False
   Filter.Type.HasSupertype _ -> False
   Filter.Type.HasColor _ -> False
-  Filter.Type.IsMonocolored -> False
   -- The source's traits arrive on the Context -- an owner read off Object.owner
   -- rather than off a projection -- and the candidate's own come from its
   -- partial, so no PEER is projected.

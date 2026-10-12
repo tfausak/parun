@@ -1641,6 +1641,7 @@ measureOf measure = case measure of
   Measure.Power -> power
   Measure.Toughness -> toughness
   Measure.ManaValue -> manaValue
+  Measure.ColorCount -> Just . toInteger . Set.size . colors
 
 -- What a Measures atom's operand reads: a literal, the candidate's own view, or
 -- a number the Context carries, Nothing where the Context carries none.
@@ -1671,7 +1672,6 @@ matches context view predicate = case predicate of
   Filter.HasCardType t -> Set.member t (cardTypes view)
   Filter.HasSupertype s -> Set.member s (supertypes view)
   Filter.HasColor c -> Set.member c (colors view)
-  Filter.IsMonocolored -> Set.size (colors view) == 1
   -- One comparison for every trait: a non-empty INTERSECTION of the
   -- candidate's values with the source's. CR 105.2 and CR 709.4a make colours
   -- and names sets, CR 702.158e asks for a shared sector designation, and an
@@ -2289,7 +2289,6 @@ rewrite pairs predicate = case predicate of
   Filter.HasCardType _ -> predicate
   Filter.HasSupertype _ -> predicate
   Filter.HasColor _ -> predicate
-  Filter.IsMonocolored -> predicate
   Filter.SharesWithSource _ -> predicate
   -- Untouched, and CR 612.2 says so outright: "an effect that changes a color
   -- word or a subtype can't change a card name, even if that name contains a
@@ -3061,7 +3060,6 @@ bakeBound players predicate = case predicate of
   Filter.HasCardType _ -> predicate
   Filter.HasSupertype _ -> predicate
   Filter.HasColor _ -> predicate
-  Filter.IsMonocolored -> predicate
   Filter.SharesWithSource _ -> predicate
   Filter.HasSubtype _ -> predicate
   Filter.HasName _ -> predicate
@@ -3212,6 +3210,7 @@ manaValueThresholds predicate = case predicate of
   Filter.Measures m -> case Measures.operand m of
     Operand.Literal n -> case Measures.measure m of
       Measure.ManaValue -> [n]
+      Measure.ColorCount -> []
       -- Reads power or toughness against the literal, so it bounds nothing.
       Measure.Power -> []
       Measure.Toughness -> []
@@ -3243,7 +3242,6 @@ manaValueThresholds predicate = case predicate of
   Filter.HasCardType _ -> []
   Filter.HasSupertype _ -> []
   Filter.HasColor _ -> []
-  Filter.IsMonocolored -> []
   Filter.SharesWithSource _ -> []
   Filter.HasSubtype _ -> []
   Filter.HasName _ -> []
@@ -3396,7 +3394,6 @@ statesAQuality predicate = case predicate of
   Filter.HasCardType _ -> True
   Filter.HasSupertype _ -> True
   Filter.HasColor _ -> True
-  Filter.IsMonocolored -> True
   Filter.SharesWithSource _ -> True
   Filter.HasSubtype _ -> True
   -- CR 701.23b's "stated quality" at its sharpest -- a named card is the most
@@ -3560,7 +3557,6 @@ readsSourceValues predicate = case predicate of
   Filter.HasCardType _ -> False
   Filter.HasSupertype _ -> False
   Filter.HasColor _ -> False
-  Filter.IsMonocolored -> False
   -- Colours and names, which a printed face carries; not an owner, which a card
   -- outside the game lacks, nor a sector, which CR 702.158b gives only a
   -- permanent.
@@ -3699,7 +3695,6 @@ overBoundSlotsWith f predicate = case predicate of
   Filter.HasCardType _ -> pure predicate
   Filter.HasSupertype _ -> pure predicate
   Filter.HasColor _ -> pure predicate
-  Filter.IsMonocolored -> pure predicate
   Filter.SharesWithSource _ -> pure predicate
   Filter.HasSubtype _ -> pure predicate
   Filter.HasName _ -> pure predicate

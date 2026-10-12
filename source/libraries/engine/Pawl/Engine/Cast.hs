@@ -796,8 +796,9 @@ withOptionalPayments paid candidate =
 -- empty for a player who declared none. A cost each instance pays at most once
 -- is one question for all the spell's instances of it, its answer how many were
 -- paid, recorded as the first that many (Keyword.paymentLimit says why that is
--- no choice); an unlimited one is a question per instance, each answer that
--- instance's own (CR 702.56b, 702.157b).
+-- no choice); an unlimited one Keyword.paidPerInstance names is a question per
+-- instance, each answer that instance's own (CR 702.56b, 702.157b), and any
+-- other is one question for its instances' combined count.
 --
 -- Two conditions per cost, and each is entwineOffer's above:
 --
@@ -836,12 +837,18 @@ announceOptionalCosts modes spending pid sid candidates offers gs =
       perInstance keyword cost paid _ = do
         times <- answer keyword cost paid
         pure (Map.insertWith (flip (<>)) keyword (Seq.singleton times) paid)
+      -- A once-each cost's count is that many instances paid once; an unlimited
+      -- one asked together is one combined count.
+      recorded limit times = case limit of
+        Just _ -> Seq.fromList (List.genericReplicate times 1)
+        Nothing -> Seq.singleton times
       ask paid (keyword, instances) = case Keyword.optionalCost keyword of
-        Just (cost, Nothing) -> Monad.foldM (perInstance keyword cost) paid [1 .. instances]
-        Just (cost, Just _)
+        Just (cost, Nothing)
+          | Keyword.paidPerInstance keyword -> Monad.foldM (perInstance keyword cost) paid [1 .. instances]
+        Just (cost, limit)
           | payable paid cost -> do
               times <- choose keyword (Keyword.paymentLimit instances keyword)
-              pure (Map.insert keyword (Seq.fromList (List.genericReplicate times 1)) paid)
+              pure (Map.insert keyword (recorded limit times) paid)
         _ -> pure paid
    in Map.filter (any (> 0)) <$> Monad.foldM ask Map.empty offers
 

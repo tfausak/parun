@@ -432,7 +432,6 @@ filterNames asking criterion = case criterion of
   Filter.HasCardType _cardType -> False
   Filter.HasSupertype _supertype -> False
   Filter.HasColor _color -> False
-  Filter.IsMonocolored -> False
   Filter.SharesWithSource _trait -> False
   Filter.HasSubtype _subtype -> False
   Filter.HasName _name -> False

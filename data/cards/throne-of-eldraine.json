@@ -32,7 +32,19 @@
                               "type": "And",
                               "value": [
                                 {
-                                  "type": "IsMonocolored"
+                                  "type": "Measures",
+                                  "value": {
+                                    "comparison": {
+                                      "type": "Exactly"
+                                    },
+                                    "measure": {
+                                      "type": "ColorCount"
+                                    },
+                                    "operand": {
+                                      "type": "Literal",
+                                      "value": 1
+                                    }
+                                  }
                                 },
                                 {
                                   "type": "HasChosenColor"

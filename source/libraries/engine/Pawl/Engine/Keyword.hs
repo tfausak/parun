@@ -3616,7 +3616,7 @@ optionalCost keyword = case keyword of
 -- paid, and Pawl.Engine.Cast records the first that many as paid. Under those
 -- five rules each instance triggers on its own payment, so which of identical
 -- instances were paid changes nothing. An unlimited cost is asked per instance
--- instead, since how its payments split is a real choice (CR 702.56b, 702.157b).
+-- where paidPerInstance says its split is a real choice, and once otherwise.
 --
 -- Kicker's and bargain's payoffs, though, link to the PRINTED instance (CR
 -- 702.33e, 702.166c), so a printed kicker beside an identical granted one would
@@ -3631,10 +3631,21 @@ paymentLimit count keyword = case keyword of
   Keyword.Gift _ -> snd =<< optionalCost keyword
   _ -> fmap (* count) (snd =<< optionalCost keyword)
 
+-- CR 702.56b / 702.157b: does each identical instance of this unlimited cost
+-- keep its own payments? Replicate's and squad's triggers each read their own
+-- instance's count, so how the payments split is a choice to ask. Multikicker
+-- states no such rule and its payoffs read the total (CR 702.33c-e), so its
+-- instances are asked together. A wildcard, optionalCost's reason.
+paidPerInstance :: Keyword -> Bool
+paidPerInstance keyword = case keyword of
+  Keyword.Replicate _ -> True
+  Keyword.Squad _ -> True
+  _ -> False
+
 -- One triggered ability per instance of a keyword, `mint` taking its ordinal,
 -- which names that instance's own payments (KeywordDesignator.OfInstance): CR
--- 702.56b, 702.78b, 702.153b, 702.157b and 702.175b's "triggers based on the
--- payments made for it".
+-- 702.56b, 702.78b, 702.153b, 702.157b and 702.175b each have an instance
+-- trigger on its own payment alone.
 perPayment :: Natural -> (Natural -> a) -> [a]
 perPayment count mint = fmap mint [1 .. count]
 
