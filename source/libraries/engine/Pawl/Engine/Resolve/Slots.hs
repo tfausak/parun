@@ -721,6 +721,8 @@ effectObjectRefs effect = case effect of
   Effect.Surveil {} -> []
   Effect.Fateseal {} -> []
   Effect.Clash {} -> []
+  -- The batch CR 702.85b's actions choose from.
+  Effect.AsYouCascade slot -> [ObjectRef.InSlot slot]
   Effect.Explore ref -> [ref]
   Effect.Assemble ref -> Maybe.maybeToList ref
   Effect.ArrangeInLibrary ref -> [ref]
@@ -962,6 +964,7 @@ effectPlayerRefs effect = case effect of
   Effect.Surveil (PlayerQuantity.MkPlayerQuantity ref _) -> [ref]
   Effect.Fateseal (PlayerQuantity.MkPlayerQuantity ref _) -> [ref]
   Effect.Clash {} -> []
+  Effect.AsYouCascade {} -> []
   Effect.Explore {} -> []
   Effect.Assemble {} -> []
   Effect.ArrangeInLibrary {} -> []
@@ -1286,6 +1289,7 @@ slotsOf effect = joinTwo (joinTwo (joinSlots (fmap objectRefSlots (effectObjectR
   Effect.Surveil (PlayerQuantity.MkPlayerQuantity _ quantity) -> quantitySlots quantity
   Effect.Fateseal (PlayerQuantity.MkPlayerQuantity _ quantity) -> quantitySlots quantity
   Effect.Clash {} -> Map.empty
+  Effect.AsYouCascade {} -> Map.empty
   Effect.Explore _ -> Map.empty
   Effect.Assemble _ -> Map.empty
   Effect.ArrangeInLibrary _ -> Map.empty
@@ -2077,6 +2081,7 @@ ownSlotsAreExhaustive effect = case effect of
   Effect.Surveil (PlayerQuantity.MkPlayerQuantity _ quantity) -> Quantity.slotsAreExhaustive quantity
   Effect.Fateseal (PlayerQuantity.MkPlayerQuantity _ quantity) -> Quantity.slotsAreExhaustive quantity
   Effect.Clash {} -> True
+  Effect.AsYouCascade {} -> True
   Effect.Explore {} -> True
   Effect.Assemble {} -> True
   Effect.ArrangeInLibrary {} -> True
@@ -2362,6 +2367,7 @@ readsX =
         Effect.Surveil (PlayerQuantity.MkPlayerQuantity _ quantity) -> Quantity.readsX quantity
         Effect.Fateseal (PlayerQuantity.MkPlayerQuantity _ quantity) -> Quantity.readsX quantity
         Effect.Clash {} -> False
+        Effect.AsYouCascade {} -> False
         Effect.Explore {} -> False
         Effect.Assemble {} -> False
         Effect.ArrangeInLibrary {} -> False
@@ -2559,6 +2565,7 @@ boundSlots effect = case effect of
   Effect.Surveil {} -> Set.empty
   Effect.Fateseal {} -> Set.empty
   Effect.Clash slot -> Set.singleton slot
+  Effect.AsYouCascade {} -> Set.empty
   Effect.Explore {} -> Set.empty
   Effect.Assemble {} -> Set.empty
   Effect.ArrangeInLibrary {} -> Set.empty

@@ -1,0 +1,43 @@
+{
+  "description": "CR 702.85b Averna declined leaves every exiled land for the bottom, and the hit is still offered",
+  "note": "The board of the scenario where Averna puts the Mountain onto the battlefield, differing only in the empty answer.",
+  "board": {
+    "seats": [
+      {
+        "name": "alice",
+        "battlefield": [
+          { "card": "Mountain", "label": "mountain", "ready": true },
+          { "card": "Mountain", "label": "mountain-2", "ready": true },
+          { "card": "Forest", "label": "forest", "ready": true },
+          { "card": "Forest", "label": "forest-2", "ready": true },
+          { "card": "Averna, the Chaos Bloom", "label": "averna", "ready": true }
+        ],
+        "hand": [
+          { "card": "Bloodbraid Elf", "label": "bloodbraid-elf", "ready": true }
+        ],
+        "library": [
+          { "card": "Forest" },
+          { "card": "Hill Giant" },
+          { "card": "Mountain" },
+          { "card": "Goblin Piker" },
+          { "card": "Think Twice" }
+        ]
+      },
+      { "name": "bob" }
+    ],
+    "active": "alice",
+    "step": "PrecombatMain"
+  },
+  "timeline": [
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": { "Cast": { "object": "$bloodbraid-elf", "mana": ["$mountain", "$mountain-2", "$forest", "$forest-2"] } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": { "Answer": { "prompt": "ChooseCardsFromAmong", "with": [] } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": { "Answer": { "prompt": "OfferedCast", "with": { "type": "Exercises" } } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": { "Answer": { "prompt": "Shuffle", "with": ["Mountain#3", "Forest#3", "Hill Giant"] } } }
+  ],
+  "final": [
+    { "Count": { "player": "alice", "zone": "Battlefield", "card": "Goblin Piker", "count": 1 } },
+    { "View": { "of": "Zone", "player": "alice", "zone": "Battlefield", "is": ["$mountain", "$mountain-2", "$forest", "$forest-2", "$averna", "Goblin Piker", "Bloodbraid Elf"] } },
+    { "View": { "of": "Zone", "player": "alice", "zone": "Library", "is": ["Think Twice", "Hill Giant", "Forest#3", "Mountain#3"] } },
+    { "View": { "of": "Zone", "player": "alice", "zone": "Exile", "is": [] } }
+  ]
+}

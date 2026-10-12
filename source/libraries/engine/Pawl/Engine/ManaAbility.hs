@@ -363,6 +363,7 @@ manaProduced effect = case effect of
   Effect.Surveil {} -> Nothing
   Effect.Fateseal {} -> Nothing
   Effect.Clash {} -> Nothing
+  Effect.AsYouCascade {} -> Nothing
   Effect.Explore {} -> Nothing
   Effect.Assemble {} -> Nothing
   Effect.Connive {} -> Nothing
@@ -559,6 +560,7 @@ playerChoice effect = case effect of
   Effect.Surveil {} -> Nothing
   Effect.Fateseal {} -> Nothing
   Effect.Clash {} -> Nothing
+  Effect.AsYouCascade {} -> Nothing
   Effect.Explore {} -> Nothing
   Effect.Assemble {} -> Nothing
   Effect.Connive {} -> Nothing
@@ -808,6 +810,7 @@ movesLibraryCard effect = case effect of
   -- CR 701.30a's second sentence moves the revealed card WITHIN the library, top
   -- to bottom, which is Scry's and Fateseal's answer above and for their reason.
   Effect.Clash {} -> False
+  Effect.AsYouCascade {} -> False
   Effect.Discard {} -> False
   Effect.LoseLife {} -> False
   Effect.GainLife {} -> False

@@ -3324,6 +3324,7 @@ effectIsImpossible resolving source controller legal gs effect = case effect of
   -- CR 701.30 states no precondition: a player with an empty library clashes
   -- anyway, revealing nothing, so nothing here refuses the instruction.
   Effect.Clash {} -> False
+  Effect.AsYouCascade {} -> False
   Effect.Explore {} -> False
   Effect.Connive {} -> False
   -- "Discard THESE cards" names the cards themselves, so a sweep matching none
@@ -6255,6 +6256,34 @@ applyOneEffect runSubgame resolving source controller legal chosen effect = case
   Effect.Clash slot -> do
     won <- clash source controller
     State.modify' (bindAmountSlot resolving source slot won)
+  -- CR 702.85b: each "as you cascade" action the cascading player has, taken
+  -- over the exiled batch before the cast decision. Each is "you may put a
+  -- matching card from among them onto the battlefield tapped", so its choice
+  -- is ChosenCardFromAmong's up-to-one: the empty answer declines, and two
+  -- matching cards are a real choice. The row's SOURCE is the move's, so its
+  -- Filter is read in the row's context and the prompt names the row's
+  -- permanent; `resolving` stays the cascade ability, where the batch is bound.
+  Effect.AsYouCascade slot -> do
+    gs <- State.get
+    Monad.forM_ (PlayerEffect.cascadeActions controller gs) $ \(rowSource, criterion) ->
+      applyOneEffect
+        runSubgame
+        resolving
+        (Maybe.fromMaybe source rowSource)
+        controller
+        legal
+        chosen
+        ( Effect.MoveToZone
+            ( MoveToZone.MkMoveToZone
+                (ObjectRef.ChosenCardFromAmong (ChosenCardFromAmong.MkChosenCardFromAmong slot criterion (HowMany.UpTo (Just (Quantity.Type.Literal 1))) (PlayerRef.Relative PlayerRelation.You)))
+                Zone.Battlefield
+                EntryRiders.defaultValue {EntryRiders.tapped = TapState.Tapped}
+                Nothing
+                Nothing
+                LibraryPlacement.defaultValue
+                Nothing
+            )
+        )
   Effect.Explore ref -> do
     gs <- State.get
     -- CR 608.2c: the set is swept as this instruction is reached; an illegal slot

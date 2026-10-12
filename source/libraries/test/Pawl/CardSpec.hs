@@ -1304,6 +1304,7 @@ ownCounts effect = case effect of
   Effect.Surveil (PlayerQuantity.MkPlayerQuantity _ quantity) -> quantityCounts quantity
   Effect.Fateseal (PlayerQuantity.MkPlayerQuantity _ quantity) -> quantityCounts quantity
   Effect.Clash {} -> []
+  Effect.AsYouCascade {} -> []
   -- No Quantity at all: rule 701.44a's counter is a literal one and its card is
   -- the one on top, so there is no number a card author writes.
   Effect.Explore {} -> []
@@ -1833,6 +1834,7 @@ effectNestedEffects effect = case effect of
   Effect.Surveil {} -> []
   Effect.Fateseal {} -> []
   Effect.Clash {} -> []
+  Effect.AsYouCascade {} -> []
   Effect.Explore {} -> []
   Effect.Assemble {} -> []
   Effect.ArrangeInLibrary {} -> []
@@ -2370,6 +2372,7 @@ effectReplacements effect = case effect of
   Effect.Surveil {} -> []
   Effect.Fateseal {} -> []
   Effect.Clash {} -> []
+  Effect.AsYouCascade {} -> []
   Effect.Explore {} -> []
   Effect.Assemble {} -> []
   Effect.ArrangeInLibrary {} -> []
@@ -2890,6 +2893,7 @@ effectMintedFaces effect = case effect of
   Effect.Surveil {} -> []
   Effect.Fateseal {} -> []
   Effect.Clash {} -> []
+  Effect.AsYouCascade {} -> []
   Effect.Explore {} -> []
   Effect.Assemble {} -> []
   Effect.ArrangeInLibrary {} -> []
@@ -4888,6 +4892,9 @@ playerEffectFilters playerEffect = case playerEffect of
   -- CR 601.3a's Filter half, which is exactly a quality of the spell (Damping
   -- Engine's "artifact, creature, or enchantment spells").
   PlayerEffect.CantCastMatching f -> [f]
+  -- CR 702.85b's quality of the exiled card the row may put onto the
+  -- battlefield (Averna, the Chaos Bloom's "land card").
+  PlayerEffect.PutTappedAsYouCascade f -> [f]
   -- CR 307.5 narrows a MOMENT rather than a class of spell, so there is no
   -- quality here either (Teferi, Mage of Zhalfir).
   PlayerEffect.CastOnlyAtSorcerySpeed -> []
@@ -5828,6 +5835,7 @@ effectFilters effect = case effect of
   Effect.Surveil (PlayerQuantity.MkPlayerQuantity _ quantity) -> frame Unframed (quantityFilters quantity)
   Effect.Fateseal (PlayerQuantity.MkPlayerQuantity _ quantity) -> frame Unframed (quantityFilters quantity)
   Effect.Clash {} -> []
+  Effect.AsYouCascade {} -> []
   -- The ObjectRef's Filter is a position a card author writes, so the lint
   -- reaches it, as PutCounters' does.
   Effect.Explore ref -> frame SourceHostFramed (objectRefFilters ref)

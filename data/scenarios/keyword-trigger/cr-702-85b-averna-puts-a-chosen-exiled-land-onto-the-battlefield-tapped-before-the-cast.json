@@ -1,0 +1,46 @@
+{
+  "description": "CR 702.85b Averna puts the chosen exiled land onto the battlefield tapped, then the hit is still offered and the rest go to the bottom",
+  "note": "Two lands are exiled so the choice is real, and the one chosen is not the first offered. The Mountain stays on the battlefield after the bottoming, so the rest clause does not undo the window's move. The refused Hill Giant is exiled too, so only the row's land filter keeps it out of the choice.",
+  "board": {
+    "seats": [
+      {
+        "name": "alice",
+        "battlefield": [
+          { "card": "Mountain", "label": "mountain", "ready": true },
+          { "card": "Mountain", "label": "mountain-2", "ready": true },
+          { "card": "Forest", "label": "forest", "ready": true },
+          { "card": "Forest", "label": "forest-2", "ready": true },
+          { "card": "Averna, the Chaos Bloom", "label": "averna", "ready": true }
+        ],
+        "hand": [
+          { "card": "Bloodbraid Elf", "label": "bloodbraid-elf", "ready": true }
+        ],
+        "library": [
+          { "card": "Forest" },
+          { "card": "Hill Giant" },
+          { "card": "Mountain" },
+          { "card": "Goblin Piker" },
+          { "card": "Think Twice" }
+        ]
+      },
+      { "name": "bob" }
+    ],
+    "active": "alice",
+    "step": "PrecombatMain"
+  },
+  "timeline": [
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": { "Cast": { "object": "$bloodbraid-elf", "mana": ["$mountain", "$mountain-2", "$forest", "$forest-2"] } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "refuse": { "Answer": { "prompt": "ChooseCardsFromAmong", "with": ["Hill Giant"] } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": { "Answer": { "prompt": "ChooseCardsFromAmong", "with": ["Mountain#3"] } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": { "Answer": { "prompt": "OfferedCast", "with": { "type": "Exercises" } } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": { "Answer": { "prompt": "Shuffle", "with": ["Forest#3", "Hill Giant"] } } }
+  ],
+  "final": [
+    { "Tapped": { "object": "Mountain#3", "tapped": true } },
+    { "Count": { "player": "alice", "zone": "Battlefield", "card": "Goblin Piker", "count": 1 } },
+    { "Count": { "player": "alice", "zone": "Battlefield", "card": "Bloodbraid Elf", "count": 1 } },
+    { "View": { "of": "Zone", "player": "alice", "zone": "Battlefield", "is": ["$mountain", "$mountain-2", "$forest", "$forest-2", "$averna", "Mountain#3", "Goblin Piker", "Bloodbraid Elf"] } },
+    { "View": { "of": "Zone", "player": "alice", "zone": "Library", "is": ["Think Twice", "Hill Giant", "Forest#3"] } },
+    { "View": { "of": "Zone", "player": "alice", "zone": "Exile", "is": [] } }
+  ]
+}

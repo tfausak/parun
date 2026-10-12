@@ -309,6 +309,7 @@ ownQuantities effect = case effect of
   Effect.Surveil (PlayerQuantity.MkPlayerQuantity _ quantity) -> [quantity]
   Effect.Fateseal (PlayerQuantity.MkPlayerQuantity _ quantity) -> [quantity]
   Effect.Clash {} -> []
+  Effect.AsYouCascade {} -> []
   Effect.Explore {} -> []
   Effect.Assemble {} -> []
   Effect.ArrangeInLibrary {} -> []
@@ -1083,6 +1084,7 @@ unpreventableScopeOffends scope playerEffect = case playerEffect of
   PlayerEffect.ActivateLoyaltyAtInstantSpeed _ -> False
   PlayerEffect.CantBeCountered _ -> False
   PlayerEffect.CantCastMatching _ -> False
+  PlayerEffect.PutTappedAsYouCascade _ -> False
   PlayerEffect.CastOnlyAtSorcerySpeed -> False
   PlayerEffect.CantPlayLands _ -> False
   PlayerEffect.CastFrom _ -> False
@@ -1152,6 +1154,7 @@ unpreventablePatternOffends playerEffect = case playerEffect of
   PlayerEffect.ActivateLoyaltyAtInstantSpeed _ -> False
   PlayerEffect.CantBeCountered _ -> False
   PlayerEffect.CantCastMatching _ -> False
+  PlayerEffect.PutTappedAsYouCascade _ -> False
   PlayerEffect.CastOnlyAtSorcerySpeed -> False
   PlayerEffect.CantPlayLands _ -> False
   PlayerEffect.CastFrom _ -> False
@@ -1396,6 +1399,7 @@ effectObjectRefs effect =
         Effect.Surveil {} -> []
         Effect.Fateseal {} -> []
         Effect.Clash {} -> []
+        Effect.AsYouCascade slot -> read_ [ObjectRef.InSlot slot]
         Effect.Explore ref -> read_ [ref]
         Effect.Assemble ref -> read_ (Maybe.maybeToList ref)
         Effect.ArrangeInLibrary ref -> read_ [ref]
