@@ -793,8 +793,8 @@ withOptionalPayments paid candidate =
 -- 702.33a/b/c's kicker costs, CR 702.157a's squad, CR 702.175a's offspring, CR
 -- 702.56a's replicate and CR 702.153a's casualty --
 -- one question per distinct keyword, answered as a count up to the limit across
--- its instances (Keyword.paymentLimit): the record CR 702.33d's
--- designation is made of, and empty for a player who declared none.
+-- its instances (Keyword.paymentLimit): the record CR 702.33d's designation is
+-- made of, and empty for a player who declared none.
 --
 -- Two conditions per cost, and each is entwineOffer's above:
 --
@@ -3127,10 +3127,10 @@ castProposed perform spending pid oid sid face castFrom preparedFor keywordsBefo
           spliceValid = Set.size (Set.fromList spliced) == length spliced && length spliceCosts == length spliced
       -- CR 702.33a's and CR 702.175a's additional costs are payable ONCE per
       -- instance (Keyword.paymentLimit), where rule 702.33c's multikicker and
-      -- rule 702.157a's squad state no limit. An
-      -- answer past a stated limit is text the card does not have, so it rejects
-      -- the cast below rather than being clamped -- Prompt.ChooseX's
-      -- reject-not-repair posture, and for its reason.
+      -- rule 702.157a's squad state no limit. An answer past a stated limit is
+      -- text the card does not have, so it rejects the cast below rather than
+      -- being clamped -- Prompt.ChooseX's reject-not-repair posture, and for its
+      -- reason.
       let overKickerLimit =
             any
               (\(keyword, limit) -> maybe False (Map.findWithDefault 0 keyword paid >) limit)

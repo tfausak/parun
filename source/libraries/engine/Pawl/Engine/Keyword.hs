@@ -3562,8 +3562,9 @@ disguiseCosts keywords =
 
 -- CR 601.2b: the OPTIONAL additional cost this keyword ability lets its spell's
 -- controller pay as they cast it, paired with how many times its rule lets ONE
--- instance be paid (paymentLimit counts the instances) -- Just 1 for kicker (CR 702.33a), offspring (CR 702.175a), casualty (CR
--- 702.153a), bargain (CR 702.166a) and teamwork (CR 702.194a), Nothing for
+-- instance be paid (paymentLimit counts the instances) -- Just 1 for kicker (CR
+-- 702.33a), offspring (CR 702.175a), casualty (CR 702.153a), bargain (CR
+-- 702.166a) and teamwork (CR 702.194a), Nothing for
 -- multikicker (CR 702.33c), squad (CR 702.157a) and replicate (CR 702.56a),
 -- which their rules make payable "any number of times" -- and Nothing for every
 -- other keyword. Rule 702.194a's "any number" counts CREATURES within one
