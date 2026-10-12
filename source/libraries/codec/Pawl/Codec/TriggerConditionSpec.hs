@@ -814,15 +814,13 @@ spec s = Spec.describe s "Pawl.Codec.TriggerCondition" $ do
       TriggerCondition.codec
       (TriggerCondition.SelfBecomesClassLevel (ClassLevel.MkClassLevel 2))
       " {\"type\":\"SelfBecomesClassLevel\",\"value\":2} "
-  -- CR 310.12b. The payload is the counter kind and a zone: "the last" needs no
-  -- number. The stated zone is CR 113.6b's (Veiling Oddity's "while it's
-  -- exiled").
-  Spec.it s "SelfLastCounterRemoved round-trips its kind and zone" $
+  -- CR 310.12b. The payload is the counter kind: "the last" needs no number.
+  Spec.it s "SelfLastCounterRemoved round-trips its kind" $
     Common.assertCodec
       s
       TriggerCondition.codec
-      (TriggerCondition.SelfLastCounterRemoved (SelfCountersRemoved.MkSelfCountersRemoved CounterKind.Time Zone.Exile))
-      " {\"type\":\"SelfLastCounterRemoved\",\"value\":{\"kind\":{\"type\":\"Time\"},\"zone\":{\"type\":\"Exile\"}}} "
+      (TriggerCondition.SelfLastCounterRemoved (SelfCountersRemoved.MkSelfCountersRemoved CounterKind.Time))
+      " {\"type\":\"SelfLastCounterRemoved\",\"value\":{\"kind\":{\"type\":\"Time\"}}} "
   -- Its any-amount mirror, sharing the payload and differing only in the tag --
   -- a DIFFERENT kind here, so a codec that crossed the two arms could not pass
   -- both cases.
@@ -830,7 +828,7 @@ spec s = Spec.describe s "Pawl.Codec.TriggerCondition" $ do
     Common.assertCodec
       s
       TriggerCondition.codec
-      (TriggerCondition.SelfCountersRemoved (SelfCountersRemoved.MkSelfCountersRemoved CounterKind.Loyalty Zone.Battlefield))
+      (TriggerCondition.SelfCountersRemoved (SelfCountersRemoved.MkSelfCountersRemoved CounterKind.Loyalty))
       " {\"type\":\"SelfCountersRemoved\",\"value\":{\"kind\":{\"type\":\"Loyalty\"}}} "
   -- Its per-counter reading (CR 603.2c), the same payload under its own tag,
   -- on a fourth kind.
@@ -838,7 +836,7 @@ spec s = Spec.describe s "Pawl.Codec.TriggerCondition" $ do
     Common.assertCodec
       s
       TriggerCondition.codec
-      (TriggerCondition.SelfCounterRemoved (SelfCountersRemoved.MkSelfCountersRemoved CounterKind.PlusOnePlusOne Zone.Battlefield))
+      (TriggerCondition.SelfCounterRemoved (SelfCountersRemoved.MkSelfCountersRemoved CounterKind.PlusOnePlusOne))
       " {\"type\":\"SelfCounterRemoved\",\"value\":{\"kind\":{\"type\":\"PlusOnePlusOne\"}}} "
   -- CR 603.2c's batch placement, whose payload is an OBJECT rather than a bare
   -- kind: a third counter kind and a Filter, so a codec that crossed this arm

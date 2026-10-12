@@ -1,0 +1,225 @@
+{
+  "faces": [
+    {
+      "manaCost": [
+        {
+          "type": "Generic",
+          "value": 3
+        },
+        {
+          "type": "OfType",
+          "value": {
+            "type": "Colored",
+            "value": {
+              "type": "Blue"
+            }
+          }
+        },
+        {
+          "type": "OfType",
+          "value": {
+            "type": "Colored",
+            "value": {
+              "type": "Red"
+            }
+          }
+        }
+      ],
+      "name": "Summitfest Closing Ceremony",
+      "oracleText": "Starting intensity 3\nCovercast — Whenever you cast another instant or sorcery spell, if five or more mana was spent to cast it, this card intensifies.\nAdd X {U} and X {R}, where X is this spell's intensity.\nDraw a card.",
+      "spell": {
+        "modes": [
+          {
+            "clauses": [
+              {
+                "effects": [
+                  {
+                    "type": "AddMana",
+                    "value": {
+                      "count": {
+                        "type": "Intensity"
+                      },
+                      "production": {
+                        "type": "OfType",
+                        "value": {
+                          "type": "Colored",
+                          "value": {
+                            "type": "Blue"
+                          }
+                        }
+                      }
+                    }
+                  },
+                  {
+                    "type": "AddMana",
+                    "value": {
+                      "count": {
+                        "type": "Intensity"
+                      },
+                      "production": {
+                        "type": "OfType",
+                        "value": {
+                          "type": "Colored",
+                          "value": {
+                            "type": "Red"
+                          }
+                        }
+                      }
+                    }
+                  },
+                  {
+                    "type": "Draw",
+                    "value": {
+                      "player": {
+                        "type": "Relative",
+                        "value": {
+                          "type": "You"
+                        }
+                      },
+                      "quantity": {
+                        "type": "Literal",
+                        "value": 1
+                      }
+                    }
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      "startingIntensity": 3,
+      "triggeredAbilities": [
+        {
+          "condition": {
+            "type": "SpellCast",
+            "value": {
+              "filter": {
+                "type": "And",
+                "value": [
+                  {
+                    "type": "ControlledBy",
+                    "value": {
+                      "type": "You"
+                    }
+                  },
+                  {
+                    "type": "Or",
+                    "value": [
+                      {
+                        "type": "HasCardType",
+                        "value": {
+                          "type": "Instant"
+                        }
+                      },
+                      {
+                        "type": "HasCardType",
+                        "value": {
+                          "type": "Sorcery"
+                        }
+                      }
+                    ]
+                  },
+                  {
+                    "type": "Not",
+                    "value": {
+                      "type": "IsSource"
+                    }
+                  }
+                ]
+              },
+              "scope": {
+                "type": "EachTurn"
+              }
+            }
+          },
+          "functionsFrom": [
+            {
+              "type": "Library"
+            },
+            {
+              "type": "Hand"
+            },
+            {
+              "type": "Graveyard"
+            },
+            {
+              "type": "Battlefield"
+            },
+            {
+              "type": "Stack"
+            },
+            {
+              "type": "Exile"
+            },
+            {
+              "type": "Command"
+            },
+            {
+              "type": "Ante"
+            }
+          ],
+          "intervening": {
+            "type": "Compares",
+            "value": {
+              "comparison": {
+                "type": "AtLeast"
+              },
+              "measured": {
+                "type": "AgainstSlot",
+                "value": {
+                  "quantity": {
+                    "type": "ManaSpent"
+                  },
+                  "slot": "thatSpell"
+                }
+              },
+              "threshold": {
+                "type": "Literal",
+                "value": 5
+              }
+            }
+          },
+          "modal": {
+            "modes": [
+              {
+                "clauses": [
+                  {
+                    "effects": [
+                      {
+                        "type": "ModifyTarget",
+                        "value": {
+                          "duration": {
+                            "type": "Perpetual"
+                          },
+                          "modification": {
+                            "type": "Intensify",
+                            "value": {
+                              "type": "Literal",
+                              "value": 1
+                            }
+                          },
+                          "ref": {
+                            "type": "InSlot",
+                            "value": "self"
+                          }
+                        }
+                      }
+                    ]
+                  }
+                ]
+              }
+            ]
+          }
+        }
+      ],
+      "typeLine": {
+        "types": [
+          {
+            "type": "Instant"
+          }
+        ]
+      }
+    }
+  ]
+}

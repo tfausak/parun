@@ -85,12 +85,14 @@ isVanguard oid gs = maybe False isVanguardFace (Game.faceOf oid gs)
 --
 -- ONLY the unstated ones. CR 113.6b is a limb of rule 113.6's list beside 113.6p
 -- rather than under it, so a row that names the command zone functions there
--- whatever the object is -- Grist, the Hunger Tide as a commander -- and every
--- caller asks this after the ability's own stated set, never before it. The two
--- that can are Pawl.Engine.Projection's static and replacement walks;
--- Pawl.Engine.CombatRestriction.inForce and Pawl.Engine.Event's trigger walk
--- read constructs carrying no stated set to ask (Pawl.Types.CombatRestriction
--- and Pawl.Types.TriggeredAbility have no functionsFrom field).
+-- whatever the object is -- Grist, the Hunger Tide as a commander.
+-- Pawl.Engine.Projection's static and replacement walks ask this after the
+-- ability's own stated set, never before it. Pawl.Engine.Event.Trigger's
+-- stated-zone scan uses it as an exclusion instead, leaving these objects to
+-- `inCommand`, whose `commandCandidate` ignores a stated set: that differs only
+-- for a command-zone object stating some other zone, which no card does.
+-- Pawl.Engine.CombatRestriction.inForce reads a construct carrying no stated
+-- set to ask (Pawl.Types.CombatRestriction has no functionsFrom field).
 --
 -- A CLASSIFICATION and never an identity: the emblem arm reads
 -- Pawl.Types.Source's own tag and the card arm reads the printed card type.

@@ -317,7 +317,7 @@ siegeDefeat =
               OfferCast.controlWhileResolving = False,
               OfferCast.slot = Nothing
             }
-   in Mint.trigger (TriggerCondition.SelfLastCounterRemoved (SelfCountersRemoved.MkSelfCountersRemoved {SelfCountersRemoved.kind = CounterKind.Defense, SelfCountersRemoved.zone = Zone.Battlefield})) (Seq.fromList [exile, offer])
+   in Mint.trigger (TriggerCondition.SelfLastCounterRemoved (SelfCountersRemoved.MkSelfCountersRemoved {SelfCountersRemoved.kind = CounterKind.Defense})) (Seq.fromList [exile, offer])
 
 -- The intrinsic triggered abilities rule 310 gives a permanent, read off the
 -- finished projection. Pawl.Engine.Keyword.triggeredAbilitiesOf's sibling, and

@@ -88,6 +88,7 @@ import qualified Pawl.Types.ManaAdded as ManaAdded
 import qualified Pawl.Types.ManifestedDread as ManifestedDread
 import qualified Pawl.Types.Mentored as Mentored
 import qualified Pawl.Types.Milled as Milled
+import qualified Pawl.Types.Modification as Modification
 import qualified Pawl.Types.Moved as Moved
 import qualified Pawl.Types.Object as Object
 import Pawl.Types.ObjectId (ObjectId)
@@ -1857,6 +1858,62 @@ eventTriggers events gs =
       -- only an exiled card whose ability face yields none forces it.
       exileGrantInForce = Projection.mintingOrTriggeredGrantInForce Keyword.exileTriggeredAbilitiesOf gs
       inExile = Map.fromList (Maybe.mapMaybe exileCandidate (Set.toAscList (GameState.exile gs)))
+      -- CR 113.6b's zones that no source above stands in: a card in a hand, a
+      -- library, the ante zone or the command zone, or a spell on the stack,
+      -- whose triggered ability STATES that it functions there (Summitfest
+      -- Closing Ceremony's covercast). The battlefield, graveyard and exile
+      -- sources need nothing new, since `functionsIn` answers the stated set.
+      --
+      -- ONE STANDING SCAN, `inExile`'s shape and for its reason: the card sits
+      -- in its zone indefinitely and the event it watches names somebody else.
+      -- Gated so the scan does not build a face for every card in every
+      -- library (#1935's cost): Projection.mayStateZone's fold over the printed
+      -- faces first, and a card is projected only when its ability face states
+      -- the zone it is in, or some grantor hands out a triggered ability that
+      -- states a zone (`statedGrantInForce`). That grant limb is a REGRESSION
+      -- FENCE rather than a proof: no card in data/cards grants a triggered
+      -- ability that states its zones, so dropping it leaves the suite green.
+      --
+      -- The command zone's emblems, vanguards and planes are `inCommand`'s
+      -- (CR 113.6p), so they are left out here and the two stay disjoint. A
+      -- spell the event cast is `spellCast`'s too, and a revealed miracle
+      -- `revealedInHand`'s; `candidates` lists both ahead of this, so the
+      -- left bias hands that id their keyword-minted superset.
+      --
+      -- The controller is the OWNER off the stack (CR 113.8's second clause:
+      -- CR 108.4 gives such a card no controller) and the spell's controller on
+      -- it (CR 113.8's first).
+      --
+      -- Not implemented: Arena keeps a covercast trigger from a hidden zone
+      -- hidden from opponents; here it is put on the stack in the open (#1412).
+      statesHere zone = any (Set.member zone . TriggeredAbility.functionsFrom) . Face.triggeredAbilities
+      statedCandidate zone oid = case Game.lookupObject oid gs of
+        Just obj
+          | statedGrantInForce || Projection.mayStateZone (statesHere zone) gs obj,
+            Just face <- Projection.abilityFaceOf oid obj gs,
+            statedGrantInForce || statesHere zone face,
+            not (zone == Zone.Command && Vanguard.functionsFromCommandZone oid gs) ->
+              let pc = Projection.project oid gs
+                  controller = if zone == Zone.Stack then Maybe.fromMaybe (Object.owner obj) (Projection.controllerOf oid gs) else Object.owner obj
+               in case Maybe.mapMaybe (functionsIn (PC.subtypes pc) (PC.delayedAbilities pc) zone) (PC.triggeredAbilities pc) of
+                    [] -> Nothing
+                    abilities -> Just (oid, (controller, abilities))
+        _ -> Nothing
+      statedGrantInForce =
+        Projection.grantInForce
+          ( \m -> case m of
+              Modification.GainAbility (GrantedAbility.Triggered ability) -> not (Set.null (TriggeredAbility.functionsFrom ability))
+              _ -> False
+          )
+          gs
+      inStatedZones =
+        Map.fromList
+          ( Projection.foldZoneCards GameState.hand (Maybe.maybeToList . statedCandidate Zone.Hand) gs
+              <> Projection.foldZoneCards GameState.library (Maybe.maybeToList . statedCandidate Zone.Library) gs
+              <> Maybe.mapMaybe (statedCandidate Zone.Stack) (GameState.stack gs)
+              <> Maybe.mapMaybe (statedCandidate Zone.Command) (Set.toAscList (GameState.command gs))
+              <> Maybe.mapMaybe (statedCandidate Zone.Ante) (Set.toAscList (GameState.ante gs))
+          )
       -- CR 702.35a's SECOND ability, for the card its first ability exiled:
       -- minted off the madness ability the discard RECORDED as applied
       -- (Discarded.madness), `spellCast`'s event scope, and not off the exiled
@@ -1884,9 +1941,9 @@ eventTriggers events gs =
       -- find the caster rather than falling back to the owner. The narrower scope
       -- is what the WORK asks for -- SelfCast is the only condition
       -- zonesTriggeredFrom puts on the stack and it matches no other event, so a
-      -- standing scan of every spell would answer alike at more cost. A future
-      -- condition that functions on the stack and watches some other event is
-      -- what would widen this.
+      -- standing scan of every spell would answer alike at more cost. An
+      -- ability that states it functions on the stack (CR 113.6b) and watches
+      -- some other event is `inStatedZones`' instead.
       --
       -- The KEYWORD-MINTED abilities join the printed ones and are NOT filtered by
       -- `functionsIn`, `exileCandidate`'s split above and for its reason: CR
@@ -2034,10 +2091,9 @@ eventTriggers events gs =
       -- Scoped to the reveal EVENT rather than computed once over every hand,
       -- which is `cycledCard`'s and `spellCast`'s shape rather than `inExile`'s.
       -- The reason is the rule: rule 702.94a's trigger fires on a reveal and
-      -- nothing else, and no ability in the pool sits in a hand watching for
-      -- something no event names -- where a haunting card sits in exile
-      -- indefinitely and only a standing scan could find it. A standing walk of
-      -- every hand would answer alike at the cost of a scan per event.
+      -- nothing else. An ability that states it functions in a hand (CR
+      -- 113.6b) watches events that name somebody else, so `inStatedZones`'
+      -- standing walk is its source instead.
       --
       -- FILTERED BY `functionsIn`, like `inExile` and unlike the command zone's
       -- emblem source: the rule at issue here IS CR 113.6k. Without it a drawn
@@ -2188,9 +2244,10 @@ eventTriggers events gs =
       -- emblem into the command zone, and no rule or effect in pawl moves one
       -- anywhere else -- Event.createEmblem is its only writer. Nor does
       -- `inExile`: CR 400.1 makes exile a zone of its own, and an id in it is in
-      -- no other. Nor does `revealedInHand`: CR 701.20b leaves the revealed card
-      -- in the hand, which no other source reads.
-      candidates onBattlefield event later same graveyard = Map.toAscList (Map.unions [onBattlefield, leftBattlefield event, later, same, cycledCard event, spellCast event, revealedInHand event, graveyard, inCommand, Map.unionWith (\(c, a) (_, b) -> (c, a <> b)) inExile (exiledForMadness event)])
+      -- no other. `revealedInHand` and `spellCast` overlap `inStatedZones`, which
+      -- comes last so the bias hands them the id: each offers the stated
+      -- abilities the scan would, plus its keyword-minted ones.
+      candidates onBattlefield event later same graveyard = Map.toAscList (Map.unions [onBattlefield, leftBattlefield event, later, same, cycledCard event, spellCast event, revealedInHand event, graveyard, inCommand, Map.unionWith (\(c, a) (_, b) -> (c, a <> b)) inExile (exiledForMadness event), inStatedZones])
       scanOne board later same graveyard event = concatMap (forOne board event) (candidates (onBattlefieldOf board) event later same graveyard)
       -- The battlefield reading is per GROUP and so is hoisted out of the block:
       -- every event in one group happened at the same time, so they share it. A
@@ -2353,17 +2410,22 @@ zonesFunctionedIn subtypes delayed ability = conditionZones subtypes delayed abi
 -- `zonesFunctionedIn`'s answer for one condition of the ability, which may be
 -- a disjunct of its AnyOf: the effect's pin is the ability's, the exemption
 -- the condition's own.
+--
+-- CR 113.6b ahead of all of it: an ability that states its zones functions
+-- only there, whatever its conditions or its effect would otherwise say.
 conditionZones :: Set.Set Subtype.Subtype -> Map.Map AbilityName.AbilityName (TriggeredAbility.TriggeredAbility Card (GrantedAbility.GrantedAbility Card)) -> TriggeredAbility.TriggeredAbility Card (GrantedAbility.GrantedAbility Card) -> TriggerCondition -> Set.Set Zone
-conditionZones subtypes delayed ability =
-  let pinned = Maybe.listToMaybe (Maybe.mapMaybe (EffectZone.zoneFunctionedFrom (selfNamingSlots (TriggeredAbility.condition ability)) delayed) (Modal.allEffects (TriggeredAbility.modal ability)))
-      exempted c zone = (Set.member Subtype.Aura subtypes && enchantedObjectLeaves c) || conditionPutsSelfInto c zone
-      zonesOf c = case c of
-        -- The empty list keeps zonesTriggeredFrom's own reading.
-        TriggerCondition.AnyOf cs@(_ : _) -> Set.unions (fmap zonesOf cs)
-        _ -> case pinned of
-          Just zone | not (exempted c zone) -> Set.singleton zone
-          _ -> zonesTriggeredFrom c
-   in zonesOf
+conditionZones subtypes delayed ability
+  | not (Set.null (TriggeredAbility.functionsFrom ability)) = const (TriggeredAbility.functionsFrom ability)
+  | otherwise =
+      let pinned = Maybe.listToMaybe (Maybe.mapMaybe (EffectZone.zoneFunctionedFrom (selfNamingSlots (TriggeredAbility.condition ability)) delayed) (Modal.allEffects (TriggeredAbility.modal ability)))
+          exempted c zone = (Set.member Subtype.Aura subtypes && enchantedObjectLeaves c) || conditionPutsSelfInto c zone
+          zonesOf c = case c of
+            -- The empty list keeps zonesTriggeredFrom's own reading.
+            TriggerCondition.AnyOf cs@(_ : _) -> Set.unions (fmap zonesOf cs)
+            _ -> case pinned of
+              Just zone | not (exempted c zone) -> Set.singleton zone
+              _ -> zonesTriggeredFrom c
+       in zonesOf
 
 -- Which slots name "the object it's on" for CR 113.6m, given what the ability
 -- watches. CR 113.7a's source slot always; CR 400.7e's `became` as well when the
@@ -2486,10 +2548,13 @@ conditionPutsSelfInto condition zone = case condition of
   _ -> False
 
 -- CR 113.6, asked of one zone and one triggered ability: does it function from
--- there? Three sentences of that rule in precedence order, each read per
+-- there? Four sentences of that rule in precedence order, each read per
 -- condition by `zonesFunctionedIn` above.
 --
--- CR 113.6m first, because it is the only one that can name a zone the condition
+-- CR 113.6b first: zones the ability states (TriggeredAbility.functionsFrom)
+-- are the whole answer, for every condition alike.
+--
+-- CR 113.6m next, because it is the only one that can name a zone the condition
 -- knows nothing about -- Squee, Goblin Nabob's "at the beginning of your upkeep"
 -- triggers perfectly well from the battlefield, and only "return this card from
 -- your graveyard" says otherwise. "Functions ONLY in that zone" is what makes
@@ -2893,13 +2958,13 @@ zonesTriggeredFrom cond =
         -- chapter ability functions from the battlefield alone.
         TriggerCondition.SelfCountersReached {} -> battlefield
         TriggerCondition.SelfBecomesClassLevel _ -> battlefield
-        -- CR 113.6b: the zone the ability states, Benalish Commander's "while
-        -- it's exiled"; the battlefield, CR 113.6's default, when it states
-        -- none. Pawl.SpecialActionSpec's suspended Benalish Commander proves
-        -- the exile answer.
-        TriggerCondition.SelfLastCounterRemoved removal -> Set.singleton (SelfCountersRemoved.zone removal)
-        TriggerCondition.SelfCountersRemoved removal -> Set.singleton (SelfCountersRemoved.zone removal)
-        TriggerCondition.SelfCounterRemoved removal -> Set.singleton (SelfCountersRemoved.zone removal)
+        -- CR 113.6's default. Benalish Commander's "while it's exiled" is the
+        -- ability stating its zone (TriggeredAbility.functionsFrom, CR 113.6b),
+        -- which `conditionZones` reads ahead of this; Pawl.SpecialActionSpec's
+        -- suspended Benalish Commander proves the exile answer.
+        TriggerCondition.SelfLastCounterRemoved _ -> battlefield
+        TriggerCondition.SelfCountersRemoved _ -> battlefield
+        TriggerCondition.SelfCounterRemoved _ -> battlefield
         -- The battlefield, every counter mirror's answer: a permanent takes CR 122.6
         -- counters there, and these conditions' bearers are bystanders watching from
         -- it.

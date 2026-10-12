@@ -2453,9 +2453,9 @@ everyTriggerCondition =
     TriggerCondition.PlayerLosesLife PlayerRelation.Opponent,
     TriggerCondition.SelfCountersReached (SelfCountersReached.MkSelfCountersReached CounterKind.Lore 1),
     TriggerCondition.SelfBecomesClassLevel (ClassLevel.MkClassLevel 2),
-    TriggerCondition.SelfLastCounterRemoved (SelfCountersRemoved.MkSelfCountersRemoved CounterKind.Defense Zone.Battlefield),
-    TriggerCondition.SelfCountersRemoved (SelfCountersRemoved.MkSelfCountersRemoved CounterKind.Loyalty Zone.Battlefield),
-    TriggerCondition.SelfCounterRemoved (SelfCountersRemoved.MkSelfCountersRemoved CounterKind.PlusOnePlusOne Zone.Battlefield),
+    TriggerCondition.SelfLastCounterRemoved (SelfCountersRemoved.MkSelfCountersRemoved CounterKind.Defense),
+    TriggerCondition.SelfCountersRemoved (SelfCountersRemoved.MkSelfCountersRemoved CounterKind.Loyalty),
+    TriggerCondition.SelfCounterRemoved (SelfCountersRemoved.MkSelfCountersRemoved CounterKind.PlusOnePlusOne),
     TriggerCondition.PermanentsGetCounters (CounterPlacement.MkCounterPlacement CounterKind.MinusOneMinusOne (Filter.Type.And [])),
     TriggerCondition.PermanentGetsCounters (CounterPlacement.MkCounterPlacement CounterKind.MinusOneMinusOne (Filter.Type.And [])),
     -- BOTH scopes, unlike StepBegins' one above: the TurnScope is new on this
