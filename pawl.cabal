@@ -1217,6 +1217,8 @@ library codec
     Pawl.Codec.SetPowerToughnessSpec
     Pawl.Codec.ShownCards
     Pawl.Codec.ShownCardsSpec
+    Pawl.Codec.ShownComponent
+    Pawl.Codec.ShownComponentSpec
     Pawl.Codec.Shows
     Pawl.Codec.ShowsSpec
     Pawl.Codec.ShuffleIntoLibrary
@@ -2685,6 +2687,7 @@ library types
     Pawl.Types.SetOwner
     Pawl.Types.SetPowerToughness
     Pawl.Types.ShownCards
+    Pawl.Types.ShownComponent
     Pawl.Types.Shows
     Pawl.Types.ShuffleIntoLibrary
     Pawl.Types.Sickness

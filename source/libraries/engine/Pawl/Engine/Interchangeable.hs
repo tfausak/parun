@@ -309,7 +309,7 @@ continuousNames oid gs row = case row of
 -- runtime id, exactly as a printed card does.
 copyNames :: ObjectId -> ActiveCopy.ActiveCopy -> Bool
 copyNames oid row = case row of
-  ActiveCopy.MkActiveCopy source _timestamp expiry copied _snapshot ->
+  ActiveCopy.MkActiveCopy source _timestamp expiry copied _snapshot _turned ->
     source == oid || Mentions.expiryNames (unread oid) expiry || Set.member oid copied
 
 playerEffectRowNames :: ObjectId -> ActivePlayerEffect.ActivePlayerEffect -> Bool

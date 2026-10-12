@@ -83,6 +83,7 @@ import qualified Pawl.Types.Prompt as Prompt
 import qualified Pawl.Types.Quantity as Quantity
 import qualified Pawl.Types.RangeOfInfluence as RangeOfInfluence
 import qualified Pawl.Types.Recipient as Recipient
+import qualified Pawl.Types.ShownComponent as ShownComponent
 import qualified Pawl.Types.SideDeck as SideDeck
 import qualified Pawl.Types.SlotName as SlotName
 import qualified Pawl.Types.Source as Source
@@ -321,7 +322,7 @@ printingOfObject oid gs = case fmap Object.source (lookupObject oid gs) of
   -- CR 730.2a: "a merged permanent has only the characteristics of its topmost
   -- component", so the head of the component list is the printing every
   -- characteristic read of a merged permanent resolves through.
-  Just (Source.OfMerge components) -> printingOf (printingOfComponent (NonEmpty.head components)) gs
+  Just (Source.OfMerge components) -> printingOf (printingOfComponent (ShownComponent.component (NonEmpty.head components))) gs
   Just (Source.OfToken pid) -> printingOf pid gs
   Just (Source.OfAbility _) -> Nothing
   Just (Source.OfTrigger _) -> Nothing
@@ -943,7 +944,7 @@ cardOfSource gs mSource = case mSource of
     -- reader past this point needs to know nothing about merging. The rest are
     -- read by `componentsOf` below and -- for CR 702.140e's added abilities --
     -- by Pawl.Engine.Projection.View.withMergedAbilities.
-    Source.OfMerge components -> cardOfPrinting (printingOfComponent (NonEmpty.head components)) gs
+    Source.OfMerge components -> cardOfPrinting (printingOfComponent (ShownComponent.component (NonEmpty.head components))) gs
     Source.OfToken pid -> cardOfPrinting pid gs
     Source.OfAbility _ -> Nothing
     Source.OfTrigger _ -> Nothing
@@ -979,7 +980,7 @@ printingIdOfSource :: Source.Source -> Maybe PrintingId.PrintingId
 printingIdOfSource source = case source of
   Source.OfCard pid -> Just pid
   Source.OfMeld meld -> Just (MeldSource.result meld)
-  Source.OfMerge components -> Just (printingOfComponent (NonEmpty.head components))
+  Source.OfMerge components -> Just (printingOfComponent (ShownComponent.component (NonEmpty.head components)))
   Source.OfToken pid -> Just pid
   Source.OfAbility _ -> Nothing
   Source.OfTrigger _ -> Nothing
@@ -1025,7 +1026,7 @@ componentsOf source = case source of
   Source.OfMeld meld -> meldCardComponents meld
   -- CR 730.2, in top-to-bottom order, which is the order CR 730.3a's arrangement
   -- prompt offers and CR 702.140e's ability fold reads.
-  Source.OfMerge components -> foldMap cardComponentsOf (Seq.fromList (NonEmpty.toList components))
+  Source.OfMerge components -> foldMap (cardComponentsOf . ShownComponent.component) (Seq.fromList (NonEmpty.toList components))
   Source.OfCard _ -> Seq.empty
   Source.OfToken _ -> Seq.empty
   Source.OfAbility _ -> Seq.empty
@@ -1181,7 +1182,7 @@ resolveFaceFor mObj card = case mObj of
   Just obj
     | Just half <- copiedHalfOf obj ->
         half
-  _ -> resolveFace (mObj >>= Object.face) card
+  _ -> resolveFace (mObj >>= shownFace) card
 
 -- CR 709.4a: the NAMES the object shows, the plural companion of resolveFaceFor
 -- above -- one arm for each of that function's, in the same order, because the
@@ -1213,7 +1214,7 @@ namesFor mObj card = case mObj of
   Just obj
     | Just half <- copiedHalfOf obj ->
         Set.singleton (Face.name half)
-  _ -> case mObj >>= Object.face of
+  _ -> case mObj >>= shownFace of
     -- CR 709.4 / 712.8a / 715.4: the layout's own view, whose names are its
     -- contributing halves'.
     Nothing -> Card.combinedNames card
@@ -1357,7 +1358,7 @@ stampHalfNamed name stamp =
 -- (Object.face) singles out, the one a spell cast off castableFacesOf above has.
 copiedHalfOf :: Object.Object -> Maybe (Face Card)
 copiedHalfOf obj = do
-  name <- Object.face obj
+  name <- shownFace obj
   stamp <- copyStampOf obj
   stampHalfNamed name stamp
 
@@ -1542,7 +1543,7 @@ manaCostFacesOf oid gs = case fmap Object.facing (lookupObject oid gs) of
 -- `printingOfComponent` answers with.
 mergeComponentsOf :: Source.Source -> Seq.Seq PrintingId.PrintingId
 mergeComponentsOf source = case source of
-  Source.OfMerge components -> fmap printingOfComponent (Seq.fromList (NonEmpty.toList components))
+  Source.OfMerge components -> fmap (printingOfComponent . ShownComponent.component) (Seq.fromList (NonEmpty.toList components))
   Source.OfMeld _ -> Seq.empty
   -- No copy of a card pawl mints is on the battlefield to be merged INTO: CR
   -- 722.3c's stays in exile, and CR 707.12's producers in data/cards/ copy
@@ -1849,8 +1850,9 @@ isDoubleFacedPermanent oid gs = case lookupObject oid gs of
 -- gate because that rule turns a permanent over from a STATIC ability rather than
 -- from an ability on the stack.
 --
--- ONE FIELD, in place (two for a merged permanent, `turnedTo` below), because
--- CR 712.18 says the permanent is not a new object:
+-- ONE FIELD, in place (for a merged permanent its components' faces and its
+-- merge stamps, `turnedObject` below), because CR 712.18 says the permanent is
+-- not a new object:
 -- "when a double-faced permanent transforms or converts, it doesn't become a new
 -- object. Any effects that applied to that permanent will continue to apply to
 -- it." So no id is minted and damage, counters and attachments ride through
@@ -1881,27 +1883,55 @@ isDoubleFacedPermanent oid gs = case lookupObject oid gs of
 --
 -- CR 613.7k: the stickers on it take new timestamps right after its own. A
 -- regression fence: no test transforms a stickered permanent.
+--
+-- A MERGED permanent takes neither: CR 613.7g stamps a double-faced permanent,
+-- and CR 730.2i says a merged permanent is not one (`takesTurnStamp`).
 turnFaceOver :: Timestamp.Timestamp -> ObjectId -> GameState -> GameState
-turnFaceOver now oid gs = case (turnsTo oid gs, lookupObject oid gs) of
-  (Just name, Just object) ->
-    let (ts, stamped) = freshTimestamp gs
-     in restampStickers oid stamped {GameState.objects = Map.insert oid (turnedTo name object) {Object.turnedOverAt = Just now, Object.timestamp = ts} (GameState.objects stamped)}
-  _ -> gs
+turnFaceOver now oid gs = case turnsTo oid gs of
+  Just turned
+    | takesTurnStamp oid gs ->
+        let (ts, stamped) = freshTimestamp gs
+         in restampStickers oid stamped {GameState.objects = Map.insert oid turned {Object.turnedOverAt = Just now, Object.timestamp = ts} (GameState.objects stamped)}
+    | otherwise -> (turnStoredCopies oid gs) {GameState.objects = Map.insert oid turned {Object.turnedOverAt = Just now} (GameState.objects gs)}
+  Nothing -> gs
 
--- CR 701.27a's write on the object itself: show `name`, and for a merged
--- permanent make its merge's turned reading the current one (CR 730.2i,
--- Binding.turnMergeCopy), since its characteristics come off that stamp rather
--- than off Object.face.
-turnedTo :: CardName.CardName -> Object -> Object
-turnedTo name object = object {Object.face = Just name, Object.bindings = Binding.turnMergeCopy (Object.bindings object)}
+-- CR 613.7g: does turning this permanent over give it a new timestamp? Every
+-- double-faced permanent's does, and a merged permanent's does not, CR 730.2i
+-- saying it is not one. Pawl.MutateSpec's "CR 730.2i each double-faced
+-- component of a merged permanent turns over on its own" proves it.
+takesTurnStamp :: ObjectId -> GameState -> Bool
+takesTurnStamp oid gs = case fmap Object.source (lookupObject oid gs) of
+  Just (Source.OfMerge _) -> False
+  _ -> True
 
--- `turnedTo` as a counterfactual board, with no battlefield gate and no stamp:
--- this object with its double-faced card turned over, or the board unchanged.
--- Pawl.Engine.Event.merge's CR 730.2i reading asks it of both sides.
+-- `turnFaceOver`'s write as a counterfactual board, with no battlefield gate and
+-- no stamp: this object with its double-faced card turned over, or the board
+-- unchanged. Pawl.Engine.Event.merge's CR 730.2i reading asks it of both sides.
+--
+-- Asked of the object FACE UP, the posture of the layer-1a read it feeds
+-- (Pawl.Engine.Projection.View.copiableCharacteristicsFaceUp): a face-down
+-- merge target turns face up before it can transform (CR 730.2f), so CR
+-- 712.15a's refusal in `turnedObject` is not this reading's. Pawl.MutateSpec's
+-- "CR 730.2i a merged permanent that was face down transforms once turned face
+-- up" proves it.
 withFaceTurned :: ObjectId -> GameState -> GameState
-withFaceTurned oid gs = case lookupObject oid gs of
-  Just object | Just name <- turnedFace object gs -> gs {GameState.objects = Map.insert oid (turnedTo name object) (GameState.objects gs)}
-  _ -> gs
+withFaceTurned oid gs =
+  let up = gs {GameState.objects = Map.adjust (\o -> o {Object.facing = Facing.FaceUp}) oid (GameState.objects gs)}
+   in case lookupObject oid up >>= \object -> turnedObject object up of
+        Just turned -> (turnStoredCopies oid up) {GameState.objects = Map.insert oid turned (GameState.objects up)}
+        Nothing -> up
+
+-- CR 730.2i under a stored copy row: a merge applied over the row turns with
+-- the permanent, so each row covering `oid` that carries a turned reading
+-- swaps it in, `Binding.turnMergeCopy`'s swap one carrier over. Only a merge
+-- writes that reading (Pawl.Engine.Event.merge), on a row carved out for its
+-- permanent alone, so no other object's row is touched.
+turnStoredCopies :: ObjectId -> GameState -> GameState
+turnStoredCopies oid gs =
+  let turn row = case ActiveCopy.turned row of
+        Just turned | Set.member oid (ActiveCopy.objects row) -> row {ActiveCopy.snapshot = turned, ActiveCopy.turned = Just (ActiveCopy.snapshot row)}
+        _ -> row
+   in gs {GameState.copyEffects = fmap turn (GameState.copyEffects gs)}
 
 -- CR 710.2 over ONE object: set its flipped status, or leave the map exactly as
 -- it was. `flipsOver` below is the whole membership question, asked rather than
@@ -1998,11 +2028,11 @@ supersedeStoredCopies oids gs =
   gs {GameState.copyEffects = fmap (\row -> row {ActiveCopy.objects = Set.difference (ActiveCopy.objects row) oids}) (GameState.copyEffects gs)}
 
 -- | CR 710.1b / 707.3: do this object's COPIABLE values include a flip card's
--- alternative half? Its copy snapshot's answer when it has one -- the merge's
--- flipped reading (CR 730.2h) or the copy's (PC.flipped) -- and its printed
--- card's otherwise (faceUpCopiable). A copy of anything else has none whatever
--- card is printed underneath it, and a stored copy effect's row replaces the
--- merge's flipped reading as it does the merge's stamp (Binding.setCopy):
+-- alternative half? Its copy snapshot's answer when it has one -- the flipped
+-- reading it nests as PC.flipped, a merge's (CR 730.2h) or a copy's -- and its
+-- printed card's otherwise (faceUpCopiable). A copy of anything else has none
+-- whatever card is printed underneath it, and a stored copy effect's row
+-- replaces the merge's stamp, flipped reading and all (Binding.setCopy):
 -- Pawl.MutateSpec's "CR 707.3 Mirrorweave makes a flipped merged permanent a
 -- copy of a creature with no flip half" proves it.
 --
@@ -2011,7 +2041,7 @@ supersedeStoredCopies oids gs =
 hasFlipHalf :: ObjectId -> GameState -> Bool
 hasFlipHalf oid gs = Maybe.isJust (faceUpCopiable flipHalf oid gs)
   where
-    flipHalf obj = copiableOf (\stamp -> Monad.void (Binding.flippedCopyOf (Object.bindings obj) Applicative.<|> PC.flipped stamp)) (Monad.void . Card.flippedFace) obj
+    flipHalf = copiableOf (Monad.void . PC.flipped) (Monad.void . Card.flippedFace)
 
 -- CR 110.5: this board with `oid`'s flipped status set to `status`, and no other
 -- change. `flipPermanent`'s write, and the counterfactual board
@@ -2020,33 +2050,42 @@ hasFlipHalf oid gs = Maybe.isJust (faceUpCopiable flipHalf oid gs)
 withFlipped :: Bool -> ObjectId -> GameState -> GameState
 withFlipped status oid gs = gs {GameState.objects = Map.adjust (\o -> o {Object.flipped = status}) oid (GameState.objects gs)}
 
--- | CR 701.27a asked rather than performed: the face this permanent WOULD turn
--- to, or Nothing where the turn is declined. `turnFaceOver` above is the only
--- performer and asks this, so the four ways nothing happens are stated once, and
--- none of them is an error:
+-- | CR 701.27a asked rather than performed: this permanent as it WOULD be once
+-- turned over, or Nothing where the turn is declined. `turnFaceOver` above is
+-- the only performer and asks this, so the five ways nothing happens are stated
+-- once, and none of them is an error:
 --
 --   * the id names nothing on the BATTLEFIELD. CR 701.27a transforms a
 --     PERMANENT, which CR 110.1 makes an object on the battlefield.
 --   * the id names nothing at all, or nothing with a card behind it (CR 113.7a).
 --   * Card.turnedOver declines -- CR 701.27c's card that is not double-faced,
---     CR 701.27d's instant or sorcery face.
+--     CR 701.27d's instant or sorcery face -- for the card, or for every
+--     component of a merged permanent (CR 730.2i).
 --   * CR 712.4c / 712.9: the permanent is melded, and so neither transformable
 --     nor convertible.
+--   * CR 712.15a: the permanent is face down.
 --
 -- Read ahead of the act by every road that restamps a batch, which must know
 -- which of the ids it swept will actually take a CR 613.7m stamp before it asks
 -- their controller to order them (Pawl.Engine.Restamp.order): a permanent that
 -- declines the turn takes no stamp and so is no part of that choice.
-turnsTo :: ObjectId -> GameState -> Maybe CardName.CardName
+turnsTo :: ObjectId -> GameState -> Maybe Object
 turnsTo oid gs
   | not (Set.member oid (GameState.battlefield gs)) = Nothing
-  | otherwise = lookupObject oid gs >>= \object -> turnedFace object gs
+  | otherwise = lookupObject oid gs >>= \object -> turnedObject object gs
 
--- `turnsTo` without its battlefield gate: the face this object's double-faced
--- card would turn to. `faceCardOf` below is the card, so a merged permanent
--- turns its double-faced component whichever component is topmost (CR 730.2i).
-turnedFace :: Object -> GameState -> Maybe CardName.CardName
-turnedFace object gs
+-- `turnsTo` without its battlefield gate: this object with its double-faced card
+-- turned over, its Object.face naming the face it would show.
+--
+-- CR 730.2i for a merged permanent: "transforming or converting that permanent
+-- causes each of those double-faced components to turn so that its other face
+-- is up", so each component turns from the face IT shows, the pile turns if any
+-- component does, and the merge's turned reading becomes the current one
+-- (Binding.turnMergeCopy), since its characteristics come off that stamp.
+-- Pawl.MutateSpec's "CR 730.2i each double-faced component of a merged
+-- permanent turns over on its own" proves it.
+turnedObject :: Object -> GameState -> Maybe Object
+turnedObject object gs
   -- CR 712.4c: "Unlike other double-faced cards, meld cards cannot be
   -- transformed or converted. Any instructions to do so are ignored", and CR
   -- 712.9 says it from the permanent's side. Asked of the OBJECT here, where
@@ -2070,40 +2109,75 @@ turnedFace object gs
   -- card would allow", which melds into a double-faced card -- card data the
   -- opcode carries -- so that this guard is the only thing refusing.
   | not (Seq.null (meldComponentsOf (Object.source object))) = Nothing
-  | otherwise = faceCardOf object gs >>= Card.turnedOver (Object.face object)
+  -- CR 712.15a: "while face down, a double-faced permanent can't transform or
+  -- convert", and a face-down merged permanent's components are face down with
+  -- it (CR 730.2f). Pawl.TransformSpec's "CR 712.15a Moonmist does not
+  -- transform a face-down Thallid that Maskwood Nexus made a Human" proves it.
+  | Facing.isFaceDown (Object.facing object) = Nothing
+  | otherwise = case Object.source object of
+      Source.OfMerge components ->
+        let turns = fmap (\shown -> (shown, componentTurnsTo shown gs)) components
+            turnOne (shown, turned) = maybe shown (\name -> shown {ShownComponent.face = Just name}) turned
+         in if all (Maybe.isNothing . snd) turns
+              then Nothing
+              else Just object {Object.source = Source.OfMerge (fmap turnOne turns), Object.bindings = Binding.turnMergeCopy (Object.bindings object)}
+      source -> cardOfSource gs (Just source) >>= Card.turnedOver (Object.face object) >>= \name -> Just object {Object.face = Just name}
 
--- The card Object.face names a face of: the object's own card (cardOf), and for
--- a merged permanent its double-faced component, which need not be the topmost
--- one (CR 730.2i). Printed cards, `turnsTo`'s footing. A melded component is
--- its two meld cards here (`componentsOf`), which Card.turnedOver refuses (CR
--- 712.4c); a melded permanent is not merged, and keeps its combined face -- a
--- regression fence, since no printed combined face is double-faced.
+-- The face one component of a merged permanent would turn to (CR 730.2i), off
+-- its printed card, `turnsTo`'s footing. Nothing for a melded component, which
+-- CR 712.4c keeps from turning -- a regression fence, since no printed combined
+-- face is double-faced.
 --
--- Not implemented: a face per component. Object.face is one field, so a merged
--- permanent with two double-faced components shows one face for both (#3614).
-faceCardOf :: Object -> GameState -> Maybe Card
-faceCardOf object gs =
-  let source = Object.source object
-      merged = if Seq.null (mergeComponentsOf source) then Seq.empty else componentsOf source
-      components = Maybe.mapMaybe (cardOfSource gs . Just . sourceOfComponent) (Foldable.toList merged)
-   in case List.find Card.isDoubleFaced components of
-        Just card -> Just card
-        Nothing -> cardOfSource gs (Just source)
+-- Not implemented: a status per component, so a face-down double-faced
+-- component under a face-up topmost one turns over against CR 712.15a (#5040).
+componentTurnsTo :: ShownComponent.ShownComponent -> GameState -> Maybe CardName.CardName
+componentTurnsTo shown gs = case ShownComponent.component shown of
+  MergeComponent.OfMeld _ -> Nothing
+  component -> cardOfSource gs (Just (sourceOfComponent component)) >>= Card.turnedOver (ShownComponent.face shown)
+
+-- The face this object shows, by name: Object.face, and for a merged permanent
+-- its topmost component's (CR 730.2a), each component keeping its own (CR
+-- 730.2i).
+shownFace :: Object -> Maybe CardName.CardName
+shownFace object = case Object.source object of
+  Source.OfMerge components -> ShownComponent.face (NonEmpty.head components)
+  _ -> Object.face object
+
+-- Every face this object shows, top to bottom: `shownFace`'s one, or a merged
+-- permanent's one per component.
+shownFaces :: Object -> [Maybe CardName.CardName]
+shownFaces object = case Object.source object of
+  Source.OfMerge components -> fmap ShownComponent.face (NonEmpty.toList components)
+  _ -> [Object.face object]
+
+-- The face `isFrontFaceUp` below asks about, and the printed card it is a face
+-- of: the object's own, and for a merged permanent its topmost
+-- double-faced component, which need not be its topmost component.
+frontFaceQuestion :: Object -> GameState -> Maybe (Maybe CardName.CardName, Card)
+frontFaceQuestion object gs = case Object.source object of
+  Source.OfMerge components ->
+    let doubleFaced shown = case ShownComponent.component shown of
+          MergeComponent.OfMeld _ -> Nothing
+          component -> fmap ((,) (ShownComponent.face shown)) (Monad.mfilter Card.isDoubleFaced (cardOfSource gs (Just (sourceOfComponent component))))
+     in Maybe.listToMaybe (Maybe.mapMaybe doubleFaced (NonEmpty.toList components))
+  source -> fmap ((,) (Object.face object)) (cardOfSource gs (Just source))
 
 -- CR 701.27a over a swept set, from the other side: which of these ids ACTUALLY
--- turned over. `turnFaceOver` above declines five ways -- an id naming nothing on
+-- turned over. `turnFaceOver` above declines six ways -- an id naming nothing on
 -- the battlefield, no card behind it, CR 701.27c's card that is not double-faced,
--- CR 701.27d's instant or sorcery face, CR 712.4c's melded permanent -- and
+-- CR 701.27d's instant or sorcery face, CR 712.4c's melded permanent, CR
+-- 712.15a's face-down one -- and
 -- Pawl.Engine.Resolve's `turnOver` adds CR 701.27f and CR 702.145b on top. A
 -- turn that did not happen is not an event, so both roads read the answer here
 -- rather than each keeping its own list, and neither can come to disagree with
 -- the write about what turned.
 --
--- Object.face is the whole comparison because it is the whole write; an id absent
--- from both maps compares equal and so is not reported.
+-- The faces shown are the whole comparison because they are the whole write
+-- (`shownFaces`); an id absent from both maps compares equal and so is not
+-- reported.
 facesTurned :: Map.Map ObjectId Object -> Map.Map ObjectId Object -> [ObjectId] -> [ObjectId]
 facesTurned before after =
-  let faceIn objects oid = Map.lookup oid objects >>= Object.face
+  let faceIn objects oid = fmap shownFaces (Map.lookup oid objects)
    in filter (\oid -> faceIn before oid /= faceIn after oid)
 
 -- CR 712.11: is this object showing the FRONT face of its card? The question CR
@@ -2126,15 +2200,20 @@ facesTurned before after =
 -- conjunct of its own, so CR 701.27g answers False for such an object either
 -- way.
 --
--- The card is `faceCardOf`'s, so a merged permanent answers for its double-faced
--- component and not its topmost one (CR 730.2i). Proved by Pawl.MutateSpec's
+-- The face is `frontFaceQuestion`'s, so a merged permanent answers for its
+-- topmost double-faced component and not its topmost one (CR 730.2i). Proved by
+-- Pawl.MutateSpec's
 -- "CR 730.2i/702.145c a Cubwarden over a nightbound Werewolf turns with the day
 -- and back with the night".
+--
+-- Not implemented: a ruling on which component answers for a merged permanent
+-- whose double-faced components show different faces, which the CR leaves
+-- undefined (#5037).
 isFrontFaceUp :: ObjectId -> GameState -> Bool
 isFrontFaceUp oid gs = case lookupObject oid gs of
   Nothing -> True
-  Just object -> case (Object.face object, faceCardOf object gs) of
-    (Just name, Just card) -> Face.name (NonEmpty.head (Card.Type.faces card)) == name
+  Just object -> case frontFaceQuestion object gs of
+    Just (Just name, card) -> Face.name (NonEmpty.head (Card.Type.faces card)) == name
     _ -> True
 
 -- CR 112.1: a spell is a card on the stack. Asks the object's zone AND its KIND
@@ -2330,7 +2409,7 @@ sourceIsToken source = case source of
   -- which is where every CHARACTERISTIC of a merged permanent is read: CR 707.2
   -- lists the copiable values and token-ness is no characteristic of them (CR
   -- 111.1), so this is a fact about what REPRESENTS the permanent.
-  Source.OfMerge components -> componentIsToken (NonEmpty.head components)
+  Source.OfMerge components -> componentIsToken (ShownComponent.component (NonEmpty.head components))
   Source.OfAbility _ -> False
   Source.OfTrigger _ -> False
   Source.OfEmblem _ -> False

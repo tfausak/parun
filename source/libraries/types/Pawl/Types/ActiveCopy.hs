@@ -55,6 +55,10 @@ data ActiveCopy = MkActiveCopy
     objects :: Set.Set ObjectId.ObjectId,
     -- | CR 707.2: the copiable values they took on, with any later merge
     -- applied over them (CR 730.2a).
-    snapshot :: ProjectedCharacteristics.ProjectedCharacteristics
+    snapshot :: ProjectedCharacteristics.ProjectedCharacteristics,
+    -- | CR 730.2i: `snapshot` with that merge's double-faced components turned
+    -- over, which Pawl.Engine.Game.turnFaceOver swaps in; Nothing where turning
+    -- changes nothing.
+    turned :: Maybe ProjectedCharacteristics.ProjectedCharacteristics
   }
   deriving (Eq, Ord, Show)

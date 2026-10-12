@@ -158,3 +158,13 @@ reassign start ordered gs =
         | member (ContinuousEffect.source e) = e {ContinuousEffect.timestamp = remap (ContinuousEffect.timestamp e)}
         | otherwise = e
    in gs {GameState.objects = Map.mapWithKey restampObject objects, GameState.continuousEffects = fmap restampEffect effects}
+
+-- CR 613.7m over the permanents one instruction turns over: those CR 613.7g
+-- restamps, ordered as `order` above orders them, and then the merged ones,
+-- which take no stamp (Game.takesTurnStamp) and so are no part of the choice.
+orderTurning :: [ObjectId] -> Game [ObjectId]
+orderTurning oids = do
+  gs <- State.get
+  let (stamped, unstamped) = List.partition (`Game.takesTurnStamp` gs) oids
+  ordered <- order stamped
+  pure (ordered <> unstamped)

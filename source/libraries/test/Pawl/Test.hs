@@ -572,6 +572,7 @@ import qualified Pawl.Codec.SetClassLevelSpec
 import qualified Pawl.Codec.SetHalfLockedSpec
 import qualified Pawl.Codec.SetPowerToughnessSpec
 import qualified Pawl.Codec.ShownCardsSpec
+import qualified Pawl.Codec.ShownComponentSpec
 import qualified Pawl.Codec.ShowsSpec
 import qualified Pawl.Codec.ShuffleIntoLibrarySpec
 import qualified Pawl.Codec.SicknessSpec
@@ -1255,6 +1256,7 @@ spec s registry = do
   Pawl.Codec.ExploitedSpec.spec s
   Pawl.Codec.MentoredSpec.spec s
   Pawl.Codec.MergeComponentSpec.spec s
+  Pawl.Codec.ShownComponentSpec.spec s
   Pawl.Codec.MillCountRSpec.spec s
   Pawl.Codec.MillCountRewriteSpec.spec s
   Pawl.Codec.MillSpec.spec s

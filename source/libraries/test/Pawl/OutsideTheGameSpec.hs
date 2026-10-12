@@ -96,6 +96,7 @@ import qualified Pawl.Types.Prompt as Prompt
 import qualified Pawl.Types.ReplacementEffect as ReplacementEffect
 import qualified Pawl.Types.ReplacementEntry as ReplacementEntry
 import qualified Pawl.Types.SearchPlace as SearchPlace
+import qualified Pawl.Types.ShownComponent as ShownComponent
 import qualified Pawl.Types.SlotName as SlotName
 import qualified Pawl.Types.Source as Source
 import qualified Pawl.Types.Trait as Trait
@@ -615,9 +616,9 @@ spec s registry = Spec.describe s "Pawl.Engine.Event (CR 400.11)" $ do
           Just (Source.OfCard printingId) -> printingId
           _ -> pikerPrinting
         withSource source gs = gs {GameState.objects = Map.adjust (\o -> o {Object.source = source}) mergedId (GameState.objects gs)}
-        merged = withSource (Source.OfMerge (MergeComponent.OfCard cubwardenPrinting NonEmpty.:| [MergeComponent.OfCard pikerPrinting])) g2
-        tokenTopped = withSource (Source.OfMerge (MergeComponent.OfToken pikerPrinting NonEmpty.:| [MergeComponent.OfCard cubwardenPrinting])) g2
-        overToken = withSource (Source.OfMerge (MergeComponent.OfCard cubwardenPrinting NonEmpty.:| [MergeComponent.OfToken pikerPrinting])) g2
+        merged = withSource (Source.OfMerge (fmap (`ShownComponent.MkShownComponent` Nothing) (MergeComponent.OfCard cubwardenPrinting NonEmpty.:| [MergeComponent.OfCard pikerPrinting]))) g2
+        tokenTopped = withSource (Source.OfMerge (fmap (`ShownComponent.MkShownComponent` Nothing) (MergeComponent.OfToken pikerPrinting NonEmpty.:| [MergeComponent.OfCard cubwardenPrinting]))) g2
+        overToken = withSource (Source.OfMerge (fmap (`ShownComponent.MkShownComponent` Nothing) (MergeComponent.OfCard cubwardenPrinting NonEmpty.:| [MergeComponent.OfToken pikerPrinting]))) g2
         creature = Filter.HasCardType CardType.Creature
         wishing parent = snd (Engine.runGamePure exercising (Setup.subgameStateFrom S.alice parent) (Event.bringInto (FromOutsideTheGame.MkFromOutsideTheGame 1 False OutsideDestination.Hand creature True) mergedId S.alice))
     Spec.assertEqWith s "CR 730.3: both of the merged permanent's cards arrive in her subgame hand" (List.sort (printingsIn Zone.Hand S.alice (wishing merged))) (List.sort [cubwarden, piker])

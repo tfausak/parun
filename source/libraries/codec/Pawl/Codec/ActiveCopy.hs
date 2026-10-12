@@ -18,11 +18,13 @@ codec = Fields.object $ do
   expiry <- Fields.required "expiry" Expiry.codec ActiveCopy.expiry
   objects <- Fields.required "objects" (Common.set ObjectId.codec) ActiveCopy.objects
   snapshot <- Fields.required "snapshot" ProjectedCharacteristics.codec ActiveCopy.snapshot
+  turned <- Fields.defaulted "turned" Nothing (Common.maybe ProjectedCharacteristics.codec) ActiveCopy.turned
   pure
     ActiveCopy.MkActiveCopy
       { ActiveCopy.source = source,
         ActiveCopy.timestamp = timestamp,
         ActiveCopy.expiry = expiry,
         ActiveCopy.objects = objects,
-        ActiveCopy.snapshot = snapshot
+        ActiveCopy.snapshot = snapshot,
+        ActiveCopy.turned = turned
       }

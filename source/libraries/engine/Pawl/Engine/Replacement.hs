@@ -2519,7 +2519,7 @@ applyEntryOption oid option gs =
         newest : _ ->
           let others = filter (/= newest) (GameState.copyEffects gs)
               rest = newest {ActiveCopy.objects = Set.delete oid (ActiveCopy.objects newest)}
-              alone = newest {ActiveCopy.objects = Set.singleton oid, ActiveCopy.snapshot = stamped}
+              alone = newest {ActiveCopy.objects = Set.singleton oid, ActiveCopy.snapshot = stamped, ActiveCopy.turned = Nothing}
            in gs {GameState.copyEffects = alone : [rest | not (Set.null (ActiveCopy.objects rest))] <> others}
         [] -> gs {GameState.objects = Map.adjust write oid (GameState.objects gs)}
 

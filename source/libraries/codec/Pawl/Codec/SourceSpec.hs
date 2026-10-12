@@ -14,6 +14,7 @@ import qualified Pawl.Types.MergeComponent as MergeComponent
 import qualified Pawl.Types.ObjectId as ObjectId
 import qualified Pawl.Types.PlayerId as PlayerId
 import qualified Pawl.Types.PrintingId as PrintingId
+import qualified Pawl.Types.ShownComponent as ShownComponent
 import qualified Pawl.Types.Source as Source
 import qualified Pawl.Types.TriggeredAbilitySource as TriggeredAbilitySource
 
@@ -58,8 +59,8 @@ spec s = Spec.describe s "Pawl.Codec.Source" $ do
     Common.assertCodec
       s
       Source.codec
-      (Source.OfMerge (MergeComponent.OfCard (PrintingId.MkPrintingId 11) NonEmpty.:| [MergeComponent.OfToken (PrintingId.MkPrintingId 12)]))
-      " {\"type\":\"OfMerge\",\"value\":[{\"type\":\"OfCard\",\"value\":11},{\"type\":\"OfToken\",\"value\":12}]} "
+      (Source.OfMerge (ShownComponent.MkShownComponent (MergeComponent.OfCard (PrintingId.MkPrintingId 11)) Nothing NonEmpty.:| [ShownComponent.MkShownComponent (MergeComponent.OfToken (PrintingId.MkPrintingId 12)) Nothing]))
+      " {\"type\":\"OfMerge\",\"value\":[{\"component\":{\"type\":\"OfCard\",\"value\":11}},{\"component\":{\"type\":\"OfToken\",\"value\":12}}]} "
   -- CR 602.
   Spec.it s "OfAbility" $
     Common.assertCodec

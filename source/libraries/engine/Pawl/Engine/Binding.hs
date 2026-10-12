@@ -42,16 +42,10 @@ chosenModes = SlotName.MkSlotName (Text.pack "modes")
 copySource :: SlotName
 copySource = SlotName.MkSlotName (Text.pack "copySource")
 
--- CR 730.2h: the reserved slot under which a MERGED permanent's flipped reading
--- of its merge is stored, beside `copySource` above. No card's targetSlots may
--- name it: a merge is not a target.
-flippedMergeSource :: SlotName
-flippedMergeSource = SlotName.MkSlotName (Text.pack "flippedMergeSource")
-
 -- CR 730.2i: the reserved slot under which a MERGED permanent's reading of its
 -- merge with each double-faced component turned over is stored, beside
--- `copySource` above. No card's targetSlots may name it: a merge is not a
--- target.
+-- `copySource` above, its CR 730.2h flipped reading nested as PC.flipped as the
+-- current one's is. No card's targetSlots may name it: a merge is not a target.
 turnedMergeSource :: SlotName
 turnedMergeSource = SlotName.MkSlotName (Text.pack "turnedMergeSource")
 
@@ -1565,14 +1559,6 @@ objectsOfSlots = Map.filter (not . Set.null) . fmap (Set.fromList . Maybe.mapMay
 copyOf :: Map SlotName Binding -> Maybe ProjectedCharacteristics
 copyOf m = Binding.copy =<< Map.lookup copySource m
 
--- CR 730.2h's reading of the same merge: what the stamp says once the merged
--- permanent is FLIPPED, each flip component contributing its alternative
--- characteristics instead of its normal ones. Nothing for an object that is not
--- a merged permanent, and nothing for one whose components include no flip card
--- -- Pawl.Engine.Event.merge stamps it only where the two readings differ.
-flippedCopyOf :: Map SlotName Binding -> Maybe ProjectedCharacteristics
-flippedCopyOf m = Binding.copy =<< Map.lookup flippedMergeSource m
-
 -- The source's copiable values as this triggered ability was put on the stack,
 -- if they were stamped (CR 702.165d).
 placedSourceCopyOf :: Map SlotName Binding -> Maybe ProjectedCharacteristics
@@ -1585,35 +1571,36 @@ setPlacedSourceCopy pc = Map.insert placedSourceCopy (Binding.empty {Binding.cop
 -- Store a copy snapshot under the reserved copySource slot. Nothing else is
 -- ever stored there, so overwriting it wholesale is lossless.
 --
--- CR 613.7: a LATER copy effect replaces the merge in layer 1a, so the flipped
--- and turned readings of that merge are dropped here rather than left to
--- outlive it. Only `setMergeCopy` below ever writes those slots, so this is the
--- whole of their lifetime.
+-- CR 613.7: a LATER copy effect replaces the merge in layer 1a, so the turned
+-- reading of that merge is dropped here rather than left to outlive it. Only
+-- `setMergeCopy` below ever writes that slot, so this is the whole of its
+-- lifetime.
 setCopy :: ProjectedCharacteristics -> Map SlotName Binding -> Map SlotName Binding
-setCopy pc = Map.insert copySource (Binding.empty {Binding.copy = Just pc}) . Map.delete flippedMergeSource . Map.delete turnedMergeSource
+setCopy pc = Map.insert copySource (Binding.empty {Binding.copy = Just pc}) . Map.delete turnedMergeSource
 
--- CR 730.2a with CR 730.2h and 730.2i: three readings of one merge, the
--- current one under copySource, the flipped one and the turned-over one beside
--- it. Each of the other two is stamped only when it DIFFERS from the first, so
--- an object carrying no flip or double-faced component is left exactly as
--- `setCopy` above leaves it.
-setMergeCopy :: ProjectedCharacteristics -> ProjectedCharacteristics -> ProjectedCharacteristics -> Map SlotName Binding -> Map SlotName Binding
-setMergeCopy pc flippedPc turnedPc m =
-  let beside slot other = if other == pc then id else Map.insert slot (Binding.empty {Binding.copy = Just other})
-   in beside turnedMergeSource turnedPc (beside flippedMergeSource flippedPc (setCopy pc m))
+-- CR 730.2a with CR 730.2i: two readings of one merge, the current one under
+-- copySource and the turned-over one beside it, each carrying its CR 730.2h
+-- flipped reading as PC.flipped, as a stored copy row does. The turned reading
+-- is stamped even where it equals the current one, so its slot is also the
+-- record that the merge's stamp is still the one in force (`mergeStampHolds`):
+-- a later copy effect's `setCopy` drops it.
+setMergeCopy :: ProjectedCharacteristics -> ProjectedCharacteristics -> Map SlotName Binding -> Map SlotName Binding
+setMergeCopy pc turnedPc = Map.insert turnedMergeSource (Binding.empty {Binding.copy = Just turnedPc}) . setCopy pc
 
 -- CR 730.2i: a merged permanent transforms, so each double-faced component turns
--- over and the turned reading of its merge becomes the current one. A SWAP, so
--- turning it back restores the reading it had. A no-op for an object with no
--- turned reading.
---
--- Not implemented: turning the FLIPPED reading over with it, so a merged
--- permanent holding both a flip and a double-faced component reads its flipped
--- stamp as of the merge (#3614).
+-- over and the turned reading of its merge becomes the current one, its flipped
+-- reading with it, since CR 730.2h's flip component stays flipped (CR 710.4). A
+-- SWAP, so turning it back restores the reading it had. A no-op for an object
+-- whose merge stamp a later copy effect replaced.
 turnMergeCopy :: Map SlotName Binding -> Map SlotName Binding
-turnMergeCopy m = case (Map.lookup copySource m, Map.lookup turnedMergeSource m) of
-  (Just current, Just turned) -> Map.insert copySource turned (Map.insert turnedMergeSource current m)
+turnMergeCopy m = case (copyOf m, Binding.copy =<< Map.lookup turnedMergeSource m) of
+  (Just current, Just turned) -> setMergeCopy turned current m
   _ -> m
+
+-- CR 613.7 / 730.2a: is this merged permanent's copy stamp still its merge's,
+-- rather than a later copy effect's that replaced it?
+mergeStampHolds :: Map SlotName Binding -> Bool
+mergeStampHolds = Map.member turnedMergeSource
 
 -- Build the binding environment stamped on a stack object at cast: the chosen
 -- targets, the chosen X under variableX, and any chosen modes under

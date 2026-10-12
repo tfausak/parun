@@ -81,6 +81,7 @@ import qualified Pawl.Engine.Cast as Cast
 import qualified Pawl.Engine.Combat as Combat
 import qualified Pawl.Engine.Engine as Engine
 import qualified Pawl.Engine.Event as Event
+import qualified Pawl.Engine.FaceDown as FaceDown
 import qualified Pawl.Engine.Filter as Filter
 import qualified Pawl.Engine.Game as Game
 import qualified Pawl.Engine.Projection as Projection
@@ -105,6 +106,7 @@ import qualified Pawl.Types.Destroy as Destroy
 import qualified Pawl.Types.Effect as Effect
 import qualified Pawl.Types.EntryRiders as EntryRiders
 import qualified Pawl.Types.Face as Face
+import qualified Pawl.Types.FaceDownReason as FaceDownReason
 import qualified Pawl.Types.Facing as Facing
 import qualified Pawl.Types.Filter as Filter.Type
 import qualified Pawl.Types.GameEvent as GameEvent
@@ -300,6 +302,29 @@ spec s registry = Spec.describe s "Transform" $ do
   disturbSpec s registry
   spellsCastLastTurnSpec s registry
   restampSpec s registry
+  -- CR 712.15a: "while face down, a double-faced permanent can't transform".
+  -- Maskwood Nexus makes every creature alice controls a Human, a face-down 2/2
+  -- included, so Moonmist's "transform all Humans" names both of her Blightreaper
+  -- Thallids. The face-up one turns over; the manifested one does not, and once
+  -- turned face up it shows its front face.
+  Spec.it s "CR 712.15a Moonmist does not transform a face-down Thallid that Maskwood Nexus made a Human" $ do
+    thallid <- S.printingOf s registry "Blightreaper Thallid"
+    nexus <- S.printingOf s registry "Maskwood Nexus"
+    moonmist <- S.printingOf s registry "Moonmist"
+    forest <- S.printingOf s registry "Forest"
+    let (faceUpId, g0) = S.addPermanent thallid S.alice (S.landsInPlay forest 2)
+        (faceDownId, g1) = S.addPermanent thallid S.alice g0
+        (_, g2) = S.addPermanent nexus S.alice g1
+        manifested = g2 {GameState.objects = Map.adjust (\o -> o {Object.facing = Facing.faceDown FaceDownReason.Manifested}) faceDownId (GameState.objects g2)}
+        (moonmistId, staged) = S.addHandCard moonmist S.alice manifested
+        misted = S.runPure S.identityAnswer staged {GameState.phase = Phase.PrecombatMain, GameState.priority = Just S.alice} (S.cast S.alice moonmistId *> Stack.resolveTop)
+        turnedUp = S.runPure S.identityAnswer misted (FaceDown.performTurnFaceUp Nothing Nothing faceDownId)
+        blightreaper = CardName.MkCardName (Text.pack "Blightreaper Thallid")
+        blightsower = CardName.MkCardName (Text.pack "Blightsower Thallid")
+    Spec.assertEqWith s "CR 712.15a turned face up, it shows its front face: Blightreaper Thallid, a 2/2" (Projection.namesOf faceDownId turnedUp, S.powerToughnessOf faceDownId turnedUp) (Set.singleton blightreaper, Just (2, 2))
+    Spec.assertEqWith s "CR 701.27a the face-up Thallid turned over" (Projection.namesOf faceUpId misted, S.powerToughnessOf faceUpId misted) (Set.singleton blightsower, Just (3, 3))
+    Spec.assertBool s (maybe False (Facing.isFaceDown . Object.facing) (Game.lookupObject faceDownId misted)) "setup: the manifested Thallid was face down when Moonmist resolved"
+    Spec.assertEqWith s "setup: CR 613.1d Maskwood Nexus made the face-down 2/2 a Human" (Set.member Subtype.Human (PC.subtypes (Projection.project faceDownId manifested))) True
   -- CR 712.8d: "While a double-faced permanent has its front face up, it has
   -- only the characteristics of its front face." Nothing has turned this one
   -- over, so CR 712.8a's front face is what Pawl.Engine.Card.combined answers

@@ -184,7 +184,7 @@ turnDue record = do
       -- The sweep names each of them ITSELF -- a controller with two daybound
       -- permanents holds them both at nightfall -- so this road asks the same
       -- question Pawl.Engine.Resolve's instruction does.
-      ordered <- Restamp.order (filter (\oid -> Maybe.isJust (Game.turnsTo oid gs)) due)
+      ordered <- Restamp.orderTurning (filter (\oid -> Maybe.isJust (Game.turnsTo oid gs)) due)
       -- LEFT fold, where this was a right one before CR 613.7g's stamp: the fold
       -- hands out timestamps, so it must run `ordered` forwards for the earlier
       -- stamp to go to the permanent CR 613.7m put first.
