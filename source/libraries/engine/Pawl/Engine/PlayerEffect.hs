@@ -3153,12 +3153,11 @@ prohibitsLosingLife :: PlayerId -> GameState -> Bool
 prohibitsLosingLife pid gs =
   let prohibits effect = case effect of
         PlayerEffect.CantLoseLife -> True
-        PlayerEffect.Shows _ -> False
         -- Every other arm is about casting, playing, targeting, countering,
         -- searching, paying, keeping mana, rule 702 protection, how a coin flip
-        -- came out or gaining life. CR 119.8's restriction is none of those --
-        -- LoseLifeForUnspentMana included, which CHARGES life rather than saying
-        -- anything about whether a charge may land.
+        -- came out, gaining life or showing cards. CR 119.8's restriction is none
+        -- of those -- LoseLifeForUnspentMana included, which CHARGES life rather
+        -- than saying anything about whether a charge may land.
         PlayerEffect.CantCastSpells -> False
         PlayerEffect.CantActivateAbilities _ -> False
         PlayerEffect.CantCastMoreThan _ -> False
@@ -3200,6 +3199,7 @@ prohibitsLosingLife pid gs =
         PlayerEffect.AdditionalVotes _ -> False
         PlayerEffect.AdditionalSurveilCards _ -> False
         PlayerEffect.CantGainLife -> False
+        PlayerEffect.Shows _ -> False
    in any (\member -> any (prohibits . snd) (applying member gs)) (Game.lifeSharers pid gs)
 
 -- CR 609.4b / 613.11: the clauses saying what this player may spend their mana
