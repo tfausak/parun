@@ -18,7 +18,7 @@ import qualified Pawl.Types.Voted as Voted
 -- these cases, one per choice, are it.
 spec :: (Monad m, Monad n) => Spec.Spec m n -> n ()
 spec s = Spec.describe s "Pawl.Codec.Voted" $ do
-  -- CR 701.38b's object choice, shown to every voter.
+  -- CR 701.38b's object choice, shown to every player in a two-player game.
   Spec.it s "MkVoted, an object ballot" $
     Common.assertCodec
       s
