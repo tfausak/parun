@@ -5446,96 +5446,240 @@ restrictionsOf ability = ActivatedAbility.restrictions ability <> foldMap printe
 -- CR 113.6b: the zones rule 702 says the ability a keyword stamps functions
 -- from, empty where it names none. CR 702.57a puts a printed forecast ability in
 -- a hand; CR 702.49a puts minted ninjutsu there, and CR 702.49d commander
--- ninjutsu in a hand or the command zone. CR 702.61a's split second "functions
--- only while the spell with split second is on the stack", and mints nothing
--- whose own zone could say so (functionsOnBattlefield).
+-- ninjutsu in a hand or the command zone.
 statedZones :: Keyword -> Set Zone.Zone
 statedZones keyword = case keyword of
   Keyword.Forecast -> Set.singleton Zone.Hand
   Keyword.Ninjutsu (Ninjutsu.MkNinjutsu _ variant) -> case variant of
     NinjutsuVariant.Plain -> Set.singleton Zone.Hand
     NinjutsuVariant.Commander -> Set.fromList [Zone.Hand, Zone.Command]
-  Keyword.SplitSecond -> Set.singleton Zone.Stack
   _ -> Set.empty
 
 -- CR 400.7b / 113.6: does any ability this keyword represents function on the
 -- battlefield? The question CR 400.7b asks of an ability a static ability grants
 -- a permanent SPELL, whose answer decides whether the grant goes on applying to
--- the permanent the spell becomes.
+-- the permanent the spell becomes (Pawl.Engine.Stack.carryGrants).
 --
--- Classified, never listed. CR 113.6b first: a zone rule 702 states
--- (statedZones) is the whole answer. Then the rosters this module mints by zone:
--- a keyword minting anything the BATTLEFIELD reads -- a triggered, activated or
--- static ability, a replacement, a combat or attach restriction -- functions
--- there, whatever else it does (blitz's haste-and-draw static, offspring's and
--- evoke's entry triggers). One minting only for another zone (cascade's stack
--- trigger, cycling's hand ability, a graveyard permission), or offering only
--- something CR 113.6d and 113.6e put on the stack -- a cost to cast it, a
--- reduction of that cost, a way to pay it (prowl, convoke, affinity, casualty's
--- additional cost) -- does not. A keyword doing neither is one the rules core
--- reads directly (flying), and CR 113.6's default puts a permanent's abilities
--- on the battlefield.
---
--- The casting readers are a WILDCARD over this module's offers, morphCosts'
--- caveat: a new keyword offering a cost owes its reader a disjunct here, and
--- -Werror will not ask for it. Pawl.PlanechaseSpec's "CR 400.7b" group proves
--- both answers, through The Caldaia's blitz and Hunting Velociraptor's prowl.
+-- TOTAL and wildcard-free, so a new keyword has to be answered here: each rule
+-- 702 entry states where its abilities function, and this is that statement
+-- read once. Pawl.PlanechaseSpec's "CR 400.7b" group proves both answers,
+-- through The Caldaia's blitz, Hunting Velociraptor's prowl and Imoti,
+-- Celebrant of Bounty's cascade.
 functionsOnBattlefield :: Keyword -> Bool
-functionsOnBattlefield keyword =
-  let one = Set.singleton keyword
-      counted = Map.singleton keyword (1 :: Natural)
-      some xs = not (null xs)
-      battlefield =
-        some (triggeredAbilitiesOf counted)
-          || some (battlefieldAbilitiesOf counted)
-          || some (mintedStaticAbilitiesOf one)
-          || some (mintedReplacementsOf counted)
-          || some (mintedCombatRestrictionsOf counted)
-          || some (mintedAttachRestrictionsOf counted)
-          || some (mintedRemovalRestrictionsOf counted)
-      elsewhere =
-        some (stackTriggeredAbilitiesOf counted)
-          || some (exileTriggeredAbilitiesOf one)
-          || some (handAbilitiesOf one)
-          || some (graveyardAbilitiesOf one)
-          || some (handReplacementsOf one)
-          || some (graveyardReplacementsOf one)
-          || some (castingPermissionsOf (Set.fromList [minBound .. maxBound]) one)
-      symbols = ManaSymbol.Generic 1 : fmap (ManaSymbol.OfType . ManaType.Colored) [minBound .. maxBound]
-      casting =
-        some (plainAlternativeCosts one)
-          || some (prowlCosts one)
-          || some (surgeCosts one)
-          || some (spectacleCosts one)
-          || some (freerunningCosts one)
-          || some (warpCosts one)
-          || some (mutateCosts one)
-          || some (emergeCosts one)
-          || some (bestowCosts one)
-          || some (prototypes one)
-          || some (moreThanMeetsTheEyeCosts one)
-          || some (disturbCosts one)
-          || some (morphCosts one)
-          || some (disguiseCosts one)
-          || some (optionalCosts one)
-          || some (entwineCosts one)
-          || some (escalateCosts one)
-          || some (splices one)
-          || some (madnessCosts one)
-          || some (foretellCosts one)
-          || some (plotCosts one)
-          || some (offeringQualities one)
-          || some (selfCostReductionsFor keyword)
-          || any (\symbol -> some (manaSubstitutesFor symbol one)) symbols
-          || Maybe.isJust (buybackCost one)
-          || Maybe.isJust (suspend one)
-          || hasFlash one
-          || hasFuse one
-          || hasSneak one
-      stated = statedZones keyword
-   in if not (Set.null stated)
-        then Set.member Zone.Battlefield stated
-        else battlefield || not (elsewhere || casting)
+functionsOnBattlefield keyword = case keyword of
+  -- CR 113.6's default for a permanent's abilities, or a part rule 702 puts on
+  -- the battlefield beside its others: blitz's and dash's haste, evoke's,
+  -- squad's, offspring's and gift's entry triggers, impending's type removal,
+  -- morph's and disguise's turning face up (CR 702.37e, 702.168d), and the
+  -- as-enters replacements CR 113.6h places as the permanent enters. CR
+  -- 113.6a's characteristic-defining changeling and devoid function everywhere.
+  Keyword.Absorb _ -> True
+  Keyword.Afflict _ -> True
+  Keyword.Afterlife _ -> True
+  Keyword.Amplify _ -> True
+  Keyword.Annihilator _ -> True
+  Keyword.Ascend -> True
+  Keyword.AuraSwap _ -> True
+  Keyword.Backup _ -> True
+  Keyword.Banding -> True
+  Keyword.BattleCry -> True
+  Keyword.Blitz _ -> True
+  Keyword.Bloodthirst _ -> True
+  Keyword.Boast -> True
+  Keyword.Bushido _ -> True
+  Keyword.Champion _ -> True
+  Keyword.Changeling -> True
+  Keyword.ClassLevel _ -> True
+  Keyword.Compleated -> True
+  Keyword.Craft _ -> True
+  Keyword.Crew _ -> True
+  Keyword.CumulativeUpkeep _ -> True
+  Keyword.Dash _ -> True
+  Keyword.Daybound -> True
+  Keyword.Deathtouch -> True
+  Keyword.Decayed -> True
+  Keyword.Defender -> True
+  Keyword.Dethrone -> True
+  Keyword.Devoid -> True
+  Keyword.Devour _ -> True
+  Keyword.Disguise _ -> True
+  Keyword.DoubleStrike -> True
+  Keyword.Echo _ -> True
+  Keyword.Enlist -> True
+  Keyword.Equip _ -> True
+  Keyword.Evoke _ -> True
+  Keyword.Evolve -> True
+  Keyword.Exalted -> True
+  Keyword.Exert -> True
+  Keyword.Exhaust -> True
+  Keyword.Exploit -> True
+  Keyword.Extort -> True
+  Keyword.Fabricate _ -> True
+  Keyword.Fading _ -> True
+  Keyword.Fear -> True
+  Keyword.Firebending _ -> True
+  Keyword.FirstStrike -> True
+  Keyword.Flanking -> True
+  Keyword.Flying -> True
+  Keyword.ForMirrodin -> True
+  Keyword.Fortify _ -> True
+  Keyword.Frenzy _ -> True
+  Keyword.Gift _ -> True
+  Keyword.Graft _ -> True
+  Keyword.Haste -> True
+  Keyword.Haunt -> True
+  Keyword.Hexproof _ -> True
+  Keyword.Hideaway _ -> True
+  Keyword.Horsemanship -> True
+  Keyword.Impending _ -> True
+  Keyword.Increment -> True
+  Keyword.Indestructible -> True
+  Keyword.Infect -> True
+  Keyword.Ingest -> True
+  Keyword.Intimidate -> True
+  Keyword.JobSelect -> True
+  Keyword.Landwalk _ -> True
+  Keyword.LevelUp _ -> True
+  Keyword.Lifelink -> True
+  Keyword.LivingMetal -> True
+  Keyword.LivingWeapon -> True
+  Keyword.Melee -> True
+  Keyword.Menace -> True
+  Keyword.Mentor -> True
+  Keyword.Mobilize _ -> True
+  Keyword.Modular _ -> True
+  Keyword.Morph {} -> True
+  Keyword.Myriad -> True
+  Keyword.Nightbound -> True
+  Keyword.Offspring _ -> True
+  Keyword.Outlast _ -> True
+  Keyword.PartnerWith _ -> True
+  Keyword.Persist -> True
+  Keyword.Phasing -> True
+  Keyword.Poisonous _ -> True
+  Keyword.PowerUp -> True
+  Keyword.Protection _ -> True
+  Keyword.Provoke -> True
+  Keyword.Prowess -> True
+  Keyword.Rampage _ -> True
+  Keyword.Ravenous -> True
+  Keyword.Reach -> True
+  Keyword.ReadAhead -> True
+  Keyword.Reconfigure _ -> True
+  Keyword.Renown _ -> True
+  Keyword.Riot -> True
+  Keyword.Saddle _ -> True
+  Keyword.Shadow -> True
+  Keyword.Shroud -> True
+  Keyword.Skulk -> True
+  Keyword.Soulbond -> True
+  Keyword.Soulshift _ -> True
+  Keyword.SpaceSculptor -> True
+  Keyword.Squad _ -> True
+  Keyword.StartYourEngines -> True
+  Keyword.Station -> True
+  Keyword.Storied -> True
+  Keyword.Sunburst -> True
+  Keyword.Toxic _ -> True
+  Keyword.Training -> True
+  Keyword.Trample -> True
+  Keyword.TrampleOverPlaneswalkers -> True
+  Keyword.Transfigure _ -> True
+  Keyword.Tribute _ -> True
+  Keyword.UmbraArmor -> True
+  Keyword.Undying -> True
+  Keyword.Unleash -> True
+  Keyword.Vanishing _ -> True
+  Keyword.Vigilance -> True
+  Keyword.Ward _ -> True
+  Keyword.Wither -> True
+  -- CR 113.6b, 113.6d and 113.6e: a static ability that functions while the
+  -- spell is on the stack or as it is cast -- an alternative or additional
+  -- cost, a reduction or a way to pay it, a cast trigger, a rule for the spell
+  -- itself (split second, CR 702.61a; spree, CR 702.172a; tiered, CR 702.183a;
+  -- assist, CR 702.132a).
+  Keyword.Affinity _ -> False
+  Keyword.Assist -> False
+  Keyword.Awaken _ -> False
+  Keyword.Bargain -> False
+  Keyword.Bestow _ -> False
+  Keyword.Buyback _ -> False
+  Keyword.Cascade -> False
+  Keyword.Casualty _ -> False
+  Keyword.Cipher -> False
+  Keyword.Cleave _ -> False
+  Keyword.Conspire -> False
+  Keyword.Convoke -> False
+  Keyword.Delve -> False
+  Keyword.Demonstrate -> False
+  Keyword.Emerge _ -> False
+  Keyword.Entwine _ -> False
+  Keyword.Epic -> False
+  Keyword.Escalate _ -> False
+  Keyword.Flash -> False
+  Keyword.Freerunning _ -> False
+  Keyword.Fuse -> False
+  Keyword.Gravestorm -> False
+  Keyword.Improvise -> False
+  Keyword.Kicker _ -> False
+  Keyword.MoreThanMeetsTheEye _ -> False
+  Keyword.Multikicker _ -> False
+  Keyword.Mutate _ -> False
+  Keyword.Offering _ -> False
+  Keyword.Overload _ -> False
+  Keyword.Paradigm -> False
+  Keyword.Prototype _ -> False
+  Keyword.Prowl _ -> False
+  Keyword.Rebound -> False
+  Keyword.Replicate _ -> False
+  Keyword.Ripple _ -> False
+  Keyword.Sneak _ -> False
+  Keyword.Spectacle _ -> False
+  Keyword.SplitSecond -> False
+  Keyword.Spree -> False
+  Keyword.StickerKicker _ -> False
+  Keyword.Storm -> False
+  Keyword.Surge _ -> False
+  Keyword.Teamwork _ -> False
+  Keyword.Tiered -> False
+  Keyword.Undaunted -> False
+  Keyword.Warp _ -> False
+  Keyword.WebSlinging _ -> False
+  -- CR 113.6b, 113.6f and 113.6m: abilities that function from a hand, a
+  -- graveyard or exile -- the zone the card is cast or activated from.
+  Keyword.Aftermath -> False
+  Keyword.Cycling {} -> False
+  Keyword.Disturb _ -> False
+  Keyword.Dredge _ -> False
+  Keyword.Embalm _ -> False
+  Keyword.Encore _ -> False
+  Keyword.Escape _ -> False
+  Keyword.Eternalize _ -> False
+  Keyword.Flashback _ -> False
+  Keyword.Forecast -> False
+  Keyword.Foretell _ -> False
+  Keyword.Harmonize _ -> False
+  Keyword.JumpStart -> False
+  Keyword.Madness _ -> False
+  Keyword.Mayhem _ -> False
+  Keyword.Miracle _ -> False
+  Keyword.Ninjutsu _ -> False
+  Keyword.Plot _ -> False
+  Keyword.Recover _ -> False
+  Keyword.Reinforce {} -> False
+  Keyword.Retrace -> False
+  Keyword.Scavenge _ -> False
+  Keyword.Splice _ -> False
+  Keyword.Suspend _ -> False
+  Keyword.Transmute _ -> False
+  Keyword.Unearth _ -> False
+  -- CR 113.6n: deck construction, before the game begins.
+  Keyword.ChooseABackground -> False
+  Keyword.Companion _ -> False
+  Keyword.DoctorsCompanion -> False
+  Keyword.HiddenAgenda -> False
+  Keyword.Partner -> False
+  Keyword.PartnerText _ -> False
 
 -- CR 702: does a card's designator name this keyword? Asked of the stamp
 -- Pawl.Types.ActivatedAbility.keyword carries (ActivationCriteria.grantedBy) and

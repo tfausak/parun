@@ -219,6 +219,21 @@ carrySpec s registry = Spec.describe s "CR 400.7b" $ do
         has keywords = (Set.member caldaiaBlitz keywords, Set.member velociraptorProwl keywords)
     Spec.assertEqWith s "CR 601.2a the spell had both grants" (has spellKeywords) (True, True)
     Spec.assertEqWith s "CR 400.7b the permanent keeps the blitz and not the prowl" (has keywordsOf) (True, False)
+  -- CR 707.10 / 707.2 on Double Major {G}{U}, "Copy target creature spell you
+  -- control, except it isn't legendary if the spell is legendary." The copy was
+  -- not cast, so The Caldaia's "from your hand" does not reach it, and its
+  -- record of the blitz paid arms no sacrifice once it holds no blitz to say so.
+  Spec.it s "CR 707.10 a Double Major copy of a Giant cast for The Caldaia's blitz gets neither haste nor the sacrifice" $ do
+    (giantId, board) <- caldaiaBoard s registry "Hill Giant" []
+    forest <- S.printingOf s registry "Forest"
+    island <- S.printingOf s registry "Island"
+    major <- S.printingOf s registry "Double Major"
+    let onStack = S.runPure (paying [ManaSymbol.Generic 3]) board (S.cast S.alice giantId)
+        (majorId, withMajor) = S.addHandCard major S.alice (S.landsFor island S.alice 1 (S.landsFor forest S.alice 1 onStack))
+        resolved = S.runPure (paying []) withMajor (S.cast S.alice majorId >> Monad.replicateM_ (3 :: Int) (Engine.settleForPriority >> Stack.resolveTop) >> Engine.settleForPriority)
+        after = throughEndStep 8 resolved
+    Spec.assertEqWith s "CR 707.10 only the cast Giant attacked bob, for 3" (S.lifeOf S.bob after) (Just 17)
+    Spec.assertEqWith s "CR 702.152a only the cast Giant was sacrificed and drew; the token copy stayed" (length (named "Hill Giant" after), drawn after) (1, 1)
   -- CR 702.85a's cascade "functions only while the spell with cascade is on the
   -- stack": Imoti, Celebrant of Bounty's grant to a Trained Orgg {6}{R} is a
   -- trigger of the stack, which Keyword.functionsOnBattlefield reads off the

@@ -2742,9 +2742,10 @@ clauseAppliesAt pid sid gs clause = case Clause.condition clause of
 --     601.2c's "alternative targets", Into the Flood Maw). Cast.castProposed's
 --     own clauseAppliesAt (the live, post-announcement read) judges the slots
 --     once the choice is in.
---   * Quantity.CastUsing family reads 1 exactly when `castFor`'s own family
---     matches, Pawl.Engine.Quantity's CastUsing arm's board read done here
---     without a board: `familyOf =<< castFor`. This is what SUBSUMES
+--   * Quantity.CastUsing reads 1 exactly when its designator names
+--     `castFor` -- by family, or the one instance (Keyword.designates) --
+--     Pawl.Engine.Quantity's CastUsing arm's board read done here without a
+--     board. This is what SUBSUMES
 --     Keyword.castOverloaded's old special case below -- Cyclonic Rift's two
 --     CastUsing Overload clauses (one at 0, one at >=1) trim the SAME way
 --     castOverloaded did, through the general mechanism rather than a keyword

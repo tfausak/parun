@@ -623,11 +623,18 @@ functionsOnBattlefield subtypes modification = case modification of
 -- permanent and arms nothing, and the Aura branch arms like the other: both are
 -- rule 702.109a written out and unobserved, no dash, blitz or warp card in
 -- data/cards/ being an Aura or entering elsewhere.
+--
+-- ONLY WHILE THE SPELL STILL HAS THE KEYWORD IT WAS CAST FOR, read off its
+-- projection on the pre-move board: the delayed ability is that keyword's own
+-- static ability's, so a copy of a spell whose blitz an effect granted the
+-- original (CR 707.2) and a spell that lost its granted blitz before resolving
+-- arm nothing. Pawl.PlanechaseSpec's Double Major case proves it.
 armBecame :: ObjectId -> Object.Object -> GameState.GameState -> Seq.Seq ObjectId -> Game ()
 armBecame oid obj gs1 arrivals = do
   gs <- State.get
   let permanents = filter (\arrival -> fmap Object.zone (Game.lookupObject arrival gs) == Just Zone.Battlefield) (Foldable.toList arrivals)
-      ability = Keyword.resolutionDelayedAbility (Object.castUsing obj) >>= Keyword.mintedDelayedAbility
+      stillHas keyword = Map.member keyword (Projection.keywordsOf oid gs1)
+      ability = Keyword.resolutionDelayedAbility (Monad.mfilter stillHas (Object.castUsing obj)) >>= Keyword.mintedDelayedAbility
       arm delayed permanent = Event.armDelayed delayed oid (Resolve.spellController obj oid gs1) (Map.singleton Keyword.becameSlot (Binding.toObject permanent)) Onset.Immediately Nothing
   Foldable.for_ ability (\delayed -> State.modify' (\g -> List.foldl' (flip (arm delayed)) g permanents))
   -- CR 702.62a's last sentence, off the same record and at the same moment the
