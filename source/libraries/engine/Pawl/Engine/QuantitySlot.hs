@@ -36,6 +36,7 @@ import Pawl.Types.Quantity (Quantity)
 import qualified Pawl.Types.Quantity as Quantity
 import qualified Pawl.Types.Scope as Scope
 import Pawl.Types.SlotName (SlotName)
+import qualified Pawl.Types.VotesReceived as VotesReceived
 
 -- The per-member quantity of a count, VISITED -- the one walk the four functions
 -- below are each an instance of, so a new Aggregation arm carrying a quantity
@@ -98,6 +99,8 @@ overSlots f quantity =
         Quantity.WasBound slot -> fmap Quantity.WasBound (f slot)
         Quantity.BoundCount slot -> fmap Quantity.BoundCount (f slot)
         Quantity.UniqueVowelsOnSticker slot -> fmap Quantity.UniqueVowelsOnSticker (f slot)
+        -- The tally's slot; the PlayerRef beside it is nestedRefs' half.
+        Quantity.VotesReceived received -> fmap (\slot -> Quantity.VotesReceived received {VotesReceived.slot = slot}) (f (VotesReceived.slot received))
         Quantity.Star -> pure quantity
         -- Whatever the operands name: a calculation's own payload (a rounding, a
         -- factor) names no slot.
@@ -305,6 +308,7 @@ nestedRefs quantity = case quantity of
   Quantity.WasBound _ -> Set.empty
   Quantity.BoundCount _ -> Set.empty
   Quantity.UniqueVowelsOnSticker _ -> Set.empty
+  Quantity.VotesReceived received -> Set.singleton (Left (VotesReceived.player received))
   Quantity.Star -> Set.empty
   -- What the operands hide is the whole question: a rounding or a factor hides
   -- no reference.
@@ -417,6 +421,7 @@ nestedCounts quantity = case quantity of
   Quantity.WasBound _ -> []
   Quantity.BoundCount _ -> []
   Quantity.UniqueVowelsOnSticker _ -> []
+  Quantity.VotesReceived _ -> []
   Quantity.Star -> []
   -- An operand may be a Count -- Malignus halves a fold over players, Blessed
   -- Reversal multiplies one over the battlefield.
@@ -668,6 +673,7 @@ mapPlayerRefs f intoCount quantity =
         Quantity.WasBound _ -> quantity
         Quantity.BoundCount _ -> quantity
         Quantity.UniqueVowelsOnSticker _ -> quantity
+        Quantity.VotesReceived received -> Quantity.VotesReceived received {VotesReceived.player = f (VotesReceived.player received)}
         Quantity.Star -> quantity
         Quantity.ObjectCounters _ -> quantity
         Quantity.ObjectCountersOfAnyKind -> quantity

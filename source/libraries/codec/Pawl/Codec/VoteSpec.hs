@@ -13,12 +13,14 @@ import qualified Pawl.Types.SlotName as SlotName
 import qualified Pawl.Types.Vote as Vote
 import qualified Pawl.Types.VoteChoices as VoteChoices
 import qualified Pawl.Types.VoteObjects as VoteObjects
+import qualified Pawl.Types.VotePlayers as VotePlayers
 
 spec :: (Monad m, Monad n) => Spec.Spec m n -> n ()
 spec s = Spec.describe s "Pawl.Codec.Vote" $ do
   -- CR 701.38a: the starter is the seat the vote begins with, and rule 701.38b's
-  -- listed choices are the tagged half. Pawl.Codec.VoteChoices and
-  -- Pawl.Codec.VoteObjects have no spec of their own; these cases are it.
+  -- listed choices are the tagged half. Pawl.Codec.VoteChoices,
+  -- Pawl.Codec.VoteObjects and Pawl.Codec.VotePlayers have no spec of their
+  -- own; these cases are it.
   Spec.it s "MkVote, Council's Judgment's object vote" $
     Common.assertCodec
       s
@@ -66,4 +68,28 @@ spec s = Spec.describe s "Pawl.Codec.Vote" $ do
           }
       )
       " {\"starter\":{\"type\":\"Relative\",\"value\":{\"type\":\"You\"}},\"choices\":{\"type\":\"Words\",\"value\":[\"truth\",\"consequences\"]},\"secret\":true} "
+  -- CR 701.38b's players, Mob Verdict's secret "another player" vote.
+  Spec.it s "MkVote, Mob Verdict's secret player vote" $
+    Common.assertCodec
+      s
+      Vote.codec
+      ( Vote.MkVote
+          { Vote.starter = PlayerRef.Relative PlayerRelation.You,
+            Vote.choices = VoteChoices.Players VotePlayers.MkVotePlayers {VotePlayers.another = True, VotePlayers.slot = SlotName.MkSlotName (Text.pack "votes")},
+            Vote.secret = True
+          }
+      )
+      " {\"starter\":{\"type\":\"Relative\",\"value\":{\"type\":\"You\"}},\"choices\":{\"type\":\"Players\",\"value\":{\"another\":true,\"slot\":\"votes\"}},\"secret\":true} "
+  -- Círdan the Shipwright's "votes for a player", which may be oneself.
+  Spec.it s "MkVote, a player vote open to every player" $
+    Common.assertCodec
+      s
+      Vote.codec
+      ( Vote.MkVote
+          { Vote.starter = PlayerRef.Relative PlayerRelation.You,
+            Vote.choices = VoteChoices.Players VotePlayers.MkVotePlayers {VotePlayers.another = False, VotePlayers.slot = SlotName.MkSlotName (Text.pack "votes")},
+            Vote.secret = False
+          }
+      )
+      " {\"starter\":{\"type\":\"Relative\",\"value\":{\"type\":\"You\"}},\"choices\":{\"type\":\"Players\",\"value\":{\"slot\":\"votes\"}}} "
   Spec.it s "has a schema" $ Common.assertHasSchema s Vote.codec

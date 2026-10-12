@@ -849,6 +849,7 @@ withinOffer prompt chosen = case prompt of
   Prompt.Type.ChooseBehold _ _ _ objects -> chosen `elem` objects
   Prompt.Type.ChooseVote _ _ _ objects -> chosen `elem` objects
   Prompt.Type.ChooseVoteWord _ _ _ slots -> chosen `elem` slots
+  Prompt.Type.ChooseVotePlayer _ _ _ players -> chosen `elem` players
   Prompt.Type.ChooseCounterKind _ _ _ kinds -> chosen `elem` kinds
   Prompt.Type.ChooseMovedCounterOrNone _ _ _ _ kinds -> all (`elem` kinds) chosen
   Prompt.Type.ChooseDamageSource _ _ _ objects -> chosen `elem` objects
@@ -1704,12 +1705,14 @@ renderView gs viewIs =
           pid <- needPlayer
           let nameOf snapshot = Text.intercalate (Text.pack " // ") (fmap CardName.unwrap (Set.toAscList (ProjectedCharacteristics.names snapshot)))
               -- CR 701.38a: "<voter> voted <choice>", an object by its name as
-              -- voted for, so one that has since left still names itself.
+              -- voted for, so one that has since left still names itself, and a
+              -- player by seat label.
               voted ballot = do
                 voter <- labelOf (Ballot.voter ballot)
-                let choice = case Ballot.choice ballot of
-                      BallotChoice.ForObject snapshot -> nameOf (ObjectSnapshot.characteristics snapshot)
-                      BallotChoice.ForWord word -> SlotName.unwrap word
+                choice <- case Ballot.choice ballot of
+                  BallotChoice.ForObject snapshot -> pure (nameOf (ObjectSnapshot.characteristics snapshot))
+                  BallotChoice.ForWord word -> pure (SlotName.unwrap word)
+                  BallotChoice.ForPlayer candidate -> Label.unwrap <$> labelOf candidate
                 pure (Label.unwrap voter <> Text.pack " voted " <> choice)
               shown logged = case LoggedEvent.event logged of
                 GameEvent.Revealed revealed -> pure [nameOf (Revealed.characteristics revealed)]

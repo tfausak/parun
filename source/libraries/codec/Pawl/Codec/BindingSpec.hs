@@ -28,7 +28,7 @@ spec s = Spec.describe s "Pawl.Codec.Binding" $ do
       Binding.empty
       " {} "
   -- A codec totality check, not a claim about a reachable game state: no real
-  -- slot carries all six fields at once. The stand-in snapshot is needed
+  -- slot carries all seven fields at once. The stand-in snapshot is needed
   -- because this sublibrary cannot reach the registry or Projection.project.
   Spec.it s "MkBinding, every field populated" $
     Common.assertCodec
@@ -40,13 +40,14 @@ spec s = Spec.describe s "Pawl.Codec.Binding" $ do
             Binding.modes = Just (Seq.fromList [ModeIndex.MkModeIndex 0, ModeIndex.MkModeIndex 2, ModeIndex.MkModeIndex 2]),
             Binding.copy = Just ProjectedCharacteristicsSpec.testCharacteristics,
             Binding.objects = Just (Seq.fromList [ObjectId.MkObjectId 7, ObjectId.MkObjectId 4]),
-            Binding.sticker = Just (StickerRef.MkStickerRef (PlayerId.MkPlayerId 0) 2 StickerKind.Name 1)
+            Binding.sticker = Just (StickerRef.MkStickerRef (PlayerId.MkPlayerId 0) 2 StickerKind.Name 1),
+            Binding.votes = Just (Map.fromList [(PlayerId.MkPlayerId 0, 2), (PlayerId.MkPlayerId 1, 0)])
           }
       )
       ( "{\"targets\":[{\"type\":\"ToPlayer\",\"value\":0}],"
           <> "\"amount\":3,\"modes\":[0,2,2],\"copy\":"
           <> ProjectedCharacteristicsSpec.testCharacteristicsJson
-          <> ",\"objects\":[7,4],\"sticker\":{\"owner\":0,\"sheet\":2,\"kind\":{\"type\":\"Name\"},\"index\":1}}"
+          <> ",\"objects\":[7,4],\"sticker\":{\"owner\":0,\"sheet\":2,\"kind\":{\"type\":\"Name\"},\"index\":1},\"votes\":{\"0\":2,\"1\":0}}"
       )
   -- A name-keyed map is a JSON OBJECT keyed by the slot name, written in
   -- ascending key order. The two entries are inserted in DESCENDING slot-name

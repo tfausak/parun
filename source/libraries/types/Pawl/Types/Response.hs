@@ -258,6 +258,8 @@ data Response
     -- Its own constructor for ChoseBolster's reason, and it could not reuse
     -- ChoseVote in any case: a word vote's choices are not objects.
     ChoseVoteWord SlotName.SlotName
+  | -- | CR 701.38b: the player one player voted for.
+    ChoseVotePlayer PlayerId.PlayerId
   | -- | CR 107.14: how much {E} a player chose to pay to an
     -- Effect.PayAnyEnergy.
     --

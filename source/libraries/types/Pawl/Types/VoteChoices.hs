@@ -3,16 +3,17 @@ module Pawl.Types.VoteChoices where
 import qualified Data.List.NonEmpty as NonEmpty
 import qualified Pawl.Types.SlotName as SlotName
 import qualified Pawl.Types.VoteObjects as VoteObjects
+import qualified Pawl.Types.VotePlayers as VotePlayers
 
 -- | CR 701.38b's listed choices: "objects, words with no rules meaning that are
 -- each connected to a different effect, or other variables relevant to the
 -- resolution of the spell or ability". The kinds differ in what a vote DECIDES,
 -- which is why they are a sum rather than two opcodes: rule 701.38a's tally is
--- one procedure over both, and rule 701.38d's extra votes have to reach both.
+-- one procedure over all of them, and rule 701.38d's extra votes have to reach
+-- each.
 --
--- Not implemented: rule 701.38b's third kind, "other variables relevant to the
--- resolution" -- Council Guardian votes for a colour and Mob Verdict for a
--- player (#3717).
+-- Of rule 701.38b's "other variables", a colour (Council Guardian) is written as
+-- Words, since nothing reads a vote's choice as a colour; a player is Players.
 data VoteChoices
   = -- | CR 701.38b's objects (Council's Judgment); see Pawl.Types.VoteObjects.
     Objects VoteObjects.VoteObjects
@@ -33,4 +34,6 @@ data VoteChoices
     -- "each connected to a DIFFERENT effect" makes a repeated word meaningless,
     -- and Pawl.CardSpec is what holds a card to distinct ones.
     Words (NonEmpty.NonEmpty SlotName.SlotName)
+  | -- | CR 701.38b's "other variables": players (Mob Verdict); see Pawl.Types.VotePlayers.
+    Players VotePlayers.VotePlayers
   deriving (Eq, Ord, Show)

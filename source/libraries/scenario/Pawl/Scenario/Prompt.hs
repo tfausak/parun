@@ -70,6 +70,7 @@ deciderOf prompt = case prompt of
   Prompt.ChooseMixedCounterRemoval decider _ _ _ _ _ -> Just (Decider.unwrap decider)
   Prompt.ChooseVote decider _ _ _ -> Just (Decider.unwrap decider)
   Prompt.ChooseVoteWord decider _ _ _ -> Just (Decider.unwrap decider)
+  Prompt.ChooseVotePlayer decider _ _ _ -> Just (Decider.unwrap decider)
   Prompt.ChooseCounterKind decider _ _ _ -> Just (Decider.unwrap decider)
   Prompt.ChooseMovedCounters decider _ _ _ _ -> Just (Decider.unwrap decider)
   Prompt.ChooseStoredRerolls decider _ _ _ -> Just (Decider.unwrap decider)
@@ -241,6 +242,7 @@ kindOf prompt = Text.pack $ case prompt of
   Prompt.ChooseMixedCounterRemoval {} -> "ChooseMixedCounterRemoval"
   Prompt.ChooseVote {} -> "ChooseVote"
   Prompt.ChooseVoteWord {} -> "ChooseVoteWord"
+  Prompt.ChooseVotePlayer {} -> "ChooseVotePlayer"
   -- The names scenario files answer these by, one per CounterKindFor.
   Prompt.ChooseCounterKind _ _ for _ -> case for of
     CounterKindFor.MovedBetween _ _ -> "ChooseMovedCounter"

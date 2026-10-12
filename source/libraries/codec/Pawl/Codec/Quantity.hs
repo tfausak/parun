@@ -22,6 +22,7 @@ import qualified Pawl.Codec.Plus as Plus
 import qualified Pawl.Codec.ProductionTag as ProductionTag
 import qualified Pawl.Codec.SlotName as SlotName
 import qualified Pawl.Codec.Times as Times
+import qualified Pawl.Codec.VotesReceived as VotesReceived
 import qualified Pawl.JsonCodec.Arm as Arm
 import qualified Pawl.JsonCodec.Codec as Codec
 import qualified Pawl.JsonCodec.Common as Common
@@ -58,6 +59,7 @@ codec =
       Arm.nullary "PowerOfStickers" Quantity.PowerOfStickers,
       Arm.nullary "ToughnessOfStickers" Quantity.ToughnessOfStickers,
       Arm.payload "UniqueVowelsOnSticker" SlotName.codec Quantity.UniqueVowelsOnSticker (\x -> case x of Quantity.UniqueVowelsOnSticker y -> Just y; _ -> Nothing),
+      Arm.payload "VotesReceived" VotesReceived.codec Quantity.VotesReceived (\x -> case x of Quantity.VotesReceived y -> Just y; _ -> Nothing),
       Arm.nullary "Star" Quantity.Star,
       Arm.payload "Plus" (Plus.codec codec) (Quantity.Arithmetic . Arithmetic.Plus) (\x -> case x of Quantity.Arithmetic (Arithmetic.Plus y) -> Just y; _ -> Nothing),
       -- CR 107.1a's rounding first, then what is halved: the direction is the
@@ -238,6 +240,7 @@ tagOf x = case x of
   Quantity.WasBound {} -> "WasBound"
   Quantity.BoundCount {} -> "BoundCount"
   Quantity.UniqueVowelsOnSticker {} -> "UniqueVowelsOnSticker"
+  Quantity.VotesReceived {} -> "VotesReceived"
   Quantity.LettersOnNameStickers {} -> "LettersOnNameStickers"
   Quantity.NameStickers {} -> "NameStickers"
   Quantity.PowerOfStickers {} -> "PowerOfStickers"

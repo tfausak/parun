@@ -4099,6 +4099,7 @@ quantityKindFilters quantity = case quantity of
   Quantity.Type.WasBound _ -> []
   Quantity.Type.BoundCount _ -> []
   Quantity.Type.UniqueVowelsOnSticker _ -> []
+  Quantity.Type.VotesReceived _ -> []
   Quantity.Type.Star -> []
   Quantity.Type.Arithmetic arithmetic -> foldMap quantityKindFilters arithmetic
   -- The Count's own Filter is countFilters' half above; what this half adds is
@@ -5781,6 +5782,8 @@ effectFilters effect = case effect of
     VoteChoices.Objects objects -> unframed [VoteObjects.filter objects]
     -- Rule 701.38b's words carry no filter to frame.
     VoteChoices.Words _ -> []
+    -- Nor do rule 701.38b's players.
+    VoteChoices.Players _ -> []
   -- Unframed, PlayerSacrifices' answer and for its reason: the filter names
   -- permanents on the battlefield, judged by the ordinary projection.
   Effect.ActivateManaAbilities (ActivateManaAbilities.MkActivateManaAbilities _ f) -> unframed [f]

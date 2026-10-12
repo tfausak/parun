@@ -1384,7 +1384,9 @@ library codec
     Pawl.Codec.Voted
     Pawl.Codec.VotedSpec
     Pawl.Codec.VoteObjects
+    Pawl.Codec.VotePlayers
     Pawl.Codec.VoteSpec
+    Pawl.Codec.VotesReceived
     Pawl.Codec.Ward
     Pawl.Codec.WardSpec
     Pawl.Codec.When
@@ -2775,6 +2777,8 @@ library types
     Pawl.Types.VoteChoices
     Pawl.Types.Voted
     Pawl.Types.VoteObjects
+    Pawl.Types.VotePlayers
+    Pawl.Types.VotesReceived
     Pawl.Types.Ward
     Pawl.Types.When
     Pawl.Types.WhenSpent
