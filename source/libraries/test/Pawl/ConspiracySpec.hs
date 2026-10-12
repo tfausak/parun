@@ -321,18 +321,53 @@ spec s registry = Spec.describe s "Conspiracy" $ do
           Spec.assertEqWith s "carol reveals it as she leaves" (revealsIn (concede gs)) [(S.carol, agenda)]
           Spec.assertEqWith s "and had she turned it face up, there is nothing to reveal" (revealsIn (concede up)) []
 
-    -- CR 315.3 against CR 727.2: the conspiracy stays in the command zone, and
-    -- nothing puts it there anew to turn it over or ask again.
-    Spec.it s "CR 315.3 / 727.1 a restarted game keeps a hidden agenda face down with its name" $ do
+    -- CR 727.1 / 103.2e / 315.2: the new game places its conspiracies again,
+    -- so hidden agenda turns the card face down and asks again -- even one alice
+    -- turned face up in the restarted game, since nothing done there carries
+    -- over (Karn Liberated's ruling; Immediate Action's "you can
+    -- name a different card in each new game").
+    Spec.it s "CR 727.1 / 702.106a a restarted game puts a hidden agenda face down again and asks a fresh name" $ do
       mountain <- S.printingOf s registry "Mountain"
       action <- S.printingOf s registry "Immediate Action"
       let (gs, _) = started 0 ((S.alice, deckOf mountain [action]) NonEmpty.:| [(S.bob, deckOf mountain [])])
-          restarted = S.runPure keepAnswer gs (Setup.restartGame S.performer Set.empty S.alice)
-      case commandCard S.alice restarted of
-        Nothing -> Spec.assertFailure s "Immediate Action is not alone in alice's command zone after the restart"
+      case commandCard S.alice gs of
+        Nothing -> Spec.assertFailure s "setup: Immediate Action is not alone in alice's command zone"
         Just agenda -> do
-          Spec.assertEqWith s "still face down" (isFaceDown agenda restarted) True
-          Spec.assertEqWith s "and still naming Grizzly Bears" (fmap Object.chosenNames (Game.lookupObject agenda restarted)) (Just (Map.singleton S.alice bears))
+          let up = S.runPure S.identityAnswer gs (Conspiracy.turnFaceUp S.alice agenda)
+              restarted = S.runPure renaming up (Setup.restartGame S.performer Set.empty S.alice)
+          Spec.assertEqWith s "setup: alice turned it face up before the restart" (isFaceDown agenda up) False
+          Spec.assertEqWith s "it is face down again" (isFaceDown agenda restarted) True
+          Spec.assertEqWith s "naming the new game's choice, Runeclaw Bear" (fmap Object.chosenNames (Game.lookupObject agenda restarted)) (Just (Map.singleton S.alice runeclawName))
+
+    -- CR 613.7j: turned face up, the conspiracy takes a new timestamp, so its
+    -- grant is later than a Humility that entered after the game began, and the
+    -- Grizzly Bears (a 1/1 under Humility) keep the haste it grants.
+    Spec.it s "CR 613.7j turned face up, its haste grant is later than an earlier Humility" $ do
+      mountain <- S.printingOf s registry "Mountain"
+      action <- S.printingOf s registry "Immediate Action"
+      grizzly <- S.printingOf s registry "Grizzly Bears"
+      humility <- S.printingOf s registry "Humility"
+      let (setUp, _) = started 0 ((S.alice, deckOf mountain [action]) NonEmpty.:| [(S.bob, deckOf mountain [])])
+          board = arriving grizzly S.alice (snd (S.addPermanent humility S.bob setUp))
+          main =
+            board
+              { GameState.activePlayer = S.alice,
+                GameState.phase = Phase.PrecombatMain,
+                GameState.priority = Just S.alice,
+                GameState.passed = Set.empty,
+                GameState.restartSignal = RestartSignal.Playing
+              }
+      Spec.assertEqWith s "CR 613.7j the 1/1 Grizzly Bears attack the turn they arrive" (S.lifeOf S.bob (attackingWithAll (withFlip main))) (Just 19)
+      Spec.assertEqWith s "and without the action they do not" (S.lifeOf S.bob (attackingWithAll (S.runPure S.identityAnswer main Engine.priorityLoop))) (Just 20)
+
+runeclawName :: CardName.CardName
+runeclawName = CardName.MkCardName (Text.pack "Runeclaw Bear")
+
+-- keepAnswer, naming Runeclaw Bear for every CR 702.106a choice.
+renaming :: Prompt.Prompt r -> r
+renaming p = case p of
+  Prompt.ChooseCardName {} -> runeclawName
+  _ -> keepAnswer p
 
 -- The one card in this player's command zone, Nothing unless there is exactly
 -- one.

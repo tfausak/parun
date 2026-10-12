@@ -79,8 +79,10 @@ turnable :: PlayerId -> GameState -> [ObjectId]
 turnable pid gs = filter (`isFaceDownConspiracy` gs) (Game.zoneMembers Zone.Command pid gs)
 
 -- | CR 702.106c: turn a face-down conspiracy this player controls face up,
--- revealing its chosen name. No cost and no stack (CR 116.2j). Nothing CR 708.7
--- watches: that rule's subject is a permanent, and this is not one (CR 315.3).
+-- revealing its chosen name. No cost and no stack (CR 116.2j). Not CR 116.2b's
+-- turning a permanent face up, so it records no GameEvent.TurnedFaceUp: a
+-- conspiracy is never a permanent (CR 315.3). Game.turnFacing gives it CR
+-- 613.7j's new timestamp.
 turnFaceUp :: PlayerId -> ObjectId -> Game ()
 turnFaceUp pid oid = do
   gs <- State.get

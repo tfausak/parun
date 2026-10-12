@@ -686,11 +686,7 @@ startGameFromCards perform exemptions = do
       -- held back on the vanguard's terms.
       conspiracyIds = Map.keysSet (Map.filterWithKey (\oid _ -> Conspiracy.isConspiracy oid gs) rebuilt)
       inCommandIds = Set.unions [commanderIds, vanguardIds, conspiracyIds]
-      -- Nor is a held conspiracy put into the command zone anew, so CR
-      -- 702.106a does not run again: a face-down one stays face down, and its
-      -- name stays noted with it (CR 702.106b).
-      keepAgenda old new = new {Object.facing = Object.facing old, Object.chosenNames = Object.chosenNames old}
-      commandZoneCards = Map.mapWithKey (\oid obj -> (if Set.member oid conspiracyIds then keepAgenda obj else id) (toCommandCard obj)) (Map.restrictKeys rebuilt inCommandIds)
+      commandZoneCards = fmap toCommandCard (Map.restrictKeys rebuilt inCommandIds)
       -- CR 727.2 / 717.2: every Attraction card, wherever it was, begins the new
       -- game in its owner's Attraction deck; CR 729.2a's subgame pool holds only
       -- the decks.
@@ -748,6 +744,13 @@ startGameFromCards perform exemptions = do
         GameState.stack = [],
         GameState.stackedIn = Map.empty
       }
+  -- CR 727.1 / 103.2e / 315.2: the new game places its conspiracies again,
+  -- before decks are shuffled, so CR 702.106a turns each hidden agenda face
+  -- down and asks a fresh name. Nothing done in the restarted game carries over:
+  -- a conspiracy turned face up there goes back face down.
+  -- Pawl.ConspiracySpec's restart case proves it.
+  Monad.forM_ owners $ \pid ->
+    Monad.forM_ (filter (\oid -> fmap Object.owner (Map.lookup oid rebuilt) == Just pid) (Set.toAscList conspiracyIds)) (Conspiracy.hideAgenda pid)
   Monad.forM_ owners Event.shuffleLibrary
   Monad.forM_ owners Event.shuffleAttractionDeck
   -- CR 103.3a / 729.2a.
@@ -826,8 +829,8 @@ claimStartingPlayer :: Game ()
 claimStartingPlayer = do
   gs <- State.get
   -- CR 315.6: a conspiracy's controller is its owner, so the owner-indexed
-  -- command zone is the controller's. The printed face, for
-  -- Pawl.Engine.Conspiracy.isConspiracy's reason (CR 315.3).
+  -- command zone is the controller's. The face the card shows (Game.faceOf),
+  -- so a face-down conspiracy claims nothing (CR 315.5, 315.5b).
   let claims pid = any (maybe False Face.claimsStartingPlayer . (`Game.faceOf` gs)) (Game.zoneMembers Zone.Command pid gs)
   starter <- Game.drawAmong Prompt.RandomFirstPlayer (filter claims (Game.stillPlayingInOrder gs))
   Monad.forM_ starter $ \pid ->

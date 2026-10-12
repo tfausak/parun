@@ -95,8 +95,8 @@ data Action
     -- face up reveals what the card is, and the card is already decided.
     TurnFaceUp ObjectId.ObjectId TurnUpProcedure.TurnUpProcedure
   | -- | CR 116.2j / 702.106c: turn a face-down conspiracy you control face up,
-    -- revealing its chosen name. Not a TurnFaceUp procedure: CR 116.2b's subject
-    -- is a permanent, whose turning over CR 708.7's triggers watch, and a
+    -- revealing its chosen name. Not a TurnFaceUp procedure: CR 116.2b and CR
+    -- 116.2j are separate special actions, 116.2b's subject is a permanent, and a
     -- conspiracy is never one (CR 315.3).
     TurnConspiracyFaceUp ObjectId.ObjectId
   | -- | CR 116.2m / 709.5e: pay a locked half's mana cost to give this permanent
