@@ -363,6 +363,8 @@ import qualified Pawl.Types.VillainousChoiceR as VillainousChoiceR
 import qualified Pawl.Types.Vote as Vote
 import qualified Pawl.Types.VoteChoices as VoteChoices
 import qualified Pawl.Types.VoteObjects as VoteObjects
+import qualified Pawl.Types.VotePlayers as VotePlayers
+import qualified Pawl.Types.VotesReceived as VotesReceived
 import qualified Pawl.Types.Ward as Ward
 import qualified Pawl.Types.WhenSpent as WhenSpent
 import qualified Pawl.Types.WhichCounters as WhichCounters
@@ -710,7 +712,7 @@ beholdNames asking x = case x of
 
 bindingNames :: Asking -> Binding.Binding -> Bool
 bindingNames asking x = case x of
-  Binding.MkBinding targets _amount _modes copy objects _sticker -> any (any (recipientNames asking)) targets || any (projectedCharacteristicsNames asking) copy || any (elem (object asking)) objects
+  Binding.MkBinding targets _amount _modes copy objects _sticker _votes -> any (any (recipientNames asking)) targets || any (projectedCharacteristicsNames asking) copy || any (elem (object asking)) objects
 
 blightNames :: Asking -> Blight.Blight -> Bool
 blightNames asking x = case x of
@@ -2328,6 +2330,7 @@ quantityNames asking x = case x of
   Quantity.WasBound slotName -> slotNames asking slotName
   Quantity.BoundCount slotName -> slotNames asking slotName
   Quantity.UniqueVowelsOnSticker slotName -> slotNames asking slotName
+  Quantity.VotesReceived votesReceived -> slotNames asking (VotesReceived.slot votesReceived) || playerRefNames asking (VotesReceived.player votesReceived)
   Quantity.Star -> False
   Quantity.Arithmetic arithmetic -> arithmeticNames asking (quantityNames asking) arithmetic
   Quantity.Count count -> countNames asking (quantityNames asking) count
@@ -2858,6 +2861,7 @@ voteChoicesNames :: Asking -> VoteChoices.VoteChoices -> Bool
 voteChoicesNames asking x = case x of
   VoteChoices.Objects voteObjects -> voteObjectsNames asking voteObjects
   VoteChoices.Words slotName -> any (slotNames asking) slotName
+  VoteChoices.Players votePlayers -> slotNames asking (VotePlayers.slot votePlayers)
 
 voteObjectsNames :: Asking -> VoteObjects.VoteObjects -> Bool
 voteObjectsNames asking x = case x of

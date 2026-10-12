@@ -54,4 +54,15 @@ spec s = Spec.describe s "Pawl.Codec.Voted" $ do
           }
       )
       "{\"ballot\":{\"voter\":2,\"choice\":{\"type\":\"ForWord\",\"value\":\"truth\"}},\"audience\":[2]}"
+  -- CR 701.38b's player choice.
+  Spec.it s "MkVoted, a player ballot" $
+    Common.assertCodec
+      s
+      Voted.codec
+      ( Voted.MkVoted
+          { Voted.ballot = Ballot.MkBallot {Ballot.voter = PlayerId.MkPlayerId 0, Ballot.choice = BallotChoice.ForPlayer (PlayerId.MkPlayerId 2)},
+            Voted.audience = Set.fromList [PlayerId.MkPlayerId 0]
+          }
+      )
+      "{\"ballot\":{\"voter\":0,\"choice\":{\"type\":\"ForPlayer\",\"value\":2}},\"audience\":[0]}"
   Spec.it s "has a schema" $ Common.assertHasSchema s Voted.codec

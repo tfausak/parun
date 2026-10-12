@@ -462,6 +462,7 @@ printedBoxQuantity quantity = case quantity of
   Quantity.Type.WasBound _ -> False
   Quantity.Type.BoundCount _ -> False
   Quantity.Type.UniqueVowelsOnSticker _ -> False
+  Quantity.Type.VotesReceived _ -> False
   Quantity.Type.Count {} -> False
   Quantity.Type.ManaCount {} -> False
   Quantity.Type.LifeTotal {} -> False

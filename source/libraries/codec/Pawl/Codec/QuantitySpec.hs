@@ -41,6 +41,7 @@ import qualified Pawl.Types.Rounding as Rounding
 import qualified Pawl.Types.Scope as Scope
 import qualified Pawl.Types.SlotName as SlotName
 import qualified Pawl.Types.Times as Times
+import qualified Pawl.Types.VotesReceived as VotesReceived
 import qualified Pawl.Types.Zone as Zone
 
 spec :: (Monad m, Monad n) => Spec.Spec m n -> n ()
@@ -111,6 +112,12 @@ spec s = Spec.describe s "Pawl.Codec.Quantity" $ do
       Quantity.codec
       (Quantity.UniqueVowelsOnSticker (SlotName.MkSlotName (Text.pack "placed")))
       " {\"type\":\"UniqueVowelsOnSticker\",\"value\":\"placed\"} "
+  Spec.it s "VotesReceived" $
+    Common.assertCodec
+      s
+      Quantity.codec
+      (Quantity.VotesReceived (VotesReceived.MkVotesReceived (SlotName.MkSlotName (Text.pack "votes")) PlayerRef.Candidate))
+      " {\"type\":\"VotesReceived\",\"value\":{\"slot\":\"votes\",\"player\":{\"type\":\"Candidate\"}}} "
   Spec.it s "LettersOnNameStickers" $
     Common.assertCodec
       s

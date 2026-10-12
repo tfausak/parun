@@ -631,6 +631,9 @@ rewriteEffect pairs effect = case effect of
       -- The Blight arm's answer: rule 701.38b's words are slot names, this
       -- card's own namespace rather than printed text CR 612.1 can reach.
       VoteChoices.Words _ -> vote
+      -- No printed text: the players are the table, and the slot is the card's
+      -- own namespace.
+      VoteChoices.Players _ -> vote
   Effect.RestartGame exempt -> Effect.RestartGame (fmap (rewriteObjectRef pairs) exempt)
   Effect.ControlPlayerNextTurn _ -> effect
   Effect.ControlPlayerThisResolution _ -> effect
@@ -2188,6 +2191,7 @@ rewriteQuantity pairs quantity = case quantity of
   Quantity.Type.WasBound _ -> quantity
   Quantity.Type.BoundCount _ -> quantity
   Quantity.Type.UniqueVowelsOnSticker _ -> quantity
+  Quantity.Type.VotesReceived _ -> quantity
   Quantity.Type.Star -> quantity
   Quantity.Type.ManaCount _ -> quantity
   Quantity.Type.LifeTotal _ -> quantity

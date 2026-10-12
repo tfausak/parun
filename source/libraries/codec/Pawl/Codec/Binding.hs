@@ -5,6 +5,7 @@ module Pawl.Codec.Binding where
 import qualified Data.Map.Strict as Map
 import qualified Pawl.Codec.ModeIndex as ModeIndex
 import qualified Pawl.Codec.ObjectId as ObjectId
+import qualified Pawl.Codec.PlayerId as PlayerId
 import qualified Pawl.Codec.ProjectedCharacteristics as ProjectedCharacteristics
 import qualified Pawl.Codec.Recipient as Recipient
 import qualified Pawl.Codec.StickerRef as StickerRef
@@ -27,6 +28,7 @@ codec = Fields.object $ do
   copy <- Fields.defaulted "copy" Nothing (Common.maybe ProjectedCharacteristics.codec) Binding.copy
   objects <- Fields.defaulted "objects" Nothing (Common.maybe (Common.seq ObjectId.codec)) Binding.objects
   sticker <- Fields.defaulted "sticker" Nothing (Common.maybe StickerRef.codec) Binding.sticker
+  votes <- Fields.defaulted "votes" Nothing (Common.maybe (Common.naturalMap PlayerId.codec Common.natural)) Binding.votes
   pure
     Binding.MkBinding
       { Binding.targets = targets,
@@ -34,7 +36,8 @@ codec = Fields.object $ do
         Binding.modes = modes,
         Binding.copy = copy,
         Binding.objects = objects,
-        Binding.sticker = sticker
+        Binding.sticker = sticker,
+        Binding.votes = votes
       }
 
 -- | A name-keyed map as a JSON OBJECT keyed by the slot name.

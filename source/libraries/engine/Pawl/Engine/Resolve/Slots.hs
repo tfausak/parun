@@ -239,6 +239,7 @@ import qualified Pawl.Types.VillainousChoiceR as VillainousChoiceR
 import qualified Pawl.Types.Vote as Vote
 import qualified Pawl.Types.VoteChoices as VoteChoices
 import qualified Pawl.Types.VoteObjects as VoteObjects
+import qualified Pawl.Types.VotePlayers as VotePlayers
 import qualified Pawl.Types.WithCounters as WithCounters
 import qualified Pawl.Types.Zone as Zone
 import qualified Pawl.Types.ZoneChangePattern as ZoneChangePattern
@@ -1250,10 +1251,11 @@ slotsOf effect = joinTwo (joinTwo (joinSlots (fmap objectRefSlots (effectObjectR
   -- The object vote's listed choices are a Filter and nothing else: the starter
   -- is effectPlayerRefs' half, joined at the head above, and the slot this
   -- WRITES is boundSlots' half. A word vote reads no slot at all -- its words
-  -- are the slots it writes.
+  -- are the slots it writes -- and neither does a player vote.
   Effect.Vote (Vote.MkVote _ choices _) -> case choices of
     VoteChoices.Objects objects -> filterSlotsOf (VoteObjects.filter objects)
     VoteChoices.Words _ -> Map.empty
+    VoteChoices.Players _ -> Map.empty
   Effect.RestartGame _ -> Map.empty
   Effect.ControlPlayerNextTurn slot -> oneSlot slot
   Effect.ControlPlayerThisResolution (ControlPlayer.MkControlPlayer slot _) -> oneSlot slot
@@ -2612,10 +2614,12 @@ boundSlots effect = case effect of
   -- CR 701.38a: the objects tied for most votes, for the later effect that
   -- acts on them (Council's Judgment's exile). For a word vote it is one slot
   -- per word, each holding that word's tally for the clause connected to it
-  -- (CR 701.38b, Plea for Power).
+  -- (CR 701.38b, Plea for Power). For a player vote it is the one slot holding
+  -- every player's tally (Mob Verdict).
   Effect.Vote (Vote.MkVote _ choices _) -> case choices of
     VoteChoices.Objects objects -> Set.singleton (VoteObjects.slot objects)
     VoteChoices.Words voteWords -> Set.fromList (NonEmpty.toList voteWords)
+    VoteChoices.Players players -> Set.singleton (VotePlayers.slot players)
   Effect.RestartGame _ -> Set.empty
   Effect.ControlPlayerNextTurn _ -> Set.empty
   Effect.ControlPlayerThisResolution _ -> Set.empty
@@ -3242,7 +3246,8 @@ effectContext gs controller source legal bindings =
         -- the amount of {E} paid this way". Live off the resolving object, the
         -- group half's own read, so a clause reads what the clause before it bound.
         Filter.boundAmounts = Map.mapMaybe Binding.Type.amount bindings,
-        Filter.slotStickers = Map.mapMaybe Binding.Type.sticker bindings
+        Filter.slotStickers = Map.mapMaybe Binding.Type.sticker bindings,
+        Filter.slotVotes = Map.mapMaybe Binding.Type.votes bindings
       }
 
 -- effectContext with `slot` naming `oid` alone, for an effect applied once per

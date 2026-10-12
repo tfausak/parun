@@ -69,6 +69,7 @@ import qualified Pawl.Types.StoredResult as StoredResult
 import qualified Pawl.Types.Subtype as Subtype
 import qualified Pawl.Types.Teams as Teams
 import qualified Pawl.Types.Times as Times
+import qualified Pawl.Types.VotesReceived as VotesReceived
 import qualified Pawl.Types.Zone as Zone
 import qualified Pawl.Types.ZoneChange as ZoneChange
 
@@ -280,6 +281,13 @@ evaluateAgainst viewOf context gs announcedOn mOid mView quantity =
           Just ref -> case Game.stickerContent ref gs of
             Just (StickerContent.Name ws) -> Just (toInteger (NameWords.uniqueVowels ws))
             _ -> Just 0
+        -- CR 701.38a's tally, off the binding as UniqueVowelsOnSticker reads its
+        -- sticker: a player or slot the tally does not hold is an honest 0.
+        -- Nothing for a reference naming anything but exactly one player,
+        -- LifeTotal's arity.
+        Quantity.VotesReceived received -> case playersOf (VotesReceived.player received) of
+          Just [pid] -> Just (toInteger (Map.findWithDefault 0 pid (Map.findWithDefault Map.empty (VotesReceived.slot received) (Filter.slotVotes context))))
+          _ -> Nothing
         -- CR 208.2: a bare star has no value of its own. Both readers of a
         -- characteristic-defining P/T substitute the object's quantity for it first,
         -- through Projection.seedCharacteristicPT at the projection's seed
@@ -1260,6 +1268,7 @@ objectSlots quantity = case quantity of
   Quantity.WasBound _ -> Set.empty
   Quantity.BoundCount _ -> Set.empty
   Quantity.UniqueVowelsOnSticker _ -> Set.empty
+  Quantity.VotesReceived _ -> Set.empty
   Quantity.Literal _ -> Set.empty
   Quantity.Measure _ -> Set.empty
   Quantity.Intensity -> Set.empty
@@ -1526,6 +1535,7 @@ readsX quantity = case quantity of
   Quantity.WasBound _ -> False
   Quantity.BoundCount _ -> False
   Quantity.UniqueVowelsOnSticker _ -> False
+  Quantity.VotesReceived _ -> False
   -- The whole point of the recursion: Vitalizing Cascade's "X plus 3" is
   -- Plus X (Literal 3), and Toxic Deluge's "-X" is Negate X, each reading X
   -- without being equal to it.

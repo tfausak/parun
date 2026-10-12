@@ -29,6 +29,7 @@ substituteStar star quantity = case quantity of
   Quantity.WasBound _ -> quantity
   Quantity.BoundCount _ -> quantity
   Quantity.UniqueVowelsOnSticker _ -> quantity
+  Quantity.VotesReceived _ -> quantity
   Quantity.Count _ -> quantity
   Quantity.ManaCount _ -> quantity
   Quantity.LifeTotal _ -> quantity

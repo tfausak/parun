@@ -292,6 +292,9 @@ data Prompt r where
   -- Power's time and knowledge). Not raised for one candidate, ChooseVote's
   -- reason.
   ChooseVoteWord :: Decider.Decider -> PlayerId.PlayerId -> ObjectId.ObjectId -> NonEmpty.NonEmpty SlotName.SlotName -> Prompt SlotName.SlotName
+  -- | CR 701.38b: ChooseVote where the listed choices are players (Mob
+  -- Verdict). Not raised for one candidate, ChooseVote's reason.
+  ChooseVotePlayer :: Decider.Decider -> PlayerId.PlayerId -> ObjectId.ObjectId -> NonEmpty.NonEmpty PlayerId.PlayerId -> Prompt PlayerId.PlayerId
   -- | Which one of these counter kinds, the CounterKindFor saying what for: a
   -- CR 122.5 move or a CR 614.1c entry. Not raised for one kind.
   -- Pawl.Engine.Replay answers each CounterKindFor with its own Response

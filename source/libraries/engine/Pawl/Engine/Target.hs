@@ -377,6 +377,7 @@ slotContext perspective unannounced bindings source amount gs =
             -- own. Read at both of CR 115's moments, like every field here.
             Filter.boundAmounts = Map.mapMaybe Binding.Type.amount bindings,
             Filter.slotStickers = Map.mapMaybe Binding.Type.sticker bindings,
+            Filter.slotVotes = Map.mapMaybe Binding.Type.votes bindings,
             -- Nothing: a target slot's filter sits in no Quantity, so nothing
             -- aims it at an object.
             Filter.evaluated = Nothing,

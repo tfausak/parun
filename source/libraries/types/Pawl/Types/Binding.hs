@@ -1,10 +1,12 @@
 module Pawl.Types.Binding where
 
+import qualified Data.Map.Strict as Map
 import qualified Data.Sequence as Seq
 import qualified Data.Set as Set
 import qualified Numeric.Natural as Natural
 import qualified Pawl.Types.ModeIndex as ModeIndex
 import qualified Pawl.Types.ObjectId as ObjectId
+import qualified Pawl.Types.PlayerId as PlayerId
 import qualified Pawl.Types.ProjectedCharacteristics as ProjectedCharacteristics
 import qualified Pawl.Types.Recipient as Recipient
 import qualified Pawl.Types.StickerRef as StickerRef
@@ -79,10 +81,13 @@ data Binding = MkBinding
     objects :: Maybe (Seq.Seq ObjectId.ObjectId),
     -- | CR 123.6e's "that sticker": the sticker an Effect.PutSticker placed,
     -- under its @bound@ slot. Nothing for every other slot.
-    sticker :: Maybe StickerRef.StickerRef
+    sticker :: Maybe StickerRef.StickerRef,
+    -- | CR 701.38a: a player vote's tally, every candidate keyed, zeros included
+    -- (Pawl.Types.VotePlayers). Nothing for every other slot.
+    votes :: Maybe (Map.Map PlayerId.PlayerId Natural.Natural)
   }
   deriving (Eq, Ord, Show)
 
 -- | The empty binding: no choice of any kind. The unit for merging.
 empty :: Binding
-empty = MkBinding {targets = Nothing, amount = Nothing, modes = Nothing, copy = Nothing, objects = Nothing, sticker = Nothing}
+empty = MkBinding {targets = Nothing, amount = Nothing, modes = Nothing, copy = Nothing, objects = Nothing, sticker = Nothing, votes = Nothing}
