@@ -7,7 +7,7 @@ module Pawl.Types.Trait where
 data Trait
   = -- | CR 105.2: a colour (CR 702.78a's conspire).
     Color
-  | -- | CR 201.2 / 709.4a: a name (CR 702.60a's ripple).
+  | -- | CR 709.4a: a name (CR 702.60a's ripple).
     Name
   | -- | CR 108.3: the owner (CR 702.140a's mutate), never CR 109.5's "you",
     -- which is the controller. Pawl.MutateSpec's "CR 702.140a a stolen mutate

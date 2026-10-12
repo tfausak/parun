@@ -443,9 +443,9 @@ occurrences needle value
 atomJson :: Filter.Type.Filter Keyword.Keyword -> Value.Value
 atomJson = Codec.encode (Filter.Codec.codec Keyword.Codec.codec)
 
--- How many copies of `needle` sit in a TRIGGERED ability's own condition -- an object
--- carrying both a "condition" and a "modal", printed or granted -- counted off
--- the encoding so a grant nested inside an effect is reached too.
+-- How many copies of `needle` sit in a TRIGGERED ability's own condition -- an
+-- object carrying both a "condition" and a "modal", printed or granted --
+-- counted off the encoding so a grant nested inside an effect is reached too.
 triggerConditionAtoms :: Value.Value -> Value.Value -> Int
 triggerConditionAtoms needle value = case value of
   Value.Object o ->
@@ -461,8 +461,8 @@ triggerConditionAtoms needle value = case value of
   Value.Boolean _ -> 0
   Value.Number _ -> 0
 
--- How many copies of `needle` sit in a resolved "can't be blocked" row's BLOCKER
--- filter -- the "blockers" of a "ForbidBeingBlocked" payload -- which
+-- How many copies of `needle` sit in a resolved "can't be blocked" row's
+-- BLOCKER filter -- the "blockers" of a "ForbidBeingBlocked" payload -- which
 -- Pawl.Engine.CombatRestriction.storedEvasions matches in the attacker's
 -- pairwise context (Space Beleren).
 evasionBlockerAtoms :: Value.Value -> Value.Value -> Int
@@ -2578,8 +2578,8 @@ filterPositionLintSpec s registry = Spec.describe s "Lint" $ do
                   Seq.empty
             }
     Spec.assertEqWith s "a planted atom is seen" (zipWith (\needle atom -> outside needle (planted atom)) needles atoms) [1, 1, 1, 1]
-  -- CR 702.140a's comparison is the source-name atom's sibling one characteristic over,
-  -- and its one filler is Pawl.Engine.Target.slotContext -- so it is answerable
+  -- CR 702.140a's comparison is the source-comparison atom's owner trait, and
+  -- its one filler is Pawl.Engine.Target.slotContext -- so it is answerable
   -- only inside a TARGET SLOT's own filter and would be a silent False in an
   -- affected set, a Count filter, a cost criterion or a search filter. Only
   -- Pawl.Engine.Keyword writes it -- mutate -- and into a slot the rule MINTS
