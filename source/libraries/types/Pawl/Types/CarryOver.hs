@@ -21,8 +21,9 @@ module Pawl.Types.CarryOver where
 -- that grant is stored as the spell is cast (Pawl.Engine.Event.permissionRiders).
 --
 -- Not implemented: CR 400.7b for a static grant to spells that is no
--- permission's rider (Zinnia, Valley's Voice's offspring): nothing stores one,
--- so no constructor here could carry it (gap #3635).
+-- permission's rider (Henzie "Toolbox" Torre's blitz, Zinnia, Valley's Voice's
+-- offspring): nothing stores one, so no constructor here could carry it
+-- (#5042).
 --
 -- CR 400.7g's carriers are Pawl.Engine.Cast.keywordsBefore and
 -- Pawl.Types.Object.castGrant, and CR 400.7i's for an exile permission's rider
