@@ -265,4 +265,8 @@ data ProposedEvent
     -- permanent assembling them named where one is (a Rigger's "it assembles").
     -- Raised once per instruction by Pawl.Engine.Contraption.assemble.
     WouldAssemble (Maybe ObjectId.ObjectId) PlayerId.PlayerId Natural.Natural
+  | -- | CR 104.3 / 614.1a: this player would lose the game, for every reason
+    -- at once. Raised by Pawl.Engine.Departure.leaveTogether, the one funnel
+    -- every loss goes through; a concession (CR 104.3a) is not one.
+    WouldLoseGame PlayerId.PlayerId
   deriving (Eq, Ord, Show)

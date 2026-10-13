@@ -10,6 +10,7 @@ import qualified Pawl.Codec.DrawCountR as DrawCountR
 import qualified Pawl.Codec.DrawR as DrawR
 import qualified Pawl.Codec.EntryR as EntryR
 import qualified Pawl.Codec.Filter as Filter
+import qualified Pawl.Codec.GameLossR as GameLossR
 import qualified Pawl.Codec.Keyword as Keyword
 import qualified Pawl.Codec.LifeGainR as LifeGainR
 import qualified Pawl.Codec.LifeLossR as LifeLossR
@@ -61,6 +62,7 @@ codec cardCodec abilityCodec effectCodec =
       Arm.payload "ProliferateR" ProliferateR.codec ReplacementEffect.ProliferateR (\x -> case x of ReplacementEffect.ProliferateR y -> Just y; _ -> Nothing),
       Arm.payload "ScryR" ScryR.codec ReplacementEffect.ScryR (\x -> case x of ReplacementEffect.ScryR y -> Just y; _ -> Nothing),
       Arm.payload "VillainousChoiceR" VillainousChoiceR.codec ReplacementEffect.VillainousChoiceR (\x -> case x of ReplacementEffect.VillainousChoiceR y -> Just y; _ -> Nothing),
+      Arm.payload "GameLossR" (GameLossR.codec effectCodec) ReplacementEffect.GameLossR (\x -> case x of ReplacementEffect.GameLossR y -> Just y; _ -> Nothing),
       Arm.payload "PhaseR" PhasePattern.codec ReplacementEffect.PhaseR (\x -> case x of ReplacementEffect.PhaseR y -> Just y; _ -> Nothing)
     ]
 
@@ -77,6 +79,7 @@ tagOf x = case x of
   ReplacementEffect.LifeLossR {} -> "LifeLossR"
   ReplacementEffect.LifeGainR {} -> "LifeGainR"
   ReplacementEffect.DrawR {} -> "DrawR"
+  ReplacementEffect.GameLossR {} -> "GameLossR"
   ReplacementEffect.DrawCountR {} -> "DrawCountR"
   ReplacementEffect.MillCountR {} -> "MillCountR"
   ReplacementEffect.CoinFlipR {} -> "CoinFlipR"

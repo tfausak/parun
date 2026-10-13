@@ -9,6 +9,7 @@ import qualified Pawl.Types.DrawCountR as DrawCountR
 import qualified Pawl.Types.DrawR as DrawR
 import qualified Pawl.Types.EntryR as EntryR
 import qualified Pawl.Types.Filter as Filter
+import qualified Pawl.Types.GameLossR as GameLossR
 import qualified Pawl.Types.Keyword as Keyword
 import qualified Pawl.Types.LifeGainR as LifeGainR
 import qualified Pawl.Types.LifeLossR as LifeLossR
@@ -214,5 +215,8 @@ data ReplacementEffect card ability effect
     -- doubling is the one rewrite any card prints for the event (Scryfall
     -- o:"would assemble", 2026-10-12, Steamflogger Boss alone).
     AssembleR (Filter.Filter Keyword.Keyword)
+  | -- | CR 104.3 / 614.1a: "if you would lose the game, instead" (Lich's
+    -- Mirror).
+    GameLossR (GameLossR.GameLossR effect)
   | PhaseR PhasePattern.PhasePattern
   deriving (Eq, Ord, Show)

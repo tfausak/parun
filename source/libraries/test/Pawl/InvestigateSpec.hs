@@ -691,7 +691,7 @@ randomRevealSpec s registry =
         -- randomness is not being offered a CHOICE, so the ask must go through
         -- Game.ask and leave GameState.lastChoice alone -- otherwise a loop
         -- containing a random reveal would look interruptible and
-        -- Engine.checkMandatoryLoop could never call it a draw. Driven through
+        -- Departure.checkMandatoryLoop could never call it a draw. Driven through
         -- Resolve.applyEffect rather than combat because declaring attackers is
         -- itself a choice and would stamp the field either way.
         Spec.it s "CR 104.4b a random reveal is not an optional action" $ do

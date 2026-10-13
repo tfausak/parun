@@ -309,8 +309,8 @@ import qualified Pawl.Types.Payment as Payment
 import qualified Pawl.Types.PaymentDecision as PaymentDecision
 import qualified Pawl.Types.PaymentMoment as PaymentMoment
 import qualified Pawl.Types.PaymentSubject as PaymentSubject
-import qualified Pawl.Types.PendingDamageEffect as PendingDamageEffect
 import qualified Pawl.Types.PendingEntryEffect as PendingEntryEffect
+import qualified Pawl.Types.PendingReplacementEffect as PendingReplacementEffect
 import qualified Pawl.Types.PendingTrigger as PendingTrigger
 import qualified Pawl.Types.PermanentActed as PermanentActed
 import qualified Pawl.Types.PermanentAction as PermanentAction
@@ -2064,6 +2064,7 @@ referentsOfReplacement re = case re of
   ReplacementEffect.ScryR _ -> []
   ReplacementEffect.VillainousChoiceR _ -> []
   ReplacementEffect.AssembleR _ -> []
+  ReplacementEffect.GameLossR _ -> []
   ReplacementEffect.PhaseR _ -> []
 
 -- The recipients a damage REWRITE bakes, which is CR 614.9's redirect destination
@@ -2492,6 +2493,11 @@ applyEffectWith runSubgame resolving source controller legal chosen effect = do
   -- battlefield, before the next instruction reads the board. After the window
   -- above, so what they exile is filed by their own windows, not this one's.
   runEntryEffects runSubgame
+  -- CR 614.1a: what a replacement put in a lost game's place (Lich's Mirror),
+  -- before the next instruction reads the board. A fence rather than a proof:
+  -- no test loses a player the game mid-resolution and reads the board after,
+  -- so Engine.performSettle's drain answers every test the same without it.
+  runReplacementEffects runSubgame
 
 -- CR 702.167c: the cards exiled to pay the cost of the craft ability resolving
 -- as `resolving` (Binding.craftMaterials), linked to the permanent it put onto
@@ -3759,7 +3765,7 @@ applyOneEffect runSubgame resolving source controller legal chosen effect = case
           Damage.applyDamage rewritten
           -- CR 614.1a: what a run-effects rewrite put in a replaced event's place
           -- runs inside this resolution too, and before the riders below.
-          runDamageRewriteEffects runSubgame
+          runReplacementEffects runSubgame
           -- CR 615.5's "immediately afterward": a shield this damage spent runs
           -- its additional effect inside this resolution.
           runPreventionRiders runSubgame
@@ -3821,7 +3827,7 @@ applyOneEffect runSubgame resolving source controller legal chosen effect = case
           -- ordinary damage event, so a rewrite or a shield that applied to it
           -- runs inside this resolution rather than waiting for the next one.
           -- CR 614.1a's instead-effects first, then CR 615.5's riders.
-          runDamageRewriteEffects runSubgame
+          runReplacementEffects runSubgame
           runPreventionRiders runSubgame
       _ -> pure ()
   Effect.ModifyTarget (ModifyTarget.MkModifyTarget duration modification ref each) -> do
@@ -6640,7 +6646,7 @@ applyOneEffect runSubgame resolving source controller legal chosen effect = case
     gs <- State.get
     let named = Set.fromList (filter (\pid -> not (PlayerEffect.precludes GameOutcome.Lose pid gs)) (playerRefPlayers legal controller gs ref))
         alive = Set.fromList (Game.stillPlaying gs)
-    Departure.leaveGameTogether Departure.Type.Lost (filter (\pid -> Set.member pid named && Set.member pid alive) (Game.apnapOrder gs))
+    Departure.leaveGameTogether True Departure.Type.Lost (filter (\pid -> Set.member pid named && Set.member pid alive) (Game.apnapOrder gs))
   -- CR 104.2b with CR 801.14: a player the reference names wins the game, which
   -- is each of their opponents within their range losing it. Under an unlimited
   -- range that is every opponent, and CR 104.2a then settles the win itself
@@ -6652,12 +6658,14 @@ applyOneEffect runSubgame resolving source controller legal chosen effect = case
   -- the game (CR 104.1), and the departure is only how pawl spells it. Under a
   -- limited one CR 104.3h makes the effect those opponents LOSING instead, so
   -- nobody wins: a can't-lose effect stops it and a can't-win one does not.
+  -- Only those losses meet a loss replacement; Lich's Mirror's ruling gives it
+  -- no effect against a win.
   Effect.WinGame ref -> do
     gs <- State.get
     let limited winner = Maybe.isJust (RangeOfInfluence.rangeOf (GameSettings.rangeOfInfluence (GameState.settings gs)) winner)
         winners = filter (\pid -> pid `elem` Game.stillPlaying gs && (limited pid || not (PlayerEffect.precludes GameOutcome.Win pid gs))) (playerRefPlayers legal controller gs ref)
         losers = Set.fromList [pid | winner <- winners, pid <- Players.offer winner gs PlayerRelation.Opponent, not (limited winner && PlayerEffect.precludes GameOutcome.Lose pid gs)]
-    Departure.leaveGameTogether Departure.Type.Lost (filter (`Set.member` losers) (Game.apnapOrder gs))
+    Departure.leaveGameTogether (all limited winners) Departure.Type.Lost (filter (`Set.member` losers) (Game.apnapOrder gs))
   -- CR 104.4c with CR 801.15: the game is a draw for the controller and each
   -- player within their range, who leave it; everyone else plays on. Under an
   -- unlimited range that is the whole table, which CR 104.2a's settle then
@@ -6665,7 +6673,7 @@ applyOneEffect runSubgame resolving source controller legal chosen effect = case
   Effect.DrawGame -> do
     gs <- State.get
     let drawn = Players.table (Just controller) gs
-    Departure.leaveGameTogether Departure.Type.Drew (filter (`elem` drawn) (Game.apnapOrder gs))
+    Departure.leaveGameTogether True Departure.Type.Drew (filter (`elem` drawn) (Game.apnapOrder gs))
   -- CR 119.7 / 119.8: redistribute life totals, each new total being CR 119.5's
   -- gain or loss of the necessary amount. The roster is CR 102.1's players IN the
   -- game, not the keys of GameState.players, which keep a departed seat's row.
@@ -10000,10 +10008,18 @@ applyOneEffect runSubgame resolving source controller legal chosen effect = case
     -- one pass does not reach it: CR 704.5m's Aura falls off only on the pass
     -- after the creature it enchanted died. Terminates because the flag is False
     -- as soon as a pass performs nothing.
-    let checkToFixpoint = do
+    -- A loss the pass replaced runs its effects before the next pass looks
+    -- (runReplacementEffects), and a pass that replaces it forever is CR
+    -- 104.4b's draw (Departure.checkMandatoryLoop).
+    let checkToFixpoint passes = do
+          begun <- State.gets GameState.lastChoice
           performed <- Sba.performStateBasedActions
-          Monad.when performed checkToFixpoint
-    checkToFixpoint
+          runReplacementEffects runSubgame
+          passed <- Departure.passesSince begun passes
+          Departure.checkMandatoryLoop passed
+          ended <- State.gets (Maybe.isJust . GameState.result)
+          Monad.when (performed && not ended) (checkToFixpoint passed)
+    checkToFixpoint 0
     -- CR 724.1d: the current phase and/or step ends; creatures and planeswalkers
     -- leave combat if this happened during one; the game skips straight to the
     -- cleanup step, or to a NEW cleanup step if this IS one.
@@ -10076,10 +10092,15 @@ applyOneEffect runSubgame resolving source controller legal chosen effect = case
         -- CR 724.2c: check state-based actions, granting no priority and putting
         -- no triggered ability on the stack. To a fixpoint on CR 704.3's
         -- authority, as above.
-        let checkToFixpoint = do
+        let checkToFixpoint passes = do
+              begun <- State.gets GameState.lastChoice
               performed <- Sba.performStateBasedActions
-              Monad.when performed checkToFixpoint
-        checkToFixpoint
+              runReplacementEffects runSubgame
+              passed <- Departure.passesSince begun passes
+              Departure.checkMandatoryLoop passed
+              ended <- State.gets (Maybe.isJust . GameState.result)
+              Monad.when (performed && not ended) (checkToFixpoint passed)
+        checkToFixpoint 0
         -- CR 724.2d, in the rule's own sentence order: the phase ends, creatures
         -- and planeswalkers leave combat, "until end of combat" effects expire,
         -- and the game skips the steps between here and the next phase.
@@ -10469,28 +10490,28 @@ enteredBeside oid gs = case Trigger.entryGroup oid gs of
         Just zc <- [Game.enteredBattlefieldChange (LoggedEvent.event logged)]
       ]
 
--- CR 614.1a: run the effects a DamageRewrite.RunEffects rewrite put in a damage
--- event's place -- Kill-Suit Cultist's destruction. Drains
--- GameState.pendingDamageEffects, which Pawl.Engine.Event filled --
+-- CR 614.1a: run the effects a replacement put in an event's place -- Kill-Suit
+-- Cultist's destruction, Lich's Mirror's reset. Drains
+-- GameState.pendingReplacementEffects, which Pawl.Engine.Event filled --
 -- runPreventionRiders above in every structural respect and for the same reason.
 -- Emptied before the effects run, so an effect whose own damage is replaced
 -- appends to a fresh queue instead of being re-run here.
 --
--- Every caller runs it BEFORE runPreventionRiders and before the next
--- state-based action check: the replaced event and the rest of its batch were
--- simultaneous (CR 616.1), so what happens instead of it lands before CR 704.5g
--- reads the board. One caller per road into Damage.applyDamage -- the
--- Effect.DealDamage and Effect.Fight arms above and Pawl.Engine.Engine's combat
--- damage step -- which is what keeps GameState.pendingDamageEffects empty at
--- every priority window.
+-- For damage, every caller runs it BEFORE runPreventionRiders and before the
+-- next state-based action check: the replaced event and the rest of its batch
+-- were simultaneous (CR 616.1), so what happens instead of it lands before CR
+-- 704.5g reads the board. For a loss of the game, it runs after each state-based
+-- action pass and before the next, so the same loss is not met twice. The
+-- callers GameState.pendingReplacementEffects lists keep it empty at every
+-- priority window.
 --
--- What that ordering does NOT give is CR 614.1's own placement, inside the
--- event; no card in the pool can observe the difference, every producer's
--- effects being destructions the SBA pass would reach anyway.
-runDamageRewriteEffects :: Game Result -> Game ()
-runDamageRewriteEffects runSubgame = do
-  queued <- State.gets GameState.pendingDamageEffects
-  State.modify' (\gs -> gs {GameState.pendingDamageEffects = Seq.empty})
+-- Not implemented: CR 614.1's own placement, inside the event. A permanent the
+-- loser owns that the same check moves is put into the graveyard and then
+-- shuffled away by the Mirror, where its controller should choose one (#5071).
+runReplacementEffects :: Game Result -> Game ()
+runReplacementEffects runSubgame = do
+  queued <- State.gets GameState.pendingReplacementEffects
+  State.modify' (\gs -> gs {GameState.pendingReplacementEffects = Seq.empty})
   Foldable.traverse_ (runDamageRewriteEffect runSubgame) queued
 
 -- One replaced damage event's effects, in printed order.
@@ -10498,11 +10519,11 @@ runDamageRewriteEffects runSubgame = do
 -- `resolving` and `source` are both the row's own source (CR 113.7),
 -- runPreventionRider's posture. Every slot the row carries is treated as a LEGAL
 -- target, CR 608.2b having been applied when the installing ability resolved.
-runDamageRewriteEffect :: Game Result -> PendingDamageEffect.PendingDamageEffect -> Game ()
+runDamageRewriteEffect :: Game Result -> PendingReplacementEffect.PendingReplacementEffect -> Game ()
 runDamageRewriteEffect runSubgame pending =
-  let targets = PendingDamageEffect.targets pending
-      src = PendingDamageEffect.source pending
-   in Monad.void (runCarrying runSubgame src (PendingDamageEffect.controller pending) Map.empty targets (PendingDamageEffect.effects pending))
+  let targets = PendingReplacementEffect.targets pending
+      src = PendingReplacementEffect.source pending
+   in Monad.void (runCarrying runSubgame src (PendingReplacementEffect.controller pending) Map.empty targets (PendingReplacementEffect.effects pending))
 
 -- CR 103.5b / CR 103.6: perform the effects of an action a card grants from a
 -- player's hand. Pawl.Engine.Mulligan's window loops reach this through the

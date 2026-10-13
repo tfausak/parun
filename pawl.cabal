@@ -692,6 +692,8 @@ library codec
     Pawl.Codec.GainControlSpec
     Pawl.Codec.GameEvent
     Pawl.Codec.GameEventSpec
+    Pawl.Codec.GameLossR
+    Pawl.Codec.GameLossRSpec
     Pawl.Codec.GameOutcome
     Pawl.Codec.GameOutcomeSpec
     Pawl.Codec.GameSettings
@@ -953,10 +955,10 @@ library codec
     Pawl.Codec.PaymentDecisionSpec
     Pawl.Codec.PayObligation
     Pawl.Codec.PayObligationSpec
-    Pawl.Codec.PendingDamageEffect
-    Pawl.Codec.PendingDamageEffectSpec
     Pawl.Codec.PendingEntryEffect
     Pawl.Codec.PendingEntryEffectSpec
+    Pawl.Codec.PendingReplacementEffect
+    Pawl.Codec.PendingReplacementEffectSpec
     Pawl.Codec.PerCreature
     Pawl.Codec.PermanentActed
     Pawl.Codec.PermanentAction
@@ -2384,6 +2386,7 @@ library types
     Pawl.Types.GainControl
     Pawl.Types.Game
     Pawl.Types.GameEvent
+    Pawl.Types.GameLossR
     Pawl.Types.GameOutcome
     Pawl.Types.GameSettings
     Pawl.Types.GameState
@@ -2540,8 +2543,8 @@ library types
     Pawl.Types.PaymentSubject
     Pawl.Types.PayObligation
     Pawl.Types.PayOffer
-    Pawl.Types.PendingDamageEffect
     Pawl.Types.PendingEntryEffect
+    Pawl.Types.PendingReplacementEffect
     Pawl.Types.PendingTrigger
     Pawl.Types.PerCreature
     Pawl.Types.PermanentActed

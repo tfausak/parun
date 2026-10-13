@@ -138,6 +138,7 @@ import qualified Pawl.Types.FromOutsideTheGame as FromOutsideTheGame
 import qualified Pawl.Types.FromReference as FromReference
 import qualified Pawl.Types.FullText as FullText
 import qualified Pawl.Types.GainControl as GainControl
+import qualified Pawl.Types.GameLossR as GameLossR
 import qualified Pawl.Types.GrantLookAtExiled as GrantLookAtExiled
 import qualified Pawl.Types.GrantPlayFromExile as GrantPlayFromExile
 import qualified Pawl.Types.GrantedAbility as GrantedAbility
@@ -1536,6 +1537,9 @@ rewriteReplacementEffect pairs effect = case effect of
   -- The Unstable FAQ: an AssembleR's Filter names a subtype (Steamflogger Boss's
   -- Rigger), which CR 612.1's text change reaches.
   ReplacementEffect.AssembleR matching -> ReplacementEffect.AssembleR (Filter.rewrite pairs matching)
+  -- CR 104.3: the pattern is one CR 109.5 relation; the effects run instead are
+  -- the resolution road's, so they are swapped here too.
+  ReplacementEffect.GameLossR r -> ReplacementEffect.GameLossR r {GameLossR.instead = fmap (rewriteEffect pairs) (GameLossR.instead r)}
   -- A DrawR's pattern is one CR 109.5 relation, but the REWRITE can hold CR 400.11c's
   -- wish filter, which rewriteEffect's own Effect.FromOutsideTheGame arm swaps on
   -- the resolution road -- so it has to be swapped here too, or the same sentence

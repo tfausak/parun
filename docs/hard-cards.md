@@ -36,7 +36,7 @@ issue; an expressible card not yet in the pool is a plain card add.
 | Acererak the Archlich | Dungeons: command-zone cards, completion read by name behind an intervening "if" (CR 309.7, 701.49, 603.4) | Proven: `DungeonSpec` "Acererak asks WHICH dungeon"; its attack trigger is untested (#4788) |
 | Melira, Sylvok Outcast | Poison: a "can't" overriding infect's results while the damage is still dealt (CR 101.2, 702.90, 702.15b) | Partial: `CounterRestrictionSpec` with spell-placed counters; infect damage untested (#4789) |
 | Worldgorger Dragon + Animate Dead | A mandatory loop making new objects each pass; a draw only with no optional action (CR 104.4b, 732.4, 303.4f) | Expressible, Dragon not in pool; the axis is proven by `GameSpec` `mandatoryLoopBoardSpec` with Sporemound |
-| Lich's Mirror | Replacing a loss of the game (CR 614.1a, 104.3, 104.4a) | Gap (#4783) |
+| Lich's Mirror | Replacing a loss of the game (CR 614.1a, 104.3, 104.4a) | Proven: `data/scenarios/game-outcome/*lich-s-mirror*`, `data/scenarios/team/cr-810-8a-lich-s-mirror-*`; a permanent the same check moves is both buried and shuffled (#5071) |
 | Panglacial Wurm | Casting from a hidden zone mid-resolution, while searching (CR 601.3, 608.2g) | Proven: `CastSpec`, `data/scenarios/cast/cr-601-3-*` |
 | Stifle | Countering an ability on the stack (CR 701.6a, 113.9) | Proven: `CounterspellSpec` `stifleSpec` |
 | Chains of Mephistopheles | A draw replacement whose replacement draws again; per-draw-step exception (CR 614.5, 616.1f) | Gap (#4781) |

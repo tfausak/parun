@@ -1,4 +1,4 @@
-module Pawl.Types.PendingDamageEffect where
+module Pawl.Types.PendingReplacementEffect where
 
 import qualified Data.Map as Map
 import qualified Data.Sequence as Seq
@@ -11,8 +11,9 @@ import qualified Pawl.Types.PlayerId as PlayerId
 import qualified Pawl.Types.Recipient as Recipient
 import qualified Pawl.Types.SlotName as SlotName
 
--- | CR 614.1a: the effects a DamageRewrite.RunEffects applied and has not run
--- yet -- Kill-Suit Cultist's "destroy that creature instead".
+-- | CR 614.1a: the effects a replacement ran in an event's place and has not
+-- run yet -- Kill-Suit Cultist's "destroy that creature instead"
+-- (DamageRewrite.RunEffects) and Lich's Mirror's reset (GameLossR).
 -- Pawl.Types.PendingEntryEffect's twin one event class over, and queued for the
 -- same reason: the module that applies a replacement (Pawl.Engine.Event) is
 -- below the module that can run a card's effects.
@@ -25,9 +26,9 @@ import qualified Pawl.Types.SlotName as SlotName
 --
 -- `targets` is Pawl.Types.ActiveReplacement.slots, which is what makes "that
 -- creature" nameable turns later; `controller` is who performs the effects,
--- which is the ROW's controller and not the damage's source; `source` is CR
+-- which is the ROW's controller and not the event's source; `source` is CR
 -- 113.7's source of the effect that created the replacement.
-data PendingDamageEffect = MkPendingDamageEffect
+data PendingReplacementEffect = MkPendingReplacementEffect
   { effects :: Seq.Seq (Effect.Effect Card.Card (GrantedAbility.GrantedAbility Card.Card)),
     targets :: Map.Map SlotName.SlotName (Set.Set Recipient.Recipient),
     controller :: PlayerId.PlayerId,

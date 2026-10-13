@@ -1,0 +1,48 @@
+{
+  "description": "CR 810.8a Lich's Mirror keeps its controller's team in",
+  "note": "A Two-Headed Giant game; alice and bob's team is at 3 life and alice controls Lich's Mirror. Carol's Lightning Bolt takes bob, and so the team, to 0. The team would lose, so alice does what the Mirror says and bob does nothing, per the card's ruling: the team stays in, bob's Plains with it, at 20 life.",
+  "board": {
+    "seats": [
+      {
+        "name": "alice",
+        "team": 1,
+        "life": 3,
+        "battlefield": [{ "card": "Lich's Mirror" }],
+        "library": [{ "card": "Island" }, { "card": "Island" }, { "card": "Island" }, { "card": "Island" }, { "card": "Island" }, { "card": "Island" }, { "card": "Island" }]
+      },
+      {
+        "name": "bob",
+        "team": 1,
+        "life": 3,
+        "battlefield": [{ "card": "Plains" }],
+        "library": [{ "card": "Plains" }, { "card": "Plains" }]
+      },
+      {
+        "name": "carol",
+        "team": 2,
+        "battlefield": [{ "card": "Mountain", "label": "m" }],
+        "hand": [{ "card": "Lightning Bolt", "label": "bolt" }],
+        "library": [{ "card": "Forest" }, { "card": "Forest" }]
+      },
+      {
+        "name": "dave",
+        "team": 2,
+        "library": [{ "card": "Forest" }, { "card": "Forest" }]
+      }
+    ],
+    "active": "carol",
+    "step": "PrecombatMain",
+    "sharedTeamTurns": true,
+    "sharedTeamLife": true,
+    "twoHeadedGiant": true
+  },
+  "timeline": [
+    { "turn": 1, "step": "PrecombatMain", "player": "carol", "do": { "Cast": { "object": "$bolt", "targets": ["$bob"], "mana": ["$m"] } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "carol", "do": "Pass" },
+    { "turn": 1, "step": "PrecombatMain", "player": "carol", "do": { "Answer": { "prompt": "Shuffle", "with": ["Island", "Island#2", "Island#3", "Island#4", "Island#5", "Island#6", "Island#7", "Lich's Mirror"] } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "carol", "check": { "Count": { "player": "bob", "zone": "Battlefield", "card": "Plains", "count": 1 } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "carol", "check": { "Life": { "player": "bob", "life": 20 } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "carol", "check": { "View": { "of": "Result", "is": null } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "carol", "check": { "View": { "of": "Zone", "player": "alice", "zone": "Library", "is": ["Lich's Mirror"] } } }
+  ]
+}

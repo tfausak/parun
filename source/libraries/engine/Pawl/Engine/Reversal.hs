@@ -92,7 +92,7 @@ withoutAnnouncement before entry closed = do
   copyEffects <- listOf GameState.copyEffects
   replacements <- listOf GameState.replacements
   pendingPreventionRiders <- seqOf GameState.pendingPreventionRiders
-  pendingDamageEffects <- seqOf GameState.pendingDamageEffects
+  pendingReplacementEffects <- seqOf GameState.pendingReplacementEffects
   ambientAmounts <- mapOf GameState.ambientAmounts
   detachedBindings <- mapOfMaps GameState.detachedBindings
   pendingEntryEffects <- seqOf GameState.pendingEntryEffects
@@ -209,7 +209,7 @@ withoutAnnouncement before entry closed = do
         GameState.copyEffects = copyEffects,
         GameState.replacements = replacements,
         GameState.pendingPreventionRiders = pendingPreventionRiders,
-        GameState.pendingDamageEffects = pendingDamageEffects,
+        GameState.pendingReplacementEffects = pendingReplacementEffects,
         GameState.ambientAmounts = ambientAmounts,
         GameState.detachedBindings = detachedBindings,
         GameState.pendingEntryEffects = pendingEntryEffects,

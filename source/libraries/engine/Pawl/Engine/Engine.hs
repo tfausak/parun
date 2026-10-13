@@ -49,7 +49,6 @@ import qualified Pawl.Engine.Phasing as Phasing
 import qualified Pawl.Engine.Planechase as Planechase
 import qualified Pawl.Engine.PlayerDesignation as PlayerDesignation
 import qualified Pawl.Engine.PlayerEffect as PlayerEffect
-import qualified Pawl.Engine.Players as Players
 import qualified Pawl.Engine.Plot as Plot
 import qualified Pawl.Engine.Projection as Projection
 import qualified Pawl.Engine.Projection.View as Projection
@@ -118,7 +117,6 @@ import qualified Pawl.Types.Prompt as Prompt
 import qualified Pawl.Types.RangeOfInfluence as RangeOfInfluence
 import qualified Pawl.Types.RestartSignal as RestartSignal
 import Pawl.Types.Result (Result)
-import qualified Pawl.Types.Result as Result
 import qualified Pawl.Types.RevealWindow as RevealWindow
 import qualified Pawl.Types.Revealed as Revealed
 import qualified Pawl.Types.Sickness as Sickness
@@ -225,9 +223,11 @@ passPriorityFrom gs pid =
 
 -- The step's own CR 704.3 check. Samples CR 704.5k's clock first, this site
 -- following the turn-based actions and CR 514.2's sweep being able to change who
--- is world.
+-- is world. A loss the pass replaced runs its effects before anything else
+-- checks again (Resolve.runReplacementEffects), or the next pass would meet it a
+-- second time.
 checkSba :: Game ()
-checkSba = sampleWorldSince >> Sba.checkStateBasedActions
+checkSba = sampleWorldSince >> Sba.checkStateBasedActions >> Resolve.runReplacementEffects playSubgame
 
 -- CR 502.3's untap, and its own "effects can keep one or more of a player's
 -- permanents from untapping": such an effect takes the permanent out of the set
@@ -544,7 +544,7 @@ runTurnBasedActions phase = do
       needSecond <- Damage.dealCombatDamage
       -- CR 614.1a: what a run-effects rewrite put in a replaced event's place
       -- runs HERE, before the step's SBA check and before the riders below.
-      Resolve.runDamageRewriteEffects playSubgame
+      Resolve.runReplacementEffects playSubgame
       -- CR 615.5's "immediately afterward": a shield this wave spent runs its
       -- additional effect HERE, before the step's SBA check, so Test of Faith's
       -- +1/+1 counters are on the blocker before CR 704.5g asks about lethality.
@@ -1163,7 +1163,13 @@ settleForPriority = Monad.void performSettle
 -- must see the post-sweep control. It REPORTS whether it acted or placed a
 -- trigger, which is what `cleanupException` (CR 514.3a) asks about.
 performSettle :: Game Bool
-performSettle = do
+performSettle = settlePasses 0
+
+-- performSettle, `passes` passes into a run with nobody asked anything
+-- (Departure.passesSince).
+settlePasses :: Natural -> Game Bool
+settlePasses passes = do
+  begun <- State.gets GameState.lastChoice
   -- CR 612.7: FIRST, so every state-based action and state trigger below reads
   -- a name grant's whole reference.
   learnReferenceNames
@@ -1221,6 +1227,10 @@ performSettle = do
   -- Soulbond's reason.
   unsectored <- SpaceSculptor.settle
   acted <- Sba.performStateBasedActions
+  -- CR 614.1a: a loss the pass replaced (Lich's Mirror) runs its effects HERE,
+  -- before the triggers are placed and before the next pass could meet the
+  -- same loss again.
+  Resolve.runReplacementEffects playSubgame
   placed <- placePendingTriggers
   -- Last, and for the same reason the conditional sweep runs first: all three read
   -- state this settle can still change -- CONTROL for all three, and CARD TYPES
@@ -1235,52 +1245,15 @@ performSettle = do
   State.modify' Combat.removeChanged
   checkControlContinuity
   Ring.endOnControlChange
-  more <- if swept || returned || orphaned || dayNight || designated || sampledControl || unpaired || unsectored || acted || placed then performSettle else pure False
+  -- CR 104.4b inside the recursion too: a pass that keeps acting with nobody
+  -- asked anything is a loop of its own -- a borrowed Lich's Mirror replacing
+  -- the same loss every pass, which its ruling calls a draw. A game that has
+  -- ended settles no further.
+  passed <- Departure.passesSince begun passes
+  Departure.checkMandatoryLoop passed
+  ended <- State.gets (Maybe.isJust . GameState.result)
+  more <- if not ended && (swept || returned || orphaned || dayNight || designated || sampledControl || unpaired || unsectored || acted || placed) then settlePasses passed else pure False
   pure (acted || placed || more)
-
--- CR 104.4b: how many events may happen with no player able to decide anything
--- before the game is declared a loop of mandatory actions.
---
--- A HEURISTIC, and deliberately a crude one: detecting such a loop in general is
--- the halting problem, so the question this answers is "has this gone on longer
--- than any real game would?". The MARGIN is what makes it safe.
--- GameState.nextTimestamp advances on the events CR 104.4b names (CR 613.7a,
--- 613.7c, 613.7d), and the slowest real ending -- decking out from a 60-card
--- library -- spends on the order of fifty of them, twenty times under the limit,
--- where a two-card recursion loop arrives in a few hundred.
-mandatoryLoopLimit :: Natural
-mandatoryLoopLimit = 1000
-
--- CR 104.4b: a game that has entered a loop of mandatory actions is a draw. Never
--- overwrites a result the game already has -- a won game is not looping, and CR
--- 104.4a's simultaneous loss is a different draw.
---
--- CR 801.16 under limited range: a draw for the loop's players and every player
--- within any of their ranges, who leave the game while the rest play on. The
--- loop's players are those GameState.loopInvolvement stamped in the gap's later
--- half, which every cycle of a loop reaches and a lead-in shorter than half the
--- limit does not. The survivors start owing nobody a choice, so the gap
--- restarts rather than drawing them at the next check. A ranged loop naming
--- nobody still playing falls back to the whole table.
---
--- The subtractions cannot underflow: GameState.lastChoice only ever takes a past
--- GameState.nextTimestamp, that supply only counts up, and `recent` is forced
--- only once the gap has reached the limit.
-checkMandatoryLoop :: Game ()
-checkMandatoryLoop = do
-  gs <- State.get
-  let now = Timestamp.unwrap (GameState.nextTimestamp gs)
-      gap = now - Timestamp.unwrap (GameState.lastChoice gs)
-      recent = Timestamp.MkTimestamp (now - div mandatoryLoopLimit 2)
-      involved = Map.keys (Map.filter (>= recent) (GameState.loopInvolvement gs))
-      drawn = Set.fromList (concatMap (\pid -> Players.table (Just pid) gs) involved)
-      ranged = GameSettings.rangeOfInfluence (GameState.settings gs) /= RangeOfInfluence.unlimited
-  Monad.when (Maybe.isNothing (GameState.result gs) && gap >= mandatoryLoopLimit) $
-    if ranged && not (Set.null drawn)
-      then do
-        Departure.leaveGameTogether Departure.Type.Drew (filter (`Set.member` drawn) (Game.apnapOrder gs))
-        State.modify' (\g -> g {GameState.lastChoice = GameState.nextTimestamp g})
-      else State.put (Departure.settle (Just Result.Drawn) gs)
 
 -- Ask the priority holder for an action until every still-playing player has
 -- passed in succession (CR 117.4). A full round of passes resolves the top of the
@@ -1298,7 +1271,7 @@ priorityLoop = do
   let loop trail = do
         -- CR 104.4b, checked HERE as well as at playGame's loop head: a
         -- resolution cycle repeats inside one priority round and never reaches it.
-        checkMandatoryLoop
+        Departure.checkMandatoryLoop 0
         finished <- State.gets (Maybe.isJust . GameState.result)
         restarted <- State.gets GameState.restartSignal
         case restarted of
@@ -2107,7 +2080,7 @@ cleanupException = do
 playGame :: Game Result
 playGame =
   let loop = do
-        checkMandatoryLoop
+        Departure.checkMandatoryLoop 0
         outcome <- State.gets GameState.result
         case outcome of
           Just r -> pure r

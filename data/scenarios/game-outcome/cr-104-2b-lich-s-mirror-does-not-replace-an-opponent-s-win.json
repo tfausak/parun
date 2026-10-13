@@ -1,0 +1,27 @@
+{
+  "description": "CR 104.2b Lich's Mirror does not replace an opponent's win",
+  "note": "Bob's Felidar Sovereign wins him the game at his upkeep at 40 life while alice controls Lich's Mirror. A win ends the game (CR 104.1); it is no loss of alice's, and the Mirror's ruling gives it no effect against \"wins the game\".",
+  "board": {
+    "active": "alice",
+    "step": "EndStep",
+    "seats": [
+      {
+        "name": "alice",
+        "battlefield": [{ "card": "Lich's Mirror" }],
+        "library": [{ "card": "Island" }, { "card": "Island" }, { "card": "Island" }, { "card": "Island" }, { "card": "Island" }, { "card": "Island" }, { "card": "Island" }]
+      },
+      {
+        "name": "bob",
+        "life": 40,
+        "battlefield": [{ "card": "Felidar Sovereign" }],
+        "library": [{ "card": "Forest" }, { "card": "Forest" }]
+      }
+    ]
+  },
+  "timeline": [
+    { "turn": 2, "step": "Upkeep", "player": "bob", "do": "Pass" }
+  ],
+  "final": [
+    { "View": { "of": "Result", "is": { "won": "bob" } } }
+  ]
+}

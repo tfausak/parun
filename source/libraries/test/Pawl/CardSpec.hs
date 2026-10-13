@@ -209,6 +209,7 @@ import qualified Pawl.Types.FromOutsideTheGame as FromOutsideTheGame
 import qualified Pawl.Types.FromReference as FromReference
 import qualified Pawl.Types.FullText as FullText
 import qualified Pawl.Types.GainControl as GainControl
+import qualified Pawl.Types.GameLossR as GameLossR
 import qualified Pawl.Types.GameState as GameState
 import qualified Pawl.Types.GrantLookAtExiled as GrantLookAtExiled
 import qualified Pawl.Types.GrantPlayFromExile as GrantPlayFromExile
@@ -2232,6 +2233,8 @@ replacementRewriteEffects replacement = case replacement of
   ReplacementEffect.ScryR {} -> []
   ReplacementEffect.VillainousChoiceR {} -> []
   ReplacementEffect.AssembleR {} -> []
+  -- CR 614.1a's instead for a loss of the game (Lich's Mirror's reset).
+  ReplacementEffect.GameLossR (GameLossR.MkGameLossR _ effects) -> Foldable.toList effects
   ReplacementEffect.PhaseR _ -> []
 
 -- CR 615.5: the additional effect a replacement PRINTS -- DamageR's riders, and
@@ -2263,6 +2266,7 @@ replacementEffectRiders replacement = case replacement of
   ReplacementEffect.ScryR {} -> []
   ReplacementEffect.VillainousChoiceR {} -> []
   ReplacementEffect.AssembleR {} -> []
+  ReplacementEffect.GameLossR {} -> []
   ReplacementEffect.PhaseR _ -> []
 
 -- CR 111.1's token a replacement MINTS: TokenR's appended token (Queen Allenal
@@ -2292,6 +2296,7 @@ replacementMintedCards replacement = case replacement of
   ReplacementEffect.ScryR {} -> []
   ReplacementEffect.VillainousChoiceR {} -> []
   ReplacementEffect.AssembleR {} -> []
+  ReplacementEffect.GameLossR {} -> []
   ReplacementEffect.PhaseR _ -> []
 
 -- Every ReplacementEffect one effect authors: the one an Effect.Replace installs
@@ -5148,6 +5153,7 @@ replacementEffectFilters replacementEffect = case replacementEffect of
   ReplacementEffect.ScryR {} -> []
   ReplacementEffect.VillainousChoiceR {} -> []
   ReplacementEffect.AssembleR {} -> []
+  ReplacementEffect.GameLossR {} -> []
   ReplacementEffect.PhaseR _ -> []
 
 -- CR 614.9's printed destination, the one Filter a damage REWRITE carries.

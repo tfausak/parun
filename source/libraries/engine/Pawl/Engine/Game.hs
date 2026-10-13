@@ -418,7 +418,7 @@ permute xs order =
 --
 --   * Prompt.Concede, because CR 104.3a lets a player concede at any time, in a
 --     loop or out of one. If conceding counted, no loop would ever be mandatory
---     and Pawl.Engine.Engine.checkMandatoryLoop could never fire.
+--     and Pawl.Engine.Departure.checkMandatoryLoop could never fire.
 --   * Prompt.ChooseAction when Pass is the only legal action -- passing is not a
 --     decision. Engine.priorityLoop makes that call, being the only caller that
 --     knows the menu.
