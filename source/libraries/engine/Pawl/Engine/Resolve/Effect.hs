@@ -685,15 +685,22 @@ oneSeat legal controller gs ref = case playerRefPlayers legal controller gs ref 
 -- CR 608.2c / 800.4g: the ONE seat a choice opcode's own chooser reference
 -- names, and who answers instead when that seat has LEFT the game.
 --
--- A reference naming nobody, or naming several where no printing writes one,
--- answers Nothing: that share of the instruction is ignored (CR 101.3), which is
--- the reading both callers already had.
+-- A RELATION ("an opponent chooses") is a seat the controller names, as
+-- Pawl.Engine.Target.chooserOf names "an opponent's choice": out of
+-- Players.chooserOffer, so CR 801.5c hands the choice to the nearest seat in the
+-- relation to the controller's left where none is in range.
+--
+-- Any other reference naming nobody, or naming several where no printing writes
+-- one, answers Nothing: that share of the instruction is ignored (CR 101.3).
 --
 -- The REASSIGNMENT is rule 800.4g's, and it is a choice rather than a fallback
 -- to the controller: the object's controller picks the substitute, narrowed to
--- another opponent where the departed chooser was one of theirs and widened back
--- to the whole table where no opponent is left. "Another" needs no exclusion of
--- its own, Game.stillPlaying having already dropped the seat that left.
+-- another opponent where the departed chooser was one of theirs (CR 801.5c's
+-- nearest one where none is in range) and widened back to the whole table where
+-- no opponent is left. "Another" needs no exclusion of its own,
+-- Game.stillPlaying having already dropped the seat that left. The departure
+-- scenario "CR 801.5c a departed opponent's choice goes to the nearest opponent
+-- out of range" proves the range half.
 --
 -- The ask is Pawl.Engine.Players.chooseOne, every "choose a player" site's.
 -- The chooser reference is read through decidersOf, so a departed chooser is
@@ -729,28 +736,67 @@ chosenPermanents legal resolving controller source (ChosenPermanents.MkChosenPer
   let candidates = battlefieldMatching legal resolving controller source gs filter_
       context = effectContext gs controller source legal (slotBindings resolving gs)
       amount = maybe 0 Integer.toNaturalSaturating . Quantity.evaluateFor (effectViewOf source legal gs) context gs resolving source
-  Game.pickCounted
-    (namesChooser legal controller gs chooser)
-    (askedChooser source controller legal chooser)
+  pickByChooser
+    source
+    controller
+    legal
+    chooser
     (\decider who -> Prompt.ChoosePermanent decider who source)
     (\decider who pool ceiling_ -> Prompt.ChooseAnyNumber decider who source AnyNumberOf.Permanents pool ceiling_)
     amount
     count
     candidates
 
--- Whether a chooser ref names one seat, askedChooser's test without its ask.
+-- Game.pickCounted with the seat a chooser ref names, for chosenPermanents and
+-- chooseCardFromAmong. CR 801.5a under a limited range: the chooser names only
+-- what is in their own range, so the seat is settled FIRST and a permanent is
+-- offered only where its controller is within the chooser's range (CR 801.2d).
+-- A card nobody controls stays offered, CR 801.5c's own Fact or Fiction
+-- example. Under an unlimited range the seat is asked only where a real choice
+-- remains. Pawl.RangeOfInfluenceSpec's "CR 801.5a a chooser handed the choice
+-- names only permanents in their own range" proves the cut.
+pickByChooser ::
+  ObjectId ->
+  PlayerId ->
+  Map.Map SlotName (Set Recipient) ->
+  PlayerRef ->
+  (Decider.Decider -> PlayerId -> NonEmpty.NonEmpty ObjectId -> Prompt.Prompt ObjectId) ->
+  (Decider.Decider -> PlayerId -> [ObjectId] -> Maybe Natural -> Prompt.Prompt (Set ObjectId)) ->
+  (Quantity.Type.Quantity -> Natural) ->
+  HowMany.HowMany ->
+  [ObjectId] ->
+  Game [ObjectId]
+pickByChooser source controller legal chooser one_ several amount count candidates = do
+  gs <- State.get
+  let named = namesChooser legal controller gs chooser
+      asked = askedChooser source controller legal chooser
+  if Map.null (RangeOfInfluence.unwrap (GameSettings.rangeOfInfluence (GameState.settings gs)))
+    then Game.pickCounted named asked one_ several amount count candidates
+    else do
+      seat <- if named then asked else pure Nothing
+      now <- State.get
+      let grants = Projection.controlGrants now
+          reachable who oid = not (Set.member oid (GameState.battlefield now)) || Projection.objectInRangeGiven grants who oid now
+      case seat of
+        Nothing -> pure []
+        Just who -> Game.pickCounted True (pure (Just who)) one_ several amount count (filter (reachable who) candidates)
+
+-- Whether a chooser ref names a seat to ask, askedChooser's test without its ask.
 namesChooser :: Map.Map SlotName (Set Recipient) -> PlayerId -> GameState -> PlayerRef -> Bool
-namesChooser legal controller gs ref = length (decidersOf legal controller gs ref) == 1
+namesChooser legal controller gs ref = case ref of
+  PlayerRef.Relative relation -> not (List.null (Players.chooserOffer controller gs relation))
+  _ -> length (decidersOf legal controller gs ref) == 1
 
 askedChooser :: ObjectId -> PlayerId -> Map.Map SlotName (Set Recipient) -> PlayerRef -> Game (Maybe PlayerId)
 askedChooser source controller legal ref = do
   gs <- State.get
-  case decidersOf legal controller gs ref of
-    [named]
+  case (ref, decidersOf legal controller gs ref) of
+    (PlayerRef.Relative relation, _) -> Players.chooseOne controller source (Players.chooserOffer controller gs relation)
+    (_, [named])
       | List.elem named (Game.stillPlaying gs) -> pure (Just named)
       | otherwise ->
           let -- CR 801.5a: a player the controller chooses is one in range.
-              opponents = Players.offer controller gs PlayerRelation.Opponent
+              opponents = Players.chooserOffer controller gs PlayerRelation.Opponent
               candidates =
                 if Game.areOpponents gs controller named && not (List.null opponents)
                   then opponents
@@ -2363,11 +2409,11 @@ chooseCardsInHand resolving source controller legal (ChosenCardInHand.MkChosenCa
 --
 -- WHO is asked is the ref's own chooser, ONE seat: CR 608.2c's resolving
 -- controller by default, or the seat a PlayerRef names -- Animal Magnetism's "an
--- opponent chooses a creature card from among them", read out of the slot a
--- ChoosePlayer filled earlier in this resolution. Read through askedChooser, so
--- the slot is read as every other is (CR 608.2b), a reference naming nobody or
--- naming several asks nobody and so names no card (CR 101.3), and CR 800.4g
--- hands the choice on where the seat it names has left the game.
+-- opponent chooses a creature card from among them", a seat the controller
+-- names. Read through askedChooser, so a slot is read as every other is (CR
+-- 608.2b), a reference naming nobody asks nobody and so names no card (CR
+-- 101.3), CR 801.5c hands the choice to the nearest opponent where none is in
+-- range, and CR 800.4g hands it on where the seat it names has left the game.
 --
 -- HOW MANY is the ref's count, read HERE (CR 608.2c) off the announcement CR
 -- 601.2b left on the resolving object -- TopOfLibrary's reading, and its clamp: a
@@ -2387,9 +2433,11 @@ chooseCardFromAmong resolving source controller legal chosen (ChosenCardFromAmon
   let viewOf = effectViewOf source legal gs
       context = effectContext gs controller source legal (slotBindings resolving gs)
       amount = maybe 0 Integer.toNaturalSaturating . Quantity.evaluateFor viewOf context gs resolving source
-  Game.pickCounted
-    (namesChooser legal controller gs chooser)
-    (askedChooser source controller legal chooser)
+  pickByChooser
+    source
+    controller
+    legal
+    chooser
     (\decider who -> Prompt.ChooseCardFromAmong decider who source)
     (\decider who pool ceiling_ -> Prompt.ChooseAnyNumber decider who source AnyNumberOf.CardsFromAmong pool ceiling_)
     amount

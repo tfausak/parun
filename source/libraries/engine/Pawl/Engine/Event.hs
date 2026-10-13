@@ -2421,9 +2421,10 @@ apply batch candidate event =
           -- in the Oracle card reference.
           Nothing -> pure Map.empty
           Just controller -> do
-            -- CR 801.5a's offer of opponents, asked through Players.chooseOne.
-            -- No opponent left (CR 104.2a) asks nobody and adds no second name.
-            opponent <- Players.chooseOne controller oid (Players.offer controller gs PlayerRelation.Opponent)
+            -- CR 801.5a / 801.5c's offer of opponents, asked through
+            -- Players.chooseOne. No opponent left (CR 104.2a) asks nobody and
+            -- adds no second name.
+            opponent <- Players.chooseOne controller oid (Players.chooserOffer controller gs PlayerRelation.Opponent)
             -- CR 101.4: the active player chooses first, then the rest in turn
             -- order. Both names are chosen as one event, so the order is the
             -- rule's and not the card's reading order.
@@ -3164,10 +3165,11 @@ apply batch candidate event =
           -- Unreachable, and defensive for the reason riot's arm gives above.
           Nothing -> pure (Just event)
           Just controller -> do
-            -- CR 801.5a's offer of opponents, asked through Players.chooseOne.
-            -- No opponent left to ask (CR 104.2a) means nobody decides, so
-            -- tribute is not paid -- rule 702.104b's condition reads as true.
-            chosen <- Players.chooseOne controller oid (Players.offer controller gs PlayerRelation.Opponent)
+            -- CR 801.5a / 801.5c's offer of opponents, asked through
+            -- Players.chooseOne. No opponent left to ask (CR 104.2a) means
+            -- nobody decides, so tribute is not paid -- rule 702.104b's
+            -- condition reads as true.
+            chosen <- Players.chooseOne controller oid (Players.chooserOffer controller gs PlayerRelation.Opponent)
             case chosen of
               Nothing -> pure ()
               Just opponent -> do

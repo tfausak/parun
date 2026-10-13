@@ -66,15 +66,6 @@
               {
                 "effects": [
                   {
-                    "type": "ChoosePlayer",
-                    "value": {
-                      "scope": {
-                        "type": "Opponent"
-                      },
-                      "slot": "opponent"
-                    }
-                  },
-                  {
                     "type": "MoveToZone",
                     "value": {
                       "placement": {
@@ -87,8 +78,10 @@
                         "type": "ChosenCardFromAmong",
                         "value": {
                           "chooser": {
-                            "type": "InSlot",
-                            "value": "opponent"
+                            "type": "Relative",
+                            "value": {
+                              "type": "Opponent"
+                            }
                           },
                           "count": {
                             "type": "Exactly",
