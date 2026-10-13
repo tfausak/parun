@@ -43,6 +43,7 @@ import qualified Pawl.Engine.Game as Game
 import qualified Pawl.Engine.IgnoredAbility as IgnoredAbility
 import qualified Pawl.Engine.Keyword as Keyword
 import qualified Pawl.Engine.ManaFilter as ManaFilter
+import qualified Pawl.Engine.Plane as Plane
 import qualified Pawl.Engine.Players as Players
 import qualified Pawl.Engine.Projection as Projection
 import qualified Pawl.Engine.Projection.Rewrite as Projection
@@ -141,14 +142,14 @@ inScope pid controller gs scope = case scope of
 -- is `pid` one of the players this row applies to? inScope for the Scoped arm,
 -- and an equality for the seat CR 601.2c chose and Pawl.Engine.Resolve baked.
 --
--- Both carriers are asked through this, and the printed one only ever holds a
--- Scoped: a static ability has no target slot to have named a seat.
+-- The stored carrier is asked through this. The printed one, which only ever
+-- holds a Scoped (a static ability has no target slot to have named a seat),
+-- asks inScope and the range itself in printedRows, since CR 801.18 lifts the
+-- range cut for a planar source.
 --
 -- CR 801.10: a row reaches only players within its controller's range of
 -- influence, which is cut here rather than in inScope, whose other readers ask
 -- about a relation between two players and not about an effect's reach.
--- Pawl.RangeOfInfluenceSpec's "CR 801.10 a player ability does not reach a
--- player outside its controller's range" proves it.
 applies :: PlayerId -> PlayerId -> GameState -> AffectedPlayers.AffectedPlayers PlayerId -> Bool
 applies pid controller gs affected =
   Game.inRangeOf controller pid gs && case affected of
@@ -230,11 +231,11 @@ playerAbilitiesOf carrier gs =
 
 -- CR 613.7a: the PRINTED carrier's rows -- printed as opposed to CR 611.2c's
 -- stored one, the list itself being the COPIABLE one above -- one per player
--- ability on one battlefield permanent that still has it, as
--- (timestamp, source, ability name, reaches, effect) -- the shape `applying`
--- below sorts, filters and strips. `reaches` answers whether the row applies to
--- a given player: its scope, CR 801.10's range, and its condition asked about
--- that player.
+-- ability on one battlefield permanent, or command-zone object whose abilities
+-- function there, that still has it, as (timestamp, source, ability name,
+-- reaches, effect) -- the shape `applying` below sorts, filters and strips.
+-- `reaches` answers whether the row applies to a given player: its scope, CR
+-- 801.10's range, and its condition asked about that player.
 --
 -- Top-level and shared rather than local to that function, because a second
 -- question needs the same walk and needs it read DIFFERENTLY: `applying` drops
@@ -293,8 +294,16 @@ printedRows gs =
                   gs
                   oid
                   (Condition.forCandidate pid (if null changes then c else Projection.rewriteCondition changes c))
+            -- CR 801.10: within the controller's range of influence, unless
+            -- the source is a planar card (CR 801.18, Plane.exemptFromRange).
+            -- Pawl.RangeOfInfluenceSpec's "CR 801.10 a player ability does
+            -- not reach a player outside its controller's range" proves the
+            -- cut, and Pawl.PlanechaseSpec's "CR 801.18 a face-up plane's
+            -- player ability reaches a player outside the planar controller's
+            -- range" the exemption.
             reaches ability pid =
-              applies pid controller gs (AffectedPlayers.Scoped (PlayerStaticAbility.scope ability))
+              (Plane.exemptFromRange oid gs || Game.inRangeOf controller pid gs)
+                && inScope pid controller gs (PlayerStaticAbility.scope ability)
                 && lives ability pid
          in fmap (\(stamp, ability) -> (stamp, Just oid, PlayerStaticAbility.name ability, reaches ability, readAs (PlayerStaticAbility.effect ability))) stamped
       fromPermanent oid = case playerAbilitiesOf oid gs of
@@ -369,7 +378,12 @@ printedRows gs =
           (Just object, Just controller) -> rowsOf [] oid controller (fmap (Bifunctor.first (max (Object.timestamp object))) abilities)
           _ -> []
       onBattlefield = Set.toList (GameState.battlefield gs)
-   in concatMap fromPermanent onBattlefield
+      -- CR 113.6p / 901.7: an object whose abilities function from the command
+      -- zone -- a face-up plane or phenomenon, an emblem, a vanguard --
+      -- contributes its player abilities from there. Pawl.PlanechaseSpec's "CR
+      -- 901.7 a face-up plane's player ability affects the game" proves it.
+      inCommand = filter (`Vanguard.functionsFromCommandZone` gs) (Set.toList (GameState.command gs))
+   in concatMap fromPermanent (onBattlefield <> inCommand)
         <> (if Projection.grantsPlayerAbilityAnywhere gs then concatMap grantedFrom onBattlefield else [])
 
 -- CR 116.2d's WHO: is `pid` a player whose game the permanent `oid` is changing

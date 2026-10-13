@@ -22,6 +22,7 @@ import qualified Pawl.Engine.Engine as Engine
 import qualified Pawl.Engine.Event as Event
 import qualified Pawl.Engine.Game as Game
 import qualified Pawl.Engine.Planechase as Planechase
+import qualified Pawl.Engine.PlayerEffect as PlayerEffect
 import qualified Pawl.Engine.Projection as Projection
 import qualified Pawl.Engine.Projection.View as Projection
 import qualified Pawl.Engine.Resolve.Effect as Resolve
@@ -113,6 +114,29 @@ spec s registry = Spec.describe s "Pawl.Engine.Planechase" $ do
     Spec.assertBool s (not (Set.member carolsToo (CombatRestriction.cantBlock (Just S.carol) [carolsToo] (S.withRange 1 withBedlam)))) "CR 801.10 at range 1 alice's Bedlam does not reach it"
     Spec.assertBool s (Set.member carolsToo (CombatRestriction.cantBlock (Just S.carol) [carolsToo] withBedlam)) "at an unlimited range Bedlam does"
     Spec.assertBool s (not (Game.inRangeOf S.alice S.carol (S.withRange 1 withTazeem))) "carol is outside alice's range"
+
+  -- CR 113.6p / 901.7: a face-up plane's player ability functions from the
+  -- command zone. The Lux Foundation Library's "Players have no maximum hand
+  -- size" reaches bob; in the planar deck it does not.
+  Spec.it s "CR 901.7 a face-up plane's player ability affects the game" $ do
+    board <- planarBoard s registry ["The Lux Foundation Library", "Academy at Tolaria West"]
+    buried <- planarBoard s registry ["Academy at Tolaria West", "The Lux Foundation Library"]
+    Spec.assertEqWith s "CR 901.7 with the Library face up bob has no maximum hand size" (PlayerEffect.maximumHandSize S.bob board) Nothing
+    Spec.assertEqWith s "with it in the planar deck his is seven" (PlayerEffect.maximumHandSize S.bob buried) (Just 7)
+
+  -- CR 801.18 for a player ability: four seats at range 1, alice the planar
+  -- controller with The Lux Foundation Library face up, and carol two seats
+  -- from her. The pair has Academy at Tolaria West face up instead and alice's
+  -- Price of Knowledge, printing the same words on an enchantment, which CR
+  -- 801.10 keeps from carol.
+  Spec.it s "CR 801.18 a face-up plane's player ability reaches a player outside the planar controller's range" $ do
+    price <- S.printingOf s registry "Price of Knowledge"
+    planar <- seatedPlanarBoard s registry S.alice [(S.alice, ["The Lux Foundation Library"]), (S.bob, []), (S.carol, []), (S.dave, [])]
+    unplanar <- seatedPlanarBoard s registry S.alice [(S.alice, ["Academy at Tolaria West"]), (S.bob, []), (S.carol, []), (S.dave, [])]
+    let (_, enchanted) = S.addPermanent price S.alice unplanar
+    Spec.assertEqWith s "CR 801.18 at range 1 carol has no maximum hand size under the Library" (PlayerEffect.maximumHandSize S.carol (S.withRange 1 planar)) Nothing
+    Spec.assertEqWith s "CR 801.10 at range 1 alice's Price of Knowledge leaves carol's at seven" (PlayerEffect.maximumHandSize S.carol (S.withRange 1 enchanted)) (Just 7)
+    Spec.assertEqWith s "at an unlimited range it reaches her" (PlayerEffect.maximumHandSize S.carol enchanted) Nothing
 
   -- CR 116.2i / 901.9: the active player, in a main phase with an empty stack,
   -- may roll the planar die; the first roll of the turn is free and the second

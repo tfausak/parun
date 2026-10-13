@@ -62,8 +62,8 @@ commandControllerOf oid obj gs
 -- | CR 801.18 / 901.13: is this source exempt from the limited range of
 -- influence option? A plane or phenomenon card is. Asked by the readers of a
 -- static ability's reach: Projection.View's inSourceRangeGiven and
--- controlReaches, CombatRestriction's reachesDeclarer and Replacement's
--- reachOf. Pawl.PlanechaseSpec's "CR 801.18 a face-up Tazeem stops a creature
+-- controlReaches, CombatRestriction's reachesDeclarer, Replacement's reachOf
+-- and PlayerEffect's printedRows. Pawl.PlanechaseSpec's "CR 801.18 a face-up Tazeem stops a creature
 -- outside the planar controller's range from blocking" proves it.
 --
 -- Not implemented: a planar card's triggered abilities, and what any of its

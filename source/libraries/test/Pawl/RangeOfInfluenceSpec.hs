@@ -6,7 +6,7 @@
 -- Pawl.Engine.Target's legalRecipientsGiven (CR 801.4),
 -- Pawl.Engine.Activate's activatableGiven (CR 801.6), Pawl.Engine.Sba's
 -- fallsOff and becomesUnattached (CR 801.8 / CR 801.9),
--- Pawl.Engine.Projection's affectsWith and Pawl.Engine.PlayerEffect's applies
+-- Pawl.Engine.Projection's affectsWith and Pawl.Engine.PlayerEffect's printedRows
 -- (CR 801.10 for static abilities), Pawl.Engine.Projection.View's
 -- controlNames (CR 801.10 for a layer-2 grant), Pawl.Engine.CombatRestriction's
 -- attackLimit and blockLimit (CR 801.10 for a declaration's bound) and Sba's
