@@ -173,6 +173,16 @@ battlefieldCandidates gs =
 battlefieldAt :: EventGroup.EventGroup -> GameState -> Map.Map ObjectId (BattlefieldCandidate.BattlefieldCandidate PC.ProjectedCharacteristics)
 battlefieldAt group gs = Map.findWithDefault (battlefieldCandidates gs) group (GameState.battlefieldWhenTriggered gs)
 
+-- CR 113.7a: the delayed abilities `oid`'s rules text declared as an ability of
+-- it triggered, which the pending trigger freezes (PendingTrigger.delayed). Read
+-- off `board`, the CR 603.10 sample its abilities came from, so the rest of the
+-- triggering resolution cannot change them, and off its projection or last known
+-- information (Projection.delayedSnapshotOf) for a bearer the sample does not
+-- hold. data/scenarios/copy's Protean Hydra and Synthetic Shifting Sting
+-- scenario proves the sampled half.
+delayedAsTriggered :: Map.Map ObjectId (BattlefieldCandidate.BattlefieldCandidate PC.ProjectedCharacteristics) -> ObjectId -> GameState -> Map.Map AbilityName.AbilityName (TriggeredAbility.TriggeredAbility Card (GrantedAbility.GrantedAbility Card))
+delayedAsTriggered board oid gs = maybe (Projection.delayedSnapshotOf oid gs) (PC.delayedAbilities . BattlefieldCandidate.characteristics) (Map.lookup oid board)
+
 -- CR 603.10: the board "immediately after" a permanent entered includes what its
 -- as-enters effects did, since they are part of the entry (CR 614.1c). So the
 -- CR 603.10 sample filed under the entry's event group is taken again now --
@@ -2231,7 +2241,7 @@ eventTriggers events gs =
             -- CR 400.7d: an ability of a permanent may read what costs were
             -- paid for the spell it was, so the bearer's record rides on every
             -- ability it triggers (Binding.paidCostRecord).
-            pend (cond, ab) = PendingTrigger.MkPendingTrigger (TriggerSource.OfObject oid) ctrl ab (Map.union (Binding.paidCostRecord bindings) (eventBindingsOver board gs (Map.lookup oid becameInGraveyard) becameInGraveyard oid ctrl cond event)) Nothing (Just event) (copiesIn (fmap snd abilities) ab)
+            pend (cond, ab) = PendingTrigger.MkPendingTrigger (TriggerSource.OfObject oid) ctrl ab (Map.union (Binding.paidCostRecord bindings) (eventBindingsOver board gs (Map.lookup oid becameInGraveyard) becameInGraveyard oid ctrl cond event)) Nothing (Just event) (copiesIn (fmap snd abilities) ab) (delayedAsTriggered board oid gs)
             -- CR 805.4d: one trigger per player whose step this is (stepCopies).
             pends (cond, ab) =
               let perPlayer = stepCopies gs ctrl cond event ab (pend (cond, ab))
@@ -2360,7 +2370,10 @@ inherentTriggers held events gs =
               TriggerSource.Sourceless -> GameState.nextObjectId gs
             cond = TriggeredAbility.condition ability
             fires event = matchesTriggerGiven Map.empty board gs bearer you cond event && eventWithinRange board gs you event
-            pend event = PendingTrigger.MkPendingTrigger source you ability (eventBindingsOver board gs Nothing Map.empty bearer you cond event) Nothing (Just event) 1
+            frozen = case source of
+              TriggerSource.OfObject oid -> delayedAsTriggered board oid gs
+              TriggerSource.Sourceless -> Map.empty
+            pend event = PendingTrigger.MkPendingTrigger source you ability (eventBindingsOver board gs Nothing Map.empty bearer you cond event) Nothing (Just event) 1 frozen
             key trigger = if batchScoped cond then Just (batchPartition cond (PendingTrigger.bindings trigger)) else Nothing
          in oncePerBatch [(key trigger, trigger) | event <- fmap LoggedEvent.event (NonEmpty.toList block), fires event, trigger <- stepCopies gs you cond event ability (pend event)]
    in concatMap (filter (interveningHolds gs) . forHeld) held
@@ -3376,7 +3389,7 @@ stateTriggers gs
           armed (before, ab) = 1 + length (filter (ab ==) before) > instancesOnStack oid ab
           -- CR 400.7d, the event scan's stamp above on this road too. A
           -- fence: no state trigger in data/cards/ reads the record.
-          pend ab = PendingTrigger.MkPendingTrigger (TriggerSource.OfObject oid) ctrl ab (maybe Map.empty (Binding.paidCostRecord . Object.bindings) (Game.lookupObject oid gs)) Nothing Nothing (copiesIn abilities ab)
+          pend ab = PendingTrigger.MkPendingTrigger (TriggerSource.OfObject oid) ctrl ab (maybe Map.empty (Binding.paidCostRecord . Object.bindings) (Game.lookupObject oid gs)) Nothing Nothing (copiesIn abilities ab) (Projection.delayedSnapshotOf oid gs)
        in fmap (pend . snd) (filter armed (zip (List.inits lives) lives))
 
 -- CR 603.7a's floor is the watermark's job, and is all an ordinary entry
@@ -3426,8 +3439,8 @@ isReflexive entry = TriggeredAbility.condition (DelayedTrigger.ability entry) ==
 -- retires the entry immediately after, an expiry-less entry having CR 603.7b's one
 -- shot. Not implemented: that rule's FIRST sentence, once per occurrence
 -- (#2121).
-reflexiveFiring :: DelayedTrigger -> PendingTrigger
-reflexiveFiring entry =
+reflexiveFiring :: GameState -> DelayedTrigger -> PendingTrigger
+reflexiveFiring gs entry =
   PendingTrigger.MkPendingTrigger
     (TriggerSource.OfObject (DelayedTrigger.source entry))
     (DelayedTrigger.controller entry)
@@ -3442,6 +3455,8 @@ reflexiveFiring entry =
     -- is no one event this fired from.
     Nothing
     1
+    -- It triggers as this gather finds it, so the source's text now.
+    (Projection.delayedSnapshotOf (DelayedTrigger.source entry) gs)
 
 -- CR 113.2c: how many instances of `ability` a bearer's list holds, which is
 -- PendingTrigger.copies. Two Well Rested grant one creature two.
@@ -3615,6 +3630,8 @@ delayedPending grouped gs =
           (Just (LoggedEvent.event logged))
           -- One entry is one instance, CR 603.7's ability created on its own.
           1
+          -- CR 113.7a, read off the board as it stood after the firing event.
+          (delayedAsTriggered (battlefieldAt (LoggedEvent.group logged) gs) (DelayedTrigger.source entry) gs)
       store = GameState.delayedTriggers gs
       -- CR 603.2 plus CR 603.4: the event matched AND the intervening "if" held,
       -- which together are what "triggered" means. Per occurrence, since CR 603.4
@@ -3627,7 +3644,7 @@ delayedPending grouped gs =
       -- occurrences whose "if" holds: CR 603.7b gives the controller every event
       -- that OCCURRED, and CR 603.4 then answers for the one they picked.
       triggered entry
-        | isReflexive entry = pure (filter (interveningHolds gs) (if delayedArmed gs entry then [reflexiveFiring entry] else []))
+        | isReflexive entry = pure (filter (interveningHolds gs) (if delayedArmed gs entry then [reflexiveFiring gs entry] else []))
         | otherwise = fmap (filter (interveningHolds gs) . fmap (pend entry)) (firedBy entry)
       -- Triggering spends the one shot only for an entry with no stated duration.
       spent (entry, fired) = not (null fired) && Maybe.isNothing (DelayedTrigger.expiry entry)

@@ -2,6 +2,7 @@ module Pawl.Types.PendingTrigger where
 
 import qualified Data.Map.Strict as Map
 import Numeric.Natural (Natural)
+import qualified Pawl.Types.AbilityName as AbilityName
 import qualified Pawl.Types.Binding as Binding
 import qualified Pawl.Types.Card as Card
 import qualified Pawl.Types.GameEvent as GameEvent
@@ -53,6 +54,13 @@ data PendingTrigger = MkPendingTrigger
     -- bore as it triggered, 1 unless a printing or a grant repeats it. The
     -- allowance Pawl.Engine.Event.withinTriggerLimit gives a "triggers only
     -- once" rider, since the instances themselves are equal values.
-    copies :: Natural
+    copies :: Natural,
+    -- | CR 113.7a: the delayed abilities the source's rules text declared as
+    -- this ability TRIGGERED (PC.delayedAbilities), which Engine.placeBorne
+    -- hands to the stack object. Read as it triggered rather than at
+    -- placement, so a copy effect the rest of the triggering resolution
+    -- applies to the source does not change what its arms create. Empty for a
+    -- sourceless ability.
+    delayed :: Map.Map AbilityName.AbilityName (TriggeredAbility.TriggeredAbility Card.Card (GrantedAbility.GrantedAbility Card.Card))
   }
   deriving (Eq, Ord, Show)

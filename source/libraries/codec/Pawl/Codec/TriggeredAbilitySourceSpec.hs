@@ -67,7 +67,7 @@ spec s = Spec.describe s "Pawl.Codec.TriggeredAbilitySource" $ do
           TriggeredAbilitySource.delayed = Map.empty
         }
       " {\"source\":6,\"ability\":{\"condition\":{\"type\":\"SelfEnters\"},\"modal\":{\"modes\":[{}]}},\"createdAt\":3} "
-  -- CR 113.7a: the delayed declarations frozen as the ability went on the stack.
+  -- CR 113.7a: the delayed declarations frozen as the ability triggered.
   Spec.it s "a triggered ability carrying its source's delayed declarations" $
     Common.assertCodec
       s

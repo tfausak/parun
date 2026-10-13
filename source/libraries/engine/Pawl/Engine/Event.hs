@@ -9635,7 +9635,7 @@ reactionTriggers events gs = filter (interveningHolds gs) (eventTriggers events 
 -- (2026-09-26).
 triggeredSources :: GameState -> Set ObjectId
 triggeredSources gs =
-  let reflexive = [reflexiveFiring entry | entry <- Foldable.toList (GameState.delayedTriggers gs), isReflexive entry, delayedArmed gs entry]
+  let reflexive = [reflexiveFiring gs entry | entry <- Foldable.toList (GameState.delayedTriggers gs), isReflexive entry, delayedArmed gs entry]
       pending = filter (interveningHolds gs) (eventTriggers (unscannedGrouped gs) gs <> stateTriggers gs <> reflexive)
    in Set.fromList [oid | TriggerSource.OfObject oid <- fmap PendingTrigger.source (withinTriggerLimit gs pending)]
 

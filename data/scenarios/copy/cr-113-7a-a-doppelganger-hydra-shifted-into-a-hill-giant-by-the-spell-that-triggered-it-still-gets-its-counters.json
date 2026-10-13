@@ -1,0 +1,41 @@
+{
+  "description": "CR 113.7a a Dimir Doppelganger copying Protean Hydra keeps the Hydra's end-step counters when the spell that triggered it then makes it a Hill Giant",
+  "note": "The triggered ability is independent of its source once it TRIGGERS, so the delayed text it arms is the Hydra's, read as the counter came off. Synthetic Shifting Sting's own next instruction makes the Doppelganger a Hill Giant before the trigger reaches the stack, and the Doppelganger's printed card declares nothing, so reading the source at placement arms nothing and it ends the turn with 2 counters rather than 4.",
+  "board": {
+    "seats": [
+      {
+        "name": "alice",
+        "battlefield": [
+          { "card": "Dimir Doppelganger", "label": "doppelganger", "ready": true, "counters": [{ "key": { "type": "PlusOnePlusOne" }, "value": 3 }] },
+          { "card": "Island", "label": "i1", "ready": true },
+          { "card": "Island", "label": "i2", "ready": true },
+          { "card": "Island", "label": "i3", "ready": true },
+          { "card": "Island", "label": "i4", "ready": true },
+          { "card": "Swamp", "label": "s1", "ready": true },
+          { "card": "Mountain", "label": "m1", "ready": true }
+        ],
+        "hand": [{ "card": "Synthetic Shifting Sting", "label": "sting" }],
+        "graveyard": [{ "card": "Protean Hydra", "label": "hydra" }],
+        "library": [{ "card": "Island" }, { "card": "Island" }]
+      },
+      {
+        "name": "bob",
+        "battlefield": [{ "card": "Hill Giant", "label": "giant" }],
+        "library": [{ "card": "Island" }, { "card": "Island" }]
+      }
+    ],
+    "active": "alice",
+    "step": "PrecombatMain"
+  },
+  "timeline": [
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": { "Activate": { "object": "$doppelganger", "targets": ["$hydra"], "mana": ["$i1", "$s1", "$i2", null] } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass" },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "check": { "Names": { "object": "$doppelganger", "names": ["Protean Hydra"] } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": { "Cast": { "object": "$sting", "targetsBySlot": { "victim": ["$doppelganger"], "copied": ["$giant"] }, "mana": ["$i3", "$i4", "$m1"] } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass" },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "check": { "Names": { "object": "$doppelganger", "names": ["Hill Giant"] } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "check": { "Counters": { "object": "$doppelganger", "kind": { "type": "PlusOnePlusOne" }, "count": 2 } } },
+    { "turn": 1, "step": "DeclareAttackers", "player": "alice", "do": { "Attack": [] } },
+    { "turn": 2, "step": "Upkeep", "player": "bob", "check": { "Counters": { "object": "$doppelganger", "kind": { "type": "PlusOnePlusOne" }, "count": 4 } } }
+  ]
+}
