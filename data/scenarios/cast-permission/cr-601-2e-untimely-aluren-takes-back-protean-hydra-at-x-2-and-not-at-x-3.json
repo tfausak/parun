@@ -74,7 +74,7 @@
       "turn": 1,
       "step": "PrecombatMain",
       "player": "alice",
-      "do": {
+      "refuse": {
         "Cast": {
           "object": "$protean-hydra",
           "x": 2
