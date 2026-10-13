@@ -1,6 +1,7 @@
 module Pawl.Codec.Aggregation where
 
 import qualified Data.Typeable as Typeable
+import qualified Pawl.Codec.DistinctOf as DistinctOf
 import qualified Pawl.JsonCodec.Arm as Arm
 import qualified Pawl.JsonCodec.Codec as Codec
 import qualified Pawl.Types.Aggregation as Aggregation
@@ -20,8 +21,7 @@ codec quantityCodec =
   Arm.tagged
     tagOf
     [ Arm.nullary "Members" Aggregation.Members,
-      Arm.nullary "DistinctCardTypes" Aggregation.DistinctCardTypes,
-      Arm.nullary "DistinctColors" Aggregation.DistinctColors,
+      Arm.payload "Distinct" DistinctOf.codec Aggregation.Distinct (\x -> case x of Aggregation.Distinct y -> Just y; _ -> Nothing),
       Arm.nullary "MostSharingACreatureType" Aggregation.MostSharingACreatureType,
       Arm.nullary "MostSharingACardType" Aggregation.MostSharingACardType,
       Arm.nullary "DistinctNames" Aggregation.DistinctNames,
@@ -32,8 +32,7 @@ codec quantityCodec =
 tagOf :: Aggregation.Aggregation q -> String
 tagOf x = case x of
   Aggregation.Members {} -> "Members"
-  Aggregation.DistinctCardTypes {} -> "DistinctCardTypes"
-  Aggregation.DistinctColors {} -> "DistinctColors"
+  Aggregation.Distinct {} -> "Distinct"
   Aggregation.MostSharingACreatureType {} -> "MostSharingACreatureType"
   Aggregation.MostSharingACardType {} -> "MostSharingACardType"
   Aggregation.DistinctNames {} -> "DistinctNames"

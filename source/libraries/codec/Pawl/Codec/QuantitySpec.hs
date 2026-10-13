@@ -19,6 +19,7 @@ import qualified Pawl.Types.Count as Count
 import qualified Pawl.Types.CounterKind as CounterKind
 import qualified Pawl.Types.Designation as Designation
 import qualified Pawl.Types.Devotion as Devotion
+import qualified Pawl.Types.DistinctOf as DistinctOf
 import qualified Pawl.Types.Filter as Filter
 import qualified Pawl.Types.Halved as Halved
 import qualified Pawl.Types.InZone as InZone
@@ -181,10 +182,10 @@ spec s = Spec.describe s "Pawl.Codec.Quantity" $ do
           ( Count.MkCount
               (Scope.InZone (InZone.MkInZone Zone.Graveyard (PlayerRef.Relative PlayerRelation.AnyPlayer)))
               (Filter.And [])
-              Aggregation.DistinctCardTypes
+              (Aggregation.Distinct DistinctOf.CardTypes)
           )
       )
-      " {\"type\":\"Count\",\"value\":{\"scope\":{\"type\":\"InZone\",\"value\":{\"zone\":{\"type\":\"Graveyard\"},\"player\":{\"type\":\"Relative\",\"value\":{\"type\":\"AnyPlayer\"}}}},\"filter\":{\"type\":\"And\",\"value\":[]},\"aggregation\":{\"type\":\"DistinctCardTypes\"}}} "
+      " {\"type\":\"Count\",\"value\":{\"scope\":{\"type\":\"InZone\",\"value\":{\"zone\":{\"type\":\"Graveyard\"},\"player\":{\"type\":\"Relative\",\"value\":{\"type\":\"AnyPlayer\"}}}},\"filter\":{\"type\":\"And\",\"value\":[]},\"aggregation\":{\"type\":\"Distinct\",\"value\":{\"type\":\"CardTypes\"}}}} "
   -- Greatest's payload is a whole Quantity rather than a nullary tag, so a
   -- per-member quantity that is itself a Count has to round-trip.
   Spec.it s "Greatest round-trips a nested Count payload" $
@@ -200,13 +201,13 @@ spec s = Spec.describe s "Pawl.Codec.Quantity" $ do
                       ( Count.MkCount
                           (Scope.InZone (InZone.MkInZone Zone.Graveyard (PlayerRef.Relative PlayerRelation.AnyPlayer)))
                           (Filter.And [])
-                          Aggregation.DistinctCardTypes
+                          (Aggregation.Distinct DistinctOf.CardTypes)
                       )
                   )
               )
           )
       )
-      " {\"type\":\"Count\",\"value\":{\"scope\":{\"type\":\"InZone\",\"value\":{\"zone\":{\"type\":\"Battlefield\"},\"player\":{\"type\":\"Relative\",\"value\":{\"type\":\"AnyPlayer\"}}}},\"filter\":{\"type\":\"And\",\"value\":[]},\"aggregation\":{\"type\":\"Greatest\",\"value\":{\"type\":\"Count\",\"value\":{\"scope\":{\"type\":\"InZone\",\"value\":{\"zone\":{\"type\":\"Graveyard\"},\"player\":{\"type\":\"Relative\",\"value\":{\"type\":\"AnyPlayer\"}}}},\"filter\":{\"type\":\"And\",\"value\":[]},\"aggregation\":{\"type\":\"DistinctCardTypes\"}}}}}} "
+      " {\"type\":\"Count\",\"value\":{\"scope\":{\"type\":\"InZone\",\"value\":{\"zone\":{\"type\":\"Battlefield\"},\"player\":{\"type\":\"Relative\",\"value\":{\"type\":\"AnyPlayer\"}}}},\"filter\":{\"type\":\"And\",\"value\":[]},\"aggregation\":{\"type\":\"Greatest\",\"value\":{\"type\":\"Count\",\"value\":{\"scope\":{\"type\":\"InZone\",\"value\":{\"zone\":{\"type\":\"Graveyard\"},\"player\":{\"type\":\"Relative\",\"value\":{\"type\":\"AnyPlayer\"}}}},\"filter\":{\"type\":\"And\",\"value\":[]},\"aggregation\":{\"type\":\"Distinct\",\"value\":{\"type\":\"CardTypes\"}}}}}}} "
   -- CR 119.1, with the PlayerRef on the wire saying whose. Serra Avatar's "your"
   -- is the Relative arm; the InSlot arm below is the one a recursive decoder
   -- could lose a payload through, so both are round-tripped.

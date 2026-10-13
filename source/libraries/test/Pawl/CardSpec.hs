@@ -815,8 +815,7 @@ quantityCounts = QuantitySlot.nestedCounts
 countQuantities :: Count.Type.Count Quantity.Type.Quantity -> [Quantity.Type.Quantity]
 countQuantities count = case Count.Type.aggregation count of
   Aggregation.Members -> []
-  Aggregation.DistinctCardTypes -> []
-  Aggregation.DistinctColors -> []
+  Aggregation.Distinct _ -> []
   Aggregation.MostSharingACreatureType -> []
   Aggregation.MostSharingACardType -> []
   Aggregation.DistinctNames -> []

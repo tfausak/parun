@@ -1,5 +1,7 @@
 module Pawl.Types.Aggregation where
 
+import qualified Pawl.Types.DistinctOf as DistinctOf
+
 -- | How a Pawl.Types.Count turns its matched set into a number. A real axis,
 -- not always "length": CR 208.2a's Tarmogoyf counts the distinct card TYPES
 -- among the cards in every graveyard, which is the size of a union.
@@ -15,10 +17,11 @@ data Aggregation quantity
     -- rather than for objects: Pawl.Types.Scope.OverPlayers folds over players,
     -- and CR 109.1's list of what an object is has no player in it.
     Members
-  | DistinctCardTypes
-  | -- | How many of CR 105.1's five colors the members have among them -- Vivid's
-    -- "the number of colors among permanents you control" (Volatile Rift).
-    DistinctColors
+  | -- | How many distinct values of one characteristic the members have among
+    -- them: Tarmogoyf's card types, Vivid's "the number of colors among
+    -- permanents you control" (Volatile Rift), domain's "the number of basic
+    -- land types among lands you control" (Tribal Flames).
+    Distinct DistinctOf.DistinctOf
   | -- | The most members that share one creature type (CR 205.3m) -- Synchronized
     -- Eviction's "at least two creatures that share a creature type".
     MostSharingACreatureType

@@ -1,0 +1,91 @@
+{
+  "faces": [
+    {
+      "attackCosts": [
+        {
+          "perAttacker": {
+            "type": "Counted",
+            "value": {
+              "type": "Count",
+              "value": {
+                "aggregation": {
+                  "type": "Distinct",
+                  "value": {
+                    "type": "BasicLandTypes"
+                  }
+                },
+                "filter": {
+                  "type": "And",
+                  "value": [
+                    {
+                      "type": "HasCardType",
+                      "value": {
+                        "type": "Land"
+                      }
+                    },
+                    {
+                      "type": "ControlledBy",
+                      "value": {
+                        "type": "You"
+                      }
+                    }
+                  ]
+                },
+                "scope": {
+                  "type": "InZone",
+                  "value": {
+                    "player": {
+                      "type": "Relative",
+                      "value": {
+                        "type": "AnyPlayer"
+                      }
+                    },
+                    "zone": {
+                      "type": "Battlefield"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "scope": {
+            "type": "Controller"
+          },
+          "subject": {
+            "type": "Matching",
+            "value": {
+              "type": "HasCardType",
+              "value": {
+                "type": "Creature"
+              }
+            }
+          }
+        }
+      ],
+      "manaCost": [
+        {
+          "type": "Generic",
+          "value": 3
+        },
+        {
+          "type": "OfType",
+          "value": {
+            "type": "Colored",
+            "value": {
+              "type": "Blue"
+            }
+          }
+        }
+      ],
+      "name": "Collective Restraint",
+      "oracleText": "Domain — Creatures can't attack you unless their controller pays {X} for each creature they control that's attacking you, where X is the number of basic land types among lands you control.",
+      "typeLine": {
+        "types": [
+          {
+            "type": "Enchantment"
+          }
+        ]
+      }
+    }
+  ]
+}

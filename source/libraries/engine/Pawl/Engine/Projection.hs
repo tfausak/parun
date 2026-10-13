@@ -65,6 +65,7 @@ import qualified Pawl.Types.Defense as Defense
 import qualified Pawl.Types.Designation as Designation
 import qualified Pawl.Types.DestructionR as DestructionR
 import qualified Pawl.Types.DestructionRewrite as DestructionRewrite
+import qualified Pawl.Types.DistinctOf as DistinctOf
 import qualified Pawl.Types.Effect as Effect
 import qualified Pawl.Types.EntryR as EntryR
 import qualified Pawl.Types.EntryRewrite as EntryRewrite
@@ -4414,13 +4415,14 @@ quantityReads q = case q of
   Quantity.Type.WasCastFrom _ -> Set.empty
   Quantity.Type.BlockersBeyondFirst -> Set.empty
 
--- What an Aggregation reads off each member the Filter kept. DistinctCardTypes
+-- What an Aggregation reads off each member the Filter kept. Distinct card types
 -- is CR 208.2a's fold over card types (layer 4); Greatest reads its Quantity's.
 aggregationReads :: Aggregation.Aggregation Quantity.Type.Quantity -> Set Aspect
 aggregationReads a = case a of
   Aggregation.Members -> Set.empty
-  Aggregation.DistinctCardTypes -> Set.singleton Types
-  Aggregation.DistinctColors -> Set.singleton Colors
+  Aggregation.Distinct DistinctOf.CardTypes -> Set.singleton Types
+  Aggregation.Distinct DistinctOf.Colors -> Set.singleton Colors
+  Aggregation.Distinct DistinctOf.BasicLandTypes -> Set.singleton Subtypes
   Aggregation.MostSharingACreatureType -> Set.singleton Subtypes
   Aggregation.MostSharingACardType -> Set.singleton Types
   -- No Modification writes CR 201.1's names, HasName's reason in filterReads.

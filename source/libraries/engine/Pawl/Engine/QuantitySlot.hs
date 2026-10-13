@@ -50,8 +50,7 @@ import qualified Pawl.Types.VotesReceived as VotesReceived
 overCount :: (Applicative f) => (quantity -> f quantity) -> Count.Type.Count quantity -> f (Count.Type.Count quantity)
 overCount f count = case Count.Type.aggregation count of
   Aggregation.Members -> pure count
-  Aggregation.DistinctCardTypes -> pure count
-  Aggregation.DistinctColors -> pure count
+  Aggregation.Distinct _ -> pure count
   Aggregation.MostSharingACreatureType -> pure count
   Aggregation.MostSharingACardType -> pure count
   Aggregation.DistinctNames -> pure count

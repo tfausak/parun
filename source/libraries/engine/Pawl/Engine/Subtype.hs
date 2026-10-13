@@ -89,6 +89,11 @@ intrinsicManaAbilityOf pc =
   not (PC.lostAllAbilities pc)
     && intrinsicManaAbility (PC.cardTypes pc) (PC.subtypes pc)
 
+-- | CR 205.3i / 305.6: Forest, Island, Mountain, Plains or Swamp -- the five
+-- `subtypeMana` names, so the list exists once.
+isBasicLandType :: Subtype.Subtype -> Bool
+isBasicLandType = Maybe.isJust . subtypeMana
+
 -- | CR 205.3i
 isLandType :: Subtype.Subtype -> Bool
 isLandType subtype = case subtype of
