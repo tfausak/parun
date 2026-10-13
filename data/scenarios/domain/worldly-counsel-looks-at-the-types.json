@@ -1,0 +1,118 @@
+{
+  "description": "CR 305.6 Worldly Counsel looks at three cards off a Forest and a Tundra and keeps one",
+  "note": "Two lands, three basic land types, so the third card from the top is offered.",
+  "board": {
+    "seats": [
+      {
+        "name": "alice",
+        "manaPool": "UU",
+        "battlefield": [
+          {
+            "card": "Forest",
+            "label": "forest"
+          },
+          {
+            "card": "Tundra",
+            "label": "tundra"
+          }
+        ],
+        "hand": [
+          {
+            "card": "Worldly Counsel",
+            "label": "counsel"
+          }
+        ],
+        "library": [
+          {
+            "card": "Plains",
+            "label": "c1"
+          },
+          {
+            "card": "Swamp",
+            "label": "c2"
+          },
+          {
+            "card": "Mountain",
+            "label": "c3"
+          },
+          {
+            "card": "Island",
+            "label": "c4"
+          }
+        ]
+      },
+      {
+        "name": "bob",
+        "library": [
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          }
+        ]
+      }
+    ],
+    "active": "alice",
+    "step": "PrecombatMain"
+  },
+  "timeline": [
+    {
+      "turn": 1,
+      "step": "PrecombatMain",
+      "player": "alice",
+      "do": {
+        "Cast": {
+          "object": "$counsel",
+          "mana": [
+            null
+          ]
+        }
+      }
+    },
+    {
+      "turn": 1,
+      "step": "PrecombatMain",
+      "player": "alice",
+      "do": "Pass"
+    },
+    {
+      "turn": 1,
+      "step": "PrecombatMain",
+      "player": "alice",
+      "do": {
+        "Answer": {
+          "prompt": "ChooseCardFromAmong",
+          "with": "$c3"
+        }
+      }
+    },
+    {
+      "turn": 1,
+      "step": "PrecombatMain",
+      "player": "alice",
+      "do": {
+        "Answer": {
+          "prompt": "ArrangeLibraryArrivals",
+          "with": [
+            1,
+            0
+          ]
+        }
+      }
+    },
+    {
+      "turn": 1,
+      "step": "PrecombatMain",
+      "player": "alice",
+      "check": {
+        "Count": {
+          "player": "alice",
+          "zone": "Hand",
+          "card": "Mountain",
+          "count": 1
+        }
+      }
+    }
+  ]
+}

@@ -1,0 +1,60 @@
+{
+  "description": "CR 305.6 Territorial Kavu is a 3/3 off a Forest and a Tundra",
+  "note": "Two lands, three basic land types.",
+  "board": {
+    "seats": [
+      {
+        "name": "alice",
+        "battlefield": [
+          {
+            "card": "Forest",
+            "label": "forest"
+          },
+          {
+            "card": "Tundra",
+            "label": "tundra"
+          },
+          {
+            "card": "Territorial Kavu",
+            "label": "kavu"
+          }
+        ],
+        "library": [
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          }
+        ]
+      },
+      {
+        "name": "bob",
+        "library": [
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          }
+        ]
+      }
+    ],
+    "active": "alice",
+    "step": "PrecombatMain"
+  },
+  "timeline": [
+    {
+      "turn": 1,
+      "step": "PrecombatMain",
+      "player": "alice",
+      "check": {
+        "PowerToughness": {
+          "object": "$kavu",
+          "power": 3,
+          "toughness": 3
+        }
+      }
+    }
+  ]
+}

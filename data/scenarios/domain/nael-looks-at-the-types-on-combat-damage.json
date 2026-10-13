@@ -1,0 +1,115 @@
+{
+  "description": "CR 305.6 Nael, Avizoa Aeronaut's combat damage trigger looks at three cards off a Forest and a Tundra and draws nothing short of five types",
+  "note": "Two lands, three basic land types, so the third card is offered and the five-type draw does not happen.",
+  "board": {
+    "seats": [
+      {
+        "name": "alice",
+        "battlefield": [
+          {
+            "card": "Forest",
+            "label": "forest"
+          },
+          {
+            "card": "Tundra",
+            "label": "tundra"
+          },
+          {
+            "card": "Nael, Avizoa Aeronaut",
+            "label": "nael",
+            "ready": true
+          }
+        ],
+        "library": [
+          {
+            "card": "Plains",
+            "label": "c1"
+          },
+          {
+            "card": "Swamp",
+            "label": "c2"
+          },
+          {
+            "card": "Mountain",
+            "label": "c3"
+          },
+          {
+            "card": "Island",
+            "label": "c4"
+          }
+        ]
+      },
+      {
+        "name": "bob",
+        "library": [
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          }
+        ]
+      }
+    ],
+    "active": "alice",
+    "step": "BeginningOfCombat"
+  },
+  "timeline": [
+    {
+      "turn": 1,
+      "step": "DeclareAttackers",
+      "player": "alice",
+      "do": {
+        "Attack": [
+          "$nael"
+        ]
+      }
+    },
+    {
+      "turn": 1,
+      "step": "CombatDamage",
+      "player": "alice",
+      "do": "Pass"
+    },
+    {
+      "turn": 1,
+      "step": "CombatDamage",
+      "player": "alice",
+      "do": {
+        "Answer": {
+          "prompt": "ChooseCardsFromAmong",
+          "with": [
+            "$c3"
+          ]
+        }
+      }
+    },
+    {
+      "turn": 1,
+      "step": "CombatDamage",
+      "player": "alice",
+      "do": {
+        "Answer": {
+          "prompt": "Shuffle",
+          "with": [
+            "$c1",
+            "$c2"
+          ]
+        }
+      }
+    },
+    {
+      "turn": 1,
+      "step": "CombatDamage",
+      "player": "alice",
+      "check": {
+        "Count": {
+          "player": "alice",
+          "zone": "Hand",
+          "card": "Island",
+          "count": 0
+        }
+      }
+    }
+  ]
+}

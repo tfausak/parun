@@ -1,0 +1,160 @@
+{
+  "description": "CR 305.6 Slimefoot's Survey fetches a Tundra and a Swamp, then looks at four cards off the four types they make with a Forest",
+  "note": "The Tundra (Island Plains) and Swamp join a Forest: three lands, four basic land types, so the fourth card from the top is offered.",
+  "board": {
+    "seats": [
+      {
+        "name": "alice",
+        "manaPool": "GGGGG",
+        "battlefield": [
+          {
+            "card": "Forest",
+            "label": "forest"
+          }
+        ],
+        "hand": [
+          {
+            "card": "Slimefoot's Survey",
+            "label": "survey"
+          }
+        ],
+        "library": [
+          {
+            "card": "Tundra",
+            "label": "tu"
+          },
+          {
+            "card": "Swamp",
+            "label": "sw"
+          },
+          {
+            "card": "Hill Giant",
+            "label": "c1"
+          },
+          {
+            "card": "Goblin Piker",
+            "label": "c2"
+          },
+          {
+            "card": "Lightning Bolt",
+            "label": "c3"
+          },
+          {
+            "card": "Enormous Baloth",
+            "label": "c4"
+          },
+          {
+            "card": "Island",
+            "label": "c5"
+          }
+        ]
+      },
+      {
+        "name": "bob",
+        "library": [
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          }
+        ]
+      }
+    ],
+    "active": "alice",
+    "step": "PrecombatMain"
+  },
+  "timeline": [
+    {
+      "turn": 1,
+      "step": "PrecombatMain",
+      "player": "alice",
+      "do": {
+        "Cast": {
+          "object": "$survey",
+          "mana": [
+            null
+          ]
+        }
+      }
+    },
+    {
+      "turn": 1,
+      "step": "PrecombatMain",
+      "player": "alice",
+      "do": "Pass"
+    },
+    {
+      "turn": 1,
+      "step": "PrecombatMain",
+      "player": "alice",
+      "do": {
+        "Answer": {
+          "prompt": "Search",
+          "with": [
+            "$tu",
+            "$sw"
+          ]
+        }
+      }
+    },
+    {
+      "turn": 1,
+      "step": "PrecombatMain",
+      "player": "alice",
+      "do": {
+        "Answer": {
+          "prompt": "Shuffle",
+          "with": [
+            "$c1",
+            "$c2",
+            "$c3",
+            "$c4",
+            "$c5"
+          ]
+        }
+      }
+    },
+    {
+      "turn": 1,
+      "step": "PrecombatMain",
+      "player": "alice",
+      "do": {
+        "Answer": {
+          "prompt": "ChooseCardsFromAmong",
+          "with": [
+            "$c4"
+          ]
+        }
+      }
+    },
+    {
+      "turn": 1,
+      "step": "PrecombatMain",
+      "player": "alice",
+      "do": {
+        "Answer": {
+          "prompt": "Shuffle",
+          "with": [
+            "$c1",
+            "$c2",
+            "$c3"
+          ]
+        }
+      }
+    },
+    {
+      "turn": 1,
+      "step": "PrecombatMain",
+      "player": "alice",
+      "check": {
+        "Count": {
+          "player": "alice",
+          "zone": "Battlefield",
+          "card": "Tundra",
+          "count": 1
+        }
+      }
+    }
+  ]
+}

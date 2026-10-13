@@ -1,0 +1,88 @@
+{
+  "description": "CR 305.6 Drag to the Bottom gives each creature -X/-X, X 1 plus alice's three basic land types",
+  "note": "A Forest and a Tundra: two lands, three types, so the Baloth is 3/3 and not 4/4.",
+  "board": {
+    "seats": [
+      {
+        "name": "alice",
+        "manaPool": "BBBB",
+        "battlefield": [
+          {
+            "card": "Forest",
+            "label": "forest"
+          },
+          {
+            "card": "Tundra",
+            "label": "tundra"
+          }
+        ],
+        "hand": [
+          {
+            "card": "Drag to the Bottom",
+            "label": "drag"
+          }
+        ],
+        "library": [
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          }
+        ]
+      },
+      {
+        "name": "bob",
+        "battlefield": [
+          {
+            "card": "Enormous Baloth",
+            "label": "baloth"
+          }
+        ],
+        "library": [
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          }
+        ]
+      }
+    ],
+    "active": "alice",
+    "step": "PrecombatMain"
+  },
+  "timeline": [
+    {
+      "turn": 1,
+      "step": "PrecombatMain",
+      "player": "alice",
+      "do": {
+        "Cast": {
+          "object": "$drag",
+          "mana": [
+            null
+          ]
+        }
+      }
+    },
+    {
+      "turn": 1,
+      "step": "PrecombatMain",
+      "player": "alice",
+      "do": "Pass"
+    },
+    {
+      "turn": 1,
+      "step": "PrecombatMain",
+      "player": "alice",
+      "check": {
+        "PowerToughness": {
+          "object": "$baloth",
+          "power": 3,
+          "toughness": 3
+        }
+      }
+    }
+  ]
+}

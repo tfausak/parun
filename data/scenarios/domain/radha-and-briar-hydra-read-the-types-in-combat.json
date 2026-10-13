@@ -1,0 +1,127 @@
+{
+  "description": "CR 305.6 Radha's tapped trigger pumps Briar Hydra +3/+3 and the Hydra's combat damage puts three counters on Radha, off a Forest and a Tundra",
+  "note": "Two lands, three basic land types.",
+  "board": {
+    "seats": [
+      {
+        "name": "alice",
+        "battlefield": [
+          {
+            "card": "Forest",
+            "label": "forest"
+          },
+          {
+            "card": "Tundra",
+            "label": "tundra"
+          },
+          {
+            "card": "Radha, Coalition Warlord",
+            "label": "radha",
+            "ready": true
+          },
+          {
+            "card": "Briar Hydra",
+            "label": "hydra",
+            "ready": true
+          }
+        ],
+        "library": [
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          }
+        ]
+      },
+      {
+        "name": "bob",
+        "library": [
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          }
+        ]
+      }
+    ],
+    "active": "alice",
+    "step": "BeginningOfCombat"
+  },
+  "timeline": [
+    {
+      "turn": 1,
+      "step": "DeclareAttackers",
+      "player": "alice",
+      "do": {
+        "Attack": [
+          "$radha",
+          "$hydra"
+        ]
+      }
+    },
+    {
+      "turn": 1,
+      "step": "DeclareAttackers",
+      "player": "alice",
+      "do": {
+        "ChooseTargets": {
+          "target": [
+            "$hydra"
+          ]
+        }
+      }
+    },
+    {
+      "turn": 1,
+      "step": "DeclareAttackers",
+      "player": "alice",
+      "do": "Pass"
+    },
+    {
+      "turn": 1,
+      "step": "DeclareAttackers",
+      "player": "alice",
+      "check": {
+        "PowerToughness": {
+          "object": "$hydra",
+          "power": 9,
+          "toughness": 9
+        }
+      }
+    },
+    {
+      "turn": 1,
+      "step": "CombatDamage",
+      "player": "alice",
+      "do": {
+        "ChooseTargets": {
+          "target": [
+            "$radha"
+          ]
+        }
+      }
+    },
+    {
+      "turn": 1,
+      "step": "CombatDamage",
+      "player": "alice",
+      "do": "Pass"
+    },
+    {
+      "turn": 1,
+      "step": "CombatDamage",
+      "player": "alice",
+      "check": {
+        "Counters": {
+          "object": "$radha",
+          "kind": {
+            "type": "PlusOnePlusOne"
+          },
+          "count": 3
+        }
+      }
+    }
+  ]
+}

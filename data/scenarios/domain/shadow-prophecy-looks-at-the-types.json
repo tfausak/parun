@@ -1,0 +1,131 @@
+{
+  "description": "CR 305.6 Shadow Prophecy looks at three cards off a Forest and a Tundra, keeps two and bins one",
+  "note": "Two lands, three basic land types, so one card reaches the graveyard rather than none.",
+  "board": {
+    "seats": [
+      {
+        "name": "alice",
+        "manaPool": "BBB",
+        "battlefield": [
+          {
+            "card": "Forest",
+            "label": "forest"
+          },
+          {
+            "card": "Tundra",
+            "label": "tundra"
+          }
+        ],
+        "hand": [
+          {
+            "card": "Shadow Prophecy",
+            "label": "prophecy"
+          }
+        ],
+        "library": [
+          {
+            "card": "Plains",
+            "label": "c1"
+          },
+          {
+            "card": "Swamp",
+            "label": "c2"
+          },
+          {
+            "card": "Mountain",
+            "label": "c3"
+          },
+          {
+            "card": "Island",
+            "label": "c4"
+          }
+        ]
+      },
+      {
+        "name": "bob",
+        "library": [
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          }
+        ]
+      }
+    ],
+    "active": "alice",
+    "step": "PrecombatMain"
+  },
+  "timeline": [
+    {
+      "turn": 1,
+      "step": "PrecombatMain",
+      "player": "alice",
+      "do": {
+        "Cast": {
+          "object": "$prophecy",
+          "mana": [
+            null
+          ]
+        }
+      }
+    },
+    {
+      "turn": 1,
+      "step": "PrecombatMain",
+      "player": "alice",
+      "do": "Pass"
+    },
+    {
+      "turn": 1,
+      "step": "PrecombatMain",
+      "player": "alice",
+      "do": {
+        "Answer": {
+          "prompt": "ChooseCardsFromAmong",
+          "with": [
+            "$c1",
+            "$c2"
+          ]
+        }
+      }
+    },
+    {
+      "turn": 1,
+      "step": "PrecombatMain",
+      "player": "alice",
+      "check": {
+        "Count": {
+          "player": "alice",
+          "zone": "Graveyard",
+          "card": "Mountain",
+          "count": 1
+        }
+      }
+    },
+    {
+      "turn": 1,
+      "step": "PrecombatMain",
+      "player": "alice",
+      "check": {
+        "Count": {
+          "player": "alice",
+          "zone": "Hand",
+          "card": "Plains",
+          "count": 1
+        }
+      }
+    },
+    {
+      "turn": 1,
+      "step": "PrecombatMain",
+      "player": "alice",
+      "check": {
+        "Life": {
+          "player": "alice",
+          "life": 18
+        }
+      }
+    }
+  ]
+}
