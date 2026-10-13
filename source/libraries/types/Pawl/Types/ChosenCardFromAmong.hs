@@ -28,9 +28,10 @@ import qualified Pawl.Types.SlotName as SlotName
 --
 -- The CHOOSER is a PlayerRef naming ONE seat, and CR 608.2c's default is the
 -- resolving controller, which is what Relative You spells. Animal Magnetism's "an
--- opponent chooses a creature card from among them" is the other seat, named
--- through the slot a Pawl.Types.Effect ChoosePlayer filled earlier in the same
--- resolution. A PlayerRef rather than Pawl.Types.Chooser: that type's arms fold
+-- opponent chooses a creature card from among them" is Relative Opponent, the
+-- seat the controller names (CR 801.5c's hand-off included,
+-- Pawl.Engine.Resolve.Effect.askedChooser), and Intuition's "target opponent
+-- chooses" a target slot. A PlayerRef rather than Pawl.Types.Chooser: that type's arms fold
 -- over a PlayerScope of GRAVEYARDS, one per chooser, where a group is one pile
 -- however many seats are in play.
 --

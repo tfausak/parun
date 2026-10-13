@@ -1,6 +1,6 @@
 {
   "description": "Burning-Rune Demon's exactly two takes one card from a library holding one name, asking once",
-  "note": "The library's only candidates are two copies of Murder, so the most cards with different names it can give is one (CR 609.3). Alice names one Murder and the answer stands without a second ask; the opponent's choice is forced and Murder goes to hand.",
+  "note": "The library's only candidates are two copies of Murder, so the most cards with different names it can give is one (CR 609.3). Alice names one Murder and the answer stands without a second ask; the opponent's choice is forced, so alice is not asked which opponent makes it, and Murder goes to hand.",
   "board": {
     "seats": [
       {
@@ -105,17 +105,6 @@
             "$murder",
             "$murder-2"
           ]
-        }
-      }
-    },
-    {
-      "turn": 1,
-      "step": "PrecombatMain",
-      "player": "alice",
-      "do": {
-        "Answer": {
-          "prompt": "ChooseOpponent",
-          "with": "bob"
         }
       }
     },

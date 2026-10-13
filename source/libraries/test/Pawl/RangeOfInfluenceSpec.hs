@@ -29,6 +29,7 @@ module Pawl.RangeOfInfluenceSpec where
 
 import qualified Control.Monad as Monad
 import qualified Control.Monad.Trans.State.Strict as State
+import qualified Data.List as List
 import qualified Data.List.NonEmpty as NonEmpty
 import qualified Data.Map.Strict as Map
 import qualified Data.Sequence as Seq
@@ -68,6 +69,7 @@ import qualified Pawl.Types.ObjectId as ObjectId
 import qualified Pawl.Types.Phase as Phase
 import qualified Pawl.Types.Player as Player
 import qualified Pawl.Types.PlayerId as PlayerId
+import qualified Pawl.Types.Printing as Printing
 import qualified Pawl.Types.Prompt as Prompt
 import qualified Pawl.Types.RangeOfInfluence as RangeOfInfluence
 import qualified Pawl.Types.Recipient as Recipient
@@ -443,6 +445,60 @@ spec s registry = Spec.describe s "Range of influence" $ do
            in (offered (S.withRange 1 board), offered board)
     Spec.assertEqWith s "CR 801.5a at range 1 tribute does not offer carol, and does at an unlimited range" (offeredFor snake forest 5) ([[S.bob, S.dave]], [[S.bob, S.carol, S.dave]])
     Spec.assertEqWith s "CR 801.5a at range 1 Null Chamber does not offer carol, and does at an unlimited range" (offeredFor chamber plains 4) ([[S.bob, S.dave]], [[S.bob, S.carol, S.dave]])
+
+  -- CR 801.5c, its own example's shape: teams [[alice, bob, dave], [carol]] at
+  -- range 1, so carol, alice's only opponent, sits two seats away. Alice's
+  -- Animal Magnetism ("... An opponent chooses a creature card from among
+  -- them. Put that card onto the battlefield ...") hands the choice to carol,
+  -- the nearest opponent to alice's left, and carol's pick enters. Alice's
+  -- Cuombajj Witches ("... 1 damage to any target of an opponent's choice")
+  -- asks carol too, who may name only what lies in her range and alice's alike
+  -- (CR 801.5a): bob and dave, never alice.
+  Spec.it s "CR 801.5c a choice no opponent in range can make goes to the nearest opponent to the controller's left" $ do
+    forest <- S.printingOf s registry "Forest"
+    island <- S.printingOf s registry "Island"
+    magnetism <- S.printingOf s registry "Animal Magnetism"
+    giant <- S.printingOf s registry "Hill Giant"
+    piker <- S.printingOf s registry "Goblin Piker"
+    witches <- S.printingOf s registry "Cuombajj Witches"
+    let teamed = S.withRange 1 (S.inTeams [[S.alice, S.bob, S.dave], [S.carol]] S.fourPlayerGame)
+        (giantId, g0) = S.addLibraryCard giant S.alice (S.landsFor forest S.alice 5 teamed)
+        (_, g1) = S.addLibraryCard piker S.alice g0
+        stocked = List.foldl' (\g _ -> snd (S.addLibraryCard island S.alice g)) g1 [1 :: Int .. 3]
+        (spellId, board) = S.addHandCard magnetism S.alice stocked
+        -- The seat asked, and the card it named: the LAST offered, which the
+        -- default answer (the head) would not name.
+        picking :: Prompt.Prompt r -> State.State [(PlayerId.PlayerId, ObjectId.ObjectId)] r
+        picking p = case p of
+          Prompt.ChooseCardFromAmong _ asked _ offer -> State.modify' (<> [(asked, NonEmpty.last offer)]) >> pure (NonEmpty.last offer)
+          _ -> pure (S.identityAnswer p)
+        ((_, cast), picks) = State.runState (Engine.runGame picking (S.runPure S.identityAnswer (onMain board) (S.cast S.alice spellId)) Engine.priorityLoop) []
+        named = if fmap snd picks == [giantId] then giant else piker
+        (witchesId, armed) = S.addPermanent witches S.alice teamed
+        targeting :: Prompt.Prompt r -> State.State [(PlayerId.PlayerId, [Recipient.Recipient])] r
+        targeting p = case p of
+          Prompt.ChooseTargets _ asked _ slots -> State.modify' (<> [(asked, concatMap (Set.toList . snd) (Map.elems slots))]) >> pure (S.identityAnswer p)
+          _ -> pure (S.identityAnswer p)
+        announced = State.execState (Engine.runGame targeting (onMain armed) (Activate.activateAbility S.alice witchesId (theAbility witches))) []
+    Spec.assertBool s (not (Game.inRangeOf S.alice S.carol teamed)) "carol is outside alice's range"
+    Spec.assertEqWith s "CR 801.5c the creature card carol named entered under alice" (S.countOnBattlefieldByName (S.nameOf (Printing.card named)) S.alice cast) 1
+    Spec.assertEqWith s "carol, the nearest opponent to alice's left, was the one seat asked" (fmap fst picks) [S.carol]
+    Spec.assertEqWith s "CR 801.5c/801.5a carol announces the opponent's target, offered bob and dave and not alice" (filter ((== S.carol) . fst) announced) [(S.carol, [Recipient.ToPlayer S.bob, Recipient.ToPlayer S.dave])]
+    -- The as-enters "opponent of your choice": Snake of the Golden Grove's
+    -- tribute (CR 702.104a) and Null Chamber's naming opponent.
+    plains <- S.printingOf s registry "Plains"
+    snake <- S.printingOf s registry "Snake of the Golden Grove"
+    chamber <- S.printingOf s registry "Null Chamber"
+    let deciding :: Prompt.Prompt r -> State.State [PlayerId.PlayerId] r
+        deciding p = case p of
+          Prompt.ChooseTribute _ asked _ _ -> State.modify' (<> [asked]) >> pure (S.identityAnswer p)
+          Prompt.ChooseCardName _ asked _ _ _ -> State.modify' (<> [asked]) >> pure (S.identityAnswer p)
+          _ -> pure (S.identityAnswer p)
+        decidersFor card land lands =
+          let (entrant, placed) = S.addHandCard card S.alice (S.landsFor land S.alice lands teamed)
+           in State.execState (Engine.runGame deciding (S.runPure S.identityAnswer (onMain placed) (S.cast S.alice entrant)) Engine.priorityLoop) []
+    Spec.assertEqWith s "CR 801.5c carol decides Snake of the Golden Grove's tribute" (decidersFor snake forest 5) [S.carol]
+    Spec.assertEqWith s "CR 801.5c carol is Null Chamber's naming opponent, after alice (CR 101.4)" (decidersFor chamber plains 4) [S.alice, S.carol]
 
   -- CR 801.5a for CR 303.4f's entry choice: alice's Replenish returns
   -- Archnemesis ("Enchant opponent") and Pacifism ("Enchant creature") to the

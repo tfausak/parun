@@ -1668,9 +1668,10 @@ chooseTargets pid oid source seed x slots sets = do
 -- card has said. A slot naming no player, or a seat no longer reachable, leaves
 -- the slots unanswered as an empty relation does.
 --
--- The relation's offer is Players.offer and the ask Players.chooseOne, so a
--- seat that has left (CR 104.3a), or sits outside the controller's range (CR
--- 801.5a), neither chooses nor is counted towards eliding the question.
+-- The relation's offer is Players.chooserOffer and the ask Players.chooseOne,
+-- so a seat that has left (CR 104.3a) neither chooses nor is counted towards
+-- eliding the question, and one outside the controller's range (CR 801.5a)
+-- chooses only where nobody in the relation is in range (CR 801.5c).
 chooserOf :: PlayerId -> ObjectId -> Map SlotName Binding.Type.Binding -> Maybe TargetChooser.TargetChooser -> Game (Maybe PlayerId)
 chooserOf controller oid seed chooser = case chooser of
   Nothing -> pure (Just controller)
@@ -1679,7 +1680,7 @@ chooserOf controller oid seed chooser = case chooser of
     pure (List.find (`List.elem` Players.table (Just controller) gs) (Map.lookup slot (Binding.playerSlots seed)))
   Just (TargetChooser.Relative r) -> do
     gs <- State.get
-    Players.chooseOne controller oid (Players.offer controller gs r)
+    Players.chooseOne controller oid (Players.chooserOffer controller gs r)
 
 -- CR 601.2c's two announcements over ONE chooser's slots, in the rule's own
 -- order: how many targets each variable slot gets, then the targets themselves.
@@ -1709,7 +1710,10 @@ askChooser controller chooser oid source seed x slots sets mine = do
   let decider = Decide.deciderFor chooser gs
       counting = countingBy (Just controller) seed source gs
       most slot = TargetCount.most . SlotCount.at counting x . TargetSlot.count =<< Map.lookup slot slots
-      offered = Map.mapWithKey (\slot -> piledOffer (most slot) (Just chooser) gs) sets
+      -- CR 801.5a: a chooser names only what lies in their own range as well as
+      -- the controller's, which `sets` already holds to.
+      grants = Projection.controlGrants gs
+      offered = Map.mapWithKey (\slot -> piledOffer (most slot) (Just chooser) gs . Set.filter (\r -> inRangeGiven grants chooser r gs)) sets
       ranges = Map.restrictKeys (Map.intersectionWith (announcedRange counting x) slots (slotCapacities counting x slots offered gs)) mine
       variable = Map.keysSet (Map.filter (uncurry (/=)) ranges)
       offers = Map.restrictKeys (Map.intersectionWith (\targetSlot legal -> (SlotCount.at counting x (TargetSlot.count targetSlot), legal)) slots offered) variable

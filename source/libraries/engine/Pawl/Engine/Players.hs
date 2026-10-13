@@ -1,5 +1,6 @@
 module Pawl.Engine.Players where
 
+import qualified Data.List as List
 import qualified Data.Map.Strict as Map
 import qualified Data.Maybe as Maybe
 import Data.Set (Set)
@@ -113,6 +114,23 @@ relatedAmong players viewer gs relation = case viewer of
 -- opponent" builds; 'chooseOne' asks it.
 offer :: PlayerId -> GameState -> PlayerRelation.PlayerRelation -> [PlayerId]
 offer you gs = Maybe.fromMaybe [] . related (Just you) gs
+
+-- | CR 801.5a / 801.5c: the players @you@ may name to MAKE a choice in this
+-- relation -- "an opponent chooses", "of an opponent's choice". 'offer' where it
+-- holds anyone; otherwise the player in the relation closest to @you@'s left,
+-- the next in turn order (CR 101.4), still in the game. Nobody only where
+-- nobody in the game stands in the relation. Not for a player who is the
+-- choice's ANSWER ("choose an opponent"), whom @you@ choose and 'offer' cuts.
+--
+-- Pawl.RangeOfInfluenceSpec's "CR 801.5c a choice no opponent in range can make
+-- goes to the nearest opponent to the controller's left" proves it.
+chooserOffer :: PlayerId -> GameState -> PlayerRelation.PlayerRelation -> [PlayerId]
+chooserOffer you gs relation = case offer you gs relation of
+  [] ->
+    let playing = Game.stillPlaying gs
+        stands pid = List.elem pid playing && PlayerRelation.holds (Game.teams gs) relation you pid
+     in take 1 (filter stands (drop 1 (Game.turnOrderFrom you gs)))
+  inRange -> inRange
 
 -- | CR 608.2d / 614.12a / 601.2c: @chooser@ picks one of the candidates, for
 -- @source@, through Game.chooseAmong. Prompt.ChoosePlayer where the offer holds

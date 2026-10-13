@@ -521,7 +521,7 @@ objectRefSlots ref = joinTwo (joinSlots (fmap playerRefSlots (objectRefPlayerRef
   --
   -- Joined with the COUNT's own slots, TopOfLibrary's arm above and for its
   -- reason; the CHOOSER's are the generic playerRefSlots fold this case is joined
-  -- into, which is what makes Animal Magnetism's ChoosePlayer slot a read.
+  -- into, which is what makes Intuition's target opponent a read.
   ObjectRef.ChosenCardFromAmong (ChosenCardFromAmong.MkChosenCardFromAmong slot _ count _) -> joinTwo (Map.singleton slot SlotArity.Many) (maybe Map.empty quantitySlots (HowMany.quantity count))
   -- The arm above's read, for its reasons: the candidates come from a slot, and
   -- the ref reads every member of the group to match them.
@@ -538,7 +538,7 @@ objectRefSlots ref = joinTwo (joinSlots (fmap playerRefSlots (objectRefPlayerRef
   -- EachMatching's answer: the candidates come off the battlefield, so no slot
   -- names them. The CHOOSER's slots are the generic playerRefSlots fold this
   -- case is joined into, ChosenCardFromAmong's route above, which is what makes
-  -- Wormfang Crab's ChoosePlayer slot a read. The CEILING is TopOfLibrary's read.
+  -- a chooser's slot a read. The CEILING is TopOfLibrary's read.
   ObjectRef.ChosenPermanents choice -> maybe Map.empty quantitySlots (HowMany.quantity (ChosenPermanents.count choice))
   -- The arm above's answer, for its reason: neither the source nor the
   -- candidates come out of a slot.
