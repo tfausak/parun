@@ -15,6 +15,7 @@ import qualified Data.Sequence as Seq
 import qualified Data.Set as Set
 import qualified Data.Text as Text
 import Numeric.Natural (Natural)
+import Pawl.CastProhibitionSpec (playEveryLand)
 import qualified Pawl.Engine.Action as Action
 import qualified Pawl.Engine.CombatRestriction as CombatRestriction
 import qualified Pawl.Engine.Cost as Cost
@@ -123,6 +124,20 @@ spec s registry = Spec.describe s "Pawl.Engine.Planechase" $ do
     buried <- planarBoard s registry ["Academy at Tolaria West", "The Lux Foundation Library"]
     Spec.assertEqWith s "CR 901.7 with the Library face up bob has no maximum hand size" (PlayerEffect.maximumHandSize S.bob board) Nothing
     Spec.assertEqWith s "with it in the planar deck his is seven" (PlayerEffect.maximumHandSize S.bob buried) (Just 7)
+
+  -- CR 305.2 / 901.7: Naya's "You may play any number of lands on each of your
+  -- turns", face up, lets alice play all five Mountains in her hand; with Naya
+  -- in the planar deck CR 305.2's one stands.
+  Spec.it s "CR 305.2 a face-up Naya lets the planar controller play any number of lands" $ do
+    mountain <- S.printingOf s registry "Mountain"
+    board <- planarBoard s registry ["Naya", "Academy at Tolaria West"]
+    buried <- planarBoard s registry ["Academy at Tolaria West", "Naya"]
+    let withHand gs = inMain S.alice (List.foldl' (\g _ -> snd (S.addHandCard mountain S.alice g)) gs [1 .. 5 :: Int])
+        played = playEveryLand (withHand board)
+        held = playEveryLand (withHand buried)
+    Spec.assertEqWith s "CR 305.2 under Naya all five Mountains landed" (S.countOnBattlefieldByName (S.printingName mountain) S.alice played) 5
+    Spec.assertEqWith s "with Naya in the planar deck only one did" (S.countOnBattlefieldByName (S.printingName mountain) S.alice held) 1
+    Spec.assertEqWith s "and four are still in her hand" (S.handSize S.alice held) 4
 
   -- CR 801.18 for a player ability: four seats at range 1, alice the planar
   -- controller with The Lux Foundation Library face up, and carol two seats

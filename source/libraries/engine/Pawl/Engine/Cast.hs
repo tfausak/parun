@@ -2560,11 +2560,12 @@ castSpellWith perform timed offered applied widened pid oid name facing = Event.
 -- Strictly greater is CR 305.2b read from the other side: it forbids the play
 -- once the allowance is EQUAL TO OR LESS THAN the tally, and less than is
 -- reachable -- Exploration destroyed after the second land leaves an allowance
--- of one against a tally of two.
+-- of one against a tally of two. An allowance raised without bound (Naya's
+-- "any number") refuses nothing.
 landDropOpen :: PlayerId -> GameState -> Bool
 landDropOpen pid gs =
   Turn.isActive gs pid
-    && Map.findWithDefault 0 pid (GameState.landsPlayed gs) < PlayerEffect.landPlaysAllowed pid gs
+    && all (Map.findWithDefault 0 pid (GameState.landsPlayed gs) <) (PlayerEffect.landPlaysAllowed pid gs)
 
 -- CR 116.2a / 305.1: `pid` plays the land `oid`, as the face `mName` names.
 -- Legality is the caller's: Pawl.Engine.Action.legalActions for the special

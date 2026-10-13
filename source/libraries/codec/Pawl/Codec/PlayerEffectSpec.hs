@@ -22,6 +22,7 @@ import qualified Pawl.Types.InZone as InZone
 import qualified Pawl.Types.Keyword as Keyword
 import qualified Pawl.Types.KeywordDesignator as KeywordDesignator
 import qualified Pawl.Types.KeywordFamily as KeywordFamily
+import qualified Pawl.Types.LandAllowance as LandAllowance
 import qualified Pawl.Types.ManaFilter as ManaFilter
 import qualified Pawl.Types.ManaType as ManaType
 import qualified Pawl.Types.ModifiedRoll as ModifiedRoll
@@ -70,16 +71,23 @@ spec s = Spec.describe s "Pawl.Codec.PlayerEffect" $ do
     Common.assertCodec
       s
       PlayerEffect.codec
-      (PlayerEffect.PlayAdditionalLands 1)
-      " {\"type\":\"PlayAdditionalLands\",\"value\":1} "
+      (PlayerEffect.PlayAdditionalLands (LandAllowance.Additional 1))
+      " {\"type\":\"PlayAdditionalLands\",\"value\":{\"type\":\"Additional\",\"value\":1}} "
   -- CR 305.2 / Azusa, Lost but Seeking: the OTHER amount, so a codec that
   -- dropped the payload would round-trip one of these and not both.
   Spec.it s "PlayAdditionalLands, Azusa's two" $
     Common.assertCodec
       s
       PlayerEffect.codec
-      (PlayerEffect.PlayAdditionalLands 2)
-      " {\"type\":\"PlayAdditionalLands\",\"value\":2} "
+      (PlayerEffect.PlayAdditionalLands (LandAllowance.Additional 2))
+      " {\"type\":\"PlayAdditionalLands\",\"value\":{\"type\":\"Additional\",\"value\":2}} "
+  -- CR 305.2 / Naya.
+  Spec.it s "PlayAdditionalLands, Naya's any number" $
+    Common.assertCodec
+      s
+      PlayerEffect.codec
+      (PlayerEffect.PlayAdditionalLands LandAllowance.AnyNumber)
+      " {\"type\":\"PlayAdditionalLands\",\"value\":{\"type\":\"AnyNumber\"}} "
   -- CR 402.2 / Reliquary Tower.
   Spec.it s "NoMaximumHandSize" $
     Common.assertCodec
