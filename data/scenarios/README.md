@@ -50,7 +50,9 @@ subdirectory named for that spec; `docs/scenario-burndown.md` lists the ones sti
   comes. A check runs when its player is next offered priority at its key, so
   put a `"Pass"` between a check with a spell on the stack and one after it
   resolves. `source` picks among prompts sharing a key, such as one combat
-  damage assignment per attacker. `OrderTimestamps` answers CR 613.7m's
+  damage assignment per attacker; an `AssignDamage` that does not divide the
+  creature's power among what it was offered fails the scenario (CR
+  510.1c-d). `OrderTimestamps` answers CR 613.7m's
   prompt by naming every object in it, earliest first, and `ChooseOptional`
   answers a "may" with `Exercises` or `Declines`, its `source` the spell
   resolving or the object whose ability is; it answers CR 614.1a's optional
@@ -87,9 +89,10 @@ subdirectory named for that spec; `docs/scenario-burndown.md` lists the ones sti
   An entry carrying `refuse` in place of `do` answers its prompt with a move
   the engine must reverse and ask for again (CR 733.1), such as an illegal
   block declaration; the move standing fails the scenario, and the prompt
-  asked again takes the next entry at that key. An illegal `do` is asked
-  again too, so turning a `refuse` into `do` proves nothing: a `refuse` is
-  proven by changing the board until the move is legal. At priority, a refused
+  asked again takes the next entry at that key. A `do` at priority the engine
+  reverses fails the scenario: the next priority prompt must find the game
+  changed. Elsewhere an illegal `do` is asked again, so a `refuse` is proven
+  by changing the board until the move is legal. At priority, a refused
   `Cast`, `PlayLand` or `Activate` the engine does not offer is refused
   already; one it offers is taken, its targets and `x` sent to the engine whether
   offered or not, and must leave the stack and the player's hand and

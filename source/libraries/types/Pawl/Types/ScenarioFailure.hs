@@ -63,6 +63,9 @@ data ScenarioFailure
   | -- | A move the timeline said the engine would refuse, which stood: the
     -- prompt asked next (Nothing when none was), not the one it answered.
     MkUnrefusedMove When.When Move.Move (Maybe Text.Text)
+  | -- | A move the timeline took at priority that the engine never made: the
+    -- next priority prompt found the game as the move did (CR 733.1).
+    MkUnmadeMove When.When Move.Move
   | -- | Entries whose moment never came, at least one of them a move, and the
     -- turn and step the run stopped at.
     MkUnreachedEntries Natural Phase.Phase (Seq.Seq Timed.Timed)

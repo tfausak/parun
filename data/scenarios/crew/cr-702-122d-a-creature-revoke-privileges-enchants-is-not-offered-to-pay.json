@@ -66,7 +66,7 @@
       "turn": 1,
       "step": "PrecombatMain",
       "player": "alice",
-      "do": {
+      "refuse": {
         "Activate": {
           "object": "$vehicle",
           "ability": 0
