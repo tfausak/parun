@@ -37,6 +37,7 @@ import qualified Pawl.Types.DamagePrevented as DamagePrevented
 import qualified Pawl.Types.ExcessDestination as ExcessDestination
 import Pawl.Types.Game (Game)
 import qualified Pawl.Types.GameEvent as GameEvent
+import qualified Pawl.Types.GameSettings as GameSettings
 import Pawl.Types.GameState (GameState)
 import qualified Pawl.Types.GameState as GameState
 import qualified Pawl.Types.Keyword as Keyword
@@ -51,6 +52,7 @@ import qualified Pawl.Types.Prevention as Prevention
 import qualified Pawl.Types.ProjectedCharacteristics as PC
 import qualified Pawl.Types.Prompt as Prompt
 import qualified Pawl.Types.Recipient as Recipient
+import qualified Pawl.Types.Teams as Teams
 
 -- CR 514.2: during the cleanup step, all damage marked on permanents is removed.
 --
@@ -381,12 +383,12 @@ combatRecipient gs attacker target =
 -- pay any part of the same bar. Where one can, the question is asked -- and the
 -- answer may turn out to have been forced after all, which is the direction CR
 -- 510.1 itself takes by announcing the whole assignment at once.
-attackerAssignment :: GameState -> Bool -> (ObjectId, AttackTarget) -> Game (Division, Map.Map Recipient.Recipient Natural)
+attackerAssignment :: GameState -> Bool -> (ObjectId, AttackTarget) -> Game Assignment
 attackerAssignment gs contested (attacker, target) = case Projection.combatDamageAmountOf attacker gs of
-  Nothing -> pure (Right [], Map.empty)
+  Nothing -> pure (Nothing, Right [], Map.empty)
   Just p ->
     if p <= 0
-      then pure (Right [], Map.empty)
+      then pure (Nothing, Right [], Map.empty)
       else do
         let power :: Natural
             power = Integer.toNaturalSaturating p
@@ -449,17 +451,17 @@ attackerAssignment gs contested (attacker, target) = case Projection.combatDamag
             -- 702.19c's threshold) is at least the creature's power, which absorbs
             -- everything it could assign -- and, for that second shape, only while
             -- nothing else this step can pay part of that loyalty.
-            toDefender :: Game (Division, Map.Map Recipient.Recipient Natural)
+            toDefender :: Game Assignment
             toDefender = case defenderEntries of
               _ : _ : _
                 | contested || power > sum (fmap snd defenderEntries) ->
                     case Projection.controllerOf attacker gs of
-                      Nothing -> pure (Right [], Map.empty)
+                      Nothing -> pure (Nothing, Right [], Map.empty)
                       -- No blocker, so CR 702.22j's inversion cannot apply and CR
                       -- 702.19c's "as the attacking creature's controller chooses"
                       -- stands unqualified.
                       Just pid -> divide pid defenderEntries
-              _ -> pure (Right allToAttacked, Map.empty)
+              _ -> pure (Nothing, Right allToAttacked, Map.empty)
             divide = divideAssignment gs attacker power
         if not (Combat.isBlocked attacker gs)
           then -- CR 510.1b: never blocked, so it hits what it is attacking.
@@ -470,16 +472,16 @@ attackerAssignment gs contested (attacker, target) = case Projection.combatDamag
             -- else assigns no combat damage at all -- not damage addressed to an
             -- object that is not there, which would still be recorded in the CR
             -- 608.2i history even though marking it is a no-op.
-            [] -> if trample then toDefender else pure (Right [], Map.empty)
+            [] -> if trample then toDefender else pure (Nothing, Right [], Map.empty)
             -- CR 510.1c / 702.19b: a single blocker with no trample -- or trample
             -- but no power past its threshold, and nothing else this step able to
             -- pay part of that threshold -- is forced: all onto the blocker. A
             -- single trample blocker WITH excess falls to the prompt arm.
             [blocker]
               | not trample || (not contested && power <= blockerThreshold gs attacker blocker) ->
-                  pure (Right [damageEvent gs DamageKind.Combat attacker (Recipient.ToCreature blocker) power], Map.empty)
+                  pure (Nothing, Right [damageEvent gs DamageKind.Combat attacker (Recipient.ToCreature blocker) power], Map.empty)
             blockers -> case Projection.controllerOf attacker gs of
-              Nothing -> pure (Right [], Map.empty)
+              Nothing -> pure (Nothing, Right [], Map.empty)
               -- CR 702.19b: the attacker's controller chooses how to assign the
               -- excess -- unless CR 702.22j inverts it.
               Just pid -> do
@@ -566,30 +568,28 @@ blockerChooser gs attackers controller =
 -- damage divided among them, so the unit of assignment is the blocker. An action
 -- and not a list for that division alone -- with one attacker blocked the rule
 -- forces the whole assignment and asks nothing.
-blockerAssignment :: GameState -> (ObjectId, Set.Set ObjectId) -> Game Division
+blockerAssignment :: GameState -> (ObjectId, Set.Set ObjectId) -> Game Assignment
 blockerAssignment gs (blocker, attackers) = case Projection.combatDamageAmountOf blocker gs of
-  Nothing -> pure (Right [])
+  Nothing -> pure (Nothing, Right [], Map.empty)
   Just p
-    | p <= 0 -> pure (Right [])
+    | p <= 0 -> pure (Nothing, Right [], Map.empty)
     | otherwise ->
         let power = Integer.toNaturalSaturating p
          in case filter (\attacker -> onBattlefield attacker gs) (Set.toList attackers) of
-              [] -> pure (Right [])
-              [attacker] -> pure (Right [damageEvent gs DamageKind.Combat blocker (Recipient.ToCreature attacker) power])
+              [] -> pure (Nothing, Right [], Map.empty)
+              [attacker] -> pure (Nothing, Right [damageEvent gs DamageKind.Combat blocker (Recipient.ToCreature attacker) power], Map.empty)
               blocked -> case Projection.controllerOf blocker gs of
-                Nothing -> pure (Right [])
+                Nothing -> pure (Nothing, Right [], Map.empty)
                 -- Every threshold is 0: CR 510.1d's division is unconstrained,
                 -- where CR 510.1c's has to clear lethal damage first. Trample is
                 -- an attacker's keyword (CR 702.19b) and reaches nothing here.
-                -- The thresholds divideAssignment answers with are dropped, and
-                -- can be: tiersCleared over an all-zero map is vacuous, so a
-                -- blocking creature's division has no gate for the step's other
-                -- assignments to clear.
+                -- tiersCleared over an all-zero map is vacuous, so a blocking
+                -- creature's division has no gate for the step's other
+                -- assignments to clear, and gatherCombatDamage leaves it out.
                 Just pid -> do
                   chooser <- blockerChooser gs blocked pid
-                  fmap fst
-                    . divideAssignment gs blocker power chooser
-                    $ fmap (\attacker -> (Recipient.ToCreature attacker, 0)) blocked
+                  divideAssignment gs blocker power chooser $
+                    fmap (\attacker -> (Recipient.ToCreature attacker, 0)) blocked
 
 -- CR 510.1c-d / 702.19b: ask `chooser` to divide `source`'s `power` over
 -- `entries`. An answer that does not total power, or that names a recipient it
@@ -604,13 +604,14 @@ blockerAssignment gs (blocker, attackers) = case Projection.combatDamageAmountOf
 -- Shared by both assignment sides, so an attacker dividing among its blockers and
 -- a blocker dividing among the creatures it blocks cannot come to disagree about
 -- what an illegal answer does.
-divideAssignment :: GameState -> ObjectId -> Natural -> PlayerId -> [(Recipient.Recipient, Natural)] -> Game (Division, Map.Map Recipient.Recipient Natural)
+divideAssignment :: GameState -> ObjectId -> Natural -> PlayerId -> [(Recipient.Recipient, Natural)] -> Game Assignment
 divideAssignment gs source power chooser entries = do
   let thresholds = Map.fromList entries
   chosen <- Game.choose (Prompt.AssignCombatDamage (Decide.deciderFor chooser gs) chooser source thresholds power)
   let toEvent (recipient, n) = damageEvent gs DamageKind.Combat source recipient n
   pure
-    ( if wellFormedAssignment thresholds power chosen
+    ( Just chooser,
+      if wellFormedAssignment thresholds power chosen
         then Right (fmap toEvent (filter (\(_, n) -> n > 0) (Map.toList chosen)))
         else Left chosen,
       thresholds
@@ -619,6 +620,10 @@ divideAssignment gs source power chooser entries = do
 -- One creature's combat damage assignment: the events it announces, or the
 -- answer that was not a division of its power (CR 510.1c-d).
 type Division = Either (Map.Map Recipient.Recipient Natural) [DamageEvent.DamageEvent]
+
+-- One creature's combat damage assignment: who divided it, Nothing where the
+-- rules forced it, the division, and the thresholds its gates are stated over.
+type Assignment = (Maybe PlayerId, Division, Map.Map Recipient.Recipient Natural)
 
 -- What a division deals: nothing, for one that was not one.
 divisionEvents :: Division -> [DamageEvent.DamageEvent]
@@ -667,34 +672,61 @@ gatherCombatDamage assigns = do
       order owned =
         fmap (\pid -> filter (\entry -> controllerOfEntry entry == Just pid) owned) seats
           <> [filter (Maybe.maybe True (\pid -> List.notElem pid seats) . controllerOfEntry) owned]
-      announcement (division, thresholds) = (divisionEvents division, thresholds)
-      ask (mine, theirs) = do
-        a <- Monad.mapM (\x -> attackerAssignment gs (contestedAssignment gs attackers x) x) mine
-        b <- Monad.mapM (blockerAssignment gs) theirs
-        pure (a, b)
-      -- CR 510.1e: once a player has assigned every creature's damage, the
-      -- total so far is checked, and an illegal one returns the game to before
-      -- that player began, which asks them again. Nothing the asking wrote
-      -- stands but CR 104.4b's stamp, so asking again IS the return. A repeated
-      -- illegal answer is kept, as Combat.attemptBlockDeclaration keeps a
-      -- repeated declaration, and settleAssignments drops what it must.
-      assign prior rejected wave = do
-        (a, b) <- ask wave
-        let mine = fmap announcement a
-            tagged = zip [0 :: Int ..] (prior <> mine)
-            kept = Set.fromList (fmap fst (settledAnnouncements tagged))
-            legal =
-              all (Either.isRight . fst) a
-                && all Either.isRight b
-                && all (`Set.member` kept) (take (length mine) [length prior ..])
-        if legal || Set.member (a, b) rejected
-          then pure (prior <> mine, (a, b))
-          else assign prior (Set.insert (a, b) rejected) wave
-      gather (prior, done) wave = do
-        (announced, answered) <- assign prior Set.empty wave
-        pure (announced, done <> [answered])
-  (announced, waves) <- Monad.foldM gather ([], []) (zip (order attackers) (order blocking))
-  pure (settleAssignments announced <> concatMap (concatMap divisionEvents . snd) waves)
+      -- Every creature's assignment, in the order CR 703.4k asks for them,
+      -- grouped by who announces together: each player, or under CR 805.10f
+      -- each team. A group past the seats is the creatures no seat controls.
+      waves = zipWith (\mine theirs -> fmap Left mine <> fmap Right theirs) (order attackers) (order blocking)
+      together a b =
+        GameSettings.sharedTeamTurns (GameState.settings gs) && Teams.sameTeam (Game.teams gs) a b
+      groups = fmap (concatMap snd) (List.groupBy (\(a, _) (b, _) -> Maybe.fromMaybe False (together <$> a <*> b)) (zip (fmap Just seats <> [Nothing]) waves))
+      assignOne entry = case entry of
+        Left x -> attackerAssignment gs (contestedAssignment gs attackers x) x
+        Right y -> blockerAssignment gs y
+      choosing group (_, (chooser, _, _)) = maybe False (`elem` group) chooser
+      -- CR 510.1e: the choosers whose assignment the total makes illegal --
+      -- a division that is not one, or an attacking creature's that fails a
+      -- CR 702.19b-c gate over every attacking creature's announcement so far,
+      -- which is what both rules' last sentences take into account.
+      illegal current =
+        let attacking = [(i, (divisionEvents division, thresholds)) | (i, (Left _, (_, division, thresholds))) <- zip [0 :: Int ..] current]
+            kept = Set.fromList (fmap fst (settledAnnouncements attacking))
+         in [ chooser
+            | (i, (entry, (Just chooser, division, _))) <- zip [0 :: Int ..] current,
+              Either.isLeft division || (Either.isLeft entry && Set.notMember i kept)
+            ]
+      -- Who goes back to before they began assigning: the chooser, or under
+      -- CR 805.10f the whole team, which announces as one.
+      rewound pid = filter (\other -> other == pid || together pid other) seats
+      -- CR 510.1e: once a group has announced, an illegal total so far returns
+      -- the game to before its chooser began, which asks them again. Nothing
+      -- the asking wrote stands but CR 104.4b's stamp, so asking again IS the
+      -- return. Only the chooser's own divisions are asked again, a banding
+      -- creature's (CR 702.22j-k) being the defending or active player's and
+      -- not its controller's. A repeated illegal answer is kept, as
+      -- Combat.attemptBlockDeclaration keeps a repeated declaration, and
+      -- settleAssignments drops what it must.
+      settle rejected current =
+        let answersOf group = [division | (_, (Just chooser, division, _)) <- current, chooser `elem` group]
+            due =
+              [ (group, answersOf group)
+              | pid <- seats,
+                pid `elem` illegal current,
+                let group = rewound pid,
+                Set.notMember (group, answersOf group) rejected
+              ]
+         in case due of
+              [] -> pure (rejected, current)
+              (group, answers) : _ -> do
+                redone <- Monad.mapM (\item@(entry, _) -> if choosing group item then fmap ((,) entry) (assignOne entry) else pure item) current
+                settle (Set.insert (group, answers) rejected) redone
+  let announce (rejected, sofar) group = do
+        asked <- Monad.mapM (\entry -> fmap ((,) entry) (assignOne entry)) group
+        settle rejected (sofar <> asked)
+  (_, settled) <- Monad.foldM announce (Set.empty, []) groups
+  pure
+    ( settleAssignments [(divisionEvents division, thresholds) | (Left _, (_, division, thresholds)) <- settled]
+        <> concat [divisionEvents division | (Right _, (_, division, _)) <- settled]
+    )
 
 -- Can any OTHER attacking creature assigning damage this step pay part of a bar
 -- this one is gated by? The two ways CR 702.19b and CR 702.19c let that happen,

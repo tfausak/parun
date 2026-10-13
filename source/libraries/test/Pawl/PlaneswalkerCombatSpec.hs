@@ -23,6 +23,7 @@ import qualified Pawl.Engine.Engine as Engine
 import qualified Pawl.Engine.Game as Game
 import qualified Pawl.Engine.Projection as Projection
 import qualified Pawl.Engine.Projection.View as Projection
+import qualified Pawl.Engine.Replay as Replay
 import qualified Pawl.Engine.Stack as Stack
 import qualified Pawl.Registry as Registry
 import qualified Pawl.Spec as Spec
@@ -400,6 +401,20 @@ trampleOverPlaneswalkersSpec s registry = Spec.describe s "TrampleOverPlaneswalk
       [Map.fromList [(Recipient.ToPlaneswalker jaceId, 3), (Recipient.ToPlayer S.bob, 0)]]
     Spec.assertEqWith s "bob took the 4 past Jace" (S.lifeOf S.bob after) (Just 16)
     Spec.assertBool s (not (Set.member jaceId (GameState.battlefield after))) "CR 704.5i: Jace took all 3 and is buried"
+  -- Replay.defaultAnswer with no blocker offered: all 7 onto Jace, the first
+  -- gate, which is well formed and clears it, so nothing is asked again and
+  -- nothing spills to bob.
+  Spec.it s "CR 510.1e the default division of an unblocked Thrasta is a legal one" $ do
+    thrasta <- S.printingOf s registry "Thrasta, Tempest's Roar"
+    jace <- S.printingOf s registry "Jace Beleren"
+    let (gs, _, jaceId) = jaceBoard jace [thrasta]
+        defaulting :: Prompt.Prompt a -> a
+        defaulting p = case p of
+          Prompt.AssignCombatDamage {} -> Replay.defaultAnswer p
+          _ -> attackThePlaneswalker p
+        after = S.runCombat defaulting gs
+    Spec.assertBool s (not (Set.member jaceId (GameState.battlefield after))) "Jace took the default's 7 and is buried"
+    Spec.assertEqWith s "and bob took none of it" (S.lifeOf S.bob after) (Just 20)
   -- The pair that makes CR 702.19c's "may be assigned as the attacking creature's
   -- controller chooses" a choice: ONE board, two interpreters, two games. An
   -- engine that computed "the excess goes to the player" passes the case above
