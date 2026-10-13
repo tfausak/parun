@@ -35,6 +35,7 @@ import qualified Pawl.Engine.Ante as Ante
 import qualified Pawl.Engine.Attach as Attach
 import qualified Pawl.Engine.Card as Engine.Card
 import qualified Pawl.Engine.Combat as Combat
+import qualified Pawl.Engine.Damage as Damage
 import qualified Pawl.Engine.Engine as Engine
 import qualified Pawl.Engine.Event.Trigger as Event.Trigger
 import qualified Pawl.Engine.Filter as Filter
@@ -163,6 +164,10 @@ data Rehearsal = MkRehearsal
     pending :: Maybe (When.When, Move.Move, Choices.Choices),
     refusing :: Maybe (When.When, Move.Move, Text.Text),
     reversing :: Maybe (When.When, Move.Move, PlayerId.PlayerId, GameState.GameState),
+    -- | A move taken at priority and the state it was taken on, until the next
+    -- priority prompt shows the engine made it. The engine's priority loop asks
+    -- again after reversing one; a run ending first had no engine acting on it.
+    awaiting :: Maybe (When.When, Move.Move, GameState.GameState),
     -- | CR 108.1: the Oracle card reference, as far as the timeline names it.
     reference :: Map.Map CardName.CardName Card.Card
   }
@@ -232,6 +237,7 @@ rehearsalOf timeline board =
           pending = Nothing,
           refusing = Nothing,
           reversing = Nothing,
+          awaiting = Nothing,
           reference = Map.empty
         }
 
@@ -616,14 +622,19 @@ answerDedicated decider asked =
           onEntry unscheduled key kind offers (takeUnqualified key kind) $ \verb -> case verb of
             Move.Block blocks -> Just (fmap Map.fromList (mapM (resolveBlock gs key kind candidates) (Map.toAscList blocks)))
             _ -> Nothing
-        -- Passed through unvalidated: CR 510.1c-d's legality is the engine's
-        -- to enforce, and a runner that checked it first would hide that.
+        -- CR 510.1c-d: an assignment that does not divide the creature's power
+        -- among what it was offered deals nothing, so it fails here; a probe
+        -- of that is an Answer flagged unoffered. CR 702.19b-c's trample gates
+        -- are the engine's alone, judged over the whole step (CR 510.1e).
         Prompt.Type.AssignCombatDamage who _ source thresholds _ -> do
           key <- whenOf gs (Decider.unwrap who)
           let offered = Map.keysSet thresholds
           offers <- describeAll gs (Maybe.mapMaybe Recipient.objectOf (Set.toList offered))
           onEntry unscheduled key kind offers (takeForSource gs key source) $ \verb -> case verb of
-            Move.AssignDamage assignment -> Just (fmap Map.fromList (mapM (resolveDamage gs key kind offered) (Map.toAscList assignment)))
+            Move.AssignDamage assignment -> Just $ do
+              chosen <- fmap Map.fromList (mapM (resolveDamage gs key kind offered) (Map.toAscList assignment))
+              Monad.unless (withinOffer prompt chosen) (failWith (Failure.MkUnofferedAnswer key verb kind))
+              pure chosen
             _ -> Nothing
         -- CR 603.3b: every entry named by its source, a repeated source taking
         -- its entries in the order offered; the engine wants their positions.
@@ -913,7 +924,7 @@ withinOffer prompt chosen = case prompt of
   Prompt.Type.DeclareBlockers _ _ blockers attackers -> all (`elem` blockers) (Map.keys chosen) && all (all (`elem` attackers)) chosen
   Prompt.Type.ChooseTargets _ _ _ offered -> Map.isSubmapOfBy (\picked (_, legal) -> Set.isSubsetOf picked legal) chosen offered
   Prompt.Type.AnnounceTargets _ _ _ offered -> all (`Map.member` offered) (Map.keys chosen)
-  Prompt.Type.AssignCombatDamage _ _ _ offered _ -> all (`Map.member` offered) (Map.keys chosen)
+  Prompt.Type.AssignCombatDamage _ _ _ offered power -> Damage.wellFormedAssignment offered power chosen
   Prompt.Type.ChooseRedistribution _ _ totals -> all (`elem` fmap fst totals) (Map.keys chosen <> Map.elems chosen)
   Prompt.Type.ChooseDistributedMovedCounters _ _ _ _ _ candidates -> all (`elem` candidates) (Map.keys chosen)
   Prompt.Type.ChooseMovedCounters _ _ _ _ available -> Map.isSubmapOfBy (<=) chosen available
@@ -1006,6 +1017,7 @@ permutationOf offered order = List.sort order == zipWith const [0 ..] offered
 -- blocking the move behind it, and is reported as unreached.
 answerActionPrompt :: GameState.GameState -> PlayerId.PlayerId -> [Action.Action] -> Run Action.Action
 answerActionPrompt gs pid actions = do
+  made gs
   key <- whenOf gs pid
   runLeadingChecks key gs
   entries <- queueAt key
@@ -1035,7 +1047,7 @@ answerActionPrompt gs pid actions = do
           [action] -> pure action
           _ -> failWith (Failure.MkAmbiguousAction key verb offered)
         popAt key index
-        State.modify' (\rehearsal -> rehearsal {pending = Just (key, verb, choicesOf verb)})
+        State.modify' (\rehearsal -> rehearsal {pending = Just (key, verb, choicesOf verb), awaiting = Just (key, verb, gs)})
         pure chosen
       -- A refused move the engine does not offer is refused already; one it
       -- does offer is taken, and must be reversed (CR 733.1).
@@ -1050,6 +1062,34 @@ answerActionPrompt gs pid actions = do
             pure action
           _ -> failWith (Failure.MkAmbiguousAction key verb offered)
       (Nothing, Entry.Expect _) -> pure Action.Pass
+
+-- | A move taken at priority must have happened by the next priority prompt: an
+-- action the engine reverses (CR 733.1) leaves the state as the move found it,
+-- and its player is asked again (CR 733.2).
+made :: GameState.GameState -> Run ()
+made gs = do
+  previous <- State.gets awaiting
+  State.modify' (\rehearsal -> rehearsal {awaiting = Nothing})
+  case previous of
+    Just (key, verb, before) | untouched before gs -> failWith (Failure.MkUnmadeMove key verb)
+    _ -> pure ()
+
+-- | Whether a state is the one a move was taken on, but for the bookkeeping
+-- written whatever the move did: who has passed and holds priority (CR
+-- 117.3c), CR 104.4b's last optional action, and the counters that allocate
+-- event groups, timestamps and object ids, which a reversal need not rewind.
+untouched :: GameState.GameState -> GameState.GameState -> Bool
+untouched before after =
+  let quiet gs =
+        gs
+          { GameState.passed = Set.empty,
+            GameState.priority = Nothing,
+            GameState.lastChoice = GameState.lastChoice before,
+            GameState.nextEventGroup = GameState.nextEventGroup before,
+            GameState.nextTimestamp = GameState.nextTimestamp before,
+            GameState.nextObjectId = GameState.nextObjectId before
+          }
+   in quiet before == quiet after
 
 -- | The checks at the head of a moment's queue, evaluated and taken in order,
 -- stopping at the first move.
@@ -1797,6 +1837,8 @@ render failure = case failure of
     renderWhen key <> Text.pack ": " <> renderMove verb <> Text.pack " is flagged unoffered, but the " <> kind <> Text.pack " prompt offered it"
   Failure.MkUnusedActionChoices key verb choices ->
     renderWhen key <> Text.pack ": " <> renderMove verb <> Text.pack " finished without using " <> Common.render (Codec.encode Codec.Choices.codec choices)
+  Failure.MkUnmadeMove key verb ->
+    renderWhen key <> Text.pack ": " <> renderMove verb <> Text.pack " was taken, but the engine left the game as the move found it"
   Failure.MkUnrefusedMove key verb next ->
     renderWhen key <> Text.pack ": " <> renderMove verb <> Text.pack " stood; " <> maybe (Text.pack "nothing was asked again") (\k -> Text.pack "the next prompt was " <> k) next
   Failure.MkUnreachedEntries turn step timed ->

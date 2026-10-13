@@ -6,6 +6,7 @@ module Pawl.ScenarioSpec where
 
 import qualified Control.Monad.Trans.State.Strict as State
 import qualified Data.ByteString as ByteString
+import qualified Data.List as List
 import qualified Data.List.NonEmpty as NonEmpty
 import qualified Data.Map.Strict as Map
 import qualified Data.Sequence as Seq
@@ -516,6 +517,43 @@ spec s registry = Spec.describe s "Scenario" $ do
       Left failure -> Spec.assertFailure s (S.renderFailure failure)
       Right _ -> Spec.assertFailure s "a declaration that stood passed as refused"
 
+  -- CR 601.2e / 733.1: a cast the engine finds illegal is reversed, so a script
+  -- whose cast is taken and then rejected fails rather than passing on a game
+  -- in which nothing was cast. Convoking five creatures for the Loxodon's {4}{W}
+  -- is a tap its cost has no room for.
+  Spec.it s "a taken cast the engine reverses fails, naming the cast" $ do
+    result <- runJson s registry (convokeLoxodon ["$p1", "$p2", "$p3", "$p4", "$guard"])
+    case result of
+      Left (ScenarioFailure.MkUnmadeMove key verb) -> do
+        Spec.assertEqWith s "the moment it was taken" key (When.MkWhen 1 S.precombatMain (S.seatLabel S.alice))
+        Spec.assertBool s (case verb of Move.Cast {} -> True; _ -> False) "the move named is the cast"
+      Left failure -> Spec.assertFailure s (S.renderFailure failure)
+      Right _ -> Spec.assertFailure s "the reversed cast passed with the Loxodon still in hand"
+
+  Spec.it s "the same cast convoking four creatures is made" $ do
+    result <- runJson s registry (convokeLoxodon ["$p1", "$p2", "$p3", "$p4"])
+    case result of
+      Left failure -> Spec.assertFailure s (S.renderFailure failure)
+      Right final -> Spec.assertEqWith s "the Loxodon resolved" (S.countOnBattlefieldByName (CardName.MkCardName (Text.pack "Venerated Loxodon")) S.alice final) 1
+
+  -- CR 510.1c-d: the engine deals nothing for an assignment that does not divide
+  -- the creature's power, so a script writing one fails rather than passing
+  -- on a combat in which no damage was dealt.
+  Spec.it s "an assignment that does not divide the power is a failure" $ do
+    result <- runJson s registry (doubleBlocked "{\"$first\":2,\"$second\":2}")
+    case result of
+      Left (ScenarioFailure.MkUnofferedAnswer _ verb kind) -> do
+        Spec.assertEqWith s "the prompt it answered" kind (Text.pack "AssignCombatDamage")
+        Spec.assertBool s (case verb of Move.AssignDamage {} -> True; _ -> False) "the move named is the assignment"
+      Left failure -> Spec.assertFailure s (S.renderFailure failure)
+      Right _ -> Spec.assertFailure s "the ill-divided assignment passed, dealing nothing"
+
+  Spec.it s "the same attacker dividing its power is answered" $ do
+    result <- runJson s registry (doubleBlocked "{\"$first\":1,\"$second\":1}")
+    case result of
+      Left failure -> Spec.assertFailure s (S.renderFailure failure)
+      Right final -> Spec.assertEqWith s "both blockers died" (S.countOnBattlefieldByName (CardName.MkCardName (Text.pack "Goblin Piker")) S.bob final) 0
+
   -- The two ways a check can fail are never spelled alike: one that ran and
   -- read false, and one whose moment never came and so asserted nothing.
   Spec.it s "a check that reads false fails as a false check, naming what it saw" $ do
@@ -594,6 +632,30 @@ runJson :: (Monad m) => Spec.Spec m n -> Registry.Registry m -> String -> m (Eit
 runJson s registry json = case Common.parse (Text.pack json) >>= Codec.decode Codec.Scenario.codec of
   Left problem -> Spec.assertFailure s (Text.unpack problem)
   Right scenario -> Scenario.run registry scenario
+
+-- alice casts Venerated Loxodon at once, convoking `taps` from four Goblin
+-- Pikers and a Palace Guard.
+convokeLoxodon :: [String] -> String
+convokeLoxodon taps =
+  let ready label card = "{\"card\":\"" <> card <> "\",\"label\":\"" <> label <> "\",\"ready\":true}"
+      creatures = [ready ("p" <> show n) "Goblin Piker" | n <- [1 :: Int .. 4]] <> [ready "guard" "Palace Guard"]
+   in "{\"description\":\"x\",\"board\":{\"seats\":[{\"name\":\"alice\",\"battlefield\":["
+        <> List.intercalate "," creatures
+        <> "],\"hand\":[{\"card\":\"Venerated Loxodon\",\"label\":\"lox\"}]},{\"name\":\"bob\"}],\"active\":\"alice\",\"step\":\"PrecombatMain\"},"
+        <> "\"timeline\":[{\"turn\":1,\"step\":\"PrecombatMain\",\"player\":\"alice\",\"do\":{\"Answer\":{\"prompt\":\"ChooseTaps\",\"with\":["
+        <> List.intercalate "," (fmap show taps)
+        <> "]}}},{\"turn\":1,\"step\":\"PrecombatMain\",\"player\":\"alice\",\"do\":{\"Cast\":{\"object\":\"$lox\",\"cost\":[],\"costOrder\":[0,1]}}}]}"
+
+-- alice's Piker, blocked by two of bob's, assigns its damage as `assignment`.
+doubleBlocked :: String -> String
+doubleBlocked assignment =
+  "{\"description\":\"x\",\"board\":{\"seats\":[{\"name\":\"alice\",\"battlefield\":[{\"card\":\"Goblin Piker\",\"label\":\"attacker\",\"ready\":true}]},"
+    <> "{\"name\":\"bob\",\"battlefield\":[{\"card\":\"Goblin Piker\",\"label\":\"first\",\"ready\":true},{\"card\":\"Goblin Piker\",\"label\":\"second\",\"ready\":true}]}],\"active\":\"alice\",\"step\":\"DeclareAttackers\"},"
+    <> "\"timeline\":[{\"turn\":1,\"step\":\"DeclareAttackers\",\"player\":\"alice\",\"do\":{\"Attack\":[\"$attacker\"]}},"
+    <> "{\"turn\":1,\"step\":\"DeclareBlockers\",\"player\":\"bob\",\"do\":{\"Block\":{\"$first\":[\"$attacker\"],\"$second\":[\"$attacker\"]}}},"
+    <> "{\"turn\":1,\"step\":\"CombatDamage\",\"player\":\"alice\",\"source\":\"$attacker\",\"do\":{\"AssignDamage\":"
+    <> assignment
+    <> "}},{\"turn\":1,\"step\":\"EndOfCombat\",\"player\":\"alice\",\"check\":{\"Life\":{\"player\":\"bob\",\"life\":20}}}]}"
 
 -- alice's settled Piker attacks bob, then `entry` (if any) and `final`.
 attackThen :: String -> String -> String
