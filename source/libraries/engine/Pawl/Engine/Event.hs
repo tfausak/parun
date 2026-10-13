@@ -2198,7 +2198,7 @@ apply batch candidate event =
               gs2 <- State.get
               let viewOf = Projection.viewWithLastKnown oid gs2
                   context = Replacement.candidateContext gs2 candidate
-                  announcedX = Projection.announcedXOf oid gs2
+                  announcedX = Game.announcedXOf oid gs2
               Foldable.for_ (Map.toList (WithCounters.counters withCounters)) $ \(kind, quantity) ->
                 case Quantity.evaluate viewOf context (Projection.boardAsEntering gs2) oid (Quantity.substituteAnnouncedX announcedX quantity) of
                   Nothing -> pure () -- unevaluable quantity: no counters, the WithCounters arm's posture
@@ -2889,7 +2889,7 @@ apply batch candidate event =
             let offered = Replacement.graveyardCandidates controller scope filter_ gs
                 viewOf = Projection.viewWithLastKnown oid gs
                 context = Replacement.candidateContext gs candidate
-                announcedX = Projection.announcedXOf oid gs
+                announcedX = Game.announcedXOf oid gs
                 amount quantity = maybe 0 Integer.toNaturalSaturating (Quantity.evaluate viewOf context (Projection.boardAsEntering gs) oid (Quantity.substituteAnnouncedX announcedX quantity))
             -- CR 614.12: "If you can't" is too few candidates for the count, so
             -- nothing is exiled and the entry is unmade.
@@ -5014,7 +5014,7 @@ placeEntryCounters candidate oid counters = do
   gs <- State.get
   let viewOf = Projection.viewWithLastKnown oid gs
       context = Replacement.candidateContext gs candidate
-      announcedX = Projection.announcedXOf oid gs
+      announcedX = Game.announcedXOf oid gs
   Foldable.for_ (Map.toList counters) $ \(kind, quantity) ->
     case Quantity.evaluate viewOf context (Projection.boardAsEntering gs) oid (Quantity.substituteAnnouncedX announcedX quantity) of
       Nothing -> pure () -- unevaluable quantity: no counters (Resolve's PutCounters posture)
@@ -8687,6 +8687,8 @@ lastKnownFrom gs oid obj =
     (Object.paidCosts obj)
     -- CR 718.3d's record, for the same reason.
     (Object.prototyped obj)
+    -- CR 107.3m's, for the same reason.
+    (Object.announcedX obj)
     -- CR 702.30a's echo window: per-incarnation, so this is the last moment it
     -- exists.
     (Object.controlClock obj)

@@ -1,0 +1,35 @@
+{
+  "description": "CR 107.3m / 113.7a a second Gadwick, the Wizened put into the graveyard by the legend rule still draws the X its spell was cast for",
+  "note": "The legend rule is a state-based action, so the new Gadwick is in the graveyard before its enters trigger is put on the stack. The trigger reads the X announced for the spell (CR 107.3m) off the source's last known information (CR 113.7a), so alice draws 2; reading a departed source as having no X draws nothing. Bob controls no nonland permanent, so the old Gadwick's tap trigger off the blue spell is removed for want of a target.",
+  "board": {
+    "seats": [
+      {
+        "name": "alice",
+        "battlefield": [
+          { "card": "Gadwick, the Wizened", "label": "old" },
+          { "card": "Island", "label": "i1", "ready": true },
+          { "card": "Island", "label": "i2", "ready": true },
+          { "card": "Island", "label": "i3", "ready": true },
+          { "card": "Island", "label": "i4", "ready": true },
+          { "card": "Island", "label": "i5", "ready": true }
+        ],
+        "hand": [{ "card": "Gadwick, the Wizened", "label": "new" }],
+        "library": [{ "card": "Plains" }, { "card": "Plains" }, { "card": "Plains" }, { "card": "Plains" }]
+      },
+      {
+        "name": "bob",
+        "library": [{ "card": "Island" }, { "card": "Island" }]
+      }
+    ],
+    "active": "alice",
+    "step": "PrecombatMain"
+  },
+  "timeline": [
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": { "Cast": { "object": "$new", "x": 2, "mana": ["$i1", "$i2", "$i3", "$i4", "$i5"] } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass" },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": { "Answer": { "prompt": "ChooseLegend", "with": "$old" } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "check": { "Count": { "player": "alice", "zone": "Graveyard", "card": "Gadwick, the Wizened", "count": 1 } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass" },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "check": { "Count": { "player": "alice", "zone": "Hand", "card": "Plains", "count": 2 } } }
+  ]
+}

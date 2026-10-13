@@ -1803,6 +1803,17 @@ liveOrLastKnown live remembered oid gs = case lookupObject oid gs of
 lastKnownOf :: ObjectId -> GameState -> Maybe LastKnown.LastKnown
 lastKnownOf oid gs = Monad.join (liveOrLastKnown (const Nothing) Just oid gs)
 
+-- CR 107.3m: the value of X announced for the spell that became this object,
+-- and 0 for every object no such spell stands behind. Read off the OBJECT, not
+-- the projection: an announcement is not a characteristic, so no CR 613 layer
+-- can write it and CR 707.2 does not copy it. A source already gone answers
+-- from its last known information (CR 113.7a), which is what a legend-rule
+-- casualty's own enters trigger reads; the
+-- cr-107-3m-a-gadwick-lost-to-the-legend-rule-still-draws-its-x scenario is the
+-- proof.
+announcedXOf :: ObjectId -> GameState -> Natural
+announcedXOf oid gs = Maybe.fromMaybe 0 (Monad.join (liveOrLastKnown Object.announcedX LastKnown.announcedX oid gs))
+
 -- CR 708.2 / CR 708.8 over ONE object: write which face it is showing, and give
 -- it CR 613.7f's new timestamp -- "a permanent receives a new timestamp each time
 -- it turns face up or face down". The primitive BOTH turning-over roads share,

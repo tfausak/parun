@@ -5302,7 +5302,7 @@ replacementsOfGiven pcs zone oid gs =
       -- card's own rules text and every segment after it is a rule minting a row
       -- onto the permanent. See Pawl.Types.ReplacementProvenance.
       fmap ((,) ReplacementProvenance.Printed . PrintedReplacement.effect) (filter lives (PC.replacementEffects pc))
-        <> fmap ((,) ReplacementProvenance.Minted) (intrinsicReplacementsOf (announcedXOf oid gs) (phyrexianLifePaidOf oid gs) (Game.lookupObject oid gs >>= Object.castUsing) pc)
+        <> fmap ((,) ReplacementProvenance.Minted) (intrinsicReplacementsOf (Game.announcedXOf oid gs) (phyrexianLifePaidOf oid gs) (Game.lookupObject oid gs >>= Object.castUsing) pc)
         <> fmap ((,) ReplacementProvenance.Minted) (shieldOf oid gs)
         <> fmap ((,) ReplacementProvenance.Minted) (finalityOf oid gs)
         <> fmap ((,) ReplacementProvenance.Minted) (stunOf oid gs)
@@ -5343,14 +5343,7 @@ functionsFromZoneOfRow zone pr =
 statesZoneOfRow :: Zone.Zone -> PrintedReplacement.PrintedReplacement card ability effect -> Bool
 statesZoneOfRow zone = Set.member zone . PrintedReplacement.functionsFrom
 
--- CR 107.3m: the value of X for this object's enters-the-battlefield replacement
--- effects, and 0 for every object no such spell stands behind. Read off the
--- OBJECT, not the projection: an announcement is not a characteristic, so no CR
--- 613 layer can write it and CR 707.2 does not copy it.
-announcedXOf :: ObjectId -> GameState -> Natural
-announcedXOf oid gs = Maybe.fromMaybe 0 (Object.announcedX =<< Game.lookupObject oid gs)
-
--- CR 400.7d's other cost record, `announcedXOf` above's twin: how many of the
+-- CR 400.7d's other cost record, Game.announcedXOf's twin: how many of the
 -- spell that became this permanent's Phyrexian mana symbols were announced to be
 -- paid with life (CR 601.2b). Rule 702.150a's compleated is the one reader.
 phyrexianLifePaidOf :: ObjectId -> GameState -> Natural
@@ -5360,7 +5353,7 @@ phyrexianLifePaidOf oid gs = maybe 0 Object.phyrexianLifePaid (Game.lookupObject
 -- COLORS of mana were spent to cast the spell that became this permanent (CR
 -- 702.44b). Rule 702.44a's sunburst is the one reader, and it counts this set.
 --
--- Read off the OBJECT for `announcedXOf`'s reason: a payment is not a
+-- Read off the OBJECT for Game.announcedXOf's reason: a payment is not a
 -- characteristic, so no CR 613 layer writes it and CR 707.2 does not copy it.
 -- Object.manaSpent is the record, carried across the move onto the battlefield
 -- by Pawl.Engine.Event's arm; CR 106.1b's colorless is not one of CR 106.1a's
