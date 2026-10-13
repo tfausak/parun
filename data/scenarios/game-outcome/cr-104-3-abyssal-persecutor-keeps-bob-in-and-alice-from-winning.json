@@ -1,0 +1,39 @@
+{
+  "description": "CR 104.3 Abyssal Persecutor keeps bob in and alice from winning",
+  "note": "Alice controls Abyssal Persecutor and Felidar Sovereign at 40 life; bob is at 0 life. Bob does not lose to CR 704.5a while the Persecutor is out, and alice's Sovereign wins her nothing at her upkeep (CR 104.2b). Once alice's Murder destroys the Persecutor, the next check takes bob out.",
+  "board": {
+    "active": "bob",
+    "step": "EndStep",
+    "seats": [
+      {
+        "name": "alice",
+        "life": 40,
+        "battlefield": [
+          { "card": "Abyssal Persecutor", "label": "persecutor" },
+          { "card": "Felidar Sovereign" },
+          { "card": "Swamp", "label": "s1" },
+          { "card": "Swamp", "label": "s2" },
+          { "card": "Swamp", "label": "s3" }
+        ],
+        "hand": [{ "card": "Murder", "label": "murder" }],
+        "library": [{ "card": "Swamp" }, { "card": "Swamp" }]
+      },
+      {
+        "name": "bob",
+        "life": 0,
+        "library": [{ "card": "Swamp" }, { "card": "Swamp" }]
+      }
+    ]
+  },
+  "timeline": [
+    { "turn": 2, "step": "Upkeep", "player": "alice", "do": "Pass" },
+    { "turn": 2, "step": "Upkeep", "player": "alice", "check": { "View": { "of": "Result", "is": null } } },
+    { "turn": 2, "step": "PrecombatMain", "player": "alice", "check": { "Life": { "player": "bob", "life": 0 } } },
+    { "turn": 2, "step": "PrecombatMain", "player": "alice", "do": { "Cast": { "object": "$murder", "targets": ["$persecutor"], "mana": ["$s1", "$s2", "$s3"] } } },
+    { "turn": 2, "step": "PrecombatMain", "player": "alice", "do": "Pass" }
+  ],
+  "final": [
+    { "View": { "of": "Result", "is": { "won": "alice" } } },
+    { "Count": { "player": "alice", "zone": "Graveyard", "card": "Abyssal Persecutor", "count": 1 } }
+  ]
+}

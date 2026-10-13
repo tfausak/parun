@@ -1111,6 +1111,7 @@ unpreventableScopeOffends scope playerEffect = case playerEffect of
   PlayerEffect.AdditionalSurveilCards _ -> False
   PlayerEffect.CantGainLife -> False
   PlayerEffect.CantLoseLife -> False
+  PlayerEffect.Precluded _ -> False
   PlayerEffect.Shows _ -> False
 
 -- The OTHER half of the same carrier -- and of CR 614.9's twin beside it, whose
@@ -1181,6 +1182,7 @@ unpreventablePatternOffends playerEffect = case playerEffect of
   PlayerEffect.AdditionalSurveilCards _ -> False
   PlayerEffect.CantGainLife -> False
   PlayerEffect.CantLoseLife -> False
+  PlayerEffect.Precluded _ -> False
   PlayerEffect.Shows _ -> False
 
 -- The non-vacuity half of both lints above: is this a damage-event prohibition

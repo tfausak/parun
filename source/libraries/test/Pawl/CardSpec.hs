@@ -4923,6 +4923,7 @@ playerEffectFilters playerEffect = case playerEffect of
   PlayerEffect.AdditionalSurveilCards _ -> []
   PlayerEffect.CantGainLife -> []
   PlayerEffect.CantLoseLife -> []
+  PlayerEffect.Precluded _ -> []
   PlayerEffect.Shows _ -> []
 
 -- CR 707.9's "except ..." clauses. Only the GainKeywords arm reaches a Filter,
