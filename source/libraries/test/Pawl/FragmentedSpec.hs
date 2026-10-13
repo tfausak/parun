@@ -6,9 +6,8 @@
 -- Untap target creature") under bob. No printing reaches the rule: Scryfall
 -- `o:"{0}: untap"` and `o:"{0}: tap"`, 2026-10-03, answer only untaps limited
 -- to one activation a turn or a game (Instill Energy, Nature's Chosen, Touch
--- of Vitae) and Chimeric Idol, which taps lands. CR 732.3's own example
--- undoes a continuous effect, which `Fragmented.digest` does not see recur
--- (gap #4650).
+-- of Vitae) and Chimeric Idol, which taps lands. CR 732.3's own example,
+-- which undoes a continuous effect, is Mist Dragon's.
 --
 -- Two seats, so alice -- active, and involved -- is the named player by
 -- construction. The answerer is test-local: it sequences two players through
@@ -16,15 +15,28 @@
 module Pawl.FragmentedSpec where
 
 import qualified Control.Monad.Trans.State.Strict as State
+import qualified Data.Foldable as Foldable
 import qualified Data.Sequence as Seq
 import qualified Data.Set as Set
 import qualified Pawl.Engine.Engine as Engine
+import qualified Pawl.Engine.Game as Game
+import qualified Pawl.Engine.Projection as Projection
 import qualified Pawl.Engine.Setup as Setup
 import qualified Pawl.Registry as Registry
 import qualified Pawl.Spec as Spec
 import qualified Pawl.Support as S
 import qualified Pawl.Types.Action as Action
+import qualified Pawl.Types.ActivatedAbility as ActivatedAbility
+import qualified Pawl.Types.Affected as Affected
+import qualified Pawl.Types.ContinuousEffect as ContinuousEffect
+import qualified Pawl.Types.Effect as Effect
+import qualified Pawl.Types.Expiry as Expiry
 import qualified Pawl.Types.GameState as GameState
+import qualified Pawl.Types.Keyword as Keyword
+import qualified Pawl.Types.Modal as Modal
+import qualified Pawl.Types.Mode as Mode
+import qualified Pawl.Types.Modification as Modification
+import qualified Pawl.Types.ModifyTarget as ModifyTarget
 import qualified Pawl.Types.ObjectId as ObjectId
 import qualified Pawl.Types.Phase as Phase
 import qualified Pawl.Types.PlayerId as PlayerId
@@ -81,6 +93,30 @@ spec s registry = Spec.describe s "a fragmented loop (CR 732.3)" $ do
     -- would also refuse aiming it at her own tapped creature, a different
     -- game choice (CR 732.1, 601.2c), so it stays offered (gap #4663).
     Spec.assertEqWith s "CR 732.3 alice's Rouser stays offered" (snd (offers (rouserBoard tapper rouser))) (replicate budget True)
+
+  Spec.it s "a loop whose undo leaves a superseded continuous effect behind is detected" $ do
+    dragon <- S.printingOf s registry "Mist Dragon"
+    -- CR 732.3's own example, on one card: alice has her Mist Dragon gain
+    -- flying, then lose it, and so on. Every resolution stores an indefinite
+    -- effect (CR 611.2a), so no two states are equal as stored; a gain a later
+    -- loss erases is unobservable, as is a loss a later loss repeats. The
+    -- fourth resolution returns to the state the second left, where she had it
+    -- gain flying, so that activation is withheld and the loss is not.
+    let (gains, loses) = unzip (dragonOffers (S.addPermanent dragon S.alice (Setup.emptyGame S.bothPlayers)))
+    Spec.assertEqWith s "CR 732.3 alice's gain is withheld where the state recurs" gains [True, True, True, True, False]
+    Spec.assertEqWith s "CR 732.3 alice's loss stays offered" loses (replicate 5 True)
+
+  Spec.it s "a superseded effect stamped before a permanent is not one stamped after it" $ do
+    dragon <- S.printingOf s registry "Mist Dragon"
+    wings <- S.printingOf s registry "Arcanum Wings"
+    -- The same loop, begun under a loss of flying stored BEFORE Arcanum Wings
+    -- was attached, so the Aura's grant applies after it (CR 613.7) and the
+    -- Dragon flies. The second resolution leaves the same one row, the loss,
+    -- but stamped after the Aura's: the Dragon does not fly, the state is not
+    -- the first one, and only the fourth resolution recurs.
+    let board = flownUnder dragon wings
+    Spec.assertBool s (uncurry (Projection.hasKeyword Keyword.Flying) board) "CR 613.7 the Dragon flies under the later Aura"
+    Spec.assertEqWith s "CR 732.3 alice's gain is withheld only where the state recurs" (fmap fst (dragonOffers board)) [True, True, True, True, False]
 
 -- How many times the answerer has the tapper activate before it passes
 -- instead, since without CR 732.3 the loop never ends.
@@ -179,3 +215,65 @@ activates :: ObjectId.ObjectId -> Action.Action -> Bool
 activates oid action = case action of
   Action.Activate source _ -> source == oid
   _ -> False
+
+-- alice's Mist Dragon, stored as losing flying (the row its second ability
+-- leaves, CR 611.2a) before her Arcanum Wings enchants it.
+flownUnder :: Printing.Printing -> Printing.Printing -> (ObjectId.ObjectId, GameState.GameState)
+flownUnder dragon wings =
+  let (dragonId, gs1) = S.addPermanent dragon S.alice (Setup.emptyGame S.bothPlayers)
+      (ts, gs2) = Game.freshTimestamp gs1
+      loss =
+        ContinuousEffect.MkContinuousEffect
+          { ContinuousEffect.source = dragonId,
+            ContinuousEffect.timestamp = ts,
+            ContinuousEffect.expiry = Expiry.Never,
+            ContinuousEffect.modification = Modification.LoseKeyword Keyword.Flying,
+            ContinuousEffect.affected = Affected.TheseObjects (Set.singleton dragonId)
+          }
+      (wingsId, gs3) = S.addPermanent wings S.alice gs2 {GameState.continuousEffects = [loss]}
+   in (dragonId, S.attach wingsId dragonId gs3)
+
+-- alice, active in her precombat main phase with an empty stack and no mana,
+-- controls the Mist Dragon and alternates its two {0} abilities, gain first,
+-- up to `budget` times twice over; bob passes throughout. Answers, at each
+-- prompt alice gets with the stack empty, whether each of the two was on the
+-- menu.
+dragonOffers :: (ObjectId.ObjectId, GameState.GameState) -> [(Bool, Bool)]
+dragonOffers (dragonId, gs) =
+  let ((_, _), (_, _, offered)) = State.runState (Engine.runGame (alternating dragonId) (inMain gs) Engine.priorityLoop) (False, 0, [])
+   in offered
+
+-- The state: whether alice's ability is on the stack, how many she has
+-- activated, and the menus recorded so far.
+alternating :: ObjectId.ObjectId -> Prompt.Prompt r -> State.State (Bool, Int, [(Bool, Bool)]) r
+alternating dragonId p = case p of
+  Prompt.ChooseAction _ pid actions | pid == S.alice -> do
+    (pending, activations, offered) <- State.get
+    if pending
+      then do
+        State.put (False, activations, offered)
+        pure Action.Pass
+      else do
+        let ofKind gains = filter (\action -> activates dragonId action && gainsFlying action == Just gains) actions
+            menu = (not (null (ofKind True)), not (null (ofKind False)))
+            wanted = ofKind (even activations)
+        case wanted of
+          action : _ | activations < 2 * budget -> do
+            State.put (True, activations + 1, offered <> [menu])
+            pure action
+          _ -> do
+            State.put (False, activations, offered <> [menu])
+            pure Action.Pass
+  Prompt.ChooseAction {} -> pure Action.Pass
+  _ -> pure (S.identityAnswer p)
+
+-- Whether a Mist Dragon activation gains flying (Just True) or loses it (Just
+-- False), read off the modification it stores.
+gainsFlying :: Action.Action -> Maybe Bool
+gainsFlying action = case action of
+  Action.Activate _ ability ->
+    case [ModifyTarget.modification modify | mode <- Foldable.toList (Modal.modes (ActivatedAbility.modal ability)), Effect.ModifyTarget modify <- Foldable.toList (Mode.allEffects mode)] of
+      [Modification.GainKeyword _] -> Just True
+      [Modification.LoseKeyword _] -> Just False
+      _ -> Nothing
+  _ -> Nothing
