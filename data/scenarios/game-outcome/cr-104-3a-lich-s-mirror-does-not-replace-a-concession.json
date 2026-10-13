@@ -1,0 +1,25 @@
+{
+  "description": "CR 104.3a Lich's Mirror does not replace a concession",
+  "note": "Alice concedes with Lich's Mirror out. A concession is leaving the game, not a loss the Mirror can replace (its ruling), so bob wins.",
+  "board": {
+    "active": "alice",
+    "step": "PrecombatMain",
+    "seats": [
+      {
+        "name": "alice",
+        "battlefield": [{ "card": "Lich's Mirror" }],
+        "library": [{ "card": "Island" }, { "card": "Island" }]
+      },
+      {
+        "name": "bob",
+        "library": [{ "card": "Forest" }, { "card": "Forest" }]
+      }
+    ]
+  },
+  "timeline": [
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Concede" }
+  ],
+  "final": [
+    { "View": { "of": "Result", "is": { "won": "bob" } } }
+  ]
+}

@@ -149,6 +149,7 @@ import qualified Pawl.Types.FromOutsideTheGame as FromOutsideTheGame
 import Pawl.Types.Game (Game)
 import Pawl.Types.GameEvent (GameEvent)
 import qualified Pawl.Types.GameEvent as GameEvent
+import qualified Pawl.Types.GameLossR as GameLossR
 import qualified Pawl.Types.GameSettings as GameSettings
 import Pawl.Types.GameState (GameState)
 import qualified Pawl.Types.GameState as GameState
@@ -188,8 +189,8 @@ import qualified Pawl.Types.OptionalDecision as OptionalDecision
 import qualified Pawl.Types.OutsideCard as OutsideCard
 import qualified Pawl.Types.OutsideDestination as OutsideDestination
 import qualified Pawl.Types.OutsideObject as OutsideObject
-import qualified Pawl.Types.PendingDamageEffect as PendingDamageEffect
 import qualified Pawl.Types.PendingEntryEffect as PendingEntryEffect
+import qualified Pawl.Types.PendingReplacementEffect as PendingReplacementEffect
 import Pawl.Types.PendingTrigger (PendingTrigger)
 import qualified Pawl.Types.PendingTrigger as PendingTrigger
 import qualified Pawl.Types.PermanentActed as PermanentActed
@@ -2013,6 +2014,7 @@ shufflesAfter candidate = case ReplacementCandidate.effect candidate of
   ReplacementEffect.ScryR {} -> False
   ReplacementEffect.VillainousChoiceR {} -> False
   ReplacementEffect.AssembleR {} -> False
+  ReplacementEffect.GameLossR {} -> False
   ReplacementEffect.PhaseR _ -> False
 
 -- CR 615.12: apply one chosen PREVENTION effect to damage that can't be
@@ -3618,7 +3620,7 @@ apply batch candidate event =
       -- gives: this module is below Pawl.Engine.Resolve and cannot run a card's
       -- effects. The environment goes onto the queue with them, since the ability
       -- that installed the row is long gone (CR 400.7); see
-      -- Pawl.Types.PendingDamageEffect.
+      -- Pawl.Types.PendingReplacementEffect.
       --
       -- The row's SLOTS carry CR 601.2c's target forward, which is what makes
       -- "that creature" nameable at the event, and they are objects rather than
@@ -3636,13 +3638,13 @@ apply batch candidate event =
           Just controller -> do
             State.modify' $ \g ->
               g
-                { GameState.pendingDamageEffects =
-                    GameState.pendingDamageEffects g
-                      Seq.|> PendingDamageEffect.MkPendingDamageEffect
-                        { PendingDamageEffect.effects = effects,
-                          PendingDamageEffect.targets = fmap (Set.map Recipient.ToObject) (ReplacementCandidate.slots candidate),
-                          PendingDamageEffect.controller = controller,
-                          PendingDamageEffect.source = ReplacementCandidate.source candidate
+                { GameState.pendingReplacementEffects =
+                    GameState.pendingReplacementEffects g
+                      Seq.|> PendingReplacementEffect.MkPendingReplacementEffect
+                        { PendingReplacementEffect.effects = effects,
+                          PendingReplacementEffect.targets = fmap (Set.map Recipient.ToObject) (ReplacementCandidate.slots candidate),
+                          PendingReplacementEffect.controller = controller,
+                          PendingReplacementEffect.source = ReplacementCandidate.source candidate
                         }
                 }
             pure Nothing
@@ -4069,6 +4071,29 @@ apply batch candidate event =
       pure (Just (ProposedEvent.WouldAssemble assembler pid (n * 2)))
     -- Unreachable: `applies` admits AssembleR only against WouldAssemble.
     (ReplacementEffect.AssembleR {}, _) -> pure (Just event)
+    -- CR 104.3 / 614.1a: Lich's Mirror's "if you would lose the game, instead
+    -- ...". The loss does not happen, and the effects run in its place --
+    -- QUEUED, the DamageRewrite.RunEffects arm's reason, and drained before the
+    -- next state-based action check (Pawl.Types.PendingReplacementEffect).
+    (ReplacementEffect.GameLossR (GameLossR.MkGameLossR _ effects), ProposedEvent.WouldLoseGame _) -> do
+      Replacement.consume (ReplacementCandidate.identity candidate)
+      -- A row whose source has left names no "you" to perform the effects; the
+      -- loss is replaced all the same, RunEffects' answer.
+      Monad.forM_ (ReplacementCandidate.controller candidate) $ \controller ->
+        State.modify' $ \g ->
+          g
+            { GameState.pendingReplacementEffects =
+                GameState.pendingReplacementEffects g
+                  Seq.|> PendingReplacementEffect.MkPendingReplacementEffect
+                    { PendingReplacementEffect.effects = effects,
+                      PendingReplacementEffect.targets = fmap (Set.map Recipient.ToObject) (ReplacementCandidate.slots candidate),
+                      PendingReplacementEffect.controller = controller,
+                      PendingReplacementEffect.source = ReplacementCandidate.source candidate
+                    }
+            }
+      pure Nothing
+    -- Unreachable: `applies` admits GameLossR only against WouldLoseGame.
+    (ReplacementEffect.GameLossR {}, _) -> pure (Just event)
     -- CR 122.6/614.1: Hardened Scales/Doubling Season scale a counter placement.
     (ReplacementEffect.CounterR (CounterR.MkCounterR _ scaling), ProposedEvent.WouldPutCounters cause oid kind n) -> do
       Replacement.consume (ReplacementCandidate.identity candidate)

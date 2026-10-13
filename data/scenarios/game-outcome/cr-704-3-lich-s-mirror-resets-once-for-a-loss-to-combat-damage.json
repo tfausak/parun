@@ -1,0 +1,27 @@
+{
+  "description": "CR 704.3 Lich's Mirror resets once for a loss to combat damage",
+  "note": "Alice at 2 life with Lich's Mirror takes 2 from bob's Grizzly Bears. The combat damage step's own check meets the loss and the Mirror replaces it once: one shuffle, seven Islands drawn, the Mirror left in her library. A second check before the reset ran would meet the same loss and reset her again.",
+  "board": {
+    "active": "bob",
+    "step": "BeginningOfCombat",
+    "seats": [
+      {
+        "name": "alice",
+        "life": 2,
+        "battlefield": [{ "card": "Lich's Mirror" }],
+        "library": [{ "card": "Island" }, { "card": "Island" }, { "card": "Island" }, { "card": "Island" }, { "card": "Island" }, { "card": "Island" }, { "card": "Island" }]
+      },
+      {
+        "name": "bob",
+        "battlefield": [{ "card": "Grizzly Bears", "label": "bears", "ready": true }],
+        "library": [{ "card": "Forest" }, { "card": "Forest" }]
+      }
+    ]
+  },
+  "timeline": [
+    { "turn": 1, "step": "DeclareAttackers", "player": "bob", "do": { "Attack": ["$bears"] } },
+    { "turn": 1, "step": "CombatDamage", "player": "bob", "do": { "Answer": { "prompt": "Shuffle", "with": ["Island", "Island#2", "Island#3", "Island#4", "Island#5", "Island#6", "Island#7", "Lich's Mirror"] } } },
+    { "turn": 1, "step": "EndOfCombat", "player": "bob", "check": { "Life": { "player": "alice", "life": 20 } } },
+    { "turn": 1, "step": "EndOfCombat", "player": "bob", "check": { "View": { "of": "Zone", "player": "alice", "zone": "Library", "is": ["Lich's Mirror"] } } }
+  ]
+}

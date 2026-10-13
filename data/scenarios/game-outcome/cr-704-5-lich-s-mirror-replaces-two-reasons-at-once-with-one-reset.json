@@ -1,0 +1,38 @@
+{
+  "description": "CR 704.5 Lich's Mirror replaces two reasons at once with one reset",
+  "note": "Alice at 2 life with an empty library casts Sign in Blood on herself: she attempts two draws from it (CR 704.5b) and goes to 0 life (CR 704.5a). The one check would lose her the game for both reasons, and the Mirror replaces that one loss once, per its ruling: one shuffle, one draw of seven from her eight cards, leaving one in her library. A second reset would draw from that one card and lose her the game.",
+  "board": {
+    "active": "alice",
+    "step": "PrecombatMain",
+    "seats": [
+      {
+        "name": "alice",
+        "life": 2,
+        "battlefield": [
+          { "card": "Lich's Mirror" },
+          { "card": "Swamp", "label": "s1" },
+          { "card": "Swamp", "label": "s2" }
+        ],
+        "hand": [
+          { "card": "Sign in Blood", "label": "sign" },
+          { "card": "Plains" },
+          { "card": "Plains" },
+          { "card": "Plains" },
+          { "card": "Plains" }
+        ]
+      },
+      {
+        "name": "bob",
+        "library": [{ "card": "Forest" }, { "card": "Forest" }]
+      }
+    ]
+  },
+  "timeline": [
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": { "Cast": { "object": "$sign", "targets": ["$alice"], "mana": ["$s1", "$s2"] } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass" },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": { "Answer": { "prompt": "Shuffle", "with": ["Plains", "Plains#2", "Plains#3", "Plains#4", "Lich's Mirror", "Swamp", "Swamp#2", "Sign in Blood"] } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "check": { "View": { "of": "Zone", "player": "alice", "zone": "Library", "is": ["Sign in Blood"] } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "check": { "Life": { "player": "alice", "life": 20 } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "check": { "View": { "of": "Result", "is": null } } }
+  ]
+}

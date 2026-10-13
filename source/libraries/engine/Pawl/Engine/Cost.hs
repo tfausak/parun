@@ -4492,7 +4492,7 @@ reverseIllegal windows before =
           -- GameState.nextTimestamp, so that supply comes across with it: a
           -- state that goes back past the announcement would otherwise hold a
           -- stamp ahead of its own supply, which
-          -- Pawl.Engine.Engine.checkMandatoryLoop's gap underflows on. The
+          -- Pawl.Engine.Departure.checkMandatoryLoop's gap underflows on. The
           -- scenario cost/cr-733-1-an-underpaid-curtain-of-light-reverses-its-plains
           -- is the proof.
           let settle reversed =

@@ -47,8 +47,8 @@ import qualified Pawl.Codec.Object as Object
 import qualified Pawl.Codec.ObjectId as ObjectId
 import qualified Pawl.Codec.OutsideObject as OutsideObject
 import qualified Pawl.Codec.PastActivation as PastActivation
-import qualified Pawl.Codec.PendingDamageEffect as PendingDamageEffect
 import qualified Pawl.Codec.PendingEntryEffect as PendingEntryEffect
+import qualified Pawl.Codec.PendingReplacementEffect as PendingReplacementEffect
 import qualified Pawl.Codec.Phase as Phase
 import qualified Pawl.Codec.PhasedOut as PhasedOut
 import qualified Pawl.Codec.Player as Player
@@ -146,7 +146,7 @@ codec resolve = Fields.object $ do
   copyEffects <- Fields.defaulted "copyEffects" [] (Common.list ActiveCopy.codec) GameState.copyEffects
   replacements <- Fields.defaulted "replacements" [] (Common.list ActiveReplacement.codec) GameState.replacements
   pendingPreventionRiders <- Fields.defaulted "pendingPreventionRiders" Seq.empty (Common.seq Prevention.codec) GameState.pendingPreventionRiders
-  pendingDamageEffects <- Fields.defaulted "pendingDamageEffects" Seq.empty (Common.seq PendingDamageEffect.codec) GameState.pendingDamageEffects
+  pendingReplacementEffects <- Fields.defaulted "pendingReplacementEffects" Seq.empty (Common.seq PendingReplacementEffect.codec) GameState.pendingReplacementEffects
   ambientAmounts <- Fields.defaulted "ambientAmounts" Map.empty (Common.textMap SlotName.Type.unwrap (Right . SlotName.Type.MkSlotName) Common.natural) GameState.ambientAmounts
   detachedBindings <- Fields.defaulted "detachedBindings" Map.empty (Common.naturalMap ObjectId.codec Binding.codecMap) GameState.detachedBindings
   pendingEntryEffects <- Fields.defaulted "pendingEntryEffects" Seq.empty (Common.seq PendingEntryEffect.codec) GameState.pendingEntryEffects
@@ -256,7 +256,7 @@ codec resolve = Fields.object $ do
         GameState.copyEffects = copyEffects,
         GameState.replacements = replacements,
         GameState.pendingPreventionRiders = pendingPreventionRiders,
-        GameState.pendingDamageEffects = pendingDamageEffects,
+        GameState.pendingReplacementEffects = pendingReplacementEffects,
         GameState.ambientAmounts = ambientAmounts,
         GameState.detachedBindings = detachedBindings,
         GameState.pendingEntryEffects = pendingEntryEffects,

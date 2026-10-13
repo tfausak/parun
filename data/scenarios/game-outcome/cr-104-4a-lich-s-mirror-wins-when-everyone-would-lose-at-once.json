@@ -1,0 +1,37 @@
+{
+  "description": "CR 104.4a Lich's Mirror wins when everyone would lose at once",
+  "note": "Alice at 3 life with three Mountains and bob at 2 with two Forests; alice's Acidic Soil takes both to 0. Without the Mirror the game would be a draw (CR 104.4a). With it alice does what the Mirror says instead of losing and bob loses, so alice wins, per the card's ruling.",
+  "board": {
+    "active": "alice",
+    "step": "PrecombatMain",
+    "seats": [
+      {
+        "name": "alice",
+        "life": 3,
+        "battlefield": [
+          { "card": "Lich's Mirror" },
+          { "card": "Mountain", "label": "m1" },
+          { "card": "Mountain", "label": "m2" },
+          { "card": "Mountain", "label": "m3" }
+        ],
+        "hand": [{ "card": "Acidic Soil", "label": "soil" }],
+        "library": [{ "card": "Island" }, { "card": "Island" }, { "card": "Island" }, { "card": "Island" }, { "card": "Island" }, { "card": "Island" }, { "card": "Island" }]
+      },
+      {
+        "name": "bob",
+        "life": 2,
+        "battlefield": [{ "card": "Forest" }, { "card": "Forest" }],
+        "library": [{ "card": "Forest" }, { "card": "Forest" }]
+      }
+    ]
+  },
+  "timeline": [
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": { "Cast": { "object": "$soil", "mana": ["$m1", "$m2", "$m3"] } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass" },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": { "Answer": { "prompt": "Shuffle", "with": ["Island", "Island#2", "Island#3", "Island#4", "Island#5", "Island#6", "Island#7", "Lich's Mirror", "Mountain", "Mountain#2", "Mountain#3", "Acidic Soil"] } } }
+  ],
+  "final": [
+    { "View": { "of": "Result", "is": { "won": "alice" } } },
+    { "Life": { "player": "alice", "life": 20 } }
+  ]
+}

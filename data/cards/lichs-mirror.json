@@ -1,0 +1,105 @@
+{
+  "faces": [
+    {
+      "manaCost": [
+        {
+          "type": "Generic",
+          "value": 5
+        }
+      ],
+      "name": "Lich's Mirror",
+      "oracleText": "If you would lose the game, instead shuffle your hand, your graveyard, and all permanents you own into your library, then draw seven cards and your life total becomes 20.",
+      "replacementEffects": [
+        {
+          "effect": {
+            "type": "GameLossR",
+            "value": {
+              "instead": [
+                {
+                  "type": "ShuffleIntoLibrary",
+                  "value": {
+                    "library": {
+                      "type": "Relative",
+                      "value": {
+                        "type": "You"
+                      }
+                    },
+                    "refs": [
+                      {
+                        "type": "EachCardInYourHand"
+                      },
+                      {
+                        "type": "EachCardInGraveyard",
+                        "value": {
+                          "filter": {
+                            "type": "And",
+                            "value": []
+                          },
+                          "graveyards": {
+                            "type": "Scoped",
+                            "value": {
+                              "type": "You"
+                            }
+                          }
+                        }
+                      },
+                      {
+                        "type": "EachMatching",
+                        "value": {
+                          "type": "OwnedBy",
+                          "value": {
+                            "type": "You"
+                          }
+                        }
+                      }
+                    ]
+                  }
+                },
+                {
+                  "type": "Draw",
+                  "value": {
+                    "player": {
+                      "type": "Relative",
+                      "value": {
+                        "type": "You"
+                      }
+                    },
+                    "quantity": {
+                      "type": "Literal",
+                      "value": 7
+                    }
+                  }
+                },
+                {
+                  "type": "SetLifeTotal",
+                  "value": {
+                    "player": {
+                      "type": "Relative",
+                      "value": {
+                        "type": "You"
+                      }
+                    },
+                    "quantity": {
+                      "type": "Literal",
+                      "value": 20
+                    }
+                  }
+                }
+              ],
+              "whose": {
+                "type": "You"
+              }
+            }
+          }
+        }
+      ],
+      "typeLine": {
+        "types": [
+          {
+            "type": "Artifact"
+          }
+        ]
+      }
+    }
+  ]
+}

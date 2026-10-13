@@ -273,7 +273,7 @@ namedByStored oid gs =
     || any (Mentions.activeReplacementNames (searched oid)) (GameState.replacements gs)
     || any (Mentions.delayedTriggerNames (searched oid)) (GameState.delayedTriggers gs)
     || any (Mentions.preventionNames (searched oid)) (GameState.pendingPreventionRiders gs)
-    || any (Mentions.pendingDamageEffectNames (searched oid)) (GameState.pendingDamageEffects gs)
+    || any (Mentions.pendingDamageEffectNames (searched oid)) (GameState.pendingReplacementEffects gs)
     || any (Mentions.pendingEntryEffectNames (searched oid)) (GameState.pendingEntryEffects gs)
 
 -- The question asked of a row that stores the environment its slots read --
