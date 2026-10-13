@@ -155,6 +155,7 @@ import qualified Pawl.Codec.CombatStepSpec
 import qualified Pawl.Codec.ComparesSpec
 import qualified Pawl.Codec.ComparisonSpec
 import qualified Pawl.Codec.CompletedDungeonSpec
+import qualified Pawl.Codec.ComponentCardSpec
 import qualified Pawl.Codec.ConditionSpec
 import qualified Pawl.Codec.ConjureCardsSpec
 import qualified Pawl.Codec.ConjureDestinationSpec
@@ -255,7 +256,6 @@ import qualified Pawl.Codec.DrawRewriteSpec
 import qualified Pawl.Codec.DrawSpec
 import qualified Pawl.Codec.DrewSpec
 import qualified Pawl.Codec.DungeonRoomSpec
-import qualified Pawl.Codec.DuplicateCardSpec
 import qualified Pawl.Codec.DurationSpec
 import qualified Pawl.Codec.DuringPhaseSpec
 import qualified Pawl.Codec.EachCardFromAmongSpec
@@ -1117,7 +1117,7 @@ spec s registry = do
   Pawl.Codec.DrawSpec.spec s
   Pawl.Codec.DrewSpec.spec s
   Pawl.Codec.DungeonRoomSpec.spec s
-  Pawl.Codec.DuplicateCardSpec.spec s
+  Pawl.Codec.ComponentCardSpec.spec s
   Pawl.Codec.DurationSpec.spec s
   Pawl.Codec.DuringPhaseSpec.spec s
   Pawl.Codec.EachCardFromAmongSpec.spec s

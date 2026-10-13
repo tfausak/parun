@@ -36,11 +36,14 @@ import qualified Pawl.Types.Binding as Binding
 import qualified Pawl.Types.Card as Card
 import qualified Pawl.Types.CardIdentity as CardIdentity
 import qualified Pawl.Types.Combat as Combat
+import qualified Pawl.Types.ComponentCard as ComponentCard
 import qualified Pawl.Types.ContinuousEffect as ContinuousEffect
 import qualified Pawl.Types.ExileLink as ExileLink
 import Pawl.Types.GameState (GameState)
 import qualified Pawl.Types.GameState as GameState
 import qualified Pawl.Types.IgnoredAbility as IgnoredAbility
+import qualified Pawl.Types.MeldSource as MeldSource
+import qualified Pawl.Types.MergeComponent as MergeComponent
 import qualified Pawl.Types.MonarchWatch as MonarchWatch
 import qualified Pawl.Types.Object as Object
 import Pawl.Types.ObjectId (ObjectId)
@@ -52,6 +55,8 @@ import qualified Pawl.Types.Recipient as Recipient
 import qualified Pawl.Types.RestrictedCreatures as RestrictedCreatures
 import qualified Pawl.Types.ReturnEnding as ReturnEnding
 import qualified Pawl.Types.ReturnWatch as ReturnWatch
+import qualified Pawl.Types.ShownComponent as ShownComponent
+import qualified Pawl.Types.Source as Source
 import qualified Pawl.Types.Timestamp as Timestamp
 import qualified Pawl.Types.TriggerSource as TriggerSource
 
@@ -84,12 +89,31 @@ import qualified Pawl.Types.TriggerSource as TriggerSource
 objects :: Map.Map ObjectId PC.ProjectedCharacteristics -> GameState -> ObjectId -> ObjectId -> Bool
 objects pcs gs a b =
   let sameObject = case (Map.lookup a (GameState.objects gs), Map.lookup b (GameState.objects gs)) of
-        -- An identity's serial is bookkeeping no rule reads; its starting owner
-        -- is not, since Ante.ownershipChanges tells two cards apart by it.
-        (Just x, Just y) ->
-          x {Object.timestamp = Object.timestamp y, Object.identity = Object.identity y} == y
-            && fmap CardIdentity.startingOwner (Object.identity x) == fmap CardIdentity.startingOwner (Object.identity y)
+        -- An identity's serial is bookkeeping no rule reads, on the object and on
+        -- each card a merged or melded one is made of; its starting owner is
+        -- not, since Ante.ownershipChanges tells two cards apart by it.
+        (Just x, Just y) -> withoutSerials x {Object.timestamp = Object.timestamp y} == withoutSerials y
         _ -> False
+      unserial identity = identity {CardIdentity.serial = 0}
+      unserialCard card = card {ComponentCard.identity = fmap unserial (ComponentCard.identity card)}
+      unserialMeld meld = meld {MeldSource.components = fmap unserialCard (MeldSource.components meld)}
+      unserialComponent component = case component of
+        MergeComponent.OfCard card -> MergeComponent.OfCard (unserialCard card)
+        MergeComponent.OfMeld meld -> MergeComponent.OfMeld (unserialMeld meld)
+        MergeComponent.OfToken _ -> component
+        MergeComponent.OfSpellCopy _ -> component
+      unserialSource source = case source of
+        Source.OfMerge components -> Source.OfMerge (fmap (\shown -> shown {ShownComponent.component = unserialComponent (ShownComponent.component shown)}) components)
+        Source.OfMeld meld -> Source.OfMeld (unserialMeld meld)
+        Source.OfCard _ -> source
+        Source.OfToken _ -> source
+        Source.OfAbility _ -> source
+        Source.OfTrigger _ -> source
+        Source.OfEmblem _ -> source
+        Source.OfSpellCopy _ -> source
+        Source.OfCardCopy _ -> source
+        Source.OfInherentTrigger _ -> source
+      withoutSerials obj = obj {Object.identity = fmap unserial (Object.identity obj), Object.source = unserialSource (Object.source obj)}
       grants = Projection.View.controlGrants gs
       viewOf oid = Projection.viewOfObjectGiven pcs grants oid gs
       -- Every View field Pawl.Engine.Projection.View fills from the turn's log
