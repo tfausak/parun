@@ -601,8 +601,7 @@ againstSlotNames asking onQuantity x = case x of
 aggregationNames :: Asking -> (quantity -> Bool) -> Aggregation.Aggregation quantity -> Bool
 aggregationNames _asking onQuantity x = case x of
   Aggregation.Members -> False
-  Aggregation.DistinctCardTypes -> False
-  Aggregation.DistinctColors -> False
+  Aggregation.Distinct _ -> False
   Aggregation.MostSharingACreatureType -> False
   Aggregation.MostSharingACardType -> False
   Aggregation.DistinctNames -> False

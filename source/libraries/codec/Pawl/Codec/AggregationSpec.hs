@@ -4,6 +4,7 @@ import qualified Pawl.Codec.Aggregation as Aggregation
 import qualified Pawl.JsonCodec.Common as Common
 import qualified Pawl.Spec as Spec
 import qualified Pawl.Types.Aggregation as Aggregation
+import qualified Pawl.Types.DistinctOf as DistinctOf
 
 -- Instantiated at Integer, the simplest element codec available: Aggregation is
 -- parametric in the per-member quantity it reads, and no card cares which
@@ -16,12 +17,12 @@ spec s = Spec.describe s "Pawl.Codec.Aggregation" $ do
       (Aggregation.codec Common.integer)
       Aggregation.Members
       " {\"type\":\"Members\"} "
-  Spec.it s "DistinctCardTypes" $
+  Spec.it s "Distinct" $
     Common.assertCodec
       s
       (Aggregation.codec Common.integer)
-      Aggregation.DistinctCardTypes
-      " {\"type\":\"DistinctCardTypes\"} "
+      (Aggregation.Distinct DistinctOf.CardTypes)
+      " {\"type\":\"Distinct\",\"value\":{\"type\":\"CardTypes\"}} "
   Spec.it s "MostSharingACreatureType" $
     Common.assertCodec
       s
@@ -40,12 +41,6 @@ spec s = Spec.describe s "Pawl.Codec.Aggregation" $ do
       (Aggregation.codec Common.integer)
       Aggregation.DistinctNames
       " {\"type\":\"DistinctNames\"} "
-  Spec.it s "DistinctColors" $
-    Common.assertCodec
-      s
-      (Aggregation.codec Common.integer)
-      Aggregation.DistinctColors
-      " {\"type\":\"DistinctColors\"} "
   Spec.it s "Greatest" $
     Common.assertCodec
       s

@@ -545,6 +545,8 @@ library codec
     Pawl.Codec.Discarded
     Pawl.Codec.DiscardedSpec
     Pawl.Codec.DiscardSpec
+    Pawl.Codec.DistinctOf
+    Pawl.Codec.DistinctOfSpec
     Pawl.Codec.DoesNotUntapNext
     Pawl.Codec.DoesNotUntapNextSpec
     Pawl.Codec.Draw
@@ -2306,6 +2308,7 @@ library types
     Pawl.Types.DiscardCards
     Pawl.Types.DiscardCause
     Pawl.Types.Discarded
+    Pawl.Types.DistinctOf
     Pawl.Types.DoesNotUntapNext
     Pawl.Types.Draw
     Pawl.Types.DrawCountR

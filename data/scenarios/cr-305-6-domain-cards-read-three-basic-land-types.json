@@ -1,0 +1,40 @@
+{
+  "description": "CR 305.6 domain cards read three basic land types off a Forest and a Tundra: Territorial Maro, Matca Rioters, Nishoba Brawler, Aven Trailblazer and Exotic Disease",
+  "note": "Two lands, three basic land types, so a count of lands (2) and a count of types (3) come apart in every number here.",
+  "board": {
+    "seats": [
+      {
+        "name": "alice",
+        "manaPool": "BBBBB",
+        "battlefield": [
+          { "card": "Forest", "label": "forest" },
+          { "card": "Tundra", "label": "tundra" },
+          { "card": "Territorial Maro", "label": "maro" },
+          { "card": "Matca Rioters", "label": "rioters" },
+          { "card": "Nishoba Brawler", "label": "brawler" },
+          { "card": "Aven Trailblazer", "label": "aven" }
+        ],
+        "hand": [
+          { "card": "Exotic Disease", "label": "disease" }
+        ],
+        "library": [{ "card": "Island" }, { "card": "Island" }]
+      },
+      {
+        "name": "bob",
+        "library": [{ "card": "Island" }, { "card": "Island" }]
+      }
+    ],
+    "active": "alice",
+    "step": "PrecombatMain"
+  },
+  "timeline": [
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "check": { "PowerToughness": { "object": "$maro", "power": 6, "toughness": 6 } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "check": { "PowerToughness": { "object": "$rioters", "power": 3, "toughness": 3 } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "check": { "PowerToughness": { "object": "$brawler", "power": 3, "toughness": 3 } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "check": { "PowerToughness": { "object": "$aven", "power": 2, "toughness": 3 } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": { "Cast": { "object": "$disease", "targets": ["$bob"], "mana": [null] } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass" },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "check": { "Life": { "player": "bob", "life": 17 } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "check": { "Life": { "player": "alice", "life": 23 } } }
+  ]
+}

@@ -1,0 +1,32 @@
+{
+  "description": "CR 205.3i / 305.6 Tribal Flames deals damage equal to the basic land types among alice's lands, counting a Tundra twice and a Desert and bob's Mountain not at all",
+  "note": "Alice's lands are two Forests, a Tundra (Island Plains) and a Desert: three basic land types. Counting lands gives 4, counting every land type gives 4, and counting every player's lands gives 4 (bob's Mountain), so only the domain count leaves bob at 17. The red mana floats, so no Mountain of alice's adds a type.",
+  "board": {
+    "seats": [
+      {
+        "name": "alice",
+        "manaPool": "RR",
+        "battlefield": [
+          { "card": "Forest", "label": "f1" },
+          { "card": "Forest", "label": "f2" },
+          { "card": "Tundra", "label": "tundra" },
+          { "card": "Desert", "label": "desert" }
+        ],
+        "hand": [{ "card": "Tribal Flames", "label": "flames" }],
+        "library": [{ "card": "Island" }, { "card": "Island" }]
+      },
+      {
+        "name": "bob",
+        "battlefield": [{ "card": "Mountain", "label": "mountain" }],
+        "library": [{ "card": "Island" }, { "card": "Island" }]
+      }
+    ],
+    "active": "alice",
+    "step": "PrecombatMain"
+  },
+  "timeline": [
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": { "Cast": { "object": "$flames", "targets": ["$bob"], "mana": [null] } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass" },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "check": { "Life": { "player": "bob", "life": 17 } } }
+  ]
+}

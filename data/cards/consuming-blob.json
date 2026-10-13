@@ -6,7 +6,10 @@
           "type": "Count",
           "value": {
             "aggregation": {
-              "type": "DistinctCardTypes"
+              "type": "Distinct",
+              "value": {
+                "type": "CardTypes"
+              }
             },
             "filter": {
               "type": "And",
@@ -32,7 +35,10 @@
           "type": "Count",
           "value": {
             "aggregation": {
-              "type": "DistinctCardTypes"
+              "type": "Distinct",
+              "value": {
+                "type": "CardTypes"
+              }
             },
             "filter": {
               "type": "And",
@@ -129,7 +135,10 @@
                                     "type": "Count",
                                     "value": {
                                       "aggregation": {
-                                        "type": "DistinctCardTypes"
+                                        "type": "Distinct",
+                                        "value": {
+                                          "type": "CardTypes"
+                                        }
                                       },
                                       "filter": {
                                         "type": "And",
@@ -155,7 +164,10 @@
                                     "type": "Count",
                                     "value": {
                                       "aggregation": {
-                                        "type": "DistinctCardTypes"
+                                        "type": "Distinct",
+                                        "value": {
+                                          "type": "CardTypes"
+                                        }
                                       },
                                       "filter": {
                                         "type": "And",

@@ -1,0 +1,139 @@
+{
+  "faces": [
+    {
+      "characteristicPT": {
+        "power": {
+          "type": "Times",
+          "value": {
+            "factor": 2,
+            "quantity": {
+              "type": "Count",
+              "value": {
+                "aggregation": {
+                  "type": "Distinct",
+                  "value": {
+                    "type": "BasicLandTypes"
+                  }
+                },
+                "filter": {
+                  "type": "And",
+                  "value": [
+                    {
+                      "type": "HasCardType",
+                      "value": {
+                        "type": "Land"
+                      }
+                    },
+                    {
+                      "type": "ControlledBy",
+                      "value": {
+                        "type": "You"
+                      }
+                    }
+                  ]
+                },
+                "scope": {
+                  "type": "InZone",
+                  "value": {
+                    "player": {
+                      "type": "Relative",
+                      "value": {
+                        "type": "AnyPlayer"
+                      }
+                    },
+                    "zone": {
+                      "type": "Battlefield"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "toughness": {
+          "type": "Times",
+          "value": {
+            "factor": 2,
+            "quantity": {
+              "type": "Count",
+              "value": {
+                "aggregation": {
+                  "type": "Distinct",
+                  "value": {
+                    "type": "BasicLandTypes"
+                  }
+                },
+                "filter": {
+                  "type": "And",
+                  "value": [
+                    {
+                      "type": "HasCardType",
+                      "value": {
+                        "type": "Land"
+                      }
+                    },
+                    {
+                      "type": "ControlledBy",
+                      "value": {
+                        "type": "You"
+                      }
+                    }
+                  ]
+                },
+                "scope": {
+                  "type": "InZone",
+                  "value": {
+                    "player": {
+                      "type": "Relative",
+                      "value": {
+                        "type": "AnyPlayer"
+                      }
+                    },
+                    "zone": {
+                      "type": "Battlefield"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "manaCost": [
+        {
+          "type": "Generic",
+          "value": 4
+        },
+        {
+          "type": "OfType",
+          "value": {
+            "type": "Colored",
+            "value": {
+              "type": "Green"
+            }
+          }
+        }
+      ],
+      "name": "Territorial Maro",
+      "oracleText": "Domain — Territorial Maro's power and toughness are each equal to twice the number of basic land types among lands you control.",
+      "power": {
+        "type": "Star"
+      },
+      "toughness": {
+        "type": "Star"
+      },
+      "typeLine": {
+        "subtypes": [
+          {
+            "type": "Elemental"
+          }
+        ],
+        "types": [
+          {
+            "type": "Creature"
+          }
+        ]
+      }
+    }
+  ]
+}

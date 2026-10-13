@@ -37,6 +37,7 @@ import qualified Pawl.Types.Color as Color
 import qualified Pawl.Types.Count as Count.Type
 import qualified Pawl.Types.CounterKind as CounterKind
 import qualified Pawl.Types.Departure as Departure.Type
+import qualified Pawl.Types.DistinctOf as DistinctOf
 import qualified Pawl.Types.EndingStep as EndingStep
 import qualified Pawl.Types.EventShape as EventShape
 import qualified Pawl.Types.Face as Face
@@ -95,7 +96,7 @@ spec s registry = Spec.describe s "Pawl.Engine.Count" $ do
             ]
     Spec.assertEq s (S.countOf viewOf (Filter.contextFor Teams.none (Just S.alice) Nothing) gs swampsYouControl) $ Just 2
 
-  Spec.it s "CR 208.2a DistinctCardTypes counts the union, not the objects" $ do
+  Spec.it s "CR 208.2a Distinct card types counts the union, not the objects" $ do
     -- Three graveyard cards, two of them Creatures: the answer is 2 types,
     -- not 3 objects.
     piker <- S.printingOf s registry "Goblin Piker"
@@ -114,7 +115,7 @@ spec s registry = Spec.describe s "Pawl.Engine.Count" $ do
           Count.Type.MkCount
             (Scope.InZone (InZone.MkInZone Zone.Graveyard (PlayerRef.Relative PlayerRelation.AnyPlayer)))
             (Filter.Type.And [])
-            Aggregation.DistinctCardTypes
+            (Aggregation.Distinct DistinctOf.CardTypes)
     Spec.assertEqWith s "two types" (S.countOf viewOf (Filter.contextFor Teams.none Nothing Nothing) gs count) $ Just 2
 
   -- A GRAVEYARD rather than the battlefield, here and in the three-seat case

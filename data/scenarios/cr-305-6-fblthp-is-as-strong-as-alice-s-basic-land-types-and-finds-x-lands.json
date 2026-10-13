@@ -1,0 +1,41 @@
+{
+  "description": "CR 305.6 / 107.3m Fblthp, Knows the Way's power is the basic land types among alice's lands, and its enters trigger finds X basic lands with different names",
+  "note": "Four Forests and a Tundra are three basic land types, so Fblthp is a 3/2 rather than a 5/2 (the lands) or a 1/2 (the Forests alone). Cast for X = 2, it finds a Plains and an Island.",
+  "board": {
+    "seats": [
+      {
+        "name": "alice",
+        "battlefield": [
+          { "card": "Forest", "label": "f1", "ready": true },
+          { "card": "Forest", "label": "f2", "ready": true },
+          { "card": "Forest", "label": "f3", "ready": true },
+          { "card": "Forest", "label": "f4", "ready": true },
+          { "card": "Tundra", "label": "tundra" }
+        ],
+        "hand": [{ "card": "Fblthp, Knows the Way", "label": "fblthp" }],
+        "library": [
+          { "card": "Plains", "label": "p1" },
+          { "card": "Plains", "label": "p2" },
+          { "card": "Island", "label": "isl" },
+          { "card": "Swamp", "label": "swamp" }
+        ]
+      },
+      {
+        "name": "bob",
+        "library": [{ "card": "Island" }, { "card": "Island" }]
+      }
+    ],
+    "active": "alice",
+    "step": "PrecombatMain"
+  },
+  "timeline": [
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": { "Cast": { "object": "$fblthp", "x": 2, "mana": ["$f1", "$f2", "$f3", "$f4", null] } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass" },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "check": { "PowerToughness": { "object": "Fblthp, Knows the Way", "power": 3, "toughness": 2 } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass" },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": { "Answer": { "prompt": "Search", "with": ["$p1", "$isl"] } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": { "Answer": { "prompt": "Shuffle", "with": ["$p2", "$swamp"] } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "check": { "Count": { "player": "alice", "zone": "Hand", "card": "Plains", "count": 1 } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "check": { "Count": { "player": "alice", "zone": "Hand", "card": "Island", "count": 1 } } }
+  ]
+}
