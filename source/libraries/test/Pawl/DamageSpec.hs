@@ -757,6 +757,8 @@ lastKnownRiderSpec s registry =
                     -- is filed under a still-live id by hand rather than by the
                     -- funnel, and nothing here reads the look-back.
                     LastKnown.attached = Set.empty,
+                    -- Nor is the Sorcerer attached to anything.
+                    LastKnown.host = Nothing,
                     -- CR 201.4: nothing named a card here.
                     LastKnown.chosenNames = Map.empty,
                     -- CR 614.1c: nothing here chose a player.

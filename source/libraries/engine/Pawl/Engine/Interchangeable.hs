@@ -43,6 +43,7 @@ import qualified Pawl.Types.ExileLink as ExileLink
 import Pawl.Types.GameState (GameState)
 import qualified Pawl.Types.GameState as GameState
 import qualified Pawl.Types.IgnoredAbility as IgnoredAbility
+import qualified Pawl.Types.LastKnown as LastKnown
 import qualified Pawl.Types.MeldSource as MeldSource
 import qualified Pawl.Types.MergeComponent as MergeComponent
 import qualified Pawl.Types.MonarchWatch as MonarchWatch
@@ -184,7 +185,8 @@ representatives pcs gs candidates =
 --     counters (landsPlayed, drawsThisTurn, departedThisTurn,
 --     spellsCastLastTurn, castsLastTurn, resolvedNames) are keyed by or valued
 --     at a PLAYER and name no object.
---   * GameState.lastKnown is about objects that have LEFT, and so is
+--   * GameState.lastKnown is about objects that have LEFT, bar the host each
+--     record names, which namedByAnother searches; and so is
 --     GameState.castsBeforeThisTurn: its spells were cast on an earlier turn,
 --     and CR 500.2 ends no step while the stack holds one.
 --     GameState.stackArchive is keyed by stack objects that have left too, and
@@ -562,6 +564,12 @@ attackedLastTurnNames oid entry = case entry of
 -- Pawl.ManaSourceSpec's "an Elf enchanted by an Aura that changes nothing about it is
 -- still a candidate of its own" is the case, and it asserts the identical
 -- projection alongside the offer so the reason is pinned as well as the answer.
+--
+-- The attachment of an object that has LEFT too: CR 608.2h hands an ability
+-- whose Aura is gone the host the Aura had (Pawl.Types.LastKnown.host), so
+-- Bewitching Leechcraft's enters trigger still taps the creature it enchanted.
+-- Every record is searched, not only those a pending ability's source names,
+-- which can only keep a choice the engine would otherwise have elided.
 namedByAnother :: ObjectId -> GameState -> Bool
 namedByAnother oid gs =
   let names (other, obj) =
@@ -570,6 +578,7 @@ namedByAnother oid gs =
                  || any (bindingNames oid) (Map.elems (Object.bindings obj))
              )
    in any names (Map.toList (GameState.objects gs))
+        || any ((== Just oid) . LastKnown.host) (GameState.lastKnown gs)
 
 -- Whether one slot's binding names this object.
 bindingNames :: ObjectId -> Binding.Binding -> Bool

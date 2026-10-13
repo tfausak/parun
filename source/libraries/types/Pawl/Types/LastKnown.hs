@@ -114,6 +114,15 @@ data LastKnown = MkLastKnown
     --
     -- Empty for everything nothing was attached to, which is most objects.
     attached :: !(Set.Set ObjectId.ObjectId),
+    -- | CR 303.4b: the object it was attached to as it left -- Game.hostOf, the
+    -- other direction of `attached` above. What "enchanted creature" means to an
+    -- ability whose Aura has already gone (CR 608.2h, 113.7a), read by
+    -- Pawl.Engine.SourceContext.framedWith through Game.hostWithLastKnown.
+    -- Pawl.AuraSpec's Bewitching Leechcraft case, the Aura destroyed in response
+    -- to its own enters trigger, is the proof.
+    --
+    -- Nothing where it was attached to nothing or to a player.
+    host :: !(Maybe ObjectId.ObjectId),
     -- | CR 201.4: the card names that had been chosen for it -- the same
     -- Object.chosenNames the live object carried. What CR 608.2h answers for an
     -- ability whose source chose a name and then left the zone it was expected
