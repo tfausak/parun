@@ -11857,8 +11857,9 @@ payGatePaid runSubgame resolving source controller idx cIdx legal announced comm
   pure (Map.fromList [(payer, Maybe.isJust paid) | (payer, paid) <- Foldable.toList answered])
 
 -- CR 101.4b: an answer as a later payer is told it -- Pays exactly when the
--- payment went through, so a payer who could not pay (CR 118.3) or had left
--- (CR 800.4f) reads as having declined.
+-- payment went through, so a payer who could not pay (CR 118.3), had left (CR
+-- 800.4f) or repeated a payment that failed (payAgain) reads as having
+-- declined.
 paymentDecisionOf :: Maybe a -> PaymentDecision.PaymentDecision
 paymentDecisionOf paid = if Maybe.isJust paid then PaymentDecision.Pays else PaymentDecision.Declines
 
@@ -11875,7 +11876,9 @@ paymentDecisionOf paid = if Maybe.isJust paid then PaymentDecision.Pays else Pay
 -- ONE payment (Cost.together), which is those rulings' "then pays that amount"
 -- and CR 101.4's "Then the actions happen simultaneously": Killing Wave paid for
 -- three creatures is one loss of 3X life, not three. A payer whose combined
--- payment fails has paid for none of them. No body runs until every payment
+-- payment fails has paid for none of them, and is asked again (CR 733.1,
+-- payAgain): the scenario "CR 733.1 a Spirit owner whose payment for Cut the
+-- Tethers fails is asked again" proves it. No body runs until every payment
 -- is made, and what the payments bound is folded on first (foldPaid). Proved
 -- by Pawl.ResolveSpec's "an offer per member" group, whose Exquisite Blood case
 -- counts the life-loss events.
@@ -11887,27 +11890,34 @@ loopOffers runSubgame resolving source controller slot legal members gate = do
       order = Game.apnapOrder gs
       offers = [(payer, member) | payer <- order, member <- members, elem payer (payersOf member)]
       agreedBy payer answers = [taken | (p, _, Just taken) <- Foldable.toList answers, p == payer]
-  answered <-
-    Monad.foldM
-      ( \acc (payer, member) -> do
-          (slots, options) <- State.gets (gateCostOf resolving source controller (legalFor member) gate)
-          let earlier = Seq.fromList [(p, maybe PaymentDecision.Declines (const PaymentDecision.Pays) taken) | (p, m, taken) <- Foldable.toList acc, m == member]
-              owed = fmap (Cost.together . fmap snd) (NonEmpty.nonEmpty (agreedBy payer acc))
-          agreed <- payGateAgreed resolving source (PayOffer.ForMember member) earlier payer gate slots owed options
-          pure (acc Seq.|> (payer, member, fmap ((,) slots) agreed))
-      )
-      Seq.empty
-      offers
-  paid <-
-    Monad.foldM
-      ( \done payer -> case NonEmpty.nonEmpty (agreedBy payer answered) of
-          Nothing -> pure done
-          Just taken -> do
-            bound <- payGateCost runSubgame (fst (NonEmpty.head taken)) payer source (Cost.together (fmap snd taken))
-            pure (maybe done (\b -> Map.insert payer b done) bound)
-      )
-      Map.empty
-      order
+      agreeOne acc payer member = do
+        (slots, options) <- State.gets (gateCostOf resolving source controller (legalFor member) gate)
+        let earlier = Seq.fromList [(p, maybe PaymentDecision.Declines (const PaymentDecision.Pays) taken) | (p, m, taken) <- Foldable.toList acc, m == member]
+            owed = fmap (Cost.together . fmap snd) (NonEmpty.nonEmpty (agreedBy payer acc))
+        agreed <- payGateAgreed resolving source (PayOffer.ForMember member) earlier payer gate slots owed options
+        pure (payer, member, fmap ((,) slots) agreed)
+      -- One payer's offers answered again, in place, each against what was
+      -- answered before it; later payers' answers stand, CR 733.1 reversing
+      -- this payer's action alone.
+      reagree payer answers =
+        Monad.foldM
+          ( \sofar i -> case Seq.lookup i sofar of
+              Just (p, member, _) | p == payer -> fmap (\entry -> Seq.update i entry sofar) (agreeOne (Seq.take i sofar) p member)
+              _ -> pure sofar
+          )
+          answers
+          [0 .. Seq.length answers - 1]
+      -- Each payer pays everything they agreed to as one payment; a failed one
+      -- asks that payer again (payAgain).
+      payFor (done, answers) payer =
+        let attempt failed current = case NonEmpty.nonEmpty (agreedBy payer current) of
+              Nothing -> pure (Just (done, current))
+              Just taken -> do
+                bound <- payGateCost runSubgame (fst (NonEmpty.head taken)) payer source (Cost.together (fmap snd taken))
+                payAgain failed (NonEmpty.toList (fmap snd taken)) (fmap (\b -> (Map.insert payer b done, current)) bound) (\failed' -> reagree payer current >>= attempt failed')
+         in fmap (Maybe.fromMaybe (done, answers)) (attempt Set.empty answers)
+  asked <- Monad.foldM (\acc (payer, member) -> fmap (acc Seq.|>) (agreeOne acc payer member)) Seq.empty offers
+  (paid, answered) <- Monad.foldM payFor (Map.empty, asked) order
   State.modify' (foldPaid resolving (foldr Binding.mergePaid Map.empty paid))
   let askedAbout member = Map.fromList [(p, Maybe.isJust taken && Map.member p paid) | (p, m, taken) <- Foldable.toList answered, m == member]
   pure (filter (not . Set.null . branchSelects (PayGate.branch gate) . askedAbout) members)
@@ -11956,10 +11966,31 @@ loopOffers runSubgame resolving source controller slot legal members gate = do
 -- which Pawl.Engine.Resolve.Effect.askedChooser does. Not here -- a cost is the
 -- whole of what this function asks about.
 payGatePaidBy :: Game Result -> ObjectId -> ObjectId -> PlayerId -> PayOffer.PayOffer -> Seq.Seq (PlayerId, PaymentDecision.PaymentDecision) -> Map.Map SlotName (Set Recipient) -> PlayerId -> PayGate.PayGate -> Game (Maybe (Map.Map SlotName Binding.Type.Binding))
-payGatePaidBy runSubgame resolving source controller offer earlier legal payer gate = do
-  (slots, options) <- State.gets (gateCostOf resolving source controller legal gate)
-  agreed <- payGateAgreed resolving source offer earlier payer gate slots Nothing options
-  maybe (pure Nothing) (payGateCost runSubgame slots payer source) agreed
+payGatePaidBy runSubgame resolving source controller offer earlier legal payer gate = attempt Set.empty
+  where
+    -- CR 733.1 / 118.12a: a payment that fails is reversed, which returns the
+    -- payer to the choice, so they are asked again (payAgain).
+    attempt failed = do
+      (slots, options) <- State.gets (gateCostOf resolving source controller legal gate)
+      agreed <- payGateAgreed resolving source offer earlier payer gate slots Nothing options
+      case agreed of
+        Nothing -> pure Nothing
+        Just cost -> do
+          paid <- payGateCost runSubgame slots payer source cost
+          payAgain failed cost paid attempt
+
+-- CR 733.1 / 118.12a: what follows a payment of `agreed`. A paid one stands. A
+-- failed one is reversed (payGateCost), which returns the payer to the choice,
+-- so `again` asks it once more. The payment's own answers are asked inside
+-- Cost.pay, out of this caller's sight, so the repeat that ends the asking is
+-- agreeing again to what already failed: that failure stands, read as unpaid,
+-- as Combat.attemptBlockDeclaration keeps a repeated illegal declaration.
+payAgain :: (Ord k) => Set k -> k -> Maybe a -> (Set k -> Game (Maybe a)) -> Game (Maybe a)
+payAgain failed agreed paid again = case paid of
+  Just _ -> pure paid
+  Nothing
+    | Set.member agreed failed -> pure Nothing
+    | otherwise -> again (Set.insert agreed failed)
 
 -- The costs one offer of this gate may be paid with, one per option in printed
 -- order (PayGate.cost), with the slot map their components read: payGatePaidBy's
