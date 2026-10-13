@@ -598,24 +598,54 @@ castAimable :: (Ord k) => (Recipient.Recipient -> k) -> Maybe (Seq.Seq ModeIndex
 castAimable key announced x pid oid gs = case Game.faceOf oid gs of
   Nothing -> []
   Just face ->
-    let modal = Face.spell face
-        enchants = Projection.enchantOf oid gs
+    let enchants = Projection.enchantOf oid gs
         mutating = maybe False Object.mutating (Game.lookupObject oid gs)
         -- CR 702.140a's slot beside CR 303.4a's, `targetable` above's union: a
         -- mutating creature spell aims at the creature it will merge with.
         enchant = Map.union (Card.enchantSlotMapGiven enchants) (Card.mutateSlotMapGiven mutating)
+        -- CR 601.2c's alternative targets: the slots the cost being priced
+        -- chooses. Once CR 601.2a's move is made, the board carries every
+        -- announcement the price includes (stampCastUsing, stampPaidCosts), so
+        -- they are read off it as castProposed's own CR 601.2c step reads them.
+        -- Before it, proposedFor has stamped only the candidate, and the optional
+        -- costs are unannounced, so each paidReadings reading is a way the cast
+        -- could still go, `targetable`'s union. Read printed instead, the gate
+        -- binds every reading's slot at once, and a tax on one prices out a cast
+        -- whose real targets owe none: Pawl.CastSpec's "CR 601.2f cleaved Lunar
+        -- Rejection is priced on its own target" and its promised Into the Flood
+        -- Maw under Kopala prove the two halves.
+        castFor = Game.lookupObject oid gs >>= Object.castUsing
+        trimmed = (Face.spell face) {Modal.Type.modes = fmap (trimModeTargetSlots pid oid gs) (Modal.Type.modes (Face.spell face))}
+        readings
+          | Game.beingCast gs oid = fmap (\paid -> trimModalForCandidate castFor paid (Face.spell face)) paidReadings
+          | otherwise = [trimmed]
         -- CR 601.2c's per-player copies, as castProposed offers them. A REGRESSION
         -- FENCE: no card pairs a per-player slot with a target-reading cost.
-        slotsOf chosen = Target.announcedSlots pid oid gs (Card.modesTargetSlotsGiven enchants mutating chosen face)
+        slotsOf modal chosen = Target.announcedSlots pid oid gs (Card.modesTargetSlotsGiven enchants mutating chosen face {Face.spell = modal})
         setsOf slots = Target.legalSets (Just pid) True Map.empty oid slots gs
+        -- CR 601.2c's joint check, asked as `setsOf` asks: ahead of the X, so a
+        -- bound reading it states none. The sets are measured slot by slot and
+        -- let one object answer both of "target" and "another target";
+        -- Pawl.CastSpec's kicked Jilt under Kopala proves the check, and
+        -- Pawl.TargetSpec's Synthetic Borrowed Exhumation under Kopala that it
+        -- reads neither an X nor a stand-in for the player slot.
+        pools = Target.wholePools gs
+        coherent slots aiming = Target.jointlyCoherentGiven pools (Just pid) True Map.empty oid slots aiming gs
         -- Every aiming of one selection's slots, at the counts CR 601.2c admits
-        -- for the X this gate is asking about (Target.aimingRanges).
-        aimingsOf slots = let sets = setsOf slots in Target.aimingsBy Cost.aimedReferent key (Target.aimingRanges (Just pid) oid (Just x) slots sets gs) sets
+        -- for the X this gate is asking about (Target.aimingRanges). Where a slot
+        -- is jointly judged, recipients the cost cannot tell apart may still
+        -- differ to the joint check (whose graveyard, which object), so each is
+        -- its own class there and the check filters real aimings, not stand-ins.
+        aimingsOf slots =
+          let sets = setsOf slots
+              joint = any (Target.jointlyJudged (Map.keysSet slots)) (Map.elems slots)
+              signature r = (key r, if joint then Just r else Nothing)
+           in filter (coherent slots) (Target.aimingsBy Cost.aimedReferent signature (Target.aimingRanges (Just pid) oid (Just x) slots sets gs) sets)
         -- CR 700.2: the modes CR 601.2b announced, or every selection the printed
         -- instruction admits among the fillable modes -- a "choose two" spell
         -- (Ojutai's Command) aims across both.
-        selected = maybe (Modal.selections (Target.fillableModes (Just pid) Map.empty oid enchant modal gs) (Modal.Type.selection modal)) pure announced
-     in concatMap (aimingsOf . slotsOf) selected
+        selected modal = maybe (Modal.selections (Target.fillableModes (Just pid) Map.empty oid enchant modal gs) (Modal.Type.selection modal)) pure announced
+     in Set.toList (Set.fromList [aiming | modal <- readings, chosen <- selected modal, aiming <- aimingsOf (slotsOf modal chosen)])
 
 -- CR 601.2b: the greatest value of X this player could actually pay for, which is
 -- what Prompt.ChooseX carries -- measured on the cost the cast is measuring, with
@@ -828,12 +858,14 @@ withOptionalPayments paid candidate =
 -- together are payable. How high a multikicker count may go is not gated here at
 -- all -- the answer is honoured and then measured, which is Prompt.ChooseX's
 -- posture, and castProposed rejects a cast whose announced total nothing can pay.
-announceOptionalCosts :: Seq.Seq ModeIndex.ModeIndex -> ManaSpending -> PlayerId -> ObjectId -> [([ManaCost.ManaCost], Cost Keyword)] -> [(Keyword, Natural)] -> GameState -> Game (Map.Map Keyword (Seq.Seq Natural))
+announceOptionalCosts :: Seq.Seq ModeIndex.ModeIndex -> ManaSpending -> PlayerId -> ObjectId -> [(Maybe Keyword, ([ManaCost.ManaCost], Cost Keyword))] -> [(Keyword, Natural)] -> GameState -> Game (Map.Map Keyword (Seq.Seq Natural))
 announceOptionalCosts modes spending pid sid candidates offers gs =
-  let payable paid cost = any (\(extra, candidate) -> payableCost (Just modes) extra spending pid sid gs (Cost.plus (withOptionalPayments paid candidate) cost)) candidates
+  let -- Priced on the board this one more declaration and the candidate would
+      -- make (CR 601.2c's slots, castAimable).
+      payable keyword paid cost = any (\(castFor, (extra, candidate)) -> payableCost (Just modes) extra spending pid sid (stampPaidCosts (Map.insertWith (flip (<>)) keyword (Seq.singleton 1) paid) sid (proposedFor sid castFor gs)) (Cost.plus (withOptionalPayments paid candidate) cost)) candidates
       choose keyword limit = KickerDecision.unwrap <$> Game.choose (Prompt.ChooseKicker (Decide.deciderFor pid gs) pid sid keyword limit)
       -- An instance asked nothing, its cost unpayable, still holds its place.
-      answer keyword cost paid = if payable paid cost then choose keyword Nothing else pure 0
+      answer keyword cost paid = if payable keyword paid cost then choose keyword Nothing else pure 0
       perInstance keyword cost paid _ = do
         times <- answer keyword cost paid
         pure (Map.insertWith (flip (<>)) keyword (Seq.singleton times) paid)
@@ -846,7 +878,7 @@ announceOptionalCosts modes spending pid sid candidates offers gs =
         Just (cost, Nothing)
           | Keyword.paidPerInstance keyword -> Monad.foldM (perInstance keyword cost) paid [1 .. instances]
         Just (cost, limit)
-          | payable paid cost -> do
+          | payable keyword paid cost -> do
               times <- choose keyword (Keyword.paymentLimit instances keyword)
               pure (Map.insert keyword (recorded limit times) paid)
         _ -> pure paid
@@ -1071,10 +1103,10 @@ castPrototyped castFor = case castFor of
 -- prototype candidate -- "while casting a prototyped spell, use only its
 -- alternative power, toughness, and mana cost when evaluating those
 -- characteristics to see if it can be cast" -- so both stamps go on here. The two
--- are the whole of it: every other keyword offering a cost leaves the
--- characteristics the gate reads exactly as they were, and answers the same board
--- it was handed. A third such keyword would join this fold rather than needing a
--- road of its own.
+-- are the whole of it for characteristics: every other keyword offering a cost
+-- leaves the ones the gate reads exactly as they were, and gets only the
+-- candidate's record (stampCastUsing). A third such keyword would join this fold
+-- rather than needing a road of its own.
 --
 -- Applied to a state the caller only READS -- asProposed's posture, and one zone
 -- earlier than the two stamps' real writes: the castability gate and CR 601.2b's
@@ -1092,6 +1124,10 @@ proposedFor oid castFor gs =
       -- whole cast back for.
       mutatingGs = if castMutating castFor then stampMutating oid bestowedGs else bestowedGs
       prototypedGs = if castPrototyped castFor then stampPrototyped oid mutatingGs else mutatingGs
+      -- CR 601.2c's alternative targets: castAimable trims the slots by the
+      -- candidate this tag names, as castProposed's own stamp lets it after the
+      -- announcement.
+      usingGs = stampCastUsing castFor oid prototypedGs
    in -- CR 400.7g joins the fold for the same reason the two stamps above are in
       -- it: CR 601.2b's payability filter prices each candidate before the player
       -- has chosen it, and a candidate offered by a GRANTED flashback is one whose
@@ -1099,7 +1135,7 @@ proposedFor oid castFor gs =
       -- lying in the zone it would be cast from -- castGrantGathered walks the
       -- STACK, rule 400.7g's own scope -- where the grant itself is still in
       -- force.
-      stampCastGrant (grantedCastKeyword castFor oid prototypedGs) oid prototypedGs
+      stampCastGrant (grantedCastKeyword castFor oid usingGs) oid usingGs
 
 -- CR 601.3a asked of ONE candidate, through the board rule 702.103d says to judge
 -- it on: Aether Storm's "creature spells can't be cast" stops Nyxborn Rollicker's
@@ -3060,6 +3096,9 @@ castProposed perform spending pid oid sid face castFrom preparedFor keywordsBefo
           withModeCost candidate = maybe candidate (Cost.plus candidate) modeCost
           withEntwine candidate = maybe candidate (Cost.plus candidate) entwined
           announcedCandidates = fmap (fmap (withModeCost . withEscalate . withEntwine)) candidates
+          -- Each beside the keyword that offered it, so a gate pricing it reads
+          -- the board that candidate makes (proposedFor).
+          keyedCandidates = zip (fmap CandidateCost.keyword candidateCosts) announcedCandidates
           -- CR 702.33a/b/c's, CR 702.157a's and CR 702.175a's costs, read ONCE off
           -- the spell's keywords: the announcement below and the limit it is
           -- judged against are the same list. Each with how many instances the
@@ -3082,7 +3121,7 @@ castProposed perform spending pid oid sid face castFrom preparedFor keywordsBefo
       --
       -- Carried as the counts per cost rather than as a flag, for entwine's
       -- reason: the candidate costs below and the CR 702.33d stamp read one value.
-      paid <- announceOptionalCosts chosenModes spending pid sid announcedCandidates optionalOffers gs
+      paid <- announceOptionalCosts chosenModes spending pid sid keyedCandidates optionalOffers gs
       --
       -- CR 702.33d: "if a spell's controller declares the intention to pay any of
       -- that spell's kicker costs, that spell has been kicked" -- the DECLARATION
@@ -3108,7 +3147,7 @@ castProposed perform spending pid oid sid face castFrom preparedFor keywordsBefo
       -- Carried as the additional Cost itself rather than as a flag, entwine's
       -- reason: the candidate costs below and the CR 702.27a stamp read one value.
       let buybackAffordable extra =
-            any (\(reduced, candidate) -> payableCost (Just chosenModes) reduced spending pid sid gs (Cost.plus (withOptionalPayments paid candidate) extra)) announcedCandidates
+            any (\(castFor, (reduced, candidate)) -> payableCost (Just chosenModes) reduced spending pid sid (stampPaidCosts paid sid (proposedFor sid castFor gs)) (Cost.plus (withOptionalPayments paid candidate) extra)) keyedCandidates
       boughtBack <- case Keyword.buybackCost keywords of
         Nothing -> pure Nothing
         Just extra
@@ -3133,7 +3172,7 @@ castProposed perform spending pid oid sid face castFrom preparedFor keywordsBefo
       -- is offered, and where one is, the player answers.
       let withBoughtBack candidate = maybe candidate (Cost.plus candidate) boughtBack
           spliceAffordable extra =
-            any (\(reduced, candidate) -> payableCost (Just chosenModes) reduced spending pid sid gs (Cost.plus (withBoughtBack (withOptionalPayments paid candidate)) extra)) announcedCandidates
+            any (\(castFor, (reduced, candidate)) -> payableCost (Just chosenModes) reduced spending pid sid (stampPaidCosts paid sid (proposedFor sid castFor gs)) (Cost.plus (withBoughtBack (withOptionalPayments paid candidate)) extra)) keyedCandidates
           spliceOffers = filter (spliceAffordable . snd) (Maybe.mapMaybe (spliceOffer pid sid gs) (Game.zoneMembers Zone.Hand pid gs))
       spliced <- if null spliceOffers then pure [] else Game.choose (Prompt.ChooseSplice decider pid sid spliceOffers)
       -- CR 702.47b: "you can't splice any one card onto the same spell more than
@@ -3179,7 +3218,7 @@ castProposed perform spending pid oid sid face castFrom preparedFor keywordsBefo
             ways -> fmap PlayerEffect.permissionReductions ways
           payableCandidates =
             filter
-              (\candidate -> any (\less -> payableCost (Just chosenModes) (CandidateCost.reductions candidate <> less) spending pid sid (proposedFor sid (CandidateCost.keyword candidate) gs) (CandidateCost.cost candidate)) permissionReductionChoices)
+              (\candidate -> any (\less -> payableCost (Just chosenModes) (CandidateCost.reductions candidate <> less) spending pid sid (stampPaidCosts paid sid (proposedFor sid (CandidateCost.keyword candidate) gs)) (CandidateCost.cost candidate)) permissionReductionChoices)
               (fmap (\candidate -> candidate {CandidateCost.cost = withSplice (withBuyback (withKicker (withModeCost (withEscalate (withEntwine (CandidateCost.cost candidate))))))}) candidateCosts)
           payable = fmap CandidateCost.cost payableCandidates
       if null payable || overKickerLimit || not spliceValid

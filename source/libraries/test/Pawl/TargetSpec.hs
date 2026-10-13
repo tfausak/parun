@@ -2780,7 +2780,7 @@ stirTheGraveSpec s registry =
 -- The two runs differ in EXACTLY ONE thing: which graveyard the mana value 2
 -- creature card sits in. Both announce X = 2, both name bob in the player slot,
 -- both pay the same {2}{B} off the same three Swamps, off one board.
-borrowedExhumationSpec :: (Monad m) => Spec.Spec m n -> Registry.Registry m -> n ()
+borrowedExhumationSpec :: (Monad m, Monad n) => Spec.Spec m n -> Registry.Registry m -> n ()
 borrowedExhumationSpec s registry = Spec.describe s "EnclosingAmount (CR 202.3)" $ do
   Spec.it s "CR 601.2c the joint check re-derives a jointly judged slot against the announced X" $ do
     swamp <- S.printingOf s registry "Swamp"
@@ -2818,6 +2818,24 @@ borrowedExhumationSpec s registry = Spec.describe s "EnclosingAmount (CR 202.3)"
     Spec.assertEqWith s "so carol's card stayed in her graveyard" (Game.zoneMembers Zone.Graveyard S.carol castAtCarol) [hersId]
     Spec.assertBool s (elem spellId (Game.zoneMembers Zone.Hand S.alice castAtCarol)) "and the spell is back in alice's hand"
     Spec.assertEqWith s "where naming his own card put it on the stack" (length (GameState.stack castAtBob)) 1
+  -- The same announcement under bob's Kopala, Warden of Waves, whose tax reads
+  -- the spell's targets: CR 601.2f's payability gate then prices every aiming
+  -- (Pawl.Engine.Cast.castAimable) and joint-checks each. That check is asked
+  -- ahead of the X, as the gate's sets are, and over the real players rather
+  -- than one stand-in for all three; either slip leaves no aiming of the card
+  -- slot, and the cast is refused.
+  Spec.it s "CR 601.2f under Kopala, the cost gate's joint check admits the Exhumation's own announcement" $ do
+    swamp <- S.printingOf s registry "Swamp"
+    piker <- S.printingOf s registry "Goblin Piker"
+    kopala <- S.printingOf s registry "Kopala, Warden of Waves"
+    exhumation <- S.printingOf s registry "Synthetic Borrowed Exhumation"
+    let (hisId, g1) = S.addGraveyardCard piker S.bob (S.landsFor swamp S.alice 3 S.threePlayerGame)
+        (_, g2) = S.addPermanent kopala S.bob g1
+        (board, spellId) = S.handOne exhumation g2
+        cast = S.runPure (aimingExhumation 2 hisId) board (S.cast S.alice spellId)
+        after = S.runPure (aimingExhumation 2 hisId) cast Stack.resolveTop
+    Spec.assertEqWith s "CR 202.3 the mana value 2 card in bob's graveyard is on the battlefield" (S.countOnBattlefieldByName (CardName.MkCardName (Text.pack "Goblin Piker")) S.bob after) 1
+    Spec.assertEqWith s "CR 601.2h paid with all three Swamps" (S.tappedCount S.alice after) 3
 
 -- CR 601.2c's whole announcement for Synthetic Borrowed Exhumation: bob in the
 -- player slot and `oid` in the card slot, with CR 601.2b's X announced first.
