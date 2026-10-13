@@ -22,7 +22,10 @@
         {
           "effect": {
             "type": "PlayAdditionalLands",
-            "value": 2
+            "value": {
+              "type": "Additional",
+              "value": 2
+            }
           },
           "scope": {
             "type": "You"

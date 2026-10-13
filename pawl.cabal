@@ -742,6 +742,8 @@ library codec
     Pawl.Codec.KeywordTally
     Pawl.Codec.Label
     Pawl.Codec.LabelSpec
+    Pawl.Codec.LandAllowance
+    Pawl.Codec.LandAllowanceSpec
     Pawl.Codec.LandPlayed
     Pawl.Codec.LandPlayedSpec
     Pawl.Codec.LastKnown
@@ -2413,6 +2415,7 @@ library types
     Pawl.Types.KeywordTally
     Pawl.Types.KickerDecision
     Pawl.Types.Label
+    Pawl.Types.LandAllowance
     Pawl.Types.LandPlayed
     Pawl.Types.LastKnown
     Pawl.Types.Layer

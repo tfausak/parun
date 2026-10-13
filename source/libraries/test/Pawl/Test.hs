@@ -342,6 +342,7 @@ import qualified Pawl.Codec.KeywordFamilySpec
 import qualified Pawl.Codec.KeywordSpec
 import qualified Pawl.Codec.KeywordsAreSpec
 import qualified Pawl.Codec.LabelSpec
+import qualified Pawl.Codec.LandAllowanceSpec
 import qualified Pawl.Codec.LandPlayedSpec
 import qualified Pawl.Codec.LastKnownSpec
 import qualified Pawl.Codec.LayoutSpec
@@ -988,6 +989,7 @@ spec s registry = do
   Pawl.Codec.CastObligationSpec.spec s
   Pawl.Codec.CastOfferSpec.spec s
   Pawl.Codec.CastRepetitionSpec.spec s
+  Pawl.Codec.LandAllowanceSpec.spec s
   Pawl.Codec.CastingPermissionSpec.spec s
   Pawl.Codec.CastingRestrictionSpec.spec s
   Pawl.Codec.ChangeSubtypeWordSpec.spec s
