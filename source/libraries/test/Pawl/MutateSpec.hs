@@ -81,6 +81,7 @@ import qualified Pawl.Types.Color as Color
 import qualified Pawl.Types.Combat as Combat.Type
 import qualified Pawl.Types.CombatStep as CombatStep
 import qualified Pawl.Types.CommandZoneDecision as CommandZoneDecision
+import qualified Pawl.Types.ComponentCard as ComponentCard
 import qualified Pawl.Types.Cost as Cost.Type
 import qualified Pawl.Types.Daytime as Daytime
 import qualified Pawl.Types.EndingStep as EndingStep
@@ -547,7 +548,7 @@ spec s registry = Spec.describe s "Mutate" $ do
           Source.OfMeld
             MeldSource.MkMeldSource
               { MeldSource.result = falconPid,
-                MeldSource.components = falconPid NonEmpty.:| [cubPid]
+                MeldSource.components = ComponentCard.MkComponentCard falconPid Nothing Nothing NonEmpty.:| [ComponentCard.MkComponentCard cubPid Nothing Nothing]
               }
         withMeld =
           bothInterned
@@ -909,7 +910,7 @@ spec s registry = Spec.describe s "Mutate" $ do
         -- The fixture facts, after it: the permanent really was a merge of a
         -- card, a token and a copy under one printing, and CR 903.9b's offer
         -- really was accepted.
-        Spec.assertEqWith s "setup: the components were a card, a token and a copy of a spell under one printing" (fmap (Foldable.toList . Game.componentsOf . Object.source) (Game.lookupObject oid board)) (Just [MergeComponent.OfCard pid, MergeComponent.OfToken pid, MergeComponent.OfSpellCopy pid])
+        Spec.assertEqWith s "setup: the components were a card, a token and a copy of a spell under one printing" (fmap (Foldable.toList . Game.componentsOf . Object.source) (Game.lookupObject oid board)) (Just [MergeComponent.OfCard (ComponentCard.MkComponentCard pid Nothing Nothing), MergeComponent.OfToken pid, MergeComponent.OfSpellCopy pid])
         Spec.assertEqWith s "setup: the merged permanent left the battlefield" (Game.lookupObject oid after) Nothing
   -- CR 730.3 over a component list that holds a token: "each of the individual
   -- components are put into the appropriate zone", and CR 111.7 is what the
@@ -1361,7 +1362,6 @@ componentKinds oid gs =
 componentKind :: MergeComponent.MergeComponent -> Text.Text
 componentKind component = case component of
   MergeComponent.OfCard _ -> Text.pack "OfCard"
-  MergeComponent.OfDuplicate _ -> Text.pack "OfDuplicate"
   MergeComponent.OfToken _ -> Text.pack "OfToken"
   MergeComponent.OfMeld _ -> Text.pack "OfMeld"
   MergeComponent.OfSpellCopy _ -> Text.pack "OfSpellCopy"
@@ -1474,7 +1474,7 @@ asMergeOfEveryKind oid pid gs =
   gs
     { GameState.objects =
         Map.adjust
-          (\o -> o {Object.source = Source.OfMerge (fmap (`ShownComponent.MkShownComponent` Nothing) (MergeComponent.OfCard pid NonEmpty.:| [MergeComponent.OfToken pid, MergeComponent.OfSpellCopy pid]))})
+          (\o -> o {Object.source = Source.OfMerge (fmap (`ShownComponent.MkShownComponent` Nothing) (MergeComponent.OfCard (ComponentCard.MkComponentCard pid Nothing Nothing) NonEmpty.:| [MergeComponent.OfToken pid, MergeComponent.OfSpellCopy pid]))})
           oid
           (GameState.objects gs)
     }

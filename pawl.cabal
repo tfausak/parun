@@ -355,6 +355,8 @@ library codec
     Pawl.Codec.ComparisonSpec
     Pawl.Codec.CompletedDungeon
     Pawl.Codec.CompletedDungeonSpec
+    Pawl.Codec.ComponentCard
+    Pawl.Codec.ComponentCardSpec
     Pawl.Codec.Condition
     Pawl.Codec.ConditionSpec
     Pawl.Codec.Conjure
@@ -559,8 +561,6 @@ library codec
     Pawl.Codec.DrewSpec
     Pawl.Codec.DungeonRoom
     Pawl.Codec.DungeonRoomSpec
-    Pawl.Codec.DuplicateCard
-    Pawl.Codec.DuplicateCardSpec
     Pawl.Codec.Duration
     Pawl.Codec.DurationSpec
     Pawl.Codec.DuringPhase
@@ -2192,6 +2192,7 @@ library types
     Pawl.Types.Compares
     Pawl.Types.Comparison
     Pawl.Types.CompletedDungeon
+    Pawl.Types.ComponentCard
     Pawl.Types.Concession
     Pawl.Types.Condition
     Pawl.Types.Conjure
@@ -2306,7 +2307,6 @@ library types
     Pawl.Types.DrawRewrite
     Pawl.Types.Drew
     Pawl.Types.DungeonRoom
-    Pawl.Types.DuplicateCard
     Pawl.Types.Duration
     Pawl.Types.DuringPhase
     Pawl.Types.EachCardFromAmong

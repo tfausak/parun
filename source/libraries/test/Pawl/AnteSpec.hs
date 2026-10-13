@@ -29,6 +29,7 @@ import qualified Pawl.Types.Deck as Deck
 import qualified Pawl.Types.Departure as Departure.Type
 import qualified Pawl.Types.GameSettings as GameSettings
 import qualified Pawl.Types.GameState as GameState
+import qualified Pawl.Types.MergeComponent as MergeComponent
 import qualified Pawl.Types.MulliganDecision as MulliganDecision
 import qualified Pawl.Types.Object as Object
 import qualified Pawl.Types.ObjectId as ObjectId
@@ -39,6 +40,7 @@ import qualified Pawl.Types.Player as Player
 import qualified Pawl.Types.PlayerId as PlayerId
 import qualified Pawl.Types.Prompt as Prompt
 import qualified Pawl.Types.Result as Result
+import qualified Pawl.Types.ShownComponent as ShownComponent
 import qualified Pawl.Types.Source as Source
 import qualified Pawl.Types.TeamId as TeamId
 import qualified Pawl.Types.Teams as Teams
@@ -344,8 +346,17 @@ spec s registry = Spec.describe s "Ante" $ do
         bobs obj = obj {Object.identity = fmap (\i -> i {CardIdentity.startingOwner = S.bob}) (Object.identity obj)}
         g4 = g3 {GameState.objects = Map.adjust bobs c (GameState.objects g3)}
         alike = Interchangeable.objects (Projection.projectAll g4) g4
+        -- The same three as merged permanents (CR 730.2), each card's identity
+        -- riding in its component.
+        asMerged obj = case Object.source obj of
+          Source.OfCard pid -> obj {Object.source = Source.OfMerge (pure (ShownComponent.MkShownComponent (MergeComponent.OfCard (Game.componentCardOf obj pid)) Nothing))}
+          _ -> obj
+        g5 = g4 {GameState.objects = Map.map asMerged (GameState.objects g4)}
+        alikeMerged = Interchangeable.objects (Projection.projectAll g5) g5
     Spec.assertEqWith s "two Mountains alice began the game with are interchangeable" (alike a b) True
     Spec.assertEqWith s "one bob began the game with is not" (alike a c) False
+    Spec.assertEqWith s "two merged ones whose cards differ only in serial are interchangeable" (alikeMerged a b) True
+    Spec.assertEqWith s "one whose card bob began the game with is not" (alikeMerged a c) False
   -- CR 104.4a: two players who lose at once draw, and a draw has no winner,
   -- so CR 407.2 pays nobody.
   Spec.it s "CR 104.4a/407.2 a drawn game pays out no ante card" $ do

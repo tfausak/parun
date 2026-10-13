@@ -1198,11 +1198,11 @@ subgameStateFrom starter parent =
             components = Game.componentsOf source
             arriving
               | Seq.null components = case source of
-                  Source.OfCard printingId -> [printingId]
+                  Source.OfCard printingId -> [Game.componentCardOf obj printingId]
                   _ -> []
-              | otherwise = fmap Game.printingOfComponent (filter Game.componentIsCard (Foldable.toList components))
+              | otherwise = Maybe.mapMaybe Game.cardOfComponent (Foldable.toList components)
          in case (Game.sourceIsToken source, Game.printingIdOfSource source, NonEmpty.nonEmpty arriving) of
-              (False, Just printingId, Just cards) -> Just (OutsideObject.MkOutsideObject (Object.owner obj) printingId (Object.facing obj) cards (Object.identity obj))
+              (False, Just printingId, Just cards) -> Just (OutsideObject.MkOutsideObject (Object.owner obj) printingId (Object.facing obj) cards)
               _ -> Nothing
    in parent
         { GameState.objects = movedObjects,

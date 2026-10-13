@@ -2,6 +2,7 @@
 
 module Pawl.Codec.MeldSource where
 
+import qualified Pawl.Codec.ComponentCard as ComponentCard
 import qualified Pawl.Codec.PrintingId as PrintingId
 import qualified Pawl.JsonCodec.Codec as Codec
 import qualified Pawl.JsonCodec.Common as Common
@@ -13,7 +14,7 @@ import qualified Pawl.Types.MeldSource as MeldSource
 codec :: Codec.Codec MeldSource.MeldSource
 codec = Fields.object $ do
   result <- Fields.required "result" PrintingId.codec MeldSource.result
-  components <- Fields.required "components" (Common.nonEmpty PrintingId.codec) MeldSource.components
+  components <- Fields.required "components" (Common.nonEmpty ComponentCard.codec) MeldSource.components
   pure
     MeldSource.MkMeldSource
       { MeldSource.result = result,

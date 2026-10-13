@@ -4,6 +4,7 @@ import qualified Data.List.NonEmpty as NonEmpty
 import qualified Pawl.Codec.MeldSource as MeldSource
 import qualified Pawl.JsonCodec.Common as Common
 import qualified Pawl.Spec as Spec
+import qualified Pawl.Types.ComponentCard as ComponentCard
 import qualified Pawl.Types.MeldSource as MeldSource
 import qualified Pawl.Types.PrintingId as PrintingId
 
@@ -18,8 +19,8 @@ spec s = Spec.describe s "Pawl.Codec.MeldSource" $ do
       MeldSource.codec
       MeldSource.MkMeldSource
         { MeldSource.result = PrintingId.MkPrintingId 8,
-          MeldSource.components = PrintingId.MkPrintingId 9 NonEmpty.:| [PrintingId.MkPrintingId 10]
+          MeldSource.components = ComponentCard.MkComponentCard (PrintingId.MkPrintingId 9) Nothing Nothing NonEmpty.:| [ComponentCard.MkComponentCard (PrintingId.MkPrintingId 10) Nothing Nothing]
         }
-      " {\"result\":8,\"components\":[9,10]} "
+      " {\"result\":8,\"components\":[{\"printing\":9},{\"printing\":10}]} "
   Spec.it s "has a schema" $
     Common.assertHasSchema s MeldSource.codec

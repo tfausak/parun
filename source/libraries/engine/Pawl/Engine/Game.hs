@@ -35,11 +35,11 @@ import qualified Pawl.Types.CardName as CardName
 import qualified Pawl.Types.CardType as CardType
 import qualified Pawl.Types.Color as Color
 import qualified Pawl.Types.Combat as Combat
+import qualified Pawl.Types.ComponentCard as ComponentCard
 import qualified Pawl.Types.DamageEvent as DamageEvent
 import qualified Pawl.Types.DamageKind as DamageKind
 import qualified Pawl.Types.Decider as Decider
 import qualified Pawl.Types.Discarded as Discarded
-import qualified Pawl.Types.DuplicateCard as DuplicateCard
 import Pawl.Types.Face (Face)
 import qualified Pawl.Types.Face as Face
 import qualified Pawl.Types.FaceDownState as FaceDownState
@@ -1053,7 +1053,6 @@ cardComponentsOf :: MergeComponent.MergeComponent -> Seq.Seq MergeComponent.Merg
 cardComponentsOf component = case component of
   MergeComponent.OfMeld meld -> meldCardComponents meld
   MergeComponent.OfCard _ -> Seq.singleton component
-  MergeComponent.OfDuplicate _ -> Seq.singleton component
   MergeComponent.OfToken _ -> Seq.singleton component
   MergeComponent.OfSpellCopy _ -> Seq.singleton component
 
@@ -1076,10 +1075,9 @@ meldCardComponents meld = fmap MergeComponent.OfCard (Seq.fromList (NonEmpty.toL
 -- instead. It is CR 712.8g's own sentence, which is why it stands.
 printingOfComponent :: MergeComponent.MergeComponent -> PrintingId.PrintingId
 printingOfComponent component = case component of
-  MergeComponent.OfCard pid -> pid
-  -- The printed card; its copiable values are read off Object.duplicate, which
-  -- `representComponent` writes back.
-  MergeComponent.OfDuplicate duplicate -> DuplicateCard.printing duplicate
+  -- The printed card; a conjured duplicate's copiable values are read off
+  -- Object.duplicate, which `representComponent` writes back.
+  MergeComponent.OfCard card -> ComponentCard.printing card
   MergeComponent.OfToken pid -> pid
   -- CR 707.2: the copiable values a copy of a spell reports are the copied
   -- spell's, so the printing it names is the one its characteristics come off --
@@ -1580,7 +1578,7 @@ mergeComponentsOf source = case source of
 -- neither reader has to case on OfMeld itself; both quantify over printings.
 meldComponentsOf :: Source.Source -> Seq.Seq PrintingId.PrintingId
 meldComponentsOf source = case source of
-  Source.OfMeld meld -> Seq.fromList (NonEmpty.toList (MeldSource.components meld))
+  Source.OfMeld meld -> Seq.fromList (fmap ComponentCard.printing (NonEmpty.toList (MeldSource.components meld)))
   -- A merged permanent answers nothing here even when its topmost component is
   -- a MELDED one: CR 730.2a's copiable effect carries that component's mana
   -- value onto the permanent at the merge (Pawl.Engine.Binding.setMergeCopy), so
@@ -1619,9 +1617,8 @@ referenceFaces gs =
         Source.OfInherentTrigger _ -> Seq.empty
       cardPrintings source = foldMap cardPrinting (componentsOf source)
       cardPrinting component = case component of
-        MergeComponent.OfCard pid -> Seq.singleton pid
-        MergeComponent.OfDuplicate duplicate -> Seq.singleton (DuplicateCard.printing duplicate)
-        MergeComponent.OfMeld meld -> Seq.fromList (NonEmpty.toList (MeldSource.components meld))
+        MergeComponent.OfCard card -> Seq.singleton (ComponentCard.printing card)
+        MergeComponent.OfMeld meld -> Seq.fromList (fmap ComponentCard.printing (NonEmpty.toList (MeldSource.components meld)))
         MergeComponent.OfToken _ -> Seq.empty
         MergeComponent.OfSpellCopy _ -> Seq.empty
       pids =
@@ -2391,9 +2388,9 @@ sourceIsCard source = case source of
 
 -- CR 108.2: the object made to be represented by @source@. CR 108.3's identity
 -- is a card's, so it survives only where the new source is still a card: a token
--- (CR 111.6) and a copy (CR 707.10, 707.12) carry none. CR 730.2's merge is
--- the one rewrite that keeps it whatever the topmost component, since
--- representComponent hands it back to a card component at CR 730.3's split.
+-- (CR 111.6) and a copy (CR 707.10, 707.12) carry none. Each card of a merged
+-- or melded permanent keeps its own in Pawl.Types.ComponentCard, which
+-- representComponent hands back at CR 712.21's and CR 730.3's split.
 setSource :: Source.Source -> Object -> Object
 setSource source object =
   object
@@ -2441,7 +2438,6 @@ componentIsToken :: MergeComponent.MergeComponent -> Bool
 componentIsToken component = case component of
   MergeComponent.OfToken _ -> True
   MergeComponent.OfCard _ -> False
-  MergeComponent.OfDuplicate _ -> False
   -- CR 108.2b / 701.42b: both cards of a meld pair are Magic cards, and a token
   -- cannot be one of them. `sourceIsToken`'s OfMeld arm answers the same.
   MergeComponent.OfMeld _ -> False
@@ -2467,11 +2463,20 @@ componentIsToken component = case component of
 componentIsCard :: MergeComponent.MergeComponent -> Bool
 componentIsCard component = case component of
   MergeComponent.OfCard _ -> True
-  MergeComponent.OfDuplicate _ -> True
   -- CR 701.42b again: both components of a meld pair are Magic cards.
   MergeComponent.OfMeld _ -> True
   MergeComponent.OfToken _ -> False
   MergeComponent.OfSpellCopy _ -> False
+
+-- CR 108.2: the card one component of `componentsOf` is, which carries what that
+-- card keeps (Pawl.Types.ComponentCard). Nothing for a token or a copy, and for
+-- a melded component, which `componentsOf` has already expanded into its cards.
+cardOfComponent :: MergeComponent.MergeComponent -> Maybe ComponentCard.ComponentCard
+cardOfComponent component = case component of
+  MergeComponent.OfCard card -> Just card
+  MergeComponent.OfMeld _ -> Nothing
+  MergeComponent.OfToken _ -> Nothing
+  MergeComponent.OfSpellCopy _ -> Nothing
 
 -- CR 730.2/730.3: what a component of a merged permanent represents once it is
 -- an object of its own again -- the card representing itself (CR 108.2), or the
@@ -2479,8 +2484,7 @@ componentIsCard component = case component of
 -- Pawl.Engine.Event's CR 712.21/730.3 split and Pawl.Engine.Setup's rebuild.
 sourceOfComponent :: MergeComponent.MergeComponent -> Source.Source
 sourceOfComponent component = case component of
-  MergeComponent.OfCard pid -> Source.OfCard pid
-  MergeComponent.OfDuplicate duplicate -> Source.OfCard (DuplicateCard.printing duplicate)
+  MergeComponent.OfCard card -> Source.OfCard (ComponentCard.printing card)
   MergeComponent.OfToken pid -> Source.OfToken pid
   -- The copy it still is, so CR 704.5e removes it in whatever zone CR 730.3 put
   -- it -- the same road the token arm above takes to CR 111.7, one rule over.
@@ -2493,31 +2497,33 @@ sourceOfComponent component = case component of
   MergeComponent.OfMeld meld -> Source.OfMeld meld
 
 -- CR 730.3 / 400.7: `object` made to represent this component alone -- its
--- Source (`sourceOfComponent`), and the conjured duplicate's copiable values
--- where the component carries them (Object.duplicate), which no other
--- component has. The one write Pawl.Engine.Event's CR 730.3 split and
--- Pawl.Engine.Setup's CR 727.2 rebuild both take.
+-- Source (`sourceOfComponent`), and for a card the card-level facts the
+-- component kept (Pawl.Types.ComponentCard): its own identity (CR 108.3) and a
+-- conjured duplicate's copiable values, which no other component shares. The
+-- one write Pawl.Engine.Event's CR 712.21 / 730.3 split, its CR 729.4a bring-in
+-- and Pawl.Engine.Setup's CR 727.2 rebuild all take. Pawl.AnteSpec's merged and
+-- melded splits prove the identity.
 representComponent :: MergeComponent.MergeComponent -> Object -> Object
 representComponent component object =
-  -- Not implemented: each card component keeping its own identity rather than
-  -- the merged object's (#4848).
-  (setSource (sourceOfComponent component) object)
-    { Object.duplicate = case component of
-        MergeComponent.OfDuplicate duplicate -> Just (DuplicateCard.values duplicate)
-        MergeComponent.OfCard _ -> Nothing
-        MergeComponent.OfToken _ -> Nothing
-        MergeComponent.OfSpellCopy _ -> Nothing
-        MergeComponent.OfMeld _ -> Nothing
-    }
+  let represented = setSource (sourceOfComponent component) object
+   in case component of
+        MergeComponent.OfCard card -> represented {Object.identity = ComponentCard.identity card, Object.duplicate = ComponentCard.duplicate card}
+        MergeComponent.OfToken _ -> represented {Object.duplicate = Nothing}
+        MergeComponent.OfSpellCopy _ -> represented {Object.duplicate = Nothing}
+        MergeComponent.OfMeld _ -> represented {Object.duplicate = Nothing}
 
--- CR 730.2: the component a CARD object becomes as it merges -- a conjured
--- duplicate carrying its copiable values (Object.duplicate) with it, any other
--- card as its printing alone. The card arm of both of Pawl.Engine.Event's
--- `mergeComponents` and `mergingComponent`.
-cardComponentOf :: Object -> PrintingId.PrintingId -> MergeComponent.MergeComponent
-cardComponentOf object pid = case Object.duplicate object of
-  Just values -> MergeComponent.OfDuplicate DuplicateCard.MkDuplicateCard {DuplicateCard.printing = pid, DuplicateCard.values = values}
-  Nothing -> MergeComponent.OfCard pid
+-- CR 730.2 / 701.42a: the card a CARD object is as it becomes one of a merged
+-- or melded permanent's components -- its printing with the card-level facts
+-- Object.newIncarnation keeps (CR 108.3's identity, a conjured duplicate's
+-- values). Read by Pawl.Engine.Event's `mergeComponents`, `mergingComponent`
+-- and `meld`, and by Pawl.Engine.Setup's CR 729.4 outside entries.
+componentCardOf :: Object -> PrintingId.PrintingId -> ComponentCard.ComponentCard
+componentCardOf object pid =
+  ComponentCard.MkComponentCard
+    { ComponentCard.printing = pid,
+      ComponentCard.identity = Object.identity object,
+      ComponentCard.duplicate = Object.duplicate object
+    }
 
 -- CR 111.8: a token that has LEFT the battlefield -- one waiting for the state-
 -- based action CR 111.7 and CR 704.5d state. Two rules read it and must agree:

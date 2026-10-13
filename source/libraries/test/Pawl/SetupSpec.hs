@@ -39,6 +39,7 @@ import qualified Pawl.Types.Asked as Asked
 import qualified Pawl.Types.Binding as Binding
 import qualified Pawl.Types.CardName as CardName
 import qualified Pawl.Types.Color as Color
+import qualified Pawl.Types.ComponentCard as ComponentCard
 import qualified Pawl.Types.ControlClock as ControlClock
 import qualified Pawl.Types.CounterKind as CounterKind
 import qualified Pawl.Types.Deck as Deck
@@ -1093,7 +1094,7 @@ subgameSpec s registry = Spec.describe s "subgames (CR 729)" $ do
         outerId = ObjectId.MkObjectId 9001
         parent =
           g2
-            { GameState.outsideObjects = Map.singleton outerId (OutsideObject.MkOutsideObject S.alice printingId Facing.FaceUp (printingId NonEmpty.:| []) Nothing)
+            { GameState.outsideObjects = Map.singleton outerId (OutsideObject.MkOutsideObject S.alice printingId Facing.FaceUp (ComponentCard.MkComponentCard printingId Nothing Nothing NonEmpty.:| []))
             }
         sub0 = Setup.subgameStateFrom S.alice parent
         (_, crossedSub) = Event.bringInFrom OutsideDestination.Hand S.alice outerId sub0

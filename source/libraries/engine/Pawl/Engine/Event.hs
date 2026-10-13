@@ -94,6 +94,7 @@ import qualified Pawl.Types.CoinFlipped as CoinFlipped
 import qualified Pawl.Types.Color as Color
 import qualified Pawl.Types.Combat as Combat
 import qualified Pawl.Types.CommandZoneDecision as CommandZoneDecision
+import qualified Pawl.Types.ComponentCard as ComponentCard
 import qualified Pawl.Types.ContinuousEffect as ContinuousEffect
 import qualified Pawl.Types.CopyClause as CopyClause
 import qualified Pawl.Types.CounterCause as CounterCause
@@ -1446,7 +1447,7 @@ arrangeOutside arrival pid outerId = do
     Just entry -> do
       let (zone, _) = arrivalOf arrival
       arranged <- arrangeComponents pid zone (Seq.fromList (fmap MergeComponent.OfCard (NonEmpty.toList (OutsideObject.cards entry))))
-      case NonEmpty.nonEmpty (fmap Game.printingOfComponent (Foldable.toList arranged)) of
+      case NonEmpty.nonEmpty (Maybe.mapMaybe Game.cardOfComponent (Foldable.toList arranged)) of
         Nothing -> pure ()
         Just cards -> State.modify' (\g -> g {GameState.outsideObjects = Map.insert outerId entry {OutsideObject.cards = cards} (GameState.outsideObjects g)})
 
@@ -1472,15 +1473,12 @@ bringInFrom destination pid outerId gs = case Map.lookup outerId (GameState.outs
   Nothing -> (Nothing, gs)
   Just entry ->
     let (zone, position) = arrivalOf destination
-        -- CR 108.3: each card keeps the identity it had out there. Not
-        -- implemented: each card of a melded or merged permanent keeping its
-        -- own (#4848).
-        kept obj = case OutsideObject.identity entry of
-          Just identity -> obj {Object.identity = Just identity}
-          Nothing -> obj
-        mint printingId (oids, g) =
-          let (oid, g1) = mintCard pid Nothing printingId zone position TapState.Untapped g
-           in (oids <> [oid], g1 {GameState.objects = Map.adjust kept oid (GameState.objects g1)})
+        -- CR 108.3: each card keeps the identity it had out there, and the
+        -- fresh one stands only where it had none.
+        kept card obj = (Game.representComponent (MergeComponent.OfCard card) obj) {Object.identity = ComponentCard.identity card <|> Object.identity obj}
+        mint card (oids, g) =
+          let (oid, g1) = mintCard pid Nothing (ComponentCard.printing card) zone position TapState.Untapped g
+           in (oids <> [oid], g1 {GameState.objects = Map.adjust (kept card) oid (GameState.objects g1)})
         (minted, gs1) = Foldable.foldl' (flip mint) ([], gs) (OutsideObject.cards entry)
      in ( NonEmpty.nonEmpty minted,
           gs1
@@ -8201,16 +8199,18 @@ meld controller victims resultCard = do
       -- (CR 113.6), so no component's projection reads another. One that did
       -- would want a single pre-removal board for all of them.
       State.modify' (\g -> Foldable.foldl' forgetObject g (fmap fst melding))
-      let mkObj ts =
+      -- CR 108.3: each card as it was, read off the board before forgetObject
+      -- above.
+      let cards = fmap (\(oid, pid) -> maybe (ComponentCard.MkComponentCard pid Nothing Nothing) (`Game.componentCardOf` pid) (Game.lookupObject oid gs)) melding
+          mkObj ts =
             -- CR 110.2, sentence 1: a permanent's owner is the owner of the
             -- card that represents it, which for a melded permanent is the
             -- one owner all of them share -- `meldable` checked that, since
             -- CR 701.42b's pair has no other reading of "its owner".
-            (Object.new owner (Source.OfMeld (MeldSource.MkMeldSource {MeldSource.result = resultId, MeldSource.components = fmap snd melding})) Zone.Battlefield ts)
+            (Object.new owner (Source.OfMeld (MeldSource.MkMeldSource {MeldSource.result = resultId, MeldSource.components = cards})) Zone.Battlefield ts)
               { -- CR 108.3: the first card's identity, read off the board before
-                -- forgetObject above. Not implemented: the melded permanent's
-                -- second card keeping its own identity (#4848).
-                Object.identity = Game.lookupObject (fst (NonEmpty.head melding)) gs >>= Object.identity,
+                -- forgetObject above; each card's own rides in `cards`.
+                Object.identity = ComponentCard.identity (NonEmpty.head cards),
                 -- CR 110.2a: "if an effect instructs a player to put an object
                 -- onto the battlefield, that object enters the battlefield under
                 -- that player's control", so the resolving controller is stamped
@@ -8517,7 +8517,7 @@ merge sid target side = do
     _ -> pure False
 
 -- CR 730.2's "any other components that were representing it", in top-to-bottom
--- order: one card for an ordinary card (CR 108.2, Game.cardComponentOf), and the
+-- order: one card for an ordinary card (CR 108.2, Game.componentCardOf), and the
 -- existing stack for a permanent already merged.
 --
 -- The TOKEN arm is CR 730.2d's own subject: a token is a component like any
@@ -8530,7 +8530,7 @@ merge sid target side = do
 -- that is mutated over contributes that face's abilities (CR 702.140e).
 mergeComponents :: Object.Object -> Maybe [ShownComponent.ShownComponent]
 mergeComponents permanent = case Object.source permanent of
-  Source.OfCard pid -> alone (Game.cardComponentOf permanent pid)
+  Source.OfCard pid -> alone (MergeComponent.OfCard (Game.componentCardOf permanent pid))
   Source.OfMerge components -> Just (NonEmpty.toList components)
   Source.OfMeld melded -> alone (MergeComponent.OfMeld melded)
   Source.OfToken pid -> alone (MergeComponent.OfToken pid)
@@ -8565,7 +8565,7 @@ mergeComponents permanent = case Object.source permanent of
 -- both report as a refusal.
 mergingComponent :: Object.Object -> Maybe MergeComponent.MergeComponent
 mergingComponent spell = case Object.source spell of
-  Source.OfCard pid -> Just (Game.cardComponentOf spell pid)
+  Source.OfCard pid -> Just (MergeComponent.OfCard (Game.componentCardOf spell pid))
   Source.OfSpellCopy pid -> Just (MergeComponent.OfSpellCopy pid)
   -- A copy of a card is a spell once cast, and no such spell pawl mints is a
   -- mutating creature spell: CR 722.3c's "has only the characteristics of that
