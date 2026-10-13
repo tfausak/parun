@@ -1,0 +1,122 @@
+{
+  "description": "CR 702.19c a teammate's attacker pays down the loyalty Thrasta must cover",
+  "note": "Shared team turns: alice's Thrasta and carol's Goblin Piker both attack bob's 3-loyalty Jace Beleren. The active team announces its assignments together (CR 805.10f), so the Piker's 2 counts toward Jace's bar, and Thrasta's 1 + 6 is legal, not asked again.",
+  "board": {
+    "active": "alice",
+    "step": "BeginningOfCombat",
+    "sharedTeamTurns": true,
+    "seats": [
+      {
+        "name": "alice",
+        "team": 1,
+        "battlefield": [
+          {
+            "card": "Thrasta, Tempest's Roar",
+            "label": "thrasta",
+            "ready": true
+          }
+        ]
+      },
+      {
+        "name": "bob",
+        "team": 2,
+        "battlefield": [
+          {
+            "card": "Jace Beleren",
+            "label": "jace",
+            "counters": [
+              {
+                "key": {
+                  "type": "Loyalty"
+                },
+                "value": 3
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "name": "carol",
+        "team": 1,
+        "battlefield": [
+          {
+            "card": "Goblin Piker",
+            "label": "piker",
+            "ready": true
+          }
+        ]
+      },
+      {
+        "name": "dave",
+        "team": 2
+      }
+    ]
+  },
+  "timeline": [
+    {
+      "turn": 1,
+      "step": "DeclareAttackers",
+      "player": "alice",
+      "do": {
+        "Attack": [
+          "$thrasta",
+          "$piker"
+        ]
+      }
+    },
+    {
+      "turn": 1,
+      "step": "DeclareAttackers",
+      "player": "alice",
+      "source": "$thrasta",
+      "do": {
+        "ChooseAttackTarget": "$jace"
+      }
+    },
+    {
+      "turn": 1,
+      "step": "DeclareAttackers",
+      "player": "alice",
+      "source": "$piker",
+      "do": {
+        "ChooseAttackTarget": "$jace"
+      }
+    },
+    {
+      "turn": 1,
+      "step": "CombatDamage",
+      "player": "alice",
+      "source": "$thrasta",
+      "do": {
+        "AssignDamage": {
+          "$jace": 1,
+          "$bob": 6
+        }
+      }
+    },
+    {
+      "turn": 1,
+      "step": "EndOfCombat",
+      "player": "alice",
+      "check": {
+        "Life": {
+          "player": "bob",
+          "life": 14
+        }
+      }
+    },
+    {
+      "turn": 1,
+      "step": "EndOfCombat",
+      "player": "alice",
+      "check": {
+        "Count": {
+          "player": "bob",
+          "zone": "Battlefield",
+          "card": "Jace Beleren",
+          "count": 0
+        }
+      }
+    }
+  ]
+}

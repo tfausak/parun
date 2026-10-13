@@ -1,0 +1,112 @@
+{
+  "description": "CR 510.1e a trampler short of lethal on its blocker is asked to assign again",
+  "board": {
+    "seats": [
+      {
+        "name": "alice",
+        "battlefield": [
+          {
+            "card": "Colossal Dreadmaw",
+            "label": "dreadmaw",
+            "ready": true
+          }
+        ]
+      },
+      {
+        "name": "bob",
+        "battlefield": [
+          {
+            "card": "War Mammoth",
+            "label": "mammoth",
+            "ready": true
+          }
+        ]
+      }
+    ],
+    "active": "alice",
+    "step": "DeclareAttackers"
+  },
+  "timeline": [
+    {
+      "turn": 1,
+      "step": "DeclareAttackers",
+      "player": "alice",
+      "do": {
+        "Attack": [
+          "$dreadmaw"
+        ]
+      }
+    },
+    {
+      "turn": 1,
+      "step": "DeclareBlockers",
+      "player": "bob",
+      "do": {
+        "Block": {
+          "$mammoth": [
+            "$dreadmaw"
+          ]
+        }
+      }
+    },
+    {
+      "turn": 1,
+      "step": "CombatDamage",
+      "player": "alice",
+      "source": "$dreadmaw",
+      "refuse": {
+        "AssignDamage": {
+          "$mammoth": 2,
+          "$bob": 4
+        }
+      }
+    },
+    {
+      "turn": 1,
+      "step": "CombatDamage",
+      "player": "alice",
+      "source": "$dreadmaw",
+      "do": {
+        "AssignDamage": {
+          "$mammoth": 3,
+          "$bob": 3
+        }
+      }
+    },
+    {
+      "turn": 1,
+      "step": "EndOfCombat",
+      "player": "alice",
+      "check": {
+        "Life": {
+          "player": "bob",
+          "life": 17
+        }
+      }
+    },
+    {
+      "turn": 1,
+      "step": "EndOfCombat",
+      "player": "alice",
+      "check": {
+        "Count": {
+          "player": "bob",
+          "zone": "Battlefield",
+          "card": "War Mammoth",
+          "count": 0
+        }
+      }
+    },
+    {
+      "turn": 1,
+      "step": "EndOfCombat",
+      "player": "alice",
+      "check": {
+        "Damage": {
+          "object": "$dreadmaw",
+          "damage": 3
+        }
+      }
+    }
+  ]
+}

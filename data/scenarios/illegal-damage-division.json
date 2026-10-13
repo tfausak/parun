@@ -1,5 +1,5 @@
 {
-  "description": "CR 510.1e an illegal division is rejected and deals nothing",
+  "description": "CR 510.1e an illegal division is asked again, and the same answer repeated deals nothing",
   "board": {
     "active": "alice",
     "step": "BeginningOfCombat",
@@ -20,6 +20,7 @@
   "timeline": [
     { "turn": 1, "step": "DeclareAttackers", "player": "alice", "do": { "Attack": ["$attacker"] } },
     { "turn": 1, "step": "DeclareBlockers", "player": "bob", "do": { "Block": { "$first": ["$attacker"], "$second": ["$attacker"] } } },
+    { "turn": 1, "step": "CombatDamage", "player": "alice", "do": { "Answer": { "prompt": "AssignCombatDamage", "with": [[["Creature", "$first"], 99], [["Creature", "$second"], 99]], "unoffered": true } } },
     { "turn": 1, "step": "CombatDamage", "player": "alice", "do": { "Answer": { "prompt": "AssignCombatDamage", "with": [[["Creature", "$first"], 99], [["Creature", "$second"], 99]], "unoffered": true } } },
     { "turn": 1, "step": "EndOfCombat", "player": "alice", "check": { "Count": { "player": "bob", "zone": "Battlefield", "card": "Goblin Piker", "count": 2 } } }
   ]
