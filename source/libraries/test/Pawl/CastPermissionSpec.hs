@@ -96,8 +96,8 @@ extraLandDropsSpec s registry =
       exploration <- S.printingOf s registry "Exploration"
       let board = landDropBoard mountain [exploration] S.bob
           after = playEveryLand board
-      Spec.assertEqWith s "alice's allowance is two" (PlayerEffect.landPlaysAllowed S.alice board) 2
-      Spec.assertEqWith s "bob's is still one" (PlayerEffect.landPlaysAllowed S.bob board) 1
+      Spec.assertEqWith s "alice's allowance is two" (PlayerEffect.landPlaysAllowed S.alice board) (Just 2)
+      Spec.assertEqWith s "bob's is still one" (PlayerEffect.landPlaysAllowed S.bob board) (Just 1)
       Spec.assertEqWith s "one Mountain landed for bob" (S.countOnBattlefieldByName (S.printingName mountain) S.bob after) 1
       Spec.assertEqWith s "four are still in his hand" (S.handSize S.bob after) 4
       Spec.assertEqWith s "and his second is refused" (filter isPlay (Action.legalActions S.bob after)) []
@@ -115,7 +115,7 @@ extraLandDropsSpec s registry =
           ready = withHand {GameState.phase = Phase.PrecombatMain, GameState.activePlayer = S.alice, GameState.priority = Just S.alice}
           gone = S.runPure S.identityAnswer (playEveryLand ready) (Event.destroy Regenerability.Regenerable [explorationId])
       Spec.assertEqWith s "two lands were played while it stood" (GameState.landsPlayed gone) (Map.singleton S.alice 2)
-      Spec.assertEqWith s "the allowance is back to one" (PlayerEffect.landPlaysAllowed S.alice gone) 1
+      Spec.assertEqWith s "the allowance is back to one" (PlayerEffect.landPlaysAllowed S.alice gone) (Just 1)
       Spec.assertEqWith s "and CR 305.2b refuses a third" (filter isPlay (Action.legalActions S.alice gone)) []
 
 vedalkenOrrerySpec :: (Monad m, Monad n) => Spec.Spec m n -> Registry.Registry m -> n ()
@@ -622,7 +622,7 @@ crucibleSpec s registry =
         Spec.it s "CR 305.2a a player who has played their land is offered neither zone" $ do
           (hers, _, _, _, _, _, with) <- board True
           let played = with {GameState.landsPlayed = Map.singleton S.alice 1}
-          Spec.assertEqWith s "the allowance is still one" (PlayerEffect.landPlaysAllowed S.alice played) 1
+          Spec.assertEqWith s "the allowance is still one" (PlayerEffect.landPlaysAllowed S.alice played) (Just 1)
           Spec.assertEqWith s "and no land play is offered at all" (filter isPlay (Action.legalActions S.alice played)) []
           Spec.assertBool s (elem (Zone.Graveyard, S.alice) (PlayerEffect.playLandPiles S.alice played)) "though the permission is still standing"
           Spec.assertBool s (notElem (Action.Type.Play hers Nothing) (Action.legalActions S.alice played)) "so the Swamp is refused by the count"

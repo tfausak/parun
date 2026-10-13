@@ -10,6 +10,7 @@ import qualified Pawl.Types.Filter as Filter
 import qualified Pawl.Types.InZone as InZone
 import qualified Pawl.Types.Keyword as Keyword
 import qualified Pawl.Types.KeywordDesignator as KeywordDesignator
+import qualified Pawl.Types.LandAllowance as LandAllowance
 import qualified Pawl.Types.ManaFilter as ManaFilter
 import qualified Pawl.Types.ModifiedRoll as ModifiedRoll
 import qualified Pawl.Types.PlayerCounterKind as PlayerCounterKind
@@ -57,14 +58,14 @@ data PlayerEffect
   | -- | CR 118.9 / 602.2b / Kíli the Resourceful: this player may pay this cost
     -- rather than the activation cost of a matching keyword ability.
     AlternativeActivationCost AlternativeActivationCost.AlternativeActivationCost
-  | -- | CR 305.2 / Exploration, Azusa Lost but Seeking: this player may play this
-    -- many lands each turn OVER the one CR 305.2 normally allows.
+  | -- | CR 305.2 / Exploration, Naya: this player may play this many more
+    -- lands each turn than the one CR 305.2 normally allows.
     --
     -- The "on each of YOUR TURNS" both cards print needs no turn restriction: CR
     -- 305.3 forbids playing a land on another player's turn for any reason, as
     -- Pawl.GameSpec's "CR 305.3 flash does not let a land be played on another
     -- player's turn" proves.
-    PlayAdditionalLands Natural.Natural
+    PlayAdditionalLands LandAllowance.LandAllowance
   | -- | CR 402.2 / Reliquary Tower: this player has no maximum hand size.
     NoMaximumHandSize
   | -- | CR 402.2 / The Ten Rings: this player's maximum hand size IS this number.

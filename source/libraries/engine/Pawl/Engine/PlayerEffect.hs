@@ -79,6 +79,7 @@ import qualified Pawl.Types.GameState as GameState
 import qualified Pawl.Types.InZone as InZone
 import Pawl.Types.Keyword (Keyword)
 import qualified Pawl.Types.KeywordDesignator as KeywordDesignator
+import qualified Pawl.Types.LandAllowance as LandAllowance
 import qualified Pawl.Types.LoyaltyKind as LoyaltyKind
 import qualified Pawl.Types.ManaCost as ManaCost
 import qualified Pawl.Types.ManaSymbol as ManaSymbol
@@ -2645,11 +2646,14 @@ defaultLandPlays = 1
 -- Saturating addition is not a concern here and the type says why: a Natural
 -- cannot overflow, and every summand is one.
 --
+-- Nothing is the number raised without bound (Naya's "any number"), which
+-- absorbs every other grant.
+--
 -- Read LIVE through `applying`, like every other question in this module, so an
 -- Exploration destroyed after the extra land was played simply stops being found
 -- (CR 604.2) -- and the already-played count outliving the grant is exactly CR
 -- 305.2b, which then permits no further play.
-landPlaysAllowed :: PlayerId -> GameState -> Natural
+landPlaysAllowed :: PlayerId -> GameState -> Maybe Natural
 landPlaysAllowed pid gs =
   let grantOf effect = case effect of
         PlayerEffect.PlayAdditionalLands extra -> Just extra
@@ -2696,7 +2700,10 @@ landPlaysAllowed pid gs =
         PlayerEffect.CantGainLife -> Nothing
         PlayerEffect.CantLoseLife -> Nothing
         PlayerEffect.Shows _ -> Nothing
-   in defaultLandPlays + sum (Maybe.mapMaybe (grantOf . snd) (applying pid gs))
+      add total allowance = case allowance of
+        LandAllowance.Additional extra -> fmap (+ extra) total
+        LandAllowance.AnyNumber -> Nothing
+   in List.foldl' add (Just defaultLandPlays) (Maybe.mapMaybe (grantOf . snd) (applying pid gs))
 
 -- CR 701.38a: the one vote every seat casts, before rule 701.38d's extras.
 defaultVotes :: Natural

@@ -2182,7 +2182,7 @@ playerEffectNames asking x = case x of
   PlayerEffect.CantCastMoreThan _natural -> False
   PlayerEffect.ModifyCost costModifier -> costModifierNames asking costModifier
   PlayerEffect.AlternativeActivationCost alternativeActivationCost -> alternativeActivationCostNames asking alternativeActivationCost
-  PlayerEffect.PlayAdditionalLands _natural -> False
+  PlayerEffect.PlayAdditionalLands _allowance -> False
   PlayerEffect.NoMaximumHandSize -> False
   PlayerEffect.SetMaximumHandSize _natural -> False
   PlayerEffect.IncreaseMaximumHandSize _natural -> False
