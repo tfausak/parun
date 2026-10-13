@@ -1085,12 +1085,10 @@ hostOfSourceCounts :: Face.Face Card.Type.Card -> (Int, Int)
 hostOfSourceCounts = chosenValueCounts hostFramed hostOfSourceTag
 
 -- The source-framed positions the host atom is admitted in: narrower than
--- `sourceFramed`, because Pawl.Engine.SourceContext reads the host live. Not
--- implemented: CR 608.2h's look-back to the host of a source that has left,
--- which a CR 603.10a trigger condition ("whenever enchanted creature dies")
--- and a target slot's CR 608.2b re-check would need (#4875). These four
--- read it while the source is on the battlefield, or already did before the
--- shared builder.
+-- `sourceFramed`, and the four a card in the pool writes it in. Not
+-- implemented: CR 603.10a's look-back to the host in a trigger condition
+-- ("when enchanted creature leaves the battlefield"), where CR 704.5n leaves an
+-- Equipment unattached on the battlefield (gap #5089).
 hostFramed :: Framing -> Bool
 hostFramed framing = case framing of
   SourceHostFramed -> True
@@ -1100,10 +1098,10 @@ hostFramed framing = case framing of
   _ -> False
 
 -- CR 303.4b's "enchanted" is answerable only where Filter.Context.sourceAttachedTo
--- is filled and the source is still attached when it is read: the positions
--- `hostFramed` admits. Filter.contextFor leaves it Nothing, and a departed
--- source reads Nothing too (#4875), so Filter.IsHostOfSource elsewhere is a
--- silent False rather than a rejected card. This is where that is made loud.
+-- is filled: the positions `hostFramed` admits, where a source that has left
+-- answers the host it had (CR 608.2h). Filter.contextFor leaves it Nothing, so
+-- Filter.IsHostOfSource elsewhere is a silent False rather than a rejected card.
+-- This is where that is made loud.
 --
 -- Two offences under one name, for canHostSubjectOffends' two reasons: the
 -- traversal found the atom outside those positions, or the traversal and the
@@ -1989,9 +1987,9 @@ filterPositionLintSpec s registry = Spec.describe s "Lint" $ do
             }
     Spec.assertEqWith s "a planted atom is an offence" (hostOfSourceCounts planted) (0, 1)
     Spec.assertBool s (hostOfSourceOffends planted) "and the lint says so"
-    -- A PERMANENT's trigger condition is source-framed, but its host is read
-    -- live and CR 704.5m/n has unattached the Aura before a CR 603.10a
-    -- "whenever enchanted creature dies" is matched (#4875), so it is refused.
+    -- A PERMANENT's trigger condition is source-framed, but CR 704.5n has
+    -- unattached an Equipment before a CR 603.10a look-back is matched (gap
+    -- #5089), so it is refused.
     let onTrigger = (S.combinedFace piker) {Face.triggeredAbilities = [oneEffectTrigger (TriggerCondition.PermanentEnters buried) (Effect.Draw (Draw.MkDraw (PlayerRef.InSlot Binding.you) (Quantity.Type.Literal 1) Nothing))]}
     Spec.assertEqWith s "a trigger condition asking it is an offence too" (hostOfSourceCounts onTrigger) (0, 1)
     -- CastOffer.payingInstead carries SlotlessCostFramed and is paid framed by

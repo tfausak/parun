@@ -32,6 +32,7 @@ codec = Fields.object $ do
   counters <- Fields.required "counters" (Common.multiset (CounterKind.codec Keyword.codec)) LastKnown.counters
   copiable <- Fields.required "copiable" ProjectedCharacteristics.codec LastKnown.copiable
   attached <- Fields.required "attached" (Common.set ObjectId.codec) LastKnown.attached
+  host <- Fields.defaulted "host" Nothing (Common.maybe ObjectId.codec) LastKnown.host
   chosenNames <- Fields.required "chosenNames" (Common.naturalMap PlayerId.codec CardName.codec) LastKnown.chosenNames
   chosenPlayer <- Fields.defaulted "chosenPlayer" Nothing (Common.maybe PlayerId.codec) LastKnown.chosenPlayer
   chosenColors <- Fields.defaulted "chosenColors" Set.empty (Common.set Color.codec) LastKnown.chosenColors
@@ -55,6 +56,7 @@ codec = Fields.object $ do
         LastKnown.counters = counters,
         LastKnown.copiable = copiable,
         LastKnown.attached = attached,
+        LastKnown.host = host,
         LastKnown.chosenNames = chosenNames,
         LastKnown.chosenPlayer = chosenPlayer,
         LastKnown.chosenColors = chosenColors,

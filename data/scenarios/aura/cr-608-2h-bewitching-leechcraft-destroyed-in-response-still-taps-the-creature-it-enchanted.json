@@ -1,0 +1,38 @@
+{
+  "description": "CR 608.2h / 113.7a Bewitching Leechcraft destroyed in response to its enters trigger still taps the creature it enchanted",
+  "note": "The trigger's \"enchanted creature\" is read off the Aura's last known information once the Aura is gone, so the Piker it enchanted as it left is tapped. Reading the departed Aura's host live finds nothing, and the Piker stays untapped.",
+  "board": {
+    "seats": [
+      {
+        "name": "alice",
+        "battlefield": [
+          { "card": "Island", "label": "i1" },
+          { "card": "Island", "label": "i2" },
+          { "card": "Island", "label": "i3" },
+          { "card": "Plains", "label": "plains" }
+        ],
+        "hand": [
+          { "card": "Bewitching Leechcraft", "label": "leechcraft" },
+          { "card": "Disenchant", "label": "disenchant" }
+        ]
+      },
+      {
+        "name": "bob",
+        "battlefield": [{ "card": "Goblin Piker", "label": "piker", "ready": true }]
+      }
+    ],
+    "active": "alice",
+    "step": "PrecombatMain"
+  },
+  "timeline": [
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": { "Cast": { "object": "$leechcraft", "targets": ["$piker"], "mana": ["$i1", "$i2", null] } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass" },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "check": { "View": { "of": "Stack", "is": ["trigger of Bewitching Leechcraft"] } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": { "Cast": { "object": "$disenchant", "targets": ["Bewitching Leechcraft"], "mana": ["$i3", "$plains"] } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass" },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "check": { "Count": { "player": "alice", "zone": "Graveyard", "card": "Bewitching Leechcraft", "count": 1 } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "check": { "Tapped": { "object": "$piker", "tapped": false } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass" },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "check": { "Tapped": { "object": "$piker", "tapped": true } } }
+  ]
+}
