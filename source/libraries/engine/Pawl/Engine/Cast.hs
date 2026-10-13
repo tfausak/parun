@@ -598,15 +598,22 @@ castAimable :: (Ord k) => (Recipient.Recipient -> k) -> Maybe (Seq.Seq ModeIndex
 castAimable key announced x pid oid gs = case Game.faceOf oid gs of
   Nothing -> []
   Just face ->
-    let modal = Face.spell face
-        enchants = Projection.enchantOf oid gs
+    let enchants = Projection.enchantOf oid gs
         mutating = maybe False Object.mutating (Game.lookupObject oid gs)
         -- CR 702.140a's slot beside CR 303.4a's, `targetable` above's union: a
         -- mutating creature spell aims at the creature it will merge with.
         enchant = Map.union (Card.enchantSlotMapGiven enchants) (Card.mutateSlotMapGiven mutating)
+        -- CR 601.2c's alternative targets: each reading's slots as the candidate
+        -- stamped on this board (proposedFor, stampCastUsing) trims them, unioned
+        -- over paidReadings as `targetable` is. Read printed, a cleaved spell's
+        -- gate also binds the bracketed slot, and a tax on that one prices out a
+        -- cast whose real targets owe none; Pawl.CastSpec's "CR 601.2f cleaved
+        -- Lunar Rejection is priced on its own target" proves it.
+        castFor = Game.lookupObject oid gs >>= Object.castUsing
+        readings = fmap (\paid -> face {Face.spell = trimModalForCandidate castFor paid (Face.spell face)}) paidReadings
         -- CR 601.2c's per-player copies, as castProposed offers them. A REGRESSION
         -- FENCE: no card pairs a per-player slot with a target-reading cost.
-        slotsOf chosen = Target.announcedSlots pid oid gs (Card.modesTargetSlotsGiven enchants mutating chosen face)
+        slotsOf reading chosen = Target.announcedSlots pid oid gs (Card.modesTargetSlotsGiven enchants mutating chosen reading)
         setsOf slots = Target.legalSets (Just pid) True Map.empty oid slots gs
         -- Every aiming of one selection's slots, at the counts CR 601.2c admits
         -- for the X this gate is asking about (Target.aimingRanges).
@@ -614,8 +621,8 @@ castAimable key announced x pid oid gs = case Game.faceOf oid gs of
         -- CR 700.2: the modes CR 601.2b announced, or every selection the printed
         -- instruction admits among the fillable modes -- a "choose two" spell
         -- (Ojutai's Command) aims across both.
-        selected = maybe (Modal.selections (Target.fillableModes (Just pid) Map.empty oid enchant modal gs) (Modal.Type.selection modal)) pure announced
-     in concatMap (aimingsOf . slotsOf) selected
+        selected modal = maybe (Modal.selections (Target.fillableModes (Just pid) Map.empty oid enchant modal gs) (Modal.Type.selection modal)) pure announced
+     in Set.toList (Set.fromList [aiming | reading <- readings, chosen <- selected (Face.spell reading), aiming <- aimingsOf (slotsOf reading chosen)])
 
 -- CR 601.2b: the greatest value of X this player could actually pay for, which is
 -- what Prompt.ChooseX carries -- measured on the cost the cast is measuring, with
@@ -1092,6 +1099,10 @@ proposedFor oid castFor gs =
       -- whole cast back for.
       mutatingGs = if castMutating castFor then stampMutating oid bestowedGs else bestowedGs
       prototypedGs = if castPrototyped castFor then stampPrototyped oid mutatingGs else mutatingGs
+      -- CR 601.2c's alternative targets: castAimable trims the slots by the
+      -- candidate this tag names, as castProposed's own stamp lets it after the
+      -- announcement.
+      usingGs = stampCastUsing castFor oid prototypedGs
    in -- CR 400.7g joins the fold for the same reason the two stamps above are in
       -- it: CR 601.2b's payability filter prices each candidate before the player
       -- has chosen it, and a candidate offered by a GRANTED flashback is one whose
@@ -1099,7 +1110,7 @@ proposedFor oid castFor gs =
       -- lying in the zone it would be cast from -- castGrantGathered walks the
       -- STACK, rule 400.7g's own scope -- where the grant itself is still in
       -- force.
-      stampCastGrant (grantedCastKeyword castFor oid prototypedGs) oid prototypedGs
+      stampCastGrant (grantedCastKeyword castFor oid usingGs) oid usingGs
 
 -- CR 601.3a asked of ONE candidate, through the board rule 702.103d says to judge
 -- it on: Aether Storm's "creature spells can't be cast" stops Nyxborn Rollicker's

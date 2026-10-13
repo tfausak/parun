@@ -3559,9 +3559,10 @@ awakenCost = [ManaSymbol.Generic 6, theBlue, theBlue, theBlue]
 -- leaves the Giant alive had the cleave cost available and declined it.
 --
 -- The card states its two readings as two clauses of one mode, each gated on
--- Quantity.CastUsing (Morsel Theft's prowl shape), rather than as CR 612.1's
--- text change; Pawl.Types.Keyword's Cleave says why, see #3686.
-cleaveSpec :: (Monad m) => Spec.Spec m n -> Registry.Registry m -> n ()
+-- Quantity.CastUsing (Morsel Theft's prowl shape). The cases after it put the
+-- bracket inside a TARGET: each reading is then a target slot of its own, which
+-- CR 601.2c chooses only for the cost that reading was cast for.
+cleaveSpec :: (Monad m, Monad n) => Spec.Spec m n -> Registry.Registry m -> n ()
 cleaveSpec s registry = Spec.describe s "Cleave" $ do
   Spec.it s "CR 702.148a cleaved, the Path destroys both creatures; cast for {1}{B}{B} the Blind-Spot Giant lives" $ do
     swamp <- S.printingOf s registry "Swamp"
@@ -3578,6 +3579,127 @@ cleaveSpec s registry = Spec.describe s "Cleave" $ do
     Spec.assertEqWith s "CR 702.148a the cleave cost was paid, so the bracketed mana value clause is gone and the Giant dies too" (alive (cast cleaveCost)) (0, 0)
     Spec.assertEqWith s "CR 702.148a the printed cost was paid, so only the Piker is destroyed" (alive (cast perilCost)) (0, 1)
     Spec.assertEqWith s "the control: both casts left the Path in alice's graveyard" (length (Game.zoneMembers Zone.Graveyard S.alice (cast cleaveCost)), length (Game.zoneMembers Zone.Graveyard S.alice (cast perilCost))) (1, 1)
+
+  -- CR 601.2c's alternative targets, on Wash Away {U} Instant, "Cleave {1}{U}{U}
+  -- / Counter target spell [that wasn't cast from its owner's hand]." (Oracle
+  -- text checked on Scryfall, 2026-10-12). ONE board for both cases: three
+  -- Islands, and two of bob's spells on the stack, a Grizzly Bears cast from his
+  -- hand and a Hill Giant cast from his graveyard.
+  Spec.it s "CR 702.148a uncleaved Wash Away is offered only the spell not cast from a hand; cleaved, the hand-cast Bears too" $ do
+    island <- S.printingOf s registry "Island"
+    wash <- S.printingOf s registry "Wash Away"
+    bears <- S.printingOf s registry "Grizzly Bears"
+    giant <- S.printingOf s registry "Hill Giant"
+    let (bearsId, gs0) = spellCastFrom bears Zone.Hand (S.landsInPlay island 3)
+        (giantId, gs1) = spellCastFrom giant Zone.Graveyard gs0
+        (washId, gs2) = S.addHandCard wash S.alice gs1
+        board = aliceOnTurn gs2
+        (uncleavedOffer, uncleaved) = castOffered [theBlue] giantId washId board
+        (cleavedOffer, cleaved) = castOffered [ManaSymbol.Generic 1, theBlue, theBlue] bearsId washId board
+    Spec.assertEqWith s "CR 601.2c cast for {U}, the hand-cast Bears is not a legal target" uncleavedOffer (slotOffer "uncleaved" [giantId])
+    Spec.assertEqWith s "CR 702.148a cast for its cleave cost, the bracket is gone and both spells are" cleavedOffer (slotOffer "cleaved" [bearsId, giantId])
+    Spec.assertEqWith s "CR 701.6a uncleaved, the Giant is countered and the Bears is not" (namesOwned Zone.Graveyard S.bob uncleaved) (cardNames ["Hill Giant"])
+    Spec.assertEqWith s "CR 701.6a cleaved, the Bears is countered" (namesOwned Zone.Graveyard S.bob cleaved) (cardNames ["Grizzly Bears"])
+
+  -- Alchemist's Retrieval {U} Instant, "Cleave {1}{U} / Return target nonland
+  -- permanent [you control] to its owner's hand." (Scryfall, 2026-10-12). alice
+  -- controls a Grizzly Bears and two Islands; bob a Goblin Piker and an Island,
+  -- the control on "nonland".
+  Spec.it s "CR 702.148a uncleaved Alchemist's Retrieval reaches only alice's own Bears; cleaved, bob's Piker goes home" $ do
+    island <- S.printingOf s registry "Island"
+    retrieval <- S.printingOf s registry "Alchemist's Retrieval"
+    bears <- S.printingOf s registry "Grizzly Bears"
+    piker <- S.printingOf s registry "Goblin Piker"
+    let (bearsId, gs0) = S.addPermanent bears S.alice (S.landsFor island S.bob 1 (S.landsInPlay island 2))
+        (pikerId, gs1) = S.addPermanent piker S.bob gs0
+        (retrievalId, gs2) = S.addHandCard retrieval S.alice gs1
+        board = aliceOnTurn gs2
+        (uncleavedOffer, _) = castOffered [theBlue] bearsId retrievalId board
+        (cleavedOffer, cleaved) = castOffered [ManaSymbol.Generic 1, theBlue] pikerId retrievalId board
+    Spec.assertEqWith s "CR 601.2c cast for {U}, only a nonland permanent alice controls is offered" uncleavedOffer (slotOffer "uncleaved" [bearsId])
+    Spec.assertEqWith s "CR 702.148a cast for its cleave cost, bob's Piker is offered beside it" cleavedOffer (slotOffer "cleaved" [bearsId, pikerId])
+    Spec.assertEqWith s "CR 702.148a the cleaved cast returned the Piker to bob's hand" (namesOwned Zone.Hand S.bob cleaved) (cardNames ["Goblin Piker"])
+
+  -- CR 707.10: a copy keeps "additional or alternative costs", so a copy of a
+  -- cleaved Alchemist's Retrieval reads unbracketed too. alice casts it cleaved at
+  -- bob's Piker, then Twincast at it, and moves the copy to bob's Hill Giant -- a
+  -- target only the cleaved reading admits.
+  Spec.it s "CR 707.10 a copy of a cleaved Alchemist's Retrieval returns bob's Giant as well" $ do
+    island <- S.printingOf s registry "Island"
+    retrieval <- S.printingOf s registry "Alchemist's Retrieval"
+    twincast <- S.printingOf s registry "Twincast"
+    piker <- S.printingOf s registry "Goblin Piker"
+    giant <- S.printingOf s registry "Hill Giant"
+    let (pikerId, gs0) = S.addPermanent piker S.bob (S.landsInPlay island 4)
+        (giantId, gs1) = S.addPermanent giant S.bob gs0
+        (retrievalId, gs2) = S.addHandCard retrieval S.alice gs1
+        (twincastId, gs3) = S.addHandCard twincast S.alice gs2
+        castRetrieval = S.runPure (payingAimedAt [ManaSymbol.Generic 1, theBlue] pikerId) (aliceOnTurn gs3) (S.cast S.alice retrievalId)
+    case GameState.stack castRetrieval of
+      [retrievalSpell] -> do
+        let castTwincast = S.runPure (aimedAt retrievalSpell) castRetrieval (S.cast S.alice twincastId)
+            -- Twincast, whose CR 707.10c prompt moves the copy to the Giant; then
+            -- the copy; then the original.
+            after = S.runPure (aimedAt giantId) castTwincast (Monad.replicateM_ (3 :: Int) (Stack.resolveTop >> Engine.settleForPriority))
+        Spec.assertEqWith s "CR 707.10 the copy kept the cleave cost, so the Giant went home beside the Piker" (namesOwned Zone.Hand S.bob after) (cardNames ["Goblin Piker", "Hill Giant"])
+        Spec.assertEqWith s "and the stack is empty" (GameState.stack after) []
+      other -> Spec.assertFailure s ("expected the Retrieval alone on the stack, got " <> show other)
+
+  -- Lunar Rejection {1}{U} Instant, "Cleave {3}{U} / Return target [Wolf or
+  -- Werewolf] creature to its owner's hand. / Draw a card." (Scryfall,
+  -- 2026-10-12), under bob's Kopala, Warden of Waves ("Spells your opponents cast
+  -- that target a Merfolk you control cost {2} more to cast"). bob's Woodland
+  -- Changeling is a Wolf AND a Merfolk, so the bracketed slot's only candidate
+  -- is taxed; his Goblin Piker is neither. Four Islands pay {3}{U} untaxed and no
+  -- more, so the cleaved cast at the Piker is offered only if CR 601.2f prices
+  -- it on its own target and not on the bracketed one it no longer has.
+  Spec.it s "CR 601.2f cleaved Lunar Rejection is priced on its own target" $ do
+    island <- S.printingOf s registry "Island"
+    rejection <- S.printingOf s registry "Lunar Rejection"
+    kopala <- S.printingOf s registry "Kopala, Warden of Waves"
+    changeling <- S.printingOf s registry "Woodland Changeling"
+    piker <- S.printingOf s registry "Goblin Piker"
+    let (_, gs0) = S.addPermanent kopala S.bob (S.landsInPlay island 4)
+        (changelingId, gs1) = S.addPermanent changeling S.bob gs0
+        (pikerId, gs2) = S.addPermanent piker S.bob gs1
+        (_, gs3) = S.addLibraryCard island S.alice gs2
+        (rejectionId, gs4) = S.addHandCard rejection S.alice gs3
+        board = aliceOnTurn gs4
+        (uncleavedOffer, uncleaved) = castOffered [ManaSymbol.Generic 1, theBlue] changelingId rejectionId board
+        (_, cleaved) = castOffered [ManaSymbol.Generic 3, theBlue] pikerId rejectionId board
+    Spec.assertEqWith s "CR 702.148a the cleaved cast returned the Piker, untaxed, and drew a card" (namesOwned Zone.Hand S.bob cleaved, namesOwned Zone.Hand S.alice cleaved) (cardNames ["Goblin Piker"], cardNames ["Island"])
+    Spec.assertEqWith s "CR 601.2c cast for {1}{U}, only the Wolf is offered" uncleavedOffer (slotOffer "uncleaved" [changelingId])
+    Spec.assertEqWith s "CR 601.2f uncleaved, the taxed Changeling went home on all four Islands" (namesOwned Zone.Hand S.bob uncleaved, S.tappedCount S.alice uncleaved) (cardNames ["Woodland Changeling"], 4)
+
+-- One of bob's spells, put on the stack by hand and remembering it was cast from
+-- `zone` (Object.castFrom), which is what Filter.WasCastFrom reads.
+spellCastFrom :: Printing.Printing -> Zone.Zone -> GameState.GameState -> (ObjectId.ObjectId, GameState.GameState)
+spellCastFrom printing zone gs =
+  let (oid, placed) = S.spellOnStack printing S.bob gs
+   in (oid, placed {GameState.objects = Map.adjust (\o -> o {Object.castFrom = Just zone}) oid (GameState.objects placed)})
+
+-- alice casts `oid` for `cost` with every slot aimed at `victim`, and the top
+-- object resolves: what CR 601.2c offered, slot by slot, and the board after.
+castOffered :: [ManaSymbol.ManaSymbol] -> ObjectId.ObjectId -> ObjectId.ObjectId -> GameState.GameState -> (Map.Map SlotName.SlotName (Set.Set (Maybe ObjectId.ObjectId)), GameState.GameState)
+castOffered cost victim oid gs =
+  let recording :: Prompt.Prompt r -> State.State (Map.Map SlotName.SlotName (Set.Set (Maybe ObjectId.ObjectId))) r
+      recording p = case p of
+        Prompt.ChooseTargets _ _ _ sets -> State.modify' (Map.union (fmap (Set.map Recipient.objectOf . snd) sets)) >> pure (aimedAt victim p)
+        _ -> pure (payingFor cost p)
+      (cast, offered) = State.runState (Engine.runGame recording gs (S.cast S.alice oid)) Map.empty
+   in (offered, S.runPure (payingFor cost) (snd cast) (Stack.resolveTop >> Engine.settleForPriority))
+
+-- The names of the cards in `pid`'s `zone`, sorted: CR 400.7 gives a moved card
+-- a new id, so a zone is compared by name.
+namesOwned :: Zone.Zone -> PlayerId.PlayerId -> GameState.GameState -> [CardName.CardName]
+namesOwned zone pid gs = List.sort (concatMap (\o -> Set.toList (Projection.namesOf o gs)) (Game.zoneMembers zone pid gs))
+
+cardNames :: [String] -> [CardName.CardName]
+cardNames = List.sort . fmap (CardName.MkCardName . Text.pack)
+
+-- One slot's expected offer.
+slotOffer :: String -> [ObjectId.ObjectId] -> Map.Map SlotName.SlotName (Set.Set (Maybe ObjectId.ObjectId))
+slotOffer slot oids = Map.singleton (SlotName.MkSlotName (Text.pack slot)) (Set.fromList (fmap Just oids))
 
 -- Path of Peril's printed {1}{B}{B} and its cleave {4}{W}{B}.
 perilCost, cleaveCost :: [ManaSymbol.ManaSymbol]
@@ -3604,8 +3726,7 @@ theWhite = ManaSymbol.OfType (ManaType.Colored Color.White)
 -- a cast is still offered there.
 --
 -- The card states its two readings as two clauses of one mode, each gated on
--- Quantity.CastUsing (Path of Peril's cleave shape above), rather than as CR
--- 612.1's text change; Pawl.Types.Keyword's Overload says why, see #3686.
+-- Quantity.CastUsing (Path of Peril's cleave shape above).
 overloadSpec :: (Monad m) => Spec.Spec m n -> Registry.Registry m -> n ()
 overloadSpec s registry = Spec.describe s "Overload" $ do
   Spec.it s "CR 702.96b overloaded, the Rift returns the hexproof Bogle too; cast for {1}{U} only the Piker goes home" $ do
