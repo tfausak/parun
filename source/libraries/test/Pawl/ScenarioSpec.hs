@@ -536,6 +536,40 @@ spec s registry = Spec.describe s "Scenario" $ do
       Left failure -> Spec.assertFailure s (S.renderFailure failure)
       Right final -> Spec.assertEqWith s "the Loxodon resolved" (S.countOnBattlefieldByName (CardName.MkCardName (Text.pack "Venerated Loxodon")) S.alice final) 1
 
+  -- CR 406.3a: a foretold card is turned face up before its cast is announced,
+  -- and stays so when the cast is reversed (CR 601.2e), so the game does not look
+  -- as the move found it. One floating {U} is short of the foretell cost {1}{U}.
+  Spec.it s "a reversed cast of a card exiled face down fails" $ do
+    result <- runJson s registry (castForetold True)
+    case result of
+      Left (ScenarioFailure.MkUnmadeMove key verb) -> do
+        Spec.assertEqWith s "the moment it was taken" key (When.MkWhen 3 S.precombatMain (S.seatLabel S.alice))
+        Spec.assertBool s (case verb of Move.Cast {} -> True; _ -> False) "the move named is the cast"
+      Left failure -> Spec.assertFailure s (S.renderFailure failure)
+      Right _ -> Spec.assertFailure s "the reversed cast passed with the Raven still in exile"
+
+  Spec.it s "the same foretold card paid in full is cast" $ do
+    result <- runJson s registry (castForetold False)
+    case result of
+      Left failure -> Spec.assertFailure s (S.renderFailure failure)
+      Right final -> Spec.assertEqWith s "the Raven resolved" (S.countOnBattlefieldByName (CardName.MkCardName (Text.pack "Augury Raven")) S.alice final) 1
+
+  -- CR 702.122a / 733.1: a crew activation whose taps fall short of crew 6 is
+  -- reversed, which leaves the game as the move found it.
+  Spec.it s "a taken activation the engine reverses fails, naming it" $ do
+    result <- runJson s registry (crewDreadnought ["$giant"])
+    case result of
+      Left (ScenarioFailure.MkUnmadeMove _ verb) ->
+        Spec.assertBool s (case verb of Move.Activate {} -> True; _ -> False) "the move named is the activation"
+      Left failure -> Spec.assertFailure s (S.renderFailure failure)
+      Right _ -> Spec.assertFailure s "the reversed crew passed with nothing tapped"
+
+  Spec.it s "the same crew tapping both giants is made" $ do
+    result <- runJson s registry (crewDreadnought ["$giant", "$blind"])
+    case result of
+      Left failure -> Spec.assertFailure s (S.renderFailure failure)
+      Right _ -> pure ()
+
   -- CR 510.1c-d: the engine deals nothing for an assignment that does not divide
   -- the creature's power, so a script writing one fails rather than passing
   -- on a combat in which no damage was dealt.
@@ -645,6 +679,36 @@ convokeLoxodon taps =
         <> "\"timeline\":[{\"turn\":1,\"step\":\"PrecombatMain\",\"player\":\"alice\",\"do\":{\"Answer\":{\"prompt\":\"ChooseTaps\",\"with\":["
         <> List.intercalate "," (fmap show taps)
         <> "]}}},{\"turn\":1,\"step\":\"PrecombatMain\",\"player\":\"alice\",\"do\":{\"Cast\":{\"object\":\"$lox\",\"cost\":[],\"costOrder\":[0,1]}}}]}"
+
+-- alice foretells Augury Raven on turn 1 and casts it on turn 3: when `short`,
+-- from one floating {U} alone, tapping nothing during the cast.
+castForetold :: Bool -> String
+castForetold short =
+  let islands = List.intercalate "," ["{\"card\":\"Island\",\"label\":\"i" <> show n <> "\",\"ready\":true}" | n <- [1 :: Int .. 4]]
+      library = List.intercalate "," (replicate 4 "{\"card\":\"Island\"}")
+      entry turn body = "{\"turn\":" <> show (turn :: Int) <> ",\"step\":\"PrecombatMain\",\"player\":\"alice\"," <> body <> "}"
+      cast =
+        if short
+          then [entry 3 "\"do\":{\"Take\":{\"action\":\"ActivateManaAbility $i1\"}}", entry 3 "\"do\":{\"Cast\":{\"object\":\"Augury Raven\",\"mana\":[null]}}"]
+          else [entry 3 "\"do\":{\"Cast\":{\"object\":\"Augury Raven\",\"mana\":[\"$i1\",\"$i2\",null]}}"]
+   in "{\"description\":\"x\",\"board\":{\"seats\":[{\"name\":\"alice\",\"battlefield\":["
+        <> islands
+        <> "],\"hand\":[{\"card\":\"Augury Raven\",\"label\":\"raven\"}],\"library\":["
+        <> library
+        <> "]},{\"name\":\"bob\",\"library\":["
+        <> library
+        <> "]}],\"active\":\"alice\",\"step\":\"PrecombatMain\"},\"timeline\":["
+        <> List.intercalate "," (entry 1 "\"do\":{\"Take\":{\"action\":\"Foretell $raven\",\"mana\":[\"$i1\",\"$i2\",null]}}" : cast)
+        <> "]}"
+
+-- alice crews Consulate Dreadnought (crew 6) by tapping `taps` from a Hill
+-- Giant (power 3) and a Blind-Spot Giant (power 4).
+crewDreadnought :: [String] -> String
+crewDreadnought taps =
+  "{\"description\":\"x\",\"board\":{\"seats\":[{\"name\":\"alice\",\"battlefield\":[{\"card\":\"Consulate Dreadnought\",\"label\":\"vehicle\",\"ready\":true},{\"card\":\"Blind-Spot Giant\",\"label\":\"blind\",\"ready\":true},{\"card\":\"Hill Giant\",\"label\":\"giant\",\"ready\":true}]},{\"name\":\"bob\"}],\"active\":\"alice\",\"step\":\"PrecombatMain\"},"
+    <> "\"timeline\":[{\"turn\":1,\"step\":\"PrecombatMain\",\"player\":\"alice\",\"do\":{\"Answer\":{\"prompt\":\"ChooseTapsForTotalPower\",\"with\":["
+    <> List.intercalate "," (fmap show taps)
+    <> "]}}},{\"turn\":1,\"step\":\"PrecombatMain\",\"player\":\"alice\",\"do\":{\"Activate\":{\"object\":\"$vehicle\",\"ability\":0}}}]}"
 
 -- alice's Piker, blocked by two of bob's, assigns its damage as `assignment`.
 doubleBlocked :: String -> String

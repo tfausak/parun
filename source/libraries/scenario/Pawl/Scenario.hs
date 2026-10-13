@@ -1065,14 +1065,26 @@ answerActionPrompt gs pid actions = do
 
 -- | A move taken at priority must have happened by the next priority prompt: an
 -- action the engine reverses (CR 733.1) leaves the state as the move found it,
--- and its player is asked again (CR 733.2).
+-- and its player is asked again (CR 733.2). A cast is asked whether it became
+-- cast (CR 601.2i) instead: a reversed cast can still leave its card turned up
+-- (CR 406.3a) and the mana abilities its payer chose to keep (CR 733.1).
 made :: GameState.GameState -> Run ()
 made gs = do
   previous <- State.gets awaiting
   State.modify' (\rehearsal -> rehearsal {awaiting = Nothing})
   case previous of
-    Just (key, verb, before) | untouched before gs -> failWith (Failure.MkUnmadeMove key verb)
+    Just (key, verb, before) | not (happened verb before gs) -> failWith (Failure.MkUnmadeMove key verb)
     _ -> pure ()
+
+-- | Whether a move taken on one state shows in another.
+happened :: Move.Move -> GameState.GameState -> GameState.GameState -> Bool
+happened verb before after = case verb of
+  Move.Cast {} ->
+    let cast logged = case LoggedEvent.event logged of
+          GameEvent.SpellCast {} -> True
+          _ -> False
+     in any cast (Seq.drop (Seq.length (GameState.events before)) (GameState.events after))
+  _ -> not (untouched before after)
 
 -- | Whether a state is the one a move was taken on, but for the bookkeeping
 -- written whatever the move did: who has passed and holds priority (CR
@@ -1838,7 +1850,7 @@ render failure = case failure of
   Failure.MkUnusedActionChoices key verb choices ->
     renderWhen key <> Text.pack ": " <> renderMove verb <> Text.pack " finished without using " <> Common.render (Codec.encode Codec.Choices.codec choices)
   Failure.MkUnmadeMove key verb ->
-    renderWhen key <> Text.pack ": " <> renderMove verb <> Text.pack " was taken, but the engine left the game as the move found it"
+    renderWhen key <> Text.pack ": " <> renderMove verb <> Text.pack " was taken, but the engine reversed it"
   Failure.MkUnrefusedMove key verb next ->
     renderWhen key <> Text.pack ": " <> renderMove verb <> Text.pack " stood; " <> maybe (Text.pack "nothing was asked again") (\k -> Text.pack "the next prompt was " <> k) next
   Failure.MkUnreachedEntries turn step timed ->
