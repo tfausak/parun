@@ -319,6 +319,7 @@ import qualified Pawl.Codec.FromOutsideTheGameSpec
 import qualified Pawl.Codec.FromReferenceSpec
 import qualified Pawl.Codec.GainControlSpec
 import qualified Pawl.Codec.GameEventSpec
+import qualified Pawl.Codec.GameLossRSpec
 import qualified Pawl.Codec.GameOutcomeSpec
 import qualified Pawl.Codec.GameSettingsSpec
 import qualified Pawl.Codec.GiftSpec
@@ -447,8 +448,8 @@ import qualified Pawl.Codec.PayGateSpec
 import qualified Pawl.Codec.PayObligationSpec
 import qualified Pawl.Codec.PayingSpec
 import qualified Pawl.Codec.PaymentDecisionSpec
-import qualified Pawl.Codec.PendingDamageEffectSpec
 import qualified Pawl.Codec.PendingEntryEffectSpec
+import qualified Pawl.Codec.PendingReplacementEffectSpec
 import qualified Pawl.Codec.PermanentActionSpec
 import qualified Pawl.Codec.PermanentBecomesDesignatedSpec
 import qualified Pawl.Codec.PermanentCandidateSpec
@@ -1189,6 +1190,7 @@ spec s registry = do
   Pawl.Codec.FromOutsideTheGameSpec.spec s
   Pawl.Codec.FromReferenceSpec.spec s
   Pawl.Codec.GameEventSpec.spec s
+  Pawl.Codec.GameLossRSpec.spec s
   Pawl.Codec.GameOutcomeSpec.spec s
   Pawl.Codec.GameSettingsSpec.spec s
   Pawl.Codec.GainControlSpec.spec s
@@ -1302,7 +1304,7 @@ spec s registry = do
   Pawl.Codec.PayBranchSpec.spec s
   Pawl.Codec.PayGateSpec.spec s
   Pawl.Codec.PayObligationSpec.spec s
-  Pawl.Codec.PendingDamageEffectSpec.spec s
+  Pawl.Codec.PendingReplacementEffectSpec.spec s
   Pawl.Codec.PendingEntryEffectSpec.spec s
   Pawl.Codec.PermanentBecomesDesignatedSpec.spec s
   Pawl.Codec.CounterPlacementSpec.spec s

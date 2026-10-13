@@ -45,6 +45,7 @@ import Pawl.Types.ObjectId (ObjectId)
 import qualified Pawl.Types.Player as Player
 import qualified Pawl.Types.PlayerControl as PlayerControl
 import Pawl.Types.PlayerId (PlayerId)
+import qualified Pawl.Types.ProposedEvent as ProposedEvent
 import qualified Pawl.Types.ReplacementBucket as ReplacementBucket
 import Pawl.Types.Result (Result)
 import qualified Pawl.Types.Result as Result
@@ -105,7 +106,22 @@ leaveTogether reason named = do
   -- CR 101.2 / 104.3i: a general an effect says can't lose the game stays in
   -- when their emperor's team loses; data/scenarios/emperor/cr-104-3i-* proves it.
   let keeps (why, pid) = why /= Departure.Lost || not (PlayerEffect.precludes GameOutcome.Lose pid before)
-      departing = fmap (\pid -> (reason, pid)) named <> filter keeps (Emperor.fallsWith reason named before) <> teamFallsWith reason named before
+      own = fmap (\pid -> (reason, pid)) named <> filter keeps (Emperor.fallsWith reason named before)
+      team = teamFallsWith reason named before
+      losing = own <> team
+      -- The losses a replacement may meet (CR 614.1a): every Lost departure but a
+      -- CR 810.8b teammate of a concession, which is leaving and not losing.
+      replaceable = [pid | (Departure.Lost, pid) <- own] <> [pid | reason == Departure.Lost, (_, pid) <- team]
+  -- CR 104.3 / 614.1a: each loss is one event, whatever its reasons, offered to
+  -- the replacements that watch it (Lich's Mirror). In Two-Headed Giant a team
+  -- loses only as a team (CR 810.8a), so a replaced member's loss is the whole
+  -- team's. data/scenarios/game-outcome/*lich-s-mirror* and
+  -- data/scenarios/team/cr-810-8a-lich-s-mirror-* prove it.
+  replaced <- Set.fromList <$> Monad.filterM (fmap Maybe.isNothing . Event.applyReplacements . ProposedEvent.WouldLoseGame) replaceable
+  let spared pid =
+        Set.member pid replaced
+          || (GameSettings.twoHeadedGiant (GameState.settings before) && any (Teams.sameTeam (Game.teams before) pid) replaced)
+      departing = filter (\(why, pid) -> why /= Departure.Lost || not (spared pid)) losing
       pids = fmap snd departing
       lose why p = p {Player.status = Status.Departed why}
       -- CR 801.2c: the seat keeps counting toward range of influence until the

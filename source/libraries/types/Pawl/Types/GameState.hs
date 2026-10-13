@@ -46,8 +46,8 @@ import qualified Pawl.Types.Object as Object
 import qualified Pawl.Types.ObjectId as ObjectId
 import qualified Pawl.Types.OutsideObject as OutsideObject
 import qualified Pawl.Types.PastActivation as PastActivation
-import qualified Pawl.Types.PendingDamageEffect as PendingDamageEffect
 import qualified Pawl.Types.PendingEntryEffect as PendingEntryEffect
+import qualified Pawl.Types.PendingReplacementEffect as PendingReplacementEffect
 import qualified Pawl.Types.Phase as Phase
 import qualified Pawl.Types.PhasedOut as PhasedOut
 import qualified Pawl.Types.Player as Player
@@ -190,17 +190,17 @@ data GameState = MkGameState
     -- yet, drained by Resolve.runPreventionRiders before the next state-based
     -- action check (CR 704.3). Empty at every priority window.
     pendingPreventionRiders :: Seq.Seq Prevention.Prevention,
-    -- | CR 614.1a: the effects a DamageRewrite.RunEffects rewrite applied in the
-    -- damage event's place and that have not run yet, drained by
-    -- Resolve.runDamageRewriteEffects beside the prevention riders above and for
-    -- the same reason.
+    -- | CR 614.1a: the effects a replacement applied in an event's place and
+    -- that have not run yet -- a damage event's (DamageRewrite.RunEffects) or a
+    -- loss of the game's (GameLossR) -- drained by Resolve.runReplacementEffects.
     --
-    -- Empty at every priority window because EVERY road into
-    -- Pawl.Engine.Damage.applyDamage drains it before returning, and there are
-    -- three: Resolve's Effect.DealDamage and Effect.Fight arms, and
-    -- Damage.dealCombatDamage through Pawl.Engine.Engine's combat damage step.
-    -- The same enumeration holds the field above empty.
-    pendingDamageEffects :: Seq.Seq PendingDamageEffect.PendingDamageEffect,
+    -- Empty at every priority window because every road that can fill it drains
+    -- it: for damage, each road into Pawl.Engine.Damage.applyDamage (Resolve's
+    -- Effect.DealDamage and Effect.Fight arms, and Pawl.Engine.Engine's combat
+    -- damage step); for a loss, each state-based action pass
+    -- (Engine.performSettle, and Resolve's CR 724 fixpoints) and each resolved
+    -- instruction (Resolve.applyEffectWith).
+    pendingReplacementEffects :: Seq.Seq PendingReplacementEffect.PendingReplacementEffect,
     -- | CR 615.5's amount channel: the amount bindings a prevention rider can
     -- read outside any object's environment, its recipient possibly being a
     -- player. Empty at every priority window.

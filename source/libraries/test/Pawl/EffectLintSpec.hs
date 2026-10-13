@@ -597,6 +597,7 @@ idleTokenRowOffends replacement = case replacement of
   ReplacementEffect.ScryR {} -> False
   ReplacementEffect.VillainousChoiceR {} -> False
   ReplacementEffect.AssembleR {} -> False
+  ReplacementEffect.GameLossR {} -> False
   ReplacementEffect.PhaseR _ -> False
 
 -- The non-vacuity half of idleTokenRowOffends' lint, isPhaseR's shape.
@@ -659,6 +660,7 @@ phasePatternOffends replacement = case replacement of
   ReplacementEffect.ScryR {} -> False
   ReplacementEffect.VillainousChoiceR {} -> False
   ReplacementEffect.AssembleR {} -> False
+  ReplacementEffect.GameLossR {} -> False
 
 -- Every replacement shape the codec accepts and no card may author, for
 -- phasePatternOffends' reason and one more. A card cannot name an ObjectId or a
@@ -729,6 +731,7 @@ engineOnlyArmOffends replacement = case replacement of
   ReplacementEffect.ScryR {} -> False
   ReplacementEffect.VillainousChoiceR {} -> False
   ReplacementEffect.AssembleR {} -> False
+  ReplacementEffect.GameLossR {} -> False
   ReplacementEffect.TurnUpR {} -> False
 
 -- Is this damage rewrite one the ENGINE mints and no card may print? Three of
@@ -818,6 +821,7 @@ turnUpRequiringOffends replacement = case replacement of
   ReplacementEffect.ScryR {} -> False
   ReplacementEffect.VillainousChoiceR {} -> False
   ReplacementEffect.AssembleR {} -> False
+  ReplacementEffect.GameLossR {} -> False
   ReplacementEffect.PhaseR _ -> False
 
 -- CR 614.1d and CR 707.9e are ENTRY riders -- "enters tapped", "enters with
@@ -866,6 +870,7 @@ riderWithoutPreventionOffends replacement = case replacement of
   ReplacementEffect.ScryR {} -> False
   ReplacementEffect.VillainousChoiceR {} -> False
   ReplacementEffect.AssembleR {} -> False
+  ReplacementEffect.GameLossR {} -> False
   ReplacementEffect.PhaseR _ -> False
 
 -- CR 615.1a: does this rewrite use the word "prevent"? engineMintedDamage's
@@ -916,6 +921,7 @@ shufflingOutsideLibraryOffends replacement = case replacement of
   ReplacementEffect.ScryR {} -> False
   ReplacementEffect.VillainousChoiceR {} -> False
   ReplacementEffect.AssembleR {} -> False
+  ReplacementEffect.GameLossR {} -> False
   ReplacementEffect.PhaseR _ -> False
 
 -- The non-vacuity half of shufflingOutsideLibraryOffends' lint, isPhaseR's shape.

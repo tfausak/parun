@@ -133,6 +133,7 @@ import qualified Pawl.Types.ForbidBeingBlocked as ForbidBeingBlocked
 import qualified Pawl.Types.FromOutsideTheGame as FromOutsideTheGame
 import qualified Pawl.Types.FromReference as FromReference
 import qualified Pawl.Types.GainControl as GainControl
+import qualified Pawl.Types.GameLossR as GameLossR
 import Pawl.Types.GameState (GameState)
 import qualified Pawl.Types.GameState as GameState
 import qualified Pawl.Types.GrantLookAtExiled as GrantLookAtExiled
@@ -1693,6 +1694,8 @@ replacementRowReads re = case re of
   ReplacementEffect.ScryR {} -> ([], [])
   ReplacementEffect.VillainousChoiceR {} -> ([], [])
   ReplacementEffect.AssembleR matching -> ([matching], [])
+  -- One ControllerRelation; the effects run instead are replacementRowEffects'.
+  ReplacementEffect.GameLossR {} -> ([], [])
   ReplacementEffect.PhaseR _ -> ([], [])
 
 -- A row's pattern Filter joined onto what its rewrite reads.
@@ -1874,6 +1877,7 @@ overRelations f re = case re of
   ReplacementEffect.ScryR r -> (\w -> ReplacementEffect.ScryR r {ScryR.whose = w}) <$> f (ScryR.whose r)
   ReplacementEffect.VillainousChoiceR r -> (\w -> ReplacementEffect.VillainousChoiceR r {VillainousChoiceR.whose = w}) <$> f (VillainousChoiceR.whose r)
   ReplacementEffect.AssembleR _ -> pure re
+  ReplacementEffect.GameLossR r -> (\w -> ReplacementEffect.GameLossR r {GameLossR.whose = w}) <$> f (GameLossR.whose r)
   -- CR 109.5's relation rides EntryR's Filter (Filter.ControlledBy) and DamageR's
   -- PlayerRelation; the other four name no player at all.
   ReplacementEffect.EntryR _ -> pure re
@@ -1929,6 +1933,8 @@ replacementRowEffects re = case re of
   ReplacementEffect.ScryR _ -> []
   ReplacementEffect.VillainousChoiceR _ -> []
   ReplacementEffect.AssembleR _ -> []
+  -- CR 614.1a's "instead [do something]" for a loss of the game (Lich's Mirror).
+  ReplacementEffect.GameLossR (GameLossR.MkGameLossR _ effects) -> Foldable.toList effects
   ReplacementEffect.PhaseR _ -> []
 
 -- The program an ENTRY rewrite runs. entryRewriteReads' discipline: no wildcard,

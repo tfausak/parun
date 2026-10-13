@@ -164,7 +164,7 @@ data DamageRewrite effect
     -- effects run instead, in printed order.
     --
     -- QUEUED rather than run where the rewrite applies, for the reason
-    -- Pawl.Types.PendingDamageEffect gives: the module that applies a
+    -- Pawl.Types.PendingReplacementEffect gives: the module that applies a
     -- replacement is below the one that can run a card's effects.
     RunEffects (Seq.Seq effect)
   deriving (Eq, Ord, Show)

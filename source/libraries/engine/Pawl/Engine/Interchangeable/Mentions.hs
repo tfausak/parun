@@ -202,6 +202,7 @@ import qualified Pawl.Types.FromOutsideTheGame as FromOutsideTheGame
 import qualified Pawl.Types.FromReference as FromReference
 import qualified Pawl.Types.FullText as FullText
 import qualified Pawl.Types.GainControl as GainControl
+import qualified Pawl.Types.GameLossR as GameLossR
 import qualified Pawl.Types.GrantLookAtExiled as GrantLookAtExiled
 import qualified Pawl.Types.GrantPlayFromExile as GrantPlayFromExile
 import qualified Pawl.Types.GrantedAbility as GrantedAbility
@@ -253,8 +254,8 @@ import qualified Pawl.Types.Optionality as Optionality
 import qualified Pawl.Types.OrElse as OrElse
 import qualified Pawl.Types.PaidExpiry as PaidExpiry
 import qualified Pawl.Types.PayGate as PayGate
-import qualified Pawl.Types.PendingDamageEffect as PendingDamageEffect
 import qualified Pawl.Types.PendingEntryEffect as PendingEntryEffect
+import qualified Pawl.Types.PendingReplacementEffect as PendingReplacementEffect
 import qualified Pawl.Types.PerCreature as PerCreature
 import qualified Pawl.Types.PermanentActed as PermanentActed
 import qualified Pawl.Types.PermanentBecomesDesignated as PermanentBecomesDesignated
@@ -2095,9 +2096,9 @@ payGateNames :: Asking -> PayGate.PayGate -> Bool
 payGateNames asking x = case x of
   PayGate.MkPayGate payer cost basis _branch _obligation perEach _offeredAt -> playerRefNames asking payer || costChoiceNames asking cost || any (costBasisNames asking) basis || any (quantityNames asking) perEach
 
-pendingDamageEffectNames :: Asking -> PendingDamageEffect.PendingDamageEffect -> Bool
+pendingDamageEffectNames :: Asking -> PendingReplacementEffect.PendingReplacementEffect -> Bool
 pendingDamageEffectNames asking x = case x of
-  PendingDamageEffect.MkPendingDamageEffect effects targets _controller source -> any (effectNames asking (const False) (grantedAbilityNames asking (const False))) effects || any (slotNames asking) (Map.keys targets) || any (any (recipientNames asking)) targets || source == object asking
+  PendingReplacementEffect.MkPendingReplacementEffect effects targets _controller source -> any (effectNames asking (const False) (grantedAbilityNames asking (const False))) effects || any (slotNames asking) (Map.keys targets) || any (any (recipientNames asking)) targets || source == object asking
 
 pendingEntryEffectNames :: Asking -> PendingEntryEffect.PendingEntryEffect -> Bool
 pendingEntryEffectNames asking x = case x of
@@ -2490,6 +2491,7 @@ replacementEffectNames asking onCard onAbility onEffect x = case x of
   ReplacementEffect.ScryR scryR -> scryRNames asking scryR
   ReplacementEffect.VillainousChoiceR villainousChoiceR -> villainousChoiceRNames asking villainousChoiceR
   ReplacementEffect.AssembleR matching -> filterNames asking matching
+  ReplacementEffect.GameLossR (GameLossR.MkGameLossR _whose effects) -> any onEffect effects
   ReplacementEffect.PhaseR _phasePattern -> False
 
 requireAttackNames :: Asking -> RequireAttack.RequireAttack -> Bool

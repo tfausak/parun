@@ -544,7 +544,7 @@ runTurnBasedActions phase = do
       needSecond <- Damage.dealCombatDamage
       -- CR 614.1a: what a run-effects rewrite put in a replaced event's place
       -- runs HERE, before the step's SBA check and before the riders below.
-      Resolve.runDamageRewriteEffects playSubgame
+      Resolve.runReplacementEffects playSubgame
       -- CR 615.5's "immediately afterward": a shield this wave spent runs its
       -- additional effect HERE, before the step's SBA check, so Test of Faith's
       -- +1/+1 counters are on the blocker before CR 704.5g asks about lethality.
@@ -1221,6 +1221,10 @@ performSettle = do
   -- Soulbond's reason.
   unsectored <- SpaceSculptor.settle
   acted <- Sba.performStateBasedActions
+  -- CR 614.1a: a loss the pass replaced (Lich's Mirror) runs its effects HERE,
+  -- before the triggers are placed and before the next pass could meet the
+  -- same loss again.
+  Resolve.runReplacementEffects playSubgame
   placed <- placePendingTriggers
   -- Last, and for the same reason the conditional sweep runs first: all three read
   -- state this settle can still change -- CONTROL for all three, and CARD TYPES
