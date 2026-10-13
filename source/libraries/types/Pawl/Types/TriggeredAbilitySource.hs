@@ -35,10 +35,10 @@ data TriggeredAbilitySource = MkTriggeredAbilitySource
     -- fires (Pawl.Engine.Event.Trigger.delayedPending).
     createdAt :: Maybe Timestamp.Timestamp,
     -- | CR 113.7a / 603.7: the delayed abilities the source's rules text
-    -- declared as this object was put on the stack (PC.delayedAbilities),
-    -- frozen with it: the ability exists independently of its source, so a copy
-    -- effect or text change on the source afterwards does not change what its
-    -- arms create.
+    -- declared as this ability triggered (PendingTrigger.delayed), frozen with
+    -- it: the ability exists independently of its source, so a copy effect or
+    -- text change on the source afterwards does not change what its arms
+    -- create.
     delayed :: Map.Map AbilityName.AbilityName (TriggeredAbility.TriggeredAbility Card.Card (GrantedAbility.GrantedAbility Card.Card))
   }
   deriving (Eq, Ord, Show)

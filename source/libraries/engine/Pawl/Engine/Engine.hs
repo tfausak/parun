@@ -895,6 +895,9 @@ placeBorne srcId pending = do
       -- itself. The same binding reaches the ability object below, so its
       -- effects read the number too. Pawl.FaceDownSpec's Aurelia's Vindicator
       -- case is the proof.
+      --
+      -- Not implemented: the X of a source that left before placement, which
+      -- reads as 0 (#5079).
       inheritedX = case TriggeredAbility.condition ability of
         TriggerCondition.SelfEnters -> Projection.announcedXOf srcId gs
         TriggerCondition.SelfTurnedFaceUp -> Maybe.fromMaybe 0 (Binding.amountOf Binding.variableX bound)
@@ -920,11 +923,8 @@ placeBorne srcId pending = do
                   -- and Nothing for every other trigger. The one thing on the
                   -- stack that tells the two apart (CR 701.27f).
                   TriggeredAbilitySource.createdAt = PendingTrigger.createdAt pending,
-                  -- CR 113.7a's frozen declarations. Not implemented: freezing
-                  -- them as the ability triggers; they are read here, at
-                  -- placement, so a copy effect applied in between changes them
-                  -- (#4846).
-                  TriggeredAbilitySource.delayed = Projection.delayedSnapshotOf srcId gs
+                  -- CR 113.7a's frozen declarations, as the ability triggered.
+                  TriggeredAbilitySource.delayed = PendingTrigger.delayed pending
                 }
           )
           Zone.Stack

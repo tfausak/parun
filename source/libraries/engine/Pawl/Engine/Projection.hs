@@ -1374,10 +1374,10 @@ declaredDelayedAbility :: ObjectId -> AbilityName.AbilityName -> GameState -> Ma
 declaredDelayedAbility source name gs =
   Map.lookup name (PC.delayedAbilities (projectWithLastKnown source gs)) Applicative.<|> Game.declaredDelayedAbility source name gs
 
--- CR 113.7a: the declarations an ability object freezes as it is put on the
--- stack -- its source's projected ones (CR 707.2), with the source's last known
--- text for a source already gone. data/scenarios/copy's and
--- data/scenarios/conjure's Harried Dronesmith scenarios prove a copy's.
+-- CR 113.7a: the declarations an ability freezes as it is activated or
+-- triggers -- its source's projected ones (CR 707.2), with the source's last
+-- known text for a source already gone. data/scenarios/copy's Baboon Spirit
+-- and Mirrorweave scenario proves an activated ability's.
 delayedSnapshotOf :: ObjectId -> GameState -> Map.Map AbilityName.AbilityName (TriggeredAbility Card.Type.Card (GrantedAbility.GrantedAbility Card.Type.Card))
 delayedSnapshotOf source gs = PC.delayedAbilities (projectWithLastKnown source gs)
 

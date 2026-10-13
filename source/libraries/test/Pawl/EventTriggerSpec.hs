@@ -1326,7 +1326,7 @@ wellRestedSpec s registry =
           let (oid, g0) = S.addPermanent cheerleader S.alice (Setup.emptyGame S.bothPlayers)
               record = AbilityTriggered.MkAbilityTriggered (TriggerSource.OfObject oid) S.alice ability
               spent = Event.recordEvent (GameEvent.AbilityTriggered record) g0 {GameState.triggeredThisGame = Seq.singleton record}
-              pending = PendingTrigger.MkPendingTrigger (TriggerSource.OfObject oid) S.alice ability Map.empty Nothing Nothing
+              pending n = PendingTrigger.MkPendingTrigger (TriggerSource.OfObject oid) S.alice ability Map.empty Nothing Nothing n Map.empty
           Spec.assertEqWith s "the second of two instances still triggers" (length (Event.withinTriggerLimit spent [pending 2])) 1
           Spec.assertEqWith s "while a lone instance is spent" (length (Event.withinTriggerLimit spent [pending 1])) 0
 
