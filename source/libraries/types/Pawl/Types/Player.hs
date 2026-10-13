@@ -4,6 +4,7 @@ import qualified Data.Map.Strict as Map
 import qualified Data.Sequence as Seq
 import qualified Data.Set as Set
 import qualified Numeric.Natural as Natural
+import qualified Pawl.Types.CardIdentity as CardIdentity
 import qualified Pawl.Types.CardName as CardName
 import qualified Pawl.Types.Designation as Designation
 import qualified Pawl.Types.GraveyardOrder as GraveyardOrder
@@ -87,21 +88,14 @@ data Player = MkPlayer
     -- pairs are legal is judged before this is written, by
     -- Pawl.Engine.Commander.designations.
     --
-    -- A PRINTING and not an ObjectId, because CR 400.7 mints a fresh id on every
-    -- zone change and a commander crosses zones constantly -- command zone to
-    -- stack to battlefield to command zone again. An object id would name a dead
-    -- object after the first cast. A printing survives, and CR 903.5b's singleton
-    -- deck construction is what makes it unambiguous: a Commander deck holds at
-    -- most one card with a given English name, so "the object whose printing is
-    -- this one" picks out exactly the commander. Pawl does not ENFORCE rule
-    -- 903.5b (#940), so a malformed deck with two copies would make both answer
-    -- to it.
-    --
-    -- The printing is named by its id (#1592), which is stable for the whole
-    -- game: Pawl.Engine.Setup.createDeck interns each of a deck's distinct
-    -- printings exactly once, so this id is the same one the commander's own
-    -- objects carry and Pawl.Engine.Commander.isCommander can compare the two.
-    commander :: Set.Set PrintingId.PrintingId,
+    -- A CARD IDENTITY and not an ObjectId or a printing: CR 903.3 makes the
+    -- designation "an attribute of the card itself" that it "retains ... even
+    -- when it changes zones", and CR 400.7 mints a fresh id on every one, while
+    -- a printing names every copy of the card (Cid, Timeless Artificer's deck
+    -- holds any number). Object.identity is the card across CR 400.7, and its
+    -- starting owner is the player whose deck designated it, which is the set
+    -- Pawl.Engine.Commander.commanderPrintingOf looks in.
+    commander :: Set.Set CardIdentity.CardIdentity,
     -- | CR 903.8: how many times this player has cast each of their commanders
     -- from the command zone this game. The commander tax is {2} for each of
     -- them. Absent key means zero, the convention `counters` above uses.

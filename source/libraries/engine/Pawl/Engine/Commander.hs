@@ -12,10 +12,10 @@
 -- rule it already knows. Pawl.Engine.Cast.legendaryRestrictionOk makes the same
 -- argument for CR 205.4e.
 --
--- The designation is a PRINTING on the player, for the reason
--- Pawl.Types.Player.commander gives: CR 400.7 mints a fresh object id on every
--- zone change and a commander crosses zones constantly, so nothing keyed to an
--- object could survive its first cast.
+-- The designation is a CARD IDENTITY on the player, for the reason
+-- Pawl.Types.Player.commander gives: CR 903.3 designates the card itself, which
+-- keeps the designation across CR 400.7's fresh object id and through a change
+-- of owner, and no other copy of its printing shares it.
 --
 -- WHAT IS NOT IMPLEMENTED:
 --
@@ -37,8 +37,10 @@ import Numeric.Natural (Natural)
 import qualified Pawl.Engine.Card as Card
 import qualified Pawl.Engine.Game as Game
 import qualified Pawl.Engine.Subtype as Subtype.Engine
+import qualified Pawl.Types.CardIdentity as CardIdentity
 import qualified Pawl.Types.CardName as CardName
 import qualified Pawl.Types.CardType as CardType
+import qualified Pawl.Types.ComponentCard as ComponentCard
 import qualified Pawl.Types.Cost as Cost
 import qualified Pawl.Types.Deck as Deck
 import qualified Pawl.Types.Face as Face
@@ -331,31 +333,31 @@ printedKeyword :: Keyword.Keyword -> Printing.Printing -> Bool
 printedKeyword keyword printing =
   Set.member keyword (Face.keywordSet (Card.frontFace (Printing.card printing)))
 
--- | CR 903.3: record which cards this player designated as their commanders.
--- Called once per designation by Pawl.Engine.Setup.createDeck, from the Deck.
-designate :: PlayerId -> PrintingId.PrintingId -> GameState -> GameState
-designate pid printingId gs =
-  gs {GameState.players = Map.adjust (\p -> p {Player.commander = Set.insert printingId (Player.commander p)}) pid (GameState.players gs)}
+-- | CR 903.3: record that this player's deck designated this card as a
+-- commander. Called once per designation by Pawl.Engine.Setup.createDeck, with
+-- the identity of the card it put into the command zone.
+designate :: PlayerId -> CardIdentity.CardIdentity -> GameState -> GameState
+designate pid identity gs =
+  gs {GameState.players = Map.adjust (\p -> p {Player.commander = Set.insert identity (Player.commander p)}) pid (GameState.players gs)}
 
--- | CR 903.3: is this object its owner's commander?
+-- | CR 903.3: is this object a commander?
 --
--- Asked of the OWNER and never the controller, because rule 903.3 designates a
--- card from the deck its owner brought -- a stolen commander is still its owner's
--- commander, which is also what makes CR 903.9 send it to its owner's command
--- zone rather than the thief's.
+-- Neither the controller nor the current owner is asked: CR 903.3 makes the
+-- designation an attribute of the card, so a stolen commander is still one,
+-- and so is one whose owner an ante card changed (CR 108.3, 407.3). The rules
+-- that act on it name "its owner" themselves (CR 903.8, 903.9).
 isCommander :: ObjectId -> GameState -> Bool
 isCommander oid gs = Maybe.isJust (commanderPrintingOf oid gs)
 
 -- | CR 903.3's designation, read off whichever card represents this object: the
--- printing of the owner's commander when one of them is it, and Nothing
--- otherwise.
+-- printing of a designated card when one of them is it, and Nothing otherwise.
 --
--- Matches on the PRINTING ID, which is exact under CR 903.5's singleton rule and
--- is the only thing that survives CR 400.7's fresh id. Setup.createDeck is what
--- makes the comparison sound: it interns a deck's distinct printings once, so
--- the designation and the object name the same entry. Pawl does not enforce rule
--- 903.5 (#940), so a deck holding two copies of its commander would have both
--- answer True here.
+-- Matches on the card's IDENTITY (Object.identity, Pawl.Types.ComponentCard's
+-- for a component), looked up under its starting owner, the player whose deck
+-- designated it. Another copy of the printing -- a second Cid, Timeless
+-- Artificer, or a copy effect's object, which carries no identity (CR 707.10)
+-- -- is not the commander. Pawl.CommanderSpec's "CR 903.3 a second copy of the
+-- commander's card is not a commander" proves the first.
 --
 -- CARDS in the plural, which is CR 903.9c: "if a commander is a melded permanent
 -- or a merged permanent" -- so the rules do call such a permanent a commander,
@@ -371,32 +373,19 @@ isCommander oid gs = Maybe.isJust (commanderPrintingOf oid gs)
 -- commander; rule 903.8's cast permission wants only the Bool, and cannot be
 -- reached by a melded permanent at all, since none is ever in the command zone
 -- to be cast from.
---
--- Not implemented: keeping the designation of a commander whose owner an ante
--- card changed (#4839).
 commanderPrintingOf :: ObjectId -> GameState -> Maybe PrintingId.PrintingId
 commanderPrintingOf oid gs = do
   obj <- Game.lookupObject oid gs
-  designated <- fmap Player.commander (Map.lookup (Object.owner obj) (GameState.players gs))
   let cards = case Object.source obj of
-        Source.OfCard printingId -> Seq.singleton printingId
+        Source.OfCard printingId -> [(printingId, Object.identity obj)]
         -- CR 903.9c names "the card that represents it and is a commander", so a
-        -- merged permanent's component that is no card is filtered out rather
-        -- than compared: neither a token (CR 111.6) nor CR 730.2's copy of a
-        -- spell (CR 707.10) is one, and either interned to the same printing as a
-        -- designated card would otherwise match.
-        --
-        -- The COPY half of that is a regression fence: `Foldable.find` below
-        -- answers the same printing whether or not a copy interned under it is in
-        -- the list, so only Pawl.Engine.Event's rule 903.9c split observes the
-        -- filter -- Pawl.MutateSpec's "CR 903.9c/111.6/707.10 a merged
-        -- commander's token and copy components are not split off to the command
-        -- zone" is that case.
-        source -> fmap Game.printingOfComponent (Seq.filter Game.componentIsCard (Game.componentsOf source))
+        -- merged permanent's component that is no card -- a token (CR 111.6) or
+        -- CR 730.2's copy of a spell (CR 707.10) -- is never one.
+        source -> fmap (\card -> (ComponentCard.printing card, ComponentCard.identity card)) (Maybe.mapMaybe Game.cardOfComponent (Foldable.toList (Game.componentsOf source)))
+      designated identity = maybe False (Set.member identity . Player.commander) (Map.lookup (CardIdentity.startingOwner identity) (GameState.players gs))
   -- CR 702.124e: with two designations this answers WHICH of them this object
-  -- is, and no object can be both -- rule 903.5b's singleton deck gives each
-  -- designation a distinct printing.
-  Foldable.find (\printingId -> Set.member printingId designated) cards
+  -- is; each is its own card, so no object is both.
+  fmap fst (Foldable.find (maybe False designated . snd) cards)
 
 -- | CR 903.9c: the one card of a melded or merged permanent that goes to the
 -- command zone when its owner accepts CR 903.9b's offer -- "the card that
@@ -443,9 +432,9 @@ lethalDamage pid gs
       Nothing -> False
       Just player -> any (>= 21) (Map.elems (Player.commanderDamage player))
 
--- | CR 903.8: "a commander's owner may cast it from the command zone for its mana
--- cost plus {2} for each previous time they cast it from the command zone this
--- game". This is the {2}-per-previous-cast part, as an amount of GENERIC mana.
+-- | CR 903.8: "a commander cast from the command zone costs an additional {2}
+-- for each previous time the player casting it has cast it from the command zone
+-- that game", as an amount of GENERIC mana.
 --
 -- Zero when the object is not a commander, when its owner is not the caster, or
 -- when it has never been cast from there -- so every ordinary spell in every
@@ -453,7 +442,7 @@ lethalDamage pid gs
 --
 -- Read as a CR 601.2f cost INCREASE by Pawl.Engine.Cost, alongside the ones cards
 -- generate. It belongs on that side of rule 601.2f rather than being folded into
--- the mana cost, because rule 903.8 says "plus {2}" -- an increase applied after
+-- the mana cost, because rule 903.8 says "an additional {2}" -- an increase after
 -- the cost is determined, so a cost reduction applies to the total afterwards
 -- exactly as CR 601.2f orders them.
 tax :: PlayerId -> ObjectId -> GameState -> Natural
@@ -473,9 +462,9 @@ tax pid oid gs
   | otherwise = 2 * maybe 0 (\printingId -> castCount pid printingId gs) (commanderPrintingOf oid gs)
 
 -- | CR 903.8's permission half: may this player cast this object from the command
--- zone? Only its OWNER may, and only if it is their commander -- rule 903.8 says
--- "a commander's owner may cast it from the command zone", and nothing else in
--- the pool is castable from there at all.
+-- zone? Only its OWNER may, and only if it is a commander -- rule 903.8 says "a
+-- player may cast a commander they own from the command zone", and nothing else
+-- in the pool is castable from there at all.
 canCastFromCommandZone :: PlayerId -> ObjectId -> GameState -> Bool
 canCastFromCommandZone pid oid gs =
   isCommander oid gs && fmap Object.owner (Game.lookupObject oid gs) == Just pid
@@ -593,8 +582,8 @@ commandZoneOffer zc gs
 --
 -- Counted against THIS commander (CR 702.124d), which is why it takes an object
 -- rather than the player alone. The object is the SPELL on the stack, CR 601.2a
--- having already moved the card there: rule 903.3's designation is a printing,
--- and Source.OfCard carries it across CR 400.7's fresh incarnation, so the spell
+-- having already moved the card there: rule 903.3's designation is the card's
+-- identity, which Object.newIncarnation keeps across CR 400.7, so the spell
 -- answers `commanderPrintingOf` exactly as the card in the command zone did.
 --
 -- Does nothing when the object is not a commander, which its one caller has

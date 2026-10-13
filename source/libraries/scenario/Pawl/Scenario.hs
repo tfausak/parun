@@ -424,12 +424,11 @@ placeAll registry zone owner placements board = case placements of
       Just card -> do
         let (printingId, interned) = Game.intern (Printing.ofCard card) (Staged.state board)
             (oid, placedCard) = Setup.placeCard zone owner printingId interned
-            -- CR 903.3: a commander is designated by its printing, which every
-            -- object the card becomes carries.
-            placed =
-              if Placement.commander placement
-                then placedCard {GameState.players = Map.adjust (\p -> p {Player.commander = Set.insert printingId (Player.commander p)}) owner (GameState.players placedCard)}
-                else placedCard
+            -- CR 903.3: a commander is designated by its card identity, which
+            -- every object the card becomes carries.
+            placed = case Game.lookupObject oid placedCard >>= Object.identity of
+              Just identity | Placement.commander placement -> placedCard {GameState.players = Map.adjust (\p -> p {Player.commander = Set.insert identity (Player.commander p)}) owner (GameState.players placedCard)}
+              _ -> placedCard
             controller = Maybe.fromMaybe owner (Placement.controller placement >>= \label -> Map.lookup label (Staged.seats board))
             adjust obj =
               obj

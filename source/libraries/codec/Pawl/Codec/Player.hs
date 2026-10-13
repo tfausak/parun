@@ -5,6 +5,7 @@ module Pawl.Codec.Player where
 import qualified Data.Map.Strict as Map
 import qualified Data.Sequence as Seq
 import qualified Data.Set as Set
+import qualified Pawl.Codec.CardIdentity as CardIdentity
 import qualified Pawl.Codec.CardName as CardName
 import qualified Pawl.Codec.Designation as Designation
 import qualified Pawl.Codec.GraveyardOrder as GraveyardOrder
@@ -45,7 +46,7 @@ codec = Fields.object $ do
   ringTemptations <- Fields.defaulted "ringTemptations" 0 Common.natural Player.ringTemptations
   speed <- Fields.required "speed" (Common.maybe Common.natural) Player.speed
   designations <- Fields.defaulted "designations" Set.empty (Common.set PlayerDesignation.codec) Player.designations
-  commander <- Fields.defaulted "commander" Set.empty (Common.set PrintingId.codec) Player.commander
+  commander <- Fields.defaulted "commander" Set.empty (Common.set CardIdentity.codec) Player.commander
   commanderCasts <- Fields.defaulted "commanderCasts" Map.empty (Common.naturalMap PrintingId.codec Common.natural) Player.commanderCasts
   commanderDamage <- Fields.defaulted "commanderDamage" Map.empty (Common.naturalMap PrintingId.codec Common.natural) Player.commanderDamage
   dungeons <- Fields.defaulted "dungeons" Set.empty (Common.set PrintingId.codec) Player.dungeons
