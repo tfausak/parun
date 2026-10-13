@@ -196,6 +196,10 @@ data LastKnown = MkLastKnown
     -- Object.prototyped as it left. Not a characteristic, so a face-down one's
     -- `characteristics` above cannot say; Count.lastKnownView reads it.
     prototyped :: !Bool,
+    -- | CR 107.3m: the X announced for the spell that became it --
+    -- Object.announcedX as it left, so an enters-the-battlefield ability whose
+    -- source is already gone still reads it (Game.announcedXOf).
+    announcedX :: !(Maybe Natural.Natural),
     -- | CR 702.30a: how far each player's echo window had run on it --
     -- Object.controlClock as it left. Not a characteristic (CR 109.3's list has
     -- no clock), and per-INCARNATION, so CR 400.7 deletes the only copy of it

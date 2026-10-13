@@ -58,6 +58,7 @@ spec s = Spec.describe s "Pawl.Codec.LastKnown" $ do
           LastKnown.protector = Just (PlayerId.MkPlayerId 7),
           LastKnown.paidCosts = Map.singleton (Keyword.Offspring (Cost.MkCost (Just (ManaCost.MkManaCost [ManaSymbol.Generic 2])) [])) (Seq.singleton 1),
           LastKnown.prototyped = True,
+          LastKnown.announcedX = Just 4,
           LastKnown.controlClock = Map.singleton (PlayerId.MkPlayerId 1) ControlClock.SinceLastUpkeep,
           LastKnown.zone = Zone.Battlefield,
           LastKnown.pile = Just (PlayerId.MkPlayerId 6)
@@ -72,6 +73,7 @@ spec s = Spec.describe s "Pawl.Codec.LastKnown" $ do
           <> ",\"chosenNames\":{\"8\":\"Goblin Piker\"},\"chosenPlayer\":3,\"chosenColors\":[{\"type\":\"Green\"}],\"chosenSubtype\":{\"type\":\"Goblin\"},\"attacking\":false,\"attackTarget\":null,\"blocking\":true,\"protector\":7"
           <> ",\"paidCosts\":[{\"key\":{\"type\":\"Offspring\",\"value\":{\"mana\":[{\"type\":\"Generic\",\"value\":2}]}},\"value\":[1]}]"
           <> ",\"prototyped\":true"
+          <> ",\"announcedX\":4"
           <> ",\"controlClock\":[{\"player\":1,\"clock\":{\"type\":\"SinceLastUpkeep\"}}]"
           <> ",\"zone\":{\"type\":\"Battlefield\"},\"pile\":6} "
       )
@@ -100,6 +102,7 @@ spec s = Spec.describe s "Pawl.Codec.LastKnown" $ do
           LastKnown.protector = Nothing,
           LastKnown.paidCosts = Map.empty,
           LastKnown.prototyped = False,
+          LastKnown.announcedX = Nothing,
           LastKnown.controlClock = Map.empty,
           LastKnown.zone = Zone.Stack,
           LastKnown.pile = Nothing

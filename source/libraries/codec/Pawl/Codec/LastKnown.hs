@@ -42,6 +42,7 @@ codec = Fields.object $ do
   protector <- Fields.required "protector" (Common.maybe PlayerId.codec) LastKnown.protector
   paidCosts <- Fields.defaulted "paidCosts" Map.empty (Common.keyedList (Common.keyValue Keyword.codec (Common.seq Common.natural))) LastKnown.paidCosts
   prototyped <- Fields.defaulted "prototyped" False Common.boolean LastKnown.prototyped
+  announcedX <- Fields.defaulted "announcedX" Nothing (Common.maybe Common.natural) LastKnown.announcedX
   controlClock <- Fields.defaulted "controlClock" Map.empty (Common.keyedList ControlClock.entry) LastKnown.controlClock
   zone <- Fields.required "zone" Zone.codec LastKnown.zone
   pile <- Fields.defaulted "pile" Nothing (Common.maybe PlayerId.codec) LastKnown.pile
@@ -64,6 +65,7 @@ codec = Fields.object $ do
         LastKnown.protector = protector,
         LastKnown.paidCosts = paidCosts,
         LastKnown.prototyped = prototyped,
+        LastKnown.announcedX = announcedX,
         LastKnown.controlClock = controlClock,
         LastKnown.zone = zone,
         LastKnown.pile = pile

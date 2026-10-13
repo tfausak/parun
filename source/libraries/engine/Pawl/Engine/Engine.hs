@@ -895,11 +895,8 @@ placeBorne srcId pending = do
       -- itself. The same binding reaches the ability object below, so its
       -- effects read the number too. Pawl.FaceDownSpec's Aurelia's Vindicator
       -- case is the proof.
-      --
-      -- Not implemented: the X of a source that left before placement, which
-      -- reads as 0 (#5079).
       inheritedX = case TriggeredAbility.condition ability of
-        TriggerCondition.SelfEnters -> Projection.announcedXOf srcId gs
+        TriggerCondition.SelfEnters -> Game.announcedXOf srcId gs
         TriggerCondition.SelfTurnedFaceUp -> Maybe.fromMaybe 0 (Binding.amountOf Binding.variableX bound)
         _ -> 0
       -- CR 107.3m: an enters-the-battlefield triggered ability's effects read

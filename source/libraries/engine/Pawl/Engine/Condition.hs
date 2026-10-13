@@ -31,7 +31,6 @@
 module Pawl.Engine.Condition where
 
 import qualified Data.Map.Strict as Map
-import qualified Data.Maybe as Maybe
 import Data.Set (Set)
 import Numeric.Natural (Natural)
 import qualified Pawl.Engine.Binding as Binding
@@ -45,7 +44,6 @@ import qualified Pawl.Types.Condition as Condition.Type
 import qualified Pawl.Types.DuringPhase as DuringPhase
 import Pawl.Types.GameState (GameState)
 import qualified Pawl.Types.GameState as GameState
-import qualified Pawl.Types.Object as Object
 import Pawl.Types.ObjectId (ObjectId)
 import Pawl.Types.PlayerId (PlayerId)
 import Pawl.Types.Recipient (Recipient)
@@ -100,7 +98,7 @@ holds viewOf context gs oid condition =
 --
 -- ZERO and not an absent key where the permanent carries none -- a token copy, or
 -- one an effect put onto the battlefield -- which is rule 107.3m's own number and
--- Projection.announcedXOf's answer for the replacement half of the same keyword.
+-- Game.announcedXOf's answer for the replacement half of the same keyword.
 -- An absent key would leave the comparison unanswerable, which Condition.holds
 -- reads as False; that agrees for "5 or more" and would not for a clause naming a
 -- smaller threshold.
@@ -110,7 +108,7 @@ holds viewOf context gs oid condition =
 inheritedX :: TriggerCondition.TriggerCondition -> ObjectId -> GameState -> Map.Map SlotName Natural
 inheritedX condition oid gs = case condition of
   TriggerCondition.SelfEnters ->
-    Map.singleton Binding.variableX (Maybe.fromMaybe 0 (Object.announcedX =<< Game.lookupObject oid gs))
+    Map.singleton Binding.variableX (Game.announcedXOf oid gs)
   _ -> Map.empty
 
 -- CR 611.2b: the condition with every slot-reading PlayerRef inside it baked to
