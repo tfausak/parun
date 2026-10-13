@@ -1,0 +1,206 @@
+{
+  "description": "CR 733.1 a Spirit owner whose payment for Cut the Tethers fails is asked again",
+  "note": "Cut the Tethers offers bob {3} to keep his Clarion Spirit (CR 118.12a). He agrees, then declines the first mana source, so the payment fails and is reversed. CR 733.1 returns him to the choice rather than reading him as declining: asked again, he pays with three Islands and the Spirit stays.",
+  "board": {
+    "seats": [
+      {
+        "name": "alice",
+        "battlefield": [
+          {
+            "card": "Island",
+            "label": "a1",
+            "ready": true
+          },
+          {
+            "card": "Island",
+            "label": "a2",
+            "ready": true
+          },
+          {
+            "card": "Island",
+            "label": "a3",
+            "ready": true
+          },
+          {
+            "card": "Island",
+            "label": "a4",
+            "ready": true
+          }
+        ],
+        "hand": [
+          {
+            "card": "Cut the Tethers",
+            "label": "cut"
+          }
+        ]
+      },
+      {
+        "name": "bob",
+        "battlefield": [
+          {
+            "card": "Island",
+            "label": "b1",
+            "ready": true
+          },
+          {
+            "card": "Island",
+            "label": "b2",
+            "ready": true
+          },
+          {
+            "card": "Island",
+            "label": "b3",
+            "ready": true
+          },
+          {
+            "card": "Clarion Spirit",
+            "label": "spirit",
+            "ready": true
+          }
+        ]
+      }
+    ],
+    "active": "alice",
+    "step": "PrecombatMain"
+  },
+  "timeline": [
+    {
+      "turn": 1,
+      "step": "PrecombatMain",
+      "player": "bob",
+      "do": {
+        "Answer": {
+          "prompt": "ChooseToPay",
+          "with": {
+            "type": "Pays"
+          }
+        }
+      }
+    },
+    {
+      "turn": 1,
+      "step": "PrecombatMain",
+      "player": "bob",
+      "do": {
+        "Answer": {
+          "prompt": "ChooseManaSource",
+          "with": null
+        }
+      }
+    },
+    {
+      "turn": 1,
+      "step": "PrecombatMain",
+      "player": "bob",
+      "do": {
+        "Answer": {
+          "prompt": "ChooseToPay",
+          "with": {
+            "type": "Pays"
+          }
+        }
+      }
+    },
+    {
+      "turn": 1,
+      "step": "PrecombatMain",
+      "player": "bob",
+      "do": {
+        "Answer": {
+          "prompt": "ChooseManaSource",
+          "with": "$b1"
+        }
+      }
+    },
+    {
+      "turn": 1,
+      "step": "PrecombatMain",
+      "player": "bob",
+      "do": {
+        "Answer": {
+          "prompt": "ChooseManaSource",
+          "with": "$b2"
+        }
+      }
+    },
+    {
+      "turn": 1,
+      "step": "PrecombatMain",
+      "player": "bob",
+      "do": {
+        "Answer": {
+          "prompt": "ChooseManaSource",
+          "with": "$b3"
+        }
+      }
+    },
+    {
+      "turn": 1,
+      "step": "PrecombatMain",
+      "player": "alice",
+      "do": {
+        "Cast": {
+          "object": "$cut",
+          "mana": [
+            "$a1",
+            "$a2",
+            "$a3",
+            "$a4"
+          ]
+        }
+      }
+    },
+    {
+      "turn": 1,
+      "step": "PrecombatMain",
+      "player": "alice",
+      "do": "Pass"
+    },
+    {
+      "turn": 1,
+      "step": "PrecombatMain",
+      "player": "alice",
+      "check": {
+        "Count": {
+          "player": "bob",
+          "zone": "Battlefield",
+          "card": "Clarion Spirit",
+          "count": 1
+        }
+      }
+    },
+    {
+      "turn": 1,
+      "step": "PrecombatMain",
+      "player": "alice",
+      "check": {
+        "Tapped": {
+          "object": "$b1",
+          "tapped": true
+        }
+      }
+    },
+    {
+      "turn": 1,
+      "step": "PrecombatMain",
+      "player": "alice",
+      "check": {
+        "Tapped": {
+          "object": "$b2",
+          "tapped": true
+        }
+      }
+    },
+    {
+      "turn": 1,
+      "step": "PrecombatMain",
+      "player": "alice",
+      "check": {
+        "Tapped": {
+          "object": "$b3",
+          "tapped": true
+        }
+      }
+    }
+  ]
+}

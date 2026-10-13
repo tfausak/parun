@@ -123,7 +123,7 @@
       "step": "PrecombatMain",
       "player": "bob",
       "source": "Mana Leak",
-      "do": {
+      "refuse": {
         "ChooseToPay": {
           "decision": {
             "type": "Pays"
@@ -132,6 +132,19 @@
             "$tomb",
             null
           ]
+        }
+      }
+    },
+    {
+      "turn": 1,
+      "step": "PrecombatMain",
+      "player": "bob",
+      "source": "Mana Leak",
+      "do": {
+        "ChooseToPay": {
+          "decision": {
+            "type": "Declines"
+          }
         }
       }
     },

@@ -487,12 +487,19 @@ answerPrompt asked = do
     then failWith (Failure.MkNestedGamePrompt (GameState.turnNumber gs) (GameState.phase gs) decider kind)
     else do
       -- CR 733.1: a refused move is reversed, so the engine's next prompt is
-      -- the one it answered, asked again.
+      -- the one it answered, asked again. A prompt the move raises on its way
+      -- there -- a payment's own choices, an Answer the timeline schedules,
+      -- CR 733.1's ReverseManaAbilities -- leaves the refusal waiting.
       refusal <- State.gets refusing
+      underway <- State.gets pending
+      queued <- takeAnswer gs decider kind
+      let raised = case underway of
+            Just (pendingKey, _, choices) -> subChoiceFor pendingKey prompt decider choices || Maybe.isJust queued
+            Nothing -> Maybe.isJust queued
       case refusal of
         Just (key, verb, answered)
           | answered /= kind || decider /= Just (When.player key) || GameState.turnNumber gs /= When.turn key || GameState.phase gs /= When.phase key ->
-              failWith (Failure.MkUnrefusedMove key verb (Just kind))
+              Monad.unless raised (failWith (Failure.MkUnrefusedMove key verb (Just kind)))
         _ -> State.modify' (\rehearsal -> rehearsal {refusing = Nothing})
       waiting <- State.gets pending
       undoing <- State.gets reversing

@@ -588,6 +588,18 @@ spec s registry = Spec.describe s "Scenario" $ do
       Left failure -> Spec.assertFailure s (S.renderFailure failure)
       Right final -> Spec.assertEqWith s "both blockers died" (S.countOnBattlefieldByName (CardName.MkCardName (Text.pack "Goblin Piker")) S.bob final) 0
 
+  -- CR 733.1 / 118.12a: a payment that fails is reversed, which returns its
+  -- payer to the choice, so a script that wrote only the failing payment fails
+  -- rather than passing on a spell countered as if bob had declined.
+  Spec.it s "a failed Mana Leak payment is asked again, failing the script" $ do
+    result <- runJson s registry leakUnpaid
+    case result of
+      Left (ScenarioFailure.MkUnscheduledPrompt _ _ decider kind _) -> do
+        Spec.assertEqWith s "the prompt asked again" kind (Text.pack "ChooseToPay")
+        Spec.assertEqWith s "of the payer" decider (Just (S.seatLabel S.bob))
+      Left failure -> Spec.assertFailure s (S.renderFailure failure)
+      Right _ -> Spec.assertFailure s "the failed payment passed as a decline"
+
   -- CR 510.1e / 702.19b: a trampler's assignment short of lethal on its blocker
   -- is illegal, and the engine asks for it again, so a script that wrote only
   -- that assignment fails rather than passing on a combat that dealt nothing.
@@ -722,6 +734,17 @@ crewDreadnought taps =
     <> "\"timeline\":[{\"turn\":1,\"step\":\"PrecombatMain\",\"player\":\"alice\",\"do\":{\"Answer\":{\"prompt\":\"ChooseTapsForTotalPower\",\"with\":["
     <> List.intercalate "," (fmap show taps)
     <> "]}}},{\"turn\":1,\"step\":\"PrecombatMain\",\"player\":\"alice\",\"do\":{\"Activate\":{\"object\":\"$vehicle\",\"ability\":0}}}]}"
+
+-- bob casts a Goblin Piker, alice Mana Leaks it, and bob agrees to pay {3}
+-- but taps nothing.
+leakUnpaid :: String
+leakUnpaid =
+  "{\"description\":\"x\",\"board\":{\"seats\":[{\"name\":\"alice\",\"battlefield\":[{\"card\":\"Island\",\"label\":\"i1\"},{\"card\":\"Island\",\"label\":\"i2\"}],\"hand\":[{\"card\":\"Mana Leak\",\"label\":\"leak\"}]},"
+    <> "{\"name\":\"bob\",\"battlefield\":[{\"card\":\"Mountain\",\"label\":\"m1\"},{\"card\":\"Mountain\",\"label\":\"m2\"},{\"card\":\"Ancient Tomb\",\"label\":\"tomb\"},{\"card\":\"Island\",\"label\":\"bi\"}],\"hand\":[{\"card\":\"Goblin Piker\",\"label\":\"piker\"}]}],\"active\":\"bob\",\"step\":\"PrecombatMain\"},"
+    <> "\"timeline\":[{\"turn\":1,\"step\":\"PrecombatMain\",\"player\":\"bob\",\"do\":{\"Cast\":{\"object\":\"$piker\",\"mana\":[\"$m1\",\"$m2\",null]}}},"
+    <> "{\"turn\":1,\"step\":\"PrecombatMain\",\"player\":\"alice\",\"do\":{\"Cast\":{\"object\":\"$leak\",\"targets\":[\"Goblin Piker\"],\"mana\":[\"$i1\",\"$i2\"]}}},"
+    <> "{\"turn\":1,\"step\":\"PrecombatMain\",\"player\":\"alice\",\"do\":\"Pass\"},"
+    <> "{\"turn\":1,\"step\":\"PrecombatMain\",\"player\":\"bob\",\"do\":{\"ChooseToPay\":{\"decision\":{\"type\":\"Pays\"},\"mana\":[null]}}}]}"
 
 -- alice's Colossal Dreadmaw (6/6 trample), blocked by bob's War Mammoth (3/3),
 -- assigns 2 to the Mammoth and 4 to bob.
