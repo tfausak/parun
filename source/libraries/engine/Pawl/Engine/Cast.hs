@@ -1078,10 +1078,10 @@ castPrototyped castFor = case castFor of
 -- prototype candidate -- "while casting a prototyped spell, use only its
 -- alternative power, toughness, and mana cost when evaluating those
 -- characteristics to see if it can be cast" -- so both stamps go on here. The two
--- are the whole of it: every other keyword offering a cost leaves the
--- characteristics the gate reads exactly as they were, and answers the same board
--- it was handed. A third such keyword would join this fold rather than needing a
--- road of its own.
+-- are the whole of it for characteristics: every other keyword offering a cost
+-- leaves the ones the gate reads exactly as they were, and gets only the
+-- candidate's record (stampCastUsing). A third such keyword would join this fold
+-- rather than needing a road of its own.
 --
 -- Applied to a state the caller only READS -- asProposed's posture, and one zone
 -- earlier than the two stamps' real writes: the castability gate and CR 601.2b's
