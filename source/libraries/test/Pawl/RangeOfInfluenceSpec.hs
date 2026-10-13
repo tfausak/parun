@@ -521,6 +521,21 @@ spec s registry = Spec.describe s "Range of influence" $ do
     Spec.assertEqWith s "CR 801.5c carol decides Snake of the Golden Grove's tribute" (decidersFor snake forest 5) [S.carol]
     Spec.assertEqWith s "CR 801.5c carol is Null Chamber's naming opponent, after alice (CR 101.4)" (decidersFor chamber plains 4) [S.alice, S.carol]
 
+  -- CR 801.5a for the chooser CR 801.5c hands a choice to: on the same teams at
+  -- range 1, alice's Wormfang Crab ("When this creature enters, an opponent
+  -- chooses a permanent you control other than this creature and exiles it.")
+  -- hands the choice to carol, and alice's Ornithopter, two seats from carol, is
+  -- outside her range. Paired with the board at an unlimited range.
+  Spec.it s "CR 801.5a a chooser handed the choice names only permanents in their own range" $ do
+    crab <- S.printingOf s registry "Wormfang Crab"
+    thopter <- S.printingOf s registry "Ornithopter"
+    let teams = S.inTeams [[S.alice, S.bob, S.dave], [S.carol]] S.fourPlayerGame
+        (_, withThopter) = S.addPermanent thopter S.alice teams
+        (_, entered) = S.entersWithTrigger crab S.alice withThopter
+        exiledAfter gs = length (Game.zoneMembers Zone.Exile S.alice (resolveAll (S.runPure S.identityAnswer gs Engine.settleForPriority)))
+    Spec.assertEqWith s "CR 801.5a at range 1 carol may name none of alice's permanents, so nothing is exiled" (exiledAfter (S.withRange 1 entered)) 0
+    Spec.assertEqWith s "at an unlimited range she exiles the Ornithopter" (exiledAfter entered) 1
+
   -- CR 801.5a for CR 303.4f's entry choice: alice's Replenish returns
   -- Archnemesis ("Enchant opponent") and Pacifism ("Enchant creature") to the
   -- battlefield, with a Goblin Piker under each of bob, carol and dave.

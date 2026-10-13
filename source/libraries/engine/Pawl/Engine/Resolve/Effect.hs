@@ -736,14 +736,50 @@ chosenPermanents legal resolving controller source (ChosenPermanents.MkChosenPer
   let candidates = battlefieldMatching legal resolving controller source gs filter_
       context = effectContext gs controller source legal (slotBindings resolving gs)
       amount = maybe 0 Integer.toNaturalSaturating . Quantity.evaluateFor (effectViewOf source legal gs) context gs resolving source
-  Game.pickCounted
-    (namesChooser legal controller gs chooser)
-    (askedChooser source controller legal chooser)
+  pickByChooser
+    source
+    controller
+    legal
+    chooser
     (\decider who -> Prompt.ChoosePermanent decider who source)
     (\decider who pool ceiling_ -> Prompt.ChooseAnyNumber decider who source AnyNumberOf.Permanents pool ceiling_)
     amount
     count
     candidates
+
+-- Game.pickCounted with the seat a chooser ref names, for chosenPermanents and
+-- chooseCardFromAmong. CR 801.5a under a limited range: the chooser names only
+-- what is in their own range, so the seat is settled FIRST and a permanent is
+-- offered only where its controller is within the chooser's range (CR 801.2d).
+-- A card nobody controls stays offered, CR 801.5c's own Fact or Fiction
+-- example. Under an unlimited range the seat is asked only where a real choice
+-- remains. Pawl.RangeOfInfluenceSpec's "CR 801.5a a chooser handed the choice
+-- names only permanents in their own range" proves the cut.
+pickByChooser ::
+  ObjectId ->
+  PlayerId ->
+  Map.Map SlotName (Set Recipient) ->
+  PlayerRef ->
+  (Decider.Decider -> PlayerId -> NonEmpty.NonEmpty ObjectId -> Prompt.Prompt ObjectId) ->
+  (Decider.Decider -> PlayerId -> [ObjectId] -> Maybe Natural -> Prompt.Prompt (Set ObjectId)) ->
+  (Quantity.Type.Quantity -> Natural) ->
+  HowMany.HowMany ->
+  [ObjectId] ->
+  Game [ObjectId]
+pickByChooser source controller legal chooser one_ several amount count candidates = do
+  gs <- State.get
+  let named = namesChooser legal controller gs chooser
+      asked = askedChooser source controller legal chooser
+  if Map.null (RangeOfInfluence.unwrap (GameSettings.rangeOfInfluence (GameState.settings gs)))
+    then Game.pickCounted named asked one_ several amount count candidates
+    else do
+      seat <- if named then asked else pure Nothing
+      now <- State.get
+      let grants = Projection.controlGrants now
+          reachable who oid = not (Set.member oid (GameState.battlefield now)) || Projection.objectInRangeGiven grants who oid now
+      case seat of
+        Nothing -> pure []
+        Just who -> Game.pickCounted True (pure (Just who)) one_ several amount count (filter (reachable who) candidates)
 
 -- Whether a chooser ref names a seat to ask, askedChooser's test without its ask.
 namesChooser :: Map.Map SlotName (Set Recipient) -> PlayerId -> GameState -> PlayerRef -> Bool
@@ -2397,9 +2433,11 @@ chooseCardFromAmong resolving source controller legal chosen (ChosenCardFromAmon
   let viewOf = effectViewOf source legal gs
       context = effectContext gs controller source legal (slotBindings resolving gs)
       amount = maybe 0 Integer.toNaturalSaturating . Quantity.evaluateFor viewOf context gs resolving source
-  Game.pickCounted
-    (namesChooser legal controller gs chooser)
-    (askedChooser source controller legal chooser)
+  pickByChooser
+    source
+    controller
+    legal
+    chooser
     (\decider who -> Prompt.ChooseCardFromAmong decider who source)
     (\decider who pool ceiling_ -> Prompt.ChooseAnyNumber decider who source AnyNumberOf.CardsFromAmong pool ceiling_)
     amount
