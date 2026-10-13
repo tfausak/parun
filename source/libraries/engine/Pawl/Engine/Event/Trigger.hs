@@ -178,8 +178,9 @@ battlefieldAt group gs = Map.findWithDefault (battlefieldCandidates gs) group (G
 -- off `board`, the CR 603.10 sample its abilities came from, so the rest of the
 -- triggering resolution cannot change them, and off its projection or last known
 -- information (Projection.delayedSnapshotOf) for a bearer the sample does not
--- hold. data/scenarios/copy's Protean Hydra and Synthetic Shifting Sting
--- scenario proves the sampled half.
+-- hold. data/scenarios/copy's Mirrorweaved Clone of Harried Dronesmith
+-- scenario proves the freeze, and its Protean Hydra and Synthetic Shifting
+-- Sting scenario the sample's.
 delayedAsTriggered :: Map.Map ObjectId (BattlefieldCandidate.BattlefieldCandidate PC.ProjectedCharacteristics) -> ObjectId -> GameState -> Map.Map AbilityName.AbilityName (TriggeredAbility.TriggeredAbility Card (GrantedAbility.GrantedAbility Card))
 delayedAsTriggered board oid gs = maybe (Projection.delayedSnapshotOf oid gs) (PC.delayedAbilities . BattlefieldCandidate.characteristics) (Map.lookup oid board)
 
