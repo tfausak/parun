@@ -1941,6 +1941,20 @@ mandatoryLoopBoardSpec s registry = Spec.describe s "a mandatory loop (CR 104.4b
         after = S.runPure S.identityAnswer board Engine.settleForPriority
     Spec.assertEqWith s "CR 104.4b" (GameState.result after) (Just Result.Drawn)
 
+  -- The same loop with nothing to move: alice owns no card at all, so the reset
+  -- shuffles nothing and draws from an empty library, minting no timestamp, and
+  -- only Departure.checkMandatoryLoop's pass count can call it.
+  Spec.it s "a borrowed Lich's Mirror moving nothing is a draw" $ do
+    mirror <- S.printingOf s registry "Lich's Mirror"
+    let (mirrorId, gs1) = S.addPermanent mirror S.bob (Setup.emptyGame S.bothPlayers)
+        board =
+          (S.addPlayerCounter PlayerCounterKind.Poison 10 S.alice (S.giveControl mirrorId S.alice gs1))
+            { GameState.phase = Phase.PrecombatMain,
+              GameState.remaining = Seq.empty
+            }
+        after = S.runPure S.identityAnswer board Engine.settleForPriority
+    Spec.assertEqWith s "CR 104.4b" (GameState.result after) (Just Result.Drawn)
+
 -- alice, active, in her precombat main phase: bob's Aether Flash and Life and
 -- Limb, alice's Sporemound, and a Forest of alice's ENTERING (so CR 603.6a's
 -- event is there for Sporemound's landfall trigger to see). Empty libraries and
@@ -2011,18 +2025,28 @@ runConcedingAt limit gs =
 mandatoryLoopSpec :: (Monad m, Monad n) => Spec.Spec m n -> n ()
 mandatoryLoopSpec s = Spec.describe s "the mandatory-loop guard (CR 104.4b)" $ do
   Spec.it s "one event short of the limit is not a draw" $ do
-    let after = S.runPure S.identityAnswer (atGap (Departure.mandatoryLoopLimit - 1)) Departure.checkMandatoryLoop
+    let after = S.runPure S.identityAnswer (atGap (Departure.mandatoryLoopLimit - 1)) (Departure.checkMandatoryLoop 0)
     Spec.assertEqWith s "still being played" (GameState.result after) Nothing
 
   Spec.it s "the limit is a draw" $ do
-    let after = S.runPure S.identityAnswer (atGap Departure.mandatoryLoopLimit) Departure.checkMandatoryLoop
+    let after = S.runPure S.identityAnswer (atGap Departure.mandatoryLoopLimit) (Departure.checkMandatoryLoop 0)
+    Spec.assertEqWith s "CR 104.4b" (GameState.result after) (Just Result.Drawn)
+
+  -- The second measure: passes in a row that acted with nobody asked, for a
+  -- loop that mints no timestamp.
+  Spec.it s "one pass short of the limit is not a draw" $ do
+    let after = S.runPure S.identityAnswer (atGap 0) (Departure.checkMandatoryLoop (Departure.mandatoryLoopLimit - 1))
+    Spec.assertEqWith s "still being played" (GameState.result after) Nothing
+
+  Spec.it s "the pass limit is a draw" $ do
+    let after = S.runPure S.identityAnswer (atGap 0) (Departure.checkMandatoryLoop Departure.mandatoryLoopLimit)
     Spec.assertEqWith s "CR 104.4b" (GameState.result after) (Just Result.Drawn)
 
   Spec.it s "a game that already ended keeps the result it had" $ do
     -- A draw must never overwrite a win: the guard fires on a gap only a loop
     -- should reach, and a won game is not looping.
     let won = (atGap Departure.mandatoryLoopLimit) {GameState.result = Just (Result.Won S.alice)}
-        after = S.runPure S.identityAnswer won Departure.checkMandatoryLoop
+        after = S.runPure S.identityAnswer won (Departure.checkMandatoryLoop 0)
     Spec.assertEqWith s "alice still won" (GameState.result after) (Just (Result.Won S.alice))
 
   Spec.it s "playGame draws instead of looping" $ do

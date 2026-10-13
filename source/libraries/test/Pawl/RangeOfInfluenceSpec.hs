@@ -18,7 +18,7 @@
 -- playersFor and the choice offers Pawl.Engine.Players.offer and
 -- Game.inRangeOf feed (CR 801.5a, 801.10, 801.11), and
 -- Pawl.Engine.Resolve.Effect's WinGame and DrawGame (CR 801.14,
--- 801.15), and Pawl.Engine.Engine's checkMandatoryLoop (CR 801.16); and CR
+-- 801.15), and Pawl.Engine.Departure's checkMandatoryLoop (CR 801.16); and CR
 -- 801.2c's turn-start seating, Pawl.Types.GameState's departedThisTurn.
 --
 -- FOUR SEATS, at range 1 unless a case says otherwise, turn order [alice, bob,
@@ -615,7 +615,7 @@ spec s registry = Spec.describe s "Range of influence" $ do
               GameState.lastChoice = Timestamp.MkTimestamp 0,
               GameState.loopInvolvement = Map.fromList [(S.alice, Timestamp.MkTimestamp (limit - 1)), (S.carol, Timestamp.MkTimestamp (div limit 2 - 1))]
             }
-        after = S.runPure S.identityAnswer board Departure.checkMandatoryLoop
+        after = S.runPure S.identityAnswer board (Departure.checkMandatoryLoop 0)
     Spec.assertEqWith s "CR 801.16 carol, the last one playing, wins" (GameState.result after) (Just (Result.Won S.carol))
   where
     -- Pawl.GameSpec's loopBoard at six seats: alice, active, in her precombat

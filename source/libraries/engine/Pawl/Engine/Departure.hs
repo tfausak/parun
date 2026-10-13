@@ -132,8 +132,10 @@ leaveTogether asOf replacing reason named = do
       falling = filter (`Set.notMember` replacedNamed) named
       fallen = filter keeps (Emperor.fallsWith reason falling before)
       team = teamFallsWith reason falling before
-  -- A general falling with their emperor loses (CR 104.3i); a teammate leaving
-  -- with a conceding player does not lose (CR 810.8b) and is not proposed.
+  -- A general falling with their emperor loses (CR 104.3i) and is proposed. A
+  -- teammate of a conceding player is not: CR 810.8b's team leaves the game
+  -- IMMEDIATELY, as the concession itself does (CR 104.3a), and the Mirror's
+  -- ruling gives it no effect against a concession.
   -- A player whose own loss was just replaced is not proposed a second time.
   replacedFallen <- propose (filter (`Set.notMember` replacedNamed) ([pid | (Departure.Lost, pid) <- fallen] <> [pid | reason == Departure.Lost, (_, pid) <- team]))
   -- In Two-Headed Giant a team loses only as a team (CR 810.8a), so a replaced
@@ -723,21 +725,35 @@ mandatoryLoopLimit = 1000
 -- restarts rather than drawing them at the next check. A ranged loop naming
 -- nobody still playing falls back to the whole table.
 --
+-- `passes` counts the state-based action passes in a row that acted with nobody
+-- asked anything (passesSince), the second measure of the same heuristic: a
+-- loop whose actions mint no timestamp -- a borrowed Lich's Mirror whose reset
+-- moves no card -- never widens the gap, but it does repeat the pass. Pawl.GameSpec's
+-- "a borrowed Lich's Mirror moving nothing is a draw" proves the wiring.
+--
 -- The subtractions cannot underflow: GameState.lastChoice only ever takes a past
--- GameState.nextTimestamp, that supply only counts up, and `recent` is forced
--- only once the gap has reached the limit.
-checkMandatoryLoop :: Game ()
-checkMandatoryLoop = do
+-- GameState.nextTimestamp, that supply only counts up, and `recent` is floored at
+-- zero.
+checkMandatoryLoop :: Natural -> Game ()
+checkMandatoryLoop passes = do
   gs <- State.get
   let now = Timestamp.unwrap (GameState.nextTimestamp gs)
       gap = now - Timestamp.unwrap (GameState.lastChoice gs)
-      recent = Timestamp.MkTimestamp (now - div mandatoryLoopLimit 2)
+      recent = Timestamp.MkTimestamp (now - min now (div mandatoryLoopLimit 2))
       involved = Map.keys (Map.filter (>= recent) (GameState.loopInvolvement gs))
       drawn = Set.fromList (concatMap (\pid -> Players.table (Just pid) gs) involved)
       ranged = GameSettings.rangeOfInfluence (GameState.settings gs) /= RangeOfInfluence.unlimited
-  Monad.when (Maybe.isNothing (GameState.result gs) && gap >= mandatoryLoopLimit) $
+  Monad.when (Maybe.isNothing (GameState.result gs) && (gap >= mandatoryLoopLimit || passes >= mandatoryLoopLimit)) $
     if ranged && not (Set.null drawn)
       then do
         leaveGameTogether True Departure.Drew (filter (`Set.member` drawn) (Game.apnapOrder gs))
         State.modify' (\g -> g {GameState.lastChoice = GameState.nextTimestamp g})
       else State.put (settle (Just Result.Drawn) gs)
+
+-- The `passes` checkMandatoryLoop counts, one pass on: none if a player was asked
+-- something during it (GameState.lastChoice moved off `before`, its value as the
+-- pass began), one more otherwise.
+passesSince :: Timestamp.Timestamp -> Natural -> Game Natural
+passesSince before passes = do
+  now <- State.gets GameState.lastChoice
+  pure (if now == before then passes + 1 else 0)

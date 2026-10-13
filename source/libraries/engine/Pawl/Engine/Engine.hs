@@ -12,6 +12,7 @@ import qualified Data.Map.Strict as Map
 import qualified Data.Maybe as Maybe
 import qualified Data.Sequence as Seq
 import qualified Data.Set as Set
+import Numeric.Natural (Natural)
 import qualified Pawl.Engine.Action as Action
 import qualified Pawl.Engine.Activate as Activate
 import qualified Pawl.Engine.Archenemy as Archenemy
@@ -1162,7 +1163,13 @@ settleForPriority = Monad.void performSettle
 -- must see the post-sweep control. It REPORTS whether it acted or placed a
 -- trigger, which is what `cleanupException` (CR 514.3a) asks about.
 performSettle :: Game Bool
-performSettle = do
+performSettle = settlePasses 0
+
+-- performSettle, `passes` passes into a run with nobody asked anything
+-- (Departure.passesSince).
+settlePasses :: Natural -> Game Bool
+settlePasses passes = do
+  begun <- State.gets GameState.lastChoice
   -- CR 612.7: FIRST, so every state-based action and state trigger below reads
   -- a name grant's whole reference.
   learnReferenceNames
@@ -1242,9 +1249,10 @@ performSettle = do
   -- asked anything is a loop of its own -- a borrowed Lich's Mirror replacing
   -- the same loss every pass, which its ruling calls a draw. A game that has
   -- ended settles no further.
-  Departure.checkMandatoryLoop
+  passed <- Departure.passesSince begun passes
+  Departure.checkMandatoryLoop passed
   ended <- State.gets (Maybe.isJust . GameState.result)
-  more <- if not ended && (swept || returned || orphaned || dayNight || designated || sampledControl || unpaired || unsectored || acted || placed) then performSettle else pure False
+  more <- if not ended && (swept || returned || orphaned || dayNight || designated || sampledControl || unpaired || unsectored || acted || placed) then settlePasses passed else pure False
   pure (acted || placed || more)
 
 -- Ask the priority holder for an action until every still-playing player has
@@ -1263,7 +1271,7 @@ priorityLoop = do
   let loop trail = do
         -- CR 104.4b, checked HERE as well as at playGame's loop head: a
         -- resolution cycle repeats inside one priority round and never reaches it.
-        Departure.checkMandatoryLoop
+        Departure.checkMandatoryLoop 0
         finished <- State.gets (Maybe.isJust . GameState.result)
         restarted <- State.gets GameState.restartSignal
         case restarted of
@@ -2072,7 +2080,7 @@ cleanupException = do
 playGame :: Game Result
 playGame =
   let loop = do
-        Departure.checkMandatoryLoop
+        Departure.checkMandatoryLoop 0
         outcome <- State.gets GameState.result
         case outcome of
           Just r -> pure r

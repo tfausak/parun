@@ -10011,13 +10011,15 @@ applyOneEffect runSubgame resolving source controller legal chosen effect = case
     -- A loss the pass replaced runs its effects before the next pass looks
     -- (runReplacementEffects), and a pass that replaces it forever is CR
     -- 104.4b's draw (Departure.checkMandatoryLoop).
-    let checkToFixpoint = do
+    let checkToFixpoint passes = do
+          begun <- State.gets GameState.lastChoice
           performed <- Sba.performStateBasedActions
           runReplacementEffects runSubgame
-          Departure.checkMandatoryLoop
+          passed <- Departure.passesSince begun passes
+          Departure.checkMandatoryLoop passed
           ended <- State.gets (Maybe.isJust . GameState.result)
-          Monad.when (performed && not ended) checkToFixpoint
-    checkToFixpoint
+          Monad.when (performed && not ended) (checkToFixpoint passed)
+    checkToFixpoint 0
     -- CR 724.1d: the current phase and/or step ends; creatures and planeswalkers
     -- leave combat if this happened during one; the game skips straight to the
     -- cleanup step, or to a NEW cleanup step if this IS one.
@@ -10090,13 +10092,15 @@ applyOneEffect runSubgame resolving source controller legal chosen effect = case
         -- CR 724.2c: check state-based actions, granting no priority and putting
         -- no triggered ability on the stack. To a fixpoint on CR 704.3's
         -- authority, as above.
-        let checkToFixpoint = do
+        let checkToFixpoint passes = do
+              begun <- State.gets GameState.lastChoice
               performed <- Sba.performStateBasedActions
               runReplacementEffects runSubgame
-              Departure.checkMandatoryLoop
+              passed <- Departure.passesSince begun passes
+              Departure.checkMandatoryLoop passed
               ended <- State.gets (Maybe.isJust . GameState.result)
-              Monad.when (performed && not ended) checkToFixpoint
-        checkToFixpoint
+              Monad.when (performed && not ended) (checkToFixpoint passed)
+        checkToFixpoint 0
         -- CR 724.2d, in the rule's own sentence order: the phase ends, creatures
         -- and planeswalkers leave combat, "until end of combat" effects expire,
         -- and the game skips the steps between here and the next phase.

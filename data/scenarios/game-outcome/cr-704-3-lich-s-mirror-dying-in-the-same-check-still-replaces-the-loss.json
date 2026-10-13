@@ -1,6 +1,6 @@
 {
   "description": "CR 704.3 Lich's Mirror dying in the same check still replaces the loss",
-  "note": "March of the Machines makes alice's Lich's Mirror a 5/5. It blocks bob's Craw Wurm while his Hill Giant takes alice from 3 to 0. One state-based action check destroys the Mirror and would lose her the game; the check is one event (CR 704.3), so the Mirror is still there to replace the loss, and its reset shuffles it in from her graveyard.",
+  "note": "March of the Machines makes alice's Lich's Mirror a 5/5. It blocks bob's Craw Wurm while his Hill Giant takes alice from 3 to 0. One state-based action check destroys the Mirror and would lose her the game; the check is one event (CR 704.3), so the Mirror is still there to replace the loss. Not implemented: the Mirror is itself a permanent alice owns that the check moves, so its controller should choose between that move and the reset; pawl does both, burying it and then shuffling it in from her graveyard (#5071).",
   "board": {
     "active": "bob",
     "step": "BeginningOfCombat",
