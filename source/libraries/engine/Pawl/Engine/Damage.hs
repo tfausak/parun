@@ -3,6 +3,7 @@ module Pawl.Engine.Damage where
 import qualified Control.Monad as Monad
 import qualified Control.Monad.Trans.State.Strict as State
 import qualified Data.Containers.ListUtils as ListUtils
+import qualified Data.Either as Either
 import qualified Data.List as List
 import qualified Data.Map.Strict as Map
 import qualified Data.Maybe as Maybe
@@ -380,12 +381,12 @@ combatRecipient gs attacker target =
 -- pay any part of the same bar. Where one can, the question is asked -- and the
 -- answer may turn out to have been forced after all, which is the direction CR
 -- 510.1 itself takes by announcing the whole assignment at once.
-attackerAssignment :: GameState -> Bool -> (ObjectId, AttackTarget) -> Game ([DamageEvent.DamageEvent], Map.Map Recipient.Recipient Natural)
+attackerAssignment :: GameState -> Bool -> (ObjectId, AttackTarget) -> Game (Division, Map.Map Recipient.Recipient Natural)
 attackerAssignment gs contested (attacker, target) = case Projection.combatDamageAmountOf attacker gs of
-  Nothing -> pure ([], Map.empty)
+  Nothing -> pure (Right [], Map.empty)
   Just p ->
     if p <= 0
-      then pure ([], Map.empty)
+      then pure (Right [], Map.empty)
       else do
         let power :: Natural
             power = Integer.toNaturalSaturating p
@@ -448,17 +449,17 @@ attackerAssignment gs contested (attacker, target) = case Projection.combatDamag
             -- 702.19c's threshold) is at least the creature's power, which absorbs
             -- everything it could assign -- and, for that second shape, only while
             -- nothing else this step can pay part of that loyalty.
-            toDefender :: Game ([DamageEvent.DamageEvent], Map.Map Recipient.Recipient Natural)
+            toDefender :: Game (Division, Map.Map Recipient.Recipient Natural)
             toDefender = case defenderEntries of
               _ : _ : _
                 | contested || power > sum (fmap snd defenderEntries) ->
                     case Projection.controllerOf attacker gs of
-                      Nothing -> pure ([], Map.empty)
+                      Nothing -> pure (Right [], Map.empty)
                       -- No blocker, so CR 702.22j's inversion cannot apply and CR
                       -- 702.19c's "as the attacking creature's controller chooses"
                       -- stands unqualified.
                       Just pid -> divide pid defenderEntries
-              _ -> pure (allToAttacked, Map.empty)
+              _ -> pure (Right allToAttacked, Map.empty)
             divide = divideAssignment gs attacker power
         if not (Combat.isBlocked attacker gs)
           then -- CR 510.1b: never blocked, so it hits what it is attacking.
@@ -469,24 +470,24 @@ attackerAssignment gs contested (attacker, target) = case Projection.combatDamag
             -- else assigns no combat damage at all -- not damage addressed to an
             -- object that is not there, which would still be recorded in the CR
             -- 608.2i history even though marking it is a no-op.
-            [] -> if trample then toDefender else pure ([], Map.empty)
+            [] -> if trample then toDefender else pure (Right [], Map.empty)
             -- CR 510.1c / 702.19b: a single blocker with no trample -- or trample
             -- but no power past its threshold, and nothing else this step able to
             -- pay part of that threshold -- is forced: all onto the blocker. A
             -- single trample blocker WITH excess falls to the prompt arm.
             [blocker]
               | not trample || (not contested && power <= blockerThreshold gs attacker blocker) ->
-                  pure ([damageEvent gs DamageKind.Combat attacker (Recipient.ToCreature blocker) power], Map.empty)
+                  pure (Right [damageEvent gs DamageKind.Combat attacker (Recipient.ToCreature blocker) power], Map.empty)
             blockers -> case Projection.controllerOf attacker gs of
-              Nothing -> pure ([], Map.empty)
+              Nothing -> pure (Right [], Map.empty)
               -- CR 702.19b: the attacker's controller chooses how to assign the
               -- excess -- unless CR 702.22j inverts it.
               Just pid -> do
                 -- CR 702.22j: with a banding creature among the blockers, the
                 -- DEFENDING player divides the attacking creature's damage. The
                 -- rule is stated as an exception to CR 510.1c alone, so it moves
-                -- WHO is asked and nothing else -- the thresholds, the legality
-                -- check and the reject-not-repair posture below are untouched.
+                -- WHO is asked and nothing else -- the thresholds and CR
+                -- 510.1e's legality check are untouched.
                 --
                 -- CR 702.22k is the mirror, moving the division of a BLOCKING
                 -- creature's damage to the active player. Its site is
@@ -565,18 +566,18 @@ blockerChooser gs attackers controller =
 -- damage divided among them, so the unit of assignment is the blocker. An action
 -- and not a list for that division alone -- with one attacker blocked the rule
 -- forces the whole assignment and asks nothing.
-blockerAssignment :: GameState -> (ObjectId, Set.Set ObjectId) -> Game [DamageEvent.DamageEvent]
+blockerAssignment :: GameState -> (ObjectId, Set.Set ObjectId) -> Game Division
 blockerAssignment gs (blocker, attackers) = case Projection.combatDamageAmountOf blocker gs of
-  Nothing -> pure []
+  Nothing -> pure (Right [])
   Just p
-    | p <= 0 -> pure []
+    | p <= 0 -> pure (Right [])
     | otherwise ->
         let power = Integer.toNaturalSaturating p
          in case filter (\attacker -> onBattlefield attacker gs) (Set.toList attackers) of
-              [] -> pure []
-              [attacker] -> pure [damageEvent gs DamageKind.Combat blocker (Recipient.ToCreature attacker) power]
+              [] -> pure (Right [])
+              [attacker] -> pure (Right [damageEvent gs DamageKind.Combat blocker (Recipient.ToCreature attacker) power])
               blocked -> case Projection.controllerOf blocker gs of
-                Nothing -> pure []
+                Nothing -> pure (Right [])
                 -- Every threshold is 0: CR 510.1d's division is unconstrained,
                 -- where CR 510.1c's has to clear lethal damage first. Trample is
                 -- an attacker's keyword (CR 702.19b) and reaches nothing here.
@@ -590,10 +591,10 @@ blockerAssignment gs (blocker, attackers) = case Projection.combatDamageAmountOf
                     . divideAssignment gs blocker power chooser
                     $ fmap (\attacker -> (Recipient.ToCreature attacker, 0)) blocked
 
--- CR 510.1e / 702.19b: ask `chooser` to divide `source`'s `power` over `entries`,
--- and keep the answer only if it is well formed -- reject-not-repair (NOT the CR
--- 733 human-error rewind). An answer that does not total power, or that names a
--- recipient it was not offered, assigns nothing.
+-- CR 510.1c-d / 702.19b: ask `chooser` to divide `source`'s `power` over
+-- `entries`. An answer that does not total power, or that names a recipient it
+-- was not offered, comes back as itself (Left), for gatherCombatDamage's CR
+-- 510.1e check to ask again.
 --
 -- Only wellFormedAssignment here. The trample gates are the other half of CR
 -- 510.1e and cannot be asked of one creature's answer, so gatherCombatDamage asks
@@ -603,17 +604,25 @@ blockerAssignment gs (blocker, attackers) = case Projection.combatDamageAmountOf
 -- Shared by both assignment sides, so an attacker dividing among its blockers and
 -- a blocker dividing among the creatures it blocks cannot come to disagree about
 -- what an illegal answer does.
-divideAssignment :: GameState -> ObjectId -> Natural -> PlayerId -> [(Recipient.Recipient, Natural)] -> Game ([DamageEvent.DamageEvent], Map.Map Recipient.Recipient Natural)
+divideAssignment :: GameState -> ObjectId -> Natural -> PlayerId -> [(Recipient.Recipient, Natural)] -> Game (Division, Map.Map Recipient.Recipient Natural)
 divideAssignment gs source power chooser entries = do
   let thresholds = Map.fromList entries
   chosen <- Game.choose (Prompt.AssignCombatDamage (Decide.deciderFor chooser gs) chooser source thresholds power)
   let toEvent (recipient, n) = damageEvent gs DamageKind.Combat source recipient n
   pure
     ( if wellFormedAssignment thresholds power chosen
-        then fmap toEvent (filter (\(_, n) -> n > 0) (Map.toList chosen))
-        else [],
+        then Right (fmap toEvent (filter (\(_, n) -> n > 0) (Map.toList chosen)))
+        else Left chosen,
       thresholds
     )
+
+-- One creature's combat damage assignment: the events it announces, or the
+-- answer that was not a division of its power (CR 510.1c-d).
+type Division = Either (Map.Map Recipient.Recipient Natural) [DamageEvent.DamageEvent]
+
+-- What a division deals: nothing, for one that was not one.
+divisionEvents :: Division -> [DamageEvent.DamageEvent]
+divisionEvents = Either.fromRight []
 
 -- CR 510.2: gather all combat damage before applying any of it (simultaneity).
 --
@@ -658,15 +667,34 @@ gatherCombatDamage assigns = do
       order owned =
         fmap (\pid -> filter (\entry -> controllerOfEntry entry == Just pid) owned) seats
           <> [filter (Maybe.maybe True (\pid -> List.notElem pid seats) . controllerOfEntry) owned]
-  waves <-
-    Monad.mapM
-      ( \(mine, theirs) -> do
-          a <- Monad.mapM (\x -> attackerAssignment gs (contestedAssignment gs attackers x) x) mine
-          b <- Monad.mapM (blockerAssignment gs) theirs
-          pure (a, b)
-      )
-      (zip (order attackers) (order blocking))
-  pure (settleAssignments (concatMap fst waves) <> concatMap (concat . snd) waves)
+      announcement (division, thresholds) = (divisionEvents division, thresholds)
+      ask (mine, theirs) = do
+        a <- Monad.mapM (\x -> attackerAssignment gs (contestedAssignment gs attackers x) x) mine
+        b <- Monad.mapM (blockerAssignment gs) theirs
+        pure (a, b)
+      -- CR 510.1e: once a player has assigned every creature's damage, the
+      -- total so far is checked, and an illegal one returns the game to before
+      -- that player began, which asks them again. Nothing the asking wrote
+      -- stands but CR 104.4b's stamp, so asking again IS the return. A repeated
+      -- illegal answer is kept, as Combat.attemptBlockDeclaration keeps a
+      -- repeated declaration, and settleAssignments drops what it must.
+      assign prior rejected wave = do
+        (a, b) <- ask wave
+        let mine = fmap announcement a
+            tagged = zip [0 :: Int ..] (prior <> mine)
+            kept = Set.fromList (fmap fst (settledAnnouncements tagged))
+            legal =
+              all (Either.isRight . fst) a
+                && all Either.isRight b
+                && all (`Set.member` kept) (take (length mine) [length prior ..])
+        if legal || Set.member (a, b) rejected
+          then pure (prior <> mine, (a, b))
+          else assign prior (Set.insert (a, b) rejected) wave
+      gather (prior, done) wave = do
+        (announced, answered) <- assign prior Set.empty wave
+        pure (announced, done <> [answered])
+  (announced, waves) <- Monad.foldM gather ([], []) (zip (order attackers) (order blocking))
+  pure (settleAssignments announced <> concatMap (concatMap divisionEvents . snd) waves)
 
 -- Can any OTHER attacking creature assigning damage this step pay part of a bar
 -- this one is gated by? The two ways CR 702.19b and CR 702.19c let that happen,
@@ -711,23 +739,27 @@ contestedAssignment gs attackers (attacker, target) =
 -- other announcement is itself thrown out. Monotone -- fewer announcements clear
 -- no more gates -- so each round either drops something or is the answer.
 --
--- Reachable only through a broken interpreter, since an enforcing one never
--- announces a division the rules forbid, and it is the same reject-not-repair
--- posture divideAssignment takes: the loop is a fence rather than a proven
--- behaviour, no test being able to distinguish it from one pass.
+-- gatherCombatDamage asks an illegal assignment again (CR 510.1e), so what this
+-- drops is a repeated illegal answer the asking kept. The loop is a fence rather
+-- than a proven behaviour, no test being able to distinguish it from one pass.
 settleAssignments :: [([DamageEvent.DamageEvent], Map.Map Recipient.Recipient Natural)] -> [DamageEvent.DamageEvent]
-settleAssignments announced =
+settleAssignments = concatMap (fst . snd) . settledAnnouncements . fmap ((,) ())
+
+-- settleAssignments' fixpoint, over announcements each carrying a tag that
+-- says which it is.
+settledAnnouncements :: [(a, ([DamageEvent.DamageEvent], Map.Map Recipient.Recipient Natural))] -> [(a, ([DamageEvent.DamageEvent], Map.Map Recipient.Recipient Natural))]
+settledAnnouncements announced =
   let totalsOf events = Map.fromListWith (+) (fmap (\ev -> (DamageEvent.target ev, DamageEvent.amount ev)) events)
-      everything = concatMap fst announced
+      everything = concatMap (fst . snd) announced
       assigned = totalsOf everything
       -- CR 702.2c, read off the SAME round's events as the totals beside it: an
       -- announcement this round drops takes its deathtouch damage with it, so a
       -- gate only that damage cleared closes again.
       lethal = deathtouchedRecipients everything
-      kept = filter (\(events, thresholds) -> tiersCleared thresholds assigned lethal (totalsOf events)) announced
+      kept = filter (\(_, (events, thresholds)) -> tiersCleared thresholds assigned lethal (totalsOf events)) announced
    in if length kept == length announced
-        then concatMap fst kept
-        else settleAssignments kept
+        then kept
+        else settledAnnouncements kept
 
 -- CR 120.1a: damage can't be dealt to an object that's not a battle, a creature,
 -- or a planeswalker. Which of those a Recipient names is a question only a

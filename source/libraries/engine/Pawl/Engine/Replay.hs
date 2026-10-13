@@ -1019,8 +1019,8 @@ defaultAnswer p = case p of
   -- (Lure) can make the empty declaration illegal -- and stays total the same
   -- way, through Combat.forcedBlockDeclaration.
   Prompt.DeclareBlockers {} -> Map.empty
-  -- Must be a WELL FORMED division (Damage.wellFormedAssignment), or the attacker
-  -- deals nothing. All power onto the first blocker totals power, and clears CR
+  -- Must be a WELL FORMED division (Damage.wellFormedAssignment), or CR 510.1e
+  -- asks again. All power onto the first blocker totals power, and clears CR
   -- 702.19b's gates by never spilling past a blocker at all.
   Prompt.AssignCombatDamage _ _ _ thresholds n ->
     let blockers = filter isCreatureRecipient (Map.keys thresholds)

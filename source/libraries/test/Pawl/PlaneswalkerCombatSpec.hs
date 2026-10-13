@@ -449,12 +449,12 @@ trampleOverPlaneswalkersSpec s registry = Spec.describe s "TrampleOverPlaneswalk
         (shared, sharedOffer) = runCombatLogging (pinnedAssignments attackThePlaneswalker [(thrastaId, answer)]) gs
         (alone, aloneOffer) = runCombatLogging (pinnedAssignments pikerAtBob [(thrastaId, answer)]) gs
     Spec.assertEqWith s "CR 702.19c: Jace is offered at his LOYALTY either way" sharedOffer offer
-    Spec.assertEqWith s "and the same offer when the Piker is elsewhere" aloneOffer offer
+    Spec.assertEqWith s "CR 510.1e: with the Piker elsewhere, the same offer is asked again" aloneOffer (offer <> offer)
     Spec.assertEqWith s "the Piker's 2 plus Thrasta's 1 is Jace's whole loyalty, so 6 reaches bob" (S.lifeOf S.bob shared) (Just 14)
     Spec.assertBool s (not (Set.member jaceId (GameState.battlefield shared))) "CR 704.5i: Jace took 3 between them"
     -- The Piker at bob instead: nothing else is assigning to Jace, so Thrasta's 1
-    -- leaves him short and the division is rejected -- Thrasta assigns nothing and
-    -- only the Piker's 2 lands.
+    -- leaves him short and the division is illegal. CR 510.1e asks again; the
+    -- same answer repeated is kept and dropped, so only the Piker's 2 lands.
     Spec.assertEqWith s "with the Piker at bob, only its own 2 reaches him" (S.lifeOf S.bob alone) (Just 18)
     Spec.assertBool s (Set.member jaceId (GameState.battlefield alone)) "and Jace is untouched"
   -- CR 702.2c is about a CREATURE: "any nonzero amount of combat damage assigned
@@ -476,7 +476,7 @@ trampleOverPlaneswalkersSpec s registry = Spec.describe s "TrampleOverPlaneswalk
         thrastaId = case mine of [_, t] -> t; _ -> S.noSource
         answer = Map.fromList [(Recipient.ToPlaneswalker jaceId, 1), (Recipient.ToPlayer S.bob, 6)]
         (after, offered) = runCombatLogging (pinnedAssignments attackThePlaneswalker [(thrastaId, answer)]) gs
-    Spec.assertEqWith s "Jace is offered at his loyalty, as ever" offered [Map.fromList [(Recipient.ToPlaneswalker jaceId, 3), (Recipient.ToPlayer S.bob, 0)]]
+    Spec.assertEqWith s "Jace is offered at his loyalty, and asked again (CR 510.1e)" offered (replicate 2 (Map.fromList [(Recipient.ToPlaneswalker jaceId, 3), (Recipient.ToPlayer S.bob, 0)]))
     Spec.assertEqWith s "the Rats' deathtouch 1 counts as 1, so Thrasta's division is rejected" (S.lifeOf S.bob after) (Just 20)
     Spec.assertEqWith s "CR 306.8: only the Rats' 1 came off Jace" (S.counterOf CounterKind.Loyalty jaceId after) 2
   -- CR 702.19e, the exception to CR 506.4c: two 2/1 first strikers bury Jace in the
@@ -586,8 +586,9 @@ sharedBlockerSpec s registry = Spec.describe s "SharedBlocker" $ do
     Spec.assertBool s (not (Set.member guardId (GameState.battlefield both))) "CR 704.5g: the Guard took its 4"
     -- The same board with the Guard declared against the Wurm alone: nothing else
     -- is assigning to it, so the Wurm's 1 leaves it short and that division is
-    -- rejected. Thrasta is unblocked and its 7 is forced (CR 510.1b).
-    Spec.assertEqWith s "only the Wurm is asked once it is blocked alone" oneOffered [Map.fromList [(Recipient.ToCreature guardId, 4), (Recipient.ToPlayer S.bob, 0)]]
+    -- illegal, asked again, and dropped on the repeat. Thrasta is unblocked and
+    -- its 7 is forced (CR 510.1b).
+    Spec.assertEqWith s "only the Wurm is asked once it is blocked alone, and asked again (CR 510.1e)" oneOffered (replicate 2 (Map.fromList [(Recipient.ToCreature guardId, 4), (Recipient.ToPlayer S.bob, 0)]))
     Spec.assertEqWith s "so bob takes Thrasta's 7 and nothing of the Wurm's" (S.lifeOf S.bob one) (Just 13)
     Spec.assertBool s (Set.member guardId (GameState.battlefield one)) "and the Guard is untouched"
   -- The same rule reaching the PROMPT rather than the check. Rhox Maulers is a 4/4
@@ -695,16 +696,18 @@ sharedBlockerSpec s registry = Spec.describe s "SharedBlocker" $ do
       "the Wurm is offered the Guard's whole bar of 4"
       deadlyOffered
       (offers ratsId deadlyWurm deadlyGuard)
+    -- Without deathtouch the Wurm's division is illegal, so CR 510.1e asks it
+    -- again before the Guard's.
     Spec.assertEqWith
       s
-      "and the same offer without deathtouch"
+      "and the same offer without deathtouch, asked again"
       plainOffered
-      (offers elvesId plainWurm plainGuard)
+      (take 1 (offers elvesId plainWurm plainGuard) <> offers elvesId plainWurm plainGuard)
     Spec.assertEqWith s "CR 702.2c: the Rats' 1 is lethal, so all 9 reach bob" (S.lifeOf S.bob withDeathtouch) (Just 11)
     Spec.assertBool s (not (Set.member deadlyGuard (GameState.battlefield withDeathtouch))) "CR 704.5h: the Guard took deathtouch damage"
     Spec.assertBool s (Set.member ratsId (GameState.battlefield withDeathtouch)) "the Rats took none of the Guard's damage and live"
-    -- Without deathtouch that 1 is a plain 1, the Guard is 3 short, and
-    -- the Wurm's division is rejected outright -- it assigns nothing at all.
+    -- Without deathtouch that 1 is a plain 1, the Guard is 3 short, and the
+    -- Wurm's division, repeated when asked again, assigns nothing at all.
     Spec.assertEqWith s "1 of plain damage leaves the bar unmet, so the Wurm assigns nothing" (S.lifeOf S.bob without) (Just 20)
     Spec.assertBool s (Set.member plainGuard (GameState.battlefield without)) "and the Guard survives on 1 damage"
     -- The same board paying that 3: the most that can reach bob without deathtouch.
