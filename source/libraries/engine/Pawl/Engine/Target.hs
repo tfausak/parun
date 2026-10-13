@@ -1927,7 +1927,7 @@ selectionLegal perspective seed source x slots sets chosen gs =
          in Set.isSubsetOf picked legal && size >= demanded && size <= hi
    in Set.isSubsetOf (Map.keysSet chosen) (Map.keysSet sets)
         && and (Map.elems (Map.mapWithKey slotLegal slots))
-        && jointlyCoherentGiven (wholePools gs) perspective seed source slots chosen gs
+        && jointlyCoherentGiven (wholePools gs) perspective False seed source slots chosen gs
 
 -- CR 601.2c's JOINT CHECK on its own: every jointly judged slot re-derived
 -- against what the whole announcement chose, under `seed`. Two callers, and
@@ -1950,20 +1950,21 @@ jointlyCoherent perspective seed source slots chosen gs = all Set.null (jointlyI
 -- unchanged target already refused before the change may stand.
 jointlyIllegal :: Maybe PlayerId -> Map SlotName Binding.Type.Binding -> ObjectId -> Map SlotName TargetSlot -> Map SlotName (Set Recipient) -> GameState -> Map SlotName (Set Recipient)
 jointlyIllegal perspective seed source slots chosen gs =
-  jointlyIllegalGiven (wholePools gs) perspective seed source slots chosen gs
+  jointlyIllegalGiven (wholePools gs) perspective False seed source slots chosen gs
 
 -- The same answers on a board the caller already walked -- see
--- legalRecipientsGiven.
-jointlyCoherentGiven :: Pools -> Maybe PlayerId -> Map SlotName Binding.Type.Binding -> ObjectId -> Map SlotName TargetSlot -> Map SlotName (Set Recipient) -> GameState -> Bool
-jointlyCoherentGiven pools perspective seed source slots chosen gs = all Set.null (jointlyIllegalGiven pools perspective seed source slots chosen gs)
+-- legalRecipientsGiven, whose `unannounced` this passes through: True for a gate
+-- asking ahead of CR 601.2b's X (Pawl.Engine.Cast.castAimable).
+jointlyCoherentGiven :: Pools -> Maybe PlayerId -> Bool -> Map SlotName Binding.Type.Binding -> ObjectId -> Map SlotName TargetSlot -> Map SlotName (Set Recipient) -> GameState -> Bool
+jointlyCoherentGiven pools perspective unannounced seed source slots chosen gs = all Set.null (jointlyIllegalGiven pools perspective unannounced seed source slots chosen gs)
 
-jointlyIllegalGiven :: Pools -> Maybe PlayerId -> Map SlotName Binding.Type.Binding -> ObjectId -> Map SlotName TargetSlot -> Map SlotName (Set Recipient) -> GameState -> Map SlotName (Set Recipient)
-jointlyIllegalGiven pools perspective seed source slots chosen gs =
+jointlyIllegalGiven :: Pools -> Maybe PlayerId -> Bool -> Map SlotName Binding.Type.Binding -> ObjectId -> Map SlotName TargetSlot -> Map SlotName (Set Recipient) -> GameState -> Map SlotName (Set Recipient)
+jointlyIllegalGiven pools perspective unannounced seed source slots chosen gs =
   let bindings = Map.union (fmap Binding.toRecipients chosen) seed
       refused slot targetSlot =
         Set.difference
           (Map.findWithDefault Set.empty slot chosen)
-          (legalRecipientsGiven pools perspective False bindings source targetSlot gs)
+          (legalRecipientsGiven pools perspective unannounced bindings source targetSlot gs)
    in Map.mapWithKey refused (Map.filter (jointlyJudged (Map.keysSet slots)) slots)
 
 -- CR 601.2c: is there ONE announcement that fills every slot at once, rather than

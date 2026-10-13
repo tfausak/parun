@@ -623,21 +623,24 @@ castAimable key announced x pid oid gs = case Game.faceOf oid gs of
         -- FENCE: no card pairs a per-player slot with a target-reading cost.
         slotsOf modal chosen = Target.announcedSlots pid oid gs (Card.modesTargetSlotsGiven enchants mutating chosen face {Face.spell = modal})
         setsOf slots = Target.legalSets (Just pid) True Map.empty oid slots gs
-        -- CR 601.2c's "another target": a slot reading a sibling's binding
-        -- (Filter.IsBound) is judged against the aiming it is part of, since the
-        -- sets above are measured with nothing bound and so let one object
-        -- answer both. Pawl.CastSpec's kicked Jilt under Kopala proves it.
-        consistent slots aiming =
-          and
-            [ Target.stillLegal (Just pid) (Binding.fromChoices aiming Nothing Seq.empty) oid recipient slot gs
-            | (name, recipients) <- Map.toList aiming,
-              Just slot <- [Map.lookup name slots],
-              not (Set.null (targetSlotSiblingNames slot)),
-              recipient <- Set.toList recipients
-            ]
+        -- CR 601.2c's joint check, asked as `setsOf` asks: ahead of the X, so a
+        -- bound reading it states none. The sets are measured slot by slot and
+        -- let one object answer both of "target" and "another target";
+        -- Pawl.CastSpec's kicked Jilt under Kopala proves the check, and
+        -- Pawl.TargetSpec's Synthetic Borrowed Exhumation under Kopala that it
+        -- reads neither an X nor a stand-in for the player slot.
+        pools = Target.wholePools gs
+        coherent slots aiming = Target.jointlyCoherentGiven pools (Just pid) True Map.empty oid slots aiming gs
         -- Every aiming of one selection's slots, at the counts CR 601.2c admits
-        -- for the X this gate is asking about (Target.aimingRanges).
-        aimingsOf slots = let sets = setsOf slots in filter (consistent slots) (Target.aimingsBy Cost.aimedReferent key (Target.aimingRanges (Just pid) oid (Just x) slots sets gs) sets)
+        -- for the X this gate is asking about (Target.aimingRanges). Where a slot
+        -- is jointly judged, recipients the cost cannot tell apart may still
+        -- differ to the joint check (whose graveyard, which object), so each is
+        -- its own class there and the check filters real aimings, not stand-ins.
+        aimingsOf slots =
+          let sets = setsOf slots
+              joint = any (Target.jointlyJudged (Map.keysSet slots)) (Map.elems slots)
+              signature r = (key r, if joint then Just r else Nothing)
+           in filter (coherent slots) (Target.aimingsBy Cost.aimedReferent signature (Target.aimingRanges (Just pid) oid (Just x) slots sets gs) sets)
         -- CR 700.2: the modes CR 601.2b announced, or every selection the printed
         -- instruction admits among the fillable modes -- a "choose two" spell
         -- (Ojutai's Command) aims across both.
