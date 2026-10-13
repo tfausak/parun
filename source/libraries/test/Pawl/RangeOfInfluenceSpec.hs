@@ -298,6 +298,27 @@ spec s registry = Spec.describe s "Range of influence" $ do
     Spec.assertEqWith s "CR 725.2/801.11 dave, the monarch, drew at the team's end step" (handOf (settle (S.withRange 1 endStep))) (handOf endStep + 1)
     Spec.assertEqWith s "as he does at an unlimited range" (handOf (settle endStep)) (handOf endStep + 1)
 
+  -- CR 805.4/805.4d with CR 801.7: the team's upkeep is each member's upkeep,
+  -- and Asylum Visitor ("At the beginning of each player's upkeep, if that
+  -- player has no cards in hand, you draw a card and you lose 1 life.")
+  -- triggers once per member, each copy judged against its controller's range
+  -- by the member it names. Every hand is empty, so each copy costs a life.
+  Spec.it s "CR 805.4d/801.7 each player's upkeep triggers for exactly the in-range members of a shared team turn" $ do
+    visitor <- S.printingOf s registry "Asylum Visitor"
+    island <- S.printingOf s registry "Island"
+    let shared = S.inTeams [[S.alice], [S.bob, S.carol, S.dave]] S.fourPlayerGame
+        teamed = shared {GameState.settings = (GameState.settings shared) {GameSettings.sharedTeamTurns = True}}
+        stock pid gs = List.foldl' (\g _ -> snd (S.addLibraryCard island pid g)) gs [1 :: Int .. 4]
+        -- The Visitor under `owner`, at the upkeep of the team `active` leads.
+        lifeAfter owner active gs =
+          let (_, placed) = S.addPermanent visitor owner (stock owner gs)
+           in S.lifeOf owner (upkeepOf active placed)
+    Spec.assertBool s (not (Game.wasInRangeOf S.alice S.carol (S.withRange 1 teamed))) "at range 1 carol is outside alice's range"
+    Spec.assertEqWith s "CR 805.4d/801.7 alice's Visitor triggers for bob and dave, not carol, at carol's team's upkeep" (lifeAfter S.alice S.carol (S.withRange 1 teamed)) (Just 18)
+    Spec.assertEqWith s "and for all three at an unlimited range" (lifeAfter S.alice S.carol teamed) (Just 17)
+    Spec.assertEqWith s "CR 801.7 dave's Visitor triggers for carol and himself, not bob, at his own team's upkeep" (lifeAfter S.dave S.bob (S.withRange 1 teamed)) (Just 18)
+    Spec.assertEqWith s "and for all three at an unlimited range" (lifeAfter S.dave S.bob teamed) (Just 17)
+
   -- CR 801.7 for an object the event involves: alice's Soul Warden ("Whenever
   -- another creature enters, you gain 1 life.") sees a Goblin Piker enter under
   -- carol, two seats away, and one under bob, one seat away.

@@ -43,7 +43,9 @@ import qualified Pawl.Engine.Cost as Cost
 import qualified Pawl.Engine.EndEffect as EndEffect
 import qualified Pawl.Engine.Engine as Engine
 import qualified Pawl.Engine.Event as Event
+import qualified Pawl.Engine.Filter as Filter
 import qualified Pawl.Engine.Game as Game
+import qualified Pawl.Engine.Interchangeable as Interchangeable
 import qualified Pawl.Engine.Modal as Modal
 import qualified Pawl.Engine.Projection as Projection
 import qualified Pawl.Engine.Projection.View as Projection
@@ -338,6 +340,34 @@ equipmentSpec s registry = Spec.describe s "Equipment" $ do
     Spec.assertEqWith s "on the Piker, its Bonesplitter stays on" (hostOf (enchanting creature)) (Just (Just (Recipient.ToCreature creature)))
     Spec.assertEqWith s "each enchanted permanent is tapped" (fmap Object.tapped (Game.lookupObject equip (enchanting equip)), fmap Object.tapped (Game.lookupObject creature (enchanting creature))) (Just TapState.Tapped, Just TapState.Tapped)
     Spec.assertBool s (not (any (null . GameState.stack . triggeredOn) [equip, creature])) "the enters trigger really was on the stack both times"
+  -- CR 608.2h / 113.7a: Bewitching Leechcraft ({1}{U} Aura, "When this Aura
+  -- enters, tap enchanted creature.", Scryfall 2026-10-13) destroyed in response
+  -- to its own enters trigger. The trigger still taps the creature the Aura
+  -- enchanted as it left (Pawl.Types.LastKnown.host). Bob's second Piker is the
+  -- bystander: it stays untapped, and while the trigger waits it is no longer
+  -- interchangeable with the enchanted one (Pawl.Engine.Interchangeable's
+  -- namedByAnother), since only one of them is about to be tapped. A third
+  -- Piker the Aura never touched is the control leg, alike with the bystander.
+  -- The gameplay case is data/scenarios/aura's Leechcraft scenario.
+  Spec.it s "CR 608.2h a departed Aura's enters trigger still names the creature it enchanted" $ do
+    island <- S.printingOf s registry "Island"
+    piker <- S.printingOf s registry "Goblin Piker"
+    leechcraft <- S.printingOf s registry "Bewitching Leechcraft"
+    let (enchanted, g1) = S.addPermanent piker S.bob (S.landsInPlay island 2)
+        (bystander, g2) = S.addPermanent piker S.bob g1
+        (untouched, g3) = S.addPermanent piker S.bob g2
+        (withSpell, spellId) = S.handOne leechcraft g3
+        triggered = S.runPure S.identityAnswer (S.runPure S.identityAnswer (S.runPure (aimedAtObject enchanted) withSpell (S.cast S.alice spellId)) Stack.resolveTop) Engine.settleForPriority
+        auras = Set.toList (Game.attachments enchanted triggered)
+        destroyed = List.foldl' (\g aura -> S.runPure S.identityAnswer g (Event.changeZone aura Zone.Graveyard)) triggered auras
+        resolved = S.runPure S.identityAnswer destroyed Stack.resolveTop
+        tappedOf oid g = fmap Object.tapped (Game.lookupObject oid g)
+        alike = Interchangeable.objects (Projection.projectAll destroyed) destroyed
+    Spec.assertEqWith s "the enchanted Piker is tapped, the bystander is not" (tappedOf enchanted resolved, tappedOf bystander resolved) (Just TapState.Tapped, Just TapState.Untapped)
+    Spec.assertEqWith s "while the trigger waits, the enchanted Piker is not alike with the bystander" (alike enchanted bystander, alike bystander enchanted) (False, False)
+    Spec.assertEqWith s "control leg: two Pikers the Aura never touched are alike" (alike bystander untouched) True
+    Spec.assertEqWith s "CR 608.2h the departed Aura's view names the host it had" (fmap (fmap Filter.attachedTo . Projection.viewWithLastKnownAnywhere destroyed) auras) [Just (Just enchanted)]
+    Spec.assertEqWith s "setup: one Aura, gone, its trigger waiting, the Piker untapped" (length auras, any (`Set.member` GameState.battlefield destroyed) auras, length (GameState.stack destroyed), tappedOf enchanted destroyed) (1, False, 1, Just TapState.Untapped)
   -- CR 301.5c's RESTRICTION, the arm the case above is the exception to. One
   -- board, one move, and the only difference is a Humility on the battlefield:
   -- CR 613.1f strips the Battery's reconfigure (it is a creature while

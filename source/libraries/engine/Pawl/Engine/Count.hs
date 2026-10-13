@@ -929,7 +929,9 @@ lastKnownView peers oid gs lastKnown =
       Filter.crewedThisTurn = crewedThisTurn oid gs,
       Filter.convokedThisTurn = convokedThisTurn oid gs,
       Filter.saddledThisTurn = saddledThisTurn oid gs,
-      Filter.attachedViews = Maybe.mapMaybe peers (Set.toList (Game.attachments oid gs))
+      Filter.attachedViews = Maybe.mapMaybe peers (Set.toList (Game.attachments oid gs)),
+      -- CR 303.4b: the host's id as it left, the live builder's Game.hostOf.
+      Filter.attachedTo = LastKnown.host lastKnown
     }
 
 -- CR 608.2i: was this object declared as an attacker this turn? From the turn's

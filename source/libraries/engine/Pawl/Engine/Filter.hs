@@ -448,7 +448,8 @@ data View = MkView
     -- second projection, so unlike `attachedToView` it needs no laziness
     -- argument -- an ObjectId is not a characteristic. Deliberately NOT narrowed
     -- to a host on the battlefield the way `attachedToView` is; see
-    -- Pawl.Engine.Projection.View.viewOfCharacteristics.
+    -- Pawl.Engine.Projection.View.viewOfCharacteristics. For an object that has
+    -- left, the host it had as it left (Pawl.Types.LastKnown.host).
     attachedTo :: Maybe ObjectId.ObjectId,
     -- CR 701.3a: could the SUBJECT of the attach now being performed -- the
     -- permanent an Effect.AttachTarget is moving -- legally be attached to this
@@ -1383,10 +1384,10 @@ data Context = MkContext
     -- candidate -- the division sourceMeasures makes against `source`. View.attachedTo
     -- is the same read in the other direction, per candidate.
     --
-    -- Filled, live off the board (Pawl.Engine.Game.hostOf), by
-    -- Pawl.Engine.SourceContext with every other source-derived field, so every
-    -- position framed by its source answers it (Ray of Frost, Oppressive Rays,
-    -- Pariah).
+    -- Filled by Pawl.Engine.SourceContext with every other source-derived
+    -- field, so every position framed by its source answers it (Ray of Frost,
+    -- Oppressive Rays, Pariah): live off the board, or for a source that has
+    -- left, the host it had as it left (CR 608.2h, Game.hostWithLastKnown).
     --
     -- Nothing in contextFor below, and the atom answers False on that Nothing --
     -- its own arm's choice, not a rule about this record, slotControllers above
@@ -2116,7 +2117,8 @@ matches context view predicate = case predicate of
   -- CR 303.4b: the same comparison a THIRD way -- the source's host against the
   -- candidate, rather than the candidate's host against the source. A live read
   -- too, one record over: the caller re-reads Object.attachedTo on every match, so
-  -- an Aura that has moved names its new host at once. Vacuously False where the
+  -- an Aura that has moved names its new host at once; one that has left names
+  -- the host it had as it left (CR 608.2h). Vacuously False where the
   -- source is attached to nothing or to a player, where no source frames the match,
   -- and where the position does not supply the field at all.
   Filter.IsHostOfSource -> case (identity view, sourceAttachedTo context) of

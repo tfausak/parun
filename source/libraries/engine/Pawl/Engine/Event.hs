@@ -8675,6 +8675,8 @@ lastKnownFrom gs oid obj =
     -- CR 303.4b / 301.5a with the arrow turned round, taken while the answer
     -- still exists (CR 603.10a).
     (Game.attachments oid gs)
+    -- CR 303.4b in its own direction: what it was attached to (CR 608.2h).
+    (Game.hostOf oid gs)
     (Object.chosenNames obj)
     (Object.chosenPlayer obj)
     (Object.chosenColors obj)

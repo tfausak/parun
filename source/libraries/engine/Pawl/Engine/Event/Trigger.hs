@@ -306,10 +306,13 @@ movedOf event = case event of
 -- nothing.
 --
 -- CR 805.4: under shared team turns a step that begins is every active
--- teammate's step, so it is within the range of each player whose turn it is,
--- however far that player sits from the active player the event names.
--- Pawl.RangeOfInfluenceSpec's "CR 805.4/801.7 a teammate two seats from the
--- active player still sees the team's own step begin" proves it.
+-- player's step, so it is within range when any player whose turn it is lies
+-- in range -- however far the active player the event names sits, and always
+-- for a member of the active team. Which members a CR 805.4d per-player trigger
+-- names is stepTriggerPlayers's question. Pawl.RangeOfInfluenceSpec's "CR
+-- 805.4/801.7 a teammate two seats from the active player still sees the
+-- team's own step begin" and "CR 805.4d/801.7 each player's upkeep triggers for
+-- exactly the in-range members of a shared team turn" prove it.
 eventWithinRange :: Map.Map ObjectId (BattlefieldCandidate.BattlefieldCandidate PC.ProjectedCharacteristics) -> GameState -> PlayerId -> GameEvent -> Bool
 eventWithinRange board gs you event
   | Map.null (RangeOfInfluence.unwrap (GameSettings.rangeOfInfluence (GameState.settings gs))) = True
@@ -327,7 +330,7 @@ eventWithinRange board gs you event
           -- the turn's players.
           playerWithin pid =
             reaches pid || case event of
-              GameEvent.StepBegan _ -> Turn.sharesTurn gs pid you
+              GameEvent.StepBegan _ -> any (\mate -> Turn.sharesTurn gs pid mate && reaches mate) (GameState.turnOrder gs)
               _ -> False
        in all playerWithin players && all objectWithin objects
 
@@ -1064,15 +1067,17 @@ eventGroups = NonEmpty.groupBy (\a b -> LoggedEvent.group a == LoggedEvent.group
 -- CR 805.4d: the players a step beginning triggers this ability once each for,
 -- or Nothing where it triggers once. An ability that reads CR 603.2b's "that
 -- player" (Binding.triggerPlayer) through its effects, targets or CR 603.4
--- intervening "if" triggers once per player whose step it is (stepPlayers);
--- one that does not triggers once, however many share the turn.
+-- intervening "if" triggers once per player whose step it is (stepPlayers)
+-- and who is within @you@'s range (CR 801.7, the event each copy names being
+-- that player's step); one that does not triggers once, however many share the
+-- turn.
 --
 -- A partial case with a wildcard: this answers about one condition and one
 -- event shape, and every other pair keeps its single trigger.
 stepTriggerPlayers :: GameState -> PlayerId -> TriggerCondition -> GameEvent -> TriggeredAbility.TriggeredAbility Card (GrantedAbility.GrantedAbility Card) -> Maybe [PlayerId]
 stepTriggerPlayers gs you cond event ability = case (cond, event) of
   (TriggerCondition.StepBegins (StepBegins.MkStepBegins wanted _ scope), GameEvent.StepBegan (StepBegan.MkStepBegan began _))
-    | began == wanted && Map.member Binding.triggerPlayer (Slots.triggeredAbilitySlots ability) -> Just (stepPlayers gs scope you)
+    | began == wanted && Map.member Binding.triggerPlayer (Slots.triggeredAbilitySlots ability) -> Just (filter (\player -> Game.wasInRangeOf you player gs) (stepPlayers gs scope you))
   (TriggerCondition.AnyOf conditions, _) -> Maybe.listToMaybe (Maybe.mapMaybe (\c -> stepTriggerPlayers gs you c event ability) conditions)
   _ -> Nothing
 

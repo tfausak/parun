@@ -745,6 +745,11 @@ isBlocking oid gs =
 hostOf :: ObjectId -> GameState -> Maybe ObjectId
 hostOf oid gs = lookupObject oid gs >>= Object.attachedTo >>= Recipient.objectOf
 
+-- hostOf through CR 608.2h: for an object that has left, what it was attached
+-- to as it left (Pawl.Types.LastKnown.host).
+hostWithLastKnown :: ObjectId -> GameState -> Maybe ObjectId
+hostWithLastKnown oid gs = Monad.join (liveOrLastKnown (const (hostOf oid gs)) LastKnown.host oid gs)
+
 -- CR 303.4b / 301.5a with the arrow turned round: the permanents attached to
 -- this one. pawl keeps the link on the ATTACHED permanent, so there is nothing
 -- to look up from this side and the answer is a sweep of the battlefield --
