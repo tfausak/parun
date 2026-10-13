@@ -2077,6 +2077,7 @@ library types
     Pawl.Types.AlternativeActivationCost
     Pawl.Types.AlternativeCost
     Pawl.Types.Amass
+    Pawl.Types.Announcement
     Pawl.Types.Answer
     Pawl.Types.Ante
     Pawl.Types.AnyNumberDiscard

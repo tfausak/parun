@@ -27,9 +27,11 @@ import Pawl.Types.Action (Action)
 import qualified Pawl.Types.Action as Action
 import qualified Pawl.Types.ActivatedAbility as ActivatedAbility
 import qualified Pawl.Types.ActiveCopy as ActiveCopy
+import qualified Pawl.Types.Announcement as Announcement
 import qualified Pawl.Types.Card as Card
 import qualified Pawl.Types.ContinuousEffect as ContinuousEffect
 import qualified Pawl.Types.Cost as Cost
+import qualified Pawl.Types.CostComponent as CostComponent
 import qualified Pawl.Types.EventGroup as EventGroup
 import Pawl.Types.GameEvent (GameEvent)
 import qualified Pawl.Types.GameEvent as GameEvent
@@ -77,59 +79,60 @@ import qualified Pawl.Types.Timestamp as Timestamp
 --
 -- Object ids are compared as they stand, so a loop that moves a card (CR
 -- 400.7) is never detected.
---
--- Not implemented: putting counter stamps (Object.counterTimestamps, CR
--- 613.7c) in canonical form as `canonicalEffects` does the stored effects, so
--- a loop that puts a counter on and takes it off again never recurs. Every
--- printing that does so with an activation pays a cost or names a target,
--- which `choiceless` does not refuse (#4663): MTGJSON 2026-10-08, text "{0}:"
--- beside "counter", only Vivi Ornitier's mana ability.
 digest :: GameState -> StateDigest
 digest gs =
-  StateDigest.MkStateDigest
-    { StateDigest.unwrap =
-        gs
-          { GameState.events = Seq.empty,
-            GameState.activationsThisTurn = Seq.empty,
-            GameState.nextObjectId = ObjectId.MkObjectId 0,
-            GameState.nextTimestamp = Timestamp.MkTimestamp 0,
-            GameState.nextPrintingId = PrintingId.MkPrintingId 0,
-            GameState.nextEventGroup = EventGroup.MkEventGroup 0,
-            GameState.eventGroupDepth = 0,
-            GameState.lastChoice = Timestamp.MkTimestamp 0,
-            GameState.loopInvolvement = Map.empty,
-            GameState.printings = Map.empty,
-            GameState.printingIds = Map.empty,
-            GameState.scannedThrough = 0,
-            GameState.damageScannedThrough = 0,
-            GameState.battlefieldWhenTriggered = Map.empty,
-            GameState.controlSample = Map.empty,
-            GameState.lastKnown = Map.empty,
-            GameState.stackArchive = Map.empty,
-            GameState.stackedIn = Map.empty,
-            -- Canonical rather than dropped, so CR 732.3's own example recurs.
-            GameState.continuousEffects = canonicalEffects gs,
-            -- Canonical rather than dropped: a payment leaves an empty pool
-            -- behind where there was no entry, and no card tells the two apart.
-            GameState.manaPool = Map.filter (not . null . Mana.unwrap) (GameState.manaPool gs)
-          },
-      StateDigest.events = GameState.events gs,
-      StateDigest.activations = GameState.activationsThisTurn gs
-    }
+  let (effects, objects) = canonicalStamps gs
+   in StateDigest.MkStateDigest
+        { StateDigest.unwrap =
+            gs
+              { GameState.events = Seq.empty,
+                GameState.activationsThisTurn = Seq.empty,
+                GameState.nextObjectId = ObjectId.MkObjectId 0,
+                GameState.nextTimestamp = Timestamp.MkTimestamp 0,
+                GameState.nextPrintingId = PrintingId.MkPrintingId 0,
+                GameState.nextEventGroup = EventGroup.MkEventGroup 0,
+                GameState.eventGroupDepth = 0,
+                GameState.lastChoice = Timestamp.MkTimestamp 0,
+                GameState.loopInvolvement = Map.empty,
+                GameState.printings = Map.empty,
+                GameState.printingIds = Map.empty,
+                GameState.scannedThrough = 0,
+                GameState.damageScannedThrough = 0,
+                GameState.battlefieldWhenTriggered = Map.empty,
+                GameState.controlSample = Map.empty,
+                GameState.lastKnown = Map.empty,
+                GameState.stackArchive = Map.empty,
+                GameState.stackedIn = Map.empty,
+                -- Canonical rather than dropped, so CR 732.3's own example recurs,
+                -- and a loop that moves a counter back.
+                GameState.continuousEffects = effects,
+                GameState.objects = objects,
+                -- Canonical rather than dropped: a payment leaves an empty pool
+                -- behind where there was no entry, and no card tells the two apart.
+                GameState.manaPool = Map.filter (not . null . Mana.unwrap) (GameState.manaPool gs)
+              },
+          StateDigest.events = GameState.events gs,
+          StateDigest.activations = GameState.activationsThisTurn gs
+        }
 
--- | CR 732.3 over GameState.continuousEffects: the rows as the game can tell
+-- | CR 732.3 over the stamps an action leaves behind -- the stored continuous
+-- effects (CR 611.2a) and the counters' (CR 613.7c) -- as the game can tell
 -- them apart. A row is dropped where a later one from the same source, over
 -- the same fixed set (CR 611.2c) and ending with it, `erases` it, which leaves
--- nothing it did standing (CR 613.7). The rows stamped after every object's
--- and copy effect's stamp -- what CR 613.7 orders a stored effect against --
--- are then restamped in order from just above the latest of those, since only
--- their order is ever read (`digest` drops GameState.nextTimestamp).
+-- nothing it did standing (CR 613.7); a counter stamp, where the object has no
+-- counters of its kind, which leaves it inert. The rest stamped after every
+-- other stamp CR 613.7 orders them against (`layeredStamps`) are then
+-- restamped in order from just above the latest of those, since only their
+-- order is ever read (`digest` drops GameState.nextTimestamp).
 --
--- Pawl.FragmentedSpec's Mist Dragon cases prove both halves, and its Arcanum
--- Wings case the floor.
-canonicalEffects :: GameState -> [ContinuousEffect.ContinuousEffect Card.Card]
-canonicalEffects gs =
+-- Pawl.FragmentedSpec's Mist Dragon cases prove both halves for the rows, its
+-- Arcanum Wings case the floor, and its Grim Poppet case both for the
+-- counters.
+canonicalStamps :: GameState -> ([ContinuousEffect.ContinuousEffect Card.Card], Map.Map ObjectId.ObjectId Object.Object)
+canonicalStamps gs =
   let rows = GameState.continuousEffects gs
+      live obj = obj {Object.counterTimestamps = Map.filterWithKey (\kind _ -> Map.findWithDefault 0 kind (Object.counters obj) > 0) (Object.counterTimestamps obj)}
+      objects = fmap live (GameState.objects gs)
       erased row = any (supersedes row) rows
       supersedes row later =
         ContinuousEffect.timestamp later > ContinuousEffect.timestamp row
@@ -139,11 +142,14 @@ canonicalEffects gs =
           && erases (ContinuousEffect.modification later) (ContinuousEffect.modification row)
       kept = filter (not . erased) rows
       floor_ = maximum (Timestamp.MkTimestamp 0 : layeredStamps gs)
-      above = Set.fromList (filter (> floor_) (fmap ContinuousEffect.timestamp kept))
+      movable = fmap ContinuousEffect.timestamp kept <> foldMap (Map.elems . Object.counterTimestamps) objects
+      above = Set.fromList (filter (> floor_) movable)
       restamp ts = case Set.lookupIndex ts above of
         Just rank -> Timestamp.MkTimestamp (Timestamp.unwrap floor_ + 1 + Int.toNaturalSaturating rank)
         Nothing -> ts
-   in fmap (\row -> row {ContinuousEffect.timestamp = restamp (ContinuousEffect.timestamp row)}) kept
+   in ( fmap (\row -> row {ContinuousEffect.timestamp = restamp (ContinuousEffect.timestamp row)}) kept,
+        fmap (\obj -> obj {Object.counterTimestamps = fmap restamp (Object.counterTimestamps obj)}) objects
+      )
 
 -- | Does `later`, applied after `earlier` to the same objects, leave nothing
 -- `earlier` did? A removal of a keyword (CR 613.1f) erases an earlier removal
@@ -159,17 +165,16 @@ erases later earlier = case (later, earlier) of
   (Modification.LoseKeyword lost, Modification.GainKeyword keyword) -> lost == keyword && Maybe.isNothing (Keyword.familyOf keyword)
   _ -> False
 
--- Every stamp CR 613.7 orders a stored continuous effect against, bar the
--- stored effects themselves: each object's own (CR 613.7a, 613.7d), its
--- counters' (613.7c), its stickers' (613.7k) and the moments it was turned
--- over or became a world, and each stored copy effect's.
+-- Every stamp CR 613.7 orders a stored continuous effect or a counter
+-- against, bar those two kinds themselves: each object's own (CR 613.7a,
+-- 613.7d), its stickers' (613.7k) and the moments it was turned over or became
+-- a world, and each stored copy effect's.
 layeredStamps :: GameState -> [Timestamp.Timestamp]
 layeredStamps gs =
   concatMap
     ( \obj ->
         Object.timestamp obj
-          : Map.elems (Object.counterTimestamps obj)
-            <> fmap StickerPlacement.timestamp (Foldable.toList (Object.stickers obj))
+          : fmap StickerPlacement.timestamp (Foldable.toList (Object.stickers obj))
             <> Maybe.maybeToList (Object.turnedOverAt obj)
             <> Maybe.maybeToList (Object.worldSince obj)
     )
@@ -424,42 +429,49 @@ planarDieRolled event = case event of
   GameEvent.PlanarDieRolled {} -> True
   _ -> False
 
--- | CR 732.3: the actions `pid`, asked at `gs` (digested as `here`), may not
--- take, so a fragmented loop does not continue. Empty unless `here` repeats a
--- state this loop has seen, nothing in the game reads the history the loop
--- appended since (`lapIsRead`), and `pid` is the player the rule names.
+-- | CR 732.3: the game choices `pid`, asked at `gs` (digested as `here`), may
+-- not make, so a fragmented loop does not continue: the actions refused
+-- outright, and the activations refused as announced with. Both empty unless
+-- `here` repeats a state this loop has seen, nothing in the game reads the
+-- history the loop appended since (`lapIsRead`), and `pid` is the player the
+-- rule names.
 --
 -- "Involved in the loop" is the players who took a non-Pass action since the
 -- state FIRST occurred: a shorter loop nested inside a longer one through the
 -- same state (a no-op lap by one player) must not hide the longer one's
--- players. Forbidden is every `choiceless` action `pid` took at ANY prior
--- occurrence, not only the last, so A, B, A, B through one state is refused
--- too. Pass never is (CR 732.5). Pawl.FragmentedSpec's control case is the
--- board where the nesting happens.
-forbidden :: StateDigest -> GameState -> PlayerId -> LoopTrail -> Set.Set Action
+-- players. Forbidden is every choice `pid` made at ANY prior occurrence, not
+-- only the last, so A, B, A, B through one state is refused too: a
+-- `choiceless` action as a whole, and an activation whose payment is
+-- `forcedPayment` by its announcement, so aiming it elsewhere (CR 601.2c) is
+-- still a choice to make. A choice made later in the lap -- as the object
+-- resolves (CR 608.2d), or for a trigger it causes -- is a game choice of its
+-- own, and leaves this one as it was: CR 732.3's example refuses "activating
+-- that creature's ability again" outright. Pass never is (CR 732.5). Pawl.FragmentedSpec's
+-- control case is the board where the nesting happens, its Grim Poppet case
+-- the announcement, and its Fatestitcher case a choice at resolution.
+forbidden :: StateDigest -> GameState -> PlayerId -> LoopTrail -> (Set.Set Action, Set.Set (Action, Announcement.Announcement))
 forbidden here gs pid loopTrail =
   case Map.findWithDefault [] here (LoopTrail.seen loopTrail) of
-    [] -> Set.empty
+    [] -> (Set.empty, Set.empty)
     occurrences ->
       let choices = LoopTrail.choices loopTrail
           firstSeen = minimum occurrences
-          acted (_, _, action) = action /= Action.Pass
-          involved = Set.fromList [who | (_, who, _) <- filter acted (Foldable.toList (Seq.drop firstSeen choices))]
+          acted (_, _, action, _) = action /= Action.Pass
+          involved = Set.fromList [who | (_, who, _, _) <- filter acted (Foldable.toList (Seq.drop firstSeen choices))]
           named = List.find (`Set.member` involved) (Game.turnOrderFrom (GameState.activePlayer gs) gs)
-          taken = Set.fromList [action | (_, who, action) <- Maybe.mapMaybe (`Seq.lookup` choices) occurrences, who == pid, choiceless action]
+          made = [(action, announced) | (_, who, action, announced) <- Maybe.mapMaybe (`Seq.lookup` choices) occurrences, who == pid]
+          taken = Set.fromList [action | (action, _) <- made, choiceless action]
+          announcedWith = Set.fromList [(action, announcement) | (action, Just announcement) <- made, forcedPayment (Announcement.cost announcement)]
           unread = case Seq.lookup firstSeen choices of
-            Just (there, _, _) -> not (lapIsRead there gs)
+            Just (there, _, _, _) -> not (lapIsRead there gs)
             Nothing -> False
-       in if named == Just pid && not (Set.null taken) && unread then taken else Set.empty
+       in if named == Just pid && unread then (taken, announcedWith) else (Set.empty, Set.empty)
 
 -- | Is `action` the whole of the game choice (CR 732.1), so refusing it
 -- refuses only the choice that continued the loop? An activation with no
 -- target, a single mode, no X and no cost but nothing to pay; never Pass (CR
--- 732.5).
---
--- Not implemented: refusing an activation by the choices it was made with --
--- its targets (CR 601.2c), modes, X or payment -- so one that leaves any of
--- them open is never refused, and a loop through it is not broken (#4663).
+-- 732.5). Refused from the menu, where an activation with more to announce is
+-- refused by its announcement instead (`forbidden`).
 choiceless :: Action -> Bool
 choiceless action = case action of
   Action.Activate _ ability ->
@@ -473,26 +485,48 @@ choiceless action = case action of
           && null (Cost.components cost)
   _ -> False
 
+-- | Does paying `cost` leave the payer nothing to choose (CR 601.2g/h), so an
+-- announcement made with it is the whole of the game choice? No mana, and
+-- only components naming the object the cost is on.
+--
+-- Not implemented: refusing an activation by how it was paid -- the mana, or
+-- the objects a component chose -- so one paid any other way is never refused
+-- (#5059).
+forcedPayment :: Cost.Cost keyword -> Bool
+forcedPayment cost =
+  maybe True (null . ManaCost.unwrap) (Cost.mana cost) && all named (Cost.components cost)
+  where
+    named component = case component of
+      CostComponent.TapThis -> True
+      CostComponent.UntapThis -> True
+      CostComponent.RemoveCountersFromThis _ -> True
+      _ -> False
+
 -- | Note that `pid`, asked at `here`, chose `action`. Held as pending until
--- the next prompt, since an action CR 733.1 reversed leaves the game in the
--- state it was taken in and never happened. A REGRESSION FENCE: only a
--- `choiceless` activation is ever refused, and none of those can be reversed,
--- so no test observes the hold; it keeps a reversed attempt from counting its
--- player as involved.
+-- the next prompt, since an action CR 733.1 reversed -- a refused
+-- announcement among them -- leaves the game in the state it was taken in and
+-- never happened. A REGRESSION FENCE: the Grim Poppet case reverses one, but
+-- counting it changes nothing that case refuses, so no test observes the
+-- hold; it keeps a reversed attempt from counting its player as involved.
 record :: StateDigest -> PlayerId -> Action -> LoopTrail -> LoopTrail
-record here pid action loopTrail = loopTrail {LoopTrail.pending = Just (here, pid, action)}
+record here pid action loopTrail = loopTrail {LoopTrail.pending = Just (here, pid, action, Nothing)}
+
+-- | Note what the pending activation was announced with, once it has been.
+announce :: Maybe Announcement.Announcement -> LoopTrail -> LoopTrail
+announce announced loopTrail =
+  loopTrail {LoopTrail.pending = fmap (\(there, pid, action, _) -> (there, pid, action, announced)) (LoopTrail.pending loopTrail)}
 
 -- | Commit the pending choice, unless the game is still in the state it was
 -- made in. Both functions above take a trail settled against `here`.
 settle :: StateDigest -> LoopTrail -> LoopTrail
 settle here loopTrail = case LoopTrail.pending loopTrail of
   Nothing -> loopTrail
-  Just (there, pid, action)
+  Just (there, pid, action, announced)
     | there == here -> loopTrail {LoopTrail.pending = Nothing}
     | otherwise ->
         let at = Seq.length (LoopTrail.choices loopTrail)
-         in LoopTrail.MkLoopTrail
-              { LoopTrail.choices = LoopTrail.choices loopTrail Seq.|> (there, pid, action),
+         in loopTrail
+              { LoopTrail.choices = LoopTrail.choices loopTrail Seq.|> (there, pid, action, announced),
                 LoopTrail.seen = Map.insertWith (<>) there [at] (LoopTrail.seen loopTrail),
                 LoopTrail.pending = Nothing
               }
