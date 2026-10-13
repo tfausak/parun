@@ -1,0 +1,279 @@
+{
+  "description": "CR 733.1 only the Spirit owner whose payment fails is asked again",
+  "note": "Cut the Tethers offers bob and carol {3} each to keep their Clarion Spirits (CR 118.12a). Both agree; bob then declines his first mana source, so his payment fails and he alone is asked again (CR 733.1). carol's answer stands: she is asked once and pays once, and both Spirits stay.",
+  "board": {
+    "seats": [
+      {
+        "name": "alice",
+        "battlefield": [
+          {
+            "card": "Island",
+            "label": "a1",
+            "ready": true
+          },
+          {
+            "card": "Island",
+            "label": "a2",
+            "ready": true
+          },
+          {
+            "card": "Island",
+            "label": "a3",
+            "ready": true
+          },
+          {
+            "card": "Island",
+            "label": "a4",
+            "ready": true
+          }
+        ],
+        "hand": [
+          {
+            "card": "Cut the Tethers",
+            "label": "cut"
+          }
+        ]
+      },
+      {
+        "name": "bob",
+        "battlefield": [
+          {
+            "card": "Island",
+            "label": "b1",
+            "ready": true
+          },
+          {
+            "card": "Island",
+            "label": "b2",
+            "ready": true
+          },
+          {
+            "card": "Island",
+            "label": "b3",
+            "ready": true
+          },
+          {
+            "card": "Clarion Spirit",
+            "label": "bob-spirit",
+            "ready": true
+          }
+        ]
+      },
+      {
+        "name": "carol",
+        "battlefield": [
+          {
+            "card": "Island",
+            "label": "c1",
+            "ready": true
+          },
+          {
+            "card": "Island",
+            "label": "c2",
+            "ready": true
+          },
+          {
+            "card": "Island",
+            "label": "c3",
+            "ready": true
+          },
+          {
+            "card": "Clarion Spirit",
+            "label": "carol-spirit",
+            "ready": true
+          }
+        ]
+      }
+    ],
+    "active": "alice",
+    "step": "PrecombatMain"
+  },
+  "timeline": [
+    {
+      "turn": 1,
+      "step": "PrecombatMain",
+      "player": "bob",
+      "do": {
+        "Answer": {
+          "prompt": "ChooseToPay",
+          "with": {
+            "type": "Pays"
+          }
+        }
+      }
+    },
+    {
+      "turn": 1,
+      "step": "PrecombatMain",
+      "player": "bob",
+      "do": {
+        "Answer": {
+          "prompt": "ChooseManaSource",
+          "with": null
+        }
+      }
+    },
+    {
+      "turn": 1,
+      "step": "PrecombatMain",
+      "player": "bob",
+      "do": {
+        "Answer": {
+          "prompt": "ChooseToPay",
+          "with": {
+            "type": "Pays"
+          }
+        }
+      }
+    },
+    {
+      "turn": 1,
+      "step": "PrecombatMain",
+      "player": "bob",
+      "do": {
+        "Answer": {
+          "prompt": "ChooseManaSource",
+          "with": "$b1"
+        }
+      }
+    },
+    {
+      "turn": 1,
+      "step": "PrecombatMain",
+      "player": "bob",
+      "do": {
+        "Answer": {
+          "prompt": "ChooseManaSource",
+          "with": "$b2"
+        }
+      }
+    },
+    {
+      "turn": 1,
+      "step": "PrecombatMain",
+      "player": "bob",
+      "do": {
+        "Answer": {
+          "prompt": "ChooseManaSource",
+          "with": "$b3"
+        }
+      }
+    },
+    {
+      "turn": 1,
+      "step": "PrecombatMain",
+      "player": "carol",
+      "do": {
+        "Answer": {
+          "prompt": "ChooseToPay",
+          "with": {
+            "type": "Pays"
+          }
+        }
+      }
+    },
+    {
+      "turn": 1,
+      "step": "PrecombatMain",
+      "player": "carol",
+      "do": {
+        "Answer": {
+          "prompt": "ChooseManaSource",
+          "with": "$c1"
+        }
+      }
+    },
+    {
+      "turn": 1,
+      "step": "PrecombatMain",
+      "player": "carol",
+      "do": {
+        "Answer": {
+          "prompt": "ChooseManaSource",
+          "with": "$c2"
+        }
+      }
+    },
+    {
+      "turn": 1,
+      "step": "PrecombatMain",
+      "player": "carol",
+      "do": {
+        "Answer": {
+          "prompt": "ChooseManaSource",
+          "with": "$c3"
+        }
+      }
+    },
+    {
+      "turn": 1,
+      "step": "PrecombatMain",
+      "player": "alice",
+      "do": {
+        "Cast": {
+          "object": "$cut",
+          "mana": [
+            "$a1",
+            "$a2",
+            "$a3",
+            "$a4"
+          ]
+        }
+      }
+    },
+    {
+      "turn": 1,
+      "step": "PrecombatMain",
+      "player": "alice",
+      "do": "Pass"
+    },
+    {
+      "turn": 1,
+      "step": "PrecombatMain",
+      "player": "alice",
+      "check": {
+        "Count": {
+          "player": "bob",
+          "zone": "Battlefield",
+          "card": "Clarion Spirit",
+          "count": 1
+        }
+      }
+    },
+    {
+      "turn": 1,
+      "step": "PrecombatMain",
+      "player": "alice",
+      "check": {
+        "Count": {
+          "player": "carol",
+          "zone": "Battlefield",
+          "card": "Clarion Spirit",
+          "count": 1
+        }
+      }
+    },
+    {
+      "turn": 1,
+      "step": "PrecombatMain",
+      "player": "alice",
+      "check": {
+        "Tapped": {
+          "object": "$b3",
+          "tapped": true
+        }
+      }
+    },
+    {
+      "turn": 1,
+      "step": "PrecombatMain",
+      "player": "alice",
+      "check": {
+        "Tapped": {
+          "object": "$c3",
+          "tapped": true
+        }
+      }
+    }
+  ]
+}

@@ -11918,7 +11918,7 @@ loopOffers runSubgame resolving source controller slot legal members gate = do
               Nothing -> pure (Just (done, current))
               Just taken -> do
                 (bound, answered) <- payGateCost runSubgame (fst (NonEmpty.head taken)) payer source (Cost.together (fmap snd taken))
-                payAgain failed (NonEmpty.toList (fmap snd taken), answered) (fmap (\b -> (Map.insert payer b done, current)) bound) (\failed' -> reagree payer current >>= attempt failed')
+                payAgain failed (fst (NonEmpty.head taken), NonEmpty.toList (fmap snd taken), answered) (fmap (\b -> (Map.insert payer b done, current)) bound) (\failed' -> reagree payer current >>= attempt failed')
          in fmap (Maybe.fromMaybe (done, answers)) (attempt Set.empty answers)
   asked <- Monad.foldM (\acc (payer, member) -> fmap (acc Seq.|>) (agreeOne acc payer member)) Seq.empty offers
   (paid, answered) <- Monad.foldM payFor (Map.empty, asked) order
