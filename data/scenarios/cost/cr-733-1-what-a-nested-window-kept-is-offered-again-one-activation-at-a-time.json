@@ -38,7 +38,7 @@
       "turn": 1,
       "step": "PrecombatMain",
       "player": "alice",
-      "do": {
+      "refuse": {
         "Cast": {
           "object": "$piker",
           "mana": [
