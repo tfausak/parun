@@ -25,6 +25,7 @@ import qualified Pawl.Engine.Game as Game
 import qualified Pawl.Engine.Initiative as Initiative
 import qualified Pawl.Engine.Monarch as Monarch
 import qualified Pawl.Engine.Planechase as Planechase
+import qualified Pawl.Engine.PlayerEffect as PlayerEffect
 import qualified Pawl.Engine.Projection as Projection
 import qualified Pawl.Engine.Projection.View as Projection
 import qualified Pawl.Engine.Replacement as Replacement
@@ -34,6 +35,7 @@ import Pawl.Types.Departure (Departure)
 import qualified Pawl.Types.Departure as Departure
 import Pawl.Types.Game (Game)
 import qualified Pawl.Types.GameEvent as GameEvent
+import qualified Pawl.Types.GameOutcome as GameOutcome
 import qualified Pawl.Types.GameSettings as GameSettings
 import Pawl.Types.GameState (GameState)
 import qualified Pawl.Types.GameState as GameState
@@ -100,7 +102,10 @@ leaveTogether :: Departure -> [PlayerId] -> Game (Game ())
 leaveTogether reason named = do
   continues <- State.gets continuesAfterDeparture
   before <- State.get
-  let departing = fmap (\pid -> (reason, pid)) named <> Emperor.fallsWith reason named before <> teamFallsWith reason named before
+  -- CR 101.2 / 104.3i: a general an effect says can't lose the game stays in
+  -- when their emperor's team loses; data/scenarios/emperor/cr-104-3i-* proves it.
+  let keeps (why, pid) = why /= Departure.Lost || not (PlayerEffect.precludes GameOutcome.Lose pid before)
+      departing = fmap (\pid -> (reason, pid)) named <> filter keeps (Emperor.fallsWith reason named before) <> teamFallsWith reason named before
       pids = fmap snd departing
       lose why p = p {Player.status = Status.Departed why}
       -- CR 801.2c: the seat keeps counting toward range of influence until the

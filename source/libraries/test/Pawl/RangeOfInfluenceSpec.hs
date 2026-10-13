@@ -528,6 +528,20 @@ spec s registry = Spec.describe s "Range of influence" $ do
     Spec.assertEqWith s "CR 104.3h at range 1 nobody leaves" (Game.stillPlaying (upkeepOf S.alice (S.withRange 1 atForty))) [S.alice, S.bob, S.carol, S.dave]
     Spec.assertEqWith s "CR 104.2b at an unlimited range alice still wins" (GameState.result (upkeepOf S.alice atForty)) (Just (Result.Won S.alice))
 
+  -- CR 104.3h / 801.2: the same Sovereign beside bob's Platinum Angel ("you
+  -- can't lose the game and your opponents can't win the game"), whose range 1
+  -- reaches alice. At range 1 alice's effect wins nothing -- it is bob and dave
+  -- LOSING -- so the Angel's can't-win has nothing to stop: dave loses and bob,
+  -- who can't, stays. At an unlimited range it is alice's win, which it stops.
+  Spec.it s "CR 104.3h a player who can't win still makes opponents within range lose" $ do
+    sovereign <- S.printingOf s registry "Felidar Sovereign"
+    angel <- S.printingOf s registry "Platinum Angel"
+    let (_, g0) = S.addPermanent sovereign S.alice S.fourPlayerGame
+        (_, g1) = S.addPermanent angel S.bob g0
+        atForty = g1 {GameState.players = Map.adjust (\p -> p {Player.life = 40}) S.alice (GameState.players g1)}
+    Spec.assertEqWith s "CR 104.3h at range 1 dave leaves and bob stays" (Game.stillPlaying (upkeepOf S.alice (S.withRange 1 atForty))) [S.alice, S.bob, S.carol]
+    Spec.assertEqWith s "CR 101.2 at an unlimited range nobody leaves" (Game.stillPlaying (upkeepOf S.alice atForty)) [S.alice, S.bob, S.carol, S.dave]
+
   -- CR 801.16: Pawl.GameSpec's CR 104.4b loop -- alice's Sporemound mints a
   -- Saproling, a Life and Limb makes it a Forest land, and another player's
   -- Aether Flash buries it -- at SIX seats, so that two players can sit outside

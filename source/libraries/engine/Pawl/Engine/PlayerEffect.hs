@@ -3331,7 +3331,8 @@ prohibitsLosingLife pid gs =
 
 -- CR 104.2b / 104.3: does an effect say this player can't win, or can't lose,
 -- the game? Read by Pawl.Engine.Sba's CR 704.5 losses and Pawl.Engine.Resolve.Effect's
--- CR 104.3e LoseGame and CR 104.2b WinGame arms. CR 104.2a's win when every
+-- CR 104.3e LoseGame and CR 104.2b WinGame arms, and by Pawl.Engine.Departure for
+-- CR 104.3i's emperor's team. CR 104.2a's win when every
 -- opponent has left "overrides all effects that would preclude" it, so
 -- Pawl.Engine.Departure.outcomeAfterLeaving asks nothing; nor does CR 104.3a's
 -- concession.

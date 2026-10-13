@@ -6647,15 +6647,15 @@ applyOneEffect runSubgame resolving source controller legal chosen effect = case
   -- (Departure.outcomeAfterLeaving). One departure set over every winner, the
   -- LoseGame arm's reason.
   --
-  -- A winner an effect says can't win the game wins nothing. Under an unlimited
-  -- range an opponent who can't lose leaves all the same: the win ends the game
-  -- (CR 104.1), and the departure is only how pawl spells it. Under a limited
-  -- one CR 104.3h makes the win those opponents LOSING, which a can't-lose
-  -- effect stops.
+  -- Under an unlimited range a winner an effect says can't win the game wins
+  -- nothing, and an opponent who can't lose leaves all the same: the win ends
+  -- the game (CR 104.1), and the departure is only how pawl spells it. Under a
+  -- limited one CR 104.3h makes the effect those opponents LOSING instead, so
+  -- nobody wins: a can't-lose effect stops it and a can't-win one does not.
   Effect.WinGame ref -> do
     gs <- State.get
-    let winners = filter (\pid -> pid `elem` Game.stillPlaying gs && not (PlayerEffect.precludes GameOutcome.Win pid gs)) (playerRefPlayers legal controller gs ref)
-        limited winner = Maybe.isJust (RangeOfInfluence.rangeOf (GameSettings.rangeOfInfluence (GameState.settings gs)) winner)
+    let limited winner = Maybe.isJust (RangeOfInfluence.rangeOf (GameSettings.rangeOfInfluence (GameState.settings gs)) winner)
+        winners = filter (\pid -> pid `elem` Game.stillPlaying gs && (limited pid || not (PlayerEffect.precludes GameOutcome.Win pid gs))) (playerRefPlayers legal controller gs ref)
         losers = Set.fromList [pid | winner <- winners, pid <- Players.offer winner gs PlayerRelation.Opponent, not (limited winner && PlayerEffect.precludes GameOutcome.Lose pid gs)]
     Departure.leaveGameTogether Departure.Type.Lost (filter (`Set.member` losers) (Game.apnapOrder gs))
   -- CR 104.4c with CR 801.15: the game is a draw for the controller and each
