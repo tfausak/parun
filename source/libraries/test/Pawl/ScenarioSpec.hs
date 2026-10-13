@@ -588,6 +588,19 @@ spec s registry = Spec.describe s "Scenario" $ do
       Left failure -> Spec.assertFailure s (S.renderFailure failure)
       Right final -> Spec.assertEqWith s "both blockers died" (S.countOnBattlefieldByName (CardName.MkCardName (Text.pack "Goblin Piker")) S.bob final) 0
 
+  -- CR 510.1e / 702.19b: a trampler's assignment short of lethal on its blocker
+  -- is illegal, and the engine asks for it again, so a script that wrote only
+  -- that assignment fails rather than passing on a combat that dealt nothing.
+  Spec.it s "a trample assignment short of lethal is asked again, failing the script" $ do
+    result <- runJson s registry trampleShort
+    case result of
+      Left (ScenarioFailure.MkUnscheduledPrompt _ step decider kind _) -> do
+        Spec.assertEqWith s "the prompt asked again" kind (Text.pack "AssignCombatDamage")
+        Spec.assertEqWith s "in the combat damage step" step S.combatDamage
+        Spec.assertEqWith s "of the attacker's controller" decider (Just (S.seatLabel S.alice))
+      Left failure -> Spec.assertFailure s (S.renderFailure failure)
+      Right _ -> Spec.assertFailure s "the short assignment passed, dealing nothing"
+
   -- The two ways a check can fail are never spelled alike: one that ran and
   -- read false, and one whose moment never came and so asserted nothing.
   Spec.it s "a check that reads false fails as a false check, naming what it saw" $ do
@@ -709,6 +722,16 @@ crewDreadnought taps =
     <> "\"timeline\":[{\"turn\":1,\"step\":\"PrecombatMain\",\"player\":\"alice\",\"do\":{\"Answer\":{\"prompt\":\"ChooseTapsForTotalPower\",\"with\":["
     <> List.intercalate "," (fmap show taps)
     <> "]}}},{\"turn\":1,\"step\":\"PrecombatMain\",\"player\":\"alice\",\"do\":{\"Activate\":{\"object\":\"$vehicle\",\"ability\":0}}}]}"
+
+-- alice's Colossal Dreadmaw (6/6 trample), blocked by bob's War Mammoth (3/3),
+-- assigns 2 to the Mammoth and 4 to bob.
+trampleShort :: String
+trampleShort =
+  "{\"description\":\"x\",\"board\":{\"seats\":[{\"name\":\"alice\",\"battlefield\":[{\"card\":\"Colossal Dreadmaw\",\"label\":\"dreadmaw\",\"ready\":true}]},"
+    <> "{\"name\":\"bob\",\"battlefield\":[{\"card\":\"War Mammoth\",\"label\":\"mammoth\",\"ready\":true}]}],\"active\":\"alice\",\"step\":\"DeclareAttackers\"},"
+    <> "\"timeline\":[{\"turn\":1,\"step\":\"DeclareAttackers\",\"player\":\"alice\",\"do\":{\"Attack\":[\"$dreadmaw\"]}},"
+    <> "{\"turn\":1,\"step\":\"DeclareBlockers\",\"player\":\"bob\",\"do\":{\"Block\":{\"$mammoth\":[\"$dreadmaw\"]}}},"
+    <> "{\"turn\":1,\"step\":\"CombatDamage\",\"player\":\"alice\",\"source\":\"$dreadmaw\",\"do\":{\"AssignDamage\":{\"$mammoth\":2,\"$bob\":4}}}]}"
 
 -- alice's Piker, blocked by two of bob's, assigns its damage as `assignment`.
 doubleBlocked :: String -> String

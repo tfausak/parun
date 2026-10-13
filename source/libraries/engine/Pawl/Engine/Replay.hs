@@ -1019,19 +1019,19 @@ defaultAnswer p = case p of
   -- (Lure) can make the empty declaration illegal -- and stays total the same
   -- way, through Combat.forcedBlockDeclaration.
   Prompt.DeclareBlockers {} -> Map.empty
-  -- Must be a WELL FORMED division (Damage.wellFormedAssignment), or the attacker
-  -- deals nothing. All power onto the first blocker totals power, and clears CR
-  -- 702.19b's gates by never spilling past a blocker at all.
+  -- Must be a WELL FORMED division (Damage.wellFormedAssignment), or CR 510.1e
+  -- asks again. All power onto the first recipient of the first gate -- a
+  -- blocker, else the attacked planeswalker or battle, else the player --
+  -- totals power and clears CR 702.19b-c's gates by never spilling past one.
   Prompt.AssignCombatDamage _ _ _ thresholds n ->
-    let blockers = filter isCreatureRecipient (Map.keys thresholds)
-        isCreatureRecipient r = case r of
-          Recipient.ToCreature _ -> True
-          Recipient.ToPlaneswalker _ -> False
-          Recipient.ToBattle _ -> False
-          Recipient.ToPlayer _ -> False
-          Recipient.ToObject _ -> False
-          Recipient.ToPile _ -> False
-     in case blockers of
+    let gate r = case r of
+          Recipient.ToCreature _ -> 0 :: Int
+          Recipient.ToPlaneswalker _ -> 1
+          Recipient.ToBattle _ -> 1
+          Recipient.ToPlayer _ -> 2
+          Recipient.ToObject _ -> 3
+          Recipient.ToPile _ -> 3
+     in case List.sortOn gate (Map.keys thresholds) of
           r : _ -> Map.singleton r n
           [] -> Map.empty
   -- As many legal recipients per slot as the announced count asks for, chosen

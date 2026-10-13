@@ -1,0 +1,163 @@
+{
+  "description": "CR 702.22j only the defender who divided illegally is asked again",
+  "note": "bob's Benalish Hero (banding) and Goblin Piker block alice's Hill Giant, so bob divides the Giant's 3 (CR 702.22j); War Mammoth blocks her Colossal Dreadmaw, whose 6 alice divides. bob's first division totals 2, so CR 510.1e asks him again. alice's own legal division is not asked again: her single answer covers it.",
+  "board": {
+    "active": "alice",
+    "step": "DeclareAttackers",
+    "seats": [
+      {
+        "name": "alice",
+        "battlefield": [
+          {
+            "card": "Hill Giant",
+            "label": "giant",
+            "ready": true
+          },
+          {
+            "card": "Colossal Dreadmaw",
+            "label": "dreadmaw",
+            "ready": true
+          }
+        ]
+      },
+      {
+        "name": "bob",
+        "battlefield": [
+          {
+            "card": "Benalish Hero",
+            "label": "hero",
+            "ready": true
+          },
+          {
+            "card": "Goblin Piker",
+            "label": "piker",
+            "ready": true
+          },
+          {
+            "card": "War Mammoth",
+            "label": "mammoth",
+            "ready": true
+          }
+        ]
+      }
+    ]
+  },
+  "timeline": [
+    {
+      "turn": 1,
+      "step": "DeclareAttackers",
+      "player": "alice",
+      "do": {
+        "Attack": [
+          "$giant",
+          "$dreadmaw"
+        ]
+      }
+    },
+    {
+      "turn": 1,
+      "step": "DeclareBlockers",
+      "player": "bob",
+      "do": {
+        "Block": {
+          "$hero": [
+            "$giant"
+          ],
+          "$piker": [
+            "$giant"
+          ],
+          "$mammoth": [
+            "$dreadmaw"
+          ]
+        }
+      }
+    },
+    {
+      "turn": 1,
+      "step": "CombatDamage",
+      "player": "bob",
+      "do": {
+        "Answer": {
+          "prompt": "AssignCombatDamage",
+          "with": [
+            [
+              [
+                "Creature",
+                "$hero"
+              ],
+              1
+            ],
+            [
+              [
+                "Creature",
+                "$piker"
+              ],
+              1
+            ]
+          ],
+          "unoffered": true
+        }
+      }
+    },
+    {
+      "turn": 1,
+      "step": "CombatDamage",
+      "player": "alice",
+      "source": "$dreadmaw",
+      "do": {
+        "AssignDamage": {
+          "$mammoth": 3,
+          "$bob": 3
+        }
+      }
+    },
+    {
+      "turn": 1,
+      "step": "CombatDamage",
+      "player": "bob",
+      "source": "$giant",
+      "do": {
+        "AssignDamage": {
+          "$hero": 3
+        }
+      }
+    },
+    {
+      "turn": 1,
+      "step": "EndOfCombat",
+      "player": "alice",
+      "check": {
+        "Life": {
+          "player": "bob",
+          "life": 17
+        }
+      }
+    },
+    {
+      "turn": 1,
+      "step": "EndOfCombat",
+      "player": "alice",
+      "check": {
+        "Count": {
+          "player": "bob",
+          "zone": "Battlefield",
+          "card": "Benalish Hero",
+          "count": 0
+        }
+      }
+    },
+    {
+      "turn": 1,
+      "step": "EndOfCombat",
+      "player": "alice",
+      "check": {
+        "Count": {
+          "player": "bob",
+          "zone": "Battlefield",
+          "card": "Goblin Piker",
+          "count": 1
+        }
+      }
+    }
+  ]
+}
