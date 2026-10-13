@@ -1,0 +1,115 @@
+{
+  "description": "CR 810.8a a teammate of a player who can’t lose does not lose",
+  "note": "CR 704.6b’s board, with alice controlling Platinum Angel. Carol’s Ichor Rats takes alice and bob’s team to fifteen poison counters, but an effect saying alice can’t lose the game says her team can’t (CR 810.8a), so bob stays in as well and the game goes on.",
+  "board": {
+    "seats": [
+      {
+        "name": "alice",
+        "team": 1,
+        "counters": [
+          {
+            "key": {
+              "type": "Poison"
+            },
+            "value": 13
+          }
+        ],
+        "battlefield": [
+          {
+            "card": "Platinum Angel"
+          }
+        ]
+      },
+      {
+        "name": "bob",
+        "team": 1,
+        "counters": [
+          {
+            "key": {
+              "type": "Poison"
+            },
+            "value": 13
+          }
+        ]
+      },
+      {
+        "name": "carol",
+        "team": 2,
+        "battlefield": [
+          {
+            "card": "Swamp",
+            "label": "swamp-1"
+          },
+          {
+            "card": "Swamp",
+            "label": "swamp-2"
+          },
+          {
+            "card": "Swamp",
+            "label": "swamp-3"
+          }
+        ],
+        "hand": [
+          {
+            "card": "Ichor Rats",
+            "label": "rats"
+          }
+        ]
+      },
+      {
+        "name": "dave",
+        "team": 2
+      }
+    ],
+    "active": "carol",
+    "step": "PrecombatMain",
+    "sharedTeamTurns": true,
+    "twoHeadedGiant": true
+  },
+  "timeline": [
+    {
+      "turn": 1,
+      "step": "PrecombatMain",
+      "player": "carol",
+      "do": {
+        "Cast": {
+          "object": "$rats",
+          "mana": [
+            "$swamp-1",
+            "$swamp-2",
+            "$swamp-3"
+          ]
+        }
+      }
+    },
+    {
+      "turn": 1,
+      "step": "PrecombatMain",
+      "player": "carol",
+      "do": "Pass"
+    },
+    {
+      "turn": 1,
+      "step": "PrecombatMain",
+      "player": "carol",
+      "do": "Pass"
+    }
+  ],
+  "final": [
+    {
+      "View": {
+        "of": "Result",
+        "is": null
+      }
+    },
+    {
+      "PlayerCounters": {
+        "player": "bob",
+        "kind": {
+          "type": "Poison"
+        },
+        "count": 15
+      }
+    }
+  ]
+}

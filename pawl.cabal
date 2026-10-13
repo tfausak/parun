@@ -692,6 +692,8 @@ library codec
     Pawl.Codec.GainControlSpec
     Pawl.Codec.GameEvent
     Pawl.Codec.GameEventSpec
+    Pawl.Codec.GameOutcome
+    Pawl.Codec.GameOutcomeSpec
     Pawl.Codec.GameSettings
     Pawl.Codec.GameSettingsSpec
     Pawl.Codec.GameState
@@ -2380,6 +2382,7 @@ library types
     Pawl.Types.GainControl
     Pawl.Types.Game
     Pawl.Types.GameEvent
+    Pawl.Types.GameOutcome
     Pawl.Types.GameSettings
     Pawl.Types.GameState
     Pawl.Types.Gift

@@ -244,6 +244,8 @@ import qualified Pawl.Types.FromReference as FromReference
 import qualified Pawl.Types.GainControl as GainControl
 import Pawl.Types.Game (Game)
 import qualified Pawl.Types.GameEvent as GameEvent
+import qualified Pawl.Types.GameOutcome as GameOutcome
+import qualified Pawl.Types.GameSettings as GameSettings
 import Pawl.Types.GameState (GameState)
 import qualified Pawl.Types.GameState as GameState
 import qualified Pawl.Types.GrantLookAtExiled as GrantLookAtExiled
@@ -346,6 +348,7 @@ import qualified Pawl.Types.Quantity as Quantity.Type
 import qualified Pawl.Types.RandomCardInGraveyard as RandomCardInGraveyard
 import qualified Pawl.Types.RandomCardInHand as RandomCardInHand
 import qualified Pawl.Types.RandomCardInLibrary as RandomCardInLibrary
+import qualified Pawl.Types.RangeOfInfluence as RangeOfInfluence
 import Pawl.Types.Recipient (Recipient)
 import qualified Pawl.Types.Recipient as Recipient
 import qualified Pawl.Types.RedirectDamage as RedirectDamage
@@ -6632,10 +6635,10 @@ applyOneEffect runSubgame resolving source controller legal chosen effect = case
   -- draw the rule states. APNAP (CR 608.2f) orders the departures, the Shuffle
   -- arm's reason -- the order is a fact about the rules rather than about
   -- PlayerId's Ord -- and apnapOrder is SEATING, so the survivors are filtered in
-  -- separately.
+  -- separately. A player an effect says can't lose the game is not named.
   Effect.LoseGame ref -> do
     gs <- State.get
-    let named = Set.fromList (playerRefPlayers legal controller gs ref)
+    let named = Set.fromList (filter (\pid -> not (PlayerEffect.precludes GameOutcome.Lose pid gs)) (playerRefPlayers legal controller gs ref))
         alive = Set.fromList (Game.stillPlaying gs)
     Departure.leaveGameTogether Departure.Type.Lost (filter (\pid -> Set.member pid named && Set.member pid alive) (Game.apnapOrder gs))
   -- CR 104.2b with CR 801.14: a player the reference names wins the game, which
@@ -6643,10 +6646,17 @@ applyOneEffect runSubgame resolving source controller legal chosen effect = case
   -- range that is every opponent, and CR 104.2a then settles the win itself
   -- (Departure.outcomeAfterLeaving). One departure set over every winner, the
   -- LoseGame arm's reason.
+  --
+  -- A winner an effect says can't win the game wins nothing. Under an unlimited
+  -- range an opponent who can't lose leaves all the same: the win ends the game
+  -- (CR 104.1), and the departure is only how pawl spells it. Under a limited
+  -- one CR 104.3h makes the win those opponents LOSING, which a can't-lose
+  -- effect stops.
   Effect.WinGame ref -> do
     gs <- State.get
-    let winners = filter (`elem` Game.stillPlaying gs) (playerRefPlayers legal controller gs ref)
-        losers = Set.fromList [pid | winner <- winners, pid <- Players.offer winner gs PlayerRelation.Opponent]
+    let winners = filter (\pid -> pid `elem` Game.stillPlaying gs && not (PlayerEffect.precludes GameOutcome.Win pid gs)) (playerRefPlayers legal controller gs ref)
+        limited winner = Maybe.isJust (RangeOfInfluence.rangeOf (GameSettings.rangeOfInfluence (GameState.settings gs)) winner)
+        losers = Set.fromList [pid | winner <- winners, pid <- Players.offer winner gs PlayerRelation.Opponent, not (limited winner && PlayerEffect.precludes GameOutcome.Lose pid gs)]
     Departure.leaveGameTogether Departure.Type.Lost (filter (`Set.member` losers) (Game.apnapOrder gs))
   -- CR 104.4c with CR 801.15: the game is a draw for the controller and each
   -- player within their range, who leave it; everyone else plays on. Under an

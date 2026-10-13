@@ -7,6 +7,7 @@ import qualified Pawl.Types.CastFromZone as CastFromZone
 import qualified Pawl.Types.CostModifier as CostModifier
 import qualified Pawl.Types.DamagePattern as DamagePattern
 import qualified Pawl.Types.Filter as Filter
+import qualified Pawl.Types.GameOutcome as GameOutcome
 import qualified Pawl.Types.InZone as InZone
 import qualified Pawl.Types.Keyword as Keyword
 import qualified Pawl.Types.KeywordDesignator as KeywordDesignator
@@ -220,6 +221,9 @@ data PlayerEffect
     -- unpayable. Pawl.PlayerEffectSpec's PlatinumEmperion and GreedUnderEmperion
     -- groups prove the two.
     CantLoseLife
+  | -- | CR 104.2b / 104.3 / Abyssal Persecutor, Platinum Angel: this player can't
+    -- win, or can't lose, the game.
+    Precluded GameOutcome.GameOutcome
   | -- | CR 401.5 / 400.2: cards of this player's that are shown, and to whom.
     Shows Shows.Shows
   deriving (Eq, Ord, Show)

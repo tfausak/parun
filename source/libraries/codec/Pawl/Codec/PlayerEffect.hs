@@ -6,6 +6,7 @@ import qualified Pawl.Codec.CastFromZone as CastFromZone
 import qualified Pawl.Codec.CostModifier as CostModifier
 import qualified Pawl.Codec.DamagePattern as DamagePattern
 import qualified Pawl.Codec.Filter as Filter
+import qualified Pawl.Codec.GameOutcome as GameOutcome
 import qualified Pawl.Codec.InZone as InZone
 import qualified Pawl.Codec.Keyword as Keyword
 import qualified Pawl.Codec.KeywordDesignator as KeywordDesignator
@@ -72,6 +73,7 @@ codec =
           Arm.payload "PutTappedAsYouCascade" filterCodec PlayerEffect.PutTappedAsYouCascade (\x -> case x of PlayerEffect.PutTappedAsYouCascade y -> Just y; _ -> Nothing),
           Arm.nullary "CantGainLife" PlayerEffect.CantGainLife,
           Arm.nullary "CantLoseLife" PlayerEffect.CantLoseLife,
+          Arm.payload "Precluded" GameOutcome.codec PlayerEffect.Precluded (\x -> case x of PlayerEffect.Precluded y -> Just y; _ -> Nothing),
           Arm.payload "Shows" Shows.codec PlayerEffect.Shows (\x -> case x of PlayerEffect.Shows y -> Just y; _ -> Nothing)
         ]
 
@@ -120,4 +122,5 @@ tagOf x = case x of
   PlayerEffect.AdditionalSurveilCards {} -> "AdditionalSurveilCards"
   PlayerEffect.CantGainLife {} -> "CantGainLife"
   PlayerEffect.CantLoseLife {} -> "CantLoseLife"
+  PlayerEffect.Precluded {} -> "Precluded"
   PlayerEffect.Shows {} -> "Shows"

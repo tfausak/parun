@@ -17,6 +17,7 @@ import qualified Pawl.Types.CostModifier as CostModifier
 import qualified Pawl.Types.CostSubject as CostSubject
 import qualified Pawl.Types.DamagePattern as DamagePattern
 import qualified Pawl.Types.Filter as Filter
+import qualified Pawl.Types.GameOutcome as GameOutcome
 import qualified Pawl.Types.InZone as InZone
 import qualified Pawl.Types.Keyword as Keyword
 import qualified Pawl.Types.KeywordDesignator as KeywordDesignator
@@ -498,6 +499,14 @@ spec s = Spec.describe s "Pawl.Codec.PlayerEffect" $ do
       PlayerEffect.codec
       PlayerEffect.CantLoseLife
       " {\"type\":\"CantLoseLife\"} "
+  -- CR 104.2b, Abyssal Persecutor's "you can't win the game"
+  -- (data/cards/abyssal-persecutor.json).
+  Spec.it s "Precluded, Abyssal Persecutor's restriction" $
+    Common.assertCodec
+      s
+      PlayerEffect.codec
+      (PlayerEffect.Precluded GameOutcome.Win)
+      " {\"type\":\"Precluded\",\"value\":{\"type\":\"Win\"}} "
   -- CR 400.2, a revealed hand.
   Spec.it s "Shows, a hand to every player" $
     Common.assertCodec

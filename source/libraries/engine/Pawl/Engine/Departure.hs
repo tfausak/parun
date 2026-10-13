@@ -137,9 +137,10 @@ leaveTogether reason named = do
 -- where CR 104.3g waits for every member instead. A draw is not a loss, so it
 -- takes nobody with it: CR 104.4g settles a team's draw member by member.
 --
--- Not implemented: CR 810.8a's "can't lose" and "can't win" reaching the team,
--- since no effect says a player can't lose (#4783) or can't win (#4793) the
--- game.
+-- CR 810.8a's "can't win" and "can't lose" need nothing here:
+-- Pawl.Engine.PlayerEffect.precludes asks them of the whole team, so no member a
+-- can't-lose effect covers loses in the first place. A conceding player leaves
+-- before they lose (CR 104.3a), so CR 810.8b still takes the team.
 teamFallsWith :: Departure -> [PlayerId] -> GameState -> [(Departure, PlayerId)]
 teamFallsWith reason leaving gs =
   let teams = Game.teams gs

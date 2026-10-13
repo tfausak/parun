@@ -41,6 +41,7 @@ import qualified Pawl.Types.Departure as Departure.Type
 import qualified Pawl.Types.DestructionCause as DestructionCause
 import Pawl.Types.Game (Game)
 import qualified Pawl.Types.GameEvent as GameEvent
+import qualified Pawl.Types.GameOutcome as GameOutcome
 import qualified Pawl.Types.GameSettings as GameSettings
 import Pawl.Types.GameState (GameState)
 import qualified Pawl.Types.GameState as GameState
@@ -1006,7 +1007,11 @@ checkOnce = do
   -- reader).
   Event.sacrificeInBatch gs told
   destroyed <- State.get
-  let leaving = filter (losesNow destroyed) (Game.stillPlaying destroyed)
+  -- CR 104.3 / 810.8a: a player an effect says can't lose the game stays in,
+  -- life, library and poison where they are. Asked of the pre-pass board for CR
+  -- 704.3's reason, so a Platinum Angel this same pass buries still protects
+  -- its controller until the next check.
+  let leaving = filter (\pid -> losesNow destroyed pid && not (PlayerEffect.precludes GameOutcome.Lose pid gs)) (Game.stillPlaying destroyed)
   -- CR 104.2a/800.4a: the losers leave together (CR 704.3), in REVERSE of
   -- `leaving` -- the order the `foldr` this replaced applied them in, kept
   -- because CR 800.4a's fourth clause emits zone changes and CR 725.4 hands the
@@ -1072,7 +1077,14 @@ checkOnce = do
         let strip obj = obj {Object.counters = Map.update (removeN n) CounterKind.MinusOneMinusOne (Map.update (removeN n) CounterKind.PlusOnePlusOne (Object.counters obj))}
          in g {GameState.objects = Map.adjust strip oid (GameState.objects g)}
       outcome = Departure.outcomeAfterLeaving leaving departed
-      drained = vanished {GameState.damageScannedThrough = watermark}
+      -- CR 704.5b's window is "since the last time state-based actions were
+      -- checked" too, so this check spends every attempt it saw by a player it
+      -- left in the game: one a can't-lose effect kept in does not lose to it
+      -- once that effect ends. A departed player's flag stays as the record of
+      -- why they left, and an attempt made during the pass itself waits for the
+      -- next check.
+      spent = Set.intersection (GameState.drewFromEmpty gs) (Set.fromList (Game.stillPlaying vanished))
+      drained = vanished {GameState.damageScannedThrough = watermark, GameState.drewFromEmpty = Set.difference (GameState.drewFromEmpty vanished) spent}
       balanced = List.foldl' balance drained annihilations
       -- CR 704.5q's removal is a REMOVAL (rule 122.3 uses the word), so it owes
       -- the same GameEvent.CountersRemoved every other removal records --
