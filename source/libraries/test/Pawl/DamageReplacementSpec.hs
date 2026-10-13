@@ -66,7 +66,6 @@ import qualified Pawl.Types.Recipient as Recipient
 import qualified Pawl.Types.ReplacementEffect as ReplacementEffect
 import qualified Pawl.Types.ReplacementEntry as ReplacementEntry
 import qualified Pawl.Types.SlotName as SlotName
-import qualified Pawl.Types.Source as Source
 import qualified Pawl.Types.Subtype as Subtype
 import qualified Pawl.Types.TapState as TapState
 import qualified Pawl.Types.Zone as Zone
@@ -3037,13 +3036,13 @@ judgmentOfAlexanderSpec s registry = Spec.describe s "Judgment of Alexander (CR 
     Spec.assertEqWith s "from ONE trigger, the one application" resolvedTriggers 1
     Spec.assertEqWith s "alice took none of the 7" (S.lifeOf S.alice after) (Just 20)
 
--- CR 903.3: designate `oid`'s card as its owner's commander, by printing --
+-- CR 903.3: designate `oid`'s card as its owner's commander, by its identity --
 -- what Pawl.Scenario does for a placement marked commander.
 designateCommander :: ObjectId.ObjectId -> GameState.GameState -> GameState.GameState
 designateCommander oid gs = case Game.lookupObject oid gs of
   Just obj
-    | Source.OfCard printing <- Object.source obj ->
-        gs {GameState.players = Map.adjust (\p -> p {Player.commander = Set.insert printing (Player.commander p)}) (Object.owner obj) (GameState.players gs)}
+    | Just identity <- Object.identity obj ->
+        gs {GameState.players = Map.adjust (\p -> p {Player.commander = Set.insert identity (Player.commander p)}) (Object.owner obj) (GameState.players gs)}
   _ -> gs
 
 spec :: (Monad m, Monad n) => Spec.Spec m n -> Registry.Registry m -> n ()

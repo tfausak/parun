@@ -502,9 +502,9 @@ data View = MkView
     -- characteristic axis distinguishes the two and no CR 613 layer can change the
     -- answer. False for every candidate with no object behind it.
     token :: Bool,
-    -- CR 903.3: is this candidate one of the cards its OWNER designated as a
-    -- commander? Read from Pawl.Engine.Commander.isCommander, never from a
-    -- projection -- rule 903.3's designation is a printing fixed before the game
+    -- CR 903.3: is this candidate a card designated as a commander? Read from
+    -- Pawl.Engine.Commander.isCommander, never from a projection -- rule
+    -- 903.3's designation is an attribute of the card fixed before the game
     -- begins, so no CR 613 layer can change the answer, `token` above's posture.
     -- False for every candidate with no object behind it.
     commander :: Bool,

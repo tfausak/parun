@@ -4,6 +4,7 @@ import qualified Data.Map.Strict as Map
 import qualified Data.Sequence as Seq
 import qualified Data.Set as Set
 import qualified Numeric.Natural as Natural
+import qualified Pawl.Types.CardIdentity as CardIdentity
 import qualified Pawl.Types.CardName as CardName
 import qualified Pawl.Types.Designation as Designation
 import qualified Pawl.Types.GraveyardOrder as GraveyardOrder
@@ -87,21 +88,14 @@ data Player = MkPlayer
     -- pairs are legal is judged before this is written, by
     -- Pawl.Engine.Commander.designations.
     --
-    -- A PRINTING and not an ObjectId, because CR 400.7 mints a fresh id on every
-    -- zone change and a commander crosses zones constantly -- command zone to
-    -- stack to battlefield to command zone again. An object id would name a dead
-    -- object after the first cast. A printing survives, and CR 903.5b's singleton
-    -- deck construction is what makes it unambiguous: a Commander deck holds at
-    -- most one card with a given English name, so "the object whose printing is
-    -- this one" picks out exactly the commander. Pawl does not ENFORCE rule
-    -- 903.5b (#940), so a malformed deck with two copies would make both answer
-    -- to it.
-    --
-    -- The printing is named by its id (#1592), which is stable for the whole
-    -- game: Pawl.Engine.Setup.createDeck interns each of a deck's distinct
-    -- printings exactly once, so this id is the same one the commander's own
-    -- objects carry and Pawl.Engine.Commander.isCommander can compare the two.
-    commander :: Set.Set PrintingId.PrintingId,
+    -- A CARD IDENTITY and not an ObjectId or a printing: CR 903.3 makes the
+    -- designation "an attribute of the card itself" that it "retains ... even
+    -- when it changes zones", and CR 400.7 mints a fresh id on every one, while
+    -- a printing names every copy of the card (Cid, Timeless Artificer's deck
+    -- holds any number). Object.identity is the card across CR 400.7, and its
+    -- starting owner is the player whose deck designated it, which is the set
+    -- Pawl.Engine.Commander.commanderCardOf looks in.
+    commander :: Set.Set CardIdentity.CardIdentity,
     -- | CR 903.8: how many times this player has cast each of their commanders
     -- from the command zone this game. The commander tax is {2} for each of
     -- them. Absent key means zero, the convention `counters` above uses.
@@ -115,19 +109,22 @@ data Player = MkPlayer
     -- partner, ignore how many times your other commander has been cast". A
     -- single counter would charge a partner deck's second commander {2} on its
     -- first cast. Pawl.CommanderSpec's "the other commander is untaxed by the
-    -- first one's casts" is the proof.
-    commanderCasts :: Map.Map PrintingId.PrintingId Natural.Natural,
+    -- first one's casts" is the proof. Keyed by the card's identity, as
+    -- `commander` is, so another deck's copy of the same printing that this
+    -- player has come to own is a different commander (CR 903.8's "it").
+    commanderCasts :: Map.Map CardIdentity.CardIdentity Natural.Natural,
     -- | CR 903.10a: how much COMBAT damage this player has been dealt by each
     -- commander, over the course of the game. Absent key means zero, the
     -- convention `counters` above uses. Only ever climbs -- rule 903.10a counts
     -- the whole game, so nothing takes damage back out.
     --
-    -- Keyed by the COMMANDER, as `commander` above names one, and not by an
-    -- object: CR 400.7 mints a fresh id on every zone change, so an id could not
-    -- survive the commander's first cast. Not by its owner either, which is CR
-    -- 702.124d -- "consider damage from each of your two commanders separately"
-    -- -- and would pool a partner deck's pair under one key.
-    commanderDamage :: Map.Map PrintingId.PrintingId Natural.Natural,
+    -- Keyed by the COMMANDER's card identity, as `commander` above names one,
+    -- and not by an object: CR 400.7 mints a fresh id on every zone change, so
+    -- an id could not survive the commander's first cast. Not by its printing,
+    -- which two decks' copies of one commander share and CR 903.10a's "the same
+    -- commander" does not, nor by its owner, which is CR 702.124d -- "consider
+    -- damage from each of your two commanders separately".
+    commanderDamage :: Map.Map CardIdentity.CardIdentity Natural.Natural,
     -- | CR 309.2 \/ 309.2a: the dungeon cards this player owns from outside the
     -- game, empty for a player who brought none. Deck.dungeons is where they come
     -- from and Pawl.Engine.Setup.createDeck copies them here.

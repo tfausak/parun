@@ -412,11 +412,6 @@ createDeck pid deck = do
   cardIds <- Monad.mapM (\(printing, n) -> fmap (\i -> (i, n)) (State.state (Game.intern printing))) (Map.toAscList (Deck.cards deck))
   Monad.forM_ cardIds $ \(printingId, n) ->
     Monad.replicateM_ (Natural.toIntSaturating n) (createCard pid printingId)
-  -- Game.intern is idempotent, which is what makes Commander.isCommander's
-  -- comparison hold: the id below goes to the object and to the designation
-  -- alike, and a malformed deck listing its commander among its cards too (CR
-  -- 903.5b forbids it; #940 means pawl does not enforce it) stays one entry.
-  --
   -- Interned for every card the deck NAMED, because CR 702.139b counts each of
   -- them in `starting` below even when CR 702.124h refuses the designation.
   commanderIds <- Monad.mapM (State.state . Game.intern) (Set.toAscList (Deck.commander deck))
@@ -427,9 +422,12 @@ createDeck pid deck = do
   -- neither.
   settings <- State.gets GameState.settings
   designatedIds <- Monad.mapM (State.state . Game.intern) (Set.toAscList (Commander.designations settings deck))
+  -- CR 903.3: the card put there is the one designated, by its identity, so
+  -- another copy of the printing in the library is no commander.
   Monad.forM_ designatedIds $ \printingId -> do
-    Monad.void (createInCommandZone pid printingId)
-    State.modify' (Commander.designate pid printingId)
+    oid <- createInCommandZone pid printingId
+    identity <- State.gets (Game.lookupObject oid Monad.>=> Object.identity)
+    Monad.forM_ identity (State.modify' . Commander.designate pid)
   -- CR 103.2a / CR 702.139b: the starting deck, recorded once for this game --
   -- rule 103.2a names a moment before the game begins, and by the time a
   -- companion's condition could be asked again the opening hands have been drawn.
@@ -591,7 +589,7 @@ splitComponents next objects =
 startGameFromCards :: HandActionPerformer -> Set.Set ObjectId -> Game ()
 startGameFromCards perform exemptions = do
   -- CR 727.2 / CR 712.21, BEFORE `gs` is read: the split has to be in the state
-  -- rather than in the `let` below, because `commanderOf` and `vanguardIds` ask
+  -- rather than in the `let` below, because `commanderIds` and `vanguardIds` ask
   -- Commander.isCommander and Vanguard.isVanguard of `gs` -- so a component
   -- minted outside it could not be recognised as CR 903.6's commander. With it
   -- here, CR 903.9c's answer falls out of the existing funnel: the component
@@ -637,20 +635,17 @@ startGameFromCards perform exemptions = do
       -- Pawl.CommanderSpec's Restart group is what proves that, against a control
       -- leg whose only difference is an empty exempt set.
       --
-      -- One object per player, by Commander.isCommander's CR 903.5 argument: the
-      -- designation is a printing and a legal deck holds one copy of it, so at
-      -- most one object can answer here. Pawl enforces no deck legality (#940), so
-      -- a deck with two copies would have this take the lower id.
-      commanderOf pid =
-        Maybe.listToMaybe (Map.keys (Map.filterWithKey (\oid obj -> Object.owner obj == pid && Commander.isCommander oid gs) rebuilt))
-      commanderIds = Set.fromList (Maybe.mapMaybe commanderOf owners)
+      -- Every commander a still-playing player owns: the designation names
+      -- one card each (Commander.isCommander), and CR 702.124b's partner pair
+      -- puts both into the command zone.
+      commanderIds = Map.keysSet (Map.filterWithKey (\oid obj -> elem (Object.owner obj) owners && Commander.isCommander oid gs) rebuilt)
       -- CR 313.2: "if a vanguard card would leave the command zone, it remains in
       -- the command zone", which is the exception CR 727.2's "all cards" and CR
       -- 729.2's own funnel would otherwise sweep into a library. So a vanguard is
       -- held back exactly as a commander is, and for a rule of its own rather than
       -- for rule 903.6's. CR 729.2b is the same holding read forwards.
       --
-      -- Every one of them, where `commanderOf` takes one per player: CR 902.1's
+      -- Every one of them, as `commanderIds` takes every commander: CR 902.1's
       -- one card per player is a deck-construction rule pawl does not enforce
       -- (#4458), and rule 313.2 is stated of each vanguard card rather than of the
       -- one the player designated, so there is nothing here to choose between.

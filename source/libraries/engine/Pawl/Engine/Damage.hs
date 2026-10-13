@@ -1037,13 +1037,13 @@ processDamage events = do
       tallyOne g ev = case DamageEvent.target ev of
         Recipient.ToPlayer pid
           | DamageEvent.kind ev == DamageKind.Combat ->
-              case Commander.commanderPrintingOf (DamageEvent.source ev) board of
+              case Commander.commanderCardOf (DamageEvent.source ev) board of
                 Nothing -> g
-                Just printingId ->
+                Just (_, identity) ->
                   let count player =
                         player
                           { Player.commanderDamage =
-                              Map.insertWith (+) printingId (DamageEvent.amount ev) (Player.commanderDamage player)
+                              Map.insertWith (+) identity (DamageEvent.amount ev) (Player.commanderDamage player)
                           }
                    in g {GameState.players = Map.adjust count pid (GameState.players g)}
         _ -> g

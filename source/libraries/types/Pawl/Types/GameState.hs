@@ -296,9 +296,7 @@ data GameState = MkGameState
     -- naming one card is benign (CR 109.3). Append-only and never collected.
     printings :: Map.Map PrintingId.PrintingId Printing.Printing,
     -- | `printings` read backwards, so Pawl.Engine.Game.intern answers with the
-    -- id a printing already has. A deck listing its commander among its cards
-    -- too (CR 903.5b forbids it; #940 means pawl does not enforce it) behaves
-    -- like a well-formed one.
+    -- id a printing already has.
     printingIds :: Map.Map Printing.Printing PrintingId.PrintingId,
     -- | CR 108.1: the printings the Oracle card reference answered a chosen
     -- name with (Prompt.LookUpCard), part of the names CR 612.7 enumerates.
