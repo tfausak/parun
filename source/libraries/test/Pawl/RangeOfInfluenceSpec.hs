@@ -37,6 +37,7 @@ import qualified Pawl.Engine.Action as Action
 import qualified Pawl.Engine.Activate as Activate
 import qualified Pawl.Engine.Combat as Combat
 import qualified Pawl.Engine.Damage as Damage
+import qualified Pawl.Engine.Departure as Departure
 import qualified Pawl.Engine.Engine as Engine
 import qualified Pawl.Engine.Event as Event
 import qualified Pawl.Engine.Game as Game
@@ -607,14 +608,14 @@ spec s registry = Spec.describe s "Range of influence" $ do
   -- predates the gap's later half, which a loop's every cycle reaches, so it
   -- was a lead-in rather than the loop. Only alice's players draw.
   Spec.it s "CR 801.16 a player stamped only before the loop is not in it" $ do
-    let limit = Engine.mandatoryLoopLimit
+    let limit = Departure.mandatoryLoopLimit
         board =
           (S.withRange 1 S.fourPlayerGame)
             { GameState.nextTimestamp = Timestamp.MkTimestamp limit,
               GameState.lastChoice = Timestamp.MkTimestamp 0,
               GameState.loopInvolvement = Map.fromList [(S.alice, Timestamp.MkTimestamp (limit - 1)), (S.carol, Timestamp.MkTimestamp (div limit 2 - 1))]
             }
-        after = S.runPure S.identityAnswer board Engine.checkMandatoryLoop
+        after = S.runPure S.identityAnswer board Departure.checkMandatoryLoop
     Spec.assertEqWith s "CR 801.16 carol, the last one playing, wins" (GameState.result after) (Just (Result.Won S.carol))
   where
     -- Pawl.GameSpec's loopBoard at six seats: alice, active, in her precombat
@@ -631,7 +632,7 @@ spec s registry = Spec.describe s "Range of influence" $ do
             gs4
               { GameState.phase = Phase.PrecombatMain,
                 GameState.remaining = Seq.empty,
-                GameState.nextTimestamp = Timestamp.MkTimestamp (Engine.mandatoryLoopLimit - 10),
+                GameState.nextTimestamp = Timestamp.MkTimestamp (Departure.mandatoryLoopLimit - 10),
                 GameState.lastChoice = Timestamp.MkTimestamp 0
               }
        in S.tapObject forestId seeded

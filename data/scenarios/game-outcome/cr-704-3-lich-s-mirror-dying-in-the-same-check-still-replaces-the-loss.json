@@ -1,0 +1,28 @@
+{
+  "description": "CR 704.3 Lich's Mirror dying in the same check still replaces the loss",
+  "note": "March of the Machines makes alice's Lich's Mirror a 5/5. It blocks bob's Craw Wurm while his Hill Giant takes alice from 3 to 0. One state-based action check destroys the Mirror and would lose her the game; the check is one event (CR 704.3), so the Mirror is still there to replace the loss, and its reset shuffles it in from her graveyard.",
+  "board": {
+    "active": "bob",
+    "step": "BeginningOfCombat",
+    "seats": [
+      {
+        "name": "alice",
+        "life": 3,
+        "battlefield": [{ "card": "Lich's Mirror", "label": "mirror" }, { "card": "March of the Machines" }],
+        "library": [{ "card": "Island" }, { "card": "Island" }, { "card": "Island" }, { "card": "Island" }, { "card": "Island" }, { "card": "Island" }, { "card": "Island" }]
+      },
+      {
+        "name": "bob",
+        "battlefield": [{ "card": "Craw Wurm", "label": "wurm", "ready": true }, { "card": "Hill Giant", "label": "giant", "ready": true }],
+        "library": [{ "card": "Forest" }, { "card": "Forest" }]
+      }
+    ]
+  },
+  "timeline": [
+    { "turn": 1, "step": "DeclareAttackers", "player": "bob", "do": { "Attack": ["$wurm", "$giant"] } },
+    { "turn": 1, "step": "DeclareBlockers", "player": "alice", "do": { "Block": { "$mirror": ["$wurm"] } } },
+    { "turn": 1, "step": "CombatDamage", "player": "bob", "do": { "Answer": { "prompt": "Shuffle", "with": ["Island", "Island#2", "Island#3", "Island#4", "Island#5", "Island#6", "Island#7", "Lich's Mirror", "March of the Machines"] } } },
+    { "turn": 1, "step": "EndOfCombat", "player": "bob", "check": { "Life": { "player": "alice", "life": 20 } } },
+    { "turn": 1, "step": "EndOfCombat", "player": "bob", "check": { "View": { "of": "Zone", "player": "alice", "zone": "Library", "is": ["Lich's Mirror", "March of the Machines"] } } }
+  ]
+}

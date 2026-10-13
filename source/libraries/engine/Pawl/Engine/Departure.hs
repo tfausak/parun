@@ -18,6 +18,7 @@ import qualified Data.List.NonEmpty as NonEmpty
 import qualified Data.Map.Strict as Map
 import qualified Data.Maybe as Maybe
 import qualified Data.Set as Set
+import Numeric.Natural (Natural)
 import qualified Pawl.Engine.Ante as Ante
 import qualified Pawl.Engine.Emperor as Emperor
 import qualified Pawl.Engine.Event as Event
@@ -26,6 +27,7 @@ import qualified Pawl.Engine.Initiative as Initiative
 import qualified Pawl.Engine.Monarch as Monarch
 import qualified Pawl.Engine.Planechase as Planechase
 import qualified Pawl.Engine.PlayerEffect as PlayerEffect
+import qualified Pawl.Engine.Players as Players
 import qualified Pawl.Engine.Projection as Projection
 import qualified Pawl.Engine.Projection.View as Projection
 import qualified Pawl.Engine.Replacement as Replacement
@@ -46,18 +48,20 @@ import qualified Pawl.Types.Player as Player
 import qualified Pawl.Types.PlayerControl as PlayerControl
 import Pawl.Types.PlayerId (PlayerId)
 import qualified Pawl.Types.ProposedEvent as ProposedEvent
+import qualified Pawl.Types.RangeOfInfluence as RangeOfInfluence
 import qualified Pawl.Types.ReplacementBucket as ReplacementBucket
 import Pawl.Types.Result (Result)
 import qualified Pawl.Types.Result as Result
 import qualified Pawl.Types.Source as Source
 import qualified Pawl.Types.Status as Status
 import qualified Pawl.Types.Teams as Teams
+import qualified Pawl.Types.Timestamp as Timestamp
 import qualified Pawl.Types.Zone as Zone
 
 -- Mark a player as having left, with the reason they left, and perform
 -- everything the rules attach to that moment.
 depart :: Departure -> PlayerId -> Game ()
-depart reason pid = departTogether reason [pid]
+depart reason pid = departTogether True reason [pid]
 
 -- Mark a SET of players as having left at once -- CR 104.3b's players losing in
 -- one state-based action check, or CR 104.3e's effect naming several -- and
@@ -90,8 +94,13 @@ depart reason pid = departTogether reason [pid]
 -- CR 809.5b / 809.5c: a departing emperor's team leaves in the same event
 -- (Emperor.fallsWith), after the players named; CR 810.8a / 810.8b, so does a
 -- Two-Headed Giant player's (teamFallsWith).
-departTogether :: Departure -> [PlayerId] -> Game ()
-departTogether reason named = Monad.join (leaveTogether reason named)
+--
+-- `replacing` says whether a Lost departure here is a loss a replacement may
+-- meet (CR 614.1a): False only for CR 104.2b's win, which pawl spells as the
+-- winner's opponents leaving but which is no loss of theirs -- Lich's Mirror's
+-- ruling gives it no effect against "wins the game".
+departTogether :: Bool -> Departure -> [PlayerId] -> Game ()
+departTogether replacing reason named = Monad.join (leaveTogether Nothing replacing reason named)
 
 -- `departTogether` up to CR 800.4a's fourth clause, which it hands back rather
 -- than performs: that clause comes "Then", so it is an event of its own, and a
@@ -99,28 +108,43 @@ departTogether reason named = Monad.join (leaveTogether reason named)
 -- runs it after its bracket closes, where it gets its own event group. The
 -- Palace Jailer and Banisher Priest board in data/scenarios/simultaneous-moves
 -- where the monarch loses to a state-based action proves it.
-leaveTogether :: Departure -> [PlayerId] -> Game (Game ())
-leaveTogether reason named = do
+--
+-- `asOf` is the board a replacement is gathered from, Pawl.Engine.Sba's
+-- pre-pass board for CR 704.3's reason: a Lich's Mirror the same pass destroys
+-- still replaces the loss (Event.applyReplacementsIn). Nothing reads the live
+-- board.
+leaveTogether :: Maybe GameState -> Bool -> Departure -> [PlayerId] -> Game (Game ())
+leaveTogether asOf replacing reason named = do
   continues <- State.gets continuesAfterDeparture
   before <- State.get
+  -- CR 104.3 / 614.1a: each loss is one event, whatever its reasons, offered to
+  -- the replacements that watch it (Lich's Mirror). Asked of the players named
+  -- FIRST, since an emperor's or a teammate's loss that is replaced takes
+  -- nobody with it (CR 104.3i, 810.8a).
+  let propose candidates =
+        if replacing
+          then Set.fromList <$> Monad.filterM (fmap Maybe.isNothing . Event.applyReplacementsIn asOf Set.empty . ProposedEvent.WouldLoseGame) candidates
+          else pure Set.empty
+  replacedNamed <- propose (if reason == Departure.Lost then named else [])
   -- CR 101.2 / 104.3i: a general an effect says can't lose the game stays in
   -- when their emperor's team loses; data/scenarios/emperor/cr-104-3i-* proves it.
   let keeps (why, pid) = why /= Departure.Lost || not (PlayerEffect.precludes GameOutcome.Lose pid before)
-      own = fmap (\pid -> (reason, pid)) named <> filter keeps (Emperor.fallsWith reason named before)
-      team = teamFallsWith reason named before
-      losing = own <> team
-      -- The losses a replacement may meet (CR 614.1a): every Lost departure but a
-      -- CR 810.8b teammate of a concession, which is leaving and not losing.
-      replaceable = [pid | (Departure.Lost, pid) <- own] <> [pid | reason == Departure.Lost, (_, pid) <- team]
-  -- CR 104.3 / 614.1a: each loss is one event, whatever its reasons, offered to
-  -- the replacements that watch it (Lich's Mirror). In Two-Headed Giant a team
-  -- loses only as a team (CR 810.8a), so a replaced member's loss is the whole
-  -- team's. data/scenarios/game-outcome/*lich-s-mirror* and
-  -- data/scenarios/team/cr-810-8a-lich-s-mirror-* prove it.
-  replaced <- Set.fromList <$> Monad.filterM (fmap Maybe.isNothing . Event.applyReplacements . ProposedEvent.WouldLoseGame) replaceable
-  let spared pid =
+      falling = filter (`Set.notMember` replacedNamed) named
+      fallen = filter keeps (Emperor.fallsWith reason falling before)
+      team = teamFallsWith reason falling before
+  -- A general falling with their emperor loses (CR 104.3i); a teammate leaving
+  -- with a conceding player does not lose (CR 810.8b) and is not proposed.
+  -- A player whose own loss was just replaced is not proposed a second time.
+  replacedFallen <- propose (filter (`Set.notMember` replacedNamed) ([pid | (Departure.Lost, pid) <- fallen] <> [pid | reason == Departure.Lost, (_, pid) <- team]))
+  -- In Two-Headed Giant a team loses only as a team (CR 810.8a), so a replaced
+  -- member's loss is the whole team's. data/scenarios/game-outcome/*lich-s-mirror*,
+  -- data/scenarios/team/cr-810-8a-lich-s-mirror-* and
+  -- data/scenarios/emperor/cr-104-3i-lich-s-mirror-* prove it.
+  let replaced = Set.union replacedNamed replacedFallen
+      spared pid =
         Set.member pid replaced
           || (GameSettings.twoHeadedGiant (GameState.settings before) && any (Teams.sameTeam (Game.teams before) pid) replaced)
+      losing = fmap (\pid -> (reason, pid)) falling <> fallen <> team
       departing = filter (\(why, pid) -> why /= Departure.Lost || not (spared pid)) losing
       pids = fmap snd departing
       lose why p = p {Player.status = Status.Departed why}
@@ -660,7 +684,7 @@ settle outcome gs = case (GameState.result gs, outcome) of
 -- result the game already has. settle keeps it, the door Pawl.Engine.Sba's pass
 -- shares.
 leaveGame :: Departure -> PlayerId -> Game ()
-leaveGame reason pid = leaveGameTogether reason [pid]
+leaveGame reason pid = leaveGameTogether True reason [pid]
 
 -- The same door for a SET of players leaving at once, which is what CR 104.3e's
 -- effect can name ("each player loses the game"). departTogether in the order
@@ -669,7 +693,51 @@ leaveGame reason pid = leaveGameTogether reason [pid]
 -- 104.4a's "if all the players remaining in a game lose simultaneously, the game
 -- is a draw" reachable: settling seat by seat would instead hand the
 -- second-to-last departure's survivor the win.
-leaveGameTogether :: Departure -> [PlayerId] -> Game ()
-leaveGameTogether reason pids = do
-  departTogether reason pids
+leaveGameTogether :: Bool -> Departure -> [PlayerId] -> Game ()
+leaveGameTogether replacing reason pids = do
+  departTogether replacing reason pids
   State.modify' (\departed -> settle (outcomeAfterLeaving pids departed) departed)
+
+-- CR 104.4b: how many events may happen with no player able to decide anything
+-- before the game is declared a loop of mandatory actions.
+--
+-- A HEURISTIC, and deliberately a crude one: detecting such a loop in general is
+-- the halting problem, so the question this answers is "has this gone on longer
+-- than any real game would?". The MARGIN is what makes it safe.
+-- GameState.nextTimestamp advances on the events CR 104.4b names (CR 613.7a,
+-- 613.7c, 613.7d), and the slowest real ending -- decking out from a 60-card
+-- library -- spends on the order of fifty of them, twenty times under the limit,
+-- where a two-card recursion loop arrives in a few hundred.
+mandatoryLoopLimit :: Natural
+mandatoryLoopLimit = 1000
+
+-- CR 104.4b: a game that has entered a loop of mandatory actions is a draw. Never
+-- overwrites a result the game already has -- a won game is not looping, and CR
+-- 104.4a's simultaneous loss is a different draw.
+--
+-- CR 801.16 under limited range: a draw for the loop's players and every player
+-- within any of their ranges, who leave the game while the rest play on. The
+-- loop's players are those GameState.loopInvolvement stamped in the gap's later
+-- half, which every cycle of a loop reaches and a lead-in shorter than half the
+-- limit does not. The survivors start owing nobody a choice, so the gap
+-- restarts rather than drawing them at the next check. A ranged loop naming
+-- nobody still playing falls back to the whole table.
+--
+-- The subtractions cannot underflow: GameState.lastChoice only ever takes a past
+-- GameState.nextTimestamp, that supply only counts up, and `recent` is forced
+-- only once the gap has reached the limit.
+checkMandatoryLoop :: Game ()
+checkMandatoryLoop = do
+  gs <- State.get
+  let now = Timestamp.unwrap (GameState.nextTimestamp gs)
+      gap = now - Timestamp.unwrap (GameState.lastChoice gs)
+      recent = Timestamp.MkTimestamp (now - div mandatoryLoopLimit 2)
+      involved = Map.keys (Map.filter (>= recent) (GameState.loopInvolvement gs))
+      drawn = Set.fromList (concatMap (\pid -> Players.table (Just pid) gs) involved)
+      ranged = GameSettings.rangeOfInfluence (GameState.settings gs) /= RangeOfInfluence.unlimited
+  Monad.when (Maybe.isNothing (GameState.result gs) && gap >= mandatoryLoopLimit) $
+    if ranged && not (Set.null drawn)
+      then do
+        leaveGameTogether True Departure.Drew (filter (`Set.member` drawn) (Game.apnapOrder gs))
+        State.modify' (\g -> g {GameState.lastChoice = GameState.nextTimestamp g})
+      else State.put (settle (Just Result.Drawn) gs)

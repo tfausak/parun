@@ -237,7 +237,7 @@ spec s registry = Spec.describe s "Face-down exile" $ do
     -- for randomness is not being offered a CHOICE, so CR 406.4's draw goes
     -- through Game.ask and leaves GameState.lastChoice alone. Otherwise a loop
     -- of mandatory actions containing such a draw would look interruptible and
-    -- Pawl.Engine.Engine.checkMandatoryLoop could never call it a draw.
+    -- Pawl.Engine.Departure.checkMandatoryLoop could never call it a draw.
     --
     -- Driven through drawFromPiles itself rather than through a cast, because
     -- announcing the target is a choice (Prompt.ChooseTargets) and would stamp

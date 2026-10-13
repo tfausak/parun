@@ -325,13 +325,13 @@ data GameState = MkGameState
     -- | CR 104.4b: the timestamp as of the last optional action offered to a
     -- player, advanced by Pawl.Engine.Game.choose (conceding excepted, CR
     -- 104.3a) and by CR 801.16's draw of a loop's players; its gap from
-    -- nextTimestamp is Pawl.Engine.Engine.checkMandatoryLoop's heuristic.
+    -- nextTimestamp is Pawl.Engine.Departure.checkMandatoryLoop's heuristic.
     lastChoice :: Timestamp.Timestamp,
     -- | CR 801.16: for each player, nextTimestamp as a triggered ability of
     -- theirs, or one an effect of theirs made trigger, was last put on the
     -- stack, or, under limited range, an event last acted on an object of
     -- theirs (Pawl.Engine.Game.involve).
-    -- Pawl.Engine.Engine.checkMandatoryLoop reads the recent ones as the loop's
+    -- Pawl.Engine.Departure.checkMandatoryLoop reads the recent ones as the loop's
     -- players.
     loopInvolvement :: Map.Map PlayerId.PlayerId Timestamp.Timestamp,
     drewFromEmpty :: Set.Set PlayerId.PlayerId,

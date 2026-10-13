@@ -1018,7 +1018,7 @@ checkOnce = do
   -- crown along, so who goes first is observable. Departure.leaveTogether is
   -- monadic for that clause's sake, which is why this is a statement rather
   -- than another binding in the `let`.
-  thenExile <- Departure.leaveTogether Departure.Type.Lost (List.reverse leaving)
+  thenExile <- Departure.leaveTogether (Just gs) True Departure.Type.Lost (List.reverse leaving)
   departed <- State.get
   let -- CR 704.5d and CR 704.5e: the objects the rules say cease to exist outside
       -- a zone of their own -- a token anywhere but the battlefield, a copy of a

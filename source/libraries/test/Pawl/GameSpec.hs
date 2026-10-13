@@ -1920,6 +1920,27 @@ mandatoryLoopBoardSpec s registry = Spec.describe s "a mandatory loop (CR 104.4b
     let result = runConcedingAt 200 (loopBoard flash limb sporemound forest (Just (mountain, bolt)))
     Spec.assertEqWith s "alice conceded, so bob won -- no draw" result (Result.Won S.bob)
 
+  -- Lich's Mirror's ruling: alice controls bob's Mirror at ten poison counters.
+  -- Every check would lose her the game, and the Mirror, not being hers, never
+  -- shuffles itself away, so it replaces the loss on every pass -- an
+  -- involuntary loop, which the ruling and CR 104.4b call a draw. Driven
+  -- through Engine.settleForPriority, the state-based action recursion the loop
+  -- runs in, seeded near the limit for loopBoard's reason.
+  Spec.it s "a borrowed Lich's Mirror resetting forever is a draw" $ do
+    mirror <- S.printingOf s registry "Lich's Mirror"
+    island <- S.printingOf s registry "Island"
+    let (mirrorId, gs1) = S.addPermanent mirror S.bob (Setup.emptyGame S.bothPlayers)
+        stocked = iterate (snd . S.addLibraryCard island S.alice) (S.giveControl mirrorId S.alice gs1) !! 8
+        board =
+          (S.addPlayerCounter PlayerCounterKind.Poison 10 S.alice stocked)
+            { GameState.phase = Phase.PrecombatMain,
+              GameState.remaining = Seq.empty,
+              GameState.nextTimestamp = Timestamp.MkTimestamp (Departure.mandatoryLoopLimit - 10),
+              GameState.lastChoice = Timestamp.MkTimestamp 0
+            }
+        after = S.runPure S.identityAnswer board Engine.settleForPriority
+    Spec.assertEqWith s "CR 104.4b" (GameState.result after) (Just Result.Drawn)
+
 -- alice, active, in her precombat main phase: bob's Aether Flash and Life and
 -- Limb, alice's Sporemound, and a Forest of alice's ENTERING (so CR 603.6a's
 -- event is there for Sporemound's landfall trigger to see). Empty libraries and
@@ -1962,7 +1983,7 @@ loopBoard flash limb sporemound forest castable =
         gs5
           { GameState.phase = Phase.PrecombatMain,
             GameState.remaining = Seq.empty,
-            GameState.nextTimestamp = Timestamp.MkTimestamp (Engine.mandatoryLoopLimit - 10),
+            GameState.nextTimestamp = Timestamp.MkTimestamp (Departure.mandatoryLoopLimit - 10),
             GameState.lastChoice = Timestamp.MkTimestamp 0
           }
    in S.tapObject forestId seeded
@@ -1990,24 +2011,24 @@ runConcedingAt limit gs =
 mandatoryLoopSpec :: (Monad m, Monad n) => Spec.Spec m n -> n ()
 mandatoryLoopSpec s = Spec.describe s "the mandatory-loop guard (CR 104.4b)" $ do
   Spec.it s "one event short of the limit is not a draw" $ do
-    let after = S.runPure S.identityAnswer (atGap (Engine.mandatoryLoopLimit - 1)) Engine.checkMandatoryLoop
+    let after = S.runPure S.identityAnswer (atGap (Departure.mandatoryLoopLimit - 1)) Departure.checkMandatoryLoop
     Spec.assertEqWith s "still being played" (GameState.result after) Nothing
 
   Spec.it s "the limit is a draw" $ do
-    let after = S.runPure S.identityAnswer (atGap Engine.mandatoryLoopLimit) Engine.checkMandatoryLoop
+    let after = S.runPure S.identityAnswer (atGap Departure.mandatoryLoopLimit) Departure.checkMandatoryLoop
     Spec.assertEqWith s "CR 104.4b" (GameState.result after) (Just Result.Drawn)
 
   Spec.it s "a game that already ended keeps the result it had" $ do
     -- A draw must never overwrite a win: the guard fires on a gap only a loop
     -- should reach, and a won game is not looping.
-    let won = (atGap Engine.mandatoryLoopLimit) {GameState.result = Just (Result.Won S.alice)}
-        after = S.runPure S.identityAnswer won Engine.checkMandatoryLoop
+    let won = (atGap Departure.mandatoryLoopLimit) {GameState.result = Just (Result.Won S.alice)}
+        after = S.runPure S.identityAnswer won Departure.checkMandatoryLoop
     Spec.assertEqWith s "alice still won" (GameState.result after) (Just (Result.Won S.alice))
 
   Spec.it s "playGame draws instead of looping" $ do
     -- Proves the guard is WIRED, not merely correct: playGame's loop head is what
     -- reads it. The board is empty, so nothing else can end this game.
-    let (result, _) = Engine.runGamePure S.identityAnswer (atGap Engine.mandatoryLoopLimit) Engine.playGame
+    let (result, _) = Engine.runGamePure S.identityAnswer (atGap Departure.mandatoryLoopLimit) Engine.playGame
     Spec.assertEqWith s "CR 104.4b" result Result.Drawn
 
 -- An otherwise-idle two-player game in which `n` events have happened since any

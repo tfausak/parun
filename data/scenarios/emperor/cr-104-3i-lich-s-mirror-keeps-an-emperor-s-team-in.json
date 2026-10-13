@@ -1,0 +1,61 @@
+{
+  "description": "CR 104.3i Lich's Mirror keeps an emperor's team in",
+  "note": "Emperor.setUp's board, bob the emperor of alice, bob and carol. Bob at 3 life Lightning Bolts himself with Lich's Mirror out. His loss is replaced, so it takes nobody with it (CR 809.5b): carol, a general, stays in with her Plains.",
+  "board": {
+    "seats": [
+      {
+        "name": "alice",
+        "team": 1,
+        "range": 1,
+        "library": [{ "card": "Plains" }, { "card": "Plains" }]
+      },
+      {
+        "name": "bob",
+        "team": 1,
+        "range": 2,
+        "emperor": true,
+        "life": 3,
+        "battlefield": [{ "card": "Lich's Mirror" }, { "card": "Mountain", "label": "m" }],
+        "hand": [{ "card": "Lightning Bolt", "label": "bolt" }],
+        "library": [{ "card": "Island" }, { "card": "Island" }, { "card": "Island" }, { "card": "Island" }, { "card": "Island" }, { "card": "Island" }, { "card": "Island" }]
+      },
+      {
+        "name": "carol",
+        "team": 1,
+        "range": 1,
+        "battlefield": [{ "card": "Plains" }],
+        "library": [{ "card": "Plains" }, { "card": "Plains" }]
+      },
+      {
+        "name": "dave",
+        "team": 2,
+        "range": 1,
+        "library": [{ "card": "Forest" }, { "card": "Forest" }]
+      },
+      {
+        "name": "erin",
+        "team": 2,
+        "range": 2,
+        "emperor": true,
+        "library": [{ "card": "Forest" }, { "card": "Forest" }]
+      },
+      {
+        "name": "frank",
+        "team": 2,
+        "range": 1,
+        "library": [{ "card": "Forest" }, { "card": "Forest" }]
+      }
+    ],
+    "active": "bob",
+    "step": "PrecombatMain",
+    "attackOption": "Adjacent",
+    "deployCreatures": true
+  },
+  "timeline": [
+    { "turn": 1, "step": "PrecombatMain", "player": "bob", "do": { "Cast": { "object": "$bolt", "targets": ["$bob"], "mana": ["$m"] } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "bob", "do": "Pass" },
+    { "turn": 1, "step": "PrecombatMain", "player": "bob", "do": { "Answer": { "prompt": "Shuffle", "with": ["Island", "Island#2", "Island#3", "Island#4", "Island#5", "Island#6", "Island#7", "Lich's Mirror", "Mountain", "Lightning Bolt"] } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "bob", "check": { "Count": { "player": "carol", "zone": "Battlefield", "card": "Plains", "count": 1 } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "bob", "check": { "Life": { "player": "bob", "life": 20 } } }
+  ]
+}

@@ -363,7 +363,7 @@ spec s registry = Spec.describe s "Ante" $ do
     piker <- S.printingOf s registry "Goblin Piker"
     let (alices, g1) = S.addObjectIn Zone.Ante piker S.alice (Setup.gameWith anteGame S.bothPlayers)
         (bobs, g2) = S.addObjectIn Zone.Ante piker S.bob g1
-        drawn = S.runPure S.identityAnswer g2 (Departure.leaveGameTogether Departure.Type.Lost [S.alice, S.bob])
+        drawn = S.runPure S.identityAnswer g2 (Departure.leaveGameTogether True Departure.Type.Lost [S.alice, S.bob])
         ownerOf oid = fmap Object.owner (Game.lookupObject oid drawn)
     Spec.assertEqWith s "CR 407.2 nobody won, so each ante card keeps its owner" (ownerOf alices, ownerOf bobs) (Just S.alice, Just S.bob)
     Spec.assertEqWith s "CR 104.4a the game is a draw" (GameState.result drawn) (Just Result.Drawn)
@@ -374,7 +374,7 @@ spec s registry = Spec.describe s "Ante" $ do
     piker <- S.printingOf s registry "Goblin Piker"
     let stake pid (ids, g) = let (oid, g') = S.addObjectIn Zone.Ante piker pid g in (ids <> [oid], g')
         (staked, g1) = stake S.carol (stake S.bob (stake S.alice ([], Setup.gameWith anteGame S.threePlayers)))
-        drew = S.runPure S.identityAnswer g1 (Departure.leaveGameTogether Departure.Type.Drew [S.bob])
+        drew = S.runPure S.identityAnswer g1 (Departure.leaveGameTogether True Departure.Type.Drew [S.bob])
         won = S.runPure S.identityAnswer drew (Departure.leaveGame Departure.Type.Conceded S.carol)
     Spec.assertEqWith s "CR 407.2 alice, the winner, owns every ante card" (fmap (\oid -> fmap Object.owner (Game.lookupObject oid won)) staked) (replicate 3 (Just S.alice))
     Spec.assertEqWith s "CR 104.2a alice won" (GameState.result won) (Just (Result.Won S.alice))

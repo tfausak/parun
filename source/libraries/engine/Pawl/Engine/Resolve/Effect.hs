@@ -6646,7 +6646,7 @@ applyOneEffect runSubgame resolving source controller legal chosen effect = case
     gs <- State.get
     let named = Set.fromList (filter (\pid -> not (PlayerEffect.precludes GameOutcome.Lose pid gs)) (playerRefPlayers legal controller gs ref))
         alive = Set.fromList (Game.stillPlaying gs)
-    Departure.leaveGameTogether Departure.Type.Lost (filter (\pid -> Set.member pid named && Set.member pid alive) (Game.apnapOrder gs))
+    Departure.leaveGameTogether True Departure.Type.Lost (filter (\pid -> Set.member pid named && Set.member pid alive) (Game.apnapOrder gs))
   -- CR 104.2b with CR 801.14: a player the reference names wins the game, which
   -- is each of their opponents within their range losing it. Under an unlimited
   -- range that is every opponent, and CR 104.2a then settles the win itself
@@ -6658,12 +6658,14 @@ applyOneEffect runSubgame resolving source controller legal chosen effect = case
   -- the game (CR 104.1), and the departure is only how pawl spells it. Under a
   -- limited one CR 104.3h makes the effect those opponents LOSING instead, so
   -- nobody wins: a can't-lose effect stops it and a can't-win one does not.
+  -- Only those losses meet a loss replacement; Lich's Mirror's ruling gives it
+  -- no effect against a win.
   Effect.WinGame ref -> do
     gs <- State.get
     let limited winner = Maybe.isJust (RangeOfInfluence.rangeOf (GameSettings.rangeOfInfluence (GameState.settings gs)) winner)
         winners = filter (\pid -> pid `elem` Game.stillPlaying gs && (limited pid || not (PlayerEffect.precludes GameOutcome.Win pid gs))) (playerRefPlayers legal controller gs ref)
         losers = Set.fromList [pid | winner <- winners, pid <- Players.offer winner gs PlayerRelation.Opponent, not (limited winner && PlayerEffect.precludes GameOutcome.Lose pid gs)]
-    Departure.leaveGameTogether Departure.Type.Lost (filter (`Set.member` losers) (Game.apnapOrder gs))
+    Departure.leaveGameTogether (all limited winners) Departure.Type.Lost (filter (`Set.member` losers) (Game.apnapOrder gs))
   -- CR 104.4c with CR 801.15: the game is a draw for the controller and each
   -- player within their range, who leave it; everyone else plays on. Under an
   -- unlimited range that is the whole table, which CR 104.2a's settle then
@@ -6671,7 +6673,7 @@ applyOneEffect runSubgame resolving source controller legal chosen effect = case
   Effect.DrawGame -> do
     gs <- State.get
     let drawn = Players.table (Just controller) gs
-    Departure.leaveGameTogether Departure.Type.Drew (filter (`elem` drawn) (Game.apnapOrder gs))
+    Departure.leaveGameTogether True Departure.Type.Drew (filter (`elem` drawn) (Game.apnapOrder gs))
   -- CR 119.7 / 119.8: redistribute life totals, each new total being CR 119.5's
   -- gain or loss of the necessary amount. The roster is CR 102.1's players IN the
   -- game, not the keys of GameState.players, which keep a departed seat's row.
@@ -10007,11 +10009,14 @@ applyOneEffect runSubgame resolving source controller legal chosen effect = case
     -- after the creature it enchanted died. Terminates because the flag is False
     -- as soon as a pass performs nothing.
     -- A loss the pass replaced runs its effects before the next pass looks
-    -- (runReplacementEffects).
+    -- (runReplacementEffects), and a pass that replaces it forever is CR
+    -- 104.4b's draw (Departure.checkMandatoryLoop).
     let checkToFixpoint = do
           performed <- Sba.performStateBasedActions
           runReplacementEffects runSubgame
-          Monad.when performed checkToFixpoint
+          Departure.checkMandatoryLoop
+          ended <- State.gets (Maybe.isJust . GameState.result)
+          Monad.when (performed && not ended) checkToFixpoint
     checkToFixpoint
     -- CR 724.1d: the current phase and/or step ends; creatures and planeswalkers
     -- leave combat if this happened during one; the game skips straight to the
@@ -10088,7 +10093,9 @@ applyOneEffect runSubgame resolving source controller legal chosen effect = case
         let checkToFixpoint = do
               performed <- Sba.performStateBasedActions
               runReplacementEffects runSubgame
-              Monad.when performed checkToFixpoint
+              Departure.checkMandatoryLoop
+              ended <- State.gets (Maybe.isJust . GameState.result)
+              Monad.when (performed && not ended) checkToFixpoint
         checkToFixpoint
         -- CR 724.2d, in the rule's own sentence order: the phase ends, creatures
         -- and planeswalkers leave combat, "until end of combat" effects expire,
@@ -10494,10 +10501,9 @@ enteredBeside oid gs = case Trigger.entryGroup oid gs of
 -- callers GameState.pendingReplacementEffects lists keep it empty at every
 -- priority window.
 --
--- Not implemented: CR 614.1's own placement, inside the event. A creature the
--- loser owns that dies in the same check as the loss is put into the graveyard
--- and then shuffled away by the Mirror, where its controller should choose one
--- (#5071).
+-- Not implemented: CR 614.1's own placement, inside the event. A permanent the
+-- loser owns that the same check moves is put into the graveyard and then
+-- shuffled away by the Mirror, where its controller should choose one (#5071).
 runReplacementEffects :: Game Result -> Game ()
 runReplacementEffects runSubgame = do
   queued <- State.gets GameState.pendingReplacementEffects
