@@ -2,10 +2,8 @@ module Pawl.Types.LoopTrail where
 
 import qualified Data.Map.Strict as Map
 import qualified Data.Sequence as Seq
-import qualified Data.Set as Set
 import qualified Pawl.Types.Action as Action
 import qualified Pawl.Types.Announcement as Announcement
-import qualified Pawl.Types.ObjectId as ObjectId
 import qualified Pawl.Types.PlayerId as PlayerId
 import qualified Pawl.Types.StateDigest as StateDigest
 
@@ -13,21 +11,18 @@ import qualified Pawl.Types.StateDigest as StateDigest
 -- game state recurred among them. Loop-local, so no codec.
 data LoopTrail = MkLoopTrail
   { -- | Each choice taken at a prompt that offered one, oldest first, with
-    -- the state it was taken in and, for an activation, the ability object it
-    -- put on the stack and what it was announced with.
-    choices :: Seq.Seq (StateDigest.StateDigest, PlayerId.PlayerId, Action.Action, Maybe (ObjectId.ObjectId, Announcement.Announcement)),
+    -- the state it was taken in and, for an activation, what it was announced
+    -- with.
+    choices :: Seq.Seq (StateDigest.StateDigest, PlayerId.PlayerId, Action.Action, Maybe Announcement.Announcement),
     -- | Each digested state's positions in `choices`, newest first.
     seen :: Map.Map StateDigest.StateDigest [Int],
     -- | The latest choice and the state it was made in, held until the next
     -- prompt shows whether it changed anything: CR 733.1 reverses an illegal
     -- action, which then never happened.
-    pending :: Maybe (StateDigest.StateDigest, PlayerId.PlayerId, Action.Action, Maybe (ObjectId.ObjectId, Announcement.Announcement)),
-    -- | The objects whose resolution offered a player a choice (CR 608.2d),
-    -- which made the game choice that put them on the stack only its start.
-    choseAtResolution :: Set.Set ObjectId.ObjectId
+    pending :: Maybe (StateDigest.StateDigest, PlayerId.PlayerId, Action.Action, Maybe Announcement.Announcement)
   }
   deriving (Eq, Show)
 
 -- | A loop that has seen nothing yet.
 empty :: LoopTrail
-empty = MkLoopTrail {choices = Seq.empty, seen = Map.empty, pending = Nothing, choseAtResolution = Set.empty}
+empty = MkLoopTrail {choices = Seq.empty, seen = Map.empty, pending = Nothing}

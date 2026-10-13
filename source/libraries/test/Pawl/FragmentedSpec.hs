@@ -101,13 +101,13 @@ spec s registry = Spec.describe s "a fragmented loop (CR 732.3)" $ do
     -- different game choice (CR 732.1, 601.2c) and goes ahead.
     Spec.assertEqWith s "CR 732.3 only alice's repeated aim is refused" (poppetAttempts poppet bears) [(False, True), (False, False), (True, True)]
 
-  Spec.it s "an activation whose resolution offers a choice is not refused" $ do
+  Spec.it s "a choice the resolution offers does not make a repeated activation a new one" $ do
     stitcher <- S.printingOf s registry "Fatestitcher"
     -- alice taps her Fatestitcher to untap bob's, and bob taps his to untap
-    -- hers: the lap ends where it began. alice's activation asked her whether
-    -- to untap as it resolved (CR 608.2d), so repeating its announcement need
-    -- not repeat the lap -- she could decline -- and it goes ahead.
-    Spec.assertEqWith s "CR 732.3 alice's repeated aim is not refused" (stitcherAttempts stitcher) [(False, True), (False, True)]
+    -- hers: the lap ends where it began. Her activation asked her whether to
+    -- untap as it resolved (CR 608.2d), a later game choice of its own; the
+    -- one CR 732.3 refuses is activating it again as she did.
+    Spec.assertEqWith s "CR 732.3 alice's repeated aim is refused" (stitcherAttempts stitcher) [(False, True), (False, False)]
 
   Spec.it s "a loop whose undo leaves a superseded continuous effect behind is detected" $ do
     dragon <- S.printingOf s registry "Mist Dragon"

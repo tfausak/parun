@@ -443,11 +443,12 @@ planarDieRolled event = case event of
 -- only the last, so A, B, A, B through one state is refused too: a
 -- `choiceless` action as a whole, and an activation whose payment is
 -- `forcedPayment` by its announcement, so aiming it elsewhere (CR 601.2c) is
--- still a choice to make. Neither is refused where its resolution offered a
--- choice (CR 608.2d), which another lap could make differently. Pass never is
--- (CR 732.5). Pawl.FragmentedSpec's
+-- still a choice to make. A choice made later in the lap -- as the object
+-- resolves (CR 608.2d), or for a trigger it causes -- is a game choice of its
+-- own, and leaves this one as it was: CR 732.3's example refuses "activating
+-- that creature's ability again" outright. Pass never is (CR 732.5). Pawl.FragmentedSpec's
 -- control case is the board where the nesting happens, its Grim Poppet case
--- the announcement, and its Fatestitcher case the resolution's choice.
+-- the announcement, and its Fatestitcher case a choice at resolution.
 forbidden :: StateDigest -> GameState -> PlayerId -> LoopTrail -> (Set.Set Action, Set.Set (Action, Announcement.Announcement))
 forbidden here gs pid loopTrail =
   case Map.findWithDefault [] here (LoopTrail.seen loopTrail) of
@@ -458,8 +459,7 @@ forbidden here gs pid loopTrail =
           acted (_, _, action, _) = action /= Action.Pass
           involved = Set.fromList [who | (_, who, _, _) <- filter acted (Foldable.toList (Seq.drop firstSeen choices))]
           named = List.find (`Set.member` involved) (Game.turnOrderFrom (GameState.activePlayer gs) gs)
-          whole = maybe True ((`Set.notMember` LoopTrail.choseAtResolution loopTrail) . fst)
-          made = [(action, fmap snd announced) | (_, who, action, announced) <- Maybe.mapMaybe (`Seq.lookup` choices) occurrences, who == pid, whole announced]
+          made = [(action, announced) | (_, who, action, announced) <- Maybe.mapMaybe (`Seq.lookup` choices) occurrences, who == pid]
           taken = Set.fromList [action | (action, _) <- made, choiceless action]
           announcedWith = Set.fromList [(action, announcement) | (action, Just announcement) <- made, forcedPayment (Announcement.cost announcement)]
           unread = case Seq.lookup firstSeen choices of
@@ -511,9 +511,8 @@ forcedPayment cost =
 record :: StateDigest -> PlayerId -> Action -> LoopTrail -> LoopTrail
 record here pid action loopTrail = loopTrail {LoopTrail.pending = Just (here, pid, action, Nothing)}
 
--- | Note the object the pending activation put on the stack and what it was
--- announced with, once it has been.
-announce :: Maybe (ObjectId.ObjectId, Announcement.Announcement) -> LoopTrail -> LoopTrail
+-- | Note what the pending activation was announced with, once it has been.
+announce :: Maybe Announcement.Announcement -> LoopTrail -> LoopTrail
 announce announced loopTrail =
   loopTrail {LoopTrail.pending = fmap (\(there, pid, action, _) -> (there, pid, action, announced)) (LoopTrail.pending loopTrail)}
 
@@ -531,7 +530,3 @@ settle here loopTrail = case LoopTrail.pending loopTrail of
                 LoopTrail.seen = Map.insertWith (<>) there [at] (LoopTrail.seen loopTrail),
                 LoopTrail.pending = Nothing
               }
-
--- | Note that `oid`'s resolution offered a player a choice.
-resolvedWithChoice :: ObjectId.ObjectId -> LoopTrail -> LoopTrail
-resolvedWithChoice oid loopTrail = loopTrail {LoopTrail.choseAtResolution = Set.insert oid (LoopTrail.choseAtResolution loopTrail)}

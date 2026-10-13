@@ -117,9 +117,9 @@ activateAbility pid srcId ability = Monad.void (activateAbilityWith (const False
 -- `runSubgame` is the injected nested-game runner, for a subgame a triggered
 -- mana ability starts while the cost is paid (CR 605.4a). `refused` names the
 -- announcements CR 732.3 forbids (Pawl.Engine.Fragmented.forbidden). Answers
--- the ability object a completed activation put on the stack and what it was
--- announced with, and Nothing for one rejected.
-activateAbilityWith :: (Announcement.Announcement -> Bool) -> Game Result -> PlayerId -> ObjectId -> ActivatedAbility.ActivatedAbility Card.Card (GrantedAbility.GrantedAbility Card.Card) -> Game (Maybe (ObjectId, Announcement.Announcement))
+-- what a completed activation was announced with, and Nothing for one
+-- rejected.
+activateAbilityWith :: (Announcement.Announcement -> Bool) -> Game Result -> PlayerId -> ObjectId -> ActivatedAbility.ActivatedAbility Card.Card (GrantedAbility.GrantedAbility Card.Card) -> Game (Maybe Announcement.Announcement)
 activateAbilityWith refused runSubgame pid srcId ability = Event.announcing $ do
   before <- State.get
   -- CR 602.2a's own order: the reveal is part of announcing, and so precedes
@@ -496,7 +496,7 @@ activateAbilityWith refused runSubgame pid srcId ability = Event.announcing $ do
                       -- a card drawn while paying for it turns face up and its
                       -- reveal is offered.
                       Event.turnUpKeptDraws
-                      pure (Just (abilId, announcement))
+                      pure (Just announcement)
                     -- CR 733.1: the payment reversed the activation back to
                     -- `before` itself, keeping what the payer chose to keep of the
                     -- mana window.

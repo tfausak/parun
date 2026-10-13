@@ -1286,29 +1286,6 @@ checkMandatoryLoop = do
 -- passed in succession (CR 117.4). A full round of passes resolves the top of the
 -- stack and hands priority back to the active player; only an EMPTY stack ends
 -- the step.
--- Resolve the top of the stack (Stack.resolveTopWith), answering whether its
--- resolution offered a player a choice: whether Game.choose ran, which writes
--- GameState.nextTimestamp to GameState.lastChoice. Read against a value it
--- cannot write -- the last choice's own where a timestamp has been minted
--- since, or else the one just before -- and the CR 104.4b reading put back
--- where nothing chose. With no timestamp minted at all there is no such value,
--- and the answer is yes, which only ever keeps CR 732.3 from refusing.
-resolveTopNotingChoice :: Game Bool
-resolveTopNotingChoice = do
-  gs <- State.get
-  let previous = GameState.lastChoice gs
-      now = Timestamp.unwrap (GameState.nextTimestamp gs)
-      unwritable
-        | previous < GameState.nextTimestamp gs = Just previous
-        | now > 0 = Just (Timestamp.MkTimestamp (now - 1))
-        | otherwise = Nothing
-  Foldable.for_ unwritable (\stamp -> State.modify' (\g -> g {GameState.lastChoice = stamp}))
-  Stack.resolveTopWith playSubgame
-  after <- State.gets GameState.lastChoice
-  let chose = unwritable /= Just after
-  Monad.unless chose (State.modify' (\g -> g {GameState.lastChoice = previous}))
-  pure chose
-
 priorityLoop :: Game ()
 priorityLoop = do
   -- CR 800.4j: the active player, unless they have left the game.
@@ -1419,13 +1396,8 @@ priorityLoop = do
                                 if everyone
                                   then case GameState.stack gs of
                                     [] -> State.modify' (\g -> g {GameState.priority = Nothing, GameState.passed = passed})
-                                    top : _ -> do
-                                      -- CR 608.2d / 732.3: a choice offered as
-                                      -- the object resolved belongs to the game
-                                      -- choice that put it on the stack, so the
-                                      -- loop's record of that one is incomplete.
-                                      chose <- resolveTopNotingChoice
-                                      let resolved = if chose then Fragmented.resolvedWithChoice top trail' else trail'
+                                    _ -> do
+                                      Stack.resolveTopWith playSubgame
                                       ended <- State.gets GameState.endTurnSignal
                                       case ended of
                                         -- CR 724.1f / CR 724.2f: an effect ended
@@ -1446,7 +1418,7 @@ priorityLoop = do
                                         EndTurnSignal.Running -> do
                                           settleForPriority
                                           State.modify' (\g -> g {GameState.passed = Set.empty, GameState.priority = Just (priorityHolder g)})
-                                          loop resolved
+                                          loop trail'
                                   else do
                                     State.modify' (\g -> g {GameState.passed = passed, GameState.priority = Just (passPriorityFrom gs {GameState.passed = passed} p)})
                                     loop trail'
