@@ -14,6 +14,7 @@ import qualified Data.Map.Strict as Map
 import qualified Data.Maybe as Maybe
 import qualified Data.Sequence as Seq
 import qualified Data.Set as Set
+import qualified Pawl.Engine.Commander as Commander
 import qualified Pawl.Engine.Filter as Filter.Engine
 import qualified Pawl.Engine.Game as Game
 import qualified Pawl.Engine.Interchangeable.Mentions as Mentions
@@ -74,7 +75,8 @@ import qualified Pawl.Types.TriggerSource as TriggerSource
 --     False -- the opposite posture to a hand-kept list of fields that must
 --     agree, which a new field would leave unread. The timestamp and the serial
 --     are the two fields two distinct objects never share; what reads the
---     timestamp is layeredBetween's question below.
+--     timestamp is layeredBetween's question below, and what reads the serial
+--     is the commander designation, compared beside them.
 --   * The projections must agree, which is what an Equipment or an Aura shows up
 --     in -- Bonesplitter's +2/+0 makes one Llanowar Elves a 3/1 and the other a
 --     1/1. So must what their two Filter views read off the turn's log (CR
@@ -89,10 +91,15 @@ import qualified Pawl.Types.TriggerSource as TriggerSource
 objects :: Map.Map ObjectId PC.ProjectedCharacteristics -> GameState -> ObjectId -> ObjectId -> Bool
 objects pcs gs a b =
   let sameObject = case (Map.lookup a (GameState.objects gs), Map.lookup b (GameState.objects gs)) of
-        -- An identity's serial is bookkeeping no rule reads, on the object and on
-        -- each card a merged or melded one is made of; its starting owner is
-        -- not, since Ante.ownershipChanges tells two cards apart by it.
-        (Just x, Just y) -> withoutSerials x {Object.timestamp = Object.timestamp y} == withoutSerials y
+        -- An identity's serial is bookkeeping, on the object and on each card a
+        -- merged or melded one is made of, save for the one rule that reads it:
+        -- CR 903.3's designation names one card (Commander.commanderCardOf), so
+        -- a commander is never alike with another copy of its printing, and two
+        -- commanders are never alike either. The starting owner is compared,
+        -- since Ante.ownershipChanges tells two cards apart by it.
+        (Just x, Just y) ->
+          withoutSerials x {Object.timestamp = Object.timestamp y} == withoutSerials y
+            && fmap snd (Commander.commanderCardOf a gs) == fmap snd (Commander.commanderCardOf b gs)
         _ -> False
       unserial identity = identity {CardIdentity.serial = 0}
       unserialCard card = card {ComponentCard.identity = fmap unserial (ComponentCard.identity card)}

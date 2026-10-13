@@ -347,10 +347,11 @@ designate pid identity gs =
 -- and so is one whose owner an ante card changed (CR 108.3, 407.3). The rules
 -- that act on it name "its owner" themselves (CR 903.8, 903.9).
 isCommander :: ObjectId -> GameState -> Bool
-isCommander oid gs = Maybe.isJust (commanderPrintingOf oid gs)
+isCommander oid gs = Maybe.isJust (commanderCardOf oid gs)
 
 -- | CR 903.3's designation, read off whichever card represents this object: the
--- printing of a designated card when one of them is it, and Nothing otherwise.
+-- printing and identity of a designated card when one of them is it, and Nothing
+-- otherwise. The identity keys CR 903.8's and CR 903.10a's tallies.
 --
 -- Matches on the card's IDENTITY (Object.identity, Pawl.Types.ComponentCard's
 -- for a component), looked up under its starting owner, the player whose deck
@@ -373,8 +374,8 @@ isCommander oid gs = Maybe.isJust (commanderPrintingOf oid gs)
 -- commander; rule 903.8's cast permission wants only the Bool, and cannot be
 -- reached by a melded permanent at all, since none is ever in the command zone
 -- to be cast from.
-commanderPrintingOf :: ObjectId -> GameState -> Maybe PrintingId.PrintingId
-commanderPrintingOf oid gs = do
+commanderCardOf :: ObjectId -> GameState -> Maybe (PrintingId.PrintingId, CardIdentity.CardIdentity)
+commanderCardOf oid gs = do
   obj <- Game.lookupObject oid gs
   let cards = case Object.source obj of
         Source.OfCard printingId -> [(printingId, Object.identity obj)]
@@ -385,21 +386,21 @@ commanderPrintingOf oid gs = do
       designated identity = maybe False (Set.member identity . Player.commander) (Map.lookup (CardIdentity.startingOwner identity) (GameState.players gs))
   -- CR 702.124e: with two designations this answers WHICH of them this object
   -- is; each is its own card, so no object is both.
-  fmap fst (Foldable.find (maybe False designated . snd) cards)
+  Foldable.find (designated . snd) [(printingId, identity) | (printingId, Just identity) <- cards]
 
 -- | CR 903.9c: the one card of a melded or merged permanent that goes to the
 -- command zone when its owner accepts CR 903.9b's offer -- "the card that
 -- represents it and is a commander" -- or Nothing when the object is a single
 -- card and the whole of it moves instead.
 --
--- Gated on the object HAVING components rather than on `commanderPrintingOf`
+-- Gated on the object HAVING components rather than on `commanderCardOf`
 -- alone: an ordinary commander card is its own designation, and rule 903.9c's
 -- split has nothing to divide there.
 commandZoneComponent :: ObjectId -> GameState -> Maybe PrintingId.PrintingId
 commandZoneComponent oid gs = do
   obj <- Game.lookupObject oid gs
   Monad.guard (not (Seq.null (Game.componentsOf (Object.source obj))))
-  commanderPrintingOf oid gs
+  fmap fst (commanderCardOf oid gs)
 
 -- | CR 903.10a / CR 704.6c: "a player who's been dealt 21 or more combat damage
 -- by the same commander over the course of the game loses the game". The
@@ -457,9 +458,9 @@ tax pid oid gs
   | not (Set.member oid (GameState.command gs)) = 0
   -- CR 702.124d: "when casting a commander with partner, ignore how many times
   -- your other commander has been cast", so the count is the one kept against
-  -- THIS designation. `commanderPrintingOf` cannot be Nothing past the guard
+  -- THIS designation. `commanderCardOf` cannot be Nothing past the guard
   -- above, which is `isCommander`.
-  | otherwise = 2 * maybe 0 (\printingId -> castCount pid printingId gs) (commanderPrintingOf oid gs)
+  | otherwise = 2 * maybe 0 (\(_, identity) -> castCount pid identity gs) (commanderCardOf oid gs)
 
 -- | CR 903.8's permission half: may this player cast this object from the command
 -- zone? Only its OWNER may, and only if it is a commander -- rule 903.8 says "a
@@ -472,9 +473,9 @@ canCastFromCommandZone pid oid gs =
 -- | CR 903.8's "each previous time they cast IT from the command zone this
 -- game", asked of one designation: CR 702.124d has a partner deck's other
 -- commander ignore this one's casts.
-castCount :: PlayerId -> PrintingId.PrintingId -> GameState -> Natural
-castCount pid printingId gs =
-  maybe 0 (Map.findWithDefault 0 printingId . Player.commanderCasts) (Map.lookup pid (GameState.players gs))
+castCount :: PlayerId -> CardIdentity.CardIdentity -> GameState -> Natural
+castCount pid identity gs =
+  maybe 0 (Map.findWithDefault 0 identity . Player.commanderCasts) (Map.lookup pid (GameState.players gs))
 
 -- | CR 903.8's tax as a function on ONE candidate cost: add {2} per previous cast
 -- to its mana part, or leave it alone when there is no tax to add.
@@ -584,15 +585,15 @@ commandZoneOffer zc gs
 -- rather than the player alone. The object is the SPELL on the stack, CR 601.2a
 -- having already moved the card there: rule 903.3's designation is the card's
 -- identity, which Object.newIncarnation keeps across CR 400.7, so the spell
--- answers `commanderPrintingOf` exactly as the card in the command zone did.
+-- answers `commanderCardOf` exactly as the card in the command zone did.
 --
 -- Does nothing when the object is not a commander, which its one caller has
 -- already ruled out by the zone it was cast from.
 recordCast :: PlayerId -> ObjectId -> GameState -> GameState
-recordCast pid oid gs = case commanderPrintingOf oid gs of
+recordCast pid oid gs = case commanderCardOf oid gs of
   Nothing -> gs
-  Just printingId ->
+  Just (_, identity) ->
     gs
       { GameState.players =
-          Map.adjust (\p -> p {Player.commanderCasts = Map.insertWith (+) printingId 1 (Player.commanderCasts p)}) pid (GameState.players gs)
+          Map.adjust (\p -> p {Player.commanderCasts = Map.insertWith (+) identity 1 (Player.commanderCasts p)}) pid (GameState.players gs)
       }

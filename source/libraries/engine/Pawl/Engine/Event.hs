@@ -6597,7 +6597,7 @@ changeZoneWithCause discarded asOf batch oid requestedDest requestedPosition see
                   -- "the card that represents it and is a commander", and neither
                   -- a token (CR 111.6) nor CR 730.2's copy (CR 707.10, "no spell
                   -- card associated with it") is one. Game.componentIsCard is
-                  -- that read, and Commander.commanderPrintingOf takes it on the
+                  -- that read, and Commander.commanderCardOf takes it on the
                   -- way in, so the two agree about which component the
                   -- designation can sit on.
                   (commandComponents, destComponents) = Seq.partition (\component -> Game.componentIsCard component && Just (Game.printingOfComponent component) == splitOff) components

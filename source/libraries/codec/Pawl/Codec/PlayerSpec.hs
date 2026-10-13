@@ -84,8 +84,8 @@ spec s = Spec.describe s "Pawl.Codec.Player" $ do
           Player.speed = Just 4,
           Player.designations = Set.fromList [PlayerDesignation.CitysBlessing, PlayerDesignation.EnduringStory],
           Player.commander = Set.fromList [CardIdentity.MkCardIdentity 20 (PlayerId.MkPlayerId 1), CardIdentity.MkCardIdentity 21 (PlayerId.MkPlayerId 1)],
-          Player.commanderCasts = Map.fromList [(PrintingId.MkPrintingId 5, 6), (PrintingId.MkPrintingId 17, 19)],
-          Player.commanderDamage = Map.singleton (PrintingId.MkPrintingId 7) 8,
+          Player.commanderCasts = Map.fromList [(CardIdentity.MkCardIdentity 20 (PlayerId.MkPlayerId 1), 6), (CardIdentity.MkCardIdentity 21 (PlayerId.MkPlayerId 1), 19)],
+          Player.commanderDamage = Map.singleton (CardIdentity.MkCardIdentity 22 (PlayerId.MkPlayerId 2)) 8,
           Player.dungeons = Set.fromList [PrintingId.MkPrintingId 9, PrintingId.MkPrintingId 11],
           Player.outsideTheGame = Map.singleton (PrintingId.MkPrintingId 12) 13,
           Player.stickerSheets = Seq.empty,
@@ -103,8 +103,8 @@ spec s = Spec.describe s "Pawl.Codec.Player" $ do
           <> ",{\"key\":{\"type\":\"Poison\"},\"value\":0}]"
           <> ",\"ringTemptations\":3,\"speed\":4"
           <> ",\"designations\":[{\"type\":\"CitysBlessing\"},{\"type\":\"EnduringStory\"}]"
-          <> ",\"commander\":[{\"serial\":20,\"startingOwner\":1},{\"serial\":21,\"startingOwner\":1}],\"commanderCasts\":{\"5\":6,\"17\":19}"
-          <> ",\"commanderDamage\":{\"7\":8},\"dungeons\":[9,11],\"outsideTheGame\":{\"12\":13},\"chosenStickerSheets\":[0,2],\"completedDungeons\":10,\"completedDungeonNames\":[\"Tomb of Annihilation\",\"Undercity\"]"
+          <> ",\"commander\":[{\"serial\":20,\"startingOwner\":1},{\"serial\":21,\"startingOwner\":1}],\"commanderCasts\":[{\"key\":{\"serial\":20,\"startingOwner\":1},\"value\":6},{\"key\":{\"serial\":21,\"startingOwner\":1},\"value\":19}]"
+          <> ",\"commanderDamage\":[{\"key\":{\"serial\":22,\"startingOwner\":2},\"value\":8}],\"dungeons\":[9,11],\"outsideTheGame\":{\"12\":13},\"chosenStickerSheets\":[0,2],\"completedDungeons\":10,\"completedDungeonNames\":[\"Tomb of Annihilation\",\"Undercity\"]"
           <> ",\"startingDeck\":{\"14\":15},\"companion\":{\"type\":\"InPool\",\"value\":16},\"companionTaken\":true"
           <> ",\"graveyardOrder\":{\"type\":\"Matters\"},\"crankCounter\":{\"type\":\"Sprocket1\"}} "
       )

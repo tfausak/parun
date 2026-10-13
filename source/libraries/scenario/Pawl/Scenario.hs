@@ -1684,8 +1684,10 @@ renderView gs viewIs =
         View.CommanderDamage -> do
           pid <- needPlayer
           let dealt = foldMap (Map.toList . Player.commanderDamage) (Map.lookup pid (GameState.players gs))
-              nameOf printingId = maybe (Text.pack "unknown") (CardName.unwrap . Face.name . NonEmpty.head . Card.faces . Printing.card) (Game.printingOf printingId gs)
-          pure (ReplyType.Array [ReplyType.Array [ReplyType.Text (nameOf printingId), ReplyType.Number (toInteger amount)] | (printingId, amount) <- dealt])
+              -- CR 903.3: the commander by the card its identity is now.
+              printingOfIdentity identity = Foldable.find ((== Just identity) . Object.identity) (GameState.objects gs) >>= Game.printingIdOfSource . Object.source
+              nameOf identity = maybe (Text.pack "unknown") (CardName.unwrap . Face.name . NonEmpty.head . Card.faces . Printing.card) (printingOfIdentity identity >>= (`Game.printingOf` gs))
+          pure (ReplyType.Array [ReplyType.Array [ReplyType.Text (nameOf identity), ReplyType.Number (toInteger amount)] | (identity, amount) <- dealt])
         View.RingBearer -> do
           oid <- needObject
           maybe (pure ReplyType.Null) (named . labelOf) (Game.lookupObject oid gs >>= Object.ringBearerFor)

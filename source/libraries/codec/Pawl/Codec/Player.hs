@@ -28,10 +28,9 @@ import qualified Pawl.Types.Status as Status.Type
 -- and an absent one the same to a card, but the map really can hold one once an
 -- effect has taken the last counter off, and the round trip has to keep it.
 --
--- `commanderCasts` and `commanderDamage` are keyed by a PrintingId, a Natural
--- newtype, so both take 'Common.naturalMap' -- a JSON object keyed by the
--- decimal id, which is what Pawl.Codec.Combat writes for that shape of key. CR
--- 702.124d is why both are keyed per commander rather than per player.
+-- `commanderCasts` and `commanderDamage` are keyed by a CardIdentity, an
+-- object, so both take 'Common.multiset' -- key/count entries. CR 702.124d is
+-- why both are keyed per commander rather than per player.
 --
 -- `speed` is 'Fields.required' over 'Common.maybe' rather than defaulted to 0,
 -- because CR 702.179b makes the absence a THIRD state: CR 704.5aa fires on a
@@ -47,8 +46,8 @@ codec = Fields.object $ do
   speed <- Fields.required "speed" (Common.maybe Common.natural) Player.speed
   designations <- Fields.defaulted "designations" Set.empty (Common.set PlayerDesignation.codec) Player.designations
   commander <- Fields.defaulted "commander" Set.empty (Common.set CardIdentity.codec) Player.commander
-  commanderCasts <- Fields.defaulted "commanderCasts" Map.empty (Common.naturalMap PrintingId.codec Common.natural) Player.commanderCasts
-  commanderDamage <- Fields.defaulted "commanderDamage" Map.empty (Common.naturalMap PrintingId.codec Common.natural) Player.commanderDamage
+  commanderCasts <- Fields.defaulted "commanderCasts" Map.empty (Common.multiset CardIdentity.codec) Player.commanderCasts
+  commanderDamage <- Fields.defaulted "commanderDamage" Map.empty (Common.multiset CardIdentity.codec) Player.commanderDamage
   dungeons <- Fields.defaulted "dungeons" Set.empty (Common.set PrintingId.codec) Player.dungeons
   outsideTheGame <- Fields.defaulted "outsideTheGame" Map.empty (Common.naturalMap PrintingId.codec Common.natural) Player.outsideTheGame
   stickerSheets <- Fields.defaulted "stickerSheets" Seq.empty (Common.seq StickerSheet.codec) Player.stickerSheets
