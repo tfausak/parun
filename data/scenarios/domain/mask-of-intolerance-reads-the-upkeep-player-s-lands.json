@@ -1,0 +1,69 @@
+{
+  "description": "CR 305.6 Mask of Intolerance deals 3 to bob in his upkeep, counting bob's basic land types and not its controller's",
+  "note": "Bob's Forest, Mountain and Tundra are four basic land types in three lands; alice, who controls the Mask, has one. Counting alice's, or counting lands, leaves bob at 20.",
+  "board": {
+    "seats": [
+      {
+        "name": "alice",
+        "battlefield": [
+          {
+            "card": "Mask of Intolerance",
+            "label": "mask"
+          },
+          {
+            "card": "Forest",
+            "label": "af"
+          }
+        ],
+        "library": [
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          }
+        ]
+      },
+      {
+        "name": "bob",
+        "battlefield": [
+          {
+            "card": "Forest",
+            "label": "bf"
+          },
+          {
+            "card": "Mountain",
+            "label": "bm"
+          },
+          {
+            "card": "Tundra",
+            "label": "bt"
+          }
+        ],
+        "library": [
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          }
+        ]
+      }
+    ],
+    "active": "alice",
+    "step": "PrecombatMain"
+  },
+  "timeline": [
+    {
+      "turn": 2,
+      "step": "DrawStep",
+      "player": "bob",
+      "check": {
+        "Life": {
+          "player": "bob",
+          "life": 17
+        }
+      }
+    }
+  ]
+}

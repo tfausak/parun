@@ -94,7 +94,10 @@
                                 "type": "Count",
                                 "value": {
                                   "aggregation": {
-                                    "type": "DistinctColors"
+                                    "type": "Distinct",
+                                    "value": {
+                                      "type": "Colors"
+                                    }
                                   },
                                   "filter": {
                                     "type": "ControlledBy",

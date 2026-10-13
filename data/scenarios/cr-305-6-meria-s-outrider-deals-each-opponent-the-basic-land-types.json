@@ -1,0 +1,30 @@
+{
+  "description": "CR 305.6 Meria's Outrider's enters trigger deals each opponent damage equal to the basic land types among alice's lands",
+  "note": "A Forest and a Tundra are two lands and three basic land types, and the red mana floats, so bob going to 17 is the type count.",
+  "board": {
+    "seats": [
+      {
+        "name": "alice",
+        "manaPool": "RRRRR",
+        "battlefield": [
+          { "card": "Forest", "label": "forest" },
+          { "card": "Tundra", "label": "tundra" }
+        ],
+        "hand": [{ "card": "Meria's Outrider", "label": "outrider" }],
+        "library": [{ "card": "Island" }, { "card": "Island" }]
+      },
+      {
+        "name": "bob",
+        "library": [{ "card": "Island" }, { "card": "Island" }]
+      }
+    ],
+    "active": "alice",
+    "step": "PrecombatMain"
+  },
+  "timeline": [
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": { "Cast": { "object": "$outrider", "mana": [null] } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass" },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass" },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "check": { "Life": { "player": "bob", "life": 17 } } }
+  ]
+}

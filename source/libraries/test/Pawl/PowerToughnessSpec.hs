@@ -61,6 +61,7 @@ import qualified Pawl.Types.Combat as Combat.Type
 import qualified Pawl.Types.CombatStep as CombatStep
 import qualified Pawl.Types.Count as Count.Type
 import qualified Pawl.Types.CounterKind as CounterKind
+import qualified Pawl.Types.DistinctOf as DistinctOf
 import qualified Pawl.Types.Face as Face
 import qualified Pawl.Types.Filter as Filter.Type
 import qualified Pawl.Types.GameEvent as GameEvent
@@ -110,7 +111,7 @@ spec s registry = Spec.describe s "Pawl.Engine.PowerToughness" $ do
             ( Count.Type.MkCount
                 (Scope.InZone (InZone.MkInZone Zone.Graveyard (PlayerRef.Relative PlayerRelation.AnyPlayer)))
                 (Filter.Type.And [])
-                Aggregation.DistinctCardTypes
+                (Aggregation.Distinct DistinctOf.CardTypes)
             )
     Spec.assertEqWith
       s

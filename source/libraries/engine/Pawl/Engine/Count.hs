@@ -37,6 +37,7 @@ import qualified Pawl.Types.Convoking as Convoking
 import qualified Pawl.Types.Count as Count.Type
 import qualified Pawl.Types.CounterKind as CounterKind
 import qualified Pawl.Types.Crewing as Crewing
+import qualified Pawl.Types.DistinctOf as DistinctOf
 import qualified Pawl.Types.EventShape as EventShape
 import qualified Pawl.Types.Filter as Filter.Type
 import qualified Pawl.Types.GameEvent as GameEvent
@@ -488,8 +489,8 @@ keep predicate context mv = case mv of
   Nothing -> Nothing
   Just v -> if Filter.matches context v predicate then Just v else Nothing
 
--- CR 208.2a: Tarmogoyf counts card TYPES, so DistinctCardTypes is the size of
--- the union, not the length of the list.
+-- CR 208.2a: Tarmogoyf counts card TYPES, so Distinct is the size of the
+-- union, not the length of the list.
 --
 -- Each member carries the object it came from when there is one, and its view
 -- either way. An InHistory member has no object -- its view is a CR 608.2h
@@ -499,9 +500,12 @@ keep predicate context mv = case mv of
 aggregate :: QuantityOf quantity -> Aggregation.Aggregation quantity -> [(Maybe ObjectId, Filter.View)] -> Maybe Integer
 aggregate quantityOf aggregation members = case aggregation of
   Aggregation.Members -> Just (toInteger (length members))
-  Aggregation.DistinctCardTypes -> Just (toInteger (Set.size (Set.unions (fmap (Filter.cardTypes . snd) members))))
+  Aggregation.Distinct DistinctOf.CardTypes -> Just (toInteger (Set.size (Set.unions (fmap (Filter.cardTypes . snd) members))))
   -- CR 105.2c: a colorless member adds nothing.
-  Aggregation.DistinctColors -> Just (toInteger (Set.size (Set.unions (fmap (Filter.colors . snd) members))))
+  Aggregation.Distinct DistinctOf.Colors -> Just (toInteger (Set.size (Set.unions (fmap (Filter.colors . snd) members))))
+  -- CR 305.6: a land's other subtypes (Gate, Desert, Urza's) add nothing, and a
+  -- land with two basic land types (Tundra) adds both.
+  Aggregation.Distinct DistinctOf.BasicLandTypes -> Just (toInteger (Set.size (Set.filter Subtype.isBasicLandType (Set.unions (fmap (Filter.subtypes . snd) members)))))
   -- CR 205.3m: the size of the largest group of members holding one creature
   -- type in common -- not "pairwise sharing", which is not transitive (a Human
   -- Cleric, a Human Rogue and an Elf Rogue are no three sharing a type). A

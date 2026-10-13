@@ -21,6 +21,7 @@ import qualified Pawl.Support as S
 import qualified Pawl.Types.Aggregation as Aggregation
 import qualified Pawl.Types.Arithmetic as Arithmetic
 import qualified Pawl.Types.Count as Count.Type
+import qualified Pawl.Types.DistinctOf as DistinctOf
 import qualified Pawl.Types.Filter as Filter.Type
 import qualified Pawl.Types.GameState as GameState
 import qualified Pawl.Types.InZone as InZone
@@ -50,7 +51,7 @@ cardTypesInAllGraveyards =
   Count.Type.MkCount
     (Scope.InZone (InZone.MkInZone Zone.Graveyard (PlayerRef.Relative PlayerRelation.AnyPlayer)))
     (Filter.Type.And [])
-    Aggregation.DistinctCardTypes
+    (Aggregation.Distinct DistinctOf.CardTypes)
 
 -- A toy instruction set for exercising Program.
 data Toy r where

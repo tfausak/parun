@@ -2338,8 +2338,7 @@ rewriteAggregation pairs aggregation = case aggregation of
   Aggregation.Greatest q -> Aggregation.Greatest (rewriteQuantity pairs q)
   Aggregation.Total q -> Aggregation.Total (rewriteQuantity pairs q)
   Aggregation.Members -> aggregation
-  Aggregation.DistinctCardTypes -> aggregation
-  Aggregation.DistinctColors -> aggregation
+  Aggregation.Distinct _ -> aggregation
   Aggregation.MostSharingACreatureType -> aggregation
   Aggregation.MostSharingACardType -> aggregation
   Aggregation.DistinctNames -> aggregation
