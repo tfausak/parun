@@ -49,6 +49,17 @@ import qualified Pawl.Types.Response as Response
 import qualified Pawl.Types.Subtype as Subtype
 import qualified Pawl.Types.TargetCount as TargetCount
 
+-- | Run `game`, also handing back every answer it was given, in the order it
+-- asked. What lets a caller tell an identical repeated answer from a different
+-- one (Pawl.Engine.Resolve.Effect.payAgain) without seeing the prompts.
+recording :: Game a -> Game (a, [Response])
+recording game = State.StateT (go . State.runStateT game)
+  where
+    go :: Program.Program Asked.Asked (a, GameState) -> Program.Program Asked.Asked ((a, [Response]), GameState)
+    go program = case program of
+      Program.Return (a, gs) -> Program.Return ((a, []), gs)
+      Program.Then asked k -> Program.Then asked (\answer -> fmap (\((a, rest), gs) -> ((a, encode (Asked.prompt asked) answer : rest), gs)) (go (k answer)))
+
 -- Flatten an answer into the log. The GADT refines 'r' per branch, so each
 -- constructor pairs with the response that carries its payload.
 encode :: Prompt r -> r -> Response

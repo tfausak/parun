@@ -98,7 +98,7 @@
       "step": "PrecombatMain",
       "player": "bob",
       "source": "Mana Leak",
-      "do": {
+      "refuse": {
         "ChooseToPay": {
           "decision": {
             "type": "Pays"
@@ -118,6 +118,19 @@
         "Answer": {
           "prompt": "ReverseManaAbilities",
           "with": {
+            "type": "Declines"
+          }
+        }
+      }
+    },
+    {
+      "turn": 1,
+      "step": "PrecombatMain",
+      "player": "bob",
+      "source": "Mana Leak",
+      "do": {
+        "ChooseToPay": {
+          "decision": {
             "type": "Declines"
           }
         }
