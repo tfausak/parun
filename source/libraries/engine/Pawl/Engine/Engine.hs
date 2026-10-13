@@ -1356,13 +1356,15 @@ priorityLoop = do
                                   _ : _ : _ -> True
                                   _ -> False
                                 -- CR 732.3: a fragmented loop narrows the named
-                                -- player's menu, asked only where the raw menu
-                                -- offered a choice, so a Pass-only grant pays
-                                -- nothing for it. Narrowed to Pass alone, the
-                                -- menu goes the way any Pass-only menu does.
+                                -- player's menu, and refuses the announcements
+                                -- an activation on it may not repeat, asked only
+                                -- where the raw menu offered a choice, so a
+                                -- Pass-only grant pays nothing for it. Narrowed
+                                -- to Pass alone, the menu goes the way any
+                                -- Pass-only menu does.
                                 here = Fragmented.digest gs
                                 settled = if offersAChoice then Fragmented.settle here trail else trail
-                                refused = if offersAChoice then Fragmented.forbidden here gs p settled else Set.empty
+                                (refused, refusedAnnouncements) = if offersAChoice then Fragmented.forbidden here gs p settled else (Set.empty, Set.empty)
                                 menu = if Set.null refused then actions else filter (`Set.notMember` refused) actions
                                 narrowedChoice = case menu of
                                   _ : _ : _ -> True
@@ -1539,10 +1541,10 @@ priorityLoop = do
                                 settleForPriority
                                 loop trail'
                               Action.Type.Activate oid ability -> do
-                                Activate.activateAbilityWith playSubgame p oid ability
+                                announced <- Activate.activateAbilityWith (\announcement -> Set.member (chosen, announcement) refusedAnnouncements) playSubgame p oid ability
                                 State.modify' (\g -> g {GameState.passed = Set.empty, GameState.priority = Just p})
                                 settleForPriority
-                                loop trail'
+                                loop (Fragmented.announce announced trail')
                       else do
                         -- CR 800.4a (last sentence): `p` was written as the holder
                         -- and then departed -- e.g. paying a life cost inside
