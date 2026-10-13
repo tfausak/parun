@@ -118,8 +118,8 @@ data LastKnown = MkLastKnown
     -- other direction of `attached` above. What "enchanted creature" means to an
     -- ability whose Aura has already gone (CR 608.2h, 113.7a), read by
     -- Pawl.Engine.SourceContext.framedWith through Game.hostWithLastKnown.
-    -- Pawl.AuraSpec's Bewitching Leechcraft case, the Aura destroyed in response
-    -- to its own enters trigger, is the proof.
+    -- data/scenarios/aura's Bewitching Leechcraft scenario, the Aura destroyed in
+    -- response to its own enters trigger, is the proof.
     --
     -- Nothing where it was attached to nothing or to a player.
     host :: !(Maybe ObjectId.ObjectId),
