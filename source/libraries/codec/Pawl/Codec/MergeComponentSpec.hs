@@ -5,9 +5,11 @@ import qualified Pawl.Codec.MergeComponent as MergeComponent
 import qualified Pawl.Codec.ProjectedCharacteristicsSpec as ProjectedCharacteristicsSpec
 import qualified Pawl.JsonCodec.Common as Common
 import qualified Pawl.Spec as Spec
-import qualified Pawl.Types.DuplicateCard as DuplicateCard
+import qualified Pawl.Types.CardIdentity as CardIdentity
+import qualified Pawl.Types.ComponentCard as ComponentCard
 import qualified Pawl.Types.MeldSource as MeldSource
 import qualified Pawl.Types.MergeComponent as MergeComponent
+import qualified Pawl.Types.PlayerId as PlayerId
 import qualified Pawl.Types.PrintingId as PrintingId
 
 spec :: (Monad m, Monad n) => Spec.Spec m n -> n ()
@@ -17,15 +19,16 @@ spec s = Spec.describe s "Pawl.Codec.MergeComponent" $ do
     Common.assertCodec
       s
       MergeComponent.codec
-      (MergeComponent.OfCard (PrintingId.MkPrintingId 11))
-      " {\"type\":\"OfCard\",\"value\":11} "
-  -- CR 108.2 / 707.2: a card component with the values it was conjured with.
-  Spec.it s "OfDuplicate" $
+      (MergeComponent.OfCard (ComponentCard.MkComponentCard (PrintingId.MkPrintingId 11) Nothing Nothing))
+      " {\"type\":\"OfCard\",\"value\":{\"printing\":11}} "
+  -- CR 108.3 / 707.2: a card component with its identity and the values it was
+  -- conjured with.
+  Spec.it s "OfCard, a conjured duplicate with an identity" $
     Common.assertCodec
       s
       MergeComponent.codec
-      (MergeComponent.OfDuplicate DuplicateCard.MkDuplicateCard {DuplicateCard.printing = PrintingId.MkPrintingId 18, DuplicateCard.values = ProjectedCharacteristicsSpec.minimalCharacteristics})
-      " {\"type\":\"OfDuplicate\",\"value\":{\"printing\":18,\"values\":{\"names\":[\"Mountain\"],\"cardTypes\":[{\"type\":\"Land\"}]}}} "
+      (MergeComponent.OfCard (ComponentCard.MkComponentCard (PrintingId.MkPrintingId 18) (Just (CardIdentity.MkCardIdentity 4 (PlayerId.MkPlayerId 1))) (Just ProjectedCharacteristicsSpec.minimalCharacteristics)))
+      " {\"type\":\"OfCard\",\"value\":{\"printing\":18,\"identity\":{\"serial\":4,\"startingOwner\":1},\"duplicate\":{\"names\":[\"Mountain\"],\"cardTypes\":[{\"type\":\"Land\"}]}}} "
   -- CR 111.3 / 730.2d: a DIFFERENT tag on the same payload shape, which is the
   -- whole of what rule 730.2d asks of a component.
   Spec.it s "OfToken" $
@@ -40,8 +43,8 @@ spec s = Spec.describe s "Pawl.Codec.MergeComponent" $ do
     Common.assertCodec
       s
       MergeComponent.codec
-      (MergeComponent.OfMeld MeldSource.MkMeldSource {MeldSource.result = PrintingId.MkPrintingId 13, MeldSource.components = PrintingId.MkPrintingId 14 NonEmpty.:| [PrintingId.MkPrintingId 15]})
-      " {\"type\":\"OfMeld\",\"value\":{\"components\":[14,15],\"result\":13}} "
+      (MergeComponent.OfMeld MeldSource.MkMeldSource {MeldSource.result = PrintingId.MkPrintingId 13, MeldSource.components = ComponentCard.MkComponentCard (PrintingId.MkPrintingId 14) Nothing Nothing NonEmpty.:| [ComponentCard.MkComponentCard (PrintingId.MkPrintingId 15) Nothing Nothing]})
+      " {\"type\":\"OfMeld\",\"value\":{\"components\":[{\"printing\":14},{\"printing\":15}],\"result\":13}} "
   -- CR 730.2's "or copy": the third tag over the printing payload, which is what
   -- separates it from the two above.
   Spec.it s "OfSpellCopy" $

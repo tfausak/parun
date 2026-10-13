@@ -8,6 +8,7 @@ import qualified Pawl.Codec.TriggeredAbilitySourceSpec as TriggeredAbilitySource
 import qualified Pawl.JsonCodec.Common as Common
 import qualified Pawl.Spec as Spec
 import qualified Pawl.Types.ActivatedAbilitySource as ActivatedAbilitySource
+import qualified Pawl.Types.ComponentCard as ComponentCard
 import qualified Pawl.Types.InherentTriggerSource as InherentTriggerSource
 import qualified Pawl.Types.MeldSource as MeldSource
 import qualified Pawl.Types.MergeComponent as MergeComponent
@@ -47,10 +48,10 @@ spec s = Spec.describe s "Pawl.Codec.Source" $ do
       ( Source.OfMeld
           MeldSource.MkMeldSource
             { MeldSource.result = PrintingId.MkPrintingId 8,
-              MeldSource.components = PrintingId.MkPrintingId 9 NonEmpty.:| [PrintingId.MkPrintingId 10]
+              MeldSource.components = ComponentCard.MkComponentCard (PrintingId.MkPrintingId 9) Nothing Nothing NonEmpty.:| [ComponentCard.MkComponentCard (PrintingId.MkPrintingId 10) Nothing Nothing]
             }
       )
-      " {\"type\":\"OfMeld\",\"value\":{\"result\":8,\"components\":[9,10]}} "
+      " {\"type\":\"OfMeld\",\"value\":{\"result\":8,\"components\":[{\"printing\":9},{\"printing\":10}]}} "
   -- CR 730.2: a bare list rather than OfMeld's record, since a merged permanent
   -- has no interned result face to name beside its components -- CR 730.2a reads
   -- the head of this list instead. A CARD over a TOKEN, so rule 730.2d's
@@ -59,8 +60,8 @@ spec s = Spec.describe s "Pawl.Codec.Source" $ do
     Common.assertCodec
       s
       Source.codec
-      (Source.OfMerge (ShownComponent.MkShownComponent (MergeComponent.OfCard (PrintingId.MkPrintingId 11)) Nothing NonEmpty.:| [ShownComponent.MkShownComponent (MergeComponent.OfToken (PrintingId.MkPrintingId 12)) Nothing]))
-      " {\"type\":\"OfMerge\",\"value\":[{\"component\":{\"type\":\"OfCard\",\"value\":11}},{\"component\":{\"type\":\"OfToken\",\"value\":12}}]} "
+      (Source.OfMerge (ShownComponent.MkShownComponent (MergeComponent.OfCard (ComponentCard.MkComponentCard (PrintingId.MkPrintingId 11) Nothing Nothing)) Nothing NonEmpty.:| [ShownComponent.MkShownComponent (MergeComponent.OfToken (PrintingId.MkPrintingId 12)) Nothing]))
+      " {\"type\":\"OfMerge\",\"value\":[{\"component\":{\"type\":\"OfCard\",\"value\":{\"printing\":11}}},{\"component\":{\"type\":\"OfToken\",\"value\":12}}]} "
   -- CR 602.
   Spec.it s "OfAbility" $
     Common.assertCodec

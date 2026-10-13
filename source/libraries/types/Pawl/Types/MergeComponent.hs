@@ -1,6 +1,6 @@
 module Pawl.Types.MergeComponent where
 
-import qualified Pawl.Types.DuplicateCard as DuplicateCard
+import qualified Pawl.Types.ComponentCard as ComponentCard
 import qualified Pawl.Types.MeldSource as MeldSource
 import qualified Pawl.Types.PrintingId as PrintingId
 
@@ -26,10 +26,8 @@ import qualified Pawl.Types.PrintingId as PrintingId
 -- the total read that field used to be, beside the other classifiers over this
 -- type.
 data MergeComponent
-  = -- | CR 108.2: a card component, named by its entry in GameState.printings.
-    OfCard PrintingId.PrintingId
-  | -- | CR 108.2 / 707.2: a card component carrying its conjured duplicate's values.
-    OfDuplicate DuplicateCard.DuplicateCard
+  = -- | CR 108.2: a card component, with the identity it keeps (CR 108.3).
+    OfCard ComponentCard.ComponentCard
   | -- | CR 111.3: a token component, named by the printing its effect-defined
     -- characteristics were interned as.
     OfToken PrintingId.PrintingId

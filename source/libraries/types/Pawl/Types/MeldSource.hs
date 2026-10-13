@@ -1,11 +1,12 @@
 module Pawl.Types.MeldSource where
 
 import qualified Data.List.NonEmpty as NonEmpty
+import qualified Pawl.Types.ComponentCard as ComponentCard
 import qualified Pawl.Types.PrintingId as PrintingId
 
 -- | CR 701.42a: what is behind a melded permanent -- "a single object
 -- represented by two cards". The printing the combined back face was interned
--- as, plus the printings of the cards representing it.
+-- as, plus the cards representing it, each with its own identity (CR 108.3).
 --
 -- The RESULT is what CR 712.8g reads: the object "has only the characteristics of
 -- the combined back face", so every characteristic read in the engine resolves
@@ -35,6 +36,6 @@ import qualified Pawl.Types.PrintingId as PrintingId
 -- is an arm of.
 data MeldSource = MkMeldSource
   { result :: PrintingId.PrintingId,
-    components :: NonEmpty.NonEmpty PrintingId.PrintingId
+    components :: NonEmpty.NonEmpty ComponentCard.ComponentCard
   }
   deriving (Eq, Ord, Show)

@@ -1,7 +1,7 @@
 module Pawl.Types.OutsideObject where
 
 import qualified Data.List.NonEmpty as NonEmpty
-import qualified Pawl.Types.CardIdentity as CardIdentity
+import qualified Pawl.Types.ComponentCard as ComponentCard
 import qualified Pawl.Types.Facing as Facing
 import qualified Pawl.Types.PlayerId as PlayerId
 import qualified Pawl.Types.PrintingId as PrintingId
@@ -33,11 +33,9 @@ data OutsideObject = MkOutsideObject
     facing :: Facing.Facing,
     -- | CR 712.21 / 730.3: the cards that arrive if it is brought in -- one for
     -- a card, every card component of a melded or merged permanent, in the
-    -- order its source lists them. `printing` above is the face `eligible`
-    -- reads, CR 712.8g's combined face for a melded one.
-    cards :: NonEmpty.NonEmpty PrintingId.PrintingId,
-    -- | CR 108.3: the out-there card's identity, which the cards it brings in
-    -- keep (CR 729.4a), as ownership does.
-    identity :: Maybe CardIdentity.CardIdentity
+    -- order its source lists them, each keeping its identity (CR 108.3, 729.4a).
+    -- `printing` above is the face `eligible` reads, CR 712.8g's combined face
+    -- for a melded one.
+    cards :: NonEmpty.NonEmpty ComponentCard.ComponentCard
   }
   deriving (Eq, Ord, Show)

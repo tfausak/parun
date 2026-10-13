@@ -27,6 +27,7 @@ import qualified Data.Set as Set
 import qualified Data.Text as Text
 import qualified Numeric.Natural as Natural
 import qualified Pawl.Engine.Activate as Activate
+import qualified Pawl.Engine.Ante as Ante
 import qualified Pawl.Engine.Binding as Binding
 import qualified Pawl.Engine.Combat as Combat
 import qualified Pawl.Engine.Damage as Damage
@@ -50,11 +51,13 @@ import qualified Pawl.Types.Aggregation as Aggregation
 import qualified Pawl.Types.Asked as Asked
 import qualified Pawl.Types.Card as Card
 import qualified Pawl.Types.CardArrivedIn as CardArrivedIn
+import qualified Pawl.Types.CardIdentity as CardIdentity
 import qualified Pawl.Types.CardLeavesZone as CardLeavesZone
 import qualified Pawl.Types.CardName as CardName
 import qualified Pawl.Types.CardType as CardType
 import qualified Pawl.Types.CombatStep as CombatStep
 import qualified Pawl.Types.CommandZoneDecision as CommandZoneDecision
+import qualified Pawl.Types.ComponentCard as ComponentCard
 import qualified Pawl.Types.ContinuousEffect as ContinuousEffect
 import qualified Pawl.Types.Count as Count.Type
 import qualified Pawl.Types.DamageKind as DamageKind
@@ -183,12 +186,12 @@ spec s registry = Spec.describe s "Meld" $ do
           Source.OfMeld
             MeldSource.MkMeldSource
               { MeldSource.result = PrintingId.MkPrintingId 8,
-                MeldSource.components = garrison NonEmpty.:| [battlements]
+                MeldSource.components = ComponentCard.MkComponentCard garrison Nothing Nothing NonEmpty.:| [ComponentCard.MkComponentCard battlements Nothing Nothing]
               }
-    Spec.assertEqWith s "the two cards, in order" (Game.componentsOf township) (Seq.fromList [MergeComponent.OfCard garrison, MergeComponent.OfCard battlements])
+    Spec.assertEqWith s "the two cards, in order" (Game.componentsOf township) (Seq.fromList [MergeComponent.OfCard (ComponentCard.MkComponentCard garrison Nothing Nothing), MergeComponent.OfCard (ComponentCard.MkComponentCard battlements Nothing Nothing)])
     -- CR 712.8g: the combined back face is NOT one of them, so a reader summing
     -- the components under CR 202.3c cannot pick up the result's own cost.
-    Spec.assertBool s (Seq.null (Seq.filter (== MergeComponent.OfCard (PrintingId.MkPrintingId 8)) (Game.componentsOf township))) "the result is not a component"
+    Spec.assertBool s (Seq.null (Seq.filter ((== PrintingId.MkPrintingId 8) . Game.printingOfComponent) (Game.componentsOf township))) "the result is not a component"
     Spec.assertEqWith s "CR 108.2 an ordinary card represents only itself" (Game.componentsOf (Source.OfCard garrison)) Seq.empty
   -- CR 701.42a's keyword action, driven straight rather than through the card:
   -- the melding ability has its own cases above, and what is proven here is the
@@ -787,6 +790,27 @@ spec s registry = Spec.describe s "Meld" $ do
         Spec.assertEqWith s "setup: alice held no experience counters before it died" (S.playerCounterOf PlayerCounterKind.Experience S.alice board) 0
         Spec.assertEqWith s "setup: Meren was on the battlefield to see it" (fmap Object.zone (Game.lookupObject merenId after)) (Just Zone.Battlefield)
         Spec.assertEqWith s "setup: alice's graveyard was empty before it died" (graveyardNames board) []
+  -- CR 108.3: alice won the Garrison from bob, so he is its starting owner and she
+  -- began the game with the Battlements. Each card the melded permanent becomes
+  -- keeps its own identity, so the ownership report names the Garrison alone; one
+  -- identity for both would name both cards or neither.
+  Spec.it s "CR 108.3/712.21 each card a melded permanent becomes keeps its own identity" $ do
+    battlements <- S.printingOf s registry "Hanweir Battlements"
+    garrison <- S.printingOf s registry "Hanweir Garrison"
+    mountain <- S.printingOf s registry "Mountain"
+    let won obj = obj {Object.identity = fmap (\i -> i {CardIdentity.startingOwner = S.bob}) (Object.identity obj)}
+        (mMelded, board) = meldedThroughWith won (Setup.emptyGame S.bothPlayers) battlements garrison mountain
+    case mMelded of
+      Nothing -> Spec.assertFailure s "expected the melding ability to put one permanent onto the battlefield"
+      Just meldedId -> do
+        let dead = S.runPure S.identityAnswer board (Event.destroy Regenerability.Regenerable [meldedId])
+            reported = [(fmap S.nameOf (Game.cardOf oid dead), change) | (oid, change) <- Map.toList (Ante.ownershipChanges dead)]
+        Spec.assertEqWith s "CR 108.3 only the Garrison changed owner, bob's to begin and alice's now" reported [(Just (CardName.MkCardName (Text.pack "Hanweir Garrison")), (S.bob, S.alice))]
+        Spec.assertEqWith
+          s
+          "CR 712.21 two cards are put into alice's graveyard"
+          (List.sort (graveyardNames dead))
+          (List.sort [CardName.MkCardName (Text.pack "Hanweir Battlements"), CardName.MkCardName (Text.pack "Hanweir Garrison")])
   -- CR 712.21's Example, taken whole and on ONE board: "An ability that triggers
   -- 'whenever a creature dies' triggers once. An ability that triggers 'whenever
   -- a card is put into a graveyard from anywhere' triggers twice."
@@ -1433,10 +1457,14 @@ choosingPermanent chosen p = case p of
 -- the melded permanent, and the board it is on. The real activation rather than
 -- the opcode, so every case reading it reads a board the game can reach.
 meldedThrough :: GameState.GameState -> Printing.Printing -> Printing.Printing -> Printing.Printing -> (Maybe ObjectId.ObjectId, GameState.GameState)
-meldedThrough base battlements garrison mountain =
+meldedThrough = meldedThroughWith id
+
+-- `meldedThrough` with the Garrison rewritten before it melds.
+meldedThroughWith :: (Object.Object -> Object.Object) -> GameState.GameState -> Printing.Printing -> Printing.Printing -> Printing.Printing -> (Maybe ObjectId.ObjectId, GameState.GameState)
+meldedThroughWith adjust base battlements garrison mountain =
   let (bId, g1) = S.addPermanent battlements S.alice base
-      (_, g2) = S.addPermanent garrison S.alice g1
-      board = readyFor mountain g2
+      (gId, g2) = S.addPermanent garrison S.alice g1
+      board = readyFor mountain g2 {GameState.objects = Map.adjust adjust gId (GameState.objects g2)}
    in case Projection.abilitiesOf bId board of
         [_, _, melding] ->
           let after = S.runPure (sparing bId S.identityAnswer) board (do Activate.activateAbility S.alice bId melding; Stack.resolveTop)

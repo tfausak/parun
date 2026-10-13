@@ -542,8 +542,9 @@ newGame perform matchup = do
 -- rather than moved, so no other zone can come to hold one.
 --
 -- Object.newIncarnation is CR 400.7's forgetting, the same one `toLibraryCard`
--- performs below; only Object.source and a conjured duplicate's values differ
--- between the two cards (Game.representComponent), since each represents itself
+-- performs below; only Object.source and what each card kept as a component
+-- (its identity, a conjured duplicate's values) differ between the two cards
+-- (Game.representComponent), since each represents itself
 -- again and not the permanent they were. A merged permanent's TOKEN component
 -- (CR 730.2d) is minted as the token it is, and its copy component (CR 730.2,
 -- CR 707.10) as the copy it is, which the funnel below then drops for CR
@@ -1198,11 +1199,11 @@ subgameStateFrom starter parent =
             components = Game.componentsOf source
             arriving
               | Seq.null components = case source of
-                  Source.OfCard printingId -> [printingId]
+                  Source.OfCard printingId -> [Game.componentCardOf obj printingId]
                   _ -> []
-              | otherwise = fmap Game.printingOfComponent (filter Game.componentIsCard (Foldable.toList components))
+              | otherwise = Maybe.mapMaybe Game.cardOfComponent (Foldable.toList components)
          in case (Game.sourceIsToken source, Game.printingIdOfSource source, NonEmpty.nonEmpty arriving) of
-              (False, Just printingId, Just cards) -> Just (OutsideObject.MkOutsideObject (Object.owner obj) printingId (Object.facing obj) cards (Object.identity obj))
+              (False, Just printingId, Just cards) -> Just (OutsideObject.MkOutsideObject (Object.owner obj) printingId (Object.facing obj) cards)
               _ -> Nothing
    in parent
         { GameState.objects = movedObjects,
