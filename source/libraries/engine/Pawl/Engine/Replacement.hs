@@ -46,6 +46,7 @@ import qualified Pawl.Engine.Decide as Decide
 import qualified Pawl.Engine.Filter as Filter
 import qualified Pawl.Engine.Game as Game
 import qualified Pawl.Engine.Mint as Mint
+import qualified Pawl.Engine.Plane as Plane
 import qualified Pawl.Engine.PlayerEffect as PlayerEffect
 import qualified Pawl.Engine.Projection as Projection
 import qualified Pawl.Engine.Projection.View as Projection
@@ -687,7 +688,7 @@ applies viewOf grants gs event candidate = matchesPrinted viewOf gs event candid
 -- that were in range of that seat. Pawl.DepartureSpec's "CR 801.2c a survivor's
 -- exile replacement still reaches a departing neighbour's permanent" proves it.
 reaches :: [Projection.ControlGrant] -> GameState -> ProposedEvent -> ReplacementCandidate -> Bool
-reaches grants gs event candidate = case (ReplacementCandidate.controller candidate, ReplacementCandidate.effect candidate) of
+reaches grants gs event candidate = case (reachOf gs candidate, ReplacementCandidate.effect candidate) of
   (Nothing, _) -> True
   (Just _, ReplacementEffect.DamageR (DamageR.MkDamageR _ rewrite _))
     | prevents rewrite || redirects rewrite -> True
@@ -758,7 +759,7 @@ matchesPrinted viewOf gs event candidate =
             && unspent rewrite
             && admitsRecipient src rewrite de
             && (not (redirects rewrite) || redirectable viewOf gs de)
-            && (not (prevents rewrite) || preventsInRange gs (ReplacementCandidate.controller candidate) pat rewrite de)
+            && (not (prevents rewrite) || preventsInRange gs (reachOf gs candidate) pat rewrite de)
         -- CR 614.1a: a printed subject (Pyramids' "target land") is matched as
         -- a Filter; absent one, the rewrite names its subject by identity or by
         -- attachment, which `scopes` reads off the board.
@@ -2764,7 +2765,7 @@ partialCoverage :: GameState -> Map.Map CandidateId Natural -> ReplacementCandid
 partialCoverage gs allowances candidate event = case (ReplacementCandidate.effect candidate, event) of
   (ReplacementEffect.DamageR (DamageR.MkDamageR _ rewrite _), ProposedEvent.WouldDealDamage de) -> case rewrite of
     DamageRewrite.RedirectNext remaining dest
-      | Maybe.isJust (redirectDestination gs (ReplacementCandidate.controller candidate) dest) && covered < DamageEvent.amount de -> Just covered
+      | Maybe.isJust (redirectDestination gs candidate dest) && covered < DamageEvent.amount de -> Just covered
       | otherwise -> Nothing
       where
         covered = min remaining (Map.findWithDefault (DamageEvent.amount de) (ReplacementCandidate.identity candidate) allowances)
@@ -3006,10 +3007,20 @@ recipientInRange gs you recipient = case (Recipient.objectOf recipient, Recipien
 --
 -- CR 801.13a: a destination outside the redirecting effect's controller's
 -- range is no destination either, so that portion does nothing.
-redirectDestination :: GameState -> Maybe PlayerId -> Recipient.Recipient -> Maybe Recipient.Recipient
-redirectDestination gs controller dest = Monad.mfilter (withinRangeOf gs controller) $ case Recipient.objectOf dest of
+redirectDestination :: GameState -> ReplacementCandidate -> Recipient.Recipient -> Maybe Recipient.Recipient
+redirectDestination gs candidate dest = Monad.mfilter (withinRangeOf gs (reachOf gs candidate)) $ case Recipient.objectOf dest of
   Nothing -> Monad.mfilter (maybe True (`elem` Game.stillPlaying gs) . Recipient.playerOf) (Just dest)
   Just oid -> liveDestination gs oid
+
+-- CR 801.13a / 801.18: whose range of influence bounds this replacement's
+-- reach -- its controller's, or nobody's for a planar card's
+-- (Plane.exemptFromRange), which every reader then treats as a row with no
+-- controller. A regression fence: no plane in `data/cards/` prints a
+-- replacement effect.
+reachOf :: GameState -> ReplacementCandidate -> Maybe PlayerId
+reachOf gs candidate
+  | Plane.exemptFromRange (ReplacementCandidate.source candidate) gs = Nothing
+  | otherwise = ReplacementCandidate.controller candidate
 
 -- CR 801.13a: may a redirection controlled by this player send damage here?
 -- Always for a row with no controller.
@@ -3050,11 +3061,13 @@ liveDestination gs oid
 -- The battlefield rather than every object, because that is where CR 614.9's
 -- own guard puts a destination; liveDestination then answers the rest.
 --
--- CR 801.13a as redirectDestination asks it, of the Context's perspective.
-printedDestination :: GameState -> Filter.Context -> Filter.Type.Filter Keyword.Type.Keyword -> Maybe Recipient.Recipient
-printedDestination gs context filter_ =
+-- The Filter is read in the candidate's Context (candidateContext), and CR
+-- 801.13a asked as redirectDestination asks it.
+printedDestination :: GameState -> ReplacementCandidate -> Filter.Type.Filter Keyword.Type.Keyword -> Maybe Recipient.Recipient
+printedDestination gs candidate filter_ =
   let viewOf = Projection.viewsOf gs
-   in Monad.mfilter (withinRangeOf gs (Filter.perspective context)) $ case filter (\oid -> Filter.matches context (viewOf oid) filter_) (Set.toList (GameState.battlefield gs)) of
+      context = candidateContext gs candidate
+   in Monad.mfilter (withinRangeOf gs (reachOf gs candidate)) $ case filter (\oid -> Filter.matches context (viewOf oid) filter_) (Set.toList (GameState.battlefield gs)) of
         [oid] -> liveDestination gs oid
         _ -> Nothing
 

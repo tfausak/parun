@@ -2407,10 +2407,12 @@ objectInRangeBy seated ctrl you oid gs =
 -- CR 801.10: is @oid@ within the range of influence of @source@'s controller?
 -- Pawl.Engine.Projection.affectsWith's cut on a static ability's dynamic set.
 -- Asked of the limited-range option first, so a game without it takes no control
--- fold; a source with no controller cuts nothing.
+-- fold; a source with no controller cuts nothing, and nor does a planar card
+-- (CR 801.18, Plane.exemptFromRange).
 inSourceRangeGiven :: [ControlGrant] -> ObjectId -> ObjectId -> GameState -> Bool
 inSourceRangeGiven grants source oid gs =
   Map.null (RangeOfInfluence.unwrap (GameSettings.rangeOfInfluence (GameState.settings gs)))
+    || Plane.exemptFromRange source gs
     || all (\you -> objectInRangeGiven grants you oid gs) (controllerOfGiven grants source gs)
 
 -- Which objects an affected set NAMES, for the CR 613.1b layer-2 control fold,
@@ -2465,10 +2467,13 @@ controlNames ctrl gs source a = case a of
 -- effects before it did. Asked of the limited-range option first, so a game
 -- without it takes no control fold. Pawl.RangeOfInfluenceSpec's "CR 801.10 a
 -- control grant does not take a permanent outside its controller's range"
--- proves it.
+-- proves it. A planar card's grant cuts nothing (CR 801.18,
+-- Plane.exemptFromRange): a regression fence, since no plane in `data/cards/`
+-- grants control by a static ability.
 controlReaches :: (ObjectId -> Maybe PlayerId.PlayerId) -> GameState -> ObjectId -> ObjectId -> Bool
 controlReaches ctrl gs source oid =
   Map.null (RangeOfInfluence.unwrap (GameSettings.rangeOfInfluence (GameState.settings gs)))
+    || Plane.exemptFromRange source gs
     || all (\you -> objectInRangeUnder ctrl you oid gs) (ctrl source)
 
 -- Does `oid` match a layer-2 affected set's Filter, read at the copiable values
