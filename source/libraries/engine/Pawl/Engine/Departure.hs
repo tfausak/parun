@@ -25,6 +25,7 @@ import qualified Pawl.Engine.Game as Game
 import qualified Pawl.Engine.Initiative as Initiative
 import qualified Pawl.Engine.Monarch as Monarch
 import qualified Pawl.Engine.Planechase as Planechase
+import qualified Pawl.Engine.PlayerEffect as PlayerEffect
 import qualified Pawl.Engine.Projection as Projection
 import qualified Pawl.Engine.Projection.View as Projection
 import qualified Pawl.Engine.Replacement as Replacement
@@ -34,6 +35,7 @@ import Pawl.Types.Departure (Departure)
 import qualified Pawl.Types.Departure as Departure
 import Pawl.Types.Game (Game)
 import qualified Pawl.Types.GameEvent as GameEvent
+import qualified Pawl.Types.GameOutcome as GameOutcome
 import qualified Pawl.Types.GameSettings as GameSettings
 import Pawl.Types.GameState (GameState)
 import qualified Pawl.Types.GameState as GameState
@@ -100,7 +102,10 @@ leaveTogether :: Departure -> [PlayerId] -> Game (Game ())
 leaveTogether reason named = do
   continues <- State.gets continuesAfterDeparture
   before <- State.get
-  let departing = fmap (\pid -> (reason, pid)) named <> Emperor.fallsWith reason named before <> teamFallsWith reason named before
+  -- CR 101.2 / 104.3i: a general an effect says can't lose the game stays in
+  -- when their emperor's team loses; data/scenarios/emperor/cr-104-3i-* proves it.
+  let keeps (why, pid) = why /= Departure.Lost || not (PlayerEffect.precludes GameOutcome.Lose pid before)
+      departing = fmap (\pid -> (reason, pid)) named <> filter keeps (Emperor.fallsWith reason named before) <> teamFallsWith reason named before
       pids = fmap snd departing
       lose why p = p {Player.status = Status.Departed why}
       -- CR 801.2c: the seat keeps counting toward range of influence until the
@@ -137,9 +142,10 @@ leaveTogether reason named = do
 -- where CR 104.3g waits for every member instead. A draw is not a loss, so it
 -- takes nobody with it: CR 104.4g settles a team's draw member by member.
 --
--- Not implemented: CR 810.8a's "can't lose" and "can't win" reaching the team,
--- since no effect says a player can't lose (#4783) or can't win (#4793) the
--- game.
+-- CR 810.8a's "can't win" and "can't lose" need nothing here:
+-- Pawl.Engine.PlayerEffect.precludes asks them of the whole team, so no member a
+-- can't-lose effect covers loses in the first place. A conceding player leaves
+-- before they lose (CR 104.3a), so CR 810.8b still takes the team.
 teamFallsWith :: Departure -> [PlayerId] -> GameState -> [(Departure, PlayerId)]
 teamFallsWith reason leaving gs =
   let teams = Game.teams gs

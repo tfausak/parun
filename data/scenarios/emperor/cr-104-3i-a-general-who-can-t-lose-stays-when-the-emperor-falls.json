@@ -1,0 +1,58 @@
+{
+  "description": "CR 104.3i a general who can't lose stays when the emperor falls",
+  "note": "Emperor.setUp's board: alice, bob and carol are team 1 with bob its emperor, dave, erin and frank team 2 with erin its emperor. Bob is at 0 life and loses at the first check, and his team loses with him (CR 809.5b), but alice controls Platinum Angel and can't lose the game (CR 101.2), so only carol leaves with him.",
+  "board": {
+    "seats": [
+      {
+        "name": "alice",
+        "team": 1,
+        "range": 1,
+        "battlefield": [{ "card": "Platinum Angel" }],
+        "library": [{ "card": "Plains" }, { "card": "Plains" }]
+      },
+      {
+        "name": "bob",
+        "team": 1,
+        "range": 2,
+        "emperor": true,
+        "life": 0,
+        "library": [{ "card": "Plains" }, { "card": "Plains" }]
+      },
+      {
+        "name": "carol",
+        "team": 1,
+        "range": 1,
+        "battlefield": [{ "card": "Plains" }],
+        "library": [{ "card": "Plains" }, { "card": "Plains" }]
+      },
+      {
+        "name": "dave",
+        "team": 2,
+        "range": 1,
+        "library": [{ "card": "Plains" }, { "card": "Plains" }]
+      },
+      {
+        "name": "erin",
+        "team": 2,
+        "range": 2,
+        "emperor": true,
+        "library": [{ "card": "Plains" }, { "card": "Plains" }]
+      },
+      {
+        "name": "frank",
+        "team": 2,
+        "range": 1,
+        "library": [{ "card": "Plains" }, { "card": "Plains" }]
+      }
+    ],
+    "active": "erin",
+    "step": "PrecombatMain",
+    "attackOption": "Adjacent",
+    "deployCreatures": true
+  },
+  "timeline": [
+    { "turn": 1, "step": "PrecombatMain", "player": "erin", "check": { "Count": { "player": "alice", "zone": "Battlefield", "card": "Platinum Angel", "count": 1 } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "erin", "check": { "Count": { "player": "carol", "zone": "Battlefield", "card": "Plains", "count": 0 } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "erin", "check": { "View": { "of": "Result", "is": null } } }
+  ]
+}

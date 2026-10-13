@@ -2220,6 +2220,7 @@ playerEffectNames asking x = case x of
   PlayerEffect.PutTappedAsYouCascade filter_ -> filterNames asking filter_
   PlayerEffect.CantGainLife -> False
   PlayerEffect.CantLoseLife -> False
+  PlayerEffect.Precluded _outcome -> False
   PlayerEffect.Shows _shows -> False
 
 playerQuantityNames :: Asking -> PlayerQuantity.PlayerQuantity -> Bool

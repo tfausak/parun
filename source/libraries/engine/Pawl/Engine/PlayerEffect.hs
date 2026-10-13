@@ -74,6 +74,8 @@ import qualified Pawl.Types.ExileLink as ExileLink
 import qualified Pawl.Types.Face as Face
 import Pawl.Types.Filter (Filter)
 import qualified Pawl.Types.Filter as Filter.Type
+import qualified Pawl.Types.GameOutcome as GameOutcome
+import qualified Pawl.Types.GameSettings as GameSettings
 import Pawl.Types.GameState (GameState)
 import qualified Pawl.Types.GameState as GameState
 import qualified Pawl.Types.InZone as InZone
@@ -112,6 +114,7 @@ import qualified Pawl.Types.SlotName as SlotName
 import qualified Pawl.Types.SourceChoices as SourceChoices
 import qualified Pawl.Types.SpendManaAsThough as SpendManaAsThough
 import qualified Pawl.Types.StatedFlip as StatedFlip
+import qualified Pawl.Types.Teams as Teams
 import Pawl.Types.Timestamp (Timestamp)
 import qualified Pawl.Types.TurnScope as TurnScope
 import qualified Pawl.Types.VariableChoice as VariableChoice
@@ -691,6 +694,7 @@ prohibitsCasting pid oid variable gs =
         PlayerEffect.AdditionalSurveilCards _ -> False
         PlayerEffect.CantGainLife -> False
         PlayerEffect.CantLoseLife -> False
+        PlayerEffect.Precluded _ -> False
         PlayerEffect.Shows _ -> False
    in any prohibits (applying pid gs)
 
@@ -819,6 +823,7 @@ prohibitsPlayingLand pid oid gs =
         PlayerEffect.AdditionalSurveilCards _ -> False
         PlayerEffect.CantGainLife -> False
         PlayerEffect.CantLoseLife -> False
+        PlayerEffect.Precluded _ -> False
         PlayerEffect.Shows _ -> False
    in any prohibits (applying pid gs)
 
@@ -896,6 +901,7 @@ prohibitsSearching pid owner causeController gs =
         PlayerEffect.AdditionalSurveilCards _ -> False
         PlayerEffect.CantGainLife -> False
         PlayerEffect.CantLoseLife -> False
+        PlayerEffect.Precluded _ -> False
         PlayerEffect.Shows _ -> False
    in any (prohibits . snd) (applying pid gs)
 
@@ -980,6 +986,7 @@ prohibitsCounters pid kind gs =
         PlayerEffect.AdditionalSurveilCards _ -> False
         PlayerEffect.CantGainLife -> False
         PlayerEffect.CantLoseLife -> False
+        PlayerEffect.Precluded _ -> False
         PlayerEffect.Shows _ -> False
    in -- CR 810.10c: a teammate who can't get poison counters stops the team,
       -- since the team shares them (Game.counterSharers).
@@ -1054,6 +1061,7 @@ prohibitsBecomingMonarch pid gs =
         PlayerEffect.AdditionalSurveilCards _ -> False
         PlayerEffect.CantGainLife -> False
         PlayerEffect.CantLoseLife -> False
+        PlayerEffect.Precluded _ -> False
         PlayerEffect.Shows _ -> False
    in any (prohibits . snd) (applying pid gs)
 
@@ -1107,6 +1115,7 @@ schemesCantBeSetInMotion gs =
         PlayerEffect.AdditionalSurveilCards _ -> False
         PlayerEffect.CantGainLife -> False
         PlayerEffect.CantLoseLife -> False
+        PlayerEffect.Precluded _ -> False
         PlayerEffect.Shows _ -> False
    in any (\pid -> any (prohibits . snd) (applying pid gs)) (Game.stillPlaying gs)
 
@@ -1160,6 +1169,7 @@ prohibitsAttackingWithCreatures pid gs =
         PlayerEffect.AdditionalSurveilCards _ -> False
         PlayerEffect.CantGainLife -> False
         PlayerEffect.CantLoseLife -> False
+        PlayerEffect.Precluded _ -> False
         PlayerEffect.Shows _ -> False
    in any (prohibits . snd) (applying pid gs)
 
@@ -1746,6 +1756,7 @@ landPlayFlashGrant effect = case effect of
   PlayerEffect.AdditionalSurveilCards _ -> Nothing
   PlayerEffect.CantGainLife -> Nothing
   PlayerEffect.CantLoseLife -> Nothing
+  PlayerEffect.Precluded _ -> Nothing
   PlayerEffect.Shows _ -> Nothing
 
 -- The same axis for a CAST: the cast-scoped grant, and -- CR 601.1a, casting
@@ -1998,6 +2009,7 @@ castPermissionsFrom pid zone oid gs =
         PlayerEffect.AdditionalSurveilCards _ -> False
         PlayerEffect.CantGainLife -> False
         PlayerEffect.CantLoseLife -> False
+        PlayerEffect.Precluded _ -> False
         PlayerEffect.Shows _ -> False
       grantOf (source, effect) = case effect of
         PlayerEffect.CastFrom grant -> Just (RowSource.object source, grant)
@@ -2219,6 +2231,7 @@ mayCastFromHandWithoutPayingManaCost pid oid gs =
         PlayerEffect.AdditionalSurveilCards _ -> False
         PlayerEffect.CantGainLife -> False
         PlayerEffect.CantLoseLife -> False
+        PlayerEffect.Precluded _ -> False
         PlayerEffect.Shows _ -> False
         -- The CR 601.3 permissions, which say WHERE a spell may be cast from and
         -- WHEN. Neither states a cost, which is the whole reason this arm is its
@@ -2348,6 +2361,7 @@ playLandPiles pid gs =
         PlayerEffect.AdditionalSurveilCards _ -> []
         PlayerEffect.CantGainLife -> []
         PlayerEffect.CantLoseLife -> []
+        PlayerEffect.Precluded _ -> []
         PlayerEffect.Shows _ -> []
    in concatMap (piles . snd) (applying pid gs)
 
@@ -2437,6 +2451,7 @@ protectedFromTargeting rows caster pid gs =
         PlayerEffect.AdditionalSurveilCards _ -> False
         PlayerEffect.CantGainLife -> False
         PlayerEffect.CantLoseLife -> False
+        PlayerEffect.Precluded _ -> False
         PlayerEffect.Shows _ -> False
    in any (stops . snd) rows
 
@@ -2536,6 +2551,7 @@ protectedFromGiven rows aimer oid gs =
         PlayerEffect.AdditionalSurveilCards _ -> False
         PlayerEffect.CantGainLife -> False
         PlayerEffect.CantLoseLife -> False
+        PlayerEffect.Precluded _ -> False
         PlayerEffect.Shows _ -> False
    in any stops rows
 
@@ -2621,6 +2637,7 @@ protectionCarriers gs =
         PlayerEffect.AdditionalSurveilCards _ -> Nothing
         PlayerEffect.CantGainLife -> Nothing
         PlayerEffect.CantLoseLife -> Nothing
+        PlayerEffect.Precluded _ -> Nothing
         PlayerEffect.Shows _ -> Nothing
    in concatMap (\pid -> Maybe.mapMaybe (carrier pid) (applying pid gs)) (Game.stillPlaying gs)
 
@@ -2699,6 +2716,7 @@ landPlaysAllowed pid gs =
         PlayerEffect.AdditionalSurveilCards _ -> Nothing
         PlayerEffect.CantGainLife -> Nothing
         PlayerEffect.CantLoseLife -> Nothing
+        PlayerEffect.Precluded _ -> Nothing
         PlayerEffect.Shows _ -> Nothing
       add total allowance = case allowance of
         LandAllowance.Additional extra -> fmap (+ extra) total
@@ -2770,6 +2788,7 @@ votesAllowed pid gs =
         PlayerEffect.AdditionalSurveilCards _ -> Nothing
         PlayerEffect.CantGainLife -> Nothing
         PlayerEffect.CantLoseLife -> Nothing
+        PlayerEffect.Precluded _ -> Nothing
         PlayerEffect.Shows _ -> Nothing
    in defaultVotes + sum (Maybe.mapMaybe (grantOf . snd) (applying pid gs))
 
@@ -2824,6 +2843,7 @@ surveilExtra pid gs =
         PlayerEffect.AdditionalSurveilCards extra -> Just extra
         PlayerEffect.CantGainLife -> Nothing
         PlayerEffect.CantLoseLife -> Nothing
+        PlayerEffect.Precluded _ -> Nothing
         PlayerEffect.Shows _ -> Nothing
       rowOf (source, effect) = case (RowSource.object source, grantOf effect) of
         (Just oid, Just extra) -> Just (oid, extra)
@@ -2880,6 +2900,7 @@ cascadeActions pid gs =
         PlayerEffect.AdditionalSurveilCards _ -> Nothing
         PlayerEffect.CantGainLife -> Nothing
         PlayerEffect.CantLoseLife -> Nothing
+        PlayerEffect.Precluded _ -> Nothing
         PlayerEffect.Shows _ -> Nothing
    in Maybe.mapMaybe (\(source, effect) -> fmap ((,) (RowSource.object source)) (grantOf effect)) (applying pid gs)
 
@@ -2931,6 +2952,7 @@ shownGrants pid gs =
         PlayerEffect.AdditionalSurveilCards _ -> Nothing
         PlayerEffect.CantGainLife -> Nothing
         PlayerEffect.CantLoseLife -> Nothing
+        PlayerEffect.Precluded _ -> Nothing
         PlayerEffect.Shows grant -> Just grant
    in Maybe.mapMaybe (grantOf . snd) (applying pid gs)
 
@@ -3021,6 +3043,7 @@ maximumHandSize pid gs =
         PlayerEffect.AdditionalSurveilCards _ -> current
         PlayerEffect.CantGainLife -> current
         PlayerEffect.CantLoseLife -> current
+        PlayerEffect.Precluded _ -> current
         PlayerEffect.Shows _ -> current
    in List.foldl' (\current row -> apply current (snd row)) (Just (Vanguard.handSize defaultMaximumHandSize pid gs)) (applying pid gs)
 
@@ -3096,6 +3119,7 @@ keepsUnspentMana pid gs =
         PlayerEffect.AdditionalSurveilCards _ -> Nothing
         PlayerEffect.CantGainLife -> Nothing
         PlayerEffect.CantLoseLife -> Nothing
+        PlayerEffect.Precluded _ -> Nothing
         PlayerEffect.Shows _ -> Nothing
       filters = Maybe.mapMaybe (keeps . snd) (applying pid gs)
    in \unit -> any (\f -> ManaFilter.matches f unit) filters
@@ -3163,6 +3187,7 @@ losesLifeForUnspentMana pid gs =
         PlayerEffect.AdditionalSurveilCards _ -> False
         PlayerEffect.CantGainLife -> False
         PlayerEffect.CantLoseLife -> False
+        PlayerEffect.Precluded _ -> False
         PlayerEffect.Shows _ -> False
    in any (charges . snd) (applying pid gs)
 
@@ -3233,6 +3258,7 @@ prohibitsGainingLife pid gs =
         PlayerEffect.AdditionalVotes _ -> False
         PlayerEffect.AdditionalSurveilCards _ -> False
         PlayerEffect.CantLoseLife -> False
+        PlayerEffect.Precluded _ -> False
         PlayerEffect.Shows _ -> False
    in any (\member -> any (prohibits . snd) (applying member gs)) (Game.lifeSharers pid gs)
 
@@ -3254,7 +3280,7 @@ prohibitsLosingLife pid gs =
         PlayerEffect.CantLoseLife -> True
         -- Every other arm is about casting, playing, targeting, countering,
         -- searching, paying, keeping mana, rule 702 protection, how a coin flip
-        -- came out, gaining life or showing cards. CR 119.8's restriction is none
+        -- came out, gaining life, winning or losing the game or showing cards. CR 119.8's restriction is none
         -- of those -- LoseLifeForUnspentMana included, which CHARGES life rather
         -- than saying anything about whether a charge may land.
         PlayerEffect.CantCastSpells -> False
@@ -3299,8 +3325,77 @@ prohibitsLosingLife pid gs =
         PlayerEffect.AdditionalVotes _ -> False
         PlayerEffect.AdditionalSurveilCards _ -> False
         PlayerEffect.CantGainLife -> False
+        PlayerEffect.Precluded _ -> False
         PlayerEffect.Shows _ -> False
    in any (\member -> any (prohibits . snd) (applying member gs)) (Game.lifeSharers pid gs)
+
+-- CR 104.2b / 104.3: does an effect say this player can't win, or can't lose,
+-- the game? Read by Pawl.Engine.Sba's CR 704.5 losses and Pawl.Engine.Resolve.Effect's
+-- CR 104.3e LoseGame and CR 104.2b WinGame arms, and by Pawl.Engine.Departure for
+-- CR 104.3i's emperor's team. CR 104.2a's win when every
+-- opponent has left "overrides all effects that would preclude" it, so
+-- Pawl.Engine.Departure.outcomeAfterLeaving asks nothing; nor does CR 104.3a's
+-- concession.
+--
+-- CR 810.8a: in Two-Headed Giant an effect saying a player can't win or can't
+-- lose says it of their whole team, so this asks every member, the reading
+-- Pawl.Engine.Game.counterSharers gives a team's poison.
+precludes :: GameOutcome.GameOutcome -> PlayerId -> GameState -> Bool
+precludes outcome pid gs =
+  let says effect = case effect of
+        PlayerEffect.Precluded precluded -> precluded == outcome
+        -- Every other arm is about casting, playing, targeting, countering,
+        -- searching, paying, keeping mana, rule 702 protection, how a coin flip
+        -- came out, life or showing cards. CR 104.2b's and 104.3's outcomes are
+        -- none of those -- CantLoseLife included, which leaves a player's life
+        -- total where it is but says nothing of CR 104.3b's loss.
+        PlayerEffect.CantLoseLife -> False
+        PlayerEffect.CantCastSpells -> False
+        PlayerEffect.CantActivateAbilities _ -> False
+        PlayerEffect.CantCastMoreThan _ -> False
+        PlayerEffect.ModifyCost {} -> False
+        PlayerEffect.AlternativeActivationCost _ -> False
+        PlayerEffect.PlayAdditionalLands _ -> False
+        PlayerEffect.NoMaximumHandSize -> False
+        PlayerEffect.SetMaximumHandSize _ -> False
+        PlayerEffect.IncreaseMaximumHandSize _ -> False
+        PlayerEffect.ReduceMaximumHandSize _ -> False
+        PlayerEffect.DontLoseUnspentMana _ -> False
+        PlayerEffect.LoseLifeForUnspentMana -> False
+        PlayerEffect.SpendManaAsThough _ -> False
+        PlayerEffect.CantBeTargetedBy _ -> False
+        PlayerEffect.CastAsThoughItHadFlash _ -> False
+        PlayerEffect.MayPlayAsThoughItHadFlash _ -> False
+        PlayerEffect.ActivateKeywordAtInstantSpeed _ -> False
+        PlayerEffect.ActivateLoyaltyAtInstantSpeed _ -> False
+        PlayerEffect.CantBeCountered _ -> False
+        PlayerEffect.DamageCantBePrevented _ -> False
+        PlayerEffect.DamageCantBeRedirected _ -> False
+        PlayerEffect.CantSearchLibraries _ -> False
+        PlayerEffect.HasProtectionFrom _ -> False
+        PlayerEffect.CantBecomeMonarch -> False
+        PlayerEffect.CantSetSchemesInMotion -> False
+        PlayerEffect.ControlledWhileSearching -> False
+        PlayerEffect.ExilesFoundWhileSearching -> False
+        PlayerEffect.CantAttackWithCreatures -> False
+        PlayerEffect.CantCastMatching _ -> False
+        PlayerEffect.PutTappedAsYouCascade _ -> False
+        PlayerEffect.CastOnlyAtSorcerySpeed -> False
+        PlayerEffect.CantPlayLands _ -> False
+        PlayerEffect.CastFrom _ -> False
+        PlayerEffect.PlayLandsFrom _ -> False
+        PlayerEffect.PlotFrom _ -> False
+        PlayerEffect.CastFromHandWithoutPayingManaCost _ -> False
+        PlayerEffect.CantGetCounters _ -> False
+        PlayerEffect.StateCoinFlip _ -> False
+        PlayerEffect.ModifyDieRoll _ -> False
+        PlayerEffect.AdditionalVotes _ -> False
+        PlayerEffect.AdditionalSurveilCards _ -> False
+        PlayerEffect.CantGainLife -> False
+        PlayerEffect.Shows _ -> False
+      team = Game.teams gs
+      members = pid : [other | GameSettings.twoHeadedGiant (GameState.settings gs), other <- GameState.turnOrder gs, Teams.sameTeam team pid other]
+   in any (\member -> any (says . snd) (applying member gs)) members
 
 -- CR 609.4b / 613.11: the clauses saying what this player may spend their mana
 -- as though it were (Celestial Dawn). The typed question Pawl.Engine.Mana asks
@@ -3364,6 +3459,7 @@ spendManaAsThough pid gs =
         PlayerEffect.AdditionalSurveilCards _ -> Nothing
         PlayerEffect.CantGainLife -> Nothing
         PlayerEffect.CantLoseLife -> Nothing
+        PlayerEffect.Precluded _ -> Nothing
         PlayerEffect.Shows _ -> Nothing
    in Maybe.mapMaybe (spends . snd) (applying pid gs)
 
@@ -3464,6 +3560,7 @@ cantBeCountered pid oid gs =
         PlayerEffect.AdditionalSurveilCards _ -> False
         PlayerEffect.CantGainLife -> False
         PlayerEffect.CantLoseLife -> False
+        PlayerEffect.Precluded _ -> False
         PlayerEffect.Shows _ -> False
    in any stops (applying pid gs)
 
@@ -3536,6 +3633,7 @@ unpreventable gs =
         PlayerEffect.AdditionalSurveilCards _ -> Nothing
         PlayerEffect.CantGainLife -> Nothing
         PlayerEffect.CantLoseLife -> Nothing
+        PlayerEffect.Precluded _ -> Nothing
         PlayerEffect.Shows _ -> Nothing
         PlayerEffect.CantBeCountered _ -> Nothing
         PlayerEffect.CantCastSpells -> Nothing
@@ -3609,6 +3707,7 @@ unredirectable gs =
         PlayerEffect.AdditionalSurveilCards _ -> Nothing
         PlayerEffect.CantGainLife -> Nothing
         PlayerEffect.CantLoseLife -> Nothing
+        PlayerEffect.Precluded _ -> Nothing
         PlayerEffect.Shows _ -> Nothing
         PlayerEffect.CantBeCountered _ -> Nothing
         PlayerEffect.CantCastSpells -> Nothing
@@ -3655,6 +3754,7 @@ statedFlips pid gs =
         PlayerEffect.AdditionalSurveilCards _ -> Nothing
         PlayerEffect.CantGainLife -> Nothing
         PlayerEffect.CantLoseLife -> Nothing
+        PlayerEffect.Precluded _ -> Nothing
         PlayerEffect.Shows _ -> Nothing
         -- Every other arm is about casting, playing, targeting, countering,
         -- searching, paying, keeping mana, gaining or losing life, or rule 702
@@ -3730,6 +3830,7 @@ rollModifiers pid gs =
         PlayerEffect.AdditionalSurveilCards _ -> Nothing
         PlayerEffect.CantGainLife -> Nothing
         PlayerEffect.CantLoseLife -> Nothing
+        PlayerEffect.Precluded _ -> Nothing
         PlayerEffect.Shows _ -> Nothing
         PlayerEffect.CantCastSpells -> Nothing
         PlayerEffect.CantActivateAbilities _ -> Nothing
@@ -3882,6 +3983,7 @@ overPlayerRefs f effect = case effect of
   PlayerEffect.AdditionalSurveilCards _ -> pure effect
   PlayerEffect.CantGainLife -> pure effect
   PlayerEffect.CantLoseLife -> pure effect
+  PlayerEffect.Precluded _ -> pure effect
   PlayerEffect.Shows _ -> pure effect
 
 -- overPlayerRefs read, for a caller that only wants the references.
@@ -3950,6 +4052,7 @@ overDamagePatterns f effect = case effect of
   PlayerEffect.AdditionalSurveilCards _ -> pure effect
   PlayerEffect.CantGainLife -> pure effect
   PlayerEffect.CantLoseLife -> pure effect
+  PlayerEffect.Precluded _ -> pure effect
   PlayerEffect.Shows _ -> pure effect
 
 -- overDamagePatterns read: the SLOTS this effect's patterns name as their

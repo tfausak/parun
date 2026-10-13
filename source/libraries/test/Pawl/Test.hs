@@ -319,6 +319,7 @@ import qualified Pawl.Codec.FromOutsideTheGameSpec
 import qualified Pawl.Codec.FromReferenceSpec
 import qualified Pawl.Codec.GainControlSpec
 import qualified Pawl.Codec.GameEventSpec
+import qualified Pawl.Codec.GameOutcomeSpec
 import qualified Pawl.Codec.GameSettingsSpec
 import qualified Pawl.Codec.GiftSpec
 import qualified Pawl.Codec.GrantLookAtExiledSpec
@@ -1188,6 +1189,7 @@ spec s registry = do
   Pawl.Codec.FromOutsideTheGameSpec.spec s
   Pawl.Codec.FromReferenceSpec.spec s
   Pawl.Codec.GameEventSpec.spec s
+  Pawl.Codec.GameOutcomeSpec.spec s
   Pawl.Codec.GameSettingsSpec.spec s
   Pawl.Codec.GainControlSpec.spec s
   Pawl.Codec.GiftSpec.spec s
