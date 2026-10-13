@@ -76,6 +76,7 @@ import qualified Pawl.Engine.Projection.View as Projection
 import qualified Pawl.Engine.Quantity as Quantity
 import qualified Pawl.Engine.Recruit as Recruit
 import qualified Pawl.Engine.Replacement as Replacement
+import qualified Pawl.Engine.Replay as Replay
 import Pawl.Engine.Resolve.Slots (battlefieldMatching, boundSlots, conditionSlots, effectContext, effectContextNaming, effectObjectRefs, effectPlayerRefs, effectViewOf, graveyardCardsOf, handCardsOf, legalMany, legalOne, libraryCardsOf, matchingFromAmong, objectRefObjects, overRelations, playerRefPlayers, playerRefSlots, replacementRowSlots, resolutionReads, slotBindings, slotGroup)
 import qualified Pawl.Engine.Restamp as Restamp
 import qualified Pawl.Engine.Ring as Ring
@@ -363,6 +364,7 @@ import qualified Pawl.Types.ReplacementEffect as ReplacementEffect
 import qualified Pawl.Types.ReplacementOrigin as ReplacementOrigin
 import qualified Pawl.Types.RequireAttack as RequireAttack
 import qualified Pawl.Types.RequireBlock as RequireBlock
+import qualified Pawl.Types.Response as Response
 import qualified Pawl.Types.RestrictedCreatures as RestrictedCreatures
 import Pawl.Types.Result (Result)
 import qualified Pawl.Types.Result as Result
@@ -10660,6 +10662,8 @@ throwDice runSubgame controller sides named perDie = do
             case (answer, kind) of
               (OptionalDecision.Declines, _) -> offering rest thrower natural
               (OptionalDecision.Exercises, Left _) -> do
+                -- Not implemented: asking the payer again after a failed
+                -- payment, as payAgain does for CR 118.12 (#5078).
                 paid <- payModifier payer stated mCost
                 if not paid
                   then offering rest thrower natural
@@ -10771,7 +10775,7 @@ throwDice runSubgame controller sides named perDie = do
       -- resolving object can name what it took, and the modifier's own change
       -- to the die reads no slot. Proved by Pawl.DiceSpec's "CR 701.67a a
       -- modifier's waterbend cost is weighed" case.
-      payForModifier payer oid cost = Maybe.isJust <$> payGateCost runSubgame Map.empty payer oid cost
+      payForModifier payer oid cost = Maybe.isJust . fst <$> payGateCost runSubgame Map.empty payer oid cost
       -- Goblin Bookie's "Activate only any time it makes sense", read as a
       -- window inside CR 706.2's modification step, beside the static offers
       -- above. No rule grants one: CR 117.1b ties activation to
@@ -11913,8 +11917,8 @@ loopOffers runSubgame resolving source controller slot legal members gate = do
         let attempt failed current = case NonEmpty.nonEmpty (agreedBy payer current) of
               Nothing -> pure (Just (done, current))
               Just taken -> do
-                bound <- payGateCost runSubgame (fst (NonEmpty.head taken)) payer source (Cost.together (fmap snd taken))
-                payAgain failed (NonEmpty.toList (fmap snd taken)) (fmap (\b -> (Map.insert payer b done, current)) bound) (\failed' -> reagree payer current >>= attempt failed')
+                (bound, answered) <- payGateCost runSubgame (fst (NonEmpty.head taken)) payer source (Cost.together (fmap snd taken))
+                payAgain failed (NonEmpty.toList (fmap snd taken), answered) (fmap (\b -> (Map.insert payer b done, current)) bound) (\failed' -> reagree payer current >>= attempt failed')
          in fmap (Maybe.fromMaybe (done, answers)) (attempt Set.empty answers)
   asked <- Monad.foldM (\acc (payer, member) -> fmap (acc Seq.|>) (agreeOne acc payer member)) Seq.empty offers
   (paid, answered) <- Monad.foldM payFor (Map.empty, asked) order
@@ -11976,15 +11980,14 @@ payGatePaidBy runSubgame resolving source controller offer earlier legal payer g
       case agreed of
         Nothing -> pure Nothing
         Just cost -> do
-          paid <- payGateCost runSubgame slots payer source cost
-          payAgain failed cost paid attempt
+          (paid, answered) <- payGateCost runSubgame slots payer source cost
+          payAgain failed (cost, answered) paid attempt
 
--- CR 733.1 / 118.12a: what follows a payment of `agreed`. A paid one stands. A
--- failed one is reversed (payGateCost), which returns the payer to the choice,
--- so `again` asks it once more. The payment's own answers are asked inside
--- Cost.pay, out of this caller's sight, so the repeat that ends the asking is
--- agreeing again to what already failed: that failure stands, read as unpaid,
--- as Combat.attemptBlockDeclaration keeps a repeated illegal declaration.
+-- CR 733.1 / 118.12a: what follows a payment `agreed` to and answered as it
+-- was (payGateCost's record). A paid one stands. A failed one is reversed, which
+-- returns the payer to the choice, so `again` asks it once more. The same
+-- option paid the same way failing a second time stands, read as unpaid, as
+-- Combat.attemptBlockDeclaration keeps a repeated illegal declaration.
 payAgain :: (Ord k) => Set k -> k -> Maybe a -> (Set k -> Game (Maybe a)) -> Game (Maybe a)
 payAgain failed agreed paid again = case paid of
   Just _ -> pure paid
@@ -12056,8 +12059,9 @@ payGateAgreed resolving source offer earlier payer gate slots owed options = do
           pure (if decision == PaymentDecision.Pays then Just cost else Nothing)
 
 -- The payment of a cost the payer agreed to, against `source` (CR 113.7a): the
--- slots it bound when it was paid (foldPaid), Nothing when it was not.
-payGateCost :: Game Result -> Map.Map SlotName (Set Recipient) -> PlayerId -> ObjectId -> Cost.Type.Cost Keyword.Type.Keyword -> Game (Maybe (Map.Map SlotName Binding.Type.Binding))
+-- slots it bound when it was paid (foldPaid), Nothing when it was not, and the
+-- answers the payment was given (payAgain).
+payGateCost :: Game Result -> Map.Map SlotName (Set Recipient) -> PlayerId -> ObjectId -> Cost.Type.Cost Keyword.Type.Keyword -> Game (Maybe (Map.Map SlotName Binding.Type.Binding), [Response.Response])
 payGateCost runSubgame slots payer source cost = do
   gs <- State.get
   -- CR 118.13b: a symbol payable in multiple ways is announced by the
@@ -12090,8 +12094,8 @@ payGateCost runSubgame slots payer source cost = do
   -- (Cost.pay). Taken after the announcement above, which writes no
   -- state of its own.
   began <- State.get
-  outcome <- Cost.payReading slots (performManaAbility runSubgame) began PaymentMoment.DuringResolution PaymentSubject.ForNeither ManaSpending.AsProduced payer source announced
-  pure (case outcome of Payment.Paid bound -> Just bound; Payment.Unpaid -> Nothing)
+  (outcome, answered) <- Replay.recording (Cost.payReading slots (performManaAbility runSubgame) began PaymentMoment.DuringResolution PaymentSubject.ForNeither ManaSpending.AsProduced payer source announced)
+  pure (case outcome of Payment.Paid bound -> Just bound; Payment.Unpaid -> Nothing, answered)
 
 -- CR 608.2c / 608.2h: the slots CR 118.12's payments bound, folded onto the
 -- RESOLVING object once every payer of one offer has paid, so a later
