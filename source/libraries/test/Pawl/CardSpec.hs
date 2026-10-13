@@ -1630,6 +1630,9 @@ removesCountersAsCost =
 spellCostsOf :: Face.Face Card.Type.Card -> [Cost.Type.Cost Keyword.Keyword]
 spellCostsOf face =
   (Cost.Type.MkCost (Face.manaCost face) (Face.additionalCosts face) : fmap AlternativeCost.cost (Face.alternativeCosts face))
+    -- A keyword's alternative cost is the spell's too (CR 601.2b): Lantern
+    -- Flare's cleave {X}{R}{W} declares the X its cleaved clause reads.
+    <> fmap snd (KeywordEngine.plainAlternativeCosts (Face.keywordSet face))
     <> Map.elems (Face.modeCosts face)
     -- CR 118.8's choice costs, each option on its own: they are additional costs
     -- of the same CR 601.2f total, so an X in one binds Binding.variableX as
