@@ -2175,7 +2175,7 @@ freezeRiders viewOf context gs resolving source riders =
         { EntryRiders.counters = Map.mapMaybe frozen (EntryRiders.counters riders),
           -- CR 608.2h / 611.2d, ModifyTarget's freeze: a quantity that cannot
           -- be evaluated now leaves its effect unstored.
-          EntryRiders.characteristics = Seq.fromList (Maybe.mapMaybe (Projection.freezeQuantities gs resolving source context) (Foldable.toList (EntryRiders.characteristics riders)))
+          EntryRiders.characteristics = Seq.fromList (Maybe.mapMaybe (Projection.freezeQuantities viewOf gs resolving source context) (Foldable.toList (EntryRiders.characteristics riders)))
         }
 
 -- The amount ONE RECIPIENT of a per-player instruction reads, which need not be
@@ -2420,7 +2420,7 @@ randomCardsInHand resolving source controller legal (RandomCardInHand.MkRandomCa
   let viewOf = effectViewOf source legal gs
       context = effectContext gs controller source legal (slotBindings resolving gs)
       wanted = maybe 0 Integer.toNaturalSaturating (Quantity.evaluateFor viewOf context gs resolving source count)
-  fmap concat . Monad.mapM (\pid -> pickAtRandom wanted (handCardsOf context gs pid filter_)) $
+  fmap concat . Monad.mapM (\pid -> Game.drawDistinct Prompt.RandomObject wanted (handCardsOf context gs pid filter_)) $
     handChoosers legal controller gs player
 
 -- CR 404.1 / 608.2c: the cards randomness names out of each graveyard the ref
@@ -2449,7 +2449,7 @@ randomCardsInGraveyard resolving source controller legal (RandomCardInGraveyard.
   let viewOf = effectViewOf source legal gs
       context = effectContext gs controller source legal (slotBindings resolving gs)
       wanted = maybe 0 Integer.toNaturalSaturating (Quantity.evaluateFor viewOf context gs resolving source count)
-  fmap concat . Monad.mapM (\pid -> pickAtRandom wanted (graveyardCardsOf context gs pid filter_)) $
+  fmap concat . Monad.mapM (\pid -> Game.drawDistinct Prompt.RandomObject wanted (graveyardCardsOf context gs pid filter_)) $
     Target.zoneScopePlayers (Just controller) legal scope gs
 
 -- Alchemy's seek: the cards randomness names out of each library the ref
@@ -2471,20 +2471,8 @@ randomCardsInLibrary resolving source controller legal (RandomCardInLibrary.MkRa
   let viewOf = effectViewOf source legal gs
       context = effectContext gs controller source legal (slotBindings resolving gs)
       wanted = maybe 0 Integer.toNaturalSaturating (Quantity.evaluateFor viewOf context gs resolving source count)
-  fmap concat . Monad.mapM (\pid -> pickAtRandom wanted (libraryCardsOf context gs pid filter_)) $
+  fmap concat . Monad.mapM (\pid -> Game.drawDistinct Prompt.RandomObject wanted (libraryCardsOf context gs pid filter_)) $
     handChoosers legal controller gs player
-
--- The random pick the three functions above share, each draw through
--- Game.drawAmong (CR 101.3, CR 609.3). The count names DISTINCT cards, so each
--- card named is dropped from the candidates before the next ask.
-pickAtRandom :: Natural -> [ObjectId] -> Game [ObjectId]
-pickAtRandom remaining candidates
-  | remaining <= 0 = pure []
-  | otherwise = do
-      drawn <- Game.drawAmong Prompt.RandomObject candidates
-      case drawn of
-        Nothing -> pure []
-        Just named -> (named :) <$> pickAtRandom (remaining - 1) (filter (/= named) candidates)
 
 -- One effect, applied, wrapped in the window CR 607.2a's link is filed from:
 -- what was in exile before, and what is in it after.
@@ -3869,7 +3857,7 @@ applyOneEffect runSubgame resolving source controller legal chosen effect = case
             -- freeze runs once per affected object with that object bound under
             -- the name, and each gets an effect of its own value.
             let context = effectContext gs controller source legal (slotBindings resolving gs)
-                freezeFor objs ctx = (objs, Projection.freezeQuantities gs resolving source ctx modification)
+                freezeFor objs ctx = (objs, Projection.freezeQuantities (effectViewOf source legal gs) gs resolving source ctx modification)
                 frozenSets = case each of
                   Nothing -> [freezeFor targets context]
                   Just slot -> [freezeFor [t] (effectContextNaming slot t gs controller source legal (slotBindings resolving gs)) | t <- targets]
@@ -7098,12 +7086,14 @@ applyOneEffect runSubgame resolving source controller legal chosen effect = case
           pure $ case NonEmpty.nonEmpty (ListUtils.nubOrd names) of
             Nothing -> []
             Just offered -> replicate count (pickReference predicate amount offered)
-        -- One pick per card conjured on the written and reference roads, and one
-        -- entry per named object on the duplicate road. `pure` rather than a
-        -- prompt for a duplicate: the object was named before the conjure ran.
+        -- One pick per card conjured on the written and reference roads, and
+        -- `n` entries per named object on the duplicate road, the whole count
+        -- per object as the battlefield road below mints it. `pure` rather than
+        -- a prompt for a duplicate: the object was named before the conjure ran.
+        -- Pawl.ConjureSpec's Gyox case proves the count reaches exile.
         pickers n = case cards of
           ConjureCards.Written written -> pure (replicate (Integer.toIntSaturating n) (fmap Just (pickWritten written)))
-          ConjureCards.Duplicate ref -> pure (fmap (pure . Just) (duplicatesOf ref))
+          ConjureCards.Duplicate ref -> pure (concatMap (replicate (Integer.toIntSaturating n) . pure . Just) (duplicatesOf ref))
           ConjureCards.Reference from -> referencePickers from (Integer.toIntSaturating n)
         intoZone zone settle n = fmap (concatMap Maybe.catMaybes) (pickers n >>= Monad.mapM (\p -> p >>= Monad.mapM (\(card, copied) -> Event.conjure controller card copied zone LibraryPosition.defaultValue >>= \made -> made <$ Monad.mapM_ settle made) . Maybe.maybeToList))
         sink depth oid = do

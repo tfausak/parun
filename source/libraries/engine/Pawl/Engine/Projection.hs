@@ -1535,6 +1535,12 @@ baseView gs oid =
 -- frozenStaticParts hands over as a permanent leaves. Nothing when a quantity
 -- cannot be evaluated at store time: it cannot be determined later either.
 --
+-- The VIEW comes from the caller too, so the resolution's CR 608.2h reader
+-- (Pawl.Engine.Resolve.Slots.effectViewOf) answers for an object that has left:
+-- Gyox, Brutal Carnivora's "+X/+X, where X is the number of oil counters on it"
+-- reads a creature that died, and the scenario in data/scenarios/conjure proves
+-- it.
+--
 -- The CONTEXT comes from the caller rather than being built here, because a
 -- Filter.contextFor built here would carry no slot bindings: Quantity.AgainstSlot
 -- reads Filter.slotObjects, so against an empty map it answers Nothing, the
@@ -1543,10 +1549,9 @@ baseView gs oid =
 -- level-3 "+1/+1 for each other attacking creature" is another, whose Count
 -- filter reads the same map through Filter.IsBound. Pawl.Engine.Resolve.Slots.effectContext
 -- is the one engine caller's spelling.
-freezeQuantities :: GameState -> ObjectId -> ObjectId -> Filter.Context -> Modification.Modification ability -> Maybe (Modification.Modification ability)
-freezeQuantities gs announcedOn source context m =
-  let viewOf = fullView gs
-      freeze q = fmap Quantity.Type.Literal (Quantity.evaluateFor viewOf context gs announcedOn source q)
+freezeQuantities :: Count.ViewOf -> GameState -> ObjectId -> ObjectId -> Filter.Context -> Modification.Modification ability -> Maybe (Modification.Modification ability)
+freezeQuantities viewOf gs announcedOn source context m =
+  let freeze q = fmap Quantity.Type.Literal (Quantity.evaluateFor viewOf context gs announcedOn source q)
    in case m of
         Modification.SetBasePowerToughness (SetBasePowerToughness.MkSetBasePowerToughness p t) -> fmap Modification.SetBasePowerToughness (SetBasePowerToughness.MkSetBasePowerToughness <$> traverse freeze p <*> traverse freeze t)
         Modification.ModifyPowerToughness (ModifyPowerToughness.MkModifyPowerToughness p t) -> fmap Modification.ModifyPowerToughness (ModifyPowerToughness.MkModifyPowerToughness <$> freeze p <*> freeze t)

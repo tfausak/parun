@@ -1,0 +1,33 @@
+{
+  "description": "Gyox, Brutal Carnivora: a Hill Giant with two oil counters dies, and two duplicates are conjured, grown +2/+2 and shuffled into the library",
+  "note": "Two oil counters, so a conjure that drops its count leaves one duplicate. The Giant's 3/3, the count of 2 and the grown 5/5 are distinct numbers.",
+  "board": {
+    "seats": [
+      {
+        "name": "alice",
+        "battlefield": [
+          { "card": "Gyox, Brutal Carnivora", "label": "gyox" },
+          { "card": "Hill Giant", "label": "giant", "counters": [{ "key": { "type": "Named", "value": "oil" }, "value": 2 }] },
+          { "card": "Mountain", "label": "mountain", "ready": true }
+        ],
+        "hand": [{ "card": "Lightning Bolt", "label": "bolt" }],
+        "library": [{ "card": "Island", "label": "island" }]
+      },
+      {
+        "name": "bob",
+        "library": [{ "card": "Island" }]
+      }
+    ],
+    "active": "alice",
+    "step": "PrecombatMain"
+  },
+  "timeline": [
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": { "Cast": { "object": "$bolt", "targets": ["$giant"], "mana": ["$mountain"] } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": { "Answer": { "prompt": "Shuffle", "with": ["Hill Giant#2", "$island", "Hill Giant#3"] } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "check": { "Count": { "player": "alice", "zone": "Library", "card": "Hill Giant", "count": 2 } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "check": { "Count": { "player": "alice", "zone": "Exile", "card": "Hill Giant", "count": 0 } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "check": { "Count": { "player": "alice", "zone": "Graveyard", "card": "Hill Giant", "count": 1 } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "check": { "PowerToughness": { "object": "Hill Giant#2", "power": 5, "toughness": 5 } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "check": { "PowerToughness": { "object": "Hill Giant#3", "power": 5, "toughness": 5 } } }
+  ]
+}

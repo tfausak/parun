@@ -1584,6 +1584,21 @@ resolveSpec s registry = Spec.describe s "Resolve" $ do
       (fmap ContinuousEffect.modification (GameState.continuousEffects resolved))
       [Modification.ModifyPowerToughness (ModifyPowerToughness.MkModifyPowerToughness (Quantity.Literal 2) (Quantity.Literal 0))]
     Spec.assertEqWith s "the Piker is still its printed 2/1 while the spell is on the stack" (Projection.powerOf pikerId cast, Projection.toughnessOf pikerId cast) (Just 2, Just 1)
+  -- Onward ({2}{R} Instant, the first half of Onward // Victory: "Target
+  -- creature gets +X/+0 until end of turn, where X is its power."), Oracle text
+  -- verified on Scryfall 2026-10-12. Rush of Blood's shape on a split card: X
+  -- is the TARGET's power, read through its slot. A Hill Giant (3/3), so the
+  -- right answer 6/3 differs from the untouched 3/3 and from +X/+X's 6/6.
+  Spec.it s "CR 608.2h Onward's X is the power of the creature it targets" $ do
+    mountain <- S.printingOf s registry "Mountain"
+    giant <- S.printingOf s registry "Hill Giant"
+    onward <- S.printingOf s registry "Onward"
+    let (giantId, withGiant) = S.addPermanent giant S.alice (S.landsInPlay mountain 3)
+        (gs, spellId) = S.handOne onward withGiant
+        -- CR 709.3: the half is named, since S.cast refuses a split card.
+        cast = snd (Engine.runGamePure S.identityAnswer gs (Cast.castSpell S.manaPerformer S.alice spellId (CardName.MkCardName (Text.pack "Onward")) Facing.FaceUp))
+        resolved = snd (Engine.runGamePure S.identityAnswer cast Stack.resolveTop)
+    Spec.assertEqWith s "the Hill Giant is 3 + its own 3 by 3" (Projection.powerOf giantId resolved, Projection.toughnessOf giantId resolved) (Just 6, Just 3)
 
 -- Add n Mountains to pid's battlefield, discarding the ids (used to bulk up a
 -- pool of owned cards). replicate n () avoids a list comprehension (CLAUDE.md).

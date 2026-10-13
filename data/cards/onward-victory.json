@@ -34,9 +34,15 @@
                         "type": "ModifyPowerToughness",
                         "value": {
                           "power": {
-                            "type": "Measure",
+                            "type": "AgainstSlot",
                             "value": {
-                              "type": "Power"
+                              "quantity": {
+                                "type": "Measure",
+                                "value": {
+                                  "type": "Power"
+                                }
+                              },
+                              "slot": "target"
                             }
                           },
                           "toughness": {

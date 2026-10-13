@@ -86,6 +86,8 @@ import qualified Pawl.Types.CombatStep as CombatStep
 import qualified Pawl.Types.Conjure as Conjure
 import qualified Pawl.Types.ConjureCards as ConjureCards
 import qualified Pawl.Types.Cost as Cost.Type
+import qualified Pawl.Types.CounterKind as CounterKind
+import qualified Pawl.Types.CounterName as CounterName
 import qualified Pawl.Types.DiscardCause as DiscardCause
 import qualified Pawl.Types.Effect as Effect
 import qualified Pawl.Types.EndingStep as EndingStep
@@ -938,6 +940,32 @@ spec s registry = Spec.describe s "Pawl.Conjure" $ do
       "the duplicate is still in alice's exile"
       (length (namedIn hillGiant Zone.Exile returned), namedIn hillGiant Zone.Battlefield returned)
       (1, [])
+  -- Gyox, Brutal Carnivora ({1}{B}{G} Legendary Creature -- Phyrexian Warlock
+  -- 2/4, "... Whenever a nontoken creature you control with one or more oil
+  -- counters on it dies, conjure X duplicates of it into exile, where X is the
+  -- number of oil counters on it. Those duplicates perpetually get +X/+X. Then
+  -- shuffle those duplicates into your library."), Oracle text verified on
+  -- Scryfall 2026-10-12. The COUNT on the duplicate road, off the battlefield:
+  -- two oil counters make two duplicates, not one per named object. alice's
+  -- library starts empty, so everything in it came from the conjure.
+  Spec.it s "a conjure of X duplicates into exile makes X of them, one per oil counter" $ do
+    gyox <- S.printingOf s registry "Gyox, Brutal Carnivora"
+    giant <- S.printingOf s registry "Hill Giant"
+    let oil = CounterKind.Named (CounterName.UnsafeMkCounterName (Text.pack "oil"))
+        (_, board0) = S.addPermanent gyox S.alice (Setup.emptyGame S.bothPlayers)
+        (giantId, board1) = S.addPermanent giant S.alice board0
+        oiled = S.addCounter oil 2 giantId board1
+        final = settleTriggers (S.runPure S.identityAnswer oiled (Event.destroy Regenerability.Regenerable [giantId]))
+    Spec.assertEqWith
+      s
+      "two Hill Giants were shuffled into alice's library"
+      (length (namedIn hillGiant Zone.Library final))
+      2
+    Spec.assertEqWith
+      s
+      "and none is left in exile, the original in the graveyard"
+      (namedIn hillGiant Zone.Exile final, length (namedIn hillGiant Zone.Graveyard final))
+      ([], 1)
 
   -- Calim, Djinn Emperor ({3}{U}{U}{U} Legendary Creature -- Djinn Noble 5/6,
   -- flying, ward {2}, "When you discard Calim, conjure a card named Calim,

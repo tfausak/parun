@@ -1840,14 +1840,7 @@ drawFromPiles perspective picked = do
       wanted = Map.fromListWith (+) (fmap (\pile -> (pile, 1 :: Natural)) (Maybe.mapMaybe drawOf (Set.toList picked)))
       -- Without replacement: the draws out of one pile are for one instance of
       -- "target", which CR 115.3 forbids naming one card twice.
-      drawOut pile = go []
-        where
-          go taken n
-            | n == 0 = pure taken
-            | otherwise = do
-                gs <- State.get
-                card <- Game.drawAmong Prompt.RandomObject (filter (`notElem` taken) (pileMembers perspective pile gs))
-                maybe (pure taken) (\one -> go (one : taken) (n - 1)) card
+      drawOut pile n = State.gets (pileMembers perspective pile) >>= Game.drawDistinct Prompt.RandomObject n
   drawn <- Map.traverseWithKey drawOut wanted
   pure (Set.union named (Set.fromList (fmap Recipient.ToObject (concat (Map.elems drawn)))))
 

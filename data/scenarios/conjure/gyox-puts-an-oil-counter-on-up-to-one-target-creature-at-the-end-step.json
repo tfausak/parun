@@ -1,0 +1,25 @@
+{
+  "description": "Gyox, Brutal Carnivora puts an oil counter on the one creature its end-step trigger targets",
+  "board": {
+    "seats": [
+      {
+        "name": "alice",
+        "battlefield": [{ "card": "Gyox, Brutal Carnivora", "label": "gyox" }],
+        "library": [{ "card": "Island" }, { "card": "Island" }]
+      },
+      {
+        "name": "bob",
+        "battlefield": [{ "card": "Hill Giant", "label": "giant" }],
+        "library": [{ "card": "Island" }, { "card": "Island" }]
+      }
+    ],
+    "active": "alice",
+    "step": "PostcombatMain"
+  },
+  "timeline": [
+    { "turn": 1, "step": "EndStep", "player": "alice", "do": { "ChooseTargets": { "target": ["$giant"] } } },
+    { "turn": 1, "step": "EndStep", "player": "alice", "do": "Pass" },
+    { "turn": 1, "step": "EndStep", "player": "alice", "check": { "Counters": { "object": "$giant", "kind": { "type": "Named", "value": "oil" }, "count": 1 } } },
+    { "turn": 1, "step": "EndStep", "player": "alice", "check": { "Counters": { "object": "$gyox", "kind": { "type": "Named", "value": "oil" }, "count": 0 } } }
+  ]
+}
