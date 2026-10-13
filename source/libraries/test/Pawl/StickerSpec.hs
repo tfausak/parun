@@ -1548,7 +1548,7 @@ spec s registry = Spec.describe s "Sticker" $ do
     case mMelded >>= \meldedId -> fmap ((,) meldedId . MeldSpec.componentPrintings . Object.source) (Game.lookupObject meldedId board) of
       Just (meldedId, components) | firstPid : _ <- Foldable.toList components -> do
         let stickered = Sticker.put S.alice meldedId (aliceSticker 1 StickerKind.Art 0) Nothing board
-            designated = stickered {GameState.players = Map.adjust (\p -> p {Player.commander = Set.singleton firstPid}) S.alice (GameState.players stickered)}
+            designated = MeldSpec.designatingComponent meldedId firstPid stickered
             ((_, g), askedKeeper) = State.runState (Engine.runGame (keeping Nothing (MeldSpec.returningComponent meldedId)) designated (S.cast S.alice griptideId >> Stack.resolveTop)) 0
             kinds = concatMap (\oid -> stickerKindsOn oid g)
         Spec.assertEqWith s "CR 123.5c the commander card in the command zone keeps the art sticker, the card in the library none" (kinds (Set.toList (GameState.command g)), kinds (Game.zoneMembers Zone.Library S.alice g)) ([StickerKind.Art], [])

@@ -470,7 +470,10 @@ restartSpec s registry = Spec.describe s "restart (CR 727)" $ do
     mountain <- S.printingOf s registry "Mountain"
     let (meldedId, board) = meldedBoard (Setup.emptyGame S.bothPlayers) battlements garrison mountain
         components = componentsOn meldedId board
-        designating printingId gs = gs {GameState.players = Map.adjust (\p -> p {Player.commander = Set.singleton printingId}) S.alice (GameState.players gs)}
+        -- CR 903.3: the component card printed as `printingId`, by its identity.
+        designating printingId gs =
+          let identities = Set.fromList [identity | obj <- Maybe.maybeToList (meldedId >>= (`Game.lookupObject` gs)), card <- Maybe.mapMaybe Game.cardOfComponent (Foldable.toList (Game.componentsOf (Object.source obj))), ComponentCard.printing card == printingId, Just identity <- [ComponentCard.identity card]]
+           in gs {GameState.players = Map.adjust (\p -> p {Player.commander = identities}) S.alice (GameState.players gs)}
         restarted gs = snd (Engine.runGamePure S.identityAnswer gs (Setup.restartGame S.performer Set.empty S.alice))
         deckOf gs = Game.zoneMembers Zone.Library S.alice gs <> Game.zoneMembers Zone.Hand S.alice gs
     case components of

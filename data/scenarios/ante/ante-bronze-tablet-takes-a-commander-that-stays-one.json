@@ -1,0 +1,133 @@
+{
+  "board": {
+    "active": "alice",
+    "ante": true,
+    "seats": [
+      {
+        "battlefield": [
+          {
+            "card": "Bronze Tablet",
+            "label": "tablet"
+          },
+          {
+            "card": "Mountain",
+            "label": "mountain-1"
+          },
+          {
+            "card": "Mountain",
+            "label": "mountain-2"
+          },
+          {
+            "card": "Mountain",
+            "label": "mountain-3"
+          },
+          {
+            "card": "Mountain",
+            "label": "mountain-4"
+          }
+        ],
+        "library": [
+          {
+            "card": "Island"
+          }
+        ],
+        "name": "alice"
+      },
+      {
+        "battlefield": [
+          {
+            "card": "Jedit Ojanen",
+            "commander": true,
+            "label": "jedit"
+          }
+        ],
+        "library": [
+          {
+            "card": "Plains"
+          }
+        ],
+        "name": "bob"
+      }
+    ],
+    "step": "PrecombatMain"
+  },
+  "description": "CR 903.3 / 903.9a a commander Bronze Tablet makes alice's is still a commander, and its new owner is offered the command zone",
+  "final": [
+    {
+      "Count": {
+        "card": "Jedit Ojanen",
+        "count": 1,
+        "player": "alice",
+        "zone": "Command"
+      }
+    },
+    {
+      "Count": {
+        "card": "Jedit Ojanen",
+        "count": 0,
+        "player": "alice",
+        "zone": "Exile"
+      }
+    },
+    {
+      "Count": {
+        "card": "Bronze Tablet",
+        "count": 1,
+        "player": "bob",
+        "zone": "Exile"
+      }
+    }
+  ],
+  "note": "CR 903.3 makes the designation an attribute of the card, kept through the ownership change CR 407.3's ante card makes; CR 903.9a then asks its owner, who is alice now. A designation looked up under the current owner finds nothing and asks no one.",
+  "timeline": [
+    {
+      "do": {
+        "Activate": {
+          "ability": 0,
+          "mana": [
+            "$mountain-1",
+            "$mountain-2",
+            "$mountain-3",
+            "$mountain-4"
+          ],
+          "object": "$tablet",
+          "targets": [
+            "$jedit"
+          ]
+        }
+      },
+      "player": "alice",
+      "step": "PrecombatMain",
+      "turn": 1
+    },
+    {
+      "do": "Pass",
+      "player": "alice",
+      "step": "PrecombatMain",
+      "turn": 1
+    },
+    {
+      "do": {
+        "ChooseToPay": {
+          "decision": {
+            "type": "Declines"
+          }
+        }
+      },
+      "player": "bob",
+      "step": "PrecombatMain",
+      "turn": 1
+    },
+    {
+      "do": {
+        "Answer": {
+          "prompt": "ReturnCommander",
+          "with": "Returns"
+        }
+      },
+      "player": "alice",
+      "step": "PrecombatMain",
+      "turn": 1
+    }
+  ]
+}

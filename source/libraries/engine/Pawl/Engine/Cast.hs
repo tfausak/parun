@@ -1241,7 +1241,8 @@ castableZones pid oid face gs =
             && (ownedBy pid oid gs || PlayerEffect.mayCastFrom pid Zone.Hand oid gs)
         Zone.Graveyard -> permitsCastFromGraveyard pid oid face gs
         Zone.Exile -> permitsCastFromExile pid oid face gs
-        -- CR 903.8: "a commander's owner may cast it from the command zone". A
+        -- CR 903.8: "a player may cast a commander they own from the command
+        -- zone". A
         -- FORMAT's permission, not a card's, which is why it is asked of
         -- Pawl.Engine.Commander rather than read off the face -- see that module.
         -- The owner test is inside isCommander's caller: rule 903.8 lets only the

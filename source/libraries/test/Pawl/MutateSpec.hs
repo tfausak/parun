@@ -899,7 +899,7 @@ spec s registry = Spec.describe s "Mutate" $ do
       Just pid -> do
         let board =
               (asMergeOfEveryKind oid pid base)
-                { GameState.players = Map.adjust (\p -> p {Player.commander = Set.singleton pid}) S.alice (GameState.players (asMergeOfEveryKind oid pid base))
+                { GameState.players = Map.adjust (\p -> p {Player.commander = Set.fromList (Maybe.maybeToList (Game.lookupObject oid base >>= Object.identity))}) S.alice (GameState.players (asMergeOfEveryKind oid pid base))
                 }
             after = snd (S.runPureWith returningCommander board (Event.changeZoneReturning oid Zone.Hand))
         Spec.assertEqWith
@@ -910,7 +910,7 @@ spec s registry = Spec.describe s "Mutate" $ do
         -- The fixture facts, after it: the permanent really was a merge of a
         -- card, a token and a copy under one printing, and CR 903.9b's offer
         -- really was accepted.
-        Spec.assertEqWith s "setup: the components were a card, a token and a copy of a spell under one printing" (fmap (Foldable.toList . Game.componentsOf . Object.source) (Game.lookupObject oid board)) (Just [MergeComponent.OfCard (ComponentCard.MkComponentCard pid Nothing Nothing), MergeComponent.OfToken pid, MergeComponent.OfSpellCopy pid])
+        Spec.assertEqWith s "setup: the components were a card, a token and a copy of a spell under one printing" (fmap (Foldable.toList . Game.componentsOf . Object.source) (Game.lookupObject oid board)) (Just [MergeComponent.OfCard (ComponentCard.MkComponentCard pid (Game.lookupObject oid base >>= Object.identity) Nothing), MergeComponent.OfToken pid, MergeComponent.OfSpellCopy pid])
         Spec.assertEqWith s "setup: the merged permanent left the battlefield" (Game.lookupObject oid after) Nothing
   -- CR 730.3 over a component list that holds a token: "each of the individual
   -- components are put into the appropriate zone", and CR 111.7 is what the
@@ -1474,7 +1474,7 @@ asMergeOfEveryKind oid pid gs =
   gs
     { GameState.objects =
         Map.adjust
-          (\o -> o {Object.source = Source.OfMerge (fmap (`ShownComponent.MkShownComponent` Nothing) (MergeComponent.OfCard (ComponentCard.MkComponentCard pid Nothing Nothing) NonEmpty.:| [MergeComponent.OfToken pid, MergeComponent.OfSpellCopy pid]))})
+          (\o -> o {Object.source = Source.OfMerge (fmap (`ShownComponent.MkShownComponent` Nothing) (MergeComponent.OfCard (Game.componentCardOf o pid) NonEmpty.:| [MergeComponent.OfToken pid, MergeComponent.OfSpellCopy pid]))})
           oid
           (GameState.objects gs)
     }
