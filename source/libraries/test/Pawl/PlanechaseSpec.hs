@@ -95,6 +95,25 @@ spec s registry = Spec.describe s "Pawl.Engine.Planechase" $ do
     Spec.assertBool s (Set.member pikerId (CombatRestriction.cantBlock (Just S.bob) [pikerId] withPiker)) "CR 311.4 with Tazeem face up bob's creature can't block"
     Spec.assertBool s (not (Set.member buriedPiker (CombatRestriction.cantBlock (Just S.bob) [buriedPiker] withBuried))) "with Tazeem in the planar deck it can"
 
+  -- CR 801.18 / 901.13: a plane is exempt from the limited range of influence
+  -- option. Four seats at range 1, alice the planar controller with Tazeem
+  -- ("Creatures can't block") face up, and carol two seats from her. The pair
+  -- has Academy at Tolaria West face up instead and alice's Bedlam, printing
+  -- the same words on an enchantment, which CR 801.10 keeps from carol's
+  -- creature.
+  Spec.it s "CR 801.18 a face-up Tazeem stops a creature outside the planar controller's range from blocking" $ do
+    piker <- S.printingOf s registry "Goblin Piker"
+    bedlam <- S.printingOf s registry "Bedlam"
+    planar <- seatedPlanarBoard s registry S.alice [(S.alice, ["Tazeem"]), (S.bob, []), (S.carol, []), (S.dave, [])]
+    unplanar <- seatedPlanarBoard s registry S.alice [(S.alice, ["Academy at Tolaria West"]), (S.bob, []), (S.carol, []), (S.dave, [])]
+    let (carols, withTazeem) = S.addPermanent piker S.carol planar
+        (_, enchanted) = S.addPermanent bedlam S.alice unplanar
+        (carolsToo, withBedlam) = S.addPermanent piker S.carol enchanted
+    Spec.assertBool s (Set.member carols (CombatRestriction.cantBlock (Just S.carol) [carols] (S.withRange 1 withTazeem))) "CR 801.18 at range 1 carol's creature can't block under Tazeem"
+    Spec.assertBool s (not (Set.member carolsToo (CombatRestriction.cantBlock (Just S.carol) [carolsToo] (S.withRange 1 withBedlam)))) "CR 801.10 at range 1 alice's Bedlam does not reach it"
+    Spec.assertBool s (Set.member carolsToo (CombatRestriction.cantBlock (Just S.carol) [carolsToo] withBedlam)) "at an unlimited range Bedlam does"
+    Spec.assertBool s (not (Game.inRangeOf S.alice S.carol (S.withRange 1 withTazeem))) "carol is outside alice's range"
+
   -- CR 116.2i / 901.9: the active player, in a main phase with an empty stack,
   -- may roll the planar die; the first roll of the turn is free and the second
   -- costs {1}.
@@ -316,14 +335,15 @@ planarBoard s registry order = do
       stacked = Game.overSideDecks SideDeck.Planar (Map.adjust (Seq.sortOn rank) S.alice) built
   pure (S.runPure S.identityAnswer stacked (Planechase.setStartingPlane S.alice))
 
--- A three-player board, each seat's planar deck stacked in the order named,
--- top first, and `starter`'s top card face up (CR 103.7). Twenty Forests in
--- each library; no opening hands.
+-- A board seated in the order named, each seat's planar deck stacked in the
+-- order named, top first, and `starter`'s top card face up (CR 103.7). Twenty
+-- Forests in each library; no opening hands.
 seatedPlanarBoard :: (Monad m) => Spec.Spec m n -> Registry.Registry m -> PlayerId.PlayerId -> [(PlayerId.PlayerId, [String])] -> m GameState.GameState
 seatedPlanarBoard s registry starter seats = do
   forest <- S.printingOf s registry "Forest"
   decks <- traverse (\(pid, order) -> (\planes -> (pid, (Deck.fromCards (Map.singleton forest 20)) {Deck.sideDecks = Map.singleton SideDeck.Planar (Map.fromSet (const 1) (Set.fromList planes))})) <$> traverse (S.printingOf s registry) order) seats
-  let built = S.runPure S.identityAnswer (Setup.emptyGame S.threePlayers) (mapM_ (uncurry Setup.createDeck) decks)
+  let seated = Maybe.fromMaybe S.threePlayers (NonEmpty.nonEmpty (fmap fst seats))
+      built = S.runPure S.identityAnswer (Setup.emptyGame seated) (mapM_ (uncurry Setup.createDeck) decks)
       rank order oid = maybe (length order) (\face -> Maybe.fromMaybe (length order) (List.elemIndex (Face.name face) (fmap (CardName.MkCardName . Text.pack) order))) (Game.faceOf oid built)
       stacked = Game.overSideDecks SideDeck.Planar (Map.mapWithKey (\pid deck -> maybe deck (\order -> Seq.sortOn (rank order) deck) (List.lookup pid seats))) built
   pure (S.runPure S.identityAnswer stacked (Planechase.setStartingPlane starter))

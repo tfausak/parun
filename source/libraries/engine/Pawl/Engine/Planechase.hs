@@ -13,9 +13,8 @@
 --     nothing (#4309).
 --   * CR 901.11's planeswalk triggers and durations -- "when you planeswalk to"
 --     and "until a player planeswalks" (#4310).
---   * CR 901.12's Two-Headed Giant, CR 901.14's Grand Melee and CR 901.15's
---     single planar deck options, and CR 801.18's range-of-influence exemption
---     (#4312).
+--   * CR 901.12's Two-Headed Giant and CR 901.14's Grand Melee options (#4465).
+--   * CR 901.15's single planar deck option (#5061).
 module Pawl.Engine.Planechase where
 
 import qualified Control.Monad as Monad

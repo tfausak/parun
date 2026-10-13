@@ -58,3 +58,17 @@ commandControllerOf :: ObjectId -> Object.Object -> GameState -> PlayerId
 commandControllerOf oid obj gs
   | isPlanarCard oid gs = planarController gs
   | otherwise = Object.owner obj
+
+-- | CR 801.18 / 901.13: is this source exempt from the limited range of
+-- influence option? A plane or phenomenon card is. Asked by the readers of a
+-- static ability's reach: Projection.View's inSourceRangeGiven and
+-- controlReaches, CombatRestriction's reachesDeclarer and Replacement's
+-- reachOf. Pawl.PlanechaseSpec's "CR 801.18 a face-up Tazeem stops a creature
+-- outside the planar controller's range from blocking" proves it.
+--
+-- Not implemented: a planar card's triggered abilities, and what any of its
+-- abilities does as it resolves, which still read the controller's range
+-- (#5062); and CR 901.14's Grand Melee Planechase, where the exemption does not
+-- hold (#4465).
+exemptFromRange :: ObjectId -> GameState -> Bool
+exemptFromRange = isPlanarCard

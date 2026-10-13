@@ -37,6 +37,7 @@ import qualified Pawl.Engine.Filter as Filter
 import qualified Pawl.Engine.Game as Game
 import qualified Pawl.Engine.IgnoredAbility as IgnoredAbility
 import qualified Pawl.Engine.Keyword as Keyword
+import qualified Pawl.Engine.Plane as Plane
 import qualified Pawl.Engine.PlayerEffect as PlayerEffect
 import qualified Pawl.Engine.Projection as Projection
 import qualified Pawl.Engine.Projection.Rewrite as Projection
@@ -1138,9 +1139,12 @@ bounded select defending gs =
 -- no controller, or no declarer named, cuts nothing.
 -- Pawl.RangeOfInfluenceSpec's "CR 801.10 a limit on attackers or blockers does
 -- not bind a player outside its controller's range" proves both.
+--
+-- CR 801.18: nor does a planar card's bound (Plane.exemptFromRange). A
+-- regression fence, since no plane in `data/cards/` prints one.
 reachesDeclarer :: Maybe PlayerId -> GameState -> (ObjectId, a, b) -> Bool
 reachesDeclarer declarer gs (source, _, _) = case declarer of
   Just pid
-    | not (Map.null (RangeOfInfluence.unwrap (GameSettings.rangeOfInfluence (GameState.settings gs)))) ->
+    | not (Map.null (RangeOfInfluence.unwrap (GameSettings.rangeOfInfluence (GameState.settings gs)))) && not (Plane.exemptFromRange source gs) ->
         all (\you -> Game.inRangeOf you pid gs) (Projection.controllerOf source gs)
   _ -> True
