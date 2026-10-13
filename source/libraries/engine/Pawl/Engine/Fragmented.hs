@@ -20,10 +20,15 @@ import qualified Data.Maybe as Maybe
 import qualified Data.Sequence as Seq
 import qualified Data.Set as Set
 import qualified Pawl.Engine.Game as Game
+import qualified Pawl.Engine.Keyword as Keyword
 import qualified Pawl.Engine.Planechase as Planechase
+import qualified Pawl.Extra.Int as Int
 import Pawl.Types.Action (Action)
 import qualified Pawl.Types.Action as Action
 import qualified Pawl.Types.ActivatedAbility as ActivatedAbility
+import qualified Pawl.Types.ActiveCopy as ActiveCopy
+import qualified Pawl.Types.Card as Card
+import qualified Pawl.Types.ContinuousEffect as ContinuousEffect
 import qualified Pawl.Types.Cost as Cost
 import qualified Pawl.Types.EventGroup as EventGroup
 import Pawl.Types.GameEvent (GameEvent)
@@ -38,6 +43,8 @@ import qualified Pawl.Types.ManaCost as ManaCost
 import qualified Pawl.Types.Modal as Modal
 import qualified Pawl.Types.Mode as Mode
 import qualified Pawl.Types.ModeSelection as ModeSelection
+import qualified Pawl.Types.Modification as Modification
+import qualified Pawl.Types.Object as Object
 import qualified Pawl.Types.ObjectId as ObjectId
 import qualified Pawl.Types.Player as Player
 import qualified Pawl.Types.PlayerActed as PlayerActed
@@ -46,6 +53,7 @@ import qualified Pawl.Types.Printing as Printing
 import qualified Pawl.Types.PrintingId as PrintingId
 import Pawl.Types.StateDigest (StateDigest)
 import qualified Pawl.Types.StateDigest as StateDigest
+import qualified Pawl.Types.StickerPlacement as StickerPlacement
 import qualified Pawl.Types.Timestamp as Timestamp
 
 -- | The game state as CR 732.3 compares it: the whole record, by its derived
@@ -68,9 +76,14 @@ import qualified Pawl.Types.Timestamp as Timestamp
 -- reads what the loop appended to them.
 --
 -- Object ids are compared as they stand, so a loop that moves a card (CR
--- 400.7) is never detected. Not implemented: detecting a loop whose undo
--- leaves a stored row behind -- a continuous effect (CR 611.2a), a counter's
--- timestamp -- which is CR 732.3's own example (#4650).
+-- 400.7) is never detected.
+--
+-- Not implemented: putting counter stamps (Object.counterTimestamps, CR
+-- 613.7c) in canonical form as `canonicalEffects` does the stored effects, so
+-- a loop that puts a counter on and takes it off again never recurs. Every
+-- printing that does so with an activation pays a cost or names a target,
+-- which `choiceless` does not refuse (#4663): MTGJSON 2026-10-08, text "{0}:"
+-- beside "counter", only Vivi Ornitier's mana ability.
 digest :: GameState -> StateDigest
 digest gs =
   StateDigest.MkStateDigest
@@ -94,6 +107,8 @@ digest gs =
             GameState.lastKnown = Map.empty,
             GameState.stackArchive = Map.empty,
             GameState.stackedIn = Map.empty,
+            -- Canonical rather than dropped, so CR 732.3's own example recurs.
+            GameState.continuousEffects = canonicalEffects gs,
             -- Canonical rather than dropped: a payment leaves an empty pool
             -- behind where there was no entry, and no card tells the two apart.
             GameState.manaPool = Map.filter (not . null . Mana.unwrap) (GameState.manaPool gs)
@@ -101,6 +116,65 @@ digest gs =
       StateDigest.events = GameState.events gs,
       StateDigest.activations = GameState.activationsThisTurn gs
     }
+
+-- | CR 732.3 over GameState.continuousEffects: the rows as the game can tell
+-- them apart. A row is dropped where a later one from the same source, over
+-- the same fixed set (CR 611.2c) and ending with it, `erases` it, which leaves
+-- nothing it did standing (CR 613.7). The rows stamped after every object's
+-- and copy effect's stamp -- what CR 613.7 orders a stored effect against --
+-- are then restamped in order from just above the latest of those, since only
+-- their order is ever read (`digest` drops GameState.nextTimestamp).
+--
+-- Pawl.FragmentedSpec's Mist Dragon cases prove both halves, and its Arcanum
+-- Wings case the floor.
+canonicalEffects :: GameState -> [ContinuousEffect.ContinuousEffect Card.Card]
+canonicalEffects gs =
+  let rows = GameState.continuousEffects gs
+      erased row = any (supersedes row) rows
+      supersedes row later =
+        ContinuousEffect.timestamp later > ContinuousEffect.timestamp row
+          && ContinuousEffect.source later == ContinuousEffect.source row
+          && ContinuousEffect.affected later == ContinuousEffect.affected row
+          && ContinuousEffect.expiry later == ContinuousEffect.expiry row
+          && erases (ContinuousEffect.modification later) (ContinuousEffect.modification row)
+      kept = filter (not . erased) rows
+      floor_ = maximum (Timestamp.MkTimestamp 0 : layeredStamps gs)
+      above = Set.fromList (filter (> floor_) (fmap ContinuousEffect.timestamp kept))
+      restamp ts = case Set.lookupIndex ts above of
+        Just rank -> Timestamp.MkTimestamp (Timestamp.unwrap floor_ + 1 + Int.toNaturalSaturating rank)
+        Nothing -> ts
+   in fmap (\row -> row {ContinuousEffect.timestamp = restamp (ContinuousEffect.timestamp row)}) kept
+
+-- | Does `later`, applied after `earlier` to the same objects, leave nothing
+-- `earlier` did? A removal of a keyword (CR 613.1f) erases an earlier removal
+-- of it, and an earlier grant of it where the keyword has no family: a
+-- protection grant is rebaked (Pawl.Engine.Keyword.grantedBy), so what it
+-- grants need not be what is removed. A grant erases nothing, two grants of a
+-- keyword counting twice (Pawl.Engine.Projection.applyModification).
+--
+-- The family guard is a regression fence: no test loops a protection grant.
+erases :: Modification.Modification ability -> Modification.Modification ability -> Bool
+erases later earlier = case (later, earlier) of
+  (Modification.LoseKeyword lost, Modification.LoseKeyword keyword) -> lost == keyword
+  (Modification.LoseKeyword lost, Modification.GainKeyword keyword) -> lost == keyword && Maybe.isNothing (Keyword.familyOf keyword)
+  _ -> False
+
+-- Every stamp CR 613.7 orders a stored continuous effect against, bar the
+-- stored effects themselves: each object's own (CR 613.7a, 613.7d), its
+-- counters' (613.7c), its stickers' (613.7k) and the moments it was turned
+-- over or became a world, and each stored copy effect's.
+layeredStamps :: GameState -> [Timestamp.Timestamp]
+layeredStamps gs =
+  concatMap
+    ( \obj ->
+        Object.timestamp obj
+          : Map.elems (Object.counterTimestamps obj)
+            <> fmap StickerPlacement.timestamp (Foldable.toList (Object.stickers obj))
+            <> Maybe.maybeToList (Object.turnedOverAt obj)
+            <> Maybe.maybeToList (Object.worldSince obj)
+    )
+    (Map.elems (GameState.objects gs))
+    <> fmap ActiveCopy.timestamp (GameState.copyEffects gs)
 
 -- | CR 732.3's example makes "nothing in the game cares how many times an
 -- ability has been activated" the precondition: does anything in the game
