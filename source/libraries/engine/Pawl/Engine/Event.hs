@@ -6559,8 +6559,9 @@ changeZoneWithCause discarded asOf batch oid requestedDest requestedPosition see
               --
               -- Each component goes through the same `mkObj`, so CR 400.7's
               -- forgetting (Object.newIncarnation) is what the two cards arrive
-              -- with; only Object.source and a conjured duplicate's values
-              -- differ (Game.representComponent), since each component
+              -- with; only Object.source and what each card kept as a component
+              -- (its identity, a conjured duplicate's values) differ
+              -- (Game.representComponent), since each component
               -- represents itself again and not the permanent it was. CR 730.3's
               -- merged permanent can have a TOKEN component, which arrives as a
               -- token (Game.sourceOfComponent) and is then removed by CR 111.7's

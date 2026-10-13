@@ -23,7 +23,9 @@ barred settings face = Face.anteOnly face && not (GameSettings.ante settings)
 -- began the game owning it, as that player and its owner. A token, an emblem
 -- and a copy carry no identity, so never appear.
 --
--- Not implemented: a card that left the game with a departed owner (#4847).
+-- Not implemented: a card that left the game with a departed owner (#4847),
+-- and each card of a merged or melded permanent but the one whose identity the
+-- permanent carries (#5055).
 ownershipChanges :: GameState.GameState -> Map.Map ObjectId (PlayerId, PlayerId)
 ownershipChanges gs =
   let changed obj = case Object.identity obj of

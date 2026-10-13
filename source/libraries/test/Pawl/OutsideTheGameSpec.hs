@@ -627,8 +627,8 @@ spec s registry = Spec.describe s "Pawl.Engine.Event (CR 400.11)" $ do
         overToken = withSource (Source.OfMerge (fmap (`ShownComponent.MkShownComponent` Nothing) (MergeComponent.OfCard (ComponentCard.MkComponentCard cubwardenPrinting Nothing Nothing) NonEmpty.:| [MergeComponent.OfToken pikerPrinting]))) g2
         creature = Filter.HasCardType CardType.Creature
         wishing parent = snd (Engine.runGamePure exercising (Setup.subgameStateFrom S.alice parent) (Event.bringInto (FromOutsideTheGame.MkFromOutsideTheGame 1 False OutsideDestination.Hand creature True) mergedId S.alice))
-    let reported = [(Game.printingOfObject oid (wishing merged), change) | (oid, change) <- Map.toList (Ante.ownershipChanges (wishing merged))]
-    Spec.assertEqWith s "CR 108.3/729.4a: each card keeps its own identity, so only the Piker is bob's to begin" reported [(Just piker, (S.bob, S.alice))]
+    let reported = [(fmap (S.nameOf . Printing.card) (Game.printingOfObject oid (wishing merged)), change) | (oid, change) <- Map.toList (Ante.ownershipChanges (wishing merged))]
+    Spec.assertEqWith s "CR 108.3/729.4a: each card keeps its own identity, so only the Piker is bob's to begin" reported [(Just (S.nameOf (Printing.card piker)), (S.bob, S.alice))]
     Spec.assertEqWith s "CR 730.3: both of the merged permanent's cards arrive in her subgame hand" (List.sort (printingsIn Zone.Hand S.alice (wishing merged))) (List.sort [cubwarden, piker])
     Spec.assertEqWith s "CR 730.2d: a token on top makes it a token, and no card is brought in" (printingsIn Zone.Hand S.alice (wishing tokenTopped)) []
     Spec.assertEqWith s "CR 730.3/111.7: Cubwarden over a token brings the one card, the token being none" (printingsIn Zone.Hand S.alice (wishing overToken)) [cubwarden]

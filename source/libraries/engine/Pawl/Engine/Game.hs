@@ -2501,8 +2501,10 @@ sourceOfComponent component = case component of
 -- component kept (Pawl.Types.ComponentCard): its own identity (CR 108.3) and a
 -- conjured duplicate's copiable values, which no other component shares. The
 -- one write Pawl.Engine.Event's CR 712.21 / 730.3 split, its CR 729.4a bring-in
--- and Pawl.Engine.Setup's CR 727.2 rebuild all take. Pawl.AnteSpec's merged and
--- melded splits prove the identity.
+-- and Pawl.Engine.Setup's CR 727.2 rebuild all take. The identity is proved by
+-- data/scenarios/ante/ante-a-merged-permanents-cards-come-apart-each-with-its-own-identity.json
+-- and Pawl.MeldSpec's "CR 108.3/712.21 each card a melded permanent becomes keeps
+-- its own identity".
 representComponent :: MergeComponent.MergeComponent -> Object -> Object
 representComponent component object =
   let represented = setSource (sourceOfComponent component) object
