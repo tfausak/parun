@@ -4,6 +4,7 @@
 -- scenarios under data/scenarios are its gameplay-level cases.
 module Pawl.ScenarioSpec where
 
+import qualified Control.Monad.IO.Class as MonadIO
 import qualified Control.Monad.Trans.State.Strict as State
 import qualified Data.ByteString as ByteString
 import qualified Data.List as List
@@ -663,8 +664,11 @@ loadSpec s = Spec.describe s "Pawl.Scenario.Load" $ do
       pure (fmap (drop (length dir) . fst) loaded)
     Spec.assertEqWith s "both .json files, the nested one included" found ["/b.json", "/sub/a.json"]
 
-corpusSpec :: (Monad n) => Spec.Spec IO n -> Registry.Registry IO -> [(FilePath, Either Text.Text Scenario.Type.Scenario)] -> n ()
-corpusSpec s registry = Spec.describe s "Scenarios" . mapM_ (uncurry (scenarioCase s registry))
+corpusSpec :: (MonadIO.MonadIO n) => Spec.Spec IO n -> Registry.Registry IO -> n ()
+corpusSpec s registry = Spec.describe s "Scenarios" $ do
+  root <- MonadIO.liftIO Load.defaultRoot
+  scenarios <- MonadIO.liftIO $ Load.loadRoot root
+  mapM_ (uncurry $ scenarioCase s registry) scenarios
 
 scenarioCase :: Spec.Spec IO n -> Registry.Registry IO -> FilePath -> Either Text.Text Scenario.Type.Scenario -> n ()
 scenarioCase s registry path decoded =

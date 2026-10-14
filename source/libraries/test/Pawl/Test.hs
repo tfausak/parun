@@ -1,8 +1,9 @@
 module Pawl.Test where
 
+import qualified Control.Monad.IO.Class as MonadIO
+import qualified Control.Monad.Trans.Class as Trans
 import qualified Control.Monad.Trans.Writer as Writer
 import qualified Data.List as List
-import qualified Data.Text as Text
 import qualified Pawl.AbilitySlotLintSpec
 import qualified Pawl.ActivateSpec
 import qualified Pawl.ActivationProhibitionSpec
@@ -802,7 +803,6 @@ import qualified Pawl.RoomSpec
 import qualified Pawl.SacrificeRestrictionSpec
 import qualified Pawl.SaddleSpec
 import qualified Pawl.SagaSpec
-import qualified Pawl.Scenario.Load as Load
 import qualified Pawl.ScenarioSpec
 import qualified Pawl.SetupSpec
 import qualified Pawl.ShieldCounterSpec
@@ -820,7 +820,6 @@ import qualified Pawl.TeamSpec
 import qualified Pawl.TransformSpec
 import qualified Pawl.TriggerSpec
 import qualified Pawl.TurnSpec
-import qualified Pawl.Types.Scenario as Scenario
 import qualified Pawl.UntapRestrictionSpec
 import qualified Pawl.Uri.FragmentSpec
 import qualified Pawl.VanguardSpec
@@ -837,25 +836,28 @@ main :: IO ()
 main = do
   root <- Registry.defaultRoot
   registry <- Registry.fileRegistry root
-  scenarioRoot <- Load.defaultRoot
-  scenarios <- Load.loadRoot scenarioRoot
-  Tasty.defaultMain (testTree registry scenarios)
+  testTree <- buildTestTree registry
+  Tasty.defaultMain testTree
 
-tasty :: Spec.Spec IO (Writer.Writer [Tasty.TestTree])
+tasty :: (Monad n) => Spec.Spec IO (Writer.WriterT [Tasty.TestTree] n)
 tasty =
   Spec.MkSpec
     { Spec.assertFailure = HU.assertFailure,
-      Spec.describe = \s -> Writer.tell . List.singleton . Tasty.testGroup s . Writer.execWriter,
+      Spec.describe = \s w -> do
+        ts <- Trans.lift $ Writer.execWriterT w
+        Writer.tell [Tasty.testGroup s ts],
       Spec.it = \s -> Writer.tell . List.singleton . HU.testCase s
     }
 
-testTree :: Registry.Registry IO -> [(FilePath, Either Text.Text Scenario.Scenario)] -> Tasty.TestTree
-testTree registry = Tasty.testGroup "pawl" . Writer.execWriter . spec tasty registry
+buildTestTree :: Registry.Registry IO -> IO Tasty.TestTree
+buildTestTree registry = do
+  testTree <- Writer.execWriterT $ spec tasty registry
+  pure $ Tasty.testGroup "pawl" testTree
 
 -- Specs that reach for card data take a registry over the same monad they
 -- assert in. The rest need none at all.
-spec :: (Monad n) => Spec.Spec IO n -> Registry.Registry IO -> [(FilePath, Either Text.Text Scenario.Scenario)] -> n ()
-spec s registry scenarios = do
+spec :: (MonadIO.MonadIO n) => Spec.Spec IO n -> Registry.Registry IO -> n ()
+spec s registry = do
   -- Pawl.EngineSpec comes first because tasty hands tests to its thread
   -- pool in tree order, and this group holds the suite's two longest cases
   -- by an order of magnitude. Started last they were the whole tail.
@@ -1705,4 +1707,4 @@ spec s registry scenarios = do
   Pawl.ZoneTriggerSpec.spec s registry
   Pawl.LeavesTriggerSpec.spec s registry
 
-  Pawl.ScenarioSpec.corpusSpec s registry scenarios
+  Pawl.ScenarioSpec.corpusSpec s registry
