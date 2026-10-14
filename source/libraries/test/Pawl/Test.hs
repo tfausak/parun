@@ -863,127 +863,133 @@ spec s registry = do
   -- by an order of magnitude. Started last they were the whole tail.
   Pawl.EngineSpec.spec s registry
 
+  Pawl.AbilitySlotLintSpec.spec s registry
   Pawl.ActivateSpec.spec s registry
   Pawl.ActivationProhibitionSpec.spec s registry
   Pawl.AdventureSpec.spec s registry
+  Pawl.AirbendSpec.spec s registry
+  Pawl.AlternatingTeamsSpec.spec s registry
+  Pawl.AnteSpec.spec s registry
+  Pawl.ArchenemySpec.spec s registry
+  Pawl.AttackKeywordTriggerSpec.spec s registry
+  Pawl.AttractionSpec.spec s registry
   Pawl.AuraSpec.spec s registry
   Pawl.BattleSpec.spec s registry
   Pawl.BindingSpec.spec s
+  Pawl.BoardEffectSpec.spec s registry
   Pawl.CardSpec.spec s registry
-  Pawl.AbilitySlotLintSpec.spec s registry
-  Pawl.EffectLintSpec.spec s registry
-  Pawl.EmperorSpec.spec s registry
-  Pawl.AlternatingTeamsSpec.spec s registry
-  Pawl.FilterPositionLintSpec.spec s registry
   Pawl.CardsSpec.spec s
-  Pawl.OracleSpec.spec s
+  Pawl.CardTriggerSpec.spec s registry
   Pawl.CaseSpec.spec s registry
+  Pawl.CastPermissionSpec.spec s registry
+  Pawl.CastProhibitionSpec.spec s registry
+  Pawl.CastRestrictionSpec.spec s registry
+  Pawl.CastSpec.spec s registry
   Pawl.ClashSpec.spec s registry
   Pawl.ClassSpec.spec s registry
-  Pawl.CastSpec.spec s registry
-  Pawl.CastRestrictionSpec.spec s registry
-  Pawl.CoinSpec.spec s registry
+  Pawl.CloakSpec.spec s registry
   Pawl.Codec.AbilityAddsManaSpec.spec s
   Pawl.Codec.AbilityKindSpec.spec s
-  Pawl.Codec.AlternativeActivationCostSpec.spec s
   Pawl.Codec.AbilityNameSpec.spec s
   Pawl.Codec.AbilityTriggeredSpec.spec s
-  Pawl.Codec.ActivatedAbilitySourceSpec.spec s
   Pawl.Codec.ActingPermanentSpec.spec s
+  Pawl.Codec.ActivatedAbilitySourceSpec.spec s
   Pawl.Codec.ActivatedAbilitySpec.spec s
+  Pawl.Codec.ActivateManaAbilitiesSpec.spec s
   Pawl.Codec.ActivationProhibitionSpec.spec s
   Pawl.Codec.ActivationRestrictionSpec.spec s
+  Pawl.Codec.ActivationSpec.spec s
   Pawl.Codec.ActivatorSpec.spec s
   Pawl.Codec.ActiveAttackProhibitionSpec.spec s
   Pawl.Codec.ActiveAttackRequirementSpec.spec s
   Pawl.Codec.ActiveBlockRequirementSpec.spec s
   Pawl.Codec.ActiveCopySpec.spec s
-  Pawl.Codec.ActivePlayerEffectSpec.spec s
-  Pawl.Codec.SourceChoicesSpec.spec s
-  Pawl.Codec.ActiveReplacementSpec.spec s
   Pawl.Codec.ActiveEvasionSpec.spec s
   Pawl.Codec.ActiveObjectProhibitionSpec.spec s
-  Pawl.Codec.ActivateManaAbilitiesSpec.spec s
-  Pawl.Codec.AffectPlayersSpec.spec s
+  Pawl.Codec.ActivePlayerEffectSpec.spec s
+  Pawl.Codec.ActiveReplacementSpec.spec s
   Pawl.Codec.AffectedPlayersSpec.spec s
   Pawl.Codec.AffectedSpec.spec s
-  Pawl.Codec.AimedAtSpec.spec s
-  Pawl.Codec.AimedPlayersSpec.spec s
   Pawl.Codec.AffectedUnlessSpec.spec s
+  Pawl.Codec.AffectPlayersSpec.spec s
   Pawl.Codec.AfterObjectTurnSpec.spec s
   Pawl.Codec.AfterTurnSpec.spec s
   Pawl.Codec.AgainstLastCardExiledWithSpec.spec s
   Pawl.Codec.AgainstSlotSpec.spec s
   Pawl.Codec.AggregationSpec.spec s
+  Pawl.Codec.AimedAtSpec.spec s
+  Pawl.Codec.AimedPlayersSpec.spec s
+  Pawl.Codec.AlternativeActivationCostSpec.spec s
   Pawl.Codec.AlternativeCostSpec.spec s
+  Pawl.Codec.AnswerSpec.spec s
   Pawl.Codec.AnyNumberDiscardSpec.spec s
-  Pawl.Codec.TheseDiscardSpec.spec s
   Pawl.Codec.AnyNumberMatchingSpec.spec s
   Pawl.Codec.ArmDelayedTriggerSpec.spec s
+  Pawl.Codec.ArrivalSpec.spec s
   Pawl.Codec.AsCopySpec.spec s
   Pawl.Codec.AttachAllSpec.spec s
-  Pawl.Codec.AttachedToBoundSpec.spec s
   Pawl.Codec.AttachBoundSpec.spec s
+  Pawl.Codec.AttachedToBoundSpec.spec s
   Pawl.Codec.AttachRestrictionSpec.spec s
   Pawl.Codec.AttachTargetSpec.spec s
   Pawl.Codec.AttackCostSpec.spec s
-  Pawl.Codec.AttackOptionSpec.spec s
-  Pawl.Codec.PlanarDieFaceSpec.spec s
-  Pawl.Codec.PlanarDieRolledSpec.spec s
-  Pawl.Codec.SchemeSetInMotionSpec.spec s
-  Pawl.Codec.AttackRequirementSpec.spec s
-  Pawl.Codec.AttackTargetKindSpec.spec s
-  Pawl.Codec.AttackTargetSpec.spec s
-  Pawl.Codec.AttackTargetRefSpec.spec s
   Pawl.Codec.AttackedPlayerSpec.spec s
   Pawl.Codec.AttackerBlockedSpec.spec s
   Pawl.Codec.AttackerDeclaredSpec.spec s
+  Pawl.Codec.AttackersAreSpec.spec s
   Pawl.Codec.AttackingPlayersSpec.spec s
+  Pawl.Codec.AttackLimitUnlessSpec.spec s
+  Pawl.Codec.AttackOptionSpec.spec s
+  Pawl.Codec.AttackPermissionSpec.spec s
+  Pawl.Codec.AttackRequirementSpec.spec s
+  Pawl.Codec.AttackTargetKindSpec.spec s
+  Pawl.Codec.AttackTargetRefSpec.spec s
+  Pawl.Codec.AttackTargetSpec.spec s
   Pawl.Codec.AudienceSpec.spec s
+  Pawl.Codec.BackupSpec.spec s
   Pawl.Codec.BattlefieldCandidateSpec.spec s
-  Pawl.Codec.PastActivationSpec.spec s
-  Pawl.Codec.ObjectSnapshotSpec.spec s
   Pawl.Codec.BecameAttackedSpec.spec s
+  Pawl.Codec.BecameBlockingSpec.spec s
   Pawl.Codec.BecameDesignatedSpec.spec s
   Pawl.Codec.BecomeCopySpec.spec s
   Pawl.Codec.BeginningStepSpec.spec s
   Pawl.Codec.BeholdSpec.spec s
   Pawl.Codec.BindingSpec.spec s
   Pawl.Codec.BlockCostSpec.spec s
+  Pawl.Codec.BlockersAreSpec.spec s
   Pawl.Codec.BlockPermissionSpec.spec s
-  Pawl.Codec.BlockRequirementSpec.spec s
-  Pawl.Codec.BecameBlockingSpec.spec s
   Pawl.Codec.BlockProducerSpec.spec s
-  Pawl.Codec.ConvokingSpec.spec s
-  Pawl.Codec.CrewingSpec.spec s
-  Pawl.Codec.SaddlingSpec.spec s
-  Pawl.Codec.BlockStatusSpec.spec s
+  Pawl.Codec.BlockRequirementSpec.spec s
   Pawl.Codec.BlocksDeclaredSpec.spec s
+  Pawl.Codec.BlockStatusSpec.spec s
+  Pawl.Codec.BoardSpec.spec s
+  Pawl.Codec.BoundMeasureSpec.spec s
   Pawl.Codec.CandidateIdSpec.spec s
   Pawl.Codec.CantAttackPlayerSpec.spec s
   Pawl.Codec.CantBeBlockedBySpec.spec s
   Pawl.Codec.CantBlockCreaturesSpec.spec s
   Pawl.Codec.CantSearchLibrariesSpec.spec s
   Pawl.Codec.CardArrivedInSpec.spec s
-  Pawl.Codec.CardLeavesZoneSpec.spec s
-  Pawl.Codec.CardPutIntoGraveyardSpec.spec s
-  Pawl.Codec.OwnedZoneSpec.spec s
-  Pawl.Codec.CardsPutIntoZoneSpec.spec s
-  Pawl.Codec.CardNameSpec.spec s
   Pawl.Codec.CardIdentitySpec.spec s
+  Pawl.Codec.CardLeavesZoneSpec.spec s
+  Pawl.Codec.CardNameSpec.spec s
+  Pawl.Codec.CardPutIntoGraveyardSpec.spec s
   Pawl.Codec.CardSpec.spec s
+  Pawl.Codec.CardsPutIntoZoneSpec.spec s
   Pawl.Codec.CardTypeSpec.spec s
   Pawl.Codec.CastFromSpec.spec s
   Pawl.Codec.CastFromZoneSpec.spec s
+  Pawl.Codec.CastingPermissionSpec.spec s
+  Pawl.Codec.CastingRestrictionSpec.spec s
+  Pawl.Codec.CastingSpec.spec s
   Pawl.Codec.CastObligationSpec.spec s
   Pawl.Codec.CastOfferSpec.spec s
   Pawl.Codec.CastRepetitionSpec.spec s
-  Pawl.Codec.LandAllowanceSpec.spec s
-  Pawl.Codec.CastingPermissionSpec.spec s
-  Pawl.Codec.CastingRestrictionSpec.spec s
   Pawl.Codec.ChangeSubtypeWordSpec.spec s
   Pawl.Codec.ChangeTextSpec.spec s
   Pawl.Codec.CharacteristicPTSpec.spec s
+  Pawl.Codec.CheckSpec.spec s
+  Pawl.Codec.ChoicesSpec.spec s
   Pawl.Codec.ChooseBetweenSpec.spec s
   Pawl.Codec.ChooseNumberSpec.spec s
   Pawl.Codec.ChoosePermanentsSpec.spec s
@@ -998,118 +1004,119 @@ spec s registry = do
   Pawl.Codec.ClauseIndexSpec.spec s
   Pawl.Codec.ClauseSpec.spec s
   Pawl.Codec.CoinFaceSpec.spec s
-  Pawl.Codec.CoinReadingSpec.spec s
   Pawl.Codec.CoinFlippedSpec.spec s
   Pawl.Codec.CoinFlipRewriteSpec.spec s
   Pawl.Codec.CoinFlipRSpec.spec s
-  Pawl.Codec.ProliferateRewriteSpec.spec s
-  Pawl.Codec.ProliferateRSpec.spec s
-  Pawl.Codec.VillainousChoiceRewriteSpec.spec s
-  Pawl.Codec.VillainousChoiceRSpec.spec s
-  Pawl.Codec.ScryRewriteSpec.spec s
-  Pawl.Codec.ScryRSpec.spec s
+  Pawl.Codec.CoinReadingSpec.spec s
   Pawl.Codec.ColorSpec.spec s
   Pawl.Codec.CombatRestrictionSpec.spec s
   Pawl.Codec.CombatSpec.spec s
   Pawl.Codec.CombatStepSpec.spec s
   Pawl.Codec.ComparesSpec.spec s
   Pawl.Codec.ComparisonSpec.spec s
-  Pawl.Codec.BoundMeasureSpec.spec s
-  Pawl.Codec.MeasureSpec.spec s
-  Pawl.Codec.MeasuresSpec.spec s
-  Pawl.Codec.OperandSpec.spec s
   Pawl.Codec.CompletedDungeonSpec.spec s
+  Pawl.Codec.ComponentCardSpec.spec s
   Pawl.Codec.ConditionSpec.spec s
-  Pawl.Codec.ContinuousEffectSpec.spec s
-  Pawl.Codec.ControlDurationSpec.spec s
-  Pawl.Codec.ControlChangedSpec.spec s
-  Pawl.Codec.ControlClockSpec.spec s
-  Pawl.Codec.ControlPlayerSpec.spec s
-  Pawl.Codec.ControlSidesSpec.spec s
-  Pawl.Codec.ControlSlotsSpec.spec s
-  Pawl.Codec.ControllerBecomesTargetSpec.spec s
-  Pawl.Codec.ControllerRelationSpec.spec s
-  Pawl.Codec.CopyClauseSpec.spec s
-  Pawl.Codec.CopyExceptionSpec.spec s
-  Pawl.Codec.CostBasisSpec.spec s
-  Pawl.Codec.CostChoiceSpec.spec s
-  Pawl.Codec.CostAmountSpec.spec s
-  Pawl.Codec.CostChangeSpec.spec s
-  Pawl.Codec.CostModifierSpec.spec s
-  Pawl.Codec.CostSubjectSpec.spec s
-  Pawl.Codec.CostComponentSpec.spec s
-  Pawl.Codec.CostDirectionSpec.spec s
-  Pawl.Codec.CostKeywordSpec.spec s
-  Pawl.Codec.CostReductionSpec.spec s
-  Pawl.Codec.CostScaleSpec.spec s
-  Pawl.Codec.CostSpec.spec s
-  Pawl.Codec.CountSpec.spec s
-  Pawl.Codec.CountedDiscardSpec.spec s
-  Pawl.Codec.CounterChangeSpec.spec s
-  Pawl.Codec.CounterKindSpec.spec s
-  Pawl.Codec.CounterNameSpec.spec s
-  Pawl.Codec.CounterPatternSpec.spec s
-  Pawl.Codec.CounterRSpec.spec s
-  Pawl.Codec.CounterDestinationSpec.spec s
-  Pawl.Codec.CounteredEndSpec.spec s
-  Pawl.Codec.CounterSpec.spec s
-  Pawl.Codec.CounterSpreadSpec.spec s
-  Pawl.Codec.CountersFromPermanentsSpec.spec s
-  Pawl.Codec.CounterSubjectSpec.spec s
-  Pawl.Codec.CounterabilitySpec.spec s
-  Pawl.Codec.CounteringSpec.spec s
-  Pawl.Codec.CopyStackObjectSpec.spec s
-  Pawl.Codec.CopyOriginalSpec.spec s
-  Pawl.Codec.CopyTargetsSpec.spec s
-  Pawl.Codec.CreateCopySpec.spec s
   Pawl.Codec.ConjureCardsSpec.spec s
   Pawl.Codec.ConjureDestinationSpec.spec s
   Pawl.Codec.ConjureSelectionSpec.spec s
   Pawl.Codec.ConjureSpec.spec s
+  Pawl.Codec.ContinuousEffectSpec.spec s
+  Pawl.Codec.ControlChangedSpec.spec s
+  Pawl.Codec.ControlClockSpec.spec s
+  Pawl.Codec.ControlDurationSpec.spec s
+  Pawl.Codec.ControllerBecomesTargetSpec.spec s
+  Pawl.Codec.ControllerRelationSpec.spec s
+  Pawl.Codec.ControlPlayerSpec.spec s
+  Pawl.Codec.ControlSidesSpec.spec s
+  Pawl.Codec.ControlSlotsSpec.spec s
+  Pawl.Codec.ConvokingSpec.spec s
+  Pawl.Codec.CopyClauseSpec.spec s
+  Pawl.Codec.CopyExceptionSpec.spec s
+  Pawl.Codec.CopyOriginalSpec.spec s
+  Pawl.Codec.CopyStackObjectSpec.spec s
+  Pawl.Codec.CopyTargetsSpec.spec s
+  Pawl.Codec.CostAmountSpec.spec s
+  Pawl.Codec.CostBasisSpec.spec s
+  Pawl.Codec.CostChangeSpec.spec s
+  Pawl.Codec.CostChoiceSpec.spec s
+  Pawl.Codec.CostComponentSpec.spec s
+  Pawl.Codec.CostDirectionSpec.spec s
+  Pawl.Codec.CostKeywordSpec.spec s
+  Pawl.Codec.CostModifierSpec.spec s
+  Pawl.Codec.CostReductionSpec.spec s
+  Pawl.Codec.CostScaleSpec.spec s
+  Pawl.Codec.CostSpec.spec s
+  Pawl.Codec.CostSubjectSpec.spec s
+  Pawl.Codec.CountedDiscardSpec.spec s
+  Pawl.Codec.CounterabilitySpec.spec s
+  Pawl.Codec.CounterChangeSpec.spec s
+  Pawl.Codec.CounterDestinationSpec.spec s
+  Pawl.Codec.CounteredEndSpec.spec s
+  Pawl.Codec.CounteringSpec.spec s
+  Pawl.Codec.CounterKindSpec.spec s
+  Pawl.Codec.CounterNameSpec.spec s
+  Pawl.Codec.CounterPatternSpec.spec s
+  Pawl.Codec.CounterPlacementSpec.spec s
+  Pawl.Codec.CounterRestrictionSpec.spec s
+  Pawl.Codec.CounterRSpec.spec s
+  Pawl.Codec.CountersAreSpec.spec s
+  Pawl.Codec.CountersFromPermanentsSpec.spec s
+  Pawl.Codec.CountersFromThisSpec.spec s
+  Pawl.Codec.CounterSpec.spec s
+  Pawl.Codec.CounterSpreadSpec.spec s
+  Pawl.Codec.CounterSubjectSpec.spec s
+  Pawl.Codec.CountIsSpec.spec s
+  Pawl.Codec.CountSpec.spec s
+  Pawl.Codec.CraftSpec.spec s
+  Pawl.Codec.CreateCopySpec.spec s
   Pawl.Codec.CreateSpec.spec s
   Pawl.Codec.CreatureBecomesBlockedByAtLeastSpec.spec s
   Pawl.Codec.CreatureExploitsSpec.spec s
-  Pawl.Codec.BackupSpec.spec s
+  Pawl.Codec.CrewingSpec.spec s
+  Pawl.Codec.CrewRestrictionSpec.spec s
   Pawl.Codec.CyclingSpec.spec s
   Pawl.Codec.DamageDirectionSpec.spec s
   Pawl.Codec.DamageEventSpec.spec s
+  Pawl.Codec.DamageIsSpec.spec s
   Pawl.Codec.DamageKindSpec.spec s
   Pawl.Codec.DamagePartSpec.spec s
   Pawl.Codec.DamagePatternSpec.spec s
   Pawl.Codec.DamagePreventedSpec.spec s
-  Pawl.Codec.DamageRSpec.spec s
   Pawl.Codec.DamageRewriteSpec.spec s
+  Pawl.Codec.DamageRSpec.spec s
   Pawl.Codec.DaytimeSpec.spec s
   Pawl.Codec.DealDamageSpec.spec s
   Pawl.Codec.DeciderSpec.spec s
+  Pawl.Codec.DefendersAreSpec.spec s
   Pawl.Codec.DefenseSpec.spec s
   Pawl.Codec.DelayedTriggerSpec.spec s
   Pawl.Codec.DepartureSpec.spec s
   Pawl.Codec.DesignateSpec.spec s
   Pawl.Codec.DesignationSpec.spec s
   Pawl.Codec.DestroySpec.spec s
-  Pawl.Codec.DestructionRSpec.spec s
   Pawl.Codec.DestructionRewriteSpec.spec s
+  Pawl.Codec.DestructionRSpec.spec s
   Pawl.Codec.DevotionSpec.spec s
   Pawl.Codec.DevourCountSpec.spec s
   Pawl.Codec.DevourSpec.spec s
   Pawl.Codec.DiceReadingSpec.spec s
-  Pawl.Codec.DieRollRSpec.spec s
   Pawl.Codec.DieRollRewriteSpec.spec s
+  Pawl.Codec.DieRollRSpec.spec s
+  Pawl.Codec.DifferentInSpec.spec s
   Pawl.Codec.DiscardCardsSpec.spec s
   Pawl.Codec.DiscardCauseSpec.spec s
-  Pawl.Codec.DiscardSpec.spec s
   Pawl.Codec.DiscardedSpec.spec s
+  Pawl.Codec.DiscardSpec.spec s
   Pawl.Codec.DistinctOfSpec.spec s
   Pawl.Codec.DoesNotUntapNextSpec.spec s
-  Pawl.Codec.DrawCountRSpec.spec s
   Pawl.Codec.DrawCountRewriteSpec.spec s
-  Pawl.Codec.DrawRSpec.spec s
+  Pawl.Codec.DrawCountRSpec.spec s
   Pawl.Codec.DrawRewriteSpec.spec s
+  Pawl.Codec.DrawRSpec.spec s
   Pawl.Codec.DrawSpec.spec s
   Pawl.Codec.DrewSpec.spec s
   Pawl.Codec.DungeonRoomSpec.spec s
-  Pawl.Codec.ComponentCardSpec.spec s
   Pawl.Codec.DurationSpec.spec s
   Pawl.Codec.DuringPhaseSpec.spec s
   Pawl.Codec.EachCardFromAmongSpec.spec s
@@ -1118,44 +1125,41 @@ spec s registry = do
   Pawl.Codec.EffectSpec.spec s
   Pawl.Codec.EmergeSpec.spec s
   Pawl.Codec.EmperorsSpec.spec s
-  Pawl.Codec.EndTurnSignalSpec.spec s
   Pawl.Codec.EndingStepSpec.spec s
+  Pawl.Codec.EndTurnSignalSpec.spec s
+  Pawl.Codec.EnteringTogetherSpec.spec s
   Pawl.Codec.EntersWithSpec.spec s
   Pawl.Codec.EntryAttackSpec.spec s
   Pawl.Codec.EntryBlockSpec.spec s
   Pawl.Codec.EntryFlipSpec.spec s
   Pawl.Codec.EntryOptionSpec.spec s
-  Pawl.Codec.EntryRSpec.spec s
-  Pawl.Codec.CounterRestrictionSpec.spec s
-  Pawl.Codec.CrewRestrictionSpec.spec s
-  Pawl.Codec.AttackPermissionSpec.spec s
-  Pawl.Codec.EnteringTogetherSpec.spec s
-  Pawl.Codec.EntryRestrictionSpec.spec s
   Pawl.Codec.EntryPriceSpec.spec s
+  Pawl.Codec.EntryRestrictionSpec.spec s
   Pawl.Codec.EntryRewriteSpec.spec s
   Pawl.Codec.EntryRidersSpec.spec s
+  Pawl.Codec.EntryRSpec.spec s
+  Pawl.Codec.EntrySpec.spec s
   Pawl.Codec.EquipSpec.spec s
   Pawl.Codec.EventGroupSpec.spec s
   Pawl.Codec.EventShapeSpec.spec s
   Pawl.Codec.ExcessDestinationSpec.spec s
   Pawl.Codec.ExchangeBlocksSpec.spec s
+  Pawl.Codec.ExchangedValueSpec.spec s
   Pawl.Codec.ExchangeSidesSpec.spec s
   Pawl.Codec.ExchangeValuesSpec.spec s
   Pawl.Codec.ExchangeZonesSpec.spec s
-  Pawl.Codec.ExchangedValueSpec.spec s
-  Pawl.Codec.CraftSpec.spec s
-  Pawl.Codec.ImpendingSpec.spec s
-  Pawl.Codec.SpliceSpec.spec s
   Pawl.Codec.ExileCardsFromGraveyardSpec.spec s
+  Pawl.Codec.ExiledWithSpec.spec s
   Pawl.Codec.ExileFromGraveyardSpec.spec s
-  Pawl.Codec.ExileMaterialsSpec.spec s
   Pawl.Codec.ExileHauntingSpec.spec s
   Pawl.Codec.ExileLinkSpec.spec s
-  Pawl.Codec.ExiledWithSpec.spec s
   Pawl.Codec.ExileLookerSpec.spec s
+  Pawl.Codec.ExileMaterialsSpec.spec s
+  Pawl.Codec.ExilePermanentsSpec.spec s
   Pawl.Codec.ExilePlayPermissionSpec.spec s
   Pawl.Codec.ExpansionSpec.spec s
   Pawl.Codec.ExpirySpec.spec s
+  Pawl.Codec.ExploitedSpec.spec s
   Pawl.Codec.ExtraPhaseSpec.spec s
   Pawl.Codec.ExtraTurnSpec.spec s
   Pawl.Codec.FaceDownCharacteristicsSpec.spec s
@@ -1167,68 +1171,70 @@ spec s registry = do
   Pawl.Codec.FilterSpec.spec s
   Pawl.Codec.FlipCoinSpec.spec s
   Pawl.Codec.FloatingCandidateSpec.spec s
-  Pawl.Codec.ForEachSpec.spec s
-  Pawl.Codec.ForEachNumberSpec.spec s
-  Pawl.Codec.RepeatSpec.spec s
-  Pawl.Codec.RepeatIfSpec.spec s
-  Pawl.Codec.ForetellCostSpec.spec s
-  Pawl.Codec.MadnessCostSpec.spec s
   Pawl.Codec.ForbidAttackSpec.spec s
   Pawl.Codec.ForbidBeingBlockedSpec.spec s
+  Pawl.Codec.ForEachNumberSpec.spec s
+  Pawl.Codec.ForEachSpec.spec s
+  Pawl.Codec.ForetellCostSpec.spec s
   Pawl.Codec.FromOutsideTheGameSpec.spec s
   Pawl.Codec.FromReferenceSpec.spec s
+  Pawl.Codec.GainControlSpec.spec s
   Pawl.Codec.GameEventSpec.spec s
   Pawl.Codec.GameLossRSpec.spec s
   Pawl.Codec.GameOutcomeSpec.spec s
   Pawl.Codec.GameSettingsSpec.spec s
-  Pawl.Codec.GainControlSpec.spec s
   Pawl.Codec.GiftSpec.spec s
-  Pawl.Codec.GraveyardOrderSpec.spec s
+  Pawl.Codec.GrantedAbilitySpec.spec s
   Pawl.Codec.GrantLookAtExiledSpec.spec s
   Pawl.Codec.GrantPlayFromExileSpec.spec s
-  Pawl.Codec.GrantedAbilitySpec.spec s
+  Pawl.Codec.GraveyardOrderSpec.spec s
   Pawl.Codec.HalfUnlockedSpec.spec s
   Pawl.Codec.HalvedSpec.spec s
   Pawl.Codec.HandActionSpec.spec s
   Pawl.Codec.HybridSpec.spec s
+  Pawl.Codec.IfTakenSpec.spec s
   Pawl.Codec.IgnoredAbilitySpec.spec s
-  Pawl.Codec.InZoneSpec.spec s
+  Pawl.Codec.ImpendingSpec.spec s
   Pawl.Codec.InherentTriggerSourceSpec.spec s
+  Pawl.Codec.InitiativeTargetSpec.spec s
   Pawl.Codec.InstanceOrdinalSpec.spec s
-  Pawl.Codec.KeywordDesignatorSpec.spec s
+  Pawl.Codec.InZoneSpec.spec s
   Pawl.Codec.KeywordCountSpec.spec s
+  Pawl.Codec.KeywordDesignatorSpec.spec s
   Pawl.Codec.KeywordFamilySpec.spec s
-  Pawl.Codec.KeywordSpec.spec s
   Pawl.Codec.KeywordsAreSpec.spec s
-  Pawl.Codec.LastKnownSpec.spec s
+  Pawl.Codec.KeywordSpec.spec s
+  Pawl.Codec.LabelSpec.spec s
+  Pawl.Codec.LandAllowanceSpec.spec s
   Pawl.Codec.LandPlayedSpec.spec s
+  Pawl.Codec.LastKnownSpec.spec s
   Pawl.Codec.LayoutSpec.spec s
   Pawl.Codec.LeftTheGameSpec.spec s
-  Pawl.Codec.ArrivalSpec.spec s
   Pawl.Codec.LibraryDepthSpec.spec s
   Pawl.Codec.LibraryPlacementSpec.spec s
   Pawl.Codec.LibraryPositionSpec.spec s
   Pawl.Codec.LifeChangeSpec.spec s
-  Pawl.Codec.LifeLossCauseSpec.spec s
-  Pawl.Codec.LifeLossSpec.spec s
-  Pawl.Codec.LifeLossPatternSpec.spec s
-  Pawl.Codec.LifeGainRSpec.spec s
   Pawl.Codec.LifeGainRewriteSpec.spec s
-  Pawl.Codec.LifeLossRSpec.spec s
+  Pawl.Codec.LifeGainRSpec.spec s
+  Pawl.Codec.LifeIsSpec.spec s
+  Pawl.Codec.LifeLossCauseSpec.spec s
+  Pawl.Codec.LifeLossPatternSpec.spec s
   Pawl.Codec.LifeLossRewriteSpec.spec s
-  Pawl.Codec.AttackLimitUnlessSpec.spec s
+  Pawl.Codec.LifeLossRSpec.spec s
+  Pawl.Codec.LifeLossSpec.spec s
   Pawl.Codec.LimitUnlessSpec.spec s
   Pawl.Codec.LoggedEventSpec.spec s
   Pawl.Codec.LookAtSpec.spec s
   Pawl.Codec.LookedSpec.spec s
   Pawl.Codec.LoopMembersSpec.spec s
+  Pawl.Codec.LoyaltyKindSpec.spec s
   Pawl.Codec.LoyaltySpec.spec s
+  Pawl.Codec.MadnessCostSpec.spec s
   Pawl.Codec.MakeForetoldSpec.spec s
   Pawl.Codec.ManaAbilityResolvedSpec.spec s
   Pawl.Codec.ManaAddedCauseSpec.spec s
   Pawl.Codec.ManaAddedSpec.spec s
   Pawl.Codec.ManaAdditionSpec.spec s
-  Pawl.Codec.LoyaltyKindSpec.spec s
   Pawl.Codec.ManaCostSpec.spec s
   Pawl.Codec.ManaCountSpec.spec s
   Pawl.Codec.ManaFilterSpec.spec s
@@ -1237,26 +1243,24 @@ spec s registry = do
   Pawl.Codec.ManaRetentionSpec.spec s
   Pawl.Codec.ManaRiderEffectSpec.spec s
   Pawl.Codec.ManaRiderSpec.spec s
-  Pawl.Codec.SpendTriggerSpec.spec s
-  Pawl.Codec.WhenSpentSpec.spec s
   Pawl.Codec.ManaSpec.spec s
   Pawl.Codec.ManaSpecificationSpec.spec s
   Pawl.Codec.ManaSpendingSpec.spec s
   Pawl.Codec.ManaSymbolSpec.spec s
   Pawl.Codec.ManaTypeSpec.spec s
   Pawl.Codec.ManaUnitSpec.spec s
+  Pawl.Codec.ManifestedDreadSpec.spec s
+  Pawl.Codec.MeasureSpec.spec s
+  Pawl.Codec.MeasuresSpec.spec s
   Pawl.Codec.MeldSourceSpec.spec s
   Pawl.Codec.MeldSpec.spec s
-  Pawl.Codec.ExploitedSpec.spec s
   Pawl.Codec.MentoredSpec.spec s
   Pawl.Codec.MergeComponentSpec.spec s
-  Pawl.Codec.ShownComponentSpec.spec s
-  Pawl.Codec.MillCountRSpec.spec s
   Pawl.Codec.MillCountRewriteSpec.spec s
+  Pawl.Codec.MillCountRSpec.spec s
+  Pawl.Codec.MilledSpec.spec s
   Pawl.Codec.MillSpec.spec s
   Pawl.Codec.MillTallySpec.spec s
-  Pawl.Codec.ManifestedDreadSpec.spec s
-  Pawl.Codec.MilledSpec.spec s
   Pawl.Codec.ModalSpec.spec s
   Pawl.Codec.ModeIndexSpec.spec s
   Pawl.Codec.ModeSelectionSpec.spec s
@@ -1265,98 +1269,81 @@ spec s registry = do
   Pawl.Codec.ModifiedRollSpec.spec s
   Pawl.Codec.ModifyPowerToughnessSpec.spec s
   Pawl.Codec.ModifyTargetSpec.spec s
-  Pawl.Codec.InitiativeTargetSpec.spec s
+  Pawl.Codec.MonarchIsSpec.spec s
   Pawl.Codec.MonarchTargetSpec.spec s
   Pawl.Codec.MonarchWatchSpec.spec s
   Pawl.Codec.MorphSpec.spec s
   Pawl.Codec.MorphVariantSpec.spec s
-  Pawl.Codec.MoveDurationSpec.spec s
-  Pawl.Codec.MoveToZoneSpec.spec s
+  Pawl.Codec.MoveCountersSpec.spec s
   Pawl.Codec.MovedBetweenSpec.spec s
+  Pawl.Codec.MovedKindsSpec.spec s
   Pawl.Codec.MovedSpec.spec s
+  Pawl.Codec.MoveDurationSpec.spec s
+  Pawl.Codec.MoveManaSpec.spec s
+  Pawl.Codec.MoveSpec.spec s
+  Pawl.Codec.MoveToZoneSpec.spec s
+  Pawl.Codec.NameChooserSpec.spec s
+  Pawl.Codec.NamesAreSpec.spec s
+  Pawl.Codec.NinjutsuSpec.spec s
+  Pawl.Codec.NinjutsuVariantSpec.spec s
   Pawl.Codec.ObjectIdSpec.spec s
   Pawl.Codec.ObjectRefSpec.spec s
+  Pawl.Codec.ObjectSnapshotSpec.spec s
   Pawl.Codec.ObjectSpec.spec s
   Pawl.Codec.OfferCastSpec.spec s
   Pawl.Codec.OnsetSpec.spec s
+  Pawl.Codec.OperandSpec.spec s
   Pawl.Codec.OptionalDecisionSpec.spec s
   Pawl.Codec.OptionalitySpec.spec s
   Pawl.Codec.OrElseSpec.spec s
-  Pawl.Codec.IfTakenSpec.spec s
-  Pawl.Codec.OutsideDestinationSpec.spec s
   Pawl.Codec.OutsideCardSpec.spec s
+  Pawl.Codec.OutsideDestinationSpec.spec s
   Pawl.Codec.OutsideObjectSpec.spec s
+  Pawl.Codec.OwnedZoneSpec.spec s
   Pawl.Codec.PaidExpirySpec.spec s
   Pawl.Codec.PairingSpec.spec s
   Pawl.Codec.PartnerTextSpec.spec s
+  Pawl.Codec.PastActivationSpec.spec s
   Pawl.Codec.PayBranchSpec.spec s
   Pawl.Codec.PayGateSpec.spec s
+  Pawl.Codec.PayingSpec.spec s
+  Pawl.Codec.PaymentDecisionSpec.spec s
   Pawl.Codec.PayObligationSpec.spec s
-  Pawl.Codec.PendingReplacementEffectSpec.spec s
   Pawl.Codec.PendingEntryEffectSpec.spec s
+  Pawl.Codec.PendingReplacementEffectSpec.spec s
+  Pawl.Codec.PermanentActionSpec.spec s
   Pawl.Codec.PermanentBecomesDesignatedSpec.spec s
-  Pawl.Codec.CounterPlacementSpec.spec s
   Pawl.Codec.PermanentCandidateSpec.spec s
+  Pawl.Codec.PermanentDealsCombatDamageToPlayerSpec.spec s
   Pawl.Codec.PermanentSacrificedSpec.spec s
+  Pawl.Codec.PermanentsBecomeTargetedSpec.spec s
+  Pawl.Codec.PermanentsDealCombatDamageToPlayerSpec.spec s
   Pawl.Codec.PermanentTappedForManaSpec.spec s
   Pawl.Codec.PermanentWasSacrificedSpec.spec s
-  Pawl.Codec.PermanentsBecomeTargetedSpec.spec s
-  Pawl.Codec.PermanentDealsCombatDamageToPlayerSpec.spec s
-  Pawl.Codec.PermanentsDealCombatDamageToPlayerSpec.spec s
+  Pawl.Codec.PermissionCostSpec.spec s
   Pawl.Codec.PermissionLimitSpec.spec s
   Pawl.Codec.PermissionPoolSpec.spec s
-  Pawl.Codec.PermissionCostSpec.spec s
   Pawl.Codec.PermissionVerbSpec.spec s
+  Pawl.Codec.PhasedOutSpec.spec s
   Pawl.Codec.PhasePatternSpec.spec s
   Pawl.Codec.PhaseSelectorSpec.spec s
   Pawl.Codec.PhaseSpec.spec s
-  Pawl.Codec.WhenSpec.spec s
-  Pawl.Codec.TimedSpec.spec s
-  Pawl.Codec.TappedIsSpec.spec s
-  Pawl.Codec.SeatSpec.spec s
-  Pawl.Codec.ScenarioSpec.spec s
-  Pawl.Codec.ReferenceSpec.spec s
-  Pawl.Codec.ReadinessSpec.spec s
-  Pawl.Codec.PlacementSpec.spec s
-  Pawl.Codec.MoveSpec.spec s
-  Pawl.Codec.LifeIsSpec.spec s
-  Pawl.Codec.LabelSpec.spec s
-  Pawl.Codec.EntrySpec.spec s
-  Pawl.Codec.DamageIsSpec.spec s
-  Pawl.Codec.CountIsSpec.spec s
-  Pawl.Codec.TypesAreSpec.spec s
-  Pawl.Codec.MonarchIsSpec.spec s
-  Pawl.Codec.PayingSpec.spec s
-  Pawl.Codec.PaymentDecisionSpec.spec s
-  Pawl.Codec.PlayerCountersAreSpec.spec s
-  Pawl.Codec.PowerToughnessIsSpec.spec s
-  Pawl.Codec.DefendersAreSpec.spec s
-  Pawl.Codec.CountersAreSpec.spec s
-  Pawl.Codec.BlockersAreSpec.spec s
-  Pawl.Codec.AttackersAreSpec.spec s
-  Pawl.Codec.ChoicesSpec.spec s
-  Pawl.Codec.CheckSpec.spec s
-  Pawl.Codec.CastingSpec.spec s
-  Pawl.Codec.TakingSpec.spec s
-  Pawl.Codec.BoardSpec.spec s
-  Pawl.Codec.ActivationSpec.spec s
-  Pawl.Codec.PhasedOutSpec.spec s
-  Pawl.Codec.PileSpec.spec s
   Pawl.Codec.PileDrawSpec.spec s
-  Pawl.Codec.PlayPermissionOriginSpec.spec s
-  Pawl.Codec.PlayerCounterKindSpec.spec s
-  Pawl.Codec.StickerKindSpec.spec s
-  Pawl.Codec.StickerSheetSpec.spec s
-  Pawl.Codec.PermanentActionSpec.spec s
+  Pawl.Codec.PileSpec.spec s
+  Pawl.Codec.PlacementSpec.spec s
+  Pawl.Codec.PlanarDieFaceSpec.spec s
+  Pawl.Codec.PlanarDieRolledSpec.spec s
   Pawl.Codec.PlayerActionSpec.spec s
   Pawl.Codec.PlayerAttacksPlayerSpec.spec s
   Pawl.Codec.PlayerAttacksWithSpec.spec s
-  Pawl.Codec.PlayerCounterTallySpec.spec s
+  Pawl.Codec.PlayerControlSpec.spec s
+  Pawl.Codec.PlayerCounterKindSpec.spec s
+  Pawl.Codec.PlayerCountersAreSpec.spec s
   Pawl.Codec.PlayerCountersSpec.spec s
+  Pawl.Codec.PlayerCounterTallySpec.spec s
   Pawl.Codec.PlayerDesignationSpec.spec s
   Pawl.Codec.PlayerDesignationTallySpec.spec s
   Pawl.Codec.PlayerDrawsNthCardSpec.spec s
-  Pawl.Codec.PlayerControlSpec.spec s
   Pawl.Codec.PlayerEffectSpec.spec s
   Pawl.Codec.PlayerIdSpec.spec s
   Pawl.Codec.PlayerQuantitySpec.spec s
@@ -1364,77 +1351,84 @@ spec s registry = do
   Pawl.Codec.PlayerRelationSpec.spec s
   Pawl.Codec.PlayerSacrificesSpec.spec s
   Pawl.Codec.PlayerScopeSpec.spec s
-  Pawl.Codec.PlotFromZoneSpec.spec s
   Pawl.Codec.PlayerSpec.spec s
   Pawl.Codec.PlayerStaticAbilitySpec.spec s
+  Pawl.Codec.PlayPermissionOriginSpec.spec s
   Pawl.Codec.PlaysLandSpec.spec s
+  Pawl.Codec.PlotFromZoneSpec.spec s
   Pawl.Codec.PlusSpec.spec s
   Pawl.Codec.PoolSpec.spec s
   Pawl.Codec.PowerSpec.spec s
+  Pawl.Codec.PowerToughnessIsSpec.spec s
   Pawl.Codec.PreventAllDamageSpec.spec s
-  Pawl.Codec.PreventNextDamageSpec.spec s
   Pawl.Codec.PreventionRiderSpec.spec s
   Pawl.Codec.PreventionSpec.spec s
+  Pawl.Codec.PreventNextDamageSpec.spec s
   Pawl.Codec.PrintedReplacementSpec.spec s
   Pawl.Codec.PrintingIdSpec.spec s
   Pawl.Codec.PrintingSpec.spec s
   Pawl.Codec.ProductionTagSpec.spec s
-  Pawl.Codec.ProhibitSpec.spec s
   Pawl.Codec.ProhibitionSpec.spec s
+  Pawl.Codec.ProhibitSpec.spec s
   Pawl.Codec.ProjectedCharacteristicsSpec.spec s
-  Pawl.Codec.MoveCountersSpec.spec s
-  Pawl.Codec.MoveManaSpec.spec s
-  Pawl.Codec.MovedKindsSpec.spec s
+  Pawl.Codec.ProliferateRewriteSpec.spec s
+  Pawl.Codec.ProliferateRSpec.spec s
   Pawl.Codec.ProtectionSpec.spec s
   Pawl.Codec.PrototypeSpec.spec s
   Pawl.Codec.PutCountersFromSpec.spec s
   Pawl.Codec.PutCountersSpec.spec s
   Pawl.Codec.QuantitySpec.spec s
+  Pawl.Codec.RangeOfInfluenceSpec.spec s
+  Pawl.Codec.ReadinessSpec.spec s
   Pawl.Codec.RecipientSpec.spec s
   Pawl.Codec.RedirectDamageSpec.spec s
+  Pawl.Codec.ReferenceSpec.spec s
   Pawl.Codec.RegenerabilitySpec.spec s
-  Pawl.Codec.NinjutsuSpec.spec s
-  Pawl.Codec.NinjutsuVariantSpec.spec s
   Pawl.Codec.ReinforceSpec.spec s
   Pawl.Codec.RemoveCountersSpec.spec s
   Pawl.Codec.RemovePlayerCountersSpec.spec s
-  Pawl.Codec.CountersFromThisSpec.spec s
-  Pawl.Codec.ReplaceSpec.spec s
+  Pawl.Codec.RepeatIfSpec.spec s
+  Pawl.Codec.RepeatSpec.spec s
   Pawl.Codec.ReplacementEffectSpec.spec s
   Pawl.Codec.ReplacementOriginSpec.spec s
   Pawl.Codec.ReplacementProvenanceSpec.spec s
+  Pawl.Codec.ReplaceSpec.spec s
   Pawl.Codec.RequireAttackSpec.spec s
   Pawl.Codec.RequireBlockSpec.spec s
-  Pawl.Codec.RestrictedCreaturesSpec.spec s
   Pawl.Codec.RequiredDefenderSpec.spec s
   Pawl.Codec.RequirementAritySpec.spec s
   Pawl.Codec.RestartSignalSpec.spec s
+  Pawl.Codec.RestrictedCreaturesSpec.spec s
   Pawl.Codec.ResultSpec.spec s
   Pawl.Codec.ReturnEndingSpec.spec s
+  Pawl.Codec.ReturnPermanentsSpec.spec s
   Pawl.Codec.ReturnWatchSpec.spec s
   Pawl.Codec.RevealCauseSpec.spec s
-  Pawl.Codec.RevealWindowSpec.spec s
-  Pawl.Codec.RevealSpec.spec s
   Pawl.Codec.RevealedSpec.spec s
+  Pawl.Codec.RevealSpec.spec s
+  Pawl.Codec.RevealWindowSpec.spec s
   Pawl.Codec.RollDieSpec.spec s
   Pawl.Codec.RollModifierSpec.spec s
   Pawl.Codec.RoomHalfSpec.spec s
   Pawl.Codec.RoomIndexSpec.spec s
   Pawl.Codec.RoundingSpec.spec s
-  Pawl.Codec.DifferentInSpec.spec s
   Pawl.Codec.RuleAbilitiesSpec.spec s
   Pawl.Codec.SacrificeAnyNumberSpec.spec s
-  Pawl.Codec.SacrificeToEnterSpec.spec s
   Pawl.Codec.SacrificeEffectSpec.spec s
   Pawl.Codec.SacrificeRestrictionSpec.spec s
-  Pawl.Codec.ReturnPermanentsSpec.spec s
-  Pawl.Codec.ExilePermanentsSpec.spec s
-  Pawl.Codec.SacrificeSpec.spec s
   Pawl.Codec.SacrificerSpec.spec s
+  Pawl.Codec.SacrificeSpec.spec s
+  Pawl.Codec.SacrificeToEnterSpec.spec s
+  Pawl.Codec.SaddlingSpec.spec s
   Pawl.Codec.ScalingSpec.spec s
+  Pawl.Codec.ScenarioSpec.spec s
+  Pawl.Codec.SchemeSetInMotionSpec.spec s
   Pawl.Codec.ScopeSpec.spec s
+  Pawl.Codec.ScryRewriteSpec.spec s
+  Pawl.Codec.ScryRSpec.spec s
   Pawl.Codec.SearchDestinationSpec.spec s
   Pawl.Codec.SearchSpec.spec s
+  Pawl.Codec.SeatSpec.spec s
   Pawl.Codec.SelfCountersReachedSpec.spec s
   Pawl.Codec.SelfCountersRemovedSpec.spec s
   Pawl.Codec.SetBasePowerToughnessSpec.spec s
@@ -1442,14 +1436,16 @@ spec s registry = do
   Pawl.Codec.SetHalfLockedSpec.spec s
   Pawl.Codec.SetPowerToughnessSpec.spec s
   Pawl.Codec.ShownCardsSpec.spec s
+  Pawl.Codec.ShownComponentSpec.spec s
   Pawl.Codec.ShowsSpec.spec s
   Pawl.Codec.ShuffleIntoLibrarySpec.spec s
-  Pawl.Codec.SideDeckSpec.spec s
   Pawl.Codec.SicknessSpec.spec s
+  Pawl.Codec.SideDeckSpec.spec s
   Pawl.Codec.SkipNextPhaseSpec.spec s
   Pawl.Codec.SlotCountSpec.spec s
   Pawl.Codec.SlotNameSpec.spec s
   Pawl.Codec.SlotPerPlayerSpec.spec s
+  Pawl.Codec.SourceChoicesSpec.spec s
   Pawl.Codec.SourceSpec.spec s
   Pawl.Codec.SpecialActionSpec.spec s
   Pawl.Codec.SpeedDecreaseSpec.spec s
@@ -1457,82 +1453,90 @@ spec s registry = do
   Pawl.Codec.SpellWasCastSpec.spec s
   Pawl.Codec.SpellWasCopiedSpec.spec s
   Pawl.Codec.SpendManaAsThoughSpec.spec s
+  Pawl.Codec.SpendTriggerSpec.spec s
+  Pawl.Codec.SpliceSpec.spec s
   Pawl.Codec.StackObjectKindSpec.spec s
-  Pawl.Codec.StaticAbilitySpec.spec s
   Pawl.Codec.StatedFlipSpec.spec s
+  Pawl.Codec.StaticAbilitySpec.spec s
   Pawl.Codec.StatusSpec.spec s
   Pawl.Codec.StepBeganSpec.spec s
   Pawl.Codec.StepBeginsSpec.spec s
+  Pawl.Codec.StickerKindSpec.spec s
+  Pawl.Codec.StickerSheetSpec.spec s
   Pawl.Codec.StoredResultSpec.spec s
   Pawl.Codec.SubtypeFamilySpec.spec s
-  Pawl.Codec.SubtypeSpec.spec s
   Pawl.Codec.SubtypesAreSpec.spec s
-  Pawl.Codec.AnswerSpec.spec s
-  Pawl.Codec.ViewIsSpec.spec s
-  Pawl.Codec.NamesAreSpec.spec s
-  Pawl.Codec.NameChooserSpec.spec s
+  Pawl.Codec.SubtypeSpec.spec s
   Pawl.Codec.SupertypeSpec.spec s
   Pawl.Codec.SuspendCountersSpec.spec s
   Pawl.Codec.SuspendSpec.spec s
   Pawl.Codec.TakeExtraTurnSpec.spec s
+  Pawl.Codec.TakingSpec.spec s
   Pawl.Codec.TapForTotalPowerSpec.spec s
+  Pawl.Codec.TappedForManaSpec.spec s
+  Pawl.Codec.TappedIsSpec.spec s
   Pawl.Codec.TapPermanentsSpec.spec s
   Pawl.Codec.TapStateSpec.spec s
-  Pawl.Codec.TappedForManaSpec.spec s
-  Pawl.Codec.TargetCountSpec.spec s
   Pawl.Codec.TargetChooserSpec.spec s
+  Pawl.Codec.TargetCountSpec.spec s
   Pawl.Codec.TargetSlotSpec.spec s
   Pawl.Codec.TeamIdSpec.spec s
-  Pawl.Codec.RangeOfInfluenceSpec.spec s
   Pawl.Codec.TeamsSpec.spec s
+  Pawl.Codec.TheseDiscardSpec.spec s
+  Pawl.Codec.TimedSpec.spec s
   Pawl.Codec.TimesSpec.spec s
   Pawl.Codec.TimestampSpec.spec s
   Pawl.Codec.TokenPatternSpec.spec s
   Pawl.Codec.TokenRSpec.spec s
   Pawl.Codec.TopOfLibrarySpec.spec s
   Pawl.Codec.TopOfLibraryUntilSpec.spec s
-  Pawl.Codec.TraitSpec.spec s
   Pawl.Codec.ToughnessSpec.spec s
+  Pawl.Codec.TraitSpec.spec s
   Pawl.Codec.TransformedSpec.spec s
   Pawl.Codec.TriggerConditionSpec.spec s
+  Pawl.Codec.TriggeredAbilitySourceSpec.spec s
+  Pawl.Codec.TriggeredAbilitySpec.spec s
   Pawl.Codec.TriggerFrequencySpec.spec s
   Pawl.Codec.TriggerLimitSpec.spec s
   Pawl.Codec.TriggerSourceSpec.spec s
-  Pawl.Codec.TriggeredAbilitySourceSpec.spec s
-  Pawl.Codec.TriggeredAbilitySpec.spec s
+  Pawl.Codec.TurnedFaceUpSpec.spec s
   Pawl.Codec.TurnFaceDownSpec.spec s
   Pawl.Codec.TurnScopeSpec.spec s
   Pawl.Codec.TurnUpProcedureSpec.spec s
-  Pawl.Codec.TurnUpRSpec.spec s
   Pawl.Codec.TurnUpRewriteSpec.spec s
-  Pawl.Codec.UntapRewriteSpec.spec s
-  Pawl.Codec.UntapRSpec.spec s
+  Pawl.Codec.TurnUpRSpec.spec s
   Pawl.Codec.TurnWindowSpec.spec s
-  Pawl.Codec.TurnedFaceUpSpec.spec s
   Pawl.Codec.TypeLineSpec.spec s
+  Pawl.Codec.TypesAreSpec.spec s
   Pawl.Codec.TypeSwapSpec.spec s
   Pawl.Codec.UntapRestrictionSpec.spec s
+  Pawl.Codec.UntapRewriteSpec.spec s
+  Pawl.Codec.UntapRSpec.spec s
   Pawl.Codec.UsesSpec.spec s
   Pawl.Codec.VanguardSpec.spec s
   Pawl.Codec.VentureMarkerEnteredSpec.spec s
-  Pawl.Codec.VoteSpec.spec s
+  Pawl.Codec.ViewIsSpec.spec s
+  Pawl.Codec.VillainousChoiceRewriteSpec.spec s
+  Pawl.Codec.VillainousChoiceRSpec.spec s
   Pawl.Codec.VotedSpec.spec s
+  Pawl.Codec.VoteSpec.spec s
   Pawl.Codec.WardSpec.spec s
+  Pawl.Codec.WhenSpec.spec s
+  Pawl.Codec.WhenSpentSpec.spec s
   Pawl.Codec.WhichCountersSpec.spec s
   Pawl.Codec.WhileSpec.spec s
   Pawl.Codec.WithCountersSpec.spec s
   Pawl.Codec.ZoneChangePatternSpec.spec s
   Pawl.Codec.ZoneChangeRSpec.spec s
   Pawl.Codec.ZoneChangeSpec.spec s
+  Pawl.Codec.ZonePairSpec.spec s
   Pawl.Codec.ZoneScopeSpec.spec s
   Pawl.Codec.ZoneSpec.spec s
-  Pawl.Codec.ZonePairSpec.spec s
   Pawl.CodecIntegrationSpec.spec s registry
-  Pawl.CloakSpec.spec s registry
+  Pawl.CoinSpec.spec s registry
   Pawl.ColorSpec.spec s registry
-  Pawl.CombatEffectSpec.spec s registry
-  Pawl.PlaneswalkerCombatSpec.spec s registry
   Pawl.CombatCostSpec.spec s registry
+  Pawl.CombatEffectSpec.spec s registry
   Pawl.CombatSpec.spec s registry
   Pawl.CommanderSpec.spec s registry
   Pawl.CompanionSpec.spec s registry
@@ -1540,31 +1544,29 @@ spec s registry = do
   Pawl.ConjureSpec.spec s registry
   Pawl.ConspiracySpec.spec s registry
   Pawl.ContraptionSpec.spec s registry
-  Pawl.AnteSpec.spec s registry
-  Pawl.StickerSpec.spec s registry
-  Pawl.CopySpec.spec s registry
-  Pawl.CopySpec.copySpellSpec s registry
-  Pawl.CopySpec.stirCopySpec s registry
   Pawl.CopySpec.copiedAbilitySpec s registry
-  Pawl.CopySpec.faceDownCopySpec s registry
-  Pawl.CopySpec.permanentCopySpec s registry
   Pawl.CopySpec.copyAbilityOnStackSpec s registry
-  Pawl.CopySpec.ivySpec s registry
-  Pawl.CopySpec.leylineOfResonanceSpec s registry
-  Pawl.CopySpec.zadaSpec s registry
-  Pawl.CopySpec.graveyardTokenCopySpec s registry
+  Pawl.CopySpec.copySpellSpec s registry
+  Pawl.CopySpec.faceDownCopySpec s registry
   Pawl.CopySpec.flamerushRiderSpec s registry
   Pawl.CopySpec.garthSpec s registry
+  Pawl.CopySpec.graveyardTokenCopySpec s registry
+  Pawl.CopySpec.ivySpec s registry
+  Pawl.CopySpec.leylineOfResonanceSpec s registry
   Pawl.CopySpec.magarSpec s registry
+  Pawl.CopySpec.permanentCopySpec s registry
+  Pawl.CopySpec.spec s registry
+  Pawl.CopySpec.stirCopySpec s registry
+  Pawl.CopySpec.zadaSpec s registry
   Pawl.CoreSpec.spec s registry
   Pawl.CostSpec.spec s registry
-  Pawl.CountSpec.spec s registry
+  Pawl.CounterKeywordTriggerSpec.spec s registry
+  Pawl.CounterRestrictionSpec.spec s registry
   Pawl.CounterspellSpec.spec s registry
+  Pawl.CountSpec.spec s registry
   Pawl.CrewSpec.spec s registry
+  Pawl.DamageReplacementSpec.spec s registry
   Pawl.DamageSpec.spec s registry
-  Pawl.DungeonSpec.spec s registry
-  Pawl.EarthbendSpec.spec s registry
-  Pawl.AirbendSpec.spec s registry
   Pawl.DaytimeSpec.spec s registry
   Pawl.DecideSpec.spec s
   Pawl.DecimalSpec.spec s
@@ -1573,16 +1575,20 @@ spec s registry = do
   Pawl.DetainSpec.spec s registry
   Pawl.DevotionSpec.spec s registry
   Pawl.DiceSpec.spec s registry
+  Pawl.DungeonSpec.spec s registry
+  Pawl.EarthbendSpec.spec s registry
+  Pawl.EffectLintSpec.spec s registry
+  Pawl.EmperorSpec.spec s registry
+  Pawl.EntryReplacementSpec.spec s registry
+  Pawl.EntryRestrictionSpec.spec s registry
   Pawl.EventSpec.spec s registry
   Pawl.EventTriggerSpec.spec s registry
-  Pawl.LifeTriggerSpec.spec s registry
-  Pawl.CardTriggerSpec.spec s registry
   Pawl.ExileSpec.spec s registry
   Pawl.ExpirySpec.spec s registry
   Pawl.Extra.BuilderSpec.spec s
   Pawl.Extra.EitherSpec.spec s
-  Pawl.Extra.IntSpec.spec s
   Pawl.Extra.IntegerSpec.spec s
+  Pawl.Extra.IntSpec.spec s
   Pawl.Extra.MonoidSpec.spec s
   Pawl.Extra.NaturalSpec.spec s
   Pawl.Extra.OrdSpec.spec s
@@ -1590,16 +1596,17 @@ spec s registry = do
   Pawl.Extra.SemigroupSpec.spec s
   Pawl.Extra.Word8Spec.spec s
   Pawl.FaceDownSpec.spec s registry
+  Pawl.FilterPositionLintSpec.spec s registry
   Pawl.FilterSpec.spec s
   Pawl.FlipSpec.spec s registry
   Pawl.ForageSpec.spec s registry
   Pawl.FragmentedSpec.spec s registry
-  Pawl.LearnSpec.spec s registry
   Pawl.GameSpec.spec s registry
   Pawl.GoadSpec.spec s registry
   Pawl.HarnessSpec.spec s registry
-  Pawl.SpaceSculptorSpec.spec s registry
   Pawl.HealSpec.spec s registry
+  Pawl.InitiativeSpec.spec s registry
+  Pawl.InvestigateSpec.spec s registry
   Pawl.Json.ArraySpec.spec s
   Pawl.Json.BooleanSpec.spec s
   Pawl.Json.NullSpec.spec s
@@ -1619,77 +1626,74 @@ spec s registry = do
   Pawl.JsonSchema.PatternSpec.spec s
   Pawl.JsonSchema.SchemaSpec.spec s
   Pawl.JsonSchema.ValidateSpec.spec s
-  Pawl.InitiativeSpec.spec s registry
-  Pawl.InvestigateSpec.spec s registry
   Pawl.KeywordTriggerSpec.spec s registry
-  Pawl.AttackKeywordTriggerSpec.spec s registry
-  Pawl.CounterKeywordTriggerSpec.spec s registry
+  Pawl.LearnSpec.spec s registry
+  Pawl.LeavesTriggerSpec.spec s registry
   Pawl.LibraryOrderSpec.spec s registry
-  Pawl.ManaSpec.spec s registry
+  Pawl.LifeReplacementSpec.spec s registry
+  Pawl.LifeTriggerSpec.spec s registry
   Pawl.ManaSourceSpec.spec s registry
+  Pawl.ManaSpec.spec s registry
   Pawl.ManaSymbolSpec.spec s registry
   Pawl.MassEffectSpec.spec s registry
-  Pawl.BoardEffectSpec.spec s registry
   Pawl.MeldSpec.spec s registry
-  Pawl.MutateSpec.spec s registry
   Pawl.ModalDoubleFacedSpec.spec s registry
   Pawl.ModalSpec.spec s registry
+  Pawl.MoveCounterSpec.spec s registry
   Pawl.MulliganSpec.spec s registry
+  Pawl.MutateSpec.spec s registry
   Pawl.OmenSpec.spec s registry
+  Pawl.OracleSpec.spec s
   Pawl.OutsideTheGameSpec.spec s registry
   Pawl.PhasingSpec.spec s registry
-  Pawl.PlaneswalkerSpec.spec s registry
+  Pawl.PlanechaseSpec.spec s registry
+  Pawl.PlaneswalkerCombatSpec.spec s registry
+  Pawl.PlaneswalkerSpec.ashiokLoyaltySpec s registry
   Pawl.PlaneswalkerSpec.combinedLoyaltyCostSpec s registry
   Pawl.PlaneswalkerSpec.countersRemovedSpec s registry
-  Pawl.PlaneswalkerSpec.variableLoyaltySpec s registry
   Pawl.PlaneswalkerSpec.gristLoyaltySpec s registry
-  Pawl.PlaneswalkerSpec.ashiokLoyaltySpec s registry
-  Pawl.PlaneswalkerSpec.tamiyoNotebookSpec s registry
+  Pawl.PlaneswalkerSpec.spec s registry
   Pawl.PlaneswalkerSpec.tamiyoMinusXSpec s registry
+  Pawl.PlaneswalkerSpec.tamiyoNotebookSpec s registry
+  Pawl.PlaneswalkerSpec.variableLoyaltySpec s registry
   Pawl.PlayerDesignationSpec.spec s registry
   Pawl.PlayerEffectSpec.spec s registry
-  Pawl.CastProhibitionSpec.spec s registry
-  Pawl.CastPermissionSpec.spec s registry
   Pawl.PopulateSpec.spec s registry
   Pawl.PowerToughnessSpec.spec s registry
   Pawl.PreparationSpec.spec s registry
+  Pawl.PreventionSpec.spec s registry
   Pawl.ProjectionSpec.spec s registry
   Pawl.PrototypeSpec.spec s registry
+  Pawl.PutCounterSpec.spec s registry
   Pawl.RadSpec.spec s registry
+  Pawl.RangeOfInfluenceSpec.spec s registry
   Pawl.RecruitSpec.spec s registry
   Pawl.RegistrySpec.spec s
-  Pawl.ReplacementSpec.spec s registry
-  Pawl.PreventionSpec.spec s registry
-  Pawl.LifeReplacementSpec.spec s registry
-  Pawl.DamageReplacementSpec.spec s registry
-  Pawl.EntryReplacementSpec.spec s registry
-  Pawl.ShieldCounterSpec.spec s registry
-  Pawl.ReplaySpec.spec s registry
-  Pawl.MoveCounterSpec.spec s registry
-  Pawl.PutCounterSpec.spec s registry
   Pawl.RemoveCounterSpec.spec s registry
+  Pawl.ReplacementSpec.spec s registry
+  Pawl.ReplaySpec.spec s registry
   Pawl.ResolveSpec.spec s registry
   Pawl.RestampSpec.spec s registry
   Pawl.ReversalSpec.spec s registry
   Pawl.RingSpec.spec s registry
   Pawl.RoomSpec.spec s registry
-  Pawl.SetupSpec.spec s registry
-  Pawl.SlugSpec.spec s
-  Pawl.CounterRestrictionSpec.spec s registry
-  Pawl.EntryRestrictionSpec.spec s registry
   Pawl.SacrificeRestrictionSpec.spec s registry
-  Pawl.SagaSpec.spec s registry
-  Pawl.AttractionSpec.spec s registry
   Pawl.SaddleSpec.spec s registry
+  Pawl.SagaSpec.spec s registry
+  Pawl.ScenarioSpec.corpusSpec s registry
+  Pawl.ScenarioSpec.loadSpec s
+  Pawl.ScenarioSpec.spec s registry
+  Pawl.SetupSpec.spec s registry
+  Pawl.ShieldCounterSpec.spec s registry
+  Pawl.SlugSpec.spec s
+  Pawl.SpaceSculptorSpec.spec s registry
   Pawl.SpecialActionSpec.spec s registry
   Pawl.SpeedSpec.spec s registry
   Pawl.SplitSecondSpec.spec s registry
   Pawl.StationSpec.spec s registry
-  Pawl.ScenarioSpec.spec s registry
-  Pawl.ScenarioSpec.loadSpec s
-  Pawl.TargetSpec.spec s registry
+  Pawl.StickerSpec.spec s registry
   Pawl.TargetPerPlayerSpec.spec s registry
-  Pawl.RangeOfInfluenceSpec.spec s registry
+  Pawl.TargetSpec.spec s registry
   Pawl.TeamSpec.spec s registry
   Pawl.TransformSpec.spec s registry
   Pawl.TriggerSpec.spec s registry
@@ -1697,14 +1701,9 @@ spec s registry = do
   Pawl.UntapRestrictionSpec.spec s registry
   Pawl.Uri.FragmentSpec.spec s
   Pawl.VanguardSpec.spec s registry
-  Pawl.PlanechaseSpec.spec s registry
-  Pawl.ArchenemySpec.spec s registry
   Pawl.VariableEffectSpec.spec s registry
   Pawl.VisibilitySpec.spec s registry
   Pawl.VoteSpec.spec s registry
   Pawl.ZoneChangeSpec.spec s registry
   Pawl.ZoneReplacementSpec.spec s registry
   Pawl.ZoneTriggerSpec.spec s registry
-  Pawl.LeavesTriggerSpec.spec s registry
-
-  Pawl.ScenarioSpec.corpusSpec s registry
