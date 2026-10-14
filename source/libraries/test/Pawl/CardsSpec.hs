@@ -3,6 +3,8 @@
 -- own spec is Pawl.SlugSpec.
 module Pawl.CardsSpec where
 
+import qualified Control.Monad as Monad
+import qualified Control.Monad.IO.Class as MonadIO
 import qualified Data.ByteString as ByteString
 import qualified Data.Text as Text
 import qualified Data.Text.Encoding as Encoding
@@ -13,21 +15,25 @@ import qualified Pawl.JsonCodec.Common as Common
 import qualified Pawl.JsonSchema.Define as Define
 import qualified Pawl.JsonSchema.Validate as Validate
 import qualified Pawl.Registry as Registry
+import qualified Pawl.Slug as Slug
 import qualified Pawl.Spec as Spec
 import qualified Pawl.Support as S
 import qualified Pawl.Types.Printing as Printing
 
-spec :: Spec.Spec IO n -> n ()
+spec :: (MonadIO.MonadIO n) => Spec.Spec IO n -> n ()
 spec s = Spec.describe s "Pawl.Cards" $ do
-  Spec.it s "each committed file re-parses to its compiled card (P3)" $ do
-    root <- Registry.defaultRoot
-    ps <- S.allPrintings s
-    -- Rendered AND indexed once for the whole corpus rather than once per file.
-    -- Validate.prepare walks every $defs entry, which is the expensive half of a
-    -- validation and does not depend on the card; doing it per file put this
-    -- case within a fifth of a second of the suite's five-second budget.
-    let schema = Validate.prepare (Define.run (Codec.schema Card.codec))
-    mapM_ (checkFile s root schema) ps
+  root <- MonadIO.liftIO Registry.defaultRoot
+  printings <- MonadIO.liftIO $ S.allPrintings s
+
+  -- Rendered AND indexed once for the whole corpus rather than once per file.
+  -- Validate.prepare walks every $defs entry, which is the expensive half of a
+  -- validation and does not depend on the card; doing it per file put this
+  -- case within a fifth of a second of the suite's five-second budget.
+  let schema = Validate.prepare (Define.run (Codec.schema Card.codec))
+
+  Monad.forM_ printings $ \printing ->
+    Spec.it s (Text.unpack . Slug.unwrap . Registry.filedAs $ Printing.card printing) $ do
+      checkFile s root schema printing
 
 checkFile :: Spec.Spec IO n -> FilePath -> Validate.Document -> Printing.Printing -> IO ()
 checkFile s root schema p = do
