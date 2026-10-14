@@ -850,9 +850,7 @@ tasty =
     }
 
 buildTestTree :: Registry.Registry IO -> IO Tasty.TestTree
-buildTestTree registry = do
-  testTree <- Writer.execWriterT $ spec tasty registry
-  pure $ Tasty.testGroup "pawl" testTree
+buildTestTree = fmap (Tasty.testGroup "pawl") . Writer.execWriterT . spec tasty
 
 -- Specs that reach for card data take a registry over the same monad they
 -- assert in. The rest need none at all.
