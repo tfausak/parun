@@ -15,9 +15,6 @@
 #   pins the setting, and streams rather than routing through a log file, so a
 #   `cabal.project` that ever set `never` or `failures`-by-log cannot silently
 #   leave the caller with a summary and no assertion.
-# - No `--timeout` is passed. `Pawl.Test.testTree` sets per-subtree budgets with
-#   `Tasty.localOption`, which beats the command line, so one here would be
-#   ineffective for those subtrees and misleading everywhere else (#2113).
 # - PATTERN is required rather than defaulting to the whole suite, so that a
 #   mutation run stays a minute instead of twenty.
 # - A corrupt shared GHC job semaphore (`semWait: invalid argument`) is retried

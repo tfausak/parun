@@ -850,33 +850,17 @@ tasty =
     }
 
 testTree :: Registry.Registry IO -> [(FilePath, Either Text.Text Scenario.Scenario)] -> Tasty.TestTree
-testTree registry scenarios =
-  Tasty.testGroup
-    "pawl"
-    ( -- Pawl.EngineSpec comes first because tasty hands tests to its thread
-      -- pool in tree order, and this group holds the suite's two longest cases
-      -- by an order of magnitude. Started last they were the whole tail.
-      Writer.execWriter (Pawl.EngineSpec.spec tasty registry)
-        <> [Tasty.testGroup "spec" . Writer.execWriter $ spec tasty registry]
-        <> Writer.execWriter (Pawl.ScenarioSpec.corpusSpec tasty registry scenarios)
-        -- ONE budget for the whole suite, and it is the command line's: the
-        -- figure CI passes lives in flake.nix's testFlags and in the workflow's
-        -- own `cabal run pawl -- test`, and nothing here overrides it. Two
-        -- subtrees used to carry their own through Tasty.localOption -- 300s for
-        -- Pawl.EngineSpec's whole games, 5s for Pawl.ReplacementSpec and its five
-        -- siblings, which guard CR 616.1's termination where a regression hangs
-        -- rather than fails. Both are gone (#3284): localOption BEATS the command
-        -- line, so a per-group budget silently ignores whatever an agent passes,
-        -- and a runner slower than the machine the figures were measured on
-        -- turns the difference into a timeout nobody can reproduce locally. What
-        -- those groups needed was headroom, which the suite-wide figure is now
-        -- where to give.
-    )
+testTree registry = Tasty.testGroup "pawl" . Writer.execWriter . spec tasty registry
 
 -- Specs that reach for card data take a registry over the same monad they
 -- assert in. The rest need none at all.
-spec :: (Monad n) => Spec.Spec IO n -> Registry.Registry IO -> n ()
-spec s registry = do
+spec :: (Monad n) => Spec.Spec IO n -> Registry.Registry IO -> [(FilePath, Either Text.Text Scenario.Scenario)] -> n ()
+spec s registry scenarios = do
+  -- Pawl.EngineSpec comes first because tasty hands tests to its thread
+  -- pool in tree order, and this group holds the suite's two longest cases
+  -- by an order of magnitude. Started last they were the whole tail.
+  Pawl.EngineSpec.spec s registry
+
   Pawl.ActivateSpec.spec s registry
   Pawl.ActivationProhibitionSpec.spec s registry
   Pawl.AdventureSpec.spec s registry
@@ -1672,9 +1656,6 @@ spec s registry = do
   Pawl.RadSpec.spec s registry
   Pawl.RecruitSpec.spec s registry
   Pawl.RegistrySpec.spec s
-  -- CR 616.1's termination guards, where a regression hangs rather than fails.
-  -- Wired here like every other spec since #3284 took away their own 5s budget;
-  -- the suite-wide figure catches the hang just as well.
   Pawl.ReplacementSpec.spec s registry
   Pawl.PreventionSpec.spec s registry
   Pawl.LifeReplacementSpec.spec s registry
@@ -1723,3 +1704,5 @@ spec s registry = do
   Pawl.ZoneReplacementSpec.spec s registry
   Pawl.ZoneTriggerSpec.spec s registry
   Pawl.LeavesTriggerSpec.spec s registry
+
+  Pawl.ScenarioSpec.corpusSpec s registry scenarios
