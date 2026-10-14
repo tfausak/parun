@@ -2944,10 +2944,6 @@ itzquinthSpec s registry = Spec.describe s "Announcing a trigger's targets (CR 6
   -- The Wall is still there, so a coherent announcement EXISTS on this board: the
   -- removal below is the decider's refusal to make one and not CR 603.3d's own
   -- "no legal choices can be made", which the case above already covers.
-  --
-  -- A regression here HANGS rather than fails, Pawl.ReplacementSpec's shape. This
-  -- group carries no Tasty.localOption budget, so what fences it is the --timeout
-  -- flake.nix's testFlags pass; run bare, the mutation never returns.
   Spec.it s "CR 603.3d an announcement outside the offer, made afresh each time, is refused rather than asked forever" $ do
     mountain <- S.printingOf s registry "Mountain"
     wall <- S.printingOf s registry "Wall of Stone"
