@@ -50,11 +50,13 @@ import qualified Pawl.Types.PaymentSubject as PaymentSubject
 import qualified Pawl.Types.PendingTrigger as PendingTrigger
 import qualified Pawl.Types.PlanarDieFace as PlanarDieFace
 import qualified Pawl.Types.PlanarDieRolled as PlanarDieRolled
+import qualified Pawl.Types.PlaneswalkCause as PlaneswalkCause
 import qualified Pawl.Types.PlayerActed as PlayerActed
 import qualified Pawl.Types.PlayerAction as PlayerAction
 import Pawl.Types.PlayerId (PlayerId)
 import qualified Pawl.Types.PlayerRelation as PlayerRelation
 import qualified Pawl.Types.Prompt as Prompt
+import qualified Pawl.Types.ProposedEvent as ProposedEvent
 import qualified Pawl.Types.SideDeck as SideDeck
 import qualified Pawl.Types.Source as Source
 import qualified Pawl.Types.TriggerCondition as TriggerCondition
@@ -82,13 +84,24 @@ canPlaneswalk pid gs = isPlanechase gs && pid == Plane.planarController gs
 
 -- | CR 701.31b: put each face-up plane and phenomenon card on the bottom of its
 -- owner's planar deck, then turn the top card of this player's planar deck
--- face up. Nothing for a player CR 701.31a does not let planeswalk.
-planeswalk :: PlayerId -> Game ()
-planeswalk pid = do
+-- face up. Nothing for a player CR 701.31a does not let planeswalk. Proposed
+-- first as WouldPlaneswalk for this cause (CR 701.31c), so CR 614's
+-- replacements see it.
+planeswalk :: PlaneswalkCause.PlaneswalkCause -> PlayerId -> Game ()
+planeswalk cause pid = proposed cause pid $ do
+  now <- State.get
+  Monad.mapM_ toBottom (faceUp now)
+  encounterTop pid
+
+-- CR 614.1a: propose this player's planeswalk for this cause, and perform it
+-- unless a replacement took its place. Nothing for a player CR 701.31a does not
+-- let planeswalk.
+proposed :: PlaneswalkCause.PlaneswalkCause -> PlayerId -> Game () -> Game ()
+proposed cause pid perform = do
   gs <- State.get
   Monad.when (canPlaneswalk pid gs) $ do
-    Monad.mapM_ toBottom (faceUp gs)
-    encounterTop pid
+    outcome <- Event.applyReplacements (ProposedEvent.WouldPlaneswalk pid cause)
+    Monad.forM_ outcome (const perform)
 
 -- | CR 103.7: the starting player turns up planar cards until a plane is face
 -- up, putting each phenomenon on the bottom. No ability triggers (CR 901.5):
@@ -111,10 +124,15 @@ setStartingPlane pid = do
 -- left with them, the planar controller -- already CR 800.4p's heir -- turns up
 -- the top card of their planar deck, and if a face-up plane left, every
 -- planeswalking ability on the stack ceases to exist. Not a state-based action.
+-- The turn-up is a planeswalk (CR 701.31c), proposed for CR 614's replacements,
+-- with nothing to put on the bottom: the face-up card has left the game.
+-- Pawl.PlanechaseSpec's "CR 701.31c Susan Foreman arranges the planeswalk a
+-- plane's departing owner causes" proves it.
+--
 -- A phenomenon leaving alone spares the ability, CR 901.10a naming a plane.
 -- Unobserved: a phenomenon is face up beside a planeswalking ability only after
--- a planeswalk in response to one, and no card in data/cards planeswalks
--- (`"type": "Planeswalk"`, 2026-10-15).
+-- a planeswalk in response to one, and the one card in data/cards that
+-- planeswalks, Path of the Enigma, is a sorcery (2026-10-15).
 ownersLeft :: GameState -> [PlayerId] -> Game ()
 ownersLeft before pids = do
   let owned oid = maybe False (\obj -> List.elem (Object.owner obj) pids) (Game.lookupObject oid before)
@@ -123,16 +141,19 @@ ownersLeft before pids = do
   Monad.unless (null left) $ do
     Monad.when (any isPlane left) (State.modify' ceasePlaneswalking)
     gs <- State.get
-    encounterTop (Plane.planarController gs)
+    let walker = Plane.planarController gs
+    proposed PlaneswalkCause.OwnerLeft walker (encounterTop walker)
 
--- CR 901.10a: every planeswalking ability on the stack ceases to exist. Read as
--- CR 901.8's own inherent ability, which is the rule's and not a card's.
+-- CR 901.10a: every planeswalking ability on the stack ceases to exist.
 ceasePlaneswalking :: GameState -> GameState
-ceasePlaneswalking gs =
-  let walking oid = case fmap Object.source (Game.lookupObject oid gs) of
-        Just (Source.OfInherentTrigger inherent) -> InherentTriggerSource.ability inherent == planeswalkingAbility
-        _ -> False
-   in List.foldl' (flip Game.cease) gs (filter walking (GameState.stack gs))
+ceasePlaneswalking gs = List.foldl' (flip Game.cease) gs (filter (`isPlaneswalkingAbility` gs) (GameState.stack gs))
+
+-- | CR 901.8: is this object a planeswalking ability? Read as CR 901.8's own
+-- inherent ability, which is the rule's and not a card's.
+isPlaneswalkingAbility :: ObjectId -> GameState -> Bool
+isPlaneswalkingAbility oid gs = case fmap Object.source (Game.lookupObject oid gs) of
+  Just (Source.OfInherentTrigger inherent) -> InherentTriggerSource.ability inherent == planeswalkingAbility
+  _ -> False
 
 -- CR 701.31b's second half and CR 901.10's turn-up: move the top card off the
 -- planar deck and turn it face up, recording the GameEvent.TurnedUpOffDeck that
@@ -235,8 +256,9 @@ faceOf n = case n of
   _ -> PlanarDieFace.Blank
 
 -- | CR 116.2i / 901.9: pay, then roll the planar die. The roll records
--- PlayerAction.RollDice (CR 901.9d) and PlanarDieRolled, which is what CR 311.7's chaos
--- abilities and CR 901.8's planeswalking ability trigger on.
+-- PlayerAction.RollDice (CR 901.9d) and PlanarDieRolled, which CR 901.8's
+-- planeswalking ability triggers on, and for the chaos symbol ChaosEnsued, which
+-- CR 311.7's chaos abilities trigger on.
 -- A payment that fails restores the state, Pawl.Engine.Companion.take's
 -- posture, and nothing is rolled.
 roll :: ManaAbilityPerformer.ManaAbilityPerformer -> PlayerId -> Game ()
@@ -249,6 +271,8 @@ roll perform pid = do
       rolled <- Game.ask (Prompt.RollDie 6)
       State.modify' (Event.recordEvent (GameEvent.PlayerActed (PlayerActed.MkPlayerActed PlayerAction.RollDice pid)))
       State.modify' (Event.recordEvent (GameEvent.PlanarDieRolled (PlanarDieRolled.MkPlanarDieRolled pid (faceOf rolled))))
+      -- CR 901.9b: the chaos symbol makes chaos ensue.
+      Monad.when (faceOf rolled == PlanarDieFace.Chaos) (State.modify' (Event.recordEvent GameEvent.ChaosEnsued))
 
 -- | CR 901.8: the planeswalking ability, paired with each player, for
 -- Pawl.Engine.Event.Trigger.inherentTriggers. Planechase games have it; it "has

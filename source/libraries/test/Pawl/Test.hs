@@ -475,6 +475,9 @@ import qualified Pawl.Codec.PileSpec
 import qualified Pawl.Codec.PlacementSpec
 import qualified Pawl.Codec.PlanarDieFaceSpec
 import qualified Pawl.Codec.PlanarDieRolledSpec
+import qualified Pawl.Codec.PlaneswalkCauseSpec
+import qualified Pawl.Codec.PlaneswalkRSpec
+import qualified Pawl.Codec.PlaneswalkRewriteSpec
 import qualified Pawl.Codec.PlayPermissionOriginSpec
 import qualified Pawl.Codec.PlayerActionSpec
 import qualified Pawl.Codec.PlayerAttacksPlayerSpec
@@ -1423,6 +1426,9 @@ spec s registry = do
   Pawl.Codec.ScalingSpec.spec s
   Pawl.Codec.ScenarioSpec.spec s
   Pawl.Codec.TurnedUpOffDeckSpec.spec s
+  Pawl.Codec.PlaneswalkCauseSpec.spec s
+  Pawl.Codec.PlaneswalkRSpec.spec s
+  Pawl.Codec.PlaneswalkRewriteSpec.spec s
   Pawl.Codec.ScopeSpec.spec s
   Pawl.Codec.ScryRewriteSpec.spec s
   Pawl.Codec.ScryRSpec.spec s

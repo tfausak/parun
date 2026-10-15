@@ -198,6 +198,8 @@ import qualified Pawl.Types.PermanentActed as PermanentActed
 import qualified Pawl.Types.PermanentAction as PermanentAction
 import qualified Pawl.Types.PermanentWasSacrificed as PermanentWasSacrificed
 import Pawl.Types.PhaseSelector (PhaseSelector)
+import qualified Pawl.Types.PlaneswalkR as PlaneswalkR
+import qualified Pawl.Types.PlaneswalkRewrite as PlaneswalkRewrite
 import qualified Pawl.Types.Player as Player
 import qualified Pawl.Types.PlayerAttacksPlayer as PlayerAttacksPlayer
 import qualified Pawl.Types.PlayerAttacksWith as PlayerAttacksWith
@@ -808,6 +810,7 @@ damageOf event = case event of
   GameEvent.RolledToVisit _ -> Nothing
   GameEvent.PlanarDieRolled _ -> Nothing
   GameEvent.TurnedUpOffDeck _ -> Nothing
+  GameEvent.ChaosEnsued -> Nothing
   GameEvent.ClassLevelSet _ -> Nothing
   GameEvent.Plotted _ -> Nothing
   GameEvent.BecameAttacked _ -> Nothing
@@ -880,6 +883,7 @@ revealOf event = case event of
   GameEvent.RolledToVisit _ -> Nothing
   GameEvent.PlanarDieRolled _ -> Nothing
   GameEvent.TurnedUpOffDeck _ -> Nothing
+  GameEvent.ChaosEnsued -> Nothing
   GameEvent.ClassLevelSet _ -> Nothing
   GameEvent.Plotted _ -> Nothing
   GameEvent.BecameAttacked _ -> Nothing
@@ -2016,6 +2020,7 @@ shufflesAfter candidate = case ReplacementCandidate.effect candidate of
   ReplacementEffect.VillainousChoiceR {} -> False
   ReplacementEffect.AssembleR {} -> False
   ReplacementEffect.GameLossR {} -> False
+  ReplacementEffect.PlaneswalkR {} -> False
   ReplacementEffect.PhaseR _ -> False
 
 -- CR 615.12: apply one chosen PREVENTION effect to damage that can't be
@@ -4097,6 +4102,34 @@ apply batch candidate event =
       pure Nothing
     -- Unreachable: `applies` admits GameLossR only against WouldLoseGame.
     (ReplacementEffect.GameLossR {}, _) -> pure (Just event)
+    (ReplacementEffect.PlaneswalkR (PlaneswalkR.MkPlaneswalkR _ _ rewrite), ProposedEvent.WouldPlaneswalk pid _) -> do
+      Replacement.consume (ReplacementCandidate.identity candidate)
+      case rewrite of
+        -- Susan Foreman's "look at the top two cards of your planar deck, put
+        -- one on the bottom of your planar deck and the other on top, then
+        -- planeswalk": the arrangement happens here, and the planeswalk stands
+        -- for the rows CR 614.5 has not yet spent.
+        PlaneswalkRewrite.ArrangeTopTwo -> do
+          arrangeTopTwo (ReplacementCandidate.source candidate) pid
+          pure (Just event)
+        -- Fixed Point in Time's "chaos ensues instead": the planeswalk does not
+        -- happen, and the effects are queued, the GameLossR arm's reason.
+        PlaneswalkRewrite.RunEffects effects -> do
+          Monad.forM_ (ReplacementCandidate.controller candidate) $ \controller ->
+            State.modify' $ \g ->
+              g
+                { GameState.pendingReplacementEffects =
+                    GameState.pendingReplacementEffects g
+                      Seq.|> PendingReplacementEffect.MkPendingReplacementEffect
+                        { PendingReplacementEffect.effects = effects,
+                          PendingReplacementEffect.targets = fmap (Set.map Recipient.ToObject) (ReplacementCandidate.slots candidate),
+                          PendingReplacementEffect.controller = controller,
+                          PendingReplacementEffect.source = ReplacementCandidate.source candidate
+                        }
+                }
+          pure Nothing
+    -- Unreachable: `applies` admits PlaneswalkR only against WouldPlaneswalk.
+    (ReplacementEffect.PlaneswalkR {}, _) -> pure (Just event)
     -- CR 122.6/614.1: Hardened Scales/Doubling Season scale a counter placement.
     (ReplacementEffect.CounterR (CounterR.MkCounterR _ scaling), ProposedEvent.WouldPutCounters cause oid kind n) -> do
       Replacement.consume (ReplacementCandidate.identity candidate)
@@ -4590,11 +4623,11 @@ seatEnteringAura batch oid = do
   case Projection.controllerOf oid gs of
     Just controller | unattached && Set.member Subtype.Aura (Projection.subtypesOf oid gs) -> do
       let entering h = Set.member h batch || Set.member h (GameState.enteringSubjects gs)
-          hosts = filter (not . maybe False entering . Recipient.objectOf) (Attach.entryHostsFor (Projection.sourceContext gs (Just controller) oid) oid gs)
+          hosts = filter (not . maybe False entering . Recipient.objectOf) (Attach.entryHostsFor controller oid gs)
       chosen <- Attach.chooseEntryHost controller oid hosts
       -- THE TAG the enchant slot produced, for changeZoneAttaching's reason:
       -- Sba.stillLegalEnchant compares the (pool, tag) pair.
-      case chosen >>= \h -> Attach.attachmentFor oid h gs of
+      case chosen >>= \h -> Attach.entryAttachmentFor controller oid h gs of
         Nothing -> pure False
         Just recipient -> do
           State.modify' $ \g -> g {GameState.objects = Map.adjust (\o -> o {Object.attachedTo = Just recipient}) oid (GameState.objects g)}
@@ -6450,7 +6483,11 @@ changeZoneWithCause discarded asOf batch oid requestedDest requestedPosition see
           -- where the hosts already are. Attach.entryHostsFor sweeps the battlefield,
           -- the graveyards and the players still in the game, and
           -- Attach.attachmentFor reads Projection.subtypesOf and Game.faceOf, both
-          -- of which answer for an object in any zone.
+          -- of which answer for an object in any zone. Its CONTROLLER is the one
+          -- read that does not: a card there has none (CR 109.4), so both judge
+          -- the Aura as `chooser`'s (Attach.enteringUnder) -- CR 109.5's "you" on
+          -- its enchant ability and CR 702.16k's "Auras that player controls".
+          -- Pawl.AuraSpec's Crime // Punishment cases prove it.
           --
           -- MINUS `batch`, which is CR 608.2f: the members of a batch enter
           -- simultaneously, so a would-be host arriving beside this Aura is not on
@@ -6510,11 +6547,11 @@ changeZoneWithCause discarded asOf batch oid requestedDest requestedPosition see
                 -- nobody, per CR 110.2 and CR 108.4a, exactly as the field's own
                 -- note above says.
                 let chooser = Maybe.fromMaybe pid under
-                    -- A bare Filter.contextFor: rule 303.4f's restriction is the
-                    -- Aura's own enchant ability, so there is no resolution
-                    -- whose slots the filter could name -- and CanHostSubject,
-                    -- the whole filter here, names none.
-                    hosts = filter (not . maybe False (`Set.member` batch) . Recipient.objectOf) (Attach.entryHostsFor (Projection.sourceContext gs (Just chooser) oid) oid gs)
+                    -- entryHostsFor builds a bare source context: rule 303.4f's
+                    -- restriction is the Aura's own enchant ability, so there is
+                    -- no resolution whose slots the filter could name -- and
+                    -- CanHostSubject, the whole filter here, names none.
+                    hosts = filter (not . maybe False (`Set.member` batch) . Recipient.objectOf) (Attach.entryHostsFor chooser oid gs)
                 chosen <- Attach.chooseEntryHost chooser oid hosts
                 -- THE TAG the Aura's own enchant slot produced, never a hand-built
                 -- ToObject: Sba.stillLegalEnchant compares the (pool, tag) pair, so
@@ -6525,7 +6562,7 @@ changeZoneWithCause discarded asOf batch oid requestedDest requestedPosition see
                 -- "remains in its current zone" too, and is unreachable rather than
                 -- a second reading: entryHostsFor admits every candidate through that
                 -- same function.
-                pure (fmap Just (chosen >>= \h -> Attach.attachmentFor oid h gs))
+                pure (fmap Just (chosen >>= \h -> Attach.entryAttachmentFor chooser oid h gs))
               else pure (Just seed)
           case settledSeed of
             Nothing -> pure Seq.empty
@@ -9185,6 +9222,22 @@ reveal cause pid oid = do
   gs <- State.get
   Monad.mapM_ (State.modify' . recordEvent) (revealedOn cause pid oid gs)
 
+-- | Susan Foreman's rewrite of CR 701.31b: this player looks at the top two
+-- cards of their planar deck and puts the one they choose on top and the other
+-- on the bottom, on behalf of the object `source`. With fewer than two there is
+-- nothing to put anywhere.
+arrangeTopTwo :: ObjectId -> PlayerId -> Game ()
+arrangeTopTwo source pid = do
+  gs <- State.get
+  case Game.sideDeckOf SideDeck.Planar pid gs of
+    first : second : rest -> do
+      Monad.mapM_ (look pid) [first, second]
+      chosen <- Game.chooseAmong (\decider asked -> Prompt.ChooseCardFromAmong decider asked source) pid [first, second]
+      let top = Maybe.fromMaybe first chosen
+          bottom = if top == first then second else first
+      State.modify' (Game.overSideDecks SideDeck.Planar (Map.insert pid (Seq.fromList (top : rest <> [bottom]))))
+    _ -> pure ()
+
 -- | CR 701.20e: a player looks at a card, shown to them and, per CR 723.4, to
 -- the player making their decisions. Records nothing when the object is gone.
 look :: PlayerId -> ObjectId -> Game ()
@@ -9826,6 +9879,7 @@ abilityTriggeredOf event = case event of
   GameEvent.RolledToVisit _ -> Nothing
   GameEvent.PlanarDieRolled _ -> Nothing
   GameEvent.TurnedUpOffDeck _ -> Nothing
+  GameEvent.ChaosEnsued -> Nothing
   GameEvent.ClassLevelSet _ -> Nothing
   GameEvent.Plotted _ -> Nothing
   GameEvent.BecameAttacked _ -> Nothing

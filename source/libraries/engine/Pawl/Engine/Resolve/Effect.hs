@@ -320,6 +320,7 @@ import qualified Pawl.Types.PermissionVerb as PermissionVerb
 import qualified Pawl.Types.Phase as Phase
 import qualified Pawl.Types.PhasePattern as PhasePattern
 import qualified Pawl.Types.PhaseSelector as PhaseSelector
+import qualified Pawl.Types.PlaneswalkCause as PlaneswalkCause
 import qualified Pawl.Types.PlayPermissionOrigin as PlayPermissionOrigin
 import qualified Pawl.Types.Player as Player
 import qualified Pawl.Types.PlayerActed as PlayerActed
@@ -2114,6 +2115,7 @@ referentsOfReplacement re = case re of
   ReplacementEffect.VillainousChoiceR _ -> []
   ReplacementEffect.AssembleR _ -> []
   ReplacementEffect.GameLossR _ -> []
+  ReplacementEffect.PlaneswalkR _ -> []
   ReplacementEffect.PhaseR _ -> []
 
 -- The recipients a damage REWRITE bakes, which is CR 614.9's redirect destination
@@ -3567,6 +3569,7 @@ effectIsImpossible resolving source controller legal gs effect = case effect of
   Effect.Assemble _ -> null (Game.sideDeckOf SideDeck.Contraption controller gs)
   -- CR 701.31a: only the planar controller of a Planechase game planeswalks.
   Effect.Planeswalk -> not (Planechase.canPlaneswalk controller gs)
+  Effect.ChaosEnsues -> False
   -- CR 701.33a: only a face-up ongoing scheme may be abandoned.
   Effect.Abandon -> not (Archenemy.canAbandon source gs)
   Effect.ClaimPrize -> False
@@ -4209,11 +4212,11 @@ applyOneEffect runSubgame resolving source controller legal chosen effect = case
     -- this same resolution.
     let searchContext g = effectContext g controller source legal (slotBindings resolving g)
         subjectOf g = maybe (Just source) (\slot -> Filter.slotOneObject slot (searchContext g)) subject
-        viewOfCandidate g oid =
+        viewOfCandidate searcher g oid =
           (Projection.viewOfObject oid g)
-            { Filter.canAttachToSubject = Maybe.maybe False (\host -> Attach.attachableWithLastKnown oid host g) (subjectOf g)
+            { Filter.canAttachToSubject = Maybe.maybe False (\host -> Attach.attachableWithLastKnown searcher oid host g) (subjectOf g)
             }
-        matches1 g oid = Filter.matches (searchContext g) (viewOfCandidate g oid) filter_
+        matches1 searcher g oid = Filter.matches (searchContext g) (viewOfCandidate searcher g oid) filter_
         -- CR 400.2: the library and the hand are the hidden zones. CR 701.23b,
         -- CR 701.23c and CR 701.23d are each scoped to a hidden zone, so this is
         -- what decides, PER ZONE, whether a find may be declined.
@@ -4373,7 +4376,7 @@ applyOneEffect runSubgame resolving source controller legal chosen effect = case
                   -- one instruction with one count, and asking per zone would cap
                   -- per zone. The zone is kept alongside its candidates because
                   -- CR 701.23b's permission is a property of the ZONE.
-                  let byZone = fmap (\zone -> (zone, filter (matches1 gs) (Game.zoneMembers zone owner gs))) (Set.toAscList searchedZones)
+                  let byZone = fmap (\zone -> (zone, filter (matches1 searcher gs) (Game.zoneMembers zone owner gs))) (Set.toAscList searchedZones)
                       matches = concatMap snd byZone
                       outsideCopies = sum (Map.elems outsideAvailable)
                       -- CR 701.23a bounds an unbounded search by the places: every
@@ -5535,7 +5538,9 @@ applyOneEffect runSubgame resolving source controller legal chosen effect = case
   -- the leaving permanent itself. Pawl.AuraSpec's AuraSwap group and
   -- data/scenarios/ante/ante-darkpact-takes-an-opponents-ante-card.json are the
   -- proof; the no-host and self-host halves are fences, every Aura card those
-  -- boards offer having a host other than the source.
+  -- boards offer having a host other than the source. Either way the entering
+  -- card is judged as the resolving controller's (Attach.entryAttachmentFor),
+  -- a fence too: AuraSwap's Aura card comes from its controller's own hand.
   --
   -- Not implemented: a library card from neither end of its library, which
   -- LibraryPosition cannot name, sends the other card to the bottom (#4974).
@@ -5551,12 +5556,12 @@ applyOneEffect runSubgame resolving source controller legal chosen effect = case
             entering card left = case Game.lookupObject left before of
               Just obj
                 | Object.zone obj == Zone.Battlefield -> case Object.attachedTo obj of
-                    Just host -> pure (fmap Just (Attach.attachmentFor card host before))
+                    Just host -> pure (fmap Just (Attach.entryAttachmentFor controller card host before))
                     Nothing
                       | Set.member Subtype.Aura (Projection.subtypesOf card before) -> do
-                          let hosts = filter ((/= Just left) . Recipient.objectOf) (Attach.entryHostsFor (Projection.sourceContext before (Just controller) card) card before)
+                          let hosts = filter ((/= Just left) . Recipient.objectOf) (Attach.entryHostsFor controller card before)
                           entryHost <- Attach.chooseEntryHost controller card hosts
-                          pure (fmap Just (entryHost >>= \h -> Attach.attachmentFor card h before))
+                          pure (fmap Just (entryHost >>= \h -> Attach.entryAttachmentFor controller card h before))
                       | otherwise -> pure (Just Nothing)
               _ -> pure (Just Nothing)
             zoneOf oid = fmap Object.zone (Game.lookupObject oid before)
@@ -9801,7 +9806,12 @@ applyOneEffect runSubgame resolving source controller legal chosen effect = case
     gs <- State.get
     let assembler = ref >>= \r -> Maybe.listToMaybe (Maybe.mapMaybe Recipient.objectOf (objectRefRecipients legal resolving controller source gs r))
     Contraption.assemble assembler controller
-  Effect.Planeswalk -> Planechase.planeswalk controller
+  -- CR 701.31c: the cause is the planar die's exactly when this is CR 901.8's
+  -- planeswalking ability resolving.
+  Effect.Planeswalk -> do
+    gs <- State.get
+    Planechase.planeswalk (if Planechase.isPlaneswalkingAbility resolving gs then PlaneswalkCause.PlanarDie else PlaneswalkCause.Instruction) controller
+  Effect.ChaosEnsues -> State.modify' (Event.recordEvent GameEvent.ChaosEnsued)
   Effect.Abandon -> Archenemy.abandon source
   -- CR 702.159b: the prize's actions are the effects after this one, so the
   -- claim itself is only the event "whenever you claim the prize" reads.
@@ -11449,7 +11459,11 @@ putFound asOf searcher subject destination cardId = case destination of
 -- nothing.
 --
 -- CR 110.2a: it enters under the SEARCHER, the player whose effect is putting it
--- there, as putOntoBattlefield's entries do.
+-- there, as putOntoBattlefield's entries do, and is judged as the searcher's
+-- (Attach.entryAttachmentFor), as the search's own offer judges it. A
+-- regression fence: the three cards in data/cards with an attaching search
+-- destination (Auratouched Mage, Bruna, Light of Alabaster, Sovereigns of Lost
+-- Alara) search their controller's own zones, so owner and searcher coincide.
 --
 -- Nothing from attachmentFor is CR 303.4i's "the Aura remains in its current
 -- zone" -- unreachable from a filter naming Filter.CanAttachToSubject, since that
@@ -11458,7 +11472,7 @@ putFound asOf searcher subject destination cardId = case destination of
 attachFound :: GameState -> PlayerId -> ObjectId -> ObjectId -> Game [ObjectId]
 attachFound asOf searcher host cardId = do
   gs <- State.get
-  case Attach.attachmentFor cardId (Recipient.ToObject host) gs of
+  case Attach.entryAttachmentFor searcher cardId (Recipient.ToObject host) gs of
     Nothing -> pure []
     Just seed ->
       Foldable.toList

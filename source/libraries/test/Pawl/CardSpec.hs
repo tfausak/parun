@@ -275,6 +275,8 @@ import qualified Pawl.Types.PermissionPool as PermissionPool
 import qualified Pawl.Types.PermissionVerb as PermissionVerb
 import qualified Pawl.Types.PhaseSelector as PhaseSelector
 import qualified Pawl.Types.PlacesSticker as PlacesSticker
+import qualified Pawl.Types.PlaneswalkR as PlaneswalkR
+import qualified Pawl.Types.PlaneswalkRewrite as PlaneswalkRewrite
 import qualified Pawl.Types.PlayerAttacksWith as PlayerAttacksWith
 import qualified Pawl.Types.PlayerCounterKind as PlayerCounterKind
 import qualified Pawl.Types.PlayerCounters as PlayerCounters
@@ -1261,6 +1263,7 @@ ownCounts effect = case effect of
   Effect.TemptWithTheRing -> []
   Effect.OpenAttraction -> []
   Effect.Planeswalk -> []
+  Effect.ChaosEnsues -> []
   Effect.Abandon -> []
   Effect.ClaimPrize -> []
   Effect.Forage -> []
@@ -1795,6 +1798,7 @@ effectNestedEffects effect = case effect of
   Effect.TemptWithTheRing -> []
   Effect.OpenAttraction -> []
   Effect.Planeswalk -> []
+  Effect.ChaosEnsues -> []
   Effect.Abandon -> []
   Effect.ClaimPrize -> []
   Effect.Forage -> []
@@ -2234,6 +2238,7 @@ replacementRewriteEffects replacement = case replacement of
   ReplacementEffect.AssembleR {} -> []
   -- CR 614.1a's instead for a loss of the game (Lich's Mirror's reset).
   ReplacementEffect.GameLossR (GameLossR.MkGameLossR _ effects) -> Foldable.toList effects
+  ReplacementEffect.PlaneswalkR r -> (case PlaneswalkR.rewrite r of PlaneswalkRewrite.ArrangeTopTwo -> []; PlaneswalkRewrite.RunEffects effects -> Foldable.toList effects)
   ReplacementEffect.PhaseR _ -> []
 
 -- CR 615.5: the additional effect a replacement PRINTS -- DamageR's riders, and
@@ -2266,6 +2271,7 @@ replacementEffectRiders replacement = case replacement of
   ReplacementEffect.VillainousChoiceR {} -> []
   ReplacementEffect.AssembleR {} -> []
   ReplacementEffect.GameLossR {} -> []
+  ReplacementEffect.PlaneswalkR {} -> []
   ReplacementEffect.PhaseR _ -> []
 
 -- CR 111.1's token a replacement MINTS: TokenR's appended token (Queen Allenal
@@ -2296,6 +2302,7 @@ replacementMintedCards replacement = case replacement of
   ReplacementEffect.VillainousChoiceR {} -> []
   ReplacementEffect.AssembleR {} -> []
   ReplacementEffect.GameLossR {} -> []
+  ReplacementEffect.PlaneswalkR {} -> []
   ReplacementEffect.PhaseR _ -> []
 
 -- Every ReplacementEffect one effect authors: the one an Effect.Replace installs
@@ -2338,6 +2345,7 @@ effectReplacements effect = case effect of
   Effect.TemptWithTheRing -> []
   Effect.OpenAttraction -> []
   Effect.Planeswalk -> []
+  Effect.ChaosEnsues -> []
   Effect.Abandon -> []
   Effect.ClaimPrize -> []
   Effect.Forage -> []
@@ -2859,6 +2867,7 @@ effectMintedFaces effect = case effect of
   Effect.TemptWithTheRing -> []
   Effect.OpenAttraction -> []
   Effect.Planeswalk -> []
+  Effect.ChaosEnsues -> []
   Effect.Abandon -> []
   Effect.ClaimPrize -> []
   Effect.Forage -> []
@@ -5153,6 +5162,7 @@ replacementEffectFilters replacementEffect = case replacementEffect of
   ReplacementEffect.VillainousChoiceR {} -> []
   ReplacementEffect.AssembleR {} -> []
   ReplacementEffect.GameLossR {} -> []
+  ReplacementEffect.PlaneswalkR {} -> []
   ReplacementEffect.PhaseR _ -> []
 
 -- CR 614.9's printed destination, the one Filter a damage REWRITE carries.
@@ -5794,6 +5804,7 @@ effectFilters effect = case effect of
   Effect.TemptWithTheRing -> []
   Effect.OpenAttraction -> []
   Effect.Planeswalk -> []
+  Effect.ChaosEnsues -> []
   Effect.Abandon -> []
   Effect.ClaimPrize -> []
   Effect.Forage -> []
@@ -7292,6 +7303,10 @@ lintSpec s registry = Spec.describe s "Lint" $ do
             || entersTriggerReadsX c
             || turnedUpReadsX c
             || selfReductionReadsX c
+            || filterReadsX c
+        -- A Filter comparing against X itself (Operand.AmountInSlot), which no
+        -- Quantity holds: Punishment's "with mana value X".
+        filterReadsX c = any (Set.member Binding.variableX . Filter.boundSlots . snd) (cardFilters c)
         -- CR 601.2f's reader: the spell's own reduction counting the X its
         -- additional cost announced (Torgaar, Famine Incarnate's "for each
         -- creature sacrificed this way").
