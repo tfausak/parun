@@ -1,0 +1,42 @@
+{
+  "description": "CR 607.5 Vesuvan Shapeshifter entering as a copy of a Centaur of Attention stores and rerolls for the pair its copy effect gave it",
+  "note": "The Shapeshifter's copy has a duration, so the abilities it brings are the copy effect's and not the Shapeshifter's own (CR 607.5). Its copied enters trigger stores 6, 6, 6, 1, 2 for that pair, which its copied +X/+X reads: 6/6 (CR 706.8a). At combat its copied reroll is offered those same results, and rerolling the 1 and the 2 into two 6s leaves five 6s: 8/8 (CR 706.8b). Noting the results for the Shapeshifter's own abilities would leave it 3/3 with nothing to reroll.",
+  "board": {
+    "seats": [
+      {
+        "name": "alice",
+        "battlefield": [
+          { "card": "Island", "label": "i1" },
+          { "card": "Island", "label": "i2" },
+          { "card": "Island", "label": "i3" },
+          { "card": "Island", "label": "i4" },
+          { "card": "Island", "label": "i5" }
+        ],
+        "hand": [{ "card": "Vesuvan Shapeshifter", "label": "vesuvan" }]
+      },
+      {
+        "name": "bob",
+        "battlefield": [{ "card": "Centaur of Attention", "label": "model" }]
+      }
+    ],
+    "active": "alice",
+    "step": "PrecombatMain"
+  },
+  "timeline": [
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": { "Cast": { "object": "$vesuvan", "faceDown": false, "mana": ["$i1", "$i2", "$i3", "$i4", "$i5"] } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass" },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": { "ChooseCopyTarget": "$model" } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass" },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": { "Answer": { "prompt": "RollDie", "with": 6 } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": { "Answer": { "prompt": "RollDie", "with": 6 } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": { "Answer": { "prompt": "RollDie", "with": 6 } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": { "Answer": { "prompt": "RollDie", "with": 1 } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": { "Answer": { "prompt": "RollDie", "with": 2 } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "check": { "PowerToughness": { "object": "Vesuvan Shapeshifter", "power": 6, "toughness": 6 } } },
+    { "turn": 1, "step": "BeginningOfCombat", "player": "alice", "do": "Pass" },
+    { "turn": 1, "step": "BeginningOfCombat", "player": "alice", "do": { "Answer": { "prompt": "ChooseStoredRerolls", "with": [[{ "sides": 6, "value": 1 }, 1], [{ "sides": 6, "value": 2 }, 1]] } } },
+    { "turn": 1, "step": "BeginningOfCombat", "player": "alice", "do": { "Answer": { "prompt": "RollDie", "with": 6 } } },
+    { "turn": 1, "step": "BeginningOfCombat", "player": "alice", "do": { "Answer": { "prompt": "RollDie", "with": 6 } } },
+    { "turn": 1, "step": "BeginningOfCombat", "player": "alice", "check": { "PowerToughness": { "object": "Vesuvan Shapeshifter", "power": 8, "toughness": 8 } } }
+  ]
+}

@@ -20,6 +20,7 @@ import qualified Pawl.Engine.Modal as Modal
 import qualified Pawl.Engine.Turn as Turn
 import qualified Pawl.Extra.Natural as Natural
 import qualified Pawl.Types.AbilityName as AbilityName
+import qualified Pawl.Types.Acquisition as Acquisition
 import qualified Pawl.Types.ActivatedAbilitySource as ActivatedAbilitySource
 import qualified Pawl.Types.ActiveCopy as ActiveCopy
 import qualified Pawl.Types.ActiveObjectProhibition as ActiveObjectProhibition
@@ -94,6 +95,7 @@ import qualified Pawl.Types.StickerKind as StickerKind
 import qualified Pawl.Types.StickerPlacement as StickerPlacement
 import qualified Pawl.Types.StickerRef as StickerRef
 import qualified Pawl.Types.StickerSheet as StickerSheet
+import qualified Pawl.Types.StoredResult as StoredResult
 import qualified Pawl.Types.Subtype as Subtype
 import qualified Pawl.Types.TapState as TapState
 import qualified Pawl.Types.TargetSlot as TargetSlot
@@ -2026,6 +2028,22 @@ storedCopyOf oid gs =
     . Maybe.listToMaybe
     . List.sortOn (Ord.Down . ActiveCopy.timestamp)
     $ filter (Set.member oid . ActiveCopy.objects) (GameState.copyEffects gs)
+
+-- | CR 607.5: the acquisition of the abilities layer 1a leaves this object --
+-- the latest stored copy effect covering it, `storedCopyOf`'s row, named by its
+-- timestamp, and otherwise the one its copy binding records (Object.acquisition).
+-- Own for an id naming no object: CR 400.7 gives a departed object's id to no
+-- other, so nothing can be noted under it again.
+acquisitionOf :: ObjectId -> GameState -> Acquisition.Acquisition
+acquisitionOf oid gs =
+  case Maybe.listToMaybe . List.sortOn Ord.Down . fmap ActiveCopy.timestamp $ filter (Set.member oid . ActiveCopy.objects) (GameState.copyEffects gs) of
+    Just ts -> Acquisition.Copied ts
+    Nothing -> maybe Acquisition.Own Object.acquisition (lookupObject oid gs)
+
+-- | CR 607.5: the results stored on this object for the abilities acquired as
+-- `acquisition` (Object.storedResults).
+storedResultsUnder :: Acquisition.Acquisition -> Object.Object -> Map.Map StoredResult.StoredResult Natural
+storedResultsUnder acquisition = Map.findWithDefault Map.empty acquisition . Object.storedResults
 
 -- CR 613.1a: the object as layer 1a leaves it -- `storedCopyOf`'s row laid into
 -- its copy binding, and the object itself where no row covers it. For the

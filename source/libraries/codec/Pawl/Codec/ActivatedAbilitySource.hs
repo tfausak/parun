@@ -3,6 +3,7 @@
 module Pawl.Codec.ActivatedAbilitySource where
 
 import qualified Data.Map.Strict as Map
+import qualified Pawl.Codec.Acquisition as Acquisition
 import qualified Pawl.Codec.ActivatedAbility as ActivatedAbility
 import qualified Pawl.Codec.Card as Card
 import qualified Pawl.Codec.GrantedAbility as GrantedAbility
@@ -10,6 +11,7 @@ import qualified Pawl.Codec.ObjectId as ObjectId
 import qualified Pawl.Codec.TriggeredAbility as TriggeredAbility
 import qualified Pawl.JsonCodec.Codec as Codec
 import qualified Pawl.JsonCodec.Fields as Fields
+import qualified Pawl.Types.Acquisition as Acquisition.Type
 import qualified Pawl.Types.ActivatedAbilitySource as ActivatedAbilitySource
 
 -- | The ability codec is built from the card codec the same way every other
@@ -19,9 +21,11 @@ codec = Fields.object $ do
   source <- Fields.required "source" ObjectId.codec ActivatedAbilitySource.source
   ability <- Fields.required "ability" (ActivatedAbility.codec Card.codec (GrantedAbility.codec Card.codec)) ActivatedAbilitySource.ability
   delayed <- Fields.defaulted "delayed" Map.empty (TriggeredAbility.codecDelayed Card.codec (GrantedAbility.codec Card.codec)) ActivatedAbilitySource.delayed
+  acquisition <- Fields.defaulted "acquisition" Acquisition.Type.Own Acquisition.codec ActivatedAbilitySource.acquisition
   pure
     ActivatedAbilitySource.MkActivatedAbilitySource
       { ActivatedAbilitySource.source = source,
         ActivatedAbilitySource.ability = ability,
-        ActivatedAbilitySource.delayed = delayed
+        ActivatedAbilitySource.delayed = delayed,
+        ActivatedAbilitySource.acquisition = acquisition
       }

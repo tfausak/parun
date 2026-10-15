@@ -2,6 +2,7 @@ module Pawl.Types.ActivatedAbilitySource where
 
 import qualified Data.Map.Strict as Map
 import qualified Pawl.Types.AbilityName as AbilityName
+import qualified Pawl.Types.Acquisition as Acquisition
 import qualified Pawl.Types.ActivatedAbility as ActivatedAbility
 import qualified Pawl.Types.Card as Card
 import qualified Pawl.Types.GrantedAbility as GrantedAbility
@@ -30,6 +31,10 @@ data ActivatedAbilitySource = MkActivatedAbilitySource
     -- frozen with it: the ability exists independently of its source, so a copy
     -- effect or text change on the source afterwards does not change what its
     -- arms create.
-    delayed :: Map.Map AbilityName.AbilityName (TriggeredAbility.TriggeredAbility Card.Card (GrantedAbility.GrantedAbility Card.Card))
+    delayed :: Map.Map AbilityName.AbilityName (TriggeredAbility.TriggeredAbility Card.Card (GrantedAbility.GrantedAbility Card.Card)),
+    -- | CR 607.5: the acquisition the ability came with on its source, frozen
+    -- as it was put on the stack (CR 113.7a), so what it notes is linked to the
+    -- pair it belongs to whatever the source becomes a copy of afterwards.
+    acquisition :: Acquisition.Acquisition
   }
   deriving (Eq, Ord, Show)

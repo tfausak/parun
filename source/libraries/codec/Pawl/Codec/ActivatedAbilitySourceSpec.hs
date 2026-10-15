@@ -5,6 +5,7 @@ import qualified Data.Sequence as Seq
 import qualified Pawl.Codec.ActivatedAbilitySource as ActivatedAbilitySource
 import qualified Pawl.JsonCodec.Common as Common
 import qualified Pawl.Spec as Spec
+import qualified Pawl.Types.Acquisition as Acquisition
 import qualified Pawl.Types.ActivatedAbility as ActivatedAbility
 import qualified Pawl.Types.ActivatedAbilitySource as ActivatedAbilitySource
 import qualified Pawl.Types.Activator as Activator
@@ -17,6 +18,7 @@ import qualified Pawl.Types.Modal as Modal
 import qualified Pawl.Types.Mode as Mode
 import qualified Pawl.Types.ModeSelection as ModeSelection
 import qualified Pawl.Types.ObjectId as ObjectId
+import qualified Pawl.Types.Timestamp as Timestamp
 
 -- | What the ability itself encodes to is Pawl.Codec.ActivatedAbility's own
 -- case; one mana cost and no modes is enough to show the two keys this record
@@ -45,8 +47,21 @@ spec s = Spec.describe s "Pawl.Codec.ActivatedAbilitySource" $ do
       ActivatedAbilitySource.MkActivatedAbilitySource
         { ActivatedAbilitySource.source = ObjectId.MkObjectId 5,
           ActivatedAbilitySource.ability = ability,
-          ActivatedAbilitySource.delayed = Map.empty
+          ActivatedAbilitySource.delayed = Map.empty,
+          ActivatedAbilitySource.acquisition = Acquisition.Own
         }
       " {\"source\":5,\"ability\":{\"cost\":{\"mana\":[{\"type\":\"Generic\",\"value\":1}]},\"modal\":{\"modes\":[{}]}}} "
+  -- CR 607.5: an ability a copy effect gave its source.
+  Spec.it s "an activated ability a copy effect gave its source" $
+    Common.assertCodec
+      s
+      ActivatedAbilitySource.codec
+      ActivatedAbilitySource.MkActivatedAbilitySource
+        { ActivatedAbilitySource.source = ObjectId.MkObjectId 5,
+          ActivatedAbilitySource.ability = ability,
+          ActivatedAbilitySource.delayed = Map.empty,
+          ActivatedAbilitySource.acquisition = Acquisition.Copied (Timestamp.MkTimestamp 2)
+        }
+      " {\"source\":5,\"ability\":{\"cost\":{\"mana\":[{\"type\":\"Generic\",\"value\":1}]},\"modal\":{\"modes\":[{}]}},\"acquisition\":{\"type\":\"Copied\",\"value\":2}} "
   Spec.it s "has a schema" $
     Common.assertHasSchema s ActivatedAbilitySource.codec

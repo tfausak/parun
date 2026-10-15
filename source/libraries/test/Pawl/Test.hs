@@ -33,6 +33,7 @@ import qualified Pawl.Codec.AbilityAddsManaSpec
 import qualified Pawl.Codec.AbilityKindSpec
 import qualified Pawl.Codec.AbilityNameSpec
 import qualified Pawl.Codec.AbilityTriggeredSpec
+import qualified Pawl.Codec.AcquisitionSpec
 import qualified Pawl.Codec.ActingPermanentSpec
 import qualified Pawl.Codec.ActivateManaAbilitiesSpec
 import qualified Pawl.Codec.ActivatedAbilitySourceSpec
@@ -890,6 +891,7 @@ spec s registry = do
   Pawl.Codec.AbilityKindSpec.spec s
   Pawl.Codec.AbilityNameSpec.spec s
   Pawl.Codec.AbilityTriggeredSpec.spec s
+  Pawl.Codec.AcquisitionSpec.spec s
   Pawl.Codec.ActingPermanentSpec.spec s
   Pawl.Codec.ActivatedAbilitySourceSpec.spec s
   Pawl.Codec.ActivatedAbilitySpec.spec s

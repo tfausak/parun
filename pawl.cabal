@@ -95,6 +95,8 @@ library codec
     Pawl.Codec.AbilitySticker
     Pawl.Codec.AbilityTriggered
     Pawl.Codec.AbilityTriggeredSpec
+    Pawl.Codec.Acquisition
+    Pawl.Codec.AcquisitionSpec
     Pawl.Codec.ActingPermanent
     Pawl.Codec.ActingPermanentSpec
     Pawl.Codec.ActivatedAbility
@@ -2052,6 +2054,7 @@ library types
     Pawl.Types.AbilityName
     Pawl.Types.AbilitySticker
     Pawl.Types.AbilityTriggered
+    Pawl.Types.Acquisition
     Pawl.Types.ActingPermanent
     Pawl.Types.Action
     Pawl.Types.ActivatedAbility

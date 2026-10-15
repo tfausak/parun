@@ -671,7 +671,8 @@ data View = MkView
     -- membership and the value are asked by different atoms, and only
     -- "monstrosity X" sets one at all.
     designationValues :: Map.Map Designation.Designation Natural.Natural,
-    -- CR 706.8a: the die results stored on this candidate, read straight off
+    -- CR 706.8a: the die results stored on this candidate for the abilities it
+    -- has now (CR 607.5, Pawl.Engine.Game.acquisitionOf), read off
     -- Object.storedResults and empty where there is no object to read it off,
     -- `designationValues` above's route. Its one reader is Pawl.Engine.Quantity's
     -- StoredResultsOfSameValue arm (Centaur of Attention).

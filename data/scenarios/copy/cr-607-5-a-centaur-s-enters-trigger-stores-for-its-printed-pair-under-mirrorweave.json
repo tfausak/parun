@@ -1,0 +1,48 @@
+{
+  "description": "CR 607.5 a Centaur of Attention's enters trigger stores for its printed pair though Mirrorweave made it a copy first",
+  "note": "Alice casts Mirrorweave at bob's Centaur in response to her own Centaur's enters trigger. The trigger is the printed storing ability's (CR 113.7a), so the 4, 4, 4, 2, 1 it stores are linked to the printed +X/+X and not to the copy's (CR 607.5): the Centaur is 3/3 while it is a copy and 6/6 once cleanup ends the copy (CR 611.2a). Noting the results for whatever abilities the Centaur has as the trigger resolves would read 6/6 and then 3/3 instead.",
+  "board": {
+    "seats": [
+      {
+        "name": "alice",
+        "battlefield": [
+          { "card": "Forest", "label": "f1" },
+          { "card": "Forest", "label": "f2" },
+          { "card": "Forest", "label": "f3" },
+          { "card": "Forest", "label": "f4" },
+          { "card": "Forest", "label": "f5" },
+          { "card": "Island", "ready": true },
+          { "card": "Island", "ready": true },
+          { "card": "Island", "ready": true },
+          { "card": "Island", "ready": true }
+        ],
+        "hand": [
+          { "card": "Centaur of Attention", "label": "centaur" },
+          { "card": "Mirrorweave", "label": "mirrorweave" }
+        ]
+      },
+      {
+        "name": "bob",
+        "battlefield": [{ "card": "Centaur of Attention", "label": "model" }],
+        "library": [{ "card": "Island" }, { "card": "Island" }]
+      }
+    ],
+    "active": "alice",
+    "step": "PrecombatMain"
+  },
+  "timeline": [
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": { "Cast": { "object": "$centaur", "mana": ["$f1", "$f2", "$f3", "$f4", "$f5", null] } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass" },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "check": { "View": { "of": "Stack", "is": ["trigger of Centaur of Attention"] } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": { "Cast": { "object": "$mirrorweave", "targets": ["$model"], "mana": ["Island", "Island#2", "Island#3", "Island#4"] } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass" },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass" },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": { "Answer": { "prompt": "RollDie", "with": 4 } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": { "Answer": { "prompt": "RollDie", "with": 4 } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": { "Answer": { "prompt": "RollDie", "with": 4 } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": { "Answer": { "prompt": "RollDie", "with": 2 } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": { "Answer": { "prompt": "RollDie", "with": 1 } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "check": { "PowerToughness": { "object": "Centaur of Attention#2", "power": 3, "toughness": 3 } } },
+    { "turn": 2, "step": "Upkeep", "player": "alice", "check": { "PowerToughness": { "object": "Centaur of Attention#2", "power": 6, "toughness": 6 } } }
+  ]
+}
