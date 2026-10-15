@@ -15,6 +15,7 @@ import qualified Pawl.Types.LifeGainR as LifeGainR
 import qualified Pawl.Types.LifeLossR as LifeLossR
 import qualified Pawl.Types.MillCountR as MillCountR
 import qualified Pawl.Types.PhasePattern as PhasePattern
+import qualified Pawl.Types.PlaneswalkR as PlaneswalkR
 import qualified Pawl.Types.ProliferateR as ProliferateR
 import qualified Pawl.Types.ScryR as ScryR
 import qualified Pawl.Types.TokenR as TokenR
@@ -218,5 +219,7 @@ data ReplacementEffect card ability effect
   | -- | CR 104.3 / 614.1a: "if you would lose the game, instead" (Lich's
     -- Mirror).
     GameLossR (GameLossR.GameLossR effect)
+  | -- | CR 701.31 / 614.1a: "if you would planeswalk, instead" (Susan Foreman).
+    PlaneswalkR (PlaneswalkR.PlaneswalkR effect)
   | PhaseR PhasePattern.PhasePattern
   deriving (Eq, Ord, Show)

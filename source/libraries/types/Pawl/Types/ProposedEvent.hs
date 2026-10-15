@@ -14,6 +14,7 @@ import qualified Pawl.Types.LibraryPosition as LibraryPosition
 import qualified Pawl.Types.LifeLossCause as LifeLossCause
 import qualified Pawl.Types.ObjectId as ObjectId
 import qualified Pawl.Types.PhaseSelector as PhaseSelector
+import qualified Pawl.Types.PlaneswalkCause as PlaneswalkCause
 import qualified Pawl.Types.PlayerCounterKind as PlayerCounterKind
 import qualified Pawl.Types.PlayerId as PlayerId
 import qualified Pawl.Types.Regenerability as Regenerability
@@ -269,4 +270,7 @@ data ProposedEvent
     -- at once. Raised by Pawl.Engine.Departure.leaveTogether, the one funnel
     -- every loss goes through; a concession (CR 104.3a) is not one.
     WouldLoseGame PlayerId.PlayerId
+  | -- | CR 701.31b / 614.1a: this player would planeswalk, for this reason.
+    -- Raised by Pawl.Engine.Planechase.planeswalk.
+    WouldPlaneswalk PlayerId.PlayerId PlaneswalkCause.PlaneswalkCause
   deriving (Eq, Ord, Show)

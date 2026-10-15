@@ -2919,6 +2919,7 @@ castOf event = case event of
   GameEvent.RolledToVisit _ -> Nothing
   GameEvent.PlanarDieRolled _ -> Nothing
   GameEvent.TurnedUpOffDeck _ -> Nothing
+  GameEvent.ChaosEnsued -> Nothing
   GameEvent.ClassLevelSet _ -> Nothing
   GameEvent.Plotted _ -> Nothing
   GameEvent.BecameAttacked _ -> Nothing
@@ -3027,6 +3028,7 @@ abilityResolved event = case event of
   GameEvent.RolledToVisit _ -> Nothing
   GameEvent.PlanarDieRolled _ -> Nothing
   GameEvent.TurnedUpOffDeck _ -> Nothing
+  GameEvent.ChaosEnsued -> Nothing
   GameEvent.ClassLevelSet _ -> Nothing
   GameEvent.Plotted _ -> Nothing
   GameEvent.BecameAttacked _ -> Nothing
@@ -3113,6 +3115,7 @@ discardOf event = case event of
   GameEvent.RolledToVisit _ -> Nothing
   GameEvent.PlanarDieRolled _ -> Nothing
   GameEvent.TurnedUpOffDeck _ -> Nothing
+  GameEvent.ChaosEnsued -> Nothing
   GameEvent.ClassLevelSet _ -> Nothing
   GameEvent.Plotted _ -> Nothing
   GameEvent.BecameAttacked _ -> Nothing
@@ -3266,6 +3269,7 @@ movedChange event = case event of
   GameEvent.RolledToVisit _ -> Nothing
   GameEvent.PlanarDieRolled _ -> Nothing
   GameEvent.TurnedUpOffDeck _ -> Nothing
+  GameEvent.ChaosEnsued -> Nothing
   GameEvent.ClassLevelSet _ -> Nothing
   GameEvent.Plotted _ -> Nothing
   GameEvent.BecameAttacked _ -> Nothing
@@ -3371,6 +3375,7 @@ damageDealt event = case event of
   GameEvent.RolledToVisit _ -> Nothing
   GameEvent.PlanarDieRolled _ -> Nothing
   GameEvent.TurnedUpOffDeck _ -> Nothing
+  GameEvent.ChaosEnsued -> Nothing
   GameEvent.ClassLevelSet _ -> Nothing
   GameEvent.Plotted _ -> Nothing
   GameEvent.BecameAttacked _ -> Nothing
@@ -3641,6 +3646,7 @@ lifeGainOf event = case event of
   GameEvent.RolledToVisit _ -> Nothing
   GameEvent.PlanarDieRolled _ -> Nothing
   GameEvent.TurnedUpOffDeck _ -> Nothing
+  GameEvent.ChaosEnsued -> Nothing
   GameEvent.ClassLevelSet _ -> Nothing
   GameEvent.Plotted _ -> Nothing
   GameEvent.BecameAttacked _ -> Nothing

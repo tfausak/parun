@@ -1010,6 +1010,12 @@ library codec
     Pawl.Codec.PlanarDieFaceSpec
     Pawl.Codec.PlanarDieRolled
     Pawl.Codec.PlanarDieRolledSpec
+    Pawl.Codec.PlaneswalkCause
+    Pawl.Codec.PlaneswalkCauseSpec
+    Pawl.Codec.PlaneswalkR
+    Pawl.Codec.PlaneswalkRewrite
+    Pawl.Codec.PlaneswalkRewriteSpec
+    Pawl.Codec.PlaneswalkRSpec
     Pawl.Codec.Player
     Pawl.Codec.PlayerActed
     Pawl.Codec.PlayerAction
@@ -2578,6 +2584,9 @@ library types
     Pawl.Types.PlacesSticker
     Pawl.Types.PlanarDieFace
     Pawl.Types.PlanarDieRolled
+    Pawl.Types.PlaneswalkCause
+    Pawl.Types.PlaneswalkR
+    Pawl.Types.PlaneswalkRewrite
     Pawl.Types.Player
     Pawl.Types.PlayerActed
     Pawl.Types.PlayerAction

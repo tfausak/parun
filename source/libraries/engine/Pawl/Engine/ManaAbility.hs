@@ -328,6 +328,7 @@ manaProduced effect = case effect of
   Effect.TemptWithTheRing -> Nothing
   Effect.OpenAttraction -> Nothing
   Effect.Planeswalk -> Nothing
+  Effect.ChaosEnsues -> Nothing
   Effect.Abandon -> Nothing
   Effect.ClaimPrize -> Nothing
   Effect.Forage -> Nothing
@@ -525,6 +526,7 @@ playerChoice effect = case effect of
   Effect.TemptWithTheRing -> Nothing
   Effect.OpenAttraction -> Nothing
   Effect.Planeswalk -> Nothing
+  Effect.ChaosEnsues -> Nothing
   Effect.Abandon -> Nothing
   Effect.ClaimPrize -> Nothing
   Effect.Forage -> Nothing
@@ -774,6 +776,7 @@ movesLibraryCard effect = case effect of
   Effect.OpenAttraction -> False
   Effect.Assemble {} -> False
   Effect.Planeswalk -> False
+  Effect.ChaosEnsues -> False
   Effect.Abandon -> False
   Effect.ClaimPrize -> False
   Effect.Forage -> False

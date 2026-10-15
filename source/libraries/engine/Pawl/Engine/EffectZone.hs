@@ -160,6 +160,7 @@ zoneFunctionedAgainst itself delayed effect = case effect of
   Effect.TemptWithTheRing -> Nothing
   Effect.OpenAttraction -> Nothing
   Effect.Planeswalk -> Nothing
+  Effect.ChaosEnsues -> Nothing
   Effect.Abandon -> Nothing
   Effect.ClaimPrize -> Nothing
   Effect.Forage -> Nothing

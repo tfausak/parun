@@ -279,6 +279,7 @@ movedOf event = case event of
   GameEvent.RolledToVisit _ -> Nothing
   GameEvent.PlanarDieRolled _ -> Nothing
   GameEvent.TurnedUpOffDeck _ -> Nothing
+  GameEvent.ChaosEnsued -> Nothing
   GameEvent.ClassLevelSet _ -> Nothing
   GameEvent.Plotted _ -> Nothing
   GameEvent.BecameAttacked _ -> Nothing
@@ -431,6 +432,7 @@ participants event =
         GameEvent.RolledToVisit r -> player (DieResult.roller r)
         GameEvent.PlanarDieRolled r -> player (PlanarDieRolled.roller r)
         GameEvent.TurnedUpOffDeck e -> ([TurnedUpOffDeck.card e], [TurnedUpOffDeck.player e])
+        GameEvent.ChaosEnsued -> ([], [])
         GameEvent.ClassLevelSet c -> one (ClassLevelChange.object c)
         GameEvent.Plotted oid -> one oid
         GameEvent.BecameTapped oid -> one oid
@@ -1332,6 +1334,7 @@ eventTriggers events gs =
         GameEvent.RolledToVisit _ -> Map.empty
         GameEvent.PlanarDieRolled _ -> Map.empty
         GameEvent.TurnedUpOffDeck _ -> Map.empty
+        GameEvent.ChaosEnsued -> Map.empty
         GameEvent.ClassLevelSet _ -> Map.empty
         GameEvent.Plotted _ -> Map.empty
         GameEvent.PermanentActed _ -> Map.empty
@@ -1691,6 +1694,7 @@ eventTriggers events gs =
         GameEvent.RolledToVisit _ -> Map.empty
         GameEvent.PlanarDieRolled _ -> Map.empty
         GameEvent.TurnedUpOffDeck _ -> Map.empty
+        GameEvent.ChaosEnsued -> Map.empty
         GameEvent.ClassLevelSet _ -> Map.empty
         GameEvent.Plotted _ -> Map.empty
         GameEvent.BecameAttacked _ -> Map.empty
@@ -2060,6 +2064,7 @@ eventTriggers events gs =
         GameEvent.RolledToVisit _ -> Map.empty
         GameEvent.PlanarDieRolled _ -> Map.empty
         GameEvent.TurnedUpOffDeck _ -> Map.empty
+        GameEvent.ChaosEnsued -> Map.empty
         GameEvent.ClassLevelSet _ -> Map.empty
         GameEvent.Plotted _ -> Map.empty
         GameEvent.BecameAttacked _ -> Map.empty
@@ -2219,6 +2224,7 @@ eventTriggers events gs =
         GameEvent.RolledToVisit _ -> Map.empty
         GameEvent.PlanarDieRolled _ -> Map.empty
         GameEvent.TurnedUpOffDeck _ -> Map.empty
+        GameEvent.ChaosEnsued -> Map.empty
         GameEvent.ClassLevelSet _ -> Map.empty
         GameEvent.Plotted _ -> Map.empty
         GameEvent.BecameAttacked _ -> Map.empty
@@ -3960,6 +3966,7 @@ resnapshot gs without event =
         GameEvent.RolledToVisit {} -> Just event
         GameEvent.PlanarDieRolled {} -> Just event
         GameEvent.TurnedUpOffDeck {} -> Just event
+        GameEvent.ChaosEnsued {} -> Just event
         GameEvent.ClassLevelSet {} -> Just event
         GameEvent.Plotted {} -> Just event
         GameEvent.BecameTapped {} -> Just event
