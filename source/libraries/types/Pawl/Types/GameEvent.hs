@@ -223,9 +223,9 @@ data GameEvent
     -- card". Strict, for Moved's reason. The RevealCause is CR 702.94a's "this
     -- way".
     --
-    -- The momentary reveal only. CR 701.20a's lasting ones -- a cost's, an
-    -- activation's from a hidden zone (CR 602.2a), a trigger's -- are the card's
-    -- Pawl.Types.Object.revealed window.
+    -- The moment of the reveal only. How long CR 701.20a keeps the card revealed
+    -- -- an effect's, a cost's, an activation's from a hidden zone (CR 602.2a), a
+    -- trigger's -- is the card's Pawl.Types.Object.revealed windows.
     Revealed Revealed.Revealed
   | -- | CR 701.20e: a card was looked at, shown to its audience alone; never a
     -- reveal (CR 701.20a).

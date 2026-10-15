@@ -150,7 +150,7 @@ codec = Fields.object $ do
   castUsing <- Fields.defaulted "castUsing" (Object.castUsing defaults) (Common.maybe Keyword.codec) Object.castUsing
   castGrant <- Fields.defaulted "castGrant" (Object.castGrant defaults) (Common.maybe Keyword.codec) Object.castGrant
   exileLookers <- Fields.defaulted "exileLookers" (Object.exileLookers defaults) (Common.set ExileLooker.codec) Object.exileLookers
-  revealed <- Fields.defaulted "revealed" (Object.revealed defaults) (Common.maybe RevealWindow.codec) Object.revealed
+  revealed <- Fields.defaulted "revealed" (Object.revealed defaults) (Common.set RevealWindow.codec) Object.revealed
   detainedUntil <- Fields.defaulted "detainedUntil" (Object.detainedUntil defaults) (Common.set PlayerId.codec) Object.detainedUntil
   goadedBy <- Fields.defaulted "goadedBy" (Object.goadedBy defaults) (Common.set PlayerId.codec) Object.goadedBy
   doesNotUntapFor <- Fields.defaulted "doesNotUntapFor" (Object.doesNotUntapFor defaults) Common.natural Object.doesNotUntapFor

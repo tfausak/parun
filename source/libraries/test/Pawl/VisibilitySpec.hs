@@ -1,14 +1,20 @@
+{-# LANGUAGE GADTs #-}
+
 -- Covers Pawl.Engine.Visibility. Its other arms are proven by the scenarios
 -- under data/scenarios/visibility; this holds the one no priority point reaches,
 -- and the stored-grant term pinned on its own.
 module Pawl.VisibilitySpec where
 
+import qualified Data.List as List
 import qualified Data.List.NonEmpty as NonEmpty
 import qualified Data.Map as Map
 import qualified Data.Sequence as Seq
+import qualified Data.Set as Set
 import qualified Data.Text as Text
 import qualified Pawl.Engine.Event as Event
 import qualified Pawl.Engine.Resolve.Effect as Resolve
+import qualified Pawl.Engine.Setup as Setup
+import qualified Pawl.Engine.Stack as Stack
 import qualified Pawl.Engine.Visibility as Visibility
 import qualified Pawl.Registry as Registry
 import qualified Pawl.Spec as Spec
@@ -17,15 +23,19 @@ import qualified Pawl.Types.AffectedPlayers as AffectedPlayers
 import qualified Pawl.Types.Audience as Audience
 import qualified Pawl.Types.Ballot as Ballot
 import qualified Pawl.Types.BallotChoice as BallotChoice
+import qualified Pawl.Types.Cost as Cost.Type
 import qualified Pawl.Types.Expiry as Expiry
 import qualified Pawl.Types.GameEvent as GameEvent
 import qualified Pawl.Types.GameState as GameState
 import qualified Pawl.Types.Label as Label
 import qualified Pawl.Types.LoggedEvent as LoggedEvent
 import qualified Pawl.Types.ObjectId as ObjectId
+import qualified Pawl.Types.Phase as Phase
 import qualified Pawl.Types.PlayerEffect as PlayerEffect
 import qualified Pawl.Types.PlayerRelation as PlayerRelation
 import qualified Pawl.Types.PlayerScope as PlayerScope
+import qualified Pawl.Types.Prompt as Prompt
+import qualified Pawl.Types.Recipient as Recipient
 import qualified Pawl.Types.Seat as Seat
 import qualified Pawl.Types.ShownCards as ShownCards
 import qualified Pawl.Types.Shows as Shows
@@ -35,6 +45,7 @@ import qualified Pawl.Types.Visibility as Visibility.Type
 
 spec :: (Monad m, Monad n) => Spec.Spec m n -> Registry.Registry m -> n ()
 spec s registry = Spec.describe s "Pawl.Engine.Visibility" $ do
+  twoBeholdsSpec s registry
   -- A card CR 121.8 keeps face down in hand exists only mid-cast, which no
   -- scenario check reaches, so the mark is written onto the state directly.
   Spec.it s "CR 121.8 / 708.5 a card kept face down in hand is hidden from its owner" $ do
@@ -111,6 +122,42 @@ spec s registry = Spec.describe s "Pawl.Engine.Visibility" $ do
       _ Seq.:> entry -> pure entry
       Seq.EmptyR -> Spec.assertFailure s "no event logged"
     Spec.assertEqWith s "carol, out of alice's range, witnesses her open ballot" (Visibility.witnessed S.carol logged) Visibility.Type.Visible
+
+-- CR 701.20a: a card revealed for two reasons stays revealed while either
+-- lasts. Caustic Exhale {B} Instant, "As an additional cost to cast this spell,
+-- behold a Dragon or pay {1}. Target creature gets -3/-3 until end of turn."
+-- (Oracle checked against Scryfall 2026-10-15.) alice casts two, beholding her
+-- one Hoarding Dragon card for each, so the card is revealed until the FIRST
+-- Exhale leaves the stack, which the second resolving ahead of it must not cut
+-- short.
+twoBeholdsSpec :: (Monad m) => Spec.Spec m n -> Registry.Registry m -> n ()
+twoBeholdsSpec s registry =
+  Spec.it s "CR 701.20a a second behold leaves the first one's window standing" $ do
+    swamp <- S.printingOf s registry "Swamp"
+    exhale <- S.printingOf s registry "Caustic Exhale"
+    dragon <- S.printingOf s registry "Hoarding Dragon"
+    galleon <- S.printingOf s registry "Armored Galleon"
+    let base = S.landsFor swamp S.alice 2 (Setup.emptyGame S.bothPlayers)
+        (victimId, withVictim) = S.addPermanent galleon S.bob base
+        (dragonId, withDragon) = S.addHandCard dragon S.alice withVictim
+        (firstId, withFirst) = S.addHandCard exhale S.alice withDragon
+        (secondId, staged) = S.addHandCard exhale S.alice withFirst
+        ready = staged {GameState.phase = Phase.PrecombatMain, GameState.activePlayer = S.alice, GameState.priority = Just S.alice}
+        -- CR 601.2b's announcement, filtered out of the costs offered: the behold
+        -- is the only component either option carries.
+        beholding :: Prompt.Prompt r -> r
+        beholding p = case p of
+          Prompt.ChooseCost _ _ _ candidates
+            | Just cost <- List.find (not . null . Cost.Type.components) candidates -> cost
+          Prompt.ChooseTargets _ _ _ asked -> fmap (\(_, legal) -> Set.filter ((== Just victimId) . Recipient.objectOf) legal) asked
+          _ -> S.identityAnswer p
+        cast = S.runPure beholding (S.runPure beholding ready (S.cast S.alice firstId)) (S.cast S.alice secondId)
+        secondResolved = S.runPure beholding cast Stack.resolveTop
+        bothResolved = S.runPure beholding secondResolved Stack.resolveTop
+    Spec.assertEqWith s "CR 701.20a with the first Exhale still waiting, bob sees the Dragon card" (Visibility.sees S.bob dragonId secondResolved) Visibility.Type.Visible
+    Spec.assertEqWith s "one Exhale is left on the stack" (length (GameState.stack secondResolved)) 1
+    Spec.assertEqWith s "CR 701.20a and once it resolves too, he does not" (Visibility.sees S.bob dragonId bothResolved) Visibility.Type.Obscured
+    Spec.assertEqWith s "off the same board: both were cast, and both resolved" (GameState.stack bothResolved) []
 
 -- Alice holds one card and has two in her library; bob has nothing.
 shownBoard :: (Monad m) => Spec.Spec m n -> Registry.Registry m -> m (GameState.GameState, ObjectId.ObjectId, ObjectId.ObjectId, ObjectId.ObjectId)

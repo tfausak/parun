@@ -951,7 +951,7 @@ placeBorne srcId pending = do
   -- cr-702-94b-lasting-reveal-the-miracle-card-stays-revealed-while-its-trigger-is-on-the-stack.
   --
   -- Not implemented: the card is unmarked between the reveal and the trigger's
-  -- placement (#4998).
+  -- placement (#5119).
   case fmap LoggedEvent.event (PendingTrigger.firedBy pending) of
     Just (GameEvent.Revealed revealed) -> Event.stampReveal (RevealWindow.WhileOnStack abilId) (Revealed.card revealed)
     _ -> pure ()
