@@ -1423,9 +1423,9 @@ applyCrossings finalSub parent =
       cross g oid =
         let gone = Event.leaveTheGame g g oid
             left zone = GameEvent.LeftTheGame (LeftTheGame.MkLeftTheGame oid zone)
-            recordLeft zone = case Event.leavingReveal g oid of
-              Nothing -> Event.recordEvent (left zone)
-              Just revealed -> Event.simultaneouslyPure (Event.recordEvent (left zone) . Event.recordEvent revealed)
+            recordLeft zone = case Event.leavingReveals g oid of
+              [] -> Event.recordEvent (left zone)
+              revealed -> Event.simultaneouslyPure (Event.recordEvent (left zone) . (\g1 -> List.foldl' (flip Event.recordEvent) g1 revealed))
          in if Set.member oid (GameState.battlefield g)
               then recordLeft Zone.Battlefield gone
               else case fmap Object.zone (Map.lookup oid (GameState.objects g)) of

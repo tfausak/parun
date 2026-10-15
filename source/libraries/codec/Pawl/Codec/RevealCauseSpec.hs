@@ -27,6 +27,12 @@ spec s = Spec.describe s "Pawl.Codec.RevealCause" $ do
       RevealCause.codec
       RevealCause.LeavingFaceDown
       " {\"type\":\"LeavingFaceDown\"} "
+  Spec.it s "LeavingFaceDownComponent" $
+    Common.assertCodec
+      s
+      RevealCause.codec
+      RevealCause.LeavingFaceDownComponent
+      " {\"type\":\"LeavingFaceDownComponent\"} "
   Spec.it s "FaceDownSpell" $
     Common.assertCodec
       s

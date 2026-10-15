@@ -142,7 +142,7 @@ activateAbilityWith refused runSubgame pid srcId ability = Event.announcing $ do
           )
           Zone.Stack
           ts
-      onStack = Game.putOnStack abilId gs2 {GameState.objects = Map.insert abilId obj (GameState.objects gs2)}
+      onStack = Game.putOnStack (GameState.nextEventGroup gs2) abilId gs2 {GameState.objects = Map.insert abilId obj (GameState.objects gs2)}
       decider = Decide.deciderFor pid gs
       -- CR 602.2b/700.2a, mirroring Cast.castSpell's mode block: a selection with
       -- one answer is FORCED, unprompted -- every single-mode ability is exactly

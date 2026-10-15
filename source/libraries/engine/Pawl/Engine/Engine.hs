@@ -89,6 +89,7 @@ import qualified Pawl.Types.Departure as Departure.Type
 import qualified Pawl.Types.DiscardCause as DiscardCause
 import qualified Pawl.Types.EndTurnSignal as EndTurnSignal
 import qualified Pawl.Types.EndingStep as EndingStep
+import qualified Pawl.Types.EventGroup as EventGroup
 import qualified Pawl.Types.ExtraTurn as ExtraTurn
 import Pawl.Types.Game (Game)
 import qualified Pawl.Types.GameEvent as GameEvent
@@ -98,6 +99,7 @@ import qualified Pawl.Types.GameState as GameState
 import qualified Pawl.Types.GrantedAbility as GrantedAbility
 import qualified Pawl.Types.InherentTriggerSource as InherentTriggerSource
 import qualified Pawl.Types.LastKnown as LastKnown
+import qualified Pawl.Types.LoggedEvent as LoggedEvent
 import qualified Pawl.Types.LoopTrail as LoopTrail
 import qualified Pawl.Types.ManaAbilityPerformer as ManaAbilityPerformer
 import qualified Pawl.Types.Modal as Modal.Type
@@ -674,7 +676,7 @@ placePendingTriggers = do
   -- CR 605.5a: the EVENT that fired it decides too, so a trigger watching mana
   -- added by an ability that resolved (Caged Sun off Crumbling Vestige) is no
   -- mana ability and is placed here like any other.
-  gathered <- reactions (filter (\p -> not (ManaAbility.isTriggeredManaAbility (PendingTrigger.firedBy p) (PendingTrigger.ability p))) pending <> inherent)
+  gathered <- reactions (filter (\p -> not (ManaAbility.isTriggeredManaAbility (fmap LoggedEvent.event (PendingTrigger.firedBy p)) (PendingTrigger.ability p))) pending <> inherent)
   -- CR 603.3b's two sentences, run one after the other rather than ordered
   -- together and placed at the end: the rule's first sentence PUTS its abilities
   -- on the stack before its second is reached, which is observable both in the
@@ -693,7 +695,7 @@ placePendingTriggers = do
 -- trigger with no event (a state trigger, a reflexive one, a batch-wide
 -- inherent gather) fired off no ability triggering, so belongs to the first pass.
 reacts :: PendingTrigger.PendingTrigger -> Bool
-reacts = Maybe.isJust . (Event.abilityTriggeredOf Monad.<=< PendingTrigger.firedBy)
+reacts = Maybe.isJust . (Event.abilityTriggeredOf . LoggedEvent.event Monad.<=< PendingTrigger.firedBy)
 
 -- CR 603.3b: "if MULTIPLE ABILITIES HAVE TRIGGERED since the last time a player
 -- received priority" -- so an ability that triggers off another ability
@@ -831,7 +833,20 @@ placeSourceless pending = do
         )
           { Object.bindings = bindings
           }
-  State.put (Game.putOnStack abilId gs2 {GameState.objects = Map.insert abilId obj (GameState.objects gs2)})
+  State.put (Game.putOnStack (triggeredSince pending gs2) abilId gs2 {GameState.objects = Map.insert abilId obj (GameState.objects gs2)})
+
+-- CR 610.3b's "after that ability triggered": the first event group after
+-- the trigger event's, so an event between the trigger and CR 603.3's
+-- placement counts, such as a CR 725.4 crowning among the state-based actions.
+-- An ability with no trigger event counts from its placement.
+--
+-- Not implemented: a reflexive (CR 603.12) or state (CR 603.8) trigger counting
+-- from when it triggered rather than from its placement (#5106).
+--
+-- data/scenarios/trigger/cr-610-3b-a-crowning-while-palace-jailers-exile-waits-for-the-stack-keeps-the-creature.json
+-- is the proof.
+triggeredSince :: PendingTrigger.PendingTrigger -> GameState -> EventGroup.EventGroup
+triggeredSince pending gs = maybe (GameState.nextEventGroup gs) (EventGroup.next . LoggedEvent.group) (PendingTrigger.firedBy pending)
 
 -- Put one object-borne triggered ability on the stack as a fresh OfTrigger
 -- object, choosing its mode(s) and their targets as it is placed (CR 603.3d).
@@ -930,14 +945,14 @@ placeBorne srcId pending = do
           )
           Zone.Stack
           ts
-  State.put (Game.putOnStack abilId gs2 {GameState.objects = Map.insert abilId obj (GameState.objects gs2)})
+  State.put (Game.putOnStack (triggeredSince pending gs2) abilId gs2 {GameState.objects = Map.insert abilId obj (GameState.objects gs2)})
   -- CR 701.20a: a card whose reveal caused this ability to trigger stays revealed
   -- until the ability leaves the stack. Proven by the scenario
   -- cr-702-94b-lasting-reveal-the-miracle-card-stays-revealed-while-its-trigger-is-on-the-stack.
   --
   -- Not implemented: the card is unmarked between the reveal and the trigger's
   -- placement (#4998).
-  case PendingTrigger.firedBy pending of
+  case fmap LoggedEvent.event (PendingTrigger.firedBy pending) of
     Just (GameEvent.Revealed revealed) -> Event.stampReveal (RevealWindow.WhileOnStack abilId) (Revealed.card revealed)
     _ -> pure ()
   if not (Modal.selectionPossible legal selection)
