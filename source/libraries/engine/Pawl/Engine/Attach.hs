@@ -44,6 +44,7 @@ import Pawl.Types.GameState (GameState)
 import qualified Pawl.Types.GameState as GameState
 import qualified Pawl.Types.Keyword as Keyword.Type
 import qualified Pawl.Types.KeywordFamily as KeywordFamily
+import qualified Pawl.Types.Object as Object
 import Pawl.Types.ObjectId (ObjectId)
 import Pawl.Types.PlayerId (PlayerId)
 import qualified Pawl.Types.Prompt as Prompt
@@ -135,16 +136,10 @@ attachmentWith equippable src destination gs
   -- Equipment nor Fortification unattachable anyway, so this needs no
   -- subtype conjunct for the same reason the minted row needs none.
   --
-  -- A REGRESSION FENCE rather than a proven behaviour: Archnemesis moves an Aura
-  -- onto a player by a CR 701.3 move, but no test sends it at a protected one,
-  -- and CR 608.3c's Aura spell reaches its player without coming through here,
-  -- so Pawl.Engine.Sba.fallsOff is the gate the pool actually drives. Written
-  -- because CR 101.2 makes the "can't" beat rule 701.3a's permission below,
-  -- exactly as the object case above is.
-  --
-  -- Not implemented: an Aura card asked about before it enters (CR 303.4f's
-  -- gate) has no controller yet, so this judges it as its owner's rather than
-  -- as the player it will enter under (#4868).
+  -- CR 303.4f's offer drives it (entryHostsFor): Pawl.AuraSpec's "CR 303.4g /
+  -- 702.16k with bob protected from alice, Archnemesis never leaves his
+  -- graveyard" proves it. CR 608.3c's Aura spell reaches its player without
+  -- coming through here, so Pawl.Engine.Sba.fallsOff is that road's gate.
   | Maybe.maybe False (\pid -> PlayerEffect.protectedFrom src pid gs) (Recipient.playerOf destination) = Nothing
   -- CR 301.5, "it can't legally be attached to anything that isn't a creature" --
   -- which is also why a player destination falls to Nothing here rather than
@@ -231,8 +226,11 @@ attachmentWith equippable src destination gs
 -- with its last step -- membership of a live slot's candidate set -- replaced by
 -- Target.lastKnownAdmits, which asks the same slot the same question about an
 -- object it can no longer enumerate.
-attachableWithLastKnown :: ObjectId -> ObjectId -> GameState -> Bool
-attachableWithLastKnown src host gs = case Game.lastKnownOf host gs of
+--
+-- `src` is judged as the permanent it would be under `player`, who would put it
+-- onto the battlefield (enteringUnder).
+attachableWithLastKnown :: PlayerId -> ObjectId -> ObjectId -> GameState -> Bool
+attachableWithLastKnown player src host before = case Game.lastKnownOf host gs of
   Nothing -> Maybe.isJust (attachmentFor src (Recipient.ToObject host) gs)
   Just _ ->
     src /= host
@@ -242,6 +240,8 @@ attachableWithLastKnown src host gs = case Game.lastKnownOf host gs of
         False
         (\slot -> Target.lastKnownAdmits (Projection.controllerOf src gs) src slot host gs)
         (Card.foldEnchant (Projection.enchantOf src gs))
+  where
+    gs = enteringUnder player src before
 
 -- The destinations a Filter admits for a permanent being attached: battlefield
 -- permanents matching it, ascending, less the one the subject already holds.
@@ -274,11 +274,11 @@ attachableWithLastKnown src host gs = case Game.lastKnownOf host gs of
 -- different ones and this function cannot tell them apart: a RESOLUTION hands
 -- over Pawl.Engine.Resolve.Slots.effectContext, so a destination filter naming a
 -- slot an earlier clause bound is answered (CR 608.2c) -- Simic Guildmage's
--- "with the same controller" over its target Aura's host; CR 303.4f's entry, CR
--- 614.1c's EntryRewrite.EntersAttachedTo row and turnUpHosts below hand over a
--- bare Filter.contextFor, which is honest there because an Aura's own enchant
--- ability, an entry replacement's own text and a CR 303.4k rider are card text
--- with no resolution's slots behind them. Threading a resolution's `legal` map
+-- "with the same controller" over its target Aura's host; CR 303.4f's entry
+-- (entryHostsFor builds its own), CR 614.1c's EntryRewrite.EntersAttachedTo row
+-- and turnUpHosts below use a bare Filter.contextFor, which is honest there
+-- because an Aura's own enchant ability, an entry replacement's own text and a
+-- CR 303.4k rider are card text with no resolution's slots behind them. Threading a resolution's `legal` map
 -- and bindings through here for the two callers that have neither is what the
 -- shared signature would otherwise force.
 hostsFor :: Filter.Context -> ObjectId -> Filter.Type.Filter Keyword.Type.Keyword -> GameState -> [ObjectId]
@@ -292,20 +292,38 @@ hostsFor context subject filter_ gs = hostsAmong (Set.toList (GameState.battlefi
 -- Death's Hold). Filter.CanHostSubject and attachmentFor are the whole test, so
 -- the Aura's own enchant ability decides which of them it may enchant.
 --
--- CR 801.5a: the context's perspective is the chooser, and a player or object
--- outside their range is not offered -- Players.table for the players, and
+-- CR 801.5a: `chooser` is CR 109.5's "you", and a player or object outside
+-- their range is not offered -- Players.table for the players, and
 -- Projection.objectInRangeGiven, CR 801.2d's controller, for the objects.
 -- Pawl.RangeOfInfluenceSpec's "CR 801.5a an Aura put onto the battlefield is
 -- offered only hosts within its chooser's range" proves both.
-entryHostsFor :: Filter.Context -> ObjectId -> GameState -> [Recipient]
-entryHostsFor context subject gs =
-  let chooser = Filter.perspective context
+--
+-- Judged on enteringUnder's board, so the Aura is `chooser`'s throughout.
+entryHostsFor :: PlayerId -> ObjectId -> GameState -> [Recipient]
+entryHostsFor chooser subject before =
+  let gs = enteringUnder chooser subject before
+      context = Projection.sourceContext gs (Just chooser) subject
       grants = Projection.controlGrants gs
-      inReach oid = maybe True (\you -> Projection.objectInRangeGiven grants you oid gs) chooser
+      inReach oid = Projection.objectInRangeGiven grants chooser oid gs
       graveyards = concatMap (\pid -> Game.zoneMembers Zone.Graveyard pid gs) (Game.stillPlaying gs)
       objects = filter inReach (hostsAmong (Set.toList (GameState.battlefield gs) <> graveyards) context subject Filter.Type.CanHostSubject gs)
-      players = filter (\pid -> Maybe.isJust (attachmentFor subject (Recipient.ToPlayer pid) gs)) (Players.table chooser gs)
+      players = filter (\pid -> Maybe.isJust (attachmentFor subject (Recipient.ToPlayer pid) gs)) (Players.table (Just chooser) gs)
    in fmap Recipient.ToObject objects <> fmap Recipient.ToPlayer players
+
+-- attachmentFor for a card about to enter under `player`, on enteringUnder's
+-- board: the tag entryHostsFor's offer was made with.
+entryAttachmentFor :: PlayerId -> ObjectId -> Recipient -> GameState -> Maybe Recipient
+entryAttachmentFor player subject destination gs = attachmentFor subject destination (enteringUnder player subject gs)
+
+-- CR 110.2a / 303.4f: `gs` with `subject` controlled by `player`, the player it
+-- is entering under. A card outside the battlefield and the stack has no
+-- controller (CR 109.4) and Projection.controllerOf answers its owner, but the
+-- question asked of it before it enters is about the permanent it will be: CR
+-- 109.5's "you" on its enchant ability, and CR 702.16k's "Auras that player
+-- controls". A hypothetical board for those reads, never written back.
+enteringUnder :: PlayerId -> ObjectId -> GameState -> GameState
+enteringUnder player subject gs =
+  gs {GameState.objects = Map.adjust (\obj -> obj {Object.enteredUnder = Just player}) subject (GameState.objects gs)}
 
 -- CR 303.4f's choice over entryHostsFor's offer, made by `chooser`, the player
 -- the Aura enters under.
