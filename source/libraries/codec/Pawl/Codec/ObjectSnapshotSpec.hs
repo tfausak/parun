@@ -7,6 +7,7 @@ import qualified Pawl.Spec as Spec
 import qualified Pawl.Types.ObjectId as ObjectId
 import qualified Pawl.Types.ObjectSnapshot as ObjectSnapshot
 import qualified Pawl.Types.PlayerId as PlayerId
+import qualified Pawl.Types.Zone as Zone
 
 spec :: (Monad m, Monad n) => Spec.Spec m n -> n ()
 spec s = Spec.describe s "Pawl.Codec.ObjectSnapshot" $ do
@@ -19,9 +20,10 @@ spec s = Spec.describe s "Pawl.Codec.ObjectSnapshot" $ do
         { ObjectSnapshot.object = ObjectId.MkObjectId 9,
           ObjectSnapshot.characteristics = ProjectedCharacteristicsSpec.testCharacteristics,
           ObjectSnapshot.controller = Just (PlayerId.MkPlayerId 1),
-          ObjectSnapshot.owner = PlayerId.MkPlayerId 2
+          ObjectSnapshot.owner = PlayerId.MkPlayerId 2,
+          ObjectSnapshot.zone = Zone.Battlefield
         }
-      (" {\"object\":9,\"characteristics\":" <> ProjectedCharacteristicsSpec.testCharacteristicsJson <> ",\"controller\":1,\"owner\":2} ")
+      (" {\"object\":9,\"characteristics\":" <> ProjectedCharacteristicsSpec.testCharacteristicsJson <> ",\"controller\":1,\"owner\":2,\"zone\":{\"type\":\"Battlefield\"}} ")
   -- CR 108.4: a card in a hand has no controller.
   Spec.it s "an object with no controller" $
     Common.assertCodec
@@ -31,8 +33,9 @@ spec s = Spec.describe s "Pawl.Codec.ObjectSnapshot" $ do
         { ObjectSnapshot.object = ObjectId.MkObjectId 3,
           ObjectSnapshot.characteristics = ProjectedCharacteristicsSpec.testCharacteristics,
           ObjectSnapshot.controller = Nothing,
-          ObjectSnapshot.owner = PlayerId.MkPlayerId 4
+          ObjectSnapshot.owner = PlayerId.MkPlayerId 4,
+          ObjectSnapshot.zone = Zone.Hand
         }
-      (" {\"object\":3,\"characteristics\":" <> ProjectedCharacteristicsSpec.testCharacteristicsJson <> ",\"controller\":null,\"owner\":4} ")
+      (" {\"object\":3,\"characteristics\":" <> ProjectedCharacteristicsSpec.testCharacteristicsJson <> ",\"controller\":null,\"owner\":4,\"zone\":{\"type\":\"Hand\"}} ")
   Spec.it s "has a schema" $
     Common.assertHasSchema s ObjectSnapshot.codec

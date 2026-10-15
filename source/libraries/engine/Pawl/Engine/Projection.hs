@@ -4540,7 +4540,8 @@ objectSnapshot oid gs =
           { ObjectSnapshot.object = oid,
             ObjectSnapshot.characteristics = project oid gs,
             ObjectSnapshot.controller = controllerOf oid gs,
-            ObjectSnapshot.owner = Object.owner o
+            ObjectSnapshot.owner = Object.owner o,
+            ObjectSnapshot.zone = Object.zone o
           }
     )
     (Game.lookupObject oid gs)
