@@ -1,18 +1,17 @@
 module Pawl.Engine.Activatable where
 
-import Control.Applicative ((<|>))
 import qualified Data.Containers.ListUtils as ListUtils
 import qualified Data.Map.Strict as Map
 import qualified Data.Maybe as Maybe
 import qualified Data.Set as Set
 import Numeric.Natural (Natural)
+import qualified Pawl.Engine.AbilityZone as AbilityZone
 import qualified Pawl.Engine.ActivationProhibition as ActivationProhibition
 import qualified Pawl.Engine.ActivationRestriction as ActivationRestriction
 import qualified Pawl.Engine.Binding as Binding
 import qualified Pawl.Engine.Condition as Condition
 import qualified Pawl.Engine.Cost as Cost
 import qualified Pawl.Engine.Detain as Detain
-import qualified Pawl.Engine.EffectZone as EffectZone
 import qualified Pawl.Engine.Game as Game
 import qualified Pawl.Engine.Keyword as Keyword
 import qualified Pawl.Engine.ManaAbility as ManaAbility
@@ -27,7 +26,6 @@ import qualified Pawl.Engine.Target as Target
 import qualified Pawl.Engine.Turn as Turn
 import qualified Pawl.Engine.Vanguard as Vanguard
 import qualified Pawl.Types.AbilityKind as AbilityKind
-import qualified Pawl.Types.AbilityName as AbilityName
 import qualified Pawl.Types.ActivatedAbility as ActivatedAbility
 import qualified Pawl.Types.Activator as Activator
 import qualified Pawl.Types.Card as Card
@@ -52,7 +50,6 @@ import Pawl.Types.PlayerId (PlayerId)
 import qualified Pawl.Types.ProjectedCharacteristics as PC
 import qualified Pawl.Types.Recipient as Recipient
 import Pawl.Types.SlotName (SlotName)
-import qualified Pawl.Types.TriggeredAbility as TriggeredAbility
 import qualified Pawl.Types.Zone as Zone
 
 -- CR 302.6: a creature's {T}-cost ability can't be activated while summoning
@@ -128,7 +125,7 @@ abilitiesForGiven pcs oid gs = case fmap Object.zone (Game.lookupObject oid gs) 
   -- arm, so the host's map never has to hold the grantor's text.
   -- Pawl.Engine.Event.battlefieldAbilitiesOf carries the same pairing and the
   -- same note.
-  Just Zone.Battlefield -> filter (functionsIn (PC.delayedAbilities (Projection.projectGiven pcs oid gs)) Zone.Battlefield) (Projection.abilitiesGiven pcs oid gs)
+  Just Zone.Battlefield -> filter (AbilityZone.functionsIn (PC.delayedAbilities (Projection.projectGiven pcs oid gs)) Zone.Battlefield) (Projection.abilitiesGiven pcs oid gs)
   -- CR 113.6j: the MINTED abilities rule 702 gives the keywords, plus the
   -- card's own AUTHORED ones that name the hand. The two are disjoint by
   -- construction -- handAbilitiesOf reads keywords and zoneAbilitiesOf reads
@@ -148,7 +145,7 @@ abilitiesForGiven pcs oid gs = case fmap Object.zone (Game.lookupObject oid gs) 
   -- 113.6b's -- each rule states the zone its ability functions in -- and
   -- enforced two ways. Rule 702.84a's cost is plain mana, payable on the
   -- battlefield as readily as in a graveyard, so unearth leans on CR 113.6m, the
-  -- reading zonesFunctionedIn below implements off the return's
+  -- reading AbilityZone.zonesFunctionedIn implements off the return's
   -- MoveToZone.origin (Pawl.Engine.Keyword.unearth). Rules 702.128a's and
   -- 702.129a's COSTS exile the card from a graveyard, CR 113.6m's other reading,
   -- which the cost's own payability gate enforces
@@ -187,7 +184,7 @@ abilitiesForGiven pcs oid gs = case fmap Object.zone (Game.lookupObject oid gs) 
 -- Reassembling Skeleton's "{1}{B}: Return this card from your graveyard to the
 -- battlefield tapped" function in the graveyard at all. One states the zone in
 -- its cost and the other in its effect, which is the rule's two halves and the
--- two the zonesFunctionedIn below reads. DERIVED from the ability either way,
+-- two AbilityZone.zonesFunctionedIn reads. DERIVED from the ability either way,
 -- never declared by the card, so no card file teaches the closed half a rule it
 -- already has.
 --
@@ -230,9 +227,9 @@ zoneAbilitiesOf pcs zone oid gs = case (Game.faceOf oid gs, Game.lookupObject oi
         -- this zone, so a commander's or a dungeon card's unstated row is left
         -- functioning on the battlefield where rule 113.6 puts it.
         functionsHere ability =
-          functionsIn delayed zone ability
+          AbilityZone.functionsIn delayed zone ability
             || ( zone == Zone.Command
-                   && Maybe.isNothing (zonesFunctionedIn delayed ability)
+                   && Maybe.isNothing (AbilityZone.zonesFunctionedIn delayed ability)
                    && Vanguard.functionsFromCommandZone oid gs
                )
         granted ability = case ActivatedAbility.condition ability of
@@ -240,81 +237,6 @@ zoneAbilitiesOf pcs zone oid gs = case (Game.faceOf oid gs, Game.lookupObject oi
           Just cond -> Condition.holds (Projection.fullView gs) (Projection.sourceContext gs (activatorOf oid gs) oid) gs oid cond
      in filter (\ability -> functionsHere ability && granted ability) (PC.activatedAbilities projected)
   _ -> []
-
--- CR 113.6m in full: "an ability whose cost OR EFFECT specifies that it moves
--- the object it's on out of a particular zone functions only in that zone".
--- Nothing for an ability that specifies neither, which leaves CR 113.6's own
--- default in place -- an instant or sorcery spell's abilities function on the
--- stack, everything else's on the battlefield.
---
--- The two halves are read by the two modules that own the two shapes:
--- Pawl.Engine.Cost walks the cost's components, Pawl.Engine.EffectZone
--- classifies one effect. Neither is a case on which ability this is, and this
--- function is not one either -- it asks the same question of both halves of the
--- rule's own sentence and takes whichever answers.
---
--- The COST answer wins a disagreement, and the choice is arbitrary because the
--- disagreement is: an ability whose cost names one zone and whose effect names
--- another functions in neither, since the cost is unpayable outside the first
--- and CR 113.6m gives one zone. No printing writes such an ability, and pawl
--- reports the cost's zone rather than inventing a "functions nowhere" answer no
--- reader has a use for.
---
--- ALL MODES, and their effects in printed order: CR 700.2 makes a modal
--- ability's modes alternatives, so a zone stated by any of them is a zone the
--- ability can move its object out of. No modal ability in the pool states one.
---
--- This is the ACTIVATED reading of a rule that says "an ability";
--- Pawl.Engine.Event.Trigger.zonesFunctionedIn is the triggered one, and has only the
--- effect half to fold, CR 603.1 giving a triggered ability no cost.
---
--- CR 113.6m's "a previous part of its cost or effect specifies that the
--- object is put into that zone" clause needs no order-sensitivity here, and
--- gets none: it can cancel no answer this fold gives. CR 400.7 mints a fresh
--- id on every zone change, so a part that puts the object into a zone leaves
--- CR 113.7a's source nothing to move -- a later part has to name the ARRIVAL
--- instead (Pawl.Engine.Binding.became, or a slot the move itself minted, as
--- Meandering Towershell's "exiled" is), and this caller gives
--- Pawl.Engine.EffectZone the reserved source slot alone. So first-answer-wins
--- and the rule's order-sensitive reading agree on every ability that can be
--- written, and a card whose later part moved the reserved source slot out of a
--- zone an earlier part put it into is what would refute that; see #2501.
---
--- CR 113.6m's final sentence is read by the fold too, Pawl.Engine.EffectZone's
--- ArmDelayedTrigger arm answering off the `delayed` map this carries. The one
--- card in data/cards/ whose ACTIVATED ability arms a delayed trigger is Grist,
--- the Hunger Tide, and what it arms destroys a target rather than moving Grist,
--- so the walk answers Nothing there. This reading is therefore a regression
--- fence; the sentence itself is proved through the TRIGGERED one, on Prized
--- Amalgam in Pawl.ZoneTriggerSpec.
---
--- Ahead of both halves, CR 113.6b: a keyword whose rule names the zones its
--- ability functions from answers first (Keyword.statedZones) -- CR 702.57a's
--- forecast, and CR 702.49d's commander ninjutsu, the one that names two, which
--- is why this answers a set.
-zonesFunctionedIn :: Map.Map AbilityName.AbilityName (TriggeredAbility.TriggeredAbility Card.Card (GrantedAbility.GrantedAbility Card.Card)) -> ActivatedAbility.ActivatedAbility Card.Card (GrantedAbility.GrantedAbility Card.Card) -> Maybe (Set.Set Zone.Zone)
-zonesFunctionedIn delayed ability =
-  case foldMap Keyword.statedZones (ActivatedAbility.keyword ability) of
-    stated
-      | not (Set.null stated) -> Just stated
-      | otherwise ->
-          fmap Set.singleton $
-            Cost.zoneFunctionedFrom (ActivatedAbility.cost ability)
-              <|> Maybe.listToMaybe
-                -- CR 113.7's source slot ALONE is "the object it's on" here: an
-                -- activation is not an event, so Pawl.Engine.Event.Binding.eventBindings
-                -- never runs for one and CR 400.7e's `became` names nothing.
-                (Maybe.mapMaybe (EffectZone.zoneFunctionedFrom (Set.singleton Binding.triggerSource) delayed) (Modal.allEffects (ActivatedAbility.modal ability)))
-
--- CR 113.6m's "functions only in that zone", asked of one zone: does this
--- ability function from there? True for an ability that names no zone at all,
--- which CR 113.6's default puts on the battlefield -- so this is only ever asked
--- of a zone abilitiesForGiven has already decided is a zone abilities are read
--- from, and never of a library or a stack.
-functionsIn :: Map.Map AbilityName.AbilityName (TriggeredAbility.TriggeredAbility Card.Card (GrantedAbility.GrantedAbility Card.Card)) -> Zone.Zone -> ActivatedAbility.ActivatedAbility Card.Card (GrantedAbility.GrantedAbility Card.Card) -> Bool
-functionsIn delayed zone ability = case zonesFunctionedIn delayed ability of
-  Nothing -> zone == Zone.Battlefield
-  Just named -> Set.member zone named
 
 -- CR 602.2's DEFAULT activator: an object's controller, or its owner if it has
 -- no controller. Both halves of that parenthetical are live here, which is why

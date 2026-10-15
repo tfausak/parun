@@ -9,11 +9,11 @@
 --
 -- The casing home for Pawl.Types.CostComponent; every other module reads the
 -- classifications derived here instead -- requiresSicknessCheck (CR 302.6),
--- isLoyaltyCost (CR 606.2/606.3), zoneFunctionedFrom (CR 113.6m),
--- statesHiddenQuality (CR 118.8c). The one classification that is NOT here is
--- CR 605.1a's library clause: Pawl.Engine.ManaAbility.costMovesLibraryCard
--- answers it, this module being unreachable from there (Cost -> Mana ->
--- Projection -> ManaAbility).
+-- isLoyaltyCost (CR 606.2/606.3), statesHiddenQuality (CR 118.8c). The two
+-- classifications that are NOT here are CR 605.1a's library clause
+-- (Pawl.Engine.ManaAbility.costMovesLibraryCard) and CR 113.6m's cost half
+-- (Pawl.Engine.AbilityZone.zoneFunctionedFrom), this module being unreachable
+-- from either (Cost -> Mana -> Projection -> ManaAbility, AbilityZone).
 module Pawl.Engine.Cost where
 
 import qualified Control.Monad as Monad
@@ -2134,107 +2134,6 @@ combineLoyalty components = case break numbered components of
      in before <> (combined : filter (not . numbered) after)
   where
     numbered = Maybe.isJust . loyaltyAmountOf
-
--- CR 113.6m's COST half: an ability whose cost moves the object it's on out of a
--- particular zone functions only in that zone. The "or effect" half is
--- Pawl.Engine.EffectZone, and Activatable.zonesFunctionedIn joins them.
---
--- Nothing means the cost names no zone, leaving the effect half to answer and CR
--- 113.6's battlefield default otherwise -- SacrificeThis' answer too, CR 701.21a
--- moving the object off the battlefield where CR 113.6 already had it.
---
--- One zone and never a set (CR 113.6m: "a particular zone"). Two components
--- naming DIFFERENT zones would make the ability unpayable in either, so the
--- FIRST is the answer and a disagreement is a card-data error.
-zoneFunctionedFrom :: Cost Keyword.Type.Keyword -> Maybe Zone.Zone
-zoneFunctionedFrom cost = Maybe.listToMaybe (Maybe.mapMaybe zoneOfComponent (Cost.components cost))
-
-zoneOfComponent :: CostComponent.CostComponent Keyword.Type.Keyword -> Maybe Zone.Zone
-zoneOfComponent component = case component of
-  -- CR 702.29a's "Discard this card": the hand, where cycling functions.
-  -- LOAD-BEARING since CR 702.29b and CR 702.77b put the minted cycling and
-  -- reinforce abilities into the projection for every zone -- this is what keeps
-  -- a Rustic Clachan on the battlefield from offering its reinforce ability.
-  CostComponent.DiscardThis _ -> Just Zone.Hand
-  CostComponent.ExileThisFromGraveyard -> Just Zone.Graveyard
-  CostComponent.TapThis -> Nothing
-  CostComponent.UntapThis -> Nothing
-  -- CR 113.6m again, and Nothing for SacrificeThis' reason above: it moves the
-  -- object off the BATTLEFIELD, where CR 113.6's default already had it, so
-  -- naming the zone would be redundant rather than wrong. A FENCE and not proven
-  -- behaviour, for exactly that reason -- answering Just Zone.Battlefield leaves
-  -- the suite green, the two readings agreeing wherever CR 113.6's default holds.
-  CostComponent.ReturnThis -> Nothing
-  CostComponent.SacrificeThis -> Nothing
-  CostComponent.ExileThis -> Nothing
-  CostComponent.PayLife _ -> Nothing
-  CostComponent.PayHalfLife _ -> Nothing
-  CostComponent.Sacrifice {} -> Nothing
-  -- These tap permanents that stay on the battlefield, so nothing moves out of
-  -- any zone and CR 113.6's default stands.
-  CostComponent.TapForTotalPower {} -> Nothing
-  CostComponent.TapPermanents {} -> Nothing
-  -- Nothing, and NOT Just Zone.Battlefield: CR 113.6m is about an ability that
-  -- moves THE OBJECT IT'S ON, and this moves OTHER permanents.
-  CostComponent.ReturnPermanents {} -> Nothing
-  CostComponent.ExilePermanents {} -> Nothing
-  -- Nothing, and NOT Just Zone.Graveyard: rule 113.6m again, and these move
-  -- OTHER cards.
-  CostComponent.ExileCardsFromGraveyard {} -> Nothing
-  CostComponent.ExileTopFromGraveyard _ -> Nothing
-  CostComponent.CollectEvidence _ -> Nothing
-  CostComponent.CollectEvidenceOfTargets -> Nothing
-  -- Nothing for the arms above's reason and one more: CR 702.167a's component
-  -- moves objects out of TWO zones, so there is no single zone to name even if
-  -- rule 113.6m asked about them.
-  CostComponent.ExileMaterials {} -> Nothing
-  CostComponent.DiscardCards {} -> Nothing
-  -- Nothing, and NOT Just Zone.Hand as DiscardThis above answers, for the same
-  -- reason the arms above give: CR 113.6m asks about an ability that moves THE
-  -- OBJECT IT'S ON, and these move another card out of the payer's hand.
-  CostComponent.PutCardFromHandOntoBattlefield _ -> Nothing
-  CostComponent.ExileCardFromHand _ -> Nothing
-  -- Nothing for a further reason than the arms above: CR 701.20b moves no card
-  -- at all, so there is no zone for CR 113.6m to be told about.
-  CostComponent.RevealCardFromHand _ -> Nothing
-  -- Nothing, the arm above's reason: CR 701.4a moves no object at all, whichever
-  -- of its two halves the payer takes, so there is no zone for CR 113.6m to be
-  -- told about.
-  CostComponent.Behold _ -> Nothing
-  -- Nothing, and NOT Just Zone.Hand or Zone.Battlefield: CR 113.6m asks about an
-  -- ability that moves THE OBJECT IT'S ON, and this exiles another object.
-  CostComponent.BeholdAndExile _ -> Nothing
-  -- Nothing, and NOT Just Zone.Library, for the arms above's reason: CR 701.17a
-  -- mills the cards on top of the paying player's library, which are OTHER cards
-  -- than the object the cost is on -- a Millikin on the battlefield is not in the
-  -- library it mills.
-  CostComponent.MillCards _ -> Nothing
-  CostComponent.RevealTopOfLibrary _ -> Nothing
-  CostComponent.PayEnergy _ -> Nothing
-  CostComponent.AddLoyaltyToThis _ -> Nothing
-  CostComponent.RemoveLoyaltyFromThis _ -> Nothing
-  -- CR 122.1's counter is a marker and not an object, and CR 122.2 has counters
-  -- "simply cease to exist" rather than travel, so removing one moves nothing out
-  -- of any zone and CR 113.6's battlefield default stands. A FENCE and not proven
-  -- behaviour, as ReturnThis' answer above is: Barkhide Troll's ability functions
-  -- on the battlefield under either answer, so nothing separates them.
-  CostComponent.RemoveCountersFromThis _ -> Nothing
-  -- Nothing for the arm above's reason and one more: the counters come off
-  -- ANOTHER permanent, which CR 113.6m does not ask about either way.
-  CostComponent.RemoveCounters {} -> Nothing
-  -- CR 122.6 puts counters on a permanent already where it is, so nothing moves
-  -- out of any zone.
-  CostComponent.PutPlusOneCountersOnThis _ -> Nothing
-  CostComponent.Blight _ -> Nothing
-  -- Nothing, and NOT Just Zone.Graveyard: rule 113.6m asks about an ability that
-  -- moves THE OBJECT IT'S ON, and CR 701.61a moves OTHER cards -- the
-  -- ExileCardsFromGraveyard arm above's answer, for its reason, and the Food half
-  -- is Sacrifice's.
-  CostComponent.Forage -> Nothing
-  CostComponent.FlipCoin -> Nothing
-  CostComponent.ChooseOpponent -> Nothing
-  CostComponent.Waterbend _ -> Nothing
-  CostComponent.WaterbendInstead _ -> Nothing
 
 -- CR 118.8c: does this cost include "actions involving cards with a stated
 -- quality in a hidden zone"? What Resolve.offerCast reads to decide whether a
