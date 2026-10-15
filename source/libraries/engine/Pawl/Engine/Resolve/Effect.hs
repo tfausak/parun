@@ -96,6 +96,7 @@ import qualified Pawl.Extra.Integer as Integer
 import qualified Pawl.Extra.Natural as Natural
 import qualified Pawl.Types.AbilityKind as AbilityKind
 import Pawl.Types.AbilityName (AbilityName)
+import qualified Pawl.Types.Acquisition as Acquisition
 import qualified Pawl.Types.ActivateManaAbilities as ActivateManaAbilities
 import qualified Pawl.Types.ActivatedAbility as ActivatedAbility
 import qualified Pawl.Types.ActivatedAbilitySource as ActivatedAbilitySource
@@ -3256,6 +3257,15 @@ resolvingMarks resolving gs = case thisAbilitySource resolving gs of
 thisAbilitySource :: ObjectId -> GameState -> Maybe Source.Source
 thisAbilitySource resolving gs = fmap Object.source (Game.lookupObject resolving gs)
 
+-- | CR 607.5: the acquisition the resolving ability came with on its source,
+-- frozen as it went on the stack. Own for a spell, which has no source to have
+-- acquired it from.
+resolvingAcquisition :: ObjectId -> GameState -> Acquisition.Acquisition
+resolvingAcquisition resolving gs = case thisAbilitySource resolving gs of
+  Just (Source.OfTrigger triggered) -> TriggeredAbilitySource.acquisition triggered
+  Just (Source.OfAbility activated) -> ActivatedAbilitySource.acquisition activated
+  _ -> Acquisition.Own
+
 -- The name a conjure's candidate answers to, which is what Prompt.RandomCard
 -- and Prompt.ChooseConjuredCard offer and what their answer is matched back
 -- against. The FRONT face's (CR 712.8a): no printed spellbook holds a card with
@@ -4809,8 +4819,9 @@ applyOneEffect runSubgame resolving source controller legal chosen effect = case
       Monad.unless (null results) (recordRoll roller throwers results)
     -- CR 706.8a: every kept result, noted with its kind of die, on the slot's
     -- permanent.
-    Foldable.for_ (RollDie.store rollDie >>= \slot -> legalOne slot legal >>= Recipient.objectOf) $ \target ->
-      State.modify' (storeOn target sides (foldMap (\(_, _, _, results) -> results) rolled))
+    Foldable.for_ (RollDie.store rollDie >>= \slot -> legalOne slot legal >>= Recipient.objectOf) $ \target -> do
+      acquisition <- State.gets (resolvingAcquisition resolving)
+      State.modify' (storeOn acquisition target sides (foldMap (\(_, _, _, results) -> results) rolled))
   -- CR 706.2b's reroll, thrown by the ability Goblin Bookie activates inside
   -- throwDice's window: the same die, the new face filtered back to
   -- CR 706.1a's range, and handed back through GameState.rerolledTo. No window
@@ -4831,9 +4842,13 @@ applyOneEffect runSubgame resolving source controller legal chosen effect = case
   -- so CR 706.2's modifiers and CR 614.1a's replacements reach it, and each
   -- kind's throw records CR 706.1's event -- and the new results replace the
   -- old.
+  --
+  -- CR 607.5 / 706.8c: only the results the resolving ability's own pair
+  -- stored, so a copy's reroll finds none its printed pair stored.
   Effect.RerollStoredResults slot -> Foldable.for_ (legalOne slot legal >>= Recipient.objectOf) $ \target -> do
     gs <- State.get
-    let stored = foldMap Object.storedResults (Game.lookupObject target gs)
+    let acquisition = resolvingAcquisition resolving gs
+        stored = foldMap (Game.storedResultsUnder acquisition) (Game.lookupObject target gs)
     Monad.unless (Map.null stored) $ do
       answer <- Game.choose (Prompt.ChooseStoredRerolls (Decide.deciderFor controller gs) controller target stored)
       -- FILTERED, NOT TRUSTED: each count clamped to what the object holds.
@@ -4844,9 +4859,9 @@ applyOneEffect runSubgame resolving source controller legal chosen effect = case
         Monad.unless (null results) (recordRoll controller throwers results)
         pure (dieSides, results)
       -- Swapped only once every die is up, in the rule's order.
-      let unstore o = o {Object.storedResults = Map.differenceWith (\have gone -> if have > gone then Just (have - gone) else Nothing) (Object.storedResults o) rerolled}
+      let unstore o = o {Object.storedResults = Map.filter (not . Map.null) (Map.adjust (\held -> Map.differenceWith (\have gone -> if have > gone then Just (have - gone) else Nothing) held rerolled) acquisition (Object.storedResults o))}
       State.modify' (\g -> g {GameState.objects = Map.adjust unstore target (GameState.objects g)})
-      Foldable.for_ thrown $ \(dieSides, results) -> State.modify' (storeOn target dieSides results)
+      Foldable.for_ thrown $ \(dieSides, results) -> State.modify' (storeOn acquisition target dieSides results)
   -- CR 705.1's flip, in RollDie's holder and for its reason: bindAmountSlot's
   -- `source` is the resolving object, and on a SPELL -- which Winter Sky is --
   -- `source` and `resolving` are the same object, so the ambiguity the arm above
@@ -7358,8 +7373,14 @@ applyOneEffect runSubgame resolving source controller legal chosen effect = case
                 -- CR 707.3: the card states no ending, so the copiable values go
                 -- onto the subject itself (Binding.setCopy) and nothing has to
                 -- remember them. CR 613.7 puts them over any stored row already
-                -- covering the subject (Game.supersedeStoredCopies).
-                Nothing -> acquire (Game.supersedeStoredCopies (Set.fromList subjects) gs {GameState.objects = foldr write (GameState.objects gs) subjects})
+                -- covering the subject (Game.supersedeStoredCopies). CR 607.5:
+                -- the abilities they bring are an acquisition of their own,
+                -- named by a fresh timestamp, so nothing noted for the ones
+                -- they replace is linked to them.
+                Nothing ->
+                  let (ts, gs1) = Game.freshTimestamp gs
+                      acquired o = o {Object.acquisition = Acquisition.Copied ts}
+                   in acquire (Game.supersedeStoredCopies (Set.fromList subjects) gs1 {GameState.objects = foldr (\subject -> Map.adjust acquired subject . write subject) (GameState.objects gs1) subjects})
                 Just stated -> case Expiry.arm legal controller source stated gs of
                   -- CR 611.2b: the duration never started, so nothing is stored.
                   Nothing -> gs
@@ -7548,6 +7569,8 @@ applyOneEffect runSubgame resolving source controller legal chosen effect = case
                       -- with it -- `designations` above, same sentence.
                       Object.designationValues = Map.empty,
                       Object.storedResults = Map.empty,
+                      -- CR 707.10: the copy is created with these values.
+                      Object.acquisition = Acquisition.Own,
                       -- CR 707.10 copies the alternative cost, but a copy isn't
                       -- CAST, so it keeps evoke's record and not escape's.
                       Object.castUsing = Keyword.copiedCastUsing (Object.castUsing obj),
@@ -10605,23 +10628,17 @@ performHandAction runSubgame source player =
         (Map.singleton Binding.triggerSource (Set.singleton (Recipient.ToObject source)))
     )
 
--- | CR 706.1-706.6: throw `named` dice with `sides` sides for `controller`,
--- through every modification rule 706 names -- CR 614.1a's replacements, CR
--- 706.2b's rerolls and adjustments, CR 706.6's ignored rolls -- and answer each
--- kept die's final result beside the player who threw its final natural result.
--- `perDie` is the instruction's own modifier (CR 706.2). Shared by
--- Effect.RollDie's arm and CR 701.52a's roll to visit, which records nothing
--- here: each caller records its own events.
 -- | CR 706.8a: note each of these results of a die of `sides` on `target` as
--- a stored result. Only a PERMANENT holds stored results, so an object no
--- longer on the battlefield is left alone.
-storeOn :: ObjectId -> Natural -> [Natural] -> GameState -> GameState
-storeOn target sides results gs =
+-- a stored result, for the abilities acquired as `acquisition` (CR 607.5).
+-- Only a PERMANENT holds stored results, so an object no longer on the
+-- battlefield is left alone.
+storeOn :: Acquisition.Acquisition -> ObjectId -> Natural -> [Natural] -> GameState -> GameState
+storeOn acquisition target sides results gs =
   let noted :: Map.Map StoredResult.StoredResult Natural
       noted = Map.fromListWith (+) [(StoredResult.MkStoredResult {StoredResult.sides = sides, StoredResult.value = result}, 1) | result <- results]
       store o =
         if Object.zone o == Zone.Battlefield
-          then o {Object.storedResults = Map.unionWith (+) noted (Object.storedResults o)}
+          then o {Object.storedResults = Map.insertWith (Map.unionWith (+)) acquisition noted (Object.storedResults o)}
           else o
    in gs {GameState.objects = Map.adjust store target (GameState.objects gs)}
 
@@ -10648,6 +10665,13 @@ rollToVisit runSubgame pid = do
   Foldable.for_ (Maybe.listToMaybe results) $ \result ->
     State.modify' (Event.recordEvent (GameEvent.RolledToVisit DieResult.MkDieResult {DieResult.roller = pid, DieResult.result = result}))
 
+-- | CR 706.1-706.6: throw `named` dice with `sides` sides for `controller`,
+-- through every modification rule 706 names -- CR 614.1a's replacements, CR
+-- 706.2b's rerolls and adjustments, CR 706.6's ignored rolls -- and answer each
+-- kept die's final result beside the player who threw its final natural result.
+-- `perDie` is the instruction's own modifier (CR 706.2). Shared by
+-- Effect.RollDie's arm and CR 701.52a's roll to visit, which records nothing
+-- here: each caller records its own events.
 throwDice :: Game Result -> PlayerId -> Natural -> Natural -> Game Integer -> Game ([Natural], [PlayerId])
 throwDice runSubgame controller sides named perDie = do
   let -- CR 706.1a's outcomes "numbered from 1 to N", BOTH ends included: the

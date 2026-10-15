@@ -771,7 +771,9 @@ viewOfCharacteristics peers oid pc controller counters gs =
       -- CR 701.37c: the number the mark was set with, read live off the object
       -- beside the mark itself -- `designations`' posture above.
       Filter.designationValues = foldMap Object.designationValues (Game.lookupObject oid gs),
-      Filter.storedResults = foldMap Object.storedResults (Game.lookupObject oid gs),
+      -- CR 607.5: the results stored for the abilities layer 1a leaves it, so a
+      -- copy's reading ability sees none its printed pair stored.
+      Filter.storedResults = foldMap (Game.storedResultsUnder (Game.acquisitionOf oid gs)) (Game.lookupObject oid gs),
       -- CR 716.2b: a designation too, so `designations`' posture again -- and
       -- Nothing for an id naming no object leaves CR 716.2d to answer level 1 at
       -- the read, which is what a CR 608.2h asker gets for a permanent that is

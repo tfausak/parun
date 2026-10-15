@@ -15,7 +15,7 @@ issue; an expressible card not yet in the pool is a plain card add.
 | Blood Moon | Setting a basic land type strips abilities; dependency overrides timestamps (CR 305.7, 613.8) | Proven: `ProjectionSpec` Urborg and Life and Limb cases, `ManaSpec` |
 | Dryad Arbor | One object that is a land and a creature; played, never cast (CR 305.9, 302.6) | Proven: `CastPermissionSpec`, `ManaSpec` Humility case |
 | Painter's Servant | A battlefield static that colours cards in every zone, hidden ones included (CR 611.3a, 613.1e) | Partial: spells and emblems proven in `ColorSpec`; hand and library untested (#4784) |
-| Vesuvan Doppelganger | Copy with an exception and a self-reproducing added ability (CR 707.9a, 707.9c) | Proven: `CopySpec` "CR 707.9c" cases; forgetting linked choices on re-copy open (#4729) |
+| Vesuvan Doppelganger | Copy with an exception and a self-reproducing added ability (CR 707.9a, 707.9c) | Proven: `CopySpec` "CR 707.9c" cases; forgetting linked choices on re-copy open (#5096) |
 | Volrath's Shapeshifter | Graveyard order driving a full-text change (CR 612.6, 404.3) | Proven: `ProjectionSpec` "CR 612.6" cases, `ZoneChangeSpec` |
 | Magical Hack | Swapping a land-type word wherever the text uses it as one: filters, landwalk, mana, counters, shields, durations (CR 612.1, 612.2) | Proven: `CastSpec` `magicalHackSpec`, `CounterspellSpec` `magicalHackTimingSpec`, `data/scenarios/projection/` |
 | Artificial Evolution | A creature-type swap that renames the tokens the text creates, under a word the card forbids (CR 612.2a) | Proven: `data/scenarios/counterspell/cr-612-2a-*`; the forbidden word is not enforced (#641) |

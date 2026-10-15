@@ -69,6 +69,7 @@ import qualified Pawl.Engine.Turn as Turn
 import qualified Pawl.Extra.Integer as Integer
 import qualified Pawl.Extra.Natural as Natural
 import qualified Pawl.Types.AbilityTriggered as AbilityTriggered
+import qualified Pawl.Types.Acquisition as Acquisition
 import qualified Pawl.Types.ActiveCopy as ActiveCopy
 import qualified Pawl.Types.ActiveReplacement as ActiveReplacement
 import qualified Pawl.Types.Affected as Affected
@@ -4311,8 +4312,17 @@ apply batch candidate event =
       -- Pawl.EffectLintSpec holds that no turn-up row states them. Applied
       -- after the status write, so a copied creature's own "as this is turned
       -- face up" row is collected on the loop's next pass (CR 616.1f).
+      --
+      -- CR 607.5: a copy with no duration made as it turns face up brings
+      -- abilities of their own acquisition, Effect.BecomeCopy's no-duration
+      -- road; one with a duration is named by its row. A REGRESSION FENCE: no
+      -- card in data/cards/ turns face up as a copy with no duration.
       TurnUpRewrite.AsCopy asCopy -> do
-        _ <- becomeCopyAs Set.empty candidate asCopy oid
+        made <- becomeCopyAs Set.empty candidate asCopy oid
+        let acquired g =
+              let (ts, g1) = Game.freshTimestamp g
+               in g1 {GameState.objects = Map.adjust (\o -> o {Object.acquisition = Acquisition.Copied ts}) oid (GameState.objects g1)}
+        Monad.when (Maybe.isJust made && Maybe.isNothing (AsCopy.duration asCopy)) (State.modify' acquired)
         pure (Just event)
     -- Unreachable: `applies` admits TurnUpR only against WouldTurnFaceUp.
     (ReplacementEffect.TurnUpR {}, _) -> pure (Just event)

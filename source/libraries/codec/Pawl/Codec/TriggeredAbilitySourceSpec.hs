@@ -8,6 +8,7 @@ import qualified Pawl.Codec.TriggeredAbilitySource as TriggeredAbilitySource
 import qualified Pawl.JsonCodec.Common as Common
 import qualified Pawl.Spec as Spec
 import qualified Pawl.Types.AbilityName as AbilityName
+import qualified Pawl.Types.Acquisition as Acquisition
 import qualified Pawl.Types.Card as Card
 import qualified Pawl.Types.GrantedAbility as GrantedAbility
 import qualified Pawl.Types.Modal as Modal
@@ -51,7 +52,8 @@ spec s = Spec.describe s "Pawl.Codec.TriggeredAbilitySource" $ do
         { TriggeredAbilitySource.source = ObjectId.MkObjectId 6,
           TriggeredAbilitySource.ability = ability,
           TriggeredAbilitySource.createdAt = Nothing,
-          TriggeredAbilitySource.delayed = Map.empty
+          TriggeredAbilitySource.delayed = Map.empty,
+          TriggeredAbilitySource.acquisition = Acquisition.Own
         }
       " {\"source\":6,\"ability\":{\"condition\":{\"type\":\"SelfEnters\"},\"modal\":{\"modes\":[{}]}}} "
   -- CR 603.7a: the same record for an ability that fired from a delayed entry,
@@ -64,7 +66,8 @@ spec s = Spec.describe s "Pawl.Codec.TriggeredAbilitySource" $ do
         { TriggeredAbilitySource.source = ObjectId.MkObjectId 6,
           TriggeredAbilitySource.ability = ability,
           TriggeredAbilitySource.createdAt = Just (Timestamp.MkTimestamp 3),
-          TriggeredAbilitySource.delayed = Map.empty
+          TriggeredAbilitySource.delayed = Map.empty,
+          TriggeredAbilitySource.acquisition = Acquisition.Own
         }
       " {\"source\":6,\"ability\":{\"condition\":{\"type\":\"SelfEnters\"},\"modal\":{\"modes\":[{}]}},\"createdAt\":3} "
   -- CR 113.7a: the delayed declarations frozen as the ability triggered.
@@ -76,8 +79,23 @@ spec s = Spec.describe s "Pawl.Codec.TriggeredAbilitySource" $ do
         { TriggeredAbilitySource.source = ObjectId.MkObjectId 6,
           TriggeredAbilitySource.ability = ability,
           TriggeredAbilitySource.createdAt = Nothing,
-          TriggeredAbilitySource.delayed = Map.singleton (AbilityName.MkAbilityName (Text.pack "later")) ability
+          TriggeredAbilitySource.delayed = Map.singleton (AbilityName.MkAbilityName (Text.pack "later")) ability,
+          TriggeredAbilitySource.acquisition = Acquisition.Own
         }
       " {\"source\":6,\"ability\":{\"condition\":{\"type\":\"SelfEnters\"},\"modal\":{\"modes\":[{}]}},\"delayed\":{\"later\":{\"condition\":{\"type\":\"SelfEnters\"},\"modal\":{\"modes\":[{}]}}}} "
+  -- CR 607.5: an ability a copy effect gave its source, which is the one case
+  -- the key is present for.
+  Spec.it s "a triggered ability a copy effect gave its source" $
+    Common.assertCodec
+      s
+      TriggeredAbilitySource.codec
+      TriggeredAbilitySource.MkTriggeredAbilitySource
+        { TriggeredAbilitySource.source = ObjectId.MkObjectId 6,
+          TriggeredAbilitySource.ability = ability,
+          TriggeredAbilitySource.createdAt = Nothing,
+          TriggeredAbilitySource.delayed = Map.empty,
+          TriggeredAbilitySource.acquisition = Acquisition.Copied (Timestamp.MkTimestamp 4)
+        }
+      " {\"source\":6,\"ability\":{\"condition\":{\"type\":\"SelfEnters\"},\"modal\":{\"modes\":[{}]}},\"acquisition\":{\"type\":\"Copied\",\"value\":4}} "
   Spec.it s "has a schema" $
     Common.assertHasSchema s TriggeredAbilitySource.codec

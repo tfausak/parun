@@ -385,6 +385,7 @@ objectWith before entry closed = do
   designations <- field Object.designations
   designationValues <- field Object.designationValues
   storedResults <- field Object.storedResults
+  acquisition <- field Object.acquisition
   paidCosts <- field Object.paidCosts
   tributePaid <- field Object.tributePaid
   bestowed <- field Object.bestowed
@@ -449,6 +450,7 @@ objectWith before entry closed = do
         Object.designations = designations,
         Object.designationValues = designationValues,
         Object.storedResults = storedResults,
+        Object.acquisition = acquisition,
         Object.paidCosts = paidCosts,
         Object.tributePaid = tributePaid,
         Object.bestowed = bestowed,
