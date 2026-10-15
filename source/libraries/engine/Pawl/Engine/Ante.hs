@@ -58,7 +58,7 @@ payOut = do
     Just (Result.TeamWon team) -> do
       let onTeam pid = Teams.teamOf (Game.teams gs) pid == Just team
           winners = filter onTeam (GameState.turnOrder gs)
-      case filter onTeam (Game.stillPlaying gs) of
+      case filter onTeam (Game.stillPlayingInOrder gs) of
         [] -> pure ()
         speaker : _ ->
           Foldable.for_ ante $ \oid -> do
