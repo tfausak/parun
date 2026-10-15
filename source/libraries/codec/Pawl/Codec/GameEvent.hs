@@ -50,7 +50,6 @@ import qualified Pawl.Codec.PlayerActed as PlayerActed
 import qualified Pawl.Codec.PlayerId as PlayerId
 import qualified Pawl.Codec.Revealed as Revealed
 import qualified Pawl.Codec.Saddling as Saddling
-import qualified Pawl.Codec.SchemeSetInMotion as SchemeSetInMotion
 import qualified Pawl.Codec.SpellWasCast as SpellWasCast
 import qualified Pawl.Codec.SpellWasCopied as SpellWasCopied
 import qualified Pawl.Codec.StepBegan as StepBegan
@@ -59,6 +58,7 @@ import qualified Pawl.Codec.TappedForMana as TappedForMana
 import qualified Pawl.Codec.Transformed as Transformed
 import qualified Pawl.Codec.TriggeredAbilitySource as TriggeredAbilitySource
 import qualified Pawl.Codec.TurnedFaceUp as TurnedFaceUp
+import qualified Pawl.Codec.TurnedUpOffDeck as TurnedUpOffDeck
 import qualified Pawl.Codec.VentureMarkerEntered as VentureMarkerEntered
 import qualified Pawl.Codec.Voted as Voted
 import qualified Pawl.Codec.ZoneChange as ZoneChange
@@ -130,7 +130,7 @@ codec =
       Arm.payload "DieResultSettled" (DieResult.codec PlayerId.codec) GameEvent.DieResultSettled (\x -> case x of GameEvent.DieResultSettled y -> Just y; _ -> Nothing),
       Arm.payload "RolledToVisit" (DieResult.codec PlayerId.codec) GameEvent.RolledToVisit (\x -> case x of GameEvent.RolledToVisit y -> Just y; _ -> Nothing),
       Arm.payload "PlanarDieRolled" PlanarDieRolled.codec GameEvent.PlanarDieRolled (\x -> case x of GameEvent.PlanarDieRolled y -> Just y; _ -> Nothing),
-      Arm.payload "SchemeSetInMotion" SchemeSetInMotion.codec GameEvent.SchemeSetInMotion (\x -> case x of GameEvent.SchemeSetInMotion y -> Just y; _ -> Nothing),
+      Arm.payload "TurnedUpOffDeck" TurnedUpOffDeck.codec GameEvent.TurnedUpOffDeck (\x -> case x of GameEvent.TurnedUpOffDeck y -> Just y; _ -> Nothing),
       Arm.payload "ClassLevelSet" ClassLevelChange.codec GameEvent.ClassLevelSet (\x -> case x of GameEvent.ClassLevelSet y -> Just y; _ -> Nothing),
       Arm.payload "Plotted" ObjectId.codec GameEvent.Plotted (\x -> case x of GameEvent.Plotted y -> Just y; _ -> Nothing),
       Arm.payload "BecameTapped" ObjectId.codec GameEvent.BecameTapped (\x -> case x of GameEvent.BecameTapped y -> Just y; _ -> Nothing),
@@ -205,7 +205,7 @@ tagOf x = case x of
   GameEvent.DieResultSettled {} -> "DieResultSettled"
   GameEvent.RolledToVisit {} -> "RolledToVisit"
   GameEvent.PlanarDieRolled {} -> "PlanarDieRolled"
-  GameEvent.SchemeSetInMotion {} -> "SchemeSetInMotion"
+  GameEvent.TurnedUpOffDeck {} -> "TurnedUpOffDeck"
   GameEvent.ClassLevelSet {} -> "ClassLevelSet"
   GameEvent.Plotted {} -> "Plotted"
   GameEvent.BecameTapped {} -> "BecameTapped"

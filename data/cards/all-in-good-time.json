@@ -6,7 +6,7 @@
       "triggeredAbilities": [
         {
           "condition": {
-            "type": "SetInMotion"
+            "type": "SelfTurnedUpOffDeck"
           },
           "modal": {
             "modes": [

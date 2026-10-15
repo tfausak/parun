@@ -563,7 +563,6 @@ import qualified Pawl.Codec.SacrificerSpec
 import qualified Pawl.Codec.SaddlingSpec
 import qualified Pawl.Codec.ScalingSpec
 import qualified Pawl.Codec.ScenarioSpec
-import qualified Pawl.Codec.SchemeSetInMotionSpec
 import qualified Pawl.Codec.ScopeSpec
 import qualified Pawl.Codec.ScryRSpec
 import qualified Pawl.Codec.ScryRewriteSpec
@@ -647,6 +646,7 @@ import qualified Pawl.Codec.TurnUpRSpec
 import qualified Pawl.Codec.TurnUpRewriteSpec
 import qualified Pawl.Codec.TurnWindowSpec
 import qualified Pawl.Codec.TurnedFaceUpSpec
+import qualified Pawl.Codec.TurnedUpOffDeckSpec
 import qualified Pawl.Codec.TypeLineSpec
 import qualified Pawl.Codec.TypeSwapSpec
 import qualified Pawl.Codec.TypesAreSpec
@@ -1420,7 +1420,7 @@ spec s registry = do
   Pawl.Codec.SaddlingSpec.spec s
   Pawl.Codec.ScalingSpec.spec s
   Pawl.Codec.ScenarioSpec.spec s
-  Pawl.Codec.SchemeSetInMotionSpec.spec s
+  Pawl.Codec.TurnedUpOffDeckSpec.spec s
   Pawl.Codec.ScopeSpec.spec s
   Pawl.Codec.ScryRewriteSpec.spec s
   Pawl.Codec.ScryRSpec.spec s

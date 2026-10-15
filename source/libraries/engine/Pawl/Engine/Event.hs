@@ -806,7 +806,7 @@ damageOf event = case event of
   GameEvent.DieResultSettled _ -> Nothing
   GameEvent.RolledToVisit _ -> Nothing
   GameEvent.PlanarDieRolled _ -> Nothing
-  GameEvent.SchemeSetInMotion _ -> Nothing
+  GameEvent.TurnedUpOffDeck _ -> Nothing
   GameEvent.ClassLevelSet _ -> Nothing
   GameEvent.Plotted _ -> Nothing
   GameEvent.BecameAttacked _ -> Nothing
@@ -878,7 +878,7 @@ revealOf event = case event of
   GameEvent.DieResultSettled _ -> Nothing
   GameEvent.RolledToVisit _ -> Nothing
   GameEvent.PlanarDieRolled _ -> Nothing
-  GameEvent.SchemeSetInMotion _ -> Nothing
+  GameEvent.TurnedUpOffDeck _ -> Nothing
   GameEvent.ClassLevelSet _ -> Nothing
   GameEvent.Plotted _ -> Nothing
   GameEvent.BecameAttacked _ -> Nothing
@@ -9250,7 +9250,7 @@ controllerTurnScoped cond = case cond of
   TriggerCondition.Visit -> False
   TriggerCondition.ChaosEnsues -> False
   TriggerCondition.PlayerRollsPlaneswalker _ -> False
-  TriggerCondition.SetInMotion -> False
+  TriggerCondition.SelfTurnedUpOffDeck -> False
   TriggerCondition.PlayerWinsCoinFlip _ -> False
   TriggerCondition.PlayerLosesCoinFlip _ -> False
   -- CR 701.3a names no turn: an Aura can be cast, and an Equipment equipped, on
@@ -9815,7 +9815,7 @@ abilityTriggeredOf event = case event of
   GameEvent.DieResultSettled _ -> Nothing
   GameEvent.RolledToVisit _ -> Nothing
   GameEvent.PlanarDieRolled _ -> Nothing
-  GameEvent.SchemeSetInMotion _ -> Nothing
+  GameEvent.TurnedUpOffDeck _ -> Nothing
   GameEvent.ClassLevelSet _ -> Nothing
   GameEvent.Plotted _ -> Nothing
   GameEvent.BecameAttacked _ -> Nothing

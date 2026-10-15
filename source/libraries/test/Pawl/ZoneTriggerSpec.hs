@@ -144,9 +144,9 @@ import qualified Pawl.Types.Regenerability as Regenerability
 import qualified Pawl.Types.RevealCause as RevealCause
 import qualified Pawl.Types.Revealed as Revealed
 import qualified Pawl.Types.RoomIndex as RoomIndex
-import qualified Pawl.Types.SchemeSetInMotion as SchemeSetInMotion
 import qualified Pawl.Types.SelfCountersReached as SelfCountersReached
 import qualified Pawl.Types.SelfCountersRemoved as SelfCountersRemoved
+import qualified Pawl.Types.SideDeck as SideDeck
 import qualified Pawl.Types.SlotName as SlotName
 import qualified Pawl.Types.SpellCast as SpellCast
 import qualified Pawl.Types.SpellWasCast as SpellWasCast
@@ -165,6 +165,7 @@ import qualified Pawl.Types.TriggerSource as TriggerSource
 import qualified Pawl.Types.TriggeredAbility as TriggeredAbility
 import qualified Pawl.Types.TurnScope as TurnScope
 import qualified Pawl.Types.TurnedFaceUp as TurnedFaceUp
+import qualified Pawl.Types.TurnedUpOffDeck as TurnedUpOffDeck
 import qualified Pawl.Types.VentureMarkerEntered as VentureMarkerEntered
 import qualified Pawl.Types.Zone as Zone
 import qualified Pawl.Types.ZoneChange as ZoneChange
@@ -2319,7 +2320,7 @@ representativeEvents cond =
         -- CR 901.9c's own event, a planar die showing the Planeswalker symbol.
         TriggerCondition.PlayerRollsPlaneswalker _ -> one (GameEvent.PlanarDieRolled (PlanarDieRolled.MkPlanarDieRolled S.bob PlanarDieFace.Planeswalker))
         -- CR 701.32's own event, and the only one this condition admits.
-        TriggerCondition.SetInMotion -> one (GameEvent.SchemeSetInMotion (SchemeSetInMotion.MkSchemeSetInMotion S.bob departed))
+        TriggerCondition.SelfTurnedUpOffDeck -> one (GameEvent.TurnedUpOffDeck (TurnedUpOffDeck.MkTurnedUpOffDeck SideDeck.Scheme S.bob departed))
         -- CR 705.2's own event, and the only one this condition admits. A WON
         -- flip, since neither a lost one nor rule 705.2's winnerless one matches
         -- at all -- and bob rather than the perspective player, on the
@@ -2574,7 +2575,7 @@ everyTriggerCondition =
     TriggerCondition.ChaosEnsues,
     TriggerCondition.PlayerRollsPlaneswalker PlayerRelation.You,
     TriggerCondition.PlayerRollsPlaneswalker PlayerRelation.Opponent,
-    TriggerCondition.SetInMotion,
+    TriggerCondition.SelfTurnedUpOffDeck,
     TriggerCondition.PlayerWinsCoinFlip PlayerRelation.You,
     TriggerCondition.PlayerWinsCoinFlip PlayerRelation.Opponent,
     TriggerCondition.PlayerLosesCoinFlip PlayerRelation.You,

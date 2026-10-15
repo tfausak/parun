@@ -2817,7 +2817,7 @@ triggerConditionNames asking x = case x of
   TriggerCondition.PlayerManifestsDread _playerRelation -> False
   TriggerCondition.ChaosEnsues -> False
   TriggerCondition.PlayerRollsPlaneswalker _playerRelation -> False
-  TriggerCondition.SetInMotion -> False
+  TriggerCondition.SelfTurnedUpOffDeck -> False
   TriggerCondition.PlayerRollsResult dieResult -> dieResultNames asking (const False) dieResult
   TriggerCondition.Visit -> False
   TriggerCondition.PlayerWinsCoinFlip _playerRelation -> False

@@ -17,6 +17,8 @@ import qualified Pawl.Types.GameState as GameState
 import qualified Pawl.Types.Object as Object
 import Pawl.Types.ObjectId (ObjectId)
 import Pawl.Types.PlayerId (PlayerId)
+import qualified Pawl.Types.Source as Source
+import qualified Pawl.Types.TriggeredAbilitySource as TriggeredAbilitySource
 import qualified Pawl.Types.TypeLine as TypeLine
 
 -- | CR 311.1 / 312.1: does this face print the plane or the phenomenon card
@@ -35,6 +37,26 @@ isPhenomenonFace face = Set.member CardType.Phenomenon (TypeLine.types (Face.typ
 -- leaves the command zone, where nothing can copy it or change its type.
 isPlanarCard :: ObjectId -> GameState -> Bool
 isPlanarCard oid gs = maybe False isPlanarFace (Game.faceOf oid gs)
+
+-- | CR 901.10 / 901.10b: the owner of the phenomenon card this object is a
+-- triggered ability from, or a copy of one (CR 707.10b), and Nothing for any
+-- other object. Through last-known information, since the rule asks it once the
+-- phenomenon has left the game with its owner.
+phenomenonOwnerOf :: ObjectId -> GameState -> Maybe PlayerId
+phenomenonOwnerOf oid gs = case fmap Object.source (Game.lookupObject oid gs) of
+  Just (Source.OfTrigger triggered)
+    | maybe False isPhenomenonFace (Game.faceOfWithLastKnown source gs) -> Game.ownerWithLastKnown source gs
+    where
+      source = TriggeredAbilitySource.source triggered
+  _ -> Nothing
+
+-- | CR 901.10b: is this a phenomenon's triggered ability whose phenomenon's
+-- owner has left the game? It is then the planar controller's, whoever put it
+-- on the stack (CR 707.10). The owner gate is unobserved: only a copy another
+-- player put on the stack tells it apart, and no card in data/cards copies a
+-- triggered ability its caster does not control (gap #4564).
+isOrphanedPhenomenonAbility :: ObjectId -> GameState -> Bool
+isOrphanedPhenomenonAbility oid gs = maybe False (`List.notElem` Game.stillPlaying gs) (phenomenonOwnerOf oid gs)
 
 -- | CR 311.5 / 312.4 / 901.6: the planar controller, normally the active
 -- player. While that seat has left (CR 800.4j keeps it active), CR 800.4p's
