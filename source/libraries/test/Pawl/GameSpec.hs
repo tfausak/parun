@@ -7,6 +7,7 @@ module Pawl.GameSpec where
 
 import qualified Control.Monad.Trans.State.Strict as State
 import qualified Data.Containers.ListUtils as ListUtils
+import qualified Data.Foldable as Foldable
 import qualified Data.List as List
 import qualified Data.List.NonEmpty as NonEmpty
 import qualified Data.Map.Strict as Map
@@ -80,6 +81,7 @@ import qualified Pawl.Types.MulliganOffer as MulliganOffer
 import qualified Pawl.Types.Object as Object
 import qualified Pawl.Types.ObjectId as ObjectId
 import qualified Pawl.Types.OutsideObject as OutsideObject
+import qualified Pawl.Types.OwnershipChange as OwnershipChange
 import qualified Pawl.Types.Phase as Phase
 import qualified Pawl.Types.Player as Player
 import qualified Pawl.Types.PlayerControl as PlayerControl
@@ -922,7 +924,7 @@ ruleSpec s registry = Spec.describe s "Rules" $ do
     Spec.assertEqWith s "CR 407.2/729.5 alice's main-game library holds the two ante cards she won" (libraryOf S.alice) 11
     Spec.assertEqWith s "CR 729.5 bob's library is one short: his ante card is alice's now" (libraryOf S.bob) 5
     Spec.assertEqWith s "and carol's" (libraryOf S.carol) 3
-    Spec.assertEqWith s "CR 108.3 the report lists both" (List.sort (Map.elems (Ante.ownershipChanges after))) [(S.bob, S.alice), (S.carol, S.alice)]
+    Spec.assertEqWith s "CR 108.3 the report lists both" (List.sort (changesOf after)) [(S.bob, S.alice), (S.carol, S.alice)]
     Spec.assertEqWith s "the main game did not end" (GameState.result after) Nothing
   -- The drawn board (CR 104.4a): all three leave, nobody is paid, and each
   -- library comes back whole, its ante card in it.
@@ -932,7 +934,7 @@ ruleSpec s registry = Spec.describe s "Rules" $ do
     shahrazad <- S.printingOf s registry "Shahrazad"
     let after = castShahrazad forAnte mountain plains shahrazad 3
     Spec.assertEqWith s "CR 729.5 each library is whole again" (fmap (\pid -> length (Game.zoneMembers Zone.Library pid after)) [S.alice, S.bob, S.carol]) [3, 6, 4]
-    Spec.assertEqWith s "CR 407.2 and no card changed owner" (Ante.ownershipChanges after) Map.empty
+    Spec.assertEqWith s "CR 407.2 and no card changed owner" (Ante.ownershipChanges after) Seq.empty
   -- The won board with alice and bob on one team (CR 104.2c): bob decked in
   -- the subgame and still wins, and alice, asked, hands each ante card to him
   -- (shahrazadAnswer): alice's own and carol's change owner, and bob's stays his.
@@ -942,7 +944,7 @@ ruleSpec s registry = Spec.describe s "Rules" $ do
     shahrazad <- S.printingOf s registry "Shahrazad"
     let teamed gs = gs {GameState.settings = (GameState.settings gs) {GameSettings.teams = Teams.MkTeams (Map.fromList [(S.alice, TeamId.MkTeamId 0), (S.bob, TeamId.MkTeamId 0), (S.carol, TeamId.MkTeamId 1)])}}
         after = castShahrazad (forAnte . teamed) mountain plains shahrazad 9
-    Spec.assertEqWith s "CR 407.2 alice's and carol's ante cards are bob's" (List.sort (Map.elems (Ante.ownershipChanges after))) [(S.alice, S.bob), (S.carol, S.bob)]
+    Spec.assertEqWith s "CR 407.2 alice's and carol's ante cards are bob's" (List.sort (changesOf after)) [(S.alice, S.bob), (S.carol, S.bob)]
     Spec.assertEqWith s "CR 729.5 and they went to his main-game library" (fmap (\pid -> length (Game.zoneMembers Zone.Library pid after)) [S.alice, S.bob, S.carol]) [8, 8, 3]
 
   -- CR 104.2c with CR 729.1b: the same board as the first case with alice and
@@ -2661,6 +2663,10 @@ cleanupStepSpec s registry = Spec.describe s "extra cleanup step (CR 514.3a)" $ 
     Spec.assertEqWith s "two passes to resolve the trigger, two to end the step" asked 4
 
 -- The CR 729.1b board played for ante (CR 407.1); the subgame inherits it.
+-- Ante.ownershipChanges as (starting owner, owner) pairs, in its order.
+changesOf :: GameState.GameState -> [(PlayerId.PlayerId, PlayerId.PlayerId)]
+changesOf gs = [(OwnershipChange.startingOwner c, OwnershipChange.owner c) | c <- Foldable.toList (Ante.ownershipChanges gs)]
+
 forAnte :: GameState.GameState -> GameState.GameState
 forAnte gs = gs {GameState.settings = (GameState.settings gs) {GameSettings.ante = True}}
 

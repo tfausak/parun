@@ -87,6 +87,7 @@ import qualified Pawl.Types.Object as Object
 import qualified Pawl.Types.ObjectId as ObjectId
 import qualified Pawl.Types.ObjectRef as ObjectRef
 import qualified Pawl.Types.OptionalDecision as OptionalDecision
+import qualified Pawl.Types.OwnershipChange as OwnershipChange
 import qualified Pawl.Types.Phase as Phase
 import qualified Pawl.Types.Player as Player
 import qualified Pawl.Types.PlayerCounterKind as PlayerCounterKind
@@ -792,8 +793,9 @@ spec s registry = Spec.describe s "Meld" $ do
         Spec.assertEqWith s "setup: alice's graveyard was empty before it died" (graveyardNames board) []
   -- CR 108.3: alice won the Garrison from bob, so he is its starting owner and she
   -- began the game with the Battlements. Each card the melded permanent becomes
-  -- keeps its own identity, so the ownership report names the Garrison alone; one
-  -- identity for both would name both cards or neither.
+  -- keeps its own identity, so the ownership report names the Garrison alone,
+  -- both while melded and after; one identity for both would name both cards or
+  -- neither.
   Spec.it s "CR 108.3/712.21 each card a melded permanent becomes keeps its own identity" $ do
     battlements <- S.printingOf s registry "Hanweir Battlements"
     garrison <- S.printingOf s registry "Hanweir Garrison"
@@ -804,8 +806,10 @@ spec s registry = Spec.describe s "Meld" $ do
       Nothing -> Spec.assertFailure s "expected the melding ability to put one permanent onto the battlefield"
       Just meldedId -> do
         let dead = S.runPure S.identityAnswer board (Event.destroy Regenerability.Regenerable [meldedId])
-            reported = [(fmap S.nameOf (Game.cardOf oid dead), change) | (oid, change) <- Map.toList (Ante.ownershipChanges dead)]
+            reported = [(fmap S.nameOf (Game.cardOf oid dead), change) | c <- Foldable.toList (Ante.ownershipChanges dead), let oid = OwnershipChange.object c; change = (OwnershipChange.startingOwner c, OwnershipChange.owner c)]
         Spec.assertEqWith s "CR 108.3 only the Garrison changed owner, bob's to begin and alice's now" reported [(Just (CardName.MkCardName (Text.pack "Hanweir Garrison")), (S.bob, S.alice))]
+        let whileMelded = [(fmap (S.nameOf . Printing.card) (Game.printingOf (OwnershipChange.card c) board), OwnershipChange.object c) | c <- Foldable.toList (Ante.ownershipChanges board)]
+        Spec.assertEqWith s "CR 108.3/701.42a and so it is while melded, a card of the one permanent" whileMelded [(Just (CardName.MkCardName (Text.pack "Hanweir Garrison")), meldedId)]
         Spec.assertEqWith
           s
           "CR 712.21 two cards are put into alice's graveyard"

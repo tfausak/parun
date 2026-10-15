@@ -2536,6 +2536,7 @@ library types
     Pawl.Types.OutsideDestination
     Pawl.Types.OutsideObject
     Pawl.Types.OwnedZone
+    Pawl.Types.OwnershipChange
     Pawl.Types.PaidExpiry
     Pawl.Types.Pairing
     Pawl.Types.PartnerText
