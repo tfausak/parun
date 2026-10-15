@@ -3897,9 +3897,13 @@ firesWithout gone pending gs =
 -- read here rather than silently kept.
 resnapshot :: GameState -> GameState -> GameEvent -> Maybe GameEvent
 resnapshot gs without event =
-  let reread oid pc =
-        let before = Projection.project oid gs
-            after = Projection.project oid without
+  let reread = rereadBy Projection.project
+      -- A reveal's snapshot is what it showed (Event.revealedOn), so it is
+      -- re-read the same way. A fence rather than a proof: reading
+      -- Projection.project here instead reddens nothing in the suite.
+      rereadBy view oid pc =
+        let before = view oid gs
+            after = view oid without
          in if not (Map.member oid (GameState.objects gs)) || before == after
               then Just pc
               else if before == pc then Just after else Nothing
@@ -3913,7 +3917,7 @@ resnapshot gs without event =
    in case event of
         GameEvent.Moved m -> fmap (\pc -> GameEvent.Moved m {Moved.characteristics = pc}) (reread (ZoneChange.departed (Moved.change m)) (Moved.characteristics m))
         GameEvent.SpellCast c -> fmap (\pc -> GameEvent.SpellCast c {SpellWasCast.characteristics = pc}) (reread (SpellWasCast.spell c) (SpellWasCast.characteristics c))
-        GameEvent.Revealed r -> fmap (\pc -> GameEvent.Revealed r {Revealed.characteristics = pc}) (reread (Revealed.card r) (Revealed.characteristics r))
+        GameEvent.Revealed r -> fmap (\pc -> GameEvent.Revealed r {Revealed.characteristics = pc}) (rereadBy Projection.projectShown (Revealed.card r) (Revealed.characteristics r))
         GameEvent.Looked l -> fmap (\pc -> GameEvent.Looked l {Looked.characteristics = pc}) (reread (Looked.card l) (Looked.characteristics l))
         GameEvent.Voted v -> fmap (\b -> GameEvent.Voted v {Voted.ballot = b}) (rereadBallot (Voted.ballot v))
         GameEvent.VotesRevealed ballots -> fmap GameEvent.VotesRevealed (traverse rereadBallot ballots)

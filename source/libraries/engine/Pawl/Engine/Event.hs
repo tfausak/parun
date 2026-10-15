@@ -8908,21 +8908,24 @@ leavingReveals asOf oid = Maybe.maybeToList whole <> componentReveals asOf oid
 -- component is revealed as its face-up pile is destroyed" and "CR 708.9 a
 -- face-down component is revealed as its owner leaves the game" prove it.
 --
--- Not implemented: the snapshot is the face-down face rather than the card
--- shown, as for a face-down permanent (#5013).
+-- The snapshot is the component card itself (CR 701.20a): the object made to
+-- represent that component alone, face up, as CR 730.3's split would make it
+-- (Game.representComponent).
 componentReveals :: GameState -> ObjectId -> [GameEvent.GameEvent]
 componentReveals asOf oid = case Game.lookupObject oid asOf of
   Just obj
     | Set.member oid (GameState.battlefield asOf),
       not (Facing.isFaceDown (Object.facing obj)),
       Source.OfMerge components <- Object.source obj ->
-        [ GameEvent.Revealed (Revealed.MkRevealed (Object.owner obj) oid RevealCause.LeavingFaceDownComponent (Projection.project oid (showing facing)))
-        | facing <- fmap ShownComponent.facing (NonEmpty.toList components),
-          Facing.isFaceDown facing
+        [ GameEvent.Revealed (Revealed.MkRevealed (Object.owner obj) oid RevealCause.LeavingFaceDownComponent (Projection.project oid (alone obj shown)))
+        | shown <- NonEmpty.toList components,
+          Facing.isFaceDown (ShownComponent.facing shown)
         ]
   _ -> []
   where
-    showing facing = asOf {GameState.objects = Map.adjust (\o -> o {Object.facing = facing}) oid (GameState.objects asOf)}
+    alone obj shown =
+      let card = (Game.representComponent (ShownComponent.component shown) (Object.newIncarnation obj)) {Object.face = ShownComponent.face shown}
+       in asOf {GameState.objects = Map.insert oid card (GameState.objects asOf)}
 
 -- | CR 708.9 / 702.143f / 702.106e, each rule's last sentence: at the end of
 -- each game, the reveals leavingReveals names for one departing owner are owed
@@ -9277,11 +9280,11 @@ shuffleLibrary pid = do
 -- and the read is Pawl.Types.Filter's RepresentedByCard -- Hauntwoods Shrieker's
 -- "if it's a creature card", proved at Pawl.FaceDownSpec's CR 708.12 group.
 --
--- A face-down permanent's reveal -- CR 708.9's departure, or Hauntwoods
--- Shrieker's -- records the same projection, which is CR 708.2's nameless one.
--- FaceDownPermanentLeavesRevealed reads only the cause, but the scenario view
--- Witnessed reads the snapshot. Not implemented: the snapshot is that face
--- rather than the card shown, so the log names nothing (#5013).
+-- A face-down object's reveal -- CR 708.9's, Hauntwoods Shrieker's or CR
+-- 701.40g's -- shows the card, so its snapshot is that projection face up
+-- (Projection.projectShown) rather than CR 708.2's nameless 2/2.
+-- data/scenarios/visibility's CR 708.9, 701.20a and 701.40g Witnessed cases
+-- prove it.
 reveal :: RevealCause.RevealCause -> PlayerId -> ObjectId -> Game ()
 reveal cause pid oid = do
   gs <- State.get
@@ -9331,7 +9334,7 @@ stampReveal window oid = State.modify' (\gs -> gs {GameState.objects = Map.adjus
 -- board before CR 800.4a's departure and records it after.
 revealedOn :: RevealCause.RevealCause -> PlayerId -> ObjectId -> GameState -> Maybe GameEvent.GameEvent
 revealedOn cause pid oid gs =
-  fmap (const (GameEvent.Revealed (Revealed.MkRevealed pid oid cause (Projection.project oid gs)))) (Game.lookupObject oid gs)
+  fmap (const (GameEvent.Revealed (Revealed.MkRevealed pid oid cause (Projection.projectShown oid gs)))) (Game.lookupObject oid gs)
 
 -- CR 603.2: does this condition fire on this event, for the permanent that bears
 -- it? `bearer` is the object whose ability this is and `you` its controller (CR
