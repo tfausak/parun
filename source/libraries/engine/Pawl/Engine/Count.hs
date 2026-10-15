@@ -17,6 +17,7 @@ import qualified Data.Maybe as Maybe
 import qualified Data.Sequence as Seq
 import qualified Data.Set as Set
 import qualified Numeric.Natural as Natural
+import qualified Pawl.Engine.AbilityZone as AbilityZone
 import qualified Pawl.Engine.Binding as Binding
 import qualified Pawl.Engine.Deploy as Deploy
 import qualified Pawl.Engine.Filter as Filter
@@ -901,8 +902,11 @@ orLastKnown live gs oid = Monad.join (Game.liveOrLastKnown (const (live oid)) (J
 -- IsSource still knows it. `peers` reads the permanents still attached to it,
 -- at the caller's depth, as viewOfCharacteristics' own `attachedViews` does.
 --
--- The activated abilities are the snapshot's less those whose CR 604.2 clause
--- the record says had lapsed (LastKnown.lapsedGrants).
+-- The activated abilities are the snapshot's less those whose CR 604.2 grant
+-- did not function in the zone it left (AbilityZone.grantFunctionsIn) or whose
+-- clause the record says had lapsed (LastKnown.lapsedGrants). The zone half is
+-- a regression fence: no card asks it of an object that left anywhere but the
+-- battlefield, where every grant functions.
 --
 -- Every other object field is the snapshot's blank, which is what the live read
 -- answers for an id naming nothing too: no zone, no targets, no designations.
@@ -911,7 +915,8 @@ lastKnownView peers oid gs lastKnown =
   let deploy = deployIn gs (LastKnown.zone lastKnown)
       characteristics = LastKnown.characteristics lastKnown
       lapsed = maybe False (`Set.member` LastKnown.lapsedGrants lastKnown) . ActivatedAbility.condition
-      roster = filter (not . lapsed) (abilitiesOf (Deploy.grants deploy characteristics) characteristics)
+      functions = AbilityZone.grantFunctionsIn (PC.delayedAbilities characteristics) (LastKnown.zone lastKnown)
+      roster = filter (\ability -> functions ability && not (lapsed ability)) (abilitiesOf (Deploy.grants deploy characteristics) characteristics)
    in ( viewOfSnapshot
           deploy
           (Just (LastKnown.controller lastKnown))

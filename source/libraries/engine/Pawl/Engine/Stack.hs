@@ -9,7 +9,7 @@ import qualified Data.Map.Strict as Map
 import qualified Data.Maybe as Maybe
 import qualified Data.Sequence as Seq
 import qualified Data.Set as Set
-import qualified Pawl.Engine.Activatable as Activatable
+import qualified Pawl.Engine.AbilityZone as AbilityZone
 import qualified Pawl.Engine.Binding as Binding
 import qualified Pawl.Engine.Card as Card
 import qualified Pawl.Engine.Combat as Combat
@@ -584,7 +584,7 @@ carryGrants oid gs =
 -- part of a grant. A keyword by Keyword.functionsOnBattlefield; a whole quoted
 -- ability by the CR 113.6 zone each of its kinds already answers -- a triggered
 -- ability's trigger conditions and effect (Trigger.zonesFunctionedIn), an
--- activated ability's cost and effect (Activatable.functionsIn), a static
+-- activated ability's cost and effect (AbilityZone.functionsIn), a static
 -- ability's or replacement's stated zones -- with the default battlefield for a
 -- rules or player ability, and the stack for the three CR 113.6d puts there.
 -- Anything that is not an ability (a colour, a power) stops at the move: CR
@@ -595,7 +595,7 @@ functionsOnBattlefield subtypes modification = case modification of
   Modification.GainKeywordAtManaCost keyword -> Keyword.functionsOnBattlefield (Keyword.withCost keyword (Cost.MkCost Nothing []))
   Modification.GainAbility ability -> case ability of
     GrantedAbility.Triggered triggered -> Set.member Zone.Battlefield (Trigger.zonesFunctionedIn subtypes Map.empty triggered)
-    GrantedAbility.Activated activated -> Activatable.functionsIn Map.empty Zone.Battlefield activated
+    GrantedAbility.Activated activated -> AbilityZone.functionsIn Map.empty Zone.Battlefield activated
     GrantedAbility.Static static -> Projection.functionsFromZone Zone.Battlefield static
     GrantedAbility.Replacement replacement -> Projection.functionsFromZoneOfRow Zone.Battlefield replacement
     GrantedAbility.Rules _ -> True

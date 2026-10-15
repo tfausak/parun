@@ -406,7 +406,7 @@ tapsForTotalPowerAsCost =
 -- 702.167a's "Return this card to the battlefield" is an ordinary slot read.
 --
 -- Both components, one question: they differ in the zone the object leaves (CR
--- 113.6m, Cost.zoneFunctionedFrom) and not in what they bind, and no printing
+-- 113.6m, AbilityZone.zoneFunctionedFrom) and not in what they bind, and no printing
 -- carries both.
 --
 -- Not offered on the CAST side (Pawl.CardSpec's cardOffends): no printing in

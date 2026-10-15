@@ -17,6 +17,7 @@ import qualified Data.Sequence as Seq
 import qualified Data.Set as Set
 import qualified Data.Text as Text
 import Numeric.Natural (Natural)
+import qualified Pawl.Engine.AbilityZone as AbilityZone
 import qualified Pawl.Engine.Action as Action
 import qualified Pawl.Engine.Activatable as Activatable
 import qualified Pawl.Engine.Activate as Activate
@@ -1495,7 +1496,7 @@ reinforceSpec s registry = Spec.describe s "Reinforce" $ do
   -- Pawl.UntapRestrictionSpec proves with a Rustic Clachan -- and what rule
   -- 702.77b does NOT do is make it activatable.
   --
-  -- CR 113.6m is the gate that answers here (Activatable.functionsIn, over the cost's
+  -- CR 113.6m is the gate that answers here (AbilityZone.functionsIn, over the cost's
   -- DiscardThis), and abilitiesFor is where it is applied, so the empty list below
   -- is the existence/activation split rather than an absence of minting.
   Spec.it s "CR 702.77a reinforce is NOT offered from the battlefield" $ do
@@ -2421,7 +2422,7 @@ namedSkeleton gs oid = case Game.faceOf oid gs of
 --
 -- Reassembling Skeleton {1}{B} Creature -- Skeleton Warrior 1/1, "{1}{B}: Return
 -- this card from your graveyard to the battlefield tapped." (checked against
--- Scryfall). Its cost is mana and nothing else, so Cost.zoneFunctionedFrom -- the
+-- Scryfall). Its cost is mana and nothing else, so AbilityZone.zoneFunctionedFrom -- the
 -- whole of pawl's CR 113.6m reading before this -- answers Nothing for it, and
 -- the graveyard is named only by what the ability DOES. Loxodon Surveyor proves
 -- the cost half in Pawl.SpeedSpec; this is the other half of the same sentence,
@@ -2438,7 +2439,7 @@ graveyardEffectZoneSpec s registry = Spec.describe s "GraveyardEffectZone" $ do
         -- THE control this whole unit turns on: nothing in the cost names a zone,
         -- so the cost half cannot be what offered the ability. If this ever
         -- answers Just, the two cases below stop proving the effect half.
-        Spec.assertEqWith s "and its cost names no zone (CR 113.6m's other half)" (Cost.zoneFunctionedFrom (ActivatedAbility.cost ability)) Nothing
+        Spec.assertEqWith s "and its cost names no zone (CR 113.6m's other half)" (AbilityZone.zoneFunctionedFrom (ActivatedAbility.cost ability)) Nothing
       abilities -> Spec.assertEqWith s "exactly one ability from the graveyard" (length abilities) 1
     Spec.assertBool s (any (isActivationOf gyId) (Action.legalActions S.alice gs)) "and the activation is a legal action"
   -- The other direction of "functions ONLY in that zone", and the case the cost
@@ -4640,6 +4641,58 @@ locusLicidSpec s registry =
     Spec.assertEqWith s "CR 602.5b but neither is offered a third time this turn" (fmap fst (offered (animate once))) []
     Spec.assertEqWith s "CR 602.5b a Locus with one Licid ability is offered it, then not again" (fmap (null . offered) [craftWith single, animate (craftWith single)]) [False, True]
 
+-- CR 113.6 / 604.2: Villainous Ogre's "As long as you control a Demon, this
+-- creature has '{B}: Regenerate this creature.'" is a static ability, so it
+-- grants nothing off the battlefield (AbilityZone.grantFunctionsIn). Alice
+-- controls a Renegade Demon on every board, so only the Ogre's ZONE differs.
+--
+-- The craft pair: three real materials in alice's graveyard, and as the fourth
+-- either the Ogre card (no activated ability there, so craft is unpayable, CR
+-- 118.3) or another Brothers of Fire. The Locus board: the Ogre on the
+-- battlefield, where it has the ability, is the fourth material; once exiled it
+-- has none, so the Locus gains the other three materials' abilities and not
+-- regenerate (CR 702.167c).
+craftGrantZoneSpec :: (Monad m, Monad n) => Spec.Spec m n -> Registry.Registry m -> n ()
+craftGrantZoneSpec s registry = Spec.describe s "CR 113.6 an as-long-as grant off the battlefield" $ do
+  let setup = do
+        jewel <- S.printingOf s registry "The Enigma Jewel"
+        island <- S.printingOf s registry "Island"
+        demon <- S.printingOf s registry "Renegade Demon"
+        let (jewelId, g0) = S.addPermanent jewel S.alice (S.landsInPlay island 9)
+        pure (jewelId, snd (S.addPermanent demon S.alice g0))
+      ready g = g {GameState.priority = Just S.alice, GameState.activePlayer = S.alice, GameState.phase = Phase.PostcombatMain}
+      withGraveyard names g = do
+        printings <- mapM (S.printingOf s registry) names
+        pure (List.foldl' (\acc p -> snd (S.addGraveyardCard p S.alice acc)) g printings)
+      craftOffers jewelId g = [a | A.Activate o a <- Action.legalActions S.alice g, o == jewelId, isCraftAbility a]
+  Spec.it s "CR 118.3 / 702.167b a Villainous Ogre card in the graveyard is no material with activated abilities" $ do
+    (jewelId, g1) <- setup
+    withOgre <- withGraveyard ["Brothers of Fire", "Withered Wretch", "Omen Hawker", "Villainous Ogre"] g1
+    withFourth <- withGraveyard ["Brothers of Fire", "Withered Wretch", "Omen Hawker", "Brothers of Fire"] g1
+    Spec.assertEqWith s "CR 113.6 / 118.3 the Ogre card has no regenerate in the graveyard, so craft is not offered" (craftOffers jewelId (ready withOgre)) []
+    Spec.assertEqWith s "and a fourth real material in its place makes craft payable" (length (craftOffers jewelId (ready withFourth))) 1
+  Spec.it s "CR 702.167c the Locus gains no regenerate from the exiled Villainous Ogre" $ do
+    (jewelId, g1) <- setup
+    ogre <- S.printingOf s registry "Villainous Ogre"
+    swamp <- S.printingOf s registry "Swamp"
+    mountain <- S.printingOf s registry "Mountain"
+    brothers <- S.printingOf s registry "Brothers of Fire"
+    stocked <- withGraveyard ["Brothers of Fire", "Withered Wretch", "Omen Hawker"] g1
+    let (ogreId, withOgre) = S.addPermanent ogre S.alice stocked
+        board = ready withOgre
+        ogreModals = fmap ActivatedAbility.modal (Activatable.abilitiesFor ogreId board)
+        brothersModals = let (o, g) = S.addPermanent brothers S.bob board in fmap ActivatedAbility.modal (Activatable.abilitiesFor o g)
+        crafted = case craftOffers jewelId board of
+          [ability] -> S.runPure S.identityAnswer board (Activate.activateAbility S.alice jewelId ability >> Stack.resolveTop)
+          _ -> board
+        paid = List.foldl' (\g p -> snd (S.addPermanent p S.alice g)) crafted [swamp, mountain, mountain, mountain]
+        locusIds = [o | o <- Game.zoneMembers Zone.Battlefield S.alice paid, Set.member (CardName.MkCardName (Text.pack "Locus of Enlightenment")) (Projection.namesOf o paid)]
+        offered modals = [o | A.Activate o a <- Action.legalActions S.alice paid, o `elem` locusIds, ActivatedAbility.modal a `elem` modals]
+    Spec.assertEqWith s "CR 604.2 the Ogre on the battlefield has regenerate with alice's Demon" (length ogreModals) 1
+    Spec.assertEqWith s "CR 113.6 / 702.167c the Locus is not offered the exiled Ogre's regenerate" (offered ogreModals) []
+    Spec.assertEqWith s "and the craft happened: the Ogre card is in exile" (length [o | o <- Game.zoneMembers Zone.Exile S.alice paid, Set.member (CardName.MkCardName (Text.pack "Villainous Ogre")) (Projection.namesOf o paid)]) 1
+    Spec.assertBool s (not (null (offered brothersModals))) "and the Locus is offered the exiled Brothers of Fire's ability"
+
 -- Saheeli's Lattice on alice's battlefield with five Mountains, which is exactly
 -- {4}{R}, and the named printings on her battlefield, in her graveyard and in
 -- exile, their ids answered in that order.
@@ -4713,6 +4766,7 @@ craftSpec s registry = Spec.describe s "Craft (CR 702.167)" $ do
 
   locusSpec s registry
   locusLicidSpec s registry
+  craftGrantZoneSpec s registry
 
 -- Leonin Shikari {1}{W} Creature -- Cat Soldier 2/2: "You may activate equip
 -- abilities any time you could cast an instant." Forge Anew {2}{W} Enchantment
