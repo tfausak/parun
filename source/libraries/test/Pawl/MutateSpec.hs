@@ -64,6 +64,7 @@ import qualified Pawl.Engine.Card as Card
 import qualified Pawl.Engine.Cast as Cast
 import qualified Pawl.Engine.Combat as Combat
 import qualified Pawl.Engine.Cost as Cost
+import qualified Pawl.Engine.Departure as Departure
 import qualified Pawl.Engine.Engine as Engine
 import qualified Pawl.Engine.Event as Event
 import qualified Pawl.Engine.FaceDown as FaceDown
@@ -84,10 +85,12 @@ import qualified Pawl.Types.CommandZoneDecision as CommandZoneDecision
 import qualified Pawl.Types.ComponentCard as ComponentCard
 import qualified Pawl.Types.Cost as Cost.Type
 import qualified Pawl.Types.Daytime as Daytime
+import qualified Pawl.Types.Departure as Departure.Type
 import qualified Pawl.Types.EndingStep as EndingStep
 import qualified Pawl.Types.FaceDownReason as FaceDownReason
 import qualified Pawl.Types.Facing as Facing
 import qualified Pawl.Types.Filter as Filter.Type
+import qualified Pawl.Types.GameEvent as GameEvent
 import qualified Pawl.Types.GameState as GameState
 import qualified Pawl.Types.Keyword as Keyword
 import qualified Pawl.Types.ManaCost as ManaCost
@@ -100,6 +103,7 @@ import qualified Pawl.Types.Object as Object
 import qualified Pawl.Types.ObjectId as ObjectId
 import qualified Pawl.Types.Phase as Phase
 import qualified Pawl.Types.Player as Player
+import qualified Pawl.Types.PlayerId as PlayerId
 import qualified Pawl.Types.Printing as Printing
 import qualified Pawl.Types.PrintingId as PrintingId
 import qualified Pawl.Types.ProjectedCharacteristics as PC
@@ -107,11 +111,14 @@ import qualified Pawl.Types.Prompt as Prompt
 import qualified Pawl.Types.Protection as Protection
 import qualified Pawl.Types.Recipient as Recipient
 import qualified Pawl.Types.Regenerability as Regenerability
+import qualified Pawl.Types.RevealCause as RevealCause
+import qualified Pawl.Types.Revealed as Revealed
 import qualified Pawl.Types.RoomHalf as RoomHalf
 import qualified Pawl.Types.ShownComponent as ShownComponent
 import qualified Pawl.Types.Source as Source
 import qualified Pawl.Types.Subtype as Subtype
 import qualified Pawl.Types.TapState as TapState
+import qualified Pawl.Types.Transformed as Transformed
 import qualified Pawl.Types.TurnUpProcedure as TurnUpProcedure
 import qualified Pawl.Types.Zone as Zone
 
@@ -157,8 +164,9 @@ spec s registry = Spec.describe s "Mutate" $ do
   -- which is what it did before this case existed.
   --
   -- CR 730.2f's "each face-down component that represents it is turned face up"
-  -- is not what this board discriminates: every component shares the one status
-  -- Object.facing carries, so the two readings of that rule cannot differ here.
+  -- is not what this board discriminates, since nothing here reads the Kirin
+  -- component's own status once it turns; "CR 730.2f a face-down pile turned
+  -- face up turns its components up with it" does.
   Spec.it s "CR 730.2a/730.2e a face-down merged permanent turned face up shows the topmost component's own face" $ do
     plains <- S.printingOf s registry "Plains"
     kirin <- S.printingOf s registry "Misthoof Kirin"
@@ -180,6 +188,88 @@ spec s registry = Spec.describe s "Mutate" $ do
         -- permanent of two cards.
         Spec.assertEqWith s "setup: CR 730.2e it was face down while its topmost component was" (Projection.namesOf host after) Set.empty
         Spec.assertEqWith s "setup: the two cards represent one permanent, the face-down one on top" (componentNames host after) [CardName.MkCardName (Text.pack "Misthoof Kirin"), CardName.MkCardName (Text.pack "Cubwarden")]
+  -- CR 708.9's first sentence over CR 730.2e's mix: Cubwarden merges OVER the
+  -- face-down Kirin, so the pile is face up and the Kirin component face down,
+  -- and alice Murders the pile. She reveals the Kirin component as it moves.
+  -- The paired leg merges UNDER, so the pile itself is face down and is
+  -- revealed whole.
+  Spec.it s "CR 708.9 a face-down component is revealed as its face-up pile is destroyed" $ do
+    plains <- S.printingOf s registry "Plains"
+    swamp <- S.printingOf s registry "Swamp"
+    kirin <- S.printingOf s registry "Misthoof Kirin"
+    cubwarden <- S.printingOf s registry "Cubwarden"
+    murder <- S.printingOf s registry "Murder"
+    case faceDownBoard plains kirin cubwarden of
+      Nothing -> Spec.assertFailure s "the morph cast did not reach the battlefield"
+      Just (host, board, spellId) -> do
+        let murdered side =
+              let (armed, murderId) = S.handOne murder (S.landsFor swamp S.alice 3 (merging side host board spellId))
+               in S.runPure (mutatingAt side host) armed (S.cast S.alice murderId >> Monad.replicateM_ 3 (Engine.settleForPriority >> Stack.resolveTop) >> Engine.settleForPriority)
+            over = murdered MutateSide.Over
+            under = murdered MutateSide.Under
+        Spec.assertEqWith s "CR 708.9 alice revealed the face-down Kirin component as the face-up pile left" (departureReveals over) [(S.alice, host, RevealCause.LeavingFaceDownComponent)]
+        Spec.assertEqWith s "CR 708.9 merged under, the pile is face down and revealed whole" (departureReveals under) [(S.alice, host, RevealCause.LeavingFaceDown)]
+        Spec.assertBool s (all (Maybe.isNothing . Game.lookupObject host) [over, under]) "setup: Murder destroyed the pile on both legs"
+  -- CR 708.9's third sentence: the same pile's owner concedes a three-player
+  -- game (CR 800.4a), so it leaves the game rather than moving to a zone, and
+  -- the game goes on (the end of the game being the rule's fourth sentence).
+  Spec.it s "CR 708.9 a face-down component is revealed as its owner leaves the game" $ do
+    plains <- S.printingOf s registry "Plains"
+    kirin <- S.printingOf s registry "Misthoof Kirin"
+    cubwarden <- S.printingOf s registry "Cubwarden"
+    case faceDownBoardOn S.threePlayers plains kirin cubwarden of
+      Nothing -> Spec.assertFailure s "the morph cast did not reach the battlefield"
+      Just (host, board, spellId) -> do
+        let conceded side = S.runPure S.identityAnswer (merging side host board spellId) (Departure.leaveGame Departure.Type.Conceded S.alice)
+            over = conceded MutateSide.Over
+        Spec.assertEqWith s "CR 708.9 alice revealed the face-down Kirin component as she left" (departureReveals over) [(S.alice, host, RevealCause.LeavingFaceDownComponent)]
+        Spec.assertEqWith s "CR 708.9 merged under, the pile is face down and revealed whole" (departureReveals (conceded MutateSide.Under)) [(S.alice, host, RevealCause.LeavingFaceDown)]
+        Spec.assertBool s (Maybe.isNothing (GameState.result over)) "setup: the game went on without her"
+  -- CR 712.15a over CR 730.2e's mix: Cubwarden merges OVER a manifested
+  -- Blightreaper Thallid, Maskwood Nexus makes the face-up pile a Human, and
+  -- Moonmist transforms all Humans. The face-down Thallid is the pile's only
+  -- double-faced component and can't transform, so nothing turns over. The
+  -- paired leg merges over the same Thallid face up, and the pile transforms.
+  Spec.it s "CR 712.15a Moonmist does not turn a face-down component of a face-up pile" $ do
+    plains <- S.printingOf s registry "Plains"
+    forest <- S.printingOf s registry "Forest"
+    thallid <- S.printingOf s registry "Blightreaper Thallid"
+    cubwarden <- S.printingOf s registry "Cubwarden"
+    nexus <- S.printingOf s registry "Maskwood Nexus"
+    moonmist <- S.printingOf s registry "Moonmist"
+    let (host, board, spellId) = mutateBoard plains thallid cubwarden
+        manifested = board {GameState.objects = Map.adjust (\o -> o {Object.facing = Facing.faceDown FaceDownReason.Manifested}) host (GameState.objects board)}
+        humanPile hostBoard = snd (S.addPermanent nexus S.alice (merging MutateSide.Over host hostBoard spellId))
+        misted hostBoard =
+          let (moonmistId, staged) = S.addHandCard moonmist S.alice (S.landsFor forest S.alice 2 (humanPile hostBoard))
+           in S.runPure S.identityAnswer staged {GameState.phase = Phase.PrecombatMain, GameState.priority = Just S.alice} (S.cast S.alice moonmistId *> Stack.resolveTop)
+        transformed gs = [Transformed.object t | GameEvent.Transformed t <- S.eventsOf gs]
+    Spec.assertEqWith s "CR 712.15a the pile over the face-down Thallid did not transform" (transformed (misted manifested)) []
+    Spec.assertEqWith s "CR 701.27a over the face-up Thallid, it did" (transformed (misted board)) [host]
+    Spec.assertEqWith s "setup: CR 730.2e the pile over the face-down Thallid is a face-up Cubwarden" (Projection.namesOf host (humanPile manifested)) (Set.singleton (CardName.MkCardName (Text.pack "Cubwarden")))
+    Spec.assertBool s (Set.member Subtype.Human (PC.subtypes (Projection.project host (humanPile manifested)))) "setup: Maskwood Nexus made it a Human"
+  -- CR 712.15a over the merge's turned reading: Synthetic Graftling merges OVER
+  -- a manifested Blightreaper Thallid and transforms the pile by its own
+  -- ability. The Graftling turns and the face-down Thallid does not, so the
+  -- pile is a 4/4 Graftbeast with trample that keeps the Thallid FRONT face's
+  -- activated ability (CR 702.140e), where Blightsower Thallid has none.
+  Spec.it s "CR 712.15a a face-down component stays unturned when the pile transforms" $ do
+    forest <- S.printingOf s registry "Forest"
+    thallid <- S.printingOf s registry "Blightreaper Thallid"
+    graftling <- S.printingOf s registry "Synthetic Graftling"
+    let base = S.landsFor forest S.alice 1 (Setup.emptyGame S.bothPlayers)
+        (host, withHost) = S.addPermanent thallid S.alice base
+        manifested = withHost {GameState.objects = Map.adjust (\o -> o {Object.facing = Facing.faceDown FaceDownReason.Manifested}) host (GameState.objects withHost)}
+        (board, spellId) = S.handOne graftling manifested
+        merged = merging MutateSide.Over host board spellId
+        offered gs = length (Activatable.abilitiesFor host (S.landsFor forest S.alice 4 gs) {GameState.phase = Phase.PrecombatMain, GameState.activePlayer = S.alice, GameState.priority = Just S.alice})
+        reading gs = (Projection.namesOf host gs, S.powerToughnessOf host gs, Projection.hasKeyword Keyword.Trample host gs)
+    case transformedBy forest host merged of
+      Nothing -> Spec.assertFailure s "expected the pile to offer the Graftling's activated ability"
+      Just after -> do
+        Spec.assertEqWith s "CR 712.15a the face-down Thallid's front-face ability is still the pile's one activated ability" (offered after) 1
+        Spec.assertEqWith s "CR 730.2i the Graftling turned: a 4/4 Graftbeast with trample" (reading after) (Set.singleton graftbeastName, Just (4, 4), True)
+        Spec.assertEqWith s "setup: merged, the pile offered the Graftling's ability and the Thallid's" (offered merged) 2
   -- CR 730.2j: a face-up merged permanent with a double-faced component can't
   -- be turned face down. Cubwarden goes OVER, so the permanent shows one-faced
   -- Cubwarden and only the component under it, Blightreaper Thallid, is
@@ -372,6 +462,35 @@ spec s registry = Spec.describe s "Mutate" $ do
         Spec.assertEqWith s "CR 730.2i a 3/3 Blightsower Thallid with the turned Graftling's trample" (reading after) (Set.singleton blightsower, Just (3, 3), True)
         Spec.assertEqWith s "setup: turned face up, a 2/2 Blightreaper Thallid" (reading turnedUp) (Set.singleton (CardName.MkCardName (Text.pack "Blightreaper Thallid")), Just (2, 2), False)
         Spec.assertBool s (maybe False (Facing.isFaceDown . Object.facing) (Game.lookupObject host merged)) "setup: CR 730.2e the pile was face down after the merge"
+  -- CR 730.2f: a manifested Blightreaper Thallid with two Cubwardens mutated
+  -- UNDER it, one at a time, so the second merge lands on a face-down PILE.
+  -- Turned face up, the pile turns its face-down Thallid component up with it,
+  -- and the Thallid's own ability then transforms it into a 3/3 Blightsower.
+  -- Left face down, the component could not turn (CR 712.15a), and a second
+  -- merge reading the pile's components as still face down would stamp no
+  -- turned Thallid.
+  Spec.it s "CR 730.2f a face-down pile turned face up turns its components up with it" $ do
+    plains <- S.printingOf s registry "Plains"
+    forest <- S.printingOf s registry "Forest"
+    thallid <- S.printingOf s registry "Blightreaper Thallid"
+    cubwarden <- S.printingOf s registry "Cubwarden"
+    let base = S.landsFor plains S.alice 8 (Setup.emptyGame S.bothPlayers)
+        (host, withHost) = S.addPermanent thallid S.alice base
+        manifested = withHost {GameState.objects = Map.adjust (\o -> o {Object.facing = Facing.faceDown FaceDownReason.Manifested}) host (GameState.objects withHost)}
+        (withFirst, first) = S.handOne cubwarden manifested
+        (board, second) = S.handOne cubwarden withFirst
+        merged = merging MutateSide.Under host (merging MutateSide.Under host board first) second
+        turnedUp = S.runPure S.identityAnswer merged (FaceDown.performTurnFaceUp Nothing Nothing host)
+        armed = (S.landsFor forest S.alice 4 turnedUp) {GameState.phase = Phase.PrecombatMain, GameState.activePlayer = S.alice, GameState.priority = Just S.alice}
+        reading gs = (Projection.namesOf host gs, S.powerToughnessOf host gs)
+    case Activatable.abilitiesFor host armed of
+      [ability] -> do
+        let activated = S.runPure S.identityAnswer armed (Activate.activateAbility S.alice host ability)
+            after = S.runPure S.identityAnswer activated (Monad.replicateM_ 4 (Stack.resolveTop >> Engine.settleForPriority))
+        Spec.assertEqWith s "CR 730.2f/730.2i the Thallid turned up with the pile and then transformed: a 3/3 Blightsower Thallid" (reading after) (Set.singleton blightsower, Just (3, 3))
+        Spec.assertEqWith s "setup: turned face up, a 2/2 Blightreaper Thallid" (reading turnedUp) (Set.singleton (CardName.MkCardName (Text.pack "Blightreaper Thallid")), Just (2, 2))
+        Spec.assertEqWith s "setup: CR 730.2e three cards represent the face-down pile" (componentNames host merged, fmap Object.facing (Game.lookupObject host merged)) ([CardName.MkCardName (Text.pack "Blightreaper Thallid"), CardName.MkCardName (Text.pack "Cubwarden"), CardName.MkCardName (Text.pack "Cubwarden")], Just (Facing.faceDown FaceDownReason.Manifested))
+      offered -> Spec.assertFailure s ("expected the turned-up pile to offer the Thallid's one activated ability, got " <> show (length offered))
   -- CR 202.3b over a merge a later copy effect replaced: Synthetic Graftling
   -- mutates over Unstable Shapeshifter, the pile transforms, and a Hill Giant
   -- entering makes it a copy of the Hill Giant through the trigger it carries
@@ -1286,8 +1405,12 @@ mutateBoard plains falcon cubwarden =
 -- Nothing when the morph cast did not land, which every caller reports rather
 -- than asserting against a board it did not get.
 faceDownBoard :: Printing.Printing -> Printing.Printing -> Printing.Printing -> Maybe (ObjectId.ObjectId, GameState.GameState, ObjectId.ObjectId)
-faceDownBoard plains kirin cubwarden =
-  let base = S.landsFor plains S.alice 10 (Setup.emptyGame S.bothPlayers)
+faceDownBoard = faceDownBoardOn S.bothPlayers
+
+-- `faceDownBoard` at these seats.
+faceDownBoardOn :: NonEmpty.NonEmpty PlayerId.PlayerId -> Printing.Printing -> Printing.Printing -> Printing.Printing -> Maybe (ObjectId.ObjectId, GameState.GameState, ObjectId.ObjectId)
+faceDownBoardOn seats plains kirin cubwarden =
+  let base = S.landsFor plains S.alice 10 (Setup.emptyGame seats)
       (withKirin, kirinId) = S.handOne kirin base
       (board, spellId) = S.handOne cubwarden withKirin
       down =
@@ -1474,7 +1597,7 @@ asMergeOfEveryKind oid pid gs =
   gs
     { GameState.objects =
         Map.adjust
-          (\o -> o {Object.source = Source.OfMerge (fmap (`ShownComponent.MkShownComponent` Nothing) (MergeComponent.OfCard (Game.componentCardOf o pid) NonEmpty.:| [MergeComponent.OfToken pid, MergeComponent.OfSpellCopy pid]))})
+          (\o -> o {Object.source = Source.OfMerge (fmap (\c -> ShownComponent.MkShownComponent c Nothing Facing.FaceUp) (MergeComponent.OfCard (Game.componentCardOf o pid) NonEmpty.:| [MergeComponent.OfToken pid, MergeComponent.OfSpellCopy pid]))})
           oid
           (GameState.objects gs)
     }
@@ -1485,3 +1608,11 @@ returningCommander :: Prompt.Prompt r -> r
 returningCommander p = case p of
   Prompt.ReturnCommander {} -> CommandZoneDecision.Returns
   _ -> S.identityAnswer p
+
+-- Each CR 708.9 departure reveal on the log: revealer, object, and cause.
+departureReveals :: GameState.GameState -> [(PlayerId.PlayerId, ObjectId.ObjectId, RevealCause.RevealCause)]
+departureReveals gs =
+  [ (Revealed.player r, Revealed.card r, Revealed.cause r)
+  | GameEvent.Revealed r <- S.eventsOf gs,
+    Revealed.cause r `elem` [RevealCause.LeavingFaceDown, RevealCause.LeavingFaceDownComponent]
+  ]
