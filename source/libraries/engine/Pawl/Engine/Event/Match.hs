@@ -9603,6 +9603,8 @@ matchesTriggerGiven bindings board gs bearer you cond event = case cond of
     GameEvent.CardArrived _ -> False
   -- CR 311.7: chaos ensued, whether the planar die's chaos symbol (CR 901.9b)
   -- or a resolving spell or ability said so.
+  --
+  -- Not implemented: chaos ensuing for one particular object (#5100).
   TriggerCondition.ChaosEnsues -> case event of
     GameEvent.Moved {} -> False
     GameEvent.DamageDealt _ -> False

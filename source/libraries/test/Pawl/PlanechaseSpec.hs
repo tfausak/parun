@@ -3,7 +3,8 @@
 
 -- | CR 901, the Planechase variant: Pawl.Engine.Planechase and Pawl.Engine.Plane,
 -- with Pawl.Types.Action's RollPlanarDie, Pawl.Types.TriggerCondition's
--- ChaosEnsues and Pawl.Types.Effect's Planeswalk.
+-- ChaosEnsues, Pawl.Types.Effect's Planeswalk and ChaosEnsues, and
+-- Pawl.Types.ReplacementEffect's PlaneswalkR.
 module Pawl.PlanechaseSpec where
 
 import qualified Control.Monad as Monad

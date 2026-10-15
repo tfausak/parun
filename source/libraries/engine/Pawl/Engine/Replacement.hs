@@ -119,6 +119,7 @@ import qualified Pawl.Types.PermanentCandidate as PermanentCandidate
 import qualified Pawl.Types.PhasePattern as PhasePattern
 import Pawl.Types.PhaseSelector (PhaseSelector)
 import qualified Pawl.Types.PlaneswalkR as PlaneswalkR
+import qualified Pawl.Types.PlaneswalkRewrite as PlaneswalkRewrite
 import qualified Pawl.Types.Player as Player
 import qualified Pawl.Types.PlayerCounterKind as PlayerCounterKind
 import Pawl.Types.PlayerId (PlayerId)
@@ -2256,7 +2257,11 @@ readsApplier re = case re of
   ReplacementEffect.AssembleR {} -> False
   -- CR 109.5: the effects run as the row's own controller, the reset's "you".
   ReplacementEffect.GameLossR {} -> True
-  ReplacementEffect.PlaneswalkR {} -> True
+  -- Susan Foreman's arrangement is of the planar deck of the player the EVENT
+  -- named, who also chooses. ProliferateR's answer, and for its reason.
+  ReplacementEffect.PlaneswalkR (PlaneswalkR.MkPlaneswalkR _ _ PlaneswalkRewrite.ArrangeTopTwo) -> False
+  -- GameLossR's answer, and for its reason.
+  ReplacementEffect.PlaneswalkR (PlaneswalkR.MkPlaneswalkR _ _ (PlaneswalkRewrite.RunEffects _)) -> True
   -- CR 614.10: a skip replaces the step or phase with nothing. The player it is
   -- ABOUT is baked into PhasePattern.whosePhase, on the EFFECT, where this
   -- comparison already sees it.
@@ -2319,7 +2324,9 @@ readsSource effect = case effect of
   -- CR 113.7: the effects run with the candidate's source as theirs, so one
   -- naming its source reaches a different object under each.
   ReplacementEffect.GameLossR {} -> True
-  ReplacementEffect.PlaneswalkR {} -> True
+  -- The arrangement reads no source; the effects are GameLossR's.
+  ReplacementEffect.PlaneswalkR (PlaneswalkR.MkPlaneswalkR _ _ PlaneswalkRewrite.ArrangeTopTwo) -> False
+  ReplacementEffect.PlaneswalkR (PlaneswalkR.MkPlaneswalkR _ _ (PlaneswalkRewrite.RunEffects _)) -> True
   ReplacementEffect.PhaseR _ -> False
 
 -- CR 616.1: the affected object's controller (or its owner if it has none), or
