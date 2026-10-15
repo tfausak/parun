@@ -6045,10 +6045,11 @@ changeZoneWithCause discarded asOf batch oid requestedDest requestedPosition see
       loggedBefore <- State.gets (Seq.length . GameState.events)
       (resolved, exiledBy, shuffling, splitOff, position) <- resolveZoneChange asOf discarded requestedPosition resolving (ZoneChange.MkZoneChange oid oid fromZone requestedDest)
       -- CR 603.10a's "an object that all players can see", asked of a card
-      -- leaving a hidden zone (CR 400.2): seen by every player on the pre-move
-      -- board, or revealed by the loop above as it leaves (CR 701.20a, Nexus of
-      -- Fate's "reveal Nexus of Fate"). Forced, so the log entry holds no thunk
-      -- over the pre-move board.
+      -- leaving a hidden zone (CR 400.2): seen by every player on the LIVE
+      -- pre-move board, or revealed by the loop above as it leaves (CR 701.20a,
+      -- Nexus of Fate's "reveal Nexus of Fate"). Live rather than `lki`: a batch
+      -- board predates the reveal a search makes just before its move. Forced, so
+      -- the log entry holds no thunk over the pre-move board.
       revealedLeaving <-
         if not (Game.isHiddenZone fromZone)
           then pure False
@@ -6057,7 +6058,7 @@ changeZoneWithCause discarded asOf batch oid requestedDest requestedPosition see
             let revealedHere logged = case LoggedEvent.event logged of
                   GameEvent.Revealed r -> Revealed.card r == oid
                   _ -> False
-            pure $! (any revealedHere loggedByLoop || all (\seat -> Visibility.sees seat oid lki == Visibility.Type.Visible) (Game.stillPlaying lki))
+            pure $! (any revealedHere loggedByLoop || all (\seat -> Visibility.sees seat oid gs == Visibility.Type.Visible) (Game.stillPlaying gs))
       case resolved of
         -- CR 614.6: nothing survived the loop, so no zone change happens. No
         -- producer today -- no ReplacementEffect in data/cards cancels a zone
@@ -9285,6 +9286,14 @@ reveal cause pid oid = do
   gs <- State.get
   Monad.mapM_ (State.modify' . recordEvent) (revealedOn cause pid oid gs)
 
+-- | CR 701.20a: an effect's reveal, kept "for as long as necessary to complete
+-- the parts of the effect that card is relevant to" -- read as the rest of the
+-- resolution of `resolving`, the spell or ability whose effect it is.
+revealResolving :: ObjectId -> PlayerId -> ObjectId -> Game ()
+revealResolving resolving pid oid = do
+  reveal RevealCause.Ordinary pid oid
+  stampReveal (RevealWindow.WhileOnStack resolving) oid
+
 -- | Susan Foreman's rewrite of CR 701.31b: this player looks at the top two
 -- cards of their planar deck and puts the one they choose on top and the other
 -- on the bottom, on behalf of the object `source`. With fewer than two there is
@@ -9309,13 +9318,11 @@ look pid oid = do
   Monad.forM_ (Game.lookupObject oid gs) $ \_ ->
     State.modify' (recordEvent (GameEvent.Looked (Looked.MkLooked oid (Projection.project oid gs) (Decide.privyTo pid gs))))
 
--- | CR 701.20a: keep a revealed card revealed for a window.
---
--- Not implemented: more than one window at once. A stamp replaces the card's
--- window, so one reveal firing two triggers ends when the first resolves, and a
--- shorter window can cut a longer one short (#4998).
+-- | CR 701.20a: keep a revealed card revealed for a window, beside any it
+-- already has. Pawl.VisibilitySpec's "CR 701.20a a second behold" case proves a
+-- shorter window leaves a longer one standing.
 stampReveal :: RevealWindow.RevealWindow -> ObjectId -> Game ()
-stampReveal window oid = State.modify' (\gs -> gs {GameState.objects = Map.adjust (\obj -> obj {Object.revealed = Just window}) oid (GameState.objects gs)})
+stampReveal window oid = State.modify' (\gs -> gs {GameState.objects = Map.adjust (\obj -> obj {Object.revealed = Set.insert window (Object.revealed obj)}) oid (GameState.objects gs)})
 
 -- `reveal`'s event, read off `gs` without recording it: Nothing when the object
 -- does not exist there. Pawl.Engine.Departure.objectsLeaveWith reads it on the

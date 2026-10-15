@@ -150,11 +150,12 @@ data Object = MkObject
     -- Per-incarnation: reset by newIncarnation (CR 400.7), which is exactly the
     -- rule's "until it leaves the exile zone".
     exileLookers :: Set.Set ExileLooker.ExileLooker,
-    -- | CR 701.20a: how long this card stays revealed, if it is.
+    -- | CR 701.20a: every window keeping this card revealed. It is revealed
+    -- while any of them is live, so a second reveal never shortens the first.
     --
     -- Per-incarnation: reset by newIncarnation (CR 400.7), which ends every
     -- window when the card changes zones.
-    revealed :: Maybe RevealWindow.RevealWindow,
+    revealed :: Set.Set RevealWindow.RevealWindow,
     -- | CR 120.3e: damage dealt to a creature is MARKED on it. A count and not a
     -- list of tagged units, every damage rider being consumed at deal time and CR
     -- 704.5g reading only the total. Removed at cleanup (CR 514.2), by a
@@ -932,7 +933,7 @@ new o s z t =
       -- is face up outright. Event.changeZoneEntering is the "otherwise".
       exiledFaceDown = False,
       exileLookers = Set.empty,
-      revealed = Nothing,
+      revealed = Set.empty,
       damage = 0,
       sickness = Sickness.Sick,
       -- CR 702.30a read straight: the object that comes back came under its
