@@ -8,9 +8,6 @@
 --
 -- WHAT IS NOT IMPLEMENTED:
 --
---   * CR 312's phenomena: the encounter trigger (CR 312.5) and CR 704.6f's
---     planeswalk away. A phenomenon turned face up here stays face up and does
---     nothing (#4309).
 --   * CR 901.11's planeswalk triggers and durations -- "when you planeswalk to"
 --     and "until a player planeswalks" (#4310).
 --   * CR 901.12's Two-Headed Giant and CR 901.14's Grand Melee options (#4465).
@@ -50,6 +47,7 @@ import qualified Pawl.Types.ManaSymbol as ManaSymbol
 import qualified Pawl.Types.Object as Object
 import Pawl.Types.ObjectId (ObjectId)
 import qualified Pawl.Types.PaymentSubject as PaymentSubject
+import qualified Pawl.Types.PendingTrigger as PendingTrigger
 import qualified Pawl.Types.PlanarDieFace as PlanarDieFace
 import qualified Pawl.Types.PlanarDieRolled as PlanarDieRolled
 import qualified Pawl.Types.PlayerActed as PlayerActed
@@ -60,7 +58,10 @@ import qualified Pawl.Types.Prompt as Prompt
 import qualified Pawl.Types.SideDeck as SideDeck
 import qualified Pawl.Types.Source as Source
 import qualified Pawl.Types.TriggerCondition as TriggerCondition
+import qualified Pawl.Types.TriggerSource as TriggerSource
 import Pawl.Types.TriggeredAbility (TriggeredAbility)
+import qualified Pawl.Types.TriggeredAbilitySource as TriggeredAbilitySource
+import qualified Pawl.Types.TurnedUpOffDeck as TurnedUpOffDeck
 
 -- | CR 901.3: this player's planar deck, top first.
 deckOf :: PlayerId -> GameState -> [ObjectId]
@@ -87,7 +88,7 @@ planeswalk pid = do
   gs <- State.get
   Monad.when (canPlaneswalk pid gs) $ do
     Monad.mapM_ toBottom (faceUp gs)
-    Monad.void (turnUpTop pid)
+    encounterTop pid
 
 -- | CR 103.7: the starting player turns up planar cards until a plane is face
 -- up, putting each phenomenon on the bottom. No ability triggers (CR 901.5):
@@ -110,8 +111,10 @@ setStartingPlane pid = do
 -- left with them, the planar controller -- already CR 800.4p's heir -- turns up
 -- the top card of their planar deck, and if a face-up plane left, every
 -- planeswalking ability on the stack ceases to exist. Not a state-based action.
--- A phenomenon leaving alone spares the ability, CR 901.10a naming a plane;
--- nothing observes that gate while phenomena are inert (gap #4309).
+-- A phenomenon leaving alone spares the ability, CR 901.10a naming a plane.
+-- Unobserved: a phenomenon is face up beside a planeswalking ability only after
+-- a planeswalk in response to one, and no card in data/cards planeswalks
+-- (`"type": "Planeswalk"`, 2026-10-15).
 ownersLeft :: GameState -> [PlayerId] -> Game ()
 ownersLeft before pids = do
   let owned oid = maybe False (\obj -> List.elem (Object.owner obj) pids) (Game.lookupObject oid before)
@@ -120,7 +123,7 @@ ownersLeft before pids = do
   Monad.unless (null left) $ do
     Monad.when (any isPlane left) (State.modify' ceasePlaneswalking)
     gs <- State.get
-    Monad.void (turnUpTop (Plane.planarController gs))
+    encounterTop (Plane.planarController gs)
 
 -- CR 901.10a: every planeswalking ability on the stack ceases to exist. Read as
 -- CR 901.8's own inherent ability, which is the rule's and not a card's.
@@ -130,6 +133,30 @@ ceasePlaneswalking gs =
         Just (Source.OfInherentTrigger inherent) -> InherentTriggerSource.ability inherent == planeswalkingAbility
         _ -> False
    in List.foldl' (flip Game.cease) gs (filter walking (GameState.stack gs))
+
+-- CR 701.31b's second half and CR 901.10's turn-up: move the top card off the
+-- planar deck and turn it face up, recording the GameEvent.TurnedUpOffDeck that
+-- CR 312.5's "When you encounter" triggers on. CR 103.7's starting plane is
+-- turned up by turnUpTop alone, CR 901.5 letting nothing trigger.
+encounterTop :: PlayerId -> Game ()
+encounterTop pid = do
+  turned <- turnUpTop pid
+  Monad.forM_ turned $ \oid ->
+    State.modify' (Event.recordEvent (GameEvent.TurnedUpOffDeck (TurnedUpOffDeck.MkTurnedUpOffDeck SideDeck.Planar pid oid)))
+
+-- | CR 704.6f / 312.7: the face-up phenomena that make the planar controller
+-- planeswalk, each the source of no triggered ability on the stack or among
+-- `waiting`, the abilities triggered on events not yet scanned
+-- (Pawl.Engine.Archenemy.abandonedBySba's reason).
+spentPhenomena :: [PendingTrigger.PendingTrigger] -> GameState -> [ObjectId]
+spentPhenomena waiting gs =
+  let phenomena = filter (\oid -> maybe False Plane.isPhenomenonFace (Game.faceOf oid gs)) (faceUp gs)
+      onStack oid = any (fromSource oid) (GameState.stack gs)
+      fromSource oid stacked = case fmap Object.source (Game.lookupObject stacked gs) of
+        Just (Source.OfTrigger triggered) -> TriggeredAbilitySource.source triggered == oid
+        _ -> False
+      pending oid = any (\p -> PendingTrigger.source p == TriggerSource.OfObject oid) waiting
+   in filter (\oid -> not (onStack oid) && not (pending oid)) phenomena
 
 -- CR 701.31b's second half: move the top card off the planar deck and turn it
 -- face up, which is joining GameState.command. A fresh timestamp, since its
@@ -150,7 +177,10 @@ turnUpTop pid = do
       pure (Just top)
 
 -- CR 701.31b's first half: a face-up card goes to the bottom of its owner's
--- planar deck face down, and CR 311.6 / 312.6 make it a new object.
+-- planar deck face down, and CR 311.6 / 312.6 make it a new object. The old id's
+-- CR 608.2h record is filed for an ability of it still on the stack, which
+-- Plane.phenomenonOwnerOf reads. Unobserved, as ownersLeft's phenomenon gate
+-- is: it needs a planeswalk while that ability waits.
 toBottom :: ObjectId -> Game ()
 toBottom oid = do
   gs <- State.get
@@ -162,7 +192,8 @@ toBottom oid = do
       State.modify' $ \g ->
         (Game.overSideDecks SideDeck.Planar (Map.insertWith (flip (Seq.><)) owner (Seq.singleton fresh)) g)
           { GameState.command = Set.delete oid (GameState.command g),
-            GameState.objects = Map.insert fresh (Object.newIncarnation obj) (Map.delete oid (GameState.objects g))
+            GameState.objects = Map.insert fresh (Object.newIncarnation obj) (Map.delete oid (GameState.objects g)),
+            GameState.lastKnown = maybe id (Map.insert oid) (Event.lastKnownRecord g oid) (GameState.lastKnown g)
           }
 
 -- | CR 901.9: how many times this player has rolled the planar die this turn.

@@ -2,7 +2,7 @@
 {-# LANGUAGE RankNTypes #-}
 
 -- | CR 904, the Archenemy variant: Pawl.Engine.Archenemy and Pawl.Engine.Scheme,
--- with Pawl.Types.TriggerCondition's SetInMotion and Pawl.Types.Effect's
+-- with Pawl.Types.TriggerCondition's SelfTurnedUpOffDeck and Pawl.Types.Effect's
 -- Abandon.
 module Pawl.ArchenemySpec where
 

@@ -1196,8 +1196,6 @@ library codec
     Pawl.Codec.ScalingSpec
     Pawl.Codec.Scenario
     Pawl.Codec.ScenarioSpec
-    Pawl.Codec.SchemeSetInMotion
-    Pawl.Codec.SchemeSetInMotionSpec
     Pawl.Codec.Scope
     Pawl.Codec.ScopeSpec
     Pawl.Codec.ScryR
@@ -1357,6 +1355,8 @@ library codec
     Pawl.Codec.TriggerSourceSpec
     Pawl.Codec.TurnedFaceUp
     Pawl.Codec.TurnedFaceUpSpec
+    Pawl.Codec.TurnedUpOffDeck
+    Pawl.Codec.TurnedUpOffDeckSpec
     Pawl.Codec.TurnFaceDown
     Pawl.Codec.TurnFaceDownSpec
     Pawl.Codec.TurnScope
@@ -2684,7 +2684,6 @@ library types
     Pawl.Types.Scaling
     Pawl.Types.Scenario
     Pawl.Types.ScenarioFailure
-    Pawl.Types.SchemeSetInMotion
     Pawl.Types.Scope
     Pawl.Types.ScryR
     Pawl.Types.ScryRewrite
@@ -2776,6 +2775,7 @@ library types
     Pawl.Types.TriggerLimit
     Pawl.Types.TriggerSource
     Pawl.Types.TurnedFaceUp
+    Pawl.Types.TurnedUpOffDeck
     Pawl.Types.TurnFaceDown
     Pawl.Types.TurnScope
     Pawl.Types.TurnUpProcedure

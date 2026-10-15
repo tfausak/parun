@@ -1357,7 +1357,7 @@ eventBindingSlots cond = case cond of
   TriggerCondition.Visit -> Set.empty
   TriggerCondition.ChaosEnsues -> Set.empty
   TriggerCondition.PlayerRollsPlaneswalker _ -> Set.empty
-  TriggerCondition.SetInMotion -> Set.empty
+  TriggerCondition.SelfTurnedUpOffDeck -> Set.empty
   TriggerCondition.PlayerWinsCoinFlip _ -> Set.empty
   TriggerCondition.PlayerLosesCoinFlip _ -> Set.empty
   -- Empty DELIBERATELY. CR 701.3a's event names two objects, and the bearer is
