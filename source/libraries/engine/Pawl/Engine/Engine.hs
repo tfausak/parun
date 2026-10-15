@@ -840,6 +840,9 @@ placeSourceless pending = do
 -- placement counts, such as a CR 725.4 crowning among the state-based actions.
 -- An ability with no trigger event counts from its placement.
 --
+-- Not implemented: a reflexive (CR 603.12) or state (CR 603.8) trigger counting
+-- from when it triggered rather than from its placement (#5106).
+--
 -- data/scenarios/trigger/cr-610-3b-a-crowning-while-palace-jailers-exile-waits-for-the-stack-keeps-the-creature.json
 -- is the proof.
 triggeredSince :: PendingTrigger.PendingTrigger -> GameState -> EventGroup.EventGroup
