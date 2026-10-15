@@ -19,6 +19,7 @@ import qualified Data.Sequence as Seq
 import Data.Set (Set)
 import qualified Data.Set as Set
 import Numeric.Natural (Natural)
+import qualified Pawl.Engine.AbilityZone as AbilityZone
 import qualified Pawl.Engine.Binding as Binding
 import qualified Pawl.Engine.Condition as Condition
 import qualified Pawl.Engine.Count as Count
@@ -361,7 +362,10 @@ applyModification textBoxOf viewOf src stamp gs oid unitTypes affected m pc =
           let crafted = ExileLink.MkExileLink {ExileLink.source = src, ExileLink.ability = Just Binding.craftLink}
               materials = filter (\o -> Map.lookup o (GameState.exiledWith gs) == Just crafted) (Set.toAscList (GameState.exile gs))
               named material a = a {ActivatedAbility.name = ActivatedAbility.name a Applicative.<|> Just (Binding.craftMaterialAbility material)}
-              gained = foldMap (\material -> fmap (named material) (PC.activatedAbilities (copiableCharacteristics material gs))) materials
+              -- CR 113.6 / 702.178b: a material has, in exile, only the "as long
+              -- as" grants that function there (AbilityZone.grantFunctionsIn).
+              inExile material = let copied = copiableCharacteristics material gs in filter (AbilityZone.grantFunctionsIn (PC.delayedAbilities copied) Zone.Exile) (PC.activatedAbilities copied)
+              gained = foldMap (\material -> fmap (named material) (inExile material)) materials
               restricted a = a {ActivatedAbility.restrictions = ActivatedAbility.restrictions a <> extra}
            in pc {PC.activatedAbilities = PC.activatedAbilities pc <> fmap restricted gained}
         -- CR 613.1f / 123.7a: the abilities printed on the ability stickers on

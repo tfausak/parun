@@ -214,6 +214,7 @@ maxSpeedZoneSpec s registry = Spec.describe s "MaxSpeedZone" $ do
     let (gyId, gs) = surveyorBoard surveyor swamp piker 4
     Spec.assertEqWith s "the card really is in the graveyard" (Game.zoneMembers Zone.Graveyard S.alice gs) [gyId]
     Spec.assertEqWith s "and it offers one ability from there" (length (Activatable.abilitiesFor gyId gs)) 1
+    Spec.assertEqWith s "CR 702.178b and the card HAS the ability there (the projection's own roster)" (length (Projection.abilitiesOf gyId gs)) 1
     Spec.assertBool s (any (isActivateOf gyId) (Action.legalActions S.alice gs)) "and the activation is a legal action"
   -- The same gate above 4, which is the second half of pawl's ruling on CR
   -- 702.179e (Pawl.Engine.Speed.maxSpeed carries it): a player at 5 has max
@@ -240,6 +241,7 @@ maxSpeedZoneSpec s registry = Spec.describe s "MaxSpeedZone" $ do
     let (gyId, gs) = surveyorBoard surveyor swamp piker 3
     Spec.assertEqWith s "the card is still in the graveyard" (Game.zoneMembers Zone.Graveyard S.alice gs) [gyId]
     Spec.assertEqWith s "but it offers no ability" (Activatable.abilitiesFor gyId gs) []
+    Spec.assertEqWith s "nor has one there" (Projection.abilitiesOf gyId gs) []
     Spec.assertBool s (not (any (isActivateOf gyId) (Action.legalActions S.alice gs))) "and no activation is offered"
   -- End to end through the real engine: the activation is announced, the {3} is
   -- paid off the three Swamps, CR 406.2's exile pays the rest of the cost, and the
@@ -259,8 +261,9 @@ maxSpeedZoneSpec s registry = Spec.describe s "MaxSpeedZone" $ do
       abilities -> Spec.assertEqWith s "exactly one ability to activate" (length abilities) 1
   -- CR 113.6m's "functions ONLY in that zone", from the other side: the very same
   -- printing on the BATTLEFIELD at max speed offers nothing. The projection still
-  -- hands the ability out -- CR 702.178a's condition is true, and pawl's
-  -- projection asks no zone question -- and the activation is withheld all the
+  -- hands the ability out -- CR 702.178a's condition is true, and the card's
+  -- ruling has the max speed ability function in the graveyard "too"
+  -- (AbilityZone.grantFunctionsIn) -- and the activation is withheld all the
   -- same, because a cost that exiles this card from the graveyard cannot be paid
   -- by a card that is not in one.
   --

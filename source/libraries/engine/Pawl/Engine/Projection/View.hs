@@ -16,6 +16,7 @@ import qualified Data.Sequence as Seq
 import Data.Set (Set)
 import qualified Data.Set as Set
 import Numeric.Natural (Natural)
+import qualified Pawl.Engine.AbilityZone as AbilityZone
 import qualified Pawl.Engine.Battle as Battle
 import qualified Pawl.Engine.Binding as Binding
 import qualified Pawl.Engine.Card as Card
@@ -2080,14 +2081,17 @@ functionsFromZone zone sa =
 
 -- abilitiesGiven with the projection already in hand -- the half
 -- viewOfCharacteristics calls. Count.abilitiesOf's roster, which every view
--- builder reads, narrowed by each ability's CR 604.2 grant condition.
+-- builder reads, narrowed by each ability's CR 604.2 grant: where the object
+-- is, the grant must function (AbilityZone.grantFunctionsIn, CR 113.6 /
+-- 702.178b) and its condition hold.
 --
 -- CR 613.1: the gate's board comes in as a parameter. Taking fullView here would
 -- not terminate for a caller inside the fold -- it re-enters `gather`, with no
 -- memo and no descending bound.
 abilitiesFromCharacteristics :: Count.ViewOf -> ProjectedCharacteristics -> ObjectId -> GameState -> [ActivatedAbility.ActivatedAbility Card.Type.Card (GrantedAbility.GrantedAbility Card.Type.Card)]
 abilitiesFromCharacteristics peers pc oid gs =
-  let granted ability = maybe True (grantHolds peers oid gs) (ActivatedAbility.condition ability)
+  let functions ability = maybe True (\zone -> AbilityZone.grantFunctionsIn (PC.delayedAbilities pc) zone ability) (lastZoneOf oid gs)
+      granted ability = functions ability && maybe True (grantHolds peers oid gs) (ActivatedAbility.condition ability)
    in filter granted (ungatedAbilitiesOf pc oid gs)
 
 -- CR 604.2 / 608.2h: the "as long as" clauses among the roster above that do

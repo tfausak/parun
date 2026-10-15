@@ -1,8 +1,8 @@
 -- CR 113.6m's "or effect" half, asked of an EFFECT: does it move the object the
 -- ability is on out of a particular zone, and which zone? The ABILITY-level
 -- readings that rule defines fold this over an ability's effects, one per kind
--- of ability: Pawl.Engine.Activatable.zonesFunctionedIn takes the cost half
--- (Pawl.Engine.Cost.zoneFunctionedFrom) alongside it, and
+-- of ability: Pawl.Engine.AbilityZone.zonesFunctionedIn takes the cost half
+-- (Pawl.Engine.AbilityZone.zoneFunctionedFrom) alongside it, and
 -- Pawl.Engine.Event.Trigger.zonesFunctionedIn has no cost half to take.
 --
 -- Here rather than in Pawl.Engine.Cost because it is a classification of an
@@ -64,7 +64,7 @@ import Pawl.Types.Zone (Zone)
 -- ability is read as CR 113.7's source for its characteristics and as CR
 -- 400.7e's `became` for anything done TO it, and only the caller knows which of
 -- those is the same card here. Pawl.Engine.Event.Trigger.zonesFunctionedIn is
--- what decides, off the condition; Pawl.Engine.Activatable.zonesFunctionedIn
+-- what decides, off the condition; Pawl.Engine.AbilityZone.zonesFunctionedIn
 -- passes the source slot alone, an activation binding no event slot.
 --
 -- The origin is only ever consulted here, so a card file that states one on a

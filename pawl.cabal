@@ -1460,6 +1460,7 @@ library engine
   hs-source-dirs: source/libraries/engine
   -- cabal-gild: discover source/libraries/engine
   exposed-modules:
+    Pawl.Engine.AbilityZone
     Pawl.Engine.Action
     Pawl.Engine.Activatable
     Pawl.Engine.Activate
