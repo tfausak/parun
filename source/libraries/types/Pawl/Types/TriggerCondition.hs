@@ -560,7 +560,7 @@ data TriggerCondition
     -- GameEvent.ManifestedDread.
     PlayerManifestsDread PlayerRelation.PlayerRelation
   | -- | CR 311.7: "whenever chaos ensues", a plane's chaos ability, against a
-    -- GameEvent.PlanarDieRolled showing the chaos symbol (CR 901.9b).
+    -- GameEvent.ChaosEnsued.
     ChaosEnsues
   | -- | CR 901.8: "whenever you roll the Planeswalker symbol on the planar die".
     PlayerRollsPlaneswalker PlayerRelation.PlayerRelation

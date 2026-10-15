@@ -723,6 +723,9 @@ data Effect card ability
   | -- | CR 701.31: the resolving controller planeswalks, performed by
     -- Pawl.Engine.Planechase.planeswalk.
     Planeswalk
+  | -- | CR 311.7: chaos ensues, which a face-up plane's chaos ability triggers
+    -- on.
+    ChaosEnsues
   | -- | CR 701.33: abandon this scheme -- the effect's source (CR 314.7) --
     -- performed by Pawl.Engine.Archenemy.abandon.
     Abandon

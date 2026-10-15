@@ -175,6 +175,8 @@ import qualified Pawl.Types.PermanentTappedForMana as PermanentTappedForMana
 import qualified Pawl.Types.PermanentsBecomeTargeted as PermanentsBecomeTargeted
 import qualified Pawl.Types.PermanentsDealCombatDamageToPlayer as PermanentsDealCombatDamageToPlayer
 import qualified Pawl.Types.PlacesSticker as PlacesSticker
+import qualified Pawl.Types.PlaneswalkR as PlaneswalkR
+import qualified Pawl.Types.PlaneswalkRewrite as PlaneswalkRewrite
 import qualified Pawl.Types.PlayerAttacksWith as PlayerAttacksWith
 import qualified Pawl.Types.PlayerCounters as PlayerCounters
 import qualified Pawl.Types.PlayerEffect as PlayerEffect
@@ -610,6 +612,7 @@ rewriteEffect pairs effect = case effect of
   Effect.TemptWithTheRing -> effect
   Effect.OpenAttraction -> effect
   Effect.Planeswalk -> effect
+  Effect.ChaosEnsues -> effect
   Effect.Abandon -> effect
   Effect.ClaimPrize -> effect
   Effect.Forage -> effect
@@ -1540,6 +1543,7 @@ rewriteReplacementEffect pairs effect = case effect of
   -- CR 104.3: the pattern is one CR 109.5 relation; the effects run instead are
   -- the resolution road's, so they are swapped here too.
   ReplacementEffect.GameLossR r -> ReplacementEffect.GameLossR r {GameLossR.instead = fmap (rewriteEffect pairs) (GameLossR.instead r)}
+  ReplacementEffect.PlaneswalkR r -> ReplacementEffect.PlaneswalkR r {PlaneswalkR.rewrite = case PlaneswalkR.rewrite r of PlaneswalkRewrite.ArrangeTopTwo -> PlaneswalkRewrite.ArrangeTopTwo; PlaneswalkRewrite.RunEffects effects -> PlaneswalkRewrite.RunEffects (fmap (rewriteEffect pairs) effects)}
   -- A DrawR's pattern is one CR 109.5 relation, but the REWRITE can hold CR 400.11c's
   -- wish filter, which rewriteEffect's own Effect.FromOutsideTheGame arm swaps on
   -- the resolution road -- so it has to be swapped here too, or the same sentence

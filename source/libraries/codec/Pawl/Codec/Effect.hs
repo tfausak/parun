@@ -157,6 +157,7 @@ codec cardCodec abilityCodec =
           Arm.nullary "OpenAttraction" Effect.OpenAttraction,
           Arm.payload "Assemble" (Common.maybe ObjectRef.codec) Effect.Assemble (\x -> case x of Effect.Assemble y -> Just y; _ -> Nothing),
           Arm.nullary "Planeswalk" Effect.Planeswalk,
+          Arm.nullary "ChaosEnsues" Effect.ChaosEnsues,
           Arm.nullary "Abandon" Effect.Abandon,
           Arm.nullary "ClaimPrize" Effect.ClaimPrize,
           Arm.nullary "Forage" Effect.Forage,
@@ -333,6 +334,7 @@ tagOf x = case x of
   Effect.OpenAttraction {} -> "OpenAttraction"
   Effect.Assemble {} -> "Assemble"
   Effect.Planeswalk {} -> "Planeswalk"
+  Effect.ChaosEnsues {} -> "ChaosEnsues"
   Effect.Abandon {} -> "Abandon"
   Effect.ClaimPrize {} -> "ClaimPrize"
   Effect.Forage {} -> "Forage"
