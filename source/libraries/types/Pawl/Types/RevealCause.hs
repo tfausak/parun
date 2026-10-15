@@ -26,8 +26,9 @@ data RevealCause
     -- battlefield.
     LeavingFaceDown
   | -- | CR 708.9: a face-down component of a face-up merged permanent, revealed
-    -- by its owner as the permanent leaves the battlefield or its owner leaves
-    -- the game. Not LeavingFaceDown, since the permanent itself is face up.
+    -- by its owner as the permanent leaves the battlefield, its owner leaves the
+    -- game, or the game ends. Not LeavingFaceDown, since the permanent itself
+    -- is face up.
     LeavingFaceDownComponent
   | -- | CR 708.9: a face-down spell, revealed by its owner as it leaves the stack
     -- for anywhere but the battlefield, or as its owner leaves the game.

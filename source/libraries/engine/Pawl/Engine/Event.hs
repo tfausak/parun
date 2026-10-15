@@ -8502,8 +8502,9 @@ meldable victims gs = do
 -- timestamp is for a permanent that turns over; and no GameEvent.TurnedFaceUp,
 -- so the CR 708.7 abilities Pawl.Engine.FaceDown.performTurnFaceUp records that
 -- event for do not trigger. Each component keeps its own status
--- (Pawl.Types.ShownComponent), so a face-down card merged under stays face down
--- (CR 708.9, 712.15a) until CR 730.2f's Game.withFacing turns them all.
+-- (Pawl.Types.ShownComponent), so a face-down card under a face-up topmost one
+-- stays face down (CR 708.9, 712.15a) until CR 730.2f's Game.withFacing turns
+-- them all.
 --
 -- Each side's record is read at LAYER 1a, before layer 1b's face-down
 -- substitution (Projection.copiableCharacteristicsFaceUp), which is CR 613.2a's
@@ -8845,7 +8846,7 @@ leaveTheGame asOf g oid = case lastKnownRecord asOf oid of
             GameState.exilePiles = Map.delete oid (GameState.exilePiles g1)
           }
 
--- | CR 708.9: the reveal a face-down permanent's or face-down spell's owner
+-- | CR 708.9: the reveals a face-down permanent's or face-down spell's owner
 -- owes as it leaves the game, read off `asOf`, the board it is leaving; and CR
 -- 702.143f's for a face-down foretold card in exile and CR 702.106e's for a
 -- face-down conspiracy, plain reveals. Nothing for anything else, including a
@@ -8872,11 +8873,12 @@ leavingReveals asOf oid = Maybe.maybeToList whole <> componentReveals asOf oid
       revealedOn cause (Object.owner obj) oid asOf
 
 -- | CR 708.9: "a face-down component of a merged permanent", revealed by its
--- owner as the permanent leaves the battlefield, read off `asOf`: one reveal per
--- face-down component of a FACE-UP merged permanent on the battlefield, a
--- face-down one being revealed whole (RevealCause.LeavingFaceDown).
--- Pawl.MutateSpec's "CR 708.9 a face-down component is revealed as its face-up
--- pile is destroyed" and "... as its owner leaves the game" prove it.
+-- owner as the permanent leaves the battlefield, as its owner leaves the game,
+-- or as the game ends, read off `asOf`: one reveal per face-down component of a
+-- FACE-UP merged permanent on the battlefield, a face-down one being revealed
+-- whole (RevealCause.LeavingFaceDown). Pawl.MutateSpec's "CR 708.9 a face-down
+-- component is revealed as its face-up pile is destroyed" and "CR 708.9 a
+-- face-down component is revealed as its owner leaves the game" prove it.
 --
 -- Not implemented: the snapshot is the face-down face rather than the card
 -- shown, as for a face-down permanent (#5013).

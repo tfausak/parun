@@ -1852,7 +1852,7 @@ turnFacing facing oid gs =
       turned = next {GameState.objects = Map.adjust adjust oid (GameState.objects next)}
    in if restamps then restampStickers oid turned else turned
 
--- CR 708.2 / 730.2f: `object` showing `facing`, and for a merged permanent
+-- CR 730.2f: `object` showing `facing`, and for a merged permanent
 -- every component with it -- "if a merged permanent is turned face down, each
 -- face-up component that represents it is turned face down", and face up the
 -- same way. Pawl.MutateSpec's "CR 730.2i a merged permanent that was face down
