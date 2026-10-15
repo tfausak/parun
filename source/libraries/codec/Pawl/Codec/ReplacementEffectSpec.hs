@@ -47,6 +47,8 @@ import qualified Pawl.Types.MillCountRewrite as MillCountRewrite
 import qualified Pawl.Types.Phase as Phase
 import qualified Pawl.Types.PhasePattern as PhasePattern
 import qualified Pawl.Types.PhaseSelector as PhaseSelector
+import qualified Pawl.Types.PlaneswalkR as PlaneswalkR
+import qualified Pawl.Types.PlaneswalkRewrite as PlaneswalkRewrite
 import qualified Pawl.Types.PlayerId as PlayerId
 import qualified Pawl.Types.PlayerRelation as PlayerRelation
 import qualified Pawl.Types.ProliferateR as ProliferateR
@@ -269,6 +271,13 @@ spec s =
             codec
             (ReplacementEffect.ProliferateR (ProliferateR.MkProliferateR (ControllerRelation.Related PlayerRelation.You) ProliferateRewrite.Doubled))
             " {\"type\":\"ProliferateR\",\"value\":{\"whose\":{\"type\":\"You\"},\"rewrite\":{\"type\":\"Doubled\"}}} "
+        -- CR 701.31 / 614.1a: Susan Foreman.
+        Spec.it s "PlaneswalkR (Susan Foreman)" $
+          Common.assertCodec
+            s
+            codec
+            (ReplacementEffect.PlaneswalkR (PlaneswalkR.MkPlaneswalkR (ControllerRelation.Related PlayerRelation.You) Nothing PlaneswalkRewrite.ArrangeTopTwo))
+            " {\"type\":\"PlaneswalkR\",\"value\":{\"whose\":{\"type\":\"You\"},\"rewrite\":{\"type\":\"ArrangeTopTwo\"}}} "
         -- CR 701.22a: Eligeth, Crossroads Augur.
         Spec.it s "ScryR (Eligeth, Crossroads Augur)" $
           Common.assertCodec

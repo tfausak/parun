@@ -198,6 +198,8 @@ import qualified Pawl.Types.PermanentActed as PermanentActed
 import qualified Pawl.Types.PermanentAction as PermanentAction
 import qualified Pawl.Types.PermanentWasSacrificed as PermanentWasSacrificed
 import Pawl.Types.PhaseSelector (PhaseSelector)
+import qualified Pawl.Types.PlaneswalkR as PlaneswalkR
+import qualified Pawl.Types.PlaneswalkRewrite as PlaneswalkRewrite
 import qualified Pawl.Types.Player as Player
 import qualified Pawl.Types.PlayerAttacksPlayer as PlayerAttacksPlayer
 import qualified Pawl.Types.PlayerAttacksWith as PlayerAttacksWith
@@ -808,6 +810,7 @@ damageOf event = case event of
   GameEvent.RolledToVisit _ -> Nothing
   GameEvent.PlanarDieRolled _ -> Nothing
   GameEvent.TurnedUpOffDeck _ -> Nothing
+  GameEvent.ChaosEnsued -> Nothing
   GameEvent.ClassLevelSet _ -> Nothing
   GameEvent.Plotted _ -> Nothing
   GameEvent.BecameAttacked _ -> Nothing
@@ -880,6 +883,7 @@ revealOf event = case event of
   GameEvent.RolledToVisit _ -> Nothing
   GameEvent.PlanarDieRolled _ -> Nothing
   GameEvent.TurnedUpOffDeck _ -> Nothing
+  GameEvent.ChaosEnsued -> Nothing
   GameEvent.ClassLevelSet _ -> Nothing
   GameEvent.Plotted _ -> Nothing
   GameEvent.BecameAttacked _ -> Nothing
@@ -2016,6 +2020,7 @@ shufflesAfter candidate = case ReplacementCandidate.effect candidate of
   ReplacementEffect.VillainousChoiceR {} -> False
   ReplacementEffect.AssembleR {} -> False
   ReplacementEffect.GameLossR {} -> False
+  ReplacementEffect.PlaneswalkR {} -> False
   ReplacementEffect.PhaseR _ -> False
 
 -- CR 615.12: apply one chosen PREVENTION effect to damage that can't be
@@ -4097,6 +4102,34 @@ apply batch candidate event =
       pure Nothing
     -- Unreachable: `applies` admits GameLossR only against WouldLoseGame.
     (ReplacementEffect.GameLossR {}, _) -> pure (Just event)
+    (ReplacementEffect.PlaneswalkR (PlaneswalkR.MkPlaneswalkR _ _ rewrite), ProposedEvent.WouldPlaneswalk pid _) -> do
+      Replacement.consume (ReplacementCandidate.identity candidate)
+      case rewrite of
+        -- Susan Foreman's "look at the top two cards of your planar deck, put
+        -- one on the bottom of your planar deck and the other on top, then
+        -- planeswalk": the arrangement happens here, and the planeswalk stands
+        -- for the rows CR 614.5 has not yet spent.
+        PlaneswalkRewrite.ArrangeTopTwo -> do
+          arrangeTopTwo (ReplacementCandidate.source candidate) pid
+          pure (Just event)
+        -- Fixed Point in Time's "chaos ensues instead": the planeswalk does not
+        -- happen, and the effects are queued, the GameLossR arm's reason.
+        PlaneswalkRewrite.RunEffects effects -> do
+          Monad.forM_ (ReplacementCandidate.controller candidate) $ \controller ->
+            State.modify' $ \g ->
+              g
+                { GameState.pendingReplacementEffects =
+                    GameState.pendingReplacementEffects g
+                      Seq.|> PendingReplacementEffect.MkPendingReplacementEffect
+                        { PendingReplacementEffect.effects = effects,
+                          PendingReplacementEffect.targets = fmap (Set.map Recipient.ToObject) (ReplacementCandidate.slots candidate),
+                          PendingReplacementEffect.controller = controller,
+                          PendingReplacementEffect.source = ReplacementCandidate.source candidate
+                        }
+                }
+          pure Nothing
+    -- Unreachable: `applies` admits PlaneswalkR only against WouldPlaneswalk.
+    (ReplacementEffect.PlaneswalkR {}, _) -> pure (Just event)
     -- CR 122.6/614.1: Hardened Scales/Doubling Season scale a counter placement.
     (ReplacementEffect.CounterR (CounterR.MkCounterR _ scaling), ProposedEvent.WouldPutCounters cause oid kind n) -> do
       Replacement.consume (ReplacementCandidate.identity candidate)
@@ -9189,6 +9222,22 @@ reveal cause pid oid = do
   gs <- State.get
   Monad.mapM_ (State.modify' . recordEvent) (revealedOn cause pid oid gs)
 
+-- | Susan Foreman's rewrite of CR 701.31b: this player looks at the top two
+-- cards of their planar deck and puts the one they choose on top and the other
+-- on the bottom, on behalf of the object `source`. With fewer than two there is
+-- nothing to put anywhere.
+arrangeTopTwo :: ObjectId -> PlayerId -> Game ()
+arrangeTopTwo source pid = do
+  gs <- State.get
+  case Game.sideDeckOf SideDeck.Planar pid gs of
+    first : second : rest -> do
+      Monad.mapM_ (look pid) [first, second]
+      chosen <- Game.chooseAmong (\decider asked -> Prompt.ChooseCardFromAmong decider asked source) pid [first, second]
+      let top = Maybe.fromMaybe first chosen
+          bottom = if top == first then second else first
+      State.modify' (Game.overSideDecks SideDeck.Planar (Map.insert pid (Seq.fromList (top : rest <> [bottom]))))
+    _ -> pure ()
+
 -- | CR 701.20e: a player looks at a card, shown to them and, per CR 723.4, to
 -- the player making their decisions. Records nothing when the object is gone.
 look :: PlayerId -> ObjectId -> Game ()
@@ -9830,6 +9879,7 @@ abilityTriggeredOf event = case event of
   GameEvent.RolledToVisit _ -> Nothing
   GameEvent.PlanarDieRolled _ -> Nothing
   GameEvent.TurnedUpOffDeck _ -> Nothing
+  GameEvent.ChaosEnsued -> Nothing
   GameEvent.ClassLevelSet _ -> Nothing
   GameEvent.Plotted _ -> Nothing
   GameEvent.BecameAttacked _ -> Nothing

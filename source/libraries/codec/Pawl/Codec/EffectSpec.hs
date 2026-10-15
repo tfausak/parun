@@ -2447,6 +2447,13 @@ spec s = Spec.describe s "Pawl.Codec.Effect" $ do
       fromJson
       Effect.Planeswalk
       " {\"type\":\"Planeswalk\"} "
+  Spec.it s "ChaosEnsues" $
+    Common.assertJsonCodec
+      s
+      toJson
+      fromJson
+      Effect.ChaosEnsues
+      " {\"type\":\"ChaosEnsues\"} "
   -- CR 702.159b: nullary, the prize's actions being the effects after it.
   Spec.it s "ClaimPrize" $
     Common.assertJsonCodec

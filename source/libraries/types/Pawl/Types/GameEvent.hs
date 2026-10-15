@@ -444,6 +444,9 @@ data GameEvent
   | -- | CR 701.32b / 312.5 / 701.31b: a player moved the top card of a side deck
     -- off it and turned it face up.
     TurnedUpOffDeck TurnedUpOffDeck.TurnedUpOffDeck
+  | -- | CR 311.7: chaos ensued, by the planar die's chaos symbol (CR 901.9b) or a
+    -- resolving spell or ability saying so.
+    ChaosEnsued
   | -- | CR 716.2a: a permanent's class level BECAME something -- the level BEFORE
     -- and the level AFTER, CountersPut's shape and for CR 714.2b's reason, since
     -- "becomes level N" is a threshold crossing. Recorded by Pawl.Engine.Resolve's
