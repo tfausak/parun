@@ -54,7 +54,9 @@ import qualified Pawl.Types.PlayerActed as PlayerActed
 import qualified Pawl.Types.PlayerAction as PlayerAction
 import qualified Pawl.Types.PlayerId as PlayerId
 import qualified Pawl.Types.Prompt as Prompt
+import qualified Pawl.Types.Recipient as Recipient
 import qualified Pawl.Types.SideDeck as SideDeck
+import qualified Pawl.Types.SlotName as SlotName
 import qualified Pawl.Types.Source as Source
 import qualified Pawl.Types.StepBegan as StepBegan
 import qualified Pawl.Types.Zone as Zone
@@ -301,6 +303,57 @@ spec s registry = Spec.describe s "Pawl.Engine.Planechase" $ do
     Spec.assertBool s (notElem S.alice (Game.stillPlaying gone)) "alice has left the game"
     Spec.assertEqWith s "CR 901.10 bob's Tazeem is face up" (fmap (\oid -> (fmap Face.name (Game.faceOf oid gone), fmap Object.owner (Game.lookupObject oid gone))) (Planechase.faceUp gone)) [(cardName "Tazeem", Just S.bob)]
     Spec.assertEqWith s "the ability was alice's while she played" controllers [Just S.alice]
+
+  -- CR 311.7: Path of the Enigma ("Target player draws four cards. Will of the
+  -- Planeswalkers -- ... If planeswalk gets more votes, planeswalk. If chaos
+  -- gets more votes or the vote is tied, chaos ensues.") cast by alice under
+  -- Academy at Tolaria West ("Whenever chaos ensues, discard your hand."),
+  -- targeting bob, with two Forests in her hand. A tied vote makes chaos
+  -- ensue; two votes for planeswalk planeswalk her to Tazeem instead.
+  Spec.it s "CR 311.7 Path of the Enigma's tied vote makes chaos ensue, and a planeswalk vote planeswalks" $ do
+    board <- planarBoard s registry ["Academy at Tolaria West", "Tazeem"]
+    (enigmaCard, enigma) <- enigmaBoard s registry board
+    let tied = S.runPure (enigmaAnswer "planeswalk" "chaos") enigma (S.cast S.alice enigmaCard >> Engine.priorityLoop)
+        walked = S.runPure (enigmaAnswer "planeswalk" "planeswalk") enigma (S.cast S.alice enigmaCard >> Engine.priorityLoop)
+    Spec.assertEqWith s "CR 311.7 on the tie Academy's chaos ability discarded alice's two Forests" (S.handSize S.alice tied) 0
+    Spec.assertEqWith s "and Academy is still the face-up plane" (faceUpNames tied) [cardName "Academy at Tolaria West"]
+    Spec.assertEqWith s "bob drew four" (S.handSize S.bob tied) 4
+    Spec.assertEqWith s "CR 701.31 on planeswalk votes alice planeswalked to Tazeem" (faceUpNames walked) [cardName "Tazeem"]
+    Spec.assertEqWith s "and kept her two Forests" (S.handSize S.alice walked) 2
+
+  -- CR 614.1a on CR 701.31b: alice controls Susan Foreman ("If you would
+  -- planeswalk, instead look at the top two cards of your planar deck, put one
+  -- on the bottom of your planar deck and the other on top, then planeswalk.")
+  -- and rolls the Planeswalker symbol under Academy at Tolaria West with Tazeem
+  -- then Naya below it. She puts Naya on top, the second card she is offered,
+  -- so she planeswalks to Naya and Tazeem goes to the bottom. Without Susan the
+  -- same answers planeswalk her to Tazeem.
+  Spec.it s "CR 614.1a Susan Foreman rearranges the top two planar cards before a planeswalk" $ do
+    susan <- S.printingOf s registry "Susan Foreman"
+    board <- planarBoard s registry ["Academy at Tolaria West", "Tazeem", "Naya"]
+    let (_, withSusan) = S.addPermanent susan S.alice (inMain S.alice board)
+        walked = S.runPure (rollingKeepingLast 6) withSusan (Planechase.roll S.manaPerformer S.alice >> Engine.priorityLoop)
+        without = S.runPure (rollingKeepingLast 6) (inMain S.alice board) (Planechase.roll S.manaPerformer S.alice >> Engine.priorityLoop)
+    Spec.assertEqWith s "CR 614.1a alice planeswalked to Naya" (faceUpNames walked) [cardName "Naya"]
+    Spec.assertEqWith s "with Tazeem then Academy below" (deckNames S.alice walked) [cardName "Tazeem", cardName "Academy at Tolaria West"]
+    Spec.assertEqWith s "without Susan she planeswalks to Tazeem" (faceUpNames without) [cardName "Tazeem"]
+
+  -- CR 312.5 / 614.1a / 701.31c: alice planeswalks to Fixed Point in Time ("When
+  -- you encounter Fixed Point in Time, until your next turn, if a player would
+  -- planeswalk as a result of rolling the planar die, chaos ensues instead.").
+  -- Its CR 704.6f planeswalk away is not the planar die's, so she reaches
+  -- Tazeem ("Whenever chaos ensues, draw a card for each land you control.").
+  -- She rolls the Planeswalker symbol again, paying {1} with her one Forest:
+  -- chaos ensues instead, so she draws one and Naya stays in the deck.
+  Spec.it s "CR 614.1a Fixed Point in Time turns a planar die planeswalk into chaos" $ do
+    forest <- S.printingOf s registry "Forest"
+    board <- planarBoard s registry ["Academy at Tolaria West", "Fixed Point in Time", "Tazeem", "Naya"]
+    let (_, withForest) = S.addPermanent forest S.alice (inMain S.alice board)
+        first = S.runPure (rolling 6) withForest (Planechase.roll S.manaPerformer S.alice >> Engine.priorityLoop)
+        second = S.runPure (rolling 6) first (Planechase.roll S.manaPerformer S.alice >> Engine.priorityLoop)
+    Spec.assertEqWith s "CR 704.6f the walk away from Fixed Point in Time reached Tazeem" (faceUpNames first) [cardName "Tazeem"]
+    Spec.assertEqWith s "CR 614.1a the second Planeswalker symbol left Tazeem face up" (faceUpNames second) [cardName "Tazeem"]
+    Spec.assertEqWith s "CR 311.7 and chaos ensued: alice drew one for her Forest" (S.handSize S.alice second) 1
   carrySpec s registry
 
 -- CR 400.7b / 611.3d on The Caldaia, Plane -- Capenna, "Creature spells you cast
@@ -415,6 +468,34 @@ caldaiaBlitz = Keyword.Blitz (Cost.Type.MkCost (Just (ManaCost.MkManaCost [ManaS
 
 velociraptorProwl :: Keyword.Keyword
 velociraptorProwl = Keyword.Prowl (Cost.Type.MkCost (Just (ManaCost.MkManaCost [ManaSymbol.Generic 2, theRed])) [])
+
+-- alice's five Islands, and Path of the Enigma and two Forests in her hand, in
+-- her main phase.
+enigmaBoard :: (Monad m) => Spec.Spec m n -> Registry.Registry m -> GameState.GameState -> m (ObjectId.ObjectId, GameState.GameState)
+enigmaBoard s registry gs = do
+  island <- S.printingOf s registry "Island"
+  forest <- S.printingOf s registry "Forest"
+  path <- S.printingOf s registry "Path of the Enigma"
+  let lands = List.foldl' (\g _ -> snd (S.addPermanent island S.alice g)) (inMain S.alice gs) [1 .. 5 :: Int]
+      held = List.foldl' (\g _ -> snd (S.addHandCard forest S.alice g)) lands [1 .. 2 :: Int]
+  pure (S.addHandCard path S.alice held)
+
+-- Path of the Enigma's answers: bob is the target, alice votes `alices` and bob
+-- `bobs`.
+enigmaAnswer :: String -> String -> Prompt.Prompt r -> r
+enigmaAnswer alices bobs p = case p of
+  Prompt.ChooseTargets _ _ _ sets -> fmap (const (Set.singleton (Recipient.ToPlayer S.bob))) sets
+  Prompt.ChooseVoteWord _ pid _ offered ->
+    let wanted = SlotName.MkSlotName (Text.pack (if pid == S.alice then alices else bobs))
+     in Maybe.fromMaybe (NonEmpty.head offered) (List.find (== wanted) (NonEmpty.toList offered))
+  _ -> S.identityAnswer p
+
+-- The planar die shows `n`, and a choice among cards takes the last one
+-- offered, which is not the default.
+rollingKeepingLast :: Natural -> Prompt.Prompt r -> r
+rollingKeepingLast n p = case p of
+  Prompt.ChooseCardFromAmong _ _ _ candidates -> NonEmpty.last candidates
+  _ -> rolling n p
 
 -- The names of the face-up planar cards.
 faceUpNames :: GameState.GameState -> [Maybe CardName.CardName]

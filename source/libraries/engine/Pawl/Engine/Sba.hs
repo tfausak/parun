@@ -51,6 +51,7 @@ import qualified Pawl.Types.GameState as GameState
 import qualified Pawl.Types.Keyword as Keyword
 import qualified Pawl.Types.Object as Object
 import Pawl.Types.ObjectId (ObjectId)
+import qualified Pawl.Types.PlaneswalkCause as PlaneswalkCause
 import qualified Pawl.Types.Player as Player
 import qualified Pawl.Types.PlayerCounterKind as PlayerCounterKind
 import Pawl.Types.PlayerId (PlayerId)
@@ -1146,5 +1147,5 @@ checkOnce = do
   -- the rest of the pass has applied.
   Monad.unless (null spentPhenomena) $ do
     settled <- State.get
-    Planechase.planeswalk (Plane.planarController settled)
+    Planechase.planeswalk PlaneswalkCause.Phenomenon (Plane.planarController settled)
   pure (acted, thenExile)

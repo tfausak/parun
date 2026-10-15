@@ -118,6 +118,7 @@ import Pawl.Types.ObjectId (ObjectId)
 import qualified Pawl.Types.PermanentCandidate as PermanentCandidate
 import qualified Pawl.Types.PhasePattern as PhasePattern
 import Pawl.Types.PhaseSelector (PhaseSelector)
+import qualified Pawl.Types.PlaneswalkR as PlaneswalkR
 import qualified Pawl.Types.Player as Player
 import qualified Pawl.Types.PlayerCounterKind as PlayerCounterKind
 import Pawl.Types.PlayerId (PlayerId)
@@ -193,6 +194,7 @@ asZoneChange event = case event of
   ProposedEvent.WouldProliferate {} -> Nothing
   ProposedEvent.WouldAssemble {} -> Nothing
   ProposedEvent.WouldLoseGame {} -> Nothing
+  ProposedEvent.WouldPlaneswalk {} -> Nothing
   ProposedEvent.WouldScry {} -> Nothing
   ProposedEvent.WouldFaceVillainousChoice {} -> Nothing
 
@@ -727,6 +729,7 @@ affected event = case event of
   ProposedEvent.WouldProliferate pid _ -> ([], [pid])
   ProposedEvent.WouldAssemble assembler pid _ -> (Maybe.maybeToList assembler, [pid])
   ProposedEvent.WouldLoseGame pid -> ([], [pid])
+  ProposedEvent.WouldPlaneswalk pid _ -> ([], [pid])
   ProposedEvent.WouldScry pid _ -> ([], [pid])
   ProposedEvent.WouldFaceVillainousChoice pid _ -> ([], [pid])
 
@@ -977,6 +980,11 @@ matchesPrinted viewOf gs event candidate =
         -- Mirror's "you".
         (ReplacementEffect.GameLossR pat, ProposedEvent.WouldLoseGame pid) ->
           matchesPlayer gs candidate (GameLossR.whose pat) pid
+        -- CR 701.31 / 614.1a: whose planeswalks the row watches, and for which
+        -- cause -- Fixed Point in Time's "as a result of rolling the planar die"
+        -- (CR 701.31c).
+        (ReplacementEffect.PlaneswalkR pat, ProposedEvent.WouldPlaneswalk pid cause) ->
+          matchesPlayer gs candidate (PlaneswalkR.whose pat) pid && all (== cause) (PlaneswalkR.cause pat)
         -- Every row below falls through to False because an arm ABOVE already
         -- matches every event of that class: a row below fires only for a
         -- MISMATCHED class, where False is the correct answer rather than a
@@ -1001,6 +1009,7 @@ matchesPrinted viewOf gs event candidate =
         (ReplacementEffect.VillainousChoiceR {}, _) -> False
         (ReplacementEffect.AssembleR {}, _) -> False
         (ReplacementEffect.GameLossR {}, _) -> False
+        (ReplacementEffect.PlaneswalkR {}, _) -> False
         (ReplacementEffect.PhaseR _, _) -> False
 
 -- CR 614.1a: would this rewrite actually change the loss? `admits` and `unspent`
@@ -1961,6 +1970,7 @@ bucketOfEffect re = case re of
   -- CR 616.1a-d are all about entering the battlefield and copying; losing
   -- the game is neither, so CR 616.1e.
   ReplacementEffect.GameLossR {} -> ReplacementBucket.Other
+  ReplacementEffect.PlaneswalkR {} -> ReplacementBucket.Other
   -- CR 616.1a-d are all about entries and copies; a skip is none of those, so it
   -- falls to CR 616.1e.
   ReplacementEffect.PhaseR _ -> ReplacementBucket.Other
@@ -2246,6 +2256,7 @@ readsApplier re = case re of
   ReplacementEffect.AssembleR {} -> False
   -- CR 109.5: the effects run as the row's own controller, the reset's "you".
   ReplacementEffect.GameLossR {} -> True
+  ReplacementEffect.PlaneswalkR {} -> True
   -- CR 614.10: a skip replaces the step or phase with nothing. The player it is
   -- ABOUT is baked into PhasePattern.whosePhase, on the EFFECT, where this
   -- comparison already sees it.
@@ -2308,6 +2319,7 @@ readsSource effect = case effect of
   -- CR 113.7: the effects run with the candidate's source as theirs, so one
   -- naming its source reaches a different object under each.
   ReplacementEffect.GameLossR {} -> True
+  ReplacementEffect.PlaneswalkR {} -> True
   ReplacementEffect.PhaseR _ -> False
 
 -- CR 616.1: the affected object's controller (or its owner if it has none), or
@@ -2502,6 +2514,8 @@ affectedChooserOf gs event = case event of
   -- a Rigger assembles.
   ProposedEvent.WouldAssemble _ pid _ -> Just pid
   ProposedEvent.WouldLoseGame pid -> Just pid
+  -- CR 616.1 / 701.31a: the planeswalking player, the planar controller.
+  ProposedEvent.WouldPlaneswalk pid _ -> Just pid
 
 -- CR 208.2b / 707.2: stamp a chosen entry shape into the object's copiable
 -- snapshot. Power and toughness are SET; keywords are UNIONED into whatever is
@@ -3756,6 +3770,7 @@ contestedResource gs candidate = case ReplacementCandidate.effect candidate of
   ReplacementEffect.AssembleR {} -> Nothing
   -- `contested` asks only about a damage batch.
   ReplacementEffect.GameLossR {} -> Nothing
+  ReplacementEffect.PlaneswalkR {} -> Nothing
   ReplacementEffect.PhaseR _ -> Nothing
 
 asDamageEvent :: ProposedEvent -> Maybe DamageEvent.DamageEvent
@@ -3780,6 +3795,7 @@ asDamageEvent event = case event of
   ProposedEvent.WouldProliferate {} -> Nothing
   ProposedEvent.WouldAssemble {} -> Nothing
   ProposedEvent.WouldLoseGame {} -> Nothing
+  ProposedEvent.WouldPlaneswalk {} -> Nothing
   ProposedEvent.WouldScry {} -> Nothing
   ProposedEvent.WouldFaceVillainousChoice {} -> Nothing
 
@@ -3805,6 +3821,7 @@ asDestruction event = case event of
   ProposedEvent.WouldProliferate {} -> Nothing
   ProposedEvent.WouldAssemble {} -> Nothing
   ProposedEvent.WouldLoseGame {} -> Nothing
+  ProposedEvent.WouldPlaneswalk {} -> Nothing
   ProposedEvent.WouldScry {} -> Nothing
   ProposedEvent.WouldFaceVillainousChoice {} -> Nothing
 
@@ -3832,6 +3849,7 @@ asUntap event = case event of
   ProposedEvent.WouldProliferate {} -> Nothing
   ProposedEvent.WouldAssemble {} -> Nothing
   ProposedEvent.WouldLoseGame {} -> Nothing
+  ProposedEvent.WouldPlaneswalk {} -> Nothing
   ProposedEvent.WouldScry {} -> Nothing
   ProposedEvent.WouldFaceVillainousChoice {} -> Nothing
 
@@ -3847,6 +3865,7 @@ asDraw event = case event of
   ProposedEvent.WouldProliferate {} -> Nothing
   ProposedEvent.WouldAssemble {} -> Nothing
   ProposedEvent.WouldLoseGame {} -> Nothing
+  ProposedEvent.WouldPlaneswalk {} -> Nothing
   ProposedEvent.WouldScry {} -> Nothing
   ProposedEvent.WouldFaceVillainousChoice {} -> Nothing
   ProposedEvent.WouldChangeZone {} -> Nothing
@@ -3874,6 +3893,7 @@ asDrawCount event = case event of
   ProposedEvent.WouldProliferate {} -> Nothing
   ProposedEvent.WouldAssemble {} -> Nothing
   ProposedEvent.WouldLoseGame {} -> Nothing
+  ProposedEvent.WouldPlaneswalk {} -> Nothing
   ProposedEvent.WouldScry {} -> Nothing
   ProposedEvent.WouldFaceVillainousChoice {} -> Nothing
   ProposedEvent.WouldDraw _ -> Nothing
@@ -3905,6 +3925,7 @@ asMillCount event = case event of
   ProposedEvent.WouldProliferate {} -> Nothing
   ProposedEvent.WouldAssemble {} -> Nothing
   ProposedEvent.WouldLoseGame {} -> Nothing
+  ProposedEvent.WouldPlaneswalk {} -> Nothing
   ProposedEvent.WouldScry {} -> Nothing
   ProposedEvent.WouldFaceVillainousChoice {} -> Nothing
   ProposedEvent.WouldDraw _ -> Nothing
@@ -3928,6 +3949,7 @@ asCoinFlip event = case event of
   ProposedEvent.WouldProliferate {} -> Nothing
   ProposedEvent.WouldAssemble {} -> Nothing
   ProposedEvent.WouldLoseGame {} -> Nothing
+  ProposedEvent.WouldPlaneswalk {} -> Nothing
   ProposedEvent.WouldScry {} -> Nothing
   ProposedEvent.WouldFaceVillainousChoice {} -> Nothing
   ProposedEvent.WouldDrawCards {} -> Nothing
@@ -3956,6 +3978,7 @@ asDiceRoll event = case event of
   ProposedEvent.WouldProliferate {} -> Nothing
   ProposedEvent.WouldAssemble {} -> Nothing
   ProposedEvent.WouldLoseGame {} -> Nothing
+  ProposedEvent.WouldPlaneswalk {} -> Nothing
   ProposedEvent.WouldScry {} -> Nothing
   ProposedEvent.WouldFaceVillainousChoice {} -> Nothing
   ProposedEvent.WouldDrawCards {} -> Nothing
@@ -3982,6 +4005,7 @@ asScry event = case event of
   ProposedEvent.WouldProliferate {} -> Nothing
   ProposedEvent.WouldAssemble {} -> Nothing
   ProposedEvent.WouldLoseGame {} -> Nothing
+  ProposedEvent.WouldPlaneswalk {} -> Nothing
   ProposedEvent.WouldFaceVillainousChoice {} -> Nothing
   ProposedEvent.WouldRollDice _ -> Nothing
   ProposedEvent.WouldFlipCoin {} -> Nothing
@@ -4008,6 +4032,7 @@ asProliferate event = case event of
   ProposedEvent.WouldProliferate pid n -> Just (pid, n)
   ProposedEvent.WouldAssemble {} -> Nothing
   ProposedEvent.WouldLoseGame {} -> Nothing
+  ProposedEvent.WouldPlaneswalk {} -> Nothing
   ProposedEvent.WouldScry {} -> Nothing
   ProposedEvent.WouldFaceVillainousChoice {} -> Nothing
   ProposedEvent.WouldRollDice _ -> Nothing
@@ -4035,6 +4060,7 @@ asAssemble :: ProposedEvent -> Maybe (Maybe ObjectId, PlayerId, Natural)
 asAssemble event = case event of
   ProposedEvent.WouldAssemble assembler pid n -> Just (assembler, pid, n)
   ProposedEvent.WouldLoseGame {} -> Nothing
+  ProposedEvent.WouldPlaneswalk {} -> Nothing
   ProposedEvent.WouldFaceVillainousChoice {} -> Nothing
   ProposedEvent.WouldProliferate {} -> Nothing
   ProposedEvent.WouldScry {} -> Nothing
@@ -4064,6 +4090,7 @@ asVillainousChoice event = case event of
   ProposedEvent.WouldProliferate {} -> Nothing
   ProposedEvent.WouldAssemble {} -> Nothing
   ProposedEvent.WouldLoseGame {} -> Nothing
+  ProposedEvent.WouldPlaneswalk {} -> Nothing
   ProposedEvent.WouldScry {} -> Nothing
   ProposedEvent.WouldRollDice _ -> Nothing
   ProposedEvent.WouldFlipCoin {} -> Nothing
@@ -4105,6 +4132,7 @@ asCounters event = case event of
   ProposedEvent.WouldProliferate {} -> Nothing
   ProposedEvent.WouldAssemble {} -> Nothing
   ProposedEvent.WouldLoseGame {} -> Nothing
+  ProposedEvent.WouldPlaneswalk {} -> Nothing
   ProposedEvent.WouldScry {} -> Nothing
   ProposedEvent.WouldFaceVillainousChoice {} -> Nothing
 
@@ -4133,6 +4161,7 @@ asPlayerCounters event = case event of
   ProposedEvent.WouldProliferate {} -> Nothing
   ProposedEvent.WouldAssemble {} -> Nothing
   ProposedEvent.WouldLoseGame {} -> Nothing
+  ProposedEvent.WouldPlaneswalk {} -> Nothing
   ProposedEvent.WouldScry {} -> Nothing
   ProposedEvent.WouldFaceVillainousChoice {} -> Nothing
 
@@ -4163,6 +4192,7 @@ asLifeLoss event = case event of
   ProposedEvent.WouldProliferate {} -> Nothing
   ProposedEvent.WouldAssemble {} -> Nothing
   ProposedEvent.WouldLoseGame {} -> Nothing
+  ProposedEvent.WouldPlaneswalk {} -> Nothing
   ProposedEvent.WouldScry {} -> Nothing
   ProposedEvent.WouldFaceVillainousChoice {} -> Nothing
 
@@ -4190,6 +4220,7 @@ asLifeGain event = case event of
   ProposedEvent.WouldProliferate {} -> Nothing
   ProposedEvent.WouldAssemble {} -> Nothing
   ProposedEvent.WouldLoseGame {} -> Nothing
+  ProposedEvent.WouldPlaneswalk {} -> Nothing
   ProposedEvent.WouldScry {} -> Nothing
   ProposedEvent.WouldFaceVillainousChoice {} -> Nothing
 
@@ -4215,6 +4246,7 @@ asTokens event = case event of
   ProposedEvent.WouldProliferate {} -> Nothing
   ProposedEvent.WouldAssemble {} -> Nothing
   ProposedEvent.WouldLoseGame {} -> Nothing
+  ProposedEvent.WouldPlaneswalk {} -> Nothing
   ProposedEvent.WouldScry {} -> Nothing
   ProposedEvent.WouldFaceVillainousChoice {} -> Nothing
 
@@ -4421,5 +4453,6 @@ asPhaseBegin event = case event of
   ProposedEvent.WouldProliferate {} -> Nothing
   ProposedEvent.WouldAssemble {} -> Nothing
   ProposedEvent.WouldLoseGame {} -> Nothing
+  ProposedEvent.WouldPlaneswalk {} -> Nothing
   ProposedEvent.WouldScry {} -> Nothing
   ProposedEvent.WouldFaceVillainousChoice {} -> Nothing
