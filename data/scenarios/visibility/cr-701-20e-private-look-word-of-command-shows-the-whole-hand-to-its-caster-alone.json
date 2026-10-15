@@ -1,0 +1,24 @@
+{
+  "description": "CR 701.20e private look: Word of Command shows the whole hand to its caster alone",
+  "note": "Alice looks at all three cards in bob's hand, not just the one she chooses, and bob is shown nothing; the Lightning Bolt she picks out of the middle of the hand is the card bob casts.",
+  "board": {
+    "seats": [
+      {"name": "alice", "battlefield": [{"card": "Swamp", "label": "swamp", "ready": true}, {"card": "Swamp", "label": "swamp-2", "ready": true}], "hand": [{"card": "Word of Command", "label": "word-of-command", "ready": true}]},
+      {"name": "bob", "battlefield": [{"card": "Mountain", "label": "mountain", "ready": true}], "hand": [{"card": "Llanowar Elves", "label": "elves", "ready": true}, {"card": "Lightning Bolt", "label": "bolt", "ready": true}, {"card": "Forest", "label": "forest", "ready": true}]}
+    ],
+    "active": "alice",
+    "step": "PrecombatMain"
+  },
+  "timeline": [
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": {"Cast": {"object": "$word-of-command", "targets": ["$bob"], "mana": ["$swamp", "$swamp-2"]}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": {"Answer": {"prompt": "ChooseCardFromAmong", "with": "$bolt"}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": {"Answer": {"prompt": "ChooseTargets", "with": [["target", [["Player", "bob"]]]]}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": {"Answer": {"prompt": "ChooseManaSource", "with": "$mountain"}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "bob", "do": "Pass"},
+    {"turn": 1, "step": "PrecombatMain", "player": "bob", "check": {"View": {"of": "Stack", "is": ["Lightning Bolt"]}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "bob", "check": {"View": {"of": "Witnessed", "player": "alice", "is": ["Llanowar Elves", "Lightning Bolt", "Forest"]}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "bob", "check": {"View": {"of": "Witnessed", "player": "bob", "is": []}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "bob", "do": "Pass"},
+    {"turn": 1, "step": "PrecombatMain", "player": "bob", "check": {"Life": {"player": "bob", "life": 17}}}
+  ]
+}

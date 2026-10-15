@@ -44,19 +44,15 @@
                     "type": "LookAt",
                     "value": {
                       "ref": {
-                        "type": "ChosenCardInHand",
+                        "type": "EachCardInHand",
                         "value": {
-                          "filter": {
-                            "type": "And",
-                            "value": []
-                          },
-                          "player": {
+                          "hands": {
                             "type": "InSlot",
                             "value": "opponent"
                           }
                         }
                       },
-                      "slot": "chosen"
+                      "slot": "looked"
                     }
                   }
                 ]
@@ -75,8 +71,14 @@
                         "type": "Mandatory"
                       },
                       "ref": {
-                        "type": "InSlot",
-                        "value": "chosen"
+                        "type": "ChosenCardFromAmong",
+                        "value": {
+                          "filter": {
+                            "type": "And",
+                            "value": []
+                          },
+                          "slot": "looked"
+                        }
                       },
                       "verb": {
                         "type": "Play"

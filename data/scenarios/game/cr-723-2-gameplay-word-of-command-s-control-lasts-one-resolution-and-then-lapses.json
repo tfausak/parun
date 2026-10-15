@@ -1,6 +1,6 @@
 {
   "description": "CR 723.2 gameplay: Word of Command's control lasts one resolution and then lapses",
-  "note": "Who decides is witnessed by the key: alice answers ChooseCardInHand, ChooseTargets and ChooseManaSource for bob, and the bob-keyed checks after the resolution and on his next turn come only while bob decides his own priority. The Haskell test's CR 723.6 fence (Concede carries no decider) is a type-level property: the runner keys every concede question on the true player.",
+  "note": "Who decides is witnessed by the key: alice answers ChooseCardFromAmong, ChooseTargets and ChooseManaSource for bob, and the bob-keyed checks after the resolution and on his next turn come only while bob decides his own priority. The Haskell test's CR 723.6 fence (Concede carries no decider) is a type-level property: the runner keys every concede question on the true player.",
   "board": {
     "seats": [
       {
@@ -98,7 +98,7 @@
       "player": "alice",
       "do": {
         "Answer": {
-          "prompt": "ChooseCardInHand",
+          "prompt": "ChooseCardFromAmong",
           "with": "$bolt"
         }
       }
