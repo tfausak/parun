@@ -147,7 +147,8 @@ to agents as written. What it doesn't say:
   forbidden is a capability no card exercises: per `docs/design.md` section 4,
   an effect is not done until a card exercises it in a gameplay-level test.
   The one good reason to stop is a *rules* reason --- the card turns out not
-  to exercise the thing after all.
+  to exercise the thing after all. The converse holds too: a card that
+  exercises nothing unique needs no test of its own.
 
 - Labels: `elision`, `gap`, `rules-correctness` and `bug`, plus the expiry
   triggers `expires:milestone`, `expires:card-driven`, `expires:subsystem` and
