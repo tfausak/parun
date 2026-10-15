@@ -22,6 +22,7 @@ import qualified Pawl.Types.AbilityKind as AbilityKind
 import qualified Pawl.Types.ActivatedAbility as ActivatedAbility
 import qualified Pawl.Types.ActivatedAbilitySource as ActivatedAbilitySource
 import qualified Pawl.Types.Announcement as Announcement
+import qualified Pawl.Types.CandidateCost as CandidateCost
 import qualified Pawl.Types.Card as Card
 import qualified Pawl.Types.Cost as Cost.Type
 import qualified Pawl.Types.Crewing as Crewing
@@ -235,7 +236,7 @@ activateAbilityWith refused runSubgame pid srcId ability = Event.announcing $ do
       -- printed cost is FIRST, so a default answer pays it.
       let offeredCosts = filter (Activatable.payableCostAt aimableUnannounced floorX stamp spendable pid srcId gs) (Activatable.costsFor pid ability gs)
       printedCost <- case offeredCosts of
-        _ : _ : _ -> Game.choose (Prompt.ChooseCost decider pid abilId offeredCosts)
+        _ : _ : _ -> CandidateCost.cost <$> Game.choose (Prompt.ChooseCost decider pid abilId (fmap Cost.untagged offeredCosts))
         [only] -> pure only
         [] -> pure (ActivatedAbility.cost ability)
       mAmount <-

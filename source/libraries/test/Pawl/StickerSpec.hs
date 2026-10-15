@@ -49,6 +49,7 @@ import qualified Pawl.StickerSheets as StickerSheets
 import qualified Pawl.Support as S
 import qualified Pawl.Types.AbilitySticker as AbilitySticker
 import qualified Pawl.Types.ActiveBlockRequirement as ActiveBlockRequirement
+import qualified Pawl.Types.CandidateCost as CandidateCost
 import qualified Pawl.Types.CardName as CardName
 import qualified Pawl.Types.CardType as CardType
 import qualified Pawl.Types.CombatStep as CombatStep
@@ -419,9 +420,9 @@ namedIn zone card gs = filter (\oid -> fmap S.nameOf (Game.cardOf oid gs) == Jus
 
 -- Cubwarden's mutate cost with sticker kicker's {1} on it, the one offered
 -- candidate paying two {W}; MutateSpec.mutatingAt names the bare mutate cost.
-mutateKicked :: [Cost.Type.Cost Keyword.Keyword] -> Cost.Type.Cost Keyword.Keyword
+mutateKicked :: [CandidateCost.CandidateCost] -> CandidateCost.CandidateCost
 mutateKicked candidates =
-  let whites c = case Cost.Type.mana c of
+  let whites c = case Cost.Type.mana (CandidateCost.cost c) of
         Just (ManaCost.MkManaCost symbols) -> length (filter (== MutateSpec.theWhite) symbols)
         Nothing -> 0
    in Maybe.fromMaybe (Cost.firstOffered candidates) (List.find ((== 2) . whites) candidates)

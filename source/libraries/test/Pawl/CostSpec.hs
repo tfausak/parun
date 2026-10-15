@@ -54,6 +54,7 @@ import qualified Pawl.Types.Aggregation as Aggregation
 import qualified Pawl.Types.Asked as Asked
 import qualified Pawl.Types.AttackTarget as AttackTarget
 import qualified Pawl.Types.BeginningStep as BeginningStep
+import qualified Pawl.Types.CandidateCost as CandidateCost
 import qualified Pawl.Types.Card as Card.Type
 import qualified Pawl.Types.CardName as CardName
 import qualified Pawl.Types.CardType as CardType
@@ -1866,7 +1867,7 @@ causticExhaleBoard lands swamp exhale galleon inHand onBattlefield =
 announcing :: Bool -> ObjectId.ObjectId -> Prompt.Prompt r -> r
 announcing beholding victim p = case p of
   Prompt.ChooseCost _ _ _ candidates
-    | Just cost <- List.find (\c -> not (null (Cost.Type.components c)) == beholding) candidates -> cost
+    | Just cost <- List.find (\c -> not (null (Cost.Type.components (CandidateCost.cost c))) == beholding) candidates -> cost
   _ -> targeting victim p
 
 -- Osseous Exhale {1}{W} Instant: "As an additional cost to cast this spell, you
@@ -2799,7 +2800,7 @@ omniscienceSpec s registry =
           paying :: [ManaSymbol.ManaSymbol] -> Prompt.Prompt r -> r
           paying wanted p = case p of
             Prompt.ChooseCost _ _ _ candidates ->
-              Maybe.fromMaybe (Cost.firstOffered candidates) (List.find ((== Just (ManaCost.MkManaCost wanted)) . Cost.Type.mana) candidates)
+              Maybe.fromMaybe (Cost.firstOffered candidates) (List.find ((== Just (ManaCost.MkManaCost wanted)) . Cost.Type.mana . CandidateCost.cost) candidates)
             Prompt.ChooseX {} -> 1
             _ -> S.identityAnswer p
           red = ManaSymbol.OfType (ManaType.Colored Color.Red)
@@ -4984,7 +4985,7 @@ convokeBoard piker spider card reds greens =
 -- payment visibly rather than picking some other entry.
 convoking :: ManaCost.ManaCost -> [ObjectId.ObjectId] -> Prompt.Prompt r -> r
 convoking wanted tapped p = case p of
-  Prompt.ChooseCost _ _ _ candidates -> Cost.firstOffered (filter ((== Just wanted) . Cost.Type.mana) candidates)
+  Prompt.ChooseCost _ _ _ candidates -> Cost.firstOffered (filter ((== Just wanted) . Cost.Type.mana . CandidateCost.cost) candidates)
   Prompt.ChooseTaps _ _ _ candidates _ -> Set.fromList (filter (`elem` tapped) candidates)
   _ -> S.identityAnswer p
 
@@ -5080,7 +5081,7 @@ convokeWindowSpec s registry = Spec.describe s "Siege Wurm" $ do
           Prompt.ChooseManaYield _ _ _ candidates -> pure (S.optionYielding green candidates)
           Prompt.ChooseCost _ _ _ candidates -> do
             note "substitution"
-            pure (Cost.firstOffered (filter ((== Just residual) . Cost.Type.mana) candidates))
+            pure (Cost.firstOffered (filter ((== Just residual) . Cost.Type.mana . CandidateCost.cost) candidates))
           Prompt.ChooseTaps _ _ _ candidates n -> pure (Set.fromList (filter (`elem` (if n == 1 then [spiderId] else pikerIds)) candidates))
           _ -> pure (S.identityAnswer p)
         ((_, after), asked) = State.runState (Engine.runGame answer gs (S.cast S.alice spell)) []
@@ -5135,7 +5136,7 @@ veneratedLoxodonSpec s registry = Spec.describe s "Venerated Loxodon" $ do
         tapCounts candidate = List.sort [TapPermanents.count t | CostComponent.TapPermanents t <- Cost.Type.components candidate]
         answer :: Prompt.Prompt r -> r
         answer p = case p of
-          Prompt.ChooseCost _ _ _ candidates -> Cost.firstOffered (filter (\c -> Cost.Type.mana c == Just (ManaCost.MkManaCost []) && tapCounts c == [1, 2, 2]) candidates)
+          Prompt.ChooseCost _ _ _ candidates -> Cost.firstOffered (filter ((\c -> Cost.Type.mana c == Just (ManaCost.MkManaCost []) && tapCounts c == [1, 2, 2]) . CandidateCost.cost) candidates)
           Prompt.ChooseTaps _ _ _ candidates n
             | n == 1 -> Set.fromList (filter (== guardId) candidates)
             | any (`elem` pikerIds) candidates -> Set.fromList (filter (`elem` pikerIds) candidates)
@@ -5205,7 +5206,7 @@ waterbendingGreedily :: Prompt.Prompt r -> r
 waterbendingGreedily p = case p of
   -- An unpayable mana part (CR 118.6) sorts last rather than first, which is
   -- what Ord would do with it.
-  Prompt.ChooseCost _ _ _ candidates -> Cost.firstOffered (List.sortOn (maybe (1 :: Int, 0) ((,) 0 . manaOwed) . Cost.Type.mana) candidates)
+  Prompt.ChooseCost _ _ _ candidates -> Cost.firstOffered (List.sortOn (maybe (1 :: Int, 0) ((,) 0 . manaOwed) . Cost.Type.mana . CandidateCost.cost) candidates)
   Prompt.ChooseTaps _ _ _ candidates wanted -> Set.fromList (take (Natural.Extra.toIntSaturating wanted) candidates)
   _ -> S.identityAnswer p
 
@@ -5659,7 +5660,7 @@ hamaBoard s registry milled taxed spare = do
 -- leave the same mana part.
 optionalWaterbending :: Bool -> Prompt.Prompt r -> r
 optionalWaterbending paid p = case p of
-  Prompt.ChooseCost _ _ _ candidates -> Cost.firstOffered (List.sortOn (maybe 0 manaOwed . Cost.Type.mana) (filter ((== paid) . any isWaterbend . Cost.Type.components) candidates))
+  Prompt.ChooseCost _ _ _ candidates -> Cost.firstOffered (List.sortOn (maybe 0 manaOwed . Cost.Type.mana . CandidateCost.cost) (filter ((== paid) . any isWaterbend . Cost.Type.components . CandidateCost.cost) candidates))
   Prompt.ChooseTaps _ _ _ candidates wanted -> Set.fromList (take (Natural.Extra.toIntSaturating wanted) candidates)
   _ -> S.identityAnswer p
   where

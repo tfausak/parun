@@ -52,6 +52,7 @@ import qualified Pawl.Types.Onset as Onset
 import qualified Pawl.Types.PlayerControl as PlayerControl
 import Pawl.Types.PlayerId (PlayerId)
 import qualified Pawl.Types.PrintingId as PrintingId
+import qualified Pawl.Types.ProjectedCharacteristics as PC
 import qualified Pawl.Types.Prompt as Prompt
 import qualified Pawl.Types.Recipient as Recipient
 import Pawl.Types.Result (Result)
@@ -566,15 +567,24 @@ resolveCardBacked runSubgame oid rest printingId = do
 -- "that functions on the battlefield": a prowl or a split second a spell was
 -- given stays behind. Pawl.PlanechaseSpec's "CR 400.7b" group proves both
 -- halves.
+--
+-- A keyword granted at the spell's own mana cost is stored at the cost it had
+-- HERE, the cost Object.castUsing recorded if it was paid: CR 702.152b's "that
+-- blitz ability" is the instance paid for, so a permanent that becomes a copy
+-- of something else keeps Henzie "Toolbox" Torre's blitz as paid. Pawl.CastSpec's
+-- "Henzie" group proves it with a Clone.
 carryGrants :: ObjectId -> GameState.GameState -> GameState.GameState
 carryGrants oid gs =
   let subtypes = Projection.subtypesOf oid gs
+      priced modification = case modification of
+        Modification.GainKeywordAtManaCost keyword -> Modification.GainKeyword (Keyword.withCost keyword (Cost.MkCost (PC.manaCost (Projection.project oid gs)) []))
+        _ -> modification
       row (src, ts, modification) =
         ContinuousEffect.MkContinuousEffect
           { ContinuousEffect.source = src,
             ContinuousEffect.timestamp = ts,
             ContinuousEffect.expiry = Expiry.Type.Never,
-            ContinuousEffect.modification = modification,
+            ContinuousEffect.modification = priced modification,
             ContinuousEffect.affected = Affected.TheseObjects (Set.singleton oid)
           }
       rows = fmap row (filter (\(_, _, modification) -> functionsOnBattlefield subtypes modification) (Projection.staticPartsOn oid gs))

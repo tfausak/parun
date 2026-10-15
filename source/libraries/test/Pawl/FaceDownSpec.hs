@@ -163,6 +163,7 @@ import qualified Pawl.Registry as Registry
 import qualified Pawl.Spec as Spec
 import qualified Pawl.Support as S
 import qualified Pawl.Types.Action as Action.Type
+import qualified Pawl.Types.CandidateCost as CandidateCost
 import qualified Pawl.Types.Card as Card
 import qualified Pawl.Types.CardName as CardName
 import qualified Pawl.Types.CardType as CardType
@@ -1634,7 +1635,7 @@ turnFaceUpSpec s registry = Spec.describe s "Turning face up" $ do
     let green n = Cost.MkCost (Just (ManaCost.MkManaCost [ManaSymbol.Generic n, ManaSymbol.OfType (ManaType.Colored Color.Green)])) []
         paying :: Cost.Cost Keyword.Keyword -> Prompt.Prompt r -> r
         paying want p = case p of
-          Prompt.ChooseCost _ _ _ offered -> Maybe.fromMaybe (S.identityAnswer p) (List.find (== want) offered)
+          Prompt.ChooseCost _ _ _ offered -> Maybe.fromMaybe (S.identityAnswer p) (List.find ((== want) . CandidateCost.cost) offered)
           _ -> S.identityAnswer p
         turnedFor want before permanent = S.runPure (paying want) before (FaceDown.turnFaceUp S.manaPerformer S.alice TurnUpProcedure.Morph permanent)
     case faceDownWith forest adept 8 of

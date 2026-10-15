@@ -34,6 +34,7 @@ import qualified Pawl.Engine.Stack as Stack
 import qualified Pawl.Registry as Registry
 import qualified Pawl.Spec as Spec
 import qualified Pawl.Support as S
+import qualified Pawl.Types.CandidateCost as CandidateCost
 import qualified Pawl.Types.Color as Color
 import qualified Pawl.Types.Cost as Cost.Type
 import qualified Pawl.Types.CounterKind as CounterKind
@@ -63,7 +64,7 @@ insetCost = [ManaSymbol.Generic 1, ManaSymbol.OfType (ManaType.Colored Color.Whi
 castingFor :: [ManaSymbol.ManaSymbol] -> Prompt.Prompt r -> r
 castingFor wanted p = case p of
   Prompt.ChooseCost _ _ _ candidates ->
-    Maybe.fromMaybe (Cost.firstOffered candidates) (List.find ((== Just (ManaCost.MkManaCost wanted)) . Cost.Type.mana) candidates)
+    Maybe.fromMaybe (Cost.firstOffered candidates) (List.find ((== Just (ManaCost.MkManaCost wanted)) . Cost.Type.mana . CandidateCost.cost) candidates)
   _ -> S.identityAnswer p
 
 -- The two answerers every discriminating pair below differs by, and the only thing
