@@ -933,16 +933,17 @@ ruleSpec s registry = Spec.describe s "Rules" $ do
     let after = castShahrazad forAnte mountain plains shahrazad 3
     Spec.assertEqWith s "CR 729.5 each library is whole again" (fmap (\pid -> length (Game.zoneMembers Zone.Library pid after)) [S.alice, S.bob, S.carol]) [3, 6, 4]
     Spec.assertEqWith s "CR 407.2 and no card changed owner" (Ante.ownershipChanges after) Map.empty
-  -- The won board with alice and bob on one team (CR 104.2c), which pays
-  -- nobody (#4849).
-  Spec.it s "CR 104.2c gameplay: a Shahrazad subgame won by a team pays out no ante card" $ do
+  -- The won board with alice and bob on one team (CR 104.2c): bob decked in
+  -- the subgame and still wins, and alice, asked, hands each ante card to him
+  -- (shahrazadAnswer): alice's own and carol's change owner, and bob's stays his.
+  Spec.it s "CR 104.2c gameplay: a Shahrazad subgame won by a team pays the ante to the winner it names" $ do
     mountain <- S.printingOf s registry "Mountain"
     plains <- S.printingOf s registry "Plains"
     shahrazad <- S.printingOf s registry "Shahrazad"
     let teamed gs = gs {GameState.settings = (GameState.settings gs) {GameSettings.teams = Teams.MkTeams (Map.fromList [(S.alice, TeamId.MkTeamId 0), (S.bob, TeamId.MkTeamId 0), (S.carol, TeamId.MkTeamId 1)])}}
         after = castShahrazad (forAnte . teamed) mountain plains shahrazad 9
-    Spec.assertEqWith s "CR 729.5 each library is whole again" (fmap (\pid -> length (Game.zoneMembers Zone.Library pid after)) [S.alice, S.bob, S.carol]) [9, 6, 4]
-    Spec.assertEqWith s "CR 407.2 and no card changed owner" (Ante.ownershipChanges after) Map.empty
+    Spec.assertEqWith s "CR 407.2 alice's and carol's ante cards are bob's" (List.sort (Map.elems (Ante.ownershipChanges after))) [(S.alice, S.bob), (S.carol, S.bob)]
+    Spec.assertEqWith s "CR 729.5 and they went to his main-game library" (fmap (\pid -> length (Game.zoneMembers Zone.Library pid after)) [S.alice, S.bob, S.carol]) [8, 8, 3]
 
   -- CR 104.2c with CR 729.1b: the same board as the first case with alice and
   -- bob on one team. bob decks in the subgame, but alice's survival is their
@@ -2687,7 +2688,14 @@ castShahrazad staged mountain plains shahrazad aliceLibrary =
             GameState.phase = Phase.PrecombatMain,
             GameState.priority = Just S.alice
           }
-   in snd (Engine.runGamePure subgameAnswer gStart Engine.priorityLoop)
+   in snd (Engine.runGamePure shahrazadAnswer gStart Engine.priorityLoop)
+
+-- subgameAnswer, naming the LAST candidate, pinned by position, wherever a
+-- winning team is asked who takes an ante card (CR 407.2 / 104.2c).
+shahrazadAnswer :: Prompt.Prompt r -> r
+shahrazadAnswer p = case p of
+  Prompt.ChoosePlayer _ _ _ offered -> NonEmpty.last offered
+  _ -> subgameAnswer p
 
 -- The Synthetic Threshold of Legends board the two CR 614.1c cases share: alice
 -- casts it off three Islands; alice's library holds 3 cards, carol's 4 and bob's

@@ -677,10 +677,14 @@ outcomeAfterLeaving leaving gs = case Game.stillPlaying gs of
 -- out as it is set (CR 407.2, Ante.payOut), and every face-down card is
 -- revealed as the game ends (CR 708.9, Event.endOfGameReveals) -- a subgame's
 -- too, since its end comes through here.
-settle :: Maybe Result -> GameState -> GameState
-settle outcome gs = case (GameState.result gs, outcome) of
-  (Nothing, Just result) -> Ante.payOut (Event.endOfGameReveals gs) {GameState.result = Just result}
-  _ -> gs
+settle :: Maybe Result -> Game ()
+settle outcome = do
+  gs <- State.get
+  case (GameState.result gs, outcome) of
+    (Nothing, Just result) -> do
+      State.put (Event.endOfGameReveals gs) {GameState.result = Just result}
+      Ante.payOut
+    _ -> pure ()
 
 -- CR 104.3a: leave the game IMMEDIATELY, and settle CR 104.2a right now rather
 -- than at the next state-based action check -- which is the whole distinction
@@ -702,7 +706,8 @@ leaveGame reason pid = leaveGameTogether True reason [pid]
 leaveGameTogether :: Bool -> Departure -> [PlayerId] -> Game ()
 leaveGameTogether replacing reason pids = do
   departTogether replacing reason pids
-  State.modify' (\departed -> settle (outcomeAfterLeaving pids departed) departed)
+  departed <- State.get
+  settle (outcomeAfterLeaving pids departed)
 
 -- CR 104.4b: how many events may happen with no player able to decide anything
 -- before the game is declared a loop of mandatory actions.
@@ -752,7 +757,7 @@ checkMandatoryLoop passes = do
       then do
         leaveGameTogether True Departure.Drew (filter (`Set.member` drawn) (Game.apnapOrder gs))
         State.modify' (\g -> g {GameState.lastChoice = GameState.nextTimestamp g})
-      else State.put (settle (Just Result.Drawn) gs)
+      else settle (Just Result.Drawn)
 
 -- The `passes` checkMandatoryLoop counts, one pass on: none if a player was asked
 -- something during it (GameState.lastChoice moved off `before`, its value as the
