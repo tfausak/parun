@@ -1421,9 +1421,7 @@ effectObjectRefs effect =
         Effect.Draw {} -> []
         Effect.Mill {} -> []
         Effect.Reveal (Reveal.MkReveal ref _) -> [(AnyCardsFromAmong : shownQuestions, ref)]
-        -- Word of Command's "look at target opponent's hand and choose a card
-        -- from it".
-        Effect.LookAt (LookAt.MkLookAt ref _ _) -> [([CardInHand], ref)]
+        Effect.LookAt (LookAt.MkLookAt ref _ _) -> read_ [ref]
         Effect.Scry {} -> []
         Effect.Surveil {} -> []
         Effect.Fateseal {} -> []
@@ -1581,7 +1579,8 @@ effectObjectRefs effect =
         -- Nor here: the opcode names cards by name.
         Effect.OfferNamedCopy {} -> []
         Effect.OfferNotedCopy {} -> []
-        Effect.OfferCast offer -> read_ [OfferCast.ref offer]
+        -- Word of Command's "choose a card from it", out of the hand it looked at.
+        Effect.OfferCast offer -> [([CardFromAmong], OfferCast.ref offer)]
         Effect.GrantPlayFromExile grant -> read_ [GrantPlayFromExile.ref grant]
         Effect.ForEach (ForEach.MkForEach ref _ _ _ _ _) -> read_ [ref]
         Effect.ForEachNumber {} -> []

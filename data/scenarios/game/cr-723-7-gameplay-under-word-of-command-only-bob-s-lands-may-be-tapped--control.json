@@ -75,7 +75,7 @@
       "player": "alice",
       "do": {
         "Answer": {
-          "prompt": "ChooseCardInHand",
+          "prompt": "ChooseCardFromAmong",
           "with": "$elves"
         }
       }
