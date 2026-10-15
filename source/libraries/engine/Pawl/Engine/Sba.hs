@@ -1141,7 +1141,8 @@ checkOnce = do
   -- not replace one. The existing result therefore wins; this pass only settles
   -- an outcome when the game did not already have one. Departure.settle is
   -- the one door, shared with Departure.leaveGame.
-  State.put (Departure.settle outcome undungeoned)
+  State.put undungeoned
+  Departure.settle outcome
   -- CR 704.6f: "the planar controller planeswalks", as the board stands once
   -- the rest of the pass has applied.
   Monad.unless (null spentPhenomena) $ do
