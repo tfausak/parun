@@ -4623,11 +4623,11 @@ seatEnteringAura batch oid = do
   case Projection.controllerOf oid gs of
     Just controller | unattached && Set.member Subtype.Aura (Projection.subtypesOf oid gs) -> do
       let entering h = Set.member h batch || Set.member h (GameState.enteringSubjects gs)
-          hosts = filter (not . maybe False entering . Recipient.objectOf) (Attach.entryHostsFor (Projection.sourceContext gs (Just controller) oid) oid gs)
+          hosts = filter (not . maybe False entering . Recipient.objectOf) (Attach.entryHostsFor controller oid gs)
       chosen <- Attach.chooseEntryHost controller oid hosts
       -- THE TAG the enchant slot produced, for changeZoneAttaching's reason:
       -- Sba.stillLegalEnchant compares the (pool, tag) pair.
-      case chosen >>= \h -> Attach.attachmentFor oid h gs of
+      case chosen >>= \h -> Attach.entryAttachmentFor controller oid h gs of
         Nothing -> pure False
         Just recipient -> do
           State.modify' $ \g -> g {GameState.objects = Map.adjust (\o -> o {Object.attachedTo = Just recipient}) oid (GameState.objects g)}
@@ -6483,7 +6483,11 @@ changeZoneWithCause discarded asOf batch oid requestedDest requestedPosition see
           -- where the hosts already are. Attach.entryHostsFor sweeps the battlefield,
           -- the graveyards and the players still in the game, and
           -- Attach.attachmentFor reads Projection.subtypesOf and Game.faceOf, both
-          -- of which answer for an object in any zone.
+          -- of which answer for an object in any zone. Its CONTROLLER is the one
+          -- read that does not: a card there has none (CR 109.4), so both judge
+          -- the Aura as `chooser`'s (Attach.enteringUnder) -- CR 109.5's "you" on
+          -- its enchant ability and CR 702.16k's "Auras that player controls".
+          -- Pawl.AuraSpec's Crime // Punishment cases prove it.
           --
           -- MINUS `batch`, which is CR 608.2f: the members of a batch enter
           -- simultaneously, so a would-be host arriving beside this Aura is not on
@@ -6543,11 +6547,11 @@ changeZoneWithCause discarded asOf batch oid requestedDest requestedPosition see
                 -- nobody, per CR 110.2 and CR 108.4a, exactly as the field's own
                 -- note above says.
                 let chooser = Maybe.fromMaybe pid under
-                    -- A bare Filter.contextFor: rule 303.4f's restriction is the
-                    -- Aura's own enchant ability, so there is no resolution
-                    -- whose slots the filter could name -- and CanHostSubject,
-                    -- the whole filter here, names none.
-                    hosts = filter (not . maybe False (`Set.member` batch) . Recipient.objectOf) (Attach.entryHostsFor (Projection.sourceContext gs (Just chooser) oid) oid gs)
+                    -- entryHostsFor builds a bare source context: rule 303.4f's
+                    -- restriction is the Aura's own enchant ability, so there is
+                    -- no resolution whose slots the filter could name -- and
+                    -- CanHostSubject, the whole filter here, names none.
+                    hosts = filter (not . maybe False (`Set.member` batch) . Recipient.objectOf) (Attach.entryHostsFor chooser oid gs)
                 chosen <- Attach.chooseEntryHost chooser oid hosts
                 -- THE TAG the Aura's own enchant slot produced, never a hand-built
                 -- ToObject: Sba.stillLegalEnchant compares the (pool, tag) pair, so
@@ -6558,7 +6562,7 @@ changeZoneWithCause discarded asOf batch oid requestedDest requestedPosition see
                 -- "remains in its current zone" too, and is unreachable rather than
                 -- a second reading: entryHostsFor admits every candidate through that
                 -- same function.
-                pure (fmap Just (chosen >>= \h -> Attach.attachmentFor oid h gs))
+                pure (fmap Just (chosen >>= \h -> Attach.entryAttachmentFor chooser oid h gs))
               else pure (Just seed)
           case settledSeed of
             Nothing -> pure Seq.empty

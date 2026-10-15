@@ -75,6 +75,7 @@ import qualified Pawl.Types.Departure as Departure.Type
 import qualified Pawl.Types.Effect as Effect
 import qualified Pawl.Types.EndingStep as EndingStep
 import qualified Pawl.Types.Face as Face
+import qualified Pawl.Types.Facing as Facing
 import qualified Pawl.Types.Filter as Filter.Type
 import qualified Pawl.Types.GameEvent as GameEvent
 import qualified Pawl.Types.GameState as GameState
@@ -1182,6 +1183,71 @@ replenishSpec s registry =
               Spec.assertEqWith s "CR 708.2a as a 2/2, not Unholy Strength" (S.powerToughnessOf oid after) (Just (2, 2))
             _ -> Spec.assertFailure s "the manifest should have put Unholy Strength onto the battlefield"
 
+-- Crime // Punishment: "Put target creature or enchantment card from an
+-- opponent's graveyard onto the battlefield under your control." / "Destroy each
+-- artifact, creature, and enchantment with mana value X." CR 303.4f's Aura
+-- entering under a player who does not own it: alice takes bob's Archnemesis
+-- ("Enchant opponent"), so CR 109.5's "you" on its enchant ability and CR
+-- 702.16k's "Auras that player controls" are both alice, never bob, its owner.
+--
+-- A PAIR differing in bob's Absolute Virtue alone. Without it, bob is alice's
+-- one opponent and the Aura enchants him; with it, he has protection from her,
+-- so nothing is legal and CR 303.4g leaves the card where it was. Judged as
+-- bob's, the Aura would go onto alice in both, and CR 704.5m would bury it.
+crimeSpec :: (Monad m, Monad n) => Spec.Spec m n -> Registry.Registry m -> n ()
+crimeSpec s registry =
+  let crime = CardName.MkCardName (Text.pack "Crime")
+      punishment = CardName.MkCardName (Text.pack "Punishment")
+      -- Eight lands for a {3}{W}{B} sorcery, for replenishSpec's reason.
+      lands plains swamp = S.landsFor swamp S.alice 4 (S.landsFor plains S.alice 4 (Setup.emptyGame S.bothPlayers))
+      -- Cast the named half, resolve, and take one CR 704.3 pass.
+      run :: (forall r. Prompt.Prompt r -> r) -> CardName.CardName -> ObjectId.ObjectId -> GameState.GameState -> GameState.GameState
+      run answer half spell gs =
+        S.settleSba (snd (Engine.runGamePure answer gs (Cast.castSpell S.manaPerformer S.alice spell half Facing.FaceUp >> Stack.resolveTop)))
+      archnemesisBoard withVirtue = do
+        plains <- S.printingOf s registry "Plains"
+        swamp <- S.printingOf s registry "Swamp"
+        card <- S.printingOf s registry "Crime"
+        archnemesis <- S.printingOf s registry "Archnemesis"
+        virtue <- S.printingOf s registry "Absolute Virtue"
+        let base = lands plains swamp
+            guarded = if withVirtue then snd (S.addPermanent virtue S.bob base) else base
+            (auraId, withAura) = S.addGraveyardCard archnemesis S.bob guarded
+            (gs, spell) = S.handOne card withAura
+            after = run S.castAnswer crime spell gs
+            returned = filter (\oid -> Game.cardOf oid after == Just (Printing.card archnemesis)) (Set.toList (GameState.battlefield after))
+        pure (auraId, spell, returned, after)
+   in Spec.describe s "Crime // Punishment" $ do
+        Spec.it s "CR 303.4f bob's Archnemesis enters under alice enchanting bob, her opponent" $ do
+          (_, _, returned, after) <- archnemesisBoard False
+          Spec.assertEqWith s "Archnemesis enchants bob" (fmap (\oid -> Game.lookupObject oid after >>= Object.attachedTo) returned) [Just (Recipient.ToPlayer S.bob)]
+          Spec.assertEqWith s "and alice controls it" (fmap (`Projection.controllerOf` after) returned) [Just S.alice]
+        -- The ObjectId is the discriminator, for replenishSpec's CR 303.4g reason:
+        -- "remains in its current zone" and "entered and was buried" are the same
+        -- zone, and only a move mints a new id (CR 400.7).
+        Spec.it s "CR 303.4g / 702.16k with bob protected from alice, Archnemesis never leaves his graveyard" $ do
+          (auraId, spell, returned, after) <- archnemesisBoard True
+          Spec.assertEqWith s "the Aura is the same object it always was, still in bob's graveyard" (fmap Object.zone (Game.lookupObject auraId after)) (Just Zone.Graveyard)
+          Spec.assertEqWith s "and no Archnemesis reached the battlefield" returned []
+          Spec.assertBool s (Maybe.isNothing (Game.lookupObject spell after)) "while Crime did resolve and leave the stack"
+        Spec.it s "CR 107.3 Punishment with X 2 destroys the 2-mana creature and spares the 4-mana one" $ do
+          swamp <- S.printingOf s registry "Swamp"
+          forest <- S.printingOf s registry "Forest"
+          card <- S.printingOf s registry "Punishment"
+          bears <- S.printingOf s registry "Grizzly Bears"
+          mammoth <- S.printingOf s registry "War Mammoth"
+          let base = S.landsFor forest S.alice 4 (S.landsFor swamp S.alice 4 (Setup.emptyGame S.bothPlayers))
+              (bearsId, withBears) = S.addPermanent bears S.bob base
+              (mammothId, withMammoth) = S.addPermanent mammoth S.bob withBears
+              (gs, spell) = S.handOne card withMammoth
+              answer :: Prompt.Prompt r -> r
+              answer p = case p of
+                Prompt.ChooseX {} -> 2
+                _ -> S.castAnswer p
+              after = run answer punishment spell gs
+          Spec.assertBool s (not (Set.member bearsId (GameState.battlefield after))) "Grizzly Bears is destroyed"
+          Spec.assertBool s (Set.member mammothId (GameState.battlefield after)) "War Mammoth is not"
+
 spec :: (Monad m, Monad n) => Spec.Spec m n -> Registry.Registry m -> n ()
 spec s registry = Spec.describe s "Pawl.Engine.Aura" $ do
   auraSpec s registry
@@ -1195,6 +1261,7 @@ spec s registry = Spec.describe s "Pawl.Engine.Aura" $ do
   miracleWorkerSpec s registry
   enchantPlayerSpec s registry
   replenishSpec s registry
+  crimeSpec s registry
   attachRestrictionSpec s registry
   couldEnchantSpec s registry
   grantedEnchantSpec s registry
@@ -2297,8 +2364,8 @@ couldEnchantSpec s registry = Spec.describe s "CouldEnchant" $ do
         -- And the rejected Aura is one the SOURCE could have hosted, which is what
         -- makes its absence from the offer a fact about WHICH object rule 701.3a
         -- asked about rather than about the Aura being unplayable anywhere.
-        Spec.assertBool s (Attach.attachableWithLastKnown banewaspId sovereignsId gs) "Banewasp Affliction could have enchanted the Sovereigns"
-        Spec.assertBool s (not (Attach.attachableWithLastKnown banewaspId apostleId gs)) "but not the attacker, which has protection from black (CR 702.16c)"
+        Spec.assertBool s (Attach.attachableWithLastKnown S.alice banewaspId sovereignsId gs) "Banewasp Affliction could have enchanted the Sovereigns"
+        Spec.assertBool s (not (Attach.attachableWithLastKnown S.alice banewaspId apostleId gs)) "but not the attacker, which has protection from black (CR 702.16c)"
       _ -> Spec.assertFailure s "fixture should give alice the Sovereigns and the Apostle"
 
 -- CR 613.1f / 702.5a: an enchant ability that arrives from an EFFECT rather than
