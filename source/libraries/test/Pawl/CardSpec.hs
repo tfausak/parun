@@ -7303,6 +7303,10 @@ lintSpec s registry = Spec.describe s "Lint" $ do
             || entersTriggerReadsX c
             || turnedUpReadsX c
             || selfReductionReadsX c
+            || filterReadsX c
+        -- A Filter comparing against X itself (Operand.AmountInSlot), which no
+        -- Quantity holds: Punishment's "with mana value X".
+        filterReadsX c = any (Set.member Binding.variableX . Filter.boundSlots . snd) (cardFilters c)
         -- CR 601.2f's reader: the spell's own reduction counting the X its
         -- additional cost announced (Torgaar, Famine Incarnate's "for each
         -- creature sacrificed this way").
