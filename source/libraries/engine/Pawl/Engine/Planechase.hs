@@ -112,6 +112,9 @@ setStartingPlane pid = do
 -- the top card of their planar deck, and if a face-up plane left, every
 -- planeswalking ability on the stack ceases to exist. Not a state-based action.
 -- A phenomenon leaving alone spares the ability, CR 901.10a naming a plane.
+-- Unobserved: a phenomenon is face up beside a planeswalking ability only after
+-- a planeswalk in response to one, and no card in data/cards planeswalks
+-- (`"type": "Planeswalk"`, 2026-10-15).
 ownersLeft :: GameState -> [PlayerId] -> Game ()
 ownersLeft before pids = do
   let owned oid = maybe False (\obj -> List.elem (Object.owner obj) pids) (Game.lookupObject oid before)
