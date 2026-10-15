@@ -74,6 +74,15 @@ acceptingAll p = case p of
     pure OptionalDecision.Exercises
   _ -> pure (S.castAnswer p)
 
+-- Answers each ChoosePlayer with the LAST candidate, pinned by position, and
+-- records who was asked, for which object, among whom.
+lastOffered :: Prompt.Prompt r -> State.State [(PlayerId.PlayerId, ObjectId.ObjectId, [PlayerId.PlayerId])] r
+lastOffered p = case p of
+  Prompt.ChoosePlayer _ asked source offered -> do
+    State.modify' ((asked, source, NonEmpty.toList offered) :)
+    pure (NonEmpty.last offered)
+  _ -> pure (S.identityAnswer p)
+
 anteOf :: PlayerId.PlayerId -> GameState.GameState -> [ObjectId.ObjectId]
 anteOf = Game.zoneMembers Zone.Ante
 
@@ -379,12 +388,15 @@ spec s registry = Spec.describe s "Ante" $ do
     Spec.assertEqWith s "CR 407.2 alice, the winner, owns every ante card" (fmap (\oid -> fmap Object.owner (Game.lookupObject oid won)) staked) (replicate 3 (Just S.alice))
     Spec.assertEqWith s "CR 104.2a alice won" (GameState.result won) (Just (Result.Won S.alice))
     Spec.assertEqWith s "and bob's draw had decided nothing" (GameState.result drew) Nothing
-  -- alice and bob are a team; carol concedes and the team wins (CR 104.2c).
-  -- CR 407.2's one winner says nothing of a team.
-  Spec.it s "CR 104.2c a team's win pays out no ante card" $ do
+  -- alice and bob are a team without the shared team turns option; bob
+  -- concedes, then carol does, and the team wins (CR 104.2c) -- bob too, though
+  -- he left. alice, its one seat still playing, is asked who takes carol's ante
+  -- card and names bob, the answer the fallback would not give.
+  Spec.it s "CR 407.2 / 104.2c the winning team names which winner takes each ante card" $ do
     piker <- S.printingOf s registry "Goblin Piker"
     let teamed = anteGame {GameSettings.teams = Teams.MkTeams (Map.fromList [(S.alice, TeamId.MkTeamId 0), (S.bob, TeamId.MkTeamId 0), (S.carol, TeamId.MkTeamId 1)])}
         (carols, g1) = S.addObjectIn Zone.Ante piker S.carol (Setup.gameWith teamed S.threePlayers)
-        won = S.runPure S.identityAnswer g1 (Departure.leaveGame Departure.Type.Conceded S.carol)
-    Spec.assertEqWith s "carol's ante card is still hers" (fmap Object.owner (Game.lookupObject carols won)) (Just S.carol)
+        ((_, won), asked) = State.runState (Engine.runGame lastOffered g1 (Departure.leaveGame Departure.Type.Conceded S.bob >> Departure.leaveGame Departure.Type.Conceded S.carol)) []
+    Spec.assertEqWith s "CR 407.2 carol's ante card is bob's, as alice named" (fmap Object.owner (Game.lookupObject carols won)) (Just S.bob)
+    Spec.assertEqWith s "CR 104.2c alice was asked for it, offered both winners" asked [(S.alice, carols, [S.alice, S.bob])]
     Spec.assertEqWith s "CR 104.2c the team won" (GameState.result won) (Just (Result.TeamWon (TeamId.MkTeamId 0)))

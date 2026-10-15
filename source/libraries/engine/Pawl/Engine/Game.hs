@@ -2714,9 +2714,13 @@ apnapOrder gs =
 -- teammate in the team's rightmost seat, which is the one turn order (CR 101.4,
 -- to the left) reaches first from outside the team. Without the shared team
 -- turns option every player is their own.
+--
+-- A departed opponent keeps their seat (CR 800.5), so the team's rightmost seat
+-- is still found once every opponent has left, as when Pawl.Engine.Ante.payOut
+-- asks a winning team.
 primaryOf :: GameState -> PlayerId -> PlayerId
 primaryOf gs pid =
-  let seats = filter (\p -> List.elem p (stillPlaying gs)) (GameState.turnOrder gs)
+  let seats = filter (\p -> List.elem p (stillPlaying gs) || not (mate p)) (GameState.turnOrder gs)
       mate = Turn.sharesTurn gs pid
       before = drop (length seats - 1) seats <> seats
    in case [seat | (previous, seat) <- zip before seats, mate seat, not (mate previous)] of
