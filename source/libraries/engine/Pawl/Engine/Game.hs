@@ -2023,9 +2023,13 @@ flipsOver oid gs = Set.member oid (GameState.battlefield gs) && hasFlipHalf oid 
 -- that hold an Object and no GameState -- copiableOf and resolveFaceFor's
 -- arms -- reach it through `lookupLayerOne` below.
 storedCopyOf :: ObjectId -> GameState -> Maybe PC.ProjectedCharacteristics
-storedCopyOf oid gs =
-  fmap ActiveCopy.snapshot
-    . Maybe.listToMaybe
+storedCopyOf oid = fmap ActiveCopy.snapshot . latestStoredCopy oid
+
+-- The row `storedCopyOf` reads: the latest stored copy effect covering the
+-- object (CR 613.7).
+latestStoredCopy :: ObjectId -> GameState -> Maybe ActiveCopy.ActiveCopy
+latestStoredCopy oid gs =
+  Maybe.listToMaybe
     . List.sortOn (Ord.Down . ActiveCopy.timestamp)
     $ filter (Set.member oid . ActiveCopy.objects) (GameState.copyEffects gs)
 
@@ -2036,8 +2040,8 @@ storedCopyOf oid gs =
 -- other, so nothing can be noted under it again.
 acquisitionOf :: ObjectId -> GameState -> Acquisition.Acquisition
 acquisitionOf oid gs =
-  case Maybe.listToMaybe . List.sortOn Ord.Down . fmap ActiveCopy.timestamp $ filter (Set.member oid . ActiveCopy.objects) (GameState.copyEffects gs) of
-    Just ts -> Acquisition.Copied ts
+  case latestStoredCopy oid gs of
+    Just row -> Acquisition.Copied (ActiveCopy.timestamp row)
     Nothing -> maybe Acquisition.Own Object.acquisition (lookupObject oid gs)
 
 -- | CR 607.5: the results stored on this object for the abilities acquired as
