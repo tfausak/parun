@@ -5909,8 +5909,35 @@ storeEntryEffect entered gs (source, modification) =
           }
    in gs1 {GameState.continuousEffects = effect : GameState.continuousEffects gs1}
 
--- Not implemented: leaving an object put into the zone it is already in where
--- it is, rather than moving it (#4843).
+-- CR 400.7: a zone change is a move "from one zone to another", so an object
+-- put into the zone it is already in does not change zones and stays the object
+-- it was. The per-player piles compare the HOLDER against CR 400.3's
+-- destination, the owner's: between CR 701.12a's ownership exchange and the
+-- move, a card can sit in a graveyard that is not its owner's, and that move is
+-- a real one. Pawl.Types.Zone's exhaustive arms rather than a wildcard, so a
+-- new zone has to answer.
+--
+-- Three zones answer False and keep the move. A library is ordered (CR 401.2),
+-- so a library card put on its top or bottom is reordered, and
+-- Pawl.Engine.Event.Match's CardsPutIntoZone arm declines that move as no
+-- arrival (Wan Shi Tong, All-Knowing's ruling). Exile and the command zone are
+-- the rules' own exceptions: the object "doesn't change zones, but it becomes a
+-- new object" (CR 400.8, CR 400.10).
+alreadyIn :: ObjectId -> Object.Object -> Zone -> GameState -> Bool
+alreadyIn oid obj dest gs
+  | Object.zone obj /= dest = False
+  | otherwise = case dest of
+      Zone.Graveyard -> heldByOwner
+      Zone.Hand -> heldByOwner
+      Zone.Battlefield -> True
+      Zone.Stack -> True
+      Zone.Ante -> True
+      Zone.Library -> False
+      Zone.Exile -> False
+      Zone.Command -> False
+  where
+    heldByOwner = Game.pileHolderOf oid gs == Just (Object.owner obj)
+
 changeZoneWithCause :: Maybe DiscardCause.DiscardCause -> Maybe GameState -> Set ObjectId -> ObjectId -> Zone -> LibraryPosition.LibraryPosition -> Maybe Recipient.Recipient -> TapState.TapState -> Map.Map (CounterKind.CounterKind Keyword.Type.Keyword) Natural -> Maybe PlayerId -> Maybe CardName.CardName -> Facing.Facing -> Bool -> CarryOver.CarryOver -> Bool -> Seq.Seq (ObjectId, Modification.Modification (GrantedAbility.Type.GrantedAbility Card.Type.Card)) -> Game (Seq.Seq ObjectId)
 changeZoneWithCause discarded asOf batch oid requestedDest requestedPosition seed tapped entering under shown facing concealed carrying resolving defining = do
   gs <- State.get
@@ -5941,6 +5968,16 @@ changeZoneWithCause discarded asOf batch oid requestedDest requestedPosition see
     -- to be worth a prompt (Rest in Peace beside Leyline of the Void, or either
     -- beside Nexus of Fate).
     Just obj | Game.tokenHasLeftTheBattlefield obj -> pure Seq.empty
+    -- CR 400.7: put into the zone it is already in, the object does not
+    -- change zones (alreadyIn). The empty answer is the arm above's: nothing
+    -- leaves, nothing arrives, no Moved event is logged and no new object is
+    -- minted, so Kishla Skimmer's "a card leaves your graveyard" sees nothing.
+    -- Before the CR 616.1 loop because CR 400.6 applies replacements to an
+    -- object that "would move from one zone to another", which this one would
+    -- not. Tempest Efreet's "put Tempest Efreet from anywhere into that
+    -- player's graveyard", with nothing exchanged, is the producer, and
+    -- data/scenarios/ante's "already in the graveyard" scenario the proof.
+    Just obj | alreadyIn oid obj requestedDest gs -> pure Seq.empty
     Just obj -> do
       let pid = Object.owner obj
           fromZone = Object.zone obj
