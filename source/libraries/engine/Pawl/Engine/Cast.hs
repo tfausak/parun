@@ -3222,8 +3222,7 @@ castProposed perform spending pid oid sid face castFrom preparedFor keywordsBefo
             filter
               (\candidate -> any (\less -> payableCost (Just chosenModes) (CandidateCost.reductions candidate <> less) spending pid sid (stampPaidCosts paid sid (proposedFor sid (CandidateCost.keyword candidate) gs)) (CandidateCost.cost candidate)) permissionReductionChoices)
               (fmap (\candidate -> candidate {CandidateCost.cost = withSplice (withBuyback (withKicker (withModeCost (withEscalate (withEntwine (CandidateCost.cost candidate))))))}) candidateCosts)
-          payable = fmap CandidateCost.cost payableCandidates
-      if null payable || overKickerLimit || not spliceValid
+      if null payableCandidates || overKickerLimit || not spliceValid
         then reject
         else do
           -- CR 702.47a's reveal and CR 702.47c's gained text, stamped once the
@@ -3231,45 +3230,28 @@ castProposed perform spending pid oid sid face castFrom preparedFor keywordsBefo
           -- rewinds to `before`, which takes both with it.
           Monad.forM_ spliced (Event.reveal RevealCause.Ordinary pid)
           Monad.unless (null spliced) (State.modify' (stampSpliced spliced sid))
-          chosenCost <- case payable of
+          -- WHICH of CR 601.2b's candidates the player chose, the keyword ability
+          -- that offered it riding beside its cost: Henzie "Toolbox" Torre's
+          -- blitz at the spell's own mana cost equals the printed cost and is a
+          -- different announcement (CR 702.152a). Pawl.CastSpec's "Henzie"
+          -- group proves it.
+          chosenCandidate <- case payableCandidates of
             [only] -> pure only
-            _ -> Game.choose (Prompt.ChooseCost decider pid sid payable)
-          if notElem chosenCost payable
+            _ -> Game.choose (Prompt.ChooseCost decider pid sid payableCandidates)
+          if notElem chosenCandidate payableCandidates
             then reject
             else do
-              let -- WHICH of CR 601.2b's candidates the player just chose, as
-                  -- the keyword ability that offered it -- the record CR
-                  -- 702.34a's "if the flashback cost was paid" reads once the
-                  -- cast is complete. Recovered by matching the answer against
-                  -- the offered list rather than carried through the prompt,
-                  -- so the tag and the cost cannot come from different
-                  -- candidates.
-                  --
-                  -- The FIRST match, and two candidates can only tie by being
-                  -- the same cost. In the pool aftermath is the one shape that
-                  -- ties -- CR 702.127a's candidate is the printed cost, which a
-                  -- CR 601.3 permission offers again -- and its exile is
-                  -- conditioned on the ZONE rather than on this tag, so that
-                  -- tie changes no answer.
-                  --
-                  -- Not implemented: telling apart two equal costs whose tags
-                  -- differ in consequence -- Henzie "Toolbox" Torre's blitz at
-                  -- the spell's own mana cost beside the printed cost -- which
-                  -- the prompt answers with a bare cost (#5044).
-                  chosenCandidate = List.find ((== chosenCost) . CandidateCost.cost) payableCandidates
-                  castFor = CandidateCost.keyword =<< chosenCandidate
+              let chosenCost = CandidateCost.cost chosenCandidate
+                  -- The record CR 702.34a's "if the flashback cost was paid"
+                  -- reads once the cast is complete.
+                  castFor = CandidateCost.keyword chosenCandidate
                   -- CR 601.3 / 702.138a: a candidate the card's OWN zone
                   -- permission offered (escape, flashback) is that permission's
                   -- cost, so the cast is made under it -- a player permission's
                   -- budget is not spent and its rider not given.
                   ownPermission = not (all (null . Keyword.permissionsFor (PC.cardTypes (Projection.copiableCharacteristics sid gs))) castFor)
-                  -- CR 601.2f's reductions THIS candidate brought, recovered
-                  -- beside the tag and by the same match, so the amount rule
-                  -- 702.119a states and the sacrifice the chosen cost carries
-                  -- cannot come from different candidates. Two emerge candidates
-                  -- differ in the object their sacrifice component names (CR
-                  -- 702.119c), so they are never the tie the note above describes.
-                  candidateReductions = foldMap CandidateCost.reductions chosenCandidate
+                  -- CR 601.2f's reductions THIS candidate brought (CR 702.119a).
+                  candidateReductions = CandidateCost.reductions chosenCandidate
               -- CR 601.3: otherwise, which of the permissions admitting the cast
               -- it is made under -- the budget it spends and the rider it gets.
               permissionUsed <- if ownPermission then pure Nothing else choosePlayPermission pid sid permissions

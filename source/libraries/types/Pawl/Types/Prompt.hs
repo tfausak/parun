@@ -11,6 +11,7 @@ import qualified Pawl.Types.Action as Action
 import qualified Pawl.Types.AnyNumberOf as AnyNumberOf
 import qualified Pawl.Types.AttackTarget as AttackTarget
 import qualified Pawl.Types.BuybackDecision as BuybackDecision
+import qualified Pawl.Types.CandidateCost as CandidateCost
 import qualified Pawl.Types.Card as Card
 import qualified Pawl.Types.CardName as CardName
 import qualified Pawl.Types.CastFromZone as CastFromZone
@@ -805,7 +806,9 @@ data Prompt r where
   -- offered as the costs they settle to and unfiltered, since nothing is paid yet
   -- (Pawl.Engine.Event.madnessChoice). The candidates are filtered by
   -- payability at the first four, and an answer outside them is rejected.
-  ChooseCost :: Decider.Decider -> PlayerId.PlayerId -> ObjectId.ObjectId -> [Cost.Cost Keyword.Keyword] -> Prompt (Cost.Cost Keyword.Keyword)
+  -- Each carries the keyword ability that offered it, so two equal costs
+  -- offered by different abilities are two answers (CR 601.2b, 702.152a).
+  ChooseCost :: Decider.Decider -> PlayerId.PlayerId -> ObjectId.ObjectId -> [CandidateCost.CandidateCost] -> Prompt CandidateCost.CandidateCost
   -- | CR 601.3 / 305.1: which of the permissions admitting a play of the
   -- ObjectId it is made under (Nothing = none of them); asked only where two
   -- would differ in the budget spent or the rider given (CR 400.7h, 400.7i).

@@ -76,6 +76,7 @@ import qualified Pawl.Registry as Registry
 import qualified Pawl.Spec as Spec
 import qualified Pawl.Support as S
 import qualified Pawl.Types.BeginningStep as BeginningStep
+import qualified Pawl.Types.CandidateCost as CandidateCost
 import qualified Pawl.Types.CardType as CardType
 import qualified Pawl.Types.Color as Color
 import qualified Pawl.Types.Cost as Cost.Type
@@ -814,7 +815,7 @@ bestowingOn host p = case p of
   Prompt.ChooseCost _ _ _ candidates ->
     Maybe.fromMaybe
       (Cost.firstOffered candidates)
-      (List.find ((== Just (ManaCost.MkManaCost [ManaSymbol.Generic 1, ManaSymbol.OfType (ManaType.Colored Color.Red)])) . Cost.Type.mana) candidates)
+      (List.find ((== Just (ManaCost.MkManaCost [ManaSymbol.Generic 1, ManaSymbol.OfType (ManaType.Colored Color.Red)])) . Cost.Type.mana . CandidateCost.cost) candidates)
   Prompt.ChooseTargets _ _ _ sets -> fmap (Set.filter ((== Just host) . Recipient.objectOf) . snd) sets
   _ -> S.identityAnswer p
 

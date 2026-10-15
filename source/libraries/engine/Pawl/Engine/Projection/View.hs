@@ -1492,12 +1492,11 @@ staticAbilitiesOf carrier gs =
 -- staticAbilitiesOf mints a printed one, at the grant's timestamp. Its effect
 -- then applies in its own layer (CR 613.1d), not in the grant's.
 -- Pawl.ProjectionSpec's "CR 702.161a living metal granted by a RESOLUTION"
--- proves it. A STATIC ability's grant of such a keyword mints nothing. Query:
--- MTGJSON's 2026-08-23 dump, text matching `\b(have|has)\b[^."]*\b(dash|blitz|
--- reconfigure|impending|living metal)\b`, run 2026-09-27, finds only Henzie
--- "Toolbox" Torre and The Caldaia, which grant blitz to creature SPELLS and are
--- not in data/cards/. A quoted static ability another static ability grants is
--- gathered by Pawl.Engine.Projection.withStaticGrants.
+-- proves it. A STATIC ability's grant of such a keyword mints here once CR
+-- 400.7b has stored it against the permanent (Pawl.Engine.Stack.carryGrants),
+-- which stores a keyword granted at a mana cost already priced: The Caldaia's
+-- blitz {3} and Henzie "Toolbox" Torre's. A quoted static ability another
+-- static ability grants is gathered by Pawl.Engine.Projection.withStaticGrants.
 grantedStaticAbilitiesOf :: ObjectId -> GameState -> [(Timestamp, StaticAbility.StaticAbility (GrantedAbility.GrantedAbility Card.Type.Card))]
 grantedStaticAbilitiesOf oid gs =
   let grant eff = case (ContinuousEffect.modification eff, ContinuousEffect.affected eff) of

@@ -34,6 +34,7 @@ import qualified Pawl.Registry as Registry
 import qualified Pawl.Spec as Spec
 import qualified Pawl.Support as S
 import qualified Pawl.Types.Action as Action.Type
+import qualified Pawl.Types.CandidateCost as CandidateCost
 import qualified Pawl.Types.CardName as CardName
 import qualified Pawl.Types.Color as Color
 import qualified Pawl.Types.Concession as Concession
@@ -458,7 +459,7 @@ caldaiaBoard s registry creature others = do
 -- CR 601.2b answered with `wanted`'s mana, and every attack with everything.
 paying :: [ManaSymbol.ManaSymbol] -> Prompt.Prompt r -> r
 paying wanted p = case p of
-  Prompt.ChooseCost _ _ _ candidates -> Maybe.fromMaybe (Cost.firstOffered candidates) (List.find ((== Just (ManaCost.MkManaCost wanted)) . Cost.Type.mana) candidates)
+  Prompt.ChooseCost _ _ _ candidates -> Maybe.fromMaybe (Cost.firstOffered candidates) (List.find ((== Just (ManaCost.MkManaCost wanted)) . Cost.Type.mana . CandidateCost.cost) candidates)
   Prompt.DeclareAttackers {} -> S.aggressiveAnswer p
   _ -> S.identityAnswer p
 

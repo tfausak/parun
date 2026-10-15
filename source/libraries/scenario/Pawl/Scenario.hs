@@ -67,6 +67,7 @@ import qualified Pawl.Types.Ballot as Ballot
 import qualified Pawl.Types.BallotChoice as BallotChoice
 import qualified Pawl.Types.BlockersAre as BlockersAre
 import qualified Pawl.Types.Board as Board
+import qualified Pawl.Types.CandidateCost as CandidateCost
 import qualified Pawl.Types.Card as Card
 import qualified Pawl.Types.CardName as CardName
 import qualified Pawl.Types.Casting as Casting
@@ -1222,7 +1223,7 @@ answerActionChoice key verb choices asked =
                   pure x
             _ -> unexpected
         Prompt.Type.ChooseCost _ _ _ candidates -> case Choices.cost choices of
-          Just wanted -> case filter ((== Just wanted) . Cost.mana) candidates of
+          Just wanted -> case filter ((== Just wanted) . Cost.mana . CandidateCost.cost) candidates of
             [cost] -> do
               updateChoices (\current -> current {Choices.cost = Nothing})
               pure cost

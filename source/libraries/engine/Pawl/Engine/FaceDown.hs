@@ -280,8 +280,8 @@ turnFaceUp perform pid procedure oid = do
         [] -> pure Nothing
         [only] -> pure (Just only)
         offered -> do
-          answer <- Game.choose (Prompt.ChooseCost (Decide.deciderFor pid before) pid oid offered)
-          pure (List.find (== answer) offered)
+          answer <- Game.choose (Prompt.ChooseCost (Decide.deciderFor pid before) pid oid (fmap Cost.untagged offered))
+          pure (List.find ((== answer) . Cost.untagged) offered)
       Monad.forM_ chosen $ \cost -> do
         paid <- Cost.payAction perform before (PaymentSubject.TurningFaceUp oid) 0 pid oid cost
         -- The PRINTED cost rides the proposed event, since CR 702.37b's

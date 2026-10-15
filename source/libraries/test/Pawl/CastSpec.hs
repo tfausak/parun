@@ -2326,7 +2326,7 @@ graveRecitalSpec s registry = Spec.describe s "GraveRecital" $ do
         paying :: [ManaSymbol.ManaSymbol] -> Prompt.Prompt r -> r
         paying wanted p = case p of
           Prompt.ChooseCost _ _ _ candidates ->
-            Maybe.fromMaybe (Cost.firstOffered candidates) (List.find ((== Just (ManaCost.MkManaCost wanted)) . Cost.Type.mana) candidates)
+            Maybe.fromMaybe (Cost.firstOffered candidates) (List.find ((== Just (ManaCost.MkManaCost wanted)) . Cost.Type.mana . CandidateCost.cost) candidates)
           _ -> S.identityAnswer p
         payingFlashback, payingPrinted :: Prompt.Prompt r -> r
         payingFlashback = paying [ManaSymbol.Generic 4, theRed]
@@ -2508,7 +2508,7 @@ lierSpec s registry = Spec.describe s "Lier" $ do
         paying :: ManaCost.ManaCost -> Prompt.Prompt r -> r
         paying wanted p = case p of
           Prompt.ChooseCost _ _ _ candidates ->
-            Maybe.fromMaybe (Cost.firstOffered candidates) (List.find ((== Just wanted) . Cost.Type.mana) candidates)
+            Maybe.fromMaybe (Cost.firstOffered candidates) (List.find ((== Just wanted) . Cost.Type.mana . CandidateCost.cost) candidates)
           -- Firebolt's own "any target", FILTERED from the offered set rather
           -- than built, and aimed at alice so its 2 damage reports which cast
           -- resolved. Lier is on this battlefield and is a legal target too, so
@@ -3165,7 +3165,7 @@ emergeSpec s registry = Spec.describe s "Emerge" $ do
           let answer :: Prompt.Prompt r -> State.State Bool r
               answer prompt = case prompt of
                 Prompt.ChooseCost _ _ _ payable ->
-                  let names cost = elem (CostComponent.Sacrifice (Sacrifice.MkSacrifice (CostAmount.Fixed 1) (Filter.IsObject victim))) (Cost.Type.components cost)
+                  let names cost = elem (CostComponent.Sacrifice (Sacrifice.MkSacrifice (CostAmount.Fixed 1) (Filter.IsObject victim))) (Cost.Type.components (CandidateCost.cost cost))
                    in pure (case filter names payable of chosen : _ -> chosen; [] -> S.identityAnswer prompt)
                 Prompt.ChooseManaSource _ _ candidates -> do
                   eaten <- State.get
@@ -3247,7 +3247,7 @@ offeringSpec s registry = Spec.describe s "Offering" $ do
         (_, g3) = S.addPermanent piker S.alice g2
         (_, g4) = S.addHandCard apex S.alice g3
         before = g4 {GameState.activePlayer = S.alice, GameState.phase = Phase.PrecombatMain, GameState.priority = Just S.alice}
-        sacrifices = any (\c -> case c of CostComponent.Sacrifice _ -> True; _ -> False) . Cost.Type.components
+        sacrifices = any (\c -> case c of CostComponent.Sacrifice _ -> True; _ -> False) . Cost.Type.components . CandidateCost.cost
         cascadingWith :: Bool -> Prompt.Prompt r -> r
         cascadingWith sacrificing prompt = case prompt of
           Prompt.ChooseAction _ _ actions -> Maybe.fromMaybe A.Pass (List.find (\a -> case a of A.Cast {} -> True; _ -> False) actions)
@@ -3327,8 +3327,8 @@ harmonizeSpec s registry = Spec.describe s "Harmonize" $ do
               pinned criterion = case criterion of
                 Filter.And atoms -> elem (Filter.IsObject victim) atoms
                 _ -> False
-              names :: Cost.Type.Cost Keyword.Keyword -> Bool
-              names cost = any (\component -> case component of CostComponent.TapPermanents tap -> pinned (TapPermanents.whichPermanents tap); _ -> False) (Cost.Type.components cost)
+              names :: CandidateCost.CandidateCost -> Bool
+              names cost = any (\component -> case component of CostComponent.TapPermanents tap -> pinned (TapPermanents.whichPermanents tap); _ -> False) (Cost.Type.components (CandidateCost.cost cost))
               answer :: Prompt.Prompt r -> State.State Bool r
               answer prompt = case prompt of
                 Prompt.ChooseCost _ _ _ payable -> pure (case filter names payable of chosen : _ -> chosen; [] -> S.identityAnswer prompt)
@@ -3515,6 +3515,91 @@ underdogBlitzCost = [ManaSymbol.Generic 2, theBlack, theBlack]
 
 inGraveyardNamed :: String -> GameState.GameState -> Int
 inGraveyardNamed name gs = length (filter (nameOnStack (CardName.MkCardName $ Text.pack name) gs) (Game.zoneMembers Zone.Graveyard S.alice gs))
+
+-- CR 601.2b / 702.152a on Henzie "Toolbox" Torre {B}{R}{G}, "Each creature spell
+-- you cast with mana value 4 or greater has blitz. The blitz cost is equal to
+-- its mana cost." (Oracle text checked on Scryfall, 2026-10-15). The blitz cost
+-- of a Hill Giant {3}{R} IS its printed cost, so the two candidates differ only
+-- in the ability that offered them, and choosing one is still an announcement
+-- with consequences.
+--
+-- Not implemented: the second sentence, "Blitz costs you pay cost {1} less for
+-- each time you've cast your commander from the command zone this game" (#5123).
+--
+-- ONE board, four Mountains and three library cards; the cases differ only in
+-- which offered candidate the answerer takes. Henzie, settled by S.addPermanent,
+-- attacks for 3 in every case, so a hasty creature is bob's SECOND 3. A
+-- test-local answerer, since the scenario runner picks a cost by its mana alone
+-- (gap #5126).
+henzieSpec :: (Monad m, Monad n) => Spec.Spec m n -> Registry.Registry m -> n ()
+henzieSpec s registry = Spec.describe s "Henzie" $ do
+  Spec.it s "CR 601.2b Henzie's blitz at a Hill Giant's own cost can be chosen, and it attacks, is sacrificed and draws; the equal printed cost does neither" $ do
+    (giantId, board) <- henzieBoard s registry "Hill Giant"
+    let blitzed = throughEndStep (castResolved (announcingBlitz True) giantId board)
+        printed = throughEndStep (castResolved (announcingBlitz False) giantId board)
+        drew gs = 3 - length (Game.zoneMembers Zone.Library S.alice gs)
+    Spec.assertEqWith s "CR 702.152a the blitzed Giant attacked bob beside Henzie, was sacrificed at the end step and drew a card" (S.lifeOf S.bob blitzed, namedOnBattlefield "Hill Giant" blitzed, drew blitzed) (Just 14, [], 1)
+    Spec.assertEqWith s "cast for its printed cost it neither attacked nor was sacrificed nor drew" (S.lifeOf S.bob printed, length (namedOnBattlefield "Hill Giant" printed), drew printed) (Just 17, 1, 0)
+    Spec.assertEqWith s "CR 601.2b both candidates were offered, at one cost" (fmap (\c -> (isBlitz (CandidateCost.keyword c), CandidateCost.cost c)) (offeredCosts giantId board)) [(False, giantCost), (True, giantCost)]
+  Spec.it s "CR 702.152a Henzie gives a Goblin Hero, of mana value 3, no blitz to choose" $ do
+    (heroId, board) <- henzieBoard s registry "Goblin Hero"
+    let cast = throughEndStep (castResolved (announcingBlitz True) heroId board)
+    Spec.assertEqWith s "the Hero stayed and did not attack" (S.lifeOf S.bob cast, length (namedOnBattlefield "Goblin Hero" cast)) (Just 17, 1)
+    Spec.assertEqWith s "no cost was asked" (offeredCosts heroId board) []
+  -- CR 702.152b / 400.7b: a Clone {3}{U} cast for Henzie's blitz at {3}{U}
+  -- enters as a copy of a Hill Giant {3}{R}, so the blitz it keeps would cost
+  -- {3}{R} if read off its mana cost now. The instance paid for is still the
+  -- one it keeps. Four Islands; Henzie and the Giant attack in every case.
+  Spec.it s "CR 702.152b a Clone cast for Henzie's blitz as a copy of a Hill Giant keeps the paid blitz: haste, the draw and the sacrifice" $ do
+    island <- S.printingOf s registry "Island"
+    henzie <- S.printingOf s registry "Henzie \"Toolbox\" Torre"
+    giant <- S.printingOf s registry "Hill Giant"
+    clone <- S.printingOf s registry "Clone"
+    let (_, gs1) = S.addPermanent henzie S.alice (S.landsInPlay island 4)
+        (giantId, gs2) = S.addPermanent giant S.alice gs1
+        (cloneId, gs3) = S.addHandCard clone S.alice gs2
+        board = scheduled (List.foldl' (\g _ -> snd (S.addLibraryCard island S.alice g)) gs3 [1 :: Int .. 3])
+        copying :: Bool -> Prompt.Prompt r -> r
+        copying blitz p = case p of
+          Prompt.ChooseCopyTarget {} -> aimedAt giantId p
+          _ -> announcingBlitz blitz p
+        blitzed = throughEndStep (castResolved (copying True) cloneId board)
+        printed = throughEndStep (castResolved (copying False) cloneId board)
+        drew gs = 3 - length (Game.zoneMembers Zone.Library S.alice gs)
+    Spec.assertEqWith s "CR 702.152b the blitzed Clone attacked beside Henzie and the Giant, was sacrificed at the end step and drew a card" (S.lifeOf S.bob blitzed, namedOnBattlefield "Hill Giant" blitzed, drew blitzed) (Just 11, [giantId], 1)
+    Spec.assertEqWith s "cast for its printed cost the Clone neither attacked nor was sacrificed nor drew" (S.lifeOf S.bob printed, length (namedOnBattlefield "Hill Giant" printed), drew printed) (Just 14, 2, 0)
+  where
+    giantCost = Cost.Type.MkCost (Just (ManaCost.MkManaCost [ManaSymbol.Generic 3, theRed])) []
+    isBlitz = maybe False (\k -> case k of Keyword.Blitz _ -> True; _ -> False)
+    -- CR 601.2b answered with the offered candidate the blitz ability did (True)
+    -- or did not (False) offer, FILTERED from the offer, and every attack with
+    -- everything.
+    announcingBlitz :: Bool -> Prompt.Prompt r -> r
+    announcingBlitz blitz p = case p of
+      Prompt.ChooseCost _ _ _ candidates -> case filter ((== blitz) . isBlitz . CandidateCost.keyword) candidates of
+        chosen : _ -> chosen
+        [] -> S.identityAnswer p
+      Prompt.DeclareAttackers {} -> S.aggressiveAnswer p
+      _ -> S.identityAnswer p
+    -- The candidates the cast's Prompt.ChooseCost offered, empty when none was
+    -- raised.
+    offeredCosts oid board =
+      let record :: Prompt.Prompt r -> State.State [CandidateCost.CandidateCost] r
+          record p = case p of
+            Prompt.ChooseCost _ _ _ candidates -> announcingBlitz True p <$ State.put candidates
+            _ -> pure (S.identityAnswer p)
+       in State.execState (Engine.runGame record board (S.cast S.alice oid)) []
+
+-- alice on turn with Henzie and four Mountains, `creature` in her hand and three
+-- library cards, the rest of the turn scheduled.
+henzieBoard :: (Monad m) => Spec.Spec m n -> Registry.Registry m -> String -> m (ObjectId.ObjectId, GameState.GameState)
+henzieBoard s registry creature = do
+  mountain <- S.printingOf s registry "Mountain"
+  henzie <- S.printingOf s registry "Henzie \"Toolbox\" Torre"
+  card <- S.printingOf s registry creature
+  let (_, gs1) = S.addPermanent henzie S.alice (S.landsInPlay mountain 4)
+      (oid, gs2) = S.addHandCard card S.alice gs1
+  pure (oid, scheduled (List.foldl' (\g _ -> snd (S.addLibraryCard mountain S.alice g)) gs2 [1 :: Int .. 3]))
 
 -- CR 702.113a on Part the Waterveil {4}{U}{U} Sorcery, "Take an extra turn after
 -- this one. Exile Part the Waterveil. / Awaken 6--{6}{U}{U}{U}" (Oracle text
@@ -4217,7 +4302,7 @@ candidatePairs = fmap (\candidate -> (CandidateCost.reductions candidate, Candid
 payingFor :: [ManaSymbol.ManaSymbol] -> Prompt.Prompt r -> r
 payingFor wanted p = case p of
   Prompt.ChooseCost _ _ _ candidates ->
-    Maybe.fromMaybe (Cost.firstOffered candidates) (List.find ((== Just (ManaCost.MkManaCost wanted)) . Cost.Type.mana) candidates)
+    Maybe.fromMaybe (Cost.firstOffered candidates) (List.find ((== Just (ManaCost.MkManaCost wanted)) . Cost.Type.mana . CandidateCost.cost) candidates)
   _ -> S.identityAnswer p
 
 -- CR 702.133a's two static abilities, on Direct Current {1}{R}{R} Sorcery,
@@ -4583,7 +4668,7 @@ gorgerRunWith answer (reunionId, ready) =
 -- 616.1) by its value rather than by its place in the offer.
 bloodmadAnswer :: ManaCost.ManaCost -> Prompt.Prompt r -> r
 bloodmadAnswer want p = case p of
-  Prompt.ChooseCost _ _ _ candidates -> Maybe.fromMaybe (Cost.firstOffered candidates) (List.find ((== Just want) . Cost.Type.mana) candidates)
+  Prompt.ChooseCost _ _ _ candidates -> Maybe.fromMaybe (Cost.firstOffered candidates) (List.find ((== Just want) . Cost.Type.mana . CandidateCost.cost) candidates)
   _ -> madnessAnswer p
 
 -- Takes rule 702.35a's offered cast and answers everything else as S.identityAnswer
@@ -5058,6 +5143,7 @@ spec s registry = Spec.describe s "Pawl.Engine.Cast" $ do
   dashSpec s registry
   blitzSpec s registry
   graveyardBlitzSpec s registry
+  henzieSpec s registry
   awakenSpec s registry
   cleaveSpec s registry
   overloadSpec s registry

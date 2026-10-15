@@ -82,6 +82,7 @@ import qualified Pawl.Types.BecameAttached as BecameAttached
 import qualified Pawl.Types.BecameTarget as BecameTarget
 import qualified Pawl.Types.BecameUnattached as BecameUnattached
 import qualified Pawl.Types.Binding as Binding.Type
+import qualified Pawl.Types.CandidateCost as CandidateCost
 import Pawl.Types.CandidateId (CandidateId)
 import Pawl.Types.Card (Card)
 import qualified Pawl.Types.Card as Card.Type
@@ -9234,9 +9235,9 @@ madnessChoice pid oid payloads = do
     [] -> pure Nothing
     [(_, only)] -> pure (Just only)
     offered@((_, first) : _) -> do
-      answer <- Game.choose (Prompt.ChooseCost (Decide.deciderFor pid gs) pid oid (fmap fst offered))
+      answer <- Game.choose (Prompt.ChooseCost (Decide.deciderFor pid gs) pid oid (fmap (CandidateCost.plain Nothing . fst) offered))
       -- Reject-not-repair: an answer outside the offer keeps the first.
-      pure (Just (Maybe.fromMaybe first (Map.lookup answer bySettled)))
+      pure (Just (Maybe.fromMaybe first (Map.lookup (CandidateCost.cost answer) bySettled)))
 
 -- Ask the interpreter to shuffle this player's library (CR 103.3 / 701.24).
 --

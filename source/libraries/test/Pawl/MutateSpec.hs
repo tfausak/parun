@@ -77,6 +77,7 @@ import qualified Pawl.Spec as Spec
 import qualified Pawl.Support as S
 import qualified Pawl.Types.ActivatedAbility as ActivatedAbility
 import qualified Pawl.Types.BeginningStep as BeginningStep
+import qualified Pawl.Types.CandidateCost as CandidateCost
 import qualified Pawl.Types.CardName as CardName
 import qualified Pawl.Types.Color as Color
 import qualified Pawl.Types.Combat as Combat.Type
@@ -1452,7 +1453,7 @@ merging side host board spellId =
 mutatingAt :: MutateSide.MutateSide -> ObjectId.ObjectId -> Prompt.Prompt r -> r
 mutatingAt side host p = case p of
   Prompt.ChooseCost _ _ _ candidates ->
-    Maybe.fromMaybe (Cost.firstOffered candidates) (List.find ((`elem` [Just mutateCost, Just graftCost]) . Cost.Type.mana) candidates)
+    Maybe.fromMaybe (Cost.firstOffered candidates) (List.find ((`elem` [Just mutateCost, Just graftCost]) . Cost.Type.mana . CandidateCost.cost) candidates)
   Prompt.ChooseTargets _ _ _ sets -> fmap (Set.filter ((== Just host) . Recipient.objectOf) . snd) sets
   Prompt.ChooseMutateSide {} -> side
   _ -> S.identityAnswer p
@@ -1466,7 +1467,7 @@ mutatingAt side host p = case p of
 doublingAt :: ObjectId.ObjectId -> Prompt.Prompt r -> r
 doublingAt host p = case p of
   Prompt.ChooseCost _ _ _ candidates ->
-    Maybe.fromMaybe (Cost.firstOffered candidates) (List.find ((== Just mutateCost) . Cost.Type.mana) candidates)
+    Maybe.fromMaybe (Cost.firstOffered candidates) (List.find ((== Just mutateCost) . Cost.Type.mana . CandidateCost.cost) candidates)
   Prompt.ChooseTargets _ _ _ sets ->
     Map.mapWithKey
       (\slot (_, offered) -> if slot == Card.mutateSlot then Set.filter ((== Just host) . Recipient.objectOf) offered else offered)

@@ -15,4 +15,6 @@ data CostKeyword
     Encore
   | -- | CR 702.168a (Disguise Agent).
     Disguise
+  | -- | CR 702.152a (Henzie "Toolbox" Torre).
+    Blitz
   deriving (Bounded, Enum, Eq, Ord, Show)
