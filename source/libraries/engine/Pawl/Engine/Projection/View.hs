@@ -2096,13 +2096,33 @@ functionsFromZone zone sa =
 -- memo and no descending bound.
 abilitiesFromCharacteristics :: Count.ViewOf -> ProjectedCharacteristics -> ObjectId -> GameState -> [ActivatedAbility.ActivatedAbility Card.Type.Card (GrantedAbility.GrantedAbility Card.Type.Card)]
 abilitiesFromCharacteristics peers pc oid gs =
-  let granted ability = case ActivatedAbility.condition ability of
-        Nothing -> True
-        Just cond -> Condition.holds peers (SourceContext.sourceContext gs (controllerOf oid gs) oid) gs oid cond
-      -- CR 804.2's for a creature on the battlefield only (CR 109.2), or, for an
-      -- id that has ceased, one whose CR 608.2h record was filed there.
-      deploys = Deploy.grants (maybe False (Count.deployIn gs) (lastZoneOf oid gs)) pc
-   in filter granted (Count.abilitiesOf deploys pc)
+  let granted ability = maybe True (grantHolds peers oid gs) (ActivatedAbility.condition ability)
+   in filter granted (ungatedAbilitiesOf pc oid gs)
+
+-- CR 604.2 / 608.2h: the "as long as" clauses among the roster above that do
+-- not hold -- what Pawl.Engine.Event files in an object's LastKnown record as it
+-- ceases, since no board is left afterwards to ask them against
+-- (Count.lastKnownView). Keyed by the clause: the gate reads only the clause, the
+-- object and the board, so two abilities sharing a clause share its answer.
+lapsedGrantsOf :: Count.ViewOf -> ProjectedCharacteristics -> ObjectId -> GameState -> Set Condition.Type.Condition
+lapsedGrantsOf peers pc oid gs =
+  Set.fromList
+    [ cond
+    | ability <- ungatedAbilitiesOf pc oid gs,
+      Just cond <- [ActivatedAbility.condition ability],
+      not (grantHolds peers oid gs cond)
+    ]
+
+-- The two above's roster before CR 604.2's gate. CR 804.2's for a creature on
+-- the battlefield only (CR 109.2), or, for an id that has ceased, one whose CR
+-- 608.2h record was filed there.
+ungatedAbilitiesOf :: ProjectedCharacteristics -> ObjectId -> GameState -> [ActivatedAbility.ActivatedAbility Card.Type.Card (GrantedAbility.GrantedAbility Card.Type.Card)]
+ungatedAbilitiesOf pc oid gs = Count.abilitiesOf (Deploy.grants (maybe False (Count.deployIn gs) (lastZoneOf oid gs)) pc) pc
+
+-- CR 604.2: does a granted ability's "as long as" clause hold, with the
+-- object's controller as CR 109.5's "you".
+grantHolds :: Count.ViewOf -> ObjectId -> GameState -> Condition.Type.Condition -> Bool
+grantHolds peers oid gs = Condition.holds peers (SourceContext.sourceContext gs (controllerOf oid gs) oid) gs oid
 
 -- CR 115.1: what a stack object TARGETS -- the recipients under its declared
 -- target slots, which is CR 601.2c's (602.2b's, 603.3d's) announcement read live

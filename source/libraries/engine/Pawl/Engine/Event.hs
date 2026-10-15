@@ -8737,7 +8737,7 @@ lastKnownRecord gs oid = fmap (lastKnownFrom gs oid) (Game.lookupObject oid gs)
 lastKnownFrom :: GameState -> ObjectId -> Object.Object -> LastKnown.LastKnown
 lastKnownFrom gs oid obj =
   LastKnown.MkLastKnown
-    (Projection.project oid gs)
+    characteristics
     -- CR 613.1b, and the reason this record is what a departure's trigger is
     -- read from: control is not a characteristic (CR 109.3), so it cannot ride
     -- the projection, and CR 603.3a asks who controlled a source that is
@@ -8779,6 +8779,10 @@ lastKnownFrom gs oid obj =
     (Object.zone obj)
     -- CR 400.1: the pile it left.
     (Game.pileHolderOf oid gs)
+    -- CR 604.2's clauses, asked while there is still a board to ask them of.
+    (Projection.lapsedGrantsOf (Projection.fullView gs) characteristics oid gs)
+  where
+    characteristics = Projection.project oid gs
 
 -- | An object leaves the GAME rather than a zone -- CR 800.4a's first clause,
 -- or CR 729.4a's crossing into a subgame -- at the instant `asOf` describes,
