@@ -11,6 +11,8 @@ spec s = Spec.describe s "Pawl.Codec.PlaneswalkCause" $ do
     Common.assertCodec s PlaneswalkCause.codec PlaneswalkCause.PlanarDie " {\"type\":\"PlanarDie\"} "
   Spec.it s "Phenomenon" $
     Common.assertCodec s PlaneswalkCause.codec PlaneswalkCause.Phenomenon " {\"type\":\"Phenomenon\"} "
+  Spec.it s "OwnerLeft" $
+    Common.assertCodec s PlaneswalkCause.codec PlaneswalkCause.OwnerLeft " {\"type\":\"OwnerLeft\"} "
   Spec.it s "Instruction" $
     Common.assertCodec s PlaneswalkCause.codec PlaneswalkCause.Instruction " {\"type\":\"Instruction\"} "
   Spec.it s "has a schema" $ Common.assertHasSchema s PlaneswalkCause.codec

@@ -88,14 +88,20 @@ canPlaneswalk pid gs = isPlanechase gs && pid == Plane.planarController gs
 -- first as WouldPlaneswalk for this cause (CR 701.31c), so CR 614's
 -- replacements see it.
 planeswalk :: PlaneswalkCause.PlaneswalkCause -> PlayerId -> Game ()
-planeswalk cause pid = do
+planeswalk cause pid = proposed cause pid $ do
+  now <- State.get
+  Monad.mapM_ toBottom (faceUp now)
+  encounterTop pid
+
+-- CR 614.1a: propose this player's planeswalk for this cause, and perform it
+-- unless a replacement took its place. Nothing for a player CR 701.31a does not
+-- let planeswalk.
+proposed :: PlaneswalkCause.PlaneswalkCause -> PlayerId -> Game () -> Game ()
+proposed cause pid perform = do
   gs <- State.get
   Monad.when (canPlaneswalk pid gs) $ do
     outcome <- Event.applyReplacements (ProposedEvent.WouldPlaneswalk pid cause)
-    Monad.forM_ outcome $ \_ -> do
-      now <- State.get
-      Monad.mapM_ toBottom (faceUp now)
-      encounterTop pid
+    Monad.forM_ outcome (const perform)
 
 -- | CR 103.7: the starting player turns up planar cards until a plane is face
 -- up, putting each phenomenon on the bottom. No ability triggers (CR 901.5):
@@ -118,10 +124,15 @@ setStartingPlane pid = do
 -- left with them, the planar controller -- already CR 800.4p's heir -- turns up
 -- the top card of their planar deck, and if a face-up plane left, every
 -- planeswalking ability on the stack ceases to exist. Not a state-based action.
+-- The turn-up is a planeswalk (CR 701.31c), proposed for CR 614's replacements,
+-- with nothing to put on the bottom: the face-up card has left the game.
+-- Pawl.PlanechaseSpec's "CR 701.31c Susan Foreman arranges the planeswalk a
+-- plane's departing owner causes" proves it.
+--
 -- A phenomenon leaving alone spares the ability, CR 901.10a naming a plane.
 -- Unobserved: a phenomenon is face up beside a planeswalking ability only after
--- a planeswalk in response to one, and no card in data/cards planeswalks
--- (`"type": "Planeswalk"`, 2026-10-15).
+-- a planeswalk in response to one, and the one card in data/cards that
+-- planeswalks, Path of the Enigma, is a sorcery (2026-10-15).
 ownersLeft :: GameState -> [PlayerId] -> Game ()
 ownersLeft before pids = do
   let owned oid = maybe False (\obj -> List.elem (Object.owner obj) pids) (Game.lookupObject oid before)
@@ -130,7 +141,8 @@ ownersLeft before pids = do
   Monad.unless (null left) $ do
     Monad.when (any isPlane left) (State.modify' ceasePlaneswalking)
     gs <- State.get
-    encounterTop (Plane.planarController gs)
+    let walker = Plane.planarController gs
+    proposed PlaneswalkCause.OwnerLeft walker (encounterTop walker)
 
 -- CR 901.10a: every planeswalking ability on the stack ceases to exist.
 ceasePlaneswalking :: GameState -> GameState

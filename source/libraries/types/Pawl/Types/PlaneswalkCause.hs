@@ -8,6 +8,8 @@ data PlaneswalkCause
     PlanarDie
   | -- | CR 704.6f: the state-based action for a face-up phenomenon.
     Phenomenon
+  | -- | CR 901.10: the owner of a face-up plane or phenomenon card left the game.
+    OwnerLeft
   | -- | CR 701.31c: any other spell or ability that says to planeswalk.
     Instruction
   deriving (Bounded, Enum, Eq, Ord, Show)

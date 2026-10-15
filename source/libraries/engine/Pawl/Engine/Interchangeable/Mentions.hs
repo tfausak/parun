@@ -2493,10 +2493,11 @@ replacementEffectNames asking onCard onAbility onEffect x = case x of
   ReplacementEffect.ScryR scryR -> scryRNames asking scryR
   ReplacementEffect.VillainousChoiceR villainousChoiceR -> villainousChoiceRNames asking villainousChoiceR
   ReplacementEffect.AssembleR matching -> filterNames asking matching
-  ReplacementEffect.GameLossR (GameLossR.MkGameLossR _whose effects) -> any onEffect effects
-  ReplacementEffect.PlaneswalkR (PlaneswalkR.MkPlaneswalkR _whose _cause rewrite) -> case rewrite of
-    PlaneswalkRewrite.ArrangeTopTwo -> False
-    PlaneswalkRewrite.RunEffects effects -> any onEffect effects
+  ReplacementEffect.GameLossR (GameLossR.MkGameLossR whose effects) -> controllerRelationNames asking whose || any onEffect effects
+  ReplacementEffect.PlaneswalkR (PlaneswalkR.MkPlaneswalkR whose _cause rewrite) ->
+    controllerRelationNames asking whose || case rewrite of
+      PlaneswalkRewrite.ArrangeTopTwo -> False
+      PlaneswalkRewrite.RunEffects effects -> any onEffect effects
   ReplacementEffect.PhaseR _phasePattern -> False
 
 requireAttackNames :: Asking -> RequireAttack.RequireAttack -> Bool

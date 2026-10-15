@@ -339,6 +339,23 @@ spec s registry = Spec.describe s "Pawl.Engine.Planechase" $ do
     Spec.assertEqWith s "with Tazeem then Academy below" (deckNames S.alice walked) [cardName "Tazeem", cardName "Academy at Tolaria West"]
     Spec.assertEqWith s "without Susan she planeswalks to Tazeem" (faceUpNames without) [cardName "Tazeem"]
 
+  -- CR 701.31c / 901.10: on bob's turn alice, whose Academy at Tolaria West is
+  -- the face-up plane, concedes. bob, the planar controller, controls Susan
+  -- Foreman, so the turn-up is a planeswalk she replaces: he puts Naya, the
+  -- second card offered, above Tazeem and turns it up. Without Susan the same
+  -- answers turn up Tazeem.
+  Spec.it s "CR 701.31c Susan Foreman arranges the planeswalk a plane's departing owner causes" $ do
+    susan <- S.printingOf s registry "Susan Foreman"
+    board <- seatedPlanarBoard s registry S.alice [(S.alice, ["Academy at Tolaria West"]), (S.bob, ["Tazeem", "Naya"]), (S.carol, [])]
+    let main = inMain S.bob board
+        (_, withSusan) = S.addPermanent susan S.bob main
+        walked = S.runPure (concedingKeepingLast S.alice) withSusan Engine.priorityLoop
+        without = S.runPure (concedingKeepingLast S.alice) main Engine.priorityLoop
+    Spec.assertEqWith s "CR 701.31c bob planeswalked to Naya" (faceUpNames walked) [cardName "Naya"]
+    Spec.assertEqWith s "with Tazeem still in his planar deck" (deckNames S.bob walked) [cardName "Tazeem"]
+    Spec.assertEqWith s "without Susan he turns up Tazeem" (faceUpNames without) [cardName "Tazeem"]
+    Spec.assertBool s (notElem S.alice (Game.stillPlaying walked)) "alice has left the game"
+
   -- CR 312.5 / 614.1a / 701.31c: alice planeswalks to Fixed Point in Time ("When
   -- you encounter Fixed Point in Time, until your next turn, if a player would
   -- planeswalk as a result of rolling the planar die, chaos ensues instead.").
@@ -497,6 +514,12 @@ rollingKeepingLast :: Natural -> Prompt.Prompt r -> r
 rollingKeepingLast n p = case p of
   Prompt.ChooseCardFromAmong _ _ _ candidates -> NonEmpty.last candidates
   _ -> rolling n p
+
+-- `who` concedes, and a choice among cards takes the last one offered.
+concedingKeepingLast :: PlayerId.PlayerId -> Prompt.Prompt r -> r
+concedingKeepingLast who p = case p of
+  Prompt.ChooseCardFromAmong _ _ _ candidates -> NonEmpty.last candidates
+  _ -> conceding who p
 
 -- The names of the face-up planar cards.
 faceUpNames :: GameState.GameState -> [Maybe CardName.CardName]
