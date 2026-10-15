@@ -45,7 +45,6 @@ import qualified Pawl.Types.PlayerActed as PlayerActed
 import qualified Pawl.Types.PlayerId as PlayerId
 import qualified Pawl.Types.Revealed as Revealed
 import qualified Pawl.Types.Saddling as Saddling
-import qualified Pawl.Types.SchemeSetInMotion as SchemeSetInMotion
 import qualified Pawl.Types.SpellWasCast as SpellWasCast
 import qualified Pawl.Types.SpellWasCopied as SpellWasCopied
 import qualified Pawl.Types.StepBegan as StepBegan
@@ -54,6 +53,7 @@ import qualified Pawl.Types.TappedForMana as TappedForMana
 import qualified Pawl.Types.Transformed as Transformed
 import qualified Pawl.Types.TriggeredAbilitySource as TriggeredAbilitySource
 import qualified Pawl.Types.TurnedFaceUp as TurnedFaceUp
+import qualified Pawl.Types.TurnedUpOffDeck as TurnedUpOffDeck
 import qualified Pawl.Types.VentureMarkerEntered as VentureMarkerEntered
 import qualified Pawl.Types.Voted as Voted
 import qualified Pawl.Types.ZoneChange as ZoneChange
@@ -441,8 +441,9 @@ data GameEvent
     -- beside it (CR 901.9d); DieResultSettled is not, since the planar die has
     -- no numerical result.
     PlanarDieRolled PlanarDieRolled.PlanarDieRolled
-  | -- | CR 701.32 / 904.9: the archenemy set a scheme in motion.
-    SchemeSetInMotion SchemeSetInMotion.SchemeSetInMotion
+  | -- | CR 701.32b / 312.5 / 701.31b: a player moved the top card of a side deck
+    -- off it and turned it face up.
+    TurnedUpOffDeck TurnedUpOffDeck.TurnedUpOffDeck
   | -- | CR 716.2a: a permanent's class level BECAME something -- the level BEFORE
     -- and the level AFTER, CountersPut's shape and for CR 714.2b's reason, since
     -- "becomes level N" is a threshold crossing. Recorded by Pawl.Engine.Resolve's

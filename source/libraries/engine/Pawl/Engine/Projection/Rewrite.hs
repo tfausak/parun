@@ -2078,7 +2078,7 @@ rewriteTriggerCondition pairs condition = case condition of
   TriggerCondition.Visit -> condition
   TriggerCondition.ChaosEnsues -> condition
   TriggerCondition.PlayerRollsPlaneswalker _ -> condition
-  TriggerCondition.SetInMotion -> condition
+  TriggerCondition.SelfTurnedUpOffDeck -> condition
   TriggerCondition.PlayerWinsCoinFlip _ -> condition
   TriggerCondition.PlayerLosesCoinFlip _ -> condition
   TriggerCondition.SelfBecomesPlotted -> condition

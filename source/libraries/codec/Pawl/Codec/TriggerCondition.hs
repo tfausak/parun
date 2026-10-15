@@ -180,7 +180,7 @@ codec =
           Arm.nullary "Visit" TriggerCondition.Visit,
           Arm.nullary "ChaosEnsues" TriggerCondition.ChaosEnsues,
           Arm.payload "PlayerRollsPlaneswalker" PlayerRelation.codec TriggerCondition.PlayerRollsPlaneswalker (\x -> case x of TriggerCondition.PlayerRollsPlaneswalker y -> Just y; _ -> Nothing),
-          Arm.nullary "SetInMotion" TriggerCondition.SetInMotion,
+          Arm.nullary "SelfTurnedUpOffDeck" TriggerCondition.SelfTurnedUpOffDeck,
           Arm.payload "PlayerWinsCoinFlip" PlayerRelation.codec TriggerCondition.PlayerWinsCoinFlip (\x -> case x of TriggerCondition.PlayerWinsCoinFlip y -> Just y; _ -> Nothing),
           Arm.payload "PlayerLosesCoinFlip" PlayerRelation.codec TriggerCondition.PlayerLosesCoinFlip (\x -> case x of TriggerCondition.PlayerLosesCoinFlip y -> Just y; _ -> Nothing),
           Arm.nullary "SelfBecomesPlotted" TriggerCondition.SelfBecomesPlotted,
@@ -323,7 +323,7 @@ tagOf x = case x of
   TriggerCondition.Visit {} -> "Visit"
   TriggerCondition.ChaosEnsues {} -> "ChaosEnsues"
   TriggerCondition.PlayerRollsPlaneswalker {} -> "PlayerRollsPlaneswalker"
-  TriggerCondition.SetInMotion {} -> "SetInMotion"
+  TriggerCondition.SelfTurnedUpOffDeck {} -> "SelfTurnedUpOffDeck"
   TriggerCondition.PlayerWinsCoinFlip {} -> "PlayerWinsCoinFlip"
   TriggerCondition.PlayerLosesCoinFlip {} -> "PlayerLosesCoinFlip"
   TriggerCondition.SelfBecomesPlotted {} -> "SelfBecomesPlotted"

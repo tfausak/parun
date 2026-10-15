@@ -33,13 +33,13 @@ import qualified Pawl.Types.Object as Object
 import Pawl.Types.ObjectId (ObjectId)
 import qualified Pawl.Types.PendingTrigger as PendingTrigger
 import Pawl.Types.PlayerId (PlayerId)
-import qualified Pawl.Types.SchemeSetInMotion as SchemeSetInMotion
 import qualified Pawl.Types.SideDeck as SideDeck
 import qualified Pawl.Types.Source as Source
 import qualified Pawl.Types.TeamId as TeamId
 import qualified Pawl.Types.Teams as Teams
 import qualified Pawl.Types.TriggerSource as TriggerSource
 import qualified Pawl.Types.TriggeredAbilitySource as TriggeredAbilitySource
+import qualified Pawl.Types.TurnedUpOffDeck as TurnedUpOffDeck
 
 -- | CR 904.3: this player's scheme deck, top first.
 deckOf :: PlayerId -> GameState -> [ObjectId]
@@ -101,7 +101,7 @@ setInMotion pid = do
       ts <- State.state Game.freshTimestamp
       State.modify' $ \g ->
         Event.recordEvent
-          (GameEvent.SchemeSetInMotion (SchemeSetInMotion.MkSchemeSetInMotion pid top))
+          (GameEvent.TurnedUpOffDeck (TurnedUpOffDeck.MkTurnedUpOffDeck SideDeck.Scheme pid top))
           (Game.overSideDecks SideDeck.Scheme (Map.insert pid (Seq.fromList rest)) g)
             { GameState.command = Set.insert top (GameState.command g),
               GameState.objects = Map.adjust (\o -> o {Object.timestamp = ts}) top (GameState.objects g)

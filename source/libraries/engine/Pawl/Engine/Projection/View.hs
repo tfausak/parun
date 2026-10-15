@@ -2270,6 +2270,9 @@ controllerOfGiven grants oid gs = case Game.lookupObject oid gs of
     -- CR 901.6: a face-up plane or phenomenon card's controller is the planar
     -- controller.
     | Object.zone obj == Zone.Command && Plane.isPlanarCard oid gs -> Just (Plane.planarController gs)
+    -- CR 901.10b: so is a phenomenon's triggered ability, which passes to the
+    -- new planar controller when its owner leaves the game.
+    | Object.zone obj == Zone.Stack && Plane.isPhenomenonAbility oid gs -> Just (Plane.planarController gs)
     | otherwise -> Just (Maybe.fromMaybe (defaultControllerOf obj) (Map.lookup oid (layerTwo grants gs)))
 
 -- One layer-2 control effect as the fold applies it: a stored

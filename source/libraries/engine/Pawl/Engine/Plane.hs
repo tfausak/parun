@@ -17,6 +17,8 @@ import qualified Pawl.Types.GameState as GameState
 import qualified Pawl.Types.Object as Object
 import Pawl.Types.ObjectId (ObjectId)
 import Pawl.Types.PlayerId (PlayerId)
+import qualified Pawl.Types.Source as Source
+import qualified Pawl.Types.TriggeredAbilitySource as TriggeredAbilitySource
 import qualified Pawl.Types.TypeLine as TypeLine
 
 -- | CR 311.1 / 312.1: does this face print the plane or the phenomenon card
@@ -35,6 +37,14 @@ isPhenomenonFace face = Set.member CardType.Phenomenon (TypeLine.types (Face.typ
 -- leaves the command zone, where nothing can copy it or change its type.
 isPlanarCard :: ObjectId -> GameState -> Bool
 isPlanarCard oid gs = maybe False isPlanarFace (Game.faceOf oid gs)
+
+-- | CR 901.10b: is this object a triggered ability whose source is a phenomenon
+-- card? Through last-known information, since the rule asks it once the
+-- phenomenon has left the game with its owner.
+isPhenomenonAbility :: ObjectId -> GameState -> Bool
+isPhenomenonAbility oid gs = case fmap Object.source (Game.lookupObject oid gs) of
+  Just (Source.OfTrigger triggered) -> maybe False isPhenomenonFace (Game.faceOfWithLastKnown (TriggeredAbilitySource.source triggered) gs)
+  _ -> False
 
 -- | CR 311.5 / 312.4 / 901.6: the planar controller, normally the active
 -- player. While that seat has left (CR 800.4j keeps it active), CR 800.4p's

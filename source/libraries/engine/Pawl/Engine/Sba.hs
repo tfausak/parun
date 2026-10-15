@@ -19,7 +19,10 @@ import qualified Pawl.Engine.Decide as Decide
 import qualified Pawl.Engine.Departure as Departure
 import qualified Pawl.Engine.Dungeon as Dungeon
 import qualified Pawl.Engine.Event as Event
+import qualified Pawl.Engine.Event.Trigger as Trigger
 import qualified Pawl.Engine.Game as Game
+import qualified Pawl.Engine.Plane as Plane
+import qualified Pawl.Engine.Planechase as Planechase
 import qualified Pawl.Engine.PlayerEffect as PlayerEffect
 import qualified Pawl.Engine.Prepare as Prepare
 import qualified Pawl.Engine.Projection as Projection
@@ -803,6 +806,9 @@ checkOnce = do
       -- CR 704.6e / 314.6: face-up non-ongoing schemes with no scheme ability
       -- pending.
       spentSchemes = Archenemy.abandonedBySba gs
+      -- CR 704.6f / 312.7: face-up phenomena whose triggered abilities have all
+      -- left the stack, reading the unscanned events for CR 704.5t's reason.
+      spentPhenomena = Planechase.spentPhenomena (Trigger.eventTriggers (Event.unscannedGrouped gs) gs) gs
       -- CR 704.5s / 714.4, from the SAME pre-pass state as everything above.
       -- Lives in Pawl.Engine.Saga with the rest of rule 714, the way CR 704.5aa
       -- lives in Pawl.Engine.Speed.
@@ -1130,10 +1136,15 @@ checkOnce = do
       -- named something. A regenerated creature still counts as destroyed, which
       -- the CR 704.3 settle loop re-checks and -- because the regen healed the
       -- damage -- terminates.
-      acted = not (null legendVictims) || not (null worldLosers) || not (null toGraveyard) || not (null toDestroy) || not (null leaving) || not (null vanishing) || not (null annihilations) || not (null unattachedAuras) || not (null unbestowing) || not (null detaching) || not (null revving) || not (null told) || not (null undefended) || not (null returningCommanders) || not (null finishedDungeons) || not (null spentSchemes) || not (null routed) || sectored
+      acted = not (null legendVictims) || not (null worldLosers) || not (null toGraveyard) || not (null toDestroy) || not (null leaving) || not (null vanishing) || not (null annihilations) || not (null unattachedAuras) || not (null unbestowing) || not (null detaching) || not (null revving) || not (null told) || not (null undefended) || not (null returningCommanders) || not (null finishedDungeons) || not (null spentSchemes) || not (null spentPhenomena) || not (null routed) || sectored
   -- CR 104.1: a game ends the moment a result is reached, so a later pass may
   -- not replace one. The existing result therefore wins; this pass only settles
   -- an outcome when the game did not already have one. Departure.settle is
   -- the one door, shared with Departure.leaveGame.
   State.put (Departure.settle outcome undungeoned)
+  -- CR 704.6f: "the planar controller planeswalks", as the board stands once
+  -- the rest of the pass has applied.
+  Monad.unless (null spentPhenomena) $ do
+    settled <- State.get
+    Planechase.planeswalk (Plane.planarController settled)
   pure (acted, thenExile)
