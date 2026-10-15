@@ -108,6 +108,7 @@ import qualified Pawl.Types.NamesAre as NamesAre
 import qualified Pawl.Types.Object as Object
 import qualified Pawl.Types.ObjectId as ObjectId
 import qualified Pawl.Types.ObjectSnapshot as ObjectSnapshot
+import qualified Pawl.Types.OwnershipChange as OwnershipChange
 import qualified Pawl.Types.Paying as Paying
 import qualified Pawl.Types.PaymentDecision as PaymentDecision
 import qualified Pawl.Types.Phase as Phase
@@ -1751,10 +1752,15 @@ renderView gs viewIs =
           oid <- needObject
           maybe (pure ReplyType.Null) (named . labelOf) (Game.lookupObject oid gs >>= Object.ringBearerFor)
         View.OwnershipChanges -> do
-          rows <- Monad.forM (Map.toAscList (Ante.ownershipChanges gs)) $ \(oid, (from, to)) -> do
-            card <- describeObject gs oid
-            fromLabel <- labelOf from
-            toLabel <- labelOf to
+          rows <- Monad.forM (Foldable.toList (Ante.ownershipChanges gs)) $ \change -> do
+            let oid = OwnershipChange.object change
+                -- One card of a merged or melded permanent is named by its
+                -- printing, the object being several cards.
+                ofSeveral = maybe False (not . Seq.null . Game.componentsOf . Object.source) (Game.lookupObject oid gs)
+                printed = maybe (Text.pack "unknown") (CardName.unwrap . Face.name . NonEmpty.head . Card.faces . Printing.card) (Game.printingOf (OwnershipChange.card change) gs)
+            card <- if ofSeveral then pure printed else describeObject gs oid
+            fromLabel <- labelOf (OwnershipChange.startingOwner change)
+            toLabel <- labelOf (OwnershipChange.owner change)
             pure (ReplyType.Array (fmap ReplyType.Text [card, Label.unwrap fromLabel, Label.unwrap toLabel]))
           pure (ReplyType.Array rows)
         View.Seers -> do
