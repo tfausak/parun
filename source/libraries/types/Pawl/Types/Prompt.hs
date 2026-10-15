@@ -650,8 +650,10 @@ data Prompt r where
   -- 303.4f; Curse of Death's Hold), or, at resolution, which player a
   -- resolving effect's controller chooses (CR 608.2d; Stadium Vendors), or which
   -- active player a banding creature's controller names under CR 805.9
-  -- (Pawl.Engine.Damage.blockerChooser) -- the ObjectId is the entering
-  -- permanent, the resolving source, or the banding creature. The candidates
+  -- (Pawl.Engine.Damage.blockerChooser), or which winner takes an ante card
+  -- after a team's win (CR 407.2 / 104.2c, Pawl.Engine.Ante.payOut) -- the
+  -- ObjectId is the entering permanent, the resolving source, the banding
+  -- creature, or the ante card. The candidates
   -- come from the caller, and this constructor rather than ChooseOpponent above
   -- is the one raised exactly when they include the chooser.
   ChoosePlayer :: Decider.Decider -> PlayerId.PlayerId -> ObjectId.ObjectId -> NonEmpty.NonEmpty PlayerId.PlayerId -> Prompt PlayerId.PlayerId

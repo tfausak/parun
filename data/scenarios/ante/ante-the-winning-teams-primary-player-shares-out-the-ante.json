@@ -1,0 +1,149 @@
+{
+  "description": "CR 407.2 / 104.2c the winning team's primary player shares out the ante",
+  "note": "A Two-Headed Giant game played for ante, alice and dave against bob and carol, seated so that dave, not alice, is their team's primary player (CR 805.2). alice Bolts carol, on 3 life, so carol and bob's team loses (CR 810.8a) and both alice and dave win (CR 104.2c). Each ante card, alice's own included, goes to the winner the team names, and dave names them though alice is the one casting. Two of the three answers are dave, which the fallback to the first candidate, alice, would not give.",
+  "board": {
+    "seats": [
+      {
+        "name": "alice",
+        "team": 1,
+        "battlefield": [
+          {
+            "card": "Mountain",
+            "label": "mountain"
+          }
+        ],
+        "hand": [
+          {
+            "card": "Lightning Bolt",
+            "label": "bolt"
+          }
+        ],
+        "ante": [
+          {
+            "card": "Grizzly Bears",
+            "label": "bears"
+          }
+        ]
+      },
+      {
+        "name": "bob",
+        "team": 2,
+        "ante": [
+          {
+            "card": "Goblin Piker",
+            "label": "piker"
+          }
+        ]
+      },
+      {
+        "name": "carol",
+        "team": 2,
+        "life": 3,
+        "ante": [
+          {
+            "card": "Hill Giant",
+            "label": "giant"
+          }
+        ]
+      },
+      {
+        "name": "dave",
+        "team": 1
+      }
+    ],
+    "active": "alice",
+    "step": "PrecombatMain",
+    "sharedTeamTurns": true,
+    "twoHeadedGiant": true,
+    "ante": true
+  },
+  "timeline": [
+    {
+      "turn": 1,
+      "step": "PrecombatMain",
+      "player": "alice",
+      "do": {
+        "Cast": {
+          "object": "$bolt",
+          "targets": [
+            "$carol"
+          ],
+          "mana": [
+            "$mountain"
+          ]
+        }
+      }
+    },
+    {
+      "turn": 1,
+      "step": "PrecombatMain",
+      "player": "alice",
+      "do": "Pass"
+    },
+    {
+      "turn": 1,
+      "step": "PrecombatMain",
+      "player": "dave",
+      "do": {
+        "Answer": {
+          "prompt": "ChoosePlayer",
+          "with": "dave"
+        }
+      }
+    },
+    {
+      "turn": 1,
+      "step": "PrecombatMain",
+      "player": "dave",
+      "do": {
+        "Answer": {
+          "prompt": "ChoosePlayer",
+          "with": "alice"
+        }
+      }
+    },
+    {
+      "turn": 1,
+      "step": "PrecombatMain",
+      "player": "dave",
+      "do": {
+        "Answer": {
+          "prompt": "ChoosePlayer",
+          "with": "dave"
+        }
+      }
+    }
+  ],
+  "final": [
+    {
+      "View": {
+        "of": "OwnershipChanges",
+        "is": [
+          [
+            "$bears",
+            "alice",
+            "dave"
+          ],
+          [
+            "$piker",
+            "bob",
+            "alice"
+          ],
+          [
+            "$giant",
+            "carol",
+            "dave"
+          ]
+        ]
+      }
+    },
+    {
+      "View": {
+        "of": "Result",
+        "is": {
+          "teamWon": 1
+        }
+      }
+    }
+  ]
+}
