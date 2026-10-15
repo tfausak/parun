@@ -6,6 +6,8 @@ import qualified Pawl.JsonCodec.Common as Common
 import qualified Pawl.Spec as Spec
 import qualified Pawl.Types.CardName as CardName
 import qualified Pawl.Types.ComponentCard as ComponentCard
+import qualified Pawl.Types.FaceDownReason as FaceDownReason
+import qualified Pawl.Types.Facing as Facing
 import qualified Pawl.Types.MergeComponent as MergeComponent
 import qualified Pawl.Types.PrintingId as PrintingId
 import qualified Pawl.Types.ShownComponent as ShownComponent
@@ -17,14 +19,21 @@ spec s = Spec.describe s "Pawl.Codec.ShownComponent" $ do
     Common.assertCodec
       s
       ShownComponent.codec
-      (ShownComponent.MkShownComponent (MergeComponent.OfCard (ComponentCard.MkComponentCard (PrintingId.MkPrintingId 11) Nothing Nothing)) Nothing)
+      (ShownComponent.MkShownComponent (MergeComponent.OfCard (ComponentCard.MkComponentCard (PrintingId.MkPrintingId 11) Nothing Nothing)) Nothing Facing.FaceUp)
       " {\"component\":{\"type\":\"OfCard\",\"value\":{\"printing\":11}}} "
   -- CR 730.2i: a double-faced component showing its back face.
   Spec.it s "back face up" $
     Common.assertCodec
       s
       ShownComponent.codec
-      (ShownComponent.MkShownComponent (MergeComponent.OfCard (ComponentCard.MkComponentCard (PrintingId.MkPrintingId 11) Nothing Nothing)) (Just (CardName.MkCardName (Text.pack "Synthetic Graftbeast"))))
+      (ShownComponent.MkShownComponent (MergeComponent.OfCard (ComponentCard.MkComponentCard (PrintingId.MkPrintingId 11) Nothing Nothing)) (Just (CardName.MkCardName (Text.pack "Synthetic Graftbeast"))) Facing.FaceUp)
       " {\"component\":{\"type\":\"OfCard\",\"value\":{\"printing\":11}},\"face\":\"Synthetic Graftbeast\"} "
+  -- CR 730.2e: a face-down component under a face-up topmost one.
+  Spec.it s "face down" $
+    Common.assertCodec
+      s
+      ShownComponent.codec
+      (ShownComponent.MkShownComponent (MergeComponent.OfCard (ComponentCard.MkComponentCard (PrintingId.MkPrintingId 11) Nothing Nothing)) Nothing (Facing.faceDown FaceDownReason.Morphed))
+      " {\"component\":{\"type\":\"OfCard\",\"value\":{\"printing\":11}},\"facing\":{\"type\":\"FaceDown\",\"value\":{\"reason\":{\"type\":\"Morphed\"},\"listed\":{}}}} "
   Spec.it s "has a schema" $
     Common.assertHasSchema s ShownComponent.codec

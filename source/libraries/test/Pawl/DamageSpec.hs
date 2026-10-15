@@ -779,7 +779,8 @@ lastKnownRiderSpec s registry =
                     LastKnown.controlClock = Map.empty,
                     LastKnown.zone = Zone.Battlefield,
                     -- CR 400.1: on the battlefield, so in no player's pile.
-                    LastKnown.pile = Nothing
+                    LastKnown.pile = Nothing,
+                    LastKnown.lapsedGrants = Set.empty
                   }
               humbled = S.withHumility humility equipped
               planted =

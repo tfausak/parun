@@ -55,9 +55,9 @@ data Source
     -- which, and Pawl.Engine.Game.sourceIsToken reads the head for it.
     --
     -- CR 730.2e gives the permanent its topmost component's STATUS, which is
-    -- Object.facing and not a field here: every component of a pawl permanent
-    -- shares that one status, which is CR 730.2f's "each face-up component that
-    -- represents it is turned face down" said once.
+    -- Object.facing, and each component keeps its own beside it
+    -- (Pawl.Types.ShownComponent), which CR 730.2f turns with the permanent
+    -- (Pawl.Engine.Game.withFacing).
     --
     -- CR 730.2h's flip components are Object.flipped and not a field here
     -- either: what the flip reaches is decided at the merge, which nests a

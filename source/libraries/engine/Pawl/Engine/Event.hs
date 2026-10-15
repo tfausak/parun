@@ -6573,9 +6573,13 @@ changeZoneWithCause discarded asOf batch oid requestedDest requestedPosition see
               -- Pawl.FaceDownSpec's Synthetic Unmasking Witness group proves it.
               -- The rule's second sentence is a face-down SPELL leaving the stack
               -- for anywhere but the battlefield; Pawl.FaceDownSpec's "CR 708.9
-              -- a countered face-down spell is revealed" proves that half.
+              -- a countered face-down spell is revealed" proves that half. The
+              -- rule's "face-down component of a merged permanent" is
+              -- componentReveals'.
               Monad.when (fromZone == Zone.Battlefield && dest /= Zone.Battlefield && Facing.isFaceDown (Object.facing obj)) $
                 reveal RevealCause.LeavingFaceDown pid oid
+              Monad.when (fromZone == Zone.Battlefield && dest /= Zone.Battlefield) $
+                State.modify' (\g -> List.foldl' (flip recordEvent) g (componentReveals g oid))
               Monad.when (fromZone == Zone.Stack && dest /= Zone.Battlefield && Facing.isFaceDown (Object.facing obj)) $
                 reveal RevealCause.FaceDownSpell pid oid
               -- CR 712.13a's rollback point; see the branch after the entry loop.
@@ -8501,11 +8505,10 @@ meldable victims gs = do
 -- "other effects don't count it as being turned face up" and CR 613.7f's new
 -- timestamp is for a permanent that turns over; and no GameEvent.TurnedFaceUp,
 -- so the CR 708.7 abilities Pawl.Engine.FaceDown.performTurnFaceUp records that
--- event for do not trigger.
--- CR 730.2f needs nothing of its own -- "each face-up component that represents
--- it is turned face down", and every component of a pawl permanent shares the
--- one status this line writes, so the components cannot fall out of step with
--- the permanent or with each other.
+-- event for do not trigger. Each component keeps its own status
+-- (Pawl.Types.ShownComponent), so a face-down card under a face-up topmost one
+-- stays face down (CR 708.9, 712.15a) until CR 730.2f's Game.withFacing turns
+-- them all.
 --
 -- Each side's record is read at LAYER 1a, before layer 1b's face-down
 -- substitution (Projection.copiableCharacteristicsFaceUp), which is CR 613.2a's
@@ -8524,8 +8527,8 @@ meldable victims gs = do
 -- decided here or nowhere.
 --
 -- CR 730.2i's double-faced components are stamped as a TURNED reading beside
--- it, both sides read again through Projection.copiableCharacteristicsTurned
--- with its own flipped reading nested the same way, which Game.turnFaceOver
+-- it, both sides read again with Game.withFaceTurned's double-faced card
+-- turned over and its own flipped reading nested the same way, which Game.turnFaceOver
 -- swaps in when the merged permanent transforms -- for the flipped reading's
 -- reason, and flipped reading and all, since a flip component stays flipped (CR
 -- 710.4).
@@ -8542,7 +8545,7 @@ merge sid target side = do
     (Just spell, Just permanent) -> case (mergingComponent spell, mergeComponents permanent) of
       (Just merging, Just existing) -> do
         let -- CR 712.13's face, the one the spell would have entered showing.
-            component = ShownComponent.MkShownComponent merging (Game.cardOf sid gs >>= \card -> Card.enteringFace card (Object.face spell))
+            component = ShownComponent.MkShownComponent merging (Game.cardOf sid gs >>= \card -> Card.enteringFace card (Object.face spell)) (Object.facing spell)
             merged = case side of
               MutateSide.Over -> component NonEmpty.:| existing
               MutateSide.Under -> case existing of
@@ -8564,15 +8567,27 @@ merge sid target side = do
             -- record and the permanent's, which is its copy stamp where an
             -- earlier copy effect gave it one and its printed seed otherwise.
             unrowed = Game.supersedeStoredCopies (Set.singleton target) gs
-            reading ask board = fold (ask sid board) (ask target board)
+            reading (askSpell, askHost) board = fold (askSpell sid board) (askHost target board)
+            both ask = (ask, ask)
+            -- CR 730.2i: a side asked with its double-faced card turned over.
+            -- A side with nothing to transform reads as it did, and a merged
+            -- side swaps in the turned reading its own merge stamped.
+            turnedAsk ask oid = ask oid . Game.withFaceTurned oid
+            -- CR 712.15a: a face-down target the spell goes OVER stays face
+            -- down under a face-up topmost component (CR 730.2e), so it does
+            -- not turn with the pile and its turned reading is its own.
+            -- Pawl.MutateSpec's "CR 712.15a a face-down component stays
+            -- unturned when the pile transforms" proves it.
+            hostStaysDown = side == MutateSide.Over && Facing.isFaceDown (Object.facing permanent)
+            turning ask = (turnedAsk ask, if hostStaysDown then ask else turnedAsk ask)
             -- CR 730.2h's reading of the same two sides, nested as PC.flipped:
             -- each flip component's alternative characteristics in place of its
             -- normal ones, and every other component's record unchanged. CR
             -- 730.2i's reading beside it, each double-faced component turned
             -- over, with its own flipped reading nested the same way.
             readings board =
-              ( readingOf Projection.copiableCharacteristicsFaceUp Projection.copiableCharacteristicsFlipped board,
-                readingOf Projection.copiableCharacteristicsTurned (\oid -> Projection.copiableCharacteristicsFlipped oid . Game.withFaceTurned oid) board
+              ( readingOf (both Projection.copiableCharacteristicsFaceUp) (both Projection.copiableCharacteristicsFlipped) board,
+                readingOf (turning Projection.copiableCharacteristicsFaceUp) (turning Projection.copiableCharacteristicsFlipped) board
               )
             readingOf up flippedAsk board = withFlip (reading up board) (reading flippedAsk board)
             -- A reading with its flipped one nested, where the two differ; any
@@ -8658,8 +8673,9 @@ mergeComponents permanent = case Object.source permanent of
   Source.OfCardCopy _ -> Nothing
   Source.OfInherentTrigger _ -> Nothing
   where
-    -- The one component an unmerged permanent is, showing its own face.
-    alone component = Just [ShownComponent.MkShownComponent component (Object.face permanent)]
+    -- The one component an unmerged permanent is, showing its own face with
+    -- its own status.
+    alone component = Just [ShownComponent.MkShownComponent component (Object.face permanent) (Object.facing permanent)]
 
 -- CR 730.2's OTHER side: "the card or copy that represented that object", which
 -- is what the merging spell contributes to the component list. Two of rule
@@ -8741,7 +8757,7 @@ lastKnownRecord gs oid = fmap (lastKnownFrom gs oid) (Game.lookupObject oid gs)
 lastKnownFrom :: GameState -> ObjectId -> Object.Object -> LastKnown.LastKnown
 lastKnownFrom gs oid obj =
   LastKnown.MkLastKnown
-    (Projection.project oid gs)
+    characteristics
     -- CR 613.1b, and the reason this record is what a departure's trigger is
     -- read from: control is not a characteristic (CR 109.3), so it cannot ride
     -- the projection, and CR 603.3a asks who controlled a source that is
@@ -8783,6 +8799,10 @@ lastKnownFrom gs oid obj =
     (Object.zone obj)
     -- CR 400.1: the pile it left.
     (Game.pileHolderOf oid gs)
+    -- CR 604.2's clauses, asked while there is still a board to ask them of.
+    (Projection.lapsedGrantsOf (Projection.fullView gs) characteristics oid gs)
+  where
+    characteristics = Projection.project oid gs
 
 -- | An object leaves the GAME rather than a zone -- CR 800.4a's first clause,
 -- or CR 729.4a's crossing into a subgame -- at the instant `asOf` describes,
@@ -8813,7 +8833,7 @@ lastKnownFrom gs oid obj =
 -- effect there is anything to continue.
 --
 -- Records no event: when each departure's events are recorded, and which zones
--- they name, is the caller's (leavingReveal is the CR 708.9 one).
+-- they name, is the caller's (leavingReveals is the CR 708.9 one).
 leaveTheGame :: GameState -> GameState -> ObjectId -> GameState
 leaveTheGame asOf g oid = case lastKnownRecord asOf oid of
   Nothing -> g
@@ -8834,7 +8854,7 @@ leaveTheGame asOf g oid = case lastKnownRecord asOf oid of
             GameState.exilePiles = Map.delete oid (GameState.exilePiles g1)
           }
 
--- | CR 708.9: the reveal a face-down permanent's or face-down spell's owner
+-- | CR 708.9: the reveals a face-down permanent's or face-down spell's owner
 -- owes as it leaves the game, read off `asOf`, the board it is leaving; and CR
 -- 702.143f's for a face-down foretold card in exile and CR 702.106e's for a
 -- face-down conspiracy, plain reveals. Nothing for anything else, including a
@@ -8844,27 +8864,52 @@ leaveTheGame asOf g oid = case lastKnownRecord asOf oid of
 -- revealed when its owner leaves the game" and Pawl.ConspiracySpec's "CR
 -- 702.106e" case prove the halves past permanents.
 --
--- Not implemented: a face-down component of a face-up merged permanent, which
--- needs a status per component (#4878).
-leavingReveal :: GameState -> ObjectId -> Maybe GameEvent.GameEvent
-leavingReveal asOf oid = do
-  obj <- Game.lookupObject oid asOf
-  let faceDown = Facing.isFaceDown (Object.facing obj)
-      causeOf
-        | Set.member oid (GameState.battlefield asOf) && faceDown = Just RevealCause.LeavingFaceDown
-        | Object.zone obj == Zone.Stack && faceDown = Just RevealCause.FaceDownSpell
-        | Object.zone obj == Zone.Exile && Object.exiledFaceDown obj && Maybe.isJust (Object.foretold obj) = Just RevealCause.Ordinary
-        | Conspiracy.isFaceDownConspiracy oid asOf = Just RevealCause.Ordinary -- CR 702.106e
-        | otherwise = Nothing
-  cause <- causeOf
-  revealedOn cause (Object.owner obj) oid asOf
+-- A face-up merged permanent's face-down components are `componentReveals`'.
+leavingReveals :: GameState -> ObjectId -> [GameEvent.GameEvent]
+leavingReveals asOf oid = Maybe.maybeToList whole <> componentReveals asOf oid
+  where
+    whole = do
+      obj <- Game.lookupObject oid asOf
+      let faceDown = Facing.isFaceDown (Object.facing obj)
+          causeOf
+            | Set.member oid (GameState.battlefield asOf) && faceDown = Just RevealCause.LeavingFaceDown
+            | Object.zone obj == Zone.Stack && faceDown = Just RevealCause.FaceDownSpell
+            | Object.zone obj == Zone.Exile && Object.exiledFaceDown obj && Maybe.isJust (Object.foretold obj) = Just RevealCause.Ordinary
+            | Conspiracy.isFaceDownConspiracy oid asOf = Just RevealCause.Ordinary -- CR 702.106e
+            | otherwise = Nothing
+      cause <- causeOf
+      revealedOn cause (Object.owner obj) oid asOf
+
+-- | CR 708.9: "a face-down component of a merged permanent", revealed by its
+-- owner as the permanent leaves the battlefield, as its owner leaves the game,
+-- or as the game ends, read off `asOf`: one reveal per face-down component of a
+-- FACE-UP merged permanent on the battlefield, a face-down one being revealed
+-- whole (RevealCause.LeavingFaceDown). Pawl.MutateSpec's "CR 708.9 a face-down
+-- component is revealed as its face-up pile is destroyed" and "CR 708.9 a
+-- face-down component is revealed as its owner leaves the game" prove it.
+--
+-- Not implemented: the snapshot is the face-down face rather than the card
+-- shown, as for a face-down permanent (#5013).
+componentReveals :: GameState -> ObjectId -> [GameEvent.GameEvent]
+componentReveals asOf oid = case Game.lookupObject oid asOf of
+  Just obj
+    | Set.member oid (GameState.battlefield asOf),
+      not (Facing.isFaceDown (Object.facing obj)),
+      Source.OfMerge components <- Object.source obj ->
+        [ GameEvent.Revealed (Revealed.MkRevealed (Object.owner obj) oid RevealCause.LeavingFaceDownComponent (Projection.project oid (showing facing)))
+        | facing <- fmap ShownComponent.facing (NonEmpty.toList components),
+          Facing.isFaceDown facing
+        ]
+  _ -> []
+  where
+    showing facing = asOf {GameState.objects = Map.adjust (\o -> o {Object.facing = facing}) oid (GameState.objects asOf)}
 
 -- | CR 708.9 / 702.143f / 702.106e, each rule's last sentence: at the end of
--- each game, the reveals leavingReveal names for one departing owner are owed
+-- each game, the reveals leavingReveals names for one departing owner are owed
 -- for every owner at once, recorded as one event group. Pawl.FaceDownSpec's
 -- "CR 708.9 the end of the game reveals" case proves it.
 endOfGameReveals :: GameState -> GameState
-endOfGameReveals gs = case Maybe.mapMaybe (leavingReveal gs) (Map.keys (GameState.objects gs)) of
+endOfGameReveals gs = case concatMap (leavingReveals gs) (Map.keys (GameState.objects gs)) of
   [] -> gs
   revealed -> simultaneouslyPure (\g -> List.foldl' (flip recordEvent) g revealed) gs
 

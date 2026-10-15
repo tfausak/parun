@@ -11,6 +11,9 @@ import qualified Pawl.Spec as Spec
 import qualified Pawl.Types.AttackTarget as AttackTarget
 import qualified Pawl.Types.CardName as CardName
 import qualified Pawl.Types.Color as Color
+import qualified Pawl.Types.Compares as Compares
+import qualified Pawl.Types.Comparison as Comparison
+import qualified Pawl.Types.Condition as Condition
 import qualified Pawl.Types.ControlClock as ControlClock
 import qualified Pawl.Types.Cost as Cost
 import qualified Pawl.Types.CounterKind as CounterKind
@@ -21,6 +24,7 @@ import qualified Pawl.Types.ManaSymbol as ManaSymbol
 import qualified Pawl.Types.ObjectId as ObjectId
 import qualified Pawl.Types.PlayerId as PlayerId
 import qualified Pawl.Types.PrintingId as PrintingId
+import qualified Pawl.Types.Quantity as Quantity
 import qualified Pawl.Types.Source as Source
 import qualified Pawl.Types.Subtype as Subtype
 import qualified Pawl.Types.Zone as Zone
@@ -62,7 +66,8 @@ spec s = Spec.describe s "Pawl.Codec.LastKnown" $ do
           LastKnown.announcedX = Just 4,
           LastKnown.controlClock = Map.singleton (PlayerId.MkPlayerId 1) ControlClock.SinceLastUpkeep,
           LastKnown.zone = Zone.Battlefield,
-          LastKnown.pile = Just (PlayerId.MkPlayerId 6)
+          LastKnown.pile = Just (PlayerId.MkPlayerId 6),
+          LastKnown.lapsedGrants = Set.singleton (Condition.Compares (Compares.MkCompares (Quantity.Literal 3) Comparison.AtLeast (Quantity.Literal 5)))
         }
       ( " {\"characteristics\":"
           <> ProjectedCharacteristicsSpec.testCharacteristicsJson
@@ -76,7 +81,8 @@ spec s = Spec.describe s "Pawl.Codec.LastKnown" $ do
           <> ",\"prototyped\":true"
           <> ",\"announcedX\":4"
           <> ",\"controlClock\":[{\"player\":1,\"clock\":{\"type\":\"SinceLastUpkeep\"}}]"
-          <> ",\"zone\":{\"type\":\"Battlefield\"},\"pile\":6} "
+          <> ",\"zone\":{\"type\":\"Battlefield\"},\"pile\":6"
+          <> ",\"lapsedGrants\":[{\"type\":\"Compares\",\"value\":{\"measured\":{\"type\":\"Literal\",\"value\":3},\"comparison\":{\"type\":\"AtLeast\"},\"threshold\":{\"type\":\"Literal\",\"value\":5}}}]} "
       )
   -- CR 109.3: neither an attachment nor a chosen name is a characteristic, and
   -- most objects have neither, so the absent case is written out rather than left
@@ -107,7 +113,8 @@ spec s = Spec.describe s "Pawl.Codec.LastKnown" $ do
           LastKnown.announcedX = Nothing,
           LastKnown.controlClock = Map.empty,
           LastKnown.zone = Zone.Stack,
-          LastKnown.pile = Nothing
+          LastKnown.pile = Nothing,
+          LastKnown.lapsedGrants = Set.empty
         }
       ( " {\"characteristics\":"
           <> minimalJson

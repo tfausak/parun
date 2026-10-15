@@ -96,9 +96,9 @@ data GameState = MkGameState
     -- that has emptied it.
     sideDecks :: Map.Map SideDeck.SideDeck (Map.Map PlayerId.PlayerId (Seq.Seq ObjectId.ObjectId)),
     stack :: [ObjectId.ObjectId],
-    -- | CR 610.3a / 610.3b: the event group current as each object was put on
-    -- the stack, so an event logged in it or a later one happened after that.
-    -- Written by Pawl.Engine.Game.putOnStack, cleared with `events`.
+    -- | CR 610.3a / 610.3b: the first event group whose events happened after
+    -- each object was put on the stack, or for a triggered ability after it
+    -- triggered. Written by Pawl.Engine.Game.putOnStack, cleared with `events`.
     stackedIn :: Map.Map ObjectId.ObjectId EventGroup.EventGroup,
     players :: Map.Map PlayerId.PlayerId Player.Player,
     -- | CR 729.4: the cards outside this game that sit in a game on hold; empty

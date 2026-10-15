@@ -13,6 +13,7 @@ codec =
     [ Arm.nullary "Ordinary" RevealCause.Ordinary,
       Arm.payload "ForMiracle" (Cost.codec Keyword.codec) RevealCause.ForMiracle (\x -> case x of RevealCause.ForMiracle y -> Just y; _ -> Nothing),
       Arm.nullary "LeavingFaceDown" RevealCause.LeavingFaceDown,
+      Arm.nullary "LeavingFaceDownComponent" RevealCause.LeavingFaceDownComponent,
       Arm.nullary "FaceDownSpell" RevealCause.FaceDownSpell
     ]
 
@@ -21,4 +22,5 @@ tagOf x = case x of
   RevealCause.Ordinary {} -> "Ordinary"
   RevealCause.ForMiracle {} -> "ForMiracle"
   RevealCause.LeavingFaceDown {} -> "LeavingFaceDown"
+  RevealCause.LeavingFaceDownComponent {} -> "LeavingFaceDownComponent"
   RevealCause.FaceDownSpell {} -> "FaceDownSpell"
