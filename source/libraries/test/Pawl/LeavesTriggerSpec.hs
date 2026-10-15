@@ -682,7 +682,7 @@ dutifulKnowledgeSeekerSpec s registry =
         -- CR 603.10a's "an object that all players can see" leaving a HIDDEN
         -- zone. Caustic Exhale {B} Instant, "As an additional cost to cast this
         -- spell, behold a Dragon or pay {1}. Target creature gets -3/-3 until
-        -- end of turn." (Oracle checked against Scryfall 2026-09-18.) Beholding
+        -- end of turn." (Oracle checked against Scryfall 2026-10-15.) Beholding
         -- reveals alice's Hoarding Dragon card until the Exhale leaves the stack
         -- (CR 701.20a). With the Exhale still waiting, the Seeker is exiled as
         -- the Dragon card goes into her library, in one event: the Seeker is gone,
