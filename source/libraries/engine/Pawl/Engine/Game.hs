@@ -1851,9 +1851,21 @@ turnFacing facing oid gs =
   let (ts, stamped) = freshTimestamp gs
       restamps = Set.member oid (GameState.battlefield gs) || (Set.member oid (GameState.command gs) && facing == Facing.FaceUp)
       next = if restamps then stamped else gs
-      adjust o = o {Object.facing = facing, Object.timestamp = if restamps then ts else Object.timestamp o}
+      adjust o = (withFacing facing o) {Object.timestamp = if restamps then ts else Object.timestamp o}
       turned = next {GameState.objects = Map.adjust adjust oid (GameState.objects next)}
    in if restamps then restampStickers oid turned else turned
+
+-- CR 730.2f: `object` showing `facing`, and for a merged permanent
+-- every component with it -- "if a merged permanent is turned face down, each
+-- face-up component that represents it is turned face down", and face up the
+-- same way. Pawl.MutateSpec's "CR 730.2i a merged permanent that was face down
+-- transforms once turned face up" proves the face-up half.
+withFacing :: Facing.Facing -> Object -> Object
+withFacing facing object =
+  let source = case Object.source object of
+        Source.OfMerge components -> Source.OfMerge (fmap (\shown -> shown {ShownComponent.facing = facing}) components)
+        other -> other
+   in object {Object.facing = facing, Object.source = source}
 
 -- CR 712.16 / 730.2j: the permanent is represented by a double-faced card or
 -- token, or is melded or merged with a double-faced component, so it can't be
@@ -1938,13 +1950,16 @@ takesTurnStamp oid gs = case fmap Object.source (lookupObject oid gs) of
 --
 -- Asked of the object FACE UP, the posture of the layer-1a read it feeds
 -- (Pawl.Engine.Projection.View.copiableCharacteristicsFaceUp): a face-down
--- merge target turns face up before it can transform (CR 730.2f), so CR
--- 712.15a's refusal in `turnedObject` is not this reading's. Pawl.MutateSpec's
--- "CR 730.2i a merged permanent that was face down transforms once turned face
--- up" proves it.
+-- merge target turns face up, every component with it, before it can transform
+-- (CR 730.2f), so CR 712.15a's refusal in `turnedObject` is not this reading's.
+-- Pawl.MutateSpec's "CR 730.2i a merged permanent that was face down transforms
+-- once turned face up" proves it. A face-up pile's face-down component stays
+-- face down here and does not turn (`componentTurnsTo`); a target merged UNDER
+-- a face-up card stays face down too, which Pawl.Engine.Event.merge asks
+-- without this reading.
 withFaceTurned :: ObjectId -> GameState -> GameState
 withFaceTurned oid gs =
-  let up = gs {GameState.objects = Map.adjust (\o -> o {Object.facing = Facing.FaceUp}) oid (GameState.objects gs)}
+  let up = gs {GameState.objects = Map.adjust (\o -> if Facing.isFaceDown (Object.facing o) then withFacing Facing.FaceUp o else o) oid (GameState.objects gs)}
    in case lookupObject oid up >>= \object -> turnedObject object up of
         Just turned -> (turnStoredCopies oid up) {GameState.objects = Map.insert oid turned (GameState.objects up)}
         Nothing -> up
@@ -2176,10 +2191,12 @@ turnedObject object gs
 -- CR 712.4c keeps from turning -- a regression fence, since no printed combined
 -- face is double-faced.
 --
--- Not implemented: a status per component, so a face-down double-faced
--- component under a face-up topmost one turns over against CR 712.15a (#5040).
+-- Nothing for a face-down component, which CR 712.15a keeps from turning under
+-- a face-up topmost one (CR 730.2e). Pawl.MutateSpec's "CR 712.15a Moonmist
+-- does not turn a face-down component of a face-up pile" proves it.
 componentTurnsTo :: ShownComponent.ShownComponent -> GameState -> Maybe CardName.CardName
 componentTurnsTo shown gs = case ShownComponent.component shown of
+  _ | Facing.isFaceDown (ShownComponent.facing shown) -> Nothing
   MergeComponent.OfMeld _ -> Nothing
   component -> cardOfSource gs (Just (sourceOfComponent component)) >>= Card.turnedOver (ShownComponent.face shown)
 
