@@ -13,6 +13,7 @@ import qualified Pawl.Types.ObjectSnapshot as ObjectSnapshot
 import qualified Pawl.Types.PlayerId as PlayerId
 import qualified Pawl.Types.SlotName as SlotName
 import qualified Pawl.Types.Voted as Voted
+import qualified Pawl.Types.Zone as Zone
 
 -- Pawl.Codec.Ballot and Pawl.Codec.BallotChoice have no spec of their own;
 -- these cases, one per choice, are it.
@@ -33,7 +34,8 @@ spec s = Spec.describe s "Pawl.Codec.Voted" $ do
                         { ObjectSnapshot.object = ObjectId.MkObjectId 7,
                           ObjectSnapshot.characteristics = ProjectedCharacteristicsSpec.testCharacteristics,
                           ObjectSnapshot.controller = Just (PlayerId.MkPlayerId 0),
-                          ObjectSnapshot.owner = PlayerId.MkPlayerId 0
+                          ObjectSnapshot.owner = PlayerId.MkPlayerId 0,
+                          ObjectSnapshot.zone = Zone.Battlefield
                         }
                 },
             Voted.audience = Set.fromList [PlayerId.MkPlayerId 0, PlayerId.MkPlayerId 1]
@@ -41,7 +43,7 @@ spec s = Spec.describe s "Pawl.Codec.Voted" $ do
       )
       ( "{\"ballot\":{\"voter\":1,\"choice\":{\"type\":\"ForObject\",\"value\":{\"object\":7,\"characteristics\":"
           <> ProjectedCharacteristicsSpec.testCharacteristicsJson
-          <> ",\"controller\":0,\"owner\":0}}},\"audience\":[0,1]}"
+          <> ",\"controller\":0,\"owner\":0,\"zone\":{\"type\":\"Battlefield\"}}}},\"audience\":[0,1]}"
       )
   -- CR 701.38b's word choice, shown to its voter alone.
   Spec.it s "MkVoted, a word ballot" $

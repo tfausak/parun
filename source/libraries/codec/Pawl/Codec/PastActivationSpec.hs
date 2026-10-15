@@ -10,6 +10,7 @@ import qualified Pawl.Types.ObjectId as ObjectId
 import qualified Pawl.Types.ObjectSnapshot as ObjectSnapshot
 import qualified Pawl.Types.PastActivation as PastActivation
 import qualified Pawl.Types.PlayerId as PlayerId
+import qualified Pawl.Types.Zone as Zone
 
 spec :: (Monad m, Monad n) => Spec.Spec m n -> n ()
 spec s = Spec.describe s "Pawl.Codec.PastActivation" $ do
@@ -18,9 +19,10 @@ spec s = Spec.describe s "Pawl.Codec.PastActivation" $ do
           { ObjectSnapshot.object = ObjectId.MkObjectId n,
             ObjectSnapshot.characteristics = ProjectedCharacteristicsSpec.testCharacteristics,
             ObjectSnapshot.controller = Just (PlayerId.MkPlayerId 1),
-            ObjectSnapshot.owner = PlayerId.MkPlayerId 1
+            ObjectSnapshot.owner = PlayerId.MkPlayerId 1,
+            ObjectSnapshot.zone = Zone.Stack
           }
-      snapshotJson n = "{\"object\":" <> show (n :: Integer) <> ",\"characteristics\":" <> ProjectedCharacteristicsSpec.testCharacteristicsJson <> ",\"controller\":1,\"owner\":1}"
+      snapshotJson n = "{\"object\":" <> show (n :: Integer) <> ",\"characteristics\":" <> ProjectedCharacteristicsSpec.testCharacteristicsJson <> ",\"controller\":1,\"owner\":1,\"zone\":{\"type\":\"Stack\"}}"
   Spec.it s "a keyword ability announced at one target" $
     Common.assertCodec
       s
