@@ -51,6 +51,7 @@ import qualified Pawl.Types.ActiveReplacement as ActiveReplacement
 import qualified Pawl.Types.AttackTarget as AttackTarget
 import qualified Pawl.Types.BeginningStep as BeginningStep
 import qualified Pawl.Types.BlockStatus as BlockStatus
+import qualified Pawl.Types.CandidateCost as CandidateCost
 import qualified Pawl.Types.Card as Card.Type
 import qualified Pawl.Types.CardName as CardName
 import qualified Pawl.Types.CardType as CardType
@@ -3032,7 +3033,7 @@ outlastSpec s registry = Spec.describe s "Outlast" $ do
 -- Answers CR 601.2b's ChooseCost with `pick` and aims every target at `victim`.
 payingAt :: ([Cost.Type.Cost Keyword.Keyword] -> Cost.Type.Cost Keyword.Keyword) -> ObjectId.ObjectId -> Prompt.Prompt r -> r
 payingAt pick victim p = case p of
-  Prompt.ChooseCost _ _ _ costs -> pick costs
+  Prompt.ChooseCost _ _ _ costs -> Cost.untagged (pick (fmap CandidateCost.cost costs))
   _ -> aimAtOffered victim p
 
 -- Kíli the Resourceful, checked against Scryfall on 2026-09-28: "As long as you

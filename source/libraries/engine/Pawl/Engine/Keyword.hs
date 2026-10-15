@@ -2999,7 +2999,7 @@ madnessCostFor manaCost payload = case payload of
   MadnessCost.Stated cost -> cost
   MadnessCost.OwnManaCost -> Cost.MkCost {Cost.mana = manaCost, Cost.components = []}
 
--- CR 702.34a / 702.97a / 702.128a / 702.141a / 702.168a: the keyword a
+-- CR 702.34a / 702.97a / 702.128a / 702.141a / 702.168a / 702.152a: the keyword a
 -- Modification.GainKeywordAtManaCost names, carrying the [cost] it was priced
 -- at. Pawl.Engine.Projection supplies the receiving object's mana cost.
 withCost :: CostKeyword.CostKeyword -> Cost Keyword -> Keyword
@@ -3009,6 +3009,7 @@ withCost keyword cost = case keyword of
   CostKeyword.Embalm -> Keyword.Embalm cost
   CostKeyword.Encore -> Keyword.Encore cost
   CostKeyword.Disguise -> Keyword.Disguise cost
+  CostKeyword.Blitz -> Keyword.Blitz cost
 
 -- CR 702.102a: does this card's keyword set let both halves be cast as one fused
 -- split spell? Its one reader is Pawl.Engine.Cast.fusedFaceOf, which asks it of

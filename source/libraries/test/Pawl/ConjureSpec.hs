@@ -78,6 +78,7 @@ import qualified Pawl.Support as S
 import qualified Pawl.Types.Action as Action
 import qualified Pawl.Types.Asked as Asked
 import qualified Pawl.Types.BeginningStep as BeginningStep
+import qualified Pawl.Types.CandidateCost as CandidateCost
 import qualified Pawl.Types.Card as Card
 import qualified Pawl.Types.CardName as CardName
 import qualified Pawl.Types.Clause as Clause
@@ -1342,7 +1343,7 @@ mergingOnto host board spellId =
   let answer :: Prompt.Prompt r -> r
       answer p = case p of
         Prompt.ChooseCost _ _ _ candidates ->
-          Maybe.fromMaybe (Cost.firstOffered candidates) (List.find ((== Just cubwardenMutateCost) . Cost.Type.mana) candidates)
+          Maybe.fromMaybe (Cost.firstOffered candidates) (List.find ((== Just cubwardenMutateCost) . Cost.Type.mana . CandidateCost.cost) candidates)
         Prompt.ChooseTargets _ _ _ sets -> fmap (Set.filter ((== Just host) . Recipient.objectOf) . snd) sets
         Prompt.ChooseMutateSide {} -> MutateSide.Over
         _ -> S.identityAnswer p

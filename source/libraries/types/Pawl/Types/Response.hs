@@ -7,6 +7,7 @@ import qualified Numeric.Natural as Natural
 import qualified Pawl.Types.Action as Action
 import qualified Pawl.Types.AttackTarget as AttackTarget
 import qualified Pawl.Types.BuybackDecision as BuybackDecision
+import qualified Pawl.Types.CandidateCost as CandidateCost
 import qualified Pawl.Types.Card as Card
 import qualified Pawl.Types.CardName as CardName
 import qualified Pawl.Types.CastFromZone as CastFromZone
@@ -15,7 +16,6 @@ import qualified Pawl.Types.CoinFace as CoinFace
 import qualified Pawl.Types.Color as Color
 import qualified Pawl.Types.CommandZoneDecision as CommandZoneDecision
 import qualified Pawl.Types.Concession as Concession
-import qualified Pawl.Types.Cost as Cost
 import qualified Pawl.Types.CounterKind as CounterKind
 import qualified Pawl.Types.Designation as Designation
 import qualified Pawl.Types.EntwineDecision as EntwineDecision
@@ -690,7 +690,7 @@ data Response
   | -- | CR 701.3a: the object a player chose to attach a moving permanent to.
     ChoseAttachment ObjectId.ObjectId
   | -- | CR 601.2b: the cost a caster announced they would pay.
-    ChoseCost (Cost.Cost Keyword.Keyword)
+    ChoseCost CandidateCost.CandidateCost
   | -- | CR 601.3 / 305.1: the permission a player made a play under (Nothing =
     -- none of the offered ones).
     ChosePlayPermission (Maybe (ObjectId.ObjectId, CastFromZone.CastFromZone))

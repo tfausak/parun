@@ -41,6 +41,7 @@ import qualified Pawl.Support as S
 import qualified Pawl.Types.Action as Action
 import qualified Pawl.Types.ActivatedAbility as ActivatedAbility
 import qualified Pawl.Types.BeginningStep as BeginningStep
+import qualified Pawl.Types.CandidateCost as CandidateCost
 import qualified Pawl.Types.Card as Card.Type
 import qualified Pawl.Types.CardName as CardName
 import qualified Pawl.Types.Color as Color
@@ -1011,7 +1012,7 @@ theBlue = ManaSymbol.OfType (ManaType.Colored Color.Blue)
 payingFor :: [ManaSymbol.ManaSymbol] -> Prompt.Prompt r -> r
 payingFor wanted p = case p of
   Prompt.ChooseCost _ _ _ candidates ->
-    Maybe.fromMaybe (Cost.firstOffered candidates) (List.find ((== Just (ManaCost.MkManaCost wanted)) . Cost.Type.mana) candidates)
+    Maybe.fromMaybe (Cost.firstOffered candidates) (List.find ((== Just (ManaCost.MkManaCost wanted)) . Cost.Type.mana . CandidateCost.cost) candidates)
   _ -> S.identityAnswer p
 
 aimCreature :: ObjectId -> Prompt.Prompt r -> r

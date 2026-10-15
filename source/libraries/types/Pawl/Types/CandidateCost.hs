@@ -23,6 +23,12 @@ import qualified Pawl.Types.ManaCost as ManaCost
 -- printed cost, one of its printed alternatives, or a cost an effect applied
 -- (CR 118.9) -- in each case a cost no keyword ability offered.
 --
+-- Also what Prompt.ChooseCost offers and is answered with at every site, so
+-- the answer names the candidate and not just its cost: Henzie "Toolbox"
+-- Torre's blitz at a spell's own mana cost equals the printed cost and is a
+-- different announcement (CR 601.2b, 702.152a). Sites where no keyword offers a
+-- cost tag every candidate Nothing.
+--
 -- The keyword is the one READ IN THE ZONE the cast was proposed from (CR
 -- 613.1), since that is where Pawl.Engine.Cost.candidateCostsFor builds the
 -- list: a granted flashback tags its candidate exactly as a printed one does.

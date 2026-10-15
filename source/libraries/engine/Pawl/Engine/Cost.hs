@@ -224,10 +224,10 @@ untagged :: Cost Keyword.Type.Keyword -> CandidateCost.CandidateCost
 untagged = CandidateCost.plain Nothing
 
 -- The first offered candidate, or `unpayable` when none was offered.
-firstOffered :: [Cost Keyword.Type.Keyword] -> Cost Keyword.Type.Keyword
+firstOffered :: [CandidateCost.CandidateCost] -> CandidateCost.CandidateCost
 firstOffered candidates = case candidates of
   c : _ -> c
-  [] -> unpayable
+  [] -> untagged unpayable
 
 -- CR 702.37a and CR 702.168a: what a face-down cast pays. Both rules fix it at
 -- {3}, so one value serves both. An alternative cost (CR 118.9) stated by the
@@ -4627,8 +4627,8 @@ announceSubstitutionsReading slots substituting pid oid cost = case Cost.mana co
       [] -> pure (cost, [])
       [only] -> pure only
       first : rest -> do
-        chosen <- Game.choose (Prompt.ChooseCost (Decide.deciderFor pid gs) pid oid (fmap whole (first : rest)))
-        pure (Maybe.fromMaybe first (List.find ((== chosen) . whole) offered))
+        chosen <- Game.choose (Prompt.ChooseCost (Decide.deciderFor pid gs) pid oid (fmap (untagged . whole) (first : rest)))
+        pure (Maybe.fromMaybe first (List.find ((== chosen) . untagged . whole) offered))
 
 -- CR 601.2g then 601.2h: the mana window first, then the payment, whose order is
 -- the PAYER's (payComponents below).

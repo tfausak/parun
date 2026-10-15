@@ -49,6 +49,7 @@ import qualified Pawl.Types.Combat as Combat
 import qualified Pawl.Types.Condition as Condition.Type
 import qualified Pawl.Types.ContinuousEffect as ContinuousEffect
 import qualified Pawl.Types.CopyException as CopyException
+import qualified Pawl.Types.Cost as Cost
 import qualified Pawl.Types.CounterKind as CounterKind
 import qualified Pawl.Types.Face as Face
 import qualified Pawl.Types.Facing as Facing
@@ -1492,17 +1493,21 @@ staticAbilitiesOf carrier gs =
 -- staticAbilitiesOf mints a printed one, at the grant's timestamp. Its effect
 -- then applies in its own layer (CR 613.1d), not in the grant's.
 -- Pawl.ProjectionSpec's "CR 702.161a living metal granted by a RESOLUTION"
--- proves it. A STATIC ability's grant of such a keyword mints nothing. Query:
--- MTGJSON's 2026-08-23 dump, text matching `\b(have|has)\b[^."]*\b(dash|blitz|
--- reconfigure|impending|living metal)\b`, run 2026-09-27, finds only Henzie
--- "Toolbox" Torre and The Caldaia, which grant blitz to creature SPELLS and are
--- not in data/cards/. A quoted static ability another static ability grants is
--- gathered by Pawl.Engine.Projection.withStaticGrants.
+-- proves it. A STATIC ability's grant of such a keyword mints here only once CR
+-- 400.7b has stored it against the permanent (Pawl.Engine.Stack.carryGrants):
+-- The Caldaia's blitz {3}, and Henzie "Toolbox" Torre's blitz priced at the
+-- permanent's copiable mana cost, the cost Pawl.Engine.Projection prices the
+-- keyword at. Pawl.CastSpec's "Henzie" group proves the second. A quoted static
+-- ability another static ability grants is gathered by
+-- Pawl.Engine.Projection.withStaticGrants.
 grantedStaticAbilitiesOf :: ObjectId -> GameState -> [(Timestamp, StaticAbility.StaticAbility (GrantedAbility.GrantedAbility Card.Type.Card))]
 grantedStaticAbilitiesOf oid gs =
-  let grant eff = case (ContinuousEffect.modification eff, ContinuousEffect.affected eff) of
+  let minted eff keyword = fmap ((,) (ContinuousEffect.timestamp eff)) (Keyword.mintedStaticAbilitiesOf (Set.singleton keyword))
+      manaCost = maybe (Face.manaCost =<< Game.faceOf oid gs) PC.manaCost (copiableSnapshotOf oid gs)
+      grant eff = case (ContinuousEffect.modification eff, ContinuousEffect.affected eff) of
         (Modification.GainAbility (GrantedAbility.Static sa), Affected.TheseObjects held) | Set.member oid held -> [(ContinuousEffect.timestamp eff, sa)]
-        (Modification.GainKeyword keyword, Affected.TheseObjects held) | Set.member oid held -> fmap ((,) (ContinuousEffect.timestamp eff)) (Keyword.mintedStaticAbilitiesOf (Set.singleton keyword))
+        (Modification.GainKeyword keyword, Affected.TheseObjects held) | Set.member oid held -> minted eff keyword
+        (Modification.GainKeywordAtManaCost keyword, Affected.TheseObjects held) | Set.member oid held -> minted eff (Keyword.withCost keyword (Cost.MkCost manaCost []))
         _ -> []
    in List.sortOn fst (concatMap grant (GameState.continuousEffects gs))
 

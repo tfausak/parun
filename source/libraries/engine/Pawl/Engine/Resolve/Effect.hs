@@ -12134,8 +12134,8 @@ payGateAgreed resolving source offer earlier payer gate slots owed options = do
         [] -> pure Nothing
         [only] -> pure (Just only)
         _ -> do
-          answer <- Game.choose (Prompt.ChooseCost (Decide.deciderFor payer gs) payer resolving payable)
-          pure (List.find (== answer) payable)
+          answer <- Game.choose (Prompt.ChooseCost (Decide.deciderFor payer gs) payer resolving (fmap Cost.untagged payable))
+          pure (List.find ((== answer) . Cost.untagged) payable)
       case picked of
         Nothing -> pure Nothing
         Just cost -> do

@@ -23,6 +23,7 @@ import qualified Pawl.Spec as Spec
 import qualified Pawl.Support as S
 import qualified Pawl.Types.AnyNumberOf as AnyNumberOf
 import qualified Pawl.Types.AttackTarget as AttackTarget
+import qualified Pawl.Types.CandidateCost as CandidateCost
 import qualified Pawl.Types.CardName as CardName
 import qualified Pawl.Types.CardType as CardType
 import qualified Pawl.Types.CastFromZone as CastFromZone
@@ -857,13 +858,13 @@ combatReplaySpec s =
             (Replay.defaultAnswer (Prompt.ChooseMaterials decider S.alice oid [oid, ObjectId.MkObjectId 8] 1 False))
             (Set.singleton oid)
         Spec.it s "ChooseCost records and replays a Cost" $ do
-          let printed = Cost.Type.MkCost (Just (ManaCost.MkManaCost [ManaSymbol.Generic 4])) []
-              alternative = Cost.Type.MkCost (Just (ManaCost.MkManaCost [])) [CostComponent.SacrificeThis]
+          let printed = CandidateCost.plain Nothing (Cost.Type.MkCost (Just (ManaCost.MkManaCost [ManaSymbol.Generic 4])) [])
+              alternative = CandidateCost.plain Nothing (Cost.Type.MkCost (Just (ManaCost.MkManaCost [])) [CostComponent.SacrificeThis])
               p = Prompt.ChooseCost decider S.alice oid [printed, alternative]
           Spec.assertEqWith s "round trip" (Replay.decode p (Replay.encode p alternative)) (Just alternative)
         Spec.it s "defaultAnswer takes the first offered cost (the printed one)" $ do
-          let printed = Cost.Type.MkCost (Just (ManaCost.MkManaCost [ManaSymbol.Generic 4])) []
-              alternative = Cost.Type.MkCost (Just (ManaCost.MkManaCost [])) [CostComponent.SacrificeThis]
+          let printed = CandidateCost.plain Nothing (Cost.Type.MkCost (Just (ManaCost.MkManaCost [ManaSymbol.Generic 4])) [])
+              alternative = CandidateCost.plain Nothing (Cost.Type.MkCost (Just (ManaCost.MkManaCost [])) [CostComponent.SacrificeThis])
           Spec.assertEqWith
             s
             "the printed one"

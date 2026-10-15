@@ -29,6 +29,7 @@ import qualified Pawl.Support as S
 import qualified Pawl.Types.Action as A
 import qualified Pawl.Types.Answer as Answer
 import qualified Pawl.Types.Board as Board
+import qualified Pawl.Types.CandidateCost as CandidateCost
 import qualified Pawl.Types.CardName as CardName
 import qualified Pawl.Types.Choices as Choices
 import qualified Pawl.Types.Concession as Concession
@@ -261,7 +262,7 @@ spec s registry = Spec.describe s "Scenario" $ do
             modePrompt = Prompt.ChooseModes (Decider.MkDecider S.alice) S.alice spellId (Set.singleton mode) (ModeSelection.ChooseExactly 1)
             xPrompt = Prompt.ChooseX (Decider.MkDecider S.alice) S.alice spellId 0 9
             cost = Cost.MkCost {Cost.mana = Just (ManaCost.MkManaCost []), Cost.components = []}
-            costPrompt = Prompt.ChooseCost (Decider.MkDecider S.alice) S.alice spellId [cost]
+            costPrompt = Prompt.ChooseCost (Decider.MkDecider S.alice) S.alice spellId [CandidateCost.plain Nothing cost]
             slot = SlotName.MkSlotName (Text.pack "target")
             targetPrompt =
               Prompt.ChooseTargets
@@ -276,7 +277,7 @@ spec s registry = Spec.describe s "Scenario" $ do
             Spec.assertEqWith s "the priority action" chosen action
             Spec.assertEqWith s "the action's modes" modes (Seq.singleton mode)
             Spec.assertEqWith s "the action's X" x 3
-            Spec.assertEqWith s "the action's cost" chosenCost cost
+            Spec.assertEqWith s "the action's cost" chosenCost (CandidateCost.plain Nothing cost)
             Spec.assertEqWith s "the action's target" targets (Map.singleton slot (Set.singleton (Recipient.ToCreature targetId)))
       _ -> Spec.assertFailure s "the board omitted an action alias"
 

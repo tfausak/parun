@@ -42,6 +42,7 @@ import qualified Pawl.Types.Acquisition as Acquisition
 import qualified Pawl.Types.ActiveReplacement as ActiveReplacement
 import qualified Pawl.Types.ArmDelayedTrigger as ArmDelayedTrigger
 import qualified Pawl.Types.BeginningStep as BeginningStep
+import qualified Pawl.Types.CandidateCost as CandidateCost
 import qualified Pawl.Types.CardLeavesZone as CardLeavesZone
 import qualified Pawl.Types.CardName as CardName
 import qualified Pawl.Types.CardType as CardType
@@ -659,7 +660,7 @@ dutifulKnowledgeSeekerSpec s registry =
               main = board {GameState.activePlayer = S.alice, GameState.phase = Phase.PrecombatMain, GameState.priority = Just S.alice}
               under :: Prompt.Prompt r -> r
               under p = case p of
-                Prompt.ChooseCost _ _ _ candidates -> Maybe.fromMaybe (Cost.firstOffered candidates) (List.find ((== Just mutateCost) . Cost.Type.mana) candidates)
+                Prompt.ChooseCost _ _ _ candidates -> Maybe.fromMaybe (Cost.firstOffered candidates) (List.find ((== Just mutateCost) . Cost.Type.mana . CandidateCost.cost) candidates)
                 Prompt.ChooseTargets _ _ _ sets -> fmap (Set.filter ((== Just tokenId) . Recipient.objectOf) . snd) sets
                 Prompt.ChooseMutateSide {} -> MutateSide.Under
                 _ -> S.identityAnswer p
@@ -706,7 +707,7 @@ dutifulKnowledgeSeekerSpec s registry =
                   announcing :: Prompt.Prompt r -> r
                   announcing p = case p of
                     Prompt.ChooseCost _ _ _ candidates
-                      | Just cost <- List.find (\c -> not (null (Cost.Type.components c)) == beholding) candidates -> cost
+                      | Just cost <- List.find (\c -> not (null (Cost.Type.components (CandidateCost.cost c))) == beholding) candidates -> cost
                     Prompt.ChooseTargets _ _ _ asked -> fmap (\(_, legal) -> Set.filter ((== Just victimId) . Recipient.objectOf) legal) asked
                     _ -> S.identityAnswer p
                   cast = S.runPure announcing ready (S.cast S.alice spellId)

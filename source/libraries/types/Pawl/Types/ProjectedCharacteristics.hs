@@ -88,10 +88,13 @@ data ProjectedCharacteristics = MkProjectedCharacteristics
     colors :: Set.Set Color.Color,
     -- | CR 202.1: the object's mana cost, copiable (CR 707.2 names it outright)
     -- -- so a card that is a copy of something else is priced off what it
-    -- copies. The one reader is a granted keyword's "[cost] equal to its mana
-    -- cost" (Pawl.Engine.Projection.applyModification's
+    -- copies. Read for a granted keyword's "[cost] equal to its mana cost"
+    -- (Pawl.Engine.Projection.applyModification's
     -- Modification.GainKeywordAtManaCost), which Pawl.CastSpec's "CR 707.2 a
-    -- graveyard card that is a copy is priced at the copy's mana cost" proves.
+    -- graveyard card that is a copy is priced at the copy's mana cost" proves,
+    -- and off the copiable snapshot by
+    -- Pawl.Engine.Projection.View.grantedStaticAbilitiesOf, which prices a
+    -- stored grant of one the same way.
     --
     -- Beside manaValue below rather than replacing it: every other reader wants
     -- the derived number, and CR 202.3b/c's back-face and melded overrides
