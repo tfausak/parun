@@ -23,6 +23,7 @@ import qualified Pawl.Types.AffectedPlayers as AffectedPlayers
 import qualified Pawl.Types.Audience as Audience
 import qualified Pawl.Types.Ballot as Ballot
 import qualified Pawl.Types.BallotChoice as BallotChoice
+import qualified Pawl.Types.CandidateCost as CandidateCost
 import qualified Pawl.Types.Cost as Cost.Type
 import qualified Pawl.Types.Expiry as Expiry
 import qualified Pawl.Types.GameEvent as GameEvent
@@ -148,7 +149,7 @@ twoBeholdsSpec s registry =
         beholding :: Prompt.Prompt r -> r
         beholding p = case p of
           Prompt.ChooseCost _ _ _ candidates
-            | Just cost <- List.find (not . null . Cost.Type.components) candidates -> cost
+            | Just cost <- List.find (not . null . Cost.Type.components . CandidateCost.cost) candidates -> cost
           Prompt.ChooseTargets _ _ _ asked -> fmap (\(_, legal) -> Set.filter ((== Just victimId) . Recipient.objectOf) legal) asked
           _ -> S.identityAnswer p
         cast = S.runPure beholding (S.runPure beholding ready (S.cast S.alice firstId)) (S.cast S.alice secondId)
