@@ -901,39 +901,48 @@ orLastKnown live gs oid = Monad.join (Game.liveOrLastKnown (const (live oid)) (J
 -- IsSource still knows it. `peers` reads the permanents still attached to it,
 -- at the caller's depth, as viewOfCharacteristics' own `attachedViews` does.
 --
+-- The activated abilities are the snapshot's less those whose CR 604.2 clause
+-- the record says had lapsed (LastKnown.lapsedGrants).
+--
 -- Every other object field is the snapshot's blank, which is what the live read
 -- answers for an id naming nothing too: no zone, no targets, no designations.
 lastKnownView :: ViewOf -> ObjectId -> GameState -> LastKnown.LastKnown -> Filter.View
 lastKnownView peers oid gs lastKnown =
-  ( viewOfSnapshot
-      (deployIn gs (LastKnown.zone lastKnown))
-      (Just (LastKnown.controller lastKnown))
-      (Just (LastKnown.owner lastKnown))
-      (Game.sourceIsToken (LastKnown.source lastKnown))
-      (LastKnown.counters lastKnown)
-      (LastKnown.characteristics lastKnown)
-  )
-    { Filter.identity = Just oid,
-      Filter.attacking = LastKnown.attacking lastKnown,
-      Filter.blocking = LastKnown.blocking lastKnown,
-      Filter.paidCosts = LastKnown.paidCosts lastKnown,
-      -- CR 718.3d: the copiable record or the object's own, viewOfCharacteristics'
-      -- disjunction. A regression fence: no card asks it of a departed object.
-      Filter.prototyped = PC.prototyped (LastKnown.characteristics lastKnown) || LastKnown.prototyped lastKnown,
-      Filter.attackedThisTurn = attackedThisTurn oid gs,
-      Filter.declaredAttackerThisCombat = declaredAttackerThisCombat oid gs,
-      Filter.declaredAttackedThisCombat = declaredAttackedThisCombat oid gs,
-      Filter.declaredBlockerThisCombat = declaredBlockerThisCombat oid gs,
-      Filter.milledThisTurn = milledThisTurn oid gs,
-      Filter.dealtDamageThisTurn = dealtDamageThisTurn oid gs,
-      Filter.enteredThisTurn = Game.enteredThisTurn oid gs,
-      Filter.crewedThisTurn = crewedThisTurn oid gs,
-      Filter.convokedThisTurn = convokedThisTurn oid gs,
-      Filter.saddledThisTurn = saddledThisTurn oid gs,
-      Filter.attachedViews = Maybe.mapMaybe peers (Set.toList (Game.attachments oid gs)),
-      -- CR 303.4b: the host's id as it left, the live builder's Game.hostOf.
-      Filter.attachedTo = LastKnown.host lastKnown
-    }
+  let deploy = deployIn gs (LastKnown.zone lastKnown)
+      characteristics = LastKnown.characteristics lastKnown
+      lapsed = maybe False (`Set.member` LastKnown.lapsedGrants lastKnown) . ActivatedAbility.condition
+      roster = filter (not . lapsed) (abilitiesOf (Deploy.grants deploy characteristics) characteristics)
+   in ( viewOfSnapshot
+          deploy
+          (Just (LastKnown.controller lastKnown))
+          (Just (LastKnown.owner lastKnown))
+          (Game.sourceIsToken (LastKnown.source lastKnown))
+          (LastKnown.counters lastKnown)
+          characteristics
+      )
+        { Filter.identity = Just oid,
+          Filter.nonManaActivatedAbility = hasNonManaAbility roster,
+          Filter.hasActivatedAbility = hasAnyAbility roster characteristics,
+          Filter.attacking = LastKnown.attacking lastKnown,
+          Filter.blocking = LastKnown.blocking lastKnown,
+          Filter.paidCosts = LastKnown.paidCosts lastKnown,
+          -- CR 718.3d: the copiable record or the object's own, viewOfCharacteristics'
+          -- disjunction. A regression fence: no card asks it of a departed object.
+          Filter.prototyped = PC.prototyped (LastKnown.characteristics lastKnown) || LastKnown.prototyped lastKnown,
+          Filter.attackedThisTurn = attackedThisTurn oid gs,
+          Filter.declaredAttackerThisCombat = declaredAttackerThisCombat oid gs,
+          Filter.declaredAttackedThisCombat = declaredAttackedThisCombat oid gs,
+          Filter.declaredBlockerThisCombat = declaredBlockerThisCombat oid gs,
+          Filter.milledThisTurn = milledThisTurn oid gs,
+          Filter.dealtDamageThisTurn = dealtDamageThisTurn oid gs,
+          Filter.enteredThisTurn = Game.enteredThisTurn oid gs,
+          Filter.crewedThisTurn = crewedThisTurn oid gs,
+          Filter.convokedThisTurn = convokedThisTurn oid gs,
+          Filter.saddledThisTurn = saddledThisTurn oid gs,
+          Filter.attachedViews = Maybe.mapMaybe peers (Set.toList (Game.attachments oid gs)),
+          -- CR 303.4b: the host's id as it left, the live builder's Game.hostOf.
+          Filter.attachedTo = LastKnown.host lastKnown
+        }
 
 -- CR 608.2i: was this object declared as an attacker this turn? From the turn's
 -- event log, which CR 511.3 does not clear. Only Combat.declareAttackers appends
@@ -1277,20 +1286,27 @@ viewOfSnapshot deploy mController mOwner isToken counters snapshot =
       -- through abilitiesOf, the roster every view builder reads.
       --
       -- Not implemented: an ability's CR 604.2 grant condition as it stood when
-      -- the snapshot was taken, so a conditional ability is always kept (#4880).
-      Filter.nonManaActivatedAbility = not (all ManaAbility.isManaAbility (abilitiesOf (Deploy.grants deploy snapshot) snapshot)),
-      -- CR 602.1 off the same roster, without CR 605.1a's exclusion, plus CR
-      -- 305.6's intrinsic ability, which the roster does not hold. Read off the
-      -- snapshot's types for Pawl.Engine.Projection.View.viewOfCharacteristics'
-      -- reason, and through the reader every view builder shares so that the
-      -- three cannot disagree about one object.
-      Filter.hasActivatedAbility =
-        not (null (abilitiesOf (Deploy.grants deploy snapshot) snapshot))
-          || Subtype.intrinsicManaAbilityOf snapshot,
+      -- an event's snapshot was taken, so a conditional ability is always kept
+      -- (#5107). lastKnownView's record carries it.
+      Filter.nonManaActivatedAbility = hasNonManaAbility (abilitiesOf (Deploy.grants deploy snapshot) snapshot),
+      Filter.hasActivatedAbility = hasAnyAbility (abilitiesOf (Deploy.grants deploy snapshot) snapshot) snapshot,
       -- CR 702.184c off the snapshot, which carries the field: the marker
       -- outlives the object exactly as a keyword or a P/T does.
       Filter.grantsStationToughness = PC.grantsStationToughness snapshot
     }
+
+-- CR 602.1 / 605.1a: does a roster hold an activated ability that is not a
+-- mana ability? Shared by viewOfSnapshot and lastKnownView.
+hasNonManaAbility :: [ActivatedAbility.ActivatedAbility Card.Card (GrantedAbility.GrantedAbility Card.Card)] -> Bool
+hasNonManaAbility = not . all ManaAbility.isManaAbility
+
+-- CR 602.1 off a roster, without CR 605.1a's exclusion, plus CR 305.6's
+-- intrinsic ability, which the roster does not hold. Read off the snapshot's
+-- types for Pawl.Engine.Projection.View.viewOfCharacteristics' reason, and
+-- through the reader every view builder shares so that the three cannot
+-- disagree about one object.
+hasAnyAbility :: [ActivatedAbility.ActivatedAbility Card.Card (GrantedAbility.GrantedAbility Card.Card)] -> PC.ProjectedCharacteristics -> Bool
+hasAnyAbility roster snapshot = not (null roster) || Subtype.intrinsicManaAbilityOf snapshot
 
 -- | The live view of an object with a sample's CHARACTERISTICS written over it,
 -- for an event whose object is still there to be asked about but whose

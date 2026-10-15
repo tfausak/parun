@@ -3,9 +3,10 @@ module Pawl.Types.ObjectSnapshot where
 import qualified Pawl.Types.ObjectId as ObjectId
 import qualified Pawl.Types.PlayerId as PlayerId
 import qualified Pawl.Types.ProjectedCharacteristics as ProjectedCharacteristics
+import qualified Pawl.Types.Zone as Zone
 
 -- | One object as it stood at a recorded moment: its id, its projected
--- characteristics, who controlled it and who owned it. What
+-- characteristics, who controlled it, who owned it and where it was. What
 -- Pawl.Types.PastActivation keeps of an ability's source and targets, so a later
 -- Filter is asked of the object as it WAS (CR 608.2h's posture) rather than of
 -- whatever it has since become.
@@ -19,6 +20,8 @@ data ObjectSnapshot = MkObjectSnapshot
     -- | CR 108.4: Nothing for a card in a zone that gives it no controller --
     -- a cycling card in a hand.
     controller :: Maybe PlayerId.PlayerId,
-    owner :: PlayerId.PlayerId
+    owner :: PlayerId.PlayerId,
+    -- | CR 400.1: the zone it was in, which CR 109.2's "a creature" asks.
+    zone :: Zone.Zone
   }
   deriving (Eq, Ord, Show)

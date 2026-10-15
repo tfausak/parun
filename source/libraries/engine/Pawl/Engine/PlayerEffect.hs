@@ -1509,9 +1509,12 @@ targetQuestions pid gs r =
 -- asking effect's own permanent, which Filter.IsSource reads.
 firstActivation :: PlayerId -> RowSource -> Filter Keyword -> Maybe (KeywordDesignator.KeywordDesignator Keyword) -> Maybe AbilityKind.AbilityKind -> Maybe (Filter Keyword) -> GameState -> TurnScope.TurnScope -> Bool
 firstActivation pid source criterion granted wantedKind aimedAt gs scope =
-  let snapshotView snapshot =
+  let -- The zone as recorded, so CR 109.2's "a creature you control" passes over
+      -- an earlier activation that targeted a creature SPELL.
+      snapshotView snapshot =
         (Count.viewOfSnapshot False (ObjectSnapshot.controller snapshot) (Just (ObjectSnapshot.owner snapshot)) False Map.empty (ObjectSnapshot.characteristics snapshot))
-          { Filter.identity = Just (ObjectSnapshot.object snapshot)
+          { Filter.identity = Just (ObjectSnapshot.object snapshot),
+            Filter.zone = Just (ObjectSnapshot.zone snapshot)
           }
       matchesSnapshot you criterion' snapshot = Filter.matches (contextFor you source gs) (snapshotView snapshot) criterion'
       admits past =
