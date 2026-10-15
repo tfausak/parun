@@ -7,6 +7,7 @@ import qualified Numeric.Natural as Natural
 import qualified Pawl.Types.AttackTarget as AttackTarget
 import qualified Pawl.Types.CardName as CardName
 import qualified Pawl.Types.Color as Color
+import qualified Pawl.Types.Condition as Condition
 import qualified Pawl.Types.ControlClock as ControlClock
 import qualified Pawl.Types.CounterKind as CounterKind
 import qualified Pawl.Types.Keyword as Keyword
@@ -226,6 +227,14 @@ data LastKnown = MkLastKnown
     zone :: !Zone.Zone,
     -- | CR 400.1: whose library, hand or graveyard held it as it ceased --
     -- Nothing off those zones. CardLeavesZone's `whose` reads it.
-    pile :: !(Maybe PlayerId.PlayerId)
+    pile :: !(Maybe PlayerId.PlayerId),
+    -- | CR 604.2 / 608.2h: the "as long as" clauses of its granted activated
+    -- abilities that did not hold as it left (Pawl.Types.ActivatedAbility's
+    -- `condition`), so Count.lastKnownView leaves those abilities out. Not
+    -- recoverable from `characteristics`, which carries each ability with its
+    -- clause unasked, and no board is left afterwards to ask it against.
+    -- data/scenarios/zone-trigger's Synthetic Hollow Audit pair, a Villainous
+    -- Ogre dying with and without a Demon, is the proof.
+    lapsedGrants :: !(Set.Set Condition.Condition)
   }
   deriving (Eq, Ord, Show)
