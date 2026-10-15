@@ -72,6 +72,7 @@ import qualified Pawl.Engine.UntapRestriction as UntapRestriction
 import qualified Pawl.Extra.Int as Int
 import qualified Pawl.Extra.Natural as Natural
 import qualified Pawl.Types.AbilityTriggered as AbilityTriggered
+import qualified Pawl.Types.Acquisition as Acquisition
 import qualified Pawl.Types.Action as Action.Type
 import qualified Pawl.Types.Asked as Asked
 import qualified Pawl.Types.BeginningStep as BeginningStep
@@ -921,7 +922,10 @@ placeBorne srcId pending = do
                   -- stack that tells the two apart (CR 701.27f).
                   TriggeredAbilitySource.createdAt = PendingTrigger.createdAt pending,
                   -- CR 113.7a's frozen declarations, as the ability triggered.
-                  TriggeredAbilitySource.delayed = PendingTrigger.delayed pending
+                  TriggeredAbilitySource.delayed = PendingTrigger.delayed pending,
+                  -- CR 607.5: the pair the ability belongs to, as it goes on the
+                  -- stack. A delayed one belongs to none of the source's.
+                  TriggeredAbilitySource.acquisition = maybe (Game.acquisitionOf srcId gs) (const Acquisition.Own) (PendingTrigger.createdAt pending)
                 }
           )
           Zone.Stack

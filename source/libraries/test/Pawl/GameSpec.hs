@@ -37,6 +37,7 @@ import qualified Pawl.Extra.Natural as Natural
 import qualified Pawl.Registry as Registry
 import qualified Pawl.Spec as Spec
 import qualified Pawl.Support as S
+import qualified Pawl.Types.Acquisition as Acquisition
 import qualified Pawl.Types.Action as A
 import qualified Pawl.Types.ActivatedAbility as ActivatedAbility
 import qualified Pawl.Types.ActivatedAbilitySource as ActivatedAbilitySource
@@ -2524,7 +2525,8 @@ restartOnStack mountain =
                 ActivatedAbilitySource.MkActivatedAbilitySource
                   { ActivatedAbilitySource.source = ObjectId.MkObjectId 0,
                     ActivatedAbilitySource.ability = ability,
-                    ActivatedAbilitySource.delayed = Map.empty
+                    ActivatedAbilitySource.delayed = Map.empty,
+                    ActivatedAbilitySource.acquisition = Acquisition.Own
                   }
             )
             Zone.Stack

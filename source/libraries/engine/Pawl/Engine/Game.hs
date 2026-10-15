@@ -20,6 +20,7 @@ import qualified Pawl.Engine.Modal as Modal
 import qualified Pawl.Engine.Turn as Turn
 import qualified Pawl.Extra.Natural as Natural
 import qualified Pawl.Types.AbilityName as AbilityName
+import qualified Pawl.Types.Acquisition as Acquisition
 import qualified Pawl.Types.ActivatedAbilitySource as ActivatedAbilitySource
 import qualified Pawl.Types.ActiveCopy as ActiveCopy
 import qualified Pawl.Types.ActiveObjectProhibition as ActiveObjectProhibition
@@ -94,6 +95,7 @@ import qualified Pawl.Types.StickerKind as StickerKind
 import qualified Pawl.Types.StickerPlacement as StickerPlacement
 import qualified Pawl.Types.StickerRef as StickerRef
 import qualified Pawl.Types.StickerSheet as StickerSheet
+import qualified Pawl.Types.StoredResult as StoredResult
 import qualified Pawl.Types.Subtype as Subtype
 import qualified Pawl.Types.TapState as TapState
 import qualified Pawl.Types.TargetSlot as TargetSlot
@@ -2021,11 +2023,31 @@ flipsOver oid gs = Set.member oid (GameState.battlefield gs) && hasFlipHalf oid 
 -- that hold an Object and no GameState -- copiableOf and resolveFaceFor's
 -- arms -- reach it through `lookupLayerOne` below.
 storedCopyOf :: ObjectId -> GameState -> Maybe PC.ProjectedCharacteristics
-storedCopyOf oid gs =
-  fmap ActiveCopy.snapshot
-    . Maybe.listToMaybe
+storedCopyOf oid = fmap ActiveCopy.snapshot . latestStoredCopy oid
+
+-- The row `storedCopyOf` reads: the latest stored copy effect covering the
+-- object (CR 613.7).
+latestStoredCopy :: ObjectId -> GameState -> Maybe ActiveCopy.ActiveCopy
+latestStoredCopy oid gs =
+  Maybe.listToMaybe
     . List.sortOn (Ord.Down . ActiveCopy.timestamp)
     $ filter (Set.member oid . ActiveCopy.objects) (GameState.copyEffects gs)
+
+-- | CR 607.5: the acquisition of the abilities layer 1a leaves this object --
+-- the latest stored copy effect covering it, `storedCopyOf`'s row, named by its
+-- timestamp, and otherwise the one its copy binding records (Object.acquisition).
+-- Own for an id naming no object: CR 400.7 gives a departed object's id to no
+-- other, so nothing can be noted under it again.
+acquisitionOf :: ObjectId -> GameState -> Acquisition.Acquisition
+acquisitionOf oid gs =
+  case latestStoredCopy oid gs of
+    Just row -> Acquisition.Copied (ActiveCopy.timestamp row)
+    Nothing -> maybe Acquisition.Own Object.acquisition (lookupObject oid gs)
+
+-- | CR 607.5: the results stored on this object for the abilities acquired as
+-- `acquisition` (Object.storedResults).
+storedResultsUnder :: Acquisition.Acquisition -> Object.Object -> Map.Map StoredResult.StoredResult Natural
+storedResultsUnder acquisition = Map.findWithDefault Map.empty acquisition . Object.storedResults
 
 -- CR 613.1a: the object as layer 1a leaves it -- `storedCopyOf`'s row laid into
 -- its copy binding, and the object itself where no row covers it. For the

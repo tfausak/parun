@@ -7,6 +7,7 @@ import qualified Pawl.Codec.Source as Source
 import qualified Pawl.Codec.TriggeredAbilitySourceSpec as TriggeredAbilitySourceSpec
 import qualified Pawl.JsonCodec.Common as Common
 import qualified Pawl.Spec as Spec
+import qualified Pawl.Types.Acquisition as Acquisition
 import qualified Pawl.Types.ActivatedAbilitySource as ActivatedAbilitySource
 import qualified Pawl.Types.ComponentCard as ComponentCard
 import qualified Pawl.Types.InherentTriggerSource as InherentTriggerSource
@@ -71,7 +72,8 @@ spec s = Spec.describe s "Pawl.Codec.Source" $ do
           ActivatedAbilitySource.MkActivatedAbilitySource
             { ActivatedAbilitySource.source = ObjectId.MkObjectId 5,
               ActivatedAbilitySource.ability = ActivatedAbilitySourceSpec.ability,
-              ActivatedAbilitySource.delayed = Map.empty
+              ActivatedAbilitySource.delayed = Map.empty,
+              ActivatedAbilitySource.acquisition = Acquisition.Own
             }
       )
       " {\"type\":\"OfAbility\",\"value\":{\"source\":5,\"ability\":{\"cost\":{\"mana\":[{\"type\":\"Generic\",\"value\":1}]},\"modal\":{\"modes\":[{}]}}}} "
@@ -85,7 +87,8 @@ spec s = Spec.describe s "Pawl.Codec.Source" $ do
             { TriggeredAbilitySource.source = ObjectId.MkObjectId 6,
               TriggeredAbilitySource.ability = TriggeredAbilitySourceSpec.ability,
               TriggeredAbilitySource.createdAt = Nothing,
-              TriggeredAbilitySource.delayed = Map.empty
+              TriggeredAbilitySource.delayed = Map.empty,
+              TriggeredAbilitySource.acquisition = Acquisition.Own
             }
       )
       " {\"type\":\"OfTrigger\",\"value\":{\"source\":6,\"ability\":{\"condition\":{\"type\":\"SelfEnters\"},\"modal\":{\"modes\":[{}]}}}} "
