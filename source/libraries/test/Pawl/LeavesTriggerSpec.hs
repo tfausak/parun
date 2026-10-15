@@ -740,6 +740,35 @@ dutifulKnowledgeSeekerSpec s registry =
           Spec.assertEqWith s "CR 603.10a the look-back put the Seeker's trigger on the stack" (length (GameState.stack settled)) 1
           Spec.assertEqWith s "CR 701.20a bob revealed the Nexus" (S.revealsOf settled) [(S.bob, Set.singleton (S.printingName nexus))]
           Spec.assertEqWith s "CR 614.1a and it went to his library instead" (length (Game.zoneMembers Zone.Library S.bob settled)) 1
+        -- An EFFECT's reveal (CR 701.20a), which lasts while the parts of the
+        -- effect the card is relevant to are completed. Synthetic Undertow of
+        -- Secrets {1}{U} Instant, "Reveal a card at random from your hand.
+        -- Shuffle the revealed card and target creature into their owners'
+        -- libraries."
+        -- (data/cards/synthetic-undertow-of-secrets.json; no printing moves a
+        -- card an instruction revealed in the same event as a permanent leaving
+        -- the battlefield, MTGJSON AtomicCards.json regex over reveal-then-put
+        -- texts, 2026-10-15.) It targets alice's Wan Shi Tong, All-Knowing
+        -- TOKEN: a token is no card (CR 111.1), so its own move does not trigger
+        -- it, and only the look-back at the revealed Goblin Piker can.
+        Spec.it s "CR 603.10a a Wan Shi Tong token shuffled away looks back at a card the same spell revealed" $ do
+          wanCard <- S.cardOf s registry "Wan Shi Tong, All-Knowing"
+          undertow <- S.printingOf s registry "Synthetic Undertow of Secrets"
+          piker <- S.printingOf s registry "Goblin Piker"
+          island <- S.printingOf s registry "Island"
+          let base = S.landsFor island S.alice 2 (Setup.emptyGame S.bothPlayers)
+              (wanId, withWan) = S.addToken wanCard S.alice base
+              (_, withPiker) = S.addHandCard piker S.alice withWan
+              (spellId, staged) = S.addHandCard undertow S.alice withPiker
+              ready = staged {GameState.phase = Phase.PrecombatMain, GameState.activePlayer = S.alice, GameState.priority = Just S.alice}
+              aiming :: Prompt.Prompt r -> r
+              aiming p = case p of
+                Prompt.ChooseTargets _ _ _ asked -> fmap (\(_, legal) -> Set.filter ((== Just wanId) . Recipient.objectOf) legal) asked
+                _ -> S.identityAnswer p
+              resolved = S.runPure aiming (S.runPure aiming ready (S.cast S.alice spellId)) Stack.resolveTop
+              (_, after) = settleAfter (pure ()) resolved
+          Spec.assertEqWith s "CR 603.10a the look-back made two Spirit tokens" (length (S.tokensOf after)) 2
+          Spec.assertEqWith s "and the Goblin Piker is in alice's library" (fmap S.nameOf (Maybe.mapMaybe (`Game.cardOf` after) (Game.zoneMembers Zone.Library S.alice after))) [S.printingName piker]
 
 -- Binding.handArrival, the card a hand received, which CR 400.7e withholds from
 -- `became` (CR 400.2) and which digital effects reach anyway. Kithkin Brinefarer

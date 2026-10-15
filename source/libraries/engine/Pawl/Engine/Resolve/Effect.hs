@@ -372,7 +372,6 @@ import Pawl.Types.Result (Result)
 import qualified Pawl.Types.Result as Result
 import qualified Pawl.Types.ReturnWatch as ReturnWatch
 import qualified Pawl.Types.Reveal as Reveal
-import qualified Pawl.Types.RevealCause as RevealCause
 import qualified Pawl.Types.RollAdjustment as RollAdjustment
 import qualified Pawl.Types.RollDie as RollDie
 import qualified Pawl.Types.SacrificeEffect as SacrificeEffect
@@ -4499,7 +4498,7 @@ applyOneEffect runSubgame resolving source controller legal chosen effect = case
               present <- State.gets (`stillThere` oid)
               case (present, exiler) of
                 (False, _) -> pure []
-                (True, Nothing) -> putFound before searcher host destination oid
+                (True, Nothing) -> putFound resolving before searcher host destination oid
                 (True, Just agent) -> [] <$ (exileFoundFor agent =<< Event.changeZoneInBatchReturning before oid Zone.Exile)
             -- CR 400.11b: a card found outside the game is brought in rather
             -- than moved, the reveal riding along as it arrives (#2450).
@@ -6218,7 +6217,7 @@ applyOneEffect runSubgame resolving source controller legal chosen effect = case
           (ObjectRef.ChosenCardFromAmong {}, _) -> controller
           (_, Just obj) | Object.zone obj == Zone.Hand -> Object.owner obj
           _ -> controller
-    Monad.mapM_ (\oid -> Event.reveal RevealCause.Ordinary (shower oid) oid) named
+    Monad.mapM_ (\oid -> Event.revealResolving resolving (shower oid) oid) named
     bindShown named
   Effect.LookAt (LookAt.MkLookAt ref slot looker) -> do
     -- CR 608.2c: the cards are named as this instruction is reached, and CR 701.20b
@@ -6332,7 +6331,7 @@ applyOneEffect runSubgame resolving source controller legal chosen effect = case
   -- and the outcome is bound at the slot for a later clause to read (Pulling
   -- Teeth's "if you win" against its "otherwise").
   Effect.Clash slot -> do
-    won <- clash source controller
+    won <- clash resolving source controller
     State.modify' (bindAmountSlot resolving source slot won)
   -- CR 702.85b: each "as you cascade" action the cascading player has, taken
   -- over the exiled batch before the cast decision. Each is "you may put a
@@ -6375,7 +6374,7 @@ applyOneEffect runSubgame resolving source controller legal chosen effect = case
     -- Projection.controllerWithLastKnown, so it agrees with exploreOne about a
     -- permanent that has left (CR 701.44c).
     ordered <- forEachOrder resolving id (objectRefRecipients legal resolving controller source gs ref)
-    Monad.mapM_ exploreOne (Maybe.mapMaybe Recipient.objectOf ordered)
+    Monad.mapM_ (exploreOne resolving) (Maybe.mapMaybe Recipient.objectOf ordered)
   Effect.Connive (Connive.Type.MkConnive quantity ref) -> do
     gs <- State.get
     let viewOf = effectViewOf source legal gs
@@ -11380,8 +11379,8 @@ differingValues axes gs oid =
 
 -- One found card's move, a member of the search's batch whose board is `asOf`
 -- (Event.changeZoneInBatch).
-putFound :: GameState -> PlayerId -> Maybe ObjectId -> SearchDestination.SearchDestination -> ObjectId -> Game [ObjectId]
-putFound asOf searcher subject destination cardId = case destination of
+putFound :: ObjectId -> GameState -> PlayerId -> Maybe ObjectId -> SearchDestination.SearchDestination -> ObjectId -> Game [ObjectId]
+putFound resolving asOf searcher subject destination cardId = case destination of
   -- Nature's Lore's "put that card onto the battlefield", and Evolving Wilds'
   -- "put it onto the battlefield tapped": CR 110.5b's default, or the card's
   -- own rider, is the one difference between the two arms.
@@ -11392,7 +11391,7 @@ putFound asOf searcher subject destination cardId = case destination of
   -- do not commute -- swapped, CR 400.7 has already ceased `cardId` and the
   -- reveal shows nothing.
   SearchDestination.RevealThenHand -> do
-    Event.reveal RevealCause.Ordinary searcher cardId
+    Event.revealResolving resolving searcher cardId
     Foldable.toList <$> Event.changeZoneInBatchReturning asOf cardId Zone.Hand
   -- Hoarding Dragon's "exile it": the move alone, with NO Event.reveal ahead of
   -- it (CR 701.23e). Which card this instruction exiled is CR 607.2a's link,
@@ -11435,12 +11434,12 @@ putFound asOf searcher subject destination cardId = case destination of
         -- swapped, CR 400.7 has already ceased `cardId` and the reveal shows
         -- nothing. The reveal is the CARD's own instruction (CR 701.23e), which
         -- is why it is written here rather than in the searching rule.
-        Event.reveal RevealCause.Ordinary searcher cardId
+        Event.revealResolving resolving searcher cardId
         Foldable.toList <$> Event.changeZoneInBatchReturning asOf cardId Zone.Hand
   -- Grim Reminder's "reveal it": CR 701.20b leaves the card in the library, so the
   -- object found is the object a later clause names.
   SearchDestination.Reveal -> do
-    Event.reveal RevealCause.Ordinary searcher cardId
+    Event.revealResolving resolving searcher cardId
     pure [cardId]
   -- Rhystic Tutor's "put that card into your hand": the move alone, with no
   -- reveal, CR 701.23e.
@@ -11674,8 +11673,8 @@ fatesealOne source n pid = do
 -- An EMPTY library reveals nothing and so cannot win (CR 701.30d asks for a card
 -- that player revealed). CR 609.3 leaves the rest of the instruction to do what
 -- it can.
-clash :: ObjectId -> PlayerId -> Game Natural
-clash source controller = do
+clash :: ObjectId -> ObjectId -> PlayerId -> Game Natural
+clash resolving source controller = do
   gs <- State.get
   chosen <- Players.chooseOne controller source (Players.offer controller gs PlayerRelation.Opponent)
   case chosen of
@@ -11691,7 +11690,7 @@ clash source controller = do
             top : _ -> Just (pid, top)
             [] -> Nothing
           revealed = Maybe.mapMaybe topOf clashers
-      Monad.mapM_ (uncurry (Event.reveal RevealCause.Ordinary)) revealed
+      Monad.mapM_ (uncurry (Event.revealResolving resolving)) revealed
       -- CR 701.30d: the comparison is against the cards as they were revealed,
       -- read once here rather than per decision, so no player's choice can move
       -- it. A library card has a mana value (CR 202.3), and an id nothing is
@@ -11747,8 +11746,8 @@ clash source controller = do
 -- library card is folded exactly as a permanent is, and a layer-4 type change
 -- (CR 613.1d) reaches it there. An id nothing is filed under projects no card
 -- types, so it is no land card -- the answer the printed face gave.
-exploreOne :: ObjectId -> Game ()
-exploreOne oid = do
+exploreOne :: ObjectId -> ObjectId -> Game ()
+exploreOne resolving oid = do
   -- CR 122.6 through the one counter funnel, so a CR 614.1 counter replacement
   -- (Hardened Scales) gets its opportunity against this placement too.
   let grow pid = Monad.void (Event.putCounters (CounterCause.ByEffect pid) oid CounterKind.PlusOnePlusOne 1)
@@ -11760,7 +11759,7 @@ exploreOne oid = do
       case Game.zoneMembers Zone.Library pid gs of
         [] -> grow pid
         top : _ -> do
-          Event.reveal RevealCause.Ordinary pid top
+          Event.revealResolving resolving pid top
           after <- State.get
           let isLand = Set.member CardType.Land (Filter.cardTypes (Projection.viewOfObject top after))
           if isLand

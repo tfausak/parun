@@ -39,8 +39,8 @@ sees pid oid gs =
     Nothing -> base pid oid gs
     Just _ -> foldMap (\seat -> base seat oid gs) (pid : controlledBy pid gs)
 
--- | CR 701.20a: a card in a lasting reveal is seen by every player while its
--- window is live.
+-- | CR 701.20a: a revealed card is seen by every player while any of its
+-- windows is live.
 revealedNow :: ObjectId -> GameState.GameState -> Visibility.Visibility
 revealedNow oid gs =
   let begun logged = case LoggedEvent.event logged of
@@ -50,9 +50,7 @@ revealedNow oid gs =
         RevealWindow.WhileOnStack sid -> Game.zoneOf sid gs == Just Zone.Stack -- CR 701.20a
         RevealWindow.UntilFirstTurn -> GameState.turnNumber gs == 1 && not (any begun (GameState.events gs)) -- CR 103.6b
         RevealWindow.DuringUpkeep turn -> GameState.turnNumber gs == turn && GameState.phase gs == Phase.Beginning BeginningStep.Upkeep -- CR 702.57b
-   in case Game.lookupObject oid gs >>= Object.revealed of
-        Nothing -> Visibility.Obscured
-        Just window -> visibleIf (live window)
+   in visibleIf (any (any live . Object.revealed) (Game.lookupObject oid gs))
 
 -- | Whether a player saw what a logged event showed: everyone sees a reveal
 -- (CR 701.20a), only its audience a look (CR 701.20e, 723.4) or a ballot (CR
