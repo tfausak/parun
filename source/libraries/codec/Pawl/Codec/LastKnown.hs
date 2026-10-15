@@ -7,6 +7,7 @@ import qualified Data.Set as Set
 import qualified Pawl.Codec.AttackTarget as AttackTarget
 import qualified Pawl.Codec.CardName as CardName
 import qualified Pawl.Codec.Color as Color
+import qualified Pawl.Codec.Condition as Condition
 import qualified Pawl.Codec.ControlClock as ControlClock
 import qualified Pawl.Codec.CounterKind as CounterKind
 import qualified Pawl.Codec.Keyword as Keyword
@@ -47,6 +48,7 @@ codec = Fields.object $ do
   controlClock <- Fields.defaulted "controlClock" Map.empty (Common.keyedList ControlClock.entry) LastKnown.controlClock
   zone <- Fields.required "zone" Zone.codec LastKnown.zone
   pile <- Fields.defaulted "pile" Nothing (Common.maybe PlayerId.codec) LastKnown.pile
+  lapsedGrants <- Fields.defaulted "lapsedGrants" Set.empty (Common.set Condition.codec) LastKnown.lapsedGrants
   pure
     LastKnown.MkLastKnown
       { LastKnown.characteristics = characteristics,
@@ -70,5 +72,6 @@ codec = Fields.object $ do
         LastKnown.announcedX = announcedX,
         LastKnown.controlClock = controlClock,
         LastKnown.zone = zone,
-        LastKnown.pile = pile
+        LastKnown.pile = pile,
+        LastKnown.lapsedGrants = lapsedGrants
       }
