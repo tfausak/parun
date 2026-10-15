@@ -5,8 +5,8 @@ import Numeric.Natural (Natural)
 import qualified Pawl.Types.AbilityName as AbilityName
 import qualified Pawl.Types.Binding as Binding
 import qualified Pawl.Types.Card as Card
-import qualified Pawl.Types.GameEvent as GameEvent
 import qualified Pawl.Types.GrantedAbility as GrantedAbility
+import qualified Pawl.Types.LoggedEvent as LoggedEvent
 import qualified Pawl.Types.PlayerId as PlayerId
 import qualified Pawl.Types.SlotName as SlotName
 import qualified Pawl.Types.Timestamp as Timestamp
@@ -42,14 +42,16 @@ data PendingTrigger = MkPendingTrigger
     -- it to the stack object; TriggeredAbilitySource.createdAt says what reads
     -- it there.
     createdAt :: Maybe Timestamp.Timestamp,
-    -- | CR 603.2's trigger event, and Nothing where the gatherer names none --
-    -- a state trigger (CR 603.8) and a reflexive one (CR 603.12), which have no
-    -- event at all. Neither can be a mana ability, nor can an inherent
-    -- ability, CR 605.1b's middle clause naming events an inherent ability the
-    -- rulebook states never watches. Read by
-    -- Pawl.Engine.ManaAbility.isTriggeredManaAbility, CR 605.5a asking what
-    -- added the mana rather than only what the ability watches.
-    firedBy :: Maybe GameEvent.GameEvent,
+    -- | CR 603.2's trigger event, as logged with its event group, and Nothing
+    -- where the gatherer names none -- a state trigger (CR 603.8) and a
+    -- reflexive one (CR 603.12), which have no event at all. Neither can be a
+    -- mana ability, nor can an inherent ability, CR 605.1b's middle clause
+    -- naming events an inherent ability the rulebook states never watches. Read
+    -- by Pawl.Engine.ManaAbility.isTriggeredManaAbility, CR 605.5a asking what
+    -- added the mana rather than only what the ability watches. The group is
+    -- CR 610.3b's "after that ability triggered", which Engine.placeOne stamps
+    -- on the stack object (GameState.stackedIn).
+    firedBy :: Maybe LoggedEvent.LoggedEvent,
     -- | CR 113.2c: how many value-identical instances of `ability` the source
     -- bore as it triggered, 1 unless a printing or a grant repeats it. The
     -- allowance Pawl.Engine.Event.withinTriggerLimit gives a "triggers only

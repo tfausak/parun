@@ -6219,7 +6219,7 @@ applyManaTriggers perform events = do
   Monad.mapM_ (State.modify' . Event.recordEvent) events
   gs <- State.get
   let recorded = Foldable.toList (Seq.drop (Seq.length (GameState.events gs) - length events) (GameState.events gs))
-      fired = filter (\p -> ManaAbility.isTriggeredManaAbility (PendingTrigger.firedBy p) (PendingTrigger.ability p)) (Event.reactionTriggers recorded gs)
+      fired = filter (\p -> ManaAbility.isTriggeredManaAbility (fmap LoggedEvent.event (PendingTrigger.firedBy p)) (PendingTrigger.ability p)) (Event.reactionTriggers recorded gs)
   Monad.mapM_ (ManaAbilityPerformer.triggered perform) fired
 
 -- CR 602.2b sends an activation cost through CR 601.2b-i, so a mana ability pays

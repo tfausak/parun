@@ -61,18 +61,18 @@ hasLeftTheBattlefield oid gs = case Game.lookupObject oid gs of
 -- gathers anything to move.
 --
 -- A crowning is an EVENT, so it is looked for in the log: a GameEvent.BecameMonarch
--- of an opponent of the controller, logged in the event group the resolving
--- object was put on the stack in or a later one (GameState.stackedIn). The
--- log is this turn's, and no stack object outlives a turn. An effect with no
--- stack object behind it has nothing to have happened since.
---
--- Not implemented: for a triggered ability, a crowning after it triggered but
--- before it was put on the stack -- CR 603.3's wait, in which only
--- state-based actions run (#4877).
+-- of an opponent of the controller, logged in or after the event group
+-- GameState.stackedIn holds for the resolving object -- the first after it was
+-- put on the stack, or for a triggered ability the first after its trigger
+-- event. The log is this turn's, and no stack object outlives a turn. An
+-- effect with no stack object behind it has nothing to have happened since.
 --
 -- data/scenarios/trigger/cr-610-3b-a-crowning-ahead-of-palace-jailers-exile-keeps-the-creature.json
 -- is the proof: Jared Carthalion's trigger crowns bob ahead of Palace Jailer's
--- exile, and the creature stays.
+-- exile, and the creature stays. Its sibling
+-- cr-610-3b-a-crowning-while-palace-jailers-exile-waits-for-the-stack-keeps-the-creature.json
+-- proves a crowning among the state-based actions before the exile reaches
+-- the stack.
 hasHappened :: MoveDuration -> ObjectId -> ObjectId -> PlayerId -> GameState -> Bool
 hasHappened duration resolving source controller gs = case duration of
   MoveDuration.Type.UntilSourceLeavesTheBattlefield -> hasLeftTheBattlefield source gs
