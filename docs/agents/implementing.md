@@ -355,11 +355,12 @@ siblings**: a wrong value survives precisely where no test pays it.
   holds a thousand-plus test files named for the card and the rule, plus
   rule-keyed files under `rules/`. Not a design reference --- its core still
   carries a card-identity check.
-- **`_scratch/mtgish`** (MIT) gives the effect's SHAPE: the pool as first-order
-  typed ASTs in `data/mtgish.lines.json`, vocabulary in
-  `rust_syntax/src/mtg_types.rs`. It carries no marker for text its parser
-  could not express, so presence is not evidence the rules text came through
-  whole.
+- **`_scratch/mtgish`** (MIT) gives the effect's SHAPE: nearly every card as
+  first-order typed ASTs in `data/mtgish.lines.json`, vocabulary in
+  `rust_syntax/src/mtg_types.rs`. Its grammar (`grammars/`) matches a card's
+  whole text, so a card it cannot parse is absent rather than partial;
+  `grammars/ignore.json5` lists those skipped on purpose. A grammar rule can
+  still map text to a coarser constructor than the card needs.
 - **`_scratch/argentum-engine`** (MIT) answers MODELING questions --- same
   base/projected split, same no-escape-hatch bet.
 
