@@ -23,7 +23,8 @@ spec s = Spec.describe s "Pawl.Codec.Moved" $ do
             Moved.characteristics = ProjectedCharacteristicsSpec.testCharacteristics,
             Moved.otherArrivals = Seq.empty,
             Moved.otherDepartures = Seq.empty,
-            Moved.duringResolution = False
+            Moved.duringResolution = False,
+            Moved.revealed = False
           }
       )
       ( "{\"change\":{\"departed\":1,\"object\":2,\"from\":{\"type\":\"Battlefield\"},\"to\":{\"type\":\"Graveyard\"}},\"characteristics\":"
@@ -41,7 +42,8 @@ spec s = Spec.describe s "Pawl.Codec.Moved" $ do
             Moved.characteristics = ProjectedCharacteristicsSpec.testCharacteristics,
             Moved.otherArrivals = Seq.fromList [ObjectId.MkObjectId 3],
             Moved.otherDepartures = Seq.empty,
-            Moved.duringResolution = False
+            Moved.duringResolution = False,
+            Moved.revealed = False
           }
       )
       ( "{\"change\":{\"departed\":1,\"object\":2,\"from\":{\"type\":\"Battlefield\"},\"to\":{\"type\":\"Graveyard\"}},\"characteristics\":"
@@ -59,7 +61,8 @@ spec s = Spec.describe s "Pawl.Codec.Moved" $ do
             Moved.characteristics = ProjectedCharacteristicsSpec.testCharacteristics,
             Moved.otherArrivals = Seq.empty,
             Moved.otherDepartures = Seq.fromList [ObjectId.MkObjectId 3],
-            Moved.duringResolution = False
+            Moved.duringResolution = False,
+            Moved.revealed = False
           }
       )
       ( "{\"change\":{\"departed\":1,\"object\":2,\"from\":{\"type\":\"Exile\"},\"to\":{\"type\":\"Battlefield\"}},\"characteristics\":"
@@ -77,11 +80,31 @@ spec s = Spec.describe s "Pawl.Codec.Moved" $ do
             Moved.characteristics = ProjectedCharacteristicsSpec.testCharacteristics,
             Moved.otherArrivals = Seq.empty,
             Moved.otherDepartures = Seq.empty,
-            Moved.duringResolution = True
+            Moved.duringResolution = True,
+            Moved.revealed = False
           }
       )
       ( "{\"change\":{\"departed\":1,\"object\":2,\"from\":{\"type\":\"Stack\"},\"to\":{\"type\":\"Graveyard\"}},\"characteristics\":"
           <> ProjectedCharacteristicsSpec.testCharacteristicsJson
           <> ",\"otherArrivals\":[],\"duringResolution\":true}"
+      )
+  -- CR 603.10a's revealed card leaving a hand: the one shape the flag's
+  -- defaulted key appears in.
+  Spec.it s "MkMoved, CR 603.10a's revealed card leaving a hidden zone" $
+    Common.assertCodec
+      s
+      Moved.codec
+      ( Moved.MkMoved
+          { Moved.change = ZoneChange.MkZoneChange (ObjectId.MkObjectId 1) (ObjectId.MkObjectId 2) Zone.Hand Zone.Library,
+            Moved.characteristics = ProjectedCharacteristicsSpec.testCharacteristics,
+            Moved.otherArrivals = Seq.empty,
+            Moved.otherDepartures = Seq.empty,
+            Moved.duringResolution = False,
+            Moved.revealed = True
+          }
+      )
+      ( "{\"change\":{\"departed\":1,\"object\":2,\"from\":{\"type\":\"Hand\"},\"to\":{\"type\":\"Library\"}},\"characteristics\":"
+          <> ProjectedCharacteristicsSpec.testCharacteristicsJson
+          <> ",\"otherArrivals\":[],\"revealed\":true}"
       )
   Spec.it s "has a schema" $ Common.assertHasSchema s Moved.codec

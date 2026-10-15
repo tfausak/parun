@@ -34,6 +34,7 @@ import qualified Pawl.Engine.Replay as Replay
 import qualified Pawl.Engine.Setup as Setup
 import qualified Pawl.Engine.Stack as Stack
 import qualified Pawl.Engine.Target as Target
+import qualified Pawl.Engine.Visibility as Visibility
 import qualified Pawl.Registry as Registry
 import qualified Pawl.Spec as Spec
 import qualified Pawl.Support as S
@@ -96,6 +97,7 @@ import qualified Pawl.Types.TriggeredAbility as TriggeredAbility
 import qualified Pawl.Types.TriggeredAbilitySource as TriggeredAbilitySource
 import qualified Pawl.Types.TurnScope as TurnScope
 import qualified Pawl.Types.TypeLine as TypeLine
+import qualified Pawl.Types.Visibility as Visibility.Type
 import qualified Pawl.Types.Ward as Ward
 import qualified Pawl.Types.Zone as Zone
 import qualified Pawl.Types.ZoneChange as ZoneChange
@@ -311,7 +313,7 @@ permanentsReturnedToHandSpec s registry =
         Set.fromList
           ( Maybe.mapMaybe
               ( \logged -> case LoggedEvent.event logged of
-                  GameEvent.Moved (Moved.MkMoved zc _ _ _ _) | ZoneChange.from zc == Zone.Battlefield && ZoneChange.to zc == Zone.Hand -> Just (LoggedEvent.group logged)
+                  GameEvent.Moved (Moved.MkMoved zc _ _ _ _ _) | ZoneChange.from zc == Zone.Battlefield && ZoneChange.to zc == Zone.Hand -> Just (LoggedEvent.group logged)
                   _ -> Nothing
               )
               (Foldable.toList (GameState.events gs))
@@ -564,7 +566,7 @@ rakshasaVizierSpec s registry =
 -- and triggers although it is a hidden library card by the CR 117.5 scan; the
 -- same Seeker put there from a HAND does not -- its ability does not function
 -- in a hand, and CR 603.10a's look-back does not reach an object in a hidden
--- zone. A Seeker standing on the battlefield sees a hand's card arrive all the
+-- zone unless it was revealed. A Seeker standing on the battlefield sees a hand's card arrive all the
 -- same: "from anywhere" is CR 603.10's first sentence for a bearer still there.
 dutifulKnowledgeSeekerSpec :: (Monad m, Monad n) => Spec.Spec m n -> Registry.Registry m -> n ()
 dutifulKnowledgeSeekerSpec s registry =
@@ -677,6 +679,66 @@ dutifulKnowledgeSeekerSpec s registry =
               (settled, after) = settleAfter (Event.changeZone cardId Zone.Library) gs
           Spec.assertEqWith s "the Seeker is still the printed 2/2" (Projection.powerOf seekerId after, Projection.toughnessOf seekerId after) (Just 2, Just 2)
           Spec.assertEqWith s "nothing reached the stack" (GameState.stack settled) []
+        -- CR 603.10a's "an object that all players can see" leaving a HIDDEN
+        -- zone. Caustic Exhale {B} Instant, "As an additional cost to cast this
+        -- spell, behold a Dragon or pay {1}. Target creature gets -3/-3 until
+        -- end of turn." (Oracle checked against Scryfall 2026-09-18.) Beholding
+        -- reveals alice's Hoarding Dragon card until the Exhale leaves the stack
+        -- (CR 701.20a). With the Exhale still waiting, the Seeker is exiled as
+        -- the Dragon card goes into her library, in one event: the Seeker is gone,
+        -- so only the look-back can see the card. Exiled rather than put into a
+        -- library, or its own move would trigger it whatever the Dragon did. The
+        -- pair differs in the cost alone: paying the {1} reveals nothing.
+        let exhaleBoard beholding = do
+              swamp <- S.printingOf s registry "Swamp"
+              exhale <- S.printingOf s registry "Caustic Exhale"
+              dragon <- S.printingOf s registry "Hoarding Dragon"
+              galleon <- S.printingOf s registry "Armored Galleon"
+              seeker <- S.printingOf s registry "Dutiful Knowledge Seeker"
+              let base = S.landsFor swamp S.alice 2 (Setup.emptyGame S.bothPlayers)
+                  (victimId, withVictim) = S.addPermanent galleon S.bob base
+                  (seekerId, withSeeker) = S.addPermanent seeker S.alice withVictim
+                  (dragonId, withDragon) = S.addHandCard dragon S.alice withSeeker
+                  (spellId, staged) = S.addHandCard exhale S.alice withDragon
+                  ready = staged {GameState.phase = Phase.PrecombatMain, GameState.activePlayer = S.alice, GameState.priority = Just S.alice}
+                  -- CR 601.2b's announcement, filtered out of the costs offered:
+                  -- the behold is the only component either option carries.
+                  announcing :: Prompt.Prompt r -> r
+                  announcing p = case p of
+                    Prompt.ChooseCost _ _ _ candidates
+                      | Just cost <- List.find (\c -> not (null (Cost.Type.components c)) == beholding) candidates -> cost
+                    Prompt.ChooseTargets _ _ _ asked -> fmap (\(_, legal) -> Set.filter ((== Just victimId) . Recipient.objectOf) legal) asked
+                    _ -> S.identityAnswer p
+                  cast = S.runPure announcing ready (S.cast S.alice spellId)
+                  (settled, _) = settleAfter (Event.simultaneously (Event.changeZone seekerId Zone.Exile >> Event.changeZone dragonId Zone.Library)) cast
+              pure (dragonId, cast, settled)
+        Spec.it s "CR 603.10a an exiled Seeker looks back at a beheld Dragon card put into a library from a hand" $ do
+          (dragonId, cast, settled) <- exhaleBoard True
+          Spec.assertEqWith s "CR 603.10a the Seeker's trigger joined the Exhale on the stack" (length (GameState.stack settled)) 2
+          Spec.assertEqWith s "CR 701.20a the Exhale was waiting with the Dragon card revealed to bob" (Visibility.sees S.bob dragonId cast) Visibility.Type.Visible
+          Spec.assertEqWith s "and the Dragon card is in alice's library" (length (Game.zoneMembers Zone.Library S.alice settled)) 1
+        Spec.it s "CR 603.10a an exiled Seeker does not see the same Dragon card put there unrevealed" $ do
+          (dragonId, cast, settled) <- exhaleBoard False
+          Spec.assertEqWith s "CR 603.10a the Exhale is alone on the stack" (length (GameState.stack settled)) 1
+          Spec.assertEqWith s "CR 400.2 paying the {1} left the Dragon card hidden from bob" (Visibility.sees S.bob dragonId cast) Visibility.Type.Obscured
+          Spec.assertEqWith s "off the same move: the Dragon card is in alice's library" (length (Game.zoneMembers Zone.Library S.alice settled)) 1
+        -- The momentary reveal (CR 701.20a) of a replacement rather than a
+        -- lasting one: Nexus of Fate {5}{U}{U} Instant, "Take an extra turn after
+        -- this one. / If Nexus of Fate would be put into a graveyard from
+        -- anywhere, reveal Nexus of Fate and shuffle it into its owner's library
+        -- instead." (Oracle checked against Scryfall 2026-10-15.) bob's Nexus is
+        -- discarded from his hand as the Seeker is exiled, and is shown as it
+        -- leaves.
+        Spec.it s "CR 603.10a an exiled Seeker looks back at Nexus of Fate revealed on its way from a hand into a library" $ do
+          seeker <- S.printingOf s registry "Dutiful Knowledge Seeker"
+          nexus <- S.printingOf s registry "Nexus of Fate"
+          lands <- islands
+          let (seekerId, withSeeker) = S.addPermanent seeker S.alice lands
+              (nexusId, gs) = S.addHandCard nexus S.bob withSeeker
+              (settled, _) = settleAfter (Event.simultaneously (Event.changeZone seekerId Zone.Exile >> Event.changeZone nexusId Zone.Graveyard)) gs
+          Spec.assertEqWith s "CR 603.10a the look-back put the Seeker's trigger on the stack" (length (GameState.stack settled)) 1
+          Spec.assertEqWith s "CR 701.20a bob revealed the Nexus" (S.revealsOf settled) [(S.bob, Set.singleton (S.printingName nexus))]
+          Spec.assertEqWith s "CR 614.1a and it went to his library instead" (length (Game.zoneMembers Zone.Library S.bob settled)) 1
 
 -- Binding.handArrival, the card a hand received, which CR 400.7e withholds from
 -- `became` (CR 400.2) and which digital effects reach anyway. Kithkin Brinefarer
@@ -841,7 +903,7 @@ warpedDevotionSpec s registry =
               moves =
                 Maybe.mapMaybe
                   ( \logged -> case LoggedEvent.event logged of
-                      ev@(GameEvent.Moved (Moved.MkMoved zc _ _ _ _)) | ZoneChange.departed zc == pikerId -> Just ev
+                      ev@(GameEvent.Moved (Moved.MkMoved zc _ _ _ _ _)) | ZoneChange.departed zc == pikerId -> Just ev
                       _ -> Nothing
                   )
                   (Foldable.toList (GameState.events gone))

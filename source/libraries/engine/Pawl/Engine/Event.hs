@@ -66,6 +66,7 @@ import qualified Pawl.Engine.Saga as Saga
 import qualified Pawl.Engine.SpaceSculptor as SpaceSculptor
 import qualified Pawl.Engine.Subtype as Subtype.Engine
 import qualified Pawl.Engine.Turn as Turn
+import qualified Pawl.Engine.Visibility as Visibility
 import qualified Pawl.Extra.Integer as Integer
 import qualified Pawl.Extra.Natural as Natural
 import qualified Pawl.Types.AbilityTriggered as AbilityTriggered
@@ -266,6 +267,7 @@ import qualified Pawl.Types.UntapR as UntapR
 import qualified Pawl.Types.UntapRewrite as UntapRewrite
 import qualified Pawl.Types.VillainousChoiceR as VillainousChoiceR
 import qualified Pawl.Types.VillainousChoiceRewrite as VillainousChoiceRewrite
+import qualified Pawl.Types.Visibility as Visibility.Type
 import qualified Pawl.Types.WithCounters as WithCounters
 import Pawl.Types.Zone (Zone)
 import qualified Pawl.Types.Zone as Zone
@@ -6040,7 +6042,22 @@ changeZoneWithCause discarded asOf batch oid requestedDest requestedPosition see
       -- loop.
       --
       -- Both ids are `oid` in the PROPOSED event: nothing has moved yet.
+      loggedBefore <- State.gets (Seq.length . GameState.events)
       (resolved, exiledBy, shuffling, splitOff, position) <- resolveZoneChange asOf discarded requestedPosition resolving (ZoneChange.MkZoneChange oid oid fromZone requestedDest)
+      -- CR 603.10a's "an object that all players can see", asked of a card
+      -- leaving a hidden zone (CR 400.2): seen by every player on the pre-move
+      -- board, or revealed by the loop above as it leaves (CR 701.20a, Nexus of
+      -- Fate's "reveal Nexus of Fate"). Forced, so the log entry holds no thunk
+      -- over the pre-move board.
+      revealedLeaving <-
+        if not (Game.isHiddenZone fromZone)
+          then pure False
+          else do
+            loggedByLoop <- State.gets (Seq.drop loggedBefore . GameState.events)
+            let revealedHere logged = case LoggedEvent.event logged of
+                  GameEvent.Revealed r -> Revealed.card r == oid
+                  _ -> False
+            pure $! (any revealedHere loggedByLoop || all (\seat -> Visibility.sees seat oid lki == Visibility.Type.Visible) (Game.stillPlaying lki))
       case resolved of
         -- CR 614.6: nothing survived the loop, so no zone change happens. No
         -- producer today -- no ReplacementEffect in data/cards cancels a zone
@@ -7082,7 +7099,8 @@ changeZoneWithCause discarded asOf batch oid requestedDest requestedPosition see
                         -- A spell's own resolution move: CR 608.2n's, where `resolving`
                         -- is True only at changeZoneResolvingReturning's door, and CR
                         -- 608.3's onto the battlefield, Pawl.Engine.Stack's Carried.
-                        Moved.duringResolution = resolving || (carrying == CarryOver.Carried && dest == Zone.Battlefield)
+                        Moved.duringResolution = resolving || (carrying == CarryOver.Carried && dest == Zone.Battlefield),
+                        Moved.revealed = revealedLeaving
                       }
                   -- CR 712.21's second clause: "two cards are put into the
                   -- appropriate zone". One event per card AFTER the leading one,
