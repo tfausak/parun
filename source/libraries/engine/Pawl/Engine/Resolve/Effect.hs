@@ -320,6 +320,7 @@ import qualified Pawl.Types.PermissionVerb as PermissionVerb
 import qualified Pawl.Types.Phase as Phase
 import qualified Pawl.Types.PhasePattern as PhasePattern
 import qualified Pawl.Types.PhaseSelector as PhaseSelector
+import qualified Pawl.Types.PlaneswalkCause as PlaneswalkCause
 import qualified Pawl.Types.PlayPermissionOrigin as PlayPermissionOrigin
 import qualified Pawl.Types.Player as Player
 import qualified Pawl.Types.PlayerActed as PlayerActed
@@ -2114,6 +2115,7 @@ referentsOfReplacement re = case re of
   ReplacementEffect.VillainousChoiceR _ -> []
   ReplacementEffect.AssembleR _ -> []
   ReplacementEffect.GameLossR _ -> []
+  ReplacementEffect.PlaneswalkR _ -> []
   ReplacementEffect.PhaseR _ -> []
 
 -- The recipients a damage REWRITE bakes, which is CR 614.9's redirect destination
@@ -3567,6 +3569,7 @@ effectIsImpossible resolving source controller legal gs effect = case effect of
   Effect.Assemble _ -> null (Game.sideDeckOf SideDeck.Contraption controller gs)
   -- CR 701.31a: only the planar controller of a Planechase game planeswalks.
   Effect.Planeswalk -> not (Planechase.canPlaneswalk controller gs)
+  Effect.ChaosEnsues -> False
   -- CR 701.33a: only a face-up ongoing scheme may be abandoned.
   Effect.Abandon -> not (Archenemy.canAbandon source gs)
   Effect.ClaimPrize -> False
@@ -9801,7 +9804,12 @@ applyOneEffect runSubgame resolving source controller legal chosen effect = case
     gs <- State.get
     let assembler = ref >>= \r -> Maybe.listToMaybe (Maybe.mapMaybe Recipient.objectOf (objectRefRecipients legal resolving controller source gs r))
     Contraption.assemble assembler controller
-  Effect.Planeswalk -> Planechase.planeswalk controller
+  -- CR 701.31c: the cause is the planar die's exactly when this is CR 901.8's
+  -- planeswalking ability resolving.
+  Effect.Planeswalk -> do
+    gs <- State.get
+    Planechase.planeswalk (if Planechase.isPlaneswalkingAbility resolving gs then PlaneswalkCause.PlanarDie else PlaneswalkCause.Instruction) controller
+  Effect.ChaosEnsues -> State.modify' (Event.recordEvent GameEvent.ChaosEnsued)
   Effect.Abandon -> Archenemy.abandon source
   -- CR 702.159b: the prize's actions are the effects after this one, so the
   -- claim itself is only the event "whenever you claim the prize" reads.

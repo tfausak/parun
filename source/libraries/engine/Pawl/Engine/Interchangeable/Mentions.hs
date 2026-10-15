@@ -266,6 +266,8 @@ import qualified Pawl.Types.PermanentTappedForMana as PermanentTappedForMana
 import qualified Pawl.Types.PermanentsBecomeTargeted as PermanentsBecomeTargeted
 import qualified Pawl.Types.PermanentsDealCombatDamageToPlayer as PermanentsDealCombatDamageToPlayer
 import qualified Pawl.Types.PlacesSticker as PlacesSticker
+import qualified Pawl.Types.PlaneswalkR as PlaneswalkR
+import qualified Pawl.Types.PlaneswalkRewrite as PlaneswalkRewrite
 import qualified Pawl.Types.PlayerAttacksWith as PlayerAttacksWith
 import qualified Pawl.Types.PlayerCounterTally as PlayerCounterTally
 import qualified Pawl.Types.PlayerCounters as PlayerCounters
@@ -1361,6 +1363,7 @@ effectNames asking onCard onAbility x = case x of
   Effect.TemptWithTheRing -> False
   Effect.OpenAttraction -> False
   Effect.Planeswalk -> False
+  Effect.ChaosEnsues -> False
   Effect.Abandon -> False
   Effect.ClaimPrize -> False
   Effect.Forage -> False
@@ -2490,7 +2493,11 @@ replacementEffectNames asking onCard onAbility onEffect x = case x of
   ReplacementEffect.ScryR scryR -> scryRNames asking scryR
   ReplacementEffect.VillainousChoiceR villainousChoiceR -> villainousChoiceRNames asking villainousChoiceR
   ReplacementEffect.AssembleR matching -> filterNames asking matching
-  ReplacementEffect.GameLossR (GameLossR.MkGameLossR _whose effects) -> any onEffect effects
+  ReplacementEffect.GameLossR (GameLossR.MkGameLossR whose effects) -> controllerRelationNames asking whose || any onEffect effects
+  ReplacementEffect.PlaneswalkR (PlaneswalkR.MkPlaneswalkR whose _cause rewrite) ->
+    controllerRelationNames asking whose || case rewrite of
+      PlaneswalkRewrite.ArrangeTopTwo -> False
+      PlaneswalkRewrite.RunEffects effects -> any onEffect effects
   ReplacementEffect.PhaseR _phasePattern -> False
 
 requireAttackNames :: Asking -> RequireAttack.RequireAttack -> Bool

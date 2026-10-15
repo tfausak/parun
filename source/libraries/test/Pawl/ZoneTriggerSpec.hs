@@ -2315,8 +2315,8 @@ representativeEvents cond =
         TriggerCondition.PlayerRollsResult watched -> one (GameEvent.DieResultSettled DieResult.MkDieResult {DieResult.roller = S.bob, DieResult.result = DieResult.result watched})
         -- CR 701.52a's own event, and the only one this condition admits.
         TriggerCondition.Visit -> one (GameEvent.RolledToVisit DieResult.MkDieResult {DieResult.roller = S.bob, DieResult.result = 3})
-        -- CR 901.9b's own event, a planar die showing the chaos symbol.
-        TriggerCondition.ChaosEnsues -> one (GameEvent.PlanarDieRolled (PlanarDieRolled.MkPlanarDieRolled S.bob PlanarDieFace.Chaos))
+        -- CR 311.7's own event, chaos ensuing.
+        TriggerCondition.ChaosEnsues -> one GameEvent.ChaosEnsued
         -- CR 901.9c's own event, a planar die showing the Planeswalker symbol.
         TriggerCondition.PlayerRollsPlaneswalker _ -> one (GameEvent.PlanarDieRolled (PlanarDieRolled.MkPlanarDieRolled S.bob PlanarDieFace.Planeswalker))
         -- CR 701.32's own event, and the only one this condition admits.

@@ -172,6 +172,8 @@ import qualified Pawl.Types.Optionality as Optionality
 import qualified Pawl.Types.OrElse as OrElse
 import qualified Pawl.Types.PayGate as PayGate
 import qualified Pawl.Types.PermanentActed as PermanentActed
+import qualified Pawl.Types.PlaneswalkR as PlaneswalkR
+import qualified Pawl.Types.PlaneswalkRewrite as PlaneswalkRewrite
 import qualified Pawl.Types.PlayerCounters as PlayerCounters
 import Pawl.Types.PlayerId (PlayerId)
 import qualified Pawl.Types.PlayerQuantity as PlayerQuantity
@@ -872,6 +874,7 @@ effectObjectRefs effect = case effect of
   Effect.TemptWithTheRing -> []
   Effect.OpenAttraction -> []
   Effect.Planeswalk -> []
+  Effect.ChaosEnsues -> []
   Effect.Abandon -> []
   Effect.ClaimPrize -> []
   Effect.Forage -> []
@@ -1089,6 +1092,7 @@ effectPlayerRefs effect = case effect of
   Effect.TemptWithTheRing -> []
   Effect.OpenAttraction -> []
   Effect.Planeswalk -> []
+  Effect.ChaosEnsues -> []
   Effect.Abandon -> []
   Effect.ClaimPrize -> []
   Effect.Forage -> []
@@ -1239,6 +1243,7 @@ slotsOf effect = joinTwo (joinTwo (joinSlots (fmap objectRefSlots (effectObjectR
   Effect.TemptWithTheRing -> Map.empty
   Effect.OpenAttraction -> Map.empty
   Effect.Planeswalk -> Map.empty
+  Effect.ChaosEnsues -> Map.empty
   Effect.Abandon -> Map.empty
   Effect.ClaimPrize -> Map.empty
   Effect.Forage -> Map.empty
@@ -1696,6 +1701,7 @@ replacementRowReads re = case re of
   ReplacementEffect.AssembleR matching -> ([matching], [])
   -- One ControllerRelation; the effects run instead are replacementRowEffects'.
   ReplacementEffect.GameLossR {} -> ([], [])
+  ReplacementEffect.PlaneswalkR {} -> ([], [])
   ReplacementEffect.PhaseR _ -> ([], [])
 
 -- A row's pattern Filter joined onto what its rewrite reads.
@@ -1878,6 +1884,7 @@ overRelations f re = case re of
   ReplacementEffect.VillainousChoiceR r -> (\w -> ReplacementEffect.VillainousChoiceR r {VillainousChoiceR.whose = w}) <$> f (VillainousChoiceR.whose r)
   ReplacementEffect.AssembleR _ -> pure re
   ReplacementEffect.GameLossR r -> (\w -> ReplacementEffect.GameLossR r {GameLossR.whose = w}) <$> f (GameLossR.whose r)
+  ReplacementEffect.PlaneswalkR r -> (\w -> ReplacementEffect.PlaneswalkR r {PlaneswalkR.whose = w}) <$> f (PlaneswalkR.whose r)
   -- CR 109.5's relation rides EntryR's Filter (Filter.ControlledBy) and DamageR's
   -- PlayerRelation; the other four name no player at all.
   ReplacementEffect.EntryR _ -> pure re
@@ -1935,6 +1942,7 @@ replacementRowEffects re = case re of
   ReplacementEffect.AssembleR _ -> []
   -- CR 614.1a's "instead [do something]" for a loss of the game (Lich's Mirror).
   ReplacementEffect.GameLossR (GameLossR.MkGameLossR _ effects) -> Foldable.toList effects
+  ReplacementEffect.PlaneswalkR r -> (case PlaneswalkR.rewrite r of PlaneswalkRewrite.ArrangeTopTwo -> []; PlaneswalkRewrite.RunEffects effects -> Foldable.toList effects)
   ReplacementEffect.PhaseR _ -> []
 
 -- The program an ENTRY rewrite runs. entryRewriteReads' discipline: no wildcard,
@@ -2078,6 +2086,7 @@ ownSlotsAreExhaustive effect = case effect of
   Effect.TemptWithTheRing -> True
   Effect.OpenAttraction -> True
   Effect.Planeswalk -> True
+  Effect.ChaosEnsues -> True
   Effect.Abandon -> True
   Effect.ClaimPrize -> True
   Effect.Forage -> True
@@ -2365,6 +2374,7 @@ readsX =
         Effect.TemptWithTheRing -> False
         Effect.OpenAttraction -> False
         Effect.Planeswalk -> False
+        Effect.ChaosEnsues -> False
         Effect.Abandon -> False
         Effect.ClaimPrize -> False
         Effect.Forage -> False
@@ -2639,6 +2649,7 @@ boundSlots effect = case effect of
   Effect.TemptWithTheRing -> Set.empty
   Effect.OpenAttraction -> Set.empty
   Effect.Planeswalk -> Set.empty
+  Effect.ChaosEnsues -> Set.empty
   Effect.Abandon -> Set.empty
   Effect.ClaimPrize -> Set.empty
   Effect.Forage -> Set.empty
