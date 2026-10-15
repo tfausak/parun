@@ -49,8 +49,8 @@ data PendingTrigger = MkPendingTrigger
     -- naming events an inherent ability the rulebook states never watches. Read
     -- by Pawl.Engine.ManaAbility.isTriggeredManaAbility, CR 605.5a asking what
     -- added the mana rather than only what the ability watches. The group is
-    -- CR 610.3b's "after that ability triggered", which Engine.placeOne stamps
-    -- on the stack object (GameState.stackedIn).
+    -- CR 610.3b's "after that ability triggered", which Engine.triggeredSince
+    -- stamps on the stack object (GameState.stackedIn).
     firedBy :: Maybe LoggedEvent.LoggedEvent,
     -- | CR 113.2c: how many value-identical instances of `ability` the source
     -- bore as it triggered, 1 unless a printing or a grant repeats it. The

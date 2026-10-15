@@ -836,9 +836,9 @@ placeSourceless pending = do
   State.put (Game.putOnStack (triggeredSince pending gs2) abilId gs2 {GameState.objects = Map.insert abilId obj (GameState.objects gs2)})
 
 -- CR 610.3b's "after that ability triggered": the first event group after
--- the trigger event's, so an event between the trigger and CR 603.3's placement
--- -- a CR 725.4 crowning among the state-based actions -- counts. An ability
--- with no trigger event counts from its placement.
+-- the trigger event's, so an event between the trigger and CR 603.3's
+-- placement counts, such as a CR 725.4 crowning among the state-based actions.
+-- An ability with no trigger event counts from its placement.
 --
 -- data/scenarios/trigger/cr-610-3b-a-crowning-while-palace-jailers-exile-waits-for-the-stack-keeps-the-creature.json
 -- is the proof.
