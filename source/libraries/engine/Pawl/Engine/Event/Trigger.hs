@@ -111,7 +111,6 @@ import qualified Pawl.Types.Recipient as Recipient
 import qualified Pawl.Types.RevealCause as RevealCause
 import qualified Pawl.Types.Revealed as Revealed
 import qualified Pawl.Types.Saddling as Saddling
-import qualified Pawl.Types.SchemeSetInMotion as SchemeSetInMotion
 import qualified Pawl.Types.SelfCountersRemoved as SelfCountersRemoved
 import qualified Pawl.Types.SlotName as SlotName
 import qualified Pawl.Types.Source as Source
@@ -131,6 +130,7 @@ import qualified Pawl.Types.TriggeredAbility as TriggeredAbility
 import qualified Pawl.Types.TriggeredAbilitySource as TriggeredAbilitySource
 import qualified Pawl.Types.TurnWindow as TurnWindow
 import qualified Pawl.Types.TurnedFaceUp as TurnedFaceUp
+import qualified Pawl.Types.TurnedUpOffDeck as TurnedUpOffDeck
 import qualified Pawl.Types.TypeLine as TypeLine
 import qualified Pawl.Types.VentureMarkerEntered as VentureMarkerEntered
 import qualified Pawl.Types.Voted as Voted
@@ -278,7 +278,7 @@ movedOf event = case event of
   GameEvent.DieResultSettled _ -> Nothing
   GameEvent.RolledToVisit _ -> Nothing
   GameEvent.PlanarDieRolled _ -> Nothing
-  GameEvent.SchemeSetInMotion _ -> Nothing
+  GameEvent.TurnedUpOffDeck _ -> Nothing
   GameEvent.ClassLevelSet _ -> Nothing
   GameEvent.Plotted _ -> Nothing
   GameEvent.BecameAttacked _ -> Nothing
@@ -430,7 +430,7 @@ participants event =
         GameEvent.DieResultSettled r -> player (DieResult.roller r)
         GameEvent.RolledToVisit r -> player (DieResult.roller r)
         GameEvent.PlanarDieRolled r -> player (PlanarDieRolled.roller r)
-        GameEvent.SchemeSetInMotion e -> ([SchemeSetInMotion.scheme e], [SchemeSetInMotion.player e])
+        GameEvent.TurnedUpOffDeck e -> ([TurnedUpOffDeck.card e], [TurnedUpOffDeck.player e])
         GameEvent.ClassLevelSet c -> one (ClassLevelChange.object c)
         GameEvent.Plotted oid -> one oid
         GameEvent.BecameTapped oid -> one oid
@@ -496,7 +496,7 @@ looksBack condition = case condition of
   TriggerCondition.Visit -> False
   TriggerCondition.ChaosEnsues -> False
   TriggerCondition.PlayerRollsPlaneswalker _ -> False
-  TriggerCondition.SetInMotion -> False
+  TriggerCondition.SelfTurnedUpOffDeck -> False
   TriggerCondition.PlayerWinsCoinFlip _ -> False
   TriggerCondition.PlayerLosesCoinFlip _ -> False
   -- CR 603.10a's list does not reach an attachment either. CR 701.3a moves a
@@ -801,7 +801,7 @@ batchScoped condition = case condition of
   TriggerCondition.Visit -> False
   TriggerCondition.ChaosEnsues -> False
   TriggerCondition.PlayerRollsPlaneswalker _ -> False
-  TriggerCondition.SetInMotion -> False
+  TriggerCondition.SelfTurnedUpOffDeck -> False
   TriggerCondition.PlayerWinsCoinFlip _ -> False
   TriggerCondition.PlayerLosesCoinFlip _ -> False
   TriggerCondition.SelfBecomesAttachedBy _ -> False
@@ -1331,7 +1331,7 @@ eventTriggers events gs =
         GameEvent.DieResultSettled _ -> Map.empty
         GameEvent.RolledToVisit _ -> Map.empty
         GameEvent.PlanarDieRolled _ -> Map.empty
-        GameEvent.SchemeSetInMotion _ -> Map.empty
+        GameEvent.TurnedUpOffDeck _ -> Map.empty
         GameEvent.ClassLevelSet _ -> Map.empty
         GameEvent.Plotted _ -> Map.empty
         GameEvent.PermanentActed _ -> Map.empty
@@ -1690,7 +1690,7 @@ eventTriggers events gs =
         GameEvent.DieResultSettled _ -> Map.empty
         GameEvent.RolledToVisit _ -> Map.empty
         GameEvent.PlanarDieRolled _ -> Map.empty
-        GameEvent.SchemeSetInMotion _ -> Map.empty
+        GameEvent.TurnedUpOffDeck _ -> Map.empty
         GameEvent.ClassLevelSet _ -> Map.empty
         GameEvent.Plotted _ -> Map.empty
         GameEvent.BecameAttacked _ -> Map.empty
@@ -2059,7 +2059,7 @@ eventTriggers events gs =
         GameEvent.DieResultSettled _ -> Map.empty
         GameEvent.RolledToVisit _ -> Map.empty
         GameEvent.PlanarDieRolled _ -> Map.empty
-        GameEvent.SchemeSetInMotion _ -> Map.empty
+        GameEvent.TurnedUpOffDeck _ -> Map.empty
         GameEvent.ClassLevelSet _ -> Map.empty
         GameEvent.Plotted _ -> Map.empty
         GameEvent.BecameAttacked _ -> Map.empty
@@ -2217,7 +2217,7 @@ eventTriggers events gs =
         GameEvent.DieResultSettled _ -> Map.empty
         GameEvent.RolledToVisit _ -> Map.empty
         GameEvent.PlanarDieRolled _ -> Map.empty
-        GameEvent.SchemeSetInMotion _ -> Map.empty
+        GameEvent.TurnedUpOffDeck _ -> Map.empty
         GameEvent.ClassLevelSet _ -> Map.empty
         GameEvent.Plotted _ -> Map.empty
         GameEvent.BecameAttacked _ -> Map.empty
@@ -2706,9 +2706,9 @@ zonesTriggeredFrom cond =
         TriggerCondition.PlayerRollsResult _ -> battlefield
         -- CR 311.7 / 901.7: a chaos ability triggers from the face-up plane.
         TriggerCondition.ChaosEnsues -> Set.singleton Zone.Command
-        -- CR 701.32b / 904.9: a scheme's set-in-motion ability triggers from the
-        -- scheme face up in the command zone.
-        TriggerCondition.SetInMotion -> Set.singleton Zone.Command
+        -- CR 904.9 / 312.5: a scheme's set-in-motion ability and a phenomenon's
+        -- encounter ability trigger from the card face up in the command zone.
+        TriggerCondition.SelfTurnedUpOffDeck -> Set.singleton Zone.Command
         TriggerCondition.Visit -> battlefield
         TriggerCondition.PlayerWinsCoinFlip _ -> battlefield
         TriggerCondition.PlayerLosesCoinFlip _ -> battlefield
@@ -3172,7 +3172,7 @@ stateTriggers gs
             TriggerCondition.Visit -> False
             TriggerCondition.ChaosEnsues -> False
             TriggerCondition.PlayerRollsPlaneswalker _ -> False
-            TriggerCondition.SetInMotion -> False
+            TriggerCondition.SelfTurnedUpOffDeck -> False
             TriggerCondition.PlayerWinsCoinFlip _ -> False
             TriggerCondition.PlayerLosesCoinFlip _ -> False
             -- CR 603.2 once more: becoming attached is something that HAPPENS,
@@ -3958,7 +3958,7 @@ resnapshot gs without event =
         GameEvent.DieResultSettled {} -> Just event
         GameEvent.RolledToVisit {} -> Just event
         GameEvent.PlanarDieRolled {} -> Just event
-        GameEvent.SchemeSetInMotion {} -> Just event
+        GameEvent.TurnedUpOffDeck {} -> Just event
         GameEvent.ClassLevelSet {} -> Just event
         GameEvent.Plotted {} -> Just event
         GameEvent.BecameTapped {} -> Just event

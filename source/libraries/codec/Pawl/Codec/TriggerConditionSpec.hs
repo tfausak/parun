@@ -1230,12 +1230,12 @@ spec s = Spec.describe s "Pawl.Codec.TriggerCondition" $ do
       TriggerCondition.Visit
       " {\"type\":\"Visit\"} "
   -- CR 701.32: nullary, the scheme being the ability's own.
-  Spec.it s "SetInMotion" $
+  Spec.it s "SelfTurnedUpOffDeck" $
     Common.assertCodec
       s
       TriggerCondition.codec
-      TriggerCondition.SetInMotion
-      " {\"type\":\"SetInMotion\"} "
+      TriggerCondition.SelfTurnedUpOffDeck
+      " {\"type\":\"SelfTurnedUpOffDeck\"} "
   -- CR 311.7: nullary, chaos ensuing for the whole table.
   Spec.it s "ChaosEnsues" $
     Common.assertCodec

@@ -245,6 +245,62 @@ spec s registry = Spec.describe s "Pawl.Engine.Planechase" $ do
     Spec.assertEqWith s "CR 901.10a bob's Tazeem is still the face-up plane" names [Just (CardName.MkCardName (Text.pack "Tazeem"))]
     Spec.assertEqWith s "and his Academy is still in his planar deck" (length (Planechase.deckOf S.bob gone)) 1
     Spec.assertBool s (notElem S.alice (Game.stillPlaying gone)) "alice has left the game"
+
+  -- CR 312.5 / 704.6f: alice rolls the Planeswalker symbol and planeswalks
+  -- from Academy at Tolaria West to Mutual Epiphany ("When you encounter Mutual
+  -- Epiphany, each player draws four cards."). Its ability resolves, and the
+  -- state-based action then planeswalks her on to Tazeem.
+  Spec.it s "CR 312.5 encountering Mutual Epiphany draws each player four, then CR 704.6f planeswalks away" $ do
+    board <- planarBoard s registry ["Academy at Tolaria West", "Mutual Epiphany", "Tazeem"]
+    let walked = rollAndResolve 6 (inMain S.alice board)
+    Spec.assertEqWith s "CR 312.5 alice and bob each drew four" (S.handSize S.alice walked, S.handSize S.bob walked) (4, 4)
+    Spec.assertEqWith s "CR 704.6f Tazeem is the face-up plane" (faceUpNames walked) [cardName "Tazeem"]
+    Spec.assertEqWith s "and Academy then Mutual Epiphany are on the bottom of the planar deck" (deckNames S.alice walked) [cardName "Academy at Tolaria West", cardName "Mutual Epiphany"]
+
+  -- CR 312.7 / 704.6f: "isn't the source of a triggered ability that has
+  -- triggered but not yet left the stack". Once the planeswalking ability has
+  -- resolved, the settle that follows checks state-based actions before it
+  -- puts the encounter ability on the stack; Mutual Epiphany stays face up
+  -- through both.
+  Spec.it s "CR 704.6f a phenomenon stays face up while its encounter ability has triggered" $ do
+    board <- planarBoard s registry ["Academy at Tolaria West", "Mutual Epiphany", "Tazeem"]
+    let pending = S.runPure (rolling 6) (inMain S.alice board) (Planechase.roll S.manaPerformer S.alice >> Engine.settleForPriority >> Stack.resolveTop >> Engine.settleForPriority)
+    Spec.assertEqWith s "CR 704.6f Mutual Epiphany is still face up" (faceUpNames pending) [cardName "Mutual Epiphany"]
+    Spec.assertEqWith s "with its ability on the stack and nobody's hand drawn" (length (GameState.stack pending), S.handSize S.alice pending, S.handSize S.bob pending) (1, 0, 0)
+
+  -- CR 901.5: the starting player puts a phenomenon on the bottom while
+  -- finding the starting plane, and no ability of it triggers. A regression
+  -- fence: CR 312.6 makes the bottomed card a new object, which no ability
+  -- triggered on the old one could reach anyway.
+  Spec.it s "CR 901.5 a phenomenon passed over for the starting plane does not trigger" $ do
+    board <- planarBoard s registry ["Mutual Epiphany", "Academy at Tolaria West"]
+    let settled = S.runPure S.identityAnswer (inMain S.alice board) Engine.settleForPriority
+    Spec.assertEqWith s "CR 901.5 nobody drew" (S.handSize S.alice settled, S.handSize S.bob settled) (0, 0)
+    Spec.assertEqWith s "and Academy is the starting plane" (faceUpNames settled) [cardName "Academy at Tolaria West"]
+
+  -- CR 901.10 / 312.5: bob, the active player, concedes while his Academy is
+  -- face up. carol, the new planar controller, turns up her Mutual Epiphany,
+  -- which is encountering it: alice and carol draw four, and carol then
+  -- planeswalks on to her Tazeem.
+  Spec.it s "CR 901.10 a phenomenon turned up when a plane's owner leaves is encountered" $ do
+    board <- seatedPlanarBoard s registry S.bob [(S.alice, ["Tazeem"]), (S.bob, ["Academy at Tolaria West"]), (S.carol, ["Mutual Epiphany", "Tazeem"])]
+    let gone = S.runPure (conceding S.bob) (inMain S.bob board) Engine.priorityLoop
+    Spec.assertEqWith s "CR 312.5 alice and carol each drew four" (S.handSize S.alice gone, S.handSize S.carol gone) (4, 4)
+    Spec.assertEqWith s "CR 704.6f carol's Tazeem is face up" (fmap (\oid -> (fmap Face.name (Game.faceOf oid gone), fmap Object.owner (Game.lookupObject oid gone))) (Planechase.faceUp gone)) [(cardName "Tazeem", Just S.carol)]
+
+  -- CR 901.10b: alice's Mutual Epiphany ability is on the stack when she
+  -- concedes. The card leaves with her and bob, the next planar controller,
+  -- turns up his Tazeem (CR 901.10), but the ability stays, now bob's, and bob
+  -- and carol each draw four.
+  Spec.it s "CR 901.10b a phenomenon's ability stays on the stack when its owner leaves" $ do
+    board <- seatedPlanarBoard s registry S.alice [(S.alice, ["Academy at Tolaria West", "Mutual Epiphany"]), (S.bob, ["Tazeem"]), (S.carol, [])]
+    let pending = S.runPure (rolling 6) (inMain S.alice board) (Planechase.roll S.manaPerformer S.alice >> Engine.settleForPriority >> Stack.resolveTop >> Engine.settleForPriority)
+        controllers = fmap (`Projection.controllerOf` pending) (GameState.stack pending)
+        gone = S.runPure (conceding S.alice) pending Engine.priorityLoop
+    Spec.assertEqWith s "CR 901.10b bob and carol each drew four" (S.handSize S.bob gone, S.handSize S.carol gone) (4, 4)
+    Spec.assertBool s (notElem S.alice (Game.stillPlaying gone)) "alice has left the game"
+    Spec.assertEqWith s "CR 901.10 bob's Tazeem is face up" (fmap (\oid -> (fmap Face.name (Game.faceOf oid gone), fmap Object.owner (Game.lookupObject oid gone))) (Planechase.faceUp gone)) [(cardName "Tazeem", Just S.bob)]
+    Spec.assertEqWith s "the ability was alice's while she played" controllers [Just S.alice]
   carrySpec s registry
 
 -- CR 400.7b / 611.3d on The Caldaia, Plane -- Capenna, "Creature spells you cast
@@ -359,6 +415,17 @@ caldaiaBlitz = Keyword.Blitz (Cost.Type.MkCost (Just (ManaCost.MkManaCost [ManaS
 
 velociraptorProwl :: Keyword.Keyword
 velociraptorProwl = Keyword.Prowl (Cost.Type.MkCost (Just (ManaCost.MkManaCost [ManaSymbol.Generic 2, theRed])) [])
+
+-- The names of the face-up planar cards.
+faceUpNames :: GameState.GameState -> [Maybe CardName.CardName]
+faceUpNames gs = fmap (\oid -> fmap Face.name (Game.faceOf oid gs)) (Planechase.faceUp gs)
+
+-- The names in this player's planar deck, top first.
+deckNames :: PlayerId.PlayerId -> GameState.GameState -> [Maybe CardName.CardName]
+deckNames pid gs = fmap (\oid -> fmap Face.name (Game.faceOf oid gs)) (Planechase.deckOf pid gs)
+
+cardName :: String -> Maybe CardName.CardName
+cardName = Just . CardName.MkCardName . Text.pack
 
 -- A two-player board with alice's planar deck stacked in the order named, top
 -- first, the top one face up (CR 103.7), and twenty Forests in each library.

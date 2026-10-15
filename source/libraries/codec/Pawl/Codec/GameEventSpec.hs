@@ -81,7 +81,7 @@ import qualified Pawl.Types.RevealCause as RevealCause
 import qualified Pawl.Types.Revealed as Revealed
 import qualified Pawl.Types.RoomIndex as RoomIndex
 import qualified Pawl.Types.Saddling as Saddling
-import qualified Pawl.Types.SchemeSetInMotion as SchemeSetInMotion
+import qualified Pawl.Types.SideDeck as SideDeck
 import qualified Pawl.Types.SlotName as SlotName
 import qualified Pawl.Types.SpellWasCast as SpellWasCast
 import qualified Pawl.Types.SpellWasCopied as SpellWasCopied
@@ -95,6 +95,7 @@ import qualified Pawl.Types.Transformed as Transformed
 import qualified Pawl.Types.TriggerSource as TriggerSource
 import qualified Pawl.Types.TriggeredAbilitySource as TriggeredAbilitySource
 import qualified Pawl.Types.TurnedFaceUp as TurnedFaceUp
+import qualified Pawl.Types.TurnedUpOffDeck as TurnedUpOffDeck
 import qualified Pawl.Types.VentureMarkerEntered as VentureMarkerEntered
 import qualified Pawl.Types.Voted as Voted
 import qualified Pawl.Types.Zone as Zone
@@ -584,12 +585,12 @@ spec s = Spec.describe s "Pawl.Codec.GameEvent" $ do
       (GameEvent.RolledToVisit DieResult.MkDieResult {DieResult.roller = PlayerId.MkPlayerId 2, DieResult.result = 5})
       " {\"type\":\"RolledToVisit\",\"value\":{\"roller\":2,\"result\":5}} "
   -- CR 701.32.
-  Spec.it s "SchemeSetInMotion" $
+  Spec.it s "TurnedUpOffDeck" $
     Common.assertCodec
       s
       GameEvent.codec
-      (GameEvent.SchemeSetInMotion (SchemeSetInMotion.MkSchemeSetInMotion (PlayerId.MkPlayerId 1) (ObjectId.MkObjectId 7)))
-      " {\"type\":\"SchemeSetInMotion\",\"value\":{\"player\":1,\"scheme\":7}} "
+      (GameEvent.TurnedUpOffDeck (TurnedUpOffDeck.MkTurnedUpOffDeck SideDeck.Scheme (PlayerId.MkPlayerId 1) (ObjectId.MkObjectId 7)))
+      " {\"type\":\"TurnedUpOffDeck\",\"value\":{\"card\":7,\"deck\":{\"type\":\"Scheme\"},\"player\":1}} "
   -- CR 901.9.
   Spec.it s "PlanarDieRolled" $
     Common.assertCodec
