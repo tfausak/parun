@@ -6048,8 +6048,9 @@ changeZoneWithCause discarded asOf batch oid requestedDest requestedPosition see
       -- leaving a hidden zone (CR 400.2): seen by every player on the LIVE
       -- pre-move board, or revealed by the loop above as it leaves (CR 701.20a,
       -- Nexus of Fate's "reveal Nexus of Fate"). Live rather than `lki`: a batch
-      -- board predates the reveal a search makes just before its move. Forced, so
-      -- the log entry holds no thunk over the pre-move board.
+      -- board predates the reveal a search makes just before its move, though no
+      -- board observes the difference yet. Forced, so the log entry holds no
+      -- thunk over the pre-move board.
       revealedLeaving <-
         if not (Game.isHiddenZone fromZone)
           then pure False
@@ -9289,6 +9290,7 @@ reveal cause pid oid = do
 -- | CR 701.20a: an effect's reveal, kept "for as long as necessary to complete
 -- the parts of the effect that card is relevant to" -- read as the rest of the
 -- resolution of `resolving`, the spell or ability whose effect it is.
+-- Pawl.LeavesTriggerSpec's Wan Shi Tong token case is the proof.
 revealResolving :: ObjectId -> PlayerId -> ObjectId -> Game ()
 revealResolving resolving pid oid = do
   reveal RevealCause.Ordinary pid oid
