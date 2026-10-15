@@ -41,6 +41,7 @@ import qualified Pawl.Engine.Target as Target
 import qualified Pawl.Registry as Registry
 import qualified Pawl.Spec as Spec
 import qualified Pawl.Support as S
+import qualified Pawl.Types.Acquisition as Acquisition
 import qualified Pawl.Types.ActivatedAbility as ActivatedAbility
 import qualified Pawl.Types.ActivatedAbilitySource as ActivatedAbilitySource
 import qualified Pawl.Types.Activator as Activator
@@ -668,7 +669,8 @@ resolveSpec s registry = Spec.describe s "Resolve" $ do
                   ActivatedAbilitySource.MkActivatedAbilitySource
                     { ActivatedAbilitySource.source = srcId,
                       ActivatedAbilitySource.ability = ability,
-                      ActivatedAbilitySource.delayed = Map.empty
+                      ActivatedAbilitySource.delayed = Map.empty,
+                      ActivatedAbilitySource.acquisition = Acquisition.Own
                     }
               )
               Zone.Stack
@@ -705,7 +707,7 @@ resolveSpec s registry = Spec.describe s "Resolve" $ do
         (abilId, g2) = Game.freshObjectId g1
         (ts, g3) = Game.freshTimestamp g2
         abilObj =
-          (Object.newSettled S.alice (Source.OfAbility ActivatedAbilitySource.MkActivatedAbilitySource {ActivatedAbilitySource.source = ObjectId.MkObjectId 0, ActivatedAbilitySource.ability = ability, ActivatedAbilitySource.delayed = Map.empty}) Zone.Stack ts)
+          (Object.newSettled S.alice (Source.OfAbility ActivatedAbilitySource.MkActivatedAbilitySource {ActivatedAbilitySource.source = ObjectId.MkObjectId 0, ActivatedAbilitySource.ability = ability, ActivatedAbilitySource.delayed = Map.empty, ActivatedAbilitySource.acquisition = Acquisition.Own}) Zone.Stack ts)
             { Object.bindings = Binding.fromChoices Map.empty Nothing (Seq.singleton (ModeIndex.MkModeIndex 0))
             }
         g4 = g3 {GameState.objects = Map.insert abilId abilObj (GameState.objects g3), GameState.stack = [abilId]}
@@ -721,7 +723,7 @@ resolveSpec s registry = Spec.describe s "Resolve" $ do
         (abilId, g2) = Game.freshObjectId g1
         (ts, g3) = Game.freshTimestamp g2
         abilObj =
-          (Object.newSettled S.alice (Source.OfAbility ActivatedAbilitySource.MkActivatedAbilitySource {ActivatedAbilitySource.source = ObjectId.MkObjectId 0, ActivatedAbilitySource.ability = ability, ActivatedAbilitySource.delayed = Map.empty}) Zone.Stack ts)
+          (Object.newSettled S.alice (Source.OfAbility ActivatedAbilitySource.MkActivatedAbilitySource {ActivatedAbilitySource.source = ObjectId.MkObjectId 0, ActivatedAbilitySource.ability = ability, ActivatedAbilitySource.delayed = Map.empty, ActivatedAbilitySource.acquisition = Acquisition.Own}) Zone.Stack ts)
             { Object.bindings = Binding.fromChoices Map.empty Nothing (Seq.singleton (ModeIndex.MkModeIndex 0))
             }
         g4 = g3 {GameState.objects = Map.insert abilId abilObj (GameState.objects g3), GameState.stack = [abilId]}
@@ -756,7 +758,7 @@ resolveSpec s registry = Spec.describe s "Resolve" $ do
         (abilId, g2) = Game.freshObjectId g1
         (ts, g3) = Game.freshTimestamp g2
         abilObj =
-          (Object.newSettled S.alice (Source.OfAbility ActivatedAbilitySource.MkActivatedAbilitySource {ActivatedAbilitySource.source = ObjectId.MkObjectId 0, ActivatedAbilitySource.ability = ability, ActivatedAbilitySource.delayed = Map.empty}) Zone.Stack ts)
+          (Object.newSettled S.alice (Source.OfAbility ActivatedAbilitySource.MkActivatedAbilitySource {ActivatedAbilitySource.source = ObjectId.MkObjectId 0, ActivatedAbilitySource.ability = ability, ActivatedAbilitySource.delayed = Map.empty, ActivatedAbilitySource.acquisition = Acquisition.Own}) Zone.Stack ts)
             { Object.bindings = Binding.fromChoices Map.empty Nothing (Seq.singleton (ModeIndex.MkModeIndex 0))
             }
         g4 = g3 {GameState.objects = Map.insert abilId abilObj (GameState.objects g3), GameState.stack = [abilId]}
@@ -787,7 +789,7 @@ resolveSpec s registry = Spec.describe s "Resolve" $ do
         (abilId, g2) = Game.freshObjectId g1
         (ts, g3) = Game.freshTimestamp g2
         abilObj =
-          (Object.newSettled S.alice (Source.OfAbility ActivatedAbilitySource.MkActivatedAbilitySource {ActivatedAbilitySource.source = ObjectId.MkObjectId 0, ActivatedAbilitySource.ability = ability, ActivatedAbilitySource.delayed = Map.empty}) Zone.Stack ts)
+          (Object.newSettled S.alice (Source.OfAbility ActivatedAbilitySource.MkActivatedAbilitySource {ActivatedAbilitySource.source = ObjectId.MkObjectId 0, ActivatedAbilitySource.ability = ability, ActivatedAbilitySource.delayed = Map.empty, ActivatedAbilitySource.acquisition = Acquisition.Own}) Zone.Stack ts)
             { Object.bindings = Binding.fromChoices Map.empty Nothing (Seq.singleton (ModeIndex.MkModeIndex 0))
             }
         g4 = g3 {GameState.objects = Map.insert abilId abilObj (GameState.objects g3), GameState.stack = [abilId]}
@@ -1278,7 +1280,8 @@ resolveSpec s registry = Spec.describe s "Resolve" $ do
                     { TriggeredAbilitySource.source = ripId,
                       TriggeredAbilitySource.ability = ability,
                       TriggeredAbilitySource.createdAt = Nothing,
-                      TriggeredAbilitySource.delayed = Map.empty
+                      TriggeredAbilitySource.delayed = Map.empty,
+                      TriggeredAbilitySource.acquisition = Acquisition.Own
                     }
               )
               Zone.Stack
@@ -1334,7 +1337,8 @@ resolveSpec s registry = Spec.describe s "Resolve" $ do
                   ActivatedAbilitySource.MkActivatedAbilitySource
                     { ActivatedAbilitySource.source = srcId,
                       ActivatedAbilitySource.ability = ability,
-                      ActivatedAbilitySource.delayed = Map.empty
+                      ActivatedAbilitySource.delayed = Map.empty,
+                      ActivatedAbilitySource.acquisition = Acquisition.Own
                     }
               )
               Zone.Stack
@@ -1401,7 +1405,8 @@ resolveSpec s registry = Spec.describe s "Resolve" $ do
                   ActivatedAbilitySource.MkActivatedAbilitySource
                     { ActivatedAbilitySource.source = aliceId,
                       ActivatedAbilitySource.ability = ability,
-                      ActivatedAbilitySource.delayed = Map.empty
+                      ActivatedAbilitySource.delayed = Map.empty,
+                      ActivatedAbilitySource.acquisition = Acquisition.Own
                     }
               )
               Zone.Stack
@@ -1640,7 +1645,8 @@ installControlBy mindslaver controller target gs0 =
                 ActivatedAbilitySource.MkActivatedAbilitySource
                   { ActivatedAbilitySource.source = srcId,
                     ActivatedAbilitySource.ability = ability,
-                    ActivatedAbilitySource.delayed = Map.empty
+                    ActivatedAbilitySource.delayed = Map.empty,
+                    ActivatedAbilitySource.acquisition = Acquisition.Own
                   }
             )
             Zone.Stack

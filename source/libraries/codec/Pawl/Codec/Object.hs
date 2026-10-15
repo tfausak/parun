@@ -3,6 +3,7 @@
 module Pawl.Codec.Object where
 
 import qualified Numeric.Natural as Natural
+import qualified Pawl.Codec.Acquisition as Acquisition
 import qualified Pawl.Codec.ActivatedAbility as ActivatedAbility
 import qualified Pawl.Codec.Binding as Binding
 import qualified Pawl.Codec.Card as Card
@@ -132,7 +133,8 @@ codec = Fields.object $ do
   unlockedHalves <- Fields.defaulted "unlockedHalves" (Object.unlockedHalves defaults) (Common.set RoomHalf.codec) Object.unlockedHalves
   designations <- Fields.defaulted "designations" (Object.designations defaults) (Common.set Designation.codec) Object.designations
   designationValues <- Fields.defaulted "designationValues" (Object.designationValues defaults) (Common.keyedList designationValue) Object.designationValues
-  storedResults <- Fields.defaulted "storedResults" (Object.storedResults defaults) (Common.multiset StoredResult.codec) Object.storedResults
+  storedResults <- Fields.defaulted "storedResults" (Object.storedResults defaults) (Common.keyedList (Common.keyValue Acquisition.codec (Common.multiset StoredResult.codec))) Object.storedResults
+  acquisition <- Fields.defaulted "acquisition" (Object.acquisition defaults) Acquisition.codec Object.acquisition
   paidCosts <- Fields.defaulted "paidCosts" (Object.paidCosts defaults) (Common.keyedList (Common.keyValue Keyword.codec (Common.seq Common.natural))) Object.paidCosts
   tributePaid <- Fields.defaulted "tributePaid" (Object.tributePaid defaults) Common.boolean Object.tributePaid
   bestowed <- Fields.defaulted "bestowed" (Object.bestowed defaults) Common.boolean Object.bestowed
@@ -199,6 +201,7 @@ codec = Fields.object $ do
         Object.designations = designations,
         Object.designationValues = designationValues,
         Object.storedResults = storedResults,
+        Object.acquisition = acquisition,
         Object.paidCosts = paidCosts,
         Object.tributePaid = tributePaid,
         Object.bestowed = bestowed,

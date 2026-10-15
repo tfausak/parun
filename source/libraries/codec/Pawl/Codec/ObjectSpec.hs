@@ -9,6 +9,7 @@ import qualified Pawl.Codec.Object as Object
 import qualified Pawl.Codec.ProjectedCharacteristicsSpec as ProjectedCharacteristicsSpec
 import qualified Pawl.JsonCodec.Common as Common
 import qualified Pawl.Spec as Spec
+import qualified Pawl.Types.Acquisition as Acquisition
 import qualified Pawl.Types.Binding as Binding
 import qualified Pawl.Types.CardIdentity as CardIdentity
 import qualified Pawl.Types.CardName as CardName
@@ -161,7 +162,8 @@ spec s = Spec.describe s "Pawl.Codec.Object" $ do
           Object.unlockedHalves = Set.singleton RoomHalf.LeftHalf,
           Object.designations = Set.singleton Designation.Renowned,
           Object.designationValues = Map.singleton Designation.Monstrous 26,
-          Object.storedResults = Map.singleton StoredResult.MkStoredResult {StoredResult.sides = 6, StoredResult.value = 4} 2,
+          Object.storedResults = Map.singleton (Acquisition.Copied (Timestamp.MkTimestamp 41)) (Map.singleton StoredResult.MkStoredResult {StoredResult.sides = 6, StoredResult.value = 4} 2),
+          Object.acquisition = Acquisition.Copied (Timestamp.MkTimestamp 42),
           Object.paidCosts =
             Map.singleton
               (Keyword.Squad Cost.MkCost {Cost.mana = Just (ManaCost.MkManaCost [ManaSymbol.Generic 24]), Cost.components = []})
@@ -226,7 +228,8 @@ spec s = Spec.describe s "Pawl.Codec.Object" $ do
           <> ",\"ventureRoom\":18,\"classLevel\":2,\"unlockedHalves\":[{\"type\":\"LeftHalf\"}]"
           <> ",\"designations\":[{\"type\":\"Renowned\"}]"
           <> ",\"designationValues\":[{\"designation\":{\"type\":\"Monstrous\"},\"value\":26}]"
-          <> ",\"storedResults\":[{\"key\":{\"sides\":6,\"value\":4},\"value\":2}]"
+          <> ",\"storedResults\":[{\"key\":{\"type\":\"Copied\",\"value\":41},\"value\":[{\"key\":{\"sides\":6,\"value\":4},\"value\":2}]}]"
+          <> ",\"acquisition\":{\"type\":\"Copied\",\"value\":42}"
           <> ",\"paidCosts\":[{\"key\":{\"type\":\"Squad\",\"value\":{\"mana\":[{\"type\":\"Generic\",\"value\":24}]}},\"value\":[25,0,3]}]"
           <> ",\"tributePaid\":true"
           <> ",\"bestowed\":true"

@@ -4,6 +4,7 @@ import qualified Data.Map.Strict as Map
 import qualified Data.Sequence as Seq
 import qualified Data.Set as Set
 import qualified Numeric.Natural as Natural
+import qualified Pawl.Types.Acquisition as Acquisition
 import qualified Pawl.Types.ActivatedAbility as ActivatedAbility
 import qualified Pawl.Types.Binding as Binding
 import qualified Pawl.Types.Card as Card
@@ -524,12 +525,19 @@ data Object = MkObject
     -- Effect.RerollStoredResults (CR 706.8b); Quantity.StoredResultsOfSameValue
     -- reads it back.
     --
+    -- KEYED BY THE ACQUISITION of the storing ability (CR 607.5, 706.8c), so a
+    -- copy's reading ability sees only what its own storing ability stored, and
+    -- the printed pair's results are there again once the copy ends. The
+    -- scenarios under data/scenarios/copy/ named for CR 607.5 prove it.
+    --
     -- Not a copiable value (CR 707.2) and per-incarnation (CR 400.7), for
     -- chosenColors's reasons.
-    --
-    -- Not implemented: CR 607.5's fresh link for a storing ability acquired by
-    -- a copy effect, which should not see results stored before (#4729).
-    storedResults :: Map.Map StoredResult.StoredResult Natural.Natural,
+    storedResults :: Map.Map Acquisition.Acquisition (Map.Map StoredResult.StoredResult Natural.Natural),
+    -- | CR 607.5: the acquisition of the abilities its copy binding gives it --
+    -- Own for the values it entered with, and Copied for a copy effect with no
+    -- duration made since, which Pawl.Engine.Game.acquisitionOf answers where
+    -- no stored copy effect covers it. Per-incarnation, as the binding is.
+    acquisition :: Acquisition.Acquisition,
     -- | CR 601.2b: how many times did this SPELL's controller declare each
     -- optional additional cost a keyword ability offers -- kicker and multikicker
     -- (CR 702.33a/c), squad (CR 702.157a), offspring (CR 702.175a)? Stamped by
@@ -956,6 +964,7 @@ new o s z t =
       designations = Set.empty,
       designationValues = Map.empty,
       storedResults = Map.empty,
+      acquisition = Acquisition.Own,
       paidCosts = Map.empty,
       -- CR 702.104b's record is written back by nothing: rule 702.104a's ability
       -- functions only as the creature ENTERS, and the permanent it produces is

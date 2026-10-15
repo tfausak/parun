@@ -33,6 +33,7 @@ import qualified Pawl.Engine.Turn as Turn
 import qualified Pawl.Registry as Registry
 import qualified Pawl.Spec as Spec
 import qualified Pawl.Support as S
+import qualified Pawl.Types.Acquisition as Acquisition
 import qualified Pawl.Types.Action as A
 import qualified Pawl.Types.ActivatedAbility as ActivatedAbility
 import qualified Pawl.Types.Asked as Asked
@@ -82,6 +83,7 @@ import qualified Pawl.Types.SideDeck as SideDeck
 import qualified Pawl.Types.SlotName as SlotName
 import qualified Pawl.Types.Source as Source
 import qualified Pawl.Types.Status as Status
+import qualified Pawl.Types.StoredResult as StoredResult
 import qualified Pawl.Types.Subtype as Subtype
 import qualified Pawl.Types.TapState as TapState
 import qualified Pawl.Types.Timestamp as Timestamp
@@ -383,7 +385,8 @@ dirtied pid object =
       Object.unlockedHalves = Set.singleton RoomHalf.RightHalf,
       Object.designations = Set.singleton Designation.Renowned,
       Object.designationValues = Map.empty,
-      Object.storedResults = Map.empty,
+      Object.storedResults = Map.singleton Acquisition.Own (Map.singleton StoredResult.MkStoredResult {StoredResult.sides = 6, StoredResult.value = 5} 1),
+      Object.acquisition = Acquisition.Copied (Timestamp.MkTimestamp 3),
       Object.detainedUntil = Set.singleton pid,
       Object.goadedBy = Set.empty,
       Object.doesNotUntapFor = 3,
