@@ -2238,8 +2238,9 @@ eventTriggers events gs =
         GameEvent.ActivatedAbilityResolved _ -> Map.empty
         GameEvent.TriggeredAbilityResolved _ -> Map.empty
         GameEvent.CardArrived _ -> Map.empty
-      forOne board event (oid, (ctrl, abilities)) =
-        let -- The bearer's own slot environment, so a condition naming a slot
+      forOne board logged (oid, (ctrl, abilities)) =
+        let event = LoggedEvent.event logged
+            -- The bearer's own slot environment, so a condition naming a slot
             -- (TriggerCondition.LoseControlOfBound) is read the same way here as it
             -- is for a CR 603.7 delayed entry. Empty for a bearer that has since
             -- left, there being no object to ask -- whether it arrived here out of
@@ -2253,7 +2254,7 @@ eventTriggers events gs =
             -- CR 400.7d: an ability of a permanent may read what costs were
             -- paid for the spell it was, so the bearer's record rides on every
             -- ability it triggers (Binding.paidCostRecord).
-            pend (cond, ab) = PendingTrigger.MkPendingTrigger (TriggerSource.OfObject oid) ctrl ab (Map.union (Binding.paidCostRecord bindings) (eventBindingsOver board gs (Map.lookup oid becameInGraveyard) becameInGraveyard oid ctrl cond event)) Nothing (Just event) (copiesIn (fmap snd abilities) ab) (delayedAsTriggered board oid gs)
+            pend (cond, ab) = PendingTrigger.MkPendingTrigger (TriggerSource.OfObject oid) ctrl ab (Map.union (Binding.paidCostRecord bindings) (eventBindingsOver board gs (Map.lookup oid becameInGraveyard) becameInGraveyard oid ctrl cond event)) Nothing (Just logged) (copiesIn (fmap snd abilities) ab) (delayedAsTriggered board oid gs)
             -- CR 805.4d: one trigger per player whose step this is (stepCopies).
             pends (cond, ab) =
               let perPlayer = stepCopies gs ctrl cond event ab (pend (cond, ab))
@@ -2300,11 +2301,11 @@ eventTriggers events gs =
       -- comes last so the bias hands them the id: each offers the stated
       -- abilities the scan would, plus its keyword-minted ones.
       candidates onBattlefield event later same graveyard = Map.toAscList (Map.unions [onBattlefield, leftBattlefield event, later, same, cycledCard event, spellCast event, revealedInHand event, graveyard, inCommand, Map.unionWith (\(c, a) (_, b) -> (c, a <> b)) inExile (exiledForMadness event), inStatedZones])
-      scanOne board later same graveyard event = concatMap (forOne board event) (candidates (onBattlefieldOf board) event later same graveyard)
+      scanOne board later same graveyard logged = concatMap (forOne board logged) (candidates (onBattlefieldOf board) (LoggedEvent.event logged) later same graveyard)
       -- The battlefield reading is per GROUP and so is hoisted out of the block:
       -- every event in one group happened at the same time, so they share it. A
       -- group with no events cannot occur, which `eventGroups` states in the type.
-      scanBlock block later same graveyard = oncePerBatch (concatMap (scanOne (battlefieldAt (LoggedEvent.group (NonEmpty.head block)) gs) later same graveyard . LoggedEvent.event) block)
+      scanBlock block later same graveyard = oncePerBatch (concatMap (scanOne (battlefieldAt (LoggedEvent.group (NonEmpty.head block)) gs) later same graveyard) block)
    in concat (List.zipWith4 scanBlock groups laterGroups sameGroup graveyardAt)
 
 -- CR 603.2c's FIRST sentence, applied to ONE event group's matches: a
@@ -2385,9 +2386,9 @@ inherentTriggers held events gs =
             frozen = case source of
               TriggerSource.OfObject oid -> delayedAsTriggered board oid gs
               TriggerSource.Sourceless -> Map.empty
-            pend event = PendingTrigger.MkPendingTrigger source you ability (eventBindingsOver board gs Nothing Map.empty bearer you cond event) Nothing (Just event) 1 frozen
+            pend logged = PendingTrigger.MkPendingTrigger source you ability (eventBindingsOver board gs Nothing Map.empty bearer you cond (LoggedEvent.event logged)) Nothing (Just logged) 1 frozen
             key trigger = if batchScoped cond then Just (batchPartition cond (PendingTrigger.bindings trigger)) else Nothing
-         in oncePerBatch [(key trigger, trigger) | event <- fmap LoggedEvent.event (NonEmpty.toList block), fires event, trigger <- stepCopies gs you cond event ability (pend event)]
+         in oncePerBatch [(key trigger, trigger) | logged <- NonEmpty.toList block, let event = LoggedEvent.event logged, fires event, trigger <- stepCopies gs you cond event ability (pend logged)]
    in concatMap (filter (interveningHolds gs) . forHeld) held
 
 -- CR 113.6m, read off a TRIGGERED ability: "an ability whose cost or effect
@@ -3639,7 +3640,7 @@ delayedPending grouped gs =
           -- source simply has, once it is on the stack.
           (Just (DelayedTrigger.createdAt entry))
           -- CR 603.2's event, the same one the slots above were read off.
-          (Just (LoggedEvent.event logged))
+          (Just logged)
           -- One entry is one instance, CR 603.7's ability created on its own.
           1
           -- CR 113.7a, read off the board as it stood after the firing event.
@@ -3858,7 +3859,7 @@ neededLimit = 8
 firesWithout :: Set.Set ObjectId -> PendingTrigger -> GameState -> Bool
 firesWithout gone pending gs =
   case (PendingTrigger.firedBy pending, PendingTrigger.createdAt pending, PendingTrigger.source pending) of
-    (Just event, Nothing, TriggerSource.OfObject _) ->
+    (Just logged, Nothing, TriggerSource.OfObject _) ->
       let without =
             gs
               { GameState.battlefield = Set.difference (GameState.battlefield gs) gone,
@@ -3871,7 +3872,7 @@ firesWithout gone pending gs =
               && PendingTrigger.controller p == PendingTrigger.controller pending
               && PendingTrigger.ability p == PendingTrigger.ability pending
               && interveningHolds without p
-       in case resnapshot gs without event of
+       in case resnapshot gs without (LoggedEvent.event logged) of
             Nothing -> False
             Just event' -> any same (eventTriggers [LoggedEvent.MkLoggedEvent (GameState.nextEventGroup gs) event'] without)
     _ -> False
