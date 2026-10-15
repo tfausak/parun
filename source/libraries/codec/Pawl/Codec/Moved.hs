@@ -25,11 +25,15 @@ codec = Fields.object $ do
   -- Defaulted rather than required, CR 608.2n's move being the only one that
   -- sets it: an ordinary move's transcript keeps the shape it had.
   duringResolution <- Fields.defaulted "duringResolution" False Common.boolean Moved.duringResolution
+  -- Defaulted for the same reason: only a revealed card leaving a hidden zone
+  -- sets it.
+  revealed <- Fields.defaulted "revealed" False Common.boolean Moved.revealed
   pure
     Moved.MkMoved
       { Moved.change = change,
         Moved.characteristics = characteristics,
         Moved.otherArrivals = otherArrivals,
         Moved.otherDepartures = otherDepartures,
-        Moved.duringResolution = duringResolution
+        Moved.duringResolution = duringResolution,
+        Moved.revealed = revealed
       }

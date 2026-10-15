@@ -414,12 +414,12 @@ eventBindingsOver board gs bearerBecame becameInGraveyard bearer you cond event 
   -- RECEIVE what the payload does is the payload's question (CR 120.1a for
   -- damage), and a binding that existed only for creatures would make the slot's
   -- presence depend on the entrant, which eventBindingSlots cannot express.
-  (TriggerCondition.PermanentEnters _, GameEvent.Moved (Moved.MkMoved zc _ _ _ _)) ->
+  (TriggerCondition.PermanentEnters _, GameEvent.Moved (Moved.MkMoved zc _ _ _ _ _)) ->
     Binding.setBecame (ZoneChange.object zc) Map.empty
   -- Its batch reading stamps the same entrant as a one-member GROUP, so
   -- batchBindings' append joins the whole entry event's entrants under one
   -- slot (CR 603.2c) where a recipient would keep only the first.
-  (TriggerCondition.PermanentsEnter _, GameEvent.Moved (Moved.MkMoved zc _ _ _ _)) ->
+  (TriggerCondition.PermanentsEnter _, GameEvent.Moved (Moved.MkMoved zc _ _ _ _ _)) ->
     Binding.setBecameGroup (Seq.singleton (ZoneChange.object zc)) Map.empty
   -- CR 708.7's "that creature": the permanent that was turned face up, which Pine
   -- Walker untaps. The bearer is a bystander here -- CR 113.7a's source slot names
@@ -901,7 +901,7 @@ eventBindingsOver board gs bearerBecame becameInGraveyard bearer you cond event 
   -- a graveyard whose `departed` IS the bearer's host, so the id is always there.
   -- The event is therefore matched rather than wildcarded, unlike every other
   -- arm's use of the first argument.
-  (TriggerCondition.AttachedCreatureDies, GameEvent.Moved (Moved.MkMoved zc _ _ _ _)) ->
+  (TriggerCondition.AttachedCreatureDies, GameEvent.Moved (Moved.MkMoved zc _ _ _ _ _)) ->
     Binding.setDepartedPermanent (ZoneChange.departed zc) (maybe Map.empty (`Binding.setBecame` Map.empty) bearerBecame)
   -- Nothing at all, stated rather than left to the fallthrough below: the
   -- attachment link already names the permanent that became tapped, and CR 109.5
