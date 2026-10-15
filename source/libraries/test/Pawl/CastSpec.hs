@@ -3544,6 +3544,28 @@ henzieSpec s registry = Spec.describe s "Henzie" $ do
     let cast = throughEndStep (castResolved (announcingBlitz True) heroId board)
     Spec.assertEqWith s "the Hero stayed and did not attack" (S.lifeOf S.bob cast, length (namedOnBattlefield "Goblin Hero" cast)) (Just 17, 1)
     Spec.assertEqWith s "no cost was asked" (offeredCosts heroId board) []
+  -- CR 702.152b / 400.7b: a Clone {3}{U} cast for Henzie's blitz at {3}{U}
+  -- enters as a copy of a Hill Giant {3}{R}, so the blitz it keeps would cost
+  -- {3}{R} if read off its mana cost now. The instance paid for is still the
+  -- one it keeps. Four Islands; Henzie and the Giant attack in every case.
+  Spec.it s "CR 702.152b a Clone cast for Henzie's blitz as a copy of a Hill Giant keeps the paid blitz: haste, the draw and the sacrifice" $ do
+    island <- S.printingOf s registry "Island"
+    henzie <- S.printingOf s registry "Henzie \"Toolbox\" Torre"
+    giant <- S.printingOf s registry "Hill Giant"
+    clone <- S.printingOf s registry "Clone"
+    let (_, gs1) = S.addPermanent henzie S.alice (S.landsInPlay island 4)
+        (giantId, gs2) = S.addPermanent giant S.alice gs1
+        (cloneId, gs3) = S.addHandCard clone S.alice gs2
+        board = scheduled (List.foldl' (\g _ -> snd (S.addLibraryCard island S.alice g)) gs3 [1 :: Int .. 3])
+        copying :: Bool -> Prompt.Prompt r -> r
+        copying blitz p = case p of
+          Prompt.ChooseCopyTarget {} -> aimedAt giantId p
+          _ -> announcingBlitz blitz p
+        blitzed = throughEndStep (castResolved (copying True) cloneId board)
+        printed = throughEndStep (castResolved (copying False) cloneId board)
+        drew gs = 3 - length (Game.zoneMembers Zone.Library S.alice gs)
+    Spec.assertEqWith s "CR 702.152b the blitzed Clone attacked beside Henzie and the Giant, was sacrificed at the end step and drew a card" (S.lifeOf S.bob blitzed, namedOnBattlefield "Hill Giant" blitzed, drew blitzed) (Just 11, [giantId], 1)
+    Spec.assertEqWith s "cast for its printed cost the Clone neither attacked nor was sacrificed nor drew" (S.lifeOf S.bob printed, length (namedOnBattlefield "Hill Giant" printed), drew printed) (Just 14, 2, 0)
   where
     giantCost = Cost.Type.MkCost (Just (ManaCost.MkManaCost [ManaSymbol.Generic 3, theRed])) []
     isBlitz = maybe False (\k -> case k of Keyword.Blitz _ -> True; _ -> False)
