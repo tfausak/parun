@@ -1571,6 +1571,7 @@ matchesTriggerGiven bindings board gs bearer you cond event = case cond of
     GameEvent.Revealed (Revealed.MkRevealed _ oid (RevealCause.ForMiracle _) _) -> oid == bearer
     GameEvent.Revealed (Revealed.MkRevealed _ _ RevealCause.Ordinary _) -> False
     GameEvent.Revealed (Revealed.MkRevealed _ _ RevealCause.LeavingFaceDown _) -> False
+    GameEvent.Revealed (Revealed.MkRevealed _ _ RevealCause.LeavingFaceDownComponent _) -> False
     GameEvent.Revealed (Revealed.MkRevealed _ _ RevealCause.FaceDownSpell _) -> False
     -- CR 702.94a: a miracle card is revealed, never merely looked at.
     GameEvent.Looked {} -> False
@@ -8023,7 +8024,9 @@ matchesTriggerGiven bindings board gs bearer you cond event = case cond of
     GameEvent.CardArrived _ -> False
     GameEvent.Moved {} -> False
   -- CR 708.9: the cause alone. The permanent is gone by the scan (CR 400.7) and
-  -- the condition names nothing else, so there is no view to read.
+  -- the condition names nothing else, so there is no view to read. A face-up
+  -- merged permanent's face-down component is no face-down permanent, so its
+  -- reveal (RevealCause.LeavingFaceDownComponent) does not match.
   TriggerCondition.FaceDownPermanentLeavesRevealed -> case event of
     GameEvent.PermanentActed _ -> False
     GameEvent.TurnedFaceUp _ -> False

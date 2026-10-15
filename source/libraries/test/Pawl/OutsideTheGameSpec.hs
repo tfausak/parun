@@ -622,9 +622,9 @@ spec s registry = Spec.describe s "Pawl.Engine.Event (CR 400.11)" $ do
         withSource source gs = gs {GameState.objects = Map.adjust (\o -> o {Object.source = source}) mergedId (GameState.objects gs)}
         cubwardenIdentity = Game.lookupObject mergedId g2 >>= Object.identity
         pikerIdentity = Just (CardIdentity.MkCardIdentity 99 S.bob)
-        merged = withSource (Source.OfMerge (fmap (`ShownComponent.MkShownComponent` Nothing) (MergeComponent.OfCard (ComponentCard.MkComponentCard cubwardenPrinting cubwardenIdentity Nothing) NonEmpty.:| [MergeComponent.OfCard (ComponentCard.MkComponentCard pikerPrinting pikerIdentity Nothing)]))) g2
-        tokenTopped = withSource (Source.OfMerge (fmap (`ShownComponent.MkShownComponent` Nothing) (MergeComponent.OfToken pikerPrinting NonEmpty.:| [MergeComponent.OfCard (ComponentCard.MkComponentCard cubwardenPrinting Nothing Nothing)]))) g2
-        overToken = withSource (Source.OfMerge (fmap (`ShownComponent.MkShownComponent` Nothing) (MergeComponent.OfCard (ComponentCard.MkComponentCard cubwardenPrinting Nothing Nothing) NonEmpty.:| [MergeComponent.OfToken pikerPrinting]))) g2
+        merged = withSource (Source.OfMerge (fmap (\c -> ShownComponent.MkShownComponent c Nothing Facing.FaceUp) (MergeComponent.OfCard (ComponentCard.MkComponentCard cubwardenPrinting cubwardenIdentity Nothing) NonEmpty.:| [MergeComponent.OfCard (ComponentCard.MkComponentCard pikerPrinting pikerIdentity Nothing)]))) g2
+        tokenTopped = withSource (Source.OfMerge (fmap (\c -> ShownComponent.MkShownComponent c Nothing Facing.FaceUp) (MergeComponent.OfToken pikerPrinting NonEmpty.:| [MergeComponent.OfCard (ComponentCard.MkComponentCard cubwardenPrinting Nothing Nothing)]))) g2
+        overToken = withSource (Source.OfMerge (fmap (\c -> ShownComponent.MkShownComponent c Nothing Facing.FaceUp) (MergeComponent.OfCard (ComponentCard.MkComponentCard cubwardenPrinting Nothing Nothing) NonEmpty.:| [MergeComponent.OfToken pikerPrinting]))) g2
         creature = Filter.HasCardType CardType.Creature
         wishing parent = snd (Engine.runGamePure exercising (Setup.subgameStateFrom S.alice parent) (Event.bringInto (FromOutsideTheGame.MkFromOutsideTheGame 1 False OutsideDestination.Hand creature True) mergedId S.alice))
     let reported = [(fmap (S.nameOf . Printing.card) (Game.printingOfObject oid (wishing merged)), change) | (oid, change) <- Map.toList (Ante.ownershipChanges (wishing merged))]

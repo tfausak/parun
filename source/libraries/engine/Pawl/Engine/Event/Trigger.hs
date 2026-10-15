@@ -2164,6 +2164,7 @@ eventTriggers events gs =
           _ -> Map.empty
         GameEvent.Revealed (Revealed.MkRevealed _ _ RevealCause.Ordinary _) -> Map.empty
         GameEvent.Revealed (Revealed.MkRevealed _ _ RevealCause.LeavingFaceDown _) -> Map.empty
+        GameEvent.Revealed (Revealed.MkRevealed _ _ RevealCause.LeavingFaceDownComponent _) -> Map.empty
         GameEvent.Revealed (Revealed.MkRevealed _ _ RevealCause.FaceDownSpell _) -> Map.empty
         GameEvent.Looked {} -> Map.empty
         GameEvent.Voted {} -> Map.empty

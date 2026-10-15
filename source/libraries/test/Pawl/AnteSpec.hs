@@ -27,6 +27,7 @@ import qualified Pawl.Support as S
 import qualified Pawl.Types.CardIdentity as CardIdentity
 import qualified Pawl.Types.Deck as Deck
 import qualified Pawl.Types.Departure as Departure.Type
+import qualified Pawl.Types.Facing as Facing
 import qualified Pawl.Types.GameSettings as GameSettings
 import qualified Pawl.Types.GameState as GameState
 import qualified Pawl.Types.MergeComponent as MergeComponent
@@ -358,7 +359,7 @@ spec s registry = Spec.describe s "Ante" $ do
         -- The same three as merged permanents (CR 730.2), each card's identity
         -- riding in its component.
         asMerged obj = case Object.source obj of
-          Source.OfCard pid -> obj {Object.source = Source.OfMerge (pure (ShownComponent.MkShownComponent (MergeComponent.OfCard (Game.componentCardOf obj pid)) Nothing))}
+          Source.OfCard pid -> obj {Object.source = Source.OfMerge (pure (ShownComponent.MkShownComponent (MergeComponent.OfCard (Game.componentCardOf obj pid)) Nothing Facing.FaceUp))}
           _ -> obj
         g5 = g4 {GameState.objects = Map.map asMerged (GameState.objects g4)}
         alikeMerged = Interchangeable.objects (Projection.projectAll g5) g5
