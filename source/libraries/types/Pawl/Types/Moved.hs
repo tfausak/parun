@@ -53,14 +53,20 @@ data Moved = MkMoved
     -- TriggerCondition.SelfPutIntoGraveyardDuringResolution and by CR 400.7d's
     -- look-backs at the cast (Quantity.WasCastFrom, Count's
     -- becamePermanents).
-    duringResolution :: Bool
+    duringResolution :: Bool,
+    -- | CR 603.10a: the object left a HIDDEN zone (CR 400.2) as one all players
+    -- could see -- revealed (CR 701.20a), or in a hand or atop a library shown
+    -- to everyone. False for a move from a public zone, whose zone answers.
+    -- Pawl.LeavesTriggerSpec's "CR 603.10a an exiled Seeker looks back at"
+    -- cases are the proof.
+    revealed :: Bool
   }
   deriving (Eq, Ord, Show)
 
 -- | The ordinary move: one departure, one arrival, no CR 712.21 split. Every
 -- construction site but Pawl.Engine.Event's zone-change funnel uses this.
 moved :: ZoneChange.ZoneChange -> ProjectedCharacteristics.ProjectedCharacteristics -> Moved
-moved zc pc = MkMoved {change = zc, characteristics = pc, otherArrivals = Seq.empty, otherDepartures = Seq.empty, duringResolution = False}
+moved zc pc = MkMoved {change = zc, characteristics = pc, otherArrivals = Seq.empty, otherDepartures = Seq.empty, duringResolution = False, revealed = False}
 
 -- | CR 400.7e's "the new object it became", in the plural CR 712.21c asks for:
 -- every incarnation this move minted, first arrival first. A singleton for every
