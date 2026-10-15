@@ -2181,8 +2181,8 @@ wordAnswer pinned p = case p of
         else A.Pass
   -- FILTERED out of the offer, never built: an ask put to the wrong seat offers
   -- a set the pinned id is not in, and falls back rather than quietly answering.
-  Prompt.ChooseCardInHand decider player _ offered -> do
-    State.modify' (<> [("ChooseCardInHand", player, Just decider)])
+  Prompt.ChooseCardFromAmong decider player _ offered -> do
+    State.modify' (<> [("ChooseCardFromAmong", player, Just decider)])
     pure (Maybe.fromMaybe (NonEmpty.head offered) (List.find (== pinned) (NonEmpty.toList offered)))
   -- CR 723.6's prompt, which carries no Decider to record.
   Prompt.Concede player -> do

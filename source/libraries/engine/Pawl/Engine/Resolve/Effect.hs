@@ -5677,13 +5677,14 @@ applyOneEffect runSubgame resolving source controller legal chosen effect = case
     let named = Set.fromList (playerRefPlayers legal controller gs ref)
     Monad.forM_ (filter (`Set.member` named) (Game.apnapOrder gs)) Event.shuffleLibrary
   Effect.OfferCast (OfferCast.MkOfferCast ref caster optionality verb offer repetition copied controlWhileResolving slot) -> do
+    -- Named HERE rather than inside offerCast so that one function takes the
+    -- objects and never the reference: CR 601.3's offer over a set (Shell of the
+    -- Last Kappa) and over one target (Tinybones, the Pickpocket) are then the
+    -- same call. Asked, since CR 608.2d's choice may name the card: Word of
+    -- Command's "choose a card from it" out of the hand its look bound.
+    named <- askingObjects resolving source controller legal chosen ref
     gs <- State.get
-    -- The sweep every ObjectRef-taking opcode shares, read HERE rather than
-    -- inside offerCast so that one function takes the objects and never the
-    -- reference: CR 601.3's offer over a set (Shell of the Last Kappa) and over
-    -- one target (Tinybones, the Pickpocket) are then the same call.
-    let named = objectRefObjects legal resolving controller source gs ref
-        -- The SAME context the reference above was gathered through, so an offer
+    let -- The SAME context the reference above was gathered through, so an offer
         -- whose restriction reads the source (CR 702.85a) answers what the walk
         -- that named these cards answered.
         context = effectContext gs controller source legal (slotBindings resolving gs)
@@ -6226,14 +6227,11 @@ applyOneEffect runSubgame resolving source controller legal chosen effect = case
     -- binds and records nothing. A public GameEvent.Revealed would be a different
     -- rule (CR 701.20a).
     --
-    -- The one PROMPT this arm raises is CR 608.2d's, not rule 701.20e's: Word of
-    -- Command's "look at target opponent's hand and CHOOSE a card from it" names
-    -- the hand and picks one, which askingObjects asks.
-    --
-    -- Not implemented: Word of Command's look is logged for the chosen card
-    -- alone, not the whole hand rule 701.20e shows (#5009).
-    named <- askingObjects resolving source controller legal chosen ref
+    -- A read and never an ask: the look shows every card it names, so a choice
+    -- among them is a later instruction's, Word of Command's "choose a card from
+    -- it" reading this slot from its OfferCast.
     gs <- State.get
+    let named = objectRefObjects legal resolving controller source gs ref
     Monad.forM_ named $ \oid ->
       Monad.forM_ (playerRefPlayers legal controller gs looker) $ \pid -> Event.look pid oid
     -- Several cards take the group, which Filter.IsBound reads as CR 701.20e's
