@@ -41,6 +41,7 @@ import qualified Pawl.Types.DamageEvent as DamageEvent
 import qualified Pawl.Types.DamageKind as DamageKind
 import qualified Pawl.Types.Decider as Decider
 import qualified Pawl.Types.Discarded as Discarded
+import qualified Pawl.Types.EventGroup as EventGroup
 import Pawl.Types.Face (Face)
 import qualified Pawl.Types.Face as Face
 import qualified Pawl.Types.FaceDownState as FaceDownState
@@ -886,16 +887,18 @@ insertIntoZone zone position pid oid gs = case zone of
   Zone.Exile -> gs {GameState.exile = Set.insert oid (GameState.exile gs)}
   Zone.Command -> gs {GameState.command = Set.insert oid (GameState.command gs)}
   Zone.Ante -> gs {GameState.ante = Set.insert oid (GameState.ante gs)}
-  Zone.Stack -> putOnStack oid gs
+  Zone.Stack -> putOnStack (GameState.nextEventGroup gs) oid gs
 
--- CR 405.2: put an object on top of the stack, noting the event group current
--- as it arrives (GameState.stackedIn) for CR 610.3a / 610.3b's "after it was
--- put onto the stack". Every arrival goes through here.
-putOnStack :: ObjectId -> GameState -> GameState
-putOnStack oid gs =
+-- CR 405.2: put an object on top of the stack, noting `since`, the first event
+-- group that counts as after it (GameState.stackedIn): CR 610.3a's "after that
+-- spell or ability was put onto the stack", the group current as it arrives,
+-- or CR 610.3b's "after that ability triggered", the one after its trigger
+-- event's (Engine.placeOne). Every arrival goes through here.
+putOnStack :: EventGroup.EventGroup -> ObjectId -> GameState -> GameState
+putOnStack since oid gs =
   gs
     { GameState.stack = oid : GameState.stack gs,
-      GameState.stackedIn = Map.insert oid (GameState.nextEventGroup gs) (GameState.stackedIn gs)
+      GameState.stackedIn = Map.insert oid since (GameState.stackedIn gs)
     }
 
 -- Move a card already in a library to this many cards down from its top, 0

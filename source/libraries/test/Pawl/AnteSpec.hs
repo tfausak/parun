@@ -9,6 +9,7 @@ module Pawl.AnteSpec where
 
 import qualified Control.Monad as Monad
 import qualified Control.Monad.Trans.State.Strict as State
+import qualified Data.Foldable as Foldable
 import qualified Data.List.NonEmpty as NonEmpty
 import qualified Data.Map.Strict as Map
 import qualified Data.Set as Set
@@ -36,6 +37,7 @@ import qualified Pawl.Types.Object as Object
 import qualified Pawl.Types.ObjectId as ObjectId
 import qualified Pawl.Types.OptionalDecision as OptionalDecision
 import qualified Pawl.Types.OutsideDestination as OutsideDestination
+import qualified Pawl.Types.OwnershipChange as OwnershipChange
 import qualified Pawl.Types.Phase as Phase
 import qualified Pawl.Types.Player as Player
 import qualified Pawl.Types.PlayerId as PlayerId
@@ -83,6 +85,10 @@ lastOffered p = case p of
     State.modify' ((asked, source, NonEmpty.toList offered) :)
     pure (NonEmpty.last offered)
   _ -> pure (S.identityAnswer p)
+
+-- Ante.ownershipChanges as (starting owner, owner) pairs, in its order.
+changesOf :: GameState.GameState -> [(PlayerId.PlayerId, PlayerId.PlayerId)]
+changesOf gs = [(OwnershipChange.startingOwner c, OwnershipChange.owner c) | c <- Foldable.toList (Ante.ownershipChanges gs)]
 
 anteOf :: PlayerId.PlayerId -> GameState.GameState -> [ObjectId.ObjectId]
 anteOf = Game.zoneMembers Zone.Ante
@@ -164,7 +170,7 @@ spec s registry = Spec.describe s "Ante" $ do
       [bobs] -> do
         let taken = Game.setOwner bobs S.alice anted
             restarted = S.runPure S.identityAnswer taken (Setup.restartGame S.performer Set.empty S.alice)
-        Spec.assertEqWith s "CR 727.2 the card alice took is reported, bob's to begin and hers now" (Map.elems (Ante.ownershipChanges restarted)) [(S.bob, S.alice)]
+        Spec.assertEqWith s "CR 727.2 the card alice took is reported, bob's to begin and hers now" (changesOf restarted) [(S.bob, S.alice)]
         Spec.assertEqWith s "CR 727.1 nobody won the restarted game" (GameState.result restarted) Nothing
         Spec.assertEqWith s "CR 727.2 and nothing else changed hands" (ownedBy S.alice restarted, ownedBy S.bob restarted) (21, 19)
       other -> Spec.assertFailure s ("bob anted " <> show (length other) <> " cards")
@@ -229,7 +235,7 @@ spec s registry = Spec.describe s "Ante" $ do
         sub = S.runPure S.identityAnswer (Setup.subgameStateFrom S.alice parent) (Setup.startGameFromCards S.performer Set.empty)
         (_, crossed) = Event.bringInFrom OutsideDestination.Hand S.alice bearsId sub
         back = Setup.funnelBack crossed (Setup.applyCrossings crossed parent)
-    Spec.assertEqWith s "CR 108.3 the Bears are still bob's to begin and alice's now" (Map.elems (Ante.ownershipChanges back)) [(S.bob, S.alice)]
+    Spec.assertEqWith s "CR 108.3 the Bears are still bob's to begin and alice's now" (changesOf back) [(S.bob, S.alice)]
   -- CR 800.4n / 729.5: bob wishes his own main-game Jeweled Bird into a
   -- three-seat subgame, antes it, and concedes. The Bird stays in the subgame,
   -- and at its end goes to his main-game library with the rest of his cards.

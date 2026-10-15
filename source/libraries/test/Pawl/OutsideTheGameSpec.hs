@@ -89,6 +89,7 @@ import qualified Pawl.Types.OptionalDecision as OptionalDecision
 import qualified Pawl.Types.OutsideCard as OutsideCard
 import qualified Pawl.Types.OutsideDestination as OutsideDestination
 import qualified Pawl.Types.OutsideObject as OutsideObject
+import qualified Pawl.Types.OwnershipChange as OwnershipChange
 import qualified Pawl.Types.Phase as Phase
 import qualified Pawl.Types.Player as Player
 import qualified Pawl.Types.PlayerId as PlayerId
@@ -627,7 +628,7 @@ spec s registry = Spec.describe s "Pawl.Engine.Event (CR 400.11)" $ do
         overToken = withSource (Source.OfMerge (fmap (\c -> ShownComponent.MkShownComponent c Nothing Facing.FaceUp) (MergeComponent.OfCard (ComponentCard.MkComponentCard cubwardenPrinting Nothing Nothing) NonEmpty.:| [MergeComponent.OfToken pikerPrinting]))) g2
         creature = Filter.HasCardType CardType.Creature
         wishing parent = snd (Engine.runGamePure exercising (Setup.subgameStateFrom S.alice parent) (Event.bringInto (FromOutsideTheGame.MkFromOutsideTheGame 1 False OutsideDestination.Hand creature True) mergedId S.alice))
-    let reported = [(fmap (S.nameOf . Printing.card) (Game.printingOfObject oid (wishing merged)), change) | (oid, change) <- Map.toList (Ante.ownershipChanges (wishing merged))]
+    let reported = [(fmap (S.nameOf . Printing.card) (Game.printingOfObject oid (wishing merged)), change) | c <- Foldable.toList (Ante.ownershipChanges (wishing merged)), let oid = OwnershipChange.object c; change = (OwnershipChange.startingOwner c, OwnershipChange.owner c)]
     Spec.assertEqWith s "CR 108.3/729.4a: each card keeps its own identity, so only the Piker is bob's to begin" reported [(Just (S.nameOf (Printing.card piker)), (S.bob, S.alice))]
     Spec.assertEqWith s "CR 730.3: both of the merged permanent's cards arrive in her subgame hand" (List.sort (printingsIn Zone.Hand S.alice (wishing merged))) (List.sort [cubwarden, piker])
     Spec.assertEqWith s "CR 730.2d: a token on top makes it a token, and no card is brought in" (printingsIn Zone.Hand S.alice (wishing tokenTopped)) []
@@ -1259,7 +1260,7 @@ spec s registry = Spec.describe s "Pawl.Engine.Event (CR 400.11)" $ do
           _ -> S.castAnswer p
         after = snd (Engine.runGamePure answer traded Engine.priorityLoop)
     let report = Ante.ownershipChanges after
-        reportFor printing = [pair | (oid, pair) <- Map.toList report, Game.printingOfObject oid after == Just printing]
+        reportFor printing = [(OwnershipChange.startingOwner c, OwnershipChange.owner c) | c <- Foldable.toList report, Game.printingOfObject (OwnershipChange.object c) after == Just printing]
     Spec.assertEqWith s "CR 108.3 the report names bob as the Sign in Blood's first owner and alice as its owner" (reportFor signInBlood) [(S.bob, S.alice)]
     Spec.assertEqWith s "and the Efreet the other way" (reportFor efreet) [(S.alice, S.bob)]
     Spec.assertEqWith s "CR 407.2 and alice, who won the subgame, took bob's subgame ante card" (reportFor mountain) [(S.bob, S.alice)]

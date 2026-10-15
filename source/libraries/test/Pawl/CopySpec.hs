@@ -1198,7 +1198,7 @@ copySpellSpec s registry = Spec.describe s "Pawl.Engine.Copy" $ do
         let cast = snd (Engine.runGamePure (pinTarget (Recipient.ToObject faithSpell)) castFaith (S.cast S.alice twincastId))
             copied = resolveOne S.identityAnswer cast
         Spec.assertEqWith s "CR 707.10 the copy and bob's spell are on the stack" (length (GameState.stack copied)) 2
-        Spec.assertEqWith s "CR 108.3 and no card's owner has changed" (Ante.ownershipChanges copied) Map.empty
+        Spec.assertEqWith s "CR 108.3 and no card's owner has changed" (Ante.ownershipChanges copied) Seq.empty
   -- CR 707.9's exception riding CR 707.10's opcode, on Double Major {G}{U}
   -- Instant, "Copy target creature spell you control, except it isn't legendary
   -- if the spell is legendary" (Oracle text verified 2026-09-14) --
