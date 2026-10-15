@@ -177,7 +177,10 @@ turnUpTop pid = do
       pure (Just top)
 
 -- CR 701.31b's first half: a face-up card goes to the bottom of its owner's
--- planar deck face down, and CR 311.6 / 312.6 make it a new object.
+-- planar deck face down, and CR 311.6 / 312.6 make it a new object. The old id's
+-- CR 608.2h record is filed for an ability of it still on the stack, which
+-- Plane.phenomenonOwnerOf reads. Unobserved, as ownersLeft's phenomenon gate
+-- is: it needs a planeswalk while that ability waits.
 toBottom :: ObjectId -> Game ()
 toBottom oid = do
   gs <- State.get
@@ -189,7 +192,8 @@ toBottom oid = do
       State.modify' $ \g ->
         (Game.overSideDecks SideDeck.Planar (Map.insertWith (flip (Seq.><)) owner (Seq.singleton fresh)) g)
           { GameState.command = Set.delete oid (GameState.command g),
-            GameState.objects = Map.insert fresh (Object.newIncarnation obj) (Map.delete oid (GameState.objects g))
+            GameState.objects = Map.insert fresh (Object.newIncarnation obj) (Map.delete oid (GameState.objects g)),
+            GameState.lastKnown = maybe id (Map.insert oid) (Event.lastKnownRecord g oid) (GameState.lastKnown g)
           }
 
 -- | CR 901.9: how many times this player has rolled the planar die this turn.

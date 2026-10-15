@@ -289,7 +289,7 @@ objectsLeaveWith pid gs =
   let -- CR 800.4n: objects the player owns in the ante do not leave the game,
       -- an exception to CR 800.4a.
       -- CR 901.10: nor does an ability from a phenomenon (CR 901.10b).
-      owned = filter (\oid -> not (Plane.isPhenomenonAbility oid gs)) (Map.keys (Map.filter (\obj -> Object.owner obj == pid && Object.zone obj /= Zone.Ante) (GameState.objects gs)))
+      owned = filter (\oid -> Maybe.isNothing (Plane.phenomenonOwnerOf oid gs)) (Map.keys (Map.filter (\obj -> Object.owner obj == pid && Object.zone obj /= Zone.Ante) (GameState.objects gs)))
       -- CR 603.6c's second trigger event: "when a phased-in permanent leaves the
       -- game because its owner leaves the game". Only those, which is CR 702.26k
       -- saying the phased-out ones cause no zone-change ability to trigger --
@@ -512,9 +512,9 @@ nonCardStackObjectsCease pid gs =
           -- zone it was made in, where the zone filter this feeds never looks.
           Source.OfCardCopy _ -> True
           Source.OfInherentTrigger _ -> True
-      -- CR 901.10b: an ability from a phenomenon stays, for the new planar
-      -- controller.
-      theirs oid = Projection.controllerOf oid gs == Just pid && notACard oid && not (Plane.isPhenomenonAbility oid gs)
+      -- CR 901.10b: an ability from a phenomenon this player owns stays, for
+      -- the new planar controller.
+      theirs oid = Projection.controllerOf oid gs == Just pid && notACard oid && Plane.phenomenonOwnerOf oid gs /= Just pid
    in List.foldl' (flip Game.cease) gs (filter theirs (GameState.stack gs))
 
 -- CR 800.4a, fourth clause: objects still controlled by the departing player are
