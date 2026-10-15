@@ -3528,7 +3528,9 @@ inGraveyardNamed name gs = length (filter (nameOnStack (CardName.MkCardName $ Te
 --
 -- ONE board, four Mountains and three library cards; the cases differ only in
 -- which offered candidate the answerer takes. Henzie, settled by S.addPermanent,
--- attacks for 3 in every case, so a hasty creature is bob's SECOND 3.
+-- attacks for 3 in every case, so a hasty creature is bob's SECOND 3. A
+-- test-local answerer, since the scenario runner picks a cost by its mana alone
+-- (gap #5126).
 henzieSpec :: (Monad m, Monad n) => Spec.Spec m n -> Registry.Registry m -> n ()
 henzieSpec s registry = Spec.describe s "Henzie" $ do
   Spec.it s "CR 601.2b Henzie's blitz at a Hill Giant's own cost can be chosen, and it attacks, is sacrificed and draws; the equal printed cost does neither" $ do
