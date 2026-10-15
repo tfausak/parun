@@ -23,6 +23,7 @@ import qualified Pawl.Engine.Game as Game
 import qualified Pawl.Engine.Keyword as Keyword
 import qualified Pawl.Engine.Planechase as Planechase
 import qualified Pawl.Extra.Int as Int
+import qualified Pawl.Types.Acquisition as Acquisition
 import Pawl.Types.Action (Action)
 import qualified Pawl.Types.Action as Action
 import qualified Pawl.Types.ActivatedAbility as ActivatedAbility
@@ -142,13 +143,23 @@ canonicalStamps gs =
           && erases (ContinuousEffect.modification later) (ContinuousEffect.modification row)
       kept = filter (not . erased) rows
       floor_ = maximum (Timestamp.MkTimestamp 0 : layeredStamps gs)
-      movable = fmap ContinuousEffect.timestamp kept <> foldMap (Map.elems . Object.counterTimestamps) objects
+      -- CR 607.5's no-duration copy stamps (Object.acquisition) move too; a
+      -- stored copy row's stamp is under the floor, so a stored result keyed by
+      -- one is left as it stands. A REGRESSION FENCE: no test loops a
+      -- no-duration copy.
+      copiedAt obj = case Object.acquisition obj of
+        Acquisition.Copied ts -> [ts]
+        Acquisition.Own -> []
+      movable = fmap ContinuousEffect.timestamp kept <> foldMap (Map.elems . Object.counterTimestamps) objects <> foldMap copiedAt objects
       above = Set.fromList (filter (> floor_) movable)
+      reacquire acquisition = case acquisition of
+        Acquisition.Copied ts -> Acquisition.Copied (restamp ts)
+        Acquisition.Own -> Acquisition.Own
       restamp ts = case Set.lookupIndex ts above of
         Just rank -> Timestamp.MkTimestamp (Timestamp.unwrap floor_ + 1 + Int.toNaturalSaturating rank)
         Nothing -> ts
    in ( fmap (\row -> row {ContinuousEffect.timestamp = restamp (ContinuousEffect.timestamp row)}) kept,
-        fmap (\obj -> obj {Object.counterTimestamps = fmap restamp (Object.counterTimestamps obj)}) objects
+        fmap (\obj -> obj {Object.counterTimestamps = fmap restamp (Object.counterTimestamps obj), Object.acquisition = reacquire (Object.acquisition obj), Object.storedResults = Map.mapKeysWith (Map.unionWith (+)) reacquire (Object.storedResults obj)}) objects
       )
 
 -- | Does `later`, applied after `earlier` to the same objects, leave nothing
