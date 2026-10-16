@@ -3912,27 +3912,35 @@ resnapshot gs without event =
       -- A reveal's snapshot is what it showed (Event.revealedOn), so it is
       -- re-read the same way. A fence rather than a proof: reading
       -- Projection.project here instead reddens nothing in the suite.
+      rereadBy :: (Eq a) => (ObjectId -> GameState -> a) -> ObjectId -> a -> Maybe a
       rereadBy view oid pc =
         let before = view oid gs
             after = view oid without
          in if not (Map.member oid (GameState.objects gs)) || before == after
               then Just pc
               else if before == pc then Just after else Nothing
+      -- CR 604.2: a snapshot that carries its "as long as" clauses' answers is
+      -- re-read with them, since `without` can flip a clause while leaving the
+      -- characteristics, which hold each granted ability unasked, the same.
+      sampled oid g =
+        let pc = Projection.project oid g
+         in (pc, Projection.lapsedGrantsOf (Projection.fullView g) pc oid g)
+      resample oid pc lapsed = rereadBy sampled oid (pc, lapsed)
       rereadBallot ballot = case Ballot.choice ballot of
         BallotChoice.ForObject snapshot ->
           fmap
-            (\pc -> ballot {Ballot.choice = BallotChoice.ForObject snapshot {ObjectSnapshot.characteristics = pc}})
-            (reread (ObjectSnapshot.object snapshot) (ObjectSnapshot.characteristics snapshot))
+            (\(pc, lapsed) -> ballot {Ballot.choice = BallotChoice.ForObject snapshot {ObjectSnapshot.characteristics = pc, ObjectSnapshot.lapsedGrants = lapsed}})
+            (resample (ObjectSnapshot.object snapshot) (ObjectSnapshot.characteristics snapshot) (ObjectSnapshot.lapsedGrants snapshot))
         BallotChoice.ForWord _ -> Just ballot
         BallotChoice.ForPlayer _ -> Just ballot
    in case event of
         GameEvent.Moved m -> fmap (\pc -> GameEvent.Moved m {Moved.characteristics = pc}) (reread (ZoneChange.departed (Moved.change m)) (Moved.characteristics m))
-        GameEvent.SpellCast c -> fmap (\pc -> GameEvent.SpellCast c {SpellWasCast.characteristics = pc}) (reread (SpellWasCast.spell c) (SpellWasCast.characteristics c))
+        GameEvent.SpellCast c -> fmap (\(pc, lapsed) -> GameEvent.SpellCast c {SpellWasCast.characteristics = pc, SpellWasCast.lapsedGrants = lapsed}) (resample (SpellWasCast.spell c) (SpellWasCast.characteristics c) (SpellWasCast.lapsedGrants c))
         GameEvent.Revealed r -> fmap (\pc -> GameEvent.Revealed r {Revealed.characteristics = pc}) (rereadBy Projection.projectShown (Revealed.card r) (Revealed.characteristics r))
         GameEvent.Looked l -> fmap (\pc -> GameEvent.Looked l {Looked.characteristics = pc}) (reread (Looked.card l) (Looked.characteristics l))
         GameEvent.Voted v -> fmap (\b -> GameEvent.Voted v {Voted.ballot = b}) (rereadBallot (Voted.ballot v))
         GameEvent.VotesRevealed ballots -> fmap GameEvent.VotesRevealed (traverse rereadBallot ballots)
-        GameEvent.Transformed t -> fmap (\pc -> GameEvent.Transformed t {Transformed.characteristics = pc}) (reread (Transformed.object t) (Transformed.characteristics t))
+        GameEvent.Transformed t -> fmap (\(pc, lapsed) -> GameEvent.Transformed t {Transformed.characteristics = pc, Transformed.lapsedGrants = lapsed}) (resample (Transformed.object t) (Transformed.characteristics t) (Transformed.lapsedGrants t))
         GameEvent.CardArrived {} -> Just event
         GameEvent.SpellCopied {} -> Just event
         GameEvent.DamageDealt {} -> Just event
