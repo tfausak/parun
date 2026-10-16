@@ -748,6 +748,8 @@ library codec
     Pawl.Codec.KeywordDesignatorSpec
     Pawl.Codec.KeywordFamily
     Pawl.Codec.KeywordFamilySpec
+    Pawl.Codec.KeywordInstance
+    Pawl.Codec.KeywordInstanceSpec
     Pawl.Codec.KeywordsAre
     Pawl.Codec.KeywordsAreSpec
     Pawl.Codec.KeywordSpec
@@ -2439,6 +2441,7 @@ library types
     Pawl.Types.KeywordCount
     Pawl.Types.KeywordDesignator
     Pawl.Types.KeywordFamily
+    Pawl.Types.KeywordInstance
     Pawl.Types.KeywordsAre
     Pawl.Types.KeywordTally
     Pawl.Types.KickerDecision

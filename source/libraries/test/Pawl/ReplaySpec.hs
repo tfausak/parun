@@ -249,7 +249,7 @@ combatReplaySpec s =
                   { Cost.Type.mana = Just (ManaCost.MkManaCost [ManaSymbol.Generic 4]),
                     Cost.Type.components = []
                   }
-              p = Prompt.ChooseKicker decider S.alice oid (Keyword.Kicker kickerCost) (Just 1)
+              p = Prompt.ChooseKicker decider S.alice oid (Keyword.Kicker kickerCost) Nothing (Just 1)
           Spec.assertEqWith
             s
             "kicking round trips"
@@ -291,6 +291,7 @@ combatReplaySpec s =
                             Cost.Type.components = []
                           }
                     )
+                    Nothing
                     (Just 1)
                 )
             )

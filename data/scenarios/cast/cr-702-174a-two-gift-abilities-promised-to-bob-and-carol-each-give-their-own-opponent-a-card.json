@@ -71,7 +71,18 @@
       "do": {
         "Answer": {
           "prompt": "ChooseKicker",
-          "with": 2
+          "with": 1
+        }
+      }
+    },
+    {
+      "turn": 1,
+      "step": "PrecombatMain",
+      "player": "alice",
+      "do": {
+        "Answer": {
+          "prompt": "ChooseKicker",
+          "with": 1
         }
       }
     },

@@ -668,7 +668,7 @@ degavolversOut gs = filter (\o -> Projection.hasName (CardName.MkCardName (Text.
 -- the prompt carries.
 kicksOnly :: Cost.Type.Cost Keyword.Keyword -> Prompt.Prompt r -> r
 kicksOnly wanted p = case p of
-  Prompt.ChooseKicker _ _ _ keyword _ -> KickerDecision.MkKickerDecision (if keyword == Keyword.Kicker wanted then 1 else 0)
+  Prompt.ChooseKicker _ _ _ keyword _ _ -> KickerDecision.MkKickerDecision (if keyword == Keyword.Kicker wanted then 1 else 0)
   _ -> S.identityAnswer p
 
 blackKicker :: Cost.Type.Cost Keyword.Keyword

@@ -38,6 +38,7 @@ import qualified Pawl.Types.GraveyardArrangement as GraveyardArrangement
 import qualified Pawl.Types.HandActionIndex as HandActionIndex
 import qualified Pawl.Types.HybridPayment as HybridPayment
 import qualified Pawl.Types.Keyword as Keyword
+import qualified Pawl.Types.KeywordInstance as KeywordInstance
 import qualified Pawl.Types.KickerDecision as KickerDecision
 import qualified Pawl.Types.LearnMode as LearnMode
 import qualified Pawl.Types.LibraryPosition as LibraryPosition
@@ -525,8 +526,11 @@ data Prompt r where
   -- 702.157a, 702.175a, 702.56a, 702.153a) --
   -- is paid, after ChooseModes and before ChooseCost; the Maybe Natural is the
   -- limit across the spell's instances of it, Nothing for "any number of
-  -- times", and an answer past it is rejected.
-  ChooseKicker :: Decider.Decider -> PlayerId.PlayerId -> ObjectId.ObjectId -> Keyword.Keyword -> Maybe Natural.Natural -> Prompt KickerDecision.KickerDecision
+  -- times", and an answer past it is rejected. The KeywordInstance names the
+  -- one instance asked about where each is asked apart (CR 702.56b, 702.157b,
+  -- 702.174a; Keyword.paidPerInstance), Nothing where the question is about
+  -- them all.
+  ChooseKicker :: Decider.Decider -> PlayerId.PlayerId -> ObjectId.ObjectId -> Keyword.Keyword -> Maybe KeywordInstance.KeywordInstance -> Maybe Natural.Natural -> Prompt KickerDecision.KickerDecision
   -- | CR 702.27a: whether the spell's buyback cost is paid, after ChooseKicker
   -- and before ChooseCost (CR 601.2b); the Cost is what buying back adds (CR
   -- 601.2f).

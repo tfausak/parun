@@ -4,6 +4,7 @@ import qualified Pawl.Codec.PlayerChoice as PlayerChoice
 import qualified Pawl.JsonCodec.Common as Common
 import qualified Pawl.Spec as Spec
 import qualified Pawl.Types.Gift as Gift
+import qualified Pawl.Types.KeywordInstance as KeywordInstance
 import qualified Pawl.Types.PlayerChoice as PlayerChoice
 
 spec :: (Monad m, Monad n) => Spec.Spec m n -> n ()
@@ -18,7 +19,7 @@ spec s = Spec.describe s "Pawl.Codec.PlayerChoice" $ do
     Common.assertCodec
       s
       PlayerChoice.codec
-      (PlayerChoice.Promised Gift.Card 2)
-      " {\"type\":\"Promised\",\"value\":[{\"type\":\"Card\"},2]} "
+      (PlayerChoice.Promised Gift.Card (KeywordInstance.Own 2))
+      " {\"type\":\"Promised\",\"value\":[{\"type\":\"Card\"},{\"type\":\"Own\",\"value\":2}]} "
   Spec.it s "has a schema" $
     Common.assertHasSchema s PlayerChoice.codec

@@ -116,6 +116,7 @@ import qualified Pawl.Types.Gift as Gift
 import qualified Pawl.Types.Hybrid as Hybrid
 import qualified Pawl.Types.HybridPhyrexian as HybridPhyrexian
 import qualified Pawl.Types.Keyword as Keyword.Type
+import qualified Pawl.Types.KeywordInstance as KeywordInstance
 import qualified Pawl.Types.LoggedEvent as LoggedEvent
 import qualified Pawl.Types.Looked as Looked
 import qualified Pawl.Types.LoyaltyKind as LoyaltyKind
@@ -6244,14 +6245,25 @@ chooseManaYield pid oid candidates gs = case candidates of
         then answer
         else NonEmpty.head candidates
 
--- CR 702.174a: the key of the NEXT promise of this gift on the object. Identical
--- instances are interchangeable, so the nth promise paid is the nth instance's,
--- the ordinal Pawl.Engine.Cast records the first that many instances of
--- Object.paidCosts by.
-nextPromise :: ObjectId -> Gift.Gift -> GameState -> PlayerChoice.PlayerChoice
-nextPromise oid gift gs =
-  let promised = Natural.length [() | PlayerChoice.Promised g _ <- foldMap Map.keys (Game.currentChoice Object.chosenPlayers oid gs), g == gift]
-   in PlayerChoice.Promised gift (promised + 1)
+-- CR 702.174a: the key of the NEXT promise of this gift on the object -- the
+-- first instance Pawl.Engine.Cast's announcement paid for that has no promise
+-- yet, Object.paidCosts' entries being the instances Projection.keywordInstances
+-- names, in its order. So each promise is its own instance's, and the
+-- Prompt.ChooseOpponent asking it names that instance.
+--
+-- Not implemented: recording the instances as announced, so a granter that
+-- leaves between CR 601.2b's announcement and this payment (a CR 601.2g mana
+-- ability sacrificing it) shifts the later instances' payments (#5160).
+nextPromise :: PlayerId -> ObjectId -> Gift.Gift -> GameState -> PlayerChoice.PlayerChoice
+nextPromise pid oid gift gs =
+  let keyword = Keyword.Type.Gift gift
+      promised = foldMap Map.keys (Game.currentChoice Object.chosenPlayers oid gs)
+      paid = foldMap (Foldable.toList . Map.findWithDefault Seq.empty keyword . Object.paidCosts) (Game.lookupObject oid gs)
+      owed = [PlayerChoice.Promised gift which | (which, times) <- zip (Projection.keywordInstances keyword oid (asSpell pid oid gs)) paid, times > 0]
+      -- Past every instance the object can have, for a payment no instance is
+      -- left to take.
+      spare = PlayerChoice.Promised gift (KeywordInstance.Own (Natural.length paid + Natural.length promised + 1))
+   in Maybe.fromMaybe spare (List.find (`notElem` promised) owed)
 
 -- Object.chosenPlayers' entry for one choice, written on the object.
 stampChosen :: ObjectId -> PlayerChoice.PlayerChoice -> PlayerId -> Game ()
@@ -6877,7 +6889,7 @@ payPayable moment paidFor slots pid oid component = case component of
   -- opponent, and naming one spends nothing that could run out.
   CostComponent.ChooseOpponent gift -> do
     gs <- State.get
-    let promise = nextPromise oid gift gs
+    let promise = nextPromise pid oid gift gs
     chosen <- Game.chooseAmong (\decider asked -> Prompt.ChooseOpponent decider asked oid (Just promise)) pid (Players.offer pid gs PlayerRelation.Opponent)
     case chosen of
       -- Unreachable behind `payComponent`'s guard, which reads the same offer;

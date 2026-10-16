@@ -216,7 +216,8 @@ data CostComponent keyword
     -- permanent the spell becomes.
     --
     -- The gift and nothing else: rule 702.174a fixes every word of this cost but
-    -- the payer's own call, and the gift says which instance's promise it is.
+    -- the payer's own call, and the gift says which keyword's promise it is,
+    -- Pawl.Engine.Cost.nextPromise which instance's.
     -- Unpayable only where the payer has no opponent left (CR 102.2, CR 104.2a),
     -- which is what keeps it a cost rather than a no-op.
     ChooseOpponent Gift.Gift

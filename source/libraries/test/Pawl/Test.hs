@@ -346,6 +346,7 @@ import qualified Pawl.Codec.InstanceOrdinalSpec
 import qualified Pawl.Codec.KeywordCountSpec
 import qualified Pawl.Codec.KeywordDesignatorSpec
 import qualified Pawl.Codec.KeywordFamilySpec
+import qualified Pawl.Codec.KeywordInstanceSpec
 import qualified Pawl.Codec.KeywordSpec
 import qualified Pawl.Codec.KeywordsAreSpec
 import qualified Pawl.Codec.LabelSpec
@@ -1210,6 +1211,7 @@ spec s registry = do
   Pawl.Codec.KeywordCountSpec.spec s
   Pawl.Codec.KeywordDesignatorSpec.spec s
   Pawl.Codec.KeywordFamilySpec.spec s
+  Pawl.Codec.KeywordInstanceSpec.spec s
   Pawl.Codec.KeywordsAreSpec.spec s
   Pawl.Codec.KeywordSpec.spec s
   Pawl.Codec.LabelSpec.spec s

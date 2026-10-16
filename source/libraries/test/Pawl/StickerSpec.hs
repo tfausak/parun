@@ -348,7 +348,7 @@ stickeringCard card ref p = case p of
 -- counting the ChooseStickerOrNone asks.
 kicking :: (Keyword.Keyword -> Natural) -> Maybe StickerRef.StickerRef -> Prompt.Prompt r -> State.State Int r
 kicking kicks ref p = case p of
-  Prompt.ChooseKicker _ _ _ keyword _ -> pure (KickerDecision.MkKickerDecision (kicks keyword))
+  Prompt.ChooseKicker _ _ _ keyword _ _ -> pure (KickerDecision.MkKickerDecision (kicks keyword))
   Prompt.ChooseStickerOrNone _ _ _ offered -> do
     State.modify' (+ 1)
     pure
@@ -1453,7 +1453,7 @@ spec s registry = Spec.describe s "Sticker" $ do
         (bearsId, board) = S.addPermanent bears S.alice g1
         answer :: Prompt.Prompt r -> r
         answer p = case p of
-          Prompt.ChooseKicker _ _ _ keyword _ -> KickerDecision.MkKickerDecision (stickerKick keyword)
+          Prompt.ChooseKicker _ _ _ keyword _ _ -> KickerDecision.MkKickerDecision (stickerKick keyword)
           Prompt.ChooseStickerOrNone _ _ _ offered -> if List.elem otterFiveOne offered then Just otterFiveOne else Nothing
           Prompt.ChooseCost _ _ _ candidates -> mutateKicked candidates
           _ -> MutateSpec.mutatingAt MutateSide.Over bearsId p
@@ -1524,7 +1524,7 @@ spec s registry = Spec.describe s "Sticker" $ do
         (bearsId, board) = S.addPermanent bears S.alice g1
         answer :: Prompt.Prompt r -> r
         answer p = case p of
-          Prompt.ChooseKicker _ _ _ keyword _ -> KickerDecision.MkKickerDecision (stickerKick keyword)
+          Prompt.ChooseKicker _ _ _ keyword _ _ -> KickerDecision.MkKickerDecision (stickerKick keyword)
           Prompt.ChooseStickerOrNone _ _ _ offered -> if List.elem otterFiveOne offered then Just otterFiveOne else Nothing
           Prompt.ChooseCost _ _ _ candidates -> mutateKicked candidates
           _ -> MutateSpec.mutatingAt MutateSide.Over bearsId p
