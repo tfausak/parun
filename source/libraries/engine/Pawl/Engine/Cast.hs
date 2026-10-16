@@ -356,11 +356,11 @@ flashOn oid face gs =
 --     (#559), so no target set can be measured differently either side of it.
 --   * nothing counts a hand. No Pawl.Types.Count arm reaches a hand zone, so
 --     hand size cannot enter a cost or a filter.
---   * a cost adjustment carries a LITERAL amount. Pawl.Types.CostChange's
---     Increase and Reduce hold a Natural or a ManaCost, never a Quantity, so no
---     adjustment can count anything but the spell's own targets (`perTarget`),
---     which the first point keeps out of hidden zones -- and a count is the only
---     route a zone read could take into Cost.total.
+--   * a cost adjustment counts nothing in one. Pawl.Types.CostChange's
+--     Increase and Reduce hold a Natural or a ManaCost, repeated by the spell's
+--     own targets (`perTarget`), which the first point keeps out of hidden
+--     zones, or by a Quantity (`perEach`), which the second does -- and a count
+--     is the only route a zone read could take into Cost.total.
 --
 -- The one object whose stack membership the move does change is the spell itself,
 -- and CR 115.5 takes that one back out of every stack pool

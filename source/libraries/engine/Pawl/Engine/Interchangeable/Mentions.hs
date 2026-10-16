@@ -2172,7 +2172,7 @@ costChangeNames asking x = case x of
 
 costModifierNames :: Asking -> CostModifier.CostModifier -> Bool
 costModifierNames asking x = case x of
-  CostModifier.MkCostModifier subject matching whichTargets perTarget _onlyFirst change -> costSubjectNames asking subject || filterNames asking matching || any (filterNames asking) whichTargets || any (filterNames asking) perTarget || costChangeNames asking change
+  CostModifier.MkCostModifier subject matching whichTargets perTarget perEach _onlyFirst change -> costSubjectNames asking subject || filterNames asking matching || any (filterNames asking) whichTargets || any (filterNames asking) perTarget || any (quantityNames asking) perEach || costChangeNames asking change
 
 costSubjectNames :: Asking -> CostSubject.CostSubject -> Bool
 costSubjectNames asking x = case x of
@@ -2403,6 +2403,7 @@ quantityNames asking x = case x of
   Quantity.SpellsCastUsingThisTurn _keywordFamily -> False
   Quantity.SubgamesThisMatch -> False
   Quantity.DungeonsCompleted playerRef -> playerRefNames asking playerRef
+  Quantity.CommanderCasts playerRef -> playerRefNames asking playerRef
   Quantity.CompletedDungeon completedDungeon -> completedDungeonNames asking completedDungeon
   Quantity.EnteredThisTurn -> False
   Quantity.EnteredFrom inZone -> inZoneNames asking inZone

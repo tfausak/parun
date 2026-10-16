@@ -2632,6 +2632,7 @@ spec s registry = Spec.describe s "Pawl.Engine.Cost" $ do
   unerringSlingSpec s registry
   kopalaSpec s registry
   battlefieldThaumaturgeSpec s registry
+  animarSpec s registry
   melokuSpec s registry
   barkhideTrollSpec s registry
   zameckGuildmageCostSpec s registry
@@ -6275,3 +6276,21 @@ battlefieldThaumaturgeSpec s registry = Spec.describe s "Battlefield Thaumaturge
     Spec.assertEqWith s "CR 601.2f Doom Blade at bob's Piker cost {B}: one Swamp" (S.tappedCount S.alice bladed) 1
     Spec.assertEqWith s "CR 109.2 Unbury at the Piker card cost {1}{B}: two Swamps" (S.tappedCount S.alice unburied) 2
     Spec.assertEqWith s "and both were cast" (fmap (length . GameState.stack) [bladed, unburied]) [1, 1]
+
+-- Animar, Soul of Elements {G}{U}{R} (Oracle text checked against Scryfall
+-- 2026-10-16): "Creature spells you cast cost {1} less to cast for each +1/+1
+-- counter on Animar." CR 601.2f reads a `perEach` count against the row's
+-- SOURCE, so three counters on Animar take {3} off a Hill Giant {3}{R}, which
+-- carries none of its own: one Mountain of four.
+animarSpec :: (Monad m) => Spec.Spec m n -> Registry.Registry m -> n ()
+animarSpec s registry = Spec.describe s "Animar, Soul of Elements" $ do
+  Spec.it s "CR 601.2f three +1/+1 counters on Animar take {3} off a Hill Giant" $ do
+    animar <- S.printingOf s registry "Animar, Soul of Elements"
+    mountain <- S.printingOf s registry "Mountain"
+    giant <- S.printingOf s registry "Hill Giant"
+    let (animarId, g1) = S.addPermanent animar S.alice (S.landsFor mountain S.alice 4 (Setup.emptyGame S.bothPlayers))
+        (giantId, g2) = S.addHandCard giant S.alice (S.addCounter CounterKind.PlusOnePlusOne 3 animarId g1)
+        board = g2 {GameState.phase = Phase.PrecombatMain, GameState.activePlayer = S.alice, GameState.priority = Just S.alice}
+        cast = S.runPure S.identityAnswer board (S.cast S.alice giantId)
+    Spec.assertEqWith s "CR 601.2f the Giant cost {R}: one Mountain" (S.tappedCount S.alice cast) 1
+    Spec.assertEqWith s "and it was cast" (length (GameState.stack cast)) 1

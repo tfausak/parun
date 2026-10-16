@@ -16,6 +16,9 @@ import qualified Pawl.Types.CostSubject as CostSubject
 import qualified Pawl.Types.Filter as Filter
 import qualified Pawl.Types.ManaCost as ManaCost
 import qualified Pawl.Types.ManaSymbol as ManaSymbol
+import qualified Pawl.Types.PlayerRef as PlayerRef
+import qualified Pawl.Types.PlayerRelation as PlayerRelation
+import qualified Pawl.Types.Quantity as Quantity
 import qualified Pawl.Types.TurnScope as TurnScope
 
 spec :: (Monad m, Monad n) => Spec.Spec m n -> n ()
@@ -25,10 +28,10 @@ spec s = Spec.describe s "Pawl.Codec.CostModifier" $ do
     Common.assertCodec
       s
       CostModifier.codec
-      (CostModifier.Type.MkCostModifier CostSubject.Spells (Filter.Not (Filter.HasCardType CardType.Creature)) Nothing Nothing Nothing (CostChange.Increase 1))
+      (CostModifier.Type.MkCostModifier CostSubject.Spells (Filter.Not (Filter.HasCardType CardType.Creature)) Nothing Nothing Nothing Nothing (CostChange.Increase 1))
       " {\"subject\":{\"type\":\"Spells\"},\"matching\":{\"type\":\"Not\",\"value\":{\"type\":\"HasCardType\",\"value\":{\"type\":\"Creature\"}}},\"change\":{\"type\":\"Increase\",\"value\":1}} "
   -- Every criterion present on the activation subject: Professor Hojo's first,
-  -- Zirda's kind, Dwarven Mauler's target, Heartstone's floor.
+  -- Zirda's kind, Dwarven Mauler's target, Henzie's count, Heartstone's floor.
   Spec.it s "an activation reduction with every criterion" $
     Common.assertCodec
       s
@@ -38,10 +41,11 @@ spec s = Spec.describe s "Pawl.Codec.CostModifier" $ do
           (Filter.HasCardType CardType.Creature)
           (Just Filter.IsSource)
           (Just (Filter.HasCardType CardType.Creature))
+          (Just (Quantity.CommanderCasts (PlayerRef.Relative PlayerRelation.You)))
           (Just TurnScope.ControllersTurn)
           (CostChange.Reduce (AppliedReduction.MkAppliedReduction (ManaCost.MkManaCost [ManaSymbol.Generic 2]) 1 False))
       )
-      " {\"subject\":{\"type\":\"Activations\",\"value\":{\"whichKind\":{\"type\":\"NonManaAbility\"}}},\"matching\":{\"type\":\"HasCardType\",\"value\":{\"type\":\"Creature\"}},\"whichTargets\":{\"type\":\"IsSource\"},\"perTarget\":{\"type\":\"HasCardType\",\"value\":{\"type\":\"Creature\"}},\"onlyFirst\":{\"type\":\"ControllersTurn\"},\"change\":{\"type\":\"Reduce\",\"value\":{\"amount\":[{\"type\":\"Generic\",\"value\":2}],\"atLeast\":1}}} "
+      " {\"subject\":{\"type\":\"Activations\",\"value\":{\"whichKind\":{\"type\":\"NonManaAbility\"}}},\"matching\":{\"type\":\"HasCardType\",\"value\":{\"type\":\"Creature\"}},\"whichTargets\":{\"type\":\"IsSource\"},\"perTarget\":{\"type\":\"HasCardType\",\"value\":{\"type\":\"Creature\"}},\"perEach\":{\"type\":\"CommanderCasts\",\"value\":{\"type\":\"Relative\",\"value\":{\"type\":\"You\"}}},\"onlyFirst\":{\"type\":\"ControllersTurn\"},\"change\":{\"type\":\"Reduce\",\"value\":{\"amount\":[{\"type\":\"Generic\",\"value\":2}],\"atLeast\":1}}} "
   Spec.it s "refuses a spell's onlyFirst (#4924)" $
     Spec.assertBool
       s

@@ -4,6 +4,7 @@ import qualified Pawl.Types.CostChange as CostChange
 import qualified Pawl.Types.CostSubject as CostSubject
 import qualified Pawl.Types.Filter as Filter
 import qualified Pawl.Types.Keyword as Keyword
+import qualified Pawl.Types.Quantity as Quantity
 import qualified Pawl.Types.TurnScope as TurnScope
 
 -- | The payload of Pawl.Types.PlayerEffect's ModifyCost arm: CR 601.2f's
@@ -31,6 +32,14 @@ data CostModifier = MkCostModifier
     -- target this matches -- Hinata, Dawn-Crowned's "{1} more to cast for each
     -- target", Battlefield Thaumaturge's "for each creature it targets".
     perTarget :: Maybe (Filter.Filter Keyword.Keyword),
+    -- | CR 601.2f: when Just, the change applies this many times, read as the
+    -- total is determined against the effect's source -- Henzie "Toolbox"
+    -- Torre's "{1} less for each time you've cast your commander". Multiplies
+    -- `perTarget`'s count where both are given.
+    --
+    -- Not implemented: baking the slots it reads when a resolving effect stores
+    -- the change, Mutated Cultist's "for each counter removed this way" (#5153).
+    perEach :: Maybe Quantity.Quantity,
     -- | Professor Hojo's "the FIRST activated ability you activate during your
     -- turn": Just a scope applies the change only in a turn the scope admits,
     -- and only to the first matching activation the player begins that turn --

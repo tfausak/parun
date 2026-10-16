@@ -966,6 +966,13 @@ evaluateAgainst viewOf context gs announcedOn mOid mView quantity =
             let completed = maybe Set.empty Player.completedDungeonNames (Map.lookup pid (GameState.players gs))
              in Just (if Set.member name completed then 1 else 0)
           _ -> Nothing
+        -- CR 903.8's tally, DungeonsCompleted's arm in arity, source and
+        -- liveness: every commander's count summed, Commander's Insignia's ruling
+        -- for a partner pair. A cast in progress is not among them: Cast records
+        -- it only after CR 601.2f has priced it.
+        Quantity.CommanderCasts ref -> case playersOf ref of
+          Just [pid] -> Just (toInteger (maybe 0 (sum . Player.commanderCasts) (Map.lookup pid (GameState.players gs))))
+          _ -> Nothing
         -- CR 400.7 / 608.2i read as a 0/1: did the object this evaluation is aimed at
         -- enter the battlefield this turn?
         --
@@ -1341,6 +1348,7 @@ objectSlots quantity = case quantity of
   Quantity.SpellsCastUsingThisTurn _ -> Set.empty
   Quantity.SubgamesThisMatch -> Set.empty
   Quantity.DungeonsCompleted _ -> Set.empty
+  Quantity.CommanderCasts _ -> Set.empty
   Quantity.CompletedDungeon {} -> Set.empty
   Quantity.EnteredThisTurn -> Set.empty
   Quantity.EnteredFrom _ -> Set.empty
@@ -1610,6 +1618,7 @@ readsX quantity = case quantity of
   Quantity.SpellsCastUsingThisTurn _ -> False
   Quantity.SubgamesThisMatch -> False
   Quantity.DungeonsCompleted _ -> False
+  Quantity.CommanderCasts _ -> False
   Quantity.CompletedDungeon {} -> False
   Quantity.EnteredThisTurn -> False
   Quantity.EnteredFrom _ -> False

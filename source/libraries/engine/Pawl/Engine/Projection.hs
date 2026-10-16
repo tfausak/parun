@@ -4424,6 +4424,7 @@ quantityReads q = case q of
   Quantity.Type.SpellsCastUsingThisTurn _ -> Set.empty
   Quantity.Type.SubgamesThisMatch -> Set.empty
   Quantity.Type.DungeonsCompleted _ -> Set.empty
+  Quantity.Type.CommanderCasts _ -> Set.empty
   Quantity.Type.CompletedDungeon {} -> Set.empty
   Quantity.Type.EnteredThisTurn -> Set.empty
   Quantity.Type.EnteredFrom _ -> Set.empty

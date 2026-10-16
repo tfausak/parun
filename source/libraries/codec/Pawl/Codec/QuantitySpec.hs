@@ -717,6 +717,13 @@ spec s = Spec.describe s "Pawl.Codec.Quantity" $ do
       Quantity.codec
       (Quantity.DungeonsCompleted (PlayerRef.InSlot (SlotName.MkSlotName (Text.pack "target"))))
       " {\"type\":\"DungeonsCompleted\",\"value\":{\"type\":\"InSlot\",\"value\":\"target\"}} "
+  -- CR 903.8's tally, a PlayerRef and nothing else (Henzie "Toolbox" Torre).
+  Spec.it s "CommanderCasts" $
+    Common.assertCodec
+      s
+      Quantity.codec
+      (Quantity.CommanderCasts (PlayerRef.Relative PlayerRelation.You))
+      " {\"type\":\"CommanderCasts\",\"value\":{\"type\":\"Relative\",\"value\":{\"type\":\"You\"}}} "
   -- CR 309.7 asked of one dungeon by name, the tally's named sibling.
   Spec.it s "CompletedDungeon, a player and a printed name" $
     Common.assertCodec
