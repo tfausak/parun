@@ -35,6 +35,7 @@ import qualified Pawl.Engine.Players as Players
 import qualified Pawl.Engine.Projection as Projection
 import qualified Pawl.Engine.Projection.View as View
 import qualified Pawl.Engine.Turn as Turn
+import qualified Pawl.Types.Acquisition as Acquisition
 import qualified Pawl.Types.ActiveAttackProhibition as ActiveAttackProhibition
 import qualified Pawl.Types.ActiveAttackRequirement as ActiveAttackRequirement
 import qualified Pawl.Types.ActiveBlockRequirement as ActiveBlockRequirement
@@ -85,11 +86,17 @@ import qualified Pawl.Types.While as While
 -- holding an OBJECT. Empty for a caller with no resolution behind it, whose
 -- durations name no slot.
 --
+-- `acquisition` says which acquisition's choices a slot's object is read under
+-- (CR 607.5): Game.readingAcquisition for a resolution, so an ability whose
+-- source has since become a copy of something else still reads the choice its
+-- own pair made (CR 607.2d); Game.acquisitionOf otherwise. Proved by
+-- data/scenarios/copy/cr-607-5-a-grudgekeeper-ability-still-times-its-window-by-the-chosen-player-after-mirrorweave.json.
+--
 -- CR 611.2b's second sentence is vacuous here: this runs once, at the point the
 -- effect would be stored, and no opcode both ends and restarts a condition
 -- mid-resolution.
-arm :: Map.Map SlotName (Set.Set Recipient) -> PlayerId -> ObjectId -> Duration -> GameState -> Maybe Expiry
-arm targets controller source duration gs = case duration of
+arm :: (GameState -> ObjectId -> Acquisition.Acquisition) -> Map.Map SlotName (Set.Set Recipient) -> PlayerId -> ObjectId -> Duration -> GameState -> Maybe Expiry
+arm acquisition targets controller source duration gs = case duration of
   Duration.UntilEndOfTurn -> Just Expiry.AtCleanup
   Duration.Indefinite -> Just Expiry.Never
   -- Alchemy's "perpetually": Never's lifetime under an arm a zone change can
@@ -118,7 +125,7 @@ arm targets controller source duration gs = case duration of
   Duration.UntilEndOfNextTurnOf ref ->
     fmap
       (\pid -> Expiry.AtEndOfTurnOf (AfterTurn.MkAfterTurn pid (GameState.turnNumber gs)))
-      (seatOf targets controller gs ref)
+      (seatOf (acquisition gs) targets controller gs ref)
   -- CR 611.2a: the same seat and the same turn number as the arm above, under an
   -- arm that also states a BEGINNING. Sampled through seatOf for that arm's
   -- reasons, and Nothing where the reference names nobody for that arm's reason
@@ -136,7 +143,7 @@ arm targets controller source duration gs = case duration of
     _ ->
       fmap
         (\pid -> Expiry.DuringTurnOf (AfterTurn.MkAfterTurn pid (GameState.turnNumber gs)))
-        (seatOf targets controller gs ref)
+        (seatOf (acquisition gs) targets controller gs ref)
   -- CR 611.2a: the arm above's window with the seat taken from CR 109.5's "you",
   -- as UntilYourNextTurn takes it. Never Nothing -- a controller is always a
   -- seat, so this window always begins.
@@ -208,9 +215,9 @@ arm targets controller source duration gs = case duration of
 -- Candidate names nobody here: it is the member a per-player fold has reached,
 -- and the one fold that states such a window substitutes the member as Specific
 -- before arming (perSeat).
-seatOf :: Map.Map SlotName (Set.Set Recipient) -> PlayerId -> GameState -> PlayerRef.PlayerRef -> Maybe PlayerId
-seatOf targets controller gs ref =
-  let given = Players.resolution (`Projection.controllerWithLastKnown` gs) (`Game.ownerWithLastKnown` gs) (`Game.acquisitionOf` gs) targets (Just controller) controller gs
+seatOf :: (ObjectId -> Acquisition.Acquisition) -> Map.Map SlotName (Set.Set Recipient) -> PlayerId -> GameState -> PlayerRef.PlayerRef -> Maybe PlayerId
+seatOf acquisition targets controller gs ref =
+  let given = Players.resolution (`Projection.controllerWithLastKnown` gs) (`Game.ownerWithLastKnown` gs) acquisition targets (Just controller) controller gs
    in case Players.named given {Players.reaches = const True} gs ref of
         Just [pid] -> Just pid
         _ -> Nothing

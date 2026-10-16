@@ -98,7 +98,7 @@ granted oid spent gs =
         -- controllerOf falls back to its owner -- and written out because arm is
         -- total over Duration.
         Nothing -> g
-        Just controller -> case Expiry.arm Map.empty controller oid Duration.UntilEndOfTurn g of
+        Just controller -> case Expiry.arm (flip Game.acquisitionOf) Map.empty controller oid Duration.UntilEndOfTurn g of
           -- UntilEndOfTurn always arms; this branch is written out for the same
           -- reason, and the payment binds no slot for a duration to have named.
           Nothing -> g
