@@ -527,8 +527,9 @@ data Prompt r where
   -- is paid, after ChooseModes and before ChooseCost; the Maybe Natural is the
   -- limit across the spell's instances of it, Nothing for "any number of
   -- times", and an answer past it is rejected. The KeywordInstance names the
-  -- one instance asked about where instances can differ (CR 702.174a's gift,
-  -- Keyword.identifiesInstances), Nothing where the question is about them all.
+  -- one instance asked about where each is asked apart (CR 702.56b, 702.157b,
+  -- 702.174a; Keyword.paidPerInstance), Nothing where the question is about
+  -- them all.
   ChooseKicker :: Decider.Decider -> PlayerId.PlayerId -> ObjectId.ObjectId -> Keyword.Keyword -> Maybe KeywordInstance.KeywordInstance -> Maybe Natural.Natural -> Prompt KickerDecision.KickerDecision
   -- | CR 702.27a: whether the spell's buyback cost is paid, after ChooseKicker
   -- and before ChooseCost (CR 601.2b); the Cost is what buying back adds (CR

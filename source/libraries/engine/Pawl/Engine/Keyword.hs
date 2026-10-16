@@ -3619,10 +3619,9 @@ optionalCost keyword = case keyword of
 -- A cost each instance pays at most once is asked ONCE, as a count of instances
 -- paid, and Pawl.Engine.Cast records the first that many as paid. Under those
 -- rules each instance triggers on its own payment, so which of identical
--- instances were paid changes nothing -- save where identifiesInstances says an
--- instance can stop applying apart from its twins, which is asked per instance.
--- An unlimited cost is asked per instance where paidPerInstance says its split
--- is a real choice, and once otherwise.
+-- instances were paid changes nothing. A cost is asked per instance where
+-- paidPerInstance says which instance pays is a real choice, and once
+-- otherwise.
 --
 -- Kicker's and bargain's payoffs, though, link to the PRINTED instance (CR
 -- 702.33e, 702.166c), so a printed kicker beside an identical granted one would
@@ -3632,26 +3631,20 @@ optionalCost keyword = case keyword of
 paymentLimit :: Natural -> Keyword -> Maybe Natural
 paymentLimit count keyword = fmap (* count) (snd =<< optionalCost keyword)
 
--- CR 702.56b / 702.157b: does each identical instance of this unlimited cost
--- keep its own payments? Replicate's and squad's triggers each read their own
--- instance's count, so how the payments split is a choice to ask. Multikicker
--- states no such rule and its payoffs read the total (CR 702.33c-e), so its
--- instances are asked together. A wildcard, optionalCost's reason.
+-- CR 702.56b / 702.157b / 702.174a: is each instance of this optional cost
+-- asked about, and its payment recorded, as the instance
+-- Projection.keywordInstances names? Replicate's and squad's triggers each read
+-- their own instance's count, so how the payments split is a choice to ask. A
+-- gift's promise belongs to its own instance, so a granted one that stops
+-- applying (CR 611.3a) takes its own promise and payment with it, and which of
+-- two is paid is a choice too (Synthetic Generous Host beside a printed gift).
+-- Multikicker states no such rule and its payoffs read the total (CR
+-- 702.33c-e), so its instances are asked together. A wildcard, optionalCost's
+-- reason.
 paidPerInstance :: Keyword -> Bool
 paidPerInstance keyword = case keyword of
   Keyword.Replicate _ -> True
   Keyword.Squad _ -> True
-  _ -> False
-
--- CR 702.174a / 611.3a: is each instance of this once-each cost asked about,
--- and its payment recorded, as the instance Projection.keywordInstances names?
--- Gift's promise belongs to its own instance, so a granted instance that stops
--- applying (CR 611.3a) takes its own promise and payment with it; which of two
--- instances is paid is then a real choice (Synthetic Generous Host beside a
--- printed gift). Every other once-each cost's instances are asked together.
--- A wildcard, optionalCost's reason.
-identifiesInstances :: Keyword -> Bool
-identifiesInstances keyword = case keyword of
   Keyword.Gift _ -> True
   _ -> False
 

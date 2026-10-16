@@ -603,10 +603,15 @@ carryGrants oid gs =
 -- promises, re-keyed by the instances it still has, which are the instances the
 -- permanent enters with (carryGrants). The ith of those the spell promised
 -- becomes Own i, its payment the ith entry of Object.paidCosts, which is what
--- Keyword.gift's ith enters trigger reads; the rest of the entries follow, so
--- "if its gift was promised" still counts a promise whose instance was lost
--- (CR 702.174k). Each live instance keeps its own promise, the property
--- Pawl.Engine.Resolve.giftOnSpellResolution has for the spell half.
+-- Keyword.gift's ith enters trigger reads, and each live instance keeps its own
+-- promise, the property Pawl.Engine.Resolve.giftOnSpellResolution has for the
+-- spell half.
+--
+-- A lost instance's payment is dropped with its promise: no ability the
+-- permanent has is linked to it (CR 607.2i, 607.5), so a gift a copy effect
+-- gives the entering permanent is unpaid rather than inheriting it. The
+-- scenario cr-607-5-a-clone-of-scrapshooter-whose-paid-host-gift-was-lost-gives-no-gift
+-- proves it.
 settlePromises :: ObjectId -> GameState.GameState -> GameState.GameState
 settlePromises oid gs = case Game.lookupObject oid gs of
   Nothing -> gs
@@ -616,18 +621,13 @@ settlePromises oid gs = case Game.lookupObject oid gs of
         gifts = [something | Keyword.Type.Gift something <- Map.keys (Object.paidCosts obj)]
         settle (paid, kept) something =
           let keyword = Keyword.Type.Gift something
-              entries = Foldable.toList (Map.findWithDefault Seq.empty keyword paid)
               live = Projection.keywordInstances keyword oid gs
               opponents = Maybe.mapMaybe (\which -> Map.lookup (PlayerChoice.Promised something which) promises) live
-              -- In Integer, where the differences below cannot underflow.
-              promisedLive = List.genericLength opponents :: Integer
-              lostPaid = max 0 (toInteger (sum entries) - promisedLive)
-              unpaidLive = max 0 (List.genericLength live - promisedLive)
-              unpaidLost = max 0 (List.genericLength entries - promisedLive - unpaidLive - lostPaid)
-              settled = List.genericReplicate promisedLive (1 :: Natural) <> List.genericReplicate unpaidLive 0 <> List.genericReplicate lostPaid 1 <> List.genericReplicate unpaidLost 0
+              settled = fmap (const (1 :: Natural)) opponents <> fmap (const 0) (drop (length opponents) live)
               unpromised = Map.filterWithKey (\key _ -> not (isPromiseOf something key)) kept
               rekeyed = Map.fromList (zip [PlayerChoice.Promised something (KeywordInstance.Own i) | i <- [1 ..]] opponents)
-           in (Map.insert keyword (Seq.fromList settled) paid, Map.union rekeyed unpromised)
+              settledPaid = if any (> 0) settled then Map.insert keyword (Seq.fromList settled) paid else Map.delete keyword paid
+           in (settledPaid, Map.union rekeyed unpromised)
         isPromiseOf something key = case key of
           PlayerChoice.Promised g _ -> g == something
           PlayerChoice.AsEnters -> False

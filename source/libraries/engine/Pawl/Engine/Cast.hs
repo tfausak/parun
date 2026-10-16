@@ -826,10 +826,9 @@ withOptionalPayments paid candidate =
 -- empty for a player who declared none. A cost each instance pays at most once
 -- is one question for all the spell's instances of it, its answer how many were
 -- paid, recorded as the first that many (Keyword.paymentLimit says why that is
--- no choice), save one Keyword.identifiesInstances names, asked per instance
--- with the prompt naming it; an unlimited one Keyword.paidPerInstance names is
--- a question per instance, each answer that instance's own (CR 702.56b,
--- 702.157b), and any
+-- no choice); one Keyword.paidPerInstance names is a question per instance,
+-- the prompt naming it and each answer that instance's own (CR 702.56b,
+-- 702.157b, 702.174a), and any
 -- other is one question for its instances' combined count.
 --
 -- Two conditions per cost, and each is entwineOffer's above:
@@ -877,12 +876,11 @@ announceOptionalCosts modes spending pid sid candidates offers gs =
         Just _ -> Seq.fromList (List.genericReplicate times 1)
         Nothing -> Seq.singleton times
       ask paid (keyword, instances) = case Keyword.optionalCost keyword of
-        Just (cost, Nothing)
-          | Keyword.paidPerInstance keyword -> Monad.foldM (\acc _ -> perInstance keyword Nothing Nothing cost acc) paid [1 .. instances]
-        -- In Projection.keywordInstances' order, each entry that instance's own
-        -- (Keyword.identifiesInstances), which Cost.nextPromise reads back.
-        Just (cost, limit@(Just _))
-          | Keyword.identifiesInstances keyword -> Monad.foldM (\acc which -> perInstance keyword (Just which) limit cost acc) paid (Projection.keywordInstances keyword sid (Cost.asSpell pid sid gs))
+        -- In Projection.keywordInstances' order, each entry that instance's
+        -- own, which Cost.nextPromise reads back for a gift; the limit is the
+        -- instance's own.
+        Just (cost, limit)
+          | Keyword.paidPerInstance keyword -> Monad.foldM (\acc which -> perInstance keyword (Just which) limit cost acc) paid (Projection.keywordInstances keyword sid (Cost.asSpell pid sid gs))
         Just (cost, limit)
           | payable keyword paid cost -> do
               times <- choose keyword Nothing (Keyword.paymentLimit instances keyword)
@@ -3196,7 +3194,7 @@ castProposed perform spending pid oid sid face castFrom preparedFor keywordsBefo
       -- reason.
       let overKickerLimit =
             any
-              (\(keyword, count) -> let entries = Map.findWithDefault Seq.empty keyword paid in maybe False (sum entries >) (Keyword.paymentLimit count keyword) || (Keyword.identifiesInstances keyword && maybe False (\each -> any (> each) entries) (snd =<< Keyword.optionalCost keyword)))
+              (\(keyword, count) -> let entries = Map.findWithDefault Seq.empty keyword paid in maybe False (sum entries >) (Keyword.paymentLimit count keyword) || (Keyword.paidPerInstance keyword && maybe False (\each -> any (> each) entries) (snd =<< Keyword.optionalCost keyword)))
               optionalOffers
           withKicker = withOptionalPayments paid
           -- CR 702.27a's cost is additional too, so it rides the same fold.
