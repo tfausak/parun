@@ -361,9 +361,9 @@ castSpec s registry = Spec.describe s "Cast" $ do
     Spec.assertEqWith s "Panglacial left the library" (S.countByName (CardName.MkCardName $ Text.pack "Panglacial Wurm") S.alice after) 0
     Spec.assertEqWith s "seven Forests tapped to pay {5}{G}{G}" (S.tappedCount S.alice after) 7
   -- CR 733.1 reverses a move from a library TO THE STACK; only a move to any
-  -- other zone, a shuffle or a reveal stands. Cost.keepingLibraryActions once
-  -- kept the failed state's library wholesale, which left a refused library cast
-  -- in no zone at all.
+  -- other zone, a shuffle, a reveal or a look stands.
+  -- Cost.keepingLibraryActions once kept the failed state's library wholesale,
+  -- which left a refused library cast in no zone at all.
   Spec.it s "CR 733.1 a refused library cast puts Panglacial back in the library" $ do
     forest <- S.printingOf s registry "Forest"
     panglacialWurm <- S.printingOf s registry "Panglacial Wurm"
