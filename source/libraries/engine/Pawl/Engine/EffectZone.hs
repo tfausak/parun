@@ -130,10 +130,13 @@ zoneFunctionedAgainst itself delayed effect = case effect of
     ObjectRef.RandomCardInGraveyard _ -> Nothing
     ObjectRef.RandomCardInLibrary _ -> Nothing
     ObjectRef.ChosenPermanents _ -> Nothing
-    ObjectRef.SourceAndChosenPermanent _ -> Nothing
     ObjectRef.AttachedToBound _ -> Nothing
     -- The object may be in any zone by now.
     ObjectRef.FromAnywhere _ -> Nothing
+    -- CR 608.2f's one action on several objects moves the object it's on when
+    -- any member names it: Sandman, Shifting Scoundrel's "return this card and
+    -- target land card from your graveyard".
+    ObjectRef.AllOf refs -> if any namesItself refs then origin else Nothing
   Effect.DealDamage (DealDamage.MkDealDamage {}) -> Nothing
   Effect.Fight {} -> Nothing
   Effect.ModifyTarget {} -> Nothing
@@ -353,3 +356,9 @@ zoneFunctionedAgainst itself delayed effect = case effect of
   Effect.Heal _ -> Nothing
   Effect.ChooseNewTargets _ -> Nothing
   Effect.ChangeTargets _ -> Nothing
+  where
+    -- InSlot naming an `itself` slot, alone or inside an AllOf.
+    namesItself ref = case ref of
+      ObjectRef.InSlot slot -> Set.member slot itself
+      ObjectRef.AllOf refs -> any namesItself refs
+      _ -> False

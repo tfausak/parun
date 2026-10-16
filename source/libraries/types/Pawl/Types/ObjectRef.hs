@@ -1,5 +1,6 @@
 module Pawl.Types.ObjectRef where
 
+import qualified Data.List.NonEmpty as NonEmpty
 import qualified Pawl.Types.AbilityName as AbilityName
 import qualified Pawl.Types.AttachedToBound as AttachedToBound
 import qualified Pawl.Types.ChosenCardFromAmong as ChosenCardFromAmong
@@ -25,7 +26,7 @@ import qualified Pawl.Types.TopOfLibraryUntil as TopOfLibraryUntil
 -- InSlot stands apart from the other arms: its objects were named BEFORE the
 -- effect runs -- a slot, filled at cast or as the ability was placed -- where
 -- every other arm's are found AS it runs. That is the distinction CR 115.10a
--- draws: only InSlot can name a target; no other arm ever does.
+-- draws: only InSlot can name a target, and AllOf only by holding one.
 data ObjectRef
   = -- | CR 601.2c / 608.2b: the objects bound in a slot -- the one Recipient a
     -- target or a reserved binding put there, or every member where the slot
@@ -161,14 +162,13 @@ data ObjectRef
     -- ceiling (Hanweir Battlements, Wormfang Crab; Tovolar, Dire Overlord, Teferi,
     -- Hero of Dominaria). Pawl.Engine.Resolve.Effect.chosenPermanents asks it.
     ChosenPermanents ChosenPermanents.ChosenPermanents
-  | -- | CR 608.2f / 701.42a / Hanweir Battlements: the effect's source together
-    -- with exactly one permanent the Filter admits, named as one instruction so
-    -- that the pair moves in one event -- proved by Pawl.MeldSpec's "CR 608.2f the
-    -- pair leaves the battlefield in one event".
-    SourceAndChosenPermanent (Filter.Filter Keyword.Keyword)
   | -- | CR 303.4b / 301.5a / 608.2h: the permanents attached to the object a slot holds,
     -- or attached as it left (Rhuk, Hexgold Nabber; Fumble).
     AttachedToBound AttachedToBound.AttachedToBound
   | -- | CR 400.7: the object a slot holds, followed to wherever it is now.
     FromAnywhere SlotName.SlotName
+  | -- | CR 608.2f: every object each ref names, as one action on all of them --
+    -- Hanweir Battlements' source and chosen permanent, proved by Pawl.MeldSpec's
+    -- "CR 608.2f the pair leaves the battlefield in one event".
+    AllOf (NonEmpty.NonEmpty ObjectRef)
   deriving (Eq, Ord, Show)

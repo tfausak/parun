@@ -950,6 +950,43 @@ handArrivalSpec s registry =
           Spec.assertEqWith s "CR 603.10a alice holds the Forge-Tender alone" (handNames S.alice after) [name]
           Spec.assertEqWith s "CR 400.2 without Future Sight bob could not see it" seen Visibility.Type.Obscured
           Spec.assertEqWith s "nothing reached the stack" (GameState.stack settled) []
+        -- CR 603.10: the look-back reads the board the batch began on, where Future
+        -- Sight shows the Forge-Tender atop alice's library and not the Knight of
+        -- Meadowgrain {W}{W} Creature -- Kithkin Knight 2/2, "First strike /
+        -- Lifelink" (Oracle checked against Scryfall 2026-10-16) beneath it.
+        -- Synthetic Tidal Recall {1}{U} Instant, "Put target creature and the top
+        -- two cards of your library into their owners' hands."
+        -- (data/cards/synthetic-tidal-recall.json; no printing puts library cards
+        -- into a hand in the same event as a permanent leaving the battlefield,
+        -- MTGJSON AtomicCards.json regex over "top ... cards of ... library" with
+        -- "and the top", 2026-10-16 -- Suspend Aggression and Become Anonymous
+        -- move theirs to exile and the battlefield.) It returns the Brinefarer
+        -- alongside both cards, and the Knight moves after the Forge-Tender, on a
+        -- live board where it has become the top card.
+        Spec.it s "CR 603.10a a returned Kithkin Brinefarer does not see a Kithkin card that became the top card partway through the batch" $ do
+          brinefarer <- S.printingOf s registry "Kithkin Brinefarer"
+          sight <- S.printingOf s registry "Future Sight"
+          tender <- S.printingOf s registry "Burrenton Forge-Tender"
+          knight <- S.printingOf s registry "Knight of Meadowgrain"
+          recall <- S.printingOf s registry "Synthetic Tidal Recall"
+          island <- S.printingOf s registry "Island"
+          let base = S.landsFor island S.alice 2 (Setup.emptyGame S.bothPlayers)
+              (brinefarerId, g1) = S.addPermanent brinefarer S.alice base
+              (_, g2) = S.addPermanent sight S.alice g1
+              (knightId, g3) = S.addLibraryCard knight S.alice g2
+              (tenderId, g4) = S.addLibraryCard tender S.alice g3
+              (spellId, staged) = S.addHandCard recall S.alice g4
+              gs = staged {GameState.phase = Phase.PrecombatMain, GameState.activePlayer = S.alice, GameState.priority = Just S.alice}
+              aiming :: Prompt.Prompt r -> r
+              aiming p = case p of
+                Prompt.ChooseTargets _ _ _ asked -> fmap (\(_, legal) -> Set.filter ((== Just brinefarerId) . Recipient.objectOf) legal) asked
+                _ -> S.identityAnswer p
+              resolved = S.runPure aiming (S.runPure aiming gs (S.cast S.alice spellId)) Stack.resolveTop
+              (settled, after) = settleAfter (pure ()) resolved
+          Spec.assertEqWith s "CR 603.10a alice holds the Brinefarer, the Knight, the Forge-Tender and the Forge-Tender's duplicate alone" (handNames S.alice after) (List.sort [S.printingName brinefarer, S.printingName knight, S.printingName tender, S.printingName tender])
+          Spec.assertEqWith s "CR 401.5 Future Sight showed bob the Forge-Tender" (Visibility.sees S.bob tenderId gs) Visibility.Type.Visible
+          Spec.assertEqWith s "CR 401.5 and not the Knight beneath it" (Visibility.sees S.bob knightId gs) Visibility.Type.Obscured
+          Spec.assertEqWith s "one trigger reached the stack" (length (GameState.stack settled)) 1
 
 -- What PermanentReturnedToHand's bindings are FOR -- Warped Devotion {2}{B}
 -- Enchantment, "Whenever a permanent is returned to a player's hand, that

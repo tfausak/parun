@@ -2065,9 +2065,9 @@ objectRefNames asking x = case x of
   ObjectRef.RandomCardInGraveyard randomCardInGraveyard -> randomCardInGraveyardNames asking randomCardInGraveyard
   ObjectRef.RandomCardInLibrary randomCardInLibrary -> randomCardInLibraryNames asking randomCardInLibrary
   ObjectRef.ChosenPermanents chosenPermanents -> chosenPermanentsNames asking chosenPermanents
-  ObjectRef.SourceAndChosenPermanent filter_ -> filterNames asking filter_
   ObjectRef.AttachedToBound attachedToBound -> attachedToBoundNames asking attachedToBound
   ObjectRef.FromAnywhere slotName -> slotNames asking slotName
+  ObjectRef.AllOf refs -> any (objectRefNames asking) refs
 
 offerCastNames :: Asking -> OfferCast.OfferCast -> Bool
 offerCastNames asking x = case x of
