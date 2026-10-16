@@ -69,6 +69,7 @@ import qualified Pawl.Types.Phase as Phase
 import qualified Pawl.Types.PhasedOut as PhasedOut
 import qualified Pawl.Types.PlayPermissionOrigin as PlayPermissionOrigin
 import qualified Pawl.Types.Player as Player
+import qualified Pawl.Types.PlayerChoice as PlayerChoice
 import qualified Pawl.Types.PlayerCounterKind as PlayerCounterKind
 import Pawl.Types.PlayerId (PlayerId)
 import qualified Pawl.Types.Printing as Printing
@@ -373,7 +374,7 @@ dirtied pid object =
       Object.chosenColors = Set.singleton Color.Blue,
       Object.chosenSubtype = Just Subtype.Forest,
       Object.chosenNames = Map.singleton pid (CardName.MkCardName (Text.pack "Mountain")),
-      Object.chosenPlayer = Just pid,
+      Object.chosenPlayers = Map.singleton PlayerChoice.AsEnters pid,
       Object.face = Just (CardName.MkCardName (Text.pack "Mountain")),
       Object.turnedOverAt = Just (Timestamp.MkTimestamp 1),
       Object.worldSince = Just (Timestamp.MkTimestamp 2),

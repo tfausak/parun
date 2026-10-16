@@ -835,7 +835,7 @@ withinOffer prompt chosen = case prompt of
   Prompt.Type.RandomCard names -> chosen `elem` names
   Prompt.Type.ChooseConjuredCard _ _ names -> chosen `elem` names
   Prompt.Type.RandomPlayer players -> chosen `elem` players
-  Prompt.Type.ChooseOpponent _ _ _ players -> chosen `elem` players
+  Prompt.Type.ChooseOpponent _ _ _ _ players -> chosen `elem` players
   Prompt.Type.ChoosePlayer _ _ _ players -> chosen `elem` players
   Prompt.Type.ChooseProliferate _ _ objects players ->
     all (`elem` objects) (fst chosen) && all (`elem` players) (snd chosen)

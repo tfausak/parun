@@ -60,7 +60,7 @@ data EntryRewrite ability effect
     -- them.
     ChooseCreatureType
   | -- | CR 614.1c / Stuffy Doll: choose a player as this enters, written to
-    -- Object.chosenPlayer. Nullary -- CR 102.1's seats are the offer, and the
+    -- Object.chosenPlayers. Nullary -- CR 102.1's seats are the offer, and the
     -- prompt carries the ones still in the game.
     ChoosePlayer
   | -- | CR 614.1c with CR 201.4a / Null Chamber: this object's controller and one

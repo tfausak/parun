@@ -63,6 +63,7 @@ import qualified Pawl.Types.Filter as Filter
 import qualified Pawl.Types.GameEvent as GameEvent
 import qualified Pawl.Types.GameSettings as GameSettings
 import qualified Pawl.Types.GameState as GameState
+import qualified Pawl.Types.Gift as Gift
 import qualified Pawl.Types.Keyword as Keyword
 import qualified Pawl.Types.KickerDecision as KickerDecision
 import qualified Pawl.Types.Label as Label
@@ -81,6 +82,7 @@ import qualified Pawl.Types.PaymentDecision as PaymentDecision
 import qualified Pawl.Types.Phase as Phase
 import qualified Pawl.Types.Placement as Placement
 import qualified Pawl.Types.Player as Player
+import qualified Pawl.Types.PlayerChoice as PlayerChoice
 import qualified Pawl.Types.PlayerCounterKind as PlayerCounterKind
 import qualified Pawl.Types.PlayerId as PlayerId
 import qualified Pawl.Types.Printing as Printing
@@ -1029,6 +1031,17 @@ floodMawBoard s registry bears = do
       (gs, spellId) = S.handOne maw withBears
   pure (gs, spellId, victim)
 
+-- Promises every gift once, a Food to bob and anything else to carol, by the
+-- gift Prompt.ChooseOpponent's promise names, FILTERED out of the offer. bob heads the
+-- offer, so carol's card is the answer the fallback would not give.
+promisesByGift :: Prompt.Prompt r -> r
+promisesByGift p = case p of
+  Prompt.ChooseKicker {} -> KickerDecision.MkKickerDecision 1
+  Prompt.ChooseOpponent _ _ _ (Just (PlayerChoice.Promised gift _)) offered ->
+    let wanted = if gift == Gift.Food then S.bob else S.carol
+     in Maybe.fromMaybe (NonEmpty.head offered) (List.find (== wanted) (NonEmpty.toList offered))
+  _ -> S.identityAnswer p
+
 -- Promises the gift `times` times and aims each slot at `victim`, FILTERED out
 -- of the offered set, since a Sol Ring is offered as a ToObject.
 floodMaws :: Natural -> ObjectId.ObjectId -> Prompt.Prompt r -> r
@@ -1527,6 +1540,24 @@ kickerSpec s registry = Spec.describe s "Kicker" $ do
     Spec.assertBool s (Projection.hasKeyword Keyword.FirstStrike bearsId after) "the Bears has first strike"
     Spec.assertEqWith s "and is a 4/2" (S.powerToughnessOf bearsId after) (Just (4, 2))
     Spec.assertEqWith s "CR 702.174d bob created a Food" (length (filter (\o -> Set.member Subtype.Food (Projection.subtypesOf o after)) (Game.zoneMembers Zone.Battlefield S.bob after))) 1
+  -- CR 702.174a with two DIFFERENT gifts: Valley Rally's printed gift a Food
+  -- and Synthetic Generous Host's granted gift a card. Prompt.ChooseOpponent's
+  -- promise names the gift, so promisesByGift sends the Food to bob and the card to carol by
+  -- gift rather than by the order the promises are asked in.
+  Spec.it s "CR 702.174a Valley Rally's Food goes to bob and its granted card to carol, each promise asked by its gift" $ do
+    mountain <- S.printingOf s registry "Mountain"
+    rally <- S.printingOf s registry "Valley Rally"
+    host <- S.printingOf s registry "Synthetic Generous Host"
+    let (_, withHost) = S.addPermanent host S.alice (S.landsFor mountain S.alice 3 S.threePlayerGame)
+        (_, bobStocked) = S.addLibraryCard mountain S.bob withHost
+        (_, stocked) = S.addLibraryCard mountain S.carol bobStocked
+        (gs, spellId) = S.handOne rally stocked
+        (_, after) = castAndResolve promisesByGift gs spellId
+        foods pid = length (filter (\o -> Set.member Subtype.Food (Projection.subtypesOf o after)) (Game.zoneMembers Zone.Battlefield pid after))
+    Spec.assertEqWith s "CR 702.174e carol, promised the card, drew it" (S.handSize S.carol after) 1
+    Spec.assertEqWith s "CR 702.174d bob, promised the Food, created it" (foods S.bob) 1
+    Spec.assertEqWith s "and bob drew nothing" (S.handSize S.bob after) 0
+    Spec.assertEqWith s "and carol created no Food" (foods S.carol) 0
   -- CR 601.2c's alternative targets: Into the Flood Maw ({U} Instant, "Gift a
   -- tapped Fish. Return target creature an opponent controls to its owner's hand.
   -- If the gift was promised, instead return target nonland permanent an opponent

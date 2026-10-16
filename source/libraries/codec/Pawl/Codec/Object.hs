@@ -23,6 +23,7 @@ import qualified Pawl.Codec.Mana as Mana
 import qualified Pawl.Codec.ManaCost as ManaCost
 import qualified Pawl.Codec.ObjectId as ObjectId
 import qualified Pawl.Codec.Pairing as Pairing
+import qualified Pawl.Codec.PlayerChoice as PlayerChoice
 import qualified Pawl.Codec.PlayerId as PlayerId
 import qualified Pawl.Codec.PrintingId as PrintingId
 import qualified Pawl.Codec.ProjectedCharacteristics as ProjectedCharacteristics
@@ -112,7 +113,7 @@ codec = Fields.object $ do
   chosenColors <- Fields.defaulted "chosenColors" (Object.chosenColors defaults) (Common.set Color.codec) Object.chosenColors
   chosenSubtype <- Fields.defaulted "chosenSubtype" (Object.chosenSubtype defaults) (Common.maybe Subtype.codec) Object.chosenSubtype
   chosenNames <- Fields.defaulted "chosenNames" (Object.chosenNames defaults) (Common.naturalMap PlayerId.codec CardName.codec) Object.chosenNames
-  chosenPlayer <- Fields.defaulted "chosenPlayer" (Object.chosenPlayer defaults) (Common.maybe PlayerId.codec) Object.chosenPlayer
+  chosenPlayers <- Fields.defaulted "chosenPlayers" (Object.chosenPlayers defaults) (Common.keyedList (Common.keyValue PlayerChoice.codec PlayerId.codec)) Object.chosenPlayers
   timestamp <- Fields.required "timestamp" Timestamp.codec Object.timestamp
   face <- Fields.defaulted "face" (Object.face defaults) (Common.maybe CardName.codec) Object.face
   turnedOverAt <- Fields.defaulted "turnedOverAt" (Object.turnedOverAt defaults) (Common.maybe Timestamp.codec) Object.turnedOverAt
@@ -179,7 +180,7 @@ codec = Fields.object $ do
         Object.chosenColors = chosenColors,
         Object.chosenSubtype = chosenSubtype,
         Object.chosenNames = chosenNames,
-        Object.chosenPlayer = chosenPlayer,
+        Object.chosenPlayers = chosenPlayers,
         Object.timestamp = timestamp,
         Object.face = face,
         Object.turnedOverAt = turnedOverAt,

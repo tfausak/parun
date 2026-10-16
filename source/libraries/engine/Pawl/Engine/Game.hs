@@ -74,6 +74,7 @@ import qualified Pawl.Types.ObjectId as ObjectId
 import qualified Pawl.Types.Player as Player
 import qualified Pawl.Types.PlayerActed as PlayerActed
 import qualified Pawl.Types.PlayerAction as PlayerAction
+import qualified Pawl.Types.PlayerChoice as PlayerChoice
 import qualified Pawl.Types.PlayerCounterKind as PlayerCounterKind
 import Pawl.Types.PlayerId (PlayerId)
 import qualified Pawl.Types.Printing as Printing
@@ -706,11 +707,11 @@ attackTargetOf oid gs =
 attackTargetWithLastKnown :: ObjectId -> GameState -> Maybe AttackTarget.AttackTarget
 attackTargetWithLastKnown oid gs = Monad.join (liveOrLastKnown (const (attackTargetOf oid gs)) LastKnown.attackTarget oid gs)
 
--- CR 614.1c / 702.174a's chosen player, through CR 608.2h: the live object's
--- Object.chosenPlayer, else the one it carried as it left
--- (Pawl.Types.LastKnown.chosenPlayer).
-chosenPlayerWithLastKnown :: ObjectId -> GameState -> Maybe PlayerId
-chosenPlayerWithLastKnown oid gs = Monad.join (liveOrLastKnown Object.chosenPlayer LastKnown.chosenPlayer oid gs)
+-- CR 614.1c / 702.174a's chosen player for one choice, through CR 608.2h: the
+-- live object's Object.chosenPlayers, else the ones it carried as it left
+-- (Pawl.Types.LastKnown.chosenPlayers).
+chosenPlayerWithLastKnown :: PlayerChoice.PlayerChoice -> ObjectId -> GameState -> Maybe PlayerId
+chosenPlayerWithLastKnown choice oid gs = Map.lookup choice =<< liveOrLastKnown Object.chosenPlayers LastKnown.chosenPlayers oid gs
 
 -- CR 614.1c / 607.2d's chosen colours, through CR 608.2h: the live object's
 -- Object.chosenColors, else the ones it carried as it left

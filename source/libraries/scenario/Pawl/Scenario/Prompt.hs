@@ -144,7 +144,7 @@ deciderOf prompt = case prompt of
   Prompt.ChooseDesignation decider _ _ _ -> Just (Decider.unwrap decider)
   Prompt.ChooseManaType decider _ _ _ -> Just (Decider.unwrap decider)
   Prompt.ChooseCardName decider _ _ _ _ -> Just (Decider.unwrap decider)
-  Prompt.ChooseOpponent decider _ _ _ -> Just (Decider.unwrap decider)
+  Prompt.ChooseOpponent decider _ _ _ _ -> Just (Decider.unwrap decider)
   Prompt.ChooseProtector decider _ _ _ -> Just (Decider.unwrap decider)
   Prompt.ChoosePlayer decider _ _ _ -> Just (Decider.unwrap decider)
   Prompt.ChooseActivePlayer decider _ _ -> Just (Decider.unwrap decider)

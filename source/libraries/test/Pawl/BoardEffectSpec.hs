@@ -535,7 +535,7 @@ skullwinderSpec s registry =
       -- NAMES, so a prompt put to anybody else takes the first candidate and
       -- lands a different card in a different hand.
       choosing p = case p of
-        Prompt.ChooseOpponent _ _ _ offered -> NonEmpty.last offered
+        Prompt.ChooseOpponent _ _ _ _ offered -> NonEmpty.last offered
         Prompt.ChooseCardInGraveyard _ pid _ offered _ ->
           if pid == S.carol then thirdOf offered else NonEmpty.head offered
         _ -> S.identityAnswer p

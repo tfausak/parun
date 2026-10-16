@@ -122,7 +122,7 @@ choosingBlue :: Prompt.Prompt r -> r
 choosingBlue p = case p of
   Prompt.ChooseColor {} -> Color.Blue
   Prompt.ChooseCardName {} -> CardName.MkCardName mempty
-  Prompt.ChooseOpponent _ _ _ opponents -> NonEmpty.head opponents
+  Prompt.ChooseOpponent _ _ _ _ opponents -> NonEmpty.head opponents
   _ -> S.identityAnswer p
 
 -- choosingBlue for the Gauntlet of Power case below, whose two permanents must
@@ -131,7 +131,7 @@ choosingBlack :: Prompt.Prompt r -> r
 choosingBlack p = case p of
   Prompt.ChooseColor {} -> Color.Black
   Prompt.ChooseCardName {} -> CardName.MkCardName mempty
-  Prompt.ChooseOpponent _ _ _ opponents -> NonEmpty.head opponents
+  Prompt.ChooseOpponent _ _ _ _ opponents -> NonEmpty.head opponents
   _ -> S.identityAnswer p
 
 -- choosingBlue for the two cases below that need RED -- the colour Burrenton
@@ -141,7 +141,7 @@ choosingRed :: Prompt.Prompt r -> r
 choosingRed p = case p of
   Prompt.ChooseColor {} -> Color.Red
   Prompt.ChooseCardName {} -> CardName.MkCardName mempty
-  Prompt.ChooseOpponent _ _ _ opponents -> NonEmpty.head opponents
+  Prompt.ChooseOpponent _ _ _ _ opponents -> NonEmpty.head opponents
   _ -> S.identityAnswer p
 
 -- Aims every ChooseTargets slot at one recipient, FILTERING the offered set for

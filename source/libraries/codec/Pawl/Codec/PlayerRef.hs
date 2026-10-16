@@ -2,11 +2,13 @@ module Pawl.Codec.PlayerRef where
 
 import qualified Pawl.Codec.AttackingPlayers as AttackingPlayers
 import qualified Pawl.Codec.ObjectId as ObjectId
+import qualified Pawl.Codec.PlayerChoice as PlayerChoice
 import qualified Pawl.Codec.PlayerId as PlayerId
 import qualified Pawl.Codec.PlayerRelation as PlayerRelation
 import qualified Pawl.Codec.SlotName as SlotName
 import qualified Pawl.JsonCodec.Arm as Arm
 import qualified Pawl.JsonCodec.Codec as Codec
+import qualified Pawl.JsonCodec.Common as Common
 import qualified Pawl.Types.PlayerRef as PlayerRef
 
 -- | The wire format is the hand-written pair's, which 'Arm.tagged' emits
@@ -43,7 +45,7 @@ codec =
       -- out of card data beside it.
       Arm.payload "ControllerOfObject" ObjectId.codec PlayerRef.ControllerOfObject (\x -> case x of PlayerRef.ControllerOfObject y -> Just y; _ -> Nothing),
       Arm.payload "OwnerOfObject" ObjectId.codec PlayerRef.OwnerOfObject (\x -> case x of PlayerRef.OwnerOfObject y -> Just y; _ -> Nothing),
-      Arm.payload "ChosenPlayerOfBound" SlotName.codec PlayerRef.ChosenPlayerOfBound (\x -> case x of PlayerRef.ChosenPlayerOfBound y -> Just y; _ -> Nothing),
+      Arm.payload "ChosenPlayerOfBound" (Common.tuple SlotName.codec PlayerChoice.codec) (uncurry PlayerRef.ChosenPlayerOfBound) (\x -> case x of PlayerRef.ChosenPlayerOfBound y z -> Just (y, z); _ -> Nothing),
       -- CR 508.6's set, which a card writes: Curse of Vitality names "each
       -- opponent attacking that player".
       Arm.payload "Attacking" AttackingPlayers.codec PlayerRef.Attacking (\x -> case x of PlayerRef.Attacking y -> Just y; _ -> Nothing)

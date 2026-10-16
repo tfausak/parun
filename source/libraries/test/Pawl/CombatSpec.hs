@@ -71,6 +71,7 @@ import qualified Pawl.Types.Modification as Modification
 import qualified Pawl.Types.Object as Object
 import qualified Pawl.Types.ObjectId as ObjectId
 import qualified Pawl.Types.Phase as Phase
+import qualified Pawl.Types.PlayerChoice as PlayerChoice
 import qualified Pawl.Types.PlayerId as PlayerId
 import qualified Pawl.Types.Printing as Printing
 import qualified Pawl.Types.Prompt as Prompt
@@ -484,7 +485,7 @@ controlChangeSicknessSpec s registry = Spec.describe s "ControlChangeSickness" $
 -- CR 614.1c's as-enters choice of a player, stamped onto a permanent a fixture
 -- placed rather than cast (S.addPermanent runs no entry loop).
 chosePlayer :: PlayerId.PlayerId -> ObjectId.ObjectId -> GameState.GameState -> GameState.GameState
-chosePlayer pid oid gs = gs {GameState.objects = Map.adjust (\o -> o {Object.chosenPlayer = Just pid}) oid (GameState.objects gs)}
+chosePlayer pid oid gs = gs {GameState.objects = Map.adjust (\o -> o {Object.chosenPlayers = Map.singleton PlayerChoice.AsEnters pid}) oid (GameState.objects gs)}
 
 -- Declare attackers with everything, then hand back the state and the ids.
 attacking :: [Printing.Printing] -> [Printing.Printing] -> (GameState.GameState, [ObjectId.ObjectId], [ObjectId.ObjectId])
@@ -613,7 +614,7 @@ evasionSpec s registry = Spec.describe s "Evasion" $ do
             blocks = Map.singleton blocker (Set.singleton a)
         Spec.assertBool s (not (Combat.legalBlockDeclaration S.bob blocks chosenBob)) "CR 702.16k bob was chosen, so bob's Goblin Piker may not block it"
         Spec.assertBool s (Combat.legalBlockDeclaration S.bob blocks chosenAlice) "and with alice chosen instead the same Piker may"
-        Spec.assertEqWith s "CR 614.1c and the two boards really differ in the seat the Nemesis chose" (Game.lookupObject a chosenBob >>= Object.chosenPlayer, Game.lookupObject a chosenAlice >>= Object.chosenPlayer) (Just S.bob, Just S.alice)
+        Spec.assertEqWith s "CR 614.1c and the two boards really differ in the seat the Nemesis chose" (Game.lookupObject a chosenBob >>= Map.lookup PlayerChoice.AsEnters . Object.chosenPlayers, Game.lookupObject a chosenAlice >>= Map.lookup PlayerChoice.AsEnters . Object.chosenPlayers) (Just S.bob, Just S.alice)
       _ -> Spec.assertFailure s "fixture should have an attacker and a blocker"
   Spec.it s "CR 509.1a a Mountain is not a legal blocker, flier or no flier" $ do
     -- The classification, from the other side: `canBlock` asks

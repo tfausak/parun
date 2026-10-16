@@ -144,7 +144,7 @@ chooseOne chooser source =
   let question decider asked offered =
         if elem asked offered
           then Prompt.ChoosePlayer decider asked source offered
-          else Prompt.ChooseOpponent decider asked source offered
+          else Prompt.ChooseOpponent decider asked source Nothing offered
    in Game.chooseAmong question chooser
 
 -- | The players a PlayerRef names, in PlayerId order, or Nothing where the
@@ -225,11 +225,11 @@ namedUncut given gs ref =
         PlayerRef.ControllerOfObject oid -> fmap pure (unlessPhasedOut oid >>= controllerOf given)
         PlayerRef.OwnerOfObject oid -> fmap pure (unlessPhasedOut oid >>= ownerOf given)
         -- CR 614.1c / CR 702.174b: the player the object a slot names chose,
-        -- read off Object.chosenPlayer rather than any view -- a choice is a
+        -- read off Object.chosenPlayers rather than any view -- a choice is a
         -- record, not a characteristic (CR 707.2) -- through CR 608.2h's
         -- look-back. Pawl.CastSpec's Scrapshooter killed in response still has
         -- the promised opponent draw.
-        PlayerRef.ChosenPlayerOfBound slot -> fmap pure (slotObject given slot >>= (`Game.chosenPlayerWithLastKnown` gs))
+        PlayerRef.ChosenPlayerOfBound slot choice -> fmap pure (slotObject given slot >>= \oid -> Game.chosenPlayerWithLastKnown choice oid gs)
         -- CR 508.6: the players controlling a creature attacking the player a
         -- slot names, narrowed by the printed relation -- Curse of Vitality's
         -- "each opponent attacking that player". The LIVE combat record (CR
