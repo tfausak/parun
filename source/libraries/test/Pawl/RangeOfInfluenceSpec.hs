@@ -251,7 +251,7 @@ spec s registry = Spec.describe s "Range of influence" $ do
         (plane, g0) = addWorld livingPlane S.alice S.fourPlayerGame
         (_, carols) = addWorld crossroads S.carol g0
         (_, bobs) = addWorld crossroads S.bob g0
-        pass gs = S.runPure S.identityAnswer gs (Engine.sampleWorldSince >> Sba.checkStateBasedActions)
+        pass gs = S.runPure S.identityAnswer gs (Engine.sampleWorldSince >> Sba.checkStateBasedActions S.insteadOfLoss)
     Spec.assertBool s (S.onBattlefield plane (pass (S.withRange 1 carols))) "CR 801.12 at range 1 alice's Living Plane survives carol's newer Crossroads"
     Spec.assertBool s (not (S.onBattlefield plane (pass carols))) "at an unlimited range it is put into the graveyard"
     Spec.assertBool s (not (S.onBattlefield plane (pass (S.withRange 1 bobs)))) "and at range 1 bob's newer Crossroads, in range, buries it"

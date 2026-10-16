@@ -3,10 +3,12 @@ module Pawl.Engine.Sba where
 import qualified Control.Monad as Monad
 import qualified Control.Monad.Trans.State.Strict as State
 import qualified Data.Containers.ListUtils as ListUtils
+import qualified Data.Foldable as Foldable
 import qualified Data.List as List
 import qualified Data.List.NonEmpty as NonEmpty
 import qualified Data.Map.Strict as Map
 import qualified Data.Maybe as Maybe
+import qualified Data.Sequence as Seq
 import qualified Data.Set as Set
 import Numeric.Natural (Natural)
 import qualified Pawl.Engine.Archenemy as Archenemy
@@ -51,6 +53,7 @@ import qualified Pawl.Types.GameState as GameState
 import qualified Pawl.Types.Keyword as Keyword
 import qualified Pawl.Types.Object as Object
 import Pawl.Types.ObjectId (ObjectId)
+import qualified Pawl.Types.PendingReplacementEffect as PendingReplacementEffect
 import qualified Pawl.Types.PlaneswalkCause as PlaneswalkCause
 import qualified Pawl.Types.Player as Player
 import qualified Pawl.Types.PlayerCounterKind as PlayerCounterKind
@@ -674,8 +677,8 @@ roleVictims pcs grants gs =
 -- 704.5n's Equipment detaches, only on the pass AFTER the creature dies -- so
 -- settleForPriority is the entry point a caller wanting a settled board should
 -- use.
-checkStateBasedActions :: Game ()
-checkStateBasedActions = Monad.void performStateBasedActions
+checkStateBasedActions :: (PendingReplacementEffect.PendingReplacementEffect -> Game ()) -> Game ()
+checkStateBasedActions = Monad.void . performStateBasedActions
 
 -- One SBA pass, also reporting whether any state-based action was PERFORMED (a
 -- creature buried or a player departed). CR 704.3: the caller repeats the check
@@ -698,19 +701,24 @@ checkStateBasedActions = Monad.void performStateBasedActions
 -- scope: the put-into-graveyard batch, the destruction batch and the departures
 -- are one check, and splitting them would make CR 704.3's "simultaneously" a
 -- sequence again.
-performStateBasedActions :: Game Bool
-performStateBasedActions = do
+--
+-- `instead` runs the effects a replacement put in place of a loss this pass
+-- meets (Lich's Mirror's reset), Pawl.Engine.Resolve.runDamageRewriteEffect,
+-- which this module cannot import: they run INSIDE the pass, CR 614.1a's
+-- "instead", before the pass moves anything (checkOnce says why).
+performStateBasedActions :: (PendingReplacementEffect.PendingReplacementEffect -> Game ()) -> Game Bool
+performStateBasedActions instead = do
   -- CR 800.4a's fourth clause comes "Then", after the departures this pass
   -- performs, so it runs once the pass's event has closed
   -- (Departure.leaveTogether).
-  (acted, thenExile) <- Event.simultaneously checkOnce
+  (acted, thenExile) <- Event.simultaneously (checkOnce instead)
   thenExile
   pure acted
 
 -- The pass itself, which is one event; `performStateBasedActions` above says why
 -- CR 800.4a's fourth clause is handed back rather than run here.
-checkOnce :: Game (Bool, Game ())
-checkOnce = do
+checkOnce :: (PendingReplacementEffect.PendingReplacementEffect -> Game ()) -> Game (Bool, Game ())
+checkOnce instead = do
   gs <- State.get
   let -- CR 704.5f/g are checked against the state BEFORE any of them apply: SBAs
       -- are simultaneous. Project the whole board once (one gather) and judge each
@@ -917,6 +925,46 @@ checkOnce = do
   -- permanent (CR 800.4a). Kept because the alternative is a battle that sits at
   -- no protector forever, re-asked and unanswerable every pass.
   let undefendable = Maybe.mapMaybe (\(oid, picked) -> if Maybe.isNothing picked then Just oid else Nothing) redesignated
+      buried = ListUtils.nubOrd (toGraveyard <> legendVictims <> worldLosers <> supersededRoles <> unattachedAuras <> undefendable <> routed <> unassembled)
+      -- CR 104.3 / 810.8a: a player an effect says can't lose the game stays
+      -- in, life, library and poison where they are. Asked of the pre-pass
+      -- board for CR 704.3's reason, so a Platinum Angel this same pass buries
+      -- still protects its controller until the next check.
+      leaving = filter (\pid -> losesNow gs pid && not (PlayerEffect.precludes GameOutcome.Lose pid gs)) (Game.stillPlaying gs)
+  -- CR 104.3 / 614.1a: each loss is offered to the replacements that watch it
+  -- BEFORE anything below moves, in REVERSE of `leaving` -- the order the
+  -- `foldr` this replaced applied them in, kept because CR 800.4a's fourth
+  -- clause emits zone changes and CR 725.4 hands the crown along, so who goes
+  -- first is observable.
+  queued <- State.gets (Seq.length . GameState.pendingReplacementEffects)
+  departing <- Departure.losing (Just gs) True Departure.Type.Lost (List.reverse leaving)
+  insteads <- State.gets (Seq.drop queued . GameState.pendingReplacementEffects)
+  -- CR 704.5b's window is "since the last time state-based actions were
+  -- checked", so this check spends every attempt it saw by a player it leaves
+  -- in the game: one a can't-lose effect kept in does not lose to it once that
+  -- effect ends. A departed player's flag stays as the record of why they left.
+  -- Spent BEFORE the effects below run, so an attempt they make -- a reset's
+  -- draw from too small a library -- waits for the next check.
+  let staying = filter (\pid -> List.notElem pid (fmap snd departing)) (Game.stillPlaying gs)
+      spent = Set.intersection (GameState.drewFromEmpty gs) (Set.fromList staying)
+  State.modify' $ \g ->
+    g
+      { GameState.pendingReplacementEffects = Seq.take queued (GameState.pendingReplacementEffects g),
+        GameState.drewFromEmpty = Set.difference (GameState.drewFromEmpty g) spent
+      }
+  -- CR 614.1a: what replaced a loss happens INSTEAD of it, so inside this
+  -- pass's one event and before its moves, with every object the pass moves
+  -- contested (GameState.contested): Lich's Mirror's ruling has its reset and
+  -- the check compete for such an object, and its controller choose which
+  -- move happens. Kept, the object stays for the moves below; taken, the
+  -- moves below find it gone (CR 614.7's shape, as for any member another
+  -- action already moved). Pawl.ScenarioSpec's
+  -- data/scenarios/game-outcome/cr-616-1-lich-s-mirror-* pair proves both.
+  let moving = Set.fromList (buried <> toDestroy <> fmap snd told <> returningCommanders)
+  Foldable.for_ insteads $ \pending -> do
+    State.modify' (\g -> g {GameState.contested = Map.fromSet (const (PendingReplacementEffect.source pending)) moving})
+    instead pending
+  State.modify' (\g -> g {GameState.contested = Map.empty})
   -- Every put-into-graveyard this pass performs, as ONE deduplicated batch:
   -- CR 704.5f (toughness <= 0), CR 704.5i (loyalty 0), CR 704.5j (the legend
   -- rule's losers), CR 704.5k (the world rule's), CR 704.5m (an Aura attached to
@@ -938,7 +986,7 @@ checkOnce = do
   -- from the board the pass began in, so an animated Rest in Peace this pass is
   -- itself burying still exiles the cards the rest of the batch would put into
   -- graveyards. See Pawl.Engine.Replacement's applyReplacementsIn.
-  Monad.mapM_ (\oid -> Event.changeZoneInBatch gs oid Zone.Graveyard) (ListUtils.nubOrd (toGraveyard <> legendVictims <> worldLosers <> supersededRoles <> unattachedAuras <> undefendable <> routed <> unassembled))
+  Monad.mapM_ (\oid -> Event.changeZoneInBatch gs oid Zone.Graveyard) buried
   -- CR 903.9a's ACTION half: "its owner may put it into the command zone". A real
   -- zone change (CR 400.7 mints a fresh incarnation), so it goes through the same
   -- batch funnel as the buries above rather than editing the zone sets -- a
@@ -1013,19 +1061,10 @@ checkOnce = do
   -- other action this pass already moved (CR 614.7's shape, destroyInBatch's third
   -- reader).
   Event.sacrificeInBatch gs told
-  destroyed <- State.get
-  -- CR 104.3 / 810.8a: a player an effect says can't lose the game stays in,
-  -- life, library and poison where they are. Asked of the pre-pass board for CR
-  -- 704.3's reason, so a Platinum Angel this same pass buries still protects
-  -- its controller until the next check.
-  let leaving = filter (\pid -> losesNow destroyed pid && not (PlayerEffect.precludes GameOutcome.Lose pid gs)) (Game.stillPlaying destroyed)
-  -- CR 104.2a/800.4a: the losers leave together (CR 704.3), in REVERSE of
-  -- `leaving` -- the order the `foldr` this replaced applied them in, kept
-  -- because CR 800.4a's fourth clause emits zone changes and CR 725.4 hands the
-  -- crown along, so who goes first is observable. Departure.leaveTogether is
-  -- monadic for that clause's sake, which is why this is a statement rather
-  -- than another binding in the `let`.
-  thenExile <- Departure.leaveTogether (Just gs) True Departure.Type.Lost (List.reverse leaving)
+  -- CR 104.2a/800.4a: the losers whose loss stood leave together (CR 704.3).
+  -- Departure.leaveAll is monadic for CR 800.4a's fourth clause, which is why
+  -- this is a statement rather than another binding in the `let`.
+  thenExile <- Departure.leaveAll departing
   departed <- State.get
   let -- CR 704.5d and CR 704.5e: the objects the rules say cease to exist outside
       -- a zone of their own -- a token anywhere but the battlefield, a copy of a
@@ -1084,14 +1123,7 @@ checkOnce = do
         let strip obj = obj {Object.counters = Map.update (removeN n) CounterKind.MinusOneMinusOne (Map.update (removeN n) CounterKind.PlusOnePlusOne (Object.counters obj))}
          in g {GameState.objects = Map.adjust strip oid (GameState.objects g)}
       outcome = Departure.outcomeAfterLeaving leaving departed
-      -- CR 704.5b's window is "since the last time state-based actions were
-      -- checked" too, so this check spends every attempt it saw by a player it
-      -- left in the game: one a can't-lose effect kept in does not lose to it
-      -- once that effect ends. A departed player's flag stays as the record of
-      -- why they left, and an attempt made during the pass itself waits for the
-      -- next check.
-      spent = Set.intersection (GameState.drewFromEmpty gs) (Set.fromList (Game.stillPlaying vanished))
-      drained = vanished {GameState.damageScannedThrough = watermark, GameState.drewFromEmpty = Set.difference (GameState.drewFromEmpty vanished) spent}
+      drained = vanished {GameState.damageScannedThrough = watermark}
       balanced = List.foldl' balance drained annihilations
       -- CR 704.5q's removal is a REMOVAL (rule 122.3 uses the word), so it owes
       -- the same GameEvent.CountersRemoved every other removal records --

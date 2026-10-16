@@ -4617,7 +4617,7 @@ madnessSpec s registry = Spec.describe s "Madness" $ do
         (gorgerId, withGorger) = S.addPermanent gorger S.alice stocked
         (vampireId, handed) = S.addHandCard vampire S.alice withGorger
         (tweezeId, ready) = S.addHandCard tweeze S.alice handed
-        resolved = S.runPure (gorgerTweezeAnswer gorgerId vampireId) ready (S.cast S.alice tweezeId >> Stack.resolveTop >> Monad.void Sba.performStateBasedActions)
+        resolved = S.runPure (gorgerTweezeAnswer gorgerId vampireId) ready (S.cast S.alice tweezeId >> Stack.resolveTop >> Monad.void (Sba.performStateBasedActions S.insteadOfLoss))
         placed = S.runPure (gorgerTweezeAnswer gorgerId vampireId) resolved Engine.placePendingTriggers
         entered = S.runPure (gorgerTweezeAnswer gorgerId vampireId) (S.runPure (gorgerTweezeAnswer gorgerId vampireId) placed Stack.resolveTop) Stack.resolveTop
     Spec.assertEqWith s "CR 702.35a the Vampire is cast for {2}{B} though the Gorger has died" (S.countOnBattlefieldByName (S.printingName vampire) S.alice entered) 1

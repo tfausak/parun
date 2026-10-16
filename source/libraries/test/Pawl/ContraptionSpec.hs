@@ -287,7 +287,7 @@ scrapyardSpec s registry = Spec.describe s "Scrapyard" $ do
     let (unassembledId, g1) = S.addPermanent depot S.alice (Setup.emptyGame S.bothPlayers)
         (assembledId, gs) = S.addPermanent depot S.alice g1
         onOne = gs {GameState.objects = Map.adjust (\o -> o {Object.designations = Set.insert Designation.Sprocket1 (Object.designations o)}) assembledId (GameState.objects gs)}
-        checked = S.runPure S.identityAnswer onOne Sba.checkStateBasedActions
+        checked = S.runPure S.identityAnswer onOne (Sba.checkStateBasedActions S.insteadOfLoss)
     Spec.assertBool s (not (Set.member unassembledId (GameState.battlefield checked))) "the Depot on no sprocket left the battlefield"
     Spec.assertEqWith s "for the scrapyard" (Set.size (GameState.command checked)) 1
     Spec.assertBool s (Set.member assembledId (GameState.battlefield checked)) "and the one on a sprocket stayed"
@@ -301,7 +301,7 @@ scrapyardSpec s registry = Spec.describe s "Scrapyard" $ do
           Prompt.ChooseCopyTarget {} -> Just original
           _ -> S.identityAnswer p
         (_, staged) = S.spellOnStack metamorph S.alice assembled
-        entered = S.runPure copyAnswer staged (Stack.resolveTop >> Sba.checkStateBasedActions)
+        entered = S.runPure copyAnswer staged (Stack.resolveTop >> Sba.checkStateBasedActions S.insteadOfLoss)
     Spec.assertEqWith s "the Metamorph card is in alice's graveyard" (length (Game.zoneMembers Zone.Graveyard S.alice entered)) 1
     Spec.assertEqWith s "nothing went to the scrapyard" (GameState.command entered) Set.empty
     Spec.assertBool s (Set.member original (GameState.battlefield entered)) "and the assembled Depot stayed"

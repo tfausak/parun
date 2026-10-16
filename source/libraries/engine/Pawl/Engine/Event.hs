@@ -5954,11 +5954,33 @@ alreadyIn oid obj dest gs
   where
     heldByOwner = Game.pileHolderOf oid gs == Just (Object.owner obj)
 
+-- CR 616.1 with Lich's Mirror's ruling: an object a state-based action check
+-- moves, which the effects a replacement ran in place of a loss in that check
+-- would move too (GameState.contested). Only one move can happen, and the
+-- object's controller -- its owner off the battlefield -- chooses: True when
+-- they keep the check's, so this move is skipped. ChooseRedirect's Exercises
+-- is the replacement's move, as for an optional redirect. Never elided: one
+-- move fires the other's triggers and not its own. Pawl.ScenarioSpec's
+-- data/scenarios/game-outcome/cr-616-1-lich-s-mirror-* pair proves both answers.
+yieldsToCheck :: ObjectId -> Game Bool
+yieldsToCheck oid = do
+  gs <- State.get
+  case (Map.lookup oid (GameState.contested gs), Game.lookupObject oid gs) of
+    (Just source, Just obj)
+      | Just chooser <- Game.ruleChooser gs =<< (Projection.controllerOf oid gs <|> Just (Object.owner obj)) -> do
+          answer <- Game.choose (Prompt.ChooseRedirect (Decide.deciderFor chooser gs) chooser source oid)
+          pure (answer == OptionalDecision.Declines)
+    _ -> pure False
+
 changeZoneWithCause :: Maybe DiscardCause.DiscardCause -> Maybe GameState -> Set ObjectId -> ObjectId -> Zone -> LibraryPosition.LibraryPosition -> Maybe Recipient.Recipient -> TapState.TapState -> Map.Map (CounterKind.CounterKind Keyword.Type.Keyword) Natural -> Maybe PlayerId -> Maybe CardName.CardName -> Facing.Facing -> Bool -> CarryOver.CarryOver -> Bool -> Seq.Seq (ObjectId, Modification.Modification (GrantedAbility.Type.GrantedAbility Card.Type.Card)) -> Game (Seq.Seq ObjectId)
 changeZoneWithCause discarded asOf batch oid requestedDest requestedPosition seed tapped entering under shown facing concealed carrying resolving defining = do
+  yielded <- yieldsToCheck oid
   gs <- State.get
   case Game.lookupObject oid gs of
     Nothing -> pure Seq.empty
+    -- Lich's Mirror's ruling: the check keeps it, so this move does not happen
+    -- and the check's own move does, after (yieldsToCheck).
+    Just _ | yielded -> pure Seq.empty
     -- CR 111.8: "A token that has left the battlefield can't move to another
     -- zone or come back onto the battlefield. If such a token would change
     -- zones, it remains in its current zone instead." The empty answer is this
