@@ -735,7 +735,7 @@ armBecame oid obj gs1 arrivals = do
 grantHaste :: Duration.Duration -> PlayerId -> ObjectId -> Game ()
 grantHaste duration controller permanent =
   State.modify' $ \g ->
-    case Expiry.arm Map.empty controller permanent duration g of
+    case Expiry.arm (flip Game.acquisitionOf) Map.empty controller permanent duration g of
       -- CR 611.2b: the duration never started -- the caster does not control the
       -- arrival -- so nothing is stored.
       Nothing -> g

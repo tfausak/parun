@@ -134,16 +134,16 @@ armGs = Setup.emptyGame S.bothPlayers
 armSpec :: (Applicative m, Monad n) => Spec.Spec m n -> n ()
 armSpec s = Spec.describe s "Arm" $ do
   Spec.it s "CR 514.2 an until-end-of-turn duration arms to AtCleanup" $
-    Spec.assertEqWith s "armed" (Expiry.arm Map.empty S.alice S.noSource Duration.UntilEndOfTurn armGs) (Just Expiry.Type.AtCleanup)
+    Spec.assertEqWith s "armed" (Expiry.arm (flip Game.acquisitionOf) Map.empty S.alice S.noSource Duration.UntilEndOfTurn armGs) (Just Expiry.Type.AtCleanup)
   Spec.it s "CR 611.2a an indefinite duration arms to Never" $
-    Spec.assertEqWith s "armed" (Expiry.arm Map.empty S.alice S.noSource Duration.Indefinite armGs) (Just Expiry.Type.Never)
+    Spec.assertEqWith s "armed" (Expiry.arm (flip Game.acquisitionOf) Map.empty S.alice S.noSource Duration.Indefinite armGs) (Just Expiry.Type.Never)
   Spec.it s "CR 611.2a / 109.5 'until your next turn' bakes the controller" $
-    Spec.assertEqWith s "armed" (Expiry.arm Map.empty S.alice S.noSource Duration.UntilYourNextTurn armGs) (Just (Expiry.Type.AtTurnOf S.alice))
+    Spec.assertEqWith s "armed" (Expiry.arm (flip Game.acquisitionOf) Map.empty S.alice S.noSource Duration.UntilYourNextTurn armGs) (Just (Expiry.Type.AtTurnOf S.alice))
   -- The turn number is sampled as well as the seat, and armGs is turn 1. Without
   -- it the sweep could not tell the controller's CURRENT turn from their next
   -- one, which is exactly the case the two phrasings disagree about.
   Spec.it s "CR 611.2a / 109.5 'until the end of your next turn' bakes the controller AND the turn" $
-    Spec.assertEqWith s "armed" (Expiry.arm Map.empty S.alice S.noSource Duration.UntilEndOfYourNextTurn armGs) (Just (Expiry.Type.AtEndOfTurnOf (AfterTurn.MkAfterTurn S.alice 1)))
+    Spec.assertEqWith s "armed" (Expiry.arm (flip Game.acquisitionOf) Map.empty S.alice S.noSource Duration.UntilEndOfYourNextTurn armGs) (Just (Expiry.Type.AtEndOfTurnOf (AfterTurn.MkAfterTurn S.alice 1)))
 
 handoffSpec :: (Monad m, Monad n) => Spec.Spec m n -> n ()
 handoffSpec s = Spec.describe s "DropAtTurnOf" $ do
@@ -422,7 +422,7 @@ conditionalSpec s registry = Spec.describe s "Conditional" $ do
     Spec.assertEqWith
       s
       "never starts"
-      (Expiry.arm Map.empty S.alice srcId (Duration.ForAsLongAs S.youControlSource) gone)
+      (Expiry.arm (flip Game.acquisitionOf) Map.empty S.alice srcId (Duration.ForAsLongAs S.youControlSource) gone)
       Nothing
   Spec.it s "CR 611.2b arm returns a While when the condition holds now" $ do
     piker <- S.printingOf s registry "Goblin Piker"
@@ -431,7 +431,7 @@ conditionalSpec s registry = Spec.describe s "Conditional" $ do
     Spec.assertEqWith
       s
       "starts"
-      (Expiry.arm Map.empty S.alice srcId (Duration.ForAsLongAs S.youControlSource) gs)
+      (Expiry.arm (flip Game.acquisitionOf) Map.empty S.alice srcId (Duration.ForAsLongAs S.youControlSource) gs)
       (Just (Expiry.Type.While (While.MkWhile S.alice S.youControlSource)))
   Spec.it s "CR 611.2b the sweep DELETES the effect once the condition fails" $ do
     piker <- S.printingOf s registry "Goblin Piker"
@@ -1049,7 +1049,7 @@ untilEndOfCombatSpec s registry = Spec.describe s "UntilEndOfCombat" $ do
     Spec.assertEqWith
       s
       "armed"
-      (Expiry.arm Map.empty S.alice S.noSource Duration.UntilEndOfCombat armGs)
+      (Expiry.arm (flip Game.acquisitionOf) Map.empty S.alice S.noSource Duration.UntilEndOfCombat armGs)
       (Just (Expiry.Type.AtEndOf PhaseSelector.CombatPhase))
   -- The unit-level half of CR 500.5a, and the sharpest statement of it: the end
   -- of combat STEP ending does not reach the effect, and the combat PHASE ending
@@ -1490,7 +1490,7 @@ cannonadeSpec s registry = Spec.describe s "BrazenCannonade" $ do
     Spec.assertEqWith
       s
       "armed"
-      (Expiry.arm Map.empty S.alice S.noSource Duration.UntilEndOfCombatOnYourNextTurn armGs)
+      (Expiry.arm (flip Game.acquisitionOf) Map.empty S.alice S.noSource Duration.UntilEndOfCombatOnYourNextTurn armGs)
       (Just (Expiry.Type.AtEndOfCombatOn (AfterTurn.MkAfterTurn S.alice 1)))
   Spec.it s "CR 500.5a / 500.8 only a combat PHASE of a later turn of that player ends it" $ do
     let armed = effectWith (Expiry.Type.AtEndOfCombatOn (AfterTurn.MkAfterTurn S.alice 1)) (Setup.emptyGame S.bothPlayers)
@@ -1956,7 +1956,7 @@ whenPaidSpec s = Spec.describe s "WhenPaid" $ do
     Spec.assertEqWith
       s
       "armed"
-      (Expiry.arm Map.empty S.alice S.noSource (Duration.UntilPaid blueCost) armGs)
+      (Expiry.arm (flip Game.acquisitionOf) Map.empty S.alice S.noSource (Duration.UntilPaid blueCost) armGs)
       (Just (Expiry.Type.WhenPaid (blueOfferTo S.alice)))
     -- The seat comes from the CONTROLLER argument and nothing else: the same
     -- duration off the same source arms to a different offer for a different
@@ -1964,7 +1964,7 @@ whenPaidSpec s = Spec.describe s "WhenPaid" $ do
     Spec.assertEqWith
       s
       "armed for the other seat"
-      (Expiry.arm Map.empty S.bob S.noSource (Duration.UntilPaid blueCost) armGs)
+      (Expiry.arm (flip Game.acquisitionOf) Map.empty S.bob S.noSource (Duration.UntilPaid blueCost) armGs)
       (Just (Expiry.Type.WhenPaid (blueOfferTo S.bob)))
   -- All four time sweeps, on one board. Never answers True in all four too, so
   -- this case does not distinguish the two arms -- what does is that a WhenPaid
@@ -2006,7 +2006,7 @@ perpetualSpec s registry = Spec.describe s "Perpetual" $ do
   Spec.it s "a perpetual duration arms to an expiry no sweep of the turn's structure ends" $ do
     let armed = effectWith Expiry.Type.Perpetual (Setup.emptyGame S.bothPlayers)
         conditional = S.runPure S.identityAnswer armed Expiry.sweepConditional
-    Spec.assertEqWith s "armed" (Expiry.arm Map.empty S.alice S.noSource Duration.Perpetual armGs) (Just Expiry.Type.Perpetual)
+    Spec.assertEqWith s "armed" (Expiry.arm (flip Game.acquisitionOf) Map.empty S.alice S.noSource Duration.Perpetual armGs) (Just Expiry.Type.Perpetual)
     Spec.assertEqWith s "cleanup leaves it" (length (GameState.continuousEffects (Expiry.dropAtCleanup armed))) 1
     Spec.assertEqWith s "a turn handoff leaves it" (length (GameState.continuousEffects (Expiry.dropAtTurnOf S.alice armed))) 1
     Spec.assertEqWith s "the end of a phase leaves it" (length (GameState.continuousEffects (Expiry.dropAtEndOf PhaseSelector.CombatPhase armed))) 1
