@@ -152,7 +152,7 @@
           "zone": "Library",
           "is": [
             "$deep",
-            "$top"
+            "Hill Giant#2"
           ]
         }
       }

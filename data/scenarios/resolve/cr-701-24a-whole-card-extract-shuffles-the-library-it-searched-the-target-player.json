@@ -138,8 +138,8 @@
         "player": "carol",
         "zone": "Library",
         "is": [
-          "$mountain",
-          "$plains"
+          "Mountain",
+          "Plains"
         ]
       }
     },

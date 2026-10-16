@@ -100,6 +100,7 @@ import qualified Pawl.Types.PlayerId as PlayerId
 import qualified Pawl.Types.Printing as Printing
 import qualified Pawl.Types.Prompt as Prompt
 import qualified Pawl.Types.Recipient as Recipient
+import qualified Pawl.Types.RevealCause as RevealCause
 import qualified Pawl.Types.Source as Source
 import qualified Pawl.Types.TapState as TapState
 import qualified Pawl.Types.TriggeredAbility as TriggeredAbility
@@ -613,6 +614,40 @@ plottingFromLibrary s registry = Spec.describe s "CR 702.170f Fblthp, Lost on th
       Spec.assertBool s (not (S.castable S.alice exiledId after)) "not castable on the turn it became plotted"
       let resolved = S.runPure S.castAnswer later (S.cast S.alice exiledId >> Stack.resolveTop)
       Spec.assertEqWith s "CR 702.170d cast free on a later turn, the Djinn is on the battlefield" (S.countOnBattlefieldByName (S.printingName djinn) S.alice resolved) 1
+  -- CR 702.170a's own order, exile then pay, made observable: the top card was
+  -- revealed this turn, and the payment sacrifices Progenitus to Ashnod's Altar,
+  -- whose replacement shuffles it into alice's library mid-payment. That shuffle
+  -- makes a revealed card in the library a new object (CR 701.20d), so paying
+  -- first would leave nothing at `topId` to exile. Chromatic Sphere's {1} is the
+  -- plot cost Fblthp grants, and the Altar is alice's only mana.
+  Spec.it s "CR 702.170a a card plotted from the top is exiled before a payment that shuffles the library" $ do
+    fblthp <- S.printingOf s registry "Fblthp, Lost on the Range"
+    altar <- S.printingOf s registry "Ashnod's Altar"
+    progenitus <- S.printingOf s registry "Progenitus"
+    sphere <- S.printingOf s registry "Chromatic Sphere"
+    island <- S.printingOf s registry "Island"
+    let (_, g1) = S.addPermanent fblthp S.alice (Setup.emptyGame S.bothPlayers)
+        (_, g2) = S.addPermanent altar S.alice g1
+        (progenitusId, g3) = S.addPermanent progenitus S.alice g2
+        (_, g4) = S.addLibraryCard island S.alice g3
+        (topId, g5) = S.addLibraryCard sphere S.alice g4
+        ready = g5 {GameState.activePlayer = S.alice, GameState.phase = Phase.PrecombatMain, GameState.priority = Just S.alice}
+        revealed = S.runPure S.identityAnswer ready (Event.reveal RevealCause.Ordinary S.alice topId)
+        sphereCost = Cost.MkCost (Just (ManaCost.MkManaCost [ManaSymbol.Generic 1])) []
+        answer :: Prompt.Prompt r -> r
+        answer p = case p of
+          Prompt.ChooseSacrifices _ _ _ candidates _ _ -> Set.filter (== progenitusId) (Set.fromList candidates)
+          _ -> S.identityAnswer p
+        after = S.runPure answer revealed (Plot.plot S.manaPerformer S.alice topId sphereCost)
+        progenitusInLibrary = [oid | oid <- Game.zoneMembers Zone.Library S.alice after, S.soleFaceName oid after == S.printingName progenitus]
+    -- THE gameplay reading, and first: the Sphere is a plotted card in exile.
+    Spec.assertEqWith
+      s
+      "the Sphere was exiled and plotted"
+      (soleExile after >>= \oid -> fmap (\obj -> (S.soleFaceName oid after, Object.plotted obj)) (Game.lookupObject oid after))
+      (Just (S.printingName sphere, Just (GameState.turnNumber after)))
+    -- The precondition: the payment did shuffle Progenitus into the library.
+    Spec.assertEqWith s "Progenitus was shuffled into alice's library" (length progenitusInLibrary) 1
   -- Plot from a hand is CR 702.170a's alone: Fblthp grants nothing there, so the
   -- Djinn in hand is offered at {3}{U} and never at its mana cost.
   Spec.it s "a card in hand keeps its own plot cost only" $ do

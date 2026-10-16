@@ -116,6 +116,15 @@
                         "type": "Battlefield"
                       }
                     }
+                  },
+                  {
+                    "type": "Shuffle",
+                    "value": {
+                      "type": "Relative",
+                      "value": {
+                        "type": "You"
+                      }
+                    }
                   }
                 ]
               }

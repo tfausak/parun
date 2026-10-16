@@ -194,9 +194,9 @@
         "player": "alice",
         "zone": "Library",
         "is": [
-          "$goblin-piker",
-          "$plains",
-          "$island"
+          "Goblin Piker",
+          "Plains",
+          "Island"
         ]
       }
     }

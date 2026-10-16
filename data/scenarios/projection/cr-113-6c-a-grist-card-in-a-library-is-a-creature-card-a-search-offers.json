@@ -187,7 +187,7 @@
         "Answer": {
           "prompt": "Search",
           "with": [
-            "$subject"
+            "Grist, the Hunger Tide"
           ]
         }
       }
@@ -200,9 +200,9 @@
         "Answer": {
           "prompt": "Shuffle",
           "with": [
-            "$piker",
-            "$giant",
-            "$mountain"
+            "Goblin Piker",
+            "Hill Giant",
+            "Mountain#7"
           ]
         }
       }

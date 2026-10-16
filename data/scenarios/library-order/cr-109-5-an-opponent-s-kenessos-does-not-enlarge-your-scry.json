@@ -117,8 +117,8 @@
           "is": [
             "$mountain",
             "$forest",
-            "$piker",
-            "$maiden"
+            "Goblin Piker",
+            "Bird Maiden"
           ]
         }
       }

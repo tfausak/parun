@@ -94,6 +94,15 @@
                         "type": "Graveyard"
                       }
                     }
+                  },
+                  {
+                    "type": "Shuffle",
+                    "value": {
+                      "type": "Relative",
+                      "value": {
+                        "type": "You"
+                      }
+                    }
                   }
                 ]
               }

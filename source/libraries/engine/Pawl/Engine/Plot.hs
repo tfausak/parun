@@ -123,17 +123,17 @@ plottable pid gs =
 -- CR 702.170a, in the rule's own order: exile the card from where it is (the hand,
 -- or CR 702.170f's other zone) and pay the cost, leaving it a plotted card.
 --
+-- The exile comes FIRST, as the rule's sentence has it ("exile this card from
+-- your hand and pay [cost]"). That order is observable: a mana ability can
+-- shuffle a library mid-payment through a replacement effect, which CR 605.1a's
+-- last sentence leaves out of the classification (Ashnod's Altar sacrificing
+-- Progenitus), and a shuffle makes a revealed card in it a new object (CR
+-- 701.20d), so a card plotted from the top after the payment could be gone.
+-- Pawl.SpecialActionSpec's Progenitus case is the proof.
+--
 -- REJECT-NOT-REPAIR, the posture Room.unlock, FaceDown.turnFaceUp and
--- Cast.castSpell all take: a payment that fails restores the state from before it
--- was attempted and the card stays where it was. The payment runs FIRST for that
--- reason -- a failed one has moved nothing to put back -- where rule 702.170a's
--- own sentence names the exile first ("exile this card from your hand and pay
--- [cost]"). Nothing observes the order: no player has priority inside a special
--- action (CR 116.1), and the exile names the card by its id. A mana ability can
--- still shuffle a library mid-payment through a replacement effect, which CR
--- 605.1a's last sentence leaves out of the classification (Ashnod's Altar
--- sacrificing Progenitus), but Event.shuffleLibrary reorders the ids it holds and
--- mints none, so the card plotted from the top is exiled wherever it went.
+-- Cast.castSpell all take: a payment that fails puts back the state from before
+-- the action, exile included, and the card stays where it was.
 --
 -- CR 107.3d's X, which a mana cost granted as a plot cost can hold, is named
 -- in Cost.payAction, with CR 118.13c's announcement and CR 733.1's reversal.
@@ -157,13 +157,16 @@ plot :: ManaAbilityPerformer.ManaAbilityPerformer -> PlayerId -> ObjectId -> Cos
 plot perform pid oid printed = do
   before <- State.get
   Monad.when (canPlot pid oid printed before) $ do
+    exiled <- Event.changeZoneReturning oid Zone.Exile
+    -- The payment names the card by `oid`, as `before` -- the board its X and
+    -- its gates are read against -- knows it.
     paid <- Cost.payAction perform before PaymentSubject.ForNeither 0 pid oid printed
-    -- One stamp per arrival: the funnel answers with more than one only for a
-    -- melded permanent leaving the battlefield (CR 712.21), and this special
-    -- action exiles a card from a hand or a library.
-    Monad.forM_ paid $ \_ -> do
-      exiled <- Event.changeZoneReturning oid Zone.Exile
-      Monad.forM_ exiled (State.modify' . becomePlotted)
+    case paid of
+      Nothing -> State.put before
+      -- One stamp per arrival: the funnel answers with more than one only for a
+      -- melded permanent leaving the battlefield (CR 712.21), and this special
+      -- action exiles a card from a hand or a library.
+      Just _ -> Monad.forM_ exiled (State.modify' . becomePlotted)
 
 -- "It becomes a plotted card" -- the stamp and the event together, which is the
 -- WHOLE of what becoming plotted is.

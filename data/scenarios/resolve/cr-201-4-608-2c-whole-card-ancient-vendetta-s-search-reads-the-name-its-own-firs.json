@@ -139,7 +139,7 @@
         "player": "bob",
         "zone": "Library",
         "is": [
-          "$crucible"
+          "Crucible of Worlds"
         ]
       }
     },

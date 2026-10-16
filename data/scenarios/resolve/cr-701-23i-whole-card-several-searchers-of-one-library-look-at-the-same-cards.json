@@ -200,9 +200,9 @@
         "player": "alice",
         "zone": "Library",
         "is": [
-          "$island-4",
-          "$swamp",
-          "$plains"
+          "Island#4",
+          "Swamp",
+          "Plains"
         ]
       }
     }

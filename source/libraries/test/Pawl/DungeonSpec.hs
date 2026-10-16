@@ -301,13 +301,16 @@ spec s registry = Spec.describe s "Pawl.Engine.Dungeon" $ do
           Prompt.ChooseScry {} -> split
           _ -> paying p
         libraryOf = Game.zoneMembers Zone.Library S.alice
+        -- By name: a card scried is put back as a new object (CR 701.20e).
+        namesOf g = fmap (\oid -> fmap S.nameOf (Game.cardOf oid g)) (libraryOf g)
+        theMountain = [Just (S.printingName mountain)]
         bottomed = ventureOnce (answering ([marker], [])) (ventureAbility door) doorId gs
         kept = ventureOnce (answering ([], [marker])) (ventureAbility door) doorId gs
     Spec.assertEqWith s "the Mountain starts on top" (take 1 (libraryOf gs)) [marker]
     Spec.assertEqWith s "the marker is on Cave Entrance either way" (markerOf S.alice bottomed, markerOf S.alice kept) (Just RoomIndex.topmost, Just RoomIndex.topmost)
-    Spec.assertEqWith s "bottoming it moved it to the bottom" (take 1 (reverse (libraryOf bottomed))) [marker]
-    Spec.assertBool s (take 1 (libraryOf bottomed) /= [marker]) "so it is no longer on top"
-    Spec.assertEqWith s "and keeping it left it on top" (take 1 (libraryOf kept)) [marker]
+    Spec.assertEqWith s "bottoming it moved it to the bottom" (take 1 (reverse (namesOf bottomed))) theMountain
+    Spec.assertBool s (take 1 (namesOf bottomed) /= theMountain) "so it is no longer on top"
+    Spec.assertEqWith s "and keeping it left it on top" (take 1 (namesOf kept)) theMountain
   -- CR 309.4c: "each room ability is controlled by the player who owns the
   -- dungeon card", whoever's turn it is. alice's venture resolves on bob's turn,
   -- so a room ability handed to the active player would scry bob's library, or
@@ -327,8 +330,10 @@ spec s registry = Spec.describe s "Pawl.Engine.Dungeon" $ do
         onBobsTurn = activated {GameState.activePlayer = S.bob}
         resolved = resolveAll answering (S.runPure answering onBobsTurn Engine.settleForPriority)
         libraryOf = Game.zoneMembers Zone.Library S.alice
+        -- By name: a card scried is put back as a new object (CR 701.20e).
+        bottomName = fmap (\oid -> fmap S.nameOf (Game.cardOf oid resolved)) (take 1 (reverse (libraryOf resolved)))
     Spec.assertEqWith s "bob is the active player" (GameState.activePlayer resolved) S.bob
-    Spec.assertEqWith s "alice scried her Mountain to the bottom" (take 1 (reverse (libraryOf resolved))) [marker]
+    Spec.assertEqWith s "alice scried her Mountain to the bottom" bottomName [Just (S.printingName mountain)]
 
   -- CR 309.5a: "if there are multiple arrows pointing away from the room the
   -- player's venture marker is on, THEY CHOOSE one of them to follow."
@@ -621,45 +626,49 @@ spec s registry = Spec.describe s "Pawl.Engine.Dungeon" $ do
   -- so the order is unchanged across it. The two boards differ in exactly one
   -- thing, which room the marker reached.
   --
-  -- Then the negative CR 701.24a is about. The nine revealed cards that stay in
-  -- the library keep the OBJECT IDS they had: CR 400.7 mints a fresh id for every
-  -- completed zone change, so identical ids are what "nothing moved" means, and
-  -- the fifth venture's zone-change log holds the one move the room does state and
-  -- nothing into a library.
+  -- Then the negative CR 701.24a is about: the fifth venture's zone-change log
+  -- holds the one move the room does state and nothing into a library. The nine
+  -- revealed cards that stay are new objects all the same -- CR 701.20d's, for a
+  -- revealed card a shuffle reorders -- so the order is read by name.
   Spec.it s "CR 701.24a Throne of the Dead Three's \"then shuffle\" randomises the library and moves nothing" $ do
     island <- S.printingOf s registry "Island"
     piker <- S.printingOf s registry "Goblin Piker"
     evangel <- S.printingOf s registry "Cabal Evangel"
     stair <- S.printingOf s registry "Synthetic Undercity Stair"
     undercity <- S.printingOf s registry "Undercity"
-    let (stairId, pikerId, evangelId, gs) = throneBoard island piker evangel stair undercity
+    let (stairId, _, evangelId, gs) = throneBoard island piker evangel stair undercity
         answering :: Prompt.Prompt r -> r
         answering = throneAnswer evangelId
         libraryOf = Game.zoneMembers Zone.Library S.alice
+        namesOf g = fmap (\oid -> fmap S.nameOf (Game.cardOf oid g))
         atStash = ventureTimes 3 answering (ventureAbility stair) stairId gs
         atCatacombs = ventureOnce answering (ventureAbility stair) stairId atStash
-        atThrone = ventureOnce answering (ventureAbility stair) stairId atCatacombs
+        -- The Evangel as it is when Throne reveals it: Secret Entrance's
+        -- declined search still looked at the whole library, and its shuffle
+        -- re-minted every card (CR 701.20d / 701.20e).
+        evangelNow = foldr const evangelId [oid | oid <- libraryOf atCatacombs, fmap S.nameOf (Game.cardOf oid atCatacombs) == Just (S.printingName evangel)]
+        atThrone = ventureOnce (throneAnswer evangelNow) (ventureAbility stair) stairId atCatacombs
         -- The fifth venture's own zone changes, the fourth's log subtracted off:
         -- S.zoneChangesOf accumulates over the whole turn and all five run in one.
         thisVenture = drop (length (S.zoneChangesOf atCatacombs)) (S.zoneChangesOf atThrone)
     -- CR 701.24a, at gameplay level: the library the room left in place comes back
     -- in a different order, and under this interpreter exactly the reversed one.
     -- An implementation that shuffled nothing would answer
-    -- `List.delete evangelId (libraryOf atCatacombs)`, which is the same list the
+    -- `List.delete evangelNow (libraryOf atCatacombs)`, which is the same list the
     -- other way round.
-    Spec.assertEqWith s "the room's \"then shuffle\" reversed what the reveal left in the library" (libraryOf atThrone) (reverse (List.delete evangelId (libraryOf atCatacombs)))
+    Spec.assertEqWith s "the room's \"then shuffle\" reversed what the reveal left in the library" (namesOf atThrone (libraryOf atThrone)) (namesOf atCatacombs (reverse (List.delete evangelNow (libraryOf atCatacombs))))
     -- The control: the venture before it, answered the same way, creates a token
     -- and shuffles nothing.
     Spec.assertEqWith s "where Catacombs, one room earlier, left the order alone" (libraryOf atCatacombs) (libraryOf atStash)
-    -- CR 400.7: the same objects, so the shuffle was not nine library-to-library
-    -- zone changes.
-    Spec.assertEqWith s "and every card that stayed kept its object id" (Set.fromList (libraryOf atThrone)) (Set.delete evangelId (Set.fromList (libraryOf atCatacombs)))
-    Spec.assertEqWith s "the only zone change the room made is the creature card's, to the battlefield" (fmap (\zc -> (ZoneChange.departed zc, ZoneChange.from zc, ZoneChange.to zc)) thisVenture) [(evangelId, Zone.Library, Zone.Battlefield)]
+    -- CR 701.20d: each revealed card the shuffle reordered is a new object,
+    -- though none of them changed zones (the log below).
+    Spec.assertEqWith s "and every revealed card that stayed is a new object" (Set.intersection (Set.fromList (libraryOf atThrone)) (Set.fromList (libraryOf atCatacombs))) Set.empty
+    Spec.assertEqWith s "the only zone change the room made is the creature card's, to the battlefield" (fmap (\zc -> (ZoneChange.departed zc, ZoneChange.from zc, ZoneChange.to zc)) thisVenture) [(evangelNow, Zone.Library, Zone.Battlefield)]
     -- The clauses the shuffle follows, so the room is transcribed whole. The
     -- chosen card is the one the answerer picked out of the offered pair, and the
     -- other is still in the library -- which is how "the room asked" is read.
     Spec.assertEqWith s "Cabal Evangel was put onto the battlefield" (length (inPlayNamed "\"Cabal Evangel\"" atThrone)) 1
-    Spec.assertBool s (List.elem pikerId (libraryOf atThrone)) "and Goblin Piker, the creature card not chosen, stayed in the library"
+    Spec.assertBool s (List.elem (Just (S.printingName piker)) (namesOf atThrone (libraryOf atThrone))) "and Goblin Piker, the creature card not chosen, stayed in the library"
     Spec.assertEqWith
       s
       "with three +1/+1 counters on it"

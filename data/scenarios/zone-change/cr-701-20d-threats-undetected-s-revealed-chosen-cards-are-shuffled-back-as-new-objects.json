@@ -126,24 +126,6 @@
         "Answer": {
           "prompt": "Shuffle",
           "with": [
-            "$goblin-piker",
-            "$goblin-chariot",
-            "$hill-giant",
-            "$serra-avatar",
-            "$bird-maiden",
-            "$swamp"
-          ]
-        }
-      }
-    },
-    {
-      "turn": 1,
-      "step": "PrecombatMain",
-      "player": "alice",
-      "do": {
-        "Answer": {
-          "prompt": "Shuffle",
-          "with": [
             "$hill-giant",
             "$goblin-piker"
           ]
@@ -162,7 +144,6 @@
             "Goblin Piker",
             "$goblin-chariot",
             "$serra-avatar",
-            "$bird-maiden",
             "$swamp"
           ]
         }
@@ -234,9 +215,9 @@
         "is": [
           "Hill Giant",
           "Goblin Piker",
-          "$goblin-chariot",
-          "$serra-avatar",
-          "$swamp"
+          "Goblin Chariot",
+          "Serra Avatar",
+          "Swamp"
         ]
       }
     }

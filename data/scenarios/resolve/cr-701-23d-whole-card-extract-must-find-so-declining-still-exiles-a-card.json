@@ -145,8 +145,8 @@
         "player": "carol",
         "zone": "Library",
         "is": [
-          "$forest",
-          "$mountain"
+          "Forest",
+          "Mountain"
         ]
       }
     },

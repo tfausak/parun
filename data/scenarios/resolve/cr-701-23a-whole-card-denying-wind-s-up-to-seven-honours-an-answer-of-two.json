@@ -280,13 +280,13 @@
         "player": "carol",
         "zone": "Library",
         "is": [
-          "$goblin-piker",
-          "$goblin-piker-2",
-          "$goblin-piker-3",
-          "$goblin-piker-4",
-          "$goblin-piker-5",
-          "$goblin-piker-6",
-          "$goblin-piker-7"
+          "Goblin Piker#2",
+          "Goblin Piker#3",
+          "Goblin Piker#4",
+          "Goblin Piker#5",
+          "Goblin Piker#6",
+          "Goblin Piker#7",
+          "Goblin Piker#8"
         ]
       }
     },

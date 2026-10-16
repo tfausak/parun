@@ -118,11 +118,7 @@
         "Answer": {
           "prompt": "Shuffle",
           "with": [
-            "$goblin-piker",
-            "$bird-maiden",
-            "$hill-giant",
             "$murder",
-            "$murder-2",
             "$swamp"
           ]
         }
@@ -331,7 +327,7 @@
           "player": "alice",
           "zone": "Hand",
           "is": [
-            "Murder#2",
+            "Murder",
             "Goblin Piker"
           ]
         }
@@ -364,8 +360,8 @@
           "player": "alice",
           "zone": "Library",
           "is": [
-            "$murder",
-            "$swamp"
+            "Murder#2",
+            "Swamp"
           ]
         }
       }

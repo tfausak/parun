@@ -631,7 +631,9 @@ scrySpec s registry = Spec.describe s "Scry" $ do
       "CR 701.22c: each seat, in APNAP order, decided over every library as it started"
       asked
       (fmap (\pid -> (pid, libraries onStack)) seats)
-    Spec.assertEqWith s "then every top card went to the bottom" (libraries after) rotated
+    -- By name: each scried card is put back as a new object (CR 701.20e).
+    let named gs = fmap (fmap (\oid -> fmap S.nameOf (Game.cardOf oid gs)))
+    Spec.assertEqWith s "then every top card went to the bottom" (named after (libraries after)) (named onStack rotated)
     Spec.assertEqWith
       s
       "CR 701.22d: each seat scried"
@@ -863,8 +865,9 @@ fatesealSpec s registry = Spec.describe s "Fateseal" $ do
     Spec.assertEqWith
       s
       "and the named card went under"
-      (Game.zoneMembers Zone.Library S.bob (S.runPure (fatesealAnswer ([top], [])) two apply))
-      [deep, top]
+      -- By name: both looked-at cards are put back as new objects (CR 701.20e).
+      (let after = S.runPure (fatesealAnswer ([top], [])) two apply in fmap (\oid -> fmap S.nameOf (Game.cardOf oid after)) (Game.zoneMembers Zone.Library S.bob after))
+      (fmap (\oid -> fmap S.nameOf (Game.cardOf oid two)) [deep, top])
 
 -- CR 701.44a: "certain spells and abilities instruct a permanent to explore. To
 -- do so, that permanent's controller reveals the top card of their library. If a

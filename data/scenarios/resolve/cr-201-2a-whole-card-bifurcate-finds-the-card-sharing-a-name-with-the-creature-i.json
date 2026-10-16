@@ -202,8 +202,8 @@
         "player": "alice",
         "zone": "Library",
         "is": [
-          "$hill-giant",
-          "$mountain"
+          "Hill Giant#2",
+          "Mountain"
         ]
       }
     }

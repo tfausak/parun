@@ -358,7 +358,7 @@
         "player": "alice",
         "zone": "Hand",
         "is": [
-          "Island#3"
+          "Island"
         ]
       }
     },
@@ -387,7 +387,7 @@
           "Mountain",
           "Mountain#2",
           "Mountain#3",
-          "Goblin Piker#2"
+          "Goblin Piker"
         ]
       }
     },
@@ -397,10 +397,10 @@
         "player": "carol",
         "zone": "Library",
         "is": [
-          "$goblin-piker-2",
-          "$plains-3",
-          "$plains-2",
-          "$plains"
+          "Goblin Piker#3",
+          "Plains",
+          "Plains#2",
+          "Plains#3"
         ]
       }
     }
