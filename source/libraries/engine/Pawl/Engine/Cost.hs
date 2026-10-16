@@ -4709,7 +4709,7 @@ announceSubstitutionsReading slots substituting pid oid cost = case Cost.mana co
 -- CR 701.67a's taps are offered (`waterbendSubstitutions`), `canPay`'s offer, so
 -- the gate and the payment agree about a waterbend cost.
 pay :: ManaAbilityPerformer.ManaAbilityPerformer -> GameState -> PaymentMoment.PaymentMoment -> PaymentSubject.PaymentSubject -> Maybe ObjectId -> ManaSpending.ManaSpending -> PlayerId -> ObjectId -> Cost Keyword.Type.Keyword -> Game Payment.Payment
-pay perform began moment subject announced spending pid oid cost = fmap fst (paySubstituting perform began [] moment subject announced spending pid oid (announceSubstitutions waterbendSubstitutions pid oid) cost)
+pay perform began moment subject announced spending pid oid cost = fmap fst (paySubstituting (const False) perform began [] moment subject announced spending pid oid (announceSubstitutions waterbendSubstitutions pid oid) cost)
 
 -- CR 116's special actions pay their costs here, every one of them, in the
 -- rules' order: gate at the least X (`actionPayableAt`), name CR 107.3d's X
@@ -4771,7 +4771,7 @@ actionPayableAt subject x pid oid cost = canPay subject pid oid (substituteX x c
 -- Island's ward and Waterbending Lesson's unless cost are waterbend costs paid
 -- here (Pawl.CostSpec's groups of those names).
 payReading :: Map.Map SlotName.SlotName (Set.Set Recipient.Recipient) -> ManaAbilityPerformer.ManaAbilityPerformer -> GameState -> PaymentMoment.PaymentMoment -> PaymentSubject.PaymentSubject -> ManaSpending.ManaSpending -> PlayerId -> ObjectId -> Cost Keyword.Type.Keyword -> Game Payment.Payment
-payReading slots perform began moment subject spending pid oid cost = fmap fst (paySubstitutingReading slots perform began [] moment subject Nothing spending pid oid (announceSubstitutionsReading slots waterbendSubstitutions pid oid) cost)
+payReading slots perform began moment subject spending pid oid cost = fmap fst (paySubstitutingReading (const False) slots perform began [] moment subject Nothing spending pid oid (announceSubstitutionsReading slots waterbendSubstitutions pid oid) cost)
 
 -- `pay` with CR 702.51a's, CR 702.66a's and CR 702.126a's substitution offered
 -- INSIDE the mana window rather than ahead of it, and the components it adds
@@ -4805,15 +4805,19 @@ payReading slots perform began moment subject spending pid oid cost = fmap fst (
 -- Nothing in `data/cards/` observes it, which is why no issue is filed: no
 -- printing there that states convoke, delve or improvise carries a cost
 -- component at all (checked 2026-09-13), and one that did would refute this.
-paySubstituting :: ManaAbilityPerformer.ManaAbilityPerformer -> GameState -> [ManaWindow.ManaWindow] -> PaymentMoment.PaymentMoment -> PaymentSubject.PaymentSubject -> Maybe ObjectId -> ManaSpending.ManaSpending -> PlayerId -> ObjectId -> (Cost Keyword.Type.Keyword -> Game (Cost Keyword.Type.Keyword, [(Keyword.Substitute, Natural)])) -> Cost Keyword.Type.Keyword -> Game (Payment.Payment, Map.Map SlotName.SlotName Binding.Type.Binding)
-paySubstituting perform began earlier moment subject announced spending pid oid substituting cost = do
+--
+-- `refuses` asks of the state a completed payment leaves whether CR 732.3
+-- forbids the game choice it completes (Pawl.Engine.Activate); a refused one
+-- is reversed as an unpaid one is.
+paySubstituting :: (GameState -> Bool) -> ManaAbilityPerformer.ManaAbilityPerformer -> GameState -> [ManaWindow.ManaWindow] -> PaymentMoment.PaymentMoment -> PaymentSubject.PaymentSubject -> Maybe ObjectId -> ManaSpending.ManaSpending -> PlayerId -> ObjectId -> (Cost Keyword.Type.Keyword -> Game (Cost Keyword.Type.Keyword, [(Keyword.Substitute, Natural)])) -> Cost Keyword.Type.Keyword -> Game (Payment.Payment, Map.Map SlotName.SlotName Binding.Type.Binding)
+paySubstituting refuses perform began earlier moment subject announced spending pid oid substituting cost = do
   slots <- State.gets (announcedSlots announced)
-  paySubstitutingReading slots perform began earlier moment subject announced spending pid oid substituting cost
+  paySubstitutingReading refuses slots perform began earlier moment subject announced spending pid oid substituting cost
 
 -- `paySubstituting` with the slot map its component criteria read handed in
 -- rather than read off `announced` (`payReading`).
-paySubstitutingReading :: Map.Map SlotName.SlotName (Set.Set Recipient.Recipient) -> ManaAbilityPerformer.ManaAbilityPerformer -> GameState -> [ManaWindow.ManaWindow] -> PaymentMoment.PaymentMoment -> PaymentSubject.PaymentSubject -> Maybe ObjectId -> ManaSpending.ManaSpending -> PlayerId -> ObjectId -> (Cost Keyword.Type.Keyword -> Game (Cost Keyword.Type.Keyword, [(Keyword.Substitute, Natural)])) -> Cost Keyword.Type.Keyword -> Game (Payment.Payment, Map.Map SlotName.SlotName Binding.Type.Binding)
-paySubstitutingReading slots perform began earlier moment subject announced spending pid oid substituting cost =
+paySubstitutingReading :: (GameState -> Bool) -> Map.Map SlotName.SlotName (Set.Set Recipient.Recipient) -> ManaAbilityPerformer.ManaAbilityPerformer -> GameState -> [ManaWindow.ManaWindow] -> PaymentMoment.PaymentMoment -> PaymentSubject.PaymentSubject -> Maybe ObjectId -> ManaSpending.ManaSpending -> PlayerId -> ObjectId -> (Cost Keyword.Type.Keyword -> Game (Cost Keyword.Type.Keyword, [(Keyword.Substitute, Natural)])) -> Cost Keyword.Type.Keyword -> Game (Payment.Payment, Map.Map SlotName.SlotName Binding.Type.Binding)
+paySubstitutingReading refuses slots perform began earlier moment subject announced spending pid oid substituting cost =
   case Cost.mana cost of
     -- CR 118.6: attempting to pay an unpayable cost is an illegal action, and
     -- CR 733.1 reverses it with no window to ask about.
@@ -4848,7 +4852,15 @@ paySubstitutingReading slots perform began earlier moment subject announced spen
               pure $ case paidConvoking of
                 Payment.Unpaid -> (Payment.Unpaid, Map.empty)
                 Payment.Paid convoked -> (mergeBound bound (mergeBound convoked paidOthers), convoked)
+      -- CR 732.3 via 733.1: a payment completing a game choice the caller
+      -- may not make again (Pawl.Engine.Fragmented.forbidden) is reversed
+      -- like an unpaid one, each window its payer's to keep.
+      refused <- State.gets refuses
       case outcome of
+        Payment.Paid _
+          | refused -> do
+              Monad.void (reverseIllegal (earlier <> [own]) began)
+              pure (Payment.Unpaid, Map.empty)
         -- The components' bound slots ride out unchanged: the mana window
         -- above binds none, and a caller that has a binding environment to
         -- write them into is the only thing between here and CR 608.2h.

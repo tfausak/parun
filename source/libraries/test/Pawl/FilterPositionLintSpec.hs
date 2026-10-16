@@ -1970,11 +1970,19 @@ filterPositionLintSpec s registry = Spec.describe s "Lint" $ do
       "Bronzehide Lion's granted indestructible is framed too"
       (hostOfSourceCounts (S.combinedFace lion))
       (1, 0)
+    -- And Freed from the Real's activated tap and untap of the creature it
+    -- enchants.
+    freed <- S.printingOf s registry "Freed from the Real"
+    Spec.assertEqWith
+      s
+      "Freed from the Real's tap and untap are framed too"
+      (hostOfSourceCounts (S.combinedFace freed))
+      (2, 0)
     Spec.assertEqWith
       s
       "and they are the pool's only ones"
       (sum (fmap (uncurry (+) . hostOfSourceCounts . S.combinedFace) ps))
-      11
+      13
     -- The rejected side, which the sweep above cannot show while the pool has no
     -- offender: the same atom planted in a SPELL's target slot -- the position a
     -- card author would most plausibly reach for -- IS counted as elsewhere.
