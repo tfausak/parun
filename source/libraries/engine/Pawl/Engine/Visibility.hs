@@ -48,6 +48,7 @@ revealedNow oid gs =
         _ -> False
       live window = case window of
         RevealWindow.WhileOnStack sid -> Game.zoneOf sid gs == Just Zone.Stack -- CR 701.20a
+        RevealWindow.UntilPriority -> True -- CR 701.20a, until Engine.performSettle closes it
         RevealWindow.UntilFirstTurn -> GameState.turnNumber gs == 1 && not (any begun (GameState.events gs)) -- CR 103.6b
         RevealWindow.DuringUpkeep turn -> GameState.turnNumber gs == turn && GameState.phase gs == Phase.Beginning BeginningStep.Upkeep -- CR 702.57b
    in visibleIf (any (any live . Object.revealed) (Game.lookupObject oid gs))

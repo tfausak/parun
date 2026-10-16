@@ -14,6 +14,12 @@ spec s = Spec.describe s "Pawl.Codec.RevealWindow" $ do
       RevealWindow.codec
       (RevealWindow.WhileOnStack (ObjectId.MkObjectId 3))
       " {\"type\":\"WhileOnStack\",\"value\":3} "
+  Spec.it s "UntilPriority" $
+    Common.assertCodec
+      s
+      RevealWindow.codec
+      RevealWindow.UntilPriority
+      " {\"type\":\"UntilPriority\"} "
   Spec.it s "UntilFirstTurn" $
     Common.assertCodec
       s

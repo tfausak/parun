@@ -11,6 +11,7 @@ codec =
   Arm.tagged
     tagOf
     [ Arm.payload "WhileOnStack" ObjectId.codec RevealWindow.WhileOnStack (\x -> case x of RevealWindow.WhileOnStack y -> Just y; _ -> Nothing),
+      Arm.nullary "UntilPriority" RevealWindow.UntilPriority,
       Arm.nullary "UntilFirstTurn" RevealWindow.UntilFirstTurn,
       Arm.payload "DuringUpkeep" Common.natural RevealWindow.DuringUpkeep (\x -> case x of RevealWindow.DuringUpkeep y -> Just y; _ -> Nothing)
     ]
@@ -18,5 +19,6 @@ codec =
 tagOf :: RevealWindow.RevealWindow -> String
 tagOf x = case x of
   RevealWindow.WhileOnStack {} -> "WhileOnStack"
+  RevealWindow.UntilPriority {} -> "UntilPriority"
   RevealWindow.UntilFirstTurn {} -> "UntilFirstTurn"
   RevealWindow.DuringUpkeep {} -> "DuringUpkeep"

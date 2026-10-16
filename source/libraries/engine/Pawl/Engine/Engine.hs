@@ -950,9 +950,6 @@ placeBorne srcId pending = do
   -- CR 701.20a: a card whose reveal caused this ability to trigger stays revealed
   -- until the ability leaves the stack. Proven by the scenario
   -- cr-702-94b-lasting-reveal-the-miracle-card-stays-revealed-while-its-trigger-is-on-the-stack.
-  --
-  -- Not implemented: the card is unmarked between the reveal and the trigger's
-  -- placement (#5119).
   case fmap LoggedEvent.event (PendingTrigger.firedBy pending) of
     Just (GameEvent.Revealed revealed) -> Event.stampReveal (RevealWindow.WhileOnStack abilId) (Revealed.card revealed)
     _ -> pure ()
@@ -1179,8 +1176,14 @@ settleForPriority = Monad.void performSettle
 -- returns a permanent to another player's control, and CR 704.5j's legend rule
 -- must see the post-sweep control. It REPORTS whether it acted or placed a
 -- trigger, which is what `cleanupException` (CR 514.3a) asks about.
+--
+-- Ends by closing CR 701.20a's window for a revealed card whose ability was not
+-- put on the stack: a player would receive priority now.
 performSettle :: Game Bool
-performSettle = settlePasses 0
+performSettle = do
+  acted <- settlePasses 0
+  State.modify' (Event.closeReveal RevealWindow.UntilPriority)
+  pure acted
 
 -- performSettle, `passes` passes into a run with nobody asked anything
 -- (Departure.passesSince).
