@@ -7104,7 +7104,7 @@ matchesTriggerGiven bindings board gs bearer you cond event = case cond of
             && maybe True (`Turn.inWindow` GameState.phase gs) window
             && Filter.matches bearerContext (Projection.viewOfSpell controller spell gs) f
      in case event of
-          GameEvent.SpellCast (SpellWasCast.MkSpellWasCast caster spell _ castFrom _) -> case Game.lookupObject spell gs of
+          GameEvent.SpellCast (SpellWasCast.MkSpellWasCast caster spell _ castFrom _ _) -> case Game.lookupObject spell gs of
             Nothing -> False
             Just _ ->
               admits caster spell
@@ -7207,7 +7207,7 @@ matchesTriggerGiven bindings board gs bearer you cond event = case cond of
   -- carries: CR 601.2a puts the card on the stack as it is cast and leaves it
   -- there, so eventTriggers' `spellCast` source offers exactly that incarnation.
   TriggerCondition.SelfCast -> case event of
-    GameEvent.SpellCast (SpellWasCast.MkSpellWasCast _ spell _ _ _) -> spell == bearer
+    GameEvent.SpellCast (SpellWasCast.MkSpellWasCast _ spell _ _ _ _) -> spell == bearer
     -- CR 707.10: a copy is not cast.
     GameEvent.SpellCopied _ -> False
     GameEvent.Discarded {} -> False
@@ -7845,6 +7845,7 @@ matchesTriggerGiven bindings board gs bearer you cond event = case cond of
               let sampled =
                     Count.overlaySnapshot
                       (Count.deployIn gs Zone.Battlefield)
+                      (Transformed.lapsedGrants transformed)
                       (Transformed.characteristics transformed)
                       live {Filter.controller = Transformed.controller transformed}
                in Filter.matches

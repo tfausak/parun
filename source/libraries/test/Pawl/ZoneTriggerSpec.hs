@@ -2118,11 +2118,11 @@ representativeEvents cond =
         -- names -- the spell under `thatSpell`, the caster or copier under
         -- `thatPlayer` -- so the two sides agree on the pair.
         TriggerCondition.SpellCast (SpellCast.MkSpellCast _ _ _ _ _ copies) ->
-          noTable (GameEvent.SpellCast (SpellWasCast.MkSpellWasCast S.alice arrived S.emptyCharacteristics (Just Zone.Hand) Nothing))
+          noTable (GameEvent.SpellCast (SpellWasCast.MkSpellWasCast S.alice arrived S.emptyCharacteristics (Just Zone.Hand) Nothing Set.empty))
             NonEmpty.:| [noTable (GameEvent.SpellCopied (SpellWasCopied.MkSpellWasCopied S.alice arrived)) | copies]
         -- The same event, and the only one this condition admits either. It binds
         -- nothing whichever ids the event names, since the spell IS the bearer.
-        TriggerCondition.SelfCast -> one (GameEvent.SpellCast (SpellWasCast.MkSpellWasCast S.alice arrived S.emptyCharacteristics (Just Zone.Hand) Nothing))
+        TriggerCondition.SelfCast -> one (GameEvent.SpellCast (SpellWasCast.MkSpellWasCast S.alice arrived S.emptyCharacteristics (Just Zone.Hand) Nothing Set.empty))
         -- CR 601.2c's event, with the bearer as the targeted object and alice as
         -- the targeting object's controller -- an event BOTH relations admit,
         -- since matchesTrigger reads `you` from the bearer's side and this list
@@ -2166,12 +2166,12 @@ representativeEvents cond =
         -- CR 701.27a's own event, and the only one this condition admits, on the
         -- BEARER and naming the same face the condition does -- so the pair
         -- really matches; the face below is the one everyTriggerCondition names.
-        TriggerCondition.SelfTransformedInto name -> one (GameEvent.Transformed Transformed.MkTransformed {Transformed.object = departed, Transformed.characteristics = S.emptyCharacteristics {PC.names = Set.singleton name}, Transformed.controller = Nothing, Transformed.attachments = Set.empty})
+        TriggerCondition.SelfTransformedInto name -> one (GameEvent.Transformed Transformed.MkTransformed {Transformed.object = departed, Transformed.characteristics = S.emptyCharacteristics {PC.names = Set.singleton name}, Transformed.controller = Nothing, Transformed.attachments = Set.empty, Transformed.lapsedGrants = Set.empty})
         -- CR 701.27e's event for the bystander form, on `departed` for the reason
         -- the PermanentTurnedFaceUp arm below gives: the Filter this condition is
         -- instantiated with is the trivial one, which the sampled characteristics
         -- satisfy however empty they are.
-        TriggerCondition.PermanentTransforms _ -> one (GameEvent.Transformed Transformed.MkTransformed {Transformed.object = departed, Transformed.characteristics = S.emptyCharacteristics, Transformed.controller = Nothing, Transformed.attachments = Set.empty})
+        TriggerCondition.PermanentTransforms _ -> one (GameEvent.Transformed Transformed.MkTransformed {Transformed.object = departed, Transformed.characteristics = S.emptyCharacteristics, Transformed.controller = Nothing, Transformed.attachments = Set.empty, Transformed.lapsedGrants = Set.empty})
         -- The same event for the watcher-scoped form, and the only one it admits.
         -- `departed` again, so the pair really matches: the Filter this condition
         -- is instantiated with below is the trivial one, which admits whatever the

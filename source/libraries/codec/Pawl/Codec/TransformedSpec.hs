@@ -6,9 +6,13 @@ import qualified Pawl.Codec.ProjectedCharacteristicsSpec as ProjectedCharacteris
 import qualified Pawl.Codec.Transformed as Transformed
 import qualified Pawl.JsonCodec.Common as Common
 import qualified Pawl.Spec as Spec
+import qualified Pawl.Types.Compares as Compares
+import qualified Pawl.Types.Comparison as Comparison
+import qualified Pawl.Types.Condition as Condition
 import qualified Pawl.Types.ObjectId as ObjectId
 import qualified Pawl.Types.PlayerId as PlayerId
 import qualified Pawl.Types.ProjectedCharacteristics as PC
+import qualified Pawl.Types.Quantity as Quantity
 import qualified Pawl.Types.Transformed as Transformed
 
 -- The shared sample's rendering with its names array emptied, for the CR 708.2a
@@ -42,12 +46,13 @@ spec s = Spec.describe s "Pawl.Codec.Transformed" $ do
           { Transformed.object = ObjectId.MkObjectId 1,
             Transformed.characteristics = ProjectedCharacteristicsSpec.testCharacteristics,
             Transformed.controller = Just (PlayerId.MkPlayerId 3),
-            Transformed.attachments = Set.fromList [ObjectId.MkObjectId 7, ObjectId.MkObjectId 9]
+            Transformed.attachments = Set.fromList [ObjectId.MkObjectId 7, ObjectId.MkObjectId 9],
+            Transformed.lapsedGrants = Set.singleton (Condition.Compares (Compares.MkCompares (Quantity.Literal 3) Comparison.AtLeast (Quantity.Literal 5)))
           }
       )
       ( "{\"object\":1,\"characteristics\":"
           <> ProjectedCharacteristicsSpec.testCharacteristicsJson
-          <> ",\"controller\":3,\"attachments\":[7,9]}"
+          <> ",\"controller\":3,\"attachments\":[7,9],\"lapsedGrants\":[{\"type\":\"Compares\",\"value\":{\"measured\":{\"type\":\"Literal\",\"value\":3},\"comparison\":{\"type\":\"AtLeast\"},\"threshold\":{\"type\":\"Literal\",\"value\":5}}}]}"
       )
   -- CR 708.2a's none, which is a real answer rather than an absence: a permanent
   -- with no name turned over triggers no "transforms into" ability at all, and
@@ -63,7 +68,8 @@ spec s = Spec.describe s "Pawl.Codec.Transformed" $ do
           { Transformed.object = ObjectId.MkObjectId 2,
             Transformed.characteristics = ProjectedCharacteristicsSpec.testCharacteristics {PC.names = Set.empty},
             Transformed.controller = Nothing,
-            Transformed.attachments = Set.empty
+            Transformed.attachments = Set.empty,
+            Transformed.lapsedGrants = Set.empty
           }
       )
       ("{\"object\":2,\"characteristics\":" <> noNamesJson <> "}")

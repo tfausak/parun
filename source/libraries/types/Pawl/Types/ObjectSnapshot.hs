@@ -1,5 +1,7 @@
 module Pawl.Types.ObjectSnapshot where
 
+import qualified Data.Set as Set
+import qualified Pawl.Types.Condition as Condition
 import qualified Pawl.Types.ObjectId as ObjectId
 import qualified Pawl.Types.PlayerId as PlayerId
 import qualified Pawl.Types.ProjectedCharacteristics as ProjectedCharacteristics
@@ -22,6 +24,10 @@ data ObjectSnapshot = MkObjectSnapshot
     controller :: Maybe PlayerId.PlayerId,
     owner :: PlayerId.PlayerId,
     -- | CR 400.1: the zone it was in, which CR 109.2's "a creature" asks.
-    zone :: Zone.Zone
+    zone :: Zone.Zone,
+    -- | CR 604.2: the "as long as" clauses of its granted activated abilities
+    -- that did not hold in that zone (Pawl.Engine.Projection.View.lapsedGrantsOf), which
+    -- `characteristics` carries unasked. Pawl.Types.LastKnown's field.
+    lapsedGrants :: Set.Set Condition.Condition
   }
   deriving (Eq, Ord, Show)

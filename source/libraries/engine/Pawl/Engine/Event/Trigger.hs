@@ -2007,7 +2007,7 @@ eventTriggers events gs =
       -- cascade" proves it. The delayed declarations are the projection's too
       -- (CR 707.2); the face only gates a spell with a card behind it.
       spellCast event = case event of
-        GameEvent.SpellCast (SpellWasCast.MkSpellWasCast caster spell _ _ _) -> case Game.faceOf spell gs of
+        GameEvent.SpellCast (SpellWasCast.MkSpellWasCast caster spell _ _ _ _) -> case Game.faceOf spell gs of
           Nothing -> Map.empty
           Just _ ->
             let pc = Projection.project spell gs

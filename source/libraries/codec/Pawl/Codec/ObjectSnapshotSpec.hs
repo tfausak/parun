@@ -1,5 +1,6 @@
 module Pawl.Codec.ObjectSnapshotSpec where
 
+import qualified Data.Set as Set
 import qualified Pawl.Codec.ObjectSnapshot as ObjectSnapshot
 import qualified Pawl.Codec.ProjectedCharacteristicsSpec as ProjectedCharacteristicsSpec
 import qualified Pawl.JsonCodec.Common as Common
@@ -21,7 +22,8 @@ spec s = Spec.describe s "Pawl.Codec.ObjectSnapshot" $ do
           ObjectSnapshot.characteristics = ProjectedCharacteristicsSpec.testCharacteristics,
           ObjectSnapshot.controller = Just (PlayerId.MkPlayerId 1),
           ObjectSnapshot.owner = PlayerId.MkPlayerId 2,
-          ObjectSnapshot.zone = Zone.Battlefield
+          ObjectSnapshot.zone = Zone.Battlefield,
+          ObjectSnapshot.lapsedGrants = Set.empty
         }
       (" {\"object\":9,\"characteristics\":" <> ProjectedCharacteristicsSpec.testCharacteristicsJson <> ",\"controller\":1,\"owner\":2,\"zone\":{\"type\":\"Battlefield\"}} ")
   -- CR 108.4: a card in a hand has no controller.
@@ -34,7 +36,8 @@ spec s = Spec.describe s "Pawl.Codec.ObjectSnapshot" $ do
           ObjectSnapshot.characteristics = ProjectedCharacteristicsSpec.testCharacteristics,
           ObjectSnapshot.controller = Nothing,
           ObjectSnapshot.owner = PlayerId.MkPlayerId 4,
-          ObjectSnapshot.zone = Zone.Hand
+          ObjectSnapshot.zone = Zone.Hand,
+          ObjectSnapshot.lapsedGrants = Set.empty
         }
       (" {\"object\":3,\"characteristics\":" <> ProjectedCharacteristicsSpec.testCharacteristicsJson <> ",\"controller\":null,\"owner\":4,\"zone\":{\"type\":\"Hand\"}} ")
   Spec.it s "has a schema" $

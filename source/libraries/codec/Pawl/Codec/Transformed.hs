@@ -3,6 +3,7 @@
 module Pawl.Codec.Transformed where
 
 import qualified Data.Set as Set
+import qualified Pawl.Codec.Condition as Condition
 import qualified Pawl.Codec.ObjectId as ObjectId
 import qualified Pawl.Codec.PlayerId as PlayerId
 import qualified Pawl.Codec.ProjectedCharacteristics as ProjectedCharacteristics
@@ -19,10 +20,12 @@ codec = Fields.object $ do
   characteristics <- Fields.required "characteristics" ProjectedCharacteristics.codec Transformed.characteristics
   controller <- Fields.defaulted "controller" Nothing (Common.maybe PlayerId.codec) Transformed.controller
   attachments <- Fields.defaulted "attachments" Set.empty (Common.set ObjectId.codec) Transformed.attachments
+  lapsedGrants <- Fields.defaulted "lapsedGrants" Set.empty (Common.set Condition.codec) Transformed.lapsedGrants
   pure
     Transformed.MkTransformed
       { Transformed.object = object,
         Transformed.characteristics = characteristics,
         Transformed.controller = controller,
-        Transformed.attachments = attachments
+        Transformed.attachments = attachments,
+        Transformed.lapsedGrants = lapsedGrants
       }

@@ -1,6 +1,7 @@
 module Pawl.Types.Transformed where
 
 import qualified Data.Set as Set
+import qualified Pawl.Types.Condition as Condition
 import qualified Pawl.Types.ObjectId as ObjectId
 import qualified Pawl.Types.PlayerId as PlayerId
 import qualified Pawl.Types.ProjectedCharacteristics as ProjectedCharacteristics
@@ -41,6 +42,10 @@ data Transformed = MkTransformed
   { object :: ObjectId.ObjectId,
     characteristics :: ProjectedCharacteristics.ProjectedCharacteristics,
     controller :: Maybe PlayerId.PlayerId,
-    attachments :: Set.Set ObjectId.ObjectId
+    attachments :: Set.Set ObjectId.ObjectId,
+    -- | CR 604.2: the "as long as" clauses of its granted activated abilities
+    -- that did not hold the instant the turn finished (Pawl.Engine.Projection.View.lapsedGrantsOf), which
+    -- `characteristics` carries unasked. Pawl.Types.LastKnown's field.
+    lapsedGrants :: Set.Set Condition.Condition
   }
   deriving (Eq, Ord, Show)
