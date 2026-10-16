@@ -143,9 +143,9 @@ canonicalStamps gs =
       kept = filter (not . erased) rows
       floor_ = maximum (Timestamp.MkTimestamp 0 : layeredStamps gs)
       -- CR 607.5's no-duration copy stamps (Object.acquisition) move too; a
-      -- stored copy row's stamp is under the floor, so a stored result keyed by
-      -- one is left as it stands. A REGRESSION FENCE: no test loops a
-      -- no-duration copy.
+      -- stored copy row's stamp is under the floor, so a stored result or a
+      -- choice keyed by one is left as it stands. A REGRESSION FENCE: no test
+      -- loops a no-duration copy.
       copiedAt obj = case Object.acquisition obj of
         Acquisition.Copied ts -> [ts]
         Acquisition.Own -> []
@@ -158,7 +158,7 @@ canonicalStamps gs =
         Just rank -> Timestamp.MkTimestamp (Timestamp.unwrap floor_ + 1 + Int.toNaturalSaturating rank)
         Nothing -> ts
    in ( fmap (\row -> row {ContinuousEffect.timestamp = restamp (ContinuousEffect.timestamp row)}) kept,
-        fmap (\obj -> obj {Object.counterTimestamps = fmap restamp (Object.counterTimestamps obj), Object.acquisition = reacquire (Object.acquisition obj), Object.storedResults = Map.mapKeysWith (Map.unionWith (+)) reacquire (Object.storedResults obj)}) objects
+        fmap (\obj -> obj {Object.counterTimestamps = fmap restamp (Object.counterTimestamps obj), Object.acquisition = reacquire (Object.acquisition obj), Object.storedResults = Map.mapKeysWith (Map.unionWith (+)) reacquire (Object.storedResults obj), Object.chosenColors = Map.mapKeys reacquire (Object.chosenColors obj), Object.chosenSubtype = Map.mapKeys reacquire (Object.chosenSubtype obj), Object.chosenNames = Map.mapKeys reacquire (Object.chosenNames obj), Object.chosenPlayers = Map.mapKeys reacquire (Object.chosenPlayers obj)}) objects
       )
 
 -- | Does `later`, applied after `earlier` to the same objects, leave nothing

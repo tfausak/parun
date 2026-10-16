@@ -26,6 +26,7 @@ import qualified Pawl.Engine.Projection as Projection
 import qualified Pawl.Engine.Projection.View as Projection
 import qualified Pawl.Engine.Resolve as Resolve
 import qualified Pawl.Engine.Resolve.Effect as Resolve
+import qualified Pawl.Engine.SourceContext as SourceContext
 import qualified Pawl.Types.ActivatedAbilitySource as ActivatedAbilitySource
 import qualified Pawl.Types.Affected as Affected
 import qualified Pawl.Types.Card as Card.Type
@@ -269,7 +270,9 @@ interveningStillHolds :: GameState.GameState -> Object.Object -> ObjectId -> Tri
 interveningStillHolds gs obj srcId trigger =
   Condition.holds
     (Projection.viewWithLastKnownAnywhere gs)
-    (Projection.framedByBindings gs (Object.bindings obj) (Projection.sourceContext gs (Just (Object.owner obj)) srcId) {Filter.boundAmounts = Condition.inheritedX trigger srcId gs})
+    -- CR 607.5: the choices of the abilities the trigger came with, which it
+    -- froze as it went on the stack, whatever its source has since become.
+    (Projection.framedByBindings gs (Object.bindings obj) (Projection.framedWith (SourceContext.choicesOf (Maybe.fromMaybe (Game.acquisitionOf srcId gs) (Game.frozenAcquisition (Object.source obj))) srcId gs) srcId gs (Filter.contextFor (Game.teams gs) (Just (Object.owner obj)) (Just srcId))) {Filter.boundAmounts = Condition.inheritedX trigger srcId gs})
     gs
     srcId
 

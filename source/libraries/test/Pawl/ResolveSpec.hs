@@ -188,8 +188,8 @@ targetSpec s registry = Spec.describe s "Target" $ do
     piker <- S.printingOf s registry "Goblin Piker"
     let (oid, gs) = S.addPermanent piker S.bob (Setup.emptyGame S.bothPlayers)
         gone = S.runPure S.identityAnswer gs (Event.changeZone oid Zone.Graveyard)
-    Spec.assertBool s (Target.stillLegal Nothing Map.empty S.noSource (Recipient.ToCreature oid) (TargetSlot.required Pool.AnyTarget Nothing) gs) "legal while fielded"
-    Spec.assertBool s (not (Target.stillLegal Nothing Map.empty S.noSource (Recipient.ToCreature oid) (TargetSlot.required Pool.AnyTarget Nothing) gone)) "illegal once moved"
+    Spec.assertBool s (Target.stillLegal Nothing Map.empty Acquisition.Own S.noSource (Recipient.ToCreature oid) (TargetSlot.required Pool.AnyTarget Nothing) gs) "legal while fielded"
+    Spec.assertBool s (not (Target.stillLegal Nothing Map.empty Acquisition.Own S.noSource (Recipient.ToCreature oid) (TargetSlot.required Pool.AnyTarget Nothing) gone)) "illegal once moved"
   Spec.it s "legalSets maps each slot to its legal recipients" $ do
     let slots = Map.singleton (SlotName.MkSlotName (Text.pack "target")) (TargetSlot.required Pool.AnyTarget Nothing)
         gs = Setup.emptyGame S.bothPlayers
@@ -215,8 +215,8 @@ targetSpec s registry = Spec.describe s "Target" $ do
     piker <- S.printingOf s registry "Goblin Piker"
     let (oid, gs) = S.addPermanent piker S.bob (Setup.emptyGame S.bothPlayers)
         gone = S.runPure S.identityAnswer gs (Event.changeZone oid Zone.Graveyard)
-    Spec.assertBool s (Target.stillLegal Nothing Map.empty S.noSource (Recipient.ToCreature oid) (TargetSlot.required Pool.Creatures Nothing) gs) "legal while fielded"
-    Spec.assertBool s (not (Target.stillLegal Nothing Map.empty S.noSource (Recipient.ToCreature oid) (TargetSlot.required Pool.Creatures Nothing) gone)) "illegal once moved"
+    Spec.assertBool s (Target.stillLegal Nothing Map.empty Acquisition.Own S.noSource (Recipient.ToCreature oid) (TargetSlot.required Pool.Creatures Nothing) gs) "legal while fielded"
+    Spec.assertBool s (not (Target.stillLegal Nothing Map.empty Acquisition.Own S.noSource (Recipient.ToCreature oid) (TargetSlot.required Pool.Creatures Nothing) gone)) "illegal once moved"
   Spec.it s "CR 115 SpellOrPermanentTarget offers battlefield permanents and stack spells" $ do
     piker <- S.printingOf s registry "Goblin Piker"
     let (permId, gs) = S.addPermanent piker S.bob (Setup.emptyGame S.bothPlayers)
@@ -2833,7 +2833,7 @@ brassHeraldSpec s registry =
         (_, g4) = S.addLibraryCard piker S.alice g3
         (heraldId, g5) = S.entersWithTrigger herald S.alice g4
         resolved chosen =
-          let chose = g5 {GameState.objects = Map.adjust (\o -> o {Object.chosenSubtype = Just chosen}) heraldId (GameState.objects g5)}
+          let chose = g5 {GameState.objects = Map.adjust (\o -> o {Object.chosenSubtype = Map.singleton Acquisition.Own chosen}) heraldId (GameState.objects g5)}
               placed = S.runPure S.identityAnswer chose Engine.placePendingTriggers
            in S.runPure S.identityAnswer placed Stack.resolveTop
         top g = Seq.lookup 0 =<< Map.lookup S.alice (GameState.library g)

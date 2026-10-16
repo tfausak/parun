@@ -31,6 +31,7 @@ import Pawl.PlayerEffectSpec (anySpellId, isCast, silenceAfter, swapAt, threeSea
 import qualified Pawl.Registry as Registry
 import qualified Pawl.Spec as Spec
 import qualified Pawl.Support as S
+import qualified Pawl.Types.Acquisition as Acquisition
 import qualified Pawl.Types.Action as Action.Type
 import qualified Pawl.Types.ActivatedAbility as ActivatedAbility
 import qualified Pawl.Types.ActivePlayerEffect as ActivePlayerEffect
@@ -952,7 +953,7 @@ nullChamberSpec s registry =
           run hers =
             let cast = snd (Engine.runGamePure (echoing hers) board (S.cast S.alice oid))
                 after = snd (Engine.runGamePure (echoing hers) cast Stack.resolveTop)
-             in fmap Object.chosenNames (enteredOne board after >>= \chamber -> Game.lookupObject chamber after)
+             in fmap (Map.findWithDefault Map.empty Acquisition.Own . Object.chosenNames) (enteredOne board after >>= \chamber -> Game.lookupObject chamber after)
       Spec.assertEqWith s "CR 101.4b told alice named Goblin Piker, bob named it too" (run (S.printingName piker)) (Just (Map.fromList [(S.alice, S.printingName piker), (S.bob, S.printingName piker)]))
       Spec.assertEqWith s "CR 101.4b told alice named Hill Giant, bob named it too" (run (S.printingName giant)) (Just (Map.fromList [(S.alice, S.printingName giant), (S.bob, S.printingName giant)]))
 
@@ -981,7 +982,7 @@ nullChamberSpec s registry =
           Spec.assertEqWith
             s
             "the two legal names, and not the name no card has"
-            (Object.chosenNames chamber)
+            (Map.findWithDefault Map.empty Acquisition.Own (Object.chosenNames chamber))
             (Map.fromList [(S.alice, S.printingName piker), (S.bob, S.printingName cancel)])
           Spec.assertEqWith s "every queued answer was drawn, so alice was asked twice" left []
 
@@ -1011,7 +1012,7 @@ nullChamberSpec s registry =
           Spec.assertEqWith
             s
             "the card's own name, and not the slug that fetches it"
-            (Object.chosenNames chamber)
+            (Map.findWithDefault Map.empty Acquisition.Own (Object.chosenNames chamber))
             (Map.fromList [(S.alice, S.printingName piker), (S.bob, S.printingName cancel)])
           Spec.assertEqWith s "every queued answer was drawn, so alice was asked twice" left []
       Spec.assertBool s (Maybe.isJust fetched) "the registry does answer to the slug"
@@ -1041,7 +1042,7 @@ nullChamberSpec s registry =
           Spec.assertEqWith
             s
             "the two legal names, and not the basic land the card forbids"
-            (Object.chosenNames chamber)
+            (Map.findWithDefault Map.empty Acquisition.Own (Object.chosenNames chamber))
             (Map.fromList [(S.alice, S.printingName piker), (S.bob, S.printingName cancel)])
           Spec.assertEqWith s "every queued answer was drawn, so alice was asked twice" left []
       Spec.assertBool s unrestricted "Island is a name the reference has"

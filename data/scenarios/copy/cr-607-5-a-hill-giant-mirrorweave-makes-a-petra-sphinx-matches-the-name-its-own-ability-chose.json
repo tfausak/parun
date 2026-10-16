@@ -1,0 +1,35 @@
+{
+  "description": "CR 607.5 a Hill Giant Mirrorweave makes a Petra Sphinx matches the name its own copied ability chose",
+  "note": "Mirrorweave makes alice's Hill Giant a copy of bob's Petra Sphinx, and the Giant activates the ability it now has, targeting bob. Bob names Chromatic Star, the card on top of his library. The name is chosen and read by that one ability, acquired with the copy, so it is noted for it and found again (CR 607.5, 608.2c): the Star goes to bob's hand.",
+  "board": {
+    "seats": [
+      {
+        "name": "alice",
+        "battlefield": [
+          { "card": "Hill Giant", "label": "giant", "ready": true },
+          { "card": "Island", "label": "i1" },
+          { "card": "Island", "label": "i2" },
+          { "card": "Island", "label": "i3" },
+          { "card": "Island", "label": "i4" }
+        ],
+        "hand": [{ "card": "Mirrorweave", "label": "mirrorweave" }]
+      },
+      {
+        "name": "bob",
+        "battlefield": [{ "card": "Petra Sphinx", "label": "sphinx" }],
+        "library": [{ "card": "Chromatic Star" }, { "card": "Goblin Piker" }]
+      }
+    ],
+    "active": "alice",
+    "step": "PrecombatMain"
+  },
+  "timeline": [
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": { "Cast": { "object": "$mirrorweave", "targets": ["$sphinx"], "mana": ["$i1", "$i2", "$i3", "$i4"] } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass" },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "check": { "Names": { "object": "$giant", "names": ["Petra Sphinx"] } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": { "Activate": { "object": "$giant", "targets": ["$bob"] } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass" },
+    { "turn": 1, "step": "PrecombatMain", "player": "bob", "do": { "Answer": { "prompt": "ChooseCardName", "with": "Chromatic Star" } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "check": { "View": { "of": "Zone", "player": "bob", "zone": "Hand", "is": ["Chromatic Star"] } } }
+  ]
+}

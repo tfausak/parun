@@ -2337,7 +2337,7 @@ apply batch candidate event =
         picked <- Monad.foldM pick Set.empty [1 .. count]
         Replacement.consume (ReplacementCandidate.identity candidate)
         State.modify' $ \g ->
-          let stamp o = o {Object.chosenColors = picked}
+          let stamp o = o {Object.chosenColors = Map.insert (Game.acquisitionOf oid g) picked (Object.chosenColors o)}
            in g {GameState.objects = Map.adjust stamp oid (GameState.objects g)}
         pure (Just event)
       -- CR 614.1c: Convincing Mirage's as-enters basic land type choice. Asked
@@ -2362,7 +2362,7 @@ apply batch candidate event =
             Game.choose (Prompt.ChooseBasicLandType decider controller oid)
         Replacement.consume (ReplacementCandidate.identity candidate)
         State.modify' $ \g ->
-          let stamp o = o {Object.chosenSubtype = Just picked}
+          let stamp o = o {Object.chosenSubtype = Map.insert (Game.acquisitionOf oid g) picked (Object.chosenSubtype o)}
            in g {GameState.objects = Map.adjust stamp oid (GameState.objects g)}
         pure (Just event)
       -- CR 614.1c: Pillar of Origins' as-enters creature type choice, the arm
@@ -2384,7 +2384,7 @@ apply batch candidate event =
             Game.choose (Prompt.ChooseCreatureType decider controller oid)
         Replacement.consume (ReplacementCandidate.identity candidate)
         State.modify' $ \g ->
-          let stamp o = o {Object.chosenSubtype = Just picked}
+          let stamp o = o {Object.chosenSubtype = Map.insert (Game.acquisitionOf oid g) picked (Object.chosenSubtype o)}
            in g {GameState.objects = Map.adjust stamp oid (GameState.objects g)}
         pure (Just event)
       -- CR 614.1c: Stuffy Doll's as-enters player choice. The three arms above ask
@@ -2412,7 +2412,7 @@ apply batch candidate event =
           Just controller -> Players.chooseOne controller oid (Players.offer controller gs PlayerRelation.AnyPlayer)
         Replacement.consume (ReplacementCandidate.identity candidate)
         State.modify' $ \g ->
-          let stamp o = o {Object.chosenPlayers = Map.alter (const picked) PlayerChoice.AsEnters (Object.chosenPlayers o)}
+          let stamp o = o {Object.chosenPlayers = Map.filter (not . Map.null) (Map.alter (Just . Map.alter (const picked) PlayerChoice.AsEnters . Maybe.fromMaybe Map.empty) (Game.acquisitionOf oid g) (Object.chosenPlayers o))}
            in g {GameState.objects = Map.adjust stamp oid (GameState.objects g)}
         pure (Just event)
       -- CR 614.1c with CR 201.4: Null Chamber's as-enters name choices. Unlike
@@ -2448,7 +2448,7 @@ apply batch candidate event =
             fmap (Map.fromList . Foldable.toList) (Monad.foldM ask Seq.empty choosers)
         Replacement.consume (ReplacementCandidate.identity candidate)
         State.modify' $ \g ->
-          let stamp o = o {Object.chosenNames = picked}
+          let stamp o = o {Object.chosenNames = Map.insert (Game.acquisitionOf oid g) picked (Object.chosenNames o)}
            in g {GameState.objects = Map.adjust stamp oid (GameState.objects g)}
         pure (Just event)
       -- CR 614.1c with CR 201.4: Runed Halo's as-enters name choice. The arm
@@ -2465,7 +2465,7 @@ apply batch candidate event =
             fmap (Map.singleton controller) (Game.choose (Prompt.ChooseCardName (Decide.deciderFor controller gs) controller oid restriction Seq.empty) >>= Game.lookUpChosenName)
         Replacement.consume (ReplacementCandidate.identity candidate)
         State.modify' $ \g ->
-          let stamp o = o {Object.chosenNames = picked}
+          let stamp o = o {Object.chosenNames = Map.insert (Game.acquisitionOf oid g) picked (Object.chosenNames o)}
            in g {GameState.objects = Map.adjust stamp oid (GameState.objects g)}
         pure (Just event)
       -- CR 306.5b via CR 614.1c: this permanent enters with N counters. Every

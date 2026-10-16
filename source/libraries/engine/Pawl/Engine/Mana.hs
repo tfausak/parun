@@ -253,7 +253,7 @@ produced oid gs production = case production of
     Offers
       (fmap ManaType.Colored (Color.White NonEmpty.:| [Color.Blue, Color.Black, Color.Red, Color.Green]))
   ManaProduction.Chosen ->
-    case fmap ManaType.Colored (Set.toList (foldMap Object.chosenColors (Game.lookupObject oid gs))) of
+    case fmap ManaType.Colored (Set.toList (Maybe.fromMaybe Set.empty (Game.currentChoice Object.chosenColors oid gs))) of
       first : second : more -> Offers (first NonEmpty.:| (second : more))
       settled -> Settles settled
   ManaProduction.SnowSymbol -> Settles [ManaType.Colorless]
@@ -791,7 +791,7 @@ sourceChoicesOf :: ObjectId -> GameState -> Maybe SourceChoices.SourceChoices
 sourceChoicesOf oid gs = case Game.lookupObject oid gs of
   Nothing -> Nothing
   Just _ ->
-    let choices = SourceContext.choicesOf oid gs
+    let choices = SourceContext.choicesOf (Game.acquisitionOf oid gs) oid gs
      in if Map.null (SourceChoices.names choices) && Set.null (SourceChoices.colors choices) && Maybe.isNothing (SourceChoices.subtype choices) then Nothing else Just choices
 
 -- CR 607.2a's production-time capture, sourceChoicesOf's twin: the last

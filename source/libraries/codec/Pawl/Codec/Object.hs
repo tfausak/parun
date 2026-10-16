@@ -110,10 +110,10 @@ codec = Fields.object $ do
   counters <- Fields.defaulted "counters" (Object.counters defaults) (Common.multiset (CounterKind.codec Keyword.codec)) Object.counters
   counterTimestamps <- Fields.defaulted "counterTimestamps" (Object.counterTimestamps defaults) (Common.keyedList counterTimestamp) Object.counterTimestamps
   attachedTo <- Fields.defaulted "attachedTo" (Object.attachedTo defaults) (Common.maybe Recipient.codec) Object.attachedTo
-  chosenColors <- Fields.defaulted "chosenColors" (Object.chosenColors defaults) (Common.set Color.codec) Object.chosenColors
-  chosenSubtype <- Fields.defaulted "chosenSubtype" (Object.chosenSubtype defaults) (Common.maybe Subtype.codec) Object.chosenSubtype
-  chosenNames <- Fields.defaulted "chosenNames" (Object.chosenNames defaults) (Common.naturalMap PlayerId.codec CardName.codec) Object.chosenNames
-  chosenPlayers <- Fields.defaulted "chosenPlayers" (Object.chosenPlayers defaults) (Common.keyedList (Common.keyValue PlayerChoice.codec PlayerId.codec)) Object.chosenPlayers
+  chosenColors <- Fields.defaulted "chosenColors" (Object.chosenColors defaults) (Common.keyedList (Common.keyValue Acquisition.codec (Common.set Color.codec))) Object.chosenColors
+  chosenSubtype <- Fields.defaulted "chosenSubtype" (Object.chosenSubtype defaults) (Common.keyedList (Common.keyValue Acquisition.codec Subtype.codec)) Object.chosenSubtype
+  chosenNames <- Fields.defaulted "chosenNames" (Object.chosenNames defaults) (Common.keyedList (Common.keyValue Acquisition.codec (Common.naturalMap PlayerId.codec CardName.codec))) Object.chosenNames
+  chosenPlayers <- Fields.defaulted "chosenPlayers" (Object.chosenPlayers defaults) (Common.keyedList (Common.keyValue Acquisition.codec (Common.keyedList (Common.keyValue PlayerChoice.codec PlayerId.codec)))) Object.chosenPlayers
   timestamp <- Fields.required "timestamp" Timestamp.codec Object.timestamp
   face <- Fields.defaulted "face" (Object.face defaults) (Common.maybe CardName.codec) Object.face
   turnedOverAt <- Fields.defaulted "turnedOverAt" (Object.turnedOverAt defaults) (Common.maybe Timestamp.codec) Object.turnedOverAt

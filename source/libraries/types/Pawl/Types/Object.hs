@@ -227,7 +227,13 @@ data Object = MkObject
     -- below are the others -- whose shared property is that each is read back OFF
     -- THE EFFECT'S SOURCE. `protector` below is chosen as the object enters too
     -- and is not one of them, being a designation rule 310 reads directly.
-    chosenColors :: Set.Set Color.Color,
+    --
+    -- All four are KEYED BY THE ACQUISITION of the choosing ability, as
+    -- `storedResults` is (CR 607.5): a pair of linked abilities a copy effect
+    -- brings never made the choice its reading ability asks after, so that
+    -- reference is undefined (CR 607.5a) until the copy ends. An absent key is
+    -- that undefined choice. data/scenarios/copy's CR 607.5a scenarios prove it.
+    chosenColors :: Map.Map Acquisition.Acquisition (Set.Set Color.Color),
     -- | CR 614.1c: a subtype this object's controller chose as it entered -- a
     -- basic land type (Convincing Mirage) or a creature type (Pillar of Origins),
     -- ONE field because no printing makes both choices. Read by
@@ -237,7 +243,7 @@ data Object = MkObject
     -- A sibling of chosenColors rather than one generalized
     -- choice map, whose sum-typed value every reader would have to re-narrow. Not
     -- a copiable value and per-incarnation, for that field's reasons.
-    chosenSubtype :: Maybe Subtype.Subtype,
+    chosenSubtype :: Map.Map Acquisition.Acquisition Subtype.Subtype,
     -- | CR 201.4: the card names chosen for this object, keyed by who chose each. THREE moments
     -- write it -- CR 614.1c's as-enters choice (Null Chamber), CR 608.2c's
     -- on-resolution one (Ancient Vendetta) and CR 702.106a's hidden agenda
@@ -254,7 +260,7 @@ data Object = MkObject
     -- a PERMANENT that chooses on two separate resolutions: the later choice is
     -- the whole of what "the chosen name" then means (Petra Sphinx activated
     -- twice, Pawl.ResolveSpec).
-    chosenNames :: Map.Map PlayerId.PlayerId CardName.CardName,
+    chosenNames :: Map.Map Acquisition.Acquisition (Map.Map PlayerId.PlayerId CardName.CardName),
     -- | CR 614.1c / 702.174a: the players chosen for this object, keyed by which
     -- choice -- the one its controller made as it entered (Stuffy Doll), and the
     -- opponent each gift instance's cost promised (Scrapshooter), one per paid
@@ -267,7 +273,7 @@ data Object = MkObject
     -- player is not one; CR 707.6), and per-incarnation, for chosenColors's
     -- reasons, save for CR 400.7d's carry of the promises to the permanent the
     -- spell becomes.
-    chosenPlayers :: Map.Map PlayerChoice.PlayerChoice PlayerId.PlayerId,
+    chosenPlayers :: Map.Map Acquisition.Acquisition (Map.Map PlayerChoice.PlayerChoice PlayerId.PlayerId),
     -- | CR 613.7d: when this object entered its current zone. A static ability's
     -- continuous effect shares this timestamp (CR 613.7a); stamped fresh on every
     -- zone change (CR 400.7 makes each a new object). Read by the projection when
@@ -948,8 +954,8 @@ new o s z t =
       counterTimestamps = Map.empty,
       attachedTo = Nothing,
       enteredUnder = Nothing,
-      chosenColors = Set.empty,
-      chosenSubtype = Nothing,
+      chosenColors = Map.empty,
+      chosenSubtype = Map.empty,
       chosenNames = Map.empty,
       chosenPlayers = Map.empty,
       face = Nothing,

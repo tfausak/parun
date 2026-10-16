@@ -728,25 +728,33 @@ attackTargetWithLastKnown oid gs = Monad.join (liveOrLastKnown (const (attackTar
 
 -- CR 614.1c / 702.174a's chosen player for one choice, through CR 608.2h: the
 -- live object's Object.chosenPlayers, else the ones it carried as it left
--- (Pawl.Types.LastKnown.chosenPlayers).
-chosenPlayerWithLastKnown :: PlayerChoice.PlayerChoice -> ObjectId -> GameState -> Maybe PlayerId
-chosenPlayerWithLastKnown choice oid gs = Map.lookup choice =<< liveOrLastKnown Object.chosenPlayers LastKnown.chosenPlayers oid gs
+-- (Pawl.Types.LastKnown.chosenPlayers) -- each only the ones the abilities
+-- acquired as `acquisition` made (CR 607.5), and Nothing for a choice they never
+-- made (CR 607.5a).
+chosenPlayerWithLastKnown :: Acquisition.Acquisition -> PlayerChoice.PlayerChoice -> ObjectId -> GameState -> Maybe PlayerId
+chosenPlayerWithLastKnown acquisition choice oid gs = Map.lookup choice =<< Map.lookup acquisition =<< liveOrLastKnown Object.chosenPlayers LastKnown.chosenPlayers oid gs
 
--- CR 614.1c / 607.2d's chosen colours, through CR 608.2h: the live object's
--- Object.chosenColors, else the ones it carried as it left
--- (Pawl.Types.LastKnown.chosenColors).
-chosenColorsWithLastKnown :: ObjectId -> GameState -> Set.Set Color.Color
-chosenColorsWithLastKnown oid gs = Maybe.fromMaybe Set.empty (liveOrLastKnown Object.chosenColors LastKnown.chosenColors oid gs)
+-- CR 614.1c / 607.2d's chosen colours, chosenPlayerWithLastKnown's read of
+-- Object.chosenColors; none for a choice never made.
+chosenColorsWithLastKnown :: Acquisition.Acquisition -> ObjectId -> GameState -> Set.Set Color.Color
+chosenColorsWithLastKnown acquisition oid gs = Maybe.fromMaybe Set.empty (Map.lookup acquisition =<< liveOrLastKnown Object.chosenColors LastKnown.chosenColors oid gs)
 
 -- chosenColorsWithLastKnown one choice over, for Object.chosenSubtype. The
 -- fallback is proved by the Kindred Boon scenario in data/scenarios/activate.
-chosenSubtypeWithLastKnown :: ObjectId -> GameState -> Maybe Subtype.Subtype
-chosenSubtypeWithLastKnown oid gs = Monad.join (liveOrLastKnown Object.chosenSubtype LastKnown.chosenSubtype oid gs)
+chosenSubtypeWithLastKnown :: Acquisition.Acquisition -> ObjectId -> GameState -> Maybe Subtype.Subtype
+chosenSubtypeWithLastKnown acquisition oid gs = Map.lookup acquisition =<< liveOrLastKnown Object.chosenSubtype LastKnown.chosenSubtype oid gs
 
 -- chosenColorsWithLastKnown for CR 201.4's chosen names (Object.chosenNames). The
 -- empty map where neither the object nor its last known information exists.
-chosenNamesWithLastKnown :: ObjectId -> GameState -> Map.Map PlayerId CardName.CardName
-chosenNamesWithLastKnown oid gs = Maybe.fromMaybe Map.empty (liveOrLastKnown Object.chosenNames LastKnown.chosenNames oid gs)
+chosenNamesWithLastKnown :: Acquisition.Acquisition -> ObjectId -> GameState -> Map.Map PlayerId CardName.CardName
+chosenNamesWithLastKnown acquisition oid gs = Maybe.fromMaybe Map.empty (Map.lookup acquisition =<< liveOrLastKnown Object.chosenNames LastKnown.chosenNames oid gs)
+
+-- | CR 607.5: the choice `field` holds for the abilities the LIVE object has
+-- now (acquisitionOf), for a static ability or a restriction read off its
+-- source. Nothing for an id naming no object, and for a choice those abilities
+-- never made (CR 607.5a).
+currentChoice :: (Object -> Map.Map Acquisition.Acquisition a) -> ObjectId -> GameState -> Maybe a
+currentChoice field oid gs = Map.lookup (acquisitionOf oid gs) . field =<< lookupObject oid gs
 
 -- CR 509.1g: is this creature blocking? Combat.blockers is keyed by ATTACKER, so
 -- the answer is membership in some attacker's set rather than a key lookup, or
@@ -2081,6 +2089,27 @@ acquisitionOf oid gs =
   case latestStoredCopy oid gs of
     Just row -> Acquisition.Copied (ActiveCopy.timestamp row)
     Nothing -> maybe Acquisition.Own Object.acquisition (lookupObject oid gs)
+
+-- | CR 607.5: the acquisition whose choices and stored results the object
+-- resolving as `resolving`, a spell or an ability of `source`, reads off
+-- `oid`. For an ability reading its own source, the one it froze as it went
+-- on the stack (Pawl.Types.TriggeredAbilitySource,
+-- Pawl.Types.ActivatedAbilitySource), since it stays linked to the abilities it
+-- came with whatever that source has since become; otherwise the one `oid`
+-- has now (acquisitionOf).
+readingAcquisition :: ObjectId -> ObjectId -> GameState -> ObjectId -> Acquisition.Acquisition
+readingAcquisition resolving source gs oid
+  | oid == source, Just frozen <- frozenAcquisition . Object.source =<< lookupObject resolving gs = frozen
+  | otherwise = acquisitionOf oid gs
+
+-- | CR 607.5: the acquisition an ability on the stack froze as it went there,
+-- off its Pawl.Types.Source; Nothing for a spell or an inherent trigger, which
+-- no acquisition of an object's abilities carries.
+frozenAcquisition :: Source.Source -> Maybe Acquisition.Acquisition
+frozenAcquisition source = case source of
+  Source.OfTrigger triggered -> Just (TriggeredAbilitySource.acquisition triggered)
+  Source.OfAbility activated -> Just (ActivatedAbilitySource.acquisition activated)
+  _ -> Nothing
 
 -- | CR 607.5: the results stored on this object for the abilities acquired as
 -- `acquisition` (Object.storedResults).

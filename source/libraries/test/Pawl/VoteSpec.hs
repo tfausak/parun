@@ -282,7 +282,7 @@ received :: ObjectId.ObjectId -> ObjectId.ObjectId -> GameState.GameState -> Pla
 received resolving source gs pid =
   Quantity.evaluate
     (Slots.effectViewOf source Map.empty gs)
-    (Slots.effectContext gs S.alice source Map.empty (Slots.slotBindings resolving gs))
+    (Slots.effectContext gs resolving S.alice source Map.empty (Slots.slotBindings resolving gs))
     gs
     source
     (Quantity.Type.VotesReceived (VotesReceived.MkVotesReceived votesSlot (PlayerRef.Specific pid)))

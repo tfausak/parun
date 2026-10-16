@@ -58,6 +58,7 @@ import qualified Pawl.Registry as Registry
 import qualified Pawl.Spec as Spec
 import qualified Pawl.Support as S
 import qualified Pawl.Types.AbilityName as AbilityName
+import qualified Pawl.Types.Acquisition as Acquisition
 import qualified Pawl.Types.Action as Action.Type
 import qualified Pawl.Types.ActivatedAbility as ActivatedAbility
 import qualified Pawl.Types.AnyNumberOf as AnyNumberOf
@@ -2156,7 +2157,7 @@ attachRestrictionSpec s registry = Spec.describe s "AttachRestriction" $ do
         (pacifismId, base3) = S.addPermanent pacifism S.alice (S.attach blessingId host base2)
         (strengthId, base4) = S.addPermanent strength S.alice (S.attach pacifismId host base3)
         wearing = S.attach strengthId host base4
-        chose color = S.settleSba (wearing {GameState.objects = Map.adjust (\o -> o {Object.chosenColors = Set.singleton color}) blessingId (GameState.objects wearing)})
+        chose color = S.settleSba (wearing {GameState.objects = Map.adjust (\o -> o {Object.chosenColors = Map.singleton Acquisition.Own (Set.singleton color)}) blessingId (GameState.objects wearing)})
         standing gs = (S.onBattlefield blessingId gs, S.onBattlefield pacifismId gs, S.onBattlefield strengthId gs)
     Spec.assertEqWith s "CR 607.2d / 704.5m: the Blessing that chose black buries Unholy Strength alone" (standing (chose Color.Black)) (True, True, False)
     Spec.assertEqWith s "CR 702.16n: the one that chose white buries Pacifism and spares itself" (standing (chose Color.White)) (True, False, True)
@@ -2175,7 +2176,7 @@ attachRestrictionSpec s registry = Spec.describe s "AttachRestriction" $ do
         (blessingId, base4) = S.addPermanent blessing S.bob (S.attach earlier host base3)
         (later, base5) = S.addPermanent pacifism S.bob (S.attach blessingId host base4)
         wearing = S.attach later host base5
-        after = S.settleSba (wearing {GameState.objects = Map.adjust (\o -> o {Object.chosenColors = Set.singleton Color.White}) blessingId (GameState.objects wearing)})
+        after = S.settleSba (wearing {GameState.objects = Map.adjust (\o -> o {Object.chosenColors = Map.singleton Acquisition.Own (Set.singleton Color.White)}) blessingId (GameState.objects wearing)})
     Spec.assertEqWith s "CR 702.16p: the Blessing and bob's Pacifism attached before it stay, and the one attached after is buried" (S.onBattlefield blessingId after, S.onBattlefield earlier after, S.onBattlefield later after) (True, True, False)
     Spec.assertBool s (not (S.onBattlefield alices after)) "and alice's Pacifism is buried, the spare being Auras the Blessing's controller controls"
   -- CR 702.16k's Aura sentence: "Such a permanent or player ... can't be
@@ -2199,7 +2200,7 @@ attachRestrictionSpec s registry = Spec.describe s "AttachRestriction" $ do
     let (nemesisId, base1) = S.addPermanent nemesis S.bob S.threePlayerGame
         (auraId, base2) = S.addPermanent pacifism S.alice base1
         wearing = S.attach auraId nemesisId base2
-        chose who = S.settleSba (wearing {GameState.objects = Map.adjust (\o -> o {Object.chosenPlayers = Map.singleton PlayerChoice.AsEnters who}) nemesisId (GameState.objects wearing)})
+        chose who = S.settleSba (wearing {GameState.objects = Map.adjust (\o -> o {Object.chosenPlayers = Map.singleton Acquisition.Own (Map.singleton PlayerChoice.AsEnters who)}) nemesisId (GameState.objects wearing)})
         choseAlice = chose S.alice
         choseCarol = chose S.carol
     Spec.assertBool s (Set.member auraId (GameState.battlefield (S.settleSba wearing))) "before any choice the Aura is legally attached"

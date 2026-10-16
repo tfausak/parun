@@ -14,6 +14,7 @@ module Pawl.Engine.SourceContext where
 import qualified Data.Map.Strict as Map
 import qualified Pawl.Engine.Filter as Filter
 import qualified Pawl.Engine.Game as Game
+import qualified Pawl.Types.Acquisition as Acquisition
 import qualified Pawl.Types.GameState as GameState
 import qualified Pawl.Types.Object as Object
 import qualified Pawl.Types.ObjectId as ObjectId
@@ -27,10 +28,11 @@ sourceContext gs perspective source =
   framedBy source gs (Filter.contextFor (Game.teams gs) perspective (Just source))
 
 -- | `context` with every source-derived field of `source` filled, its choices
--- read live through CR 608.2h's last known information (choicesOf). Leaves
+-- read live through CR 608.2h's last known information (choicesOf), for the
+-- abilities it has now (Game.acquisitionOf). Leaves
 -- `Filter.source` alone, so a caller whose IsSource names nothing keeps that.
 framedBy :: ObjectId.ObjectId -> GameState.GameState -> Filter.Context -> Filter.Context
-framedBy source gs = framedWith (choicesOf source gs) source gs
+framedBy source gs = framedWith (choicesOf (Game.acquisitionOf source gs) source gs) source gs
 
 -- | framedBy with the choices supplied: what a stored effect baked as it began
 -- (CR 608.2h), in place of the source's current ones. Every other field is
@@ -48,14 +50,15 @@ framedWith choices source gs context =
       Filter.sourceEntrants = Map.keysSet (Map.filter (== source) (GameState.enteredWith gs))
     }
 
--- | The choices `source` has made so far, through CR 608.2h's last known
--- information; what a stored effect bakes as it begins.
-choicesOf :: ObjectId.ObjectId -> GameState.GameState -> SourceChoices.SourceChoices
-choicesOf source gs =
+-- | The choices `source`'s abilities acquired as `acquisition` have made so
+-- far (CR 607.5), through CR 608.2h's last known information; what a stored
+-- effect bakes as it begins.
+choicesOf :: Acquisition.Acquisition -> ObjectId.ObjectId -> GameState.GameState -> SourceChoices.SourceChoices
+choicesOf acquisition source gs =
   SourceChoices.MkSourceChoices
-    { SourceChoices.names = Game.chosenNamesWithLastKnown source gs,
-      SourceChoices.colors = Game.chosenColorsWithLastKnown source gs,
-      SourceChoices.subtype = Game.chosenSubtypeWithLastKnown source gs
+    { SourceChoices.names = Game.chosenNamesWithLastKnown acquisition source gs,
+      SourceChoices.colors = Game.chosenColorsWithLastKnown acquisition source gs,
+      SourceChoices.subtype = Game.chosenSubtypeWithLastKnown acquisition source gs
     }
 
 -- | `context` with these choices as the source's: CR 105.2's colours, CR

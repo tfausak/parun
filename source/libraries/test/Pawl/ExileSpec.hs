@@ -65,6 +65,7 @@ import qualified Pawl.Engine.Target as Target
 import qualified Pawl.Registry as Registry
 import qualified Pawl.Spec as Spec
 import qualified Pawl.Support as S
+import qualified Pawl.Types.Acquisition as Acquisition
 import qualified Pawl.Types.Action as A
 import qualified Pawl.Types.BeginningStep as BeginningStep
 import qualified Pawl.Types.CardName as CardName
@@ -961,7 +962,7 @@ windbriskHeights s registry = Spec.describe s "Windbrisk Heights" $ do
     let mutavault = CardName.MkCardName (Text.pack "Mutavault")
         naming name gs =
           let (chamber, withChamber) = S.addPermanent nullChamber S.alice gs
-           in withChamber {GameState.objects = Map.adjust (\o -> o {Object.chosenNames = Map.singleton S.alice name}) chamber (GameState.objects withChamber)}
+           in withChamber {GameState.objects = Map.adjust (\o -> o {Object.chosenNames = Map.singleton Acquisition.Own (Map.singleton S.alice name)}) chamber (GameState.objects withChamber)}
         mutavaults = S.countOnBattlefieldByName mutavault S.alice
         named = legWith (naming mutavault) 0 3 land
         unnamed = legWith (naming (CardName.MkCardName (Text.pack "Goblin Piker"))) 0 3 land

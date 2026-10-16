@@ -50,6 +50,7 @@ import qualified Pawl.Engine.Visibility as Visibility
 import qualified Pawl.Registry as Registry
 import qualified Pawl.Spec as Spec
 import qualified Pawl.Support as S
+import qualified Pawl.Types.Acquisition as Acquisition
 import qualified Pawl.Types.Action as Action.Type
 import qualified Pawl.Types.BeginningStep as BeginningStep
 import qualified Pawl.Types.CardName as CardName
@@ -268,7 +269,7 @@ spec s registry = Spec.describe s "Conspiracy" $ do
         Just agenda -> do
           Spec.assertEqWith s "CR 702.106a alice names a card for it before the first mulligan declaration (CR 315.2, 103.5)" asked [NamedBy S.alice agenda, DeclaredBy S.alice, DeclaredBy S.bob]
           Spec.assertEqWith s "it lies face down" (isFaceDown agenda gs) True
-          Spec.assertEqWith s "with her name noted (CR 702.106b)" (fmap Object.chosenNames (Game.lookupObject agenda gs)) (Just (Map.singleton S.alice bears))
+          Spec.assertEqWith s "with her name noted (CR 702.106b)" (fmap (Map.findWithDefault Map.empty Acquisition.Own . Object.chosenNames) (Game.lookupObject agenda gs)) (Just (Map.singleton S.alice bears))
           let pc = Projection.Full.project agenda gs
           Spec.assertEqWith s "CR 315.5b it has no name" (PC.names pc) Set.empty
           Spec.assertEqWith s "and no card type" (PC.cardTypes pc) Set.empty
@@ -352,7 +353,7 @@ spec s registry = Spec.describe s "Conspiracy" $ do
               restarted = S.runPure renaming up (Setup.restartGame S.performer Set.empty S.alice)
           Spec.assertEqWith s "setup: alice turned it face up before the restart" (isFaceDown agenda up) False
           Spec.assertEqWith s "it is face down again" (isFaceDown agenda restarted) True
-          Spec.assertEqWith s "naming the new game's choice, Runeclaw Bear" (fmap Object.chosenNames (Game.lookupObject agenda restarted)) (Just (Map.singleton S.alice runeclawName))
+          Spec.assertEqWith s "naming the new game's choice, Runeclaw Bear" (fmap (Map.findWithDefault Map.empty Acquisition.Own . Object.chosenNames) (Game.lookupObject agenda restarted)) (Just (Map.singleton S.alice runeclawName))
 
     -- CR 613.7j: turned face up, the conspiracy takes a new timestamp, so its
     -- grant is later than a Humility that entered after the game began, and the

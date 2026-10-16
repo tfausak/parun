@@ -68,7 +68,7 @@ hideAgenda pid oid = do
     State.modify' (Game.turnFacing (Facing.faceDown FaceDownReason.HiddenAgenda) oid)
     name <- Game.choose (Prompt.ChooseCardName (Decide.deciderFor pid gs) pid oid (Filter.And []) Seq.empty) >>= Game.lookUpChosenName
     State.modify' $ \g ->
-      g {GameState.objects = Map.adjust (\o -> o {Object.chosenNames = Map.singleton pid name}) oid (GameState.objects g)}
+      g {GameState.objects = Map.adjust (\o -> o {Object.chosenNames = Map.singleton (Game.acquisitionOf oid g) (Map.singleton pid name)}) oid (GameState.objects g)}
 
 -- | CR 702.106c / 116.2j: the face-down conspiracies this player may turn face
 -- up now. CR 315.6 makes the owner the controller, so the owner-indexed command

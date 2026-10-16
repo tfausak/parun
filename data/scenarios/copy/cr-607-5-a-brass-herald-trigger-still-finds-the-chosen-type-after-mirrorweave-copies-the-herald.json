@@ -1,0 +1,46 @@
+{
+  "description": "CR 607.5 a Brass Herald enters trigger still finds the chosen type after Mirrorweave makes the Herald a copy",
+  "note": "Alice's Herald chooses Goblin, and its enters trigger goes on the stack. In response Mirrorweave makes the Herald a copy of bob's Hill Giant. The trigger is independent of its source (CR 113.7a) and stays linked to the as-enters ability it was printed beside (CR 607.2d), not to whatever the Herald has since become (CR 607.5), so the Goblin Piker it reveals goes to alice's hand. Her library holds that one card, so nothing is left to order on the bottom whichever way the type is read.",
+  "board": {
+    "seats": [
+      {
+        "name": "alice",
+        "battlefield": [
+          { "card": "Island", "label": "i1" },
+          { "card": "Island", "label": "i2" },
+          { "card": "Island", "label": "i3" },
+          { "card": "Island", "label": "i4" },
+          { "card": "Island", "label": "i5" },
+          { "card": "Island", "label": "i6" },
+          { "card": "Island", "label": "i7" },
+          { "card": "Island", "label": "i8" },
+          { "card": "Island", "label": "i9" },
+          { "card": "Island", "label": "i10" }
+        ],
+        "hand": [
+          { "card": "Brass Herald", "label": "herald" },
+          { "card": "Mirrorweave", "label": "mirrorweave" }
+        ],
+        "library": [{ "card": "Goblin Piker" }]
+      },
+      {
+        "name": "bob",
+        "battlefield": [{ "card": "Hill Giant", "label": "giant" }],
+        "library": [{ "card": "Island" }, { "card": "Island" }]
+      }
+    ],
+    "active": "alice",
+    "step": "PrecombatMain"
+  },
+  "timeline": [
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": { "Cast": { "object": "$herald", "mana": ["$i1", "$i2", "$i3", "$i4", "$i5", "$i6", null] } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass" },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": { "Answer": { "prompt": "ChooseCreatureType", "with": { "type": "Goblin" } } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "check": { "View": { "of": "Stack", "is": ["trigger of Brass Herald"] } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": { "Cast": { "object": "$mirrorweave", "targets": ["$giant"], "mana": ["$i7", "$i8", "$i9", "$i10"] } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass" },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "check": { "Names": { "object": "Brass Herald", "names": ["Hill Giant"] } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass" },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "check": { "Count": { "player": "alice", "zone": "Hand", "card": "Goblin Piker", "count": 1 } } }
+  ]
+}

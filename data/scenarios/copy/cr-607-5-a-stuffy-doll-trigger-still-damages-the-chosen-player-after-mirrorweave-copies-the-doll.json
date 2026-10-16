@@ -1,0 +1,44 @@
+{
+  "description": "CR 607.5 a Stuffy Doll trigger whose Doll Mirrorweave makes a copy still damages the chosen player",
+  "note": "Alice's Doll chooses bob. Two turns later it deals 1 damage to itself and its trigger goes on the stack; in response Mirrorweave makes the Doll a copy of bob's Hill Giant. The trigger is independent of its source (CR 113.7a) and stays linked to the as-enters ability it was printed beside (CR 607.2d), not to whatever the Doll has since become (CR 607.5), so it still deals 1 damage to bob.",
+  "board": {
+    "seats": [
+      {
+        "name": "alice",
+        "battlefield": [
+          { "card": "Island", "label": "i1" },
+          { "card": "Island", "label": "i2" },
+          { "card": "Island", "label": "i3" },
+          { "card": "Island", "label": "i4" },
+          { "card": "Island", "label": "i5" }
+        ],
+        "hand": [
+          { "card": "Stuffy Doll", "label": "doll" },
+          { "card": "Mirrorweave", "label": "mirrorweave" }
+        ],
+        "library": [{ "card": "Island" }, { "card": "Island" }]
+      },
+      {
+        "name": "bob",
+        "battlefield": [{ "card": "Hill Giant", "label": "giant" }],
+        "library": [{ "card": "Island" }, { "card": "Island" }]
+      }
+    ],
+    "active": "alice",
+    "step": "PrecombatMain"
+  },
+  "timeline": [
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": { "Cast": { "object": "$doll", "mana": ["$i1", "$i2", "$i3", "$i4", "$i5"] } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass" },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": { "Answer": { "prompt": "ChoosePlayer", "with": "bob" } } },
+    { "turn": 2, "step": "DeclareAttackers", "player": "bob", "do": { "Attack": [] } },
+    { "turn": 3, "step": "PrecombatMain", "player": "alice", "do": { "Activate": { "object": "Stuffy Doll", "mana": [null] } } },
+    { "turn": 3, "step": "PrecombatMain", "player": "alice", "do": "Pass" },
+    { "turn": 3, "step": "PrecombatMain", "player": "alice", "check": { "View": { "of": "Stack", "is": ["trigger of Stuffy Doll"] } } },
+    { "turn": 3, "step": "PrecombatMain", "player": "alice", "do": { "Cast": { "object": "$mirrorweave", "targets": ["$giant"], "mana": ["$i1", "$i2", "$i3", "$i4", null] } } },
+    { "turn": 3, "step": "PrecombatMain", "player": "alice", "do": "Pass" },
+    { "turn": 3, "step": "PrecombatMain", "player": "alice", "check": { "Names": { "object": "Stuffy Doll", "names": ["Hill Giant"] } } },
+    { "turn": 3, "step": "PrecombatMain", "player": "alice", "do": "Pass" },
+    { "turn": 3, "step": "PrecombatMain", "player": "alice", "check": { "Life": { "player": "bob", "life": 19 } } }
+  ]
+}
