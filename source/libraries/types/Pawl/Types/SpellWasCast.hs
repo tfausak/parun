@@ -40,8 +40,8 @@ data SpellWasCast = MkSpellWasCast
     -- (Quantity.SpellsCastUsingThisTurn).
     castUsing :: Maybe Keyword.Keyword,
     -- | CR 604.2: the "as long as" clauses of its granted activated abilities
-    -- that did not hold as it became cast (Pawl.Engine.Projection.View.lapsedGrantsOf), which
-    -- `characteristics` carries unasked. Pawl.Types.LastKnown's field.
+    -- that did not hold as it became cast, which `characteristics` carries
+    -- unasked (Pawl.Engine.Projection.View.lapsedGrantsOf).
     lapsedGrants :: Set.Set Condition.Condition
   }
   deriving (Eq, Ord, Show)

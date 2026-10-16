@@ -44,8 +44,9 @@ data Transformed = MkTransformed
     controller :: Maybe PlayerId.PlayerId,
     attachments :: Set.Set ObjectId.ObjectId,
     -- | CR 604.2: the "as long as" clauses of its granted activated abilities
-    -- that did not hold the instant the turn finished (Pawl.Engine.Projection.View.lapsedGrantsOf), which
-    -- `characteristics` carries unasked. Pawl.Types.LastKnown's field.
+    -- that did not hold the instant the turn finished, which `characteristics`
+    -- carries unasked (Pawl.Engine.Projection.View.lapsedGrantsOf).
+    -- data/scenarios/transform's Synthetic Turnabout Audit pair is the proof.
     lapsedGrants :: Set.Set Condition.Condition
   }
   deriving (Eq, Ord, Show)
