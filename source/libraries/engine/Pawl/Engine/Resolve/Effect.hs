@@ -855,14 +855,6 @@ askingObjects resolving source controller legal chosen ref = case ref of
   -- Tovolar's "any number of Human Werewolves you control", read off a board CR
   -- 702.145c has already turned him over on.
   ObjectRef.ChosenPermanents choice -> chosenPermanents legal resolving controller source choice
-  -- Hanweir Battlements' "exile them": the arm above's choice with the SOURCE
-  -- named alongside it, so the pair is one CR 608.2f batch. The source is not
-  -- offered to anybody, and one that has left is not named (CR 101.3). CR
-  -- 608.2c's default chooser, since the printed sentence names no other.
-  ObjectRef.SourceAndChosenPermanent filter_ -> do
-    counterpart <- chosenPermanents legal resolving controller source (ChosenPermanents.MkChosenPermanents filter_ (PlayerRef.Relative PlayerRelation.You) HowMany.one)
-    gs <- State.get
-    pure (counterpart <> battlefieldMatching legal resolving controller source gs Filter.Type.IsSource)
   -- Each ref asked or read in the order written, before anything moves; an
   -- object two refs name is named once.
   ObjectRef.AllOf refs -> fmap (ListUtils.nubOrd . concat) (traverse (askingObjects resolving source controller legal chosen) (NonEmpty.toList refs))
@@ -1236,7 +1228,6 @@ objectRefRecipients legal resolving controller source gs ref = case ref of
   ObjectRef.RandomCardInGraveyard _ -> []
   ObjectRef.RandomCardInLibrary _ -> []
   ObjectRef.ChosenPermanents _ -> []
-  ObjectRef.SourceAndChosenPermanent _ -> []
   -- A read, so the sweep answers it.
   ObjectRef.AttachedToBound _ -> fmap Recipient.ToObject (objectRefObjects legal resolving controller source gs ref)
   -- A read, so the sweep answers it.
@@ -10291,7 +10282,7 @@ applyOneEffect runSubgame resolving source controller legal chosen effect = case
               [one, two] -> [one, two]
               _ -> []
             -- CR 113.7's source object, found through the funnel
-            -- ObjectRef.SourceAndChosenPermanent reads it by rather than off
+            -- Filter.IsSource reads it by rather than off
             -- Object.source: a permanent that is a COPY of Avarice Totem is the
             -- side, not the card. A source no longer on the battlefield matches
             -- nothing and so is no side at all, which is CR 701.12a again.

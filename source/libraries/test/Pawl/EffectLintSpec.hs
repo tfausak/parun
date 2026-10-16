@@ -1267,7 +1267,6 @@ data Question
   | OnePermanent
   | SeveralPermanents
   | PermanentsUpTo
-  | SourceAndPermanent
   deriving (Eq, Show, Enum, Bounded)
 
 -- Which question an ObjectRef arm puts, if any.
@@ -1315,7 +1314,6 @@ questionOf ref = case ref of
     HowMany.Exactly (Quantity.Type.Literal 1) -> Just OnePermanent
     HowMany.Exactly _ -> Just SeveralPermanents
     HowMany.UpTo _ -> Just PermanentsUpTo
-  ObjectRef.SourceAndChosenPermanent {} -> Just SourceAndPermanent
   ObjectRef.AttachedToBound {} -> Nothing
   ObjectRef.FromAnywhere {} -> Nothing
   -- The first question a member puts, so a member that asks is fenced as it would be alone.
@@ -1600,6 +1598,19 @@ effectObjectRefs effect =
 inertChoosers :: Effect.Effect Card.Type.Card (GrantedAbility.GrantedAbility Card.Type.Card) -> [ObjectRef.ObjectRef]
 inertChoosers effect =
   [ref | (allowed, ref) <- effectObjectRefs effect, Just question <- [questionOf ref], question `notElem` allowed]
+
+-- An ObjectRef.AllOf written anywhere but a move's ref. Only MoveToZone
+-- gathers it member by member (Pawl.Engine.Resolve.Effect's gather); the other
+-- opcodes' one-ref reads (a sticker's candidates, a copy's archived source, a
+-- reveal's shower) would read the union as a single arm.
+allOfOutsideMove :: Effect.Effect Card.Type.Card (GrantedAbility.GrantedAbility Card.Type.Card) -> Bool
+allOfOutsideMove effect = case effect of
+  Effect.MoveToZone {} -> False
+  _ -> any (holdsAllOf . snd) (effectObjectRefs effect)
+  where
+    holdsAllOf ref = case ref of
+      ObjectRef.AllOf _ -> True
+      _ -> False
 
 -- CR 709.4a: a card's faces are referred to BY NAME (Card.faceNamed), so two
 -- faces sharing a name make that reference ambiguous -- faceNamed would return
@@ -1993,16 +2004,11 @@ effectLintSpec s registry = Spec.describe s "Lint" $ do
           -- of one, TopOfLibrary's answer; FALSE, EachCardFromAmong's answer
           -- over the battlefield, where "any number" states no bound.
           ObjectRef.ChosenPermanents (ChosenPermanents.MkChosenPermanents _ _ count) -> atMostOne count
-          -- FALSE where the arm above is True: the ref names the source
-          -- ALONGSIDE the one permanent it picks, so a per-player count over it
-          -- moves two.
-          ObjectRef.SourceAndChosenPermanent _ -> False
           -- FALSE: every attachment to a host moves, however many there are.
           ObjectRef.AttachedToBound _ -> False
           -- TRUE, InSlot's answer: the slot's object, followed.
           ObjectRef.FromAnywhere _ -> True
-          -- FALSE, SourceAndChosenPermanent's answer: several refs together name
-          -- several objects.
+          -- FALSE: several refs together name several objects.
           ObjectRef.AllOf _ -> False
         -- Does a choice's count name at most one? A COMPUTED count is plural
         -- whatever the board would make it, TopOfLibrary's reading above.
@@ -2536,6 +2542,17 @@ effectLintSpec s registry = Spec.describe s "Lint" $ do
     -- Exhume, Elvish Piper, Commune with the Gods and Merfolk Spy print them.
     Spec.assertBool s asks "the pool has a card asking a player to pick a card"
     Spec.assertEqWith s "a chosen card under an opcode that cannot ask (CR 608.2d)" (fmap (S.nameOf . Printing.card) offenders) []
+  Spec.it s "no AllOf outside a move" $ do
+    ps <- S.allPrintings s
+    let offenders = filter (anyFace (any allOfOutsideMove . cardAuthoredEffects) . Printing.card) ps
+        moved = any (anyFace (any (any (isAllOf . snd) . effectObjectRefs) . cardAuthoredEffects) . Printing.card) ps
+        isAllOf ref = case ref of
+          ObjectRef.AllOf _ -> True
+          _ -> False
+    -- Guards against a vacuous sweep: Hanweir Battlements, Sandman, Shifting
+    -- Scoundrel and Synthetic Tidal Recall print one under a move.
+    Spec.assertBool s moved "the pool has an AllOf under a move"
+    Spec.assertEqWith s "an AllOf under an opcode that reads one ref" (fmap (S.nameOf . Printing.card) offenders) []
   -- The sweep above still passes VACUOUSLY on the half that matters: every
   -- committed card writes its chooser under an asking pair, so the
   -- sweep proves nothing about the lint. Both directions are proven here instead,
@@ -2559,7 +2576,7 @@ effectLintSpec s registry = Spec.describe s "Lint" $ do
         sought = ObjectRef.RandomCardInLibrary (RandomCardInLibrary.MkRandomCardInLibrary (PlayerRef.Relative PlayerRelation.You) anyCard (Quantity.Type.Literal 1))
         anyNumber = ObjectRef.ChosenPermanents (ChosenPermanents.MkChosenPermanents anyCard (PlayerRef.Relative PlayerRelation.You) (HowMany.UpTo Nothing))
         onePermanent = ObjectRef.ChosenPermanents (ChosenPermanents.MkChosenPermanents anyCard (PlayerRef.Relative PlayerRelation.You) HowMany.one)
-        sourceAndOne = ObjectRef.SourceAndChosenPermanent anyCard
+        sourceAndOne = ObjectRef.AllOf (onePermanent NonEmpty.:| [ObjectRef.EachMatching Filter.Type.IsSource])
         moves ref = Effect.MoveToZone (MoveToZone.MkMoveToZone ref Zone.Battlefield EntryRiders.defaultValue Nothing Nothing LibraryPlacement.defaultValue Nothing)
         reveals ref = Effect.Reveal (Reveal.MkReveal ref Nothing)
         inert :: [Effect.Effect Card.Type.Card (GrantedAbility.GrantedAbility Card.Type.Card)] -> [Bool]
@@ -2611,14 +2628,19 @@ effectLintSpec s registry = Spec.describe s "Lint" $ do
     -- An exact count other than one has no gameplay test, so no site allows it.
     let exactlyTwo = ObjectRef.ChosenPermanents (ChosenPermanents.MkChosenPermanents anyCard (PlayerRef.Relative PlayerRelation.You) (HowMany.Exactly (Quantity.Type.Literal 2)))
     Spec.assertEqWith s "two exactly chosen permanents are allowed nowhere" (inert [moves exactlyTwo, Effect.Transform exactlyTwo, Effect.Untap exactlyTwo]) [True, True, True]
-    -- The arm above with the source named alongside the choice, and the same row:
-    -- Hanweir Battlements' "exile them" is a move, the only site allowing it.
-    -- Asserted separately because the two arms are distinct constructors.
+    -- Hanweir Battlements' "exile them": the source beside one chosen
+    -- permanent, fenced by its member's question, and refused outside a move by
+    -- allOfOutsideMove.
     Spec.assertEqWith
       s
-      "the source with one chosen permanent is allowed by a move alone"
+      "the source with one chosen permanent is allowed where one chosen permanent is"
       (inert [Effect.Transform sourceAndOne, moves sourceAndOne, reveals sourceAndOne, Effect.Tap sourceAndOne])
-      [True, False, True, True]
+      [False, False, True, True]
+    Spec.assertEqWith
+      s
+      "AllOf is refused outside a move"
+      (fmap allOfOutsideMove [moves sourceAndOne, Effect.Transform sourceAndOne, Effect.Tap (ObjectRef.AllOf (ObjectRef.EachMatching anyCard NonEmpty.:| []))])
+      [False, True, True]
     -- The at-random arm one zone over, allowed by a move alone -- Ghoulraiser's
     -- "return a Zombie card at random from your graveyard to your hand".
     -- Rejected under the two sites allowing the hand's at-random arm: CR 400.2's

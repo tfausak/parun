@@ -85,7 +85,6 @@ codec =
           Arm.payload "RandomCardInGraveyard" RandomCardInGraveyard.codec ObjectRef.RandomCardInGraveyard (\x -> case x of ObjectRef.RandomCardInGraveyard y -> Just y; _ -> Nothing),
           Arm.payload "RandomCardInLibrary" RandomCardInLibrary.codec ObjectRef.RandomCardInLibrary (\x -> case x of ObjectRef.RandomCardInLibrary y -> Just y; _ -> Nothing),
           Arm.payload "ChosenPermanents" ChosenPermanents.codec ObjectRef.ChosenPermanents (\x -> case x of ObjectRef.ChosenPermanents y -> Just y; _ -> Nothing),
-          Arm.payload "SourceAndChosenPermanent" filterCodec ObjectRef.SourceAndChosenPermanent (\x -> case x of ObjectRef.SourceAndChosenPermanent y -> Just y; _ -> Nothing),
           Arm.payload "AttachedToBound" AttachedToBound.codec ObjectRef.AttachedToBound (\x -> case x of ObjectRef.AttachedToBound y -> Just y; _ -> Nothing),
           Arm.payload "FromAnywhere" SlotName.codec ObjectRef.FromAnywhere (\x -> case x of ObjectRef.FromAnywhere y -> Just y; _ -> Nothing),
           Arm.payload "AllOf" (Common.nonEmpty codec) ObjectRef.AllOf (\x -> case x of ObjectRef.AllOf y -> Just y; _ -> Nothing)
@@ -121,7 +120,6 @@ tagOf x = case x of
   ObjectRef.RandomCardInGraveyard {} -> "RandomCardInGraveyard"
   ObjectRef.RandomCardInLibrary {} -> "RandomCardInLibrary"
   ObjectRef.ChosenPermanents {} -> "ChosenPermanents"
-  ObjectRef.SourceAndChosenPermanent {} -> "SourceAndChosenPermanent"
   ObjectRef.AttachedToBound {} -> "AttachedToBound"
   ObjectRef.FromAnywhere {} -> "FromAnywhere"
   ObjectRef.AllOf {} -> "AllOf"

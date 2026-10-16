@@ -437,16 +437,6 @@ spec s = Spec.describe s "Pawl.Codec.ObjectRef" $ do
       ObjectRef.codec
       (ObjectRef.ChosenPermanents (ChosenPermanents.MkChosenPermanents (Filter.HasCardType CardType.Land) (PlayerRef.Relative PlayerRelation.You) (HowMany.UpTo (Just (Quantity.Literal 2)))))
       " {\"type\":\"ChosenPermanents\",\"value\":{\"filter\":{\"type\":\"HasCardType\",\"value\":{\"type\":\"Land\"}},\"count\":{\"type\":\"UpTo\",\"value\":{\"type\":\"Literal\",\"value\":2}}}} "
-  -- The arm above with the source named alongside the choice, and an arm whose
-  -- payload is a bare Filter, so the same Arm.tagged risk: a missing codec arm
-  -- would compile, and a tag copied from its sibling would lose the source half
-  -- without a decode error.
-  Spec.it s "SourceAndChosenPermanent" $
-    Common.assertCodec
-      s
-      ObjectRef.codec
-      (ObjectRef.SourceAndChosenPermanent (Filter.HasCardType CardType.Creature))
-      " {\"type\":\"SourceAndChosenPermanent\",\"value\":{\"type\":\"HasCardType\",\"value\":{\"type\":\"Creature\"}}} "
   -- CR 303.4b / 608.2h: a slot and a Filter under their own tag.
   Spec.it s "AttachedToBound" $
     Common.assertCodec
@@ -506,7 +496,7 @@ spec s = Spec.describe s "Pawl.Codec.ObjectRef" $ do
                 Codec.encode ObjectRef.codec (ObjectRef.RandomCardInGraveyard (RandomCardInGraveyard.MkRandomCardInGraveyard (ZoneScope.Scoped (PlayerScope.Related PlayerRelation.You)) (Filter.And []) (Quantity.Literal 1))),
                 Codec.encode ObjectRef.codec (ObjectRef.RandomCardInLibrary (RandomCardInLibrary.MkRandomCardInLibrary (PlayerRef.Relative PlayerRelation.You) (Filter.And []) (Quantity.Literal 1))),
                 Codec.encode ObjectRef.codec (ObjectRef.ChosenPermanents (ChosenPermanents.MkChosenPermanents (Filter.HasCardType CardType.Creature) (PlayerRef.Relative PlayerRelation.You) HowMany.one)),
-                Codec.encode ObjectRef.codec (ObjectRef.SourceAndChosenPermanent (Filter.HasCardType CardType.Creature)),
+                Codec.encode ObjectRef.codec (ObjectRef.AllOf (ObjectRef.EachPlayer NonEmpty.:| [])),
                 Codec.encode ObjectRef.codec (ObjectRef.AttachedToBound (AttachedToBound.MkAttachedToBound (SlotName.MkSlotName (Text.pack "target")) (Filter.HasCardType CardType.Creature)))
               ]
           )

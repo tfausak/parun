@@ -254,34 +254,47 @@
                         "type": "MoveToZone",
                         "value": {
                           "ref": {
-                            "type": "SourceAndChosenPermanent",
-                            "value": {
-                              "type": "And",
-                              "value": [
-                                {
-                                  "type": "HasCardType",
-                                  "value": {
-                                    "type": "Creature"
-                                  }
-                                },
-                                {
-                                  "type": "HasName",
-                                  "value": "Hanweir Garrison"
-                                },
-                                {
-                                  "type": "OwnedBy",
-                                  "value": {
-                                    "type": "You"
-                                  }
-                                },
-                                {
-                                  "type": "ControlledBy",
-                                  "value": {
-                                    "type": "You"
+                            "type": "AllOf",
+                            "value": [
+                              {
+                                "type": "ChosenPermanents",
+                                "value": {
+                                  "filter": {
+                                    "type": "And",
+                                    "value": [
+                                      {
+                                        "type": "HasCardType",
+                                        "value": {
+                                          "type": "Creature"
+                                        }
+                                      },
+                                      {
+                                        "type": "HasName",
+                                        "value": "Hanweir Garrison"
+                                      },
+                                      {
+                                        "type": "OwnedBy",
+                                        "value": {
+                                          "type": "You"
+                                        }
+                                      },
+                                      {
+                                        "type": "ControlledBy",
+                                        "value": {
+                                          "type": "You"
+                                        }
+                                      }
+                                    ]
                                   }
                                 }
-                              ]
-                            }
+                              },
+                              {
+                                "type": "EachMatching",
+                                "value": {
+                                  "type": "IsSource"
+                                }
+                              }
+                            ]
                           },
                           "slot": "melded",
                           "zone": {

@@ -4071,10 +4071,6 @@ objectRefFilters ref = case ref of
   -- conjuncts of that Filter, which is what this traversal hands to the Filter
   -- lints; the ceiling is reached through refFilters beside it.
   ObjectRef.ChosenPermanents (ChosenPermanents.MkChosenPermanents f _ _) -> unframed [f] <> refFilters ref
-  -- The arm above with the source riding along: the Filter still says which
-  -- counterpart may be picked and nothing about the source, so it is framed the
-  -- same way.
-  ObjectRef.SourceAndChosenPermanent f -> unframed [f]
   -- Rhuk's "all Equipment attached to that creature".
   ObjectRef.AttachedToBound (AttachedToBound.MkAttachedToBound _ f) -> unframed [f]
   ObjectRef.FromAnywhere _ -> []
