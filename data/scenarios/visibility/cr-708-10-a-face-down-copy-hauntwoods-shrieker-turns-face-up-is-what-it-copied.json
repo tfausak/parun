@@ -1,0 +1,35 @@
+{
+  "description": "CR 708.10 a face-down copy Hauntwoods Shrieker turns face up is what it copied",
+  "note": "The control for the reveal scenario beside it: the same board, but alice turns the revealed Goblin Piker face up, and it becomes the Hill Giant Cytoshape made it a copy of.",
+  "board": {
+    "seats": [
+      { "name": "alice",
+        "battlefield": [
+          { "card": "Forest", "label": "f1", "ready": true },
+          { "card": "Forest", "label": "f2", "ready": true },
+          { "card": "Forest", "label": "f3", "ready": true },
+          { "card": "Forest", "label": "f4", "ready": true },
+          { "card": "Island", "label": "i1", "ready": true },
+          { "card": "Hauntwoods Shrieker", "label": "shrieker" },
+          { "card": "Hill Giant", "label": "giant" } ],
+        "hand": [ { "card": "Cytoshape", "label": "cytoshape" } ] },
+      { "name": "bob",
+        "battlefield": [ { "card": "Goblin Piker", "label": "piker", "faceDown": { "type": "Manifested" } } ] }
+    ],
+    "active": "alice",
+    "step": "PrecombatMain"
+  },
+  "timeline": [
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": { "Answer": { "prompt": "ChoosePermanent", "with": "$giant" } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": { "Cast": { "object": "$cytoshape", "targets": ["$piker"], "mana": ["$f1", "$i1", "$f2", null] } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass" },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "check": { "View": { "of": "Stack", "is": [] } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "check": { "View": { "of": "Witnessed", "player": "alice", "is": [] } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": { "ChooseOptional": { "type": "Exercises" } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": { "Activate": { "object": "$shrieker", "targets": ["$piker"], "mana": ["$f3", "$f4"] } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass" },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "check": { "View": { "of": "Stack", "is": [] } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "check": { "View": { "of": "Witnessed", "player": "alice", "is": ["Goblin Piker"] } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "check": { "Names": { "object": "$piker", "names": ["Hill Giant"] } } }
+  ]
+}

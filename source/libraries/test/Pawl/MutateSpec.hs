@@ -213,6 +213,33 @@ spec s registry = Spec.describe s "Mutate" $ do
         Spec.assertEqWith s "CR 701.20a the reveal shows the Kirin card, neither the nameless 2/2 nor the Cubwarden pile over it" (departureRevealNames over) [Set.singleton (CardName.MkCardName (Text.pack "Misthoof Kirin"))]
         Spec.assertEqWith s "CR 701.20a the face-down pile is shown face up, its topmost Kirin's name" (departureRevealNames under) [Set.singleton (CardName.MkCardName (Text.pack "Misthoof Kirin"))]
         Spec.assertBool s (all (Maybe.isNothing . Game.lookupObject host) [over, under]) "setup: Murder destroyed the pile on both legs"
+  -- CR 701.20a over a stored copy effect: the same face-up pile over the
+  -- face-down Kirin, but Mirrorweave first makes it a copy of bob's Hill Giant
+  -- until end of turn. The copy effect made the PERMANENT a Hill Giant, so the
+  -- Kirin component Murder makes alice reveal is still shown as its card.
+  Spec.it s "CR 701.20a a face-down component is revealed as its card, not the copy its pile was" $ do
+    plains <- S.printingOf s registry "Plains"
+    swamp <- S.printingOf s registry "Swamp"
+    kirin <- S.printingOf s registry "Misthoof Kirin"
+    cubwarden <- S.printingOf s registry "Cubwarden"
+    murder <- S.printingOf s registry "Murder"
+    mirrorweave <- S.printingOf s registry "Mirrorweave"
+    giant <- S.printingOf s registry "Hill Giant"
+    case faceDownBoard plains kirin cubwarden of
+      Nothing -> Spec.assertFailure s "the morph cast did not reach the battlefield"
+      Just (host, board, spellId) -> do
+        let (giantId, withGiant) = S.addPermanent giant S.bob (merging MutateSide.Over host board spellId)
+            (weaving, weaveId) = S.handOne mirrorweave (S.landsFor plains S.alice 4 withGiant)
+            atGiant :: Prompt.Prompt r -> r
+            atGiant p = case p of
+              Prompt.ChooseTargets _ _ _ sets -> fmap (Set.filter ((== Just giantId) . Recipient.objectOf) . snd) sets
+              _ -> S.identityAnswer p
+            woven = S.runPure atGiant weaving (S.cast S.alice weaveId >> Engine.settleForPriority >> Stack.resolveTop >> Engine.settleForPriority)
+            (armed, murderId) = S.handOne murder (S.landsFor swamp S.alice 3 woven)
+            murdered = S.runPure (mutatingAt MutateSide.Over host) armed (S.cast S.alice murderId >> Monad.replicateM_ 3 (Engine.settleForPriority >> Stack.resolveTop) >> Engine.settleForPriority)
+        Spec.assertEqWith s "CR 701.20a the reveal shows the Kirin card, not the Hill Giant its pile was a copy of" (departureRevealNames murdered) [Set.singleton (CardName.MkCardName (Text.pack "Misthoof Kirin"))]
+        Spec.assertEqWith s "setup: Mirrorweave made the pile a Hill Giant" (Projection.namesOf host woven) (Set.singleton (CardName.MkCardName (Text.pack "Hill Giant")))
+        Spec.assertBool s (Maybe.isNothing (Game.lookupObject host murdered)) "setup: Murder destroyed the pile"
   -- CR 708.9's third sentence: the same pile's owner concedes a three-player
   -- game (CR 800.4a), so it leaves the game rather than moving to a zone, and
   -- the game goes on (the end of the game being the rule's fourth sentence).

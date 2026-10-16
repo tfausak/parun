@@ -9056,7 +9056,8 @@ leavingReveals asOf oid = Maybe.maybeToList whole <> componentReveals asOf oid
 --
 -- The snapshot is the component card itself (CR 701.20a): the object made to
 -- represent that component alone, face up, as CR 730.3's split would make it
--- (Game.representComponent).
+-- (Game.representComponent), and out of any stored copy effect on the pile,
+-- which made the permanent a copy and never the card.
 componentReveals :: GameState -> ObjectId -> [GameEvent.GameEvent]
 componentReveals asOf oid = case Game.lookupObject oid asOf of
   Just obj
@@ -9071,7 +9072,7 @@ componentReveals asOf oid = case Game.lookupObject oid asOf of
   where
     alone obj shown =
       let card = (Game.representComponent (ShownComponent.component shown) (Object.newIncarnation obj)) {Object.face = ShownComponent.face shown}
-       in asOf {GameState.objects = Map.insert oid card (GameState.objects asOf)}
+       in Game.supersedeStoredCopies (Set.singleton oid) asOf {GameState.objects = Map.insert oid card (GameState.objects asOf)}
 
 -- | CR 708.9 / 702.143f / 702.106e, each rule's last sentence: at the end of
 -- each game, the reveals leavingReveals names for one departing owner are owed
@@ -9486,11 +9487,15 @@ arrangeTopTwo source pid = do
 
 -- | CR 701.20e: a player looks at a card, shown to them and, per CR 723.4, to
 -- the player making their decisions. Records nothing when the object is gone.
+-- A look follows a reveal's rules, so it shows what `reveal` shows
+-- (Projection.projectShown): a face-down permanent's card, not CR 708.2's
+-- nameless 2/2. data/scenarios/visibility's CR 701.20e Smoke Teller case proves
+-- it.
 look :: PlayerId -> ObjectId -> Game ()
 look pid oid = do
   gs <- State.get
   Monad.forM_ (Game.lookupObject oid gs) $ \_ ->
-    State.modify' (recordEvent (GameEvent.Looked (Looked.MkLooked oid (Projection.project oid gs) (Decide.privyTo pid gs))))
+    State.modify' (recordEvent (GameEvent.Looked (Looked.MkLooked oid (Projection.projectShown oid gs) (Decide.privyTo pid gs))))
 
 -- | CR 701.20a: keep a revealed card revealed for a window, beside any it
 -- already has. Pawl.VisibilitySpec's "CR 701.20a a second behold" case proves a

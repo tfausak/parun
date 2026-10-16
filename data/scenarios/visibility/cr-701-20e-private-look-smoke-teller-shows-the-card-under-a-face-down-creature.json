@@ -1,0 +1,27 @@
+{
+  "description": "CR 701.20e private look: Smoke Teller shows the card under a face-down creature",
+  "note": "alice looks at bob's manifested Goblin Piker, so her record names the card rather than CR 708.2a's nameless 2/2, and the look is hers alone.",
+  "board": {
+    "seats": [
+      { "name": "alice",
+        "battlefield": [
+          { "card": "Island", "label": "i1", "ready": true },
+          { "card": "Island", "label": "i2", "ready": true },
+          { "card": "Smoke Teller", "label": "teller" } ] },
+      { "name": "bob",
+        "battlefield": [ { "card": "Goblin Piker", "label": "piker", "faceDown": { "type": "Manifested" } } ] },
+      { "name": "carol" }
+    ],
+    "active": "alice",
+    "step": "PrecombatMain"
+  },
+  "timeline": [
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "check": { "View": { "of": "Witnessed", "player": "alice", "is": [] } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": { "Activate": { "object": "$teller", "targets": ["$piker"], "mana": ["$i1", "$i2"] } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass" },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "check": { "View": { "of": "Stack", "is": [] } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "check": { "View": { "of": "Witnessed", "player": "alice", "is": ["Goblin Piker"] } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "check": { "View": { "of": "Witnessed", "player": "carol", "is": [] } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "check": { "Names": { "object": "$piker", "names": [] } } }
+  ]
+}

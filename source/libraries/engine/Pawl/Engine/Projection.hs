@@ -4548,16 +4548,23 @@ definingReads cda = quantityReads (CharacteristicPT.power cda) <> quantityReads 
 project :: ObjectId -> GameState -> ProjectedCharacteristics
 project oid gs = projectFrom (gather gs) oid gs
 
--- | CR 701.20a: what revealing `oid` shows on this board -- `project`, but a
--- face-down object's as the face-up card it is, since CR 708.2's substitution
--- is its face-down status and a reveal shows the card. A counterfactual board,
--- as Projection.View's copiableCharacteristicsFaceUp; Game.withFacing turns a
--- merged permanent's components with it (CR 730.2f).
+-- | CR 701.20a / 701.20e: what revealing `oid`, or looking at it, shows on
+-- this board -- `project`, but a face-down object's as the card it is: face up,
+-- since CR 708.2's substitution is its face-down status, and under no copy
+-- effect, stamped (Binding.withoutCopyEffect) or stored
+-- (Game.supersedeStoredCopies), since a copy effect sets the permanent's
+-- copiable values and reaches the card only once it is turned face up (CR
+-- 708.10, 708.8). A counterfactual board, as Projection.View's
+-- copiableCharacteristicsFaceUp; Game.withFacing turns a merged permanent's
+-- components with it (CR 730.2f). data/scenarios/visibility's CR 708.10
+-- Cytoshape case proves the stored road, and its CR 701.20a Clone case the
+-- stamped one.
 projectShown :: ObjectId -> GameState -> ProjectedCharacteristics
 projectShown oid gs = case Game.lookupObject oid gs of
   Just obj
     | Facing.isFaceDown (Object.facing obj) ->
-        project oid gs {GameState.objects = Map.insert oid (Game.withFacing Facing.FaceUp obj) (GameState.objects gs)}
+        let card = (Game.withFacing Facing.FaceUp obj) {Object.bindings = Binding.withoutCopyEffect (Object.bindings obj)}
+         in project oid (Game.supersedeStoredCopies (Set.singleton oid) gs {GameState.objects = Map.insert oid card (GameState.objects gs)})
   _ -> project oid gs
 
 -- | One object as it stands on this board, through the projection; Nothing
