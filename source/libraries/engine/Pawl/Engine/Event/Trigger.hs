@@ -549,12 +549,15 @@ looksBack condition = case condition of
   -- swept up in its own batch still sees the group-mates returned beside it.
   TriggerCondition.PermanentsReturnedToHand _ -> True
   -- CR 603.10a's third family, named in that rule's own list: "abilities that
-  -- trigger when a card leaves a graveyard". A card leaving any other zone is
-  -- not in the list.
-  TriggerCondition.CardLeavesZone p -> CardLeavesZone.from p == Zone.Graveyard
+  -- trigger when a card leaves a graveyard". And its fourth, CardsPutIntoZone's
+  -- below, where the condition names a hand or library as the destination
+  -- (Kithkin Brinefarer's "put into your hand from your library");
+  -- matchesTriggerGiven's arm asks each move whether all players could see it.
+  -- A card leaving any other zone for anywhere else is in neither.
+  TriggerCondition.CardLeavesZone p -> leavesLookingBack p
   -- The batch reading is in the same family, PermanentsDie's reason: CR 603.10a
   -- names the family without counting its members.
-  TriggerCondition.CardsLeaveZone p -> CardLeavesZone.from p == Zone.Graveyard
+  TriggerCondition.CardsLeaveZone p -> leavesLookingBack p
   -- CR 603.10a's fourth family, "put into a hand or library", which are CR
   -- 400.2's two hidden zones. The rule narrows it to an object all players could
   -- see; matchesTriggerGiven's arm asks that of each move, since it is a fact
@@ -759,6 +762,13 @@ looksBack condition = case condition of
   -- CR 603.10a's look-back is a question about which event fired the ability, and
   -- a reflexive is fired by none. Its bearer is a CR 603.7 delayed entry too.
   TriggerCondition.Reflexive -> False
+
+-- CR 603.10a's third and fourth families for a card leaving a zone: a card
+-- leaving a graveyard, or one put into a hand or library (CR 400.2's hidden
+-- zones). Pawl.LeavesTriggerSpec's "CR 603.10a an exiled Kithkin Brinefarer
+-- looks back" cases are the proof of the second.
+leavesLookingBack :: CardLeavesZone.CardLeavesZone -> Bool
+leavesLookingBack p = CardLeavesZone.from p == Zone.Graveyard || maybe False Game.isHiddenZone (CardLeavesZone.to p)
 
 -- CR 603.2c: does this condition's trigger event CONTAIN the occurrences, or IS
 -- each occurrence its trigger event? "Whenever one or more
