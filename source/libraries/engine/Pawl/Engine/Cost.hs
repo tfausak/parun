@@ -4349,10 +4349,10 @@ criteriaOf component = case component of
 --
 -- Every restore goes through `keepingLibraryActions` rather than a bare
 -- State.put, CR 733.1's last sentence's reason: a shuffle, a reveal or a look
--- (CR 701.20e) one of the reversed abilities performed stands even though the
--- rest of it goes back. The
--- no-activation arm reads the LIVE state rather than a window's `closed`, which
--- is what the callers it took this restore over from did.
+-- (CR 701.20e) the reversed action performed outside a mana ability stands
+-- even though the rest of it goes back. The no-activation arm reads the LIVE
+-- state rather than a window's `closed`, which is what the callers it took this
+-- restore over from did.
 --
 -- The answer is the activations that STAND, empty unless a payer kept them: a
 -- nested window's caller (`tapForManaWith`) hands them to the window it is
@@ -4361,13 +4361,17 @@ reverseIllegal :: [ManaWindow.ManaWindow] -> GameState -> Game ([ManaActivation.
 reverseIllegal windows before =
   let indexed = [((w, i), window, activation) | (w, window) <- zip [0 :: Int ..] windows, (i, activation) <- zip [0 :: Int ..] (ManaWindow.activated window)]
       segmentsOf = Map.fromListWith (flip (<>)) [((w, ManaSegment.activation segment), [segment]) | (w, window) <- zip [0 :: Int ..] windows, segment <- ManaWindow.segments window]
-      -- CR 733.1: "players may not reverse actions that moved cards to a
-      -- library [or] from a library to any zone other than the stack". An
-      -- activation that did -- a CR 605.1b triggered mana ability that draws
-      -- (Synthetic Wellspring Growth) -- stands unasked, and so does a combat
-      -- toll's mill or reveal (ManaWindow.unreversible).
-      movedLibraryCard key = any (\segment -> libraryMembershipChanged (ManaSegment.opened segment) (ManaSegment.closed segment)) (Map.findWithDefault [] key segmentsOf)
-      askers = [entry | entry@(key, window, _) <- indexed, not (movedLibraryCard key || ManaWindow.unreversible window)]
+      -- CR 733.1's last sentence (`touchedLibrary`): an activation that moved
+      -- a card to or from a library -- a CR 605.1b triggered mana ability that
+      -- draws (Synthetic Wellspring Growth) -- shuffled one (Synthetic
+      -- Shuffling Tomb), or revealed or looked at a card in one
+      -- (Under-Construction Skyscraper's scry) stands WHOLE and unasked, its
+      -- tap and its mana included; so does a combat toll's mill or reveal
+      -- (ManaWindow.unreversible). The scenario
+      -- cost/cr-733-1-the-skyscraper-s-scry-keeps-the-whole-mana-ability is the
+      -- proof.
+      touchedLibraryAt key = any (\segment -> touchedLibrary (ManaSegment.opened segment) (ManaSegment.closed segment)) (Map.findWithDefault [] key segmentsOf)
+      askers = [entry | entry@(key, window, _) <- indexed, not (touchedLibraryAt key || ManaWindow.unreversible window)]
       compose reversed = composeReversal before windows (\w i -> Set.notMember (w, i) reversed)
       -- CR 733.1's "unless", per payer, replayed from the pool their first
       -- window opened on.
@@ -4524,15 +4528,16 @@ composeReversal before windows keeps = case NonEmpty.nonEmpty windows of
 
 -- CR 733.1's last sentence: shuffling a library or revealing cards from one --
 -- or looking at them, which CR 701.20e has follow a reveal's rules -- is never
--- reversed, even where the mana ability that did it is. Restoring `snapshot`
--- with those things taken from `since` (the state as the mana window closed,
--- still carrying them) keeps every OTHER write reversed while they stand.
+-- reversed. A mana ability that did so stands whole (`touchedLibrary`); this is
+-- for the rest of the action. Restoring `snapshot` with those things taken from
+-- `since` (the state as the mana window closed, still carrying them) keeps
+-- every OTHER write reversed while they stand.
 --
 -- A library takes `since`'s ORDER, with whatever `snapshot` held that `since`
 -- lacks put back at the index it held (Pawl.Engine.Reversal.restoredOrder). The
 -- card that goes back is one the reversed action took, and CR 733.1 reverses a
 -- move from a library to the stack: a spell cast from a library (Panglacial
--- Wurm) returns, and a shuffle a mana ability performed beside it stands.
+-- Wurm) returns, and a shuffle performed beside it stands.
 -- Pawl.CastSpec's "a refused library cast puts Panglacial back" is the proof
 -- that the card comes back; ReversalSpec's `restoredOrder` case that the shuffle
 -- stands. A MillCards cost never reaches this: CR 601.2h pays it in a second pass
@@ -4547,9 +4552,13 @@ composeReversal before windows keeps = case NonEmpty.nonEmpty windows of
 -- rule's "revealed from a library" protects. `nextEventGroup` rides at
 -- `since`'s value, since a carried-over entry may already hold a group
 -- `snapshot`'s own counter would otherwise repeat -- GameState.events' groups
--- are non-decreasing along the log. The scenario
--- cost/cr-733-1-reversing-the-skyscraper-does-not-undo-its-scry-s-look is the
--- proof that a look stands.
+-- are non-decreasing along the log.
+--
+-- The `events` carry is a REGRESSION FENCE: a mana ability that revealed or
+-- looked stands whole, so only a reversed cost could bring a reveal here, and
+-- `RevealTopOfLibrary` in data/cards/ (2026-10-15) is Synthetic Tithe of Omens'
+-- combat toll alone, which `unreversibleStretch` keeps. Emptying it reddens
+-- nothing.
 keepingLibraryActions :: GameState -> GameState -> GameState
 keepingLibraryActions since snapshot =
   let keep pid held = case Map.lookup pid (GameState.library since) of
@@ -5061,8 +5070,8 @@ tollOrderObservable charges = case filter (any orderSensitive . snd) charges of
 -- combat-cost/cr-508-1j-milling-first-feeds-the-exile-a-tithe-of-ashes-attacks
 -- is the proof.
 --
--- A part that moved a card into or out of a library, or revealed one there,
--- comes back as a stretch CR 733.1 forbids reversing (`unreversibleStretch`):
+-- A part that did what CR 733.1's last sentence names (`touchedLibrary`)
+-- comes back as a stretch that rule forbids reversing (`unreversibleStretch`):
 -- "in any order" lets it finish before a LATER part refuses, and the reversal
 -- that follows must keep it. The scenario
 -- combat-cost/cr-733-1-a-card-milled-to-attack-stays-milled-when-a-later-toll-fails
@@ -5083,7 +5092,7 @@ payTagged pid charges = case charges of
             opened <- State.get
             outcome <- payComponent PaymentMoment.OutsideResolution Nothing Map.empty pid oid component
             closed <- State.get
-            let kept = [unreversibleStretch pid oid opened closed | libraryMembershipChanged opened closed || revealsLibraryCard opened closed] <> stretches
+            let kept = [unreversibleStretch pid oid opened closed | touchedLibrary opened closed] <> stretches
             case outcome of
               Payment.Unpaid -> pure (Payment.Unpaid, reverse kept)
               Payment.Paid bound -> do
@@ -5096,9 +5105,9 @@ payTagged pid charges = case charges of
         (rested, later) <- payTagged pid rest
         pure (mergeBound bound rested, stretches <> later)
 
--- A stretch of a payment that moved a card into or out of a library or revealed
--- one there, which CR 733.1 forbids reversing, shaped as a window holding one
--- activation so that `composeReversal` keeps it in order beside the real ones.
+-- A stretch of a payment that did what CR 733.1's last sentence names
+-- (`touchedLibrary`), which that rule forbids reversing, shaped as a window
+-- holding one activation so that `composeReversal` keeps it in order beside the real ones.
 -- It is NOT a CR 605.3a window: `oid` is the permanent whose charge it paid, and
 -- ManaWindow.unreversible keeps `reverseIllegal` from offering it back.
 unreversibleStretch :: PlayerId -> ObjectId -> GameState -> GameState -> ManaWindow.ManaWindow
@@ -5113,6 +5122,12 @@ unreversibleStretch pid oid opened closed =
       ManaWindow.unreversible = True
     }
 
+-- CR 733.1's last sentence, whole: between the two states, did a card go into
+-- or out of a library, a library get shuffled, or a card in one get revealed or
+-- looked at? An action that did any of it may not be reversed.
+touchedLibrary :: GameState -> GameState -> Bool
+touchedLibrary opened closed = libraryMembershipChanged opened closed || shuffledLibrary opened closed || revealsLibraryCard opened closed
+
 -- CR 733.1: did a card go into or out of a library between the two states? Its
 -- "moved cards to a library [or] from a library to any zone other than the
 -- stack", read off membership: nothing that reaches here moves a card from a
@@ -5124,13 +5139,20 @@ libraryMembershipChanged opened closed =
 
 -- CR 733.1: did the log gain a reveal or a look (`shownCard`) of a card that is
 -- in a library, its "caused cards from a library to be revealed"?
--- `keepingLibraryActions`' test, read over one stretch. Its look half is a
--- regression fence: no toll `payTagged` lists looks at a card, so `shownCard`'s
--- proof runs through keepingLibraryActions instead.
+-- `keepingLibraryActions`' test, read over one stretch.
 revealsLibraryCard :: GameState -> GameState -> Bool
 revealsLibraryCard opened closed =
   let inLibrary oid = any (Foldable.elem oid) (GameState.library closed)
    in any (any inLibrary . shownCard) (Seq.drop (Seq.length (GameState.events opened)) (GameState.events closed))
+
+-- CR 733.1: did the log gain a shuffle (CR 701.24a), its "caused a library to
+-- be shuffled"?
+shuffledLibrary :: GameState -> GameState -> Bool
+shuffledLibrary opened closed =
+  let shuffle logged = case LoggedEvent.event logged of
+        GameEvent.PlayerActed acted -> PlayerActed.action acted == PlayerAction.Shuffle
+        _ -> False
+   in any shuffle (Seq.drop (Seq.length (GameState.events opened)) (GameState.events closed))
 
 -- The card a logged reveal (CR 701.20a) or look showed: CR 701.20e has a look
 -- follow a reveal's rules, so CR 733.1's last sentence keeps both standing.

@@ -48,4 +48,7 @@ data PlayerAction
     Firebend
   | -- | CR 309.7: as the dungeon card is removed from the game.
     CompleteDungeon
+  | -- | CR 701.24a: a library was shuffled, under its owner; CR 701.24e's
+    -- library of zero or one cards too.
+    Shuffle
   deriving (Bounded, Enum, Eq, Ord, Show)

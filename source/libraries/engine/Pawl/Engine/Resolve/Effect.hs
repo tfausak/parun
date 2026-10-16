@@ -4160,9 +4160,6 @@ applyOneEffect runSubgame resolving source controller legal chosen effect = case
     -- exactly as a permanent is, and CR 208.2a's characteristic-defining power
     -- rides along at layer 7a.
     --
-    -- Not implemented: rule 701.23a's look at the searched zone logs no
-    -- GameEvent.Looked (#5008).
-    --
     -- Through effectContext and NOT Filter.contextFor, so the resolution's own
     -- slots ride along and a search filter naming one is answerable: Bifurcate's
     -- "with the same name as target nontoken creature" is CR 201.2a's
@@ -4370,6 +4367,12 @@ applyOneEffect runSubgame resolving source controller legal chosen effect = case
                   -- needs a castable library card on the board at the same time,
                   -- which no case builds; removing it reddens nothing.
                   Monad.when (searcher == owner && Set.member Zone.Library searchedZones) (Cast.castWhileSearching (performManaAbility runSubgame) searcher)
+                  -- CR 701.23a: the searcher looks at ALL cards in each zone
+                  -- searched, not only the matches (Event.look). The scenario
+                  -- visibility/cr-701-23a-private-look-rampant-growth-shows-the-whole-library-to-its-searcher-alone
+                  -- is the proof.
+                  looking <- State.get
+                  Monad.forM_ (Set.toAscList searchedZones) $ \zone -> Monad.mapM_ (Event.look searcher) (Game.zoneMembers zone owner looking)
                   gs <- State.get
                   -- ONE prompt over the union, not one per zone: the card prints
                   -- one instruction with one count, and asking per zone would cap
@@ -4521,10 +4524,7 @@ applyOneEffect runSubgame resolving source controller legal chosen effect = case
           -- ONCE per library, however many searchers read it: the card prints
           -- one "then shuffle" of that library, not one per searcher.
           let shuffled = ListUtils.nubOrd [owner | (_, owner, chosenZones, _, _, _) <- decisions, Set.member Zone.Library chosenZones]
-          Monad.forM_ shuffled $ \owner -> do
-            lib <- State.gets (Game.zoneMembers Zone.Library owner)
-            shuffleAnswer <- Game.ask (Prompt.Shuffle lib)
-            State.modify' (reorderLibrary owner (Game.honourShuffle lib shuffleAnswer))
+          Monad.forM_ shuffled Event.shuffleLibrary
           -- CR 608.2c: "that card" in a later clause, or in a delayed ability
           -- this resolution arms (CR 603.7c), is what arrived.
           bindObjects resolving foundSlot arrivals
@@ -11490,9 +11490,8 @@ putOntoBattlefield asOf searcher tapped cardId =
   Foldable.toList
     <$> Event.changeZoneAttaching (Just asOf) Set.empty cardId Zone.Battlefield LibraryPosition.defaultValue Nothing tapped Map.empty (Just searcher) Nothing Facing.FaceUp False CarryOver.NotCarried False Seq.empty
 
--- Write a whole new order back to a player's library: the shuffle after a CR
--- 701.23 search, and CR 701.22a's scry, CR 701.25a's surveil and CR 701.29a's
--- fateseal.
+-- Write a whole new order back to a player's library: CR 701.22a's scry, CR
+-- 701.25a's surveil and CR 701.29a's fateseal.
 reorderLibrary :: PlayerId -> [ObjectId] -> GameState -> GameState
 reorderLibrary pid order gs =
   gs {GameState.library = Map.insert pid (Seq.fromList order) (GameState.library gs)}

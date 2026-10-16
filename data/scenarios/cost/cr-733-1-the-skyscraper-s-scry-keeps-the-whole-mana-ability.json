@@ -1,0 +1,202 @@
+{
+  "description": "CR 733.1 the Skyscraper's scry keeps the whole mana ability",
+  "note": "bob casts Grizzly Bears ({1}{G}) paying with the eight-level Under-Construction Skyscraper alone, so CR 601.2h's payment fails and CR 733.1 reverses the cast. The Skyscraper's mana ability scried 1 on the way: bob looked at Hill Giant and put it on the bottom. CR 701.20e has the look follow a reveal's rules, and CR 733.1's last sentence forbids reversing an action that revealed cards from a library, so bob is not asked: the Skyscraper stays tapped, its {G} stays in his pool, bob still saw Hill Giant, alice saw nothing, and the library stays as the scry left it.",
+  "board": {
+    "active": "bob",
+    "step": "PrecombatMain",
+    "seats": [
+      {
+        "name": "alice",
+        "library": [
+          {
+            "card": "Island"
+          }
+        ]
+      },
+      {
+        "name": "bob",
+        "battlefield": [
+          {
+            "card": "Under-Construction Skyscraper",
+            "label": "sky",
+            "ready": true,
+            "counters": [
+              {
+                "key": {
+                  "type": "Level"
+                },
+                "value": 8
+              }
+            ]
+          },
+          {
+            "card": "Forest",
+            "label": "forest",
+            "ready": true
+          }
+        ],
+        "hand": [
+          {
+            "card": "Grizzly Bears",
+            "label": "bears"
+          }
+        ],
+        "library": [
+          {
+            "card": "Hill Giant",
+            "label": "hill"
+          },
+          {
+            "card": "Goblin Piker",
+            "label": "piker"
+          }
+        ]
+      }
+    ]
+  },
+  "timeline": [
+    {
+      "turn": 1,
+      "step": "PrecombatMain",
+      "player": "bob",
+      "do": {
+        "Answer": {
+          "prompt": "ChooseScry",
+          "with": [
+            [
+              "$hill"
+            ],
+            []
+          ]
+        }
+      }
+    },
+    {
+      "turn": 1,
+      "step": "PrecombatMain",
+      "player": "bob",
+      "refuse": {
+        "Cast": {
+          "object": "$bears",
+          "mana": [
+            "$sky",
+            null
+          ],
+          "yields": [
+            [
+              {
+                "manaType": {
+                  "type": "Colored",
+                  "value": {
+                    "type": "Green"
+                  }
+                },
+                "tags": [],
+                "retention": {
+                  "type": "Ordinary"
+                },
+                "restriction": null,
+                "rider": null,
+                "sourceChoices": null
+              }
+            ]
+          ]
+        }
+      }
+    },
+    {
+      "turn": 1,
+      "step": "PrecombatMain",
+      "player": "bob",
+      "check": {
+        "View": {
+          "of": "Witnessed",
+          "player": "bob",
+          "is": [
+            "Hill Giant"
+          ]
+        }
+      }
+    },
+    {
+      "turn": 1,
+      "step": "PrecombatMain",
+      "player": "bob",
+      "check": {
+        "View": {
+          "of": "Witnessed",
+          "player": "alice",
+          "is": []
+        }
+      }
+    },
+    {
+      "turn": 1,
+      "step": "PrecombatMain",
+      "player": "bob",
+      "check": {
+        "Tapped": {
+          "object": "$sky",
+          "tapped": true
+        }
+      }
+    },
+    {
+      "turn": 1,
+      "step": "PrecombatMain",
+      "player": "bob",
+      "check": {
+        "View": {
+          "of": "ManaPool",
+          "player": "bob",
+          "is": [
+            {
+              "manaType": {
+                "type": "Colored",
+                "value": {
+                  "type": "Green"
+                }
+              },
+              "tags": [],
+              "retention": {
+                "type": "Ordinary"
+              },
+              "restriction": null,
+              "rider": null,
+              "sourceChoices": null
+            }
+          ]
+        }
+      }
+    },
+    {
+      "turn": 1,
+      "step": "PrecombatMain",
+      "player": "bob",
+      "check": {
+        "View": {
+          "of": "Zone",
+          "player": "bob",
+          "zone": "Library",
+          "is": [
+            "$piker",
+            "$hill"
+          ]
+        }
+      }
+    },
+    {
+      "turn": 1,
+      "step": "PrecombatMain",
+      "player": "bob",
+      "check": {
+        "Count": {
+          "player": "bob",
+          "zone": "Hand",
+          "card": "Grizzly Bears",
+          "count": 1
+        }
+      }
+    }
+  ]
+}

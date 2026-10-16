@@ -1,0 +1,32 @@
+{
+  "description": "CR 701.23a private look Rampant Growth shows the whole library to its searcher alone",
+  "note": "alice searches her library for a basic land card. CR 701.23a has her look at all cards in the zone, so she sees Hill Giant as well as the Forest she finds; bob sees nothing, the found card not being revealed (CR 701.23e).",
+  "board": {
+    "active": "alice",
+    "step": "PrecombatMain",
+    "seats": [
+      {
+        "name": "alice",
+        "battlefield": [
+          { "card": "Forest", "label": "f0", "ready": true },
+          { "card": "Forest", "label": "f1", "ready": true }
+        ],
+        "hand": [{ "card": "Rampant Growth", "label": "growth" }],
+        "library": [
+          { "card": "Hill Giant", "label": "hill" },
+          { "card": "Forest", "label": "lib-forest" }
+        ]
+      },
+      { "name": "bob", "library": [{ "card": "Island" }] }
+    ]
+  },
+  "timeline": [
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": { "Cast": { "object": "$growth", "mana": ["$f0", "$f1"] } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass" },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": { "Answer": { "prompt": "Search", "with": ["$lib-forest"] } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": { "Answer": { "prompt": "Shuffle", "with": ["$hill"] } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "check": { "View": { "of": "Witnessed", "player": "alice", "is": ["Hill Giant", "Forest"] } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "check": { "View": { "of": "Witnessed", "player": "bob", "is": [] } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "check": { "Count": { "player": "alice", "zone": "Battlefield", "card": "Forest", "count": 3 } } }
+  ]
+}
