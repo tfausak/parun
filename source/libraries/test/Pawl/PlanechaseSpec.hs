@@ -160,6 +160,27 @@ spec s registry = Spec.describe s "Pawl.Engine.Planechase" $ do
         chaos = rollAndResolve 5 (S.withRange 1 (inMain S.alice withCarols))
     Spec.assertEqWith s "CR 801.18 carol's Piker died with bob's" (fmap (\pid -> length (Game.zoneMembers Zone.Graveyard pid chaos)) [S.bob, S.carol]) [1, 1]
 
+  -- CR 801.18 for a plane's target: the same four seats at range 1, Akoum
+  -- ("Whenever chaos ensues, destroy target creature that isn't enchanted.")
+  -- face up, and a Goblin Piker each for bob and carol. CR 801.4 and 801.5a
+  -- would keep carol's out of alice's targets; the plane is exempt, so alice
+  -- aims at it.
+  Spec.it s "CR 801.18 Akoum's chaos targets a creature outside the planar controller's range" $ do
+    piker <- S.printingOf s registry "Goblin Piker"
+    board <- seatedPlanarBoard s registry S.alice [(S.alice, ["Akoum"]), (S.bob, []), (S.carol, []), (S.dave, [])]
+    let (bobs, withBobs) = S.addPermanent piker S.bob board
+        (carols, withCarols) = S.addPermanent piker S.carol withBobs
+        ranged = S.withRange 1 (inMain S.alice withCarols)
+        aimAtCarols :: Prompt.Prompt r -> r
+        aimAtCarols p = case p of
+          Prompt.RollDie _ -> 5
+          Prompt.ChooseTargets _ _ _ sets -> fmap (Set.filter ((== Just carols) . Recipient.objectOf) . snd) sets
+          _ -> S.identityAnswer p
+        chaos = S.runPure aimAtCarols ranged (Planechase.roll S.manaPerformer S.alice >> Engine.priorityLoop)
+    Spec.assertEqWith s "CR 801.18 carol's Piker was destroyed and bob's was not" (fmap (\pid -> length (Game.zoneMembers Zone.Graveyard pid chaos)) [S.bob, S.carol]) [0, 1]
+    Spec.assertBool s (List.elem bobs (Game.zoneMembers Zone.Battlefield S.bob chaos)) "bob's Piker is still on the battlefield"
+    Spec.assertBool s (not (Game.inRangeOf S.alice S.carol ranged)) "carol is outside alice's range"
+
   -- CR 113.6p / 901.7: a face-up plane's player ability functions from the
   -- command zone. The Lux Foundation Library's "Players have no maximum hand
   -- size" reaches bob; in the planar deck it does not.
