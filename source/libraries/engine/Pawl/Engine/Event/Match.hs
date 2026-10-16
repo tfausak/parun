@@ -6008,8 +6008,8 @@ matchesTriggerGiven bindings board gs bearer you cond event = case cond of
   -- game reaches no zone, so it cannot be the hand or exile a printing names.
   -- Pawl.OutsideTheGameSpec's Spirit Mascot case proves it.
   --
-  -- A bearer absent from the board sees a move out of a hidden zone only where
-  -- all players could see it, CardsPutIntoZone's gate below and for its reason:
+  -- A bearer absent from the board sees a move only where all players could see
+  -- it (Moved.revealed), CardsPutIntoZone's gate below and for its reason:
   -- CR 603.10a's look-back reaches such a move only then. Pawl.LeavesTriggerSpec's
   -- "CR 603.10a an exiled Kithkin Brinefarer" cases are the proof.
   TriggerCondition.CardLeavesZone p ->
@@ -6020,7 +6020,7 @@ matchesTriggerGiven bindings board gs bearer you cond event = case cond of
               Game.leftOrigin (Moved.change m),
               maybe True (== ZoneChange.to (Moved.change m)) (CardLeavesZone.to p) ->
                 Turn.turnScopeAdmits gs (CardLeavesZone.scope p) (GameState.activePlayer gs) you
-                  && (Map.member bearer board || Moved.revealed m || not (Game.isHiddenZone (ZoneChange.from (Moved.change m))))
+                  && (Map.member bearer board || Moved.revealed m)
                   && not (Seq.null (admitted m))
           GameEvent.Moved {} -> False
           GameEvent.LeftTheGame l
@@ -6110,8 +6110,9 @@ matchesTriggerGiven bindings board gs bearer you cond event = case cond of
   -- exiled from exile is "a new object that has just been exiled" (CR 400.8).
   --
   -- CR 603.10a's look-back reaches the move only when the object was one all
-  -- players could see: one leaving a public zone (CR 400.2), or a card leaving
-  -- a hidden one revealed (Moved.revealed). So a bearer absent from the board --
+  -- players could see (Moved.revealed): not a card leaving a hidden zone (CR
+  -- 400.2) unrevealed, nor one face down in exile, which that rule lets a public
+  -- zone hold. So a bearer absent from the board --
   -- offered for its own departure in this event group by `leftBattlefield` or
   -- `sameGroup` -- sees those moves alone, while a bearer standing on the
   -- battlefield sees every move, a hand's included, by CR 603.10's first
@@ -6128,7 +6129,7 @@ matchesTriggerGiven bindings board gs bearer you cond event = case cond of
           ZoneChange.to zc == destination
             && Turn.turnScopeAdmits gs scope (GameState.activePlayer gs) you
             && (Set.null origins || Set.member (ZoneChange.from zc) origins)
-            && (Map.member bearer board || revealed || not (Game.isHiddenZone (ZoneChange.from zc)))
+            && (Map.member bearer board || revealed)
             && let arrived = ZoneChange.object zc
                 in case Projection.viewWithLastKnown arrived gs arrived of
                      Nothing -> False
@@ -6136,8 +6137,9 @@ matchesTriggerGiven bindings board gs bearer you cond event = case cond of
      in case event of
           GameEvent.Moved m -> admits (Moved.revealed m) (Moved.change m)
           -- A merged or melded permanent's further card, which left the
-          -- battlefield, a public zone.
-          GameEvent.CardArrived zc -> admits False zc
+          -- battlefield, where all players see it (CR 400.2) or CR 708.9 reveals
+          -- it.
+          GameEvent.CardArrived zc -> admits True zc
           GameEvent.DamageDealt _ -> False
           GameEvent.StepBegan {} -> False
           GameEvent.SpellCast {} -> False

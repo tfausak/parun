@@ -54,11 +54,12 @@ data Moved = MkMoved
     -- look-backs at the cast (Quantity.WasCastFrom, Count's
     -- becamePermanents).
     duringResolution :: Bool,
-    -- | CR 603.10a: the object left a HIDDEN zone (CR 400.2) as one all players
-    -- could see -- revealed (CR 701.20a), or in a hand or atop a library shown
-    -- to everyone. False for a move from a public zone, whose zone answers.
-    -- Pawl.LeavesTriggerSpec's "CR 603.10a an exiled Seeker looks back at"
-    -- cases are the proof.
+    -- | CR 603.10a: all players could see the object as it left -- face up in
+    -- a public zone (CR 400.2), revealed (CR 701.20a, 708.9), or in a hand or
+    -- atop a library shown to everyone. False for a card face down in exile.
+    -- Pawl.LeavesTriggerSpec's "CR 603.10a an exiled Seeker looks back at" and
+    -- "CR 603.10a the same token does not see a foretold card" cases are the
+    -- proof.
     revealed :: Bool
   }
   deriving (Eq, Ord, Show)
