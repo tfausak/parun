@@ -18,6 +18,7 @@ import Numeric.Natural (Natural)
 import qualified Pawl.Engine.Binding as Binding
 import qualified Pawl.Engine.Filter as Filter
 import qualified Pawl.Engine.Game as Game
+import qualified Pawl.Engine.Plane as Plane
 import qualified Pawl.Engine.PlayerEffect as PlayerEffect
 import qualified Pawl.Engine.Players as Players
 import qualified Pawl.Engine.Projection as Projection
@@ -2823,15 +2824,16 @@ legalMany slot legal = Set.toList (Map.findWithDefault Set.empty slot legal)
 -- who controlled or owned an object the clause has already moved. Nobody where
 -- that reading is unanswerable: an unfilled or illegal slot is a no-op (CR
 -- 608.2b). In PlayerId order; a caller with an ordering rule imposes it.
-playerRefPlayers :: Map.Map SlotName (Set Recipient) -> PlayerId -> GameState -> PlayerRef -> [PlayerId]
-playerRefPlayers legal controller gs =
-  Maybe.fromMaybe [] . Players.named (resolutionReads legal controller gs) gs
+playerRefPlayers :: Map.Map SlotName (Set Recipient) -> ObjectId -> PlayerId -> GameState -> PlayerRef -> [PlayerId]
+playerRefPlayers legal source controller gs =
+  Maybe.fromMaybe [] . Players.named (resolutionReads legal source controller gs) gs
 
--- What a resolution reads (Players.resolution), off CR 608.2h's last known
--- controller and owner.
-resolutionReads :: Map.Map SlotName (Set Recipient) -> PlayerId -> GameState -> Players.Reads
-resolutionReads legal controller gs =
-  Players.resolution (`Projection.controllerWithLastKnown` gs) (`Game.ownerWithLastKnown` gs) legal controller gs
+-- What a resolution of an ability of @source@ reads (Players.resolution), off
+-- CR 608.2h's last known controller and owner, cut to the range
+-- Plane.rangePerspective gives it.
+resolutionReads :: Map.Map SlotName (Set Recipient) -> ObjectId -> PlayerId -> GameState -> Players.Reads
+resolutionReads legal source controller gs =
+  Players.resolution (`Projection.controllerWithLastKnown` gs) (`Game.ownerWithLastKnown` gs) legal (Plane.rangePerspective source controller gs) controller gs
 
 -- CR 109.2's battlefield, narrowed by an effect-borne Filter and sorted into CR
 -- 608.2f's APNAP order. ObjectRef.EachMatching's whole answer, and the
@@ -2863,10 +2865,12 @@ battlefieldMatching legal resolving controller source gs filter_ =
       baked = Filter.bakeBound (Binding.playerSlots (slotBindings resolving gs)) filter_
       grants = Projection.controlGrants gs
       -- CR 801.10 / 801.5a: only permanents in the controller's range, so the
-      -- sweep and the ChosenPermanents offer agree.
+      -- sweep and the ChosenPermanents offer agree -- every one for CR 801.18's
+      -- planar source (Plane.rangePerspective).
+      reach = Plane.rangePerspective source controller gs
       matching =
         filter
-          (\oid -> Filter.matches context (viewOf oid) baked && Projection.objectInRangeGiven grants controller oid gs)
+          (\oid -> Filter.matches context (viewOf oid) baked && all (\you -> Projection.objectInRangeGiven grants you oid gs) reach)
           -- CR 614.12: less a batch an entry loop or its as-enters effects hold
           -- off the battlefield (GameState.enteringBeside) -- Ixidron's sweep
           -- misses a creature entering beside it.
@@ -3102,7 +3106,7 @@ objectRefObjects legal resolving controller source gs ref = case ref of
   -- negative, is ZERO cards (CR 107.1b): a REGRESSION FENCE, since making the
   -- fallback 5 leaves the suite green.
   ObjectRef.TopOfLibrary (TopOfLibrary.MkTopOfLibrary player count) ->
-    let named = playerRefPlayers legal controller gs player
+    let named = playerRefPlayers legal source controller gs player
         viewOf = effectViewOf source legal gs
         context = effectContext gs controller source legal (slotBindings resolving gs)
         depth = maybe 0 Integer.toNaturalSaturating (Quantity.evaluateFor viewOf context gs resolving source count)
@@ -3128,7 +3132,7 @@ objectRefObjects legal resolving controller source gs ref = case ref of
   -- (CR 608.2c) -- the context is this resolution's, so a filter reading a slot
   -- this resolution bound sees it.
   ObjectRef.TopOfLibraryUntil (TopOfLibraryUntil.MkTopOfLibraryUntil player filter_ count) ->
-    let named = playerRefPlayers legal controller gs player
+    let named = playerRefPlayers legal source controller gs player
         viewOf = effectViewOf source legal gs
         context = effectContext gs controller source legal (slotBindings resolving gs)
         wanted = maybe 0 Integer.toNaturalSaturating (Quantity.evaluateFor viewOf context gs resolving source count)
@@ -3150,7 +3154,7 @@ objectRefObjects legal resolving controller source gs ref = case ref of
   -- 101.3). No Quantity to evaluate and no prompt: CR 404.2 keeps a graveyard's
   -- order out of the players' hands, so "the top card" names exactly one.
   ObjectRef.TopOfGraveyard player ->
-    let named = playerRefPlayers legal controller gs player
+    let named = playerRefPlayers legal source controller gs player
      in Maybe.mapMaybe
           (`Game.topOfGraveyard` gs)
           (filter (`elem` named) (Game.apnapOrder gs))

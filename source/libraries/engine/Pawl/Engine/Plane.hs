@@ -88,9 +88,23 @@ commandControllerOf oid obj gs
 -- and PlayerEffect's printedRows. Pawl.PlanechaseSpec's "CR 801.18 a face-up Tazeem stops a creature
 -- outside the planar controller's range from blocking" proves it.
 --
--- Not implemented: a planar card's triggered abilities, and what any of its
--- abilities does as it resolves, which still read the controller's range
--- (#5062); and CR 901.14's Grand Melee Planechase, where the exemption does not
--- hold (#4465).
+-- Not implemented: CR 901.14's Grand Melee Planechase, where the exemption does
+-- not hold (#4465).
 exemptFromRange :: ObjectId -> GameState -> Bool
 exemptFromRange = isPlanarCard
+
+-- | CR 801.10 / 801.11 / 801.18: whose range of influence an ability of this
+-- source sees and affects through -- its controller's, or nobody's for a
+-- source 'exemptFromRange', which Pawl.Engine.Players.table reads as the whole
+-- table. Asked by trigger detection (Event.Trigger's eventWithinRange), a
+-- resolution's player reads (Resolve.Slots' resolutionReads) and its
+-- battlefield sweep (battlefieldMatching). Pawl.PlanechaseSpec's "CR 801.18
+-- Fields of Summer sees and reaches a caster outside the planar controller's
+-- range", "Mutual Epiphany draws four for a player outside" and "Astral Arena's
+-- chaos damages a creature outside" prove the three.
+--
+-- Not implemented: the other readers of a resolving or triggered ability's
+-- range -- targeting, choices, counts and the remaining Players.table rosters
+-- -- which still read the controller's (#5131).
+rangePerspective :: ObjectId -> PlayerId -> GameState -> Maybe PlayerId
+rangePerspective source controller gs = if exemptFromRange source gs then Nothing else Just controller

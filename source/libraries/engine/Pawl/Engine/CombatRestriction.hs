@@ -1141,7 +1141,9 @@ bounded select defending gs =
 -- not bind a player outside its controller's range" proves both.
 --
 -- CR 801.18: nor does a planar card's bound (Plane.exemptFromRange). A
--- regression fence, since no plane in `data/cards/` prints one.
+-- regression fence: Astral Arena prints one, but its declarer is always in the
+-- planar controller's range -- the active player (CR 901.6) declaring
+-- attackers, or a defending player they could attack (CR 801.3).
 reachesDeclarer :: Maybe PlayerId -> GameState -> (ObjectId, a, b) -> Bool
 reachesDeclarer declarer gs (source, _, _) = case declarer of
   Just pid

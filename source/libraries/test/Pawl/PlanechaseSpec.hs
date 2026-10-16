@@ -51,6 +51,7 @@ import qualified Pawl.Types.ManaSymbol as ManaSymbol
 import qualified Pawl.Types.ManaType as ManaType
 import qualified Pawl.Types.Object as Object
 import qualified Pawl.Types.ObjectId as ObjectId
+import qualified Pawl.Types.OptionalDecision as OptionalDecision
 import qualified Pawl.Types.Phase as Phase
 import qualified Pawl.Types.PlayerActed as PlayerActed
 import qualified Pawl.Types.PlayerAction as PlayerAction
@@ -119,6 +120,45 @@ spec s registry = Spec.describe s "Pawl.Engine.Planechase" $ do
     Spec.assertBool s (not (Set.member carolsToo (CombatRestriction.cantBlock (Just S.carol) [carolsToo] (S.withRange 1 withBedlam)))) "CR 801.10 at range 1 alice's Bedlam does not reach it"
     Spec.assertBool s (Set.member carolsToo (CombatRestriction.cantBlock (Just S.carol) [carolsToo] withBedlam)) "at an unlimited range Bedlam does"
     Spec.assertBool s (not (Game.inRangeOf S.alice S.carol (S.withRange 1 withTazeem))) "carol is outside alice's range"
+
+  -- CR 801.18 / 901.13 for a plane's triggered ability. Four seats at range 1,
+  -- alice the planar controller with Fields of Summer ("Whenever a player casts
+  -- a spell, that player may gain 2 life.") face up. carol, two seats from her,
+  -- casts Ancestral Recall on alice's turn: CR 801.11 would hide the cast from
+  -- alice's ability and CR 801.10 keep carol from gaining, but the plane is
+  -- exempt from both.
+  Spec.it s "CR 801.18 Fields of Summer sees and reaches a caster outside the planar controller's range" $ do
+    island <- S.printingOf s registry "Island"
+    recall <- S.printingOf s registry "Ancestral Recall"
+    board <- seatedPlanarBoard s registry S.alice [(S.alice, ["Fields of Summer"]), (S.bob, []), (S.carol, []), (S.dave, [])]
+    let (recallId, held) = S.addHandCard recall S.carol (S.landsFor island S.carol 1 board)
+        ranged = S.withRange 1 ((inMain S.alice held) {GameState.priority = Just S.carol})
+        carolGains p = case p of
+          Prompt.ChooseOptional _ pid _ _ _ _ -> if pid == S.carol then OptionalDecision.Exercises else OptionalDecision.Declines
+          _ -> S.identityAnswer p
+        gained = S.runPure carolGains ranged (S.cast S.carol recallId >> Engine.settleForPriority >> Stack.resolveTop >> Engine.settleForPriority)
+    Spec.assertEqWith s "CR 801.18 carol gained 2 life off alice's plane, and alice none" (S.lifeOf S.carol gained, S.lifeOf S.alice gained) (Just 22, Just 20)
+    Spec.assertBool s (not (Game.inRangeOf S.alice S.carol ranged)) "carol is outside alice's range"
+
+  -- CR 801.18 for what a phenomenon's ability affects: the same four seats at
+  -- range 1, and alice encounters Mutual Epiphany ("each player draws four
+  -- cards"). carol, outside her range, draws four with everyone else.
+  Spec.it s "CR 801.18 Mutual Epiphany draws four for a player outside the planar controller's range" $ do
+    board <- seatedPlanarBoard s registry S.alice [(S.alice, ["Academy at Tolaria West", "Mutual Epiphany", "Tazeem"]), (S.bob, []), (S.carol, []), (S.dave, [])]
+    let walked = rollAndResolve 6 (S.withRange 1 (inMain S.alice board))
+    Spec.assertEqWith s "CR 801.18 every seat drew four, carol included" (fmap (`S.handSize` walked) [S.alice, S.bob, S.carol, S.dave]) [4, 4, 4, 4]
+
+  -- CR 801.18 for a plane's sweep: the same four seats at range 1, Astral Arena
+  -- ("Whenever chaos ensues, Astral Arena deals 2 damage to each creature.")
+  -- face up, and a Goblin Piker each for bob, in alice's range, and carol, out
+  -- of it. alice rolls chaos and both die.
+  Spec.it s "CR 801.18 Astral Arena's chaos damages a creature outside the planar controller's range" $ do
+    piker <- S.printingOf s registry "Goblin Piker"
+    board <- seatedPlanarBoard s registry S.alice [(S.alice, ["Astral Arena"]), (S.bob, []), (S.carol, []), (S.dave, [])]
+    let (_, withBobs) = S.addPermanent piker S.bob board
+        (_, withCarols) = S.addPermanent piker S.carol withBobs
+        chaos = rollAndResolve 5 (S.withRange 1 (inMain S.alice withCarols))
+    Spec.assertEqWith s "CR 801.18 carol's Piker died with bob's" (fmap (\pid -> length (Game.zoneMembers Zone.Graveyard pid chaos)) [S.bob, S.carol]) [1, 1]
 
   -- CR 113.6p / 901.7: a face-up plane's player ability functions from the
   -- command zone. The Lux Foundation Library's "Players have no maximum hand
