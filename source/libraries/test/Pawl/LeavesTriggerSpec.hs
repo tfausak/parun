@@ -25,6 +25,7 @@ import qualified Pawl.Engine.Engine as Engine
 import qualified Pawl.Engine.Event as Event
 import qualified Pawl.Engine.Event.Binding as Event
 import qualified Pawl.Engine.Event.Trigger as Event
+import qualified Pawl.Engine.Foretell as Foretell
 import qualified Pawl.Engine.Game as Game
 import qualified Pawl.Engine.Keyword as Keyword
 import qualified Pawl.Engine.Mana as Mana
@@ -54,13 +55,17 @@ import qualified Pawl.Types.DamageEvent as DamageEvent
 import qualified Pawl.Types.Designation as Designation
 import qualified Pawl.Types.Effect as Effect
 import qualified Pawl.Types.EndingStep as EndingStep
+import qualified Pawl.Types.EntryRiders as EntryRiders
 import qualified Pawl.Types.Face as Face
+import qualified Pawl.Types.FaceDownReason as FaceDownReason
+import qualified Pawl.Types.FaceDownState as FaceDownState
 import qualified Pawl.Types.Filter as Filter.Type
 import qualified Pawl.Types.GameEvent as GameEvent
 import qualified Pawl.Types.GameState as GameState
 import qualified Pawl.Types.GrantedAbility as GrantedAbility
 import qualified Pawl.Types.Keyword as Keyword.Type
 import qualified Pawl.Types.LastKnown as LastKnown
+import qualified Pawl.Types.LibraryPosition as LibraryPosition
 import qualified Pawl.Types.LoggedEvent as LoggedEvent
 import qualified Pawl.Types.ManaCost as ManaCost
 import qualified Pawl.Types.ManaSymbol as ManaSymbol
@@ -774,6 +779,70 @@ dutifulKnowledgeSeekerSpec s registry =
               (_, after) = settleAfter (pure ()) resolved
           Spec.assertEqWith s "CR 603.10a the look-back made two Spirit tokens" (length (S.tokensOf after)) 2
           Spec.assertEqWith s "and the Goblin Piker is in alice's library" (fmap S.nameOf (Maybe.mapMaybe (`Game.cardOf` after) (Game.zoneMembers Zone.Library S.alice after))) [S.printingName piker]
+        -- CR 400.2's exception to a public zone: a card some rule lets be face
+        -- down. Synthetic Recall the Banished {1}{U} Instant, "Shuffle target
+        -- creature and each card you own in exile into their owners' libraries."
+        -- (data/cards/synthetic-recall-the-banished.json; no printing moves a
+        -- face-down exiled card into a library in the same event as a permanent
+        -- leaving the battlefield, MTGJSON AtomicCards.json regex over
+        -- exile-to-library texts, 2026-10-16.) The exiled card is Augury Raven
+        -- {3}{U} Creature -- Bird 3/3, "Flying / Foretell {1}{U}" (Oracle checked
+        -- against Scryfall 2026-10-16): foretold, so face down and seen by alice
+        -- alone (CR 702.143a), or exiled face up. The pair differs in that and in
+        -- the two Islands foretelling taps. The Recall targets alice's Wan Shi
+        -- Tong token, a card in neither case, so only the look-back at the Raven
+        -- can trigger it.
+        let recallBoard foretelling = do
+              wanCard <- S.cardOf s registry "Wan Shi Tong, All-Knowing"
+              recall <- S.printingOf s registry "Synthetic Recall the Banished"
+              raven <- S.printingOf s registry "Augury Raven"
+              island <- S.printingOf s registry "Island"
+              let base = S.landsFor island S.alice 4 (Setup.emptyGame S.bothPlayers)
+                  (wanId, withWan) = S.addToken wanCard S.alice base
+                  (spellId, withSpell) = S.addHandCard recall S.alice withWan
+                  onMain g = g {GameState.phase = Phase.PrecombatMain, GameState.activePlayer = S.alice, GameState.priority = Just S.alice}
+                  staged
+                    | foretelling =
+                        let (handId, withRaven) = S.addHandCard raven S.alice withSpell
+                         in S.runPure S.identityAnswer (onMain withRaven) (Foretell.foretell S.manaPerformer S.alice handId)
+                    | otherwise = onMain (snd (S.addExiledCard raven S.alice withSpell))
+                  aiming :: Prompt.Prompt r -> r
+                  aiming p = case p of
+                    Prompt.ChooseTargets _ _ _ asked -> fmap (\(_, legal) -> Set.filter ((== Just wanId) . Recipient.objectOf) legal) asked
+                    _ -> S.identityAnswer p
+                  resolved = S.runPure aiming (S.runPure aiming staged (S.cast S.alice spellId)) Stack.resolveTop
+                  (_, after) = settleAfter (pure ()) resolved
+                  libraryNames = fmap S.nameOf (Maybe.mapMaybe (`Game.cardOf` after) (Game.zoneMembers Zone.Library S.alice after))
+              pure (fmap (\ravenId -> Visibility.sees S.bob ravenId staged) (Set.toList (GameState.exile staged)), after, libraryNames, S.printingName raven)
+        Spec.it s "CR 603.10a a Wan Shi Tong token shuffled away looks back at a face-up exiled card shuffled beside it" $ do
+          (seen, after, libraryNames, raven) <- recallBoard False
+          Spec.assertEqWith s "CR 603.10a the look-back made two Spirit tokens" (length (S.tokensOf after)) 2
+          Spec.assertEqWith s "CR 400.2 bob could see the exiled Raven" seen [Visibility.Type.Visible]
+          Spec.assertEqWith s "and the Raven is in alice's library" libraryNames [raven]
+        Spec.it s "CR 603.10a the same token does not see a foretold card shuffled beside it face down" $ do
+          (seen, after, libraryNames, raven) <- recallBoard True
+          Spec.assertEqWith s "CR 400.2 the look-back missed the face-down Raven: no Spirit tokens" (length (S.tokensOf after)) 0
+          Spec.assertEqWith s "CR 702.143a bob could not see the foretold Raven" seen [Visibility.Type.Obscured]
+          Spec.assertEqWith s "off the same spell: the Raven is in alice's library" libraryNames [raven]
+        -- CR 708.9: a face-down PERMANENT is public too, revealed as it leaves.
+        -- bob's Island card is manifested face down from his library; it goes
+        -- into his library in the same event as the Seeker is exiled, so only
+        -- the look-back can see it, and only CR 708.9's reveal shows it to alice.
+        Spec.it s "CR 708.9 an exiled Seeker looks back at a face-down permanent revealed on its way into a library" $ do
+          seeker <- S.printingOf s registry "Dutiful Knowledge Seeker"
+          island <- S.printingOf s registry "Island"
+          lands <- islands
+          let (seekerId, withSeeker) = S.addPermanent seeker S.alice lands
+              (manifestedId, withManifested) = S.addLibraryCard island S.bob withSeeker
+              riders = EntryRiders.defaultValue {EntryRiders.faceDown = Just (FaceDownState.defaultFor FaceDownReason.Manifested)}
+              (entered, gs) = Engine.runGamePure S.identityAnswer withManifested (Event.changeZoneEntering manifestedId Zone.Battlefield LibraryPosition.defaultValue riders (Just S.bob))
+          case Foldable.toList entered of
+            [faceDownId] -> do
+              let (settled, _) = settleAfter (Event.simultaneously (Event.changeZone seekerId Zone.Exile >> Event.changeZone faceDownId Zone.Library)) gs
+              Spec.assertEqWith s "CR 603.10a the look-back put the Seeker's trigger on the stack" (length (GameState.stack settled)) 1
+              Spec.assertEqWith s "CR 708.5 alice could not see the face-down permanent before it left" (Visibility.sees S.alice faceDownId gs) Visibility.Type.Obscured
+              Spec.assertEqWith s "off the same move: the Island card is in bob's library" (length (Game.zoneMembers Zone.Library S.bob settled)) 1
+            _ -> Spec.assertFailure s "setup: the Island card did not enter face down"
 
 -- Binding.handArrival, the card a hand received, which CR 400.7e withholds from
 -- `became` (CR 400.2) and which digital effects reach anyway. Kithkin Brinefarer
