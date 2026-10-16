@@ -8,6 +8,7 @@ import qualified Pawl.Codec.CostChange as CostChange
 import qualified Pawl.Codec.CostSubject as CostSubject
 import qualified Pawl.Codec.Filter as Filter
 import qualified Pawl.Codec.Keyword as Keyword
+import qualified Pawl.Codec.Quantity as Quantity
 import qualified Pawl.Codec.TurnScope as TurnScope
 import qualified Pawl.JsonCodec.Codec as Codec
 import qualified Pawl.JsonCodec.Common as Common
@@ -17,9 +18,9 @@ import qualified Pawl.Types.CostChange as CostChange.Type
 import qualified Pawl.Types.CostModifier as CostModifier
 import qualified Pawl.Types.CostSubject as CostSubject.Type
 
--- | A bare object keyed by the record's field names. The three Maybe criteria
--- are DEFAULTED to Nothing, a sentence that names no target and no "first", so
--- a card file writes only the ones it prints.
+-- | A bare object keyed by the record's field names. The four Maybe criteria
+-- are DEFAULTED to Nothing, a sentence that names no target, no "for each"
+-- and no "first", so a card file writes only the ones it prints.
 --
 -- Refused ('Fields.objectWith''s check): `onlyFirst` on spells, which is not
 -- implemented (#4924); `onlyFirst` beside `whichLoyalty`, since
@@ -35,6 +36,7 @@ codec = Fields.objectWith check $ do
   matching <- Fields.required "matching" (Filter.codec Keyword.codec) CostModifier.matching
   whichTargets <- Fields.defaulted "whichTargets" Nothing (Common.maybe (Filter.codec Keyword.codec)) CostModifier.whichTargets
   perTarget <- Fields.defaulted "perTarget" Nothing (Common.maybe (Filter.codec Keyword.codec)) CostModifier.perTarget
+  perEach <- Fields.defaulted "perEach" Nothing (Common.maybe Quantity.codec) CostModifier.perEach
   onlyFirst <- Fields.defaulted "onlyFirst" Nothing (Common.maybe TurnScope.codec) CostModifier.onlyFirst
   change <- Fields.required "change" CostChange.codec CostModifier.change
   pure
@@ -43,6 +45,7 @@ codec = Fields.objectWith check $ do
         CostModifier.matching = matching,
         CostModifier.whichTargets = whichTargets,
         CostModifier.perTarget = perTarget,
+        CostModifier.perEach = perEach,
         CostModifier.onlyFirst = onlyFirst,
         CostModifier.change = change
       }

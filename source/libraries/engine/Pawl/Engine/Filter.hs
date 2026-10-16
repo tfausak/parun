@@ -721,7 +721,7 @@ data View = MkView
     -- CR 601.2b / 400.7d: the keyword whose candidate cost this candidate was
     -- cast for, read off Object.castUsing, and Nothing where there is no live
     -- object, since Pawl.Types.LastKnown keeps no such record.
-    -- Pawl.Engine.Quantity's CastUsing arm is the reader.
+    -- Pawl.Engine.Quantity's CastUsing arm and Filter.Paid are the readers.
     castUsing :: Maybe Keyword.Type.Keyword,
     -- CR 702.143c: is this candidate a foretold card, or a spell that was one
     -- before it was cast? Read off Object.foretold, which Pawl.Engine.Cast
@@ -2199,7 +2199,10 @@ matches context view predicate = case predicate of
   -- for as long as the object lasts. Vacuously False for a player and for
   -- everything nothing was ever paid for -- `manaSpentTagColors` is empty there.
   Filter.TagWasSpent tag -> Map.member tag (manaSpentTagColors view)
-  Filter.Paid designator -> Keyword.timesPaid designator (paidCosts view) > 0
+  -- CR 601.2b either way: an optional additional cost declared, or the
+  -- alternative cost the candidate was cast for (Henzie "Toolbox" Torre's
+  -- "blitz costs you pay").
+  Filter.Paid designator -> Keyword.timesPaid designator (paidCosts view) > 0 || any (Keyword.designates designator) (castUsing view)
   Filter.IsPrototyped -> prototyped view
   -- CR 701.54e's designation conjunct, asked of the perspective (CR 109.5's
   -- "you"). A live read of Object.ringBearerFor, never a stamp on the candidate:

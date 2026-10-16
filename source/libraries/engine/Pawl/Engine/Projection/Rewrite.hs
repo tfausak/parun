@@ -452,20 +452,21 @@ rewritePlayerEffect pairs effect = case effect of
   -- the printed road, and Liliana, Untouched by Death's "Zombie spells" does on
   -- the stored one.
   --
-  -- A cost modifier has a word in up to FOUR places: its own criterion
+  -- A cost modifier has a word in up to FIVE places: its own criterion
   -- ("nontoken Rebels"), the two target criteria (Dwarven Mauler's "that target
-  -- this creature", Kopala's "that target a MERFOLK"), and the criterion inside
+  -- this creature", Kopala's "that target a MERFOLK"), the count it repeats by
+  -- (Sokka, Swordmaster's "for each ALLY you control") and the criterion inside
   -- each component it adds ("sacrifice a SWAMP"). All descend, which is
   -- Filter.rewriteCost's reading of CR 612.2 carried to a component added to a
   -- cost rather than printed in one. The subject's criteria (a rule-702
   -- designator, CR 605.1a's and CR 606.2's classifications) and an addition's
   -- scale (a colour) are no words CR 612.2's subtype pairs reach.
-  PlayerEffect.ModifyCost (CostModifier.MkCostModifier subject f targets perTarget first change) ->
+  PlayerEffect.ModifyCost (CostModifier.MkCostModifier subject f targets perTarget perEach first change) ->
     let change' = case change of
           CostChange.Add (CostAddition.MkCostAddition components scale) -> CostChange.Add (CostAddition.MkCostAddition (fmap (Filter.rewriteComponent pairs) components) scale)
           CostChange.Increase _ -> change
           CostChange.Reduce _ -> change
-     in PlayerEffect.ModifyCost (CostModifier.MkCostModifier subject (Filter.rewrite pairs f) (fmap (Filter.rewrite pairs) targets) (fmap (Filter.rewrite pairs) perTarget) first change')
+     in PlayerEffect.ModifyCost (CostModifier.MkCostModifier subject (Filter.rewrite pairs f) (fmap (Filter.rewrite pairs) targets) (fmap (Filter.rewrite pairs) perTarget) (fmap (rewriteQuantity pairs) perEach) first change')
   -- No filter to rewrite: a rule-702 designator is not a word CR 612.1 swaps.
   PlayerEffect.AlternativeActivationCost _ -> effect
   PlayerEffect.CastAsThoughItHadFlash f -> PlayerEffect.CastAsThoughItHadFlash (Filter.rewrite pairs f)
@@ -2282,6 +2283,7 @@ rewriteQuantity pairs quantity = case quantity of
   Quantity.Type.SpellsCastUsingThisTurn _ -> quantity
   Quantity.Type.SubgamesThisMatch -> quantity
   Quantity.Type.DungeonsCompleted _ -> quantity
+  Quantity.Type.CommanderCasts _ -> quantity
   Quantity.Type.CompletedDungeon {} -> quantity
   Quantity.Type.EnteredThisTurn -> quantity
   Quantity.Type.EnteredFrom _ -> quantity

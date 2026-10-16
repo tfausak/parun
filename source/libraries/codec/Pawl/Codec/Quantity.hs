@@ -196,6 +196,7 @@ codec =
       -- threshold that turns the count into "you've completed a dungeon" is the
       -- Comparison's, not this arm's.
       Arm.payload "DungeonsCompleted" PlayerRef.codec Quantity.DungeonsCompleted (\x -> case x of Quantity.DungeonsCompleted y -> Just y; _ -> Nothing),
+      Arm.payload "CommanderCasts" PlayerRef.codec Quantity.CommanderCasts (\x -> case x of Quantity.CommanderCasts y -> Just y; _ -> Nothing),
       -- CR 309.7 asked of ONE dungeon, so a player and a printed name go on the
       -- wire together -- PlayerCounters' payload shape. The threshold that turns
       -- the 0\/1 into "you haven't completed it" is the Comparison's.
@@ -303,6 +304,7 @@ tagOf x = case x of
   Quantity.SpellsCastUsingThisTurn {} -> "SpellsCastUsingThisTurn"
   Quantity.SubgamesThisMatch {} -> "SubgamesThisMatch"
   Quantity.DungeonsCompleted {} -> "DungeonsCompleted"
+  Quantity.CommanderCasts {} -> "CommanderCasts"
   Quantity.CompletedDungeon {} -> "CompletedDungeon"
   Quantity.EnteredThisTurn {} -> "EnteredThisTurn"
   Quantity.EnteredFrom {} -> "EnteredFrom"

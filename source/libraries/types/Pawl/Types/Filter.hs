@@ -592,8 +592,9 @@ data Filter keyword
     -- needs. Vacuously False for a player and for everything nothing paid for.
     TagWasSpent ProductionTag.ProductionTag
   | -- | CR 601.2b: a cost the designated keywords offer was declared for the
-    -- candidate, Quantity.TimesPaid's read at least once -- Hallar's "if that
-    -- spell was kicked" is CR 702.33d's whole family, sticker kicker among it.
+    -- candidate, Quantity.TimesPaid's read at least once or Quantity.CastUsing's
+    -- -- Hallar's "if that spell was kicked", Henzie "Toolbox" Torre's "blitz
+    -- costs you pay".
     Paid (KeywordDesignator.KeywordDesignator keyword)
   | -- | CR 718.3c / 718.3d: the candidate is a prototyped spell or a permanent
     -- that was one, a copy of either included. Not Paid above: a Clone of a

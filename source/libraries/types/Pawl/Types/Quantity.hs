@@ -308,6 +308,10 @@ data Quantity
   | -- | CR 309.7: how many dungeons that player has completed
     -- (Player.completedDungeons).
     DungeonsCompleted PlayerRef.PlayerRef
+  | -- | CR 903.8: how many times that player has cast a commander from the
+    -- command zone this game, every commander's tally summed
+    -- (Player.commanderCasts).
+    CommanderCasts PlayerRef.PlayerRef
   | -- | CR 309.7 as a 0\/1: has that player completed a dungeon with this name --
     -- Acererak the Archlich's "if you haven't completed Tomb of Annihilation".
     CompletedDungeon CompletedDungeon.CompletedDungeon

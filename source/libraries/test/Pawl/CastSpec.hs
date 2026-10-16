@@ -46,6 +46,7 @@ import qualified Pawl.Types.Action as A
 import qualified Pawl.Types.BeginningStep as BeginningStep
 import qualified Pawl.Types.BuybackDecision as BuybackDecision
 import qualified Pawl.Types.CandidateCost as CandidateCost
+import qualified Pawl.Types.CardIdentity as CardIdentity
 import qualified Pawl.Types.CardName as CardName
 import qualified Pawl.Types.CardType as CardType
 import qualified Pawl.Types.CastingPermission as CastingPermission
@@ -3554,9 +3555,6 @@ inGraveyardNamed name gs = length (filter (nameOnStack (CardName.MkCardName $ Te
 -- in the ability that offered them, and choosing one is still an announcement
 -- with consequences.
 --
--- Not implemented: the second sentence, "Blitz costs you pay cost {1} less for
--- each time you've cast your commander from the command zone this game" (#5123).
---
 -- ONE board, four Mountains and three library cards; the cases differ only in
 -- which offered candidate the answerer takes. Henzie, settled by S.addPermanent,
 -- attacks for 3 in every case, so a hasty creature is bob's SECOND 3. A
@@ -3577,6 +3575,21 @@ henzieSpec s registry = Spec.describe s "Henzie" $ do
     let cast = throughEndStep (castResolved (announcingBlitz True) heroId board)
     Spec.assertEqWith s "the Hero stayed and did not attack" (S.lifeOf S.bob cast, length (namedOnBattlefield "Goblin Hero" cast)) (Just 17, 1)
     Spec.assertEqWith s "no cost was asked" (offeredCosts heroId board) []
+  -- CR 601.2f / 903.8 on Henzie's second sentence, "Blitz costs you pay cost {1}
+  -- less for each time you've cast your commander from the command zone this
+  -- game": alice's tally holds one cast each of two commanders, which Commander's
+  -- Insignia's ruling sums for a partner pair, so the blitzed Giant costs {1}{R}
+  -- and two of the four Mountains stay untapped. The same board's printed cost
+  -- is not a blitz cost and takes nothing off.
+  Spec.it s "CR 601.2f Henzie takes {1} off a blitz cost per commander cast, summed over both commanders, and nothing off the printed cost" $ do
+    (giantId, board0) <- henzieBoard s registry "Hill Giant"
+    let tallied p = p {Player.commanderCasts = Map.fromList [(CardIdentity.MkCardIdentity 900 S.alice, 1), (CardIdentity.MkCardIdentity 901 S.alice, 1)]}
+        board = board0 {GameState.players = Map.adjust tallied S.alice (GameState.players board0)}
+        blitzed = castResolved (announcingBlitz True) giantId board
+        printed = castResolved (announcingBlitz False) giantId board
+    Spec.assertEqWith s "CR 601.2f the blitzed Giant tapped two Mountains for {1}{R}" (S.tappedCount S.alice blitzed) 2
+    Spec.assertEqWith s "the Giant cast for its printed cost tapped all four for {3}{R}" (S.tappedCount S.alice printed) 4
+    Spec.assertEqWith s "both resolved" (fmap (length . namedOnBattlefield "Hill Giant") [blitzed, printed]) [1, 1]
   -- CR 702.152b / 400.7b: a Clone {3}{U} cast for Henzie's blitz at {3}{U}
   -- enters as a copy of a Hill Giant {3}{R}, so the blitz it keeps would cost
   -- {3}{R} if read off its mana cost now. The instance paid for is still the

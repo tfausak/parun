@@ -52,6 +52,7 @@ import qualified Pawl.Engine.Quantity as Quantity
 import qualified Pawl.Engine.SourceContext as SourceContext
 import qualified Pawl.Engine.Turn as Turn
 import qualified Pawl.Engine.Vanguard as Vanguard
+import qualified Pawl.Extra.Integer as Integer
 import qualified Pawl.Extra.Natural as Natural
 import qualified Pawl.Types.AbilityKind as AbilityKind
 import qualified Pawl.Types.AbilityName as AbilityName
@@ -106,6 +107,7 @@ import qualified Pawl.Types.PlayerScope as PlayerScope
 import qualified Pawl.Types.PlayerStaticAbility as PlayerStaticAbility
 import qualified Pawl.Types.PlotFromZone as PlotFromZone
 import qualified Pawl.Types.ProjectedCharacteristics as PC
+import qualified Pawl.Types.Quantity as Quantity.Type
 import qualified Pawl.Types.Recipient as Recipient
 import Pawl.Types.RowSource (RowSource)
 import qualified Pawl.Types.RowSource as RowSource
@@ -1396,12 +1398,14 @@ spellCostAdjustments targets pid oid gs =
         [(source, modifier) | (source, PlayerEffect.ModifyCost modifier) <- applying pid gs, reaches source modifier]
         (\source wanted -> any (perTargetMatches pid source gs wanted) (Set.toList targets))
         (\source wanted -> perTargetCount targets pid source gs wanted)
+        (perEachCount pid oid gs)
 
 -- CR 601.2f, once for both subjects (CR 602.2b): the adjustments the given
 -- modifiers make, every one of them already known to reach the payment. `aims`
 -- answers `whichTargets` -- SOME announced target matches, once however many do
--- (Kopala, Warden of Waves' ruling) -- and `counted` answers `perTarget`, the
--- distinct announced targets matching, which repeats the change.
+-- (Kopala, Warden of Waves' ruling) -- `counted` answers `perTarget`, the
+-- distinct announced targets matching, which repeats the change, and `each`
+-- answers `perEach` (perEachCount), which repeats it again.
 --
 -- A repeated reduction is its amount REPEATED rather than multiplied, as
 -- Pawl.Engine.Cost.selfReductions repeats Thrasta's, so a typed amount needs no
@@ -1412,9 +1416,13 @@ spellCostAdjustments targets pid oid gs =
 -- Additions are CONCATENATED rather than resolved between, because two effects
 -- each adding a cost both add it, and each keeps its SCALE for
 -- Pawl.Engine.Cost.plusComponents to cash against the cost being adjusted.
-modifierAdjustments :: [(RowSource, CostModifier.CostModifier)] -> (RowSource -> Filter Keyword -> Bool) -> (RowSource -> Filter Keyword -> Natural) -> CostAdjustments
-modifierAdjustments rows aims counted =
-  let applying' = [(source, modifier, maybe 1 (counted source) (CostModifier.perTarget modifier)) | (source, modifier) <- rows, maybe True (aims source) (CostModifier.whichTargets modifier)]
+modifierAdjustments :: [(RowSource, CostModifier.CostModifier)] -> (RowSource -> Filter Keyword -> Bool) -> (RowSource -> Filter Keyword -> Natural) -> (RowSource -> Quantity.Type.Quantity -> Natural) -> CostAdjustments
+modifierAdjustments rows aims counted each =
+  let applying' =
+        [ (source, modifier, maybe 1 (counted source) (CostModifier.perTarget modifier) * maybe 1 (each source) (CostModifier.perEach modifier))
+        | (source, modifier) <- rows,
+          maybe True (aims source) (CostModifier.whichTargets modifier)
+        ]
    in CostAdjustments.MkCostAdjustments
         { CostAdjustments.increases = [amount * times | (_, modifier, times) <- applying', CostChange.Increase amount <- [CostModifier.change modifier]],
           CostAdjustments.reductions =
@@ -1461,16 +1469,28 @@ perTargetCount targets pid source gs wanted =
   let referent r = (Recipient.objectOf r, Recipient.playerOf r)
    in Natural.length (Set.map referent (Set.filter (perTargetMatches pid source gs wanted) targets))
 
+-- CR 601.2f: how many times a `perEach` cost change applies -- its Quantity read
+-- as the total is determined, against the row's SOURCE (CR 113.7, Animar, Soul
+-- of Elements' "for each +1/+1 counter on Animar") with `targetPerspective`'s
+-- "you" (Henzie "Toolbox" Torre's "you've cast your commander"). Against the
+-- object paying where the row names no source. A negative or undeterminable
+-- count applies the change no times, Cost.selfReductions' floor.
+perEachCount :: PlayerId -> ObjectId -> GameState -> RowSource -> Quantity.Type.Quantity -> Natural
+perEachCount pid oid gs source quantity =
+  let context = contextFor (Just (targetPerspective pid source gs)) source gs
+      against = Maybe.fromMaybe oid (RowSource.object source)
+   in maybe 0 Integer.toNaturalSaturating (Quantity.evaluate (Projection.fullView gs) context gs against quantity)
+
 -- Does one announced target count towards a per-target change? perTargetCount's
 -- question of a single recipient.
 perTargetMatches :: PlayerId -> RowSource -> GameState -> Filter Keyword -> Recipient.Recipient -> Bool
 perTargetMatches pid source gs wanted r =
   maybe False (\view -> Filter.matches (contextFor (Just (targetPerspective pid source gs)) source gs) view wanted) (Projection.viewOfRecipient (Projection.fullView gs) gs r)
 
--- CR 109.5: the "you" a cost modifier's TARGET criteria are read with -- the
--- controller of the row's source, which is Kopala, Warden of Waves' "a Merfolk
--- you control" under a row scoped to that controller's opponents. Not the
--- target's own controller, which would make Professor Hojo's "a creature you
+-- CR 109.5: the "you" a cost modifier's TARGET criteria and its `perEach` count
+-- are read with -- the controller of the row's source, which is Kopala, Warden
+-- of Waves' "a Merfolk you control" under a row scoped to that controller's
+-- opponents. Not the target's own controller, which would make Professor Hojo's "a creature you
 -- control" true of every creature, and not the paying player, who is Kopala's
 -- opponent. Pawl.CostSpec's kopalaSpec on three seats proves it.
 --
@@ -1617,6 +1637,7 @@ activationCostAdjustmentsGiven effects pid targets stamp kind loyalty srcId gs =
           [(source, modifier) | (source, PlayerEffect.ModifyCost modifier) <- effects, reaches source modifier]
           (\source wanted -> not (null (matchingTargets source wanted)))
           (\source wanted -> Natural.length (matchingTargets source wanted))
+          (perEachCount pid srcId gs)
       -- CR 702.193a/b: power-up's own reduction by "this permanent's mana cost",
       -- the rule's and not an effect's, so it is asked of the ability's stamp
       -- rather than gathered off a row. Read off the projection, so a copy
@@ -3946,6 +3967,7 @@ overPlayerRefs f effect = case effect of
   PlayerEffect.CantCastSpells -> pure effect
   PlayerEffect.CantActivateAbilities _ -> pure effect
   PlayerEffect.CantCastMoreThan _ -> pure effect
+  -- Not implemented: the references inside a `perEach` count (#5153).
   PlayerEffect.ModifyCost {} -> pure effect
   PlayerEffect.AlternativeActivationCost _ -> pure effect
   PlayerEffect.PlayAdditionalLands _ -> pure effect
