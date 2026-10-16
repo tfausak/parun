@@ -4346,6 +4346,34 @@ applyOneEffect runSubgame resolving source controller legal chosen effect = case
               if lookOutside
                 then State.gets (Event.outsideOffer filter_ source searcher)
                 else pure Map.empty
+            -- CR 601.3 (Panglacial Wurm): the chance to cast is offered AT THE
+            -- SEARCH, not when the resolution began, so earlier effects of the
+            -- resolution have already happened. Both spells and abilities reach
+            -- here. The Wurm's "while you're searching your library" makes the
+            -- offer the SEARCHER's, only where the library being searched is
+            -- their own, and only where a LIBRARY is among the zones being looked
+            -- through.
+            --
+            -- That last conjunct is a REGRESSION FENCE rather than a proven
+            -- behaviour. It is now REACHABLE -- a searcher may take the graveyard
+            -- half of an "and/or" alone -- but observing it needs a castable
+            -- library card on the board at the same time, which no case builds;
+            -- removing it reddens nothing.
+            --
+            -- CR 701.23a: the searcher looks at ALL cards in each zone searched,
+            -- not only the matches (Event.look). The scenario
+            -- visibility/cr-701-23a-private-look-rampant-growth-shows-the-whole-library-to-its-searcher-alone
+            -- is the proof.
+            --
+            -- Both come AHEAD of the zero-cap shortcut below: a search for zero
+            -- cards is still a search, which looks and may cast, though it finds
+            -- nothing. The scenario
+            -- visibility/cr-701-23a-private-look-oreskos-explorer-s-search-for-none-still-looks
+            -- is the proof.
+            Monad.unless (Set.null searchedZones) $ do
+              Monad.when (searcher == owner && Set.member Zone.Library searchedZones) (Cast.castWhileSearching (performManaAbility runSubgame) searcher)
+              looking <- State.get
+              Monad.forM_ (Set.toAscList searchedZones) $ \zone -> Monad.mapM_ (Event.look searcher) (Game.zoneMembers zone owner looking)
             -- A cap of zero asks nothing and finds nothing: one legal answer is
             -- no choice to put to a player. An unbounded search has no such
             -- shortcut -- its cap is not known until the zones are read.
@@ -4353,26 +4381,6 @@ applyOneEffect runSubgame resolving source controller legal chosen effect = case
               if (Set.null searchedZones && Map.null outsideAvailable) || cap == Just 0
                 then pure ([], [])
                 else do
-                  -- CR 601.3 (Panglacial Wurm): the chance to cast is offered AT
-                  -- THE SEARCH, not when the resolution began, so earlier
-                  -- effects of the resolution have already happened. Both spells
-                  -- and abilities reach here. The Wurm's "while you're searching
-                  -- your library" makes the offer the SEARCHER's, only where the
-                  -- library being searched is their own, and only where a LIBRARY
-                  -- is among the zones being looked through.
-                  --
-                  -- That last conjunct is a REGRESSION FENCE rather than a
-                  -- proven behaviour. It is now REACHABLE -- a searcher may take
-                  -- the graveyard half of an "and/or" alone -- but observing it
-                  -- needs a castable library card on the board at the same time,
-                  -- which no case builds; removing it reddens nothing.
-                  Monad.when (searcher == owner && Set.member Zone.Library searchedZones) (Cast.castWhileSearching (performManaAbility runSubgame) searcher)
-                  -- CR 701.23a: the searcher looks at ALL cards in each zone
-                  -- searched, not only the matches (Event.look). The scenario
-                  -- visibility/cr-701-23a-private-look-rampant-growth-shows-the-whole-library-to-its-searcher-alone
-                  -- is the proof.
-                  looking <- State.get
-                  Monad.forM_ (Set.toAscList searchedZones) $ \zone -> Monad.mapM_ (Event.look searcher) (Game.zoneMembers zone owner looking)
                   gs <- State.get
                   -- ONE prompt over the union, not one per zone: the card prints
                   -- one instruction with one count, and asking per zone would cap

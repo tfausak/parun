@@ -1,0 +1,32 @@
+{
+  "description": "CR 701.23a private look Oreskos Explorer's search for none still looks",
+  "note": "No player controls more lands than alice, so Oreskos Explorer's trigger searches for up to zero Plains cards. A search for zero cards is still a search (the card's ruling: you still search and shuffle, though you can't find any cards), so alice looks at her whole library (CR 701.23a) and bob sees nothing; the library is shuffled and nothing is found.",
+  "board": {
+    "active": "alice",
+    "step": "PrecombatMain",
+    "seats": [
+      {
+        "name": "alice",
+        "battlefield": [
+          { "card": "Plains", "label": "p0", "ready": true },
+          { "card": "Plains", "label": "p1", "ready": true }
+        ],
+        "hand": [{ "card": "Oreskos Explorer", "label": "explorer" }],
+        "library": [
+          { "card": "Plains", "label": "lib-plains" },
+          { "card": "Hill Giant", "label": "hill" }
+        ]
+      },
+      { "name": "bob", "library": [{ "card": "Island" }] }
+    ]
+  },
+  "timeline": [
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": { "Cast": { "object": "$explorer", "mana": ["$p0", "$p1"] } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass" },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass" },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": { "Answer": { "prompt": "Shuffle", "with": ["$hill", "$lib-plains"] } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "check": { "View": { "of": "Witnessed", "player": "alice", "is": ["Plains", "Hill Giant"] } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "check": { "View": { "of": "Witnessed", "player": "bob", "is": [] } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "check": { "View": { "of": "Zone", "player": "alice", "zone": "Library", "is": ["$hill", "$lib-plains"] } } }
+  ]
+}
