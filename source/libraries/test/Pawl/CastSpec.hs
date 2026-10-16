@@ -66,6 +66,7 @@ import qualified Pawl.Types.GameSettings as GameSettings
 import qualified Pawl.Types.GameState as GameState
 import qualified Pawl.Types.Gift as Gift
 import qualified Pawl.Types.Keyword as Keyword
+import qualified Pawl.Types.KeywordInstance as KeywordInstance
 import qualified Pawl.Types.KickerDecision as KickerDecision
 import qualified Pawl.Types.Label as Label
 import qualified Pawl.Types.Mana as Mana.Type
@@ -1144,7 +1145,7 @@ kicksBlue = kicksMatching blueKicker
 
 kicksMatching :: Cost.Type.Cost Keyword.Keyword -> Prompt.Prompt r -> r
 kicksMatching wanted p = case p of
-  Prompt.ChooseKicker _ _ _ keyword _ ->
+  Prompt.ChooseKicker _ _ _ keyword _ _ ->
     KickerDecision.MkKickerDecision (if keyword == Keyword.Kicker wanted then 1 else 0)
   -- One legal target per slot, FILTERED out of the offered set rather than built
   -- by hand, so CR 608.2b sees the recipient the prompt offered.
@@ -1559,6 +1560,31 @@ kickerSpec s registry = Spec.describe s "Kicker" $ do
     Spec.assertEqWith s "CR 702.174d bob, promised the Food, created it" (foods S.bob) 1
     Spec.assertEqWith s "and bob drew nothing" (S.handSize S.bob after) 0
     Spec.assertEqWith s "and carol created no Food" (foods S.carol) 0
+  -- CR 702.174a with two IDENTICAL gifts from two Synthetic Generous Hosts:
+  -- Prompt.ChooseKicker and Prompt.ChooseOpponent each name the instance they
+  -- ask about, so the answerer pays only the second Host's gift and promises it
+  -- to carol by that name rather than by the order it is asked in.
+  Spec.it s "CR 702.174a each gift prompt names its Host's instance, so alice pays and promises only the second Host's" $ do
+    island <- S.printingOf s registry "Island"
+    divination <- S.printingOf s registry "Divination"
+    host <- S.printingOf s registry "Synthetic Generous Host"
+    let (_, withFirst) = S.addPermanent host S.alice (S.landsFor island S.alice 3 S.threePlayerGame)
+        (second, withHosts) = S.addPermanent host S.alice withFirst
+        stocked = List.foldl' (\g pid -> snd (S.addLibraryCard island pid g)) withHosts [S.alice, S.alice, S.bob, S.carol]
+        (gs, spellId) = S.handOne divination stocked
+        grantedBySecond which = case which of
+          KeywordInstance.Granted src _ _ -> src == second
+          KeywordInstance.Own _ -> False
+        answer :: Prompt.Prompt r -> r
+        answer p = case p of
+          Prompt.ChooseKicker _ _ _ _ which _ -> KickerDecision.MkKickerDecision (if any grantedBySecond which then 1 else 0)
+          Prompt.ChooseOpponent _ _ _ (Just (PlayerChoice.Promised _ which)) offered ->
+            let wanted = if grantedBySecond which then S.carol else S.bob
+             in Maybe.fromMaybe (NonEmpty.head offered) (List.find (== wanted) (NonEmpty.toList offered))
+          _ -> S.identityAnswer p
+        (_, after) = castAndResolve answer gs spellId
+    Spec.assertEqWith s "CR 702.174e carol, promised the second Host's gift, drew a card" (S.handSize S.carol after) 1
+    Spec.assertEqWith s "and bob, promised nothing, drew none" (S.handSize S.bob after) 0
   -- CR 601.2c's alternative targets: Into the Flood Maw ({U} Instant, "Gift a
   -- tapped Fish. Return target creature an opponent controls to its owner's hand.
   -- If the gift was promised, instead return target nonland permanent an opponent

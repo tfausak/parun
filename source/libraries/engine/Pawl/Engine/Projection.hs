@@ -36,6 +36,7 @@ import qualified Pawl.Engine.Sector as Sector
 import qualified Pawl.Engine.SourceContext as SourceContext
 import qualified Pawl.Engine.Subtype as Subtype
 import qualified Pawl.Engine.Vanguard as Vanguard
+import qualified Pawl.Extra.Natural as Natural
 import qualified Pawl.Types.AbilityName as AbilityName
 import qualified Pawl.Types.AbilitySticker as AbilitySticker
 import qualified Pawl.Types.ActivatedAbility as ActivatedAbility
@@ -82,6 +83,7 @@ import qualified Pawl.Types.GameState as GameState
 import qualified Pawl.Types.GrantedAbility as GrantedAbility
 import Pawl.Types.Keyword (Keyword)
 import qualified Pawl.Types.Keyword as Keyword.Type
+import qualified Pawl.Types.KeywordInstance as KeywordInstance
 import qualified Pawl.Types.LastKnown as LastKnown
 import Pawl.Types.Layer (Layer)
 import qualified Pawl.Types.Layer as Layer
@@ -5273,6 +5275,31 @@ keywordsOf = keywordsGiven Map.empty
 
 keywordsGiven :: Map ObjectId ProjectedCharacteristics -> ObjectId -> GameState -> Map Keyword Natural
 keywordsGiven pcs oid gs = PC.keywords (projectGiven pcs oid gs)
+
+-- CR 611.3a / 613.7a: which of `oid`'s instances of `keyword` it has right
+-- now, as many as keywordsOf counts: those a grant applying to it is giving,
+-- each named by that effect's source and timestamp, and its own for the rest.
+-- Own first, then the grants in KeywordInstance order.
+--
+-- A grant's share is what the fold LOSES without that grant's GainKeyword parts,
+-- rather than a count of the grants whose affected set holds `oid`, so CR
+-- 613.7's order with a later "loses" effect and CR 613.8's dependencies answer
+-- as the fold does: a grant a removal swept away gives nothing.
+--
+-- The keyword is matched as the grant writes it, which is the keyword as held
+-- for every keyword Keyword.grantedBy leaves unchanged.
+keywordInstances :: Keyword -> ObjectId -> GameState -> [KeywordInstance.KeywordInstance]
+keywordInstances keyword oid gs =
+  let cands = gather gs
+      held cs = Map.findWithDefault 0 keyword (PC.keywords (projectFrom cs oid gs))
+      total = held cands
+      grants keyed c = case gModification c of
+        Modification.GainKeyword k -> k == keyword && keyed (gSource c, gTimestamp c)
+        _ -> False
+      origins = Set.toAscList (Set.fromList [(gSource c, gTimestamp c) | c <- cands, grants (const True) c])
+      shareOf origin = Natural.minusSaturating total (held (filter (not . grants (== origin)) cands))
+      granted = [KeywordInstance.Granted src ts n | (src, ts) <- origins, n <- [1 .. shareOf (src, ts)]]
+   in fmap KeywordInstance.Own [1 .. Natural.minusSaturating total (Natural.length granted)] <> granted
 
 -- CR 105.2 / 613.1e: an object's colours after the layer fold. The sole read
 -- point -- the closed half never reads Face.manaCost for colour.

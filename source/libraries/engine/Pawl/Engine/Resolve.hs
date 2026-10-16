@@ -74,6 +74,7 @@ import qualified Pawl.Types.PayGate as PayGate
 import qualified Pawl.Types.PayObligation as PayObligation
 import qualified Pawl.Types.PermissionVerb as PermissionVerb
 import qualified Pawl.Types.PlayPermissionOrigin as PlayPermissionOrigin
+import qualified Pawl.Types.PlayerChoice as PlayerChoice
 import qualified Pawl.Types.PlayerEffect as PlayerEffect
 import Pawl.Types.PlayerId (PlayerId)
 import qualified Pawl.Types.PlayerRef as PlayerRef
@@ -469,14 +470,13 @@ resolveSpellWith runSubgame oid = do
 -- promised gift spell gives the gift again. That is the opposite of the permanent
 -- half's answer one rule over, where CR 707.2 copies no such record onto a Clone.
 --
--- One gift per PAID INSTANCE the spell still HAS, each to the opponent its own
--- promise named (Keyword.Engine.giftEffect's ordinal): the ith entry of the
--- keyword's Object.paidCosts is the ith instance's, and an instance whose grant
--- stopped applying since the cast (CR 611.3a) gives nothing -- the permanent
--- half's perPayment cap, read off the projection's count.
---
--- Not implemented: tying each promise to the instance that made it, so a lost
--- instance takes its own promise rather than the latest (#5135).
+-- One gift per PROMISED INSTANCE the spell still HAS, each to the opponent its
+-- own promise named: Projection.keywordInstances names the instances, and
+-- Pawl.Engine.Cost.nextPromise keyed each promise by its instance as the cost
+-- was paid, so an instance whose grant stopped applying since the cast (CR
+-- 611.3a) takes its own promise with it and the others keep theirs. A promise
+-- is made exactly when its instance's cost is paid, which makes it the record
+-- of "if this spell's gift cost was paid" here.
 --
 -- Effect.GiveGift follows, once per spell however many gifts it promised: CR
 -- 702.174c's "gives a gift" is the promised spell resolving.
@@ -500,10 +500,10 @@ giftOnSpellResolution :: Game Result -> ObjectId -> PlayerId -> Game ()
 giftOnSpellResolution runSubgame oid controller = do
   gs <- State.get
   let object = Game.lookupObject oid gs
-      promised = maybe Map.empty Object.paidCosts object
+      promised = Maybe.fromMaybe Map.empty (Game.currentChoice Object.chosenPlayers oid gs)
       slots = maybe Map.empty (Binding.targetsOf . Object.bindings) object
-      gifts = [(something, ordinal) | (Keyword.Gift something, count) <- Map.toList (Projection.keywordsOf oid gs), (ordinal, times) <- zip [1 .. count] (Foldable.toList (Map.findWithDefault Seq.empty (Keyword.Gift something) promised)), times > 0]
-      give (something, ordinal) = applyEffectWith runSubgame oid oid controller slots slots (Keyword.Engine.giftEffect something ordinal)
+      gifts = [(something, which) | Keyword.Gift something <- Map.keys (Projection.keywordsOf oid gs), which <- Projection.keywordInstances (Keyword.Gift something) oid gs, Map.member (PlayerChoice.Promised something which) promised]
+      give (something, which) = applyEffectWith runSubgame oid oid controller slots slots (Keyword.Engine.giftEffect something which)
   Monad.when (Keyword.Engine.isSpellCard (Projection.cardTypesOf oid gs) && not (null gifts)) $ do
     Monad.forM_ gifts give
     applyEffectWith runSubgame oid oid controller slots slots Effect.GiveGift
