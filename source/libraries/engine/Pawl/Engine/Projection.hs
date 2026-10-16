@@ -362,6 +362,10 @@ applyModification textBoxOf viewOf src stamp gs oid unitTypes affected m pc =
         -- Pawl.ActivateSpec's Locus of Enlightenment case proves all three, and
         -- its Gliding Licid case the named twins. The Steward of the Harvest
         -- scenarios prove the other pile.
+        --
+        -- Not implemented: CR 607.2a's printed link for the ExiledWithSource
+        -- pile, which also counts a card an acquired ability of `src` exiled
+        -- (#5149).
         Modification.GainExiledCardAbilities (ExiledCardAbilities.MkExiledCardAbilities pile extra) ->
           let inPile o = case (pile, Map.lookup o (GameState.exiledWith gs)) of
                 (ExiledPile.CraftMaterials, Just link) -> link == ExileLink.MkExileLink {ExileLink.source = src, ExileLink.ability = Just Binding.craftLink}
