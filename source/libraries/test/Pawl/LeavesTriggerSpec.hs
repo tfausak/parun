@@ -900,6 +900,33 @@ handArrivalSpec s registry =
               (settled, after) = settleAfter (Event.changeZone giantId Zone.Hand) gs
           Spec.assertEqWith s "alice holds the Giant and its duplicate" (handNames S.alice after) [S.printingName giant, S.printingName giant]
           Spec.assertEqWith s "one trigger reached the stack" (length (GameState.stack settled)) 1
+        -- CR 603.10a's fourth family: the Brinefarer is exiled in the same event
+        -- as the Forge-Tender atop alice's library is put into her hand, so only
+        -- the look-back can see the card. Future Sight {2}{U}{U}{U} Enchantment,
+        -- "Play with the top card of your library revealed. / You may play lands
+        -- and cast spells from the top of your library." (data/cards/; Oracle
+        -- checked against Scryfall 2026-10-16) is what lets all players see it.
+        -- The pair differs in Future Sight alone.
+        let exiledBeside revealing = do
+              brinefarer <- S.printingOf s registry "Kithkin Brinefarer"
+              sight <- S.printingOf s registry "Future Sight"
+              tender <- S.printingOf s registry "Burrenton Forge-Tender"
+              forest <- S.printingOf s registry "Forest"
+              let (brinefarerId, withBrinefarer) = S.addPermanent brinefarer S.alice (S.landsInPlay forest 1)
+                  withSight = if revealing then snd (S.addPermanent sight S.alice withBrinefarer) else withBrinefarer
+                  (tenderId, gs) = S.addLibraryCard tender S.alice withSight
+                  (settled, after) = settleAfter (Event.simultaneously (Event.changeZone brinefarerId Zone.Exile >> Event.changeZone tenderId Zone.Hand)) gs
+              pure (S.printingName tender, Visibility.sees S.bob tenderId gs, settled, after)
+        Spec.it s "CR 603.10a an exiled Kithkin Brinefarer looks back at a revealed Kithkin card put into alice's hand" $ do
+          (name, seen, settled, after) <- exiledBeside True
+          Spec.assertEqWith s "CR 603.10a alice holds the Forge-Tender and its duplicate" (handNames S.alice after) [name, name]
+          Spec.assertEqWith s "Future Sight showed bob the Forge-Tender" seen Visibility.Type.Visible
+          Spec.assertEqWith s "one trigger reached the stack" (length (GameState.stack settled)) 1
+        Spec.it s "CR 603.10a an exiled Kithkin Brinefarer does not see the same Kithkin card put there unrevealed" $ do
+          (name, seen, settled, after) <- exiledBeside False
+          Spec.assertEqWith s "CR 603.10a alice holds the Forge-Tender alone" (handNames S.alice after) [name]
+          Spec.assertEqWith s "CR 400.2 without Future Sight bob could not see it" seen Visibility.Type.Obscured
+          Spec.assertEqWith s "nothing reached the stack" (GameState.stack settled) []
 
 -- What PermanentReturnedToHand's bindings are FOR -- Warped Devotion {2}{B}
 -- Enchantment, "Whenever a permanent is returned to a player's hand, that
