@@ -202,10 +202,10 @@ data GameState = MkGameState
     pendingReplacementEffects :: Seq.Seq PendingReplacementEffect.PendingReplacementEffect,
     -- | CR 616.1 and Lich's Mirror's ruling: the objects a state-based action
     -- check moves, keyed to the source of the replacement whose effects run in
-    -- place of a loss in that check. A move those effects make of one asks its
-    -- controller which of the two happens (Event.changeZoneWithCause). Empty
-    -- outside that window.
-    contested :: Map.Map ObjectId.ObjectId ObjectId.ObjectId,
+    -- place of a loss in that check, or to Nothing once kept for the check. A
+    -- move those effects make of one asks its controller which of the two
+    -- happens (Event.contestedKept). Empty outside that window.
+    contested :: Map.Map ObjectId.ObjectId (Maybe ObjectId.ObjectId),
     -- | CR 615.5's amount channel: the amount bindings a prevention rider can
     -- read outside any object's environment, its recipient possibly being a
     -- player. Empty at every priority window.

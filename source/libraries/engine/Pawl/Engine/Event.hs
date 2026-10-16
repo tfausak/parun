@@ -5775,9 +5775,12 @@ changeZoneInBatchReturning asOf oid requestedDest = changeZoneAttaching (Just as
 -- Pawl.LeavesTriggerSpec's Rest in Peace case and data/scenarios/
 -- simultaneous-moves' Banisher Priest and Palace Jailer boards prove it.
 changeZonesTogether :: [(ObjectId, Zone)] -> Game [Seq.Seq ObjectId]
-changeZonesTogether moves = simultaneously . together $ do
+changeZonesTogether batch = simultaneously . together $ do
+  -- Lich's Mirror's ruling, asked of the whole batch before any of it moves.
+  kept <- contestedKept (fmap fst batch)
   before <- State.get
-  let entering = [oid | (oid, Zone.Battlefield) <- moves]
+  let moves = filter ((`Set.notMember` kept) . fst) batch
+      entering = [oid | (oid, Zone.Battlefield) <- moves]
       step (sofar, acc) (oid, dest) = do
         State.modify' (\g -> g {GameState.enteringPending = Map.delete oid (GameState.enteringPending g)})
         new <- changeZoneAttaching (Just before) sofar oid dest LibraryPosition.defaultValue Nothing TapState.Untapped Map.empty Nothing Nothing Facing.FaceUp False CarryOver.NotCarried False Seq.empty
@@ -5954,32 +5957,46 @@ alreadyIn oid obj dest gs
   where
     heldByOwner = Game.pileHolderOf oid gs == Just (Object.owner obj)
 
--- CR 616.1 with Lich's Mirror's ruling: an object a state-based action check
+-- CR 616.1 with Lich's Mirror's ruling: objects a state-based action check
 -- moves, which the effects a replacement ran in place of a loss in that check
--- would move too (GameState.contested). Only one move can happen, and the
--- object's controller -- its owner off the battlefield -- chooses: True when
--- they keep the check's, so this move is skipped. ChooseRedirect's Exercises
--- is the replacement's move, as for an optional redirect. Never elided: one
--- move fires the other's triggers and not its own. Pawl.ScenarioSpec's
--- data/scenarios/game-outcome/cr-616-1-lich-s-mirror-* pair proves both answers.
-yieldsToCheck :: ObjectId -> Game Bool
-yieldsToCheck oid = do
+-- are about to move too (GameState.contested). Only one move can happen, and
+-- each object's controller -- its owner off the battlefield -- chooses; the
+-- answer is the set kept for the check, whose moves here are skipped.
+-- ChooseRedirect's Exercises is the replacement's move, as for an optional
+-- redirect. Never elided: one move fires the other's triggers and not its own.
+-- Pawl.ScenarioSpec's data/scenarios/game-outcome/cr-616-1-lich-s-mirror-*
+-- pair proves both answers.
+--
+-- Asked for a whole batch at once, in APNAP order of the choosers (CR 616.1's
+-- last sentence, 101.4); Pawl.DepartureSpec's "CR 616.1 / 101.4 the players
+-- whose permanents Lich's Mirror's reset contests choose in APNAP order"
+-- proves it. An answer is recorded, so a later move of the same object is not
+-- asked again.
+contestedKept :: [ObjectId] -> Game (Set ObjectId)
+contestedKept oids = do
   gs <- State.get
-  case (Map.lookup oid (GameState.contested gs), Game.lookupObject oid gs) of
-    (Just source, Just obj)
-      | Just chooser <- Game.ruleChooser gs =<< (Projection.controllerOf oid gs <|> Just (Object.owner obj)) -> do
-          answer <- Game.choose (Prompt.ChooseRedirect (Decide.deciderFor chooser gs) chooser source oid)
-          pure (answer == OptionalDecision.Declines)
-    _ -> pure False
+  let contest oid = do
+        source <- Monad.join (Map.lookup oid (GameState.contested gs))
+        obj <- Game.lookupObject oid gs
+        chooser <- Game.ruleChooser gs =<< (Projection.controllerOf oid gs <|> Just (Object.owner obj))
+        pure (List.elemIndex chooser (Game.apnapOrder gs), (chooser, source, oid))
+      asked = fmap snd (List.sortOn fst (Maybe.mapMaybe contest (ListUtils.nubOrd oids)))
+  Monad.forM_ asked $ \(chooser, source, oid) -> do
+    now <- State.get
+    answer <- Game.choose (Prompt.ChooseRedirect (Decide.deciderFor chooser now) chooser source oid)
+    let record = if answer == OptionalDecision.Declines then Map.insert oid Nothing else Map.delete oid
+    State.modify' (\g -> g {GameState.contested = record (GameState.contested g)})
+  after <- State.gets GameState.contested
+  pure (Set.fromList [oid | oid <- oids, Map.lookup oid after == Just Nothing])
 
 changeZoneWithCause :: Maybe DiscardCause.DiscardCause -> Maybe GameState -> Set ObjectId -> ObjectId -> Zone -> LibraryPosition.LibraryPosition -> Maybe Recipient.Recipient -> TapState.TapState -> Map.Map (CounterKind.CounterKind Keyword.Type.Keyword) Natural -> Maybe PlayerId -> Maybe CardName.CardName -> Facing.Facing -> Bool -> CarryOver.CarryOver -> Bool -> Seq.Seq (ObjectId, Modification.Modification (GrantedAbility.Type.GrantedAbility Card.Type.Card)) -> Game (Seq.Seq ObjectId)
 changeZoneWithCause discarded asOf batch oid requestedDest requestedPosition seed tapped entering under shown facing concealed carrying resolving defining = do
-  yielded <- yieldsToCheck oid
+  yielded <- Set.member oid <$> contestedKept [oid]
   gs <- State.get
   case Game.lookupObject oid gs of
     Nothing -> pure Seq.empty
     -- Lich's Mirror's ruling: the check keeps it, so this move does not happen
-    -- and the check's own move does, after (yieldsToCheck).
+    -- and the check's own move does, after (contestedKept).
     Just _ | yielded -> pure Seq.empty
     -- CR 111.8: "A token that has left the battlefield can't move to another
     -- zone or come back onto the battlefield. If such a token would change
@@ -7569,8 +7586,7 @@ destroyIn :: Maybe GameState -> DestructionCause.DestructionCause -> Regenerabil
 destroyIn asOf cause regenerability oids = simultaneously $ do
   live <- State.get
   let gs = Maybe.fromMaybe live asOf
-      doomed = filter (\oid -> Maybe.isJust (Game.lookupObject oid live) && not (Projection.hasKeyword Keyword.Type.Indestructible oid gs)) oids
-  fmap Maybe.catMaybes . Monad.forM doomed $ \oid -> do
+  fmap Maybe.catMaybes . Monad.forM (doomedAmong live gs oids) $ \oid -> do
     settled <- resolveDestruction (Just gs) cause regenerability oid
     case settled of
       -- CR 701.8c: a regeneration effect REPLACED the destruction, so nothing was
@@ -7582,6 +7598,22 @@ destroyIn asOf cause regenerability oids = simultaneously $ do
       Just target -> do
         arrived <- changeZoneInBatchReturning gs target Zone.Graveyard
         pure (Just (target, arrived))
+
+-- The members a destruction reaches: still there on the live board, and not
+-- indestructible on the batch's (CR 702.12b).
+doomedAmong :: GameState -> GameState -> [ObjectId] -> [ObjectId]
+doomedAmong live gs = filter (\oid -> Maybe.isJust (Game.lookupObject oid live) && not (Projection.hasKeyword Keyword.Type.Indestructible oid gs))
+
+-- destroyIn's first half for a batch on `asOf`: each member's destruction
+-- through its CR 616.1 loop, answering the settled objects whose destruction
+-- stands -- a regeneration shield or umbra armor (CR 701.19a, 702.89a)
+-- replaced the rest, which then move nowhere. The caller puts the answer into
+-- graveyards itself: Pawl.Engine.Sba does so after Lich's Mirror's reset, which
+-- contests only what would really move.
+destructionsStanding :: GameState -> DestructionCause.DestructionCause -> Regenerability.Regenerability -> [ObjectId] -> Game [ObjectId]
+destructionsStanding asOf cause regenerability oids = do
+  live <- State.get
+  fmap Maybe.catMaybes (Monad.mapM (resolveDestruction (Just asOf) cause regenerability) (doomedAmong live asOf oids))
 
 -- The single countering funnel (CR 701.6a -- not to be confused with putCounters
 -- above, CR 122.6's counter markers).

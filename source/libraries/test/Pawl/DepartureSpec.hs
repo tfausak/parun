@@ -46,6 +46,7 @@ import qualified Pawl.Types.MonarchWatch as MonarchWatch
 import qualified Pawl.Types.Moved as Moved
 import qualified Pawl.Types.Object as Object
 import Pawl.Types.ObjectId (ObjectId)
+import qualified Pawl.Types.OptionalDecision as OptionalDecision
 import qualified Pawl.Types.PaymentDecision as PaymentDecision
 import qualified Pawl.Types.Phase as Phase
 import qualified Pawl.Types.PhasedOut as PhasedOut
@@ -948,6 +949,30 @@ spec s registry = Spec.describe s "Pawl.Engine.Departure" $ do
     Spec.assertEqWith s "alice controls carol's Island by CR 110.2a alone" (Projection.controllerOf islandId board) (Just S.alice)
     Spec.assertEqWith s "CR 800.4h bob, the next seat, chose Reclamation's row: the Island is in carol's library" (fmap (Object.zone . snd) (soleObjectOf island after)) (Just Zone.Library)
     Spec.assertEqWith s "and bob was the only seat asked" asked [S.bob]
+
+  -- Lich's Mirror's ruling asks each contested permanent's controller, and two
+  -- controllers choosing at once choose in APNAP order (CR 616.1, 101.4). The
+  -- Mirror's own sweep already reaches the battlefield in APNAP order
+  -- (Resolve.Slots.battlefieldMatching), but a batch need not: here one moves
+  -- bob's lent Bears BEFORE alice's, with both contested as a check would leave
+  -- them, and alice is active, so only the ordering asks her first.
+  Spec.it s "CR 616.1 / 101.4 the players whose permanents Lich's Mirror's reset contests choose in APNAP order" $ do
+    mirror <- S.printingOf s registry "Lich's Mirror"
+    bears <- S.printingOf s registry "Grizzly Bears"
+    let (lentId, g1) = S.addPermanent bears S.alice S.threePlayerGame
+        (keptId, g2) = S.addPermanent bears S.alice g1
+        (mirrorId, g3) = S.addPermanent mirror S.alice g2
+        lent = underControlOf S.bob lentId g3
+        board = lent {GameState.activePlayer = S.alice, GameState.contested = Map.fromList [(lentId, Just mirrorId), (keptId, Just mirrorId)]}
+        step :: Prompt.Prompt r -> State.State [PlayerId.PlayerId] r
+        step p = case p of
+          Prompt.ChooseRedirect _ pid _ _ -> do
+            State.modify' (<> [pid])
+            pure OptionalDecision.Exercises
+          _ -> pure (S.identityAnswer p)
+        asked = State.execState (Engine.runGame step board (Event.changeZonesTogether [(lentId, Zone.Library), (keptId, Zone.Library)])) []
+    Spec.assertEqWith s "bob controls the lent Bears" (Projection.controllerOf lentId board) (Just S.bob)
+    Spec.assertEqWith s "CR 101.4 alice, the active player, chooses before bob" asked [S.alice, S.bob]
 
   -- The same race when two players lose in ONE state-based action check (CR
   -- 704.3, CR 104.3b): dave and alice are at 0 life, dave leaves first (the

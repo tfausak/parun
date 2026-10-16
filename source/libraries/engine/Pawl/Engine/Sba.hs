@@ -931,6 +931,24 @@ checkOnce instead = do
       -- board for CR 704.3's reason, so a Platinum Angel this same pass buries
       -- still protects its controller until the next check.
       leaving = filter (\pid -> losesNow gs pid && not (PlayerEffect.precludes GameOutcome.Lose pid gs)) (Game.stillPlaying gs)
+  -- CR 704.5g/h: destruction through the funnel, Regenerable -- the point rather
+  -- than a default, since CR 701.19a's shield exists to replace exactly this
+  -- destruction. ByRule for the mirror-image reason: no effect is destroying
+  -- anything here, so CR 122.1c's shield counter does not save a permanent whose
+  -- marked damage is lethal.
+  --
+  -- A permanent this pass puts into a graveyard is excluded: CR 704.5j, 704.5k,
+  -- 704.5m, 704.5z and the rest are put-into-graveyards, not destructions, so
+  -- none offers the shield an opportunity nor may consume one here.
+  --
+  -- Settled HERE, on the SAME pre-pass board as the put-into-graveyard batch,
+  -- because CR 704.3 makes the whole check one event, and BEFORE a reset in
+  -- place of a loss runs: a destruction a shield or umbra armor replaces moves
+  -- nothing, so it does not contest the reset's move (Lich's Mirror's ruling
+  -- is about a permanent "put into your graveyard"). The funnel's CR 702.12b
+  -- gate is judged against that board too. Pawl.ScenarioSpec's
+  -- cr-616-1-lich-s-mirror-s-reset-takes-a-regenerating-blocker-unasked proves it.
+  standing <- Event.destructionsStanding gs DestructionCause.ByRule Regenerability.Regenerable (filter (`notElem` buried) toDestroy)
   -- CR 104.3 / 614.1a: each loss is offered to the replacements that watch it
   -- BEFORE anything below moves, in REVERSE of `leaving` -- the order the
   -- `foldr` this replaced applied them in, kept because CR 800.4a's fourth
@@ -960,9 +978,9 @@ checkOnce instead = do
   -- moves below find it gone (CR 614.7's shape, as for any member another
   -- action already moved). Pawl.ScenarioSpec's
   -- data/scenarios/game-outcome/cr-616-1-lich-s-mirror-* pair proves both.
-  let moving = Set.fromList (buried <> toDestroy <> fmap snd told <> returningCommanders)
+  let moving = Set.fromList (buried <> standing <> fmap snd told <> returningCommanders)
   Foldable.for_ insteads $ \pending -> do
-    State.modify' (\g -> g {GameState.contested = Map.fromSet (const (PendingReplacementEffect.source pending)) moving})
+    State.modify' (\g -> g {GameState.contested = Map.fromSet (const (Just (PendingReplacementEffect.source pending))) moving})
     instead pending
   State.modify' (\g -> g {GameState.contested = Map.empty})
   -- Every put-into-graveyard this pass performs, as ONE deduplicated batch:
@@ -1018,32 +1036,10 @@ checkOnce instead = do
   -- 701.3d event like the detach above and is recorded the same way.
   Monad.forM_ unbestowing (\oid -> Monad.forM_ (Game.lookupObject oid gs >>= Object.attachedTo) (Event.unattach oid))
   State.modify' (\g -> g {GameState.objects = List.foldl' (flip (Map.adjust (\o -> o {Object.attachedTo = Nothing, Object.bestowed = False}))) (GameState.objects g) unbestowing})
-  -- CR 704.5g/h: destruction through the funnel, Regenerable -- the point rather
-  -- than a default, since CR 701.19a's shield exists to replace exactly this
-  -- destruction. ByRule for the mirror-image reason: no effect is destroying
-  -- anything here, so CR 122.1c's shield counter does not save a permanent whose
-  -- marked damage is lethal.
-  --
-  -- A permanent the legend rule, the world rule or the Role rule already buried
-  -- is excluded rather than left to no-op on a dead id: CR 704.5j, 704.5k and
-  -- 704.5z are put-into-graveyards, not destructions, so none offers the shield
-  -- an opportunity nor may consume one here.
-  --
-  -- ONE batch, not one call per victim, and on the SAME pre-pass board as the
-  -- put-into-graveyard batch above, because CR 704.3 makes the two halves one
-  -- event. Splitting them is an implementation order, not a rules one, so a
-  -- replacement effect belonging to a permanent buried above is still in force
-  -- for a destruction here.
-  --
-  -- The funnel's own CR 702.12b gate is judged against that same board too, so it
-  -- asks what `destroyedBySba` asked above rather than second-guessing it from a
-  -- board the buries have already changed. Only the funnel's existence filter is
-  -- live, which is what keeps a permanent the buries already moved from being
-  -- offered a destruction that never happens (CR 614.7). TWO members are left to
-  -- that filter rather than excluded by name here: CR 704.5m's Aura, and CR
-  -- 310.11's undefendable battle -- an animated Siege with lethal damage whose
-  -- protector has just left is in both `toDestroy` and `undefendable`.
-  Event.destroyInBatch gs DestructionCause.ByRule Regenerability.Regenerable (filter (\oid -> List.notElem oid legendVictims && List.notElem oid worldLosers && List.notElem oid supersededRoles) toDestroy)
+  -- CR 704.5g/h: the destructions settled above go to their graveyards, with
+  -- the put-into-graveyard batch's board for CR 704.3's reason. A member Lich's
+  -- Mirror's reset took is gone, and the move finds nothing (CR 614.7).
+  Monad.mapM_ (\oid -> Event.changeZoneInBatch gs oid Zone.Graveyard) standing
   -- CR 704.5s / 714.4: the Saga's controller SACRIFICES it. Neither a
   -- put-into-graveyard nor a destruction, so it joins neither batch above -- CR
   -- 701.21a is its own game action, ungated by indestructible and offering
