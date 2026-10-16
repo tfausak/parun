@@ -743,7 +743,7 @@ resolveSpec s registry = Spec.describe s "Resolve" $ do
     piker <- S.printingOf s registry "Goblin Piker"
     let base = Setup.emptyGame S.bothPlayers
         (_, g0) = S.addLibraryCard mountain S.alice base
-        (pikerId, g1) = S.addLibraryCard piker S.alice g0
+        (_, g1) = S.addLibraryCard piker S.alice g0
         ability =
           ActivatedAbility.MkActivatedAbility
             (Cost.Type.MkCost (Just (ManaCost.MkManaCost [])) [])
@@ -764,7 +764,7 @@ resolveSpec s registry = Spec.describe s "Resolve" $ do
         g4 = g3 {GameState.objects = Map.insert abilId abilObj (GameState.objects g3), GameState.stack = [abilId]}
         resolved = snd (Engine.runGamePure findFirst g4 Stack.resolveTop)
     Spec.assertEqWith s "the basic land is offered and fetched to the battlefield" (S.countOnBattlefieldByName (CardName.MkCardName $ Text.pack "Mountain") S.alice resolved) 1
-    Spec.assertBool s (elem pikerId (Game.zoneMembers Zone.Library S.alice resolved)) "the nonland is not offered -- it remains in the library"
+    Spec.assertBool s (elem (Just (S.printingName piker)) (libraryNames S.alice resolved)) "the nonland is not offered -- it remains in the library"
   -- #222: CR 701.23a's filter defines what the search may find. An
   -- interpreter that names a card the filter excluded must find nothing --
   -- "fails to find" is already a legal outcome, so rejecting needs no new
@@ -795,7 +795,7 @@ resolveSpec s registry = Spec.describe s "Resolve" $ do
         g4 = g3 {GameState.objects = Map.insert abilId abilObj (GameState.objects g3), GameState.stack = [abilId]}
         resolved = snd (Engine.runGamePure (findForbidden pikerId) g4 Stack.resolveTop)
     Spec.assertEqWith s "the Piker was NOT fetched to the battlefield" (S.countOnBattlefieldByName (CardName.MkCardName $ Text.pack "Goblin Piker") S.alice resolved) 0
-    Spec.assertBool s (elem pikerId (Game.zoneMembers Zone.Library S.alice resolved)) "it is still in the library"
+    Spec.assertBool s (elem (Just (S.printingName piker)) (libraryNames S.alice resolved)) "it is still in the library"
     Spec.assertEqWith s "and nothing else was fetched either" (S.countOnBattlefieldByName (CardName.MkCardName $ Text.pack "Mountain") S.alice resolved) 0
   -- Hoarding Dragon -- "Flying. When this creature enters, you may search your
   -- library for an artifact card, exile it, then shuffle." The whole-card proof
@@ -820,7 +820,7 @@ resolveSpec s registry = Spec.describe s "Resolve" $ do
     piker <- S.printingOf s registry "Goblin Piker"
     let base0 = S.landsInPlay mountain 5
         (_, base1) = S.addLibraryCard altar S.alice base0
-        (pikerId, base2) = S.addLibraryCard piker S.alice base1
+        (_, base2) = S.addLibraryCard piker S.alice base1
         (gs, spellId) = S.handOne dragon base2
         cast = snd (Engine.runGamePure findFirstExercising gs (S.cast S.alice spellId))
         settled = snd (Engine.runGamePure findFirstExercising cast Engine.priorityLoop)
@@ -833,7 +833,7 @@ resolveSpec s registry = Spec.describe s "Resolve" $ do
     Spec.assertEqWith s "it did NOT go to her hand -- she cast her only card" (S.handSize S.alice settled) 0
     Spec.assertEqWith s "nor onto the battlefield" (S.countOnBattlefieldByName (CardName.MkCardName $ Text.pack "Ashnod's Altar") S.alice settled) 0
     Spec.assertEqWith s "CR 701.23e: the card says only \"exile it\", so nothing was revealed" (S.revealsOf settled) []
-    Spec.assertEqWith s "the nonartifact was no candidate and stayed in the library" (Game.zoneMembers Zone.Library S.alice settled) [pikerId]
+    Spec.assertEqWith s "the nonartifact was no candidate and stayed in the library" (libraryNames S.alice settled) [Just (S.printingName piker)]
   -- CR 608.2d, the half that says an option has to be a real one: "the player
   -- can't choose an option that's illegal or impossible". The SAME Tweeze off a
   -- board where alice's hand is empty once the spell is on the stack, so "you
@@ -1241,8 +1241,8 @@ resolveSpec s registry = Spec.describe s "Resolve" $ do
     Spec.assertEqWith
       s
       "the other Forest card and the nonland stayed in the library"
-      (Set.fromList (Game.zoneMembers Zone.Library S.alice settled))
-      (Set.fromList [loreArbor board, lorePiker board])
+      (Set.fromList (libraryNames S.alice settled))
+      (Set.fromList (fmap (\oid -> fmap S.nameOf (Game.cardOf oid (loreState board))) [loreArbor board, lorePiker board]))
   -- CR 101.4b: a pair of boards differing only in alice's answer to the "may".
   -- bob and carol each give the answer their prompt says the seat before them
   -- gave, declining when told nothing, so what they do is what they were told.
@@ -2194,7 +2194,11 @@ twoDragonBoard s registry = do
       (base4, firstSpell) = S.handOne dragon base3
       (secondSpell, base5) = S.addHandCard dragon S.alice base4
       afterFirst = settleCast (findPinnedExercising altarId) firstSpell base5
-      afterSecond = settleCast (findPinnedExercising sphereId) secondSpell afterFirst
+      -- The Sphere the second Dragon finds is the one in the library NOW: the
+      -- first search looked at it and its shuffle reordered it, so it is a new
+      -- object (CR 701.20d / 701.20e).
+      sphereNow = foldr const sphereId [oid | oid <- Game.zoneMembers Zone.Library S.alice afterFirst, S.soleFaceName oid afterFirst == S.printingName sphere]
+      afterSecond = settleCast (findPinnedExercising sphereNow) secondSpell afterFirst
       earlier = dragonsOf afterFirst
       later = filter (`notElem` earlier) (dragonsOf afterSecond)
   Spec.assertEqWith s "the first Dragon is alone on the battlefield" (length earlier) 1
@@ -2855,3 +2859,8 @@ spec s registry = Spec.describe s "Pawl.Engine.Resolve" $ do
   crabSpec s registry
   snagSpec s registry
   rhysticSpec s registry
+
+-- The names of a player's library, top first: what a test reads where a search
+-- looked at the cards and its shuffle re-minted them (CR 701.20d / 701.20e).
+libraryNames :: PlayerId.PlayerId -> GameState.GameState -> [Maybe CardName.CardName]
+libraryNames pid gs = fmap (\oid -> fmap S.nameOf (Game.cardOf oid gs)) (Game.zoneMembers Zone.Library pid gs)

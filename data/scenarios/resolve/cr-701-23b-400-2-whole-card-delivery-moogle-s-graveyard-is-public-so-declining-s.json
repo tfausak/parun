@@ -217,8 +217,8 @@
         "player": "alice",
         "zone": "Library",
         "is": [
-          "$crucible-of-worlds",
-          "$chromatic-star"
+          "Crucible of Worlds",
+          "Chromatic Star"
         ]
       }
     }

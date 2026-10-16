@@ -163,7 +163,7 @@
           "player": "alice",
           "zone": "Library",
           "is": [
-            "$goblin-piker",
+            "Goblin Piker",
             "Mountain",
             "Forest"
           ]

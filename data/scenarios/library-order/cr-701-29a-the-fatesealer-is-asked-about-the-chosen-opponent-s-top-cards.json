@@ -176,8 +176,8 @@
           "zone": "Library",
           "is": [
             "$carol-forest",
-            "$bird-maiden",
-            "$mountain-2"
+            "Bird Maiden",
+            "Mountain#2"
           ]
         }
       }

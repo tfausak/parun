@@ -94,8 +94,6 @@
           "prompt": "Shuffle",
           "with": [
             "$goblin-piker",
-            "$bird-maiden",
-            "$hill-giant",
             "$murder",
             "$murder-2",
             "$swamp"

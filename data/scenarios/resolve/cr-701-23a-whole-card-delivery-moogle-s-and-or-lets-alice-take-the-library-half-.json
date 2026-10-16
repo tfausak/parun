@@ -198,8 +198,8 @@
         "player": "alice",
         "zone": "Library",
         "is": [
-          "$chromatic-star",
-          "$crucible-of-worlds"
+          "Chromatic Star",
+          "Crucible of Worlds"
         ]
       }
     }

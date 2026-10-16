@@ -106,8 +106,8 @@
           "player": "alice",
           "zone": "Library",
           "is": [
-            "$maiden",
-            "$piker",
+            "Bird Maiden",
+            "Goblin Piker",
             "$mountain",
             "$forest"
           ]

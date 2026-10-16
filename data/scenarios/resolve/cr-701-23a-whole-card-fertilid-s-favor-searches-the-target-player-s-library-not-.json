@@ -232,7 +232,7 @@
         "player": "carol",
         "zone": "Library",
         "is": [
-          "$goblin-piker"
+          "Goblin Piker"
         ]
       }
     }

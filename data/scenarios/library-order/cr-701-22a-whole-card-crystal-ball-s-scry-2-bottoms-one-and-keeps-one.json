@@ -125,10 +125,10 @@
           "player": "alice",
           "zone": "Library",
           "is": [
-            "$maiden",
+            "Bird Maiden",
             "$mountain",
             "$forest",
-            "$piker"
+            "Goblin Piker"
           ]
         }
       }

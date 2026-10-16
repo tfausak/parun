@@ -114,9 +114,9 @@
           "zone": "Library",
           "is": [
             "$forest",
-            "$piker",
-            "$maiden",
-            "$mountain"
+            "Goblin Piker",
+            "Bird Maiden",
+            "Mountain"
           ]
         }
       }

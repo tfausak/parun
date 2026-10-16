@@ -204,8 +204,8 @@
           "player": "alice",
           "zone": "Library",
           "is": [
-            "$deadbridge-goliath",
-            "$goblin-piker"
+            "Deadbridge Goliath",
+            "Goblin Piker"
           ]
         }
       }
