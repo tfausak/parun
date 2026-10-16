@@ -3626,7 +3626,7 @@ castProposed perform spending pid oid sid face castFrom preparedFor keywordsBefo
                       let assisting c = do
                             assisted <- maybe (pure c) (\(h, _) -> Cost.payAssist h (PaymentSubject.Casting sid) sid c) assist
                             Cost.announceSubstitutions Cost.manaSubstitutions pid sid assisted
-                      (payment, substitutedBindings) <- Cost.paySubstituting perform before (foldMap (pure . snd) assist) PaymentMoment.OutsideResolution (PaymentSubject.Casting sid) (Just sid) spending pid sid assisting paidCost
+                      (payment, substitutedBindings) <- Cost.paySubstituting (const False) perform before (foldMap (pure . snd) assist) PaymentMoment.OutsideResolution (PaymentSubject.Casting sid) (Just sid) spending pid sid assisting paidCost
                       case payment of
                         -- CR 601.2h: the payment failed, so the cast is illegal
                         -- and CR 733.1 reverses it -- which is what takes the

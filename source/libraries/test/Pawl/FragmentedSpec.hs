@@ -7,8 +7,10 @@
 -- `o:"{0}: untap"` and `o:"{0}: tap"`, 2026-10-03, answer only untaps limited
 -- to one activation a turn or a game (Instill Energy, Nature's Chosen, Touch
 -- of Vitae) and Chimeric Idol, which taps lands. CR 732.3's own example,
--- which undoes a continuous effect, is Mist Dragon's, and a loop through a
--- targeted activation is two Grim Poppets', or two Fatestitchers'.
+-- which undoes a continuous effect, is Mist Dragon's, a loop through a
+-- targeted activation is two Grim Poppets', or two Fatestitchers', and one
+-- through a payment or a mana ability is Freed from the Real's on Birds of
+-- Paradise.
 --
 -- Two seats, so alice -- active, and involved -- is the named player by
 -- construction. The answerer is test-local: it sequences two players through
@@ -16,12 +18,16 @@
 module Pawl.FragmentedSpec where
 
 import qualified Control.Monad.Trans.State.Strict as State
+import qualified Data.Bifunctor as Bifunctor
 import qualified Data.Foldable as Foldable
 import qualified Data.List as List
+import qualified Data.List.NonEmpty as NonEmpty
+import qualified Data.Maybe as Maybe
 import qualified Data.Sequence as Seq
 import qualified Data.Set as Set
 import qualified Pawl.Engine.Engine as Engine
 import qualified Pawl.Engine.Game as Game
+import qualified Pawl.Engine.Mana as Mana
 import qualified Pawl.Engine.Projection as Projection
 import qualified Pawl.Engine.Setup as Setup
 import qualified Pawl.Registry as Registry
@@ -31,12 +37,17 @@ import qualified Pawl.Types.Action as Action
 import qualified Pawl.Types.ActivatedAbility as ActivatedAbility
 import qualified Pawl.Types.Affected as Affected
 import qualified Pawl.Types.Asked as Asked
+import qualified Pawl.Types.Color as Color
 import qualified Pawl.Types.ContinuousEffect as ContinuousEffect
 import qualified Pawl.Types.CounterKind as CounterKind
 import qualified Pawl.Types.Effect as Effect
 import qualified Pawl.Types.Expiry as Expiry
 import qualified Pawl.Types.GameState as GameState
 import qualified Pawl.Types.Keyword as Keyword
+import qualified Pawl.Types.Mana as Mana.Type
+import qualified Pawl.Types.ManaOption as ManaOption
+import qualified Pawl.Types.ManaType as ManaType
+import qualified Pawl.Types.ManaUnit as ManaUnit
 import qualified Pawl.Types.Modal as Modal
 import qualified Pawl.Types.Mode as Mode
 import qualified Pawl.Types.Modification as Modification
@@ -100,6 +111,25 @@ spec s registry = Spec.describe s "a fragmented loop (CR 732.3)" $ do
     -- bob's Poppet again is refused; aiming at her Grizzly Bears is a
     -- different game choice (CR 732.1, 601.2c) and goes ahead.
     Spec.assertEqWith s "CR 732.3 only alice's repeated aim is refused" (poppetAttempts poppet bears) [(False, True), (False, False), (True, True)]
+
+  Spec.it s "an activation is refused as paid, not as announced" $ do
+    birds <- S.printingOf s registry "Birds of Paradise"
+    freed <- S.printingOf s registry "Freed from the Real"
+    island <- S.printingOf s registry "Island"
+    -- alice's Freed from the Real enchants her Birds of Paradise, and she
+    -- untaps them, tapping them for the {U} in the mana window (CR 601.2g):
+    -- the lap ends where it began. Paying so again is refused; paying with
+    -- her Island is a different game choice (CR 601.2h via 602.2b) and goes
+    -- ahead.
+    Spec.assertEqWith s "CR 732.3 only alice's repeated payment is refused" (freedPayments birds freed island) [(False, True), (False, False), (True, True)]
+
+  Spec.it s "a mana ability is refused as the state it leaves" $ do
+    birds <- S.printingOf s registry "Birds of Paradise"
+    freed <- S.printingOf s registry "Freed from the Real"
+    -- The same loop, the Birds tapped for {U} with priority (CR 605.3a) and
+    -- the {U} spent from the pool. Tapping them for {U} again is refused; for
+    -- {G}, which leaves another state, is not.
+    Spec.assertEqWith s "CR 732.3 only alice's repeated mana ability is refused" (freedTaps birds freed) [True, False, True]
 
   Spec.it s "a choice the resolution offers does not make a repeated activation a new one" $ do
     stitcher <- S.printingOf s registry "Fatestitcher"
@@ -291,6 +321,110 @@ poppetAttempts poppet bears =
       (bobs, gs2) = S.addPermanent poppet S.bob gs1
       (bearsId, gs3) = S.addPermanent bears S.alice gs2
    in attempts alices bobs bearsId [bobs, bobs, bearsId] (S.addCounter CounterKind.MinusOneMinusOne 1 alices gs3)
+
+-- alice, active in her precombat main phase with an empty pool, controls
+-- Birds of Paradise enchanted by Freed from the Real, and an Island when
+-- `island` is given. Answers the Birds, the Aura and the Island.
+freedBoard :: Printing.Printing -> Printing.Printing -> Maybe Printing.Printing -> (ObjectId.ObjectId, ObjectId.ObjectId, Maybe ObjectId.ObjectId, GameState.GameState)
+freedBoard birds freed island =
+  let (birdsId, gs1) = S.addPermanent birds S.alice (Setup.emptyGame S.bothPlayers)
+      (freedId, gs2) = S.addPermanent freed S.alice gs1
+      (islandId, gs3) = case island of
+        Just printing -> Bifunctor.first Just (S.addPermanent printing S.alice gs2)
+        Nothing -> (Nothing, gs2)
+   in (birdsId, freedId, islandId, inMain (S.attach freedId birdsId gs3))
+
+-- alice untaps her Birds with the Aura once per source in `script`, paying
+-- with that source in the mana window; bob passes throughout. Answers her
+-- attempts, each as whether it paid with the Island and whether it went on
+-- the stack.
+freedPayments :: Printing.Printing -> Printing.Printing -> Printing.Printing -> [(Bool, Bool)]
+freedPayments birds freed island =
+  let (birdsId, freedId, islandId, gs) = freedBoard birds freed (Just island)
+      script = [birdsId, birdsId] <> Maybe.maybeToList islandId
+      ((_, _), (_, _, _, made)) = State.runState (Engine.runGameAsked (paying freedId islandId) gs Engine.priorityLoop) (script, Nothing, False, [])
+   in made
+
+-- The sources alice has yet to pay with, the one the attempt under way pays
+-- with, whether she has just attempted one, and her attempts so far.
+type Paying = ([ObjectId.ObjectId], Maybe ObjectId.ObjectId, Bool, [(Bool, Bool)])
+
+paying :: ObjectId.ObjectId -> Maybe ObjectId.ObjectId -> Asked.Asked r -> State.State Paying r
+paying freedId islandId asked = case Asked.prompt asked of
+  Prompt.ChooseAction _ pid actions | pid == S.alice -> do
+    (script, source, attempted, made) <- State.get
+    let stacked = not (null (GameState.stack (Asked.game asked)))
+        recorded = if attempted then made <> [(Maybe.isJust source && source == islandId, stacked)] else made
+    case (script, untapping freedId actions) of
+      (next : rest, Just action) | not stacked -> do
+        State.put (rest, Just next, True, recorded)
+        pure action
+      _ -> do
+        State.put (script, source, False, recorded)
+        pure Action.Pass
+  Prompt.ChooseAction {} -> pure Action.Pass
+  -- Pinned to the scripted source, never the head of the offer.
+  Prompt.ChooseManaSource _ _ candidates -> do
+    (_, source, _, _) <- State.get
+    pure (List.find (`elem` NonEmpty.toList candidates) source)
+  Prompt.ChooseExtraManaSource {} -> pure Nothing
+  Prompt.ChooseManaYield _ _ _ candidates -> pure (yielding (ManaType.Colored Color.Blue) candidates)
+  Prompt.ReverseManaAbilities {} -> pure OptionalDecision.Exercises
+  prompt -> pure (S.identityAnswer prompt)
+
+-- alice taps her Birds for each colour in `script` with priority, and spends
+-- what she can of it untapping them with the Aura; bob passes throughout.
+-- Answers, per tap, whether it added mana.
+freedTaps :: Printing.Printing -> Printing.Printing -> [Bool]
+freedTaps birds freed =
+  let (birdsId, freedId, _, gs) = freedBoard birds freed Nothing
+      ((_, _), (_, _, _, made)) = State.runState (Engine.runGameAsked (tappingFor birdsId freedId) gs Engine.priorityLoop) ([Color.Blue, Color.Blue, Color.Green], Nothing, False, [])
+   in made
+
+-- The colours alice has yet to tap for, the one the tap under way is for,
+-- whether she has just tapped, and her taps so far.
+type Tapping = ([Color.Color], Maybe Color.Color, Bool, [Bool])
+
+tappingFor :: ObjectId.ObjectId -> ObjectId.ObjectId -> Asked.Asked r -> State.State Tapping r
+tappingFor birdsId freedId asked = case Asked.prompt asked of
+  Prompt.ChooseAction _ pid actions | pid == S.alice -> do
+    (script, colour, tapped, made) <- State.get
+    let g = Asked.game asked
+        stacked = not (null (GameState.stack g))
+        pooled = not (null (Mana.Type.unwrap (Game.poolOf S.alice g)))
+        tap = List.find (== Action.ActivateManaAbility birdsId) actions
+        recorded = if tapped then made <> [pooled] else made
+    case (script, tap) of
+      _ | tapped && pooled -> do
+        State.put (script, colour, False, recorded)
+        pure (Maybe.fromMaybe Action.Pass (untapping freedId actions))
+      (next : rest, Just action) | not stacked && not pooled -> do
+        State.put (rest, Just next, True, recorded)
+        pure action
+      _ -> do
+        State.put (script, colour, False, recorded)
+        pure Action.Pass
+  Prompt.ChooseAction {} -> pure Action.Pass
+  Prompt.ChooseManaSource {} -> pure Nothing
+  Prompt.ChooseExtraManaSource {} -> pure Nothing
+  Prompt.ChooseManaYield _ _ _ candidates -> do
+    (_, colour, _, _) <- State.get
+    pure (yielding (ManaType.Colored (Maybe.fromMaybe Color.Blue colour)) candidates)
+  prompt -> pure (S.identityAnswer prompt)
+
+-- The Aura's untap among `actions`, told from its tap by its effect.
+untapping :: ObjectId.ObjectId -> [Action.Action] -> Maybe Action.Action
+untapping freedId = List.find untaps
+  where
+    untaps action = case action of
+      Action.Activate source ability ->
+        source == freedId && not (null [() | mode <- Foldable.toList (Modal.modes (ActivatedAbility.modal ability)), Effect.Untap _ <- Foldable.toList (Mode.allEffects mode)])
+      _ -> False
+
+-- The way of tapping a source that yields `wanted`, or the head of the offer.
+yielding :: ManaType.ManaType -> NonEmpty.NonEmpty ManaOption.ManaOption -> ManaOption.ManaOption
+yielding wanted candidates =
+  Maybe.fromMaybe (NonEmpty.head candidates) (List.find (any ((== wanted) . ManaUnit.manaType) . Mana.yieldUnits) (NonEmpty.toList candidates))
 
 -- alice, active in her precombat main phase, controls an untapped
 -- Fatestitcher; bob controls a tapped one. alice aims hers at bob's twice.

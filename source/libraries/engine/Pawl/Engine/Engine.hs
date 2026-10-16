@@ -78,6 +78,7 @@ import qualified Pawl.Types.Asked as Asked
 import qualified Pawl.Types.BeginningStep as BeginningStep
 import qualified Pawl.Types.Card as Card
 import qualified Pawl.Types.CombatStep as CombatStep
+import qualified Pawl.Types.Completion as Completion
 import qualified Pawl.Types.Concession as Concession
 import qualified Pawl.Types.ControlChanged as ControlChanged
 import qualified Pawl.Types.ControlClock as ControlClock
@@ -1345,7 +1346,7 @@ priorityLoop = do
                                   _ : _ : _ -> True
                                   _ -> False
                                 -- CR 732.3: a fragmented loop narrows the named
-                                -- player's menu, and refuses the announcements
+                                -- player's menu, and refuses the completions
                                 -- an activation on it may not repeat, asked only
                                 -- where the raw menu offered a choice, so a
                                 -- Pass-only grant pays nothing for it. Narrowed
@@ -1353,7 +1354,7 @@ priorityLoop = do
                                 -- Pass-only menu does.
                                 here = Fragmented.digest gs
                                 settled = if offersAChoice then Fragmented.settle here trail else trail
-                                (refused, refusedAnnouncements) = if offersAChoice then Fragmented.forbidden here gs p settled else (Set.empty, Set.empty)
+                                (refused, refusedCompletions) = if offersAChoice then Fragmented.forbidden here gs p settled else (Set.empty, Set.empty)
                                 menu = if Set.null refused then actions else filter (`Set.notMember` refused) actions
                                 narrowedChoice = case menu of
                                   _ : _ : _ -> True
@@ -1524,16 +1525,41 @@ priorityLoop = do
                               -- WHEN it may happen; its answer is discarded, a
                               -- mana ability whose cost went unpaid having changed
                               -- nothing (CR 601.2h).
+                              --
+                              -- CR 732.3: completed as the state it leaves
+                              -- (Fragmented.paid), and reversed as an illegal
+                              -- action (CR 733.1) where a fragmented loop has
+                              -- already completed it so here. One that touched a
+                              -- library is never refused, since CR 733.1's last
+                              -- sentence forbids reversing it. One that activated
+                              -- another mana ability to pay its cost is never
+                              -- refused either, a deliberate under-detection: the
+                              -- loop is caught a step later. Both exclusions are
+                              -- a REGRESSION FENCE: no test loops such a mana
+                              -- ability. Pawl.FragmentedSpec's Freed from the
+                              -- Real cases prove the refusal.
+                              --
+                              -- Compared by the state it leaves, so a tap for
+                              -- another colour is not refused, though CR 605.3b
+                              -- and 608.2d make the colour a resolution choice,
+                              -- which `Fragmented.forbidden` otherwise ignores.
+                              -- Another deliberate under-detection: pawl asks for
+                              -- the colour at activation (Prompt.ChooseManaYield).
                               Action.Type.ActivateManaAbility oid -> do
-                                Monad.void (Cost.tapForMana performManaAbility p oid)
+                                pre <- State.get
+                                (_, (nested, _), _, _) <- Cost.tapForManaWith performManaAbility id Set.empty Set.empty p oid
+                                post <- State.get
+                                let completion = Completion.MkCompletion {Completion.announcement = Nothing, Completion.paid = Fragmented.paid Nothing post}
+                                    completed = if null nested && not (Cost.touchedLibrary pre post) then Just completion else Nothing
+                                Monad.when (not (Set.null refusedCompletions) && any (\c -> Set.member (chosen, c) refusedCompletions) completed) (Cost.restoreKeepingLibraryActions pre)
                                 State.modify' (\g -> g {GameState.passed = Set.empty, GameState.priority = Just p})
                                 settleForPriority
-                                loop trail'
+                                loop (Fragmented.complete completed trail')
                               Action.Type.Activate oid ability -> do
-                                announced <- Activate.activateAbilityWith (\announcement -> Set.member (chosen, announcement) refusedAnnouncements) playSubgame p oid ability
+                                completed <- Activate.activateAbilityWith (\completion -> Set.member (chosen, completion) refusedCompletions) playSubgame p oid ability
                                 State.modify' (\g -> g {GameState.passed = Set.empty, GameState.priority = Just p})
                                 settleForPriority
-                                loop (Fragmented.announce announced trail')
+                                loop (Fragmented.complete completed trail')
                       else do
                         -- CR 800.4a (last sentence): `p` was written as the holder
                         -- and then departed -- e.g. paying a life cost inside

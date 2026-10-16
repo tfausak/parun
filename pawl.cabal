@@ -2213,6 +2213,7 @@ library types
     Pawl.Types.Compares
     Pawl.Types.Comparison
     Pawl.Types.CompletedDungeon
+    Pawl.Types.Completion
     Pawl.Types.ComponentCard
     Pawl.Types.Concession
     Pawl.Types.Condition
