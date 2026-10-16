@@ -1231,7 +1231,7 @@ galvanicBlastReferentSpec s registry = Spec.describe s "Galvanic Blast (CR 609.7
           S.runPure
             (targetingOnly destroyed)
             ready
-            (S.cast S.alice blastId Monad.>> Stack.resolveTop Monad.>> Sba.checkStateBasedActions)
+            (S.cast S.alice blastId Monad.>> Stack.resolveTop Monad.>> Sba.checkStateBasedActions S.insteadOfLoss)
         rest =
           Activate.activateAbility S.alice fireEater (theAbility ghitu)
             Monad.>> Activate.activateAbility S.alice replicaId (theAbility replica)

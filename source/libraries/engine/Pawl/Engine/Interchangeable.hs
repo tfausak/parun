@@ -216,11 +216,12 @@ representatives pcs gs candidates =
 -- filterNames answers for it.
 --
 -- GameState.enteringCounters, GameState.copyExceptionCounters,
--- GameState.enteringTogether, GameState.arrivals, GameState.detachedBindings
--- and GameState.broughtIn are listed below because each holds ObjectIds, and
--- NOT because any board reaches this with one of them non-empty: the first
--- two are empty outside an entry loop, the next two outside a CR 608.2f action
--- or an arrival, and the last two are CR 729's subgame bookkeeping. They are
+-- GameState.enteringTogether, GameState.arrivals, GameState.contested,
+-- GameState.detachedBindings and GameState.broughtIn are listed below because
+-- each holds ObjectIds, and NOT because any board reaches this with one of them
+-- non-empty: the first two are empty outside an entry loop, the next two
+-- outside a CR 608.2f action or an arrival, the fifth outside a state-based
+-- action check, and the last two are CR 729's subgame bookkeeping. They are
 -- in the list rather than in the account above because requiring a field empty
 -- is the direction that cannot make a player's choice, so an unreachable row
 -- is the cheap side to be wrong on.
@@ -236,6 +237,7 @@ quiet gs =
     && Map.null (GameState.detachedBindings gs)
     && Maybe.isNothing (GameState.enteringTogether gs)
     && Maybe.isNothing (GameState.arrivals gs)
+    && Map.null (GameState.contested gs)
 
 -- Whether a stored row, or the combat in progress, MIGHT name this object.
 -- "Might", because a slot read with no environment to search answers True --

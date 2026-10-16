@@ -111,12 +111,19 @@ departTogether replacing reason named = Monad.join (leaveTogether Nothing replac
 -- where the monarch loses to a state-based action proves it.
 --
 -- `asOf` is the board a replacement is gathered from, Pawl.Engine.Sba's
--- pre-pass board for CR 704.3's reason: a Lich's Mirror the same pass destroys
--- still replaces the loss (Event.applyReplacementsIn). Nothing reads the live
--- board.
+-- pre-pass board (through `losing`) for CR 704.3's reason: a Lich's Mirror the
+-- same pass destroys still replaces the loss (Event.applyReplacementsIn).
+-- Nothing reads the live board.
 leaveTogether :: Maybe GameState -> Bool -> Departure -> [PlayerId] -> Game (Game ())
-leaveTogether asOf replacing reason named = do
-  continues <- State.gets continuesAfterDeparture
+leaveTogether asOf replacing reason named = losing asOf replacing reason named >>= leaveAll
+
+-- Who leaves, and why, when these players would: `leaveTogether` up to its
+-- departures, with every loss offered to the replacements that watch it first.
+-- Split out so Pawl.Engine.Sba can offer a check's losses before the check
+-- moves anything, and run what replaced them while the moves are still
+-- contested (GameState.contested).
+losing :: Maybe GameState -> Bool -> Departure -> [PlayerId] -> Game [(Departure, PlayerId)]
+losing asOf replacing reason named = do
   before <- State.get
   -- CR 104.3 / 614.1a: each loss is one event, whatever its reasons, offered to
   -- the replacements that watch it (Lich's Mirror). Asked of the players named
@@ -147,9 +154,15 @@ leaveTogether asOf replacing reason named = do
       spared pid =
         Set.member pid replaced
           || (GameSettings.twoHeadedGiant (GameState.settings before) && any (Teams.sameTeam (Game.teams before) pid) replaced)
-      losing = fmap (\pid -> (reason, pid)) falling <> fallen <> team
-      departing = filter (\(why, pid) -> why /= Departure.Lost || not (spared pid)) losing
-      pids = fmap snd departing
+      leaving = fmap (\pid -> (reason, pid)) falling <> fallen <> team
+  pure (filter (\(why, pid) -> why /= Departure.Lost || not (spared pid)) leaving)
+
+-- `leaveTogether`'s departures, for the players `losing` named.
+leaveAll :: [(Departure, PlayerId)] -> Game (Game ())
+leaveAll departing = do
+  continues <- State.gets continuesAfterDeparture
+  before <- State.get
+  let pids = fmap snd departing
       lose why p = p {Player.status = Status.Departed why}
       -- CR 801.2c: the seat keeps counting toward range of influence until the
       -- next turn begins.

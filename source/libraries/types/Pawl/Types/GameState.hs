@@ -197,10 +197,15 @@ data GameState = MkGameState
     -- Empty at every priority window because every road that can fill it drains
     -- it: for damage, each road into Pawl.Engine.Damage.applyDamage (Resolve's
     -- Effect.DealDamage and Effect.Fight arms, and Pawl.Engine.Engine's combat
-    -- damage step); for a loss, each state-based action pass
-    -- (Engine.performSettle, and Resolve's CR 724 fixpoints) and each resolved
-    -- instruction (Resolve.applyEffectWith).
+    -- damage step); for a loss, the state-based action pass that met it
+    -- (Sba.checkOnce) and each resolved instruction (Resolve.applyEffectWith).
     pendingReplacementEffects :: Seq.Seq PendingReplacementEffect.PendingReplacementEffect,
+    -- | CR 616.1 and Lich's Mirror's ruling: the objects a state-based action
+    -- check moves, keyed to the source of the replacement whose effects run in
+    -- place of a loss in that check, or to Nothing once kept for the check. A
+    -- move those effects make of one asks its controller which of the two
+    -- happens (Event.contestedKept). Empty outside that window.
+    contested :: Map.Map ObjectId.ObjectId (Maybe ObjectId.ObjectId),
     -- | CR 615.5's amount channel: the amount bindings a prevention rider can
     -- read outside any object's environment, its recipient possibly being a
     -- player. Empty at every priority window.

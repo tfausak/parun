@@ -106,6 +106,7 @@ import qualified Pawl.Types.Move as Move
 import qualified Pawl.Types.Moved as Moved
 import qualified Pawl.Types.Object as Object
 import qualified Pawl.Types.ObjectId as ObjectId
+import qualified Pawl.Types.PendingReplacementEffect as PendingReplacementEffect
 import qualified Pawl.Types.Phase as Phase
 import qualified Pawl.Types.Placement as Placement
 import qualified Pawl.Types.Player as Player
@@ -1215,7 +1216,12 @@ runPureWith = Engine.runGamePure
 -- One CR 704 state-based-action pass, run purely. The direct replacement for the
 -- pre-P5 pure `Sba.checkStateBasedActions gs`.
 settleSba :: GameState.GameState -> GameState.GameState
-settleSba gs = runPure identityAnswer gs Sba.checkStateBasedActions
+settleSba gs = runPure identityAnswer gs (Sba.checkStateBasedActions insteadOfLoss)
+
+-- What a replacement put in place of a loss, run inside a state-based action
+-- pass as the engine runs it (Sba.performStateBasedActions' `instead`).
+insteadOfLoss :: PendingReplacementEffect.PendingReplacementEffect -> Game.Type.Game ()
+insteadOfLoss = Resolve.runDamageRewriteEffect Engine.playSubgame
 
 -- CR 104.2a/800.4a: one player leaves the game, run purely. The direct
 -- replacement for the pure `Departure.depart reason pid gs` -- that function is
@@ -1644,6 +1650,7 @@ oneMountainState mountain ph =
           GameState.replacements = [],
           GameState.pendingPreventionRiders = Seq.empty,
           GameState.pendingReplacementEffects = Seq.empty,
+          GameState.contested = Map.empty,
           GameState.ambientAmounts = Map.empty,
           GameState.detachedBindings = Map.empty,
           GameState.pendingEntryEffects = Seq.empty,

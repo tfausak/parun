@@ -1,0 +1,103 @@
+{
+  "description": "CR 704.5b Lich's Mirror's reset drawing from too small a library loses the next check",
+  "note": "Alice at 2 life with an empty library casts Sign in Blood on herself. The check meets her loss and the Mirror replaces it, but her hand, graveyard and permanents come to six cards, so the reset's seventh draw is from an empty library. That attempt is made during the check, so it waits for the next one, which the Mirror -- now in her hand -- cannot replace: she loses, per the Mirror's ruling.",
+  "board": {
+    "active": "alice",
+    "step": "PrecombatMain",
+    "seats": [
+      {
+        "name": "alice",
+        "life": 2,
+        "battlefield": [
+          {
+            "card": "Lich's Mirror"
+          },
+          {
+            "card": "Swamp",
+            "label": "s1"
+          },
+          {
+            "card": "Swamp",
+            "label": "s2"
+          }
+        ],
+        "hand": [
+          {
+            "card": "Sign in Blood",
+            "label": "sign"
+          },
+          {
+            "card": "Plains"
+          },
+          {
+            "card": "Plains"
+          }
+        ]
+      },
+      {
+        "name": "bob",
+        "library": [
+          {
+            "card": "Forest"
+          },
+          {
+            "card": "Forest"
+          }
+        ]
+      }
+    ]
+  },
+  "timeline": [
+    {
+      "turn": 1,
+      "step": "PrecombatMain",
+      "player": "alice",
+      "do": {
+        "Cast": {
+          "object": "$sign",
+          "targets": [
+            "$alice"
+          ],
+          "mana": [
+            "$s1",
+            "$s2"
+          ]
+        }
+      }
+    },
+    {
+      "turn": 1,
+      "step": "PrecombatMain",
+      "player": "alice",
+      "do": "Pass"
+    },
+    {
+      "turn": 1,
+      "step": "PrecombatMain",
+      "player": "alice",
+      "do": {
+        "Answer": {
+          "prompt": "Shuffle",
+          "with": [
+            "Plains",
+            "Plains#2",
+            "Lich's Mirror",
+            "Swamp",
+            "Swamp#2",
+            "Sign in Blood"
+          ]
+        }
+      }
+    }
+  ],
+  "final": [
+    {
+      "View": {
+        "of": "Result",
+        "is": {
+          "won": "bob"
+        }
+      }
+    }
+  ]
+}

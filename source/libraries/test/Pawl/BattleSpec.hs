@@ -205,7 +205,7 @@ repairSpec s registry = Spec.describe s "Repair" $ do
     -- performStateBasedActions' own answer, which is the value that loop reads;
     -- nothing else about the repair is visible to it.
     let gone = S.departs Departure.Type.Conceded S.carol entered
-        (acted, _) = S.runPureWith S.identityAnswer gone Sba.performStateBasedActions
+        (acted, _) = S.runPureWith S.identityAnswer gone (Sba.performStateBasedActions S.insteadOfLoss)
     Spec.assertBool s acted "the pass reports the repair"
 
 -- CR 310.5: battles can be attacked, and everything that follows from WHOM they
@@ -370,7 +370,7 @@ defeatSpec s registry = Spec.describe s "Defeat" $ do
     -- assertion is what says the defeat is the only thing this pass does.
     (entered, battle) <- castInvasionThreeSeated s registry (protectTo S.carol)
     let drained = drain battle entered
-        (acted, after) = S.runPureWith S.identityAnswer drained Sba.performStateBasedActions
+        (acted, after) = S.runPureWith S.identityAnswer drained (Sba.performStateBasedActions S.insteadOfLoss)
     Spec.assertBool s acted "the pass reports the defeat"
     Spec.assertBool s (not (S.onBattlefield battle after)) "and the battle has left the battlefield"
   Spec.it s "CR 704.5v and is NOT while its defeat ability is still owed a resolution" $ do

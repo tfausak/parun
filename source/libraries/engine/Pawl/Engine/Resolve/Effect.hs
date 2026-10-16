@@ -10097,12 +10097,12 @@ applyOneEffect runSubgame resolving source controller legal chosen effect = case
     -- one pass does not reach it: CR 704.5m's Aura falls off only on the pass
     -- after the creature it enchanted died. Terminates because the flag is False
     -- as soon as a pass performs nothing.
-    -- A loss the pass replaced runs its effects before the next pass looks
-    -- (runReplacementEffects), and a pass that replaces it forever is CR
+    -- A loss the pass replaced runs its effects inside the pass
+    -- (runDamageRewriteEffect), and a pass that replaces it forever is CR
     -- 104.4b's draw (Departure.checkMandatoryLoop).
     let checkToFixpoint passes = do
           begun <- State.gets GameState.lastChoice
-          performed <- Sba.performStateBasedActions
+          performed <- Sba.performStateBasedActions (runDamageRewriteEffect runSubgame)
           runReplacementEffects runSubgame
           passed <- Departure.passesSince begun passes
           Departure.checkMandatoryLoop passed
@@ -10183,7 +10183,7 @@ applyOneEffect runSubgame resolving source controller legal chosen effect = case
         -- authority, as above.
         let checkToFixpoint passes = do
               begun <- State.gets GameState.lastChoice
-              performed <- Sba.performStateBasedActions
+              performed <- Sba.performStateBasedActions (runDamageRewriteEffect runSubgame)
               runReplacementEffects runSubgame
               passed <- Departure.passesSince begun passes
               Departure.checkMandatoryLoop passed
@@ -10589,14 +10589,11 @@ enteredBeside oid gs = case Trigger.entryGroup oid gs of
 -- For damage, every caller runs it BEFORE runPreventionRiders and before the
 -- next state-based action check: the replaced event and the rest of its batch
 -- were simultaneous (CR 616.1), so what happens instead of it lands before CR
--- 704.5g reads the board. For a loss of the game, it runs after each state-based
--- action pass and before the next, so the same loss is not met twice. The
--- callers GameState.pendingReplacementEffects lists keep it empty at every
+-- 704.5g reads the board. For a loss of the game, it runs after each resolved
+-- instruction; a loss a state-based action check meets runs inside that check
+-- instead (Sba.performStateBasedActions' `instead`, runDamageRewriteEffect).
+-- The callers GameState.pendingReplacementEffects lists keep it empty at every
 -- priority window.
---
--- Not implemented: CR 614.1's own placement, inside the event. A permanent the
--- loser owns that the same check moves is put into the graveyard and then
--- shuffled away by the Mirror, where its controller should choose one (#5071).
 runReplacementEffects :: Game Result -> Game ()
 runReplacementEffects runSubgame = do
   queued <- State.gets GameState.pendingReplacementEffects
