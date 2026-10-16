@@ -653,9 +653,9 @@ armsReflexive resolving source effect gs = case effect of
 -- Cutpurse's names every opponent; the order is observable only where the
 -- reference names more than one seat, which no printing in the pool does at the
 -- naming caller (Petra Sphinx's is a target slot).
-apnapPlayersOf :: PlayerRef -> Map.Map SlotName (Set Recipient) -> PlayerId -> GameState -> [PlayerId]
-apnapPlayersOf ref legal controller gs =
-  let named = playerRefPlayers legal controller gs ref
+apnapPlayersOf :: PlayerRef -> Map.Map SlotName (Set Recipient) -> ObjectId -> PlayerId -> GameState -> [PlayerId]
+apnapPlayersOf ref legal source controller gs =
+  let named = playerRefPlayers legal source controller gs ref
    in filter (\pid -> List.elem pid named) (Game.apnapOrder gs)
 
 -- The players a PlayerRef names as DECIDERS -- a payer (CR 118.12), a "may"
@@ -663,23 +663,23 @@ apnapPlayersOf ref legal controller gs =
 -- -- read WITHOUT Players.resolution's CR 801.10 cut, which is for players the
 -- effect affects. A departed decider stays named, so CR 800.4f and 800.4g can
 -- answer for them. In PlayerId order.
-decidersOf :: Map.Map SlotName (Set Recipient) -> PlayerId -> GameState -> PlayerRef -> [PlayerId]
-decidersOf legal controller gs ref =
-  Maybe.fromMaybe [] (Players.named (resolutionReads legal controller gs) {Players.reaches = const True} gs ref)
+decidersOf :: Map.Map SlotName (Set Recipient) -> ObjectId -> PlayerId -> GameState -> PlayerRef -> [PlayerId]
+decidersOf legal source controller gs ref =
+  Maybe.fromMaybe [] (Players.named (resolutionReads legal source controller gs) {Players.reaches = const True} gs ref)
 
 -- decidersOf in CR 101.4's APNAP order, apnapPlayersOf's ordering. Proved by
 -- Pawl.RangeOfInfluenceSpec's "CR 801.10 a payer outside the controller's
 -- range is still offered the payment" (Cut the Tethers).
-apnapDecidersOf :: PlayerRef -> Map.Map SlotName (Set Recipient) -> PlayerId -> GameState -> [PlayerId]
-apnapDecidersOf ref legal controller gs =
-  let named = decidersOf legal controller gs ref
+apnapDecidersOf :: PlayerRef -> Map.Map SlotName (Set Recipient) -> ObjectId -> PlayerId -> GameState -> [PlayerId]
+apnapDecidersOf ref legal source controller gs =
+  let named = decidersOf legal source controller gs ref
    in filter (\pid -> List.elem pid named) (Game.apnapOrder gs)
 
 -- The ONE seat a PlayerRef names, for a designation CR 725.3 and CR 726.3 give
 -- to exactly one player at a time; a reference naming nobody or several moves
 -- nothing (CR 101.3).
-oneSeat :: Map.Map SlotName (Set Recipient) -> PlayerId -> GameState -> PlayerRef -> Maybe PlayerId
-oneSeat legal controller gs ref = case playerRefPlayers legal controller gs ref of
+oneSeat :: Map.Map SlotName (Set Recipient) -> ObjectId -> PlayerId -> GameState -> PlayerRef -> Maybe PlayerId
+oneSeat legal source controller gs ref = case playerRefPlayers legal source controller gs ref of
   [pid] -> Just pid
   _ -> Nothing
 
@@ -769,7 +769,7 @@ pickByChooser ::
   Game [ObjectId]
 pickByChooser source controller legal chooser one_ several amount count candidates = do
   gs <- State.get
-  let named = namesChooser legal controller gs chooser
+  let named = namesChooser legal source controller gs chooser
       asked = askedChooser source controller legal chooser
   if Map.null (RangeOfInfluence.unwrap (GameSettings.rangeOfInfluence (GameState.settings gs)))
     then Game.pickCounted named asked one_ several amount count candidates
@@ -783,15 +783,15 @@ pickByChooser source controller legal chooser one_ several amount count candidat
         Just who -> Game.pickCounted True (pure (Just who)) one_ several amount count (filter (reachable who) candidates)
 
 -- Whether a chooser ref names a seat to ask, askedChooser's test without its ask.
-namesChooser :: Map.Map SlotName (Set Recipient) -> PlayerId -> GameState -> PlayerRef -> Bool
-namesChooser legal controller gs ref = case ref of
+namesChooser :: Map.Map SlotName (Set Recipient) -> ObjectId -> PlayerId -> GameState -> PlayerRef -> Bool
+namesChooser legal source controller gs ref = case ref of
   PlayerRef.Relative relation -> not (List.null (Players.chooserOffer controller gs relation))
-  _ -> length (decidersOf legal controller gs ref) == 1
+  _ -> length (decidersOf legal source controller gs ref) == 1
 
 askedChooser :: ObjectId -> PlayerId -> Map.Map SlotName (Set Recipient) -> PlayerRef -> Game (Maybe PlayerId)
 askedChooser source controller legal ref = do
   gs <- State.get
-  case (ref, decidersOf legal controller gs ref) of
+  case (ref, decidersOf legal source controller gs ref) of
     (PlayerRef.Relative relation, _) -> Players.chooseOne controller source (Players.chooserOffer controller gs relation)
     (_, [named])
       | List.elem named (Game.stillPlaying gs) -> pure (Just named)
@@ -1088,7 +1088,7 @@ chosenCardsInGraveyard legal resolving controller source (ChosenCardInGraveyard.
     -- asked is nothing moved (CR 101.3). Intersected with the scope, so
     -- a chooser the scope does not name is offered nothing.
     Chooser.BoundInSlot slot ->
-      case playerRefPlayers legal controller gs (PlayerRef.InSlot slot) of
+      case playerRefPlayers legal source controller gs (PlayerRef.InSlot slot) of
         [pid] | List.elem pid (Target.zoneScopePlayers (Just controller) legal scope gs) -> ask pid (graveyardCardsOf context gs pid filter_)
         _ -> pure []
 
@@ -1097,9 +1097,9 @@ chosenCardsInGraveyard legal resolving controller source (ChosenCardInGraveyard.
 -- plus a scope: CR 402.3 lets a player look only at their own hand. Through
 -- playerRefPlayers, so an unfilled, illegal or non-player slot names nobody and
 -- CR 101.3 ignores that share (CR 608.2b).
-handChoosers :: Map.Map SlotName (Set Recipient) -> PlayerId -> GameState -> PlayerRef -> [PlayerId]
-handChoosers legal controller gs player =
-  let named = playerRefPlayers legal controller gs player
+handChoosers :: Map.Map SlotName (Set Recipient) -> ObjectId -> PlayerId -> GameState -> PlayerRef -> [PlayerId]
+handChoosers legal source controller gs player =
+  let named = playerRefPlayers legal source controller gs player
    in filter (`elem` named) (Game.apnapOrder gs)
 
 -- CR 401.2 and CR 401.4: turn the effect's LibraryPlacement into the END each
@@ -1203,8 +1203,8 @@ objectRefRecipients legal resolving controller source gs ref = case ref of
   -- departed seat are cut where every other reference cuts them.
   -- Pawl.RangeOfInfluenceSpec's and Pawl.DepartureSpec's Fanatic of Mogis
   -- prove both.
-  ObjectRef.EachPlayer -> fmap Recipient.ToPlayer (apnapPlayersOf (PlayerRef.Relative PlayerRelation.AnyPlayer) legal controller gs)
-  ObjectRef.EachOpponent -> fmap Recipient.ToPlayer (apnapPlayersOf (PlayerRef.Relative PlayerRelation.Opponent) legal controller gs)
+  ObjectRef.EachPlayer -> fmap Recipient.ToPlayer (apnapPlayersOf (PlayerRef.Relative PlayerRelation.AnyPlayer) legal source controller gs)
+  ObjectRef.EachOpponent -> fmap Recipient.ToPlayer (apnapPlayersOf (PlayerRef.Relative PlayerRelation.Opponent) legal source controller gs)
   -- CR 120.3a, one seat wide: the player the SOURCE chose as it entered (CR
   -- 614.12a), the printed noun for PlayerRef.ChosenPlayerOfBound over the
   -- source's own slot (CR 113.7a) -- not `resolving`, which for a triggered
@@ -1213,11 +1213,11 @@ objectRefRecipients legal resolving controller source gs ref = case ref of
   -- cuts a chosen player outside the controller's range: Pawl.RangeOfInfluenceSpec's
   -- "CR 801.10 a chosen player outside the controller's range is dealt no
   -- damage" proves it.
-  ObjectRef.ChosenPlayer -> fmap Recipient.ToPlayer (apnapPlayersOf (PlayerRef.ChosenPlayerOfBound Binding.triggerSource) legal controller gs)
+  ObjectRef.ChosenPlayer -> fmap Recipient.ToPlayer (apnapPlayersOf (PlayerRef.ChosenPlayerOfBound Binding.triggerSource) legal source controller gs)
   -- CR 120.3a, at whatever width the reference has: the seats a PlayerRef names,
   -- which for Deflecting Palm's ControllerOfBound is CR 108.4's controller of the
   -- object a slot holds, read through CR 608.2h's last known information.
-  ObjectRef.Players playerRef -> fmap Recipient.ToPlayer (apnapPlayersOf playerRef legal controller gs)
+  ObjectRef.Players playerRef -> fmap Recipient.ToPlayer (apnapPlayersOf playerRef legal source controller gs)
   -- No recipients: the answer needs the chooser asked, which askingObjects does.
   ObjectRef.ChosenCardInGraveyard {} -> []
   ObjectRef.ChosenCardInHand {} -> []
@@ -2388,7 +2388,7 @@ chooseCardsInHand resolving source controller legal (ChosenCardInHand.MkChosenCa
   let context = effectContext gs controller source legal (slotBindings resolving gs)
       ask asked candidates = Maybe.maybeToList <$> Game.chooseAmong (\decider who -> Prompt.ChooseCardInHand decider who source) asked candidates
   fmap concat . Monad.mapM (\pid -> ask pid (handCardsOf context gs pid filter_)) $
-    handChoosers legal controller gs player
+    handChoosers legal source controller gs player
 
 -- The printed "from among them", a CR 608.2d choice: the candidates are the
 -- members of a GROUP an earlier clause of this resolution bound rather than a
@@ -2477,7 +2477,7 @@ randomCardsInHand resolving source controller legal (RandomCardInHand.MkRandomCa
       context = effectContext gs controller source legal (slotBindings resolving gs)
       wanted = maybe 0 Integer.toNaturalSaturating (Quantity.evaluateFor viewOf context gs resolving source count)
   fmap concat . Monad.mapM (\pid -> Game.drawDistinct Prompt.RandomObject wanted (handCardsOf context gs pid filter_)) $
-    handChoosers legal controller gs player
+    handChoosers legal source controller gs player
 
 -- CR 404.1 / 608.2c: the cards randomness names out of each graveyard the ref
 -- reaches -- askingObjects' RandomCardInGraveyard arm.
@@ -2528,7 +2528,7 @@ randomCardsInLibrary resolving source controller legal (RandomCardInLibrary.MkRa
       context = effectContext gs controller source legal (slotBindings resolving gs)
       wanted = maybe 0 Integer.toNaturalSaturating (Quantity.evaluateFor viewOf context gs resolving source count)
   fmap concat . Monad.mapM (\pid -> Game.drawDistinct Prompt.RandomObject wanted (libraryCardsOf context gs pid filter_)) $
-    handChoosers legal controller gs player
+    handChoosers legal source controller gs player
 
 -- One effect, applied, wrapped in the window CR 607.2a's link is filed from:
 -- what was in exile before, and what is in it after.
@@ -3373,7 +3373,7 @@ effectIsImpossible resolving source controller legal gs effect = case effect of
   -- that one is for drawing alone. The millers and the per-miller amount are the
   -- executing arm's own reads.
   Effect.Mill (Mill.MkMill ref quantity _ _) ->
-    let millers = playerRefPlayers legal controller gs ref
+    let millers = playerRefPlayers legal source controller gs ref
         beyondLibrary pid = case evaluateForRecipient viewOf context gs resolving source pid quantity of
           Just n | n > 0 -> n > List.genericLength (Game.zoneMembers Zone.Library pid gs)
           _ -> False
@@ -3601,7 +3601,7 @@ effectIsImpossible resolving source controller legal gs effect = case effect of
   -- per victim there too. Pawl.ResolveSpec's "CR 608.2d Giant Opportunity's
   -- sacrifice of two Foods is not offered with one Food" proves the count.
   Effect.PlayerSacrifices (PlayerSacrifices.MkPlayerSacrifices players filter_ quantity) ->
-    let victims = playerRefPlayers legal controller gs players
+    let victims = playerRefPlayers legal source controller gs players
         tooFewToGive victim = case evaluateForRecipient viewOf context gs resolving source victim quantity of
           Just n | n > 0 -> n > List.genericLength (Replacement.sacrificeCandidates (Filter.perspective context) (Binding.recipientsBySlot legal (slotBindings resolving gs)) victim Nothing filter_ gs)
           _ -> False
@@ -3617,7 +3617,7 @@ effectIsImpossible resolving source controller legal gs effect = case effect of
   -- An instruction naming no player is never impossible (an unbound
   -- `thoseWhoMay` before the "may" is asked).
   Effect.Ante (Ante.MkAnte player ref _) ->
-    let anteing = playerRefPlayers legal controller gs player
+    let anteing = playerRefPlayers legal source controller gs player
         named = objectRefObjects legal resolving controller source gs ref
         theirs oid = case Game.lookupObject oid gs of
           Just obj -> List.elem (Object.owner obj) anteing
@@ -3628,11 +3628,11 @@ effectIsImpossible resolving source controller legal gs effect = case effect of
   -- ChosenCardInGraveyard reads are the candidate sets chosenPermanents and
   -- chosenCardsInGraveyard offer, the pure sweep answering nothing for them.
   Effect.PutSticker (PutSticker.MkPutSticker player ref kinds cap free _) ->
-    let placers = playerRefPlayers legal controller gs player
+    let placers = playerRefPlayers legal source controller gs player
         named = case ref of
           ObjectRef.ChosenPermanents choice -> battlefieldMatching legal resolving controller source gs (ChosenPermanents.filter choice)
           ObjectRef.ChosenCardInGraveyard (ChosenCardInGraveyard.MkChosenCardInGraveyard chooser scope filter_ _) -> case chooser of
-            Chooser.BoundInSlot slot -> case playerRefPlayers legal controller gs (PlayerRef.InSlot slot) of
+            Chooser.BoundInSlot slot -> case playerRefPlayers legal source controller gs (PlayerRef.InSlot slot) of
               [pid] | List.elem pid (Target.zoneScopePlayers (Just controller) legal scope gs) -> graveyardCardsOf context gs pid filter_
               _ -> []
             Chooser.TheController -> graveyardCards context legal controller gs scope filter_
@@ -3679,7 +3679,7 @@ effectIsImpossible resolving source controller legal gs effect = case effect of
     -- the empty answer satisfies, and every ref that reads, answers False.
     choosesFromNothing ref = case ref of
       ObjectRef.ChosenCardInHand (ChosenCardInHand.MkChosenCardInHand player filter_) ->
-        let choosers = handChoosers legal controller gs player
+        let choosers = handChoosers legal source controller gs player
          in not (null choosers) && all (\pid -> null (handCardsOf context gs pid filter_)) choosers
       ObjectRef.ChosenCardInGraveyard (ChosenCardInGraveyard.MkChosenCardInGraveyard chooser scope filter_ count) ->
         positive count && case chooser of
@@ -4066,7 +4066,7 @@ applyOneEffect runSubgame resolving source controller legal chosen effect = case
       -- chosen, or nothing noted: adding nothing is the honest answer.
       Mana.Settles run ->
         let units = concat (replicate howMany (fmap unitOf run))
-            recipients = playerRefPlayers legal controller gs0 ref
+            recipients = playerRefPlayers legal source controller gs0 ref
          in Monad.unless (null run) $ do
               State.modify' (\gs -> foldr (\pid -> Mana.addMana pid units) gs recipients)
               Monad.mapM_ (\pid -> recordAdded pid (Set.fromList run)) recipients
@@ -4081,7 +4081,7 @@ applyOneEffect runSubgame resolving source controller legal chosen effect = case
       -- "two mana of any one color they choose" says (Stadium Vendors): the
       -- count replicates the unit the answer settled rather than asking again.
       Mana.Offers offered ->
-        let named = playerRefPlayers legal controller gs0 ref
+        let named = playerRefPlayers legal source controller gs0 ref
             ordered = filter (\pid -> List.elem pid named) (Game.apnapOrder gs0)
             recipients = ordered <> filter (\pid -> List.notElem pid ordered) named
          in Monad.forM_ recipients $ \pid -> do
@@ -4132,7 +4132,7 @@ applyOneEffect runSubgame resolving source controller legal chosen effect = case
         theirs pid = filter (\oid -> Projection.controllerOf oid gs0 == Just pid) matching
     -- CR 101.4's APNAP order over several actors, apnapPlayersOf's own
     -- intersection; Drain Power names one.
-    Monad.forM_ (apnapPlayersOf ref legal controller gs0) $ \pid -> do
+    Monad.forM_ (apnapPlayersOf ref legal source controller gs0) $ \pid -> do
       let batch = theirs pid
       ordered <- case batch of
         _ : _ : _ -> do
@@ -4153,7 +4153,7 @@ applyOneEffect runSubgame resolving source controller legal chosen effect = case
   -- on both sides nets the mana once.
   Effect.MoveMana (MoveMana.MkMoveMana fromRef toRef) -> do
     gs <- State.get
-    Mana.moveMana (apnapPlayersOf fromRef legal controller gs) (apnapPlayersOf toRef legal controller gs)
+    Mana.moveMana (apnapPlayersOf fromRef legal source controller gs) (apnapPlayersOf toRef legal source controller gs)
   Effect.Search (Search.MkSearch searcherRef ownerRef zones outside quantity filter_ upTo destination subject foundSlot differentIn exactly andOr) ->
     -- CR 701.23a: match each candidate through its own CR 613 projection --
     -- rule 613.1 names no zone, so a card in any of the searched zones is folded
@@ -4237,7 +4237,7 @@ applyOneEffect runSubgame resolving source controller legal chosen effect = case
           -- shuffled after the last decision, and a later searcher of the same
           -- library is offered what an earlier one found.
           let inApnapOrder r =
-                let named = playerRefPlayers legal controller gs0 r
+                let named = playerRefPlayers legal source controller gs0 r
                  in filter (\pid -> List.elem pid named) (Game.apnapOrder gs0)
               searchers = inApnapOrder searcherRef
               -- "Each player searches THEIR library" (Jungle Wayfinder) is ONE
@@ -5501,7 +5501,7 @@ applyOneEffect runSubgame resolving source controller legal chosen effect = case
   Effect.ExchangeZones (ExchangeZones.MkExchangeZones player pair) -> do
     before <- State.get
     let (one, other) = ZonePair.zones pair
-        named = playerRefPlayers legal controller before player
+        named = playerRefPlayers legal source controller before player
         exchanging = filter (`elem` named) (Game.apnapOrder before)
         moves =
           concatMap
@@ -5606,7 +5606,7 @@ applyOneEffect runSubgame resolving source controller legal chosen effect = case
         -- no longer resolves contributes no owner.
         owners =
           Set.fromList (Maybe.mapMaybe (\target -> fmap Object.owner (Game.lookupObject target gs)) targets)
-            <> Set.fromList (foldMap (playerRefPlayers legal controller gs) named)
+            <> Set.fromList (foldMap (playerRefPlayers legal source controller gs) named)
     Monad.void (Event.changeZonesTogether (fmap (\target -> (target, Zone.Library)) targets))
     -- APNAP (CR 608.2f), which is what makes the ORDER of the Prompt.Shuffle calls
     -- a fact about the rules rather than about PlayerId's Ord.
@@ -5617,7 +5617,7 @@ applyOneEffect runSubgame resolving source controller legal chosen effect = case
   Effect.SetOwner (SetOwner.MkSetOwner player ref) -> do
     gs <- State.get
     let named = ListUtils.nubOrd (objectRefObjects legal resolving controller source gs ref)
-    case playerRefPlayers legal controller gs player of
+    case playerRefPlayers legal source controller gs player of
       [owner] -> State.put (List.foldl' (\g oid -> Game.setOwner oid owner g) gs named)
       _ -> pure ()
   -- CR 701.12a / 108.3: the one object each ref names trade owners. All or
@@ -5644,7 +5644,7 @@ applyOneEffect runSubgame resolving source controller legal chosen effect = case
   Effect.Ante (Ante.MkAnte player ref mSlot) -> do
     gs <- State.get
     let named = objectRefObjects legal resolving controller source gs ref
-    let anteing = playerRefPlayers legal controller gs player
+    let anteing = playerRefPlayers legal source controller gs player
         theirs oid = case Game.lookupObject oid gs of
           Just obj -> List.elem (Object.owner obj) anteing
           Nothing -> False
@@ -5658,7 +5658,7 @@ applyOneEffect runSubgame resolving source controller legal chosen effect = case
   -- so happenedBetween reads it as not having happened.
   Effect.PutSticker (PutSticker.MkPutSticker player ref kinds cap free bound) -> do
     named <- askingObjects resolving source controller legal chosen ref
-    placers <- State.gets (\gs -> playerRefPlayers legal controller gs player)
+    placers <- State.gets (\gs -> playerRefPlayers legal source controller gs player)
     Monad.forM_ placers $ \placer -> Monad.forM_ (ListUtils.nubOrd named) $ \oid -> do
       gs <- State.get
       picked <- Sticker.place False placer oid kinds (ticketCapOf resolving source controller legal gs cap) free
@@ -5674,7 +5674,7 @@ applyOneEffect runSubgame resolving source controller legal chosen effect = case
   -- PlayerId's Ord.
   Effect.Shuffle ref -> do
     gs <- State.get
-    let named = Set.fromList (playerRefPlayers legal controller gs ref)
+    let named = Set.fromList (playerRefPlayers legal source controller gs ref)
     Monad.forM_ (filter (`Set.member` named) (Game.apnapOrder gs)) Event.shuffleLibrary
   Effect.OfferCast (OfferCast.MkOfferCast ref caster optionality verb offer repetition copied controlWhileResolving slot) -> do
     -- Named HERE rather than inside offerCast so that one function takes the
@@ -5694,7 +5694,7 @@ applyOneEffect runSubgame resolving source controller legal chosen effect = case
     spells <-
       concat
         <$> Monad.forM
-          (playerRefPlayers legal controller gs caster)
+          (playerRefPlayers legal source controller gs caster)
           ( \pid ->
               offerCast runSubgame context evaluate named pid optionality verb (if controlWhileResolving then Just controller else Nothing) repetition copied offer
           )
@@ -5752,7 +5752,7 @@ applyOneEffect runSubgame resolving source controller legal chosen effect = case
       -- illegal slot (CR 608.2b) and a set that matched nothing all arrive empty.
       case objectRefObjects legal resolving controller source gs ref of
         [] -> gs
-        targets -> case playerRefPlayers legal controller gs player of
+        targets -> case playerRefPlayers legal source controller gs player of
           -- CR 715.3d's "that player" is ONE seat and
           -- Object.playableFromExile holds one, so a reference naming nobody --
           -- or naming several -- grants nothing, PlayerRef.InSlot's own
@@ -6054,7 +6054,7 @@ applyOneEffect runSubgame resolving source controller legal chosen effect = case
     gs <- State.get
     let viewOf = effectViewOf source legal gs
         context = effectContext gs controller source legal (slotBindings resolving gs)
-        named = playerRefPlayers legal controller gs ref
+        named = playerRefPlayers legal source controller gs ref
         -- CR 121.2c: the active player draws first, then each other player in turn
         -- order. Observable rather than cosmetic: each draw records a zone change
         -- the trigger scan reads (CR 603.2). Not implemented: CR 121.2d's order within
@@ -6101,7 +6101,7 @@ applyOneEffect runSubgame resolving source controller legal chosen effect = case
     let viewOf = effectViewOf source legal gs
         context = effectContext gs controller source legal (slotBindings resolving gs)
         -- An illegal slot (CR 608.2b) or a reference naming nobody mills nothing.
-        millers = playerRefPlayers legal controller gs ref
+        millers = playerRefPlayers legal source controller gs ref
         -- The number each miller is INSTRUCTED to mill, before CR 614.1a has had a
         -- say and before CR 701.17b's library is looked at. PER MILLER
         -- (evaluateForRecipient), off the one pre-effect `gs`, so a seat milling
@@ -6233,7 +6233,7 @@ applyOneEffect runSubgame resolving source controller legal chosen effect = case
     gs <- State.get
     let named = objectRefObjects legal resolving controller source gs ref
     Monad.forM_ named $ \oid ->
-      Monad.forM_ (playerRefPlayers legal controller gs looker) $ \pid -> Event.look pid oid
+      Monad.forM_ (playerRefPlayers legal source controller gs looker) $ \pid -> Event.look pid oid
     -- Several cards take the group, which Filter.IsBound reads as CR 701.20e's
     -- "among them".
     bindObjects resolving (Just slot) named
@@ -6255,7 +6255,7 @@ applyOneEffect runSubgame resolving source controller legal chosen effect = case
     let viewOf = effectViewOf source legal gs
         context = effectContext gs controller source legal (slotBindings resolving gs)
         -- An illegal slot (CR 608.2b) or a reference naming nobody scries nothing.
-        named = playerRefPlayers legal controller gs ref
+        named = playerRefPlayers legal source controller gs ref
         -- CR 701.22c: players scrying at once decide in APNAP order -- apnapOrder
         -- supplies the ORDER, `named` the MEMBERSHIP.
         scryers = filter (\pid -> List.elem pid named) (Game.apnapOrder gs)
@@ -6284,7 +6284,7 @@ applyOneEffect runSubgame resolving source controller legal chosen effect = case
         context = effectContext gs controller source legal (slotBindings resolving gs)
         -- Scry's arm in every respect, APNAP and both phases included (CR
         -- 101.4, rule 701.25 stating no order of its own).
-        named = playerRefPlayers legal controller gs ref
+        named = playerRefPlayers legal source controller gs ref
         surveillers = filter (\pid -> List.elem pid named) (Game.apnapOrder gs)
     -- The split is a regression fence rather than a proven behaviour: no card
     -- in data/cards/ names two surveillers, and MTGJSON's 2026-08-23 dump has no
@@ -6313,7 +6313,7 @@ applyOneEffect runSubgame resolving source controller legal chosen effect = case
         context = effectContext gs controller source legal (slotBindings resolving gs)
         -- The players who FATESEAL, not the ones fatesealed (CR 701.29a); whose
         -- library is looked at is fatesealOne's separate choice.
-        named = playerRefPlayers legal controller gs ref
+        named = playerRefPlayers legal source controller gs ref
         fatesealers = filter (\pid -> List.elem pid named) (Game.apnapOrder gs)
     -- One fatesealer at a time, unlike Scry's two phases: MTGJSON's 2026-08-23
     -- dump has no printing whose text puts "each player", "each opponent" or
@@ -6474,7 +6474,7 @@ applyOneEffect runSubgame resolving source controller legal chosen effect = case
     gs <- State.get
     let viewOf = effectViewOf source legal gs
         context = effectContext gs controller source legal (slotBindings resolving gs)
-        named = playerRefPlayers legal controller gs ref
+        named = playerRefPlayers legal source controller gs ref
         victims = filter (\pid -> List.elem pid named) (Game.apnapOrder gs)
         pickFor victim = do
           let candidates = handCardsOf context gs victim filter_
@@ -6496,7 +6496,7 @@ applyOneEffect runSubgame resolving source controller legal chosen effect = case
         -- Whoever the PlayerRef names loses the life. Unordered: there is no CR
         -- 121.2c for life, and CR 704.3 checks state-based actions only as a player
         -- would get priority, so no total is observable in between.
-        losers = playerRefPlayers legal controller gs ref
+        losers = playerRefPlayers legal source controller gs ref
     -- PER PAYER (evaluateForRecipient): Shahrazad's "half THEIR life" reads each
     -- payer's own total, and every number is read off the SAME `gs`.
     --
@@ -6549,7 +6549,7 @@ applyOneEffect runSubgame resolving source controller legal chosen effect = case
     gs <- State.get
     let viewOf = effectViewOf source legal gs
         context = effectContext gs controller source legal (slotBindings resolving gs)
-        gainers = playerRefPlayers legal controller gs ref
+        gainers = playerRefPlayers legal source controller gs ref
     Event.simultaneously . Monad.forM_ gainers $ \pid ->
       case evaluateForRecipient viewOf context gs resolving source pid quantity of
         Just n
@@ -6631,7 +6631,7 @@ applyOneEffect runSubgame resolving source controller legal chosen effect = case
         -- when CR 119.7-8 forbid it.
         side value = case value of
           ExchangedValue.LifeTotal ref -> do
-            pid <- single (playerRefPlayers legal controller gs ref)
+            pid <- single (playerRefPlayers legal source controller gs ref)
             life <- Player.life <$> Map.lookup pid (GameState.players gs)
             let barred new
                   | new > life = PlayerEffect.prohibitsGainingLife pid gs
@@ -6686,7 +6686,7 @@ applyOneEffect runSubgame resolving source controller legal chosen effect = case
     gs <- State.get
     let viewOf = effectViewOf source legal gs
         context = effectContext gs controller source legal (slotBindings resolving gs)
-        recipients = playerRefPlayers legal controller gs ref
+        recipients = playerRefPlayers legal source controller gs ref
     -- CR 608.2f's bracket, the GainLife arm's: one instruction setting several
     -- players' totals is one event, however the per-seat deltas fall out.
     Event.simultaneously . Monad.forM_ recipients $ \pid ->
@@ -6711,7 +6711,7 @@ applyOneEffect runSubgame resolving source controller legal chosen effect = case
   -- separately. A player an effect says can't lose the game is not named.
   Effect.LoseGame ref -> do
     gs <- State.get
-    let named = Set.fromList (filter (\pid -> not (PlayerEffect.precludes GameOutcome.Lose pid gs)) (playerRefPlayers legal controller gs ref))
+    let named = Set.fromList (filter (\pid -> not (PlayerEffect.precludes GameOutcome.Lose pid gs)) (playerRefPlayers legal source controller gs ref))
         alive = Set.fromList (Game.stillPlaying gs)
     Departure.leaveGameTogether True Departure.Type.Lost (filter (\pid -> Set.member pid named && Set.member pid alive) (Game.apnapOrder gs))
   -- CR 104.2b with CR 801.14: a player the reference names wins the game, which
@@ -6730,7 +6730,7 @@ applyOneEffect runSubgame resolving source controller legal chosen effect = case
   Effect.WinGame ref -> do
     gs <- State.get
     let limited winner = Maybe.isJust (RangeOfInfluence.rangeOf (GameSettings.rangeOfInfluence (GameState.settings gs)) winner)
-        winners = filter (\pid -> pid `elem` Game.stillPlaying gs && (limited pid || not (PlayerEffect.precludes GameOutcome.Win pid gs))) (playerRefPlayers legal controller gs ref)
+        winners = filter (\pid -> pid `elem` Game.stillPlaying gs && (limited pid || not (PlayerEffect.precludes GameOutcome.Win pid gs))) (playerRefPlayers legal source controller gs ref)
         losers = Set.fromList [pid | winner <- winners, pid <- Players.offer winner gs PlayerRelation.Opponent, not (limited winner && PlayerEffect.precludes GameOutcome.Lose pid gs)]
     Departure.leaveGameTogether (all limited winners) Departure.Type.Lost (filter (`Set.member` losers) (Game.apnapOrder gs))
   -- CR 104.4c with CR 801.15: the game is a draw for the controller and each
@@ -6800,7 +6800,7 @@ applyOneEffect runSubgame resolving source controller legal chosen effect = case
     gs <- State.get
     let viewOf = effectViewOf source legal gs
         context = effectContext gs controller source legal (slotBindings resolving gs)
-        revving = playerRefPlayers legal controller gs ref
+        revving = playerRefPlayers legal source controller gs ref
     Monad.forM_ revving $ \pid ->
       case evaluateForRecipient viewOf context gs resolving source pid quantity of
         Just n
@@ -6828,7 +6828,7 @@ applyOneEffect runSubgame resolving source controller legal chosen effect = case
     gs <- State.get
     let viewOf = effectViewOf source legal gs
         context = effectContext gs controller source legal (slotBindings resolving gs)
-        slowing = playerRefPlayers legal controller gs (SpeedDecrease.player d)
+        slowing = playerRefPlayers legal source controller gs (SpeedDecrease.player d)
         atLeast = toInteger (SpeedDecrease.floor d)
     Monad.forM_ slowing $ \pid ->
       case evaluateForRecipient viewOf context gs resolving source pid (SpeedDecrease.quantity d) of
@@ -6852,7 +6852,7 @@ applyOneEffect runSubgame resolving source controller legal chosen effect = case
     let viewOf = effectViewOf source legal gs
         context = effectContext gs controller source legal (slotBindings resolving gs)
         -- Every player the reference names, in APNAP order.
-        named = playerRefPlayers legal controller gs players
+        named = playerRefPlayers legal source controller gs players
         victims = filter (\pid -> List.elem pid named) (Game.apnapOrder gs)
         -- `made` is every earlier victim's pick, which CR 101.4b lets a later
         -- victim know.
@@ -6912,7 +6912,7 @@ applyOneEffect runSubgame resolving source controller legal chosen effect = case
     let -- Rule 701.38a's "specified player". A reference naming several names the
         -- first in PlayerId order, and one naming nobody falls back to CR 109.5's
         -- "you" -- which is the starter every printing in the pool states anyway.
-        begin = case playerRefPlayers legal controller gs starter of
+        begin = case playerRefPlayers legal source controller gs starter of
           pid : _ -> pid
           [] -> controller
         -- turnOrderFrom answers the SEATING roster (CR 800.5), so stillPlaying
@@ -6995,7 +6995,7 @@ applyOneEffect runSubgame resolving source controller legal chosen effect = case
         -- Clans' "its controller", read off the loop's member through CR 608.2h.
         -- APNAP (CR 608.2f) for a reference naming several, apnapPlayersOf's own
         -- intersection so a reference naming a departed seat mints nothing.
-        creators = apnapPlayersOf creator legal controller gs
+        creators = apnapPlayersOf creator legal source controller gs
     -- CR 509.4's parenthetical: the attacking creature the effect SPECIFIED,
     -- named by slot. Read ONCE, ahead of the minting loop, so CR 608.2f's single
     -- event cannot see it move; through fromAmongMembers, the reader every "the
@@ -7451,7 +7451,7 @@ applyOneEffect runSubgame resolving source controller legal chosen effect = case
         -- Read off the same pre-effect `gs` as the objects (CR 608.2f), and
         -- PLURAL, one copy per seat the reference names; every producer names one,
         -- and the elided default names the resolving controller.
-        Monad.forM_ (playerRefPlayers legal controller gs copierRef) $ \copier -> Monad.forM_ (copyOnStackOf (Object.source obj)) $ \(copySource, kind) -> Monad.replicateM_ copies $ do
+        Monad.forM_ (playerRefPlayers legal source controller gs copierRef) $ \copier -> Monad.forM_ (copyOnStackOf (Object.source obj)) $ \(copySource, kind) -> Monad.replicateM_ copies $ do
           -- CR 707.10's answers, as the target maps to write: one EMPTY map
           -- where the copy keeps the decisions rule 707.10 copied (rule 707.10c
           -- included, its offer below being a separate act), CR 707.10d's one
@@ -8009,7 +8009,7 @@ applyOneEffect runSubgame resolving source controller legal chosen effect = case
     -- players on a team skips that team's step once, so the team's first named
     -- player takes the one row. Replacement.applies matches it for the team.
     gs <- State.get
-    let named = List.foldl' (\kept pid -> if any (Turn.sharesTurn gs pid) kept then kept else kept <> [pid]) [] (playerRefPlayers legal controller gs ref)
+    let named = List.foldl' (\kept pid -> if any (Turn.sharesTurn gs pid) kept then kept else kept <> [pid]) [] (playerRefPlayers legal source controller gs ref)
         install pid g =
           let (ts, g1) = Game.freshTimestamp g
               active =
@@ -8054,7 +8054,7 @@ applyOneEffect runSubgame resolving source controller legal chosen effect = case
             -- Through playerRefPlayers so the slot is read exactly as every
             -- other opcode reads one, CR 608.2b's empty answer included.
             AffectedPlayers.Named slot ->
-              fmap AffectedPlayers.Named (playerRefPlayers legal controller gs (PlayerRef.InSlot slot))
+              fmap AffectedPlayers.Named (playerRefPlayers legal source controller gs (PlayerRef.InSlot slot))
           -- CR 601.2c / 608.2b: a zone reference inside the payload is a read of
           -- this resolution's bindings, so it is baked here for the reason the
           -- Named set above is -- Sen Triplets' "that player's hand" is the
@@ -8072,7 +8072,7 @@ applyOneEffect runSubgame resolving source controller legal chosen effect = case
             PlayerRef.ControllerOfBound _ -> seatNow ref
             PlayerRef.OwnerOfBound _ -> seatNow ref
             _ -> Quantity.bakePlayerRef (Binding.playersIn legal) Map.empty ref
-          seatNow ref = case playerRefPlayers legal controller gs ref of
+          seatNow ref = case playerRefPlayers legal source controller gs ref of
             [pid] -> PlayerRef.Specific pid
             _ -> ref
           withPlayers = PlayerEffect.mapPlayerRefs atResolution playerEffect
@@ -8207,7 +8207,7 @@ applyOneEffect runSubgame resolving source controller legal chosen effect = case
             -- nobody stores nothing (Chaos Dragon's "those players").
             aims = case aimedAt of
               Just (AimedAt.MkAimedAt (AimedPlayers.EachInSlot slot) kinds) ->
-                fmap (\pid -> Just (AimedAt.MkAimedAt (AimedPlayers.BoundPlayer pid) kinds)) (playerRefPlayers legal controller gs (PlayerRef.EachInSlot slot))
+                fmap (\pid -> Just (AimedAt.MkAimedAt (AimedPlayers.BoundPlayer pid) kinds)) (playerRefPlayers legal source controller gs (PlayerRef.EachInSlot slot))
               _ -> [aimedAt]
             (ts, gs1) = Game.freshTimestamp gs
             stored = do
@@ -8266,7 +8266,7 @@ applyOneEffect runSubgame resolving source controller legal chosen effect = case
             -- the declaration is pruned there by membership
             -- (Pawl.Engine.AttackRequirement's fromStored).
             defenders = case defenderRef of
-              AttackTargetRef.Players ref -> fmap AttackTarget.OfPlayer (playerRefPlayers legal controller gs ref)
+              AttackTargetRef.Players ref -> fmap AttackTarget.OfPlayer (playerRefPlayers legal source controller gs ref)
               AttackTargetRef.Permanents ref -> Maybe.mapMaybe announcement (objectRefObjects legal resolving controller source gs ref)
             announcement oid
               | Projection.isPlaneswalkerOf oid gs = Just (AttackTarget.OfPlaneswalker oid)
@@ -8293,7 +8293,7 @@ applyOneEffect runSubgame resolving source controller legal chosen effect = case
     pure ()
   Effect.BecomeMonarch target -> do
     gs <- State.get
-    let newMonarch = oneSeat legal controller gs $ case target of
+    let newMonarch = oneSeat legal source controller gs $ case target of
           MonarchTarget.TheController -> PlayerRef.Relative PlayerRelation.You
           -- CR 725.2: the controller of the ability's bound source, read from the
           -- reserved trigger-source slot through CR 608.2h's last known
@@ -8318,7 +8318,7 @@ applyOneEffect runSubgame resolving source controller legal chosen effect = case
   -- CR 726.1: the initiative moves, whichever InitiativeTarget named the taker.
   Effect.TakeTheInitiative target -> do
     gs <- State.get
-    let taker = oneSeat legal controller gs $ case target of
+    let taker = oneSeat legal source controller gs $ case target of
           InitiativeTarget.TheController -> PlayerRef.Relative PlayerRelation.You
           -- CR 726.2: the controller of the ability's bound source, for
           -- Effect.BecomeMonarch ControllerOfSource's reason one rule over.
@@ -8918,7 +8918,7 @@ applyOneEffect runSubgame resolving source controller legal chosen effect = case
           g <- State.get
           name <- Game.choose (Prompt.ChooseCardName (Decide.deciderFor chooser g) chooser source restriction made) >>= Game.lookUpChosenName
           pure (made Seq.|> (chooser, name))
-    picked <- fmap (Map.fromList . Foldable.toList) (Monad.foldM ask Seq.empty (apnapDecidersOf ref legal controller gs))
+    picked <- fmap (Map.fromList . Foldable.toList) (Monad.foldM ask Seq.empty (apnapDecidersOf ref legal source controller gs))
     -- CR 101.3: a reference naming NOBODY leaves nothing to do, so the write is
     -- skipped rather than assigning the empty set -- which would clear a name an
     -- earlier instruction chose, and the assignment above is the whole reason
@@ -9775,7 +9775,7 @@ applyOneEffect runSubgame resolving source controller legal chosen effect = case
     gs <- State.get
     let viewOf = effectViewOf source legal gs
         context = effectContext gs controller source legal (slotBindings resolving gs)
-        named = playerRefPlayers legal controller gs ref
+        named = playerRefPlayers legal source controller gs ref
         blighters = filter (\pid -> List.elem pid named) (Game.apnapOrder gs)
     blightedCreatures <- Event.simultaneously . fmap Maybe.catMaybes . Monad.forM blighters $ \pid ->
       case evaluateForRecipient viewOf context gs resolving source pid quantity of
@@ -9835,14 +9835,14 @@ applyOneEffect runSubgame resolving source controller legal chosen effect = case
   -- reason: the order is a fact about the rules rather than about PlayerId's Ord.
   Effect.Cloak ref -> do
     gs <- State.get
-    let named = Set.fromList (playerRefPlayers legal controller gs ref)
+    let named = Set.fromList (playerRefPlayers legal source controller gs ref)
     Monad.mapM_ Cloak.cloak (filter (`Set.member` named) (Game.apnapOrder gs))
   -- CR 701.62a: the named players each manifest dread, the keyword action being
   -- Pawl.Engine.ManifestDread.manifestDread's, choice and event alike. APNAP
   -- orders the several, the Cloak arm's reason.
   Effect.ManifestDread ref -> do
     gs <- State.get
-    let named = Set.fromList (playerRefPlayers legal controller gs ref)
+    let named = Set.fromList (playerRefPlayers legal source controller gs ref)
     Monad.mapM_ (ManifestDread.manifestDread source) (filter (`Set.member` named) (Game.apnapOrder gs))
   -- CR 701.49: the whole keyword action, which Pawl.Engine.Dungeon owns.
   Effect.Venture quality -> Dungeon.venture controller quality
@@ -9850,7 +9850,7 @@ applyOneEffect runSubgame resolving source controller legal chosen effect = case
     gs <- State.get
     let viewOf = effectViewOf source legal gs
         context = effectContext gs controller source legal (slotBindings resolving gs)
-        recipients = playerRefPlayers legal controller gs ref
+        recipients = playerRefPlayers legal source controller gs ref
     -- CR 122 / 107.14: the amount is read per recipient off the one pre-effect
     -- `gs`, then CR 122.6's funnel per recipient, so a counter-scaling
     -- replacement gets its CR 614 opportunity against each player's gain.
@@ -9863,7 +9863,7 @@ applyOneEffect runSubgame resolving source controller legal chosen effect = case
     gs <- State.get
     let viewOf = effectViewOf source legal gs
         context = effectContext gs controller source legal (slotBindings resolving gs)
-        recipients = playerRefPlayers legal controller gs ref
+        recipients = playerRefPlayers legal source controller gs ref
     Monad.forM_ recipients $ \pid ->
       case evaluateForRecipient viewOf context gs resolving source pid quantity of
         Just n
@@ -10216,7 +10216,7 @@ applyOneEffect runSubgame resolving source controller legal chosen effect = case
   -- Exactly one new controller or nothing: a slot CR 608.2b emptied names
   -- nobody to give the object to.
   Effect.GainControl (GainControl.MkGainControl duration ref to) ->
-    State.modify' $ \gs -> case playerRefPlayers legal controller gs to of
+    State.modify' $ \gs -> case playerRefPlayers legal source controller gs to of
       [recipient] -> installControl legal resolving controller source recipient duration ref gs
       _ -> gs
   -- CR 701.12b: each of the two permanents goes to the other's controller,
@@ -10294,7 +10294,7 @@ applyOneEffect runSubgame resolving source controller legal chosen effect = case
         -- before it bound. CR 107.2's posture for a quantity that cannot be
         -- evaluated: no turns at all.
         turns = Integer.toNaturalSaturating (Maybe.fromMaybe 0 (Quantity.evaluateFor viewOf context gs resolving source (TakeExtraTurn.count takeExtraTurn)))
-        named = playerRefPlayers legal controller gs (TakeExtraTurn.player takeExtraTurn)
+        named = playerRefPlayers legal source controller gs (TakeExtraTurn.player takeExtraTurn)
         -- CR 500.7: extra turns are added one at a time in APNAP order (CR
         -- 101.4). apnapOrder supplies the ORDER and `named` the MEMBERSHIP, so a
         -- departed player gets no turn; one named through a TARGET slot can still
@@ -11940,7 +11940,7 @@ payGatePaid runSubgame resolving source controller idx cIdx legal announced comm
           pure (earlier Seq.|> (payer, paid))
       )
       Seq.empty
-      (announcedOnly announced (apnapDecidersOf (PayGate.payer gate) legal controller gs))
+      (announcedOnly announced (apnapDecidersOf (PayGate.payer gate) legal source controller gs))
   State.modify' (foldPaid resolving (foldr Binding.mergePaid Map.empty (Maybe.mapMaybe snd (Foldable.toList answered))))
   pure (Map.fromList [(payer, Maybe.isJust paid) | (payer, paid) <- Foldable.toList answered])
 
@@ -11974,7 +11974,7 @@ loopOffers :: Game Result -> ObjectId -> ObjectId -> PlayerId -> SlotName -> Map
 loopOffers runSubgame resolving source controller slot legal members gate = do
   gs <- State.get
   let legalFor member = Map.insert slot (Set.singleton member) legal
-      payersOf member = apnapDecidersOf (PayGate.payer gate) (legalFor member) controller gs
+      payersOf member = apnapDecidersOf (PayGate.payer gate) (legalFor member) source controller gs
       order = Game.apnapOrder gs
       offers = [(payer, member) | payer <- order, member <- members, elem payer (payersOf member)]
       agreedBy payer answers = [taken | (p, _, Just taken) <- Foldable.toList answers, p == payer]
