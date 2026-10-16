@@ -459,7 +459,7 @@ spec s registry = Spec.describe s "Range of influence" $ do
     chamber <- S.printingOf s registry "Null Chamber"
     let recording :: Prompt.Prompt r -> State.State [[PlayerId.PlayerId]] r
         recording p = case p of
-          Prompt.ChooseOpponent _ _ _ offer -> State.modify' (<> [NonEmpty.toList offer]) >> pure (NonEmpty.head offer)
+          Prompt.ChooseOpponent _ _ _ _ offer -> State.modify' (<> [NonEmpty.toList offer]) >> pure (NonEmpty.head offer)
           _ -> pure (S.identityAnswer p)
         offeredFor card land lands =
           let (spellId, board) = S.addHandCard card S.alice (S.landsFor land S.alice lands S.fourPlayerGame)
@@ -554,7 +554,7 @@ spec s registry = Spec.describe s "Range of influence" $ do
         (spellId, board) = S.addHandCard replenish S.alice g4
         recording :: Prompt.Prompt r -> State.State ([[PlayerId.PlayerId]], [[ObjectId.ObjectId]]) r
         recording p = case p of
-          Prompt.ChooseOpponent _ _ _ offer -> State.modify' (\(ps, os) -> (ps <> [NonEmpty.toList offer], os)) >> pure (NonEmpty.head offer)
+          Prompt.ChooseOpponent _ _ _ _ offer -> State.modify' (\(ps, os) -> (ps <> [NonEmpty.toList offer], os)) >> pure (NonEmpty.head offer)
           Prompt.ChooseAttachment _ _ _ offer -> State.modify' (\(ps, os) -> (ps, os <> [NonEmpty.toList offer])) >> pure (NonEmpty.head offer)
           _ -> pure (S.identityAnswer p)
         offered gs = State.execState (Engine.runGame recording (S.runPure S.identityAnswer (onMain gs) (S.cast S.alice spellId)) Engine.priorityLoop) ([], [])

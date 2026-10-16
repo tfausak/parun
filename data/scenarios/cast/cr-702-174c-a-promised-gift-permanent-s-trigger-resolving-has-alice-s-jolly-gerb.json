@@ -100,7 +100,7 @@
       "player": "alice",
       "do": {
         "Answer": {
-          "prompt": "PromiseGift",
+          "prompt": "ChooseOpponent",
           "with": "carol"
         }
       }

@@ -162,6 +162,7 @@ import Pawl.Types.ObjectId (ObjectId)
 import qualified Pawl.Types.ObjectId as ObjectId
 import qualified Pawl.Types.OptionalDecision as OptionalDecision
 import qualified Pawl.Types.Phase as Phase
+import qualified Pawl.Types.PlayerChoice as PlayerChoice
 import qualified Pawl.Types.PlayerId as PlayerId
 import qualified Pawl.Types.Printing as Printing
 import qualified Pawl.Types.ProjectedCharacteristics as PC
@@ -1099,7 +1100,7 @@ pinTarget recipient p = case p of
 promisesCarol :: Prompt.Prompt r -> r
 promisesCarol p = case p of
   Prompt.ChooseKicker {} -> KickerDecision.MkKickerDecision 1
-  Prompt.PromiseGift _ _ _ _ offered -> Maybe.fromMaybe (NonEmpty.head offered) (List.find (== S.carol) (NonEmpty.toList offered))
+  Prompt.ChooseOpponent _ _ _ (Just PlayerChoice.Promised {}) offered -> Maybe.fromMaybe (NonEmpty.head offered) (List.find (== S.carol) (NonEmpty.toList offered))
   _ -> S.identityAnswer p
 
 -- The stack's top object, which after a cast is the spell just cast.

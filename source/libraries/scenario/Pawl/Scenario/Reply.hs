@@ -395,7 +395,6 @@ shapeOf prompt = case prompt of
   Prompt.ChooseManaType {} -> viaCodec Codec.ManaType.codec
   Prompt.ChooseCardName {} -> viaCodec Codec.CardName.codec
   Prompt.ChooseOpponent {} -> player
-  Prompt.PromiseGift {} -> player
   Prompt.ChooseProtector {} -> player
   Prompt.ChoosePlayer {} -> player
   Prompt.ChooseActivePlayer {} -> player

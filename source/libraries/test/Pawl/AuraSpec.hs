@@ -1142,7 +1142,7 @@ replenishSpec s registry =
               (gs, spell) = S.handOne replenish withAura
               choosing :: Prompt.Prompt r -> r
               choosing p = case p of
-                Prompt.ChooseOpponent _ _ _ offered -> nth 2 offered
+                Prompt.ChooseOpponent _ _ _ _ offered -> nth 2 offered
                 _ -> S.castAnswer p
               (after, _) = run choosing spell gs
               hosts = [Game.lookupObject oid after >>= Object.attachedTo | oid <- Set.toList (GameState.battlefield after), Game.cardOf oid after == Just (Printing.card archnemesis)]

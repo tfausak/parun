@@ -6210,15 +6210,20 @@ chooseManaYield pid oid candidates gs = case candidates of
         then answer
         else NonEmpty.head candidates
 
--- CR 702.174a's promise, written to Object.chosenPlayers as the NEXT instance
--- of this gift's: identical instances are interchangeable, so the nth promise
--- paid is the nth instance's, the ordinal Pawl.Engine.Cast records the first
--- that many instances of Object.paidCosts by.
-stampPromise :: ObjectId -> Gift.Gift -> PlayerId -> Game ()
-stampPromise oid gift pid =
+-- CR 702.174a: the key of the NEXT promise of this gift on the object. Identical
+-- instances are interchangeable, so the nth promise paid is the nth instance's,
+-- the ordinal Pawl.Engine.Cast records the first that many instances of
+-- Object.paidCosts by.
+nextPromise :: ObjectId -> Gift.Gift -> GameState -> PlayerChoice.PlayerChoice
+nextPromise oid gift gs =
+  let promised = Natural.length [() | PlayerChoice.Promised g _ <- foldMap (Map.keys . Object.chosenPlayers) (Game.lookupObject oid gs), g == gift]
+   in PlayerChoice.Promised gift (promised + 1)
+
+-- Object.chosenPlayers' entry for one choice, written on the object.
+stampChosen :: ObjectId -> PlayerChoice.PlayerChoice -> PlayerId -> Game ()
+stampChosen oid choice pid =
   State.modify' $ \gs ->
-    let promised object = Natural.length [() | PlayerChoice.Promised g _ <- Map.keys (Object.chosenPlayers object), g == gift]
-        stamp object = object {Object.chosenPlayers = Map.insert (PlayerChoice.Promised gift (promised object + 1)) pid (Object.chosenPlayers object)}
+    let stamp object = object {Object.chosenPlayers = Map.insert choice pid (Object.chosenPlayers object)}
      in gs {GameState.objects = Map.adjust stamp oid (GameState.objects gs)}
 
 -- CR 118.3 asked AGAIN as each component is paid, and not only at the gate: CR
@@ -6825,8 +6830,8 @@ payPayable moment paidFor slots pid oid component = case component of
     _ <- Event.flipWinLoseCoin pid statements
     pure bindsNothing
   -- CR 702.174a's first ability, paid by naming the opponent the gift is
-  -- promised to, through Prompt.PromiseGift, which names the gift so a spell
-  -- with two different gifts has each promise asked apart.
+  -- promised to, through Prompt.ChooseOpponent carrying the promise it records,
+  -- so a spell with two gifts has each promise asked apart.
   --
   -- Written to Object.chosenPlayers rather than bound as a slot: CR 702.174b's
   -- payoff is a triggered ability of the PERMANENT the spell becomes, and CR
@@ -6838,13 +6843,14 @@ payPayable moment paidFor slots pid oid component = case component of
   -- opponent, and naming one spends nothing that could run out.
   CostComponent.ChooseOpponent gift -> do
     gs <- State.get
-    chosen <- Game.chooseAmong (\decider asked -> Prompt.PromiseGift decider asked oid gift) pid (Players.offer pid gs PlayerRelation.Opponent)
+    let promise = nextPromise oid gift gs
+    chosen <- Game.chooseAmong (\decider asked -> Prompt.ChooseOpponent decider asked oid (Just promise)) pid (Players.offer pid gs PlayerRelation.Opponent)
     case chosen of
       -- Unreachable behind `payComponent`'s guard, which reads the same offer;
       -- defensive, as CR 118.3 would have it.
       Nothing -> pure Payment.Unpaid
       Just opponent -> do
-        stampPromise oid gift opponent
+        stampChosen oid promise opponent
         pure bindsNothing
   -- NOTHING TO PAY. Rule 701.67a's waterbend cost is the mana this component
   -- scopes, and that mana is in the cost's own mana part, paid by `payMana`

@@ -556,6 +556,10 @@ abilitiesFor keyword count = case keyword of
   -- CR 702.174b's enters trigger, one per instance paid (perPayment), each
   -- naming its own instance's promised opponent.
   --
+  -- Not implemented: tying each promise to the instance that made it, so an
+  -- instance lost before entry takes its own promise rather than the latest
+  -- (#5135).
+  --
   -- Rule 702.174b's INSTANT AND SORCERY half is a spell ability rather than a
   -- triggered one, so nothing is minted for it here; it is performed by
   -- Pawl.Engine.Resolve.giftOnSpellResolution as the spell resolves. Minting the

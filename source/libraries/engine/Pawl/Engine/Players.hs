@@ -144,7 +144,7 @@ chooseOne chooser source =
   let question decider asked offered =
         if elem asked offered
           then Prompt.ChoosePlayer decider asked source offered
-          else Prompt.ChooseOpponent decider asked source offered
+          else Prompt.ChooseOpponent decider asked source Nothing offered
    in Game.chooseAmong question chooser
 
 -- | The players a PlayerRef names, in PlayerId order, or Nothing where the

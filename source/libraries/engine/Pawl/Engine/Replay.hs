@@ -186,7 +186,6 @@ encode p answer = case p of
   Prompt.ChooseManaType {} -> Response.ChoseManaType answer
   Prompt.ChooseCardName {} -> Response.ChoseCardName answer
   Prompt.ChooseOpponent {} -> Response.ChoseOpponent answer
-  Prompt.PromiseGift {} -> Response.ChoseOpponent answer
   Prompt.ChooseProtector {} -> Response.ChoseProtector answer
   Prompt.ChoosePlayer {} -> Response.ChosePlayer answer
   Prompt.ChooseActivePlayer {} -> Response.ChoseActivePlayer answer
@@ -556,9 +555,6 @@ decode p response = case p of
     Response.ChoseCardName n -> Just n
     _ -> Nothing
   Prompt.ChooseOpponent {} -> case response of
-    Response.ChoseOpponent pid -> Just pid
-    _ -> Nothing
-  Prompt.PromiseGift {} -> case response of
     Response.ChoseOpponent pid -> Just pid
     _ -> Nothing
   Prompt.ChooseProtector {} -> case response of
@@ -1156,8 +1152,7 @@ defaultAnswer p = case p of
   Prompt.ChooseCardName {} -> CardName.MkCardName Text.empty
   -- Every candidate is an opponent the card's own text offered, and the prompt
   -- is raised only when there are two or more.
-  Prompt.ChooseOpponent _ _ _ opponents -> NonEmpty.head opponents
-  Prompt.PromiseGift _ _ _ _ opponents -> NonEmpty.head opponents
+  Prompt.ChooseOpponent _ _ _ _ opponents -> NonEmpty.head opponents
   -- CR 310.9a: the head of Battle.protectorCandidates, the same filter-not-trust
   -- fallback Battle.designateProtector applies to a wrong answer.
   Prompt.ChooseProtector _ _ _ candidates -> NonEmpty.head candidates

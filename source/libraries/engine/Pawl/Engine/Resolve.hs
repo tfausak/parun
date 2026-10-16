@@ -15,7 +15,6 @@ import qualified Data.Maybe as Maybe
 import qualified Data.Sequence as Seq
 import Data.Set (Set)
 import qualified Data.Set as Set
-import Numeric.Natural (Natural)
 import qualified Pawl.Engine.Binding as Binding
 import qualified Pawl.Engine.Card as Card
 import qualified Pawl.Engine.Condition as Condition
@@ -470,9 +469,14 @@ resolveSpellWith runSubgame oid = do
 -- promised gift spell gives the gift again. That is the opposite of the permanent
 -- half's answer one rule over, where CR 707.2 copies no such record onto a Clone.
 --
--- One gift per PAID INSTANCE, each to the opponent its own promise named
--- (Keyword.Engine.giftEffect's ordinal): the ith entry of the keyword's
--- Object.paidCosts is the ith instance's.
+-- One gift per PAID INSTANCE the spell still HAS, each to the opponent its own
+-- promise named (Keyword.Engine.giftEffect's ordinal): the ith entry of the
+-- keyword's Object.paidCosts is the ith instance's, and an instance whose grant
+-- stopped applying since the cast (CR 611.3a) gives nothing -- the permanent
+-- half's perPayment cap, read off the projection's count.
+--
+-- Not implemented: tying each promise to the instance that made it, so a lost
+-- instance takes its own promise rather than the latest (#5135).
 --
 -- Effect.GiveGift follows, once per spell however many gifts it promised: CR
 -- 702.174c's "gives a gift" is the promised spell resolving.
@@ -498,7 +502,7 @@ giftOnSpellResolution runSubgame oid controller = do
   let object = Game.lookupObject oid gs
       promised = maybe Map.empty Object.paidCosts object
       slots = maybe Map.empty (Binding.targetsOf . Object.bindings) object
-      gifts = [(something, ordinal) | Keyword.Gift something <- Map.keys (Projection.keywordsOf oid gs), (ordinal, times) <- zip [1 :: Natural ..] (Foldable.toList (Map.findWithDefault Seq.empty (Keyword.Gift something) promised)), times > 0]
+      gifts = [(something, ordinal) | (Keyword.Gift something, count) <- Map.toList (Projection.keywordsOf oid gs), (ordinal, times) <- zip [1 .. count] (Foldable.toList (Map.findWithDefault Seq.empty (Keyword.Gift something) promised)), times > 0]
       give (something, ordinal) = applyEffectWith runSubgame oid oid controller slots slots (Keyword.Engine.giftEffect something ordinal)
   Monad.when (Keyword.Engine.isSpellCard (Projection.cardTypesOf oid gs) && not (null gifts)) $ do
     Monad.forM_ gifts give
