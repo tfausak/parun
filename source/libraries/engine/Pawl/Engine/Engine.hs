@@ -1529,14 +1529,22 @@ priorityLoop = do
                               -- CR 732.3: completed as the state it leaves
                               -- (Fragmented.paid), and reversed as an illegal
                               -- action (CR 733.1) where a fragmented loop has
-                              -- already completed it so here. Only one that
-                              -- activated no other mana ability to pay its cost
-                              -- and touched no library: CR 733.1 leaves the first
-                              -- to its payer to keep and forbids reversing the
-                              -- second, so neither is refused. That exclusion is
+                              -- already completed it so here. One that touched a
+                              -- library is never refused, since CR 733.1's last
+                              -- sentence forbids reversing it. One that activated
+                              -- another mana ability to pay its cost is never
+                              -- refused either, a deliberate under-detection: the
+                              -- loop is caught a step later. Both exclusions are
                               -- a REGRESSION FENCE: no test loops such a mana
                               -- ability. Pawl.FragmentedSpec's Freed from the
                               -- Real cases prove the refusal.
+                              --
+                              -- Compared by the state it leaves, so a tap for
+                              -- another colour is not refused, though CR 605.3b
+                              -- and 608.2d make the colour a resolution choice,
+                              -- which `Fragmented.forbidden` otherwise ignores.
+                              -- Another deliberate under-detection: pawl asks for
+                              -- the colour at activation (Prompt.ChooseManaYield).
                               Action.Type.ActivateManaAbility oid -> do
                                 pre <- State.get
                                 (_, (nested, _), _, _) <- Cost.tapForManaWith performManaAbility id Set.empty Set.empty p oid
