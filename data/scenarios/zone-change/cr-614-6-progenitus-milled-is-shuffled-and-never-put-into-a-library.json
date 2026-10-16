@@ -1,6 +1,6 @@
 {
-  "description": "CR 614.6 / 400.7 Progenitus milled by Tome Scour is revealed and shuffled into the library it is in, so it stays the same object and Dutiful Knowledge Seeker sees no card put into a library",
-  "note": "Tome Scour takes the top five, Progenitus second among them, and its shuffle comes before the three cards under it are milled. The shuffle's answer names each card by name, so it binds whichever object the shuffle finds; the library view names Progenitus by label, which a new object would not carry.",
+  "description": "CR 614.6 / 400.7 Progenitus milled by Tome Scour is revealed and shuffled into the library it is in, so Dutiful Knowledge Seeker sees no card put into a library",
+  "note": "Tome Scour takes the top five, Progenitus second among them, and its shuffle comes before the three cards under it are milled. The shuffle's answer names each card by name. Progenitus was revealed, so CR 701.20d makes it a new object and the library view names it by card.",
   "board": {
     "active": "alice",
     "step": "PrecombatMain",
@@ -114,7 +114,7 @@
         "zone": "Library",
         "is": [
           "$piker",
-          "$progenitus"
+          "Progenitus"
         ]
       }
     }

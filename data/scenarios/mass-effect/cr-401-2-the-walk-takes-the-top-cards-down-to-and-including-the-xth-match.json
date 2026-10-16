@@ -381,9 +381,9 @@
           "is": [
             "Plains",
             "Ogre Sentry",
-            "$murder",
-            "$goblin-piker",
-            "$bird-maiden"
+            "Murder",
+            "Goblin Piker",
+            "Bird Maiden"
           ]
         }
       }

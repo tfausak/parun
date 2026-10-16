@@ -5958,24 +5958,56 @@ alreadyIn oid obj dest gs
     heldByOwner = Game.pileHolderOf oid gs == Just (Object.owner obj)
 
 -- CR 400.7's answer for an object put into the zone it is already in
--- (alreadyIn): it stays the object it was, and nothing is logged. A library
--- card is reordered instead (Wan Shi Tong, All-Knowing's ruling: a reorder puts
--- no card into a library) -- to the stated end, or by CR 701.24a's shuffle
--- where a redirect said so -- and answered as itself, so a caller's CR 401.7
--- depth sinks it. A redirect to a stated end is noted for CR 401.4's
--- arrangement, as changeZoneWithCause notes one that moves (Wheel of Sun and
--- Moon over Tome Scour, Pawl.ZoneChangeSpec). Every other zone answers empty,
--- nothing having moved.
+-- (alreadyIn): nothing is logged, and outside a library it stays the object it
+-- was. A library card is reordered instead (Wan Shi Tong, All-Knowing's ruling:
+-- a reorder puts no card into a library) -- to the stated end, or by CR
+-- 701.24a's shuffle where a redirect said so -- and answered by its id, so a
+-- caller's CR 401.7 depth sinks it. A redirect to a stated end is noted for CR
+-- 401.4's arrangement, as changeZoneWithCause notes one that moves (Wheel of Sun
+-- and Moon over Tome Scour, Pawl.ZoneChangeSpec). Every other zone answers
+-- empty, nothing having moved.
+--
+-- CR 701.20d / 701.20e: a revealed or looked-at card that is reordered "stop[s]
+-- being revealed and become[s] a new object" -- shown by a live window or by
+-- this turn's log -- so it is re-minted where it now lies, still unlogged.
+-- data/scenarios/zone-change's Threats Undetected scenario is the proof.
 stayPut :: ObjectId -> Object.Object -> Zone -> LibraryPosition.LibraryPosition -> Bool -> Game (Seq.Seq ObjectId)
 stayPut oid obj requestedDest position shuffling = case Object.zone obj of
   Zone.Library -> do
     let owner = Object.owner obj
     State.modify' (Game.insertIntoZone Zone.Library position owner oid . Game.removeFromZones oid)
+    placed <- State.state (forgetShown oid)
     Monad.when shuffling (shuffleLibrary owner)
     Monad.when (requestedDest /= Zone.Library && not shuffling) $
-      State.modify' (noteArrival owner (ArrivalEnd.IntoLibrary position) (Seq.singleton oid))
-    pure (Seq.singleton oid)
+      State.modify' (noteArrival owner (ArrivalEnd.IntoLibrary position) (Seq.singleton placed))
+    pure (Seq.singleton placed)
   _ -> pure Seq.empty
+
+-- CR 701.20d's new object for a library card shown to a player -- revealed (a
+-- live CR 701.20a window, or a Revealed entry this turn) or looked at (CR
+-- 701.20e's Looked) -- swapped into the same place in its pile under a fresh id,
+-- through Object.newIncarnation. Not a zone change, so nothing is logged and no
+-- last known information is filed. Answers the id the card now has.
+forgetShown :: ObjectId -> GameState -> (ObjectId, GameState)
+forgetShown oid gs = case Game.lookupObject oid gs of
+  Just obj
+    | Object.zone obj == Zone.Library && shown ->
+        let (newId, gs1) = Game.freshObjectId gs
+            (ts, gs2) = Game.freshTimestamp gs1
+            fresh = (Object.newIncarnation obj) {Object.zone = Zone.Library, Object.timestamp = ts}
+         in ( newId,
+              gs2
+                { GameState.objects = Map.insert newId fresh (Map.delete oid (GameState.objects gs2)),
+                  GameState.library = fmap (fmap (\member -> if member == oid then newId else member)) (GameState.library gs2)
+                }
+            )
+    where
+      shown = not (Set.null (Object.revealed obj)) || any names (GameState.events gs)
+      names logged = case LoggedEvent.event logged of
+        GameEvent.Revealed r -> Revealed.card r == oid
+        GameEvent.Looked l -> Looked.card l == oid
+        _ -> False
+  _ -> (oid, gs)
 
 -- CR 616.1 with Lich's Mirror's ruling: objects a state-based action check
 -- moves, which the effects a replacement ran in place of a loss in that check
@@ -9334,6 +9366,9 @@ madnessChoice pid oid payloads = do
 -- shuffles one (see changeZoneAttaching). Pawl.Engine.Mulligan sits ABOVE this
 -- module, so the setup callers reach down to it and this one does not have to
 -- reach up.
+--
+-- Not implemented: CR 701.20d's new object for a revealed or looked-at card the
+-- shuffle reorders; it keeps its id and any reveal window (#5144).
 shuffleLibrary :: PlayerId -> Game ()
 shuffleLibrary pid = do
   gs <- State.get

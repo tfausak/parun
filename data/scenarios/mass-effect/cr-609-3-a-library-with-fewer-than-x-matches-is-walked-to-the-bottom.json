@@ -308,8 +308,8 @@
           "player": "alice",
           "zone": "Library",
           "is": [
-            "$murder",
-            "$bird-maiden"
+            "Murder",
+            "Bird Maiden"
           ]
         }
       }
