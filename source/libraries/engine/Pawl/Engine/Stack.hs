@@ -9,6 +9,7 @@ import qualified Data.Map.Strict as Map
 import qualified Data.Maybe as Maybe
 import qualified Data.Sequence as Seq
 import qualified Data.Set as Set
+import Numeric.Natural (Natural)
 import qualified Pawl.Engine.AbilityZone as AbilityZone
 import qualified Pawl.Engine.Binding as Binding
 import qualified Pawl.Engine.Card as Card
@@ -45,11 +46,13 @@ import qualified Pawl.Types.GameState as GameState
 import qualified Pawl.Types.GrantedAbility as GrantedAbility
 import qualified Pawl.Types.InherentTriggerSource as InherentTriggerSource
 import qualified Pawl.Types.Keyword as Keyword.Type
+import qualified Pawl.Types.KeywordInstance as KeywordInstance
 import qualified Pawl.Types.LibraryPosition as LibraryPosition
 import qualified Pawl.Types.Modification as Modification
 import qualified Pawl.Types.Object as Object
 import Pawl.Types.ObjectId (ObjectId)
 import qualified Pawl.Types.Onset as Onset
+import qualified Pawl.Types.PlayerChoice as PlayerChoice
 import qualified Pawl.Types.PlayerControl as PlayerControl
 import Pawl.Types.PlayerId (PlayerId)
 import qualified Pawl.Types.PrintingId as PrintingId
@@ -448,6 +451,9 @@ resolveCardBacked runSubgame oid rest printingId = do
           -- status, the two things those branches differ in.
           entersAs seed facing = do
             Monad.void (Resolve.noteResolved oid (Resolve.spellController obj oid gs1))
+            -- Ahead of carryGrants, whose stored rows would count each grant's
+            -- instance twice on the spell.
+            State.modify' (settlePromises oid)
             -- CR 400.7b, stored against the spell so the move's CarryOver.Carried
             -- re-keys it onto the permanent before CR 614.12's entry loop reads
             -- it.
@@ -592,6 +598,42 @@ carryGrants oid gs =
           }
       rows = fmap row (filter (\(_, _, modification) -> functionsOnBattlefield subtypes modification) (Projection.staticPartsOn oid gs))
    in if null rows then gs else gs {GameState.continuousEffects = GameState.continuousEffects gs <> rows}
+
+-- CR 400.7d / 702.174a: the resolving permanent spell's gift payments and
+-- promises, re-keyed by the instances it still has, which are the instances the
+-- permanent enters with (carryGrants). The ith of those the spell promised
+-- becomes Own i, its payment the ith entry of Object.paidCosts, which is what
+-- Keyword.gift's ith enters trigger reads; the rest of the entries follow, so
+-- "if its gift was promised" still counts a promise whose instance was lost
+-- (CR 702.174k). Each live instance keeps its own promise, the property
+-- Pawl.Engine.Resolve.giftOnSpellResolution has for the spell half.
+settlePromises :: ObjectId -> GameState.GameState -> GameState.GameState
+settlePromises oid gs = case Game.lookupObject oid gs of
+  Nothing -> gs
+  Just obj ->
+    let acquisition = Game.acquisitionOf oid gs
+        promises = Map.findWithDefault Map.empty acquisition (Object.chosenPlayers obj)
+        gifts = [something | Keyword.Type.Gift something <- Map.keys (Object.paidCosts obj)]
+        settle (paid, kept) something =
+          let keyword = Keyword.Type.Gift something
+              entries = Foldable.toList (Map.findWithDefault Seq.empty keyword paid)
+              live = Projection.keywordInstances keyword oid gs
+              opponents = Maybe.mapMaybe (\which -> Map.lookup (PlayerChoice.Promised something which) promises) live
+              -- In Integer, where the differences below cannot underflow.
+              promisedLive = List.genericLength opponents :: Integer
+              lostPaid = max 0 (toInteger (sum entries) - promisedLive)
+              unpaidLive = max 0 (List.genericLength live - promisedLive)
+              unpaidLost = max 0 (List.genericLength entries - promisedLive - unpaidLive - lostPaid)
+              settled = List.genericReplicate promisedLive (1 :: Natural) <> List.genericReplicate unpaidLive 0 <> List.genericReplicate lostPaid 1 <> List.genericReplicate unpaidLost 0
+              unpromised = Map.filterWithKey (\key _ -> not (isPromiseOf something key)) kept
+              rekeyed = Map.fromList (zip [PlayerChoice.Promised something (KeywordInstance.Own i) | i <- [1 ..]] opponents)
+           in (Map.insert keyword (Seq.fromList settled) paid, Map.union rekeyed unpromised)
+        isPromiseOf something key = case key of
+          PlayerChoice.Promised g _ -> g == something
+          PlayerChoice.AsEnters -> False
+        (paid', promises') = List.foldl' settle (Object.paidCosts obj, promises) gifts
+        settledObject = obj {Object.paidCosts = paid', Object.chosenPlayers = Map.insert acquisition promises' (Object.chosenPlayers obj)}
+     in if null gifts then gs else gs {GameState.objects = Map.insert oid settledObject (GameState.objects gs)}
 
 -- CR 400.7b's "an ability ... that functions on the battlefield", asked of one
 -- part of a grant. A keyword by Keyword.functionsOnBattlefield; a whole quoted

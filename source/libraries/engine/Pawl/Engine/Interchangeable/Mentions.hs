@@ -215,6 +215,7 @@ import qualified Pawl.Types.InZone as InZone
 import qualified Pawl.Types.Keyword as Keyword
 import qualified Pawl.Types.KeywordCount as KeywordCount
 import qualified Pawl.Types.KeywordDesignator as KeywordDesignator
+import qualified Pawl.Types.KeywordInstance as KeywordInstance
 import qualified Pawl.Types.KeywordTally as KeywordTally
 import qualified Pawl.Types.LibraryPlacement as LibraryPlacement
 import qualified Pawl.Types.LifeGainR as LifeGainR
@@ -270,6 +271,7 @@ import qualified Pawl.Types.PlacesSticker as PlacesSticker
 import qualified Pawl.Types.PlaneswalkR as PlaneswalkR
 import qualified Pawl.Types.PlaneswalkRewrite as PlaneswalkRewrite
 import qualified Pawl.Types.PlayerAttacksWith as PlayerAttacksWith
+import qualified Pawl.Types.PlayerChoice as PlayerChoice
 import qualified Pawl.Types.PlayerCounterTally as PlayerCounterTally
 import qualified Pawl.Types.PlayerCounters as PlayerCounters
 import qualified Pawl.Types.PlayerDesignationTally as PlayerDesignationTally
@@ -2227,6 +2229,16 @@ playerEffectNames asking x = case x of
   PlayerEffect.Precluded _outcome -> False
   PlayerEffect.Shows _shows -> False
 
+playerChoiceNames :: Asking -> PlayerChoice.PlayerChoice -> Bool
+playerChoiceNames asking x = case x of
+  PlayerChoice.AsEnters -> False
+  PlayerChoice.Promised _gift instance_ -> keywordInstanceNames asking instance_
+
+keywordInstanceNames :: Asking -> KeywordInstance.KeywordInstance -> Bool
+keywordInstanceNames asking x = case x of
+  KeywordInstance.Own _ordinal -> False
+  KeywordInstance.Granted objectId _timestamp _ordinal -> objectId == object asking
+
 playerQuantityNames :: Asking -> PlayerQuantity.PlayerQuantity -> Bool
 playerQuantityNames asking x = case x of
   PlayerQuantity.MkPlayerQuantity player quantity -> playerRefNames asking player || quantityNames asking quantity
@@ -2244,7 +2256,7 @@ playerRefNames asking x = case x of
   PlayerRef.OwnerOfBound slotName -> slotNames asking slotName
   PlayerRef.ControllerOfObject objectId -> objectId == object asking
   PlayerRef.OwnerOfObject objectId -> objectId == object asking
-  PlayerRef.ChosenPlayerOfBound slotName _choice -> slotNames asking slotName
+  PlayerRef.ChosenPlayerOfBound slotName choice -> slotNames asking slotName || playerChoiceNames asking choice
   PlayerRef.Attacking attackingPlayers -> attackingPlayersNames asking attackingPlayers
 
 playerSacrificesNames :: Asking -> PlayerSacrifices.PlayerSacrifices -> Bool

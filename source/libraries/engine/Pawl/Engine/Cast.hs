@@ -826,7 +826,8 @@ withOptionalPayments paid candidate =
 -- empty for a player who declared none. A cost each instance pays at most once
 -- is one question for all the spell's instances of it, its answer how many were
 -- paid, recorded as the first that many (Keyword.paymentLimit says why that is
--- no choice); an unlimited one Keyword.paidPerInstance names is a question per
+-- no choice), save one Keyword.identifiesInstances names, asked per instance
+-- with the prompt naming it; an unlimited one Keyword.paidPerInstance names is a question per
 -- instance, each answer that instance's own (CR 702.56b, 702.157b), and any
 -- other is one question for its instances' combined count.
 --
@@ -863,11 +864,11 @@ announceOptionalCosts modes spending pid sid candidates offers gs =
   let -- Priced on the board this one more declaration and the candidate would
       -- make (CR 601.2c's slots, castAimable).
       payable keyword paid cost = any (\(castFor, (extra, candidate)) -> payableCost (Just modes) extra spending pid sid (stampPaidCosts (Map.insertWith (flip (<>)) keyword (Seq.singleton 1) paid) sid (proposedFor sid castFor gs)) (Cost.plus (withOptionalPayments paid candidate) cost)) candidates
-      choose keyword limit = KickerDecision.unwrap <$> Game.choose (Prompt.ChooseKicker (Decide.deciderFor pid gs) pid sid keyword limit)
+      choose keyword which limit = KickerDecision.unwrap <$> Game.choose (Prompt.ChooseKicker (Decide.deciderFor pid gs) pid sid keyword which limit)
       -- An instance asked nothing, its cost unpayable, still holds its place.
-      answer keyword cost paid = if payable keyword paid cost then choose keyword Nothing else pure 0
-      perInstance keyword cost paid _ = do
-        times <- answer keyword cost paid
+      answer keyword which limit cost paid = if payable keyword paid cost then choose keyword which limit else pure 0
+      perInstance keyword which limit cost paid = do
+        times <- answer keyword which limit cost paid
         pure (Map.insertWith (flip (<>)) keyword (Seq.singleton times) paid)
       -- A once-each cost's count is that many instances paid once; an unlimited
       -- one asked together is one combined count.
@@ -876,10 +877,14 @@ announceOptionalCosts modes spending pid sid candidates offers gs =
         Nothing -> Seq.singleton times
       ask paid (keyword, instances) = case Keyword.optionalCost keyword of
         Just (cost, Nothing)
-          | Keyword.paidPerInstance keyword -> Monad.foldM (perInstance keyword cost) paid [1 .. instances]
+          | Keyword.paidPerInstance keyword -> Monad.foldM (\acc _ -> perInstance keyword Nothing Nothing cost acc) paid [1 .. instances]
+        -- In Projection.keywordInstances' order, each entry that instance's own
+        -- (Keyword.identifiesInstances), which Cost.nextPromise reads back.
+        Just (cost, limit@(Just _))
+          | Keyword.identifiesInstances keyword -> Monad.foldM (\acc which -> perInstance keyword (Just which) limit cost acc) paid (Projection.keywordInstances keyword sid (Cost.asSpell pid sid gs))
         Just (cost, limit)
           | payable keyword paid cost -> do
-              times <- choose keyword (Keyword.paymentLimit instances keyword)
+              times <- choose keyword Nothing (Keyword.paymentLimit instances keyword)
               pure (Map.insert keyword (recorded limit times) paid)
         _ -> pure paid
    in Map.filter (any (> 0)) <$> Monad.foldM ask Map.empty offers
@@ -3190,7 +3195,7 @@ castProposed perform spending pid oid sid face castFrom preparedFor keywordsBefo
       -- reason.
       let overKickerLimit =
             any
-              (\(keyword, count) -> maybe False (sum (Map.findWithDefault Seq.empty keyword paid) >) (Keyword.paymentLimit count keyword))
+              (\(keyword, count) -> let entries = Map.findWithDefault Seq.empty keyword paid in maybe False (sum entries >) (Keyword.paymentLimit count keyword) || (Keyword.identifiesInstances keyword && maybe False (\each -> any (> each) entries) (snd =<< Keyword.optionalCost keyword)))
               optionalOffers
           withKicker = withOptionalPayments paid
           -- CR 702.27a's cost is additional too, so it rides the same fold.

@@ -121,7 +121,7 @@ deciderOf prompt = case prompt of
   Prompt.ChooseSplice decider _ _ _ -> Just (Decider.unwrap decider)
   Prompt.ChooseAssistant decider _ _ _ -> Just (Decider.unwrap decider)
   Prompt.ChooseAssistAmount decider _ _ _ -> Just (Decider.unwrap decider)
-  Prompt.ChooseKicker decider _ _ _ _ -> Just (Decider.unwrap decider)
+  Prompt.ChooseKicker decider _ _ _ _ _ -> Just (Decider.unwrap decider)
   Prompt.ReturnCommander decider _ _ -> Just (Decider.unwrap decider)
   Prompt.ChooseCommandZoneOfferFirst decider _ _ -> Just (Decider.unwrap decider)
   Prompt.ChooseLibraryEnd decider _ _ _ -> Just (Decider.unwrap decider)

@@ -121,6 +121,7 @@ import qualified Pawl.Types.Keyword as Keyword
 import qualified Pawl.Types.KeywordCount as KeywordCount
 import qualified Pawl.Types.KeywordDesignator as KeywordDesignator
 import qualified Pawl.Types.KeywordFamily as KeywordFamily
+import qualified Pawl.Types.KeywordInstance as KeywordInstance
 import qualified Pawl.Types.KeywordTally as KeywordTally
 import qualified Pawl.Types.Layout as Layout
 import qualified Pawl.Types.LibraryPlacement as LibraryPlacement
@@ -555,10 +556,6 @@ abilitiesFor keyword count = case keyword of
   Keyword.Offspring cost -> perPayment count (offspring cost)
   -- CR 702.174b's enters trigger, one per instance paid (perPayment), each
   -- naming its own instance's promised opponent.
-  --
-  -- Not implemented: tying each promise to the instance that made it, so an
-  -- instance lost before entry takes its own promise rather than the latest
-  -- (#5135).
   --
   -- Rule 702.174b's INSTANT AND SORCERY half is a spell ability rather than a
   -- triggered one, so nothing is minted for it here; it is performed by
@@ -3622,8 +3619,10 @@ optionalCost keyword = case keyword of
 -- A cost each instance pays at most once is asked ONCE, as a count of instances
 -- paid, and Pawl.Engine.Cast records the first that many as paid. Under those
 -- rules each instance triggers on its own payment, so which of identical
--- instances were paid changes nothing. An unlimited cost is asked per instance
--- where paidPerInstance says its split is a real choice, and once otherwise.
+-- instances were paid changes nothing -- save where identifiesInstances says an
+-- instance can stop applying apart from its twins, which is asked per instance.
+-- An unlimited cost is asked per instance where paidPerInstance says its split
+-- is a real choice, and once otherwise.
 --
 -- Kicker's and bargain's payoffs, though, link to the PRINTED instance (CR
 -- 702.33e, 702.166c), so a printed kicker beside an identical granted one would
@@ -3642,6 +3641,18 @@ paidPerInstance :: Keyword -> Bool
 paidPerInstance keyword = case keyword of
   Keyword.Replicate _ -> True
   Keyword.Squad _ -> True
+  _ -> False
+
+-- CR 702.174a / 611.3a: is each instance of this once-each cost asked about,
+-- and its payment recorded, as the instance Projection.keywordInstances names?
+-- Gift's promise belongs to its own instance, so a granted instance that stops
+-- applying (CR 611.3a) takes its own promise and payment with it; which of two
+-- instances is paid is then a real choice (Synthetic Generous Host beside a
+-- printed gift). Every other once-each cost's instances are asked together.
+-- A wildcard, optionalCost's reason.
+identifiesInstances :: Keyword -> Bool
+identifiesInstances keyword = case keyword of
+  Keyword.Gift _ -> True
   _ -> False
 
 -- One triggered ability per instance of a keyword, `mint` taking its ordinal,
@@ -7228,13 +7239,16 @@ offspring cost = paidTokenCopies (Keyword.Offspring cost) (Quantity.Literal 1) [
 --
 -- One per instance, `ordinal` naming it, both in the intervening "if" and in the
 -- chosen player: two gifts promised to two opponents give each their own, and
--- an unpaid instance does not trigger beside a paid one.
+-- an unpaid instance does not trigger beside a paid one. The ordinal is among
+-- the instances the permanent entered with, which is how
+-- Pawl.Engine.Stack.settlePromises keys the spell's payments and promises as it
+-- resolves.
 gift :: Gift.Gift -> Natural -> TriggeredAbility Card (GrantedAbility.GrantedAbility Card)
 gift something ordinal =
   Mint.triggerIf
     TriggerCondition.SelfEnters
     (Condition.Compares (Compares.MkCompares (Quantity.TimesPaid (KeywordDesignator.OfInstance (Keyword.Gift something) ordinal)) Comparison.AtLeast (Quantity.Literal 1)))
-    (Seq.fromList [giftEffect something ordinal, Effect.GiveGift])
+    (Seq.fromList [giftEffect something (KeywordInstance.Own ordinal), Effect.GiveGift])
 
 -- CR 702.174d-i's "[effect]": what the [something] the card printed means, which
 -- rule 702.174b then hangs off whichever of its two abilities the object is --
@@ -7242,11 +7256,11 @@ gift something ordinal =
 -- Pawl.Engine.Resolve.giftOnSpellResolution's spell ability on an instant or a
 -- sorcery. One function so the two halves cannot promise different things.
 --
--- `ordinal` is which instance of the gift, and so which promise "the chosen
+-- `instance_` is which instance of the gift, and so which promise "the chosen
 -- player" reads (PlayerChoice.Promised).
-giftEffect :: Gift.Gift -> Natural -> Effect.Effect Card (GrantedAbility.GrantedAbility Card)
-giftEffect something ordinal =
-  let chosen = PlayerRef.ChosenPlayerOfBound Binding.triggerSource (PlayerChoice.Promised something ordinal)
+giftEffect :: Gift.Gift -> KeywordInstance.KeywordInstance -> Effect.Effect Card (GrantedAbility.GrantedAbility Card)
+giftEffect something instance_ =
+  let chosen = PlayerRef.ChosenPlayerOfBound Binding.triggerSource (PlayerChoice.Promised something instance_)
    in case something of
         Gift.Card -> Effect.Draw Draw.MkDraw {Draw.player = chosen, Draw.quantity = Quantity.Literal 1, Draw.slot = Nothing}
         Gift.TappedFish -> giftToken chosen TapState.Tapped fishToken
