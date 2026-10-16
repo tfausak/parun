@@ -1487,12 +1487,18 @@ perTargetMatches :: PlayerId -> RowSource -> GameState -> Filter Keyword -> Reci
 perTargetMatches pid source gs wanted r =
   maybe False (\view -> Filter.matches (contextFor (Just (targetPerspective pid source gs)) source gs) view wanted) (Projection.viewOfRecipient (Projection.fullView gs) gs r)
 
--- CR 109.5: the "you" a cost modifier's TARGET criteria and its `perEach` count
--- are read with -- the controller of the row's source, which is Kopala, Warden
--- of Waves' "a Merfolk you control" under a row scoped to that controller's
--- opponents. Not the target's own controller, which would make Professor Hojo's "a creature you
+-- CR 109.5: the "you" a cost modifier's TARGET criteria are read with -- the
+-- controller of the row's source, which is Kopala, Warden of Waves' "a Merfolk
+-- you control" under a row scoped to that controller's opponents. Not the
+-- target's own controller, which would make Professor Hojo's "a creature you
 -- control" true of every creature, and not the paying player, who is Kopala's
 -- opponent. Pawl.CostSpec's kopalaSpec on three seats proves it.
+--
+-- perEachCount reads its count with the same "you", a fence rather than a
+-- proof: every `perEach` row in `data/cards/` is scoped to "you", so the
+-- source's controller is the paying player. Not implemented: a count read
+-- against the caster or the spell being cast, Damping Sphere's "that player"
+-- (#5155).
 --
 -- The paying player where the source has no controller to read -- a stored
 -- row whose spell has left the stack -- which coincides with the source's
