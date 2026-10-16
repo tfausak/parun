@@ -3919,9 +3919,10 @@ firesWithout gone pending gs =
 resnapshot :: GameState -> GameState -> GameEvent -> Maybe GameEvent
 resnapshot gs without event =
   let reread = rereadBy Projection.project
-      -- A reveal's snapshot is what it showed (Event.revealedOn), so it is
-      -- re-read the same way. A fence rather than a proof: reading
-      -- Projection.project here instead reddens nothing in the suite.
+      -- A reveal's or a look's snapshot is what it showed (Event.revealedOn,
+      -- Event.look), so it is re-read the same way. A fence rather than a
+      -- proof: reading Projection.project here instead reddens nothing in the
+      -- suite.
       rereadBy :: (Eq a) => (ObjectId -> GameState -> a) -> ObjectId -> a -> Maybe a
       rereadBy view oid pc =
         let before = view oid gs
@@ -3947,7 +3948,7 @@ resnapshot gs without event =
         GameEvent.Moved m -> fmap (\pc -> GameEvent.Moved m {Moved.characteristics = pc}) (reread (ZoneChange.departed (Moved.change m)) (Moved.characteristics m))
         GameEvent.SpellCast c -> fmap (\(pc, lapsed) -> GameEvent.SpellCast c {SpellWasCast.characteristics = pc, SpellWasCast.lapsedGrants = lapsed}) (resample (SpellWasCast.spell c) (SpellWasCast.characteristics c) (SpellWasCast.lapsedGrants c))
         GameEvent.Revealed r -> fmap (\pc -> GameEvent.Revealed r {Revealed.characteristics = pc}) (rereadBy Projection.projectShown (Revealed.card r) (Revealed.characteristics r))
-        GameEvent.Looked l -> fmap (\pc -> GameEvent.Looked l {Looked.characteristics = pc}) (reread (Looked.card l) (Looked.characteristics l))
+        GameEvent.Looked l -> fmap (\pc -> GameEvent.Looked l {Looked.characteristics = pc}) (rereadBy Projection.projectShown (Looked.card l) (Looked.characteristics l))
         GameEvent.Voted v -> fmap (\b -> GameEvent.Voted v {Voted.ballot = b}) (rereadBallot (Voted.ballot v))
         GameEvent.VotesRevealed ballots -> fmap GameEvent.VotesRevealed (traverse rereadBallot ballots)
         GameEvent.Transformed t -> fmap (\(pc, lapsed) -> GameEvent.Transformed t {Transformed.characteristics = pc, Transformed.lapsedGrants = lapsed}) (resample (Transformed.object t) (Transformed.characteristics t) (Transformed.lapsedGrants t))

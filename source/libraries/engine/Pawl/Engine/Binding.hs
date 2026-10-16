@@ -1602,6 +1602,15 @@ turnMergeCopy m = case (copyOf m, Binding.copy =<< Map.lookup turnedMergeSource 
 mergeStampHolds :: Map SlotName Binding -> Bool
 mergeStampHolds = Map.member turnedMergeSource
 
+-- CR 708.10: these bindings without a copy effect's stamp -- the card beneath
+-- a face-down permanent that is a copy. A merge's stamp stays
+-- (`mergeStampHolds`), being the merged cards' own values (CR 730.2a).
+--
+-- Not implemented: a merge's stamp that a later stamped copy effect replaced
+-- is not recovered, so such a pile answers with no stamp at all (#5167).
+withoutCopyEffect :: Map SlotName Binding -> Map SlotName Binding
+withoutCopyEffect m = if mergeStampHolds m then m else Map.delete copySource m
+
 -- Build the binding environment stamped on a stack object at cast: the chosen
 -- targets, the chosen X under variableX, and any chosen modes under
 -- chosenModes. The reserved names cannot collide with a target slot
