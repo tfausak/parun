@@ -2633,6 +2633,7 @@ spec s registry = Spec.describe s "Pawl.Engine.Cost" $ do
   kopalaSpec s registry
   battlefieldThaumaturgeSpec s registry
   animarSpec s registry
+  magnusSpec s registry
   melokuSpec s registry
   barkhideTrollSpec s registry
   zameckGuildmageCostSpec s registry
@@ -6293,4 +6294,25 @@ animarSpec s registry = Spec.describe s "Animar, Soul of Elements" $ do
         board = g2 {GameState.phase = Phase.PrecombatMain, GameState.activePlayer = S.alice, GameState.priority = Just S.alice}
         cast = S.runPure S.identityAnswer board (S.cast S.alice giantId)
     Spec.assertEqWith s "CR 601.2f the Giant cost {R}: one Mountain" (S.tappedCount S.alice cast) 1
+    Spec.assertEqWith s "and it was cast" (length (GameState.stack cast)) 1
+
+-- Magnus the Red {3}{U}{R} (Oracle text checked against Scryfall 2026-10-16):
+-- "Instant and sorcery spells you cast cost {1} less to cast for each creature
+-- token you control." A `perEach` Count read with the source controller's
+-- "you": alice's Goblin Piker token counts and bob's does not, so a Divination
+-- {2}{U} costs {1}{U}, two Islands of four.
+magnusSpec :: (Monad m) => Spec.Spec m n -> Registry.Registry m -> n ()
+magnusSpec s registry = Spec.describe s "Magnus the Red" $ do
+  Spec.it s "CR 601.2f Magnus takes {1} off per creature token alice controls, not bob's" $ do
+    magnus <- S.printingOf s registry "Magnus the Red"
+    island <- S.printingOf s registry "Island"
+    piker <- S.printingOf s registry "Goblin Piker"
+    divination <- S.printingOf s registry "Divination"
+    let (_, g1) = S.addPermanent magnus S.alice (S.landsFor island S.alice 4 (Setup.emptyGame S.bothPlayers))
+        (_, g2) = S.addToken (Printing.card piker) S.alice g1
+        (_, g3) = S.addToken (Printing.card piker) S.bob g2
+        (divinationId, g4) = S.addHandCard divination S.alice g3
+        board = g4 {GameState.phase = Phase.PrecombatMain, GameState.activePlayer = S.alice, GameState.priority = Just S.alice}
+        cast = S.runPure S.identityAnswer board (S.cast S.alice divinationId)
+    Spec.assertEqWith s "CR 601.2f Divination cost {1}{U}: two Islands" (S.tappedCount S.alice cast) 2
     Spec.assertEqWith s "and it was cast" (length (GameState.stack cast)) 1
