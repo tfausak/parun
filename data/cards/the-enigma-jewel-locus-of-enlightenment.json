@@ -163,12 +163,17 @@
           },
           "modifications": [
             {
-              "type": "GainCraftMaterialAbilities",
-              "value": [
-                {
-                  "type": "OnlyOnceEachTurn"
-                }
-              ]
+              "type": "GainExiledCardAbilities",
+              "value": {
+                "pile": {
+                  "type": "CraftMaterials"
+                },
+                "restrictions": [
+                  {
+                    "type": "OnlyOnceEachTurn"
+                  }
+                ]
+              }
             }
           ]
         }

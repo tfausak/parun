@@ -185,6 +185,7 @@ import qualified Pawl.Types.ExileFromGraveyard as ExileFromGraveyard
 import qualified Pawl.Types.ExileHaunting as ExileHaunting
 import qualified Pawl.Types.ExileMaterials as ExileMaterials
 import qualified Pawl.Types.ExilePermanents as ExilePermanents
+import qualified Pawl.Types.ExiledCardAbilities as ExiledCardAbilities
 import qualified Pawl.Types.Expiry as Expiry
 import qualified Pawl.Types.Face as Face
 import qualified Pawl.Types.FaceDownCharacteristics as FaceDownCharacteristics
@@ -1950,7 +1951,7 @@ modificationNames asking onAbility x = case x of
   Modification.GainCastingPermission _castingPermission -> False
   Modification.GainAbility ability -> onAbility ability
   Modification.GainAbilitiesOfSource keyword -> any (keywordNames asking) keyword
-  Modification.GainCraftMaterialAbilities items -> any (activationRestrictionNames asking) items
+  Modification.GainExiledCardAbilities (ExiledCardAbilities.MkExiledCardAbilities _ items) -> any (activationRestrictionNames asking) items
   Modification.GainAbilitiesOfStickers -> False
   Modification.LoseAllAbilities -> False
   Modification.LoseNamedAbility _abilityName -> False

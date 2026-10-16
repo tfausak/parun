@@ -2,13 +2,13 @@ module Pawl.Types.Modification where
 
 import qualified Data.Set as Set
 import qualified Pawl.Types.AbilityName as AbilityName
-import qualified Pawl.Types.ActivationRestriction as ActivationRestriction
 import qualified Pawl.Types.CardName as CardName
 import qualified Pawl.Types.CardType as CardType
 import qualified Pawl.Types.CastingPermission as CastingPermission
 import qualified Pawl.Types.ChangeSubtypeWord as ChangeSubtypeWord
 import qualified Pawl.Types.Color as Color
 import qualified Pawl.Types.CostKeyword as CostKeyword
+import qualified Pawl.Types.ExiledCardAbilities as ExiledCardAbilities
 import qualified Pawl.Types.Filter as Filter
 import qualified Pawl.Types.FullText as FullText
 import qualified Pawl.Types.Keyword as Keyword
@@ -151,10 +151,11 @@ data Modification ability
     -- gave the creature with backup is not granted. Pawl.KeywordTriggerSpec's Backup group
     -- proves the first half.
     GainAbilitiesOfSource (Set.Set Keyword.Keyword)
-  | -- | layer 6, CR 613.1f / 702.167c: this object has each activated ability
-    -- of the exiled cards used to craft this effect's source, each carrying
-    -- these extra restrictions (Locus of Enlightenment).
-    GainCraftMaterialAbilities [ActivationRestriction.ActivationRestriction]
+  | -- | layer 6, CR 613.1f / 607.2a: this object has each activated ability of
+    -- the payload's pile of cards exiled with this effect's source, each
+    -- carrying the payload's extra restrictions (Locus of Enlightenment,
+    -- Steward of the Harvest).
+    GainExiledCardAbilities ExiledCardAbilities.ExiledCardAbilities
   | -- | layer 6, CR 613.1f / 123.7a: this object has the abilities printed on
     -- the ability stickers on this effect's source, read off the stickers
     -- (Pin Collection).

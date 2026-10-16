@@ -2,13 +2,13 @@ module Pawl.Codec.Modification where
 
 import qualified Data.Typeable as Typeable
 import qualified Pawl.Codec.AbilityName as AbilityName
-import qualified Pawl.Codec.ActivationRestriction as ActivationRestriction
 import qualified Pawl.Codec.CardName as CardName
 import qualified Pawl.Codec.CardType as CardType
 import qualified Pawl.Codec.CastingPermission as CastingPermission
 import qualified Pawl.Codec.ChangeSubtypeWord as ChangeSubtypeWord
 import qualified Pawl.Codec.Color as Color
 import qualified Pawl.Codec.CostKeyword as CostKeyword
+import qualified Pawl.Codec.ExiledCardAbilities as ExiledCardAbilities
 import qualified Pawl.Codec.Filter as Filter
 import qualified Pawl.Codec.FullText as FullText
 import qualified Pawl.Codec.Keyword as Keyword
@@ -45,7 +45,7 @@ codec abilityCodec =
           Arm.payload "LoseEnchant" TargetSlot.codec Modification.LoseEnchant (\x -> case x of Modification.LoseEnchant y -> Just y; _ -> Nothing),
           Arm.payload "GainCastingPermission" CastingPermission.codec Modification.GainCastingPermission (\x -> case x of Modification.GainCastingPermission y -> Just y; _ -> Nothing),
           Arm.payload "GainAbilitiesOfSource" (Common.set Keyword.codec) Modification.GainAbilitiesOfSource (\x -> case x of Modification.GainAbilitiesOfSource y -> Just y; _ -> Nothing),
-          Arm.payload "GainCraftMaterialAbilities" (Common.list ActivationRestriction.codec) Modification.GainCraftMaterialAbilities (\x -> case x of Modification.GainCraftMaterialAbilities y -> Just y; _ -> Nothing),
+          Arm.payload "GainExiledCardAbilities" ExiledCardAbilities.codec Modification.GainExiledCardAbilities (\x -> case x of Modification.GainExiledCardAbilities y -> Just y; _ -> Nothing),
           Arm.nullary "GainAbilitiesOfStickers" Modification.GainAbilitiesOfStickers,
           Arm.nullary "LoseAllAbilities" Modification.LoseAllAbilities,
           Arm.payload "LoseNamedAbility" AbilityName.codec Modification.LoseNamedAbility (\x -> case x of Modification.LoseNamedAbility y -> Just y; _ -> Nothing),
@@ -93,7 +93,7 @@ tagOf x = case x of
   Modification.LoseEnchant {} -> "LoseEnchant"
   Modification.GainCastingPermission {} -> "GainCastingPermission"
   Modification.GainAbilitiesOfSource {} -> "GainAbilitiesOfSource"
-  Modification.GainCraftMaterialAbilities {} -> "GainCraftMaterialAbilities"
+  Modification.GainExiledCardAbilities {} -> "GainExiledCardAbilities"
   Modification.GainAbilitiesOfStickers -> "GainAbilitiesOfStickers"
   Modification.LoseAllAbilities {} -> "LoseAllAbilities"
   Modification.LoseNamedAbility {} -> "LoseNamedAbility"
