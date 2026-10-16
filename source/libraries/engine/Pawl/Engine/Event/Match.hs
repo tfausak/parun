@@ -6104,8 +6104,9 @@ matchesTriggerGiven bindings board gs bearer you cond event = case cond of
   -- exiled from exile is "a new object that has just been exiled" (CR 400.8).
   --
   -- CR 603.10a's look-back reaches the move only when the object was one all
-  -- players could see: one leaving a public zone (CR 400.2), or a card leaving
-  -- a hidden one revealed (Moved.revealed). So a bearer absent from the board --
+  -- players could see (Moved.revealed): not a card leaving a hidden zone (CR
+  -- 400.2) unrevealed, nor one face down in exile, which that rule lets a public
+  -- zone hold. So a bearer absent from the board --
   -- offered for its own departure in this event group by `leftBattlefield` or
   -- `sameGroup` -- sees those moves alone, while a bearer standing on the
   -- battlefield sees every move, a hand's included, by CR 603.10's first
@@ -6122,7 +6123,7 @@ matchesTriggerGiven bindings board gs bearer you cond event = case cond of
           ZoneChange.to zc == destination
             && Turn.turnScopeAdmits gs scope (GameState.activePlayer gs) you
             && (Set.null origins || Set.member (ZoneChange.from zc) origins)
-            && (Map.member bearer board || revealed || not (Game.isHiddenZone (ZoneChange.from zc)))
+            && (Map.member bearer board || revealed)
             && let arrived = ZoneChange.object zc
                 in case Projection.viewWithLastKnown arrived gs arrived of
                      Nothing -> False
@@ -6130,8 +6131,9 @@ matchesTriggerGiven bindings board gs bearer you cond event = case cond of
      in case event of
           GameEvent.Moved m -> admits (Moved.revealed m) (Moved.change m)
           -- A merged or melded permanent's further card, which left the
-          -- battlefield, a public zone.
-          GameEvent.CardArrived zc -> admits False zc
+          -- battlefield, where all players see it (CR 400.2) or CR 708.9 reveals
+          -- it.
+          GameEvent.CardArrived zc -> admits True zc
           GameEvent.DamageDealt _ -> False
           GameEvent.StepBegan {} -> False
           GameEvent.SpellCast {} -> False

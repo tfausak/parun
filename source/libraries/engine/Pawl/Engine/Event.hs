@@ -6144,22 +6144,6 @@ changeZoneWithCause discarded asOf batch oid requestedDest requestedPosition see
       -- Both ids are `oid` in the PROPOSED event: nothing has moved yet.
       loggedBefore <- State.gets (Seq.length . GameState.events)
       (resolved, exiledBy, shuffling, splitOff, position) <- resolveZoneChange asOf discarded requestedPosition resolving (ZoneChange.MkZoneChange oid oid fromZone requestedDest)
-      -- CR 603.10a's "an object that all players can see", asked of a card
-      -- leaving a hidden zone (CR 400.2): seen by every player on the LIVE
-      -- pre-move board, or revealed by the loop above as it leaves (CR 701.20a,
-      -- Nexus of Fate's "reveal Nexus of Fate"). Live rather than `lki`: a batch
-      -- board predates the reveal a search makes just before its move, though no
-      -- board observes the difference yet. Forced, so the log entry holds no
-      -- thunk over the pre-move board.
-      revealedLeaving <-
-        if not (Game.isHiddenZone fromZone)
-          then pure False
-          else do
-            loggedByLoop <- State.gets (Seq.drop loggedBefore . GameState.events)
-            let revealedHere logged = case LoggedEvent.event logged of
-                  GameEvent.Revealed r -> Revealed.card r == oid
-                  _ -> False
-            pure $! (any revealedHere loggedByLoop || all (\seat -> Visibility.sees seat oid gs == Visibility.Type.Visible) (Game.stillPlaying gs))
       case resolved of
         -- CR 614.6: nothing survived the loop, so no zone change happens. No
         -- producer today -- no ReplacementEffect in data/cards cancels a zone
@@ -6710,6 +6694,20 @@ changeZoneWithCause discarded asOf batch oid requestedDest requestedPosition see
                 State.modify' (\g -> List.foldl' (flip recordEvent) g (componentReveals g oid))
               Monad.when (fromZone == Zone.Stack && dest /= Zone.Battlefield && Facing.isFaceDown (Object.facing obj)) $
                 reveal RevealCause.FaceDownSpell pid oid
+              -- CR 603.10a's "an object that all players can see": seen by every
+              -- player on the LIVE pre-move board, or revealed as it leaves -- by
+              -- the CR 616.1 loop (CR 701.20a, Nexus of Fate's "reveal Nexus of
+              -- Fate") or by CR 708.9 just above. Asked of every origin, since CR
+              -- 400.2 lets a public zone hold a face-down card (a foretold one in
+              -- exile). Live rather than `lki`: a batch board predates the reveal
+              -- a search makes just before its move, though no board observes the
+              -- difference yet. Forced, so the log entry holds no thunk over the
+              -- pre-move board.
+              loggedByLeaving <- State.gets (Seq.drop loggedBefore . GameState.events)
+              let revealedHere logged = case LoggedEvent.event logged of
+                    GameEvent.Revealed r -> Revealed.card r == oid
+                    _ -> False
+              revealedLeaving <- pure $! any revealedHere loggedByLeaving || all (\seat -> Visibility.sees seat oid gs == Visibility.Type.Visible) (Game.stillPlaying gs)
               -- CR 712.13a's rollback point; see the branch after the entry loop.
               unentered <- State.get
               State.modify' $ \g ->
@@ -8397,7 +8395,8 @@ recordMintedEntry :: ObjectId -> Game ()
 recordMintedEntry newId = do
   placed <- State.get
   let snapshot = Projection.project newId placed
-  State.modify' (recordEvent (GameEvent.Moved (Moved.moved (ZoneChange.MkZoneChange newId newId Zone.Battlefield Zone.Battlefield) snapshot)))
+  -- Seen by all: a minted object arrives on the battlefield from no zone at all.
+  State.modify' (recordEvent (GameEvent.Moved ((Moved.moved (ZoneChange.MkZoneChange newId newId Zone.Battlefield Zone.Battlefield) snapshot) {Moved.revealed = True})))
 
 -- CR 701.42a: meld these cards -- "put them onto the battlefield with their back
 -- faces up and combined. The resulting permanent is a single object represented by
@@ -8535,7 +8534,9 @@ meld controller victims resultCard = do
       -- the count.
       placed <- State.get
       let snapshot = Projection.project newId placed
-          entry = (Moved.moved (ZoneChange.MkZoneChange (fst (NonEmpty.head melding)) newId origin Zone.Battlefield) snapshot) {Moved.otherDepartures = Seq.fromList (fmap fst (NonEmpty.tail melding))}
+          -- Seen by all when the cards left a public zone (CR 400.2), where the
+          -- meld pair is exiled face up first.
+          entry = (Moved.moved (ZoneChange.MkZoneChange (fst (NonEmpty.head melding)) newId origin Zone.Battlefield) snapshot) {Moved.otherDepartures = Seq.fromList (fmap fst (NonEmpty.tail melding)), Moved.revealed = not (Game.isHiddenZone origin)}
       State.modify' (recordEvent (GameEvent.Moved entry))
       pure (Just newId)
 
