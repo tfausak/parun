@@ -4534,6 +4534,18 @@ definingReads cda = quantityReads (CharacteristicPT.power cda) <> quantityReads 
 project :: ObjectId -> GameState -> ProjectedCharacteristics
 project oid gs = projectFrom (gather gs) oid gs
 
+-- | CR 701.20a: what revealing `oid` shows on this board -- `project`, but a
+-- face-down object's as the face-up card it is, since CR 708.2's substitution
+-- is its face-down status and a reveal shows the card. A counterfactual board,
+-- as Projection.View's copiableCharacteristicsFaceUp; Game.withFacing turns a
+-- merged permanent's components with it (CR 730.2f).
+projectShown :: ObjectId -> GameState -> ProjectedCharacteristics
+projectShown oid gs = case Game.lookupObject oid gs of
+  Just obj
+    | Facing.isFaceDown (Object.facing obj) ->
+        project oid gs {GameState.objects = Map.insert oid (Game.withFacing Facing.FaceUp obj) (GameState.objects gs)}
+  _ -> project oid gs
+
 -- | One object as it stands on this board, through the projection; Nothing
 -- where it does not exist.
 objectSnapshot :: ObjectId -> GameState -> Maybe ObjectSnapshot.ObjectSnapshot

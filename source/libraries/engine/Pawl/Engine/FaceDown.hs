@@ -75,6 +75,7 @@ import Pawl.Types.PlayerId (PlayerId)
 import qualified Pawl.Types.ProjectedCharacteristics as PC
 import qualified Pawl.Types.Prompt as Prompt
 import qualified Pawl.Types.ProposedEvent as ProposedEvent
+import qualified Pawl.Types.RevealCause as RevealCause
 import Pawl.Types.TurnUpProcedure (TurnUpProcedure)
 import qualified Pawl.Types.TurnUpProcedure as TurnUpProcedure
 import qualified Pawl.Types.TurnedFaceUp as TurnedFaceUp
@@ -245,8 +246,10 @@ turnableFaceUp pid gs =
 -- the same game action -- the rules differ only in what they showed and what they
 -- charged, which is `costOf` and nothing else.
 --
--- Not implemented: the SHOWING logs nothing, which a refused payment would
--- expose by leaving the permanent face down (#5013).
+-- The SHOWING is not a reveal and logs nothing: CR 701.20a reveals a card,
+-- and these rules show a cost or that the card is a creature card. A paid cost
+-- turns the card face up anyway, and a payment that cannot be completed
+-- reverses the whole action (CR 733.1), the showing with it.
 --
 -- REJECT-NOT-REPAIR, the posture Cast.castSpell and Activate.activateAbility
 -- both take: a payment that fails restores the state from before it was
@@ -298,11 +301,8 @@ turnFaceUp perform pid procedure oid = do
 -- 708.2a has left the permanent itself with no card type at all, so a projected
 -- read would answer about the 2/2 rather than about the card.
 --
--- What is modelled is the second half of the rule's first sentence, and its
--- second sentence.
---
--- Not implemented: the REVEAL logs no GameEvent.Revealed, so the card stays
--- hidden from the other players' record (#5013).
+-- performTurnFaceUp performs the reveal, by the permanent's controller, and
+-- leaves the permanent face down.
 --
 -- EnteredFaceDown joins them on Magar of the Magic Strings' ruling (2022-10-07),
 -- which gives its face-down instant or sorcery card the same treatment. Yedora,
@@ -365,12 +365,15 @@ performTurnFaceUp road announcedX oid = do
   gs <- State.get
   if revealsInsteadOfTurningUp oid gs
     then
-      -- CR 701.40g / 730.2g: it stays face down, and NOTHING below runs. The rule's second
-      -- sentence -- "abilities that trigger whenever a permanent is turned face
-      -- up won't trigger" -- is exactly the GameEvent.TurnedFaceUp that is never
-      -- recorded, and CR 614.1e's loop is skipped with it, since a permanent that
-      -- did not turn over was never being turned over.
-      pure ()
+      -- CR 701.40g / 730.2g: its controller reveals it, it stays face down,
+      -- and NOTHING below runs. The rule's second sentence -- "abilities that
+      -- trigger whenever a permanent is turned face up won't trigger" -- is
+      -- exactly the GameEvent.TurnedFaceUp that is never recorded, and CR
+      -- 614.1e's loop is skipped with it, since a permanent that did not turn
+      -- over was never being turned over. data/scenarios/visibility's CR
+      -- 701.40g case proves the reveal.
+      Monad.forM_ (Projection.controllerOf oid gs) $ \controller ->
+        Event.reveal RevealCause.Ordinary controller oid
     else do
       -- CR 708.8: the copiable values revert, which for pawl is the status
       -- flipping -- Game.faceOf reads it, so the substitution simply stops
@@ -440,8 +443,8 @@ performTurnFaceUp road announcedX oid = do
 -- turning-over rather than about the road.
 --
 -- No controller argument: the effect's controller is who resolved it, and
--- nothing left here reads a player. Not implemented: CR 701.40g's reveal, which
--- would be the permanent's own controller's (#5013).
+-- CR 701.40g's reveal is the permanent's own controller's, which
+-- performTurnFaceUp reads.
 turnFaceUpByEffect :: ObjectId -> Game ()
 turnFaceUpByEffect oid = do
   gs <- State.get
