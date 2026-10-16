@@ -212,6 +212,7 @@ spec s registry = Spec.describe s "Mutate" $ do
         Spec.assertEqWith s "CR 708.9 merged under, the pile is face down and revealed whole" (departureReveals under) [(S.alice, host, RevealCause.LeavingFaceDown)]
         Spec.assertEqWith s "CR 701.20a the reveal shows the Kirin card, neither the nameless 2/2 nor the Cubwarden pile over it" (departureRevealNames over) [Set.singleton (CardName.MkCardName (Text.pack "Misthoof Kirin"))]
         Spec.assertEqWith s "CR 701.20a the face-down pile is shown face up, its topmost Kirin's name" (departureRevealNames under) [Set.singleton (CardName.MkCardName (Text.pack "Misthoof Kirin"))]
+        Spec.assertEqWith s "CR 730.2a and with the lifelink of the Cubwarden merged under it" [Map.member Keyword.Lifelink (PC.keywords (Revealed.characteristics r)) | GameEvent.Revealed r <- S.eventsOf under] [True]
         Spec.assertBool s (all (Maybe.isNothing . Game.lookupObject host) [over, under]) "setup: Murder destroyed the pile on both legs"
   -- CR 701.20a over a stored copy effect: the same face-up pile over the
   -- face-down Kirin, but Mirrorweave first makes it a copy of bob's Hill Giant
