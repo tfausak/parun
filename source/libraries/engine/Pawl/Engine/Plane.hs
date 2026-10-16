@@ -97,14 +97,15 @@ exemptFromRange = isPlanarCard
 -- source sees and affects through -- its controller's, or nobody's for a
 -- source 'exemptFromRange', which Pawl.Engine.Players.table reads as the whole
 -- table. Asked by trigger detection (Event.Trigger's eventWithinRange), a
--- resolution's player reads (Resolve.Slots' resolutionReads) and its
--- battlefield sweep (battlefieldMatching). Pawl.PlanechaseSpec's "CR 801.18
--- Fields of Summer sees and reaches a caster outside the planar controller's
--- range", "Mutual Epiphany draws four for a player outside" and "Astral Arena's
--- chaos damages a creature outside" prove the three.
+-- resolution's player reads (Resolve.Slots' resolutionReads), its
+-- battlefield sweep (battlefieldMatching), and targeting's CR 801.4 and CR
+-- 801.5a cuts (Target's legalRecipientsGiven and askChooser).
+-- Pawl.PlanechaseSpec's "CR 801.18 Fields of Summer sees and reaches a caster
+-- outside the planar controller's range", "Mutual Epiphany draws four for a
+-- player outside", "Astral Arena's chaos damages a creature outside" and
+-- "Akoum's chaos targets a creature outside" prove them.
 --
--- Not implemented: the other readers of a resolving or triggered ability's
--- range -- targeting, choices, counts and the remaining Players.table rosters
--- -- which still read the controller's (#5131).
+-- Not implemented: a per-opponent target slot's roster, votes and
+-- redistributed life totals, which still read the controller's range (#5165).
 rangePerspective :: ObjectId -> PlayerId -> GameState -> Maybe PlayerId
 rangePerspective source controller gs = if exemptFromRange source gs then Nothing else Just controller
