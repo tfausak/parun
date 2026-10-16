@@ -71,6 +71,9 @@ data SearchDestination
     BattlefieldAttached
   | -- | Grim Reminder's "reveal it", the card staying where it was found (CR 701.20b).
     Reveal
+  | -- | Mystical Tutor's "reveal it, then shuffle and put that card on top": left
+    -- out of the shuffle (CR 701.24b), then put on top.
+    RevealThenTop
   | -- | Rhystic Tutor's "put that card into your hand", unrevealed (CR 701.23e).
     Hand
   deriving (Bounded, Enum, Eq, Ord, Show)

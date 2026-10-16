@@ -229,10 +229,10 @@ miracleBeforePlacementSpec s registry = do
 
 -- CR 701.20d's shuffle, read inside the resolution that revealed the card --
 -- the window CR 701.20a keeps open while the spell resolves. No printing reads
--- that window after its shuffle: every search that reveals a card it leaves in
--- the library either shuffles last (Grim Reminder, Prophecy) or moves the card
--- first (Gifts Ungiven, and CR 701.24b's "shuffle and put that card on top"
--- tutors). Scryfall o:/reveal(s)? (it|them|that card|those cards)[^\n]*shuffle[^\n]*\. [A-Z][^\n]+/,
+-- that window after its shuffle: a card that reveals a library card it leaves
+-- there either shuffles last (Grim Reminder, Prophecy), moves the card first
+-- (Gifts Ungiven), or leaves it out of the shuffle (CR 701.24b, Mystical
+-- Tutor's "shuffle and put that card on top"). Scryfall o:/reveal(s)? (it|them|that card|those cards)[^\n]*shuffle[^\n]*\. [A-Z][^\n]+/,
 -- 2026-10-16, no hit that leaves the card behind. So Synthetic Recounted
 -- Reminder ({1}{B} Sorcery, "Search your library for a card and reveal it, then
 -- shuffle. Target player discards a card.") prints a question after the

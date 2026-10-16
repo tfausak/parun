@@ -5990,7 +5990,11 @@ stayPut oid obj requestedDest position shuffling = case Object.zone obj of
 -- live CR 701.20a window, or a Revealed entry this turn) or looked at (CR
 -- 701.20e's Looked) -- swapped into the same place in its pile under a fresh id,
 -- through Object.newIncarnation. Not a zone change, so nothing is logged and no
--- last known information is filed. Answers the id the card now has.
+-- last known information is filed; a perpetual effect follows it all the same
+-- (perpetuated), as it follows a card across a zone change. Answers the id the
+-- card now has. The scenario
+-- cr-701-20e-the-kavu-mine-security-conjured-keeps-its-perpetual-0-through-a-shuffle
+-- is the proof.
 forgetShown :: ObjectId -> GameState -> (ObjectId, GameState)
 forgetShown oid gs = case Game.lookupObject oid gs of
   Just obj
@@ -5999,10 +6003,13 @@ forgetShown oid gs = case Game.lookupObject oid gs of
             (ts, gs2) = Game.freshTimestamp gs1
             fresh = (Object.newIncarnation obj) {Object.zone = Zone.Library, Object.timestamp = ts}
          in ( newId,
-              gs2
-                { GameState.objects = Map.insert newId fresh (Map.delete oid (GameState.objects gs2)),
-                  GameState.library = fmap (fmap (\member -> if member == oid then newId else member)) (GameState.library gs2)
-                }
+              perpetuated
+                oid
+                (Set.singleton newId)
+                gs2
+                  { GameState.objects = Map.insert newId fresh (Map.delete oid (GameState.objects gs2)),
+                    GameState.library = fmap (fmap (\member -> if member == oid then newId else member)) (GameState.library gs2)
+                  }
             )
     where
       shown = not (Set.null (Object.revealed obj)) || any names (GameState.events gs)
@@ -7410,16 +7417,17 @@ rewatch oldId newId row = case ActiveReplacement.effect row of
 -- meld calls this too, one component at a time -- the same shape read backwards,
 -- two departures with one arrival each. Its own comment has the reason.
 perpetuate :: ObjectId -> Seq.Seq ObjectId -> Game ()
-perpetuate oldId newIds =
-  let arrivals = Set.fromList (Foldable.toList newIds)
-      follow eff =
+perpetuate oldId newIds = State.modify' (perpetuated oldId (Set.fromList (Foldable.toList newIds)))
+
+-- perpetuate's rewrite on a bare state, for a new object minted without a zone
+-- change (forgetShown).
+perpetuated :: ObjectId -> Set ObjectId -> GameState -> GameState
+perpetuated oldId arrivals gs =
+  let follow eff =
         if Expiry.follows (ContinuousEffect.expiry eff)
           then reanchor oldId arrivals eff
           else eff
-   in State.modify' $ \gs ->
-        gs
-          { GameState.continuousEffects = fmap follow (GameState.continuousEffects gs)
-          }
+   in gs {GameState.continuousEffects = fmap follow (GameState.continuousEffects gs)}
 
 -- carryOver's and perpetuate's per-effect half: swap oldId for the arriving ids
 -- in a locked affected set that names it, and leave every other effect alone. A
@@ -9382,24 +9390,33 @@ madnessChoice pid oid payloads = do
 -- reach up.
 --
 -- CR 701.20d / 701.20e: every card shuffled is reordered, so each one revealed or
--- looked at becomes a new object (forgetShown). The whole library is shuffled:
--- CR 701.24b's found cards, left out of the shuffle, are never in it here, since
--- every search that leaves them in the library prints its shuffle after the
--- clauses that move them (Pawl.Engine.Resolve.Effect's Search arm).
--- Pawl.VisibilitySpec's "CR 701.20d a revealed card shuffled into its library"
--- case is the proof.
+-- looked at becomes a new object (forgetShown). Pawl.VisibilitySpec's "CR
+-- 701.20d a revealed card shuffled into its library" case is the proof.
 shuffleLibrary :: PlayerId -> Game ()
-shuffleLibrary pid = do
+shuffleLibrary = shuffleLibraryExcept Set.empty
+
+-- shuffleLibrary leaving `leftOut` out: CR 701.24b's found cards, which "aren't
+-- included in the shuffle, even though they remain in the library". They keep
+-- their places, and are not reordered, so none of them becomes a new object.
+shuffleLibraryExcept :: Set ObjectId -> PlayerId -> Game ()
+shuffleLibraryExcept leftOut pid = do
   gs <- State.get
-  let ids = Game.zoneMembers Zone.Library pid gs
+  let whole = Game.zoneMembers Zone.Library pid gs
+      ids = filter (`Set.notMember` leftOut) whole
   answer <- Game.ask (Prompt.Shuffle ids)
-  let shuffled = Game.honourShuffle ids answer
+  let mixed = Game.honourShuffle ids answer
+      refill remaining oid
+        | Set.member oid leftOut = (remaining, oid)
+        | otherwise = case remaining of
+            next : rest -> (rest, next)
+            [] -> ([], oid)
+      shuffled = snd (List.mapAccumL refill mixed whole)
   -- modify' rather than putting `gs` back: it was read before the prompt, and a
   -- prompt may write state -- Game.choose writes GameState.lastChoice. This one
   -- does not (Prompt.Shuffle is bare, being randomness rather than a choice),
   -- so this is defending the invariant rather than fixing a live bug.
   State.modify' (\g -> g {GameState.library = Map.insert pid (Seq.fromList shuffled) (GameState.library g)})
-  State.modify' (forgetAllShown shuffled)
+  State.modify' (forgetAllShown mixed)
   State.modify' (recordEvent (GameEvent.PlayerActed (PlayerActed.MkPlayerActed PlayerAction.Shuffle pid)))
 
 -- The single reveal funnel (CR 701.20a): `pid` shows `oid` to all players, which

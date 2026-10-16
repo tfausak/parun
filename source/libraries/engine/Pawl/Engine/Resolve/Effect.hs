@@ -4538,13 +4538,33 @@ applyOneEffect runSubgame resolving source controller legal chosen effect = case
           -- Effect.Shuffle, so a found card is never shuffled while a later
           -- clause still names it -- CR 701.24b's exclusion, and CR 701.20d's
           -- new object for a card Grim Reminder leaves behind.
+          --
+          -- RevealThenTop's found cards are still in the library at its shuffle,
+          -- and CR 701.24b leaves them out of it: not reordered, they stay the
+          -- objects the search found until they are put on top, which reorders
+          -- them (CR 701.20d). Several would go on top in the order their owner
+          -- states (CR 401.4, arrangeInLibrary) -- a regression fence, no card in
+          -- data/cards finding more than one. The scenario
+          -- cr-701-24b-mystical-tutor-s-find-is-left-out-of-the-shuffle-and-put-on-top
+          -- is the proof.
           let shuffled
                 | destination == SearchDestination.Reveal = []
                 | otherwise = ListUtils.nubOrd [owner | (_, owner, chosenZones, _, _, _) <- decisions, Set.member Zone.Library chosenZones]
-          Monad.forM_ shuffled Event.shuffleLibrary
+              leftOut
+                | destination == SearchDestination.RevealThenTop = Set.fromList arrivals
+                | otherwise = Set.empty
+          Monad.forM_ shuffled (Event.shuffleLibraryExcept leftOut)
+          placed <-
+            if destination == SearchDestination.RevealThenTop
+              then do
+                onTop <- concat <$> traverse (\oid -> Foldable.toList <$> Event.changeZoneAttaching Nothing Set.empty oid Zone.Library LibraryPosition.Top Nothing TapState.Untapped Map.empty Nothing Nothing Facing.FaceUp False CarryOver.NotCarried False Seq.empty) (reverse arrivals)
+                owners <- State.gets (\gs -> ListUtils.nubOrd (Maybe.mapMaybe (\oid -> fmap Object.owner (Game.lookupObject oid gs)) onTop))
+                Monad.forM_ owners (`arrangeInLibrary` onTop)
+                pure onTop
+              else pure arrivals
           -- CR 608.2c: "that card" in a later clause, or in a delayed ability
           -- this resolution arms (CR 603.7c), is what arrived.
-          bindObjects resolving foundSlot arrivals
+          bindObjects resolving foundSlot placed
   -- Exile every card in every graveyard as ONE event (CR 608.2f), so "one or
   -- more cards leave your graveyard" fires once (CR 603.2c). "Every graveyard"
   -- is CR 102.1's players still in the game, not the keys of
@@ -11340,6 +11360,7 @@ outsideArrival destination = case destination of
   SearchDestination.BattlefieldAttachedOrHand -> Nothing
   SearchDestination.BattlefieldAttached -> Nothing
   SearchDestination.Reveal -> Nothing
+  SearchDestination.RevealThenTop -> Nothing
 
 -- Search.differentIn: the cards, in order, that keep the group apart -- each
 -- shares no value on any named axis with a card kept ahead of it.
@@ -11455,6 +11476,11 @@ putFound resolving asOf searcher subject destination cardId = case destination o
   -- Grim Reminder's "reveal it": CR 701.20b leaves the card in the library, so the
   -- object found is the object a later clause names.
   SearchDestination.Reveal -> do
+    Event.revealResolving resolving searcher cardId
+    pure [cardId]
+  -- Mystical Tutor's "reveal it": the card stays in the library through the
+  -- Search arm's shuffle, which leaves it out, until the move to the top after it.
+  SearchDestination.RevealThenTop -> do
     Event.revealResolving resolving searcher cardId
     pure [cardId]
   -- Rhystic Tutor's "put that card into your hand": the move alone, with no
