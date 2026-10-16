@@ -1,0 +1,25 @@
+{
+  "description": "CR 701.20a Hauntwoods Shrieker shows everyone the card under a face-down permanent",
+  "note": "bob's manifested Forest is not a creature card, so it stays face down; alice's record names the Forest rather than CR 708.2a's nameless 2/2.",
+  "board": {
+    "seats": [
+      { "name": "alice",
+        "battlefield": [
+          { "card": "Forest", "label": "f1", "ready": true },
+          { "card": "Forest", "label": "f2", "ready": true },
+          { "card": "Hauntwoods Shrieker", "label": "shrieker" } ] },
+      { "name": "bob",
+        "battlefield": [ { "card": "Forest", "label": "manifest", "faceDown": { "type": "Manifested" } } ] }
+    ],
+    "active": "alice",
+    "step": "PrecombatMain"
+  },
+  "timeline": [
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "check": { "View": { "of": "Witnessed", "player": "alice", "is": [] } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": { "Activate": { "object": "$shrieker", "targets": ["$manifest"], "mana": ["$f1", "$f2"] } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass" },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "check": { "View": { "of": "Stack", "is": [] } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "check": { "View": { "of": "Witnessed", "player": "alice", "is": ["Forest"] } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "check": { "Names": { "object": "$manifest", "names": [] } } }
+  ]
+}

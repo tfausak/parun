@@ -210,6 +210,8 @@ spec s registry = Spec.describe s "Mutate" $ do
             under = murdered MutateSide.Under
         Spec.assertEqWith s "CR 708.9 alice revealed the face-down Kirin component as the face-up pile left" (departureReveals over) [(S.alice, host, RevealCause.LeavingFaceDownComponent)]
         Spec.assertEqWith s "CR 708.9 merged under, the pile is face down and revealed whole" (departureReveals under) [(S.alice, host, RevealCause.LeavingFaceDown)]
+        Spec.assertEqWith s "CR 701.20a the reveal shows the Kirin card, neither the nameless 2/2 nor the Cubwarden pile over it" (departureRevealNames over) [Set.singleton (CardName.MkCardName (Text.pack "Misthoof Kirin"))]
+        Spec.assertEqWith s "CR 701.20a the face-down pile is shown face up, its topmost Kirin's name" (departureRevealNames under) [Set.singleton (CardName.MkCardName (Text.pack "Misthoof Kirin"))]
         Spec.assertBool s (all (Maybe.isNothing . Game.lookupObject host) [over, under]) "setup: Murder destroyed the pile on both legs"
   -- CR 708.9's third sentence: the same pile's owner concedes a three-player
   -- game (CR 800.4a), so it leaves the game rather than moving to a zone, and
@@ -1609,6 +1611,14 @@ returningCommander :: Prompt.Prompt r -> r
 returningCommander p = case p of
   Prompt.ReturnCommander {} -> CommandZoneDecision.Returns
   _ -> S.identityAnswer p
+
+-- The names each CR 708.9 departure reveal showed, in log order.
+departureRevealNames :: GameState.GameState -> [Set.Set CardName.CardName]
+departureRevealNames gs =
+  [ PC.names (Revealed.characteristics r)
+  | GameEvent.Revealed r <- S.eventsOf gs,
+    Revealed.cause r `elem` [RevealCause.LeavingFaceDown, RevealCause.LeavingFaceDownComponent]
+  ]
 
 -- Each CR 708.9 departure reveal on the log: revealer, object, and cause.
 departureReveals :: GameState.GameState -> [(PlayerId.PlayerId, ObjectId.ObjectId, RevealCause.RevealCause)]

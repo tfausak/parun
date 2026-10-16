@@ -1,0 +1,28 @@
+{
+  "description": "CR 701.40g the manifested sorcery Showstopping Surprise could not turn up is shown to everyone",
+  "note": "Prey Upon is a sorcery card, so the turning over is replaced by a reveal: it stays face down, and bob's record names it.",
+  "board": {
+    "seats": [
+      { "name": "alice",
+        "battlefield": [
+          { "card": "Mountain", "label": "m1", "ready": true },
+          { "card": "Mountain", "label": "m2", "ready": true },
+          { "card": "Mountain", "label": "m3", "ready": true },
+          { "card": "Mountain", "label": "m4", "ready": true },
+          { "card": "Mountain", "label": "m5", "ready": true },
+          { "card": "Prey Upon", "label": "prey", "faceDown": { "type": "Manifested" } } ],
+        "hand": [ { "card": "Showstopping Surprise", "label": "surprise" } ] },
+      { "name": "bob" }
+    ],
+    "active": "alice",
+    "step": "PrecombatMain"
+  },
+  "timeline": [
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "check": { "View": { "of": "Witnessed", "player": "bob", "is": [] } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": { "Cast": { "object": "$surprise", "targets": ["$prey"], "mana": ["$m1", "$m2", "$m3", "$m4", "$m5"] } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass" },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "check": { "View": { "of": "Stack", "is": [] } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "check": { "View": { "of": "Witnessed", "player": "bob", "is": ["Prey Upon"] } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "check": { "Names": { "object": "$prey", "names": [] } } }
+  ]
+}
