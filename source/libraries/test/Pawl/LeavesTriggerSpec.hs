@@ -8,6 +8,7 @@
 -- Pawl.ZoneTriggerSpec, which keeps the machinery.
 module Pawl.LeavesTriggerSpec where
 
+import qualified Control.Monad as Monad
 import qualified Control.Monad.Trans.State.Strict as State
 import qualified Data.Foldable as Foldable
 import qualified Data.List as List
@@ -950,6 +951,27 @@ handArrivalSpec s registry =
           Spec.assertEqWith s "CR 603.10a alice holds the Forge-Tender alone" (handNames S.alice after) [name]
           Spec.assertEqWith s "CR 400.2 without Future Sight bob could not see it" seen Visibility.Type.Obscured
           Spec.assertEqWith s "nothing reached the stack" (GameState.stack settled) []
+        -- CR 603.10: the look-back reads the board the batch began on, where Future
+        -- Sight shows the Forge-Tender atop alice's library and not the Knight of
+        -- Meadowgrain {W}{W} Creature -- Kithkin Knight 2/2, "First strike /
+        -- Lifelink" (Oracle checked against Scryfall 2026-10-16) beneath it. The
+        -- Knight moves after the Forge-Tender, on a live board where it has
+        -- become the top card.
+        Spec.it s "CR 603.10a an exiled Kithkin Brinefarer does not see a Kithkin card that became the top card partway through the batch" $ do
+          brinefarer <- S.printingOf s registry "Kithkin Brinefarer"
+          sight <- S.printingOf s registry "Future Sight"
+          tender <- S.printingOf s registry "Burrenton Forge-Tender"
+          knight <- S.printingOf s registry "Knight of Meadowgrain"
+          forest <- S.printingOf s registry "Forest"
+          let (brinefarerId, g1) = S.addPermanent brinefarer S.alice (S.landsInPlay forest 1)
+              (_, g2) = S.addPermanent sight S.alice g1
+              (knightId, g3) = S.addLibraryCard knight S.alice g2
+              (tenderId, gs) = S.addLibraryCard tender S.alice g3
+              (settled, after) = settleAfter (Monad.void (Event.changeZonesTogether [(brinefarerId, Zone.Exile), (tenderId, Zone.Hand), (knightId, Zone.Hand)])) gs
+          Spec.assertEqWith s "CR 603.10a alice holds the Knight, the Forge-Tender and the Forge-Tender's duplicate alone" (handNames S.alice after) (List.sort [S.printingName knight, S.printingName tender, S.printingName tender])
+          Spec.assertEqWith s "CR 401.5 Future Sight showed bob the Forge-Tender" (Visibility.sees S.bob tenderId gs) Visibility.Type.Visible
+          Spec.assertEqWith s "CR 401.5 and not the Knight beneath it" (Visibility.sees S.bob knightId gs) Visibility.Type.Obscured
+          Spec.assertEqWith s "one trigger reached the stack" (length (GameState.stack settled)) 1
 
 -- What PermanentReturnedToHand's bindings are FOR -- Warped Devotion {2}{B}
 -- Enchantment, "Whenever a permanent is returned to a player's hand, that

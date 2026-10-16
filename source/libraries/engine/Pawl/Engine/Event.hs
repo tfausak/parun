@@ -6706,19 +6706,26 @@ changeZoneWithCause discarded asOf batch oid requestedDest requestedPosition see
               Monad.when (fromZone == Zone.Stack && dest /= Zone.Battlefield && Facing.isFaceDown (Object.facing obj)) $
                 reveal RevealCause.FaceDownSpell pid oid
               -- CR 603.10a's "an object that all players can see": seen by every
-              -- player on the LIVE pre-move board, or revealed as it leaves -- by
-              -- the CR 616.1 loop (CR 701.20a, Nexus of Fate's "reveal Nexus of
-              -- Fate") or by CR 708.9 just above. Asked of every origin, since CR
-              -- 400.2 lets a public zone hold a face-down card (a foretold one in
-              -- exile). Live rather than `lki`: a batch board predates the reveal
-              -- a search makes just before its move, though no board observes the
-              -- difference yet. Forced, so the log entry holds no thunk over the
-              -- pre-move board.
+              -- player on `lki`, or revealed as it leaves -- by a reveal window
+              -- live on the pre-move board, by the CR 616.1 loop (CR 701.20a,
+              -- Nexus of Fate's "reveal Nexus of Fate") or by CR 708.9 just above.
+              -- Asked of every origin, since CR 400.2 lets a public zone hold a
+              -- face-down card (a foretold one in exile).
+              --
+              -- Sight off `lki`, CR 603.10's board "immediately prior to the
+              -- event": the live board carries the batch's earlier moves, so a
+              -- card that became the top of its library partway through would
+              -- read as shown by Future Sight (CR 401.5).
+              -- Pawl.LeavesTriggerSpec's "became the top card partway through the
+              -- batch" is the proof. The windows off the live board: a batch board
+              -- predates the reveal a search makes just before its move, though no
+              -- board observes that half yet. Forced, so the log entry holds no
+              -- thunk over the pre-move board.
               loggedByLeaving <- State.gets (Seq.drop loggedBefore . GameState.events)
               let revealedHere logged = case LoggedEvent.event logged of
                     GameEvent.Revealed r -> Revealed.card r == oid
                     _ -> False
-              revealedLeaving <- pure $! any revealedHere loggedByLeaving || all (\seat -> Visibility.sees seat oid gs == Visibility.Type.Visible) (Game.stillPlaying gs)
+              revealedLeaving <- pure $! any revealedHere loggedByLeaving || all (\seat -> (Visibility.revealedNow oid gs <> Visibility.sees seat oid lki) == Visibility.Type.Visible) (Game.stillPlaying gs)
               -- CR 712.13a's rollback point; see the branch after the entry loop.
               unentered <- State.get
               State.modify' $ \g ->
