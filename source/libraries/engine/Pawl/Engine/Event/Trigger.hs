@@ -297,7 +297,8 @@ movedOf event = case event of
 -- CR 801.7: does this event happen entirely within @you@'s range of influence --
 -- every object it involves controlled by (or, a battle, protected by) a player
 -- in range, and every player it involves in range? Always, under an unlimited
--- range.
+-- range, and for no perspective at all: CR 801.18's planar source
+-- (Plane.rangePerspective).
 --
 -- CR 801.7a: an object is read as it stood after the event where the board
 -- sample holds it, and otherwise from last known information -- so a permanent
@@ -314,26 +315,28 @@ movedOf event = case event of
 -- 805.4/801.7 a teammate two seats from the active player still sees the
 -- team's own step begin" and "CR 805.4d/801.7 each player's upkeep triggers for
 -- exactly the in-range members of a shared team turn" prove it.
-eventWithinRange :: Map.Map ObjectId (BattlefieldCandidate.BattlefieldCandidate PC.ProjectedCharacteristics) -> GameState -> PlayerId -> GameEvent -> Bool
-eventWithinRange board gs you event
-  | Map.null (RangeOfInfluence.unwrap (GameSettings.rangeOfInfluence (GameState.settings gs))) = True
-  | otherwise =
-      let (objects, players) = participants event
-          reaches pid = Game.wasInRangeOf you pid gs
-          controllerAt oid = case Map.lookup oid board of
-            Just candidate -> Just (BattlefieldCandidate.controller candidate)
-            Nothing -> Monad.join (Game.liveOrLastKnown (const (Projection.controllerOf oid gs)) (Just . LastKnown.controller) oid gs)
-          protectorAt oid = Monad.join (Game.liveOrLastKnown Object.protector LastKnown.protector oid gs)
-          objectWithin oid = case controllerAt oid of
-            Nothing -> True
-            Just pid -> reaches pid || maybe False reaches (protectorAt oid)
-          -- A partial case with a wildcard: only a step beginning is shared by
-          -- the turn's players.
-          playerWithin pid =
-            reaches pid || case event of
-              GameEvent.StepBegan _ -> any (\mate -> Turn.sharesTurn gs pid mate && reaches mate) (GameState.turnOrder gs)
-              _ -> False
-       in all playerWithin players && all objectWithin objects
+eventWithinRange :: Map.Map ObjectId (BattlefieldCandidate.BattlefieldCandidate PC.ProjectedCharacteristics) -> GameState -> Maybe PlayerId -> GameEvent -> Bool
+eventWithinRange board gs perspective event = case perspective of
+  Nothing -> True
+  Just you
+    | Map.null (RangeOfInfluence.unwrap (GameSettings.rangeOfInfluence (GameState.settings gs))) -> True
+    | otherwise ->
+        let (objects, players) = participants event
+            reaches pid = Game.wasInRangeOf you pid gs
+            controllerAt oid = case Map.lookup oid board of
+              Just candidate -> Just (BattlefieldCandidate.controller candidate)
+              Nothing -> Monad.join (Game.liveOrLastKnown (const (Projection.controllerOf oid gs)) (Just . LastKnown.controller) oid gs)
+            protectorAt oid = Monad.join (Game.liveOrLastKnown Object.protector LastKnown.protector oid gs)
+            objectWithin oid = case controllerAt oid of
+              Nothing -> True
+              Just pid -> reaches pid || maybe False reaches (protectorAt oid)
+            -- A partial case with a wildcard: only a step beginning is shared by
+            -- the turn's players.
+            playerWithin pid =
+              reaches pid || case event of
+                GameEvent.StepBegan _ -> any (\mate -> Turn.sharesTurn gs pid mate && reaches mate) (GameState.turnOrder gs)
+                _ -> False
+         in all playerWithin players && all objectWithin objects
 
 -- CR 801.7: the objects and players an event involves, which is what "happens
 -- entirely within" a range is asked of. The event as its trigger event names
@@ -2251,8 +2254,9 @@ eventTriggers events gs =
             -- Each entry pairs the conditions that function in the bearer's zone
             -- (`functionsIn`) with the ability as printed, which is what the
             -- pending trigger carries.
-            -- CR 801.7: and the event happened within the controller's range.
-            fires (cond, _) = matchesTriggerGiven bindings board gs oid ctrl cond event && eventWithinRange board gs ctrl event
+            -- CR 801.7: and the event happened within the controller's range,
+            -- or anywhere for a planar bearer (CR 801.18).
+            fires (cond, _) = matchesTriggerGiven bindings board gs oid ctrl cond event && eventWithinRange board gs (Plane.rangePerspective oid ctrl gs) event
             -- CR 400.7d: an ability of a permanent may read what costs were
             -- paid for the spell it was, so the bearer's record rides on every
             -- ability it triggers (Binding.paidCostRecord).
@@ -2384,7 +2388,13 @@ inherentTriggers held events gs =
               TriggerSource.OfObject oid -> oid
               TriggerSource.Sourceless -> GameState.nextObjectId gs
             cond = TriggeredAbility.condition ability
-            fires event = matchesTriggerGiven Map.empty board gs bearer you cond event && eventWithinRange board gs you event
+            -- CR 801.11, as eventTriggers asks it: a sourceless ability sees
+            -- through its holder's range. The planar arm is a regression
+            -- fence: the one bearer here is a dungeon card.
+            perspective = case source of
+              TriggerSource.OfObject oid -> Plane.rangePerspective oid you gs
+              TriggerSource.Sourceless -> Just you
+            fires event = matchesTriggerGiven Map.empty board gs bearer you cond event && eventWithinRange board gs perspective event
             frozen = case source of
               TriggerSource.OfObject oid -> delayedAsTriggered board oid gs
               TriggerSource.Sourceless -> Map.empty
@@ -3517,8 +3527,9 @@ delayedPending grouped gs =
                   ( \logged ->
                       let board = battlefieldAt (LoggedEvent.group logged) gs
                        in matchesTriggerGiven (DelayedTrigger.bindings entry) board gs (DelayedTrigger.source entry) (DelayedTrigger.controller entry) cond (LoggedEvent.event logged)
-                            -- CR 801.7, as eventTriggers asks it.
-                            && eventWithinRange board gs (DelayedTrigger.controller entry) (LoggedEvent.event logged)
+                            -- CR 801.7, as eventTriggers asks it; a fence for a planar source,
+                            -- since no plane in `data/cards/` arms a delayed trigger.
+                            && eventWithinRange board gs (Plane.rangePerspective (DelayedTrigger.source entry) (DelayedTrigger.controller entry) gs) (LoggedEvent.event logged)
                   )
                   grouped
               else []

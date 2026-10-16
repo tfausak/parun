@@ -401,7 +401,7 @@ resolveSpellWith runSubgame oid = do
                         -- own arrival finds it already answered.
                         case facedVillainously picked cIdx clause of
                           Just (orElse, limbs) | gated -> do
-                            (answers2, ran2) <- villainousPass oid effectController idx legalNowForMay orElse limbs performLimb (answers, ran)
+                            (answers2, ran2) <- villainousPass oid oid effectController idx legalNowForMay orElse limbs performLimb (answers, ran)
                             pure (answers2, Map.insert (NonEmpty.head limbs) (False, Map.empty) picked, ran2)
                           _ -> do
                             (announced, committed, picked2) <- if gated then chosenBranch oid oid effectController idx cIdx legalNowForMay eligible (`lookup` indexedClauses) picked clause else pure (Just Set.empty, Set.empty, picked)
@@ -889,7 +889,7 @@ resolveModesWith runSubgame stackId srcId modes = do
                         -- arrival finds it already answered.
                         case facedVillainously picked cIdx clause of
                           Just (orElse, limbs) | gated -> do
-                            (answers2, ran2) <- villainousPass stackId effectController idx legalNowForMay orElse limbs performLimb (answers, ran)
+                            (answers2, ran2) <- villainousPass stackId srcId effectController idx legalNowForMay orElse limbs performLimb (answers, ran)
                             pure (answers2, Map.insert (NonEmpty.head limbs) (False, Map.empty) picked, ran2)
                           _ -> do
                             (announced, committed, picked2) <- if gated then chosenBranch stackId srcId effectController idx cIdx legalNowForMay eligible (`lookup` indexedClauses) picked clause else pure (Just Set.empty, Set.empty, picked)
@@ -1098,7 +1098,7 @@ chosenBranch resolving source controller idx cIdx legal eligible limbOf picked c
             offered <- Monad.filterM eligible (NonEmpty.toList branches)
             memo <- case offered of
               [] -> pure (False, Map.empty)
-              [forced] -> pure (False, Map.fromList (fmap (\chooser -> (chooser, forced)) (apnapDecidersOf (OrElse.chooser orElse) legal controller gs)))
+              [forced] -> pure (False, Map.fromList (fmap (\chooser -> (chooser, forced)) (apnapDecidersOf (OrElse.chooser orElse) legal source controller gs)))
               _ ->
                 -- CR 101.4b: each chooser is told the branches the choosers
                 -- before them announced.
@@ -1120,7 +1120,7 @@ chosenBranch resolving source controller idx cIdx legal eligible limbOf picked c
                         pure (made Seq.|> (chooser, announcedHere))
                     )
                     Seq.empty
-                    (apnapDecidersOf (OrElse.chooser orElse) legal controller gs)
+                    (apnapDecidersOf (OrElse.chooser orElse) legal source controller gs)
             let (announced, committed) = settled memo
             pure (announced, committed, Map.insert key memo picked)
 
@@ -1214,8 +1214,8 @@ facedVillainously picked cIdx clause = case Clause.orElse clause of
 -- performed that many times for that seat, one at a time, each its own choice
 -- read off the board the previous one left. Pawl.ResolveSpec's "CR 701.55c The
 -- Valeyard: an opponent faces the choice twice" proves it.
-villainousPass :: ObjectId -> PlayerId -> ModeIndex -> Map.Map SlotName (Set Recipient) -> OrElse.OrElse -> NonEmpty.NonEmpty ClauseIndex -> (ClauseIndex -> Set PlayerId -> acc -> Game acc) -> acc -> Game acc
-villainousPass resolving controller idx legal orElse limbs performLimb acc0 = do
+villainousPass :: ObjectId -> ObjectId -> PlayerId -> ModeIndex -> Map.Map SlotName (Set Recipient) -> OrElse.OrElse -> NonEmpty.NonEmpty ClauseIndex -> (ClauseIndex -> Set PlayerId -> acc -> Game acc) -> acc -> Game acc
+villainousPass resolving source controller idx legal orElse limbs performLimb acc0 = do
   gs <- State.get
   -- CR 101.4b: each seat is told the choices the seats before it made. No test
   -- drives two seats through this pass, so the payload is unproven here.
@@ -1227,7 +1227,7 @@ villainousPass resolving controller idx legal orElse limbs performLimb acc0 = do
           Monad.foldM (\faced _ -> face chooser faced) seat (List.replicate times ())
       )
       (acc0, Seq.empty)
-      (apnapDecidersOf (OrElse.chooser orElse) legal controller gs)
+      (apnapDecidersOf (OrElse.chooser orElse) legal source controller gs)
   where
     face chooser (acc, made) = do
       gs1 <- State.get
@@ -1318,7 +1318,7 @@ exercises resolving source controller idx cIdx bound legal announced committed c
                   pure (made Seq.|> (pid, decision))
               )
               Seq.empty
-              (filter able (announcedOnly announced (apnapDecidersOf asker legal controller gs)))
+              (filter able (announcedOnly announced (apnapDecidersOf asker legal source controller gs)))
           let accepted = Set.fromList [pid | (pid, OptionalDecision.Exercises) <- Foldable.toList answers]
           State.modify' (bindPlayersSlot resolving Binding.mayPlayers accepted)
           pure (not (Set.null accepted))

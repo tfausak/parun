@@ -1,0 +1,75 @@
+{
+  "faces": [
+    {
+      "combatRestrictions": [
+        {
+          "type": "CantAttackMoreThan",
+          "value": {
+            "limit": 1
+          }
+        },
+        {
+          "type": "CantBlockMoreThan",
+          "value": {
+            "limit": 1
+          }
+        }
+      ],
+      "name": "Astral Arena",
+      "oracleText": "No more than one creature can attack each combat.\nNo more than one creature can block each combat.\nWhenever chaos ensues, Astral Arena deals 2 damage to each creature.",
+      "triggeredAbilities": [
+        {
+          "condition": {
+            "type": "ChaosEnsues"
+          },
+          "modal": {
+            "modes": [
+              {
+                "clauses": [
+                  {
+                    "effects": [
+                      {
+                        "type": "DealDamage",
+                        "value": {
+                          "parts": [
+                            {
+                              "quantity": {
+                                "type": "Literal",
+                                "value": 2
+                              },
+                              "ref": {
+                                "type": "EachMatching",
+                                "value": {
+                                  "type": "HasCardType",
+                                  "value": {
+                                    "type": "Creature"
+                                  }
+                                }
+                              }
+                            }
+                          ]
+                        }
+                      }
+                    ]
+                  }
+                ]
+              }
+            ]
+          }
+        }
+      ],
+      "typeLine": {
+        "subtypes": [
+          {
+            "type": "Kolbahan"
+          }
+        ],
+        "types": [
+          {
+            "type": "Plane"
+          }
+        ]
+      }
+    }
+  ]
+}

@@ -62,10 +62,12 @@ data Reads = MkReads
 -- 'table', so a player the clause names through an object or a choice --
 -- Stuffy Doll's chosen player under another controller -- is not affected
 -- from out of range. Pawl.RangeOfInfluenceSpec's "CR 801.10 a chosen player
--- outside the controller's range is dealt no damage" proves it.
-resolution :: (ObjectId -> Maybe PlayerId) -> (ObjectId -> Maybe PlayerId) -> Map.Map SlotName (Set Recipient) -> PlayerId -> GameState -> Reads
-resolution controllerRead ownerRead slots controller gs =
-  let reached = table (Just controller) gs
+-- outside the controller's range is dealt no damage" proves it. The range is
+-- the caller's @reach@ (Plane.rangePerspective), so CR 801.18's planar source
+-- cuts nobody.
+resolution :: (ObjectId -> Maybe PlayerId) -> (ObjectId -> Maybe PlayerId) -> Map.Map SlotName (Set Recipient) -> Maybe PlayerId -> PlayerId -> GameState -> Reads
+resolution controllerRead ownerRead slots reach controller gs =
+  let reached = table reach gs
    in MkReads
         { perspective = Just controller,
           bound = True,
