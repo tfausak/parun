@@ -557,8 +557,9 @@ isHiddenZone zone = case zone of
 -- between two zones did. One whose two ends are the same zone did only between
 -- two players' piles (CR 400.1: each has their own library, hand and graveyard;
 -- Pawl.Engine.Event.alreadyIn logs nothing within one pile). CR 400.8 and CR
--- 400.10's object "doesn't change zones" though it is a new one, and CR
--- 111.3's minted entry (Pawl.Engine.Event.recordMintedEntry) left nothing.
+-- 400.10's object "doesn't change zones" though it is a new one, and a token
+-- created onto the battlefield (CR 701.7a, Pawl.Engine.Event.recordMintedEntry)
+-- left nothing.
 leftOrigin :: ZoneChange.ZoneChange -> Bool
 leftOrigin zc
   | ZoneChange.from zc /= ZoneChange.to zc = True
