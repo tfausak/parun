@@ -827,8 +827,9 @@ withOptionalPayments paid candidate =
 -- is one question for all the spell's instances of it, its answer how many were
 -- paid, recorded as the first that many (Keyword.paymentLimit says why that is
 -- no choice), save one Keyword.identifiesInstances names, asked per instance
--- with the prompt naming it; an unlimited one Keyword.paidPerInstance names is a question per
--- instance, each answer that instance's own (CR 702.56b, 702.157b), and any
+-- with the prompt naming it; an unlimited one Keyword.paidPerInstance names is
+-- a question per instance, each answer that instance's own (CR 702.56b,
+-- 702.157b), and any
 -- other is one question for its instances' combined count.
 --
 -- Two conditions per cost, and each is entwineOffer's above:

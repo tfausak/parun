@@ -549,10 +549,16 @@ attackedLastTurnNames oid entry = case entry of
     attacker == oid || attackTargetNames oid target
 
 -- Whether any OTHER object names this one: an Aura or Equipment attached to it,
--- which CR 303.4 stores on the rider rather than on the host, and a spell or
+-- which CR 303.4 stores on the rider rather than on the host, a spell or
 -- ability on the stack that took it as a target (CR 601.2c) or that named it as
--- something an instruction produced. Binding's other three fields carry no
--- object -- an amount, a Seq of mode indices, and a copiable-values snapshot.
+-- something an instruction produced, and a spell whose gift promise is for the
+-- instance it grants (CR 702.174a, Pawl.Types.KeywordInstance). Binding's other
+-- three fields carry no object -- an amount, a Seq of mode indices, and a
+-- copiable-values snapshot.
+--
+-- The promise arm is a REGRESSION FENCE: the one elision asking this is a mana
+-- source's (Cost.chooseSource), and no board in the suite taps one of two
+-- granters of a promised gift for mana, so dropping it leaves the suite green.
 --
 -- A spell's targets reach Object.bindings only as CR 601.2i finishes the cast,
 -- so the window CR 601.2g opens for that same cast cannot see them; every
@@ -578,6 +584,7 @@ namedByAnother oid gs =
         other /= oid
           && ( (Object.attachedTo obj >>= Recipient.objectOf) == Just oid
                  || any (bindingNames oid) (Map.elems (Object.bindings obj))
+                 || any (Mentions.playerChoiceNames (unread oid)) (foldMap Map.keys (Object.chosenPlayers obj))
              )
    in any names (Map.toList (GameState.objects gs))
         || any ((== Just oid) . LastKnown.host) (GameState.lastKnown gs)
