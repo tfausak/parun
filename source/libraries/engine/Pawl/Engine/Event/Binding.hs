@@ -743,7 +743,7 @@ eventBindingsOver board gs bearerBecame becameInGraveyard bearer you cond event 
   -- Filter in hand, so a slot it names has to hold for every cast the condition
   -- can match. Both do: GameEvent.SpellCast carries an ObjectId and a PlayerId
   -- unconditionally, so no shape of the event withholds either.
-  (TriggerCondition.SpellCast {}, GameEvent.SpellCast (SpellWasCast.MkSpellWasCast caster spell _ _ _)) ->
+  (TriggerCondition.SpellCast {}, GameEvent.SpellCast (SpellWasCast.MkSpellWasCast caster spell _ _ _ _)) ->
     Binding.setTriggerPlayer caster (Binding.setCastSpell spell Map.empty)
   -- Magecraft's "or copy" binds the same pair off its own event (CR 707.10):
   -- the copy, and the player who copied it.

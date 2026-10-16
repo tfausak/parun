@@ -65,6 +65,7 @@
 module Pawl.TransformSpec where
 
 import qualified Control.Monad as Monad
+import qualified Data.Foldable as Foldable
 import qualified Data.List as List
 import qualified Data.List.NonEmpty as NonEmpty
 import qualified Data.Map.Strict as Map
@@ -81,6 +82,7 @@ import qualified Pawl.Engine.Cast as Cast
 import qualified Pawl.Engine.Combat as Combat
 import qualified Pawl.Engine.Engine as Engine
 import qualified Pawl.Engine.Event as Event
+import qualified Pawl.Engine.Event.Trigger as Trigger
 import qualified Pawl.Engine.FaceDown as FaceDown
 import qualified Pawl.Engine.Filter as Filter
 import qualified Pawl.Engine.Game as Game
@@ -113,11 +115,13 @@ import qualified Pawl.Types.GameEvent as GameEvent
 import qualified Pawl.Types.GameState as GameState
 import qualified Pawl.Types.Keyword as Keyword
 import qualified Pawl.Types.LibraryPosition as LibraryPosition
+import qualified Pawl.Types.LoggedEvent as LoggedEvent
 import qualified Pawl.Types.ManaSpending as ManaSpending
 import qualified Pawl.Types.Object as Object
 import qualified Pawl.Types.ObjectId as ObjectId
 import qualified Pawl.Types.ObjectRef as ObjectRef
 import qualified Pawl.Types.OptionalDecision as OptionalDecision
+import qualified Pawl.Types.PendingTrigger as PendingTrigger
 import qualified Pawl.Types.PermissionVerb as PermissionVerb
 import qualified Pawl.Types.Phase as Phase
 import qualified Pawl.Types.PlayerId as PlayerId
@@ -130,6 +134,7 @@ import qualified Pawl.Types.StepBegan as StepBegan
 import qualified Pawl.Types.Subtype as Subtype
 import qualified Pawl.Types.Transformed as Transformed
 import qualified Pawl.Types.TriggerCondition as TriggerCondition
+import qualified Pawl.Types.TriggerSource as TriggerSource
 import qualified Pawl.Types.Zone as Zone
 
 -- CR 701.27g's fixture, which is not the Gargoyle's: Tovolar, Dire Overlord //
@@ -988,7 +993,7 @@ transformTriggerSpec s registry = Spec.describe s "TransformsInto" $ do
   Spec.it s "CR 701.27e the condition refuses an event naming a different face" $ do
     let board = emptyBoard
         bearer = S.noSource
-        event into = GameEvent.Transformed Transformed.MkTransformed {Transformed.object = bearer, Transformed.characteristics = S.emptyCharacteristics {PC.names = Set.singleton into}, Transformed.controller = Nothing, Transformed.attachments = Set.empty}
+        event into = GameEvent.Transformed Transformed.MkTransformed {Transformed.object = bearer, Transformed.characteristics = S.emptyCharacteristics {PC.names = Set.singleton into}, Transformed.controller = Nothing, Transformed.attachments = Set.empty, Transformed.lapsedGrants = Set.empty}
         matches into = Event.matchesTrigger board bearer S.alice (TriggerCondition.SelfTransformedInto thallidBack) (event into)
     Spec.assertBool s (matches thallidBack) "the face it names matches"
     Spec.assertBool s (not (matches thallidFront)) "and the other face of the same card does not"
@@ -1182,6 +1187,26 @@ bystanderTransformSpec s registry = Spec.describe s "TransformsIntoWatched" $ do
         after = resolveStack (gather turned)
     Spec.assertEqWith s "the one turn into a non-Human made one Wolf" (S.countOnBattlefieldByName wolfToken S.alice after) 1
     Spec.assertEqWith s "and the scan saw a Human, the permanent being back on its front face" (faceNameOf aangId turned) (Just aangFront)
+  -- CR 801.16's loop attribution asks whether a trigger fires with some
+  -- permanents' effects removed (Event.Trigger.firesWithout), re-reading the
+  -- event's snapshot on that board. alice's Synthetic Turnabout Brute has its
+  -- regenerate ability only while she controls a Demon (CR 604.2), so removing
+  -- her Renegade Demon flips the clause while leaving the Brute's
+  -- characteristics as they were, and the Audit's trigger no longer fires. Asked
+  -- of the entry point directly: no mandatory loop in data/cards/ turns a
+  -- permanent over each cycle.
+  Spec.it s "CR 604.2 / 801.16 the Audit's trigger does not fire without the Demon" $ do
+    audit <- S.printingOf s registry "Synthetic Turnabout Audit"
+    initiate <- S.printingOf s registry "Synthetic Turnabout Initiate"
+    demon <- S.printingOf s registry "Renegade Demon"
+    let (auditId, withAudit) = S.addPermanent audit S.alice emptyBoard
+        (_, withInitiate) = S.addPermanent initiate S.alice withAudit
+        (demonId, board) = S.addPermanent demon S.alice withInitiate
+        turned = sweep board
+        transforms = filter (\logged -> case LoggedEvent.event logged of GameEvent.Transformed _ -> True; _ -> False) (Foldable.toList (GameState.events turned))
+        audits = filter (\p -> PendingTrigger.source p == TriggerSource.OfObject auditId) (Trigger.eventTriggers transforms turned)
+    Spec.assertEqWith s "without the Demon the Audit's trigger does not fire" (fmap (\p -> Trigger.firesWithout (Set.singleton demonId) p turned) audits) [False]
+    Spec.assertEqWith s "with it, it does" (fmap (\p -> Trigger.firesWithout Set.empty p turned) audits) [True]
 
 -- CR 603.10's FIRST sentence over an axis CR 109.3 keeps out of an object's
 -- characteristics: what was attached to the permanent that turned over. The

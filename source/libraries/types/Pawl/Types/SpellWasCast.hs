@@ -1,5 +1,7 @@
 module Pawl.Types.SpellWasCast where
 
+import qualified Data.Set as Set
+import qualified Pawl.Types.Condition as Condition
 import qualified Pawl.Types.Keyword as Keyword
 import qualified Pawl.Types.ObjectId as ObjectId
 import qualified Pawl.Types.PlayerId as PlayerId
@@ -36,6 +38,10 @@ data SpellWasCast = MkSpellWasCast
     -- Object.castUsing as it became cast, since CR 400.7 leaves no object to
     -- read it off later -- CR 702.185c's "a spell was warped this turn"
     -- (Quantity.SpellsCastUsingThisTurn).
-    castUsing :: Maybe Keyword.Keyword
+    castUsing :: Maybe Keyword.Keyword,
+    -- | CR 604.2: the "as long as" clauses of its granted activated abilities
+    -- that did not hold as it became cast, which `characteristics` carries
+    -- unasked (Pawl.Engine.Projection.View.lapsedGrantsOf).
+    lapsedGrants :: Set.Set Condition.Condition
   }
   deriving (Eq, Ord, Show)

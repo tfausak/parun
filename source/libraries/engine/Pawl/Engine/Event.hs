@@ -577,10 +577,13 @@ transformedAt :: ObjectId -> GameState -> Transformed.Transformed
 transformedAt oid gs =
   Transformed.MkTransformed
     { Transformed.object = oid,
-      Transformed.characteristics = Projection.project oid gs,
+      Transformed.characteristics = characteristics,
       Transformed.controller = Projection.controllerOf oid gs,
-      Transformed.attachments = Game.attachments oid gs
+      Transformed.attachments = Game.attachments oid gs,
+      Transformed.lapsedGrants = Projection.lapsedGrantsOf (Projection.fullView gs) characteristics oid gs
     }
+  where
+    characteristics = Projection.project oid gs
 
 openEventGroup :: GameState -> GameState
 openEventGroup gs = gs {GameState.eventGroupDepth = GameState.eventGroupDepth gs + 1}
