@@ -4827,7 +4827,7 @@ applyOneEffect runSubgame resolving source controller legal chosen effect = case
     -- CR 706.8a: every kept result, noted with its kind of die, on the slot's
     -- permanent.
     Foldable.for_ (RollDie.store rollDie >>= \slot -> legalOne slot legal >>= Recipient.objectOf) $ \target -> do
-      acquisition <- State.gets (Game.resolvingAcquisition resolving)
+      acquisition <- State.gets (\g -> Game.readingAcquisition resolving source g target)
       State.modify' (storeOn acquisition target sides (foldMap (\(_, _, _, results) -> results) rolled))
   -- CR 706.2b's reroll, thrown by the ability Goblin Bookie activates inside
   -- throwDice's window: the same die, the new face filtered back to
@@ -4854,7 +4854,7 @@ applyOneEffect runSubgame resolving source controller legal chosen effect = case
   -- stored, so a copy's reroll finds none its printed pair stored.
   Effect.RerollStoredResults slot -> Foldable.for_ (legalOne slot legal >>= Recipient.objectOf) $ \target -> do
     gs <- State.get
-    let acquisition = Game.resolvingAcquisition resolving gs
+    let acquisition = Game.readingAcquisition resolving source gs target
         stored = foldMap (Game.storedResultsUnder acquisition) (Game.lookupObject target gs)
     Monad.unless (Map.null stored) $ do
       answer <- Game.choose (Prompt.ChooseStoredRerolls (Decide.deciderFor controller gs) controller target stored)

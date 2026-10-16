@@ -61,10 +61,11 @@ data Reads = MkReads
   }
 
 -- | What a RESOLUTION reads (CR 608.2): its controller as "you", the slots it
--- filled (CR 608.2b's legal ones), and the controller, owner and choice reads
--- the caller supplies -- CR 608.2h's last known information, from a module that
--- sees the projection, and CR 607.5's acquisition. CR 801.10: every answer is cut to the controller's
--- 'table', so a player the clause names through an object or a choice --
+-- filled (CR 608.2b's legal ones), and the controller, owner and acquisition
+-- reads the caller supplies -- CR 608.2h's last known information and CR
+-- 607.5's linked choices, from a module that sees the projection. CR 801.10:
+-- every answer is cut to the controller's 'table', so a player the clause
+-- names through an object or a choice --
 -- Stuffy Doll's chosen player under another controller -- is not affected
 -- from out of range. Pawl.RangeOfInfluenceSpec's "CR 801.10 a chosen player
 -- outside the controller's range is dealt no damage" proves it. The range is

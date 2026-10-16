@@ -2071,21 +2071,13 @@ acquisitionOf oid gs =
     Just row -> Acquisition.Copied (ActiveCopy.timestamp row)
     Nothing -> maybe Acquisition.Own Object.acquisition (lookupObject oid gs)
 
--- | CR 607.5: the acquisition the RESOLVING ability came with on its source,
--- frozen as it went on the stack (Pawl.Types.TriggeredAbilitySource,
--- Pawl.Types.ActivatedAbilitySource). Own for a spell, which has no source to
--- have acquired it from.
-resolvingAcquisition :: ObjectId -> GameState -> Acquisition.Acquisition
-resolvingAcquisition resolving gs = case fmap Object.source (lookupObject resolving gs) of
-  Just (Source.OfTrigger triggered) -> TriggeredAbilitySource.acquisition triggered
-  Just (Source.OfAbility activated) -> ActivatedAbilitySource.acquisition activated
-  _ -> Acquisition.Own
-
--- | CR 607.5: the acquisition whose choices the object resolving as
--- `resolving`, a spell or an ability of `source`, reads off `oid` -- for an
--- ability reading its own source, the one it froze (resolvingAcquisition),
--- since it stays linked to the abilities it came with whatever that source has
--- since become; otherwise the one `oid` has now (acquisitionOf).
+-- | CR 607.5: the acquisition whose choices and stored results the object
+-- resolving as `resolving`, a spell or an ability of `source`, reads off
+-- `oid`. For an ability reading its own source, the one it froze as it went
+-- on the stack (Pawl.Types.TriggeredAbilitySource,
+-- Pawl.Types.ActivatedAbilitySource), since it stays linked to the abilities it
+-- came with whatever that source has since become; otherwise the one `oid`
+-- has now (acquisitionOf).
 readingAcquisition :: ObjectId -> ObjectId -> GameState -> ObjectId -> Acquisition.Acquisition
 readingAcquisition resolving source gs oid = case fmap Object.source (lookupObject resolving gs) of
   Just (Source.OfTrigger triggered) | oid == source -> TriggeredAbilitySource.acquisition triggered
