@@ -4549,21 +4549,39 @@ project :: ObjectId -> GameState -> ProjectedCharacteristics
 project oid gs = projectFrom (gather gs) oid gs
 
 -- | CR 701.20a / 701.20e: what revealing `oid`, or looking at it, shows on
--- this board -- `project`, but a face-down object's as the card it is: face up,
--- since CR 708.2's substitution is its face-down status, and under no copy
--- effect, stamped (Binding.withoutCopyEffect) or stored
--- (Game.supersedeStoredCopies), since a copy effect sets the permanent's
--- copiable values and reaches the card only once it is turned face up (CR
--- 708.10, 708.8). A counterfactual board, as Projection.View's
+-- this board -- `project`, but a face-down object's as the card it is (CR
+-- 701.20a): face up, since CR 708.2's substitution is its face-down status, and
+-- under no copy effect, stored (Game.supersedeStoredCopies) or stamped
+-- (Binding.withoutCopyEffect), since a copy effect changes the permanent and
+-- never the card. A counterfactual board, as Projection.View's
 -- copiableCharacteristicsFaceUp; Game.withFacing turns a merged permanent's
--- components with it (CR 730.2f). data/scenarios/visibility's CR 708.10
--- Cytoshape case proves the stored road, and its CR 701.20a Clone case the
--- stamped one.
+-- components with it (CR 730.2f).
+--
+-- The stamp is a copy effect's only on an object a card represents. A token's
+-- or a copy's stamp is its own values (CR 111.3, 707.10), so it stays.
+--
+-- Not implemented: a token's own values that a later stamped copy effect
+-- replaced are not recovered, so its reveal shows that copy (#5167).
+--
+-- data/scenarios/visibility proves each road: the CR 708.10 Cytoshape case the
+-- stored one, the CR 701.20a Clone case the stamped one, and the CR 111.3 token
+-- case the kept stamp.
 projectShown :: ObjectId -> GameState -> ProjectedCharacteristics
 projectShown oid gs = case Game.lookupObject oid gs of
   Just obj
     | Facing.isFaceDown (Object.facing obj) ->
-        let card = (Game.withFacing Facing.FaceUp obj) {Object.bindings = Binding.withoutCopyEffect (Object.bindings obj)}
+        let uncopied = case Object.source obj of
+              Source.OfCard _ -> Binding.withoutCopyEffect
+              Source.OfMerge _ -> Binding.withoutCopyEffect
+              Source.OfMeld _ -> Binding.withoutCopyEffect
+              Source.OfToken _ -> id
+              Source.OfSpellCopy _ -> id
+              Source.OfCardCopy _ -> id
+              Source.OfEmblem _ -> id
+              Source.OfAbility _ -> id
+              Source.OfTrigger _ -> id
+              Source.OfInherentTrigger _ -> id
+            card = (Game.withFacing Facing.FaceUp obj) {Object.bindings = uncopied (Object.bindings obj)}
          in project oid (Game.supersedeStoredCopies (Set.singleton oid) gs {GameState.objects = Map.insert oid card (GameState.objects gs)})
   _ -> project oid gs
 
