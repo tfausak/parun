@@ -194,6 +194,7 @@ import qualified Pawl.Types.ExileCardsFromGraveyard as ExileCardsFromGraveyard
 import qualified Pawl.Types.ExileFromGraveyard as ExileFromGraveyard
 import qualified Pawl.Types.ExileMaterials as ExileMaterials
 import qualified Pawl.Types.ExilePermanents as ExilePermanents
+import qualified Pawl.Types.ExiledCardAbilities as ExiledCardAbilities
 import qualified Pawl.Types.Face as Face
 import qualified Pawl.Types.FaceDownCharacteristics as FaceDownCharacteristics
 import qualified Pawl.Types.FaceDownState as FaceDownState
@@ -935,7 +936,7 @@ modificationCounts modification = case modification of
   -- minted from the card's Backup keyword, swept there.
   Modification.GainAbilitiesOfSource _ -> []
   -- The rider's CR 602.5 conditions; the abilities are the linked cards'.
-  Modification.GainCraftMaterialAbilities extra -> concatMap conditionCounts (concatMap restrictionConditions extra)
+  Modification.GainExiledCardAbilities (ExiledCardAbilities.MkExiledCardAbilities _ extra) -> concatMap conditionCounts (concatMap restrictionConditions extra)
   Modification.GainAbilitiesOfStickers -> []
   Modification.LoseAllAbilities -> []
   -- Carries a name, which reaches no Count.
@@ -4282,7 +4283,7 @@ modificationFilters modification = case modification of
   -- Minted, and swept as the Backup keyword -- see modificationCounts.
   Modification.GainAbilitiesOfSource _ -> []
   -- The rider's CR 602.5 conditions, as a printed ability's are swept.
-  Modification.GainCraftMaterialAbilities extra -> frame Unframed (concatMap conditionFilters (concatMap restrictionConditions extra))
+  Modification.GainExiledCardAbilities (ExiledCardAbilities.MkExiledCardAbilities _ extra) -> frame Unframed (concatMap conditionFilters (concatMap restrictionConditions extra))
   Modification.GainAbilitiesOfStickers -> []
   Modification.SetBasePowerToughness (SetBasePowerToughness.MkSetBasePowerToughness p t) -> foldMap quantityFilters p <> foldMap quantityFilters t
   Modification.ModifyPowerToughness (ModifyPowerToughness.MkModifyPowerToughness p t) -> quantityFilters p <> quantityFilters t

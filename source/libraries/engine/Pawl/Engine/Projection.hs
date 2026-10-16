@@ -71,6 +71,8 @@ import qualified Pawl.Types.Effect as Effect
 import qualified Pawl.Types.EntryR as EntryR
 import qualified Pawl.Types.EntryRewrite as EntryRewrite
 import qualified Pawl.Types.ExileLink as ExileLink
+import qualified Pawl.Types.ExiledCardAbilities as ExiledCardAbilities
+import qualified Pawl.Types.ExiledPile as ExiledPile
 import qualified Pawl.Types.Face as Face
 import qualified Pawl.Types.Facing as Facing
 import qualified Pawl.Types.Filter as Filter.Type
@@ -150,7 +152,7 @@ layer m = case m of
   Modification.GainCastingPermission _ -> Layer.Ability
   Modification.GainAbility _ -> Layer.Ability
   Modification.GainAbilitiesOfSource _ -> Layer.Ability
-  Modification.GainCraftMaterialAbilities _ -> Layer.Ability
+  Modification.GainExiledCardAbilities _ -> Layer.Ability
   Modification.GainAbilitiesOfStickers -> Layer.Ability
   Modification.LoseAllAbilities -> Layer.Ability
   -- CR 613.1f again, and the same layer as the wipe above: what differs is the
@@ -343,29 +345,38 @@ applyModification textBoxOf viewOf src stamp gs oid unitTypes affected m pc =
         -- put in GameState.continuousEffects. The identity keeps the walk total,
         -- which is the posture SetController's arm below takes.
         Modification.GainAbilitiesOfSource _ -> pc
-        -- CR 613.1f / 702.167c: the activated abilities of each card used to craft
-        -- `src` -- linked under Binding.craftLink, so nothing `src`'s other
-        -- abilities exile (CR 607.2a) -- read off its copiable values (CR 707.2),
-        -- each with the rider's restrictions added. Like GainAbility above, the
-        -- receiver is their source (CR 113.7).
+        -- CR 613.1f / 607.2a: the activated abilities of each card in the
+        -- payload's pile, read off its copiable values (CR 707.2), each with the
+        -- payload's restrictions added. Like GainAbility above, the receiver is
+        -- their source (CR 113.7). The craft pile is the cards linked under
+        -- Binding.craftLink (CR 702.167c), so nothing `src`'s other abilities
+        -- exile; the other is every card linked to `src`.
         --
-        -- CR 602.5c: an unnamed ability is named for the material it came from
-        -- (Binding.craftMaterialAbility), so two identically worded abilities
-        -- from two materials are two to a restriction on their use. A named one
+        -- CR 602.5c: an unnamed ability is named for the card it came from
+        -- (Binding.exiledCardAbility), so two identically worded abilities
+        -- from two cards are two to a restriction on their use. A named one
         -- keeps its name, which its linked twin refers to (CR 607.5), and two
-        -- materials' equal copies of it are told apart by count instead
+        -- cards' equal copies of it are told apart by count instead
         -- (ActivationRestriction.unspent).
         --
         -- Pawl.ActivateSpec's Locus of Enlightenment case proves all three, and
-        -- its Gliding Licid case the named twins.
-        Modification.GainCraftMaterialAbilities extra ->
-          let crafted = ExileLink.MkExileLink {ExileLink.source = src, ExileLink.ability = Just Binding.craftLink}
-              materials = filter (\o -> Map.lookup o (GameState.exiledWith gs) == Just crafted) (Set.toAscList (GameState.exile gs))
-              named material a = a {ActivatedAbility.name = ActivatedAbility.name a Applicative.<|> Just (Binding.craftMaterialAbility material)}
-              -- CR 113.6 / 702.178b: a material has, in exile, only the "as long
+        -- its Gliding Licid case the named twins. The Steward of the Harvest
+        -- scenarios prove the other pile.
+        --
+        -- Not implemented: CR 607.2a's printed link for the ExiledWithSource
+        -- pile, which also counts a card an acquired ability of `src` exiled
+        -- (#5149).
+        Modification.GainExiledCardAbilities (ExiledCardAbilities.MkExiledCardAbilities pile extra) ->
+          let inPile o = case (pile, Map.lookup o (GameState.exiledWith gs)) of
+                (ExiledPile.CraftMaterials, Just link) -> link == ExileLink.MkExileLink {ExileLink.source = src, ExileLink.ability = Just Binding.craftLink}
+                (ExiledPile.ExiledWithSource, Just link) -> ExileLink.source link == src
+                (_, Nothing) -> False
+              cards = filter inPile (Set.toAscList (GameState.exile gs))
+              named card a = a {ActivatedAbility.name = ActivatedAbility.name a Applicative.<|> Just (Binding.exiledCardAbility card)}
+              -- CR 113.6 / 702.178b: a card has, in exile, only the "as long
               -- as" grants that function there (AbilityZone.grantFunctionsIn).
-              inExile material = let copied = copiableCharacteristics material gs in filter (AbilityZone.grantFunctionsIn (PC.delayedAbilities copied) Zone.Exile) (PC.activatedAbilities copied)
-              gained = foldMap (\material -> fmap (named material) (inExile material)) materials
+              inExile card = let copied = copiableCharacteristics card gs in filter (AbilityZone.grantFunctionsIn (PC.delayedAbilities copied) Zone.Exile) (PC.activatedAbilities copied)
+              gained = foldMap (\card -> fmap (named card) (inExile card)) cards
               restricted a = a {ActivatedAbility.restrictions = ActivatedAbility.restrictions a <> extra}
            in pc {PC.activatedAbilities = PC.activatedAbilities pc <> fmap restricted gained}
         -- CR 613.1f / 123.7a: the abilities printed on the ability stickers on
@@ -756,7 +767,7 @@ cardTypesAfter m types = case m of
   Modification.GainCastingPermission _ -> types
   Modification.GainAbility _ -> types
   Modification.GainAbilitiesOfSource _ -> types
-  Modification.GainCraftMaterialAbilities _ -> types
+  Modification.GainExiledCardAbilities _ -> types
   Modification.GainAbilitiesOfStickers -> types
   Modification.LoseAllAbilities -> types
   Modification.LoseNamedAbility _ -> types
@@ -1572,7 +1583,7 @@ freezeQuantities viewOf gs announcedOn source context m =
         -- variable in this effect, not in a quoted ability's own future one.
         Modification.GainAbility _ -> Just m
         Modification.GainAbilitiesOfSource _ -> Just m
-        Modification.GainCraftMaterialAbilities _ -> Just m
+        Modification.GainExiledCardAbilities _ -> Just m
         Modification.GainAbilitiesOfStickers -> Just m
         Modification.LoseAllAbilities -> Just m
         Modification.LoseNamedAbility _ -> Just m
@@ -1631,7 +1642,7 @@ quantitiesOf m = case m of
   -- The layer fold evaluates nothing inside a quoted ability.
   Modification.GainAbility _ -> []
   Modification.GainAbilitiesOfSource _ -> []
-  Modification.GainCraftMaterialAbilities _ -> []
+  Modification.GainExiledCardAbilities _ -> []
   Modification.GainAbilitiesOfStickers -> []
   Modification.LoseAllAbilities -> []
   Modification.LoseNamedAbility _ -> []
@@ -1687,7 +1698,7 @@ referenceQuery m = case m of
   Modification.GainCastingPermission _ -> Nothing
   Modification.GainAbility _ -> Nothing
   Modification.GainAbilitiesOfSource _ -> Nothing
-  Modification.GainCraftMaterialAbilities _ -> Nothing
+  Modification.GainExiledCardAbilities _ -> Nothing
   Modification.GainAbilitiesOfStickers -> Nothing
   Modification.LoseAllAbilities -> Nothing
   Modification.LoseNamedAbility _ -> Nothing
@@ -1739,7 +1750,7 @@ setsLandSubtype m = case m of
   -- An ability grant is layer 6 and sets no subtype at all.
   Modification.GainAbility _ -> False
   Modification.GainAbilitiesOfSource _ -> False
-  Modification.GainCraftMaterialAbilities _ -> False
+  Modification.GainExiledCardAbilities _ -> False
   Modification.GainAbilitiesOfStickers -> False
   Modification.GainKeyword _ -> False
   Modification.GainKeywordAtManaCost _ -> False
@@ -2987,7 +2998,7 @@ removesAbilities m = case m of
   -- green.
   Modification.GainAbility _ -> False
   Modification.GainAbilitiesOfSource _ -> False
-  Modification.GainCraftMaterialAbilities _ -> False
+  Modification.GainExiledCardAbilities _ -> False
   Modification.GainAbilitiesOfStickers -> False
   -- CR 305.7 strips a land's rules text, but as a layer-4 type change performed
   -- by setLandSubtypeTo and the two gates beside it, never a layer-6 removal.
@@ -4152,7 +4163,7 @@ modificationWrites m = case m of
   -- creature into the Ascent's set" proves it.
   Modification.GainAbility _ -> Set.singleton Keywords
   Modification.GainAbilitiesOfSource _ -> Set.singleton Keywords
-  Modification.GainCraftMaterialAbilities _ -> Set.singleton Keywords
+  Modification.GainExiledCardAbilities _ -> Set.singleton Keywords
   Modification.GainAbilitiesOfStickers -> Set.singleton Keywords
   Modification.LoseAllAbilities -> Set.singleton Keywords
   -- Writes ProjectedCharacteristics.activatedAbilities, which Aspect has no finer
@@ -4255,7 +4266,7 @@ modificationReads m = case m of
   -- A quoted ability's quantities are read at ITS resolution.
   Modification.GainAbility _ -> Set.empty
   Modification.GainAbilitiesOfSource _ -> Set.empty
-  Modification.GainCraftMaterialAbilities _ -> Set.empty
+  Modification.GainExiledCardAbilities _ -> Set.empty
   Modification.GainAbilitiesOfStickers -> Set.empty
   Modification.LoseAllAbilities -> Set.empty
   -- Carries a name, which is not a Quantity.
@@ -6054,7 +6065,7 @@ grantsKeywordWhere p m = case m of
   -- one whose own modifications grant one.
   Modification.GainAbility g -> grantedStaticWrites (grantsKeywordWhere p) g
   Modification.GainAbilitiesOfSource _ -> False
-  Modification.GainCraftMaterialAbilities _ -> False
+  Modification.GainExiledCardAbilities _ -> False
   -- The sticker data is not in the modification, so True over-approximates.
   Modification.GainAbilitiesOfStickers -> True
   Modification.LoseAllAbilities -> False
@@ -6142,7 +6153,7 @@ grantsMintingType m = case m of
   -- A granted static ability's own parts, grantsKeywordWhere's reason.
   Modification.GainAbility g -> grantedStaticWrites grantsMintingType g
   Modification.GainAbilitiesOfSource _ -> False
-  Modification.GainCraftMaterialAbilities _ -> False
+  Modification.GainExiledCardAbilities _ -> False
   Modification.GainAbilitiesOfStickers -> False
   Modification.LoseAllAbilities -> False
   Modification.LoseNamedAbility _ -> False
@@ -6240,7 +6251,7 @@ grantsAbilityWhere p m = case m of
   Modification.LoseEnchant _ -> False
   Modification.GainCastingPermission _ -> False
   Modification.GainAbilitiesOfSource _ -> False
-  Modification.GainCraftMaterialAbilities _ -> False
+  Modification.GainExiledCardAbilities _ -> False
   -- The sticker data is not in the modification, so True over-approximates.
   Modification.GainAbilitiesOfStickers -> True
   Modification.LoseAllAbilities -> False

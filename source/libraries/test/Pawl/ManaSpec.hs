@@ -263,10 +263,10 @@ manaSpec s registry = Spec.describe s "Mana" $ do
         Spec.assertEqWith s "emptied" (poolSize S.alice (Mana.emptiedManaPools (S.runPure S.identityAnswer gs (S.tapForMana oid)))) 0
 
   -- CR 122.1 / CR 105.4: "{T}: Add {C}. If Gemstone Caverns has a luck counter on
-  -- it, instead add one mana of any color." pawl carries the sentence as two
-  -- gated abilities whose conditions are complements (ActivatedAbility.condition
-  -- over Quantity.ObjectCounters), so exactly one exists at a time and "instead"
-  -- falls out of the pair.
+  -- it, instead add one mana of any color." pawl carries the sentence as one
+  -- ability whose two clauses' printed "if"s are complements (Clause.condition
+  -- over Quantity.ObjectCounters), so exactly one adds mana and "instead" falls
+  -- out of the pair.
   Spec.it s "CR 122.1 a luck counter swaps Gemstone Caverns' {C} for any color" $ do
     caverns <- S.printingOf s registry "Gemstone Caverns"
     let base = Setup.emptyGame S.bothPlayers
@@ -275,7 +275,7 @@ manaSpec s registry = Spec.describe s "Mana" $ do
     Spec.assertEqWith s "no counter: colorless and nothing else" (Mana.manaTypesOf cavernsId gs) [ManaType.Colorless]
     Spec.assertBool s (ManaType.Colored Color.White `elem` Mana.manaTypesOf cavernsId lucky) "with a luck counter, white is available"
     Spec.assertBool s (ManaType.Colored Color.Green `elem` Mana.manaTypesOf cavernsId lucky) "and so is green -- CR 105.4's whole five"
-    -- The "instead": the {C} ability is gone, not joined.
+    -- The "instead": the {C} clause adds nothing, not joined.
     Spec.assertBool s (ManaType.Colorless `notElem` Mana.manaTypesOf cavernsId lucky) "and colorless is not"
 
   Spec.it s "CR 305.6/305.7 an Urborg'd Mountain taps for black too" $ do

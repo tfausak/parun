@@ -633,6 +633,10 @@ library codec
     Pawl.Codec.ExchangeZonesSpec
     Pawl.Codec.ExileCardsFromGraveyard
     Pawl.Codec.ExileCardsFromGraveyardSpec
+    Pawl.Codec.ExiledCardAbilities
+    Pawl.Codec.ExiledCardAbilitiesSpec
+    Pawl.Codec.ExiledPile
+    Pawl.Codec.ExiledPileSpec
     Pawl.Codec.ExiledWith
     Pawl.Codec.ExiledWithSpec
     Pawl.Codec.ExileFromGraveyard
@@ -2368,6 +2372,8 @@ library types
     Pawl.Types.ExchangeValues
     Pawl.Types.ExchangeZones
     Pawl.Types.ExileCardsFromGraveyard
+    Pawl.Types.ExiledCardAbilities
+    Pawl.Types.ExiledPile
     Pawl.Types.ExiledWith
     Pawl.Types.ExileFromGraveyard
     Pawl.Types.ExileHaunting

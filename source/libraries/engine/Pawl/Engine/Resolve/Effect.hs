@@ -2558,7 +2558,7 @@ applyEffectWith runSubgame resolving source controller legal chosen effect = do
 -- CR 702.167c: the cards exiled to pay the cost of the craft ability resolving
 -- as `resolving` (Binding.craftMaterials), linked to the permanent it put onto
 -- the battlefield as `entered`, under Binding.craftLink so the craft readers
--- (Quantity.AgainstCraftMaterials, Modification.GainCraftMaterialAbilities)
+-- (Quantity.AgainstCraftMaterials, Modification.GainExiledCardAbilities)
 -- tell them from what that permanent's other abilities exile. Only those still
 -- in exile, which is the rule's "cards in exile". Pawl.ActivateSpec's
 -- Mastercraft Raptor case is the proof.
