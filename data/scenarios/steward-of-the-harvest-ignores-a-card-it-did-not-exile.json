@@ -1,0 +1,38 @@
+{
+  "description": "CR 607.2a Steward of the Harvest grants nothing from a Gemstone Caverns it did not exile",
+  "note": "The pair of steward-of-the-harvest-grants-an-exiled-gemstone-caverns-mana-ability.json: the Caverns starts in exile, linked to nothing, so the Steward's trigger has no target and the Bears gains no ability.",
+  "board": {
+    "seats": [
+      {
+        "name": "alice",
+        "battlefield": [
+          { "card": "Forest", "label": "forest" },
+          { "card": "Forest", "label": "forest-2" },
+          { "card": "Forest", "label": "forest-3" },
+          { "card": "Forest", "label": "forest-4" },
+          { "card": "Grizzly Bears", "label": "bears", "ready": true }
+        ],
+        "hand": [
+          { "card": "Steward of the Harvest", "label": "steward" }
+        ],
+        "exile": [
+          { "card": "Gemstone Caverns", "label": "caverns" }
+        ]
+      },
+      {
+        "name": "bob"
+      }
+    ],
+    "active": "alice",
+    "step": "PrecombatMain"
+  },
+  "timeline": [
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": { "Cast": { "object": "$steward", "mana": ["$forest", "$forest-2", "$forest-3", "$forest-4"] } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass" },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "check": { "View": { "of": "Stack", "is": ["trigger of Steward of the Harvest"] } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass" },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "check": { "View": { "of": "Stack", "is": [] } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "check": { "View": { "of": "Offered", "player": "alice", "is": ["Pass"] } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "check": { "Count": { "player": "alice", "zone": "Battlefield", "card": "Steward of the Harvest", "count": 1 } } }
+  ]
+}

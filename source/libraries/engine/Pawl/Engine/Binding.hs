@@ -529,12 +529,12 @@ craftLink = AbilityName.MkAbilityName (Text.pack "thoseCraftMaterials")
 entryExileLink :: AbilityName.AbilityName
 entryExileLink = AbilityName.MkAbilityName (Text.pack "exiledAsThisEntered")
 
--- CR 602.5c: the name each activated ability a permanent acquires from one
--- craft material carries, drawn from that material's id, so two identically
--- worded abilities acquired from two materials are two abilities to a
--- restriction on their use. Reserved, as craftLink is.
-craftMaterialAbility :: ObjectId -> AbilityName.AbilityName
-craftMaterialAbility oid = AbilityName.MkAbilityName (Text.pack ("thatCraftMaterial" <> show (ObjectId.unwrap oid)))
+-- CR 602.5c: the name each activated ability an object acquires from one
+-- exiled card carries (Modification.GainExiledCardAbilities), drawn from that
+-- card's id, so two identically worded abilities acquired from two cards are
+-- two abilities to a restriction on their use. Reserved, as craftLink is.
+exiledCardAbility :: ObjectId -> AbilityName.AbilityName
+exiledCardAbility oid = AbilityName.MkAbilityName (Text.pack ("thatExiledCard" <> show (ObjectId.unwrap oid)))
 
 -- CR 400.7j: the reserved slot under which the card a DiscardThis COST payment
 -- discarded is bound, as the object it became in the graveyard -- Calim, Djinn

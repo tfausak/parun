@@ -324,7 +324,7 @@ rewriteModification pairs m =
         Modification.GainAbilitiesOfSource _ -> acc
         -- Carries no word: the abilities are the linked cards', read at
         -- projection time, and the restrictions name none.
-        Modification.GainCraftMaterialAbilities _ -> acc
+        Modification.GainExiledCardAbilities _ -> acc
         -- Carries no word: the abilities are the stickers', read at projection
         -- time.
         Modification.GainAbilitiesOfStickers -> acc

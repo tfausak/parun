@@ -217,6 +217,9 @@ zoneOfComponent component = case component of
 -- difference. Scryfall `o:/as long as .*, (this|~) has "/ o:graveyard -o:"max
 -- speed"`, 2026-10-15: every hit is a threshold grant of a triggered ability or
 -- of a battlefield one.
+--
+-- Not implemented: CR 113.6p's command-zone override, which
+-- Pawl.Engine.Activatable.zoneAbilitiesOf applies (#5147).
 grantFunctionsIn :: Map.Map AbilityName.AbilityName (TriggeredAbility.TriggeredAbility Card.Card (GrantedAbility.GrantedAbility Card.Card)) -> Zone.Zone -> ActivatedAbility.ActivatedAbility Card.Card (GrantedAbility.GrantedAbility Card.Card) -> Bool
 grantFunctionsIn delayed zone ability = case ActivatedAbility.condition ability of
   Nothing -> True

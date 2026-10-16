@@ -21,6 +21,8 @@ import qualified Pawl.Types.Color as Color
 import qualified Pawl.Types.Cost as Cost
 import qualified Pawl.Types.CostComponent as CostComponent
 import qualified Pawl.Types.CostKeyword as CostKeyword
+import qualified Pawl.Types.ExiledCardAbilities as ExiledCardAbilities
+import qualified Pawl.Types.ExiledPile as ExiledPile
 import qualified Pawl.Types.Filter as Filter
 import qualified Pawl.Types.FullText as FullText
 import qualified Pawl.Types.GrantedAbility as GrantedAbility
@@ -299,13 +301,13 @@ spec s = Spec.describe s "Pawl.Codec.Modification" $ do
       (Modification.GainAbilitiesOfSource (Set.singleton Keyword.Flash))
       " {\"type\":\"GainAbilitiesOfSource\",\"value\":[{\"type\":\"Flash\"}]} "
   -- layer 6, CR 607.2a: the abilities come off the linked cards, so the arm
-  -- carries only the rider's restrictions.
-  Spec.it s "GainCraftMaterialAbilities" $
+  -- carries only which pile and the rider's restrictions.
+  Spec.it s "GainExiledCardAbilities" $
     Common.assertCodec
       s
       codec
-      (Modification.GainCraftMaterialAbilities [ActivationRestriction.OnlyOnceEachTurn])
-      " {\"type\":\"GainCraftMaterialAbilities\",\"value\":[{\"type\":\"OnlyOnceEachTurn\"}]} "
+      (Modification.GainExiledCardAbilities ExiledCardAbilities.MkExiledCardAbilities {ExiledCardAbilities.pile = ExiledPile.CraftMaterials, ExiledCardAbilities.restrictions = [ActivationRestriction.OnlyOnceEachTurn]})
+      " {\"type\":\"GainExiledCardAbilities\",\"value\":{\"pile\":{\"type\":\"CraftMaterials\"},\"restrictions\":[{\"type\":\"OnlyOnceEachTurn\"}]}} "
   -- layer 3, CR 612.5: the two sides come from the effect's affected set, so
   -- the arm itself is payload-free.
   Spec.it s "ExchangeTextBoxes" $

@@ -3517,8 +3517,8 @@ canPaySomeCompletionGiven slots subject spending sources pcs pid oid total_ subs
         -- ActivationRestriction.needsEmptyStack answers True for. In `data/cards/`
         -- those two sets do not meet: Grinning Ignus, Lavinia and Synthetic Ember
         -- Spring carry the pool's three refusable riders on a mana ability and each
-        -- has one route, while Gemstone Caverns, Muraganda Raceway and Phyrexian
-        -- Tower have two routes and no rider. Nimbus Maze is both and still not
+        -- has one route, while Muraganda Raceway and Phyrexian Tower have two
+        -- routes and no rider. Nimbus Maze is both and still not
         -- it: two of its three routes carry CR 602.5's board condition, which
         -- needsEmptyStack admits.
         hoisted = stackedManaActivations (PlayerEffect.applying pid gs)

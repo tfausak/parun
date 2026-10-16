@@ -3,25 +3,6 @@
     {
       "activatedAbilities": [
         {
-          "condition": {
-            "type": "Compares",
-            "value": {
-              "comparison": {
-                "type": "Exactly"
-              },
-              "measured": {
-                "type": "ObjectCounters",
-                "value": {
-                  "type": "Named",
-                  "value": "luck"
-                }
-              },
-              "threshold": {
-                "type": "Literal",
-                "value": 0
-              }
-            }
-          },
           "cost": {
             "components": [
               {
@@ -35,6 +16,25 @@
               {
                 "clauses": [
                   {
+                    "condition": {
+                      "type": "Compares",
+                      "value": {
+                        "comparison": {
+                          "type": "Exactly"
+                        },
+                        "measured": {
+                          "type": "ObjectCounters",
+                          "value": {
+                            "type": "Named",
+                            "value": "luck"
+                          }
+                        },
+                        "threshold": {
+                          "type": "Literal",
+                          "value": 0
+                        }
+                      }
+                    },
                     "effects": [
                       {
                         "type": "AddMana",
@@ -48,45 +48,27 @@
                         }
                       }
                     ]
-                  }
-                ]
-              }
-            ]
-          }
-        },
-        {
-          "condition": {
-            "type": "Compares",
-            "value": {
-              "comparison": {
-                "type": "AtLeast"
-              },
-              "measured": {
-                "type": "ObjectCounters",
-                "value": {
-                  "type": "Named",
-                  "value": "luck"
-                }
-              },
-              "threshold": {
-                "type": "Literal",
-                "value": 1
-              }
-            }
-          },
-          "cost": {
-            "components": [
-              {
-                "type": "TapThis"
-              }
-            ],
-            "mana": []
-          },
-          "modal": {
-            "modes": [
-              {
-                "clauses": [
+                  },
                   {
+                    "condition": {
+                      "type": "Compares",
+                      "value": {
+                        "comparison": {
+                          "type": "AtLeast"
+                        },
+                        "measured": {
+                          "type": "ObjectCounters",
+                          "value": {
+                            "type": "Named",
+                            "value": "luck"
+                          }
+                        },
+                        "threshold": {
+                          "type": "Literal",
+                          "value": 1
+                        }
+                      }
+                    },
                     "effects": [
                       {
                         "type": "AddMana",
