@@ -1,6 +1,6 @@
 {
   "description": "CR 607.5a a Brass Herald Mirrorweave makes a copy of another pumps no type until the copy ends",
-  "note": "Alice's first Herald chooses Golem and her second Giant, so both Heralds, Golems, are 3/3 (CR 613.4c). Mirrorweave makes the first a copy of the second: the choosing and pumping abilities it now has were acquired together by that effect and are linked only to each other (CR 607.5), and no type was chosen for them, so the chosen type is undefined and that ability pumps nothing (CR 607.5a). The second Herald is 2/2. Golem stays noted for the printed pair, so after cleanup ends the copy (CR 611.2a) it is 3/3 again. Alice's library is empty, so neither enters trigger reveals anything to order.",
+  "note": "Alice's first Herald chooses Golem and her second Giant, so both Heralds, Golems, are 3/3 (CR 613.4c). Mirrorweave makes the first a copy of the second: the choosing and pumping abilities it now has were acquired together by that effect and are linked only to each other (CR 607.5), and no type was chosen for them, so the chosen type is undefined and that ability pumps nothing (CR 607.5a). The second Herald is 2/2. Golem stays noted for the printed pair, so after cleanup ends the copy (CR 514.2) it is 3/3 again. Alice's library is empty, so neither enters trigger reveals anything to order.",
   "board": {
     "seats": [
       {
