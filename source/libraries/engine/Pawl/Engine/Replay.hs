@@ -1152,7 +1152,7 @@ defaultAnswer p = case p of
   Prompt.ChooseCardName {} -> CardName.MkCardName Text.empty
   -- Every candidate is an opponent the card's own text offered, and the prompt
   -- is raised only when there are two or more.
-  Prompt.ChooseOpponent _ _ _ opponents -> NonEmpty.head opponents
+  Prompt.ChooseOpponent _ _ _ _ opponents -> NonEmpty.head opponents
   -- CR 310.9a: the head of Battle.protectorCandidates, the same filter-not-trust
   -- fallback Battle.designateProtector applies to a wrong answer.
   Prompt.ChooseProtector _ _ _ candidates -> NonEmpty.head candidates

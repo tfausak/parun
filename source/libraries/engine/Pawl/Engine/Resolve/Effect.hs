@@ -325,6 +325,7 @@ import qualified Pawl.Types.PlayPermissionOrigin as PlayPermissionOrigin
 import qualified Pawl.Types.Player as Player
 import qualified Pawl.Types.PlayerActed as PlayerActed
 import qualified Pawl.Types.PlayerAction as PlayerAction
+import qualified Pawl.Types.PlayerChoice as PlayerChoice
 import qualified Pawl.Types.PlayerControl as PlayerControl
 import qualified Pawl.Types.PlayerCounters as PlayerCounters
 import Pawl.Types.PlayerId (PlayerId)
@@ -1213,7 +1214,7 @@ objectRefRecipients legal resolving controller source gs ref = case ref of
   -- cuts a chosen player outside the controller's range: Pawl.RangeOfInfluenceSpec's
   -- "CR 801.10 a chosen player outside the controller's range is dealt no
   -- damage" proves it.
-  ObjectRef.ChosenPlayer -> fmap Recipient.ToPlayer (apnapPlayersOf (PlayerRef.ChosenPlayerOfBound Binding.triggerSource) legal source controller gs)
+  ObjectRef.ChosenPlayer -> fmap Recipient.ToPlayer (apnapPlayersOf (PlayerRef.ChosenPlayerOfBound Binding.triggerSource PlayerChoice.AsEnters) legal source controller gs)
   -- CR 120.3a, at whatever width the reference has: the seats a PlayerRef names,
   -- which for Deflecting Palm's ControllerOfBound is CR 108.4's controller of the
   -- object a slot holds, read through CR 608.2h's last known information.
@@ -3219,6 +3220,9 @@ acquireChoices copiedSpell mOriginal subject =
         { Object.bindings = Map.union (Map.restrictKeys (Object.bindings subject) own) decisions,
           Object.announcedX = mOriginal >>= Object.announcedX,
           Object.paidCosts = maybe Map.empty Object.paidCosts mOriginal,
+          -- The opponents its gift costs were promised to, the paid costs' own
+          -- record (CR 702.174a).
+          Object.chosenPlayers = maybe Map.empty Object.chosenPlayers mOriginal,
           Object.boughtBack = any Object.boughtBack mOriginal,
           Object.unannounced = Maybe.isNothing mOriginal,
           Object.castUsing = mOriginal >>= Object.castUsing

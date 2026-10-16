@@ -121,6 +121,7 @@ import Pawl.Types.PhaseSelector (PhaseSelector)
 import qualified Pawl.Types.PlaneswalkR as PlaneswalkR
 import qualified Pawl.Types.PlaneswalkRewrite as PlaneswalkRewrite
 import qualified Pawl.Types.Player as Player
+import qualified Pawl.Types.PlayerChoice as PlayerChoice
 import qualified Pawl.Types.PlayerCounterKind as PlayerCounterKind
 import Pawl.Types.PlayerId (PlayerId)
 import qualified Pawl.Types.PlayerRef as PlayerRef
@@ -1756,7 +1757,7 @@ candidateContext gs candidate =
         gs
         (fmap (Set.map Recipient.ToObject) (ReplacementCandidate.slots candidate))
         (Projection.framedWith choices source gs (Projection.sourceContext gs (ReplacementCandidate.controller candidate) source))
-          { Filter.carrierChosenPlayer = Game.lookupObject source gs >>= Object.chosenPlayer
+          { Filter.carrierChosenPlayer = Game.lookupObject source gs >>= Map.lookup PlayerChoice.AsEnters . Object.chosenPlayers
           }
 
 -- CR 614.12 for a token that does not exist yet: a lot's token is judged off

@@ -1024,6 +1024,8 @@ library codec
     Pawl.Codec.PlayerAttacksPlayerSpec
     Pawl.Codec.PlayerAttacksWith
     Pawl.Codec.PlayerAttacksWithSpec
+    Pawl.Codec.PlayerChoice
+    Pawl.Codec.PlayerChoiceSpec
     Pawl.Codec.PlayerControl
     Pawl.Codec.PlayerControlSpec
     Pawl.Codec.PlayerCounterKind
@@ -2595,6 +2597,7 @@ library types
     Pawl.Types.PlayerAction
     Pawl.Types.PlayerAttacksPlayer
     Pawl.Types.PlayerAttacksWith
+    Pawl.Types.PlayerChoice
     Pawl.Types.PlayerControl
     Pawl.Types.PlayerCounterKind
     Pawl.Types.PlayerCounters

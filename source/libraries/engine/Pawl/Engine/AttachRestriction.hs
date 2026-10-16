@@ -68,6 +68,7 @@ import qualified Pawl.Types.GameState as GameState
 import qualified Pawl.Types.Keyword as Keyword.Type
 import qualified Pawl.Types.Object as Object
 import Pawl.Types.ObjectId (ObjectId)
+import qualified Pawl.Types.PlayerChoice as PlayerChoice
 import qualified Pawl.Types.ProjectedCharacteristics as PC
 import qualified Pawl.Types.RuleAbilities as RuleAbilities
 
@@ -165,7 +166,7 @@ barredBy mint pcs subject host gs =
                 -- rule 702.16 minted is the protected host itself -- the same
                 -- frame this function's haddock states for the minted case.
                 (Projection.sourceContext gs (Projection.controllerOf source gs) source)
-                  { Filter.carrierChosenPlayer = Game.lookupObject source gs >>= Object.chosenPlayer
+                  { Filter.carrierChosenPlayer = Game.lookupObject source gs >>= Map.lookup PlayerChoice.AsEnters . Object.chosenPlayers
                   }
                 subjectView
                 (if null changes then attachers else Filter.rewrite changes attachers)

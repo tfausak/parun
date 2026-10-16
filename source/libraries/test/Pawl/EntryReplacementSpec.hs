@@ -55,6 +55,7 @@ import qualified Pawl.Types.Object as Object
 import qualified Pawl.Types.ObjectId as ObjectId
 import qualified Pawl.Types.OptionalDecision as OptionalDecision
 import qualified Pawl.Types.Phase as Phase
+import qualified Pawl.Types.PlayerChoice as PlayerChoice
 import qualified Pawl.Types.PlayerCounterKind as PlayerCounterKind
 import qualified Pawl.Types.PlayerId as PlayerId
 import qualified Pawl.Types.Printing as Printing
@@ -884,7 +885,7 @@ stuffyDollSpec s registry =
       dealing events gs = resolveAll (settleAll (S.runPure S.identityAnswer gs (Damage.applyDamage events)))
       noncombat src target amount = DamageEvent.MkDamageEvent src (Recipient.ToCreature target) amount False False False 0 Nothing Nothing mempty False DamageKind.Noncombat
       lives g = (S.lifeOf S.alice g, S.lifeOf S.bob g, S.lifeOf S.carol g)
-      chosenOn oid g = Game.lookupObject oid g >>= Object.chosenPlayer
+      chosenOn oid g = Game.lookupObject oid g >>= Map.lookup PlayerChoice.AsEnters . Object.chosenPlayers
       -- alice casts the Doll off five Mountains on a three-seat board and answers
       -- CR 614.12a's choice with `who`. The Doll must be CAST: S.addPermanent puts
       -- an object straight onto the battlefield without running the entry loop,
@@ -975,7 +976,7 @@ stuffyDollSpec s registry =
               Spec.assertEqWith
                 s
                 "CR 400.7 the rebuilt object forgot the player it chose"
-                (fmap (Object.chosenPlayer . Object.newIncarnation) (Game.lookupObject dollId gs))
+                (fmap (Map.lookup PlayerChoice.AsEnters . Object.chosenPlayers . Object.newIncarnation) (Game.lookupObject dollId gs))
                 (Just Nothing)
             _ -> Spec.assertFailure s "the Doll did not reach the battlefield"
         -- The fourth clause, and the one that makes the card self-contained: {T}

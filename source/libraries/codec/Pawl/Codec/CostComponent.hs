@@ -10,6 +10,7 @@ import qualified Pawl.Codec.ExileCardsFromGraveyard as ExileCardsFromGraveyard
 import qualified Pawl.Codec.ExileMaterials as ExileMaterials
 import qualified Pawl.Codec.ExilePermanents as ExilePermanents
 import qualified Pawl.Codec.Filter as Filter
+import qualified Pawl.Codec.Gift as Gift
 import qualified Pawl.Codec.ReturnPermanents as ReturnPermanents
 import qualified Pawl.Codec.Rounding as Rounding
 import qualified Pawl.Codec.Sacrifice as Sacrifice
@@ -79,7 +80,7 @@ codec keywordCodec =
       Arm.payload "BeholdAndExile" (Filter.codec keywordCodec) CostComponent.BeholdAndExile (\x -> case x of CostComponent.BeholdAndExile y -> Just y; _ -> Nothing),
       Arm.payload "MillCards" Common.natural CostComponent.MillCards (\x -> case x of CostComponent.MillCards y -> Just y; _ -> Nothing),
       Arm.payload "RevealTopOfLibrary" Common.natural CostComponent.RevealTopOfLibrary (\x -> case x of CostComponent.RevealTopOfLibrary y -> Just y; _ -> Nothing),
-      Arm.nullary "ChooseOpponent" CostComponent.ChooseOpponent,
+      Arm.payload "ChooseOpponent" Gift.codec CostComponent.ChooseOpponent (\x -> case x of CostComponent.ChooseOpponent y -> Just y; _ -> Nothing),
       Arm.payload "Waterbend" CostAmount.codec CostComponent.Waterbend (\x -> case x of CostComponent.Waterbend y -> Just y; _ -> Nothing),
       Arm.payload "WaterbendInstead" Common.natural CostComponent.WaterbendInstead (\x -> case x of CostComponent.WaterbendInstead y -> Just y; _ -> Nothing)
     ]

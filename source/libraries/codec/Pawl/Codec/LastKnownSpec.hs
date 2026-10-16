@@ -17,11 +17,13 @@ import qualified Pawl.Types.Condition as Condition
 import qualified Pawl.Types.ControlClock as ControlClock
 import qualified Pawl.Types.Cost as Cost
 import qualified Pawl.Types.CounterKind as CounterKind
+import qualified Pawl.Types.Gift as Gift
 import qualified Pawl.Types.Keyword as Keyword
 import qualified Pawl.Types.LastKnown as LastKnown
 import qualified Pawl.Types.ManaCost as ManaCost
 import qualified Pawl.Types.ManaSymbol as ManaSymbol
 import qualified Pawl.Types.ObjectId as ObjectId
+import qualified Pawl.Types.PlayerChoice as PlayerChoice
 import qualified Pawl.Types.PlayerId as PlayerId
 import qualified Pawl.Types.PrintingId as PrintingId
 import qualified Pawl.Types.Quantity as Quantity
@@ -54,7 +56,7 @@ spec s = Spec.describe s "Pawl.Codec.LastKnown" $ do
           LastKnown.attached = Set.singleton (ObjectId.MkObjectId 9),
           LastKnown.host = Just (ObjectId.MkObjectId 11),
           LastKnown.chosenNames = Map.singleton (PlayerId.MkPlayerId 8) (CardName.MkCardName (Text.pack "Goblin Piker")),
-          LastKnown.chosenPlayer = Just (PlayerId.MkPlayerId 3),
+          LastKnown.chosenPlayers = Map.singleton (PlayerChoice.Promised Gift.Food 1) (PlayerId.MkPlayerId 3),
           LastKnown.chosenColors = Set.singleton Color.Green,
           LastKnown.chosenSubtype = Just Subtype.Goblin,
           LastKnown.attacking = False,
@@ -76,7 +78,7 @@ spec s = Spec.describe s "Pawl.Codec.LastKnown" $ do
           <> ",\"copiable\":"
           <> minimalJson
           <> ",\"attached\":[9],\"host\":11"
-          <> ",\"chosenNames\":{\"8\":\"Goblin Piker\"},\"chosenPlayer\":3,\"chosenColors\":[{\"type\":\"Green\"}],\"chosenSubtype\":{\"type\":\"Goblin\"},\"attacking\":false,\"attackTarget\":null,\"blocking\":true,\"protector\":7"
+          <> ",\"chosenNames\":{\"8\":\"Goblin Piker\"},\"chosenPlayers\":[{\"key\":{\"type\":\"Promised\",\"value\":[{\"type\":\"Food\"},1]},\"value\":3}],\"chosenColors\":[{\"type\":\"Green\"}],\"chosenSubtype\":{\"type\":\"Goblin\"},\"attacking\":false,\"attackTarget\":null,\"blocking\":true,\"protector\":7"
           <> ",\"paidCosts\":[{\"key\":{\"type\":\"Offspring\",\"value\":{\"mana\":[{\"type\":\"Generic\",\"value\":2}]}},\"value\":[1]}]"
           <> ",\"prototyped\":true"
           <> ",\"announcedX\":4"
@@ -101,7 +103,7 @@ spec s = Spec.describe s "Pawl.Codec.LastKnown" $ do
           LastKnown.attached = Set.empty,
           LastKnown.host = Nothing,
           LastKnown.chosenNames = Map.empty,
-          LastKnown.chosenPlayer = Nothing,
+          LastKnown.chosenPlayers = Map.empty,
           LastKnown.chosenColors = Set.empty,
           LastKnown.chosenSubtype = Nothing,
           LastKnown.attacking = True,

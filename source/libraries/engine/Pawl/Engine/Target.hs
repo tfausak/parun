@@ -49,6 +49,7 @@ import qualified Pawl.Types.Object as Object
 import Pawl.Types.ObjectId (ObjectId)
 import qualified Pawl.Types.Pile as Pile
 import qualified Pawl.Types.PileDraw as PileDraw
+import qualified Pawl.Types.PlayerChoice as PlayerChoice
 import Pawl.Types.PlayerEffect (PlayerEffect)
 import Pawl.Types.PlayerId (PlayerId)
 import qualified Pawl.Types.PlayerRelation as PlayerRelation
@@ -646,7 +647,7 @@ targetable pcs rowsOf perspective source sourceView gs recipient =
             protects =
               Filter.matches
                 (Filter.contextFor (Game.teams gs) controller (Just source))
-                  { Filter.carrierChosenPlayer = Game.lookupObject oid gs >>= Object.chosenPlayer,
+                  { Filter.carrierChosenPlayer = Game.lookupObject oid gs >>= Map.lookup PlayerChoice.AsEnters . Object.chosenPlayers,
                     Filter.aimingController = Just perspective
                   }
                 sourceView

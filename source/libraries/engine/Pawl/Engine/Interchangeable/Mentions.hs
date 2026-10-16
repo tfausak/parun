@@ -983,7 +983,7 @@ costComponentNames asking onKeyword x = case x of
   CostComponent.BeholdAndExile filter_ -> filterNames asking filter_
   CostComponent.MillCards _natural -> False
   CostComponent.RevealTopOfLibrary _natural -> False
-  CostComponent.ChooseOpponent -> False
+  CostComponent.ChooseOpponent _ -> False
   CostComponent.Waterbend _amount -> False
   CostComponent.WaterbendInstead _natural -> False
 
@@ -2243,7 +2243,7 @@ playerRefNames asking x = case x of
   PlayerRef.OwnerOfBound slotName -> slotNames asking slotName
   PlayerRef.ControllerOfObject objectId -> objectId == object asking
   PlayerRef.OwnerOfObject objectId -> objectId == object asking
-  PlayerRef.ChosenPlayerOfBound slotName -> slotNames asking slotName
+  PlayerRef.ChosenPlayerOfBound slotName _choice -> slotNames asking slotName
   PlayerRef.Attacking attackingPlayers -> attackingPlayersNames asking attackingPlayers
 
 playerSacrificesNames :: Asking -> PlayerSacrifices.PlayerSacrifices -> Bool

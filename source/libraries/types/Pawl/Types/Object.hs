@@ -24,6 +24,7 @@ import qualified Pawl.Types.Mana as Mana
 import qualified Pawl.Types.ManaCost as ManaCost
 import qualified Pawl.Types.ObjectId as ObjectId
 import qualified Pawl.Types.Pairing as Pairing
+import qualified Pawl.Types.PlayerChoice as PlayerChoice
 import qualified Pawl.Types.PlayerId as PlayerId
 import qualified Pawl.Types.PrintingId as PrintingId
 import qualified Pawl.Types.ProjectedCharacteristics as ProjectedCharacteristics
@@ -222,7 +223,7 @@ data Object = MkObject
     -- and makes its own new choice (CR 707.5, CR 707.6).
     -- Per-incarnation: reset by newIncarnation (CR 400.7).
     --
-    -- One of FOUR `chosen` fields -- chosenSubtype, chosenNames and chosenPlayer
+    -- One of FOUR `chosen` fields -- chosenSubtype, chosenNames and chosenPlayers
     -- below are the others -- whose shared property is that each is read back OFF
     -- THE EFFECT'S SOURCE. `protector` below is chosen as the object enters too
     -- and is not one of them, being a designation rule 310 reads directly.
@@ -254,16 +255,19 @@ data Object = MkObject
     -- the whole of what "the chosen name" then means (Petra Sphinx activated
     -- twice, Pawl.ResolveSpec).
     chosenNames :: Map.Map PlayerId.PlayerId CardName.CardName,
-    -- | CR 614.1c: a player this object's controller chose as it entered (Stuffy
-    -- Doll). Read by Pawl.Engine.Resolve's ObjectRef.ChosenPlayer arm off the
+    -- | CR 614.1c / 702.174a: the players chosen for this object, keyed by which
+    -- choice -- the one its controller made as it entered (Stuffy Doll), and the
+    -- opponent each gift instance's cost promised (Scrapshooter), one per paid
+    -- instance (CR 118.8a). Read by PlayerRef.ChosenPlayerOfBound off the
     -- effect's SOURCE -- a triggered ability's payload rather than a
     -- Modification, which is what makes the family's shared property "read off
     -- the effect's source" rather than "read by a Modification".
     --
     -- Not a copiable value (CR 707.2's copiable values are characteristics, and a
     -- player is not one; CR 707.6), and per-incarnation, for chosenColors's
-    -- reasons.
-    chosenPlayer :: Maybe PlayerId.PlayerId,
+    -- reasons, save for CR 400.7d's carry of the promises to the permanent the
+    -- spell becomes.
+    chosenPlayers :: Map.Map PlayerChoice.PlayerChoice PlayerId.PlayerId,
     -- | CR 613.7d: when this object entered its current zone. A static ability's
     -- continuous effect shares this timestamp (CR 613.7a); stamped fresh on every
     -- zone change (CR 400.7 makes each a new object). Read by the projection when
@@ -947,7 +951,7 @@ new o s z t =
       chosenColors = Set.empty,
       chosenSubtype = Nothing,
       chosenNames = Map.empty,
-      chosenPlayer = Nothing,
+      chosenPlayers = Map.empty,
       face = Nothing,
       turnedOverAt = Nothing,
       worldSince = Nothing,

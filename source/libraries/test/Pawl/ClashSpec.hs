@@ -93,7 +93,7 @@ clashing p = case p of
 -- case is about bob rather than carol -- and carol as the discard's target.
 casting :: Prompt.Prompt r -> r
 casting p = case p of
-  Prompt.ChooseOpponent _ _ _ opponents -> Maybe.fromMaybe (NonEmpty.head opponents) (List.find (S.bob ==) (NonEmpty.toList opponents))
+  Prompt.ChooseOpponent _ _ _ _ opponents -> Maybe.fromMaybe (NonEmpty.head opponents) (List.find (S.bob ==) (NonEmpty.toList opponents))
   Prompt.ChooseTargets _ _ _ sets -> S.preferring ((==) (Just S.carol) . Recipient.playerOf) sets
   _ -> S.castAnswer p
 

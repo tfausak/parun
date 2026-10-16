@@ -129,6 +129,7 @@ import qualified Pawl.Types.ObjectId as ObjectId
 import qualified Pawl.Types.OptionalDecision as OptionalDecision
 import qualified Pawl.Types.PaymentDecision as PaymentDecision
 import qualified Pawl.Types.Phase as Phase
+import qualified Pawl.Types.PlayerChoice as PlayerChoice
 import qualified Pawl.Types.PlayerId as PlayerId
 import qualified Pawl.Types.Printing as Printing
 import qualified Pawl.Types.Prompt as Prompt
@@ -1288,7 +1289,7 @@ spec s registry = Spec.describe s "Pawl.Engine.Target" $ do
       Just slot -> do
         let (nemesisId, board0) = S.addPermanent nemesis S.bob S.threePlayerGame
             (giantId, board) = S.addPermanent giant S.bob board0
-            chose who = board {GameState.objects = Map.adjust (\o -> o {Object.chosenPlayer = Just who}) nemesisId (GameState.objects board)}
+            chose who = board {GameState.objects = Map.adjust (\o -> o {Object.chosenPlayers = Map.singleton PlayerChoice.AsEnters who}) nemesisId (GameState.objects board)}
             reaches gs victim =
               let (spellId, onStack) = S.spellOnStack murder S.alice gs
                in Set.member (Recipient.ToCreature victim) (Target.legalRecipients (Just S.alice) spellId slot onStack)
@@ -1333,7 +1334,7 @@ spec s registry = Spec.describe s "Pawl.Engine.Target" $ do
     case Face.activatedAbilities (S.combinedFace recluse) of
       [ability] | Just theSlot <- soleTargetSlot (ActivatedAbility.modal ability) -> do
         let (nemesisId, board0) = S.addPermanent nemesis S.alice S.threePlayerGame
-            chose = board0 {GameState.objects = Map.adjust (\o -> o {Object.chosenPlayer = Just S.bob}) nemesisId (GameState.objects board0)}
+            chose = board0 {GameState.objects = Map.adjust (\o -> o {Object.chosenPlayers = Map.singleton PlayerChoice.AsEnters S.bob}) nemesisId (GameState.objects board0)}
             (recluseId, board1) = S.addPermanent recluse S.carol chose
             (hisRecluseId, board2) = S.addPermanent recluse S.bob board1
             (rayId, board) = S.addHandCard rayOfCommand S.bob (S.landsFor island S.bob 4 board2)

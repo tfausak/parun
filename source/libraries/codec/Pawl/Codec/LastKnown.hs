@@ -12,6 +12,7 @@ import qualified Pawl.Codec.ControlClock as ControlClock
 import qualified Pawl.Codec.CounterKind as CounterKind
 import qualified Pawl.Codec.Keyword as Keyword
 import qualified Pawl.Codec.ObjectId as ObjectId
+import qualified Pawl.Codec.PlayerChoice as PlayerChoice
 import qualified Pawl.Codec.PlayerId as PlayerId
 import qualified Pawl.Codec.ProjectedCharacteristics as ProjectedCharacteristics
 import qualified Pawl.Codec.Source as Source
@@ -35,7 +36,7 @@ codec = Fields.object $ do
   attached <- Fields.required "attached" (Common.set ObjectId.codec) LastKnown.attached
   host <- Fields.defaulted "host" Nothing (Common.maybe ObjectId.codec) LastKnown.host
   chosenNames <- Fields.required "chosenNames" (Common.naturalMap PlayerId.codec CardName.codec) LastKnown.chosenNames
-  chosenPlayer <- Fields.defaulted "chosenPlayer" Nothing (Common.maybe PlayerId.codec) LastKnown.chosenPlayer
+  chosenPlayers <- Fields.defaulted "chosenPlayers" Map.empty (Common.keyedList (Common.keyValue PlayerChoice.codec PlayerId.codec)) LastKnown.chosenPlayers
   chosenColors <- Fields.defaulted "chosenColors" Set.empty (Common.set Color.codec) LastKnown.chosenColors
   chosenSubtype <- Fields.defaulted "chosenSubtype" Nothing (Common.maybe Subtype.codec) LastKnown.chosenSubtype
   attacking <- Fields.required "attacking" Common.boolean LastKnown.attacking
@@ -60,7 +61,7 @@ codec = Fields.object $ do
         LastKnown.attached = attached,
         LastKnown.host = host,
         LastKnown.chosenNames = chosenNames,
-        LastKnown.chosenPlayer = chosenPlayer,
+        LastKnown.chosenPlayers = chosenPlayers,
         LastKnown.chosenColors = chosenColors,
         LastKnown.chosenSubtype = chosenSubtype,
         LastKnown.attacking = attacking,

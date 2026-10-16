@@ -12,6 +12,7 @@ import qualified Pawl.Types.ControlClock as ControlClock
 import qualified Pawl.Types.CounterKind as CounterKind
 import qualified Pawl.Types.Keyword as Keyword
 import qualified Pawl.Types.ObjectId as ObjectId
+import qualified Pawl.Types.PlayerChoice as PlayerChoice
 import qualified Pawl.Types.PlayerId as PlayerId
 import qualified Pawl.Types.ProjectedCharacteristics as ProjectedCharacteristics
 import qualified Pawl.Types.Source as Source
@@ -134,13 +135,13 @@ data LastKnown = MkLastKnown
     -- changes nothing the projection folds. So it sits beside them for
     -- `controller`'s reason.
     chosenNames :: !(Map.Map PlayerId.PlayerId CardName.CardName),
-    -- | CR 614.1c / 702.174a: the player chosen for it -- the same
-    -- Object.chosenPlayer the live object carried. What CR 608.2h answers for a
+    -- | CR 614.1c / 702.174a: the players chosen for it -- the same
+    -- Object.chosenPlayers the live object carried. What CR 608.2h answers for a
     -- gift trigger whose permanent has left (Pawl.CastSpec's Scrapshooter killed
     -- in response) and for Stuffy Doll's damage once the Doll is gone
     -- (Pawl.EntryReplacementSpec). Not a characteristic, for `chosenNames`'
     -- reason.
-    chosenPlayer :: !(Maybe PlayerId.PlayerId),
+    chosenPlayers :: !(Map.Map PlayerChoice.PlayerChoice PlayerId.PlayerId),
     -- | CR 614.1c / 607.2d: the colours chosen for it as it entered -- the same
     -- Object.chosenColors the live object carried. What CR 608.2h answers for an
     -- ability of the object asking for "the chosen color" once the object has

@@ -519,7 +519,7 @@ combatReplaySpec s =
         -- two apart -- a shared Response constructor would replay a combat
         -- declaration into Null Chamber's entry.
         Spec.it s "ChooseOpponent records and replays a PlayerId, and rejects a defender" $ do
-          let p = Prompt.ChooseOpponent decider S.alice oid (S.bob NonEmpty.:| [])
+          let p = Prompt.ChooseOpponent decider S.alice oid Nothing (S.bob NonEmpty.:| [])
           Spec.assertEqWith s "round trip" (Replay.decode p (Replay.encode p S.bob)) (Just S.bob)
           Spec.assertEqWith s "a defender is not an answer to it" (Replay.decode p (Response.ChoseDefender S.bob)) Nothing
         -- CR 612.2's word families are asked for by prompts whose answers have

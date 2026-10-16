@@ -68,6 +68,7 @@ import qualified Pawl.Types.Object as Object
 import qualified Pawl.Types.ObjectId as ObjectId
 import qualified Pawl.Types.Phase as Phase
 import qualified Pawl.Types.Player as Player
+import qualified Pawl.Types.PlayerChoice as PlayerChoice
 import qualified Pawl.Types.PlayerId as PlayerId
 import qualified Pawl.Types.Printing as Printing
 import qualified Pawl.Types.Prompt as Prompt
@@ -458,7 +459,7 @@ spec s registry = Spec.describe s "Range of influence" $ do
     chamber <- S.printingOf s registry "Null Chamber"
     let recording :: Prompt.Prompt r -> State.State [[PlayerId.PlayerId]] r
         recording p = case p of
-          Prompt.ChooseOpponent _ _ _ offer -> State.modify' (<> [NonEmpty.toList offer]) >> pure (NonEmpty.head offer)
+          Prompt.ChooseOpponent _ _ _ _ offer -> State.modify' (<> [NonEmpty.toList offer]) >> pure (NonEmpty.head offer)
           _ -> pure (S.identityAnswer p)
         offeredFor card land lands =
           let (spellId, board) = S.addHandCard card S.alice (S.landsFor land S.alice lands S.fourPlayerGame)
@@ -553,7 +554,7 @@ spec s registry = Spec.describe s "Range of influence" $ do
         (spellId, board) = S.addHandCard replenish S.alice g4
         recording :: Prompt.Prompt r -> State.State ([[PlayerId.PlayerId]], [[ObjectId.ObjectId]]) r
         recording p = case p of
-          Prompt.ChooseOpponent _ _ _ offer -> State.modify' (\(ps, os) -> (ps <> [NonEmpty.toList offer], os)) >> pure (NonEmpty.head offer)
+          Prompt.ChooseOpponent _ _ _ _ offer -> State.modify' (\(ps, os) -> (ps <> [NonEmpty.toList offer], os)) >> pure (NonEmpty.head offer)
           Prompt.ChooseAttachment _ _ _ offer -> State.modify' (\(ps, os) -> (ps, os <> [NonEmpty.toList offer])) >> pure (NonEmpty.head offer)
           _ -> pure (S.identityAnswer p)
         offered gs = State.execState (Engine.runGame recording (S.runPure S.identityAnswer (onMain gs) (S.cast S.alice spellId)) Engine.priorityLoop) ([], [])
@@ -567,7 +568,7 @@ spec s registry = Spec.describe s "Range of influence" $ do
   Spec.it s "CR 801.10 a chosen player outside the controller's range is dealt no damage" $ do
     doll <- S.printingOf s registry "Stuffy Doll"
     let (dollId, g0) = S.addPermanent doll S.alice (Setup.emptyGame (S.alice NonEmpty.:| [S.bob, S.carol, S.dave, erin]))
-        chosen = g0 {GameState.objects = Map.adjust (\o -> o {Object.chosenPlayer = Just erin}) dollId (GameState.objects g0)}
+        chosen = g0 {GameState.objects = Map.adjust (\o -> o {Object.chosenPlayers = Map.singleton PlayerChoice.AsEnters erin}) dollId (GameState.objects g0)}
         stolen = S.giveControl dollId S.bob chosen
         tapped gs =
           let activated = S.runPure S.identityAnswer gs (Activate.activateAbility S.bob dollId (theAbility doll))

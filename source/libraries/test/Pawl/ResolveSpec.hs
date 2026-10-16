@@ -2498,7 +2498,7 @@ crabSpec s registry =
       -- alike, which is what makes the seat observable at gameplay level.
       picking :: ObjectId.ObjectId -> ObjectId.ObjectId -> Prompt.Prompt r -> r
       picking byCarol byOthers p = case p of
-        Prompt.ChooseOpponent _ _ _ seats
+        Prompt.ChooseOpponent _ _ _ _ seats
           | List.elem S.carol (NonEmpty.toList seats) -> S.carol
         Prompt.ChoosePermanent _ asked _ offered ->
           let wanted = if asked == S.carol then byCarol else byOthers

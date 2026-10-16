@@ -3018,7 +3018,7 @@ rewriteComponent pairs component = case component of
   CostComponent.ExileThis -> component
   CostComponent.MillCards _ -> component
   CostComponent.RevealTopOfLibrary _ -> component
-  CostComponent.ChooseOpponent -> component
+  CostComponent.ChooseOpponent _ -> component
   CostComponent.Waterbend _ -> component
   CostComponent.WaterbendInstead _ -> component
 

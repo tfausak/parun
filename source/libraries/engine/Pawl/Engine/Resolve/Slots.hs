@@ -416,7 +416,7 @@ playerRefSlots ref = case ref of
   PlayerRef.OwnerOfBound slot -> Map.singleton slot SlotArity.One
   -- Read at arity one for that arm's reason: a slot naming several objects names
   -- no one chooser.
-  PlayerRef.ChosenPlayerOfBound slot -> Map.singleton slot SlotArity.One
+  PlayerRef.ChosenPlayerOfBound slot _ -> Map.singleton slot SlotArity.One
   -- Read at arity one for that arm's reason: a slot naming several players names
   -- no one player to have been attacked.
   PlayerRef.Attacking (AttackingPlayers.MkAttackingPlayers _ slot) -> Map.singleton slot SlotArity.One

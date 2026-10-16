@@ -19,6 +19,7 @@ import qualified Pawl.Types.ExileCardsFromGraveyard as ExileCardsFromGraveyard
 import qualified Pawl.Types.ExileMaterials as ExileMaterials
 import qualified Pawl.Types.ExilePermanents as ExilePermanents
 import qualified Pawl.Types.Filter as Filter
+import qualified Pawl.Types.Gift as Gift
 import qualified Pawl.Types.Keyword as Keyword
 import qualified Pawl.Types.ReturnPermanents as ReturnPermanents
 import qualified Pawl.Types.Rounding as Rounding
@@ -327,14 +328,13 @@ spec s = Spec.describe s "Pawl.Codec.CostComponent" $ do
       codec
       (CostComponent.RevealTopOfLibrary 2)
       " {\"type\":\"RevealTopOfLibrary\",\"value\":2} "
-  -- CR 702.174a as a cost, nullary on the wire for FlipCoin's reason above: the
-  -- rule fixes every word but the payer's own call -- Scrapshooter's gift.
+  -- CR 702.174a as a cost: the gift whose promise it is -- Scrapshooter's.
   Spec.it s "ChooseOpponent" $
     Common.assertCodec
       s
       codec
-      CostComponent.ChooseOpponent
-      " {\"type\":\"ChooseOpponent\"} "
+      (CostComponent.ChooseOpponent Gift.Card)
+      " {\"type\":\"ChooseOpponent\",\"value\":{\"type\":\"Card\"}} "
   -- CR 701.67a as a cost: a bare amount, which is how much of the cost's generic
   -- mana rule 701.67b lets taps pay for.
   Spec.it s "Waterbend" $

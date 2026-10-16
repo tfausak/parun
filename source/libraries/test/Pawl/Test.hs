@@ -482,6 +482,7 @@ import qualified Pawl.Codec.PlayPermissionOriginSpec
 import qualified Pawl.Codec.PlayerActionSpec
 import qualified Pawl.Codec.PlayerAttacksPlayerSpec
 import qualified Pawl.Codec.PlayerAttacksWithSpec
+import qualified Pawl.Codec.PlayerChoiceSpec
 import qualified Pawl.Codec.PlayerControlSpec
 import qualified Pawl.Codec.PlayerCounterKindSpec
 import qualified Pawl.Codec.PlayerCounterTallySpec
@@ -1339,6 +1340,7 @@ spec s registry = do
   Pawl.Codec.PlayerActionSpec.spec s
   Pawl.Codec.PlayerAttacksPlayerSpec.spec s
   Pawl.Codec.PlayerAttacksWithSpec.spec s
+  Pawl.Codec.PlayerChoiceSpec.spec s
   Pawl.Codec.PlayerControlSpec.spec s
   Pawl.Codec.PlayerCounterKindSpec.spec s
   Pawl.Codec.PlayerCountersAreSpec.spec s
