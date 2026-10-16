@@ -1,0 +1,101 @@
+{
+  "description": "CR 400.7 without Synthetic Exile Diversion, Grizzly Bears exiled from alice's graveyard leave it, so Kishla Skimmer draws her a card",
+  "note": "The pair of 'redirected back into its graveyard', which differs only in the Diversion.",
+  "board": {
+    "active": "alice",
+    "step": "PrecombatMain",
+    "seats": [
+      {
+        "name": "alice",
+        "battlefield": [
+          {
+            "card": "Swamp",
+            "label": "swamp",
+            "ready": true
+          },
+          {
+            "card": "Withered Wretch",
+            "label": "wretch",
+            "ready": true
+          },
+          {
+            "card": "Kishla Skimmer",
+            "ready": true
+          }
+        ],
+        "graveyard": [
+          {
+            "card": "Grizzly Bears",
+            "label": "bears"
+          }
+        ],
+        "library": [
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Mountain"
+          }
+        ]
+      },
+      {
+        "name": "bob",
+        "library": [
+          {
+            "card": "Mountain"
+          }
+        ]
+      }
+    ]
+  },
+  "timeline": [
+    {
+      "turn": 1,
+      "step": "PrecombatMain",
+      "player": "alice",
+      "do": {
+        "Activate": {
+          "object": "$wretch",
+          "targets": [
+            "$bears"
+          ],
+          "mana": [
+            "$swamp"
+          ]
+        }
+      }
+    },
+    {
+      "turn": 1,
+      "step": "PrecombatMain",
+      "player": "alice",
+      "do": "Pass"
+    }
+  ],
+  "final": [
+    {
+      "Count": {
+        "player": "alice",
+        "zone": "Hand",
+        "card": "Island",
+        "count": 1
+      }
+    },
+    {
+      "Count": {
+        "player": "alice",
+        "zone": "Graveyard",
+        "card": "Grizzly Bears",
+        "count": 0
+      }
+    },
+    {
+      "Count": {
+        "player": "alice",
+        "zone": "Exile",
+        "card": "Grizzly Bears",
+        "count": 1
+      }
+    }
+  ]
+}

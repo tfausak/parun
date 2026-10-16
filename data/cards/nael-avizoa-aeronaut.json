@@ -143,6 +143,7 @@
                               "slot": "looked"
                             }
                           },
+                          "slot": "kept",
                           "zone": {
                             "type": "Library"
                           }
@@ -162,8 +163,17 @@
                             }
                           },
                           "ref": {
-                            "type": "InSlot",
-                            "value": "looked"
+                            "type": "EachCardFromAmong",
+                            "value": {
+                              "filter": {
+                                "type": "Not",
+                                "value": {
+                                  "type": "IsBound",
+                                  "value": "kept"
+                                }
+                              },
+                              "slot": "looked"
+                            }
                           },
                           "zone": {
                             "type": "Library"

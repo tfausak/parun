@@ -1,0 +1,122 @@
+{
+  "description": "CR 614.6 / 400.7 Progenitus milled by Tome Scour is revealed and shuffled into the library it is in, so it stays the same object and Dutiful Knowledge Seeker sees no card put into a library",
+  "note": "Tome Scour takes the top five, Progenitus second among them, and its shuffle comes before the three cards under it are milled. The shuffle's answer names each card by name, so it binds whichever object the shuffle finds; the library view names Progenitus by label, which a new object would not carry.",
+  "board": {
+    "active": "alice",
+    "step": "PrecombatMain",
+    "seats": [
+      {
+        "name": "alice",
+        "battlefield": [
+          {
+            "card": "Island",
+            "label": "island",
+            "ready": true
+          },
+          {
+            "card": "Dutiful Knowledge Seeker",
+            "label": "seeker",
+            "ready": true
+          }
+        ],
+        "hand": [
+          {
+            "card": "Tome Scour",
+            "label": "scour"
+          }
+        ],
+        "library": [
+          {
+            "card": "Forest"
+          },
+          {
+            "card": "Progenitus",
+            "label": "progenitus"
+          },
+          {
+            "card": "Swamp"
+          },
+          {
+            "card": "Mountain"
+          },
+          {
+            "card": "Plains"
+          },
+          {
+            "card": "Goblin Piker",
+            "label": "piker"
+          }
+        ]
+      },
+      {
+        "name": "bob",
+        "library": [
+          {
+            "card": "Mountain"
+          }
+        ]
+      }
+    ]
+  },
+  "timeline": [
+    {
+      "turn": 1,
+      "step": "PrecombatMain",
+      "player": "alice",
+      "do": {
+        "Cast": {
+          "object": "$scour",
+          "targets": [
+            "$alice"
+          ],
+          "mana": [
+            "$island"
+          ]
+        }
+      }
+    },
+    {
+      "turn": 1,
+      "step": "PrecombatMain",
+      "player": "alice",
+      "do": "Pass"
+    },
+    {
+      "turn": 1,
+      "step": "PrecombatMain",
+      "player": "alice",
+      "do": {
+        "Answer": {
+          "prompt": "Shuffle",
+          "with": [
+            "Swamp",
+            "Mountain",
+            "Plains",
+            "Goblin Piker",
+            "Progenitus"
+          ]
+        }
+      }
+    }
+  ],
+  "final": [
+    {
+      "PowerToughness": {
+        "object": "$seeker",
+        "power": 2,
+        "toughness": 2
+      }
+    },
+    {
+      "View": {
+        "of": "Zone",
+        "player": "alice",
+        "zone": "Library",
+        "is": [
+          "$piker",
+          "$progenitus"
+        ]
+      }
+    }
+  ]
+}

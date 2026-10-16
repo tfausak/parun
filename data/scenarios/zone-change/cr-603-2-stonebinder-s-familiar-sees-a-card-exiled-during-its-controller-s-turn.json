@@ -1,0 +1,92 @@
+{
+  "description": "CR 603.2 Stonebinder's Familiar sees Withered Wretch exile a card during alice's turn",
+  "note": "The pair of 'not during bob's turn', which differs only in whose turn it is.",
+  "board": {
+    "active": "alice",
+    "step": "PrecombatMain",
+    "seats": [
+      {
+        "name": "alice",
+        "battlefield": [
+          {
+            "card": "Swamp",
+            "label": "swamp",
+            "ready": true
+          },
+          {
+            "card": "Withered Wretch",
+            "label": "wretch",
+            "ready": true
+          },
+          {
+            "card": "Stonebinder's Familiar",
+            "label": "familiar",
+            "ready": true
+          }
+        ],
+        "graveyard": [
+          {
+            "card": "Grizzly Bears",
+            "label": "bears"
+          }
+        ],
+        "library": [
+          {
+            "card": "Island"
+          }
+        ]
+      },
+      {
+        "name": "bob",
+        "library": [
+          {
+            "card": "Mountain"
+          }
+        ]
+      }
+    ]
+  },
+  "timeline": [
+    {
+      "turn": 1,
+      "step": "PrecombatMain",
+      "player": "alice",
+      "do": {
+        "Activate": {
+          "object": "$wretch",
+          "targets": [
+            "$bears"
+          ],
+          "mana": [
+            "$swamp"
+          ]
+        }
+      }
+    },
+    {
+      "turn": 1,
+      "step": "PrecombatMain",
+      "player": "alice",
+      "do": "Pass"
+    }
+  ],
+  "final": [
+    {
+      "Counters": {
+        "object": "$familiar",
+        "kind": {
+          "type": "PlusOnePlusOne"
+        },
+        "count": 1
+      }
+    },
+    {
+      "Count": {
+        "player": "alice",
+        "zone": "Exile",
+        "card": "Grizzly Bears",
+        "count": 1
+      }
+    }
+  ]
+}

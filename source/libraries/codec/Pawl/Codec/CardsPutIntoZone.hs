@@ -5,6 +5,7 @@ module Pawl.Codec.CardsPutIntoZone where
 import qualified Data.Set as Set
 import qualified Pawl.Codec.Filter as Filter
 import qualified Pawl.Codec.Keyword as Keyword
+import qualified Pawl.Codec.TurnScope as TurnScope
 import qualified Pawl.Codec.Zone as Zone
 import qualified Pawl.JsonCodec.Codec as Codec
 import qualified Pawl.JsonCodec.Common as Common
@@ -17,6 +18,7 @@ import qualified Pawl.Types.CardsPutIntoZone as CardsPutIntoZone
 codec :: Codec.Codec CardsPutIntoZone.CardsPutIntoZone
 codec = Fields.object $ do
   filter_ <- Fields.required "filter" (Filter.codec Keyword.codec) CardsPutIntoZone.filter
+  scope <- Fields.required "scope" TurnScope.codec CardsPutIntoZone.scope
   from <- Fields.defaulted "from" Set.empty (Common.set Zone.codec) CardsPutIntoZone.from
   to <- Fields.required "to" Zone.codec CardsPutIntoZone.to
-  pure CardsPutIntoZone.MkCardsPutIntoZone {CardsPutIntoZone.filter = filter_, CardsPutIntoZone.from = from, CardsPutIntoZone.to = to}
+  pure CardsPutIntoZone.MkCardsPutIntoZone {CardsPutIntoZone.filter = filter_, CardsPutIntoZone.scope = scope, CardsPutIntoZone.from = from, CardsPutIntoZone.to = to}

@@ -5381,7 +5381,10 @@ applyOneEffect runSubgame resolving source controller legal chosen effect = case
               -- group. The same read chooseCardFromAmong makes, off the pre-move
               -- state (CR 608.2c), so the matched half and "the rest" -- a LATER
               -- clause naming the same slot with InSlot, which finds these cards
-              -- gone (CR 400.7) -- cannot see different groups.
+              -- gone (CR 400.7) -- cannot see different groups. A card put into
+              -- the library it is in is not gone (Event.alreadyIn), so "the
+              -- rest" after one is this arm with `Not (IsBound kept)` (Voda Sea
+              -- Scavenger).
               ObjectRef.EachCardFromAmong (EachCardFromAmong.MkEachCardFromAmong slot filter_) -> do
                 members <- fromAmongMembers legal resolving chosen slot
                 gs <- State.get
