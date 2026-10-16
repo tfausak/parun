@@ -9226,10 +9226,12 @@ turnUpKeptDraws = do
 -- A card drawn while a spell is being cast or an ability activated is offered
 -- here only once that is done (CR 121.8, `turnUpKeptDraws`).
 --
--- CR 702.94b's lasting reveal -- the card stays revealed until the ability leaves
--- the stack -- is Engine.placeBorne's CR 701.20a stamp, made for every trigger
--- whose Revealed event names a card still in place; the card leaving the hand
--- ends it with the incarnation.
+-- CR 702.94b's lasting reveal is CR 701.20a's for a reveal that causes an ability
+-- to trigger: from the reveal until the next time a player would receive
+-- priority (RevealWindow.UntilPriority), and then until the ability leaves the
+-- stack (Engine.placeBorne's stamp). The card leaving the hand ends both with
+-- the incarnation. Pawl.VisibilitySpec's "CR 701.20a a miracle card is revealed
+-- while an earlier-placed trigger chooses its targets" is the proof.
 offerMiracleReveal :: PlayerId -> ObjectId -> Game ()
 offerMiracleReveal pid drawn = do
   gs <- State.get
@@ -9244,7 +9246,9 @@ offerMiracleReveal pid drawn = do
               decision <- Game.choose (Prompt.OfferedMiracleReveal decider pid drawn (Face.name face) cost)
               case decision of
                 OptionalDecision.Declines -> offer rest
-                OptionalDecision.Exercises -> reveal (RevealCause.ForMiracle cost) pid drawn
+                OptionalDecision.Exercises -> do
+                  reveal (RevealCause.ForMiracle cost) pid drawn
+                  stampReveal RevealWindow.UntilPriority drawn
       case Keyword.miracleCosts (Map.keysSet (Projection.keywordsOf drawn gs)) of
         [] -> pure ()
         costs -> do
@@ -9459,6 +9463,12 @@ look pid oid = do
 -- shorter window leaves a longer one standing.
 stampReveal :: RevealWindow.RevealWindow -> ObjectId -> Game ()
 stampReveal window oid = State.modify' (\gs -> gs {GameState.objects = Map.adjust (\obj -> obj {Object.revealed = Set.insert window (Object.revealed obj)}) oid (GameState.objects gs)})
+
+-- | CR 701.20a: end one window on every object that holds it.
+closeReveal :: RevealWindow.RevealWindow -> GameState -> GameState
+closeReveal window gs
+  | any (Set.member window . Object.revealed) (GameState.objects gs) = gs {GameState.objects = fmap (\obj -> obj {Object.revealed = Set.delete window (Object.revealed obj)}) (GameState.objects gs)}
+  | otherwise = gs
 
 -- `reveal`'s event, read off `gs` without recording it: Nothing when the object
 -- does not exist there. Pawl.Engine.Departure.objectsLeaveWith reads it on the

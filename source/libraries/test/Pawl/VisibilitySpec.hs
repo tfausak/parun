@@ -5,13 +5,17 @@
 -- and the stored-grant term pinned on its own.
 module Pawl.VisibilitySpec where
 
+import qualified Control.Monad.Trans.State.Strict as State
 import qualified Data.List as List
 import qualified Data.List.NonEmpty as NonEmpty
 import qualified Data.Map as Map
 import qualified Data.Sequence as Seq
 import qualified Data.Set as Set
 import qualified Data.Text as Text
+import qualified Pawl.Engine.Activate as Activate
+import qualified Pawl.Engine.Engine as Engine
 import qualified Pawl.Engine.Event as Event
+import qualified Pawl.Engine.Game as Game
 import qualified Pawl.Engine.Resolve.Effect as Resolve
 import qualified Pawl.Engine.Setup as Setup
 import qualified Pawl.Engine.Stack as Stack
@@ -20,17 +24,21 @@ import qualified Pawl.Registry as Registry
 import qualified Pawl.Spec as Spec
 import qualified Pawl.Support as S
 import qualified Pawl.Types.AffectedPlayers as AffectedPlayers
+import qualified Pawl.Types.Asked as Asked
 import qualified Pawl.Types.Audience as Audience
 import qualified Pawl.Types.Ballot as Ballot
 import qualified Pawl.Types.BallotChoice as BallotChoice
 import qualified Pawl.Types.CandidateCost as CandidateCost
 import qualified Pawl.Types.Cost as Cost.Type
+import qualified Pawl.Types.CounterKind as CounterKind
 import qualified Pawl.Types.Expiry as Expiry
+import qualified Pawl.Types.Face as Face
 import qualified Pawl.Types.GameEvent as GameEvent
 import qualified Pawl.Types.GameState as GameState
 import qualified Pawl.Types.Label as Label
 import qualified Pawl.Types.LoggedEvent as LoggedEvent
 import qualified Pawl.Types.ObjectId as ObjectId
+import qualified Pawl.Types.OptionalDecision as OptionalDecision
 import qualified Pawl.Types.Phase as Phase
 import qualified Pawl.Types.PlayerEffect as PlayerEffect
 import qualified Pawl.Types.PlayerRelation as PlayerRelation
@@ -43,10 +51,12 @@ import qualified Pawl.Types.Shows as Shows
 import qualified Pawl.Types.SlotName as SlotName
 import qualified Pawl.Types.Staged as Staged
 import qualified Pawl.Types.Visibility as Visibility.Type
+import qualified Pawl.Types.Zone as Zone
 
 spec :: (Monad m, Monad n) => Spec.Spec m n -> Registry.Registry m -> n ()
 spec s registry = Spec.describe s "Pawl.Engine.Visibility" $ do
   twoBeholdsSpec s registry
+  miracleBeforePlacementSpec s registry
   -- A card CR 121.8 keeps face down in hand exists only mid-cast, which no
   -- scenario check reaches, so the mark is written onto the state directly.
   Spec.it s "CR 121.8 / 708.5 a card kept face down in hand is hidden from its owner" $ do
@@ -159,6 +169,62 @@ twoBeholdsSpec s registry =
     Spec.assertEqWith s "one Exhale is left on the stack" (length (GameState.stack secondResolved)) 1
     Spec.assertEqWith s "CR 701.20a and once it resolves too, he does not" (Visibility.sees S.bob dragonId bothResolved) Visibility.Type.Obscured
     Spec.assertEqWith s "off the same board: both were cast, and both resolved" (GameState.stack bothResolved) []
+
+-- CR 701.20a: a card whose reveal causes an ability to trigger is revealed from
+-- the reveal, not from that ability's placement. Vision Skeins {1}{U} Instant,
+-- "Each player draws two cards."; Thunderous Wrath {4}{R}{R} Instant, "deals 5
+-- damage to any target. Miracle {R}"; Teferi, Hero of Dominaria's emblem,
+-- "Whenever you draw a card, exile target permanent an opponent controls."
+-- (Oracle checked against Scryfall 2026-10-16.) In alice's turn her Skeins has
+-- bob draw the Wrath as his first card of the turn, and he reveals it; alice's
+-- two emblem triggers are put on the stack ahead of his miracle trigger (CR
+-- 603.3b), so their targets are chosen while his is still waiting. The pair
+-- differs in bob's answer to the miracle offer alone.
+miracleBeforePlacementSpec :: (Monad m, Monad n) => Spec.Spec m n -> Registry.Registry m -> n ()
+miracleBeforePlacementSpec s registry = do
+  let board revealing = do
+        island <- S.printingOf s registry "Island"
+        teferi <- S.printingOf s registry "Teferi, Hero of Dominaria"
+        skeins <- S.printingOf s registry "Vision Skeins"
+        wrath <- S.printingOf s registry "Thunderous Wrath"
+        piker <- S.printingOf s registry "Goblin Piker"
+        minusEight <- case Face.activatedAbilities (S.combinedFace teferi) of
+          [_, _, ability] -> pure ability
+          _ -> Spec.assertFailure s "Teferi has three loyalty abilities"
+        let base = S.landsFor island S.alice 2 (Setup.emptyGame S.bothPlayers)
+            (teferiId, withTeferi) = S.addPermanent teferi S.alice base
+            (skeinsId, withSkeins) = S.addHandCard skeins S.alice (S.addCounter CounterKind.Loyalty 8 teferiId withTeferi)
+            (_, withPiker) = S.addPermanent piker S.bob withSkeins
+            (_, withPikers) = S.addPermanent piker S.bob withPiker
+            stocked = List.foldl' (\g owner -> snd (S.addLibraryCard piker owner g)) withPikers [S.alice, S.alice, S.alice, S.bob, S.bob, S.bob]
+            -- Added last, so on top.
+            (_, withWrath) = S.addLibraryCard wrath S.bob stocked
+            ready = withWrath {GameState.phase = Phase.PrecombatMain, GameState.activePlayer = S.alice, GameState.priority = Just S.alice}
+            isWrath g oid = fmap S.nameOf (Game.cardOf oid g) == Just (S.printingName wrath)
+            -- At each of alice's target prompts, what she sees of bob's Wrath.
+            answer :: Asked.Asked r -> State.State [Visibility.Type.Visibility] r
+            answer asked = case Asked.prompt asked of
+              Prompt.OfferedMiracleReveal {} -> pure (if revealing then OptionalDecision.Exercises else OptionalDecision.Declines)
+              p@(Prompt.ChooseTargets _ pid _ _) | pid == S.alice -> do
+                let g = Asked.game asked
+                State.modify (<> fmap (\oid -> Visibility.sees S.alice oid g) (filter (isWrath g) (Game.zoneMembers Zone.Hand S.bob g)))
+                pure (S.identityAnswer p)
+              p -> pure (S.identityAnswer p)
+            program = do
+              Activate.activateAbility S.alice teferiId minusEight
+              Stack.resolveTop
+              S.cast S.alice skeinsId
+              Stack.resolveTop
+              Engine.settleForPriority
+        pure (State.runState (Engine.runGameAsked answer ready program) [])
+  Spec.it s "CR 701.20a a miracle card is revealed while an earlier-placed trigger chooses its targets" $ do
+    ((_, after), seen) <- board True
+    Spec.assertEqWith s "CR 701.20a at both of alice's target prompts, she sees bob's revealed Wrath" seen [Visibility.Type.Visible, Visibility.Type.Visible]
+    Spec.assertEqWith s "CR 603.3b both emblem triggers went under bob's miracle trigger" (length (GameState.stack after)) 3
+  Spec.it s "CR 400.2 the same Wrath unrevealed is hidden from alice at those prompts" $ do
+    ((_, after), seen) <- board False
+    Spec.assertEqWith s "CR 400.2 at both of alice's target prompts, bob's Wrath is hidden from her" seen [Visibility.Type.Obscured, Visibility.Type.Obscured]
+    Spec.assertEqWith s "off the same board: only the two emblem triggers were put on the stack" (length (GameState.stack after)) 2
 
 -- Alice holds one card and has two in her library; bob has nothing.
 shownBoard :: (Monad m) => Spec.Spec m n -> Registry.Registry m -> m (GameState.GameState, ObjectId.ObjectId, ObjectId.ObjectId, ObjectId.ObjectId)
