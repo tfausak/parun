@@ -25,6 +25,7 @@ import qualified Pawl.Engine.Projection as Projection
 import qualified Pawl.Engine.Projection.View as Projection
 import qualified Pawl.Engine.Quantity as Quantity
 import qualified Pawl.Engine.QuantitySlot as QuantitySlot
+import qualified Pawl.Engine.SourceContext as SourceContext
 import qualified Pawl.Engine.Target as Target
 import qualified Pawl.Extra.Integer as Integer
 import qualified Pawl.Types.ActivateManaAbilities as ActivateManaAbilities
@@ -2824,16 +2825,17 @@ legalMany slot legal = Set.toList (Map.findWithDefault Set.empty slot legal)
 -- who controlled or owned an object the clause has already moved. Nobody where
 -- that reading is unanswerable: an unfilled or illegal slot is a no-op (CR
 -- 608.2b). In PlayerId order; a caller with an ordering rule imposes it.
-playerRefPlayers :: Map.Map SlotName (Set Recipient) -> ObjectId -> PlayerId -> GameState -> PlayerRef -> [PlayerId]
-playerRefPlayers legal source controller gs =
-  Maybe.fromMaybe [] . Players.named (resolutionReads legal source controller gs) gs
+playerRefPlayers :: Map.Map SlotName (Set Recipient) -> ObjectId -> ObjectId -> PlayerId -> GameState -> PlayerRef -> [PlayerId]
+playerRefPlayers legal resolving source controller gs =
+  Maybe.fromMaybe [] . Players.named (resolutionReads legal resolving source controller gs) gs
 
--- What a resolution of an ability of @source@ reads (Players.resolution), off
--- CR 608.2h's last known controller and owner, cut to the range
--- Plane.rangePerspective gives it.
-resolutionReads :: Map.Map SlotName (Set Recipient) -> ObjectId -> PlayerId -> GameState -> Players.Reads
-resolutionReads legal source controller gs =
-  Players.resolution (`Projection.controllerWithLastKnown` gs) (`Game.ownerWithLastKnown` gs) legal (Plane.rangePerspective source controller gs) controller gs
+-- What a resolution of `resolving`, an ability of @source@, reads
+-- (Players.resolution), off CR 608.2h's last known controller and owner and
+-- the choices of the abilities it came with (Game.readingAcquisition), cut to
+-- the range Plane.rangePerspective gives it.
+resolutionReads :: Map.Map SlotName (Set Recipient) -> ObjectId -> ObjectId -> PlayerId -> GameState -> Players.Reads
+resolutionReads legal resolving source controller gs =
+  Players.resolution (`Projection.controllerWithLastKnown` gs) (`Game.ownerWithLastKnown` gs) (Game.readingAcquisition resolving source gs) legal (Plane.rangePerspective source controller gs) controller gs
 
 -- CR 109.2's battlefield, narrowed by an effect-borne Filter and sorted into CR
 -- 608.2f's APNAP order. ObjectRef.EachMatching's whole answer, and the
@@ -2853,7 +2855,7 @@ resolutionReads legal source controller gs =
 -- `ControlledBy You`, read against CR 109.5's perspective.
 battlefieldMatching :: Map.Map SlotName (Set Recipient) -> ObjectId -> PlayerId -> ObjectId -> GameState -> Filter.Type.Filter Keyword.Type.Keyword -> [ObjectId]
 battlefieldMatching legal resolving controller source gs filter_ =
-  let context = effectContext gs controller source legal (slotBindings resolving gs)
+  let context = effectContext gs resolving controller source legal (slotBindings resolving gs)
       viewOf = Projection.viewsOf gs
       -- CR 603.2's player slots baked in, exactly as Pawl.Engine.Target.bakeSlots
       -- does it for a MODE's target filter and off the same map: Filter.matches
@@ -2957,7 +2959,7 @@ objectRefObjects legal resolving controller source gs ref = case ref of
   ObjectRef.EachCardInGraveyard (EachCardInGraveyard.MkEachCardInGraveyard scope filter_) ->
     -- With CR 303.4b's host filled for Animate Dead's "return enchanted
     -- creature card".
-    let context = effectContext gs controller source legal (slotBindings resolving gs)
+    let context = effectContext gs resolving controller source legal (slotBindings resolving gs)
      in concatMap (\pid -> graveyardCardsOf context gs pid filter_) (Target.zoneScopePlayers (Just controller) legal scope gs)
   -- CR 400.1's per-player zone again, but only the RESOLVING CONTROLLER's, so no
   -- scope to fold over and no APNAP order to impose. In the zone's own order,
@@ -2976,7 +2978,7 @@ objectRefObjects legal resolving controller source gs ref = case ref of
   -- so swapping in a bare Filter.contextFor exiles nothing. The sibling sweeps
   -- are written the same way for the reason spelled out at EachMatching above.
   ObjectRef.EachCardInHand (EachCardInHand.MkEachCardInHand scope mFilter) ->
-    let context = effectContext gs controller source legal (slotBindings resolving gs)
+    let context = effectContext gs resolving controller source legal (slotBindings resolving gs)
         held pid = case mFilter of
           Nothing -> Game.zoneMembers Zone.Hand pid gs
           Just filter_ -> handCardsOf context gs pid filter_
@@ -3000,7 +3002,7 @@ objectRefObjects legal resolving controller source gs ref = case ref of
      in case mFilter of
           Nothing -> inLibrary
           Just filter_ ->
-            let context = effectContext gs controller source legal (slotBindings resolving gs)
+            let context = effectContext gs resolving controller source legal (slotBindings resolving gs)
                 viewOf = Projection.viewsOf gs
              in filter (\oid -> Filter.matches context (viewOf oid) filter_) inLibrary
   -- CR 108.3's owner over every zone at once, so no APNAP order to impose:
@@ -3010,7 +3012,7 @@ objectRefObjects legal resolving controller source gs ref = case ref of
   -- copy the Filter would match. data/scenarios/static-discharge-intensifies.json
   -- proves the owner test and the reach into a hand.
   ObjectRef.EachCardYouOwn filter_ ->
-    let context = effectContext gs controller source legal (slotBindings resolving gs)
+    let context = effectContext gs resolving controller source legal (slotBindings resolving gs)
         viewOf = Projection.viewsOf gs
         owned oid obj = Object.owner obj == controller && Game.isCardObject oid gs && Filter.matches context (viewOf oid) filter_
      in Map.keys (Map.filterWithKey owned (GameState.objects gs))
@@ -3028,7 +3030,7 @@ objectRefObjects legal resolving controller source gs ref = case ref of
   -- them, then meld them into Hanweir, the Writhing Township" is that printing,
   -- and its Meld reads an InSlot.
   ObjectRef.EachCardExiledWithSource mFilter ->
-    let context = effectContext gs controller source legal (slotBindings resolving gs)
+    let context = effectContext gs resolving controller source legal (slotBindings resolving gs)
         viewOf = Projection.viewsOf gs
         stated oid = case mFilter of
           Nothing -> True
@@ -3050,7 +3052,7 @@ objectRefObjects legal resolving controller source gs ref = case ref of
   -- on the source's id alone, so a trigger whose creature has since left still
   -- finds the card; no Gatherer ruling on cipher covers that case.
   ObjectRef.EachCardEncodedOnSource mFilter ->
-    let context = effectContext gs controller source legal (slotBindings resolving gs)
+    let context = effectContext gs resolving controller source legal (slotBindings resolving gs)
         viewOf = Projection.viewsOf gs
         stated oid = case mFilter of
           Nothing -> True
@@ -3064,7 +3066,7 @@ objectRefObjects legal resolving controller source gs ref = case ref of
   -- the STACK's own order, top first (CR 405.2), not APNAP: one shared zone has an
   -- order the rules already read. Read LIVE (CR 608.2c).
   ObjectRef.EachSpell filter_ ->
-    let context = effectContext gs controller source legal (slotBindings resolving gs)
+    let context = effectContext gs resolving controller source legal (slotBindings resolving gs)
         viewOf = Projection.viewsOf gs
      in filter
           (\oid -> Game.isSpell oid gs && Filter.matches context (viewOf oid) filter_)
@@ -3075,7 +3077,7 @@ objectRefObjects legal resolving controller source gs ref = case ref of
   -- swept (CR 605.3b), and a static ability never uses the stack at all (CR
   -- 113.9). Same order, top first (CR 405.2), and read LIVE (CR 608.2c).
   ObjectRef.EachAbility filter_ ->
-    let context = effectContext gs controller source legal (slotBindings resolving gs)
+    let context = effectContext gs resolving controller source legal (slotBindings resolving gs)
         viewOf = Projection.viewsOf gs
      in filter
           (\oid -> Game.isAbility oid gs && Filter.matches context (viewOf oid) filter_)
@@ -3084,7 +3086,7 @@ objectRefObjects legal resolving controller source gs ref = case ref of
   -- a sentence naming spells AND abilities names everything the stack holds. Same
   -- order, top first (CR 405.2), and read LIVE (CR 608.2c).
   ObjectRef.EachOnStack filter_ ->
-    let context = effectContext gs controller source legal (slotBindings resolving gs)
+    let context = effectContext gs resolving controller source legal (slotBindings resolving gs)
         viewOf = Projection.viewsOf gs
      in filter
           (\oid -> Filter.matches context (viewOf oid) filter_)
@@ -3106,9 +3108,9 @@ objectRefObjects legal resolving controller source gs ref = case ref of
   -- negative, is ZERO cards (CR 107.1b): a REGRESSION FENCE, since making the
   -- fallback 5 leaves the suite green.
   ObjectRef.TopOfLibrary (TopOfLibrary.MkTopOfLibrary player count) ->
-    let named = playerRefPlayers legal source controller gs player
+    let named = playerRefPlayers legal resolving source controller gs player
         viewOf = effectViewOf source legal gs
-        context = effectContext gs controller source legal (slotBindings resolving gs)
+        context = effectContext gs resolving controller source legal (slotBindings resolving gs)
         depth = maybe 0 Integer.toNaturalSaturating (Quantity.evaluateFor viewOf context gs resolving source count)
      in concatMap
           (\pid -> List.genericTake depth (Game.zoneMembers Zone.Library pid gs))
@@ -3132,9 +3134,9 @@ objectRefObjects legal resolving controller source gs ref = case ref of
   -- (CR 608.2c) -- the context is this resolution's, so a filter reading a slot
   -- this resolution bound sees it.
   ObjectRef.TopOfLibraryUntil (TopOfLibraryUntil.MkTopOfLibraryUntil player filter_ count) ->
-    let named = playerRefPlayers legal source controller gs player
+    let named = playerRefPlayers legal resolving source controller gs player
         viewOf = effectViewOf source legal gs
-        context = effectContext gs controller source legal (slotBindings resolving gs)
+        context = effectContext gs resolving controller source legal (slotBindings resolving gs)
         wanted = maybe 0 Integer.toNaturalSaturating (Quantity.evaluateFor viewOf context gs resolving source count)
         viewOfCard = Projection.viewsOf gs
         matches oid = Filter.matches context (viewOfCard oid) filter_
@@ -3154,7 +3156,7 @@ objectRefObjects legal resolving controller source gs ref = case ref of
   -- 101.3). No Quantity to evaluate and no prompt: CR 404.2 keeps a graveyard's
   -- order out of the players' hands, so "the top card" names exactly one.
   ObjectRef.TopOfGraveyard player ->
-    let named = playerRefPlayers legal source controller gs player
+    let named = playerRefPlayers legal resolving source controller gs player
      in Maybe.mapMaybe
           (`Game.topOfGraveyard` gs)
           (filter (`elem` named) (Game.apnapOrder gs))
@@ -3276,14 +3278,14 @@ resolvingBindings resolving gs = case Game.lookupObject resolving gs of
 -- is.
 --
 -- CR 607.2d's CHOSEN values -- CR 201.4's names, CR 105.2's colour and CR 205.3's
--- creature type -- come from Pawl.Engine.Projection.sourceContext, with the
+-- creature type -- come from Pawl.Engine.Projection.framedWith, with the
 -- source's projected characteristics (CR 702.85a's cascade, CR 702.60a's
 -- ripple), and this is their only filler on the resolution side -- the search filter's and the mill tally's
 -- alike, which each overlaid the names for themselves until Petra Sphinx wanted
 -- them at an ObjectRef's own filter too, see #2992. What holds a CARD to the
 -- positions this fills is Pawl.FilterPositionLintSpec, not this function.
-effectContext :: GameState -> PlayerId -> ObjectId -> Map.Map SlotName (Set Recipient) -> Map.Map SlotName Binding.Type.Binding -> Filter.Context
-effectContext gs controller source legal bindings =
+effectContext :: GameState -> ObjectId -> PlayerId -> ObjectId -> Map.Map SlotName (Set Recipient) -> Map.Map SlotName Binding.Type.Binding -> Filter.Context
+effectContext gs resolving controller source legal bindings =
   Projection.framedBySlots
     gs
     (Binding.recipientsBySlot legal bindings)
@@ -3294,8 +3296,9 @@ effectContext gs controller source legal bindings =
     -- card its own reveal bound. CR 608.2h's last-known reader is inside
     -- choicesOf, for the source that has already left (Conjurer's Ban).
     -- Brass Herald's "creature cards of the chosen type revealed this way" is
-    -- the chosen subtype's proof (Pawl.ResolveSpec).
-    (Projection.sourceContext gs (Just controller) source)
+    -- the chosen subtype's proof (Pawl.ResolveSpec). CR 607.5: only the choices
+    -- of the abilities the resolving one came with (Game.readingAcquisition).
+    (Projection.framedWith (SourceContext.choicesOf (Game.readingAcquisition resolving source gs source) source gs) source gs (Filter.contextFor (Game.teams gs) (Just controller) (Just source)))
       { -- CR 608.2c: the numbers earlier clauses of THIS resolution stamped on
         -- slots, for the Filter.Measures operand that compares a candidate
         -- against one (AmountInSlot) -- Localized Destruction's "power equal to
@@ -3311,12 +3314,12 @@ effectContext gs controller source legal bindings =
 -- through Projection.framedBySlots with the narrowed map rather than by
 -- overriding slotObjects, so every slot-derived field (names, controllers,
 -- toughness) reads that one object too.
-effectContextNaming :: SlotName -> ObjectId -> GameState -> PlayerId -> ObjectId -> Map.Map SlotName (Set Recipient) -> Map.Map SlotName Binding.Type.Binding -> Filter.Context
-effectContextNaming slot oid gs controller source legal bindings =
+effectContextNaming :: SlotName -> ObjectId -> GameState -> ObjectId -> PlayerId -> ObjectId -> Map.Map SlotName (Set Recipient) -> Map.Map SlotName Binding.Type.Binding -> Filter.Context
+effectContextNaming slot oid gs resolving controller source legal bindings =
   Projection.framedBySlots
     gs
     (Map.insert slot (Set.singleton (Recipient.ToObject oid)) (Binding.recipientsBySlot legal bindings))
-    (effectContext gs controller source legal bindings)
+    (effectContext gs resolving controller source legal bindings)
 
 -- Every object a resolution's TARGET slots name, CR 608.2b's legal ones only:
 -- what effectViewOf below answers through CR 608.2h's last-known reader.
@@ -3376,7 +3379,7 @@ effectViewOf source legal gs oid =
 -- creature source that has left is still a creature source" proves it.
 matchingFromAmong :: Map.Map SlotName (Set Recipient) -> ObjectId -> PlayerId -> ObjectId -> GameState -> Filter.Type.Filter Keyword.Type.Keyword -> [ObjectId] -> [ObjectId]
 matchingFromAmong legal resolving controller source gs filter_ members =
-  let context = effectContext gs controller source legal (slotBindings resolving gs)
+  let context = effectContext gs resolving controller source legal (slotBindings resolving gs)
       viewOf = effectViewOf source legal gs
    in filter (maybe False (\view -> Filter.matches context view filter_) . viewOf) members
 

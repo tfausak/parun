@@ -1253,7 +1253,7 @@ contextFrom src oid gs = contextFor (Projection.controllerOf oid gs) src gs
 contextFor :: Maybe PlayerId -> RowSource -> GameState -> Filter.Context
 contextFor you row gs =
   let src = RowSource.object row
-      frame s = Projection.framedWith (Maybe.fromMaybe (SourceContext.choicesOf s gs) (RowSource.choices row)) s gs
+      frame s = Projection.framedWith (Maybe.fromMaybe (SourceContext.choicesOf (Game.acquisitionOf s gs) s gs) (RowSource.choices row)) s gs
    in maybe id frame src (Filter.contextFor (Game.teams gs) you src)
 
 -- CR 601.3a's LOOKAHEAD, asked of a prohibition that matches the spell as it
@@ -1887,6 +1887,7 @@ zoneOwners pid ref gs =
           Players.slotObject = const Nothing,
           Players.controllerOf = (`Projection.controllerOf` gs),
           Players.ownerOf = fmap Object.owner . (`Game.lookupObject` gs),
+          Players.acquisitionOf = (`Game.acquisitionOf` gs),
           Players.roster = Game.stillPlaying gs,
           Players.reaches = const True
         }

@@ -47,6 +47,7 @@ import qualified Pawl.Scenario as Scenario
 import qualified Pawl.Spec as Spec
 import Pawl.SpecialActionSpec (humiliatedBoard)
 import qualified Pawl.Support as S
+import qualified Pawl.Types.Acquisition as Acquisition
 import qualified Pawl.Types.Action as Action.Type
 import qualified Pawl.Types.ActivatedAbility as ActivatedAbility
 import qualified Pawl.Types.Activator as Activator
@@ -160,7 +161,7 @@ doomCannonSpec s registry =
           Prompt.ChooseTargets _ _ _ sets -> S.preferring ((== Just S.bob) . Recipient.playerOf) sets
           _ -> S.identityAnswer p
         fired chosen =
-          let chose = g2 {GameState.objects = Map.adjust (\o -> o {Object.chosenSubtype = Just chosen}) cannonId (GameState.objects g2)}
+          let chose = g2 {GameState.objects = Map.adjust (\o -> o {Object.chosenSubtype = Map.singleton Acquisition.Own chosen}) cannonId (GameState.objects g2)}
            in S.runPure S.identityAnswer (S.runPure aimAtBob chose (Activate.activateAbility S.alice cannonId (theAbility cannon))) Stack.resolveTop
         goblins = fired Subtype.Goblin
         giants = fired Subtype.Giant

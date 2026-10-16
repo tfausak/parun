@@ -243,7 +243,7 @@ applyModification textBoxOf viewOf src stamp gs oid unitTypes affected m pc =
         -- Blessing and Benevolent Blessing cases prove them.
         Modification.GainKeyword k ->
           let granter = Game.lookupObject src gs
-              chosen = foldMap Object.chosenColors granter
+              chosen = Maybe.fromMaybe Set.empty (Game.currentChoice Object.chosenColors src gs)
               stampedBy limit attacher = maybe False ((<= limit) . Object.timestamp) (Game.lookupObject attacher gs)
               already = foldMap (\g -> filter (stampedBy (Object.timestamp g)) (Set.toList (Game.attachments oid gs))) granter
            in pc {PC.keywords = Map.insertWith (+) (Keyword.grantedBy src chosen (controllerOf src gs) already k) 1 (PC.keywords pc)}
@@ -553,7 +553,7 @@ applyModification textBoxOf viewOf src stamp gs oid unitTypes affected m pc =
         -- whose rewrite writes the field before the permanent is on the
         -- battlefield to be projected.
         Modification.SetLandSubtypeToChosen ->
-          case Game.lookupObject src gs >>= Object.chosenSubtype of
+          case Game.currentChoice Object.chosenSubtype src gs of
             Nothing -> pc
             Just s -> setLandSubtypeTo unitTypes s pc
         -- CR 612.1/612.2: a text-changing effect swaps a subtype word in the type
@@ -672,7 +672,7 @@ applyModification textBoxOf viewOf src stamp gs oid unitTypes affected m pc =
           pc {PC.colors = Set.union cs (PC.colors pc)}
         -- CR 105.3's parenthetical, colour read off the source's entry choice.
         Modification.AddChosenColor ->
-          pc {PC.colors = Set.union (foldMap Object.chosenColors (Game.lookupObject src gs)) (PC.colors pc)}
+          pc {PC.colors = Set.union (Maybe.fromMaybe Set.empty (Game.currentChoice Object.chosenColors src gs)) (PC.colors pc)}
         -- CR 613.4d.
         Modification.SwitchPowerToughness ->
           pc {PC.power = PC.toughness pc, PC.toughness = PC.power pc}
@@ -1289,7 +1289,7 @@ sourceContext gs perspective source =
 
 -- SourceContext.framedBy plus withCharacteristicsOf: every source-derived field.
 framedBy :: ObjectId -> GameState -> Filter.Context -> Filter.Context
-framedBy source gs = framedWith (SourceContext.choicesOf source gs) source gs
+framedBy source gs = withCharacteristicsOf source gs . SourceContext.framedBy source gs
 
 -- SourceContext.framedWith plus withCharacteristicsOf: the choices supplied (a
 -- stored effect's, CR 608.2h), everything else read off the board.

@@ -2382,7 +2382,7 @@ addPlayerEffectAt source expiry scope effect controller gs =
         ActivePlayerEffect.MkActivePlayerEffect
           { ActivePlayerEffect.source = source,
             ActivePlayerEffect.controller = controller,
-            ActivePlayerEffect.choices = SourceContext.choicesOf source gs,
+            ActivePlayerEffect.choices = SourceContext.choicesOf (Game.acquisitionOf source gs) source gs,
             ActivePlayerEffect.timestamp = ts,
             ActivePlayerEffect.expiry = expiry,
             ActivePlayerEffect.scope = scope,

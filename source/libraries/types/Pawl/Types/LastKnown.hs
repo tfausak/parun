@@ -4,6 +4,7 @@ import qualified Data.Map.Strict as Map
 import qualified Data.Sequence as Seq
 import qualified Data.Set as Set
 import qualified Numeric.Natural as Natural
+import qualified Pawl.Types.Acquisition as Acquisition
 import qualified Pawl.Types.AttackTarget as AttackTarget
 import qualified Pawl.Types.CardName as CardName
 import qualified Pawl.Types.Color as Color
@@ -134,23 +135,23 @@ data LastKnown = MkLastKnown
     -- not recoverable from `characteristics` or `copiable`, since choosing a name
     -- changes nothing the projection folds. So it sits beside them for
     -- `controller`'s reason.
-    chosenNames :: !(Map.Map PlayerId.PlayerId CardName.CardName),
+    chosenNames :: !(Map.Map Acquisition.Acquisition (Map.Map PlayerId.PlayerId CardName.CardName)),
     -- | CR 614.1c / 702.174a: the players chosen for it -- the same
     -- Object.chosenPlayers the live object carried. What CR 608.2h answers for a
     -- gift trigger whose permanent has left (Pawl.CastSpec's Scrapshooter killed
     -- in response) and for Stuffy Doll's damage once the Doll is gone
     -- (Pawl.EntryReplacementSpec). Not a characteristic, for `chosenNames`'
     -- reason.
-    chosenPlayers :: !(Map.Map PlayerChoice.PlayerChoice PlayerId.PlayerId),
+    chosenPlayers :: !(Map.Map Acquisition.Acquisition (Map.Map PlayerChoice.PlayerChoice PlayerId.PlayerId)),
     -- | CR 614.1c / 607.2d: the colours chosen for it as it entered -- the same
     -- Object.chosenColors the live object carried. What CR 608.2h answers for an
     -- ability of the object asking for "the chosen color" once the object has
     -- left (Pentarch Paladin destroyed in response, Pawl.TargetSpec). Not a
     -- characteristic, for `chosenNames`' reason.
-    chosenColors :: !(Set.Set Color.Color),
+    chosenColors :: !(Map.Map Acquisition.Acquisition (Set.Set Color.Color)),
     -- | The subtype chosen for it as it entered, `chosenColors`'s sibling for
     -- Object.chosenSubtype.
-    chosenSubtype :: !(Maybe Subtype.Subtype),
+    chosenSubtype :: !(Map.Map Acquisition.Acquisition Subtype.Subtype),
     -- | CR 508.1k: was it attacking as it left -- the same membership
     -- Pawl.Engine.Filter.View's `attacking` reports, through the one classifier
     -- Game.isAttacking, read off GameState.combat before the object ceased.

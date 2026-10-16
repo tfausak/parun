@@ -49,6 +49,7 @@ import qualified Pawl.Extra.Natural as Natural
 import qualified Pawl.Registry as Registry
 import qualified Pawl.Scenario as Scenario
 import qualified Pawl.Spec as Spec
+import qualified Pawl.Types.Acquisition as Acquisition
 import qualified Pawl.Types.Action as A
 import qualified Pawl.Types.Activation as Activation
 import qualified Pawl.Types.ActivePlayerEffect as ActivePlayerEffect
@@ -834,7 +835,7 @@ withEffectFromAt src oid ts m gs =
 -- Mirage test, and this exists so a projection test does not have to cast.
 withChosenSubtype :: Subtype.Subtype -> ObjectId.ObjectId -> GameState.GameState -> GameState.GameState
 withChosenSubtype subtype oid gs =
-  let set obj = obj {Object.chosenSubtype = Just subtype}
+  let set obj = obj {Object.chosenSubtype = Map.singleton Acquisition.Own subtype}
    in gs {GameState.objects = Map.adjust set oid (GameState.objects gs)}
 
 -- withEffectAt, allocating its own fresh timestamp -- the convenience shape for
