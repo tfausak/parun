@@ -28,7 +28,7 @@ import qualified Pawl.Engine.Game as Game
 import qualified Pawl.Engine.Keyword as Keyword
 import qualified Pawl.Engine.NameWords as NameWords
 import Pawl.Engine.Projection.Rewrite (Modification, composeWordChanges, rewriteActivatedAbility, rewriteAffected, rewriteCharacteristicPT, rewriteCondition, rewriteMinted, rewriteModification, rewritePlayerStaticAbility, rewritePrintedReplacement, rewriteRuleAbilities, rewriteStaticAbility, rewriteTriggeredAbility)
-import Pawl.Engine.Projection.View (ControlGrant, abilitiesFromCharacteristics, abilityFaceOf, abilityFaceOfId, abilitySources, controlGrants, controllerOf, controllerOfGiven, copiableCharacteristics, copiableRuleAbilitiesOf, copiableSnapshotOf, copiableSpecialActionsOf, countersOf, definesColorless, definesEveryCreatureType, enchantedPlayerOf, functionsFromZone, grantedStaticAbilitiesOf, inSourceRangeGiven, staticAbilitiesOf, staticTimestampOf, viewOfCard, viewOfCharacteristics, withAnnouncedX)
+import Pawl.Engine.Projection.View (ControlGrant, abilitiesFromCharacteristics, abilityFaceOf, abilityFaceOfId, abilitySources, controlGrants, controllerOf, controllerOfGiven, copiableCharacteristics, copiableRuleAbilitiesOf, copiableSnapshotOf, copiableSpecialActionsOf, countersOf, definesColorless, definesEveryCreatureType, enchantedPlayerOf, functionsFromZone, grantedStaticAbilitiesOf, inSourceRangeGiven, lapsedGrantsOf, staticAbilitiesOf, staticTimestampOf, viewOfCard, viewOfCharacteristics, withAnnouncedX)
 import qualified Pawl.Engine.Quantity as Quantity
 import qualified Pawl.Engine.RuleAbilities as RuleAbilities.Engine
 import qualified Pawl.Engine.Saga as Saga
@@ -4554,13 +4554,16 @@ objectSnapshot oid gs =
     ( \o ->
         ObjectSnapshot.MkObjectSnapshot
           { ObjectSnapshot.object = oid,
-            ObjectSnapshot.characteristics = project oid gs,
+            ObjectSnapshot.characteristics = pc,
             ObjectSnapshot.controller = controllerOf oid gs,
             ObjectSnapshot.owner = Object.owner o,
-            ObjectSnapshot.zone = Object.zone o
+            ObjectSnapshot.zone = Object.zone o,
+            ObjectSnapshot.lapsedGrants = lapsedGrantsOf (fullView gs) pc oid gs
           }
     )
     (Game.lookupObject oid gs)
+  where
+    pc = project oid gs
 
 -- CR 613.4a layer 7a: apply the object's own characteristic-defining P/T
 -- ability, read from the PARTIAL projection (post-layer-6) so LoseAllAbilities

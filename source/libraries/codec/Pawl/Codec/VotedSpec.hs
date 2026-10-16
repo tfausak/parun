@@ -35,7 +35,8 @@ spec s = Spec.describe s "Pawl.Codec.Voted" $ do
                           ObjectSnapshot.characteristics = ProjectedCharacteristicsSpec.testCharacteristics,
                           ObjectSnapshot.controller = Just (PlayerId.MkPlayerId 0),
                           ObjectSnapshot.owner = PlayerId.MkPlayerId 0,
-                          ObjectSnapshot.zone = Zone.Battlefield
+                          ObjectSnapshot.zone = Zone.Battlefield,
+                          ObjectSnapshot.lapsedGrants = Set.empty
                         }
                 },
             Voted.audience = Set.fromList [PlayerId.MkPlayerId 0, PlayerId.MkPlayerId 1]

@@ -1510,9 +1510,11 @@ targetQuestions pid gs r =
 firstActivation :: PlayerId -> RowSource -> Filter Keyword -> Maybe (KeywordDesignator.KeywordDesignator Keyword) -> Maybe AbilityKind.AbilityKind -> Maybe (Filter Keyword) -> GameState -> TurnScope.TurnScope -> Bool
 firstActivation pid source criterion granted wantedKind aimedAt gs scope =
   let -- The zone as recorded, so CR 109.2's "a creature you control" passes over
-      -- an earlier activation that targeted a creature SPELL.
+      -- an earlier activation that targeted a creature SPELL. CR 604.2's sample
+      -- beside it is a regression fence: no criterion in data/cards/ asks whether
+      -- the object had an activated ability.
       snapshotView snapshot =
-        (Count.viewOfSnapshot False (ObjectSnapshot.controller snapshot) (Just (ObjectSnapshot.owner snapshot)) False Map.empty (ObjectSnapshot.characteristics snapshot))
+        (Count.viewOfSnapshot False (ObjectSnapshot.controller snapshot) (Just (ObjectSnapshot.owner snapshot)) False Map.empty (ObjectSnapshot.zone snapshot) (ObjectSnapshot.lapsedGrants snapshot) (ObjectSnapshot.characteristics snapshot))
           { Filter.identity = Just (ObjectSnapshot.object snapshot),
             Filter.zone = Just (ObjectSnapshot.zone snapshot)
           }

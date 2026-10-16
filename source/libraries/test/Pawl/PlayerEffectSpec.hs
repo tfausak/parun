@@ -233,7 +233,7 @@ ruleOfLawSpec s registry =
       ruleOfLaw <- S.printingOf s registry "Rule of Law"
       let (_, _, z, plain) = ruleOfLawBoard plains ruleOfLaw
           (rol, onBoard) = S.addPermanent ruleOfLaw S.alice plain
-          castOne = S.withEvents [GameEvent.SpellCast (SpellWasCast.MkSpellWasCast S.alice S.noSource S.emptyCharacteristics (Just Zone.Hand) Nothing)] onBoard
+          castOne = S.withEvents [GameEvent.SpellCast (SpellWasCast.MkSpellWasCast S.alice S.noSource S.emptyCharacteristics (Just Zone.Hand) Nothing Set.empty)] onBoard
           gone = S.runPure S.identityAnswer castOne (Event.destroy Regenerability.Regenerable [rol])
       Spec.assertBool s (PlayerEffect.prohibitsCasting S.alice anySpellId VariableChoice.Announced castOne) "prohibited while it stands"
       Spec.assertBool s (not (PlayerEffect.prohibitsCasting S.alice anySpellId VariableChoice.Announced gone)) "not prohibited once it is gone"
@@ -250,7 +250,7 @@ ruleOfLawSpec s registry =
       let base = S.landsInPlay forest 7
           (_, withRuleOfLaw) = S.addPermanent ruleOfLaw S.alice base
           (_, gs) = S.addLibraryCard panglacialWurm S.alice withRuleOfLaw
-          castOne = S.withEvents [GameEvent.SpellCast (SpellWasCast.MkSpellWasCast S.alice S.noSource S.emptyCharacteristics (Just Zone.Hand) Nothing)] gs
+          castOne = S.withEvents [GameEvent.SpellCast (SpellWasCast.MkSpellWasCast S.alice S.noSource S.emptyCharacteristics (Just Zone.Hand) Nothing Set.empty)] gs
       -- Positive control: without it, the negative assertion below
       -- could pass merely because the Wurm was never offered at all.
       Spec.assertEqWith
@@ -1111,7 +1111,7 @@ humilitySpec s registry =
           (_, withRuleOfLaw) = S.addPermanent ruleOfLaw S.alice base
           withHumility = S.withHumility humility withRuleOfLaw
           (_, withOpalescence) = S.addPermanent opalescence S.alice withHumility
-          castOne = S.withEvents [GameEvent.SpellCast (SpellWasCast.MkSpellWasCast S.alice S.noSource S.emptyCharacteristics (Just Zone.Hand) Nothing)]
+          castOne = S.withEvents [GameEvent.SpellCast (SpellWasCast.MkSpellWasCast S.alice S.noSource S.emptyCharacteristics (Just Zone.Hand) Nothing Set.empty)]
       Spec.assertBool
         s
         (PlayerEffect.prohibitsCasting S.alice anySpellId VariableChoice.Announced (castOne withHumility))
@@ -2698,7 +2698,7 @@ angelicArbiterSpec s registry =
                   }
           pure (bobBolt, carolBolt, bobPiker, S.withEvents (acted bobPiker) positioned)
         attacked piker = [GameEvent.AttackerDeclared (AttackerDeclared.MkAttackerDeclared piker S.alice (AttackTarget.OfPlayer S.alice) 1 S.bob)]
-        castOne _ = [GameEvent.SpellCast (SpellWasCast.MkSpellWasCast S.bob S.noSource S.emptyCharacteristics (Just Zone.Hand) Nothing)]
+        castOne _ = [GameEvent.SpellCast (SpellWasCast.MkSpellWasCast S.bob S.noSource S.emptyCharacteristics (Just Zone.Hand) Nothing Set.empty)]
 
     -- The condition is asked of EACH opponent with that opponent as
     -- PlayerRef.Candidate: bob attacked and carol didn't, so a reading asked

@@ -34,6 +34,7 @@ import qualified Pawl.Types.AttackerDeclared as AttackerDeclared
 import qualified Pawl.Types.Card as Card
 import qualified Pawl.Types.CardArrivedIn as CardArrivedIn
 import qualified Pawl.Types.Combat as Combat
+import qualified Pawl.Types.Condition as Condition
 import qualified Pawl.Types.Convoking as Convoking
 import qualified Pawl.Types.Count as Count.Type
 import qualified Pawl.Types.CounterKind as CounterKind
@@ -675,7 +676,7 @@ snapshotView viewOf gs shape event = case event of
   -- which it can -- CR 601.2i's trigger is checked while the spell is still
   -- there. The CHARACTERISTICS, that is: Game.ownerWithLastKnown reads the live object
   -- for the one field a snapshot cannot carry, wherever there still is one.
-  GameEvent.SpellCast (SpellWasCast.MkSpellWasCast caster spell snapshot _ _) -> case shape of
+  GameEvent.SpellCast (SpellWasCast.MkSpellWasCast caster spell snapshot _ _ lapsed) -> case shape of
     -- CR 601.2a: "that player becomes its controller", so the caster the event
     -- recorded IS the view's controller and Filter.ControlledBy You answers "a
     -- spell you've cast". The spell's id is deliberately left out of the view
@@ -700,7 +701,9 @@ snapshotView viewOf gs shape event = case event of
     -- too would count one cast twice.
     EventShape.CardArrivedIn {} -> Nothing
     where
-      castView = viewOfSnapshot False (Just caster) (Game.ownerWithLastKnown spell gs) False Map.empty snapshot
+      -- CR 113.6 / 604.2: on the stack. A regression fence: nothing in
+      -- data/cards/ asks a cast whether it had an activated ability.
+      castView = viewOfSnapshot False (Just caster) (Game.ownerWithLastKnown spell gs) False Map.empty Zone.Stack lapsed snapshot
   GameEvent.BecameMonarch _ -> Nothing
   GameEvent.TookInitiative _ -> Nothing
   -- CR 702.29c's cycling records no characteristics snapshot -- the Moved event
@@ -848,14 +851,17 @@ arrivalMatches arrival zc =
 -- events that reach here carry it differently: a Moved event stamps its own, and
 -- a CardArrived event has none of its own to stamp.
 --
--- No record only where nothing departed: Event.recordTokenEntry's
--- battlefield-to-battlefield pseudo-move for a new token, which no shape here
--- counts as a departure. The bare snapshot answers there, with no controller,
--- owner or counters to read.
+-- No record only where nothing departed: Event.recordMintedEntry's
+-- battlefield-to-battlefield entry of a token or conjured card, which no shape
+-- here counts as a departure. The bare snapshot answers there, with no
+-- controller, owner or counters to read.
+--
+-- Not implemented: CR 604.2's "as long as" clauses as they stood at that entry,
+-- so a conditional ability is always kept there (#5142).
 departedView :: ViewOf -> GameState -> ZoneChange.ZoneChange -> PC.ProjectedCharacteristics -> Filter.View
 departedView viewOf gs zc snapshot = case Map.lookup (ZoneChange.departed zc) (GameState.lastKnown gs) of
   Just lastKnown -> lastKnownView viewOf (ZoneChange.departed zc) gs lastKnown {LastKnown.characteristics = snapshot}
-  Nothing -> viewOfSnapshot (deployIn gs (ZoneChange.from zc)) Nothing Nothing (Game.isToken (ZoneChange.object zc) gs) Map.empty snapshot
+  Nothing -> viewOfSnapshot (deployIn gs (ZoneChange.from zc)) Nothing Nothing (Game.isToken (ZoneChange.object zc) gs) Map.empty (ZoneChange.from zc) Set.empty snapshot
 
 -- CR 113.7a / 608.2h: `live`'s view of an object that exists, else the view of
 -- the record filed under its id once it has left (lastKnownView), else Nothing.
@@ -905,31 +911,27 @@ orLastKnown live gs oid = Monad.join (Game.liveOrLastKnown (const (live oid)) (J
 -- at the caller's depth, as viewOfCharacteristics' own `attachedViews` does.
 --
 -- The activated abilities are the snapshot's less those whose CR 604.2 grant
--- did not function in the zone it left (AbilityZone.grantFunctionsIn) or whose
--- clause the record says had lapsed (LastKnown.lapsedGrants). The zone half is
--- a regression fence: no card asks it of an object that left anywhere but the
--- battlefield, where every grant functions.
+-- did not function in the zone it left or whose clause the record says had
+-- lapsed (LastKnown.lapsedGrants). The zone half is a regression fence here: no
+-- card asks it of an object that left anywhere but the battlefield, where every
+-- grant functions.
 --
 -- Every other object field is the snapshot's blank, which is what the live read
 -- answers for an id naming nothing too: no zone, no targets, no designations.
 lastKnownView :: ViewOf -> ObjectId -> GameState -> LastKnown.LastKnown -> Filter.View
 lastKnownView peers oid gs lastKnown =
   let deploy = deployIn gs (LastKnown.zone lastKnown)
-      characteristics = LastKnown.characteristics lastKnown
-      lapsed = maybe False (`Set.member` LastKnown.lapsedGrants lastKnown) . ActivatedAbility.condition
-      functions = AbilityZone.grantFunctionsIn (PC.delayedAbilities characteristics) (LastKnown.zone lastKnown)
-      roster = filter (\ability -> functions ability && not (lapsed ability)) (abilitiesOf (Deploy.grants deploy characteristics) characteristics)
    in ( viewOfSnapshot
           deploy
           (Just (LastKnown.controller lastKnown))
           (Just (LastKnown.owner lastKnown))
           (Game.sourceIsToken (LastKnown.source lastKnown))
           (LastKnown.counters lastKnown)
-          characteristics
+          (LastKnown.zone lastKnown)
+          (LastKnown.lapsedGrants lastKnown)
+          (LastKnown.characteristics lastKnown)
       )
         { Filter.identity = Just oid,
-          Filter.nonManaActivatedAbility = hasNonManaAbility roster,
-          Filter.hasActivatedAbility = hasAnyAbility roster characteristics,
           Filter.attacking = LastKnown.attacking lastKnown,
           Filter.blocking = LastKnown.blocking lastKnown,
           Filter.paidCosts = LastKnown.paidCosts lastKnown,
@@ -1094,8 +1096,14 @@ abilitiesOf deploys pc =
 --
 -- `deploy` says whether CR 804.2 reaches the snapshot: the game uses the option
 -- and the snapshot is of a permanent (CR 109.2).
-viewOfSnapshot :: Bool -> Maybe PlayerId -> Maybe PlayerId -> Bool -> Map.Map (CounterKind.CounterKind Keyword.Type.Keyword) Natural.Natural -> PC.ProjectedCharacteristics -> Filter.View
-viewOfSnapshot deploy mController mOwner isToken counters snapshot =
+--
+-- `zone` and `lapsed` are CR 604.2's two halves of an "as long as" grant, as
+-- they stood when the snapshot was taken: the zone the object was in
+-- (AbilityZone.grantFunctionsIn), and the clauses that did not hold there
+-- (Projection.View.lapsedGrantsOf), since the snapshot carries each granted
+-- ability with its clause unasked.
+viewOfSnapshot :: Bool -> Maybe PlayerId -> Maybe PlayerId -> Bool -> Map.Map (CounterKind.CounterKind Keyword.Type.Keyword) Natural.Natural -> Zone.Zone -> Set.Set Condition.Condition -> PC.ProjectedCharacteristics -> Filter.View
+viewOfSnapshot deploy mController mOwner isToken counters zone lapsed snapshot =
   Filter.MkView
     { -- CR 201.1 off the snapshot, which carries the set: this reads what the
       -- object's names were AT THE EVENT, which is the whole point of a snapshot.
@@ -1290,20 +1298,26 @@ viewOfSnapshot deploy mController mOwner isToken counters snapshot =
       Filter.manaSpentAmount = 0,
       -- CR 602.1 / 605.1a off the snapshot, which is what it reads for `keywords`
       -- and `power` too -- so this answers what the object HAD at the event,
-      -- through abilitiesOf, the roster every view builder reads.
-      --
-      -- Not implemented: an ability's CR 604.2 grant condition as it stood when
-      -- an event's snapshot was taken, so a conditional ability is always kept
-      -- (#5107). lastKnownView's record carries it.
-      Filter.nonManaActivatedAbility = hasNonManaAbility (abilitiesOf (Deploy.grants deploy snapshot) snapshot),
-      Filter.hasActivatedAbility = hasAnyAbility (abilitiesOf (Deploy.grants deploy snapshot) snapshot) snapshot,
+      -- through abilitiesOf, the roster every view builder reads, less what CR
+      -- 604.2 withheld (snapshotRoster).
+      Filter.nonManaActivatedAbility = hasNonManaAbility (snapshotRoster deploy zone lapsed snapshot),
+      Filter.hasActivatedAbility = hasAnyAbility (snapshotRoster deploy zone lapsed snapshot) snapshot,
       -- CR 702.184c off the snapshot, which carries the field: the marker
       -- outlives the object exactly as a keyword or a P/T does.
       Filter.grantsStationToughness = PC.grantsStationToughness snapshot
     }
 
+-- CR 604.2: a snapshot's activated abilities less those whose "as long as"
+-- grant did not function in the zone it was taken in, or whose clause had
+-- lapsed there.
+snapshotRoster :: Bool -> Zone.Zone -> Set.Set Condition.Condition -> PC.ProjectedCharacteristics -> [ActivatedAbility.ActivatedAbility Card.Card (GrantedAbility.GrantedAbility Card.Card)]
+snapshotRoster deploy zone lapsed snapshot =
+  let functions = AbilityZone.grantFunctionsIn (PC.delayedAbilities snapshot) zone
+      held = maybe True (`Set.notMember` lapsed) . ActivatedAbility.condition
+   in filter (\ability -> functions ability && held ability) (abilitiesOf (Deploy.grants deploy snapshot) snapshot)
+
 -- CR 602.1 / 605.1a: does a roster hold an activated ability that is not a
--- mana ability? Shared by viewOfSnapshot and lastKnownView.
+-- mana ability?
 hasNonManaAbility :: [ActivatedAbility.ActivatedAbility Card.Card (GrantedAbility.GrantedAbility Card.Card)] -> Bool
 hasNonManaAbility = not . all ManaAbility.isManaAbility
 
@@ -1335,9 +1349,12 @@ hasAnyAbility roster snapshot = not (null roster) || Subtype.intrinsicManaAbilit
 -- hand-kept copy of which of them the snapshot answers. A field added to
 -- viewOfSnapshot's PC-derived set and not to this record update is silently read
 -- LIVE here, and neither -Werror nor any test says so. Keep the two in step.
-overlaySnapshot :: Bool -> PC.ProjectedCharacteristics -> Filter.View -> Filter.View
-overlaySnapshot deploy snapshot live =
-  let sampled = viewOfSnapshot deploy (Filter.controller live) (Filter.owner live) (Filter.token live) (Filter.counters live) snapshot
+--
+-- `lapsed` is CR 604.2's sample beside the snapshot (viewOfSnapshot), and the
+-- zone the battlefield, the only one a permanent turns over in.
+overlaySnapshot :: Bool -> Set.Set Condition.Condition -> PC.ProjectedCharacteristics -> Filter.View -> Filter.View
+overlaySnapshot deploy lapsed snapshot live =
+  let sampled = viewOfSnapshot deploy (Filter.controller live) (Filter.owner live) (Filter.token live) (Filter.counters live) Zone.Battlefield lapsed snapshot
    in live
         { Filter.names = Filter.names sampled,
           Filter.cardTypes = Filter.cardTypes sampled,

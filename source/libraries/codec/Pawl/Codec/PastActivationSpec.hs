@@ -1,5 +1,6 @@
 module Pawl.Codec.PastActivationSpec where
 
+import qualified Data.Set as Set
 import qualified Pawl.Codec.PastActivation as PastActivation
 import qualified Pawl.Codec.ProjectedCharacteristicsSpec as ProjectedCharacteristicsSpec
 import qualified Pawl.JsonCodec.Common as Common
@@ -20,7 +21,8 @@ spec s = Spec.describe s "Pawl.Codec.PastActivation" $ do
             ObjectSnapshot.characteristics = ProjectedCharacteristicsSpec.testCharacteristics,
             ObjectSnapshot.controller = Just (PlayerId.MkPlayerId 1),
             ObjectSnapshot.owner = PlayerId.MkPlayerId 1,
-            ObjectSnapshot.zone = Zone.Stack
+            ObjectSnapshot.zone = Zone.Stack,
+            ObjectSnapshot.lapsedGrants = Set.empty
           }
       snapshotJson n = "{\"object\":" <> show (n :: Integer) <> ",\"characteristics\":" <> ProjectedCharacteristicsSpec.testCharacteristicsJson <> ",\"controller\":1,\"owner\":1,\"zone\":{\"type\":\"Stack\"}}"
   Spec.it s "a keyword ability announced at one target" $

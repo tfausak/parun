@@ -1765,13 +1765,17 @@ candidateContext gs candidate =
 -- for CR 707.1's copy token the copiable values it takes (CR 707.2). The
 -- controller is the event's player (CR 111.2), which is what lets a lot say
 -- "under your control" on the Filter axis too.
+--
+-- Not implemented: CR 604.2's "as long as" clause of a lot's granted activated
+-- ability, asked of the token it would be, so a conditional ability is always
+-- kept (#5142).
 matchesTokenLot :: Bool -> Filter.Context -> Filter.Type.Filter Keyword.Type.Keyword -> PlayerId -> TokenLot.TokenLot -> Bool
 matchesTokenLot deploy context filter_ pid lot =
   let view = case TokenLot.copy lot of
         -- No OWNER, matching the viewOfCard branch below, which has no object to
         -- read CR 108.3 off either: a lot that named one would answer two ways
         -- for the same token depending on whether it was a copy.
-        Just snapshot -> Count.viewOfSnapshot deploy (Just pid) Nothing True Map.empty snapshot
+        Just snapshot -> Count.viewOfSnapshot deploy (Just pid) Nothing True Map.empty Zone.Battlefield Set.empty snapshot
         -- CR 111.1: what the lot describes is a TOKEN whichever way its
         -- characteristics were given, so `token` is True here as it is in the
         -- copy branch above. Projection.viewOfCard answers False, describing a
