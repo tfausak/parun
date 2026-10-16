@@ -1,0 +1,100 @@
+{
+  "description": "CR 400.8 Grizzly Bears put from exile into bob's graveyard under Leyline of the Void are exiled again without leaving exile, so Synthetic Exile Tally gains alice nothing",
+  "note": "The pair of 'without Leyline of the Void, Grizzly Bears leave exile for Synthetic Exile Tally', which differs only in the Leyline. Pull from Eternity is alice's, so it goes to her graveyard: the Bears are the only card that moves.",
+  "board": {
+    "active": "alice",
+    "step": "PrecombatMain",
+    "seats": [
+      {
+        "name": "alice",
+        "battlefield": [
+          {
+            "card": "Plains",
+            "label": "plains",
+            "ready": true
+          },
+          {
+            "card": "Synthetic Exile Tally",
+            "ready": true
+          },
+          {
+            "card": "Leyline of the Void"
+          }
+        ],
+        "hand": [
+          {
+            "card": "Pull from Eternity",
+            "label": "pull"
+          }
+        ],
+        "library": [
+          {
+            "card": "Island"
+          }
+        ]
+      },
+      {
+        "name": "bob",
+        "exile": [
+          {
+            "card": "Grizzly Bears",
+            "label": "bears"
+          }
+        ],
+        "library": [
+          {
+            "card": "Mountain"
+          }
+        ]
+      }
+    ]
+  },
+  "timeline": [
+    {
+      "turn": 1,
+      "step": "PrecombatMain",
+      "player": "alice",
+      "do": {
+        "Cast": {
+          "object": "$pull",
+          "targets": [
+            "$bears"
+          ],
+          "mana": [
+            "$plains"
+          ]
+        }
+      }
+    },
+    {
+      "turn": 1,
+      "step": "PrecombatMain",
+      "player": "alice",
+      "do": "Pass"
+    }
+  ],
+  "final": [
+    {
+      "Life": {
+        "player": "alice",
+        "life": 20
+      }
+    },
+    {
+      "Count": {
+        "player": "bob",
+        "zone": "Exile",
+        "card": "Grizzly Bears",
+        "count": 1
+      }
+    },
+    {
+      "Count": {
+        "player": "bob",
+        "zone": "Graveyard",
+        "card": "Grizzly Bears",
+        "count": 0
+      }
+    }
+  ]
+}

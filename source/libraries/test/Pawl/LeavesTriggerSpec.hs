@@ -670,16 +670,21 @@ dutifulKnowledgeSeekerSpec s registry =
           Spec.assertBool s (Game.isToken tokenId merged) "CR 730.2d the merged permanent was a token"
           Spec.assertEqWith s "and the Cubwarden is in alice's library" (fmap S.nameOf (Maybe.mapMaybe (`Game.cardOf` after) (Game.zoneMembers Zone.Library S.alice after))) [S.printingName cubwarden]
         -- A library card moved into a library arrives nowhere new (Wan Shi Tong,
-        -- All-Knowing's ruling: reordering a library does not trigger).
+        -- All-Knowing's ruling: reordering a library does not trigger). CR
+        -- 400.7: it is reordered to the bottom as the object it was, and no move
+        -- is logged for the Seeker to see.
         Spec.it s "a card moved from a library into a library is not put into one" $ do
           seeker <- S.printingOf s registry "Dutiful Knowledge Seeker"
           island <- S.printingOf s registry "Island"
+          forest <- S.printingOf s registry "Forest"
           lands <- islands
           let (seekerId, withSeeker) = S.addPermanent seeker S.alice lands
-              (cardId, gs) = S.addLibraryCard island S.alice withSeeker
+              (forestId, withForest) = S.addLibraryCard forest S.alice withSeeker
+              (cardId, gs) = S.addLibraryCard island S.alice withForest
               (settled, after) = settleAfter (Event.changeZone cardId Zone.Library) gs
           Spec.assertEqWith s "the Seeker is still the printed 2/2" (Projection.powerOf seekerId after, Projection.toughnessOf seekerId after) (Just 2, Just 2)
           Spec.assertEqWith s "nothing reached the stack" (GameState.stack settled) []
+          Spec.assertEqWith s "CR 400.7 the same Island, now under the Forest" (Game.zoneMembers Zone.Library S.alice settled) [forestId, cardId]
         -- CR 603.10a's "an object that all players can see" leaving a HIDDEN
         -- zone. Caustic Exhale {B} Instant, "As an additional cost to cast this
         -- spell, behold a Dragon or pay {1}. Target creature gets -3/-3 until

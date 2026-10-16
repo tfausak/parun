@@ -103,6 +103,9 @@
                   "type": "IsToken"
                 }
               },
+              "scope": {
+                "type": "EachTurn"
+              },
               "to": {
                 "type": "Library"
               }

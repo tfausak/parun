@@ -1,0 +1,104 @@
+{
+  "description": "CR 614.6 / 400.7 Grizzly Bears exiled from alice's graveyard under Synthetic Exile Diversion settle in the graveyard they are in, so Kishla Skimmer sees no card leave it",
+  "note": "The pair of 'without Synthetic Exile Diversion', which differs only in the Diversion.",
+  "board": {
+    "active": "alice",
+    "step": "PrecombatMain",
+    "seats": [
+      {
+        "name": "alice",
+        "battlefield": [
+          {
+            "card": "Swamp",
+            "label": "swamp",
+            "ready": true
+          },
+          {
+            "card": "Withered Wretch",
+            "label": "wretch",
+            "ready": true
+          },
+          {
+            "card": "Kishla Skimmer",
+            "ready": true
+          },
+          {
+            "card": "Synthetic Exile Diversion"
+          }
+        ],
+        "graveyard": [
+          {
+            "card": "Grizzly Bears",
+            "label": "bears"
+          }
+        ],
+        "library": [
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Mountain"
+          }
+        ]
+      },
+      {
+        "name": "bob",
+        "library": [
+          {
+            "card": "Mountain"
+          }
+        ]
+      }
+    ]
+  },
+  "timeline": [
+    {
+      "turn": 1,
+      "step": "PrecombatMain",
+      "player": "alice",
+      "do": {
+        "Activate": {
+          "object": "$wretch",
+          "targets": [
+            "$bears"
+          ],
+          "mana": [
+            "$swamp"
+          ]
+        }
+      }
+    },
+    {
+      "turn": 1,
+      "step": "PrecombatMain",
+      "player": "alice",
+      "do": "Pass"
+    }
+  ],
+  "final": [
+    {
+      "Count": {
+        "player": "alice",
+        "zone": "Hand",
+        "card": "Island",
+        "count": 0
+      }
+    },
+    {
+      "Count": {
+        "player": "alice",
+        "zone": "Graveyard",
+        "card": "Grizzly Bears",
+        "count": 1
+      }
+    },
+    {
+      "Count": {
+        "player": "alice",
+        "zone": "Exile",
+        "card": "Grizzly Bears",
+        "count": 0
+      }
+    }
+  ]
+}

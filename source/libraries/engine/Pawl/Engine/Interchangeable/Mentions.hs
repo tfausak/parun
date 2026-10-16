@@ -763,7 +763,7 @@ cardPutIntoGraveyardNames asking x = case x of
 
 cardsPutIntoZoneNames :: Asking -> CardsPutIntoZone.CardsPutIntoZone -> Bool
 cardsPutIntoZoneNames asking x = case x of
-  CardsPutIntoZone.MkCardsPutIntoZone filter_ _from _to -> filterNames asking filter_
+  CardsPutIntoZone.MkCardsPutIntoZone filter_ _scope _from _to -> filterNames asking filter_
 
 castFromNames :: Asking -> CastFrom.CastFrom -> Bool
 castFromNames asking x = case x of

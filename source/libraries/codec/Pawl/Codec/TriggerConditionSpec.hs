@@ -636,8 +636,8 @@ spec s = Spec.describe s "Pawl.Codec.TriggerCondition" $ do
     Common.assertCodec
       s
       TriggerCondition.codec
-      (TriggerCondition.CardsPutIntoZone (CardsPutIntoZone.MkCardsPutIntoZone (Filter.Not Filter.IsToken) Set.empty Zone.Library))
-      " {\"type\":\"CardsPutIntoZone\",\"value\":{\"filter\":{\"type\":\"Not\",\"value\":{\"type\":\"IsToken\"}},\"to\":{\"type\":\"Library\"}}} "
+      (TriggerCondition.CardsPutIntoZone (CardsPutIntoZone.MkCardsPutIntoZone (Filter.Not Filter.IsToken) TurnScope.EachTurn Set.empty Zone.Library))
+      " {\"type\":\"CardsPutIntoZone\",\"value\":{\"filter\":{\"type\":\"Not\",\"value\":{\"type\":\"IsToken\"}},\"scope\":{\"type\":\"EachTurn\"},\"to\":{\"type\":\"Library\"}}} "
   -- CR 700.4's death read off the enchanted permanent. Nullary: the link it
   -- matches on is board state, HauntedCreatureDies' reason.
   Spec.it s "AttachedCreatureDies" $

@@ -645,9 +645,10 @@ snapshotView viewOf gs shape event = case event of
     EventShape.MovedBetween (MovedBetween.MkMovedBetween from to) ->
       if ZoneChange.from zc == from && ZoneChange.to zc == to then Just (departedView viewOf gs zc snapshot) else Nothing
     -- CR 603.6c: to another zone, so Event.recordMintedEntry's Battlefield to
-    -- Battlefield entry of a token or conjured card is not a departure.
+    -- Battlefield entry of a token or conjured card is not a departure, nor CR
+    -- 400.8's re-exiled card (Game.leftOrigin).
     EventShape.MovedFrom from ->
-      if ZoneChange.from zc == from && ZoneChange.to zc /= from then Just (departedView viewOf gs zc snapshot) else Nothing
+      if ZoneChange.from zc == from && Game.leftOrigin zc then Just (departedView viewOf gs zc snapshot) else Nothing
     -- CR 712.21e's second half, whose unit is the CARD: this event announces the
     -- move's LEADING arrival (Pawl.Engine.Event.changeZoneAttaching), so it is
     -- worth one card here and each arrival after it is worth another through the
