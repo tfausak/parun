@@ -1398,7 +1398,7 @@ ownCounts effect = case effect of
   Effect.GainControl (GainControl.MkGainControl duration _ _) -> durationCounts duration
   Effect.ExchangeControl _ -> []
   Effect.ArmDelayedTrigger arm -> foldMap triggeredAbilityCounts (Game.carriedDelayedAbility arm)
-  Effect.AffectPlayers (AffectPlayers.MkAffectPlayers duration _ _) -> durationCounts duration
+  Effect.AffectPlayers (AffectPlayers.MkAffectPlayers duration _ playerEffect) -> durationCounts duration <> playerEffectCounts playerEffect
   Effect.RequireBlock (RequireBlock.MkRequireBlock duration _ _) -> durationCounts duration
   Effect.Prohibit (Prohibit.MkProhibit _ duration _) -> durationCounts duration
   Effect.ForbidAttack (ForbidAttack.MkForbidAttack duration _ _) -> durationCounts duration
@@ -2044,10 +2044,10 @@ cardCounts card =
     <> concatMap (concatMap effectCounts . Modal.allEffects . DungeonRoom.ability) (Face.rooms card)
     <> concatMap (concatMap conditionCounts . Maybe.maybeToList . AlternativeCost.condition) (Face.alternativeCosts card)
     -- CR 604.2's "as long as" clause on the PLAYER-facing static carrier, the
-    -- staticAbilityCounts treatment of the same clause on the object-facing one.
-    -- Its PlayerEffect beside it holds no Count -- a player effect states a
-    -- literal amount or a Filter, never a fold over a zone.
+    -- staticAbilityCounts treatment of the same clause on the object-facing one,
+    -- and the PlayerEffect beside it.
     <> concatMap (concatMap conditionCounts . Maybe.maybeToList . PlayerStaticAbility.condition) (Face.playerAbilities card)
+    <> concatMap (playerEffectCounts . PlayerStaticAbility.effect) (Face.playerAbilities card)
     <> concatMap (quantityCounts . CostReduction.perEach) (Face.costReductions card)
     <> concatMap (concatMap conditionCounts . Maybe.maybeToList . CostReduction.condition) (Face.costReductions card)
     <> ruleAbilitiesCounts (Projection.ruleAbilitiesOfFace card)
@@ -3187,7 +3187,7 @@ protectionFromEach = Set.fromList (fmap (CardName.MkCardName . Text.pack) ["Irid
 -- which any subset of the domain satisfies. Council Guardian's per-colour
 -- grants, each gated on that colour's votes, are listed the same way.
 protectionListed :: Set.Set CardName.CardName
-protectionListed = Set.fromList (fmap (CardName.MkCardName . Text.pack) ["Council Guardian", "Paladin en-Vec"])
+protectionListed = Set.fromList (fmap (CardName.MkCardName . Text.pack) ["Animar, Soul of Elements", "Council Guardian", "Paladin en-Vec"])
 
 -- The qualities of each protection group a face prints: its own keywords, each
 -- static ability's grants, and every grant its resolution effects make.
@@ -4189,6 +4189,7 @@ quantityKindFilters quantity = case quantity of
   Quantity.Type.SpellsCastUsingThisTurn {} -> []
   Quantity.Type.SubgamesThisMatch -> []
   Quantity.Type.DungeonsCompleted _ -> []
+  Quantity.Type.CommanderCasts _ -> []
   Quantity.Type.CompletedDungeon {} -> []
   Quantity.Type.EnteredThisTurn -> []
   Quantity.Type.EnteredFrom _ -> []
@@ -4808,6 +4809,13 @@ triggerConditionSlots triggerCondition = case triggerCondition of
 filterSlotsReadSingly :: Filter.Type.Filter Keyword.Keyword -> [SlotName.SlotName]
 filterSlotsReadSingly = Set.toList . Filter.singularSlots
 
+-- Every Count a player effect holds: a cost change's `perEach`, the one
+-- Quantity a PlayerEffect carries.
+playerEffectCounts :: PlayerEffect.PlayerEffect -> [Count.Type.Count Quantity.Type.Quantity]
+playerEffectCounts playerEffect = case playerEffect of
+  PlayerEffect.ModifyCost modifier -> foldMap quantityCounts (CostModifier.perEach modifier)
+  _ -> []
+
 -- The Filters a DamagePattern carries -- its source half and its printed
 -- recipient half, the two axes of that type that ARE predicates over an object.
 damagePatternFilters :: DamagePattern.DamagePattern -> [Filter.Type.Filter Keyword.Keyword]
@@ -4826,10 +4834,11 @@ playerEffectFilters playerEffect = case playerEffect of
   -- apply. An addition's components carry one each ("sacrifice a SWAMP"), held
   -- to a printed component's standard through costComponentFilters. The
   -- subject's criteria are not returned: neither a rule-702 designator nor CR
-  -- 605.1a's or 606.2's classification is a Filter.
-  PlayerEffect.ModifyCost (CostModifier.MkCostModifier _ f targets perTarget _ change) ->
+  -- 605.1a's or 606.2's classification is a Filter. A `perEach` count's
+  -- Filters are read with the same Context, so they take the same framing.
+  PlayerEffect.ModifyCost (CostModifier.MkCostModifier _ f targets perTarget perEach _ change) ->
     f
-      : Maybe.maybeToList targets <> Maybe.maybeToList perTarget <> case change of
+      : Maybe.maybeToList targets <> Maybe.maybeToList perTarget <> foldMap (fmap snd . quantityFilters) perEach <> case change of
         CostChange.Add addition -> concatMap costComponentFilters (CostAddition.components addition)
         CostChange.Increase _ -> []
         CostChange.Reduce _ -> []

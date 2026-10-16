@@ -528,6 +528,7 @@ printedBoxQuantity quantity = case quantity of
   Quantity.Type.SpellsCastUsingThisTurn {} -> False
   Quantity.Type.SubgamesThisMatch -> False
   Quantity.Type.DungeonsCompleted {} -> False
+  Quantity.Type.CommanderCasts {} -> False
   Quantity.Type.CompletedDungeon {} -> False
   Quantity.Type.EnteredThisTurn -> False
   Quantity.Type.EnteredFrom {} -> False
