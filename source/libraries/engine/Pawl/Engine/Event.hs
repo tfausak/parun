@@ -5939,26 +5939,78 @@ storeEntryEffect entered gs (source, modification) =
 -- a real one. Pawl.Types.Zone's exhaustive arms rather than a wildcard, so a
 -- new zone has to answer.
 --
--- Three zones answer False and keep the move. A library is ordered (CR 401.2),
--- so a library card put on its top or bottom is reordered, and
--- Pawl.Engine.Event.Match's CardsPutIntoZone arm declines that move as no
--- arrival (Wan Shi Tong, All-Knowing's ruling). Exile and the command zone are
--- the rules' own exceptions: the object "doesn't change zones, but it becomes a
--- new object" (CR 400.8, CR 400.10).
+-- A library is a pile like the others, and an ordered one (CR 401.2): staying
+-- in it still puts the card where the instruction said (stayPut). Exile and the
+-- command zone answer False and keep the move: they are the rules' own
+-- exceptions, where the object "doesn't change zones, but it becomes a new
+-- object" (CR 400.8, CR 400.10), and Game.leftOrigin is what keeps the logged
+-- move from reading as a departure.
 alreadyIn :: ObjectId -> Object.Object -> Zone -> GameState -> Bool
 alreadyIn oid obj dest gs
   | Object.zone obj /= dest = False
   | otherwise = case dest of
       Zone.Graveyard -> heldByOwner
       Zone.Hand -> heldByOwner
+      Zone.Library -> heldByOwner
       Zone.Battlefield -> True
       Zone.Stack -> True
       Zone.Ante -> True
-      Zone.Library -> False
       Zone.Exile -> False
       Zone.Command -> False
   where
     heldByOwner = Game.pileHolderOf oid gs == Just (Object.owner obj)
+
+-- CR 400.7's answer for an object put into the zone it is already in
+-- (alreadyIn): nothing is logged, and outside a library it stays the object it
+-- was. A library card is reordered instead (Wan Shi Tong, All-Knowing's ruling:
+-- a reorder puts no card into a library) -- to the stated end, or by CR
+-- 701.24a's shuffle where a redirect said so -- and answered by its id, so a
+-- caller's CR 401.7 depth sinks it. A redirect to a stated end is noted for CR
+-- 401.4's arrangement, as changeZoneWithCause notes one that moves (Wheel of Sun
+-- and Moon over Tome Scour, Pawl.ZoneChangeSpec). Every other zone answers
+-- empty, nothing having moved.
+--
+-- CR 701.20d / 701.20e: a revealed or looked-at card that is reordered "stop[s]
+-- being revealed and become[s] a new object" -- shown by a live window or by
+-- this turn's log -- so it is re-minted where it now lies, still unlogged.
+-- data/scenarios/zone-change's Threats Undetected scenario is the proof.
+stayPut :: ObjectId -> Object.Object -> Zone -> LibraryPosition.LibraryPosition -> Bool -> Game (Seq.Seq ObjectId)
+stayPut oid obj requestedDest position shuffling = case Object.zone obj of
+  Zone.Library -> do
+    let owner = Object.owner obj
+    State.modify' (Game.insertIntoZone Zone.Library position owner oid . Game.removeFromZones oid)
+    placed <- State.state (forgetShown oid)
+    Monad.when shuffling (shuffleLibrary owner)
+    Monad.when (requestedDest /= Zone.Library && not shuffling) $
+      State.modify' (noteArrival owner (ArrivalEnd.IntoLibrary position) (Seq.singleton placed))
+    pure (Seq.singleton placed)
+  _ -> pure Seq.empty
+
+-- CR 701.20d's new object for a library card shown to a player -- revealed (a
+-- live CR 701.20a window, or a Revealed entry this turn) or looked at (CR
+-- 701.20e's Looked) -- swapped into the same place in its pile under a fresh id,
+-- through Object.newIncarnation. Not a zone change, so nothing is logged and no
+-- last known information is filed. Answers the id the card now has.
+forgetShown :: ObjectId -> GameState -> (ObjectId, GameState)
+forgetShown oid gs = case Game.lookupObject oid gs of
+  Just obj
+    | Object.zone obj == Zone.Library && shown ->
+        let (newId, gs1) = Game.freshObjectId gs
+            (ts, gs2) = Game.freshTimestamp gs1
+            fresh = (Object.newIncarnation obj) {Object.zone = Zone.Library, Object.timestamp = ts}
+         in ( newId,
+              gs2
+                { GameState.objects = Map.insert newId fresh (Map.delete oid (GameState.objects gs2)),
+                  GameState.library = fmap (fmap (\member -> if member == oid then newId else member)) (GameState.library gs2)
+                }
+            )
+    where
+      shown = not (Set.null (Object.revealed obj)) || any names (GameState.events gs)
+      names logged = case LoggedEvent.event logged of
+        GameEvent.Revealed r -> Revealed.card r == oid
+        GameEvent.Looked l -> Looked.card l == oid
+        _ -> False
+  _ -> (oid, gs)
 
 -- CR 616.1 with Lich's Mirror's ruling: objects a state-based action check
 -- moves, which the effects a replacement ran in place of a loss in that check
@@ -6034,8 +6086,10 @@ changeZoneWithCause discarded asOf batch oid requestedDest requestedPosition see
     -- object that "would move from one zone to another", which this one would
     -- not. Tempest Efreet's "put Tempest Efreet from anywhere into that
     -- player's graveyard", with nothing exchanged, is the producer, and
-    -- data/scenarios/ante's "already in the graveyard" scenario the proof.
-    Just obj | alreadyIn oid obj requestedDest gs -> pure Seq.empty
+    -- data/scenarios/ante's "already in the graveyard" scenario the proof, and
+    -- Pawl.LeavesTriggerSpec's "a card moved from a library into a library"
+    -- the library's.
+    Just obj | alreadyIn oid obj requestedDest gs -> stayPut oid obj requestedDest requestedPosition False
     Just obj -> do
       let pid = Object.owner obj
           fromZone = Object.zone obj
@@ -6113,6 +6167,15 @@ changeZoneWithCause discarded asOf batch oid requestedDest requestedPosition see
         -- 101.2 "can't" rather than a rule 614 replacement -- but Maybe is what
         -- "the event does not happen" means on this path.
         Nothing -> pure Seq.empty
+        -- CR 614.6 with CR 400.7: the modified event is what happens, and a
+        -- redirect that settles on the zone the object is already in moves it
+        -- nowhere -- alreadyIn asked of the SETTLED destination, as the arm
+        -- before the loop asks it of the requested one. Progenitus milled
+        -- ("reveal Progenitus and shuffle it into its owner's library instead")
+        -- is shuffled, never put into a library. data/scenarios/zone-change's
+        -- "Progenitus milled" scenario proves the library, and its "redirected
+        -- back into its graveyard" pair a graveyard.
+        Just settled | alreadyIn oid obj (ZoneChange.to settled) gs -> stayPut oid obj requestedDest position shuffling
         -- CR 101.2 with CR 400.4a: an effect in force states this object can't
         -- enter the battlefield, and CR 101.2 makes that "can't" beat whatever
         -- allowed or directed the entry. CR 400.4a is the rulebook's own answer
@@ -9306,6 +9369,9 @@ madnessChoice pid oid payloads = do
 -- shuffles one (see changeZoneAttaching). Pawl.Engine.Mulligan sits ABOVE this
 -- module, so the setup callers reach down to it and this one does not have to
 -- reach up.
+--
+-- Not implemented: CR 701.20d's new object for a revealed or looked-at card the
+-- shuffle reorders; it keeps its id and any reveal window (#5144).
 shuffleLibrary :: PlayerId -> Game ()
 shuffleLibrary pid = do
   gs <- State.get

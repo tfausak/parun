@@ -4453,7 +4453,7 @@ matchesTriggerGiven bindings board gs bearer you cond event = case cond of
   TriggerCondition.SelfLeavesGraveyard -> case event of
     GameEvent.Moved m ->
       ZoneChange.from (Moved.change m) == Zone.Graveyard
-        && ZoneChange.to (Moved.change m) /= Zone.Graveyard
+        && Game.leftOrigin (Moved.change m)
         && elem bearer (Moved.departures m)
     GameEvent.DamageDealt _ -> False
     GameEvent.StepBegan {} -> False
@@ -5988,7 +5988,8 @@ matchesTriggerGiven bindings board gs bearer you cond event = case cond of
   -- instead -- the origin is the zone the condition names, and the destination is
   -- the one it names or, where it names none, wherever the card went. Whose zone
   -- it left is CardLeavesZone.whose, read off the pile CR 608.2h recorded
-  -- (Event.Binding.admitsDeparture).
+  -- (Event.Binding.admitsDeparture). A card exiled from exile left nothing (CR
+  -- 400.8, Game.leftOrigin).
   --
   -- ANY of Moved.departures admits, not only ZoneChange.departed: a meld's entry
   -- is one event naming every card that left exile (CR 701.42a, CR 712.14c).
@@ -6011,6 +6012,7 @@ matchesTriggerGiven bindings board gs bearer you cond event = case cond of
      in case event of
           GameEvent.Moved m
             | ZoneChange.from (Moved.change m) == CardLeavesZone.from p,
+              Game.leftOrigin (Moved.change m),
               maybe True (== ZoneChange.to (Moved.change m)) (CardLeavesZone.to p) ->
                 Turn.turnScopeAdmits gs (CardLeavesZone.scope p) (GameState.activePlayer gs) you
                   && not (Seq.null (admitted m))
@@ -6096,9 +6098,10 @@ matchesTriggerGiven bindings board gs bearer you cond event = case cond of
   TriggerCondition.CardsLeaveZone p -> matchesTriggerGiven bindings board gs bearer you (TriggerCondition.CardLeavesZone p) event
   -- CR 603.2c's batch reading of a card put INTO a zone (Dutiful Knowledge
   -- Seeker's "one or more cards are put into a library from anywhere"), once for
-  -- the batch by `batchScoped`. "From anywhere" is still from ANOTHER zone:
-  -- reordering a library puts no card into one (Wan Shi Tong, All-Knowing's
-  -- ruling), so a move that stays in the destination is declined.
+  -- the batch by `batchScoped`. Every logged move into the destination is an
+  -- arrival: reordering a library puts no card into one (Wan Shi Tong,
+  -- All-Knowing's ruling) and logs nothing (Event.alreadyIn), while a card
+  -- exiled from exile is "a new object that has just been exiled" (CR 400.8).
   --
   -- CR 603.10a's look-back reaches the move only when the object was one all
   -- players could see: one leaving a public zone (CR 400.2), or a card leaving
@@ -6114,10 +6117,10 @@ matchesTriggerGiven bindings board gs bearer you cond event = case cond of
   -- topmost component is one, so "cards" read off the departure would reject a
   -- card component that really did arrive. Pawl.LeavesTriggerSpec's "CR 730.3 a
   -- merged token put into a library" case is the proof.
-  TriggerCondition.CardsPutIntoZone (CardsPutIntoZone.MkCardsPutIntoZone f origins destination) ->
+  TriggerCondition.CardsPutIntoZone (CardsPutIntoZone.MkCardsPutIntoZone f scope origins destination) ->
     let admits revealed zc =
           ZoneChange.to zc == destination
-            && ZoneChange.from zc /= destination
+            && Turn.turnScopeAdmits gs scope (GameState.activePlayer gs) you
             && (Set.null origins || Set.member (ZoneChange.from zc) origins)
             && (Map.member bearer board || revealed || not (Game.isHiddenZone (ZoneChange.from zc)))
             && let arrived = ZoneChange.object zc

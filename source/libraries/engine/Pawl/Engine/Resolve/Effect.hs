@@ -5377,7 +5377,9 @@ applyOneEffect runSubgame resolving source controller legal chosen effect = case
               -- group. The same read chooseCardFromAmong makes, off the pre-move
               -- state (CR 608.2c), so the matched half and "the rest" -- a LATER
               -- clause naming the same slot with InSlot, which finds these cards
-              -- gone (CR 400.7) -- cannot see different groups.
+              -- gone (CR 400.7) -- cannot see different groups. A looked-at card
+              -- put back into the library it is in is gone too, a new object by
+              -- CR 701.20d (Event.forgetShown).
               ObjectRef.EachCardFromAmong (EachCardFromAmong.MkEachCardFromAmong slot filter_) -> do
                 members <- fromAmongMembers legal resolving chosen slot
                 gs <- State.get
@@ -11498,6 +11500,9 @@ putOntoBattlefield asOf searcher tapped cardId =
 
 -- Write a whole new order back to a player's library: CR 701.22a's scry, CR
 -- 701.25a's surveil and CR 701.29a's fateseal.
+--
+-- Not implemented: CR 701.20d's new object for a revealed or looked-at card the
+-- new order moves; it keeps its id and any reveal window (#5144).
 reorderLibrary :: PlayerId -> [ObjectId] -> GameState -> GameState
 reorderLibrary pid order gs =
   gs {GameState.library = Map.insert pid (Seq.fromList order) (GameState.library gs)}

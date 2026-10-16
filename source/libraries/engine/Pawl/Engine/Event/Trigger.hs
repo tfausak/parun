@@ -1833,7 +1833,7 @@ eventTriggers events gs =
       -- and CR 400.7 mints a fresh id per move, so `graveyardCandidate` drops it.
       leftGraveyard event = case movedOf event of
         Just zc
-          | ZoneChange.from zc == Zone.Graveyard && ZoneChange.to zc /= Zone.Graveyard ->
+          | ZoneChange.from zc == Zone.Graveyard && Game.leftOrigin zc ->
               case Map.lookup (ZoneChange.departed zc) (GameState.lastKnown gs) of
                 Nothing -> Map.empty
                 Just lk ->

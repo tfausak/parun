@@ -1,0 +1,244 @@
+{
+  "description": "CR 701.20d the two revealed creature cards bob chooses for Threats Undetected are shuffled back as new objects",
+  "note": "The board of the mass-effect Threats Undetected scenario. The chosen Hill Giant and Goblin Piker were revealed by the search, so reordering them into the library re-mints them and they lose their labels; the library view names them by card.",
+  "board": {
+    "seats": [
+      {
+        "name": "alice",
+        "life": 3,
+        "battlefield": [
+          {
+            "card": "Forest",
+            "label": "forest",
+            "ready": true
+          },
+          {
+            "card": "Forest",
+            "label": "forest-2",
+            "ready": true
+          },
+          {
+            "card": "Forest",
+            "label": "forest-3",
+            "ready": true
+          }
+        ],
+        "hand": [
+          {
+            "card": "Threats Undetected",
+            "label": "threats-undetected",
+            "ready": true
+          }
+        ],
+        "library": [
+          {
+            "card": "Goblin Piker",
+            "label": "goblin-piker"
+          },
+          {
+            "card": "Goblin Chariot",
+            "label": "goblin-chariot"
+          },
+          {
+            "card": "Hill Giant",
+            "label": "hill-giant"
+          },
+          {
+            "card": "Serra Avatar",
+            "label": "serra-avatar"
+          },
+          {
+            "card": "Bird Maiden",
+            "label": "bird-maiden"
+          },
+          {
+            "card": "Swamp",
+            "label": "swamp"
+          }
+        ]
+      },
+      {
+        "name": "bob"
+      },
+      {
+        "name": "carol"
+      }
+    ],
+    "active": "alice",
+    "step": "PrecombatMain"
+  },
+  "timeline": [
+    {
+      "turn": 1,
+      "step": "PrecombatMain",
+      "player": "alice",
+      "do": {
+        "Answer": {
+          "prompt": "Search",
+          "with": [
+            "$goblin-piker",
+            "$goblin-chariot",
+            "$hill-giant",
+            "$serra-avatar",
+            "$bird-maiden"
+          ]
+        }
+      }
+    },
+    {
+      "turn": 1,
+      "step": "PrecombatMain",
+      "player": "alice",
+      "do": {
+        "Answer": {
+          "prompt": "ChooseOpponent",
+          "with": "bob"
+        }
+      }
+    },
+    {
+      "turn": 1,
+      "step": "PrecombatMain",
+      "player": "bob",
+      "do": {
+        "Answer": {
+          "prompt": "ChooseCardFromAmong",
+          "with": "$hill-giant"
+        }
+      }
+    },
+    {
+      "turn": 1,
+      "step": "PrecombatMain",
+      "player": "bob",
+      "do": {
+        "Answer": {
+          "prompt": "ChooseCardFromAmong",
+          "with": "$goblin-piker"
+        }
+      }
+    },
+    {
+      "turn": 1,
+      "step": "PrecombatMain",
+      "player": "alice",
+      "do": {
+        "Answer": {
+          "prompt": "Shuffle",
+          "with": [
+            "$goblin-piker",
+            "$goblin-chariot",
+            "$hill-giant",
+            "$serra-avatar",
+            "$bird-maiden",
+            "$swamp"
+          ]
+        }
+      }
+    },
+    {
+      "turn": 1,
+      "step": "PrecombatMain",
+      "player": "alice",
+      "do": {
+        "Answer": {
+          "prompt": "Shuffle",
+          "with": [
+            "$hill-giant",
+            "$goblin-piker"
+          ]
+        }
+      }
+    },
+    {
+      "turn": 1,
+      "step": "PrecombatMain",
+      "player": "alice",
+      "do": {
+        "Answer": {
+          "prompt": "Shuffle",
+          "with": [
+            "Hill Giant",
+            "Goblin Piker",
+            "$goblin-chariot",
+            "$serra-avatar",
+            "$bird-maiden",
+            "$swamp"
+          ]
+        }
+      }
+    },
+    {
+      "turn": 1,
+      "step": "PrecombatMain",
+      "player": "alice",
+      "do": {
+        "Cast": {
+          "object": "$threats-undetected",
+          "mana": [
+            "$forest",
+            "$forest-2",
+            "$forest-3"
+          ]
+        }
+      }
+    },
+    {
+      "turn": 1,
+      "step": "PrecombatMain",
+      "player": "alice",
+      "check": {
+        "View": {
+          "of": "Zone",
+          "player": "alice",
+          "zone": "Hand",
+          "is": [
+            "Bird Maiden"
+          ]
+        }
+      }
+    },
+    {
+      "turn": 1,
+      "step": "PrecombatMain",
+      "player": "alice",
+      "check": {
+        "Count": {
+          "player": "alice",
+          "zone": "Library",
+          "card": "Hill Giant",
+          "count": 1
+        }
+      }
+    },
+    {
+      "turn": 1,
+      "step": "PrecombatMain",
+      "player": "alice",
+      "check": {
+        "Count": {
+          "player": "alice",
+          "zone": "Library",
+          "card": "Goblin Piker",
+          "count": 1
+        }
+      }
+    }
+  ],
+  "final": [
+    {
+      "View": {
+        "of": "Zone",
+        "player": "alice",
+        "zone": "Library",
+        "is": [
+          "Hill Giant",
+          "Goblin Piker",
+          "$goblin-chariot",
+          "$serra-avatar",
+          "$swamp"
+        ]
+      }
+    }
+  ]
+}

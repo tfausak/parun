@@ -2442,7 +2442,7 @@ everyTriggerCondition =
     TriggerCondition.CardLeavesZone (CardLeavesZone.MkCardLeavesZone Filter.Type.IsSource TurnScope.EachTurn Zone.Library (Just Zone.Hand) Nothing),
     TriggerCondition.CardsLeaveZone (CardLeavesZone.MkCardLeavesZone Filter.Type.IsSource TurnScope.EachTurn Zone.Graveyard Nothing Nothing),
     TriggerCondition.CardsLeaveZone (CardLeavesZone.MkCardLeavesZone Filter.Type.IsSource TurnScope.EachTurn Zone.Exile Nothing Nothing),
-    TriggerCondition.CardsPutIntoZone (CardsPutIntoZone.MkCardsPutIntoZone Filter.Type.IsSource Set.empty Zone.Library),
+    TriggerCondition.CardsPutIntoZone (CardsPutIntoZone.MkCardsPutIntoZone Filter.Type.IsSource TurnScope.EachTurn Set.empty Zone.Library),
     TriggerCondition.SelfLeavesGraveyard,
     TriggerCondition.HauntedCreatureDies,
     TriggerCondition.SpellOrAbilityCounters PlayerRelation.You,

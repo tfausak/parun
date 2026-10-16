@@ -3,6 +3,7 @@ module Pawl.Types.CardsPutIntoZone where
 import qualified Data.Set as Set
 import qualified Pawl.Types.Filter as Filter
 import qualified Pawl.Types.Keyword as Keyword
+import qualified Pawl.Types.TurnScope as TurnScope
 import qualified Pawl.Types.Zone as Zone
 
 -- | Which arriving cards fire a "whenever one or more cards are put into [a
@@ -15,7 +16,9 @@ import qualified Pawl.Types.Zone as Zone
 -- characteristic of the card, so they come from the event.
 data CardsPutIntoZone = MkCardsPutIntoZone
   { filter :: Filter.Filter Keyword.Keyword,
-    -- | The zones it may have come from (CR 400.7); empty admits any but `to`.
+    -- | Whose turns it fires on: Stonebinder's Familiar's "during your turn".
+    scope :: TurnScope.TurnScope,
+    -- | The zones it may have come from (CR 400.7); empty admits any.
     from :: Set.Set Zone.Zone,
     -- | The zone it was put into.
     to :: Zone.Zone
