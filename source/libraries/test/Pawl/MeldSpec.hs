@@ -315,7 +315,7 @@ spec s registry = Spec.describe s "Meld" $ do
   --
   -- ONE exile: the printed "exile them" is one instruction over both permanents,
   -- written as one Pawl.Types.Effect MoveToZone over
-  -- Pawl.Types.ObjectRef's SourceAndChosenPermanent. The case below is what
+  -- Pawl.Types.ObjectRef's AllOf. The case below is what
   -- proves the batch; this one proves what comes out of it.
   Spec.it s "CR 701.42a the melding ability exiles the pair and puts one permanent onto the battlefield" $ do
     battlements <- S.printingOf s registry "Hanweir Battlements"

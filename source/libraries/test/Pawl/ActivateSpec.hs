@@ -2474,6 +2474,37 @@ graveyardEffectZoneSpec s registry = Spec.describe s "GraveyardEffectZone" $ do
         -- about the Skeleton by name rather than about the battlefield at large.
         Spec.assertEqWith s "returned tapped (CR 110.5b)" (fmap (\oid -> fmap Object.tapped (Game.lookupObject oid after)) skeletons) [Just TapState.Tapped]
       abilities -> Spec.assertEqWith s "exactly one ability to activate" (length abilities) 1
+  -- The same rule when the move names the card BESIDE another object (CR
+  -- 608.2f's one action on both). Sandman, Shifting Scoundrel {1}{G}{G}
+  -- Legendary Creature -- Sand Elemental Villain */*, "Sandman's power and
+  -- toughness are each equal to the number of lands you control. / Sandman
+  -- can't be blocked by creatures with power 2 or less. / {3}{G}{G}: Return
+  -- this card and target land card from your graveyard to the battlefield
+  -- tapped." (checked against Scryfall 2026-10-16). The pair differs only in
+  -- where Sandman is.
+  let sandmanBoard inGraveyard = do
+        sandman <- S.printingOf s registry "Sandman, Shifting Scoundrel"
+        forest <- S.printingOf s registry "Forest"
+        let (landId, g1) = S.addGraveyardCard forest S.alice (S.landsInPlay forest 5)
+            (sandmanId, g2) = (if inGraveyard then S.addGraveyardCard else S.addPermanent) sandman S.alice g1
+        pure (sandmanId, landId, g2 {GameState.priority = Just S.alice})
+  Spec.it s "CR 113.6m Sandman's ability is offered from the graveyard" $ do
+    (sandmanId, landId, gs) <- sandmanBoard True
+    Spec.assertBool s (any (isActivationOf sandmanId) (Action.legalActions S.alice gs)) "CR 113.6m the activation is a legal action"
+    case Activatable.abilitiesFor sandmanId gs of
+      [ability] -> do
+        let aiming :: Prompt.Prompt r -> r
+            aiming p = case p of
+              Prompt.ChooseTargets _ _ _ asked -> fmap (\(_, legal) -> Set.filter ((== Just landId) . Recipient.objectOf) legal) asked
+              _ -> S.identityAnswer p
+            after = S.runPure aiming gs (Activate.activateAbility S.alice sandmanId ability >> Stack.resolveTop)
+        Spec.assertEqWith s "CR 608.2f the graveyard is empty" (Game.zoneMembers Zone.Graveyard S.alice after) []
+        Spec.assertEqWith s "and Sandman and the land card are on the battlefield" (length (Game.zoneMembers Zone.Battlefield S.alice after)) 7
+      abilities -> Spec.assertEqWith s "exactly one ability from the graveyard" (length abilities) 1
+  Spec.it s "CR 113.6m Sandman on the battlefield offers the ability to nobody" $ do
+    (sandmanId, _, gs) <- sandmanBoard False
+    Spec.assertEqWith s "the projection does hand it out" (length (Projection.abilitiesOf sandmanId gs)) 1
+    Spec.assertBool s (not (any (isActivationOf sandmanId) (Action.legalActions S.alice gs))) "CR 113.6m but no activation is offered"
 
 -- alice with a Dregscape Zombie in her graveyard, a SECOND Dregscape Zombie
 -- already on the battlefield, one untapped Swamp and priority in her postcombat

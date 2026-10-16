@@ -5,6 +5,7 @@
 -- Pawl.Engine.Resolve for size; nothing here resolves anything.
 module Pawl.Engine.Resolve.Slots where
 
+import qualified Data.Containers.ListUtils as ListUtils
 import qualified Data.Foldable as Foldable
 import qualified Data.Functor.Const as Functor
 import qualified Data.List as List
@@ -544,12 +545,11 @@ objectRefSlots ref = joinTwo (joinSlots (fmap playerRefSlots (objectRefPlayerRef
   -- case is joined into, ChosenCardFromAmong's route above, which is what makes
   -- a chooser's slot a read. The CEILING is TopOfLibrary's read.
   ObjectRef.ChosenPermanents choice -> maybe Map.empty quantitySlots (HowMany.quantity (ChosenPermanents.count choice))
-  -- The arm above's answer, for its reason: neither the source nor the
-  -- candidates come out of a slot.
-  ObjectRef.SourceAndChosenPermanent _ -> Map.empty
   -- The host is read out of the slot, and the Filter over what is attached to
   -- it may name slots of its own.
   ObjectRef.AttachedToBound (AttachedToBound.MkAttachedToBound slot filter_) -> joinTwo (Map.singleton slot SlotArity.Many) (filterSlotsOf filter_)
+  -- Every ref's own reads; the PlayerRefs are objectRefPlayerRefs', which recurses.
+  ObjectRef.AllOf refs -> joinSlots (fmap objectRefSlots (NonEmpty.toList refs))
 
 -- The Quantities an ObjectRef carries: the two library walks' counts.
 -- Exhaustive, no wildcard, and every payload destructured positionally rather
@@ -607,9 +607,9 @@ objectRefQuantities ref = case ref of
   -- At most how many permanents are chosen -- Teferi, Hero of Dominaria's
   -- printed two.
   ObjectRef.ChosenPermanents choice -> Foldable.toList (HowMany.quantity (ChosenPermanents.count choice))
-  ObjectRef.SourceAndChosenPermanent _ -> []
   ObjectRef.AttachedToBound _ -> []
   ObjectRef.FromAnywhere _ -> []
+  ObjectRef.AllOf refs -> concatMap objectRefQuantities refs
 
 -- Every PlayerRef nested in one ObjectRef -- effectPlayerRefs' other half, and
 -- the seat a per-player walk counts against. objectRefSlots takes its player
@@ -661,11 +661,9 @@ objectRefPlayerRefs ref = case ref of
   -- The seat that picks off the battlefield -- Wormfang Crab's opponent, and
   -- by default CR 608.2c's resolving controller. Pinned as the arm above is.
   ObjectRef.ChosenPermanents choice -> [ChosenPermanents.chooser choice]
-  -- No chooser to report: the arm below names the source alongside ONE permanent,
-  -- and CR 608.2c's resolving controller is the only seat that picks it.
-  ObjectRef.SourceAndChosenPermanent _ -> []
   ObjectRef.AttachedToBound _ -> []
   ObjectRef.FromAnywhere _ -> []
+  ObjectRef.AllOf refs -> concatMap objectRefPlayerRefs refs
 
 -- The refs a CR 707.10 answer names: rule 707.10d's candidates, and nothing for
 -- the other two, neither of which describes anything.
@@ -2931,10 +2929,6 @@ objectRefObjects legal resolving controller source gs ref = case ref of
   -- card-data error, which Pawl.EffectLintSpec's inertChoosers rejects at load
   -- time.
   ObjectRef.ChosenPermanents _ -> []
-  -- The arm above's answer, for its reason: a CR 608.2d question, so this pure
-  -- sweep answers nothing for it -- the source half included, which no reader may
-  -- take without the counterpart the one instruction names alongside it.
-  ObjectRef.SourceAndChosenPermanent _ -> []
   -- CR 303.4b read off each object the slot holds: what is attached to it now,
   -- or -- once it has left -- CR 608.2h's record of what was attached as it left,
   -- still on the battlefield. CR 704.5n has unattached an Equipment from a
@@ -2951,6 +2945,8 @@ objectRefObjects legal resolving controller source gs ref = case ref of
   -- CR 400.7's link read back: each object the slot holds, followed through
   -- this turn's logged zone changes to the object it is now.
   ObjectRef.FromAnywhere slot -> Maybe.mapMaybe (\oid -> Game.currentIncarnation oid gs) (objectRefObjects legal resolving controller source gs (ObjectRef.InSlot slot))
+  -- Each ref's objects in the order written, an object two refs name once.
+  ObjectRef.AllOf refs -> ListUtils.nubOrd (concatMap (objectRefObjects legal resolving controller source gs) refs)
   -- EachMatching's sweep with CR 109.2's battlefield default switched off by the
   -- card's own words (CR 109.2a), over CR 400.1's per-player zone. Whose
   -- graveyards is Target.zoneScopePlayers -- either the perspective's own

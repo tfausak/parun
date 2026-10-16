@@ -1,6 +1,7 @@
 module Pawl.Codec.ObjectRefSpec where
 
 import qualified Data.Either as Either
+import qualified Data.List.NonEmpty as NonEmpty
 import qualified Data.Set as Set
 import qualified Data.Text as Text
 import qualified Pawl.Codec.ObjectRef as ObjectRef
@@ -436,16 +437,6 @@ spec s = Spec.describe s "Pawl.Codec.ObjectRef" $ do
       ObjectRef.codec
       (ObjectRef.ChosenPermanents (ChosenPermanents.MkChosenPermanents (Filter.HasCardType CardType.Land) (PlayerRef.Relative PlayerRelation.You) (HowMany.UpTo (Just (Quantity.Literal 2)))))
       " {\"type\":\"ChosenPermanents\",\"value\":{\"filter\":{\"type\":\"HasCardType\",\"value\":{\"type\":\"Land\"}},\"count\":{\"type\":\"UpTo\",\"value\":{\"type\":\"Literal\",\"value\":2}}}} "
-  -- The arm above with the source named alongside the choice, and an arm whose
-  -- payload is a bare Filter, so the same Arm.tagged risk: a missing codec arm
-  -- would compile, and a tag copied from its sibling would lose the source half
-  -- without a decode error.
-  Spec.it s "SourceAndChosenPermanent" $
-    Common.assertCodec
-      s
-      ObjectRef.codec
-      (ObjectRef.SourceAndChosenPermanent (Filter.HasCardType CardType.Creature))
-      " {\"type\":\"SourceAndChosenPermanent\",\"value\":{\"type\":\"HasCardType\",\"value\":{\"type\":\"Creature\"}}} "
   -- CR 303.4b / 608.2h: a slot and a Filter under their own tag.
   Spec.it s "AttachedToBound" $
     Common.assertCodec
@@ -456,6 +447,13 @@ spec s = Spec.describe s "Pawl.Codec.ObjectRef" $ do
   -- CR 400.7: the slot whose object is followed, a bare string.
   Spec.it s "FromAnywhere" $
     Common.assertCodec s ObjectRef.codec (ObjectRef.FromAnywhere (SlotName.MkSlotName (Text.pack "self"))) " {\"type\":\"FromAnywhere\",\"value\":\"self\"} "
+  -- CR 608.2f: the refs moved as one action, an array of refs under its own tag.
+  Spec.it s "AllOf" $
+    Common.assertCodec
+      s
+      ObjectRef.codec
+      (ObjectRef.AllOf (ObjectRef.InSlot (SlotName.MkSlotName (Text.pack "target")) NonEmpty.:| [ObjectRef.EachCardInYourHand]))
+      " {\"type\":\"AllOf\",\"value\":[{\"type\":\"InSlot\",\"value\":\"target\"},{\"type\":\"EachCardInYourHand\"}]} "
   -- Guards against a decoder that read every payload as one arm. The arms are
   -- all objects, so only the tag separates them, and a duplicated tag would
   -- collapse two of these. The two graveyard arms are the pair it really
@@ -498,7 +496,7 @@ spec s = Spec.describe s "Pawl.Codec.ObjectRef" $ do
                 Codec.encode ObjectRef.codec (ObjectRef.RandomCardInGraveyard (RandomCardInGraveyard.MkRandomCardInGraveyard (ZoneScope.Scoped (PlayerScope.Related PlayerRelation.You)) (Filter.And []) (Quantity.Literal 1))),
                 Codec.encode ObjectRef.codec (ObjectRef.RandomCardInLibrary (RandomCardInLibrary.MkRandomCardInLibrary (PlayerRef.Relative PlayerRelation.You) (Filter.And []) (Quantity.Literal 1))),
                 Codec.encode ObjectRef.codec (ObjectRef.ChosenPermanents (ChosenPermanents.MkChosenPermanents (Filter.HasCardType CardType.Creature) (PlayerRef.Relative PlayerRelation.You) HowMany.one)),
-                Codec.encode ObjectRef.codec (ObjectRef.SourceAndChosenPermanent (Filter.HasCardType CardType.Creature)),
+                Codec.encode ObjectRef.codec (ObjectRef.AllOf (ObjectRef.EachPlayer NonEmpty.:| [])),
                 Codec.encode ObjectRef.codec (ObjectRef.AttachedToBound (AttachedToBound.MkAttachedToBound (SlotName.MkSlotName (Text.pack "target")) (Filter.HasCardType CardType.Creature)))
               ]
           )
