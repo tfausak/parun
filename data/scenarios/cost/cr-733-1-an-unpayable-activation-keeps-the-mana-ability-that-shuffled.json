@@ -1,6 +1,6 @@
 {
-  "description": "CR 733.1 reversing an unpayable activation does not undo the mana ability's own shuffle",
-  "note": "The Rig's {1} is paid off the Tomb in its one mana window (a second entry goes unused and fails the run), the Tomb's shuffle answered as a reversal; the discard is answered with nothing, so the activation is refused and CR 733.1's ReverseManaAbilities is answered Exercises, as the Haskell answerer does. The Tomb untaps and the pool empties, but the shuffled order stands.",
+  "description": "CR 733.1 an unpayable activation keeps the mana ability that shuffled",
+  "note": "The Rig's {1} is paid off the Tomb in its one mana window (a second entry goes unused and fails the run), the Tomb's shuffle answered as a reversal; the discard is answered with nothing, so the activation is refused. CR 733.1's last sentence forbids reversing the Tomb's activation, which shuffled a library, so alice is not asked: the Tomb stays tapped, its mana stays in her pool, and the shuffled order stands.",
   "board": {
     "seats": [
       {
@@ -87,24 +87,36 @@
       "turn": 1,
       "step": "PrecombatMain",
       "player": "alice",
-      "do": {
-        "Answer": {
-          "prompt": "ReverseManaAbilities",
-          "with": {
-            "type": "Exercises"
-          }
-        }
-      }
-    },
-    {
-      "turn": 1,
-      "step": "PrecombatMain",
-      "player": "alice",
       "check": {
         "View": {
           "of": "ManaPool",
           "player": "alice",
-          "is": []
+          "is": [
+            {
+              "manaType": {
+                "type": "Colorless"
+              },
+              "tags": [],
+              "retention": {
+                "type": "Ordinary"
+              },
+              "restriction": null,
+              "rider": null,
+              "sourceChoices": null
+            },
+            {
+              "manaType": {
+                "type": "Colorless"
+              },
+              "tags": [],
+              "retention": {
+                "type": "Ordinary"
+              },
+              "restriction": null,
+              "rider": null,
+              "sourceChoices": null
+            }
+          ]
         }
       }
     },
@@ -115,7 +127,7 @@
       "check": {
         "Tapped": {
           "object": "$tomb",
-          "tapped": false
+          "tapped": true
         }
       }
     },

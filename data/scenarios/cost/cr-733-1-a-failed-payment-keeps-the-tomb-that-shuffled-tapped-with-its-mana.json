@@ -1,6 +1,6 @@
 {
-  "description": "CR 733.1 reversing the payment does not undo the Tomb's own shuffle",
-  "note": "The Haskell test puts bob's Goblin Piker straight onto the stack; here bob casts it off two Mountains, so his untapped mana when Mana Leak resolves is still exactly the Shuffling Tomb and one Island. bob pays CR 118.12's {3} by tapping the Shuffling Tomb alone, which cannot pay it, so the payment is reversed (CR 733.1). Its activation shuffles bob's library, answered in reverse, and bob reverses the activation: the mana and the tap go back and the shuffle stands.",
+  "description": "CR 733.1 a failed payment keeps the Tomb that shuffled tapped, with its mana",
+  "note": "The Haskell test puts bob's Goblin Piker straight onto the stack; here bob casts it off two Mountains, so his untapped mana when Mana Leak resolves is still exactly the Shuffling Tomb and one Island. bob pays CR 118.12's {3} by tapping the Shuffling Tomb alone, which cannot pay it, so the payment is reversed (CR 733.1). The Tomb's activation shuffled bob's library, answered in reverse, and CR 733.1's last sentence forbids reversing an action that caused a library to be shuffled: bob is not asked, the Tomb stays tapped, its mana stays in his pool, and the shuffle stands.",
   "board": {
     "active": "bob",
     "step": "PrecombatMain",
@@ -166,24 +166,36 @@
       "turn": 1,
       "step": "PrecombatMain",
       "player": "bob",
-      "do": {
-        "Answer": {
-          "prompt": "ReverseManaAbilities",
-          "with": {
-            "type": "Exercises"
-          }
-        }
-      }
-    },
-    {
-      "turn": 1,
-      "step": "PrecombatMain",
-      "player": "bob",
       "check": {
         "View": {
           "of": "ManaPool",
           "player": "bob",
-          "is": []
+          "is": [
+            {
+              "manaType": {
+                "type": "Colorless"
+              },
+              "tags": [],
+              "retention": {
+                "type": "Ordinary"
+              },
+              "restriction": null,
+              "rider": null,
+              "sourceChoices": null
+            },
+            {
+              "manaType": {
+                "type": "Colorless"
+              },
+              "tags": [],
+              "retention": {
+                "type": "Ordinary"
+              },
+              "restriction": null,
+              "rider": null,
+              "sourceChoices": null
+            }
+          ]
         }
       }
     },
@@ -194,7 +206,7 @@
       "check": {
         "Tapped": {
           "object": "$tomb",
-          "tapped": false
+          "tapped": true
         }
       }
     },

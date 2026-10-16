@@ -203,6 +203,8 @@ import Pawl.Types.PhaseSelector (PhaseSelector)
 import qualified Pawl.Types.PlaneswalkR as PlaneswalkR
 import qualified Pawl.Types.PlaneswalkRewrite as PlaneswalkRewrite
 import qualified Pawl.Types.Player as Player
+import qualified Pawl.Types.PlayerActed as PlayerActed
+import qualified Pawl.Types.PlayerAction as PlayerAction
 import qualified Pawl.Types.PlayerAttacksPlayer as PlayerAttacksPlayer
 import qualified Pawl.Types.PlayerAttacksWith as PlayerAttacksWith
 import qualified Pawl.Types.PlayerCounterKind as PlayerCounterKind
@@ -9257,6 +9259,7 @@ shuffleLibrary pid = do
   -- does not (Prompt.Shuffle is bare, being randomness rather than a choice),
   -- so this is defending the invariant rather than fixing a live bug.
   State.modify' (\g -> g {GameState.library = Map.insert pid (Seq.fromList shuffled) (GameState.library g)})
+  State.modify' (recordEvent (GameEvent.PlayerActed (PlayerActed.MkPlayerActed PlayerAction.Shuffle pid)))
 
 -- The single reveal funnel (CR 701.20a): `pid` shows `oid` to all players, which
 -- here means appending what was shown to the public log. No-op for an unknown id.
