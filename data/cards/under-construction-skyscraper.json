@@ -1,0 +1,414 @@
+{
+  "faces": [
+    {
+      "activatedAbilities": [
+        {
+          "cost": {
+            "components": [
+              {
+                "type": "TapThis"
+              }
+            ],
+            "mana": []
+          },
+          "modal": {
+            "modes": [
+              {
+                "clauses": [
+                  {
+                    "effects": [
+                      {
+                        "type": "AddMana",
+                        "value": {
+                          "production": {
+                            "type": "OfType",
+                            "value": {
+                              "type": "Colorless"
+                            }
+                          }
+                        }
+                      }
+                    ]
+                  }
+                ]
+              }
+            ]
+          }
+        }
+      ],
+      "keywords": [
+        {
+          "type": "LevelUp",
+          "value": {
+            "mana": [
+              {
+                "type": "Generic",
+                "value": 1
+              }
+            ]
+          }
+        }
+      ],
+      "name": "Under-Construction Skyscraper",
+      "oracleText": "Level up {1} ({1}: Put a level counter on this. Level up only as a sorcery.)\n{T}: Add {C}.\nLEVEL 1-7\n{T}: Add {W}, {B}, {G}, or {C}.\nLEVEL 8+\n{T}: Add {W}, {B}, {G}, or {C}. Scry 1.",
+      "staticAbilities": [
+        {
+          "affected": {
+            "type": "Matching",
+            "value": {
+              "type": "IsSource"
+            }
+          },
+          "condition": {
+            "type": "All",
+            "value": [
+              {
+                "type": "Compares",
+                "value": {
+                  "comparison": {
+                    "type": "AtLeast"
+                  },
+                  "measured": {
+                    "type": "ObjectCounters",
+                    "value": {
+                      "type": "Level"
+                    }
+                  },
+                  "threshold": {
+                    "type": "Literal",
+                    "value": 1
+                  }
+                }
+              },
+              {
+                "type": "Compares",
+                "value": {
+                  "comparison": {
+                    "type": "AtMost"
+                  },
+                  "measured": {
+                    "type": "ObjectCounters",
+                    "value": {
+                      "type": "Level"
+                    }
+                  },
+                  "threshold": {
+                    "type": "Literal",
+                    "value": 7
+                  }
+                }
+              }
+            ]
+          },
+          "modifications": [
+            {
+              "type": "GainAbility",
+              "value": {
+                "type": "Activated",
+                "value": {
+                  "cost": {
+                    "components": [
+                      {
+                        "type": "TapThis"
+                      }
+                    ],
+                    "mana": []
+                  },
+                  "modal": {
+                    "modes": [
+                      {
+                        "clauses": [
+                          {
+                            "effects": [
+                              {
+                                "type": "AddMana",
+                                "value": {
+                                  "production": {
+                                    "type": "OfType",
+                                    "value": {
+                                      "type": "Colored",
+                                      "value": {
+                                        "type": "White"
+                                      }
+                                    }
+                                  }
+                                }
+                              }
+                            ]
+                          }
+                        ]
+                      },
+                      {
+                        "clauses": [
+                          {
+                            "effects": [
+                              {
+                                "type": "AddMana",
+                                "value": {
+                                  "production": {
+                                    "type": "OfType",
+                                    "value": {
+                                      "type": "Colored",
+                                      "value": {
+                                        "type": "Black"
+                                      }
+                                    }
+                                  }
+                                }
+                              }
+                            ]
+                          }
+                        ]
+                      },
+                      {
+                        "clauses": [
+                          {
+                            "effects": [
+                              {
+                                "type": "AddMana",
+                                "value": {
+                                  "production": {
+                                    "type": "OfType",
+                                    "value": {
+                                      "type": "Colored",
+                                      "value": {
+                                        "type": "Green"
+                                      }
+                                    }
+                                  }
+                                }
+                              }
+                            ]
+                          }
+                        ]
+                      },
+                      {
+                        "clauses": [
+                          {
+                            "effects": [
+                              {
+                                "type": "AddMana",
+                                "value": {
+                                  "production": {
+                                    "type": "OfType",
+                                    "value": {
+                                      "type": "Colorless"
+                                    }
+                                  }
+                                }
+                              }
+                            ]
+                          }
+                        ]
+                      }
+                    ]
+                  }
+                }
+              }
+            }
+          ]
+        },
+        {
+          "affected": {
+            "type": "Matching",
+            "value": {
+              "type": "IsSource"
+            }
+          },
+          "condition": {
+            "type": "Compares",
+            "value": {
+              "comparison": {
+                "type": "AtLeast"
+              },
+              "measured": {
+                "type": "ObjectCounters",
+                "value": {
+                  "type": "Level"
+                }
+              },
+              "threshold": {
+                "type": "Literal",
+                "value": 8
+              }
+            }
+          },
+          "modifications": [
+            {
+              "type": "GainAbility",
+              "value": {
+                "type": "Activated",
+                "value": {
+                  "cost": {
+                    "components": [
+                      {
+                        "type": "TapThis"
+                      }
+                    ],
+                    "mana": []
+                  },
+                  "modal": {
+                    "modes": [
+                      {
+                        "clauses": [
+                          {
+                            "effects": [
+                              {
+                                "type": "AddMana",
+                                "value": {
+                                  "production": {
+                                    "type": "OfType",
+                                    "value": {
+                                      "type": "Colored",
+                                      "value": {
+                                        "type": "White"
+                                      }
+                                    }
+                                  }
+                                }
+                              },
+                              {
+                                "type": "Scry",
+                                "value": {
+                                  "player": {
+                                    "type": "Relative",
+                                    "value": {
+                                      "type": "You"
+                                    }
+                                  },
+                                  "quantity": {
+                                    "type": "Literal",
+                                    "value": 1
+                                  }
+                                }
+                              }
+                            ]
+                          }
+                        ]
+                      },
+                      {
+                        "clauses": [
+                          {
+                            "effects": [
+                              {
+                                "type": "AddMana",
+                                "value": {
+                                  "production": {
+                                    "type": "OfType",
+                                    "value": {
+                                      "type": "Colored",
+                                      "value": {
+                                        "type": "Black"
+                                      }
+                                    }
+                                  }
+                                }
+                              },
+                              {
+                                "type": "Scry",
+                                "value": {
+                                  "player": {
+                                    "type": "Relative",
+                                    "value": {
+                                      "type": "You"
+                                    }
+                                  },
+                                  "quantity": {
+                                    "type": "Literal",
+                                    "value": 1
+                                  }
+                                }
+                              }
+                            ]
+                          }
+                        ]
+                      },
+                      {
+                        "clauses": [
+                          {
+                            "effects": [
+                              {
+                                "type": "AddMana",
+                                "value": {
+                                  "production": {
+                                    "type": "OfType",
+                                    "value": {
+                                      "type": "Colored",
+                                      "value": {
+                                        "type": "Green"
+                                      }
+                                    }
+                                  }
+                                }
+                              },
+                              {
+                                "type": "Scry",
+                                "value": {
+                                  "player": {
+                                    "type": "Relative",
+                                    "value": {
+                                      "type": "You"
+                                    }
+                                  },
+                                  "quantity": {
+                                    "type": "Literal",
+                                    "value": 1
+                                  }
+                                }
+                              }
+                            ]
+                          }
+                        ]
+                      },
+                      {
+                        "clauses": [
+                          {
+                            "effects": [
+                              {
+                                "type": "AddMana",
+                                "value": {
+                                  "production": {
+                                    "type": "OfType",
+                                    "value": {
+                                      "type": "Colorless"
+                                    }
+                                  }
+                                }
+                              },
+                              {
+                                "type": "Scry",
+                                "value": {
+                                  "player": {
+                                    "type": "Relative",
+                                    "value": {
+                                      "type": "You"
+                                    }
+                                  },
+                                  "quantity": {
+                                    "type": "Literal",
+                                    "value": 1
+                                  }
+                                }
+                              }
+                            ]
+                          }
+                        ]
+                      }
+                    ]
+                  }
+                }
+              }
+            }
+          ]
+        }
+      ],
+      "typeLine": {
+        "types": [
+          {
+            "type": "Land"
+          }
+        ]
+      }
+    }
+  ]
+}

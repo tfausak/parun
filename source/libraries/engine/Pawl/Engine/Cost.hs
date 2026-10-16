@@ -116,6 +116,7 @@ import qualified Pawl.Types.Hybrid as Hybrid
 import qualified Pawl.Types.HybridPhyrexian as HybridPhyrexian
 import qualified Pawl.Types.Keyword as Keyword.Type
 import qualified Pawl.Types.LoggedEvent as LoggedEvent
+import qualified Pawl.Types.Looked as Looked
 import qualified Pawl.Types.LoyaltyKind as LoyaltyKind
 import qualified Pawl.Types.Mana as Mana.Type
 import qualified Pawl.Types.ManaAbilityPerformer as ManaAbilityPerformer
@@ -4347,8 +4348,9 @@ criteriaOf component = case component of
 -- and with the live GameState.nextTimestamp the stamp was drawn from.
 --
 -- Every restore goes through `keepingLibraryActions` rather than a bare
--- State.put, CR 733.1's last sentence's reason: a shuffle or a reveal one of the
--- reversed abilities performed stands even though the rest of it goes back. The
+-- State.put, CR 733.1's last sentence's reason: a shuffle, a reveal or a look
+-- (CR 701.20e) one of the reversed abilities performed stands even though the
+-- rest of it goes back. The
 -- no-activation arm reads the LIVE state rather than a window's `closed`, which
 -- is what the callers it took this restore over from did.
 --
@@ -4520,11 +4522,11 @@ composeReversal before windows keeps = case NonEmpty.nonEmpty windows of
                 starts = before : fmap (\(_, closed, _) -> closed) keptRuns
              in foldr (\(start, (opened, _, _)) rest -> rest >>= Reversal.withoutAnnouncement start opened) (Just tailState) (zip starts keptRuns)
 
--- CR 733.1's last sentence: shuffling a library or revealing cards from one is
--- never reversed, even where the mana ability that did it is. Restoring
--- `snapshot` with those two things taken from `since` (the state as the mana
--- window closed, still carrying them) keeps every OTHER write reversed while
--- these two stand.
+-- CR 733.1's last sentence: shuffling a library or revealing cards from one --
+-- or looking at them, which CR 701.20e has follow a reveal's rules -- is never
+-- reversed, even where the mana ability that did it is. Restoring `snapshot`
+-- with those things taken from `since` (the state as the mana window closed,
+-- still carrying them) keeps every OTHER write reversed while they stand.
 --
 -- A library takes `since`'s ORDER, with whatever `snapshot` held that `since`
 -- lacks put back at the index it held (Pawl.Engine.Reversal.restoredOrder). The
@@ -4537,28 +4539,24 @@ composeReversal before windows keeps = case NonEmpty.nonEmpty windows of
 -- that nothing can refuse after (`pay`), and a combat toll whose LATER tag
 -- refuses keeps it by composition instead (`unreversibleStretch`).
 
--- `events` keeps only the Revealed entries `since` gained past `snapshot`'s own
--- length whose card is in a library on BOTH sides, not the whole suffix: a tap
--- or a mana addition the window performed is exactly what the surrounding
--- reversal DOES undo, and a card revealed from a hand (CR 602.2a's activation
+-- `events` keeps only the reveals and looks (`shownCard`) `since` gained past
+-- `snapshot`'s own length whose card is in a library on BOTH sides, not the
+-- whole suffix: a tap or a mana addition the window performed is exactly what
+-- the surrounding reversal DOES undo, and a card revealed from a hand (CR 602.2a's activation
 -- reveal, logged inside Pawl.Engine.Activate's announcement) is not what the
 -- rule's "revealed from a library" protects. `nextEventGroup` rides at
 -- `since`'s value, since a carried-over entry may already hold a group
 -- `snapshot`'s own counter would otherwise repeat -- GameState.events' groups
--- are non-decreasing along the log.
---
--- Not implemented: a GameEvent.Looked of a library card is dropped, here and by
--- revealsLibraryCard, though CR 701.20e has a look follow a reveal's rules
--- (#5010).
+-- are non-decreasing along the log. The scenario
+-- cost/cr-733-1-reversing-the-skyscraper-does-not-undo-its-scry-s-look is the
+-- proof that a look stands.
 keepingLibraryActions :: GameState -> GameState -> GameState
 keepingLibraryActions since snapshot =
   let keep pid held = case Map.lookup pid (GameState.library since) of
         Just reordered -> Seq.fromList (Reversal.restoredOrder (Foldable.toList held) (Foldable.toList reordered))
         Nothing -> held
       inLibraryOf gs oid = any (Foldable.elem oid) (GameState.library gs)
-      revealedFromLibrary logged = case LoggedEvent.event logged of
-        GameEvent.Revealed revealed -> inLibraryOf snapshot (Revealed.card revealed) && inLibraryOf since (Revealed.card revealed)
-        _ -> False
+      revealedFromLibrary logged = any (\oid -> inLibraryOf snapshot oid && inLibraryOf since oid) (shownCard logged)
    in snapshot
         { GameState.library = Map.mapWithKey keep (GameState.library snapshot),
           GameState.events = GameState.events snapshot <> Seq.filter revealedFromLibrary (Seq.drop (Seq.length (GameState.events snapshot)) (GameState.events since)),
@@ -5124,16 +5122,23 @@ libraryMembershipChanged opened closed =
   let held gs = Set.fromList (foldMap Foldable.toList (GameState.library gs))
    in held opened /= held closed
 
--- CR 733.1: did the log gain a reveal of a card that is in a library, its
--- "caused cards from a library to be revealed"? `keepingLibraryActions`' test,
--- read over one stretch.
+-- CR 733.1: did the log gain a reveal or a look (`shownCard`) of a card that is
+-- in a library, its "caused cards from a library to be revealed"?
+-- `keepingLibraryActions`' test, read over one stretch. Its look half is a
+-- regression fence: no toll `payTagged` lists looks at a card, so `shownCard`'s
+-- proof runs through keepingLibraryActions instead.
 revealsLibraryCard :: GameState -> GameState -> Bool
 revealsLibraryCard opened closed =
   let inLibrary oid = any (Foldable.elem oid) (GameState.library closed)
-      fromLibrary logged = case LoggedEvent.event logged of
-        GameEvent.Revealed revealed -> inLibrary (Revealed.card revealed)
-        _ -> False
-   in any fromLibrary (Seq.drop (Seq.length (GameState.events opened)) (GameState.events closed))
+   in any (any inLibrary . shownCard) (Seq.drop (Seq.length (GameState.events opened)) (GameState.events closed))
+
+-- The card a logged reveal (CR 701.20a) or look showed: CR 701.20e has a look
+-- follow a reveal's rules, so CR 733.1's last sentence keeps both standing.
+shownCard :: LoggedEvent.LoggedEvent -> Maybe ObjectId
+shownCard logged = case LoggedEvent.event logged of
+  GameEvent.Revealed revealed -> Just (Revealed.card revealed)
+  GameEvent.Looked looked -> Just (Looked.card looked)
+  _ -> Nothing
 
 -- CR 601.2h: the parts are paid "in any order", and the ORDER IS THE PAYER'S.
 -- Observable: Jarad, Golgari Lich Lord's "Sacrifice a Swamp and a Forest" beside
