@@ -8395,7 +8395,8 @@ recordMintedEntry :: ObjectId -> Game ()
 recordMintedEntry newId = do
   placed <- State.get
   let snapshot = Projection.project newId placed
-  -- Seen by all: a minted object arrives on the battlefield from no zone at all.
+  -- Moved.revealed is read by no look-back here: none reaches a battlefield
+  -- destination (Event.Trigger.looksBack), so the public origin answers.
   State.modify' (recordEvent (GameEvent.Moved ((Moved.moved (ZoneChange.MkZoneChange newId newId Zone.Battlefield Zone.Battlefield) snapshot) {Moved.revealed = True})))
 
 -- CR 701.42a: meld these cards -- "put them onto the battlefield with their back
@@ -8534,8 +8535,9 @@ meld controller victims resultCard = do
       -- the count.
       placed <- State.get
       let snapshot = Projection.project newId placed
-          -- Seen by all when the cards left a public zone (CR 400.2), where the
-          -- meld pair is exiled face up first.
+          -- Moved.revealed is read by no look-back here: none reaches a
+          -- battlefield destination (Event.Trigger.looksBack), so the origin's
+          -- zone answers.
           entry = (Moved.moved (ZoneChange.MkZoneChange (fst (NonEmpty.head melding)) newId origin Zone.Battlefield) snapshot) {Moved.otherDepartures = Seq.fromList (fmap fst (NonEmpty.tail melding)), Moved.revealed = not (Game.isHiddenZone origin)}
       State.modify' (recordEvent (GameEvent.Moved entry))
       pure (Just newId)

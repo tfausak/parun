@@ -55,13 +55,17 @@ import qualified Pawl.Types.DamageEvent as DamageEvent
 import qualified Pawl.Types.Designation as Designation
 import qualified Pawl.Types.Effect as Effect
 import qualified Pawl.Types.EndingStep as EndingStep
+import qualified Pawl.Types.EntryRiders as EntryRiders
 import qualified Pawl.Types.Face as Face
+import qualified Pawl.Types.FaceDownReason as FaceDownReason
+import qualified Pawl.Types.FaceDownState as FaceDownState
 import qualified Pawl.Types.Filter as Filter.Type
 import qualified Pawl.Types.GameEvent as GameEvent
 import qualified Pawl.Types.GameState as GameState
 import qualified Pawl.Types.GrantedAbility as GrantedAbility
 import qualified Pawl.Types.Keyword as Keyword.Type
 import qualified Pawl.Types.LastKnown as LastKnown
+import qualified Pawl.Types.LibraryPosition as LibraryPosition
 import qualified Pawl.Types.LoggedEvent as LoggedEvent
 import qualified Pawl.Types.ManaCost as ManaCost
 import qualified Pawl.Types.ManaSymbol as ManaSymbol
@@ -820,6 +824,25 @@ dutifulKnowledgeSeekerSpec s registry =
           Spec.assertEqWith s "CR 400.2 the look-back missed the face-down Raven: no Spirit tokens" (length (S.tokensOf after)) 0
           Spec.assertEqWith s "CR 702.143a bob could not see the foretold Raven" seen [Visibility.Type.Obscured]
           Spec.assertEqWith s "off the same spell: the Raven is in alice's library" libraryNames [raven]
+        -- CR 708.9: a face-down PERMANENT is public too, revealed as it leaves.
+        -- bob's Island card is manifested face down from his library; it goes
+        -- into his library in the same event as the Seeker is exiled, so only
+        -- the look-back can see it, and only CR 708.9's reveal shows it to alice.
+        Spec.it s "CR 708.9 an exiled Seeker looks back at a face-down permanent revealed on its way into a library" $ do
+          seeker <- S.printingOf s registry "Dutiful Knowledge Seeker"
+          island <- S.printingOf s registry "Island"
+          lands <- islands
+          let (seekerId, withSeeker) = S.addPermanent seeker S.alice lands
+              (manifestedId, withManifested) = S.addLibraryCard island S.bob withSeeker
+              riders = EntryRiders.defaultValue {EntryRiders.faceDown = Just (FaceDownState.defaultFor FaceDownReason.Manifested)}
+              (entered, gs) = Engine.runGamePure S.identityAnswer withManifested (Event.changeZoneEntering manifestedId Zone.Battlefield LibraryPosition.defaultValue riders (Just S.bob))
+          case Foldable.toList entered of
+            [faceDownId] -> do
+              let (settled, _) = settleAfter (Event.simultaneously (Event.changeZone seekerId Zone.Exile >> Event.changeZone faceDownId Zone.Library)) gs
+              Spec.assertEqWith s "CR 603.10a the look-back put the Seeker's trigger on the stack" (length (GameState.stack settled)) 1
+              Spec.assertEqWith s "CR 708.5 alice could not see the face-down permanent before it left" (Visibility.sees S.alice faceDownId gs) Visibility.Type.Obscured
+              Spec.assertEqWith s "off the same move: the Island card is in bob's library" (length (Game.zoneMembers Zone.Library S.bob settled)) 1
+            _ -> Spec.assertFailure s "setup: the Island card did not enter face down"
 
 -- Binding.handArrival, the card a hand received, which CR 400.7e withholds from
 -- `became` (CR 400.2) and which digital effects reach anyway. Kithkin Brinefarer

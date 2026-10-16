@@ -6008,8 +6008,8 @@ matchesTriggerGiven bindings board gs bearer you cond event = case cond of
   -- game reaches no zone, so it cannot be the hand or exile a printing names.
   -- Pawl.OutsideTheGameSpec's Spirit Mascot case proves it.
   --
-  -- A bearer absent from the board sees a move out of a hidden zone only where
-  -- all players could see it, CardsPutIntoZone's gate below and for its reason:
+  -- A bearer absent from the board sees a move only where all players could see
+  -- it (Moved.revealed), CardsPutIntoZone's gate below and for its reason:
   -- CR 603.10a's look-back reaches such a move only then. Pawl.LeavesTriggerSpec's
   -- "CR 603.10a an exiled Kithkin Brinefarer" cases are the proof.
   TriggerCondition.CardLeavesZone p ->
@@ -6020,7 +6020,7 @@ matchesTriggerGiven bindings board gs bearer you cond event = case cond of
               Game.leftOrigin (Moved.change m),
               maybe True (== ZoneChange.to (Moved.change m)) (CardLeavesZone.to p) ->
                 Turn.turnScopeAdmits gs (CardLeavesZone.scope p) (GameState.activePlayer gs) you
-                  && (Map.member bearer board || Moved.revealed m || not (Game.isHiddenZone (ZoneChange.from (Moved.change m))))
+                  && (Map.member bearer board || Moved.revealed m)
                   && not (Seq.null (admitted m))
           GameEvent.Moved {} -> False
           GameEvent.LeftTheGame l
