@@ -2079,10 +2079,18 @@ acquisitionOf oid gs =
 -- came with whatever that source has since become; otherwise the one `oid`
 -- has now (acquisitionOf).
 readingAcquisition :: ObjectId -> ObjectId -> GameState -> ObjectId -> Acquisition.Acquisition
-readingAcquisition resolving source gs oid = case fmap Object.source (lookupObject resolving gs) of
-  Just (Source.OfTrigger triggered) | oid == source -> TriggeredAbilitySource.acquisition triggered
-  Just (Source.OfAbility activated) | oid == source -> ActivatedAbilitySource.acquisition activated
-  _ -> acquisitionOf oid gs
+readingAcquisition resolving source gs oid
+  | oid == source, Just frozen <- frozenAcquisition . Object.source =<< lookupObject resolving gs = frozen
+  | otherwise = acquisitionOf oid gs
+
+-- | CR 607.5: the acquisition an ability on the stack froze as it went there,
+-- off its Pawl.Types.Source; Nothing for a spell or an inherent trigger, which
+-- no acquisition of an object's abilities carries.
+frozenAcquisition :: Source.Source -> Maybe Acquisition.Acquisition
+frozenAcquisition source = case source of
+  Source.OfTrigger triggered -> Just (TriggeredAbilitySource.acquisition triggered)
+  Source.OfAbility activated -> Just (ActivatedAbilitySource.acquisition activated)
+  _ -> Nothing
 
 -- | CR 607.5: the results stored on this object for the abilities acquired as
 -- `acquisition` (Object.storedResults).
