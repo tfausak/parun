@@ -11544,7 +11544,8 @@ refill whole moving ordered =
 -- nothing crosses a zone boundary, so CR 400.7 mints no new incarnation and the
 -- ids the prompt named still move. Looking mints nothing either (CR 701.20b).
 --
--- Not implemented: the look logs no GameEvent.Looked (#5008).
+-- Every card looked at is logged (Event.look) before the question, and where
+-- none is asked: the look is the rule's, the question the engine's.
 decideScry :: Integer -> PlayerId -> Game (PlayerId, Maybe [ObjectId])
 decideScry n pid = do
   gs <- State.get
@@ -11558,6 +11559,7 @@ decideScry n pid = do
         [] -> False
         [_] -> not (null beneath)
         _ -> True
+  Monad.mapM_ (Event.look pid) looked
   if decided
     then do
       answer <- Game.choose (Prompt.ChooseScry (Decide.deciderFor pid gs) pid looked)
@@ -11624,9 +11626,8 @@ applySurveil (pid, decision) = Monad.forM_ decision $ \(kept, toGraveyard) -> do
 --
 -- TWO choices, both the fatesealer's and in this order: which opponent, then how
 -- to split. The first is elided at one candidate (CR 102.2) and filtered rather
--- than trusted (Players.chooseOne); the library's owner is asked neither.
---
--- Not implemented: the look logs no GameEvent.Looked (#5008).
+-- than trusted (Players.chooseOne); the library's owner is asked neither. The
+-- look is the fatesealer's alone (Event.look), logged as decideScry's is.
 fatesealOne :: ObjectId -> Integer -> PlayerId -> Game ()
 fatesealOne source n pid = do
   gs <- State.get
@@ -11642,6 +11643,7 @@ fatesealOne source n pid = do
           [] -> False
           [_] -> not (null beneath)
           _ -> True
+    Monad.mapM_ (Event.look pid) looked
     Monad.when decided $ do
       answer <- Game.choose (Prompt.ChooseFateseal (Decide.deciderFor pid chosen) pid owner looked)
       let (toBottom, onTop) = splitLooked looked answer
