@@ -227,11 +227,11 @@ passPriorityFrom gs pid =
 
 -- The step's own CR 704.3 check. Samples CR 704.5k's clock first, this site
 -- following the turn-based actions and CR 514.2's sweep being able to change who
--- is world. A loss the pass replaced runs its effects before anything else
--- checks again (Resolve.runReplacementEffects), or the next pass would meet it a
--- second time.
+-- is world. A loss the pass replaced runs its effects inside the pass
+-- (Resolve.runDamageRewriteEffect, the pass's `instead`); anything else those
+-- effects queued runs before anything checks again.
 checkSba :: Game ()
-checkSba = sampleWorldSince >> Sba.checkStateBasedActions >> Resolve.runReplacementEffects playSubgame
+checkSba = sampleWorldSince >> Sba.checkStateBasedActions (Resolve.runDamageRewriteEffect playSubgame) >> Resolve.runReplacementEffects playSubgame
 
 -- CR 502.3's untap, and its own "effects can keep one or more of a player's
 -- permanents from untapping": such an effect takes the permanent out of the set
@@ -1243,10 +1243,10 @@ settlePasses passes = do
   -- a sculptor is still on the battlefield, and inside the recursion guard for
   -- Soulbond's reason.
   unsectored <- SpaceSculptor.settle
-  acted <- Sba.performStateBasedActions
-  -- CR 614.1a: a loss the pass replaced (Lich's Mirror) runs its effects HERE,
-  -- before the triggers are placed and before the next pass could meet the
-  -- same loss again.
+  acted <- Sba.performStateBasedActions (Resolve.runDamageRewriteEffect playSubgame)
+  -- CR 614.1a: a loss the pass replaced (Lich's Mirror) ran its effects inside
+  -- the pass (its `instead`); anything else queued runs HERE, before the
+  -- triggers are placed.
   Resolve.runReplacementEffects playSubgame
   placed <- placePendingTriggers
   -- Last, and for the same reason the conditional sweep runs first: all three read

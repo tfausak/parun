@@ -1665,7 +1665,7 @@ levelerSpec s registry =
           staged <- printings
           let emptied = cast staged
               intact = fst staged
-              drawn gs = S.runPure S.identityAnswer (S.runPure S.identityAnswer gs (Event.drawCard S.alice)) Sba.checkStateBasedActions
+              drawn gs = S.runPure S.identityAnswer (S.runPure S.identityAnswer gs (Event.drawCard S.alice)) (Sba.checkStateBasedActions S.insteadOfLoss)
           Spec.assertEqWith s "she is still playing the moment the sweep finishes" (statusOf S.alice emptied) (Just Status.Playing)
           Spec.assertEqWith s "and drawing from the emptied library loses her the game" (statusOf S.alice (drawn emptied)) (Just (Status.Departed Departure.Type.Lost))
           Spec.assertEqWith s "where the same draw on the board she never cast it on leaves her playing" (statusOf S.alice (drawn intact)) (Just Status.Playing)

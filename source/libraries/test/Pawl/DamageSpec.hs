@@ -930,7 +930,7 @@ legendRuleSpec s registry =
       thalia <- S.printingOf s registry "Thalia, Guardian of Thraben"
       let (first, g0) = S.addPermanent thalia S.alice (Setup.emptyGame S.bothPlayers)
           (second, gs) = S.addPermanent thalia S.alice g0
-          kept = S.runPure (keepsLegend first) gs Sba.checkStateBasedActions
+          kept = S.runPure (keepsLegend first) gs (Sba.checkStateBasedActions S.insteadOfLoss)
       Spec.assertBool s (inPlay first kept) "the chosen one stays"
       Spec.assertBool s (not (inPlay second kept)) "the other is gone"
       -- CR 400.7: the move mints a NEW incarnation, so the buried Thalia is not
@@ -943,7 +943,7 @@ legendRuleSpec s registry =
       thalia <- S.printingOf s registry "Thalia, Guardian of Thraben"
       let (first, g0) = S.addPermanent thalia S.alice (Setup.emptyGame S.bothPlayers)
           (second, gs) = S.addPermanent thalia S.alice g0
-          keptSecond = S.runPure (keepsLegend second) gs Sba.checkStateBasedActions
+          keptSecond = S.runPure (keepsLegend second) gs (Sba.checkStateBasedActions S.insteadOfLoss)
       Spec.assertBool s (inPlay second keptSecond) "the second one stays this time"
       Spec.assertBool s (not (inPlay first keptSecond)) "the first is gone"
 
@@ -953,7 +953,7 @@ legendRuleSpec s registry =
       thalia <- S.printingOf s registry "Thalia, Guardian of Thraben"
       let (hers, g0) = S.addPermanent thalia S.alice (Setup.emptyGame S.bothPlayers)
           (his, gs) = S.addPermanent thalia S.bob g0
-          after = S.runPure S.identityAnswer gs Sba.checkStateBasedActions
+          after = S.runPure S.identityAnswer gs (Sba.checkStateBasedActions S.insteadOfLoss)
       Spec.assertBool s (inPlay hers after) "alice keeps hers"
       Spec.assertBool s (inPlay his after) "bob keeps his"
 
@@ -963,7 +963,7 @@ legendRuleSpec s registry =
       piker <- S.printingOf s registry "Goblin Piker"
       let (a, g0) = S.addPermanent piker S.alice (Setup.emptyGame S.bothPlayers)
           (b, gs) = S.addPermanent piker S.alice g0
-          after = S.runPure S.identityAnswer gs Sba.checkStateBasedActions
+          after = S.runPure S.identityAnswer gs (Sba.checkStateBasedActions S.insteadOfLoss)
       Spec.assertBool s (inPlay a after && inPlay b after) "both stay"
 
     -- "With the same name" is the other half: two DIFFERENT legends coexist.
@@ -972,7 +972,7 @@ legendRuleSpec s registry =
       urborg <- S.printingOf s registry "Urborg, Tomb of Yawgmoth"
       let (t, g0) = S.addPermanent thalia S.alice (Setup.emptyGame S.bothPlayers)
           (u, gs) = S.addPermanent urborg S.alice g0
-          after = S.runPure S.identityAnswer gs Sba.checkStateBasedActions
+          after = S.runPure S.identityAnswer gs (Sba.checkStateBasedActions S.insteadOfLoss)
       Spec.assertBool s (inPlay t after && inPlay u after) "both stay"
 
     -- "Put into their OWNERS' graveyards" -- not the controller's. Alice
@@ -982,7 +982,7 @@ legendRuleSpec s registry =
       let (hers, g0) = S.addPermanent thalia S.alice (Setup.emptyGame S.bothPlayers)
           (his, g1) = S.addPermanent thalia S.bob g0
           stolen = S.giveControl his S.alice g1
-          after = S.runPure (keepsLegend hers) stolen Sba.checkStateBasedActions
+          after = S.runPure (keepsLegend hers) stolen (Sba.checkStateBasedActions S.insteadOfLoss)
       Spec.assertBool s (inPlay hers after) "alice keeps her own"
       Spec.assertBool s (not (inPlay his after)) "the stolen one left the battlefield"
       -- The whole point: alice controlled it, but bob owns it, so bob's
@@ -1020,8 +1020,8 @@ legendRuleSpec s registry =
           -- Thalia is 2/1, so -2/-1 makes this copy a 0/0: CR 704.5f applies to
           -- it and not to the other.
           gs = S.withEffect dying (Modification.ModifyPowerToughness (ModifyPowerToughness.MkModifyPowerToughness (Quantity.Literal (-2)) (Quantity.Literal (-1)))) g1
-          keptDying = S.runPure (keepsLegend dying) gs Sba.checkStateBasedActions
-          keptHealthy = S.runPure (keepsLegend healthy) gs Sba.checkStateBasedActions
+          keptDying = S.runPure (keepsLegend dying) gs (Sba.checkStateBasedActions S.insteadOfLoss)
+          keptHealthy = S.runPure (keepsLegend healthy) gs (Sba.checkStateBasedActions S.insteadOfLoss)
       Spec.assertEqWith s "the 0/0 really is a 0/0" (Projection.toughnessOf dying gs) (Just 0)
       -- Keeping the dying copy: 704.5j buries the healthy one, 704.5f buries this
       -- one, and alice is left with no Thalia at all.
@@ -1051,7 +1051,7 @@ legendRuleSpec s registry =
           -- The CONTROL, and the guard against a vacuous pass below: with no
           -- Leyline on the board these two live through a settled sweep, so the
           -- fixture really does hold two duplicates for the rule to find.
-          before = S.runPure S.identityAnswer g1 Sba.performStateBasedActions
+          before = S.runPure S.identityAnswer g1 (Sba.performStateBasedActions S.insteadOfLoss)
           (_, staged) = S.spellOnStack leyline S.alice g1
           after = S.runPure (keepsLegend a) staged (Stack.resolveTop >> Engine.settleForPriority)
       Spec.assertBool s (a /= b) "the two Pikers are separate objects, not one counted twice"
@@ -1150,7 +1150,7 @@ legendRuleSpec s registry =
           board = unlockDoors bothDoors q (unlockDoors bothDoors p g1)
           -- The CONTROL: without the Leyline neither Room is legendary, so the
           -- rule has nothing to say and the pass below cannot be vacuous.
-          before = S.runPure S.identityAnswer board Sba.performStateBasedActions
+          before = S.runPure S.identityAnswer board (Sba.performStateBasedActions S.insteadOfLoss)
           (_, staged) = S.spellOnStack leyline S.alice board
           ((_, after), asked) = State.runState (Engine.runGame alternatingLegend staged (Stack.resolveTop >> Engine.settleForPriority)) 0
       Spec.assertBool s (p /= q) "the two Rooms are separate objects, not one counted twice"
@@ -1205,7 +1205,7 @@ worldPair s registry = do
 -- the rule with no candidates -- so this, and not the bare pass, is what these
 -- single-pass tests run.
 worldPass :: Game.Type.Game Bool
-worldPass = Engine.sampleWorldSince >> Sba.performStateBasedActions
+worldPass = Engine.sampleWorldSince >> Sba.performStateBasedActions S.insteadOfLoss
 
 -- What Object.worldSince holds for one object, or Nothing if there is no such
 -- object at all.

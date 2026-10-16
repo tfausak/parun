@@ -1,0 +1,35 @@
+{
+  "description": "CR 616.1 Lich's Mirror's reset takes a regenerating blocker without asking",
+  "note": "Alice at 3 life with Lich's Mirror regenerates Drudge Skeletons, blocks bob's Craw Wurm with them while his Hill Giant hits her. The check would destroy the Skeletons and lose her the game, but the shield replaces the destruction (CR 701.19a), so the check moves nothing the reset also moves and nobody is asked: the reset shuffles the Skeletons in with the rest.",
+  "board": {
+    "active": "bob",
+    "step": "BeginningOfCombat",
+    "seats": [
+      {
+        "name": "alice",
+        "life": 3,
+        "battlefield": [
+          { "card": "Lich's Mirror" },
+          { "card": "Drudge Skeletons", "label": "skel", "ready": true },
+          { "card": "Swamp", "label": "swamp", "ready": true }
+        ],
+        "library": [{ "card": "Island" }, { "card": "Island" }, { "card": "Island" }, { "card": "Island" }, { "card": "Island" }, { "card": "Island" }, { "card": "Island" }]
+      },
+      {
+        "name": "bob",
+        "battlefield": [{ "card": "Craw Wurm", "label": "wurm", "ready": true }, { "card": "Hill Giant", "label": "giant", "ready": true }],
+        "library": [{ "card": "Forest" }, { "card": "Forest" }]
+      }
+    ]
+  },
+  "timeline": [
+    { "turn": 1, "step": "DeclareAttackers", "player": "bob", "do": { "Attack": ["$wurm", "$giant"] } },
+    { "turn": 1, "step": "DeclareAttackers", "player": "bob", "do": "Pass" },
+    { "turn": 1, "step": "DeclareAttackers", "player": "alice", "do": { "Activate": { "object": "$skel", "mana": ["$swamp"] } } },
+    { "turn": 1, "step": "DeclareAttackers", "player": "alice", "do": "Pass" },
+    { "turn": 1, "step": "DeclareBlockers", "player": "alice", "do": { "Block": { "$skel": ["$wurm"] } } },
+    { "turn": 1, "step": "CombatDamage", "player": "bob", "do": { "Answer": { "prompt": "Shuffle", "with": ["Island", "Island#2", "Island#3", "Island#4", "Island#5", "Island#6", "Island#7", "Lich's Mirror", "Drudge Skeletons", "Swamp"] } } },
+    { "turn": 1, "step": "EndOfCombat", "player": "bob", "check": { "View": { "of": "Zone", "player": "alice", "zone": "Library", "is": ["Lich's Mirror", "Drudge Skeletons", "Swamp"] } } },
+    { "turn": 1, "step": "EndOfCombat", "player": "bob", "check": { "Life": { "player": "alice", "life": 20 } } }
+  ]
+}
