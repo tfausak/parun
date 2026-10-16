@@ -863,6 +863,9 @@ askingObjects resolving source controller legal chosen ref = case ref of
     counterpart <- chosenPermanents legal resolving controller source (ChosenPermanents.MkChosenPermanents filter_ (PlayerRef.Relative PlayerRelation.You) HowMany.one)
     gs <- State.get
     pure (counterpart <> battlefieldMatching legal resolving controller source gs Filter.Type.IsSource)
+  -- Each ref asked or read in the order written, before anything moves; an
+  -- object two refs name is named once.
+  ObjectRef.AllOf refs -> fmap (ListUtils.nubOrd . concat) (traverse (askingObjects resolving source controller legal chosen) (NonEmpty.toList refs))
   -- Every other arm is a read. Exhaustive with no `_`, so a new arm has to say
   -- which it is: one answered [] by objectRefObjects but falling through here
   -- would name nothing.
@@ -1238,6 +1241,8 @@ objectRefRecipients legal resolving controller source gs ref = case ref of
   ObjectRef.AttachedToBound _ -> fmap Recipient.ToObject (objectRefObjects legal resolving controller source gs ref)
   -- A read, so the sweep answers it.
   ObjectRef.FromAnywhere _ -> fmap Recipient.ToObject (objectRefObjects legal resolving controller source gs ref)
+  -- Each ref's recipients in the order written, one named twice named once.
+  ObjectRef.AllOf refs -> ListUtils.nubOrd (concatMap (objectRefRecipients legal resolving controller source gs) refs)
 
 -- The order for a per-object batch -- CR 608.2f's, and CR 701.44d's, which say
 -- the same thing about the PRIMARY key: APNAP first, reading a player recipient
@@ -3306,6 +3311,7 @@ clauseIsImpossible resolving source controller legal gs clause =
       readsOnly defined ref = case ref of
         ObjectRef.InSlot slot -> Set.member slot defined
         ObjectRef.FromAnywhere slot -> Set.member slot defined
+        ObjectRef.AllOf refs -> all (readsOnly defined) refs
         _ -> False
       dependent defined effect =
         let refs = effectObjectRefs effect
@@ -3691,6 +3697,8 @@ effectIsImpossible resolving source controller legal gs effect = case effect of
       ObjectRef.ChosenCardFromAmong (ChosenCardFromAmong.MkChosenCardFromAmong slot filter_ count _) ->
         mustPick count && maybe False (null . matchingFromAmong legal resolving controller source gs filter_) (fromAmongBound slot)
       ObjectRef.ChosenPermanents (ChosenPermanents.MkChosenPermanents filter_ _ count) -> mustPick count && null (battlefieldMatching legal resolving controller source gs filter_)
+      -- Only when no member names anything: a read always might.
+      ObjectRef.AllOf refs -> all choosesFromNothing refs
       _ -> False
     -- A read that names objects, none of them exchangeable.
     namesOnlyTheGone ref =
@@ -5382,47 +5390,52 @@ applyOneEffect runSubgame resolving source controller legal chosen effect = case
             -- WHICH objects move, gathered first and moved second, so the CR 401.2
             -- and CR 401.4 questions between the two steps are asked of the whole
             -- batch.
-            targets <- case ref of
-              -- NOT routed through objectRefObjects: that function reads `slotGroup`
-              -- then `chosen`, never `slotOne`, and slotOne is what lets a slot an
-              -- EARLIER EFFECT OF THIS SAME RESOLUTION bound name its object here.
-              -- A declared target is read out of `chosen` behind CR 608.2b's
-              -- re-validation; a slot `chosen` does not mention was never targeted
-              -- and is read live. Membership rather than preference keeps a target
-              -- from losing its re-validation to a binding sharing its name.
-              -- A slot bound to a GROUP names every member, a slot bound to one
-              -- names that one, and a TARGETED slot names EVERY still-legal
-              -- recipient -- not one, which is the SlotArity.Many objectRefSlots
-              -- declares; legalOne declines a slot naming several. An empty list is
-              -- an unbound slot, every target gone illegal, or CR 115.6's zero
-              -- targets chosen. fromAmongMembers is where those three and their
-              -- rules live, shared with the two "from among them" refs so they
-              -- cannot read the slot differently.
-              ObjectRef.InSlot slot -> fromAmongMembers legal resolving chosen slot
-              -- Mulch's "all land cards revealed this way", the arm above's plural.
-              -- NOT routed through objectRefObjects, for the InSlot arm's reason:
-              -- the members come off slotBoundObjects, which reads the single
-              -- binding an earlier effect of this resolution left as well as the
-              -- group. The same read chooseCardFromAmong makes, off the pre-move
-              -- state (CR 608.2c), so the matched half and "the rest" -- a LATER
-              -- clause naming the same slot with InSlot, which finds these cards
-              -- gone (CR 400.7) -- cannot see different groups. A looked-at card
-              -- put back into the library it is in is gone too, a new object by
-              -- CR 701.20d (Event.forgetShown).
-              ObjectRef.EachCardFromAmong (EachCardFromAmong.MkEachCardFromAmong slot filter_) -> do
-                members <- fromAmongMembers legal resolving chosen slot
-                gs <- State.get
-                pure (matchingFromAmong legal resolving controller source gs filter_ members)
-              -- Every other ref is swept or asked ONCE off the PRE-MOVE state (CR
-              -- 608.2c, CR 608.2f) through askingObjects, then moved one at a time,
-              -- each judged against the board the batch began on and against the
-              -- siblings that have already arrived (see moveOne). CR 400.3 files a
-              -- hand arrival under Object.owner, and CR 110.2a hands a battlefield
-              -- arrival to the player the effect instructed. A ref naming players
-              -- names no object. askingObjects' match is exhaustive, so a new arm
-              -- is classified there; only a slot read needing fromAmongMembers'
-              -- single binding, as the two arms above do, belongs here.
-              _ -> askingObjects resolving source controller legal chosen ref
+            let gather r = case r of
+                  -- NOT routed through objectRefObjects: that function reads `slotGroup`
+                  -- then `chosen`, never `slotOne`, and slotOne is what lets a slot an
+                  -- EARLIER EFFECT OF THIS SAME RESOLUTION bound name its object here.
+                  -- A declared target is read out of `chosen` behind CR 608.2b's
+                  -- re-validation; a slot `chosen` does not mention was never targeted
+                  -- and is read live. Membership rather than preference keeps a target
+                  -- from losing its re-validation to a binding sharing its name.
+                  -- A slot bound to a GROUP names every member, a slot bound to one
+                  -- names that one, and a TARGETED slot names EVERY still-legal
+                  -- recipient -- not one, which is the SlotArity.Many objectRefSlots
+                  -- declares; legalOne declines a slot naming several. An empty list is
+                  -- an unbound slot, every target gone illegal, or CR 115.6's zero
+                  -- targets chosen. fromAmongMembers is where those three and their
+                  -- rules live, shared with the two "from among them" refs so they
+                  -- cannot read the slot differently.
+                  ObjectRef.InSlot slot -> fromAmongMembers legal resolving chosen slot
+                  -- Mulch's "all land cards revealed this way", the arm above's plural.
+                  -- NOT routed through objectRefObjects, for the InSlot arm's reason:
+                  -- the members come off slotBoundObjects, which reads the single
+                  -- binding an earlier effect of this resolution left as well as the
+                  -- group. The same read chooseCardFromAmong makes, off the pre-move
+                  -- state (CR 608.2c), so the matched half and "the rest" -- a LATER
+                  -- clause naming the same slot with InSlot, which finds these cards
+                  -- gone (CR 400.7) -- cannot see different groups. A looked-at card
+                  -- put back into the library it is in is gone too, a new object by
+                  -- CR 701.20d (Event.forgetShown).
+                  ObjectRef.EachCardFromAmong (EachCardFromAmong.MkEachCardFromAmong slot filter_) -> do
+                    members <- fromAmongMembers legal resolving chosen slot
+                    gs <- State.get
+                    pure (matchingFromAmong legal resolving controller source gs filter_ members)
+                  -- Each ref gathered in the order written, before anything
+                  -- moves, so the members move as ONE batch (CR 608.2f); an
+                  -- object two refs name moves once.
+                  ObjectRef.AllOf refs -> fmap (ListUtils.nubOrd . concat) (traverse gather (NonEmpty.toList refs))
+                  -- Every other ref is swept or asked ONCE off the PRE-MOVE state (CR
+                  -- 608.2c, CR 608.2f) through askingObjects, then moved one at a time,
+                  -- each judged against the board the batch began on and against the
+                  -- siblings that have already arrived (see moveOne). CR 400.3 files a
+                  -- hand arrival under Object.owner, and CR 110.2a hands a battlefield
+                  -- arrival to the player the effect instructed. A ref naming players
+                  -- names no object. askingObjects' match is exhaustive, so a new arm
+                  -- is classified there; only a slot read needing fromAmongMembers'
+                  -- single binding, as the two arms above do, belongs here.
+                  _ -> askingObjects resolving source controller legal chosen r
+            targets <- gather ref
             -- CR 608.2h: a depth's amount is read once, off the pre-move board.
             depthBoard <- State.get
             let depthOf quantity =

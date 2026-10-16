@@ -1318,6 +1318,8 @@ questionOf ref = case ref of
   ObjectRef.SourceAndChosenPermanent {} -> Just SourceAndPermanent
   ObjectRef.AttachedToBound {} -> Nothing
   ObjectRef.FromAnywhere {} -> Nothing
+  -- The first question a member puts, so a member that asks is fenced as it would be alone.
+  ObjectRef.AllOf refs -> Foldable.asum (fmap questionOf refs)
 
 -- Whether an ObjectRef arm is a resolution-time question rather than a read.
 chooserRef :: ObjectRef.ObjectRef -> Bool
@@ -1999,6 +2001,9 @@ effectLintSpec s registry = Spec.describe s "Lint" $ do
           ObjectRef.AttachedToBound _ -> False
           -- TRUE, InSlot's answer: the slot's object, followed.
           ObjectRef.FromAnywhere _ -> True
+          -- FALSE, SourceAndChosenPermanent's answer: several refs together name
+          -- several objects.
+          ObjectRef.AllOf _ -> False
         -- Does a choice's count name at most one? A COMPUTED count is plural
         -- whatever the board would make it, TopOfLibrary's reading above.
         atMostOne count = case count of

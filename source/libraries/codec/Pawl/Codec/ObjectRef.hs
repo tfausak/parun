@@ -20,6 +20,7 @@ import qualified Pawl.Codec.TopOfLibrary as TopOfLibrary
 import qualified Pawl.Codec.TopOfLibraryUntil as TopOfLibraryUntil
 import qualified Pawl.JsonCodec.Arm as Arm
 import qualified Pawl.JsonCodec.Codec as Codec
+import qualified Pawl.JsonCodec.Common as Common
 import qualified Pawl.Types.ObjectRef as ObjectRef
 
 -- | Tagged like every other sum. The arms were previously told apart by
@@ -86,7 +87,8 @@ codec =
           Arm.payload "ChosenPermanents" ChosenPermanents.codec ObjectRef.ChosenPermanents (\x -> case x of ObjectRef.ChosenPermanents y -> Just y; _ -> Nothing),
           Arm.payload "SourceAndChosenPermanent" filterCodec ObjectRef.SourceAndChosenPermanent (\x -> case x of ObjectRef.SourceAndChosenPermanent y -> Just y; _ -> Nothing),
           Arm.payload "AttachedToBound" AttachedToBound.codec ObjectRef.AttachedToBound (\x -> case x of ObjectRef.AttachedToBound y -> Just y; _ -> Nothing),
-          Arm.payload "FromAnywhere" SlotName.codec ObjectRef.FromAnywhere (\x -> case x of ObjectRef.FromAnywhere y -> Just y; _ -> Nothing)
+          Arm.payload "FromAnywhere" SlotName.codec ObjectRef.FromAnywhere (\x -> case x of ObjectRef.FromAnywhere y -> Just y; _ -> Nothing),
+          Arm.payload "AllOf" (Common.nonEmpty codec) ObjectRef.AllOf (\x -> case x of ObjectRef.AllOf y -> Just y; _ -> Nothing)
         ]
 
 tagOf :: ObjectRef.ObjectRef -> String
@@ -122,3 +124,4 @@ tagOf x = case x of
   ObjectRef.SourceAndChosenPermanent {} -> "SourceAndChosenPermanent"
   ObjectRef.AttachedToBound {} -> "AttachedToBound"
   ObjectRef.FromAnywhere {} -> "FromAnywhere"
+  ObjectRef.AllOf {} -> "AllOf"

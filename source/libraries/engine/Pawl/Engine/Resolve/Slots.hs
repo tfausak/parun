@@ -5,6 +5,7 @@
 -- Pawl.Engine.Resolve for size; nothing here resolves anything.
 module Pawl.Engine.Resolve.Slots where
 
+import qualified Data.Containers.ListUtils as ListUtils
 import qualified Data.Foldable as Foldable
 import qualified Data.Functor.Const as Functor
 import qualified Data.List as List
@@ -550,6 +551,8 @@ objectRefSlots ref = joinTwo (joinSlots (fmap playerRefSlots (objectRefPlayerRef
   -- The host is read out of the slot, and the Filter over what is attached to
   -- it may name slots of its own.
   ObjectRef.AttachedToBound (AttachedToBound.MkAttachedToBound slot filter_) -> joinTwo (Map.singleton slot SlotArity.Many) (filterSlotsOf filter_)
+  -- Every ref's own reads; the PlayerRefs are objectRefPlayerRefs', which recurses.
+  ObjectRef.AllOf refs -> joinSlots (fmap objectRefSlots (NonEmpty.toList refs))
 
 -- The Quantities an ObjectRef carries: the two library walks' counts.
 -- Exhaustive, no wildcard, and every payload destructured positionally rather
@@ -610,6 +613,7 @@ objectRefQuantities ref = case ref of
   ObjectRef.SourceAndChosenPermanent _ -> []
   ObjectRef.AttachedToBound _ -> []
   ObjectRef.FromAnywhere _ -> []
+  ObjectRef.AllOf refs -> concatMap objectRefQuantities refs
 
 -- Every PlayerRef nested in one ObjectRef -- effectPlayerRefs' other half, and
 -- the seat a per-player walk counts against. objectRefSlots takes its player
@@ -666,6 +670,7 @@ objectRefPlayerRefs ref = case ref of
   ObjectRef.SourceAndChosenPermanent _ -> []
   ObjectRef.AttachedToBound _ -> []
   ObjectRef.FromAnywhere _ -> []
+  ObjectRef.AllOf refs -> concatMap objectRefPlayerRefs refs
 
 -- The refs a CR 707.10 answer names: rule 707.10d's candidates, and nothing for
 -- the other two, neither of which describes anything.
@@ -2951,6 +2956,8 @@ objectRefObjects legal resolving controller source gs ref = case ref of
   -- CR 400.7's link read back: each object the slot holds, followed through
   -- this turn's logged zone changes to the object it is now.
   ObjectRef.FromAnywhere slot -> Maybe.mapMaybe (\oid -> Game.currentIncarnation oid gs) (objectRefObjects legal resolving controller source gs (ObjectRef.InSlot slot))
+  -- Each ref's objects in the order written, an object two refs name once.
+  ObjectRef.AllOf refs -> ListUtils.nubOrd (concatMap (objectRefObjects legal resolving controller source gs) refs)
   -- EachMatching's sweep with CR 109.2's battlefield default switched off by the
   -- card's own words (CR 109.2a), over CR 400.1's per-player zone. Whose
   -- graveyards is Target.zoneScopePlayers -- either the perspective's own

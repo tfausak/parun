@@ -134,6 +134,8 @@ zoneFunctionedAgainst itself delayed effect = case effect of
     ObjectRef.AttachedToBound _ -> Nothing
     -- The object may be in any zone by now.
     ObjectRef.FromAnywhere _ -> Nothing
+    -- Several refs together are never one object.
+    ObjectRef.AllOf _ -> Nothing
   Effect.DealDamage (DealDamage.MkDealDamage {}) -> Nothing
   Effect.Fight {} -> Nothing
   Effect.ModifyTarget {} -> Nothing

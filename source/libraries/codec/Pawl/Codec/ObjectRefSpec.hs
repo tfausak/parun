@@ -1,6 +1,7 @@
 module Pawl.Codec.ObjectRefSpec where
 
 import qualified Data.Either as Either
+import qualified Data.List.NonEmpty as NonEmpty
 import qualified Data.Set as Set
 import qualified Data.Text as Text
 import qualified Pawl.Codec.ObjectRef as ObjectRef
@@ -456,6 +457,13 @@ spec s = Spec.describe s "Pawl.Codec.ObjectRef" $ do
   -- CR 400.7: the slot whose object is followed, a bare string.
   Spec.it s "FromAnywhere" $
     Common.assertCodec s ObjectRef.codec (ObjectRef.FromAnywhere (SlotName.MkSlotName (Text.pack "self"))) " {\"type\":\"FromAnywhere\",\"value\":\"self\"} "
+  -- CR 608.2f: the refs moved as one action, an array of refs under its own tag.
+  Spec.it s "AllOf" $
+    Common.assertCodec
+      s
+      ObjectRef.codec
+      (ObjectRef.AllOf (ObjectRef.InSlot (SlotName.MkSlotName (Text.pack "target")) NonEmpty.:| [ObjectRef.EachCardInYourHand]))
+      " {\"type\":\"AllOf\",\"value\":[{\"type\":\"InSlot\",\"value\":\"target\"},{\"type\":\"EachCardInYourHand\"}]} "
   -- Guards against a decoder that read every payload as one arm. The arms are
   -- all objects, so only the tag separates them, and a duplicated tag would
   -- collapse two of these. The two graveyard arms are the pair it really

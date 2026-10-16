@@ -1034,3 +1034,4 @@ refReachesLibrary ref = case ref of
   ObjectRef.AttachedToBound _ -> False
   -- TRUE: the object followed may be in a library by now.
   ObjectRef.FromAnywhere _ -> True
+  ObjectRef.AllOf refs -> any refReachesLibrary refs

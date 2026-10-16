@@ -1189,6 +1189,7 @@ rewriteObjectRef pairs ref = case ref of
   ObjectRef.AttachedToBound (AttachedToBound.MkAttachedToBound slot f) -> ObjectRef.AttachedToBound (AttachedToBound.MkAttachedToBound slot (Filter.rewrite pairs f))
   ObjectRef.FromAnywhere slot -> ObjectRef.FromAnywhere slot
   ObjectRef.SourceAndChosenPermanent f -> ObjectRef.SourceAndChosenPermanent (Filter.rewrite pairs f)
+  ObjectRef.AllOf refs -> ObjectRef.AllOf (fmap (rewriteObjectRef pairs) refs)
 
 -- CR 612.1 through a battlefield choice: its Filter and its count are card
 -- text, and its chooser names a seat, never a subtype.
