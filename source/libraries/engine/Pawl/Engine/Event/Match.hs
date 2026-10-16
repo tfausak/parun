@@ -10434,4 +10434,4 @@ producedSpecified gs bearer specified produced = case specified of
   -- nothing left to ask.
   ManaSpecification.AnyMana -> True
   ManaSpecification.ChosenColor ->
-    any (\color -> Set.member (ManaType.Colored color) produced) (foldMap Object.chosenColors (Game.lookupObject bearer gs))
+    any (\color -> Set.member (ManaType.Colored color) produced) (Maybe.fromMaybe Set.empty (Game.currentChoice Object.chosenColors bearer gs))

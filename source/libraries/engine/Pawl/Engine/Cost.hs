@@ -6250,14 +6250,14 @@ chooseManaYield pid oid candidates gs = case candidates of
 -- Object.paidCosts by.
 nextPromise :: ObjectId -> Gift.Gift -> GameState -> PlayerChoice.PlayerChoice
 nextPromise oid gift gs =
-  let promised = Natural.length [() | PlayerChoice.Promised g _ <- foldMap (Map.keys . Object.chosenPlayers) (Game.lookupObject oid gs), g == gift]
+  let promised = Natural.length [() | PlayerChoice.Promised g _ <- foldMap Map.keys (Game.currentChoice Object.chosenPlayers oid gs), g == gift]
    in PlayerChoice.Promised gift (promised + 1)
 
 -- Object.chosenPlayers' entry for one choice, written on the object.
 stampChosen :: ObjectId -> PlayerChoice.PlayerChoice -> PlayerId -> Game ()
 stampChosen oid choice pid =
   State.modify' $ \gs ->
-    let stamp object = object {Object.chosenPlayers = Map.insert choice pid (Object.chosenPlayers object)}
+    let stamp object = object {Object.chosenPlayers = Map.insertWith Map.union (Game.acquisitionOf oid gs) (Map.singleton choice pid) (Object.chosenPlayers object)}
      in gs {GameState.objects = Map.adjust stamp oid (GameState.objects gs)}
 
 -- CR 118.3 asked AGAIN as each component is paid, and not only at the gate: CR

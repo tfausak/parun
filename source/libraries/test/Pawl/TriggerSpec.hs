@@ -43,6 +43,7 @@ import qualified Pawl.Registry as Registry
 import qualified Pawl.Scenario.Prompt as Scenario.Prompt
 import qualified Pawl.Spec as Spec
 import qualified Pawl.Support as S
+import qualified Pawl.Types.Acquisition as Acquisition
 import qualified Pawl.Types.ActiveReplacement as ActiveReplacement
 import qualified Pawl.Types.AttackTarget as AttackTarget
 import qualified Pawl.Types.AttackerDeclared as AttackerDeclared
@@ -2576,7 +2577,7 @@ kindredDiscoverySpec s registry =
         stocked = List.foldl' (\g _ -> snd (S.addLibraryCard island S.alice g)) g0 [1 :: Int .. 5]
         drawn chosen =
           let chose = case mine of
-                discoveryId : _ -> stocked {GameState.objects = Map.adjust (\o -> o {Object.chosenSubtype = Just chosen}) discoveryId (GameState.objects stocked)}
+                discoveryId : _ -> stocked {GameState.objects = Map.adjust (\o -> o {Object.chosenSubtype = Map.singleton Acquisition.Own chosen}) discoveryId (GameState.objects stocked)}
                 [] -> stocked
            in S.handSize S.alice (S.runToStep (Phase.Combat CombatStep.DeclareBlockers) S.aggressiveAnswer chose)
     Spec.assertEqWith s "having chosen Goblin, the two attacking Pikers draw two" (drawn Subtype.Goblin) 2

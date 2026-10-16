@@ -647,7 +647,7 @@ targetable pcs rowsOf perspective source sourceView gs recipient =
             protects =
               Filter.matches
                 (Filter.contextFor (Game.teams gs) controller (Just source))
-                  { Filter.carrierChosenPlayer = Game.lookupObject oid gs >>= Map.lookup PlayerChoice.AsEnters . Object.chosenPlayers,
+                  { Filter.carrierChosenPlayer = Game.currentChoice Object.chosenPlayers oid gs >>= Map.lookup PlayerChoice.AsEnters,
                     Filter.aimingController = Just perspective
                   }
                 sourceView

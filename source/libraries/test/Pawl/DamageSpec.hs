@@ -38,6 +38,7 @@ import qualified Pawl.Interpreter as Interpreter
 import qualified Pawl.Registry as Registry
 import qualified Pawl.Spec as Spec
 import qualified Pawl.Support as S
+import qualified Pawl.Types.Acquisition as Acquisition
 import qualified Pawl.Types.ActivatedAbility as ActivatedAbility
 import qualified Pawl.Types.ActiveReplacement as ActiveReplacement
 import qualified Pawl.Types.Asked as Asked
@@ -765,8 +766,8 @@ lastKnownRiderSpec s registry =
                     -- CR 614.1c: nothing here chose a player.
                     LastKnown.chosenPlayers = Map.empty,
                     -- CR 614.1c: nor a colour or a subtype.
-                    LastKnown.chosenColors = Set.empty,
-                    LastKnown.chosenSubtype = Nothing,
+                    LastKnown.chosenColors = Map.empty,
+                    LastKnown.chosenSubtype = Map.empty,
                     -- CR 508.1k / 509.1g: this board declares no combat at all.
                     LastKnown.attacking = False,
                     LastKnown.attackTarget = Nothing,
@@ -2662,7 +2663,7 @@ trueNameNemesisSpec s registry =
               Spec.assertEqWith
                 s
                 "CR 614.1c and each board's Nemesis really remembers the seat it was told"
-                (Game.lookupObject chosenBobId chosenBob >>= Map.lookup PlayerChoice.AsEnters . Object.chosenPlayers, Game.lookupObject chosenCarolId chosenCarol >>= Map.lookup PlayerChoice.AsEnters . Object.chosenPlayers)
+                (Game.lookupObject chosenBobId chosenBob >>= Map.lookup PlayerChoice.AsEnters . Map.findWithDefault Map.empty Acquisition.Own . Object.chosenPlayers, Game.lookupObject chosenCarolId chosenCarol >>= Map.lookup PlayerChoice.AsEnters . Map.findWithDefault Map.empty Acquisition.Own . Object.chosenPlayers)
                 (Just S.bob, Just S.carol)
             _ -> Spec.assertFailure s "the Nemesis did not reach the battlefield"
 

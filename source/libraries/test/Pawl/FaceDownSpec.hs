@@ -162,6 +162,7 @@ import qualified Pawl.Extra.Natural as Natural
 import qualified Pawl.Registry as Registry
 import qualified Pawl.Spec as Spec
 import qualified Pawl.Support as S
+import qualified Pawl.Types.Acquisition as Acquisition
 import qualified Pawl.Types.Action as Action.Type
 import qualified Pawl.Types.CandidateCost as CandidateCost
 import qualified Pawl.Types.Card as Card
@@ -1292,7 +1293,7 @@ offerSpec s registry = Spec.describe s "Offer" $ do
 -- Put chosen card names, keyed by chooser, onto a permanent (CR 201.4 / 614.1c).
 withChosenNames :: ObjectId.ObjectId -> Map.Map PlayerId.PlayerId CardName.CardName -> GameState.GameState -> GameState.GameState
 withChosenNames oid names gs =
-  gs {GameState.objects = Map.adjust (\o -> o {Object.chosenNames = names}) oid (GameState.objects gs)}
+  gs {GameState.objects = Map.adjust (\o -> o {Object.chosenNames = Map.singleton Acquisition.Own names}) oid (GameState.objects gs)}
 
 -- CR 708.2a / 708.4: what the face-down spell and the permanent it becomes are.
 castSpec :: (Monad m, Monad n) => Spec.Spec m n -> Registry.Registry m -> n ()

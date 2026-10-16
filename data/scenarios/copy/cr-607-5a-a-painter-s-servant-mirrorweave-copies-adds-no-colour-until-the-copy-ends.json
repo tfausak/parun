@@ -1,0 +1,47 @@
+{
+  "description": "CR 607.5a a Painter's Servant Mirrorweave makes a copy of another adds no colour until the copy ends",
+  "note": "Alice's first Servant chooses blue and her second red, so her Forest is blue and red (CR 105.3). Mirrorweave makes the first a copy of the second: the choosing and colouring abilities it now has were acquired together by that effect and are linked only to each other (CR 607.5), and no colour was chosen for them, so the chosen colour is undefined and that ability adds nothing (CR 607.5a). The Forest is red alone. Blue stays noted for the printed pair, so after cleanup ends the copy (CR 611.2a) the Forest is blue and red again.",
+  "board": {
+    "seats": [
+      {
+        "name": "alice",
+        "battlefield": [
+          { "card": "Forest", "label": "forest" },
+          { "card": "Island", "label": "i1" },
+          { "card": "Island", "label": "i2" },
+          { "card": "Island", "label": "i3" },
+          { "card": "Island", "label": "i4" },
+          { "card": "Island", "label": "i5" },
+          { "card": "Island", "label": "i6" },
+          { "card": "Island", "label": "i7" },
+          { "card": "Island", "label": "i8" }
+        ],
+        "hand": [
+          { "card": "Painter's Servant", "label": "blue-servant" },
+          { "card": "Painter's Servant", "label": "red-servant" },
+          { "card": "Mirrorweave", "label": "mirrorweave" }
+        ],
+        "library": [{ "card": "Island" }, { "card": "Island" }]
+      },
+      {
+        "name": "bob",
+        "library": [{ "card": "Island" }, { "card": "Island" }]
+      }
+    ],
+    "active": "alice",
+    "step": "PrecombatMain"
+  },
+  "timeline": [
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": { "Cast": { "object": "$blue-servant", "mana": ["$i1", "$i2", null] } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass" },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": { "Answer": { "prompt": "ChooseColor", "with": { "type": "Blue" } } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": { "Cast": { "object": "$red-servant", "mana": ["$i3", "$i4", null] } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass" },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": { "Answer": { "prompt": "ChooseColor", "with": { "type": "Red" } } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "check": { "View": { "of": "Colors", "object": "$forest", "is": ["Blue", "Red"] } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": { "Cast": { "object": "$mirrorweave", "targets": ["Painter's Servant#2"], "mana": ["$i5", "$i6", "$i7", "$i8", null] } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass" },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "check": { "View": { "of": "Colors", "object": "$forest", "is": ["Red"] } } },
+    { "turn": 2, "step": "Upkeep", "player": "bob", "check": { "View": { "of": "Colors", "object": "$forest", "is": ["Blue", "Red"] } } }
+  ]
+}

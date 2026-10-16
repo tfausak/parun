@@ -347,7 +347,7 @@ resolveSpellWith runSubgame oid = do
                               instanceView = Modal.instanceView modeOwnedSlots mi (Mode.targetSlots mode)
                               legalHere = instanceView (Map.mapWithKey legalSlot (Binding.targetsOf gateBindings))
                               boundHere = Map.keysSet (instanceView (Set.empty <$ gateBindings))
-                          gated <- gateHolds effectController oid (instanceView (Binding.targetsOf gateBindings)) gateBindings limb
+                          gated <- gateHolds effectController oid oid (instanceView (Binding.targetsOf gateBindings)) gateBindings limb
                           taken <- if gated then exercises oid oid effectController idx limbIdx boundHere legalHere (Just facing) Set.empty limb else pure False
                           before <- State.get
                           (admitted, answers2) <-
@@ -374,7 +374,7 @@ resolveSpellWith runSubgame oid = do
                         -- re-read adds only defined slots. A REGRESSION FENCE --
                         -- mutating this half back leaves the suite green.
                         gateBindings <- State.gets (liveBindings obj oid)
-                        gated <- if hangs then gateHolds effectController oid (Modal.instanceView modeOwnedSlots mi (Mode.targetSlots mode) (Binding.targetsOf gateBindings)) gateBindings clause else pure False
+                        gated <- if hangs then gateHolds effectController oid oid (Modal.instanceView modeOwnedSlots mi (Mode.targetSlots mode) (Binding.targetsOf gateBindings)) gateBindings clause else pure False
                         -- CR 603.5 / 608.2d: then the printed "may", against the
                         -- SAME live bindings CR 608.2b's filter is applied to, so
                         -- a clause whose every read is dead is not asked about.
@@ -392,7 +392,7 @@ resolveSpellWith runSubgame oid = do
                         let eligible i = case lookup i indexedClauses of
                               Nothing -> pure False
                               Just sibling -> do
-                                held <- gateHolds effectController oid (Modal.instanceView modeOwnedSlots mi (Mode.targetSlots mode) (Binding.targetsOf gateBindings)) gateBindings sibling
+                                held <- gateHolds effectController oid oid (Modal.instanceView modeOwnedSlots mi (Mode.targetSlots mode) (Binding.targetsOf gateBindings)) gateBindings sibling
                                 State.gets (\gsNow -> held && not (clauseIsImpossible oid oid effectController legalNowForMay gsNow sibling))
                         -- CR 701.55d's exception to rule 608.2e, ahead of the
                         -- ordinary either-or: a villainous pair is chosen AND
@@ -538,7 +538,7 @@ applyEpic oid controller = do
             ActivePlayerEffect.MkActivePlayerEffect
               { ActivePlayerEffect.source = oid,
                 ActivePlayerEffect.controller = controller,
-                ActivePlayerEffect.choices = SourceContext.choicesOf oid g,
+                ActivePlayerEffect.choices = SourceContext.choicesOf (Game.acquisitionOf oid g) oid g,
                 ActivePlayerEffect.timestamp = ts,
                 ActivePlayerEffect.expiry = Expiry.Type.Never,
                 ActivePlayerEffect.scope = AffectedPlayers.Scoped (PlayerScope.Related PlayerRelation.You),
@@ -842,7 +842,7 @@ resolveModesWith runSubgame stackId srcId modes = do
                       gateBindings <- State.gets (liveBindings obj stackId)
                       let legalHere = instanceView (Map.mapWithKey legalSlot (Binding.targetsOf gateBindings))
                           boundHere = Map.keysSet (instanceView (Set.empty <$ gateBindings))
-                      gated <- gateHolds effectController srcId (instanceView (Binding.targetsOf gateBindings)) gateBindings limb
+                      gated <- gateHolds effectController stackId srcId (instanceView (Binding.targetsOf gateBindings)) gateBindings limb
                       taken <- if gated then exercises stackId srcId effectController idx limbIdx boundHere legalHere (Just facing) Set.empty limb else pure False
                       before <- State.get
                       (admitted, answers2) <- if taken then payGateAdmits runSubgame stackId srcId effectController idx limbIdx (instanceView legal) (Just facing) Set.empty answers limb else pure (False, answers)
@@ -866,7 +866,7 @@ resolveModesWith runSubgame stackId srcId modes = do
                         -- the STACK object (CR 608.2c), where this resolution's
                         -- slots are bound (see bindSlot).
                         gateBindings <- State.gets (liveBindings obj stackId)
-                        gated <- if hangs then gateHolds effectController srcId (instanceView (Binding.targetsOf gateBindings)) gateBindings clause else pure False
+                        gated <- if hangs then gateHolds effectController stackId srcId (instanceView (Binding.targetsOf gateBindings)) gateBindings clause else pure False
                         -- CR 603.5 / 608.2d: then the printed "may", against the
                         -- SAME live bindings CR 608.2b's filter is applied to, so a
                         -- clause whose every read is dead is not asked about.
@@ -889,7 +889,7 @@ resolveModesWith runSubgame stackId srcId modes = do
                         let eligible i = case lookup i indexedClauses of
                               Nothing -> pure False
                               Just sibling -> do
-                                held <- gateHolds effectController srcId (instanceView (Binding.targetsOf gateBindings)) gateBindings sibling
+                                held <- gateHolds effectController stackId srcId (instanceView (Binding.targetsOf gateBindings)) gateBindings sibling
                                 State.gets (\gsNow -> held && not (clauseIsImpossible stackId srcId effectController legalNowForMay gsNow sibling))
                         -- CR 701.55d's exception to rule 608.2e, ahead of the
                         -- ordinary either-or and off the same helper the spell
@@ -1018,12 +1018,12 @@ recordTaken clause admitted before after cIdx ran =
 -- clause stamped. Under the printed slot names, which is how every other live
 -- read is written (slotBindings) and unlike the chosen map, which the caller has
 -- projected into CR 700.2d's mode instance.
-gateHolds :: PlayerId -> ObjectId -> Map.Map SlotName (Set Recipient) -> Map.Map SlotName Binding.Type.Binding -> Clause.Clause Card.Type.Card (GrantedAbility.GrantedAbility Card.Type.Card) -> Game Bool
-gateHolds controller source chosen bindings clause = case Clause.condition clause of
+gateHolds :: PlayerId -> ObjectId -> ObjectId -> Map.Map SlotName (Set Recipient) -> Map.Map SlotName Binding.Type.Binding -> Clause.Clause Card.Type.Card (GrantedAbility.GrantedAbility Card.Type.Card) -> Game Bool
+gateHolds controller resolving source chosen bindings clause = case Clause.condition clause of
   Nothing -> pure True
   Just condition -> do
     gs <- State.get
-    pure (Condition.holds (Projection.viewWithLastKnownAnywhere gs) (effectContext gs controller source chosen bindings) gs source condition)
+    pure (Condition.holds (Projection.viewWithLastKnownAnywhere gs) (effectContext gs resolving controller source chosen bindings) gs source condition)
 
 -- CR 608.2d: which branch of an either-or clause pair happens -- Twiddle's "you
 -- may tap or untap target artifact, creature, or land". A clause naming no
@@ -1107,7 +1107,7 @@ chosenBranch resolving source controller idx cIdx legal eligible limbOf picked c
             offered <- Monad.filterM eligible (NonEmpty.toList branches)
             memo <- case offered of
               [] -> pure (False, Map.empty)
-              [forced] -> pure (False, Map.fromList (fmap (\chooser -> (chooser, forced)) (apnapDecidersOf (OrElse.chooser orElse) legal source controller gs)))
+              [forced] -> pure (False, Map.fromList (fmap (\chooser -> (chooser, forced)) (apnapDecidersOf (OrElse.chooser orElse) legal resolving source controller gs)))
               _ ->
                 -- CR 101.4b: each chooser is told the branches the choosers
                 -- before them announced.
@@ -1129,7 +1129,7 @@ chosenBranch resolving source controller idx cIdx legal eligible limbOf picked c
                         pure (made Seq.|> (chooser, announcedHere))
                     )
                     Seq.empty
-                    (apnapDecidersOf (OrElse.chooser orElse) legal source controller gs)
+                    (apnapDecidersOf (OrElse.chooser orElse) legal resolving source controller gs)
             let (announced, committed) = settled memo
             pure (announced, committed, Map.insert key memo picked)
 
@@ -1236,7 +1236,7 @@ villainousPass resolving source controller idx legal orElse limbs performLimb ac
           Monad.foldM (\faced _ -> face chooser faced) seat (List.replicate times ())
       )
       (acc0, Seq.empty)
-      (apnapDecidersOf (OrElse.chooser orElse) legal source controller gs)
+      (apnapDecidersOf (OrElse.chooser orElse) legal resolving source controller gs)
   where
     face chooser (acc, made) = do
       gs1 <- State.get
@@ -1327,7 +1327,7 @@ exercises resolving source controller idx cIdx bound legal announced committed c
                   pure (made Seq.|> (pid, decision))
               )
               Seq.empty
-              (filter able (announcedOnly announced (apnapDecidersOf asker legal source controller gs)))
+              (filter able (announcedOnly announced (apnapDecidersOf asker legal resolving source controller gs)))
           let accepted = Set.fromList [pid | (pid, OptionalDecision.Exercises) <- Foldable.toList answers]
           State.modify' (bindPlayersSlot resolving Binding.mayPlayers accepted)
           pure (not (Set.null accepted))

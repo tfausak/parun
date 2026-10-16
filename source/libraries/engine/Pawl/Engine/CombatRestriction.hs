@@ -943,7 +943,7 @@ cantBeBlockedBy defending blockers attackers gs =
               -- player comes off the same object the power does.
               context attacker =
                 (Projection.pairwiseContext gs attacker)
-                  { Filter.carrierChosenPlayer = Game.lookupObject attacker gs >>= Map.lookup PlayerChoice.AsEnters . Object.chosenPlayers
+                  { Filter.carrierChosenPlayer = Game.currentChoice Object.chosenPlayers attacker gs >>= Map.lookup PlayerChoice.AsEnters
                   }
               matched attacker blocker = Filter.matches (context attacker) (Projection.viewOfObject blocker gs) wanted
               barred attacker = fmap (\blocker -> (blocker, attacker)) (filter (matched attacker) blockers)

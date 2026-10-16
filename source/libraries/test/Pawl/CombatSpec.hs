@@ -40,6 +40,7 @@ import qualified Pawl.Registry as Registry
 import qualified Pawl.Scenario as Scenario
 import qualified Pawl.Spec as Spec
 import qualified Pawl.Support as S
+import qualified Pawl.Types.Acquisition as Acquisition
 import qualified Pawl.Types.ActiveAttackProhibition as ActiveAttackProhibition
 import qualified Pawl.Types.ActiveAttackRequirement as ActiveAttackRequirement
 import qualified Pawl.Types.ActiveObjectProhibition as ActiveObjectProhibition
@@ -485,7 +486,7 @@ controlChangeSicknessSpec s registry = Spec.describe s "ControlChangeSickness" $
 -- CR 614.1c's as-enters choice of a player, stamped onto a permanent a fixture
 -- placed rather than cast (S.addPermanent runs no entry loop).
 chosePlayer :: PlayerId.PlayerId -> ObjectId.ObjectId -> GameState.GameState -> GameState.GameState
-chosePlayer pid oid gs = gs {GameState.objects = Map.adjust (\o -> o {Object.chosenPlayers = Map.singleton PlayerChoice.AsEnters pid}) oid (GameState.objects gs)}
+chosePlayer pid oid gs = gs {GameState.objects = Map.adjust (\o -> o {Object.chosenPlayers = Map.singleton Acquisition.Own (Map.singleton PlayerChoice.AsEnters pid)}) oid (GameState.objects gs)}
 
 -- Declare attackers with everything, then hand back the state and the ids.
 attacking :: [Printing.Printing] -> [Printing.Printing] -> (GameState.GameState, [ObjectId.ObjectId], [ObjectId.ObjectId])
@@ -614,7 +615,7 @@ evasionSpec s registry = Spec.describe s "Evasion" $ do
             blocks = Map.singleton blocker (Set.singleton a)
         Spec.assertBool s (not (Combat.legalBlockDeclaration S.bob blocks chosenBob)) "CR 702.16k bob was chosen, so bob's Goblin Piker may not block it"
         Spec.assertBool s (Combat.legalBlockDeclaration S.bob blocks chosenAlice) "and with alice chosen instead the same Piker may"
-        Spec.assertEqWith s "CR 614.1c and the two boards really differ in the seat the Nemesis chose" (Game.lookupObject a chosenBob >>= Map.lookup PlayerChoice.AsEnters . Object.chosenPlayers, Game.lookupObject a chosenAlice >>= Map.lookup PlayerChoice.AsEnters . Object.chosenPlayers) (Just S.bob, Just S.alice)
+        Spec.assertEqWith s "CR 614.1c and the two boards really differ in the seat the Nemesis chose" (Game.lookupObject a chosenBob >>= Map.lookup PlayerChoice.AsEnters . Map.findWithDefault Map.empty Acquisition.Own . Object.chosenPlayers, Game.lookupObject a chosenAlice >>= Map.lookup PlayerChoice.AsEnters . Map.findWithDefault Map.empty Acquisition.Own . Object.chosenPlayers) (Just S.bob, Just S.alice)
       _ -> Spec.assertFailure s "fixture should have an attacker and a blocker"
   Spec.it s "CR 509.1a a Mountain is not a legal blocker, flier or no flier" $ do
     -- The classification, from the other side: `canBlock` asks
@@ -1821,7 +1822,7 @@ aimedAttackRestrictionSpec s registry = Spec.describe s "AimedAttackRestriction"
     let (gs, mine, theirs) = S.combatBoardOf [piker, maiden] [moat]
     case (mine, theirs) of
       ([pikerId, maidenId], [moatId]) -> do
-        let choosing color = gs {GameState.objects = Map.adjust (\o -> o {Object.chosenColors = Set.singleton color}) moatId (GameState.objects gs)}
+        let choosing color = gs {GameState.objects = Map.adjust (\o -> o {Object.chosenColors = Map.singleton Acquisition.Own (Set.singleton color)}) moatId (GameState.objects gs)}
         Spec.assertBool s (not (Combat.legalAttackDeclaration S.alice [pikerId] (choosing Color.Red))) "red chosen: the red Piker may not attack bob"
         Spec.assertBool s (Combat.legalAttackDeclaration S.alice [pikerId] (choosing Color.Green)) "green chosen: the red Piker may"
         Spec.assertBool s (Combat.legalAttackDeclaration S.alice [maidenId] (choosing Color.Red)) "red chosen: the red Bird Maiden flies, so it may"

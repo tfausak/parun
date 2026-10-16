@@ -99,6 +99,7 @@ import qualified Pawl.Extra.Natural as Natural
 import qualified Pawl.Registry as Registry
 import qualified Pawl.Spec as Spec
 import qualified Pawl.Support as S
+import qualified Pawl.Types.Acquisition as Acquisition
 import qualified Pawl.Types.Action as A
 import qualified Pawl.Types.ActivatedAbility as ActivatedAbility
 import qualified Pawl.Types.Card as Card.Type
@@ -398,7 +399,7 @@ pentarchPaladinSpec s registry = Spec.describe s "Pentarch Paladin" $ do
             (pikerId, g1) = S.addPermanent piker S.bob g0
             (elvesId, g2) = S.addPermanent elves S.bob g1
             (murderId, g3) = S.addHandCard murder S.bob g2
-            chose = g3 {GameState.objects = Map.adjust (\o -> o {Object.chosenColors = Set.singleton chosen}) paladinId (GameState.objects g3)}
+            chose = g3 {GameState.objects = Map.adjust (\o -> o {Object.chosenColors = Map.singleton Acquisition.Own (Set.singleton chosen)}) paladinId (GameState.objects g3)}
         case soleActivatedAbility paladin of
           Nothing -> Spec.assertFailure s "Pentarch Paladin should declare one activated ability" >> pure Nothing
           Just ability -> pure (Just (paladinId, pikerId, elvesId, murderId, S.runPure (aimAtCreature pikerId) chose (Activate.activateAbility S.alice paladinId ability)))
@@ -475,7 +476,7 @@ fromTheRubbleSpec s registry =
         (pikerId, g1) = S.addGraveyardCard piker S.alice g0
         (_, g2) = S.addGraveyardCard giant S.alice g1
         endOfTurn chosen =
-          let chose = g2 {GameState.objects = Map.adjust (\o -> o {Object.chosenSubtype = Just chosen}) rubbleId (GameState.objects g2), GameState.remaining = Seq.fromList [Phase.Ending EndingStep.EndStep, Phase.Ending EndingStep.Cleanup]}
+          let chose = g2 {GameState.objects = Map.adjust (\o -> o {Object.chosenSubtype = Map.singleton Acquisition.Own chosen}) rubbleId (GameState.objects g2), GameState.remaining = Seq.fromList [Phase.Ending EndingStep.EndStep, Phase.Ending EndingStep.Cleanup]}
               afterMain = S.runPure (aimAtCreature pikerId) chose Engine.runStep
            in S.runPure (aimAtCreature pikerId) afterMain Engine.runStep
         onBattlefield name = S.countOnBattlefieldByName (CardName.MkCardName (Text.pack name)) S.alice
@@ -568,7 +569,7 @@ spec s registry = Spec.describe s "Pawl.Engine.Target" $ do
         (giantB, gs) = S.addPermanent giant S.bob g3
         slot = SlotName.MkSlotName (Text.pack "each")
         legal = Map.singleton slot (Set.fromList [Recipient.ToObject pikerA, Recipient.ToObject giantA])
-        context = Slots.effectContextNaming slot pikerA gs S.alice S.noSource legal Map.empty
+        context = Slots.effectContextNaming slot pikerA gs S.noSource S.alice S.noSource legal Map.empty
         sharesName oid = Filter.matches context (Projection.viewOfObject oid gs) (Filter.Type.SameNameAsBound slot)
     Spec.assertEqWith
       s
@@ -1289,7 +1290,7 @@ spec s registry = Spec.describe s "Pawl.Engine.Target" $ do
       Just slot -> do
         let (nemesisId, board0) = S.addPermanent nemesis S.bob S.threePlayerGame
             (giantId, board) = S.addPermanent giant S.bob board0
-            chose who = board {GameState.objects = Map.adjust (\o -> o {Object.chosenPlayers = Map.singleton PlayerChoice.AsEnters who}) nemesisId (GameState.objects board)}
+            chose who = board {GameState.objects = Map.adjust (\o -> o {Object.chosenPlayers = Map.singleton Acquisition.Own (Map.singleton PlayerChoice.AsEnters who)}) nemesisId (GameState.objects board)}
             reaches gs victim =
               let (spellId, onStack) = S.spellOnStack murder S.alice gs
                in Set.member (Recipient.ToCreature victim) (Target.legalRecipients (Just S.alice) spellId slot onStack)
@@ -1334,7 +1335,7 @@ spec s registry = Spec.describe s "Pawl.Engine.Target" $ do
     case Face.activatedAbilities (S.combinedFace recluse) of
       [ability] | Just theSlot <- soleTargetSlot (ActivatedAbility.modal ability) -> do
         let (nemesisId, board0) = S.addPermanent nemesis S.alice S.threePlayerGame
-            chose = board0 {GameState.objects = Map.adjust (\o -> o {Object.chosenPlayers = Map.singleton PlayerChoice.AsEnters S.bob}) nemesisId (GameState.objects board0)}
+            chose = board0 {GameState.objects = Map.adjust (\o -> o {Object.chosenPlayers = Map.singleton Acquisition.Own (Map.singleton PlayerChoice.AsEnters S.bob)}) nemesisId (GameState.objects board0)}
             (recluseId, board1) = S.addPermanent recluse S.carol chose
             (hisRecluseId, board2) = S.addPermanent recluse S.bob board1
             (rayId, board) = S.addHandCard rayOfCommand S.bob (S.landsFor island S.bob 4 board2)

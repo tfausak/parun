@@ -668,9 +668,9 @@ ruleSpec s registry = Spec.describe s "Rules" $ do
         -- going in, and the object that carried it is still the same object,
         -- sitting in a library, coming out.
         (Just before, Just rebuilt) -> do
-          Spec.assertBool s (not (Set.null (Object.chosenColors before))) "CR 614.1c: the cast Servant chose a colour as it entered"
+          Spec.assertBool s (not (Map.null (Object.chosenColors before))) "CR 614.1c: the cast Servant chose a colour as it entered"
           Spec.assertEqWith s "CR 727.2: the rebuilt Servant is the same object, in a library" (Object.zone rebuilt) Zone.Library
-          Spec.assertEqWith s "CR 400.7: the Servant in the library forgot the colour it chose" (Object.chosenColors rebuilt) Set.empty
+          Spec.assertEqWith s "CR 400.7: the Servant in the library forgot the colour it chose" (Object.chosenColors rebuilt) Map.empty
         (_, Nothing) -> Spec.assertFailure s "the opening draw took the Servant out of the library; raise alice's pool"
         _ -> Spec.assertFailure s "the fixture lost the Servant before the restart"
       _ -> Spec.assertFailure s "Painter's Servant did not reach the battlefield"

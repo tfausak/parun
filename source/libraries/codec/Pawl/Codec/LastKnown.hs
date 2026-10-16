@@ -4,6 +4,7 @@ module Pawl.Codec.LastKnown where
 
 import qualified Data.Map.Strict as Map
 import qualified Data.Set as Set
+import qualified Pawl.Codec.Acquisition as Acquisition
 import qualified Pawl.Codec.AttackTarget as AttackTarget
 import qualified Pawl.Codec.CardName as CardName
 import qualified Pawl.Codec.Color as Color
@@ -35,10 +36,10 @@ codec = Fields.object $ do
   copiable <- Fields.required "copiable" ProjectedCharacteristics.codec LastKnown.copiable
   attached <- Fields.required "attached" (Common.set ObjectId.codec) LastKnown.attached
   host <- Fields.defaulted "host" Nothing (Common.maybe ObjectId.codec) LastKnown.host
-  chosenNames <- Fields.required "chosenNames" (Common.naturalMap PlayerId.codec CardName.codec) LastKnown.chosenNames
-  chosenPlayers <- Fields.defaulted "chosenPlayers" Map.empty (Common.keyedList (Common.keyValue PlayerChoice.codec PlayerId.codec)) LastKnown.chosenPlayers
-  chosenColors <- Fields.defaulted "chosenColors" Set.empty (Common.set Color.codec) LastKnown.chosenColors
-  chosenSubtype <- Fields.defaulted "chosenSubtype" Nothing (Common.maybe Subtype.codec) LastKnown.chosenSubtype
+  chosenNames <- Fields.required "chosenNames" (Common.keyedList (Common.keyValue Acquisition.codec (Common.naturalMap PlayerId.codec CardName.codec))) LastKnown.chosenNames
+  chosenPlayers <- Fields.defaulted "chosenPlayers" Map.empty (Common.keyedList (Common.keyValue Acquisition.codec (Common.keyedList (Common.keyValue PlayerChoice.codec PlayerId.codec)))) LastKnown.chosenPlayers
+  chosenColors <- Fields.defaulted "chosenColors" Map.empty (Common.keyedList (Common.keyValue Acquisition.codec (Common.set Color.codec))) LastKnown.chosenColors
+  chosenSubtype <- Fields.defaulted "chosenSubtype" Map.empty (Common.keyedList (Common.keyValue Acquisition.codec Subtype.codec)) LastKnown.chosenSubtype
   attacking <- Fields.required "attacking" Common.boolean LastKnown.attacking
   attackTarget <- Fields.required "attackTarget" (Common.maybe AttackTarget.codec) LastKnown.attackTarget
   blocking <- Fields.required "blocking" Common.boolean LastKnown.blocking

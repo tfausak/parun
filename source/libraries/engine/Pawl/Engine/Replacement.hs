@@ -1752,12 +1752,12 @@ matchesFiltered viewOf gs candidate filter_ oid =
 candidateContext :: GameState -> ReplacementCandidate -> Filter.Context
 candidateContext gs candidate =
   let source = ReplacementCandidate.source candidate
-      choices = Maybe.fromMaybe (SourceContext.choicesOf source gs) (ReplacementCandidate.choices candidate)
+      choices = Maybe.fromMaybe (SourceContext.choicesOf (Game.acquisitionOf source gs) source gs) (ReplacementCandidate.choices candidate)
    in Projection.framedBySlots
         gs
         (fmap (Set.map Recipient.ToObject) (ReplacementCandidate.slots candidate))
         (Projection.framedWith choices source gs (Projection.sourceContext gs (ReplacementCandidate.controller candidate) source))
-          { Filter.carrierChosenPlayer = Game.lookupObject source gs >>= Map.lookup PlayerChoice.AsEnters . Object.chosenPlayers
+          { Filter.carrierChosenPlayer = Game.currentChoice Object.chosenPlayers source gs >>= Map.lookup PlayerChoice.AsEnters
           }
 
 -- CR 614.12 for a token that does not exist yet: a lot's token is judged off

@@ -7,6 +7,7 @@ import Data.Set (Set)
 import qualified Data.Set as Set
 import qualified Pawl.Engine.Binding as Binding
 import qualified Pawl.Engine.Game as Game
+import qualified Pawl.Types.Acquisition as Acquisition
 import qualified Pawl.Types.AttackTarget as AttackTarget
 import qualified Pawl.Types.AttackingPlayers as AttackingPlayers
 import qualified Pawl.Types.Combat as Combat
@@ -44,6 +45,10 @@ data Reads = MkReads
     controllerOf :: ObjectId -> Maybe PlayerId,
     -- | CR 108.3's owner of an object, as this position sees it.
     ownerOf :: ObjectId -> Maybe PlayerId,
+    -- | CR 607.5: which acquisition's choices this position reads off an
+    -- object -- Game.readingAcquisition for a resolution, Game.acquisitionOf
+    -- elsewhere.
+    acquisitionOf :: ObjectId -> Acquisition.Acquisition,
     -- | The players a relation is judged over: CR 801.10 / 801.11's 'table'
     -- for a spell or ability, every player still in the game where no range
     -- applies (Pawl.Engine.PlayerEffect.zoneOwners).
@@ -56,17 +61,17 @@ data Reads = MkReads
   }
 
 -- | What a RESOLUTION reads (CR 608.2): its controller as "you", the slots it
--- filled (CR 608.2b's legal ones), and the controller and owner reads the
--- caller supplies -- CR 608.2h's last known information, from a module that
--- sees the projection. CR 801.10: every answer is cut to the controller's
+-- filled (CR 608.2b's legal ones), and the controller, owner and choice reads
+-- the caller supplies -- CR 608.2h's last known information, from a module that
+-- sees the projection, and CR 607.5's acquisition. CR 801.10: every answer is cut to the controller's
 -- 'table', so a player the clause names through an object or a choice --
 -- Stuffy Doll's chosen player under another controller -- is not affected
 -- from out of range. Pawl.RangeOfInfluenceSpec's "CR 801.10 a chosen player
 -- outside the controller's range is dealt no damage" proves it. The range is
 -- the caller's @reach@ (Plane.rangePerspective), so CR 801.18's planar source
 -- cuts nobody.
-resolution :: (ObjectId -> Maybe PlayerId) -> (ObjectId -> Maybe PlayerId) -> Map.Map SlotName (Set Recipient) -> Maybe PlayerId -> PlayerId -> GameState -> Reads
-resolution controllerRead ownerRead slots reach controller gs =
+resolution :: (ObjectId -> Maybe PlayerId) -> (ObjectId -> Maybe PlayerId) -> (ObjectId -> Acquisition.Acquisition) -> Map.Map SlotName (Set Recipient) -> Maybe PlayerId -> PlayerId -> GameState -> Reads
+resolution controllerRead ownerRead acquisitionRead slots reach controller gs =
   let reached = table reach gs
    in MkReads
         { perspective = Just controller,
@@ -75,6 +80,7 @@ resolution controllerRead ownerRead slots reach controller gs =
           slotObject = \slot -> Map.lookup slot (Binding.objectsIn slots),
           controllerOf = controllerRead,
           ownerOf = ownerRead,
+          acquisitionOf = acquisitionRead,
           roster = reached,
           reaches = (`elem` reached)
         }
@@ -229,7 +235,7 @@ namedUncut given gs ref =
         -- record, not a characteristic (CR 707.2) -- through CR 608.2h's
         -- look-back. Pawl.CastSpec's Scrapshooter killed in response still has
         -- the promised opponent draw.
-        PlayerRef.ChosenPlayerOfBound slot choice -> fmap pure (slotObject given slot >>= \oid -> Game.chosenPlayerWithLastKnown choice oid gs)
+        PlayerRef.ChosenPlayerOfBound slot choice -> fmap pure (slotObject given slot >>= \oid -> Game.chosenPlayerWithLastKnown (acquisitionOf given oid) choice oid gs)
         -- CR 508.6: the players controlling a creature attacking the player a
         -- slot names, narrowed by the printed relation -- Curse of Vitality's
         -- "each opponent attacking that player". The LIVE combat record (CR

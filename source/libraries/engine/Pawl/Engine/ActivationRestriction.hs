@@ -384,7 +384,7 @@ refusedMidPayment restriction = case restriction of
 spendableTypes :: ObjectId -> [ActivationRestriction.ActivationRestriction] -> GameState -> Maybe (Set.Set ManaType.ManaType)
 spendableTypes srcId restrictions gs =
   let named restriction = case restriction of
-        ActivationRestriction.SpendOnly ManaSpecification.ChosenColor -> Just (Set.map ManaType.Colored (Game.chosenColorsWithLastKnown srcId gs))
+        ActivationRestriction.SpendOnly ManaSpecification.ChosenColor -> Just (Set.map ManaType.Colored (Game.chosenColorsWithLastKnown (Game.acquisitionOf srcId gs) srcId gs))
         ActivationRestriction.SpendOnly ManaSpecification.AnyMana -> Nothing
         -- The rest time or count an activation and say nothing of its mana.
         _ -> Nothing
