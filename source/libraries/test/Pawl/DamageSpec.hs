@@ -70,6 +70,7 @@ import qualified Pawl.Types.Object as Object
 import qualified Pawl.Types.ObjectId as ObjectId
 import qualified Pawl.Types.Phase as Phase
 import qualified Pawl.Types.Player as Player
+import qualified Pawl.Types.PlayerChoice as PlayerChoice
 import qualified Pawl.Types.PlayerCounterKind as PlayerCounterKind
 import qualified Pawl.Types.PlayerId as PlayerId
 import qualified Pawl.Types.Printing as Printing
@@ -762,7 +763,7 @@ lastKnownRiderSpec s registry =
                     -- CR 201.4: nothing named a card here.
                     LastKnown.chosenNames = Map.empty,
                     -- CR 614.1c: nothing here chose a player.
-                    LastKnown.chosenPlayer = Nothing,
+                    LastKnown.chosenPlayers = Map.empty,
                     -- CR 614.1c: nor a colour or a subtype.
                     LastKnown.chosenColors = Set.empty,
                     LastKnown.chosenSubtype = Nothing,
@@ -2661,7 +2662,7 @@ trueNameNemesisSpec s registry =
               Spec.assertEqWith
                 s
                 "CR 614.1c and each board's Nemesis really remembers the seat it was told"
-                (Game.lookupObject chosenBobId chosenBob >>= Object.chosenPlayer, Game.lookupObject chosenCarolId chosenCarol >>= Object.chosenPlayer)
+                (Game.lookupObject chosenBobId chosenBob >>= Map.lookup PlayerChoice.AsEnters . Object.chosenPlayers, Game.lookupObject chosenCarolId chosenCarol >>= Map.lookup PlayerChoice.AsEnters . Object.chosenPlayers)
                 (Just S.bob, Just S.carol)
             _ -> Spec.assertFailure s "the Nemesis did not reach the battlefield"
 

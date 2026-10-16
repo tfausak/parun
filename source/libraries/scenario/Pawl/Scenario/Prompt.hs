@@ -145,6 +145,7 @@ deciderOf prompt = case prompt of
   Prompt.ChooseManaType decider _ _ _ -> Just (Decider.unwrap decider)
   Prompt.ChooseCardName decider _ _ _ _ -> Just (Decider.unwrap decider)
   Prompt.ChooseOpponent decider _ _ _ -> Just (Decider.unwrap decider)
+  Prompt.PromiseGift decider _ _ _ _ -> Just (Decider.unwrap decider)
   Prompt.ChooseProtector decider _ _ _ -> Just (Decider.unwrap decider)
   Prompt.ChoosePlayer decider _ _ _ -> Just (Decider.unwrap decider)
   Prompt.ChooseActivePlayer decider _ _ -> Just (Decider.unwrap decider)
@@ -328,6 +329,7 @@ kindOf prompt = Text.pack $ case prompt of
   Prompt.ChooseManaType {} -> "ChooseManaType"
   Prompt.ChooseCardName {} -> "ChooseCardName"
   Prompt.ChooseOpponent {} -> "ChooseOpponent"
+  Prompt.PromiseGift {} -> "PromiseGift"
   Prompt.ChooseProtector {} -> "ChooseProtector"
   Prompt.ChoosePlayer {} -> "ChoosePlayer"
   Prompt.ChooseActivePlayer {} -> "ChooseActivePlayer"

@@ -199,7 +199,7 @@ zoneOfComponent component = case component of
   -- is Sacrifice's.
   CostComponent.Forage -> Nothing
   CostComponent.FlipCoin -> Nothing
-  CostComponent.ChooseOpponent -> Nothing
+  CostComponent.ChooseOpponent _ -> Nothing
   CostComponent.Waterbend _ -> Nothing
   CostComponent.WaterbendInstead _ -> Nothing
 

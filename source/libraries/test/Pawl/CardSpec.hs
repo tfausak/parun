@@ -3871,7 +3871,7 @@ costComponentFilters component = case component of
   CostComponent.RevealTopOfLibrary _ -> []
   -- CR 702.174a names an opponent rather than an object, so this component
   -- carries no Filter either.
-  CostComponent.ChooseOpponent -> []
+  CostComponent.ChooseOpponent _ -> []
   CostComponent.Waterbend _ -> []
   CostComponent.WaterbendInstead _ -> []
 

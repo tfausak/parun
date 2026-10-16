@@ -68,6 +68,7 @@ import qualified Pawl.Types.Object as Object
 import qualified Pawl.Types.ObjectId as ObjectId
 import qualified Pawl.Types.Phase as Phase
 import qualified Pawl.Types.Player as Player
+import qualified Pawl.Types.PlayerChoice as PlayerChoice
 import qualified Pawl.Types.PlayerId as PlayerId
 import qualified Pawl.Types.Printing as Printing
 import qualified Pawl.Types.Prompt as Prompt
@@ -567,7 +568,7 @@ spec s registry = Spec.describe s "Range of influence" $ do
   Spec.it s "CR 801.10 a chosen player outside the controller's range is dealt no damage" $ do
     doll <- S.printingOf s registry "Stuffy Doll"
     let (dollId, g0) = S.addPermanent doll S.alice (Setup.emptyGame (S.alice NonEmpty.:| [S.bob, S.carol, S.dave, erin]))
-        chosen = g0 {GameState.objects = Map.adjust (\o -> o {Object.chosenPlayer = Just erin}) dollId (GameState.objects g0)}
+        chosen = g0 {GameState.objects = Map.adjust (\o -> o {Object.chosenPlayers = Map.singleton PlayerChoice.AsEnters erin}) dollId (GameState.objects g0)}
         stolen = S.giveControl dollId S.bob chosen
         tapped gs =
           let activated = S.runPure S.identityAnswer gs (Activate.activateAbility S.bob dollId (theAbility doll))

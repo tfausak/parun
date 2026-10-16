@@ -2054,7 +2054,7 @@ effectLintSpec s registry = Spec.describe s "Lint" $ do
           PlayerRef.ControllerOfObject _ -> True
           PlayerRef.OwnerOfObject _ -> True
           -- One seat -- the arm above's answer, one record over.
-          PlayerRef.ChosenPlayerOfBound _ -> True
+          PlayerRef.ChosenPlayerOfBound _ _ -> True
           -- A SET -- Relative Opponent's answer, and for its reason: CR 508.6 is
           -- a predicate over the table rather than a name for one seat.
           PlayerRef.Attacking _ -> False

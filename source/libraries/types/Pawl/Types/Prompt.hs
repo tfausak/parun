@@ -34,6 +34,7 @@ import qualified Pawl.Types.Facing as Facing
 import qualified Pawl.Types.Filter as Filter
 import qualified Pawl.Types.ForageMode as ForageMode
 import qualified Pawl.Types.GameEvent as GameEvent
+import qualified Pawl.Types.Gift as Gift
 import qualified Pawl.Types.GraveyardArrangement as GraveyardArrangement
 import qualified Pawl.Types.HandActionIndex as HandActionIndex
 import qualified Pawl.Types.HybridPayment as HybridPayment
@@ -642,6 +643,10 @@ data Prompt r where
   -- "you" at entry, the rule's actor at the fateseal, and the ability's
   -- controller at the announcement.
   ChooseOpponent :: Decider.Decider -> PlayerId.PlayerId -> ObjectId.ObjectId -> NonEmpty.NonEmpty PlayerId.PlayerId -> Prompt PlayerId.PlayerId
+  -- | CR 702.174a: which opponent the spell's caster promises this gift to, as
+  -- they pay its cost. ChooseOpponent's shape plus the gift, which tells two
+  -- different gift abilities' promises apart.
+  PromiseGift :: Decider.Decider -> PlayerId.PlayerId -> ObjectId.ObjectId -> Gift.Gift -> NonEmpty.NonEmpty PlayerId.PlayerId -> Prompt PlayerId.PlayerId
   -- | CR 310.9a: which player protects the battle, chosen by its controller as
   -- it enters and again under CR 310.11's state-based action; the candidates
   -- are Pawl.Engine.Battle.protectorCandidates.

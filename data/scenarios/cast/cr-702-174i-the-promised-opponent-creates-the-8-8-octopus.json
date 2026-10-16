@@ -67,7 +67,7 @@
       "player": "alice",
       "do": {
         "Answer": {
-          "prompt": "ChooseOpponent",
+          "prompt": "PromiseGift",
           "with": "carol"
         }
       }

@@ -548,7 +548,8 @@ data Response
   | -- | CR 201.4 / 614.1c: the card name a player chose as an object entered.
     ChoseCardName CardName.CardName
   | -- | The opponent a player chose for an as-enters choice the card assigns to
-    -- "an opponent" (CR 614.12a puts that choice before the permanent enters).
+    -- "an opponent" (CR 614.12a puts that choice before the permanent enters),
+    -- or promised a gift to (CR 702.174a, Prompt.PromiseGift).
     -- Unlike ChoseDefender, which also carries an opponent, this answers no
     -- combat question.
     ChoseOpponent PlayerId.PlayerId

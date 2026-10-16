@@ -164,6 +164,7 @@ import qualified Pawl.Types.PermanentAction as PermanentAction
 import qualified Pawl.Types.PermissionVerb as PermissionVerb
 import qualified Pawl.Types.Phase as Phase
 import qualified Pawl.Types.PhaseSelector as PhaseSelector
+import qualified Pawl.Types.PlayerChoice as PlayerChoice
 import qualified Pawl.Types.PlayerCounterKind as PlayerCounterKind
 import qualified Pawl.Types.PlayerCounters as PlayerCounters
 import Pawl.Types.PlayerId (PlayerId)
@@ -552,14 +553,14 @@ abilitiesFor keyword count = case keyword of
   -- squad, so no board gives a spell two.
   Keyword.Squad cost -> perPayment count (squad cost)
   Keyword.Offspring cost -> perPayment count (offspring cost)
-  -- CR 702.174b's enters trigger, one per distinct keyword, since paymentLimit
-  -- holds two identical gift instances to one payment.
+  -- CR 702.174b's enters trigger, one per instance paid (perPayment), each
+  -- naming its own instance's promised opponent.
   --
   -- Rule 702.174b's INSTANT AND SORCERY half is a spell ability rather than a
   -- triggered one, so nothing is minted for it here; it is performed by
   -- Pawl.Engine.Resolve.giftOnSpellResolution as the spell resolves. Minting the
   -- enters trigger for one anyway is harmless -- an instant never enters.
-  Keyword.Gift something -> List.genericReplicate (min 1 count) (gift something)
+  Keyword.Gift something -> perPayment count (gift something)
   Keyword.Foretell _ -> []
   Keyword.Companion _ -> []
   -- CR 702.94a's linked triggered half, one per instance for CR 603.2's general
@@ -3593,7 +3594,7 @@ optionalCost keyword = case keyword of
   -- Minted rather than printed, bargain's and conspire's reason: rule 702.174a
   -- writes this cost's every word in the rulebook and the card prints only the
   -- [something].
-  Keyword.Gift _ -> Just (giftCost, Just 1)
+  Keyword.Gift something -> Just (giftCost something, Just 1)
   Keyword.Replicate cost -> Just (cost, Nothing)
   -- The one arm whose cost is MINTED rather than printed: rule 702.153a writes
   -- the sacrifice out in the rulebook and the card prints only the N.
@@ -3611,11 +3612,12 @@ optionalCost keyword = case keyword of
 -- CR 601.2b / 118.8a: how many times a spell holding `count` instances of this
 -- keyword may declare its cost, Nothing for no limit. Each instance is its own
 -- ability offering its own cost (CR 702.56b, 702.78b, 702.153b, 702.157b,
--- 702.175b), so optionalCost's limit is per instance.
+-- 702.175b; gift states no such rule, but CR 702.174a makes each instance its
+-- own two abilities), so optionalCost's limit is per instance.
 --
 -- A cost each instance pays at most once is asked ONCE, as a count of instances
 -- paid, and Pawl.Engine.Cast records the first that many as paid. Under those
--- five rules each instance triggers on its own payment, so which of identical
+-- rules each instance triggers on its own payment, so which of identical
 -- instances were paid changes nothing. An unlimited cost is asked per instance
 -- where paidPerInstance says its split is a real choice, and once otherwise.
 --
@@ -3624,13 +3626,8 @@ optionalCost keyword = case keyword of
 -- care which was paid, and this count cannot say. MTGJSON 2026-08-23 text search
 -- `(gains?|ha(ve|s)) (kicker|bargain)`, no hit; a card granting a spell kicker
 -- [cost] or bargain would refute it.
---
--- Not implemented: two identical gift instances paid separately, each with its
--- own chosen opponent, where Object.chosenPlayer holds one (#5049).
 paymentLimit :: Natural -> Keyword -> Maybe Natural
-paymentLimit count keyword = case keyword of
-  Keyword.Gift _ -> snd =<< optionalCost keyword
-  _ -> fmap (* count) (snd =<< optionalCost keyword)
+paymentLimit count keyword = fmap (* count) (snd =<< optionalCost keyword)
 
 -- CR 702.56b / 702.157b: does each identical instance of this unlimited cost
 -- keep its own payments? Replicate's and squad's triggers each read their own
@@ -3689,11 +3686,11 @@ bargainCost =
 -- alone, and rule 702.174a states the cost.
 --
 -- An EMPTY mana part, casualtyCost's reason.
-giftCost :: Cost Keyword
-giftCost =
+giftCost :: Gift.Gift -> Cost Keyword
+giftCost something =
   Cost.MkCost
     { Cost.mana = Just (ManaCost.MkManaCost []),
-      Cost.components = [CostComponent.ChooseOpponent]
+      Cost.components = [CostComponent.ChooseOpponent something]
     }
 
 -- CR 702.194a's additional cost: "you may tap any number of creatures you
@@ -7220,37 +7217,46 @@ offspring cost = paidTokenCopies (Keyword.Offspring cost) (Quantity.Literal 1) [
 -- one that re-enters promised nobody anything and do not trigger.
 --
 -- "The chosen player" is PlayerRef.ChosenPlayerOfBound over CR 113.7a's source
--- slot, which reads Object.chosenPlayer off the permanent. Rule 702.174a's cost
--- wrote that field on the SPELL and CR 400.7d carries it to the permanent
--- (Pawl.Engine.Event.changeZoneAttaching), which is why the seat survives a move
--- that clears the spell's bindings.
-gift :: Gift.Gift -> TriggeredAbility Card (GrantedAbility.GrantedAbility Card)
-gift something =
+-- slot, which reads this instance's promise off the permanent's
+-- Object.chosenPlayers. Rule 702.174a's cost wrote that field on the SPELL and
+-- CR 400.7d carries it to the permanent (Pawl.Engine.Event.changeZoneAttaching),
+-- which is why the seat survives a move that clears the spell's bindings.
+--
+-- One per instance, `ordinal` naming it, both in the intervening "if" and in the
+-- chosen player: two gifts promised to two opponents give each their own, and
+-- an unpaid instance does not trigger beside a paid one.
+gift :: Gift.Gift -> Natural -> TriggeredAbility Card (GrantedAbility.GrantedAbility Card)
+gift something ordinal =
   Mint.triggerIf
     TriggerCondition.SelfEnters
-    (Condition.Compares (Compares.MkCompares (Quantity.TimesPaid (KeywordDesignator.OfKeyword (Keyword.Gift something))) Comparison.AtLeast (Quantity.Literal 1)))
-    (Seq.fromList [giftEffect something, Effect.GiveGift])
+    (Condition.Compares (Compares.MkCompares (Quantity.TimesPaid (KeywordDesignator.OfInstance (Keyword.Gift something) ordinal)) Comparison.AtLeast (Quantity.Literal 1)))
+    (Seq.fromList [giftEffect something ordinal, Effect.GiveGift])
 
 -- CR 702.174d-i's "[effect]": what the [something] the card printed means, which
 -- rule 702.174b then hangs off whichever of its two abilities the object is --
 -- `gift` above's triggered one on a permanent, and
 -- Pawl.Engine.Resolve.giftOnSpellResolution's spell ability on an instant or a
 -- sorcery. One function so the two halves cannot promise different things.
-giftEffect :: Gift.Gift -> Effect.Effect Card (GrantedAbility.GrantedAbility Card)
-giftEffect something = case something of
-  Gift.Card -> Effect.Draw Draw.MkDraw {Draw.player = PlayerRef.ChosenPlayerOfBound Binding.triggerSource, Draw.quantity = Quantity.Literal 1, Draw.slot = Nothing}
-  Gift.TappedFish -> giftToken TapState.Tapped fishToken
-  Gift.Octopus -> giftToken TapState.Untapped octopusToken
-  Gift.Food -> giftToken TapState.Untapped foodToken
-  Gift.Treasure -> giftToken TapState.Untapped treasureToken
+--
+-- `ordinal` is which instance of the gift, and so which promise "the chosen
+-- player" reads (PlayerChoice.Promised).
+giftEffect :: Gift.Gift -> Natural -> Effect.Effect Card (GrantedAbility.GrantedAbility Card)
+giftEffect something ordinal =
+  let chosen = PlayerRef.ChosenPlayerOfBound Binding.triggerSource (PlayerChoice.Promised something ordinal)
+   in case something of
+        Gift.Card -> Effect.Draw Draw.MkDraw {Draw.player = chosen, Draw.quantity = Quantity.Literal 1, Draw.slot = Nothing}
+        Gift.TappedFish -> giftToken chosen TapState.Tapped fishToken
+        Gift.Octopus -> giftToken chosen TapState.Untapped octopusToken
+        Gift.Food -> giftToken chosen TapState.Untapped foodToken
+        Gift.Treasure -> giftToken chosen TapState.Untapped treasureToken
 
 -- CR 702.174d's, 702.174f's, 702.174h's and 702.174i's effect: "the chosen
 -- player creates a [token]".
 -- The creator is the SAME PlayerRef rule 702.174e's draw reads, which is what CR
 -- 111.2 asks for: the chosen player creates the token, so they own and control
 -- it, rather than CR 109.5's "you".
-giftToken :: TapState.TapState -> Card -> Effect.Effect Card (GrantedAbility.GrantedAbility Card)
-giftToken tapped token =
+giftToken :: PlayerRef.PlayerRef -> TapState.TapState -> Card -> Effect.Effect Card (GrantedAbility.GrantedAbility Card)
+giftToken chosen tapped token =
   Effect.Create
     Create.MkCreate
       { Create.quantity = Quantity.Literal 1,
@@ -7258,7 +7264,7 @@ giftToken tapped token =
         Create.riders =
           EntryRiders.defaultValue {EntryRiders.tapped = tapped},
         Create.slot = Nothing,
-        Create.creator = PlayerRef.ChosenPlayerOfBound Binding.triggerSource
+        Create.creator = chosen
       }
 
 -- | CR 702.174f's token: 1\/1 blue Fish creature. Rule 702.174f's "tapped" is a

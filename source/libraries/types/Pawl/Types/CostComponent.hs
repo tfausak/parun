@@ -11,6 +11,7 @@ import qualified Pawl.Types.ExileCardsFromGraveyard as ExileCardsFromGraveyard
 import qualified Pawl.Types.ExileMaterials as ExileMaterials
 import qualified Pawl.Types.ExilePermanents as ExilePermanents
 import qualified Pawl.Types.Filter as Filter
+import qualified Pawl.Types.Gift as Gift
 import qualified Pawl.Types.ReturnPermanents as ReturnPermanents
 import qualified Pawl.Types.Rounding as Rounding
 import qualified Pawl.Types.Sacrifice as Sacrifice
@@ -210,13 +211,15 @@ data CostComponent keyword
     -- reveals the top this-many cards of their library, which stay there.
     RevealTopOfLibrary Natural.Natural
   | -- | CR 702.174a as a cost / Scrapshooter: the paying player chooses an
-    -- opponent, recorded on the object the cost is on as Object.chosenPlayer so
-    -- that CR 400.7d's exception carries it to the permanent the spell becomes.
+    -- opponent to promise this gift to, recorded on the object the cost is on in
+    -- Object.chosenPlayers so that CR 400.7d's exception carries it to the
+    -- permanent the spell becomes.
     --
-    -- Nullary, FlipCoin's shape: rule 702.174a fixes every word of this cost but
-    -- the payer's own call. Unpayable only where the payer has no opponent left
-    -- (CR 102.2, CR 104.2a), which is what keeps it a cost rather than a no-op.
-    ChooseOpponent
+    -- The gift and nothing else: rule 702.174a fixes every word of this cost but
+    -- the payer's own call, and the gift says which instance's promise it is.
+    -- Unpayable only where the payer has no opponent left (CR 102.2, CR 104.2a),
+    -- which is what keeps it a cost rather than a no-op.
+    ChooseOpponent Gift.Gift
   | -- | CR 701.67a as a cost / Geyser Leaper: this much of the cost's generic
     -- mana is a waterbend cost, so the payer may tap an untapped artifact or
     -- creature they control rather than pay each of it.

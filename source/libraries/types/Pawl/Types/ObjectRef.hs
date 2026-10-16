@@ -84,7 +84,7 @@ data ObjectRef
     -- controller, the arm above narrowed by CR 109.5's perspective.
     EachOpponent
   | -- | CR 614.12a / 120.3a / Stuffy Doll: the player this effect's source chose as
-    -- it entered the battlefield, read off Object.chosenPlayer there, or off
+    -- it entered the battlefield, read off Object.chosenPlayers there, or off
     -- CR 608.2h's last known information once it has left.
     ChosenPlayer
   | -- | CR 120.3a: the players a PlayerRef names -- Deflecting Palm's "that

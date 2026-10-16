@@ -89,6 +89,7 @@ import qualified Pawl.Types.Object as Object
 import qualified Pawl.Types.ObjectId as ObjectId
 import qualified Pawl.Types.OptionalDecision as OptionalDecision
 import qualified Pawl.Types.Phase as Phase
+import qualified Pawl.Types.PlayerChoice as PlayerChoice
 import qualified Pawl.Types.PlayerId as PlayerId
 import qualified Pawl.Types.Pool as Pool
 import qualified Pawl.Types.Printing as Printing
@@ -2198,7 +2199,7 @@ attachRestrictionSpec s registry = Spec.describe s "AttachRestriction" $ do
     let (nemesisId, base1) = S.addPermanent nemesis S.bob S.threePlayerGame
         (auraId, base2) = S.addPermanent pacifism S.alice base1
         wearing = S.attach auraId nemesisId base2
-        chose who = S.settleSba (wearing {GameState.objects = Map.adjust (\o -> o {Object.chosenPlayer = Just who}) nemesisId (GameState.objects wearing)})
+        chose who = S.settleSba (wearing {GameState.objects = Map.adjust (\o -> o {Object.chosenPlayers = Map.singleton PlayerChoice.AsEnters who}) nemesisId (GameState.objects wearing)})
         choseAlice = chose S.alice
         choseCarol = chose S.carol
     Spec.assertBool s (Set.member auraId (GameState.battlefield (S.settleSba wearing))) "before any choice the Aura is legally attached"

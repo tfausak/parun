@@ -1397,7 +1397,7 @@ playerRefIsSlotless ref = case ref of
   PlayerRef.ControllerOfObject _ -> True
   PlayerRef.OwnerOfObject _ -> True
   -- The arm above's answer: the object is named by a slot.
-  PlayerRef.ChosenPlayerOfBound _ -> False
+  PlayerRef.ChosenPlayerOfBound _ _ -> False
   -- InSlot's answer again: the player attacked is named by a slot.
   PlayerRef.Attacking _ -> False
 
@@ -1468,7 +1468,7 @@ forCandidate pid =
         PlayerRef.OwnerOfBound _ -> ref
         PlayerRef.ControllerOfObject _ -> ref
         PlayerRef.OwnerOfObject _ -> ref
-        PlayerRef.ChosenPlayerOfBound _ -> ref
+        PlayerRef.ChosenPlayerOfBound _ _ -> ref
         PlayerRef.Attacking _ -> ref
    in QuantitySlot.mapPlayerRefs substitute (\c -> c {Count.Type.scope = QuantitySlot.mapScope substitute (Count.Type.scope c)})
 
@@ -1508,7 +1508,7 @@ bakePlayerRef players objects ref = case ref of
   PlayerRef.OwnerOfObject _ -> ref
   -- LEFT STANDING: not implemented, a stored condition reading the player an
   -- object chose, which goes unanswered and ends (#4833).
-  PlayerRef.ChosenPlayerOfBound _ -> ref
+  PlayerRef.ChosenPlayerOfBound _ _ -> ref
   -- LEFT STANDING: the slot this names holds a PLAYER, but what the reference
   -- reads is the live combat record, which no baking can fix in place.
   PlayerRef.Attacking _ -> ref

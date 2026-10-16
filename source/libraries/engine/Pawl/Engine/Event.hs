@@ -205,6 +205,7 @@ import qualified Pawl.Types.PlaneswalkRewrite as PlaneswalkRewrite
 import qualified Pawl.Types.Player as Player
 import qualified Pawl.Types.PlayerAttacksPlayer as PlayerAttacksPlayer
 import qualified Pawl.Types.PlayerAttacksWith as PlayerAttacksWith
+import qualified Pawl.Types.PlayerChoice as PlayerChoice
 import qualified Pawl.Types.PlayerCounterKind as PlayerCounterKind
 import Pawl.Types.PlayerId (PlayerId)
 import qualified Pawl.Types.PlayerRef as PlayerRef
@@ -2390,7 +2391,7 @@ apply batch candidate event =
       -- three never reach -- a single player still in the game, where CR 102.1's
       -- offer has one member and nothing is left to decide.
       --
-      -- Written to Object.chosenPlayer, NOT to the copiable snapshot -- see
+      -- Written to Object.chosenPlayers, NOT to the copiable snapshot -- see
       -- EntryRewrite.ChoosePlayer.
       EntryRewrite.ChoosePlayer -> do
         gs <- State.get
@@ -2409,7 +2410,7 @@ apply batch candidate event =
           Just controller -> Players.chooseOne controller oid (Players.offer controller gs PlayerRelation.AnyPlayer)
         Replacement.consume (ReplacementCandidate.identity candidate)
         State.modify' $ \g ->
-          let stamp o = o {Object.chosenPlayer = picked}
+          let stamp o = o {Object.chosenPlayers = Map.alter (const picked) PlayerChoice.AsEnters (Object.chosenPlayers o)}
            in g {GameState.objects = Map.adjust stamp oid (GameState.objects g)}
         pure (Just event)
       -- CR 614.1c with CR 201.4: Null Chamber's as-enters name choices. Unlike
@@ -6460,9 +6461,9 @@ changeZoneWithCause discarded asOf batch oid requestedDest requestedPosition see
                     -- gate and for its reason.
                     Object.castUsing = if resolvedOnto then Object.castUsing obj else Nothing,
                     -- CR 400.7d a sixth time, and CR 702.174b is the ability that
-                    -- references it: the opponent the caster chose to pay rule
-                    -- 702.174a's gift cost, which "the chosen player" then names on
-                    -- the permanent the spell became.
+                    -- references it: the opponent the caster chose to pay each
+                    -- instance of rule 702.174a's gift cost, which "the chosen
+                    -- player" then names on the permanent the spell became.
                     --
                     -- The field's OTHER writer stamps the permanent itself as it
                     -- enters (CR 614.1c, Stuffy Doll), and this carry cannot reach
@@ -6472,7 +6473,7 @@ changeZoneWithCause discarded asOf batch oid requestedDest requestedPosition see
                     -- BATTLEFIELD ONLY, `paidCosts`' gate and for its reason: rule
                     -- 400.7d speaks about a permanent, and a countered gift spell
                     -- becomes a card whose enters trigger never fires.
-                    Object.chosenPlayer = if resolvedOnto then Object.chosenPlayer obj else Nothing,
+                    Object.chosenPlayers = if resolvedOnto then Object.chosenPlayers obj else Map.empty,
                     -- CR 123.5 / 400.7m: stickers stay on an object moving to
                     -- a public zone and apply to the new object; a hidden zone
                     -- drops them. Restamped after placeObject (CR 613.7k).
@@ -8799,7 +8800,7 @@ lastKnownFrom gs oid obj =
     -- CR 303.4b in its own direction: what it was attached to (CR 608.2h).
     (Game.hostOf oid gs)
     (Object.chosenNames obj)
-    (Object.chosenPlayer obj)
+    (Object.chosenPlayers obj)
     (Object.chosenColors obj)
     (Object.chosenSubtype obj)
     -- CR 508.1k / 509.1g.

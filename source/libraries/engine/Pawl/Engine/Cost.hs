@@ -112,6 +112,7 @@ import Pawl.Types.Game (Game)
 import qualified Pawl.Types.GameEvent as GameEvent
 import Pawl.Types.GameState (GameState)
 import qualified Pawl.Types.GameState as GameState
+import qualified Pawl.Types.Gift as Gift
 import qualified Pawl.Types.Hybrid as Hybrid
 import qualified Pawl.Types.HybridPhyrexian as HybridPhyrexian
 import qualified Pawl.Types.Keyword as Keyword.Type
@@ -145,6 +146,7 @@ import qualified Pawl.Types.PermissionCost as PermissionCost
 import qualified Pawl.Types.Player as Player
 import qualified Pawl.Types.PlayerActed as PlayerActed
 import qualified Pawl.Types.PlayerAction as PlayerAction
+import qualified Pawl.Types.PlayerChoice as PlayerChoice
 import qualified Pawl.Types.PlayerCounterKind as PlayerCounterKind
 import qualified Pawl.Types.PlayerEffect as PlayerEffect.Type
 import Pawl.Types.PlayerId (PlayerId)
@@ -1669,7 +1671,7 @@ traverseAmount f component = case component of
   CostComponent.Forage -> pure component
   CostComponent.FlipCoin -> pure component
   -- CR 702.174a's cost names no X.
-  CostComponent.ChooseOpponent -> pure component
+  CostComponent.ChooseOpponent _ -> pure component
   CostComponent.WaterbendInstead _ -> pure component
   CostComponent.ExileThisFromGraveyard -> pure component
   CostComponent.ExileThis -> pure component
@@ -1798,7 +1800,7 @@ componentDemandGrowsWithX component = case component of
   CostComponent.PutPlusOneCountersOnThis _ -> False
   CostComponent.Forage -> False
   CostComponent.FlipCoin -> False
-  CostComponent.ChooseOpponent -> False
+  CostComponent.ChooseOpponent _ -> False
   -- False even when announced: the licence itself demands nothing, and the
   -- mana the announcement grows is the cost's own mana part, which
   -- `manaHasVariable` answers for.
@@ -2092,7 +2094,7 @@ loyaltyAmountOf component = case component of
   CostComponent.Blight _ -> Nothing
   CostComponent.Forage -> Nothing
   CostComponent.FlipCoin -> Nothing
-  CostComponent.ChooseOpponent -> Nothing
+  CostComponent.ChooseOpponent _ -> Nothing
   CostComponent.Waterbend _ -> Nothing
   CostComponent.WaterbendInstead _ -> Nothing
   CostComponent.ExileThisFromGraveyard -> Nothing
@@ -2217,7 +2219,7 @@ componentStatesHiddenQuality component = case component of
   -- for their reason. Rule 701.61a states no quality either way.
   CostComponent.Forage -> False
   CostComponent.FlipCoin -> False
-  CostComponent.ChooseOpponent -> False
+  CostComponent.ChooseOpponent _ -> False
   CostComponent.Waterbend _ -> False
   CostComponent.WaterbendInstead _ -> False
   -- The other hidden zone (CR 400.2), and the FIRST conjunct is satisfied where
@@ -2832,7 +2834,7 @@ claimOf slots pid oid component gs =
         CostComponent.Forage -> Nothing
         CostComponent.FlipCoin -> Nothing
         -- CR 702.174a's choice spends nothing, FlipCoin's answer just above.
-        CostComponent.ChooseOpponent -> Nothing
+        CostComponent.ChooseOpponent _ -> Nothing
         -- No claim: rule 701.67a's taps are a component of their own once the
         -- payer takes the offer (`manaSubstitutions`), and that one claims them.
         CostComponent.Waterbend _ -> Nothing
@@ -3298,7 +3300,7 @@ uncountedCeiling pid oid claims gs component = case component of
   -- 1: `claimOf` states no claim, so there is no pool to divide, and rule
   -- 702.174a's cost is offered once per gift ability
   -- (Pawl.Engine.Keyword.optionalCost).
-  CostComponent.ChooseOpponent -> Just 1
+  CostComponent.ChooseOpponent _ -> Just 1
   -- 1, and counted by none of the four totals: rule 701.67a's licence spends
   -- nothing, so `objectCeiling` has no pool to divide. Unreachable -- a
   -- waterbend cost carries the mana it licenses, so `repeatsOf` answers 1
@@ -3612,7 +3614,7 @@ targetComputed component = case component of
   CostComponent.BeholdAndExile _ -> False
   CostComponent.MillCards _ -> False
   CostComponent.RevealTopOfLibrary _ -> False
-  CostComponent.ChooseOpponent -> False
+  CostComponent.ChooseOpponent _ -> False
   CostComponent.Waterbend _ -> False
   CostComponent.WaterbendInstead _ -> False
 
@@ -3654,7 +3656,7 @@ lifeOwedByComponent pid gs component = case component of
   CostComponent.Blight _ -> 0
   CostComponent.Forage -> 0
   CostComponent.FlipCoin -> 0
-  CostComponent.ChooseOpponent -> 0
+  CostComponent.ChooseOpponent _ -> 0
   CostComponent.Waterbend _ -> 0
   CostComponent.WaterbendInstead _ -> 0
   CostComponent.ExileThisFromGraveyard -> 0
@@ -3705,7 +3707,7 @@ energyOwedByComponent component = case component of
   CostComponent.Blight _ -> 0
   CostComponent.Forage -> 0
   CostComponent.FlipCoin -> 0
-  CostComponent.ChooseOpponent -> 0
+  CostComponent.ChooseOpponent _ -> 0
   CostComponent.Waterbend _ -> 0
   CostComponent.WaterbendInstead _ -> 0
   CostComponent.ExileThisFromGraveyard -> 0
@@ -3762,7 +3764,7 @@ countersOwedByComponent component = case component of
   CostComponent.Blight _ -> []
   CostComponent.Forage -> []
   CostComponent.FlipCoin -> []
-  CostComponent.ChooseOpponent -> []
+  CostComponent.ChooseOpponent _ -> []
   CostComponent.Waterbend _ -> []
   CostComponent.WaterbendInstead _ -> []
   CostComponent.ExileThisFromGraveyard -> []
@@ -4032,7 +4034,7 @@ canPayComponent slots pid oid component gs = case component of
   -- with none left, or none in range (CR 801.5a), cannot pay it -- the payment
   -- arm's own offer. Nothing about `oid`: the choice is about the table, not
   -- about the object the cost is on.
-  CostComponent.ChooseOpponent -> not (null (Players.offer pid gs PlayerRelation.Opponent))
+  CostComponent.ChooseOpponent _ -> not (null (Players.offer pid gs PlayerRelation.Opponent))
   -- Always payable once announced: rule 701.67a's licence spends nothing of
   -- its own, and the mana it scopes is the cost's own mana part, which the mana
   -- half gates.
@@ -4249,7 +4251,7 @@ criteriaOf component = case component of
   -- Filter, so there is no criterion for the lint to sweep.
   CostComponent.Forage -> []
   CostComponent.FlipCoin -> []
-  CostComponent.ChooseOpponent -> []
+  CostComponent.ChooseOpponent _ -> []
   -- The criterion the licence leads to is MINTED by `waterbendSubstitute` from
   -- rule 701.67a's own words rather than printed, `manaSubstitutesFor`'s posture:
   -- no word of a card's is in it, so CR 612.2 has nothing to swap.
@@ -5239,7 +5241,7 @@ paidInSecondPass component = case component of
   CostComponent.FlipCoin -> True
   -- CR 702.174a's choice moves no object and involves no random element, so
   -- neither half of rule 601.2h's first criterion reaches it.
-  CostComponent.ChooseOpponent -> False
+  CostComponent.ChooseOpponent _ -> False
   CostComponent.Waterbend _ -> False
   CostComponent.WaterbendInstead _ -> False
   -- CR 701.20b moves nothing out of any zone, so rule 601.2h's library half has
@@ -5376,7 +5378,7 @@ orderSensitive component = case component of
   CostComponent.FlipCoin -> False
   -- False: rule 702.174a's choice spends nothing another part of the same cost
   -- could have spent, FlipCoin's answer just above.
-  CostComponent.ChooseOpponent -> False
+  CostComponent.ChooseOpponent _ -> False
   -- False: rule 701.67a's licence spends nothing another part of the same cost
   -- could have spent, ChooseOpponent's answer just above.
   CostComponent.Waterbend _ -> False
@@ -6208,14 +6210,15 @@ chooseManaYield pid oid candidates gs = case candidates of
         then answer
         else NonEmpty.head candidates
 
--- CR 614.1c's record written from the other provenance: the player the payer
--- chose as a COST, rather than the one an as-enters replacement asks for. One
--- field for both because the rules make it one fact -- "the chosen player" is
--- what CR 702.174b's effect names -- and no card carries both writers.
-stampChosenPlayer :: ObjectId -> PlayerId -> Game ()
-stampChosenPlayer oid pid =
+-- CR 702.174a's promise, written to Object.chosenPlayers as the NEXT instance
+-- of this gift's: identical instances are interchangeable, so the nth promise
+-- paid is the nth instance's, the ordinal Pawl.Engine.Cast records the first
+-- that many instances of Object.paidCosts by.
+stampPromise :: ObjectId -> Gift.Gift -> PlayerId -> Game ()
+stampPromise oid gift pid =
   State.modify' $ \gs ->
-    let stamp object = object {Object.chosenPlayer = Just pid}
+    let promised object = Natural.length [() | PlayerChoice.Promised g _ <- Map.keys (Object.chosenPlayers object), g == gift]
+        stamp object = object {Object.chosenPlayers = Map.insert (PlayerChoice.Promised gift (promised object + 1)) pid (Object.chosenPlayers object)}
      in gs {GameState.objects = Map.adjust stamp oid (GameState.objects gs)}
 
 -- CR 118.3 asked AGAIN as each component is paid, and not only at the gate: CR
@@ -6822,25 +6825,26 @@ payPayable moment paidFor slots pid oid component = case component of
     _ <- Event.flipWinLoseCoin pid statements
     pure bindsNothing
   -- CR 702.174a's first ability, paid by naming the opponent the gift is
-  -- promised to, through Players.chooseOne.
+  -- promised to, through Prompt.PromiseGift, which names the gift so a spell
+  -- with two different gifts has each promise asked apart.
   --
-  -- Written to Object.chosenPlayer rather than bound as a slot: CR 702.174b's
+  -- Written to Object.chosenPlayers rather than bound as a slot: CR 702.174b's
   -- payoff is a triggered ability of the PERMANENT the spell becomes, and CR
   -- 400.7 clears a spell's bindings on that move where
   -- Pawl.Engine.Event.changeZoneAttaching carries this field across it under CR
-  -- 400.7d. Pawl.Types.PlayerRef's ChosenPlayer is what reads it back.
+  -- 400.7d. Pawl.Types.PlayerRef's ChosenPlayerOfBound is what reads it back.
   --
   -- ALWAYS PAID where the gate allowed the offer at all: the payer has an
   -- opponent, and naming one spends nothing that could run out.
-  CostComponent.ChooseOpponent -> do
+  CostComponent.ChooseOpponent gift -> do
     gs <- State.get
-    chosen <- Players.chooseOne pid oid (Players.offer pid gs PlayerRelation.Opponent)
+    chosen <- Game.chooseAmong (\decider asked -> Prompt.PromiseGift decider asked oid gift) pid (Players.offer pid gs PlayerRelation.Opponent)
     case chosen of
       -- Unreachable behind `payComponent`'s guard, which reads the same offer;
       -- defensive, as CR 118.3 would have it.
       Nothing -> pure Payment.Unpaid
       Just opponent -> do
-        stampChosenPlayer oid opponent
+        stampPromise oid gift opponent
         pure bindsNothing
   -- NOTHING TO PAY. Rule 701.67a's waterbend cost is the mana this component
   -- scopes, and that mana is in the cost's own mana part, paid by `payMana`

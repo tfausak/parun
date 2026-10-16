@@ -7,7 +7,9 @@ import qualified Pawl.JsonCodec.Codec as Codec
 import qualified Pawl.JsonCodec.Common as Common
 import qualified Pawl.Spec as Spec
 import qualified Pawl.Types.AttackingPlayers as AttackingPlayers
+import qualified Pawl.Types.Gift as Gift
 import qualified Pawl.Types.ObjectId as ObjectId
+import qualified Pawl.Types.PlayerChoice as PlayerChoice
 import qualified Pawl.Types.PlayerId as PlayerId
 import qualified Pawl.Types.PlayerRef as PlayerRef
 import qualified Pawl.Types.PlayerRelation as PlayerRelation
@@ -81,8 +83,8 @@ spec s = Spec.describe s "Pawl.Codec.PlayerRef" $ do
     Common.assertCodec
       s
       PlayerRef.codec
-      (PlayerRef.ChosenPlayerOfBound (SlotName.MkSlotName (Text.pack "permanent")))
-      " {\"type\":\"ChosenPlayerOfBound\",\"value\":\"permanent\"} "
+      (PlayerRef.ChosenPlayerOfBound (SlotName.MkSlotName (Text.pack "permanent")) (PlayerChoice.Promised Gift.Card 2))
+      " {\"type\":\"ChosenPlayerOfBound\",\"value\":[\"permanent\",{\"type\":\"Promised\",\"value\":[{\"type\":\"Card\"},2]}]} "
   Spec.it s "Attacking" $
     Common.assertCodec
       s

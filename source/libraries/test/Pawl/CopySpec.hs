@@ -148,6 +148,7 @@ import qualified Pawl.Types.Facing as Facing
 import qualified Pawl.Types.GameEvent as GameEvent
 import qualified Pawl.Types.GameState as GameState
 import qualified Pawl.Types.GrantedAbility as GrantedAbility
+import qualified Pawl.Types.KickerDecision as KickerDecision
 import qualified Pawl.Types.Mana as Mana.Type
 import qualified Pawl.Types.ManaCost as ManaCost
 import qualified Pawl.Types.ManaRetention as ManaRetention
@@ -1093,6 +1094,14 @@ pinTarget recipient p = case p of
   Prompt.ChooseTargets _ _ _ asked -> fmap (\(_, offered) -> Set.filter (== recipient) offered) asked
   _ -> S.identityAnswer p
 
+-- Promises a gift to carol, FILTERED out of the offer: bob heads it, so carol
+-- is the answer the fallback would not give.
+promisesCarol :: Prompt.Prompt r -> r
+promisesCarol p = case p of
+  Prompt.ChooseKicker {} -> KickerDecision.MkKickerDecision 1
+  Prompt.PromiseGift _ _ _ _ offered -> Maybe.fromMaybe (NonEmpty.head offered) (List.find (== S.carol) (NonEmpty.toList offered))
+  _ -> S.identityAnswer p
+
 -- The stack's top object, which after a cast is the spell just cast.
 topOfStack :: GameState.GameState -> Maybe ObjectId
 topOfStack = Maybe.listToMaybe . GameState.stack
@@ -1143,6 +1152,34 @@ copySpellSpec s registry = Spec.describe s "Pawl.Engine.Copy" $ do
             after = resolveOne S.identityAnswer (resolveOne S.identityAnswer (resolveOne S.identityAnswer cast3))
         Spec.assertBool s (CardName.MkCardName (Text.pack "Embereth Shieldbreaker") `elem` graveyardNames after) "the card went to alice's graveyard, not into exile"
         Spec.assertEqWith s "bob took the Bolt's 3 and the copy's 3" (S.lifeOf S.bob after) (Just 14)
+      _ -> Spec.assertFailure s "the spells never reached the stack"
+
+  -- CR 707.2 with CR 702.174a: the opponent a gift was promised to is a choice
+  -- made when casting, so a Divination that becomes a copy of Crumb and Get It
+  -- promised to carol gives carol the copy's Food too.
+  Spec.it s "CR 707.2 a spell that becomes a copy of a promised Crumb and Get It gives the same opponent a Food" $ do
+    island <- S.printingOf s registry "Island"
+    plains <- S.printingOf s registry "Plains"
+    divination <- S.printingOf s registry "Divination"
+    crumb <- S.printingOf s registry "Crumb and Get It"
+    bears <- S.printingOf s registry "Grizzly Bears"
+    mimicry <- S.printingOf s registry "Synthetic Mimicry"
+    let lands = S.landsFor plains S.alice 1 (S.landsFor island S.alice 5 S.threePlayerGame)
+        withBears = snd (S.addPermanent bears S.alice lands)
+        (withDivination, divinationId) = S.handOne divination withBears
+        (crumbId, withCrumb) = S.addHandCard crumb S.alice withDivination
+        (mimicryId, board) = S.addHandCard mimicry S.alice withCrumb
+        cast1 = snd (Engine.runGamePure S.identityAnswer board (S.cast S.alice divinationId))
+        cast2 = snd (Engine.runGamePure promisesCarol cast1 (S.cast S.alice crumbId))
+        foods gs = length (filter (\o -> Set.member Subtype.Food (Projection.subtypesOf o gs)) (Game.zoneMembers Zone.Battlefield S.carol gs))
+    case (topOfStack cast1, topOfStack cast2) of
+      (Just divinationSpell, Just crumbSpell) | divinationSpell /= crumbSpell -> do
+        let cast3 = snd (Engine.runGamePure (aimMimicry divinationSpell crumbSpell) cast2 (S.cast S.alice mimicryId))
+            -- Mimicry, then Crumb and Get It, then the copy.
+            afterCrumb = resolveOne S.identityAnswer (resolveOne S.identityAnswer cast3)
+            after = resolveOne S.identityAnswer afterCrumb
+        Spec.assertEqWith s "CR 702.174d carol created the copy's Food as well as the original's" (foods after) 2
+        Spec.assertEqWith s "the original alone gave her one" (foods afterCrumb) 1
       _ -> Spec.assertFailure s "the spells never reached the stack"
 
   -- CR 707.10: "a copy of a spell is owned by the player under whose control it
