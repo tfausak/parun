@@ -1,0 +1,86 @@
+{
+  "faces": [
+    {
+      "name": "Akoum",
+      "oracleText": "Players may cast enchantment spells as though they had flash.\nWhenever chaos ensues, destroy target creature that isn't enchanted.",
+      "playerAbilities": [
+        {
+          "effect": {
+            "type": "CastAsThoughItHadFlash",
+            "value": {
+              "type": "HasCardType",
+              "value": {
+                "type": "Enchantment"
+              }
+            }
+          },
+          "scope": {
+            "type": "AnyPlayer"
+          }
+        }
+      ],
+      "triggeredAbilities": [
+        {
+          "condition": {
+            "type": "ChaosEnsues"
+          },
+          "modal": {
+            "modes": [
+              {
+                "clauses": [
+                  {
+                    "effects": [
+                      {
+                        "type": "Destroy",
+                        "value": {
+                          "ref": {
+                            "type": "InSlot",
+                            "value": "target"
+                          },
+                          "regenerability": {
+                            "type": "Regenerable"
+                          }
+                        }
+                      }
+                    ]
+                  }
+                ],
+                "targetSlots": {
+                  "target": {
+                    "filter": {
+                      "type": "Not",
+                      "value": {
+                        "type": "HasAttached",
+                        "value": {
+                          "type": "HasSubtype",
+                          "value": {
+                            "type": "Aura"
+                          }
+                        }
+                      }
+                    },
+                    "pool": {
+                      "type": "Creatures"
+                    }
+                  }
+                }
+              }
+            ]
+          }
+        }
+      ],
+      "typeLine": {
+        "subtypes": [
+          {
+            "type": "Zendikar"
+          }
+        ],
+        "types": [
+          {
+            "type": "Plane"
+          }
+        ]
+      }
+    }
+  ]
+}

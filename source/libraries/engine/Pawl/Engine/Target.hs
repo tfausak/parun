@@ -21,6 +21,7 @@ import qualified Pawl.Engine.Exile as Exile
 import qualified Pawl.Engine.Filter as Filter
 import qualified Pawl.Engine.Game as Game
 import qualified Pawl.Engine.Modal as Modal.Engine
+import qualified Pawl.Engine.Plane as Plane
 import qualified Pawl.Engine.PlayerEffect as PlayerEffect
 import qualified Pawl.Engine.Players as Players
 import qualified Pawl.Engine.Projection as Projection
@@ -211,16 +212,19 @@ legalRecipientsGiven pools perspective unannounced bindings acquisition source s
       -- The player rows out of the caller's Pools, which a whole enumeration
       -- shares; a player the pools do not list is gathered on the spot.
       rowsOf pid = Maybe.fromMaybe (PlayerEffect.applying pid gs) (lookup pid (playerRowsPool pools))
+      -- CR 801.4's range, split from CR 109.5's "you": nobody's for a planar
+      -- source (CR 801.18), which hexproof's `perspective` below still reads.
+      reach = perspective >>= \you -> Plane.rangePerspective source you gs
       keep recipient =
         not (sourceOnStack && Recipient.objectOf recipient == Just source)
-          && all (\you -> inRangeGiven grants you recipient gs) perspective
+          && all (\you -> inRangeGiven grants you recipient gs) reach
           && targetable pcs rowsOf perspective source sourceView gs recipient
    in Set.filter keep (admittedGiven pools perspective unannounced bindings acquisition source slot gs)
 
 -- CR 801.2: is this recipient within @you@'s range of influence -- a player
 -- within range, or an object Projection.objectInRangeGiven admits? CR 801.4 is
--- the reader: legalRecipientsGiven asks it of the perspective, the controller of
--- the spell or ability.
+-- the reader: legalRecipientsGiven asks it of the controller of the spell or
+-- ability, and of nobody for a planar source (Plane.rangePerspective).
 inRangeGiven :: [Projection.ControlGrant] -> PlayerId -> Recipient -> GameState -> Bool
 inRangeGiven grants you recipient gs = case (Recipient.playerOf recipient, Recipient.objectOf recipient) of
   (Just pid, _) -> Game.inRangeOf you pid gs
@@ -1716,9 +1720,11 @@ askChooser controller chooser oid source seed x slots sets mine = do
       counting = countingBy (Just controller) seed source gs
       most slot = TargetCount.most . SlotCount.at counting x . TargetSlot.count =<< Map.lookup slot slots
       -- CR 801.5a: a chooser names only what lies in their own range as well as
-      -- the controller's, which `sets` already holds to.
+      -- the controller's, which `sets` already holds to; neither range applies
+      -- to a planar source (CR 801.18, Plane.rangePerspective).
       grants = Projection.controlGrants gs
-      offered = Map.mapWithKey (\slot -> piledOffer (most slot) (Just chooser) gs . Set.filter (\r -> inRangeGiven grants chooser r gs)) sets
+      inReach r = all (\you -> inRangeGiven grants you r gs) (Plane.rangePerspective source chooser gs)
+      offered = Map.mapWithKey (\slot -> piledOffer (most slot) (Just chooser) gs . Set.filter inReach) sets
       ranges = Map.restrictKeys (Map.intersectionWith (announcedRange counting x) slots (slotCapacities counting x slots offered gs)) mine
       variable = Map.keysSet (Map.filter (uncurry (/=)) ranges)
       offers = Map.restrictKeys (Map.intersectionWith (\targetSlot legal -> (SlotCount.at counting x (TargetSlot.count targetSlot), legal)) slots offered) variable
