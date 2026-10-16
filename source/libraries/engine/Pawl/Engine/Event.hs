@@ -2541,7 +2541,7 @@ apply batch candidate event =
               -- unreachable and is written out only because arm is total over
               -- Duration. No bindings -- CR 614.1c's rewrite is a replacement's,
               -- not a resolution's, so its duration can name no slot.
-              case Expiry.arm Map.empty controller oid Duration.Indefinite gs2 of
+              case Expiry.arm (flip Game.acquisitionOf) Map.empty controller oid Duration.Indefinite gs2 of
                 Nothing -> gs2
                 Just expiry ->
                   let (ts, gs3) = Game.freshTimestamp gs2
@@ -3114,7 +3114,7 @@ apply batch candidate event =
                   -- and is written out only because arm is total over Duration.
                   -- No bindings: rule 702.136a's riot is a replacement's choice,
                   -- not a resolution, so its duration can name no slot.
-                  case Expiry.arm Map.empty controller oid Duration.Indefinite gs2 of
+                  case Expiry.arm (flip Game.acquisitionOf) Map.empty controller oid Duration.Indefinite gs2 of
                     Nothing -> gs2
                     Just expiry ->
                       let (ts, gs3) = Game.freshTimestamp gs2
@@ -4428,7 +4428,7 @@ becomeCopyAs batch candidate asCopy oid = do
             -- this creature is turned face down") stores the copy as a row
             -- that can end, Effect.BecomeCopy's road. The object is the
             -- row's source, which is "this creature".
-            Just stated -> case Expiry.arm Map.empty controller oid stated g of
+            Just stated -> case Expiry.arm (flip Game.acquisitionOf) Map.empty controller oid stated g of
               -- CR 611.2b: the duration never started.
               Nothing -> g
               Just expiry ->
@@ -7514,7 +7514,7 @@ lingeringHandover oid lastController gs =
           duration <- fmap snd (filter ((== n) . fst) lingering)
           -- No bindings to bake a CR 611.2b condition against: this duration is
           -- a PRINTED static ability's, and no resolution chose anything for it.
-          expiry <- Maybe.maybeToList (Expiry.arm Map.empty lastController oid duration gs)
+          expiry <- Maybe.maybeToList (Expiry.arm (flip Game.acquisitionOf) Map.empty lastController oid duration gs)
           pure
             ContinuousEffect.MkContinuousEffect
               { ContinuousEffect.source = oid,
@@ -7556,7 +7556,7 @@ permissionRiders src gs played =
           (n, ts, modification, _) <- Projection.frozenStaticParts src gs
           duration <- fmap snd (filter ((== n) . fst) riders)
           you <- Maybe.maybeToList controller
-          expiry <- Maybe.maybeToList (Expiry.arm Map.empty you src duration gs)
+          expiry <- Maybe.maybeToList (Expiry.arm (flip Game.acquisitionOf) Map.empty you src duration gs)
           pure
             ContinuousEffect.MkContinuousEffect
               { ContinuousEffect.source = src,
