@@ -169,6 +169,9 @@ canonicalStamps gs =
 -- keyword counting twice (Pawl.Engine.Projection.applyModification).
 --
 -- The family guard is a regression fence: no test loops a protection grant.
+--
+-- Not implemented: a later keyword-family or all-abilities removal erasing
+-- what it overrides (#5136).
 erases :: Modification.Modification ability -> Modification.Modification ability -> Bool
 erases later earlier = case (later, earlier) of
   (Modification.LoseKeyword lost, Modification.LoseKeyword keyword) -> lost == keyword
