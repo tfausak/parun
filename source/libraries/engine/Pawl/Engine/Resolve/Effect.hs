@@ -4531,7 +4531,16 @@ applyOneEffect runSubgame resolving source controller legal chosen effect = case
           --
           -- ONCE per library, however many searchers read it: the card prints
           -- one "then shuffle" of that library, not one per searcher.
-          let shuffled = ListUtils.nubOrd [owner | (_, owner, chosenZones, _, _, _) <- decisions, Set.member Zone.Library chosenZones]
+          --
+          -- NOT where the destination is Reveal, which leaves the found cards
+          -- in the library for a later clause to read or move: there the card
+          -- prints its shuffle after those clauses (CR 608.2c), as its own
+          -- Effect.Shuffle, so a found card is never shuffled while a later
+          -- clause still names it -- CR 701.24b's exclusion, and CR 701.20d's
+          -- new object for a card Grim Reminder leaves behind.
+          let shuffled
+                | destination == SearchDestination.Reveal = []
+                | otherwise = ListUtils.nubOrd [owner | (_, owner, chosenZones, _, _, _) <- decisions, Set.member Zone.Library chosenZones]
           Monad.forM_ shuffled Event.shuffleLibrary
           -- CR 608.2c: "that card" in a later clause, or in a delayed ability
           -- this resolution arms (CR 603.7c), is what arrived.
@@ -5676,7 +5685,8 @@ applyOneEffect runSubgame resolving source controller legal chosen effect = case
   -- CR 701.24a alone: randomize the named libraries so no player knows their
   -- order. Nothing moves, so there is no changeZone call and no CR 616.1
   -- opportunity -- the cards a "then shuffle" follows are still the objects they
-  -- were, with the ids they had.
+  -- were, with the ids they had, but for a revealed or looked-at one (CR
+  -- 701.20d, Event.shuffleLibrary).
   --
   -- APNAP (CR 608.2f) and once per library, the arm above's two reasons: a
   -- PlayerRef naming a player twice still shuffles their library once, and the
@@ -6284,7 +6294,7 @@ applyOneEffect runSubgame resolving source controller legal chosen effect = case
             Monad.forM (outcome >>= Replacement.asScry) $ \(scryer, settled) ->
               decideScry (toInteger settled) scryer
           _ -> pure Nothing
-    Monad.mapM_ (\(pid, order) -> Monad.forM_ order (State.modify' . reorderLibrary pid)) decided
+    Monad.mapM_ (\(pid, order) -> Monad.forM_ order (\(looked, whole) -> State.modify' (reorderLibrary pid looked whole))) decided
     -- CR 701.22d: recorded once the process is complete, and for a scry whose
     -- move was impossible too.
     Monad.mapM_ (\(pid, _) -> State.modify' (Event.recordEvent (GameEvent.PlayerActed (PlayerActed.MkPlayerActed PlayerAction.Scry pid)))) decided
@@ -11499,20 +11509,25 @@ putOntoBattlefield asOf searcher tapped cardId =
     <$> Event.changeZoneAttaching (Just asOf) Set.empty cardId Zone.Battlefield LibraryPosition.defaultValue Nothing tapped Map.empty (Just searcher) Nothing Facing.FaceUp False CarryOver.NotCarried False Seq.empty
 
 -- Write a whole new order back to a player's library: CR 701.22a's scry, CR
--- 701.25a's surveil and CR 701.29a's fateseal.
+-- 701.25a's surveil and CR 701.29a's fateseal, CR 401.4's arrangement and CR
+-- 701.30a's clash.
 --
--- Not implemented: CR 701.20d's new object for a revealed or looked-at card the
--- new order moves; it keeps its id and any reveal window (#5144).
-reorderLibrary :: PlayerId -> [ObjectId] -> GameState -> GameState
-reorderLibrary pid order gs =
-  gs {GameState.library = Map.insert pid (Seq.fromList order) (GameState.library gs)}
+-- `placed` is the cards the instruction put back, wherever they land -- the
+-- reordered ones of CR 701.20d / 701.20e, each of which becomes a new object if
+-- it was revealed or looked at (Event.forgetShown), as a card put into the
+-- library it is already in does (Event.stayPut). Pawl.ClashSpec's "CR 701.20d a
+-- card the clash bottoms" case is the proof.
+reorderLibrary :: PlayerId -> [ObjectId] -> [ObjectId] -> GameState -> GameState
+reorderLibrary pid placed order gs =
+  Event.forgetAllShown placed gs {GameState.library = Map.insert pid (Seq.fromList order) (GameState.library gs)}
 
 -- CR 401.4: one owner puts the cards `cards` names back into their library, in
 -- an order they state, at the positions those cards already occupy.
 --
 -- The library is REWRITTEN rather than funnelled through Event.changeZone, for
 -- decideScry's reason one rule over: nothing crosses a zone boundary, so CR 400.7
--- mints no new incarnation and the ids the prompt named are the ids that move.
+-- mints no new incarnation and the ids the prompt named are the ids that move;
+-- CR 701.20d / 701.20e's new objects come after (reorderLibrary).
 --
 -- ASKED AT TWO OR MORE, which is rule 401.4's own count: one card has one
 -- order, and the engine does not raise a question with a single answer. Two
@@ -11532,7 +11547,7 @@ arrangeInLibrary pid cards = do
       moving = filter (\oid -> List.elem oid cards) whole
   Monad.when (length moving > 1) $ do
     answer <- Game.choose (Prompt.ArrangeLibraryCards (Decide.deciderFor pid gs) pid moving)
-    State.modify' (reorderLibrary pid (refill whole moving (Game.permute moving answer)))
+    State.modify' (reorderLibrary pid moving (refill whole moving (Game.permute moving answer)))
 
 -- Put `ordered` back at the positions `moving` occupies in `whole`, leaving
 -- every other card where it was. Game.permute answers a permutation of `moving`
@@ -11544,19 +11559,20 @@ refill whole moving ordered =
         _ -> (remaining, oid)
    in snd (List.mapAccumL step ordered whole)
 
--- CR 701.22a: one player's scry DECISION, answered with the library order it
--- makes -- Nothing where there was nothing to decide. A short library is looked
+-- CR 701.22a: one player's scry DECISION, answered with the cards looked at and
+-- the library order it makes -- Nothing where there was nothing to decide. A short library is looked
 -- at as far as it goes; rule 701.22 states no penalty for scrying more than
 -- there is. The move and the CR 701.22d event are the Scry arm's, after every
 -- scryer has decided (CR 701.22c).
 --
 -- The library is REWRITTEN rather than funnelled through Event.changeZone:
 -- nothing crosses a zone boundary, so CR 400.7 mints no new incarnation and the
--- ids the prompt named still move. Looking mints nothing either (CR 701.20b).
+-- ids the prompt named still move; CR 701.20e's new objects come after
+-- (reorderLibrary). Looking mints nothing either (CR 701.20b).
 --
 -- Every card looked at is logged (Event.look) before the question, and where
 -- none is asked: the look is the rule's, the question the engine's.
-decideScry :: Integer -> PlayerId -> Game (PlayerId, Maybe [ObjectId])
+decideScry :: Integer -> PlayerId -> Game (PlayerId, Maybe ([ObjectId], [ObjectId]))
 decideScry n pid = do
   gs <- State.get
   let whole = Game.zoneMembers Zone.Library pid gs
@@ -11574,7 +11590,7 @@ decideScry n pid = do
     then do
       answer <- Game.choose (Prompt.ChooseScry (Decide.deciderFor pid gs) pid looked)
       let (toBottom, onTop) = splitLooked looked answer
-      pure (pid, Just (onTop <> beneath <> toBottom))
+      pure (pid, Just (looked, onTop <> beneath <> toBottom))
     else pure (pid, Nothing)
 
 -- Repair a look-and-split answer into the two groups the effect then moves: the
@@ -11599,7 +11615,7 @@ splitLooked looked (away, kept) =
 --
 -- The ELISION is decideScry's minus its one-card case: the graveyard and the top
 -- of the library are still two different places.
-decideSurveil :: Integer -> PlayerId -> Game (PlayerId, Maybe ([ObjectId], [ObjectId]))
+decideSurveil :: Integer -> PlayerId -> Game (PlayerId, Maybe ([ObjectId], [ObjectId], [ObjectId]))
 decideSurveil n pid = do
   gs <- State.get
   let whole = Game.zoneMembers Zone.Library pid gs
@@ -11612,18 +11628,18 @@ decideSurveil n pid = do
       Monad.mapM_ (Event.look pid) looked
       answer <- Game.choose (Prompt.ChooseSurveil (Decide.deciderFor pid gs) pid looked)
       let (toGraveyard, onTop) = splitLooked looked answer
-      pure (pid, Just (onTop <> beneath, toGraveyard))
+      pure (pid, Just (onTop, beneath, toGraveyard))
 
 -- One decided surveil's move. Half of it IS a zone change: the graveyard cards
 -- go through Event.changeZoneInBatch in the order the answer named them, so the
 -- first named ends up deepest (CR 404.1), an order that is the player's rather
 -- than the engine's (CR 404.3) -- so the scope does not ask for it again
 -- (Event.arrangedAlready).
-applySurveil :: (PlayerId, Maybe ([ObjectId], [ObjectId])) -> Game ()
-applySurveil (pid, decision) = Monad.forM_ decision $ \(kept, toGraveyard) -> do
+applySurveil :: (PlayerId, Maybe ([ObjectId], [ObjectId], [ObjectId])) -> Game ()
+applySurveil (pid, decision) = Monad.forM_ decision $ \(onTop, beneath, toGraveyard) -> do
   -- Order-independent: Game.removeFromZones takes each mover out of the library
   -- by identity rather than by position.
-  State.modify' (reorderLibrary pid kept)
+  State.modify' (reorderLibrary pid onTop (onTop <> beneath))
   -- ONE event (CR 608.2f) on ONE board, and one CR 401.4 scope for a redirect
   -- into a library.
   Event.simultaneously $ do
@@ -11657,7 +11673,7 @@ fatesealOne source n pid = do
     Monad.when decided $ do
       answer <- Game.choose (Prompt.ChooseFateseal (Decide.deciderFor pid chosen) pid owner looked)
       let (toBottom, onTop) = splitLooked looked answer
-      State.modify' (reorderLibrary owner (onTop <> beneath <> toBottom))
+      State.modify' (reorderLibrary owner looked (onTop <> beneath <> toBottom))
 
 -- CR 701.30b: "Clash with an opponent" -- the controller chooses an opponent,
 -- and the two of them clash (CR 701.30c). Answers 1 where the CONTROLLER won the
@@ -11734,11 +11750,13 @@ clash resolving source controller = do
                     else Game.choose (Prompt.ChooseClash (Decide.deciderFor pid asked) pid source top public earlier)
                 pure (made Seq.|> (pid, top, position))
           Monad.foldM decide Seq.empty revealed
+      -- Only a card put on the bottom is reordered: CR 701.30a's player "may
+      -- then put that card on the bottom", and keeping it on top puts nothing.
       Monad.forM_ decisions $ \(pid, top, position) ->
         Monad.when (position == LibraryPosition.Bottom) $ do
           moving <- State.get
           let whole = Game.zoneMembers Zone.Library pid moving
-          State.modify' (reorderLibrary pid (filter (/= top) whole <> [top]))
+          State.modify' (reorderLibrary pid [top] (filter (/= top) whole <> [top]))
       pure (if won then 1 else 0)
 
 -- CR 701.44a: one permanent's explore.

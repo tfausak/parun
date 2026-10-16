@@ -187,7 +187,7 @@
         "Answer": {
           "prompt": "Search",
           "with": [
-            "$mountain"
+            "Mountain#7"
           ],
           "unoffered": true
         }
@@ -201,10 +201,10 @@
         "Answer": {
           "prompt": "Shuffle",
           "with": [
-            "$piker",
-            "$subject",
-            "$giant",
-            "$mountain"
+            "Goblin Piker",
+            "Jace Beleren",
+            "Hill Giant",
+            "Mountain#7"
           ]
         }
       }

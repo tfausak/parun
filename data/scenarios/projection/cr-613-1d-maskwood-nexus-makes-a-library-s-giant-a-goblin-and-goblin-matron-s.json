@@ -224,7 +224,7 @@
         "Answer": {
           "prompt": "Search",
           "with": [
-            "$giant"
+            "Hill Giant"
           ]
         }
       }
@@ -237,8 +237,8 @@
         "Answer": {
           "prompt": "Shuffle",
           "with": [
-            "$piker",
-            "$mountain"
+            "Goblin Piker",
+            "Mountain#10"
           ]
         }
       }
@@ -314,7 +314,7 @@
         "Answer": {
           "prompt": "Search",
           "with": [
-            "$piker"
+            "Goblin Piker"
           ]
         }
       }
@@ -327,7 +327,7 @@
         "Answer": {
           "prompt": "Shuffle",
           "with": [
-            "$mountain"
+            "Mountain#10"
           ]
         }
       }

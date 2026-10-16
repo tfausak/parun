@@ -148,8 +148,8 @@
           "player": "carol",
           "zone": "Library",
           "is": [
-            "$c-top",
-            "$c-mid",
+            "Bird Maiden",
+            "Mountain#2",
             "$c-deep"
           ]
         }

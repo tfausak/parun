@@ -221,8 +221,8 @@
           "player": "alice",
           "zone": "Library",
           "is": [
-            "$day-of-judgment",
-            "$drift-of-phantasms"
+            "Day of Judgment",
+            "Drift of Phantasms"
           ]
         }
       }

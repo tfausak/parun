@@ -341,7 +341,7 @@
         "player": "alice",
         "zone": "Hand",
         "is": [
-          "Island#3"
+          "Island"
         ]
       }
     },
@@ -351,9 +351,9 @@
         "player": "alice",
         "zone": "Library",
         "is": [
-          "$island-2",
-          "$island-3",
-          "$goblin-piker"
+          "Island#2",
+          "Island#3",
+          "Goblin Piker"
         ]
       }
     },
@@ -363,7 +363,7 @@
         "player": "bob",
         "zone": "Hand",
         "is": [
-          "Mountain#3"
+          "Mountain"
         ]
       }
     },
@@ -373,9 +373,9 @@
         "player": "bob",
         "zone": "Library",
         "is": [
-          "$mountain-2",
-          "$mountain-3",
-          "$goblin-piker-2"
+          "Mountain#2",
+          "Mountain#3",
+          "Goblin Piker#2"
         ]
       }
     },
@@ -385,7 +385,7 @@
         "player": "carol",
         "zone": "Hand",
         "is": [
-          "Plains#3"
+          "Plains"
         ]
       }
     },
@@ -395,9 +395,9 @@
         "player": "carol",
         "zone": "Library",
         "is": [
-          "$plains-2",
-          "$plains-3",
-          "$goblin-piker-3"
+          "Plains#2",
+          "Plains#3",
+          "Goblin Piker#3"
         ]
       }
     }

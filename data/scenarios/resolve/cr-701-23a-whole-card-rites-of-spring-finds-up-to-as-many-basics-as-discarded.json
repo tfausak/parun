@@ -160,8 +160,8 @@
         "player": "alice",
         "zone": "Library",
         "is": [
-          "$lib-island",
-          "$lib-piker"
+          "Island",
+          "Goblin Piker#8"
         ]
       }
     },

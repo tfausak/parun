@@ -2841,7 +2841,9 @@ partnerWithSpec s registry =
               settled = settle atCarolSearching gs spellId
               trynnName = CardName.MkCardName (Text.pack "Trynn, Champion of Freedom")
           Spec.assertEqWith s "CR 702.124j: the named card is in the TARGETED player's hand" (handNamesOf S.carol settled) [trynnName]
-          Spec.assertEqWith s "CR 702.124j: and carol's library kept only the card the name rejected" (Game.zoneMembers Zone.Library S.carol settled) [carolPiker]
+          -- By name: the search looked at it and the shuffle reordered it, so it
+          -- is a new object (CR 701.20d / 701.20e).
+          Spec.assertEqWith s "CR 702.124j: and carol's library kept only the card the name rejected" (fmap (`S.soleFaceName` settled) (Game.zoneMembers Zone.Library S.carol settled)) [S.soleFaceName carolPiker gs]
           Spec.assertEqWith s "the caster's own library is untouched" (Game.zoneMembers Zone.Library S.alice settled) [aliceCard]
           Spec.assertEqWith s "and so is the third seat's" (Game.zoneMembers Zone.Library S.bob settled) [bobCard]
           Spec.assertEqWith s "CR 702.124j: the find was revealed, which is the rule's own word" (fmap fst (S.revealsOf settled)) [S.carol]

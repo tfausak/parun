@@ -140,11 +140,11 @@
         "player": "alice",
         "zone": "Library",
         "is": [
-          "$goblin-piker",
-          "$forest",
-          "$plains",
-          "$swamp",
-          "$mountain"
+          "Goblin Piker",
+          "Forest",
+          "Plains",
+          "Swamp",
+          "Mountain"
         ]
       }
     }

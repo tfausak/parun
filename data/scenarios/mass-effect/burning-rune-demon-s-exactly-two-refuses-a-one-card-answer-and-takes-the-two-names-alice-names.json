@@ -124,10 +124,8 @@
           "prompt": "Shuffle",
           "with": [
             "$demon-2",
-            "$murder",
             "$murder-2",
-            "$hill-giant",
-            "$forest"
+            "$hill-giant"
           ]
         }
       }

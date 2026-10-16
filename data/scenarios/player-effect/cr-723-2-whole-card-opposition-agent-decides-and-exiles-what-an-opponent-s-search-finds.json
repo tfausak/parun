@@ -117,8 +117,8 @@
         "player": "bob",
         "zone": "Library",
         "is": [
-          "$piker",
-          "$forest"
+          "Goblin Piker",
+          "Forest#3"
         ]
       }
     }

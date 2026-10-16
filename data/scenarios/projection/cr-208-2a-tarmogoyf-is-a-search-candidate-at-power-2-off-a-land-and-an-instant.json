@@ -228,7 +228,7 @@
         "Answer": {
           "prompt": "Search",
           "with": [
-            "$mountain"
+            "Mountain#14"
           ],
           "unoffered": true
         }
@@ -242,10 +242,10 @@
         "Answer": {
           "prompt": "Shuffle",
           "with": [
-            "$piker",
-            "$goyf",
-            "$giant",
-            "$mountain"
+            "Goblin Piker",
+            "Tarmogoyf",
+            "Hill Giant",
+            "Mountain#14"
           ]
         }
       }
@@ -312,7 +312,7 @@
         "Answer": {
           "prompt": "Search",
           "with": [
-            "$goyf"
+            "Tarmogoyf"
           ]
         }
       }
@@ -325,9 +325,9 @@
         "Answer": {
           "prompt": "Shuffle",
           "with": [
-            "$piker",
-            "$giant",
-            "$mountain"
+            "Goblin Piker",
+            "Hill Giant",
+            "Mountain#14"
           ]
         }
       }
@@ -393,7 +393,7 @@
         "Answer": {
           "prompt": "Search",
           "with": [
-            "$piker"
+            "Goblin Piker"
           ]
         }
       }
@@ -406,8 +406,8 @@
         "Answer": {
           "prompt": "Shuffle",
           "with": [
-            "$giant",
-            "$mountain"
+            "Hill Giant",
+            "Mountain#14"
           ]
         }
       }

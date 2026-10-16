@@ -6012,6 +6012,10 @@ forgetShown oid gs = case Game.lookupObject oid gs of
         _ -> False
   _ -> (oid, gs)
 
+-- forgetShown over every card an instruction reordered, in the order given.
+forgetAllShown :: (Foldable t) => t ObjectId -> GameState -> GameState
+forgetAllShown reordered gs = Foldable.foldl' (\g oid -> snd (forgetShown oid g)) gs reordered
+
 -- CR 616.1 with Lich's Mirror's ruling: objects a state-based action check
 -- moves, which the effects a replacement ran in place of a loss in that check
 -- are about to move too (GameState.contested). Only one move can happen, and
@@ -9377,8 +9381,13 @@ madnessChoice pid oid payloads = do
 -- module, so the setup callers reach down to it and this one does not have to
 -- reach up.
 --
--- Not implemented: CR 701.20d's new object for a revealed or looked-at card the
--- shuffle reorders; it keeps its id and any reveal window (#5144).
+-- CR 701.20d / 701.20e: every card shuffled is reordered, so each one revealed or
+-- looked at becomes a new object (forgetShown). The whole library is shuffled:
+-- CR 701.24b's found cards, left out of the shuffle, are never in it here, since
+-- every search that leaves them in the library prints its shuffle after the
+-- clauses that move them (Pawl.Engine.Resolve.Effect's Search arm).
+-- Pawl.VisibilitySpec's "CR 701.20d a revealed card shuffled into its library"
+-- case is the proof.
 shuffleLibrary :: PlayerId -> Game ()
 shuffleLibrary pid = do
   gs <- State.get
@@ -9390,6 +9399,7 @@ shuffleLibrary pid = do
   -- does not (Prompt.Shuffle is bare, being randomness rather than a choice),
   -- so this is defending the invariant rather than fixing a live bug.
   State.modify' (\g -> g {GameState.library = Map.insert pid (Seq.fromList shuffled) (GameState.library g)})
+  State.modify' (forgetAllShown shuffled)
   State.modify' (recordEvent (GameEvent.PlayerActed (PlayerActed.MkPlayerActed PlayerAction.Shuffle pid)))
 
 -- The single reveal funnel (CR 701.20a): `pid` shows `oid` to all players, which

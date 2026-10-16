@@ -57,6 +57,7 @@ spec :: (Monad m, Monad n) => Spec.Spec m n -> Registry.Registry m -> n ()
 spec s registry = Spec.describe s "Pawl.Engine.Visibility" $ do
   twoBeholdsSpec s registry
   miracleBeforePlacementSpec s registry
+  shuffledRevealSpec s registry
   -- A card CR 121.8 keeps face down in hand exists only mid-cast, which no
   -- scenario check reaches, so the mark is written onto the state directly.
   Spec.it s "CR 121.8 / 708.5 a card kept face down in hand is hidden from its owner" $ do
@@ -225,6 +226,57 @@ miracleBeforePlacementSpec s registry = do
     ((_, after), seen) <- board False
     Spec.assertEqWith s "CR 400.2 at both of alice's target prompts, bob's Wrath is hidden from her" seen [Visibility.Type.Obscured, Visibility.Type.Obscured]
     Spec.assertEqWith s "off the same board: only the two emblem triggers were put on the stack" (length (GameState.stack after)) 2
+
+-- CR 701.20d's shuffle, read inside the resolution that revealed the card --
+-- the window CR 701.20a keeps open while the spell resolves. No printing reads
+-- that window after its shuffle: every search that reveals a card it leaves in
+-- the library either shuffles last (Grim Reminder, Prophecy) or moves the card
+-- first (Gifts Ungiven, and CR 701.24b's "shuffle and put that card on top"
+-- tutors). Scryfall o:/reveal(s)? (it|them|that card|those cards)[^\n]*shuffle[^\n]*\. [A-Z][^\n]+/,
+-- 2026-10-16, no hit that leaves the card behind. So Synthetic Recounted
+-- Reminder ({1}{B} Sorcery, "Search your library for a card and reveal it, then
+-- shuffle. Target player discards a card.") prints a question after the
+-- shuffle; nothing in the CR forbids such a card.
+--
+-- The pair is the moment, off one run: what bob, the discarding player, sees of
+-- the revealed Hill Giant at the shuffle prompt, before anything is reordered,
+-- and at his discard prompt, after. The shuffle answer keeps the Giant on top:
+-- shuffled is reordered wherever the card lands. Three seats, so the target and
+-- the bystander are different players.
+shuffledRevealSpec :: (Monad m) => Spec.Spec m n -> Registry.Registry m -> n ()
+shuffledRevealSpec s registry =
+  Spec.it s "CR 701.20d a revealed card shuffled into its library is no longer seen before the effect finishes" $ do
+    swamp <- S.printingOf s registry "Swamp"
+    plains <- S.printingOf s registry "Plains"
+    giant <- S.printingOf s registry "Hill Giant"
+    recount <- S.printingOf s registry "Synthetic Recounted Reminder"
+    let g0 = S.landsFor swamp S.alice 2 S.threePlayerGame
+        (spell, g1) = S.addHandCard recount S.alice g0
+        (_, g2) = S.addLibraryCard plains S.alice g1
+        (_, g3) = S.addLibraryCard plains S.alice g2
+        -- Added last, so on top.
+        (found, g4) = S.addLibraryCard giant S.alice g3
+        (_, g5) = S.addHandCard plains S.bob g4
+        (_, ready) = S.addHandCard plains S.bob g5
+        giants g = [oid | oid <- Game.zoneMembers Zone.Library S.alice g, fmap S.nameOf (Game.cardOf oid g) == Just (S.printingName giant)]
+        note :: String -> GameState.GameState -> State.State [(String, [ObjectId.ObjectId], [Visibility.Type.Visibility])] ()
+        note label g = State.modify' (<> [(label, giants g, fmap (\oid -> Visibility.sees S.bob oid g) (giants g))])
+        answer :: Asked.Asked r -> State.State [(String, [ObjectId.ObjectId], [Visibility.Type.Visibility])] r
+        answer asked = case Asked.prompt asked of
+          Prompt.Search _ _ offered _ -> pure (filter (== found) offered)
+          p@(Prompt.Shuffle _) -> note "shuffle" (Asked.game asked) >> pure (S.identityAnswer p)
+          Prompt.ChooseTargets _ _ _ sets -> pure (S.preferring ((==) (Just S.bob) . Recipient.playerOf) sets)
+          p@(Prompt.ChooseDiscard _ pid _ _) | pid == S.bob -> note "discard" (Asked.game asked) >> pure (S.identityAnswer p)
+          p -> pure (S.castAnswer p)
+        ((_, after), seen) = State.runState (Engine.runGameAsked answer ready (S.cast S.alice spell >> Stack.resolveTop)) []
+        at label = lookup label [(l, (ids, views)) | (l, ids, views) <- seen]
+    -- THE gameplay reading, and first: after the shuffle, with the spell still
+    -- resolving, bob no longer sees the Giant.
+    Spec.assertEqWith s "CR 701.20d at bob's discard prompt he does not see the shuffled Giant" (fmap snd (at "discard")) (Just [Visibility.Type.Obscured])
+    Spec.assertEqWith s "CR 701.20d the shuffled Giant is a new object" (fmap ((== [found]) . fst) (at "discard")) (Just False)
+    -- The control, off the same run: before the shuffle, bob saw it.
+    Spec.assertEqWith s "CR 701.20a at the shuffle prompt bob sees the revealed Giant" (at "shuffle") (Just ([found], [Visibility.Type.Visible]))
+    Spec.assertEqWith s "bob discarded a card" (length (Game.zoneMembers Zone.Graveyard S.bob after)) 1
 
 -- Alice holds one card and has two in her library; bob has nothing.
 shownBoard :: (Monad m) => Spec.Spec m n -> Registry.Registry m -> m (GameState.GameState, ObjectId.ObjectId, ObjectId.ObjectId, ObjectId.ObjectId)

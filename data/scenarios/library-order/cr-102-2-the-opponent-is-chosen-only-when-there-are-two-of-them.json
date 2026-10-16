@@ -119,8 +119,8 @@
           "player": "bob",
           "zone": "Library",
           "is": [
-            "$bob-deep",
-            "$bob-top"
+            "Forest#2",
+            "Mountain"
           ]
         }
       }
