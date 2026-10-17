@@ -13,30 +13,6 @@ leaves this table when its card is added to `data/cards/`.
 
 | Card | Template card(s) | Note |
 |---|---|---|
-| Devastation | day-of-judgment | Destroy EachMatching Or(creature, land) |
-| Dread Charge | space-beleren | ForbidBeingBlocked UntilEndOfTurn, affected And(black creature, you control), blockers Not black (live Filter) |
-| Dread Reaper | thragtusk | SelfEnters LoseLife 5 you; Flying |
-| Dry Spell | molten-disaster | DealDamage parts: each creature, each player, 1 |
-| Déjà Vu | regrowth | filter HasCardType Sorcery |
-| Earthquake | molten-disaster | exact line (drop split second) |
-| Ebon Dragon | ravenous-rats + midnight-scavengers | optionality Optional on the discard clause; Flying |
-| Elven Cache | regrowth | exact line |
-| Final Strike | fling + chandra-fire-artisan | additional cost sacrifice creature; target AnyTarget filter Or(IsPlayer Opponent, Planeswalker) |
-| Fire Dragon | skred / koth-fire-of-resistance | SelfEnters, damage = count Mountains you control |
-| Fire Imp | electros-bolt | SelfEnters, 2 damage to target creature |
-| Fire Snake | endless-cockroaches + vandalize | SelfDies, Destroy target land |
-| Fire Tempest | molten-disaster | 6 to each creature and each player |
-| Flashfires | boil | HasSubtype Plains |
-| Fleet-Footed Monk | chomping-kavu | CantBeBlockedBy blockers power AtLeast 2 |
-| Fruition | blessed-reversal | GainLife Count Forests on the battlefield |
-| Gift of Estates | oreskos-explorer | ControlsMoreThanYou over players as a clause condition; Search up to 3 Plains, RevealThenHand |
-| Gravedigger | midnight-scavengers | drop the mana-value clause of the filter |
-| Hand of Death | doom-blade | exact line |
-| Harsh Justice | rally-the-troops + false-cure + teysa-envoy-of-ghosts + stuffy-doll | ArmDelayedTrigger UntilEndOfTurn; PermanentDealsCombatDamageToPlayer filter attacking creature, recipient You (binds combatDamager, eventAmount); DealDamage dealer = damager slot, quantity `thatMuch`, ref ControllerOfBound damager. Verify the damager slot's wire name |
-| Howling Fury | hatred | +4/+0 literal |
-| Hulking Cyclops | villainous-ogre | CantBlock self |
-| Hulking Goblin | villainous-ogre | CantBlock self |
-| Hurricane | molten-disaster + corrosive-gale | X to each creature with flying and each player |
 | Ingenious Thief | the-ravens-warning | SelfEnters, LookAt EachCardInHand of target player; Flying |
 | Jungle Lion | villainous-ogre | CantBlock self |
 | Lava Axe | goblin-war-strike | PlayersAndPlaneswalkers, 5 |

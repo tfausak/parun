@@ -1,0 +1,43 @@
+{
+  "description": "CR 603.7a / 120.2b Harsh Justice's delayed trigger has the attacker that hit its caster deal that much damage to the attacker's controller",
+  "note": "Scourge Servant's infect shows who deals the reflected damage: alice gets 3 poison counters and loses no life only when the Servant, not Harsh Justice, deals it (CR 120.3b). The Hill Giant's 3 to carol is not damage to bob, so nothing reflects it.",
+  "board": {
+    "seats": [
+      {
+        "name": "alice",
+        "life": 15,
+        "battlefield": [
+          { "card": "Scourge Servant", "label": "servant", "ready": true },
+          { "card": "Hill Giant", "label": "giant", "ready": true }
+        ]
+      },
+      {
+        "name": "bob",
+        "life": 18,
+        "counters": [{ "key": { "type": "Poison" }, "value": 1 }],
+        "battlefield": [
+          { "card": "Plains", "label": "plains-1", "ready": true },
+          { "card": "Plains", "label": "plains-2", "ready": true },
+          { "card": "Plains", "label": "plains-3", "ready": true }
+        ],
+        "hand": [{ "card": "Harsh Justice", "label": "justice", "ready": true }]
+      },
+      {
+        "name": "carol",
+        "life": 19
+      }
+    ],
+    "active": "alice",
+    "step": "BeginningOfCombat"
+  },
+  "timeline": [
+    { "turn": 1, "step": "DeclareAttackers", "player": "alice", "do": { "Attack": ["$servant", "$giant"] } },
+    { "turn": 1, "step": "DeclareAttackers", "player": "alice", "source": "$servant", "do": { "ChooseAttackTarget": "$bob" } },
+    { "turn": 1, "step": "DeclareAttackers", "player": "alice", "source": "$giant", "do": { "ChooseAttackTarget": "$carol" } },
+    { "turn": 1, "step": "DeclareAttackers", "player": "bob", "do": { "Cast": { "object": "$justice", "mana": ["$plains-1", "$plains-2", "$plains-3"] } } },
+    { "turn": 1, "step": "EndOfCombat", "player": "alice", "check": { "PlayerCounters": { "player": "alice", "kind": { "type": "Poison" }, "count": 3 } } },
+    { "turn": 1, "step": "EndOfCombat", "player": "alice", "check": { "Life": { "player": "alice", "life": 15 } } },
+    { "turn": 1, "step": "EndOfCombat", "player": "alice", "check": { "PlayerCounters": { "player": "bob", "kind": { "type": "Poison" }, "count": 4 } } },
+    { "turn": 1, "step": "EndOfCombat", "player": "alice", "check": { "Life": { "player": "carol", "life": 16 } } }
+  ]
+}

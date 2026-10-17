@@ -1,0 +1,113 @@
+{
+  "faces": [
+    {
+      "manaCost": [
+        {
+          "type": "Generic",
+          "value": 1
+        },
+        {
+          "type": "OfType",
+          "value": {
+            "type": "Colored",
+            "value": {
+              "type": "White"
+            }
+          }
+        }
+      ],
+      "name": "Gift of Estates",
+      "oracleText": "If an opponent controls more lands than you, search your library for up to three Plains cards, reveal them, put them into your hand, then shuffle.",
+      "spell": {
+        "modes": [
+          {
+            "clauses": [
+              {
+                "condition": {
+                  "type": "Compares",
+                  "value": {
+                    "comparison": {
+                      "type": "AtLeast"
+                    },
+                    "measured": {
+                      "type": "Count",
+                      "value": {
+                        "aggregation": {
+                          "type": "Members"
+                        },
+                        "filter": {
+                          "type": "ControlsMoreThanYou",
+                          "value": {
+                            "filter": {
+                              "type": "HasCardType",
+                              "value": {
+                                "type": "Land"
+                              }
+                            },
+                            "margin": 1
+                          }
+                        },
+                        "scope": {
+                          "type": "OverPlayers",
+                          "value": {
+                            "type": "Relative",
+                            "value": {
+                              "type": "Opponent"
+                            }
+                          }
+                        }
+                      }
+                    },
+                    "threshold": {
+                      "type": "Literal",
+                      "value": 1
+                    }
+                  }
+                },
+                "effects": [
+                  {
+                    "type": "Search",
+                    "value": {
+                      "destination": {
+                        "type": "RevealThenHand"
+                      },
+                      "filter": {
+                        "type": "HasSubtype",
+                        "value": {
+                          "type": "Plains"
+                        }
+                      },
+                      "owner": {
+                        "type": "Relative",
+                        "value": {
+                          "type": "You"
+                        }
+                      },
+                      "quantity": {
+                        "type": "Literal",
+                        "value": 3
+                      },
+                      "searcher": {
+                        "type": "Relative",
+                        "value": {
+                          "type": "You"
+                        }
+                      }
+                    }
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      "typeLine": {
+        "types": [
+          {
+            "type": "Sorcery"
+          }
+        ]
+      }
+    }
+  ]
+}

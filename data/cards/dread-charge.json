@@ -1,0 +1,82 @@
+{
+  "faces": [
+    {
+      "manaCost": [
+        {
+          "type": "Generic",
+          "value": 3
+        },
+        {
+          "type": "OfType",
+          "value": {
+            "type": "Colored",
+            "value": {
+              "type": "Black"
+            }
+          }
+        }
+      ],
+      "name": "Dread Charge",
+      "oracleText": "Black creatures you control can't be blocked this turn except by black creatures.",
+      "spell": {
+        "modes": [
+          {
+            "clauses": [
+              {
+                "effects": [
+                  {
+                    "type": "ForbidBeingBlocked",
+                    "value": {
+                      "affected": {
+                        "type": "And",
+                        "value": [
+                          {
+                            "type": "HasCardType",
+                            "value": {
+                              "type": "Creature"
+                            }
+                          },
+                          {
+                            "type": "HasColor",
+                            "value": {
+                              "type": "Black"
+                            }
+                          },
+                          {
+                            "type": "ControlledBy",
+                            "value": {
+                              "type": "You"
+                            }
+                          }
+                        ]
+                      },
+                      "blockers": {
+                        "type": "Not",
+                        "value": {
+                          "type": "HasColor",
+                          "value": {
+                            "type": "Black"
+                          }
+                        }
+                      },
+                      "duration": {
+                        "type": "UntilEndOfTurn"
+                      }
+                    }
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      "typeLine": {
+        "types": [
+          {
+            "type": "Sorcery"
+          }
+        ]
+      }
+    }
+  ]
+}
