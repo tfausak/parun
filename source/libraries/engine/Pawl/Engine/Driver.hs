@@ -1,7 +1,7 @@
 {-# LANGUAGE GADTs #-}
 {-# LANGUAGE RankNTypes #-}
 
--- The one loop every answerer plugs into (#5182): a prompt is routed to the
+-- The one loop every answerer plugs into: a prompt is routed to the
 -- answerer for its seat, observers watch it either side of the answer, and a
 -- game is stepped until it ends or its caller says stop.
 module Pawl.Engine.Driver where
