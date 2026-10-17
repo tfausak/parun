@@ -64,6 +64,7 @@ import qualified Pawl.Engine.Modal as Modal
 import qualified Pawl.Engine.Monarch as Monarch
 import qualified Pawl.Engine.MoveDuration as MoveDuration
 import qualified Pawl.Engine.Phasing as Phasing
+import qualified Pawl.Engine.Plane as Plane
 import qualified Pawl.Engine.Planechase as Planechase
 import qualified Pawl.Engine.PlayerEffect as PlayerEffect
 import qualified Pawl.Engine.Players as Players
@@ -1053,9 +1054,9 @@ alreadyTurnedFor resolving victim gs =
 -- graveyard has no controller, so Filter.ControlledBy is vacuously False. APNAP
 -- (CR 101.4) then ascending ObjectId, not the graveyard's own pile order (CR
 -- 404.2), which no rule makes a batch's processing order.
-graveyardCards :: Filter.Context -> Map.Map SlotName (Set Recipient) -> PlayerId -> GameState -> ZoneScope.ZoneScope -> Filter.Type.Filter Keyword.Type.Keyword -> [ObjectId]
-graveyardCards context bindings controller gs scope filter_ =
-  concatMap (\pid -> graveyardCardsOf context gs pid filter_) (Target.zoneScopePlayers (Just controller) bindings scope gs)
+graveyardCards :: Filter.Context -> Map.Map SlotName (Set Recipient) -> ObjectId -> PlayerId -> GameState -> ZoneScope.ZoneScope -> Filter.Type.Filter Keyword.Type.Keyword -> [ObjectId]
+graveyardCards context bindings source controller gs scope filter_ =
+  concatMap (\pid -> graveyardCardsOf context gs pid filter_) (Target.zoneScopePlayers (Plane.rangePerspective source controller gs) (Just controller) bindings scope gs)
 
 -- askingObjects' ChosenCardInGraveyard arm.
 chosenCardsInGraveyard :: Map.Map SlotName (Set Recipient) -> ObjectId -> PlayerId -> ObjectId -> ChosenCardInGraveyard.ChosenCardInGraveyard -> Game [ObjectId]
@@ -1075,10 +1076,10 @@ chosenCardsInGraveyard legal resolving controller source (ChosenCardInGraveyard.
               Just taken -> pick (made Seq.|> (asked, taken)) asked (n - 1) (List.delete taken candidates)
       ask asked = fmap (fmap snd . Foldable.toList) . pick Seq.empty asked wanted
   case chooser of
-    Chooser.TheController -> ask controller (graveyardCards context legal controller gs scope filter_)
+    Chooser.TheController -> ask controller (graveyardCards context legal source controller gs scope filter_)
     Chooser.EachInScope ->
       fmap (fmap snd . Foldable.toList) . Monad.foldM (\made pid -> pick made pid wanted (graveyardCardsOf context gs pid filter_)) Seq.empty $
-        Target.zoneScopePlayers (Just controller) legal scope gs
+        Target.zoneScopePlayers (Plane.rangePerspective source controller gs) (Just controller) legal scope gs
     -- ONE chooser, read out of the slot a ChoosePlayer bound,
     -- choosing out of their own graveyard. Through playerRefPlayers so
     -- the slot is read as every other is (CR 608.2b): an unfilled,
@@ -1087,7 +1088,7 @@ chosenCardsInGraveyard legal resolving controller source (ChosenCardInGraveyard.
     -- a chooser the scope does not name is offered nothing.
     Chooser.BoundInSlot slot ->
       case playerRefPlayers legal resolving source controller gs (PlayerRef.InSlot slot) of
-        [pid] | List.elem pid (Target.zoneScopePlayers (Just controller) legal scope gs) -> ask pid (graveyardCardsOf context gs pid filter_)
+        [pid] | List.elem pid (Target.zoneScopePlayers (Plane.rangePerspective source controller gs) (Just controller) legal scope gs) -> ask pid (graveyardCardsOf context gs pid filter_)
         _ -> pure []
 
 -- The seats an ObjectRef.ChosenCardInHand asks -- and an
@@ -2509,7 +2510,7 @@ randomCardsInGraveyard resolving source controller legal (RandomCardInGraveyard.
       context = effectContext gs resolving controller source legal (slotBindings resolving gs)
       wanted = maybe 0 Integer.toNaturalSaturating (Quantity.evaluateFor viewOf context gs resolving source count)
   fmap concat . Monad.mapM (\pid -> Game.drawDistinct Prompt.RandomObject wanted (graveyardCardsOf context gs pid filter_)) $
-    Target.zoneScopePlayers (Just controller) legal scope gs
+    Target.zoneScopePlayers (Plane.rangePerspective source controller gs) (Just controller) legal scope gs
 
 -- Alchemy's seek: the cards randomness names out of each library the ref
 -- reaches -- askingObjects' RandomCardInLibrary arm.
@@ -3633,10 +3634,10 @@ effectIsImpossible resolving source controller legal gs effect = case effect of
           ObjectRef.ChosenPermanents choice -> battlefieldMatching legal resolving controller source gs (ChosenPermanents.filter choice)
           ObjectRef.ChosenCardInGraveyard (ChosenCardInGraveyard.MkChosenCardInGraveyard chooser scope filter_ _) -> case chooser of
             Chooser.BoundInSlot slot -> case playerRefPlayers legal resolving source controller gs (PlayerRef.InSlot slot) of
-              [pid] | List.elem pid (Target.zoneScopePlayers (Just controller) legal scope gs) -> graveyardCardsOf context gs pid filter_
+              [pid] | List.elem pid (Target.zoneScopePlayers (Plane.rangePerspective source controller gs) (Just controller) legal scope gs) -> graveyardCardsOf context gs pid filter_
               _ -> []
-            Chooser.TheController -> graveyardCards context legal controller gs scope filter_
-            Chooser.EachInScope -> graveyardCards context legal controller gs scope filter_
+            Chooser.TheController -> graveyardCards context legal source controller gs scope filter_
+            Chooser.EachInScope -> graveyardCards context legal source controller gs scope filter_
           _ -> objectRefObjects legal resolving controller source gs ref
         owns pid oid = fmap Object.owner (Game.lookupObject oid gs) == Just pid
         placeable pid = any (\oid -> owns pid oid && not (null (Sticker.offered pid oid kinds (ticketCapOf resolving source controller legal gs cap) free gs))) named
@@ -3683,9 +3684,9 @@ effectIsImpossible resolving source controller legal gs effect = case effect of
          in not (null choosers) && all (\pid -> null (handCardsOf context gs pid filter_)) choosers
       ObjectRef.ChosenCardInGraveyard (ChosenCardInGraveyard.MkChosenCardInGraveyard chooser scope filter_ count) ->
         positive count && case chooser of
-          Chooser.TheController -> null (graveyardCards context legal controller gs scope filter_)
+          Chooser.TheController -> null (graveyardCards context legal source controller gs scope filter_)
           Chooser.EachInScope ->
-            let scoped = Target.zoneScopePlayers (Just controller) legal scope gs
+            let scoped = Target.zoneScopePlayers (Plane.rangePerspective source controller gs) (Just controller) legal scope gs
              in not (null scoped) && all (\pid -> null (graveyardCardsOf context gs pid filter_)) scoped
           Chooser.BoundInSlot _ -> False
       ObjectRef.ChosenCardFromAmong (ChosenCardFromAmong.MkChosenCardFromAmong slot filter_ count _) ->
@@ -4571,10 +4572,11 @@ applyOneEffect runSubgame resolving source controller legal chosen effect = case
   -- more cards leave your graveyard" fires once (CR 603.2c). "Every graveyard"
   -- is CR 102.1's players still in the game, not the keys of
   -- GameState.players, which keep a departed seat's row -- and CR 801.10's
-  -- within the controller's range.
+  -- within the controller's range, which CR 801.18 lifts for a planar source
+  -- (Plane.rangePerspective).
   Effect.ExileAllGraveyards -> do
     gs <- State.get
-    let gyCards = concatMap (\pid -> Game.zoneMembers Zone.Graveyard pid gs) (Players.table (Just controller) gs)
+    let gyCards = concatMap (\pid -> Game.zoneMembers Zone.Graveyard pid gs) (Players.table (Plane.rangePerspective source controller gs) gs)
     Monad.void (Event.changeZonesTogether (fmap (\c -> (c, Zone.Exile)) gyCards))
   -- CR 103.5b (Serum Powder): the count is the hand size BEFORE the exile, which
   -- is why this is one opcode rather than an exile followed by a Draw. Both
@@ -4658,7 +4660,7 @@ applyOneEffect runSubgame resolving source controller legal chosen effect = case
   Effect.ChoosePlayer choice -> do
     gs <- State.get
     let slot = ChoosePlayer.slot choice
-    chosenPlayer <- Players.chooseOne controller source (Maybe.fromMaybe [] (PlayerEffect.playersInScope (Just controller) gs (ChoosePlayer.scope choice)))
+    chosenPlayer <- Players.chooseOne controller source (Maybe.fromMaybe [] (PlayerEffect.playersInScope (Plane.rangePerspective source controller gs) (Just controller) gs (ChoosePlayer.scope choice)))
     Monad.forM_ chosenPlayer $ \pid -> State.modify' (bindPlayerSlot resolving slot (Set.singleton pid))
   -- ChoosePlayer's twin with the decision replaced by randomness (Ruhan of the
   -- Fomori's "choose an opponent at random", Strax, Sontaran Nurse's "choose a
@@ -4683,7 +4685,7 @@ applyOneEffect runSubgame resolving source controller legal chosen effect = case
   Effect.ChoosePlayerAtRandom choice -> do
     gs <- State.get
     let slot = ChoosePlayerAtRandom.slot choice
-        candidates = Maybe.fromMaybe [] (PlayerEffect.playersInScope (Just controller) gs (ChoosePlayerAtRandom.scope choice))
+        candidates = Maybe.fromMaybe [] (PlayerEffect.playersInScope (Plane.rangePerspective source controller gs) (Just controller) gs (ChoosePlayerAtRandom.scope choice))
     chosenPlayer <- Game.drawAmong Prompt.RandomPlayer candidates
     Monad.forM_ chosenPlayer $ \pid -> State.modify' (bindPlayerSlot resolving slot (Set.singleton pid))
   -- CR 608.2d: the seat the payload names picks any number of the matching
@@ -6782,15 +6784,18 @@ applyOneEffect runSubgame resolving source controller legal chosen effect = case
     Departure.leaveGameTogether (all limited winners) Departure.Type.Lost (filter (`Set.member` losers) (Game.apnapOrder gs))
   -- CR 104.4c with CR 801.15: the game is a draw for the controller and each
   -- player within their range, who leave it; everyone else plays on. Under an
-  -- unlimited range that is the whole table, which CR 104.2a's settle then
-  -- records as the draw.
+  -- unlimited range, or for CR 801.18's planar source, that is the whole
+  -- table, which CR 104.2a's settle then records as the draw.
   Effect.DrawGame -> do
     gs <- State.get
-    let drawn = Players.table (Just controller) gs
+    let drawn = Players.table (Plane.rangePerspective source controller gs) gs
     Departure.leaveGameTogether True Departure.Type.Drew (filter (`elem` drawn) (Game.apnapOrder gs))
   -- CR 119.7 / 119.8: redistribute life totals, each new total being CR 119.5's
   -- gain or loss of the necessary amount. The roster is CR 102.1's players IN the
-  -- game, not the keys of GameState.players, which keep a departed seat's row.
+  -- game, not the keys of GameState.players, which keep a departed seat's row,
+  -- within the controller's range but for CR 801.18's planar source
+  -- (Plane.rangePerspective). That exemption is unobserved: The Doctor's Tomb,
+  -- the plane that redistributes, is not yet expressible (gap #5196).
   -- Every total is read ONCE, before the prompt and before any life moves (CR
   -- 608.2h); a rotation would otherwise leave two seats on one number.
   --
@@ -6811,7 +6816,7 @@ applyOneEffect runSubgame resolving source controller legal chosen effect = case
   -- (#4493).
   Effect.RedistributeLifeTotals -> do
     gs <- State.get
-    let candidates = Players.table (Just controller) gs
+    let candidates = Players.table (Plane.rangePerspective source controller gs) gs
         lifeOf pid = maybe 0 Player.life (Map.lookup pid (GameState.players gs))
         offered = fmap (\pid -> (pid, lifeOf pid)) candidates
     -- With one candidate or none every assignment is the same, so there is
@@ -6963,8 +6968,11 @@ applyOneEffect runSubgame resolving source controller legal chosen effect = case
           pid : _ -> pid
           [] -> controller
         -- turnOrderFrom answers the SEATING roster (CR 800.5), so stillPlaying
-        -- is what keeps a departed seat from being asked to vote.
-        voters = filter (\pid -> List.elem pid (Players.table (Just controller) gs)) (Game.turnOrderFrom begin gs)
+        -- is what keeps a departed seat from being asked to vote. Within the
+        -- controller's range (CR 801.10), every seat for a planar source (CR
+        -- 801.18): Pawl.PlanechaseSpec's "Prime Minister's Cabinet Room's vote
+        -- is cast by a player outside" proves it.
+        voters = filter (\pid -> List.elem pid (Players.table (Plane.rangePerspective source controller gs) gs)) (Game.turnOrderFrom begin gs)
         -- CR 701.38d: a seat given extra votes casts them ALL here, before the
         -- next seat votes -- "at the same time the player would otherwise have
         -- voted" (Brago's Representative). Each is its own prompt: that card's
@@ -7024,7 +7032,7 @@ applyOneEffect runSubgame resolving source controller legal chosen effect = case
       -- The tally keys every candidate, zeros included, and is bound on the
       -- resolving object, where effectContext's slotVotes reads it.
       VoteChoices.Players (VotePlayers.MkVotePlayers another slot) -> do
-        let table = Players.table (Just controller) gs
+        let table = Players.table (Plane.rangePerspective source controller gs) gs
             candidatesFor voter = if another then filter (/= voter) table else table
         picks <- cast (fmap BallotChoice.ForPlayer) $ \voter -> Game.chooseAmong (\decider who -> Prompt.ChooseVotePlayer decider who resolving) voter (candidatesFor voter)
         let tally = Map.fromList (fmap (\pid -> (pid, Natural.length (filter (== Just pid) picks))) (concatMap candidatesFor voters))
@@ -9665,7 +9673,7 @@ applyOneEffect runSubgame resolving source controller legal chosen effect = case
   Effect.Proliferate -> do
     outcome <- Event.applyReplacements (ProposedEvent.WouldProliferate controller 1)
     Monad.forM_ (outcome >>= Replacement.asProliferate) $ \(_, times) ->
-      Monad.replicateM_ (Natural.toIntSaturating times) (proliferateOnce controller)
+      Monad.replicateM_ (Natural.toIntSaturating times) (proliferateOnce source controller)
   -- CR 701.39a: "bolster N" -- put N +1/+1 counters on a creature you control
   -- with the least toughness, or tied for least. The prompt is raised only for a
   -- TIE; CR 101.3 ignores the instruction when the pool is empty. Targetless: no
@@ -10391,20 +10399,23 @@ logBallot secret ballot = do
           else Set.fromList (Game.stillPlaying gs)
   State.modify' (Event.recordEvent (GameEvent.Voted (Voted.MkVoted ballot audience)))
 
--- CR 701.34a: one proliferate by `controller`. The Effect.Proliferate arm's
--- body, once per proliferate its CR 614.1a replacements left standing.
-proliferateOnce :: PlayerId -> Game ()
-proliferateOnce controller = do
+-- CR 701.34a: one proliferate by `controller`, for an ability of `source`. The
+-- Effect.Proliferate arm's body, once per proliferate its CR 614.1a
+-- replacements left standing.
+proliferateOnce :: ObjectId -> PlayerId -> Game ()
+proliferateOnce source controller = do
   gs <- State.get
-  let everyone = Players.table (Just controller) gs
+  let reach = Plane.rangePerspective source controller gs
+      everyone = Players.table reach gs
       grants = Projection.controlGrants gs
       kindsOn oid = foldMap (Map.keys . Map.filter (> 0) . Object.counters) (Game.lookupObject oid gs)
       kindsFor pid = foldMap (Map.keys . Map.filter (> 0) . Player.counters) (Map.lookup pid (GameState.players gs))
       -- zoneMembers slices the shared battlefield by OWNER, so the union over
       -- every seat is every permanent in play (CR 701.34a).
       onBattlefield = concatMap (\pid -> Game.zoneMembers Zone.Battlefield pid gs) (Game.stillPlaying gs)
-      -- CR 801.10: a permanent in range, whoever owns it.
-      permanents = filter (\oid -> not (null (kindsOn oid)) && Projection.objectInRangeGiven grants controller oid gs) onBattlefield
+      -- CR 801.10: a permanent in range, whoever owns it -- every one for CR
+      -- 801.18's planar source.
+      permanents = filter (\oid -> not (null (kindsOn oid)) && all (\you -> Projection.objectInRangeGiven grants you oid gs) reach) onBattlefield
       players = filter (not . null . kindsFor) everyone
   Monad.unless (null permanents && null players) $ do
     (pickedPermanents, pickedPlayers) <-

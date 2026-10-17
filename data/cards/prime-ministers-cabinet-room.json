@@ -1,0 +1,163 @@
+{
+  "faces": [
+    {
+      "name": "Prime Minister's Cabinet Room",
+      "oracleText": "At the beginning of combat on your turn, up to one target creature you control becomes a copy of target creature an opponent controls.\nWill of the council — Whenever chaos ensues, starting with you, each player votes for a creature you don't control. Exile each creature with the most votes or tied for most votes.",
+      "triggeredAbilities": [
+        {
+          "condition": {
+            "type": "StepBegins",
+            "value": {
+              "phase": {
+                "type": "Combat",
+                "value": {
+                  "type": "BeginningOfCombat"
+                }
+              },
+              "scope": {
+                "type": "ControllersTurn"
+              }
+            }
+          },
+          "modal": {
+            "modes": [
+              {
+                "clauses": [
+                  {
+                    "effects": [
+                      {
+                        "type": "BecomeCopy",
+                        "value": {
+                          "original": {
+                            "type": "OfObject",
+                            "value": {
+                              "type": "InSlot",
+                              "value": "copied"
+                            }
+                          },
+                          "subject": {
+                            "type": "InSlot",
+                            "value": "subject"
+                          }
+                        }
+                      }
+                    ]
+                  }
+                ],
+                "targetSlots": {
+                  "copied": {
+                    "filter": {
+                      "type": "ControlledBy",
+                      "value": {
+                        "type": "Opponent"
+                      }
+                    },
+                    "pool": {
+                      "type": "Creatures"
+                    }
+                  },
+                  "subject": {
+                    "count": {
+                      "type": "Printed",
+                      "value": {
+                        "least": 0,
+                        "most": 1
+                      }
+                    },
+                    "filter": {
+                      "type": "ControlledBy",
+                      "value": {
+                        "type": "You"
+                      }
+                    },
+                    "pool": {
+                      "type": "Creatures"
+                    }
+                  }
+                }
+              }
+            ]
+          }
+        },
+        {
+          "condition": {
+            "type": "ChaosEnsues"
+          },
+          "modal": {
+            "modes": [
+              {
+                "clauses": [
+                  {
+                    "effects": [
+                      {
+                        "type": "Vote",
+                        "value": {
+                          "choices": {
+                            "type": "Objects",
+                            "value": {
+                              "filter": {
+                                "type": "And",
+                                "value": [
+                                  {
+                                    "type": "HasCardType",
+                                    "value": {
+                                      "type": "Creature"
+                                    }
+                                  },
+                                  {
+                                    "type": "Not",
+                                    "value": {
+                                      "type": "ControlledBy",
+                                      "value": {
+                                        "type": "You"
+                                      }
+                                    }
+                                  }
+                                ]
+                              },
+                              "slot": "elected"
+                            }
+                          },
+                          "starter": {
+                            "type": "Relative",
+                            "value": {
+                              "type": "You"
+                            }
+                          }
+                        }
+                      },
+                      {
+                        "type": "MoveToZone",
+                        "value": {
+                          "ref": {
+                            "type": "InSlot",
+                            "value": "elected"
+                          },
+                          "zone": {
+                            "type": "Exile"
+                          }
+                        }
+                      }
+                    ]
+                  }
+                ]
+              }
+            ]
+          }
+        }
+      ],
+      "typeLine": {
+        "subtypes": [
+          {
+            "type": "Earth"
+          }
+        ],
+        "types": [
+          {
+            "type": "Plane"
+          }
+        ]
+      }
+    }
+  ]
+}

@@ -196,9 +196,11 @@ permanentLeader gs =
 -- The same scope as a SET rather than as a membership test -- CR 400.1's
 -- per-player zones asked in the direction a zone fold needs it
 -- (Pawl.Engine.Target.graveyardRecipients), and the offer a resolving "choose
--- a player" makes (CR 608.2d). A relation is Pawl.Engine.Players.related's: the
--- players still in the game (CR 102.1) within the perspective's range (CR
--- 801.5a / 801.10), so no scope names a departed seat or one out of reach.
+-- a player" makes (CR 608.2d). A relation is Pawl.Engine.Players.relatedAmong's:
+-- the players still in the game (CR 102.1) within @reach@'s range (CR 801.5a /
+-- 801.10), so no scope names a departed seat or one out of reach. @reach@ is
+-- the perspective's own but for a planar source (CR 801.18,
+-- Plane.rangePerspective).
 --
 -- Nothing is an ABSENT perspective, which is CR 109.5's "you" with nobody to be
 -- -- the vacuous posture every player-referencing Filter atom takes. AnyPlayer
@@ -206,10 +208,10 @@ permanentLeader gs =
 -- card in a graveyard" names the whole table whoever is reading it.
 -- ControllingMostPermanents is answerable for that same reason, one arm further
 -- on: its membership is a fact about the board.
-playersInScope :: Maybe PlayerId -> GameState -> PlayerScope -> Maybe [PlayerId]
-playersInScope perspective gs scope = case scope of
-  PlayerScope.Related relation -> Players.related perspective gs relation
-  PlayerScope.ControllingMostPermanents -> Just (filter (`elem` Players.table perspective gs) (Maybe.maybeToList (permanentLeader gs)))
+playersInScope :: Maybe PlayerId -> Maybe PlayerId -> GameState -> PlayerScope -> Maybe [PlayerId]
+playersInScope reach perspective gs scope = case scope of
+  PlayerScope.Related relation -> Players.relatedAmong (Players.table reach gs) perspective gs relation
+  PlayerScope.ControllingMostPermanents -> Just (filter (`elem` Players.table reach gs) (Maybe.maybeToList (permanentLeader gs)))
 
 -- CR 707.2a: the player abilities this permanent's copiable rules text gives it
 -- -- its copy snapshot's when it has one, its printed face's otherwise. The

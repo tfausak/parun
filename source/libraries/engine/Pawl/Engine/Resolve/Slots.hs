@@ -2962,7 +2962,7 @@ objectRefObjects legal resolving controller source gs ref = case ref of
     -- With CR 303.4b's host filled for Animate Dead's "return enchanted
     -- creature card".
     let context = effectContext gs resolving controller source legal (slotBindings resolving gs)
-     in concatMap (\pid -> graveyardCardsOf context gs pid filter_) (Target.zoneScopePlayers (Just controller) legal scope gs)
+     in concatMap (\pid -> graveyardCardsOf context gs pid filter_) (Target.zoneScopePlayers (Plane.rangePerspective source controller gs) (Just controller) legal scope gs)
   -- CR 400.1's per-player zone again, but only the RESOLVING CONTROLLER's, so no
   -- scope to fold over and no APNAP order to impose. In the zone's own order,
   -- which no rule reads: CR 402.3 leaves a hand's arrangement to its owner.
@@ -2984,7 +2984,7 @@ objectRefObjects legal resolving controller source gs ref = case ref of
         held pid = case mFilter of
           Nothing -> Game.zoneMembers Zone.Hand pid gs
           Just filter_ -> handCardsOf context gs pid filter_
-     in concatMap held (Target.zoneScopePlayers (Just controller) legal scope gs)
+     in concatMap held (Target.zoneScopePlayers (Plane.rangePerspective source controller gs) (Just controller) legal scope gs)
   -- CR 400.1's other hidden per-player zone, and only the RESOLVING
   -- CONTROLLER's, so no scope to fold over and no APNAP order to impose --
   -- EachCardInYourHand's answer above. CR 400.12 is what makes "from your

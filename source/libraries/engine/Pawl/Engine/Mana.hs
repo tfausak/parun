@@ -545,7 +545,7 @@ manaSuppliesGiven capacity pcs pid oid gs =
           [ (ChoosePlayer.slot choice, Set.singleton pid)
           | (clause, _) <- ManaOption.steps option,
             choice <- Maybe.mapMaybe ManaAbility.playerChoice (Foldable.toList (Clause.effects clause)),
-            List.elem pid (Maybe.fromMaybe [] (PlayerEffect.playersInScope (Just pid) gs (ChoosePlayer.scope choice)))
+            List.elem pid (Maybe.fromMaybe [] (PlayerEffect.playersInScope (Just pid) (Just pid) gs (ChoosePlayer.scope choice)))
           ]
       options = manaOptionsOfGiven pcs oid gs
       -- Lazy, and forced only for a permanent mixing open and closed routes:
