@@ -8250,7 +8250,7 @@ createTokens controller card copy n tapped entering attached marks = do
             -- they name one entry.
             tokenId <- State.state (Game.intern (Printing.ofCard (TokenLot.card lot)))
             let mkObj ts =
-                  (Object.new owner (Source.OfToken tokenId) Zone.Battlefield ts)
+                  (Game.tokenOfLot owner tokenId lot ts)
                     { -- CR 110.5b: untapped unless an effect says otherwise, which
                       -- is why the caller supplies this rather than the default
                       -- being taken and the token tapped after.
@@ -8258,16 +8258,6 @@ createTokens controller card copy n tapped entering attached marks = do
                       -- CR 110.5b: face up, for the same rule's reason. No effect
                       -- in the pool creates a token face down.
                       Object.facing = Facing.FaceUp,
-                      -- CR 707.2 / 111.3: a token copy's copiable values are the
-                      -- copied permanent's, stamped into the layer-1 snapshot the
-                      -- projection starts from -- the same binding the CR 614.1c
-                      -- entry rewrite writes, and the same read
-                      -- (Projection.copiableCharacteristics) on the way out.
-                      -- Written HERE rather than after the entry loop because CR
-                      -- 614.12 asks for the characteristics the permanent would
-                      -- have on the battlefield, and for this token those are the
-                      -- copy's from the instant it exists.
-                      Object.bindings = maybe Map.empty (\pc -> Binding.setCopy pc Map.empty) (TokenLot.copy lot),
                       -- CR 702.128b: a mark the token has from its creation
                       -- (embalmed), so its own CR 614.12 entry loop already
                       -- reads it (Vizier of Many Faces).
