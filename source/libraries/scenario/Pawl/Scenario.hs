@@ -36,6 +36,7 @@ import qualified Pawl.Engine.Attach as Attach
 import qualified Pawl.Engine.Card as Engine.Card
 import qualified Pawl.Engine.Combat as Combat
 import qualified Pawl.Engine.Damage as Damage
+import qualified Pawl.Engine.Driver as Driver
 import qualified Pawl.Engine.Engine as Engine
 import qualified Pawl.Engine.Event.Trigger as Event.Trigger
 import qualified Pawl.Engine.Filter as Filter
@@ -482,7 +483,7 @@ answerPrompt asked = do
   let prompt = Asked.prompt asked
       gs = Asked.game asked
       kind = Prompt.kindOf prompt
-  decider <- traverse labelOf (Prompt.deciderOf prompt)
+  decider <- traverse labelOf (Driver.deciderOf prompt)
   -- Hoisted above every arm: a nested game (CR 729.1) is out of scope for every
   -- prompt alike, a pending action's sub-choices included.
   if not (null (Asked.enclosing asked))

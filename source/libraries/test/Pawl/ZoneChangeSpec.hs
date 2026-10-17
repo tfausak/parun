@@ -1621,8 +1621,9 @@ setLifeTotalSpec s registry =
 --
 -- Written against S.runPure rather than the Board harness, and that is the
 -- shuffle clause's doing: the harness has no vocabulary for Prompt.Shuffle,
--- which randomness rather than any player answers (Pawl.Scenario.Prompt.deciderOf), so a card
--- that shuffles cannot be scripted through it.
+-- which randomness rather than any player answers
+-- (Pawl.Engine.Driver.deciderOf), so a card that shuffles cannot be scripted
+-- through it.
 doubleLifeTotalSpec :: (Monad m, Monad n) => Spec.Spec m n -> Registry.Registry m -> n ()
 doubleLifeTotalSpec s registry =
   let -- setLifeTotalSpec's driver: cast, then settle-and-resolve until the stack
