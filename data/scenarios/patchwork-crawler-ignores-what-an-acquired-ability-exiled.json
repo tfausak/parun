@@ -1,0 +1,38 @@
+{
+  "description": "CR 607.2a / 607.5 Patchwork Crawler gains nothing from the Llanowar Elves an ability it acquired exiled",
+  "note": "The pair of patchwork-crawler-gains-what-its-own-ability-exiled.json: the Crawler exiles Withered Wretch, gains its exiling ability and exiles the Elves with that, which no ability printed on the Crawler is linked to.",
+  "board": {
+    "seats": [
+      {
+        "name": "alice",
+        "battlefield": [
+          { "card": "Island", "label": "island" },
+          { "card": "Island", "label": "island-2" },
+          { "card": "Island", "label": "island-3" },
+          { "card": "Island", "label": "island-4" },
+          { "card": "Island", "label": "island-5" },
+          { "card": "Island", "label": "island-6" },
+          { "card": "Patchwork Crawler", "label": "crawler", "ready": true }
+        ],
+        "graveyard": [
+          { "card": "Withered Wretch", "label": "wretch" },
+          { "card": "Llanowar Elves", "label": "elves" }
+        ]
+      },
+      {
+        "name": "bob"
+      }
+    ],
+    "active": "alice",
+    "step": "PrecombatMain"
+  },
+  "timeline": [
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": { "Activate": { "object": "$crawler", "ability": 0, "mana": ["$island", "$island-2", "$island-3", null], "targets": ["$wretch"] } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass" },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": { "Activate": { "object": "$crawler", "ability": 1, "mana": ["$island-4", null], "targets": ["$elves"] } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass" },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "check": { "Count": { "player": "alice", "zone": "Exile", "card": "Llanowar Elves", "count": 1 } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "check": { "View": { "of": "Offered", "player": "alice", "is": ["Pass", "ActivateManaAbility $island-5", "ActivateManaAbility $island-6"] } } },
+    { "turn": 1, "step": "DeclareAttackers", "player": "alice", "do": { "Attack": [] } }
+  ]
+}
