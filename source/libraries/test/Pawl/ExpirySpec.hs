@@ -1644,9 +1644,10 @@ suspendAggressionSpec s registry = Spec.describe s "SuspendAggression" $ do
   -- Pawl.Types.EventGroup, which is what CR 603.2c's batch conditions ("whenever
   -- one or more cards are put into exile") read. Asserted on the log, as
   -- Pawl.MeldSpec's "CR 608.2f the pair leaves the battlefield in one event" is:
-  -- the one batch exile trigger in data/cards/, Stonebinder's Familiar, triggers
-  -- once each turn and so gives one counter under either reading. The War Doctor
-  -- would tell them apart; see #5189 and #5190.
+  -- no batch exile trigger in data/cards/ tells the readings apart, since
+  -- Stonebinder's Familiar triggers once each turn and Rakshasa Vizier watches
+  -- only a graveyard (pool grep for "one or more cards are put into exile",
+  -- 2026-10-17). The War Doctor would; see #5189 and #5190.
   Spec.it s "CR 608.2f the permanent and the library card are exiled in one event" $ do
     (pikerId, mineId, resolved) <- suspendAggressionBoard s registry
     let logged = Foldable.toList (GameState.events resolved)
