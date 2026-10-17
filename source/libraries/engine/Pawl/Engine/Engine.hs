@@ -5,6 +5,7 @@ module Pawl.Engine.Engine where
 import qualified Control.Monad as Monad
 import qualified Control.Monad.Trans.Class as Trans
 import qualified Control.Monad.Trans.State.Strict as State
+import qualified Data.Containers.ListUtils as ListUtils
 import qualified Data.Foldable as Foldable
 import qualified Data.List as List
 import qualified Data.List.NonEmpty as NonEmpty
@@ -450,8 +451,11 @@ discardToHandSize pid = do
       Monad.when (excess > 0) $ do
         let decider = Decide.deciderFor pid gs
         chosen <- Game.choose (Prompt.ChooseDiscard decider pid held (Int.toNaturalSaturating excess))
-        let inHand oid = List.elem oid held
-            toDiscard = take excess (filter inHand chosen)
+        -- Filtered, deduplicated and completed from the hand, the CR 701.9b
+        -- discard's posture: a short answer still discards down (CR 514.1).
+        let valid = ListUtils.nubOrd (filter (`List.elem` held) chosen)
+            filler = filter (`List.notElem` valid) held
+            toDiscard = take excess (valid <> filler)
         -- CR 701.9a, through the shared discard funnel, so it records a discard
         -- for a rule 701.9a trigger -- then a trigger waiting during the cleanup
         -- step, CR 514.3a's condition (`cleanupException`).

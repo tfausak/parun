@@ -534,6 +534,7 @@ import qualified Pawl.Codec.PrototypeSpec
 import qualified Pawl.Codec.PutCountersFromSpec
 import qualified Pawl.Codec.PutCountersSpec
 import qualified Pawl.Codec.QuantitySpec
+import qualified Pawl.Codec.QuestionSpec
 import qualified Pawl.Codec.RangeOfInfluenceSpec
 import qualified Pawl.Codec.ReadinessSpec
 import qualified Pawl.Codec.RecipientSpec
@@ -549,6 +550,7 @@ import qualified Pawl.Codec.ReplaceSpec
 import qualified Pawl.Codec.ReplacementEffectSpec
 import qualified Pawl.Codec.ReplacementOriginSpec
 import qualified Pawl.Codec.ReplacementProvenanceSpec
+import qualified Pawl.Codec.RequestSpec
 import qualified Pawl.Codec.RequireAttackSpec
 import qualified Pawl.Codec.RequireBlockSpec
 import qualified Pawl.Codec.RequiredDefenderSpec
@@ -804,6 +806,7 @@ import qualified Pawl.PowerToughnessSpec
 import qualified Pawl.PreparationSpec
 import qualified Pawl.PreventionSpec
 import qualified Pawl.ProjectionSpec
+import qualified Pawl.ProtocolSpec
 import qualified Pawl.PrototypeSpec
 import qualified Pawl.PutCounterSpec
 import qualified Pawl.RadSpec
@@ -814,6 +817,7 @@ import qualified Pawl.RegistrySpec
 import qualified Pawl.RemoveCounterSpec
 import qualified Pawl.ReplacementSpec
 import qualified Pawl.ReplaySpec
+import qualified Pawl.ReplySpec
 import qualified Pawl.ResolveSpec
 import qualified Pawl.RestampSpec
 import qualified Pawl.ReversalSpec
@@ -1253,6 +1257,8 @@ spec s registry = do
   Pawl.Codec.LookedSpec.spec s
   Pawl.Codec.SeatViewSpec.spec s
   Pawl.Codec.PlayerViewSpec.spec s
+  Pawl.Codec.QuestionSpec.spec s
+  Pawl.Codec.RequestSpec.spec s
   Pawl.Codec.ObjectViewSpec.spec s
   Pawl.Codec.LoopMembersSpec.spec s
   Pawl.Codec.LoyaltyKindSpec.spec s
@@ -1717,6 +1723,8 @@ spec s registry = do
   Pawl.SacrificeRestrictionSpec.spec s registry
   Pawl.SaddleSpec.spec s registry
   Pawl.SagaSpec.spec s registry
+  Pawl.ProtocolSpec.spec s registry
+  Pawl.ReplySpec.spec s registry
   Pawl.ScenarioSpec.corpusSpec s registry
   Pawl.ScenarioSpec.loadSpec s
   Pawl.ScenarioSpec.spec s registry
