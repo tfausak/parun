@@ -1040,7 +1040,9 @@ abilityRecipients gs = Set.fromList (fmap Recipient.ToObject (filter (\oid -> Ga
 --     the superset and CR 608.2b's re-check the one object.
 graveyardRecipients :: Filter.Context -> Map SlotName (Set Recipient) -> ZoneScope.ZoneScope -> GameState -> Set Recipient
 graveyardRecipients context bindings scope gs =
-  graveyardsOf (zoneScopePlayers (Filter.perspective context) bindings scope gs) gs
+  let perspective = Filter.perspective context
+      reach = perspective >>= \you -> maybe (Just you) (\source -> Plane.rangePerspective source you gs) (Filter.source context)
+   in graveyardsOf (zoneScopePlayers reach perspective bindings scope gs) gs
 
 -- The players a ZoneScope names, and the WHOLE of what any reading of
 -- that type means: the arms are exactly the paragraphs above, and this is
@@ -1052,14 +1054,16 @@ graveyardRecipients context bindings scope gs =
 -- a sweep wants them filtered -- so splitting here rather than at the
 -- recipients keeps one reading of the scope for both.
 --
--- Every arm is cut to the perspective's Players.table, CR 801.4 for a target
--- pool and CR 801.10 at resolution; Scoped's playersInScope has already cut. In
--- APNAP order (CR 608.2f, CR 101.4), the order a sweep asks for.
-zoneScopePlayers :: Maybe PlayerId -> Map SlotName (Set Recipient) -> ZoneScope.ZoneScope -> GameState -> [PlayerId]
-zoneScopePlayers perspective bindings scope gs =
-  let reached = Players.table perspective gs
+-- Every arm is cut to @reach@'s Players.table, CR 801.4 for a target pool and
+-- CR 801.10 at resolution; Scoped's playersInScope has already cut. @reach@ is
+-- the perspective but for a planar source, which cuts nobody (CR 801.18,
+-- Plane.rangePerspective). In APNAP order (CR 608.2f, CR 101.4), the order a
+-- sweep asks for.
+zoneScopePlayers :: Maybe PlayerId -> Maybe PlayerId -> Map SlotName (Set Recipient) -> ZoneScope.ZoneScope -> GameState -> [PlayerId]
+zoneScopePlayers reach perspective bindings scope gs =
+  let reached = Players.table reach gs
       named = case scope of
-        ZoneScope.Scoped playerScope -> Maybe.fromMaybe [] (PlayerEffect.playersInScope perspective gs playerScope)
+        ZoneScope.Scoped playerScope -> Maybe.fromMaybe [] (PlayerEffect.playersInScope reach perspective gs playerScope)
         ZoneScope.InSlot slot ->
           filter (`elem` reached) (Maybe.mapMaybe Recipient.playerOf (Set.toList (Map.findWithDefault Set.empty slot bindings)))
         ZoneScope.ControllerOfBound slot ->
@@ -1680,13 +1684,16 @@ chooseTargets pid oid source seed x slots sets = do
 -- The relation's offer is Players.chooserOffer and the ask Players.chooseOne,
 -- so a seat that has left (CR 104.3a) neither chooses nor is counted towards
 -- eliding the question, and one outside the controller's range (CR 801.5a)
--- chooses only where nobody in the relation is in range (CR 801.5c).
+-- chooses only where nobody in the relation is in range (CR 801.5c). A slot's
+-- seat is cut by Plane.rangePerspective, so a planar source's reaches the
+-- whole table (CR 801.18); unobserved, Grand Ossuary not being in the pool
+-- (see #5196).
 chooserOf :: PlayerId -> ObjectId -> Map SlotName Binding.Type.Binding -> Maybe TargetChooser.TargetChooser -> Game (Maybe PlayerId)
 chooserOf controller oid seed chooser = case chooser of
   Nothing -> pure (Just controller)
   Just (TargetChooser.InSlot slot) -> do
     gs <- State.get
-    pure (List.find (`List.elem` Players.table (Just controller) gs) (Map.lookup slot (Binding.playerSlots seed)))
+    pure (List.find (`List.elem` Players.table (Plane.rangePerspective oid controller gs) gs) (Map.lookup slot (Binding.playerSlots seed)))
   Just (TargetChooser.Relative r) -> do
     gs <- State.get
     Players.chooseOne controller oid (Players.chooserOffer controller gs r)
@@ -2199,7 +2206,8 @@ bakeSlot players slot =
 
 -- CR 601.2c's "for each opponent, ... up to one target ... that player controls"
 -- at announcement: every perPlayer slot replaced by one copy per player its
--- relation names from `controller` (CR 801.5a's range included), each under
+-- relation names from `controller` (CR 801.5a's range included, which CR
+-- 801.18 lifts for a planar source: Plane.rangePerspective), each under
 -- Modal.perPlayerSlot's name and baked against its own player. Every other slot
 -- passes through.
 --
@@ -2210,7 +2218,7 @@ bakeSlot players slot =
 announcedSlots :: PlayerId -> ObjectId -> GameState -> Map SlotName TargetSlot -> Map SlotName TargetSlot
 announcedSlots controller source gs =
   splitPerPlayer
-    (\_ each -> List.filter (PlayerRelation.holds (Game.teams gs) (SlotPerPlayer.players each) controller) (Players.table (Just controller) gs))
+    (\_ each -> List.filter (PlayerRelation.holds (Game.teams gs) (SlotPerPlayer.players each) controller) (Players.table (Plane.rangePerspective source controller gs) gs))
     (\copy -> not (Set.null (legalRecipients (Just controller) source copy gs)))
 
 -- CR 802.2a: the defending player an announcement chose, for a source with no

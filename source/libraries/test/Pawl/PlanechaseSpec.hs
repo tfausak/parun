@@ -42,6 +42,7 @@ import qualified Pawl.Types.Cost as Cost.Type
 import qualified Pawl.Types.Deck as Deck
 import qualified Pawl.Types.EndingStep as EndingStep
 import qualified Pawl.Types.Face as Face
+import qualified Pawl.Types.Facing as Facing
 import qualified Pawl.Types.GameEvent as GameEvent
 import qualified Pawl.Types.GameState as GameState
 import qualified Pawl.Types.InherentTriggerSource as InherentTriggerSource
@@ -179,6 +180,79 @@ spec s registry = Spec.describe s "Pawl.Engine.Planechase" $ do
         chaos = S.runPure aimAtCarols ranged (Planechase.roll S.manaPerformer S.alice >> Engine.priorityLoop)
     Spec.assertEqWith s "CR 801.18 carol's Piker was destroyed and bob's was not" (fmap (\pid -> length (Game.zoneMembers Zone.Graveyard pid chaos)) [S.bob, S.carol]) [0, 1]
     Spec.assertBool s (List.elem bobs (Game.zoneMembers Zone.Battlefield S.bob chaos)) "bob's Piker is still on the battlefield"
+    Spec.assertBool s (not (Game.inRangeOf S.alice S.carol ranged)) "carol is outside alice's range"
+
+  -- CR 801.18 for an ability whose plane has left: on bob's turn alice's Akoum
+  -- is face up, and bob rolls chaos and aims at dave's Goblin Piker, two seats
+  -- from him at range 1. alice then concedes with the ability on the stack:
+  -- Akoum leaves the game with her and bob turns up his Academy at Tolaria West
+  -- (CR 901.10). The ability is still a plane's, so CR 608.2b's re-check does
+  -- not cut dave's Piker by bob's range, and it is destroyed.
+  Spec.it s "CR 801.18 Akoum's chaos still reaches outside the range after Akoum leaves the game" $ do
+    piker <- S.printingOf s registry "Goblin Piker"
+    board <- seatedPlanarBoard s registry S.alice [(S.alice, ["Akoum"]), (S.bob, ["Academy at Tolaria West"]), (S.carol, []), (S.dave, [])]
+    let (daves, withDaves) = S.addPermanent piker S.dave board
+        ranged = S.withRange 1 (inMain S.bob withDaves)
+        answer :: Prompt.Prompt r -> r
+        answer p = case p of
+          Prompt.RollDie _ -> 5
+          Prompt.ChooseTargets _ _ _ sets -> fmap (Set.filter ((== Just daves) . Recipient.objectOf) . snd) sets
+          _ -> conceding S.alice p
+        gone = S.runPure answer ranged (Planechase.roll S.manaPerformer S.bob >> Engine.priorityLoop)
+    Spec.assertEqWith s "CR 801.18 dave's Piker was destroyed" (Set.member daves (GameState.battlefield gone), length (Game.zoneMembers Zone.Graveyard S.dave gone)) (False, 1)
+    Spec.assertBool s (notElem S.alice (Game.stillPlaying gone)) "alice has left the game"
+    Spec.assertEqWith s "CR 901.10 bob's Academy replaced Akoum" (faceUpNames gone) [cardName "Academy at Tolaria West"]
+    Spec.assertBool s (not (Game.inRangeOf S.bob S.dave gone)) "dave is still outside bob's range (CR 801.2c)"
+
+  -- CR 801.18 for a per-opponent target slot: the same four seats at range 1,
+  -- The Moonbase ("Whenever chaos ensues, for each opponent, choose up to one
+  -- target creature card in that player's graveyard. Put those cards onto the
+  -- battlefield face down under your control. They're 2/2 Cyberman artifact
+  -- creatures.") face up, and a Goblin Piker in bob's graveyard and in carol's.
+  -- CR 801.5a would give carol, outside alice's range, no slot and her
+  -- graveyard no card to offer; the plane is exempt, so both enter under alice.
+  Spec.it s "CR 801.18 The Moonbase's chaos takes a card from the graveyard of an opponent outside the planar controller's range" $ do
+    piker <- S.printingOf s registry "Goblin Piker"
+    board <- seatedPlanarBoard s registry S.alice [(S.alice, ["The Moonbase"]), (S.bob, []), (S.carol, []), (S.dave, [])]
+    let (_, withBobs) = S.addGraveyardCard piker S.bob board
+        (_, withCarols) = S.addGraveyardCard piker S.carol withBobs
+        ranged = S.withRange 1 (inMain S.alice withCarols)
+        takeEverything :: Prompt.Prompt r -> r
+        takeEverything p = case p of
+          Prompt.RollDie _ -> 5
+          Prompt.ChooseTargets _ _ _ sets -> fmap snd sets
+          _ -> S.identityAnswer p
+        chaos = S.runPure takeEverything ranged (Planechase.roll S.manaPerformer S.alice >> Engine.priorityLoop)
+        cybermen = [oid | oid <- Set.toList (GameState.battlefield chaos), Projection.controllerOf oid chaos == Just S.alice, maybe False (Facing.isFaceDown . Object.facing) (Game.lookupObject oid chaos)]
+    Spec.assertEqWith s "CR 801.18 carol's Piker left her graveyard with bob's" (fmap (\pid -> length (Game.zoneMembers Zone.Graveyard pid chaos)) [S.bob, S.carol]) [0, 0]
+    Spec.assertEqWith s "both entered face down under alice" (length cybermen) 2
+    Spec.assertBool s (not (Game.inRangeOf S.alice S.carol ranged)) "carol is outside alice's range"
+
+  -- CR 801.18 / 701.38a for a plane's vote: the same four seats at range 1,
+  -- Prime Minister's Cabinet Room ("Will of the council -- Whenever chaos
+  -- ensues, starting with you, each player votes for a creature you don't
+  -- control. Exile each creature with the most votes or tied for most votes.")
+  -- face up, and a creature each for bob, carol and dave. alice votes for bob's
+  -- Goblin Piker, bob for carol's Llanowar Elves, carol for bob's Piker and dave
+  -- for his own Hill Giant. carol, outside alice's range, votes too: the Piker
+  -- has two votes and is exiled alone, where without her ballot all three tie.
+  Spec.it s "CR 801.18 Prime Minister's Cabinet Room's vote is cast by a player outside the planar controller's range" $ do
+    piker <- S.printingOf s registry "Goblin Piker"
+    elves <- S.printingOf s registry "Llanowar Elves"
+    giant <- S.printingOf s registry "Hill Giant"
+    board <- seatedPlanarBoard s registry S.alice [(S.alice, ["Prime Minister's Cabinet Room"]), (S.bob, []), (S.carol, []), (S.dave, [])]
+    let (bobs, withBobs) = S.addPermanent piker S.bob board
+        (carols, withCarols) = S.addPermanent elves S.carol withBobs
+        (daves, withDaves) = S.addPermanent giant S.dave withCarols
+        ranged = S.withRange 1 (inMain S.alice withDaves)
+        ballots = Map.fromList [(S.alice, bobs), (S.bob, carols), (S.carol, bobs), (S.dave, daves)]
+        voting :: Prompt.Prompt r -> r
+        voting p = case p of
+          Prompt.RollDie _ -> 5
+          Prompt.ChooseVote _ pid _ offered -> Maybe.fromMaybe (NonEmpty.head offered) (List.find (\oid -> Map.lookup pid ballots == Just oid) (NonEmpty.toList offered))
+          _ -> S.identityAnswer p
+        chaos = S.runPure voting ranged (Planechase.roll S.manaPerformer S.alice >> Engine.priorityLoop)
+    Spec.assertEqWith s "CR 801.18 carol's ballot left bob's Piker the one creature exiled" (fmap (`Set.member` GameState.battlefield chaos) [bobs, carols, daves]) [False, True, True]
     Spec.assertBool s (not (Game.inRangeOf S.alice S.carol ranged)) "carol is outside alice's range"
 
   -- CR 113.6p / 901.7: a face-up plane's player ability functions from the
