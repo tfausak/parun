@@ -9519,6 +9519,22 @@ revealedOn :: RevealCause.RevealCause -> PlayerId -> ObjectId -> GameState -> Ma
 revealedOn cause pid oid gs =
   fmap (const (GameEvent.Revealed (Revealed.MkRevealed pid oid cause (Projection.projectShown oid gs)))) (Game.lookupObject oid gs)
 
+-- | CR 701.20a: the objects a lasting window on this reveal covers. CR 708.9's
+-- reveal is made "as they move it", so it covers what that move made of the
+-- card too (CR 400.7), every card of a split merged permanent (CR 730.3).
+-- Every other reveal ends with its incarnation. Proven by
+-- data/scenarios/visibility's CR 701.20a / 708.9 Unsummon and Griptide cases.
+revealedObjects :: Revealed.Revealed -> GameState -> [ObjectId]
+revealedObjects revealed gs =
+  let card = Revealed.card revealed
+      asMoved = case Revealed.cause revealed of
+        RevealCause.Ordinary -> False
+        RevealCause.ForMiracle _ -> False
+        RevealCause.LeavingFaceDown -> True
+        RevealCause.LeavingFaceDownComponent -> True
+        RevealCause.FaceDownSpell -> True
+   in card : if asMoved then Game.arrivalsOf card gs else []
+
 -- CR 603.2: does this condition fire on this event, for the permanent that bears
 -- it? `bearer` is the object whose ability this is and `you` its controller (CR
 -- 603.3a, CR 109.5); both are part of the match because the scan visits EVERY
