@@ -66,6 +66,7 @@ import qualified Pawl.Engine.Saga as Saga
 import qualified Pawl.Engine.SpaceSculptor as SpaceSculptor
 import qualified Pawl.Engine.Subtype as Subtype.Engine
 import qualified Pawl.Engine.Turn as Turn
+import qualified Pawl.Engine.Vanguard as Vanguard
 import qualified Pawl.Engine.Visibility as Visibility
 import qualified Pawl.Extra.Integer as Integer
 import qualified Pawl.Extra.Natural as Natural
@@ -8963,6 +8964,8 @@ lastKnownFrom gs oid obj =
     -- exists.
     (Object.controlClock obj)
     (Object.zone obj)
+    -- CR 113.6p's home, read while the object is still on the board it asks.
+    (Vanguard.homeZoneOf oid gs)
     -- CR 400.1: the pile it left.
     (Game.pileHolderOf oid gs)
     -- CR 604.2's clauses, asked while there is still a board to ask them of.

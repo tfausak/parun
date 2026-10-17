@@ -780,6 +780,7 @@ lastKnownRiderSpec s registry =
                     -- CR 702.30a: nothing here asks about an echo window.
                     LastKnown.controlClock = Map.empty,
                     LastKnown.zone = Zone.Battlefield,
+                    LastKnown.home = Zone.Battlefield,
                     -- CR 400.1: on the battlefield, so in no player's pile.
                     LastKnown.pile = Nothing,
                     LastKnown.lapsedGrants = Set.empty

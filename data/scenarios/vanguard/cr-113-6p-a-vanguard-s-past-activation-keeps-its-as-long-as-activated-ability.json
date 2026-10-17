@@ -1,0 +1,35 @@
+{
+  "description": "CR 113.6p a vanguard's past activation keeps its as-long-as activated ability",
+  "note": "Alice controls an artifact, so Synthetic Steward Avatar's grant holds in the command zone (CR 113.6p). Synthetic First Rehearsal makes the first activation free; the second must cost {1}, since the first's recorded source had an activated ability, which empties the one-mana pool and leaves a third unaffordable. A snapshot that lost the command-zone home would see no earlier match and make the second free too.",
+  "board": {
+    "active": "alice",
+    "step": "PrecombatMain",
+    "seats": [
+      {
+        "name": "alice",
+        "manaPool": "C",
+        "battlefield": [
+          { "card": "Darksteel Relic" },
+          { "card": "Synthetic First Rehearsal" }
+        ],
+        "library": [{ "card": "Mountain" }, { "card": "Mountain" }],
+        "command": [{ "card": "Synthetic Steward Avatar", "label": "steward" }]
+      },
+      {
+        "name": "bob",
+        "library": [{ "card": "Mountain" }, { "card": "Mountain" }]
+      }
+    ]
+  },
+  "timeline": [
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": { "Activate": { "object": "$steward", "ability": 0 } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass" },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "check": { "Life": { "player": "alice", "life": 21 } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "check": { "View": { "of": "Offered", "player": "alice", "is": ["Pass", "Activate $steward"] } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": { "Activate": { "object": "$steward", "ability": 0 } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "check": { "View": { "of": "ManaPool", "player": "alice", "is": [] } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass" },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "check": { "Life": { "player": "alice", "life": 22 } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "check": { "View": { "of": "Offered", "player": "alice", "is": ["Pass"] } } }
+  ]
+}

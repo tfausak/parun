@@ -22,6 +22,7 @@ spec s = Spec.describe s "Pawl.Codec.PastActivation" $ do
             ObjectSnapshot.controller = Just (PlayerId.MkPlayerId 1),
             ObjectSnapshot.owner = PlayerId.MkPlayerId 1,
             ObjectSnapshot.zone = Zone.Stack,
+            ObjectSnapshot.home = Zone.Battlefield,
             ObjectSnapshot.lapsedGrants = Set.empty
           }
       snapshotJson n = "{\"object\":" <> show (n :: Integer) <> ",\"characteristics\":" <> ProjectedCharacteristicsSpec.testCharacteristicsJson <> ",\"controller\":1,\"owner\":1,\"zone\":{\"type\":\"Stack\"}}"

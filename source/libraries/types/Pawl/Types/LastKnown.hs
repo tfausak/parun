@@ -227,6 +227,10 @@ data LastKnown = MkLastKnown
     -- permanent's record (CR 109.2) from a card's or a spell's -- CR 804.2's
     -- ability is a permanent's alone (Pawl.Engine.Projection.View).
     zone :: !Zone.Zone,
+    -- | CR 113.6 / 113.6p: where its abilities that state no zone functioned as
+    -- it ceased (Pawl.Engine.Vanguard.homeZoneOf), which `zone` alone cannot say
+    -- once the object is gone.
+    home :: !Zone.Zone,
     -- | CR 400.1: whose library, hand or graveyard held it as it ceased --
     -- Nothing off those zones. CardLeavesZone's `whose` reads it.
     pile :: !(Maybe PlayerId.PlayerId),

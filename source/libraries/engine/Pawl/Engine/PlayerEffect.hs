@@ -1536,11 +1536,12 @@ targetQuestions pid gs r =
 firstActivation :: PlayerId -> RowSource -> Filter Keyword -> Maybe (KeywordDesignator.KeywordDesignator Keyword) -> Maybe AbilityKind.AbilityKind -> Maybe (Filter Keyword) -> GameState -> TurnScope.TurnScope -> Bool
 firstActivation pid source criterion granted wantedKind aimedAt gs scope =
   let -- The zone as recorded, so CR 109.2's "a creature you control" passes over
-      -- an earlier activation that targeted a creature SPELL. CR 604.2's sample
-      -- beside it is a regression fence: no criterion in data/cards/ asks whether
-      -- the object had an activated ability.
+      -- an earlier activation that targeted a creature SPELL. CR 113.6p's home
+      -- beside it is what Synthetic First Rehearsal's "whose source has an
+      -- activated ability" reads (data/scenarios/vanguard's past-activation
+      -- scenario); CR 604.2's lapsed sample is a regression fence.
       snapshotView snapshot =
-        (Count.viewOfSnapshot False (ObjectSnapshot.controller snapshot) (Just (ObjectSnapshot.owner snapshot)) False Map.empty (ObjectSnapshot.zone snapshot) (ObjectSnapshot.lapsedGrants snapshot) (ObjectSnapshot.characteristics snapshot))
+        (Count.viewOfSnapshot False (ObjectSnapshot.controller snapshot) (Just (ObjectSnapshot.owner snapshot)) False Map.empty (ObjectSnapshot.zone snapshot) (ObjectSnapshot.home snapshot) (ObjectSnapshot.lapsedGrants snapshot) (ObjectSnapshot.characteristics snapshot))
           { Filter.identity = Just (ObjectSnapshot.object snapshot),
             Filter.zone = Just (ObjectSnapshot.zone snapshot)
           }

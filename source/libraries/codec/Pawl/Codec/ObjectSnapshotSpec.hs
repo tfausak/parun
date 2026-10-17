@@ -23,9 +23,10 @@ spec s = Spec.describe s "Pawl.Codec.ObjectSnapshot" $ do
           ObjectSnapshot.controller = Just (PlayerId.MkPlayerId 1),
           ObjectSnapshot.owner = PlayerId.MkPlayerId 2,
           ObjectSnapshot.zone = Zone.Battlefield,
+          ObjectSnapshot.home = Zone.Command,
           ObjectSnapshot.lapsedGrants = Set.empty
         }
-      (" {\"object\":9,\"characteristics\":" <> ProjectedCharacteristicsSpec.testCharacteristicsJson <> ",\"controller\":1,\"owner\":2,\"zone\":{\"type\":\"Battlefield\"}} ")
+      (" {\"object\":9,\"characteristics\":" <> ProjectedCharacteristicsSpec.testCharacteristicsJson <> ",\"controller\":1,\"owner\":2,\"zone\":{\"type\":\"Battlefield\"},\"home\":{\"type\":\"Command\"}} ")
   -- CR 108.4: a card in a hand has no controller.
   Spec.it s "an object with no controller" $
     Common.assertCodec
@@ -37,6 +38,7 @@ spec s = Spec.describe s "Pawl.Codec.ObjectSnapshot" $ do
           ObjectSnapshot.controller = Nothing,
           ObjectSnapshot.owner = PlayerId.MkPlayerId 4,
           ObjectSnapshot.zone = Zone.Hand,
+          ObjectSnapshot.home = Zone.Battlefield,
           ObjectSnapshot.lapsedGrants = Set.empty
         }
       (" {\"object\":3,\"characteristics\":" <> ProjectedCharacteristicsSpec.testCharacteristicsJson <> ",\"controller\":null,\"owner\":4,\"zone\":{\"type\":\"Hand\"}} ")

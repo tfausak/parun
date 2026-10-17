@@ -71,6 +71,7 @@ spec s = Spec.describe s "Pawl.Codec.LastKnown" $ do
           LastKnown.announcedX = Just 4,
           LastKnown.controlClock = Map.singleton (PlayerId.MkPlayerId 1) ControlClock.SinceLastUpkeep,
           LastKnown.zone = Zone.Battlefield,
+          LastKnown.home = Zone.Command,
           LastKnown.pile = Just (PlayerId.MkPlayerId 6),
           LastKnown.lapsedGrants = Set.singleton (Condition.Compares (Compares.MkCompares (Quantity.Literal 3) Comparison.AtLeast (Quantity.Literal 5)))
         }
@@ -86,7 +87,7 @@ spec s = Spec.describe s "Pawl.Codec.LastKnown" $ do
           <> ",\"prototyped\":true"
           <> ",\"announcedX\":4"
           <> ",\"controlClock\":[{\"player\":1,\"clock\":{\"type\":\"SinceLastUpkeep\"}}]"
-          <> ",\"zone\":{\"type\":\"Battlefield\"},\"pile\":6"
+          <> ",\"zone\":{\"type\":\"Battlefield\"},\"home\":{\"type\":\"Command\"},\"pile\":6"
           <> ",\"lapsedGrants\":[{\"type\":\"Compares\",\"value\":{\"measured\":{\"type\":\"Literal\",\"value\":3},\"comparison\":{\"type\":\"AtLeast\"},\"threshold\":{\"type\":\"Literal\",\"value\":5}}}]} "
       )
   -- CR 109.3: neither an attachment nor a chosen name is a characteristic, and
@@ -118,6 +119,7 @@ spec s = Spec.describe s "Pawl.Codec.LastKnown" $ do
           LastKnown.announcedX = Nothing,
           LastKnown.controlClock = Map.empty,
           LastKnown.zone = Zone.Stack,
+          LastKnown.home = Zone.Battlefield,
           LastKnown.pile = Nothing,
           LastKnown.lapsedGrants = Set.empty
         }
