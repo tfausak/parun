@@ -589,7 +589,7 @@ spec s = Spec.describe s "Pawl.Codec.GameEvent" $ do
     Common.assertCodec
       s
       GameEvent.codec
-      (GameEvent.TurnedUpOffDeck (TurnedUpOffDeck.MkTurnedUpOffDeck SideDeck.Scheme (PlayerId.MkPlayerId 1) (ObjectId.MkObjectId 7)))
+      (GameEvent.TurnedUpOffDeck (TurnedUpOffDeck.MkTurnedUpOffDeck SideDeck.Scheme (PlayerId.MkPlayerId 1) (ObjectId.MkObjectId 7) Set.empty))
       " {\"type\":\"TurnedUpOffDeck\",\"value\":{\"card\":7,\"deck\":{\"type\":\"Scheme\"},\"player\":1}} "
   -- CR 311.7.
   Spec.it s "ChaosEnsued" $

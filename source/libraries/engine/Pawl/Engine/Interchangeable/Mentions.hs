@@ -1216,6 +1216,7 @@ durationEventNames :: Asking -> DurationEvent.DurationEvent -> Bool
 durationEventNames asking x = case x of
   DurationEvent.SourceTurnedFaceDown -> False
   DurationEvent.SpellCast filter_ -> filterNames asking filter_
+  DurationEvent.Planeswalked -> False
 
 eachCardFromAmongNames :: Asking -> EachCardFromAmong.EachCardFromAmong -> Bool
 eachCardFromAmongNames asking x = case x of
@@ -2850,6 +2851,7 @@ triggerConditionNames asking x = case x of
   TriggerCondition.ChaosEnsues -> False
   TriggerCondition.PlayerRollsPlaneswalker _playerRelation -> False
   TriggerCondition.SelfTurnedUpOffDeck -> False
+  TriggerCondition.SelfPlaneswalkedAwayFrom -> False
   TriggerCondition.PlayerRollsResult dieResult -> dieResultNames asking (const False) dieResult
   TriggerCondition.Visit -> False
   TriggerCondition.PlayerWinsCoinFlip _playerRelation -> False

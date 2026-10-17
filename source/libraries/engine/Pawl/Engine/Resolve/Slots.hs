@@ -1616,6 +1616,7 @@ durationSlots duration = case duration of
   -- CR 611.2a: a cast's criterion may name a seat by slot, which
   -- Pawl.Engine.Expiry.arm bakes.
   Duration.UntilEvent DurationEvent.SourceTurnedFaceDown -> Map.empty
+  Duration.UntilEvent DurationEvent.Planeswalked -> Map.empty
   Duration.UntilEvent (DurationEvent.SpellCast criterion) -> filterSlotsOf criterion
 
 -- Both sides of a comparison are a Quantity, and either may read a slot.

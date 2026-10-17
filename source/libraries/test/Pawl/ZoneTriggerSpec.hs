@@ -605,7 +605,7 @@ commandZoneTriggerSpec s registry =
 -- Emblem, Vanguard, Conspiracy, Dungeon, Plane and Scheme card scanned for a line
 -- opening "When " that is not an event, finds only the plane Aretopolis ("When
 -- Aretopolis has ten or more scroll counters on it, planeswalk."), which needs
--- counters on a plane (#4310).
+-- counters on a plane (#5203).
 --
 -- Three seats, and only alice's hand decides: bob's and carol's are empty on
 -- both boards, so a scan reading "you" as any player would fire on the negative.
@@ -2320,7 +2320,10 @@ representativeEvents cond =
         -- CR 901.9c's own event, a planar die showing the Planeswalker symbol.
         TriggerCondition.PlayerRollsPlaneswalker _ -> one (GameEvent.PlanarDieRolled (PlanarDieRolled.MkPlanarDieRolled S.bob PlanarDieFace.Planeswalker))
         -- CR 701.32's own event, and the only one this condition admits.
-        TriggerCondition.SelfTurnedUpOffDeck -> one (GameEvent.TurnedUpOffDeck (TurnedUpOffDeck.MkTurnedUpOffDeck SideDeck.Scheme S.bob departed))
+        TriggerCondition.SelfTurnedUpOffDeck -> one (GameEvent.TurnedUpOffDeck (TurnedUpOffDeck.MkTurnedUpOffDeck SideDeck.Scheme S.bob departed Set.empty))
+        -- CR 701.31d's own event, naming the bearer among the planes walked
+        -- away from, and the only one this condition admits.
+        TriggerCondition.SelfPlaneswalkedAwayFrom -> one (GameEvent.TurnedUpOffDeck (TurnedUpOffDeck.MkTurnedUpOffDeck SideDeck.Planar S.bob arrived (Set.singleton departed)))
         -- CR 705.2's own event, and the only one this condition admits. A WON
         -- flip, since neither a lost one nor rule 705.2's winnerless one matches
         -- at all -- and bob rather than the perspective player, on the
@@ -2576,6 +2579,7 @@ everyTriggerCondition =
     TriggerCondition.PlayerRollsPlaneswalker PlayerRelation.You,
     TriggerCondition.PlayerRollsPlaneswalker PlayerRelation.Opponent,
     TriggerCondition.SelfTurnedUpOffDeck,
+    TriggerCondition.SelfPlaneswalkedAwayFrom,
     TriggerCondition.PlayerWinsCoinFlip PlayerRelation.You,
     TriggerCondition.PlayerWinsCoinFlip PlayerRelation.Opponent,
     TriggerCondition.PlayerLosesCoinFlip PlayerRelation.You,
