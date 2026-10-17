@@ -1683,7 +1683,7 @@ graveyardCandidates :: PlayerId -> PlayerScope -> Filter.Type.Filter Keyword.Typ
 graveyardCandidates pid scope filter_ gs =
   let context = Filter.contextFor (Game.teams gs) (Just pid) Nothing
       viewOf = Projection.viewsOf gs
-      owners = Maybe.fromMaybe [] (PlayerEffect.playersInScope (Just pid) gs scope)
+      owners = Maybe.fromMaybe [] (PlayerEffect.playersInScope (Just pid) (Just pid) gs scope)
       offered oid = not (Map.member oid (GameState.enteringPending gs)) && Filter.matches context (viewOf oid) filter_
    in List.sort (concatMap (\owner -> filter offered (Game.zoneMembers Zone.Graveyard owner gs)) owners)
 

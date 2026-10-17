@@ -88,10 +88,16 @@ commandControllerOf oid obj gs
 -- and PlayerEffect's printedRows. Pawl.PlanechaseSpec's "CR 801.18 a face-up Tazeem stops a creature
 -- outside the planar controller's range from blocking" proves it.
 --
+-- Through last-known information, which CR 608.2b reads for a source that has
+-- left its zone: an ability of a plane that has since left the command zone is
+-- still a planar card's.
+-- Pawl.PlanechaseSpec's "CR 801.18 Akoum's chaos still reaches outside the
+-- range after Akoum leaves the game" proves it.
+--
 -- Not implemented: CR 901.14's Grand Melee Planechase, where the exemption does
 -- not hold (#4465).
 exemptFromRange :: ObjectId -> GameState -> Bool
-exemptFromRange = isPlanarCard
+exemptFromRange oid gs = maybe False isPlanarFace (Game.faceOfWithLastKnown oid gs)
 
 -- | CR 801.10 / 801.11 / 801.18: whose range of influence an ability of this
 -- source sees and affects through -- its controller's, or nobody's for a
@@ -99,13 +105,15 @@ exemptFromRange = isPlanarCard
 -- table. Asked by trigger detection (Event.Trigger's eventWithinRange), a
 -- resolution's player reads (Resolve.Slots' resolutionReads), its
 -- battlefield sweep (battlefieldMatching), and targeting's CR 801.4 and CR
--- 801.5a cuts (Target's legalRecipientsGiven and askChooser).
--- Pawl.PlanechaseSpec's "CR 801.18 Fields of Summer sees and reaches a caster
--- outside the planar controller's range", "Mutual Epiphany draws four for a
--- player outside", "Astral Arena's chaos damages a creature outside" and
--- "Akoum's chaos targets a creature outside" prove them.
---
--- Not implemented: a per-opponent target slot's roster, votes and
--- redistributed life totals, which still read the controller's range (#5165).
+-- 801.5a cuts (Target's legalRecipientsGiven and askChooser), a per-player
+-- slot's roster (Target's announcedSlots), the graveyards a zone scope names
+-- (Target's zoneScopePlayers), and Resolve.Effect's table-wide reads -- its
+-- voters among them. Pawl.PlanechaseSpec's "CR 801.18 Fields of Summer sees and
+-- reaches a caster outside the planar controller's range", "Mutual Epiphany
+-- draws four for a player outside", "Astral Arena's chaos damages a creature
+-- outside", "Akoum's chaos targets a creature outside", "The Moonbase's chaos
+-- takes a card from the graveyard of an opponent outside", "Strixhaven's chaos
+-- returns a card from the graveyard of a player outside" and "Prime
+-- Minister's Cabinet Room's vote is cast by a player outside" prove them.
 rangePerspective :: ObjectId -> PlayerId -> GameState -> Maybe PlayerId
 rangePerspective source controller gs = if exemptFromRange source gs then Nothing else Just controller
