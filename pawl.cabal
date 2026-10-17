@@ -935,6 +935,8 @@ library codec
     Pawl.Codec.ObjectSnapshot
     Pawl.Codec.ObjectSnapshotSpec
     Pawl.Codec.ObjectSpec
+    Pawl.Codec.ObjectView
+    Pawl.Codec.ObjectViewSpec
     Pawl.Codec.OfferCast
     Pawl.Codec.OfferCastSpec
     Pawl.Codec.Onset
@@ -1076,6 +1078,8 @@ library codec
     Pawl.Codec.PlayerSpec
     Pawl.Codec.PlayerStaticAbility
     Pawl.Codec.PlayerStaticAbilitySpec
+    Pawl.Codec.PlayerView
+    Pawl.Codec.PlayerViewSpec
     Pawl.Codec.PlayPermissionOrigin
     Pawl.Codec.PlayPermissionOriginSpec
     Pawl.Codec.PlaysLand
@@ -1235,6 +1239,8 @@ library codec
     Pawl.Codec.SearchSpec
     Pawl.Codec.Seat
     Pawl.Codec.SeatSpec
+    Pawl.Codec.SeatView
+    Pawl.Codec.SeatViewSpec
     Pawl.Codec.SelfCountersReached
     Pawl.Codec.SelfCountersReachedSpec
     Pawl.Codec.SelfCountersRemoved
@@ -2565,6 +2571,7 @@ library types
     Pawl.Types.ObjectId
     Pawl.Types.ObjectRef
     Pawl.Types.ObjectSnapshot
+    Pawl.Types.ObjectView
     Pawl.Types.Observer
     Pawl.Types.OfferCast
     Pawl.Types.Onset
@@ -2646,6 +2653,7 @@ library types
     Pawl.Types.PlayerScope
     Pawl.Types.PlayersDealtDamage
     Pawl.Types.PlayerStaticAbility
+    Pawl.Types.PlayerView
     Pawl.Types.PlayPermissionOrigin
     Pawl.Types.PlaysLand
     Pawl.Types.PlotFromZone
@@ -2741,6 +2749,7 @@ library types
     Pawl.Types.SearchDestination
     Pawl.Types.SearchPlace
     Pawl.Types.Seat
+    Pawl.Types.SeatView
     Pawl.Types.SelfCountersReached
     Pawl.Types.SelfCountersRemoved
     Pawl.Types.SetBasePowerToughness

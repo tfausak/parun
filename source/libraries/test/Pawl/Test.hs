@@ -439,6 +439,7 @@ import qualified Pawl.Codec.ObjectIdSpec
 import qualified Pawl.Codec.ObjectRefSpec
 import qualified Pawl.Codec.ObjectSnapshotSpec
 import qualified Pawl.Codec.ObjectSpec
+import qualified Pawl.Codec.ObjectViewSpec
 import qualified Pawl.Codec.OfferCastSpec
 import qualified Pawl.Codec.OnsetSpec
 import qualified Pawl.Codec.OperandSpec
@@ -507,6 +508,7 @@ import qualified Pawl.Codec.PlayerSacrificesSpec
 import qualified Pawl.Codec.PlayerScopeSpec
 import qualified Pawl.Codec.PlayerSpec
 import qualified Pawl.Codec.PlayerStaticAbilitySpec
+import qualified Pawl.Codec.PlayerViewSpec
 import qualified Pawl.Codec.PlayersDealtDamageSpec
 import qualified Pawl.Codec.PlaysLandSpec
 import qualified Pawl.Codec.PlotFromZoneSpec
@@ -582,6 +584,7 @@ import qualified Pawl.Codec.ScryRewriteSpec
 import qualified Pawl.Codec.SearchDestinationSpec
 import qualified Pawl.Codec.SearchSpec
 import qualified Pawl.Codec.SeatSpec
+import qualified Pawl.Codec.SeatViewSpec
 import qualified Pawl.Codec.SelfCountersReachedSpec
 import qualified Pawl.Codec.SelfCountersRemovedSpec
 import qualified Pawl.Codec.SetBasePowerToughnessSpec
@@ -1247,6 +1250,9 @@ spec s registry = do
   Pawl.Codec.LoggedEventSpec.spec s
   Pawl.Codec.LookAtSpec.spec s
   Pawl.Codec.LookedSpec.spec s
+  Pawl.Codec.SeatViewSpec.spec s
+  Pawl.Codec.PlayerViewSpec.spec s
+  Pawl.Codec.ObjectViewSpec.spec s
   Pawl.Codec.LoopMembersSpec.spec s
   Pawl.Codec.LoyaltyKindSpec.spec s
   Pawl.Codec.LoyaltySpec.spec s
