@@ -8,6 +8,7 @@ import qualified Pawl.Types.AsCopy as AsCopy
 import qualified Pawl.Types.CardType as CardType
 import qualified Pawl.Types.CounterKind as CounterKind
 import qualified Pawl.Types.Duration as Duration
+import qualified Pawl.Types.DurationEvent as DurationEvent
 import qualified Pawl.Types.Filter as Filter
 import qualified Pawl.Types.Quantity as Quantity
 import qualified Pawl.Types.TurnUpRewrite as TurnUpRewrite
@@ -35,7 +36,7 @@ spec s = Spec.describe s "Pawl.Codec.TurnUpRewrite" $ do
     Common.assertCodec
       s
       (TurnUpRewrite.codec Common.text Common.text)
-      (TurnUpRewrite.AsCopy (AsCopy.MkAsCopy (Filter.HasCardType CardType.Creature) [] False Seq.empty Zone.Battlefield (Just Duration.UntilTurnedFaceDown)))
-      " {\"type\":\"AsCopy\",\"value\":{\"eligible\":{\"type\":\"HasCardType\",\"value\":{\"type\":\"Creature\"}},\"duration\":{\"type\":\"UntilTurnedFaceDown\"}}} "
+      (TurnUpRewrite.AsCopy (AsCopy.MkAsCopy (Filter.HasCardType CardType.Creature) [] False Seq.empty Zone.Battlefield (Just (Duration.UntilEvent DurationEvent.SourceTurnedFaceDown))))
+      " {\"type\":\"AsCopy\",\"value\":{\"eligible\":{\"type\":\"HasCardType\",\"value\":{\"type\":\"Creature\"}},\"duration\":{\"type\":\"UntilEvent\",\"value\":{\"type\":\"SourceTurnedFaceDown\"}}}} "
   Spec.it s "has a schema" $
     Common.assertHasSchema s (TurnUpRewrite.codec Common.text Common.text)

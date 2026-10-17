@@ -102,6 +102,7 @@ import qualified Pawl.Types.DrawCountR as DrawCountR
 import qualified Pawl.Types.DrawR as DrawR
 import qualified Pawl.Types.DrawRewrite as DrawRewrite
 import qualified Pawl.Types.Duration as Duration
+import qualified Pawl.Types.DurationEvent as DurationEvent
 import qualified Pawl.Types.EachCardFromAmong as EachCardFromAmong
 import qualified Pawl.Types.EachCardInGraveyard as EachCardInGraveyard
 import qualified Pawl.Types.EachCardInHand as EachCardInHand
@@ -1583,7 +1584,8 @@ durationPlayerRefs duration = case duration of
   Duration.UntilEndOfCombat -> []
   Duration.UntilEndOfCombatOnYourNextTurn -> []
   Duration.UntilUsed -> []
-  Duration.UntilTurnedFaceDown -> []
+  -- A criterion's seats are Filter atoms, reached through durationSlots.
+  Duration.UntilEvent _ -> []
 
 -- CR 611.2b: only ForAsLongAs carries a Quantity, through its Condition.
 durationSlots :: Duration.Duration -> Map.Map SlotName SlotArity
@@ -1611,7 +1613,10 @@ durationSlots duration = case duration of
   -- walked wherever that effect's payload is (Pawl.Engine.PlayerEffect), not
   -- here.
   Duration.UntilUsed -> Map.empty
-  Duration.UntilTurnedFaceDown -> Map.empty
+  -- CR 611.2a: a cast's criterion may name a seat by slot, which
+  -- Pawl.Engine.Expiry.arm bakes.
+  Duration.UntilEvent DurationEvent.SourceTurnedFaceDown -> Map.empty
+  Duration.UntilEvent (DurationEvent.SpellCast criterion) -> filterSlotsOf criterion
 
 -- Both sides of a comparison are a Quantity, and either may read a slot.
 conditionSlots :: Condition.Type.Condition -> Map.Map SlotName SlotArity
@@ -2314,7 +2319,7 @@ durationSlotsAreExhaustive duration = case duration of
   Duration.UntilEndOfCombat -> True
   Duration.UntilEndOfCombatOnYourNextTurn -> True
   Duration.UntilUsed -> True
-  Duration.UntilTurnedFaceDown -> True
+  Duration.UntilEvent _ -> True
 
 -- conditionSlots' mirror: both sides are a Quantity.
 conditionSlotsAreExhaustive :: Condition.Type.Condition -> Bool

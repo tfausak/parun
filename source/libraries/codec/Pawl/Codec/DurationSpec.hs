@@ -11,6 +11,7 @@ import qualified Pawl.Types.Comparison as Comparison
 import qualified Pawl.Types.Condition as Condition
 import qualified Pawl.Types.Cost as Cost
 import qualified Pawl.Types.Duration as Duration
+import qualified Pawl.Types.DurationEvent as DurationEvent
 import qualified Pawl.Types.ManaCost as ManaCost
 import qualified Pawl.Types.ManaSymbol as ManaSymbol
 import qualified Pawl.Types.ManaType as ManaType
@@ -136,10 +137,10 @@ spec s = Spec.describe s "Pawl.Codec.Duration" $ do
       Duration.UntilUsed
       " {\"type\":\"UntilUsed\"} "
   -- CR 611.2a / Vesuvan Shapeshifter: "until this creature is turned face down".
-  Spec.it s "UntilTurnedFaceDown" $
+  Spec.it s "UntilEvent" $
     Common.assertCodec
       s
       Duration.codec
-      Duration.UntilTurnedFaceDown
-      " {\"type\":\"UntilTurnedFaceDown\"} "
+      (Duration.UntilEvent DurationEvent.SourceTurnedFaceDown)
+      " {\"type\":\"UntilEvent\",\"value\":{\"type\":\"SourceTurnedFaceDown\"}} "
   Spec.it s "has a schema" $ Common.assertHasSchema s Duration.codec

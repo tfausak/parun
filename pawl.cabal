@@ -566,6 +566,8 @@ library codec
     Pawl.Codec.DungeonRoom
     Pawl.Codec.DungeonRoomSpec
     Pawl.Codec.Duration
+    Pawl.Codec.DurationEvent
+    Pawl.Codec.DurationEventSpec
     Pawl.Codec.DurationSpec
     Pawl.Codec.DuringPhase
     Pawl.Codec.DuringPhaseSpec
@@ -613,6 +615,8 @@ library codec
     Pawl.Codec.Equip
     Pawl.Codec.EquipSpec
     Pawl.Codec.EquipTarget
+    Pawl.Codec.EventExpiry
+    Pawl.Codec.EventExpirySpec
     Pawl.Codec.EventGroup
     Pawl.Codec.EventGroupSpec
     Pawl.Codec.EventShape
@@ -2337,6 +2341,7 @@ library types
     Pawl.Types.Drew
     Pawl.Types.DungeonRoom
     Pawl.Types.Duration
+    Pawl.Types.DurationEvent
     Pawl.Types.DuringPhase
     Pawl.Types.EachCardFromAmong
     Pawl.Types.EachCardInGraveyard
@@ -2363,6 +2368,7 @@ library types
     Pawl.Types.EntwineDecision
     Pawl.Types.Equip
     Pawl.Types.EquipTarget
+    Pawl.Types.EventExpiry
     Pawl.Types.EventGroup
     Pawl.Types.EventShape
     Pawl.Types.ExcessDestination
