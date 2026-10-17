@@ -61,6 +61,7 @@ import qualified Pawl.Types.ActivatedAbility as ActivatedAbility
 import qualified Pawl.Types.ActivatedAbilitySource as ActivatedAbilitySource
 import qualified Pawl.Types.Activation as Activation
 import qualified Pawl.Types.Answer as Answer
+import qualified Pawl.Types.Answerer as Answerer
 import qualified Pawl.Types.Asked as Asked
 import qualified Pawl.Types.AttackTarget as AttackTarget
 import qualified Pawl.Types.AttackersAre as AttackersAre
@@ -193,7 +194,7 @@ run registry scenario = do
   found <- mapM (\name -> fmap (fmap ((,) name)) (Registry.fetchCard registry name)) names
   pure $ do
     board <- staging
-    (final, rehearsal) <- State.runStateT (playOut stepBudget (Staged.state board)) ((rehearsalOf (Scenario.timeline scenario) board) {reference = Map.fromList (Maybe.catMaybes found)})
+    (final, rehearsal) <- State.runStateT (Driver.drive [] scripted stepBudget finished (Staged.state board)) ((rehearsalOf (Scenario.timeline scenario) board) {reference = Map.fromList (Maybe.catMaybes found)})
     settle rehearsal final
     State.evalStateT (mapM_ (expect Nothing final) (Scenario.final scenario)) rehearsal
     pure final
@@ -212,15 +213,13 @@ namesIn reply = case reply of
 stepBudget :: Natural
 stepBudget = 1000
 
-playOut :: Natural -> GameState.GameState -> Run GameState.GameState
-playOut budget gs = do
+-- | Whether the timeline is spent, or the game has passed the last turn it
+-- names.
+finished :: GameState.GameState -> Run Bool
+finished gs = do
   remaining <- State.gets queues
   let lastTurn = maybe 0 (When.turn . fst) (Map.lookupMax remaining)
-  if Map.null remaining || Maybe.isJust (GameState.result gs) || budget == 0 || GameState.turnNumber gs > lastTurn
-    then pure gs
-    else do
-      (_, next) <- Engine.runGameAsked answerPrompt gs Engine.runStep
-      playOut (budget - 1) next
+  pure (Map.null remaining || GameState.turnNumber gs > lastTurn)
 
 -- | Run one explicit engine entry point under a timeline, for a Haskell caller
 -- whose subject is a subsystem rather than a whole game. An entry whose moment
@@ -477,6 +476,12 @@ facingFor reason = case reason of
     listing = Facing.FaceDown FaceDownState.MkFaceDownState {FaceDownState.reason = reason, FaceDownState.listed = FaceDownCharacteristics.disguisedValue}
 
 -- Answering -------------------------------------------------------------------
+
+-- | The timeline, answering every prompt the engine asks. Its checks run here
+-- rather than in an observer: they share the moment's queue with its moves, so
+-- a check behind a refused move (CR 733.1) runs only once that move is taken.
+scripted :: Answerer.Answerer Run
+scripted = Answerer.MkAnswerer answerPrompt
 
 answerPrompt :: Asked.Asked r -> Run r
 answerPrompt asked = do
