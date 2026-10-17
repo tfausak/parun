@@ -37,77 +37,65 @@
                     "type": "MoveToZone",
                     "value": {
                       "ref": {
-                        "type": "InSlot",
-                        "value": "target"
+                        "type": "AllOf",
+                        "value": [
+                          {
+                            "type": "InSlot",
+                            "value": "target"
+                          },
+                          {
+                            "type": "TopOfLibrary",
+                            "value": {
+                              "count": {
+                                "type": "Literal",
+                                "value": 1
+                              },
+                              "player": {
+                                "type": "Relative",
+                                "value": {
+                                  "type": "You"
+                                }
+                              }
+                            }
+                          }
+                        ]
                       },
-                      "slot": "exiledPermanent",
+                      "slot": "exiled",
                       "zone": {
                         "type": "Exile"
                       }
                     }
                   },
                   {
-                    "type": "MoveToZone",
+                    "type": "ForEach",
                     "value": {
-                      "ref": {
-                        "type": "TopOfLibrary",
-                        "value": {
-                          "count": {
-                            "type": "Literal",
-                            "value": 1
-                          },
-                          "player": {
-                            "type": "Relative",
-                            "value": {
-                              "type": "You"
+                      "body": [
+                        {
+                          "type": "GrantPlayFromExile",
+                          "value": {
+                            "duration": {
+                              "type": "UntilEndOfNextTurnOf",
+                              "value": {
+                                "type": "ControllerOfBound",
+                                "value": "exiledCard"
+                              }
+                            },
+                            "player": {
+                              "type": "ControllerOfBound",
+                              "value": "exiledCard"
+                            },
+                            "ref": {
+                              "type": "InSlot",
+                              "value": "exiledCard"
                             }
                           }
                         }
-                      },
-                      "slot": "exiledCard",
-                      "zone": {
-                        "type": "Exile"
-                      }
-                    }
-                  },
-                  {
-                    "type": "GrantPlayFromExile",
-                    "value": {
-                      "duration": {
-                        "type": "UntilEndOfNextTurnOf",
-                        "value": {
-                          "type": "ControllerOfBound",
-                          "value": "exiledPermanent"
-                        }
-                      },
-                      "player": {
-                        "type": "ControllerOfBound",
-                        "value": "exiledPermanent"
-                      },
+                      ],
                       "ref": {
                         "type": "InSlot",
-                        "value": "exiledPermanent"
-                      }
-                    }
-                  },
-                  {
-                    "type": "GrantPlayFromExile",
-                    "value": {
-                      "duration": {
-                        "type": "UntilEndOfNextTurnOf",
-                        "value": {
-                          "type": "ControllerOfBound",
-                          "value": "exiledCard"
-                        }
+                        "value": "exiled"
                       },
-                      "player": {
-                        "type": "ControllerOfBound",
-                        "value": "exiledCard"
-                      },
-                      "ref": {
-                        "type": "InSlot",
-                        "value": "exiledCard"
-                      }
+                      "slot": "exiledCard"
                     }
                   }
                 ]

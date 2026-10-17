@@ -37,7 +37,8 @@ import qualified Pawl.Types.TapState as TapState
 -- ONE seat, since Pawl.Types.ExilePlayPermission holds one (CR 715.3d: "that
 -- card ... that player"). So Pawl.Engine.Resolve.Effect's arm grants nothing for
 -- a reference naming nobody, and nothing for one naming several --
--- PlayerRef.InSlot's own collapse.
+-- PlayerRef.InSlot's own collapse. A holder per card is Pawl.Types.ForEach's
+-- job: Suspend Aggression loops over its one exile's slot.
 data GrantPlayFromExile = MkGrantPlayFromExile
   { duration :: Duration.Duration,
     player :: PlayerRef.PlayerRef,
