@@ -80,6 +80,7 @@ import qualified Data.Set as Set
 import qualified Data.Text as Text
 import qualified Numeric.Natural as Natural.Type
 import qualified Pawl.Engine.Action as Action
+import qualified Pawl.Engine.Activatable as Activatable
 import qualified Pawl.Engine.Activate as Activate
 import qualified Pawl.Engine.Binding as Binding
 import qualified Pawl.Engine.Damage as Damage
@@ -1036,12 +1037,10 @@ spec s registry = Spec.describe s "Pawl.Engine.Target" $ do
   -- object to lose all 'hexproof from [quality]' abilities."
   --
   -- Humility ("All creatures lose all abilities and have base power and toughness
-  -- 1/1", CR 613.1f layer 6) is pawl's only hexproof-remover -- Modification has
-  -- GainKeyword and LoseAllAbilities and nothing narrower -- so it is the witness
-  -- this rule gets. The rule is really held BY CONSTRUCTION rather than by this
-  -- case: the quality rides the Hexproof constructor, so there is no second
-  -- keyword for an ability-removing effect to miss, and the CR 613.1f case above
-  -- and this one are the same code path with a different payload.
+  -- 1/1", CR 613.1f layer 6) is the witness for a removal of every ability; the
+  -- quality rides the Hexproof constructor, so the CR 613.1f case above and this
+  -- one are the same code path with a different payload. The case after it is
+  -- the narrower removal.
   --
   -- The grant is stamped BEFORE Humility enters, so CR 613.7's timestamp order
   -- puts the removal last within layer 6. Stamped the other way round the grant
@@ -1061,6 +1060,30 @@ spec s registry = Spec.describe s "Pawl.Engine.Target" $ do
                in Set.member (Recipient.ToCreature pikerId) (Target.legalRecipients (Just S.alice) spellId theSlot onStack)
         Spec.assertBool s (not (reaches guarded)) "before Humility alice's Doom Blade cannot reach the Piker"
         Spec.assertBool s (reaches humbled) "under Humility it can, the variant having gone with the rest"
+
+  -- The rule's own subject: Shadowspear's "lose hexproof" is a removal of the
+  -- whole hexproof family (Modification.LoseKeywordFamily), so it takes Knight
+  -- of Grace's "hexproof from black" too and alice's Doom Blade reaches it.
+  Spec.it s "CR 702.11e Shadowspear's loss of hexproof takes Knight of Grace's hexproof from black" $ do
+    knight <- S.printingOf s registry "Knight of Grace"
+    spear <- S.printingOf s registry "Shadowspear"
+    doomBlade <- S.printingOf s registry "Doom Blade"
+    swamp <- S.printingOf s registry "Swamp"
+    let (knightId, g1) = S.addPermanent knight S.bob (S.landsInPlay swamp 1)
+        (spearId, g2) = S.addPermanent spear S.alice g1
+        board = g2 {GameState.phase = Phase.PrecombatMain, GameState.priority = Just S.alice}
+        stripped = case Activatable.abilitiesFor spearId board of
+          lose : _ -> S.runPure S.identityAnswer board (Activate.activateAbility S.alice spearId lose >> Stack.resolveTop)
+          [] -> board
+    case S.spellTargetSlot doomBlade of
+      Nothing -> Spec.assertFailure s "Doom Blade should declare a target slot"
+      Just theSlot -> do
+        let reaches gs =
+              let (spellId, onStack) = S.spellOnStack doomBlade S.alice gs
+               in Set.member (Recipient.ToCreature knightId) (Target.legalRecipients (Just S.alice) spellId theSlot onStack)
+        Spec.assertBool s (reaches stripped) "CR 702.11e after Shadowspear's ability alice's Doom Blade reaches the Knight"
+        Spec.assertBool s (not (reaches board)) "before it, it cannot"
+        Spec.assertBool s (Projection.hasKeyword Keyword.FirstStrike knightId stripped) "and the Knight keeps first strike"
 
   -- The whole card, through the CAST path rather than as a set membership: CR
   -- 601.2c makes a spell with no legal target for a slot uncastable at all, which

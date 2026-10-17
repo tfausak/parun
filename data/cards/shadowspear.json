@@ -24,7 +24,7 @@
                             "type": "UntilEndOfTurn"
                           },
                           "modification": {
-                            "type": "LoseKeyword",
+                            "type": "LoseKeywordFamily",
                             "value": {
                               "type": "Hexproof"
                             }

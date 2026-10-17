@@ -8,9 +8,9 @@
 -- to one activation a turn or a game (Instill Energy, Nature's Chosen, Touch
 -- of Vitae) and Chimeric Idol, which taps lands. CR 732.3's own example,
 -- which undoes a continuous effect, is Mist Dragon's, a loop through a
--- targeted activation is two Grim Poppets', or two Fatestitchers', and one
+-- targeted activation is two Grim Poppets', or two Fatestitchers', one
 -- through a payment or a mana ability is Freed from the Real's on Birds of
--- Paradise.
+-- Paradise, and one through a keyword-family removal is Shadowspear's.
 --
 -- Two seats, so alice -- active, and involved -- is the named player by
 -- construction. The answerer is test-local: it sequences two players through
@@ -162,6 +162,17 @@ spec s registry = Spec.describe s "a fragmented loop (CR 732.3)" $ do
     let board = flownUnder dragon wings
     Spec.assertBool s (uncurry (Projection.hasKeyword Keyword.Flying) board) "CR 613.7 the Dragon flies under the later Aura"
     Spec.assertEqWith s "CR 732.3 alice's gain is withheld only where the state recurs" (fmap fst (dragonOffers board)) [True, True, True, True, False]
+
+  Spec.it s "a loop whose undo leaves a superseded keyword-family removal behind is detected" $ do
+    spear <- S.printingOf s registry "Shadowspear"
+    birds <- S.printingOf s registry "Birds of Paradise"
+    rouser <- S.printingOf s registry "Synthetic Rouser"
+    -- alice pays Shadowspear's {1} with her Birds of Paradise, and bob untaps
+    -- them. Each resolution stores a removal of the hexproof family over bob's
+    -- permanents (CR 702.11e, 611.2c), which the next one erases (CR 613.7);
+    -- the second lap returns to the state the first left, so the third
+    -- activation, paid the same way, is refused.
+    Spec.assertEqWith s "CR 732.3 alice's third activation is refused" (spearAttempts spear birds rouser) [True, True, False]
 
 -- How many times the answerer has the tapper activate before it passes
 -- instead, since without CR 732.3 the loop never ends.
@@ -484,3 +495,68 @@ aiming alices bobs other asked = case Asked.prompt asked of
     pure (fmap (Set.filter (\recipient -> Recipient.objectOf recipient == aim) . snd) sets)
   Prompt.ChooseOptional {} -> pure OptionalDecision.Exercises
   prompt -> pure (S.identityAnswer prompt)
+
+-- alice, active in her precombat main phase with an empty pool, controls
+-- Shadowspear and Birds of Paradise; bob controls a Synthetic Rouser. alice
+-- opens each lap with Shadowspear's {1} ability paid with the Birds, up to
+-- `budget` times, and bob answers each that resolves by untapping the Birds.
+-- Answers alice's attempts, each as whether it went on the stack.
+spearAttempts :: Printing.Printing -> Printing.Printing -> Printing.Printing -> [Bool]
+spearAttempts spear birds rouser =
+  let (spearId, gs1) = S.addPermanent spear S.alice (Setup.emptyGame S.bothPlayers)
+      (birdsId, gs2) = S.addPermanent birds S.alice gs1
+      (rouserId, gs3) = S.addPermanent rouser S.bob gs2
+      ((_, _), (_, _, _, made)) = State.runState (Engine.runGameAsked (spearing spearId birdsId rouserId) (inMain gs3) Engine.priorityLoop) (budget, False, True, [])
+   in made
+
+-- The activations alice has left, whether she has just attempted one,
+-- whether the lap is hers to open, and her attempts so far.
+type Spearing = (Int, Bool, Bool, [Bool])
+
+spearing :: ObjectId.ObjectId -> ObjectId.ObjectId -> ObjectId.ObjectId -> Asked.Asked r -> State.State Spearing r
+spearing spearId birdsId rouserId asked = case Asked.prompt asked of
+  Prompt.ChooseAction _ pid actions -> do
+    (left, attempted, alicesLap, made) <- State.get
+    let stacked = not (null (GameState.stack (Asked.game asked)))
+        open recorded = case List.find (losesFrom spearId) actions of
+          Just action | left > 0 -> do
+            State.put (left - 1, True, alicesLap, recorded)
+            pure action
+          _ -> do
+            State.put (0, False, alicesLap, recorded)
+            pure Action.Pass
+    if pid == S.alice
+      then
+        if attempted
+          then
+            if stacked
+              then do
+                State.put (left, False, False, made <> [True])
+                pure Action.Pass
+              else do
+                -- Refused (CR 733.1): the loop is over.
+                State.put (0, False, alicesLap, made <> [False])
+                pure Action.Pass
+          else
+            if not stacked && alicesLap
+              then open made
+              else pure Action.Pass
+      else case List.find (activates rouserId) actions of
+        Just action | not stacked && not alicesLap -> do
+          State.put (left, False, True, made)
+          pure action
+        _ -> pure Action.Pass
+  -- FILTERED out of the offer, never built (CR 608.2b re-reads it).
+  Prompt.ChooseTargets _ _ _ sets -> pure (fmap (Set.filter (== Recipient.ToCreature birdsId) . snd) sets)
+  Prompt.ChooseManaSource _ _ candidates -> pure (List.find (== birdsId) (NonEmpty.toList candidates))
+  Prompt.ChooseExtraManaSource {} -> pure Nothing
+  Prompt.ChooseManaYield _ _ _ candidates -> pure (yielding (ManaType.Colored Color.Green) candidates)
+  Prompt.ReverseManaAbilities {} -> pure OptionalDecision.Exercises
+  prompt -> pure (S.identityAnswer prompt)
+
+-- Shadowspear's loss among `actions`, told from its equip by its effect.
+losesFrom :: ObjectId.ObjectId -> Action.Action -> Bool
+losesFrom spearId action = case action of
+  Action.Activate source ability ->
+    source == spearId && not (null [() | mode <- Foldable.toList (Modal.modes (ActivatedAbility.modal ability)), Effect.ModifyTarget _ <- Foldable.toList (Mode.allEffects mode)])
+  _ -> False
