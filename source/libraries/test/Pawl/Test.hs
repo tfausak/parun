@@ -717,6 +717,7 @@ import qualified Pawl.DepartureSpec
 import qualified Pawl.DetainSpec
 import qualified Pawl.DevotionSpec
 import qualified Pawl.DiceSpec
+import qualified Pawl.DriverSpec
 import qualified Pawl.DungeonSpec
 import qualified Pawl.EarthbendSpec
 import qualified Pawl.EffectLintSpec
@@ -1602,6 +1603,7 @@ spec s registry = do
   Pawl.DetainSpec.spec s registry
   Pawl.DevotionSpec.spec s registry
   Pawl.DiceSpec.spec s registry
+  Pawl.DriverSpec.spec s registry
   Pawl.DungeonSpec.spec s registry
   Pawl.EarthbendSpec.spec s registry
   Pawl.EffectLintSpec.spec s registry

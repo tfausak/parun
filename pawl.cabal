@@ -1528,6 +1528,7 @@ library engine
     Pawl.Engine.Deploy
     Pawl.Engine.Detain
     Pawl.Engine.Dice
+    Pawl.Engine.Driver
     Pawl.Engine.Dungeon
     Pawl.Engine.Earthbend
     Pawl.Engine.EffectZone
@@ -1970,6 +1971,7 @@ library test
     Pawl.DetainSpec
     Pawl.DevotionSpec
     Pawl.DiceSpec
+    Pawl.DriverSpec
     Pawl.DungeonSpec
     Pawl.EarthbendSpec
     Pawl.EffectLintSpec
@@ -2118,6 +2120,7 @@ library types
     Pawl.Types.Amass
     Pawl.Types.Announcement
     Pawl.Types.Answer
+    Pawl.Types.Answerer
     Pawl.Types.Ante
     Pawl.Types.AnyNumberDiscard
     Pawl.Types.AnyNumberMatching
@@ -2562,6 +2565,7 @@ library types
     Pawl.Types.ObjectId
     Pawl.Types.ObjectRef
     Pawl.Types.ObjectSnapshot
+    Pawl.Types.Observer
     Pawl.Types.OfferCast
     Pawl.Types.Onset
     Pawl.Types.Operand

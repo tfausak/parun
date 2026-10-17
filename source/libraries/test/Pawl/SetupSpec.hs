@@ -212,7 +212,7 @@ setupSpec s registry = Spec.describe s "Setup" $ do
     gs <- setupState s registry
     Spec.assertEqWith s "active" (GameState.activePlayer gs) S.alice
 
-  Spec.it s "runMatch derives the players from the matchup (#24)" $ do
+  Spec.it s "runMatchPure derives the players from the matchup (#24)" $ do
     matchup <- S.shortRedRed (S.printingOf s registry)
     let (result, final) = Engine.runMatchPure S.identityAnswer GameSettings.plain matchup
     Spec.assertBool s (Maybe.isJust (GameState.result final)) "has a result"

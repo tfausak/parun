@@ -157,10 +157,7 @@ runGamePure answer = runGameAskedPure (answer . Asked.prompt)
 -- One entry point from matchup to played game: the player list is DERIVED from it,
 -- so a matchup player without a Player record is unrepresentable. CR 800.2: the
 -- options are settled before the game begins, so they are an argument here.
-runMatch :: (Monad m) => (forall r. Prompt r -> m r) -> GameSettings.GameSettings -> NonEmpty.NonEmpty (PlayerId, Deck.Deck) -> m (Result, GameState)
-runMatch answer settings matchup =
-  runGame answer (Setup.gameWith settings (fmap fst matchup)) (playFrom matchup)
-
+-- Pawl.Engine.Driver.match is the same, for an answerer that runs in a monad.
 runMatchPure :: (forall r. Prompt r -> r) -> GameSettings.GameSettings -> NonEmpty.NonEmpty (PlayerId, Deck.Deck) -> (Result, GameState)
 runMatchPure answer settings matchup =
   runGamePure answer (Setup.gameWith settings (fmap fst matchup)) (playFrom matchup)
