@@ -609,8 +609,8 @@ carryGrants oid gs =
 --
 -- A lost instance's payment is dropped with its promise: no ability the
 -- permanent has is linked to it (CR 607.2i, 607.5). A grant carried onto the
--- permanent (carryGrants) keeps its key there; a copy effect applying as it
--- enters gives it own instances the spell's Own keys still name. So a Clone
+-- permanent (carryGrants) keeps its key there, and where a copy effect applies
+-- as it enters, the spell's Own keys name the copy's own instances. So a Clone
 -- entering as Scrapshooter beside a paid Host gift gives bob the Host's gift and
 -- does not read it as its copied gift's, which the scenarios
 -- cr-607-5-a-clone-of-scrapshooter-keeps-its-paid-host-gift-and-gives-bob-one-card

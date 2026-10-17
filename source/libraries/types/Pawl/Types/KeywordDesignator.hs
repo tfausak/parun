@@ -27,9 +27,8 @@ data KeywordDesignator keyword
     OfFamily KeywordFamily.KeywordFamily
   | -- | CR 702.177a / 702.33f: one keyword, payload and all.
     OfKeyword keyword
-  | -- | CR 607.2i / 607.5: a family's instances an object has of its own, which
-    -- its own "if it was kicked" or "if the gift was promised" is linked to; for
-    -- kicker, a sticker kicker's not among them (CR 702.33e, 702.33h).
+  | -- | CR 607.2i / 702.33e: a family's instances the object has of its own, which
+    -- its own payoff is linked to, a sticker kicker's not among them (CR 702.33h).
     Printed KeywordFamily.KeywordFamily
   | -- | CR 702.56b / 702.157b: the nth of an object's identical instances of one
     -- keyword, counting from 1, whose payments are its own.
