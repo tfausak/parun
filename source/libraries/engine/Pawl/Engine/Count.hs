@@ -1310,9 +1310,13 @@ viewOfSnapshot deploy mController mOwner isToken counters zone lapsed snapshot =
 -- CR 604.2: a snapshot's activated abilities less those whose "as long as"
 -- grant did not function in the zone it was taken in, or whose clause had
 -- lapsed there.
+--
+-- Not implemented: CR 113.6p's command-zone home (Vanguard.homeZoneOf), which
+-- a snapshot does not record, so a grant on an emblem, vanguard, conspiracy,
+-- plane or scheme snapshotted in the command zone is dropped (#5170).
 snapshotRoster :: Bool -> Zone.Zone -> Set.Set Condition.Condition -> PC.ProjectedCharacteristics -> [ActivatedAbility.ActivatedAbility Card.Card (GrantedAbility.GrantedAbility Card.Card)]
 snapshotRoster deploy zone lapsed snapshot =
-  let functions = AbilityZone.grantFunctionsIn (PC.delayedAbilities snapshot) zone
+  let functions = AbilityZone.grantFunctionsIn Zone.Battlefield (PC.delayedAbilities snapshot) zone
       held = maybe True (`Set.notMember` lapsed) . ActivatedAbility.condition
    in filter (\ability -> functions ability && held ability) (abilitiesOf (Deploy.grants deploy snapshot) snapshot)
 

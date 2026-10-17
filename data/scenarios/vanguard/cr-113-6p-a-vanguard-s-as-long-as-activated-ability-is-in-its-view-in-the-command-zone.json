@@ -1,0 +1,29 @@
+{
+  "description": "CR 113.6p a vanguard's as-long-as activated ability is in its view in the command zone",
+  "note": "Alice controls an artifact, so Synthetic Steward Avatar's grant holds, and the grant functions in the command zone (CR 113.6p): Synthetic Command Audit counts the avatar, so the Piker is 3/1. The control board drops the artifact and nothing else.",
+  "board": {
+    "active": "alice",
+    "step": "PrecombatMain",
+    "seats": [
+      {
+        "name": "alice",
+        "manaPool": "C",
+        "battlefield": [
+          { "card": "Goblin Piker", "label": "piker" },
+          { "card": "Darksteel Relic" },
+          { "card": "Synthetic Command Audit" }
+        ],
+        "library": [{ "card": "Mountain" }, { "card": "Mountain" }],
+        "command": [{ "card": "Synthetic Steward Avatar", "label": "steward" }]
+      },
+      {
+        "name": "bob",
+        "library": [{ "card": "Mountain" }, { "card": "Mountain" }]
+      }
+    ]
+  },
+  "timeline": [
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "check": { "PowerToughness": { "object": "$piker", "power": 3, "toughness": 1 } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "check": { "View": { "of": "Offered", "player": "alice", "is": ["Pass", "Activate $steward"] } } }
+  ]
+}

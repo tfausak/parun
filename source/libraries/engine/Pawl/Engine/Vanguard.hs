@@ -13,8 +13,10 @@
 -- printed ability off a command-zone object asks it, rather than growing its own
 -- reading of rule 313. Those walks are Pawl.Engine.Event's triggered gather,
 -- Pawl.Engine.Projection's static and replacement gathers, and
--- Pawl.Engine.CombatRestriction.inForce, and Pawl.Engine.Activate's
--- zoneAbilitiesOf for the activated ones.
+-- Pawl.Engine.CombatRestriction.inForce, and, through homeZoneOf,
+-- Pawl.Engine.Activatable.zoneAbilitiesOf and
+-- Pawl.Engine.Projection.View.abilitiesFromCharacteristics for the activated
+-- ones.
 --
 -- There is no GameSettings field for "this is a Vanguard game", and CR 902 asks
 -- for none: every rule in it is stated of a player's vanguard CARD, so having one
@@ -112,6 +114,12 @@ functionsFromCommandZone oid gs = case fmap Object.source (Game.lookupObject oid
   Just (Source.OfEmblem _) -> True
   Just (Source.OfCard _) -> isVanguard oid gs || (Conspiracy.isConspiracy oid gs && not (Conspiracy.isFaceDownConspiracy oid gs)) || ((Plane.isPlanarCard oid gs || Scheme.isScheme oid gs) && Set.member oid (GameState.command gs))
   _ -> False
+
+-- | CR 113.6 \/ 113.6p: the zone where this object's abilities that state no zone
+-- function -- the command zone for an object functionsFromCommandZone names, the
+-- battlefield otherwise.
+homeZoneOf :: ObjectId -> GameState -> Zone.Zone
+homeZoneOf oid gs = if functionsFromCommandZone oid gs then Zone.Command else Zone.Battlefield
 
 -- | CR 902.3 \/ 902.6: this player's vanguard card, which is theirs to own and
 -- sits in the command zone all game.

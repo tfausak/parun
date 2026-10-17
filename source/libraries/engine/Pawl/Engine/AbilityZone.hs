@@ -96,10 +96,11 @@ zonesFunctionedIn delayed ability =
 
 -- CR 113.6m's "functions only in that zone", asked of one zone: does this
 -- ability function from there? For an ability that names no zone at all, only
--- the battlefield, CR 113.6's default.
-functionsIn :: Map.Map AbilityName.AbilityName (TriggeredAbility.TriggeredAbility Card.Card (GrantedAbility.GrantedAbility Card.Card)) -> Zone.Zone -> ActivatedAbility.ActivatedAbility Card.Card (GrantedAbility.GrantedAbility Card.Card) -> Bool
-functionsIn delayed zone ability = case zonesFunctionedIn delayed ability of
-  Nothing -> zone == Zone.Battlefield
+-- `home`: the battlefield, CR 113.6's default, or the command zone for an object
+-- CR 113.6p names (Pawl.Engine.Vanguard.homeZoneOf).
+functionsIn :: Zone.Zone -> Map.Map AbilityName.AbilityName (TriggeredAbility.TriggeredAbility Card.Card (GrantedAbility.GrantedAbility Card.Card)) -> Zone.Zone -> ActivatedAbility.ActivatedAbility Card.Card (GrantedAbility.GrantedAbility Card.Card) -> Bool
+functionsIn home delayed zone ability = case zonesFunctionedIn delayed ability of
+  Nothing -> zone == home
   Just named -> Set.member zone named
 
 -- CR 113.6m's COST half: an ability whose cost moves the object it's on out of a
@@ -205,8 +206,9 @@ zoneOfComponent component = case component of
 
 -- CR 113.6 / 604.2 / 702.178b: does the "as long as" grant that gives an object
 -- this ability function where the object is? A grant is a static ability, so
--- on the battlefield (CR 113.6's default), and also in any zone the granted
--- ability states (CR 113.6b / 113.6m), which CR 702.178b makes the grant's too.
+-- in `home` (functionsIn's: CR 113.6's battlefield default, or CR 113.6p's
+-- command zone), and also in any zone the granted ability states (CR 113.6b /
+-- 113.6m), which CR 702.178b makes the grant's too.
 -- Loxodon Surveyor's ruling says "too": its max speed ability functions on the
 -- battlefield as well as in the graveyard. True for an ability no grant gives
 -- (no condition): the object simply has it, in every zone. Pawl.ActivateSpec's
@@ -218,9 +220,9 @@ zoneOfComponent component = case component of
 -- speed"`, 2026-10-15: every hit is a threshold grant of a triggered ability or
 -- of a battlefield one.
 --
--- Not implemented: CR 113.6p's command-zone override, which
--- Pawl.Engine.Activatable.zoneAbilitiesOf applies (#5147).
-grantFunctionsIn :: Map.Map AbilityName.AbilityName (TriggeredAbility.TriggeredAbility Card.Card (GrantedAbility.GrantedAbility Card.Card)) -> Zone.Zone -> ActivatedAbility.ActivatedAbility Card.Card (GrantedAbility.GrantedAbility Card.Card) -> Bool
-grantFunctionsIn delayed zone ability = case ActivatedAbility.condition ability of
+-- The command-zone half is proved by data/scenarios/vanguard's
+-- Synthetic Steward Avatar pair.
+grantFunctionsIn :: Zone.Zone -> Map.Map AbilityName.AbilityName (TriggeredAbility.TriggeredAbility Card.Card (GrantedAbility.GrantedAbility Card.Card)) -> Zone.Zone -> ActivatedAbility.ActivatedAbility Card.Card (GrantedAbility.GrantedAbility Card.Card) -> Bool
+grantFunctionsIn home delayed zone ability = case ActivatedAbility.condition ability of
   Nothing -> True
-  Just _ -> zone == Zone.Battlefield || functionsIn delayed zone ability
+  Just _ -> zone == home || functionsIn home delayed zone ability

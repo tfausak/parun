@@ -377,7 +377,7 @@ applyModification textBoxOf viewOf src stamp gs oid unitTypes affected m pc =
               named card a = a {ActivatedAbility.name = ActivatedAbility.name a Applicative.<|> Just (Binding.exiledCardAbility card)}
               -- CR 113.6 / 702.178b: a card has, in exile, only the "as long
               -- as" grants that function there (AbilityZone.grantFunctionsIn).
-              inExile card = let copied = copiableCharacteristics card gs in filter (AbilityZone.grantFunctionsIn (PC.delayedAbilities copied) Zone.Exile) (PC.activatedAbilities copied)
+              inExile card = let copied = copiableCharacteristics card gs in filter (AbilityZone.grantFunctionsIn Zone.Battlefield (PC.delayedAbilities copied) Zone.Exile) (PC.activatedAbilities copied)
               gained = foldMap (\card -> fmap (named card) (inExile card)) cards
               restricted a = a {ActivatedAbility.restrictions = ActivatedAbility.restrictions a <> extra}
            in pc {PC.activatedAbilities = PC.activatedAbilities pc <> fmap restricted gained}
