@@ -1,0 +1,28 @@
+{
+  "description": "CR 701.20a / 708.9 a face-down Goblin Piker Unsummoned stays revealed while the Witness trigger waits",
+  "note": "bob's manifested Goblin Piker is revealed as Unsummon returns it to his hand, and that reveal triggers alice's Synthetic Unmasking Witness. alice sees the card in bob's hand until the trigger leaves the stack.",
+  "board": {
+    "seats": [
+      { "name": "alice",
+        "battlefield": [
+          { "card": "Island", "label": "i1", "ready": true },
+          { "card": "Synthetic Unmasking Witness", "label": "witness" } ],
+        "hand": [ { "card": "Unsummon", "label": "unsummon" } ],
+        "library": [ { "card": "Swamp" }, { "card": "Swamp" }, { "card": "Swamp" } ] },
+      { "name": "bob",
+        "battlefield": [ { "card": "Goblin Piker", "label": "piker", "faceDown": { "type": "Manifested" } } ] }
+    ],
+    "active": "alice",
+    "step": "PrecombatMain"
+  },
+  "timeline": [
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": { "Cast": { "object": "$unsummon", "targets": ["$piker"], "mana": ["$i1"] } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass" },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "check": { "View": { "of": "Stack", "is": ["trigger of $witness"] } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "check": { "View": { "of": "Seers", "object": "Goblin Piker", "is": ["alice", "bob"] } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "check": { "Count": { "player": "bob", "zone": "Hand", "card": "Goblin Piker", "count": 1 } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass" },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "check": { "View": { "of": "Stack", "is": [] } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "check": { "View": { "of": "Seers", "object": "Goblin Piker", "is": ["bob"] } } }
+  ]
+}

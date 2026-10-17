@@ -1,0 +1,32 @@
+{
+  "description": "CR 701.20a / 708.9 a face-down Goblin Piker Griptided stays revealed atop the library while the Witness trigger waits",
+  "note": "bob's manifested Goblin Piker is revealed as Griptide puts it on top of his library, and that reveal triggers alice's Synthetic Unmasking Witness. Everyone sees the card there until the trigger leaves the stack, then no one does (CR 401.2).",
+  "board": {
+    "seats": [
+      { "name": "alice",
+        "battlefield": [
+          { "card": "Island", "label": "i1", "ready": true },
+          { "card": "Island", "label": "i2", "ready": true },
+          { "card": "Island", "label": "i3", "ready": true },
+          { "card": "Island", "label": "i4", "ready": true },
+          { "card": "Synthetic Unmasking Witness", "label": "witness" } ],
+        "hand": [ { "card": "Griptide", "label": "griptide" } ],
+        "library": [ { "card": "Swamp" }, { "card": "Swamp" }, { "card": "Swamp" } ] },
+      { "name": "bob",
+        "battlefield": [ { "card": "Goblin Piker", "label": "piker", "faceDown": { "type": "Manifested" } } ],
+        "library": [ { "card": "Forest" }, { "card": "Forest" } ] }
+    ],
+    "active": "alice",
+    "step": "PrecombatMain"
+  },
+  "timeline": [
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": { "Cast": { "object": "$griptide", "targets": ["$piker"], "mana": ["$i1", "$i2", "$i3", "$i4"] } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass" },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "check": { "View": { "of": "Stack", "is": ["trigger of $witness"] } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "check": { "View": { "of": "Seers", "object": "Goblin Piker", "is": ["alice", "bob"] } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "check": { "Count": { "player": "bob", "zone": "Library", "card": "Goblin Piker", "count": 1 } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass" },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "check": { "View": { "of": "Stack", "is": [] } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "check": { "View": { "of": "Seers", "object": "Goblin Piker", "is": [] } } }
+  ]
+}
