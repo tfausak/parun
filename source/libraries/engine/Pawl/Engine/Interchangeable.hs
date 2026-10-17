@@ -39,6 +39,7 @@ import qualified Pawl.Types.CardIdentity as CardIdentity
 import qualified Pawl.Types.Combat as Combat
 import qualified Pawl.Types.ComponentCard as ComponentCard
 import qualified Pawl.Types.ContinuousEffect as ContinuousEffect
+import qualified Pawl.Types.CopyCoverage as CopyCoverage
 import qualified Pawl.Types.ExileLink as ExileLink
 import Pawl.Types.GameState (GameState)
 import qualified Pawl.Types.GameState as GameState
@@ -344,8 +345,10 @@ continuousNames oid gs row = case row of
 -- runtime id, exactly as a printed card does.
 copyNames :: ObjectId -> ActiveCopy.ActiveCopy -> Bool
 copyNames oid row = case row of
-  ActiveCopy.MkActiveCopy source _timestamp expiry copied _snapshot _turned ->
-    source == oid || Mentions.expiryNames (unread oid) expiry || Set.member oid copied
+  ActiveCopy.MkActiveCopy source _timestamp expiry covers _snapshot _turned ->
+    source == oid || Mentions.expiryNames (unread oid) expiry || case covers of
+      CopyCoverage.These copied -> Set.member oid copied
+      CopyCoverage.SourceHost overtaken -> Map.member oid overtaken
 
 playerEffectRowNames :: ObjectId -> ActivePlayerEffect.ActivePlayerEffect -> Bool
 playerEffectRowNames oid row = case row of

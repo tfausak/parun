@@ -1,0 +1,41 @@
+{
+  "description": "CR 613.7m two Metamorphic Alterations entering together on one creature copy in the timestamp order their controller chose",
+  "note": "Replenish returns two Metamorphic Alterations onto alice's Goblin Piker, the first choosing her War Mammoth and the second her Grizzly Bears. Each static copy effect has its Aura's timestamp (CR 613.7a), and alice orders the two (CR 613.7m) so the one that chose the Mammoth is later: the Piker is a War Mammoth. The order the as-enters choices were made in decides nothing. Distinct printed pairs: the Piker's 2/1, the Mammoth's 3/3, the Bears' 2/2.",
+  "board": {
+    "seats": [
+      {
+        "name": "alice",
+        "battlefield": [
+          { "card": "Goblin Piker", "label": "piker" },
+          { "card": "War Mammoth", "label": "mammoth" },
+          { "card": "Grizzly Bears", "label": "bears" },
+          { "card": "Plains", "label": "plains-1", "ready": true },
+          { "card": "Plains", "label": "plains-2", "ready": true },
+          { "card": "Plains", "label": "plains-3", "ready": true },
+          { "card": "Plains", "label": "plains-4", "ready": true }
+        ],
+        "hand": [{ "card": "Replenish", "label": "replenish" }],
+        "graveyard": [
+          { "card": "Metamorphic Alteration", "label": "first" },
+          { "card": "Metamorphic Alteration", "label": "second" }
+        ]
+      },
+      {
+        "name": "bob",
+        "library": [{ "card": "Island" }, { "card": "Island" }]
+      }
+    ],
+    "active": "alice",
+    "step": "PrecombatMain"
+  },
+  "timeline": [
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": { "Cast": { "object": "$replenish", "mana": ["$plains-1", "$plains-2", "$plains-3", "$plains-4"] } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass" },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": { "Answer": { "prompt": "ChooseAttachment", "with": "$piker" } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": { "Answer": { "prompt": "ChooseAttachment", "with": "$piker" } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": { "Answer": { "prompt": "ChoosePermanent", "with": "$mammoth" } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": { "Answer": { "prompt": "ChoosePermanent", "with": "$bears" } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": { "OrderTimestamps": ["Metamorphic Alteration#2", "Metamorphic Alteration"] } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "check": { "Names": { "object": "$piker", "names": ["War Mammoth"] } } }
+  ]
+}

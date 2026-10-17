@@ -173,6 +173,7 @@ import qualified Pawl.Types.ControlPlayer as ControlPlayer
 import qualified Pawl.Types.ControlSides as ControlSides
 import qualified Pawl.Types.ControlSlots as ControlSlots
 import qualified Pawl.Types.ControllerRelation as ControllerRelation
+import qualified Pawl.Types.CopyCoverage as CopyCoverage
 import qualified Pawl.Types.CopyOriginal as CopyOriginal
 import qualified Pawl.Types.CopyStackObject as CopyStackObject
 import qualified Pawl.Types.CopyTargets as CopyTargets
@@ -7451,7 +7452,7 @@ applyOneEffect runSubgame resolving source controller legal chosen effect = case
                             { ActiveCopy.source = source,
                               ActiveCopy.timestamp = ts,
                               ActiveCopy.expiry = expiry,
-                              ActiveCopy.objects = oids,
+                              ActiveCopy.covers = CopyCoverage.These oids,
                               ActiveCopy.snapshot = pc,
                               ActiveCopy.turned = Nothing
                             }

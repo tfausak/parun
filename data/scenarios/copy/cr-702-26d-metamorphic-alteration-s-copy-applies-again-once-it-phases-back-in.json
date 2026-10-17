@@ -1,0 +1,42 @@
+{
+  "description": "CR 702.26d Metamorphic Alteration's copy applies again once it phases back in with the creature it enchants",
+  "note": "Alice casts Metamorphic Alteration on her Goblin Piker choosing her War Mammoth, the second of three candidates, then Reality Ripple on the Piker; the Aura phases out with it (CR 702.26g). Phasing is no zone change, and the copy is a static ability's (CR 611.3b), not a 'for as long as' duration CR 702.26f would end, so when both phase in on her next turn the Piker is a War Mammoth again. Distinct printed pairs: the Piker's 2/1, the Mammoth's 3/3, the Bears' 2/2.",
+  "board": {
+    "seats": [
+      {
+        "name": "alice",
+        "battlefield": [
+          { "card": "Goblin Piker", "label": "piker" },
+          { "card": "War Mammoth", "label": "mammoth" },
+          { "card": "Grizzly Bears", "label": "bears" },
+          { "card": "Island", "label": "island-1", "ready": true },
+          { "card": "Island", "label": "island-2", "ready": true },
+          { "card": "Island", "label": "island-3", "ready": true },
+          { "card": "Island", "label": "island-4", "ready": true }
+        ],
+        "hand": [
+          { "card": "Metamorphic Alteration", "label": "alteration" },
+          { "card": "Reality Ripple", "label": "ripple" }
+        ],
+        "library": [{ "card": "Island" }, { "card": "Island" }]
+      },
+      {
+        "name": "bob",
+        "library": [{ "card": "Island" }, { "card": "Island" }]
+      }
+    ],
+    "active": "alice",
+    "step": "PrecombatMain"
+  },
+  "timeline": [
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": { "Cast": { "object": "$alteration", "targets": ["$piker"], "mana": ["$island-1", "$island-2", null] } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass" },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": { "Answer": { "prompt": "ChoosePermanent", "with": "$mammoth" } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "check": { "Names": { "object": "$piker", "names": ["War Mammoth"] } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": { "Cast": { "object": "$ripple", "targets": ["$piker"], "mana": ["$island-3", "$island-4"] } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass" },
+    { "turn": 3, "step": "PrecombatMain", "player": "alice", "check": { "Names": { "object": "$piker", "names": ["War Mammoth"] } } },
+    { "turn": 3, "step": "PrecombatMain", "player": "alice", "check": { "PowerToughness": { "object": "$piker", "power": 3, "toughness": 3 } } },
+    { "turn": 3, "step": "DeclareAttackers", "player": "alice", "do": { "Attack": [] } }
+  ]
+}

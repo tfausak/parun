@@ -14,6 +14,7 @@ import qualified Pawl.Types.CardType as CardType
 import qualified Pawl.Types.CoinFlipR as CoinFlipR
 import qualified Pawl.Types.CoinFlipRewrite as CoinFlipRewrite
 import qualified Pawl.Types.ControllerRelation as ControllerRelation
+import qualified Pawl.Types.CopyRecipient as CopyRecipient
 import qualified Pawl.Types.CounterKind as CounterKind
 import qualified Pawl.Types.CounterPattern as CounterPattern
 import qualified Pawl.Types.CounterR as CounterR
@@ -129,7 +130,7 @@ spec s =
           Common.assertCodec
             s
             codec
-            (ReplacementEffect.EntryR (EntryR.MkEntryR Filter.IsSource (EntryRewrite.AsCopy (AsCopy.MkAsCopy (Filter.HasCardType CardType.Creature) [] False Seq.empty Zone.Battlefield Nothing))))
+            (ReplacementEffect.EntryR (EntryR.MkEntryR Filter.IsSource (EntryRewrite.AsCopy (AsCopy.MkAsCopy (Filter.HasCardType CardType.Creature) [] False Seq.empty Zone.Battlefield Nothing CopyRecipient.ThisObject True))))
             " {\"type\":\"EntryR\",\"value\":{\"matching\":{\"type\":\"IsSource\"},\"rewrite\":{\"type\":\"AsCopy\",\"value\":{\"eligible\":{\"type\":\"HasCardType\",\"value\":{\"type\":\"Creature\"}}}}}} "
         -- CR 208.2b: Primal Plasma's ChoiceOf, carrying P/T and keywords.
         Spec.it s "EntryR (Primal Plasma, ChoiceOf)" $

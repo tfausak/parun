@@ -659,7 +659,7 @@ armDelayedTriggerNames asking onAbility x = case x of
 
 asCopyNames :: Asking -> (ability -> Bool) -> (effect -> Bool) -> AsCopy.AsCopy ability effect -> Bool
 asCopyNames asking onAbility onEffect x = case x of
-  AsCopy.MkAsCopy eligible clauses _tapped whenYouDo _zone duration -> filterNames asking eligible || any (copyClauseNames asking onAbility) clauses || any onEffect whenYouDo || any (durationNames asking) duration
+  AsCopy.MkAsCopy eligible clauses _tapped whenYouDo _zone duration _recipient _optional -> filterNames asking eligible || any (copyClauseNames asking onAbility) clauses || any onEffect whenYouDo || any (durationNames asking) duration
 
 attachAllNames :: Asking -> AttachAll.AttachAll -> Bool
 attachAllNames asking x = case x of

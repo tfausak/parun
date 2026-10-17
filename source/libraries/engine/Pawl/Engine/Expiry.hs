@@ -49,6 +49,7 @@ import qualified Pawl.Types.AfterObjectTurn as AfterObjectTurn
 import qualified Pawl.Types.AfterTurn as AfterTurn
 import qualified Pawl.Types.CombatStep as CombatStep
 import qualified Pawl.Types.ContinuousEffect as ContinuousEffect
+import qualified Pawl.Types.CopyCoverage as CopyCoverage
 import qualified Pawl.Types.DelayedTrigger as DelayedTrigger
 import qualified Pawl.Types.Designation as Designation
 import Pawl.Types.Duration (Duration)
@@ -474,9 +475,22 @@ dropAtCleanup gs =
 sweepConditional :: Game Bool
 sweepConditional = do
   gs <- State.get
-  let changed = any (uncurry (endsAt gs Settle)) (sourcedExpiries gs)
-  Monad.when changed $ State.put (sweep Settle gs)
+  let changed = any (uncurry (endsAt gs Settle)) (sourcedExpiries gs) || any (orphanedHostCopy gs) (GameState.copyEffects gs)
+  Monad.when changed $ State.put (dropOrphanedHostCopies (sweep Settle gs))
   pure changed
+
+-- CR 611.3b / 400.7: a static ability's copy row (CopyCoverage.SourceHost)
+-- states no expiry, and ends when its source is gone: the object that left is
+-- no more, and whatever it became is a new one. Hygiene only, since
+-- Game.copyCovers already reads nothing off a missing source, but
+-- Pawl.Engine.Interchangeable reads every row's timestamp.
+orphanedHostCopy :: GameState -> ActiveCopy.ActiveCopy -> Bool
+orphanedHostCopy gs row = case ActiveCopy.covers row of
+  CopyCoverage.SourceHost _ -> Maybe.isNothing (Game.lookupObject (ActiveCopy.source row) gs)
+  CopyCoverage.These _ -> False
+
+dropOrphanedHostCopies :: GameState -> GameState
+dropOrphanedHostCopies gs = gs {GameState.copyEffects = filter (not . orphanedHostCopy gs) (GameState.copyEffects gs)}
 
 -- CR 701.35a's duration, ended: a detain lasts "until the next turn of the
 -- controller of that spell or ability", which is dropAtTurnOf's own moment, so
