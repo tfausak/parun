@@ -1,0 +1,55 @@
+{
+  "description": "CR 613.7 a copy effect made after Metamorphic Alteration's outranks it, until the Aura is attached again (Dimir Doppelganger)",
+  "note": "Alice casts Metamorphic Alteration on her Dimir Doppelganger, choosing the Doppelganger itself over her Goblin Piker, so it stays a Doppelganger with its ability (the ruling's copy of itself). She then activates it at a Hill Giant card in her graveyard. The ability's copy effect is later than the Aura's static one, so layer 1 leaves the Hill Giant though the Aura still enchants it. Crown of the Ages then moves the Aura to the Piker, the only other creature, which becomes the Doppelganger the Aura fixed, and on her next turn back onto the Doppelganger: the Aura has a new timestamp (CR 613.7e), later than the ability's copy, so the Doppelganger is a Doppelganger again. Distinct printed pairs: the Doppelganger's 0/2, the Piker's 2/1, the Giant's 3/3.",
+  "board": {
+    "seats": [
+      {
+        "name": "alice",
+        "battlefield": [
+          { "card": "Goblin Piker", "label": "piker" },
+          { "card": "Dimir Doppelganger", "label": "doppelganger" },
+          { "card": "Crown of the Ages", "label": "crown" },
+          { "card": "Island", "label": "island-1", "ready": true },
+          { "card": "Island", "label": "island-2", "ready": true },
+          { "card": "Island", "label": "island-3", "ready": true },
+          { "card": "Island", "label": "island-4", "ready": true },
+          { "card": "Island", "label": "island-5", "ready": true },
+          { "card": "Island", "label": "island-6", "ready": true },
+          { "card": "Island", "label": "island-7", "ready": true },
+          { "card": "Island", "label": "island-8", "ready": true },
+          { "card": "Swamp", "label": "swamp", "ready": true }
+        ],
+        "hand": [{ "card": "Metamorphic Alteration", "label": "alteration" }],
+        "graveyard": [{ "card": "Hill Giant", "label": "giant" }],
+        "library": [{ "card": "Island" }, { "card": "Island" }]
+      },
+      {
+        "name": "bob",
+        "library": [{ "card": "Island" }, { "card": "Island" }]
+      }
+    ],
+    "active": "alice",
+    "step": "PrecombatMain"
+  },
+  "timeline": [
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": { "Cast": { "object": "$alteration", "targets": ["$doppelganger"], "mana": ["$island-1", "$island-2", null] } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass" },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": { "Answer": { "prompt": "ChoosePermanent", "with": "$doppelganger" } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "check": { "PowerToughness": { "object": "$doppelganger", "power": 0, "toughness": 2 } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": { "Activate": { "object": "$doppelganger", "targets": ["$giant"], "mana": ["$island-3", "$island-4", "$swamp", null] } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass" },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "check": { "Names": { "object": "$doppelganger", "names": ["Hill Giant"] } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "check": { "PowerToughness": { "object": "$doppelganger", "power": 3, "toughness": 3 } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": { "Activate": { "object": "$crown", "ability": 0, "targets": ["Metamorphic Alteration"], "mana": ["$island-5", "$island-6", "$island-7", "$island-8"] } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass" },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "check": { "Names": { "object": "$piker", "names": ["Dimir Doppelganger"] } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "check": { "PowerToughness": { "object": "$piker", "power": 0, "toughness": 2 } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "check": { "Names": { "object": "$doppelganger", "names": ["Hill Giant"] } } },
+    { "turn": 3, "step": "PrecombatMain", "player": "alice", "do": { "Activate": { "object": "$crown", "ability": 0, "targets": ["Metamorphic Alteration"], "mana": ["$island-1", "$island-2", "$island-3", "$island-4", null] } } },
+    { "turn": 3, "step": "PrecombatMain", "player": "alice", "do": "Pass" },
+    { "turn": 3, "step": "PrecombatMain", "player": "alice", "check": { "Names": { "object": "$doppelganger", "names": ["Dimir Doppelganger"] } } },
+    { "turn": 3, "step": "PrecombatMain", "player": "alice", "check": { "PowerToughness": { "object": "$doppelganger", "power": 0, "toughness": 2 } } },
+    { "turn": 3, "step": "PrecombatMain", "player": "alice", "check": { "Names": { "object": "$piker", "names": ["Goblin Piker"] } } },
+    { "turn": 3, "step": "DeclareAttackers", "player": "alice", "do": { "Attack": [] } }
+  ]
+}

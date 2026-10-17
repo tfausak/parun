@@ -57,6 +57,7 @@ import qualified Pawl.Types.Compares as Compares
 import qualified Pawl.Types.Comparison as Comparison
 import qualified Pawl.Types.Condition as Condition
 import qualified Pawl.Types.ContinuousEffect as ContinuousEffect
+import qualified Pawl.Types.CopyCoverage as CopyCoverage
 import qualified Pawl.Types.Cost as Cost.Type
 import qualified Pawl.Types.CostComponent as CostComponent
 import qualified Pawl.Types.Count as Count
@@ -1851,7 +1852,7 @@ interchangeableSourcesSpec s registry = Spec.describe s "Interchangeable mana so
   Spec.it s "CR 707.2 an Elf a stored copy effect names is a candidate of its own" $ do
     offers <- namedRowOffers s registry $ \bear elf gs ->
       let (ts, gs1) = Game.freshTimestamp gs
-       in gs1 {GameState.copyEffects = [ActiveCopy.MkActiveCopy bear ts Expiry.AtCleanup (Set.singleton elf) (Projection.project elf gs) Nothing]}
+       in gs1 {GameState.copyEffects = [ActiveCopy.MkActiveCopy bear ts Expiry.AtCleanup (CopyCoverage.These (Set.singleton elf)) (Projection.project elf gs) Nothing]}
     Spec.assertEqWith s "asked once, with the named Elf beside the two that are alike" offers [2]
 
   -- CR 509.1b / 611.2c: Veiling Oddity's "creatures can't be blocked this turn"

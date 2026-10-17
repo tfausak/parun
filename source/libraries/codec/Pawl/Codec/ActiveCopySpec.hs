@@ -1,11 +1,13 @@
 module Pawl.Codec.ActiveCopySpec where
 
+import qualified Data.Map.Strict as Map
 import qualified Data.Set as Set
 import qualified Pawl.Codec.ActiveCopy as ActiveCopy
 import qualified Pawl.Codec.ProjectedCharacteristicsSpec as ProjectedCharacteristicsSpec
 import qualified Pawl.JsonCodec.Common as Common
 import qualified Pawl.Spec as Spec
 import qualified Pawl.Types.ActiveCopy as ActiveCopy
+import qualified Pawl.Types.CopyCoverage as CopyCoverage
 import qualified Pawl.Types.Expiry as Expiry
 import qualified Pawl.Types.ObjectId as ObjectId
 import qualified Pawl.Types.Timestamp as Timestamp
@@ -24,11 +26,11 @@ spec s = Spec.describe s "Pawl.Codec.ActiveCopy" $ do
         { ActiveCopy.source = ObjectId.MkObjectId 1,
           ActiveCopy.timestamp = Timestamp.MkTimestamp 2,
           ActiveCopy.expiry = Expiry.AtCleanup,
-          ActiveCopy.objects = Set.fromList [ObjectId.MkObjectId 3, ObjectId.MkObjectId 4],
+          ActiveCopy.covers = CopyCoverage.These (Set.fromList [ObjectId.MkObjectId 3, ObjectId.MkObjectId 4]),
           ActiveCopy.snapshot = ProjectedCharacteristicsSpec.minimalCharacteristics,
           ActiveCopy.turned = Nothing
         }
-      " {\"source\":1,\"timestamp\":2,\"expiry\":{\"type\":\"AtCleanup\"},\"objects\":[3,4],\"snapshot\":{\"names\":[\"Mountain\"],\"cardTypes\":[{\"type\":\"Land\"}]}} "
+      " {\"source\":1,\"timestamp\":2,\"expiry\":{\"type\":\"AtCleanup\"},\"covers\":{\"type\":\"These\",\"value\":[3,4]},\"snapshot\":{\"names\":[\"Mountain\"],\"cardTypes\":[{\"type\":\"Land\"}]}} "
   -- CR 730.2i: a merge applied over the row, with its turned-over reading.
   Spec.it s "a merged permanent's row with its turned reading" $
     Common.assertCodec
@@ -38,10 +40,25 @@ spec s = Spec.describe s "Pawl.Codec.ActiveCopy" $ do
         { ActiveCopy.source = ObjectId.MkObjectId 1,
           ActiveCopy.timestamp = Timestamp.MkTimestamp 2,
           ActiveCopy.expiry = Expiry.AtCleanup,
-          ActiveCopy.objects = Set.fromList [ObjectId.MkObjectId 3],
+          ActiveCopy.covers = CopyCoverage.These (Set.singleton (ObjectId.MkObjectId 3)),
           ActiveCopy.snapshot = ProjectedCharacteristicsSpec.minimalCharacteristics,
           ActiveCopy.turned = Just ProjectedCharacteristicsSpec.minimalCharacteristics
         }
-      " {\"source\":1,\"timestamp\":2,\"expiry\":{\"type\":\"AtCleanup\"},\"objects\":[3],\"snapshot\":{\"names\":[\"Mountain\"],\"cardTypes\":[{\"type\":\"Land\"}]},\"turned\":{\"names\":[\"Mountain\"],\"cardTypes\":[{\"type\":\"Land\"}]}} "
+      " {\"source\":1,\"timestamp\":2,\"expiry\":{\"type\":\"AtCleanup\"},\"covers\":{\"type\":\"These\",\"value\":[3]},\"snapshot\":{\"names\":[\"Mountain\"],\"cardTypes\":[{\"type\":\"Land\"}]},\"turned\":{\"names\":[\"Mountain\"],\"cardTypes\":[{\"type\":\"Land\"}]}} "
+  -- Metamorphic Alteration's row, following its source's host, one object of
+  -- which a later copy effect took over while the source had timestamp 5.
+  Spec.it s "a row following its source's host" $
+    Common.assertCodec
+      s
+      ActiveCopy.codec
+      ActiveCopy.MkActiveCopy
+        { ActiveCopy.source = ObjectId.MkObjectId 1,
+          ActiveCopy.timestamp = Timestamp.MkTimestamp 2,
+          ActiveCopy.expiry = Expiry.AtCleanup,
+          ActiveCopy.covers = CopyCoverage.SourceHost (Map.singleton (ObjectId.MkObjectId 3) (Timestamp.MkTimestamp 5)),
+          ActiveCopy.snapshot = ProjectedCharacteristicsSpec.minimalCharacteristics,
+          ActiveCopy.turned = Nothing
+        }
+      " {\"source\":1,\"timestamp\":2,\"expiry\":{\"type\":\"AtCleanup\"},\"covers\":{\"type\":\"SourceHost\",\"value\":{\"3\":5}},\"snapshot\":{\"names\":[\"Mountain\"],\"cardTypes\":[{\"type\":\"Land\"}]}} "
   Spec.it s "has a schema" $
     Common.assertHasSchema s ActiveCopy.codec

@@ -2,6 +2,7 @@ module Pawl.Types.AsCopy where
 
 import qualified Data.Sequence as Seq
 import qualified Pawl.Types.CopyClause as CopyClause
+import qualified Pawl.Types.CopyRecipient as CopyRecipient
 import qualified Pawl.Types.Duration as Duration
 import qualified Pawl.Types.Filter as Filter
 import qualified Pawl.Types.Keyword as Keyword
@@ -65,6 +66,12 @@ data AsCopy ability effect = MkAsCopy
     -- BecomeCopy.duration's field and read the same way: Nothing stamps the
     -- copy, a stated duration stores it as a Pawl.Types.ActiveCopy row that can
     -- end.
-    duration :: Maybe Duration.Duration
+    duration :: Maybe Duration.Duration,
+    -- | Which object becomes the copy: the entering one (Clone), or what it is
+    -- attached to (Metamorphic Alteration).
+    recipient :: CopyRecipient.CopyRecipient,
+    -- | CR 707.5's "you may" (Clone), False for a printed "choose"
+    -- (Metamorphic Alteration's "choose a creature").
+    optional :: Bool
   }
   deriving (Eq, Ord, Show)

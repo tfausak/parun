@@ -2553,3 +2553,99 @@ magarAnswer only p = case p of
   Prompt.ChooseOptional {} -> OptionalDecision.Exercises
   Prompt.OfferedCast {} -> OptionalDecision.Exercises
   _ -> S.attackTo S.bob p
+
+-- CR 707.2c / 611.3a: Metamorphic Alteration's "Enchanted creature is a copy
+-- of the chosen creature", a static ability's copy effect. Its copiable values
+-- are fixed as it first applies, and it applies to whatever the Aura enchants.
+-- The board: alice's tapped Goblin Piker (2/1) with a +1/+1 counter and Unholy
+-- Strength (+2/+1), her War Mammoth (3/3) and Grizzly Bears (2/2), and two
+-- Islands, four of them left for a Mirrorweave. The Aura is cast on the Piker
+-- choosing the Mammoth, the second of three candidates, so the fallback first
+-- candidate cannot stand in for it.
+metamorphicAlterationSpec :: (Monad m, Monad n) => Spec.Spec m n -> Registry.Registry m -> n ()
+metamorphicAlterationSpec s registry = Spec.describe s "Pawl.Engine.Copy" $ do
+  let enchantedBoard = do
+        island <- S.printingOf s registry "Island"
+        piker <- S.printingOf s registry "Goblin Piker"
+        mammoth <- S.printingOf s registry "War Mammoth"
+        bears <- S.printingOf s registry "Grizzly Bears"
+        unholy <- S.printingOf s registry "Unholy Strength"
+        alteration <- S.printingOf s registry "Metamorphic Alteration"
+        let (pikerId, g1) = S.addPermanent piker S.alice (S.landsInPlay island 6)
+            (mammothId, g2) = S.addPermanent mammoth S.alice g1
+            (bearsId, g3) = S.addPermanent bears S.alice g2
+            (unholyId, g4) = S.addPermanent unholy S.alice g3
+            g5 = S.addCounter CounterKind.PlusOnePlusOne 1 pikerId (S.attach unholyId pikerId g4)
+            board = g5 {GameState.objects = Map.adjust (\o -> o {Object.tapped = TapState.Tapped}) pikerId (GameState.objects g5)}
+            (withSpell, spellId) = S.handOne alteration board
+            answer :: Prompt.Prompt r -> r
+            answer p = case p of
+              Prompt.ChooseTargets _ _ _ sets -> fmap (Set.filter ((==) (Just pikerId) . Recipient.objectOf) . snd) sets
+              Prompt.ChoosePermanent _ _ _ candidates -> if elem mammothId candidates then mammothId else NonEmpty.head candidates
+              _ -> S.identityAnswer p
+            cast = snd (Engine.runGamePure answer withSpell (S.cast S.alice spellId))
+            resolved = resolveAndSettle answer cast
+            auraId = List.find (\oid -> fmap Object.attachedTo (Game.lookupObject oid resolved) == Just (Just (Recipient.ToCreature pikerId)) && oid /= unholyId) (Set.toList (GameState.battlefield resolved))
+        pure (pikerId, mammothId, bearsId, auraId, resolved)
+      named name = Set.singleton (CardName.MkCardName (Text.pack name))
+
+  Spec.it s "CR 707.2 Metamorphic Alteration makes the enchanted creature a copy, keeping its counters, Auras and status" $ do
+    (pikerId, mammothId, _, auraId, resolved) <- enchantedBoard
+    Spec.assertEqWith s "the Piker is named War Mammoth" (Projection.namesOf pikerId resolved) (named "War Mammoth")
+    Spec.assertEqWith s "with the Mammoth's 3/3 under its counter and Unholy Strength" (S.powerToughnessOf pikerId resolved) (Just (6, 5))
+    Spec.assertEqWith s "still tapped" (fmap Object.tapped (Game.lookupObject pikerId resolved)) (Just TapState.Tapped)
+    Spec.assertEqWith s "the chosen Mammoth is itself" (S.powerToughnessOf mammothId resolved) (Just (3, 3))
+    Spec.assertBool s (Maybe.isJust auraId) "the Aura enchants the Piker"
+    -- CR 707.2c: fixed as the effect first applied, so the Mammoth leaving
+    -- changes nothing.
+    let mammothGone = S.runPure S.identityAnswer resolved (Event.destroy Regenerability.Regenerable [mammothId])
+    Spec.assertEqWith s "the Mammoth destroyed, the Piker is still a War Mammoth" (Projection.namesOf pikerId mammothGone) (named "War Mammoth")
+    Spec.assertEqWith s "and still 6/5" (S.powerToughnessOf pikerId mammothGone) (Just (6, 5))
+    -- CR 611.3b: the Aura gone, the Piker is itself again.
+    let auraGone = S.runPure S.identityAnswer mammothGone (Event.destroy Regenerability.Regenerable (Maybe.maybeToList auraId))
+    Spec.assertEqWith s "the Aura destroyed, the Piker is a Goblin Piker again" (Projection.namesOf pikerId auraGone) (named "Goblin Piker")
+    Spec.assertEqWith s "2/1 under its counter and Unholy Strength" (S.powerToughnessOf pikerId auraGone) (Just (5, 3))
+
+  -- CR 611.3a: the effect applies to whatever the Aura enchants, so moving it
+  -- moves the copy.
+  Spec.it s "CR 611.3a Metamorphic Alteration moved to another creature takes the copy with it" $ do
+    (pikerId, _, bearsId, auraId, resolved) <- enchantedBoard
+    let moved = S.runPure S.identityAnswer resolved (Foldable.for_ auraId (\aura -> Event.attach aura (Recipient.ToCreature bearsId)))
+    Spec.assertEqWith s "the Bears are a War Mammoth" (Projection.namesOf bearsId moved) (named "War Mammoth")
+    Spec.assertEqWith s "and 3/3" (S.powerToughnessOf bearsId moved) (Just (3, 3))
+    Spec.assertEqWith s "the Piker is a Goblin Piker again" (Projection.namesOf pikerId moved) (named "Goblin Piker")
+    Spec.assertEqWith s "2/1 under its counter and Unholy Strength" (S.powerToughnessOf pikerId moved) (Just (5, 3))
+
+  -- CR 707.3: a Clone of the enchanted creature copies the copiable values the
+  -- Aura gave it, and keeps them once the Aura is gone (CR 707.2b).
+  Spec.it s "CR 707.3 a Clone of the creature Metamorphic Alteration enchants is a War Mammoth" $ do
+    (pikerId, _, _, auraId, resolved) <- enchantedBoard
+    clone <- S.printingOf s registry "Clone"
+    let (_, staged) = S.spellOnStack clone S.alice resolved
+        cloned = resolveAndSettle (copyNamed pikerId) staged
+        cloneId = newest (printedOnBattlefield "Clone" cloned)
+        auraGone = S.runPure S.identityAnswer cloned (Event.destroy Regenerability.Regenerable (Maybe.maybeToList auraId))
+    Spec.assertEqWith s "the Clone is named War Mammoth" (fmap (`Projection.namesOf` cloned) cloneId) (Just (named "War Mammoth"))
+    Spec.assertEqWith s "and is 3/3, with no counter of the Piker's" (cloneId >>= (`S.powerToughnessOf` cloned)) (Just (3, 3))
+    Spec.assertEqWith s "the Aura destroyed, the Clone is still a War Mammoth" (fmap (`Projection.namesOf` auraGone) cloneId) (Just (named "War Mammoth"))
+    Spec.assertEqWith s "while the Piker is itself" (Projection.namesOf pikerId auraGone) (named "Goblin Piker")
+
+  -- CR 613.7e: a copy effect stored after the Aura's outranks it, until the
+  -- Aura becomes attached again and takes a new timestamp. Mirrorweave makes
+  -- every creature but the Bears a Grizzly Bears; the Aura then moves to the
+  -- Mammoth and back.
+  Spec.it s "CR 613.7e Metamorphic Alteration attached again outranks a Mirrorweave cast after it" $ do
+    (pikerId, mammothId, bearsId, auraId, resolved) <- enchantedBoard
+    mirrorweave <- S.printingOf s registry "Mirrorweave"
+    let (withSpell, spellId) = S.handOne mirrorweave resolved
+        atBears :: Prompt.Prompt r -> r
+        atBears p = case p of
+          Prompt.ChooseTargets _ _ _ sets -> fmap (Set.filter ((==) (Just bearsId) . Recipient.objectOf) . snd) sets
+          _ -> S.identityAnswer p
+        woven = resolveAndSettle atBears (snd (Engine.runGamePure atBears withSpell (S.cast S.alice spellId)))
+        moveTo host = Foldable.for_ auraId (\aura -> Event.attach aura (Recipient.ToCreature host))
+        away = S.runPure S.identityAnswer woven (moveTo mammothId)
+        back = S.runPure S.identityAnswer away (moveTo pikerId)
+    Spec.assertEqWith s "under Mirrorweave the Piker is a Grizzly Bears" (Projection.namesOf pikerId woven) (named "Grizzly Bears")
+    Spec.assertEqWith s "the Aura moved back, the Piker is a War Mammoth again" (Projection.namesOf pikerId back) (named "War Mammoth")
+    Spec.assertEqWith s "and the Mammoth a Grizzly Bears" (Projection.namesOf mammothId back) (named "Grizzly Bears")

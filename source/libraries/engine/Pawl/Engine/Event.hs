@@ -101,6 +101,8 @@ import qualified Pawl.Types.CommandZoneDecision as CommandZoneDecision
 import qualified Pawl.Types.ComponentCard as ComponentCard
 import qualified Pawl.Types.ContinuousEffect as ContinuousEffect
 import qualified Pawl.Types.CopyClause as CopyClause
+import qualified Pawl.Types.CopyCoverage as CopyCoverage
+import qualified Pawl.Types.CopyRecipient as CopyRecipient
 import qualified Pawl.Types.CounterCause as CounterCause
 import qualified Pawl.Types.CounterChange as CounterChange
 import qualified Pawl.Types.CounterKind as CounterKind
@@ -4388,15 +4390,21 @@ becomeCopyAs batch candidate asCopy oid = do
       -- legalCopyTargets'.
       let legal = Replacement.legalCopyTargets batch (AsCopy.eligible asCopy) (AsCopy.zone asCopy) oid gs
       answer <-
-        if null legal
-          then -- With nothing eligible, declining is the only legal answer
-          -- -- a forced selection rather than an elision of options a
-          -- player could tell apart -- so the prompt is skipped rather
-          -- than asked and overruled. OrTapped's reveal posture.
-          -- One candidate IS still asked: the card's "may" makes
-          -- declining a real fork.
-            pure Nothing
-          else Game.choose (Prompt.ChooseCopyTarget decider controller oid legal)
+        if not (AsCopy.optional asCopy)
+          then -- A printed "choose" (Metamorphic Alteration) offers no
+          -- declining, so it is chooseAmong's mandatory pick: elided at one
+          -- candidate, nothing at none.
+            Game.chooseAmong (\chooser who -> Prompt.ChoosePermanent chooser who oid) controller legal
+          else
+            if null legal
+              then -- With nothing eligible, declining is the only legal answer
+              -- -- a forced selection rather than an elision of options a
+              -- player could tell apart -- so the prompt is skipped rather
+              -- than asked and overruled. OrTapped's reveal posture.
+              -- One candidate IS still asked: the card's "may" makes
+              -- declining a real fork.
+                pure Nothing
+              else Game.choose (Prompt.ChooseCopyTarget decider controller oid legal)
       -- FILTERED, NOT TRUSTED (#222). legalCopyTargets is the ONLY thing
       -- enforcing CR 614.12a's same-batch exclusion and the printed noun
       -- phrase, so honouring an unoffered answer would let a Clone copy a
@@ -4423,10 +4431,16 @@ becomeCopyAs batch candidate asCopy oid = do
           -- off the same board the copied snapshot is: an entering object is
           -- materialized with no copy binding yet, so this is its printed
           -- card's reading.
-          let stampWith excepted = Replacement.applyCopyExceptions Nothing (Just (copiedSnapshot oid g0)) excepted (copiedSnapshot src2 g0)
+          -- The object becoming the copy: this one (CR 707.5), or what it is
+          -- attached to (CR 303.4m / 301.5f), and itself while it is attached
+          -- to nothing.
+          let copier = case AsCopy.recipient asCopy of
+                CopyRecipient.ThisObject -> oid
+                CopyRecipient.ItsHost -> Maybe.fromMaybe oid (Game.hostOf oid g0)
+              stampWith excepted = Replacement.applyCopyExceptions Nothing (Just (copiedSnapshot copier g0)) excepted (copiedSnapshot src2 g0)
               -- CR 707.3: no stated ending, so the copiable values go onto
               -- the object itself, over any stored row (CR 613.7).
-              stampOnto pc g = Game.supersedeStoredCopies (Set.singleton oid) g {GameState.objects = Map.adjust (\o -> o {Object.bindings = Binding.setCopy pc (Object.bindings o)}) oid (GameState.objects g)}
+              stampOnto pc g = Game.supersedeStoredCopies (Set.singleton copier) g {GameState.objects = Map.adjust (\o -> o {Object.bindings = Binding.setCopy pc (Object.bindings o)}) copier (GameState.objects g)}
               clauses = AsCopy.clauses asCopy
               -- CR 707.9f: a conditional clause applies only if its condition
               -- holds of the permanent as the copy effect would make it
@@ -4443,22 +4457,36 @@ becomeCopyAs batch candidate asCopy oid = do
               -- creature").
               hypothetical = stampOnto (stampWith (foldMap CopyClause.exceptions (filter (Maybe.isNothing . CopyClause.condition) clauses))) g0
               framing = candidate {ReplacementCandidate.slots = Map.insert Binding.copiedObject (Set.singleton src2) (ReplacementCandidate.slots candidate)}
-              holds = Condition.holds (Projection.fullView hypothetical) (Replacement.candidateContext hypothetical framing) hypothetical oid
+              holds = Condition.holds (Projection.fullView hypothetical) (Replacement.candidateContext hypothetical framing) hypothetical copier
               applies clause = all holds (CopyClause.condition clause)
               held = filter applies clauses
               stamped = stampWith (foldMap CopyClause.exceptions held)
           State.modify' $ \g -> case AsCopy.duration asCopy of
-            Nothing -> stampOnto stamped g
+            -- An object attached to nothing has no host to stamp. A regression
+            -- fence: Metamorphic Alteration states a duration.
+            Nothing
+              | copier == oid && AsCopy.recipient asCopy == CopyRecipient.ItsHost -> g
+              | otherwise -> stampOnto stamped g
             -- CR 611.2a: a stated duration (Vesuvan Shapeshifter's "until
             -- this creature is turned face down") stores the copy as a row
             -- that can end, Effect.BecomeCopy's road. The object is the
             -- row's source, which is "this creature".
+            --
+            -- Onto its host, the row follows the source's attachment
+            -- (CopyCoverage.SourceHost): Metamorphic Alteration's static
+            -- ability applies to whatever it enchants (CR 611.3a), with the
+            -- copiable values fixed as it first applies (CR 707.2c), which is
+            -- now (CR 611.3c). Pawl.CopySpec's Metamorphic Alteration group
+            -- proves it.
             Just stated -> case Expiry.arm (flip Game.acquisitionOf) Map.empty controller oid stated g of
               -- CR 611.2b: the duration never started.
               Nothing -> g
               Just expiry ->
                 let (ts, g1) = Game.freshTimestamp g
-                    row = ActiveCopy.MkActiveCopy {ActiveCopy.source = oid, ActiveCopy.timestamp = ts, ActiveCopy.expiry = expiry, ActiveCopy.objects = Set.singleton oid, ActiveCopy.snapshot = stamped, ActiveCopy.turned = Nothing}
+                    covers = case AsCopy.recipient asCopy of
+                      CopyRecipient.ThisObject -> CopyCoverage.These (Set.singleton oid)
+                      CopyRecipient.ItsHost -> CopyCoverage.SourceHost Map.empty
+                    row = ActiveCopy.MkActiveCopy {ActiveCopy.source = oid, ActiveCopy.timestamp = ts, ActiveCopy.expiry = expiry, ActiveCopy.covers = covers, ActiveCopy.snapshot = stamped, ActiveCopy.turned = Nothing}
                  in g1 {GameState.copyEffects = row : GameState.copyEffects g1}
           pure held
       Foldable.for_ chosen $ \src2 -> do
@@ -8792,11 +8820,18 @@ merge sid target side = do
             -- as ActiveCopy.turned, flipped reading and all: Pawl.MutateSpec's
             -- "CR 730.2i/613.7 a merged permanent transforms while
             -- Mirrorweave's copy stands" proves it.
-            alone row = row {ActiveCopy.objects = Set.singleton target}
+            --
+            -- A row following its source's host is carved the same way, its
+            -- expiry and source kept, so the carved row ends with the source. A
+            -- regression fence: no test merges onto an enchanted copy.
+            --
+            -- Not implemented: the carved row outlives the source moving to
+            -- another host (#5218).
+            alone row = row {ActiveCopy.covers = CopyCoverage.These (Set.singleton target)}
             rewoven row =
               let (snapshot, turned) = readings (unrowed {GameState.copyEffects = alone row : GameState.copyEffects unrowed})
                in (alone row) {ActiveCopy.snapshot = snapshot, ActiveCopy.turned = if turned == snapshot then Nothing else Just turned}
-            rows = fmap rewoven (filter (Set.member target . ActiveCopy.objects) (GameState.copyEffects gs))
+            rows = fmap rewoven (filter (Game.copyCovers gs target) (GameState.copyEffects gs))
         State.modify' (`forgetObject` sid)
         State.modify'
           ( \g ->

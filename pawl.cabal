@@ -393,10 +393,14 @@ library codec
     Pawl.Codec.ConvokingSpec
     Pawl.Codec.CopyClause
     Pawl.Codec.CopyClauseSpec
+    Pawl.Codec.CopyCoverage
+    Pawl.Codec.CopyCoverageSpec
     Pawl.Codec.CopyException
     Pawl.Codec.CopyExceptionSpec
     Pawl.Codec.CopyOriginal
     Pawl.Codec.CopyOriginalSpec
+    Pawl.Codec.CopyRecipient
+    Pawl.Codec.CopyRecipientSpec
     Pawl.Codec.CopyStackObject
     Pawl.Codec.CopyStackObjectSpec
     Pawl.Codec.CopyTargets
@@ -2244,8 +2248,10 @@ library types
     Pawl.Types.ControlSlots
     Pawl.Types.Convoking
     Pawl.Types.CopyClause
+    Pawl.Types.CopyCoverage
     Pawl.Types.CopyException
     Pawl.Types.CopyOriginal
+    Pawl.Types.CopyRecipient
     Pawl.Types.CopyStackObject
     Pawl.Types.CopyTargets
     Pawl.Types.Cost

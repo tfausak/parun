@@ -67,6 +67,7 @@ import qualified Pawl.Types.CoinFlipR as CoinFlipR
 import qualified Pawl.Types.CoinFlipRewrite as CoinFlipRewrite
 import Pawl.Types.ControllerRelation (ControllerRelation)
 import qualified Pawl.Types.ControllerRelation as ControllerRelation
+import qualified Pawl.Types.CopyCoverage as CopyCoverage
 import qualified Pawl.Types.CopyException as CopyException
 import qualified Pawl.Types.CounterCause as CounterCause
 import qualified Pawl.Types.CounterKind as CounterKind
@@ -2588,13 +2589,20 @@ applyEntryOption oid option gs =
             PC.keywords = Map.unionWith (+) (PC.keywords base) (Map.fromSet (const 1) (EntryOption.keywords option))
           }
       write o = o {Object.bindings = Binding.setCopy stamped (Object.bindings o)}
-      covering = List.sortOn (Ord.Down . ActiveCopy.timestamp) (filter (Set.member oid . ActiveCopy.objects) (GameState.copyEffects gs))
+      -- A row following its source's host is not among them: what an
+      -- entering object is attached to is decided as it enters, so no such
+      -- row covers it yet.
+      fixed row = case ActiveCopy.covers row of
+        CopyCoverage.These oids -> Just (row, oids)
+        CopyCoverage.SourceHost _ -> Nothing
+      covering = List.sortOn (Ord.Down . ActiveCopy.timestamp . fst) (filter (Set.member oid . snd) (Maybe.mapMaybe fixed (GameState.copyEffects gs)))
    in case covering of
-        newest : _ ->
+        (newest, oids) : _ ->
           let others = filter (/= newest) (GameState.copyEffects gs)
-              rest = newest {ActiveCopy.objects = Set.delete oid (ActiveCopy.objects newest)}
-              alone = newest {ActiveCopy.objects = Set.singleton oid, ActiveCopy.snapshot = stamped, ActiveCopy.turned = Nothing}
-           in gs {GameState.copyEffects = alone : [rest | not (Set.null (ActiveCopy.objects rest))] <> others}
+              remaining = Set.delete oid oids
+              rest = newest {ActiveCopy.covers = CopyCoverage.These remaining}
+              alone = newest {ActiveCopy.covers = CopyCoverage.These (Set.singleton oid), ActiveCopy.snapshot = stamped, ActiveCopy.turned = Nothing}
+           in gs {GameState.copyEffects = alone : [rest | not (Set.null remaining)] <> others}
         [] -> gs {GameState.objects = Map.adjust write oid (GameState.objects gs)}
 
 -- CR 707.9: fold a copy effect's "except ..." clauses into the snapshot the copy
