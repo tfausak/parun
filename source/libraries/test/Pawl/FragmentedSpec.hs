@@ -11,8 +11,13 @@
 -- targeted activation is two Grim Poppets', or two Fatestitchers', one
 -- through a payment or a mana ability is Freed from the Real's on Birds of
 -- Paradise, one through a keyword-family removal is Shadowspear's, and one
--- through an all-abilities removal and a card-type set is Soul Sculptor's
--- under Opalescence.
+-- through an all-abilities removal is Synthetic Hushing Adept's ("{T}: Target
+-- creature loses all abilities until end of turn"). No printing reaches that
+-- last: MTGJSON AtomicCards, 2026-10-16, Oracle text matching `loses? all
+-- abilities` on a line with {T} in its cost, answers Immovable Rod, whose
+-- effect ends when it untaps, and Soul Sculptor, whose second activation
+-- under Opalescence leaves its target no creature to aim at again (CR 613.8c,
+-- data/scenarios/projection).
 --
 -- Two seats, so alice -- active, and involved -- is the named player by
 -- construction. The answerer is test-local: it sequences two players through
@@ -185,21 +190,6 @@ spec s registry = Spec.describe s "a fragmented loop (CR 732.3)" $ do
     -- which the next one erases (CR 613.7); the second lap returns to the state
     -- the first left, so the third activation is refused.
     Spec.assertEqWith s "CR 732.3 alice's third activation is refused" (hushAttempts adept rouser bears) [True, True, False]
-
-  Spec.it s "a loop whose undo leaves a superseded all-abilities removal and type set behind is detected" $ do
-    sculptor <- S.printingOf s registry "Soul Sculptor"
-    opalescence <- S.printingOf s registry "Opalescence"
-    birds <- S.printingOf s registry "Birds of Paradise"
-    rouser <- S.printingOf s registry "Synthetic Rouser"
-    bears <- S.printingOf s registry "Grizzly Bears"
-    -- alice pays Soul Sculptor's {1}{W} with her two Birds of Paradise at bob's
-    -- Grizzly Bears, and bob untaps the Birds and the Sculptor. Each
-    -- resolution stores a layer-4 enchantment set and a layer-6 loss of all
-    -- abilities (CR 613.1d, 613.1f), which the next one's erase (CR 613.7);
-    -- Opalescence keeps the Bears a creature to target again, since its grant
-    -- depends on the set (CR 613.8a). The second lap returns to the state the
-    -- first left, so the third activation, paid the same way, is refused.
-    Spec.assertEqWith s "CR 732.3 alice's third activation is refused" (sculptorAttempts sculptor opalescence birds rouser bears) [True, True, False]
 
 -- How many times the answerer has the tapper activate before it passes
 -- instead, since without CR 732.3 the loop never ends.
@@ -578,77 +568,6 @@ spearing spearId birdsId rouserId asked = case Asked.prompt asked of
   Prompt.ChooseManaSource _ _ candidates -> pure (List.find (== birdsId) (NonEmpty.toList candidates))
   Prompt.ChooseExtraManaSource {} -> pure Nothing
   Prompt.ChooseManaYield _ _ _ candidates -> pure (yielding (ManaType.Colored Color.Green) candidates)
-  Prompt.ReverseManaAbilities {} -> pure OptionalDecision.Exercises
-  prompt -> pure (S.identityAnswer prompt)
-
--- alice, active in her precombat main phase with an empty pool, controls Soul
--- Sculptor, Opalescence and two Birds of Paradise; bob controls a Synthetic
--- Rouser and Grizzly Bears. alice opens each lap with the Sculptor's ability at
--- the Bears, paid with the Birds, up to `budget` times, and bob answers each
--- that resolves by untapping both Birds and the Sculptor. Answers alice's
--- attempts, each as whether it went on the stack.
-sculptorAttempts :: Printing.Printing -> Printing.Printing -> Printing.Printing -> Printing.Printing -> Printing.Printing -> [Bool]
-sculptorAttempts sculptor opalescence birds rouser bears =
-  let (sculptorId, gs1) = S.addPermanent sculptor S.alice (Setup.emptyGame S.bothPlayers)
-      (_, gs2) = S.addPermanent opalescence S.alice gs1
-      (first, gs3) = S.addPermanent birds S.alice gs2
-      (second, gs4) = S.addPermanent birds S.alice gs3
-      (rouserId, gs5) = S.addPermanent rouser S.bob gs4
-      (bearsId, gs6) = S.addPermanent bears S.bob gs5
-      untaps = [first, second, sculptorId]
-      ((_, _), (_, _, _, made)) = State.runState (Engine.runGameAsked (sculpting sculptorId untaps rouserId bearsId) (inMain gs6) Engine.priorityLoop) (budget, False, [], [])
-   in made
-
--- The activations alice has left, whether she has just attempted one, the
--- untaps bob has yet to make (none: the lap is alice's to open), and her
--- attempts so far.
-type Sculpting = (Int, Bool, [ObjectId.ObjectId], [Bool])
-
-sculpting :: ObjectId.ObjectId -> [ObjectId.ObjectId] -> ObjectId.ObjectId -> ObjectId.ObjectId -> Asked.Asked r -> State.State Sculpting r
-sculpting sculptorId untaps rouserId bearsId asked = case Asked.prompt asked of
-  Prompt.ChooseAction _ pid actions -> do
-    (left, attempted, pending, made) <- State.get
-    let stacked = not (null (GameState.stack (Asked.game asked)))
-        open recorded = case List.find (activates sculptorId) actions of
-          Just action | left > 0 -> do
-            State.put (left - 1, True, pending, recorded)
-            pure action
-          _ -> do
-            State.put (0, False, pending, recorded)
-            pure Action.Pass
-    if pid == S.alice
-      then
-        if attempted
-          then
-            if stacked
-              then do
-                State.put (left, False, untaps, made <> [True])
-                pure Action.Pass
-              else do
-                -- Refused (CR 733.1): the loop is over.
-                State.put (0, False, pending, made <> [False])
-                pure Action.Pass
-          else
-            if not stacked && null pending
-              then open made
-              else pure Action.Pass
-      else case List.find (activates rouserId) actions of
-        Just action | not stacked && not (null pending) -> pure action
-        _ -> pure Action.Pass
-  -- FILTERED out of the offer, never built (CR 608.2b re-reads it). alice's
-  -- attempt aims at the Bears, and each of bob's at the next untap.
-  Prompt.ChooseTargets _ _ _ sets -> do
-    (left, attempted, pending, made) <- State.get
-    if attempted
-      then pure (fmap (Set.filter (== Recipient.ToCreature bearsId) . snd) sets)
-      else case pending of
-        next : rest -> do
-          State.put (left, attempted, rest, made)
-          pure (fmap (Set.filter (== Recipient.ToCreature next) . snd) sets)
-        [] -> pure (fmap snd sets)
-  Prompt.ChooseManaSource _ _ candidates -> pure (List.find (`elem` take 2 untaps) (NonEmpty.toList candidates))
-  Prompt.ChooseExtraManaSource {} -> pure Nothing
-  Prompt.ChooseManaYield _ _ _ candidates -> pure (yielding (ManaType.Colored Color.White) candidates)
   Prompt.ReverseManaAbilities {} -> pure OptionalDecision.Exercises
   prompt -> pure (S.identityAnswer prompt)
 
