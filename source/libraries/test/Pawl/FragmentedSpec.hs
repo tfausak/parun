@@ -10,7 +10,14 @@
 -- which undoes a continuous effect, is Mist Dragon's, a loop through a
 -- targeted activation is two Grim Poppets', or two Fatestitchers', one
 -- through a payment or a mana ability is Freed from the Real's on Birds of
--- Paradise, and one through a keyword-family removal is Shadowspear's.
+-- Paradise, one through a keyword-family removal is Shadowspear's, and one
+-- through an all-abilities removal is Synthetic Hushing Adept's ("{T}: Target
+-- creature loses all abilities until end of turn"). No printing reaches that
+-- last: MTGJSON AtomicCards, 2026-10-16, Oracle text matching `loses? all
+-- abilities` on a line with {T} in its cost, answers Immovable Rod, whose
+-- effect ends when it untaps, and Soul Sculptor, whose second activation
+-- under Opalescence leaves its target no creature to aim at again (CR 613.8c,
+-- data/scenarios/projection).
 --
 -- Two seats, so alice -- active, and involved -- is the named player by
 -- construction. The answerer is test-local: it sequences two players through
@@ -173,6 +180,16 @@ spec s registry = Spec.describe s "a fragmented loop (CR 732.3)" $ do
     -- the second lap returns to the state the first left, so the third
     -- activation, paid the same way, is refused.
     Spec.assertEqWith s "CR 732.3 alice's third activation is refused" (spearAttempts spear birds rouser) [True, True, False]
+
+  Spec.it s "a loop whose undo leaves a superseded all-abilities removal behind is detected" $ do
+    adept <- S.printingOf s registry "Synthetic Hushing Adept"
+    rouser <- S.printingOf s registry "Synthetic Rouser"
+    bears <- S.printingOf s registry "Grizzly Bears"
+    -- alice taps her Synthetic Hushing Adept at bob's Grizzly Bears, and bob
+    -- untaps it. Each resolution stores a loss of all abilities (CR 613.1f),
+    -- which the next one erases (CR 613.7); the second lap returns to the state
+    -- the first left, so the third activation is refused.
+    Spec.assertEqWith s "CR 732.3 alice's third activation is refused" (hushAttempts adept rouser bears) [True, True, False]
 
 -- How many times the answerer has the tapper activate before it passes
 -- instead, since without CR 732.3 the loop never ends.
@@ -552,6 +569,61 @@ spearing spearId birdsId rouserId asked = case Asked.prompt asked of
   Prompt.ChooseExtraManaSource {} -> pure Nothing
   Prompt.ChooseManaYield _ _ _ candidates -> pure (yielding (ManaType.Colored Color.Green) candidates)
   Prompt.ReverseManaAbilities {} -> pure OptionalDecision.Exercises
+  prompt -> pure (S.identityAnswer prompt)
+
+-- alice, active in her precombat main phase, controls a Synthetic Hushing
+-- Adept; bob controls a Synthetic Rouser and Grizzly Bears. alice opens each
+-- lap with the Adept's ability at the Bears, up to `budget` times, and bob
+-- answers each that resolves by untapping the Adept. Answers alice's
+-- attempts, each as whether it went on the stack.
+hushAttempts :: Printing.Printing -> Printing.Printing -> Printing.Printing -> [Bool]
+hushAttempts adept rouser bears =
+  let (adeptId, gs1) = S.addPermanent adept S.alice (Setup.emptyGame S.bothPlayers)
+      (rouserId, gs2) = S.addPermanent rouser S.bob gs1
+      (bearsId, gs3) = S.addPermanent bears S.bob gs2
+      ((_, _), (_, _, _, made)) = State.runState (Engine.runGameAsked (hushing adeptId rouserId bearsId) (inMain gs3) Engine.priorityLoop) (budget, False, True, [])
+   in made
+
+hushing :: ObjectId.ObjectId -> ObjectId.ObjectId -> ObjectId.ObjectId -> Asked.Asked r -> State.State Spearing r
+hushing adeptId rouserId bearsId asked = case Asked.prompt asked of
+  Prompt.ChooseAction _ pid actions -> do
+    (left, attempted, alicesLap, made) <- State.get
+    let stacked = not (null (GameState.stack (Asked.game asked)))
+        open recorded = case List.find (activates adeptId) actions of
+          Just action | left > 0 -> do
+            State.put (left - 1, True, alicesLap, recorded)
+            pure action
+          _ -> do
+            State.put (0, False, alicesLap, recorded)
+            pure Action.Pass
+    if pid == S.alice
+      then
+        if attempted
+          then
+            if stacked
+              then do
+                State.put (left, False, False, made <> [True])
+                pure Action.Pass
+              else do
+                -- Refused (CR 733.1): the loop is over.
+                State.put (0, False, alicesLap, made <> [False])
+                pure Action.Pass
+          else
+            if not stacked && alicesLap
+              then open made
+              else pure Action.Pass
+      else case List.find (activates rouserId) actions of
+        Just action | not stacked && not alicesLap -> do
+          State.put (left, False, True, made)
+          pure action
+        _ -> pure Action.Pass
+  -- FILTERED out of the offer, never built (CR 608.2b re-reads it): alice's
+  -- attempt aims at the Bears, bob's untap at the Adept.
+  Prompt.ChooseTargets _ _ _ sets -> do
+    (_, attempted, _, _) <- State.get
+    let aim = if attempted then bearsId else adeptId
+    pure (fmap (Set.filter (== Recipient.ToCreature aim) . snd) sets)
+  Prompt.ChooseExtraManaSource {} -> pure Nothing
   prompt -> pure (S.identityAnswer prompt)
 
 -- Shadowspear's loss among `actions`, told from its equip by its effect.

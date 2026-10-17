@@ -2,6 +2,7 @@ module Pawl.Codec.Expiry where
 
 import qualified Pawl.Codec.AfterObjectTurn as AfterObjectTurn
 import qualified Pawl.Codec.AfterTurn as AfterTurn
+import qualified Pawl.Codec.EventExpiry as EventExpiry
 import qualified Pawl.Codec.PaidExpiry as PaidExpiry
 import qualified Pawl.Codec.PhaseSelector as PhaseSelector
 import qualified Pawl.Codec.PlayerId as PlayerId
@@ -33,7 +34,7 @@ codec =
       Arm.payload "AtEndOfCombatOn" AfterTurn.codec Expiry.AtEndOfCombatOn (\x -> case x of Expiry.AtEndOfCombatOn y -> Just y; _ -> Nothing),
       Arm.payload "WhenPaid" PaidExpiry.codec Expiry.WhenPaid (\x -> case x of Expiry.WhenPaid y -> Just y; _ -> Nothing),
       Arm.nullary "WhenUsed" Expiry.WhenUsed,
-      Arm.nullary "WhenTurnedFaceDown" Expiry.WhenTurnedFaceDown
+      Arm.payload "OnEvent" EventExpiry.codec Expiry.OnEvent (\x -> case x of Expiry.OnEvent y -> Just y; _ -> Nothing)
     ]
 
 tagOf :: Expiry.Expiry -> String
@@ -52,4 +53,4 @@ tagOf x = case x of
   Expiry.AtEndOfCombatOn {} -> "AtEndOfCombatOn"
   Expiry.WhenPaid {} -> "WhenPaid"
   Expiry.WhenUsed {} -> "WhenUsed"
-  Expiry.WhenTurnedFaceDown {} -> "WhenTurnedFaceDown"
+  Expiry.OnEvent {} -> "OnEvent"

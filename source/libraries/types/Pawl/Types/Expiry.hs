@@ -2,6 +2,7 @@ module Pawl.Types.Expiry where
 
 import qualified Pawl.Types.AfterObjectTurn as AfterObjectTurn
 import qualified Pawl.Types.AfterTurn as AfterTurn
+import qualified Pawl.Types.EventExpiry as EventExpiry
 import qualified Pawl.Types.PaidExpiry as PaidExpiry
 import qualified Pawl.Types.PhaseSelector as PhaseSelector
 import qualified Pawl.Types.PlayerId as PlayerId
@@ -128,8 +129,8 @@ data Expiry
     -- turn"; Pawl.Engine.PlayerEffect.spentByCast/spentByLandPlay are the only
     -- readers that end it early.
     WhenUsed
-  | -- | CR 611.2a / 701.27b: Duration.UntilTurnedFaceDown, stored. Ends when the
-    -- effect's source is turned face down, and never resumes: turning it face up
-    -- again by other means does not bring the effect back.
-    WhenTurnedFaceDown
+  | -- | CR 611.2a: Duration.UntilEvent, stored. Ends when its event happens,
+    -- and never resumes: a Vesuvan Shapeshifter turned face up again by other
+    -- means does not bring its effect back.
+    OnEvent EventExpiry.EventExpiry
   deriving (Eq, Ord, Show)

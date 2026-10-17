@@ -168,24 +168,44 @@ canonicalStamps gs =
 -- protection grant is rebaked (Pawl.Engine.Keyword.grantedBy), so a removal of
 -- one keyword erases only a grant of a familyless one, where a family removal
 -- takes whatever the rebake made of it. A grant erases nothing, two grants of
--- a keyword counting twice (Pawl.Engine.Projection.applyModification).
+-- a keyword counting twice (Pawl.Engine.Projection.applyModification). An
+-- all-abilities removal erases every earlier row `wiped` names.
+--
+-- A later identical type SET erases nothing: under Opalescence the earlier
+-- one is what its grant depends on (CR 613.8a), so dropping it reorders the
+-- grant (data/scenarios/projection's second Soul Sculptor activation).
 --
 -- Pawl.FragmentedSpec's Mist Dragon cases prove a removal of one keyword
--- erasing a removal and a grant of it, and its Shadowspear case a family
+-- erasing a removal and a grant of it, its Shadowspear case a family removal
+-- erasing another, and its Synthetic Hushing Adept case an all-abilities
 -- removal erasing another. A family removal erasing a removal of one keyword
--- or a grant, and the family guard, are a regression fence: no test loops them.
---
--- Not implemented: a later all-abilities removal erasing what it overrides
--- (#5136).
+-- or a grant, the family guard, and an all-abilities removal erasing any
+-- other row, are a regression fence: no test loops them.
 erases :: Modification.Modification ability -> Modification.Modification ability -> Bool
-erases later earlier = case earlier of
-  Modification.LoseKeyword keyword -> takes later keyword
-  Modification.LoseKeywordFamily f -> case later of
-    Modification.LoseKeywordFamily g -> g == f
-    _ -> False
-  Modification.GainKeyword keyword -> case later of
-    Modification.LoseKeyword lost -> lost == keyword && Maybe.isNothing (Keyword.familyOf keyword)
-    _ -> takes later keyword
+erases later earlier = case (later, earlier) of
+  (Modification.LoseAllAbilities, _) -> wiped earlier
+  (_, Modification.LoseKeyword keyword) -> takes later keyword
+  (Modification.LoseKeywordFamily g, Modification.LoseKeywordFamily f) -> g == f
+  (Modification.LoseKeyword lost, Modification.GainKeyword keyword) -> lost == keyword && Maybe.isNothing (Keyword.familyOf keyword)
+  (_, Modification.GainKeyword keyword) -> takes later keyword
+  _ -> False
+
+-- | Is all of what this layer-6 row writes emptied by a later all-abilities
+-- removal (Pawl.Engine.Projection.applyModification's LoseAllAbilities arm)?
+-- Every removal, and a grant whose list that arm empties. Not a quoted
+-- ability's grant, whose kind this cannot see, and not CR 702.184c's station
+-- toughness, which that arm leaves standing.
+wiped :: Modification.Modification ability -> Bool
+wiped m = case m of
+  Modification.LoseAllAbilities -> True
+  Modification.LoseNamedAbility _ -> True
+  Modification.LoseKeyword _ -> True
+  Modification.LoseKeywordFamily _ -> True
+  Modification.LoseEnchant _ -> True
+  Modification.GainKeyword _ -> True
+  Modification.GainKeywordAtManaCost _ -> True
+  Modification.GainEnchant _ -> True
+  Modification.GainCastingPermission _ -> True
   _ -> False
 
 -- | Does `removal` take `keyword` away (CR 613.1f)? A family removal takes

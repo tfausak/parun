@@ -12,6 +12,8 @@ import qualified Pawl.Types.Compares as Compares
 import qualified Pawl.Types.Comparison as Comparison
 import qualified Pawl.Types.Condition as Condition
 import qualified Pawl.Types.Cost as Cost
+import qualified Pawl.Types.DurationEvent as DurationEvent
+import qualified Pawl.Types.EventExpiry as EventExpiry
 import qualified Pawl.Types.Expiry as Expiry
 import qualified Pawl.Types.ManaCost as ManaCost
 import qualified Pawl.Types.ManaSymbol as ManaSymbol
@@ -175,10 +177,10 @@ spec s = Spec.describe s "Pawl.Codec.Expiry" $ do
       Expiry.codec
       Expiry.WhenUsed
       " {\"type\":\"WhenUsed\"} "
-  -- CR 611.2a / 701.27b: what Duration.UntilTurnedFaceDown arms into.
-  Spec.it s "WhenTurnedFaceDown" $
+  -- CR 611.2a: what Duration.UntilEvent arms into.
+  Spec.it s "OnEvent" $
     Common.assertCodec
       s
       Expiry.codec
-      Expiry.WhenTurnedFaceDown
-      " {\"type\":\"WhenTurnedFaceDown\"} "
+      (Expiry.OnEvent (EventExpiry.MkEventExpiry (PlayerId.MkPlayerId 0) DurationEvent.SourceTurnedFaceDown))
+      " {\"type\":\"OnEvent\",\"value\":{\"controller\":0,\"event\":{\"type\":\"SourceTurnedFaceDown\"}}} "
