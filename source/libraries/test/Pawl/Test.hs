@@ -814,6 +814,7 @@ import qualified Pawl.RegistrySpec
 import qualified Pawl.RemoveCounterSpec
 import qualified Pawl.ReplacementSpec
 import qualified Pawl.ReplaySpec
+import qualified Pawl.ReplySpec
 import qualified Pawl.ResolveSpec
 import qualified Pawl.RestampSpec
 import qualified Pawl.ReversalSpec
@@ -1717,6 +1718,7 @@ spec s registry = do
   Pawl.SacrificeRestrictionSpec.spec s registry
   Pawl.SaddleSpec.spec s registry
   Pawl.SagaSpec.spec s registry
+  Pawl.ReplySpec.spec s registry
   Pawl.ScenarioSpec.corpusSpec s registry
   Pawl.ScenarioSpec.loadSpec s
   Pawl.ScenarioSpec.spec s registry

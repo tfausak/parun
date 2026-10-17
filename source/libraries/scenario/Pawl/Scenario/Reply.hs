@@ -9,6 +9,8 @@ module Pawl.Scenario.Reply where
 import qualified Control.Monad as Monad
 import qualified Data.Either as Either
 import qualified Data.Foldable as Foldable
+import qualified Data.List as List
+import qualified Data.List.NonEmpty as NonEmpty
 import qualified Data.Map.Strict as Map
 import qualified Data.Sequence as Seq
 import qualified Data.Set as Set
@@ -38,6 +40,7 @@ import qualified Pawl.Codec.StickerRef as Codec.StickerRef
 import qualified Pawl.Codec.StoredResult as Codec.StoredResult
 import qualified Pawl.Codec.Subtype as Codec.Subtype
 import qualified Pawl.Codec.Zone as Codec.Zone
+import qualified Pawl.Extra.Natural as Natural
 import qualified Pawl.JsonCodec.Codec as Codec
 import qualified Pawl.JsonCodec.Common as Common
 import qualified Pawl.Types.AttackTarget as AttackTarget
@@ -150,6 +153,19 @@ named options =
           [] -> Failed (Text.pack ("expected one of " <> show (fmap show options)))
     )
     (\namer -> encode text namer . Text.pack . show)
+
+-- | One of an offer that has no wire name of its own, spelled by its 0-based
+-- position in the offer.
+indexed :: (Eq a) => [a] -> Shape a
+indexed options =
+  MkShape
+    ( \v -> do
+        i <- decode natural v
+        case List.genericDrop i options of
+          x : _ -> Done x
+          [] -> Failed (Text.pack ("expected an index below " <> show (Natural.length options)))
+    )
+    (\namer x -> maybe R.Null (encode natural namer . fst) (List.find ((== x) . snd) (zip [0 :: Natural ..] options)))
 
 unsupported :: Text.Text -> Shape a
 unsupported what = MkShape (const (Failed (Text.pack "no Answer for " <> what))) (\_ _ -> R.Null)
@@ -282,7 +298,7 @@ subtype = viaCodec Codec.Subtype.codec
 -- | Every prompt's answer shape; one arm each, so a new prompt is a compile error.
 shapeOf :: Prompt.Prompt r -> Shape r
 shapeOf prompt = case prompt of
-  Prompt.ChooseAction {} -> unsupported (Text.pack "an action")
+  Prompt.ChooseAction _ _ offered -> indexed offered
   Prompt.Concede {} -> named [Concession.Concedes, Concession.Continues]
   Prompt.Shuffle {} -> list object
   Prompt.RandomFirstPlayer {} -> player
@@ -311,7 +327,7 @@ shapeOf prompt = case prompt of
   Prompt.ChooseManaSource {} -> maybeOf object
   Prompt.ChooseExtraManaSource {} -> maybeOf object
   Prompt.ReverseManaAbilities {} -> viaCodec Codec.OptionalDecision.codec
-  Prompt.ChooseManaYield {} -> unsupported (Text.pack "a mana option")
+  Prompt.ChooseManaYield _ _ _ offered -> indexed (NonEmpty.toList offered)
   Prompt.ChooseManaToSpend {} -> viaCodec Codec.ManaUnit.codec
   Prompt.ChooseProliferate {} -> pairOf (setOf object) (setOf player)
   Prompt.ChooseRedistribution {} -> mapOf player player
@@ -343,7 +359,7 @@ shapeOf prompt = case prompt of
   Prompt.ChooseStickerOrNone {} -> maybeOf (viaCodec Codec.StickerRef.codec)
   Prompt.ChooseNamePosition {} -> natural
   Prompt.ChooseCompanion {} -> maybeOf (viaCodec Codec.OutsideCard.codec)
-  Prompt.ChooseFromOutsideTheGame {} -> unsupported (Text.pack "outside cards")
+  Prompt.ChooseFromOutsideTheGame {} -> list (viaCodec Codec.OutsideCard.codec)
   Prompt.ChooseRoom {} -> wrapped RoomIndex.MkRoomIndex RoomIndex.unwrap
   Prompt.ChooseHalf {} -> viaCodec Codec.CardName.codec
   Prompt.ChooseLegend {} -> object
@@ -368,7 +384,7 @@ shapeOf prompt = case prompt of
   Prompt.ChooseEntwine {} -> named [EntwineDecision.Declines, EntwineDecision.Entwines]
   Prompt.ChooseMutateSide {} -> named [MutateSide.Over, MutateSide.Under]
   Prompt.ChooseForage {} -> named [ForageMode.ExileCards, ForageMode.SacrificeFood]
-  Prompt.ChooseLearn {} -> unsupported (Text.pack "a learn mode")
+  Prompt.ChooseLearn _ _ _ offered -> maybeOf (indexed (NonEmpty.toList offered))
   Prompt.ChooseTimeTravel {} -> mapOf object (named [TimeTravelChoice.Add, TimeTravelChoice.Remove])
   Prompt.ChooseClash {} -> viaCodec Codec.LibraryPosition.codec
   Prompt.ChooseKicker {} -> wrapped KickerDecision.MkKickerDecision KickerDecision.unwrap
@@ -421,7 +437,7 @@ shapeOf prompt = case prompt of
   Prompt.ChooseMixedCounterRemoval {} -> mapOf object (mapOf counterKind natural)
   Prompt.ChooseAttachment {} -> object
   Prompt.ChooseTurnUpAttachment {} -> viaCodec Codec.OptionalDecision.codec
-  Prompt.ChooseCost {} -> unsupported (Text.pack "a cost")
+  Prompt.ChooseCost _ _ _ offered -> indexed offered
   Prompt.ChoosePlayPermission {} -> maybeOf (pairOf object (viaCodec Codec.CastFromZone.codec))
   Prompt.OrderCostComponents {} -> list natural
   Prompt.OrderCombatTolls {} -> list natural

@@ -2042,6 +2042,7 @@ library test
     Pawl.RemoveCounterSpec
     Pawl.ReplacementSpec
     Pawl.ReplaySpec
+    Pawl.ReplySpec
     Pawl.ResolveSpec
     Pawl.RestampSpec
     Pawl.ReversalSpec
