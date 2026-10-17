@@ -21,6 +21,7 @@ import qualified Pawl.Types.Filter as Filter.Type
 import qualified Pawl.Types.Keyword as Keyword
 import qualified Pawl.Types.KeywordDesignator as KeywordDesignator
 import qualified Pawl.Types.KeywordFamily as KeywordFamily
+import qualified Pawl.Types.KeywordInstance as KeywordInstance
 import qualified Pawl.Types.ManaCost as ManaCost
 import qualified Pawl.Types.ManaSymbol as ManaSymbol
 import qualified Pawl.Types.ManaType as ManaType
@@ -2090,7 +2091,7 @@ spec s = Spec.describe s "Pawl.Engine.Filter" $ do
   -- the Firefletcher case; these pin the atom over each kicker kind.
   Spec.describe s "Paid" $ do
     let one = Cost.MkCost (Just (ManaCost.MkManaCost [ManaSymbol.Generic 1])) []
-        paid keyword n = blackCreature {Filter.paidCosts = Map.singleton keyword (Seq.singleton n)}
+        paid keyword n = blackCreature {Filter.paidCosts = Map.singleton keyword (Map.singleton (KeywordInstance.Own 1) n)}
         kicked = Filter.Type.Paid (KeywordDesignator.OfFamily KeywordFamily.Kicker)
     Spec.it s "a kicker, multikicker or sticker kicker payment kicks; a declined one or a squad payment does not" $ do
       Spec.assertBool s (all (\k -> Filter.matches self (paid k 1) kicked) [Keyword.Kicker one, Keyword.Multikicker one, Keyword.StickerKicker one]) "each kicker kind"

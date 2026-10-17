@@ -5742,23 +5742,34 @@ designates :: KeywordDesignator.KeywordDesignator Keyword -> Keyword -> Bool
 designates designator keyword = case designator of
   KeywordDesignator.OfFamily family -> familyOf keyword == Just family
   KeywordDesignator.OfKeyword whole -> whole == keyword
-  -- The Kicker family, which familyOf assigns without a wildcard, less the
-  -- sticker kicker it holds but CR 702.33e does not link (CR 702.33h, Wicker
-  -- Picker's ruling); Pawl.StickerSpec's Faerie Squadron case proves it.
-  KeywordDesignator.PrintedKicker -> case keyword of
+  -- The family, less the sticker kicker the Kicker family holds but CR 702.33e
+  -- does not link (CR 702.33h, Wicker Picker's ruling); Pawl.StickerSpec's
+  -- Faerie Squadron case proves it. Which instances are the object's own is
+  -- timesPaid's question, since a keyword cannot say.
+  KeywordDesignator.Printed family -> case keyword of
     Keyword.StickerKicker _ -> False
-    _ -> familyOf keyword == Just KeywordFamily.Kicker
+    _ -> familyOf keyword == Just family
   KeywordDesignator.OfInstance whole _ -> whole == keyword
 
 -- | CR 601.2b: how many times the costs of the keywords a designator names were
 -- declared, summed over a paidCosts record -- Quantity.TimesPaid's count, and
 -- Filter.Paid's when it is above zero. One instance's own entry where the
--- designator names one (CR 702.56b), and 0 for an instance never asked.
-timesPaid :: KeywordDesignator.KeywordDesignator Keyword -> Map Keyword (Seq.Seq Natural) -> Natural
+-- designator names one (CR 702.56b), and 0 for an instance never asked. A
+-- Printed designator sums only the object's own instances' payments (CR
+-- 607.2i, 607.5): Synthetic Generous Host's granted gift paid on Scrapshooter
+-- is not "the gift" Scrapshooter's trigger asks about, which the scenario
+-- cr-607-2i-scrapshooter-promised-only-the-host-s-gift-destroys-nothing proves.
+timesPaid :: KeywordDesignator.KeywordDesignator Keyword -> Map Keyword (Map KeywordInstance.KeywordInstance Natural) -> Natural
 timesPaid designator paid = case designator of
   KeywordDesignator.OfInstance keyword ordinal ->
-    Maybe.fromMaybe 0 (Seq.lookup (Natural.toIntSaturating ordinal - 1) =<< Map.lookup keyword paid)
-  _ -> sum (fmap sum (Map.filterWithKey (\keyword _ -> designates designator keyword) paid))
+    Maybe.fromMaybe 0 (Seq.lookup (Natural.toIntSaturating ordinal - 1) . Seq.fromList . Map.elems =<< Map.lookup keyword paid)
+  KeywordDesignator.Printed _ -> sum (fmap (sum . Map.filterWithKey (\which _ -> isOwn which)) (named paid))
+  _ -> sum (fmap sum (named paid))
+  where
+    named = Map.filterWithKey (\keyword _ -> designates designator keyword)
+    isOwn which = case which of
+      KeywordInstance.Own _ -> True
+      KeywordInstance.Granted {} -> False
 
 -- CR 702: WHICH KEYWORD this is, with its payload dropped -- the classification
 -- Filter.HasKeywordFamily matches on, so that Flensing Raptor's "creature you
@@ -5794,7 +5805,7 @@ familyOf keyword = case keyword of
   Keyword.Multikicker _ -> Just KeywordFamily.Kicker
   -- CR 702.33h: sticker kicker "means Kicker [cost]", so a "spell with
   -- kicker" or "kicked" reader matches it; CR 702.33e's linked read does not
-  -- (KeywordDesignator.PrintedKicker).
+  -- (KeywordDesignator.Printed).
   Keyword.StickerKicker _ -> Just KeywordFamily.Kicker
   Keyword.Flashback _ -> Just KeywordFamily.Flashback
   Keyword.Bestow _ -> Just KeywordFamily.Bestow
@@ -7232,10 +7243,10 @@ offspring cost = paidTokenCopies (Keyword.Offspring cost) (Quantity.Literal 1) [
 --
 -- One per instance, `ordinal` naming it, both in the intervening "if" and in the
 -- chosen player: two gifts promised to two opponents give each their own, and
--- an unpaid instance does not trigger beside a paid one. The ordinal is among
--- the instances the permanent entered with, which is how
--- Pawl.Engine.Stack.settlePromises keys the spell's payments and promises as it
--- resolves.
+-- an unpaid instance does not trigger beside a paid one. The ordinal is a
+-- position among the promised instances the permanent entered with, which is
+-- how Pawl.Engine.Stack.settlePromises orders its payments and keys its
+-- promises.
 gift :: Gift.Gift -> Natural -> TriggeredAbility Card (GrantedAbility.GrantedAbility Card)
 gift something ordinal =
   Mint.triggerIf

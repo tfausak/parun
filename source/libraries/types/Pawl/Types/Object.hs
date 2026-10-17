@@ -20,6 +20,7 @@ import qualified Pawl.Types.ExilePlayPermission as ExilePlayPermission
 import qualified Pawl.Types.Facing as Facing
 import qualified Pawl.Types.GrantedAbility as GrantedAbility
 import qualified Pawl.Types.Keyword as Keyword
+import qualified Pawl.Types.KeywordInstance as KeywordInstance
 import qualified Pawl.Types.Mana as Mana
 import qualified Pawl.Types.ManaCost as ManaCost
 import qualified Pawl.Types.ObjectId as ObjectId
@@ -558,8 +559,11 @@ data Object = MkObject
     -- [cost 1] and/or [cost 2]" has payoffs naming one of them (CR 702.33f), the
     -- count is CR 702.33c's multikicker and squad's "for each time", and CR
     -- 702.56b and CR 702.157b give each identical instance its own payments. The
-    -- ith entry is the ith instance's (KeywordDesignator.OfInstance), the
-    -- ordinal Pawl.Engine.Keyword.perPayment mints its triggers by.
+    -- ith entry in KeywordInstance order is the ith instance's
+    -- (KeywordDesignator.OfInstance), the ordinal Pawl.Engine.Keyword.perPayment
+    -- mints its triggers by, and an Own key is a payment for one of the object's
+    -- own instances, which CR 607.2i links its own payoffs to
+    -- (KeywordDesignator.Printed).
     -- Quantity.TimesPaid and Filter.Paid read the keys a KeywordDesignator
     -- names. Stored
     -- rather than projected, since it records a choice rather than a
@@ -571,7 +575,7 @@ data Object = MkObject
     -- permanent as it resolved, including what costs were paid" -- which CR
     -- 702.33e's payoff needs, so Pawl.Engine.Event.changeZoneAttaching carries it
     -- across that one move, and Pawl.Types.LastKnown keeps it for CR 608.2h.
-    paidCosts :: Map.Map Keyword.Keyword (Seq.Seq Natural.Natural),
+    paidCosts :: Map.Map Keyword.Keyword (Map.Map KeywordInstance.KeywordInstance Natural.Natural),
     -- | CR 702.104b: was tribute paid -- did the opponent this permanent's
     -- controller chose have it enter with the +1/+1 counters rule 702.104a's
     -- tribute ability specifies? Stamped by Pawl.Engine.Event's EntryRewrite.Tribute

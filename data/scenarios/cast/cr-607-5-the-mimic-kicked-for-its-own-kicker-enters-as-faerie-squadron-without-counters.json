@@ -1,0 +1,148 @@
+{
+  "description": "CR 607.5 alice kicked Synthetic Gift Mimic for its own kicker {1} and it enters as a copy of Faerie Squadron, whose copied kicker {3}{U} was never paid, so it enters a 1/1 with no counters",
+  "board": {
+    "active": "alice",
+    "step": "PrecombatMain",
+    "seats": [
+      {
+        "name": "alice",
+        "battlefield": [
+          {
+            "card": "Faerie Squadron",
+            "label": "squadron"
+          },
+          {
+            "card": "Island",
+            "label": "l0",
+            "ready": true
+          },
+          {
+            "card": "Island",
+            "label": "l1",
+            "ready": true
+          },
+          {
+            "card": "Island",
+            "label": "l2",
+            "ready": true
+          },
+          {
+            "card": "Island",
+            "label": "l3",
+            "ready": true
+          }
+        ],
+        "hand": [
+          {
+            "card": "Synthetic Gift Mimic",
+            "label": "mimic"
+          }
+        ],
+        "library": [
+          {
+            "card": "Forest"
+          },
+          {
+            "card": "Forest"
+          }
+        ]
+      },
+      {
+        "name": "bob",
+        "library": [
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          }
+        ]
+      },
+      {
+        "name": "carol",
+        "library": [
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          }
+        ]
+      }
+    ]
+  },
+  "timeline": [
+    {
+      "turn": 1,
+      "step": "PrecombatMain",
+      "player": "alice",
+      "do": {
+        "Answer": {
+          "prompt": "ChooseKicker",
+          "with": 1
+        }
+      }
+    },
+    {
+      "turn": 1,
+      "step": "PrecombatMain",
+      "player": "alice",
+      "do": {
+        "Answer": {
+          "prompt": "ChooseKicker",
+          "with": 0
+        }
+      }
+    },
+    {
+      "turn": 1,
+      "step": "PrecombatMain",
+      "player": "alice",
+      "do": {
+        "Cast": {
+          "object": "$mimic",
+          "mana": [
+            "$l0",
+            "$l1",
+            "$l2",
+            "$l3"
+          ]
+        }
+      }
+    },
+    {
+      "turn": 1,
+      "step": "PrecombatMain",
+      "player": "alice",
+      "do": {
+        "ChooseCopyTarget": "$squadron"
+      }
+    },
+    {
+      "turn": 1,
+      "step": "EndStep",
+      "player": "alice",
+      "check": {
+        "PowerToughness": {
+          "object": "Synthetic Gift Mimic",
+          "power": 1,
+          "toughness": 1
+        }
+      }
+    },
+    {
+      "turn": 1,
+      "step": "EndStep",
+      "player": "alice",
+      "check": {
+        "Keywords": {
+          "object": "Synthetic Gift Mimic",
+          "keyword": {
+            "type": "Flying"
+          },
+          "count": 0
+        }
+      }
+    }
+  ]
+}

@@ -71,6 +71,7 @@ import qualified Pawl.Types.GameState as GameState
 import qualified Pawl.Types.GrantedAbility as GrantedAbility
 import Pawl.Types.Keyword (Keyword)
 import qualified Pawl.Types.Keyword as Keyword.Type
+import qualified Pawl.Types.KeywordInstance as KeywordInstance
 import qualified Pawl.Types.KickerDecision as KickerDecision
 import qualified Pawl.Types.LandPlayed as LandPlayed
 import qualified Pawl.Types.Mana as Mana.Type
@@ -812,7 +813,7 @@ entwineOffer spending pid oid candidates gs = case Game.faceOf oid gs of
 -- CR 601.2f: one candidate cost with every optional additional payment announced
 -- so far added to it -- CR 118.8a's "any number of additional costs may be
 -- applied", so a cost declared N times is added N times (CR 702.33c, CR 702.157a).
-withOptionalPayments :: Map.Map Keyword (Seq.Seq Natural) -> Cost Keyword -> Cost Keyword
+withOptionalPayments :: Map.Map Keyword (Map.Map KeywordInstance.KeywordInstance Natural) -> Cost Keyword -> Cost Keyword
 withOptionalPayments paid candidate =
   Map.foldrWithKey
     (\keyword times acc -> maybe acc (\(cost, _) -> List.foldl' Cost.plus acc (List.genericReplicate (sum times) cost)) (Keyword.optionalCost keyword))
@@ -859,30 +860,33 @@ withOptionalPayments paid candidate =
 -- together are payable. How high a multikicker count may go is not gated here at
 -- all -- the answer is honoured and then measured, which is Prompt.ChooseX's
 -- posture, and castProposed rejects a cast whose announced total nothing can pay.
-announceOptionalCosts :: Seq.Seq ModeIndex.ModeIndex -> ManaSpending -> PlayerId -> ObjectId -> [(Maybe Keyword, ([ManaCost.ManaCost], Cost Keyword))] -> [(Keyword, Natural)] -> GameState -> Game (Map.Map Keyword (Seq.Seq Natural))
+announceOptionalCosts :: Seq.Seq ModeIndex.ModeIndex -> ManaSpending -> PlayerId -> ObjectId -> [(Maybe Keyword, ([ManaCost.ManaCost], Cost Keyword))] -> [(Keyword, Natural)] -> GameState -> Game (Map.Map Keyword (Map.Map KeywordInstance.KeywordInstance Natural))
 announceOptionalCosts modes spending pid sid candidates offers gs =
   let -- Priced on the board this one more declaration and the candidate would
       -- make (CR 601.2c's slots, castAimable).
-      payable keyword paid cost = any (\(castFor, (extra, candidate)) -> payableCost (Just modes) extra spending pid sid (stampPaidCosts (Map.insertWith (flip (<>)) keyword (Seq.singleton 1) paid) sid (proposedFor sid castFor gs)) (Cost.plus (withOptionalPayments paid candidate) cost)) candidates
+      -- One more declaration, for the instance asked about or, for a cost
+      -- asked once, the next of the object's own.
+      declared keyword which paid = Map.insertWith Map.union keyword (Map.singleton (Maybe.fromMaybe (KeywordInstance.Own (Natural.length (Map.findWithDefault Map.empty keyword paid) + 1)) which) 1) paid
+      payable keyword which paid cost = any (\(castFor, (extra, candidate)) -> payableCost (Just modes) extra spending pid sid (stampPaidCosts (declared keyword which paid) sid (proposedFor sid castFor gs)) (Cost.plus (withOptionalPayments paid candidate) cost)) candidates
       choose keyword which limit = KickerDecision.unwrap <$> Game.choose (Prompt.ChooseKicker (Decide.deciderFor pid gs) pid sid keyword which limit)
       -- An instance asked nothing, its cost unpayable, still holds its place.
-      answer keyword which limit cost paid = if payable keyword paid cost then choose keyword which limit else pure 0
+      answer keyword which limit cost paid = if payable keyword (Just which) paid cost then choose keyword (Just which) limit else pure 0
       perInstance keyword which limit cost paid = do
         times <- answer keyword which limit cost paid
-        pure (Map.insertWith (flip (<>)) keyword (Seq.singleton times) paid)
-      -- A once-each cost's count is that many instances paid once; an unlimited
-      -- one asked together is one combined count.
+        pure (Map.insertWith Map.union keyword (Map.singleton which times) paid)
+      -- A once-each cost's count is that many of the object's own instances
+      -- paid once; an unlimited one asked together is one combined count.
       recorded limit times = case limit of
-        Just _ -> Seq.fromList (List.genericReplicate times 1)
-        Nothing -> Seq.singleton times
+        Just _ -> Map.fromList [(KeywordInstance.Own i, 1) | i <- [1 .. times]]
+        Nothing -> Map.singleton (KeywordInstance.Own 1) times
       ask paid (keyword, instances) = case Keyword.optionalCost keyword of
-        -- In Projection.keywordInstances' order, each entry that instance's
-        -- own, which Cost.nextPromise reads back for a gift; the limit is the
-        -- instance's own.
+        -- Each of Projection.keywordInstances' instances asked in turn, its
+        -- entry keyed by it, which Cost.nextPromise reads back for a gift; the
+        -- limit is the instance's own.
         Just (cost, limit)
-          | Keyword.paidPerInstance keyword -> Monad.foldM (\acc which -> perInstance keyword (Just which) limit cost acc) paid (Projection.keywordInstances keyword sid (Cost.asSpell pid sid gs))
+          | Keyword.paidPerInstance keyword -> Monad.foldM (\acc which -> perInstance keyword which limit cost acc) paid (Projection.keywordInstances keyword sid (Cost.asSpell pid sid gs))
         Just (cost, limit)
-          | payable keyword paid cost -> do
+          | payable keyword Nothing paid cost -> do
               times <- choose keyword Nothing (Keyword.paymentLimit instances keyword)
               pure (Map.insert keyword (recorded limit times) paid)
         _ -> pure paid
@@ -896,7 +900,7 @@ announceOptionalCosts modes spending pid sid candidates offers gs =
 -- A write of a field no layer computes, and one direction only: rule 702.33d gives
 -- no way to unkick a spell, and CR 400.7 ends the designation with the incarnation
 -- (Object.newIncarnation), so nothing has to clear it.
-stampPaidCosts :: Map.Map Keyword (Seq.Seq Natural) -> ObjectId -> GameState -> GameState
+stampPaidCosts :: Map.Map Keyword (Map.Map KeywordInstance.KeywordInstance Natural) -> ObjectId -> GameState -> GameState
 stampPaidCosts paid sid gs =
   gs
     { GameState.objects =
@@ -3194,7 +3198,7 @@ castProposed perform spending pid oid sid face castFrom preparedFor keywordsBefo
       -- reason.
       let overKickerLimit =
             any
-              (\(keyword, count) -> let entries = Map.findWithDefault Seq.empty keyword paid in maybe False (sum entries >) (Keyword.paymentLimit count keyword) || (Keyword.paidPerInstance keyword && maybe False (\each -> any (> each) entries) (snd =<< Keyword.optionalCost keyword)))
+              (\(keyword, count) -> let entries = Map.findWithDefault Map.empty keyword paid in maybe False (sum entries >) (Keyword.paymentLimit count keyword) || (Keyword.paidPerInstance keyword && maybe False (\each -> any (> each) entries) (snd =<< Keyword.optionalCost keyword)))
               optionalOffers
           withKicker = withOptionalPayments paid
           -- CR 702.27a's cost is additional too, so it rides the same fold.

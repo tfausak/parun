@@ -7,7 +7,8 @@ import qualified Pawl.Types.KeywordFamily as KeywordFamily
 -- about the ability rather than about the object that has it -- Fluctuator's
 -- "cycling abilities you activate", Boom Scholar's "exhaust abilities of other
 -- permanents you control", Sunscape Battlemage's "if it was kicked with its
--- {1}{G} kicker". Pawl.Engine.Keyword.designates is the one reader, asked of
+-- {1}{G} kicker", Scrapshooter's "if the gift was promised".
+-- Pawl.Engine.Keyword.designates is the one reader, asked of
 -- Pawl.Types.ActivatedAbility.keyword by ActivationCriteria's @grantedBy@ and of
 -- Pawl.Types.Object.paidCosts' keys by Quantity.TimesPaid and Filter.Paid.
 --
@@ -26,9 +27,9 @@ data KeywordDesignator keyword
     OfFamily KeywordFamily.KeywordFamily
   | -- | CR 702.177a / 702.33f: one keyword, payload and all.
     OfKeyword keyword
-  | -- | CR 702.33e: the kicker and multikicker abilities an object's "if it was
-    -- kicked" is linked to, a sticker kicker's not among them (CR 702.33h).
-    PrintedKicker
+  | -- | CR 607.2i / 702.33e: a family's instances the object has of its own, which
+    -- its own payoff is linked to, a sticker kicker's not among them (CR 702.33h).
+    Printed KeywordFamily.KeywordFamily
   | -- | CR 702.56b / 702.157b: the nth of an object's identical instances of one
     -- keyword, counting from 1, whose payments are its own.
     OfInstance keyword Natural.Natural

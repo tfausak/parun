@@ -1,5 +1,5 @@
 {
-  "description": "CR 607.5 alice paid the Host's gift on Clone, promising bob, and the Host lived, so the Clone entering as Scrapshooter gives bob one card for that gift and none for its own unpaid one",
+  "description": "CR 607.5 alice paid the Host's gift on Clone, promising bob, and the Host lived, so the Clone entering as Scrapshooter gives bob one card for that gift, and its copied trigger reads its own unpaid gift and destroys no Ornithopter",
   "board": {
     "active": "alice",
     "step": "PrecombatMain",
@@ -62,6 +62,10 @@
             "card": "Mountain",
             "label": "m",
             "ready": true
+          },
+          {
+            "card": "Ornithopter",
+            "label": "thopter"
           }
         ],
         "hand": [
@@ -163,17 +167,6 @@
     },
     {
       "turn": 1,
-      "step": "PrecombatMain",
-      "player": "alice",
-      "do": {
-        "OrderTriggers": [
-          "Clone",
-          "Clone"
-        ]
-      }
-    },
-    {
-      "turn": 1,
       "step": "EndStep",
       "player": "alice",
       "check": {
@@ -194,6 +187,19 @@
           "player": "alice",
           "zone": "Hand",
           "card": "Forest",
+          "count": 1
+        }
+      }
+    },
+    {
+      "turn": 1,
+      "step": "EndStep",
+      "player": "alice",
+      "check": {
+        "Count": {
+          "player": "bob",
+          "zone": "Battlefield",
+          "card": "Ornithopter",
           "count": 1
         }
       }

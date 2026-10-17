@@ -116,7 +116,10 @@
               "measured": {
                 "type": "TimesPaid",
                 "value": {
-                  "type": "PrintedKicker"
+                  "type": "Printed",
+                  "value": {
+                    "type": "Kicker"
+                  }
                 }
               },
               "threshold": {
