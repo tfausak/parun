@@ -7243,10 +7243,10 @@ offspring cost = paidTokenCopies (Keyword.Offspring cost) (Quantity.Literal 1) [
 --
 -- One per instance, `ordinal` naming it, both in the intervening "if" and in the
 -- chosen player: two gifts promised to two opponents give each their own, and
--- an unpaid instance does not trigger beside a paid one. The ordinal is among
--- the instances the permanent entered with, which is how
--- Pawl.Engine.Stack.settlePromises keys the spell's payments and promises as it
--- resolves.
+-- an unpaid instance does not trigger beside a paid one. The ordinal is a
+-- position among the instances the spell still had as it resolved, which is how
+-- Pawl.Engine.Stack.settlePromises orders the spell's payments and keys its
+-- promises.
 gift :: Gift.Gift -> Natural -> TriggeredAbility Card (GrantedAbility.GrantedAbility Card)
 gift something ordinal =
   Mint.triggerIf
