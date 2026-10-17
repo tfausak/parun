@@ -19,6 +19,7 @@ import qualified Pawl.Json.Value as Value
 import qualified Pawl.JsonCodec.Codec as Codec
 import qualified Pawl.JsonCodec.Common as Common
 import qualified Pawl.JsonSchema.Define as Define
+import qualified Pawl.Play.Command
 import qualified Pawl.Registry as Registry
 import qualified Pawl.Scenario as Scenario
 import qualified Pawl.Scenario.Load as Load
@@ -50,11 +51,12 @@ main = do
     ["deck", path] -> deck path
     ["ingest", path] -> ingest path
     "scenario" : paths@(_ : _) -> scenario paths
+    "play" : rest -> Pawl.Play.Command.main rest
     "bench" : rest -> Environment.withArgs rest Pawl.Benchmark.main
     "test" : rest -> Environment.withArgs rest Pawl.Test.main
     _ -> do
       name <- Environment.getProgName
-      IO.hPutStrLn IO.stderr $ "usage: " <> name <> " (schema [scenario] | deck FILE | ingest FILE | scenario FILE... | bench | test)"
+      IO.hPutStrLn IO.stderr $ "usage: " <> name <> " (schema [scenario] | deck FILE | ingest FILE | scenario FILE... | play [OPTION...] DECK DECK | bench | test)"
       Exit.exitFailure
 
 -- | Reads a deck list and writes back the deck it means, which is what makes a
