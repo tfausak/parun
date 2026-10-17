@@ -229,6 +229,25 @@ spec s registry = Spec.describe s "Pawl.Engine.Planechase" $ do
     Spec.assertEqWith s "both entered face down under alice" (length cybermen) 2
     Spec.assertBool s (not (Game.inRangeOf S.alice S.carol ranged)) "carol is outside alice's range"
 
+  -- CR 801.18 for a plane's "from a graveyard": the same four seats at range 1,
+  -- Strixhaven ("Whenever chaos ensues, return up to one target instant or
+  -- sorcery card from a graveyard to its owner's hand.") face up, and Ancestral
+  -- Recall in carol's graveyard. CR 801.4 would keep carol's graveyard out of
+  -- alice's pool; the plane is exempt, so the card goes back to carol's hand.
+  Spec.it s "CR 801.18 Strixhaven's chaos returns a card from the graveyard of a player outside the planar controller's range" $ do
+    recall <- S.printingOf s registry "Ancestral Recall"
+    board <- seatedPlanarBoard s registry S.alice [(S.alice, ["Strixhaven"]), (S.bob, []), (S.carol, []), (S.dave, [])]
+    let (_, withRecall) = S.addGraveyardCard recall S.carol board
+        ranged = S.withRange 1 (inMain S.alice withRecall)
+        takeEverything :: Prompt.Prompt r -> r
+        takeEverything p = case p of
+          Prompt.RollDie _ -> 5
+          Prompt.ChooseTargets _ _ _ sets -> fmap snd sets
+          _ -> S.identityAnswer p
+        chaos = S.runPure takeEverything ranged (Planechase.roll S.manaPerformer S.alice >> Engine.priorityLoop)
+    Spec.assertEqWith s "CR 801.18 Ancestral Recall went from carol's graveyard to her hand" (length (Game.zoneMembers Zone.Graveyard S.carol chaos), S.handSize S.carol chaos) (0, 1)
+    Spec.assertBool s (not (Game.inRangeOf S.alice S.carol ranged)) "carol is outside alice's range"
+
   -- CR 801.18 / 701.38a for a plane's vote: the same four seats at range 1,
   -- Prime Minister's Cabinet Room ("Will of the council -- Whenever chaos
   -- ensues, starting with you, each player votes for a creature you don't

@@ -112,7 +112,8 @@ exemptFromRange oid gs = maybe False isPlanarFace (Game.faceOfWithLastKnown oid 
 -- reaches a caster outside the planar controller's range", "Mutual Epiphany
 -- draws four for a player outside", "Astral Arena's chaos damages a creature
 -- outside", "Akoum's chaos targets a creature outside", "The Moonbase's chaos
--- takes a card from the graveyard of an opponent outside" and "Prime
+-- takes a card from the graveyard of an opponent outside", "Strixhaven's chaos
+-- returns a card from the graveyard of a player outside" and "Prime
 -- Minister's Cabinet Room's vote is cast by a player outside" prove them.
 rangePerspective :: ObjectId -> PlayerId -> GameState -> Maybe PlayerId
 rangePerspective source controller gs = if exemptFromRange source gs then Nothing else Just controller

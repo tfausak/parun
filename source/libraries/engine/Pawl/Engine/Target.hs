@@ -1655,7 +1655,7 @@ chooseTargets pid oid source seed x slots sets = do
   answers <-
     traverse
       ( \(named, mine) -> do
-          seat <- chooserOf pid oid seed named
+          seat <- chooserOf pid oid source seed named
           case seat of
             -- CR 601.2c has nobody to announce with, which is CR 102.2's game of one
             -- seat under an "of an opponent's choice" slot. The slots go unanswered,
@@ -1685,15 +1685,15 @@ chooseTargets pid oid source seed x slots sets = do
 -- so a seat that has left (CR 104.3a) neither chooses nor is counted towards
 -- eliding the question, and one outside the controller's range (CR 801.5a)
 -- chooses only where nobody in the relation is in range (CR 801.5c). A slot's
--- seat is cut by Plane.rangePerspective, so a planar source's reaches the
--- whole table (CR 801.18); unobserved, Grand Ossuary not being in the pool
--- (see #5196).
-chooserOf :: PlayerId -> ObjectId -> Map SlotName Binding.Type.Binding -> Maybe TargetChooser.TargetChooser -> Game (Maybe PlayerId)
-chooserOf controller oid seed chooser = case chooser of
+-- seat is cut by Plane.rangePerspective of `source` (CR 113.7's, not the stack
+-- object `oid`), so a planar source's reaches the whole table (CR 801.18);
+-- unobserved until Grand Ossuary is in the pool (see #5201).
+chooserOf :: PlayerId -> ObjectId -> ObjectId -> Map SlotName Binding.Type.Binding -> Maybe TargetChooser.TargetChooser -> Game (Maybe PlayerId)
+chooserOf controller oid source seed chooser = case chooser of
   Nothing -> pure (Just controller)
   Just (TargetChooser.InSlot slot) -> do
     gs <- State.get
-    pure (List.find (`List.elem` Players.table (Plane.rangePerspective oid controller gs) gs) (Map.lookup slot (Binding.playerSlots seed)))
+    pure (List.find (`List.elem` Players.table (Plane.rangePerspective source controller gs) gs) (Map.lookup slot (Binding.playerSlots seed)))
   Just (TargetChooser.Relative r) -> do
     gs <- State.get
     Players.chooseOne controller oid (Players.chooserOffer controller gs r)
