@@ -1,0 +1,38 @@
+{
+  "description": "CR 607.2a Patchwork Crawler has the mana ability of the Llanowar Elves its own ability exiled",
+  "note": "The pair of patchwork-crawler-ignores-what-an-acquired-ability-exiled.json, which exiles the Elves with the Withered Wretch ability the Crawler gained instead.",
+  "board": {
+    "seats": [
+      {
+        "name": "alice",
+        "battlefield": [
+          { "card": "Island", "label": "island" },
+          { "card": "Island", "label": "island-2" },
+          { "card": "Island", "label": "island-3" },
+          { "card": "Island", "label": "island-4" },
+          { "card": "Island", "label": "island-5" },
+          { "card": "Island", "label": "island-6" },
+          { "card": "Patchwork Crawler", "label": "crawler", "ready": true }
+        ],
+        "graveyard": [
+          { "card": "Withered Wretch", "label": "wretch" },
+          { "card": "Llanowar Elves", "label": "elves" }
+        ]
+      },
+      {
+        "name": "bob"
+      }
+    ],
+    "active": "alice",
+    "step": "PrecombatMain"
+  },
+  "timeline": [
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": { "Activate": { "object": "$crawler", "ability": 0, "mana": ["$island", "$island-2", "$island-3", null], "targets": ["$wretch"] } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass" },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": { "Activate": { "object": "$crawler", "ability": 0, "mana": ["$island-4", "$island-5", "$island-6"], "targets": ["$elves"] } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass" },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "check": { "View": { "of": "Offered", "player": "alice", "is": ["Pass", "ActivateManaAbility $crawler"] } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "check": { "Count": { "player": "alice", "zone": "Exile", "card": "Llanowar Elves", "count": 1 } } },
+    { "turn": 1, "step": "DeclareAttackers", "player": "alice", "do": { "Attack": [] } }
+  ]
+}
