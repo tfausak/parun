@@ -164,6 +164,13 @@ afterMountainMoved mountain =
 
 gameSpec :: (Monad m, Monad n) => Spec.Spec m n -> Registry.Registry m -> n ()
 gameSpec s registry = Spec.describe s "Game" $ do
+  Spec.it s "CR 514.1 a short or doubled discard answer still discards down to the maximum hand size" $ do
+    bears <- S.printingOf s registry "Grizzly Bears"
+    let gs0 = List.foldl' (\g _ -> snd (S.addHandCard bears S.alice g)) (Setup.emptyGame S.bothPlayers) [1 .. 9 :: Int]
+        held = Game.zoneMembers Zone.Hand S.alice gs0
+        after chosen = S.handSize S.alice (snd (Engine.runGamePure (discarding chosen) gs0 (Engine.discardToHandSize S.alice)))
+    Spec.assertEqWith s "none named" (after []) 7
+    Spec.assertEqWith s "one named twice" (after (take 1 held <> take 1 held)) 7
   Spec.it s "changeZone preserves object count" $ do
     mountain <- S.printingOf s registry "Mountain"
     Spec.assertEqWith s "count" (Game.objectCount (afterMountainMoved mountain)) 1
@@ -2747,3 +2754,9 @@ castThroughWellspring s registry bobLibrary = do
               }
       pure (snd (Engine.runGamePure subgameAnswer gStart Engine.priorityLoop))
     _ -> Spec.assertFailure s "fixture should give alice exactly one Island" >> pure g2
+
+-- Answers a discard with `chosen`, and everything else as S.castAnswer does.
+discarding :: [ObjectId.ObjectId] -> Prompt.Prompt r -> r
+discarding chosen prompt = case prompt of
+  Prompt.ChooseDiscard {} -> chosen
+  _ -> S.castAnswer prompt

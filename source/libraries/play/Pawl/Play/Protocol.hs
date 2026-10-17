@@ -19,6 +19,7 @@ import qualified Pawl.Engine.Driver as Driver
 import qualified Pawl.Engine.PlayerView as PlayerView
 import qualified Pawl.JsonCodec.Codec as Codec
 import qualified Pawl.JsonCodec.Common as Common
+import qualified Pawl.Scenario as Scenario
 import qualified Pawl.Scenario.Prompt as Scenario.Prompt
 import qualified Pawl.Scenario.Reply as Reply
 import qualified Pawl.Types.Action as Action
@@ -37,8 +38,8 @@ import qualified Pawl.Types.Request as Request
 import qualified Text.Read as Read
 
 -- | Answers each prompt a seat answers over the line `send` carries, asking
--- again with the problem until the reply reads; every other prompt goes to
--- `fallback`.
+-- again with the problem until the reply reads and is on offer; every other
+-- prompt goes to `fallback`.
 over :: (Monad m) => (Text.Text -> m Text.Text) -> Answerer.Answerer m -> Answerer.Answerer m
 over send fallback = Answerer.MkAnswerer $ \asked -> case requestFor asked of
   Nothing -> Answerer.unwrap fallback asked
@@ -46,8 +47,15 @@ over send fallback = Answerer.MkAnswerer $ \asked -> case requestFor asked of
     let go pending = do
           line <- send (render pending)
           either (\problem -> go pending {Request.problem = Just problem}) pure $
-            Common.parse line >>= Codec.Reply.fromValue >>= decodeAnswer (Asked.prompt asked)
+            Common.parse line >>= Codec.Reply.fromValue >>= decodeAnswer (Asked.prompt asked) >>= onOffer (Asked.prompt asked)
      in go request
+
+-- | An answer the prompt offers. The engine reads one it does not with a
+-- fallback of its own, which would choose for the player.
+onOffer :: Prompt.Prompt r -> r -> Either Text.Text r
+onOffer prompt answer
+  | Scenario.withinOffer prompt answer = Right answer
+  | otherwise = Left (Text.pack "not an answer the prompt offers")
 
 -- | One line: no newline inside it, and none after.
 render :: Request.Request -> Text.Text

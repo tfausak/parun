@@ -98,6 +98,16 @@ spec s registry = Spec.describe s "Protocol" $ do
         Spec.assertBool s (maybe False Maybe.isJust second) "second"
       _ -> Spec.assertFailure s "fewer than two lines"
 
+  Spec.it s "an answer naming what the prompt does not offer is asked again" $ do
+    gs <- started s registry
+    let strayed = State.execState (Driver.drive [observer] (Protocol.over (exchanging stray) chance) 10000 (pure . (>= 3) . GameState.turnNumber) gs) []
+        discards = [Request.problem request | Just request <- fmap (requestOf . snd) (linesWithState strayed), Question.kind (Request.question request) == Text.pack "ChooseDiscard"]
+    case discards of
+      first : second : _ -> do
+        Spec.assertEqWith s "first" first Nothing
+        Spec.assertBool s (Maybe.isJust second) "second"
+      _ -> Spec.assertFailure s "fewer than two discard lines"
+
 -- Every prompt's state before its answer, and every line sent, in order.
 type Log = [Either GameState.GameState String]
 
@@ -121,6 +131,13 @@ once :: Text.Text -> State.State Log Text.Text
 once line = do
   sent <- State.gets (length . Either.rights)
   if sent == 1 then pure (Text.pack "nonsense") else client line
+
+-- Discards a card that does not exist the first time it is asked to discard,
+-- then answers as `client` does.
+stray :: Text.Text -> State.State Log Text.Text
+stray line = do
+  asked <- State.gets (length . filter (Text.isInfixOf (Text.pack "\"kind\":\"ChooseDiscard\"") . Text.pack) . Either.rights)
+  if asked == 1 && Text.isInfixOf (Text.pack "\"kind\":\"ChooseDiscard\"") line then pure (Text.pack "[\"$9999\"]") else client line
 
 -- Passes, keeps, declines and discards the first cards offered, reading only
 -- the line.
