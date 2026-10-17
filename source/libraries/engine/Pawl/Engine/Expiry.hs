@@ -207,6 +207,7 @@ arm acquisition targets controller source duration gs = case duration of
       ( Expiry.OnEvent
           ( EventExpiry.MkEventExpiry controller $ case event of
               DurationEvent.SourceTurnedFaceDown -> event
+              DurationEvent.Planeswalked -> event
               DurationEvent.SpellCast criterion -> DurationEvent.SpellCast (Filter.bakeBound (Binding.playersIn targets) criterion)
           )
       )
@@ -352,6 +353,8 @@ data Moment
     TurnedFaceDown ObjectId
   | -- | CR 601.2i: this spell became cast.
     Cast ObjectId
+  | -- | CR 901.11: a player planeswalked.
+    Planeswalked
   deriving (Eq, Show)
 
 -- CR 611.2: does the expiry a row from `source` stores end at this moment? The
@@ -419,6 +422,11 @@ endsAt gs moment source expiry = case expiry of
   Expiry.OnEvent (EventExpiry.MkEventExpiry you (DurationEvent.SpellCast criterion)) -> case moment of
     Cast spell -> Filter.matches (Projection.sourceContext gs (Just you) source) (Projection.viewOfObject spell gs) criterion
     _ -> False
+  -- CR 901.11: ended by any player's planeswalk, which
+  -- Pawl.Engine.Planechase.encounterTop sweeps. Not by its source leaving: the
+  -- effect is a resolved one, and its plane is walked away from by the very
+  -- planeswalk that ends it.
+  Expiry.OnEvent (EventExpiry.MkEventExpiry _ DurationEvent.Planeswalked) -> moment == Planeswalked
   where
     departedTurnOf p = moment == TurnOf p && List.notElem p (Game.stillPlaying gs)
     namedTurnEnds at afterTurn =

@@ -502,6 +502,9 @@ looksBack condition = case condition of
   TriggerCondition.ChaosEnsues -> False
   TriggerCondition.PlayerRollsPlaneswalker _ -> False
   TriggerCondition.SelfTurnedUpOffDeck -> False
+  -- CR 603.10g: on the rule's list of exceptions, though no zone change of a
+  -- permanent. eventTriggers' `walkedAwayFrom` is the source it decides for.
+  TriggerCondition.SelfPlaneswalkedAwayFrom -> True
   TriggerCondition.PlayerWinsCoinFlip _ -> False
   TriggerCondition.PlayerLosesCoinFlip _ -> False
   -- CR 603.10a's list does not reach an attachment either. CR 701.3a moves a
@@ -818,6 +821,7 @@ batchScoped condition = case condition of
   TriggerCondition.ChaosEnsues -> False
   TriggerCondition.PlayerRollsPlaneswalker _ -> False
   TriggerCondition.SelfTurnedUpOffDeck -> False
+  TriggerCondition.SelfPlaneswalkedAwayFrom -> False
   TriggerCondition.PlayerWinsCoinFlip _ -> False
   TriggerCondition.PlayerLosesCoinFlip _ -> False
   TriggerCondition.SelfBecomesAttachedBy _ -> False
@@ -1987,6 +1991,26 @@ eventTriggers events gs =
           | Just obj <- Game.lookupObject oid gs ->
               Map.singleton oid (Object.owner obj, [whole (Keyword.madnessCast (PC.manaCost (Projection.project oid gs)) payload)])
         _ -> Map.empty
+      -- CR 603.10g: the planes and phenomena a planeswalk walked away from, read
+      -- back in time. Each is gone by the scan -- turned face down into a new
+      -- object (CR 901.7a) or out of the game with its owner (CR 901.10) -- so
+      -- its printed face comes from CR 608.2h last known information, keyed by
+      -- the id it had face up. A plane that left with its owner is walked away
+      -- from (CR 701.31d) and still triggers, as Sanctum of Serra's ruling
+      -- says. Its look-back abilities only, `sameGroup`'s narrowing. CR
+      -- 901.6's controller is the planar controller, which is the player who
+      -- planeswalked (CR 701.31a): the record would name the departing owner
+      -- for a plane that left with them (CR 800.4p).
+      walkedAwayFrom event = case event of
+        GameEvent.TurnedUpOffDeck e ->
+          Map.fromList
+            [ (oid, (TurnedUpOffDeck.player e, abilities))
+            | oid <- Set.toAscList (TurnedUpOffDeck.awayFrom e),
+              Just face <- [Game.faceOfWithLastKnown oid gs],
+              let abilities = filter (looksBack . fst) (fmap whole (Face.triggeredAbilities face)),
+              not (null abilities)
+            ]
+        _ -> Map.empty
       -- CR 113.6k's other zone: the spell that just became cast, offered from the
       -- STACK, where CR 601.2a leaves it. Desolation Twin's "when you cast this
       -- spell" is borne by an object that is on nobody's battlefield and in
@@ -2308,6 +2332,8 @@ eventTriggers events gs =
       -- cycled into a graveyard is honestly a member of both -- and the winner
       -- offers that card's projected abilities unfiltered, a superset of the
       -- other's projected, `functionsIn`-filtered read.
+      -- `walkedAwayFrom` overlaps nothing: its ids no longer exist, and none
+      -- of them stood on the battlefield.
       -- `spellCast` overlaps nothing: CR 601.2a keeps its object on the stack,
       -- which no other source reads. Neither does `inCommand`: CR 114.1 puts an
       -- emblem into the command zone, and no rule or effect in pawl moves one
@@ -2316,7 +2342,7 @@ eventTriggers events gs =
       -- no other. `revealedInHand` and `spellCast` overlap `inStatedZones`, which
       -- comes last so the bias hands them the id: each offers the stated
       -- abilities the scan would, plus its keyword-minted ones.
-      candidates onBattlefield event later same graveyard = Map.toAscList (Map.unions [onBattlefield, leftBattlefield event, later, same, cycledCard event, spellCast event, revealedInHand event, graveyard, inCommand, Map.unionWith (\(c, a) (_, b) -> (c, a <> b)) inExile (exiledForMadness event), inStatedZones])
+      candidates onBattlefield event later same graveyard = Map.toAscList (Map.unions [onBattlefield, leftBattlefield event, later, same, walkedAwayFrom event, cycledCard event, spellCast event, revealedInHand event, graveyard, inCommand, Map.unionWith (\(c, a) (_, b) -> (c, a <> b)) inExile (exiledForMadness event), inStatedZones])
       scanOne board later same graveyard logged = concatMap (forOne board logged) (candidates (onBattlefieldOf board) (LoggedEvent.event logged) later same graveyard)
       -- The battlefield reading is per GROUP and so is hoisted out of the block:
       -- every event in one group happened at the same time, so they share it. A
@@ -2738,6 +2764,9 @@ zonesTriggeredFrom cond =
         -- CR 904.9 / 312.5: a scheme's set-in-motion ability and a phenomenon's
         -- encounter ability trigger from the card face up in the command zone.
         TriggerCondition.SelfTurnedUpOffDeck -> Set.singleton Zone.Command
+        -- CR 901.7: a plane's planeswalk-away ability triggers from the card as
+        -- it stood face up, read back in time (CR 603.10g).
+        TriggerCondition.SelfPlaneswalkedAwayFrom -> Set.singleton Zone.Command
         TriggerCondition.Visit -> battlefield
         TriggerCondition.PlayerWinsCoinFlip _ -> battlefield
         TriggerCondition.PlayerLosesCoinFlip _ -> battlefield
@@ -3202,6 +3231,7 @@ stateTriggers gs
             TriggerCondition.ChaosEnsues -> False
             TriggerCondition.PlayerRollsPlaneswalker _ -> False
             TriggerCondition.SelfTurnedUpOffDeck -> False
+            TriggerCondition.SelfPlaneswalkedAwayFrom -> False
             TriggerCondition.PlayerWinsCoinFlip _ -> False
             TriggerCondition.PlayerLosesCoinFlip _ -> False
             -- CR 603.2 once more: becoming attached is something that HAPPENS,

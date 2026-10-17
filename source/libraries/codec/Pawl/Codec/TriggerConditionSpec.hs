@@ -1236,6 +1236,13 @@ spec s = Spec.describe s "Pawl.Codec.TriggerCondition" $ do
       TriggerCondition.codec
       TriggerCondition.SelfTurnedUpOffDeck
       " {\"type\":\"SelfTurnedUpOffDeck\"} "
+  -- CR 701.31d: nullary, the plane being the ability's own.
+  Spec.it s "SelfPlaneswalkedAwayFrom" $
+    Common.assertCodec
+      s
+      TriggerCondition.codec
+      TriggerCondition.SelfPlaneswalkedAwayFrom
+      " {\"type\":\"SelfPlaneswalkedAwayFrom\"} "
   -- CR 311.7: nullary, chaos ensuing for the whole table.
   Spec.it s "ChaosEnsues" $
     Common.assertCodec

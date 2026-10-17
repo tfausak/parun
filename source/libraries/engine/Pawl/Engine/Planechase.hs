@@ -8,8 +8,6 @@
 --
 -- WHAT IS NOT IMPLEMENTED:
 --
---   * CR 901.11's planeswalk triggers and durations -- "when you planeswalk to"
---     and "until a player planeswalks" (#4310).
 --   * CR 901.12's Two-Headed Giant and CR 901.14's Grand Melee options (#4465).
 --   * CR 901.15's single planar deck option (#5061).
 module Pawl.Engine.Planechase where
@@ -24,6 +22,7 @@ import qualified Data.Set as Set
 import Numeric.Natural (Natural)
 import qualified Pawl.Engine.Cost as Cost
 import qualified Pawl.Engine.Event as Event
+import qualified Pawl.Engine.Expiry as Expiry
 import qualified Pawl.Engine.Game as Game
 import qualified Pawl.Engine.Mint as Mint
 import qualified Pawl.Engine.Plane as Plane
@@ -90,8 +89,9 @@ canPlaneswalk pid gs = isPlanechase gs && pid == Plane.planarController gs
 planeswalk :: PlaneswalkCause.PlaneswalkCause -> PlayerId -> Game ()
 planeswalk cause pid = proposed cause pid $ do
   now <- State.get
-  Monad.mapM_ toBottom (faceUp now)
-  encounterTop pid
+  let away = faceUp now
+  Monad.mapM_ toBottom away
+  encounterTop pid (Set.fromList away)
 
 -- CR 614.1a: propose this player's planeswalk for this cause, and perform it
 -- unless a replacement took its place. Nothing for a player CR 701.31a does not
@@ -142,7 +142,7 @@ ownersLeft before pids = do
     Monad.when (any isPlane left) (State.modify' ceasePlaneswalking)
     gs <- State.get
     let walker = Plane.planarController gs
-    proposed PlaneswalkCause.OwnerLeft walker (encounterTop walker)
+    proposed PlaneswalkCause.OwnerLeft walker (encounterTop walker (Set.fromList left))
 
 -- CR 901.10a: every planeswalking ability on the stack ceases to exist.
 ceasePlaneswalking :: GameState -> GameState
@@ -156,14 +156,18 @@ isPlaneswalkingAbility oid gs = case fmap Object.source (Game.lookupObject oid g
   _ -> False
 
 -- CR 701.31b's second half and CR 901.10's turn-up: move the top card off the
--- planar deck and turn it face up, recording the GameEvent.TurnedUpOffDeck that
--- CR 312.5's "When you encounter" triggers on. CR 103.7's starting plane is
--- turned up by turnUpTop alone, CR 901.5 letting nothing trigger.
-encounterTop :: PlayerId -> Game ()
-encounterTop pid = do
+-- planar deck and turn it face up, which is the planeswalk itself (CR 901.11).
+-- It records the GameEvent.TurnedUpOffDeck that CR 312.5's "When you
+-- encounter" and CR 701.31d's "When you planeswalk to" and "away from" trigger
+-- on, naming the cards `away` held face up, and ends every effect lasting
+-- "until a player planeswalks". CR 103.7's starting plane is turned up by
+-- turnUpTop alone, CR 901.5 letting nothing trigger.
+encounterTop :: PlayerId -> Set.Set ObjectId -> Game ()
+encounterTop pid away = do
   turned <- turnUpTop pid
-  Monad.forM_ turned $ \oid ->
-    State.modify' (Event.recordEvent (GameEvent.TurnedUpOffDeck (TurnedUpOffDeck.MkTurnedUpOffDeck SideDeck.Planar pid oid)))
+  Monad.forM_ turned $ \oid -> do
+    State.modify' (Event.recordEvent (GameEvent.TurnedUpOffDeck (TurnedUpOffDeck.MkTurnedUpOffDeck SideDeck.Planar pid oid away)))
+    State.modify' (Expiry.sweep Expiry.Planeswalked)
 
 -- | CR 704.6f / 312.7: the face-up phenomena that make the planar controller
 -- planeswalk, each the source of no triggered ability on the stack or among

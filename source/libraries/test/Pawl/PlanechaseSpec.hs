@@ -18,10 +18,12 @@ import qualified Data.Text as Text
 import Numeric.Natural (Natural)
 import Pawl.CastProhibitionSpec (playEveryLand)
 import qualified Pawl.Engine.Action as Action
+import qualified Pawl.Engine.Combat as Combat
 import qualified Pawl.Engine.CombatRestriction as CombatRestriction
 import qualified Pawl.Engine.Cost as Cost
 import qualified Pawl.Engine.Engine as Engine
 import qualified Pawl.Engine.Event as Event
+import qualified Pawl.Engine.Expiry as Expiry
 import qualified Pawl.Engine.Game as Game
 import qualified Pawl.Engine.Planechase as Planechase
 import qualified Pawl.Engine.PlayerEffect as PlayerEffect
@@ -34,9 +36,12 @@ import qualified Pawl.Registry as Registry
 import qualified Pawl.Spec as Spec
 import qualified Pawl.Support as S
 import qualified Pawl.Types.Action as Action.Type
+import qualified Pawl.Types.AttackTarget as AttackTarget
 import qualified Pawl.Types.CandidateCost as CandidateCost
 import qualified Pawl.Types.CardName as CardName
 import qualified Pawl.Types.Color as Color
+import qualified Pawl.Types.Combat as Combat.Type
+import qualified Pawl.Types.CombatStep as CombatStep
 import qualified Pawl.Types.Concession as Concession
 import qualified Pawl.Types.Cost as Cost.Type
 import qualified Pawl.Types.Deck as Deck
@@ -435,6 +440,7 @@ spec s registry = Spec.describe s "Pawl.Engine.Planechase" $ do
     Spec.assertEqWith s "CR 614.1a the second Planeswalker symbol left Tazeem face up" (faceUpNames second) [cardName "Tazeem"]
     Spec.assertEqWith s "CR 311.7 and chaos ensued: alice drew one for her Forest" (S.handSize S.alice second) 1
   carrySpec s registry
+  planeswalkSpec s registry
 
 -- CR 400.7b / 611.3d on The Caldaia, Plane -- Capenna, "Creature spells you cast
 -- from your hand have blitz {3}." (Oracle text checked on Scryfall,
@@ -648,3 +654,110 @@ rolling n p = case p of
 -- alice rolls the planar die showing `n`, and whatever it triggers resolves.
 rollAndResolve :: Natural -> GameState.GameState -> GameState.GameState
 rollAndResolve n gs = S.runPure (rolling n) gs (Planechase.roll S.manaPerformer S.alice >> Engine.priorityLoop)
+
+-- CR 901.11 / 701.31d: what a planeswalk sets off -- "When you planeswalk to"
+-- (Panopticon), "When you planeswalk away from" (Orzhova, CR 603.10g's
+-- look-back) and "until a player planeswalks" (Agyrem). Oracle text checked on
+-- Scryfall, 2026-10-17.
+planeswalkSpec :: (Monad m, Monad n) => Spec.Spec m n -> Registry.Registry m -> n ()
+planeswalkSpec s registry = Spec.describe s "CR 901.11" $ do
+  -- Panopticon: "When you planeswalk to Panopticon, draw a card." alice rolls
+  -- the Planeswalker symbol off Academy at Tolaria West; the pair is Panopticon
+  -- as the starting plane, which CR 901.5 lets trigger nothing.
+  Spec.it s "CR 701.31d planeswalking to Panopticon draws a card, and starting on it does not" $ do
+    walkedTo <- planarBoard s registry ["Academy at Tolaria West", "Panopticon"]
+    startedOn <- planarBoard s registry ["Panopticon", "Academy at Tolaria West"]
+    let walked = rollAndResolve 6 (inMain S.alice walkedTo)
+        started = S.runPure S.identityAnswer (inMain S.alice startedOn) Engine.priorityLoop
+    Spec.assertEqWith s "CR 701.31d alice drew one for walking to Panopticon" (S.handSize S.alice walked) 1
+    Spec.assertEqWith s "Panopticon is the face-up plane" (faceUpNames walked) [cardName "Panopticon"]
+    Spec.assertEqWith s "CR 901.5 starting on Panopticon draws nothing" (S.handSize S.alice started) 0
+
+  -- Orzhova: "When you planeswalk away from Orzhova, each player returns all
+  -- creature cards from their graveyard to the battlefield." By the time the
+  -- trigger is looked for, Orzhova is face down on the bottom of alice's
+  -- planar deck as a new object, so only CR 603.10g's look-back finds the
+  -- ability. A creature card in each graveyard and a land beside alice's.
+  Spec.it s "CR 603.10g planeswalking away from Orzhova returns each player's creature cards" $ do
+    bears <- S.printingOf s registry "Grizzly Bears"
+    lions <- S.printingOf s registry "Savannah Lions"
+    forest <- S.printingOf s registry "Forest"
+    board <- planarBoard s registry ["Orzhova", "Tazeem"]
+    let (_, b1) = S.addGraveyardCard bears S.alice (inMain S.alice board)
+        (_, b2) = S.addGraveyardCard lions S.bob b1
+        (_, stocked) = S.addGraveyardCard forest S.alice b2
+        walked = rollAndResolve 6 stocked
+        blank = rollAndResolve 1 stocked
+    Spec.assertEqWith s "CR 603.10g alice's Grizzly Bears returned under her control" (controllersNamed "Grizzly Bears" walked) [Just S.alice]
+    Spec.assertEqWith s "and bob's Savannah Lions under his" (controllersNamed "Savannah Lions" walked) [Just S.bob]
+    Spec.assertEqWith s "the Forest stays in alice's graveyard" (zoneNames Zone.Graveyard S.alice walked) [cardName "Forest"]
+    Spec.assertEqWith s "CR 701.31b Tazeem is face up, Orzhova face down" (faceUpNames walked, deckNames S.alice walked) ([cardName "Tazeem"], [cardName "Orzhova"])
+    Spec.assertEqWith s "a blank roll walks nowhere and returns nothing" (length (zoneNames Zone.Graveyard S.alice blank), length (zoneNames Zone.Graveyard S.bob blank)) (2, 1)
+
+  -- CR 901.10 / 701.31d: bob, active, concedes while his Orzhova is face up.
+  -- It leaves the game with him, which is walking away from it, and carol --
+  -- CR 800.4p's planar controller -- turns up her Tazeem. The trigger is
+  -- carol's (CR 901.6): bob's own creature card left with him, and alice's and
+  -- carol's return.
+  Spec.it s "CR 701.31d a plane leaving with its owner is walked away from" $ do
+    bears <- S.printingOf s registry "Grizzly Bears"
+    lions <- S.printingOf s registry "Savannah Lions"
+    giant <- S.printingOf s registry "Hill Giant"
+    board <- seatedPlanarBoard s registry S.bob [(S.alice, ["Tazeem"]), (S.bob, ["Orzhova"]), (S.carol, ["Tazeem"])]
+    let (_, b1) = S.addGraveyardCard bears S.alice (inMain S.bob board)
+        (_, b2) = S.addGraveyardCard giant S.bob b1
+        (_, stocked) = S.addGraveyardCard lions S.carol b2
+        gone = S.runPure (conceding S.bob) stocked Engine.priorityLoop
+    Spec.assertEqWith s "CR 701.31d alice's Grizzly Bears returned under her control" (controllersNamed "Grizzly Bears" gone) [Just S.alice]
+    Spec.assertEqWith s "and carol's Savannah Lions under hers" (controllersNamed "Savannah Lions" gone) [Just S.carol]
+    Spec.assertEqWith s "CR 901.10 carol's Tazeem is face up" (faceUpNames gone) [cardName "Tazeem"]
+    Spec.assertEqWith s "CR 800.4a bob's Hill Giant left with him" (controllersNamed "Hill Giant" gone) []
+
+  -- Agyrem: "Whenever chaos ensues, creatures can't attack you until a player
+  -- planeswalks." alice's chaos on her turn stores the restriction; it outlasts
+  -- her cleanup into bob's turn, and bob's own planeswalk ends it.
+  Spec.it s "CR 901.11 Agyrem's chaos keeps creatures off alice until a player planeswalks" $ do
+    bears <- S.printingOf s registry "Grizzly Bears"
+    board <- seatedPlanarBoard s registry S.alice [(S.alice, ["Agyrem", "Tazeem"]), (S.bob, ["Tazeem"])]
+    let (bear, stocked) = S.addPermanent bears S.bob (inMain S.alice board)
+        chaos = rollAndResolve 5 stocked
+        handoff gs = inMain S.bob (S.runPure S.identityAnswer (Expiry.dropAtCleanup gs) Engine.handoffTurn)
+        bobsTurn = handoff chaos
+        walked = S.runPure (rolling 6) bobsTurn (Planechase.roll S.manaPerformer S.bob >> Engine.priorityLoop)
+        mayAttack gs = Combat.legalAttackDeclarationAs S.bob [(bear, AttackTarget.OfPlayer S.alice)] (declaringAt S.alice gs)
+    Spec.assertBool s (mayAttack (handoff stocked)) "with no chaos, bob's Grizzly Bears may attack alice on his turn"
+    Spec.assertBool s (not (mayAttack bobsTurn)) "CR 611.2a after chaos and alice's cleanup, it may not"
+    Spec.assertBool s (mayAttack walked) "CR 901.11 once bob planeswalks, it may again"
+    Spec.assertEqWith s "bob walked to his Tazeem" (faceUpNames walked) [cardName "Tazeem"]
+
+  -- Agyrem's first two abilities: a white creature that dies comes back to the
+  -- battlefield under its OWNER's control at the next end step, a nonwhite one
+  -- to its owner's hand. bob's Savannah Lions and alice's Grizzly Bears die
+  -- together; alice controls the triggers (CR 901.6).
+  Spec.it s "CR 603.7 Agyrem returns a dead white creature to the battlefield and a nonwhite one to hand" $ do
+    bears <- S.printingOf s registry "Grizzly Bears"
+    lions <- S.printingOf s registry "Savannah Lions"
+    board <- planarBoard s registry ["Agyrem", "Tazeem"]
+    let (lionsId, b1) = S.addPermanent lions S.bob (inMain S.alice board)
+        (bearId, stocked) = S.addPermanent bears S.alice b1
+        died = S.runPure S.identityAnswer stocked (Event.simultaneously (Event.changeZone lionsId Zone.Graveyard >> Event.changeZone bearId Zone.Graveyard) >> Engine.priorityLoop)
+        ended = endStep S.alice died
+    Spec.assertEqWith s "both wait in their owners' graveyards until the end step" (zoneNames Zone.Graveyard S.bob died, zoneNames Zone.Graveyard S.alice died) ([cardName "Savannah Lions"], [cardName "Grizzly Bears"])
+    Spec.assertEqWith s "CR 603.7 the white Savannah Lions returns under bob's control" (controllersNamed "Savannah Lions" ended) [Just S.bob]
+    Spec.assertEqWith s "and the nonwhite Grizzly Bears goes to alice's hand" (zoneNames Zone.Hand S.alice ended) [cardName "Grizzly Bears"]
+
+-- The controllers of the permanents with this name.
+controllersNamed :: String -> GameState.GameState -> [Maybe PlayerId.PlayerId]
+controllersNamed name gs = fmap (`Projection.controllerOf` gs) (named name gs)
+
+-- The names of the cards in this player's zone, ordered.
+zoneNames :: Zone.Zone -> PlayerId.PlayerId -> GameState.GameState -> [Maybe CardName.CardName]
+zoneNames zone pid gs = List.sort (fmap (\oid -> fmap Face.name (Game.faceOf oid gs)) (Game.zoneMembers zone pid gs))
+
+-- The declare attackers step with `defending` as the one defending player.
+declaringAt :: PlayerId.PlayerId -> GameState.GameState -> GameState.GameState
+declaringAt defending gs =
+  gs
+    { GameState.phase = Phase.Combat CombatStep.DeclareAttackers,
+      GameState.combat = Combat.emptyCombat {Combat.Type.defenders = [defending]}
+    }

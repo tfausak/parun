@@ -101,7 +101,7 @@ setInMotion pid = do
       ts <- State.state Game.freshTimestamp
       State.modify' $ \g ->
         Event.recordEvent
-          (GameEvent.TurnedUpOffDeck (TurnedUpOffDeck.MkTurnedUpOffDeck SideDeck.Scheme pid top))
+          (GameEvent.TurnedUpOffDeck (TurnedUpOffDeck.MkTurnedUpOffDeck SideDeck.Scheme pid top Set.empty))
           (Game.overSideDecks SideDeck.Scheme (Map.insert pid (Seq.fromList rest)) g)
             { GameState.command = Set.insert top (GameState.command g),
               GameState.objects = Map.adjust (\o -> o {Object.timestamp = ts}) top (GameState.objects g)

@@ -2085,6 +2085,7 @@ rewriteTriggerCondition pairs condition = case condition of
   TriggerCondition.ChaosEnsues -> condition
   TriggerCondition.PlayerRollsPlaneswalker _ -> condition
   TriggerCondition.SelfTurnedUpOffDeck -> condition
+  TriggerCondition.SelfPlaneswalkedAwayFrom -> condition
   TriggerCondition.PlayerWinsCoinFlip _ -> condition
   TriggerCondition.PlayerLosesCoinFlip _ -> condition
   TriggerCondition.SelfBecomesPlotted -> condition
@@ -2164,6 +2165,7 @@ rewriteDuration pairs duration = case duration of
   Duration.UntilPaid _ -> duration
   Duration.UntilUsed -> duration
   Duration.UntilEvent DurationEvent.SourceTurnedFaceDown -> duration
+  Duration.UntilEvent DurationEvent.Planeswalked -> duration
   Duration.UntilEvent (DurationEvent.SpellCast criterion) -> Duration.UntilEvent (DurationEvent.SpellCast (Filter.rewrite pairs criterion))
 
 -- CR 612.1 through the counters a CR 122.5 move carries: the count, and the
