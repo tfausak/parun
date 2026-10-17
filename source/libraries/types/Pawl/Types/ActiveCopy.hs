@@ -1,16 +1,21 @@
 module Pawl.Types.ActiveCopy where
 
-import qualified Data.Set as Set
+import qualified Pawl.Types.CopyCoverage as CopyCoverage
 import qualified Pawl.Types.Expiry as Expiry
 import qualified Pawl.Types.ObjectId as ObjectId
 import qualified Pawl.Types.ProjectedCharacteristics as ProjectedCharacteristics
 import qualified Pawl.Types.Timestamp as Timestamp
 
--- | CR 613.1a / 611.2: a stored, resolution-generated COPY EFFECT with a stated
+-- | CR 613.1a / 611.2: a stored COPY EFFECT with a stated
 -- duration, held in GameState.copyEffects. Mirrorweave's "each other creature
 -- becomes a copy of target nonlegendary creature until end of turn" is one
 -- producer, and Vesuvan Shapeshifter's "until this creature is turned face
--- down" (Pawl.Types.AsCopy's `duration`) the other.
+-- down" (Pawl.Types.AsCopy's `duration`) another. Metamorphic Alteration's
+-- "enchanted creature is a copy of the chosen creature" is the third, a static
+-- ability's effect: CR 707.2c fixes its copiable values as it first applies,
+-- which is as the Aura enters (CR 611.3c), so they are stored as the
+-- as-enters choice is made, and only what the effect covers is read live
+-- (CopyCoverage.SourceHost, CR 611.3a).
 --
 -- Read at Pawl.Engine.Projection.View.stampedSnapshotOf, which layers a live row
 -- over the copy stamp underneath it -- so every one of the seven readers that
@@ -32,10 +37,10 @@ import qualified Pawl.Types.Timestamp as Timestamp
 -- rather than gathered with layers 2-7, so a copy effect has no Modification to
 -- be in either carrier.
 --
--- A bare id SET where the printed carrier holds an ObjectRef, for
--- ActiveObjectProhibition's reason and CR 611.2c's: the ref is swept ONCE, as the
--- ability resolves, and the objects it named are what the effect covers
--- thereafter.
+-- A resolved effect covers a bare id SET where the printed carrier holds an
+-- ObjectRef, for ActiveObjectProhibition's reason and CR 611.2c's: the ref is
+-- swept ONCE, as the ability resolves, and the objects it named are what the
+-- effect covers thereafter.
 --
 -- `snapshot` is the copiable values CR 707.2 read off the original, exceptions
 -- already folded in (CR 707.9a) -- the same value the no-duration road stamps
@@ -43,16 +48,18 @@ import qualified Pawl.Types.Timestamp as Timestamp
 --
 -- `timestamp` orders two live rows over one object (CR 613.7): the latest one is
 -- what layer 1a leaves, since a copy effect REPLACES copiable values rather than
--- adding to them. A stamp made later drops its object from `objects`
--- (Pawl.Engine.Game.supersedeStoredCopies), which is how a row is ordered
+-- adding to them; a SourceHost row's is its source's, restamped as it becomes
+-- attached (CR 613.7e, Pawl.Engine.Game.copyRowTimestamp). A stamp made later
+-- takes its object out of `covers` (Pawl.Engine.Game.supersedeStoredCopies),
+-- which is how a row is ordered
 -- against a stamp that carries no timestamp -- proved by Pawl.CopySpec's "CR
 -- 613.7 a copy effect made after Mirrorweave's outranks it (Dimir Doppelganger)".
 data ActiveCopy = MkActiveCopy
   { source :: ObjectId.ObjectId,
     timestamp :: Timestamp.Timestamp,
     expiry :: Expiry.Expiry,
-    -- | The objects that became copies.
-    objects :: Set.Set ObjectId.ObjectId,
+    -- | The objects that are copies: a fixed set, or the source's host.
+    covers :: CopyCoverage.CopyCoverage,
     -- | CR 707.2: the copiable values they took on, with any later merge
     -- applied over them (CR 730.2a).
     snapshot :: ProjectedCharacteristics.ProjectedCharacteristics,

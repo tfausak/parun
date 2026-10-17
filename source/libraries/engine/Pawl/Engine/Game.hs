@@ -37,6 +37,7 @@ import qualified Pawl.Types.CardType as CardType
 import qualified Pawl.Types.Color as Color
 import qualified Pawl.Types.Combat as Combat
 import qualified Pawl.Types.ComponentCard as ComponentCard
+import qualified Pawl.Types.CopyCoverage as CopyCoverage
 import qualified Pawl.Types.DamageEvent as DamageEvent
 import qualified Pawl.Types.DamageKind as DamageKind
 import qualified Pawl.Types.Decider as Decider
@@ -2018,7 +2019,7 @@ withFaceTurned oid gs =
 turnStoredCopies :: ObjectId -> GameState -> GameState
 turnStoredCopies oid gs =
   let turn row = case ActiveCopy.turned row of
-        Just turned | Set.member oid (ActiveCopy.objects row) -> row {ActiveCopy.snapshot = turned, ActiveCopy.turned = Just (ActiveCopy.snapshot row)}
+        Just turned | copyCovers gs oid row -> row {ActiveCopy.snapshot = turned, ActiveCopy.turned = Just (ActiveCopy.snapshot row)}
         _ -> row
    in gs {GameState.copyEffects = fmap turn (GameState.copyEffects gs)}
 
@@ -2094,8 +2095,32 @@ storedCopyOf oid = fmap ActiveCopy.snapshot . latestStoredCopy oid
 latestStoredCopy :: ObjectId -> GameState -> Maybe ActiveCopy.ActiveCopy
 latestStoredCopy oid gs =
   Maybe.listToMaybe
-    . List.sortOn (Ord.Down . ActiveCopy.timestamp)
-    $ filter (Set.member oid . ActiveCopy.objects) (GameState.copyEffects gs)
+    . List.sortOn (Ord.Down . copyRowTimestamp gs)
+    $ filter (copyCovers gs oid) (GameState.copyEffects gs)
+
+-- | Does this stored copy effect cover the object right now? A fixed set's
+-- member (CR 611.2c), or what the row's source is attached to while the source
+-- is phased in on the battlefield (CR 611.3a, 611.3b, 702.26b), where no later
+-- copy effect took it over since the source was last restamped (CR 613.7,
+-- 613.7e).
+copyCovers :: GameState -> ObjectId -> ActiveCopy.ActiveCopy -> Bool
+copyCovers gs oid row = case ActiveCopy.covers row of
+  CopyCoverage.These oids -> Set.member oid oids
+  CopyCoverage.SourceHost overtaken -> case lookupObject (ActiveCopy.source row) gs of
+    Just src ->
+      Set.member (ActiveCopy.source row) (GameState.battlefield gs)
+        && hostOf (ActiveCopy.source row) gs == Just oid
+        && Map.lookup oid overtaken /= Just (Object.timestamp src)
+    Nothing -> False
+
+-- | CR 613.7: the timestamp a stored copy effect is ordered by -- its own, or
+-- for a static ability's following its source's attachment, the source's (CR
+-- 613.7a), which CR 613.7e renews each time it becomes attached and CR 613.7m
+-- may reorder (Pawl.Engine.Restamp).
+copyRowTimestamp :: GameState -> ActiveCopy.ActiveCopy -> Timestamp.Timestamp
+copyRowTimestamp gs row = case ActiveCopy.covers row of
+  CopyCoverage.These _ -> ActiveCopy.timestamp row
+  CopyCoverage.SourceHost _ -> maybe (ActiveCopy.timestamp row) Object.timestamp (lookupObject (ActiveCopy.source row) gs)
 
 -- | CR 607.5: the acquisition of the abilities layer 1a leaves this object --
 -- the latest stored copy effect covering it, `storedCopyOf`'s row, named by its
@@ -2105,7 +2130,7 @@ latestStoredCopy oid gs =
 acquisitionOf :: ObjectId -> GameState -> Acquisition.Acquisition
 acquisitionOf oid gs =
   case latestStoredCopy oid gs of
-    Just row -> Acquisition.Copied (ActiveCopy.timestamp row)
+    Just row -> Acquisition.Copied (copyRowTimestamp gs row)
     Nothing -> maybe Acquisition.Own Object.acquisition (lookupObject oid gs)
 
 -- | CR 607.5: the acquisition whose choices and stored results the object
@@ -2151,11 +2176,18 @@ lookupLayerOne oid gs = withStoredCopy <$> lookupObject oid gs
 -- CR 613.7: a copy effect stamped now is later than every stored row covering
 -- these objects, and a copy effect replaces copiable values rather than adding
 -- to them, so no such row is observable on them again. Taken out of each row's
--- `objects` rather than ordered at the read, because a stamp carries no
--- timestamp; the rows stand for whatever else they cover.
+-- coverage rather than ordered at the read, because a stamp carries no
+-- timestamp; the rows stand for whatever else they cover. A row following its
+-- source's host notes the source's timestamp beside the object, so the row
+-- covers it again once a re-attachment restamps the source (CR 613.7e).
 supersedeStoredCopies :: Set.Set ObjectId -> GameState -> GameState
 supersedeStoredCopies oids gs =
-  gs {GameState.copyEffects = fmap (\row -> row {ActiveCopy.objects = Set.difference (ActiveCopy.objects row) oids}) (GameState.copyEffects gs)}
+  let overtake row = case ActiveCopy.covers row of
+        CopyCoverage.These covered -> row {ActiveCopy.covers = CopyCoverage.These (Set.difference covered oids)}
+        CopyCoverage.SourceHost overtaken -> case lookupObject (ActiveCopy.source row) gs of
+          Just src -> row {ActiveCopy.covers = CopyCoverage.SourceHost (Map.union (Map.fromSet (const (Object.timestamp src)) (Set.filter (\oid -> copyCovers gs oid row) oids)) overtaken)}
+          Nothing -> row
+   in gs {GameState.copyEffects = fmap overtake (GameState.copyEffects gs)}
 
 -- | CR 710.1b / 707.3: do this object's COPIABLE values include a flip card's
 -- alternative half? Its copy snapshot's answer when it has one -- the flipped

@@ -56,6 +56,7 @@ import qualified Pawl.Types.Compares as Compares
 import qualified Pawl.Types.Comparison as Comparison
 import qualified Pawl.Types.Condition as Condition.Type
 import qualified Pawl.Types.ContinuousEffect as ContinuousEffect
+import qualified Pawl.Types.CopyCoverage as CopyCoverage
 import qualified Pawl.Types.Cost as Cost.Type
 import qualified Pawl.Types.CounterKind as CounterKind
 import qualified Pawl.Types.DamageEvent as DamageEvent
@@ -461,7 +462,7 @@ conditionalSpec s registry = Spec.describe s "Conditional" $ do
     warMammoth <- S.printingOf s registry "War Mammoth"
     let (srcId, targetId, gs) = board piker warMammoth
         (ts, gs1) = Game.freshTimestamp gs
-        stored = gs1 {GameState.copyEffects = [ActiveCopy.MkActiveCopy srcId ts (Expiry.Type.OnEvent (EventExpiry.MkEventExpiry S.alice DurationEvent.SourceTurnedFaceDown)) (Set.singleton srcId) (Projection.project targetId gs) Nothing]}
+        stored = gs1 {GameState.copyEffects = [ActiveCopy.MkActiveCopy srcId ts (Expiry.Type.OnEvent (EventExpiry.MkEventExpiry S.alice DurationEvent.SourceTurnedFaceDown)) (CopyCoverage.These (Set.singleton srcId)) (Projection.project targetId gs) Nothing]}
         gone = S.runPure S.identityAnswer stored (Event.destroy Regenerability.Regenerable [srcId])
         (keptChanged, kept) = Engine.runGamePure S.identityAnswer stored Expiry.sweepConditional
         (goneChanged, swept) = Engine.runGamePure S.identityAnswer gone Expiry.sweepConditional

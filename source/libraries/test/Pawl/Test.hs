@@ -174,8 +174,10 @@ import qualified Pawl.Codec.ControllerBecomesTargetSpec
 import qualified Pawl.Codec.ControllerRelationSpec
 import qualified Pawl.Codec.ConvokingSpec
 import qualified Pawl.Codec.CopyClauseSpec
+import qualified Pawl.Codec.CopyCoverageSpec
 import qualified Pawl.Codec.CopyExceptionSpec
 import qualified Pawl.Codec.CopyOriginalSpec
+import qualified Pawl.Codec.CopyRecipientSpec
 import qualified Pawl.Codec.CopyStackObjectSpec
 import qualified Pawl.Codec.CopyTargetsSpec
 import qualified Pawl.Codec.CostAmountSpec
@@ -1043,8 +1045,10 @@ spec s registry = do
   Pawl.Codec.ControlSlotsSpec.spec s
   Pawl.Codec.ConvokingSpec.spec s
   Pawl.Codec.CopyClauseSpec.spec s
+  Pawl.Codec.CopyCoverageSpec.spec s
   Pawl.Codec.CopyExceptionSpec.spec s
   Pawl.Codec.CopyOriginalSpec.spec s
+  Pawl.Codec.CopyRecipientSpec.spec s
   Pawl.Codec.CopyStackObjectSpec.spec s
   Pawl.Codec.CopyTargetsSpec.spec s
   Pawl.Codec.CostAmountSpec.spec s
@@ -1576,6 +1580,7 @@ spec s registry = do
   Pawl.CopySpec.ivySpec s registry
   Pawl.CopySpec.leylineOfResonanceSpec s registry
   Pawl.CopySpec.magarSpec s registry
+  Pawl.CopySpec.metamorphicAlterationSpec s registry
   Pawl.CopySpec.permanentCopySpec s registry
   Pawl.CopySpec.spec s registry
   Pawl.CopySpec.stirCopySpec s registry

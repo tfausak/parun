@@ -2,6 +2,7 @@
 
 module Pawl.Codec.ActiveCopy where
 
+import qualified Pawl.Codec.CopyCoverage as CopyCoverage
 import qualified Pawl.Codec.Expiry as Expiry
 import qualified Pawl.Codec.ObjectId as ObjectId
 import qualified Pawl.Codec.ProjectedCharacteristics as ProjectedCharacteristics
@@ -16,7 +17,7 @@ codec = Fields.object $ do
   source <- Fields.required "source" ObjectId.codec ActiveCopy.source
   timestamp <- Fields.required "timestamp" Timestamp.codec ActiveCopy.timestamp
   expiry <- Fields.required "expiry" Expiry.codec ActiveCopy.expiry
-  objects <- Fields.required "objects" (Common.set ObjectId.codec) ActiveCopy.objects
+  covers <- Fields.required "covers" CopyCoverage.codec ActiveCopy.covers
   snapshot <- Fields.required "snapshot" ProjectedCharacteristics.codec ActiveCopy.snapshot
   turned <- Fields.defaulted "turned" Nothing (Common.maybe ProjectedCharacteristics.codec) ActiveCopy.turned
   pure
@@ -24,7 +25,7 @@ codec = Fields.object $ do
       { ActiveCopy.source = source,
         ActiveCopy.timestamp = timestamp,
         ActiveCopy.expiry = expiry,
-        ActiveCopy.objects = objects,
+        ActiveCopy.covers = covers,
         ActiveCopy.snapshot = snapshot,
         ActiveCopy.turned = turned
       }
