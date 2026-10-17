@@ -122,7 +122,6 @@ import qualified Pawl.Types.RangeOfInfluence as RangeOfInfluence
 import qualified Pawl.Types.RestartSignal as RestartSignal
 import Pawl.Types.Result (Result)
 import qualified Pawl.Types.RevealWindow as RevealWindow
-import qualified Pawl.Types.Revealed as Revealed
 import qualified Pawl.Types.Sickness as Sickness
 import qualified Pawl.Types.Source as Source
 import qualified Pawl.Types.StackObjectKind as StackObjectKind
@@ -951,7 +950,7 @@ placeBorne srcId pending = do
   -- until the ability leaves the stack. Proven by the scenario
   -- cr-702-94b-lasting-reveal-the-miracle-card-stays-revealed-while-its-trigger-is-on-the-stack.
   case fmap LoggedEvent.event (PendingTrigger.firedBy pending) of
-    Just (GameEvent.Revealed revealed) -> Event.stampReveal (RevealWindow.WhileOnStack abilId) (Revealed.card revealed)
+    Just (GameEvent.Revealed revealed) -> Monad.mapM_ (Event.stampReveal (RevealWindow.WhileOnStack abilId)) (Event.revealedObjects revealed gs2)
     _ -> pure ()
   if not (Modal.selectionPossible legal selection)
     then -- CR 603.3c: no selection satisfies the instruction.
