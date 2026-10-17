@@ -854,10 +854,12 @@ arrivalMatches arrival zc =
 -- No record only where nothing departed: Event.recordMintedEntry's
 -- battlefield-to-battlefield entry of a token or conjured card, which no shape
 -- here counts as a departure. The bare snapshot answers there, with no
--- controller, owner or counters to read.
---
--- Not implemented: CR 604.2's "as long as" clauses as they stood at that entry,
--- so a conditional ability is always kept there (#5142).
+-- controller, owner, counters or lapsed CR 604.2 clauses to read. Only a
+-- MovedBetween naming the battlefield as both ends reaches it, which no printed
+-- look-back can, a token's creation (CR 111.2) being no move from the
+-- battlefield; the MovedFrom arm refuses it (Game.leftOrigin). Once the token
+-- has left, the CardArrivedIn arm reads the record its departure filed, clauses
+-- and all (LastKnown.lapsedGrants).
 departedView :: ViewOf -> GameState -> ZoneChange.ZoneChange -> PC.ProjectedCharacteristics -> Filter.View
 departedView viewOf gs zc snapshot = case Map.lookup (ZoneChange.departed zc) (GameState.lastKnown gs) of
   Just lastKnown -> lastKnownView viewOf (ZoneChange.departed zc) gs lastKnown {LastKnown.characteristics = snapshot}
@@ -1320,8 +1322,12 @@ viewOfSnapshot deploy mController mOwner isToken counters zone home lapsed snaps
 snapshotRoster :: Bool -> Zone.Zone -> Zone.Zone -> Set.Set Condition.Condition -> PC.ProjectedCharacteristics -> [ActivatedAbility.ActivatedAbility Card.Card (GrantedAbility.GrantedAbility Card.Card)]
 snapshotRoster deploy zone home lapsed snapshot =
   let functions = AbilityZone.grantFunctionsIn home (PC.delayedAbilities snapshot) zone
-      held = maybe True (`Set.notMember` lapsed) . ActivatedAbility.condition
-   in filter (\ability -> functions ability && held ability) (abilitiesOf (Deploy.grants deploy snapshot) snapshot)
+   in filter (\ability -> functions ability && grantHeld lapsed ability) (abilitiesOf (Deploy.grants deploy snapshot) snapshot)
+
+-- CR 604.2: is this ability granted, given the "as long as" clauses a sample
+-- recorded as lapsed? An ability with no clause always is.
+grantHeld :: Set.Set Condition.Condition -> ActivatedAbility.ActivatedAbility card ability -> Bool
+grantHeld lapsed = maybe True (`Set.notMember` lapsed) . ActivatedAbility.condition
 
 -- CR 602.1 / 605.1a: does a roster hold an activated ability that is not a
 -- mana ability?

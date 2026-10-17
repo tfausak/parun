@@ -103,6 +103,7 @@ import qualified Pawl.Types.TapState as TapState
 import qualified Pawl.Types.TargetSlot as TargetSlot
 import qualified Pawl.Types.Teams as Teams
 import qualified Pawl.Types.Timestamp as Timestamp
+import qualified Pawl.Types.TokenLot as TokenLot
 import qualified Pawl.Types.TriggeredAbility as TriggeredAbility
 import qualified Pawl.Types.TriggeredAbilitySource as TriggeredAbilitySource
 import qualified Pawl.Types.TypeLine as TypeLine
@@ -266,6 +267,23 @@ sheetContent sheet kind index = do
     StickerKind.Ability -> StickerContent.Ability <$> Seq.lookup i (StickerSheet.abilities sheet)
     StickerKind.PowerToughness -> StickerContent.PowerToughness <$> Seq.lookup i (StickerSheet.powerToughness sheet)
     StickerKind.Art -> StickerContent.Art <$ Monad.guard (index < StickerSheet.art sheet)
+
+-- CR 111.2 / 707.2: the token a lot mints, owned by the player creating it, on
+-- the battlefield, with the copied permanent's copiable values where the lot is
+-- a copy -- stamped into the layer-1 snapshot the projection starts from, the
+-- same binding the CR 614.1c entry rewrite writes, and the same read
+-- (Projection.copiableCharacteristics) on the way out. Stamped at the mint
+-- rather than after the entry loop because CR 614.12 asks for the
+-- characteristics the permanent would have on the battlefield, and for this
+-- token those are the copy's from the instant it exists. The creation's own
+-- status (CR 110.5b) is the caller's.
+-- Pawl.Engine.Event.createTokens mints it, and
+-- Pawl.Engine.Replacement.matchesTokenLot asks CR 614.12 of it before it exists.
+tokenOfLot :: PlayerId -> PrintingId.PrintingId -> TokenLot.TokenLot -> Timestamp.Timestamp -> Object
+tokenOfLot owner printing lot ts =
+  (Object.new owner (Source.OfToken printing) Zone.Battlefield ts)
+    { Object.bindings = maybe Map.empty (\pc -> Binding.setCopy pc Map.empty) (TokenLot.copy lot)
+    }
 
 freshPrintingId :: GameState -> (PrintingId.PrintingId, GameState)
 freshPrintingId gs =

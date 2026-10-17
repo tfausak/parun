@@ -97,14 +97,23 @@ import qualified Pawl.Types.Zone as Zone
 --
 -- Its readers are Pawl.ProjectionSpec's, which ask about a printed face with no
 -- game around it, Pawl.Engine.Replacement.matchesTokenLot, which asks about a
--- token that is proposed and not yet minted (CR 614.12), and the readers of a
+-- token that is proposed and not yet minted (CR 614.12) through
+-- viewOfCardLapsed below, and the readers of a
 -- card outside the game -- Pawl.Engine.Event.eligible, referenceAdmits below,
 -- Pawl.Interpreter.legalCardName. A reader that holds
 -- an OBJECT takes viewOfObject instead, in whatever zone the object sits -- see
 -- #1911, which moved the last of them.
 viewOfCard :: Face.Face Card.Type.Card -> Filter.View
-viewOfCard face =
+viewOfCard = viewOfCardLapsed Set.empty
+
+-- viewOfCard less the activated abilities whose CR 604.2 "as long as" clause
+-- is in `lapsed`, Count.snapshotRoster's reading: for a token lot's given text,
+-- whose clauses Pawl.Engine.Replacement.matchesTokenLot asks of the token it
+-- would be.
+viewOfCardLapsed :: Set Condition.Type.Condition -> Face.Face Card.Type.Card -> Filter.View
+viewOfCardLapsed lapsed face =
   let typeLine = Face.typeLine face
+      roster = filter (Count.grantHeld lapsed) (printedAbilitiesOf face)
    in Filter.MkView
         { -- CR 201.1 off the printed FACE. A multi-faced card's combined view
           -- carries the halves joined for rendering (Engine.Card.merge2); CR
@@ -292,7 +301,7 @@ viewOfCard face =
           -- and rule 702's, battlefield ones included -- a Vehicle card HAS crew
           -- (CR 702.122a). No text change reaches a printed face, and CR 804.2
           -- gives its ability to a creature on the battlefield only.
-          Filter.nonManaActivatedAbility = not (all ManaAbility.isManaAbility (printedAbilitiesOf face)),
+          Filter.nonManaActivatedAbility = not (all ManaAbility.isManaAbility roster),
           -- CR 602.1 over the same roster, without CR 605.1a's exclusion --
           -- Zirda, the Dawnwaker's companion condition is read here, since a card
           -- outside the game has no object to project.
@@ -301,7 +310,7 @@ viewOfCard face =
           -- view builder shares: a Mountain must answer the same here as it does
           -- on the battlefield.
           Filter.hasActivatedAbility =
-            not (null (printedAbilitiesOf face))
+            not (null roster)
               || Subtype.intrinsicManaAbility (TypeLine.types typeLine) (TypeLine.subtypes typeLine),
           -- CR 702.184c reaches a permanent's CONTROLLER; this builder describes
           -- a printed FACE with no controller and no board to grant it one.
@@ -2100,10 +2109,16 @@ abilitiesFromCharacteristics peers pc oid gs =
 -- (Count.lastKnownView). Keyed by the clause: the gate reads only the clause, the
 -- object and the board, so two abilities sharing a clause share its answer.
 lapsedGrantsOf :: Count.ViewOf -> ProjectedCharacteristics -> ObjectId -> GameState -> Set Condition.Type.Condition
-lapsedGrantsOf peers pc oid gs =
+lapsedGrantsOf peers pc oid gs = lapsedAmong peers oid gs (ungatedAbilitiesOf pc oid gs)
+
+-- The clauses among these abilities that do not hold of `oid` -- lapsedGrantsOf
+-- over a roster the caller supplies, for a token not yet minted, whose roster
+-- is its lot's (Pawl.Engine.Replacement.matchesTokenLot).
+lapsedAmong :: Count.ViewOf -> ObjectId -> GameState -> [ActivatedAbility.ActivatedAbility Card.Type.Card (GrantedAbility.GrantedAbility Card.Type.Card)] -> Set Condition.Type.Condition
+lapsedAmong peers oid gs abilities =
   Set.fromList
     [ cond
-    | ability <- ungatedAbilitiesOf pc oid gs,
+    | ability <- abilities,
       Just cond <- [ActivatedAbility.condition ability],
       not (grantHolds peers oid gs cond)
     ]
