@@ -1819,6 +1819,22 @@ library json-schema
     Pawl.JsonSchema.Validate
     Pawl.JsonSchema.ValidateSpec
 
+-- The line protocol a client plays a game through: each seat's decisions as
+-- JSON lines out and answers back.
+library play
+  import: library
+  build-depends:
+    pawl:codec,
+    pawl:engine,
+    pawl:json-codec,
+    pawl:scenario,
+    pawl:types,
+    text ^>=2.1.3,
+
+  hs-source-dirs: source/libraries/play
+  -- cabal-gild: discover source/libraries/play
+  exposed-modules: Pawl.Play.Protocol
+
 -- The registry provides a way to load and cache card data from disk.
 library registry
   import: library
@@ -1913,6 +1929,7 @@ library test
     pawl:json-codec,
     pawl:json-pointer,
     pawl:json-schema,
+    pawl:play,
     pawl:registry,
     pawl:scenario,
     pawl:slug,
@@ -2037,6 +2054,7 @@ library test
     Pawl.PreparationSpec
     Pawl.PreventionSpec
     Pawl.ProjectionSpec
+    Pawl.ProtocolSpec
     Pawl.PrototypeSpec
     Pawl.PutCounterSpec
     Pawl.RadSpec

@@ -806,6 +806,7 @@ import qualified Pawl.PowerToughnessSpec
 import qualified Pawl.PreparationSpec
 import qualified Pawl.PreventionSpec
 import qualified Pawl.ProjectionSpec
+import qualified Pawl.ProtocolSpec
 import qualified Pawl.PrototypeSpec
 import qualified Pawl.PutCounterSpec
 import qualified Pawl.RadSpec
@@ -1722,6 +1723,7 @@ spec s registry = do
   Pawl.SacrificeRestrictionSpec.spec s registry
   Pawl.SaddleSpec.spec s registry
   Pawl.SagaSpec.spec s registry
+  Pawl.ProtocolSpec.spec s registry
   Pawl.ReplySpec.spec s registry
   Pawl.ScenarioSpec.corpusSpec s registry
   Pawl.ScenarioSpec.loadSpec s
