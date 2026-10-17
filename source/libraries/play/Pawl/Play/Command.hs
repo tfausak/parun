@@ -2,22 +2,33 @@
 -- random bot, or both over the line protocol with --json.
 module Pawl.Play.Command where
 
+import qualified Control.Exception as Exception
+import qualified Control.Monad as Monad
+import qualified Data.Bifunctor as Bifunctor
 import qualified Data.ByteString as ByteString
+import qualified Data.IORef as IORef
 import qualified Data.List.NonEmpty as NonEmpty
 import qualified Data.Map.Strict as Map
+import qualified Data.Maybe as Maybe
+import qualified Data.Sequence as Seq
 import qualified Data.Set as Set
 import qualified Data.Text as Text
 import qualified Data.Text.Encoding as Encoding
 import qualified Data.Text.IO as TextIO
 import qualified GHC.Clock as Clock
 import Numeric.Natural (Natural)
+import qualified Pawl.Codec.Scenario as Codec.Scenario
 import qualified Pawl.DeckList as DeckList
+import qualified Pawl.JsonCodec.Codec as Codec
+import qualified Pawl.JsonCodec.Common as Common
 import qualified Pawl.Play.Bot as Bot
 import qualified Pawl.Play.Game as Game
+import qualified Pawl.Play.Record as Record
 import qualified Pawl.Play.Render as Render
 import qualified Pawl.Registry as Registry
 import qualified Pawl.Types.Deck as Deck
 import qualified Pawl.Types.Hotseat as Hotseat
+import qualified Pawl.Types.Label as Label
 import qualified Pawl.Types.PlayOptions as PlayOptions
 import qualified Pawl.Types.PlayerId as PlayerId
 import qualified Pawl.Types.SplitMix as SplitMix
@@ -41,7 +52,8 @@ flags =
   [ GetOpt.Option [] ["seed"] (GetOpt.ReqArg (\s o -> maybe (Left ("not a seed: " <> s)) (\n -> Right o {PlayOptions.seed = Just n}) (Read.readMaybe s)) "N") "the generator's seed; the clock's when absent",
     GetOpt.Option [] ["first"] (GetOpt.ReqArg (\s o -> fmap (\n -> o {PlayOptions.first = Just n}) (seat s)) "1|2") "which seat plays first; asked when absent",
     GetOpt.Option [] ["bot"] (GetOpt.ReqArg (\s o -> fmap (\n -> o {PlayOptions.bots = Set.insert n (PlayOptions.bots o)}) (seat s)) "1|2") "a seat the random bot plays",
-    GetOpt.Option [] ["json"] (GetOpt.NoArg (\o -> Right o {PlayOptions.json = True})) "speak the line protocol on standard input and output"
+    GetOpt.Option [] ["json"] (GetOpt.NoArg (\o -> Right o {PlayOptions.json = True})) "speak the line protocol on standard input and output",
+    GetOpt.Option [] ["save"] (GetOpt.ReqArg (\s o -> Right o {PlayOptions.save = Just s}) "FILE") "save the game as a scenario, even one cut short"
   ]
   where
     seat s = case Read.readMaybe s of
@@ -90,7 +102,19 @@ play options (one, two) = do
       hotseat = case people of
         [only] -> Hotseat.fresh {Hotseat.facing = Just (idOf only)}
         _ -> Hotseat.fresh
-  outcome <- Game.run seats hotseat (SplitMix.MkSplitMix seed) matchup
+  entries <- IORef.newIORef Seq.empty
+  let labels = Map.fromList [(idOf n, Label.MkLabel (Text.pack ("player" <> show n))) | n <- [1, 2 :: Natural]]
+      observers = [Record.recording labels (Game.underneath . IORef.modifyIORef' entries . flip (Seq.|>)) | Maybe.isJust (PlayOptions.save options)]
+      interrupted e = case e of
+        Exception.UserInterrupt -> pure (Left (Text.pack "interrupted"))
+        _ -> Exception.throwIO e
+  outcome <- Exception.catch (Game.run observers seats hotseat (SplitMix.MkSplitMix seed) matchup) interrupted
+  Monad.forM_ (PlayOptions.save options) $ \path -> do
+    timeline <- IORef.readIORef entries
+    let entrants = fmap (Bifunctor.first (Record.labelOf labels)) matchup
+        saved = Record.scenario (Text.pack ("Played with pawl play, seed " <> show seed <> ".")) entrants timeline
+    ByteString.writeFile path (Encoding.encodeUtf8 (Common.render (Codec.encode Codec.Scenario.codec saved) <> Text.pack "\n"))
+    IO.hPutStrLn IO.stderr ("Saved " <> path <> ".")
   case outcome of
     Right (result, _) -> (if PlayOptions.json options then TextIO.hPutStrLn IO.stderr else TextIO.putStrLn) (Render.result result)
     Left reason -> TextIO.hPutStrLn IO.stderr (Text.pack "Stopped: " <> reason <> Text.pack ".")

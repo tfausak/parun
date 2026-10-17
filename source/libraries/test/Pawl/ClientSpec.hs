@@ -77,7 +77,7 @@ spec s registry = Spec.describe s "Client" $ do
   Spec.it s "a change of seat clears the screen and waits before showing the next seat" $ do
     matchup <- BotSpec.bears s registry
     let people = Map.fromList [(S.alice, Game.human (screen 300 plays)), (S.bob, Game.human (screen 300 plays))]
-        shown = reverse (written (State.execState (Game.run people Hotseat.fresh (SplitMix.MkSplitMix 1) matchup) blank))
+        shown = reverse (written (State.execState (Game.run [] people Hotseat.fresh (SplitMix.MkSplitMix 1) matchup) blank))
         handOffs = [i | (i, l) <- zip [0 :: Int ..] shown, Text.isPrefixOf (Text.pack "Pass to ") l]
         at i = Maybe.listToMaybe (drop i shown)
         -- The last hand-off may be cut short by the end of input.
@@ -135,7 +135,7 @@ screen budget typist =
 against :: (Screen -> Maybe Text.Text) -> NonEmpty.NonEmpty (PlayerId.PlayerId, Deck.Deck) -> (Either Text.Text (Result.Result, GameState.GameState), [Text.Text])
 against typist matchup =
   let seats = Map.fromList [(S.alice, Game.human (screen 3000 typist)), (S.bob, Bot.bot)]
-      (outcome, sc) = State.runState (Game.run seats Hotseat.fresh {Hotseat.facing = Just S.alice} (SplitMix.MkSplitMix 1) matchup) blank
+      (outcome, sc) = State.runState (Game.run [] seats Hotseat.fresh {Hotseat.facing = Just S.alice} (SplitMix.MkSplitMix 1) matchup) blank
    in (outcome, reverse (written sc))
 
 -- Since the last line typed.

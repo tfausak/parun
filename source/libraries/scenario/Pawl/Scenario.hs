@@ -30,6 +30,7 @@ import qualified Pawl.Codec.Phase as Codec.Phase
 import qualified Pawl.Codec.Reference as Codec.Reference
 import qualified Pawl.Codec.Reply as Codec.Reply
 import qualified Pawl.Codec.Timed as Codec.Timed
+import qualified Pawl.DeckList as DeckList
 import qualified Pawl.Engine.Action as ActionEngine
 import qualified Pawl.Engine.Ante as Ante
 import qualified Pawl.Engine.Attach as Attach
@@ -45,6 +46,7 @@ import qualified Pawl.Engine.Mana as Mana
 import qualified Pawl.Engine.Modal as Modal
 import qualified Pawl.Engine.Projection as Projection
 import qualified Pawl.Engine.Projection.View as Projection
+import qualified Pawl.Engine.Resolve.Effect as Resolve
 import qualified Pawl.Engine.Script as Script
 import qualified Pawl.Engine.Setup as Setup
 import qualified Pawl.Engine.Turn as Turn
@@ -83,8 +85,10 @@ import qualified Pawl.Types.CountIs as CountIs
 import qualified Pawl.Types.CountersAre as CountersAre
 import qualified Pawl.Types.DamageIs as DamageIs
 import qualified Pawl.Types.Decider as Decider
+import qualified Pawl.Types.Deck as Deck
 import qualified Pawl.Types.DefendersAre as DefendersAre
 import qualified Pawl.Types.Emperors as Emperors
+import qualified Pawl.Types.Entrant as Entrant
 import qualified Pawl.Types.Entry as Entry
 import qualified Pawl.Types.Face as Face
 import qualified Pawl.Types.FaceDownCharacteristics as FaceDownCharacteristics
@@ -137,6 +141,7 @@ import qualified Pawl.Types.Sickness as Sickness
 import qualified Pawl.Types.SlotName as SlotName
 import qualified Pawl.Types.Source as Source
 import qualified Pawl.Types.Staged as Staged
+import qualified Pawl.Types.Start as Start
 import qualified Pawl.Types.SubtypesAre as SubtypesAre
 import qualified Pawl.Types.Taking as Taking
 import qualified Pawl.Types.TappedIs as TappedIs
@@ -173,31 +178,68 @@ data Rehearsal = MkRehearsal
     -- again after reversing one; a run ending first had no engine acting on it.
     awaiting :: Maybe (When.When, Move.Move, GameState.GameState),
     -- | CR 108.1: the Oracle card reference, as far as the timeline names it.
-    reference :: Map.Map CardName.CardName Card.Card
+    reference :: Map.Map CardName.CardName Card.Card,
+    -- | Whether the run replays a game from its decks, which ends at the
+    -- game's result or where its recording stops.
+    replaying :: Bool,
+    -- | Where a replayed recording stopped: the state the first prompt past
+    -- its last entry was asked in.
+    ended :: Maybe GameState.GameState
   }
 
 type Run = State.StateT Rehearsal (Either Failure.ScenarioFailure)
 
 -- | Build, run from the board's step, check. The entry point for a scenario
 -- written as data: whole steps (CR 500.1) until the timeline is spent, the game
--- is over, or the turn passes the last one the timeline names. Its final checks
--- then run on that state.
+-- is over, or the turn passes the last one the timeline names. A game from
+-- decks is set up first (CR 103) and runs to its result or to where its
+-- recording stops. Its final checks then run on that state.
 run :: (Monad m) => Registry.Registry m -> Scenario.Scenario -> m (Either Failure.ScenarioFailure GameState.GameState)
 run registry scenario = do
-  staging <- stage registry (Scenario.board scenario)
-  let names =
+  let placed = case Scenario.start scenario of
+        Start.FromBoard board -> fmap Placement.card (placementsOf board)
+        Start.FromDecks _ -> []
+      names =
         Set.toList
           ( foldMap (namesIn . encoded Codec.Timed.codec) (Scenario.timeline scenario)
               <> foldMap (namesIn . encoded Codec.Check.codec) (Scenario.final scenario)
-              <> Set.fromList (fmap Placement.card (placementsOf (Scenario.board scenario)))
+              <> Set.fromList placed
           )
   found <- mapM (\name -> fmap (fmap ((,) name)) (Registry.fetchCard registry name)) names
+  staging <- case Scenario.start scenario of
+    Start.FromBoard board -> fmap (fmap (\placed' -> (placed', Driver.drive [] scripted stepBudget finished (Staged.state placed')))) (stage registry board)
+    Start.FromDecks entrants -> fmap (fmap (\(seated, matchup) -> (seated, setUp matchup (Staged.state seated)))) (enter registry entrants)
   pure $ do
-    board <- staging
-    (final, rehearsal) <- State.runStateT (Driver.drive [] scripted stepBudget finished (Staged.state board)) ((rehearsalOf (Scenario.timeline scenario) board) {reference = Map.fromList (Maybe.catMaybes found)})
+    (board, playing) <- staging
+    let fromDecks = case Scenario.start scenario of
+          Start.FromBoard _ -> False
+          Start.FromDecks _ -> True
+    (reached, rehearsal) <- State.runStateT playing ((rehearsalOf (Scenario.timeline scenario) board) {reference = Map.fromList (Maybe.catMaybes found), replaying = fromDecks})
+    let final = Maybe.fromMaybe reached (ended rehearsal)
     settle rehearsal final
     State.evalStateT (mapM_ (expect Nothing final) (Scenario.final scenario)) rehearsal
     pure final
+  where
+    setUp matchup gs = do
+      (_, set) <- Engine.runGameAsked answerPrompt gs (Setup.newGame (Resolve.performHandAction Engine.playSubgame) matchup)
+      Driver.drive [] scripted replayBudget finished set
+
+-- | CR 103: each entrant seated in turn order, its deck list read, nothing yet
+-- created; Setup.newGame builds the libraries.
+enter :: (Monad m) => Registry.Registry m -> NonEmpty.NonEmpty Entrant.Entrant -> m (Either Failure.ScenarioFailure (Staged.Staged, NonEmpty.NonEmpty (PlayerId.PlayerId, Deck.Deck)))
+enter registry entrants = do
+  let seated = NonEmpty.zip entrants (fmap PlayerId.MkPlayerId (0 NonEmpty.:| [1 ..]))
+      ids = Map.fromList (fmap (Bifunctor.first Entrant.name) (NonEmpty.toList seated))
+  decks <- traverse (\(entrant, pid) -> fmap (Bifunctor.bimap (Failure.MkUnreadableDeck (Entrant.name entrant) . Text.intercalate (Text.pack "; ") . fmap DeckList.explain) ((,) pid)) (DeckList.parse registry (Text.unlines (Entrant.deck entrant)))) seated
+  pure $ case List.find ((> 1) . length) (List.group (List.sort (fmap Entrant.name (NonEmpty.toList entrants)))) of
+    Just (label : _) -> Left (Failure.MkDuplicateLabel label)
+    _ -> do
+      matchup <- sequence decks
+      pure (Staged.MkStaged (Setup.gameWith GameSettings.plain (fmap fst matchup)) ids Map.empty, matchup)
+
+-- | How many steps a replayed game may run: a whole game's worth.
+replayBudget :: Natural
+replayBudget = 100000
 
 -- | Every string an entry or check holds, read as a card name: with the board's
 -- cards, the names a CR 201.4 answer or a copy can ask Prompt.LookUpCard about.
@@ -217,9 +259,13 @@ stepBudget = 1000
 -- names.
 finished :: GameState.GameState -> Run Bool
 finished gs = do
-  remaining <- State.gets queues
-  let lastTurn = maybe 0 (When.turn . fst) (Map.lookupMax remaining)
-  pure (Map.null remaining || GameState.turnNumber gs > lastTurn)
+  rehearsal <- State.get
+  let remaining = queues rehearsal
+      lastTurn = maybe 0 (When.turn . fst) (Map.lookupMax remaining)
+  pure $
+    if replaying rehearsal
+      then Maybe.isJust (ended rehearsal)
+      else Map.null remaining || GameState.turnNumber gs > lastTurn
 
 -- | Run one explicit engine entry point under a timeline, for a Haskell caller
 -- whose subject is a subsystem rather than a whole game. An entry whose moment
@@ -240,7 +286,9 @@ rehearsalOf timeline board =
           refusing = Nothing,
           reversing = Nothing,
           awaiting = Nothing,
-          reference = Map.empty
+          reference = Map.empty,
+          replaying = False,
+          ended = Nothing
         }
 
 -- | What a finished run still owes: choices its last action never used, and
@@ -485,6 +533,28 @@ scripted = Answerer.MkAnswerer answerPrompt
 
 answerPrompt :: Asked.Asked r -> Run r
 answerPrompt asked = do
+  rehearsal <- State.get
+  -- A replayed recording ends at the first prompt past its last entry; the
+  -- run answers quietly to the end of the step and checks that state.
+  if replaying rehearsal && Map.null (queues rehearsal) && recorded (Asked.prompt asked)
+    then do
+      Monad.when (Maybe.isNothing (ended rehearsal)) (State.put rehearsal {ended = Just (Asked.game asked)})
+      pure (quietAnswer (Asked.prompt asked))
+    else answerScheduled asked
+
+-- | Whether a recording of a played game holds this prompt's answer: not a
+-- seat's standing refusal to concede (CR 104.3a), nor the interpreter's
+-- questions, which the run answers from the registry.
+recorded :: Prompt.Type.Prompt r -> Bool
+recorded prompt = case prompt of
+  Prompt.Type.Concede {} -> False
+  Prompt.Type.LookUpCard {} -> False
+  Prompt.Type.ReferenceCards {} -> False
+  Prompt.Type.ReferenceNames {} -> False
+  _ -> True
+
+answerScheduled :: Asked.Asked r -> Run r
+answerScheduled asked = do
   let prompt = Asked.prompt asked
       gs = Asked.game asked
       kind = Prompt.kindOf prompt
@@ -584,7 +654,7 @@ answerDedicated decider asked =
       kind = Prompt.kindOf prompt
       unscheduled offers = failWith (Failure.MkUnscheduledPrompt (GameState.turnNumber gs) (GameState.phase gs) decider kind offers)
    in case prompt of
-        Prompt.Type.ChooseAction who _ actions -> answerActionPrompt gs (Decider.unwrap who) actions
+        Prompt.Type.ChooseAction who _ actions -> answerActionPrompt gs (Decider.unwrap who) actions prompt
         -- CR 108.1: the interpreter's question, answered from the reference.
         Prompt.Type.LookUpCard name -> State.gets (Map.lookup name . reference)
         -- CR 723.6: keyed on the conceding player, whom no one decides for.
@@ -1030,8 +1100,8 @@ permutationOf offered order = List.sort order == zipWith const [0 ..] offered
 -- order, then the first move that takes priority, and a pass when there is
 -- none. An entry for a prompt the engine elided stays queued rather than
 -- blocking the move behind it, and is reported as unreached.
-answerActionPrompt :: GameState.GameState -> PlayerId.PlayerId -> [Action.Action] -> Run Action.Action
-answerActionPrompt gs pid actions = do
+answerActionPrompt :: GameState.GameState -> PlayerId.PlayerId -> [Action.Action] -> Prompt.Type.Prompt Action.Action -> Run Action.Action
+answerActionPrompt gs pid actions prompt = do
   made gs
   key <- whenOf gs pid
   runLeadingChecks key gs
@@ -1046,6 +1116,8 @@ answerActionPrompt gs pid actions = do
         Entry.Refuse Move.Activate {} -> True
         Entry.Do Move.Take {} -> True
         Entry.Refuse Move.Take {} -> True
+        -- A recording's answer, by the action's place in the offer.
+        Entry.Do (Move.Answer answer) -> Answer.prompt answer == Text.pack "ChooseAction"
         _ -> False
   case List.find (takesPriority . snd) (zip [0 ..] (Foldable.toList entries)) of
     Nothing -> pure Action.Pass
@@ -1054,6 +1126,7 @@ answerActionPrompt gs pid actions = do
       (Nothing, Entry.Do Move.Pass) -> do
         popAt key index
         pure Action.Pass
+      (Nothing, Entry.Do (Move.Answer _)) -> answerGeneric gs key (Text.pack "ChooseAction") index timed prompt
       (Nothing, Entry.Do verb) -> do
         offered <- mapM (describeAction gs) actions
         matching <- actionsMatching gs verb actions
@@ -1071,7 +1144,7 @@ answerActionPrompt gs pid actions = do
         matching <- actionsMatching gs verb actions
         popAt key index
         case matching of
-          [] -> answerActionPrompt gs pid actions
+          [] -> answerActionPrompt gs pid actions prompt
           [action] -> do
             State.modify' (\rehearsal -> rehearsal {pending = Just (key, verb, choicesOf verb), reversing = Just (key, verb, pid, gs)})
             pure action
@@ -1834,6 +1907,7 @@ render failure = case failure of
   Failure.MkUnknownActivePlayer label -> Label.unwrap label <> Text.pack " is active but has no seat"
   Failure.MkUnknownController label -> Label.unwrap label <> Text.pack " controls a placed card but has no seat"
   Failure.MkUnknownCard name -> Text.pack "no card named " <> CardName.unwrap name
+  Failure.MkUnreadableDeck label problem -> Label.unwrap label <> Text.pack "'s deck: " <> problem
   Failure.MkUnknownProtector label -> Label.unwrap label <> Text.pack " protects a placed battle but has no seat"
   Failure.MkUnknownFace name face -> CardName.unwrap name <> Text.pack " has no face named " <> CardName.unwrap face
   Failure.MkIllegalAttachment label -> Text.pack "a placement cannot be attached to " <> Label.unwrap label
