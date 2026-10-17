@@ -596,6 +596,8 @@ library codec
     Pawl.Codec.EnteringTogetherSpec
     Pawl.Codec.EntersWith
     Pawl.Codec.EntersWithSpec
+    Pawl.Codec.Entrant
+    Pawl.Codec.EntrantSpec
     Pawl.Codec.Entry
     Pawl.Codec.EntryAttack
     Pawl.Codec.EntryAttackSpec
@@ -1849,6 +1851,7 @@ library play
     Pawl.Play.Command
     Pawl.Play.Game
     Pawl.Play.Protocol
+    Pawl.Play.Record
     Pawl.Play.Render
     Pawl.Play.SplitMix
     Pawl.Play.SplitMixSpec
@@ -2079,6 +2082,7 @@ library test
     Pawl.PutCounterSpec
     Pawl.RadSpec
     Pawl.RangeOfInfluenceSpec
+    Pawl.RecordSpec
     Pawl.RecruitSpec
     Pawl.RegistrySpec
     Pawl.RemoveCounterSpec
@@ -2419,6 +2423,7 @@ library types
     Pawl.Types.EndTurnSignal
     Pawl.Types.EnteringTogether
     Pawl.Types.EntersWith
+    Pawl.Types.Entrant
     Pawl.Types.Entry
     Pawl.Types.EntryAttack
     Pawl.Types.EntryBlock
@@ -2830,6 +2835,7 @@ library types
     Pawl.Types.SplitMix
     Pawl.Types.StackObjectKind
     Pawl.Types.Staged
+    Pawl.Types.Start
     Pawl.Types.StatedFlip
     Pawl.Types.StateDigest
     Pawl.Types.StaticAbility

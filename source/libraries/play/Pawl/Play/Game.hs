@@ -18,6 +18,7 @@ import qualified Pawl.Types.Deck as Deck
 import qualified Pawl.Types.GameSettings as GameSettings
 import qualified Pawl.Types.GameState as GameState
 import qualified Pawl.Types.Hotseat as Hotseat
+import qualified Pawl.Types.Observer as Observer
 import qualified Pawl.Types.PlayerId as PlayerId
 import qualified Pawl.Types.Result as Result
 import qualified Pawl.Types.SplitMix as SplitMix
@@ -37,6 +38,10 @@ wired exchange = Protocol.over (\line -> Trans.lift (Client.lift2 (exchange line
 
 -- | A plain two-player game, from setup to its result; the head of the
 -- matchup plays first. Left is why play stopped before the end.
-run :: (Monad m) => Map.Map PlayerId.PlayerId (Answerer.Answerer (Play m)) -> Hotseat.Hotseat -> SplitMix.SplitMix -> NonEmpty.NonEmpty (PlayerId.PlayerId, Deck.Deck) -> m (Either Text.Text (Result.Result, GameState.GameState))
-run seats hotseat generator matchup =
-  Except.runExceptT (State.evalStateT (State.evalStateT (Driver.match [] (Driver.bySeat seats Chance.chance) GameSettings.plain matchup) generator) hotseat)
+run :: (Monad m) => [Observer.Observer (Play m)] -> Map.Map PlayerId.PlayerId (Answerer.Answerer (Play m)) -> Hotseat.Hotseat -> SplitMix.SplitMix -> NonEmpty.NonEmpty (PlayerId.PlayerId, Deck.Deck) -> m (Either Text.Text (Result.Result, GameState.GameState))
+run observers seats hotseat generator matchup =
+  Except.runExceptT (State.evalStateT (State.evalStateT (Driver.match observers (Driver.bySeat seats Chance.chance) GameSettings.plain matchup) generator) hotseat)
+
+-- | Something of the base monad's, from inside a game.
+underneath :: (Monad m) => m a -> Play m a
+underneath = Trans.lift . Client.lift2

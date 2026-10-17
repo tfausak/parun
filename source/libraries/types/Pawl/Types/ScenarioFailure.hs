@@ -22,6 +22,8 @@ data ScenarioFailure
   | MkUnknownActivePlayer Label.Label
   | MkUnknownController Label.Label
   | MkUnknownCard CardName.CardName
+  | -- | A new game's deck list that does not read (Pawl.DeckList), by seat.
+    MkUnreadableDeck Label.Label Text.Text
   | -- | A placement's protector names no seat (CR 310.9).
     MkUnknownProtector Label.Label
   | -- | A placement shows a face its card does not have (CR 712.8), card first.

@@ -276,6 +276,7 @@ import qualified Pawl.Codec.EndTurnSignalSpec
 import qualified Pawl.Codec.EndingStepSpec
 import qualified Pawl.Codec.EnteringTogetherSpec
 import qualified Pawl.Codec.EntersWithSpec
+import qualified Pawl.Codec.EntrantSpec
 import qualified Pawl.Codec.EntryAttackSpec
 import qualified Pawl.Codec.EntryBlockSpec
 import qualified Pawl.Codec.EntryFlipSpec
@@ -815,6 +816,7 @@ import qualified Pawl.PrototypeSpec
 import qualified Pawl.PutCounterSpec
 import qualified Pawl.RadSpec
 import qualified Pawl.RangeOfInfluenceSpec
+import qualified Pawl.RecordSpec
 import qualified Pawl.RecruitSpec
 import qualified Pawl.Registry as Registry
 import qualified Pawl.RegistrySpec
@@ -1158,6 +1160,7 @@ spec s registry = do
   Pawl.Codec.EndTurnSignalSpec.spec s
   Pawl.Codec.EnteringTogetherSpec.spec s
   Pawl.Codec.EntersWithSpec.spec s
+  Pawl.Codec.EntrantSpec.spec s
   Pawl.Codec.EntryAttackSpec.spec s
   Pawl.Codec.EntryBlockSpec.spec s
   Pawl.Codec.EntryFlipSpec.spec s
@@ -1732,6 +1735,7 @@ spec s registry = do
   Pawl.ProtocolSpec.spec s registry
   Pawl.BotSpec.spec s registry
   Pawl.ClientSpec.spec s registry
+  Pawl.RecordSpec.spec s registry
   Pawl.ReplySpec.spec s registry
   Pawl.ScenarioSpec.corpusSpec s registry
   Pawl.ScenarioSpec.loadSpec s
