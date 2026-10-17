@@ -13,30 +13,6 @@ leaves this table when its card is added to `data/cards/`.
 
 | Card | Template card(s) | Note |
 |---|---|---|
-| Ingenious Thief | the-ravens-warning | SelfEnters, LookAt EachCardInHand of target player; Flying |
-| Jungle Lion | villainous-ogre | CantBlock self |
-| Lava Axe | goblin-war-strike | PlayersAndPlaneswalkers, 5 |
-| Lava Flow | grounded-for-life | Permanents pool filter Or(creature, land) |
-| Man-o'-War | unsummon + radiant-fountain | SelfEnters bounce target creature |
-| Mercenary Knight | lithophage + selhoff-entomber | SelfEnters; Sacrifice self with payGate IfNotPaid, cost DiscardCards 1 creature card |
-| Mind Knives | hymn-to-tourach + duress | RandomCardInHand count 1; target filter IsPlayer Opponent |
-| Mobilize | rally-the-troops | exact line |
-| Monstrous Growth | giant-growth | +4/+4 |
-| Mystic Denial | essence-scatter | filter Or(creature, sorcery) |
-| Natural Order | fling + enduring-ideal | additional Sacrifice whichPermanents green creature; Search green creature to Battlefield |
-| Natural Spring | braingeyser (target player) + cram-session | GainLife 8 to InSlot target |
-| Nature's Cloak | piety-charm | GainKeyword Landwalk(Forest) over EachMatching green creatures you control |
-| Nature's Ruin | day-of-judgment | filter green creatures |
-| Needle Storm | corrosive-gale | literal 4 |
-| Omen | ponder | exact text |
-| Owl Familiar | sorcerer-class | SelfEnters Draw 1, Discard Counted 1; Flying |
-| Path of Peace | swords-to-plowshares | Destroy; GainLife 4 to OwnerOfBound (timmerian-fiends uses OwnerOfBound) |
-| Personal Tutor | mystical-tutor | filter Sorcery, RevealThenTop |
-| Phantom Warrior | wormfang-crab | its "can't be blocked" line only |
-| Pillaging Horde | browbeat (NoneTaken) + hymn-to-tourach | clause 0 Optional Discard RandomCardInHand you; clause 1 ifTaken NoneTaken[0] Sacrifice self. No pool cost component discards at random, so the "unless" is the optional-clause form |
-| Plant Elemental | lithophage | SelfEnters; payGate sacrifice 1 Forest |
-| Primeval Force | lithophage + phyrexian-tribute | payGate sacrifice Fixed 3 Forests |
-| Prosperity | vision-skeins + braingeyser | Draw AnyPlayer, quantity X |
 | Pyroclasm | astral-arena | DealDamage 2 EachMatching creature |
 | Rain of Salt | ley-weaver + vandalize | target count least 2 most 2, lands |
 | Rain of Tears | vandalize | Destroy target land |

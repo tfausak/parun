@@ -3677,12 +3677,19 @@ effectIsImpossible resolving source controller legal gs effect = case effect of
     -- permanent is an instruction to choose one, and an empty pool leaves
     -- nothing to choose. Each pool is its asking arm's own read
     -- (chooseCardsInHand, chosenCardsInGraveyard,
-    -- chooseCardFromAmong, chosenPermanents); a ref naming no chooser, a choice
+    -- chooseCardFromAmong, chosenPermanents), and a random card in hand is the
+    -- same pick with randomness choosing; a ref naming no chooser, a choice
     -- the empty answer satisfies, and every ref that reads, answers False.
     choosesFromNothing ref = case ref of
       ObjectRef.ChosenCardInHand (ChosenCardInHand.MkChosenCardInHand player filter_) ->
         let choosers = handChoosers legal resolving source controller gs player
          in not (null choosers) && all (\pid -> null (handCardsOf context gs pid filter_)) choosers
+      -- randomCardsInHand's pool: Pillaging Horde's "unless you discard a card
+      -- at random" over an empty hand (CR 118.3, 118.12a), which the scenario
+      -- "CR 118.3 Pillaging Horde is sacrificed over an empty hand" proves.
+      ObjectRef.RandomCardInHand (RandomCardInHand.MkRandomCardInHand player filter_ _) ->
+        let holders = handChoosers legal resolving source controller gs player
+         in not (null holders) && all (\pid -> null (handCardsOf context gs pid filter_)) holders
       ObjectRef.ChosenCardInGraveyard (ChosenCardInGraveyard.MkChosenCardInGraveyard chooser scope filter_ count) ->
         positive count && case chooser of
           Chooser.TheController -> null (graveyardCards context legal source controller gs scope filter_)
