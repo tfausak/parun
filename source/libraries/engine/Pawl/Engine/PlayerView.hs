@@ -63,6 +63,9 @@ seatView pid gs seat = do
 
 -- | CR 708.2: an object's status for anyone, its characteristics (as projected,
 -- CR 613) only for a seat that may see it.
+--
+-- Not implemented: a face-down permanent or spell showing its face to its
+-- controller (CR 708.5) and its face-down values to everyone else (#5222).
 objectView :: PlayerId.PlayerId -> GameState.GameState -> ObjectId.ObjectId -> Maybe ObjectView.ObjectView
 objectView pid gs oid = do
   object <- Game.lookupObject oid gs
