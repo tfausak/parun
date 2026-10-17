@@ -30,13 +30,13 @@ spec s = Spec.describe s "Pawl.Codec.KeywordDesignator" $ do
       (KeywordDesignator.OfKeyword Keyword.Exhaust)
       " {\"type\":\"OfKeyword\",\"value\":{\"type\":\"Exhaust\"}} "
 
-  -- CR 702.33e: Faerie Squadron's "if this spell was kicked".
-  Spec.it s "PrintedKicker" $
+  -- CR 607.2i / 702.33e: Scrapshooter's "if the gift was promised".
+  Spec.it s "Printed" $
     Common.assertCodec
       s
       codec
-      KeywordDesignator.PrintedKicker
-      " {\"type\":\"PrintedKicker\"} "
+      (KeywordDesignator.Printed KeywordFamily.Gift)
+      " {\"type\":\"Printed\",\"value\":{\"type\":\"Gift\"}} "
 
   -- CR 702.56b: the second of a spell's identical replicate instances, which a
   -- minted replicate trigger names.

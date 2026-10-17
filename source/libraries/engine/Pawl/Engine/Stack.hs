@@ -451,14 +451,13 @@ resolveCardBacked runSubgame oid rest printingId = do
           -- status, the two things those branches differ in.
           entersAs seed facing = do
             Monad.void (Resolve.noteResolved oid (Resolve.spellController obj oid gs1))
-            -- Ahead of carryGrants, whose stored rows would count each grant's
-            -- instance twice on the spell.
-            State.modify' (settlePromises oid)
             -- CR 400.7b, stored against the spell so the move's CarryOver.Carried
             -- re-keys it onto the permanent before CR 614.12's entry loop reads
             -- it.
             State.modify' (carryGrants oid)
             arrivals <- Event.changeZoneAttaching Nothing Set.empty oid Zone.Battlefield LibraryPosition.defaultValue seed (maybe TapState.Untapped EntryRiders.tapped sneak) Map.empty (Just controller) entering facing False CarryOver.Carried False Seq.empty
+            -- After the move, against the instances the permanent has.
+            State.modify' (\g -> foldr settlePromises g arrivals)
             -- AFTER the move, ninjutsu's ordering one opcode over
             -- (Pawl.Engine.Resolve.Effect's MoveToZone arm): the permanent has
             -- to be on the battlefield before CR 508.4 can put it in combat, and
@@ -599,19 +598,22 @@ carryGrants oid gs =
       rows = fmap row (filter (\(_, _, modification) -> functionsOnBattlefield subtypes modification) (Projection.staticPartsOn oid gs))
    in if null rows then gs else gs {GameState.continuousEffects = GameState.continuousEffects gs <> rows}
 
--- CR 400.7d / 702.174a: the resolving permanent spell's gift payments and
--- promises, re-keyed by the instances it still has, which are the instances the
--- permanent enters with (carryGrants). The ith of those the spell promised
--- becomes Own i, its payment the ith entry of Object.paidCosts, which is what
--- Keyword.gift's ith enters trigger reads, and each live instance keeps its own
--- promise, the property Pawl.Engine.Resolve.giftOnSpellResolution has for the
--- spell half.
+-- CR 400.7d / 702.174a: the gift payments and promises a permanent carried from
+-- the spell it was, kept for the instances it has as it enters: its own, and the
+-- grants carried onto it (carryGrants). Each payment stays keyed by its instance,
+-- so the card's own payoff reads only its own gift's (CR 607.2i,
+-- KeywordDesignator.Printed). Only promised instances keep an entry, and the
+-- promise of the ith becomes Own i, the ordinal Keyword.gift's ith enters
+-- trigger reads beside the ith entry of Object.paidCosts.
 --
 -- A lost instance's payment is dropped with its promise: no ability the
--- permanent has is linked to it (CR 607.2i, 607.5), so a gift a copy effect
--- gives the entering permanent is unpaid rather than inheriting it. The
--- scenario cr-607-5-a-clone-of-scrapshooter-whose-paid-host-gift-was-lost-gives-no-gift
--- proves it.
+-- permanent has is linked to it (CR 607.2i, 607.5), and an own instance a copy
+-- effect overwrote is already gone (Event.unlinkLostPayments). So a Mimic
+-- entering as Grizzly Bears gives the Host's gift to the opponent promised it,
+-- which the scenarios
+-- cr-607-5-the-mimic-entering-as-grizzly-bears-gives-the-host-s-gift-to-bob-and-not-its-own-to-carol
+-- and cr-607-5-a-clone-of-scrapshooter-whose-paid-host-gift-was-lost-gives-no-gift
+-- prove.
 settlePromises :: ObjectId -> GameState.GameState -> GameState.GameState
 settlePromises oid gs = case Game.lookupObject oid gs of
   Nothing -> gs
@@ -622,11 +624,12 @@ settlePromises oid gs = case Game.lookupObject oid gs of
         settle (paid, kept) something =
           let keyword = Keyword.Type.Gift something
               live = Projection.keywordInstances keyword oid gs
-              opponents = Maybe.mapMaybe (\which -> Map.lookup (PlayerChoice.Promised something which) promises) live
-              settled = fmap (const (1 :: Natural)) opponents <> fmap (const 0) (drop (length opponents) live)
+              promisedTo which = Map.lookup (PlayerChoice.Promised something which) promises
+              promised = [(which, opponent) | which <- live, Just opponent <- [promisedTo which]]
+              settled = Map.fromList [(which, 1 :: Natural) | (which, _) <- promised]
               unpromised = Map.filterWithKey (\key _ -> not (isPromiseOf something key)) kept
-              rekeyed = Map.fromList (zip [PlayerChoice.Promised something (KeywordInstance.Own i) | i <- [1 ..]] opponents)
-              settledPaid = if any (> 0) settled then Map.insert keyword (Seq.fromList settled) paid else Map.delete keyword paid
+              rekeyed = Map.fromList [(PlayerChoice.Promised something (KeywordInstance.Own i), opponent) | (i, (_, opponent)) <- zip [1 ..] promised]
+              settledPaid = if any (> 0) settled then Map.insert keyword settled paid else Map.delete keyword paid
            in (settledPaid, Map.union rekeyed unpromised)
         isPromiseOf something key = case key of
           PlayerChoice.Promised g _ -> g == something

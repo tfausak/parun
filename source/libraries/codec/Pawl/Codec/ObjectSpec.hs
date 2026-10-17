@@ -170,7 +170,7 @@ spec s = Spec.describe s "Pawl.Codec.Object" $ do
           Object.paidCosts =
             Map.singleton
               (Keyword.Squad Cost.MkCost {Cost.mana = Just (ManaCost.MkManaCost [ManaSymbol.Generic 24]), Cost.components = []})
-              (Seq.fromList [25, 0, 3]),
+              (Map.fromList [(KeywordInstance.Own 1, 25), (KeywordInstance.Own 2, 0), (KeywordInstance.Granted (ObjectId.MkObjectId 4) (Timestamp.MkTimestamp 6) 1, 3)]),
           Object.tributePaid = True,
           Object.bestowed = True,
           Object.mutating = True,
@@ -233,7 +233,7 @@ spec s = Spec.describe s "Pawl.Codec.Object" $ do
           <> ",\"designationValues\":[{\"designation\":{\"type\":\"Monstrous\"},\"value\":26}]"
           <> ",\"storedResults\":[{\"key\":{\"type\":\"Copied\",\"value\":41},\"value\":[{\"key\":{\"sides\":6,\"value\":4},\"value\":2}]}]"
           <> ",\"acquisition\":{\"type\":\"Copied\",\"value\":42}"
-          <> ",\"paidCosts\":[{\"key\":{\"type\":\"Squad\",\"value\":{\"mana\":[{\"type\":\"Generic\",\"value\":24}]}},\"value\":[25,0,3]}]"
+          <> ",\"paidCosts\":[{\"key\":{\"type\":\"Squad\",\"value\":{\"mana\":[{\"type\":\"Generic\",\"value\":24}]}},\"value\":[{\"key\":{\"type\":\"Own\",\"value\":1},\"value\":25},{\"key\":{\"type\":\"Own\",\"value\":2},\"value\":0},{\"key\":{\"type\":\"Granted\",\"value\":[[4,6],1]},\"value\":3}]}]"
           <> ",\"tributePaid\":true"
           <> ",\"bestowed\":true"
           <> ",\"mutating\":true"

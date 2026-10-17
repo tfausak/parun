@@ -42,6 +42,7 @@ import qualified Pawl.Types.ForetellCost as ForetellCost
 import qualified Pawl.Types.Impending as Impending
 import qualified Pawl.Types.Keyword as Keyword.Type
 import qualified Pawl.Types.KeywordCount as KeywordCount
+import qualified Pawl.Types.KeywordInstance as KeywordInstance
 import qualified Pawl.Types.KeywordTally as KeywordTally
 import qualified Pawl.Types.MadnessCost as MadnessCost
 import qualified Pawl.Types.ManaCost as ManaCost
@@ -710,7 +711,7 @@ data View = MkView
     -- those do: the reader holds a view and not a board. It is nonetheless filled
     -- for a permanent a kicked spell became, which is CR 400.7d's exception to
     -- the forgetting (see Pawl.Types.Object).
-    paidCosts :: Map.Map Keyword.Type.Keyword (Seq.Seq Natural.Natural),
+    paidCosts :: Map.Map Keyword.Type.Keyword (Map.Map KeywordInstance.KeywordInstance Natural.Natural),
     -- CR 702.104b: did the opponent rule 702.104a's tribute ability let this
     -- candidate's controller choose have it enter with the +1/+1 counters? Read
     -- off Object.tributePaid, and False where there is no live object -- rule

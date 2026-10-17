@@ -6,6 +6,7 @@
 module Pawl.FilterPositionLintSpec where
 
 import qualified Control.Monad as Monad
+import qualified Data.Foldable as Foldable
 import qualified Data.List.NonEmpty as NonEmpty
 import qualified Data.Map.Strict as Map
 import qualified Data.Maybe as Maybe
@@ -1230,15 +1231,16 @@ taggedValues tag value = case value of
 -- Stated about the PRINTED keywords, which is what a card file can be wrong
 -- about. Every Kicker or Multikicker in data/cards/ sits at a face's own
 -- `keywords`; Wicker Picker's granted StickerKicker is named by no TimesPaid.
--- A PrintedKicker designator offends on a face printing no kicker it links to
--- (CR 702.33e), since it too would read 0 for the life of the game.
+-- A Printed designator offends on a face printing no keyword it links to (CR
+-- 607.2i, 702.33e), since it too would read 0 for the life of the game.
 timesPaidOffends :: Face.Face Card.Type.Card -> Bool
 timesPaidOffends card =
   let encoded = Codec.encode (Face.Codec.codec Card.codec) card
       printed = fmap (Codec.encode Keyword.Codec.codec) (Keyword.Engine.optionalCosts (Face.keywordSet card))
-      linked = any (Keyword.Engine.designates KeywordDesignator.PrintedKicker) (Face.keywordSet card)
-      printedKicker = Codec.encode (KeywordDesignator.Codec.codec Keyword.Codec.codec) KeywordDesignator.PrintedKicker
-   in any (`notElem` printed) (timesPaidKeywords encoded) || (not linked && elem printedKicker (timesPaidDesignators encoded))
+      designator = Codec.encode (KeywordDesignator.Codec.codec Keyword.Codec.codec)
+      linked = [designator (KeywordDesignator.Printed family) | keyword <- Foldable.toList (Face.keywordSet card), Just family <- [Keyword.Engine.familyOf keyword], Keyword.Engine.designates (KeywordDesignator.Printed family) keyword]
+      isPrinted = not . null . taggedValues (Text.pack "Printed")
+   in any (`notElem` printed) (timesPaidKeywords encoded) || any (`notElem` linked) (filter isPrinted (timesPaidDesignators encoded))
 
 -- Two things a TriggerCondition.AnyOf may not contain, checked at every depth so
 -- that a nested one cannot smuggle either in.
@@ -2050,8 +2052,11 @@ filterPositionLintSpec s registry = Spec.describe s "Lint" $ do
     Spec.assertBool s (timesPaidOffends (face {Face.keywords = Map.mapKeys respell (Face.keywords face)})) "a reordered multikicker cost is rejected"
     Spec.assertBool s (timesPaidOffends (face {Face.keywords = Map.empty})) "and so is a face that counts a kicker it prints none of"
     burst <- S.printingOf s registry "Burst Lightning"
-    Spec.assertBool s (not (timesPaidOffends (S.combinedFace burst))) "the control: Burst Lightning's PrintedKicker reading is accepted"
+    Spec.assertBool s (not (timesPaidOffends (S.combinedFace burst))) "the control: Burst Lightning's Printed Kicker reading is accepted"
     Spec.assertBool s (timesPaidOffends ((S.combinedFace burst) {Face.keywords = Map.empty})) "and rejected on a face printing no kicker"
+    scrapshooter <- S.printingOf s registry "Scrapshooter"
+    Spec.assertBool s (not (timesPaidOffends (S.combinedFace scrapshooter))) "the control: Scrapshooter's Printed Gift reading is accepted"
+    Spec.assertBool s (timesPaidOffends ((S.combinedFace scrapshooter) {Face.keywords = Map.empty})) "and rejected on a face printing no gift"
   -- CR 702.122d's Filter.CantCrewVehicles is the one atom here that no card may
   -- write ANYWHERE, rather than one admitted at some positions: it is answerable
   -- only where Pawl.Engine.Cost.tapCandidates gathers the prohibition, and it is

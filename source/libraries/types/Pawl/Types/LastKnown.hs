@@ -1,7 +1,6 @@
 module Pawl.Types.LastKnown where
 
 import qualified Data.Map.Strict as Map
-import qualified Data.Sequence as Seq
 import qualified Data.Set as Set
 import qualified Numeric.Natural as Natural
 import qualified Pawl.Types.Acquisition as Acquisition
@@ -12,6 +11,7 @@ import qualified Pawl.Types.Condition as Condition
 import qualified Pawl.Types.ControlClock as ControlClock
 import qualified Pawl.Types.CounterKind as CounterKind
 import qualified Pawl.Types.Keyword as Keyword
+import qualified Pawl.Types.KeywordInstance as KeywordInstance
 import qualified Pawl.Types.ObjectId as ObjectId
 import qualified Pawl.Types.PlayerChoice as PlayerChoice
 import qualified Pawl.Types.PlayerId as PlayerId
@@ -203,7 +203,7 @@ data LastKnown = MkLastKnown
     -- | CR 400.7d: the optional additional costs paid for the spell that became
     -- it -- Object.paidCosts as it left. Not a characteristic, and gone with the
     -- object, but CR 702.175a's trigger still asks after it on resolution.
-    paidCosts :: !(Map.Map Keyword.Keyword (Seq.Seq Natural.Natural)),
+    paidCosts :: !(Map.Map Keyword.Keyword (Map.Map KeywordInstance.KeywordInstance Natural.Natural)),
     -- | CR 718.3d: was it a permanent that was a prototyped spell --
     -- Object.prototyped as it left. Not a characteristic, so a face-down one's
     -- `characteristics` above cannot say; Count.lastKnownView reads it.
