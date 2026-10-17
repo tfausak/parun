@@ -1655,6 +1655,7 @@ library executable
     pawl:json,
     pawl:json-codec,
     pawl:json-schema,
+    pawl:play,
     pawl:registry,
     pawl:scenario,
     pawl:test,
@@ -1826,11 +1827,13 @@ library json-schema
 library play
   import: library
   build-depends:
+    bytestring ^>=0.12.2,
     containers ^>=0.7,
     pawl:codec,
     pawl:engine,
     pawl:extra,
     pawl:json-codec,
+    pawl:registry,
     pawl:scenario,
     pawl:spec,
     pawl:types,
@@ -1842,7 +1845,11 @@ library play
   exposed-modules:
     Pawl.Play.Bot
     Pawl.Play.Chance
+    Pawl.Play.Client
+    Pawl.Play.Command
+    Pawl.Play.Game
     Pawl.Play.Protocol
+    Pawl.Play.Render
     Pawl.Play.SplitMix
     Pawl.Play.SplitMixSpec
 
@@ -1981,6 +1988,7 @@ library test
     Pawl.CastSpec
     Pawl.ClashSpec
     Pawl.ClassSpec
+    Pawl.ClientSpec
     Pawl.CloakSpec
     Pawl.CodecIntegrationSpec
     Pawl.CoinSpec
@@ -2489,6 +2497,7 @@ library types
     Pawl.Types.HandActionIndex
     Pawl.Types.HandActionPerformer
     Pawl.Types.HandWindowCap
+    Pawl.Types.Hotseat
     Pawl.Types.HowMany
     Pawl.Types.Hybrid
     Pawl.Types.HybridPayment
@@ -2691,6 +2700,7 @@ library types
     Pawl.Types.PlayersDealtDamage
     Pawl.Types.PlayerStaticAbility
     Pawl.Types.PlayerView
+    Pawl.Types.PlayOptions
     Pawl.Types.PlayPermissionOrigin
     Pawl.Types.PlaysLand
     Pawl.Types.PlotFromZone
@@ -2852,6 +2862,7 @@ library types
     Pawl.Types.TargetSlot
     Pawl.Types.TeamId
     Pawl.Types.Teams
+    Pawl.Types.Terminal
     Pawl.Types.TheseDiscard
     Pawl.Types.Threshold
     Pawl.Types.Timed

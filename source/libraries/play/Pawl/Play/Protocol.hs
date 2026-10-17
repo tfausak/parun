@@ -122,6 +122,7 @@ offerOf prompt = case prompt of
         ("slots", Reply.encode (Reply.mapOf (Reply.viaCodec Codec.SlotName.codec) (Reply.pairOf Reply.natural (Reply.setOf Reply.recipient))) namer slots)
       ]
   Prompt.ChooseManaSource _ _ sources -> objects (Foldable.toList sources)
+  Prompt.ChooseExtraManaSource _ _ sources -> objects (Foldable.toList sources)
   Prompt.ChooseX _ _ source least greatest -> fields [("source", object source), ("least", natural least), ("greatest", natural greatest)]
   Prompt.ChooseOptional _ _ source _ _ _ -> fields [("source", object source)]
   _ -> R.Null

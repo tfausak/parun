@@ -29,6 +29,7 @@ import qualified Pawl.CastRestrictionSpec
 import qualified Pawl.CastSpec
 import qualified Pawl.ClashSpec
 import qualified Pawl.ClassSpec
+import qualified Pawl.ClientSpec
 import qualified Pawl.CloakSpec
 import qualified Pawl.Codec.AbilityAddsManaSpec
 import qualified Pawl.Codec.AbilityKindSpec
@@ -1730,6 +1731,7 @@ spec s registry = do
   Pawl.SagaSpec.spec s registry
   Pawl.ProtocolSpec.spec s registry
   Pawl.BotSpec.spec s registry
+  Pawl.ClientSpec.spec s registry
   Pawl.ReplySpec.spec s registry
   Pawl.ScenarioSpec.corpusSpec s registry
   Pawl.ScenarioSpec.loadSpec s
