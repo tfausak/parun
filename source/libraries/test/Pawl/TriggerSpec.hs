@@ -1143,6 +1143,38 @@ tymnaSpec s registry =
           Spec.assertEqWith s "both took combat damage: two, for two life" (S.handSize S.alice both, S.lifeOf S.alice both) (2, Just 18)
           Spec.assertEqWith s "noncombat damage alone: nothing" (S.handSize S.alice neither, S.lifeOf S.alice neither) (0, Just 20)
 
+-- Vivien's Stampede {4}{G}{G} Sorcery: "... At the beginning of the next main
+-- phase this turn, draw a card for each player who was dealt combat damage this
+-- turn." (Oracle text checked on Scryfall, 2026-10-17.) CR 603.7's delayed
+-- ability over either main phase, armed in alice's precombat main: that main
+-- phase has already begun, so it waits for the postcombat one. Three seats;
+-- combat damage to bob and to alice herself, noncombat damage to carol.
+stampedeSpec :: (Monad m) => Spec.Spec m n -> Registry.Registry m -> n ()
+stampedeSpec s registry =
+  let resolveAll gs = S.runPure S.identityAnswer gs Engine.priorityLoop
+      postcombat = Phase.PostcombatMain
+      beginPostcombat gs = Event.recordEvent (GameEvent.StepBegan (StepBegan.MkStepBegan postcombat S.alice)) (gs {GameState.phase = postcombat, GameState.priority = Just S.alice})
+      hit src target kind gs =
+        S.runPure
+          S.identityAnswer
+          gs
+          (Damage.applyDamage [DamageEvent.MkDamageEvent src (Recipient.ToPlayer target) 2 False False False 0 Nothing Nothing mempty False kind])
+   in Spec.describe s "Vivien's Stampede"
+        . Spec.it s "CR 603.7 at the next main phase alice draws one per player dealt combat damage"
+        $ do
+          stampede <- S.printingOf s registry "Vivien's Stampede"
+          forest <- S.printingOf s registry "Forest"
+          let (sourceId, lands) = S.addPermanent forest S.alice (S.landsFor forest S.alice 6 S.threePlayerGame)
+              stocked = List.foldl' (\g _ -> snd (S.addLibraryCard forest S.alice g)) lands [1 .. 5 :: Int]
+              (inHand, stampedeId) = S.handOne stampede stocked
+              main1 = inHand {GameState.activePlayer = S.alice, GameState.phase = Phase.PrecombatMain, GameState.priority = Just S.alice}
+              begun = Event.recordEvent (GameEvent.StepBegan (StepBegan.MkStepBegan Phase.PrecombatMain S.alice)) main1
+              cast = resolveAll (S.runPure S.identityAnswer begun (S.cast S.alice stampedeId))
+              damaged = hit sourceId S.carol DamageKind.Noncombat (hit sourceId S.alice DamageKind.Combat (hit sourceId S.bob DamageKind.Combat cast))
+              drawn = resolveAll (beginPostcombat damaged)
+          Spec.assertEqWith s "CR 603.7 at the postcombat main alice drew two: bob and herself" (S.handSize S.alice drawn) 2
+          Spec.assertEqWith s "the premise: the precombat main already under way drew nothing" (S.handSize S.alice cast) 0
+
 -- Tidal Wave {2}{U} Instant: "Create a 5/5 blue Wall creature token with defender.
 -- Sacrifice it at the beginning of the next end step." CR 603.7c's object-bound
 -- delayed ability -- "it" must survive the resolution that armed it. Synthetic
@@ -2634,6 +2666,7 @@ spec s registry = Spec.describe s "Pawl.Engine.Trigger" $ do
   historySpec s registry
   spinesplitterSpec s registry
   tymnaSpec s registry
+  stampedeSpec s registry
   delayedSpec s registry
   tokenSetSpec s registry
   tokenGroupReadSpec s registry

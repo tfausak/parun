@@ -138,12 +138,18 @@ import qualified Pawl.Types.Zone as Zone
 -- and PlayerScope.Related Opponent reads CR 808.1's teams. Each is computed inside the
 -- arm that asks, so a scope that names neither pays nothing.
 inScope :: PlayerId -> PlayerId -> GameState -> PlayerScope -> Bool
-inScope pid controller gs scope = case scope of
+inScope pid controller = inScopeWithin (Just controller) pid controller
+
+-- inScope with the range a Superlative ranks over named: @reach@ is
+-- Plane.rangePerspective's, the anchor's own but for a planar source (CR
+-- 801.18), whose printed rows rank the whole table.
+inScopeWithin :: Maybe PlayerId -> PlayerId -> PlayerId -> GameState -> PlayerScope -> Bool
+inScopeWithin reach pid controller gs scope = case scope of
   -- PlayerRelation.holds, the judge every player-naming position shares: CR
   -- 102.3's opponents are every player not on the controller's team, and
   -- AnyPlayer includes the controller (Thalia's ruling: "including your own").
   PlayerScope.Related relation -> PlayerRelation.holds (Game.teams gs) relation controller pid
-  PlayerScope.Superlative leading -> List.elem pid (leaders gs leading)
+  PlayerScope.Superlative leading -> List.elem pid (leaders reach gs leading)
 
 -- The same question over a CARRIER's affected set rather than over a bare scope:
 -- is `pid` one of the players this row applies to? inScope for the Scoped arm,
@@ -163,14 +169,17 @@ applies pid controller gs affected =
     AffectedPlayers.Scoped scope -> inScope pid controller gs scope
     AffectedPlayers.Named seat -> pid == seat
 
--- PlayerScope.Superlative's players: Players.superlative over every player
--- still in the game, reading the PROJECTED controller (CR 613.1b layer 2). A
--- player controlling nothing still has a row, so on an empty board Damping
+-- PlayerScope.Superlative's players: Players.superlative over the players
+-- @reach@'s range holds (CR 801.11: an ability gets no information from outside
+-- its controller's range), reading the PROJECTED controller (CR 613.1b layer
+-- 2). A player controlling nothing still has a row, so on an empty board Damping
 -- Engine's strict lead names nobody rather than an arbitrary seat.
-leaders :: GameState -> Superlative.Superlative -> [PlayerId]
-leaders gs =
+-- Pawl.SpecialActionSpec's "CR 801.11 at range 1 Damping Engine ranks only the
+-- players in its controller's range" proves the range.
+leaders :: Maybe PlayerId -> GameState -> Superlative.Superlative -> [PlayerId]
+leaders reach gs =
   let grants = Projection.controlGrants gs
-   in Players.superlative (\oid -> Projection.controllerOfGiven grants oid gs) (Game.stillPlaying gs) gs
+   in Players.superlative (\oid -> Projection.controllerOfGiven grants oid gs) (Players.table reach gs) gs
 
 -- The same scope as a SET rather than as a membership test -- CR 400.1's
 -- per-player zones asked in the direction a zone fold needs it
@@ -190,7 +199,7 @@ leaders gs =
 playersInScope :: Maybe PlayerId -> Maybe PlayerId -> GameState -> PlayerScope -> Maybe [PlayerId]
 playersInScope reach perspective gs scope = case scope of
   PlayerScope.Related relation -> Players.relatedAmong (Players.table reach gs) perspective gs relation
-  PlayerScope.Superlative leading -> Just (filter (`elem` Players.table reach gs) (leaders gs leading))
+  PlayerScope.Superlative leading -> Just (leaders reach gs leading)
 
 -- CR 707.2a: the player abilities this permanent's copiable rules text gives it
 -- -- its copy snapshot's when it has one, its printed face's otherwise. The
@@ -290,7 +299,7 @@ printedRows gs =
             -- range" the exemption.
             reaches ability pid =
               (Plane.exemptFromRange oid gs || Game.inRangeOf controller pid gs)
-                && inScope pid controller gs (PlayerStaticAbility.scope ability)
+                && inScopeWithin (Plane.rangePerspective oid controller gs) pid controller gs (PlayerStaticAbility.scope ability)
                 && lives ability pid
          in fmap (\(stamp, ability) -> (stamp, Just oid, PlayerStaticAbility.name ability, reaches ability, readAs (PlayerStaticAbility.effect ability))) stamped
       fromPermanent oid = case playerAbilitiesOf oid gs of
