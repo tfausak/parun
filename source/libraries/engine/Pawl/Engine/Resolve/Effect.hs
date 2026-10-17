@@ -1489,7 +1489,7 @@ castableCopy caster original = do
                 { Object.owner = caster,
                   Object.zone = zone,
                   Object.timestamp = ts,
-                  Object.bindings = maybe Map.empty (\pc -> Binding.setCopy pc Map.empty) (Game.copyStampOf obj)
+                  Object.bindings = maybe Map.empty (\pc -> Binding.setOwnCopy pc Map.empty) (Game.copyStampOf obj)
                 }
         State.put (Game.insertIntoZone zone LibraryPosition.Top caster copyId gs2 {GameState.objects = Map.insert copyId copy (GameState.objects gs2)})
         pure (Just copyId)
@@ -3213,7 +3213,7 @@ changeTargetsFor chooser controller oid = do
 -- Pawl.CopySpec's "CR 707.2 a spell that becomes a copy of a Bolt" proves it.
 acquireChoices :: Modal.Type.Modal Card.Type.Card (GrantedAbility.GrantedAbility Card.Type.Card) -> Acquisition.Acquisition -> Maybe Object.Object -> Object.Object -> Object.Object
 acquireChoices copiedSpell acquisition mOriginal subject =
-  let own = Set.fromList [Binding.you, Binding.triggerSource, Binding.copySource, Binding.turnedMergeSource]
+  let own = Set.fromList [Binding.you, Binding.triggerSource, Binding.copySource, Binding.ownCopySource, Binding.turnedMergeSource]
       -- CR 700.2: a spell that is not modal has no mode to choose, so the copy
       -- of one from off the stack still resolves its text: the one selection
       -- the copied text forces (Modal.forcedSelection), where there is one.
@@ -7572,13 +7572,13 @@ applyOneEffect runSubgame resolving source controller legal chosen effect = case
                 -- stack has no previous copiable values for CR 707.9c to retain.
                 except = Replacement.applyCopyExceptions (thisAbilitySource resolving gs) Nothing exceptions
                 stampCopiable = case kind of
-                  StackObjectKind.Spell | Maybe.isJust (Game.lookupObject original gs) -> Binding.setCopy (except (Event.copiedSnapshot original gs))
+                  StackObjectKind.Spell | Maybe.isJust (Game.lookupObject original gs) -> Binding.setOwnCopy (except (Event.copiedSnapshot original gs))
                   -- An ARCHIVED spell's exceptions are re-folded over the snapshot
                   -- GameState.stackArchive holds. A REGRESSION FENCE rather than a
                   -- proved line: no road to the archive states an exception --
                   -- rule 702.50a's epic does not, and neither does a copy-this-spell
                   -- keyword trigger (Pawl.Engine.Keyword.copiesOf).
-                  StackObjectKind.Spell -> maybe id (Binding.setCopy . except) (Game.copyStampOf obj)
+                  StackObjectKind.Spell -> maybe id (Binding.setOwnCopy . except) (Game.copyStampOf obj)
                   StackObjectKind.ActivatedAbility -> id
                   StackObjectKind.TriggeredAbility -> id
                 -- CR 201.5's slot, and the one place the two nouns CR 707.10

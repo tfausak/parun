@@ -794,6 +794,15 @@ eventBindingsOver board gs bearerBecame becameInGraveyard bearer you cond event 
   -- and so gets no second name.
   (TriggerCondition.SelfBlocksCreature _, GameEvent.BecameBlocking (BecameBlocking.MkBecameBlocking {BecameBlocking.attacker = attacker})) ->
     Binding.setBlockedCreature attacker Map.empty
+  -- CR 603.6a's "enters attached to a creature": that host, bound as the
+  -- trigger is placed, so Infinite Reflection copies it even once the Aura has
+  -- moved on (its ruling, 2012-05-01). Through CR 608.2h's record where CR
+  -- 704.5m buried the Aura first, whose host only CR 704 has acted on since the
+  -- entry; a regression fence today, since triggers are placed between passes
+  -- and the Aura falls a pass after its host (see #5215). Bound only for an
+  -- entrant that was attached to an object.
+  (TriggerCondition.SelfEnters, GameEvent.Moved (Moved.MkMoved zc _ _ _ _ _)) ->
+    maybe Map.empty (`Binding.setAttachedHost` Map.empty) (Game.hostWithLastKnown (ZoneChange.object zc) gs)
   -- CR 701.3a's "that creature" read from the ATTACHMENT: the host the bearer
   -- went onto, which Enormous Energy Blade taps. SelfBecomesAttachedBy has no arm
   -- here at all, and the two together are the pair -- whichever end of rule
@@ -2064,6 +2073,9 @@ eventBindingSlots cond = case cond of
 -- which unions where the floor's pin intersects.
 eventBindingSlotsSometimes :: TriggerCondition -> Set.Set SlotName.SlotName
 eventBindingSlotsSometimes cond = case cond of
+  -- The host an Aura entered attached to, bound only where the entrant is
+  -- attached. data/cards/infinite-reflection.json is the reader.
+  TriggerCondition.SelfEnters -> Set.singleton Binding.attachedHost
   -- CR 400.7e's proviso, read against CR 400.2's split: a death binds `became`
   -- and a bounce does not, and CR 603.6c admits both, so the floor is empty
   -- while a card naming the slot is correct for every destination -- it acts on

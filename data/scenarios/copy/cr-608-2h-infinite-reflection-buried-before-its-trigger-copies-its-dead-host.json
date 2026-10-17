@@ -1,0 +1,39 @@
+{
+  "description": "CR 608.2h Infinite Reflection buried before its trigger copies its dead host",
+  "note": "Replenish returns Infinite Reflection attached to bob's Savannah Lions and Curse of Death's Hold on bob at once. The Curse makes the Lions a 1/0, CR 704.5f buries them and CR 704.5m then buries the Aura before the trigger resolves (under CR 704.3, before it is put on the stack; pawl places it between the two passes, #5215). The Aura still entered attached to a creature, so the trigger resolves, and alice's Goblin Piker becomes a copy of the Lions as they last existed.",
+  "board": {
+    "seats": [
+      { "name": "alice",
+        "battlefield": [
+          { "card": "Plains", "label": "p1", "ready": true },
+          { "card": "Plains", "label": "p2", "ready": true },
+          { "card": "Plains", "label": "p3", "ready": true },
+          { "card": "Plains", "label": "p4", "ready": true },
+          { "card": "Goblin Piker", "label": "piker" } ],
+        "hand": [
+          { "card": "Replenish", "label": "replenish" } ],
+        "graveyard": [
+          { "card": "Infinite Reflection" },
+          { "card": "Curse of Death's Hold" } ] },
+      { "name": "bob",
+        "battlefield": [
+          { "card": "Savannah Lions", "label": "lions" } ] }
+    ],
+    "active": "alice",
+    "step": "PrecombatMain"
+  },
+  "timeline": [
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": { "Cast": { "object": "$replenish", "mana": ["$p1", "$p2", "$p3", "$p4"] } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": { "Answer": { "prompt": "ChooseAttachment", "with": "$lions" } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": { "Answer": { "prompt": "ChoosePlayer", "with": "bob" } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": { "OrderTimestamps": ["Infinite Reflection", "Curse of Death's Hold"] } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass" },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "check": { "View": { "of": "Stack", "is": ["trigger of Infinite Reflection"] } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "check": { "Count": { "player": "alice", "zone": "Graveyard", "card": "Infinite Reflection", "count": 1 } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass" },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "check": { "View": { "of": "Stack", "is": [] } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "check": { "Count": { "player": "bob", "zone": "Graveyard", "card": "Savannah Lions", "count": 1 } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "check": { "Count": { "player": "alice", "zone": "Graveyard", "card": "Infinite Reflection", "count": 1 } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "check": { "Names": { "object": "$piker", "names": ["Savannah Lions"] } } }
+  ]
+}

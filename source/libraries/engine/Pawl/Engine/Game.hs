@@ -281,7 +281,7 @@ sheetContent sheet kind index = do
 tokenOfLot :: PlayerId -> PrintingId.PrintingId -> TokenLot.TokenLot -> Timestamp.Timestamp -> Object
 tokenOfLot owner printing lot ts =
   (Object.new owner (Source.OfToken printing) Zone.Battlefield ts)
-    { Object.bindings = maybe Map.empty (\pc -> Binding.setCopy pc Map.empty) (TokenLot.copy lot)
+    { Object.bindings = maybe Map.empty (\pc -> Binding.setOwnCopy pc Map.empty) (TokenLot.copy lot)
     }
 
 freshPrintingId :: GameState -> (PrintingId.PrintingId, GameState)
@@ -2537,10 +2537,10 @@ sourceIsToken source = case source of
   -- is a token only if the topmost component is a token". The head of the list,
   -- which is CR 730.2a's topmost component, and never any other component.
   --
-  -- Object.source and not the copiable record Pawl.Engine.Binding.setCopy stamps,
-  -- which is where every CHARACTERISTIC of a merged permanent is read: CR 707.2
-  -- lists the copiable values and token-ness is no characteristic of them (CR
-  -- 111.1), so this is a fact about what REPRESENTS the permanent.
+  -- Object.source and not the copiable record Pawl.Engine.Binding.setMergeCopy
+  -- stamps, which is where every CHARACTERISTIC of a merged permanent is read:
+  -- CR 707.2 lists the copiable values and token-ness is no characteristic of
+  -- them (CR 111.1), so this is a fact about what REPRESENTS the permanent.
   Source.OfMerge components -> componentIsToken (ShownComponent.component (NonEmpty.head components))
   Source.OfAbility _ -> False
   Source.OfTrigger _ -> False

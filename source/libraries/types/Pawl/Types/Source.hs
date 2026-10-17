@@ -88,7 +88,7 @@ data Source
     -- associated with it. Names the copied spell's printing the way the three
     -- card-shaped constructors do, so every characteristic read resolves as
     -- theirs does; the copiable values themselves come from the snapshot
-    -- Pawl.Engine.Binding.setCopy stamps, exactly as they do for a token copy.
+    -- Pawl.Engine.Binding.setOwnCopy stamps, exactly as they do for a token copy.
     --
     -- ITS OWN CONSTRUCTOR, and neither of the two it resembles: OfCard would make
     -- CR 704.5e's "a copy of a spell in a zone other than the stack ceases to

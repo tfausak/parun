@@ -107,7 +107,7 @@ import qualified Pawl.Types.Visibility as Visibility.Type
 import qualified Pawl.Types.Ward as Ward
 import qualified Pawl.Types.Zone as Zone
 import qualified Pawl.Types.ZoneChange as ZoneChange
-import Pawl.ZoneTriggerSpec (everyTriggerCondition, gathered, paysFor, representativeDeparted, representativeEvents)
+import Pawl.ZoneTriggerSpec (everyTriggerCondition, gathered, paysFor, representativeDeparted, representativeEntrant, representativeEvents, representativeHost)
 
 -- CR 603.6c's first written form read by a BYSTANDER -- Super Shredder {1}{B}
 -- Legendary Creature -- Mutant Ninja Human 1/1, "Whenever another permanent
@@ -1232,7 +1232,10 @@ becameSlotSpec s registry =
               -- placePendingTriggers, so on a real board the arriving object can
               -- already be gone when eventBindings runs. An arm that bound a slot
               -- off a live Game.lookupObject would be partial in play, and a
-              -- pinState holding the arrival would let it pass here anyway.
+              -- pinState holding the arrival would let it pass here anyway. The
+              -- one object stocked (withRepresentativeEntrant) arrives in
+              -- SelfEnters' second row alone, whose arm claims its slot only
+              -- sometimes for exactly that reason.
               --
               -- The record is the ZONE-CHANGE FUNNEL's own, lifted off a real
               -- bounce and re-filed under the id representativeEvents uses, so the
@@ -1242,7 +1245,7 @@ becameSlotSpec s registry =
               (pikerId, placed) = S.addPermanent piker S.alice (Setup.emptyGame S.bothPlayers)
               bounced = S.runPure S.identityAnswer placed (Event.changeZone pikerId Zone.Hand)
               empty = Setup.emptyGame S.bothPlayers
-              pinState = case Map.lookup pikerId (GameState.lastKnown bounced) of
+              pinState = withRepresentativeEntrant placed pikerId $ case Map.lookup pikerId (GameState.lastKnown bounced) of
                 Just lk -> empty {GameState.lastKnown = Map.singleton representativeDeparted lk}
                 Nothing -> empty
           Spec.assertBool s (not (Map.null (GameState.lastKnown pinState))) "the funnel filed a last-known record for the bounced Piker"
@@ -1267,7 +1270,7 @@ becameSlotSpec s registry =
               (pikerId, placed) = S.addPermanent piker S.alice (Setup.emptyGame S.bothPlayers)
               bounced = S.runPure S.identityAnswer placed (Event.changeZone pikerId Zone.Hand)
               empty = Setup.emptyGame S.bothPlayers
-              pinState = case Map.lookup pikerId (GameState.lastKnown bounced) of
+              pinState = withRepresentativeEntrant placed pikerId $ case Map.lookup pikerId (GameState.lastKnown bounced) of
                 Just lk -> empty {GameState.lastKnown = Map.singleton representativeDeparted lk}
                 Nothing -> empty
           mapM_
@@ -1280,6 +1283,14 @@ becameSlotSpec s registry =
                       (foldr Set.union (NonEmpty.head stamped) (NonEmpty.tail stamped))
             )
             everyTriggerCondition
+
+-- The board both pins read: `representativeEntrant` stands on it attached to
+-- `representativeHost`, so SelfEnters' CR 603.6a host is bound for the one
+-- representative entry that names it. The Piker on `placed` lends the object.
+withRepresentativeEntrant :: GameState.GameState -> ObjectId.ObjectId -> GameState.GameState -> GameState.GameState
+withRepresentativeEntrant placed pikerId g = case Game.lookupObject pikerId placed of
+  Just o -> g {GameState.objects = Map.insert representativeEntrant (o {Object.attachedTo = Just (Recipient.ToObject representativeHost)}) (GameState.objects g)}
+  Nothing -> g
 
 -- CR 400.7e's slot under a BYSTANDER's dies trigger, the last of the four
 -- conditions that bind it (SelfDies in becameSlotSpec above,
