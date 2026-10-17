@@ -1,0 +1,41 @@
+{
+  "description": "CR 603.6a Infinite Reflection copies the creature it entered attached to after Aura Graft moves it",
+  "note": "Infinite Reflection enters attached to alice's Hill Giant, and with its trigger on the stack Aura Graft moves it onto bob's Savannah Lions. Its ruling (2012-05-01) says each other nontoken creature still becomes a copy of the first creature, so alice's Goblin Piker becomes a Hill Giant and the Hill Giant stays one. Reading the enchanted creature at resolution would make both Savannah Lions.",
+  "board": {
+    "seats": [
+      { "name": "alice",
+        "battlefield": [
+          { "card": "Island", "label": "i1", "ready": true },
+          { "card": "Island", "label": "i2", "ready": true },
+          { "card": "Island", "label": "i3", "ready": true },
+          { "card": "Island", "label": "i4", "ready": true },
+          { "card": "Island", "label": "i5", "ready": true },
+          { "card": "Island", "label": "i6", "ready": true },
+          { "card": "Island", "label": "i7", "ready": true },
+          { "card": "Island", "label": "i8", "ready": true },
+          { "card": "Hill Giant", "label": "giant" },
+          { "card": "Goblin Piker", "label": "piker" } ],
+        "hand": [
+          { "card": "Infinite Reflection", "label": "reflection" },
+          { "card": "Aura Graft", "label": "graft" } ] },
+      { "name": "bob",
+        "battlefield": [
+          { "card": "Savannah Lions", "label": "lions" } ] }
+    ],
+    "active": "alice",
+    "step": "PrecombatMain"
+  },
+  "timeline": [
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": { "Cast": { "object": "$reflection", "targets": ["$giant"], "mana": ["$i1", "$i2", "$i3", "$i4", "$i5", "$i6", null] } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass" },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "check": { "View": { "of": "Stack", "is": ["trigger of Infinite Reflection"] } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": { "Cast": { "object": "$graft", "targets": ["Infinite Reflection"], "mana": ["$i7", "$i8"] } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass" },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": { "Answer": { "prompt": "ChooseAttachment", "with": "$lions" } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "check": { "View": { "of": "AttachedTo", "object": "Infinite Reflection", "is": "$lions" } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass" },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "check": { "View": { "of": "Stack", "is": [] } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "check": { "Names": { "object": "$piker", "names": ["Hill Giant"] } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "check": { "Names": { "object": "$giant", "names": ["Hill Giant"] } } }
+  ]
+}

@@ -6415,7 +6415,7 @@ changeZoneWithCause discarded asOf batch oid requestedDest requestedPosition see
               becomesToken printingId =
                 -- CR 111.6: a token is no card.
                 (Game.setSource (Source.OfToken printingId) (Object.newIncarnation obj))
-                  { Object.bindings = foldMap (\pc -> Binding.setCopy pc Map.empty) (Game.copyStampOf obj)
+                  { Object.bindings = foldMap (\pc -> Binding.setOwnCopy pc Map.empty) (Game.copyStampOf obj)
                   }
               -- CR 400.7d and CR 107.3m: "the spell that became that permanent
               -- AS IT RESOLVED". Only a permanent spell's own resolution
