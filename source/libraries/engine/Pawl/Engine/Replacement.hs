@@ -1791,12 +1791,16 @@ matchesTokenLot gs context filter_ pid lot =
            in (Projection.viewOfCardLapsed lapsed face) {Filter.controller = Just pid, Filter.token = True}
    in Filter.matches context view filter_
 
--- CR 614.12: the board with the token a lot would mint standing in GameState's
--- object table, under the id it would get, and in no zone index -- the posture
--- Projection.boardAsEntering gives an entering permanent, which is not on the
--- battlefield yet and so counts nothing, itself included. The object is what
--- the projection and a clause's "this" read; createTokens mints the same one
--- (Game.tokenOfLot).
+-- CR 614.12: the board with the token a lot would mint ON it, under the id it
+-- would get. The rule reads the permanent's characteristics as it would exist
+-- on the battlefield, its own static abilities' effects included, so a clause
+-- deciding whether it has an ability is asked with the token counted: a copy
+-- made a Demon by Maskwood Nexus satisfies its own "as long as you control a
+-- Demon". That is a CHARACTERISTIC read, where Projection.printedRowLives' is a
+-- replacement's own condition, which takes membership off boardAsEntering and
+-- leaves the entering permanent out. The other entering permanents stay out
+-- here too. createTokens mints the same object (Game.tokenOfLot).
+-- data/scenarios/replacement's Villainous Ogre pair proves the token counted.
 --
 -- Not implemented: the creation's own status, so a clause reading whether
 -- the token is tapped, attacking or has counters sees it untapped and bare
@@ -1806,7 +1810,8 @@ wouldExist gs pid lot =
   let (token, gs1) = Game.freshObjectId gs
       (ts, gs2) = Game.freshTimestamp gs1
       (printing, gs3) = Game.intern (Printing.ofCard (TokenLot.card lot)) gs2
-   in (token, Projection.boardAsEntering gs3 {GameState.objects = Map.insert token (Game.tokenOfLot pid printing lot ts) (GameState.objects gs3)})
+      entering = Projection.boardAsEntering gs3 {GameState.objects = Map.insert token (Game.tokenOfLot pid printing lot ts) (GameState.objects gs3)}
+   in (token, Game.insertIntoZone Zone.Battlefield LibraryPosition.defaultValue pid token entering)
 
 -- The counters `oid` is so far entering with, empty outside an entry (see
 -- GameState.enteringCounters).
