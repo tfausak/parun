@@ -89,55 +89,42 @@
                         "type": "MoveToZone",
                         "value": {
                           "ref": {
-                            "type": "TopOfLibrary",
-                            "value": {
-                              "count": {
-                                "type": "Literal",
-                                "value": 1
+                            "type": "AllOf",
+                            "value": [
+                              {
+                                "type": "TopOfLibrary",
+                                "value": {
+                                  "count": {
+                                    "type": "Literal",
+                                    "value": 1
+                                  },
+                                  "player": {
+                                    "type": "InSlot",
+                                    "value": "opponent"
+                                  }
+                                }
                               },
-                              "player": {
-                                "type": "InSlot",
-                                "value": "opponent"
+                              {
+                                "type": "RandomCardInGraveyard",
+                                "value": {
+                                  "players": {
+                                    "type": "InSlot",
+                                    "value": "opponent"
+                                  }
+                                }
+                              },
+                              {
+                                "type": "RandomCardInHand",
+                                "value": {
+                                  "player": {
+                                    "type": "InSlot",
+                                    "value": "opponent"
+                                  }
+                                }
                               }
-                            }
+                            ]
                           },
-                          "slot": "library",
-                          "zone": {
-                            "type": "Exile"
-                          }
-                        }
-                      },
-                      {
-                        "type": "MoveToZone",
-                        "value": {
-                          "ref": {
-                            "type": "RandomCardInGraveyard",
-                            "value": {
-                              "players": {
-                                "type": "InSlot",
-                                "value": "opponent"
-                              }
-                            }
-                          },
-                          "slot": "graveyard",
-                          "zone": {
-                            "type": "Exile"
-                          }
-                        }
-                      },
-                      {
-                        "type": "MoveToZone",
-                        "value": {
-                          "ref": {
-                            "type": "RandomCardInHand",
-                            "value": {
-                              "player": {
-                                "type": "InSlot",
-                                "value": "opponent"
-                              }
-                            }
-                          },
-                          "slot": "hand",
+                          "slot": "exiled",
                           "zone": {
                             "type": "Exile"
                           }
@@ -156,21 +143,8 @@
                           "ref": {
                             "type": "EachCardExiledWithSource",
                             "value": {
-                              "type": "Or",
-                              "value": [
-                                {
-                                  "type": "IsBound",
-                                  "value": "library"
-                                },
-                                {
-                                  "type": "IsBound",
-                                  "value": "graveyard"
-                                },
-                                {
-                                  "type": "IsBound",
-                                  "value": "hand"
-                                }
-                              ]
+                              "type": "IsBound",
+                              "value": "exiled"
                             }
                           }
                         }

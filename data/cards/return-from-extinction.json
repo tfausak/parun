@@ -67,20 +67,17 @@
                     "type": "MoveToZone",
                     "value": {
                       "ref": {
-                        "type": "InSlot",
-                        "value": "first"
-                      },
-                      "zone": {
-                        "type": "Hand"
-                      }
-                    }
-                  },
-                  {
-                    "type": "MoveToZone",
-                    "value": {
-                      "ref": {
-                        "type": "InSlot",
-                        "value": "second"
+                        "type": "AllOf",
+                        "value": [
+                          {
+                            "type": "InSlot",
+                            "value": "first"
+                          },
+                          {
+                            "type": "InSlot",
+                            "value": "second"
+                          }
+                        ]
                       },
                       "zone": {
                         "type": "Hand"
