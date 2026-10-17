@@ -7,14 +7,18 @@ import qualified Pawl.JsonCodec.Codec as Codec
 import qualified Pawl.JsonCodec.Common as Common
 import qualified Pawl.Spec as Spec
 import qualified Pawl.Types.AttackingPlayers as AttackingPlayers
+import qualified Pawl.Types.Comparison as Comparison
 import qualified Pawl.Types.Gift as Gift
 import qualified Pawl.Types.KeywordInstance as KeywordInstance
 import qualified Pawl.Types.ObjectId as ObjectId
 import qualified Pawl.Types.PlayerChoice as PlayerChoice
+import qualified Pawl.Types.PlayerCounterKind as PlayerCounterKind
 import qualified Pawl.Types.PlayerId as PlayerId
+import qualified Pawl.Types.PlayerMeasure as PlayerMeasure
 import qualified Pawl.Types.PlayerRef as PlayerRef
 import qualified Pawl.Types.PlayerRelation as PlayerRelation
 import qualified Pawl.Types.SlotName as SlotName
+import qualified Pawl.Types.Superlative as Superlative
 
 spec :: (Monad m, Monad n) => Spec.Spec m n -> n ()
 spec s = Spec.describe s "Pawl.Codec.PlayerRef" $ do
@@ -92,6 +96,12 @@ spec s = Spec.describe s "Pawl.Codec.PlayerRef" $ do
       PlayerRef.codec
       (PlayerRef.Attacking (AttackingPlayers.MkAttackingPlayers PlayerRelation.Opponent (SlotName.MkSlotName (Text.pack "attackedPlayer"))))
       " {\"type\":\"Attacking\",\"value\":{\"relation\":{\"type\":\"Opponent\"},\"attacked\":\"attackedPlayer\"}} "
+  Spec.it s "Superlative" $
+    Common.assertCodec
+      s
+      PlayerRef.codec
+      (PlayerRef.Superlative (Superlative.MkSuperlative (PlayerMeasure.CountersOf PlayerCounterKind.Point) Comparison.AtLeast))
+      " {\"type\":\"Superlative\",\"value\":{\"measure\":{\"type\":\"CountersOf\",\"value\":{\"type\":\"Point\"}},\"comparison\":{\"type\":\"AtLeast\"}}} "
   Spec.it s "EachOpponentExcept" $
     Common.assertCodec
       s

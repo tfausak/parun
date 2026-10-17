@@ -507,6 +507,7 @@ import qualified Pawl.Codec.PlayerSacrificesSpec
 import qualified Pawl.Codec.PlayerScopeSpec
 import qualified Pawl.Codec.PlayerSpec
 import qualified Pawl.Codec.PlayerStaticAbilitySpec
+import qualified Pawl.Codec.PlayersDealtDamageSpec
 import qualified Pawl.Codec.PlaysLandSpec
 import qualified Pawl.Codec.PlotFromZoneSpec
 import qualified Pawl.Codec.PlusSpec
@@ -619,6 +620,7 @@ import qualified Pawl.Codec.StoredResultSpec
 import qualified Pawl.Codec.SubtypeFamilySpec
 import qualified Pawl.Codec.SubtypeSpec
 import qualified Pawl.Codec.SubtypesAreSpec
+import qualified Pawl.Codec.SuperlativeSpec
 import qualified Pawl.Codec.SupertypeSpec
 import qualified Pawl.Codec.SuspendCountersSpec
 import qualified Pawl.Codec.SuspendSpec
@@ -1360,6 +1362,8 @@ spec s registry = do
   Pawl.Codec.PlayerCountersAreSpec.spec s
   Pawl.Codec.PlayerCountersSpec.spec s
   Pawl.Codec.PlayerCounterTallySpec.spec s
+  Pawl.Codec.PlayersDealtDamageSpec.spec s
+  Pawl.Codec.SuperlativeSpec.spec s
   Pawl.Codec.PlayerDesignationSpec.spec s
   Pawl.Codec.PlayerDesignationTallySpec.spec s
   Pawl.Codec.PlayerDrawsNthCardSpec.spec s

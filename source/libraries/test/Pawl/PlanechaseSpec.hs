@@ -21,6 +21,7 @@ import qualified Pawl.Engine.Action as Action
 import qualified Pawl.Engine.Combat as Combat
 import qualified Pawl.Engine.CombatRestriction as CombatRestriction
 import qualified Pawl.Engine.Cost as Cost
+import qualified Pawl.Engine.Damage as Damage
 import qualified Pawl.Engine.Engine as Engine
 import qualified Pawl.Engine.Event as Event
 import qualified Pawl.Engine.Expiry as Expiry
@@ -44,6 +45,8 @@ import qualified Pawl.Types.Combat as Combat.Type
 import qualified Pawl.Types.CombatStep as CombatStep
 import qualified Pawl.Types.Concession as Concession
 import qualified Pawl.Types.Cost as Cost.Type
+import qualified Pawl.Types.DamageEvent as DamageEvent
+import qualified Pawl.Types.DamageKind as DamageKind
 import qualified Pawl.Types.Deck as Deck
 import qualified Pawl.Types.EndingStep as EndingStep
 import qualified Pawl.Types.Face as Face
@@ -62,6 +65,7 @@ import qualified Pawl.Types.Phase as Phase
 import qualified Pawl.Types.Player as Player
 import qualified Pawl.Types.PlayerActed as PlayerActed
 import qualified Pawl.Types.PlayerAction as PlayerAction
+import qualified Pawl.Types.PlayerCounterKind as PlayerCounterKind
 import qualified Pawl.Types.PlayerId as PlayerId
 import qualified Pawl.Types.Prompt as Prompt
 import qualified Pawl.Types.Recipient as Recipient
@@ -536,6 +540,7 @@ spec s registry = Spec.describe s "Pawl.Engine.Planechase" $ do
     Spec.assertEqWith s "CR 311.7 and chaos ensued: alice drew one for her Forest" (S.handSize S.alice second) 1
   carrySpec s registry
   planeswalkSpec s registry
+  raidersSpec s registry
 
 -- CR 400.7b / 611.3d on The Caldaia, Plane -- Capenna, "Creature spells you cast
 -- from your hand have blitz {3}." (Oracle text checked on Scryfall,
@@ -749,6 +754,60 @@ rolling n p = case p of
 -- alice rolls the planar die showing `n`, and whatever it triggers resolves.
 rollAndResolve :: Natural -> GameState.GameState -> GameState.GameState
 rollAndResolve n gs = S.runPure (rolling n) gs (Planechase.roll S.manaPerformer S.alice >> Engine.priorityLoop)
+
+-- Raiders' Allegiance, Plane -- Ixalan (un-set, Oracle text checked on
+-- Scryfall, 2026-10-17): "Raid -- At the beginning of your second main phase,
+-- for each player dealt combat damage this turn, you get a point counter and
+-- create a 2/2 black Pirate creature token with menace. / Whenever you
+-- planeswalk away from here, each player with the most point counters or tied
+-- for the most point counters creates three Treasure tokens and draws three
+-- cards. Then remove all point counters from each player. / Whenever Chaos
+-- ensues, proliferate for each Pirate you control."
+raidersSpec :: (Monad m, Monad n) => Spec.Spec m n -> Registry.Registry m -> n ()
+raidersSpec s registry = Spec.describe s "Raiders' Allegiance" $ do
+  -- Four seats; alice's Goblin Piker deals combat damage to bob and carol and
+  -- noncombat damage to dave, then her second main phase begins.
+  Spec.it s "CR 510.2 raid counts the players dealt combat damage this turn" $ do
+    piker <- S.printingOf s registry "Goblin Piker"
+    board <- seatedPlanarBoard s registry S.alice [(S.alice, ["Raiders' Allegiance"]), (S.bob, []), (S.carol, []), (S.dave, [])]
+    let (pikerId, stocked) = S.addPermanent piker S.alice board
+        begin phase gs = Event.recordEvent (GameEvent.StepBegan (StepBegan.MkStepBegan phase S.alice)) (gs {GameState.activePlayer = S.alice, GameState.phase = phase, GameState.priority = Just S.alice})
+        hit target = DamageEvent.MkDamageEvent pikerId (Recipient.ToPlayer target) 1 False False False 0 Nothing Nothing mempty False
+        damaged = S.runPure S.identityAnswer (begin Phase.PrecombatMain stocked) (Damage.applyDamage [hit S.bob DamageKind.Combat, hit S.carol DamageKind.Combat, hit S.dave DamageKind.Noncombat])
+        raided = S.runPure S.identityAnswer (begin Phase.PostcombatMain damaged) Engine.priorityLoop
+    Spec.assertEqWith s "CR 510.2 two players took combat damage: alice has two point counters" (S.playerCounterOf PlayerCounterKind.Point S.alice raided) 2
+    Spec.assertEqWith s "and two Pirates" (controllersNamed "Pirate Token" raided) [Just S.alice, Just S.alice]
+
+  -- Three seats: alice and bob tied on three point counters, carol on two.
+  -- alice planeswalks away; the two leaders each create three Treasures and draw
+  -- three, carol neither, and every point counter goes.
+  Spec.it s "CR 122.1 planeswalking away rewards every player tied for the most point counters" $ do
+    board <- seatedPlanarBoard s registry S.alice [(S.alice, ["Raiders' Allegiance", "Tazeem"]), (S.bob, []), (S.carol, [])]
+    let counted = S.addPlayerCounter PlayerCounterKind.Point 3 S.alice (S.addPlayerCounter PlayerCounterKind.Point 3 S.bob (S.addPlayerCounter PlayerCounterKind.Point 2 S.carol (inMain S.alice board)))
+        walked = rollAndResolve 6 counted
+        players = [S.alice, S.bob, S.carol]
+    Spec.assertEqWith s "the tied leaders drew three each, carol none" (fmap (`S.handSize` walked) players) [3, 3, 0]
+    Spec.assertEqWith s "and created three Treasures each" (List.sort (controllersNamed "Treasure Token" walked)) (fmap Just [S.alice, S.alice, S.alice, S.bob, S.bob, S.bob])
+    Spec.assertEqWith s "then every point counter was removed" (fmap (\pid -> S.playerCounterOf PlayerCounterKind.Point pid walked) players) [0, 0, 0]
+    Spec.assertEqWith s "alice walked to Tazeem" (faceUpNames walked) [cardName "Tazeem"]
+
+  -- CR 801.18 / 901.13 for a plane's proliferate: four seats at range 1, alice
+  -- controlling two Pirates and bob one, carol -- outside alice's range -- with
+  -- a poison counter. Chaos proliferates twice, and carol is offered each time.
+  Spec.it s "CR 801.18 its chaos proliferates once per Pirate alice controls, outside her range too" $ do
+    pilferer <- S.printingOf s registry "Impulsive Pilferer"
+    board <- seatedPlanarBoard s registry S.alice [(S.alice, ["Raiders' Allegiance"]), (S.bob, []), (S.carol, []), (S.dave, [])]
+    let (_, b1) = S.addPermanent pilferer S.alice board
+        (_, b2) = S.addPermanent pilferer S.alice b1
+        (_, b3) = S.addPermanent pilferer S.bob b2
+        ranged = S.withRange 1 (S.addPlayerCounter PlayerCounterKind.Poison 1 S.carol (inMain S.alice b3))
+        everything :: Prompt.Prompt r -> r
+        everything p = case p of
+          Prompt.ChooseProliferate _ _ oids pids -> (Set.fromList oids, Set.fromList pids)
+          _ -> rolling 5 p
+        chaos = S.runPure everything ranged (Planechase.roll S.manaPerformer S.alice >> Engine.priorityLoop)
+    Spec.assertEqWith s "CR 801.18 carol's poison grew by one per proliferate: two" (S.playerCounterOf PlayerCounterKind.Poison S.carol chaos) 3
+    Spec.assertBool s (not (Game.inRangeOf S.alice S.carol ranged)) "carol is outside alice's range"
 
 -- CR 901.11 / 701.31d: what a planeswalk sets off -- "When you planeswalk to"
 -- (Panopticon), "When you planeswalk away from" (Orzhova, CR 603.10g's

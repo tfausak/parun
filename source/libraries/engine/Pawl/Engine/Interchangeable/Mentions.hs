@@ -282,6 +282,7 @@ import qualified Pawl.Types.PlayerQuantity as PlayerQuantity
 import qualified Pawl.Types.PlayerRef as PlayerRef
 import qualified Pawl.Types.PlayerSacrifices as PlayerSacrifices
 import qualified Pawl.Types.PlayerStaticAbility as PlayerStaticAbility
+import qualified Pawl.Types.PlayersDealtDamage as PlayersDealtDamage
 import qualified Pawl.Types.PlaysLand as PlaysLand
 import qualified Pawl.Types.PlotFromZone as PlotFromZone
 import qualified Pawl.Types.Plus as Plus
@@ -2270,6 +2271,7 @@ playerRefNames asking x = case x of
   PlayerRef.OwnerOfObject objectId -> objectId == object asking
   PlayerRef.ChosenPlayerOfBound slotName choice -> slotNames asking slotName || playerChoiceNames asking choice
   PlayerRef.Attacking attackingPlayers -> attackingPlayersNames asking attackingPlayers
+  PlayerRef.Superlative _ -> False
 
 playerSacrificesNames :: Asking -> PlayerSacrifices.PlayerSacrifices -> Bool
 playerSacrificesNames asking x = case x of
@@ -2416,7 +2418,7 @@ quantityNames asking x = case x of
   Quantity.CardsDrawnThisTurn playerRef -> playerRefNames asking playerRef
   Quantity.BendingsThisTurn playerRef -> playerRefNames asking playerRef
   Quantity.LifeGainedThisTurn playerRef -> playerRefNames asking playerRef
-  Quantity.PlayersDealtDamageThisTurn playerRef -> playerRefNames asking playerRef
+  Quantity.PlayersDealtDamageThisTurn tally -> playerRefNames asking (PlayersDealtDamage.player tally)
   Quantity.DamageDealtToPlayersThisTurn playerRef -> playerRefNames asking playerRef
   Quantity.DamageDealtToThisTurn -> False
   Quantity.SpellsCastLastTurn playerRef -> playerRefNames asking playerRef

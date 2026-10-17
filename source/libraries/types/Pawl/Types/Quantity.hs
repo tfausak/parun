@@ -19,6 +19,7 @@ import qualified Pawl.Types.Measure as Measure
 import qualified Pawl.Types.PlayerCounterTally as PlayerCounterTally
 import qualified Pawl.Types.PlayerDesignationTally as PlayerDesignationTally
 import qualified Pawl.Types.PlayerRef as PlayerRef
+import qualified Pawl.Types.PlayersDealtDamage as PlayersDealtDamage
 import qualified Pawl.Types.ProductionTag as ProductionTag
 import qualified Pawl.Types.SlotName as SlotName
 import qualified Pawl.Types.VotesReceived as VotesReceived
@@ -260,8 +261,9 @@ data Quantity
     -- from the turn-scoped GameEvent.LifeGained log.
     LifeGainedThisTurn PlayerRef.PlayerRef
   | -- | CR 120.1 / 608.2i: how many of the players that reference names were
-    -- dealt damage this turn -- players, not events (rule 702.54a).
-    PlayersDealtDamageThisTurn PlayerRef.PlayerRef
+    -- dealt damage, or combat damage alone, this turn -- players, not events
+    -- (rule 702.54a).
+    PlayersDealtDamageThisTurn PlayersDealtDamage.PlayersDealtDamage
   | -- | CR 120.1 / 608.2i: the total damage dealt this turn to the players that
     -- reference names (rule 702.54b).
     DamageDealtToPlayersThisTurn PlayerRef.PlayerRef

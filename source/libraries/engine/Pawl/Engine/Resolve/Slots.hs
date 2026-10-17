@@ -423,6 +423,7 @@ playerRefSlots ref = case ref of
   -- Read at arity one for that arm's reason: a slot naming several players names
   -- no one player to have been attacked.
   PlayerRef.Attacking (AttackingPlayers.MkAttackingPlayers _ slot) -> Map.singleton slot SlotArity.One
+  PlayerRef.Superlative _ -> Map.empty
 
 -- The slots an AffectedPlayers reads. Only Named does, and only ever one player.
 affectedPlayersSlots :: AffectedPlayers.AffectedPlayers SlotName -> Map.Map SlotName SlotArity

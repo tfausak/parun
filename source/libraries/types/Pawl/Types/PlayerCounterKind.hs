@@ -35,6 +35,9 @@ data PlayerCounterKind
     -- Progress counts them, both through the same Effect and Quantity arms every
     -- other kind uses.
     --
-    -- LAST rather than sorted into place, having no rule number to sort by.
+    -- After the rule-numbered kinds, having no rule number to sort by.
     Experience
+  | -- | CR 122.1's bare first sentence, Experience's posture: vocabulary only,
+    -- read by nothing but card text -- Raiders' Allegiance's point counters.
+    Point
   deriving (Bounded, Enum, Eq, Ord, Show)

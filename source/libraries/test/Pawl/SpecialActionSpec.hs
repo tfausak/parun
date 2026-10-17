@@ -1909,6 +1909,19 @@ dampingEngine s registry = Spec.describe s "CR 116.2d Damping Engine" $ do
     Spec.assertBool s (List.notElem (Action.Type.Ignore engineId theLead) (asked S.alice tied)) "alice has no lead to be affected by"
     Spec.assertBool s (List.notElem (Action.Type.Ignore engineId theLead) (asked S.bob tied)) "and neither does bob"
     Spec.assertBool s (any (playing forestId) (asked S.alice tied)) "the control: with the ability affecting nobody, alice may play her land"
+  -- CR 801.11: four seats at range 1, alice's Damping Engine. carol, outside
+  -- alice's range, controls the most permanents at the table; bob leads among
+  -- the players alice's range holds, so he is the one affected.
+  Spec.it s "CR 801.11 at range 1 Damping Engine ranks only the players in its controller's range" $ do
+    engine <- S.printingOf s registry "Damping Engine"
+    forest <- S.printingOf s registry "Forest"
+    let (engineId, g0) = S.addPermanent engine S.alice S.fourPlayerGame
+        lands pid n g = List.foldl' (\acc _ -> snd (S.addPermanent forest pid acc)) g [1 .. n :: Int]
+        ranged = S.withRange 1 (lands S.carol 5 (lands S.bob 3 g0))
+        asked pid gs = Action.legalActions pid (gs {GameState.priority = Just pid})
+    Spec.assertBool s (List.elem (Action.Type.Ignore engineId theLead) (asked S.bob ranged)) "CR 801.11 bob leads within alice's range, so he is affected"
+    Spec.assertBool s (List.notElem (Action.Type.Ignore engineId theLead) (asked S.carol ranged)) "carol, out of range, is not"
+    Spec.assertBool s (not (Game.inRangeOf S.alice S.carol ranged)) "carol is outside alice's range"
   -- CR 305.1 and CR 601.3a, from ONE printed sentence declaring two player
   -- abilities. The Growth is what makes the Filter discriminating: same {1}{G},
   -- same three Forests, and a sorcery is not one of the three types named.

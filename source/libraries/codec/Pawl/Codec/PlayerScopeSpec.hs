@@ -3,8 +3,11 @@ module Pawl.Codec.PlayerScopeSpec where
 import qualified Pawl.Codec.PlayerScope as PlayerScope
 import qualified Pawl.JsonCodec.Common as Common
 import qualified Pawl.Spec as Spec
+import qualified Pawl.Types.Comparison as Comparison
+import qualified Pawl.Types.PlayerMeasure as PlayerMeasure
 import qualified Pawl.Types.PlayerRelation as PlayerRelation
 import qualified Pawl.Types.PlayerScope as PlayerScope
+import qualified Pawl.Types.Superlative as Superlative
 
 spec :: (Monad m, Monad n) => Spec.Spec m n -> n ()
 spec s = Spec.describe s "Pawl.Codec.PlayerScope" $ do
@@ -26,12 +29,12 @@ spec s = Spec.describe s "Pawl.Codec.PlayerScope" $ do
       PlayerScope.codec
       (PlayerScope.Related PlayerRelation.AnyPlayer)
       " {\"type\":\"AnyPlayer\"} "
-  Spec.it s "ControllingMostPermanents" $
+  Spec.it s "Superlative" $
     Common.assertCodec
       s
       PlayerScope.codec
-      PlayerScope.ControllingMostPermanents
-      " {\"type\":\"ControllingMostPermanents\"} "
+      (PlayerScope.Superlative (Superlative.MkSuperlative PlayerMeasure.PermanentsControlled Comparison.GreaterThan))
+      " {\"type\":\"Superlative\",\"value\":{\"measure\":{\"type\":\"PermanentsControlled\"},\"comparison\":{\"type\":\"GreaterThan\"}}} "
   -- Exhaustive over the relation, whose arms the codec derives: this is what
   -- would catch a relation the derivation missed, or one spelled unlike the
   -- relation's own tag.
