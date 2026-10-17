@@ -534,7 +534,16 @@ entryExileLink = AbilityName.MkAbilityName (Text.pack "exiledAsThisEntered")
 -- card's id, so two identically worded abilities acquired from two cards are
 -- two abilities to a restriction on their use. Reserved, as craftLink is.
 exiledCardAbility :: ObjectId -> AbilityName.AbilityName
-exiledCardAbility oid = AbilityName.MkAbilityName (Text.pack ("thatExiledCard" <> show (ObjectId.unwrap oid)))
+exiledCardAbility oid = AbilityName.MkAbilityName (exiledCardPrefix <> Text.pack (show (ObjectId.unwrap oid)))
+
+-- CR 607.2a / 607.5: whether exiledCardAbility gave this name, so what an
+-- ability acquired that way exiled is linked to none of its holder's own
+-- abilities.
+isExiledCardAbility :: AbilityName.AbilityName -> Bool
+isExiledCardAbility = Text.isPrefixOf exiledCardPrefix . AbilityName.unwrap
+
+exiledCardPrefix :: Text.Text
+exiledCardPrefix = Text.pack "thatExiledCard"
 
 -- CR 400.7j: the reserved slot under which the card a DiscardThis COST payment
 -- discarded is bound, as the object it became in the graveyard -- Calim, Djinn
