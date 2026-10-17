@@ -53,7 +53,6 @@ import qualified Pawl.Types.ManaAbilityResolved as ManaAbilityResolved
 import qualified Pawl.Types.ManifestedDread as ManifestedDread
 import qualified Pawl.Types.Mentored as Mentored
 import qualified Pawl.Types.Moved as Moved
-import qualified Pawl.Types.Object as Object
 import Pawl.Types.ObjectId (ObjectId)
 import qualified Pawl.Types.OwnedZone as OwnedZone
 import qualified Pawl.Types.PermanentWasSacrificed as PermanentWasSacrificed
@@ -795,12 +794,13 @@ eventBindingsOver board gs bearerBecame becameInGraveyard bearer you cond event 
   -- and so gets no second name.
   (TriggerCondition.SelfBlocksCreature _, GameEvent.BecameBlocking (BecameBlocking.MkBecameBlocking {BecameBlocking.attacker = attacker})) ->
     Binding.setBlockedCreature attacker Map.empty
-  -- CR 603.6a's "enters attached to a creature": that host, read as
-  -- the entry triggered, so Infinite Reflection copies it even once the Aura
-  -- has moved on (its ruling, 2012-05-01). Bound only for an entrant that is
-  -- attached to an object.
+  -- CR 603.6a's "enters attached to a creature": that host, bound as the
+  -- trigger is placed, so Infinite Reflection copies it even once the Aura has
+  -- moved on (its ruling, 2012-05-01). Through CR 608.2h's record where CR
+  -- 704.5m buried the Aura first, whose host only CR 704 has acted on since the
+  -- entry. Bound only for an entrant that was attached to an object.
   (TriggerCondition.SelfEnters, GameEvent.Moved (Moved.MkMoved zc _ _ _ _ _)) ->
-    maybe Map.empty (`Binding.setAttachedHost` Map.empty) (Game.lookupObject (ZoneChange.object zc) gs >>= Object.attachedTo >>= Recipient.objectOf)
+    maybe Map.empty (`Binding.setAttachedHost` Map.empty) (Game.hostWithLastKnown (ZoneChange.object zc) gs)
   -- CR 701.3a's "that creature" read from the ATTACHMENT: the host the bearer
   -- went onto, which Enormous Energy Blade taps. SelfBecomesAttachedBy has no arm
   -- here at all, and the two together are the pair -- whichever end of rule

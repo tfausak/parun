@@ -4562,6 +4562,9 @@ project oid gs = projectFrom (gather gs) oid gs
 -- components with it (CR 730.2f). A token's, a copy's or a merge's own values
 -- are no copy effect's (CR 111.3, 730.2a), so they stay.
 --
+-- Not implemented: a copy effect a side had before it merged is part of the
+-- merge's values, so the reveal still shows it (#5214).
+--
 -- data/scenarios/visibility proves each road: the CR 708.10 Cytoshape case the
 -- stored one, the CR 701.20a Clone case the stamped one, the CR 111.3 token
 -- cases the kept own values, and the CR 730.2a Infinite Reflection case a

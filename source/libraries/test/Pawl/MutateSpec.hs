@@ -245,13 +245,13 @@ spec s registry = Spec.describe s "Mutate" $ do
         Spec.assertBool s (Maybe.isNothing (Game.lookupObject host murdered)) "setup: Murder destroyed the pile"
   -- CR 730.2a under a STAMPED copy effect: Cubwarden merges under the face-down
   -- Kirin, so the pile is face down, and Infinite Reflection's trigger makes it
-  -- a copy of alice's Hill Giant with no stated ending (CR 708.10). Hauntwoods
-  -- Shrieker, arriving afterwards so it is no Giant itself, reveals the pile:
-  -- the copy effect changed the permanent, never its merged cards.
+  -- a copy of alice's Hill Giant with no stated ending (CR 708.10). Bob's
+  -- Hauntwoods Shrieker, out of the trigger's reach, reveals the pile: the copy
+  -- effect changed the permanent, never its merged cards.
   --
   -- Not implemented: Infinite Reflection's "nontoken creatures you control
-  -- enter as a copy of enchanted creature" (#5198). Nothing enters after it
-  -- here.
+  -- enter as a copy of enchanted creature" (#5198). No creature of alice's
+  -- enters after it here.
   Spec.it s "CR 730.2a a face-down pile Infinite Reflection made a copy is revealed with its merge" $ do
     plains <- S.printingOf s registry "Plains"
     island <- S.printingOf s registry "Island"
@@ -265,14 +265,14 @@ spec s registry = Spec.describe s "Mutate" $ do
       Nothing -> Spec.assertFailure s "the morph cast did not reach the battlefield"
       Just (host, board, spellId) -> do
         let (giantId, withGiant) = S.addPermanent giant S.alice (merging MutateSide.Under host board spellId)
-            (reflecting, reflectionId) = S.handOne reflection (S.landsFor island S.alice 6 withGiant)
+            (shriekerId, withShrieker) = S.addPermanent shrieker S.bob (S.landsFor forest S.bob 2 withGiant)
+            (reflecting, reflectionId) = S.handOne reflection (S.landsFor island S.alice 6 withShrieker)
             atGiant :: Prompt.Prompt r -> r
             atGiant p = case p of
               Prompt.ChooseTargets _ _ _ sets -> fmap (Set.filter ((== Just giantId) . Recipient.objectOf) . snd) sets
               _ -> S.identityAnswer p
             reflected = S.runPure atGiant reflecting (S.cast S.alice reflectionId >> Monad.replicateM_ 3 (Engine.settleForPriority >> Stack.resolveTop) >> Engine.settleForPriority)
-            (shriekerId, withShrieker) = S.addPermanent shrieker S.alice (S.landsFor forest S.alice 2 reflected)
-            armed = withShrieker {GameState.phase = Phase.PrecombatMain, GameState.activePlayer = S.alice, GameState.priority = Just S.alice}
+            armed = reflected {GameState.phase = Phase.PrecombatMain, GameState.activePlayer = S.alice, GameState.priority = Just S.bob}
             -- The Shrieker's "may" declined, so the pile stays face down and
             -- the reveal is the whole of what it shows.
             atPile :: Prompt.Prompt r -> r
@@ -283,7 +283,7 @@ spec s registry = Spec.describe s "Mutate" $ do
             shown gs = [Revealed.characteristics r | GameEvent.Revealed r <- S.eventsOf gs, Revealed.card r == host]
         case Activatable.abilitiesFor shriekerId armed of
           [ability] -> do
-            let shrieked = S.runPure atPile armed (Activate.activateAbility S.alice shriekerId ability >> Engine.settleForPriority >> Stack.resolveTop >> Engine.settleForPriority)
+            let shrieked = S.runPure atPile armed (Activate.activateAbility S.bob shriekerId ability >> Engine.settleForPriority >> Stack.resolveTop >> Engine.settleForPriority)
             Spec.assertEqWith s "CR 730.2a the reveal carries the lifelink of the Cubwarden merged under the Kirin" (fmap (Map.member Keyword.Lifelink . PC.keywords) (shown shrieked)) [True]
             Spec.assertEqWith s "CR 701.20a and shows the topmost Kirin's name, not the Hill Giant the pile became" (fmap PC.names (shown shrieked)) [Set.singleton (CardName.MkCardName (Text.pack "Misthoof Kirin"))]
             Spec.assertEqWith s "setup: Infinite Reflection made the pile a copy of the Hill Giant" (fmap PC.names (Binding.copyOf . Object.bindings =<< Game.lookupObject host reflected)) (Just (Set.singleton (CardName.MkCardName (Text.pack "Hill Giant"))))

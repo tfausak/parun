@@ -47,6 +47,9 @@ copySource = SlotName.MkSlotName (Text.pack "copySource")
 -- a copy's as it was created, a merged permanent's merge -- so a later copy
 -- effect stamped under `copySource` above covers them without erasing them. No
 -- card's targetSlots may name it: an object's own values are not a target.
+--
+-- Not implemented: a merge's values here include any copy effect a side had
+-- before the merge, which a reveal should leave out (#5214).
 ownCopySource :: SlotName
 ownCopySource = SlotName.MkSlotName (Text.pack "ownCopySource")
 
@@ -1624,8 +1627,8 @@ mergeStampHolds m = Map.member turnedMergeSource m && not (Map.member copySource
 
 -- CR 708.10: these bindings without a copy effect's stamp -- the card beneath
 -- a face-down permanent that is a copy. The object's own values stay
--- (`ownCopySource`): a token's or a copy's (CR 111.3), and a merge's, being the
--- merged cards' own (CR 730.2a).
+-- (`ownCopySource`): a token's or a copy's (CR 111.3), and a merge's (CR
+-- 730.2a).
 withoutCopyEffect :: Map SlotName Binding -> Map SlotName Binding
 withoutCopyEffect = Map.delete copySource
 
