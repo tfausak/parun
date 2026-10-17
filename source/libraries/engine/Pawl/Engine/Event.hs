@@ -163,6 +163,7 @@ import qualified Pawl.Types.GraveyardOrder as GraveyardOrder
 import qualified Pawl.Types.HalfUnlocked as HalfUnlocked
 import qualified Pawl.Types.HowMany as HowMany
 import qualified Pawl.Types.Keyword as Keyword.Type
+import qualified Pawl.Types.KeywordInstance as KeywordInstance
 import qualified Pawl.Types.LastKnown as LastKnown
 import qualified Pawl.Types.Layout as Layout
 import qualified Pawl.Types.LibraryPosition as LibraryPosition
@@ -2179,6 +2180,7 @@ apply batch candidate event =
         case made of
           Nothing -> pure (Just event)
           Just (_, heldCounters) -> do
+            State.modify' (unlinkLostPayments oid)
             -- CR 614.1d, inside the same sentence: Vesuva enters TAPPED as a
             -- copy. On this branch alone -- a declined copy is a Vesuva that
             -- entered untapped, since the printed "may" governs both halves
@@ -4336,6 +4338,28 @@ apply batch candidate event =
         pure (Just event)
     -- Unreachable: `applies` admits TurnUpR only against WouldTurnFaceUp.
     (ReplacementEffect.TurnUpR {}, _) -> pure (Just event)
+
+-- CR 607.2i / 607.5: a permanent spell entering as a copy keeps its own
+-- instances' payments, and their gift promises, only for the own instances it
+-- still has, so a kicker or gift the copy overwrote links to no copied payoff.
+-- An identical keyword the copy has too keeps its payment. Granted keys are
+-- left for Pawl.Engine.Stack.settlePromises. The scenario
+-- cr-607-5-the-mimic-kicked-for-its-own-kicker-enters-as-faerie-squadron-without-counters
+-- proves it.
+unlinkLostPayments :: ObjectId -> GameState -> GameState
+unlinkLostPayments oid gs = case Game.lookupObject oid gs of
+  Nothing -> gs
+  Just obj ->
+    let kept keyword which = case which of
+          KeywordInstance.Own _ -> elem which (Projection.keywordInstances keyword oid gs)
+          KeywordInstance.Granted {} -> True
+        paid = Map.filter (not . Map.null) (Map.mapWithKey (\keyword -> Map.filterWithKey (\which _ -> kept keyword which)) (Object.paidCosts obj))
+        promise choice = case choice of
+          PlayerChoice.Promised something which -> kept (Keyword.Type.Gift something) which
+          PlayerChoice.AsEnters -> True
+        promises = fmap (Map.filterWithKey (\choice _ -> promise choice)) (Object.chosenPlayers obj)
+        settled = obj {Object.paidCosts = paid, Object.chosenPlayers = promises}
+     in gs {GameState.objects = Map.insert oid settled (GameState.objects gs)}
 
 -- CR 707.5 / 707.4: the copying process an AsCopy rewrite performs, on either
 -- event class it rides (CR 614.1c's entry, CR 614.1e's turning face up): the
