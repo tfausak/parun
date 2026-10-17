@@ -4597,6 +4597,7 @@ objectSnapshot oid gs =
             ObjectSnapshot.controller = controllerOf oid gs,
             ObjectSnapshot.owner = Object.owner o,
             ObjectSnapshot.zone = Object.zone o,
+            ObjectSnapshot.home = Vanguard.homeZoneOf oid gs,
             ObjectSnapshot.lapsedGrants = lapsedGrantsOf (fullView gs) pc oid gs
           }
     )

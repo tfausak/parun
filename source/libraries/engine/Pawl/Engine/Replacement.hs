@@ -1775,7 +1775,7 @@ matchesTokenLot deploy context filter_ pid lot =
         -- No OWNER, matching the viewOfCard branch below, which has no object to
         -- read CR 108.3 off either: a lot that named one would answer two ways
         -- for the same token depending on whether it was a copy.
-        Just snapshot -> Count.viewOfSnapshot deploy (Just pid) Nothing True Map.empty Zone.Battlefield Set.empty snapshot
+        Just snapshot -> Count.viewOfSnapshot deploy (Just pid) Nothing True Map.empty Zone.Battlefield Zone.Battlefield Set.empty snapshot
         -- CR 111.1: what the lot describes is a TOKEN whichever way its
         -- characteristics were given, so `token` is True here as it is in the
         -- copy branch above. Projection.viewOfCard answers False, describing a

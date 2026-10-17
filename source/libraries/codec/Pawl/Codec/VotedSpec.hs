@@ -36,6 +36,7 @@ spec s = Spec.describe s "Pawl.Codec.Voted" $ do
                           ObjectSnapshot.controller = Just (PlayerId.MkPlayerId 0),
                           ObjectSnapshot.owner = PlayerId.MkPlayerId 0,
                           ObjectSnapshot.zone = Zone.Battlefield,
+                          ObjectSnapshot.home = Zone.Battlefield,
                           ObjectSnapshot.lapsedGrants = Set.empty
                         }
                 },

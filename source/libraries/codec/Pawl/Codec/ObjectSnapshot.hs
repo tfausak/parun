@@ -12,6 +12,7 @@ import qualified Pawl.JsonCodec.Codec as Codec
 import qualified Pawl.JsonCodec.Common as Common
 import qualified Pawl.JsonCodec.Fields as Fields
 import qualified Pawl.Types.ObjectSnapshot as ObjectSnapshot
+import qualified Pawl.Types.Zone as Zone
 
 -- | A bare object keyed by the record's field names.
 codec :: Codec.Codec ObjectSnapshot.ObjectSnapshot
@@ -21,6 +22,7 @@ codec = Fields.object $ do
   controller <- Fields.required "controller" (Common.maybe PlayerId.codec) ObjectSnapshot.controller
   owner <- Fields.required "owner" PlayerId.codec ObjectSnapshot.owner
   zone <- Fields.required "zone" Zone.codec ObjectSnapshot.zone
+  home <- Fields.defaulted "home" Zone.Battlefield Zone.codec ObjectSnapshot.home
   lapsedGrants <- Fields.defaulted "lapsedGrants" Set.empty (Common.set Condition.codec) ObjectSnapshot.lapsedGrants
   pure
     ObjectSnapshot.MkObjectSnapshot
@@ -29,5 +31,6 @@ codec = Fields.object $ do
         ObjectSnapshot.controller = controller,
         ObjectSnapshot.owner = owner,
         ObjectSnapshot.zone = zone,
+        ObjectSnapshot.home = home,
         ObjectSnapshot.lapsedGrants = lapsedGrants
       }
