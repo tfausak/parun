@@ -68,7 +68,9 @@ data AsCopy ability effect = MkAsCopy
     -- end.
     duration :: Maybe Duration.Duration,
     -- | Which object becomes the copy: the entering one (Clone), or what it is
-    -- attached to (Metamorphic Alteration).
+    -- attached to (Metamorphic Alteration). Onto its host and with no
+    -- `duration`, the copy is a static ability's (CR 611.3a), stored to follow
+    -- the host for as long as the source exists (CopyCoverage.SourceHost).
     recipient :: CopyRecipient.CopyRecipient,
     -- | CR 707.5's "you may" (Clone), False for a printed "choose"
     -- (Metamorphic Alteration's "choose a creature").

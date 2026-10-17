@@ -4432,8 +4432,12 @@ becomeCopyAs batch candidate asCopy oid = do
           -- materialized with no copy binding yet, so this is its printed
           -- card's reading.
           -- The object becoming the copy: this one (CR 707.5), or what it is
-          -- attached to (CR 303.4m / 301.5f), and itself while it is attached
-          -- to nothing.
+          -- attached to (CR 303.4m / 301.5f), whose own values CR 707.9c's
+          -- exceptions read. Onto its host, the copy is Metamorphic
+          -- Alteration's static ability (CopyCoverage.SourceHost): it applies
+          -- to whatever the Aura enchants (CR 611.3a), with the copiable values
+          -- fixed as it first applies (CR 707.2c), which is now (CR 611.3c).
+          -- Pawl.CopySpec's Metamorphic Alteration group proves it.
           let copier = case AsCopy.recipient asCopy of
                 CopyRecipient.ThisObject -> oid
                 CopyRecipient.ItsHost -> Maybe.fromMaybe oid (Game.hostOf oid g0)
@@ -4462,22 +4466,21 @@ becomeCopyAs batch candidate asCopy oid = do
               held = filter applies clauses
               stamped = stampWith (foldMap CopyClause.exceptions held)
           State.modify' $ \g -> case AsCopy.duration asCopy of
-            -- An object attached to nothing has no host to stamp. A regression
-            -- fence: Metamorphic Alteration states a duration.
-            Nothing
-              | copier == oid && AsCopy.recipient asCopy == CopyRecipient.ItsHost -> g
-              | otherwise -> stampOnto stamped g
+            Nothing -> case AsCopy.recipient asCopy of
+              CopyRecipient.ThisObject -> stampOnto stamped g
+              -- CR 611.3b: a static ability's copy applies while its source is
+              -- on the battlefield, so the row has no expiry of its own. It is
+              -- read only while the source is phased in (Game.copyCovers),
+              -- since phasing is no zone change (CR 702.26d), and dropped once
+              -- the source is gone (Expiry.sweepConditional).
+              CopyRecipient.ItsHost ->
+                let (ts, g1) = Game.freshTimestamp g
+                    row = ActiveCopy.MkActiveCopy {ActiveCopy.source = oid, ActiveCopy.timestamp = ts, ActiveCopy.expiry = Expiry.Type.Never, ActiveCopy.covers = CopyCoverage.SourceHost Map.empty, ActiveCopy.snapshot = stamped, ActiveCopy.turned = Nothing}
+                 in g1 {GameState.copyEffects = row : GameState.copyEffects g1}
             -- CR 611.2a: a stated duration (Vesuvan Shapeshifter's "until
             -- this creature is turned face down") stores the copy as a row
             -- that can end, Effect.BecomeCopy's road. The object is the
             -- row's source, which is "this creature".
-            --
-            -- Onto its host, the row follows the source's attachment
-            -- (CopyCoverage.SourceHost): Metamorphic Alteration's static
-            -- ability applies to whatever it enchants (CR 611.3a), with the
-            -- copiable values fixed as it first applies (CR 707.2c), which is
-            -- now (CR 611.3c). Pawl.CopySpec's Metamorphic Alteration group
-            -- proves it.
             Just stated -> case Expiry.arm (flip Game.acquisitionOf) Map.empty controller oid stated g of
               -- CR 611.2b: the duration never started.
               Nothing -> g
@@ -8822,12 +8825,13 @@ merge sid target side = do
             -- Mirrorweave's copy stands" proves it.
             --
             -- A row following its source's host is carved the same way, its
-            -- expiry and source kept, so the carved row ends with the source. A
-            -- regression fence: no test merges onto an enchanted copy.
+            -- source kept and its timestamp the source's (CR 613.7e), so it ends
+            -- with the source. A regression fence: no test merges onto an
+            -- enchanted copy.
             --
             -- Not implemented: the carved row outlives the source moving to
             -- another host (#5218).
-            alone row = row {ActiveCopy.covers = CopyCoverage.These (Set.singleton target)}
+            alone row = row {ActiveCopy.covers = CopyCoverage.These (Set.singleton target), ActiveCopy.timestamp = Game.copyRowTimestamp gs row}
             rewoven row =
               let (snapshot, turned) = readings (unrowed {GameState.copyEffects = alone row : GameState.copyEffects unrowed})
                in (alone row) {ActiveCopy.snapshot = snapshot, ActiveCopy.turned = if turned == snapshot then Nothing else Just turned}

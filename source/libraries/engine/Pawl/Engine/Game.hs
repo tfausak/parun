@@ -2099,26 +2099,28 @@ latestStoredCopy oid gs =
     $ filter (copyCovers gs oid) (GameState.copyEffects gs)
 
 -- | Does this stored copy effect cover the object right now? A fixed set's
--- member (CR 611.2c), or what the row's source is attached to (CR 611.3a)
--- where no later copy effect took it over since the source was last restamped
--- (CR 613.7, 613.7e). CR 611.3b's "while on the battlefield" is the row's
--- expiry, which the card states.
+-- member (CR 611.2c), or what the row's source is attached to while the source
+-- is phased in on the battlefield (CR 611.3a, 611.3b, 702.26b), where no later
+-- copy effect took it over since the source was last restamped (CR 613.7,
+-- 613.7e).
 copyCovers :: GameState -> ObjectId -> ActiveCopy.ActiveCopy -> Bool
 copyCovers gs oid row = case ActiveCopy.covers row of
   CopyCoverage.These oids -> Set.member oid oids
   CopyCoverage.SourceHost overtaken -> case lookupObject (ActiveCopy.source row) gs of
     Just src ->
-      hostOf (ActiveCopy.source row) gs == Just oid
+      Set.member (ActiveCopy.source row) (GameState.battlefield gs)
+        && hostOf (ActiveCopy.source row) gs == Just oid
         && Map.lookup oid overtaken /= Just (Object.timestamp src)
     Nothing -> False
 
 -- | CR 613.7: the timestamp a stored copy effect is ordered by -- its own, or
--- for one following its source's attachment the later of that and the
--- source's, which CR 613.7e renews each time the source becomes attached.
+-- for a static ability's following its source's attachment, the source's (CR
+-- 613.7a), which CR 613.7e renews each time it becomes attached and CR 613.7m
+-- may reorder (Pawl.Engine.Restamp).
 copyRowTimestamp :: GameState -> ActiveCopy.ActiveCopy -> Timestamp.Timestamp
 copyRowTimestamp gs row = case ActiveCopy.covers row of
   CopyCoverage.These _ -> ActiveCopy.timestamp row
-  CopyCoverage.SourceHost _ -> maybe (ActiveCopy.timestamp row) (max (ActiveCopy.timestamp row) . Object.timestamp) (lookupObject (ActiveCopy.source row) gs)
+  CopyCoverage.SourceHost _ -> maybe (ActiveCopy.timestamp row) Object.timestamp (lookupObject (ActiveCopy.source row) gs)
 
 -- | CR 607.5: the acquisition of the abilities layer 1a leaves this object --
 -- the latest stored copy effect covering it, `storedCopyOf`'s row, named by its

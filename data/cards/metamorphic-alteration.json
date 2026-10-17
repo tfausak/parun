@@ -36,46 +36,6 @@
               "rewrite": {
                 "type": "AsCopy",
                 "value": {
-                  "duration": {
-                    "type": "ForAsLongAs",
-                    "value": {
-                      "type": "Compares",
-                      "value": {
-                        "comparison": {
-                          "type": "Exactly"
-                        },
-                        "measured": {
-                          "type": "Count",
-                          "value": {
-                            "aggregation": {
-                              "type": "Members"
-                            },
-                            "filter": {
-                              "type": "IsSource"
-                            },
-                            "scope": {
-                              "type": "InZone",
-                              "value": {
-                                "player": {
-                                  "type": "Relative",
-                                  "value": {
-                                    "type": "AnyPlayer"
-                                  }
-                                },
-                                "zone": {
-                                  "type": "Battlefield"
-                                }
-                              }
-                            }
-                          }
-                        },
-                        "threshold": {
-                          "type": "Literal",
-                          "value": 1
-                        }
-                      }
-                    }
-                  },
                   "eligible": {
                     "type": "HasCardType",
                     "value": {
