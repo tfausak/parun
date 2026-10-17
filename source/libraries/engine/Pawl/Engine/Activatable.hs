@@ -125,7 +125,7 @@ abilitiesForGiven pcs oid gs = case fmap Object.zone (Game.lookupObject oid gs) 
   -- arm, so the host's map never has to hold the grantor's text.
   -- Pawl.Engine.Event.battlefieldAbilitiesOf carries the same pairing and the
   -- same note.
-  Just Zone.Battlefield -> filter (AbilityZone.functionsIn (PC.delayedAbilities (Projection.projectGiven pcs oid gs)) Zone.Battlefield) (Projection.abilitiesGiven pcs oid gs)
+  Just Zone.Battlefield -> filter (AbilityZone.functionsIn Zone.Battlefield (PC.delayedAbilities (Projection.projectGiven pcs oid gs)) Zone.Battlefield) (Projection.abilitiesGiven pcs oid gs)
   -- CR 113.6j: the MINTED abilities rule 702 gives the keywords, plus the
   -- card's own AUTHORED ones that name the hand. The two are disjoint by
   -- construction -- handAbilitiesOf reads keywords and zoneAbilitiesOf reads
@@ -219,19 +219,12 @@ zoneAbilitiesOf pcs zone oid gs = case (Game.faceOf oid gs, Game.lookupObject oi
         -- CR 113.6p, the limb beside CR 113.6b that reads the OBJECT rather than
         -- the ability: an emblem's abilities function in the command zone (CR
         -- 114.4), and a face-up vanguard card's (CR 902.7) and conspiracy's (CR
-        -- 315.5) do too, so a row of one that states no zone functions here
-        -- instead of taking rule 113.6's battlefield default. functionsIn keeps the default and this disjunct
-        -- overrides it, rather than the two readings being written twice;
-        -- Vanguard.functionsFromCommandZone is rule 113.6p's own list, shared with
-        -- the static, replacement, triggered and combat-restriction walks over
-        -- this zone, so a commander's or a dungeon card's unstated row is left
-        -- functioning on the battlefield where rule 113.6 puts it.
-        functionsHere ability =
-          AbilityZone.functionsIn delayed zone ability
-            || ( zone == Zone.Command
-                   && Maybe.isNothing (AbilityZone.zonesFunctionedIn delayed ability)
-                   && Vanguard.functionsFromCommandZone oid gs
-               )
+        -- 315.5) do too, so a row of one that states no zone functions there
+        -- instead of taking rule 113.6's battlefield default. Vanguard.homeZoneOf
+        -- answers which, off rule 113.6p's own list, so a commander's or a
+        -- dungeon card's unstated row is left functioning on the battlefield
+        -- where rule 113.6 puts it.
+        functionsHere = AbilityZone.functionsIn (Vanguard.homeZoneOf oid gs) delayed zone
         granted ability = case ActivatedAbility.condition ability of
           Nothing -> True
           Just cond -> Condition.holds (Projection.fullView gs) (Projection.sourceContext gs (activatorOf oid gs) oid) gs oid cond

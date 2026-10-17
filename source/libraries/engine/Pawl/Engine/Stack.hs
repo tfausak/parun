@@ -650,7 +650,7 @@ functionsOnBattlefield subtypes modification = case modification of
   Modification.GainKeywordAtManaCost keyword -> Keyword.functionsOnBattlefield (Keyword.withCost keyword (Cost.MkCost Nothing []))
   Modification.GainAbility ability -> case ability of
     GrantedAbility.Triggered triggered -> Set.member Zone.Battlefield (Trigger.zonesFunctionedIn subtypes Map.empty triggered)
-    GrantedAbility.Activated activated -> AbilityZone.functionsIn Map.empty Zone.Battlefield activated
+    GrantedAbility.Activated activated -> AbilityZone.functionsIn Zone.Battlefield Map.empty Zone.Battlefield activated
     GrantedAbility.Static static -> Projection.functionsFromZone Zone.Battlefield static
     GrantedAbility.Replacement replacement -> Projection.functionsFromZoneOfRow Zone.Battlefield replacement
     GrantedAbility.Rules _ -> True

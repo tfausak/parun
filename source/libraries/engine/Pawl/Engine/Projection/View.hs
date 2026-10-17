@@ -35,6 +35,7 @@ import qualified Pawl.Engine.Quantity as Quantity
 import qualified Pawl.Engine.SourceContext as SourceContext
 import qualified Pawl.Engine.Star as Star
 import qualified Pawl.Engine.Subtype as Subtype
+import qualified Pawl.Engine.Vanguard as Vanguard
 import qualified Pawl.Extra.Natural as Natural
 import qualified Pawl.Types.ActivatedAbility as ActivatedAbility
 import qualified Pawl.Types.ActivatedAbilitySource as ActivatedAbilitySource
@@ -2082,14 +2083,14 @@ functionsFromZone zone sa =
 -- viewOfCharacteristics calls. Count.abilitiesOf's roster, which every view
 -- builder reads, narrowed by each ability's CR 604.2 grant: where the object
 -- is, the grant must function (AbilityZone.grantFunctionsIn, CR 113.6 /
--- 702.178b) and its condition hold.
+-- 113.6p / 702.178b) and its condition hold.
 --
 -- CR 613.1: the gate's board comes in as a parameter. Taking fullView here would
 -- not terminate for a caller inside the fold -- it re-enters `gather`, with no
 -- memo and no descending bound.
 abilitiesFromCharacteristics :: Count.ViewOf -> ProjectedCharacteristics -> ObjectId -> GameState -> [ActivatedAbility.ActivatedAbility Card.Type.Card (GrantedAbility.GrantedAbility Card.Type.Card)]
 abilitiesFromCharacteristics peers pc oid gs =
-  let functions ability = maybe True (\zone -> AbilityZone.grantFunctionsIn (PC.delayedAbilities pc) zone ability) (lastZoneOf oid gs)
+  let functions ability = maybe True (\zone -> AbilityZone.grantFunctionsIn (Vanguard.homeZoneOf oid gs) (PC.delayedAbilities pc) zone ability) (lastZoneOf oid gs)
       granted ability = functions ability && maybe True (grantHolds peers oid gs) (ActivatedAbility.condition ability)
    in filter granted (ungatedAbilitiesOf pc oid gs)
 
