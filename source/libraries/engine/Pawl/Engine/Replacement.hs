@@ -130,6 +130,7 @@ import Pawl.Types.PlayerScope (PlayerScope)
 import Pawl.Types.Prevention (Prevention)
 import qualified Pawl.Types.Prevention as Prevention
 import qualified Pawl.Types.PreventionRider as PreventionRider
+import qualified Pawl.Types.Printing as Printing
 import qualified Pawl.Types.ProjectedCharacteristics as PC
 import qualified Pawl.Types.ProliferateR as ProliferateR
 import qualified Pawl.Types.ProliferateRewrite as ProliferateRewrite
@@ -815,7 +816,7 @@ matchesPrinted viewOf gs event candidate =
         -- would exist (CR 614.12) since none is minted yet.
         (ReplacementEffect.TokenR (TokenR.MkTokenR pat _ _), ProposedEvent.WouldCreateTokens pid lots) ->
           matchesPlayer gs candidate (TokenPattern.whose pat) pid
-            && any (matchesTokenLot (Count.deployIn gs Zone.Battlefield) (candidateContext gs candidate) (TokenPattern.whatToken pat) pid) lots
+            && any (matchesTokenLot gs (candidateContext gs candidate) (TokenPattern.whatToken pat) pid) lots
         -- CR 614.1b / 500.11: a skip intercepts a step or phase BEGINNING, and
         -- names exactly which one -- and, for a player-scoped skip, whose.
         --
@@ -1766,22 +1767,51 @@ candidateContext gs candidate =
 -- controller is the event's player (CR 111.2), which is what lets a lot say
 -- "under your control" on the Filter axis too.
 --
--- Not implemented: CR 604.2's "as long as" clause of a lot's granted activated
--- ability, asked of the token it would be, so a conditional ability is always
--- kept (#5142).
-matchesTokenLot :: Bool -> Filter.Context -> Filter.Type.Filter Keyword.Type.Keyword -> PlayerId -> TokenLot.TokenLot -> Bool
-matchesTokenLot deploy context filter_ pid lot =
-  let view = case TokenLot.copy lot of
+-- A CR 604.2 "as long as" clause of the token's activated ability is asked of
+-- the token as it would exist (wouldExist), so a lapsed one is withheld as
+-- Count.snapshotRoster withholds a sampled one. data/scenarios/replacement's
+-- Synthetic Minting Ledger pair proves the copy arm; the given-text arm is a
+-- regression fence, no token in data/cards/ being given such a clause.
+matchesTokenLot :: GameState -> Filter.Context -> Filter.Type.Filter Keyword.Type.Keyword -> PlayerId -> TokenLot.TokenLot -> Bool
+matchesTokenLot gs context filter_ pid lot =
+  let (token, board) = wouldExist gs pid lot
+      view = case TokenLot.copy lot of
         -- No OWNER, matching the viewOfCard branch below, which has no object to
         -- read CR 108.3 off either: a lot that named one would answer two ways
         -- for the same token depending on whether it was a copy.
-        Just snapshot -> Count.viewOfSnapshot deploy (Just pid) Nothing True Map.empty Zone.Battlefield Zone.Battlefield Set.empty snapshot
+        Just snapshot ->
+          Count.viewOfSnapshot (Count.deployIn gs Zone.Battlefield) (Just pid) Nothing True Map.empty Zone.Battlefield Zone.Battlefield (Projection.lapsedGrantsOf (Projection.fullView board) snapshot token board) snapshot
         -- CR 111.1: what the lot describes is a TOKEN whichever way its
         -- characteristics were given, so `token` is True here as it is in the
         -- copy branch above. Projection.viewOfCard answers False, describing a
         -- printed face rather than the object this lot would mint.
-        Nothing -> (Projection.viewOfCard (NonEmpty.head (Card.Type.faces (TokenLot.card lot)))) {Filter.controller = Just pid, Filter.token = True}
+        Nothing ->
+          let face = NonEmpty.head (Card.Type.faces (TokenLot.card lot))
+              lapsed = Projection.lapsedAmong (Projection.fullView board) token board (Projection.printedAbilitiesOf face)
+           in (Projection.viewOfCardLapsed lapsed face) {Filter.controller = Just pid, Filter.token = True}
    in Filter.matches context view filter_
+
+-- CR 614.12: the board with the token a lot would mint ON it, under the id it
+-- would get. The rule reads the permanent's characteristics as it would exist
+-- on the battlefield, its own static abilities' effects included, so a clause
+-- deciding whether it has an ability is asked with the token counted: a copy
+-- made a Demon by Maskwood Nexus satisfies its own "as long as you control a
+-- Demon". That is a CHARACTERISTIC read, where Projection.printedRowLives' is a
+-- replacement's own condition, which takes membership off boardAsEntering and
+-- leaves the entering permanent out. The other entering permanents stay out
+-- here too. createTokens mints the same object (Game.tokenOfLot).
+-- data/scenarios/replacement's Villainous Ogre pair proves the token counted.
+--
+-- Not implemented: the creation's own status, so a clause reading whether
+-- the token is tapped, attacking or has counters sees it untapped and bare
+-- (#5183).
+wouldExist :: GameState -> PlayerId -> TokenLot.TokenLot -> (ObjectId, GameState)
+wouldExist gs pid lot =
+  let (token, gs1) = Game.freshObjectId gs
+      (ts, gs2) = Game.freshTimestamp gs1
+      (printing, gs3) = Game.intern (Printing.ofCard (TokenLot.card lot)) gs2
+      entering = Projection.boardAsEntering gs3 {GameState.objects = Map.insert token (Game.tokenOfLot pid printing lot ts) (GameState.objects gs3)}
+   in (token, Game.insertIntoZone Zone.Battlefield LibraryPosition.defaultValue pid token entering)
 
 -- The counters `oid` is so far entering with, empty outside an entry (see
 -- GameState.enteringCounters).
