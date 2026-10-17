@@ -33,20 +33,17 @@
                     "type": "MoveToZone",
                     "value": {
                       "ref": {
-                        "type": "InSlot",
-                        "value": "card"
-                      },
-                      "zone": {
-                        "type": "Hand"
-                      }
-                    }
-                  },
-                  {
-                    "type": "MoveToZone",
-                    "value": {
-                      "ref": {
-                        "type": "InSlot",
-                        "value": "creature"
+                        "type": "AllOf",
+                        "value": [
+                          {
+                            "type": "InSlot",
+                            "value": "card"
+                          },
+                          {
+                            "type": "InSlot",
+                            "value": "creature"
+                          }
+                        ]
                       },
                       "zone": {
                         "type": "Hand"

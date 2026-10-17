@@ -17,6 +17,7 @@
 -- one.
 module Pawl.ExpirySpec where
 
+import qualified Data.Foldable as Foldable
 import qualified Data.List as List
 import qualified Data.Map.Strict as Map
 import qualified Data.Maybe as Maybe
@@ -69,6 +70,7 @@ import qualified Pawl.Types.GameEvent as GameEvent
 import qualified Pawl.Types.GameState as GameState
 import qualified Pawl.Types.GrantedAbility as GrantedAbility
 import qualified Pawl.Types.Keyword as Keyword
+import qualified Pawl.Types.LoggedEvent as LoggedEvent
 import qualified Pawl.Types.Mana as Mana.Type
 import qualified Pawl.Types.ManaCost as ManaCost
 import qualified Pawl.Types.ManaFilter as ManaFilter
@@ -1565,8 +1567,9 @@ cannonadeSpec s registry = Spec.describe s "BrazenCannonade" $ do
 -- offered on turn 4 under the first and never under the second.
 --
 -- TWO EXILED CARDS with DIFFERENT owners, which is the whole of what the
--- reference buys: the same clause grants bob the permission on one card and
--- alice on the other, off one Duration that reads its own slot.
+-- reference buys: one Effect.ForEach over the slot the single exile bound
+-- grants bob the permission on one card and alice on the other, the grant and
+-- its Duration reading each card's owner through the loop's own slot.
 suspendAggressionBoard :: (Monad m) => Spec.Spec m n -> Registry.Registry m -> m (ObjectId.ObjectId, ObjectId.ObjectId, GameState.GameState)
 suspendAggressionBoard s registry = do
   mountain <- S.printingOf s registry "Mountain"
@@ -1627,14 +1630,42 @@ suspendAggressionSpec s registry = Spec.describe s "SuspendAggression" $ do
     Spec.assertEqWith s "bob cannot play it on turn 6 either, and the card is untouched" (S.creaturesInPlay S.bob later, Game.zoneMembers Zone.Exile S.bob later) (1, [pikerId])
     Spec.assertEqWith s "turn 5 began, so bob's next turn is over" (GameState.activePlayer afterwards, GameState.turnNumber afterwards) (S.alice, 5)
     Spec.assertEqWith s "the permission is gone" (permissionOn pikerId afterwards) Nothing
-  -- ONE clause, TWO seats: the reference is read per slot, so the leg over the
-  -- card alice exiled from her own library names her and the leg over bob's
-  -- permanent names him. A duration that took CR 109.5's "you" would name alice
-  -- on both.
+  -- ONE clause, TWO seats: the reference is read per loop member, so the
+  -- iteration over the card alice exiled from her own library names her and
+  -- the one over bob's permanent names him. A grant that took CR 109.5's "you"
+  -- would name alice on both, and one read over the whole slot would name two
+  -- seats and so grant nothing.
   Spec.it s "CR 108.4a each leg names the owner of its own exiled card" $ do
     (pikerId, mineId, resolved) <- suspendAggressionBoard s registry
     Spec.assertEqWith s "bob's permanent is bob's to play" (permissionOn pikerId resolved) (Just S.bob)
     Spec.assertEqWith s "and the card off alice's library is hers" (permissionOn mineId resolved) (Just S.alice)
+  -- CR 608.2f: "exile target nonland permanent and the top card of your
+  -- library" is one action on two objects, so both arrivals share ONE
+  -- Pawl.Types.EventGroup, which is what CR 603.2c's batch conditions ("whenever
+  -- one or more cards are put into exile") read. Asserted on the log, as
+  -- Pawl.MeldSpec's "CR 608.2f the pair leaves the battlefield in one event" is:
+  -- no batch exile trigger in data/cards/ tells the readings apart, since
+  -- Stonebinder's Familiar triggers once each turn and Rakshasa Vizier watches
+  -- only a graveyard (pool grep for "one or more cards are put into exile",
+  -- 2026-10-17). The War Doctor would; see #5189 and #5190.
+  Spec.it s "CR 608.2f the permanent and the library card are exiled in one event" $ do
+    (pikerId, mineId, resolved) <- suspendAggressionBoard s registry
+    let logged = Foldable.toList (GameState.events resolved)
+        arrivals =
+          [ (LoggedEvent.group entry, (ZoneChange.from change, ZoneChange.object change))
+          | entry <- logged,
+            GameEvent.Moved moved <- [LoggedEvent.event entry],
+            let change = Moved.change moved,
+            ZoneChange.to change == Zone.Exile
+          ]
+    Spec.assertEqWith
+      s
+      "CR 608.2f bob's permanent and alice's library card arrived in exile, and the two arrivals carry one EventGroup"
+      (List.sort (fmap snd arrivals), Set.size (Set.fromList (fmap fst arrivals)))
+      (List.sort [(Zone.Battlefield, pikerId), (Zone.Library, mineId)], 1)
+    -- The control: this log DOES mint more than one group, so "one group" is a
+    -- claim about the exile.
+    Spec.assertBool s (Set.size (Set.fromList (fmap LoggedEvent.group logged)) > 1) "the log carries more than one EventGroup"
 
 -- Dovin, Hand of Control ({2}{W/U} Legendary Planeswalker -- Dovin, loyalty 5,
 -- War of the Spark; name, cost, type line and Oracle text checked against
