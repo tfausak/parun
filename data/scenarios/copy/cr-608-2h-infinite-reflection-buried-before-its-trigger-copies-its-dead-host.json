@@ -1,6 +1,6 @@
 {
   "description": "CR 608.2h Infinite Reflection buried before its trigger copies its dead host",
-  "note": "Replenish returns Infinite Reflection attached to bob's Savannah Lions and Curse of Death's Hold on bob at once. The Curse makes the Lions a 1/0, CR 704.5f buries them and CR 704.5m then buries the Aura, all before the enters trigger is put on the stack. The Aura still entered attached to a creature, so the trigger resolves, and alice's Goblin Piker becomes a copy of the Lions as they last existed.",
+  "note": "Replenish returns Infinite Reflection attached to bob's Savannah Lions and Curse of Death's Hold on bob at once. The Curse makes the Lions a 1/0, CR 704.5f buries them and CR 704.5m then buries the Aura before the trigger resolves (under CR 704.3, before it is put on the stack; pawl places it between the two passes, #5215). The Aura still entered attached to a creature, so the trigger resolves, and alice's Goblin Piker becomes a copy of the Lions as they last existed.",
   "board": {
     "seats": [
       { "name": "alice",

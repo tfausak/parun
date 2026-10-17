@@ -798,7 +798,9 @@ eventBindingsOver board gs bearerBecame becameInGraveyard bearer you cond event 
   -- trigger is placed, so Infinite Reflection copies it even once the Aura has
   -- moved on (its ruling, 2012-05-01). Through CR 608.2h's record where CR
   -- 704.5m buried the Aura first, whose host only CR 704 has acted on since the
-  -- entry. Bound only for an entrant that was attached to an object.
+  -- entry; a regression fence today, since triggers are placed between passes
+  -- and the Aura falls a pass after its host (see #5215). Bound only for an
+  -- entrant that was attached to an object.
   (TriggerCondition.SelfEnters, GameEvent.Moved (Moved.MkMoved zc _ _ _ _ _)) ->
     maybe Map.empty (`Binding.setAttachedHost` Map.empty) (Game.hostWithLastKnown (ZoneChange.object zc) gs)
   -- CR 701.3a's "that creature" read from the ATTACHMENT: the host the bearer
