@@ -37,6 +37,7 @@ import Pawl.Types.GameEvent (GameEvent)
 import qualified Pawl.Types.GameEvent as GameEvent
 import Pawl.Types.GameState (GameState)
 import qualified Pawl.Types.GameState as GameState
+import qualified Pawl.Types.Keyword as Keyword.Type
 import qualified Pawl.Types.LoggedEvent as LoggedEvent
 import Pawl.Types.LoopTrail (LoopTrail)
 import qualified Pawl.Types.LoopTrail as LoopTrail
@@ -162,20 +163,37 @@ canonicalStamps gs =
       )
 
 -- | Does `later`, applied after `earlier` to the same objects, leave nothing
--- `earlier` did? A removal of a keyword (CR 613.1f) erases an earlier removal
--- of it, and an earlier grant of it where the keyword has no family: a
--- protection grant is rebaked (Pawl.Engine.Keyword.grantedBy), so what it
--- grants need not be what is removed. A grant erases nothing, two grants of a
--- keyword counting twice (Pawl.Engine.Projection.applyModification).
+-- `earlier` did? A keyword removal (CR 613.1f) erases an earlier removal of
+-- keywords it `takes` all of, and an earlier grant of one it takes: a
+-- protection grant is rebaked (Pawl.Engine.Keyword.grantedBy), so a removal of
+-- one keyword erases only a grant of a familyless one, where a family removal
+-- takes whatever the rebake made of it. A grant erases nothing, two grants of
+-- a keyword counting twice (Pawl.Engine.Projection.applyModification).
 --
--- The family guard is a regression fence: no test loops a protection grant.
+-- Pawl.FragmentedSpec's Mist Dragon cases prove a removal of one keyword
+-- erasing a removal and a grant of it, and its Shadowspear case a family
+-- removal erasing another. A family removal erasing a removal of one keyword
+-- or a grant, and the family guard, are a regression fence: no test loops them.
 --
--- Not implemented: a later keyword-family or all-abilities removal erasing
--- what it overrides (#5136).
+-- Not implemented: a later all-abilities removal erasing what it overrides
+-- (#5136).
 erases :: Modification.Modification ability -> Modification.Modification ability -> Bool
-erases later earlier = case (later, earlier) of
-  (Modification.LoseKeyword lost, Modification.LoseKeyword keyword) -> lost == keyword
-  (Modification.LoseKeyword lost, Modification.GainKeyword keyword) -> lost == keyword && Maybe.isNothing (Keyword.familyOf keyword)
+erases later earlier = case earlier of
+  Modification.LoseKeyword keyword -> takes later keyword
+  Modification.LoseKeywordFamily f -> case later of
+    Modification.LoseKeywordFamily g -> g == f
+    _ -> False
+  Modification.GainKeyword keyword -> case later of
+    Modification.LoseKeyword lost -> lost == keyword && Maybe.isNothing (Keyword.familyOf keyword)
+    _ -> takes later keyword
+  _ -> False
+
+-- | Does `removal` take `keyword` away (CR 613.1f)? A family removal takes
+-- every keyword of the family (CR 702.11e, 702.14a); anything else, none.
+takes :: Modification.Modification ability -> Keyword.Type.Keyword -> Bool
+takes removal keyword = case removal of
+  Modification.LoseKeyword lost -> lost == keyword
+  Modification.LoseKeywordFamily f -> Keyword.familyOf keyword == Just f
   _ -> False
 
 -- Every stamp CR 613.7 orders a stored continuous effect or a counter
