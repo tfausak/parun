@@ -798,6 +798,7 @@ import qualified Pawl.PlaneswalkerCombatSpec
 import qualified Pawl.PlaneswalkerSpec
 import qualified Pawl.PlayerDesignationSpec
 import qualified Pawl.PlayerEffectSpec
+import qualified Pawl.PlayerViewSpec
 import qualified Pawl.PopulateSpec
 import qualified Pawl.PowerToughnessSpec
 import qualified Pawl.PreparationSpec
@@ -1692,6 +1693,7 @@ spec s registry = do
   Pawl.PlaneswalkerSpec.tamiyoNotebookSpec s registry
   Pawl.PlaneswalkerSpec.variableLoyaltySpec s registry
   Pawl.PlayerDesignationSpec.spec s registry
+  Pawl.PlayerViewSpec.spec s registry
   Pawl.PlayerEffectSpec.spec s registry
   Pawl.PopulateSpec.spec s registry
   Pawl.PowerToughnessSpec.spec s registry

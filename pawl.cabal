@@ -1580,6 +1580,7 @@ library engine
     Pawl.Engine.PlayerDesignation
     Pawl.Engine.PlayerEffect
     Pawl.Engine.Players
+    Pawl.Engine.PlayerView
     Pawl.Engine.Plot
     Pawl.Engine.Populate
     Pawl.Engine.Prepare
@@ -2026,6 +2027,7 @@ library test
     Pawl.PlaneswalkerSpec
     Pawl.PlayerDesignationSpec
     Pawl.PlayerEffectSpec
+    Pawl.PlayerViewSpec
     Pawl.PopulateSpec
     Pawl.PowerToughnessSpec
     Pawl.PreparationSpec
