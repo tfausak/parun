@@ -1,0 +1,130 @@
+{
+  "faces": [
+    {
+      "combatRestrictions": [
+        {
+          "type": "CantAttack",
+          "value": {
+            "affected": {
+              "type": "Matching",
+              "value": {
+                "type": "And",
+                "value": [
+                  {
+                    "type": "HasCardType",
+                    "value": {
+                      "type": "Creature"
+                    }
+                  },
+                  {
+                    "type": "Not",
+                    "value": {
+                      "type": "HasKeyword",
+                      "value": {
+                        "type": "Flying"
+                      }
+                    }
+                  },
+                  {
+                    "type": "Not",
+                    "value": {
+                      "type": "HasKeyword",
+                      "value": {
+                        "type": "Landwalk",
+                        "value": {
+                          "type": "HasSubtype",
+                          "value": {
+                            "type": "Island"
+                          }
+                        }
+                      }
+                    }
+                  }
+                ]
+              }
+            }
+          }
+        }
+      ],
+      "name": "Celestine Reef",
+      "oracleText": "Creatures without flying or islandwalk can't attack.\nWhenever chaos ensues, until a player planeswalks, you can't lose the game and your opponents can't win the game.",
+      "triggeredAbilities": [
+        {
+          "condition": {
+            "type": "ChaosEnsues"
+          },
+          "modal": {
+            "modes": [
+              {
+                "clauses": [
+                  {
+                    "effects": [
+                      {
+                        "type": "AffectPlayers",
+                        "value": {
+                          "duration": {
+                            "type": "UntilEvent",
+                            "value": {
+                              "type": "Planeswalked"
+                            }
+                          },
+                          "effect": {
+                            "type": "Precluded",
+                            "value": {
+                              "type": "Lose"
+                            }
+                          },
+                          "players": {
+                            "type": "Scoped",
+                            "value": {
+                              "type": "You"
+                            }
+                          }
+                        }
+                      },
+                      {
+                        "type": "AffectPlayers",
+                        "value": {
+                          "duration": {
+                            "type": "UntilEvent",
+                            "value": {
+                              "type": "Planeswalked"
+                            }
+                          },
+                          "effect": {
+                            "type": "Precluded",
+                            "value": {
+                              "type": "Win"
+                            }
+                          },
+                          "players": {
+                            "type": "Scoped",
+                            "value": {
+                              "type": "Opponent"
+                            }
+                          }
+                        }
+                      }
+                    ]
+                  }
+                ]
+              }
+            ]
+          }
+        }
+      ],
+      "typeLine": {
+        "subtypes": [
+          {
+            "type": "Luvion"
+          }
+        ],
+        "types": [
+          {
+            "type": "Plane"
+          }
+        ]
+      }
+    }
+  ]
+}

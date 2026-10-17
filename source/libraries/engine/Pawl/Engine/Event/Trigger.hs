@@ -1992,10 +1992,13 @@ eventTriggers events gs =
               Map.singleton oid (Object.owner obj, [whole (Keyword.madnessCast (PC.manaCost (Projection.project oid gs)) payload)])
         _ -> Map.empty
       -- CR 603.10g: the planes and phenomena a planeswalk walked away from, read
-      -- back in time. Each is gone by the scan -- turned face down into a new
-      -- object (CR 901.7a) or out of the game with its owner (CR 901.10) -- so
-      -- its printed face comes from CR 608.2h last known information, keyed by
-      -- the id it had face up. A plane that left with its owner is walked away
+      -- back in time. Each that is gone by the scan -- turned face down into a
+      -- new object (CR 901.7a) or out of the game with its owner (CR 901.10) --
+      -- has its printed face read from CR 608.2h last known information, keyed
+      -- by the id it had face up. One still face up (CR 901.11c on the CR
+      -- 901.10 road) is `inCommand`'s, which offers it live. That gate is
+      -- unobserved: without it the union's bias hands the id to this source
+      -- instead, which offers the same trigger under the same controller. A plane that left with its owner is walked away
       -- from (CR 701.31d) and still triggers, as Sanctum of Serra's ruling
       -- says. Its look-back abilities only, `sameGroup`'s narrowing. CR
       -- 901.6's controller is the planar controller, which is the player who
@@ -2006,6 +2009,7 @@ eventTriggers events gs =
           Map.fromList
             [ (oid, (TurnedUpOffDeck.player e, abilities))
             | oid <- Set.toAscList (TurnedUpOffDeck.awayFrom e),
+              Set.notMember oid (GameState.command gs),
               Just face <- [Game.faceOfWithLastKnown oid gs],
               let abilities = filter (looksBack . fst) (fmap whole (Face.triggeredAbilities face)),
               not (null abilities)
@@ -2333,7 +2337,8 @@ eventTriggers events gs =
       -- offers that card's projected abilities unfiltered, a superset of the
       -- other's projected, `functionsIn`-filtered read.
       -- `walkedAwayFrom` overlaps nothing: its ids no longer exist, and none
-      -- of them stood on the battlefield.
+      -- of them stood on the battlefield or is in the command zone `inCommand`
+      -- walks.
       -- `spellCast` overlaps nothing: CR 601.2a keeps its object on the stack,
       -- which no other source reads. Neither does `inCommand`: CR 114.1 puts an
       -- emblem into the command zone, and no rule or effect in pawl moves one

@@ -59,6 +59,7 @@ import qualified Pawl.Types.Object as Object
 import qualified Pawl.Types.ObjectId as ObjectId
 import qualified Pawl.Types.OptionalDecision as OptionalDecision
 import qualified Pawl.Types.Phase as Phase
+import qualified Pawl.Types.Player as Player
 import qualified Pawl.Types.PlayerActed as PlayerActed
 import qualified Pawl.Types.PlayerAction as PlayerAction
 import qualified Pawl.Types.PlayerId as PlayerId
@@ -839,6 +840,102 @@ planeswalkSpec s registry = Spec.describe s "CR 901.11" $ do
     Spec.assertEqWith s "both wait in their owners' graveyards until the end step" (zoneNames Zone.Graveyard S.bob died, zoneNames Zone.Graveyard S.alice died) ([cardName "Savannah Lions"], [cardName "Grizzly Bears"])
     Spec.assertEqWith s "CR 603.7 the white Savannah Lions returns under bob's control" (controllersNamed "Savannah Lions" ended) [Just S.bob]
     Spec.assertEqWith s "and the nonwhite Grizzly Bears goes to alice's hand" (zoneNames Zone.Hand S.alice ended) [cardName "Grizzly Bears"]
+
+  -- CR 901.11c on the CR 901.10 road: bob's Orzhova and carol's Sanctum of
+  -- Serra ("When you planeswalk away from Sanctum of Serra, destroy all nonland
+  -- permanents.") are both face up -- Spatial Merging's board, turned up here by
+  -- hand (#5206) -- and bob concedes. carol turns up her Tazeem, and that
+  -- planeswalk walks away from every face-up plane, Sanctum too, though it
+  -- stays face up. alice's Sol Ring is destroyed.
+  Spec.it s "CR 901.11c a departing owner's planeswalk walks away from the plane left face up" $ do
+    ring <- S.printingOf s registry "Sol Ring"
+    board <- seatedPlanarBoard s registry S.bob [(S.alice, ["Tazeem"]), (S.bob, ["Orzhova"]), (S.carol, ["Sanctum of Serra", "Tazeem"])]
+    let merged = S.runPure S.identityAnswer board (Monad.void (Planechase.turnUpTop S.carol))
+        (ringId, stocked) = S.addPermanent ring S.alice (inMain S.bob merged)
+        gone = S.runPure (conceding S.bob) stocked Engine.priorityLoop
+    Spec.assertEqWith s "the premise: Orzhova and Sanctum of Serra are face up" (List.sort (faceUpNames stocked)) [cardName "Orzhova", cardName "Sanctum of Serra"]
+    Spec.assertEqWith s "CR 901.11c Sanctum of Serra's trigger destroyed alice's Sol Ring" (zoneNames Zone.Graveyard S.alice gone) [cardName "Sol Ring"]
+    Spec.assertBool s (Maybe.isNothing (Game.lookupObject ringId gone) || notElem ringId (Set.toList (GameState.battlefield gone))) "and it is off the battlefield"
+    Spec.assertEqWith s "CR 901.10 Sanctum stays face up beside carol's Tazeem" (List.sort (faceUpNames gone)) [cardName "Sanctum of Serra", cardName "Tazeem"]
+
+  -- Sanctum of Serra on the planar die's road: alice planeswalks away and every
+  -- nonland permanent is destroyed, whoever controls it; the Forest stays. Its
+  -- chaos ability ("you may have your life total become 20") on the pair, taken
+  -- and declined.
+  Spec.it s "CR 603.10g planeswalking away from Sanctum of Serra destroys all nonland permanents" $ do
+    bears <- S.printingOf s registry "Grizzly Bears"
+    ring <- S.printingOf s registry "Sol Ring"
+    forest <- S.printingOf s registry "Forest"
+    board <- planarBoard s registry ["Sanctum of Serra", "Tazeem"]
+    let (_, b1) = S.addPermanent bears S.alice (inMain S.alice board)
+        (_, b2) = S.addPermanent ring S.bob b1
+        (_, stocked) = S.addPermanent forest S.alice b2
+        walked = rollAndResolve 6 stocked
+        hurt = stocked {GameState.players = Map.adjust (\p -> p {Player.life = 7}) S.alice (GameState.players stocked)}
+        declining :: Prompt.Prompt r -> r
+        declining p = case p of
+          Prompt.ChooseOptional {} -> OptionalDecision.Declines
+          _ -> rolling 5 p
+        exercising :: Prompt.Prompt r -> r
+        exercising p = case p of
+          Prompt.ChooseOptional {} -> OptionalDecision.Exercises
+          _ -> rolling 5 p
+        rolled = Planechase.roll S.manaPerformer S.alice >> Engine.priorityLoop
+    Spec.assertEqWith s "CR 603.10g alice's Grizzly Bears and bob's Sol Ring are destroyed" (zoneNames Zone.Graveyard S.alice walked, zoneNames Zone.Graveyard S.bob walked) ([cardName "Grizzly Bears"], [cardName "Sol Ring"])
+    Spec.assertEqWith s "and alice's Forest stays" (length (named "Forest" walked)) 1
+    Spec.assertEqWith s "chaos: alice may have her life total become 20" (S.lifeOf S.alice (S.runPure exercising hurt rolled)) (Just 20)
+    Spec.assertEqWith s "and may decline" (S.lifeOf S.alice (S.runPure declining hurt rolled)) (Just 7)
+
+  -- Celestine Reef: "Creatures without flying or islandwalk can't attack." on
+  -- bob's turn, against Grizzly Bears, Ornithopter and Meandering Towershell.
+  Spec.it s "CR 508.1c Celestine Reef keeps creatures without flying or islandwalk from attacking" $ do
+    bears <- S.printingOf s registry "Grizzly Bears"
+    thopter <- S.printingOf s registry "Ornithopter"
+    towershell <- S.printingOf s registry "Meandering Towershell"
+    board <- planarBoard s registry ["Celestine Reef"]
+    let (bearId, b1) = S.addPermanent bears S.bob board
+        (thopterId, b2) = S.addPermanent thopter S.bob b1
+        (shellId, stocked) = S.addPermanent towershell S.bob b2
+        declaring = declaringAt S.alice (inMain S.bob stocked)
+        mayAttack oid = Combat.legalAttackDeclarationAs S.bob [(oid, AttackTarget.OfPlayer S.alice)] declaring
+    Spec.assertBool s (not (mayAttack bearId)) "Grizzly Bears may not attack"
+    Spec.assertBool s (mayAttack thopterId) "Ornithopter, flying, may"
+    Spec.assertBool s (mayAttack shellId) "Meandering Towershell, islandwalk, may"
+
+  -- Celestine Reef's chaos: "until a player planeswalks, you can't lose the
+  -- game". alice at 0 life stays in the game, and loses once she planeswalks,
+  -- paying {1} for her second roll with a Forest.
+  Spec.it s "CR 901.11 Celestine Reef's chaos keeps alice in the game until a player planeswalks" $ do
+    forest <- S.printingOf s registry "Forest"
+    board <- planarBoard s registry ["Celestine Reef", "Tazeem"]
+    let (_, stocked) = S.addPermanent forest S.alice (inMain S.alice board)
+        chaos = rollAndResolve 5 stocked
+        dying gs = gs {GameState.players = Map.adjust (\p -> p {Player.life = 0}) S.alice (GameState.players gs)}
+        held = S.runPure S.identityAnswer (dying chaos) Engine.priorityLoop
+        walked = S.runPure (rolling 6) held (Planechase.roll S.manaPerformer S.alice >> Engine.priorityLoop)
+        unprotected = S.runPure S.identityAnswer (dying stocked) Engine.priorityLoop
+    Spec.assertBool s (elem S.alice (Game.stillPlaying held)) "CR 901.11 at 0 life after chaos, alice is still in the game"
+    Spec.assertBool s (notElem S.alice (Game.stillPlaying walked)) "and once she planeswalks she loses"
+    Spec.assertBool s (notElem S.alice (Game.stillPlaying unprotected)) "with no chaos, 0 life loses at once"
+
+  -- Inys Haen: "When you planeswalk to Inys Haen ..., mill three cards." and
+  -- "When you planeswalk away from Inys Haen, each player returns all land
+  -- cards from their graveyard to the battlefield tapped." alice walks to it,
+  -- milling three Forests, then away, paying {1} with a Forest; bob's Forest
+  -- comes back under his control.
+  Spec.it s "CR 603.10g Inys Haen mills on the way in and returns every graveyard's lands tapped on the way out" $ do
+    forest <- S.printingOf s registry "Forest"
+    board <- planarBoard s registry ["Academy at Tolaria West", "Inys Haen", "Tazeem"]
+    let (_, b1) = S.addPermanent forest S.alice (inMain S.alice board)
+        (_, stocked) = S.addGraveyardCard forest S.bob b1
+        arrived = rollAndResolve 6 stocked
+        left = S.runPure (rolling 6) arrived (Planechase.roll S.manaPerformer S.alice >> Engine.priorityLoop)
+        alicesForests gs = filter (\oid -> Projection.controllerOf oid gs == Just S.alice) (named "Forest" gs)
+    Spec.assertEqWith s "CR 701.31d walking to Inys Haen milled three" (length (zoneNames Zone.Graveyard S.alice arrived)) 3
+    Spec.assertEqWith s "CR 603.10g walking away returned alice's three Forests beside the one she tapped" (length (alicesForests left)) 4
+    Spec.assertBool s (all (`Game.isTapped` left) (alicesForests left)) "all tapped"
+    Spec.assertEqWith s "and bob's Forest under his control" (fmap (`Projection.controllerOf` left) (filter (\oid -> Projection.controllerOf oid left == Just S.bob) (named "Forest" left))) [Just S.bob]
+    Spec.assertEqWith s "no land is left in a graveyard" (zoneNames Zone.Graveyard S.alice left, zoneNames Zone.Graveyard S.bob left) ([], [])
 
 -- The controllers of the permanents with this name.
 controllersNamed :: String -> GameState.GameState -> [Maybe PlayerId.PlayerId]

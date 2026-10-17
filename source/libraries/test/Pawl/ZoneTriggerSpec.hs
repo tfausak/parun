@@ -605,7 +605,7 @@ commandZoneTriggerSpec s registry =
 -- Emblem, Vanguard, Conspiracy, Dungeon, Plane and Scheme card scanned for a line
 -- opening "When " that is not an event, finds only the plane Aretopolis ("When
 -- Aretopolis has ten or more scroll counters on it, planeswalk."), which needs
--- a scroll counter on a plane (#5203).
+-- counters on a plane (#5203).
 --
 -- Three seats, and only alice's hand decides: bob's and carol's are empty on
 -- both boards, so a scan reading "you" as any player would fire on the negative.

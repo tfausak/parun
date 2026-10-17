@@ -133,6 +133,11 @@ setStartingPlane pid = do
 -- Unobserved: a phenomenon is face up beside a planeswalking ability only after
 -- a planeswalk in response to one, and the one card in data/cards that
 -- planeswalks, Path of the Enigma, is a sorcery (2026-10-15).
+--
+-- The planeswalk walks away from the cards that left and, by CR 901.11c, from
+-- every plane still face up beside them. Pawl.PlanechaseSpec's "CR 901.11c a
+-- departing owner's planeswalk walks away from the plane left face up" proves
+-- it.
 ownersLeft :: GameState -> [PlayerId] -> Game ()
 ownersLeft before pids = do
   let owned oid = maybe False (\obj -> List.elem (Object.owner obj) pids) (Game.lookupObject oid before)
@@ -142,7 +147,8 @@ ownersLeft before pids = do
     Monad.when (any isPlane left) (State.modify' ceasePlaneswalking)
     gs <- State.get
     let walker = Plane.planarController gs
-    proposed PlaneswalkCause.OwnerLeft walker (encounterTop walker (Set.fromList left))
+        away = Set.fromList (left <> filter isPlane (faceUp before))
+    proposed PlaneswalkCause.OwnerLeft walker (encounterTop walker away)
 
 -- CR 901.10a: every planeswalking ability on the stack ceases to exist.
 ceasePlaneswalking :: GameState -> GameState
