@@ -37,4 +37,7 @@ data PlayerCounterKind
     --
     -- LAST rather than sorted into place, having no rule number to sort by.
     Experience
+  | -- | CR 122.1's bare first sentence, Experience's posture: vocabulary only,
+    -- read by nothing but card text -- Raiders' Allegiance's point counters.
+    Point
   deriving (Bounded, Enum, Eq, Ord, Show)

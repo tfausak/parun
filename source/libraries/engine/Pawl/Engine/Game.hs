@@ -3597,9 +3597,15 @@ freerunningDamageThisTurn pid gs =
 -- Filter.dealtDamageThisTurn, and Pawl.Engine.Quantity's
 -- PlayersDealtDamageThisTurn arm, which counts the seats it answers True for.
 -- The turn scope is GameState.events itself: Pawl.Engine.Engine.beginTurnOf
--- clears the log at the handoff, so "this turn" is what the log holds.
-wasDealtDamageThisTurn :: GameState -> PlayerId -> Bool
-wasDealtDamageThisTurn gs pid = any ((== Just pid) . damagedPlayer . LoggedEvent.event) (GameState.events gs)
+-- clears the log at the handoff, so "this turn" is what the log holds. A kind
+-- narrows the question to that damage alone (CR 510.2's combat damage).
+wasDealtDamageThisTurn :: Maybe DamageKind.DamageKind -> GameState -> PlayerId -> Bool
+wasDealtDamageThisTurn kind gs pid =
+  let counts event =
+        damagedPlayer event == Just pid && case event of
+          GameEvent.DamageDealt ev -> all (== DamageEvent.kind ev) kind
+          _ -> Maybe.isNothing kind
+   in any (counts . LoggedEvent.event) (GameState.events gs)
 
 -- CR 120.1 / 608.2i: how much damage was dealt to this PLAYER this turn --
 -- wasDealtDamageThisTurn's twin summing amounts where that one answers yes or

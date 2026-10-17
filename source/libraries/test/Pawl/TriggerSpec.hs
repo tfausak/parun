@@ -1107,6 +1107,42 @@ spinesplitterSpec s registry =
           Spec.assertEqWith s "on the turn it happened, two" (countersOn spine (atEnd damaged)) 2
           Spec.assertEqWith s "a turn cycle later, none" (countersOn spine (atEnd roundAgain)) 0
 
+-- Tymna the Weaver {1}{W}{B} Legendary Creature -- Human Cleric 2/2: "At the
+-- beginning of each of your postcombat main phases, you may pay X life, where X
+-- is the number of opponents that were dealt combat damage this turn. If you
+-- do, draw X cards." (Oracle text checked on Scryfall, 2026-10-17.) The
+-- Spinesplitter count narrowed to CR 510.2's combat damage. Three seats, the
+-- damage dealt by Tymna through Damage.applyDamage, and every board differing
+-- only in which damage was combat damage; alice always pays.
+tymnaSpec :: (Monad m) => Spec.Spec m n -> Registry.Registry m -> n ()
+tymnaSpec s registry =
+  let postcombat = Phase.PostcombatMain
+      beginPostcombat gs = Event.recordEvent (GameEvent.StepBegan (StepBegan.MkStepBegan postcombat S.alice)) (gs {GameState.phase = postcombat, GameState.activePlayer = S.alice, GameState.priority = Just S.alice})
+      paying :: Prompt.Prompt r -> r
+      paying p = case p of
+        Prompt.ChooseToPay {} -> PaymentDecision.Pays
+        _ -> S.identityAnswer p
+      atPostcombat gs = S.runPure paying (beginPostcombat gs) Engine.priorityLoop
+      hit src target amount kind gs =
+        S.runPure
+          S.identityAnswer
+          gs
+          (Damage.applyDamage [DamageEvent.MkDamageEvent src (Recipient.ToPlayer target) amount False False False 0 Nothing Nothing mempty False kind])
+   in Spec.describe s "Tymna the Weaver"
+        . Spec.it s "CR 510.2 X counts the opponents dealt COMBAT damage this turn"
+        $ do
+          tymna <- S.printingOf s registry "Tymna the Weaver"
+          forest <- S.printingOf s registry "Forest"
+          let (tymnaId, gs0) = S.addPermanent tymna S.alice S.threePlayerGame
+              base = List.foldl' (\g _ -> snd (S.addLibraryCard forest S.alice g)) gs0 [1 .. 5 :: Int]
+              mixed = atPostcombat (hit tymnaId S.carol 3 DamageKind.Noncombat (hit tymnaId S.bob 2 DamageKind.Combat base))
+              both = atPostcombat (hit tymnaId S.carol 3 DamageKind.Combat (hit tymnaId S.bob 2 DamageKind.Combat base))
+              neither = atPostcombat (hit tymnaId S.carol 3 DamageKind.Noncombat (hit tymnaId S.bob 2 DamageKind.Noncombat base))
+          Spec.assertEqWith s "CR 510.2 bob alone took combat damage: alice drew one" (S.handSize S.alice mixed) 1
+          Spec.assertEqWith s "and paid one life for it" (S.lifeOf S.alice mixed) (Just 19)
+          Spec.assertEqWith s "both took combat damage: two, for two life" (S.handSize S.alice both, S.lifeOf S.alice both) (2, Just 18)
+          Spec.assertEqWith s "noncombat damage alone: nothing" (S.handSize S.alice neither, S.lifeOf S.alice neither) (0, Just 20)
+
 -- Tidal Wave {2}{U} Instant: "Create a 5/5 blue Wall creature token with defender.
 -- Sacrifice it at the beginning of the next end step." CR 603.7c's object-bound
 -- delayed ability -- "it" must survive the resolution that armed it. Synthetic
@@ -2597,6 +2633,7 @@ spec s registry = Spec.describe s "Pawl.Engine.Trigger" $ do
   textChangedTriggerSpec s registry
   historySpec s registry
   spinesplitterSpec s registry
+  tymnaSpec s registry
   delayedSpec s registry
   tokenSetSpec s registry
   tokenGroupReadSpec s registry

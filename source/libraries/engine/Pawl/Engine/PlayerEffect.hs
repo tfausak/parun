@@ -116,6 +116,7 @@ import qualified Pawl.Types.SlotName as SlotName
 import qualified Pawl.Types.SourceChoices as SourceChoices
 import qualified Pawl.Types.SpendManaAsThough as SpendManaAsThough
 import qualified Pawl.Types.StatedFlip as StatedFlip
+import qualified Pawl.Types.Superlative as Superlative
 import qualified Pawl.Types.Teams as Teams
 import Pawl.Types.Timestamp (Timestamp)
 import qualified Pawl.Types.TurnScope as TurnScope
@@ -133,7 +134,7 @@ import qualified Pawl.Types.Zone as Zone
 -- The parameter is named for the common case.
 --
 -- The board comes in because two arms' membership is a fact about it rather than
--- about the two players: PlayerScope.ControllingMostPermanents reads who leads,
+-- about the two players: PlayerScope.Superlative reads who leads,
 -- and PlayerScope.Related Opponent reads CR 808.1's teams. Each is computed inside the
 -- arm that asks, so a scope that names neither pays nothing.
 inScope :: PlayerId -> PlayerId -> GameState -> PlayerScope -> Bool
@@ -142,7 +143,7 @@ inScope pid controller gs scope = case scope of
   -- 102.3's opponents are every player not on the controller's team, and
   -- AnyPlayer includes the controller (Thalia's ruling: "including your own").
   PlayerScope.Related relation -> PlayerRelation.holds (Game.teams gs) relation controller pid
-  PlayerScope.ControllingMostPermanents -> permanentLeader gs == Just pid
+  PlayerScope.Superlative leading -> List.elem pid (leaders gs leading)
 
 -- The same question over a CARRIER's affected set rather than over a bare scope:
 -- is `pid` one of the players this row applies to? inScope for the Scoped arm,
@@ -162,36 +163,14 @@ applies pid controller gs affected =
     AffectedPlayers.Scoped scope -> inScope pid controller gs scope
     AffectedPlayers.Named seat -> pid == seat
 
--- Damping Engine's "a player who controls more permanents than each other
--- player", as the at-most-one player it names. Nothing when the lead is TIED,
--- which is the sentence's own answer: "more than each other player" is a strict
--- comparison, so two players on four permanents each leave the ability affecting
--- nobody at all.
---
--- CR 110.1 is what makes the tally a battlefield fold and nothing more: every
--- object on the battlefield is a permanent, so no filter is owed. The controller
--- is the PROJECTED one (CR 613.1b layer 2), so a Mind Control counts the
--- permanent for its new controller.
---
--- A player controlling nothing still has a row, which is what keeps the tie test
--- honest: on an empty board every player is tied on zero and the answer is
--- Nothing rather than an arbitrary seat.
---
--- One remaining player is VACUOUSLY the leader -- there is no other player to
--- have fewer than -- and that is the rules answer as well as this fold's. CR
--- 104.2a has already ended such a game, so nothing observes it.
-permanentLeader :: GameState -> Maybe PlayerId
-permanentLeader gs =
+-- PlayerScope.Superlative's players: Players.superlative over every player
+-- still in the game, reading the PROJECTED controller (CR 613.1b layer 2). A
+-- player controlling nothing still has a row, so on an empty board Damping
+-- Engine's strict lead names nobody rather than an arbitrary seat.
+leaders :: GameState -> Superlative.Superlative -> [PlayerId]
+leaders gs =
   let grants = Projection.controlGrants gs
-      controls pid = length (filter (\oid -> Projection.controllerOfGiven grants oid gs == Just pid) (Set.toList (GameState.battlefield gs)))
-      tallies = fmap (\pid -> (pid, controls pid)) (Game.stillPlaying gs)
-   in case tallies of
-        [] -> Nothing
-        _ ->
-          let best = maximum (fmap snd tallies)
-           in case filter ((== best) . snd) tallies of
-                [(pid, _)] -> Just pid
-                _ -> Nothing
+   in Players.superlative (\oid -> Projection.controllerOfGiven grants oid gs) (Game.stillPlaying gs) gs
 
 -- The same scope as a SET rather than as a membership test -- CR 400.1's
 -- per-player zones asked in the direction a zone fold needs it
@@ -206,12 +185,12 @@ permanentLeader gs =
 -- -- the vacuous posture every player-referencing Filter atom takes. AnyPlayer
 -- is answerable anyway, because it never asks the perspective a question: "target
 -- card in a graveyard" names the whole table whoever is reading it.
--- ControllingMostPermanents is answerable for that same reason, one arm further
--- on: its membership is a fact about the board.
+-- Superlative is answerable for that same reason, one arm further on: its
+-- membership is a fact about the board.
 playersInScope :: Maybe PlayerId -> Maybe PlayerId -> GameState -> PlayerScope -> Maybe [PlayerId]
 playersInScope reach perspective gs scope = case scope of
   PlayerScope.Related relation -> Players.relatedAmong (Players.table reach gs) perspective gs relation
-  PlayerScope.ControllingMostPermanents -> Just (filter (`elem` Players.table reach gs) (Maybe.maybeToList (permanentLeader gs)))
+  PlayerScope.Superlative leading -> Just (filter (`elem` Players.table reach gs) (leaders gs leading))
 
 -- CR 707.2a: the player abilities this permanent's copiable rules text gives it
 -- -- its copy snapshot's when it has one, its printed face's otherwise. The
@@ -2441,7 +2420,7 @@ protectedFromTargeting rows caster pid gs =
             -- Unlike AnyPlayer, this one does ask the caster a question -- "is
             -- the caster the player controlling the most permanents?" -- and a
             -- sourceless spell or ability is nobody, so it is not that player.
-            PlayerScope.ControllingMostPermanents -> False
+            PlayerScope.Superlative _ -> False
         PlayerEffect.CantCastSpells -> False
         PlayerEffect.CantActivateAbilities _ -> False
         PlayerEffect.CantCastMoreThan _ -> False

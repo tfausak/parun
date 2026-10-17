@@ -57,6 +57,7 @@ import qualified Pawl.Types.PlayerCounterTally as PlayerCounterTally
 import qualified Pawl.Types.PlayerDesignationTally as PlayerDesignationTally
 import qualified Pawl.Types.PlayerId as PlayerId
 import qualified Pawl.Types.PlayerRef as PlayerRef
+import qualified Pawl.Types.PlayersDealtDamage as PlayersDealtDamage
 import qualified Pawl.Types.Plus as Plus
 import qualified Pawl.Types.PowerToughnessSticker as PowerToughnessSticker
 import Pawl.Types.Quantity (Quantity)
@@ -133,7 +134,7 @@ evaluateAgainst viewOf context gs announcedOn mOid mView quantity =
       -- shared fold, so this count and the Filter.DealtDamageThisTurn atom a player
       -- candidate answers cannot come apart; see Game.damagedPlayer under it for CR
       -- 120.3a's recipient and for CR 120.8's zero.
-      wasDealtDamage = Game.wasDealtDamageThisTurn gs
+      wasDealtDamage kind = Game.wasDealtDamageThisTurn kind gs
       -- CR 102.1's reference, resolved by Count.playersFor for every arm but the
       -- fold's own candidate. That one is answered HERE because this is where the
       -- candidate is: Count.evaluate's Scope.OverPlayers arm hands each candidate
@@ -819,9 +820,12 @@ evaluateAgainst viewOf context gs announcedOn mOid mView quantity =
         --
         -- An EMPTY log answers 0 rather than Nothing, as CardsDiscardedThisTurn's does.
         -- What is unanswered is only the reference.
-        Quantity.PlayersDealtDamageThisTurn ref -> case playersOf ref of
+        --
+        -- The kind narrows the log to CR 510.2's combat damage where a card says
+        -- so -- Tymna the Weaver's "opponents that were dealt combat damage".
+        Quantity.PlayersDealtDamageThisTurn tally -> case playersOf (PlayersDealtDamage.player tally) of
           Nothing -> Nothing
-          Just pids -> Just (toInteger (length (filter wasDealtDamage pids)))
+          Just pids -> Just (toInteger (length (filter (wasDealtDamage (PlayersDealtDamage.kind tally)) pids)))
         -- CR 120.1 / 608.2i: how much damage in total the players this reference names
         -- were dealt this turn -- rule 702.54b's "the total damage your opponents have
         -- been dealt this turn", which Pawl.Engine.Event's Bloodthirst arm asks with
@@ -1408,6 +1412,8 @@ playerRefIsSlotless ref = case ref of
   PlayerRef.ChosenPlayerOfBound _ _ -> False
   -- InSlot's answer again: the player attacked is named by a slot.
   PlayerRef.Attacking _ -> False
+  -- A fact about the board, Relative's answer: no slot is read.
+  PlayerRef.Superlative _ -> True
 
 -- CR 611.2b: replace every PlayerRef.InSlot this quantity names with the baked
 -- PlayerRef.Specific arm, off the players the resolution's bindings name, and
@@ -1478,6 +1484,7 @@ forCandidate pid =
         PlayerRef.OwnerOfObject _ -> ref
         PlayerRef.ChosenPlayerOfBound _ _ -> ref
         PlayerRef.Attacking _ -> ref
+        PlayerRef.Superlative _ -> ref
    in QuantitySlot.mapPlayerRefs substitute (\c -> c {Count.Type.scope = QuantitySlot.mapScope substitute (Count.Type.scope c)})
 
 -- One reference, baked. The whole of the substitution: every arm above funnels
@@ -1520,6 +1527,8 @@ bakePlayerRef players objects ref = case ref of
   -- LEFT STANDING: the slot this names holds a PLAYER, but what the reference
   -- reads is the live combat record, which no baking can fix in place.
   PlayerRef.Attacking _ -> ref
+  -- Nothing to bake: the set is read off the live board, Relative's posture.
+  PlayerRef.Superlative _ -> ref
 
 -- Does this quantity read CR 601.2b's announced X? Since #14 retired X's
 -- dedicated constructor, that read is a Quantity.InSlot naming

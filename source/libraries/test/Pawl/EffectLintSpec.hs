@@ -72,6 +72,7 @@ import qualified Pawl.Types.ChosenCardInGraveyard as ChosenCardInGraveyard
 import qualified Pawl.Types.ChosenCardInHand as ChosenCardInHand
 import qualified Pawl.Types.ChosenPermanents as ChosenPermanents
 import qualified Pawl.Types.Clause as Clause
+import qualified Pawl.Types.Comparison as Comparison
 import qualified Pawl.Types.Conjure as Conjure
 import qualified Pawl.Types.ConjureCards as ConjureCards
 import qualified Pawl.Types.Connive as Connive
@@ -209,6 +210,7 @@ import qualified Pawl.Types.SkipNextPhase as SkipNextPhase
 import qualified Pawl.Types.SlotArity as SlotArity
 import qualified Pawl.Types.SlotName as SlotName
 import qualified Pawl.Types.SpeedDecrease as SpeedDecrease
+import qualified Pawl.Types.Superlative as Superlative
 import qualified Pawl.Types.Supertype as Supertype
 import qualified Pawl.Types.TakeExtraTurn as TakeExtraTurn
 import qualified Pawl.Types.TargetSlot as TargetSlot
@@ -2016,20 +2018,22 @@ effectLintSpec s registry = Spec.describe s "Lint" $ do
           HowMany.Exactly (Quantity.Type.Literal n) -> n <= 1
           HowMany.UpTo (Just (Quantity.Type.Literal n)) -> n <= 1
           _ -> False
+        -- A strict comparison against every other player leaves at most one.
+        strictSuperlative leading = List.elem (Superlative.comparison leading) [Comparison.GreaterThan, Comparison.LessThan]
         -- Does this PlayerRef name at most ONE seat? A per-player count over it
         -- -- a library's top card, a card chosen out of a hand -- moves at most
         -- one object exactly when it does.
         -- namesOneSeat one type over, for the scope that says WHOSE zone (CR
         -- 400.1): a slot holds one player and CR 108.4's controller is one
         -- player, where the plural PlayerScopes are the whole table, the opponents
-        -- or a team. ControllingMostPermanents is at most one by its own rule.
+        -- or a team. A strict Superlative is at most one by its own rule.
         namesOneGraveyard scope = case scope of
           ZoneScope.Scoped (PlayerScope.Related PlayerRelation.You) -> True
           ZoneScope.Scoped (PlayerScope.Related PlayerRelation.Opponent) -> False
           ZoneScope.Scoped (PlayerScope.Related PlayerRelation.AnyPlayer) -> False
           ZoneScope.Scoped (PlayerScope.Related PlayerRelation.Teammate) -> False
           ZoneScope.Scoped (PlayerScope.Related PlayerRelation.YourTeam) -> False
-          ZoneScope.Scoped PlayerScope.ControllingMostPermanents -> True
+          ZoneScope.Scoped (PlayerScope.Superlative leading) -> strictSuperlative leading
           ZoneScope.InSlot _ -> True
           ZoneScope.ControllerOfBound _ -> True
           ZoneScope.BoundPlayer _ -> True
@@ -2070,6 +2074,9 @@ effectLintSpec s registry = Spec.describe s "Lint" $ do
           -- A SET -- Relative Opponent's answer, and for its reason: CR 508.6 is
           -- a predicate over the table rather than a name for one seat.
           PlayerRef.Attacking _ -> False
+          -- A strict lead or trail is at most one seat; any other comparison
+          -- admits ties, a SET.
+          PlayerRef.Superlative leading -> strictSuperlative leading
         -- WHICH opcodes bind a batch is this enumeration and not this paragraph
         -- -- readSingly's posture below. An opcode belongs here when
         -- Pawl.Engine.Resolve hands its slot to `bindObjectsSlot`, and the guard

@@ -1056,6 +1056,7 @@ library codec
     Pawl.Codec.PlayerEffectSpec
     Pawl.Codec.PlayerId
     Pawl.Codec.PlayerIdSpec
+    Pawl.Codec.PlayerMeasure
     Pawl.Codec.PlayerQuantity
     Pawl.Codec.PlayerQuantitySpec
     Pawl.Codec.PlayerRef
@@ -1066,6 +1067,8 @@ library codec
     Pawl.Codec.PlayerSacrificesSpec
     Pawl.Codec.PlayerScope
     Pawl.Codec.PlayerScopeSpec
+    Pawl.Codec.PlayersDealtDamage
+    Pawl.Codec.PlayersDealtDamageSpec
     Pawl.Codec.PlayerSpec
     Pawl.Codec.PlayerStaticAbility
     Pawl.Codec.PlayerStaticAbilitySpec
@@ -1308,6 +1311,8 @@ library codec
     Pawl.Codec.SubtypesAre
     Pawl.Codec.SubtypesAreSpec
     Pawl.Codec.SubtypeSpec
+    Pawl.Codec.Superlative
+    Pawl.Codec.SuperlativeSpec
     Pawl.Codec.Supertype
     Pawl.Codec.SupertypeSpec
     Pawl.Codec.Suspend
@@ -2623,11 +2628,13 @@ library types
     Pawl.Types.PlayerDrawsNthCard
     Pawl.Types.PlayerEffect
     Pawl.Types.PlayerId
+    Pawl.Types.PlayerMeasure
     Pawl.Types.PlayerQuantity
     Pawl.Types.PlayerRef
     Pawl.Types.PlayerRelation
     Pawl.Types.PlayerSacrifices
     Pawl.Types.PlayerScope
+    Pawl.Types.PlayersDealtDamage
     Pawl.Types.PlayerStaticAbility
     Pawl.Types.PlayPermissionOrigin
     Pawl.Types.PlaysLand
@@ -2770,6 +2777,7 @@ library types
     Pawl.Types.Subtype
     Pawl.Types.SubtypeFamily
     Pawl.Types.SubtypesAre
+    Pawl.Types.Superlative
     Pawl.Types.Supertype
     Pawl.Types.Suspend
     Pawl.Types.SuspendCounters
