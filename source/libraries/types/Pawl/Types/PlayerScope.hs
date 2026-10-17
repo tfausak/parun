@@ -41,8 +41,7 @@ import qualified Pawl.Types.Superlative as Superlative
 data PlayerScope
   = -- | The players in this relation to the perspective (CR 109.5, 102.3).
     Related PlayerRelation.PlayerRelation
-  | -- | The players leading (or trailing) the table on a measure -- Damping
-    -- Engine's "a player who controls more permanents than each other player".
+  | -- | CR 110.1 / 122.1: the players leading or trailing the table on a measure.
     --
     -- PERSPECTIVE-FREE, like AnyPlayer: the sentence names no "you" for a
     -- carrier to supply, so Pawl.Engine.PlayerEffect.playersInScope answers it

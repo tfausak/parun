@@ -255,8 +255,9 @@ namedUncut given gs ref =
           let sentAt = Map.keys (Map.filter (== AttackTarget.OfPlayer attacked) (Combat.attackers (GameState.combat gs)))
               attackers = Maybe.mapMaybe (controllerOf given) sentAt
           fmap (filter (`elem` attackers)) (related' relation)
-        -- The table's leaders on a measure, compared over the 'roster' -- CR
-        -- 801.11 shows a spell or ability nothing outside its controller's range.
+        -- The table's leaders on a measure, compared among the 'roster' alone:
+        -- CR 801.11 gives a spell or ability no information from outside its
+        -- controller's range.
         PlayerRef.Superlative leading -> Just (superlative (controllerOf given) (roster given) gs leading)
 
 -- | The players among @roster@ whose measure stands in the superlative's

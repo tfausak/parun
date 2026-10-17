@@ -196,8 +196,6 @@ data PlayerRef
     -- effect's recipient and a Scope or ManaCount alike. Pawl.CountSpec's
     -- Synthetic Toll of the Siege proves the count.
     Attacking AttackingPlayers.AttackingPlayers
-  | -- | The players leading (or trailing) the table on a measure -- Raiders'
-    -- Allegiance's "each player with the most point counters or tied for the
-    -- most". PlayerScope.Superlative's reading, for an effect's recipients.
+  | -- | CR 110.1 / 122.1: the players leading or trailing the table on a measure.
     Superlative Superlative.Superlative
   deriving (Eq, Ord, Show)
