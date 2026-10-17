@@ -25,6 +25,9 @@ data ObjectSnapshot = MkObjectSnapshot
     owner :: PlayerId.PlayerId,
     -- | CR 400.1: the zone it was in, which CR 109.2's "a creature" asks.
     zone :: Zone.Zone,
+    -- | CR 113.6 / 113.6p: where its abilities that state no zone functioned
+    -- (Pawl.Engine.Vanguard.homeZoneOf).
+    home :: Zone.Zone,
     -- | CR 604.2: the "as long as" clauses of its granted activated abilities
     -- that did not hold in that zone, which `characteristics` carries
     -- unasked (Pawl.Engine.Projection.View.lapsedGrantsOf).

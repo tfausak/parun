@@ -21,11 +21,14 @@ import Numeric.Natural (Natural)
 import qualified Pawl.Engine.Combat as Combat
 import qualified Pawl.Engine.Damage as Damage
 import qualified Pawl.Engine.Engine as Engine
+import qualified Pawl.Engine.Event as Event
+import qualified Pawl.Engine.Filter as Filter
 import qualified Pawl.Engine.Game as Game
 import qualified Pawl.Engine.Mulligan as Mulligan
 import qualified Pawl.Engine.PlayerEffect as PlayerEffect
 import qualified Pawl.Engine.Projection as Projection
 import qualified Pawl.Engine.Setup as Setup
+import qualified Pawl.Engine.Vanguard as Vanguard
 import qualified Pawl.Registry as Registry
 import qualified Pawl.Spec as Spec
 import qualified Pawl.Support as S
@@ -38,6 +41,7 @@ import qualified Pawl.Types.Deck as Deck
 import qualified Pawl.Types.Facing as Facing
 import qualified Pawl.Types.GameState as GameState
 import qualified Pawl.Types.Keyword as Keyword
+import qualified Pawl.Types.LastKnown as LastKnown
 import qualified Pawl.Types.MulliganDecision as MulliganDecision
 import qualified Pawl.Types.MulliganOffer as MulliganOffer
 import qualified Pawl.Types.Object as Object
@@ -248,6 +252,26 @@ spec s registry = Spec.describe s "Vanguard" $ do
     Spec.assertBool s (Combat.legalAttackDeclaration S.alice [free] control) "and may on the board that differs only in the vanguard"
     Spec.assertBool s (not (Combat.canAttack S.alice barred board)) "so it is not a CR 508.1a candidate either"
     Spec.assertEqWith s "where without the vanguard it is the one offered" (Combat.legalAttackers S.alice control) [free]
+
+  -- CR 113.6p / 608.2h: an object's record keeps the home its unstated
+  -- abilities functioned in, which Count.lastKnownView reads. No rule moves a
+  -- vanguard out of the command zone (CR 313.2), so Event.forgetObject stands
+  -- in for a plane's planeswalk away (Planechase.toBottom), which files the same
+  -- record. The control is that record with only its home rewritten to CR
+  -- 113.6's battlefield default.
+  Spec.it s "CR 113.6p a departed vanguard's record keeps its as-long-as activated ability" $ do
+    mountain <- S.printingOf s registry "Mountain"
+    relic <- S.printingOf s registry "Darksteel Relic"
+    avatar <- S.printingOf s registry "Synthetic Steward Avatar"
+    let (_, placed) = S.addPermanent relic S.alice (built mountain (Just avatar))
+    case Vanguard.vanguardOf S.alice placed of
+      Nothing -> Spec.assertFailure s "alice has no vanguard"
+      Just steward -> do
+        let gone = Event.forgetObject placed steward
+            control = gone {GameState.lastKnown = Map.adjust (\lk -> lk {LastKnown.home = Zone.Battlefield}) steward (GameState.lastKnown gone)}
+            hasOne g = fmap Filter.hasActivatedAbility (Projection.viewWithLastKnownAnywhere g steward)
+        Spec.assertBool s (hasOne gone == Just True) "CR 608.2h: the record's view has the activated ability"
+        Spec.assertBool s (hasOne control == Just False) "and the same record with a battlefield home does not"
 
   -- CR 313.2 against CR 727.2: a restart puts every card into its owner's new
   -- library, and the vanguard card is the exception -- it stays where it is, and

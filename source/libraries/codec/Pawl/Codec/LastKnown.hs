@@ -23,6 +23,7 @@ import qualified Pawl.JsonCodec.Codec as Codec
 import qualified Pawl.JsonCodec.Common as Common
 import qualified Pawl.JsonCodec.Fields as Fields
 import qualified Pawl.Types.LastKnown as LastKnown
+import qualified Pawl.Types.Zone as Zone
 
 -- | Every axis, none derivable from another: the type's own haddock says why
 -- CR 608.2h needs each of them beside the projection.
@@ -49,6 +50,7 @@ codec = Fields.object $ do
   announcedX <- Fields.defaulted "announcedX" Nothing (Common.maybe Common.natural) LastKnown.announcedX
   controlClock <- Fields.defaulted "controlClock" Map.empty (Common.keyedList ControlClock.entry) LastKnown.controlClock
   zone <- Fields.required "zone" Zone.codec LastKnown.zone
+  home <- Fields.defaulted "home" Zone.Battlefield Zone.codec LastKnown.home
   pile <- Fields.defaulted "pile" Nothing (Common.maybe PlayerId.codec) LastKnown.pile
   lapsedGrants <- Fields.defaulted "lapsedGrants" Set.empty (Common.set Condition.codec) LastKnown.lapsedGrants
   pure
@@ -74,6 +76,7 @@ codec = Fields.object $ do
         LastKnown.announcedX = announcedX,
         LastKnown.controlClock = controlClock,
         LastKnown.zone = zone,
+        LastKnown.home = home,
         LastKnown.pile = pile,
         LastKnown.lapsedGrants = lapsedGrants
       }
