@@ -18,6 +18,7 @@ import qualified Pawl.AuraSpec
 import qualified Pawl.BattleSpec
 import qualified Pawl.BindingSpec
 import qualified Pawl.BoardEffectSpec
+import qualified Pawl.BotSpec
 import qualified Pawl.CardSpec
 import qualified Pawl.CardTriggerSpec
 import qualified Pawl.CardsSpec
@@ -743,6 +744,7 @@ import qualified Pawl.Extra.NaturalSpec
 import qualified Pawl.Extra.OrdSpec
 import qualified Pawl.Extra.ParsecSpec
 import qualified Pawl.Extra.SemigroupSpec
+import qualified Pawl.Extra.Word64Spec
 import qualified Pawl.Extra.Word8Spec
 import qualified Pawl.FaceDownSpec
 import qualified Pawl.FilterPositionLintSpec
@@ -798,6 +800,7 @@ import qualified Pawl.PhasingSpec
 import qualified Pawl.PlanechaseSpec
 import qualified Pawl.PlaneswalkerCombatSpec
 import qualified Pawl.PlaneswalkerSpec
+import qualified Pawl.Play.SplitMixSpec
 import qualified Pawl.PlayerDesignationSpec
 import qualified Pawl.PlayerEffectSpec
 import qualified Pawl.PlayerViewSpec
@@ -1633,6 +1636,8 @@ spec s registry = do
   Pawl.Extra.IntSpec.spec s
   Pawl.Extra.MonoidSpec.spec s
   Pawl.Extra.NaturalSpec.spec s
+  Pawl.Extra.Word64Spec.spec s
+  Pawl.Play.SplitMixSpec.spec s
   Pawl.Extra.OrdSpec.spec s
   Pawl.Extra.ParsecSpec.spec s
   Pawl.Extra.SemigroupSpec.spec s
@@ -1724,6 +1729,7 @@ spec s registry = do
   Pawl.SaddleSpec.spec s registry
   Pawl.SagaSpec.spec s registry
   Pawl.ProtocolSpec.spec s registry
+  Pawl.BotSpec.spec s registry
   Pawl.ReplySpec.spec s registry
   Pawl.ScenarioSpec.corpusSpec s registry
   Pawl.ScenarioSpec.loadSpec s

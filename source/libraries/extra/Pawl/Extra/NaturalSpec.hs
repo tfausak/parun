@@ -44,3 +44,10 @@ spec s = Spec.describe s "Pawl.Extra.Natural" $ do
 
     Spec.it s "clamps to zero" $ do
       Spec.assertEq s (Natural.minusSaturating 2 3) 0
+
+  Spec.describe s "toWord64" $ do
+    Spec.it s "succeeds with the max bound" $ do
+      Spec.assertEq s (Natural.toWord64 18446744073709551615) $ Just 18446744073709551615
+
+    Spec.it s "fails beyond the max bound" $ do
+      Spec.assertEq s (Natural.toWord64 18446744073709551616) Nothing

@@ -3,6 +3,7 @@ module Pawl.Extra.Natural where
 import qualified Data.Bits as Bits
 import qualified Data.Foldable as Foldable
 import qualified Data.Maybe as Maybe
+import qualified Data.Word as Word
 import qualified Numeric.Natural as Natural
 import qualified Pawl.Extra.Int as Int
 
@@ -28,3 +29,8 @@ toIntSaturating = Maybe.fromMaybe maxBound . toInt
 -- throws when the result would be negative, this returns @0@.
 minusSaturating :: Natural.Natural -> Natural.Natural -> Natural.Natural
 minusSaturating x y = if x >= y then x - y else 0
+
+-- | Converts a 'Natural.Natural' into a 'Word.Word64'. If the input is too
+-- large, this will return 'Nothing'.
+toWord64 :: Natural.Natural -> Maybe Word.Word64
+toWord64 = Bits.toIntegralSized
