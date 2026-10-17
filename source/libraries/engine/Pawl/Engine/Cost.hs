@@ -6247,19 +6247,19 @@ chooseManaYield pid oid candidates gs = case candidates of
 
 -- CR 702.174a: the key of the NEXT promise of this gift on the object -- the
 -- first instance Pawl.Engine.Cast's announcement paid for that has no promise
--- yet, Object.paidCosts' entries being the instances Projection.keywordInstances
--- names, in its order. So each promise is its own instance's, and the
--- Prompt.ChooseOpponent asking it names that instance.
---
--- Not implemented: recording the instances as announced, so a granter that
--- leaves between CR 601.2b's announcement and this payment (a CR 601.2g mana
--- ability sacrificing it) shifts the later instances' payments (#5160).
-nextPromise :: PlayerId -> ObjectId -> Gift.Gift -> GameState -> PlayerChoice.PlayerChoice
-nextPromise pid oid gift gs =
+-- yet, Object.paidCosts being keyed by the instances as announced. So each
+-- promise is its own instance's, the Prompt.ChooseOpponent asking it names that
+-- instance, and a granter that leaves between CR 601.2b's announcement and this
+-- payment (a CR 601.2g mana ability sacrificing it) moves no other instance's
+-- payment; the scenario
+-- cr-601-2f-the-altar-eats-the-first-host-mid-payment-and-carol-still-gets-the-second-s-gift
+-- proves it.
+nextPromise :: ObjectId -> Gift.Gift -> GameState -> PlayerChoice.PlayerChoice
+nextPromise oid gift gs =
   let keyword = Keyword.Type.Gift gift
       promised = foldMap Map.keys (Game.currentChoice Object.chosenPlayers oid gs)
-      paid = foldMap (Foldable.toList . Map.findWithDefault Seq.empty keyword . Object.paidCosts) (Game.lookupObject oid gs)
-      owed = [PlayerChoice.Promised gift which | (which, times) <- zip (Projection.keywordInstances keyword oid (asSpell pid oid gs)) paid, times > 0]
+      paid = foldMap (Map.findWithDefault Map.empty keyword . Object.paidCosts) (Game.lookupObject oid gs)
+      owed = [PlayerChoice.Promised gift which | (which, times) <- Map.toAscList paid, times > 0]
       -- Past every instance the object can have, for a payment no instance is
       -- left to take.
       spare = PlayerChoice.Promised gift (KeywordInstance.Own (Natural.length paid + Natural.length promised + 1))
@@ -6889,7 +6889,7 @@ payPayable moment paidFor slots pid oid component = case component of
   -- opponent, and naming one spends nothing that could run out.
   CostComponent.ChooseOpponent gift -> do
     gs <- State.get
-    let promise = nextPromise pid oid gift gs
+    let promise = nextPromise oid gift gs
     chosen <- Game.chooseAmong (\decider asked -> Prompt.ChooseOpponent decider asked oid (Just promise)) pid (Players.offer pid gs PlayerRelation.Opponent)
     case chosen of
       -- Unreachable behind `payComponent`'s guard, which reads the same offer;

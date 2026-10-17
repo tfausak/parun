@@ -36,12 +36,9 @@
                     "measured": {
                       "type": "TimesPaid",
                       "value": {
-                        "type": "OfKeyword",
+                        "type": "Printed",
                         "value": {
-                          "type": "Gift",
-                          "value": {
-                            "type": "TappedFish"
-                          }
+                          "type": "Gift"
                         }
                       }
                     },
@@ -76,12 +73,9 @@
                     "measured": {
                       "type": "TimesPaid",
                       "value": {
-                        "type": "OfKeyword",
+                        "type": "Printed",
                         "value": {
-                          "type": "Gift",
-                          "value": {
-                            "type": "TappedFish"
-                          }
+                          "type": "Gift"
                         }
                       }
                     },

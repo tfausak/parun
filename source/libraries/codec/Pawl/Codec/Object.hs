@@ -19,6 +19,7 @@ import qualified Pawl.Codec.ExilePlayPermission as ExilePlayPermission
 import qualified Pawl.Codec.Facing as Facing
 import qualified Pawl.Codec.GrantedAbility as GrantedAbility
 import qualified Pawl.Codec.Keyword as Keyword
+import qualified Pawl.Codec.KeywordInstance as KeywordInstance
 import qualified Pawl.Codec.Mana as Mana
 import qualified Pawl.Codec.ManaCost as ManaCost
 import qualified Pawl.Codec.ObjectId as ObjectId
@@ -136,7 +137,7 @@ codec = Fields.object $ do
   designationValues <- Fields.defaulted "designationValues" (Object.designationValues defaults) (Common.keyedList designationValue) Object.designationValues
   storedResults <- Fields.defaulted "storedResults" (Object.storedResults defaults) (Common.keyedList (Common.keyValue Acquisition.codec (Common.multiset StoredResult.codec))) Object.storedResults
   acquisition <- Fields.defaulted "acquisition" (Object.acquisition defaults) Acquisition.codec Object.acquisition
-  paidCosts <- Fields.defaulted "paidCosts" (Object.paidCosts defaults) (Common.keyedList (Common.keyValue Keyword.codec (Common.seq Common.natural))) Object.paidCosts
+  paidCosts <- Fields.defaulted "paidCosts" (Object.paidCosts defaults) (Common.keyedList (Common.keyValue Keyword.codec (Common.keyedList (Common.keyValue KeywordInstance.codec Common.natural)))) Object.paidCosts
   tributePaid <- Fields.defaulted "tributePaid" (Object.tributePaid defaults) Common.boolean Object.tributePaid
   bestowed <- Fields.defaulted "bestowed" (Object.bestowed defaults) Common.boolean Object.bestowed
   mutating <- Fields.defaulted "mutating" (Object.mutating defaults) Common.boolean Object.mutating

@@ -1,7 +1,6 @@
 module Pawl.Codec.LastKnownSpec where
 
 import qualified Data.Map.Strict as Map
-import qualified Data.Sequence as Seq
 import qualified Data.Set as Set
 import qualified Data.Text as Text
 import qualified Pawl.Codec.LastKnown as LastKnown
@@ -66,7 +65,7 @@ spec s = Spec.describe s "Pawl.Codec.LastKnown" $ do
           LastKnown.attackTarget = Nothing,
           LastKnown.blocking = True,
           LastKnown.protector = Just (PlayerId.MkPlayerId 7),
-          LastKnown.paidCosts = Map.singleton (Keyword.Offspring (Cost.MkCost (Just (ManaCost.MkManaCost [ManaSymbol.Generic 2])) [])) (Seq.singleton 1),
+          LastKnown.paidCosts = Map.singleton (Keyword.Offspring (Cost.MkCost (Just (ManaCost.MkManaCost [ManaSymbol.Generic 2])) [])) (Map.singleton (KeywordInstance.Own 1) 1),
           LastKnown.prototyped = True,
           LastKnown.announcedX = Just 4,
           LastKnown.controlClock = Map.singleton (PlayerId.MkPlayerId 1) ControlClock.SinceLastUpkeep,
@@ -83,7 +82,7 @@ spec s = Spec.describe s "Pawl.Codec.LastKnown" $ do
           <> minimalJson
           <> ",\"attached\":[9],\"host\":11"
           <> ",\"chosenNames\":[{\"key\":{\"type\":\"Own\"},\"value\":{\"8\":\"Goblin Piker\"}}],\"chosenPlayers\":[{\"key\":{\"type\":\"Copied\",\"value\":5},\"value\":[{\"key\":{\"type\":\"Promised\",\"value\":[{\"type\":\"Food\"},{\"type\":\"Own\",\"value\":1}]},\"value\":3}]}],\"chosenColors\":[{\"key\":{\"type\":\"Own\"},\"value\":[{\"type\":\"Green\"}]}],\"chosenSubtype\":[{\"key\":{\"type\":\"Copied\",\"value\":6},\"value\":{\"type\":\"Goblin\"}}],\"attacking\":false,\"attackTarget\":null,\"blocking\":true,\"protector\":7"
-          <> ",\"paidCosts\":[{\"key\":{\"type\":\"Offspring\",\"value\":{\"mana\":[{\"type\":\"Generic\",\"value\":2}]}},\"value\":[1]}]"
+          <> ",\"paidCosts\":[{\"key\":{\"type\":\"Offspring\",\"value\":{\"mana\":[{\"type\":\"Generic\",\"value\":2}]}},\"value\":[{\"key\":{\"type\":\"Own\",\"value\":1},\"value\":1}]}]"
           <> ",\"prototyped\":true"
           <> ",\"announcedX\":4"
           <> ",\"controlClock\":[{\"player\":1,\"clock\":{\"type\":\"SinceLastUpkeep\"}}]"

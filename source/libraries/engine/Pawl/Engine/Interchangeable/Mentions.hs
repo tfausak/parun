@@ -1852,7 +1852,7 @@ keywordDesignatorNames :: Asking -> KeywordDesignator.KeywordDesignator Keyword.
 keywordDesignatorNames asking x = case x of
   KeywordDesignator.OfFamily _keywordFamily -> False
   KeywordDesignator.OfKeyword keyword -> keywordNames asking keyword
-  KeywordDesignator.PrintedKicker -> False
+  KeywordDesignator.Printed _keywordFamily -> False
   KeywordDesignator.OfInstance keyword _ordinal -> keywordNames asking keyword
 
 keywordTallyNames :: Asking -> KeywordTally.KeywordTally keyword -> Bool

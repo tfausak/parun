@@ -600,18 +600,22 @@ carryGrants oid gs =
    in if null rows then gs else gs {GameState.continuousEffects = GameState.continuousEffects gs <> rows}
 
 -- CR 400.7d / 702.174a: the resolving permanent spell's gift payments and
--- promises, re-keyed by the instances it still has, which are the instances the
--- permanent enters with (carryGrants). The ith of those the spell promised
--- becomes Own i, its payment the ith entry of Object.paidCosts, which is what
--- Keyword.gift's ith enters trigger reads, and each live instance keeps its own
--- promise, the property Pawl.Engine.Resolve.giftOnSpellResolution has for the
--- spell half.
+-- promises, kept for the instances it still has. Each payment stays keyed by its
+-- instance, so the card's own payoff reads only its own gift's (CR 607.2i,
+-- KeywordDesignator.Printed). The promise of the ith instance becomes Own i, the
+-- ordinal Keyword.gift's ith enters trigger reads beside the ith entry of
+-- Object.paidCosts, so each live instance keeps its own promise, the property
+-- Pawl.Engine.Resolve.giftOnSpellResolution has for the spell half.
 --
 -- A lost instance's payment is dropped with its promise: no ability the
--- permanent has is linked to it (CR 607.2i, 607.5), so a gift a copy effect
--- gives the entering permanent is unpaid rather than inheriting it. The
--- scenario cr-607-5-a-clone-of-scrapshooter-whose-paid-host-gift-was-lost-gives-no-gift
--- proves it.
+-- permanent has is linked to it (CR 607.2i, 607.5). A grant carried onto the
+-- permanent (carryGrants) keeps its key there; a copy effect applying as it
+-- enters gives it own instances the spell's Own keys still name. So a Clone
+-- entering as Scrapshooter beside a paid Host gift gives bob the Host's gift and
+-- does not read it as its copied gift's, which the scenarios
+-- cr-607-5-a-clone-of-scrapshooter-keeps-its-paid-host-gift-and-gives-bob-one-card
+-- and cr-607-5-a-clone-of-scrapshooter-whose-paid-host-gift-was-lost-gives-no-gift
+-- prove.
 settlePromises :: ObjectId -> GameState.GameState -> GameState.GameState
 settlePromises oid gs = case Game.lookupObject oid gs of
   Nothing -> gs
@@ -622,11 +626,11 @@ settlePromises oid gs = case Game.lookupObject oid gs of
         settle (paid, kept) something =
           let keyword = Keyword.Type.Gift something
               live = Projection.keywordInstances keyword oid gs
-              opponents = Maybe.mapMaybe (\which -> Map.lookup (PlayerChoice.Promised something which) promises) live
-              settled = fmap (const (1 :: Natural)) opponents <> fmap (const 0) (drop (length opponents) live)
+              promisedTo which = Map.lookup (PlayerChoice.Promised something which) promises
+              settled = Map.fromList [(which, if Maybe.isJust (promisedTo which) then 1 else 0 :: Natural) | which <- live]
               unpromised = Map.filterWithKey (\key _ -> not (isPromiseOf something key)) kept
-              rekeyed = Map.fromList (zip [PlayerChoice.Promised something (KeywordInstance.Own i) | i <- [1 ..]] opponents)
-              settledPaid = if any (> 0) settled then Map.insert keyword (Seq.fromList settled) paid else Map.delete keyword paid
+              rekeyed = Map.fromList [(PlayerChoice.Promised something (KeywordInstance.Own i), opponent) | (i, which) <- zip [1 ..] live, Just opponent <- [promisedTo which]]
+              settledPaid = if any (> 0) settled then Map.insert keyword settled paid else Map.delete keyword paid
            in (settledPaid, Map.union rekeyed unpromised)
         isPromiseOf something key = case key of
           PlayerChoice.Promised g _ -> g == something

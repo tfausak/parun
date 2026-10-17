@@ -12,6 +12,7 @@ import qualified Pawl.Codec.Condition as Condition
 import qualified Pawl.Codec.ControlClock as ControlClock
 import qualified Pawl.Codec.CounterKind as CounterKind
 import qualified Pawl.Codec.Keyword as Keyword
+import qualified Pawl.Codec.KeywordInstance as KeywordInstance
 import qualified Pawl.Codec.ObjectId as ObjectId
 import qualified Pawl.Codec.PlayerChoice as PlayerChoice
 import qualified Pawl.Codec.PlayerId as PlayerId
@@ -45,7 +46,7 @@ codec = Fields.object $ do
   attackTarget <- Fields.required "attackTarget" (Common.maybe AttackTarget.codec) LastKnown.attackTarget
   blocking <- Fields.required "blocking" Common.boolean LastKnown.blocking
   protector <- Fields.required "protector" (Common.maybe PlayerId.codec) LastKnown.protector
-  paidCosts <- Fields.defaulted "paidCosts" Map.empty (Common.keyedList (Common.keyValue Keyword.codec (Common.seq Common.natural))) LastKnown.paidCosts
+  paidCosts <- Fields.defaulted "paidCosts" Map.empty (Common.keyedList (Common.keyValue Keyword.codec (Common.keyedList (Common.keyValue KeywordInstance.codec Common.natural)))) LastKnown.paidCosts
   prototyped <- Fields.defaulted "prototyped" False Common.boolean LastKnown.prototyped
   announcedX <- Fields.defaulted "announcedX" Nothing (Common.maybe Common.natural) LastKnown.announcedX
   controlClock <- Fields.defaulted "controlClock" Map.empty (Common.keyedList ControlClock.entry) LastKnown.controlClock
