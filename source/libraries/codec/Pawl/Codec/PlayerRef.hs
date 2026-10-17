@@ -6,6 +6,7 @@ import qualified Pawl.Codec.PlayerChoice as PlayerChoice
 import qualified Pawl.Codec.PlayerId as PlayerId
 import qualified Pawl.Codec.PlayerRelation as PlayerRelation
 import qualified Pawl.Codec.SlotName as SlotName
+import qualified Pawl.Codec.Superlative as Superlative
 import qualified Pawl.JsonCodec.Arm as Arm
 import qualified Pawl.JsonCodec.Codec as Codec
 import qualified Pawl.JsonCodec.Common as Common
@@ -48,7 +49,10 @@ codec =
       Arm.payload "ChosenPlayerOfBound" (Common.tuple SlotName.codec PlayerChoice.codec) (uncurry PlayerRef.ChosenPlayerOfBound) (\x -> case x of PlayerRef.ChosenPlayerOfBound y z -> Just (y, z); _ -> Nothing),
       -- CR 508.6's set, which a card writes: Curse of Vitality names "each
       -- opponent attacking that player".
-      Arm.payload "Attacking" AttackingPlayers.codec PlayerRef.Attacking (\x -> case x of PlayerRef.Attacking y -> Just y; _ -> Nothing)
+      Arm.payload "Attacking" AttackingPlayers.codec PlayerRef.Attacking (\x -> case x of PlayerRef.Attacking y -> Just y; _ -> Nothing),
+      -- The table's leaders on a measure, which a card writes: Raiders'
+      -- Allegiance rewards "each player with the most point counters".
+      Arm.payload "Superlative" Superlative.codec PlayerRef.Superlative (\x -> case x of PlayerRef.Superlative y -> Just y; _ -> Nothing)
     ]
 
 tagOf :: PlayerRef.PlayerRef -> String
@@ -66,3 +70,4 @@ tagOf x = case x of
   PlayerRef.OwnerOfObject {} -> "OwnerOfObject"
   PlayerRef.ChosenPlayerOfBound {} -> "ChosenPlayerOfBound"
   PlayerRef.Attacking {} -> "Attacking"
+  PlayerRef.Superlative {} -> "Superlative"

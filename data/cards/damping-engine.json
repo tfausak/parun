@@ -20,7 +20,15 @@
           },
           "name": "the lead",
           "scope": {
-            "type": "ControllingMostPermanents"
+            "type": "Superlative",
+            "value": {
+              "comparison": {
+                "type": "GreaterThan"
+              },
+              "measure": {
+                "type": "PermanentsControlled"
+              }
+            }
           }
         },
         {
@@ -52,7 +60,15 @@
           },
           "name": "the lead",
           "scope": {
-            "type": "ControllingMostPermanents"
+            "type": "Superlative",
+            "value": {
+              "comparison": {
+                "type": "GreaterThan"
+              },
+              "measure": {
+                "type": "PermanentsControlled"
+              }
+            }
           }
         }
       ],

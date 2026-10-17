@@ -1,6 +1,7 @@
 module Pawl.Types.PlayerScope where
 
 import qualified Pawl.Types.PlayerRelation as PlayerRelation
+import qualified Pawl.Types.Superlative as Superlative
 
 -- | A SET of players, named relative to a perspective: the player-side analogue of
 -- Pawl.Types.Affected, and much smaller because CR 109.5 fixes what "you" means.
@@ -40,14 +41,12 @@ import qualified Pawl.Types.PlayerRelation as PlayerRelation
 data PlayerScope
   = -- | The players in this relation to the perspective (CR 109.5, 102.3).
     Related PlayerRelation.PlayerRelation
-  | -- | Damping Engine's "a player who controls more permanents than each other
-    -- player". At most ONE player, and often none: the comparison is STRICT, so a
-    -- tie for the lead puts nobody in scope.
+  | -- | CR 110.1 / 122.1: the players leading or trailing the table on a measure.
     --
     -- PERSPECTIVE-FREE, like AnyPlayer: the sentence names no "you" for a
     -- carrier to supply, so Pawl.Engine.PlayerEffect.playersInScope answers it
     -- with an absent perspective. Its membership is a fact about the BOARD
     -- rather than about the two players being compared, which is why inScope
     -- takes a GameState at all.
-    ControllingMostPermanents
+    Superlative Superlative.Superlative
   deriving (Eq, Ord, Show)

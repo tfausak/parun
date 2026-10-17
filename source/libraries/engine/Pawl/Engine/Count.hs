@@ -263,7 +263,7 @@ revealedArriving gs oid =
 playerView :: GameState -> PlayerId -> Filter.View
 playerView gs pid =
   (Filter.playerView pid)
-    { Filter.dealtDamageThisTurn = Game.wasDealtDamageThisTurn gs pid,
+    { Filter.dealtDamageThisTurn = Game.wasDealtDamageThisTurn Nothing gs pid,
       -- CR 508.3b: the same division, one record over -- a player IS one of that
       -- rule's three subjects, and Pawl.Engine.Filter.playerView holds no combat
       -- record to read the answer from.

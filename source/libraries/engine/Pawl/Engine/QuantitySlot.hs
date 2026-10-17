@@ -32,6 +32,7 @@ import qualified Pawl.Types.ManaCount as ManaCount.Type
 import qualified Pawl.Types.PlayerCounterTally as PlayerCounterTally
 import qualified Pawl.Types.PlayerDesignationTally as PlayerDesignationTally
 import qualified Pawl.Types.PlayerRef as PlayerRef
+import qualified Pawl.Types.PlayersDealtDamage as PlayersDealtDamage
 import Pawl.Types.Quantity (Quantity)
 import qualified Pawl.Types.Quantity as Quantity
 import qualified Pawl.Types.Scope as Scope
@@ -364,7 +365,7 @@ nestedRefs quantity = case quantity of
   Quantity.CardsDrawnThisTurn ref -> Set.singleton (Left ref)
   Quantity.BendingsThisTurn ref -> Set.singleton (Left ref)
   Quantity.LifeGainedThisTurn ref -> Set.singleton (Left ref)
-  Quantity.PlayersDealtDamageThisTurn ref -> Set.singleton (Left ref)
+  Quantity.PlayersDealtDamageThisTurn tally -> Set.singleton (Left (PlayersDealtDamage.player tally))
   Quantity.DamageDealtToPlayersThisTurn ref -> Set.singleton (Left ref)
   Quantity.SpellsCastLastTurn ref -> Set.singleton (Left ref)
   Quantity.SpellsCastThisTurn ref -> Set.singleton (Left ref)
@@ -589,6 +590,7 @@ overPlayerRefSlots f ref = case ref of
   PlayerRef.ControllerOfObject _ -> pure ref
   PlayerRef.OwnerOfObject _ -> pure ref
   PlayerRef.Candidate -> pure ref
+  PlayerRef.Superlative _ -> pure ref
 
 -- A scope's own slot, renamed -- scopeRefs' Right arm turned around, and paired
 -- with it arm for arm. Only CR 400.7j's fold names a slot outright; the players
@@ -640,7 +642,7 @@ mapPlayerRefs f intoCount quantity =
         Quantity.CardsDrawnThisTurn ref -> Quantity.CardsDrawnThisTurn (f ref)
         Quantity.BendingsThisTurn ref -> Quantity.BendingsThisTurn (f ref)
         Quantity.LifeGainedThisTurn ref -> Quantity.LifeGainedThisTurn (f ref)
-        Quantity.PlayersDealtDamageThisTurn ref -> Quantity.PlayersDealtDamageThisTurn (f ref)
+        Quantity.PlayersDealtDamageThisTurn tally -> Quantity.PlayersDealtDamageThisTurn tally {PlayersDealtDamage.player = f (PlayersDealtDamage.player tally)}
         Quantity.DamageDealtToPlayersThisTurn ref -> Quantity.DamageDealtToPlayersThisTurn (f ref)
         Quantity.SpellsCastLastTurn ref -> Quantity.SpellsCastLastTurn (f ref)
         Quantity.SpellsCastThisTurn ref -> Quantity.SpellsCastThisTurn (f ref)

@@ -6,6 +6,7 @@ import qualified Pawl.Types.PlayerChoice as PlayerChoice
 import qualified Pawl.Types.PlayerId as PlayerId
 import qualified Pawl.Types.PlayerRelation as PlayerRelation
 import qualified Pawl.Types.SlotName as SlotName
+import qualified Pawl.Types.Superlative as Superlative
 
 -- | CR 400.1: whose zone a scope folds over, per-player zones being a player's
 -- own. And whose MANA POOL, since CR 106.4 attaches a pool to a player exactly as
@@ -195,4 +196,6 @@ data PlayerRef
     -- effect's recipient and a Scope or ManaCount alike. Pawl.CountSpec's
     -- Synthetic Toll of the Siege proves the count.
     Attacking AttackingPlayers.AttackingPlayers
+  | -- | CR 110.1 / 122.1: the players leading or trailing the table on a measure.
+    Superlative Superlative.Superlative
   deriving (Eq, Ord, Show)

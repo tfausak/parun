@@ -6,6 +6,7 @@ import qualified Data.Maybe as Maybe
 import Data.Set (Set)
 import qualified Data.Set as Set
 import qualified Pawl.Engine.Binding as Binding
+import qualified Pawl.Engine.Filter as Filter
 import qualified Pawl.Engine.Game as Game
 import qualified Pawl.Types.Acquisition as Acquisition
 import qualified Pawl.Types.AttackTarget as AttackTarget
@@ -15,13 +16,16 @@ import Pawl.Types.Game (Game)
 import Pawl.Types.GameState (GameState)
 import qualified Pawl.Types.GameState as GameState
 import Pawl.Types.ObjectId (ObjectId)
+import qualified Pawl.Types.Player as Player
 import Pawl.Types.PlayerId (PlayerId)
+import qualified Pawl.Types.PlayerMeasure as PlayerMeasure
 import qualified Pawl.Types.PlayerRef as PlayerRef
 import qualified Pawl.Types.PlayerRelation as PlayerRelation
 import qualified Pawl.Types.Prompt as Prompt
 import Pawl.Types.Recipient (Recipient)
 import qualified Pawl.Types.Recipient as Recipient
 import Pawl.Types.SlotName (SlotName)
+import qualified Pawl.Types.Superlative as Superlative
 
 -- | What a position asking "which players?" can read, so that 'named' answers
 -- every PlayerRef the same way wherever it is asked. The two askers differ only
@@ -251,3 +255,25 @@ namedUncut given gs ref =
           let sentAt = Map.keys (Map.filter (== AttackTarget.OfPlayer attacked) (Combat.attackers (GameState.combat gs)))
               attackers = Maybe.mapMaybe (controllerOf given) sentAt
           fmap (filter (`elem` attackers)) (related' relation)
+        -- The table's leaders on a measure, compared among the 'roster' alone:
+        -- CR 801.11 gives a spell or ability no information from outside its
+        -- controller's range.
+        PlayerRef.Superlative leading -> Just (superlative (controllerOf given) (roster given) gs leading)
+
+-- | The players among @roster@ whose measure stands in the superlative's
+-- comparison to every OTHER roster player's (Pawl.Types.Superlative): with
+-- GreaterThan a tie names nobody, with AtLeast it names every tied player. A
+-- lone player is vacuously the leader; CR 104.2a has ended such a game.
+--
+-- @controllerOf@ is CR 613.1b's projected controller as the asker sees it, so a
+-- Mind Control counts the permanent for its new controller (CR 110.1 makes every
+-- object on the battlefield a permanent). Counters are read off the player row
+-- (CR 122.1).
+superlative :: (ObjectId -> Maybe PlayerId) -> [PlayerId] -> GameState -> Superlative.Superlative -> [PlayerId]
+superlative controllerOf' roster' gs leading =
+  let measureOf pid = case Superlative.measure leading of
+        PlayerMeasure.PermanentsControlled -> toInteger (length (filter ((== Just pid) . controllerOf') (Set.toList (GameState.battlefield gs))))
+        PlayerMeasure.CountersOf kind -> maybe 0 (toInteger . Map.findWithDefault 0 kind . Player.counters) (Map.lookup pid (GameState.players gs))
+      tallies = fmap (\pid -> (pid, measureOf pid)) roster'
+      stands (pid, n) = all (\(other, m) -> other == pid || Filter.compares (Superlative.comparison leading) n m) tallies
+   in fmap fst (filter stands tallies)

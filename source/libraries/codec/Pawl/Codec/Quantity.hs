@@ -18,6 +18,7 @@ import qualified Pawl.Codec.Measure as Measure
 import qualified Pawl.Codec.PlayerCounterTally as PlayerCounterTally
 import qualified Pawl.Codec.PlayerDesignationTally as PlayerDesignationTally
 import qualified Pawl.Codec.PlayerRef as PlayerRef
+import qualified Pawl.Codec.PlayersDealtDamage as PlayersDealtDamage
 import qualified Pawl.Codec.Plus as Plus
 import qualified Pawl.Codec.ProductionTag as ProductionTag
 import qualified Pawl.Codec.SlotName as SlotName
@@ -161,12 +162,12 @@ codec =
       -- not the events, which is the arm's own reading rather than anything on
       -- the wire.
       Arm.payload "LifeGainedThisTurn" PlayerRef.codec Quantity.LifeGainedThisTurn (\x -> case x of Quantity.LifeGainedThisTurn y -> Just y; _ -> Nothing),
-      -- CR 120.1's damage, with only a PlayerRef on the wire for
-      -- CardsDiscardedThisTurn's reason above. The threshold that turns the count
-      -- into "an opponent was dealt damage" is the Comparison's, not this arm's.
-      Arm.payload "PlayersDealtDamageThisTurn" PlayerRef.codec Quantity.PlayersDealtDamageThisTurn (\x -> case x of Quantity.PlayersDealtDamageThisTurn y -> Just y; _ -> Nothing),
-      -- CR 120.1's damage as a TOTAL, PlayersDealtDamageThisTurn's wire shape
-      -- above: the reference is all this arm carries, and rule 702.54b's "your
+      -- CR 120.1's damage: a PlayerRef and, for CR 510.2's combat damage alone,
+      -- a kind. The threshold that turns the count into "an opponent was dealt
+      -- damage" is the Comparison's, not this arm's.
+      Arm.payload "PlayersDealtDamageThisTurn" PlayersDealtDamage.codec Quantity.PlayersDealtDamageThisTurn (\x -> case x of Quantity.PlayersDealtDamageThisTurn y -> Just y; _ -> Nothing),
+      -- CR 120.1's damage as a TOTAL: the reference is all this arm carries, and
+      -- rule 702.54b's "your
       -- opponents" is that reference rather than anything here.
       Arm.payload "DamageDealtToPlayersThisTurn" PlayerRef.codec Quantity.DamageDealtToPlayersThisTurn (\x -> case x of Quantity.DamageDealtToPlayersThisTurn y -> Just y; _ -> Nothing),
       -- CR 120.1's damage again, with nothing on the wire for WasToken's reason:
