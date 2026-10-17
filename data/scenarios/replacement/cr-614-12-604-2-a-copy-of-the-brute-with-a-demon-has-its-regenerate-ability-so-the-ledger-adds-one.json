@@ -1,0 +1,37 @@
+{
+  "description": "CR 614.12 / 604.2 with a Demon: a token copy of the Brute would have its regenerate ability, so the Ledger adds a token",
+  "note": "Synthetic Minting Ledger judges each token as it would exist on the battlefield. Synthetic Turnabout Brute has its regenerate ability only while its controller controls a Demon, so the pair differs in the Demon alone.",
+  "board": {
+    "seats": [
+      {
+        "name": "alice",
+        "battlefield": [
+          { "card": "Mountain", "label": "mountain", "ready": true },
+          { "card": "Island", "label": "island-1", "ready": true },
+          { "card": "Island", "label": "island-2", "ready": true },
+          { "card": "Island", "label": "island-3", "ready": true },
+          { "card": "Synthetic Minting Ledger", "ready": true },
+          { "card": "Synthetic Turnabout Initiate", "label": "initiate", "ready": true },
+          { "card": "Renegade Demon", "ready": true }
+        ],
+        "hand": [{ "card": "Cackling Counterpart", "label": "counterpart" }],
+        "library": [{ "card": "Island" }, { "card": "Island" }]
+      },
+      {
+        "name": "bob",
+        "library": [{ "card": "Island" }]
+      }
+    ],
+    "active": "alice",
+    "step": "PrecombatMain"
+  },
+  "timeline": [
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": { "Activate": { "object": "$initiate", "ability": 0, "mana": ["$mountain", null] } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass" },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "check": { "Names": { "object": "$initiate", "names": ["Synthetic Turnabout Brute"] } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": { "Cast": { "object": "$counterpart", "mana": ["$island-1", "$island-2", "$island-3"], "targets": ["$initiate"] } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": { "OrderTimestamps": ["Synthetic Turnabout Initiate#2", "Synthetic Turnabout Initiate#3"] } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass" },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "check": { "Count": { "player": "alice", "zone": "Battlefield", "card": "Synthetic Turnabout Brute", "count": 3 } } }
+  ]
+}

@@ -1,0 +1,61 @@
+{
+  "faces": [
+    {
+      "manaCost": [
+        {
+          "type": "Generic",
+          "value": 2
+        },
+        {
+          "type": "OfType",
+          "value": {
+            "type": "Colored",
+            "value": {
+              "type": "Blue"
+            }
+          }
+        }
+      ],
+      "name": "Synthetic Minting Ledger",
+      "replacementEffects": [
+        {
+          "effect": {
+            "type": "TokenR",
+            "value": {
+              "matching": {
+                "whatToken": {
+                  "type": "And",
+                  "value": [
+                    {
+                      "type": "HasCardType",
+                      "value": {
+                        "type": "Creature"
+                      }
+                    },
+                    {
+                      "type": "HasActivatedAbility"
+                    }
+                  ]
+                },
+                "whose": {
+                  "type": "You"
+                }
+              },
+              "scaling": {
+                "type": "AddMore",
+                "value": 1
+              }
+            }
+          }
+        }
+      ],
+      "typeLine": {
+        "types": [
+          {
+            "type": "Enchantment"
+          }
+        ]
+      }
+    }
+  ]
+}
