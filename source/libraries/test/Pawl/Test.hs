@@ -534,6 +534,7 @@ import qualified Pawl.Codec.PrototypeSpec
 import qualified Pawl.Codec.PutCountersFromSpec
 import qualified Pawl.Codec.PutCountersSpec
 import qualified Pawl.Codec.QuantitySpec
+import qualified Pawl.Codec.QuestionSpec
 import qualified Pawl.Codec.RangeOfInfluenceSpec
 import qualified Pawl.Codec.ReadinessSpec
 import qualified Pawl.Codec.RecipientSpec
@@ -549,6 +550,7 @@ import qualified Pawl.Codec.ReplaceSpec
 import qualified Pawl.Codec.ReplacementEffectSpec
 import qualified Pawl.Codec.ReplacementOriginSpec
 import qualified Pawl.Codec.ReplacementProvenanceSpec
+import qualified Pawl.Codec.RequestSpec
 import qualified Pawl.Codec.RequireAttackSpec
 import qualified Pawl.Codec.RequireBlockSpec
 import qualified Pawl.Codec.RequiredDefenderSpec
@@ -1254,6 +1256,8 @@ spec s registry = do
   Pawl.Codec.LookedSpec.spec s
   Pawl.Codec.SeatViewSpec.spec s
   Pawl.Codec.PlayerViewSpec.spec s
+  Pawl.Codec.QuestionSpec.spec s
+  Pawl.Codec.RequestSpec.spec s
   Pawl.Codec.ObjectViewSpec.spec s
   Pawl.Codec.LoopMembersSpec.spec s
   Pawl.Codec.LoyaltyKindSpec.spec s

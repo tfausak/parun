@@ -1133,6 +1133,8 @@ library codec
     Pawl.Codec.PutSticker
     Pawl.Codec.Quantity
     Pawl.Codec.QuantitySpec
+    Pawl.Codec.Question
+    Pawl.Codec.QuestionSpec
     Pawl.Codec.RandomCardInGraveyard
     Pawl.Codec.RandomCardInHand
     Pawl.Codec.RandomCardInLibrary
@@ -1169,6 +1171,8 @@ library codec
     Pawl.Codec.ReplacementProvenanceSpec
     Pawl.Codec.ReplaceSpec
     Pawl.Codec.Reply
+    Pawl.Codec.Request
+    Pawl.Codec.RequestSpec
     Pawl.Codec.RequireAttack
     Pawl.Codec.RequireAttackSpec
     Pawl.Codec.RequireBlock
@@ -2688,6 +2692,7 @@ library types
     Pawl.Types.PutCountersFrom
     Pawl.Types.PutSticker
     Pawl.Types.Quantity
+    Pawl.Types.Question
     Pawl.Types.RandomCardInGraveyard
     Pawl.Types.RandomCardInHand
     Pawl.Types.RandomCardInLibrary
@@ -2712,6 +2717,7 @@ library types
     Pawl.Types.ReplacementOrigin
     Pawl.Types.ReplacementProvenance
     Pawl.Types.Reply
+    Pawl.Types.Request
     Pawl.Types.RequireAttack
     Pawl.Types.RequireBlock
     Pawl.Types.RequiredDefender
