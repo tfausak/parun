@@ -4559,33 +4559,18 @@ project oid gs = projectFrom (gather gs) oid gs
 -- (Binding.withoutCopyEffect), since a copy effect changes the permanent and
 -- never the card. A counterfactual board, as Projection.View's
 -- copiableCharacteristicsFaceUp; Game.withFacing turns a merged permanent's
--- components with it (CR 730.2f).
---
--- The stamp is a copy effect's only on an object a card represents. A token's
--- or a copy's stamp is its own values (CR 111.3, 707.10), so it stays.
---
--- Not implemented: a token's own values that a later stamped copy effect
--- replaced are not recovered, so its reveal shows that copy (#5167).
+-- components with it (CR 730.2f). A token's, a copy's or a merge's own values
+-- are no copy effect's (CR 111.3, 730.2a), so they stay.
 --
 -- data/scenarios/visibility proves each road: the CR 708.10 Cytoshape case the
--- stored one, the CR 701.20a Clone case the stamped one, and the CR 111.3 token
--- case the kept stamp.
+-- stored one, the CR 701.20a Clone case the stamped one, the CR 111.3 token
+-- cases the kept own values, and the CR 730.2a Infinite Reflection case a
+-- merge's under a later stamp.
 projectShown :: ObjectId -> GameState -> ProjectedCharacteristics
 projectShown oid gs = case Game.lookupObject oid gs of
   Just obj
     | Facing.isFaceDown (Object.facing obj) ->
-        let uncopied = case Object.source obj of
-              Source.OfCard _ -> Binding.withoutCopyEffect
-              Source.OfMerge _ -> Binding.withoutCopyEffect
-              Source.OfMeld _ -> Binding.withoutCopyEffect
-              Source.OfToken _ -> id
-              Source.OfSpellCopy _ -> id
-              Source.OfCardCopy _ -> id
-              Source.OfEmblem _ -> id
-              Source.OfAbility _ -> id
-              Source.OfTrigger _ -> id
-              Source.OfInherentTrigger _ -> id
-            card = (Game.withFacing Facing.FaceUp obj) {Object.bindings = uncopied (Object.bindings obj)}
+        let card = (Game.withFacing Facing.FaceUp obj) {Object.bindings = Binding.withoutCopyEffect (Object.bindings obj)}
          in project oid (Game.supersedeStoredCopies (Set.singleton oid) gs {GameState.objects = Map.insert oid card (GameState.objects gs)})
   _ -> project oid gs
 

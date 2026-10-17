@@ -60,6 +60,7 @@ import qualified Data.Text as Text
 import qualified Numeric.Natural as Natural
 import qualified Pawl.Engine.Activatable as Activatable
 import qualified Pawl.Engine.Activate as Activate
+import qualified Pawl.Engine.Binding as Binding
 import qualified Pawl.Engine.Card as Card
 import qualified Pawl.Engine.Cast as Cast
 import qualified Pawl.Engine.Combat as Combat
@@ -102,6 +103,7 @@ import qualified Pawl.Types.MergeComponent as MergeComponent
 import qualified Pawl.Types.MutateSide as MutateSide
 import qualified Pawl.Types.Object as Object
 import qualified Pawl.Types.ObjectId as ObjectId
+import qualified Pawl.Types.OptionalDecision as OptionalDecision
 import qualified Pawl.Types.Phase as Phase
 import qualified Pawl.Types.Player as Player
 import qualified Pawl.Types.PlayerId as PlayerId
@@ -241,6 +243,52 @@ spec s registry = Spec.describe s "Mutate" $ do
         Spec.assertEqWith s "CR 701.20a the reveal shows the Kirin card, not the Hill Giant its pile was a copy of" (departureRevealNames murdered) [Set.singleton (CardName.MkCardName (Text.pack "Misthoof Kirin"))]
         Spec.assertEqWith s "setup: Mirrorweave made the pile a Hill Giant" (Projection.namesOf host woven) (Set.singleton (CardName.MkCardName (Text.pack "Hill Giant")))
         Spec.assertBool s (Maybe.isNothing (Game.lookupObject host murdered)) "setup: Murder destroyed the pile"
+  -- CR 730.2a under a STAMPED copy effect: Cubwarden merges under the face-down
+  -- Kirin, so the pile is face down, and Infinite Reflection's trigger makes it
+  -- a copy of alice's Hill Giant with no stated ending (CR 708.10). Hauntwoods
+  -- Shrieker, arriving afterwards so it is no Giant itself, reveals the pile:
+  -- the copy effect changed the permanent, never its merged cards.
+  --
+  -- Not implemented: Infinite Reflection's "nontoken creatures you control
+  -- enter as a copy of enchanted creature" (#5198). Nothing enters after it
+  -- here.
+  Spec.it s "CR 730.2a a face-down pile Infinite Reflection made a copy is revealed with its merge" $ do
+    plains <- S.printingOf s registry "Plains"
+    island <- S.printingOf s registry "Island"
+    forest <- S.printingOf s registry "Forest"
+    kirin <- S.printingOf s registry "Misthoof Kirin"
+    cubwarden <- S.printingOf s registry "Cubwarden"
+    giant <- S.printingOf s registry "Hill Giant"
+    reflection <- S.printingOf s registry "Infinite Reflection"
+    shrieker <- S.printingOf s registry "Hauntwoods Shrieker"
+    case faceDownBoard plains kirin cubwarden of
+      Nothing -> Spec.assertFailure s "the morph cast did not reach the battlefield"
+      Just (host, board, spellId) -> do
+        let (giantId, withGiant) = S.addPermanent giant S.alice (merging MutateSide.Under host board spellId)
+            (reflecting, reflectionId) = S.handOne reflection (S.landsFor island S.alice 6 withGiant)
+            atGiant :: Prompt.Prompt r -> r
+            atGiant p = case p of
+              Prompt.ChooseTargets _ _ _ sets -> fmap (Set.filter ((== Just giantId) . Recipient.objectOf) . snd) sets
+              _ -> S.identityAnswer p
+            reflected = S.runPure atGiant reflecting (S.cast S.alice reflectionId >> Monad.replicateM_ 3 (Engine.settleForPriority >> Stack.resolveTop) >> Engine.settleForPriority)
+            (shriekerId, withShrieker) = S.addPermanent shrieker S.alice (S.landsFor forest S.alice 2 reflected)
+            armed = withShrieker {GameState.phase = Phase.PrecombatMain, GameState.activePlayer = S.alice, GameState.priority = Just S.alice}
+            -- The Shrieker's "may" declined, so the pile stays face down and
+            -- the reveal is the whole of what it shows.
+            atPile :: Prompt.Prompt r -> r
+            atPile p = case p of
+              Prompt.ChooseTargets _ _ _ sets -> fmap (Set.filter ((== Just host) . Recipient.objectOf) . snd) sets
+              Prompt.ChooseOptional {} -> OptionalDecision.Declines
+              _ -> S.identityAnswer p
+            shown gs = [Revealed.characteristics r | GameEvent.Revealed r <- S.eventsOf gs, Revealed.card r == host]
+        case Activatable.abilitiesFor shriekerId armed of
+          [ability] -> do
+            let shrieked = S.runPure atPile armed (Activate.activateAbility S.alice shriekerId ability >> Engine.settleForPriority >> Stack.resolveTop >> Engine.settleForPriority)
+            Spec.assertEqWith s "CR 730.2a the reveal carries the lifelink of the Cubwarden merged under the Kirin" (fmap (Map.member Keyword.Lifelink . PC.keywords) (shown shrieked)) [True]
+            Spec.assertEqWith s "CR 701.20a and shows the topmost Kirin's name, not the Hill Giant the pile became" (fmap PC.names (shown shrieked)) [Set.singleton (CardName.MkCardName (Text.pack "Misthoof Kirin"))]
+            Spec.assertEqWith s "setup: Infinite Reflection made the pile a copy of the Hill Giant" (fmap PC.names (Binding.copyOf . Object.bindings =<< Game.lookupObject host reflected)) (Just (Set.singleton (CardName.MkCardName (Text.pack "Hill Giant"))))
+            Spec.assertBool s (maybe False (Facing.isFaceDown . Object.facing) (Game.lookupObject host shrieked)) "setup: the pile stayed face down"
+          abilities -> Spec.assertFailure s ("expected the Shrieker's one activated ability, got " <> show (length abilities))
   -- CR 708.9's third sentence: the same pile's owner concedes a three-player
   -- game (CR 800.4a), so it leaves the game rather than moving to a zone, and
   -- the game goes on (the end of the game being the rule's fourth sentence).

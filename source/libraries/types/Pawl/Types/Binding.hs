@@ -47,8 +47,8 @@ data Binding = MkBinding
     -- Stored only under the reserved Binding.chosenModes slot. Nothing elsewhere.
     modes :: Maybe (Seq.Seq ModeIndex.ModeIndex),
     -- | CR 707.2 / 707.5: the copiable-value snapshot a permanent copies AS IT
-    -- ENTERS. Stored only under Pawl.Engine.Binding.copySource; the layer fold
-    -- reads it as the layer-1 seed. Nothing for a non-copy object.
+    -- ENTERS. Stored only under Pawl.Engine.Binding's reserved copy slots; the
+    -- layer fold reads it as the layer-1 seed. Nothing for a non-copy object.
     copy :: Maybe ProjectedCharacteristics.ProjectedCharacteristics,
     -- | EVERY object one instruction produced or acted on, for a card that refers
     -- back to all of them at once -- CR 111.1's minted tokens under Thatcher

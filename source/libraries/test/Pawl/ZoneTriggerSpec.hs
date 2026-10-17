@@ -1750,6 +1750,16 @@ leavesBattlefieldSpec s registry =
 representativeDeparted :: ObjectId.ObjectId
 representativeDeparted = ObjectId.MkObjectId 1
 
+-- The one arrival the pin DOES stock, attached to `representativeHost`: only
+-- SelfEnters' second row arrives as it, for CR 603.6a's host, which that arm
+-- binds off the live board and so claims only sometimes.
+representativeEntrant :: ObjectId.ObjectId
+representativeEntrant = ObjectId.MkObjectId 7
+
+-- What `representativeEntrant` is attached to on the pinning board.
+representativeHost :: ObjectId.ObjectId
+representativeHost = ObjectId.MkObjectId 5
+
 -- A triggered ability with this condition and no payload, for the representative
 -- GameEvent.AbilityTriggered below. The record names the ABILITY beside its
 -- source, and that arm's floor does not depend on what the ability does.
@@ -1787,7 +1797,12 @@ representativeEvents cond =
       -- which is what "prevented this way" compares against.
       preventedByBearer = CandidateId.OfFloating (FloatingCandidate.MkFloatingCandidate departed (Timestamp.MkTimestamp 1))
    in case cond of
-        TriggerCondition.SelfEnters -> one (moved Zone.Stack Zone.Battlefield)
+        -- CR 603.6a: an entrant with no object on the pinning board, and one
+        -- stocked there attached to a host, so the host is bound for some
+        -- entries only.
+        TriggerCondition.SelfEnters ->
+          noTable (moved Zone.Stack Zone.Battlefield)
+            NonEmpty.:| [noTable (GameEvent.Moved (Moved.moved (ZoneChange.MkZoneChange departed representativeEntrant Zone.Stack Zone.Battlefield) S.emptyCharacteristics))]
         TriggerCondition.PermanentEnters _ -> one (moved Zone.Stack Zone.Battlefield)
         TriggerCondition.PermanentsEnter _ -> one (moved Zone.Stack Zone.Battlefield)
         TriggerCondition.StepBegins (StepBegins.MkStepBegins phase _ _) -> one (GameEvent.StepBegan (StepBegan.MkStepBegan phase S.alice))
