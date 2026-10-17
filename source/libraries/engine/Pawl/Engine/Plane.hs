@@ -88,8 +88,9 @@ commandControllerOf oid obj gs
 -- and PlayerEffect's printedRows. Pawl.PlanechaseSpec's "CR 801.18 a face-up Tazeem stops a creature
 -- outside the planar controller's range from blocking" proves it.
 --
--- Through last-known information, phenomenonOwnerOf's reason: an ability of a
--- plane that has since left the command zone is still a planar card's.
+-- Through last-known information, which CR 608.2b reads for a source that has
+-- left its zone: an ability of a plane that has since left the command zone is
+-- still a planar card's.
 -- Pawl.PlanechaseSpec's "CR 801.18 Akoum's chaos still reaches outside the
 -- range after Akoum leaves the game" proves it.
 --

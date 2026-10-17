@@ -186,8 +186,9 @@ spec s registry = Spec.describe s "Pawl.Engine.Planechase" $ do
   -- is face up, and bob rolls chaos and aims at dave's Goblin Piker, two seats
   -- from him at range 1. alice then concedes with the ability on the stack:
   -- Akoum leaves the game with her and bob turns up his Academy at Tolaria West
-  -- (CR 901.10). The ability is still a plane's, so CR 608.2b's re-check does
-  -- not cut dave's Piker by bob's range, and it is destroyed.
+  -- (CR 901.10). CR 608.2b's re-check reads Akoum's last known information, so
+  -- the ability is still a plane's: dave's Piker is not cut by bob's range, and
+  -- it is destroyed.
   Spec.it s "CR 801.18 Akoum's chaos still reaches outside the range after Akoum leaves the game" $ do
     piker <- S.printingOf s registry "Goblin Piker"
     board <- seatedPlanarBoard s registry S.alice [(S.alice, ["Akoum"]), (S.bob, ["Academy at Tolaria West"]), (S.carol, []), (S.dave, [])]
