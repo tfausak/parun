@@ -1,0 +1,93 @@
+{
+  "faces": [
+    {
+      "castingRestrictions": [
+        {
+          "type": "DuringPhase",
+          "value": {
+            "scope": {
+              "type": "EachTurn"
+            },
+            "window": {
+              "type": "Step",
+              "value": {
+                "type": "Combat",
+                "value": {
+                  "type": "DeclareAttackers"
+                }
+              }
+            }
+          }
+        },
+        {
+          "type": "AttackedThisStep"
+        }
+      ],
+      "manaCost": [
+        {
+          "type": "Generic",
+          "value": 2
+        },
+        {
+          "type": "OfType",
+          "value": {
+            "type": "Colored",
+            "value": {
+              "type": "Blue"
+            }
+          }
+        }
+      ],
+      "name": "Command of Unsummoning",
+      "oracleText": "Cast this spell only during the declare attackers step and only if you've been attacked this step.\nReturn one or two target attacking creatures to their owner's hand.",
+      "spell": {
+        "modes": [
+          {
+            "clauses": [
+              {
+                "effects": [
+                  {
+                    "type": "MoveToZone",
+                    "value": {
+                      "ref": {
+                        "type": "InSlot",
+                        "value": "creatures"
+                      },
+                      "zone": {
+                        "type": "Hand"
+                      }
+                    }
+                  }
+                ]
+              }
+            ],
+            "targetSlots": {
+              "creatures": {
+                "count": {
+                  "type": "Printed",
+                  "value": {
+                    "least": 1,
+                    "most": 2
+                  }
+                },
+                "filter": {
+                  "type": "IsAttacking"
+                },
+                "pool": {
+                  "type": "Creatures"
+                }
+              }
+            }
+          }
+        ]
+      },
+      "typeLine": {
+        "types": [
+          {
+            "type": "Instant"
+          }
+        ]
+      }
+    }
+  ]
+}

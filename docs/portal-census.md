@@ -13,30 +13,6 @@ leaves this table when its card is added to `data/cards/`.
 
 | Card | Template card(s) | Note |
 |---|---|---|
-| Alabaster Dragon | endless-cockroaches + serra-avatar | SelfDies, ShuffleIntoLibrary on the `became` slot; Flying keyword |
-| Angelic Blessing | befriending-the-moths-imperial-moth | ModifyTarget P/T plus GainKeyword Flying, until end of turn |
-| Armageddon | fall-of-the-thran (chapter I) | Destroy EachMatching lands |
-| Assassin's Blade | rally-the-troops + kill-shot + doom-blade | castingRestrictions DuringPhase DeclareAttackers + AttackedThisStep; target filter And(IsAttacking, Not black) |
-| Balance of Power | the-ten-rings + sudden-impact | clause `condition` Compares count(target hand) vs count(your hand); Draw Plus(count target hand, Negate count your hand); Count InZone player InSlot target |
-| Baleful Stare | duress + sudden-impact | Reveal EachCardInHand of target opponent; Draw Count over target's hand filter Or(HasSubtype Mountain, HasColor Red) |
-| Bee Sting | galvanic-blast | 2 damage, any target |
-| Blinding Light | rally-the-troops | Tap EachMatching And(creature, Not white) |
-| Boiling Seas | boil | exact line |
-| Breath of Life | restoration-seminar | creature filter, graveyard to battlefield |
-| Burning Cloak | hatred + galvanic-blast | ModifyTarget +2/+0, then DealDamage 2 to the same slot |
-| Charging Bandits | patron-of-the-akki / thrashing-frontliner | SelfAttacks EveryTime, ModifyTarget self +2/+0 |
-| Charging Paladin | patron-of-the-akki / thrashing-frontliner | as above, +0/+3 |
-| Cloak of Feathers | encouraging-aviator-jump + divination | gain flying, draw |
-| Cloud Dragon | cyclops-tyrant | CantBlockCreatures attackers Not(HasKeyword Flying); Flying |
-| Cloud Pirates | cyclops-tyrant | as above |
-| Cloud Spirit | cyclops-tyrant | as above |
-| Command of Unsummoning | rally-the-troops + hearts-on-fire + unsummon | targetSlots count Printed least 1 most 2 (hearts-on-fire), filter IsAttacking |
-| Craven Giant | villainous-ogre | combatRestrictions CantBlock self (ogre's first line only) |
-| Craven Knight | villainous-ogre | as above |
-| Cruel Fate | worldly-counsel + ponder | LookAt TopOfLibrary 5 of target opponent (InSlot); MoveToZone ChosenCardFromAmong to Graveyard; ArrangeInLibrary the rest |
-| Deep Wood | rally-the-troops + scarecrow | PreventAllDamage UntilEndOfTurn to you, whatSource And(creature, IsAttacking) |
-| Deep-Sea Serpent | armored-galleon | exact line |
-| Defiant Stand | rally-the-troops + giant-growth | +1/+3 then Untap InSlot target |
 | Devastation | day-of-judgment | Destroy EachMatching Or(creature, land) |
 | Dread Charge | space-beleren | ForbidBeingBlocked UntilEndOfTurn, affected And(black creature, you control), blockers Not black (live Filter) |
 | Dread Reaper | thragtusk | SelfEnters LoseLife 5 you; Flying |
@@ -190,3 +166,9 @@ RestrictedCreatures.Matching arm for this; RequireBlock and DoesNotUntapNext
 don't (every pool use of DoesNotUntapNext is InSlot).
 - Alluring Scent: "All creatures able to block target creature this turn do so." RequireBlock (lineprancers) needs a Matching blocker side. BlockRequirement's haddock already names Alluring Scent as the "Nothing subject" shape, but that is the static carrier.
 - Exhaustion: "Creatures and lands target opponent controls don't untap during their next untap step." DoesNotUntapNext needs a filter arm (ControlledByBound target, Or(creature, land)). Freezing at resolution misses a permanent that comes under that player's control before their untap step.
+
+### The caster orders another player's library cards (#5243)
+ArrangeInLibrary asks the cards' owner (CR 401.4), but "in any order" on a
+spell that reorders an opponent's library is the caster's choice (Portent's
+ruling). Ponder and Tome of the Infinite only reorder their caster's own.
+- Cruel Fate: "Look at the top five cards of target opponent's library. Put one of those cards into that player's graveyard and the rest on top of their library in any order."
