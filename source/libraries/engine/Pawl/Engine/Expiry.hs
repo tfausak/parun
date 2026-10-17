@@ -30,6 +30,7 @@ import qualified Data.Sequence as Seq
 import qualified Data.Set as Set
 import qualified Pawl.Engine.Binding as Binding
 import qualified Pawl.Engine.Condition as Condition
+import qualified Pawl.Engine.Filter as Filter
 import qualified Pawl.Engine.Game as Game
 import qualified Pawl.Engine.Players as Players
 import qualified Pawl.Engine.Projection as Projection
@@ -52,6 +53,8 @@ import qualified Pawl.Types.DelayedTrigger as DelayedTrigger
 import qualified Pawl.Types.Designation as Designation
 import Pawl.Types.Duration (Duration)
 import qualified Pawl.Types.Duration as Duration
+import qualified Pawl.Types.DurationEvent as DurationEvent
+import qualified Pawl.Types.EventExpiry as EventExpiry
 import qualified Pawl.Types.ExilePlayPermission as ExilePlayPermission
 import Pawl.Types.Expiry (Expiry)
 import qualified Pawl.Types.Expiry as Expiry
@@ -194,9 +197,19 @@ arm acquisition targets controller source duration gs = case duration of
   -- axes, so Pawl.EffectLintSpec refuses the duration on every other carrier
   -- and axis.
   Duration.UntilUsed -> Just Expiry.WhenUsed
-  -- CR 611.2a / 701.27b: nothing to bake; the source is the row's own, and
-  -- Pawl.Engine.Resolve.Effect's TurnFaceDown arm sweeps the moment that ends it.
-  Duration.UntilTurnedFaceDown -> Just Expiry.WhenTurnedFaceDown
+  -- CR 611.2a: the seat CR 109.5 reads a cast's criterion from is baked, as
+  -- UntilPaid's is, and so is any seat the criterion names by slot
+  -- (Pawl.Engine.Filter.bakeBound), since the sweep has no resolution to read
+  -- one off. Pawl.Engine.Resolve.Effect's TurnFaceDown arm and
+  -- Pawl.Engine.Cast's CR 601.2i event sweep the moments that end it.
+  Duration.UntilEvent event ->
+    Just
+      ( Expiry.OnEvent
+          ( EventExpiry.MkEventExpiry controller $ case event of
+              DurationEvent.SourceTurnedFaceDown -> event
+              DurationEvent.SpellCast criterion -> DurationEvent.SpellCast (Filter.bakeBound (Binding.playersIn targets) criterion)
+          )
+      )
 
 -- The ONE seat a Duration.UntilEndOfNextTurnOf or DuringNextTurnOf reference
 -- names, sampled as the window begins. One stored row names one turn, so a
@@ -248,7 +261,7 @@ perSeat duration = case duration of
   Duration.UntilEndOfCombatOnYourNextTurn -> Nothing
   Duration.UntilPaid _ -> Nothing
   Duration.UntilUsed -> Nothing
-  Duration.UntilTurnedFaceDown -> Nothing
+  Duration.UntilEvent _ -> Nothing
 
 -- Does a stored effect under this duration FOLLOW its objects across a zone
 -- change? CR 400.7's default is no -- the object that arrives is a new object
@@ -297,7 +310,7 @@ begun gs expiry = case expiry of
   Expiry.AtEndOfCombatOn _ -> True
   Expiry.WhenPaid _ -> True
   Expiry.WhenUsed -> True
-  Expiry.WhenTurnedFaceDown -> True
+  Expiry.OnEvent _ -> True
 
 -- CR 601.3: may this player use this object's exile permission right now? It
 -- names them, its duration's window has begun (`begun`), and its own condition
@@ -337,6 +350,8 @@ data Moment
   | -- | CR 701.27b: this object was turned face down. Ends the effects it is
     -- the source of, PaidFor's grain.
     TurnedFaceDown ObjectId
+  | -- | CR 601.2i: this spell became cast.
+    Cast ObjectId
   deriving (Eq, Show)
 
 -- CR 611.2: does the expiry a row from `source` stores end at this moment? The
@@ -396,8 +411,14 @@ endsAt gs moment source expiry = case expiry of
   -- has left the game's objects (CR 400.7) can never turn face down, so the row
   -- is dropped at the next settle instead: it covers only that old id, but
   -- Pawl.Engine.Interchangeable still reads every row's timestamp.
-  Expiry.WhenTurnedFaceDown ->
+  Expiry.OnEvent (EventExpiry.MkEventExpiry _ DurationEvent.SourceTurnedFaceDown) ->
     moment == TurnedFaceDown source || (moment == Settle && Maybe.isNothing (Game.lookupObject source gs))
+  -- CR 611.2a / 601.2i: ended by a cast its criterion matches, read off the
+  -- spell from the baked seat. Not by its source leaving: the effect is a
+  -- resolved one, which outlives it.
+  Expiry.OnEvent (EventExpiry.MkEventExpiry you (DurationEvent.SpellCast criterion)) -> case moment of
+    Cast spell -> Filter.matches (Projection.sourceContext gs (Just you) source) (Projection.viewOfObject spell gs) criterion
+    _ -> False
   where
     departedTurnOf p = moment == TurnOf p && List.notElem p (Game.stillPlaying gs)
     namedTurnEnds at afterTurn =

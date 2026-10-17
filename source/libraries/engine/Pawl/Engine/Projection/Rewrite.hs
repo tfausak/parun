@@ -108,6 +108,7 @@ import qualified Pawl.Types.Draw as Draw
 import qualified Pawl.Types.DrawR as DrawR
 import qualified Pawl.Types.DrawRewrite as DrawRewrite
 import qualified Pawl.Types.Duration as Duration
+import qualified Pawl.Types.DurationEvent as DurationEvent
 import qualified Pawl.Types.EachCardFromAmong as EachCardFromAmong
 import qualified Pawl.Types.EachCardInGraveyard as EachCardInGraveyard
 import qualified Pawl.Types.EachCardInHand as EachCardInHand
@@ -2162,7 +2163,8 @@ rewriteDuration pairs duration = case duration of
   -- non-mana components hold are matched where the cost is paid.
   Duration.UntilPaid _ -> duration
   Duration.UntilUsed -> duration
-  Duration.UntilTurnedFaceDown -> duration
+  Duration.UntilEvent DurationEvent.SourceTurnedFaceDown -> duration
+  Duration.UntilEvent (DurationEvent.SpellCast criterion) -> Duration.UntilEvent (DurationEvent.SpellCast (Filter.rewrite pairs criterion))
 
 -- CR 612.1 through the counters a CR 122.5 move carries: the count, and the
 -- kind wherever the CARD names one (MovedKinds.kindOf's three arms), since CR

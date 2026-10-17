@@ -156,6 +156,7 @@ import qualified Pawl.Types.DrawR as DrawR
 import qualified Pawl.Types.DrawRewrite as DrawRewrite
 import qualified Pawl.Types.DungeonRoom as DungeonRoom
 import qualified Pawl.Types.Duration as Duration
+import qualified Pawl.Types.DurationEvent as DurationEvent
 import qualified Pawl.Types.EachCardFromAmong as EachCardFromAmong
 import qualified Pawl.Types.EachCardInGraveyard as EachCardInGraveyard
 import qualified Pawl.Types.EachCardInHand as EachCardInHand
@@ -173,6 +174,7 @@ import qualified Pawl.Types.EntryRestriction as EntryRestriction
 import qualified Pawl.Types.EntryRewrite as EntryRewrite
 import qualified Pawl.Types.EntryRiders as EntryRiders
 import qualified Pawl.Types.Equip as Equip
+import qualified Pawl.Types.EventExpiry as EventExpiry
 import qualified Pawl.Types.ExchangeBlocks as ExchangeBlocks
 import qualified Pawl.Types.ExchangeCardZones as ExchangeCardZones
 import qualified Pawl.Types.ExchangeOwnership as ExchangeOwnership
@@ -1208,7 +1210,12 @@ durationNames asking x = case x of
   Duration.UntilEndOfCombatOnYourNextTurn -> False
   Duration.UntilPaid cost -> costNames asking (keywordNames asking) cost
   Duration.UntilUsed -> False
-  Duration.UntilTurnedFaceDown -> False
+  Duration.UntilEvent durationEvent -> durationEventNames asking durationEvent
+
+durationEventNames :: Asking -> DurationEvent.DurationEvent -> Bool
+durationEventNames asking x = case x of
+  DurationEvent.SourceTurnedFaceDown -> False
+  DurationEvent.SpellCast filter_ -> filterNames asking filter_
 
 eachCardFromAmongNames :: Asking -> EachCardFromAmong.EachCardFromAmong -> Bool
 eachCardFromAmongNames asking x = case x of
@@ -1533,7 +1540,11 @@ expiryNames asking x = case x of
   Expiry.AtEndOfCombatOn _afterTurn -> False
   Expiry.WhenPaid paidExpiry -> paidExpiryNames asking paidExpiry
   Expiry.WhenUsed -> False
-  Expiry.WhenTurnedFaceDown -> False
+  Expiry.OnEvent eventExpiry -> eventExpiryNames asking eventExpiry
+
+eventExpiryNames :: Asking -> EventExpiry.EventExpiry -> Bool
+eventExpiryNames asking x = case x of
+  EventExpiry.MkEventExpiry _controller durationEvent -> durationEventNames asking durationEvent
 
 faceNames :: Asking -> (card -> Bool) -> Face.Face card -> Bool
 faceNames asking onCard x = case x of

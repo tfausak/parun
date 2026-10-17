@@ -124,7 +124,10 @@
                     }
                   ],
                   "duration": {
-                    "type": "UntilTurnedFaceDown"
+                    "type": "UntilEvent",
+                    "value": {
+                      "type": "SourceTurnedFaceDown"
+                    }
                   },
                   "eligible": {
                     "type": "HasCardType",
@@ -202,7 +205,10 @@
                     }
                   ],
                   "duration": {
-                    "type": "UntilTurnedFaceDown"
+                    "type": "UntilEvent",
+                    "value": {
+                      "type": "SourceTurnedFaceDown"
+                    }
                   },
                   "eligible": {
                     "type": "HasCardType",
