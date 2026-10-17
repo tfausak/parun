@@ -564,10 +564,14 @@ data TriggerCondition
     ChaosEnsues
   | -- | CR 901.8: "whenever you roll the Planeswalker symbol on the planar die".
     PlayerRollsPlaneswalker PlayerRelation.PlayerRelation
-  | -- | CR 904.9 / 312.5: "When you set this scheme in motion" and "When you
-    -- encounter [this phenomenon]", against a GameEvent.TurnedUpOffDeck naming
-    -- the ability's own card.
+  | -- | CR 904.9 / 312.5 / 701.31d: "When you set this scheme in motion", "When
+    -- you encounter [this phenomenon]" and "When you planeswalk to [this
+    -- plane]", against a GameEvent.TurnedUpOffDeck naming the ability's own card.
     SelfTurnedUpOffDeck
+  | -- | CR 701.31d / 603.10g: "When you planeswalk away from [this plane]",
+    -- against a GameEvent.TurnedUpOffDeck naming the ability's own card among
+    -- those walked away from. A look-back.
+    SelfPlaneswalkedAwayFrom
   | -- | CR 706.2: "whenever you roll a 6" (Night Shift of the Living Dead), once
     -- per die whose result, after every modifier, is the stated number.
     PlayerRollsResult (DieResult.DieResult PlayerRelation.PlayerRelation)

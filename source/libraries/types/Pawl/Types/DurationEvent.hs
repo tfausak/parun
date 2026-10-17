@@ -9,4 +9,6 @@ data DurationEvent
     SourceTurnedFaceDown
   | -- | CR 601.2i: a player casts a spell this matches (Soul Sculptor).
     SpellCast (Filter.Filter Keyword.Keyword)
+  | -- | CR 901.11: a player planeswalks (Agyrem).
+    Planeswalked
   deriving (Eq, Ord, Show)

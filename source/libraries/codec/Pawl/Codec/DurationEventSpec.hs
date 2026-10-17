@@ -23,4 +23,11 @@ spec s = Spec.describe s "Pawl.Codec.DurationEvent" $ do
       Codec.codec
       (DurationEvent.SpellCast (Filter.HasCardType CardType.Creature))
       " {\"type\":\"SpellCast\",\"value\":{\"type\":\"HasCardType\",\"value\":{\"type\":\"Creature\"}}} "
+  -- CR 901.11 (Agyrem).
+  Spec.it s "Planeswalked" $
+    Common.assertCodec
+      s
+      Codec.codec
+      DurationEvent.Planeswalked
+      " {\"type\":\"Planeswalked\"} "
   Spec.it s "has a schema" $ Common.assertHasSchema s Codec.codec

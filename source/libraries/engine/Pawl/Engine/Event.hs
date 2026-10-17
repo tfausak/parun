@@ -9602,6 +9602,7 @@ controllerTurnScoped cond = case cond of
   TriggerCondition.ChaosEnsues -> False
   TriggerCondition.PlayerRollsPlaneswalker _ -> False
   TriggerCondition.SelfTurnedUpOffDeck -> False
+  TriggerCondition.SelfPlaneswalkedAwayFrom -> False
   TriggerCondition.PlayerWinsCoinFlip _ -> False
   TriggerCondition.PlayerLosesCoinFlip _ -> False
   -- CR 701.3a names no turn: an Aura can be cast, and an Equipment equipped, on
