@@ -2,6 +2,7 @@ module Pawl.Codec.Duration where
 
 import qualified Pawl.Codec.Condition as Condition
 import qualified Pawl.Codec.Cost as Cost
+import qualified Pawl.Codec.DurationEvent as DurationEvent
 import qualified Pawl.Codec.Keyword as Keyword
 import qualified Pawl.Codec.PlayerRef as PlayerRef
 import qualified Pawl.JsonCodec.Arm as Arm
@@ -29,7 +30,7 @@ codec =
       Arm.nullary "UntilEndOfCombatOnYourNextTurn" Duration.UntilEndOfCombatOnYourNextTurn,
       Arm.payload "UntilPaid" (Cost.codec Keyword.codec) Duration.UntilPaid (\x -> case x of Duration.UntilPaid y -> Just y; _ -> Nothing),
       Arm.nullary "UntilUsed" Duration.UntilUsed,
-      Arm.nullary "UntilTurnedFaceDown" Duration.UntilTurnedFaceDown
+      Arm.payload "UntilEvent" DurationEvent.codec Duration.UntilEvent (\x -> case x of Duration.UntilEvent y -> Just y; _ -> Nothing)
     ]
 
 tagOf :: Duration.Duration -> String
@@ -49,4 +50,4 @@ tagOf x = case x of
   Duration.UntilEndOfCombatOnYourNextTurn {} -> "UntilEndOfCombatOnYourNextTurn"
   Duration.UntilPaid {} -> "UntilPaid"
   Duration.UntilUsed {} -> "UntilUsed"
-  Duration.UntilTurnedFaceDown {} -> "UntilTurnedFaceDown"
+  Duration.UntilEvent {} -> "UntilEvent"

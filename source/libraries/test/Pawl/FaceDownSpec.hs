@@ -121,7 +121,7 @@
 --
 -- Synthetic Veiled Witness is the watcher of CR 701.27b's turned-face-down
 -- event: Scryfall `o:"turned face down" include:extras`, 2026-09-10, answers
--- Vesuvan Shapeshifter alone, whose clause is a duration (Expiry.WhenTurnedFaceDown,
+-- Vesuvan Shapeshifter alone, whose clause is a duration (Expiry.OnEvent,
 -- proved in data/scenarios/copy). Thraben Gargoyle is CR 712.16's double-faced
 -- permanent. turnedFaceDownSpec has both.
 --

@@ -170,6 +170,7 @@ import qualified Pawl.Types.DrawR as DrawR
 import qualified Pawl.Types.DrawRewrite as DrawRewrite
 import qualified Pawl.Types.DungeonRoom as DungeonRoom
 import qualified Pawl.Types.Duration as Duration
+import qualified Pawl.Types.DurationEvent as DurationEvent
 import qualified Pawl.Types.EachCardFromAmong as EachCardFromAmong
 import qualified Pawl.Types.EachCardInGraveyard as EachCardInGraveyard
 import qualified Pawl.Types.EachCardInHand as EachCardInHand
@@ -895,7 +896,7 @@ durationConditions duration = case duration of
   -- exactly that split (activatedAbilityCounts against activatedAbilityFilters).
   Duration.UntilPaid _ -> []
   Duration.UntilUsed -> []
-  Duration.UntilTurnedFaceDown -> []
+  Duration.UntilEvent _ -> []
 
 -- Every Count reachable from a Duration, off the enumeration above.
 durationCounts :: Duration.Duration -> [Count.Type.Count Quantity.Type.Quantity]
@@ -4252,8 +4253,12 @@ durationFilters duration =
           Duration.UntilEndOfCombat -> []
           Duration.UntilEndOfCombatOnYourNextTurn -> []
           Duration.UntilUsed -> []
-          Duration.UntilTurnedFaceDown -> []
+          Duration.UntilEvent _ -> []
       )
+    <> case duration of
+      -- CR 601.2i: a cast's criterion, read as TriggerCondition.SpellCast's is.
+      Duration.UntilEvent (DurationEvent.SpellCast f) -> unframed [f]
+      _ -> []
 
 -- A Modification reaches a Filter two ways: through its layer-7 quantities (a
 -- Count) and through the keyword a layer-6 grant hands out or takes away (CR

@@ -259,6 +259,7 @@ import qualified Pawl.Codec.DrawRewriteSpec
 import qualified Pawl.Codec.DrawSpec
 import qualified Pawl.Codec.DrewSpec
 import qualified Pawl.Codec.DungeonRoomSpec
+import qualified Pawl.Codec.DurationEventSpec
 import qualified Pawl.Codec.DurationSpec
 import qualified Pawl.Codec.DuringPhaseSpec
 import qualified Pawl.Codec.EachCardFromAmongSpec
@@ -282,6 +283,7 @@ import qualified Pawl.Codec.EntryRewriteSpec
 import qualified Pawl.Codec.EntryRidersSpec
 import qualified Pawl.Codec.EntrySpec
 import qualified Pawl.Codec.EquipSpec
+import qualified Pawl.Codec.EventExpirySpec
 import qualified Pawl.Codec.EventGroupSpec
 import qualified Pawl.Codec.EventShapeSpec
 import qualified Pawl.Codec.ExcessDestinationSpec
@@ -1124,6 +1126,7 @@ spec s registry = do
   Pawl.Codec.DrawSpec.spec s
   Pawl.Codec.DrewSpec.spec s
   Pawl.Codec.DungeonRoomSpec.spec s
+  Pawl.Codec.DurationEventSpec.spec s
   Pawl.Codec.DurationSpec.spec s
   Pawl.Codec.DuringPhaseSpec.spec s
   Pawl.Codec.EachCardFromAmongSpec.spec s
@@ -1148,6 +1151,7 @@ spec s registry = do
   Pawl.Codec.EntrySpec.spec s
   Pawl.Codec.EquipSpec.spec s
   Pawl.Codec.EventGroupSpec.spec s
+  Pawl.Codec.EventExpirySpec.spec s
   Pawl.Codec.EventShapeSpec.spec s
   Pawl.Codec.ExcessDestinationSpec.spec s
   Pawl.Codec.ExchangeBlocksSpec.spec s

@@ -15,6 +15,7 @@ import qualified Pawl.Types.CopyClause as CopyClause
 import qualified Pawl.Types.CopyException as CopyException
 import qualified Pawl.Types.CounterKind as CounterKind
 import qualified Pawl.Types.Duration as Duration
+import qualified Pawl.Types.DurationEvent as DurationEvent
 import qualified Pawl.Types.Filter as Filter
 import qualified Pawl.Types.Quantity as Quantity
 import qualified Pawl.Types.SetPowerToughness as SetPowerToughness
@@ -73,8 +74,8 @@ spec s = Spec.describe s "Pawl.Codec.AsCopy" $ do
     Common.assertCodec
       s
       (AsCopy.codec Common.text Common.text)
-      (AsCopy.MkAsCopy (Filter.HasCardType CardType.Creature) [] False Seq.empty Zone.Battlefield (Just Duration.UntilTurnedFaceDown))
-      " {\"eligible\":{\"type\":\"HasCardType\",\"value\":{\"type\":\"Creature\"}},\"duration\":{\"type\":\"UntilTurnedFaceDown\"}} "
+      (AsCopy.MkAsCopy (Filter.HasCardType CardType.Creature) [] False Seq.empty Zone.Battlefield (Just (Duration.UntilEvent DurationEvent.SourceTurnedFaceDown)))
+      " {\"eligible\":{\"type\":\"HasCardType\",\"value\":{\"type\":\"Creature\"}},\"duration\":{\"type\":\"UntilEvent\",\"value\":{\"type\":\"SourceTurnedFaceDown\"}}} "
   Spec.it s "MkAsCopy, from a graveyard (Superior Spider-Man)" $
     Common.assertCodec
       s

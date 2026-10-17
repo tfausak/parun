@@ -3723,6 +3723,9 @@ castProposed perform spending pid oid sid face castFrom preparedFor keywordsBefo
                           -- your hand" trigger reads it off the event, since CR
                           -- 400.7 left `sid` no memory of it.
                           State.modify' (\g -> let pc = Projection.project sid g in Event.recordEvent (GameEvent.SpellCast (SpellWasCast.MkSpellWasCast pid sid pc castFrom (Object.castUsing =<< Game.lookupObject sid g) (Projection.lapsedGrantsOf (Projection.fullView g) pc sid g))) g)
+                          -- CR 611.2a: the durations this cast ends (Soul
+                          -- Sculptor's), off the spell as it became cast.
+                          State.modify' (Expiry.sweep (Expiry.Cast sid))
                           -- CR 601.2a / 400.7h: the card was played, under the
                           -- id it had before the move and the spell's.
                           State.modify' (\g -> g {GameState.cardsPlayed = Map.insert sid pid (Map.insert oid pid (GameState.cardsPlayed g))})

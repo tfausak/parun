@@ -1,0 +1,154 @@
+{
+  "description": "CR 613.8c Opalescence keeps a creature Soul Sculptor made an enchantment a creature, and a second Sculpting ends that",
+  "note": "Opalescence's grant depends on the first set, which makes the Bears an enchantment (CR 613.8a), so it applies after it. Once that set has applied, the second changes nothing Opalescence applies to, so the two are applied in timestamp order (CR 613.8c) and the later set takes the creature type away again. alice's Synthetic Rouser untaps the Sculptor between the two activations.",
+  "board": {
+    "seats": [
+      {
+        "name": "alice",
+        "battlefield": [
+          {
+            "card": "Soul Sculptor",
+            "label": "sculptor",
+            "ready": true
+          },
+          {
+            "card": "Opalescence",
+            "label": "opalescence"
+          },
+          {
+            "card": "Synthetic Rouser",
+            "label": "rouser"
+          },
+          {
+            "card": "Plains",
+            "label": "p1"
+          },
+          {
+            "card": "Plains",
+            "label": "p2"
+          },
+          {
+            "card": "Plains",
+            "label": "p3"
+          },
+          {
+            "card": "Plains",
+            "label": "p4"
+          }
+        ]
+      },
+      {
+        "name": "bob",
+        "battlefield": [
+          {
+            "card": "Grizzly Bears",
+            "label": "bears"
+          }
+        ]
+      }
+    ],
+    "active": "alice",
+    "step": "PrecombatMain"
+  },
+  "timeline": [
+    {
+      "turn": 1,
+      "step": "PrecombatMain",
+      "player": "alice",
+      "do": {
+        "Activate": {
+          "object": "$sculptor",
+          "ability": 0,
+          "targets": [
+            "$bears"
+          ],
+          "mana": [
+            "$p1",
+            "$p2",
+            null
+          ]
+        }
+      }
+    },
+    {
+      "turn": 1,
+      "step": "PrecombatMain",
+      "player": "alice",
+      "do": "Pass"
+    },
+    {
+      "turn": 1,
+      "step": "PrecombatMain",
+      "player": "alice",
+      "check": {
+        "Types": {
+          "object": "$bears",
+          "types": [
+            "Creature",
+            "Enchantment"
+          ]
+        }
+      }
+    },
+    {
+      "turn": 1,
+      "step": "PrecombatMain",
+      "player": "alice",
+      "do": {
+        "Activate": {
+          "object": "$rouser",
+          "ability": 0,
+          "targets": [
+            "$sculptor"
+          ],
+          "mana": [
+            null
+          ]
+        }
+      }
+    },
+    {
+      "turn": 1,
+      "step": "PrecombatMain",
+      "player": "alice",
+      "do": "Pass"
+    },
+    {
+      "turn": 1,
+      "step": "PrecombatMain",
+      "player": "alice",
+      "do": {
+        "Activate": {
+          "object": "$sculptor",
+          "ability": 0,
+          "targets": [
+            "$bears"
+          ],
+          "mana": [
+            "$p3",
+            "$p4"
+          ]
+        }
+      }
+    },
+    {
+      "turn": 1,
+      "step": "PrecombatMain",
+      "player": "alice",
+      "do": "Pass"
+    },
+    {
+      "turn": 1,
+      "step": "PrecombatMain",
+      "player": "alice",
+      "check": {
+        "Types": {
+          "object": "$bears",
+          "types": [
+            "Enchantment"
+          ]
+        }
+      }
+    }
+  ]
+}

@@ -2,6 +2,7 @@ module Pawl.Types.Duration where
 
 import qualified Pawl.Types.Condition as Condition
 import qualified Pawl.Types.Cost as Cost
+import qualified Pawl.Types.DurationEvent as DurationEvent
 import qualified Pawl.Types.Keyword as Keyword
 import qualified Pawl.Types.PlayerRef as PlayerRef
 
@@ -110,8 +111,8 @@ data Duration
     -- Expiry.WhenUsed. Nullary: no printed sentence in the pool narrows WHICH
     -- use ends it beyond the effect's own Filter.
     UntilUsed
-  | -- | CR 611.2a: "until this creature is turned face down" (Vesuvan
-    -- Shapeshifter), stored as Expiry.WhenTurnedFaceDown and ended by CR
-    -- 701.27b's event on the effect's source.
-    UntilTurnedFaceDown
+  | -- | CR 611.2a: "until" an event -- "this creature is turned face down"
+    -- (Vesuvan Shapeshifter), "a player casts a creature spell" (Soul
+    -- Sculptor) -- stored as Expiry.OnEvent.
+    UntilEvent DurationEvent.DurationEvent
   deriving (Eq, Ord, Show)

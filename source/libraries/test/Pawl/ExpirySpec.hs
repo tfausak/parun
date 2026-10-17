@@ -61,7 +61,9 @@ import qualified Pawl.Types.DamageEvent as DamageEvent
 import qualified Pawl.Types.DamageKind as DamageKind
 import qualified Pawl.Types.Departure as Departure.Type
 import qualified Pawl.Types.Duration as Duration
+import qualified Pawl.Types.DurationEvent as DurationEvent
 import qualified Pawl.Types.EndingStep as EndingStep
+import qualified Pawl.Types.EventExpiry as EventExpiry
 import qualified Pawl.Types.ExilePlayPermission as ExilePlayPermission
 import qualified Pawl.Types.Expiry as Expiry.Type
 import qualified Pawl.Types.Face as Face
@@ -457,7 +459,7 @@ conditionalSpec s registry = Spec.describe s "Conditional" $ do
     warMammoth <- S.printingOf s registry "War Mammoth"
     let (srcId, targetId, gs) = board piker warMammoth
         (ts, gs1) = Game.freshTimestamp gs
-        stored = gs1 {GameState.copyEffects = [ActiveCopy.MkActiveCopy srcId ts Expiry.Type.WhenTurnedFaceDown (Set.singleton srcId) (Projection.project targetId gs) Nothing]}
+        stored = gs1 {GameState.copyEffects = [ActiveCopy.MkActiveCopy srcId ts (Expiry.Type.OnEvent (EventExpiry.MkEventExpiry S.alice DurationEvent.SourceTurnedFaceDown)) (Set.singleton srcId) (Projection.project targetId gs) Nothing]}
         gone = S.runPure S.identityAnswer stored (Event.destroy Regenerability.Regenerable [srcId])
         (keptChanged, kept) = Engine.runGamePure S.identityAnswer stored Expiry.sweepConditional
         (goneChanged, swept) = Engine.runGamePure S.identityAnswer gone Expiry.sweepConditional
