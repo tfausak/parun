@@ -41,6 +41,9 @@ viewFor pid gs =
 
 -- | CR 400.2: a hidden zone by its size and the members `pid` may see; a public
 -- one in full.
+--
+-- Not implemented: a fresh id for a card a shuffle moves, so a seat shown a
+-- library card can still tell that copy apart after the shuffle (#5223).
 seatView :: PlayerId.PlayerId -> GameState.GameState -> PlayerId.PlayerId -> Maybe SeatView.SeatView
 seatView pid gs seat = do
   player <- Map.lookup seat (GameState.players gs)
@@ -61,7 +64,7 @@ seatView pid gs seat = do
         SeatView.manaPool = Map.findWithDefault (Mana.MkMana []) seat (GameState.manaPool gs)
       }
 
--- | CR 708.2: an object's status for anyone, its characteristics (as projected,
+-- | CR 110.5: an object's status for anyone, its characteristics (as projected,
 -- CR 613) only for a seat that may see it.
 --
 -- Not implemented: a face-down permanent or spell showing its face to its

@@ -24,6 +24,8 @@ import qualified Pawl.Registry as Registry
 import qualified Pawl.Spec as Spec
 import qualified Pawl.Support as S
 import qualified Pawl.Types.CardName as CardName
+import qualified Pawl.Types.ControlDuration as ControlDuration
+import qualified Pawl.Types.Decider as Decider
 import qualified Pawl.Types.EventGroup as EventGroup
 import qualified Pawl.Types.GameEvent as GameEvent
 import qualified Pawl.Types.GameSettings as GameSettings
@@ -33,9 +35,11 @@ import qualified Pawl.Types.Looked as Looked
 import qualified Pawl.Types.Object as Object
 import qualified Pawl.Types.ObjectId as ObjectId
 import qualified Pawl.Types.ObjectView as ObjectView
+import qualified Pawl.Types.PlayerControl as PlayerControl
 import qualified Pawl.Types.PlayerId as PlayerId
 import qualified Pawl.Types.PlayerView as PlayerView.Type
 import qualified Pawl.Types.SeatView as SeatView
+import qualified Pawl.Types.Timestamp as Timestamp
 import qualified Pawl.Types.Zone as Zone
 
 spec :: (Monad m, Monad n) => Spec.Spec m n -> Registry.Registry m -> n ()
@@ -48,7 +52,7 @@ spec s registry = Spec.describe s "PlayerView" $ do
         theirs = Set.unions (fmap (`Projection.namesOf` gs) hidden) `Set.difference` own
         bobsHand = Set.unions (fmap (`Projection.namesOf` gs) (Game.zoneMembers Zone.Hand S.bob gs))
         named name = Text.unpack (CardName.unwrap name) `List.isInfixOf` rendered
-        idOf oid = ("\"object\":" <> show (ObjectId.unwrap oid) <> ",") `List.isInfixOf` rendered
+        idOf oid = any (\key -> ("\"" <> key <> "\":" <> show (ObjectId.unwrap oid) <> ",") `List.isInfixOf` rendered) ["object", "card"]
     Spec.assertBool s (not (Set.null theirs)) "alice holds cards bob's deck lacks"
     Spec.assertBool s (not (any named (Set.toList theirs))) "no name"
     Spec.assertBool s (not (any idOf hidden)) "no id"
@@ -84,6 +88,24 @@ spec s registry = Spec.describe s "PlayerView" $ do
         exiled pid = foldMap SeatView.exile (seatOf S.alice (PlayerView.viewFor pid gs))
     Spec.assertEqWith s "listed" (fmap ObjectView.object (exiled S.alice)) [oid]
     Spec.assertEqWith s "face down" (fmap ObjectView.characteristics (exiled S.alice)) [Nothing]
+    Spec.assertEqWith s "face down to bob" (fmap ObjectView.characteristics (exiled S.bob)) [Nothing]
+  Spec.it s "CR 406.3 a card exiled face up is seen by both seats" $ do
+    piker <- S.printingOf s registry "Goblin Piker"
+    let (_, gs) = S.addObjectIn Zone.Exile piker S.alice (Setup.emptyGame S.bothPlayers)
+        exiled pid = foldMap SeatView.exile (seatOf S.alice (PlayerView.viewFor pid gs))
+    Spec.assertBool s (all (Maybe.isJust . ObjectView.characteristics) (exiled S.bob) && not (null (exiled S.bob))) "bob sees it"
+  Spec.it s "CR 723.4 a seat making another player's decisions sees that player's hand" $ do
+    started0 <- started s registry
+    let row =
+          PlayerControl.MkPlayerControl
+            { PlayerControl.decider = Decider.MkDecider S.alice,
+              PlayerControl.duration = ControlDuration.UntilTurnEnds,
+              PlayerControl.manaFromLandsOnly = False,
+              PlayerControl.timestamp = Timestamp.MkTimestamp 0
+            }
+        gs = started0 {GameState.control = Map.singleton S.bob (row NonEmpty.:| [])}
+    Spec.assertEqWith s "alice sees bob's hand" (fmap (length . SeatView.hand) (seatOf S.bob (PlayerView.viewFor S.alice gs))) (Just 7)
+    Spec.assertEqWith s "without control she does not" (fmap (length . SeatView.hand) (seatOf S.bob (PlayerView.viewFor S.alice started0))) (Just 0)
   Spec.it s "a look reaches only its audience" $ do
     piker <- S.printingOf s registry "Goblin Piker"
     let (oid, placed) = S.addObjectIn Zone.Hand piker S.alice (Setup.emptyGame S.bothPlayers)
