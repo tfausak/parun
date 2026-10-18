@@ -8,6 +8,7 @@
 -- when its results are predictable, which is the bar met here.
 module Pawl.Engine.Interchangeable where
 
+import qualified Data.Foldable as Foldable
 import qualified Data.List as List
 import qualified Data.List.NonEmpty as NonEmpty
 import qualified Data.Map.Strict as Map
@@ -15,6 +16,7 @@ import qualified Data.Maybe as Maybe
 import qualified Data.Sequence as Seq
 import qualified Data.Set as Set
 import qualified Pawl.Engine.Commander as Commander
+import qualified Pawl.Engine.Count as Count
 import qualified Pawl.Engine.Filter as Filter.Engine
 import qualified Pawl.Engine.Game as Game
 import qualified Pawl.Engine.Interchangeable.Mentions as Mentions
@@ -39,12 +41,17 @@ import qualified Pawl.Types.CardIdentity as CardIdentity
 import qualified Pawl.Types.Combat as Combat
 import qualified Pawl.Types.ComponentCard as ComponentCard
 import qualified Pawl.Types.ContinuousEffect as ContinuousEffect
+import qualified Pawl.Types.Convoking as Convoking
 import qualified Pawl.Types.CopyCoverage as CopyCoverage
+import qualified Pawl.Types.Crewing as Crewing
+import qualified Pawl.Types.DamageEvent as DamageEvent
 import qualified Pawl.Types.ExileLink as ExileLink
+import qualified Pawl.Types.GameEvent as GameEvent
 import Pawl.Types.GameState (GameState)
 import qualified Pawl.Types.GameState as GameState
 import qualified Pawl.Types.IgnoredAbility as IgnoredAbility
 import qualified Pawl.Types.LastKnown as LastKnown
+import qualified Pawl.Types.LoggedEvent as LoggedEvent
 import qualified Pawl.Types.MeldSource as MeldSource
 import qualified Pawl.Types.MergeComponent as MergeComponent
 import qualified Pawl.Types.MonarchWatch as MonarchWatch
@@ -58,6 +65,7 @@ import qualified Pawl.Types.Recipient as Recipient
 import qualified Pawl.Types.RestrictedCreatures as RestrictedCreatures
 import qualified Pawl.Types.ReturnEnding as ReturnEnding
 import qualified Pawl.Types.ReturnWatch as ReturnWatch
+import qualified Pawl.Types.Saddling as Saddling
 import qualified Pawl.Types.ShownComponent as ShownComponent
 import qualified Pawl.Types.Source as Source
 import qualified Pawl.Types.Timestamp as Timestamp
@@ -83,7 +91,9 @@ import qualified Pawl.Types.TriggerSource as TriggerSource
 --     in -- Bonesplitter's +2/+0 makes one Llanowar Elves a 3/1 and the other a
 --     1/1. So must what their two Filter views read off the turn's log (CR
 --     608.2i: attacked, dealt damage, entered this turn), so no Filter anywhere
---     -- printed or stored -- answers a look-back atom differently of the two.
+--     -- printed or stored -- answers a look-back atom differently of the two;
+--     and what the log says OTHER objects did to each (actedOnBy), which a
+--     relation atom reads off the other object's view.
 --   * Nothing else may name either object: no other object (namedByAnother),
 --     no id-keyed relation (namedByRelation), and no stored row or combat
 --     assignment (namedByStored). Each of those SEARCHES for the two ids, so a
@@ -134,9 +144,10 @@ objects pcs gs a b =
           Filter.Engine.enteredThisTurn view,
           Filter.Engine.crewedThisTurn view,
           Filter.Engine.convokedThisTurn view,
-          Filter.Engine.saddledThisTurn view
+          Filter.Engine.saddledThisTurn view,
+          Filter.Engine.dealtDamageTo view
         )
-      sameView = lookBack (viewOf a) == lookBack (viewOf b)
+      sameView = lookBack (viewOf a) == lookBack (viewOf b) && actedOnBy a gs == actedOnBy b gs
       -- Keyed by every permanent alike, so compared rather than searched.
       sameSample m = Map.lookup a m == Map.lookup b m
       sameSamples =
@@ -156,6 +167,25 @@ objects pcs gs a b =
                && not (namedByStored b gs)
                && not (layeredBetween a b gs)
            )
+
+-- CR 608.2i from the other end: which objects the turn's log says dealt this
+-- one damage (CR 120.1), crewed it (CR 702.122c), convoked it or the spell it
+-- was (CR 702.51c, 400.7d), and saddled it (CR 702.171c). Each is a relation
+-- atom's answer read off ANOTHER object's view with this one as the source --
+-- DealtDamageToThisTurn's Source party, CrewedSourceThisTurn,
+-- ConvokedSourceThisTurn, SaddledSourceThisTurn -- so two candidates whose own
+-- views agree are still different options when these differ. Compared rather
+-- than searched, so two objects the same creature damaged stay alike.
+-- Pawl.ManaSourceSpec's "CR 120.1 Elves damaged by different Bears" case
+-- proves the damage arm, both ways; the other three are regression fences.
+actedOnBy :: ObjectId -> GameState -> (Set.Set ObjectId, Set.Set ObjectId, Set.Set ObjectId, Set.Set ObjectId)
+actedOnBy oid gs =
+  let events = fmap LoggedEvent.event (Foldable.toList (GameState.events gs))
+      damagers = Set.fromList [DamageEvent.source dealt | event@(GameEvent.DamageDealt dealt) <- events, (Game.damageRecipient event >>= Recipient.objectOf) == Just oid]
+      crewers = Set.unions [Crewing.crewedBy crewed | GameEvent.Crewed crewed <- events, Crewing.vehicle crewed == oid]
+      convokers = Set.unions [Convoking.convokedBy convoked | GameEvent.Convoked convoked <- events, let spell = Convoking.spell convoked, spell == oid || elem oid (Count.becamePermanents spell events)]
+      saddlers = Set.unions [Saddling.saddledBy saddled | GameEvent.Saddled saddled <- events, Saddling.mount saddled == oid]
+   in (damagers, crewers, convokers, saddlers)
 
 -- | One candidate per interchangeability class, keeping the FIRST of each in the
 -- order it was offered. Deterministic, because Pawl.Engine.Replay.defaultAnswer
@@ -195,7 +225,8 @@ representatives pcs gs candidates =
 --     trigger (CR 608.2h), which namedByAnother and namedByStored already
 --     cover.
 --   * GameState.events is read here through the two Filter views objects
---     compares, which is where a Filter's look-back atoms read it; an event
+--     compares, which is where a Filter's look-back atoms read it, and through
+--     actedOnBy, the relations those views hold from the other end; an event
 --     the choice itself writes names whichever object was chosen, alike.
 --     GameState.controlSample (CR 603.2's control diff) and
 --     GameState.battlefieldWhenTriggered (CR 603.10's look-back) are keyed by

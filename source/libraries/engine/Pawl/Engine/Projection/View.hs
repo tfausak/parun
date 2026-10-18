@@ -208,6 +208,8 @@ viewOfCardLapsed lapsed face =
           -- CR 702.171c relates a creature to a Mount it saddled; the field
           -- above's reason.
           Filter.saddledThisTurn = Set.empty,
+          -- CR 120.1: an OBJECT deals damage; the field above's reason.
+          Filter.dealtDamageTo = Set.empty,
           -- CR 302.6 asks about an OBJECT a player controls; this builder
           -- describes a printed FACE, which is none -- `milledThisTurn` above's
           -- reason.
@@ -643,6 +645,7 @@ viewOfCharacteristics peers oid pc controller counters gs =
       Filter.crewedThisTurn = Count.crewedThisTurn oid gs,
       Filter.convokedThisTurn = Count.convokedThisTurn oid gs,
       Filter.saddledThisTurn = Count.saddledThisTurn oid gs,
+      Filter.dealtDamageTo = Count.dealtDamageTo oid gs,
       -- CR 302.6: Object.sickness, compared against the PROJECTED controller
       -- rather than read as a bare flag -- rule 302.6's subject is a player, so
       -- `Settled` names one, and Pawl.Engine.Engine.checkControlContinuity drops a
