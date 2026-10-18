@@ -373,11 +373,7 @@ applyModification textBoxOf viewOf src stamp gs oid unitTypes affected m pc =
         -- otherwise exiled -- a named one from an exiled card, or one a layer-6
         -- grant gave -- whose link carries a name `src` could print (#5185).
         Modification.GainExiledCardAbilities (ExiledCardAbilities.MkExiledCardAbilities pile extra) ->
-          let inPile o = case (pile, Map.lookup o (GameState.exiledWith gs)) of
-                (ExiledPile.CraftMaterials, Just link) -> link == ExileLink.MkExileLink {ExileLink.source = src, ExileLink.ability = Just Binding.craftLink}
-                (ExiledPile.ExiledWithSource, Just link) -> ExileLink.source link == src && not (any Binding.isExiledCardAbility (ExileLink.ability link))
-                (_, Nothing) -> False
-              cards = filter inPile (Set.toAscList (GameState.exile gs))
+          let cards = exiledPileOf pile src gs
               named card a = a {ActivatedAbility.name = ActivatedAbility.name a Applicative.<|> Just (Binding.exiledCardAbility card)}
               -- CR 113.6 / 702.178b: a card has, in exile, only the "as long
               -- as" grants that function there (AbilityZone.grantFunctionsIn).
@@ -1303,6 +1299,16 @@ framedByBindings gs bindings = framedBySlots gs (Binding.recipientsBySlot (Bindi
 sourceContext :: GameState -> Maybe PlayerId.PlayerId -> ObjectId -> Filter.Context
 sourceContext gs perspective source =
   framedBy source gs (Filter.contextFor (Game.teams gs) perspective (Just source))
+
+-- | CR 607.2a: the cards in exile in `src`'s pile -- the ones exiled to craft
+-- it (CR 702.167c), or every one its own abilities exiled.
+exiledPileOf :: ExiledPile.ExiledPile -> ObjectId -> GameState -> [ObjectId]
+exiledPileOf pile src gs =
+  let inPile o = case (pile, Map.lookup o (GameState.exiledWith gs)) of
+        (ExiledPile.CraftMaterials, Just link) -> link == ExileLink.MkExileLink {ExileLink.source = src, ExileLink.ability = Just Binding.craftLink}
+        (ExiledPile.ExiledWithSource, Just link) -> ExileLink.source link == src && not (any Binding.isExiledCardAbility (ExileLink.ability link))
+        (_, Nothing) -> False
+   in filter inPile (Set.toAscList (GameState.exile gs))
 
 -- SourceContext.framedBy plus withCharacteristicsOf: every source-derived field.
 framedBy :: ObjectId -> GameState -> Filter.Context -> Filter.Context
