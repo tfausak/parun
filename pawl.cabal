@@ -708,6 +708,8 @@ library codec
     Pawl.Codec.ForEachSpec
     Pawl.Codec.ForetellCost
     Pawl.Codec.ForetellCostSpec
+    Pawl.Codec.FromAnywhere
+    Pawl.Codec.FromAnywhereSpec
     Pawl.Codec.FromOutsideTheGame
     Pawl.Codec.FromOutsideTheGameSpec
     Pawl.Codec.FromReference
@@ -2492,6 +2494,7 @@ library types
     Pawl.Types.ForEach
     Pawl.Types.ForEachNumber
     Pawl.Types.ForetellCost
+    Pawl.Types.FromAnywhere
     Pawl.Types.FromOutsideTheGame
     Pawl.Types.FromReference
     Pawl.Types.FullText

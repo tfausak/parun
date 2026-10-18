@@ -1190,7 +1190,7 @@ rewriteObjectRef pairs ref = case ref of
   ObjectRef.RandomCardInLibrary (RandomCardInLibrary.MkRandomCardInLibrary p f c) -> ObjectRef.RandomCardInLibrary (RandomCardInLibrary.MkRandomCardInLibrary p (Filter.rewrite pairs f) (rewriteQuantity pairs c))
   ObjectRef.ChosenPermanents choice -> ObjectRef.ChosenPermanents (rewriteChosenPermanents pairs choice)
   ObjectRef.AttachedToBound (AttachedToBound.MkAttachedToBound slot f) -> ObjectRef.AttachedToBound (AttachedToBound.MkAttachedToBound slot (Filter.rewrite pairs f))
-  ObjectRef.FromAnywhere slot -> ObjectRef.FromAnywhere slot
+  ObjectRef.FromAnywhere _ -> ref
   ObjectRef.AllOf refs -> ObjectRef.AllOf (fmap (rewriteObjectRef pairs) refs)
 
 -- CR 612.1 through a battlefield choice: its Filter and its count are card
