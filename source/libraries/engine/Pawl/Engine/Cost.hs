@@ -899,7 +899,7 @@ candidateCostsGiven permitted pid name oid gs =
                             tappingOne cost (vid, n) =
                               CandidateCost.MkCandidateCost
                                 (Just (Keyword.Type.Harmonize cost))
-                                (withAdditional cost {Cost.components = Cost.components cost <> [CostComponent.TapPermanents (TapPermanents.MkTapPermanents 1 (criterion vid) False)]})
+                                (withAdditional cost {Cost.components = Cost.components cost <> [CostComponent.TapPermanents (TapPermanents.MkTapPermanents (CostAmount.Fixed 1) (criterion vid) False)]})
                                 [ManaCost.MkManaCost [ManaSymbol.Generic (Integer.toNaturalSaturating n)]]
                                 False
                             tappingNone cost = CandidateCost.plain (Just (Keyword.Type.Harmonize cost)) (withAdditional cost)
@@ -1497,8 +1497,8 @@ substituteCandidates slots pid oid substitute gs = case substitute of
 -- Prompt.ChooseExilesFromGraveyard for the other.
 substituteComponent :: Keyword.Substitute -> Natural -> CostComponent.CostComponent Keyword.Type.Keyword
 substituteComponent substitute n = case substitute of
-  Keyword.TapUntapped criterion -> CostComponent.TapPermanents (TapPermanents.MkTapPermanents n criterion False)
-  Keyword.TapToConvoke criterion -> CostComponent.TapPermanents (TapPermanents.MkTapPermanents n criterion False)
+  Keyword.TapUntapped criterion -> CostComponent.TapPermanents (TapPermanents.MkTapPermanents (CostAmount.Fixed n) criterion False)
+  Keyword.TapToConvoke criterion -> CostComponent.TapPermanents (TapPermanents.MkTapPermanents (CostAmount.Fixed n) criterion False)
   Keyword.ExileFromGraveyard criterion -> CostComponent.ExileCardsFromGraveyard (ExileCardsFromGraveyard.MkExileCardsFromGraveyard n criterion)
 
 -- The components an offer's substitutes are paid as, `substituteComponent` over
@@ -1658,7 +1658,7 @@ traverseAmount f component = case component of
   CostComponent.SacrificeThis -> pure component
   CostComponent.ReturnThis -> pure component
   CostComponent.TapForTotalPower {} -> pure component
-  CostComponent.TapPermanents {} -> pure component
+  CostComponent.TapPermanents tap -> (\amount -> CostComponent.TapPermanents tap {TapPermanents.count = amount}) <$> f (TapPermanents.count tap)
   CostComponent.ReturnPermanents {} -> pure component
   CostComponent.ExilePermanents {} -> pure component
   CostComponent.DiscardCards {} -> pure component
@@ -1784,7 +1784,8 @@ componentDemandGrowsWithX component = case component of
   -- permanents the payer controls refuses.
   CostComponent.Sacrifice sacrifice -> Sacrifice.count sacrifice == CostAmount.AnnouncedX
   CostComponent.TapForTotalPower {} -> False
-  CostComponent.TapPermanents {} -> False
+  -- One permanent per tap, Sacrifice's reason.
+  CostComponent.TapPermanents tap -> TapPermanents.count tap == CostAmount.AnnouncedX
   CostComponent.ReturnPermanents {} -> False
   CostComponent.ExilePermanents {} -> False
   CostComponent.DiscardCards {} -> False
@@ -2791,8 +2792,10 @@ claimOf slots pid oid component gs =
         -- A SUPERSET where the component asks for a shared creature type: the
         -- claim pools every candidate, and `payable`'s arm is what narrows to a
         -- group holding one type (Weight of Conscience states no other claim).
-        CostComponent.TapPermanents (TapPermanents.MkTapPermanents n criterion _) ->
+        CostComponent.TapPermanents (TapPermanents.MkTapPermanents (CostAmount.Fixed n) criterion _) ->
           claim ClaimAxis.Tapping (Set.fromList (tapCandidates slots pid oid criterion gs)) n
+        -- Nothing until CR 601.2b fixes the count, Sacrifice's arm.
+        CostComponent.TapPermanents (TapPermanents.MkTapPermanents CostAmount.AnnouncedX _ _) -> Nothing
         -- The battlefield pool SacrificeThis and ReturnThis draw on, on their axis
         -- and not the tapping one: a permanent returned to hand is as gone from the
         -- battlefield as one sacrificed, so a cost that returns and a cost that
@@ -3853,7 +3856,7 @@ canPayComponent slots pid oid component gs = case component of
   --
   -- CR 205.3m where the permanents must share a creature type: payable iff n
   -- candidates hold ONE type in common, the largest such group.
-  CostComponent.TapPermanents (TapPermanents.MkTapPermanents n criterion sharing) ->
+  CostComponent.TapPermanents (TapPermanents.MkTapPermanents amount criterion sharing) -> payableAnnounced amount $ \n ->
     let candidates = tapCandidates slots pid oid criterion gs
      in if sharing then largestSharingGroup candidates gs >= n else Natural.length candidates >= n
   -- CR 118.3: this player must have at least `n` permanents the criterion
@@ -6447,7 +6450,9 @@ payPayable moment paidFor slots pid oid component = case component of
   -- The payer chooses WHICH permanents to tap, so this is a prompt. Sacrifice's
   -- posture rather than TapForTotalPower's: the count is exact, so as many
   -- candidates as the count leaves one legal answer and the prompt is elided,
-  -- where a THRESHOLD would have left a choice among subsets.
+  -- where a THRESHOLD would have left a choice among subsets. So does an
+  -- announced count of 0 (CR 601.2b), a FENCE: no test casts Explosive
+  -- Singularity tapping none beside a creature it could tap.
   --
   -- Reject-not-repair, Sacrifice's posture again; the tap goes through tapObject,
   -- TapThis' route.
@@ -6463,13 +6468,13 @@ payPayable moment paidFor slots pid oid component = case component of
   --
   -- A shared creature type (CR 205.3m) is asked of the CHOSEN set, reject-not-
   -- repair: a set holding no type in common is unpaid.
-  CostComponent.TapPermanents (TapPermanents.MkTapPermanents n criterion sharing) -> do
+  CostComponent.TapPermanents (TapPermanents.MkTapPermanents amount criterion sharing) -> paidAnnounced amount $ \n -> do
     gs <- State.get
     let candidates = tapCandidates slots pid oid criterion gs
         decider = Decide.deciderFor pid gs
     chosen <-
-      if Natural.length candidates <= n
-        then pure (Set.fromList candidates)
+      if n == 0 || Natural.length candidates <= n
+        then pure (Set.fromList (List.genericTake n candidates))
         else Game.choose (Prompt.ChooseTaps decider pid oid candidates n)
     if Set.isSubsetOf chosen (Set.fromList candidates) && Natural.length chosen == n && (not sharing || shareACreatureType (Set.toList chosen) gs)
       then do
