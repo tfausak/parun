@@ -13,30 +13,6 @@ leaves this table when its card is added to `data/cards/`.
 
 | Card | Template card(s) | Note |
 |---|---|---|
-| Pyroclasm | astral-arena | DealDamage 2 EachMatching creature |
-| Rain of Salt | ley-weaver + vandalize | target count least 2 most 2, lands |
-| Rain of Tears | vandalize | Destroy target land |
-| Renewing Dawn | gideon-jura + blessed-reversal | Times factor 2 over Count Mountains ControlledByBound target |
-| Sacred Knight | otarian-juggernaut | CantBeBlockedBy blockers Or(HasColor Black, HasColor Red) |
-| Sacred Nectar | cram-session | GainLife 4 |
-| Scorching Spear | flame-jab | 1, any target |
-| Scorching Winds | rally-the-troops + astral-arena | 1 damage EachMatching attacking creature |
-| Seasoned Marshal | sensational-spider-man + midnight-scavengers | SelfAttacks, Optional Tap target creature |
-| Serpent Assassin | doom-blade + midnight-scavengers | SelfEnters, Optional Destroy target nonblack |
-| Serpent Warrior | thragtusk | SelfEnters LoseLife 3 |
-| Sorcerous Sight | the-ravens-warning + duress | LookAt EachCardInHand of target opponent; Draw 1 |
-| Soul Shred | parasitic-grasp | nonblack filter instead of Human |
-| Spiritual Guardian | thragtusk | GainLife 4 |
-| Spitting Earth | skred | count Mountains you control |
-| Starlight | gideon-jura + blessed-reversal | Times factor 3 over Count black creatures ControlledByBound target |
-| Steadfastness | steeling-stance | +0/+3 |
-| Stone Rain | vandalize | Destroy target land |
-| Summer Bloom | sea-gate-restoration-sea-gate-reborn + azusa-lost-but-seeking | AffectPlayers UntilEndOfTurn, You, PlayAdditionalLands Additional 3 (landPlaysAllowed reads it live). No pool card yet installs this PlayerEffect from a resolution |
-| Sylvan Tutor | mystical-tutor | creature filter |
-| Symbol of Unsummoning | unsummon + divination | exact lines |
-| Thing from the Deep | lithophage + patron-of-the-akki | SelfAttacks; payGate sacrifice 1 Island |
-| Theft of Dreams | winged-portent + gideon-jura | Count And(creature, IsTapped, ControlledByBound target) |
-| Thundering Wurm | lithophage + selhoff-entomber | payGate DiscardCards 1 land card |
 | Thundermare | rally-the-troops + radiant-fountain | SelfEnters Tap EachMatching And(creature, Not IsSource); Haste |
 | Tidal Surge | moonshae-pixie-pixie-dust + a-good-day-to-pie | count least 0 most 3, filter Not Flying, Tap |
 | Time Ebb | griptide | exact line |
