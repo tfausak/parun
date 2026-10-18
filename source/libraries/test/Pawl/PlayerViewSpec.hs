@@ -20,6 +20,7 @@ import qualified Pawl.Engine.Setup as Setup
 import qualified Pawl.Extra.Natural as Natural
 import qualified Pawl.JsonCodec.Codec as Codec
 import qualified Pawl.JsonCodec.Common as Common
+import qualified Pawl.Play.Render as Render
 import qualified Pawl.Registry as Registry
 import qualified Pawl.Spec as Spec
 import qualified Pawl.Support as S
@@ -27,6 +28,9 @@ import qualified Pawl.Types.CardName as CardName
 import qualified Pawl.Types.ControlDuration as ControlDuration
 import qualified Pawl.Types.Decider as Decider
 import qualified Pawl.Types.EventGroup as EventGroup
+import qualified Pawl.Types.ExileLooker as ExileLooker
+import qualified Pawl.Types.FaceDownReason as FaceDownReason
+import qualified Pawl.Types.Facing as Facing
 import qualified Pawl.Types.GameEvent as GameEvent
 import qualified Pawl.Types.GameSettings as GameSettings
 import qualified Pawl.Types.GameState as GameState
@@ -38,6 +42,8 @@ import qualified Pawl.Types.ObjectView as ObjectView
 import qualified Pawl.Types.PlayerControl as PlayerControl
 import qualified Pawl.Types.PlayerId as PlayerId
 import qualified Pawl.Types.PlayerView as PlayerView.Type
+import qualified Pawl.Types.Printing as Printing
+import qualified Pawl.Types.ProjectedCharacteristics as ProjectedCharacteristics
 import qualified Pawl.Types.SeatView as SeatView
 import qualified Pawl.Types.Timestamp as Timestamp
 import qualified Pawl.Types.Zone as Zone
@@ -89,6 +95,25 @@ spec s registry = Spec.describe s "PlayerView" $ do
     Spec.assertEqWith s "listed" (fmap ObjectView.object (exiled S.alice)) [oid]
     Spec.assertEqWith s "face down" (fmap ObjectView.characteristics (exiled S.alice)) [Nothing]
     Spec.assertEqWith s "face down to bob" (fmap ObjectView.characteristics (exiled S.bob)) [Nothing]
+    Spec.assertEqWith s "no look" (fmap ObjectView.face (exiled S.alice <> exiled S.bob)) [Nothing, Nothing]
+  Spec.it s "CR 406.3 a card exiled face down shows the card only to a seat that may look at it" $ do
+    piker <- S.printingOf s registry "Goblin Piker"
+    let (oid, placed) = S.addObjectIn Zone.Exile piker S.alice (Setup.emptyGame S.bothPlayers)
+        gs = placed {GameState.objects = Map.adjust (\o -> o {Object.exiledFaceDown = True, Object.exileLookers = Set.singleton (ExileLooker.ThePlayer S.bob)}) oid (GameState.objects placed)}
+        exiled pid = foldMap SeatView.exile (seatOf S.alice (PlayerView.viewFor pid gs))
+    Spec.assertEqWith s "bob looks at the card" (fmap (fmap ProjectedCharacteristics.names . ObjectView.face) (exiled S.bob)) [Just (Set.singleton (S.printingName piker))]
+    Spec.assertEqWith s "its owner may not" (fmap ObjectView.face (exiled S.alice)) [Nothing]
+    Spec.assertEqWith s "CR 406.3a it has no characteristics to either" (fmap ObjectView.characteristics (exiled S.alice <> exiled S.bob)) [Nothing, Nothing]
+  Spec.it s "CR 708.2 / 708.5 a face-down permanent shows every seat a nameless 2/2 and its controller the card" $ do
+    tracker <- S.printingOf s registry "Ainok Tracker"
+    let (oid, placed) = S.addPermanent tracker S.alice (Setup.emptyGame S.bothPlayers)
+        gs = placed {GameState.objects = Map.adjust (\o -> o {Object.facing = Facing.faceDown FaceDownReason.Morphed}) oid (GameState.objects placed)}
+    faceDownViews s tracker gs PlayerView.Type.battlefield
+  Spec.it s "CR 708.2 / 708.5 a face-down spell shows every seat a nameless 2/2 and its controller the card" $ do
+    tracker <- S.printingOf s registry "Ainok Tracker"
+    let (oid, placed) = S.addObjectIn Zone.Stack tracker S.alice (Setup.emptyGame S.bothPlayers)
+        gs = placed {GameState.objects = Map.adjust (\o -> o {Object.facing = Facing.faceDown FaceDownReason.Morphed}) oid (GameState.objects placed)}
+    faceDownViews s tracker gs PlayerView.Type.stack
   Spec.it s "CR 406.3 a card exiled face up is seen by both seats" $ do
     piker <- S.printingOf s registry "Goblin Piker"
     let (_, gs) = S.addObjectIn Zone.Exile piker S.alice (Setup.emptyGame S.bothPlayers)
@@ -123,6 +148,25 @@ spec s registry = Spec.describe s "PlayerView" $ do
         gs = placed {GameState.events = GameState.events placed Seq.|> look}
     Spec.assertEqWith s "alice witnessed it" (length (PlayerView.Type.witnessed (PlayerView.viewFor S.alice gs))) 1
     Spec.assertEqWith s "bob did not" (length (PlayerView.Type.witnessed (PlayerView.viewFor S.bob gs))) 0
+
+-- Alice's face-down Ainok Tracker, read off the zone `zoneOf` lists from both
+-- seats: the CR 708.2a values to each, the card to alice alone, and no name of
+-- it in bob's encoded view or drawing.
+faceDownViews :: (Monad m) => Spec.Spec m n -> Printing.Printing -> GameState.GameState -> (PlayerView.Type.PlayerView -> [ObjectView.ObjectView]) -> m ()
+faceDownViews s tracker gs zoneOf = do
+  let viewOf pid = zoneOf (PlayerView.viewFor pid gs)
+      shown pid = fmap (fmap (\c -> (ProjectedCharacteristics.names c, ProjectedCharacteristics.power c, ProjectedCharacteristics.toughness c))) . ObjectView.characteristics <$> viewOf pid
+      card pid = fmap (fmap (\c -> (ProjectedCharacteristics.names c, ProjectedCharacteristics.power c))) . ObjectView.face <$> viewOf pid
+      nameless = Just (Set.empty, Just 2, Just 2)
+      name = S.printingName tracker
+      rendered = Text.unpack (Common.render (Codec.encode Codec.PlayerView.codec (PlayerView.viewFor S.bob gs)))
+  Spec.assertEqWith s "CR 708.2 bob sees a nameless 2/2" (shown S.bob) [nameless]
+  Spec.assertEqWith s "CR 708.5 alice looks at the card" (card S.alice) [Just (Set.singleton name, Just 3)]
+  Spec.assertEqWith s "CR 708.5 bob may not" (card S.bob) [Nothing]
+  Spec.assertEqWith s "CR 708.2 alice's permanent is the 2/2 all the same" (shown S.alice) [nameless]
+  Spec.assertBool s (not (Text.unpack (CardName.unwrap name) `List.isInfixOf` rendered)) "no name in bob's encoded view"
+  Spec.assertEqWith s "bob's drawing" (fmap Render.describe (viewOf S.bob)) [Text.pack "a face-down card 2/2"]
+  Spec.assertEqWith s "alice's drawing" (fmap Render.describe (viewOf S.alice)) [Text.pack "a face-down card (Ainok Tracker) 2/2"]
 
 -- A game after setup: alice red, bob green, hands drawn.
 started :: (Monad m) => Spec.Spec m n -> Registry.Registry m -> m GameState.GameState

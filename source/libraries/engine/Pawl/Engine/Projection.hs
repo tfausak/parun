@@ -4560,7 +4560,8 @@ project oid gs = projectFrom (gather gs) oid gs
 -- never the card. A counterfactual board, as Projection.View's
 -- copiableCharacteristicsFaceUp; Game.withFacing turns a merged permanent's
 -- components with it (CR 730.2f). A token's, a copy's or a merge's own values
--- are no copy effect's (CR 111.3, 730.2a), so they stay.
+-- are no copy effect's (CR 111.3, 730.2a), so they stay. A card exiled face
+-- down shows the card too (CR 406.3), on a board where it is not.
 --
 -- Not implemented: a copy effect a side had before it merged is part of the
 -- merge's values, so the reveal still shows it (#5214).
@@ -4572,6 +4573,8 @@ project oid gs = projectFrom (gather gs) oid gs
 projectShown :: ObjectId -> GameState -> ProjectedCharacteristics
 projectShown oid gs = case Game.lookupObject oid gs of
   Just obj
+    | Object.exiledFaceDown obj ->
+        project oid gs {GameState.objects = Map.insert oid obj {Object.exiledFaceDown = False} (GameState.objects gs)}
     | Facing.isFaceDown (Object.facing obj) ->
         let card = (Game.withFacing Facing.FaceUp obj) {Object.bindings = Binding.withoutCopyEffect (Object.bindings obj)}
          in project oid (Game.supersedeStoredCopies (Set.singleton oid) gs {GameState.objects = Map.insert oid card (GameState.objects gs)})
