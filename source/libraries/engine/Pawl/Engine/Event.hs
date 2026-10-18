@@ -79,6 +79,8 @@ import qualified Pawl.Types.AnyNumberOf as AnyNumberOf
 import qualified Pawl.Types.Arrival as Arrival
 import qualified Pawl.Types.ArrivalEnd as ArrivalEnd
 import qualified Pawl.Types.AsCopy as AsCopy
+import qualified Pawl.Types.AttachR as AttachR
+import qualified Pawl.Types.AttachRewrite as AttachRewrite
 import qualified Pawl.Types.BecameAttached as BecameAttached
 import qualified Pawl.Types.BecameTarget as BecameTarget
 import qualified Pawl.Types.BecameUnattached as BecameUnattached
@@ -102,6 +104,7 @@ import qualified Pawl.Types.ComponentCard as ComponentCard
 import qualified Pawl.Types.ContinuousEffect as ContinuousEffect
 import qualified Pawl.Types.CopyClause as CopyClause
 import qualified Pawl.Types.CopyCoverage as CopyCoverage
+import qualified Pawl.Types.CopyDomain as CopyDomain
 import qualified Pawl.Types.CopyRecipient as CopyRecipient
 import qualified Pawl.Types.CounterCause as CounterCause
 import qualified Pawl.Types.CounterChange as CounterChange
@@ -2020,6 +2023,7 @@ shufflesAfter candidate = case ReplacementCandidate.effect candidate of
   ReplacementEffect.CounterR {} -> False
   ReplacementEffect.TokenR {} -> False
   ReplacementEffect.TurnUpR {} -> False
+  ReplacementEffect.AttachR {} -> False
   ReplacementEffect.UntapR _ -> False
   ReplacementEffect.LifeLossR {} -> False
   ReplacementEffect.LifeGainR {} -> False
@@ -2327,26 +2331,7 @@ apply batch candidate event =
       -- Written to Object.chosenColors, NOT to the copiable snapshot -- see
       -- EntryRewrite.ChooseColors.
       EntryRewrite.ChooseColors count -> do
-        let pick chosen _ = do
-              gs <- State.get
-              let remaining = filter (`Set.notMember` chosen) [minBound .. maxBound :: Color.Color]
-              picked <- case Projection.controllerOf oid gs of
-                -- Through Game.chooseAmong, the choice being mandatory.
-                Just controller -> Game.chooseAmong (\decider who -> Prompt.ChooseColor decider who oid) controller remaining
-                -- Unreachable, and defensive for ChoiceOf's reason: the object is
-                -- materialized on the battlefield before this loop runs, so
-                -- controllerOf falls back to its owner. A WEAKER fallback than
-                -- ChoiceOf's, and the one place on this path the engine would
-                -- decide something: there is no colour the card named to default
-                -- to, so the first offered is conjured. It stands only because the
-                -- branch cannot be reached.
-                Nothing -> pure (Maybe.listToMaybe remaining)
-              pure (maybe chosen (`Set.insert` chosen) picked)
-        picked <- Monad.foldM pick Set.empty [1 .. count]
-        Replacement.consume (ReplacementCandidate.identity candidate)
-        State.modify' $ \g ->
-          let stamp o = o {Object.chosenColors = Map.insert (Game.acquisitionOf oid g) picked (Object.chosenColors o)}
-           in g {GameState.objects = Map.adjust stamp oid (GameState.objects g)}
+        chooseColors candidate count oid
         pure (Just event)
       -- CR 614.1c: Convincing Mirage's as-enters basic land type choice. Asked
       -- every time the entering object has a controller to ask, for
@@ -4340,6 +4325,20 @@ apply batch candidate event =
         pure (Just event)
     -- Unreachable: `applies` admits TurnUpR only against WouldTurnFaceUp.
     (ReplacementEffect.TurnUpR {}, _) -> pure (Just event)
+    -- CR 607.2d: an "as this Equipment becomes attached to a creature, choose
+    -- ..." ability, through the entry arms' processes. Dinosaur Headdress's
+    -- copy (CR 707.2c) lands on the new host; nothing enters, so no batch
+    -- narrows the offer. The event survives: the attachment is already written.
+    (ReplacementEffect.AttachR (AttachR.MkAttachR _ rewrite), ProposedEvent.WouldBecomeAttached oid) -> case rewrite of
+      AttachRewrite.AsCopy asCopy -> do
+        Monad.void (becomeCopyAs Set.empty candidate asCopy oid)
+        pure (Just event)
+      -- Sanctuary Blade's "choose a color", ChooseColors' entry arm's process.
+      AttachRewrite.ChooseColors count -> do
+        chooseColors candidate count oid
+        pure (Just event)
+    -- Unreachable: `applies` admits AttachR only against WouldBecomeAttached.
+    (ReplacementEffect.AttachR {}, _) -> pure (Just event)
 
 -- CR 607.2i / 607.5: a permanent spell entering as a copy keeps its own
 -- instances' payments, and their gift promises, only for the own instances it
@@ -4363,16 +4362,45 @@ unlinkLostPayments oid gs = case Game.lookupObject oid gs of
         settled = obj {Object.paidCosts = paid, Object.chosenPlayers = promises}
      in gs {GameState.objects = Map.insert oid settled (GameState.objects gs)}
 
--- CR 707.5 / 707.4: the copying process an AsCopy rewrite performs, on either
--- event class it rides (CR 614.1c's entry, CR 614.1e's turning face up): the
--- object's controller chooses what to copy, and the copiable values are written
--- onto it. Answers the copied object and the CR 707.9e counters of the clauses
+-- CR 614.1c / 607.2d: the colour choices an "as this enters" (Painter's
+-- Servant) or "as this becomes attached" (Sanctuary Blade) ability makes, one
+-- prompt per colour, each offering the CR 105.1 colours not yet chosen ("two
+-- colors" are two different ones). A prompt is raised whenever two or more
+-- remain. Written to Object.chosenColors, NOT to the copiable snapshot -- see
+-- EntryRewrite.ChooseColors -- replacing any earlier choice, which is what "the
+-- last chosen color" reads.
+chooseColors :: ReplacementCandidate -> Natural -> ObjectId -> Game ()
+chooseColors candidate count oid = do
+  let pick chosen _ = do
+        gs <- State.get
+        let remaining = filter (`Set.notMember` chosen) [minBound .. maxBound :: Color.Color]
+        picked <- case Projection.controllerOf oid gs of
+          -- Through Game.chooseAmong, the choice being mandatory.
+          Just controller -> Game.chooseAmong (\decider who -> Prompt.ChooseColor decider who oid) controller remaining
+          -- Unreachable, and defensive: the object is on the battlefield (an
+          -- entering one is materialized before the loop runs), so controllerOf
+          -- falls back to its owner. A WEAKER fallback than ChoiceOf's, and the
+          -- one place on this path the engine would decide something: there is
+          -- no colour the card named to default to, so the first offered is
+          -- conjured. It stands only because the branch cannot be reached.
+          Nothing -> pure (Maybe.listToMaybe remaining)
+        pure (maybe chosen (`Set.insert` chosen) picked)
+  picked <- Monad.foldM pick Set.empty [1 .. count]
+  Replacement.consume (ReplacementCandidate.identity candidate)
+  State.modify' $ \g ->
+    let stamp o = o {Object.chosenColors = Map.insert (Game.acquisitionOf oid g) picked (Object.chosenColors o)}
+     in g {GameState.objects = Map.adjust stamp oid (GameState.objects g)}
+
+-- CR 707.5 / 707.4: the copying process an AsCopy rewrite performs, on each
+-- event class it rides (CR 614.1c's entry, CR 614.1e's turning face up, CR
+-- 701.3a's becoming attached): the object's controller chooses what to copy,
+-- and the copiable values are written onto it. Answers the copied object and the CR 707.9e counters of the clauses
 -- that applied, or Nothing where no copy was made.
 -- Clone's "may" is real: Nothing leaves the object as its printed self (a 0/0,
 -- which CR 704.5f then buries).
 --
 -- `batch` is the entering siblings the offer excludes (CR 614.12a), empty for
--- a turning-over.
+-- a turning-over or an attachment.
 becomeCopyAs :: Set ObjectId -> ReplacementCandidate -> AsCopy.AsCopy (GrantedAbility.Type.GrantedAbility Card) (Effect.Type.Effect Card (GrantedAbility.Type.GrantedAbility Card)) -> ObjectId -> Game (Maybe (ObjectId, [WithCounters.WithCounters]))
 becomeCopyAs batch candidate asCopy oid = do
   Replacement.consume (ReplacementCandidate.identity candidate)
@@ -4388,13 +4416,18 @@ becomeCopyAs batch candidate asCopy oid = do
       -- "any creature" and Copy Enchantment "any enchantment", and the
       -- battlefield walk that supplies "on the battlefield" is
       -- legalCopyTargets'.
-      let legal = Replacement.legalCopyTargets batch (AsCopy.eligible asCopy) (AsCopy.zone asCopy) oid gs
+      let legal = Replacement.legalCopyTargets batch (AsCopy.eligible asCopy) (AsCopy.among asCopy) oid gs
+          -- A permanent is asked as one, a card as one from among the rest.
+          pick = case AsCopy.among asCopy of
+            CopyDomain.InZone Zone.Battlefield -> Prompt.ChoosePermanent
+            CopyDomain.InZone _ -> Prompt.ChooseCardFromAmong
+            CopyDomain.InPile _ -> Prompt.ChooseCardFromAmong
       answer <-
         if not (AsCopy.optional asCopy)
           then -- A printed "choose" (Metamorphic Alteration) offers no
           -- declining, so it is chooseAmong's mandatory pick: elided at one
           -- candidate, nothing at none.
-            Game.chooseAmong (\chooser who -> Prompt.ChoosePermanent chooser who oid) controller legal
+            Game.chooseAmong (\chooser who -> pick chooser who oid) controller legal
           else
             if null legal
               then -- With nothing eligible, declining is the only legal answer
@@ -4473,10 +4506,20 @@ becomeCopyAs batch candidate asCopy oid = do
               -- read only while the source is phased in (Game.copyCovers),
               -- since phasing is no zone change (CR 702.26d), and dropped once
               -- the source is gone (Expiry.sweepConditional).
+              --
+              -- CR 607.2d: the row replaces one an earlier choice of this source
+              -- wrote, the copy being of "the last chosen card" (Dinosaur
+              -- Headdress, which chooses each time it becomes attached). A
+              -- regression fence: the new row is prepended, so it wins
+              -- latestStoredCopy's tie with the old one either way.
               CopyRecipient.ItsHost ->
                 let (ts, g1) = Game.freshTimestamp g
                     row = ActiveCopy.MkActiveCopy {ActiveCopy.source = oid, ActiveCopy.timestamp = ts, ActiveCopy.expiry = Expiry.Type.Never, ActiveCopy.covers = CopyCoverage.SourceHost Map.empty, ActiveCopy.snapshot = stamped, ActiveCopy.turned = Nothing}
-                 in g1 {GameState.copyEffects = row : GameState.copyEffects g1}
+                    earlier r = ActiveCopy.source r == oid && isHostRow (ActiveCopy.covers r)
+                    isHostRow covers = case covers of
+                      CopyCoverage.SourceHost _ -> True
+                      CopyCoverage.These _ -> False
+                 in g1 {GameState.copyEffects = row : filter (not . earlier) (GameState.copyEffects g1)}
             -- CR 611.2a: a stated duration (Vesuvan Shapeshifter's "until
             -- this creature is turned face down") stores the copy as a row
             -- that can end, Effect.BecomeCopy's road. The object is the
@@ -8016,6 +8059,13 @@ attachVia legality subject destination = do
       -- The equality guard above is what keeps a re-attach to the SAME host from
       -- reaching here: CR 701.3b makes that "do nothing", so neither event fires.
       Monad.forM_ (Game.lookupObject subject gs >>= Object.attachedTo) (unattach subject)
+      -- CR 607.2d: an "as this becomes attached" choice (Dinosaur Headdress,
+      -- Sanctuary Blade), made once the permanent is on its new host so a copy
+      -- lands there. The copy and attach scenarios named for CR 607.2d prove it.
+      --
+      -- Not implemented: the choice for a permanent that arrives attached (CR
+      -- 301.5e), which records BecameAttached without this move (#5250).
+      Monad.void (applyReplacements (ProposedEvent.WouldBecomeAttached subject))
       State.modify'
         . recordEvent
         $ GameEvent.BecameAttached

@@ -2106,6 +2106,7 @@ referentsOfReplacement re = case re of
   ReplacementEffect.CounterR _ -> []
   ReplacementEffect.TokenR _ -> []
   ReplacementEffect.TurnUpR _ -> []
+  ReplacementEffect.AttachR _ -> []
   ReplacementEffect.UntapR _ -> []
   ReplacementEffect.LifeLossR _ -> []
   ReplacementEffect.LifeGainR _ -> []

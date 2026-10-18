@@ -73,7 +73,9 @@ import qualified Pawl.Codec.ArrivalSpec
 import qualified Pawl.Codec.AsCopySpec
 import qualified Pawl.Codec.AttachAllSpec
 import qualified Pawl.Codec.AttachBoundSpec
+import qualified Pawl.Codec.AttachRSpec
 import qualified Pawl.Codec.AttachRestrictionSpec
+import qualified Pawl.Codec.AttachRewriteSpec
 import qualified Pawl.Codec.AttachTargetSpec
 import qualified Pawl.Codec.AttachedToBoundSpec
 import qualified Pawl.Codec.AttackCostSpec
@@ -177,6 +179,7 @@ import qualified Pawl.Codec.ControllerRelationSpec
 import qualified Pawl.Codec.ConvokingSpec
 import qualified Pawl.Codec.CopyClauseSpec
 import qualified Pawl.Codec.CopyCoverageSpec
+import qualified Pawl.Codec.CopyDomainSpec
 import qualified Pawl.Codec.CopyExceptionSpec
 import qualified Pawl.Codec.CopyOriginalSpec
 import qualified Pawl.Codec.CopyRecipientSpec
@@ -1066,6 +1069,9 @@ spec s registry = do
   Pawl.Codec.CopyExceptionSpec.spec s
   Pawl.Codec.CopyOriginalSpec.spec s
   Pawl.Codec.CopyRecipientSpec.spec s
+  Pawl.Codec.CopyDomainSpec.spec s
+  Pawl.Codec.AttachRewriteSpec.spec s
+  Pawl.Codec.AttachRSpec.spec s
   Pawl.Codec.CopyStackObjectSpec.spec s
   Pawl.Codec.CopyTargetsSpec.spec s
   Pawl.Codec.CostAmountSpec.spec s
