@@ -2953,6 +2953,8 @@ objectRefObjects legal resolving controller source gs ref = case ref of
   -- CR 400.7's link read back: each object the slot holds, followed through
   -- this turn's logged zone changes to the object it is now -- and, given an
   -- `among`, kept only where that slot holds the incarnation too (CR 400.7j).
+  -- The scenario ante-bronze-tablet-destroyed-in-response-trades-only-the-target
+  -- proves the `among` half.
   ObjectRef.FromAnywhere (FromAnywhere.MkFromAnywhere slot among) ->
     let held named = objectRefObjects legal resolving controller source gs (ObjectRef.InSlot named)
         followed = Maybe.mapMaybe (\oid -> Game.currentIncarnation oid gs) (held slot)
