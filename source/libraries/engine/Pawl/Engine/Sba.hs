@@ -705,7 +705,9 @@ checkStateBasedActions instead = Monad.void (performStateBasedActions instead []
 -- `instead` runs the effects a replacement put in place of a loss this pass
 -- meets (Lich's Mirror's reset), Pawl.Engine.Resolve.runDamageRewriteEffect,
 -- which this module cannot import: they run INSIDE the pass, CR 614.1a's
--- "instead", before the pass moves anything (checkOnce says why).
+-- "instead", before the pass moves anything (checkOnce says why). `boards` are
+-- Engine.settlePasses', for CR 704.5v's triggered-but-not-placed abilities
+-- (Event.triggeredSources).
 performStateBasedActions :: (PendingReplacementEffect.PendingReplacementEffect -> Game ()) -> [GameState] -> Game Bool
 performStateBasedActions instead boards = do
   -- CR 800.4a's fourth clause comes "Then", after the departures this pass

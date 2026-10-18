@@ -3462,11 +3462,6 @@ stateTriggersOn gs
           pend ab = PendingTrigger.MkPendingTrigger (TriggerSource.OfObject oid) ctrl ab (maybe Map.empty (Binding.paidCostRecord . Object.bindings) (Game.lookupObject oid gs)) Nothing Nothing (copiesIn abilities ab) (Projection.delayedSnapshotOf oid gs)
        in fmap (pend . snd) (filter armed (zip (List.inits lives) lives))
 
--- CR 603.7a's floor is the watermark's job, and is all an ordinary entry
--- needs. This is the card's OWN further restriction: an ability printed "on
--- your next turn" fires on that one turn and no other, whatever its
--- condition matches. Read against the LIVE turn number, so an entry with no
--- onset is untouched.
 -- CR 603.8 across one settle: a state trigger triggers "as soon as the game
 -- state matches", so one armed on any of `boards` (`boardWhenTriggered`'s) has
 -- triggered although a later state-based action check made its condition false,
@@ -3486,6 +3481,11 @@ stateTriggers boards live = List.foldl' widen (armedOn live) (reverse boards)
       let earlier = armedOn board
        in acc <> [pending | (before, pending) <- zip (List.inits earlier) earlier, held (key pending) before >= held (key pending) acc]
 
+-- CR 603.7a's floor is the watermark's job, and is all an ordinary entry
+-- needs. This is the card's OWN further restriction: an ability printed "on
+-- your next turn" fires on that one turn and no other, whatever its
+-- condition matches. Read against the LIVE turn number, so an entry with no
+-- onset is untouched.
 delayedArmed :: GameState -> DelayedTrigger -> Bool
 delayedArmed gs entry = case DelayedTrigger.window entry of
   TurnWindow.AnyTurn -> True
