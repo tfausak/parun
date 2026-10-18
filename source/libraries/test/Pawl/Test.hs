@@ -330,6 +330,7 @@ import qualified Pawl.Codec.ForEachSpec
 import qualified Pawl.Codec.ForbidAttackSpec
 import qualified Pawl.Codec.ForbidBeingBlockedSpec
 import qualified Pawl.Codec.ForetellCostSpec
+import qualified Pawl.Codec.FromAnywhereSpec
 import qualified Pawl.Codec.FromOutsideTheGameSpec
 import qualified Pawl.Codec.FromReferenceSpec
 import qualified Pawl.Codec.GainControlSpec
@@ -1158,6 +1159,7 @@ spec s registry = do
   Pawl.Codec.DurationSpec.spec s
   Pawl.Codec.DuringPhaseSpec.spec s
   Pawl.Codec.EachCardFromAmongSpec.spec s
+  Pawl.Codec.FromAnywhereSpec.spec s
   Pawl.Codec.EachCardInGraveyardSpec.spec s
   Pawl.Codec.EachCardInHandSpec.spec s
   Pawl.Codec.EffectSpec.spec s

@@ -44,7 +44,9 @@
                           },
                           "other": {
                             "type": "FromAnywhere",
-                            "value": "self"
+                            "value": {
+                              "slot": "self"
+                            }
                           }
                         }
                       },
@@ -65,7 +67,9 @@
                         "value": {
                           "ref": {
                             "type": "FromAnywhere",
-                            "value": "self"
+                            "value": {
+                              "slot": "self"
+                            }
                           },
                           "zone": {
                             "type": "Graveyard"
