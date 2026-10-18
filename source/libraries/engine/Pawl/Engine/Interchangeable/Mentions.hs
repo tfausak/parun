@@ -836,7 +836,7 @@ chosenCardInGraveyardNames asking x = case x of
 
 chosenCardInHandNames :: Asking -> ChosenCardInHand.ChosenCardInHand -> Bool
 chosenCardInHandNames asking x = case x of
-  ChosenCardInHand.MkChosenCardInHand player filter_ -> playerRefNames asking player || filterNames asking filter_
+  ChosenCardInHand.MkChosenCardInHand player filter_ count -> playerRefNames asking player || filterNames asking filter_ || quantityNames asking count
 
 chosenPermanentsNames :: Asking -> ChosenPermanents.ChosenPermanents -> Bool
 chosenPermanentsNames asking x = case x of

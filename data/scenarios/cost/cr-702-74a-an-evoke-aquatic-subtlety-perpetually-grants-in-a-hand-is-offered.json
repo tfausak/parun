@@ -127,6 +127,20 @@
       "turn": 1,
       "step": "PrecombatMain",
       "player": "alice",
+      "do": {
+        "Answer": {
+          "prompt": "ArrangeLibraryArrivals",
+          "with": [
+            1,
+            0
+          ]
+        }
+      }
+    },
+    {
+      "turn": 1,
+      "step": "PrecombatMain",
+      "player": "alice",
       "check": {
         "View": {
           "of": "Zone",

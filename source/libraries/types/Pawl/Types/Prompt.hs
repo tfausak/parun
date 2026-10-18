@@ -347,7 +347,8 @@ data Prompt r where
   -- know.
   ChooseCardInGraveyard :: Decider.Decider -> PlayerId.PlayerId -> ObjectId.ObjectId -> NonEmpty.NonEmpty ObjectId.ObjectId -> Seq.Seq (PlayerId.PlayerId, ObjectId.ObjectId) -> Prompt ObjectId.ObjectId
   -- | CR 608.2d: which card of their own hand a Pawl.Types.ObjectRef.ChosenCardInHand
-  -- takes; also CostComponent.PutCardFromHandOntoBattlefield's question while a
+  -- takes, asked once per card with what earlier asks did not take; also
+  -- CostComponent.PutCardFromHandOntoBattlefield's question while a
   -- CR 118.12 cost is paid, and CostComponent.ExileCardFromHand's and
   -- RevealCardFromHand's while a CR 601.2h one is, where the ObjectId is the
   -- object the cost is on.
