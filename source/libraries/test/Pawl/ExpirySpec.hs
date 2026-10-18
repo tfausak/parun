@@ -1648,9 +1648,10 @@ suspendAggressionSpec s registry = Spec.describe s "SuspendAggression" $ do
   -- one or more cards are put into exile") read. Asserted on the log, as
   -- Pawl.MeldSpec's "CR 608.2f the pair leaves the battlefield in one event" is:
   -- no batch exile trigger in data/cards/ tells the readings apart, since
-  -- Stonebinder's Familiar triggers once each turn and Rakshasa Vizier watches
-  -- only a graveyard (pool grep for "one or more cards are put into exile",
-  -- 2026-10-17). The War Doctor would; see #5189 and #5190.
+  -- Stonebinder's Familiar triggers once each turn, Rakshasa Vizier watches
+  -- only a graveyard, and Ketramose, the New Dawn counts the permanent alone,
+  -- a library being neither of its origins (pool grep for "one or more cards
+  -- are put into exile", 2026-10-18). The War Doctor would; see #5189 and #5190.
   Spec.it s "CR 608.2f the permanent and the library card are exiled in one event" $ do
     (pikerId, mineId, resolved) <- suspendAggressionBoard s registry
     let logged = Foldable.toList (GameState.events resolved)

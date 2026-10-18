@@ -11,6 +11,7 @@ import qualified Pawl.Types.EachCardFromAmong as EachCardFromAmong
 import qualified Pawl.Types.EachCardInGraveyard as EachCardInGraveyard
 import qualified Pawl.Types.EachCardInHand as EachCardInHand
 import qualified Pawl.Types.Filter as Filter
+import qualified Pawl.Types.FromAnywhere as FromAnywhere
 import qualified Pawl.Types.Keyword as Keyword
 import qualified Pawl.Types.PlayerRef as PlayerRef
 import qualified Pawl.Types.RandomCardInGraveyard as RandomCardInGraveyard
@@ -166,7 +167,7 @@ data ObjectRef
     -- or attached as it left (Rhuk, Hexgold Nabber; Fumble).
     AttachedToBound AttachedToBound.AttachedToBound
   | -- | CR 400.7: the object a slot holds, followed to wherever it is now.
-    FromAnywhere SlotName.SlotName
+    FromAnywhere FromAnywhere.FromAnywhere
   | -- | CR 608.2f: every object each ref names, as one action on all of them --
     -- Hanweir Battlements' source and chosen permanent, proved by Pawl.MeldSpec's
     -- "CR 608.2f the pair leaves the battlefield in one event".

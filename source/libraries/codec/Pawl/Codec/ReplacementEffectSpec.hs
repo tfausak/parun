@@ -9,11 +9,14 @@ import qualified Pawl.Codec.ReplacementEffect as ReplacementEffect
 import qualified Pawl.JsonCodec.Common as Common
 import qualified Pawl.Spec as Spec
 import qualified Pawl.Types.AsCopy as AsCopy
+import qualified Pawl.Types.AttachR as AttachR
+import qualified Pawl.Types.AttachRewrite as AttachRewrite
 import qualified Pawl.Types.BeginningStep as BeginningStep
 import qualified Pawl.Types.CardType as CardType
 import qualified Pawl.Types.CoinFlipR as CoinFlipR
 import qualified Pawl.Types.CoinFlipRewrite as CoinFlipRewrite
 import qualified Pawl.Types.ControllerRelation as ControllerRelation
+import qualified Pawl.Types.CopyDomain as CopyDomain
 import qualified Pawl.Types.CopyRecipient as CopyRecipient
 import qualified Pawl.Types.CounterKind as CounterKind
 import qualified Pawl.Types.CounterPattern as CounterPattern
@@ -34,6 +37,7 @@ import qualified Pawl.Types.DrawRewrite as DrawRewrite
 import qualified Pawl.Types.EntryOption as EntryOption
 import qualified Pawl.Types.EntryR as EntryR
 import qualified Pawl.Types.EntryRewrite as EntryRewrite
+import qualified Pawl.Types.ExiledPile as ExiledPile
 import qualified Pawl.Types.Filter as Filter
 import qualified Pawl.Types.Keyword as Keyword
 import qualified Pawl.Types.LibraryPosition as LibraryPosition
@@ -130,7 +134,7 @@ spec s =
           Common.assertCodec
             s
             codec
-            (ReplacementEffect.EntryR (EntryR.MkEntryR Filter.IsSource (EntryRewrite.AsCopy (AsCopy.MkAsCopy (Filter.HasCardType CardType.Creature) [] False Seq.empty Zone.Battlefield Nothing CopyRecipient.ThisObject True))))
+            (ReplacementEffect.EntryR (EntryR.MkEntryR Filter.IsSource (EntryRewrite.AsCopy (AsCopy.MkAsCopy (Filter.HasCardType CardType.Creature) [] False Seq.empty (CopyDomain.InZone Zone.Battlefield) Nothing CopyRecipient.ThisObject True))))
             " {\"type\":\"EntryR\",\"value\":{\"matching\":{\"type\":\"IsSource\"},\"rewrite\":{\"type\":\"AsCopy\",\"value\":{\"eligible\":{\"type\":\"HasCardType\",\"value\":{\"type\":\"Creature\"}}}}}} "
         -- CR 208.2b: Primal Plasma's ChoiceOf, carrying P/T and keywords.
         Spec.it s "EntryR (Primal Plasma, ChoiceOf)" $
@@ -373,4 +377,11 @@ spec s =
             codec
             (ReplacementEffect.TurnUpR (TurnUpR.MkTurnUpR Filter.IsSource (Just TurnUpProcedure.Morph) Nothing (TurnUpRewrite.WithCounters (WithCounters.one CounterKind.PlusOnePlusOne (Quantity.Literal 1)))))
             " {\"type\":\"TurnUpR\",\"value\":{\"matching\":{\"type\":\"IsSource\"},\"requiring\":{\"type\":\"Morph\"},\"rewrite\":{\"type\":\"WithCounters\",\"value\":[{\"kind\":{\"type\":\"PlusOnePlusOne\"},\"count\":{\"type\":\"Literal\",\"value\":1}}]}}} "
+        -- CR 701.3a: Dinosaur Headdress's "as this Equipment becomes attached".
+        Spec.it s "AttachR (Dinosaur Headdress)" $
+          Common.assertCodec
+            s
+            codec
+            (ReplacementEffect.AttachR (AttachR.MkAttachR Filter.IsSource (AttachRewrite.AsCopy (AsCopy.MkAsCopy (Filter.HasCardType CardType.Creature) [] False Seq.empty (CopyDomain.InPile ExiledPile.CraftMaterials) Nothing CopyRecipient.ItsHost False))))
+            " {\"type\":\"AttachR\",\"value\":{\"matching\":{\"type\":\"IsSource\"},\"rewrite\":{\"type\":\"AsCopy\",\"value\":{\"eligible\":{\"type\":\"HasCardType\",\"value\":{\"type\":\"Creature\"}},\"among\":{\"type\":\"InPile\",\"value\":{\"type\":\"CraftMaterials\"}},\"recipient\":{\"type\":\"ItsHost\"},\"optional\":false}}}} "
         Spec.it s "has a schema" $ Common.assertHasSchema s codec

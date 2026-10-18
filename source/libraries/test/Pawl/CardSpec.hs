@@ -77,7 +77,9 @@ import qualified Pawl.Types.AnyNumberMatching as AnyNumberMatching
 import qualified Pawl.Types.ArmDelayedTrigger as ArmDelayedTrigger
 import qualified Pawl.Types.AsCopy as AsCopy
 import qualified Pawl.Types.AttachAll as AttachAll
+import qualified Pawl.Types.AttachR as AttachR
 import qualified Pawl.Types.AttachRestriction as AttachRestriction
+import qualified Pawl.Types.AttachRewrite as AttachRewrite
 import qualified Pawl.Types.AttachTarget as AttachTarget
 import qualified Pawl.Types.AttachedToBound as AttachedToBound
 import qualified Pawl.Types.AttackCost as AttackCost
@@ -2227,6 +2229,8 @@ replacementRewriteEffects replacement = case replacement of
   -- The same linked trigger, on the copy a turning face up makes.
   ReplacementEffect.TurnUpR (TurnUpR.MkTurnUpR _ _ _ (TurnUpRewrite.AsCopy asCopy)) -> Foldable.toList (AsCopy.whenYouDo asCopy)
   ReplacementEffect.TurnUpR {} -> []
+  ReplacementEffect.AttachR (AttachR.MkAttachR _ (AttachRewrite.AsCopy asCopy)) -> Foldable.toList (AsCopy.whenYouDo asCopy)
+  ReplacementEffect.AttachR (AttachR.MkAttachR _ (AttachRewrite.ChooseColors _)) -> []
   ReplacementEffect.UntapR _ -> []
   ReplacementEffect.LifeLossR {} -> []
   ReplacementEffect.LifeGainR {} -> []
@@ -2261,6 +2265,7 @@ replacementEffectRiders replacement = case replacement of
   ReplacementEffect.DestructionR _ -> []
   ReplacementEffect.TokenR {} -> []
   ReplacementEffect.TurnUpR {} -> []
+  ReplacementEffect.AttachR {} -> []
   ReplacementEffect.UntapR _ -> []
   ReplacementEffect.LifeLossR {} -> []
   ReplacementEffect.LifeGainR {} -> []
@@ -2292,6 +2297,7 @@ replacementMintedCards replacement = case replacement of
   ReplacementEffect.EntryR {} -> []
   ReplacementEffect.DestructionR _ -> []
   ReplacementEffect.TurnUpR {} -> []
+  ReplacementEffect.AttachR {} -> []
   ReplacementEffect.UntapR _ -> []
   ReplacementEffect.LifeLossR {} -> []
   ReplacementEffect.LifeGainR {} -> []
@@ -5158,6 +5164,8 @@ replacementEffectFilters replacementEffect = case replacementEffect of
   -- object's, and reach the sweep through replacementMintedCards instead.
   ReplacementEffect.TokenR (TokenR.MkTokenR tokenPattern _ _) -> unframed [TokenPattern.whatToken tokenPattern]
   ReplacementEffect.TurnUpR (TurnUpR.MkTurnUpR turnUpPattern _ _ turnUpRewrite) -> unframed [turnUpPattern] <> turnUpRewriteFilters turnUpRewrite
+  ReplacementEffect.AttachR (AttachR.MkAttachR attachPattern (AttachRewrite.AsCopy asCopy)) -> unframed [attachPattern] <> asCopyFilters asCopy
+  ReplacementEffect.AttachR (AttachR.MkAttachR attachPattern (AttachRewrite.ChooseColors _)) -> unframed [attachPattern]
   ReplacementEffect.UntapR _ -> []
   ReplacementEffect.LifeLossR {} -> []
   ReplacementEffect.LifeGainR {} -> []
@@ -6360,6 +6368,7 @@ replacementCopyExceptions :: ReplacementEffect.ReplacementEffect Card.Type.Card 
 replacementCopyExceptions replacement = case replacement of
   ReplacementEffect.EntryR (EntryR.MkEntryR _ (EntryRewrite.AsCopy asCopy)) -> asCopyExceptions asCopy
   ReplacementEffect.TurnUpR (TurnUpR.MkTurnUpR _ _ _ (TurnUpRewrite.AsCopy asCopy)) -> asCopyExceptions asCopy
+  ReplacementEffect.AttachR (AttachR.MkAttachR _ (AttachRewrite.AsCopy asCopy)) -> asCopyExceptions asCopy
   _ -> []
 
 -- Every exception an AsCopy can apply, conditional or not.

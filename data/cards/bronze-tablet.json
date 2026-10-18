@@ -26,21 +26,17 @@
                         "type": "MoveToZone",
                         "value": {
                           "ref": {
-                            "type": "InSlot",
-                            "value": "self"
-                          },
-                          "slot": "tablet",
-                          "zone": {
-                            "type": "Exile"
-                          }
-                        }
-                      },
-                      {
-                        "type": "MoveToZone",
-                        "value": {
-                          "ref": {
-                            "type": "InSlot",
-                            "value": "target"
+                            "type": "AllOf",
+                            "value": [
+                              {
+                                "type": "InSlot",
+                                "value": "self"
+                              },
+                              {
+                                "type": "InSlot",
+                                "value": "target"
+                              }
+                            ]
                           },
                           "slot": "exiled",
                           "zone": {
@@ -56,8 +52,11 @@
                         "type": "MoveToZone",
                         "value": {
                           "ref": {
-                            "type": "InSlot",
-                            "value": "tablet"
+                            "type": "FromAnywhere",
+                            "value": {
+                              "among": "exiled",
+                              "slot": "self"
+                            }
                           },
                           "zone": {
                             "type": "Graveyard"
@@ -97,8 +96,11 @@
                             "value": "target"
                           },
                           "ref": {
-                            "type": "InSlot",
-                            "value": "tablet"
+                            "type": "FromAnywhere",
+                            "value": {
+                              "among": "exiled",
+                              "slot": "self"
+                            }
                           }
                         }
                       },
@@ -112,8 +114,11 @@
                             }
                           },
                           "ref": {
-                            "type": "InSlot",
-                            "value": "exiled"
+                            "type": "FromAnywhere",
+                            "value": {
+                              "among": "exiled",
+                              "slot": "target"
+                            }
                           }
                         }
                       }
