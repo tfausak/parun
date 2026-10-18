@@ -57,6 +57,8 @@ import qualified Pawl.Types.Arithmetic as Arithmetic
 import qualified Pawl.Types.AsCopy as AsCopy
 import qualified Pawl.Types.AttachAll as AttachAll
 import qualified Pawl.Types.AttachBound as AttachBound
+import qualified Pawl.Types.AttachR as AttachR
+import qualified Pawl.Types.AttachRewrite as AttachRewrite
 import qualified Pawl.Types.AttachTarget as AttachTarget
 import qualified Pawl.Types.AttackTargetRef as AttackTargetRef
 import qualified Pawl.Types.BecomeCopy as BecomeCopy
@@ -589,6 +591,7 @@ idleTokenRowOffends replacement = case replacement of
   ReplacementEffect.EntryR {} -> False
   ReplacementEffect.DestructionR _ -> False
   ReplacementEffect.TurnUpR {} -> False
+  ReplacementEffect.AttachR {} -> False
   ReplacementEffect.UntapR _ -> False
   ReplacementEffect.LifeLossR {} -> False
   ReplacementEffect.LifeGainR {} -> False
@@ -653,6 +656,7 @@ phasePatternOffends replacement = case replacement of
   ReplacementEffect.DestructionR _ -> False
   ReplacementEffect.TokenR {} -> False
   ReplacementEffect.TurnUpR {} -> False
+  ReplacementEffect.AttachR {} -> False
   ReplacementEffect.UntapR _ -> False
   ReplacementEffect.LifeLossR {} -> False
   ReplacementEffect.LifeGainR {} -> False
@@ -740,6 +744,7 @@ engineOnlyArmOffends replacement = case replacement of
   ReplacementEffect.GameLossR {} -> False
   ReplacementEffect.PlaneswalkR {} -> False
   ReplacementEffect.TurnUpR {} -> False
+  ReplacementEffect.AttachR {} -> False
 
 -- Is this damage rewrite one the ENGINE mints and no card may print? Three of
 -- them, for three rules:
@@ -810,6 +815,7 @@ isPhaseR replacement = case replacement of
 turnUpRequiringOffends :: ReplacementEffect.ReplacementEffect Card.Type.Card (GrantedAbility.GrantedAbility Card.Type.Card) (Effect.Effect Card.Type.Card (GrantedAbility.GrantedAbility Card.Type.Card)) -> Bool
 turnUpRequiringOffends replacement = case replacement of
   ReplacementEffect.TurnUpR turnUpR -> Maybe.isJust (TurnUpR.requiring turnUpR) || Maybe.isJust (TurnUpR.paying turnUpR)
+  ReplacementEffect.AttachR {} -> False
   ReplacementEffect.CounterR {} -> False
   ReplacementEffect.ZoneChangeR {} -> False
   ReplacementEffect.EntryR {} -> False
@@ -834,13 +840,17 @@ turnUpRequiringOffends replacement = case replacement of
 
 -- CR 614.1d and CR 707.9e are ENTRY riders -- "enters tapped", "enters with
 -- additional counters" -- so a copy made as a permanent turns face up (CR
--- 614.1e) has nowhere to put them, and Pawl.Engine.Event's TurnUpR AsCopy arm
--- places neither. A turn-up copy row stating one is refused here rather than
--- silently weakened. A wildcard is right: this asks one rewrite one question.
-turnUpCopyRiderOffends :: ReplacementEffect.ReplacementEffect Card.Type.Card (GrantedAbility.GrantedAbility Card.Type.Card) (Effect.Effect Card.Type.Card (GrantedAbility.GrantedAbility Card.Type.Card)) -> Bool
-turnUpCopyRiderOffends replacement = case replacement of
-  ReplacementEffect.TurnUpR (TurnUpR.MkTurnUpR _ _ _ (TurnUpRewrite.AsCopy asCopy)) -> AsCopy.tapped asCopy || any (Maybe.isJust . CopyClause.counters) (AsCopy.clauses asCopy)
+-- 614.1e) or becomes attached (CR 701.3a) has nowhere to put them, and
+-- Pawl.Engine.Event's TurnUpR and AttachR AsCopy arms place neither. A row
+-- stating one is refused here rather than silently weakened. A wildcard is
+-- right: this asks one rewrite one question.
+nonEntryCopyRiderOffends :: ReplacementEffect.ReplacementEffect Card.Type.Card (GrantedAbility.GrantedAbility Card.Type.Card) (Effect.Effect Card.Type.Card (GrantedAbility.GrantedAbility Card.Type.Card)) -> Bool
+nonEntryCopyRiderOffends replacement = case replacement of
+  ReplacementEffect.TurnUpR (TurnUpR.MkTurnUpR _ _ _ (TurnUpRewrite.AsCopy asCopy)) -> riders asCopy
+  ReplacementEffect.AttachR (AttachR.MkAttachR _ (AttachRewrite.AsCopy asCopy)) -> riders asCopy
   _ -> False
+  where
+    riders asCopy = AsCopy.tapped asCopy || any (Maybe.isJust . CopyClause.counters) (AsCopy.clauses asCopy)
 
 -- isPhaseR's twin: did the sweep above have anything to look at? A wildcard for
 -- the same reason.
@@ -866,6 +876,7 @@ riderWithoutPreventionOffends replacement = case replacement of
   ReplacementEffect.DestructionR _ -> False
   ReplacementEffect.TokenR {} -> False
   ReplacementEffect.TurnUpR {} -> False
+  ReplacementEffect.AttachR {} -> False
   ReplacementEffect.UntapR _ -> False
   ReplacementEffect.LifeLossR {} -> False
   ReplacementEffect.LifeGainR {} -> False
@@ -918,6 +929,7 @@ shufflingOutsideLibraryOffends replacement = case replacement of
   ReplacementEffect.DestructionR _ -> False
   ReplacementEffect.TokenR {} -> False
   ReplacementEffect.TurnUpR {} -> False
+  ReplacementEffect.AttachR {} -> False
   ReplacementEffect.UntapR _ -> False
   ReplacementEffect.LifeLossR {} -> False
   ReplacementEffect.LifeGainR {} -> False
@@ -2936,22 +2948,27 @@ effectLintSpec s registry = Spec.describe s "Lint" $ do
         baked = card {Face.replacementEffects = fmap (\pr -> pr {PrintedReplacement.effect = bake (PrintedReplacement.effect pr)}) (Face.replacementEffects card)}
     Spec.assertBool s (not (any turnUpRequiringOffends (cardReplacementEffects card))) "the real Bubble Smuggler names no procedure and is accepted"
     Spec.assertBool s (any turnUpRequiringOffends (cardReplacementEffects baked)) "and the same card naming CR 702.37e's is rejected"
-  -- turnUpCopyRiderOffends over the pool, and its rejecting direction against
-  -- Vesuvan Shapeshifter with Vesuva's `tapped` baked into its turn-up row,
-  -- the pair above's shape.
-  Spec.it s "no turn-up copy states an entry rider (CR 614.1d, 707.9e)" $ do
+  -- nonEntryCopyRiderOffends over the pool, and its rejecting direction against
+  -- Vesuvan Shapeshifter and Dinosaur Headdress with Vesuva's `tapped` baked
+  -- into their rows, the pair above's shape.
+  Spec.it s "no turn-up or attach copy states an entry rider (CR 614.1d, 707.9e)" $ do
     ps <- S.allPrintings s
     vesuvan <- S.printingOf s registry "Vesuvan Shapeshifter"
+    headdress <- S.printingOf s registry "Paleontologist's Pick-Axe"
     let writes p = anyFace (any p . cardReplacementEffects) . Printing.card
-        card = S.combinedFace vesuvan
         bake replacement = case replacement of
           ReplacementEffect.TurnUpR (TurnUpR.MkTurnUpR m r c (TurnUpRewrite.AsCopy asCopy)) ->
             ReplacementEffect.TurnUpR (TurnUpR.MkTurnUpR m r c (TurnUpRewrite.AsCopy asCopy {AsCopy.tapped = True}))
+          ReplacementEffect.AttachR (AttachR.MkAttachR m (AttachRewrite.AsCopy asCopy)) ->
+            ReplacementEffect.AttachR (AttachR.MkAttachR m (AttachRewrite.AsCopy asCopy {AsCopy.tapped = True}))
           other -> other
-        baked = card {Face.replacementEffects = fmap (\pr -> pr {PrintedReplacement.effect = bake (PrintedReplacement.effect pr)}) (Face.replacementEffects card)}
-    Spec.assertEqWith s "no printing states one" (fmap (S.nameOf . Printing.card) (filter (writes turnUpCopyRiderOffends) ps)) []
-    Spec.assertBool s (not (any turnUpCopyRiderOffends (cardReplacementEffects card))) "the real Vesuvan Shapeshifter states none and is accepted"
-    Spec.assertBool s (any turnUpCopyRiderOffends (cardReplacementEffects baked)) "and the same card entering tapped is rejected"
+        baked card = card {Face.replacementEffects = fmap (\pr -> pr {PrintedReplacement.effect = bake (PrintedReplacement.effect pr)}) (Face.replacementEffects card)}
+        back = NonEmpty.last (Card.Type.faces (Printing.card headdress))
+    Spec.assertEqWith s "no printing states one" (fmap (S.nameOf . Printing.card) (filter (writes nonEntryCopyRiderOffends) ps)) []
+    Spec.assertBool s (not (any nonEntryCopyRiderOffends (cardReplacementEffects (S.combinedFace vesuvan)))) "the real Vesuvan Shapeshifter states none and is accepted"
+    Spec.assertBool s (any nonEntryCopyRiderOffends (cardReplacementEffects (baked (S.combinedFace vesuvan)))) "and the same card entering tapped is rejected"
+    Spec.assertBool s (not (any nonEntryCopyRiderOffends (cardReplacementEffects back))) "the real Dinosaur Headdress states none and is accepted"
+    Spec.assertBool s (any nonEntryCopyRiderOffends (cardReplacementEffects (baked back))) "and the same card entering tapped is rejected"
   -- The sibling of the lint above, for the OTHER PlayerId the engine bakes and
   -- the codec accepts. See phasePatternOffends for why a card cannot name a
   -- player, and for why this is a lint rather than a type split (#437).

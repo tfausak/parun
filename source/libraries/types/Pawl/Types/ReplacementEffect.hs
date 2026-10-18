@@ -1,5 +1,6 @@
 module Pawl.Types.ReplacementEffect where
 
+import qualified Pawl.Types.AttachR as AttachR
 import qualified Pawl.Types.CoinFlipR as CoinFlipR
 import qualified Pawl.Types.CounterR as CounterR
 import qualified Pawl.Types.DamageR as DamageR
@@ -117,6 +118,11 @@ data ReplacementEffect card ability effect
     -- Pawl.Engine.FaceDown.performTurnFaceUp raises the event between the status write
     -- and the CR 708.7 record.
     TurnUpR (TurnUpR.TurnUpR ability effect)
+  | -- | CR 701.3a: "As this Equipment becomes attached to a creature . . ."
+    -- (Dinosaur Headdress). Its own arm because becoming attached is its own
+    -- event class: a permanent that becomes attached neither enters nor turns
+    -- face up. Raised by Pawl.Engine.Event.attach, after the move is written.
+    AttachR (AttachR.AttachR ability effect)
   | -- | CR 614.1a / 122.1d: "If a permanent with a stun counter on it would
     -- become untapped, instead remove a stun counter from it." A separate arm
     -- from every other because becoming untapped is its own event class: CR
