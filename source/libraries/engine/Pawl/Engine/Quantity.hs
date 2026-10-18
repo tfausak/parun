@@ -1804,7 +1804,7 @@ greatestOfOneValue stored =
 -- by it, so the latest stamp is "last" there too.
 --
 -- The membership test is Quantity.AgainstCardsExiledWith's relation, not a zone
--- sweep, and the same reader's pairing (#5268).
+-- sweep, under the same pairing (Binding.isLinkedExile):
 -- data/scenarios/duplicant-ignores-what-an-acquired-ability-exiled.json proves
 -- it skips what an acquired ability exiled. Nothing when the context names no
 -- source or nothing matches.
