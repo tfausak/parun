@@ -1,0 +1,96 @@
+{
+  "description": "CR 704.3 triggers from two state-based action passes go on the stack together, in APNAP order",
+  "note": "The Bolt resolves mid-step, so the settle before alice's priority makes both passes: the first destroys bob's Cockroaches, the second puts alice's Rancor into the graveyard (CR 704.5m). Placed together, alice's trigger goes on the stack first (CR 603.3b), so bob's resolves first. Placed between the passes, bob's would be the lower. Cast rather than placed with damage, since the step's own check before priority would take the first pass.",
+  "board": {
+    "seats": [
+      {
+        "name": "alice",
+        "battlefield": [
+          {
+            "card": "Mountain",
+            "label": "mountain",
+            "ready": true
+          },
+          {
+            "card": "Rancor",
+            "label": "rancor",
+            "attached": "roach"
+          }
+        ],
+        "hand": [
+          {
+            "card": "Lightning Bolt",
+            "label": "bolt"
+          }
+        ]
+      },
+      {
+        "name": "bob",
+        "battlefield": [
+          {
+            "card": "Endless Cockroaches",
+            "label": "roach"
+          }
+        ]
+      }
+    ],
+    "active": "alice",
+    "step": "PrecombatMain"
+  },
+  "timeline": [
+    {
+      "turn": 1,
+      "step": "PrecombatMain",
+      "player": "alice",
+      "do": {
+        "Cast": {
+          "object": "$bolt",
+          "targets": [
+            "$roach"
+          ],
+          "mana": [
+            "$mountain"
+          ]
+        }
+      }
+    },
+    {
+      "turn": 1,
+      "step": "PrecombatMain",
+      "player": "alice",
+      "do": "Pass"
+    },
+    {
+      "turn": 1,
+      "step": "PrecombatMain",
+      "player": "alice",
+      "check": {
+        "View": {
+          "of": "Stack",
+          "is": [
+            "trigger of $roach",
+            "trigger of $rancor"
+          ]
+        }
+      }
+    }
+  ],
+  "final": [
+    {
+      "Count": {
+        "player": "alice",
+        "zone": "Hand",
+        "card": "Rancor",
+        "count": 1
+      }
+    },
+    {
+      "Count": {
+        "player": "bob",
+        "zone": "Hand",
+        "card": "Endless Cockroaches",
+        "count": 1
+      }
+    }
+  ]
+}

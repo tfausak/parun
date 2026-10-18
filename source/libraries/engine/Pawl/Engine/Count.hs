@@ -909,8 +909,8 @@ orLastKnown live gs oid = Monad.join (Game.liveOrLastKnown (const (live oid)) (J
 --
 -- `oid` is the id it had, so the turn's log still answers what it did while it
 -- existed (CR 608.2i) -- it attacked, it was dealt damage, it entered -- and
--- IsSource still knows it. `peers` reads the permanents still attached to it,
--- at the caller's depth, as viewOfCharacteristics' own `attachedViews` does.
+-- IsSource still knows it. `peers` reads the record's attachments, at the
+-- caller's depth, as viewOfCharacteristics' own `attachedViews` does.
 --
 -- The activated abilities are the snapshot's less those whose CR 604.2 grant
 -- did not function in the zone it left, given its CR 113.6p home
@@ -953,7 +953,9 @@ lastKnownView peers oid gs lastKnown =
           Filter.crewedThisTurn = crewedThisTurn oid gs,
           Filter.convokedThisTurn = convokedThisTurn oid gs,
           Filter.saddledThisTurn = saddledThisTurn oid gs,
-          Filter.attachedViews = Maybe.mapMaybe peers (Set.toList (Game.attachments oid gs)),
+          -- CR 603.10a: what was attached to it as it left, which the next CR
+          -- 704.5m/n pass clears from the live board before triggers are placed.
+          Filter.attachedViews = Maybe.mapMaybe peers (Set.toList (LastKnown.attached lastKnown)),
           -- CR 303.4b: the host's id as it left, the live builder's Game.hostOf.
           Filter.attachedTo = LastKnown.host lastKnown
         }
