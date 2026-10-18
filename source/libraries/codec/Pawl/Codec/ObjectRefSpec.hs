@@ -20,6 +20,7 @@ import qualified Pawl.Types.EachCardFromAmong as EachCardFromAmong
 import qualified Pawl.Types.EachCardInGraveyard as EachCardInGraveyard
 import qualified Pawl.Types.EachCardInHand as EachCardInHand
 import qualified Pawl.Types.Filter as Filter
+import qualified Pawl.Types.FromAnywhere as FromAnywhere
 import qualified Pawl.Types.HowMany as HowMany
 import qualified Pawl.Types.ObjectRef as ObjectRef
 import qualified Pawl.Types.PlayerRef as PlayerRef
@@ -446,7 +447,7 @@ spec s = Spec.describe s "Pawl.Codec.ObjectRef" $ do
       " {\"type\":\"AttachedToBound\",\"value\":{\"slot\":\"target\",\"filter\":{\"type\":\"HasSubtype\",\"value\":{\"type\":\"Equipment\"}}}} "
   -- CR 400.7: the slot whose object is followed, a bare string.
   Spec.it s "FromAnywhere" $
-    Common.assertCodec s ObjectRef.codec (ObjectRef.FromAnywhere (SlotName.MkSlotName (Text.pack "self"))) " {\"type\":\"FromAnywhere\",\"value\":\"self\"} "
+    Common.assertCodec s ObjectRef.codec (ObjectRef.FromAnywhere (FromAnywhere.MkFromAnywhere {FromAnywhere.slot = SlotName.MkSlotName (Text.pack "self"), FromAnywhere.among = Nothing})) " {\"type\":\"FromAnywhere\",\"value\":{\"slot\":\"self\"}} "
   -- CR 608.2f: the refs moved as one action, an array of refs under its own tag.
   Spec.it s "AllOf" $
     Common.assertCodec

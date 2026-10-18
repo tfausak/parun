@@ -244,6 +244,7 @@ import qualified Pawl.Types.ForEach as ForEach
 import qualified Pawl.Types.ForEachNumber as ForEachNumber
 import qualified Pawl.Types.ForbidAttack as ForbidAttack
 import qualified Pawl.Types.ForbidBeingBlocked as ForbidBeingBlocked
+import qualified Pawl.Types.FromAnywhere as FromAnywhere
 import qualified Pawl.Types.FromReference as FromReference
 import qualified Pawl.Types.GainControl as GainControl
 import Pawl.Types.Game (Game)
@@ -3306,7 +3307,7 @@ clauseIsImpossible resolving source controller legal gs clause =
       definedBefore = List.scanl (\defined effect -> Set.union defined (boundSlots effect)) Set.empty effects
       readsOnly defined ref = case ref of
         ObjectRef.InSlot slot -> Set.member slot defined
-        ObjectRef.FromAnywhere slot -> Set.member slot defined
+        ObjectRef.FromAnywhere (FromAnywhere.MkFromAnywhere slot among) -> all (`Set.member` defined) (slot : Foldable.toList among)
         ObjectRef.AllOf refs -> all (readsOnly defined) refs
         _ -> False
       dependent defined effect =

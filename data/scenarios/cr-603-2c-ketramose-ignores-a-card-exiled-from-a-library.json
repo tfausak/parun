@@ -1,0 +1,44 @@
+{
+  "description": "CR 603.2c Ketramose, the New Dawn does not trigger on a card Elkin Bottle exiles from alice's library during her turn: only graveyards and the battlefield count",
+  "note": "The battlefield half is ante-bronze-tablet-exiles-both-cards-in-one-event. Here alice stays at 20 and draws nothing.",
+  "board": {
+    "active": "alice",
+    "step": "PrecombatMain",
+    "seats": [
+      {
+        "name": "alice",
+        "battlefield": [
+          { "card": "Elkin Bottle", "label": "bottle" },
+          { "card": "Ketramose, the New Dawn" },
+          { "card": "Mountain", "label": "mountain-1" },
+          { "card": "Mountain", "label": "mountain-2" },
+          { "card": "Mountain", "label": "mountain-3" }
+        ],
+        "library": [{ "card": "Island" }, { "card": "Swamp" }]
+      },
+      {
+        "name": "bob",
+        "library": [{ "card": "Plains" }]
+      }
+    ]
+  },
+  "timeline": [
+    {
+      "turn": 1,
+      "step": "PrecombatMain",
+      "player": "alice",
+      "do": {
+        "Activate": {
+          "object": "$bottle",
+          "ability": 0,
+          "mana": ["$mountain-1", "$mountain-2", "$mountain-3"]
+        }
+      }
+    }
+  ],
+  "final": [
+    { "Count": { "player": "alice", "zone": "Exile", "card": "Island", "count": 1 } },
+    { "Life": { "player": "alice", "life": 20 } },
+    { "Count": { "player": "alice", "zone": "Hand", "card": "Swamp", "count": 0 } }
+  ]
+}

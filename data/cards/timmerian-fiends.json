@@ -87,7 +87,9 @@
                           },
                           "other": {
                             "type": "FromAnywhere",
-                            "value": "self"
+                            "value": {
+                              "slot": "self"
+                            }
                           }
                         }
                       },
@@ -103,7 +105,9 @@
                               },
                               {
                                 "type": "FromAnywhere",
-                                "value": "self"
+                                "value": {
+                                  "slot": "self"
+                                }
                               }
                             ]
                           },

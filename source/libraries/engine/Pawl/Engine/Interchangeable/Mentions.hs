@@ -201,6 +201,7 @@ import qualified Pawl.Types.ForEachNumber as ForEachNumber
 import qualified Pawl.Types.ForbidAttack as ForbidAttack
 import qualified Pawl.Types.ForbidBeingBlocked as ForbidBeingBlocked
 import qualified Pawl.Types.ForetellCost as ForetellCost
+import qualified Pawl.Types.FromAnywhere as FromAnywhere
 import qualified Pawl.Types.FromOutsideTheGame as FromOutsideTheGame
 import qualified Pawl.Types.FromReference as FromReference
 import qualified Pawl.Types.FullText as FullText
@@ -1223,6 +1224,10 @@ eachCardFromAmongNames :: Asking -> EachCardFromAmong.EachCardFromAmong -> Bool
 eachCardFromAmongNames asking x = case x of
   EachCardFromAmong.MkEachCardFromAmong slot filter_ -> slotNames asking slot || filterNames asking filter_
 
+fromAnywhereNames :: Asking -> FromAnywhere.FromAnywhere -> Bool
+fromAnywhereNames asking x = case x of
+  FromAnywhere.MkFromAnywhere slot among -> slotNames asking slot || any (slotNames asking) among
+
 eachCardInGraveyardNames :: Asking -> EachCardInGraveyard.EachCardInGraveyard -> Bool
 eachCardInGraveyardNames asking x = case x of
   EachCardInGraveyard.MkEachCardInGraveyard graveyards filter_ -> zoneScopeNames asking graveyards || filterNames asking filter_
@@ -2081,7 +2086,7 @@ objectRefNames asking x = case x of
   ObjectRef.RandomCardInLibrary randomCardInLibrary -> randomCardInLibraryNames asking randomCardInLibrary
   ObjectRef.ChosenPermanents chosenPermanents -> chosenPermanentsNames asking chosenPermanents
   ObjectRef.AttachedToBound attachedToBound -> attachedToBoundNames asking attachedToBound
-  ObjectRef.FromAnywhere slotName -> slotNames asking slotName
+  ObjectRef.FromAnywhere fromAnywhere -> fromAnywhereNames asking fromAnywhere
   ObjectRef.AllOf refs -> any (objectRefNames asking) refs
 
 offerCastNames :: Asking -> OfferCast.OfferCast -> Bool
