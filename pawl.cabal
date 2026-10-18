@@ -14,6 +14,7 @@ license-file: LICENSE.txt
 data-dir: data
 data-files:
   cards/*.json
+  decks/*.txt
   scenarios/**/*.json
   sticker-sheets/*.json
 
@@ -1877,6 +1878,7 @@ library registry
   -- cabal-gild: discover source/libraries/registry
   exposed-modules:
     Pawl.DeckList
+    Pawl.Decks
     Pawl.Ingest
     Pawl.Oracle
     Pawl.Registry
@@ -2018,6 +2020,7 @@ library test
     Pawl.DaytimeSpec
     Pawl.DecideSpec
     Pawl.DeckListSpec
+    Pawl.DecksSpec
     Pawl.DepartureSpec
     Pawl.DetainSpec
     Pawl.DevotionSpec

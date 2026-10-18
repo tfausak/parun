@@ -721,6 +721,7 @@ import qualified Pawl.DaytimeSpec
 import qualified Pawl.DecideSpec
 import qualified Pawl.DecimalSpec
 import qualified Pawl.DeckListSpec
+import qualified Pawl.DecksSpec
 import qualified Pawl.DepartureSpec
 import qualified Pawl.DetainSpec
 import qualified Pawl.DevotionSpec
@@ -1736,6 +1737,7 @@ spec s registry = do
   Pawl.BotSpec.spec s registry
   Pawl.ClientSpec.spec s registry
   Pawl.RecordSpec.spec s registry
+  Pawl.DecksSpec.spec s registry
   Pawl.ReplySpec.spec s registry
   Pawl.ScenarioSpec.corpusSpec s registry
   Pawl.ScenarioSpec.loadSpec s
