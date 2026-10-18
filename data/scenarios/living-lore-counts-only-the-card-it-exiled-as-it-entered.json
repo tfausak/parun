@@ -1,0 +1,63 @@
+{
+  "description": "CR 607.2a / 607.5 Living Lore's size counts only the card it exiled as it entered, not what the ability Steward of the Harvest gave it exiled",
+  "note": "Living Lore exiles Unsummon as it enters, so it is 1/1. Steward of the Harvest exiles Scavenger Grounds, and Living Lore uses the acquired \"Exile all graveyards\" on bob's Grizzly Bears and the Desert it sacrificed. Its printed size is linked to its printed exile alone, so it stays 1/1 rather than 3/3.",
+  "board": {
+    "seats": [
+      {
+        "name": "alice",
+        "battlefield": [
+          { "card": "Forest", "label": "forest" },
+          { "card": "Forest", "label": "forest-2" },
+          { "card": "Forest", "label": "forest-3" },
+          { "card": "Forest", "label": "forest-4" },
+          { "card": "Island", "label": "island" },
+          { "card": "Island", "label": "island-2" },
+          { "card": "Island", "label": "island-3" },
+          { "card": "Island", "label": "island-4" },
+          { "card": "Desert", "label": "desert" }
+        ],
+        "hand": [
+          { "card": "Living Lore", "label": "lore" },
+          { "card": "Steward of the Harvest", "label": "steward" }
+        ],
+        "graveyard": [
+          { "card": "Scavenger Grounds", "label": "grounds" },
+          { "card": "Unsummon", "label": "unsummon" }
+        ],
+        "library": [
+          { "card": "Hill Giant" },
+          { "card": "Hill Giant" },
+          { "card": "Hill Giant" }
+        ]
+      },
+      {
+        "name": "bob",
+        "graveyard": [
+          { "card": "Grizzly Bears", "label": "bears" }
+        ],
+        "library": [
+          { "card": "Hill Giant" },
+          { "card": "Hill Giant" },
+          { "card": "Hill Giant" }
+        ]
+      }
+    ],
+    "active": "alice",
+    "step": "PrecombatMain"
+  },
+  "timeline": [
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": { "Cast": { "object": "$lore", "mana": ["$island", "$island-2", "$island-3", "$island-4", null] } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass" },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "check": { "PowerToughness": { "object": "Living Lore", "power": 1, "toughness": 1 } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": { "Cast": { "object": "$steward", "mana": ["$forest", "$forest-2", "$forest-3", "$forest-4", null] } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass" },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": { "Answer": { "prompt": "AnnounceTargets", "with": [["target", 1]] } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": { "ChooseTargets": { "target": ["$grounds"] } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass" },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "check": { "Count": { "player": "alice", "zone": "Exile", "card": "Scavenger Grounds", "count": 1 } } },
+    { "turn": 3, "step": "PrecombatMain", "player": "alice", "do": { "Activate": { "object": "Living Lore", "ability": 1, "mana": ["Forest", "Forest#2", null], "costOrder": [0, 1] } } },
+    { "turn": 3, "step": "PrecombatMain", "player": "alice", "do": "Pass" },
+    { "turn": 3, "step": "PrecombatMain", "player": "alice", "check": { "Count": { "player": "bob", "zone": "Exile", "card": "Grizzly Bears", "count": 1 } } },
+    { "turn": 3, "step": "PrecombatMain", "player": "alice", "check": { "PowerToughness": { "object": "Living Lore", "power": 1, "toughness": 1 } } }
+  ]
+}

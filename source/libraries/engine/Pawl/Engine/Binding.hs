@@ -1,6 +1,7 @@
 module Pawl.Engine.Binding where
 
 import Control.Applicative ((<|>))
+import qualified Control.Monad as Monad
 import qualified Data.Foldable as Foldable
 import Data.Map.Strict (Map)
 import qualified Data.Map.Strict as Map
@@ -14,6 +15,7 @@ import Numeric.Natural (Natural)
 import qualified Pawl.Types.AbilityName as AbilityName
 import Pawl.Types.Binding (Binding)
 import qualified Pawl.Types.Binding as Binding
+import qualified Pawl.Types.ExileLink as ExileLink
 import Pawl.Types.ModeIndex (ModeIndex)
 import Pawl.Types.ObjectId (ObjectId)
 import qualified Pawl.Types.ObjectId as ObjectId
@@ -553,6 +555,23 @@ exiledCardAbility oid = AbilityName.MkAbilityName (exiledCardPrefix <> Text.pack
 -- abilities.
 isExiledCardAbility :: AbilityName.AbilityName -> Bool
 isExiledCardAbility = Text.isPrefixOf exiledCardPrefix . AbilityName.unwrap
+
+-- | CR 607.2a / 607.5: whether `link` files its card against `src` under the
+-- exiling ability paired with a reader named `reader`. A reader acquired from
+-- an exiled card (isExiledCardAbility) is linked only to its own pair, which
+-- shares its name; every other reader -- printed, or "printed" by CR 607.1a's
+-- grant -- only to exiling abilities that were not acquired that way.
+--
+-- Not implemented: telling a NAMED acquired ability from a printed one of that
+-- name, since exiledCardAbility names only an unnamed one (#5267).
+isLinkedExile :: Maybe AbilityName.AbilityName -> ObjectId -> ExileLink.ExileLink -> Bool
+isLinkedExile reader src link =
+  ExileLink.source link == src && pairOf (ExileLink.ability link) == pairOf reader
+
+-- The acquired pair a link's or a reader's ability name stands for, Nothing
+-- for the holder's own.
+pairOf :: Maybe AbilityName.AbilityName -> Maybe AbilityName.AbilityName
+pairOf = Monad.mfilter isExiledCardAbility
 
 exiledCardPrefix :: Text.Text
 exiledCardPrefix = Text.pack "thatExiledCard"

@@ -672,7 +672,7 @@ abilitySlotLintSpec s registry = Spec.describe s "Lint" $ do
   -- CR 607.2a's ObjectRef.EachCardExiledWithAbility is the name's third reader,
   -- and joins the same namespace: a reference naming no exiling ability of its
   -- face would read an empty pile. It must name an ACTIVATED ability, the one
-  -- carrier Pawl.Engine.Resolve.Effect.exilingAbility files a name for.
+  -- carrier Pawl.Engine.Resolve.Slots.resolvingAbilityName files a name for.
   --
   -- A removal may name any carrier, the rule and player abilities CR 116.2d's
   -- ignore names included (Synthetic Grounded Sentry, Synthetic Hushed Warden),

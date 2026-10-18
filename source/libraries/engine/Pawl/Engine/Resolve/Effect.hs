@@ -78,7 +78,7 @@ import qualified Pawl.Engine.Quantity as Quantity
 import qualified Pawl.Engine.Recruit as Recruit
 import qualified Pawl.Engine.Replacement as Replacement
 import qualified Pawl.Engine.Replay as Replay
-import Pawl.Engine.Resolve.Slots (battlefieldMatching, boundSlots, conditionSlots, effectContext, effectContextNaming, effectObjectRefs, effectPlayerRefs, effectViewOf, graveyardCardsOf, handCardsOf, legalMany, legalOne, libraryCardsOf, matchingFromAmong, objectRefObjects, overRelations, playerRefPlayers, playerRefSlots, replacementRowSlots, resolutionReads, slotBindings, slotGroup)
+import Pawl.Engine.Resolve.Slots (battlefieldMatching, boundSlots, conditionSlots, effectContext, effectContextNaming, effectObjectRefs, effectPlayerRefs, effectViewOf, graveyardCardsOf, handCardsOf, legalMany, legalOne, libraryCardsOf, matchingFromAmong, objectRefObjects, overRelations, playerRefPlayers, playerRefSlots, replacementRowSlots, resolutionReads, resolvingAbilityName, slotBindings, slotGroup)
 import qualified Pawl.Engine.Restamp as Restamp
 import qualified Pawl.Engine.Ring as Ring
 import qualified Pawl.Engine.Room as Room
@@ -96,7 +96,6 @@ import qualified Pawl.Engine.Warp as Warp
 import qualified Pawl.Extra.Integer as Integer
 import qualified Pawl.Extra.Natural as Natural
 import qualified Pawl.Types.AbilityKind as AbilityKind
-import Pawl.Types.AbilityName (AbilityName)
 import qualified Pawl.Types.Acquisition as Acquisition
 import qualified Pawl.Types.ActivateManaAbilities as ActivateManaAbilities
 import qualified Pawl.Types.ActivatedAbility as ActivatedAbility
@@ -2544,7 +2543,7 @@ applyEffectWith runSubgame resolving source controller legal chosen effect = do
   before <- State.gets GameState.exile
   -- Read BEFORE the effect runs, while the resolving ability is surely still an
   -- object to read.
-  ability <- State.gets (exilingAbility resolving)
+  ability <- State.gets (resolvingAbilityName resolving)
   applyOneEffect runSubgame resolving source controller legal chosen effect
   State.modify' (recordExiledWith ExileLink.MkExileLink {ExileLink.source = source, ExileLink.ability = ability} before)
   State.modify' (recordExilePile before)
@@ -2571,25 +2570,6 @@ linkCraftMaterials resolving entered gs =
       materials = filter (`Set.member` GameState.exile gs) (Maybe.mapMaybe Recipient.objectOf paid)
       link = ExileLink.MkExileLink {ExileLink.source = entered, ExileLink.ability = Just Binding.craftLink}
    in gs {GameState.exiledWith = foldr (`Map.insert` link) (GameState.exiledWith gs) materials}
-
--- CR 607.2a's name for the ability resolving as `resolving`: an activated
--- ability's ActivatedAbility.name, which is how a linked reference names one of
--- two exiling abilities of an object. Nothing for every other kind of object,
--- none of which carries a name a reference could state.
-exilingAbility :: ObjectId -> GameState -> Maybe AbilityName
-exilingAbility resolving gs = case fmap Object.source (Game.lookupObject resolving gs) of
-  Nothing -> Nothing
-  Just src -> case src of
-    Source.OfAbility a -> ActivatedAbility.name (ActivatedAbilitySource.ability a)
-    Source.OfTrigger _ -> Nothing
-    Source.OfInherentTrigger _ -> Nothing
-    Source.OfCard _ -> Nothing
-    Source.OfSpellCopy _ -> Nothing
-    Source.OfCardCopy _ -> Nothing
-    Source.OfMeld _ -> Nothing
-    Source.OfMerge _ -> Nothing
-    Source.OfToken _ -> Nothing
-    Source.OfEmblem _ -> Nothing
 
 -- CR 607.2a's link, filed as the instruction that made it finishes: every card
 -- that ARRIVED in exile while the effect ran is filed against that effect's
@@ -4051,7 +4031,7 @@ applyOneEffect runSubgame resolving source controller legal chosen effect = case
               ManaUnit.rider = rider,
               ManaUnit.spendTrigger = Mana.spendTriggerOf controller source gs0 =<< whenSpent,
               ManaUnit.sourceChoices = Mana.sourceChoicesOf source gs0,
-              ManaUnit.sourceLastExiled = Mana.lastExiledWith source gs0
+              ManaUnit.sourceLastExiled = Mana.lastExiledWith (resolvingAbilityName resolving gs0) source gs0
             }
         -- CR 605.1b's event, per recipient. Nothing is recorded where the
         -- instruction added no mana: an addition of none is no addition, and CR

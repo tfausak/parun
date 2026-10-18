@@ -2044,6 +2044,10 @@ castPermissionsFrom pid zone oid gs =
       holder source = Maybe.fromMaybe pid (source >>= \sid -> Projection.controllerOf sid gs)
       -- CR 607.2a: the linked set is the cards GameState.exiledWith files
       -- against this very source object.
+      --
+      -- Not implemented: CR 607.5's pairing (Binding.isLinkedExile), so a
+      -- card an ability the source acquired from an exiled card exiled is in
+      -- the pool too (#5268).
       inPool source pool = case pool of
         PermissionPool.EveryCard -> True
         PermissionPool.CardsExiledWithSource -> Maybe.isJust source && fmap ExileLink.source (Map.lookup oid (GameState.exiledWith gs)) == source

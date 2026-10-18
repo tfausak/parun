@@ -345,7 +345,14 @@ evaluateAgainst viewOf context gs announcedOn mOid mView quantity =
         -- source. Nothing when the context names no source at all.
         --
         -- Every exiling ability of the source counts, whatever its name: this
-        -- reference names none, so CR 607.4 links it to each of them.
+        -- reference names none, so CR 607.4 links it to each of them. Each, that
+        -- is, but one the source acquired from an exiled card (CR 607.5,
+        -- Binding.isLinkedExile): data/scenarios/living-lore-counts-only-the-card-it-exiled-as-it-entered.json
+        -- is the proof.
+        --
+        -- Not implemented: a reader that is itself an acquired ability, which
+        -- would read only its own pair's exiles; Filter.Context names no
+        -- reading ability, so every reader here is the source's own (#5268).
         --
         -- Not implemented: CR 607.5's narrowing for a reference a copy effect
         -- brought, which sees only what its own copied pair exiled -- Mimeoplasm,
@@ -356,7 +363,7 @@ evaluateAgainst viewOf context gs announcedOn mOid mView quantity =
           case Filter.source context of
             Nothing -> Nothing
             Just src ->
-              let linked = filter (\o -> fmap ExileLink.source (Map.lookup o (GameState.exiledWith gs)) == Just src) (Set.toList (GameState.exile gs))
+              let linked = filter (\o -> maybe False (Binding.isLinkedExile Nothing src) (Map.lookup o (GameState.exiledWith gs))) (Set.toList (GameState.exile gs))
                in fmap sum (traverse (\o -> evaluateAgainst viewOf context gs announcedOn (Just o) (viewOf o) inner) linked)
         -- The arm above narrowed to ONE card, lastCardExiledWith's, so there is
         -- nothing to sum. Nothing when no linked card matches: "the last creature
@@ -1797,11 +1804,14 @@ greatestOfOneValue stored =
 -- by it, so the latest stamp is "last" there too.
 --
 -- The membership test is Quantity.AgainstCardsExiledWith's relation, not a zone
--- sweep. Nothing when the context names no source or nothing matches.
+-- sweep, and the same reader's pairing (#5268).
+-- data/scenarios/duplicant-ignores-what-an-acquired-ability-exiled.json proves
+-- it skips what an acquired ability exiled. Nothing when the context names no
+-- source or nothing matches.
 lastCardExiledWith :: Count.ViewOf -> Filter.Context -> GameState -> Filter.Type.Filter Keyword.Type.Keyword -> Maybe ObjectId
 lastCardExiledWith viewOf context gs criterion = do
   src <- Filter.source context
-  let linked o = fmap ExileLink.source (Map.lookup o (GameState.exiledWith gs)) == Just src
+  let linked o = maybe False (Binding.isLinkedExile Nothing src) (Map.lookup o (GameState.exiledWith gs))
       matching o = maybe False (\view -> Filter.matches context view criterion) (viewOf o)
       stamped = [(Object.timestamp obj, o) | o <- Set.toList (GameState.exile gs), linked o, matching o, Just obj <- [Game.lookupObject o gs]]
   fmap snd (Maybe.listToMaybe (List.sortOn (Ord.Down . fst) stamped))
