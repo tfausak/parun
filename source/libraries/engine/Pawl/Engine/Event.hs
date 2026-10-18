@@ -4391,16 +4391,16 @@ chooseColors candidate count oid = do
     let stamp o = o {Object.chosenColors = Map.insert (Game.acquisitionOf oid g) picked (Object.chosenColors o)}
      in g {GameState.objects = Map.adjust stamp oid (GameState.objects g)}
 
--- CR 707.5 / 707.4: the copying process an AsCopy rewrite performs, on either
--- event class it rides (CR 614.1c's entry, CR 614.1e's turning face up): the
--- object's controller chooses what to copy, and the copiable values are written
--- onto it. Answers the copied object and the CR 707.9e counters of the clauses
+-- CR 707.5 / 707.4: the copying process an AsCopy rewrite performs, on each
+-- event class it rides (CR 614.1c's entry, CR 614.1e's turning face up, CR
+-- 701.3a's becoming attached): the object's controller chooses what to copy,
+-- and the copiable values are written onto it. Answers the copied object and the CR 707.9e counters of the clauses
 -- that applied, or Nothing where no copy was made.
 -- Clone's "may" is real: Nothing leaves the object as its printed self (a 0/0,
 -- which CR 704.5f then buries).
 --
 -- `batch` is the entering siblings the offer excludes (CR 614.12a), empty for
--- a turning-over.
+-- a turning-over or an attachment.
 becomeCopyAs :: Set ObjectId -> ReplacementCandidate -> AsCopy.AsCopy (GrantedAbility.Type.GrantedAbility Card) (Effect.Type.Effect Card (GrantedAbility.Type.GrantedAbility Card)) -> ObjectId -> Game (Maybe (ObjectId, [WithCounters.WithCounters]))
 becomeCopyAs batch candidate asCopy oid = do
   Replacement.consume (ReplacementCandidate.identity candidate)
