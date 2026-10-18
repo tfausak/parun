@@ -2,16 +2,17 @@ module Pawl.Types.AsCopy where
 
 import qualified Data.Sequence as Seq
 import qualified Pawl.Types.CopyClause as CopyClause
+import qualified Pawl.Types.CopyDomain as CopyDomain
 import qualified Pawl.Types.CopyRecipient as CopyRecipient
 import qualified Pawl.Types.Duration as Duration
 import qualified Pawl.Types.Filter as Filter
 import qualified Pawl.Types.Keyword as Keyword
-import qualified Pawl.Types.Zone as Zone
 
 -- | CR 707.5 / 614.1c: the payload of Pawl.Types.EntryRewrite's @AsCopy@ arm --
 -- "you may have this permanent enter as a copy of [any enchantment on the
 -- battlefield]" -- and of Pawl.Types.TurnUpRewrite's, CR 614.1e's "as this
--- creature is turned face up ... it becomes a copy" (Vesuvan Shapeshifter).
+-- creature is turned face up ... it becomes a copy" (Vesuvan Shapeshifter) --
+-- and of Pawl.Types.AttachRewrite's (Dinosaur Headdress).
 --
 -- The Filter is the printed noun phrase after "a copy of", read as a quality of
 -- the candidate: Clone's "any creature", Copy Enchantment's "any enchantment",
@@ -22,7 +23,7 @@ import qualified Pawl.Types.Zone as Zone
 -- the other.
 --
 -- "On the battlefield" is not in the Filter and cannot be: the zone is the
--- offer's domain rather than a quality of a candidate. It is `zone` instead,
+-- offer's domain rather than a quality of a candidate. It is `among` instead,
 -- which Pawl.Engine.Replacement.legalCopyTargets walks.
 --
 -- The exceptions are CR 707.9's "except ..." clause, empty for a plain Clone.
@@ -57,10 +58,11 @@ data AsCopy ability effect = MkAsCopy
     -- Pawl.Engine.Event.becomeCopyAs arms it as a reflexive entry only where a
     -- copy was made.
     whenYouDo :: Seq.Seq effect,
-    -- | CR 707.5's domain: Battlefield for "any creature on the battlefield"
-    -- (Clone), Graveyard for "any creature card in a graveyard" (Superior
-    -- Spider-Man), every player's graveyard alike.
-    zone :: Zone.Zone,
+    -- | CR 707.5's domain: the battlefield for "any creature on the
+    -- battlefield" (Clone), every graveyard for "any creature card in a
+    -- graveyard" (Superior Spider-Man), the craft materials for "an exiled
+    -- creature card used to craft this Equipment" (Dinosaur Headdress).
+    among :: CopyDomain.CopyDomain,
     -- | CR 611.2a: how long the copy lasts (Vesuvan Shapeshifter's "until this
     -- creature is turned face down"), Nothing for a printing stating none.
     -- BecomeCopy.duration's field and read the same way: Nothing stamps the

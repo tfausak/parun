@@ -101,6 +101,7 @@ import qualified Pawl.Types.ForEach as ForEach
 import qualified Pawl.Types.ForEachNumber as ForEachNumber
 import qualified Pawl.Types.ForbidAttack as ForbidAttack
 import qualified Pawl.Types.ForbidBeingBlocked as ForbidBeingBlocked
+import qualified Pawl.Types.FromAnywhere as FromAnywhere
 import qualified Pawl.Types.FromOutsideTheGame as FromOutsideTheGame
 import qualified Pawl.Types.GainControl as GainControl
 import qualified Pawl.Types.GrantLookAtExiled as GrantLookAtExiled
@@ -1235,8 +1236,8 @@ spec s = Spec.describe s "Pawl.Codec.Effect" $ do
       s
       toJson
       fromJson
-      (Effect.ExchangeOwnership (ExchangeOwnership.MkExchangeOwnership (ObjectRef.InSlot (SlotName.MkSlotName (Text.pack "target"))) (ObjectRef.FromAnywhere (SlotName.MkSlotName (Text.pack "self")))))
-      " {\"type\":\"ExchangeOwnership\",\"value\":{\"one\":{\"type\":\"InSlot\",\"value\":\"target\"},\"other\":{\"type\":\"FromAnywhere\",\"value\":\"self\"}}} "
+      (Effect.ExchangeOwnership (ExchangeOwnership.MkExchangeOwnership (ObjectRef.InSlot (SlotName.MkSlotName (Text.pack "target"))) (ObjectRef.FromAnywhere (FromAnywhere.MkFromAnywhere {FromAnywhere.slot = SlotName.MkSlotName (Text.pack "self"), FromAnywhere.among = Nothing}))))
+      " {\"type\":\"ExchangeOwnership\",\"value\":{\"one\":{\"type\":\"InSlot\",\"value\":\"target\"},\"other\":{\"type\":\"FromAnywhere\",\"value\":{\"slot\":\"self\"}}}} "
   -- CR 701.12d: the card and the top card of a library trade zones.
   Spec.it s "ExchangeCardZones" $
     Common.assertJsonCodec

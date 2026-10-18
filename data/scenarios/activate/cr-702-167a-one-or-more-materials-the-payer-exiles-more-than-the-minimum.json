@@ -148,6 +148,17 @@
           ]
         }
       }
+    },
+    {
+      "turn": 1,
+      "step": "PostcombatMain",
+      "player": "alice",
+      "do": {
+        "Answer": {
+          "prompt": "ChooseCardFromAmong",
+          "with": "Goblin Piker"
+        }
+      }
     }
   ]
 }

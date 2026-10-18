@@ -15,7 +15,9 @@ import qualified Pawl.Types.Timestamp as Timestamp
 -- ability's effect: CR 707.2c fixes its copiable values as it first applies,
 -- which is as the Aura enters (CR 611.3c), so they are stored as the
 -- as-enters choice is made, and only what the effect covers is read live
--- (CopyCoverage.SourceHost, CR 611.3a).
+-- (CopyCoverage.SourceHost, CR 611.3a). Dinosaur Headdress's "equipped creature
+-- is a copy of the last chosen card" is another, stored afresh at each choice
+-- made as it becomes attached (CR 607.2d).
 --
 -- Read at Pawl.Engine.Projection.View.stampedSnapshotOf, which layers a live row
 -- over the copy stamp underneath it -- so every one of the seven readers that

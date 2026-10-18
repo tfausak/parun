@@ -88,13 +88,17 @@ describe o =
           <> [count (sum (ObjectView.counters o)) "counter" | not (Map.null (ObjectView.counters o))]
    in nameOf o <> Maybe.fromMaybe Text.empty pt <> if null status then Text.empty else Text.pack " (" <> Text.intercalate (Text.pack ", ") status <> Text.pack ")"
 
--- | CR 708.2a: a face-down object has no name, and a hidden one shows none.
+-- | CR 708.2a: a face-down object has no name, and a hidden one shows none;
+-- CR 406.3 / 708.5: a face-down card the seat may look at names its card too.
 nameOf :: ObjectView.ObjectView -> Text.Text
-nameOf o = case ObjectView.characteristics o of
-  Nothing -> Text.pack "a hidden card"
-  Just c -> case Set.toList (ProjectedCharacteristics.names c) of
-    [] -> Text.pack "a face-down card"
-    names -> Text.intercalate (Text.pack " // ") (fmap CardName.unwrap names)
+nameOf o =
+  let shown = case ObjectView.characteristics o of
+        Nothing | Maybe.isNothing (ObjectView.face o) -> Text.pack "a hidden card"
+        Just c | names <- Set.toList (ProjectedCharacteristics.names c), not (null names) -> joined names
+        _ -> Text.pack "a face-down card"
+      joined = Text.intercalate (Text.pack " // ") . fmap CardName.unwrap
+      card = foldMap (\f -> Text.pack " (" <> joined (Set.toList (ProjectedCharacteristics.names f)) <> Text.pack ")") (ObjectView.face o)
+   in shown <> card
 
 -- | Every object the view shows, by id.
 objects :: PlayerView.PlayerView -> Map.Map ObjectId.ObjectId ObjectView.ObjectView

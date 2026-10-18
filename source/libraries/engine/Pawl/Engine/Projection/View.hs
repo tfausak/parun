@@ -1713,10 +1713,11 @@ baseCharacteristics oid gs = case Game.faceOf oid gs of
   Nothing -> noCharacteristics
   -- CR 406.3a: a card exiled face down has no characteristics, so the seed CR
   -- 613.1 starts the layers from holds none either -- the card behind it is
-  -- read only by the one reader the rules entitle, which is Pawl.Engine.Cast's
-  -- offer of a play the exiling effect permitted (CR 406.3b) and never this
-  -- projection. CR 110.5d keeps this apart from Object.facing, which is CR
-  -- 708's face-down PERMANENT and reaches the projection through Game.faceOf.
+  -- read only by the readers the rules entitle, Pawl.Engine.Cast's offer of a
+  -- play the exiling effect permitted (CR 406.3b) and Projection.projectShown's
+  -- look (CR 406.3), and never this projection. CR 110.5d keeps this apart from
+  -- Object.facing, which is CR 708's face-down PERMANENT and reaches the
+  -- projection through Game.faceOf.
   Just _ | any Object.exiledFaceDown (Game.lookupObject oid gs) -> noCharacteristics
   -- CR 121.8: so is a card drawn while a spell is being cast or an ability
   -- activated, until it becomes cast or activated. Pawl.Engine.Cost's
