@@ -8,31 +8,7 @@ deck` on it: every unresolved name is reported.
 
 ## Expressible today
 
-Each row names the pool card(s) whose file is the closest template. A row
-leaves this table when its card is added to `data/cards/`.
-
-| Card | Template card(s) | Note |
-|---|---|---|
-| Thundermare | rally-the-troops + radiant-fountain | SelfEnters Tap EachMatching And(creature, Not IsSource); Haste |
-| Tidal Surge | moonshae-pixie-pixie-dust + a-good-day-to-pie | count least 0 most 3, filter Not Flying, Tap |
-| Time Ebb | griptide | exact line |
-| Touch of Brilliance | divination | exact line |
-| Treetop Defense | rally-the-troops + piety-charm | GainKeyword Reach over creatures you control |
-| Undying Beast | endless-cockroaches + griptide | SelfDies, MoveToZone `became` to Library placement Stated Top |
-| Untamed Wilds | rampant-growth | destination Battlefield (natures-lore) instead of BattlefieldTapped |
-| Valorous Charge | steeling-stance | EachMatching And(creature, HasColor White) (all controllers), +2/+0 |
-| Vampiric Feast | parasitic-grasp | AnyTarget, 4 and gain 4 |
-| Vampiric Touch | chandra-fire-artisan + parasitic-grasp | opponent-or-planeswalker filter; 2 and gain 2 |
-| Venerable Monk | radiant-fountain | exact line |
-| Vengeance | gideon-jura | Destroy target creature filter IsTapped |
-| Virtue's Ruin | day-of-judgment | filter white creatures |
-| Volcanic Hammer | lightning-bolt | exact line |
-| Warrior's Charge | steeling-stance | exact line |
-| Wicked Pact | fulgent-distraction + doom-blade | count least 2 most 2, nonblack; LoseLife 5 |
-| Winter's Grasp | vandalize | Destroy target land |
-| Withering Gaze | duress + sudden-impact | as Baleful Stare with Forest / green |
-| Wood Elves | natures-lore + radiant-fountain | SelfEnters Search Forest to Battlefield |
-| Wrath of God | day-of-judgment + terror | regenerability CantBeRegenerated |
+Every expressible Portal card has been added to `data/cards/`.
 
 ## Needs a capability
 
