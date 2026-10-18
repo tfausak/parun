@@ -496,6 +496,7 @@ filterNames asking criterion = case criterion of
   Filter.ConvokedSourceThisTurn -> True
   Filter.SaddledSourceThisTurn -> True
   Filter.DealtDamageThisTurn -> True
+  Filter.DealtDamageToThisTurn _ -> True
   Filter.EnteredThisTurn -> True
   Filter.ControlledSinceTurnBegan -> False
   Filter.AttachedTo nested -> filterNames asking nested

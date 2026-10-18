@@ -39,6 +39,7 @@ import qualified Pawl.Types.Convoking as Convoking
 import qualified Pawl.Types.Count as Count.Type
 import qualified Pawl.Types.CounterKind as CounterKind
 import qualified Pawl.Types.Crewing as Crewing
+import qualified Pawl.Types.DamageEvent as DamageEvent
 import qualified Pawl.Types.DistinctOf as DistinctOf
 import qualified Pawl.Types.EventShape as EventShape
 import qualified Pawl.Types.Filter as Filter.Type
@@ -386,6 +387,7 @@ bakePerspective viewOf context gs candidate predicate =
         Filter.Type.MilledThisTurn -> predicate
         Filter.Type.CantCrewVehicles -> predicate
         Filter.Type.DealtDamageThisTurn -> predicate
+        Filter.Type.DealtDamageToThisTurn _ -> predicate
         Filter.Type.EnteredThisTurn -> predicate
         Filter.Type.CrewedSourceThisTurn -> predicate
         Filter.Type.ConvokedSourceThisTurn -> predicate
@@ -953,6 +955,7 @@ lastKnownView peers oid gs lastKnown =
           Filter.crewedThisTurn = crewedThisTurn oid gs,
           Filter.convokedThisTurn = convokedThisTurn oid gs,
           Filter.saddledThisTurn = saddledThisTurn oid gs,
+          Filter.dealtDamageTo = dealtDamageTo oid gs,
           Filter.attachedViews = Maybe.mapMaybe peers (Set.toList (Game.attachments oid gs)),
           -- CR 303.4b: the host's id as it left, the live builder's Game.hostOf.
           Filter.attachedTo = LastKnown.host lastKnown
@@ -1029,6 +1032,18 @@ saddledThisTurn oid gs =
           | Set.member oid (Saddling.saddledBy saddled) -> Just (Saddling.mount saddled)
         _ -> Nothing
    in Set.fromList (Maybe.mapMaybe (saddledByIt . LoggedEvent.event) (Foldable.toList (GameState.events gs)))
+
+-- CR 120.1 / 608.2i: whom this object dealt damage to this turn -- every
+-- recipient of a damage event it was the source of, through
+-- Game.damageRecipient so CR 120.8's zero is no damage here either. The
+-- recipient is the one the damage was finally dealt to, so CR 614.9's
+-- redirection counts against where it landed.
+dealtDamageTo :: ObjectId -> GameState -> Set.Set Recipient.Recipient
+dealtDamageTo oid gs =
+  let byIt event = case event of
+        GameEvent.DamageDealt ev | DamageEvent.source ev == oid -> Game.damageRecipient event
+        _ -> Nothing
+   in Set.fromList (Maybe.mapMaybe (byIt . LoggedEvent.event) (Foldable.toList (GameState.events gs)))
 
 -- CR 702.51c: which spells did this object convoke, and which permanents did
 -- those spells become? GameEvent.Convoked is written as the cast's cost is paid
@@ -1200,6 +1215,7 @@ viewOfSnapshot deploy mController mOwner isToken counters zone home lapsed snaps
       Filter.crewedThisTurn = Set.empty,
       Filter.convokedThisTurn = Set.empty,
       Filter.saddledThisTurn = Set.empty,
+      Filter.dealtDamageTo = Set.empty,
       -- CR 302.6 asks about an OBJECT under a player's control; this view
       -- describes a snapshot rather than one -- `milledThisTurn` above's reason.
       Filter.controlledSinceTurnBegan = False,

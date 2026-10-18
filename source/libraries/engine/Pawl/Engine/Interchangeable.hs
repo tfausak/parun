@@ -134,7 +134,8 @@ objects pcs gs a b =
           Filter.Engine.enteredThisTurn view,
           Filter.Engine.crewedThisTurn view,
           Filter.Engine.convokedThisTurn view,
-          Filter.Engine.saddledThisTurn view
+          Filter.Engine.saddledThisTurn view,
+          Filter.Engine.dealtDamageTo view
         )
       sameView = lookBack (viewOf a) == lookBack (viewOf b)
       -- Keyed by every permanent alike, so compared rather than searched.

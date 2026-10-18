@@ -27,6 +27,7 @@ import qualified Pawl.Types.CounterKind as CounterKind
 import qualified Pawl.Types.CountersFromPermanents as CountersFromPermanents
 import qualified Pawl.Types.Craft as Craft
 import qualified Pawl.Types.Cycling as Cycling
+import qualified Pawl.Types.DamagedParty as DamagedParty
 import qualified Pawl.Types.Designation as Designation
 import qualified Pawl.Types.Devour as Devour
 import qualified Pawl.Types.DiscardCards as DiscardCards
@@ -369,6 +370,11 @@ data View = MkView
     -- `crewedThisTurn` above's shape and laziness, one keyword over, and a field
     -- of its own so a saddler never satisfies CrewedSourceThisTurn.
     saddledThisTurn :: Set.Set ObjectId.ObjectId,
+    -- CR 120.1 / 608.2i: whom did this candidate deal damage to earlier this
+    -- turn? Every recipient of a GameEvent.DamageDealt it was the source of,
+    -- LAZY for `crewedThisTurn`'s reason; DealtDamageToThisTurn compares them
+    -- against the party the card names.
+    dealtDamageTo :: Set.Set Recipient.Recipient,
     -- CR 302.6: has this candidate's CONTROLLER controlled it continuously since
     -- their most recent turn began? Read from Object.sickness, the field CR
     -- 302.6's own gates on attacking and the tap symbol are read from, and
@@ -910,6 +916,8 @@ playerView pid =
       crewedThisTurn = Set.empty,
       convokedThisTurn = Set.empty,
       saddledThisTurn = Set.empty,
+      -- CR 120.2: any object can deal damage, but a player is not an object.
+      dealtDamageTo = Set.empty,
       -- CR 302.6's continuity is about a creature a player CONTROLS, and a player
       -- is not one -- False is the answer here rather than a default.
       controlledSinceTurnBegan = False,
@@ -2054,6 +2062,18 @@ matches context view predicate = case predicate of
   -- CantCrewVehicles sits between them and is neither: a prohibition lifts the
   -- moment its source leaves.
   Filter.DealtDamageThisTurn -> dealtDamageThisTurn view
+  -- CR 120.1 / 608.2i: the same look-back asked of a RELATION, CrewedSourceThisTurn's
+  -- split -- the candidate's own field says whom it dealt damage to, and the
+  -- party says which of them the card names. The source is the id it had, so a
+  -- dies trigger's "it" still finds the damage (CR 603.10a). Vacuously False for
+  -- a context with no source or no perspective, where the party names nothing.
+  Filter.DealtDamageToThisTurn party ->
+    let hit damaged = case party of
+          DamagedParty.Source -> Maybe.isJust (source context) && Recipient.objectOf damaged == source context
+          DamagedParty.Related relation -> case (Recipient.playerOf damaged, perspective context) of
+            (Just player, Just you) -> PlayerRelation.holds (teams context) relation you player
+            _ -> False
+     in any hit (dealtDamageTo view)
   -- CR 400.7 / 608.2i: the same look-back over the entries. A permanent that
   -- left and came back is a new object whose entry this is; one that phased in
   -- or turned face up made no entry at all (CR 702.26d, CR 708.8).
@@ -2384,6 +2404,7 @@ rewrite pairs predicate = case predicate of
   Filter.MilledThisTurn -> predicate
   Filter.CantCrewVehicles -> predicate
   Filter.DealtDamageThisTurn -> predicate
+  Filter.DealtDamageToThisTurn _ -> predicate
   Filter.EnteredThisTurn -> predicate
   Filter.CrewedSourceThisTurn -> predicate
   Filter.ConvokedSourceThisTurn -> predicate
@@ -3132,6 +3153,7 @@ bakeBound players predicate = case predicate of
   Filter.MilledThisTurn -> predicate
   Filter.CantCrewVehicles -> predicate
   Filter.DealtDamageThisTurn -> predicate
+  Filter.DealtDamageToThisTurn _ -> predicate
   Filter.EnteredThisTurn -> predicate
   Filter.CrewedSourceThisTurn -> predicate
   Filter.ConvokedSourceThisTurn -> predicate
@@ -3302,6 +3324,7 @@ manaValueThresholds predicate = case predicate of
   Filter.MilledThisTurn -> []
   Filter.CantCrewVehicles -> []
   Filter.DealtDamageThisTurn -> []
+  Filter.DealtDamageToThisTurn _ -> []
   Filter.EnteredThisTurn -> []
   Filter.CrewedSourceThisTurn -> []
   Filter.ConvokedSourceThisTurn -> []
@@ -3470,6 +3493,7 @@ statesAQuality predicate = case predicate of
   Filter.MilledThisTurn -> True
   Filter.CantCrewVehicles -> True
   Filter.DealtDamageThisTurn -> True
+  Filter.DealtDamageToThisTurn _ -> True
   Filter.EnteredThisTurn -> True
   Filter.CrewedSourceThisTurn -> True
   Filter.ConvokedSourceThisTurn -> True
@@ -3622,6 +3646,7 @@ readsSourceValues predicate = case predicate of
   Filter.MilledThisTurn -> False
   Filter.CantCrewVehicles -> False
   Filter.DealtDamageThisTurn -> False
+  Filter.DealtDamageToThisTurn _ -> False
   Filter.EnteredThisTurn -> False
   Filter.CrewedSourceThisTurn -> False
   Filter.ConvokedSourceThisTurn -> False
@@ -3787,6 +3812,7 @@ overBoundSlotsWith f predicate = case predicate of
   Filter.MilledThisTurn -> pure predicate
   Filter.CantCrewVehicles -> pure predicate
   Filter.DealtDamageThisTurn -> pure predicate
+  Filter.DealtDamageToThisTurn _ -> pure predicate
   Filter.EnteredThisTurn -> pure predicate
   Filter.CrewedSourceThisTurn -> pure predicate
   Filter.ConvokedSourceThisTurn -> pure predicate

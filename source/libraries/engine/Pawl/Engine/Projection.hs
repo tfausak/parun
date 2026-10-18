@@ -3804,6 +3804,7 @@ filterReads f = case f of
   -- handed in on the context, so it is a fixed input to any single projection.
   Filter.Type.CantCrewVehicles -> Set.empty
   Filter.Type.DealtDamageThisTurn -> Set.empty
+  Filter.Type.DealtDamageToThisTurn _ -> Set.empty
   Filter.Type.EnteredThisTurn -> Set.empty
   Filter.Type.CrewedSourceThisTurn -> Set.empty
   Filter.Type.ConvokedSourceThisTurn -> Set.empty
@@ -4083,6 +4084,7 @@ filterReadsPeers f = case f of
   -- peer's view, so no second projection can change its answer.
   Filter.Type.CantCrewVehicles -> False
   Filter.Type.DealtDamageThisTurn -> False
+  Filter.Type.DealtDamageToThisTurn _ -> False
   Filter.Type.EnteredThisTurn -> False
   Filter.Type.CrewedSourceThisTurn -> False
   Filter.Type.ConvokedSourceThisTurn -> False

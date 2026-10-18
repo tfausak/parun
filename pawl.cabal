@@ -489,6 +489,8 @@ library codec
     Pawl.Codec.CyclingSpec
     Pawl.Codec.DamageDirection
     Pawl.Codec.DamageDirectionSpec
+    Pawl.Codec.DamagedParty
+    Pawl.Codec.DamagedPartySpec
     Pawl.Codec.DamageEvent
     Pawl.Codec.DamageEventSpec
     Pawl.Codec.DamageIs
@@ -2366,6 +2368,7 @@ library types
     Pawl.Types.CrewRestriction
     Pawl.Types.Cycling
     Pawl.Types.DamageDirection
+    Pawl.Types.DamagedParty
     Pawl.Types.DamageEvent
     Pawl.Types.DamageIs
     Pawl.Types.DamageKind
