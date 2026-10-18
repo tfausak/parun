@@ -2257,7 +2257,7 @@ collectsEvidenceFrom oid action = case action of
 -- 2-power Piker, two Spiders.
 evidenceSpec :: (Monad m, Monad n) => Spec.Spec m n -> Registry.Registry m -> n ()
 evidenceSpec s registry =
-  let play held = S.cast S.alice held >> Stack.resolveTop >> Engine.placePendingTriggers >> Stack.resolveTop
+  let play held = S.cast S.alice held >> Stack.resolveTop >> Engine.placePendingTriggers [] >> Stack.resolveTop
       clues = S.countOnBattlefieldByName (CardName.MkCardName (Text.pack "Clue Token")) S.alice
    in Spec.describe s "Collect evidence (CR 701.59)" $ do
         Spec.it s "CR 701.59c Vitu-Ghazi Inspector's enters ability reads the evidence its spell collected" $ do

@@ -1721,10 +1721,10 @@ spec s registry = Spec.describe s "Pawl.Engine.Target" $ do
         (hersId, g6) = S.addExiledCard piker S.alice g5
         (hisId, board) = S.addExiledCard bolt S.bob g6
         runShuffling oid =
-          let placed = S.runPure (aimAtCardShuffling oid) board Engine.placePendingTriggers
+          let placed = S.runPure (aimAtCardShuffling oid) board (Engine.placePendingTriggers [])
            in S.runPure (aimAtCardShuffling oid) placed Stack.resolveTop
         runPlain oid =
-          let placed = S.runPure (aimAtCard oid) board Engine.placePendingTriggers
+          let placed = S.runPure (aimAtCard oid) board (Engine.placePendingTriggers [])
            in S.runPure (aimAtCard oid) placed Stack.resolveTop
         shuffledHers = runShuffling hersId
         shuffledHis = runShuffling hisId
@@ -1783,7 +1783,7 @@ spec s registry = Spec.describe s "Pawl.Engine.Target" $ do
         (hisDeeperId, g2) = S.addLibraryCard bolt S.bob g1
         (hisTopId, g3) = S.addLibraryCard bolt S.bob g2
         (hisId, board) = S.addExiledCard piker S.bob g3
-        placed = S.runPure (aimAtCardShuffling hisId) board Engine.placePendingTriggers
+        placed = S.runPure (aimAtCardShuffling hisId) board (Engine.placePendingTriggers [])
         resolve g = S.runPure (aimAtCardShuffling hisId) g Stack.resolveTop
         shuffledIn = resolve placed
         fizzled = resolve (S.runPure S.identityAnswer placed (Event.changeZone hisId Zone.Hand))

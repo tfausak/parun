@@ -10159,7 +10159,7 @@ applyOneEffect runSubgame resolving source controller legal chosen effect = case
     -- 104.4b's draw (Departure.checkMandatoryLoop).
     let checkToFixpoint passes = do
           begun <- State.gets GameState.lastChoice
-          performed <- Sba.performStateBasedActions (runDamageRewriteEffect runSubgame)
+          performed <- Sba.performStateBasedActions (runDamageRewriteEffect runSubgame) []
           runReplacementEffects runSubgame
           passed <- Departure.passesSince begun passes
           Departure.checkMandatoryLoop passed
@@ -10240,7 +10240,7 @@ applyOneEffect runSubgame resolving source controller legal chosen effect = case
         -- authority, as above.
         let checkToFixpoint passes = do
               begun <- State.gets GameState.lastChoice
-              performed <- Sba.performStateBasedActions (runDamageRewriteEffect runSubgame)
+              performed <- Sba.performStateBasedActions (runDamageRewriteEffect runSubgame) []
               runReplacementEffects runSubgame
               passed <- Departure.passesSince begun passes
               Departure.checkMandatoryLoop passed

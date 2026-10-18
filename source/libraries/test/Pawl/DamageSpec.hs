@@ -1053,7 +1053,7 @@ legendRuleSpec s registry =
           -- The CONTROL, and the guard against a vacuous pass below: with no
           -- Leyline on the board these two live through a settled sweep, so the
           -- fixture really does hold two duplicates for the rule to find.
-          before = S.runPure S.identityAnswer g1 (Sba.performStateBasedActions S.insteadOfLoss)
+          before = S.runPure S.identityAnswer g1 (Sba.performStateBasedActions S.insteadOfLoss [])
           (_, staged) = S.spellOnStack leyline S.alice g1
           after = S.runPure (keepsLegend a) staged (Stack.resolveTop >> Engine.settleForPriority)
       Spec.assertBool s (a /= b) "the two Pikers are separate objects, not one counted twice"
@@ -1152,7 +1152,7 @@ legendRuleSpec s registry =
           board = unlockDoors bothDoors q (unlockDoors bothDoors p g1)
           -- The CONTROL: without the Leyline neither Room is legendary, so the
           -- rule has nothing to say and the pass below cannot be vacuous.
-          before = S.runPure S.identityAnswer board (Sba.performStateBasedActions S.insteadOfLoss)
+          before = S.runPure S.identityAnswer board (Sba.performStateBasedActions S.insteadOfLoss [])
           (_, staged) = S.spellOnStack leyline S.alice board
           ((_, after), asked) = State.runState (Engine.runGame alternatingLegend staged (Stack.resolveTop >> Engine.settleForPriority)) 0
       Spec.assertBool s (p /= q) "the two Rooms are separate objects, not one counted twice"
@@ -1207,7 +1207,7 @@ worldPair s registry = do
 -- the rule with no candidates -- so this, and not the bare pass, is what these
 -- single-pass tests run.
 worldPass :: Game.Type.Game Bool
-worldPass = Engine.sampleWorldSince >> Sba.performStateBasedActions S.insteadOfLoss
+worldPass = Engine.sampleWorldSince >> Sba.performStateBasedActions S.insteadOfLoss []
 
 -- What Object.worldSince holds for one object, or Nothing if there is no such
 -- object at all.

@@ -3000,7 +3000,7 @@ spawnbrokerRun s registry measuredByWraith = do
         Prompt.ChooseTargets _ _ _ sets -> fmap (\(_, offered) -> Set.filter (maybe False (`elem` wanted) . Recipient.objectOf) offered) sets
         Prompt.ChooseOptional {} -> OptionalDecision.Exercises
         _ -> S.identityAnswer p
-      placed = S.runPure answer entered Engine.placePendingTriggers
+      placed = S.runPure answer entered (Engine.placePendingTriggers [])
   pure (alicePiker, aliceWraith, bobWraith, placed, S.runPure answer placed Stack.resolveTop)
 
 spawnbrokerSpec :: (Monad m) => Spec.Spec m n -> Registry.Registry m -> n ()

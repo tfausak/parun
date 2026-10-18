@@ -678,7 +678,7 @@ roleVictims pcs grants gs =
 -- settleForPriority is the entry point a caller wanting a settled board should
 -- use.
 checkStateBasedActions :: (PendingReplacementEffect.PendingReplacementEffect -> Game ()) -> Game ()
-checkStateBasedActions = Monad.void . performStateBasedActions
+checkStateBasedActions instead = Monad.void (performStateBasedActions instead [])
 
 -- One SBA pass, also reporting whether any state-based action was PERFORMED (a
 -- creature buried or a player departed). CR 704.3: the caller repeats the check
@@ -706,19 +706,19 @@ checkStateBasedActions = Monad.void . performStateBasedActions
 -- meets (Lich's Mirror's reset), Pawl.Engine.Resolve.runDamageRewriteEffect,
 -- which this module cannot import: they run INSIDE the pass, CR 614.1a's
 -- "instead", before the pass moves anything (checkOnce says why).
-performStateBasedActions :: (PendingReplacementEffect.PendingReplacementEffect -> Game ()) -> Game Bool
-performStateBasedActions instead = do
+performStateBasedActions :: (PendingReplacementEffect.PendingReplacementEffect -> Game ()) -> [GameState] -> Game Bool
+performStateBasedActions instead boards = do
   -- CR 800.4a's fourth clause comes "Then", after the departures this pass
   -- performs, so it runs once the pass's event has closed
   -- (Departure.leaveTogether).
-  (acted, thenExile) <- Event.simultaneously (checkOnce instead)
+  (acted, thenExile) <- Event.simultaneously (checkOnce instead boards)
   thenExile
   pure acted
 
 -- The pass itself, which is one event; `performStateBasedActions` above says why
 -- CR 800.4a's fourth clause is handed back rather than run here.
-checkOnce :: (PendingReplacementEffect.PendingReplacementEffect -> Game ()) -> Game (Bool, Game ())
-checkOnce instead = do
+checkOnce :: (PendingReplacementEffect.PendingReplacementEffect -> Game ()) -> [GameState] -> Game (Bool, Game ())
+checkOnce instead boards = do
   gs <- State.get
   let -- CR 704.5f/g are checked against the state BEFORE any of them apply: SBAs
       -- are simultaneous. Project the whole board once (one gather) and judge each
@@ -858,7 +858,7 @@ checkOnce instead = do
       -- ability that "has triggered but not yet left the stack", and this pass
       -- runs before placePendingTriggers. Rule 704.5w exempts nothing. See
       -- Battle.awaitingAbility.
-      routed = Battle.defeated pcs (Event.triggeredSources gs) gs
+      routed = Battle.defeated pcs (Event.triggeredSources boards gs) gs
       -- CR 704.5x / 704.5y: the battles whose protector designation has become
       -- illegal, paired with the projection and controller the re-choice needs.
       -- What "illegal" means is CR 310.11, and it lives in Pawl.Engine.Battle with

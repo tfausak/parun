@@ -10072,9 +10072,10 @@ settleOnsets begun gs =
 --
 -- Takes the GROUPED events, because eventTriggers is the one gatherer whose
 -- answer depends on which of them were simultaneous (CR 603.10a). The other two
--- take the events alone.
-gatherTriggers :: [LoggedEvent.LoggedEvent] -> GameState -> Game ([PendingTrigger], Seq.Seq DelayedTrigger)
-gatherTriggers grouped gs = do
+-- take the events alone. `boards` are the states CR 603.4 and CR 603.8 read
+-- (Trigger.boardWhenTriggered).
+gatherTriggers :: [LoggedEvent.LoggedEvent] -> [GameState] -> GameState -> Game ([PendingTrigger], Seq.Seq DelayedTrigger)
+gatherTriggers grouped boards gs = do
   -- Already CR 603.4-filtered: delayedPending has to run the check itself,
   -- since which entries survive in its second component depends on the
   -- answer. Running it over these again would be a redundant no-op, the
@@ -10083,9 +10084,8 @@ gatherTriggers grouped gs = do
   -- In Game rather than pure because CR 603.7b's second sentence is a QUESTION
   -- for the entry's controller, and every prompt goes through Game.ask. The
   -- other two gatherers stay pure and are merged in here.
-  (fromDelayed, surviving) <- delayedPending grouped gs
-  let undecided = eventTriggers grouped gs <> stateTriggers gs
-  pure (filter (interveningHolds gs) undecided <> fromDelayed, surviving)
+  (fromDelayed, surviving) <- delayedPending grouped boards gs
+  pure (filter (interveningHolds boards gs) (eventTriggers grouped gs) <> stateTriggers boards gs <> fromDelayed, surviving)
 
 -- | CR 603.3b: the abilities a round of GameEvent.AbilityTriggered records fires,
 -- for Pawl.Engine.Engine.reactions to fold into the same batch.
@@ -10095,7 +10095,7 @@ gatherTriggers grouped gs = do
 -- at all, so a second call would duplicate every one of them. The CR 603.7
 -- delayed store is re-run by Engine.reactions itself, which writes it back.
 reactionTriggers :: [LoggedEvent.LoggedEvent] -> GameState -> [PendingTrigger]
-reactionTriggers events gs = filter (interveningHolds gs) (eventTriggers events gs)
+reactionTriggers events gs = filter (interveningHolds [] gs) (eventTriggers events gs)
 
 -- CR 704.5v's "the source of an ability that has triggered": the objects an
 -- ability has triggered from since the last scan, before any of it is placed.
@@ -10107,7 +10107,8 @@ reactionTriggers events gs = filter (interveningHolds gs) (eventTriggers events 
 -- under the CR 603.4 check and then withinTriggerLimit, since a spent "only once"
 -- rider means the ability did not trigger. The rest of the CR 603.7 store is left
 -- out, because whether such an entry triggers can turn on its controller's CR
--- 603.7b choice, which a state-based action cannot ask. No battle face in
+-- 603.7b choice, which a state-based action cannot ask. `boards` are
+-- gatherTriggers', so this names what that gather will place. No battle face in
 -- MTGJSON's 2026-08-23 dump arms one: of the texts matching "next", "until",
 -- "delayed" or "when you do", the two "when you do"s are reflexive and the rest
 -- are durations or Invasion of Alara's "exile ... until".
@@ -10117,10 +10118,10 @@ reactionTriggers events gs = filter (interveningHolds gs) (eventTriggers events 
 -- Siege in data/cards/ has a state trigger, a reflexive ability, an intervening
 -- "if" or a rider, and dropping the limit filter left the suite green
 -- (2026-09-26).
-triggeredSources :: GameState -> Set ObjectId
-triggeredSources gs =
+triggeredSources :: [GameState] -> GameState -> Set ObjectId
+triggeredSources boards gs =
   let reflexive = [reflexiveFiring gs entry | entry <- Foldable.toList (GameState.delayedTriggers gs), isReflexive entry, delayedArmed gs entry]
-      pending = filter (interveningHolds gs) (eventTriggers (unscannedGrouped gs) gs <> stateTriggers gs <> reflexive)
+      pending = filter (interveningHolds boards gs) (eventTriggers (unscannedGrouped gs) gs <> reflexive) <> stateTriggers boards gs
    in Set.fromList [oid | TriggerSource.OfObject oid <- fmap PendingTrigger.source (withinTriggerLimit gs pending)]
 
 -- The printed riders "This ability triggers only once each turn" and "This

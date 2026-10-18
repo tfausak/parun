@@ -81,7 +81,7 @@ foraged answer gs =
       recording p = do
         State.modify (<> [Scenario.Prompt.kindOf p])
         pure (answer p)
-      (after, asked) = State.runState (Engine.runGame recording gs (Engine.placePendingTriggers *> Stack.resolveTop)) []
+      (after, asked) = State.runState (Engine.runGame recording gs (Engine.placePendingTriggers [] *> Stack.resolveTop)) []
    in (asked, snd after)
 
 -- Take the "may", and exile the graveyard cards at these positions in the

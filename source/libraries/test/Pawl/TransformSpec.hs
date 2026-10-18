@@ -227,7 +227,7 @@ aangBoard aang piker moonmist forest =
 -- creates the delayed ability. Everything before the clock this unit is about.
 armAangsDelayedAbility :: ObjectId.ObjectId -> GameState.GameState -> GameState.GameState
 armAangsDelayedAbility pikerId board =
-  S.runPure S.identityAnswer (S.settleSba (S.markDamage pikerId 5 board)) (Engine.placePendingTriggers *> Stack.resolveTop)
+  S.runPure S.identityAnswer (S.settleSba (S.markDamage pikerId 5 board)) (Engine.placePendingTriggers [] *> Stack.resolveTop)
 
 -- The next upkeep arrives, the delayed ability triggers, and it resolves. The
 -- ability object gets its CR 613.7d timestamp HERE, which is what the rule's
@@ -236,7 +236,7 @@ atNextUpkeep :: GameState.GameState -> GameState.GameState
 atNextUpkeep gs =
   let upkeep = Phase.Beginning BeginningStep.Upkeep
       began = Event.recordEvent (GameEvent.StepBegan (StepBegan.MkStepBegan upkeep S.alice)) (gs {GameState.phase = upkeep})
-   in S.runPure S.identityAnswer began (Engine.placePendingTriggers *> Stack.resolveTop)
+   in S.runPure S.identityAnswer began (Engine.placePendingTriggers [] *> Stack.resolveTop)
 
 -- "Transform all creatures", the shape CR 701.27a takes when a spell rather than
 -- the permanent's own ability asks -- Moonmist's "transform all Humans" with a
@@ -286,7 +286,7 @@ masterOfElementsCloneSpec s registry = Spec.describe s "Aang, Master of Elements
         cloned = S.runPure yes staged Stack.resolveTop
         upkeep = Phase.Beginning BeginningStep.Upkeep
         began = Event.recordEvent (GameEvent.StepBegan (StepBegan.MkStepBegan upkeep S.alice)) (cloned {GameState.phase = upkeep, GameState.activePlayer = S.alice})
-        after = S.runPure yes began (Engine.placePendingTriggers *> Stack.resolveTop *> Stack.resolveTop)
+        after = S.runPure yes began (Engine.placePendingTriggers [] *> Stack.resolveTop *> Stack.resolveTop)
     Spec.assertEqWith s "CR 608.2d bob's Clone could not transform, so bob gained no life and only lost alice's 4" (S.lifeOf S.bob after) (Just 16)
     Spec.assertEqWith s "and alice took no damage from bob's Clone, only gaining her own 4" (S.lifeOf S.alice after) (Just 24)
     -- The preconditions, after the behaviour: the Clone really copied the back

@@ -276,7 +276,7 @@ triggerModalSpec s registry = Spec.describe s "M4h trigger modal (CR 700.2b/603.
     let (acId, gs) = S.entersWithTrigger aetherChanneler S.alice (Setup.emptyGame S.bothPlayers)
         answer :: Prompt.Prompt r -> r
         answer = chooseModeAt (ModeIndex.MkModeIndex 0) (Recipient.ToObject acId)
-        placed = snd (Engine.runGamePure answer gs Engine.placePendingTriggers)
+        placed = snd (Engine.runGamePure answer gs (Engine.placePendingTriggers []))
         resolved = snd (Engine.runGamePure answer placed Stack.resolveTop)
         newObjs = Set.toList (Set.delete acId (GameState.battlefield resolved))
     Spec.assertEqWith s "alice's hand is still empty (nothing drawn)" (length (Game.zoneMembers Zone.Hand S.alice resolved)) 0
@@ -296,7 +296,7 @@ triggerModalSpec s registry = Spec.describe s "M4h trigger modal (CR 700.2b/603.
         (victimId, gs2) = S.addPermanent piker S.bob gs1
         answer :: Prompt.Prompt r -> r
         answer = chooseModeAt (ModeIndex.MkModeIndex 1) (Recipient.ToObject victimId)
-        placed = snd (Engine.runGamePure answer gs2 Engine.placePendingTriggers)
+        placed = snd (Engine.runGamePure answer gs2 (Engine.placePendingTriggers []))
         resolved = snd (Engine.runGamePure answer placed Stack.resolveTop)
         boundSlots = case GameState.stack placed of
           abilId : _ -> case Game.lookupObject abilId placed of
@@ -330,7 +330,7 @@ triggerModalSpec s registry = Spec.describe s "M4h trigger modal (CR 700.2b/603.
         (_, gs2) = S.addLibraryCard piker S.alice gs1
         answer :: Prompt.Prompt r -> r
         answer = chooseModeAt (ModeIndex.MkModeIndex 2) (Recipient.ToObject acId)
-        placed = snd (Engine.runGamePure answer gs2 Engine.placePendingTriggers)
+        placed = snd (Engine.runGamePure answer gs2 (Engine.placePendingTriggers []))
         resolved = snd (Engine.runGamePure answer placed Stack.resolveTop)
     Spec.assertEqWith s "alice drew one card" (length (Game.zoneMembers Zone.Hand S.alice resolved)) 1
     Spec.assertEqWith s "no new permanent (mode 0 never resolved)" (GameState.battlefield resolved) (Set.singleton acId)
@@ -368,7 +368,7 @@ triggerModalSpec s registry = Spec.describe s "M4h trigger modal (CR 700.2b/603.
         gs2 = S.withEvents [GameEvent.Moved (Moved.moved entered (Projection.project smtId gs1))] gs1
         answer :: Prompt.Prompt r -> r
         answer = S.identityAnswer
-        placed = snd (Engine.runGamePure answer gs2 Engine.placePendingTriggers)
+        placed = snd (Engine.runGamePure answer gs2 (Engine.placePendingTriggers []))
         stackHasTrigger =
           any
             ( \abilId -> case Game.lookupObject abilId placed of

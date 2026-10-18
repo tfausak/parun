@@ -270,7 +270,7 @@ sharedTurnsSpec s registry = Spec.describe s "SharedTeamTurns" $ do
                 S.withEvents
                   [GameEvent.StepBegan (StepBegan.MkStepBegan endStep S.alice)]
                   placed {GameState.phase = endStep, GameState.activePlayer = S.alice}
-           in length (GameState.stack (snd (Engine.runGamePure S.identityAnswer began Engine.placePendingTriggers)))
+           in length (GameState.stack (snd (Engine.runGamePure S.identityAnswer began (Engine.placePendingTriggers []))))
     Spec.assertEqWith s "one trigger with the option" (run sharedTurns) 1
     Spec.assertEqWith s "and one without" (run id) 1
   -- CR 702.179d / 805.4: alice and bob are both active players, so one opponent's
@@ -368,7 +368,7 @@ sharedTurnsSpec s registry = Spec.describe s "SharedTeamTurns" $ do
                   State.modify' (<> [pid])
                   pure [i | source <- wanted, (i, entry) <- zip [0 ..] entries, TriggerEntry.source entry == source]
                 _ -> pure (S.identityAnswer p)
-              ((_, placed), asked) = State.runState (Engine.runGame interleave began Engine.placePendingTriggers) []
+              ((_, placed), asked) = State.runState (Engine.runGame interleave began (Engine.placePendingTriggers [])) []
               sourceOf oid = case fmap Object.source (Game.lookupObject oid placed) of
                 Just (Source.OfTrigger triggered) -> Just (TriggeredAbilitySource.source triggered)
                 _ -> Nothing
