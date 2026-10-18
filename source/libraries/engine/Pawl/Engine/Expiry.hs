@@ -479,7 +479,8 @@ sweepConditional = do
   Monad.when changed $ State.put (dropOrphanedHostCopies (sweep Settle gs))
   pure changed
 
--- CR 611.3b / 400.7: a static ability's copy row (CopyCoverage.SourceHost)
+-- CR 611.3b / 400.7: a static ability's copy row (CopyCoverage.SourceHost, or an
+-- Attachment carved off one)
 -- states no expiry, and ends when its source is gone: the object that left is
 -- no more, and whatever it became is a new one. Hygiene only, since
 -- Game.copyCovers already reads nothing off a missing source, but
@@ -487,6 +488,7 @@ sweepConditional = do
 orphanedHostCopy :: GameState -> ActiveCopy.ActiveCopy -> Bool
 orphanedHostCopy gs row = case ActiveCopy.covers row of
   CopyCoverage.SourceHost _ -> Maybe.isNothing (Game.lookupObject (ActiveCopy.source row) gs)
+  CopyCoverage.Attachment _ -> Maybe.isNothing (Game.lookupObject (ActiveCopy.source row) gs)
   CopyCoverage.These _ -> False
 
 dropOrphanedHostCopies :: GameState -> GameState

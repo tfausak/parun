@@ -2621,6 +2621,7 @@ applyEntryOption oid option gs =
       fixed row = case ActiveCopy.covers row of
         CopyCoverage.These oids -> Just (row, oids)
         CopyCoverage.SourceHost _ -> Nothing
+        CopyCoverage.Attachment _ -> Nothing
       covering = List.sortOn (Ord.Down . ActiveCopy.timestamp . fst) (filter (Set.member oid . snd) (Maybe.mapMaybe fixed (GameState.copyEffects gs)))
    in case covering of
         (newest, oids) : _ ->

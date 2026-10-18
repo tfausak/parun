@@ -349,6 +349,7 @@ copyNames oid row = case row of
     source == oid || Mentions.expiryNames (unread oid) expiry || case covers of
       CopyCoverage.These copied -> Set.member oid copied
       CopyCoverage.SourceHost overtaken -> Map.member oid overtaken
+      CopyCoverage.Attachment host -> oid == host
 
 playerEffectRowNames :: ObjectId -> ActivePlayerEffect.ActivePlayerEffect -> Bool
 playerEffectRowNames oid row = case row of

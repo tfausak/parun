@@ -4518,6 +4518,7 @@ becomeCopyAs batch candidate asCopy oid = do
                     earlier r = ActiveCopy.source r == oid && isHostRow (ActiveCopy.covers r)
                     isHostRow covers = case covers of
                       CopyCoverage.SourceHost _ -> True
+                      CopyCoverage.Attachment _ -> True
                       CopyCoverage.These _ -> False
                  in g1 {GameState.copyEffects = row : filter (not . earlier) (GameState.copyEffects g1)}
             -- CR 611.2a: a stated duration (Vesuvan Shapeshifter's "until
@@ -8874,14 +8875,19 @@ merge sid target side = do
             -- "CR 730.2i/613.7 a merged permanent transforms while
             -- Mirrorweave's copy stands" proves it.
             --
-            -- A row following its source's host is carved the same way, its
-            -- source kept and its timestamp the source's (CR 613.7e), so it ends
-            -- with the source. A regression fence: no test merges onto an
-            -- enchanted copy.
-            --
-            -- Not implemented: the carved row outlives the source moving to
-            -- another host (#5218).
-            alone row = row {ActiveCopy.covers = CopyCoverage.These (Set.singleton target), ActiveCopy.timestamp = Game.copyRowTimestamp gs row}
+            -- A row following its source's host is carved as that one
+            -- attachment, its timestamp the source's (CR 613.7e), so it ends as
+            -- the source leaves or becomes attached again (CR 611.3a).
+            -- data/scenarios/mutate's "Metamorphic Alteration moved off a merged
+            -- permanent takes its copy along" proves it.
+            alone row =
+              row
+                { ActiveCopy.covers = case ActiveCopy.covers row of
+                    CopyCoverage.These _ -> CopyCoverage.These (Set.singleton target)
+                    CopyCoverage.SourceHost _ -> CopyCoverage.Attachment target
+                    CopyCoverage.Attachment _ -> CopyCoverage.Attachment target,
+                  ActiveCopy.timestamp = Game.copyRowTimestamp gs row
+                }
             rewoven row =
               let (snapshot, turned) = readings (unrowed {GameState.copyEffects = alone row : GameState.copyEffects unrowed})
                in (alone row) {ActiveCopy.snapshot = snapshot, ActiveCopy.turned = if turned == snapshot then Nothing else Just turned}
