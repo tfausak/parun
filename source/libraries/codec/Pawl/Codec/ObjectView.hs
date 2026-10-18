@@ -15,7 +15,8 @@ import qualified Pawl.JsonCodec.Fields as Fields
 import qualified Pawl.Types.ObjectView as ObjectView
 
 -- | A bare object keyed by the record's field names; `characteristics` is
--- null for an object the seat may not see.
+-- null for an object the seat may not see, and `face` for any but a face-down
+-- one the seat may look at.
 codec :: Codec.Codec ObjectView.ObjectView
 codec = Fields.object $ do
   object <- Fields.required "object" ObjectId.codec ObjectView.object
@@ -26,6 +27,7 @@ codec = Fields.object $ do
   counters <- Fields.required "counters" (Common.multiset (CounterKind.codec Keyword.codec)) ObjectView.counters
   attachedTo <- Fields.required "attachedTo" (Common.maybe Recipient.codec) ObjectView.attachedTo
   characteristics <- Fields.required "characteristics" (Common.maybe ProjectedCharacteristics.codec) ObjectView.characteristics
+  face <- Fields.required "face" (Common.maybe ProjectedCharacteristics.codec) ObjectView.face
   pure
     ObjectView.MkObjectView
       { ObjectView.object = object,
@@ -35,5 +37,6 @@ codec = Fields.object $ do
         ObjectView.damage = damage,
         ObjectView.counters = counters,
         ObjectView.attachedTo = attachedTo,
-        ObjectView.characteristics = characteristics
+        ObjectView.characteristics = characteristics,
+        ObjectView.face = face
       }
