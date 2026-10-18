@@ -34,7 +34,9 @@ import qualified Pawl.Types.Arithmetic as Arithmetic
 import qualified Pawl.Types.ArmDelayedTrigger as ArmDelayedTrigger
 import qualified Pawl.Types.AsCopy as AsCopy
 import qualified Pawl.Types.AttachAll as AttachAll
+import qualified Pawl.Types.AttachR as AttachR
 import qualified Pawl.Types.AttachRestriction as AttachRestriction
+import qualified Pawl.Types.AttachRewrite as AttachRewrite
 import qualified Pawl.Types.AttachTarget as AttachTarget
 import qualified Pawl.Types.AttachedToBound as AttachedToBound
 import qualified Pawl.Types.AttackLimitUnless as AttackLimitUnless
@@ -1583,6 +1585,14 @@ rewriteReplacementEffect pairs effect = case effect of
             TurnUpRewrite.WithCounters w -> TurnUpRewrite.WithCounters (rewriteWithCounters pairs w)
             TurnUpRewrite.MayAttachTo f -> TurnUpRewrite.MayAttachTo (Filter.rewrite pairs f)
             TurnUpRewrite.AsCopy c -> TurnUpRewrite.AsCopy (rewriteAsCopy pairs c)
+        }
+  ReplacementEffect.AttachR r ->
+    ReplacementEffect.AttachR
+      r
+        { AttachR.matching = Filter.rewrite pairs (AttachR.matching r),
+          AttachR.rewrite = case AttachR.rewrite r of
+            AttachRewrite.AsCopy c -> AttachRewrite.AsCopy (rewriteAsCopy pairs c)
+            AttachRewrite.ChooseColors n -> AttachRewrite.ChooseColors n
         }
   -- A PhasePattern is a PhaseSelector and a baked seat (CR 614.1b / 500.11), both
   -- rules categories rather than printed words.

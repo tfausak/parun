@@ -179,8 +179,12 @@ library codec
     Pawl.Codec.AttachBoundSpec
     Pawl.Codec.AttachedToBound
     Pawl.Codec.AttachedToBoundSpec
+    Pawl.Codec.AttachR
     Pawl.Codec.AttachRestriction
     Pawl.Codec.AttachRestrictionSpec
+    Pawl.Codec.AttachRewrite
+    Pawl.Codec.AttachRewriteSpec
+    Pawl.Codec.AttachRSpec
     Pawl.Codec.AttachTarget
     Pawl.Codec.AttachTargetSpec
     Pawl.Codec.AttackCost
@@ -396,6 +400,8 @@ library codec
     Pawl.Codec.CopyClauseSpec
     Pawl.Codec.CopyCoverage
     Pawl.Codec.CopyCoverageSpec
+    Pawl.Codec.CopyDomain
+    Pawl.Codec.CopyDomainSpec
     Pawl.Codec.CopyException
     Pawl.Codec.CopyExceptionSpec
     Pawl.Codec.CopyOriginal
@@ -2193,7 +2199,9 @@ library types
     Pawl.Types.AttachAll
     Pawl.Types.AttachBound
     Pawl.Types.AttachedToBound
+    Pawl.Types.AttachR
     Pawl.Types.AttachRestriction
+    Pawl.Types.AttachRewrite
     Pawl.Types.AttachTarget
     Pawl.Types.AttackCost
     Pawl.Types.AttackCostScope
@@ -2315,6 +2323,7 @@ library types
     Pawl.Types.Convoking
     Pawl.Types.CopyClause
     Pawl.Types.CopyCoverage
+    Pawl.Types.CopyDomain
     Pawl.Types.CopyException
     Pawl.Types.CopyOriginal
     Pawl.Types.CopyRecipient

@@ -6,6 +6,7 @@ import qualified Pawl.JsonCodec.Common as Common
 import qualified Pawl.Spec as Spec
 import qualified Pawl.Types.AsCopy as AsCopy
 import qualified Pawl.Types.CardType as CardType
+import qualified Pawl.Types.CopyDomain as CopyDomain
 import qualified Pawl.Types.CopyRecipient as CopyRecipient
 import qualified Pawl.Types.CounterKind as CounterKind
 import qualified Pawl.Types.Duration as Duration
@@ -37,7 +38,7 @@ spec s = Spec.describe s "Pawl.Codec.TurnUpRewrite" $ do
     Common.assertCodec
       s
       (TurnUpRewrite.codec Common.text Common.text)
-      (TurnUpRewrite.AsCopy (AsCopy.MkAsCopy (Filter.HasCardType CardType.Creature) [] False Seq.empty Zone.Battlefield (Just (Duration.UntilEvent DurationEvent.SourceTurnedFaceDown)) CopyRecipient.ThisObject True))
+      (TurnUpRewrite.AsCopy (AsCopy.MkAsCopy (Filter.HasCardType CardType.Creature) [] False Seq.empty (CopyDomain.InZone Zone.Battlefield) (Just (Duration.UntilEvent DurationEvent.SourceTurnedFaceDown)) CopyRecipient.ThisObject True))
       " {\"type\":\"AsCopy\",\"value\":{\"eligible\":{\"type\":\"HasCardType\",\"value\":{\"type\":\"Creature\"}},\"duration\":{\"type\":\"UntilEvent\",\"value\":{\"type\":\"SourceTurnedFaceDown\"}}}} "
   Spec.it s "has a schema" $
     Common.assertHasSchema s (TurnUpRewrite.codec Common.text Common.text)

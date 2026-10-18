@@ -354,7 +354,9 @@ data Prompt r where
   ChooseCardInHand :: Decider.Decider -> PlayerId.PlayerId -> ObjectId.ObjectId -> NonEmpty.NonEmpty ObjectId.ObjectId -> Prompt ObjectId.ObjectId
   -- | CR 608.2d: which card of a bound group a Pawl.Types.ObjectRef.ChosenCardFromAmong
   -- takes, asked once per card with what earlier asks did not take; the
-  -- PlayerId is the ref's chooser.
+  -- PlayerId is the ref's chooser. Also CR 707.5: which card off the
+  -- battlefield a mandatory Pawl.Types.AsCopy choice copies (Dinosaur
+  -- Headdress's craft materials), the ObjectId the object choosing.
   ChooseCardFromAmong :: Decider.Decider -> PlayerId.PlayerId -> ObjectId.ObjectId -> NonEmpty.NonEmpty ObjectId.ObjectId -> Prompt ObjectId.ObjectId
   -- | CR 309.2a \/ 701.49a: which of the dungeon printings they own a venturing
   -- player brings in from outside the game (CR 400.11), there being no object

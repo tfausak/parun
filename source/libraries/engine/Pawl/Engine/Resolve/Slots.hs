@@ -41,6 +41,8 @@ import qualified Pawl.Types.AnyNumberMatching as AnyNumberMatching
 import qualified Pawl.Types.AsCopy as AsCopy
 import qualified Pawl.Types.AttachAll as AttachAll
 import qualified Pawl.Types.AttachBound as AttachBound
+import qualified Pawl.Types.AttachR as AttachR
+import qualified Pawl.Types.AttachRewrite as AttachRewrite
 import qualified Pawl.Types.AttachTarget as AttachTarget
 import qualified Pawl.Types.AttachedToBound as AttachedToBound
 import qualified Pawl.Types.AttackTargetRef as AttackTargetRef
@@ -1683,6 +1685,8 @@ replacementRowReads re = case re of
   -- the appended token is card data of its own, so neither reads a slot.
   ReplacementEffect.TokenR (TokenR.MkTokenR pat _ _) -> ([TokenPattern.whatToken pat], [])
   ReplacementEffect.TurnUpR (TurnUpR.MkTurnUpR pat _ _ rewrite) -> addFilter pat (turnUpRewriteReads rewrite)
+  ReplacementEffect.AttachR (AttachR.MkAttachR pat (AttachRewrite.AsCopy asCopy)) -> addFilter pat (asCopyReads asCopy)
+  ReplacementEffect.AttachR (AttachR.MkAttachR pat (AttachRewrite.ChooseColors _)) -> ([pat], [])
   ReplacementEffect.UntapR _ -> ([], [])
   -- A LifeLossPattern is one ControllerRelation and one LifeLossCause, and no arm
   -- of LifeLossRewrite carries a Filter or a Quantity: no read at all.
@@ -1898,6 +1902,7 @@ overRelations f re = case re of
   ReplacementEffect.DamageR _ -> pure re
   ReplacementEffect.DestructionR _ -> pure re
   ReplacementEffect.TurnUpR _ -> pure re
+  ReplacementEffect.AttachR _ -> pure re
   ReplacementEffect.UntapR _ -> pure re
   ReplacementEffect.PhaseR _ -> pure re
   where
@@ -1935,6 +1940,7 @@ replacementRowEffects re = case re of
   ReplacementEffect.CounterR _ -> []
   ReplacementEffect.TokenR _ -> []
   ReplacementEffect.TurnUpR _ -> []
+  ReplacementEffect.AttachR _ -> []
   ReplacementEffect.UntapR _ -> []
   ReplacementEffect.LifeLossR _ -> []
   ReplacementEffect.LifeGainR _ -> []

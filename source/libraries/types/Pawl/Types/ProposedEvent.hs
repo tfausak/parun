@@ -124,6 +124,10 @@ data ProposedEvent
     -- engine that turns anything face up -- the one funnel CR 116.2b's special
     -- action and Effect.TurnFaceUp both go through.
     WouldTurnFaceUp ObjectId.ObjectId (Maybe (TurnUpProcedure.TurnUpProcedure, Cost.Cost Keyword.Keyword))
+  | -- | CR 701.3a: a permanent is becoming attached to an object or player.
+    -- Raised by Pawl.Engine.Event.attach, the CR 701.3 move's one funnel, once
+    -- the attachment is written; nothing replaces the move itself.
+    WouldBecomeAttached ObjectId.ObjectId
   | -- | CR 701.26b / 122.1d: a permanent would become untapped. Raised by
     -- Pawl.Engine.Event.proposeUntap, the one funnel CR 502.3's turn-based
     -- action, Effect.Untap and CR 107.6's untap symbol in a cost all go through.

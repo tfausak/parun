@@ -42,6 +42,12 @@
               "rewrite": {
                 "type": "AsCopy",
                 "value": {
+                  "among": {
+                    "type": "InZone",
+                    "value": {
+                      "type": "Graveyard"
+                    }
+                  },
                   "clauses": [
                     {
                       "exceptions": [
@@ -92,10 +98,7 @@
                         }
                       }
                     }
-                  ],
-                  "zone": {
-                    "type": "Graveyard"
-                  }
+                  ]
                 }
               }
             }
