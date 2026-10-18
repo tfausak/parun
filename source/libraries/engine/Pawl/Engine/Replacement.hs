@@ -59,6 +59,8 @@ import qualified Pawl.Extra.Natural as Natural
 import qualified Pawl.Types.ActiveCopy as ActiveCopy
 import qualified Pawl.Types.ActiveReplacement as ActiveReplacement
 import qualified Pawl.Types.AsCopy as AsCopy
+import qualified Pawl.Types.AttachR as AttachR
+import qualified Pawl.Types.AttachRewrite as AttachRewrite
 import Pawl.Types.CandidateId (CandidateId)
 import qualified Pawl.Types.CandidateId as CandidateId
 import Pawl.Types.Card (Card)
@@ -68,6 +70,7 @@ import qualified Pawl.Types.CoinFlipRewrite as CoinFlipRewrite
 import Pawl.Types.ControllerRelation (ControllerRelation)
 import qualified Pawl.Types.ControllerRelation as ControllerRelation
 import qualified Pawl.Types.CopyCoverage as CopyCoverage
+import qualified Pawl.Types.CopyDomain as CopyDomain
 import qualified Pawl.Types.CopyException as CopyException
 import qualified Pawl.Types.CounterCause as CounterCause
 import qualified Pawl.Types.CounterKind as CounterKind
@@ -188,6 +191,7 @@ asZoneChange event = case event of
   ProposedEvent.WouldCreateTokens {} -> Nothing
   ProposedEvent.WouldBeginPhase {} -> Nothing
   ProposedEvent.WouldTurnFaceUp {} -> Nothing
+  ProposedEvent.WouldBecomeAttached {} -> Nothing
   ProposedEvent.WouldUntap _ -> Nothing
   ProposedEvent.WouldLoseLife {} -> Nothing
   ProposedEvent.WouldGainLife {} -> Nothing
@@ -723,6 +727,7 @@ affected event = case event of
   ProposedEvent.WouldCreateTokens pid _ -> ([], [pid])
   ProposedEvent.WouldBeginPhase _ pid -> ([], [pid])
   ProposedEvent.WouldTurnFaceUp oid _ -> ([oid], [])
+  ProposedEvent.WouldBecomeAttached oid -> ([oid], [])
   ProposedEvent.WouldUntap oid -> ([oid], [])
   ProposedEvent.WouldLoseLife _ pid _ -> ([], [pid])
   ProposedEvent.WouldGainLife pid _ -> ([], [pid])
@@ -879,6 +884,12 @@ matchesPrinted viewOf gs event candidate =
           matchesFiltered viewOf gs candidate (TurnUpR.matching turnUpR) oid
             && maybe True (\required -> fmap fst road == Just required) (TurnUpR.requiring turnUpR)
             && maybe True (\required -> fmap snd road == Just required) (TurnUpR.paying turnUpR)
+        -- The TurnUpR arm's reading one event class over: the Filter is matched
+        -- against the live projection of the permanent becoming attached, which
+        -- Pawl.Engine.Event.attach has already moved, and every producer writes
+        -- Filter.IsSource ("as THIS Equipment becomes attached").
+        (ReplacementEffect.AttachR attachR, ProposedEvent.WouldBecomeAttached oid) ->
+          matchesFiltered viewOf gs candidate (AttachR.matching attachR) oid
         -- CR 122.1d's "a permanent with a stun counter on it" is the self-scope
         -- DestructionR's arm reads one event class over: the row is minted onto
         -- the permanent holding the counters, so `src` IS the rule's subject and
@@ -1001,6 +1012,7 @@ matchesPrinted viewOf gs event candidate =
         (ReplacementEffect.CounterR {}, _) -> False
         (ReplacementEffect.TokenR {}, _) -> False
         (ReplacementEffect.TurnUpR {}, _) -> False
+        (ReplacementEffect.AttachR {}, _) -> False
         (ReplacementEffect.UntapR _, _) -> False
         (ReplacementEffect.LifeLossR {}, _) -> False
         (ReplacementEffect.LifeGainR {}, _) -> False
@@ -1977,6 +1989,9 @@ bucketOfEffect re = case re of
   -- so CR 616.1e -- for the copy rewrite too, since CR 616.1c's copy is one made
   -- "as it enters the battlefield".
   ReplacementEffect.TurnUpR {} -> ReplacementBucket.Other
+  -- CR 616.1a-d are all about entering the battlefield; becoming attached is
+  -- not, so CR 616.1e -- for the copy rewrite too, TurnUpR's reason.
+  ReplacementEffect.AttachR {} -> ReplacementBucket.Other
   -- CR 616.1a-d are all about entering the battlefield and copying; becoming
   -- untapped is neither, so CR 616.1e.
   ReplacementEffect.UntapR _ -> ReplacementBucket.Other
@@ -2197,6 +2212,12 @@ readsApplier re = case re of
   -- CR 707.4 / 109.5: the EntryR AsCopy arm's answer on the other event class --
   -- the chooser is the turning permanent's controller, read off the event.
   ReplacementEffect.TurnUpR (TurnUpR.MkTurnUpR _ _ _ (TurnUpRewrite.AsCopy _)) -> False
+  -- The same answer for an attaching permanent: the chooser is its controller,
+  -- read off the event.
+  ReplacementEffect.AttachR (AttachR.MkAttachR _ (AttachRewrite.AsCopy _)) -> False
+  -- CR 105.1's five colours are the whole offer whoever's row is applying, the
+  -- entry arm's answer.
+  ReplacementEffect.AttachR (AttachR.MkAttachR _ (AttachRewrite.ChooseColors _)) -> False
   -- CR 122.1d acts on the permanent becoming untapped and names no player -- CR
   -- 701.19a's answer one event class over, and for its reason.
   ReplacementEffect.UntapR _ -> False
@@ -2347,6 +2368,7 @@ readsSource effect = case effect of
   ReplacementEffect.CounterR {} -> False
   ReplacementEffect.TokenR {} -> False
   ReplacementEffect.TurnUpR {} -> False
+  ReplacementEffect.AttachR {} -> False
   ReplacementEffect.UntapR _ -> False
   ReplacementEffect.LifeLossR {} -> False
   ReplacementEffect.LifeGainR {} -> False
@@ -2512,6 +2534,9 @@ affectedChooserOf gs event = case event of
   -- CR 616.1's affected object is the permanent turning over, and its controller
   -- is CR 702.37e's "you" -- the player who took the special action.
   ProposedEvent.WouldTurnFaceUp oid _ -> Projection.controllerOf oid gs
+  -- CR 616.1's affected object is the permanent becoming attached, and its
+  -- controller is the "you" of its own "as this becomes attached" ability.
+  ProposedEvent.WouldBecomeAttached oid -> Projection.controllerOf oid gs
   -- CR 616.1's affected object is the permanent that would become untapped, and
   -- CR 122.1d gives its controller the choice among applicable rows even at CR
   -- 502.3's turn-based action, where that controller is the active player.
@@ -2648,17 +2673,19 @@ applyCopyExceptions this own exceptions snapshot =
    in (excepted snapshot) {PC.flipped = fmap excepted (PC.flipped snapshot)}
 
 -- CR 707.5 / 614.12a: the objects an entering copy may choose. Members of the
--- rewrite's zone matching its printed noun phrase, other than itself, minus
+-- rewrite's domain matching its printed noun phrase, other than itself, minus
 -- anything entering in the same batch (see the CR 614.12a note on
 -- Event.applyReplacementsIn for why the batch set, not 614.13a, is what excludes
 -- them).
 --
 -- The Filter comes off the card (Pawl.Types.AsCopy's `eligible`) rather than
 -- being hardcoded here (#1512): Clone writes "any creature" and Copy Enchantment
--- "any enchantment", and this function must not know which. The zone is the
--- card's too (Pawl.Types.AsCopy's `zone`): the battlefield for Clone, and for
+-- "any enchantment", and this function must not know which. The domain is the
+-- card's too (Pawl.Types.AsCopy's `among`): the battlefield for Clone, for
 -- Superior Spider-Man's "any creature card in a graveyard" every player's
--- graveyard. Any other zone answers nothing.
+-- graveyard, and for Dinosaur Headdress's "an exiled creature card used to craft
+-- this Equipment" its craft materials (Projection.exiledPileOf). Any other zone
+-- answers nothing.
 --
 -- Matched through each candidate's own CR 613 projection, revealableFromHand's
 -- reading, so a continuous effect that made a permanent an enchantment reaches
@@ -2666,18 +2693,19 @@ applyCopyExceptions this own exceptions snapshot =
 -- entering object, so a filter naming "you" or "this" resolves against the
 -- player making the choice (CR 109.5); nothing printed today uses either, and
 -- supplying Nothing would silently answer False if one did.
-legalCopyTargets :: Set ObjectId -> Filter.Type.Filter Keyword.Type.Keyword -> Zone.Zone -> ObjectId -> GameState -> [ObjectId]
-legalCopyTargets batch filter_ zone self gs =
+legalCopyTargets :: Set ObjectId -> Filter.Type.Filter Keyword.Type.Keyword -> CopyDomain.CopyDomain -> ObjectId -> GameState -> [ObjectId]
+legalCopyTargets batch filter_ among self gs =
   let context = Projection.sourceContext gs (Projection.controllerOf self gs) self
       viewOf = Projection.viewsOf gs
       eligible oid =
         oid /= self
           && not (Set.member oid batch)
           && Filter.matches context (viewOf oid) filter_
-      domain = case zone of
-        Zone.Battlefield -> Set.toAscList (GameState.battlefield gs)
-        Zone.Graveyard -> concatMap (\pid -> Game.zoneMembers Zone.Graveyard pid gs) (GameState.turnOrder gs)
-        _ -> []
+      domain = case among of
+        CopyDomain.InZone Zone.Battlefield -> Set.toAscList (GameState.battlefield gs)
+        CopyDomain.InZone Zone.Graveyard -> concatMap (\pid -> Game.zoneMembers Zone.Graveyard pid gs) (GameState.turnOrder gs)
+        CopyDomain.InZone _ -> []
+        CopyDomain.InPile pile -> Projection.exiledPileOf pile self gs
    in filter eligible domain
 
 -- CR 707.9g / 603.11: the triggered ability linked to a CR 707.5 entry
@@ -3782,6 +3810,7 @@ contestedResource gs candidate = case ReplacementCandidate.effect candidate of
   ReplacementEffect.CounterR {} -> Nothing
   ReplacementEffect.TokenR {} -> Nothing
   ReplacementEffect.TurnUpR {} -> Nothing
+  ReplacementEffect.AttachR {} -> Nothing
   ReplacementEffect.UntapR _ -> Nothing
   -- CR 614.1a: neither resizing life-total rewrite is a supply a batch can run out
   -- of. A floor is re-read off the board every application, and once the player is
@@ -3835,6 +3864,7 @@ asDamageEvent event = case event of
   ProposedEvent.WouldCreateTokens {} -> Nothing
   ProposedEvent.WouldBeginPhase {} -> Nothing
   ProposedEvent.WouldTurnFaceUp {} -> Nothing
+  ProposedEvent.WouldBecomeAttached {} -> Nothing
   ProposedEvent.WouldUntap _ -> Nothing
   ProposedEvent.WouldLoseLife {} -> Nothing
   ProposedEvent.WouldGainLife {} -> Nothing
@@ -3861,6 +3891,7 @@ asDestruction event = case event of
   ProposedEvent.WouldCreateTokens {} -> Nothing
   ProposedEvent.WouldBeginPhase {} -> Nothing
   ProposedEvent.WouldTurnFaceUp {} -> Nothing
+  ProposedEvent.WouldBecomeAttached {} -> Nothing
   ProposedEvent.WouldUntap _ -> Nothing
   ProposedEvent.WouldLoseLife {} -> Nothing
   ProposedEvent.WouldGainLife {} -> Nothing
@@ -3890,6 +3921,7 @@ asUntap event = case event of
   ProposedEvent.WouldCreateTokens {} -> Nothing
   ProposedEvent.WouldBeginPhase {} -> Nothing
   ProposedEvent.WouldTurnFaceUp {} -> Nothing
+  ProposedEvent.WouldBecomeAttached {} -> Nothing
   ProposedEvent.WouldLoseLife {} -> Nothing
   ProposedEvent.WouldGainLife {} -> Nothing
   ProposedEvent.WouldDraw _ -> Nothing
@@ -3928,6 +3960,7 @@ asDraw event = case event of
   ProposedEvent.WouldCreateTokens {} -> Nothing
   ProposedEvent.WouldBeginPhase {} -> Nothing
   ProposedEvent.WouldTurnFaceUp {} -> Nothing
+  ProposedEvent.WouldBecomeAttached {} -> Nothing
   ProposedEvent.WouldUntap _ -> Nothing
   ProposedEvent.WouldLoseLife {} -> Nothing
   ProposedEvent.WouldGainLife {} -> Nothing
@@ -3957,6 +3990,7 @@ asDrawCount event = case event of
   ProposedEvent.WouldCreateTokens {} -> Nothing
   ProposedEvent.WouldBeginPhase {} -> Nothing
   ProposedEvent.WouldTurnFaceUp {} -> Nothing
+  ProposedEvent.WouldBecomeAttached {} -> Nothing
   ProposedEvent.WouldUntap _ -> Nothing
   ProposedEvent.WouldLoseLife {} -> Nothing
   ProposedEvent.WouldGainLife {} -> Nothing
@@ -3989,6 +4023,7 @@ asMillCount event = case event of
   ProposedEvent.WouldCreateTokens {} -> Nothing
   ProposedEvent.WouldBeginPhase {} -> Nothing
   ProposedEvent.WouldTurnFaceUp {} -> Nothing
+  ProposedEvent.WouldBecomeAttached {} -> Nothing
   ProposedEvent.WouldUntap _ -> Nothing
   ProposedEvent.WouldLoseLife {} -> Nothing
   ProposedEvent.WouldGainLife {} -> Nothing
@@ -4015,6 +4050,7 @@ asCoinFlip event = case event of
   ProposedEvent.WouldCreateTokens {} -> Nothing
   ProposedEvent.WouldBeginPhase {} -> Nothing
   ProposedEvent.WouldTurnFaceUp {} -> Nothing
+  ProposedEvent.WouldBecomeAttached {} -> Nothing
   ProposedEvent.WouldUntap _ -> Nothing
   ProposedEvent.WouldLoseLife {} -> Nothing
   ProposedEvent.WouldGainLife {} -> Nothing
@@ -4044,6 +4080,7 @@ asDiceRoll event = case event of
   ProposedEvent.WouldCreateTokens {} -> Nothing
   ProposedEvent.WouldBeginPhase {} -> Nothing
   ProposedEvent.WouldTurnFaceUp {} -> Nothing
+  ProposedEvent.WouldBecomeAttached {} -> Nothing
   ProposedEvent.WouldUntap _ -> Nothing
   ProposedEvent.WouldLoseLife {} -> Nothing
   ProposedEvent.WouldGainLife {} -> Nothing
@@ -4072,6 +4109,7 @@ asScry event = case event of
   ProposedEvent.WouldCreateTokens {} -> Nothing
   ProposedEvent.WouldBeginPhase {} -> Nothing
   ProposedEvent.WouldTurnFaceUp {} -> Nothing
+  ProposedEvent.WouldBecomeAttached {} -> Nothing
   ProposedEvent.WouldUntap _ -> Nothing
   ProposedEvent.WouldLoseLife {} -> Nothing
   ProposedEvent.WouldGainLife {} -> Nothing
@@ -4100,6 +4138,7 @@ asProliferate event = case event of
   ProposedEvent.WouldCreateTokens {} -> Nothing
   ProposedEvent.WouldBeginPhase {} -> Nothing
   ProposedEvent.WouldTurnFaceUp {} -> Nothing
+  ProposedEvent.WouldBecomeAttached {} -> Nothing
   ProposedEvent.WouldUntap _ -> Nothing
   ProposedEvent.WouldLoseLife {} -> Nothing
   ProposedEvent.WouldGainLife {} -> Nothing
@@ -4129,6 +4168,7 @@ asAssemble event = case event of
   ProposedEvent.WouldCreateTokens {} -> Nothing
   ProposedEvent.WouldBeginPhase {} -> Nothing
   ProposedEvent.WouldTurnFaceUp {} -> Nothing
+  ProposedEvent.WouldBecomeAttached {} -> Nothing
   ProposedEvent.WouldUntap _ -> Nothing
   ProposedEvent.WouldLoseLife {} -> Nothing
   ProposedEvent.WouldGainLife {} -> Nothing
@@ -4157,6 +4197,7 @@ asVillainousChoice event = case event of
   ProposedEvent.WouldCreateTokens {} -> Nothing
   ProposedEvent.WouldBeginPhase {} -> Nothing
   ProposedEvent.WouldTurnFaceUp {} -> Nothing
+  ProposedEvent.WouldBecomeAttached {} -> Nothing
   ProposedEvent.WouldUntap _ -> Nothing
   ProposedEvent.WouldLoseLife {} -> Nothing
   ProposedEvent.WouldGainLife {} -> Nothing
@@ -4172,6 +4213,7 @@ asCounters event = case event of
   ProposedEvent.WouldCreateTokens {} -> Nothing
   ProposedEvent.WouldBeginPhase {} -> Nothing
   ProposedEvent.WouldTurnFaceUp {} -> Nothing
+  ProposedEvent.WouldBecomeAttached {} -> Nothing
   ProposedEvent.WouldUntap _ -> Nothing
   ProposedEvent.WouldLoseLife {} -> Nothing
   ProposedEvent.WouldGainLife {} -> Nothing
@@ -4201,6 +4243,7 @@ asPlayerCounters event = case event of
   ProposedEvent.WouldCreateTokens {} -> Nothing
   ProposedEvent.WouldBeginPhase {} -> Nothing
   ProposedEvent.WouldTurnFaceUp {} -> Nothing
+  ProposedEvent.WouldBecomeAttached {} -> Nothing
   ProposedEvent.WouldUntap _ -> Nothing
   ProposedEvent.WouldLoseLife {} -> Nothing
   ProposedEvent.WouldGainLife {} -> Nothing
@@ -4234,6 +4277,7 @@ asLifeLoss event = case event of
   ProposedEvent.WouldCreateTokens {} -> Nothing
   ProposedEvent.WouldBeginPhase {} -> Nothing
   ProposedEvent.WouldTurnFaceUp {} -> Nothing
+  ProposedEvent.WouldBecomeAttached {} -> Nothing
   ProposedEvent.WouldUntap _ -> Nothing
   ProposedEvent.WouldDraw _ -> Nothing
   ProposedEvent.WouldDrawCards {} -> Nothing
@@ -4262,6 +4306,7 @@ asLifeGain event = case event of
   ProposedEvent.WouldCreateTokens {} -> Nothing
   ProposedEvent.WouldBeginPhase {} -> Nothing
   ProposedEvent.WouldTurnFaceUp {} -> Nothing
+  ProposedEvent.WouldBecomeAttached {} -> Nothing
   ProposedEvent.WouldUntap _ -> Nothing
   ProposedEvent.WouldDraw _ -> Nothing
   ProposedEvent.WouldDrawCards {} -> Nothing
@@ -4286,6 +4331,7 @@ asTokens event = case event of
   ProposedEvent.WouldPutPlayerCounters {} -> Nothing
   ProposedEvent.WouldBeginPhase {} -> Nothing
   ProposedEvent.WouldTurnFaceUp {} -> Nothing
+  ProposedEvent.WouldBecomeAttached {} -> Nothing
   ProposedEvent.WouldUntap _ -> Nothing
   ProposedEvent.WouldLoseLife {} -> Nothing
   ProposedEvent.WouldGainLife {} -> Nothing
@@ -4493,6 +4539,7 @@ asPhaseBegin event = case event of
   ProposedEvent.WouldPutPlayerCounters {} -> Nothing
   ProposedEvent.WouldCreateTokens {} -> Nothing
   ProposedEvent.WouldTurnFaceUp {} -> Nothing
+  ProposedEvent.WouldBecomeAttached {} -> Nothing
   ProposedEvent.WouldUntap _ -> Nothing
   ProposedEvent.WouldLoseLife {} -> Nothing
   ProposedEvent.WouldGainLife {} -> Nothing

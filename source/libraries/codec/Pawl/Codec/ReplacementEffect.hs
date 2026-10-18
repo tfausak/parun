@@ -1,6 +1,7 @@
 module Pawl.Codec.ReplacementEffect where
 
 import qualified Data.Typeable as Typeable
+import qualified Pawl.Codec.AttachR as AttachR
 import qualified Pawl.Codec.CoinFlipR as CoinFlipR
 import qualified Pawl.Codec.CounterR as CounterR
 import qualified Pawl.Codec.DamageR as DamageR
@@ -51,6 +52,7 @@ codec cardCodec abilityCodec effectCodec =
       Arm.payload "CounterR" CounterR.codec ReplacementEffect.CounterR (\x -> case x of ReplacementEffect.CounterR y -> Just y; _ -> Nothing),
       Arm.payload "TokenR" (TokenR.codec cardCodec) ReplacementEffect.TokenR (\x -> case x of ReplacementEffect.TokenR y -> Just y; _ -> Nothing),
       Arm.payload "TurnUpR" (TurnUpR.codec abilityCodec effectCodec) ReplacementEffect.TurnUpR (\x -> case x of ReplacementEffect.TurnUpR y -> Just y; _ -> Nothing),
+      Arm.payload "AttachR" (AttachR.codec abilityCodec effectCodec) ReplacementEffect.AttachR (\x -> case x of ReplacementEffect.AttachR y -> Just y; _ -> Nothing),
       Arm.payload "UntapR" UntapR.codec ReplacementEffect.UntapR (\x -> case x of ReplacementEffect.UntapR y -> Just y; _ -> Nothing),
       Arm.payload "LifeLossR" LifeLossR.codec ReplacementEffect.LifeLossR (\x -> case x of ReplacementEffect.LifeLossR y -> Just y; _ -> Nothing),
       Arm.payload "LifeGainR" LifeGainR.codec ReplacementEffect.LifeGainR (\x -> case x of ReplacementEffect.LifeGainR y -> Just y; _ -> Nothing),
@@ -77,6 +79,7 @@ tagOf x = case x of
   ReplacementEffect.CounterR {} -> "CounterR"
   ReplacementEffect.TokenR {} -> "TokenR"
   ReplacementEffect.TurnUpR {} -> "TurnUpR"
+  ReplacementEffect.AttachR {} -> "AttachR"
   ReplacementEffect.UntapR {} -> "UntapR"
   ReplacementEffect.LifeLossR {} -> "LifeLossR"
   ReplacementEffect.LifeGainR {} -> "LifeGainR"
