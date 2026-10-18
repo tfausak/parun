@@ -2065,7 +2065,8 @@ matches context view predicate = case predicate of
   -- CR 120.1 / 608.2i: the same look-back asked of a RELATION, CrewedSourceThisTurn's
   -- split -- the candidate's own field says whom it dealt damage to, and the
   -- party says which of them the card names. The source is the id it had, so a
-  -- dies trigger's "it" still finds the damage (CR 603.10a). Vacuously False for
+  -- dies trigger's "it" still finds the damage (CR 603.10a) -- Pawl.DamageSpec's
+  -- Brine Hag case is what proves it. Vacuously False for
   -- a context with no source or no perspective, where the party names nothing.
   Filter.DealtDamageToThisTurn party ->
     let hit damaged = case party of
