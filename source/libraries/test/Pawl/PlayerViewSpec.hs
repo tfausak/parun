@@ -155,8 +155,9 @@ spec s registry = Spec.describe s "PlayerView" $ do
 faceDownViews :: (Monad m) => Spec.Spec m n -> Printing.Printing -> GameState.GameState -> (PlayerView.Type.PlayerView -> [ObjectView.ObjectView]) -> m ()
 faceDownViews s tracker gs zoneOf = do
   let viewOf pid = zoneOf (PlayerView.viewFor pid gs)
-      shown pid = fmap (fmap (\c -> (ProjectedCharacteristics.names c, ProjectedCharacteristics.power c, ProjectedCharacteristics.toughness c))) . ObjectView.characteristics <$> viewOf pid
-      card pid = fmap (fmap (\c -> (ProjectedCharacteristics.names c, ProjectedCharacteristics.power c))) . ObjectView.face <$> viewOf pid
+      shown pid = fmap (\c -> (ProjectedCharacteristics.names c, ProjectedCharacteristics.power c, ProjectedCharacteristics.toughness c)) . ObjectView.characteristics <$> viewOf pid
+      card pid = fmap (\c -> (ProjectedCharacteristics.names c, ProjectedCharacteristics.power c)) . ObjectView.face <$> viewOf pid
+      nameless :: Maybe (Set.Set CardName.CardName, Maybe Integer, Maybe Integer)
       nameless = Just (Set.empty, Just 2, Just 2)
       name = S.printingName tracker
       rendered = Text.unpack (Common.render (Codec.encode Codec.PlayerView.codec (PlayerView.viewFor S.bob gs)))
