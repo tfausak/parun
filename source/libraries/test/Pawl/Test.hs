@@ -313,6 +313,7 @@ import qualified Pawl.Codec.ExpirySpec
 import qualified Pawl.Codec.ExploitedSpec
 import qualified Pawl.Codec.ExtraPhaseSpec
 import qualified Pawl.Codec.ExtraTurnSpec
+import qualified Pawl.Codec.ExtraVotesSpec
 import qualified Pawl.Codec.FaceDownCharacteristicsSpec
 import qualified Pawl.Codec.FaceDownReasonSpec
 import qualified Pawl.Codec.FaceDownStateSpec
@@ -1198,6 +1199,7 @@ spec s registry = do
   Pawl.Codec.ExploitedSpec.spec s
   Pawl.Codec.ExtraPhaseSpec.spec s
   Pawl.Codec.ExtraTurnSpec.spec s
+  Pawl.Codec.ExtraVotesSpec.spec s
   Pawl.Codec.FaceDownCharacteristicsSpec.spec s
   Pawl.Codec.FaceDownReasonSpec.spec s
   Pawl.Codec.FaceDownStateSpec.spec s

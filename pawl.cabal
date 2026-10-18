@@ -674,6 +674,8 @@ library codec
     Pawl.Codec.ExtraPhaseSpec
     Pawl.Codec.ExtraTurn
     Pawl.Codec.ExtraTurnSpec
+    Pawl.Codec.ExtraVotes
+    Pawl.Codec.ExtraVotesSpec
     Pawl.Codec.Face
     Pawl.Codec.FaceDownCharacteristics
     Pawl.Codec.FaceDownCharacteristicsSpec
@@ -2468,6 +2470,7 @@ library types
     Pawl.Types.Exploited
     Pawl.Types.ExtraPhase
     Pawl.Types.ExtraTurn
+    Pawl.Types.ExtraVotes
     Pawl.Types.Face
     Pawl.Types.FaceDownCharacteristics
     Pawl.Types.FaceDownReason

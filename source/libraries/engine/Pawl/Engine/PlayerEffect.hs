@@ -72,6 +72,7 @@ import qualified Pawl.Types.CostModifier as CostModifier
 import qualified Pawl.Types.CostSubject as CostSubject
 import qualified Pawl.Types.DamagePattern as DamagePattern
 import qualified Pawl.Types.ExileLink as ExileLink
+import qualified Pawl.Types.ExtraVotes as ExtraVotes
 import qualified Pawl.Types.Face as Face
 import Pawl.Types.Filter (Filter)
 import qualified Pawl.Types.Filter as Filter.Type
@@ -2751,10 +2752,12 @@ landPlaysAllowed pid gs =
 defaultVotes :: Natural
 defaultVotes = 1
 
--- CR 701.38d: how many ballots `pid` casts in one vote -- rule 701.38a's own
--- one, plus every vote an effect gives them (Brago's Representative). Rule
--- 701.38d puts them all "at the same time the player would otherwise have
--- voted", which is Resolve.Effect's business; this answers only how many.
+-- CR 701.38d: how many ballots `pid` casts in one vote unasked -- rule
+-- 701.38a's own one, plus every vote an effect gives them (Brago's
+-- Representative). The votes a player MAY cast (Ballot Broker) are
+-- `offeredExtras`'s, asked one grant at a time. Rule 701.38d puts them all "at
+-- the same time the player would otherwise have voted", which is
+-- Resolve.Effect's business; this answers only how many.
 --
 -- A SUM over every applicable grant, landPlaysAllowed's posture and for its
 -- reason: rule 701.38d says an effect gives "multiple votes" and states no rule
@@ -2763,9 +2766,6 @@ defaultVotes = 1
 -- Read LIVE through `applying`, like every other question in this module. The
 -- vote itself reads it ONCE, off the board the vote begins on, since nothing
 -- happens between two seats' ballots that could change it.
---
--- Not implemented: an OPTIONAL additional vote, Ballot Broker's and The
--- Valeyard's "you may vote an additional time" (#4409).
 votesAllowed :: PlayerId -> GameState -> Natural
 votesAllowed pid gs =
   let grantOf effect = case effect of
@@ -2808,7 +2808,8 @@ votesAllowed pid gs =
         PlayerEffect.CantGetCounters {} -> Nothing
         PlayerEffect.StateCoinFlip {} -> Nothing
         PlayerEffect.ModifyDieRoll _ -> Nothing
-        PlayerEffect.AdditionalVotes extra -> Just extra
+        PlayerEffect.AdditionalVotes (ExtraVotes.Mandatory extra) -> Just extra
+        PlayerEffect.AdditionalVotes (ExtraVotes.Optional _) -> Nothing
         PlayerEffect.AdditionalSurveilCards _ -> Nothing
         PlayerEffect.CantGainLife -> Nothing
         PlayerEffect.CantLoseLife -> Nothing
@@ -2816,61 +2817,63 @@ votesAllowed pid gs =
         PlayerEffect.Shows _ -> Nothing
    in defaultVotes + sum (Maybe.mapMaybe (grantOf . snd) (applying pid gs))
 
--- CR 701.25b: the grants letting `pid` look at cards beyond a surveil's own N
--- (Enhanced Surveillance), each its source and its count. One per grant, so
--- each "may" is asked on its own: the card's ruling (2018-10-05) has both of
--- two copies apply, making the extra cards four. Every
+-- CR 701.25b / 701.38d: the "may" grants `pid` takes up or declines one at a
+-- time, each its source and the grant -- Enhanced Surveillance's cards beyond a
+-- surveil's own N, Ballot Broker's vote beyond rule 701.38a's one. One per
+-- grant, so each "may" is asked on its own: Enhanced Surveillance's ruling
+-- (2018-10-05) has both of two copies apply, making the extra cards four. Every
 -- row's source is an object, so the Maybe dropped here drops nothing.
-surveilExtra :: PlayerId -> GameState -> [(ObjectId, Natural)]
-surveilExtra pid gs =
-  let grantOf effect = case effect of
-        PlayerEffect.CantCastSpells -> Nothing
-        PlayerEffect.CantActivateAbilities _ -> Nothing
-        PlayerEffect.CantCastMoreThan {} -> Nothing
-        PlayerEffect.ModifyCost {} -> Nothing
-        PlayerEffect.AlternativeActivationCost {} -> Nothing
-        PlayerEffect.PlayAdditionalLands {} -> Nothing
-        PlayerEffect.NoMaximumHandSize -> Nothing
-        PlayerEffect.SetMaximumHandSize {} -> Nothing
-        PlayerEffect.IncreaseMaximumHandSize {} -> Nothing
-        PlayerEffect.ReduceMaximumHandSize {} -> Nothing
-        PlayerEffect.DontLoseUnspentMana {} -> Nothing
-        PlayerEffect.LoseLifeForUnspentMana -> Nothing
-        PlayerEffect.SpendManaAsThough {} -> Nothing
-        PlayerEffect.CantBeTargetedBy {} -> Nothing
-        PlayerEffect.HasProtectionFrom {} -> Nothing
-        PlayerEffect.CastAsThoughItHadFlash {} -> Nothing
-        PlayerEffect.MayPlayAsThoughItHadFlash {} -> Nothing
-        PlayerEffect.ActivateKeywordAtInstantSpeed {} -> Nothing
-        PlayerEffect.ActivateLoyaltyAtInstantSpeed {} -> Nothing
-        PlayerEffect.CantBeCountered {} -> Nothing
-        PlayerEffect.DamageCantBePrevented {} -> Nothing
-        PlayerEffect.DamageCantBeRedirected {} -> Nothing
-        PlayerEffect.CantSearchLibraries {} -> Nothing
-        PlayerEffect.CantBecomeMonarch -> Nothing
-        PlayerEffect.CantSetSchemesInMotion -> Nothing
-        PlayerEffect.ControlledWhileSearching -> Nothing
-        PlayerEffect.ExilesFoundWhileSearching -> Nothing
-        PlayerEffect.CantAttackWithCreatures -> Nothing
-        PlayerEffect.CantCastMatching {} -> Nothing
-        PlayerEffect.PutTappedAsYouCascade {} -> Nothing
-        PlayerEffect.CastOnlyAtSorcerySpeed -> Nothing
-        PlayerEffect.CantPlayLands {} -> Nothing
-        PlayerEffect.CastFrom {} -> Nothing
-        PlayerEffect.PlayLandsFrom {} -> Nothing
-        PlayerEffect.PlotFrom {} -> Nothing
-        PlayerEffect.CastFromHandWithoutPayingManaCost {} -> Nothing
-        PlayerEffect.CantGetCounters {} -> Nothing
-        PlayerEffect.StateCoinFlip {} -> Nothing
-        PlayerEffect.ModifyDieRoll _ -> Nothing
-        PlayerEffect.AdditionalVotes _ -> Nothing
-        PlayerEffect.AdditionalSurveilCards extra -> Just extra
-        PlayerEffect.CantGainLife -> Nothing
-        PlayerEffect.CantLoseLife -> Nothing
-        PlayerEffect.Precluded _ -> Nothing
-        PlayerEffect.Shows _ -> Nothing
-      rowOf (source, effect) = case (RowSource.object source, grantOf effect) of
-        (Just oid, Just extra) -> Just (oid, extra)
+offeredExtras :: PlayerId -> GameState -> [(ObjectId, PlayerEffect.PlayerEffect)]
+offeredExtras pid gs =
+  let offered effect = case effect of
+        PlayerEffect.CantCastSpells -> False
+        PlayerEffect.CantActivateAbilities _ -> False
+        PlayerEffect.CantCastMoreThan {} -> False
+        PlayerEffect.ModifyCost {} -> False
+        PlayerEffect.AlternativeActivationCost {} -> False
+        PlayerEffect.PlayAdditionalLands {} -> False
+        PlayerEffect.NoMaximumHandSize -> False
+        PlayerEffect.SetMaximumHandSize {} -> False
+        PlayerEffect.IncreaseMaximumHandSize {} -> False
+        PlayerEffect.ReduceMaximumHandSize {} -> False
+        PlayerEffect.DontLoseUnspentMana {} -> False
+        PlayerEffect.LoseLifeForUnspentMana -> False
+        PlayerEffect.SpendManaAsThough {} -> False
+        PlayerEffect.CantBeTargetedBy {} -> False
+        PlayerEffect.HasProtectionFrom {} -> False
+        PlayerEffect.CastAsThoughItHadFlash {} -> False
+        PlayerEffect.MayPlayAsThoughItHadFlash {} -> False
+        PlayerEffect.ActivateKeywordAtInstantSpeed {} -> False
+        PlayerEffect.ActivateLoyaltyAtInstantSpeed {} -> False
+        PlayerEffect.CantBeCountered {} -> False
+        PlayerEffect.DamageCantBePrevented {} -> False
+        PlayerEffect.DamageCantBeRedirected {} -> False
+        PlayerEffect.CantSearchLibraries {} -> False
+        PlayerEffect.CantBecomeMonarch -> False
+        PlayerEffect.CantSetSchemesInMotion -> False
+        PlayerEffect.ControlledWhileSearching -> False
+        PlayerEffect.ExilesFoundWhileSearching -> False
+        PlayerEffect.CantAttackWithCreatures -> False
+        PlayerEffect.CantCastMatching {} -> False
+        PlayerEffect.PutTappedAsYouCascade {} -> False
+        PlayerEffect.CastOnlyAtSorcerySpeed -> False
+        PlayerEffect.CantPlayLands {} -> False
+        PlayerEffect.CastFrom {} -> False
+        PlayerEffect.PlayLandsFrom {} -> False
+        PlayerEffect.PlotFrom {} -> False
+        PlayerEffect.CastFromHandWithoutPayingManaCost {} -> False
+        PlayerEffect.CantGetCounters {} -> False
+        PlayerEffect.StateCoinFlip {} -> False
+        PlayerEffect.ModifyDieRoll _ -> False
+        PlayerEffect.AdditionalVotes (ExtraVotes.Mandatory _) -> False
+        PlayerEffect.AdditionalVotes (ExtraVotes.Optional _) -> True
+        PlayerEffect.AdditionalSurveilCards _ -> True
+        PlayerEffect.CantGainLife -> False
+        PlayerEffect.CantLoseLife -> False
+        PlayerEffect.Precluded _ -> False
+        PlayerEffect.Shows _ -> False
+      rowOf (source, effect) = case RowSource.object source of
+        Just oid | offered effect -> Just (oid, effect)
         _ -> Nothing
    in Maybe.mapMaybe rowOf (applying pid gs)
 

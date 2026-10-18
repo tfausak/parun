@@ -233,6 +233,7 @@ import qualified Pawl.Types.ExilePlayPermission as ExilePlayPermission
 import qualified Pawl.Types.Expiry as Expiry.Type
 import qualified Pawl.Types.Exploited as Exploited
 import qualified Pawl.Types.ExtraTurn as ExtraTurn
+import qualified Pawl.Types.ExtraVotes as ExtraVotes
 import qualified Pawl.Types.Face as Face
 import qualified Pawl.Types.FaceDownReason as FaceDownReason
 import qualified Pawl.Types.FaceDownState as FaceDownState
@@ -330,6 +331,7 @@ import qualified Pawl.Types.PlayerAction as PlayerAction
 import qualified Pawl.Types.PlayerChoice as PlayerChoice
 import qualified Pawl.Types.PlayerControl as PlayerControl
 import qualified Pawl.Types.PlayerCounters as PlayerCounters
+import qualified Pawl.Types.PlayerEffect as PlayerEffect.Type
 import Pawl.Types.PlayerId (PlayerId)
 import qualified Pawl.Types.PlayerQuantity as PlayerQuantity
 import Pawl.Types.PlayerRef (PlayerRef)
@@ -6354,8 +6356,8 @@ applyOneEffect runSubgame resolving source controller legal chosen effect = case
           -- it. CR 701.25b's extra cards join the ones looked at, each grant's
           -- "may" asked on its own, read off the board the surveil begins on.
           Just n | n > 0 -> do
-            extras <- Monad.forM (PlayerEffect.surveilExtra pid gs) $ \(grant, count) -> do
-              answer <- Game.choose (Prompt.OfferedExtraLook (Decide.deciderFor pid gs) pid grant count)
+            extras <- Monad.forM [(grant, grantEffect, count) | (grant, grantEffect@(PlayerEffect.Type.AdditionalSurveilCards count)) <- PlayerEffect.offeredExtras pid gs] $ \(grant, grantEffect, count) -> do
+              answer <- Game.choose (Prompt.OfferedExtra (Decide.deciderFor pid gs) pid grant grantEffect)
               case answer of
                 OptionalDecision.Exercises -> pure count
                 OptionalDecision.Declines -> pure 0
@@ -6986,7 +6988,18 @@ applyOneEffect runSubgame resolving source controller legal chosen effect = case
         -- voted" (Brago's Representative). Each is its own prompt: that card's
         -- reminder text has the votes go to different choices or the same one, so
         -- nothing lets the engine answer the second from the first.
-        ballotsOf ask voter = Monad.replicateM (Natural.toIntSaturating (PlayerEffect.votesAllowed voter gs)) (ask voter)
+        --
+        -- The votes a grant only OFFERS (Ballot Broker's "you may vote an
+        -- additional time") come after the seat's own, each grant's "may" asked on
+        -- its own and its ballots cast at once, still before the next seat votes.
+        ballotsOf ask voter = do
+          own <- Monad.replicateM (Natural.toIntSaturating (PlayerEffect.votesAllowed voter gs)) (ask voter)
+          offered <- Monad.forM [(grant, grantEffect, count) | (grant, grantEffect@(PlayerEffect.Type.AdditionalVotes (ExtraVotes.Optional count))) <- PlayerEffect.offeredExtras voter gs] $ \(grant, grantEffect, count) -> do
+            answer <- Game.choose (Prompt.OfferedExtra (Decide.deciderFor voter gs) voter grant grantEffect)
+            case answer of
+              OptionalDecision.Exercises -> Monad.replicateM (Natural.toIntSaturating count) (ask voter)
+              OptionalDecision.Declines -> pure []
+          pure (own <> concat offered)
         -- Each ballot is logged as it is cast, and a secret vote's are revealed
         -- together once the last is in, in voting order.
         cast choiceOf ask = do
