@@ -2188,7 +2188,9 @@ lookupLayerOne oid gs = withStoredCopy <$> lookupObject oid gs
 -- timestamp; the rows stand for whatever else they cover. A row following its
 -- source's host notes the source's timestamp beside the object, so the row
 -- covers it again once a re-attachment restamps the source (CR 613.7e). A
--- row covering one attachment is dropped, its timestamp being fixed.
+-- row covering one attachment is dropped, its timestamp being fixed:
+-- data/scenarios/mutate's "a copy effect made after a merge onto Metamorphic
+-- Alteration's copy outranks both" proves it.
 supersedeStoredCopies :: Set.Set ObjectId -> GameState -> GameState
 supersedeStoredCopies oids gs =
   let overtake row = case ActiveCopy.covers row of
