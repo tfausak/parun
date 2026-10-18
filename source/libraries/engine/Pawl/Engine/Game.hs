@@ -277,8 +277,7 @@ sheetContent sheet kind index = do
 -- rather than after the entry loop because CR 614.12 asks for the
 -- characteristics the permanent would have on the battlefield, and for this
 -- token those are the copy's from the instant it exists. The creation's own
--- status (CR 110.5b) is the caller's. Pawl.Engine.Event.createTokens mints it,
--- and Pawl.Engine.Replacement.wouldExist stands it up before it exists.
+-- status (CR 110.5b) is the caller's, Pawl.Engine.Event.createTokens.
 tokenOfLot :: PlayerId -> PrintingId.PrintingId -> TokenLot.TokenLot -> Timestamp.Timestamp -> Object
 tokenOfLot owner printing lot ts =
   (Object.new owner (Source.OfToken printing) Zone.Battlefield ts)

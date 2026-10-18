@@ -97,7 +97,7 @@ import qualified Pawl.Types.Zone as Zone
 --
 -- Its readers are Pawl.ProjectionSpec's, which ask about a printed face with no
 -- game around it, Pawl.Engine.Replacement.matchesTokenLot, which asks about a
--- token that is proposed and not yet minted (CR 614.12) through
+-- token that is proposed and not yet minted (CR 111.3) through
 -- viewOfCardLapsed below, and the readers of a
 -- card outside the game -- Pawl.Engine.Event.eligible, referenceAdmits below,
 -- Pawl.Interpreter.legalCardName. A reader that holds
@@ -108,8 +108,7 @@ viewOfCard = viewOfCardLapsed Set.empty
 
 -- viewOfCard less the activated abilities whose CR 604.2 "as long as" clause
 -- is in `lapsed`, Count.snapshotRoster's reading: for a token lot's given text,
--- whose clauses Pawl.Engine.Replacement.matchesTokenLot asks of the token it
--- would be.
+-- all of whose clauses Pawl.Engine.Replacement.matchesTokenLot withholds.
 viewOfCardLapsed :: Set Condition.Type.Condition -> Face.Face Card.Type.Card -> Filter.View
 viewOfCardLapsed lapsed face =
   let typeLine = Face.typeLine face
@@ -2109,16 +2108,10 @@ abilitiesFromCharacteristics peers pc oid gs =
 -- (Count.lastKnownView). Keyed by the clause: the gate reads only the clause, the
 -- object and the board, so two abilities sharing a clause share its answer.
 lapsedGrantsOf :: Count.ViewOf -> ProjectedCharacteristics -> ObjectId -> GameState -> Set Condition.Type.Condition
-lapsedGrantsOf peers pc oid gs = lapsedAmong peers oid gs (ungatedAbilitiesOf pc oid gs)
-
--- The clauses among these abilities that do not hold of `oid` -- lapsedGrantsOf
--- over a roster the caller supplies, for a token not yet minted, whose roster
--- is its lot's (Pawl.Engine.Replacement.matchesTokenLot).
-lapsedAmong :: Count.ViewOf -> ObjectId -> GameState -> [ActivatedAbility.ActivatedAbility Card.Type.Card (GrantedAbility.GrantedAbility Card.Type.Card)] -> Set Condition.Type.Condition
-lapsedAmong peers oid gs abilities =
+lapsedGrantsOf peers pc oid gs =
   Set.fromList
     [ cond
-    | ability <- abilities,
+    | ability <- ungatedAbilitiesOf pc oid gs,
       Just cond <- [ActivatedAbility.condition ability],
       not (grantHolds peers oid gs cond)
     ]
