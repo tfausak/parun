@@ -604,6 +604,9 @@ applyClauseEffects resolving source applyOne =
 -- REGRESSION FENCE rather than a proved line: no pool card puts an offering,
 -- drawing or tallying instruction directly before a reflexive arm or an "If
 -- you do", so un-copying lastChoice leaves the suite green.
+--
+-- Not implemented: an "any number" choice of zero counting as done (#5334),
+-- and a numbered instruction done only in part not counting (#5335).
 happenedBetween :: GameState -> GameState -> Bool
 happenedBetween before after =
   let tallyless :: Map.Map SlotName Binding.Type.Binding -> Map.Map SlotName Binding.Type.Binding

@@ -258,7 +258,9 @@ Entries are ordered by the first rule each cites.
   with no creature to sacrifice returns nothing". The other copies are a
   regression fence: no card in `data/cards/` puts an instruction writing them
   ahead of a "when you do" or "if you do".
-- **Issue**: none.
+- **Issue**: none. Rulings contradict it in two shapes, filed as #5334 (an
+  "any number" choice of zero still counts) and #5335 (a numbered instruction
+  done only in part does not).
 
 ## Whether conjuring into a library is a library move for a mana ability
 
