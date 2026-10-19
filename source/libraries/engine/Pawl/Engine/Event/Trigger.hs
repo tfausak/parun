@@ -3865,7 +3865,9 @@ interveningHolds boards live pending =
 -- an ability no event fired (a reflexive one), is answered by `live`.
 --
 -- Not implemented: a trigger event in the middle of a resolution is answered by
--- the board the whole resolution left, not by the one standing at the event
+-- the board the whole resolution left, not by the one standing at the event, and
+-- one before a check no settle keeps a board for (Engine.checkSba in a step that
+-- grants no priority or as a step ends, CR 724.1c's) by the board after it
 -- (#5270).
 boardWhenTriggered :: [GameState] -> GameState -> PendingTrigger -> GameState
 boardWhenTriggered boards live pending = case PendingTrigger.firedBy pending of

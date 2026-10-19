@@ -2046,11 +2046,16 @@ runStepThatBegan phase = do
   -- the creature CR 514.2 just dropped to zero toughness (CR 704.5f), and CR
   -- 514.3a then finds a settled board and grants nothing.
   grants <- grantsPriorityNow phase
-  -- CR 704.3, one unlooped pass (Sba.checkStateBasedActions says why one is
-  -- enough at this site). Nothing left for a cleanup step to do, since
-  -- `grantsPriorityNow` has just settled it to a fixpoint; the step's own check
-  -- for every other.
-  checkSba
+  -- CR 704.3, the step's own check. A step that grants priority takes it as
+  -- the settle a player is about to get priority after, so CR 603.4 and CR 603.8
+  -- read a turn-based action's events (combat damage) off the board before the
+  -- check buries anything (settlePasses' `boards`). Proved by the scenario "CR
+  -- 603.4 Lone Revenant does not trigger when the creature beside it dies to
+  -- combat damage". Nothing is left for a cleanup step that grants, since
+  -- `grantsPriorityNow` has just settled it to a fixpoint. A step that grants
+  -- none takes one unlooped pass (Sba.checkStateBasedActions says why one is
+  -- enough there).
+  if grants then Monad.void performSettle else checkSba
   finished <- State.gets (Maybe.isJust . GameState.result)
   Monad.unless finished $ do
     Monad.when grants priorityLoop
