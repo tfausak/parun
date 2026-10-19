@@ -74,6 +74,7 @@ import Pawl.Types.PlayerId (PlayerId)
 import qualified Pawl.Types.PlayerRef as PlayerRef
 import Pawl.Types.Recipient (Recipient)
 import Pawl.Types.SlotName (SlotName)
+import qualified Pawl.Types.StepBegan as StepBegan
 import qualified Pawl.Types.While as While
 
 -- CR 611.2: the moment a duration BEGINS. `controller` is the effect's
@@ -107,8 +108,10 @@ arm acquisition targets controller source duration gs = case duration of
   -- find (Pawl.Engine.Event.perpetuate).
   Duration.Perpetual -> Just Expiry.Perpetual
   Duration.UntilYourNextTurn -> Just (Expiry.AtTurnOf controller)
-  -- CR 503 / 611.2a: the arm above's seat, ended at that player's next upkeep.
-  Duration.UntilYourNextUpkeep -> Just (Expiry.AtUpkeepOf controller)
+  -- CR 611.2a: the arm above's seat, ended as the named step of that
+  -- player's turn next begins. A duration armed during that very step outlives
+  -- it: the step has already begun, so only a later beginning ends it.
+  Duration.UntilYourNextStep step -> Just (Expiry.AtStepOf (StepBegan.MkStepBegan step controller))
   -- CR 611.2a: "until the end of your next turn". Two samples, both taken here
   -- and neither ever rewritten: the controller (CR 109.5's "you", as above) and
   -- the turn this duration began on. dropAtCleanup ends it at the first turn of
@@ -254,7 +257,7 @@ perSeat duration = case duration of
   Duration.Indefinite -> Nothing
   Duration.Perpetual -> Nothing
   Duration.UntilYourNextTurn -> Nothing
-  Duration.UntilYourNextUpkeep -> Nothing
+  Duration.UntilYourNextStep _ -> Nothing
   Duration.UntilEndOfYourNextTurn -> Nothing
   Duration.DuringYourNextTurn -> Nothing
   Duration.DuringThatExtraTurn -> Nothing
@@ -306,7 +309,7 @@ begun gs expiry = case expiry of
   Expiry.Perpetual -> True
   Expiry.While {} -> True
   Expiry.AtTurnOf _ -> True
-  Expiry.AtUpkeepOf _ -> True
+  Expiry.AtStepOf _ -> True
   Expiry.AtEndOfTurnOf _ -> True
   Expiry.AtEndOf _ -> True
   Expiry.AtEndOfCombatOn _ -> True
@@ -337,8 +340,8 @@ data Moment
     Cleanup
   | -- | CR 611.2a / 800.4m: this seat's turn begins, or would have.
     TurnOf PlayerId
-  | -- | CR 503 / 611.2a: this player's upkeep step begins.
-    UpkeepOf PlayerId
+  | -- | CR 611.2a: this step of this player's turn begins.
+    StepOf StepBegan.StepBegan
   | -- | CR 500.5: this step or phase ends.
     EndOf PhaseSelector
   | -- | CR 611.2b / 704.3: a settle re-reads every "for as long as" condition.
@@ -370,9 +373,9 @@ endsAt gs moment source expiry = case expiry of
   Expiry.While (While.MkWhile you cond) ->
     moment == Settle && not (Condition.holds (Projection.fullView gs) (Projection.sourceContext gs (Just you) source) gs source cond)
   Expiry.AtTurnOf p -> moment == TurnOf p
-  -- CR 800.4m's "a specific point in that turn": a departed player's upkeep
+  -- CR 800.4m's "a specific point in that turn": a departed player's step
   -- never begins, so the duration ends where that turn would have.
-  Expiry.AtUpkeepOf p -> moment == UpkeepOf p || departedTurnOf p
+  Expiry.AtStepOf began -> moment == StepOf began || departedTurnOf (StepBegan.player began)
   -- CR 611.2a: "until the end of your next turn" ends at that turn's cleanup
   -- (CR 514.2), one NAMED turn later (see Pawl.Types.AfterTurn), so the turn the
   -- duration began on is not its next turn. CR 800.4m ends it where a departed
