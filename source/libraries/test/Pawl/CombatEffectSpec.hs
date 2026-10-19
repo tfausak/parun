@@ -1016,7 +1016,7 @@ mazeAnswer mazeId ability victim p = case p of
         State.put True
         pure (A.Activate mazeId ability)
   Prompt.ChooseTargets _ _ _ sets -> pure (fmap (const (Set.singleton (Recipient.ToCreature victim))) sets)
-  Prompt.ChooseManaSource _ _ candidates ->
+  Prompt.ChooseManaSource _ _ _ candidates ->
     pure (Just (Maybe.fromMaybe (NonEmpty.head candidates) (List.find (/= mazeId) (NonEmpty.toList candidates))))
   _ -> pure (S.aggressiveAnswer p)
 

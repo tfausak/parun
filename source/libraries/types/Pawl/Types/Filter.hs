@@ -6,7 +6,7 @@ import qualified Pawl.Types.CardName as CardName
 import qualified Pawl.Types.CardType as CardType
 import qualified Pawl.Types.Color as Color
 import qualified Pawl.Types.CounterKind as CounterKind
-import qualified Pawl.Types.DamagedParty as DamagedParty
+import qualified Pawl.Types.DealtDamageTo as DealtDamageTo
 import qualified Pawl.Types.Designation as Designation
 import qualified Pawl.Types.ExiledWith as ExiledWith
 import qualified Pawl.Types.Expansion as Expansion
@@ -353,7 +353,7 @@ data Filter keyword
     DealtDamageThisTurn
   | -- | CR 120.1 / 608.2i: the candidate DEALT damage to this party earlier this
     -- turn -- Brine Hag's "each creature that dealt damage to it this turn".
-    DealtDamageToThisTurn DamagedParty.DamagedParty
+    DealtDamageToThisTurn DealtDamageTo.DealtDamageTo
   | -- | CR 400.7 / 608.2i: the candidate ENTERED THE BATTLEFIELD earlier this
     -- turn, as the object it is now -- Octomancer's "target creature token that
     -- entered the battlefield this turn". Read off the log's zone changes, so

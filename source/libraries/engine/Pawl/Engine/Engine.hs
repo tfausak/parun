@@ -641,7 +641,7 @@ placePendingTriggers boards = do
       -- would make them resolve first, by the engine's choice rather than the
       -- player's.
       sourceless = Monarch.abilities gs <> Initiative.abilities gs <> Speed.abilities gs <> Rad.abilities gs <> Planechase.abilities gs
-      inherent = Trigger.inherentTriggers (fmap (\(pid, ability) -> (TriggerSource.Sourceless, pid, ability)) sourceless <> Dungeon.abilities gs) logged boards gs
+      inherent = Trigger.inherentTriggers (fmap (\(pid, ability) -> (TriggerSource.Sourceless, pid, ability)) sourceless <> Dungeon.abilities gs) logged gs
   -- The CR 603.10a look-back in Event.eventTriggers, over the same grouped
   -- snapshot inherentTriggers took.
   -- Not in the `let` because it can ASK -- CR 603.7b's second sentence is a
@@ -660,6 +660,7 @@ placePendingTriggers boards = do
         -- CR 603.10's per-group samples are spent with the batch they were taken
         -- for. Cleared rather than left standing, which bounds both the map and
         -- the game states its unforced thunks retain.
+        GameState.boardAfterEvent = Map.empty,
         GameState.battlefieldWhenTriggered = Map.empty,
         GameState.delayedTriggers = surviving
       }
@@ -740,12 +741,13 @@ reactions incoming = do
           fresh = Event.reactionTriggers recorded gs
       -- A CR 603.7 entry watching an ability trigger. Can ASK (CR 603.7b), so
       -- the store is written back by modify below rather than by putting `gs`.
-      (fromDelayed, surviving) <- Trigger.delayedPending recorded [] gs
+      (fromDelayed, surviving) <- Trigger.delayedPending recorded gs
       -- The round's own events are consumed here, CR 603.10's samples with them.
       State.modify'
         ( \g ->
             g
               { GameState.scannedThrough = Natural.length (GameState.events g),
+                GameState.boardAfterEvent = Map.empty,
                 GameState.battlefieldWhenTriggered = Map.empty,
                 GameState.delayedTriggers = surviving
               }
@@ -1189,8 +1191,7 @@ performSettle = do
 -- performSettle, `passes` passes into a run with nobody asked anything
 -- (Departure.passesSince). `boards` are the states this settle stood in before
 -- each state-based action check that performed something since triggers were
--- last placed, oldest first: the boards CR 603.4 and CR 603.8 read
--- (Trigger.boardWhenTriggered).
+-- last placed, oldest first: the boards CR 603.8 reads (Trigger.stateTriggers).
 settlePasses :: Natural -> [GameState] -> Game Bool
 settlePasses passes boards = do
   begun <- State.gets GameState.lastChoice
@@ -1250,8 +1251,8 @@ settlePasses passes boards = do
   -- a sculptor is still on the battlefield, and inside the recursion guard for
   -- Soulbond's reason.
   unsectored <- SpaceSculptor.settle
-  -- CR 603.4 / 603.8: the board the events before this check left, which a
-  -- trigger they fired is answered by if the check acts and placement waits.
+  -- CR 603.8: the board before this check, which a state trigger armed on it
+  -- has triggered on if the check acts and placement waits.
   board <- State.get
   acted <- Sba.performStateBasedActions (Resolve.runDamageRewriteEffect playSubgame) boards
   -- CR 614.1a: a loss the pass replaced (Lich's Mirror) ran its effects inside
@@ -1778,6 +1779,7 @@ beginTurn extra pid gs =
             GameState.scannedThrough = 0,
             -- Cleared with the log it describes: the settle Engine.advance runs
             -- immediately before this leaves nothing unscanned.
+            GameState.boardAfterEvent = Map.empty,
             GameState.battlefieldWhenTriggered = Map.empty,
             GameState.damageScannedThrough = 0,
             -- GameState.lastKnown is deliberately NOT cleared alongside them: CR
@@ -2048,14 +2050,14 @@ runStepThatBegan phase = do
   -- 514.3a then finds a settled board and grants nothing.
   grants <- grantsPriorityNow phase
   -- CR 704.3, the step's own check. A step that grants priority takes it as
-  -- the settle a player is about to get priority after, so CR 603.4 and CR 603.8
-  -- read a turn-based action's events (combat damage) off the board before the
-  -- check buries anything (settlePasses' `boards`). Proved by the scenario "CR
-  -- 603.4 Lone Revenant does not trigger when the creature beside it dies to
-  -- combat damage". Nothing is left for a cleanup step that grants, since
-  -- `grantsPriorityNow` has just settled it to a fixpoint. A step that grants
-  -- none takes one unlooped pass (Sba.checkStateBasedActions says why one is
-  -- enough there).
+  -- the settle a player is about to get priority after, so CR 603.8 reads the
+  -- board a turn-based action (combat damage) left before the check buries
+  -- anything (settlePasses' `boards`). A regression fence: taking `checkSba`
+  -- here leaves the suite green, no scenario arming a state trigger on a
+  -- combat damage board alone. Nothing is left for a cleanup step that
+  -- grants, since `grantsPriorityNow` has just settled it to a fixpoint. A step
+  -- that grants none takes one unlooped pass (Sba.checkStateBasedActions says
+  -- why one is enough there).
   if grants then Monad.void performSettle else checkSba
   finished <- State.gets (Maybe.isJust . GameState.result)
   Monad.unless finished $ do

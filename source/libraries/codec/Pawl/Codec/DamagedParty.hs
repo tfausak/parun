@@ -1,6 +1,7 @@
 module Pawl.Codec.DamagedParty where
 
 import qualified Pawl.Codec.PlayerRelation as PlayerRelation
+import qualified Pawl.Codec.SlotName as SlotName
 import qualified Pawl.JsonCodec.Arm as Arm
 import qualified Pawl.JsonCodec.Codec as Codec
 import qualified Pawl.Types.DamagedParty as DamagedParty
@@ -10,10 +11,12 @@ codec =
   Arm.tagged
     tagOf
     [ Arm.payload "Related" PlayerRelation.codec DamagedParty.Related (\x -> case x of DamagedParty.Related y -> Just y; _ -> Nothing),
-      Arm.nullary "Source" DamagedParty.Source
+      Arm.nullary "Source" DamagedParty.Source,
+      Arm.payload "InSlot" SlotName.codec DamagedParty.InSlot (\x -> case x of DamagedParty.InSlot y -> Just y; _ -> Nothing)
     ]
 
 tagOf :: DamagedParty.DamagedParty -> String
 tagOf x = case x of
   DamagedParty.Related {} -> "Related"
   DamagedParty.Source -> "Source"
+  DamagedParty.InSlot {} -> "InSlot"
