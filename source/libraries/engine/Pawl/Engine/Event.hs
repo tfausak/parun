@@ -7259,15 +7259,7 @@ changeZoneWithCause discarded asOf batch oid requestedDest requestedPosition see
                   -- the seed alone would miss a permanent that arrived attached by
                   -- its own static ability. Every seeded road still reaches it --
                   -- `mkObj` writes the seed into this same field.
-                  settledHost <- State.gets (Game.lookupObject newId Monad.>=> Object.attachedTo)
-                  Monad.forM_ (if dest == Zone.Battlefield then settledHost else Nothing) $ \host ->
-                    State.modify'
-                      . recordEvent
-                      $ GameEvent.BecameAttached
-                        BecameAttached.MkBecameAttached
-                          { BecameAttached.attachment = newId,
-                            BecameAttached.host = host
-                          }
+                  Monad.when (dest == Zone.Battlefield) (arrivedAttached newId)
                   -- CR 607.2b: this move ended in exile because somebody's replacement
                   -- effect sent it there, so the arriving card is linked to THAT
                   -- object. Filed here, at the one place the CR 400.7 incarnation
@@ -8059,20 +8051,31 @@ attachVia legality subject destination = do
       -- The equality guard above is what keeps a re-attach to the SAME host from
       -- reaching here: CR 701.3b makes that "do nothing", so neither event fires.
       Monad.forM_ (Game.lookupObject subject gs >>= Object.attachedTo) (unattach subject)
-      -- CR 607.2d: an "as this becomes attached" choice (Dinosaur Headdress,
-      -- Sanctuary Blade), made once the permanent is on its new host so a copy
-      -- lands there. The copy and attach scenarios named for CR 607.2d prove it.
-      --
-      -- Not implemented: the choice for a permanent that arrives attached (CR
-      -- 301.5e), which records BecameAttached without this move (#5250).
-      Monad.void (applyReplacements (ProposedEvent.WouldBecomeAttached subject))
-      State.modify'
-        . recordEvent
-        $ GameEvent.BecameAttached
-          BecameAttached.MkBecameAttached
-            { BecameAttached.attachment = subject,
-              BecameAttached.host = attachment
-            }
+      becameAttached subject attachment
+
+-- CR 303.4 / 301.5e: a permanent that ARRIVES attached became attached, with
+-- no CR 701.3 move; read off the entered object, whose host the seed, the
+-- EntryRewrite.EntersAttachedTo arm or seatEnteringAura wrote. Called before
+-- the arrival's Moved event, so the choice is made as it enters.
+arrivedAttached :: ObjectId -> Game ()
+arrivedAttached oid = do
+  settled <- State.gets (Game.lookupObject oid Monad.>=> Object.attachedTo)
+  Monad.forM_ settled (becameAttached oid)
+
+-- The tail both roads share. CR 607.2d: an "as this becomes attached" choice
+-- (Dinosaur Headdress, Sanctuary Blade), made once the permanent is on its
+-- host so a copy lands there. The copy and attach scenarios named for CR
+-- 607.2d prove the move; the Danitha, Benalia's Hope scenarios prove arrival.
+becameAttached :: ObjectId -> Recipient.Recipient -> Game ()
+becameAttached subject host = do
+  Monad.void (applyReplacements (ProposedEvent.WouldBecomeAttached subject))
+  State.modify'
+    . recordEvent
+    $ GameEvent.BecameAttached
+      BecameAttached.MkBecameAttached
+        { BecameAttached.attachment = subject,
+          BecameAttached.host = host
+        }
 
 -- CR 701.3d: record that `subject` BECAME UNATTACHED from `host`. The funnel every
 -- route rule 701.3d lists goes through, so a condition watching for one sees them
@@ -8441,9 +8444,9 @@ createTokens controller card copy n tapped entering attached marks = do
               pure []
             else do
               -- CR 303.4: an Aura ENTERS attached, so the host is written before the
-              -- entry loop and before the CR 111.3 minted entry below -- no
-              -- BecameAttached event and no fresh timestamp, which are rule 701.3c's
-              -- and 701.3d's for a permanent that MOVES onto a host. The move funnel's
+              -- entry loop and before the CR 111.3 minted entry below, with no fresh
+              -- timestamp, which is rule 701.3c's for a permanent that MOVES onto a
+              -- host. settleMinted records that it became attached. The move funnel's
               -- own door (changeZoneEntering's entrySeed) writes the same field the same
               -- way, one incarnation earlier.
               Monad.forM_ ids $ \tok ->
@@ -8496,6 +8499,10 @@ unmake oid = State.modify' (Game.deleteObject oid)
 settleMinted :: Timestamp.Timestamp -> [ObjectId] -> Game ()
 settleMinted start ids = do
   Restamp.settle start ids
+  -- CR 603.2e: a token created attached became attached, as a cast Aura does
+  -- (Bramble Elemental under a Role token). The card-trigger scenario named
+  -- for CR 303.4 proves it.
+  Monad.mapM_ arrivedAttached ids
   deferred <- State.gets GameState.enteringTogether
   case deferred of
     Just batch -> State.modify' (\g -> g {GameState.enteringTogether = Just batch {EnteringTogether.minted = EnteringTogether.minted batch <> Seq.fromList ids}})

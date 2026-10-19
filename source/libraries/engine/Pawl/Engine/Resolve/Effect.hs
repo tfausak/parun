@@ -11466,13 +11466,9 @@ putFound resolving asOf searcher subject destination cardId = case destination o
   -- and Sovereigns of Lost Alara's "put it onto the battlefield attached to that
   -- creature". WHICH object "it" is, is Search.subject, resolved by the arm that
   -- ran the search -- the same value its filter asked CR 701.3a about, so the
-  -- offer and the move cannot name different hosts. A subject naming no object is
-  -- CR 609.3's "only as much as possible", which for a sentence printing no other
-  -- destination is nothing at all -- the Aura stays where the search found it (CR
-  -- 303.4i).
-  SearchDestination.BattlefieldAttached -> case subject of
-    Nothing -> pure []
-    Just host -> attachFound asOf searcher host cardId
+  -- offer and the move cannot name different hosts. A subject naming no object
+  -- is attachFound's undefined host.
+  SearchDestination.BattlefieldAttached -> attachFound asOf searcher subject cardId
   -- The arm above with the card's second sentence added: "If this creature is
   -- still on the battlefield ... Otherwise, reveal the Aura card and put it into
   -- your hand."
@@ -11493,7 +11489,7 @@ putFound resolving asOf searcher subject destination cardId = case destination o
   SearchDestination.BattlefieldAttachedOrHand -> do
     gs <- State.get
     if maybe False (\host -> Set.member host (GameState.battlefield gs)) subject
-      then concat <$> traverse (\host -> attachFound asOf searcher host cardId) (Maybe.maybeToList subject)
+      then attachFound asOf searcher subject cardId
       else do
         -- CR 701.20b makes the order matter, for RevealThenHand's reason above:
         -- swapped, CR 400.7 has already ceased `cardId` and the reveal shows
@@ -11530,19 +11526,21 @@ putFound resolving asOf searcher subject destination cardId = case destination o
 -- CR 110.2a: it enters under the SEARCHER, the player whose effect is putting it
 -- there, as putOntoBattlefield's entries do, and is judged as the searcher's
 -- (Attach.entryAttachmentFor), as the search's own offer judges it. A
--- regression fence: the three cards in data/cards with an attaching search
--- destination (Auratouched Mage, Bruna, Light of Alabaster, Sovereigns of Lost
--- Alara) search their controller's own zones, so owner and searcher coincide.
+-- regression fence: every card in data/cards with an attaching search
+-- destination (Auratouched Mage, for one) searches its controller's own zones,
+-- so owner and searcher coincide.
 --
--- Nothing from attachmentFor is CR 303.4i's "the Aura remains in its current
--- zone" -- unreachable from a filter naming Filter.CanAttachToSubject, since that
--- atom is this same function, and the honest answer for a card whose filter does
--- not.
-attachFound :: GameState -> PlayerId -> ObjectId -> ObjectId -> Game [ObjectId]
+-- An illegal or undefined host is CR 303.4i's "the Aura remains in its current
+-- zone" for an Aura, and CR 301.5e / 303.4h's unattached entry for anything
+-- else: Danitha, Benalia's Hope's Equipment with Danitha gone, which the attach
+-- scenario named for CR 301.5e proves.
+attachFound :: GameState -> PlayerId -> Maybe ObjectId -> ObjectId -> Game [ObjectId]
 attachFound asOf searcher host cardId = do
   gs <- State.get
-  case Attach.entryAttachmentFor searcher cardId (Recipient.ToObject host) gs of
-    Nothing -> pure []
+  case host >>= \h -> Attach.entryAttachmentFor searcher cardId (Recipient.ToObject h) gs of
+    Nothing
+      | Set.member Subtype.Aura (Projection.subtypesOf cardId gs) -> pure []
+      | otherwise -> putOntoBattlefield asOf searcher TapState.Untapped cardId
     Just seed ->
       Foldable.toList
         <$> Event.changeZoneAttaching (Just asOf) Set.empty cardId Zone.Battlefield LibraryPosition.defaultValue (Just seed) TapState.Untapped Map.empty (Just searcher) Nothing Facing.FaceUp False CarryOver.NotCarried False Seq.empty
