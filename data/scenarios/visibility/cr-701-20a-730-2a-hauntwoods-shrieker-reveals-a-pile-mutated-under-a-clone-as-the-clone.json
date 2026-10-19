@@ -1,6 +1,6 @@
 {
   "description": "CR 701.20a/730.2a Hauntwoods Shrieker reveals a pile mutated under a Clone as the Clone",
-  "note": "alice's Clone enters as a copy of Hill Giant and Cubwarden mutates under it, so the merged permanent is the Hill Giant with Cubwarden's lifelink (CR 613.7: the copy effect, then the merge), and a Clever Impersonator entering as a copy of it is too. Cyber Conversion turns the pile face down. The reveal shows the cards, under no copy effect, so its topmost card is the Clone (CR 701.20a). Turned face up, it is the Hill Giant again (CR 708.10).",
+  "note": "alice's Clone enters as a copy of Hill Giant and Cubwarden mutates under it, so the merged permanent is the Hill Giant with Cubwarden's lifelink (CR 613.7: the copy effect, then the merge), and a Clever Impersonator entering as a copy of it is too. Cyber Conversion turns the pile face down. The reveal shows the cards, under no copy effect, so its topmost card is the Clone (CR 701.20a). Turned face up, it is the Hill Giant with lifelink again, the copy effect and the merge still applying (CR 708.8).",
   "board": {
     "seats": [
       { "name": "alice",
