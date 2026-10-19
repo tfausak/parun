@@ -69,7 +69,7 @@
       "player": "bob",
       "do": {
         "Answer": {
-          "prompt": "ChooseVoteWord",
+          "prompt": "ChooseVote",
           "with": "Mines of Moria"
         }
       }
@@ -80,7 +80,7 @@
       "player": "alice",
       "do": {
         "Answer": {
-          "prompt": "ChooseVoteWord",
+          "prompt": "ChooseVote",
           "with": "Redhorn Pass"
         }
       }

@@ -61,7 +61,7 @@
       "player": "alice",
       "do": {
         "Answer": {
-          "prompt": "ChooseVoteWord",
+          "prompt": "ChooseVote",
           "with": "red"
         }
       }
@@ -72,7 +72,7 @@
       "player": "bob",
       "do": {
         "Answer": {
-          "prompt": "ChooseVoteWord",
+          "prompt": "ChooseVote",
           "with": "green"
         }
       }
@@ -83,7 +83,7 @@
       "player": "carol",
       "do": {
         "Answer": {
-          "prompt": "ChooseVoteWord",
+          "prompt": "ChooseVote",
           "with": "blue"
         }
       }
