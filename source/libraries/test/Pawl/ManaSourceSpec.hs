@@ -23,6 +23,7 @@ import qualified Pawl.Engine.Activate as Activate
 import qualified Pawl.Engine.Cast as Cast
 import qualified Pawl.Engine.Combat as Combat
 import qualified Pawl.Engine.Cost as Cost
+import qualified Pawl.Engine.Damage as Damage
 import qualified Pawl.Engine.Engine as Engine
 import qualified Pawl.Engine.FaceDown as FaceDown
 import qualified Pawl.Engine.Game as Game
@@ -61,6 +62,7 @@ import qualified Pawl.Types.CopyCoverage as CopyCoverage
 import qualified Pawl.Types.Cost as Cost.Type
 import qualified Pawl.Types.CostComponent as CostComponent
 import qualified Pawl.Types.Count as Count
+import qualified Pawl.Types.DamageKind as DamageKind
 import qualified Pawl.Types.DelayedTrigger as DelayedTrigger
 import qualified Pawl.Types.EndingStep as EndingStep
 import qualified Pawl.Types.Expiry as Expiry
@@ -1734,6 +1736,40 @@ interchangeableSourcesSpec s registry = Spec.describe s "Interchangeable mana so
     (elves, shielded) <- mendingHandsBoard s registry (\elves _ -> NonEmpty.head elves)
     let (offers, paid, after) = greenWindow shielded
     Spec.assertEqWith s "asked once, with the shielded Elf beside the two that are alike" (fmap length offers) [2]
+    Spec.assertBool s paid "the {G} was paid"
+    Spec.assertEqWith s "off exactly one Elf" (tappedCount (NonEmpty.toList elves) after) 1
+
+  -- CR 120.1 from the recipient's side: two of bob's Grizzly Bears dealt combat
+  -- damage to two of alice's three Elves, 2/2 under Glorious Anthem so they
+  -- live, and the combat is over (CR 511.3 clears its record, so nothing but the
+  -- log remembers it). A damaged Elf's own view says only that it was dealt
+  -- damage; WHICH Bears did it lives in the Bears' view, where Brine Hag's
+  -- "dealt damage to it" reads it with the Elf as the source. Different Bears
+  -- part the two Elves; one Bears damaging both leaves them alike. Damage dealt
+  -- through the funnel rather than an activation, whose CR 602.2 log entry
+  -- names its target and would part the Elves on its own.
+  Spec.it s "CR 120.1 Elves damaged by different Bears are candidates of their own" $ do
+    elf <- S.printingOf s registry "Llanowar Elves"
+    anthem <- S.printingOf s registry "Glorious Anthem"
+    bears <- S.printingOf s registry "Grizzly Bears"
+    let (elves, plain) = elfBoard elf 3
+        (_, anthemed) = S.addPermanent anthem S.alice plain
+        (first, g1) = S.addPermanent bears S.bob anthemed
+        (second, ready) = S.addPermanent bears S.bob g1
+        (elfA, elfB) = case NonEmpty.toList elves of
+          a : b : _ -> (a, b)
+          _ -> (NonEmpty.head elves, NonEmpty.head elves)
+        hit pairs gs = S.runPure S.identityAnswer gs (Damage.applyDamage [Damage.damageEvent gs DamageKind.Combat source (Recipient.ToCreature victim) 1 | (source, victim) <- pairs])
+        apart = hit [(first, elfA), (second, elfB)] ready
+        together = hit [(first, elfA), (first, elfB)] ready
+        (offers, paid, after) = greenWindow apart
+        (alike, _, _) = greenWindow together
+    Spec.assertEqWith s "asked once, with each damaged Elf a candidate of its own beside the untouched one" (fmap length offers) [3]
+    Spec.assertEqWith s "and damaged by the same Bears, the two are one candidate" (fmap length alike) [2]
+    -- The premises, after the assertions above.
+    Spec.assertEqWith s "CR 120.3e: one damage on each damaged Elf" (fmap (`S.damageOf` apart) [elfA, elfB]) [Just 1, Just 1]
+    Spec.assertEqWith s "and the same on the other board" (fmap (`S.damageOf` together) [elfA, elfB]) [Just 1, Just 1]
+    Spec.assertEqWith s "the Anthem keeps all three Elves 2/2" (fmap (`S.powerToughnessOf` apart) (NonEmpty.toList elves)) (replicate 3 (Just (2, 2)))
     Spec.assertBool s paid "the {G} was paid"
     Spec.assertEqWith s "off exactly one Elf" (tappedCount (NonEmpty.toList elves) after) 1
 

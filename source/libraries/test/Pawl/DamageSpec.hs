@@ -5,7 +5,7 @@
 -- funnel credits as a damage event's source, its deal-time riders (deathtouch,
 -- infect, wither, toxic, lifelink), trample, state-based actions, and the
 -- look-back read of the damage the turn's event log records
--- (Filter.DealtDamageThisTurn).
+-- (Filter.DealtDamageThisTurn, DealtDamageToThisTurn).
 module Pawl.DamageSpec where
 
 import qualified Control.Monad as Monad
@@ -2538,6 +2538,7 @@ spec s registry = Spec.describe s "Pawl.Engine.Damage" $ do
   fightSpec s registry
   m2cPropertySpec s registry
   dealtDamageThisTurnSpec s registry
+  dealtDamageToThisTurnSpec s registry
 
 -- CR 702.16e: "Any damage that would be dealt by sources that have the stated
 -- quality to a permanent or player with protection is prevented." Rule 702.16
@@ -2884,3 +2885,76 @@ dealtDamageThisTurnSpec s registry =
           Spec.assertEqWith s "CR 121.1: the second clause drew alice a card" (S.handSize S.alice resolved) 1
           Spec.assertBool s (Set.member sorcererId (GameState.battlefield board)) "and the undamaged Sorcerer is standing to be offered"
         _ -> Spec.assertFailure s "Prodigal Sorcerer should print an activated ability, and Needle Drop a 'target' slot"
+
+-- CR 120.1 / 608.2i: Filter.DealtDamageToThisTurn, DealtDamageThisTurn's
+-- relation turned round -- the candidate DEALT the damage, and the party says
+-- to whom.
+dealtDamageToThisTurnSpec :: (Monad m, Monad n) => Spec.Spec m n -> Registry.Registry m -> n ()
+dealtDamageToThisTurnSpec s registry =
+  Spec.describe s "DealtDamageToThisTurn" $ do
+    -- Three Prodigal Sorcerers: two ping bob's 2/2 Brine Hag to death and the
+    -- third pings bob himself, so it dealt damage this turn but not to the Hag.
+    -- The Hag is in the graveyard as its trigger resolves, so the source the
+    -- atom compares is the id it had on the battlefield (CR 603.10a).
+    Spec.it s "CR 603.10a Brine Hag's dies trigger reaches the creatures that dealt damage to it" $ do
+      island <- S.printingOf s registry "Island"
+      sorcerer <- S.printingOf s registry "Prodigal Sorcerer"
+      brineHag <- S.printingOf s registry "Brine Hag"
+      case Face.activatedAbilities (S.combinedFace sorcerer) of
+        ping : _ -> do
+          let (first, gs1) = S.addPermanent sorcerer S.alice (S.landsInPlay island 1)
+              (second, gs2) = S.addPermanent sorcerer S.alice gs1
+              (elsewhere, gs3) = S.addPermanent sorcerer S.alice gs2
+              (hagId, gs4) = S.addPermanent brineHag S.bob gs3
+              ready = gs4 {GameState.priority = Just S.alice}
+              pingBy who = do
+                Activate.activateAbility S.alice who ping
+                Stack.resolveTop
+              atHag = S.runPure (aimedAt hagId) ready (do pingBy first; pingBy second)
+              pinged = S.runPure (aimedAtPlayer S.bob) atHag (pingBy elsewhere)
+              settled = S.runPure S.identityAnswer pinged Engine.settleForPriority
+              resolved = S.runPure S.identityAnswer settled Stack.resolveTop
+          Spec.assertEqWith s "CR 613.4b: both Sorcerers that pinged the Hag are now 0/2" (fmap (`S.powerToughnessOf` resolved) [first, second]) [Just (0, 2), Just (0, 2)]
+          Spec.assertEqWith s "and the one that pinged bob instead is still 1/1" (S.powerToughnessOf elsewhere resolved) (Just (1, 1))
+          -- The premises, after the assertions above so neither can absorb a
+          -- mutation of the atom.
+          Spec.assertEqWith s "the third ping hit bob" (S.lifeOf S.bob pinged) (Just 19)
+          Spec.assertBool s (not (inPlay hagId settled)) "CR 704.5g: two damage killed the 2/2 Hag"
+          Spec.assertEqWith s "CR 603.3: and its trigger was put on the stack" (length (GameState.stack settled)) 1
+        _ -> Spec.assertFailure s "Prodigal Sorcerer should print an activated ability"
+
+    -- THREE seats, for the Needle Drop case's reason: bob's first Sorcerer pings
+    -- alice, his second pings carol, and his third pings alice's Hill Giant --
+    -- damage to a creature she controls is not damage to her (CR 120.1).
+    Spec.it s "CR 120.1 Retaliate destroys only the creature that dealt damage to its caster" $ do
+      plains <- S.printingOf s registry "Plains"
+      sorcerer <- S.printingOf s registry "Prodigal Sorcerer"
+      hillGiant <- S.printingOf s registry "Hill Giant"
+      retaliate <- S.printingOf s registry "Retaliate"
+      case Face.activatedAbilities (S.combinedFace sorcerer) of
+        ping : _ -> do
+          let seats = S.landsFor plains S.alice 4 (Setup.emptyGame S.threePlayers)
+              (atAlice, gs1) = S.addPermanent sorcerer S.bob seats
+              (atCarol, gs2) = S.addPermanent sorcerer S.bob gs1
+              (atGiant, gs3) = S.addPermanent sorcerer S.bob gs2
+              (giant, gs4) = S.addPermanent hillGiant S.alice gs3
+              (withSpell, spellId) = S.handOne retaliate gs4
+              bobsTurn = withSpell {GameState.priority = Just S.bob}
+              pingBy who = do
+                Activate.activateAbility S.bob who ping
+                Stack.resolveTop
+              afterAlice = S.runPure (aimedAtPlayer S.alice) bobsTurn (pingBy atAlice)
+              afterCarol = S.runPure (aimedAtPlayer S.carol) afterAlice (pingBy atCarol)
+              afterGiant = S.runPure (aimedAt giant) afterCarol (pingBy atGiant)
+              ready = (S.settleSba afterGiant) {GameState.priority = Just S.alice}
+              resolved = S.settleSba (S.runPure S.identityAnswer ready (do S.cast S.alice spellId; Stack.resolveTop))
+          Spec.assertEqWith
+            s
+            "CR 120.1 / 701.8a: the Sorcerer that pinged alice is destroyed, the other two stand"
+            (fmap (`inPlay` resolved) [atAlice, atCarol, atGiant])
+            [False, True, True]
+          -- The premises, after the assertion above.
+          Spec.assertEqWith s "each ping landed where it was aimed" (fmap (`S.lifeOf` ready) [S.alice, S.carol]) [Just 19, Just 19]
+          Spec.assertEqWith s "CR 120.3e: including the one on the Giant" (S.damageOf giant ready) (Just 1)
+          Spec.assertBool s (inPlay giant resolved) "and Retaliate leaves the Giant, which dealt no damage, alone"
+        _ -> Spec.assertFailure s "Prodigal Sorcerer should print an activated ability"

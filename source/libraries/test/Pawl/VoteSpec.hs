@@ -18,7 +18,8 @@
 -- votes, take an extra turn after this one. If knowledge gets more votes or the
 -- vote is tied, draw three cards." Rule 701.38d's extra vote is Brago's
 -- Representative {2}{W} Creature -- Human Advisor: "While voting, you get an
--- additional vote."
+-- additional vote." Its optional twin is Ballot Broker {2}{W} Creature -- Human
+-- Advisor: "While voting, you may vote an additional time."
 --
 -- The player vote's is Mob Verdict {2}{R}{R} Sorcery: "Secret council -- Each
 -- player secretly votes for another player, then those votes are revealed. ..."
@@ -27,8 +28,8 @@
 -- loser at once, and the exile could follow the candidate list rather than the
 -- count without the board telling the difference. Three seats also make three
 -- ballots, which cannot TIE over two words -- so the tie half of Plea for
--- Power's second sentence is reachable only with Brago's Representative's fourth
--- ballot, which is why the two sit in one group.
+-- Power's second sentence is reachable only with a fourth ballot, Brago's
+-- Representative's or Ballot Broker's, which is why they sit in one group.
 module Pawl.VoteSpec where
 
 import qualified Control.Monad.Trans.State.Strict as State
@@ -53,6 +54,7 @@ import qualified Pawl.Types.ExtraTurn as ExtraTurn
 import qualified Pawl.Types.GameState as GameState
 import qualified Pawl.Types.Object as Object
 import qualified Pawl.Types.ObjectId as ObjectId
+import qualified Pawl.Types.OptionalDecision as OptionalDecision
 import qualified Pawl.Types.PlayerId as PlayerId
 import qualified Pawl.Types.PlayerRef as PlayerRef
 import qualified Pawl.Types.PlayerRelation as PlayerRelation
@@ -161,19 +163,21 @@ councilsJudgmentSpec s registry = Spec.describe s "Council's Judgment" $ do
 
 -- Alice's four Islands, Plea for Power in her hand, and three Mountains in her
 -- library so the printed "draw three cards" has cards to draw (CR 104.3c).
--- `representatives` many Brago's Representatives under her control. Returns the
--- spell and that state.
+-- `representatives` many copies of the named vote-granting creature (Brago's
+-- Representative, Ballot Broker) under her control. Returns the spell and that
+-- state.
 pleaBoard ::
   (Monad m) =>
   Spec.Spec m n ->
   Registry.Registry m ->
+  String ->
   Int ->
   m (ObjectId.ObjectId, GameState.GameState)
-pleaBoard s registry representatives = do
+pleaBoard s registry granter representatives = do
   island <- S.printingOf s registry "Island"
   mountain <- S.printingOf s registry "Mountain"
   plea <- S.printingOf s registry "Plea for Power"
-  representative <- S.printingOf s registry "Brago's Representative"
+  representative <- S.printingOf s registry granter
   let g1 = S.landsFor island S.alice 4 S.threePlayerGame
       g2 = List.foldl' (\gs _ -> snd (S.addPermanent representative S.alice gs)) g1 [1 .. representatives]
       g3 = List.foldl' (\gs _ -> snd (S.addLibraryCard mountain S.alice gs)) g2 [1 .. 3 :: Int]
@@ -212,7 +216,7 @@ pleaForPowerSpec s registry = Spec.describe s "Plea for Power" $ do
   -- what says a clause read the WORD's tally: nothing else on this board tells
   -- the two sentences apart.
   Spec.it s "CR 701.38b a clause gated on a word's tally happens and the clause gated on the other does not" $ do
-    (spell, gs) <- pleaBoard s registry 0
+    (spell, gs) <- pleaBoard s registry "Brago's Representative" 0
     let ballots = [word "time", word "knowledge", word "knowledge"]
         ((_, after), (_, asked)) = State.runState (Engine.runGame votingWords gs (S.cast S.alice spell >> Stack.resolveTop)) (ballots, [])
     Spec.assertEqWith s "knowledge won, so alice drew three cards and took no extra turn" (outcome after) (3, [])
@@ -229,7 +233,7 @@ pleaForPowerSpec s registry = Spec.describe s "Plea for Power" $ do
   -- Representative's reminder text allows, so the tally is two all and the "or
   -- the vote is tied" is what admits the draw.
   Spec.it s "CR 701.38d an additional vote is a second ballot for that seat, taken before the next seat votes" $ do
-    (spell, gs) <- pleaBoard s registry 1
+    (spell, gs) <- pleaBoard s registry "Brago's Representative" 1
     let ballots = [word "time", word "knowledge", word "time", word "knowledge"]
         ((_, after), (_, asked)) = State.runState (Engine.runGame votingWords gs (S.cast S.alice spell >> Stack.resolveTop)) (ballots, [])
     Spec.assertEqWith s "the vote is two all, so alice drew three cards and took no extra turn" (outcome after) (3, [])
@@ -238,6 +242,42 @@ pleaForPowerSpec s registry = Spec.describe s "Plea for Power" $ do
       "alice is asked twice in a row and the other two seats once each"
       (fmap fst asked)
       [S.alice, S.alice, S.bob, S.carol]
+  -- Ballot Broker's "you may vote an additional time" (CR 701.38d), one board
+  -- answered both ways. The same four ballots in the same order: taken up,
+  -- alice's two split the words and the tie draws; declined, carol's vote is the
+  -- second for time and the extra turn is taken instead.
+  Spec.it s "CR 701.38d a vote a player may cast is cast when they take it up, before the next seat votes" $ do
+    (spell, gs) <- pleaBoard s registry "Ballot Broker" 1
+    let ballots = [word "time", word "knowledge", word "time", word "knowledge"]
+        ((_, after), (_, asked)) = State.runState (Engine.runGame (mayVotingWords OptionalDecision.Exercises) gs (S.cast S.alice spell >> Stack.resolveTop)) (ballots, [])
+    Spec.assertEqWith s "the vote is two all, so alice drew three cards and took no extra turn" (outcome after) (3, [])
+    Spec.assertEqWith
+      s
+      "alice is asked her own ballot, then the may, then her extra ballot, all before bob and carol"
+      asked
+      [Right S.alice, Left S.alice, Right S.alice, Right S.bob, Right S.carol]
+  Spec.it s "CR 701.38d a vote a player may cast is not cast when they decline it" $ do
+    (spell, gs) <- pleaBoard s registry "Ballot Broker" 1
+    let ballots = [word "time", word "knowledge", word "time", word "knowledge"]
+        ((_, after), (_, asked)) = State.runState (Engine.runGame (mayVotingWords OptionalDecision.Declines) gs (S.cast S.alice spell >> Stack.resolveTop)) (ballots, [])
+    Spec.assertEqWith s "time won two to one, so alice took an extra turn and drew nothing" (outcome after) (0, [S.alice])
+    Spec.assertEqWith s "alice is still asked the may" asked [Right S.alice, Left S.alice, Right S.bob, Right S.carol]
+
+-- votingWords that answers every Prompt.OfferedExtra with `decision`. Records
+-- each ballot's seat as Right and each "may" as Left, in the order asked.
+mayVotingWords ::
+  OptionalDecision.OptionalDecision ->
+  Prompt.Prompt r ->
+  State.State ([SlotName.SlotName], [Either PlayerId.PlayerId PlayerId.PlayerId]) r
+mayVotingWords decision p = case p of
+  Prompt.ChooseVoteWord _ pid _ _ -> do
+    (pending, asked) <- State.get
+    State.put (drop 1 pending, asked <> [Right pid])
+    pure (case pending of chosen : _ -> chosen; [] -> S.identityAnswer p)
+  Prompt.OfferedExtra _ pid _ _ -> do
+    State.modify (fmap (<> [Left pid]))
+    pure decision
+  _ -> pure (S.identityAnswer p)
 
 -- Answers Prompt.ChooseVotePlayer from a list of picks consumed in the order the
 -- prompts are raised, and records which seat each prompt named and what it was
