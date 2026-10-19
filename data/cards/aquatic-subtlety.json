@@ -59,29 +59,10 @@
                       "ref": {
                         "type": "ChosenCardInHand",
                         "value": {
-                          "filter": {
-                            "type": "And",
-                            "value": []
+                          "count": {
+                            "type": "Literal",
+                            "value": 2
                           },
-                          "player": {
-                            "type": "Relative",
-                            "value": {
-                              "type": "You"
-                            }
-                          }
-                        }
-                      },
-                      "zone": {
-                        "type": "Library"
-                      }
-                    }
-                  },
-                  {
-                    "type": "MoveToZone",
-                    "value": {
-                      "ref": {
-                        "type": "ChosenCardInHand",
-                        "value": {
                           "filter": {
                             "type": "And",
                             "value": []

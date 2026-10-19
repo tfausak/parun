@@ -3765,7 +3765,7 @@ goldenEggSpec s registry = Spec.describe s "Golden Egg" $ do
     island <- S.printingOf s registry "Island"
     let (_, g0) = S.entersWithTrigger goldenEgg S.alice (Setup.emptyGame S.bothPlayers)
         (_, gs) = S.addLibraryCard island S.alice g0
-        placed = S.runPure S.identityAnswer gs Engine.placePendingTriggers
+        placed = S.runPure S.identityAnswer gs (Engine.placePendingTriggers [])
         resolved = S.runPure S.identityAnswer placed Stack.resolveTop
     Spec.assertEqWith s "the trigger is on the stack" (length (GameState.stack placed)) 1
     Spec.assertEqWith s "and nothing is drawn yet" (S.handSize S.alice placed) 0

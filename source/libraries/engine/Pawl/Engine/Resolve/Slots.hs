@@ -29,7 +29,10 @@ import qualified Pawl.Engine.QuantitySlot as QuantitySlot
 import qualified Pawl.Engine.SourceContext as SourceContext
 import qualified Pawl.Engine.Target as Target
 import qualified Pawl.Extra.Integer as Integer
+import qualified Pawl.Types.AbilityName as AbilityName
 import qualified Pawl.Types.ActivateManaAbilities as ActivateManaAbilities
+import qualified Pawl.Types.ActivatedAbility as ActivatedAbility
+import qualified Pawl.Types.ActivatedAbilitySource as ActivatedAbilitySource
 import qualified Pawl.Types.AffectPlayers as AffectPlayers
 import qualified Pawl.Types.AffectedPlayers as AffectedPlayers
 import qualified Pawl.Types.AimedAt as AimedAt
@@ -232,6 +235,7 @@ import qualified Pawl.Types.SlotArity as SlotArity
 import qualified Pawl.Types.SlotCount as SlotCount
 import Pawl.Types.SlotName (SlotName)
 import qualified Pawl.Types.SlotPerPlayer as SlotPerPlayer
+import qualified Pawl.Types.Source as Source
 import qualified Pawl.Types.SpeedDecrease as SpeedDecrease
 import qualified Pawl.Types.TakeExtraTurn as TakeExtraTurn
 import qualified Pawl.Types.TargetChooser as TargetChooser
@@ -518,9 +522,9 @@ objectRefSlots ref = joinTwo (joinSlots (fmap playerRefSlots (objectRefPlayerRef
   -- Joined with the COUNT's own slots, TopOfLibrary's arm above and for its
   -- reason.
   ObjectRef.ChosenCardInGraveyard (ChosenCardInGraveyard.MkChosenCardInGraveyard chooser scope _ count) -> joinTwo (joinTwo (chooserSlots chooser) (zoneScopeSlots scope)) (quantitySlots count)
-  -- CR 402.3: the choosers own the hands, so the PlayerRef is the whole read --
-  -- reported by objectRefPlayerRefs rather than here.
-  ObjectRef.ChosenCardInHand (ChosenCardInHand.MkChosenCardInHand _ _) -> Map.empty
+  -- CR 402.3: the choosers own the hands, so the PlayerRef is reported by
+  -- objectRefPlayerRefs rather than here; the COUNT's slots are this arm's.
+  ObjectRef.ChosenCardInHand (ChosenCardInHand.MkChosenCardInHand _ _ count) -> quantitySlots count
   -- The first of the two arms whose CANDIDATES come from a slot -- the plural is
   -- below -- where the two chosen arms above name a slot only through their
   -- chooser. Reported for EachCardInGraveyard's
@@ -588,11 +592,12 @@ objectRefQuantities ref = case ref of
   ObjectRef.TopOfLibraryUntil (TopOfLibraryUntil.MkTopOfLibraryUntil _ _ count) -> [count]
   -- CR 404.1's top card is ONE card, so the graveyard arm states no depth at all.
   ObjectRef.TopOfGraveyard _ -> []
-  -- How many cards each chooser picks out of a graveyard -- Fall of the Thran's
-  -- printed two. A REGRESSION FENCE for the ChosenCardFromAmong arm below's
-  -- reason: every count in the pool is a Literal, which reads no slot.
+  -- How many cards each chooser picks out of a graveyard or a hand -- Fall of
+  -- the Thran's and Aquatic Subtlety's printed two. A REGRESSION FENCE for the
+  -- ChosenCardFromAmong arm below's reason: every count in the pool is a
+  -- Literal, which reads no slot.
   ObjectRef.ChosenCardInGraveyard (ChosenCardInGraveyard.MkChosenCardInGraveyard _ _ _ count) -> [count]
-  ObjectRef.ChosenCardInHand (ChosenCardInHand.MkChosenCardInHand _ _) -> []
+  ObjectRef.ChosenCardInHand (ChosenCardInHand.MkChosenCardInHand _ _ count) -> [count]
   -- How many cards are picked out of the group -- Ancestral Memories' printed
   -- two, the library walks' counts above being the only other ObjectRef numbers.
   -- A REGRESSION FENCE rather than proven behaviour: every count in the pool is a
@@ -647,7 +652,7 @@ objectRefPlayerRefs ref = case ref of
   -- per-player zone.
   ObjectRef.TopOfGraveyard player -> [player]
   ObjectRef.ChosenCardInGraveyard (ChosenCardInGraveyard.MkChosenCardInGraveyard _ _ _ _) -> []
-  ObjectRef.ChosenCardInHand (ChosenCardInHand.MkChosenCardInHand player _) -> [player]
+  ObjectRef.ChosenCardInHand (ChosenCardInHand.MkChosenCardInHand player _ _) -> [player]
   -- The seat that picks out of the group -- Animal Magnetism's opponent, and by
   -- default CR 608.2c's resolving controller.
   --
@@ -3040,6 +3045,12 @@ objectRefObjects legal resolving controller source gs ref = case ref of
   -- off GameState.exile directly because CR 400.1 makes exile one SHARED zone --
   -- no player to ask, and no APNAP sort, so ascending id and thus arrival order.
   --
+  -- Only what the exiling abilities paired with the RESOLVING one exiled
+  -- (Binding.isLinkedExile): a printed reader skips what an ability acquired
+  -- from an exiled card exiled, and an acquired one reads only its own pair's
+  -- (CR 607.5). data/scenarios/wormfang-crab-returns-only-what-its-own-trigger-exiled.json
+  -- is the proof.
+  --
   -- Rule 607.2a's wording ALONE: an ability referring back to what its own
   -- earlier instruction exiled is CR 400.7j in CR 608.2c's written order, and
   -- names the slot that instruction bound instead -- Hanweir Battlements' "exile
@@ -3052,7 +3063,7 @@ objectRefObjects legal resolving controller source gs ref = case ref of
           Nothing -> True
           Just filter_ -> Filter.matches context (viewOf oid) filter_
      in filter
-          (\oid -> fmap ExileLink.source (Map.lookup oid (GameState.exiledWith gs)) == Just source && stated oid)
+          (\oid -> maybe False (Binding.isLinkedExile (resolvingAbilityName resolving gs) source) (Map.lookup oid (GameState.exiledWith gs)) && stated oid)
           (Set.toList (GameState.exile gs))
   -- The arm above's relation, narrowed to the cards the NAMED ability exiled:
   -- CR 607.2a links the reference to that one ability, so another exiling
@@ -3556,3 +3567,23 @@ conjureQuantities conjure =
     ConjureCards.Written {} -> []
     ConjureCards.Duplicate {} -> []
     ConjureCards.Reference from -> Maybe.maybeToList (FromReference.amount from)
+
+-- | CR 607.2a's name for the ability resolving as `resolving`: an activated
+-- ability's ActivatedAbility.name, which is how a linked reference names one of
+-- two exiling abilities of an object, and how one acquired from an exiled card
+-- names its pair (Binding.isLinkedExile). Nothing for every other kind of
+-- object, none of which carries a name a reference could state.
+resolvingAbilityName :: ObjectId -> GameState -> Maybe AbilityName.AbilityName
+resolvingAbilityName resolving gs = case fmap Object.source (Game.lookupObject resolving gs) of
+  Nothing -> Nothing
+  Just src -> case src of
+    Source.OfAbility a -> ActivatedAbility.name (ActivatedAbilitySource.ability a)
+    Source.OfTrigger _ -> Nothing
+    Source.OfInherentTrigger _ -> Nothing
+    Source.OfCard _ -> Nothing
+    Source.OfSpellCopy _ -> Nothing
+    Source.OfCardCopy _ -> Nothing
+    Source.OfMeld _ -> Nothing
+    Source.OfMerge _ -> Nothing
+    Source.OfToken _ -> Nothing
+    Source.OfEmblem _ -> Nothing

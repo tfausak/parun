@@ -58,7 +58,7 @@ spec s registry = Spec.describe s "Pawl.Engine.Target" . Spec.describe s "PerPla
       -- the object ids each slot offers.
       enter :: Set.Set ObjectId.ObjectId -> ObjectId.ObjectId -> GameState.GameState -> (GameState.GameState, [[Set.Set ObjectId.ObjectId]])
       enter picks cardId gs =
-        State.runState (fmap snd (Engine.runGame (aiming picks) gs (Event.changeZone cardId Zone.Battlefield >> Engine.placePendingTriggers))) []
+        State.runState (fmap snd (Engine.runGame (aiming picks) gs (Event.changeZone cardId Zone.Battlefield >> Engine.placePendingTriggers []))) []
       resolve :: GameState.GameState -> GameState.GameState
       resolve gs = State.evalState (fmap snd (Engine.runGame (aiming Set.empty) gs Stack.resolveTop)) []
       named = Just . CardName.MkCardName . Text.pack

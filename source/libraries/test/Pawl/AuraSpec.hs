@@ -2491,7 +2491,7 @@ cloudformBoard island piker cloudform =
       entered = snd (Engine.runGamePure S.identityAnswer cast Stack.resolveTop)
       -- CR 704.3: the enters trigger waits until a player would get priority,
       -- which resolveTop alone never reaches.
-      placed = snd (Engine.runGamePure S.identityAnswer entered Engine.placePendingTriggers)
+      placed = snd (Engine.runGamePure S.identityAnswer entered (Engine.placePendingTriggers []))
       after = snd (Engine.runGamePure S.identityAnswer placed Stack.resolveTop)
       nonLand oid = not (Set.member CardType.Land (Projection.cardTypesOf oid after))
    in case battlefieldNamed (S.nameOf (Printing.card cloudform)) after of
@@ -3501,7 +3501,7 @@ animateDeadSpec s registry = Spec.describe s "Animate Dead" $ do
   Spec.it s "CR 303.4c / 400.7: the returned creature is alice's, enchanted, at -1/-0; leaving sacrifices it" $ do
     (_, cast) <- setUp
     let entered = S.settleSba (step Stack.resolveTop cast)
-        returned = S.settleSba (step Stack.resolveTop (step Engine.placePendingTriggers entered))
+        returned = S.settleSba (step Stack.resolveTop (step (Engine.placePendingTriggers []) entered))
         creatures = named pikerName Zone.Battlefield S.bob returned
         -- FIRST, and read off every returned Piker rather than a matched one, so
         -- an Aura that fell off or a creature left in the graveyard reddens THIS.
@@ -3512,7 +3512,7 @@ animateDeadSpec s registry = Spec.describe s "Animate Dead" $ do
       (fmap (\creature -> (Projection.controllerOf creature returned, enchantedBy creature, Projection.powerOf creature returned)) creatures)
       [(Just S.alice, [Just animateName], Just 1)]
     let gone = S.settleSba (step (Foldable.traverse_ (`Event.changeZone` Zone.Graveyard) (concatMap (`attachedTo` returned) creatures)) returned)
-        sacrificed = S.settleSba (step Stack.resolveTop (step Engine.placePendingTriggers gone))
+        sacrificed = S.settleSba (step Stack.resolveTop (step (Engine.placePendingTriggers []) gone))
     Spec.assertEqWith
       s
       "the leaves trigger sacrifices it into bob's graveyard"
@@ -3528,7 +3528,7 @@ animateDeadSpec s registry = Spec.describe s "Animate Dead" $ do
     let (engineId, cast1) = S.addPermanent engine S.alice cast0
         cast = S.landsFor swamp S.alice 2 cast1
         entered = S.settleSba (step Stack.resolveTop cast)
-        placed = step Engine.placePendingTriggers entered
+        placed = step (Engine.placePendingTriggers []) entered
         copier = List.find ((== Just (ManaCost.MkManaCost [ManaSymbol.Generic 2])) . Cost.Type.mana . ActivatedAbility.cost) (Projection.abilitiesOf engineId placed)
         settle g = S.settleSba (step (Stack.resolveTop >> Engine.settleForPriority) g)
     case (GameState.stack placed, copier) of

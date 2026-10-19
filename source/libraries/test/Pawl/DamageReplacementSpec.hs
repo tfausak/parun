@@ -2738,7 +2738,7 @@ queensBayPaladinSpec s registry = Spec.describe s "Queen's Bay Paladin (CR 122.1
           Prompt.AnnounceTargets _ _ _ offers -> fmap (const 1) offers
           Prompt.ChooseTargets _ _ _ offers -> fmap (Set.filter (== Recipient.ToObject buriedVampire) . snd) offers
           _ -> S.identityAnswer p
-        placed = S.runPure answer entered Engine.placePendingTriggers
+        placed = S.runPure answer entered (Engine.placePendingTriggers [])
         resolved = S.runPure answer placed Stack.resolveTop
         -- The CR 400.7 incarnation the return minted: the battlefield permanent
         -- that is not the Paladin.

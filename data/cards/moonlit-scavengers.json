@@ -1,0 +1,152 @@
+{
+  "faces": [
+    {
+      "manaCost": [
+        {
+          "type": "Generic",
+          "value": 5
+        },
+        {
+          "type": "OfType",
+          "value": {
+            "type": "Colored",
+            "value": {
+              "type": "Blue"
+            }
+          }
+        }
+      ],
+      "name": "Moonlit Scavengers",
+      "oracleText": "When this creature enters, if you control an artifact or enchantment, return target creature an opponent controls to its owner's hand.",
+      "power": {
+        "type": "Literal",
+        "value": 4
+      },
+      "toughness": {
+        "type": "Literal",
+        "value": 5
+      },
+      "triggeredAbilities": [
+        {
+          "condition": {
+            "type": "SelfEnters"
+          },
+          "intervening": {
+            "type": "Compares",
+            "value": {
+              "comparison": {
+                "type": "AtLeast"
+              },
+              "measured": {
+                "type": "Count",
+                "value": {
+                  "aggregation": {
+                    "type": "Members"
+                  },
+                  "filter": {
+                    "type": "And",
+                    "value": [
+                      {
+                        "type": "Or",
+                        "value": [
+                          {
+                            "type": "HasCardType",
+                            "value": {
+                              "type": "Artifact"
+                            }
+                          },
+                          {
+                            "type": "HasCardType",
+                            "value": {
+                              "type": "Enchantment"
+                            }
+                          }
+                        ]
+                      },
+                      {
+                        "type": "ControlledBy",
+                        "value": {
+                          "type": "You"
+                        }
+                      }
+                    ]
+                  },
+                  "scope": {
+                    "type": "InZone",
+                    "value": {
+                      "player": {
+                        "type": "Relative",
+                        "value": {
+                          "type": "AnyPlayer"
+                        }
+                      },
+                      "zone": {
+                        "type": "Battlefield"
+                      }
+                    }
+                  }
+                }
+              },
+              "threshold": {
+                "type": "Literal",
+                "value": 1
+              }
+            }
+          },
+          "modal": {
+            "modes": [
+              {
+                "clauses": [
+                  {
+                    "effects": [
+                      {
+                        "type": "MoveToZone",
+                        "value": {
+                          "ref": {
+                            "type": "InSlot",
+                            "value": "creature"
+                          },
+                          "zone": {
+                            "type": "Hand"
+                          }
+                        }
+                      }
+                    ]
+                  }
+                ],
+                "targetSlots": {
+                  "creature": {
+                    "filter": {
+                      "type": "ControlledBy",
+                      "value": {
+                        "type": "Opponent"
+                      }
+                    },
+                    "pool": {
+                      "type": "Creatures"
+                    }
+                  }
+                }
+              }
+            ]
+          }
+        }
+      ],
+      "typeLine": {
+        "subtypes": [
+          {
+            "type": "Merfolk"
+          },
+          {
+            "type": "Rogue"
+          }
+        ],
+        "types": [
+          {
+            "type": "Creature"
+          }
+        ]
+      }
+    }
+  ]
+}

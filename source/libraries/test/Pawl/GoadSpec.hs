@@ -123,7 +123,7 @@ goadedBoard homunculus jace piker centaur decision =
     (gs0, [victim, untouched], [bobWalker], [carolWalker]) ->
       let loyal = S.addCounter CounterKind.Loyalty 3 carolWalker (S.addCounter CounterKind.Loyalty 3 bobWalker gs0)
           (_, entered) = S.entersWithTrigger homunculus S.bob loyal
-          placed = S.runPure (goadAt decision victim) entered Engine.placePendingTriggers
+          placed = S.runPure (goadAt decision victim) entered (Engine.placePendingTriggers [])
        in Just (victim, untouched, bobWalker, carolWalker, S.runPure (goadAt decision victim) placed Stack.resolveTop)
     _ -> Nothing
 

@@ -1652,7 +1652,7 @@ feywildTricksterSpec s registry =
               if n <= (0 :: Int) || null (GameState.stack g)
                 then g
                 else drain (n - 1) (S.runPure rollAnswerer g Stack.resolveTop)
-            cycleOnce g = drain 8 (S.runPure rollAnswerer g Engine.placePendingTriggers)
+            cycleOnce g = drain 8 (S.runPure rollAnswerer g (Engine.placePendingTriggers []))
          in cycleOnce (cycleOnce gs)
    in Spec.describe s "PlayerActs RollDice" $ do
         -- CR 706.1: alice's own Windseer rolls, alice's Trickster fires. The

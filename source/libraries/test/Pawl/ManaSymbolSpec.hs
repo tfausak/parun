@@ -1889,7 +1889,7 @@ bergBoard s registry snowy = do
   piker <- S.printingOf s registry "Goblin Piker"
   let (victim, board) = S.addPermanent piker S.bob (S.landsFor filler S.alice 4 (S.landsInPlay island 1))
       (gs, spellId) = S.handOne strider board
-      resolved = S.runPure S.identityAnswer gs (S.cast S.alice spellId *> Stack.resolveTop *> Engine.placePendingTriggers *> Stack.resolveTop)
+      resolved = S.runPure S.identityAnswer gs (S.cast S.alice spellId *> Stack.resolveTop *> Engine.placePendingTriggers [] *> Stack.resolveTop)
   pure (victim, resolved {GameState.activePlayer = S.bob})
 
 -- The untap step's turn-based actions, run for whoever the state says is active
@@ -1993,7 +1993,7 @@ heraldBoard s registry greenLand genericLand = do
   entrant <- S.printingOf s registry "Tomakul Honor Guard"
   let (heraldId, board) = S.addPermanent herald S.alice (S.landsFor other S.alice 1 (S.landsInPlay green 1))
       (gs, spellId) = S.handOne entrant board
-      resolved = S.runPure S.identityAnswer gs (S.cast S.alice spellId *> Engine.placePendingTriggers *> Stack.resolveTop *> Stack.resolveTop)
+      resolved = S.runPure S.identityAnswer gs (S.cast S.alice spellId *> Engine.placePendingTriggers [] *> Stack.resolveTop *> Stack.resolveTop)
   pure (heraldId, resolved)
 
 -- Alice's Tomakul Honor Guard on the battlefield, or a placeholder id that reads

@@ -352,10 +352,10 @@ applyModification textBoxOf viewOf src stamp gs oid unitTypes affected m pc =
         -- payload's restrictions added. Like GainAbility above, the receiver is
         -- their source (CR 113.7). The craft pile is the cards linked under
         -- Binding.craftLink (CR 702.167c), so nothing `src`'s other abilities
-        -- exile; the other is every card linked to `src` but those an unnamed
-        -- ability it acquired this way exiled (Binding.isExiledCardAbility):
-        -- CR 607.2a links this ability only to exiling abilities printed beside
-        -- it, and CR 607.5 an acquired one only to its own pair.
+        -- exile; the other is every card linked to `src` but those an ability
+        -- it acquired this way exiled (Binding.isLinkedExile): CR 607.2a links
+        -- this ability only to exiling abilities printed beside it, and CR
+        -- 607.5 an acquired one only to its own pair.
         --
         -- CR 602.5c: an unnamed ability is named for the card it came from
         -- (Binding.exiledCardAbility), so two identically worded abilities
@@ -368,10 +368,6 @@ applyModification textBoxOf viewOf src stamp gs oid unitTypes affected m pc =
         -- its Gliding Licid case the named twins. The Steward of the Harvest
         -- scenarios prove the other pile, and the Patchwork Crawler pair what
         -- an acquired ability exiled.
-        --
-        -- Not implemented: excluding what an exiling ability `src` acquired
-        -- otherwise exiled -- a named one from an exiled card, or one a layer-6
-        -- grant gave -- whose link carries a name `src` could print (#5185).
         Modification.GainExiledCardAbilities (ExiledCardAbilities.MkExiledCardAbilities pile extra) ->
           let cards = exiledPileOf pile src gs
               named card a = a {ActivatedAbility.name = ActivatedAbility.name a Applicative.<|> Just (Binding.exiledCardAbility card)}
@@ -1306,7 +1302,7 @@ exiledPileOf :: ExiledPile.ExiledPile -> ObjectId -> GameState -> [ObjectId]
 exiledPileOf pile src gs =
   let inPile o = case (pile, Map.lookup o (GameState.exiledWith gs)) of
         (ExiledPile.CraftMaterials, Just link) -> link == ExileLink.MkExileLink {ExileLink.source = src, ExileLink.ability = Just Binding.craftLink}
-        (ExiledPile.ExiledWithSource, Just link) -> ExileLink.source link == src && not (any Binding.isExiledCardAbility (ExileLink.ability link))
+        (ExiledPile.ExiledWithSource, Just link) -> Binding.isLinkedExile Nothing src link
         (_, Nothing) -> False
    in filter inPile (Set.toAscList (GameState.exile gs))
 

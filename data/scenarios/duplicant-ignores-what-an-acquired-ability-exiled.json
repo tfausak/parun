@@ -1,0 +1,48 @@
+{
+  "description": "CR 607.2a / 607.5 Duplicant does not become the creature card the ability Steward of the Harvest gave it exiled",
+  "note": "Steward of the Harvest exiles Scavenger Grounds, so Duplicant has its \"Exile all graveyards\", which exiles bob's Hill Giant. Duplicant's printed \"last creature card exiled with it\" is linked to its printed imprint alone, which exiled nothing, so Duplicant stays a 2/4 Shapeshifter rather than a 3/3 Giant.",
+  "board": {
+    "seats": [
+      {
+        "name": "alice",
+        "battlefield": [
+          { "card": "Forest", "label": "forest" },
+          { "card": "Forest", "label": "forest-2" },
+          { "card": "Forest", "label": "forest-3" },
+          { "card": "Forest", "label": "forest-4" },
+          { "card": "Island", "label": "island" },
+          { "card": "Island", "label": "island-2" },
+          { "card": "Desert", "label": "desert" },
+          { "card": "Duplicant", "label": "duplicant", "ready": true }
+        ],
+        "hand": [
+          { "card": "Steward of the Harvest", "label": "steward" }
+        ],
+        "graveyard": [
+          { "card": "Scavenger Grounds", "label": "grounds" }
+        ]
+      },
+      {
+        "name": "bob",
+        "graveyard": [
+          { "card": "Hill Giant", "label": "giant" }
+        ]
+      }
+    ],
+    "active": "alice",
+    "step": "PrecombatMain"
+  },
+  "timeline": [
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": { "Cast": { "object": "$steward", "mana": ["$forest", "$forest-2", "$forest-3", "$forest-4", null] } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass" },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": { "Answer": { "prompt": "AnnounceTargets", "with": [["target", 1]] } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": { "ChooseTargets": { "target": ["$grounds"] } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass" },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "check": { "Count": { "player": "alice", "zone": "Exile", "card": "Scavenger Grounds", "count": 1 } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": { "Activate": { "object": "$duplicant", "ability": 1, "mana": ["$island", "$island-2", null], "costOrder": [0, 1] } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass" },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "check": { "Count": { "player": "bob", "zone": "Exile", "card": "Hill Giant", "count": 1 } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "check": { "PowerToughness": { "object": "$duplicant", "power": 2, "toughness": 4 } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "check": { "Subtypes": { "object": "$duplicant", "subtypes": ["Shapeshifter"] } } }
+  ]
+}

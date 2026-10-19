@@ -89,7 +89,7 @@ plusOne = CounterKind.PlusOnePlusOne
 -- controls. The Lizrog enters with its trigger pending.
 lizrogSpec :: (Monad m, Monad n) => Spec.Spec m n -> Registry.Registry m -> n ()
 lizrogSpec s registry =
-  let run may answer board = State.runState (fmap snd (Engine.runGame (recording answer (plan may Nothing)) board (Engine.placePendingTriggers >> Stack.resolveTop))) []
+  let run may answer board = State.runState (fmap snd (Engine.runGame (recording answer (plan may Nothing)) board (Engine.placePendingTriggers [] >> Stack.resolveTop))) []
    in Spec.describe s "Galloping Lizrog" $ do
         -- The gameplay assertion first, the prompt record a proxy after it.
         Spec.it s "CR 608.2d the controller removes any number from among their creatures, and it gets twice that many" $ do

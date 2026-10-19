@@ -4714,7 +4714,7 @@ honeCounterSpec s registry = Spec.describe s "HoneCounter" $ do
         (pikerId, g3) = S.addPermanent piker S.bob (S.attach mine giantId g2)
         (theirs, g4) = S.addPermanent bonesplitter S.bob g3
         (dwalinId, arrived) = S.entersWithTrigger dwalin S.alice (S.attach theirs pikerId g4)
-        placed = S.runPure S.identityAnswer arrived Engine.placePendingTriggers
+        placed = S.runPure S.identityAnswer arrived (Engine.placePendingTriggers [])
         after = S.runPure S.identityAnswer placed Stack.resolveTop
     Spec.assertEqWith s "setup: equipped and unhoned, the Giant is 3 + 2" (Projection.powerOf giantId arrived) (Just 5)
     Spec.assertEqWith s "the honed Bonesplitter gives its Giant one more" (Projection.powerOf giantId after) (Just 6)

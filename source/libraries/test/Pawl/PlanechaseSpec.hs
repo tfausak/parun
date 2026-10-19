@@ -381,7 +381,7 @@ spec s registry = Spec.describe s "Pawl.Engine.Planechase" $ do
   -- answers differently.
   Spec.it s "CR 901.8 the planeswalking ability is the roller's alone, with no source" $ do
     board <- seatedPlanarBoard s registry S.bob [(S.alice, ["Academy at Tolaria West"]), (S.bob, ["Tazeem", "Academy at Tolaria West"]), (S.carol, ["Tazeem"])]
-    let placed = S.runPure (rolling 6) (inMain S.bob board) (Planechase.roll S.manaPerformer S.bob >> Engine.placePendingTriggers)
+    let placed = S.runPure (rolling 6) (inMain S.bob board) (Planechase.roll S.manaPerformer S.bob >> Engine.placePendingTriggers [])
         walker oid = case fmap Object.source (Game.lookupObject oid placed) of
           Just (Source.OfInherentTrigger inherent) -> Just (InherentTriggerSource.controller inherent)
           _ -> Nothing

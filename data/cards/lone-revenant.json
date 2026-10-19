@@ -1,0 +1,195 @@
+{
+  "faces": [
+    {
+      "keywords": [
+        {
+          "type": "Hexproof"
+        }
+      ],
+      "manaCost": [
+        {
+          "type": "Generic",
+          "value": 3
+        },
+        {
+          "type": "OfType",
+          "value": {
+            "type": "Colored",
+            "value": {
+              "type": "Blue"
+            }
+          }
+        },
+        {
+          "type": "OfType",
+          "value": {
+            "type": "Colored",
+            "value": {
+              "type": "Blue"
+            }
+          }
+        }
+      ],
+      "name": "Lone Revenant",
+      "oracleText": "Hexproof (This creature can't be the target of spells or abilities your opponents control.)\nWhenever this creature deals combat damage to a player, if you control no other creatures, look at the top four cards of your library. Put one of them into your hand and the rest on the bottom of your library in any order.",
+      "power": {
+        "type": "Literal",
+        "value": 4
+      },
+      "toughness": {
+        "type": "Literal",
+        "value": 4
+      },
+      "triggeredAbilities": [
+        {
+          "condition": {
+            "type": "SelfDealsCombatDamageToPlayer",
+            "value": {
+              "type": "AnyPlayer"
+            }
+          },
+          "intervening": {
+            "type": "Compares",
+            "value": {
+              "comparison": {
+                "type": "Exactly"
+              },
+              "measured": {
+                "type": "Count",
+                "value": {
+                  "aggregation": {
+                    "type": "Members"
+                  },
+                  "filter": {
+                    "type": "And",
+                    "value": [
+                      {
+                        "type": "HasCardType",
+                        "value": {
+                          "type": "Creature"
+                        }
+                      },
+                      {
+                        "type": "ControlledBy",
+                        "value": {
+                          "type": "You"
+                        }
+                      },
+                      {
+                        "type": "Not",
+                        "value": {
+                          "type": "IsSource"
+                        }
+                      }
+                    ]
+                  },
+                  "scope": {
+                    "type": "InZone",
+                    "value": {
+                      "player": {
+                        "type": "Relative",
+                        "value": {
+                          "type": "AnyPlayer"
+                        }
+                      },
+                      "zone": {
+                        "type": "Battlefield"
+                      }
+                    }
+                  }
+                }
+              },
+              "threshold": {
+                "type": "Literal",
+                "value": 0
+              }
+            }
+          },
+          "modal": {
+            "modes": [
+              {
+                "clauses": [
+                  {
+                    "effects": [
+                      {
+                        "type": "LookAt",
+                        "value": {
+                          "ref": {
+                            "type": "TopOfLibrary",
+                            "value": {
+                              "count": {
+                                "type": "Literal",
+                                "value": 4
+                              },
+                              "player": {
+                                "type": "Relative",
+                                "value": {
+                                  "type": "You"
+                                }
+                              }
+                            }
+                          },
+                          "slot": "looked"
+                        }
+                      }
+                    ]
+                  },
+                  {
+                    "effects": [
+                      {
+                        "type": "MoveToZone",
+                        "value": {
+                          "ref": {
+                            "type": "ChosenCardFromAmong",
+                            "value": {
+                              "filter": {
+                                "type": "And",
+                                "value": []
+                              },
+                              "slot": "looked"
+                            }
+                          },
+                          "zone": {
+                            "type": "Hand"
+                          }
+                        }
+                      }
+                    ]
+                  },
+                  {
+                    "effects": [
+                      {
+                        "type": "MoveToZone",
+                        "value": {
+                          "ref": {
+                            "type": "InSlot",
+                            "value": "looked"
+                          },
+                          "zone": {
+                            "type": "Library"
+                          }
+                        }
+                      }
+                    ]
+                  }
+                ]
+              }
+            ]
+          }
+        }
+      ],
+      "typeLine": {
+        "subtypes": [
+          {
+            "type": "Spirit"
+          }
+        ],
+        "types": [
+          {
+            "type": "Creature"
+          }
+        ]
+      }
+    }
+  ]
+}

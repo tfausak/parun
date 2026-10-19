@@ -266,7 +266,7 @@ spec s registry = Spec.describe s "Range of influence" $ do
     let fast = S.fourPlayerGame {GameState.players = Map.adjust (\p -> p {Player.speed = Just 1}) S.alice (GameState.players S.fourPlayerGame)}
         losing pid = S.withEvents [GameEvent.LifeLost (LifeChange.MkLifeChange pid 2)] fast
         settle gs =
-          let placed = S.runPure S.identityAnswer gs Engine.placePendingTriggers
+          let placed = S.runPure S.identityAnswer gs (Engine.placePendingTriggers [])
            in if null (GameState.stack placed) then placed else S.runPure S.identityAnswer placed Stack.resolveTop
         speedAfter gs = Player.speed =<< Map.lookup S.alice (GameState.players (settle gs))
     Spec.assertEqWith s "alice is the active player" (GameState.activePlayer fast) S.alice
@@ -290,7 +290,7 @@ spec s registry = Spec.describe s "Range of influence" $ do
         stocked = snd (S.addLibraryCard island S.dave (snd (S.addLibraryCard island S.dave teamed)))
         (_, withBlossom) = S.addPermanent bitterblossom S.dave stocked
         settle gs =
-          let placed = S.runPure S.identityAnswer gs Engine.placePendingTriggers
+          let placed = S.runPure S.identityAnswer gs (Engine.placePendingTriggers [])
            in if null (GameState.stack placed) then placed else S.runPure S.identityAnswer placed Stack.resolveTop
         upkeep = S.withEvents [GameEvent.StepBegan (StepBegan.MkStepBegan (Phase.Beginning BeginningStep.Upkeep) S.bob)] withBlossom
         endStep = S.withEvents [GameEvent.StepBegan (StepBegan.MkStepBegan (Phase.Ending EndingStep.EndStep) S.bob)] (S.withMonarch S.dave stocked)
