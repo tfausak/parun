@@ -18,6 +18,7 @@ import qualified Pawl.Types.GameEvent as GameEvent
 import qualified Pawl.Types.GameState as GameState
 import qualified Pawl.Types.LoggedEvent as LoggedEvent
 import qualified Pawl.Types.Looked as Looked
+import qualified Pawl.Types.Moved as Moved
 import qualified Pawl.Types.Object as Object
 import Pawl.Types.ObjectId (ObjectId)
 import qualified Pawl.Types.Phase as Phase
@@ -28,6 +29,7 @@ import qualified Pawl.Types.Shows as Shows
 import qualified Pawl.Types.Visibility as Visibility
 import qualified Pawl.Types.Voted as Voted
 import qualified Pawl.Types.Zone as Zone
+import qualified Pawl.Types.ZoneChange as ZoneChange
 
 -- | Whether a player may see an object's face now. CR 723.4: for an object in
 -- the game, a player also sees what each player they control sees; a card
@@ -55,14 +57,85 @@ revealedNow oid gs =
 
 -- | Whether a player saw what a logged event showed: everyone sees a reveal
 -- (CR 701.20a), only its audience a look (CR 701.20e, 723.4) or a ballot (CR
--- 701.38a), and everyone a secret vote's ballots once revealed.
+-- 701.38a), and everyone a secret vote's ballots once revealed. An event in
+-- the open (CR 400.2) is seen by everyone: a draw as the act alone (CR 121.1),
+-- and a move only when everyone saw the card leave (CR 603.10a) or it landed
+-- face up in a graveyard (CR 404.2).
+--
+-- Not implemented: a card put face up onto the battlefield or into exile from
+-- a hand or library other than by casting or playing it, such as Untamed
+-- Wilds' land, is not witnessed as it arrives (#5278).
 witnessed :: PlayerId -> LoggedEvent.LoggedEvent -> Visibility.Visibility
 witnessed pid logged = case LoggedEvent.event logged of
   GameEvent.Revealed _ -> Visibility.Visible
   GameEvent.Looked looked -> visibleIf (Set.member pid (Looked.audience looked))
   GameEvent.Voted voted -> visibleIf (Set.member pid (Voted.audience voted))
   GameEvent.VotesRevealed _ -> Visibility.Visible
-  _ -> Visibility.Obscured
+  GameEvent.Moved moved -> visibleIf (Moved.revealed moved || ZoneChange.to (Moved.change moved) == Zone.Graveyard)
+  GameEvent.CardArrived change -> visibleIf (not (Game.isHiddenZone (ZoneChange.to change)))
+  GameEvent.DamageDealt {} -> Visibility.Visible
+  GameEvent.DamagePrevented {} -> Visibility.Visible
+  GameEvent.StepBegan {} -> Visibility.Visible
+  GameEvent.SpellCast {} -> Visibility.Visible -- CR 601.2a, 708.4: as it is on the stack
+  GameEvent.SpellCopied {} -> Visibility.Visible
+  GameEvent.BecameMonarch {} -> Visibility.Visible
+  GameEvent.TookInitiative {} -> Visibility.Visible
+  GameEvent.Discarded {} -> Visibility.Visible
+  GameEvent.Milled {} -> Visibility.Visible
+  GameEvent.Drew {} -> Visibility.Visible
+  GameEvent.AttackerDeclared {} -> Visibility.Visible
+  GameEvent.BecameAttacked {} -> Visibility.Visible
+  GameEvent.AttackersDeclared {} -> Visibility.Visible
+  GameEvent.BecameBlocking {} -> Visibility.Visible
+  GameEvent.AttackerBlocked {} -> Visibility.Visible
+  GameEvent.AttackerUnblocked {} -> Visibility.Visible
+  GameEvent.BlocksDeclared {} -> Visibility.Visible
+  GameEvent.SpellCountered {} -> Visibility.Visible
+  GameEvent.AbilityCountered {} -> Visibility.Visible
+  GameEvent.LifeLost {} -> Visibility.Visible
+  GameEvent.LifeGained {} -> Visibility.Visible
+  GameEvent.LoyaltyAbilityActivated {} -> Visibility.Visible
+  GameEvent.CountersPut {} -> Visibility.Visible
+  GameEvent.CountersRemoved {} -> Visibility.Visible
+  GameEvent.HalfUnlocked {} -> Visibility.Visible
+  GameEvent.TurnedFaceUp {} -> Visibility.Visible
+  GameEvent.Transformed {} -> Visibility.Visible
+  GameEvent.BecameDesignated {} -> Visibility.Visible
+  GameEvent.Mentored {} -> Visibility.Visible
+  GameEvent.Exploited {} -> Visibility.Visible
+  GameEvent.Convoked {} -> Visibility.Visible
+  GameEvent.Crewed {} -> Visibility.Visible
+  GameEvent.BecameCrewed {} -> Visibility.Visible
+  GameEvent.Saddled {} -> Visibility.Visible
+  GameEvent.PermanentSacrificed {} -> Visibility.Visible
+  GameEvent.AbilityTriggered {} -> Visibility.Visible -- CR 603.3: it goes on the stack
+  GameEvent.ControlChanged {} -> Visibility.Visible
+  GameEvent.VentureMarkerEntered {} -> Visibility.Visible
+  GameEvent.BecameTarget {} -> Visibility.Visible
+  GameEvent.BecameAttached {} -> Visibility.Visible
+  GameEvent.BecameUnattached {} -> Visibility.Visible
+  GameEvent.LeftTheGame {} -> Visibility.Visible
+  GameEvent.LostTheGame {} -> Visibility.Visible
+  GameEvent.LandPlayed {} -> Visibility.Visible
+  GameEvent.ManifestedDread {} -> Visibility.Visible
+  GameEvent.DieResultSettled {} -> Visibility.Visible
+  GameEvent.RolledToVisit {} -> Visibility.Visible
+  GameEvent.PlanarDieRolled {} -> Visibility.Visible
+  GameEvent.TurnedUpOffDeck {} -> Visibility.Visible
+  GameEvent.ChaosEnsued -> Visibility.Visible
+  GameEvent.ClassLevelSet {} -> Visibility.Visible
+  GameEvent.Plotted {} -> Visibility.Visible
+  GameEvent.BecameTapped {} -> Visibility.Visible
+  GameEvent.BecameUntapped {} -> Visibility.Visible
+  GameEvent.TappedForMana {} -> Visibility.Visible
+  GameEvent.ManaAdded {} -> Visibility.Visible
+  GameEvent.ManaAbilityResolved {} -> Visibility.Visible
+  GameEvent.CoinFlipped {} -> Visibility.Visible
+  GameEvent.ActivatedAbilityResolved {} -> Visibility.Visible -- CR 602.2a: one from a hidden zone reveals its card
+  GameEvent.TriggeredAbilityResolved {} -> Visibility.Visible
+  GameEvent.PermanentActed {} -> Visibility.Visible
+  GameEvent.PlayerActed {} -> Visibility.Visible
+  GameEvent.StickerPut {} -> Visibility.Visible
 
 -- | CR 723.5: the players whose decisions this player makes, by the reading
 -- Pawl.Engine.Decide.deciderFor makes, so a dormant row waiting for its spell
