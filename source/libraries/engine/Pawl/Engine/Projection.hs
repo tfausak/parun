@@ -4034,10 +4034,8 @@ filterReadsPeers f = case f of
   Filter.Type.HasKeywordFamily _ -> False
   -- The SOURCE's and a bound object's numbers arrive on the Context, which
   -- affectsGiven builds with Filter.contextFor -- no projection of a second
-  -- object is read.
-  -- Every operand but OfEachOtherCandidate reads the candidate, the source or a
-  -- binding; that one reads the other candidates' projections, through
-  -- Filter.Context rather than a view field.
+  -- object is read -- except OfEachOtherCandidate's, which are the other
+  -- candidates' projections.
   Filter.Type.Measures m -> case Measures.operand m of
     Operand.OfEachOtherCandidate _ -> True
     Operand.Literal _ -> False
