@@ -22,7 +22,10 @@
         {
           "effect": {
             "type": "AdditionalVotes",
-            "value": 1
+            "value": {
+              "type": "Mandatory",
+              "value": 1
+            }
           },
           "scope": {
             "type": "You"

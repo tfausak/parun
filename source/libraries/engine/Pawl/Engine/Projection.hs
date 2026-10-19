@@ -373,11 +373,7 @@ applyModification textBoxOf viewOf src stamp gs oid unitTypes affected m pc =
         -- otherwise exiled -- a named one from an exiled card, or one a layer-6
         -- grant gave -- whose link carries a name `src` could print (#5185).
         Modification.GainExiledCardAbilities (ExiledCardAbilities.MkExiledCardAbilities pile extra) ->
-          let inPile o = case (pile, Map.lookup o (GameState.exiledWith gs)) of
-                (ExiledPile.CraftMaterials, Just link) -> link == ExileLink.MkExileLink {ExileLink.source = src, ExileLink.ability = Just Binding.craftLink}
-                (ExiledPile.ExiledWithSource, Just link) -> ExileLink.source link == src && not (any Binding.isExiledCardAbility (ExileLink.ability link))
-                (_, Nothing) -> False
-              cards = filter inPile (Set.toAscList (GameState.exile gs))
+          let cards = exiledPileOf pile src gs
               named card a = a {ActivatedAbility.name = ActivatedAbility.name a Applicative.<|> Just (Binding.exiledCardAbility card)}
               -- CR 113.6 / 702.178b: a card has, in exile, only the "as long
               -- as" grants that function there (AbilityZone.grantFunctionsIn).
@@ -1303,6 +1299,16 @@ framedByBindings gs bindings = framedBySlots gs (Binding.recipientsBySlot (Bindi
 sourceContext :: GameState -> Maybe PlayerId.PlayerId -> ObjectId -> Filter.Context
 sourceContext gs perspective source =
   framedBy source gs (Filter.contextFor (Game.teams gs) perspective (Just source))
+
+-- | CR 607.2a: the cards in exile in `src`'s pile -- the ones exiled to craft
+-- it (CR 702.167c), or every one its own abilities exiled.
+exiledPileOf :: ExiledPile.ExiledPile -> ObjectId -> GameState -> [ObjectId]
+exiledPileOf pile src gs =
+  let inPile o = case (pile, Map.lookup o (GameState.exiledWith gs)) of
+        (ExiledPile.CraftMaterials, Just link) -> link == ExileLink.MkExileLink {ExileLink.source = src, ExileLink.ability = Just Binding.craftLink}
+        (ExiledPile.ExiledWithSource, Just link) -> ExileLink.source link == src && not (any Binding.isExiledCardAbility (ExileLink.ability link))
+        (_, Nothing) -> False
+   in filter inPile (Set.toAscList (GameState.exile gs))
 
 -- SourceContext.framedBy plus withCharacteristicsOf: every source-derived field.
 framedBy :: ObjectId -> GameState -> Filter.Context -> Filter.Context
@@ -3804,6 +3810,7 @@ filterReads f = case f of
   -- handed in on the context, so it is a fixed input to any single projection.
   Filter.Type.CantCrewVehicles -> Set.empty
   Filter.Type.DealtDamageThisTurn -> Set.empty
+  Filter.Type.DealtDamageToThisTurn _ -> Set.empty
   Filter.Type.EnteredThisTurn -> Set.empty
   Filter.Type.CrewedSourceThisTurn -> Set.empty
   Filter.Type.ConvokedSourceThisTurn -> Set.empty
@@ -4083,6 +4090,7 @@ filterReadsPeers f = case f of
   -- peer's view, so no second projection can change its answer.
   Filter.Type.CantCrewVehicles -> False
   Filter.Type.DealtDamageThisTurn -> False
+  Filter.Type.DealtDamageToThisTurn _ -> False
   Filter.Type.EnteredThisTurn -> False
   Filter.Type.CrewedSourceThisTurn -> False
   Filter.Type.ConvokedSourceThisTurn -> False
@@ -4560,7 +4568,8 @@ project oid gs = projectFrom (gather gs) oid gs
 -- never the card. A counterfactual board, as Projection.View's
 -- copiableCharacteristicsFaceUp; Game.withFacing turns a merged permanent's
 -- components with it (CR 730.2f). A token's, a copy's or a merge's own values
--- are no copy effect's (CR 111.3, 730.2a), so they stay.
+-- are no copy effect's (CR 111.3, 730.2a), so they stay. A card exiled face
+-- down shows the card too (CR 406.3), on a board where it is not.
 --
 -- Not implemented: a copy effect a side had before it merged is part of the
 -- merge's values, so the reveal still shows it (#5214).
@@ -4572,6 +4581,8 @@ project oid gs = projectFrom (gather gs) oid gs
 projectShown :: ObjectId -> GameState -> ProjectedCharacteristics
 projectShown oid gs = case Game.lookupObject oid gs of
   Just obj
+    | Object.exiledFaceDown obj ->
+        project oid gs {GameState.objects = Map.insert oid obj {Object.exiledFaceDown = False} (GameState.objects gs)}
     | Facing.isFaceDown (Object.facing obj) ->
         let card = (Game.withFacing Facing.FaceUp obj) {Object.bindings = Binding.withoutCopyEffect (Object.bindings obj)}
          in project oid (Game.supersedeStoredCopies (Set.singleton oid) gs {GameState.objects = Map.insert oid card (GameState.objects gs)})

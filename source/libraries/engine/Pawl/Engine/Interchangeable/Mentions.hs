@@ -48,7 +48,9 @@ import qualified Pawl.Types.ArmDelayedTrigger as ArmDelayedTrigger
 import qualified Pawl.Types.AsCopy as AsCopy
 import qualified Pawl.Types.AttachAll as AttachAll
 import qualified Pawl.Types.AttachBound as AttachBound
+import qualified Pawl.Types.AttachR as AttachR
 import qualified Pawl.Types.AttachRestriction as AttachRestriction
+import qualified Pawl.Types.AttachRewrite as AttachRewrite
 import qualified Pawl.Types.AttachTarget as AttachTarget
 import qualified Pawl.Types.AttachedToBound as AttachedToBound
 import qualified Pawl.Types.AttackCost as AttackCost
@@ -201,6 +203,7 @@ import qualified Pawl.Types.ForEachNumber as ForEachNumber
 import qualified Pawl.Types.ForbidAttack as ForbidAttack
 import qualified Pawl.Types.ForbidBeingBlocked as ForbidBeingBlocked
 import qualified Pawl.Types.ForetellCost as ForetellCost
+import qualified Pawl.Types.FromAnywhere as FromAnywhere
 import qualified Pawl.Types.FromOutsideTheGame as FromOutsideTheGame
 import qualified Pawl.Types.FromReference as FromReference
 import qualified Pawl.Types.FullText as FullText
@@ -496,6 +499,7 @@ filterNames asking criterion = case criterion of
   Filter.ConvokedSourceThisTurn -> True
   Filter.SaddledSourceThisTurn -> True
   Filter.DealtDamageThisTurn -> True
+  Filter.DealtDamageToThisTurn _ -> True
   Filter.EnteredThisTurn -> True
   Filter.ControlledSinceTurnBegan -> False
   Filter.AttachedTo nested -> filterNames asking nested
@@ -659,7 +663,7 @@ armDelayedTriggerNames asking onAbility x = case x of
 
 asCopyNames :: Asking -> (ability -> Bool) -> (effect -> Bool) -> AsCopy.AsCopy ability effect -> Bool
 asCopyNames asking onAbility onEffect x = case x of
-  AsCopy.MkAsCopy eligible clauses _tapped whenYouDo _zone duration _recipient _optional -> filterNames asking eligible || any (copyClauseNames asking onAbility) clauses || any onEffect whenYouDo || any (durationNames asking) duration
+  AsCopy.MkAsCopy eligible clauses _tapped whenYouDo _among duration _recipient _optional -> filterNames asking eligible || any (copyClauseNames asking onAbility) clauses || any onEffect whenYouDo || any (durationNames asking) duration
 
 attachAllNames :: Asking -> AttachAll.AttachAll -> Bool
 attachAllNames asking x = case x of
@@ -1222,6 +1226,10 @@ durationEventNames asking x = case x of
 eachCardFromAmongNames :: Asking -> EachCardFromAmong.EachCardFromAmong -> Bool
 eachCardFromAmongNames asking x = case x of
   EachCardFromAmong.MkEachCardFromAmong slot filter_ -> slotNames asking slot || filterNames asking filter_
+
+fromAnywhereNames :: Asking -> FromAnywhere.FromAnywhere -> Bool
+fromAnywhereNames asking x = case x of
+  FromAnywhere.MkFromAnywhere slot among -> slotNames asking slot || any (slotNames asking) among
 
 eachCardInGraveyardNames :: Asking -> EachCardInGraveyard.EachCardInGraveyard -> Bool
 eachCardInGraveyardNames asking x = case x of
@@ -2081,7 +2089,7 @@ objectRefNames asking x = case x of
   ObjectRef.RandomCardInLibrary randomCardInLibrary -> randomCardInLibraryNames asking randomCardInLibrary
   ObjectRef.ChosenPermanents chosenPermanents -> chosenPermanentsNames asking chosenPermanents
   ObjectRef.AttachedToBound attachedToBound -> attachedToBoundNames asking attachedToBound
-  ObjectRef.FromAnywhere slotName -> slotNames asking slotName
+  ObjectRef.FromAnywhere fromAnywhere -> fromAnywhereNames asking fromAnywhere
   ObjectRef.AllOf refs -> any (objectRefNames asking) refs
 
 offerCastNames :: Asking -> OfferCast.OfferCast -> Bool
@@ -2234,7 +2242,7 @@ playerEffectNames asking x = case x of
   PlayerEffect.CantGetCounters _playerCounterKind -> False
   PlayerEffect.StateCoinFlip _statedFlip -> False
   PlayerEffect.ModifyDieRoll modifiedRoll -> modifiedRollNames asking modifiedRoll
-  PlayerEffect.AdditionalVotes _natural -> False
+  PlayerEffect.AdditionalVotes _extraVotes -> False
   PlayerEffect.AdditionalSurveilCards _natural -> False
   PlayerEffect.PutTappedAsYouCascade filter_ -> filterNames asking filter_
   PlayerEffect.CantGainLife -> False
@@ -2509,6 +2517,7 @@ replacementEffectNames asking onCard onAbility onEffect x = case x of
   ReplacementEffect.CounterR counterR -> counterRNames asking counterR
   ReplacementEffect.TokenR tokenR -> tokenRNames asking onCard tokenR
   ReplacementEffect.TurnUpR turnUpR -> turnUpRNames asking onAbility onEffect turnUpR
+  ReplacementEffect.AttachR attachR -> attachRNames asking onAbility onEffect attachR
   ReplacementEffect.UntapR untapR -> untapRNames asking untapR
   ReplacementEffect.LifeLossR lifeLossR -> lifeLossRNames asking lifeLossR
   ReplacementEffect.LifeGainR lifeGainR -> lifeGainRNames asking lifeGainR
@@ -2883,6 +2892,15 @@ turnUpRewriteNames asking onAbility onEffect x = case x of
   TurnUpRewrite.WithCounters withCounters -> withCountersNames asking withCounters
   TurnUpRewrite.MayAttachTo filter_ -> filterNames asking filter_
   TurnUpRewrite.AsCopy asCopy -> asCopyNames asking onAbility onEffect asCopy
+
+attachRNames :: Asking -> (ability -> Bool) -> (effect -> Bool) -> AttachR.AttachR ability effect -> Bool
+attachRNames asking onAbility onEffect x = case x of
+  AttachR.MkAttachR matching rewrite -> filterNames asking matching || attachRewriteNames asking onAbility onEffect rewrite
+
+attachRewriteNames :: Asking -> (ability -> Bool) -> (effect -> Bool) -> AttachRewrite.AttachRewrite ability effect -> Bool
+attachRewriteNames asking onAbility onEffect x = case x of
+  AttachRewrite.AsCopy asCopy -> asCopyNames asking onAbility onEffect asCopy
+  AttachRewrite.ChooseColors _ -> False
 
 untapRNames :: Asking -> UntapR.UntapR -> Bool
 untapRNames asking x = case x of

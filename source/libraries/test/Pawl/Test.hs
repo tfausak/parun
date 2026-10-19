@@ -73,7 +73,9 @@ import qualified Pawl.Codec.ArrivalSpec
 import qualified Pawl.Codec.AsCopySpec
 import qualified Pawl.Codec.AttachAllSpec
 import qualified Pawl.Codec.AttachBoundSpec
+import qualified Pawl.Codec.AttachRSpec
 import qualified Pawl.Codec.AttachRestrictionSpec
+import qualified Pawl.Codec.AttachRewriteSpec
 import qualified Pawl.Codec.AttachTargetSpec
 import qualified Pawl.Codec.AttachedToBoundSpec
 import qualified Pawl.Codec.AttackCostSpec
@@ -177,6 +179,7 @@ import qualified Pawl.Codec.ControllerRelationSpec
 import qualified Pawl.Codec.ConvokingSpec
 import qualified Pawl.Codec.CopyClauseSpec
 import qualified Pawl.Codec.CopyCoverageSpec
+import qualified Pawl.Codec.CopyDomainSpec
 import qualified Pawl.Codec.CopyExceptionSpec
 import qualified Pawl.Codec.CopyOriginalSpec
 import qualified Pawl.Codec.CopyRecipientSpec
@@ -231,6 +234,7 @@ import qualified Pawl.Codec.DamagePatternSpec
 import qualified Pawl.Codec.DamagePreventedSpec
 import qualified Pawl.Codec.DamageRSpec
 import qualified Pawl.Codec.DamageRewriteSpec
+import qualified Pawl.Codec.DamagedPartySpec
 import qualified Pawl.Codec.DaytimeSpec
 import qualified Pawl.Codec.DealDamageSpec
 import qualified Pawl.Codec.DeciderSpec
@@ -313,6 +317,7 @@ import qualified Pawl.Codec.ExpirySpec
 import qualified Pawl.Codec.ExploitedSpec
 import qualified Pawl.Codec.ExtraPhaseSpec
 import qualified Pawl.Codec.ExtraTurnSpec
+import qualified Pawl.Codec.ExtraVotesSpec
 import qualified Pawl.Codec.FaceDownCharacteristicsSpec
 import qualified Pawl.Codec.FaceDownReasonSpec
 import qualified Pawl.Codec.FaceDownStateSpec
@@ -327,6 +332,7 @@ import qualified Pawl.Codec.ForEachSpec
 import qualified Pawl.Codec.ForbidAttackSpec
 import qualified Pawl.Codec.ForbidBeingBlockedSpec
 import qualified Pawl.Codec.ForetellCostSpec
+import qualified Pawl.Codec.FromAnywhereSpec
 import qualified Pawl.Codec.FromOutsideTheGameSpec
 import qualified Pawl.Codec.FromReferenceSpec
 import qualified Pawl.Codec.GainControlSpec
@@ -1065,6 +1071,9 @@ spec s registry = do
   Pawl.Codec.CopyExceptionSpec.spec s
   Pawl.Codec.CopyOriginalSpec.spec s
   Pawl.Codec.CopyRecipientSpec.spec s
+  Pawl.Codec.CopyDomainSpec.spec s
+  Pawl.Codec.AttachRewriteSpec.spec s
+  Pawl.Codec.AttachRSpec.spec s
   Pawl.Codec.CopyStackObjectSpec.spec s
   Pawl.Codec.CopyTargetsSpec.spec s
   Pawl.Codec.CostAmountSpec.spec s
@@ -1114,6 +1123,7 @@ spec s registry = do
   Pawl.Codec.DamagePartSpec.spec s
   Pawl.Codec.DamagePatternSpec.spec s
   Pawl.Codec.DamagePreventedSpec.spec s
+  Pawl.Codec.DamagedPartySpec.spec s
   Pawl.Codec.DamageRewriteSpec.spec s
   Pawl.Codec.DamageRSpec.spec s
   Pawl.Codec.DaytimeSpec.spec s
@@ -1152,6 +1162,7 @@ spec s registry = do
   Pawl.Codec.DurationSpec.spec s
   Pawl.Codec.DuringPhaseSpec.spec s
   Pawl.Codec.EachCardFromAmongSpec.spec s
+  Pawl.Codec.FromAnywhereSpec.spec s
   Pawl.Codec.EachCardInGraveyardSpec.spec s
   Pawl.Codec.EachCardInHandSpec.spec s
   Pawl.Codec.EffectSpec.spec s
@@ -1198,6 +1209,7 @@ spec s registry = do
   Pawl.Codec.ExploitedSpec.spec s
   Pawl.Codec.ExtraPhaseSpec.spec s
   Pawl.Codec.ExtraTurnSpec.spec s
+  Pawl.Codec.ExtraVotesSpec.spec s
   Pawl.Codec.FaceDownCharacteristicsSpec.spec s
   Pawl.Codec.FaceDownReasonSpec.spec s
   Pawl.Codec.FaceDownStateSpec.spec s

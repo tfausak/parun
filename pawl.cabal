@@ -179,8 +179,12 @@ library codec
     Pawl.Codec.AttachBoundSpec
     Pawl.Codec.AttachedToBound
     Pawl.Codec.AttachedToBoundSpec
+    Pawl.Codec.AttachR
     Pawl.Codec.AttachRestriction
     Pawl.Codec.AttachRestrictionSpec
+    Pawl.Codec.AttachRewrite
+    Pawl.Codec.AttachRewriteSpec
+    Pawl.Codec.AttachRSpec
     Pawl.Codec.AttachTarget
     Pawl.Codec.AttachTargetSpec
     Pawl.Codec.AttackCost
@@ -396,6 +400,8 @@ library codec
     Pawl.Codec.CopyClauseSpec
     Pawl.Codec.CopyCoverage
     Pawl.Codec.CopyCoverageSpec
+    Pawl.Codec.CopyDomain
+    Pawl.Codec.CopyDomainSpec
     Pawl.Codec.CopyException
     Pawl.Codec.CopyExceptionSpec
     Pawl.Codec.CopyOriginal
@@ -489,6 +495,8 @@ library codec
     Pawl.Codec.CyclingSpec
     Pawl.Codec.DamageDirection
     Pawl.Codec.DamageDirectionSpec
+    Pawl.Codec.DamagedParty
+    Pawl.Codec.DamagedPartySpec
     Pawl.Codec.DamageEvent
     Pawl.Codec.DamageEventSpec
     Pawl.Codec.DamageIs
@@ -674,6 +682,8 @@ library codec
     Pawl.Codec.ExtraPhaseSpec
     Pawl.Codec.ExtraTurn
     Pawl.Codec.ExtraTurnSpec
+    Pawl.Codec.ExtraVotes
+    Pawl.Codec.ExtraVotesSpec
     Pawl.Codec.Face
     Pawl.Codec.FaceDownCharacteristics
     Pawl.Codec.FaceDownCharacteristicsSpec
@@ -702,6 +712,8 @@ library codec
     Pawl.Codec.ForEachSpec
     Pawl.Codec.ForetellCost
     Pawl.Codec.ForetellCostSpec
+    Pawl.Codec.FromAnywhere
+    Pawl.Codec.FromAnywhereSpec
     Pawl.Codec.FromOutsideTheGame
     Pawl.Codec.FromOutsideTheGameSpec
     Pawl.Codec.FromReference
@@ -2193,7 +2205,9 @@ library types
     Pawl.Types.AttachAll
     Pawl.Types.AttachBound
     Pawl.Types.AttachedToBound
+    Pawl.Types.AttachR
     Pawl.Types.AttachRestriction
+    Pawl.Types.AttachRewrite
     Pawl.Types.AttachTarget
     Pawl.Types.AttackCost
     Pawl.Types.AttackCostScope
@@ -2315,6 +2329,7 @@ library types
     Pawl.Types.Convoking
     Pawl.Types.CopyClause
     Pawl.Types.CopyCoverage
+    Pawl.Types.CopyDomain
     Pawl.Types.CopyException
     Pawl.Types.CopyOriginal
     Pawl.Types.CopyRecipient
@@ -2366,6 +2381,7 @@ library types
     Pawl.Types.CrewRestriction
     Pawl.Types.Cycling
     Pawl.Types.DamageDirection
+    Pawl.Types.DamagedParty
     Pawl.Types.DamageEvent
     Pawl.Types.DamageIs
     Pawl.Types.DamageKind
@@ -2468,6 +2484,7 @@ library types
     Pawl.Types.Exploited
     Pawl.Types.ExtraPhase
     Pawl.Types.ExtraTurn
+    Pawl.Types.ExtraVotes
     Pawl.Types.Face
     Pawl.Types.FaceDownCharacteristics
     Pawl.Types.FaceDownReason
@@ -2483,6 +2500,7 @@ library types
     Pawl.Types.ForEach
     Pawl.Types.ForEachNumber
     Pawl.Types.ForetellCost
+    Pawl.Types.FromAnywhere
     Pawl.Types.FromOutsideTheGame
     Pawl.Types.FromReference
     Pawl.Types.FullText

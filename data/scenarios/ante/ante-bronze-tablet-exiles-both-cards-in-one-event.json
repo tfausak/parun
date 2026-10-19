@@ -1,0 +1,57 @@
+{
+  "description": "CR 608.2f / 603.2c Bronze Tablet exiles itself and bob's Ornithopter as one event, so alice's Ketramose triggers once: she draws one card and loses 1 life",
+  "note": "Both cards leave the battlefield during alice's turn, so Ketramose's batch trigger admits each; two exile events would trigger it twice and leave alice at 18 with two cards drawn.",
+  "board": {
+    "ante": true,
+    "active": "alice",
+    "step": "PrecombatMain",
+    "seats": [
+      {
+        "name": "alice",
+        "battlefield": [
+          { "card": "Bronze Tablet", "label": "tablet" },
+          { "card": "Ketramose, the New Dawn" },
+          { "card": "Mountain", "label": "mountain-1" },
+          { "card": "Mountain", "label": "mountain-2" },
+          { "card": "Mountain", "label": "mountain-3" },
+          { "card": "Mountain", "label": "mountain-4" }
+        ],
+        "library": [{ "card": "Island" }, { "card": "Swamp" }, { "card": "Forest" }]
+      },
+      {
+        "name": "bob",
+        "battlefield": [{ "card": "Ornithopter", "label": "thopter" }],
+        "library": [{ "card": "Plains" }]
+      }
+    ]
+  },
+  "timeline": [
+    {
+      "turn": 1,
+      "step": "PrecombatMain",
+      "player": "alice",
+      "do": {
+        "Activate": {
+          "object": "$tablet",
+          "ability": 0,
+          "targets": ["$thopter"],
+          "mana": ["$mountain-1", "$mountain-2", "$mountain-3", "$mountain-4"]
+        }
+      }
+    },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass" },
+    {
+      "turn": 1,
+      "step": "PrecombatMain",
+      "player": "bob",
+      "do": { "ChooseToPay": { "decision": { "type": "Declines" } } }
+    }
+  ],
+  "final": [
+    { "Life": { "player": "alice", "life": 19 } },
+    { "Count": { "player": "alice", "zone": "Hand", "card": "Island", "count": 1 } },
+    { "Count": { "player": "alice", "zone": "Hand", "card": "Swamp", "count": 0 } },
+    { "Count": { "player": "bob", "zone": "Exile", "card": "Bronze Tablet", "count": 1 } },
+    { "Count": { "player": "alice", "zone": "Exile", "card": "Ornithopter", "count": 1 } }
+  ]
+}

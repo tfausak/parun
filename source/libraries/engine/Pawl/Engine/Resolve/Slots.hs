@@ -41,6 +41,8 @@ import qualified Pawl.Types.AnyNumberMatching as AnyNumberMatching
 import qualified Pawl.Types.AsCopy as AsCopy
 import qualified Pawl.Types.AttachAll as AttachAll
 import qualified Pawl.Types.AttachBound as AttachBound
+import qualified Pawl.Types.AttachR as AttachR
+import qualified Pawl.Types.AttachRewrite as AttachRewrite
 import qualified Pawl.Types.AttachTarget as AttachTarget
 import qualified Pawl.Types.AttachedToBound as AttachedToBound
 import qualified Pawl.Types.AttackTargetRef as AttackTargetRef
@@ -134,6 +136,7 @@ import qualified Pawl.Types.ForEach as ForEach
 import qualified Pawl.Types.ForEachNumber as ForEachNumber
 import qualified Pawl.Types.ForbidAttack as ForbidAttack
 import qualified Pawl.Types.ForbidBeingBlocked as ForbidBeingBlocked
+import qualified Pawl.Types.FromAnywhere as FromAnywhere
 import qualified Pawl.Types.FromOutsideTheGame as FromOutsideTheGame
 import qualified Pawl.Types.FromReference as FromReference
 import qualified Pawl.Types.GainControl as GainControl
@@ -467,7 +470,7 @@ objectRefSlots :: ObjectRef -> Map.Map SlotName SlotArity
 objectRefSlots ref = joinTwo (joinSlots (fmap playerRefSlots (objectRefPlayerRefs ref))) $ case ref of
   ObjectRef.InSlot slot -> Map.singleton slot SlotArity.Many
   -- InSlot's read of the slot, never a target (CR 115.10a).
-  ObjectRef.FromAnywhere slot -> Map.singleton slot SlotArity.Many
+  ObjectRef.FromAnywhere (FromAnywhere.MkFromAnywhere slot among) -> Map.fromList [(named, SlotArity.Many) | named <- slot : Foldable.toList among]
   ObjectRef.EachMatching _ -> Map.empty
   -- The sweeping arms that DO name a slot are this one and EachCardInHand below:
   -- CR 400.1's per-player zones leave "whose" to be said, and Angel of Finality
@@ -1683,6 +1686,8 @@ replacementRowReads re = case re of
   -- the appended token is card data of its own, so neither reads a slot.
   ReplacementEffect.TokenR (TokenR.MkTokenR pat _ _) -> ([TokenPattern.whatToken pat], [])
   ReplacementEffect.TurnUpR (TurnUpR.MkTurnUpR pat _ _ rewrite) -> addFilter pat (turnUpRewriteReads rewrite)
+  ReplacementEffect.AttachR (AttachR.MkAttachR pat (AttachRewrite.AsCopy asCopy)) -> addFilter pat (asCopyReads asCopy)
+  ReplacementEffect.AttachR (AttachR.MkAttachR pat (AttachRewrite.ChooseColors _)) -> ([pat], [])
   ReplacementEffect.UntapR _ -> ([], [])
   -- A LifeLossPattern is one ControllerRelation and one LifeLossCause, and no arm
   -- of LifeLossRewrite carries a Filter or a Quantity: no read at all.
@@ -1898,6 +1903,7 @@ overRelations f re = case re of
   ReplacementEffect.DamageR _ -> pure re
   ReplacementEffect.DestructionR _ -> pure re
   ReplacementEffect.TurnUpR _ -> pure re
+  ReplacementEffect.AttachR _ -> pure re
   ReplacementEffect.UntapR _ -> pure re
   ReplacementEffect.PhaseR _ -> pure re
   where
@@ -1935,6 +1941,7 @@ replacementRowEffects re = case re of
   ReplacementEffect.CounterR _ -> []
   ReplacementEffect.TokenR _ -> []
   ReplacementEffect.TurnUpR _ -> []
+  ReplacementEffect.AttachR _ -> []
   ReplacementEffect.UntapR _ -> []
   ReplacementEffect.LifeLossR _ -> []
   ReplacementEffect.LifeGainR _ -> []
@@ -2950,8 +2957,14 @@ objectRefObjects legal resolving controller source gs ref = case ref of
         attached = foldMap attachedTo hosts
      in filter (`Set.member` attached) (battlefieldMatching legal resolving controller source gs filter_)
   -- CR 400.7's link read back: each object the slot holds, followed through
-  -- this turn's logged zone changes to the object it is now.
-  ObjectRef.FromAnywhere slot -> Maybe.mapMaybe (\oid -> Game.currentIncarnation oid gs) (objectRefObjects legal resolving controller source gs (ObjectRef.InSlot slot))
+  -- this turn's logged zone changes to the object it is now -- and, given an
+  -- `among`, kept only where that slot holds the incarnation too (CR 400.7j).
+  -- The scenario ante-bronze-tablet-destroyed-in-response-trades-only-the-target
+  -- proves the `among` half.
+  ObjectRef.FromAnywhere (FromAnywhere.MkFromAnywhere slot among) ->
+    let held named = objectRefObjects legal resolving controller source gs (ObjectRef.InSlot named)
+        followed = Maybe.mapMaybe (\oid -> Game.currentIncarnation oid gs) (held slot)
+     in maybe followed (\named -> filter (`elem` held named) followed) among
   -- Each ref's objects in the order written, an object two refs name once.
   ObjectRef.AllOf refs -> ListUtils.nubOrd (concatMap (objectRefObjects legal resolving controller source gs) refs)
   -- EachMatching's sweep with CR 109.2's battlefield default switched off by the

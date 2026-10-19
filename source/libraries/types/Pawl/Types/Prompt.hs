@@ -60,6 +60,7 @@ import qualified Pawl.Types.PayOffer as PayOffer
 import qualified Pawl.Types.PaymentDecision as PaymentDecision
 import qualified Pawl.Types.PhyrexianPayment as PhyrexianPayment
 import qualified Pawl.Types.PlayerChoice as PlayerChoice
+import qualified Pawl.Types.PlayerEffect as PlayerEffect
 import qualified Pawl.Types.PlayerId as PlayerId
 import qualified Pawl.Types.PrintingId as PrintingId
 import qualified Pawl.Types.Recipient as Recipient
@@ -354,7 +355,9 @@ data Prompt r where
   ChooseCardInHand :: Decider.Decider -> PlayerId.PlayerId -> ObjectId.ObjectId -> NonEmpty.NonEmpty ObjectId.ObjectId -> Prompt ObjectId.ObjectId
   -- | CR 608.2d: which card of a bound group a Pawl.Types.ObjectRef.ChosenCardFromAmong
   -- takes, asked once per card with what earlier asks did not take; the
-  -- PlayerId is the ref's chooser.
+  -- PlayerId is the ref's chooser. Also CR 707.5: which card off the
+  -- battlefield a mandatory Pawl.Types.AsCopy choice copies (Dinosaur
+  -- Headdress's craft materials), the ObjectId the object choosing.
   ChooseCardFromAmong :: Decider.Decider -> PlayerId.PlayerId -> ObjectId.ObjectId -> NonEmpty.NonEmpty ObjectId.ObjectId -> Prompt ObjectId.ObjectId
   -- | CR 309.2a \/ 701.49a: which of the dungeon printings they own a venturing
   -- player brings in from outside the game (CR 400.11), there being no object
@@ -920,9 +923,10 @@ data Prompt r where
   -- cast being OfferedCast's separate "may"; asked once per miracle ability,
   -- named by its cost, until one is taken (CR 702.94b).
   OfferedMiracleReveal :: Decider.Decider -> PlayerId.PlayerId -> ObjectId.ObjectId -> CardName.CardName -> Cost.Cost Keyword.Keyword -> Prompt OptionalDecision.OptionalDecision
-  -- | CR 701.25b: whether the surveilling player looks at the N extra cards the
-  -- permanent's static ability lets them; asked once per such ability.
-  OfferedExtraLook :: Decider.Decider -> PlayerId.PlayerId -> ObjectId.ObjectId -> Natural.Natural -> Prompt OptionalDecision.OptionalDecision
+  -- | CR 701.25b / 701.38d: whether the player takes up the "may" grant the
+  -- permanent's static ability gives them -- a surveil's extra cards, a vote's
+  -- extra ballots; asked once per such ability.
+  OfferedExtra :: Decider.Decider -> PlayerId.PlayerId -> ObjectId.ObjectId -> PlayerEffect.PlayerEffect -> Prompt OptionalDecision.OptionalDecision
   -- | CR 118.12 / 118.12a: whether the named player -- the one the effects are
   -- aimed at, not the resolving controller -- pays the cost a resolving object
   -- offers, once per payment in APNAP order. Not asked where CR 118.3 leaves

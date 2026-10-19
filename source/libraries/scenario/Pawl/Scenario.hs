@@ -1063,7 +1063,7 @@ withinOffer prompt chosen = case prompt of
   Prompt.Type.ChooseLibraryEnd {} -> True
   Prompt.Type.OfferedCast {} -> True
   Prompt.Type.OfferedMiracleReveal {} -> True
-  Prompt.Type.OfferedExtraLook {} -> True
+  Prompt.Type.OfferedExtra {} -> True
   Prompt.Type.RerollDie {} -> True
   Prompt.Type.ReverseManaAbilities {} -> True
   Prompt.Type.ReturnCommander {} -> True
