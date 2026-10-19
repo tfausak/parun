@@ -17,7 +17,8 @@ module Pawl.Types.TriggerLimit where
 -- Warleader "attacks for the first time each turn" -- and the two are
 -- distinguishable: an ability gained after the turn's first matching event has
 -- already passed still triggers under this rider and never does under that
--- narrowing.
+-- narrowing. docs/decisions.md, "Whether a trigger limit differs from a
+-- first-time-each-turn trigger".
 data TriggerLimit
   = -- | The ability triggers on every occurrence of its trigger event
     -- (CR 603.2c). Every printing but the riders' bearers.

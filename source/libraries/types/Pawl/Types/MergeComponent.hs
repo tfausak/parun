@@ -42,6 +42,8 @@ data MergeComponent
     -- -- "a merged permanent is the same object that it was before" -- so CR
     -- 712.8g still gives that component only the combined back face, which is
     -- what Pawl.Engine.Game.printingOfComponent answers with.
+    -- docs/decisions.md, "Whether a melded permanent is one mutate component
+    -- or two".
     --
     -- CR 730.3's departure still puts down two CARDS, not a melded permanent:
     -- Pawl.Engine.Game.componentsOf expands this arm into rule 712.21's two

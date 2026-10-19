@@ -1338,7 +1338,8 @@ priorityLoop = do
                             -- leaveGame has already run. The pass count restarts
                             -- (CR 117.4); the CR does not settle that directly,
                             -- but not resetting risks resolving a spell a player
-                            -- would have responded to.
+                            -- would have responded to. See docs/decisions.md,
+                            -- "Whether a concession restarts the pass count".
                             State.modify' $ \g ->
                               let reset = g {GameState.passed = Set.empty}
                                in reset {GameState.priority = Just (passPriorityFrom reset p)}

@@ -810,10 +810,10 @@ suspectedBoard piker suspected lands =
    in (declared, suspect, other, attacker)
 
 -- CR 701.60b's designation, written straight onto the permanent -- a FIXTURE, the
--- posture `tap` above takes. The road that sets it is Reasonable Doubt's and
--- Pawl.CombatSpec's SuspectedAbilityRemoval group proves it; what this file needs
--- is only that a designation outlives a turning-over and carries the permanent's
--- own timestamp into layer 6.
+-- posture `tap` above takes. The road that sets it is Reasonable Doubt's, and
+-- the cr-613-7 Humility scenario pair in data/scenarios/combat
+-- proves it; what this file needs is only that a designation outlives a
+-- turning-over and carries the permanent's own timestamp into layer 6.
 suspecting :: ObjectId.ObjectId -> GameState.GameState -> GameState.GameState
 suspecting oid gs =
   gs

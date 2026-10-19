@@ -549,7 +549,8 @@ aggregate quantityOf aggregation members = case aggregation of
   -- nothing a value, and where the CR wants an empty maximum to be 0 it
   -- legislates it case by case (CR 714.2d). CR 208.2a is one such case, applied
   -- where it is scoped -- at the characteristic-defining ability that consumes
-  -- this count, never here.
+  -- this count, never here. docs/decisions.md, "What the greatest value is
+  -- over an empty or undeterminable set".
   -- Pawl.CountSpec's Rootha, Mastering the Moment group is what proves the
   -- objectless member really is read off its snapshot.
   Aggregation.Greatest quantity -> do

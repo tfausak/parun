@@ -2008,7 +2008,8 @@ announceReductions pid oid gs cost adjustments =
 -- directly. The HYBRID Phyrexian symbol is here, as its two colours: CR 107.4f
 -- makes it both, so CR 118.7f's one mana of its colour needs one chosen, and CR
 -- 118.7e gives that choice to the payer. Its 2 life is no half, since neither
--- rule reduces a cost by life.
+-- rule reduces a cost by life. docs/decisions.md, "How a hybrid Phyrexian
+-- symbol in a cost reduction reduces".
 reductionHalvesOf :: ManaSymbol.ManaSymbol -> Maybe [ManaSymbol.ManaSymbol]
 reductionHalvesOf symbol = case symbol of
   ManaSymbol.Generic _ -> Nothing

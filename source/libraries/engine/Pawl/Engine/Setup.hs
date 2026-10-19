@@ -1420,6 +1420,8 @@ applyCrossings finalSub parent =
       -- one rule 702.26b speaks of. Pawl.SetupSpec's "CR 702.26b a phased-out
       -- permanent a subgame takes leaves the main game and triggers nothing" is
       -- the proof, against a phased-in leg differing in the phase-out alone.
+      -- docs/decisions.md, "Whether a phased-out permanent a subgame takes
+      -- leaves visibly".
       --
       -- CR 708.9's first sentence: a face-down permanent moving from the
       -- battlefield to any other zone is revealed by its owner, and a subgame's

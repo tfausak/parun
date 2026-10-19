@@ -8,6 +8,7 @@
 -- reading of CR 611.2b -- a "for as long as" whose condition cannot be
 -- evaluated ends rather than persists. CR 208.2a's substituted 0 is a different
 -- rule scoped to a characteristic-defining ability, which a condition is not.
+-- docs/decisions.md, "Whether a condition that cannot be evaluated holds".
 --
 -- The VIEW is the caller's, and picking it is a rules decision rather than a
 -- detail. Three answers, one per kind of question:
