@@ -16,6 +16,7 @@ import qualified Pawl.Types.CostChange as CostChange
 import qualified Pawl.Types.CostModifier as CostModifier
 import qualified Pawl.Types.CostSubject as CostSubject
 import qualified Pawl.Types.DamagePattern as DamagePattern
+import qualified Pawl.Types.ExtraVotes as ExtraVotes
 import qualified Pawl.Types.Filter as Filter
 import qualified Pawl.Types.GameOutcome as GameOutcome
 import qualified Pawl.Types.InZone as InZone
@@ -473,8 +474,16 @@ spec s = Spec.describe s "Pawl.Codec.PlayerEffect" $ do
     Common.assertCodec
       s
       PlayerEffect.codec
-      (PlayerEffect.AdditionalVotes 1)
-      " {\"type\":\"AdditionalVotes\",\"value\":1} "
+      (PlayerEffect.AdditionalVotes (ExtraVotes.Mandatory 1))
+      " {\"type\":\"AdditionalVotes\",\"value\":{\"type\":\"Mandatory\",\"value\":1}} "
+  -- CR 701.38d as Ballot Broker prints it, and the wire form
+  -- data/cards/ballot-broker.json writes.
+  Spec.it s "AdditionalVotes, Ballot Broker's optional one" $
+    Common.assertCodec
+      s
+      PlayerEffect.codec
+      (PlayerEffect.AdditionalVotes (ExtraVotes.Optional 1))
+      " {\"type\":\"AdditionalVotes\",\"value\":{\"type\":\"Optional\",\"value\":1}} "
   -- CR 701.25b as Enhanced Surveillance prints it, and the wire form
   -- data/cards/enhanced-surveillance.json writes.
   Spec.it s "AdditionalSurveilCards, Enhanced Surveillance's two" $

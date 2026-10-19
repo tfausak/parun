@@ -67,7 +67,7 @@
       "player": "alice",
       "do": {
         "Answer": {
-          "prompt": "OfferedExtraLook",
+          "prompt": "OfferedExtra",
           "with": {
             "type": "Declines"
           }
