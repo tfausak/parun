@@ -120,6 +120,7 @@ import qualified Pawl.Types.Sacrifice as Sacrifice
 import qualified Pawl.Types.Scope as Scope
 import qualified Pawl.Types.Seat as Seat
 import qualified Pawl.Types.Sickness as Sickness
+import qualified Pawl.Types.SlotName as SlotName
 import qualified Pawl.Types.Staged as Staged
 import qualified Pawl.Types.Status as Status
 import qualified Pawl.Types.Subtype as Subtype
@@ -1611,6 +1612,28 @@ hatredSpec s registry =
       let addPiker = snd . S.addPermanent piker S.alice
           (gs, torgaarId) = S.handOne torgaar (addPiker (addPiker (addPiker (S.landsInPlay swamp 4))))
       Spec.assertEqWith s "the bound is 3, one sacrifice per Piker" (State.execState (Engine.runGame answerHatredAtBound gs (S.cast S.alice torgaarId)) []) [3]
+    -- A count announced BESIDE X is asked as its own variable, ahead of X: March
+    -- of Wretched Sorrow on one Swamp, two black cards and a red one in hand.
+    -- The count is bounded by the black cards, and X's bound then reads the count
+    -- announced -- {X}{B} less {4} pays up to X = 4 off one Swamp.
+    Spec.it s "CR 601.2b March of Wretched Sorrow asks its count before X, and X's bound reads the count" $ do
+      swamp <- S.printingOf s registry "Swamp"
+      march <- S.printingOf s registry "March of Wretched Sorrow"
+      wraith <- S.printingOf s registry "Bog Wraith"
+      goblin <- S.printingOf s registry "Raging Goblin"
+      giant <- S.printingOf s registry "Hill Giant"
+      let (_, withGiant) = S.addPermanent giant S.bob (S.landsInPlay swamp 1)
+          (withMarch, marchId) = S.handOne march withGiant
+          addCard printing = snd . S.addHandCard printing S.alice
+          gs = addCard goblin (addCard wraith (addCard wraith withMarch))
+          exiled = SlotName.MkSlotName (Text.pack "exiledCount")
+          answer :: Prompt.Prompt r -> State.State [(SlotName.SlotName, Natural.Natural)] r
+          answer p = case p of
+            Prompt.ChooseX _ _ _ variable _ bound -> do
+              State.modify' (<> [(variable, bound)])
+              pure (if variable == exiled then 2 else bound)
+            _ -> pure (S.identityAnswer p)
+      Spec.assertEqWith s "the count is asked first, bounded by the two black cards, then X, bounded at 4" (State.execState (Engine.runGame answer gs (S.cast S.alice marchId)) []) [(exiled, 2), (Binding.variableX, 4)]
     -- The fence under the two functions above. CR 601.2 reverses a casting whose
     -- steps a player cannot comply with; it never picks a value on their behalf,
     -- so an unannounced X is simply unpayable. Unreachable from either cast path
