@@ -1,0 +1,77 @@
+{
+  "faces": [
+    {
+      "activatedAbilities": [
+        {
+          "cost": {
+            "components": [
+              {
+                "type": "TapThis"
+              }
+            ],
+            "mana": []
+          },
+          "modal": {
+            "modes": [
+              {
+                "clauses": [
+                  {
+                    "effects": [
+                      {
+                        "type": "AddMana",
+                        "value": {
+                          "production": {
+                            "type": "OfType",
+                            "value": {
+                              "type": "Colored",
+                              "value": {
+                                "type": "Green"
+                              }
+                            }
+                          }
+                        }
+                      }
+                    ]
+                  },
+                  {
+                    "effects": [
+                      {
+                        "type": "Conjure",
+                        "value": {
+                          "cards": {
+                            "type": "Reference",
+                            "value": {
+                              "filter": {
+                                "type": "HasName",
+                                "value": "Forest"
+                              }
+                            }
+                          },
+                          "destination": {
+                            "type": "Library",
+                            "value": {
+                              "type": "FromTop",
+                              "value": 1
+                            }
+                          }
+                        }
+                      }
+                    ]
+                  }
+                ]
+              }
+            ]
+          }
+        }
+      ],
+      "name": "Synthetic Seeded Grove",
+      "typeLine": {
+        "types": [
+          {
+            "type": "Land"
+          }
+        ]
+      }
+    }
+  ]
+}

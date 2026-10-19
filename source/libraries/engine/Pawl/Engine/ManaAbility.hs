@@ -842,10 +842,10 @@ movesLibraryCard effect = case effect of
   -- the battlefield and exile are libraries no more than the battlefield Create's
   -- token below reaches is.
   --
-  -- Unproven either way: no printing conjures inside an ability that could add
-  -- mana, so no board tells the two answers apart. A regression fence, not a
-  -- test-backed behaviour. docs/decisions.md, "Whether conjuring into a
-  -- library is a library move for a mana ability".
+  -- docs/decisions.md, "Whether conjuring into a library is a library move for
+  -- a mana ability". The scenario "CR 605.1a conjuring into a library keeps an
+  -- ability that adds mana off the mana path" proves it on Synthetic Seeded
+  -- Grove.
   Effect.Conjure (Conjure.MkConjure _ _ _ destination _) -> case destination of
     ConjureDestination.Hand -> False
     ConjureDestination.Library _ -> True

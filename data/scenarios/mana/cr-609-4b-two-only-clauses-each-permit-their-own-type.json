@@ -1,0 +1,30 @@
+{
+  "description": "CR 609.4b two only-clauses about one red mana each permit their own type",
+  "note": "docs/decisions.md, \"How two only-clauses about spending one mana combine\". Under Celestial Dawn alice may spend her red mana only as though it were colorless; under Synthetic Verdant Prism, only as though it were green. Pawl takes the union, so the floating {R} pays Llanowar Elves' {G}. The rejected reading makes each \"only\" a prohibition of the other's type (CR 101.2), and the red mana pays neither, so the Elves cannot be cast. The mana floats rather than coming off a land, since Celestial Dawn makes every land of alice's a Plains. Synthetic because Celestial Dawn is the one printing with an only-clause: MTGJSON AtomicCards of 2026-10-08, every text with \"only as though\", 2026-10-19.",
+  "board": {
+    "seats": [
+      {
+        "name": "alice",
+        "manaPool": "R",
+        "battlefield": [
+          { "card": "Celestial Dawn", "label": "dawn" },
+          { "card": "Synthetic Verdant Prism", "label": "prism" }
+        ],
+        "hand": [{ "card": "Llanowar Elves", "label": "elves" }],
+        "library": [{ "card": "Island" }, { "card": "Island" }]
+      },
+      {
+        "name": "bob",
+        "library": [{ "card": "Island" }, { "card": "Island" }]
+      }
+    ],
+    "active": "alice",
+    "step": "PrecombatMain"
+  },
+  "timeline": [
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "check": { "View": { "of": "Offered", "player": "alice", "is": ["Pass", "Cast $elves"] } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": { "Cast": { "object": "$elves" } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass" },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "check": { "Count": { "player": "alice", "zone": "Battlefield", "card": "Llanowar Elves", "count": 1 } } }
+  ]
+}
