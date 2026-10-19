@@ -7010,12 +7010,15 @@ applyOneEffect runSubgame resolving source controller legal chosen effect = case
               OptionalDecision.Exercises -> Monad.replicateM (Natural.toIntSaturating count) (ask voter)
               OptionalDecision.Declines -> pure []
           pure (own <> concat offered)
-        -- Each ballot is logged as it is cast, and a secret vote's are revealed
-        -- together once the last is in, in voting order.
-        cast choiceOf ask = do
+        -- Through Game.chooseAmong, rule 701.38a stating no way to abstain.
+        ballotAmong = Game.chooseAmong (\decider who -> Prompt.ChooseVote decider who resolving)
+        -- Each ballot is logged as it is cast, an object snapshotted as it is
+        -- voted for, and a secret vote's are revealed together once the last
+        -- is in, in voting order.
+        cast ask = do
           let logged voter = do
                 picked <- ask voter
-                let ballot = fmap (Ballot.MkBallot voter) (choiceOf picked)
+                let ballot = fmap (Ballot.MkBallot voter) (picked >>= traverse (`Projection.objectSnapshot` gs))
                 Monad.forM_ ballot (logBallot secret)
                 pure (picked, ballot)
           ballots <- fmap concat (Monad.forM voters (ballotsOf logged))
@@ -7033,10 +7036,8 @@ applyOneEffect runSubgame resolving source controller legal chosen effect = case
           -- CR 101.3: an empty list of choices, so nobody votes and nothing is bound.
           [] -> pure ()
           _ : _ -> do
-            -- Through Game.chooseAmong, rule 701.38a stating no way to abstain.
-            let choiceOf picked = picked >>= \oid -> BallotChoice.ForObject <$> Projection.objectSnapshot oid gs
-            ballots <- cast choiceOf $ \voter -> Game.chooseAmong (\decider who -> Prompt.ChooseVote decider who resolving) voter (candidatesFor voter)
-            let tallyOf oid = List.length (filter (== Just oid) ballots)
+            ballots <- cast $ \voter -> ballotAmong voter (fmap BallotChoice.ForObject (candidatesFor voter))
+            let tallyOf oid = List.length (filter (== Just (BallotChoice.ForObject oid)) ballots)
                 best = List.maximum (0 : fmap tallyOf candidates)
                 -- Every candidate on the winning tally, and none at all where nobody
                 -- voted. Rule 701.38a's vote determines "some aspect of the effect",
@@ -7047,8 +7048,8 @@ applyOneEffect runSubgame resolving source controller legal chosen effect = case
       -- printed on the card, so the list cannot come up empty the way a
       -- battlefield sweep can.
       VoteChoices.Words voteWords -> do
-        let offered = NonEmpty.toList voteWords
-        ballots <- cast (Just . BallotChoice.ForWord) $ \voter -> Maybe.fromMaybe (NonEmpty.head voteWords) <$> Game.chooseAmong (\decider who -> Prompt.ChooseVoteWord decider who resolving) voter offered
+        let offered = fmap BallotChoice.ForWord (NonEmpty.toList voteWords)
+        ballots <- cast (`ballotAmong` offered)
         -- The aspect rule 701.38a's vote determines here is a NUMBER per word,
         -- bound on the SOURCE as Effect.FlipCoin's tallies are, for the clause
         -- rule 701.38b connects to that word to read as Quantity.InSlot.
@@ -7060,7 +7061,7 @@ applyOneEffect runSubgame resolving source controller legal chosen effect = case
         -- Rule 701.38a's tie-break is arithmetic and not an outcome of its own,
         -- which is why no tie is recorded anywhere.
         Foldable.for_ voteWords $ \word ->
-          State.modify' (bindAmountSlot resolving source word (Natural.length (filter (== word) ballots)))
+          State.modify' (bindAmountSlot resolving source word (Natural.length (filter (== Just (BallotChoice.ForWord word)) ballots)))
       -- CR 701.38b's players: every player still in the game, less the voter
       -- for Mob Verdict's "another player". A voter left with no candidate casts
       -- no ballot, Objects' CR 101.3 answer.
@@ -7073,8 +7074,8 @@ applyOneEffect runSubgame resolving source controller legal chosen effect = case
       VoteChoices.Players (VotePlayers.MkVotePlayers another slot) -> do
         let table = Players.table (Plane.rangePerspective source controller gs) gs
             candidatesFor voter = filter (\pid -> not (another && pid == voter) && List.elem pid (Players.table (Plane.rangePerspective source voter gs) gs)) table
-        picks <- cast (fmap BallotChoice.ForPlayer) $ \voter -> Game.chooseAmong (\decider who -> Prompt.ChooseVotePlayer decider who resolving) voter (candidatesFor voter)
-        let tally = Map.fromList (fmap (\pid -> (pid, Natural.length (filter (== Just pid) picks))) (concatMap candidatesFor voters))
+        picks <- cast $ \voter -> ballotAmong voter (fmap BallotChoice.ForPlayer (candidatesFor voter))
+        let tally = Map.fromList (fmap (\pid -> (pid, Natural.length (filter (== Just (BallotChoice.ForPlayer pid)) picks))) (concatMap candidatesFor voters))
         State.modify' (overHolderBindings resolving (Map.insert slot (Binding.toVotes tally)))
   Effect.Create (Create.MkCreate quantity card entry mSlot creator) -> do
     gs <- State.get

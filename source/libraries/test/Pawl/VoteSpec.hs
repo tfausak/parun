@@ -2,8 +2,8 @@
 {-# LANGUAGE RankNTypes #-}
 
 -- CR 701.38's vote: Pawl.Engine.Resolve.Effect's Effect.Vote arm, the
--- Pawl.Types.Vote payload it reads, Prompt.ChooseVote, Prompt.ChooseVoteWord and
--- Prompt.ChooseVotePlayer, Quantity.VotesReceived, Pawl.Engine.PlayerEffect's
+-- Pawl.Types.Vote payload it reads, Prompt.ChooseVote over each kind of listed
+-- choice, Quantity.VotesReceived, Pawl.Engine.PlayerEffect's
 -- votesAllowed, and Pawl.Engine.Game's turnOrderFrom,
 -- which rule 701.38a's "starting with a specified player and proceeding in turn
 -- order" is the second reader of (CR 101.4 is the first).
@@ -33,8 +33,8 @@
 module Pawl.VoteSpec where
 
 import qualified Control.Monad.Trans.State.Strict as State
+import qualified Data.Foldable as Foldable
 import qualified Data.List as List
-import qualified Data.List.NonEmpty as NonEmpty
 import qualified Data.Map.Strict as Map
 import qualified Data.Text as Text
 import Numeric.Natural (Natural)
@@ -47,6 +47,7 @@ import qualified Pawl.Engine.Stack as Stack
 import qualified Pawl.Registry as Registry
 import qualified Pawl.Spec as Spec
 import qualified Pawl.Support as S
+import qualified Pawl.Types.BallotChoice as BallotChoice
 import qualified Pawl.Types.Binding as Binding
 import qualified Pawl.Types.CardName as CardName
 import qualified Pawl.Types.Effect as Effect
@@ -120,9 +121,9 @@ votingFor ::
   State.State [(PlayerId.PlayerId, [ObjectId.ObjectId])] r
 votingFor pins p = case p of
   Prompt.ChooseVote _ pid _ offered -> do
-    State.modify (<> [(pid, NonEmpty.toList offered)])
+    State.modify (<> [(pid, foldMap Foldable.toList offered)])
     pure $ case lookup pid pins of
-      Just oid -> oid
+      Just oid -> BallotChoice.ForObject oid
       Nothing -> S.identityAnswer p
   _ -> pure (S.identityAnswer p)
 
@@ -184,7 +185,7 @@ pleaBoard s registry granter representatives = do
       (g4, spell) = S.handOne plea g3
   pure (spell, g4)
 
--- Answers Prompt.ChooseVoteWord from a list of ballots consumed in the order the
+-- Answers a word vote's Prompt.ChooseVote from a list of ballots consumed in the order the
 -- prompts are raised, and records which seat each prompt named and what it was
 -- offered. Everything else defers to S.identityAnswer.
 --
@@ -195,14 +196,26 @@ votingWords ::
   Prompt.Prompt r ->
   State.State ([SlotName.SlotName], [(PlayerId.PlayerId, [SlotName.SlotName])]) r
 votingWords p = case p of
-  Prompt.ChooseVoteWord _ pid _ offered -> do
+  Prompt.ChooseVote _ pid _ offered -> do
     (pending, asked) <- State.get
-    State.put (drop 1 pending, asked <> [(pid, NonEmpty.toList offered)])
-    pure (case pending of chosen : _ -> chosen; [] -> S.identityAnswer p)
+    State.put (drop 1 pending, asked <> [(pid, foldMap wordOf offered)])
+    pure (case pending of chosen : _ -> BallotChoice.ForWord chosen; [] -> S.identityAnswer p)
   _ -> pure (S.identityAnswer p)
 
 word :: String -> SlotName.SlotName
 word = SlotName.MkSlotName . Text.pack
+
+-- The word a listed choice names, if it names one.
+wordOf :: BallotChoice.BallotChoice o -> [SlotName.SlotName]
+wordOf choice = case choice of
+  BallotChoice.ForWord w -> [w]
+  _ -> []
+
+-- The player a listed choice names, if it names one.
+playerOf :: BallotChoice.BallotChoice o -> [PlayerId.PlayerId]
+playerOf choice = case choice of
+  BallotChoice.ForPlayer pid -> [pid]
+  _ -> []
 
 -- How many cards are in alice's hand, and whom the extra turns queued are for:
 -- the two observable halves of Plea for Power's two gated clauses.
@@ -270,16 +283,16 @@ mayVotingWords ::
   Prompt.Prompt r ->
   State.State ([SlotName.SlotName], [Either PlayerId.PlayerId PlayerId.PlayerId]) r
 mayVotingWords decision p = case p of
-  Prompt.ChooseVoteWord _ pid _ _ -> do
+  Prompt.ChooseVote _ pid _ _ -> do
     (pending, asked) <- State.get
     State.put (drop 1 pending, asked <> [Right pid])
-    pure (case pending of chosen : _ -> chosen; [] -> S.identityAnswer p)
+    pure (case pending of chosen : _ -> BallotChoice.ForWord chosen; [] -> S.identityAnswer p)
   Prompt.OfferedExtra _ pid _ _ -> do
     State.modify (fmap (<> [Left pid]))
     pure decision
   _ -> pure (S.identityAnswer p)
 
--- Answers Prompt.ChooseVotePlayer from a list of picks consumed in the order the
+-- Answers a player vote's Prompt.ChooseVote from a list of picks consumed in the order the
 -- prompts are raised, and records which seat each prompt named and what it was
 -- offered. Everything else defers to S.identityAnswer. Positional for
 -- votingWords' reason: CR 701.38d's second ballot is its own answer.
@@ -287,10 +300,10 @@ votingPlayers ::
   Prompt.Prompt r ->
   State.State ([PlayerId.PlayerId], [(PlayerId.PlayerId, [PlayerId.PlayerId])]) r
 votingPlayers p = case p of
-  Prompt.ChooseVotePlayer _ pid _ offered -> do
+  Prompt.ChooseVote _ pid _ offered -> do
     (pending, asked) <- State.get
-    State.put (drop 1 pending, asked <> [(pid, NonEmpty.toList offered)])
-    pure (case pending of chosen : _ -> chosen; [] -> S.identityAnswer p)
+    State.put (drop 1 pending, asked <> [(pid, foldMap playerOf offered)])
+    pure (case pending of chosen : _ -> BallotChoice.ForPlayer chosen; [] -> S.identityAnswer p)
   _ -> pure (S.identityAnswer p)
 
 -- The slot Mob Verdict's tally is bound at.
