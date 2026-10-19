@@ -2071,11 +2071,11 @@ matches context view predicate = case predicate of
   -- dies trigger's "it" still finds the damage (CR 603.10a) -- Pawl.DamageSpec's
   -- Brine Hag case is what proves it. A slot party is MEMBERSHIP, IsBound's
   -- reading, and a dies trigger's departed permanent is the id the damage
-  -- named (CR 400.7, 603.10a) -- the Hawkeye, Avenging Archer and Autumn
-  -- Willow and Baron Sengir scenarios under data/scenarios/damage prove it, and
-  -- the Witch-king of Angmar one the kind. Vacuously False for a context with no source, no
-  -- perspective or nothing in the slot, where the party names nothing. The kind
-  -- narrows to CR 510.2's combat damage.
+  -- named (CR 400.7, 603.10a). The kind narrows to CR 510.2's combat damage.
+  -- The Hawkeye, Autumn Willow and Witch-king scenarios under
+  -- data/scenarios/damage prove the slot and the kind. Vacuously False for a
+  -- context with no source, no perspective or nothing in the slot, where the
+  -- party names nothing.
   Filter.DealtDamageToThisTurn (DealtDamageTo.MkDealtDamageTo party wanted) ->
     let toParty damaged = case party of
           DamagedParty.Source -> Maybe.isJust (source context) && Recipient.objectOf damaged == source context
