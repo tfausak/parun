@@ -237,6 +237,7 @@ import qualified Pawl.Codec.DamageRewriteSpec
 import qualified Pawl.Codec.DamagedPartySpec
 import qualified Pawl.Codec.DaytimeSpec
 import qualified Pawl.Codec.DealDamageSpec
+import qualified Pawl.Codec.DealtDamageToSpec
 import qualified Pawl.Codec.DeciderSpec
 import qualified Pawl.Codec.DefendersAreSpec
 import qualified Pawl.Codec.DefenseSpec
@@ -1124,6 +1125,7 @@ spec s registry = do
   Pawl.Codec.DamagePatternSpec.spec s
   Pawl.Codec.DamagePreventedSpec.spec s
   Pawl.Codec.DamagedPartySpec.spec s
+  Pawl.Codec.DealtDamageToSpec.spec s
   Pawl.Codec.DamageRewriteSpec.spec s
   Pawl.Codec.DamageRSpec.spec s
   Pawl.Codec.DaytimeSpec.spec s

@@ -14,6 +14,7 @@ import qualified Pawl.Types.Color as Color
 import qualified Pawl.Types.Comparison as Comparison
 import qualified Pawl.Types.CounterKind as CounterKind
 import qualified Pawl.Types.DamagedParty as DamagedParty
+import qualified Pawl.Types.DealtDamageTo as DealtDamageTo
 import qualified Pawl.Types.Designation as Designation
 import qualified Pawl.Types.ExiledWith as ExiledWith
 import qualified Pawl.Types.Expansion as Expansion
@@ -408,8 +409,8 @@ spec s = Spec.describe s "Pawl.Codec.Filter" $ do
     Common.assertCodec
       s
       codec
-      (Filter.DealtDamageToThisTurn DamagedParty.Source)
-      " {\"type\":\"DealtDamageToThisTurn\",\"value\":{\"type\":\"Source\"}} "
+      (Filter.DealtDamageToThisTurn DealtDamageTo.MkDealtDamageTo {DealtDamageTo.party = DamagedParty.Source, DealtDamageTo.kind = Nothing})
+      " {\"type\":\"DealtDamageToThisTurn\",\"value\":{\"party\":{\"type\":\"Source\"}}} "
   Spec.it s "EnteredThisTurn" $
     Common.assertCodec
       s

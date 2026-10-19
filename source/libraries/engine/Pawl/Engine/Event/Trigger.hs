@@ -3843,6 +3843,13 @@ interveningHolds boards live pending =
       oid = case PendingTrigger.source pending of
         TriggerSource.OfObject bearer -> bearer
         TriggerSource.Sourceless -> GameState.nextObjectId gs
+      -- CR 113.7a: the source slot Engine.placeBorne stamps, framed here too, so
+      -- Hawkeye, Avenging Archer's "if Hawkeye dealt damage to it" reads a
+      -- source that died beside the creature off its last known information at
+      -- both checks.
+      bindings = case PendingTrigger.source pending of
+        TriggerSource.OfObject bearer -> Binding.setTriggerSource bearer (PendingTrigger.bindings pending)
+        TriggerSource.Sourceless -> PendingTrigger.bindings pending
    in case TriggeredAbility.intervening (PendingTrigger.ability pending) of
         Nothing -> True
         Just cond ->
@@ -3852,7 +3859,7 @@ interveningHolds boards live pending =
             -- creature is red" asks the source's CR 303.4b host and Tablet of the
             -- Guilds' "the chosen colors" its CR 607.2d choices. Stack's CR 608.2a
             -- re-check builds the same record so the two checks cannot disagree.
-            (Projection.framedByBindings gs (PendingTrigger.bindings pending) (Projection.sourceContext gs (Just (PendingTrigger.controller pending)) oid) {Filter.boundAmounts = Condition.inheritedX (TriggeredAbility.condition (PendingTrigger.ability pending)) oid gs})
+            (Projection.framedByBindings gs bindings (Projection.sourceContext gs (Just (PendingTrigger.controller pending)) oid) {Filter.boundAmounts = Condition.inheritedX (TriggeredAbility.condition (PendingTrigger.ability pending)) oid gs})
             gs
             oid
             cond

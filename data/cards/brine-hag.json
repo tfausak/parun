@@ -79,7 +79,9 @@
                                 {
                                   "type": "DealtDamageToThisTurn",
                                   "value": {
-                                    "type": "Source"
+                                    "party": {
+                                      "type": "Source"
+                                    }
                                   }
                                 }
                               ]

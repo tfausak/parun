@@ -1,0 +1,35 @@
+{
+  "description": "CR 603.4 Hawkeye, Avenging Archer draws nothing when a creature it did not damage dies",
+  "note": "The pair of cr-603-10a-hawkeye-draws-for-the-creature-it-damaged:Hawkeye pings the Giant and alice's Sorcerer kills bob's, so Hawkeye dealt damage this turn, but not to the creature that died.",
+  "board": {
+    "active": "alice",
+    "step": "PrecombatMain",
+    "seats": [
+      {
+        "name": "alice",
+        "battlefield": [
+          { "card": "Hawkeye, Avenging Archer", "label": "hawkeye", "ready": true },
+          { "card": "Prodigal Sorcerer", "label": "sorcerer", "ready": true }
+        ],
+        "library": [{ "card": "Island" }, { "card": "Island" }]
+      },
+      {
+        "name": "bob",
+        "battlefield": [
+          { "card": "Prodigal Sorcerer", "label": "victim" },
+          { "card": "Hill Giant", "label": "giant" }
+        ],
+        "library": [{ "card": "Island" }, { "card": "Island" }]
+      }
+    ]
+  },
+  "timeline": [
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": { "Activate": { "object": "$hawkeye", "ability": 0, "targets": ["$giant"] } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass" },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": { "Activate": { "object": "$sorcerer", "ability": 0, "targets": ["$victim"] } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass" },
+    { "turn": 1, "step": "BeginningOfCombat", "player": "alice", "check": { "Count": { "player": "alice", "zone": "Hand", "card": "Island", "count": 0 } } },
+    { "turn": 1, "step": "BeginningOfCombat", "player": "alice", "check": { "Count": { "player": "bob", "zone": "Graveyard", "card": "Prodigal Sorcerer", "count": 1 } } },
+    { "turn": 1, "step": "BeginningOfCombat", "player": "alice", "check": { "Damage": { "object": "$giant", "damage": 1 } } }
+  ]
+}
