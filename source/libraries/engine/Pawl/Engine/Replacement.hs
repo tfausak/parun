@@ -2557,7 +2557,7 @@ affectedChooserOf gs event = case event of
   -- CR 616.1: an instruction is addressed to the player it names, so that is
   -- the seat choosing among applicable rows -- for a coin flip CR 705.2's last
   -- sentence says so outright ("no other players are involved"), and where a
-  -- Rigger assembles it is the Rigger's controller. Pawl.LibraryOrderSpec's "CR
+  -- Rigger assembles it is the Rigger's controller. data/scenarios/library-order's "CR
   -- 616.1 Eligeth and Kenessos: the scryer orders them" proves it for a scry.
   ProposedEvent.WouldPerform _ pid _ -> Just pid
   -- CR 616.1 / 706.1: the instruction is addressed to the roller, and rule 706's

@@ -1209,7 +1209,7 @@ facedVillainously picked cIdx clause = case Clause.orElse clause of
 -- readable: the limb's reads are re-taken after the bind, where chosenBranch's
 -- callers had captured theirs before the question was put.
 --
--- CR 701.55c: each seat's facing is first proposed as an instruction (WouldPerform),
+-- CR 701.55c: each seat's facing is first proposed as WouldPerform,
 -- so a row like The Valeyard's can make it several -- the whole of rule 701.55a
 -- performed that many times for that seat, one at a time, each its own choice
 -- read off the board the previous one left. Pawl.ResolveSpec's "CR 701.55c The

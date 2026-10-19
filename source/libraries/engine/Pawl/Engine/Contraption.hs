@@ -45,7 +45,7 @@ import qualified Pawl.Types.Subtype as Subtype
 -- which Steamflogger Boss's row reads -- reveals the top card of their
 -- Contraption deck and puts it face up onto one of their sprockets, chosen for
 -- each Contraption apart ("you choose individually for each one"). Proposed
--- first as an instruction (WouldPerform), so a row can change how many. An empty deck
+-- first as WouldPerform, so a row can change how many. An empty deck
 -- assembles nothing and loses nobody the game.
 assemble :: Maybe ObjectId -> PlayerId -> Game ()
 assemble assembler pid = do
