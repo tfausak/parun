@@ -84,7 +84,6 @@ import Pawl.Types.ManaType (ManaType)
 import qualified Pawl.Types.ManaType as ManaType
 import Pawl.Types.ManaUnit (ManaUnit)
 import qualified Pawl.Types.ManaUnit as ManaUnit
-import qualified Pawl.Types.Object as Object
 import Pawl.Types.ObjectId (ObjectId)
 import qualified Pawl.Types.Optionality as Optionality
 import qualified Pawl.Types.PaymentSubject as PaymentSubject

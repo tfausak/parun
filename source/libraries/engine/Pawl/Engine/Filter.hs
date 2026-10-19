@@ -1958,8 +1958,8 @@ matches context view predicate = case predicate of
   -- chosen none matches nothing.
   Filter.HasChosenSubtype -> maybe False (`Set.member` subtypes view) (sourceChosenSubtype context)
   -- CR 607.2a off the Context: the candidate's link to the source, judged as
-  -- the source's own ability reads it (Binding.isLinkedExile). A candidate the
-  -- source exiled nothing as matches nothing.
+  -- the source's own ability reads it (Binding.isLinkedExile). A
+  -- candidate outside that pile matches nothing.
   Filter.IsExiledWithSource pile -> maybe False (\link -> Binding.isLinkedExile Nothing pile (ExileLink.source link) link) (identity view >>= (`Map.lookup` sourceExiled context))
   -- CR 607.2a off the Context, which the mana-spending road alone fills: no
   -- card exiled with the source matches nothing.

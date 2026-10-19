@@ -157,7 +157,7 @@ lookupObject oid gs = Map.lookup oid (GameState.objects gs)
 
 -- | CR 607.2a: the cards in exile in `src`'s `pile`, as a reader named `reader`
 -- means it (Binding.isLinkedExile), in ascending id and thus arrival order.
--- THE one reader of GameState.exiledWith's piles. The relation and not a zone
+-- THE one sweep of GameState.exiledWith's piles. The relation and not a zone
 -- sweep, so a card a second copy of the same printing exiled is not in it; and
 -- in exile NOW (CR 400.7), since a card that left is a new object the stale
 -- link no longer names.
