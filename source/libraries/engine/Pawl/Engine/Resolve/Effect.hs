@@ -10603,7 +10603,13 @@ runEntryEffects :: Game Result -> Game ()
 runEntryEffects runSubgame = do
   queued <- State.gets GameState.pendingEntryEffects
   State.modify' (\gs -> gs {GameState.pendingEntryEffects = Seq.empty})
+  -- CR 603.4 / 614.12: the effects are part of the entry, so a board their own
+  -- instructions file (Trigger.fileBoards) is dropped, the entry not yet over:
+  -- its siblings are still held off the battlefield. The filing after the drain
+  -- stands. data/scenarios/trigger's Battering Krasis scenario proves it.
+  filed <- State.gets GameState.boardAfterEvent
   Foldable.traverse_ (runEntryEffect runSubgame) queued
+  State.modify' (\gs -> gs {GameState.boardAfterEvent = filed})
 
 -- One entered permanent's as-enters effects, in printed order.
 --
