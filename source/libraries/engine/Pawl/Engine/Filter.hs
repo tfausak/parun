@@ -1577,6 +1577,9 @@ data Context = MkContext
     -- there, and Pawl.FilterPositionLintSpec keeps a card to an edict's filter.
     -- `Just Map.empty` is the pool-gathering read: with no other candidate to
     -- compare against, every comparison holds.
+    --
+    -- Not implemented: the operand in a target slot, a chosen permanent, a
+    -- discard or any other choice's pool (#5311).
     candidateMeasures :: Maybe (Map.Map ObjectId.ObjectId (Map.Map Measure.Measure Integer))
   }
   deriving (Eq, Ord, Show)
