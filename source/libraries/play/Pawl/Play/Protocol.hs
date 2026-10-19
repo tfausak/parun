@@ -133,7 +133,7 @@ offerOf gs prompt = case prompt of
     fields [("payer", Reply.encode Reply.player namer payer), ("cost", Reply.encode (Reply.viaCodec Codec.ManaCost.codec) namer cost), ("sources", manaSources gs sources)]
   Prompt.ChooseExtraManaSource _ _ sources -> fields [("sources", manaSources gs sources)]
   Prompt.ChooseManaYield _ _ source options -> fields [("source", object source), ("yields", Reply.encode (Reply.list (Reply.list (Reply.viaCodec Codec.ManaType.codec))) namer (fmap (fmap ManaUnit.manaType . Mana.yieldUnits) (Foldable.toList options)))]
-  Prompt.ChooseX _ _ source least greatest -> fields [("source", object source), ("least", natural least), ("greatest", natural greatest)]
+  Prompt.ChooseX _ _ source variable least greatest -> fields [("source", object source), ("variable", Reply.encode (Reply.viaCodec Codec.SlotName.codec) namer variable), ("least", natural least), ("greatest", natural greatest)]
   Prompt.ChooseOptional _ _ source _ _ _ -> fields [("source", object source)]
   _ -> R.Null
 

@@ -36,6 +36,7 @@ import qualified Pawl.Types.DiscardCards as DiscardCards
 import qualified Pawl.Types.Emerge as Emerge
 import qualified Pawl.Types.Equip as Equip
 import qualified Pawl.Types.ExileCardsFromGraveyard as ExileCardsFromGraveyard
+import qualified Pawl.Types.ExileCardsFromHand as ExileCardsFromHand
 import qualified Pawl.Types.ExileMaterials as ExileMaterials
 import qualified Pawl.Types.ExilePermanents as ExilePermanents
 import qualified Pawl.Types.ExiledWith as ExiledWith
@@ -3007,7 +3008,7 @@ rewriteWhichCounters pairs which = case which of
 -- activation cost, and Lithophage on the cost a trigger offers as it resolves
 -- (CR 118.12). The TapForTotalPower, TapPermanents, DiscardCards,
 -- ExileCardsFromGraveyard, ExileTopFromGraveyard, ReturnPermanents,
--- ExileCardFromHand, RevealCardFromHand, Behold, BeholdAndExile, ExileMaterials,
+-- ExileCardsFromHand, RevealCardFromHand, Behold, BeholdAndExile, ExileMaterials,
 -- RemoveCounters and
 -- PutCardFromHandOntoBattlefield arms
 -- are a regression
@@ -3032,7 +3033,7 @@ rewriteComponent pairs component = case component of
   CostComponent.CollectEvidenceOfTargets -> component
   CostComponent.DiscardCards (DiscardCards.MkDiscardCards n criterion) -> CostComponent.DiscardCards (DiscardCards.MkDiscardCards n (rewrite pairs criterion))
   CostComponent.PutCardFromHandOntoBattlefield criterion -> CostComponent.PutCardFromHandOntoBattlefield (rewrite pairs criterion)
-  CostComponent.ExileCardFromHand criterion -> CostComponent.ExileCardFromHand (rewrite pairs criterion)
+  CostComponent.ExileCardsFromHand (ExileCardsFromHand.MkExileCardsFromHand n criterion) -> CostComponent.ExileCardsFromHand (ExileCardsFromHand.MkExileCardsFromHand n (rewrite pairs criterion))
   CostComponent.RevealCardFromHand criterion -> CostComponent.RevealCardFromHand (rewrite pairs criterion)
   CostComponent.Behold (Behold.MkBehold n criterion) -> CostComponent.Behold (Behold.MkBehold n (rewrite pairs criterion))
   CostComponent.BeholdAndExile criterion -> CostComponent.BeholdAndExile (rewrite pairs criterion)

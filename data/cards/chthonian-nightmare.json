@@ -8,7 +8,8 @@
               {
                 "type": "PayEnergy",
                 "value": {
-                  "type": "AnnouncedX"
+                  "type": "Announced",
+                  "value": "X"
                 }
               },
               {

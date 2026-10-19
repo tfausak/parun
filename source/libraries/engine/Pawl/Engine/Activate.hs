@@ -243,7 +243,7 @@ activateAbilityWith refused runSubgame pid srcId ability = Event.announcing $ do
         [] -> pure (ActivatedAbility.cost ability)
       mAmount <-
         if Cost.hasVariable printedCost
-          then fmap Just (Game.choose (Prompt.ChooseX decider pid abilId floorX (Activatable.affordableX mCeiling aimableUnannounced stamp spendable pid srcId gs printedCost)))
+          then fmap Just (Game.choose (Prompt.ChooseX decider pid abilId Binding.variableX floorX (Activatable.affordableX mCeiling aimableUnannounced stamp spendable pid srcId gs printedCost)))
           else pure Nothing
       let announcedAtX = maybe printedCost (\x -> Cost.substituteX x printedCost) mAmount
           -- CR 101.1, and CR 101.2 for its direction, exactly as Cast.castProposed

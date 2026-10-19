@@ -161,7 +161,7 @@ zoneOfComponent component = case component of
   -- reason the arms above give: CR 113.6m asks about an ability that moves THE
   -- OBJECT IT'S ON, and these move another card out of the payer's hand.
   CostComponent.PutCardFromHandOntoBattlefield _ -> Nothing
-  CostComponent.ExileCardFromHand _ -> Nothing
+  CostComponent.ExileCardsFromHand {} -> Nothing
   -- Nothing for a further reason than the arms above: CR 701.20b moves no card
   -- at all, so there is no zone for CR 113.6m to be told about.
   CostComponent.RevealCardFromHand _ -> Nothing

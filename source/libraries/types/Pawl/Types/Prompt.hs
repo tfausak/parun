@@ -351,7 +351,7 @@ data Prompt r where
   -- | CR 608.2d: which card of their own hand a Pawl.Types.ObjectRef.ChosenCardInHand
   -- takes, asked once per card with what earlier asks did not take; also
   -- CostComponent.PutCardFromHandOntoBattlefield's question while a
-  -- CR 118.12 cost is paid, and CostComponent.ExileCardFromHand's and
+  -- CR 118.12 cost is paid, and CostComponent.ExileCardsFromHand's (one card) and
   -- RevealCardFromHand's while a CR 601.2h one is, where the ObjectId is the
   -- object the cost is on.
   ChooseCardInHand :: Decider.Decider -> PlayerId.PlayerId -> ObjectId.ObjectId -> NonEmpty.NonEmpty ObjectId.ObjectId -> Prompt ObjectId.ObjectId
@@ -473,15 +473,17 @@ data Prompt r where
   -- offered in a loop before the find; one entry per castable half and facing
   -- (CR 709.3, 708.4).
   CastWhileSearching :: Decider.Decider -> PlayerId.PlayerId -> [(ObjectId.ObjectId, CardName.CardName, Facing.Facing)] -> Prompt (Maybe (ObjectId.ObjectId, CardName.CardName, Facing.Facing))
-  -- | CR 601.2b / 602.2b: the value of X, before targets. The Naturals are the
-  -- least value the card permits (CR 101.1's "X can't be 0") and the greatest
-  -- legally announceable now (Cast.affordableX, Activatable.affordableX;
-  -- Cost.maximumX for CR 101.1's card-stated ceiling).
+  -- | CR 601.2b / 602.2b: the value of a variable, before targets -- X, or the
+  -- count a cost announces beside it (March of Wretched Sorrow's cards exiled),
+  -- named by the SlotName it binds under. The Naturals are the least value the
+  -- card permits (CR 101.1's "X can't be 0") and the greatest legally
+  -- announceable now (Cast.affordableX, Activatable.affordableX; Cost.maximumX
+  -- for CR 101.1's card-stated ceiling).
   --
   -- Advisory: the answer is filtered against neither. Announcing past what the
   -- player can pay is answered by CR 601.2h's reversal (#741); outside what the
   -- card permits, by the caller's own gate (CR 101.1, CR 101.2).
-  ChooseX :: Decider.Decider -> PlayerId.PlayerId -> ObjectId.ObjectId -> Natural.Natural -> Natural.Natural -> Prompt Natural.Natural
+  ChooseX :: Decider.Decider -> PlayerId.PlayerId -> ObjectId.ObjectId -> SlotName.SlotName -> Natural.Natural -> Natural.Natural -> Prompt Natural.Natural
   -- | CR 702.42a: whether the modal spell is entwined, before ChooseModes; the
   -- Cost is what entwining adds (CR 601.2f).
   ChooseEntwine :: Decider.Decider -> PlayerId.PlayerId -> ObjectId.ObjectId -> Cost.Cost Keyword.Keyword -> Prompt EntwineDecision.EntwineDecision
@@ -763,8 +765,9 @@ data Prompt r where
   -- how many (CR 118.1); ChooseTaps\' shape, answering as Response.ChoseReturns
   -- so a replay cannot tap what it should have returned.
   ChooseReturns :: Decider.Decider -> PlayerId.PlayerId -> ObjectId.ObjectId -> [ObjectId.ObjectId] -> Natural.Natural -> Prompt (Set.Set ObjectId.ObjectId)
-  -- | Which permanents are exiled to pay a cost naming how many (CR 118.1,
-  -- 406.2); ChooseReturns\' shape, answering as Response.ChoseExiles.
+  -- | Which permanents, or cards in the payer\'s hand, are exiled to pay a cost
+  -- naming how many (CR 118.1, 406.2); ChooseReturns\' shape, answering as
+  -- Response.ChoseExiles.
   ChooseExiles :: Decider.Decider -> PlayerId.PlayerId -> ObjectId.ObjectId -> [ObjectId.ObjectId] -> Natural.Natural -> Prompt (Set.Set ObjectId.ObjectId)
   -- | CR 118.1 as a cost: which ONE permanent loses the counters of one kind a
   -- cost names (Zameck Guildmage). ChooseBlight's shape rather than ChooseTaps',

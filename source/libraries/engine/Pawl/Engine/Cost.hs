@@ -100,6 +100,7 @@ import qualified Pawl.Types.DiscardCards as DiscardCards
 import qualified Pawl.Types.DiscardCause as DiscardCause
 import qualified Pawl.Types.Emerge as Emerge
 import qualified Pawl.Types.ExileCardsFromGraveyard as ExileCardsFromGraveyard
+import qualified Pawl.Types.ExileCardsFromHand as ExileCardsFromHand
 import qualified Pawl.Types.ExileLink as ExileLink
 import qualified Pawl.Types.ExileMaterials as ExileMaterials
 import qualified Pawl.Types.ExilePermanents as ExilePermanents
@@ -1340,7 +1341,7 @@ totalWith adjustments cost = cost {Cost.mana = fmap (applyAdjustments adjustment
 -- cost before any reduction -- CR 601.2f's order, argued rather than tested.
 --
 -- Applied AFTER `substituteX`, so an ADDED component may not carry CR 601.2b's
--- X: a CostAmount.AnnouncedX arriving this way would never be substituted and
+-- X: a CostAmount.Announced arriving this way would never be substituted and
 -- `canPayComponent` would refuse the whole cost. A bound on the open half rather
 -- than an elision.
 plusComponents :: CostAdjustments.CostAdjustments -> Cost Keyword.Type.Keyword -> Cost Keyword.Type.Keyword
@@ -1621,19 +1622,29 @@ repeated :: Natural -> Cost Keyword.Type.Keyword -> Cost Keyword.Type.Keyword
 repeated n cost = foldr plus (Cost.MkCost (fmap (const (ManaCost.MkManaCost [])) (Cost.mana cost)) []) (List.genericReplicate n cost)
 
 -- CR 601.2b: substitute the chosen value of X everywhere in this cost -- the mana
--- part's ManaSymbol.Variable, and every component's CostAmount.AnnouncedX. BOTH
--- halves, CR 107.3a giving one announced value to the whole cost, so Hatred's X
--- is the same X whichever half it sits in (CR 107.3i).
+-- part's ManaSymbol.Variable, and every component's X (`substituteAnnounced`).
+-- BOTH halves, CR 107.3a giving one announced value to the whole cost, so
+-- Hatred's X is the same X whichever half it sits in (CR 107.3i).
 substituteX :: Natural -> Cost Keyword.Type.Keyword -> Cost Keyword.Type.Keyword
-substituteX x cost =
-  cost
-    { Cost.mana = fmap (Mana.substituteX x) (Cost.mana cost),
-      Cost.components = fmap (Identity.runIdentity . traverseAmount (Identity.Identity . fixAt)) (Cost.components cost)
-    }
+substituteX x cost = (substituteAnnounced Binding.variableX x cost) {Cost.mana = fmap (Mana.substituteX x) (Cost.mana cost)}
+
+-- CR 601.2b: substitute the value announced for one variable into every
+-- component carrying it. X's mana half is `substituteX`'s; a count announced
+-- beside it (March of Wretched Sorrow's cards exiled) has no other half.
+substituteAnnounced :: SlotName.SlotName -> Natural -> Cost Keyword.Type.Keyword -> Cost Keyword.Type.Keyword
+substituteAnnounced slot n cost = cost {Cost.components = fmap (Identity.runIdentity . traverseAmount (Identity.Identity . fixAt)) (Cost.components cost)}
   where
-    fixAt amount = case amount of
-      CostAmount.AnnouncedX -> CostAmount.Fixed x
-      CostAmount.Fixed _ -> amount
+    fixAt amount = if amount == CostAmount.Announced slot then CostAmount.Fixed n else amount
+
+-- `substituteAnnounced` for every count in the map.
+substituteCounts :: Map.Map SlotName.SlotName Natural -> Cost Keyword.Type.Keyword -> Cost Keyword.Type.Keyword
+substituteCounts counts cost = Map.foldrWithKey substituteAnnounced cost counts
+
+-- CR 601.2b: the variables OTHER than X this cost's components leave to be
+-- announced, in the order the components name them -- March of Wretched
+-- Sorrow's count of cards exiled. X is `hasVariable`'s, asked by its own prompt.
+announcedCounts :: Cost Keyword.Type.Keyword -> [SlotName.SlotName]
+announcedCounts cost = ListUtils.nubOrd [slot | component <- Cost.components cost, CostAmount.Announced slot <- Const.getConst (traverseAmount (Const.Const . pure) component), slot /= Binding.variableX]
 
 -- The CostAmount a component carries, as a traversal: the one place that knows
 -- which components CR 107.3a's X can stand in, so `substituteX` and
@@ -1683,7 +1694,7 @@ traverseAmount f component = case component of
   -- CR 601.2f's computed amount, not CR 601.2b's X: fixComputed reads it once the
   -- targets exist.
   CostComponent.CollectEvidenceOfTargets -> pure component
-  CostComponent.ExileCardFromHand _ -> pure component
+  CostComponent.ExileCardsFromHand exile -> (\amount -> CostComponent.ExileCardsFromHand exile {ExileCardsFromHand.count = amount}) <$> f (ExileCardsFromHand.count exile)
   CostComponent.RevealCardFromHand _ -> pure component
   CostComponent.Behold _ -> pure component
   CostComponent.BeholdAndExile _ -> pure component
@@ -1714,7 +1725,16 @@ manaHasVariable cost = case Cost.mana cost of
 -- `substituteX`'s predicate half, read off the same traversal: a component this
 -- answers False for is one no announcement will ever substitute.
 componentHasVariable :: CostComponent.CostComponent Keyword.Type.Keyword -> Bool
-componentHasVariable = Monoid.getAny . Const.getConst . traverseAmount (Const.Const . Monoid.Any . (== CostAmount.AnnouncedX))
+componentHasVariable = Monoid.getAny . Const.getConst . traverseAmount (Const.Const . Monoid.Any . (== CostAmount.Announced Binding.variableX))
+
+-- Does this component still carry ANY unannounced amount, X or another
+-- variable? Such a component names nothing to pay yet (`payableAnnounced`).
+componentUnannounced :: CostComponent.CostComponent Keyword.Type.Keyword -> Bool
+componentUnannounced = Monoid.getAny . Const.getConst . traverseAmount (Const.Const . Monoid.Any . isAnnounced)
+  where
+    isAnnounced amount = case amount of
+      CostAmount.Announced _ -> True
+      CostAmount.Fixed _ -> False
 
 -- CR 601.2b: the greatest value of X this player could legally announce -- what
 -- Prompt.ChooseX carries -- found by ASCENDING SEARCH from 0 over the caller's
@@ -1755,21 +1775,22 @@ greatestPayableX mCeiling payableAt cost =
 -- produces finitely much. `manaHasVariable` therefore answers both, and the
 -- COMPONENTS are where the two questions come apart.
 demandGrowsWithX :: Cost Keyword.Type.Keyword -> Bool
-demandGrowsWithX cost = manaHasVariable cost || any componentDemandGrowsWithX (Cost.components cost)
+demandGrowsWithX cost = manaHasVariable cost || any (componentDemandGrowsWith Binding.variableX) (Cost.components cost)
 
 -- `componentHasVariable`'s question sharpened, and exhaustive for its reason: a
--- new X-carrying component owes an answer here as well as there.
-componentDemandGrowsWithX :: CostComponent.CostComponent Keyword.Type.Keyword -> Bool
-componentDemandGrowsWithX component = case component of
+-- new X-carrying component owes an answer here as well as there. Asked of the
+-- variable named, X or a count announced beside it.
+componentDemandGrowsWith :: SlotName.SlotName -> CostComponent.CostComponent Keyword.Type.Keyword -> Bool
+componentDemandGrowsWith slot component = case component of
   -- CR 119.4: payable only out of a life total at least that large, so a big
   -- enough X refuses.
-  CostComponent.PayLife amount -> amount == CostAmount.AnnouncedX
+  CostComponent.PayLife amount -> amount == announced
   -- CR 118.3 measures the announced amount against the energy counters the
   -- player has, so a big enough X refuses -- PayLife's arm above and for its
   -- reason. Pawl.CardSpec's CR 101.1 sweep reads this answer now that it covers
   -- activation costs: Sphinx of the Revelation's carries this component and
   -- states no ceiling, so False here would make that printing an offender.
-  CostComponent.PayEnergy amount -> amount == CostAmount.AnnouncedX
+  CostComponent.PayEnergy amount -> amount == announced
   -- FALSE, and that is CR 701.68b rather than an omission: the rule refuses a
   -- blight only where the player controls no creature, and names no number of
   -- counters that is too many. So a Soul Immolation announcement is refused by
@@ -1782,10 +1803,10 @@ componentDemandGrowsWithX component = case component of
   CostComponent.ReturnThis -> False
   -- CR 701.21a: one permanent per sacrifice, so an X past the matching
   -- permanents the payer controls refuses.
-  CostComponent.Sacrifice sacrifice -> Sacrifice.count sacrifice == CostAmount.AnnouncedX
+  CostComponent.Sacrifice sacrifice -> Sacrifice.count sacrifice == announced
   CostComponent.TapForTotalPower {} -> False
   -- One permanent per tap, Sacrifice's reason.
-  CostComponent.TapPermanents tap -> TapPermanents.count tap == CostAmount.AnnouncedX
+  CostComponent.TapPermanents tap -> TapPermanents.count tap == announced
   CostComponent.ReturnPermanents {} -> False
   CostComponent.ExilePermanents {} -> False
   CostComponent.DiscardCards {} -> False
@@ -1794,11 +1815,11 @@ componentDemandGrowsWithX component = case component of
   CostComponent.AddLoyaltyToThis _ -> False
   -- CR 606.6 measures the announced X against the loyalty counters present, so
   -- a big enough X refuses.
-  CostComponent.RemoveLoyaltyFromThis amount -> amount == CostAmount.AnnouncedX
+  CostComponent.RemoveLoyaltyFromThis amount -> amount == announced
   CostComponent.RemoveCountersFromThis _ -> False
   -- CR 118.3 measures the announced count against the counters the criterion
   -- admits between them, so a big enough X refuses.
-  CostComponent.RemoveCounters remove -> CountersFromPermanents.count remove == CostAmount.AnnouncedX
+  CostComponent.RemoveCounters remove -> CountersFromPermanents.count remove == announced
   CostComponent.PutPlusOneCountersOnThis _ -> False
   CostComponent.Forage -> False
   CostComponent.FlipCoin -> False
@@ -1815,12 +1836,15 @@ componentDemandGrowsWithX component = case component of
   CostComponent.ExileTopFromGraveyard _ -> False
   CostComponent.CollectEvidence _ -> False
   CostComponent.CollectEvidenceOfTargets -> False
-  CostComponent.ExileCardFromHand _ -> False
+  -- One card per exile out of a finite hand, Sacrifice's reason.
+  CostComponent.ExileCardsFromHand exile -> ExileCardsFromHand.count exile == announced
   CostComponent.RevealCardFromHand _ -> False
   CostComponent.Behold _ -> False
   CostComponent.BeholdAndExile _ -> False
   CostComponent.MillCards _ -> False
   CostComponent.RevealTopOfLibrary _ -> False
+  where
+    announced = CostAmount.Announced slot
 
 -- CR 101.1: the ceiling this face's own words put on CR 601.2b's announced X --
 -- Soul Immolation's "X can't be greater than the greatest toughness among
@@ -2050,7 +2074,7 @@ loyaltyKindOf cost = if isLoyaltyCost cost then LoyaltyKind.LoyaltyAbility else 
 
 -- CR 606.2 reads the symbol, not its number, so an unannounced [-X] is one too.
 isLoyaltyComponent :: CostComponent.CostComponent Keyword.Type.Keyword -> Bool
-isLoyaltyComponent component = component == CostComponent.RemoveLoyaltyFromThis CostAmount.AnnouncedX || Maybe.isJust (loyaltyAmountOf component)
+isLoyaltyComponent component = component == CostComponent.RemoveLoyaltyFromThis (CostAmount.Announced Binding.variableX) || Maybe.isJust (loyaltyAmountOf component)
 
 -- The SIGNED amount of loyalty a component moves, positive for CR 606.4's adding
 -- half and negative for the removing one. `isLoyaltyComponent` above is this
@@ -2065,7 +2089,7 @@ loyaltyAmountOf component = case component of
   CostComponent.RemoveLoyaltyFromThis (CostAmount.Fixed n) -> Just (negate (toInteger n))
   -- Nothing until CR 601.2b substitutes it; `isLoyaltyComponent` classifies it
   -- all the same.
-  CostComponent.RemoveLoyaltyFromThis CostAmount.AnnouncedX -> Nothing
+  CostComponent.RemoveLoyaltyFromThis (CostAmount.Announced _) -> Nothing
   CostComponent.TapThis -> Nothing
   CostComponent.UntapThis -> Nothing
   CostComponent.SacrificeThis -> Nothing
@@ -2106,7 +2130,7 @@ loyaltyAmountOf component = case component of
   CostComponent.ExileTopFromGraveyard _ -> Nothing
   CostComponent.CollectEvidence _ -> Nothing
   CostComponent.CollectEvidenceOfTargets -> Nothing
-  CostComponent.ExileCardFromHand _ -> Nothing
+  CostComponent.ExileCardsFromHand {} -> Nothing
   CostComponent.RevealCardFromHand _ -> Nothing
   CostComponent.Behold _ -> Nothing
   CostComponent.BeholdAndExile _ -> Nothing
@@ -2162,7 +2186,7 @@ componentStatesHiddenQuality component = case component of
   -- The second: CR 406.2's exile reads the same hidden hand, so the criterion
   -- decides -- Jhoira of the Ghitu's "a nonland card" states a quality,
   -- Cadaverous Bloom's "a card" does not.
-  CostComponent.ExileCardFromHand criterion -> Filter.statesAQuality criterion
+  CostComponent.ExileCardsFromHand exile -> Filter.statesAQuality (ExileCardsFromHand.whichCards exile)
   -- The third: CR 701.20a reveals out of the same hidden hand, and the criterion
   -- decides -- Living Destiny's "a creature card" states a quality. CR 701.20b
   -- leaving the card in the hand does not matter here: rule 118.8c asks what the
@@ -2285,7 +2309,7 @@ discardCandidates slots pid oid criterion gs =
 putOntoBattlefieldCandidates :: Map.Map SlotName.SlotName (Set.Set Recipient.Recipient) -> PlayerId -> ObjectId -> Filter.Type.Filter Keyword.Type.Keyword -> GameState -> [ObjectId]
 putOntoBattlefieldCandidates = discardCandidates
 
--- The cards this player may exile to pay an ExileCardFromHand component on
+-- The cards this player may exile to pay an ExileCardsFromHand component on
 -- `oid`: the same pool again, read out of the same hidden zone (CR 402.3) and
 -- narrowed by the same criterion through the same CR 613 projection. The
 -- DESTINATION is what separates this component from the two above, and CR 406.2
@@ -2686,7 +2710,7 @@ claimOf slots pid oid component gs =
         CostComponent.Sacrifice (Sacrifice.MkSacrifice (CostAmount.Fixed n) criterion) ->
           claim (ClaimAxis.Removal Zone.Battlefield) (Set.fromList (Replacement.sacrificeCandidates (Just pid) slots pid (Just oid) criterion gs)) n
         -- Nothing until CR 601.2b fixes the count.
-        CostComponent.Sacrifice (Sacrifice.MkSacrifice CostAmount.AnnouncedX _) -> Nothing
+        CostComponent.Sacrifice (Sacrifice.MkSacrifice (CostAmount.Announced _) _) -> Nothing
         CostComponent.SacrificeThis -> claim (ClaimAxis.Removal Zone.Battlefield) itself 1
         -- The same battlefield pool SacrificeThis draws on -- a permanent returned to
         -- hand is as gone from the battlefield as one sacrificed.
@@ -2722,8 +2746,10 @@ claimOf slots pid oid component gs =
         -- The pool excludes the card being CAST as well as the object the cost is on
         -- (Game.beingCast), so a spell being offered is not fuel for the source that would
         -- pay for it: CR 601.2a has it on the stack by the time CR 601.2h pays.
-        CostComponent.ExileCardFromHand criterion ->
-          claim (ClaimAxis.Removal Zone.Hand) (Set.fromList (exileFromHandCandidates slots pid oid criterion gs)) 1
+        CostComponent.ExileCardsFromHand (ExileCardsFromHand.MkExileCardsFromHand (CostAmount.Fixed n) criterion) ->
+          claim (ClaimAxis.Removal Zone.Hand) (Set.fromList (exileFromHandCandidates slots pid oid criterion gs)) n
+        -- Nothing until CR 601.2b fixes the count, Sacrifice's arm.
+        CostComponent.ExileCardsFromHand (ExileCardsFromHand.MkExileCardsFromHand (CostAmount.Announced _) _) -> Nothing
         CostComponent.ExileCardsFromGraveyard (ExileCardsFromGraveyard.MkExileCardsFromGraveyard n criterion) ->
           claim (ClaimAxis.Removal Zone.Graveyard) (Set.fromList (exileCandidates slots pid oid criterion gs)) n
         -- The same graveyard pool and the same axis, as ONE selection reaching the
@@ -2795,7 +2821,7 @@ claimOf slots pid oid component gs =
         CostComponent.TapPermanents (TapPermanents.MkTapPermanents (CostAmount.Fixed n) criterion _) ->
           claim ClaimAxis.Tapping (Set.fromList (tapCandidates slots pid oid criterion gs)) n
         -- Nothing until CR 601.2b fixes the count, Sacrifice's arm.
-        CostComponent.TapPermanents (TapPermanents.MkTapPermanents CostAmount.AnnouncedX _ _) -> Nothing
+        CostComponent.TapPermanents (TapPermanents.MkTapPermanents (CostAmount.Announced _) _ _) -> Nothing
         -- The battlefield pool SacrificeThis and ReturnThis draw on, on their axis
         -- and not the tapping one: a permanent returned to hand is as gone from the
         -- battlefield as one sacrificed, so a cost that returns and a cost that
@@ -3198,7 +3224,7 @@ uncountedCeiling :: PlayerId -> ObjectId -> [Claim] -> GameState -> CostComponen
 -- Zero, not the 1 the uncounted components take: an unannounced X cannot be
 -- paid even once (`canPayComponent`). Unreachable, since `manaActivations`
 -- asks canPayComponent of every component before reaching `repeatsOf`.
-uncountedCeiling _ _ _ _ component | componentHasVariable component = Just 0
+uncountedCeiling _ _ _ _ component | componentUnannounced component = Just 0
 uncountedCeiling pid oid claims gs component = case component of
   -- Counted by `objectCeiling`.
   CostComponent.Sacrifice {} -> Nothing
@@ -3209,7 +3235,7 @@ uncountedCeiling pid oid claims gs component = case component of
   CostComponent.DiscardCards {} -> Nothing
   CostComponent.DiscardThis _ -> Nothing
   CostComponent.PutCardFromHandOntoBattlefield _ -> Nothing
-  CostComponent.ExileCardFromHand _ -> Nothing
+  CostComponent.ExileCardsFromHand {} -> Nothing
   CostComponent.ExileCardsFromGraveyard {} -> Nothing
   -- 1, and counted by none of the four totals: `claimOf` states no claim for
   -- this component either, Forage's answer below and for its reason. An
@@ -3612,7 +3638,7 @@ targetComputed component = case component of
   CostComponent.ExileCardsFromGraveyard _ -> False
   CostComponent.ExileMaterials _ -> False
   CostComponent.ExileTopFromGraveyard _ -> False
-  CostComponent.ExileCardFromHand _ -> False
+  CostComponent.ExileCardsFromHand {} -> False
   CostComponent.RevealCardFromHand _ -> False
   CostComponent.Behold _ -> False
   CostComponent.BeholdAndExile _ -> False
@@ -3634,7 +3660,7 @@ lifeOwedByComponent pid gs component = case component of
   CostComponent.PayLife (CostAmount.Fixed n) -> n
   -- 0, an unannounced X naming no amount to owe. Not a claim that this component
   -- is free: `canPayComponent` refuses it outright.
-  CostComponent.PayLife CostAmount.AnnouncedX -> 0
+  CostComponent.PayLife (CostAmount.Announced _) -> 0
   -- CR 118.3: shares a total with the life a mana ability spends. Pawl.CostSpec's
   -- "CR 118.3 Murderous Betrayal's half and Mana Confluence's life are weighed
   -- together" is the proof.
@@ -3670,7 +3696,7 @@ lifeOwedByComponent pid gs component = case component of
   CostComponent.ExileTopFromGraveyard _ -> 0
   CostComponent.CollectEvidence _ -> 0
   CostComponent.CollectEvidenceOfTargets -> 0
-  CostComponent.ExileCardFromHand _ -> 0
+  CostComponent.ExileCardsFromHand {} -> 0
   CostComponent.RevealCardFromHand _ -> 0
   CostComponent.Behold _ -> 0
   CostComponent.BeholdAndExile _ -> 0
@@ -3688,7 +3714,7 @@ energyOwedByComponent component = case component of
   CostComponent.PayEnergy (CostAmount.Fixed n) -> n
   -- 0, an unannounced PayLife's answer in lifeOwedByComponent and for its
   -- reason.
-  CostComponent.PayEnergy CostAmount.AnnouncedX -> 0
+  CostComponent.PayEnergy (CostAmount.Announced _) -> 0
   CostComponent.PayLife _ -> 0
   CostComponent.PayHalfLife _ -> 0
   CostComponent.TapThis -> 0
@@ -3721,7 +3747,7 @@ energyOwedByComponent component = case component of
   CostComponent.ExileTopFromGraveyard _ -> 0
   CostComponent.CollectEvidence _ -> 0
   CostComponent.CollectEvidenceOfTargets -> 0
-  CostComponent.ExileCardFromHand _ -> 0
+  CostComponent.ExileCardsFromHand {} -> 0
   CostComponent.RevealCardFromHand _ -> 0
   CostComponent.Behold _ -> 0
   CostComponent.BeholdAndExile _ -> 0
@@ -3778,7 +3804,7 @@ countersOwedByComponent component = case component of
   CostComponent.ExileTopFromGraveyard _ -> []
   CostComponent.CollectEvidence _ -> []
   CostComponent.CollectEvidenceOfTargets -> []
-  CostComponent.ExileCardFromHand _ -> []
+  CostComponent.ExileCardsFromHand {} -> []
   CostComponent.RevealCardFromHand _ -> []
   CostComponent.Behold _ -> []
   CostComponent.BeholdAndExile _ -> []
@@ -3897,8 +3923,8 @@ canPayComponent slots pid oid component gs = case component of
   -- ReturnPermanents arm's note above: relaxing this arm to True leaves
   -- Pawl.CostSpec's Cadaverous Bloom cases green, the empty claim pool refusing
   -- the same activation. A FENCE, not proven behaviour.
-  CostComponent.ExileCardFromHand criterion ->
-    not (null (exileFromHandCandidates slots pid oid criterion gs))
+  CostComponent.ExileCardsFromHand (ExileCardsFromHand.MkExileCardsFromHand amount criterion) ->
+    payableAnnounced amount (\n -> Natural.length (exileFromHandCandidates slots pid oid criterion gs) >= n)
   -- CR 118.3: payable only if the hand holds a card the criterion admits, the arm
   -- above's reading. What it decides is the OFFER: `payComponent` below answers
   -- Unpaid on an empty pool anyway, so a caster with no creature card is refused
@@ -4064,14 +4090,14 @@ canPayComponent slots pid oid component gs = case component of
 payableAnnounced :: CostAmount.CostAmount -> (Natural -> Bool) -> Bool
 payableAnnounced amount payable = case amount of
   CostAmount.Fixed n -> payable n
-  CostAmount.AnnouncedX -> False
+  CostAmount.Announced _ -> False
 
 -- `payableAnnounced`'s payment half: Unpaid rather than a guessed 0, which CR
 -- 601.2h turns into the reversal of the whole casting.
 paidAnnounced :: CostAmount.CostAmount -> (Natural -> Game Payment.Payment) -> Game Payment.Payment
 paidAnnounced amount pay' = case amount of
   CostAmount.Fixed n -> pay' n
-  CostAmount.AnnouncedX -> pure Payment.Unpaid
+  CostAmount.Announced _ -> pure Payment.Unpaid
 
 -- CR 601.2c / 602.2b: what the announcement had bound by the time CR 601.2h pays
 -- -- the targets, and CR 601.2b's X -- read off the stack object `pay` is handed
@@ -4224,7 +4250,7 @@ criteriaOf component = case component of
   CostComponent.ExilePermanents exiled -> [ExilePermanents.whichPermanents exiled]
   CostComponent.DiscardCards discard -> [DiscardCards.whichCards discard]
   CostComponent.PutCardFromHandOntoBattlefield criterion -> [criterion]
-  CostComponent.ExileCardFromHand criterion -> [criterion]
+  CostComponent.ExileCardsFromHand exile -> [ExileCardsFromHand.whichCards exile]
   CostComponent.RevealCardFromHand criterion -> [criterion]
   CostComponent.Behold behold -> [Behold.whichObjects behold]
   CostComponent.BeholdAndExile criterion -> [criterion]
@@ -4750,7 +4776,7 @@ payAction perform before subject leastX pid oid printed
   | otherwise = do
       named <-
         if hasVariable printed
-          then Game.choose (Prompt.ChooseX (Decide.deciderFor pid before) pid oid leastX (greatestPayableX Nothing payableAt printed))
+          then Game.choose (Prompt.ChooseX (Decide.deciderFor pid before) pid oid Binding.variableX leastX (greatestPayableX Nothing payableAt printed))
           else pure 0
       if (hasVariable printed && named < leastX) || not (payableAt named)
         then pure Nothing
@@ -5254,7 +5280,7 @@ paidInSecondPass component = case component of
   CostComponent.ExileTopFromGraveyard _ -> False
   CostComponent.CollectEvidence _ -> False
   CostComponent.CollectEvidenceOfTargets -> False
-  CostComponent.ExileCardFromHand _ -> False
+  CostComponent.ExileCardsFromHand {} -> False
   -- These move no object at all.
   CostComponent.TapThis -> False
   CostComponent.UntapThis -> False
@@ -5372,7 +5398,7 @@ orderSensitive component = case component of
   CostComponent.ExileTopFromGraveyard _ -> True
   CostComponent.CollectEvidence _ -> True
   CostComponent.CollectEvidenceOfTargets -> True
-  CostComponent.ExileCardFromHand _ -> True
+  CostComponent.ExileCardsFromHand {} -> True
   -- FALSE, one of the two object-choosing components that answer so: CR 701.20b
   -- leaves the card where it was, so paying this changes no other part's pool.
   CostComponent.RevealCardFromHand _ -> False
@@ -6615,14 +6641,32 @@ payPayable moment paidFor slots pid oid component = case component of
   --
   -- Through Event.changeZone, CR 400.7's funnel, so the exile is a zone change
   -- like any other and a CR 603.6a leaves-the-hand watcher sees it.
-  CostComponent.ExileCardFromHand criterion -> do
+  --
+  -- One card is asked as Prompt.ChooseCardInHand, the arm above's prompt; more
+  -- are asked at once as Prompt.ChooseExiles, ExilePermanents' elision and
+  -- reject-not-repair posture, and exiled as ONE event (Event.changeZonesTogether),
+  -- ExileCardsFromGraveyard's reason.
+  CostComponent.ExileCardsFromHand (ExileCardsFromHand.MkExileCardsFromHand amount criterion) -> paidAnnounced amount $ \n -> do
     gs <- State.get
-    picked <- Game.chooseAmong (\decider who -> Prompt.ChooseCardInHand decider who oid) pid (exileFromHandCandidates slots pid oid criterion gs)
-    case picked of
-      Nothing -> pure Payment.Unpaid
-      Just chosen -> do
-        Event.changeZone chosen Zone.Exile
+    let candidates = exileFromHandCandidates slots pid oid criterion gs
+        decider = Decide.deciderFor pid gs
+    -- A count of 0 (the March cycle announcing none) has the empty set as its
+    -- one answer, so nothing is asked.
+    chosen <-
+      if n == 0
+        then pure Set.empty
+        else
+          if n == 1
+            then fmap (maybe Set.empty Set.singleton) (Game.chooseAmong (\asked who -> Prompt.ChooseCardInHand asked who oid) pid candidates)
+            else
+              if Natural.length candidates <= n
+                then pure (Set.fromList candidates)
+                else Game.choose (Prompt.ChooseExiles decider pid oid candidates n)
+    if Set.isSubsetOf chosen (Set.fromList candidates) && Natural.length chosen == n
+      then do
+        Monad.void (Event.changeZonesTogether (fmap (\c -> (c, Zone.Exile)) (Set.toAscList chosen)))
         pure bindsNothing
+      else pure Payment.Unpaid
   -- CR 701.20a's reveal as a cost, the arm above's pool and prompt with no zone
   -- change at the end of it (CR 701.20b): the candidates are re-read HERE so an
   -- earlier component of the same cost that emptied the hand leaves this Unpaid,

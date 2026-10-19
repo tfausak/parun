@@ -13,11 +13,17 @@
           "value": {
             "components": [
               {
-                "type": "ExileCardFromHand",
+                "type": "ExileCardsFromHand",
                 "value": {
-                  "type": "HasColor",
-                  "value": {
-                    "type": "Green"
+                  "count": {
+                    "type": "Fixed",
+                    "value": 1
+                  },
+                  "whichCards": {
+                    "type": "HasColor",
+                    "value": {
+                      "type": "Green"
+                    }
                   }
                 }
               }

@@ -194,6 +194,7 @@ import qualified Pawl.Types.ExchangeValues as ExchangeValues
 import qualified Pawl.Types.ExchangeZones as ExchangeZones
 import qualified Pawl.Types.ExchangedValue as ExchangedValue
 import qualified Pawl.Types.ExileCardsFromGraveyard as ExileCardsFromGraveyard
+import qualified Pawl.Types.ExileCardsFromHand as ExileCardsFromHand
 import qualified Pawl.Types.ExileFromGraveyard as ExileFromGraveyard
 import qualified Pawl.Types.ExileMaterials as ExileMaterials
 import qualified Pawl.Types.ExilePermanents as ExilePermanents
@@ -3848,7 +3849,7 @@ costComponentFilters component = case component of
   CostComponent.DiscardCards (DiscardCards.MkDiscardCards _ f) -> [f]
   CostComponent.PutCardFromHandOntoBattlefield f -> [f]
   -- CR 406.2 out of the hand: Cadaverous Bloom's "a card".
-  CostComponent.ExileCardFromHand f -> [f]
+  CostComponent.ExileCardsFromHand (ExileCardsFromHand.MkExileCardsFromHand _ f) -> [f]
   -- CR 701.20a out of the hand: Living Destiny's "a creature card".
   CostComponent.RevealCardFromHand f -> [f]
   -- CR 701.4a over the hand and the battlefield at once: Caustic Exhale's "a
@@ -7352,6 +7353,21 @@ lintSpec s registry = Spec.describe s "Lint" $ do
                 || (not spellDeclaresX && turnUpDeclaresX f /= turnedUpReadsX f)
         offenders = filter (anyFace offends . Printing.card) ps
     Spec.assertEqWith s "X read iff X declared" (fmap (S.nameOf . Printing.card) offenders) []
+  -- CR 601.2b's count announced BESIDE X (Cost.announcedCounts), the lint above
+  -- for a variable of its own name: a spell's cost declares it exactly where the
+  -- face's own CR 601.2f reduction reads it, since nothing else binds the slot
+  -- (Cast.castProposed's announcement). An activation cost declaring one would
+  -- never be asked for it, and so never be payable.
+  Spec.it s "CR 601.2b a count announced beside X is read by the spell's own reduction and declared nowhere else" $ do
+    ps <- S.allPrintings s
+    let declared f = Set.fromList (concatMap Cost.announcedCounts (spellCostsOf f))
+        read_ f = Set.delete Binding.variableX (foldMap (QuantitySlot.slots . CostReduction.perEach) (Face.costReductions f))
+        activated f = concatMap (Cost.announcedCounts . ActivatedAbility.cost) (Face.activatedAbilities f)
+        offends f = declared f /= read_ f || not (null (activated f))
+        offenders = filter (anyFace offends . Printing.card) ps
+    Spec.assertEqWith s "a count is read iff declared" (fmap (S.nameOf . Printing.card) offenders) []
+    sorrow <- S.printingOf s registry "March of Wretched Sorrow"
+    Spec.assertEqWith s "and March of Wretched Sorrow declares one" (declared (S.combinedFace sorrow)) (Set.singleton (SlotName.MkSlotName (Text.pack "exiledCount")))
   -- The ACTIVATED-ABILITY half, and it is a separate sweep because it is a
   -- separate cost: CR 602.2b makes "an activated ability's analog to a spell's
   -- mana cost (as referenced in rule 601.2f) ... its activation cost", so an

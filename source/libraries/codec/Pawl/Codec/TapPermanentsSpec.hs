@@ -1,5 +1,6 @@
 module Pawl.Codec.TapPermanentsSpec where
 
+import qualified Data.Text as Text
 import qualified Pawl.Codec.Keyword as Keyword
 import qualified Pawl.Codec.TapPermanents as TapPermanents
 import qualified Pawl.JsonCodec.Codec as Codec
@@ -9,6 +10,7 @@ import qualified Pawl.Types.CardType as CardType
 import qualified Pawl.Types.CostAmount as CostAmount
 import qualified Pawl.Types.Filter as Filter
 import qualified Pawl.Types.Keyword as Keyword
+import qualified Pawl.Types.SlotName as SlotName
 import qualified Pawl.Types.TapPermanents as TapPermanents
 
 -- | Instantiated at 'Keyword.Keyword', the only concrete instantiation anywhere
@@ -44,15 +46,15 @@ spec s = Spec.describe s "Pawl.Codec.TapPermanents" $ do
       )
       " {\"count\":{\"type\":\"Fixed\",\"value\":2},\"whichPermanents\":{\"type\":\"HasCardType\",\"value\":{\"type\":\"Creature\"}},\"sharingACreatureType\":true} "
   -- Explosive Singularity's "tap any number", announced at CR 601.2b.
-  Spec.it s "AnnouncedX" $
+  Spec.it s "Announced" $
     Common.assertCodec
       s
       codec
       ( TapPermanents.MkTapPermanents
-          { TapPermanents.count = CostAmount.AnnouncedX,
+          { TapPermanents.count = CostAmount.Announced (SlotName.MkSlotName (Text.pack "X")),
             TapPermanents.whichPermanents = Filter.HasCardType CardType.Creature,
             TapPermanents.sharingACreatureType = False
           }
       )
-      " {\"count\":{\"type\":\"AnnouncedX\"},\"whichPermanents\":{\"type\":\"HasCardType\",\"value\":{\"type\":\"Creature\"}}} "
+      " {\"count\":{\"type\":\"Announced\",\"value\":\"X\"},\"whichPermanents\":{\"type\":\"HasCardType\",\"value\":{\"type\":\"Creature\"}}} "
   Spec.it s "has a schema" $ Common.assertHasSchema s codec
