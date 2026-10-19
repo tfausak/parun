@@ -2656,7 +2656,7 @@ backupSpec s registry =
                   -- The Island pays; the Arbor is left untapped to attack.
                   sparing :: Prompt.Prompt r -> r
                   sparing p = case p of
-                    Prompt.ChooseManaSource _ _ candidates -> List.find (/= arborId) (NonEmpty.toList candidates)
+                    Prompt.ChooseManaSource _ _ _ candidates -> List.find (/= arborId) (NonEmpty.toList candidates)
                     Prompt.ChooseExtraManaSource {} -> Nothing
                     _ -> targeting arborId p
                   pumped = S.runPure sparing backed (S.cast S.alice ascentId >> Stack.resolveTop)

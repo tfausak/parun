@@ -8,14 +8,18 @@ module Pawl.Play.Protocol where
 import qualified Data.Bifunctor as Bifunctor
 import qualified Data.Char as Char
 import qualified Data.Foldable as Foldable
+import qualified Data.List.NonEmpty as NonEmpty
 import qualified Data.Text as Text
 import Numeric.Natural (Natural)
 import qualified Pawl.Codec.Facing as Codec.Facing
+import qualified Pawl.Codec.ManaCost as Codec.ManaCost
+import qualified Pawl.Codec.ManaType as Codec.ManaType
 import qualified Pawl.Codec.Reference as Codec.Reference
 import qualified Pawl.Codec.Reply as Codec.Reply
 import qualified Pawl.Codec.Request as Codec.Request
 import qualified Pawl.Codec.SlotName as Codec.SlotName
 import qualified Pawl.Engine.Driver as Driver
+import qualified Pawl.Engine.Mana as Mana
 import qualified Pawl.Engine.PlayerView as PlayerView
 import qualified Pawl.JsonCodec.Codec as Codec
 import qualified Pawl.JsonCodec.Common as Common
@@ -26,7 +30,10 @@ import qualified Pawl.Types.Action as Action
 import qualified Pawl.Types.Answerer as Answerer
 import qualified Pawl.Types.Asked as Asked
 import qualified Pawl.Types.CardName as CardName
+import qualified Pawl.Types.GameState as GameState
 import qualified Pawl.Types.Label as Label
+import qualified Pawl.Types.Mana as Mana.Type
+import qualified Pawl.Types.ManaUnit as ManaUnit
 import qualified Pawl.Types.MulliganOffer as MulliganOffer
 import qualified Pawl.Types.ObjectId as ObjectId
 import qualified Pawl.Types.PlayerId as PlayerId
@@ -67,12 +74,12 @@ requestFor :: Asked.Asked r -> Maybe Request.Request
 requestFor asked =
   fmap
     (\question -> Request.MkRequest (PlayerView.viewFor (Question.seat question) (Asked.game asked)) question Nothing)
-    (questionOf (Asked.prompt asked))
+    (questionOf (Asked.game asked) (Asked.prompt asked))
 
-questionOf :: Prompt.Prompt r -> Maybe Question.Question
-questionOf prompt =
+questionOf :: GameState.GameState -> Prompt.Prompt r -> Maybe Question.Question
+questionOf gs prompt =
   fmap
-    (\seat -> Question.MkQuestion seat (Scenario.Prompt.kindOf prompt) (offerOf prompt))
+    (\seat -> Question.MkQuestion seat (Scenario.Prompt.kindOf prompt) (offerOf gs prompt))
     (Driver.deciderOf prompt)
 
 decodeAnswer :: Prompt.Prompt r -> R.Reply -> Either Text.Text r
@@ -103,12 +110,13 @@ idOf label =
   let t = Label.unwrap label
    in if not (Text.null t) && Text.all Char.isDigit t then Read.readMaybe (Text.unpack t) else Nothing
 
--- | What a prompt offers, in its answer's vocabulary.
+-- | What a prompt offers, in its answer's vocabulary, with what the game
+-- tells the seat about each option.
 --
 -- Not implemented: the offer of every prompt not listed here, which sends
 -- null (#5225).
-offerOf :: Prompt.Prompt r -> R.Reply
-offerOf prompt = case prompt of
+offerOf :: GameState.GameState -> Prompt.Prompt r -> R.Reply
+offerOf gs prompt = case prompt of
   Prompt.ChooseAction _ _ offered -> R.Array (fmap actionOffer offered)
   Prompt.DeclareMulligan _ _ offer ->
     fields [("taken", natural (MulliganOffer.taken offer)), ("bottom", natural (MulliganOffer.bottomCount offer))]
@@ -121,8 +129,10 @@ offerOf prompt = case prompt of
       [ ("source", object source),
         ("slots", Reply.encode (Reply.mapOf (Reply.viaCodec Codec.SlotName.codec) (Reply.pairOf Reply.natural (Reply.setOf Reply.recipient))) namer slots)
       ]
-  Prompt.ChooseManaSource _ _ sources -> objects (Foldable.toList sources)
-  Prompt.ChooseExtraManaSource _ _ sources -> objects (Foldable.toList sources)
+  Prompt.ChooseManaSource _ payer cost sources ->
+    fields [("payer", Reply.encode Reply.player namer payer), ("cost", Reply.encode (Reply.viaCodec Codec.ManaCost.codec) namer cost), ("sources", manaSources gs sources)]
+  Prompt.ChooseExtraManaSource _ _ sources -> fields [("sources", manaSources gs sources)]
+  Prompt.ChooseManaYield _ _ source options -> fields [("source", object source), ("yields", Reply.encode (Reply.list (Reply.list (Reply.viaCodec Codec.ManaType.codec))) namer (fmap (fmap ManaUnit.manaType . Mana.yieldUnits) (Foldable.toList options)))]
   Prompt.ChooseX _ _ source least greatest -> fields [("source", object source), ("least", natural least), ("greatest", natural greatest)]
   Prompt.ChooseOptional _ _ source _ _ _ -> fields [("source", object source)]
   _ -> R.Null
@@ -153,6 +163,15 @@ actionOffer action = fields (("action", R.Text (Text.pack kind)) : rest)
       Action.RollPlanarDie -> ("RollPlanarDie", [])
     on oid = [("object", object oid)]
     named name = [("name", R.Text (CardName.unwrap name))]
+
+-- | CR 106.1: each source beside the mana it could make, one list of mana
+-- types per yield (Mana.manaYieldsOf).
+manaSources :: GameState.GameState -> NonEmpty.NonEmpty ObjectId.ObjectId -> R.Reply
+manaSources gs sources =
+  R.Array
+    [ fields [("source", object oid), ("makes", Reply.encode (Reply.list (Reply.list (Reply.viaCodec Codec.ManaType.codec))) namer (fmap (fmap ManaUnit.manaType . Mana.Type.unwrap) (Mana.manaYieldsOf oid gs)))]
+    | oid <- Foldable.toList sources
+    ]
 
 fields :: [(String, R.Reply)] -> R.Reply
 fields = R.Object . fmap (Bifunctor.first Text.pack)

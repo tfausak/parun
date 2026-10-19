@@ -195,7 +195,7 @@ meldedBoard base battlements garrison mountain =
 -- {T} the ability still needs (CR 107.5). Duplicated from Pawl.SetupSpec.
 sparing :: ObjectId.ObjectId -> Prompt.Prompt r -> r
 sparing oid p = case p of
-  Prompt.ChooseManaSource _ _ candidates -> List.find (/= oid) (NonEmpty.toList candidates)
+  Prompt.ChooseManaSource _ _ _ candidates -> List.find (/= oid) (NonEmpty.toList candidates)
   _ -> S.identityAnswer p
 
 spec :: (Monad m, Monad n) => Spec.Spec m n -> Registry.Registry m -> n ()

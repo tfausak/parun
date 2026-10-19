@@ -1646,7 +1646,7 @@ townshipName = CardName.MkCardName (Text.pack "Hanweir, the Writhing Township")
 -- answerer for the same reason.
 sparing :: ObjectId.ObjectId -> Prompt.Prompt r -> r
 sparing oid p = case p of
-  Prompt.ChooseManaSource _ _ candidates -> List.find (/= oid) (NonEmpty.toList candidates)
+  Prompt.ChooseManaSource _ _ _ candidates -> List.find (/= oid) (NonEmpty.toList candidates)
   _ -> S.identityAnswer p
 
 -- The first of the two Cat tokens CR 702.140d's trigger created, which is the
