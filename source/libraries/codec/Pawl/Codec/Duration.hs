@@ -4,6 +4,7 @@ import qualified Pawl.Codec.Condition as Condition
 import qualified Pawl.Codec.Cost as Cost
 import qualified Pawl.Codec.DurationEvent as DurationEvent
 import qualified Pawl.Codec.Keyword as Keyword
+import qualified Pawl.Codec.Phase as Phase
 import qualified Pawl.Codec.PlayerRef as PlayerRef
 import qualified Pawl.JsonCodec.Arm as Arm
 import qualified Pawl.JsonCodec.Codec as Codec
@@ -19,7 +20,7 @@ codec =
       Arm.nullary "Indefinite" Duration.Indefinite,
       Arm.nullary "Perpetual" Duration.Perpetual,
       Arm.nullary "UntilYourNextTurn" Duration.UntilYourNextTurn,
-      Arm.nullary "UntilYourNextUpkeep" Duration.UntilYourNextUpkeep,
+      Arm.payload "UntilYourNextStep" Phase.codec Duration.UntilYourNextStep (\x -> case x of Duration.UntilYourNextStep y -> Just y; _ -> Nothing),
       Arm.nullary "UntilEndOfYourNextTurn" Duration.UntilEndOfYourNextTurn,
       Arm.payload "UntilEndOfNextTurnOf" PlayerRef.codec Duration.UntilEndOfNextTurnOf (\x -> case x of Duration.UntilEndOfNextTurnOf y -> Just y; _ -> Nothing),
       Arm.payload "DuringNextTurnOf" PlayerRef.codec Duration.DuringNextTurnOf (\x -> case x of Duration.DuringNextTurnOf y -> Just y; _ -> Nothing),
@@ -39,7 +40,7 @@ tagOf x = case x of
   Duration.Indefinite {} -> "Indefinite"
   Duration.Perpetual {} -> "Perpetual"
   Duration.UntilYourNextTurn {} -> "UntilYourNextTurn"
-  Duration.UntilYourNextUpkeep {} -> "UntilYourNextUpkeep"
+  Duration.UntilYourNextStep {} -> "UntilYourNextStep"
   Duration.UntilEndOfYourNextTurn {} -> "UntilEndOfYourNextTurn"
   Duration.UntilEndOfNextTurnOf {} -> "UntilEndOfNextTurnOf"
   Duration.DuringNextTurnOf {} -> "DuringNextTurnOf"

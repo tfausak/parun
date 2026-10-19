@@ -1,0 +1,33 @@
+{
+  "description": "CR 603.10a Autumn Willow and Baron Sengir counters only the Vampire that dealt damage to the creature that died",
+  "note": "Two Vampires attack: bob's Bears block the Highborn Vampire and die, while the Vampire Noble hits bob. Both dealt damage this turn, and only one dealt it to the Bears.",
+  "board": {
+    "active": "alice",
+    "step": "BeginningOfCombat",
+    "seats": [
+      {
+        "name": "alice",
+        "battlefield": [
+          { "card": "Autumn Willow and Baron Sengir", "label": "sengir", "ready": true },
+          { "card": "Highborn Vampire", "label": "highborn", "ready": true },
+          { "card": "Vampire Noble", "label": "noble", "ready": true }
+        ],
+        "library": [{ "card": "Swamp" }, { "card": "Swamp" }]
+      },
+      {
+        "name": "bob",
+        "battlefield": [{ "card": "Grizzly Bears", "label": "bears", "ready": true }],
+        "library": [{ "card": "Swamp" }, { "card": "Swamp" }]
+      }
+    ]
+  },
+  "timeline": [
+    { "turn": 1, "step": "DeclareAttackers", "player": "alice", "do": { "Attack": ["$highborn", "$noble"] } },
+    { "turn": 1, "step": "DeclareBlockers", "player": "bob", "do": { "Block": { "$bears": ["$highborn"] } } },
+    { "turn": 1, "step": "EndOfCombat", "player": "alice", "check": { "PowerToughness": { "object": "$highborn", "power": 6, "toughness": 5 } } },
+    { "turn": 1, "step": "EndOfCombat", "player": "alice", "check": { "PowerToughness": { "object": "$noble", "power": 3, "toughness": 2 } } },
+    { "turn": 1, "step": "EndOfCombat", "player": "alice", "check": { "PowerToughness": { "object": "$sengir", "power": 5, "toughness": 5 } } },
+    { "turn": 1, "step": "EndOfCombat", "player": "alice", "check": { "Life": { "player": "bob", "life": 17 } } },
+    { "turn": 1, "step": "EndOfCombat", "player": "alice", "check": { "Count": { "player": "bob", "zone": "Graveyard", "card": "Grizzly Bears", "count": 1 } } }
+  ]
+}
