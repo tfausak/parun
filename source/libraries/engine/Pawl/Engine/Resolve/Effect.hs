@@ -8732,11 +8732,15 @@ applyOneEffect runSubgame resolving source controller legal chosen effect = case
   -- Prompt.ChooseAttachment would name -- and asked even when nothing moves,
   -- since the instruction still makes the choice. None admitted: nothing moves
   -- (CR 609.3). A mover that cannot go there stays put (CR 701.3b, CR 303.4j),
-  -- which Event.attach applies.
+  -- which Event.attach applies. Only a destination within the controller's
+  -- range (CR 801.5a), every one for a planar source (CR 801.18): Fumble's
+  -- "another creature".
   Effect.AttachAll (AttachAll.MkAttachAll ref filter_) -> do
     movers <- askingObjects resolving source controller legal chosen ref
     gs <- State.get
-    destination <- Game.chooseAmong (\decider who -> Prompt.ChoosePermanent decider who source) controller (Attach.groupHostsFor (effectContext gs resolving controller source legal (slotBindings resolving gs)) movers filter_ gs)
+    let grants = Projection.controlGrants gs
+        inReach oid = all (\you -> Projection.objectInRangeGiven grants you oid gs) (Plane.rangePerspective source controller gs)
+    destination <- Game.chooseAmong (\decider who -> Prompt.ChoosePermanent decider who source) controller (filter inReach (Attach.groupHostsFor (effectContext gs resolving controller source legal (slotBindings resolving gs)) movers filter_ gs))
     -- Proposed as a bare ToObject; Event.attach re-tags it per mover, as
     -- AttachTarget's arm says.
     Foldable.for_ destination (attachTogether movers . Recipient.ToObject)

@@ -21,7 +21,8 @@
 -- 801.15), and Pawl.Engine.Departure's checkMandatoryLoop (CR 801.16); CR
 -- 801.5a's chooser cut in Resolve.Effect's Vote arm, changeTargetsFor and
 -- chooseNewTargetsFor (Target.inChooserRange), Pawl.Engine.Cost's offerAssist
--- and Pawl.Engine.Replacement's legalCopyTargets; and CR
+-- and Pawl.Engine.Replacement's legalCopyTargets, and the AttachAll arm's
+-- destination; and CR
 -- 801.2c's turn-start seating, Pawl.Types.GameState's departedThisTurn.
 --
 -- FOUR SEATS, at range 1 unless a case says otherwise, turn order [alice, bob,
@@ -680,6 +681,35 @@ spec s registry = Spec.describe s "Range of influence" $ do
            in fmap (`S.powerToughnessOf` after) (filter (`notElem` Game.zoneMembers Zone.Battlefield S.alice board) (Game.zoneMembers Zone.Battlefield S.alice after))
     Spec.assertEqWith s "CR 801.5a at range 1 the Clone enters as a copy of bob's Piker" (cloned (S.withRange 1 board)) [Just (2, 1)]
     Spec.assertEqWith s "at an unlimited range it copies carol's Giant" (cloned board) [Just (3, 3)]
+
+  -- CR 801.5a for a destination chosen on resolution: alice's Fumble ("Return
+  -- target creature to its owner's hand. Gain control of all Auras and
+  -- Equipment that were attached to it, then attach them to another
+  -- creature.") at bob's Goblin Piker wearing his Unholy Strength (+2/+1),
+  -- with dave's Typhoid Rats beside her and carol's Hill Giant two seats away.
+  -- She moves the Aura to the Giant where she may, else to the Rats. Paired
+  -- with the board at an unlimited range.
+  Spec.it s "CR 801.5a an attachment's new host is offered only within its controller's range" $ do
+    island <- S.printingOf s registry "Island"
+    fumble <- S.printingOf s registry "Fumble"
+    piker <- S.printingOf s registry "Goblin Piker"
+    unholy <- S.printingOf s registry "Unholy Strength"
+    rats <- S.printingOf s registry "Typhoid Rats"
+    giant <- S.printingOf s registry "Hill Giant"
+    let (pikerId, g0) = S.addPermanent piker S.bob (S.landsFor island S.alice 2 S.fourPlayerGame)
+        (auraId, g1) = S.addPermanent unholy S.bob g0
+        (ratsId, g2) = S.addPermanent rats S.dave g1
+        (giantId, g3) = S.addPermanent giant S.carol g2
+        (spell, board) = S.addHandCard fumble S.alice (S.attach auraId pikerId g3)
+        moving :: Prompt.Prompt r -> r
+        moving p = case p of
+          Prompt.ChoosePermanent _ _ _ offered -> Maybe.fromMaybe (NonEmpty.head offered) (List.find (`elem` offered) [giantId, ratsId])
+          _ -> aimingFirst [(S.alice, [(== Just pikerId) . Recipient.objectOf])] p
+        hosts gs =
+          let after = S.runPure moving (onMain gs) (S.cast S.alice spell >> Stack.resolveTop)
+           in fmap (`S.powerToughnessOf` after) [ratsId, giantId]
+    Spec.assertEqWith s "CR 801.5a at range 1 the Aura goes to dave's Rats and not carol's Giant" (hosts (S.withRange 1 board)) [Just (3, 2), Just (3, 3)]
+    Spec.assertEqWith s "at an unlimited range it goes to the Giant" (hosts board) [Just (1, 1), Just (5, 4)]
 
   -- CR 801.10 for a chosen player: alice's Stuffy Doll chose erin, beside her
   -- at five seats, and bob now controls it. Bob's {T} has the Doll deal 1 to
