@@ -6,6 +6,7 @@ import qualified Pawl.JsonCodec.Common as Common
 import qualified Pawl.Spec as Spec
 import qualified Pawl.Types.AfterObjectTurn as AfterObjectTurn
 import qualified Pawl.Types.AfterTurn as AfterTurn
+import qualified Pawl.Types.BeginningStep as BeginningStep
 import qualified Pawl.Types.Color as Color
 import qualified Pawl.Types.CombatStep as CombatStep
 import qualified Pawl.Types.Compares as Compares
@@ -24,6 +25,7 @@ import qualified Pawl.Types.Phase as Phase
 import qualified Pawl.Types.PhaseSelector as PhaseSelector
 import qualified Pawl.Types.PlayerId as PlayerId
 import qualified Pawl.Types.Quantity as Quantity
+import qualified Pawl.Types.StepBegan as StepBegan
 import qualified Pawl.Types.Timestamp as Timestamp
 import qualified Pawl.Types.While as While
 
@@ -75,13 +77,13 @@ spec s = Spec.describe s "Pawl.Codec.Expiry" $ do
       Expiry.codec
       (Expiry.AtTurnOf (PlayerId.MkPlayerId 1))
       " {\"type\":\"AtTurnOf\",\"value\":1} "
-  -- CR 611.2a / 503: until that player's next upkeep.
-  Spec.it s "AtUpkeepOf carries its player" $
+  -- CR 611.2a: until that step of that player's turn next begins.
+  Spec.it s "AtStepOf carries its step and player" $
     Common.assertCodec
       s
       Expiry.codec
-      (Expiry.AtUpkeepOf (PlayerId.MkPlayerId 2))
-      " {\"type\":\"AtUpkeepOf\",\"value\":2} "
+      (Expiry.AtStepOf (StepBegan.MkStepBegan (Phase.Beginning BeginningStep.Upkeep) (PlayerId.MkPlayerId 2)))
+      " {\"type\":\"AtStepOf\",\"value\":{\"phase\":{\"type\":\"Beginning\",\"value\":{\"type\":\"Upkeep\"}},\"player\":2}} "
   -- CR 611.2a's other phrasing, which needs the turn as well as the player: the
   -- effect ends at the end of the first turn of theirs numbered above it.
   Spec.it s "AtEndOfTurnOf carries its player and turn" $

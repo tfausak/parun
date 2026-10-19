@@ -1,0 +1,49 @@
+{
+  "description": "CR 611.2a Haste Magic cast in alice's end step lets her play the card through bob's end step, until her next one",
+  "note": "Cast once alice's end step has begun, Haste Magic's \"until your next end step\" names the end step of her next turn: the current one began before the duration did, and bob's end step is not hers. She may cast the exiled Lightning Bolt in that same end step, in bob's end step and in her next upkeep, and no longer once her next end step has begun.",
+  "board": {
+    "seats": [
+      {
+        "name": "alice",
+        "battlefield": [
+          { "card": "Mountain", "label": "mountain-1" },
+          { "card": "Mountain", "label": "mountain-2" },
+          { "card": "Mountain", "label": "mountain-3" },
+          { "card": "Hill Giant", "label": "giant" }
+        ],
+        "hand": [{ "card": "Haste Magic", "label": "haste-magic" }],
+        "library": [
+          { "card": "Lightning Bolt" },
+          { "card": "Island" },
+          { "card": "Island" },
+          { "card": "Island" },
+          { "card": "Island" }
+        ]
+      },
+      {
+        "name": "bob",
+        "library": [
+          { "card": "Island" },
+          { "card": "Island" },
+          { "card": "Island" },
+          { "card": "Island" }
+        ]
+      }
+    ],
+    "active": "alice",
+    "step": "PrecombatMain"
+  },
+  "timeline": [
+    { "turn": 1, "step": "EndStep", "player": "alice", "do": { "Cast": { "object": "$haste-magic", "targets": ["$giant"], "mana": ["$mountain-1", "$mountain-2", null] } } },
+    { "turn": 1, "step": "EndStep", "player": "alice", "do": "Pass" },
+    { "turn": 1, "step": "EndStep", "player": "alice", "check": { "View": { "of": "Offered", "player": "alice", "is": ["Pass", "Cast Lightning Bolt", "ActivateManaAbility $mountain-3"] } } },
+    { "turn": 2, "step": "EndStep", "player": "alice", "check": { "View": { "of": "Offered", "player": "alice", "is": ["Pass", "Cast Lightning Bolt", "ActivateManaAbility $mountain-3"] } } },
+    { "turn": 3, "step": "Upkeep", "player": "alice", "check": { "View": { "of": "Offered", "player": "alice", "is": ["Pass", "Cast Lightning Bolt", "ActivateManaAbility $mountain-1", "ActivateManaAbility $mountain-2", "ActivateManaAbility $mountain-3"] } } },
+    { "turn": 3, "step": "DeclareAttackers", "player": "alice", "do": { "Attack": [] } },
+    { "turn": 3, "step": "EndStep", "player": "alice", "check": { "View": { "of": "Offered", "player": "alice", "is": ["Pass", "ActivateManaAbility $mountain-1", "ActivateManaAbility $mountain-2", "ActivateManaAbility $mountain-3"] } } }
+  ],
+  "final": [
+    { "Count": { "player": "alice", "zone": "Exile", "card": "Lightning Bolt", "count": 1 } },
+    { "Life": { "player": "bob", "life": 20 } }
+  ]
+}

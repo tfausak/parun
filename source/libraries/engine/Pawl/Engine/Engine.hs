@@ -2035,11 +2035,12 @@ runStepThatBegan phase = do
   Monad.when (phase == Phase.Beginning BeginningStep.Upkeep) $ do
     _ <- sampleControl
     State.gets Turn.activePlayers >>= Monad.mapM_ advanceControlClock
-    -- CR 611.2a: "until the beginning of your next upkeep" ends here, before
-    -- this step's first priority boundary puts its triggers on the stack (CR
-    -- 503.1a), for every active player (CR 805.4). A skipped upkeep (CR 500.11)
-    -- never begins, so the duration runs on to the next one that does.
-    State.gets Turn.activePlayers >>= Monad.mapM_ (State.modify' . Expiry.sweep . Expiry.UpkeepOf)
+  -- CR 611.2a: "until the beginning of your next upkeep" and "until
+  -- your next end step" end here, before this step's first priority boundary
+  -- puts its triggers on the stack (CR 117.3a), for every active player (CR
+  -- 805.4). After the upkeep's control sample above. A skipped step (CR
+  -- 500.11) never begins, so the duration runs on to the next one that does.
+  State.gets Turn.activePlayers >>= Monad.mapM_ (State.modify' . Expiry.sweep . Expiry.StepOf . StepBegan.MkStepBegan phase)
   runTurnBasedActions phase
   -- Asked BEFORE the CR 704.3 check below. For every step but one the order is
   -- free -- this line is pure there -- and for the cleanup step it is forced: CR

@@ -8,7 +8,8 @@
               {
                 "type": "Blight",
                 "value": {
-                  "type": "AnnouncedX"
+                  "type": "Announced",
+                  "value": "X"
                 }
               },
               {

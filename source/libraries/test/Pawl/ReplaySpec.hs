@@ -11,6 +11,7 @@ import qualified Data.Sequence as Seq
 import qualified Data.Set as Set
 import qualified Data.Text as Text
 import qualified Numeric.Natural as Natural
+import qualified Pawl.Engine.Binding as Binding
 import qualified Pawl.Engine.Decide as Decide
 import qualified Pawl.Engine.Engine as Engine
 import qualified Pawl.Engine.Mana as Mana
@@ -169,7 +170,7 @@ combatReplaySpec s =
         -- the board can pay. A codec that folded the bound into the response
         -- would replay a different game (#417).
         Spec.it s "ChooseX records and replays a Natural" $ do
-          let p = Prompt.ChooseX decider S.alice oid 0 2
+          let p = Prompt.ChooseX decider S.alice oid Binding.variableX 0 2
           Spec.assertEqWith s "round trip" (Replay.decode p (Replay.encode p 4)) (Just (4 :: Natural.Natural))
         -- CR 601.2b / 700.2a: a modal choice (Response.ChoseModes, a Seq
         -- ModeIndex) round-trips through the DecisionLog exactly like every

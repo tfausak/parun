@@ -6,7 +6,8 @@
           "type": "TapPermanents",
           "value": {
             "count": {
-              "type": "AnnouncedX"
+              "type": "Announced",
+              "value": "X"
             },
             "whichPermanents": {
               "type": "And",

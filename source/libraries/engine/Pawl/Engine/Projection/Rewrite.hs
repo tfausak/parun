@@ -2158,7 +2158,7 @@ rewriteDuration pairs duration = case duration of
   Duration.Indefinite -> duration
   Duration.Perpetual -> duration
   Duration.UntilYourNextTurn -> duration
-  Duration.UntilYourNextUpkeep -> duration
+  Duration.UntilYourNextStep _ -> duration
   Duration.UntilEndOfYourNextTurn -> duration
   -- A PlayerRef names its seat structurally -- by slot or by relation -- and
   -- carries no word CR 612.1 can swap, so the reference is left alone.

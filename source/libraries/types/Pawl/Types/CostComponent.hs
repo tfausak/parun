@@ -8,6 +8,7 @@ import qualified Pawl.Types.CountersFromThis as CountersFromThis
 import qualified Pawl.Types.DiscardCards as DiscardCards
 import qualified Pawl.Types.DiscardCause as DiscardCause
 import qualified Pawl.Types.ExileCardsFromGraveyard as ExileCardsFromGraveyard
+import qualified Pawl.Types.ExileCardsFromHand as ExileCardsFromHand
 import qualified Pawl.Types.ExileMaterials as ExileMaterials
 import qualified Pawl.Types.ExilePermanents as ExilePermanents
 import qualified Pawl.Types.Filter as Filter
@@ -175,10 +176,10 @@ data CostComponent keyword
     -- mana value of the permanents CR 601.2c's targets name
     -- (Pawl.Engine.Cost.fixComputed).
     CollectEvidenceOfTargets
-  | -- | CR 406.2 out of a hidden zone / Cadaverous Bloom: the paying player
-    -- exiles one card matching the Filter from their own hand, which the payer
-    -- chooses.
-    ExileCardFromHand (Filter.Filter keyword)
+  | -- | CR 406.2 out of a hidden zone / Cadaverous Bloom, March of Wretched
+    -- Sorrow: the paying player exiles this many cards matching the Filter from
+    -- their own hand, which the payer chooses.
+    ExileCardsFromHand (ExileCardsFromHand.ExileCardsFromHand keyword)
   | -- | CR 701.20a as a cost / Living Destiny: the paying player reveals one card
     -- matching the Filter from their own hand, which the payer chooses. CR 701.20b
     -- leaves the card in the hand, so this component spends nothing.
