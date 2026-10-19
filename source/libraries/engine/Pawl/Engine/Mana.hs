@@ -33,6 +33,7 @@ import qualified Pawl.Engine.SourceContext as SourceContext
 import qualified Pawl.Engine.Subtype as Subtype.Engine
 import qualified Pawl.Extra.Integer as Integer
 import qualified Pawl.Extra.Natural as Natural
+import qualified Pawl.Types.AbilityName as AbilityName
 import qualified Pawl.Types.ActivatedAbility as ActivatedAbility
 import qualified Pawl.Types.ActivationRestriction as ActivationRestriction
 import qualified Pawl.Types.Activations as Activations
@@ -52,7 +53,6 @@ import qualified Pawl.Types.CostAmount as CostAmount
 import qualified Pawl.Types.CostComponent as CostComponent
 import qualified Pawl.Types.Decider as Decider
 import qualified Pawl.Types.Effect as Effect
-import qualified Pawl.Types.ExileLink as ExileLink
 import qualified Pawl.Types.ExilePermanents as ExilePermanents
 import Pawl.Types.Game (Game)
 import Pawl.Types.GameState (GameState)
@@ -615,7 +615,6 @@ pricedOptionsGiven :: Map.Map SlotName.SlotName Binding.Type.Binding -> Map.Map 
 pricedOptionsGiven paid pcs oid gs =
   let tags = productionTagsGiven pcs oid gs
       choices = sourceChoicesOf oid gs
-      lastExiled = lastExiledWith oid gs
       -- CR 106.6, stamped from the instruction that adds the unit: the
       -- restriction is the addition's (CR 106.6a), so every unit one AddMana
       -- produces carries it and a route mixing a restricted addition with an
@@ -639,7 +638,7 @@ pricedOptionsGiven paid pcs oid gs =
       -- CR 106.6's third shape too, under the source's controller -- CR
       -- 113.8's activator for every route but CR 602.1b's "any player may
       -- activate", which Pawl.Engine.Cost.tapForManaWith restamps.
-      unitFor addition manaType =
+      unitFor reader addition manaType =
         ManaUnit.MkManaUnit
           { ManaUnit.manaType = manaType,
             ManaUnit.tags = tags,
@@ -651,7 +650,7 @@ pricedOptionsGiven paid pcs oid gs =
               whenSpent <- ManaAddition.whenSpent addition
               spendTriggerOf controller oid gs whenSpent,
             ManaUnit.sourceChoices = choices,
-            ManaUnit.sourceLastExiled = lastExiled
+            ManaUnit.sourceLastExiled = lastExiledWith reader oid gs
           }
       -- CR 106.3's count, read off the BOARD rather than off the card: Cabal
       -- Coffers' "Add {B} for each Swamp you control" is ONE instruction whose
@@ -708,14 +707,14 @@ pricedOptionsGiven paid pcs oid gs =
                     }
          in fmap
               (\picks -> (build (howManyIn countContext) picks, build (howManyIn pricedContext) picks))
-              (traverse (\(i, addition) -> fmap ((,) i . (,) addition) (additionRuns addition)) [(i, addition) | (i, (_, additions)) <- indexed, addition <- additions])
+              (traverse (\(i, addition) -> fmap ((,) i . (,) addition) (additionRuns (ActivatedAbility.name =<< ability) addition)) [(i, addition) | (i, (_, additions)) <- indexed, addition <- additions])
       -- CR 106.5: an addition of an undefined type -- CR 607.2d's chosen colour
       -- with none chosen -- adds no mana, and the activation is still one the
       -- player may make. Resolve.Effect's AddMana arm answers the same. A
       -- settled run is repeated whole by the count (CR 607.2e's noted mana).
-      additionRuns addition = case produced oid gs (ManaAddition.production addition) of
-        Settles run -> [fmap (unitFor addition) run]
-        Offers types -> fmap (\manaType -> [unitFor addition manaType]) (NonEmpty.toList types)
+      additionRuns reader addition = case produced oid gs (ManaAddition.production addition) of
+        Settles run -> [fmap (unitFor reader addition) run]
+        Offers types -> fmap (\manaType -> [unitFor reader addition manaType]) (NonEmpty.toList types)
    in concatMap expand (manaRoutesOfGiven pcs oid gs)
 
 -- Every unit one option adds, whoever gets it, in printed order within each
@@ -796,7 +795,11 @@ sourceChoicesOf oid gs = case Game.lookupObject oid gs of
 
 -- CR 607.2a's production-time capture, sourceChoicesOf's twin: the last
 -- card exiled with this source that is still in exile, baked onto every unit it
--- adds (Pawl.Types.ManaUnit.sourceLastExiled). "Last" is the latest to enter
+-- adds (Pawl.Types.ManaUnit.sourceLastExiled). Only a card the mana ability
+-- named `reader` is linked to counts (Binding.isLinkedExile), so one the source
+-- acquired with its exiling twin reads that twin's pile alone (CR 607.5).
+-- data/scenarios/mana-source/cr-607-5-myr-welder-s-acquired-ice-cauldron-mana-casts-what-its-pair-exiled.json
+-- is the proof. "Last" is the latest to enter
 -- exile (CR 613.7d's timestamp), so a second card the source exiles replaces the
 -- first, and a card that left exile is no longer one (CR 400.7).
 --
@@ -805,9 +808,9 @@ sourceChoicesOf oid gs = case Game.lookupObject oid gs of
 -- stack before CR 601.2h pays for it, so a spend-time read would never find it in
 -- exile. Mana made while that card is already being cast (CR 601.2g) therefore
 -- names whatever was exiled before it.
-lastExiledWith :: ObjectId -> GameState -> Maybe ObjectId
-lastExiledWith oid gs =
-  let linked card = fmap ExileLink.source (Map.lookup card (GameState.exiledWith gs)) == Just oid
+lastExiledWith :: Maybe AbilityName.AbilityName -> ObjectId -> GameState -> Maybe ObjectId
+lastExiledWith reader oid gs =
+  let linked card = maybe False (Binding.isLinkedExile reader oid) (Map.lookup card (GameState.exiledWith gs))
       enteredAt card = fmap (\obj -> (Object.timestamp obj, card)) (Game.lookupObject card gs)
    in fmap snd (Maybe.listToMaybe (List.sortOn Ord.Down (Maybe.mapMaybe enteredAt (filter linked (Set.toList (GameState.exile gs))))))
 

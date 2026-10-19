@@ -642,7 +642,7 @@ refCounts = concatMap quantityCounts . Resolve.objectRefQuantities
 objectRefPositions :: [(String, Effect.Effect () (), [ObjectRef.ObjectRef])]
 objectRefPositions =
   let plainRiders = EntryRiders.defaultValue
-      handChoice = ChosenCardInHand.MkChosenCardInHand (plantedPlayer "xh") (Filter.Type.And [])
+      handChoice = ChosenCardInHand.MkChosenCardInHand (plantedPlayer "xh") (Filter.Type.And []) (Quantity.Type.Literal 1)
    in [ ("deal-damage", Effect.DealDamage (DealDamage.MkDealDamage (Seq.fromList [DamagePart.MkDamagePart (plantedRef "dd1") (Quantity.Type.Literal 1), DamagePart.MkDamagePart (plantedRef "dd2") (Quantity.Type.Literal 1)]) Nothing Nothing), [plantedRef "dd1", plantedRef "dd2"]),
         ("modify-target", Effect.ModifyTarget (ModifyTarget.MkModifyTarget Duration.UntilEndOfTurn (Modification.GainKeyword Keyword.Flying) (plantedRef "mt") Nothing), [plantedRef "mt"]),
         ("restart-game", Effect.RestartGame (Just (plantedRef "rg")), [plantedRef "rg"]),
@@ -795,7 +795,7 @@ objectRefPlayerRefPositions =
   [ ("top-of-library", ObjectRef.TopOfLibrary (TopOfLibrary.MkTopOfLibrary (plantedPlayer "tl") (Quantity.Type.Literal 1)), [plantedPlayer "tl"]),
     ("top-of-library-until", ObjectRef.TopOfLibraryUntil (TopOfLibraryUntil.MkTopOfLibraryUntil (plantedPlayer "tu") (Filter.Type.And []) (Quantity.Type.Literal 1)), [plantedPlayer "tu"]),
     ("top-of-graveyard", ObjectRef.TopOfGraveyard (plantedPlayer "tg"), [plantedPlayer "tg"]),
-    ("chosen-card-in-hand", ObjectRef.ChosenCardInHand (ChosenCardInHand.MkChosenCardInHand (plantedPlayer "ch") (Filter.Type.And [])), [plantedPlayer "ch"]),
+    ("chosen-card-in-hand", ObjectRef.ChosenCardInHand (ChosenCardInHand.MkChosenCardInHand (plantedPlayer "ch") (Filter.Type.And []) (Quantity.Type.Literal 1)), [plantedPlayer "ch"]),
     ("random-card-in-hand", ObjectRef.RandomCardInHand (RandomCardInHand.MkRandomCardInHand (plantedPlayer "rh") (Filter.Type.And []) (Quantity.Type.Literal 1)), [plantedPlayer "rh"]),
     ("random-card-in-library", ObjectRef.RandomCardInLibrary (RandomCardInLibrary.MkRandomCardInLibrary (plantedPlayer "rl") (Filter.Type.And []) (Quantity.Type.Literal 1)), [plantedPlayer "rl"]),
     -- And the two CHOOSERS, which name a seat without counting per seat --
@@ -4043,14 +4043,15 @@ objectRefFilters ref = case ref of
   -- nothing at all to lint: its PlayerRef names players.
   ObjectRef.TopOfGraveyard _ -> []
   -- Port of Karfell's "a creature card from your graveyard"; its ZoneScope and
-  -- its Chooser name players, so the Filter is the whole of what there is to
-  -- lint, exactly as for the graveyard sweep above.
-  ObjectRef.ChosenCardInGraveyard (ChosenCardInGraveyard.MkChosenCardInGraveyard _ _ f _) -> unframed [f]
+  -- its Chooser name players, so the Filter is linted as for the graveyard
+  -- sweep above, and Fall of the Thran's count goes through refFilters beside
+  -- it, TopOfLibrary's route above.
+  ObjectRef.ChosenCardInGraveyard (ChosenCardInGraveyard.MkChosenCardInGraveyard _ _ f _) -> unframed [f] <> refFilters ref
   -- Elvish Piper's "a creature card from your hand"; its PlayerRef names the
-  -- choosers, who are also the hands' owners (CR 402.3), so the Filter is the
-  -- whole of what there is to lint -- the chosen graveyard card's arm's answer,
-  -- for its reason.
-  ObjectRef.ChosenCardInHand (ChosenCardInHand.MkChosenCardInHand _ f) -> unframed [f]
+  -- choosers, who are also the hands' owners (CR 402.3), so the Filter and
+  -- Aquatic Subtlety's count are what there is to lint -- the chosen graveyard
+  -- card's arm's answer, for its reason.
+  ObjectRef.ChosenCardInHand (ChosenCardInHand.MkChosenCardInHand _ f _) -> unframed [f] <> refFilters ref
   -- Commune with the Gods' "a creature or enchantment card from among them"; its
   -- slot names the group and holds no characteristic, so the Filter is the whole
   -- of what there is to lint -- the two chosen arms above's answer.

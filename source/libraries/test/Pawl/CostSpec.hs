@@ -3501,7 +3501,7 @@ springleafDrumSpec s registry = Spec.describe s "Springleaf Drum" $ do
         -- The ONE thing the pair varies: both creatures tapped, which leaves
         -- the criterion's `Not IsTapped` with nothing to offer.
         unpayable = S.tapObject spotId (S.tapObject giantId payable)
-        component = CostComponent.TapPermanents (TapPermanents.MkTapPermanents 1 (Filter.Type.And [Filter.Type.HasCardType CardType.Creature, Filter.Type.ControlledBy PlayerRelation.You, Filter.Type.Not Filter.Type.IsTapped]) False)
+        component = CostComponent.TapPermanents (TapPermanents.MkTapPermanents (CostAmount.Fixed 1) (Filter.Type.And [Filter.Type.HasCardType CardType.Creature, Filter.Type.ControlledBy PlayerRelation.You, Filter.Type.Not Filter.Type.IsTapped]) False)
     Spec.assertBool s (Cost.canPayComponent Map.empty S.alice drumId component payable) "two untapped creatures pay"
     Spec.assertBool s (not (Cost.canPayComponent Map.empty S.alice drumId component unpayable)) "two tapped ones do not"
     Spec.assertEqWith s "and the ability adds no mana" (pooledFrom S.identityAnswer drumId unpayable) 0
@@ -5136,7 +5136,7 @@ veneratedLoxodonSpec s registry = Spec.describe s "Venerated Loxodon" $ do
             }
         -- The entry naming one colored tap and two generic taps per keyword;
         -- the improvise prompt is the one offering no Piker.
-        tapCounts candidate = List.sort [TapPermanents.count t | CostComponent.TapPermanents t <- Cost.Type.components candidate]
+        tapCounts candidate = List.sort [n | CostComponent.TapPermanents (TapPermanents.MkTapPermanents (CostAmount.Fixed n) _ _) <- Cost.Type.components candidate]
         answer :: Prompt.Prompt r -> r
         answer p = case p of
           Prompt.ChooseCost _ _ _ candidates -> Cost.firstOffered (filter ((\c -> Cost.Type.mana c == Just (ManaCost.MkManaCost []) && tapCounts c == [1, 2, 2]) . CandidateCost.cost) candidates)

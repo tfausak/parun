@@ -1,0 +1,70 @@
+{
+  "description": "CR 607.2a / 607.5 Wormfang Crab returns only what its own trigger exiled, not what the ability Steward of the Harvest gave it exiled",
+  "note": "Steward of the Harvest exiles Scavenger Grounds, so the Crab has its \"Exile all graveyards\". The Crab's own trigger exiles a Forest; the acquired ability then exiles bob's Grizzly Bears and the Desert it sacrificed. Unsummon makes the Crab leave: its printed return is linked to its printed exile alone, so the Forest comes back and the Bears and the Desert stay in exile.",
+  "board": {
+    "seats": [
+      {
+        "name": "alice",
+        "battlefield": [
+          { "card": "Forest", "label": "forest" },
+          { "card": "Forest", "label": "forest-2" },
+          { "card": "Forest", "label": "forest-3" },
+          { "card": "Forest", "label": "forest-4" },
+          { "card": "Island", "label": "island" },
+          { "card": "Island", "label": "island-2" },
+          { "card": "Island", "label": "island-3" },
+          { "card": "Island", "label": "island-4" },
+          { "card": "Desert", "label": "desert" }
+        ],
+        "hand": [
+          { "card": "Steward of the Harvest", "label": "steward" },
+          { "card": "Wormfang Crab", "label": "crab" },
+          { "card": "Unsummon", "label": "unsummon" }
+        ],
+        "graveyard": [
+          { "card": "Scavenger Grounds", "label": "grounds" }
+        ],
+        "library": [
+          { "card": "Hill Giant" },
+          { "card": "Hill Giant" },
+          { "card": "Hill Giant" }
+        ]
+      },
+      {
+        "name": "bob",
+        "graveyard": [
+          { "card": "Grizzly Bears", "label": "bears" }
+        ],
+        "library": [
+          { "card": "Hill Giant" },
+          { "card": "Hill Giant" },
+          { "card": "Hill Giant" }
+        ]
+      }
+    ],
+    "active": "alice",
+    "step": "PrecombatMain"
+  },
+  "timeline": [
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": { "Cast": { "object": "$steward", "mana": ["$forest", "$forest-2", "$forest-3", "$forest-4", null] } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass" },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": { "Answer": { "prompt": "AnnounceTargets", "with": [["target", 1]] } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": { "ChooseTargets": { "target": ["$grounds"] } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass" },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "check": { "Count": { "player": "alice", "zone": "Exile", "card": "Scavenger Grounds", "count": 1 } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": { "Cast": { "object": "$crab", "mana": ["$island", "$island-2", "$island-3", "$island-4", null] } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass" },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass" },
+    { "turn": 1, "step": "PrecombatMain", "player": "bob", "do": { "Answer": { "prompt": "ChoosePermanent", "with": "$forest" } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "check": { "Count": { "player": "alice", "zone": "Exile", "card": "Forest", "count": 1 } } },
+    { "turn": 3, "step": "PrecombatMain", "player": "alice", "do": { "Activate": { "object": "Wormfang Crab", "ability": 1, "mana": ["Forest", "Forest#2", null], "costOrder": [0, 1] } } },
+    { "turn": 3, "step": "PrecombatMain", "player": "alice", "do": "Pass" },
+    { "turn": 3, "step": "PrecombatMain", "player": "alice", "check": { "Count": { "player": "bob", "zone": "Exile", "card": "Grizzly Bears", "count": 1 } } },
+    { "turn": 3, "step": "PrecombatMain", "player": "alice", "do": { "Cast": { "object": "$unsummon", "mana": ["Island", null], "targets": ["Wormfang Crab"] } } },
+    { "turn": 3, "step": "PrecombatMain", "player": "alice", "do": "Pass" },
+    { "turn": 3, "step": "PrecombatMain", "player": "alice", "do": "Pass" },
+    { "turn": 3, "step": "PrecombatMain", "player": "alice", "check": { "Count": { "player": "bob", "zone": "Exile", "card": "Grizzly Bears", "count": 1 } } },
+    { "turn": 3, "step": "PrecombatMain", "player": "alice", "check": { "Count": { "player": "alice", "zone": "Exile", "card": "Desert", "count": 1 } } },
+    { "turn": 3, "step": "PrecombatMain", "player": "alice", "check": { "Count": { "player": "alice", "zone": "Battlefield", "card": "Forest", "count": 4 } } }
+  ]
+}

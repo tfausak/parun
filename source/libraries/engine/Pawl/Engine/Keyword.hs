@@ -2239,7 +2239,7 @@ station =
               { -- CR 118.5, crew's note above: no mana part is `Just` an empty one
                 -- and not the Nothing that means unpayable.
                 Cost.mana = Just (ManaCost.MkManaCost []),
-                Cost.components = [CostComponent.TapPermanents (TapPermanents.MkTapPermanents 1 criterion False)]
+                Cost.components = [CostComponent.TapPermanents (TapPermanents.MkTapPermanents (CostAmount.Fixed 1) criterion False)]
               },
           ActivatedAbility.modal =
             Mint.oneMode (Seq.singleton load),
@@ -2530,7 +2530,7 @@ reconfigureOff cost =
 -- named and never TARGETED (CR 115.10a).
 auraSwap :: Cost Keyword -> ActivatedAbility Card (GrantedAbility.GrantedAbility Card)
 auraSwap cost =
-  let chosen = ChosenCardInHand.MkChosenCardInHand (PlayerRef.Relative PlayerRelation.You) (Filter.HasSubtype Subtype.Aura)
+  let chosen = ChosenCardInHand.MkChosenCardInHand (PlayerRef.Relative PlayerRelation.You) (Filter.HasSubtype Subtype.Aura) (Quantity.Literal 1)
       effect = Effect.ExchangeCardZones (ExchangeCardZones.MkExchangeCardZones (ObjectRef.InSlot Binding.triggerSource) (ObjectRef.ChosenCardInHand chosen))
    in ActivatedAbility.MkActivatedAbility
         { ActivatedAbility.cost = cost,
@@ -3754,7 +3754,7 @@ conspireCost =
       Cost.components =
         [ CostComponent.TapPermanents
             ( TapPermanents.MkTapPermanents
-                2
+                (CostAmount.Fixed 2)
                 ( Filter.And
                     [ Filter.HasCardType CardType.Creature,
                       Filter.Not Filter.IsTapped,

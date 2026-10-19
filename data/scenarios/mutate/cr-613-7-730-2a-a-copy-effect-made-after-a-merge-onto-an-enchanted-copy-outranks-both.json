@@ -1,0 +1,69 @@
+{
+  "description": "CR 613.7/730.2a a copy effect made after a merge onto Metamorphic Alteration's copy outranks both (Dimir Doppelganger)",
+  "note": "Alice casts Metamorphic Alteration on her Dimir Doppelganger choosing the Doppelganger itself, so it keeps its ability, and Cubwarden mutates over it, so the merged permanent is Cubwarden with the Doppelganger's ability from under (CR 702.140e). She activates that ability at a Hill Giant card in her graveyard: its copy effect is later than both the Aura's and the merge's (CR 613.7), so layer 1 leaves the Hill Giant, though the Aura still enchants it. Distinct printed pairs: the Doppelganger's 0/2, Cubwarden's 3/5, the Giant's 3/3.",
+  "board": {
+    "seats": [
+      {
+        "name": "alice",
+        "battlefield": [
+          { "card": "Goblin Piker", "label": "piker" },
+          { "card": "Dimir Doppelganger", "label": "doppelganger" },
+          { "card": "Island", "label": "island-1", "ready": true },
+          { "card": "Island", "label": "island-2", "ready": true },
+          { "card": "Island", "label": "island-3", "ready": true },
+          { "card": "Island", "label": "island-4", "ready": true },
+          { "card": "Swamp", "label": "swamp", "ready": true },
+          { "card": "Plains", "label": "plains-1", "ready": true },
+          { "card": "Plains", "label": "plains-2", "ready": true },
+          { "card": "Plains", "label": "plains-3", "ready": true },
+          { "card": "Plains", "label": "plains-4", "ready": true }
+        ],
+        "hand": [
+          { "card": "Metamorphic Alteration", "label": "alteration" },
+          { "card": "Cubwarden", "label": "cubwarden" }
+        ],
+        "graveyard": [{ "card": "Hill Giant", "label": "giant" }],
+        "library": [{ "card": "Island" }, { "card": "Island" }]
+      },
+      {
+        "name": "bob",
+        "library": [{ "card": "Island" }, { "card": "Island" }]
+      }
+    ],
+    "active": "alice",
+    "step": "PrecombatMain"
+  },
+  "timeline": [
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": { "Cast": { "object": "$alteration", "targets": ["$doppelganger"], "mana": ["$island-1", "$island-2", null] } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass" },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": { "Answer": { "prompt": "ChoosePermanent", "with": "$doppelganger" } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": { "Answer": { "prompt": "ChooseMutateSide", "with": "Over" } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": { "Answer": { "prompt": "OrderTimestamps", "with": [0, 1] } } },
+    {
+      "turn": 1,
+      "step": "PrecombatMain",
+      "player": "alice",
+      "do": {
+        "Cast": {
+          "object": "$cubwarden",
+          "targets": ["$doppelganger"],
+          "cost": [
+            { "type": "Generic", "value": 2 },
+            { "type": "OfType", "value": { "type": "Colored", "value": { "type": "White" } } },
+            { "type": "OfType", "value": { "type": "Colored", "value": { "type": "White" } } }
+          ],
+          "mana": ["$plains-1", "$plains-2", "$plains-3", "$plains-4", null]
+        }
+      }
+    },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass" },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass" },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "check": { "Names": { "object": "$doppelganger", "names": ["Cubwarden"] } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "check": { "PowerToughness": { "object": "$doppelganger", "power": 3, "toughness": 5 } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": { "Activate": { "object": "$doppelganger", "targets": ["$giant"], "mana": ["$island-3", "$island-4", "$swamp"] } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass" },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "check": { "Names": { "object": "$doppelganger", "names": ["Hill Giant"] } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "check": { "PowerToughness": { "object": "$doppelganger", "power": 3, "toughness": 3 } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "check": { "View": { "of": "AttachedTo", "object": "Metamorphic Alteration", "is": "$doppelganger" } } }
+  ]
+}

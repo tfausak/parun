@@ -6,6 +6,7 @@ import qualified Pawl.JsonCodec.Codec as Codec
 import qualified Pawl.JsonCodec.Common as Common
 import qualified Pawl.Spec as Spec
 import qualified Pawl.Types.CardType as CardType
+import qualified Pawl.Types.CostAmount as CostAmount
 import qualified Pawl.Types.Filter as Filter
 import qualified Pawl.Types.Keyword as Keyword
 import qualified Pawl.Types.TapPermanents as TapPermanents
@@ -24,22 +25,34 @@ spec s = Spec.describe s "Pawl.Codec.TapPermanents" $ do
       s
       codec
       ( TapPermanents.MkTapPermanents
-          { TapPermanents.count = 1,
+          { TapPermanents.count = CostAmount.Fixed 1,
             TapPermanents.whichPermanents = Filter.HasCardType CardType.Creature,
             TapPermanents.sharingACreatureType = False
           }
       )
-      " {\"count\":1,\"whichPermanents\":{\"type\":\"HasCardType\",\"value\":{\"type\":\"Creature\"}}} "
+      " {\"count\":{\"type\":\"Fixed\",\"value\":1},\"whichPermanents\":{\"type\":\"HasCardType\",\"value\":{\"type\":\"Creature\"}}} "
   -- Weight of Conscience's pair, which must share a creature type (CR 205.3m).
   Spec.it s "sharingACreatureType" $
     Common.assertCodec
       s
       codec
       ( TapPermanents.MkTapPermanents
-          { TapPermanents.count = 2,
+          { TapPermanents.count = CostAmount.Fixed 2,
             TapPermanents.whichPermanents = Filter.HasCardType CardType.Creature,
             TapPermanents.sharingACreatureType = True
           }
       )
-      " {\"count\":2,\"whichPermanents\":{\"type\":\"HasCardType\",\"value\":{\"type\":\"Creature\"}},\"sharingACreatureType\":true} "
+      " {\"count\":{\"type\":\"Fixed\",\"value\":2},\"whichPermanents\":{\"type\":\"HasCardType\",\"value\":{\"type\":\"Creature\"}},\"sharingACreatureType\":true} "
+  -- Explosive Singularity's "tap any number", announced at CR 601.2b.
+  Spec.it s "AnnouncedX" $
+    Common.assertCodec
+      s
+      codec
+      ( TapPermanents.MkTapPermanents
+          { TapPermanents.count = CostAmount.AnnouncedX,
+            TapPermanents.whichPermanents = Filter.HasCardType CardType.Creature,
+            TapPermanents.sharingACreatureType = False
+          }
+      )
+      " {\"count\":{\"type\":\"AnnouncedX\"},\"whichPermanents\":{\"type\":\"HasCardType\",\"value\":{\"type\":\"Creature\"}}} "
   Spec.it s "has a schema" $ Common.assertHasSchema s codec

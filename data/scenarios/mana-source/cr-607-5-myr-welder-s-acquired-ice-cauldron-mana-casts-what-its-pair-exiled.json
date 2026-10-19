@@ -1,0 +1,56 @@
+{
+  "description": "CR 607.5: the Ice Cauldron mana ability Myr Welder acquired casts the card the acquired exile ability exiled, not the artifact the Welder imprinted after it",
+  "note": "The Welder imprints Ice Cauldron, uses the Cauldron's acquired ability to exile Balduvian Bears from hand, then imprints Ornithopter, which is now the last card exiled with the Welder. The acquired mana ability is linked to the acquired exile ability alone, so its {G} still reaches the Bears; the Forest's {G} is the only other mana, so Offered shows whether it does.",
+  "board": {
+    "seats": [
+      {
+        "name": "alice",
+        "battlefield": [
+          { "card": "Myr Welder", "label": "welder", "ready": true },
+          { "card": "Forest", "label": "forest", "ready": true }
+        ],
+        "hand": [
+          { "card": "Balduvian Bears", "label": "bears" }
+        ],
+        "graveyard": [
+          { "card": "Ice Cauldron", "label": "cauldron" },
+          { "card": "Ornithopter", "label": "ornithopter" }
+        ],
+        "library": [
+          { "card": "Hill Giant" },
+          { "card": "Hill Giant" },
+          { "card": "Hill Giant" },
+          { "card": "Hill Giant" },
+          { "card": "Hill Giant" }
+        ]
+      },
+      {
+        "name": "bob",
+        "library": [
+          { "card": "Hill Giant" },
+          { "card": "Hill Giant" },
+          { "card": "Hill Giant" },
+          { "card": "Hill Giant" },
+          { "card": "Hill Giant" }
+        ]
+      }
+    ],
+    "active": "alice",
+    "step": "PrecombatMain"
+  },
+  "timeline": [
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": { "Activate": { "object": "$welder", "ability": 0, "mana": [null], "targets": ["$cauldron"] } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass" },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "check": { "Count": { "player": "alice", "zone": "Exile", "card": "Ice Cauldron", "count": 1 } } },
+    { "turn": 3, "step": "PrecombatMain", "player": "alice", "do": { "Activate": { "object": "$welder", "ability": 1, "mana": ["$forest"], "x": 1 } } },
+    { "turn": 3, "step": "PrecombatMain", "player": "alice", "do": "Pass" },
+    { "turn": 3, "step": "PrecombatMain", "player": "alice", "do": { "Answer": { "prompt": "ChooseOptional", "with": { "type": "Exercises" } } } },
+    { "turn": 3, "step": "PrecombatMain", "player": "alice", "do": { "Answer": { "prompt": "ChooseCardInHand", "with": "$bears" } } },
+    { "turn": 3, "step": "PrecombatMain", "player": "alice", "check": { "Count": { "player": "alice", "zone": "Exile", "card": "Balduvian Bears", "count": 1 } } },
+    { "turn": 5, "step": "PrecombatMain", "player": "alice", "do": { "Activate": { "object": "$welder", "ability": 0, "mana": [null], "targets": ["$ornithopter"] } } },
+    { "turn": 5, "step": "PrecombatMain", "player": "alice", "do": "Pass" },
+    { "turn": 5, "step": "PrecombatMain", "player": "alice", "check": { "Count": { "player": "alice", "zone": "Exile", "card": "Ornithopter", "count": 1 } } },
+    { "turn": 7, "step": "PrecombatMain", "player": "alice", "do": { "Take": { "action": "ActivateManaAbility $welder", "costOrder": [0, 1] } } },
+    { "turn": 7, "step": "PrecombatMain", "player": "alice", "check": { "View": { "of": "Offered", "player": "alice", "is": ["Pass", "Cast Balduvian Bears", "ActivateManaAbility $forest"] } } }
+  ]
+}

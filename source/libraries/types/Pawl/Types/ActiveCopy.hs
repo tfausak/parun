@@ -60,7 +60,8 @@ data ActiveCopy = MkActiveCopy
   { source :: ObjectId.ObjectId,
     timestamp :: Timestamp.Timestamp,
     expiry :: Expiry.Expiry,
-    -- | The objects that are copies: a fixed set, or the source's host.
+    -- | The objects that are copies: a fixed set, the source's host, or one
+    -- attachment of it.
     covers :: CopyCoverage.CopyCoverage,
     -- | CR 707.2: the copiable values they took on, with any later merge
     -- applied over them (CR 730.2a).

@@ -43,6 +43,7 @@ import qualified Pawl.Engine.Card as Card
 import qualified Pawl.Engine.Condition as Condition
 import qualified Pawl.Engine.Count as Count
 import qualified Pawl.Engine.Decide as Decide
+import qualified Pawl.Engine.Deploy as Deploy
 import qualified Pawl.Engine.Filter as Filter
 import qualified Pawl.Engine.Game as Game
 import qualified Pawl.Engine.Mint as Mint
@@ -56,6 +57,7 @@ import qualified Pawl.Engine.SourceContext as SourceContext
 import qualified Pawl.Engine.Turn as Turn
 import qualified Pawl.Extra.Int as Int
 import qualified Pawl.Extra.Natural as Natural
+import qualified Pawl.Types.ActivatedAbility as ActivatedAbility
 import qualified Pawl.Types.ActiveCopy as ActiveCopy
 import qualified Pawl.Types.ActiveReplacement as ActiveReplacement
 import qualified Pawl.Types.AsCopy as AsCopy
@@ -135,7 +137,6 @@ import qualified Pawl.Types.PlayersDealtDamage as PlayersDealtDamage
 import Pawl.Types.Prevention (Prevention)
 import qualified Pawl.Types.Prevention as Prevention
 import qualified Pawl.Types.PreventionRider as PreventionRider
-import qualified Pawl.Types.Printing as Printing
 import qualified Pawl.Types.ProjectedCharacteristics as PC
 import qualified Pawl.Types.ProliferateR as ProliferateR
 import qualified Pawl.Types.ProliferateRewrite as ProliferateRewrite
@@ -819,8 +820,8 @@ matchesPrinted viewOf gs event candidate =
         -- candidate's "you". No producer today names an opponent here.
         --
         -- And WHAT is being created (Queen Allenal of Ruadach's "creature
-        -- tokens"): "one or more" is ANY lot matching, each judged as its token
-        -- would exist (CR 614.12) since none is minted yet.
+        -- tokens"): "one or more" is ANY lot matching, each judged off what the
+        -- creating effect gives its token (CR 111.3) since none is minted yet.
         (ReplacementEffect.TokenR (TokenR.MkTokenR pat _ _), ProposedEvent.WouldCreateTokens pid lots) ->
           matchesPlayer gs candidate (TokenPattern.whose pat) pid
             && any (matchesTokenLot gs (candidateContext gs candidate) (TokenPattern.whatToken pat) pid) lots
@@ -1775,57 +1776,39 @@ candidateContext gs candidate =
           { Filter.carrierChosenPlayer = Game.currentChoice Object.chosenPlayers source gs >>= Map.lookup PlayerChoice.AsEnters
           }
 
--- CR 614.12 for a token that does not exist yet: a lot's token is judged off
--- the characteristics it would have on the battlefield -- its given text, or
--- for CR 707.1's copy token the copiable values it takes (CR 707.2). The
--- controller is the event's player (CR 111.2), which is what lets a lot say
--- "under your control" on the Filter axis too.
+-- A lot's token is judged off the characteristics the creating effect gives it
+-- (CR 111.3) -- its given text, or for CR 707.1's copy token the copiable values
+-- it takes (CR 707.2). The controller is the event's player (CR 111.2), which is
+-- what lets a lot say "under your control" on the Filter axis too.
 --
--- A CR 604.2 "as long as" clause of the token's activated ability is asked of
--- the token as it would exist (wouldExist), so a lapsed one is withheld as
--- Count.snapshotRoster withholds a sampled one. data/scenarios/replacement's
--- Synthetic Minting Ledger pair proves the copy arm; the given-text arm is a
--- regression fence, no token in data/cards/ being given such a clause.
+-- NOT as it would exist on the battlefield: CR 614.12 reads that for the
+-- replacements of CR 614.1c-d, which modify how a permanent enters, and a token
+-- replacement modifies its creation instead (Divine Visitation's March of the
+-- Machines ruling, Draconic Visitor's Mycosynth Lattice one). So the token's own
+-- static abilities, functioning only on the battlefield (CR 113.6, 604.2), grant
+-- it nothing yet: every "as long as" clause of its activated abilities is
+-- withheld, whatever the board or the creation's status would make of it.
+-- data/scenarios/replacement's Synthetic Minting Ledger pair proves the copy
+-- arm; the given-text arm is a regression fence, no token in data/cards/ being
+-- given such a clause.
 matchesTokenLot :: GameState -> Filter.Context -> Filter.Type.Filter Keyword.Type.Keyword -> PlayerId -> TokenLot.TokenLot -> Bool
 matchesTokenLot gs context filter_ pid lot =
-  let (token, board) = wouldExist gs pid lot
+  let deploys = Count.deployIn gs Zone.Battlefield
+      clausesOf = Set.fromList . Maybe.mapMaybe ActivatedAbility.condition
       view = case TokenLot.copy lot of
         -- No OWNER, matching the viewOfCard branch below, which has no object to
         -- read CR 108.3 off either: a lot that named one would answer two ways
         -- for the same token depending on whether it was a copy.
         Just snapshot ->
-          Count.viewOfSnapshot (Count.deployIn gs Zone.Battlefield) (Just pid) Nothing True Map.empty Zone.Battlefield Zone.Battlefield (Projection.lapsedGrantsOf (Projection.fullView board) snapshot token board) snapshot
+          Count.viewOfSnapshot deploys (Just pid) Nothing True Map.empty Zone.Battlefield Zone.Battlefield (clausesOf (Count.abilitiesOf (Deploy.grants deploys snapshot) snapshot)) snapshot
         -- CR 111.1: what the lot describes is a TOKEN whichever way its
         -- characteristics were given, so `token` is True here as it is in the
         -- copy branch above. Projection.viewOfCard answers False, describing a
         -- printed face rather than the object this lot would mint.
         Nothing ->
           let face = NonEmpty.head (Card.Type.faces (TokenLot.card lot))
-              lapsed = Projection.lapsedAmong (Projection.fullView board) token board (Projection.printedAbilitiesOf face)
-           in (Projection.viewOfCardLapsed lapsed face) {Filter.controller = Just pid, Filter.token = True}
+           in (Projection.viewOfCardLapsed (clausesOf (Projection.printedAbilitiesOf face)) face) {Filter.controller = Just pid, Filter.token = True}
    in Filter.matches context view filter_
-
--- CR 614.12: the board with the token a lot would mint ON it, under the id it
--- would get. The rule reads the permanent's characteristics as it would exist
--- on the battlefield, its own static abilities' effects included, so a clause
--- deciding whether it has an ability is asked with the token counted: a copy
--- made a Demon by Maskwood Nexus satisfies its own "as long as you control a
--- Demon". That is a CHARACTERISTIC read, where Projection.printedRowLives' is a
--- replacement's own condition, which takes membership off boardAsEntering and
--- leaves the entering permanent out. The other entering permanents stay out
--- here too. createTokens mints the same object (Game.tokenOfLot).
--- data/scenarios/replacement's Villainous Ogre pair proves the token counted.
---
--- Not implemented: the creation's own status, so a clause reading whether
--- the token is tapped, attacking or has counters sees it untapped and bare
--- (#5183).
-wouldExist :: GameState -> PlayerId -> TokenLot.TokenLot -> (ObjectId, GameState)
-wouldExist gs pid lot =
-  let (token, gs1) = Game.freshObjectId gs
-      (ts, gs2) = Game.freshTimestamp gs1
-      (printing, gs3) = Game.intern (Printing.ofCard (TokenLot.card lot)) gs2
-      entering = Projection.boardAsEntering gs3 {GameState.objects = Map.insert token (Game.tokenOfLot pid printing lot ts) (GameState.objects gs3)}
-   in (token, Game.insertIntoZone Zone.Battlefield LibraryPosition.defaultValue pid token entering)
 
 -- The counters `oid` is so far entering with, empty outside an entry (see
 -- GameState.enteringCounters).
@@ -2621,6 +2604,7 @@ applyEntryOption oid option gs =
       fixed row = case ActiveCopy.covers row of
         CopyCoverage.These oids -> Just (row, oids)
         CopyCoverage.SourceHost _ -> Nothing
+        CopyCoverage.Attachment _ -> Nothing
       covering = List.sortOn (Ord.Down . ActiveCopy.timestamp . fst) (filter (Set.member oid . snd) (Maybe.mapMaybe fixed (GameState.copyEffects gs)))
    in case covering of
         (newest, oids) : _ ->
