@@ -302,7 +302,7 @@ unseen view = do
   let skipped = case before of
         Just (t, n) | t == turn -> n
         _ -> 0
-  pure (fmap Render.event (List.genericDrop skipped entries))
+  pure (Maybe.mapMaybe (Render.event view) (List.genericDrop skipped entries))
 
 say :: (Monad m) => Terminal.Terminal m -> Text.Text -> Client m ()
 say terminal = lift2 . Terminal.say terminal
