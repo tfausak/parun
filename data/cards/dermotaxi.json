@@ -73,7 +73,12 @@
                           "original": {
                             "type": "OfObject",
                             "value": {
-                              "type": "EachCardExiledWithSource"
+                              "type": "EachCardInExiledPile",
+                              "value": {
+                                "pile": {
+                                  "type": "OwnAbilities"
+                                }
+                              }
                             }
                           },
                           "subject": {

@@ -1,5 +1,6 @@
 module Pawl.Codec.Quantity where
 
+import qualified Pawl.Codec.AgainstExiledPile as AgainstExiledPile
 import qualified Pawl.Codec.AgainstLastCardExiledWith as AgainstLastCardExiledWith
 import qualified Pawl.Codec.AgainstSlot as AgainstSlot
 import qualified Pawl.Codec.CastFrom as CastFrom
@@ -34,8 +35,8 @@ import qualified Pawl.Types.Quantity as Quantity
 -- writes a bare object, so the tag that picks this arm has to come from the
 -- dispatching type, which is this one.
 --
--- RECURSIVE, and directly so: @Negate@ and @AgainstCardsExiledWith@ name
--- 'codec' itself, and @Plus@, @Halved@, @AgainstSlot@ and @Count@ each pass it to a payload codec that is
+-- RECURSIVE, and directly so: @Negate@ names
+-- 'codec' itself, and @Plus@, @Halved@, @AgainstSlot@, @AgainstExiledPile@ and @Count@ each pass it to a payload codec that is
 -- parametric in the quantity for exactly that reason. That ties the same knot
 -- Pawl.Codec.Filter already ties at the value level, and
 -- Pawl.JsonSchema.Define.define breaks it at the schema level by registering the
@@ -222,13 +223,11 @@ codec =
       -- A slot and a whole Quantity, in that order: which object to aim at, then
       -- what to read off it.
       Arm.payload "AgainstSlot" (AgainstSlot.codec codec) Quantity.AgainstSlot (\x -> case x of Quantity.AgainstSlot y -> Just y; _ -> Nothing),
-      -- CR 607.2a: no slot to name, so the payload IS the whole arm -- what to
-      -- read off each card the source exiled.
-      Arm.payload "AgainstCardsExiledWith" codec Quantity.AgainstCardsExiledWith (\x -> case x of Quantity.AgainstCardsExiledWith y -> Just y; _ -> Nothing),
+      -- CR 607.2a: a pile and a whole Quantity, in that order: which linked
+      -- cards to aim at, then what to read off each.
+      Arm.payload "AgainstExiledPile" (AgainstExiledPile.codec codec) Quantity.AgainstExiledPile (\x -> case x of Quantity.AgainstExiledPile y -> Just y; _ -> Nothing),
       -- CR 607.2a / 613.7d: which linked card to aim at, then what to read off it.
       Arm.payload "AgainstLastCardExiledWith" (AgainstLastCardExiledWith.codec codec) Quantity.AgainstLastCardExiledWith (\x -> case x of Quantity.AgainstLastCardExiledWith y -> Just y; _ -> Nothing),
-      -- CR 702.167c: the arm above's shape, over the craft materials alone.
-      Arm.payload "AgainstCraftMaterials" codec Quantity.AgainstCraftMaterials (\x -> case x of Quantity.AgainstCraftMaterials y -> Just y; _ -> Nothing),
       -- CR 702.184c, engine-only: Intensity's shape, nothing on the wire.
       Arm.nullary "StationMeasure" Quantity.StationMeasure
     ]
@@ -312,8 +311,6 @@ tagOf x = case x of
   Quantity.WasCastFrom {} -> "WasCastFrom"
   Quantity.BlockersBeyondFirst {} -> "BlockersBeyondFirst"
   Quantity.AgainstSlot {} -> "AgainstSlot"
-  Quantity.AgainstCardsExiledWith {} -> "AgainstCardsExiledWith"
+  Quantity.AgainstExiledPile {} -> "AgainstExiledPile"
   Quantity.AgainstLastCardExiledWith {} -> "AgainstLastCardExiledWith"
-  -- CR 702.167c: AgainstCardsExiledWith's answer, over the craft link alone.
-  Quantity.AgainstCraftMaterials {} -> "AgainstCraftMaterials"
   Quantity.StationMeasure {} -> "StationMeasure"

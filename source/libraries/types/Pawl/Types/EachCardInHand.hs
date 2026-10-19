@@ -24,7 +24,7 @@ import qualified Pawl.Types.ZoneScope as ZoneScope
 -- Warning). A card sweeping a hand it neither reveals nor looks at would leak,
 -- and none is written.
 --
--- The Filter is OPTIONAL, Pawl.Types.ObjectRef.EachCardExiledWithSource's
+-- The Filter is OPTIONAL, Pawl.Types.EachCardInExiledPile's
 -- reason: Pawl.Types.Filter has no tautological arm, so "reveals their hand" --
 -- the whole of it, which is Amnesia's first instruction -- has no other spelling.
 --

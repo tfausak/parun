@@ -3,20 +3,30 @@
     {
       "characteristicPT": {
         "power": {
-          "type": "AgainstCardsExiledWith",
+          "type": "AgainstExiledPile",
           "value": {
-            "type": "Measure",
-            "value": {
-              "type": "Power"
+            "pile": {
+              "type": "OwnAbilities"
+            },
+            "quantity": {
+              "type": "Measure",
+              "value": {
+                "type": "Power"
+              }
             }
           }
         },
         "toughness": {
-          "type": "AgainstCardsExiledWith",
+          "type": "AgainstExiledPile",
           "value": {
-            "type": "Measure",
-            "value": {
-              "type": "Toughness"
+            "pile": {
+              "type": "OwnAbilities"
+            },
+            "quantity": {
+              "type": "Measure",
+              "value": {
+                "type": "Toughness"
+              }
             }
           }
         }

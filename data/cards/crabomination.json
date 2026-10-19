@@ -141,10 +141,15 @@
                             "withoutPayingManaCost": true
                           },
                           "ref": {
-                            "type": "EachCardExiledWithSource",
+                            "type": "EachCardInExiledPile",
                             "value": {
-                              "type": "IsBound",
-                              "value": "exiled"
+                              "filter": {
+                                "type": "IsBound",
+                                "value": "exiled"
+                              },
+                              "pile": {
+                                "type": "OwnAbilities"
+                              }
                             }
                           }
                         }

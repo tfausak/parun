@@ -66,6 +66,7 @@ import qualified Pawl.Types.AffectPlayers as AffectPlayers
 import qualified Pawl.Types.Affected as Affected
 import qualified Pawl.Types.AffectedPlayers as AffectedPlayers
 import qualified Pawl.Types.AffectedUnless as AffectedUnless
+import qualified Pawl.Types.AgainstExiledPile as AgainstExiledPile
 import qualified Pawl.Types.AgainstLastCardExiledWith as AgainstLastCardExiledWith
 import qualified Pawl.Types.AgainstSlot as AgainstSlot
 import qualified Pawl.Types.Aggregation as Aggregation
@@ -124,6 +125,7 @@ import qualified Pawl.Types.ConjureCards as ConjureCards
 import qualified Pawl.Types.ConjureDestination as ConjureDestination
 import qualified Pawl.Types.Connive as Connive
 import qualified Pawl.Types.CopyClause as CopyClause
+import qualified Pawl.Types.CopyDomain as CopyDomain
 import qualified Pawl.Types.CopyException as CopyException
 import qualified Pawl.Types.CopyOriginal as CopyOriginal
 import qualified Pawl.Types.CopyStackObject as CopyStackObject
@@ -174,6 +176,7 @@ import qualified Pawl.Types.DungeonRoom as DungeonRoom
 import qualified Pawl.Types.Duration as Duration
 import qualified Pawl.Types.DurationEvent as DurationEvent
 import qualified Pawl.Types.EachCardFromAmong as EachCardFromAmong
+import qualified Pawl.Types.EachCardInExiledPile as EachCardInExiledPile
 import qualified Pawl.Types.EachCardInGraveyard as EachCardInGraveyard
 import qualified Pawl.Types.EachCardInHand as EachCardInHand
 import qualified Pawl.Types.Earthbend as Earthbend
@@ -4008,8 +4011,10 @@ objectRefFilters ref = case ref of
   -- named by which object exiled the cards rather than by their characteristics.
   -- Karn Liberated's "all non-Aura permanent cards exiled with Karn" is the one
   -- printing that also states characteristics, and states them here.
-  ObjectRef.EachCardExiledWithSource f -> unframed (Foldable.toList f)
-  ObjectRef.EachCardExiledWithAbility _ -> unframed []
+  -- The pile itself is a selection too (CR 607.2a), and IsExiledWithSource
+  -- names the same cards, so it is listed as that atom beside the stated
+  -- Filter: Pawl.AbilitySlotLintSpec's exile-name join reads it here.
+  ObjectRef.EachCardInExiledPile e -> unframed (Filter.Type.IsExiledWithSource (EachCardInExiledPile.pile e) : Foldable.toList (EachCardInExiledPile.filter e))
   ObjectRef.EachCardEncodedOnSource f -> unframed (Foldable.toList f)
   -- Swift Silence's "all other spells" states its own -- CR 109.2b's set is
   -- named by characteristics exactly as CR 109.2's battlefield sweep is.
@@ -4210,12 +4215,25 @@ quantityKindFilters quantity = case quantity of
   -- stop the payload from naming a kind.
   Quantity.Type.AgainstSlot (AgainstSlot.MkAgainstSlot _ inner) -> quantityKindFilters inner
   -- AgainstSlot's answer: aiming the evaluation at CR 607.2a's linked cards
-  -- does not stop the payload from naming a kind.
-  Quantity.Type.AgainstCardsExiledWith inner -> quantityKindFilters inner
+  -- does not stop the payload from naming a kind. The pile it aims at is
+  -- listed as the IsExiledWithSource atom naming the same cards, refFilters'
+  -- EachCardInExiledPile posture.
+  Quantity.Type.AgainstExiledPile a -> (Unframed, Filter.Type.IsExiledWithSource (AgainstExiledPile.pile a)) : quantityKindFilters (AgainstExiledPile.quantity a)
   -- And its own Filter, which no Count holds and countFilters cannot see.
   Quantity.Type.AgainstLastCardExiledWith (AgainstLastCardExiledWith.MkAgainstLastCardExiledWith criterion inner) -> (Unframed, criterion) : quantityKindFilters inner
-  -- CR 702.167c: AgainstCardsExiledWith's answer, over the craft link alone.
-  Quantity.Type.AgainstCraftMaterials inner -> quantityKindFilters inner
+
+-- CR 707.5's domain as the atom selecting the same cards: a linked pile
+-- (CR 607.2a) is one, a whole zone none.
+domainFilters :: CopyDomain.CopyDomain -> [Filter.Type.Filter Keyword.Keyword]
+domainFilters domain = case domain of
+  CopyDomain.InZone _ -> []
+  CopyDomain.InPile pile -> [Filter.Type.IsExiledWithSource pile]
+
+-- CR 601.3's pool as the atom selecting the same cards: none for the whole zone.
+poolFilters :: PermissionPool.PermissionPool -> [Filter.Type.Filter Keyword.Keyword]
+poolFilters pool = case pool of
+  PermissionPool.EveryCard -> []
+  PermissionPool.InExiledPile pile -> [Filter.Type.IsExiledWithSource pile]
 
 -- BOTH axes of every Quantity a Condition compares, off Resolve.conditionQuantities
 -- above rather than off conditionCounts beside it: reading the Counts alone drops
@@ -4296,8 +4314,10 @@ modificationFilters modification = case modification of
   Modification.GainAbility _ -> []
   -- Minted, and swept as the Backup keyword -- see modificationCounts.
   Modification.GainAbilitiesOfSource _ -> []
-  -- The rider's CR 602.5 conditions, as a printed ability's are swept.
-  Modification.GainExiledCardAbilities (ExiledCardAbilities.MkExiledCardAbilities _ extra) -> frame Unframed (concatMap conditionFilters (concatMap restrictionConditions extra))
+  -- The rider's CR 602.5 conditions, as a printed ability's are swept, and the
+  -- pile as the IsExiledWithSource atom naming the same cards (refFilters'
+  -- EachCardInExiledPile posture).
+  Modification.GainExiledCardAbilities (ExiledCardAbilities.MkExiledCardAbilities pile extra) -> (Unframed, Filter.Type.IsExiledWithSource pile) : frame Unframed (concatMap conditionFilters (concatMap restrictionConditions extra))
   Modification.GainAbilitiesOfStickers -> []
   Modification.SetBasePowerToughness (SetBasePowerToughness.MkSetBasePowerToughness p t) -> foldMap quantityFilters p <> foldMap quantityFilters t
   Modification.ModifyPowerToughness (ModifyPowerToughness.MkModifyPowerToughness p t) -> quantityFilters p <> quantityFilters t
@@ -4934,8 +4954,10 @@ playerEffectFilters playerEffect = case playerEffect of
   -- CR 601.3's zone permission, narrowed by the card's own qualities exactly as
   -- the timing permission beside it is (Yawgmoth's Will's is `And []`, Garruk's
   -- Horde's "creature spells"). WHOSE zone rides beside the Filter and is no
-  -- quality of the card, so it is not a position this lint sweeps.
-  PlayerEffect.CastFrom grant -> CastFromZone.matching grant : concatMap costComponentFilters (CastFromZone.additionalCosts grant)
+  -- quality of the card, so it is not a position this lint sweeps. A linked
+  -- pool (CR 607.2a) is listed as the IsExiledWithSource atom naming the same
+  -- cards, refFilters' EachCardInExiledPile posture.
+  PlayerEffect.CastFrom grant -> CastFromZone.matching grant : poolFilters (CastFromZone.pool grant) <> concatMap costComponentFilters (CastFromZone.additionalCosts grant)
   -- CR 305.1's play-side permission narrows nothing: a land play has already
   -- fixed the card type, and Crucible of Worlds' sentence says no more.
   PlayerEffect.PlayLandsFrom _ -> []
@@ -5112,7 +5134,7 @@ turnUpRewriteFilters turnUpRewrite = case turnUpRewrite of
 -- durationFilters'.
 asCopyFilters :: AsCopy.AsCopy (GrantedAbility.GrantedAbility Card.Type.Card) (Effect.Effect Card.Type.Card (GrantedAbility.GrantedAbility Card.Type.Card)) -> [(Framing, Filter.Type.Filter Keyword.Keyword)]
 asCopyFilters asCopy =
-  unframed [AsCopy.eligible asCopy]
+  unframed (AsCopy.eligible asCopy : domainFilters (AsCopy.among asCopy))
     <> foldMap copyClauseFilters (AsCopy.clauses asCopy)
     <> foldMap durationFilters (AsCopy.duration asCopy)
 

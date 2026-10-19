@@ -2572,7 +2572,7 @@ hinataSpec s registry = Spec.describe s "Hinata, Dawn-Crowned" $ do
 -- Last Kappa without paying its mana cost."
 --
 -- The second ability is CR 601.3's offer over a SET: Effect.OfferCast reads an
--- ObjectRef, and ObjectRef.EachCardExiledWithSource is CR 607.2a's link to the
+-- ObjectRef, and ObjectRef.EachCardInExiledPile is CR 607.2a's link to the
 -- pile. ShellSecondAbility below is what proves it.
 --
 -- THREE SEATS, so "you" is told from "a player": bob's Lightning Bolt aims at

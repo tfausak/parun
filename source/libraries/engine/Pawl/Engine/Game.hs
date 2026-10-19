@@ -45,6 +45,7 @@ import qualified Pawl.Types.DamageKind as DamageKind
 import qualified Pawl.Types.Decider as Decider
 import qualified Pawl.Types.Discarded as Discarded
 import qualified Pawl.Types.EventGroup as EventGroup
+import qualified Pawl.Types.ExiledPile as ExiledPile
 import Pawl.Types.Face (Face)
 import qualified Pawl.Types.Face as Face
 import qualified Pawl.Types.FaceDownState as FaceDownState
@@ -153,6 +154,26 @@ energyOf pid gs =
 
 lookupObject :: ObjectId -> GameState -> Maybe Object
 lookupObject oid gs = Map.lookup oid (GameState.objects gs)
+
+-- | CR 607.2a: the cards in exile in `src`'s `pile`, as a reader named `reader`
+-- means it (Binding.isLinkedExile), in ascending id and thus arrival order.
+-- THE one sweep of GameState.exiledWith's piles. The relation and not a zone
+-- sweep, so a card a second copy of the same printing exiled is not in it; and
+-- in exile NOW (CR 400.7), since a card that left is a new object the stale
+-- link no longer names.
+linkedPile :: Maybe AbilityName.AbilityName -> ExiledPile.ExiledPile -> ObjectId -> GameState -> [ObjectId]
+linkedPile reader pile src gs =
+  filter (\o -> maybe False (Binding.isLinkedExile reader pile src) (Map.lookup o (GameState.exiledWith gs))) (Set.toAscList (GameState.exile gs))
+
+-- | CR 607.2a / 613.7d: the LAST of these cards to have been exiled, the one
+-- with the latest timestamp -- Duplicant's "the last creature card exiled with
+-- it", Ice Cauldron's "the last card exiled with this artifact". CR 712.21b and
+-- 730.3b let the exiler order two cards exiled at once, and
+-- Pawl.Engine.Event.changeZoneAttaching asks for that order and stamps the
+-- cards by it, so the latest stamp is "last" there too. Nothing for none.
+lastExiled :: [ObjectId] -> GameState -> Maybe ObjectId
+lastExiled cards gs =
+  fmap snd (Maybe.listToMaybe (List.sortOn Ord.Down [(Object.timestamp obj, o) | o <- cards, Just obj <- [lookupObject o gs]]))
 
 -- CR 400.1 / 400.11: the zone an object is in, Nothing for an id naming no
 -- object and for one outside the game (GameState.outsideCopies). The zone read

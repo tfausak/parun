@@ -19,6 +19,7 @@ import qualified Data.Functor.Identity as Identity
 import qualified Data.Monoid as Monoid
 import Data.Set (Set)
 import qualified Data.Set as Set
+import qualified Pawl.Types.AgainstExiledPile as AgainstExiledPile
 import qualified Pawl.Types.AgainstLastCardExiledWith as AgainstLastCardExiledWith
 import qualified Pawl.Types.AgainstSlot as AgainstSlot
 import qualified Pawl.Types.Aggregation as Aggregation
@@ -232,11 +233,9 @@ overSlots f quantity =
         -- DESCENT and no slot of its own: CR 607.2a's linked pile comes from
         -- GameState.exiledWith rather than from a binding, so the arm names nothing
         -- here and only the payload can.
-        Quantity.AgainstCardsExiledWith inner -> fmap Quantity.AgainstCardsExiledWith (recur inner)
+        Quantity.AgainstExiledPile (AgainstExiledPile.MkAgainstExiledPile pile inner) -> fmap (Quantity.AgainstExiledPile . AgainstExiledPile.MkAgainstExiledPile pile) (recur inner)
         -- The same descent: the card comes off GameState.exiledWith too.
         Quantity.AgainstLastCardExiledWith (AgainstLastCardExiledWith.MkAgainstLastCardExiledWith criterion inner) -> fmap (Quantity.AgainstLastCardExiledWith . AgainstLastCardExiledWith.MkAgainstLastCardExiledWith criterion) (recur inner)
-        -- CR 702.167c: AgainstCardsExiledWith's answer, over the craft link alone.
-        Quantity.AgainstCraftMaterials inner -> fmap Quantity.AgainstCraftMaterials (recur inner)
 
 -- The binding slots a quantity READS. The read half of the dataflow lint whose
 -- write half is Resolve.definedSlots -- so a card whose "for each ... destroyed
@@ -392,10 +391,8 @@ nestedRefs quantity = case quantity of
   -- Nothing of its own to report -- CR 607.2a's pile is a relation on the board,
   -- named by no reference and no slot -- and the payload is walked like any
   -- other.
-  Quantity.AgainstCardsExiledWith inner -> nestedRefs inner
+  Quantity.AgainstExiledPile a -> nestedRefs (AgainstExiledPile.quantity a)
   Quantity.AgainstLastCardExiledWith l -> nestedRefs (AgainstLastCardExiledWith.quantity l)
-  -- CR 702.167c: AgainstCardsExiledWith's answer, over the craft link alone.
-  Quantity.AgainstCraftMaterials inner -> nestedRefs inner
 
 -- Every Count reachable from a Quantity: a leaf Count directly, plus the ones
 -- nested through the arms that compose one (CR 208.2's printed 1+*, CR 107.1a's
@@ -515,10 +512,8 @@ nestedCounts quantity = case quantity of
   Quantity.AgainstSlot (AgainstSlot.MkAgainstSlot _ inner) -> nestedCounts inner
   -- AgainstSlot's answer: re-aiming the evaluation at CR 607.2a's linked cards
   -- does not stop the payload from being a Count.
-  Quantity.AgainstCardsExiledWith inner -> nestedCounts inner
+  Quantity.AgainstExiledPile a -> nestedCounts (AgainstExiledPile.quantity a)
   Quantity.AgainstLastCardExiledWith l -> nestedCounts (AgainstLastCardExiledWith.quantity l)
-  -- CR 702.167c: AgainstCardsExiledWith's answer, over the craft link alone.
-  Quantity.AgainstCraftMaterials inner -> nestedCounts inner
 
 -- A scope's own read. Every scope that names players takes a PlayerRef and CR
 -- 608.2i's look-back names nothing, so the same question as the arms above --
@@ -665,10 +660,8 @@ mapPlayerRefs f intoCount quantity =
         Quantity.Count c -> Quantity.Count (intoCount c)
         Quantity.Arithmetic arithmetic -> Quantity.Arithmetic (fmap recur arithmetic)
         Quantity.AgainstSlot (AgainstSlot.MkAgainstSlot slot inner) -> Quantity.AgainstSlot (AgainstSlot.MkAgainstSlot slot (recur inner))
-        Quantity.AgainstCardsExiledWith inner -> Quantity.AgainstCardsExiledWith (recur inner)
+        Quantity.AgainstExiledPile a -> Quantity.AgainstExiledPile a {AgainstExiledPile.quantity = recur (AgainstExiledPile.quantity a)}
         Quantity.AgainstLastCardExiledWith l -> Quantity.AgainstLastCardExiledWith l {AgainstLastCardExiledWith.quantity = recur (AgainstLastCardExiledWith.quantity l)}
-        -- CR 702.167c: AgainstCardsExiledWith's answer, over the craft link alone.
-        Quantity.AgainstCraftMaterials inner -> Quantity.AgainstCraftMaterials (recur inner)
         -- Every arm below holds no PlayerRef and no Quantity. InSlot names an AMOUNT
         -- slot rather than a player one, so nothing here substitutes it -- an amount an
         -- earlier effect bound is not a seat.

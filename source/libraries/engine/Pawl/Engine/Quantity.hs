@@ -3,10 +3,8 @@ module Pawl.Engine.Quantity where
 import Control.Applicative ((<|>))
 import qualified Control.Monad as Monad
 import qualified Data.Foldable as Foldable
-import qualified Data.List as List
 import qualified Data.Map as Map
 import qualified Data.Maybe as Maybe
-import qualified Data.Ord as Ord
 import Data.Set (Set)
 import qualified Data.Set as Set
 import Numeric.Natural (Natural)
@@ -19,6 +17,7 @@ import qualified Pawl.Engine.ManaCount as ManaCount
 import qualified Pawl.Engine.NameWords as NameWords
 import qualified Pawl.Engine.QuantitySlot as QuantitySlot
 import qualified Pawl.Engine.Turn as Turn
+import qualified Pawl.Types.AgainstExiledPile as AgainstExiledPile
 import qualified Pawl.Types.AgainstLastCardExiledWith as AgainstLastCardExiledWith
 import qualified Pawl.Types.AgainstSlot as AgainstSlot
 import qualified Pawl.Types.Arithmetic as Arithmetic
@@ -33,7 +32,7 @@ import qualified Pawl.Types.CompletedDungeon as CompletedDungeon
 import qualified Pawl.Types.ControlClock as ControlClock
 import qualified Pawl.Types.Count as Count.Type
 import qualified Pawl.Types.Devotion as Devotion
-import qualified Pawl.Types.ExileLink as ExileLink
+import qualified Pawl.Types.ExiledPile as ExiledPile
 import qualified Pawl.Types.Face as Face
 import qualified Pawl.Types.Filter as Filter.Type
 import qualified Pawl.Types.GameEvent as GameEvent
@@ -318,19 +317,18 @@ evaluateAgainst viewOf context gs announcedOn mOid mView quantity =
           Just oid -> evaluateAgainst viewOf context gs announcedOn (Just oid) (viewOf oid) inner
         -- CR 607.2a's other half of the AgainstSlot posture: a STATIC ability has no
         -- resolution and so no slot to aim at, and the objects it wants are the ones
-        -- GameState.exiledWith files against its own source. Re-aim the fold at each
+        -- in the payload's pile of its own source (Game.linkedPile). Re-aim the fold at each
         -- of them in turn and SUM, which is CR 607.3: "if these answers are used to
         -- determine the value of a variable, the sum of the answers is used". One
         -- exiled card, the ordinary case, sums to itself.
         --
-        -- The membership test is the relation and not a zone sweep, exactly as
-        -- ObjectRef.EachCardExiledWithSource's is, so a card exiled by a second copy
-        -- of the same printing is not counted. Pawl.PowerToughnessSpec's "CR
+        -- The membership test is the relation and not a zone sweep, so a card
+        -- exiled by a second copy of the same printing is not counted. Pawl.PowerToughnessSpec's "CR
         -- 607.2a/613.4c the static ability reads the card its own trigger exiled" is
         -- what proves that half: it leaves an unlinked card sitting in exile, which a
         -- zone sweep would add in.
         --
-        -- The GameState.exile intersection beside it is a REGRESSION FENCE rather than
+        -- Game.linkedPile's GameState.exile intersection is a REGRESSION FENCE rather than
         -- proven behaviour. Dropping it leaves the suite green, because CR 400.7 mints
         -- a new object as the card leaves exile and the stale key then projects
         -- nothing -- so both readings answer the same. It is kept because CR 400.7 is
@@ -344,11 +342,13 @@ evaluateAgainst viewOf context gs announcedOn mOid mView quantity =
         -- OBJECT and the object this quantity is aimed at need not be the ability's
         -- source. Nothing when the context names no source at all.
         --
-        -- Every exiling ability of the source counts, whatever its name: this
-        -- reference names none, so CR 607.4 links it to each of them. Each, that
-        -- is, but one the source acquired from an exiled card (CR 607.5,
-        -- Binding.isLinkedExile): data/scenarios/living-lore-counts-only-the-card-it-exiled-as-it-entered.json
-        -- is the proof.
+        -- Under OwnAbilities every exiling ability of the source counts, whatever
+        -- its name: the reference names none, so CR 607.4 links it to each of
+        -- them. Each, that is, but one the source acquired from an exiled card (CR
+        -- 607.5, Binding.isLinkedExile): data/scenarios/living-lore-counts-only-the-card-it-exiled-as-it-entered.json
+        -- is the proof. CraftMaterials is the craft link alone (CR 702.167c), a
+        -- REGRESSION FENCE: no board in the suite gives a crafted permanent that
+        -- reads it an exiling ability too.
         --
         -- Not implemented: a reader that is itself an acquired ability, which
         -- would read only its own pair's exiles; Filter.Context names no
@@ -359,12 +359,10 @@ evaluateAgainst viewOf context gs announcedOn mOid mView quantity =
         -- Revered One as a copy of Sutured Ghoul (#4985).
         --
         -- Terminating: the payload is a strictly smaller subterm.
-        Quantity.AgainstCardsExiledWith inner ->
+        Quantity.AgainstExiledPile (AgainstExiledPile.MkAgainstExiledPile pile inner) ->
           case Filter.source context of
             Nothing -> Nothing
-            Just src ->
-              let linked = filter (\o -> maybe False (Binding.isLinkedExile Nothing src) (Map.lookup o (GameState.exiledWith gs))) (Set.toList (GameState.exile gs))
-               in fmap sum (traverse (\o -> evaluateAgainst viewOf context gs announcedOn (Just o) (viewOf o) inner) linked)
+            Just src -> fmap sum (traverse (\o -> evaluateAgainst viewOf context gs announcedOn (Just o) (viewOf o) inner) (Game.linkedPile Nothing pile src gs))
         -- The arm above narrowed to ONE card, lastCardExiledWith's, so there is
         -- nothing to sum. Nothing when no linked card matches: "the last creature
         -- card exiled with it" is then no card at all.
@@ -372,19 +370,6 @@ evaluateAgainst viewOf context gs announcedOn mOid mView quantity =
         -- Terminating: the payload is a strictly smaller subterm.
         Quantity.AgainstLastCardExiledWith (AgainstLastCardExiledWith.MkAgainstLastCardExiledWith criterion inner) ->
           lastCardExiledWith viewOf context gs criterion >>= \o -> evaluateAgainst viewOf context gs announcedOn (Just o) (viewOf o) inner
-        -- CR 702.167c: the arm above narrowed to the craft link
-        -- (Binding.craftLink), so a card the permanent's own abilities exile is
-        -- not "used to craft it". A REGRESSION FENCE: no board in the suite
-        -- gives a crafted permanent that reads this an exiling ability too.
-        --
-        -- Terminating: the payload is a strictly smaller subterm.
-        Quantity.AgainstCraftMaterials inner ->
-          case Filter.source context of
-            Nothing -> Nothing
-            Just src ->
-              let crafted = ExileLink.MkExileLink {ExileLink.source = src, ExileLink.ability = Just Binding.craftLink}
-                  materials = filter (\o -> Map.lookup o (GameState.exiledWith gs) == Just crafted) (Set.toList (GameState.exile gs))
-               in fmap sum (traverse (\o -> evaluateAgainst viewOf context gs announcedOn (Just o) (viewOf o) inner) materials)
         -- CR 107.1: Nothing propagates from any operand -- a calculation over a
         -- number nobody could determine is not a number either.
         Quantity.Arithmetic arithmetic -> fmap calculate (traverse recur arithmetic)
@@ -1138,7 +1123,7 @@ evaluateAgainst viewOf context gs announcedOn mOid mView quantity =
         -- CR 702.184c: Power's arm, with the substitution asked first. `perspective`
         -- is CR 109.5's "you" of the ability being resolved -- its controller (CR
         -- 113.8), unmoved by the re-aiming arms (AgainstSlot,
-        -- AgainstCardsExiledWith), which only ever repoint `mOid`/`mView`, and unmoved
+        -- AgainstExiledPile), which only ever repoint `mOid`/`mView`, and unmoved
         -- by whoever controls the stationing permanent
         -- NOW: Tapestry Warden's ruling gates on the station ability's controller
         -- controlling the Warden as it resolves. grantsStationToughnessFor walks the
@@ -1252,7 +1237,7 @@ determineWith eval quantity = case quantity of
 -- by the scenario banquet-guests-enters-with-twice-the-announced-x. No
 -- descent into Count -- its per-member quantity is read against ANOTHER object,
 -- so an X inside it would be that object's and not this entry's -- nor into
--- AgainstSlot or AgainstCardsExiledWith, which re-aim the fold the same way.
+-- AgainstSlot or AgainstExiledPile, which re-aim the fold the same way.
 substituteAnnouncedX :: Natural -> Quantity -> Quantity
 substituteAnnouncedX n quantity = case quantity of
   Quantity.InSlot slot | slot == Binding.variableX -> Quantity.Literal (toInteger n)
@@ -1374,10 +1359,8 @@ objectSlots quantity = case quantity of
   -- DESCENT and no slot of its own: the objects come from GameState.exiledWith
   -- rather than from a binding, so this arm names none, and the payload it aims
   -- at them may still name one.
-  Quantity.AgainstCardsExiledWith inner -> objectSlots inner
+  Quantity.AgainstExiledPile a -> objectSlots (AgainstExiledPile.quantity a)
   Quantity.AgainstLastCardExiledWith l -> objectSlots (AgainstLastCardExiledWith.quantity l)
-  -- CR 702.167c: AgainstCardsExiledWith's answer, over the craft link alone.
-  Quantity.AgainstCraftMaterials inner -> objectSlots inner
 
 -- CR 603.3b: is QuantitySlot.slots the WHOLE of what evaluating this quantity
 -- reads off the resolving object's bindings? It is not wherever
@@ -1648,10 +1631,8 @@ readsX quantity = case quantity of
   Quantity.AgainstSlot (AgainstSlot.MkAgainstSlot _ inner) -> readsX inner
   -- AgainstSlot's answer: not a leaf, and its payload may read X. It names no
   -- slot at all, so the target/amount distinction above does not arise.
-  Quantity.AgainstCardsExiledWith inner -> readsX inner
+  Quantity.AgainstExiledPile a -> readsX (AgainstExiledPile.quantity a)
   Quantity.AgainstLastCardExiledWith l -> readsX (AgainstLastCardExiledWith.quantity l)
-  -- CR 702.167c: AgainstCardsExiledWith's answer, over the craft link alone.
-  Quantity.AgainstCraftMaterials inner -> readsX inner
 
 -- CR 202.3: each generic symbol contributes its number, each colored or
 -- colorless symbol one, and each hybrid symbol its largest half (CR 202.3f). A
@@ -1797,21 +1778,15 @@ greatestOfOneValue stored =
   Foldable.foldl' max 0 (Map.fromListWith (+) [(StoredResult.value result, n) | (result, n) <- Map.toList stored])
 
 -- | CR 607.2a / 613.7d: of the cards in exile that an ability of the context's
--- source exiled, the one `criterion` matches with the LATEST timestamp --
--- Duplicant's "the last creature card exiled with it". CR 712.21b and 730.3b
--- let the exiler order two cards exiled at once, and
--- Pawl.Engine.Event.changeZoneAttaching asks for that order and stamps the cards
--- by it, so the latest stamp is "last" there too.
+-- source exiled, the last one `criterion` matches (Game.lastExiled) --
+-- Duplicant's "the last creature card exiled with it".
 --
--- The membership test is Quantity.AgainstCardsExiledWith's relation, not a zone
--- sweep, under the same pairing (Binding.isLinkedExile):
--- data/scenarios/duplicant-ignores-what-an-acquired-ability-exiled.json proves
--- it skips what an acquired ability exiled. Nothing when the context names no
--- source or nothing matches.
+-- The membership test is Quantity.AgainstExiledPile's, Game.linkedPile's
+-- OwnAbilities: data/scenarios/duplicant-ignores-what-an-acquired-ability-exiled.json
+-- proves it skips what an acquired ability exiled. Nothing when the context
+-- names no source or nothing matches.
 lastCardExiledWith :: Count.ViewOf -> Filter.Context -> GameState -> Filter.Type.Filter Keyword.Type.Keyword -> Maybe ObjectId
 lastCardExiledWith viewOf context gs criterion = do
   src <- Filter.source context
-  let linked o = maybe False (Binding.isLinkedExile Nothing src) (Map.lookup o (GameState.exiledWith gs))
-      matching o = maybe False (\view -> Filter.matches context view criterion) (viewOf o)
-      stamped = [(Object.timestamp obj, o) | o <- Set.toList (GameState.exile gs), linked o, matching o, Just obj <- [Game.lookupObject o gs]]
-  fmap snd (Maybe.listToMaybe (List.sortOn (Ord.Down . fst) stamped))
+  let matching o = maybe False (\view -> Filter.matches context view criterion) (viewOf o)
+  Game.lastExiled (filter matching (Game.linkedPile Nothing ExiledPile.OwnAbilities src gs)) gs

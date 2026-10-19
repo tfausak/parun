@@ -156,10 +156,7 @@
                           },
                           "restriction": {
                             "casts": {
-                              "type": "IsExiledWithSource",
-                              "value": {
-                                "type": "LastExiled"
-                              }
+                              "type": "IsLastExiledWithSource"
                             }
                           }
                         }

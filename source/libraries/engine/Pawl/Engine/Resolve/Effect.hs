@@ -325,7 +325,6 @@ import qualified Pawl.Types.PhasePattern as PhasePattern
 import qualified Pawl.Types.PhaseSelector as PhaseSelector
 import qualified Pawl.Types.PlaneswalkCause as PlaneswalkCause
 import qualified Pawl.Types.PlayBudget as PlayBudget
-import qualified Pawl.Types.PlayPermissionOrigin as PlayPermissionOrigin
 import qualified Pawl.Types.Player as Player
 import qualified Pawl.Types.PlayerActed as PlayerActed
 import qualified Pawl.Types.PlayerAction as PlayerAction
@@ -876,8 +875,7 @@ askingObjects resolving source controller legal chosen ref = case ref of
   ObjectRef.EachCardInHand _ -> swept
   ObjectRef.EachCardInYourLibrary _ -> swept
   ObjectRef.EachCardYouOwn _ -> swept
-  ObjectRef.EachCardExiledWithSource _ -> swept
-  ObjectRef.EachCardExiledWithAbility _ -> swept
+  ObjectRef.EachCardInExiledPile _ -> swept
   ObjectRef.EachCardEncodedOnSource _ -> swept
   ObjectRef.EachSpell _ -> swept
   ObjectRef.EachAbility _ -> swept
@@ -1194,8 +1192,7 @@ objectRefRecipients legal resolving controller source gs ref = case ref of
   ObjectRef.EachCardInHand {} -> fmap Recipient.ToObject (objectRefObjects legal resolving controller source gs ref)
   ObjectRef.EachCardInYourLibrary _ -> fmap Recipient.ToObject (objectRefObjects legal resolving controller source gs ref)
   ObjectRef.EachCardYouOwn _ -> fmap Recipient.ToObject (objectRefObjects legal resolving controller source gs ref)
-  ObjectRef.EachCardExiledWithSource {} -> fmap Recipient.ToObject (objectRefObjects legal resolving controller source gs ref)
-  ObjectRef.EachCardExiledWithAbility _ -> fmap Recipient.ToObject (objectRefObjects legal resolving controller source gs ref)
+  ObjectRef.EachCardInExiledPile _ -> fmap Recipient.ToObject (objectRefObjects legal resolving controller source gs ref)
   ObjectRef.EachCardEncodedOnSource {} -> fmap Recipient.ToObject (objectRefObjects legal resolving controller source gs ref)
   ObjectRef.TopOfLibrary {} -> fmap Recipient.ToObject (objectRefObjects legal resolving controller source gs ref)
   ObjectRef.TopOfLibraryUntil {} -> fmap Recipient.ToObject (objectRefObjects legal resolving controller source gs ref)
@@ -2352,20 +2349,7 @@ exileFoundFor agent exiled =
   State.modify' $ \gs ->
     let link = ExileLink.MkExileLink {ExileLink.source = agent, ExileLink.ability = Nothing}
         file oid = Map.insert oid link
-        permission you =
-          ExilePlayPermission.MkExilePlayPermission
-            { ExilePlayPermission.player = you,
-              ExilePlayPermission.source = agent,
-              ExilePlayPermission.expiry = Expiry.Type.Never,
-              ExilePlayPermission.spending = ManaSpending.AnyColor,
-              ExilePlayPermission.alternativeCost = Nothing,
-              ExilePlayPermission.condition = Nothing,
-              ExilePlayPermission.origin = PlayPermissionOrigin.Granted,
-              ExilePlayPermission.verb = PermissionVerb.Play,
-              ExilePlayPermission.increase = 0,
-              ExilePlayPermission.landEnters = TapState.Untapped,
-              ExilePlayPermission.budget = Nothing
-            }
+        permission you = (ExilePlayPermission.defaultValue you agent) {ExilePlayPermission.spending = ManaSpending.AnyColor}
         grant you o = o {Object.playableFromExile = Just (permission you)}
         granted = case Projection.controllerOf agent gs of
           Just you -> foldr (Map.adjust (grant you)) (GameState.objects gs) exiled
@@ -2583,7 +2567,7 @@ applyEffectWith runSubgame resolving source controller legal chosen effect = do
 -- CR 702.167c: the cards exiled to pay the cost of the craft ability resolving
 -- as `resolving` (Binding.craftMaterials), linked to the permanent it put onto
 -- the battlefield as `entered`, under Binding.craftLink so the craft readers
--- (Quantity.AgainstCraftMaterials, Modification.GainExiledCardAbilities)
+-- (ExiledPile.CraftMaterials)
 -- tell them from what that permanent's other abilities exile. Only those still
 -- in exile, which is the rule's "cards in exile". Pawl.ActivateSpec's
 -- Mastercraft Raptor case is the proof.
@@ -5829,10 +5813,8 @@ applyOneEffect runSubgame resolving source controller legal chosen effect = case
             Nothing -> gs
             Just expiry ->
               let permission =
-                    ExilePlayPermission.MkExilePlayPermission
-                      { ExilePlayPermission.player = holder,
-                        ExilePlayPermission.source = source,
-                        ExilePlayPermission.expiry = expiry,
+                    (ExilePlayPermission.defaultValue holder source)
+                      { ExilePlayPermission.expiry = expiry,
                         -- CR 118.14, carried from the opcode unread;
                         -- Pawl.Engine.Mana is the only thing that acts on it.
                         ExilePlayPermission.spending = spending,
@@ -5842,10 +5824,10 @@ applyOneEffect runSubgame resolving source controller legal chosen effect = case
                         -- BAKED, Expiry.arm's ForAsLongAs reason: the permission
                         -- outlives this resolution's slots.
                         ExilePlayPermission.condition = fmap (Condition.bakeBound legal) condition,
-                        -- CR 715.3d's "other effects that allow a player to cast
-                        -- it": a card said this, not rule 715.3d, so the Adventure
-                        -- exclusion does not reach it.
-                        ExilePlayPermission.origin = PlayPermissionOrigin.Granted,
+                        -- The default's Granted origin is CR 715.3d's "other
+                        -- effects that allow a player to cast it": a card said
+                        -- this, not rule 715.3d, so the Adventure exclusion does
+                        -- not reach it.
                         ExilePlayPermission.verb = verb,
                         -- CR 601.2f and CR 614.1d, carried from the opcode
                         -- unread; Pawl.Engine.Cost and Pawl.Engine.Cast.playLand

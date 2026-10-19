@@ -58,6 +58,7 @@ import qualified Pawl.Codec.AffectedSpec
 import qualified Pawl.Codec.AffectedUnlessSpec
 import qualified Pawl.Codec.AfterObjectTurnSpec
 import qualified Pawl.Codec.AfterTurnSpec
+import qualified Pawl.Codec.AgainstExiledPileSpec
 import qualified Pawl.Codec.AgainstLastCardExiledWithSpec
 import qualified Pawl.Codec.AgainstSlotSpec
 import qualified Pawl.Codec.AggregationSpec
@@ -272,6 +273,7 @@ import qualified Pawl.Codec.DurationEventSpec
 import qualified Pawl.Codec.DurationSpec
 import qualified Pawl.Codec.DuringPhaseSpec
 import qualified Pawl.Codec.EachCardFromAmongSpec
+import qualified Pawl.Codec.EachCardInExiledPileSpec
 import qualified Pawl.Codec.EachCardInGraveyardSpec
 import qualified Pawl.Codec.EachCardInHandSpec
 import qualified Pawl.Codec.EffectSpec
@@ -313,7 +315,6 @@ import qualified Pawl.Codec.ExilePermanentsSpec
 import qualified Pawl.Codec.ExilePlayPermissionSpec
 import qualified Pawl.Codec.ExiledCardAbilitiesSpec
 import qualified Pawl.Codec.ExiledPileSpec
-import qualified Pawl.Codec.ExiledWithSpec
 import qualified Pawl.Codec.ExpansionSpec
 import qualified Pawl.Codec.ExpirySpec
 import qualified Pawl.Codec.ExploitedSpec
@@ -952,6 +953,7 @@ spec s registry = do
   Pawl.Codec.AffectPlayersSpec.spec s
   Pawl.Codec.AfterObjectTurnSpec.spec s
   Pawl.Codec.AfterTurnSpec.spec s
+  Pawl.Codec.AgainstExiledPileSpec.spec s
   Pawl.Codec.AgainstLastCardExiledWithSpec.spec s
   Pawl.Codec.AgainstSlotSpec.spec s
   Pawl.Codec.AggregationSpec.spec s
@@ -1168,6 +1170,7 @@ spec s registry = do
   Pawl.Codec.EachCardFromAmongSpec.spec s
   Pawl.Codec.FromAnywhereSpec.spec s
   Pawl.Codec.EachCardInGraveyardSpec.spec s
+  Pawl.Codec.EachCardInExiledPileSpec.spec s
   Pawl.Codec.EachCardInHandSpec.spec s
   Pawl.Codec.EffectSpec.spec s
   Pawl.Codec.EmergeSpec.spec s
@@ -1201,7 +1204,6 @@ spec s registry = do
   Pawl.Codec.ExileCardsFromHandSpec.spec s
   Pawl.Codec.ExiledCardAbilitiesSpec.spec s
   Pawl.Codec.ExiledPileSpec.spec s
-  Pawl.Codec.ExiledWithSpec.spec s
   Pawl.Codec.ExileFromGraveyardSpec.spec s
   Pawl.Codec.ExileHauntingSpec.spec s
   Pawl.Codec.ExileLinkSpec.spec s

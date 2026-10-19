@@ -143,6 +143,8 @@ library codec
     Pawl.Codec.AfterObjectTurnSpec
     Pawl.Codec.AfterTurn
     Pawl.Codec.AfterTurnSpec
+    Pawl.Codec.AgainstExiledPile
+    Pawl.Codec.AgainstExiledPileSpec
     Pawl.Codec.AgainstLastCardExiledWith
     Pawl.Codec.AgainstLastCardExiledWithSpec
     Pawl.Codec.AgainstSlot
@@ -588,6 +590,8 @@ library codec
     Pawl.Codec.DuringPhaseSpec
     Pawl.Codec.EachCardFromAmong
     Pawl.Codec.EachCardFromAmongSpec
+    Pawl.Codec.EachCardInExiledPile
+    Pawl.Codec.EachCardInExiledPileSpec
     Pawl.Codec.EachCardInGraveyard
     Pawl.Codec.EachCardInGraveyardSpec
     Pawl.Codec.EachCardInHand
@@ -660,8 +664,6 @@ library codec
     Pawl.Codec.ExiledCardAbilitiesSpec
     Pawl.Codec.ExiledPile
     Pawl.Codec.ExiledPileSpec
-    Pawl.Codec.ExiledWith
-    Pawl.Codec.ExiledWithSpec
     Pawl.Codec.ExileFromGraveyard
     Pawl.Codec.ExileFromGraveyardSpec
     Pawl.Codec.ExileHaunting
@@ -2186,6 +2188,7 @@ library types
     Pawl.Types.AffectPlayers
     Pawl.Types.AfterObjectTurn
     Pawl.Types.AfterTurn
+    Pawl.Types.AgainstExiledPile
     Pawl.Types.AgainstLastCardExiledWith
     Pawl.Types.AgainstSlot
     Pawl.Types.Aggregation
@@ -2440,6 +2443,7 @@ library types
     Pawl.Types.DurationEvent
     Pawl.Types.DuringPhase
     Pawl.Types.EachCardFromAmong
+    Pawl.Types.EachCardInExiledPile
     Pawl.Types.EachCardInGraveyard
     Pawl.Types.EachCardInHand
     Pawl.Types.Earthbend
@@ -2480,7 +2484,6 @@ library types
     Pawl.Types.ExileCardsFromHand
     Pawl.Types.ExiledCardAbilities
     Pawl.Types.ExiledPile
-    Pawl.Types.ExiledWith
     Pawl.Types.ExileFromGraveyard
     Pawl.Types.ExileHaunting
     Pawl.Types.ExileLink

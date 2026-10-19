@@ -14,7 +14,7 @@ data OfferCast = MkOfferCast
   { -- | WHICH cards are on offer. An ObjectRef and not a SlotName because CR
     -- 601.3's offer ranges over a SET as often as over one card -- Shell of the
     -- Last Kappa's "a spell from among cards exiled with Shell of the Last
-    -- Kappa" is ObjectRef.EachCardExiledWithSource, CR 607.2a's linked set,
+    -- Kappa" is ObjectRef.EachCardInExiledPile, CR 607.2a's linked set,
     -- where Tinybones, the Pickpocket's one target is ObjectRef.InSlot.
     --
     -- Several cards is a CHOICE first: Pawl.Engine.Resolve.Effect's offerCast puts

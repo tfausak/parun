@@ -2682,7 +2682,7 @@ applyCopyExceptions this own exceptions snapshot =
 -- card's too (Pawl.Types.AsCopy's `among`): the battlefield for Clone, for
 -- Superior Spider-Man's "any creature card in a graveyard" every player's
 -- graveyard, and for Dinosaur Headdress's "an exiled creature card used to craft
--- this Equipment" its craft materials (Projection.exiledPileOf). Any other zone
+-- this Equipment" its craft materials (Game.linkedPile). Any other zone
 -- answers nothing.
 --
 -- Matched through each candidate's own CR 613 projection, revealableFromHand's
@@ -2707,7 +2707,7 @@ legalCopyTargets batch filter_ among self gs =
         CopyDomain.InZone Zone.Battlefield -> Set.toAscList (GameState.battlefield gs)
         CopyDomain.InZone Zone.Graveyard -> concatMap (\pid -> Game.zoneMembers Zone.Graveyard pid gs) (GameState.turnOrder gs)
         CopyDomain.InZone _ -> []
-        CopyDomain.InPile pile -> Projection.exiledPileOf pile self gs
+        CopyDomain.InPile pile -> Game.linkedPile Nothing pile self gs
    in filter eligible domain
 
 -- CR 707.9g / 603.11: the triggered ability linked to a CR 707.5 entry

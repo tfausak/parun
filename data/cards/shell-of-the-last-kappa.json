@@ -106,7 +106,12 @@
                             "withoutPayingManaCost": true
                           },
                           "ref": {
-                            "type": "EachCardExiledWithSource"
+                            "type": "EachCardInExiledPile",
+                            "value": {
+                              "pile": {
+                                "type": "OwnAbilities"
+                              }
+                            }
                           }
                         }
                       }
