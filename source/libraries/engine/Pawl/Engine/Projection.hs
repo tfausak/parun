@@ -4564,16 +4564,16 @@ project oid gs = projectFrom (gather gs) oid gs
 -- never the card. A counterfactual board, as Projection.View's
 -- copiableCharacteristicsFaceUp; Game.withFacing turns a merged permanent's
 -- components with it (CR 730.2f). A token's, a copy's or a merge's own values
--- are no copy effect's (CR 111.3, 730.2a), so they stay. A card exiled face
--- down shows the card too (CR 406.3), on a board where it is not.
---
--- Not implemented: a copy effect a side had before it merged is part of the
--- merge's values, so the reveal still shows it (#5214).
+-- are no copy effect's (CR 111.3, 730.2a), so they stay -- a merge's as read
+-- with the copy effects its sides had left out. A card exiled face down shows
+-- the card too (CR 406.3), on a board where it is not.
 --
 -- data/scenarios/visibility proves each road: the CR 708.10 Cytoshape case the
 -- stored one, the CR 701.20a Clone case the stamped one, the CR 111.3 token
--- cases the kept own values, and the CR 730.2a Infinite Reflection case a
--- merge's under a later stamp.
+-- cases the kept own values, and the CR 730.2a Clone case a merge's over an
+-- earlier stamp. Pawl.MutateSpec's "CR 730.2a a face-down pile Infinite
+-- Reflection made a copy is revealed with its merge" proves a merge's under a
+-- later one.
 projectShown :: ObjectId -> GameState -> ProjectedCharacteristics
 projectShown oid gs = case Game.lookupObject oid gs of
   Just obj
