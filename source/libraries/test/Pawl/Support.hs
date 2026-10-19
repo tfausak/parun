@@ -1502,7 +1502,8 @@ addPlayerEffect expiry scope effect controller gs =
             ActivePlayerEffect.timestamp = ts,
             ActivePlayerEffect.expiry = expiry,
             ActivePlayerEffect.scope = scope,
-            ActivePlayerEffect.effect = effect
+            ActivePlayerEffect.effect = effect,
+            ActivePlayerEffect.ability = Nothing
           }
    in gs1 {GameState.playerEffects = active : GameState.playerEffects gs1}
 
