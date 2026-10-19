@@ -319,7 +319,7 @@ permanentsReturnedToHandSpec s registry =
         Set.fromList
           ( Maybe.mapMaybe
               ( \logged -> case LoggedEvent.event logged of
-                  GameEvent.Moved (Moved.MkMoved zc _ _ _ _ _) | ZoneChange.from zc == Zone.Battlefield && ZoneChange.to zc == Zone.Hand -> Just (LoggedEvent.group logged)
+                  GameEvent.Moved (Moved.MkMoved zc _ _ _ _ _ _) | ZoneChange.from zc == Zone.Battlefield && ZoneChange.to zc == Zone.Hand -> Just (LoggedEvent.group logged)
                   _ -> Nothing
               )
               (Foldable.toList (GameState.events gs))
@@ -1071,7 +1071,7 @@ warpedDevotionSpec s registry =
               moves =
                 Maybe.mapMaybe
                   ( \logged -> case LoggedEvent.event logged of
-                      ev@(GameEvent.Moved (Moved.MkMoved zc _ _ _ _ _)) | ZoneChange.departed zc == pikerId -> Just ev
+                      ev@(GameEvent.Moved (Moved.MkMoved zc _ _ _ _ _ _)) | ZoneChange.departed zc == pikerId -> Just ev
                       _ -> Nothing
                   )
                   (Foldable.toList (GameState.events gone))

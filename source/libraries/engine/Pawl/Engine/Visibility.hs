@@ -59,19 +59,14 @@ revealedNow oid gs =
 -- (CR 701.20a), only its audience a look (CR 701.20e, 723.4) or a ballot (CR
 -- 701.38a), and everyone a secret vote's ballots once revealed. An event in
 -- the open (CR 400.2) is seen by everyone: a draw as the act alone (CR 121.1),
--- and a move only when everyone saw the card leave (CR 603.10a) or it landed
--- face up in a graveyard (CR 404.2).
---
--- Not implemented: a card put face up onto the battlefield or into exile from
--- a hand or library other than by casting or playing it, such as Untamed
--- Wilds' land, is not witnessed as it arrives (#5278).
+-- and a move only when everyone saw the card leave (CR 603.10a) or arrive.
 witnessed :: PlayerId -> LoggedEvent.LoggedEvent -> Visibility.Visibility
 witnessed pid logged = case LoggedEvent.event logged of
   GameEvent.Revealed _ -> Visibility.Visible
   GameEvent.Looked looked -> visibleIf (Set.member pid (Looked.audience looked))
   GameEvent.Voted voted -> visibleIf (Set.member pid (Voted.audience voted))
   GameEvent.VotesRevealed _ -> Visibility.Visible
-  GameEvent.Moved moved -> visibleIf (Moved.revealed moved || ZoneChange.to (Moved.change moved) == Zone.Graveyard)
+  GameEvent.Moved moved -> visibleIf (Moved.revealed moved || Moved.seenArriving moved)
   GameEvent.CardArrived change -> visibleIf (not (Game.isHiddenZone (ZoneChange.to change)))
   GameEvent.DamageDealt {} -> Visibility.Visible
   GameEvent.DamagePrevented {} -> Visibility.Visible
@@ -136,6 +131,11 @@ witnessed pid logged = case LoggedEvent.event logged of
   GameEvent.PermanentActed {} -> Visibility.Visible
   GameEvent.PlayerActed {} -> Visibility.Visible
   GameEvent.StickerPut {} -> Visibility.Visible
+
+-- | CR 400.2: whether every player still in the game may see an object's face
+-- now.
+seenByEveryone :: ObjectId -> GameState.GameState -> Bool
+seenByEveryone oid gs = all (\seat -> sees seat oid gs == Visibility.Visible) (Game.stillPlaying gs)
 
 -- | CR 723.5: the players whose decisions this player makes, by the reading
 -- Pawl.Engine.Decide.deciderFor makes, so a dormant row waiting for its spell

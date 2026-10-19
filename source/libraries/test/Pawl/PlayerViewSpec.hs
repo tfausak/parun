@@ -25,6 +25,7 @@ import qualified Pawl.Play.Render as Render
 import qualified Pawl.Registry as Registry
 import qualified Pawl.Spec as Spec
 import qualified Pawl.Support as S
+import qualified Pawl.Types.Answer as Answer
 import qualified Pawl.Types.AttackTarget as AttackTarget
 import qualified Pawl.Types.AttackerDeclared as AttackerDeclared
 import qualified Pawl.Types.BeginningStep as BeginningStep
@@ -59,6 +60,7 @@ import qualified Pawl.Types.PlayerView as PlayerView.Type
 import qualified Pawl.Types.Printing as Printing
 import qualified Pawl.Types.ProjectedCharacteristics as ProjectedCharacteristics
 import qualified Pawl.Types.Recipient as Recipient
+import qualified Pawl.Types.Reply as Reply
 import qualified Pawl.Types.Seat as Seat
 import qualified Pawl.Types.SeatView as SeatView
 import qualified Pawl.Types.SpellWasCast as SpellWasCast
@@ -207,7 +209,7 @@ spec s registry = Spec.describe s "PlayerView" $ do
           seat = Text.unpack (Render.player pid) <> ": "
       Spec.assertEqWith s (seat <> "CR 601.2a every cast, by its caster and name") [(SpellWasCast.player c, ProjectedCharacteristics.names (SpellWasCast.characteristics c)) | GameEvent.SpellCast c <- seen] (fmap (\n -> (S.alice, Set.singleton (CardName.MkCardName (Text.pack n)))) ["Mind Rot", "Volcanic Hammer", "Sacred Nectar"])
       Spec.assertEqWith s (seat <> "CR 701.9a both discards") [Discarded.player d | GameEvent.Discarded d <- seen] [S.bob, S.bob]
-      Spec.assertEqWith s (seat <> "CR 404.2 both discarded cards landing face up") (Set.fromList [ProjectedCharacteristics.names (Moved.characteristics m) | GameEvent.Moved m <- seen, ZoneChange.from (Moved.change m) == Zone.Hand]) (Set.fromList (fmap (Set.singleton . CardName.MkCardName . Text.pack) ["Hill Giant", "Grizzly Bears"]))
+      Spec.assertEqWith s (seat <> "CR 404.2 both discarded cards landing face up") (Set.fromList [ProjectedCharacteristics.names (Moved.characteristics m) | GameEvent.Moved m <- seen, ZoneChange.from (Moved.change m) == Zone.Hand, ZoneChange.to (Moved.change m) == Zone.Graveyard]) (Set.fromList (fmap (Set.singleton . CardName.MkCardName . Text.pack) ["Hill Giant", "Grizzly Bears"]))
       Spec.assertEqWith s (seat <> "CR 120.3a the damage") [(DamageEvent.amount d, DamageEvent.target d) | GameEvent.DamageDealt d <- seen] [(3, Recipient.ToPlayer S.bob)]
       Spec.assertEqWith s (seat <> "CR 119.3 the life lost and gained") ([LifeChange.amount l | GameEvent.LifeLost l <- seen], [LifeChange.amount l | GameEvent.LifeGained l <- seen]) ([3], [4])
       Spec.assertEqWith s (seat <> "drawn") (List.sort (filter (`elem` sentences) (drawnFor pid gs))) (List.sort sentences)
@@ -255,6 +257,29 @@ spec s registry = Spec.describe s "PlayerView" $ do
       let seat = Text.unpack (Render.player pid) <> ": "
       Spec.assertEqWith s (seat <> "CR 603.10a the giant, seen leaving") [ProjectedCharacteristics.names (Moved.characteristics m) | GameEvent.Moved m <- witnessedBy pid gs, ZoneChange.to (Moved.change m) == Zone.Library] [Set.singleton (CardName.MkCardName (Text.pack "Hill Giant"))]
       Spec.assertBool s (Text.pack "Hill Giant moves from the battlefield to a library." `elem` drawnFor pid gs) (seat <> "drawn")
+  Spec.it s "CR 400.2 / 701.23a a land searched out onto the battlefield is witnessed by both seats as it arrives, the rest of the library by neither" $ do
+    let mine =
+          (S.battlefield S.alice (fmap (uncurry S.settled) [("f1", "Forest"), ("f2", "Forest"), ("f3", "Forest")]))
+            { Seat.hand = Seq.singleton (S.aliased "wilds" (S.cardSetup "Untamed Wilds")),
+              Seat.library = Seq.fromList [S.aliased "hill" (S.cardSetup "Hill Giant"), S.aliased "found" (S.cardSetup "Plains")]
+            }
+        setup = S.board (mine NonEmpty.:| [S.playerSetup S.bob]) S.alice S.precombatMain
+        choices = Choices.none {Choices.manaSources = Seq.fromList (fmap (Just . S.aliasRef) ["f1", "f2", "f3"])}
+        answering prompt label = Move.Answer (Answer.MkAnswer (Text.pack prompt) (Reply.Array [Reply.Text (Text.pack label)]) False)
+        script =
+          S.turn
+            1
+            [ S.on S.precombatMain S.alice (S.castAction (S.aliasRef "wilds") choices),
+              S.on S.precombatMain S.alice Move.Pass,
+              S.on S.precombatMain S.alice (answering "Search" "$found"),
+              S.on S.precombatMain S.alice (answering "Shuffle" "$hill")
+            ]
+    gs <- S.play s registry setup script S.priorityGame
+    Monad.forM_ [S.alice, S.bob] $ \pid -> do
+      let seat = Text.unpack (Render.player pid) <> ": "
+      Spec.assertEqWith s (seat <> "CR 400.2 the land, seen arriving") [ProjectedCharacteristics.names (Moved.characteristics m) | GameEvent.Moved m <- witnessedBy pid gs, ZoneChange.from (Moved.change m) == Zone.Library] [Set.singleton (CardName.MkCardName (Text.pack "Plains"))]
+      Spec.assertBool s (Text.pack "Plains moves from a library to the battlefield." `elem` drawnFor pid gs) (seat <> "drawn")
+    Spec.assertBool s (not ("Hill Giant" `List.isInfixOf` encodedFor S.bob gs)) "CR 701.23a the card alice saw searching reaches no part of bob's view"
   Spec.it s "CR 121.1 / 401.2 a draw is witnessed by both seats as the act alone, never the card" $ do
     let mine = (S.playerSetup S.alice) {Seat.library = Seq.fromList [S.cardSetup "Lava Axe", S.cardSetup "Forest"]}
         theirs = (S.playerSetup S.bob) {Seat.library = Seq.fromList [S.cardSetup "Forest"]}
