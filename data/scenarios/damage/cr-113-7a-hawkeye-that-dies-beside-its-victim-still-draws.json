@@ -1,0 +1,27 @@
+{
+  "description": "CR 603.10a / 113.7a Hawkeye, Avenging Archer that trades with the creature it blocked still draws",
+  "note": "Hawkeye already carries 1 damage, so the Giant's 3 kills it in the same combat damage step its own 3 kills the Giant. Both CR 603.4 checks then read Hawkeye off its last known information, since it is in the graveyard at each.",
+  "board": {
+    "active": "bob",
+    "step": "BeginningOfCombat",
+    "seats": [
+      {
+        "name": "alice",
+        "battlefield": [{ "card": "Hawkeye, Avenging Archer", "label": "hawkeye", "ready": true, "damage": 1 }],
+        "library": [{ "card": "Island" }, { "card": "Island" }]
+      },
+      {
+        "name": "bob",
+        "battlefield": [{ "card": "Hill Giant", "label": "giant", "ready": true }],
+        "library": [{ "card": "Island" }, { "card": "Island" }]
+      }
+    ]
+  },
+  "timeline": [
+    { "turn": 1, "step": "DeclareAttackers", "player": "bob", "do": { "Attack": ["$giant"] } },
+    { "turn": 1, "step": "DeclareBlockers", "player": "alice", "do": { "Block": { "$hawkeye": ["$giant"] } } },
+    { "turn": 1, "step": "EndOfCombat", "player": "bob", "check": { "Count": { "player": "alice", "zone": "Hand", "card": "Island", "count": 1 } } },
+    { "turn": 1, "step": "EndOfCombat", "player": "bob", "check": { "Count": { "player": "alice", "zone": "Graveyard", "card": "Hawkeye, Avenging Archer", "count": 1 } } },
+    { "turn": 1, "step": "EndOfCombat", "player": "bob", "check": { "Count": { "player": "bob", "zone": "Graveyard", "card": "Hill Giant", "count": 1 } } }
+  ]
+}

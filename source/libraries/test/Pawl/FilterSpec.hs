@@ -15,7 +15,9 @@ import qualified Pawl.Types.Comparison as Comparison
 import qualified Pawl.Types.Cost as Cost
 import qualified Pawl.Types.CounterKind as CounterKind
 import qualified Pawl.Types.Cycling as Cycling
+import qualified Pawl.Types.DamageKind as DamageKind
 import qualified Pawl.Types.DamagedParty as DamagedParty
+import qualified Pawl.Types.DealtDamageTo as DealtDamageTo
 import qualified Pawl.Types.Designation as Designation
 import qualified Pawl.Types.Expansion as Expansion
 import qualified Pawl.Types.Filter as Filter.Type
@@ -1711,13 +1713,32 @@ spec s = Spec.describe s "Pawl.Engine.Filter" $ do
   -- player 0 the perspective, and player 1 someone else. Pawl.DamageSpec's
   -- Brine Hag and Reciprocate cases are where a real board fills the field.
   Spec.describe s "DealtDamageToThisTurn" $ do
-    let damaged rs = blackCreature {Filter.dealtDamageTo = Set.fromList rs}
+    let damaged rs = blackCreature {Filter.dealtDamageTo = Set.fromList (fmap (\r -> (r, DamageKind.Noncombat)) rs)}
         asked n = self {Filter.source = Just (ObjectId.MkObjectId n)}
-        toSource = Filter.Type.DealtDamageToThisTurn DamagedParty.Source
-        toYou = Filter.Type.DealtDamageToThisTurn (DamagedParty.Related PlayerRelation.You)
-        toOpponent = Filter.Type.DealtDamageToThisTurn (DamagedParty.Related PlayerRelation.Opponent)
+        to party = Filter.Type.DealtDamageToThisTurn DealtDamageTo.MkDealtDamageTo {DealtDamageTo.party = party, DealtDamageTo.kind = Nothing}
+        toSource = to DamagedParty.Source
+        toYou = to (DamagedParty.Related PlayerRelation.You)
+        toOpponent = to (DamagedParty.Related PlayerRelation.Opponent)
+        it_ = SlotName.MkSlotName (Text.pack "it")
+        toIt = to (DamagedParty.InSlot it_)
+        boundTo ns = self {Filter.slotObjects = Map.singleton it_ (Set.fromList (fmap ObjectId.MkObjectId ns))}
         player n = Recipient.ToPlayer (PlayerId.MkPlayerId n)
         creature n = Recipient.ToCreature (ObjectId.MkObjectId n)
+
+    -- CR 603.10a: the object a slot binds -- a dies trigger's departed creature.
+    Spec.it s "matches a creature that dealt damage to the object a slot binds" $ do
+      Spec.assertBool s (Filter.matches (boundTo [33]) (damaged [creature 33]) toIt) "damaged it"
+      Spec.assertBool s (not (Filter.matches (boundTo [33]) (damaged [creature 34]) toIt)) "damaged something else"
+      Spec.assertBool s (not (Filter.matches self (damaged [creature 33]) toIt)) "nothing bound"
+      Spec.assertBool s (not (Filter.matches (boundTo [33]) (damaged [player 0]) toIt)) "a player is not the bound object"
+
+    -- CR 510.2: combat damage alone, Witch-king of Angmar's narrowing.
+    Spec.it s "a combat kind admits only combat damage" $ do
+      let combatToYou = Filter.Type.DealtDamageToThisTurn DealtDamageTo.MkDealtDamageTo {DealtDamageTo.party = DamagedParty.Related PlayerRelation.You, DealtDamageTo.kind = Just DamageKind.Combat}
+          dealt k = blackCreature {Filter.dealtDamageTo = Set.singleton (player 0, k)}
+      Spec.assertBool s (Filter.matches self (dealt DamageKind.Combat) combatToYou) "combat damage"
+      Spec.assertBool s (not (Filter.matches self (dealt DamageKind.Noncombat) combatToYou)) "noncombat damage"
+      Spec.assertBool s (Filter.matches self (dealt DamageKind.Combat) toYou) "and any damage admits combat"
 
     Spec.it s "matches a creature that dealt damage to the source" $ do
       Spec.assertBool s (Filter.matches (asked 31) (damaged [creature 31]) toSource) "damaged it"

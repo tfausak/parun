@@ -82,9 +82,11 @@
                       {
                         "type": "DealtDamageToThisTurn",
                         "value": {
-                          "type": "Related",
-                          "value": {
-                            "type": "Opponent"
+                          "party": {
+                            "type": "Related",
+                            "value": {
+                              "type": "Opponent"
+                            }
                           }
                         }
                       }
