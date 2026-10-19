@@ -38,6 +38,7 @@ import qualified Pawl.Support as S
 import qualified Pawl.Types.Action as Action
 import qualified Pawl.Types.Answerer as Answerer
 import qualified Pawl.Types.Asked as Asked
+import qualified Pawl.Types.BeginningStep as BeginningStep
 import qualified Pawl.Types.Card as Card
 import qualified Pawl.Types.CardName as CardName
 import qualified Pawl.Types.ClauseIndex as ClauseIndex
@@ -45,6 +46,7 @@ import qualified Pawl.Types.Color as Color
 import qualified Pawl.Types.CounterKind as CounterKind
 import qualified Pawl.Types.Decider as Decider
 import qualified Pawl.Types.Deck as Deck
+import qualified Pawl.Types.Drew as Drew
 import qualified Pawl.Types.EventGroup as EventGroup
 import qualified Pawl.Types.Face as Face
 import qualified Pawl.Types.FaceDownReason as FaceDownReason
@@ -63,6 +65,7 @@ import qualified Pawl.Types.ModeIndex as ModeIndex
 import qualified Pawl.Types.Object as Object
 import qualified Pawl.Types.ObjectId as ObjectId
 import qualified Pawl.Types.OptionalDecision as OptionalDecision
+import qualified Pawl.Types.Phase as Phase
 import qualified Pawl.Types.PlayerId as PlayerId
 import qualified Pawl.Types.Prompt as Prompt
 import qualified Pawl.Types.Recipient as Recipient
@@ -132,7 +135,7 @@ spec s registry = Spec.describe s "Client" $ do
         -- Since alice last answered: the auto payment ends her questions.
         unanswered = pending sc
     Spec.assertBool s (any (\l -> Text.isPrefixOf (Text.pack "Since you last looked: ") l && Text.isInfixOf (Text.pack "Grizzly Bears moves from the stack to the battlefield") l) unanswered) ("shown the bear resolve: " <> show unanswered)
-    Spec.assertBool s (Text.pack "Player 1 passes (no other actions)." `elem` unanswered) "passed for"
+    Spec.assertBool s (Text.pack "Player 1 passes in their precombat main phase (no other actions)." `elem` unanswered) "passed for, in its main phase"
     Spec.assertEqWith s "into the next turn" (fmap ((> turn) . GameState.turnNumber) outcome) (Right True)
 
   Spec.it s "news read at a pass made for a seat the screen does not face waits for its next question, past the turn's end" $ do
@@ -151,7 +154,7 @@ spec s registry = Spec.describe s "Client" $ do
         news = filter (Text.isPrefixOf (Text.pack "Since you last looked: "))
     Spec.assertEqWith s "not shown while the screen faces Player 2" (news facingBob) []
     Spec.assertEqWith s "shown at its next question, a turn later" (news facingAlice) [Text.pack "Since you last looked: Player 2 reveals a face-down card."]
-    Spec.assertBool s (Text.pack "Player 1 passes (no other actions)." `elem` facingBob) "passed for"
+    Spec.assertBool s (any (Text.isPrefixOf (Text.pack "Player 1 passes in ")) facingBob) "passed for"
 
   Spec.it s "each reader's answer reads as its prompt's answer" $ do
     gs <- started s registry
@@ -168,6 +171,41 @@ spec s registry = Spec.describe s "Client" $ do
     Spec.assertEqWith s "x" (answering gs "3" (Prompt.ChooseX alice S.alice o7 Binding.variableX 1 5)) (Right 3)
     Spec.assertEqWith s "mana source" (answering gs "0" (Prompt.ChooseManaSource alice S.alice (ManaCost.MkManaCost [ManaSymbol.Generic 1]) (o7 NonEmpty.:| [o9]))) (Right Nothing)
 
+  Spec.it s "all and a range pick options, and a count-bound pick takes them only at its count" $ do
+    gs <- started s registry
+    let o5 = ObjectId.MkObjectId 5
+        o7 = ObjectId.MkObjectId 7
+        o9 = ObjectId.MkObjectId 9
+        alice = Decider.MkDecider S.alice
+        attacking = Prompt.DeclareAttackers alice S.alice [o5, o7, o9]
+        discarding = Prompt.ChooseDiscard alice S.alice [o5, o7, o9] 2
+    Spec.assertEqWith s "all attack" (answering gs "all" attacking) (Right [o5, o7, o9])
+    Spec.assertEqWith s "a range attacks" (answering gs "2-3" attacking) (Right [o7, o9])
+    Spec.assertEqWith s "a backward range is refused, not read as none" (answering gs "3-2" attacking) (Left (Text.pack "end of input"))
+    Spec.assertEqWith s "a range of the count discards" (answering gs "1-2" discarding) (Right [o5, o7])
+    Spec.assertEqWith s "all of three is refused for two" (answering gs "all" discarding) (Left (Text.pack "end of input"))
+
+  Spec.it s "a run of one player's draws is told as one" $ do
+    gs <- started s registry
+    let drew pid n = LoggedEvent.MkLoggedEvent (EventGroup.MkEventGroup n) (GameEvent.Drew (Drew.MkDrew pid n))
+        drawing = gs {GameState.events = Seq.fromList [drew S.bob 1, drew S.bob 2, drew S.alice 1, drew S.bob 3]}
+        shown = snd (asking Hotseat.fresh {Hotseat.facing = Just S.alice, Hotseat.autoPass = False} [] drawing (Prompt.ChooseAction (Decider.MkDecider S.alice) S.alice [Action.Pass]))
+    Spec.assertEqWith s "told" (filter (Text.isPrefixOf (Text.pack "Since you last looked: ")) shown) [Text.pack "Since you last looked: Player 2 draws 2 cards.; Player 1 draws a card.; Player 2 draws a card."]
+
+  Spec.it s "options for cards in hand the view shows alike merge, and a card shown otherwise under the same name stays apart" $ do
+    forest <- S.printingOf s registry "Forest"
+    let (a, g1) = S.addHandCard forest S.alice (Setup.emptyGame S.bothPlayers)
+        (b, g2) = S.addHandCard forest S.alice g1
+        (c, g3) = S.addHandCard forest S.alice g2
+        gs = g3 {GameState.objects = Map.adjust (\o -> o {Object.counters = Map.singleton CounterKind.PlusOnePlusOne 1}) c (GameState.objects g3)}
+        playing = Prompt.ChooseAction (Decider.MkDecider S.alice) S.alice [Action.Play a Nothing, Action.Play b Nothing, Action.Play c Nothing, Action.Pass]
+        facing = Hotseat.fresh {Hotseat.facing = Just S.alice}
+        (second, shown) = asking facing ["2"] gs playing
+    Spec.assertEqWith s "the menu" (actionMenus shown) [[Text.pack "Play Forest", Text.pack "Play Forest", Text.pack "Pass"]]
+    Spec.assertEqWith s "the second is the Forest with a counter" second (Right (Action.Play c Nothing))
+    Spec.assertEqWith s "the first is the first alike" (fst (asking facing ["1"] gs playing)) (Right (Action.Play a Nothing))
+    Spec.assertEqWith s "the third passes" (fst (asking facing ["3"] gs playing)) (Right Action.Pass)
+
   Spec.it s "a priority offering only passing and mana abilities is passed without asking or handing off" $ do
     (forest, gs) <- withForest s registry
     hand <- maybe (Spec.assertFailure s "no card in hand") pure (Maybe.listToMaybe (Game.Engine.zoneMembers Zone.Hand S.alice gs))
@@ -175,7 +213,8 @@ spec s registry = Spec.describe s "Client" $ do
         manaOnly = Prompt.ChooseAction decider S.alice [Action.ActivateManaAbility forest, Action.Pass]
         facingBob = Hotseat.fresh {Hotseat.facing = Just S.bob}
         facingAlice = Hotseat.fresh {Hotseat.facing = Just S.alice}
-    Spec.assertEqWith s "passed for" (asking facingBob [] gs manaOnly) (Right Action.Pass, [Text.pack "Player 1 passes (no other actions)."])
+        upkeep = gs {GameState.phase = Phase.Beginning BeginningStep.Upkeep, GameState.activePlayer = S.bob}
+    Spec.assertEqWith s "passed for, in the other seat's upkeep" (asking facingBob [] upkeep manaOnly) (Right Action.Pass, [Text.pack "Player 1 passes in Player 2's upkeep (no other actions)."])
     let menu (outcome, shown) = (outcome, Text.pack "Choose an action:" `elem` shown)
     Spec.assertEqWith s "asked when turned off" (menu (asking facingAlice {Hotseat.autoPass = False} [] gs manaOnly)) (Left (Text.pack "end of input"), True)
     Spec.assertEqWith s "asked with a land to play" (menu (asking facingAlice [] gs (Prompt.ChooseAction decider S.alice [Action.Play hand Nothing, Action.Pass]))) (Left (Text.pack "end of input"), True)
@@ -186,7 +225,7 @@ spec s registry = Spec.describe s "Client" $ do
         menus = actionMenus shown
     Spec.assertBool s (either (const False) (const True) outcome) ("finished: " <> show (fmap fst outcome))
     Spec.assertEqWith s "menus of passing and mana abilities" (filter (all (\o -> o == Text.pack "Pass" || Text.isPrefixOf (Text.pack "Activate a mana ability of ") o)) menus) []
-    Spec.assertBool s (Text.pack "Player 1 passes (no other actions)." `elem` shown) "passed for"
+    Spec.assertBool s (any (Text.isPrefixOf (Text.pack "Player 1 passes in ")) shown) "passed for"
 
   Spec.it s "auto pays a cost's color from the land that makes it and its generic from another" $ do
     (lands, resolved, tapped, shown) <- autoCast s registry "Grizzly Bears" ["Mountain", "Mountain", "Forest"]
