@@ -152,8 +152,8 @@ snapshotName c = case Set.toList (ProjectedCharacteristics.names c) of
 
 -- | A witnessed entry as a sentence naming its cards, players and amounts, or
 -- nothing for the bookkeeping a seat can read off the board (a step, a tap,
--- mana, a trigger) or another entry already tells (a spell's moves, a land
--- play's, discard's or mill's move, a block's per-attacker records).
+-- mana, a trigger) or another entry already tells (a cast's, land play's,
+-- discard's or mill's move, a block's per-attacker records).
 event :: PlayerView.PlayerView -> LoggedEvent.LoggedEvent -> Maybe Text.Text
 event view logged = case LoggedEvent.event logged of
   GameEvent.SpellCast c -> said [player (SpellWasCast.player c), Text.pack "casts", snapshotName (SpellWasCast.characteristics c)]
@@ -164,7 +164,7 @@ event view logged = case LoggedEvent.event logged of
   GameEvent.LifeLost l -> said [player (LifeChange.player l), Text.pack "loses", Text.pack (show (LifeChange.amount l)), Text.pack "life"]
   GameEvent.LifeGained l -> said [player (LifeChange.player l), Text.pack "gains", Text.pack (show (LifeChange.amount l)), Text.pack "life"]
   GameEvent.Moved m
-    | from == Zone.Stack || to == Zone.Stack || any (`Set.member` told view) (ZoneChange.departed (Moved.change m) : Foldable.toList (Moved.arrivals m)) -> Nothing
+    | any (`Set.member` told view) (Moved.arrivals m) -> Nothing
     | to == Zone.Graveyard -> said [snapshotName (Moved.characteristics m), Text.pack "is put into a graveyard from", zone from]
     | otherwise -> said [snapshotName (Moved.characteristics m), Text.pack "moves from", zone from, Text.pack "to", zone to]
     where
@@ -210,13 +210,15 @@ event view logged = case LoggedEvent.event logged of
       Recipient.ToObject oid -> name oid
       Recipient.ToPile _ -> Text.pack "a pile"
 
--- | The objects whose move another witnessed entry already tells: a land
--- played, a card discarded or milled.
+-- | The objects whose arrival another witnessed entry already tells: a spell
+-- cast, a land played, a card discarded or milled. Only the move that made
+-- one is told; a later move of it is not.
 told :: PlayerView.PlayerView -> Set.Set ObjectId.ObjectId
 told view =
   Set.fromList . concatMap (telling . LoggedEvent.event) $ PlayerView.witnessed view
   where
     telling e = case e of
+      GameEvent.SpellCast c -> [SpellWasCast.spell c]
       GameEvent.LandPlayed l -> [LandPlayed.land l]
       GameEvent.Discarded d -> [Discarded.card d]
       GameEvent.Milled m -> Foldable.toList (Milled.cards m)

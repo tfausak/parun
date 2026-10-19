@@ -280,6 +280,31 @@ spec s registry = Spec.describe s "PlayerView" $ do
       Spec.assertEqWith s (seat <> "CR 400.2 the land, seen arriving") [ProjectedCharacteristics.names (Moved.characteristics m) | GameEvent.Moved m <- witnessedBy pid gs, ZoneChange.from (Moved.change m) == Zone.Library] [Set.singleton (CardName.MkCardName (Text.pack "Plains"))]
       Spec.assertBool s (Text.pack "Plains moves from a library to the battlefield." `elem` drawnFor pid gs) (seat <> "drawn")
     Spec.assertBool s (not ("Hill Giant" `List.isInfixOf` encodedFor S.bob gs)) "CR 701.23a the card alice saw searching reaches no part of bob's view"
+  Spec.it s "CR 305.1 / 701.8a a land played this turn and then destroyed is drawn leaving the battlefield like every other" $ do
+    let lands = [("p1", "Plains"), ("p2", "Plains"), ("p3", "Plains"), ("p4", "Plains")]
+        mine =
+          (S.battlefield S.alice (fmap (uncurry S.settled) lands))
+            { Seat.hand = Seq.fromList [S.aliased "played" (S.cardSetup "Plains"), S.aliased "geddon" (S.cardSetup "Armageddon")]
+            }
+        setup = S.board (mine NonEmpty.:| [S.battlefield S.bob [S.settled "theirs" "Forest"]]) S.alice S.precombatMain
+        -- CR 605.3a: the played Plains is left over, so the payment declines it.
+        choices = Choices.none {Choices.manaSources = Seq.fromList (fmap (Just . S.aliasRef . fst) lands <> [Nothing])}
+        script =
+          S.turn
+            1
+            [ S.on S.precombatMain S.alice (S.playLand (S.aliasRef "played")),
+              S.on S.precombatMain S.alice (S.castAction (S.aliasRef "geddon") choices)
+            ]
+        died name = Text.pack (name <> " is put into a graveyard from the battlefield.")
+    gs <- S.play s registry setup script S.priorityGame
+    Monad.forM_ [S.alice, S.bob] $ \pid -> do
+      let drawn = drawnFor pid gs
+          seat = Text.unpack (Render.player pid) <> ": "
+      Spec.assertEqWith s (seat <> "every Plains, the one played this turn too") (length (filter (== died "Plains") drawn)) 5
+      Spec.assertEqWith s (seat <> "bob's Forest") (length (filter (== died "Forest") drawn)) 1
+      Spec.assertEqWith s (seat <> "the land play, once") (filter (Text.isInfixOf (Text.pack "Plains moves")) drawn <> filter (== Text.pack "Player 1 plays Plains.") drawn) [Text.pack "Player 1 plays Plains."]
+      Spec.assertBool s (Text.pack "Armageddon is put into a graveyard from the stack." `elem` drawn) (seat <> "CR 608.2n the spell's own move, told by no other entry")
+      Spec.assertEqWith s (seat <> "CR 601.2a the cast's move, told by the cast") (filter (Text.isInfixOf (Text.pack "to the stack")) drawn) []
   Spec.it s "CR 121.1 / 401.2 a draw is witnessed by both seats as the act alone, never the card" $ do
     let mine = (S.playerSetup S.alice) {Seat.library = Seq.fromList [S.cardSetup "Lava Axe", S.cardSetup "Forest"]}
         theirs = (S.playerSetup S.bob) {Seat.library = Seq.fromList [S.cardSetup "Forest"]}
