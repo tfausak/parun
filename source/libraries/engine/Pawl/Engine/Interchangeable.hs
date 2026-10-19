@@ -15,6 +15,7 @@ import qualified Data.Map.Strict as Map
 import qualified Data.Maybe as Maybe
 import qualified Data.Sequence as Seq
 import qualified Data.Set as Set
+import qualified Pawl.Engine.Binding as Binding
 import qualified Pawl.Engine.Commander as Commander
 import qualified Pawl.Engine.Count as Count
 import qualified Pawl.Engine.Filter as Filter.Engine
@@ -384,8 +385,8 @@ copyNames oid row = case row of
 
 playerEffectRowNames :: ObjectId -> ActivePlayerEffect.ActivePlayerEffect -> Bool
 playerEffectRowNames oid row = case row of
-  ActivePlayerEffect.MkActivePlayerEffect source _controller _choices _timestamp expiry _scope effect ->
-    source == oid || Mentions.expiryNames (unread oid) expiry || Mentions.playerEffectNames (unread oid) effect
+  ActivePlayerEffect.MkActivePlayerEffect source _controller _choices _timestamp expiry _scope effect ability ->
+    source == oid || Mentions.expiryNames (unread oid) expiry || Mentions.playerEffectNames (unread oid) effect || ability == Just (Binding.exiledCardAbility oid)
 
 blockRequirementNames :: ObjectId -> ActiveBlockRequirement.ActiveBlockRequirement -> Bool
 blockRequirementNames oid row = case row of

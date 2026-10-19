@@ -35,6 +35,7 @@ import qualified Data.Map.Strict as Map
 import qualified Data.Maybe as Maybe
 import qualified Data.Set as Set
 import Numeric.Natural (Natural)
+import qualified Pawl.Engine.Binding as Binding
 import qualified Pawl.Engine.Condition as Condition
 import qualified Pawl.Engine.Count as Count
 import qualified Pawl.Engine.Expiry as Expiry
@@ -71,7 +72,6 @@ import qualified Pawl.Types.CostComponent as CostComponent
 import qualified Pawl.Types.CostModifier as CostModifier
 import qualified Pawl.Types.CostSubject as CostSubject
 import qualified Pawl.Types.DamagePattern as DamagePattern
-import qualified Pawl.Types.ExileLink as ExileLink
 import qualified Pawl.Types.ExtraVotes as ExtraVotes
 import qualified Pawl.Types.Face as Face
 import Pawl.Types.Filter (Filter)
@@ -515,11 +515,11 @@ applying pid gs =
 
 -- A printed row's source: its choices are read off the object live (CR 604.2).
 liveSource :: Maybe ObjectId -> RowSource
-liveSource source = RowSource.MkRowSource source Nothing
+liveSource source = RowSource.MkRowSource source Nothing Nothing
 
 -- A stored row's source, carrying the choices baked as it began (CR 608.2h).
 storedSource :: ActivePlayerEffect.ActivePlayerEffect -> RowSource
-storedSource active = RowSource.MkRowSource (Just (ActivePlayerEffect.source active)) (Just (ActivePlayerEffect.choices active))
+storedSource active = RowSource.MkRowSource (Just (ActivePlayerEffect.source active)) (Just (ActivePlayerEffect.choices active)) (ActivePlayerEffect.ability active)
 
 -- CR 601.2i: how many spells this player has cast this turn. A fold over the
 -- whole event log, which is exactly "this turn" because Engine.handoffTurn clears
@@ -1977,7 +1977,7 @@ castPermissionsFrom pid zone oid gs =
   let allows (source, effect) = case effect of
         PlayerEffect.CastFrom grant ->
           opensZoneOf pid zone oid (CastFromZone.from grant) gs
-            && inPool (RowSource.object source) (CastFromZone.pool grant)
+            && inPool source (CastFromZone.pool grant)
             && matchesObjectFor (holder (RowSource.object source)) source (CastFromZone.matching grant) oid gs
             && unspentPermission pid (RowSource.object source) grant gs
         -- The other CR 601.3 permission on this axis names a TIME, and this
@@ -2044,14 +2044,16 @@ castPermissionsFrom pid zone oid gs =
       -- make Dawnhand Dissident's "cards you own" true of every card.
       holder source = Maybe.fromMaybe pid (source >>= \sid -> Projection.controllerOf sid gs)
       -- CR 607.2a: the linked set is the cards GameState.exiledWith files
-      -- against this very source object.
-      --
-      -- Not implemented: CR 607.5's pairing (Binding.isLinkedExile), so a
-      -- card an ability the source acquired from an exiled card exiled is in
-      -- the pool too (#5268).
+      -- against this very source object, under the granting ability's pair
+      -- (CR 607.5, Binding.isLinkedExile). Pawl's scenarios
+      -- urianger-augurelt-s-play-arcanum-skips-what-an-acquired-ability-exiled.json
+      -- and patchwork-crawler-s-acquired-play-arcanum-plays-only-what-its-pair-exiled.json
+      -- prove both directions.
       inPool source pool = case pool of
         PermissionPool.EveryCard -> True
-        PermissionPool.CardsExiledWithSource -> Maybe.isJust source && fmap ExileLink.source (Map.lookup oid (GameState.exiledWith gs)) == source
+        PermissionPool.CardsExiledWithSource -> case (RowSource.object source, Map.lookup oid (GameState.exiledWith gs)) of
+          (Just sid, Just link) -> Binding.isLinkedExile (RowSource.ability source) sid link
+          _ -> False
    in Maybe.mapMaybe grantOf (filter allows (applying pid gs))
 
 -- CR 601.3: has this permission a use left this turn? Unlimited always; a

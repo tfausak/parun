@@ -1,5 +1,6 @@
 module Pawl.Types.ActivePlayerEffect where
 
+import qualified Pawl.Types.AbilityName as AbilityName
 import qualified Pawl.Types.AffectedPlayers as AffectedPlayers
 import qualified Pawl.Types.Expiry as Expiry
 import qualified Pawl.Types.ObjectId as ObjectId
@@ -68,6 +69,11 @@ data ActivePlayerEffect = MkActivePlayerEffect
     timestamp :: Timestamp.Timestamp,
     expiry :: Expiry.Expiry,
     scope :: AffectedPlayers.AffectedPlayers PlayerId.PlayerId,
-    effect :: PlayerEffect.PlayerEffect
+    effect :: PlayerEffect.PlayerEffect,
+    -- | CR 607.5: the name of the activated ability whose resolution began the
+    -- effect (Pawl.Engine.Resolve.Slots.resolvingAbilityName), so a reference
+    -- to cards exiled with `source` reads that ability's pair. Nothing for an
+    -- unnamed one, a trigger or a spell.
+    ability :: Maybe AbilityName.AbilityName
   }
   deriving (Eq, Ord, Show)
