@@ -146,16 +146,17 @@ spec s registry = Spec.describe s "Client" $ do
     Spec.assertBool s (Text.pack "Player 1 passes (no other actions)." `elem` shown) "passed for"
 
   Spec.it s "auto pays a cost's color from the land that makes it and its generic from another" $ do
-    (lands, resolved, tapped, shown) <- autoCast s registry ["Mountain", "Mountain", "Forest"]
+    (lands, resolved, tapped, shown) <- autoCast s registry "Grizzly Bears" ["Mountain", "Mountain", "Forest"]
     Spec.assertEqWith s "the bear resolved" resolved True
     Spec.assertEqWith s "the Forest and one Mountain tapped" (fmap (`elem` tapped) lands) [True, False, True]
     Spec.assertBool s (any (Text.isPrefixOf (Text.pack "Paying {1}{G}.")) shown) "asked with the cost"
 
-  Spec.it s "auto pays through dual lands, taking the color still owed" $ do
-    (lands, resolved, tapped, shown) <- autoCast s registry ["Plateau", "Taiga"]
-    Spec.assertEqWith s "the bear resolved" resolved True
-    Spec.assertEqWith s "both tapped" (fmap (`elem` tapped) lands) [True, True]
-    Spec.assertBool s (Text.pack "Auto takes G." `elem` shown) "took green"
+  -- The Plateau makes red ahead of white, so taking its first yield fails.
+  Spec.it s "auto pays through a dual land, taking the color still owed" $ do
+    (lands, resolved, tapped, shown) <- autoCast s registry "Savannah Lions" ["Taiga", "Plateau"]
+    Spec.assertEqWith s "the lions resolved" resolved True
+    Spec.assertEqWith s "the Plateau tapped" (fmap (`elem` tapped) lands) [False, True]
+    Spec.assertBool s (Text.pack "Auto takes W." `elem` shown) "took white"
 
   Spec.it s "auto taps the source making the fewest colors still owed, for the color owed" $ do
     gs <- started s registry
@@ -165,14 +166,14 @@ spec s registry = Spec.describe s "Client" $ do
         (p, board) = S.addPermanent plateau S.alice g1
         decider = Decider.MkDecider S.alice
         facing = Hotseat.fresh {Hotseat.facing = Just S.alice}
-        red = ManaType.Colored Color.Red
-        cost = ManaCost.MkManaCost [ManaSymbol.OfType red, ManaSymbol.OfType (ManaType.Colored Color.Green)]
+        cost = ManaCost.MkManaCost [ManaSymbol.OfType (ManaType.Colored Color.Red), ManaSymbol.OfType (ManaType.Colored Color.Green)]
         options = Mana.manaOptionsOf p board
     Spec.assertEqWith s "the Plateau" (fst (asking facing ["auto"] board (Prompt.ChooseManaSource decider S.alice cost (t NonEmpty.:| [p])))) (Right (Just p))
     case options of
       first : rest -> do
-        let yielded = fmap (fmap ManaUnit.manaType . Mana.yieldUnits) (fst (asking facing {Hotseat.paying = Map.singleton S.alice (Set.singleton red)} [] board (Prompt.ChooseManaYield decider S.alice p (first NonEmpty.:| rest))))
-        Spec.assertEqWith s "red from the Plateau" yielded (Right [red])
+        let white = ManaType.Colored Color.White
+            yielded = fmap (fmap ManaUnit.manaType . Mana.yieldUnits) (fst (asking facing {Hotseat.paying = Map.singleton S.alice (Set.singleton white)} [] board (Prompt.ChooseManaYield decider S.alice p (first NonEmpty.:| rest))))
+        Spec.assertEqWith s "white from the Plateau, its second yield" yielded (Right [white])
       [] -> Spec.assertFailure s "the Plateau makes nothing"
 
   Spec.it s "auto counts the payer's floating mana against the cost" $ do
@@ -295,19 +296,19 @@ asking hotseat typing gs prompt =
       (outcome, sc) = State.runState (Except.runExceptT (State.evalStateT (State.evalStateT (Answerer.unwrap (Game.human terminal) (Asked.MkAsked [] gs prompt)) (SplitMix.MkSplitMix 0)) hotseat)) blank
    in (outcome, reverse (written sc))
 
--- Alice casting a Grizzly Bears with auto from a game after setup and the
+-- Alice casting a creature spell with auto from a game after setup and the
 -- named lands: the lands, whether it resolved, which lands it tapped, and
 -- what the screen showed.
-autoCast :: (Monad m) => Spec.Spec m n -> Registry.Registry m -> [String] -> m ([ObjectId.ObjectId], Bool, [ObjectId.ObjectId], [Text.Text])
-autoCast s registry names = do
+autoCast :: (Monad m) => Spec.Spec m n -> Registry.Registry m -> String -> [String] -> m ([ObjectId.ObjectId], Bool, [ObjectId.ObjectId], [Text.Text])
+autoCast s registry spell names = do
   gs <- started s registry
   printings <- mapM (S.printingOf s registry) names
-  bear <- S.printingOf s registry "Grizzly Bears"
+  card <- S.printingOf s registry spell
   let place (placed, g) printing = let (oid, g') = S.addPermanent printing S.alice g in (placed <> [oid], g')
       (lands, withLands) = List.foldl' place ([], gs) printings
-      board = snd (S.addHandCard bear S.alice withLands)
-      bears = S.countOnBattlefieldByName (CardName.MkCardName (Text.pack "Grizzly Bears")) S.alice
-      seats = Driver.bySeat (Map.singleton S.alice (Game.human (screen 200 castsOnce))) Bot.bot
+      board = snd (S.addHandCard card S.alice withLands)
+      bears = S.countOnBattlefieldByName (CardName.MkCardName (Text.pack spell)) S.alice
+      seats = Driver.bySeat (Map.singleton S.alice (Game.human (screen 200 (castsOnce spell)))) Bot.bot
       run = Driver.drive [] seats 20 (pure . (> bears board) . bears) board
       (outcome, sc) = State.runState (Except.runExceptT (State.evalStateT (State.evalStateT run (SplitMix.MkSplitMix 1)) Hotseat.fresh {Hotseat.facing = Just S.alice})) blank
       -- A game that stopped is read as the board it started from.
@@ -322,14 +323,14 @@ withForest s registry = do
   forest <- S.printingOf s registry "Forest"
   pure (S.addPermanent forest S.alice gs)
 
--- Casts the first Grizzly Bears it is offered, has auto pay for it, and
+-- Casts the first of the spell it is offered, has auto pay for it, and
 -- passes otherwise.
-castsOnce :: Screen -> Maybe Text.Text
-castsOnce sc
+castsOnce :: String -> Screen -> Maybe Text.Text
+castsOnce spell sc
   | any (Text.isPrefixOf (Text.pack "Paying ")) shown = Just (Text.pack "auto")
   | Text.pack "Choose an action:" `elem` shown =
       let options = [(n, rest) | line <- shown, (n, rest) <- [Text.breakOn (Text.pack ". ") (Text.strip line)], Text.all (`elem` ['0' .. '9']) n, not (Text.null n)]
-          cast = [n | not (typedYet "auto" sc), (n, rest) <- options, rest == Text.pack ". Cast Grizzly Bears"]
+          cast = [n | not (typedYet "auto" sc), (n, rest) <- options, rest == Text.pack (". Cast " <> spell)]
        in Maybe.listToMaybe (cast <> [n | (n, rest) <- options, rest == Text.pack ". Pass"])
   | otherwise = plays sc
   where
