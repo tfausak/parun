@@ -1,10 +1,9 @@
 module Pawl.Types.PlayerInstruction where
 
-import qualified Pawl.Types.ObjectId as ObjectId
-
 -- | What a player is instructed to do some number of times, as
--- Pawl.Types.ProposedEvent's WouldPerform proposes it for a CR 614.1a row to
--- resize. Each constructor's comment names the funnel that raises it.
+-- Pawl.Types.ProposedEvent's WouldPerform proposes it and
+-- Pawl.Types.InstructionR's rows name it (CR 614.1a). Each constructor's
+-- comment names the funnel that raises it.
 --
 -- A sibling of Pawl.Types.PlayerAction rather than more of its arms: that type
 -- is what a CR 603.2 trigger watches, recorded as GameEvent.PlayerActed, and a
@@ -38,8 +37,7 @@ data PlayerInstruction
   | -- | CR 701.55a / 701.55c: face a villainous choice this many times. Raised
     -- once per facing seat by Pawl.Engine.Resolve.villainousPass.
     FaceVillainousChoice
-  | -- | The Unstable FAQ: assemble this many Contraptions, the permanent
-    -- assembling them named where one is (a Rigger's "it assembles"). Raised
-    -- once per instruction by Pawl.Engine.Contraption.assemble.
-    Assemble (Maybe ObjectId.ObjectId)
-  deriving (Eq, Ord, Show)
+  | -- | The Unstable FAQ: assemble this many Contraptions. Raised once per
+    -- instruction by Pawl.Engine.Contraption.assemble.
+    Assemble
+  deriving (Bounded, Enum, Eq, Ord, Show)

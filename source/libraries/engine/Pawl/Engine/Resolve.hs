@@ -1222,7 +1222,7 @@ villainousPass resolving source controller idx legal orElse limbs performLimb ac
   fmap fst $
     Monad.foldM
       ( \seat chooser -> do
-          outcome <- Event.applyReplacements (ProposedEvent.WouldPerform PlayerInstruction.FaceVillainousChoice chooser 1)
+          outcome <- Event.applyReplacements (ProposedEvent.WouldPerform PlayerInstruction.FaceVillainousChoice Nothing chooser 1)
           let times = maybe 0 (Natural.toIntSaturating . snd) (outcome >>= Replacement.asPerformed PlayerInstruction.FaceVillainousChoice)
           Monad.foldM (\faced _ -> face chooser faced) seat (List.replicate times ())
       )

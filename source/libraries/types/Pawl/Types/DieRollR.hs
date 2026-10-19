@@ -7,7 +7,7 @@ import qualified Pawl.Types.DieRollRewrite as DieRollRewrite
 -- are intercepted (CR 706.1 / 614.1a), and what happens instead.
 --
 -- A bare ControllerRelation beside the rewrite rather than a pattern RECORD,
--- Pawl.Types.CoinFlipR's shape and for its reason: the roller is the only seat
+-- Pawl.Types.InstructionR's shape and for its reason: the roller is the only seat
 -- rule 706.1's instruction concerns, and the rest of the roll -- the die's size
 -- and the count -- belongs to the instruction rather than to anything a row here
 -- would narrow by. Notably NOT the die's size: every printing of the sentence

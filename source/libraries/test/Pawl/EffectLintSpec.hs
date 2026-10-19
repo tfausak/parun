@@ -595,12 +595,8 @@ idleTokenRowOffends replacement = case replacement of
   ReplacementEffect.LifeGainR {} -> False
   ReplacementEffect.DrawR {} -> False
   ReplacementEffect.DrawCountR {} -> False
-  ReplacementEffect.MillCountR {} -> False
-  ReplacementEffect.CoinFlipR {} -> False
+  ReplacementEffect.InstructionR {} -> False
   ReplacementEffect.DieRollR {} -> False
-  ReplacementEffect.ProliferateR {} -> False
-  ReplacementEffect.ScryR {} -> False
-  ReplacementEffect.VillainousChoiceR {} -> False
   ReplacementEffect.AssembleR {} -> False
   ReplacementEffect.GameLossR {} -> False
   ReplacementEffect.PlaneswalkR {} -> False
@@ -660,12 +656,8 @@ phasePatternOffends replacement = case replacement of
   ReplacementEffect.LifeGainR {} -> False
   ReplacementEffect.DrawR {} -> False
   ReplacementEffect.DrawCountR {} -> False
-  ReplacementEffect.MillCountR {} -> False
-  ReplacementEffect.CoinFlipR {} -> False
+  ReplacementEffect.InstructionR {} -> False
   ReplacementEffect.DieRollR {} -> False
-  ReplacementEffect.ProliferateR {} -> False
-  ReplacementEffect.ScryR {} -> False
-  ReplacementEffect.VillainousChoiceR {} -> False
   ReplacementEffect.AssembleR {} -> False
   ReplacementEffect.GameLossR {} -> False
   ReplacementEffect.PlaneswalkR {} -> False
@@ -732,12 +724,8 @@ engineOnlyArmOffends replacement = case replacement of
   -- engine-only. LifeLossR's answer, and for its reason.
   ReplacementEffect.DrawR {} -> False
   ReplacementEffect.DrawCountR {} -> False
-  ReplacementEffect.MillCountR {} -> False
-  ReplacementEffect.CoinFlipR {} -> False
+  ReplacementEffect.InstructionR {} -> False
   ReplacementEffect.DieRollR {} -> False
-  ReplacementEffect.ProliferateR {} -> False
-  ReplacementEffect.ScryR {} -> False
-  ReplacementEffect.VillainousChoiceR {} -> False
   ReplacementEffect.AssembleR {} -> False
   ReplacementEffect.GameLossR {} -> False
   ReplacementEffect.PlaneswalkR {} -> False
@@ -825,12 +813,8 @@ turnUpRequiringOffends replacement = case replacement of
   ReplacementEffect.LifeGainR {} -> False
   ReplacementEffect.DrawR {} -> False
   ReplacementEffect.DrawCountR {} -> False
-  ReplacementEffect.MillCountR {} -> False
-  ReplacementEffect.CoinFlipR {} -> False
+  ReplacementEffect.InstructionR {} -> False
   ReplacementEffect.DieRollR {} -> False
-  ReplacementEffect.ProliferateR {} -> False
-  ReplacementEffect.ScryR {} -> False
-  ReplacementEffect.VillainousChoiceR {} -> False
   ReplacementEffect.AssembleR {} -> False
   ReplacementEffect.GameLossR {} -> False
   ReplacementEffect.PlaneswalkR {} -> False
@@ -880,12 +864,8 @@ riderWithoutPreventionOffends replacement = case replacement of
   ReplacementEffect.LifeGainR {} -> False
   ReplacementEffect.DrawR {} -> False
   ReplacementEffect.DrawCountR {} -> False
-  ReplacementEffect.MillCountR {} -> False
-  ReplacementEffect.CoinFlipR {} -> False
+  ReplacementEffect.InstructionR {} -> False
   ReplacementEffect.DieRollR {} -> False
-  ReplacementEffect.ProliferateR {} -> False
-  ReplacementEffect.ScryR {} -> False
-  ReplacementEffect.VillainousChoiceR {} -> False
   ReplacementEffect.AssembleR {} -> False
   ReplacementEffect.GameLossR {} -> False
   ReplacementEffect.PlaneswalkR {} -> False
@@ -933,12 +913,8 @@ shufflingOutsideLibraryOffends replacement = case replacement of
   ReplacementEffect.LifeGainR {} -> False
   ReplacementEffect.DrawR {} -> False
   ReplacementEffect.DrawCountR {} -> False
-  ReplacementEffect.MillCountR {} -> False
-  ReplacementEffect.CoinFlipR {} -> False
+  ReplacementEffect.InstructionR {} -> False
   ReplacementEffect.DieRollR {} -> False
-  ReplacementEffect.ProliferateR {} -> False
-  ReplacementEffect.ScryR {} -> False
-  ReplacementEffect.VillainousChoiceR {} -> False
   ReplacementEffect.AssembleR {} -> False
   ReplacementEffect.GameLossR {} -> False
   ReplacementEffect.PlaneswalkR {} -> False
@@ -2111,7 +2087,7 @@ effectLintSpec s registry = Spec.describe s "Lint" $ do
           Effect.LookAt (LookAt.MkLookAt ref slot _) | not (movesAtMostOne ref) -> [slot]
           Effect.Reveal (Reveal.MkReveal ref mSlot) | not (movesAtMostOne ref) -> Maybe.maybeToList mSlot
           -- CR 701.17c's slot, plural at every depth and every seat count: a
-          -- MillCountR row resizes the INSTRUCTION (Bruvac the Grandiloquent
+          -- InstructionR row resizes the INSTRUCTION (Bruvac the Grandiloquent
           -- doubles it), so even a literal 1 can reach Resolve's `several ->
           -- bindObjectsSlot` arm and a singular reader over that slot would
           -- answer unanswered. No count test and no seat test, the destruction's

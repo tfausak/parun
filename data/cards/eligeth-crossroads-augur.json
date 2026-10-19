@@ -42,8 +42,11 @@
       "replacementEffects": [
         {
           "effect": {
-            "type": "ScryR",
+            "type": "InstructionR",
             "value": {
+              "instruction": {
+                "type": "Scry"
+              },
               "rewrite": {
                 "type": "DrawInstead"
               },

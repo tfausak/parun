@@ -3,7 +3,7 @@
 
 -- Covers: CR 705 FLIPPING A COIN -- Pawl.Types.FlipCoin (both of its tallies),
 -- Pawl.Types.CoinReading, Pawl.Engine.Coin, Pawl.Engine.Event.flipOneCoin and
--- the CR 614.1a replacement over it (Pawl.Types.CoinFlipR, Krark's Thumb),
+-- the CR 614.1a replacement over it (Pawl.Types.InstructionR, Krark's Thumb),
 -- Pawl.Types.StatedFlip, Effect.FlipCoin's arm in Pawl.Engine.Resolve, and the
 -- Pawl.Types.Prompt / Pawl.Types.Response pairs the call and the flip are
 -- externalised through. The transcript legs live in

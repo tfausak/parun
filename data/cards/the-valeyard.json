@@ -57,10 +57,17 @@
       "replacementEffects": [
         {
           "effect": {
-            "type": "VillainousChoiceR",
+            "type": "InstructionR",
             "value": {
+              "instruction": {
+                "type": "FaceVillainousChoice"
+              },
               "rewrite": {
-                "type": "AdditionalTime"
+                "type": "Scaled",
+                "value": {
+                  "type": "AddMore",
+                  "value": 1
+                }
               },
               "whose": {
                 "type": "Opponent"

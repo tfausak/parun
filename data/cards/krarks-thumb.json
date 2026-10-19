@@ -12,10 +12,17 @@
       "replacementEffects": [
         {
           "effect": {
-            "type": "CoinFlipR",
+            "type": "InstructionR",
             "value": {
+              "instruction": {
+                "type": "FlipCoin"
+              },
               "rewrite": {
-                "type": "Doubled"
+                "type": "Scaled",
+                "value": {
+                  "type": "Multiply",
+                  "value": 2
+                }
               },
               "whose": {
                 "type": "You"

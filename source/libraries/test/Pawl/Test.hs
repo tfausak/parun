@@ -151,8 +151,6 @@ import qualified Pawl.Codec.ClassLevelSpec
 import qualified Pawl.Codec.ClauseIndexSpec
 import qualified Pawl.Codec.ClauseSpec
 import qualified Pawl.Codec.CoinFaceSpec
-import qualified Pawl.Codec.CoinFlipRSpec
-import qualified Pawl.Codec.CoinFlipRewriteSpec
 import qualified Pawl.Codec.CoinFlippedSpec
 import qualified Pawl.Codec.CoinReadingSpec
 import qualified Pawl.Codec.ColorSpec
@@ -359,6 +357,8 @@ import qualified Pawl.Codec.InZoneSpec
 import qualified Pawl.Codec.InherentTriggerSourceSpec
 import qualified Pawl.Codec.InitiativeTargetSpec
 import qualified Pawl.Codec.InstanceOrdinalSpec
+import qualified Pawl.Codec.InstructionRSpec
+import qualified Pawl.Codec.InstructionRewriteSpec
 import qualified Pawl.Codec.KeywordCountSpec
 import qualified Pawl.Codec.KeywordDesignatorSpec
 import qualified Pawl.Codec.KeywordFamilySpec
@@ -417,8 +417,6 @@ import qualified Pawl.Codec.MeldSourceSpec
 import qualified Pawl.Codec.MeldSpec
 import qualified Pawl.Codec.MentoredSpec
 import qualified Pawl.Codec.MergeComponentSpec
-import qualified Pawl.Codec.MillCountRSpec
-import qualified Pawl.Codec.MillCountRewriteSpec
 import qualified Pawl.Codec.MillSpec
 import qualified Pawl.Codec.MillTallySpec
 import qualified Pawl.Codec.MilledSpec
@@ -514,6 +512,7 @@ import qualified Pawl.Codec.PlayerDesignationTallySpec
 import qualified Pawl.Codec.PlayerDrawsNthCardSpec
 import qualified Pawl.Codec.PlayerEffectSpec
 import qualified Pawl.Codec.PlayerIdSpec
+import qualified Pawl.Codec.PlayerInstructionSpec
 import qualified Pawl.Codec.PlayerQuantitySpec
 import qualified Pawl.Codec.PlayerRefSpec
 import qualified Pawl.Codec.PlayerRelationSpec
@@ -540,8 +539,6 @@ import qualified Pawl.Codec.ProductionTagSpec
 import qualified Pawl.Codec.ProhibitSpec
 import qualified Pawl.Codec.ProhibitionSpec
 import qualified Pawl.Codec.ProjectedCharacteristicsSpec
-import qualified Pawl.Codec.ProliferateRSpec
-import qualified Pawl.Codec.ProliferateRewriteSpec
 import qualified Pawl.Codec.ProtectionSpec
 import qualified Pawl.Codec.PrototypeSpec
 import qualified Pawl.Codec.PutCountersFromSpec
@@ -594,8 +591,6 @@ import qualified Pawl.Codec.SaddlingSpec
 import qualified Pawl.Codec.ScalingSpec
 import qualified Pawl.Codec.ScenarioSpec
 import qualified Pawl.Codec.ScopeSpec
-import qualified Pawl.Codec.ScryRSpec
-import qualified Pawl.Codec.ScryRewriteSpec
 import qualified Pawl.Codec.SearchDestinationSpec
 import qualified Pawl.Codec.SearchSpec
 import qualified Pawl.Codec.SeatSpec
@@ -689,8 +684,6 @@ import qualified Pawl.Codec.UsesSpec
 import qualified Pawl.Codec.VanguardSpec
 import qualified Pawl.Codec.VentureMarkerEnteredSpec
 import qualified Pawl.Codec.ViewIsSpec
-import qualified Pawl.Codec.VillainousChoiceRSpec
-import qualified Pawl.Codec.VillainousChoiceRewriteSpec
 import qualified Pawl.Codec.VoteSpec
 import qualified Pawl.Codec.VotedSpec
 import qualified Pawl.Codec.WardSpec
@@ -1045,8 +1038,6 @@ spec s registry = do
   Pawl.Codec.ClauseSpec.spec s
   Pawl.Codec.CoinFaceSpec.spec s
   Pawl.Codec.CoinFlippedSpec.spec s
-  Pawl.Codec.CoinFlipRewriteSpec.spec s
-  Pawl.Codec.CoinFlipRSpec.spec s
   Pawl.Codec.CoinReadingSpec.spec s
   Pawl.Codec.ColorSpec.spec s
   Pawl.Codec.CombatRestrictionSpec.spec s
@@ -1254,6 +1245,8 @@ spec s registry = do
   Pawl.Codec.InitiativeTargetSpec.spec s
   Pawl.Codec.InstanceOrdinalSpec.spec s
   Pawl.Codec.InZoneSpec.spec s
+  Pawl.Codec.InstructionRSpec.spec s
+  Pawl.Codec.InstructionRewriteSpec.spec s
   Pawl.Codec.KeywordCountSpec.spec s
   Pawl.Codec.KeywordDesignatorSpec.spec s
   Pawl.Codec.KeywordFamilySpec.spec s
@@ -1282,6 +1275,7 @@ spec s registry = do
   Pawl.Codec.LoggedEventSpec.spec s
   Pawl.Codec.LookAtSpec.spec s
   Pawl.Codec.LookedSpec.spec s
+  Pawl.Codec.PlayerInstructionSpec.spec s
   Pawl.Codec.SeatViewSpec.spec s
   Pawl.Codec.PlayerViewSpec.spec s
   Pawl.Codec.QuestionSpec.spec s
@@ -1317,8 +1311,6 @@ spec s registry = do
   Pawl.Codec.MeldSpec.spec s
   Pawl.Codec.MentoredSpec.spec s
   Pawl.Codec.MergeComponentSpec.spec s
-  Pawl.Codec.MillCountRewriteSpec.spec s
-  Pawl.Codec.MillCountRSpec.spec s
   Pawl.Codec.MilledSpec.spec s
   Pawl.Codec.MillSpec.spec s
   Pawl.Codec.MillTallySpec.spec s
@@ -1436,8 +1428,6 @@ spec s registry = do
   Pawl.Codec.ProhibitionSpec.spec s
   Pawl.Codec.ProhibitSpec.spec s
   Pawl.Codec.ProjectedCharacteristicsSpec.spec s
-  Pawl.Codec.ProliferateRewriteSpec.spec s
-  Pawl.Codec.ProliferateRSpec.spec s
   Pawl.Codec.ProtectionSpec.spec s
   Pawl.Codec.PrototypeSpec.spec s
   Pawl.Codec.PutCountersFromSpec.spec s
@@ -1492,8 +1482,6 @@ spec s registry = do
   Pawl.Codec.PlaneswalkRSpec.spec s
   Pawl.Codec.PlaneswalkRewriteSpec.spec s
   Pawl.Codec.ScopeSpec.spec s
-  Pawl.Codec.ScryRewriteSpec.spec s
-  Pawl.Codec.ScryRSpec.spec s
   Pawl.Codec.SearchDestinationSpec.spec s
   Pawl.Codec.SearchSpec.spec s
   Pawl.Codec.SeatSpec.spec s
@@ -1584,8 +1572,6 @@ spec s registry = do
   Pawl.Codec.VanguardSpec.spec s
   Pawl.Codec.VentureMarkerEnteredSpec.spec s
   Pawl.Codec.ViewIsSpec.spec s
-  Pawl.Codec.VillainousChoiceRewriteSpec.spec s
-  Pawl.Codec.VillainousChoiceRSpec.spec s
   Pawl.Codec.VotedSpec.spec s
   Pawl.Codec.VoteSpec.spec s
   Pawl.Codec.WardSpec.spec s

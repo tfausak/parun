@@ -1,7 +1,6 @@
 module Pawl.Types.ReplacementEffect where
 
 import qualified Pawl.Types.AttachR as AttachR
-import qualified Pawl.Types.CoinFlipR as CoinFlipR
 import qualified Pawl.Types.CounterR as CounterR
 import qualified Pawl.Types.DamageR as DamageR
 import qualified Pawl.Types.DestructionR as DestructionR
@@ -11,18 +10,15 @@ import qualified Pawl.Types.DrawR as DrawR
 import qualified Pawl.Types.EntryR as EntryR
 import qualified Pawl.Types.Filter as Filter
 import qualified Pawl.Types.GameLossR as GameLossR
+import qualified Pawl.Types.InstructionR as InstructionR
 import qualified Pawl.Types.Keyword as Keyword
 import qualified Pawl.Types.LifeGainR as LifeGainR
 import qualified Pawl.Types.LifeLossR as LifeLossR
-import qualified Pawl.Types.MillCountR as MillCountR
 import qualified Pawl.Types.PhasePattern as PhasePattern
 import qualified Pawl.Types.PlaneswalkR as PlaneswalkR
-import qualified Pawl.Types.ProliferateR as ProliferateR
-import qualified Pawl.Types.ScryR as ScryR
 import qualified Pawl.Types.TokenR as TokenR
 import qualified Pawl.Types.TurnUpR as TurnUpR
 import qualified Pawl.Types.UntapR as UntapR
-import qualified Pawl.Types.VillainousChoiceR as VillainousChoiceR
 import qualified Pawl.Types.ZoneChangeR as ZoneChangeR
 
 -- | CR 614.1a: a replacement effect, classified by the EVENT CLASS it intercepts
@@ -178,44 +174,18 @@ data ReplacementEffect card ability effect
     -- instruction is settled before any draw inside it -- so a board carrying
     -- both rows applies each once.
     DrawCountR DrawCountR.DrawCountR
-  | -- | CR 701.17a / 614.1a: "if an opponent would mill one or more cards, they
-    -- mill twice that many cards instead" (Bruvac the Grandiloquent). Its own arm
-    -- because a mill is its own event class: rule 701.17a's action moves cards
-    -- from a library to a graveyard as one batch, and a ZoneChangeR watching those
-    -- moves sees each card separately and cannot change how many there are.
-    --
-    -- The INSTRUCTION and not the individual moves, DrawCountR's split: a row here
-    -- resizes the count before any card is looked at, which is what CR 701.17d's
-    -- "if more than one card is milled due to replacement effects" is about.
-    MillCountR MillCountR.MillCountR
-  | -- | CR 705.1 / 614.1a: "if you would flip a coin, instead flip two coins and
-    -- ignore one" (Krark's Thumb). Its own arm because rule 705.1's flip is its
-    -- own event class: nothing else in the rules asks for a random two-way
-    -- result, and CR 706's die roll is a different rule with a different
-    -- vocabulary (no call, no winner, and a size).
-    --
-    -- Carries no pattern beyond CR 109.5's relation, for LifeGainR's reason --
-    -- see Pawl.Types.CoinFlipR.
-    CoinFlipR CoinFlipR.CoinFlipR
+  | -- | CR 614.1a: a player's instruction to do something some number of times,
+    -- resized or replaced (Krark's Thumb, Tekuthal, Kenessos, Eligeth, The
+    -- Valeyard, Bruvac the Grandiloquent) -- ProposedEvent's WouldPerform.
+    InstructionR InstructionR.InstructionR
   | -- | CR 706.1 / 614.1a: "if you would roll one or more dice, instead roll that
     -- many dice plus one and ignore the lowest roll" (Pixie Guide). Its own arm
-    -- beside CoinFlipR because rule 706's roll and rule 705's flip are two event
-    -- classes with two vocabularies: a roll has a die SIZE and a COUNT the
-    -- instruction names and no call and no winner, and a row watching one can say
-    -- nothing about the other.
+    -- beside InstructionR because rule 706's roll carries two counts, the dice
+    -- and the ignored (CR 706.6), where a flip carries one.
     --
-    -- Carries no pattern beyond CR 109.5's relation, for CoinFlipR's reason --
+    -- Carries no pattern beyond CR 109.5's relation, InstructionR's reason --
     -- see Pawl.Types.DieRollR.
     DieRollR DieRollR.DieRollR
-  | -- | CR 701.34a / 614.1a: "if you would proliferate, proliferate twice
-    -- instead" (Tekuthal, Inquiry Dominus).
-    ProliferateR ProliferateR.ProliferateR
-  | -- | CR 701.22a / 614.1a: "if you would scry a number of cards, [...]
-    -- instead" (Kenessos, Priest of Thassa; Eligeth, Crossroads Augur).
-    ScryR ScryR.ScryR
-  | -- | CR 701.55c / 614.1a: "if an opponent would face a villainous choice, they
-    -- face that choice an additional time" (The Valeyard).
-    VillainousChoiceR VillainousChoiceR.VillainousChoiceR
   | -- | The Unstable FAQ with CR 614.1a: "if a Rigger you control would assemble
     -- a Contraption, it assembles two Contraptions instead" (Steamflogger Boss),
     -- the Filter judging the permanent that assembles. No rewrite field: the
