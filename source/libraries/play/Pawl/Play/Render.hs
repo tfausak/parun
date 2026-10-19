@@ -134,7 +134,7 @@ named view oid = case Map.lookup oid (objects view) of
   Just o -> nameOf o
   Nothing -> maybe (Text.pack ("object " <> show (ObjectId.unwrap oid))) snapshotName (Map.lookup oid (snapshots view))
 
--- | CR 608.2h: what each witnessed move showed the objects it moved as, by
+-- | What each witnessed move showed the object it moved as, by
 -- either end's id, the latest winning.
 snapshots :: PlayerView.PlayerView -> Map.Map ObjectId.ObjectId ProjectedCharacteristics.ProjectedCharacteristics
 snapshots view =
