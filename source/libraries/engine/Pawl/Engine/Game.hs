@@ -277,8 +277,7 @@ sheetContent sheet kind index = do
 -- rather than after the entry loop because CR 614.12 asks for the
 -- characteristics the permanent would have on the battlefield, and for this
 -- token those are the copy's from the instant it exists. The creation's own
--- status (CR 110.5b) is the caller's. Pawl.Engine.Event.createTokens mints it,
--- and Pawl.Engine.Replacement.wouldExist stands it up before it exists.
+-- status (CR 110.5b) is the caller's, Pawl.Engine.Event.createTokens.
 tokenOfLot :: PlayerId -> PrintingId.PrintingId -> TokenLot.TokenLot -> Timestamp.Timestamp -> Object
 tokenOfLot owner printing lot ts =
   (Object.new owner (Source.OfToken printing) Zone.Battlefield ts)
@@ -3407,8 +3406,9 @@ movedChange event = case event of
 --
 -- castOf's, discardOf's and enteredBattlefield's sibling, and here for their
 -- import-graph reason: the callers are Pawl.Engine.Quantity's
--- PlayersDealtDamageThisTurn arm and Pawl.Engine.Projection's fold for
--- Filter.DealtDamageThisTurn.
+-- PlayersDealtDamageThisTurn arm, Pawl.Engine.Projection's fold for
+-- Filter.DealtDamageThisTurn and Pawl.Engine.Count.dealtDamageTo's for
+-- Filter.DealtDamageToThisTurn.
 --
 -- The `amount > 0` test below is CR 120.8 -- "if a source would deal 0 damage, it does
 -- not deal damage at all" -- and a FENCE rather than a reachable filter on the

@@ -339,6 +339,7 @@ historyReaders =
     (["AttackedThisTurn"], Just attackerDeclared),
     (["MilledThisTurn"], Just milled),
     (["DealtDamageThisTurn"], Just (\event -> Maybe.isJust (Game.damagedObject event) || Maybe.isJust (Game.damagedPlayer event))),
+    (["DealtDamageToThisTurn"], via Game.damageRecipient),
     (["CrewedSourceThisTurn"], Just crewed),
     (["ConvokedSourceThisTurn"], Just convokedOrMoved),
     (["SaddledSourceThisTurn"], Just saddled),

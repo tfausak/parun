@@ -234,6 +234,7 @@ import qualified Pawl.Codec.DamagePatternSpec
 import qualified Pawl.Codec.DamagePreventedSpec
 import qualified Pawl.Codec.DamageRSpec
 import qualified Pawl.Codec.DamageRewriteSpec
+import qualified Pawl.Codec.DamagedPartySpec
 import qualified Pawl.Codec.DaytimeSpec
 import qualified Pawl.Codec.DealDamageSpec
 import qualified Pawl.Codec.DeciderSpec
@@ -316,6 +317,7 @@ import qualified Pawl.Codec.ExpirySpec
 import qualified Pawl.Codec.ExploitedSpec
 import qualified Pawl.Codec.ExtraPhaseSpec
 import qualified Pawl.Codec.ExtraTurnSpec
+import qualified Pawl.Codec.ExtraVotesSpec
 import qualified Pawl.Codec.FaceDownCharacteristicsSpec
 import qualified Pawl.Codec.FaceDownReasonSpec
 import qualified Pawl.Codec.FaceDownStateSpec
@@ -1121,6 +1123,7 @@ spec s registry = do
   Pawl.Codec.DamagePartSpec.spec s
   Pawl.Codec.DamagePatternSpec.spec s
   Pawl.Codec.DamagePreventedSpec.spec s
+  Pawl.Codec.DamagedPartySpec.spec s
   Pawl.Codec.DamageRewriteSpec.spec s
   Pawl.Codec.DamageRSpec.spec s
   Pawl.Codec.DaytimeSpec.spec s
@@ -1206,6 +1209,7 @@ spec s registry = do
   Pawl.Codec.ExploitedSpec.spec s
   Pawl.Codec.ExtraPhaseSpec.spec s
   Pawl.Codec.ExtraTurnSpec.spec s
+  Pawl.Codec.ExtraVotesSpec.spec s
   Pawl.Codec.FaceDownCharacteristicsSpec.spec s
   Pawl.Codec.FaceDownReasonSpec.spec s
   Pawl.Codec.FaceDownStateSpec.spec s

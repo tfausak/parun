@@ -1915,6 +1915,8 @@ stubView table oid =
                 Filter.convokedThisTurn = Set.empty,
                 -- CR 702.171c: nor any saddling, for the same reason.
                 Filter.saddledThisTurn = Set.empty,
+                -- CR 120.1: nor any damage.
+                Filter.dealtDamageTo = Set.empty,
                 -- CR 302.6: the table registers no sickness, and no Count in the
                 -- pool filters by one, so ControlledSinceTurnBegan is vacuously
                 -- False against this stub.

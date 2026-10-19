@@ -499,6 +499,7 @@ filterNames asking criterion = case criterion of
   Filter.ConvokedSourceThisTurn -> True
   Filter.SaddledSourceThisTurn -> True
   Filter.DealtDamageThisTurn -> True
+  Filter.DealtDamageToThisTurn _ -> True
   Filter.EnteredThisTurn -> True
   Filter.ControlledSinceTurnBegan -> False
   Filter.AttachedTo nested -> filterNames asking nested
@@ -2241,7 +2242,7 @@ playerEffectNames asking x = case x of
   PlayerEffect.CantGetCounters _playerCounterKind -> False
   PlayerEffect.StateCoinFlip _statedFlip -> False
   PlayerEffect.ModifyDieRoll modifiedRoll -> modifiedRollNames asking modifiedRoll
-  PlayerEffect.AdditionalVotes _natural -> False
+  PlayerEffect.AdditionalVotes _extraVotes -> False
   PlayerEffect.AdditionalSurveilCards _natural -> False
   PlayerEffect.PutTappedAsYouCascade filter_ -> filterNames asking filter_
   PlayerEffect.CantGainLife -> False

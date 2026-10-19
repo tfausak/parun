@@ -1,12 +1,13 @@
 module Pawl.Types.TapPermanents where
 
-import qualified Numeric.Natural as Natural
+import qualified Pawl.Types.CostAmount as CostAmount
 import qualified Pawl.Types.Filter as Filter
 
 -- | The payload of Pawl.Types.CostComponent's TapPermanents arm: CR 601.2f's
 -- "tapping permanents" as a cost, spent by tapping exactly this many permanents
 -- the payer chooses out of the ones the Filter admits. Springleaf Drum's "Tap
--- an untapped creature you control" is the printing.
+-- an untapped creature you control" is the printing, and Explosive
+-- Singularity's "tap any number" the announced count (CR 601.2b).
 --
 -- PARAMETRIC in the keyword for the Filter it carries, exactly as
 -- Pawl.Types.CostComponent is.
@@ -23,7 +24,7 @@ import qualified Pawl.Types.Filter as Filter
 -- differ: Pawl.Engine.Cost's arms pay one through Pawl.Engine.Event.sacrificeAll
 -- and the other with a tap, and no reader wants to be told they are the same.
 data TapPermanents keyword = MkTapPermanents
-  { count :: Natural.Natural,
+  { count :: CostAmount.CostAmount,
     whichPermanents :: Filter.Filter keyword,
     -- | CR 205.3m: the permanents tapped must hold one creature type in common
     -- -- Weight of Conscience's "two untapped creatures you control that share
