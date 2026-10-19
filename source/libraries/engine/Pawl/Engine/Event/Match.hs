@@ -351,7 +351,7 @@ countersRemovedFrom bearer wanted event = case event of
 -- be answered off a snapshot of a permanent that is gone.
 boundDeparts :: Map.Map SlotName.SlotName Binding -> Set.Set Zone -> SlotName.SlotName -> GameEvent -> Bool
 boundDeparts bindings destinations slot event = case event of
-  GameEvent.Moved (Moved.MkMoved zc _ _ _ _ _)
+  GameEvent.Moved (Moved.MkMoved zc _ _ _ _ _ _)
     | ZoneChange.from zc == Zone.Battlefield && Set.member (ZoneChange.to zc) destinations ->
         Map.lookup slot (Binding.objectSlots bindings) == Just (ZoneChange.departed zc)
   GameEvent.Moved {} -> False
@@ -4532,7 +4532,7 @@ matchesTriggerGiven bindings board gs bearer you cond event = case cond of
   -- `from` is the half that does the work: the same card discarded out of a hand
   -- or dying off the battlefield reaches the same graveyard and must not trigger.
   TriggerCondition.SelfPutIntoGraveyardFromLibrary -> case event of
-    GameEvent.Moved (Moved.MkMoved zc _ _ _ _ _) ->
+    GameEvent.Moved (Moved.MkMoved zc _ _ _ _ _ _) ->
       ZoneChange.object zc == bearer
         && ZoneChange.from zc == Zone.Library
         && ZoneChange.to zc == Zone.Graveyard
@@ -4619,7 +4619,7 @@ matchesTriggerGiven bindings board gs bearer you cond event = case cond of
   -- what makes the graveyard the one zone the scan has to find the bearer in,
   -- however far away the card started.
   TriggerCondition.SelfPutIntoGraveyardFromAnywhere -> case event of
-    GameEvent.Moved (Moved.MkMoved zc _ _ _ _ _) ->
+    GameEvent.Moved (Moved.MkMoved zc _ _ _ _ _ _) ->
       ZoneChange.object zc == bearer
         && ZoneChange.to zc == Zone.Graveyard
     GameEvent.DamageDealt _ -> False
@@ -4712,7 +4712,7 @@ matchesTriggerGiven bindings board gs bearer you cond event = case cond of
   -- CR 603.6c's last sentence keeps this out of the leaves-the-battlefield
   -- family.
   TriggerCondition.SelfPutIntoGraveyardDuringResolution -> case event of
-    GameEvent.Moved (Moved.MkMoved zc _ _ _ duringResolution _) ->
+    GameEvent.Moved (Moved.MkMoved zc _ _ _ duringResolution _ _) ->
       ZoneChange.object zc == bearer
         && ZoneChange.to zc == Zone.Graveyard
         && duringResolution
@@ -4836,7 +4836,7 @@ matchesTriggerGiven bindings board gs bearer you cond event = case cond of
                      Nothing -> False
                      Just view -> Filter.matches bearerContext view f
      in case event of
-          GameEvent.Moved (Moved.MkMoved zc _ _ _ _ _) -> admits zc
+          GameEvent.Moved (Moved.MkMoved zc _ _ _ _ _ _) -> admits zc
           GameEvent.CardArrived zc -> admits zc
           GameEvent.DamageDealt _ -> False
           GameEvent.StepBegan {} -> False
@@ -5633,7 +5633,7 @@ matchesTriggerGiven bindings board gs bearer you cond event = case cond of
   -- SelfDies deliberately does NOT take the same arm: CR 700.4 makes "dies" a
   -- move to a graveyard, and leaving the game reaches no zone at all.
   TriggerCondition.SelfLeavesTheBattlefield -> case event of
-    GameEvent.Moved (Moved.MkMoved zc _ _ _ _ _) ->
+    GameEvent.Moved (Moved.MkMoved zc _ _ _ _ _ _) ->
       ZoneChange.departed zc == bearer
         && ZoneChange.from zc == Zone.Battlefield
         && ZoneChange.to zc /= Zone.Battlefield
@@ -5712,7 +5712,7 @@ matchesTriggerGiven bindings board gs bearer you cond event = case cond of
   -- `/= Battlefield` guard is the arm above's, against recordMintedEntry's
   -- pseudo-move.
   TriggerCondition.SelfPutFromBattlefieldInto destination -> case event of
-    GameEvent.Moved (Moved.MkMoved zc _ _ _ _ _) ->
+    GameEvent.Moved (Moved.MkMoved zc _ _ _ _ _ _) ->
       ZoneChange.departed zc == bearer
         && ZoneChange.from zc == Zone.Battlefield
         && ZoneChange.to zc /= Zone.Battlefield
@@ -5801,7 +5801,7 @@ matchesTriggerGiven bindings board gs bearer you cond event = case cond of
           Nothing -> False
           Just view -> Filter.matches bearerContext view f
      in case event of
-          GameEvent.Moved (Moved.MkMoved zc _ _ _ _ _)
+          GameEvent.Moved (Moved.MkMoved zc _ _ _ _ _ _)
             | ZoneChange.from zc == Zone.Battlefield && ZoneChange.to zc /= Zone.Battlefield ->
                 admits (ZoneChange.departed zc)
           GameEvent.Moved {} -> False
@@ -5898,7 +5898,7 @@ matchesTriggerGiven bindings board gs bearer you cond event = case cond of
           Nothing -> False
           Just view -> Filter.matches bearerContext view f
      in case event of
-          GameEvent.Moved (Moved.MkMoved zc _ _ _ _ _)
+          GameEvent.Moved (Moved.MkMoved zc _ _ _ _ _ _)
             | ZoneChange.from zc == Zone.Battlefield && ZoneChange.to zc == Zone.Hand ->
                 admits (ZoneChange.departed zc)
           GameEvent.Moved {} -> False

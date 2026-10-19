@@ -108,7 +108,7 @@ spec s registry = Spec.describe s "Client" $ do
         twice = Answerer.unwrap human acting >> Answerer.unwrap human acting
         human = Game.human (screen 2 (const (Just (Text.pack "1"))))
         shown = reverse (written (State.execState (Except.runExceptT (State.evalStateT (State.evalStateT twice (SplitMix.MkSplitMix 0)) Hotseat.fresh {Hotseat.facing = Just S.alice, Hotseat.autoPass = False})) blank))
-    Spec.assertEqWith s "once" (filter (Text.isPrefixOf (Text.pack "Since you last looked: ")) shown) [Text.pack "Since you last looked: revealed"]
+    Spec.assertEqWith s "once" (filter (Text.isPrefixOf (Text.pack "Since you last looked: ")) shown) [Text.pack "Since you last looked: Player 2 reveals a face-down card."]
 
   Spec.it s "each reader's answer reads as its prompt's answer" $ do
     gs <- started s registry

@@ -7310,6 +7310,7 @@ changeZoneWithCause discarded asOf batch oid requestedDest requestedPosition see
                   -- other zone carries no attachment for CR 701.3a to have made.
                   Monad.when (fromZone == Zone.Battlefield) $
                     Monad.forM_ (Object.attachedTo obj) (unattach oid)
+                  seenArriving <- State.gets (Visibility.seenByEveryone newId)
                   State.modify'
                     . recordEvent
                     . GameEvent.Moved
@@ -7323,7 +7324,8 @@ changeZoneWithCause discarded asOf batch oid requestedDest requestedPosition see
                         -- is True only at changeZoneResolvingReturning's door, and CR
                         -- 608.3's onto the battlefield, Pawl.Engine.Stack's Carried.
                         Moved.duringResolution = resolving || (carrying == CarryOver.Carried && dest == Zone.Battlefield),
-                        Moved.revealed = revealedLeaving
+                        Moved.revealed = revealedLeaving,
+                        Moved.seenArriving = seenArriving
                       }
                   -- CR 712.21's second clause: "two cards are put into the
                   -- appropriate zone". One event per card AFTER the leading one,
@@ -8520,7 +8522,7 @@ recordMintedEntry newId = do
   let snapshot = Projection.project newId placed
   -- Moved.revealed is read by no look-back here: none reaches a battlefield
   -- destination (Event.Trigger.looksBack), so the public origin answers.
-  State.modify' (recordEvent (GameEvent.Moved ((Moved.moved (ZoneChange.MkZoneChange newId newId Zone.Battlefield Zone.Battlefield) snapshot) {Moved.revealed = True})))
+  State.modify' (recordEvent (GameEvent.Moved ((Moved.moved (ZoneChange.MkZoneChange newId newId Zone.Battlefield Zone.Battlefield) snapshot) {Moved.revealed = True, Moved.seenArriving = Visibility.seenByEveryone newId placed})))
 
 -- CR 701.42a: meld these cards -- "put them onto the battlefield with their back
 -- faces up and combined. The resulting permanent is a single object represented by
@@ -8661,7 +8663,7 @@ meld controller victims resultCard = do
           -- Moved.revealed is read by no look-back here: none reaches a
           -- battlefield destination (Event.Trigger.looksBack), so the origin's
           -- zone answers.
-          entry = (Moved.moved (ZoneChange.MkZoneChange (fst (NonEmpty.head melding)) newId origin Zone.Battlefield) snapshot) {Moved.otherDepartures = Seq.fromList (fmap fst (NonEmpty.tail melding)), Moved.revealed = not (Game.isHiddenZone origin)}
+          entry = (Moved.moved (ZoneChange.MkZoneChange (fst (NonEmpty.head melding)) newId origin Zone.Battlefield) snapshot) {Moved.otherDepartures = Seq.fromList (fmap fst (NonEmpty.tail melding)), Moved.revealed = not (Game.isHiddenZone origin), Moved.seenArriving = Visibility.seenByEveryone newId placed}
       State.modify' (recordEvent (GameEvent.Moved entry))
       pure (Just newId)
 
