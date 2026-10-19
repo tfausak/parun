@@ -2724,6 +2724,7 @@ reservedSlots =
       Binding.copySource,
       Binding.ownCopySource,
       Binding.turnedMergeSource,
+      Binding.shownMergeSource,
       Binding.placedSourceCopy,
       Binding.triggerSource,
       Binding.you,

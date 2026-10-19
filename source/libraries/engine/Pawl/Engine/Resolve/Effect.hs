@@ -3218,7 +3218,7 @@ changeTargetsFor chooser controller oid = do
 -- Pawl.CopySpec's "CR 707.2 a spell that becomes a copy of a Bolt" proves it.
 acquireChoices :: Modal.Type.Modal Card.Type.Card (GrantedAbility.GrantedAbility Card.Type.Card) -> Acquisition.Acquisition -> Maybe Object.Object -> Object.Object -> Object.Object
 acquireChoices copiedSpell acquisition mOriginal subject =
-  let own = Set.fromList [Binding.you, Binding.triggerSource, Binding.copySource, Binding.ownCopySource, Binding.turnedMergeSource]
+  let own = Set.fromList [Binding.you, Binding.triggerSource, Binding.copySource, Binding.ownCopySource, Binding.turnedMergeSource, Binding.shownMergeSource]
       -- CR 700.2: a spell that is not modal has no mode to choose, so the copy
       -- of one from off the stack still resolves its text: the one selection
       -- the copied text forces (Modal.forcedSelection), where there is one.
