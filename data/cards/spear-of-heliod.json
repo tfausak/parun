@@ -60,9 +60,11 @@
                     "filter": {
                       "type": "DealtDamageToThisTurn",
                       "value": {
-                        "type": "Related",
-                        "value": {
-                          "type": "You"
+                        "party": {
+                          "type": "Related",
+                          "value": {
+                            "type": "You"
+                          }
                         }
                       }
                     },

@@ -1800,7 +1800,7 @@ answerXAt x who p = case p of
 -- WITH it is what proves the bound is payable rather than merely reported.
 answerAtBound :: PlayerId.PlayerId -> Prompt.Prompt r -> State.State [Natural] r
 answerAtBound who p = case p of
-  Prompt.ChooseX _ _ _ _ bound -> do
+  Prompt.ChooseX _ _ _ _ _ bound -> do
     State.modify' (\seen -> seen <> [bound])
     pure bound
   _ -> pure (aimAt who p)
@@ -1809,7 +1809,7 @@ answerAtBound who p = case p of
 -- construction, whatever the board is.
 answerAboveBound :: PlayerId.PlayerId -> Prompt.Prompt r -> r
 answerAboveBound who p = case p of
-  Prompt.ChooseX _ _ _ _ bound -> bound + 1
+  Prompt.ChooseX _ _ _ _ _ bound -> bound + 1
   _ -> aimAt who p
 
 -- answerAtBound and answerAboveBound in one, COUNTING the CR 601.2c target
@@ -1819,7 +1819,7 @@ answerAboveBound who p = case p of
 -- one reversed earlier.
 answerAtBoundOffsetCounting :: Natural -> PlayerId.PlayerId -> Prompt.Prompt r -> State.State Int r
 answerAtBoundOffsetCounting offset who p = case p of
-  Prompt.ChooseX _ _ _ _ bound -> pure (bound + offset)
+  Prompt.ChooseX _ _ _ _ _ bound -> pure (bound + offset)
   Prompt.ChooseTargets {} -> do
     State.modify' (+ 1)
     pure (aimAt who p)
@@ -4117,7 +4117,7 @@ answerBlightXTargeting x blighted wanted p = case p of
 -- treatment for a cost whose X is a blight.
 answerBlightAtBound :: ObjectId.ObjectId -> Prompt.Prompt r -> State.State [Natural] r
 answerBlightAtBound blighted p = case p of
-  Prompt.ChooseX _ _ _ _ bound -> do
+  Prompt.ChooseX _ _ _ _ _ bound -> do
     State.modify' (\seen -> seen <> [bound])
     pure bound
   Prompt.ChooseBlight {} -> pure blighted

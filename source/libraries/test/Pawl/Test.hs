@@ -237,6 +237,7 @@ import qualified Pawl.Codec.DamageRewriteSpec
 import qualified Pawl.Codec.DamagedPartySpec
 import qualified Pawl.Codec.DaytimeSpec
 import qualified Pawl.Codec.DealDamageSpec
+import qualified Pawl.Codec.DealtDamageToSpec
 import qualified Pawl.Codec.DeciderSpec
 import qualified Pawl.Codec.DefendersAreSpec
 import qualified Pawl.Codec.DefenseSpec
@@ -302,6 +303,7 @@ import qualified Pawl.Codec.ExchangeValuesSpec
 import qualified Pawl.Codec.ExchangeZonesSpec
 import qualified Pawl.Codec.ExchangedValueSpec
 import qualified Pawl.Codec.ExileCardsFromGraveyardSpec
+import qualified Pawl.Codec.ExileCardsFromHandSpec
 import qualified Pawl.Codec.ExileFromGraveyardSpec
 import qualified Pawl.Codec.ExileHauntingSpec
 import qualified Pawl.Codec.ExileLinkSpec
@@ -1124,6 +1126,7 @@ spec s registry = do
   Pawl.Codec.DamagePatternSpec.spec s
   Pawl.Codec.DamagePreventedSpec.spec s
   Pawl.Codec.DamagedPartySpec.spec s
+  Pawl.Codec.DealtDamageToSpec.spec s
   Pawl.Codec.DamageRewriteSpec.spec s
   Pawl.Codec.DamageRSpec.spec s
   Pawl.Codec.DaytimeSpec.spec s
@@ -1194,6 +1197,7 @@ spec s registry = do
   Pawl.Codec.ExchangeValuesSpec.spec s
   Pawl.Codec.ExchangeZonesSpec.spec s
   Pawl.Codec.ExileCardsFromGraveyardSpec.spec s
+  Pawl.Codec.ExileCardsFromHandSpec.spec s
   Pawl.Codec.ExiledCardAbilitiesSpec.spec s
   Pawl.Codec.ExiledPileSpec.spec s
   Pawl.Codec.ExiledWithSpec.spec s

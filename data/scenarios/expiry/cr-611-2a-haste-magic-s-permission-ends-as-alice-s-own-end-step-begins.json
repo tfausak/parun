@@ -1,0 +1,47 @@
+{
+  "description": "CR 611.2a Haste Magic's permission ends as alice's own end step begins",
+  "note": "Haste Magic, cast in alice's main phase, exiles the Lightning Bolt on top of her library and lets her play it until her next end step. She may cast it in her postcombat main phase, and no longer once her end step has begun, though the turn has not ended.",
+  "board": {
+    "seats": [
+      {
+        "name": "alice",
+        "battlefield": [
+          { "card": "Mountain", "label": "mountain-1" },
+          { "card": "Mountain", "label": "mountain-2" },
+          { "card": "Mountain", "label": "mountain-3" },
+          { "card": "Hill Giant", "label": "giant" }
+        ],
+        "hand": [{ "card": "Haste Magic", "label": "haste-magic" }],
+        "library": [
+          { "card": "Lightning Bolt" },
+          { "card": "Island" },
+          { "card": "Island" },
+          { "card": "Island" },
+          { "card": "Island" }
+        ]
+      },
+      {
+        "name": "bob",
+        "library": [
+          { "card": "Island" },
+          { "card": "Island" },
+          { "card": "Island" },
+          { "card": "Island" }
+        ]
+      }
+    ],
+    "active": "alice",
+    "step": "PrecombatMain"
+  },
+  "timeline": [
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": { "Cast": { "object": "$haste-magic", "targets": ["$giant"], "mana": ["$mountain-1", "$mountain-2", null] } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass" },
+    { "turn": 1, "step": "DeclareAttackers", "player": "alice", "do": { "Attack": [] } },
+    { "turn": 1, "step": "PostcombatMain", "player": "alice", "check": { "View": { "of": "Offered", "player": "alice", "is": ["Pass", "Cast Lightning Bolt", "ActivateManaAbility $mountain-3"] } } },
+    { "turn": 1, "step": "EndStep", "player": "alice", "check": { "View": { "of": "Offered", "player": "alice", "is": ["Pass", "ActivateManaAbility $mountain-3"] } } }
+  ],
+  "final": [
+    { "Count": { "player": "alice", "zone": "Exile", "card": "Lightning Bolt", "count": 1 } },
+    { "Life": { "player": "bob", "life": 20 } }
+  ]
+}

@@ -38,7 +38,7 @@ bot = Answerer.MkAnswerer $ \asked -> case Asked.prompt asked of
       fmap (fmap (\attacker -> (blocker, Set.singleton attacker))) (SplitMix.pick (Nothing NonEmpty.:| fmap Just attackers))
   Prompt.ChooseTargets _ _ _ slots -> traverse (\(count, legal) -> fmap (Set.fromList . List.genericTake count) (SplitMix.shuffle (Set.toList legal))) slots
   Prompt.ChooseManaSource _ _ _ sources -> fmap Just (SplitMix.pick sources)
-  Prompt.ChooseX _ _ _ least greatest -> SplitMix.between least greatest
+  Prompt.ChooseX _ _ _ _ least greatest -> SplitMix.between least greatest
   Prompt.ChooseOptional {} -> SplitMix.pick (OptionalDecision.Exercises NonEmpty.:| [OptionalDecision.Declines])
   prompt -> pure (Replay.defaultAnswer prompt)
 

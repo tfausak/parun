@@ -12,9 +12,11 @@ import qualified Pawl.Types.Condition as Condition
 import qualified Pawl.Types.Cost as Cost
 import qualified Pawl.Types.Duration as Duration
 import qualified Pawl.Types.DurationEvent as DurationEvent
+import qualified Pawl.Types.EndingStep as EndingStep
 import qualified Pawl.Types.ManaCost as ManaCost
 import qualified Pawl.Types.ManaSymbol as ManaSymbol
 import qualified Pawl.Types.ManaType as ManaType
+import qualified Pawl.Types.Phase as Phase
 import qualified Pawl.Types.PlayerRef as PlayerRef
 import qualified Pawl.Types.Quantity as Quantity
 import qualified Pawl.Types.SlotName as SlotName
@@ -56,13 +58,13 @@ spec s = Spec.describe s "Pawl.Codec.Duration" $ do
       Duration.codec
       Duration.UntilYourNextTurn
       " {\"type\":\"UntilYourNextTurn\"} "
-  -- CR 611.2a / 503: until the beginning of your next upkeep.
-  Spec.it s "UntilYourNextUpkeep" $
+  -- CR 611.2a: until a step of your turn next begins.
+  Spec.it s "UntilYourNextStep carries its step" $
     Common.assertCodec
       s
       Duration.codec
-      Duration.UntilYourNextUpkeep
-      " {\"type\":\"UntilYourNextUpkeep\"} "
+      (Duration.UntilYourNextStep (Phase.Ending EndingStep.EndStep))
+      " {\"type\":\"UntilYourNextStep\",\"value\":{\"type\":\"Ending\",\"value\":{\"type\":\"EndStep\"}}} "
   -- CR 611.2a: until the END of your next turn, a whole turn later.
   Spec.it s "UntilEndOfYourNextTurn" $
     Common.assertCodec

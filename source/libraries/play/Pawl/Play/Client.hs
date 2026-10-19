@@ -175,10 +175,11 @@ choice view question = Maybe.fromMaybe generic $ case Text.unpack (Question.kind
       )
   "ChooseX" -> do
     source <- field "source" offer
+    variable <- field "variable" offer >>= textOf
     least <- field "least" offer >>= naturalOf
     greatest <- field "greatest" offer >>= naturalOf
     pure
-      ( [Text.concat [Text.pack "Choose X for ", objectName view source, Text.pack (", from " <> show least <> " to " <> show greatest <> ":")]],
+      ( [Text.concat [Text.pack "Choose ", variable, Text.pack " for ", objectName view source, Text.pack (", from " <> show least <> " to " <> show greatest <> ":")]],
         \typed -> case Read.readMaybe (Text.unpack (Text.strip typed)) of
           Just n | least <= n && n <= greatest -> Right (R.Number (toInteger n))
           _ -> Left (Text.pack ("Type a number from " <> show least <> " to " <> show greatest <> "."))

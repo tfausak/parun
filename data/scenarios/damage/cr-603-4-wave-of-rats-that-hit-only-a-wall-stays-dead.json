@@ -1,0 +1,33 @@
+{
+  "description": "CR 603.4 / 510.2 Wave of Rats whose combat damage went only to a blocker stays in the graveyard",
+  "note": "The pair of cr-603-4-wave-of-rats-that-hit-a-player-returns-when-it-dies: the Wall of Stone blocks and takes all 4, none of it trampling over, so the Rats dealt combat damage this turn but not to a player.",
+  "board": {
+    "active": "alice",
+    "step": "BeginningOfCombat",
+    "seats": [
+      {
+        "name": "alice",
+        "battlefield": [{ "card": "Wave of Rats", "label": "rats", "ready": true }],
+        "library": [{ "card": "Swamp" }, { "card": "Swamp" }]
+      },
+      {
+        "name": "bob",
+        "battlefield": [
+          { "card": "Wall of Stone", "label": "wall", "ready": true },
+          { "card": "Mountain", "label": "m1" }
+        ],
+        "hand": [{ "card": "Lightning Bolt", "label": "bolt" }],
+        "library": [{ "card": "Swamp" }, { "card": "Swamp" }]
+      }
+    ]
+  },
+  "timeline": [
+    { "turn": 1, "step": "DeclareAttackers", "player": "alice", "do": { "Attack": ["$rats"] } },
+    { "turn": 1, "step": "DeclareBlockers", "player": "bob", "do": { "Block": { "$wall": ["$rats"] } } },
+    { "turn": 1, "step": "PostcombatMain", "player": "bob", "do": { "Cast": { "object": "$bolt", "targets": ["$rats"], "mana": ["$m1"] } } },
+    { "turn": 1, "step": "EndStep", "player": "alice", "check": { "Count": { "player": "alice", "zone": "Battlefield", "card": "Wave of Rats", "count": 0 } } },
+    { "turn": 1, "step": "EndStep", "player": "alice", "check": { "Count": { "player": "alice", "zone": "Graveyard", "card": "Wave of Rats", "count": 1 } } },
+    { "turn": 1, "step": "EndStep", "player": "alice", "check": { "Life": { "player": "bob", "life": 20 } } },
+    { "turn": 1, "step": "EndStep", "player": "alice", "check": { "Damage": { "object": "$wall", "damage": 4 } } }
+  ]
+}

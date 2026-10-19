@@ -1,5 +1,6 @@
 module Pawl.Codec.CostComponentSpec where
 
+import qualified Data.Text as Text
 import qualified Pawl.Codec.CostComponent as CostComponent
 import qualified Pawl.Codec.Keyword as Keyword
 import qualified Pawl.JsonCodec.Codec as Codec
@@ -16,6 +17,7 @@ import qualified Pawl.Types.CountersFromThis as CountersFromThis
 import qualified Pawl.Types.DiscardCards as DiscardCards
 import qualified Pawl.Types.DiscardCause as DiscardCause
 import qualified Pawl.Types.ExileCardsFromGraveyard as ExileCardsFromGraveyard
+import qualified Pawl.Types.ExileCardsFromHand as ExileCardsFromHand
 import qualified Pawl.Types.ExileMaterials as ExileMaterials
 import qualified Pawl.Types.ExilePermanents as ExilePermanents
 import qualified Pawl.Types.Filter as Filter
@@ -24,6 +26,7 @@ import qualified Pawl.Types.Keyword as Keyword
 import qualified Pawl.Types.ReturnPermanents as ReturnPermanents
 import qualified Pawl.Types.Rounding as Rounding
 import qualified Pawl.Types.Sacrifice as Sacrifice
+import qualified Pawl.Types.SlotName as SlotName
 import qualified Pawl.Types.Subtype as Subtype
 import qualified Pawl.Types.TapForTotalPower as TapForTotalPower
 import qualified Pawl.Types.TapPermanents as TapPermanents
@@ -71,8 +74,8 @@ spec s = Spec.describe s "Pawl.Codec.CostComponent" $ do
     Common.assertCodec
       s
       codec
-      (CostComponent.PayLife CostAmount.AnnouncedX)
-      " {\"type\":\"PayLife\",\"value\":{\"type\":\"AnnouncedX\"}} "
+      (CostComponent.PayLife (CostAmount.Announced (SlotName.MkSlotName (Text.pack "X"))))
+      " {\"type\":\"PayLife\",\"value\":{\"type\":\"Announced\",\"value\":\"X\"}} "
   Spec.it s "PayHalfLife" $
     Common.assertCodec
       s
@@ -141,8 +144,8 @@ spec s = Spec.describe s "Pawl.Codec.CostComponent" $ do
     Common.assertCodec
       s
       codec
-      (CostComponent.PayEnergy CostAmount.AnnouncedX)
-      " {\"type\":\"PayEnergy\",\"value\":{\"type\":\"AnnouncedX\"}} "
+      (CostComponent.PayEnergy (CostAmount.Announced (SlotName.MkSlotName (Text.pack "X"))))
+      " {\"type\":\"PayEnergy\",\"value\":{\"type\":\"Announced\",\"value\":\"X\"}} "
   -- CR 606.4's two halves.
   Spec.it s "AddLoyaltyToThis" $
     Common.assertCodec
@@ -161,8 +164,8 @@ spec s = Spec.describe s "Pawl.Codec.CostComponent" $ do
     Common.assertCodec
       s
       codec
-      (CostComponent.RemoveLoyaltyFromThis CostAmount.AnnouncedX)
-      " {\"type\":\"RemoveLoyaltyFromThis\",\"value\":{\"type\":\"AnnouncedX\"}} "
+      (CostComponent.RemoveLoyaltyFromThis (CostAmount.Announced (SlotName.MkSlotName (Text.pack "X"))))
+      " {\"type\":\"RemoveLoyaltyFromThis\",\"value\":{\"type\":\"Announced\",\"value\":\"X\"}} "
   -- CR 118.1's counter removal as an activation cost, Barkhide Troll's.
   Spec.it s "RemoveCountersFromThis" $
     Common.assertCodec
@@ -182,15 +185,15 @@ spec s = Spec.describe s "Pawl.Codec.CostComponent" $ do
     Common.assertCodec
       s
       codec
-      (CostComponent.RemoveCounters (CountersFromPermanents.MkCountersFromPermanents CostAmount.AnnouncedX (WhichCounters.OfKind CounterKind.PlusOnePlusOne) (Filter.HasCardType CardType.Creature) CounterSpread.FromAmong))
-      " {\"type\":\"RemoveCounters\",\"value\":{\"count\":{\"type\":\"AnnouncedX\"},\"kind\":{\"type\":\"OfKind\",\"value\":{\"type\":\"PlusOnePlusOne\"}},\"spread\":{\"type\":\"FromAmong\"},\"whichPermanent\":{\"type\":\"HasCardType\",\"value\":{\"type\":\"Creature\"}}}} "
+      (CostComponent.RemoveCounters (CountersFromPermanents.MkCountersFromPermanents (CostAmount.Announced (SlotName.MkSlotName (Text.pack "X"))) (WhichCounters.OfKind CounterKind.PlusOnePlusOne) (Filter.HasCardType CardType.Creature) CounterSpread.FromAmong))
+      " {\"type\":\"RemoveCounters\",\"value\":{\"count\":{\"type\":\"Announced\",\"value\":\"X\"},\"kind\":{\"type\":\"OfKind\",\"value\":{\"type\":\"PlusOnePlusOne\"}},\"spread\":{\"type\":\"FromAmong\"},\"whichPermanent\":{\"type\":\"HasCardType\",\"value\":{\"type\":\"Creature\"}}}} "
   -- Sacrifice's X form, Grim Hireling's.
   Spec.it s "Sacrifice of an announced X" $
     Common.assertCodec
       s
       codec
-      (CostComponent.Sacrifice (Sacrifice.MkSacrifice CostAmount.AnnouncedX (Filter.HasCardType CardType.Creature)))
-      " {\"type\":\"Sacrifice\",\"value\":{\"count\":{\"type\":\"AnnouncedX\"},\"whichPermanents\":{\"type\":\"HasCardType\",\"value\":{\"type\":\"Creature\"}}}} "
+      (CostComponent.Sacrifice (Sacrifice.MkSacrifice (CostAmount.Announced (SlotName.MkSlotName (Text.pack "X"))) (Filter.HasCardType CardType.Creature)))
+      " {\"type\":\"Sacrifice\",\"value\":{\"count\":{\"type\":\"Announced\",\"value\":\"X\"},\"whichPermanents\":{\"type\":\"HasCardType\",\"value\":{\"type\":\"Creature\"}}}} "
   -- CR 118.12's counter-placing cost, CR 701.63a's endure.
   Spec.it s "PutPlusOneCountersOnThis" $
     Common.assertCodec
@@ -210,8 +213,8 @@ spec s = Spec.describe s "Pawl.Codec.CostComponent" $ do
     Common.assertCodec
       s
       codec
-      (CostComponent.Blight CostAmount.AnnouncedX)
-      " {\"type\":\"Blight\",\"value\":{\"type\":\"AnnouncedX\"}} "
+      (CostComponent.Blight (CostAmount.Announced (SlotName.MkSlotName (Text.pack "X"))))
+      " {\"type\":\"Blight\",\"value\":{\"type\":\"Announced\",\"value\":\"X\"}} "
   -- CR 701.61a as a cost, nullary on the wire because the rule states no number:
   -- Thornvault Forager's "{T}, Forage".
   Spec.it s "Forage" $
@@ -277,13 +280,13 @@ spec s = Spec.describe s "Pawl.Codec.CostComponent" $ do
       codec
       CostComponent.CollectEvidenceOfTargets
       " {\"type\":\"CollectEvidenceOfTargets\"} "
-  -- CR 406.2 out of the hand: a bare criterion, one card.
-  Spec.it s "ExileCardFromHand" $
+  -- CR 406.2 out of the hand: a count and a criterion.
+  Spec.it s "ExileCardsFromHand" $
     Common.assertCodec
       s
       codec
-      (CostComponent.ExileCardFromHand (Filter.And []))
-      " {\"type\":\"ExileCardFromHand\",\"value\":{\"type\":\"And\",\"value\":[]}} "
+      (CostComponent.ExileCardsFromHand (ExileCardsFromHand.MkExileCardsFromHand (CostAmount.Fixed 1) (Filter.And [])))
+      " {\"type\":\"ExileCardsFromHand\",\"value\":{\"count\":{\"type\":\"Fixed\",\"value\":1},\"whichCards\":{\"type\":\"And\",\"value\":[]}}} "
   -- CR 701.20a out of the hand: a bare criterion, one card.
   Spec.it s "RevealCardFromHand" $
     Common.assertCodec
@@ -356,7 +359,7 @@ spec s = Spec.describe s "Pawl.Codec.CostComponent" $ do
     Common.assertCodec
       s
       codec
-      (CostComponent.Waterbend CostAmount.AnnouncedX)
-      " {\"type\":\"Waterbend\",\"value\":{\"type\":\"AnnouncedX\"}} "
+      (CostComponent.Waterbend (CostAmount.Announced (SlotName.MkSlotName (Text.pack "X"))))
+      " {\"type\":\"Waterbend\",\"value\":{\"type\":\"Announced\",\"value\":\"X\"}} "
   Spec.it s "has a schema" $
     Common.assertHasSchema s codec

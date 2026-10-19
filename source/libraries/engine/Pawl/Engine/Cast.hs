@@ -442,15 +442,15 @@ payableCost modes extra spending pid oid gs cost = any (\x -> payableCostAt mode
 -- creature sacrificed this way" makes its least X its dearest -- so every X up
 -- to the first whose COMPONENTS alone cannot be paid. That climb is monotone
 -- for Cost.greatestPayableX's reason, and it stops when a component's demand
--- grows with X (Cost.componentDemandGrowsWithX, an announced sacrifice's past
+-- grows with X (Cost.componentDemandGrowsWith, an announced sacrifice's past
 -- the matching permanents) or at CR 101.1's ceiling. A cost with neither keeps
 -- the least X, the only value the climb could not overrun.
 gateXs :: PlayerId -> ObjectId -> GameState -> Cost Keyword -> [Natural]
 gateXs pid oid gs cost =
   let least = maybe 0 Face.minimumX (Game.faceOf oid gs)
       ceiling_ = (\face -> Cost.maximumX pid oid face gs) =<< Game.faceOf oid gs
-      componentsAt x = Cost.componentsPayable Map.empty pid oid (Cost.Type.components (Cost.substituteX x cost)) gs
-      bounded = Maybe.isJust ceiling_ || any Cost.componentDemandGrowsWithX (Cost.Type.components cost)
+      componentsAt x = Cost.componentsPayable Map.empty pid oid (Cost.Type.components (Cost.substituteCounts (Map.fromSet (const 0) (Set.fromList (Cost.announcedCounts cost))) (Cost.substituteX x cost))) gs
+      bounded = Maybe.isJust ceiling_ || any (Cost.componentDemandGrowsWith Binding.variableX) (Cost.Type.components cost)
    in if readsAnnouncedX pid oid cost gs && bounded
         then least : takeWhile (\x -> all (x <=) ceiling_ && componentsAt x) [least + 1 ..]
         else [least]
@@ -544,8 +544,44 @@ payableCostGiven pcs sources extra spending pid oid gs cost = any (\x -> payable
 -- A spell whose own reduction reads the X (readsAnnouncedX) is totalled with
 -- `x` bound on it under Binding.variableX, castProposed's own seed, so CR
 -- 601.2f's reduction counts the X being asked about rather than none.
+--
+-- A count the cost still leaves to CR 601.2b beside X (Cost.announcedCounts,
+-- March of Wretched Sorrow's cards exiled) is asked at every value `countValues`
+-- names, bound on the spell as castProposed binds the announced one: the cast is
+-- legal if SOME announcement complies (CR 601.2), and a reduction reading the
+-- count makes its least value its dearest.
 payableCostAtGiven :: Maybe (Seq.Seq ModeIndex.ModeIndex) -> Map.Map ObjectId PC.ProjectedCharacteristics -> [ObjectId] -> Natural -> [ManaCost.ManaCost] -> ManaSpending -> PlayerId -> ObjectId -> GameState -> Cost Keyword -> Bool
 payableCostAtGiven modes pcs sources x extra spending pid oid gs cost =
+  any
+    ((\counts -> payableCountedAtGiven modes pcs sources x extra spending pid oid (bindAnnounced counts oid gs) (Cost.substituteCounts counts cost)) . Map.fromList)
+    (traverse (\slot -> fmap ((,) slot) (countValues pid oid gs x cost slot)) (Cost.announcedCounts cost))
+
+-- CR 601.2b: the values a gate asks one count announced beside X at -- every
+-- value up to the first whose COMPONENTS alone cannot be paid, `gateXs`' climb
+-- over the count instead of X, and for its reason: a reduction reading the
+-- count is not monotone in it. The other counts are asked at 0 and X at `x`.
+-- Zero alone where no component's demand grows with the count
+-- (Cost.componentDemandGrowsWith), the only value the climb could not overrun.
+countValues :: PlayerId -> ObjectId -> GameState -> Natural -> Cost Keyword -> SlotName.SlotName -> [Natural]
+countValues pid oid gs x cost slot =
+  let atX = Cost.substituteX x cost
+      zeroed = Map.fromSet (const (0 :: Natural)) (Set.fromList (Cost.announcedCounts atX))
+      componentsAt n = Cost.componentsPayable Map.empty pid oid (Cost.Type.components (Cost.substituteCounts (Map.insert slot n zeroed) atX)) gs
+   in if any (Cost.componentDemandGrowsWith slot) (Cost.Type.components atX)
+        then 0 : takeWhile componentsAt [1 ..]
+        else [0]
+
+-- CR 601.2b: the counts announced beside X bound on the spell, each under its
+-- own slot, as Binding.fromChoices binds X -- so CR 601.2f's "for each card
+-- exiled this way" reads the count announced.
+bindAnnounced :: Map.Map SlotName.SlotName Natural -> ObjectId -> GameState -> GameState
+bindAnnounced counts oid gs
+  | Map.null counts = gs
+  | otherwise = gs {GameState.objects = Map.adjust (\o -> o {Object.bindings = Map.union (Binding.fromAnnounced counts) (Object.bindings o)}) oid (GameState.objects gs)}
+
+-- `payableCostAtGiven` once every count beside X is announced.
+payableCountedAtGiven :: Maybe (Seq.Seq ModeIndex.ModeIndex) -> Map.Map ObjectId PC.ProjectedCharacteristics -> [ObjectId] -> Natural -> [ManaCost.ManaCost] -> ManaSpending -> PlayerId -> ObjectId -> GameState -> Cost Keyword -> Bool
+payableCountedAtGiven modes pcs sources x extra spending pid oid gs cost =
   let substituted = Cost.substituteX x cost
       assisted = Cost.assistable (PaymentSubject.Casting oid) pid oid gs
       withX o = o {Object.bindings = Map.union (Binding.fromChoices Map.empty (Just x) Seq.empty) (Object.bindings o)}
@@ -676,7 +712,7 @@ castAimable key announced x pid oid gs = case Game.faceOf oid gs of
 --     X too.
 --
 --   * as LIFE (Cost.substituteX, a CostComponent.PayLife's
---     CostAmount.AnnouncedX becoming a fixed amount). CR 119.4's floor is
+--     CostAmount.Announced X becoming a fixed amount). CR 119.4's floor is
 --     Event.canPayLife's >= against a life total X cannot move either, so the
 --     same argument runs a second time. Hatred is the card whose X reaches a
 --     cost only this way.
@@ -3266,7 +3302,7 @@ castProposed perform spending pid oid sid face castFrom preparedFor keywordsBefo
               let ridersUsed = riders permissionUsed
                   -- CR 118.8 / 601.2f: the permission's additional costs join
                   -- the chosen candidate's.
-                  chargedCost = withPermissionCosts (PlayerEffect.permissionCosts permissionUsed) chosenCost
+                  unannouncedCost = withPermissionCosts (PlayerEffect.permissionCosts permissionUsed) chosenCost
                   -- CR 601.2f: and its reduction joins the candidate's.
                   chosenReductions = candidateReductions <> PlayerEffect.permissionReductions permissionUsed
               -- CR 702.103b: the announcement has settled on the bestow
@@ -3300,6 +3336,18 @@ castProposed perform spending pid oid sid face castFrom preparedFor keywordsBefo
               -- paid for.
               gsChosen <- State.get
               State.modify' (stampCastGrant (grantedCastKeyword castFor sid gsChosen) sid)
+              -- CR 601.2b: a count the cost announces beside X -- March of
+              -- Wretched Sorrow's "exile any number of black cards" -- is named
+              -- here, ahead of X, and bound on the spell under its own slot, so
+              -- CR 601.2f's "for each card exiled this way" reads it and every
+              -- gate below measures the cost it fixes. The bound is advisory,
+              -- Prompt.ChooseX's posture: a count the components cannot pay
+              -- reverses the cast at the gate below rather than being clamped.
+              gsCounting <- State.get
+              let announceCount slot = fmap ((,) slot) (Game.choose (Prompt.ChooseX decider pid sid slot 0 (maximum (0 : countValues pid sid gsCounting (Face.minimumX face) unannouncedCost slot))))
+              counts <- fmap Map.fromList (traverse announceCount (Cost.announcedCounts unannouncedCost))
+              State.modify' (bindAnnounced counts sid)
+              let chargedCost = Cost.substituteCounts counts unannouncedCost
               -- Re-read, because `gs` above predates the stamp and both CR 601.2c
               -- and CR 601.2f have to be judged on the spell as rule 702.103b
               -- left it -- CR 702.103d's "only its characteristics as modified by
@@ -3349,7 +3397,7 @@ castProposed perform spending pid oid sid face castFrom preparedFor keywordsBefo
               -- Its least value is CR 101.1's printed floor, off the same face.
               mAmount <-
                 if Cost.hasVariable chargedCost
-                  then fmap Just (Game.choose (Prompt.ChooseX decider pid sid (Face.minimumX face) (affordableX chosenModes mCeiling chosenReductions spending pid sid bestowedGs chargedCost)))
+                  then fmap Just (Game.choose (Prompt.ChooseX decider pid sid Binding.variableX (Face.minimumX face) (affordableX chosenModes mCeiling chosenReductions spending pid sid bestowedGs chargedCost)))
                   else pure Nothing
               -- CR 101.1, and CR 101.2 for its direction: the card's sentence
               -- overrides the rule that would otherwise leave X free, and a
@@ -3542,7 +3590,7 @@ castProposed perform spending pid oid sid face castFrom preparedFor keywordsBefo
                             g
                               { GameState.objects =
                                   Map.adjust
-                                    (\o -> o {Object.bindings = Binding.setAnnouncedTargets chosen (Binding.setYou pid (Binding.setTriggerSource sid (Target.stampDefendingPlayers sid chosen g (Binding.fromChoices chosen mAmount chosenModes))))})
+                                    (\o -> o {Object.bindings = Binding.setAnnouncedTargets chosen (Binding.setYou pid (Binding.setTriggerSource sid (Target.stampDefendingPlayers sid chosen g (Map.union (Binding.fromAnnounced counts) (Binding.fromChoices chosen mAmount chosenModes)))))})
                                     sid
                                     (GameState.objects g)
                               }
