@@ -93,6 +93,7 @@ import qualified Pawl.Types.CardLeavesZone as CardLeavesZone
 import qualified Pawl.Types.CardName as CardName
 import qualified Pawl.Types.CardType as CardType
 import qualified Pawl.Types.CarryOver as CarryOver
+import qualified Pawl.Types.Chosen as Chosen
 import qualified Pawl.Types.CoinFace as CoinFace
 import qualified Pawl.Types.CoinFlipR as CoinFlipR
 import qualified Pawl.Types.CoinFlipRewrite as CoinFlipRewrite
@@ -2356,9 +2357,7 @@ apply batch candidate event =
             let decider = Decide.deciderFor controller gs
             Game.choose (Prompt.ChooseBasicLandType decider controller oid)
         Replacement.consume (ReplacementCandidate.identity candidate)
-        State.modify' $ \g ->
-          let stamp o = o {Object.chosenSubtype = Map.insert (Game.acquisitionOf oid g) picked (Object.chosenSubtype o)}
-           in g {GameState.objects = Map.adjust stamp oid (GameState.objects g)}
+        State.modify' $ \g -> Game.recordChoice Chosen.Subtype (Game.acquisitionOf oid g) (const (Just picked)) oid g
         pure (Just event)
       -- CR 614.1c: Pillar of Origins' as-enters creature type choice, the arm
       -- above one rule over. Asked unconditionally for that arm's reason: CR
@@ -2378,9 +2377,7 @@ apply batch candidate event =
             let decider = Decide.deciderFor controller gs
             Game.choose (Prompt.ChooseCreatureType decider controller oid)
         Replacement.consume (ReplacementCandidate.identity candidate)
-        State.modify' $ \g ->
-          let stamp o = o {Object.chosenSubtype = Map.insert (Game.acquisitionOf oid g) picked (Object.chosenSubtype o)}
-           in g {GameState.objects = Map.adjust stamp oid (GameState.objects g)}
+        State.modify' $ \g -> Game.recordChoice Chosen.Subtype (Game.acquisitionOf oid g) (const (Just picked)) oid g
         pure (Just event)
       -- CR 614.1c: Stuffy Doll's as-enters player choice. The three arms above ask
       -- unconditionally because rules 105.1, 305.6 and 205.3m fix their offers; this one
@@ -2404,11 +2401,12 @@ apply batch candidate event =
           -- choose from is a board CR 104.2a has already ended the game on, and
           -- chooses nobody, the posture designateProtector takes for a battle
           -- with no legal protector.
-          Just controller -> Players.chooseOne controller oid (Players.offer controller gs PlayerRelation.AnyPlayer)
+          Just controller -> Players.chooseOne controller oid Nothing (Players.offer controller gs PlayerRelation.AnyPlayer)
         Replacement.consume (ReplacementCandidate.identity candidate)
-        State.modify' $ \g ->
-          let stamp o = o {Object.chosenPlayers = Map.filter (not . Map.null) (Map.alter (Just . Map.alter (const picked) PlayerChoice.AsEnters . Maybe.fromMaybe Map.empty) (Game.acquisitionOf oid g) (Object.chosenPlayers o))}
-           in g {GameState.objects = Map.adjust stamp oid (GameState.objects g)}
+        let asEnters held = case Map.alter (const picked) PlayerChoice.AsEnters (Maybe.fromMaybe Map.empty held) of
+              chosen | Map.null chosen -> Nothing
+              chosen -> Just chosen
+        State.modify' $ \g -> Game.recordChoice Chosen.Players (Game.acquisitionOf oid g) asEnters oid g
         pure (Just event)
       -- CR 614.1c with CR 201.4: Null Chamber's as-enters name choices. Unlike
       -- the two arms above, this one has to settle WHO is asked before it can
@@ -2431,7 +2429,7 @@ apply batch candidate event =
             -- CR 801.5a / 801.5c's offer of opponents, asked through
             -- Players.chooseOne. No opponent left (CR 104.2a) asks nobody and
             -- adds no second name.
-            opponent <- Players.chooseOne controller oid (Players.chooserOffer controller gs PlayerRelation.Opponent)
+            opponent <- Players.chooseOne controller oid Nothing (Players.chooserOffer controller gs PlayerRelation.Opponent)
             -- CR 101.4: the active player chooses first, then the rest in turn
             -- order. Both names are chosen as one event, so the order is the
             -- rule's and not the card's reading order.
@@ -2442,9 +2440,7 @@ apply batch candidate event =
                   pure (made Seq.|> (pid, name))
             fmap (Map.fromList . Foldable.toList) (Monad.foldM ask Seq.empty choosers)
         Replacement.consume (ReplacementCandidate.identity candidate)
-        State.modify' $ \g ->
-          let stamp o = o {Object.chosenNames = Map.insert (Game.acquisitionOf oid g) picked (Object.chosenNames o)}
-           in g {GameState.objects = Map.adjust stamp oid (GameState.objects g)}
+        State.modify' $ \g -> Game.recordChoice Chosen.Names (Game.acquisitionOf oid g) (const (Just picked)) oid g
         pure (Just event)
       -- CR 614.1c with CR 201.4: Runed Halo's as-enters name choice. The arm
       -- above with ONE chooser -- the card names its controller and nobody else
@@ -2459,9 +2455,7 @@ apply batch candidate event =
           Just controller ->
             fmap (Map.singleton controller) (Game.choose (Prompt.ChooseCardName (Decide.deciderFor controller gs) controller oid restriction Seq.empty) >>= Game.lookUpChosenName)
         Replacement.consume (ReplacementCandidate.identity candidate)
-        State.modify' $ \g ->
-          let stamp o = o {Object.chosenNames = Map.insert (Game.acquisitionOf oid g) picked (Object.chosenNames o)}
-           in g {GameState.objects = Map.adjust stamp oid (GameState.objects g)}
+        State.modify' $ \g -> Game.recordChoice Chosen.Names (Game.acquisitionOf oid g) (const (Just picked)) oid g
         pure (Just event)
       -- CR 306.5b via CR 614.1c: this permanent enters with N counters. Every
       -- kind in ONE application, consuming the candidate once, because the row
@@ -3176,7 +3170,7 @@ apply batch candidate event =
             -- Players.chooseOne. No opponent left to ask (CR 104.2a) means
             -- nobody decides, so tribute is not paid -- rule 702.104b's
             -- condition reads as true.
-            chosen <- Players.chooseOne controller oid (Players.chooserOffer controller gs PlayerRelation.Opponent)
+            chosen <- Players.chooseOne controller oid Nothing (Players.chooserOffer controller gs PlayerRelation.Opponent)
             case chosen of
               Nothing -> pure ()
               Just opponent -> do
@@ -4389,9 +4383,7 @@ chooseColors candidate count oid = do
         pure (maybe chosen (`Set.insert` chosen) picked)
   picked <- Monad.foldM pick Set.empty [1 .. count]
   Replacement.consume (ReplacementCandidate.identity candidate)
-  State.modify' $ \g ->
-    let stamp o = o {Object.chosenColors = Map.insert (Game.acquisitionOf oid g) picked (Object.chosenColors o)}
-     in g {GameState.objects = Map.adjust stamp oid (GameState.objects g)}
+  State.modify' $ \g -> Game.recordChoice Chosen.Colors (Game.acquisitionOf oid g) (const (Just picked)) oid g
 
 -- CR 707.5 / 707.4: the copying process an AsCopy rewrite performs, on each
 -- event class it rides (CR 614.1c's entry, CR 614.1e's turning face up, CR

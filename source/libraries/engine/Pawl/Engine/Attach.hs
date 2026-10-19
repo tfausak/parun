@@ -339,7 +339,7 @@ enteringUnder player subject gs =
 chooseEntryHost :: PlayerId -> ObjectId -> [Recipient] -> Game (Maybe Recipient)
 chooseEntryHost chooser subject candidates =
   case (Maybe.mapMaybe Recipient.objectOf candidates, Maybe.mapMaybe Recipient.playerOf candidates) of
-    ([], players) -> fmap (fmap Recipient.ToPlayer) (Players.chooseOne chooser subject players)
+    ([], players) -> fmap (fmap Recipient.ToPlayer) (Players.chooseOne chooser subject Nothing players)
     (objects, _) -> fmap (fmap Recipient.ToObject) (chooseHost chooser subject objects)
 
 -- hostsFor over the candidates the caller names.

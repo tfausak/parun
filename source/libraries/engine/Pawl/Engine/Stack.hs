@@ -33,6 +33,7 @@ import qualified Pawl.Types.Affected as Affected
 import qualified Pawl.Types.Card as Card.Type
 import qualified Pawl.Types.CardType as CardType
 import qualified Pawl.Types.CarryOver as CarryOver
+import qualified Pawl.Types.Chosen as Chosen
 import qualified Pawl.Types.Condition as Condition.Type
 import qualified Pawl.Types.ContinuousEffect as ContinuousEffect
 import qualified Pawl.Types.ControlDuration as ControlDuration
@@ -619,7 +620,7 @@ settlePromises oid gs = case Game.lookupObject oid gs of
   Nothing -> gs
   Just obj ->
     let acquisition = Game.acquisitionOf oid gs
-        promises = Map.findWithDefault Map.empty acquisition (Object.chosenPlayers obj)
+        promises = Maybe.fromMaybe Map.empty (Game.currentChoice Chosen.Players oid gs)
         gifts = [something | Keyword.Type.Gift something <- Map.keys (Object.paidCosts obj)]
         settle (paid, kept) something =
           let keyword = Keyword.Type.Gift something
@@ -635,8 +636,8 @@ settlePromises oid gs = case Game.lookupObject oid gs of
           PlayerChoice.Promised g _ -> g == something
           PlayerChoice.AsEnters -> False
         (paid', promises') = List.foldl' settle (Object.paidCosts obj, promises) gifts
-        settledObject = obj {Object.paidCosts = paid', Object.chosenPlayers = Map.insert acquisition promises' (Object.chosenPlayers obj)}
-     in if null gifts then gs else gs {GameState.objects = Map.insert oid settledObject (GameState.objects gs)}
+        settledObject = obj {Object.paidCosts = paid'}
+     in if null gifts then gs else Game.recordChoice Chosen.Players acquisition (const (Just promises')) oid (gs {GameState.objects = Map.insert oid settledObject (GameState.objects gs)})
 
 -- CR 400.7b's "an ability ... that functions on the battlefield", asked of one
 -- part of a grant. A keyword by Keyword.functionsOnBattlefield; a whole quoted

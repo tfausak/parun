@@ -47,6 +47,7 @@ import qualified Pawl.Types.CardLeavesZone as CardLeavesZone
 import qualified Pawl.Types.CardPutIntoGraveyard as CardPutIntoGraveyard
 import qualified Pawl.Types.CardType as CardType
 import qualified Pawl.Types.CardsPutIntoZone as CardsPutIntoZone
+import qualified Pawl.Types.Chosen as Chosen
 import qualified Pawl.Types.ClassLevelChange as ClassLevelChange
 import qualified Pawl.Types.CoinFlipped as CoinFlipped
 import qualified Pawl.Types.Combat as Combat
@@ -10520,4 +10521,4 @@ producedSpecified gs bearer specified produced = case specified of
   -- nothing left to ask.
   ManaSpecification.AnyMana -> True
   ManaSpecification.ChosenColor ->
-    any (\color -> Set.member (ManaType.Colored color) produced) (Maybe.fromMaybe Set.empty (Game.currentChoice Object.chosenColors bearer gs))
+    any (\color -> Set.member (ManaType.Colored color) produced) (Maybe.fromMaybe Set.empty (Game.currentChoice Chosen.Colors bearer gs))
