@@ -44,6 +44,7 @@ import qualified Pawl.Extra.Natural as Natural
 import qualified Pawl.JsonCodec.Codec as Codec
 import qualified Pawl.JsonCodec.Common as Common
 import qualified Pawl.Types.AttackTarget as AttackTarget
+import qualified Pawl.Types.BallotChoice as BallotChoice
 import qualified Pawl.Types.BuybackDecision as BuybackDecision
 import qualified Pawl.Types.ClauseIndex as ClauseIndex
 import qualified Pawl.Types.CommandZoneDecision as CommandZoneDecision
@@ -262,6 +263,17 @@ attackTarget =
         AttackTarget.OfBattle o -> tagged "Battle" (encode object namer o)
     )
 
+-- | A vote's choice, spelled as its kind's own answer -- a reference, a word or a
+-- seat label -- with the kind read off @offered@, one of the prompt's listed
+-- choices: every choice in one vote is of one kind (Pawl.Types.VoteChoices).
+ballotChoice :: BallotChoice.BallotChoice a -> Shape (BallotChoice.BallotChoice ObjectId.ObjectId)
+ballotChoice offered = case offered of
+  BallotChoice.ForObject _ -> MkShape (fmap BallotChoice.ForObject . decode object) (\namer c -> case c of BallotChoice.ForObject oid -> encode object namer oid; _ -> R.Null)
+  BallotChoice.ForWord _ -> MkShape (fmap BallotChoice.ForWord . decode word) (\namer c -> case c of BallotChoice.ForWord slot -> encode word namer slot; _ -> R.Null)
+  BallotChoice.ForPlayer _ -> MkShape (fmap BallotChoice.ForPlayer . decode player) (\namer c -> case c of BallotChoice.ForPlayer pid -> encode player namer pid; _ -> R.Null)
+  where
+    word = viaCodec Codec.SlotName.codec
+
 tagged :: String -> R.Reply -> R.Reply
 tagged tag x = R.Array [R.Text (Text.pack tag), x]
 
@@ -336,9 +348,7 @@ shapeOf prompt = case prompt of
   Prompt.ChooseAmass {} -> object
   Prompt.ChooseBlight {} -> object
   Prompt.ChooseBehold {} -> object
-  Prompt.ChooseVote {} -> object
-  Prompt.ChooseVoteWord {} -> viaCodec Codec.SlotName.codec
-  Prompt.ChooseVotePlayer {} -> player
+  Prompt.ChooseVote _ _ _ offered -> ballotChoice (NonEmpty.head offered)
   Prompt.ChooseCounterKind {} -> counterKind
   Prompt.ChooseMovedCounters {} -> mapOf counterKind natural
   Prompt.ChooseStoredRerolls {} -> mapOf (viaCodec Codec.StoredResult.codec) natural

@@ -221,6 +221,15 @@ legalRecipientsGiven pools perspective unannounced bindings acquisition source s
           && targetable pcs rowsOf perspective source sourceView gs recipient
    in Set.filter keep (admittedGiven pools perspective unannounced bindings acquisition source slot gs)
 
+-- CR 801.5a: the recipients @chooser@ may name for an ability of @source@ --
+-- those within their own range, which the controller's cut
+-- (legalRecipientsGiven) does not reach. Neither range applies to a planar
+-- source (CR 801.18, Plane.rangePerspective).
+inChooserRange :: ObjectId -> PlayerId -> GameState -> Set Recipient -> Set Recipient
+inChooserRange source chooser gs =
+  let grants = Projection.controlGrants gs
+   in Set.filter (\r -> all (\you -> inRangeGiven grants you r gs) (Plane.rangePerspective source chooser gs))
+
 -- CR 801.2: is this recipient within @you@'s range of influence -- a player
 -- within range, or an object Projection.objectInRangeGiven admits? CR 801.4 is
 -- the reader: legalRecipientsGiven asks it of the controller of the spell or
@@ -1727,11 +1736,8 @@ askChooser controller chooser oid source seed x slots sets mine = do
       counting = countingBy (Just controller) seed source gs
       most slot = TargetCount.most . SlotCount.at counting x . TargetSlot.count =<< Map.lookup slot slots
       -- CR 801.5a: a chooser names only what lies in their own range as well as
-      -- the controller's, which `sets` already holds to; neither range applies
-      -- to a planar source (CR 801.18, Plane.rangePerspective).
-      grants = Projection.controlGrants gs
-      inReach r = all (\you -> inRangeGiven grants you r gs) (Plane.rangePerspective source chooser gs)
-      offered = Map.mapWithKey (\slot -> piledOffer (most slot) (Just chooser) gs . Set.filter inReach) sets
+      -- the controller's, which `sets` already holds to.
+      offered = Map.mapWithKey (\slot -> piledOffer (most slot) (Just chooser) gs . inChooserRange source chooser gs) sets
       ranges = Map.restrictKeys (Map.intersectionWith (announcedRange counting x) slots (slotCapacities counting x slots offered gs)) mine
       variable = Map.keysSet (Map.filter (uncurry (/=)) ranges)
       offers = Map.restrictKeys (Map.intersectionWith (\targetSlot legal -> (SlotCount.at counting x (TargetSlot.count targetSlot), legal)) slots offered) variable

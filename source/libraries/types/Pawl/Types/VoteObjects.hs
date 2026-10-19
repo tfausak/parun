@@ -12,7 +12,8 @@ import qualified Pawl.Types.SlotName as SlotName
 --
 -- The filter is swept ONCE, off the board as the vote begins, which is also
 -- what makes every voter's list the same list -- rule 701.38a votes "for one
--- choice from a list", singular.
+-- choice from a list", singular -- less what lies outside that voter's range
+-- (CR 801.5a).
 data VoteObjects = MkVoteObjects
   { filter :: Filter.Filter Keyword.Keyword,
     slot :: SlotName.SlotName
