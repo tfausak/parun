@@ -599,13 +599,11 @@ applyClauseEffects resolving source applyOne =
 -- or not anything happened, a finite set. docs/decisions.md,
 -- "What counts as an instruction having happened".
 --
--- The scenario "CR 603.12 an empty mill after a token ceased in exile arms
--- no reflexive" proves the exiledWith copy. The rest is a REGRESSION
--- FENCE rather than a proved line: no pool card puts an offering, drawing or
--- tallying instruction directly before a reflexive arm, so un-copying
--- lastChoice leaves the suite green. Miasma Demon ("you may discard any number
--- of cards. When you do, ...", answered with zero) is the card that would
--- observe it.
+-- docs/decisions.md's Site line names the tests proving the exiledWith,
+-- exilePiles, nextTimestamp and nextEventGroup copies. The rest is a
+-- REGRESSION FENCE rather than a proved line: no pool card puts an offering,
+-- drawing or tallying instruction directly before a reflexive arm or an "If
+-- you do", so un-copying lastChoice leaves the suite green.
 happenedBetween :: GameState -> GameState -> Bool
 happenedBetween before after =
   let tallyless :: Map.Map SlotName Binding.Type.Binding -> Map.Map SlotName Binding.Type.Binding
