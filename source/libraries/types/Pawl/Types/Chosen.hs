@@ -10,11 +10,11 @@ import qualified Pawl.Types.PlayerChoice as PlayerChoice
 import qualified Pawl.Types.PlayerId as PlayerId
 import qualified Pawl.Types.Subtype as Subtype
 
--- | Which of an object's per-acquisition choices (CR 607.5), indexed by what
--- one acquisition's entry holds: the field Pawl.Engine.Game reads and writes on
--- the live object and on its last known information alike.
+-- | Which of an object's per-acquisition choices (CR 607.2d / 607.5), indexed
+-- by what one acquisition's entry holds: the field Pawl.Engine.Game reads and
+-- writes on the live object and on its last known information alike.
 data Chosen a where
-  -- | CR 105.2: the chosen colours (Object.chosenColors).
+  -- | CR 105.1: the chosen colours (Object.chosenColors).
   Colors :: Chosen (Set.Set Color.Color)
   -- | CR 205.3: the chosen subtype (Object.chosenSubtype).
   Subtype :: Chosen Subtype.Subtype
