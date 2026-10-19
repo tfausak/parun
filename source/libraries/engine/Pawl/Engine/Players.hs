@@ -11,12 +11,14 @@ import qualified Pawl.Engine.Game as Game
 import qualified Pawl.Types.Acquisition as Acquisition
 import qualified Pawl.Types.AttackTarget as AttackTarget
 import qualified Pawl.Types.AttackingPlayers as AttackingPlayers
+import qualified Pawl.Types.Chosen as Chosen
 import qualified Pawl.Types.Combat as Combat
 import Pawl.Types.Game (Game)
 import Pawl.Types.GameState (GameState)
 import qualified Pawl.Types.GameState as GameState
 import Pawl.Types.ObjectId (ObjectId)
 import qualified Pawl.Types.Player as Player
+import qualified Pawl.Types.PlayerChoice as PlayerChoice
 import Pawl.Types.PlayerId (PlayerId)
 import qualified Pawl.Types.PlayerMeasure as PlayerMeasure
 import qualified Pawl.Types.PlayerRef as PlayerRef
@@ -148,14 +150,15 @@ chooserOffer you gs relation = case offer you gs relation of
 -- | CR 608.2d / 614.12a / 601.2c: @chooser@ picks one of the candidates, for
 -- @source@, through Game.chooseAmong. Prompt.ChoosePlayer where the offer holds
 -- the chooser and Prompt.ChooseOpponent where it cannot, so the prompt follows
--- the candidate set rather than any scope's name. Hexproof and shroud do not
--- enter into it: a choice is not a target (CR 115.10a).
-chooseOne :: PlayerId -> ObjectId -> [PlayerId] -> Game (Maybe PlayerId)
-chooseOne chooser source =
+-- the candidate set rather than any scope's name; the latter carries @promise@,
+-- the CR 702.174a gift a payment names. Hexproof and shroud do not enter into
+-- it: a choice is not a target (CR 115.10a).
+chooseOne :: PlayerId -> ObjectId -> Maybe PlayerChoice.PlayerChoice -> [PlayerId] -> Game (Maybe PlayerId)
+chooseOne chooser source promise =
   let question decider asked offered =
         if elem asked offered
           then Prompt.ChoosePlayer decider asked source offered
-          else Prompt.ChooseOpponent decider asked source Nothing offered
+          else Prompt.ChooseOpponent decider asked source promise offered
    in Game.chooseAmong question chooser
 
 -- | The players a PlayerRef names, in PlayerId order, or Nothing where the
@@ -240,7 +243,7 @@ namedUncut given gs ref =
         -- record, not a characteristic (CR 707.2) -- through CR 608.2h's
         -- look-back. Pawl.CastSpec's Scrapshooter killed in response still has
         -- the promised opponent draw.
-        PlayerRef.ChosenPlayerOfBound slot choice -> fmap pure (slotObject given slot >>= \oid -> Game.chosenPlayerWithLastKnown (acquisitionOf given oid) choice oid gs)
+        PlayerRef.ChosenPlayerOfBound slot choice -> fmap pure (slotObject given slot >>= \oid -> Game.choiceWithLastKnown Chosen.Players (acquisitionOf given oid) oid gs >>= Map.lookup choice)
         -- CR 508.6: the players controlling a creature attacking the player a
         -- slot names, narrowed by the printed relation -- Curse of Vitality's
         -- "each opponent attacking that player". The LIVE combat record (CR

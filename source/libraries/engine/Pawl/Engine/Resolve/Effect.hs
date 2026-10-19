@@ -147,6 +147,7 @@ import qualified Pawl.Types.ChoosePermanents as ChoosePermanents
 import qualified Pawl.Types.ChoosePlayer as ChoosePlayer
 import qualified Pawl.Types.ChoosePlayerAtRandom as ChoosePlayerAtRandom
 import qualified Pawl.Types.Chooser as Chooser
+import qualified Pawl.Types.Chosen as Chosen
 import qualified Pawl.Types.ChosenCardFromAmong as ChosenCardFromAmong
 import qualified Pawl.Types.ChosenCardInGraveyard as ChosenCardInGraveyard
 import qualified Pawl.Types.ChosenCardInHand as ChosenCardInHand
@@ -262,7 +263,6 @@ import qualified Pawl.Types.InherentTriggerSource as InherentTriggerSource
 import qualified Pawl.Types.InitiativeTarget as InitiativeTarget
 import qualified Pawl.Types.Keyword as Keyword.Type
 import qualified Pawl.Types.KeywordFamily as KeywordFamily
-import qualified Pawl.Types.LastKnown as LastKnown
 import qualified Pawl.Types.LibraryDepth as LibraryDepth
 import qualified Pawl.Types.LibraryPlacement as LibraryPlacement
 import qualified Pawl.Types.LibraryPosition as LibraryPosition
@@ -802,7 +802,7 @@ askedChooser :: ObjectId -> ObjectId -> PlayerId -> Map.Map SlotName (Set Recipi
 askedChooser resolving source controller legal ref = do
   gs <- State.get
   case (ref, decidersOf legal resolving source controller gs ref) of
-    (PlayerRef.Relative relation, _) -> Players.chooseOne controller source (Players.chooserOffer controller gs relation)
+    (PlayerRef.Relative relation, _) -> Players.chooseOne controller source Nothing (Players.chooserOffer controller gs relation)
     (_, [named])
       | List.elem named (Game.stillPlaying gs) -> pure (Just named)
       | otherwise ->
@@ -812,7 +812,7 @@ askedChooser resolving source controller legal ref = do
                 if Game.areOpponents gs controller named && not (List.null opponents)
                   then opponents
                   else Players.offer controller gs PlayerRelation.AnyPlayer
-           in Players.chooseOne controller source candidates
+           in Players.chooseOne controller source Nothing candidates
     _ -> pure Nothing
 
 -- CR 701.3a for several movers going to one destination together. CR 613.7m:
@@ -4677,7 +4677,7 @@ applyOneEffect runSubgame resolving source controller legal chosen effect = case
   Effect.ChoosePlayer choice -> do
     gs <- State.get
     let slot = ChoosePlayer.slot choice
-    chosenPlayer <- Players.chooseOne controller source (Maybe.fromMaybe [] (PlayerEffect.playersInScope (Plane.rangePerspective source controller gs) (Just controller) gs (ChoosePlayer.scope choice)))
+    chosenPlayer <- Players.chooseOne controller source Nothing (Maybe.fromMaybe [] (PlayerEffect.playersInScope (Plane.rangePerspective source controller gs) (Just controller) gs (ChoosePlayer.scope choice)))
     Monad.forM_ chosenPlayer $ \pid -> State.modify' (bindPlayerSlot resolving slot (Set.singleton pid))
   -- ChoosePlayer's twin with the decision replaced by randomness (Ruhan of the
   -- Fomori's "choose an opponent at random", Strax, Sontaran Nurse's "choose a
@@ -9026,14 +9026,11 @@ applyOneEffect runSubgame resolving source controller legal chosen effect = case
     -- that would now be visible.
     --
     -- A source that has LEFT its zone gets the names on its last known
-    -- information instead (CR 608.2h), which is where Game.chosenNamesWithLastKnown
+    -- information instead (CR 608.2h), which is where Game.choiceWithLastKnown
     -- reads them back: Conundrum Sphinx bounced with its trigger on the stack
     -- still keeps a named card (its CR 608.2h scenario under data/scenarios).
-    Monad.unless (Map.null picked) $ do
-      let acquisition = Game.readingAcquisition resolving source gs source
-          stamp o = o {Object.chosenNames = Map.insert acquisition picked (Object.chosenNames o)}
-          remember lk = lk {LastKnown.chosenNames = Map.insert acquisition picked (LastKnown.chosenNames lk)}
-      State.modify' $ \g -> g {GameState.objects = Map.adjust stamp source (GameState.objects g), GameState.lastKnown = Map.adjust remember source (GameState.lastKnown g)}
+    Monad.unless (Map.null picked) $
+      State.modify' (Game.recordChoice Chosen.Names (Game.readingAcquisition resolving source gs source) (const (Just picked)) source)
   -- CR 400.11c: the resolving controller reveals a card they own from outside the
   -- game matching the filter and puts it into their hand -- Burning Wish.
   --
@@ -11754,7 +11751,7 @@ applySurveil (pid, decision) = Monad.forM_ decision $ \(onTop, beneath, toGravey
 fatesealOne :: ObjectId -> Integer -> PlayerId -> Game ()
 fatesealOne source n pid = do
   gs <- State.get
-  victim <- Players.chooseOne pid source (Players.offer pid gs PlayerRelation.Opponent)
+  victim <- Players.chooseOne pid source Nothing (Players.offer pid gs PlayerRelation.Opponent)
   Monad.forM_ victim $ \owner -> do
     -- Re-read rather than reusing the state the opponent choice was made
     -- against: a prompt is the one place this function yields.
@@ -11799,7 +11796,7 @@ fatesealOne source n pid = do
 clash :: ObjectId -> ObjectId -> PlayerId -> Game Natural
 clash resolving source controller = do
   gs <- State.get
-  chosen <- Players.chooseOne controller source (Players.offer controller gs PlayerRelation.Opponent)
+  chosen <- Players.chooseOne controller source Nothing (Players.offer controller gs PlayerRelation.Opponent)
   case chosen of
     -- Every other seat has left (CR 104.2a): nobody to clash with, so rule
     -- 701.30b's instruction does nothing and nobody won.

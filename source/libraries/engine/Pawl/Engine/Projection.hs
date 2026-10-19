@@ -53,6 +53,7 @@ import qualified Pawl.Types.CardName as CardName
 import qualified Pawl.Types.CardType as CardType
 import qualified Pawl.Types.ChangeSubtypeWord as ChangeSubtypeWord
 import qualified Pawl.Types.CharacteristicPT as CharacteristicPT
+import qualified Pawl.Types.Chosen as Chosen
 import qualified Pawl.Types.Color as Color
 import qualified Pawl.Types.Condition as Condition.Type
 import qualified Pawl.Types.ContinuousEffect as ContinuousEffect
@@ -247,7 +248,7 @@ applyModification textBoxOf viewOf src stamp gs oid unitTypes affected m pc =
         -- Blessing and Benevolent Blessing cases prove them.
         Modification.GainKeyword k ->
           let granter = Game.lookupObject src gs
-              chosen = Maybe.fromMaybe Set.empty (Game.currentChoice Object.chosenColors src gs)
+              chosen = Maybe.fromMaybe Set.empty (Game.currentChoice Chosen.Colors src gs)
               stampedBy limit attacher = maybe False ((<= limit) . Object.timestamp) (Game.lookupObject attacher gs)
               already = foldMap (\g -> filter (stampedBy (Object.timestamp g)) (Set.toList (Game.attachments oid gs))) granter
            in pc {PC.keywords = Map.insertWith (+) (Keyword.grantedBy src chosen (controllerOf src gs) already k) 1 (PC.keywords pc)}
@@ -562,7 +563,7 @@ applyModification textBoxOf viewOf src stamp gs oid unitTypes affected m pc =
         -- whose rewrite writes the field before the permanent is on the
         -- battlefield to be projected.
         Modification.SetLandSubtypeToChosen ->
-          case Game.currentChoice Object.chosenSubtype src gs of
+          case Game.currentChoice Chosen.Subtype src gs of
             Nothing -> pc
             Just s -> setLandSubtypeTo unitTypes s pc
         -- CR 612.1/612.2: a text-changing effect swaps a subtype word in the type
@@ -681,7 +682,7 @@ applyModification textBoxOf viewOf src stamp gs oid unitTypes affected m pc =
           pc {PC.colors = Set.union cs (PC.colors pc)}
         -- CR 105.3's parenthetical, colour read off the source's entry choice.
         Modification.AddChosenColor ->
-          pc {PC.colors = Set.union (Maybe.fromMaybe Set.empty (Game.currentChoice Object.chosenColors src gs)) (PC.colors pc)}
+          pc {PC.colors = Set.union (Maybe.fromMaybe Set.empty (Game.currentChoice Chosen.Colors src gs)) (PC.colors pc)}
         -- CR 613.4d.
         Modification.SwitchPowerToughness ->
           pc {PC.power = PC.toughness pc, PC.toughness = PC.power pc}
