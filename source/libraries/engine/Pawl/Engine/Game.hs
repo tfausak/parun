@@ -2611,11 +2611,10 @@ componentIsToken component = case component of
   MergeComponent.OfMeld _ -> False
   -- CR 608.3f gives a copy of a permanent spell its token-ness only "as it is put
   -- onto the battlefield", and CR 702.140c's merge never puts it there --
-  -- `sourceIsToken`'s OfSpellCopy arm answers the same for the same rule. A
-  -- REGRESSION FENCE rather than a proved answer: only a merged permanent whose
-  -- TOPMOST component is a copy reads it, and answering True leaves the suite
-  -- green (2026-09-09). docs/decisions.md, "Whether a merged copy of a
-  -- mutating spell is a token".
+  -- `sourceIsToken`'s OfSpellCopy arm answers the same for the same rule.
+  -- Pawl.MutateSpec's "CR 730.2d/608.3f a merged permanent whose topmost
+  -- component is a spell copy is no token" proves it. docs/decisions.md,
+  -- "Whether a merged copy of a mutating spell is a token".
   MergeComponent.OfSpellCopy _ -> False
 
 -- CR 108.2 / 903.9c: is this component of a merged permanent a CARD? Not
