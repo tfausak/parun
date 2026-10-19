@@ -114,3 +114,23 @@ data ExilePlayPermission = MkExilePlayPermission
     budget :: Maybe PlayBudget.PlayBudget
   }
   deriving (Eq, Ord, Show)
+
+-- | CR 601.3: the permission `player` holds from `source` that states nothing
+-- but the play -- no duration (CR 611.2a), no rider (CR 118.14), no cost (CR
+-- 118.9a), no condition, increase, entry or budget. Each grant writes over it
+-- what its own rule says.
+defaultValue :: PlayerId.PlayerId -> ObjectId.ObjectId -> ExilePlayPermission
+defaultValue p s =
+  MkExilePlayPermission
+    { player = p,
+      source = s,
+      expiry = Expiry.Never,
+      spending = ManaSpending.AsProduced,
+      alternativeCost = Nothing,
+      condition = Nothing,
+      origin = PlayPermissionOrigin.Granted,
+      verb = PermissionVerb.Play,
+      increase = 0,
+      landEnters = TapState.Untapped,
+      budget = Nothing
+    }

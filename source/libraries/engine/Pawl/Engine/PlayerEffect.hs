@@ -2051,8 +2051,8 @@ castPermissionsFrom pid zone oid gs =
       -- prove both directions.
       inPool source pool = case pool of
         PermissionPool.EveryCard -> True
-        PermissionPool.CardsExiledWithSource -> case (RowSource.object source, Map.lookup oid (GameState.exiledWith gs)) of
-          (Just sid, Just link) -> Binding.isLinkedExile (RowSource.ability source) sid link
+        PermissionPool.InExiledPile pile -> case (RowSource.object source, Map.lookup oid (GameState.exiledWith gs)) of
+          (Just sid, Just link) -> Binding.isLinkedExile (RowSource.ability source) pile sid link
           _ -> False
    in Maybe.mapMaybe grantOf (filter allows (applying pid gs))
 

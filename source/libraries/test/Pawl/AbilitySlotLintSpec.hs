@@ -72,8 +72,10 @@ import qualified Pawl.Types.CountedDiscard as CountedDiscard
 import qualified Pawl.Types.CounterKind as CounterKind
 import qualified Pawl.Types.Discard as Discard
 import qualified Pawl.Types.Draw as Draw
+import qualified Pawl.Types.EachCardInExiledPile as EachCardInExiledPile
 import qualified Pawl.Types.Effect as Effect
 import qualified Pawl.Types.EntryRiders as EntryRiders
+import qualified Pawl.Types.ExiledPile as ExiledPile
 import qualified Pawl.Types.Face as Face
 import qualified Pawl.Types.Filter as Filter.Type
 import qualified Pawl.Types.GrantedAbility as GrantedAbility
@@ -669,7 +671,7 @@ abilitySlotLintSpec s registry = Spec.describe s "Lint" $ do
   -- Per FACE, because the name is written on one face's ability and read by that
   -- same face's text -- so two faces may reuse a name without colliding.
   --
-  -- CR 607.2a's ObjectRef.EachCardExiledWithAbility is the name's third reader,
+  -- CR 607.2a's ObjectRef.EachCardInExiledPile, over ExiledPile.OfAbility, is the name's third reader,
   -- and joins the same namespace: a reference naming no exiling ability of its
   -- face would read an empty pile. It must name an ACTIVATED ability, the one
   -- carrier Pawl.Engine.Resolve.Slots.resolvingAbilityName files a name for.
@@ -1544,11 +1546,11 @@ namedRemovals face =
         )
 
 -- Every AbilityName a face's CR 607.2a references name: the exiling ability
--- each EachCardExiledWithAbility reads the pile of.
+-- each EachCardInExiledPile's OfAbility pile reads.
 namedExileReferences :: Face.Face Card.Type.Card -> Set.Set AbilityName.AbilityName
 namedExileReferences face =
   let named ref = case ref of
-        ObjectRef.EachCardExiledWithAbility name -> [name]
+        ObjectRef.EachCardInExiledPile (EachCardInExiledPile.MkEachCardInExiledPile (ExiledPile.OfAbility name) _) -> [name]
         _ -> []
    in Set.fromList (concatMap named (concatMap Resolve.effectObjectRefs (cardAuthoredEffects face)))
 

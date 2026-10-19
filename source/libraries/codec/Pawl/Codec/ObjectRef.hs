@@ -1,12 +1,12 @@
 module Pawl.Codec.ObjectRef where
 
-import qualified Pawl.Codec.AbilityName as AbilityName
 import qualified Pawl.Codec.AttachedToBound as AttachedToBound
 import qualified Pawl.Codec.ChosenCardFromAmong as ChosenCardFromAmong
 import qualified Pawl.Codec.ChosenCardInGraveyard as ChosenCardInGraveyard
 import qualified Pawl.Codec.ChosenCardInHand as ChosenCardInHand
 import qualified Pawl.Codec.ChosenPermanents as ChosenPermanents
 import qualified Pawl.Codec.EachCardFromAmong as EachCardFromAmong
+import qualified Pawl.Codec.EachCardInExiledPile as EachCardInExiledPile
 import qualified Pawl.Codec.EachCardInGraveyard as EachCardInGraveyard
 import qualified Pawl.Codec.EachCardInHand as EachCardInHand
 import qualified Pawl.Codec.Filter as Filter
@@ -35,16 +35,15 @@ import qualified Pawl.Types.ObjectRef as ObjectRef
 -- was waiting on. The wire format is unchanged by that conversion -- the same
 -- tags, emitted identically -- and what it adds is the schema.
 --
--- 'EachCardInGraveyard', 'EachCardInHand', 'TopOfLibrary', 'TopOfLibraryUntil', 'ChosenCardInGraveyard',
+-- 'EachCardInGraveyard', 'EachCardInHand', 'EachCardInExiledPile', 'TopOfLibrary', 'TopOfLibraryUntil', 'ChosenCardInGraveyard',
 -- 'ChosenCardInHand', 'ChosenCardFromAmong', 'EachCardFromAmong', 'RandomCardInHand', 'RandomCardInGraveyard', 'RandomCardInLibrary',
 -- 'FromAnywhere' and 'ChosenPermanents' each carry a payload record of their own (#1464), so no arm here writes a
 -- positional array.
 --
--- 'EachCardExiledWithSource' and 'EachCardInYourLibrary' take an OPTIONAL
--- payload: the bare tag is the whole set -- the linked one (CR 607.3), the whole
--- library (CR 400.12) -- and a value narrows it to the cards a printing's own
--- words name. Both widenings left the printings written before them on the bare
--- tag, so neither changed a card on the wire.
+-- 'EachCardInYourLibrary' takes an OPTIONAL payload: the bare tag is the whole
+-- library (CR 400.12), and a value narrows it to the cards a printing's own
+-- words name. The widening left the printings written before it on the bare
+-- tag, so it changed no card on the wire.
 codec :: Codec.Codec ObjectRef.ObjectRef
 codec =
   let -- Written once so the encoder, the decoder and the schema cannot disagree
@@ -59,8 +58,7 @@ codec =
           Arm.payload "EachCardInHand" EachCardInHand.codec ObjectRef.EachCardInHand (\x -> case x of ObjectRef.EachCardInHand y -> Just y; _ -> Nothing),
           Arm.optionalPayload "EachCardInYourLibrary" filterCodec ObjectRef.EachCardInYourLibrary (\x -> case x of ObjectRef.EachCardInYourLibrary y -> Just y; _ -> Nothing),
           Arm.payload "EachCardYouOwn" filterCodec ObjectRef.EachCardYouOwn (\x -> case x of ObjectRef.EachCardYouOwn y -> Just y; _ -> Nothing),
-          Arm.optionalPayload "EachCardExiledWithSource" filterCodec ObjectRef.EachCardExiledWithSource (\x -> case x of ObjectRef.EachCardExiledWithSource y -> Just y; _ -> Nothing),
-          Arm.payload "EachCardExiledWithAbility" AbilityName.codec ObjectRef.EachCardExiledWithAbility (\x -> case x of ObjectRef.EachCardExiledWithAbility y -> Just y; _ -> Nothing),
+          Arm.payload "EachCardInExiledPile" EachCardInExiledPile.codec ObjectRef.EachCardInExiledPile (\x -> case x of ObjectRef.EachCardInExiledPile y -> Just y; _ -> Nothing),
           Arm.optionalPayload "EachCardEncodedOnSource" filterCodec ObjectRef.EachCardEncodedOnSource (\x -> case x of ObjectRef.EachCardEncodedOnSource y -> Just y; _ -> Nothing),
           Arm.payload "EachSpell" filterCodec ObjectRef.EachSpell (\x -> case x of ObjectRef.EachSpell y -> Just y; _ -> Nothing),
           Arm.payload "EachAbility" filterCodec ObjectRef.EachAbility (\x -> case x of ObjectRef.EachAbility y -> Just y; _ -> Nothing),
@@ -100,8 +98,7 @@ tagOf x = case x of
   ObjectRef.EachCardInHand {} -> "EachCardInHand"
   ObjectRef.EachCardInYourLibrary {} -> "EachCardInYourLibrary"
   ObjectRef.EachCardYouOwn {} -> "EachCardYouOwn"
-  ObjectRef.EachCardExiledWithSource {} -> "EachCardExiledWithSource"
-  ObjectRef.EachCardExiledWithAbility {} -> "EachCardExiledWithAbility"
+  ObjectRef.EachCardInExiledPile {} -> "EachCardInExiledPile"
   ObjectRef.EachCardEncodedOnSource {} -> "EachCardEncodedOnSource"
   ObjectRef.EachSpell {} -> "EachSpell"
   ObjectRef.EachAbility {} -> "EachAbility"

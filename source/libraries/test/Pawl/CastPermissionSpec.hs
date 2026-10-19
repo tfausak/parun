@@ -1689,7 +1689,7 @@ spec s registry = Spec.describe s "Pawl.Engine.PlayerEffect" $ do
 -- cards you own exiled with this creature by removing three counters from among
 -- creatures you control in addition to paying their other costs."
 --
--- The producer for PermissionPool.CardsExiledWithSource (CR 607.2a) and for a
+-- The producer for PermissionPool.InExiledPile (CR 607.2a) and for a
 -- CastFromZone's additionalCosts (CR 118.8 / 601.2f); "during your turn" is the
 -- PlayerStaticAbility condition Paladin Class writes.
 --

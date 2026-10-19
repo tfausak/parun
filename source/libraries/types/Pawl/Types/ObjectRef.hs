@@ -1,13 +1,13 @@
 module Pawl.Types.ObjectRef where
 
 import qualified Data.List.NonEmpty as NonEmpty
-import qualified Pawl.Types.AbilityName as AbilityName
 import qualified Pawl.Types.AttachedToBound as AttachedToBound
 import qualified Pawl.Types.ChosenCardFromAmong as ChosenCardFromAmong
 import qualified Pawl.Types.ChosenCardInGraveyard as ChosenCardInGraveyard
 import qualified Pawl.Types.ChosenCardInHand as ChosenCardInHand
 import qualified Pawl.Types.ChosenPermanents as ChosenPermanents
 import qualified Pawl.Types.EachCardFromAmong as EachCardFromAmong
+import qualified Pawl.Types.EachCardInExiledPile as EachCardInExiledPile
 import qualified Pawl.Types.EachCardInGraveyard as EachCardInGraveyard
 import qualified Pawl.Types.EachCardInHand as EachCardInHand
 import qualified Pawl.Types.Filter as Filter
@@ -57,13 +57,10 @@ data ObjectRef
     -- own named Static Discharge". Never a token or a copy, which CR 108.2 keeps
     -- out of "card".
     EachCardYouOwn (Filter.Filter Keyword.Keyword)
-  | -- | CR 607.2a / Hoarding Dragon, Karn Liberated: every card in exile that an
-    -- instruction in an ability of this effect's source put there, narrowed by the
+  | -- | CR 607.2a / Hoarding Dragon, Synthetic Split Reliquary: every card in
+    -- exile in one of this effect's source's linked piles, narrowed by the
     -- optional Filter.
-    EachCardExiledWithSource (Maybe (Filter.Filter Keyword.Keyword))
-  | -- | CR 607.2a / Synthetic Split Reliquary: every card in exile that the named
-    -- activated ability of this effect's source put there.
-    EachCardExiledWithAbility AbilityName.AbilityName
+    EachCardInExiledPile EachCardInExiledPile.EachCardInExiledPile
   | -- | CR 702.99a / Last Thoughts: every card in exile encoded on this effect's
     -- source, narrowed by the optional Filter.
     EachCardEncodedOnSource (Maybe (Filter.Filter Keyword.Keyword))

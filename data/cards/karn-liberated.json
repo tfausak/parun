@@ -120,61 +120,66 @@
                       {
                         "type": "RestartGame",
                         "value": {
-                          "type": "EachCardExiledWithSource",
+                          "type": "EachCardInExiledPile",
                           "value": {
-                            "type": "And",
-                            "value": [
-                              {
-                                "type": "Or",
-                                "value": [
-                                  {
-                                    "type": "HasCardType",
-                                    "value": {
-                                      "type": "Artifact"
+                            "filter": {
+                              "type": "And",
+                              "value": [
+                                {
+                                  "type": "Or",
+                                  "value": [
+                                    {
+                                      "type": "HasCardType",
+                                      "value": {
+                                        "type": "Artifact"
+                                      }
+                                    },
+                                    {
+                                      "type": "HasCardType",
+                                      "value": {
+                                        "type": "Battle"
+                                      }
+                                    },
+                                    {
+                                      "type": "HasCardType",
+                                      "value": {
+                                        "type": "Creature"
+                                      }
+                                    },
+                                    {
+                                      "type": "HasCardType",
+                                      "value": {
+                                        "type": "Enchantment"
+                                      }
+                                    },
+                                    {
+                                      "type": "HasCardType",
+                                      "value": {
+                                        "type": "Land"
+                                      }
+                                    },
+                                    {
+                                      "type": "HasCardType",
+                                      "value": {
+                                        "type": "Planeswalker"
+                                      }
                                     }
-                                  },
-                                  {
-                                    "type": "HasCardType",
-                                    "value": {
-                                      "type": "Battle"
-                                    }
-                                  },
-                                  {
-                                    "type": "HasCardType",
-                                    "value": {
-                                      "type": "Creature"
-                                    }
-                                  },
-                                  {
-                                    "type": "HasCardType",
-                                    "value": {
-                                      "type": "Enchantment"
-                                    }
-                                  },
-                                  {
-                                    "type": "HasCardType",
-                                    "value": {
-                                      "type": "Land"
-                                    }
-                                  },
-                                  {
-                                    "type": "HasCardType",
-                                    "value": {
-                                      "type": "Planeswalker"
-                                    }
-                                  }
-                                ]
-                              },
-                              {
-                                "type": "Not",
-                                "value": {
-                                  "type": "HasSubtype",
+                                  ]
+                                },
+                                {
+                                  "type": "Not",
                                   "value": {
-                                    "type": "Aura"
+                                    "type": "HasSubtype",
+                                    "value": {
+                                      "type": "Aura"
+                                    }
                                   }
                                 }
-                              }
-                            ]
+                              ]
+                            },
+                            "pile": {
+                              "type": "OwnAbilities"
+                            }
                           }
                         }
                       },
@@ -182,7 +187,12 @@
                         "type": "MoveToZone",
                         "value": {
                           "ref": {
-                            "type": "EachCardExiledWithSource"
+                            "type": "EachCardInExiledPile",
+                            "value": {
+                              "pile": {
+                                "type": "OwnAbilities"
+                              }
+                            }
                           },
                           "zone": {
                             "type": "Battlefield"

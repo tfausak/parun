@@ -42,6 +42,7 @@ import qualified Pawl.Types.AbilitySticker as AbilitySticker
 import qualified Pawl.Types.ActivatedAbility as ActivatedAbility
 import qualified Pawl.Types.ActivatedAbilitySource as ActivatedAbilitySource
 import qualified Pawl.Types.Affected as Affected
+import qualified Pawl.Types.AgainstExiledPile as AgainstExiledPile
 import qualified Pawl.Types.AgainstLastCardExiledWith as AgainstLastCardExiledWith
 import qualified Pawl.Types.AgainstSlot as AgainstSlot
 import qualified Pawl.Types.Aggregation as Aggregation
@@ -71,9 +72,7 @@ import qualified Pawl.Types.DistinctOf as DistinctOf
 import qualified Pawl.Types.Effect as Effect
 import qualified Pawl.Types.EntryR as EntryR
 import qualified Pawl.Types.EntryRewrite as EntryRewrite
-import qualified Pawl.Types.ExileLink as ExileLink
 import qualified Pawl.Types.ExiledCardAbilities as ExiledCardAbilities
-import qualified Pawl.Types.ExiledPile as ExiledPile
 import qualified Pawl.Types.Face as Face
 import qualified Pawl.Types.Facing as Facing
 import qualified Pawl.Types.Filter as Filter.Type
@@ -352,7 +351,7 @@ applyModification textBoxOf viewOf src stamp gs oid unitTypes affected m pc =
         -- payload's restrictions added. Like GainAbility above, the receiver is
         -- their source (CR 113.7). The craft pile is the cards linked under
         -- Binding.craftLink (CR 702.167c), so nothing `src`'s other abilities
-        -- exile; the other is every card linked to `src` but those an ability
+        -- exile; OwnAbilities is every card linked to `src` but those an ability
         -- it acquired this way exiled (Binding.isLinkedExile): CR 607.2a links
         -- this ability only to exiling abilities printed beside it, and CR
         -- 607.5 an acquired one only to its own pair.
@@ -369,7 +368,7 @@ applyModification textBoxOf viewOf src stamp gs oid unitTypes affected m pc =
         -- scenarios prove the other pile, and the Patchwork Crawler pair what
         -- an acquired ability exiled.
         Modification.GainExiledCardAbilities (ExiledCardAbilities.MkExiledCardAbilities pile extra) ->
-          let cards = exiledPileOf pile src gs
+          let cards = Game.linkedPile Nothing pile src gs
               named card a = a {ActivatedAbility.name = ActivatedAbility.name a Applicative.<|> Just (Binding.exiledCardAbility card)}
               -- CR 113.6 / 702.178b: a card has, in exile, only the "as long
               -- as" grants that function there (AbilityZone.grantFunctionsIn).
@@ -1295,16 +1294,6 @@ framedByBindings gs bindings = framedBySlots gs (Binding.recipientsBySlot (Bindi
 sourceContext :: GameState -> Maybe PlayerId.PlayerId -> ObjectId -> Filter.Context
 sourceContext gs perspective source =
   framedBy source gs (Filter.contextFor (Game.teams gs) perspective (Just source))
-
--- | CR 607.2a: the cards in exile in `src`'s pile -- the ones exiled to craft
--- it (CR 702.167c), or every one its own abilities exiled.
-exiledPileOf :: ExiledPile.ExiledPile -> ObjectId -> GameState -> [ObjectId]
-exiledPileOf pile src gs =
-  let inPile o = case (pile, Map.lookup o (GameState.exiledWith gs)) of
-        (ExiledPile.CraftMaterials, Just link) -> link == ExileLink.MkExileLink {ExileLink.source = src, ExileLink.ability = Just Binding.craftLink}
-        (ExiledPile.ExiledWithSource, Just link) -> Binding.isLinkedExile Nothing src link
-        (_, Nothing) -> False
-   in filter inPile (Set.toAscList (GameState.exile gs))
 
 -- SourceContext.framedBy plus withCharacteristicsOf: every source-derived field.
 framedBy :: ObjectId -> GameState -> Filter.Context -> Filter.Context
@@ -3743,6 +3732,7 @@ filterReads f = case f of
   -- on the Context baked at production, and CR 613.1d's layer writes the other.
   Filter.Type.HasChosenSubtype -> Set.singleton Subtypes
   Filter.Type.IsExiledWithSource _ -> Set.empty
+  Filter.Type.IsLastExiledWithSource -> Set.empty
   -- Reads the candidate's CONTROLLER, SameControllerAsBound's answer above: rule
   -- 702.16k's other half is an owner, which CR 108.3 never projects.
   Filter.Type.OfChosenPlayer -> Set.singleton Controller
@@ -4077,6 +4067,7 @@ filterReadsPeers f = case f of
   -- is projected.
   Filter.Type.HasChosenSubtype -> False
   Filter.Type.IsExiledWithSource _ -> False
+  Filter.Type.IsLastExiledWithSource -> False
   -- The carrier's chosen player arrives on the Context; the candidate's own
   -- controller and owner are read off its view, so no PEER is projected.
   Filter.Type.OfChosenPlayer -> False
@@ -4370,10 +4361,8 @@ quantityReads q = case q of
   -- linked cards rather than off a slot. Over-declaring is the safe direction
   -- here, so the payload's reads are reported even though the cards it reads
   -- them off are in exile and no modification this screen guards writes there.
-  Quantity.Type.AgainstCardsExiledWith a -> quantityReads a
+  Quantity.Type.AgainstExiledPile a -> quantityReads (AgainstExiledPile.quantity a)
   Quantity.Type.AgainstLastCardExiledWith l -> quantityReads (AgainstLastCardExiledWith.quantity l)
-  -- CR 702.167c: AgainstCardsExiledWith's answer, over the craft link alone.
-  Quantity.Type.AgainstCraftMaterials a -> quantityReads a
   Quantity.Type.Literal _ -> Set.empty
   Quantity.Type.InSlot _ -> Set.empty
   -- InSlot's answer: a binding is not a projected aspect, so neither half of the

@@ -66,6 +66,7 @@ import qualified Pawl.Types.AffectPlayers as AffectPlayers
 import qualified Pawl.Types.Affected as Affected
 import qualified Pawl.Types.AffectedPlayers as AffectedPlayers
 import qualified Pawl.Types.AffectedUnless as AffectedUnless
+import qualified Pawl.Types.AgainstExiledPile as AgainstExiledPile
 import qualified Pawl.Types.AgainstLastCardExiledWith as AgainstLastCardExiledWith
 import qualified Pawl.Types.AgainstSlot as AgainstSlot
 import qualified Pawl.Types.Aggregation as Aggregation
@@ -174,6 +175,7 @@ import qualified Pawl.Types.DungeonRoom as DungeonRoom
 import qualified Pawl.Types.Duration as Duration
 import qualified Pawl.Types.DurationEvent as DurationEvent
 import qualified Pawl.Types.EachCardFromAmong as EachCardFromAmong
+import qualified Pawl.Types.EachCardInExiledPile as EachCardInExiledPile
 import qualified Pawl.Types.EachCardInGraveyard as EachCardInGraveyard
 import qualified Pawl.Types.EachCardInHand as EachCardInHand
 import qualified Pawl.Types.Earthbend as Earthbend
@@ -4008,8 +4010,7 @@ objectRefFilters ref = case ref of
   -- named by which object exiled the cards rather than by their characteristics.
   -- Karn Liberated's "all non-Aura permanent cards exiled with Karn" is the one
   -- printing that also states characteristics, and states them here.
-  ObjectRef.EachCardExiledWithSource f -> unframed (Foldable.toList f)
-  ObjectRef.EachCardExiledWithAbility _ -> unframed []
+  ObjectRef.EachCardInExiledPile e -> unframed (Foldable.toList (EachCardInExiledPile.filter e))
   ObjectRef.EachCardEncodedOnSource f -> unframed (Foldable.toList f)
   -- Swift Silence's "all other spells" states its own -- CR 109.2b's set is
   -- named by characteristics exactly as CR 109.2's battlefield sweep is.
@@ -4211,11 +4212,9 @@ quantityKindFilters quantity = case quantity of
   Quantity.Type.AgainstSlot (AgainstSlot.MkAgainstSlot _ inner) -> quantityKindFilters inner
   -- AgainstSlot's answer: aiming the evaluation at CR 607.2a's linked cards
   -- does not stop the payload from naming a kind.
-  Quantity.Type.AgainstCardsExiledWith inner -> quantityKindFilters inner
+  Quantity.Type.AgainstExiledPile a -> quantityKindFilters (AgainstExiledPile.quantity a)
   -- And its own Filter, which no Count holds and countFilters cannot see.
   Quantity.Type.AgainstLastCardExiledWith (AgainstLastCardExiledWith.MkAgainstLastCardExiledWith criterion inner) -> (Unframed, criterion) : quantityKindFilters inner
-  -- CR 702.167c: AgainstCardsExiledWith's answer, over the craft link alone.
-  Quantity.Type.AgainstCraftMaterials inner -> quantityKindFilters inner
 
 -- BOTH axes of every Quantity a Condition compares, off Resolve.conditionQuantities
 -- above rather than off conditionCounts beside it: reading the Counts alone drops

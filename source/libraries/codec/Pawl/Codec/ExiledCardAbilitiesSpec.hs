@@ -19,6 +19,6 @@ spec s = Spec.describe s "Pawl.Codec.ExiledCardAbilities" $ do
     Common.assertCodec
       s
       ExiledCardAbilities.codec
-      ExiledCardAbilities.MkExiledCardAbilities {ExiledCardAbilities.pile = ExiledPile.ExiledWithSource, ExiledCardAbilities.restrictions = []}
-      " {\"pile\":{\"type\":\"ExiledWithSource\"}} "
+      ExiledCardAbilities.MkExiledCardAbilities {ExiledCardAbilities.pile = ExiledPile.OwnAbilities, ExiledCardAbilities.restrictions = []}
+      " {\"pile\":{\"type\":\"OwnAbilities\"}} "
   Spec.it s "has a schema" $ Common.assertHasSchema s ExiledCardAbilities.codec

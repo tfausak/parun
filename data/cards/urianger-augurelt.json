@@ -117,7 +117,10 @@
                                 "value": []
                               },
                               "pool": {
-                                "type": "CardsExiledWithSource"
+                                "type": "InExiledPile",
+                                "value": {
+                                  "type": "OwnAbilities"
+                                }
                               },
                               "reduction": 2,
                               "verb": {

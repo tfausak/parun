@@ -80,6 +80,7 @@ import qualified Pawl.Types.Discard as Discard
 import qualified Pawl.Types.DoesNotUntapNext as DoesNotUntapNext
 import qualified Pawl.Types.Draw as Draw
 import qualified Pawl.Types.Duration as Duration
+import qualified Pawl.Types.EachCardInExiledPile as EachCardInExiledPile
 import qualified Pawl.Types.Earthbend as Earthbend
 import qualified Pawl.Types.Effect as Effect
 import qualified Pawl.Types.EntryAttack as EntryAttack
@@ -92,6 +93,7 @@ import qualified Pawl.Types.ExchangeValues as ExchangeValues
 import qualified Pawl.Types.ExchangeZones as ExchangeZones
 import qualified Pawl.Types.ExchangedValue as ExchangedValue
 import qualified Pawl.Types.ExileHaunting as ExileHaunting
+import qualified Pawl.Types.ExiledPile as ExiledPile
 import qualified Pawl.Types.ExtraPhase as ExtraPhase
 import qualified Pawl.Types.FaceDownCharacteristics as FaceDownCharacteristics
 import qualified Pawl.Types.Fight as Fight
@@ -367,8 +369,8 @@ spec s = Spec.describe s "Pawl.Codec.Effect" $ do
       s
       toJson
       fromJson
-      (Effect.RestartGame (Just (ObjectRef.EachCardExiledWithSource Nothing)))
-      " {\"type\":\"RestartGame\",\"value\":{\"type\":\"EachCardExiledWithSource\"}} "
+      (Effect.RestartGame (Just (ObjectRef.EachCardInExiledPile (EachCardInExiledPile.MkEachCardInExiledPile ExiledPile.OwnAbilities Nothing))))
+      " {\"type\":\"RestartGame\",\"value\":{\"type\":\"EachCardInExiledPile\",\"value\":{\"pile\":{\"type\":\"OwnAbilities\"}}}} "
   Spec.it s "ControlPlayerNextTurn" $
     Common.assertJsonCodec
       s

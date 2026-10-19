@@ -17,8 +17,10 @@ import qualified Pawl.Types.ChosenCardInGraveyard as ChosenCardInGraveyard
 import qualified Pawl.Types.ChosenCardInHand as ChosenCardInHand
 import qualified Pawl.Types.ChosenPermanents as ChosenPermanents
 import qualified Pawl.Types.EachCardFromAmong as EachCardFromAmong
+import qualified Pawl.Types.EachCardInExiledPile as EachCardInExiledPile
 import qualified Pawl.Types.EachCardInGraveyard as EachCardInGraveyard
 import qualified Pawl.Types.EachCardInHand as EachCardInHand
+import qualified Pawl.Types.ExiledPile as ExiledPile
 import qualified Pawl.Types.Filter as Filter
 import qualified Pawl.Types.FromAnywhere as FromAnywhere
 import qualified Pawl.Types.HowMany as HowMany
@@ -183,36 +185,19 @@ spec s = Spec.describe s "Pawl.Codec.ObjectRef" $ do
       (ObjectRef.EachCardYouOwn (Filter.HasSubtype Subtype.Mountain))
       " {\"type\":\"EachCardYouOwn\",\"value\":{\"type\":\"HasSubtype\",\"value\":{\"type\":\"Mountain\"}}} "
   -- No player, for a rule: CR 607.2a's set is defined by which object exiled the
-  -- card. The bare tag is the whole linked set, which is what three of the four
-  -- printings that read one take.
-  Spec.it s "EachCardExiledWithSource" $
+  -- card. The record carries the pile and the filter (Pawl.Codec.EachCardInExiledPileSpec).
+  Spec.it s "EachCardInExiledPile" $
     Common.assertCodec
       s
       ObjectRef.codec
-      (ObjectRef.EachCardExiledWithSource Nothing)
-      " {\"type\":\"EachCardExiledWithSource\"} "
-  -- CR 607.2a's pile of one named exiling ability, Synthetic Split Reliquary's.
-  Spec.it s "EachCardExiledWithAbility" $
-    Common.assertCodec
-      s
-      ObjectRef.codec
-      (ObjectRef.EachCardExiledWithAbility (AbilityName.MkAbilityName (Text.pack "warden")))
-      " {\"type\":\"EachCardExiledWithAbility\",\"value\":\"warden\"} "
+      (ObjectRef.EachCardInExiledPile (EachCardInExiledPile.MkEachCardInExiledPile (ExiledPile.OfAbility (AbilityName.MkAbilityName (Text.pack "warden"))) Nothing))
+      " {\"type\":\"EachCardInExiledPile\",\"value\":{\"pile\":{\"type\":\"OfAbility\",\"value\":\"warden\"}}} "
   Spec.it s "EachCardEncodedOnSource" $
     Common.assertCodec
       s
       ObjectRef.codec
       (ObjectRef.EachCardEncodedOnSource Nothing)
       " {\"type\":\"EachCardEncodedOnSource\"} "
-  -- And the narrowed set, Karn Liberated's "non-Aura permanent cards": an absent
-  -- key and a stated filter are different refs, so the optional payload has to
-  -- survive the trip rather than being dropped to the bare tag.
-  Spec.it s "EachCardExiledWithSource narrowed by a filter" $
-    Common.assertCodec
-      s
-      ObjectRef.codec
-      (ObjectRef.EachCardExiledWithSource (Just (Filter.Not (Filter.HasSubtype Subtype.Aura))))
-      " {\"type\":\"EachCardExiledWithSource\",\"value\":{\"type\":\"Not\",\"value\":{\"type\":\"HasSubtype\",\"value\":{\"type\":\"Aura\"}}}} "
   -- The other two-payload arm: whose library, and how deep. A depth ABOVE ONE,
   -- since a 1 is what a decoder that dropped the field would answer anyway.
   Spec.it s "TopOfLibrary" $
@@ -478,7 +463,7 @@ spec s = Spec.describe s "Pawl.Codec.ObjectRef" $ do
                 Codec.encode ObjectRef.codec (ObjectRef.EachCardInHand (EachCardInHand.MkEachCardInHand (ZoneScope.Scoped (PlayerScope.Related PlayerRelation.You)) Nothing)),
                 Codec.encode ObjectRef.codec (ObjectRef.EachCardInYourLibrary Nothing),
                 Codec.encode ObjectRef.codec (ObjectRef.EachCardYouOwn (Filter.HasCardType CardType.Creature)),
-                Codec.encode ObjectRef.codec (ObjectRef.EachCardExiledWithSource Nothing),
+                Codec.encode ObjectRef.codec (ObjectRef.EachCardInExiledPile (EachCardInExiledPile.MkEachCardInExiledPile ExiledPile.OwnAbilities Nothing)),
                 Codec.encode ObjectRef.codec (ObjectRef.EachSpell (Filter.Not Filter.IsSource)),
                 Codec.encode ObjectRef.codec (ObjectRef.EachAbility (Filter.Not Filter.IsSource)),
                 Codec.encode ObjectRef.codec (ObjectRef.EachOnStack (Filter.Not Filter.IsSource)),

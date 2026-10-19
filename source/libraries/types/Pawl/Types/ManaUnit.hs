@@ -115,7 +115,7 @@ data ManaUnit = MkManaUnit
     -- restriction the ABILITY's rather than the permanent's.
     sourceChoices :: Maybe SourceChoices.SourceChoices,
     -- | CR 607.2a: the last card exiled with this mana's SOURCE when the mana was
-    -- produced, baked in for Filter.IsExiledWithSource to ask -- Ice
+    -- produced, baked in for Filter.IsLastExiledWithSource to ask -- Ice
     -- Cauldron's "only to cast the last card exiled with this artifact". Nothing
     -- for almost every mana. Stamped by both producers off
     -- Pawl.Engine.Mana.lastExiledWith, and read by Pawl.Engine.Mana.admitsUnder.

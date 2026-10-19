@@ -16,6 +16,7 @@ import qualified Pawl.Types.AbilityName as AbilityName
 import Pawl.Types.Binding (Binding)
 import qualified Pawl.Types.Binding as Binding
 import qualified Pawl.Types.ExileLink as ExileLink
+import qualified Pawl.Types.ExiledPile as ExiledPile
 import Pawl.Types.ModeIndex (ModeIndex)
 import Pawl.Types.ObjectId (ObjectId)
 import qualified Pawl.Types.ObjectId as ObjectId
@@ -560,17 +561,26 @@ exiledCardAbility oid = AbilityName.MkAbilityName (exiledCardPrefix <> Text.pack
 isExiledCardAbility :: AbilityName.AbilityName -> Bool
 isExiledCardAbility = Text.isPrefixOf exiledCardPrefix . AbilityName.unwrap
 
--- | CR 607.2a / 607.5: whether `link` files its card against `src` under the
--- exiling ability paired with a reader named `reader`. A reader acquired from
--- an exiled card (isExiledCardAbility) is linked only to its own pair, which
--- shares its name; every other reader -- printed, or "printed" by CR 607.1a's
--- grant -- only to exiling abilities that were not acquired that way.
+-- | CR 607.2a / 607.5: whether `link` files its card against `src` in `pile`,
+-- as a reader named `reader` means it. THE one membership test every reader of
+-- GameState.exiledWith goes through (Pawl.Engine.Game.linkedPile).
+--
+-- OwnAbilities is every exiling ability paired with the reader: a reader
+-- acquired from an exiled card (isExiledCardAbility) is linked only to its own
+-- pair, which shares its name; every other reader -- printed, or "printed" by
+-- CR 607.1a's grant -- only to exiling abilities that were not acquired that
+-- way. The other three piles name one exiling ability outright, the reserved
+-- ones under entryExileLink and craftLink.
 --
 -- Not implemented: telling a NAMED acquired ability from a printed one of that
 -- name, since exiledCardAbility names only an unnamed one (#5267).
-isLinkedExile :: Maybe AbilityName.AbilityName -> ObjectId -> ExileLink.ExileLink -> Bool
-isLinkedExile reader src link =
-  ExileLink.source link == src && pairOf (ExileLink.ability link) == pairOf reader
+isLinkedExile :: Maybe AbilityName.AbilityName -> ExiledPile.ExiledPile -> ObjectId -> ExileLink.ExileLink -> Bool
+isLinkedExile reader pile src link =
+  ExileLink.source link == src && case pile of
+    ExiledPile.OwnAbilities -> pairOf (ExileLink.ability link) == pairOf reader
+    ExiledPile.OfAbility name -> ExileLink.ability link == Just name
+    ExiledPile.AsItEntered -> ExileLink.ability link == Just entryExileLink
+    ExiledPile.CraftMaterials -> ExileLink.ability link == Just craftLink
 
 -- The acquired pair a link's or a reader's ability name stands for, Nothing
 -- for the holder's own.

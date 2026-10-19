@@ -54,6 +54,7 @@ import qualified Pawl.Types.CostComponent as CostComponent
 import qualified Pawl.Types.Decider as Decider
 import qualified Pawl.Types.Effect as Effect
 import qualified Pawl.Types.ExilePermanents as ExilePermanents
+import qualified Pawl.Types.ExiledPile as ExiledPile
 import Pawl.Types.Game (Game)
 import Pawl.Types.GameState (GameState)
 import qualified Pawl.Types.GameState as GameState
@@ -796,12 +797,12 @@ sourceChoicesOf oid gs = case Game.lookupObject oid gs of
 -- CR 607.2a's production-time capture, sourceChoicesOf's twin: the last
 -- card exiled with this source that is still in exile, baked onto every unit it
 -- adds (Pawl.Types.ManaUnit.sourceLastExiled). Only a card the mana ability
--- named `reader` is linked to counts (Binding.isLinkedExile), so one the source
+-- named `reader` is linked to counts (Game.linkedPile), so one the source
 -- acquired with its exiling twin reads that twin's pile alone (CR 607.5).
 -- data/scenarios/mana-source/cr-607-5-myr-welder-s-acquired-ice-cauldron-mana-casts-what-its-pair-exiled.json
--- is the proof. "Last" is the latest to enter
--- exile (CR 613.7d's timestamp), so a second card the source exiles replaces the
--- first, and a card that left exile is no longer one (CR 400.7).
+-- is the proof. "Last" is Game.lastExiled's, so a second card the source
+-- exiles replaces the first, and a card that left exile is no longer one (CR
+-- 400.7).
 --
 -- Asked at PRODUCTION and never at payment, which is the only reading under
 -- which Ice Cauldron's mana can be spent at all: by CR 601.2a the card is on the
@@ -809,10 +810,7 @@ sourceChoicesOf oid gs = case Game.lookupObject oid gs of
 -- exile. Mana made while that card is already being cast (CR 601.2g) therefore
 -- names whatever was exiled before it.
 lastExiledWith :: Maybe AbilityName.AbilityName -> ObjectId -> GameState -> Maybe ObjectId
-lastExiledWith reader oid gs =
-  let linked card = maybe False (Binding.isLinkedExile reader oid) (Map.lookup card (GameState.exiledWith gs))
-      enteredAt card = fmap (\obj -> (Object.timestamp obj, card)) (Game.lookupObject card gs)
-   in fmap snd (Maybe.listToMaybe (List.sortOn Ord.Down (Maybe.mapMaybe enteredAt (filter linked (Set.toList (GameState.exile gs))))))
+lastExiledWith reader oid gs = Game.lastExiled (Game.linkedPile reader ExiledPile.OwnAbilities oid gs) gs
 
 -- The production-time tags (Pawl.Types.ProductionTag) every mana this object
 -- adds will carry. THE one place they are decided; manaOptionsOfGiven just above

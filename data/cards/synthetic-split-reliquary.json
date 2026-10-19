@@ -131,8 +131,13 @@
                         "type": "MoveToZone",
                         "value": {
                           "ref": {
-                            "type": "EachCardExiledWithAbility",
-                            "value": "warden"
+                            "type": "EachCardInExiledPile",
+                            "value": {
+                              "pile": {
+                                "type": "OfAbility",
+                                "value": "warden"
+                              }
+                            }
                           },
                           "zone": {
                             "type": "Hand"

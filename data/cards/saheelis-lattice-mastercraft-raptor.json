@@ -123,20 +123,30 @@
     {
       "characteristicPT": {
         "power": {
-          "type": "AgainstCraftMaterials",
+          "type": "AgainstExiledPile",
           "value": {
-            "type": "Measure",
-            "value": {
-              "type": "Power"
+            "pile": {
+              "type": "CraftMaterials"
+            },
+            "quantity": {
+              "type": "Measure",
+              "value": {
+                "type": "Power"
+              }
             }
           }
         },
         "toughness": {
-          "type": "AgainstCraftMaterials",
+          "type": "AgainstExiledPile",
           "value": {
-            "type": "Measure",
-            "value": {
-              "type": "Power"
+            "pile": {
+              "type": "CraftMaterials"
+            },
+            "quantity": {
+              "type": "Measure",
+              "value": {
+                "type": "Power"
+              }
             }
           }
         }
