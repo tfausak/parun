@@ -9,9 +9,9 @@ import qualified Pawl.Types.Keyword as Keyword
 -- token; Queen Allenal of Ruadach's narrows `whatToken` to creature tokens.
 data TokenPattern = MkTokenPattern
   { whose :: ControllerRelation.ControllerRelation,
-    -- | What the token being created IS, judged off its characteristics as it
-    -- would exist (CR 614.12). A creation of several lots matches when any
-    -- lot does.
+    -- | What the token being created IS, judged off the characteristics the
+    -- creating effect gives it (CR 111.3). A creation of several lots matches
+    -- when any lot does.
     whatToken :: Filter.Filter Keyword.Keyword
   }
   deriving (Eq, Ord, Show)

@@ -1,6 +1,6 @@
 {
-  "description": "CR 614.12 / 604.2 without a Demon: a token copy of the Brute would have no activated ability, so the Ledger adds no token",
-  "note": "Synthetic Minting Ledger judges each token as it would exist on the battlefield. Synthetic Turnabout Brute has its regenerate ability only while its controller controls a Demon, so the copy lot carries that ability and the pair differs in the Demon alone.",
+  "description": "CR 111.3 / 604.2 with a Demon: a token copy of the Brute is judged as created, off the battlefield, where its static ability grants it nothing, so the Ledger adds no token",
+  "note": "Synthetic Minting Ledger modifies how the tokens are created, so it does not see what applies only once a token is on the battlefield (Divine Visitation's March of the Machines ruling). Synthetic Turnabout Brute has its regenerate ability only while its controller controls a Demon, and alice controls one, so a Brute on the battlefield would have it. The Initiate copy beside this is the pair's positive half.",
   "board": {
     "seats": [
       {
@@ -11,7 +11,8 @@
           { "card": "Island", "label": "island-2", "ready": true },
           { "card": "Island", "label": "island-3", "ready": true },
           { "card": "Synthetic Minting Ledger", "ready": true },
-          { "card": "Synthetic Turnabout Initiate", "label": "initiate", "ready": true }
+          { "card": "Synthetic Turnabout Initiate", "label": "initiate", "ready": true },
+          { "card": "Renegade Demon", "ready": true }
         ],
         "hand": [{ "card": "Cackling Counterpart", "label": "counterpart" }],
         "library": [{ "card": "Island" }, { "card": "Island" }]
