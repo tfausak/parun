@@ -36,6 +36,7 @@ import qualified Pawl.Types.ManaSymbol as ManaSymbol
 import qualified Pawl.Types.ManaType as ManaType
 import qualified Pawl.Types.ManaUnit as ManaUnit
 import qualified Pawl.Types.ObjectId as ObjectId
+import qualified Pawl.Types.ObjectView as ObjectView
 import qualified Pawl.Types.PlayerId as PlayerId
 import qualified Pawl.Types.PlayerView as PlayerView
 import qualified Pawl.Types.Question as Question
@@ -102,7 +103,7 @@ asked terminal lookUp request = do
 answer :: (Monad m) => Terminal.Terminal m -> (CardName.CardName -> Maybe Card.Card) -> PlayerId.PlayerId -> PlayerView.PlayerView -> Question.Question -> Client m R.Reply
 answer terminal lookUp seat view question = case (Question.kind question, slotsOf question) of
   (kind, Just (source, slots)) | kind == Text.pack "ChooseTargets" -> fmap R.Array (mapM (target source) slots)
-  _ -> ask (listedObjects (Question.offer question)) (choice view question)
+  _ -> ask (listedObjects view (Question.offer question)) (choice view question)
   where
     ask listed (shown, reader) = do
       mapM_ (say terminal) shown
@@ -139,10 +140,10 @@ answer terminal lookUp seat view question = case (Question.kind question, slotsO
 choice :: PlayerView.PlayerView -> Question.Question -> ([Text.Text], Text.Text -> Either Text.Text R.Reply)
 choice view question = Maybe.fromMaybe generic $ case Text.unpack (Question.kind question) of
   "ChooseAction" -> do
-    actions <- arrayOf offer
+    shown <- fmap (distinct view) (arrayOf offer)
     pure
-      ( Text.pack "Choose an action:" : numbered (fmap (actionName view) actions),
-        fmap (R.Number . toInteger . subtract 1) . one (Natural.length actions)
+      ( Text.pack "Choose an action:" : numbered (fmap (actionName view . snd) shown),
+        fmap (\i -> R.Number (maybe 0 fst (Maybe.listToMaybe (List.genericDrop (i - 1) shown)))) . one (Natural.length shown)
       )
   "DeclareMulligan" -> do
     bottom <- field "bottom" offer >>= naturalOf
@@ -158,7 +159,7 @@ choice view question = Maybe.fromMaybe generic $ case Text.unpack (Question.kind
   "DeclareAttackers" -> do
     attackers <- arrayOf offer
     pure
-      ( Text.pack "Choose attackers by number, separated by spaces, or press Enter for none:" : numbered (fmap (objectName view) attackers),
+      ( Text.pack "Choose attackers by number or range such as 1-3, separated by spaces, all, or press Enter for none:" : numbered (fmap (objectName view) attackers),
         fmap R.Array . some attackers
       )
   "DeclareBlockers" -> do
@@ -216,7 +217,7 @@ choice view question = Maybe.fromMaybe generic $ case Text.unpack (Question.kind
       wanted <- field "count" offer >>= naturalOf
       let n = min wanted (Natural.length from)
       pure
-        ( Text.pack "Choose " <> Render.count n "card" <> Text.pack (" " <> purpose <> ", by number separated by spaces:") : numbered (fmap (objectName view) from),
+        ( Text.pack "Choose " <> Render.count n "card" <> Text.pack (" " <> purpose <> ", by number or range such as 1-3, separated by spaces:") : numbered (fmap (objectName view) from),
           fmap R.Array . exactly n from
         )
     generic =
@@ -243,10 +244,30 @@ reading lookUp view listed wanted
 
 -- | The object behind each numbered option of an offer, where it names one:
 -- the offer's own list, or the cards or sources it chooses from.
-listedObjects :: R.Reply -> [Maybe ObjectId.ObjectId]
-listedObjects offer = foldMap (fmap optionObject) (Monad.msum [arrayOf offer, field "from" offer >>= arrayOf, field "sources" offer >>= arrayOf])
+listedObjects :: PlayerView.PlayerView -> R.Reply -> [Maybe ObjectId.ObjectId]
+listedObjects view offer = foldMap (fmap optionObject) (Monad.msum [fmap (fmap snd . distinct view) (arrayOf offer), field "from" offer >>= arrayOf, field "sources" offer >>= arrayOf])
   where
     optionObject option = Monad.msum [objectOf option, field "object" option >>= objectOf, field "source" option >>= objectOf]
+
+-- | A list's options as shown, each beside its index in the list: an option
+-- is dropped when an earlier one plays or casts a card in the seat's hand
+-- that the view shows exactly as it shows this one's, bar its id. Other
+-- actions never merge, since an offer may leave out what tells two apart
+-- (#5225), and neither do cards elsewhere, which a permission may tell
+-- apart.
+distinct :: PlayerView.PlayerView -> [R.Reply] -> [(Integer, R.Reply)]
+distinct view = reverse . snd . List.foldl' keep ([], []) . zip [0 ..]
+  where
+    keep (keys, kept) (i, option) = case key option of
+      Just k | k `elem` keys -> (keys, kept)
+      k -> (maybe keys (: keys) k, (i, option) : kept)
+    held = Map.fromList [(ObjectView.object o, o) | s <- PlayerView.seats view, SeatView.player s == PlayerView.viewer view, o <- SeatView.hand s]
+    key option = do
+      kind <- field "action" option >>= textOf
+      Monad.guard (kind `elem` [Text.pack "Play", Text.pack "Cast"])
+      o <- field "object" option >>= objectOf >>= (`Map.lookup` held)
+      R.Object pairs <- Just option
+      pure (filter ((/= Text.pack "object") . fst) pairs, o {ObjectView.object = ObjectId.MkObjectId 0})
 
 -- | The object a recipient names, if it is not a player.
 recipientObject :: R.Reply -> Maybe ObjectId.ObjectId
@@ -274,7 +295,10 @@ unasked request = do
     "ChooseAction"
       | Hotseat.autoPass hotseat,
         Just pass <- onlyPass offer ->
-          pure ([Render.player seat <> Text.pack " passes (no other actions)."], Just (R.Number pass))
+          let view = Request.view request
+              active = PlayerView.active view
+              whose = if active == seat then Text.pack "their " else Render.player active <> Text.pack "'s "
+           in pure ([Render.player seat <> Text.pack " passes in " <> whose <> Render.phase (PlayerView.phase view) <> Text.pack " (no other actions)."], Just (R.Number pass))
     "ChooseManaSource"
       | Maybe.isJust paying ->
           autoPay seat (Request.view request) offer >>= \paid -> case paid of
@@ -368,11 +392,21 @@ exactly n options typed = do
   picked <- some options typed
   if Natural.length picked == n then Right picked else Left (Text.pack ("Choose exactly " <> show n <> "."))
 
--- | Any number of different options, by number.
+-- | Any number of different options, by number, by a range such as 1-3, or
+-- all of them.
 some :: [R.Reply] -> Text.Text -> Either Text.Text [R.Reply]
 some options typed = do
-  is <- numbers typed
   let size = Natural.length options
+      range word = case Text.splitOn (Text.pack "-") word of
+        _ | Text.toCaseFold word == Text.pack "all" -> Just [1 .. size]
+        [from, to] -> do
+          a <- digits from
+          b <- digits to
+          Monad.guard (a <= b)
+          pure [a .. b]
+        _ -> fmap pure (digits word)
+      digits t = if not (Text.null t) && Text.all Char.isDigit t then Read.readMaybe (Text.unpack t) else Nothing
+  is <- maybe (Left (Text.pack "Type numbers or ranges such as 1-3, separated by spaces, or all.")) (Right . concat) (mapM range (Text.words typed))
   Monad.unless (all (\i -> i >= 1 && i <= size) is) (Left (Text.pack ("Each number must be from 1 to " <> show size <> ".")))
   Monad.unless (ListUtils.nubOrd is == is) (Left (Text.pack "Choose each one at most once."))
   pure (fmap (pickFrom options) is)
@@ -494,7 +528,7 @@ collect view = do
   let skipped = case before of
         Just (t, n) | t == turn -> n
         _ -> 0
-      unread = Seq.fromList (Maybe.mapMaybe (Render.event view) (List.genericDrop skipped entries))
+      unread = Seq.fromList (Render.events view (List.genericDrop skipped entries))
   State.modify' $ \h ->
     h
       { Hotseat.seen = Map.insert seat (turn, Natural.length entries) (Hotseat.seen h),

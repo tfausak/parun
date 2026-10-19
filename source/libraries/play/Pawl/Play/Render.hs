@@ -251,6 +251,17 @@ snapshotName c = case Set.toList (ProjectedCharacteristics.names c) of
   [] -> Text.pack "a face-down card"
   names -> Text.intercalate (Text.pack " // ") (fmap CardName.unwrap names)
 
+-- | Witnessed entries as sentences, a run of one player's draws told as one.
+events :: PlayerView.PlayerView -> [LoggedEvent.LoggedEvent] -> [Text.Text]
+events view = concatMap sentences . List.groupBy (\a b -> Maybe.isJust (drawer a) && drawer a == drawer b) . filter (Maybe.isJust . event view)
+  where
+    drawer logged = case LoggedEvent.event logged of
+      GameEvent.Drew d -> Just (Drew.player d)
+      _ -> Nothing
+    sentences run = case run of
+      first : _ : _ | Just pid <- drawer first -> [player pid <> Text.pack " draws " <> count (List.genericLength run) "card" <> Text.pack "."]
+      _ -> Maybe.mapMaybe (event view) run
+
 -- | A witnessed entry as a sentence naming its cards, players and amounts, or
 -- nothing for the bookkeeping a seat can read off the board (a step, a tap,
 -- mana, a trigger) or another entry already tells (a cast's, land play's,
