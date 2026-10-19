@@ -3225,7 +3225,7 @@ emergeSpec s registry = Spec.describe s "Emerge" $ do
                 Prompt.ChooseCost _ _ _ payable ->
                   let names cost = elem (CostComponent.Sacrifice (Sacrifice.MkSacrifice (CostAmount.Fixed 1) (Filter.IsObject victim))) (Cost.Type.components (CandidateCost.cost cost))
                    in pure (case filter names payable of chosen : _ -> chosen; [] -> S.identityAnswer prompt)
-                Prompt.ChooseManaSource _ _ candidates -> do
+                Prompt.ChooseManaSource _ _ _ candidates -> do
                   eaten <- State.get
                   if eaten || notElem altarId (NonEmpty.toList candidates)
                     then pure (S.identityAnswer prompt)
@@ -3390,7 +3390,7 @@ harmonizeSpec s registry = Spec.describe s "Harmonize" $ do
               answer :: Prompt.Prompt r -> State.State Bool r
               answer prompt = case prompt of
                 Prompt.ChooseCost _ _ _ payable -> pure (case filter names payable of chosen : _ -> chosen; [] -> S.identityAnswer prompt)
-                Prompt.ChooseManaSource _ _ candidates -> do
+                Prompt.ChooseManaSource _ _ _ candidates -> do
                   floated <- State.get
                   if floated || notElem elvesId (NonEmpty.toList candidates)
                     then pure (S.identityAnswer prompt)
@@ -5084,7 +5084,7 @@ keptFaceDownSpec s registry = Spec.describe s "KeptFaceDown" $ do
       -- mana abilities of a reversed cast whenever it is asked.
       answerer :: ObjectId.ObjectId -> (ObjectId.ObjectId -> Bool) -> Prompt.Prompt r -> r
       answerer source pick p = case p of
-        Prompt.ChooseManaSource _ _ sources -> if source `elem` sources then Just source else Nothing
+        Prompt.ChooseManaSource _ _ _ sources -> if source `elem` sources then Just source else Nothing
         Prompt.ChooseDiscard _ _ cards n -> take (Natural.toIntSaturating n) (filter pick cards <> filter (not . pick) cards)
         Prompt.ChooseTargets _ _ _ slots -> fmap (Set.take 1 . snd) slots
         Prompt.OfferedMiracleReveal {} -> OptionalDecision.Exercises

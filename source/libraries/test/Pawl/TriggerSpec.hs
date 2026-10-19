@@ -131,7 +131,7 @@ gathered gs = gatheredIn (Event.unscannedGrouped gs) gs
 delayedFrom :: [GameEvent.GameEvent] -> GameState.GameState -> ([PendingTrigger.PendingTrigger], Seq.Seq DelayedTrigger.DelayedTrigger)
 delayedFrom events gs =
   let grouped = zipWith (\group event -> LoggedEvent.MkLoggedEvent {LoggedEvent.group = group, LoggedEvent.event = event}) (iterate EventGroup.next EventGroup.first) events
-   in fst (S.runPureWith S.identityAnswer gs (Event.delayedPending grouped [] gs))
+   in fst (S.runPureWith S.identityAnswer gs (Event.delayedPending grouped gs))
 
 -- CR 608.2i: the log records; it is never emptied by a reader.
 logSpec :: (Monad m, Monad n) => Spec.Spec m n -> Registry.Registry m -> n ()
@@ -151,7 +151,7 @@ logSpec s registry =
           expected = Projection.project piker gs
           after = S.runPure S.identityAnswer gs (Event.changeZone piker Zone.Graveyard)
       case S.eventsOf after of
-        GameEvent.Moved (Moved.MkMoved _ snapshot _ _ _ _) : _ -> Spec.assertEqWith s "snapshot from the origin zone" snapshot expected
+        GameEvent.Moved (Moved.MkMoved _ snapshot _ _ _ _ _) : _ -> Spec.assertEqWith s "snapshot from the origin zone" snapshot expected
         _ -> Spec.assertFailure s "expected exactly one Moved event"
     -- CR 704.5h's window is "since the last SBA check": the check CONSUMES by
     -- bumping a watermark, and the record survives.

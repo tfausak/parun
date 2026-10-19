@@ -2944,7 +2944,7 @@ switcherooAnswer wanted p =
         Recipient.ToCreature oid -> elem oid wanted
         _ -> False
    in case p of
-        Prompt.ChooseManaSource _ _ candidates -> Just (NonEmpty.head candidates)
+        Prompt.ChooseManaSource _ _ _ candidates -> Just (NonEmpty.head candidates)
         Prompt.ChooseTargets _ _ _ sets -> S.preferring isWanted sets
         _ -> S.identityAnswer p
 
@@ -3066,7 +3066,7 @@ avariceTotemAnswer wanted p =
         Recipient.ToObject oid -> oid == wanted
         _ -> False
    in case p of
-        Prompt.ChooseManaSource _ _ candidates -> Just (NonEmpty.head candidates)
+        Prompt.ChooseManaSource _ _ _ candidates -> Just (NonEmpty.head candidates)
         Prompt.ChooseTargets _ _ _ sets -> S.preferring isWanted sets
         _ -> S.identityAnswer p
 

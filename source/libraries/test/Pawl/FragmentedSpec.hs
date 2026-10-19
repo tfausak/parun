@@ -392,7 +392,7 @@ paying freedId islandId asked = case Asked.prompt asked of
         pure Action.Pass
   Prompt.ChooseAction {} -> pure Action.Pass
   -- Pinned to the scripted source, never the head of the offer.
-  Prompt.ChooseManaSource _ _ candidates -> do
+  Prompt.ChooseManaSource _ _ _ candidates -> do
     (_, source, _, _) <- State.get
     pure (List.find (`elem` NonEmpty.toList candidates) source)
   Prompt.ChooseExtraManaSource {} -> pure Nothing
@@ -565,7 +565,7 @@ spearing spearId birdsId rouserId asked = case Asked.prompt asked of
         _ -> pure Action.Pass
   -- FILTERED out of the offer, never built (CR 608.2b re-reads it).
   Prompt.ChooseTargets _ _ _ sets -> pure (fmap (Set.filter (== Recipient.ToCreature birdsId) . snd) sets)
-  Prompt.ChooseManaSource _ _ candidates -> pure (List.find (== birdsId) (NonEmpty.toList candidates))
+  Prompt.ChooseManaSource _ _ _ candidates -> pure (List.find (== birdsId) (NonEmpty.toList candidates))
   Prompt.ChooseExtraManaSource {} -> pure Nothing
   Prompt.ChooseManaYield _ _ _ candidates -> pure (yielding (ManaType.Colored Color.Green) candidates)
   Prompt.ReverseManaAbilities {} -> pure OptionalDecision.Exercises

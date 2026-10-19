@@ -28,6 +28,9 @@ codec = Fields.object $ do
   -- Defaulted for the same reason: only a revealed card leaving a hidden zone
   -- sets it.
   revealed <- Fields.defaulted "revealed" False Common.boolean Moved.revealed
+  -- Defaulted for the same reason: a move into a hidden zone or face down
+  -- leaves it unset.
+  seenArriving <- Fields.defaulted "seenArriving" False Common.boolean Moved.seenArriving
   pure
     Moved.MkMoved
       { Moved.change = change,
@@ -35,5 +38,6 @@ codec = Fields.object $ do
         Moved.otherArrivals = otherArrivals,
         Moved.otherDepartures = otherDepartures,
         Moved.duringResolution = duringResolution,
-        Moved.revealed = revealed
+        Moved.revealed = revealed,
+        Moved.seenArriving = seenArriving
       }
