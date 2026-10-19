@@ -1950,7 +1950,7 @@ manifestSpec s registry = Spec.describe s "Manifest" $ do
 
   -- The same board with Ainok Tracker underneath and six Mountains: the card's
   -- {5}{R} is the price, which they pay, where the Bears' {1}{G} is one they
-  -- cannot. CR 708.10's Wandering Ones example is why no morph procedure is
+  -- cannot. CR 707.3's Wandering Ones example is why no morph procedure is
   -- offered beside it: the copy has no morph.
   Spec.it s "CR 701.40b a manifested creature under a copy is priced at its own card's mana cost" $ do
     ainok <- S.printingOf s registry "Ainok Tracker"

@@ -147,7 +147,8 @@ creatureCardCostOf oid gs = do
 -- be applying to it) and paying its mana cost". A conjured duplicate's values
 -- (Object.duplicate) are the card's own, so those do count. Pawl.FaceDownSpec's
 -- "CR 701.40b a manifested creature under a copy is priced at its own card's
--- mana cost" proves the copy is ignored.
+-- mana cost" proves the copy is ignored; the duplicate arm is a regression
+-- fence, since no test manifests a duplicate.
 representingCardOf :: ObjectId -> GameState -> Maybe (Face Card, Set.Set CardType.CardType)
 representingCardOf oid gs = do
   object <- Game.lookupObject oid gs
