@@ -44,7 +44,6 @@ import qualified Pawl.Types.Revealed as Revealed
 import qualified Pawl.Types.SeatView as SeatView
 import qualified Pawl.Types.SpellWasCast as SpellWasCast
 import qualified Pawl.Types.TapState as TapState
-import qualified Pawl.Types.Transformed as Transformed
 import qualified Pawl.Types.Zone as Zone
 import qualified Pawl.Types.ZoneChange as ZoneChange
 
@@ -129,25 +128,21 @@ objects view =
       <> concatMap (\s -> SeatView.hand s <> SeatView.library s <> SeatView.graveyard s <> SeatView.exile s) (PlayerView.seats view)
 
 -- | An object by id, named as the view shows it, or else as the last witnessed
--- entry that named it showed it, so one that has since left still has a name.
+-- move of it showed it, so one that has since left still has a name.
 named :: PlayerView.PlayerView -> ObjectId.ObjectId -> Text.Text
 named view oid = case Map.lookup oid (objects view) of
   Just o -> nameOf o
   Nothing -> maybe (Text.pack ("object " <> show (ObjectId.unwrap oid))) snapshotName (Map.lookup oid (snapshots view))
 
--- | The characteristics each witnessed entry showed an object with, by id, the
--- latest winning.
+-- | CR 608.2h: what each witnessed move showed the objects it moved as, by
+-- either end's id, the latest winning.
 snapshots :: PlayerView.PlayerView -> Map.Map ObjectId.ObjectId ProjectedCharacteristics.ProjectedCharacteristics
 snapshots view =
-  Map.fromList . concatMap (shownBy . LoggedEvent.event) $ PlayerView.witnessed view
-  where
-    shownBy e = case e of
-      GameEvent.Moved m -> fmap (\oid -> (oid, Moved.characteristics m)) (ZoneChange.departed (Moved.change m) : ZoneChange.object (Moved.change m) : Foldable.toList (Moved.otherArrivals m))
-      GameEvent.SpellCast c -> [(SpellWasCast.spell c, SpellWasCast.characteristics c)]
-      GameEvent.Revealed r -> [(Revealed.card r, Revealed.characteristics r)]
-      GameEvent.Looked l -> [(Looked.card l, Looked.characteristics l)]
-      GameEvent.Transformed t -> [(Transformed.object t, Transformed.characteristics t)]
-      _ -> []
+  Map.fromList
+    [ (oid, Moved.characteristics m)
+    | GameEvent.Moved m <- fmap LoggedEvent.event (PlayerView.witnessed view),
+      oid <- ZoneChange.departed (Moved.change m) : Foldable.toList (Moved.arrivals m)
+    ]
 
 -- | CR 708.2a: a face-down object has no name.
 snapshotName :: ProjectedCharacteristics.ProjectedCharacteristics -> Text.Text
