@@ -1634,6 +1634,30 @@ hatredSpec s registry =
               pure (if variable == exiled then 2 else bound)
             _ -> pure (S.identityAnswer p)
       Spec.assertEqWith s "the count is asked first, bounded by the two black cards, then X, bounded at 4" (State.execState (Engine.runGame answer gs (S.cast S.alice marchId)) []) [(exiled, 2), (Binding.variableX, 4)]
+    -- CR 601.2b: a count of 0 exiles nothing, so CR 601.2h has nothing to ask,
+    -- though a black card is in hand. Two Swamps pay {1}{B} at X = 1.
+    Spec.it s "CR 601.2h March of Wretched Sorrow announcing no cards asks for none" $ do
+      swamp <- S.printingOf s registry "Swamp"
+      march <- S.printingOf s registry "March of Wretched Sorrow"
+      wraith <- S.printingOf s registry "Bog Wraith"
+      giant <- S.printingOf s registry "Hill Giant"
+      let (_, withGiant) = S.addPermanent giant S.bob (S.landsInPlay swamp 2)
+          (withMarch, marchId) = S.handOne march withGiant
+          (wraithId, gs) = S.addHandCard wraith S.alice withMarch
+          answer :: Prompt.Prompt r -> State.State [String] r
+          answer p = case p of
+            Prompt.ChooseX _ _ _ variable _ _ -> pure (if variable == Binding.variableX then 1 else 0)
+            Prompt.ChooseExiles {} -> do
+              State.modify' (<> ["ChooseExiles"])
+              pure (S.identityAnswer p)
+            Prompt.ChooseCardInHand {} -> do
+              State.modify' (<> ["ChooseCardInHand"])
+              pure (S.identityAnswer p)
+            _ -> pure (S.identityAnswer p)
+          ((_, after), asked) = State.runState (Engine.runGame answer gs (S.cast S.alice marchId)) []
+      Spec.assertEqWith s "no card is asked for" asked []
+      Spec.assertBool s (elem wraithId (Game.zoneMembers Zone.Hand S.alice after)) "and the Bog Wraith stays in hand"
+      Spec.assertBool s (notElem marchId (Game.zoneMembers Zone.Hand S.alice after)) "while the March was cast"
     -- The fence under the two functions above. CR 601.2 reverses a casting whose
     -- steps a player cannot comply with; it never picks a value on their behalf,
     -- so an unannounced X is simply unpayable. Unreachable from either cast path

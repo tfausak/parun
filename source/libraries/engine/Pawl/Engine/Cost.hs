@@ -6649,13 +6649,18 @@ payPayable moment paidFor slots pid oid component = case component of
     gs <- State.get
     let candidates = exileFromHandCandidates slots pid oid criterion gs
         decider = Decide.deciderFor pid gs
+    -- A count of 0 (the March cycle announcing none) has the empty set as its
+    -- one answer, so nothing is asked.
     chosen <-
-      if n == 1
-        then fmap (maybe Set.empty Set.singleton) (Game.chooseAmong (\asked who -> Prompt.ChooseCardInHand asked who oid) pid candidates)
+      if n == 0
+        then pure Set.empty
         else
-          if Natural.length candidates <= n
-            then pure (Set.fromList candidates)
-            else Game.choose (Prompt.ChooseExiles decider pid oid candidates n)
+          if n == 1
+            then fmap (maybe Set.empty Set.singleton) (Game.chooseAmong (\asked who -> Prompt.ChooseCardInHand asked who oid) pid candidates)
+            else
+              if Natural.length candidates <= n
+                then pure (Set.fromList candidates)
+                else Game.choose (Prompt.ChooseExiles decider pid oid candidates n)
     if Set.isSubsetOf chosen (Set.fromList candidates) && Natural.length chosen == n
       then do
         Monad.void (Event.changeZonesTogether (fmap (\c -> (c, Zone.Exile)) (Set.toAscList chosen)))
