@@ -164,8 +164,8 @@ actionOffer action = fields (("action", R.Text (Text.pack kind)) : rest)
     on oid = [("object", object oid)]
     named name = [("name", R.Text (CardName.unwrap name))]
 
--- | CR 106.1: each source beside the mana it could make, one list of mana
--- types per yield (Mana.manaYieldsOf).
+-- | Each mana source beside the mana it could make, one list of mana types
+-- per yield (Mana.manaYieldsOf).
 manaSources :: GameState.GameState -> NonEmpty.NonEmpty ObjectId.ObjectId -> R.Reply
 manaSources gs sources =
   R.Array

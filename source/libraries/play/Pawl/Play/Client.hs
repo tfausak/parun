@@ -263,13 +263,13 @@ onlyPass offer = do
   Monad.guard (all (`elem` [Text.pack "Pass", Text.pack "ActivateManaAbility"]) kinds)
   fmap toInteger (List.elemIndex (Text.pack "Pass") kinds)
 
--- | CR 601.2g: the next source auto taps, and the colors it is tapped for,
--- none for generic mana. The payer's pool goes
--- first against the cost; then each colored symbol still owed is paid from
--- the source that makes the fewest of the colors still owed, then generic
--- mana from the source that makes the fewest types. Nothing when the cost
--- holds a symbol other than generic or one type of mana, when the pool
--- already covers it, or when no source makes what is still owed.
+-- | CR 601.2g: the next source auto taps, and the colors it is tapped for
+-- (none for generic mana). The payer's pool goes first against the cost; then
+-- each colored symbol still owed is paid from the source that makes the
+-- fewest of the colors still owed, then generic mana from the source that
+-- makes the fewest types. Nothing when the cost holds a symbol other than
+-- generic or one type of mana, when the pool already covers it, or when no
+-- source makes what is still owed.
 autoSource :: PlayerView.PlayerView -> R.Reply -> Maybe (R.Reply, Set.Set ManaType.ManaType)
 autoSource view offer = do
   payer <- field "payer" offer >>= textOf >>= Read.readMaybe . Text.unpack
@@ -326,7 +326,7 @@ manaCost cost = case ManaCost.unwrap cost of
       ManaSymbol.Snow -> Text.pack "S"
       ManaSymbol.Variable -> Text.pack "X"
 
--- | CR 105.1 / 106.1b: a mana type's symbol letter.
+-- | CR 107.4: a mana type's symbol letter.
 manaType :: ManaType.ManaType -> Text.Text
 manaType t = Text.pack $ case t of
   ManaType.Colored Color.White -> "W"
