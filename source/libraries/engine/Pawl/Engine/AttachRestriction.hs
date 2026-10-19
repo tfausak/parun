@@ -63,10 +63,10 @@ import qualified Pawl.Engine.Projection as Projection
 import qualified Pawl.Engine.Projection.Rewrite as Projection
 import qualified Pawl.Engine.Projection.View as Projection
 import qualified Pawl.Types.AttachRestriction as AttachRestriction
+import qualified Pawl.Types.Chosen as Chosen
 import Pawl.Types.GameState (GameState)
 import qualified Pawl.Types.GameState as GameState
 import qualified Pawl.Types.Keyword as Keyword.Type
-import qualified Pawl.Types.Object as Object
 import Pawl.Types.ObjectId (ObjectId)
 import qualified Pawl.Types.PlayerChoice as PlayerChoice
 import qualified Pawl.Types.ProjectedCharacteristics as PC
@@ -166,7 +166,7 @@ barredBy mint pcs subject host gs =
                 -- rule 702.16 minted is the protected host itself -- the same
                 -- frame this function's haddock states for the minted case.
                 (Projection.sourceContext gs (Projection.controllerOf source gs) source)
-                  { Filter.carrierChosenPlayer = Game.currentChoice Object.chosenPlayers source gs >>= Map.lookup PlayerChoice.AsEnters
+                  { Filter.carrierChosenPlayer = Game.currentChoice Chosen.Players source gs >>= Map.lookup PlayerChoice.AsEnters
                   }
                 subjectView
                 (if null changes then attachers else Filter.rewrite changes attachers)

@@ -41,6 +41,7 @@ import qualified Pawl.Types.ArmDelayedTrigger as ArmDelayedTrigger
 import qualified Pawl.Types.Binding as Binding.Type
 import qualified Pawl.Types.Card as Card.Type
 import qualified Pawl.Types.CardType as CardType
+import qualified Pawl.Types.Chosen as Chosen
 import qualified Pawl.Types.Clause as Clause
 import Pawl.Types.ClauseIndex (ClauseIndex)
 import qualified Pawl.Types.ClauseIndex as ClauseIndex
@@ -497,7 +498,7 @@ giftOnSpellResolution :: Game Result -> ObjectId -> PlayerId -> Game ()
 giftOnSpellResolution runSubgame oid controller = do
   gs <- State.get
   let object = Game.lookupObject oid gs
-      promised = Maybe.fromMaybe Map.empty (Game.currentChoice Object.chosenPlayers oid gs)
+      promised = Maybe.fromMaybe Map.empty (Game.currentChoice Chosen.Players oid gs)
       slots = maybe Map.empty (Binding.targetsOf . Object.bindings) object
       gifts = [(something, which) | Keyword.Gift something <- Map.keys (Projection.keywordsOf oid gs), which <- Projection.keywordInstances (Keyword.Gift something) oid gs, Map.member (PlayerChoice.Promised something which) promised]
       give (something, which) = applyEffectWith runSubgame oid oid controller slots slots (Keyword.Engine.giftEffect something which)

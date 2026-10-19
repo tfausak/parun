@@ -40,6 +40,7 @@ import qualified Numeric.Natural as Natural
 import qualified Pawl.Engine.Action as Action
 import qualified Pawl.Engine.Activatable as Activatable
 import qualified Pawl.Engine.Activate as Activate
+import qualified Pawl.Engine.Cast as Cast
 import qualified Pawl.Engine.Engine as Engine
 import qualified Pawl.Engine.Event as Event
 import qualified Pawl.Engine.Event.Trigger as Trigger
@@ -460,6 +461,26 @@ increaseSpec s registry = Spec.describe s "Increase" $ do
         twice = castResolveSettle atBob S.alice secondSpell withAnother
     Spec.assertEqWith s "bob lost four life over the two castings" (S.lifeOf S.bob twice) (fmap (subtract 4) (S.lifeOf S.bob gs0))
     Spec.assertEqWith s "but alice's speed rose only once" (speedOf S.alice twice) (Just (Just 2))
+  -- The same rider on an ability GAINED after the turn's first matching event.
+  -- Bob loses life to a Lightning Bolt while alice has no speed, so CR 702.179d's
+  -- ability does not exist yet; she then plays Muraganda Raceway, CR 702.179a
+  -- starts her speed at 1, and a second Bolt is the ability's first triggering
+  -- though not the turn's first opponent losing life. docs/decisions.md,
+  -- "Whether a trigger limit differs from a first-time-each-turn trigger".
+  Spec.it s "CR 702.179d an ability gained after the turn's first life loss still triggers once" $ do
+    raceway <- S.printingOf s registry "Muraganda Raceway"
+    mountain <- S.printingOf s registry "Mountain"
+    lightningBolt <- S.printingOf s registry "Lightning Bolt"
+    let (racewayId, withRaceway) = S.addHandCard raceway S.alice (S.landsInPlay mountain 2)
+        (firstBolt, withFirst) = S.addHandCard lightningBolt S.alice withRaceway
+        (gs0, secondBolt) = S.handOne lightningBolt withFirst
+        early = castResolveSettle atBob S.alice firstBolt gs0
+        engines = S.runPure S.identityAnswer early (Cast.playLand False S.alice racewayId Nothing >> Engine.settleForPriority)
+        late = castResolveSettle atBob S.alice secondBolt engines
+    Spec.assertEqWith s "the second Bolt raised alice's speed from 1 to 2" (speedOf S.alice late) (Just (Just 2))
+    Spec.assertEqWith s "bob lost six life over the two Bolts" (S.lifeOf S.bob late) (fmap (subtract 6) (S.lifeOf S.bob gs0))
+    Spec.assertEqWith s "setup: alice had no speed when bob first lost life" (speedOf S.alice early) (Just Nothing)
+    Spec.assertEqWith s "setup: the Raceway started her speed at 1" (speedOf S.alice engines) (Just (Just 1))
   -- CR 603.2c's "one or more opponents lose life", through the shared matcher
   -- (Event.Trigger.inherentTriggers): two losses in ONE group -- one combat
   -- damage step -- are one trigger event, and a later group in the same scan is

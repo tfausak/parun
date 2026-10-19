@@ -2293,6 +2293,7 @@ library types
     Pawl.Types.ChoosePlayer
     Pawl.Types.ChoosePlayerAtRandom
     Pawl.Types.Chooser
+    Pawl.Types.Chosen
     Pawl.Types.ChosenCardFromAmong
     Pawl.Types.ChosenCardInGraveyard
     Pawl.Types.ChosenCardInHand

@@ -67,6 +67,7 @@ import Pawl.Types.CandidateId (CandidateId)
 import qualified Pawl.Types.CandidateId as CandidateId
 import Pawl.Types.Card (Card)
 import qualified Pawl.Types.Card as Card.Type
+import qualified Pawl.Types.Chosen as Chosen
 import qualified Pawl.Types.CoinFlipR as CoinFlipR
 import qualified Pawl.Types.CoinFlipRewrite as CoinFlipRewrite
 import Pawl.Types.ControllerRelation (ControllerRelation)
@@ -1786,7 +1787,7 @@ candidateContext gs candidate =
         gs
         (fmap (Set.map Recipient.ToObject) (ReplacementCandidate.slots candidate))
         (Projection.framedWith choices source gs (Projection.sourceContext gs (ReplacementCandidate.controller candidate) source))
-          { Filter.carrierChosenPlayer = Game.currentChoice Object.chosenPlayers source gs >>= Map.lookup PlayerChoice.AsEnters
+          { Filter.carrierChosenPlayer = Game.currentChoice Chosen.Players source gs >>= Map.lookup PlayerChoice.AsEnters
           }
 
 -- A lot's token is judged off the characteristics the creating effect gives it

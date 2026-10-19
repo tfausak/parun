@@ -37,6 +37,7 @@ import qualified Pawl.Types.AgainstSlot as AgainstSlot
 import qualified Pawl.Types.Binding as Binding.Type
 import Pawl.Types.Card (Card)
 import qualified Pawl.Types.CardType as CardType
+import qualified Pawl.Types.Chosen as Chosen
 import qualified Pawl.Types.Filter as Filter.Type
 import Pawl.Types.Game (Game)
 import Pawl.Types.GameState (GameState)
@@ -47,7 +48,6 @@ import qualified Pawl.Types.Modal as Modal
 import qualified Pawl.Types.Mode as Mode
 import Pawl.Types.ModeIndex (ModeIndex)
 import qualified Pawl.Types.ModeIndex as ModeIndex
-import qualified Pawl.Types.Object as Object
 import Pawl.Types.ObjectId (ObjectId)
 import qualified Pawl.Types.Pile as Pile
 import qualified Pawl.Types.PileDraw as PileDraw
@@ -656,7 +656,7 @@ targetable pcs rowsOf perspective source sourceView gs recipient =
             protects =
               Filter.matches
                 (Filter.contextFor (Game.teams gs) controller (Just source))
-                  { Filter.carrierChosenPlayer = Game.currentChoice Object.chosenPlayers oid gs >>= Map.lookup PlayerChoice.AsEnters,
+                  { Filter.carrierChosenPlayer = Game.currentChoice Chosen.Players oid gs >>= Map.lookup PlayerChoice.AsEnters,
                     Filter.aimingController = Just perspective
                   }
                 sourceView
@@ -1697,7 +1697,7 @@ chooserOf controller oid source seed chooser = case chooser of
     pure (List.find (`List.elem` Players.table (Plane.rangePerspective source controller gs) gs) (Map.lookup slot (Binding.playerSlots seed)))
   Just (TargetChooser.Relative r) -> do
     gs <- State.get
-    Players.chooseOne controller oid (Players.chooserOffer controller gs r)
+    Players.chooseOne controller oid Nothing (Players.chooserOffer controller gs r)
 
 -- CR 601.2c's two announcements over ONE chooser's slots, in the rule's own
 -- order: how many targets each variable slot gets, then the targets themselves.

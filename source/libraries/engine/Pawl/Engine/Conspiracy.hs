@@ -21,13 +21,13 @@ import qualified Pawl.Engine.Decide as Decide
 import qualified Pawl.Engine.Game as Game
 import qualified Pawl.Types.Card as Card
 import qualified Pawl.Types.CardType as CardType
+import qualified Pawl.Types.Chosen as Chosen
 import qualified Pawl.Types.Face as Face
 import qualified Pawl.Types.FaceDownReason as FaceDownReason
 import qualified Pawl.Types.Facing as Facing
 import qualified Pawl.Types.Filter as Filter
 import Pawl.Types.Game (Game)
 import Pawl.Types.GameState (GameState)
-import qualified Pawl.Types.GameState as GameState
 import qualified Pawl.Types.Keyword as Keyword
 import qualified Pawl.Types.Object as Object
 import Pawl.Types.ObjectId (ObjectId)
@@ -67,8 +67,7 @@ hideAgenda pid oid = do
   Monad.when (maybe False (Map.member Keyword.HiddenAgenda . Face.keywords) (Game.faceOf oid gs)) $ do
     State.modify' (Game.turnFacing (Facing.faceDown FaceDownReason.HiddenAgenda) oid)
     name <- Game.choose (Prompt.ChooseCardName (Decide.deciderFor pid gs) pid oid (Filter.And []) Seq.empty) >>= Game.lookUpChosenName
-    State.modify' $ \g ->
-      g {GameState.objects = Map.adjust (\o -> o {Object.chosenNames = Map.singleton (Game.acquisitionOf oid g) (Map.singleton pid name)}) oid (GameState.objects g)}
+    State.modify' $ \g -> Game.recordChoice Chosen.Names (Game.acquisitionOf oid g) (const (Just (Map.singleton pid name))) oid g
 
 -- | CR 702.106c / 116.2j: the face-down conspiracies this player may turn face
 -- up now. CR 315.6 makes the owner the controller, so the owner-indexed command
