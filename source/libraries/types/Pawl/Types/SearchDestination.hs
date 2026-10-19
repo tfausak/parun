@@ -67,7 +67,8 @@ data SearchDestination
     -- what happens when the host has gone -- the effect does only as much as
     -- possible, which for a card that never names a second destination is
     -- nothing, leaving the Aura in the library (CR 303.4i). Putting it into a hand
-    -- instead would be this engine printing a sentence the card does not.
+    -- instead would be this engine printing a sentence the card does not. An
+    -- Equipment (Danitha, Benalia's Hope) enters unattached instead (CR 301.5e).
     BattlefieldAttached
   | -- | Grim Reminder's "reveal it", the card staying where it was found (CR 701.20b).
     Reveal
