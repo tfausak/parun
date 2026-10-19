@@ -1,0 +1,206 @@
+{
+  "description": "CR 301.5e Sanctuary Blade put onto the battlefield attached to a departed Danitha enters unattached and chooses no colour",
+  "note": "Alice exiles Danitha with Swords to Plowshares while her trigger waits. The Equipment has no host, so it enters unattached rather than staying in the graveyard, and it never became attached, so no colour is asked (an unscheduled prompt would fail the run).",
+  "board": {
+    "active": "alice",
+    "step": "PrecombatMain",
+    "seats": [
+      {
+        "name": "alice",
+        "battlefield": [
+          {
+            "card": "Plains",
+            "label": "p1",
+            "ready": true
+          },
+          {
+            "card": "Plains",
+            "label": "p2",
+            "ready": true
+          },
+          {
+            "card": "Plains",
+            "label": "p3",
+            "ready": true
+          },
+          {
+            "card": "Plains",
+            "label": "p4",
+            "ready": true
+          },
+          {
+            "card": "Plains",
+            "label": "p5",
+            "ready": true
+          },
+          {
+            "card": "Plains",
+            "label": "p6",
+            "ready": true
+          }
+        ],
+        "hand": [
+          {
+            "card": "Danitha, Benalia's Hope",
+            "label": "danitha"
+          },
+          {
+            "card": "Swords to Plowshares",
+            "label": "swords"
+          }
+        ],
+        "graveyard": [
+          {
+            "card": "Sanctuary Blade",
+            "label": "blade"
+          }
+        ],
+        "library": [
+          {
+            "card": "Plains"
+          },
+          {
+            "card": "Plains"
+          }
+        ]
+      },
+      {
+        "name": "bob",
+        "library": [
+          {
+            "card": "Plains"
+          },
+          {
+            "card": "Plains"
+          }
+        ]
+      }
+    ]
+  },
+  "timeline": [
+    {
+      "turn": 1,
+      "step": "PrecombatMain",
+      "player": "alice",
+      "do": {
+        "Cast": {
+          "object": "$danitha",
+          "mana": [
+            "$p1",
+            "$p2",
+            "$p3",
+            "$p4",
+            "$p5",
+            null
+          ]
+        }
+      }
+    },
+    {
+      "turn": 1,
+      "step": "PrecombatMain",
+      "player": "alice",
+      "do": "Pass"
+    },
+    {
+      "turn": 1,
+      "step": "PrecombatMain",
+      "player": "alice",
+      "do": {
+        "Cast": {
+          "object": "$swords",
+          "targets": [
+            "Danitha, Benalia's Hope"
+          ],
+          "mana": [
+            "$p6"
+          ]
+        }
+      }
+    },
+    {
+      "turn": 1,
+      "step": "PrecombatMain",
+      "player": "alice",
+      "do": "Pass"
+    },
+    {
+      "turn": 1,
+      "step": "PrecombatMain",
+      "player": "alice",
+      "do": "Pass"
+    },
+    {
+      "turn": 1,
+      "step": "PrecombatMain",
+      "player": "alice",
+      "do": {
+        "ChooseOptional": {
+          "type": "Exercises"
+        }
+      }
+    },
+    {
+      "turn": 1,
+      "step": "PrecombatMain",
+      "player": "alice",
+      "do": {
+        "Answer": {
+          "prompt": "Search",
+          "with": [
+            "$blade"
+          ]
+        }
+      }
+    },
+    {
+      "turn": 1,
+      "step": "PrecombatMain",
+      "player": "alice",
+      "check": {
+        "View": {
+          "of": "Stack",
+          "is": []
+        }
+      }
+    },
+    {
+      "turn": 1,
+      "step": "PrecombatMain",
+      "player": "alice",
+      "check": {
+        "View": {
+          "of": "AttachedTo",
+          "object": "Sanctuary Blade",
+          "is": null
+        }
+      }
+    },
+    {
+      "turn": 1,
+      "step": "PrecombatMain",
+      "player": "alice",
+      "check": {
+        "Count": {
+          "player": "alice",
+          "zone": "Battlefield",
+          "card": "Sanctuary Blade",
+          "count": 1
+        }
+      }
+    },
+    {
+      "turn": 1,
+      "step": "PrecombatMain",
+      "player": "alice",
+      "check": {
+        "Count": {
+          "player": "alice",
+          "zone": "Exile",
+          "card": "Danitha, Benalia's Hope",
+          "count": 1
+        }
+      }
+    }
+  ]
+}
