@@ -18,7 +18,10 @@
 -- playersFor and the choice offers Pawl.Engine.Players.offer and
 -- Game.inRangeOf feed (CR 801.5a, 801.10, 801.11), and
 -- Pawl.Engine.Resolve.Effect's WinGame and DrawGame (CR 801.14,
--- 801.15), and Pawl.Engine.Departure's checkMandatoryLoop (CR 801.16); and CR
+-- 801.15), and Pawl.Engine.Departure's checkMandatoryLoop (CR 801.16); CR
+-- 801.5a's chooser cut in Resolve.Effect's Vote arm, changeTargetsFor and
+-- chooseNewTargetsFor (Target.inChooserRange), Pawl.Engine.Cost's offerAssist
+-- and Pawl.Engine.Replacement's legalCopyTargets; and CR
 -- 801.2c's turn-start seating, Pawl.Types.GameState's departedThisTurn.
 --
 -- FOUR SEATS, at range 1 unless a case says otherwise, turn order [alice, bob,
@@ -32,8 +35,10 @@ import qualified Control.Monad.Trans.State.Strict as State
 import qualified Data.List as List
 import qualified Data.List.NonEmpty as NonEmpty
 import qualified Data.Map.Strict as Map
+import qualified Data.Maybe as Maybe
 import qualified Data.Sequence as Seq
 import qualified Data.Set as Set
+import Pawl.CostSpec (assisting)
 import qualified Pawl.Engine.Action as Action
 import qualified Pawl.Engine.Activate as Activate
 import qualified Pawl.Engine.Combat as Combat
@@ -563,6 +568,119 @@ spec s registry = Spec.describe s "Range of influence" $ do
     Spec.assertEqWith s "CR 801.5a at range 1 Pacifism is not offered carol's Piker" (snd (offered (S.withRange 1 board))) [[bobs, daves]]
     Spec.assertEqWith s "at an unlimited range both offers hold carol" (offered board) ([[S.bob, S.carol, S.dave]], [[bobs, carols, daves]])
 
+  -- CR 801.5a for a vote's listed players, both ranges at once as in its
+  -- Cuombajj Witches example: alice's Mob Verdict at range 1 is voted on by
+  -- alice, bob and dave, and bob and dave, two seats apart, may each vote only
+  -- for alice. Each seat votes for the first seat it prefers that it is offered.
+  -- Paired with the board at an unlimited range.
+  Spec.it s "CR 801.5a a voter is offered only players within their own range and the caster's" $ do
+    mountain <- S.printingOf s registry "Mountain"
+    verdict <- S.printingOf s registry "Mob Verdict"
+    let stocked = List.foldl' (\gs _ -> snd (S.addLibraryCard mountain S.alice gs)) (S.landsFor mountain S.alice 4 S.fourPlayerGame) [1 .. 3 :: Int]
+        (board, spell) = S.handOne verdict stocked
+        prefers = [(S.alice, [S.bob]), (S.bob, [S.dave]), (S.carol, [S.dave]), (S.dave, [S.bob])]
+        outcome gs =
+          let after = S.runPure (votingAs prefers []) (onMain gs) (S.cast S.alice spell >> Stack.resolveTop)
+           in (S.lifeOf S.bob after, S.lifeOf S.dave after, length (Game.zoneMembers Zone.Hand S.alice after))
+    Spec.assertEqWith s "CR 801.5a at range 1 bob and dave both vote for alice: bob takes 2, dave none, and alice draws two" (outcome (S.withRange 1 board)) (Just 18, Just 20, 2)
+    Spec.assertEqWith s "at an unlimited range they vote for each other and alice draws none" (outcome board) (Just 16, Just 16, 0)
+
+  -- CR 801.5a for a vote's listed objects: alice's Council's Judgment at range
+  -- 1 over bob's Goblin Piker, dave's Typhoid Rats and carol's Wall of Stone.
+  -- Bob and dave, two seats apart, may each vote only for their own permanent,
+  -- and carol's, outside alice's range, is no choice at all. Paired with the
+  -- board at an unlimited range.
+  Spec.it s "CR 801.5a a voter is offered only permanents within their own range and the caster's" $ do
+    plains <- S.printingOf s registry "Plains"
+    judgment <- S.printingOf s registry "Council's Judgment"
+    piker <- S.printingOf s registry "Goblin Piker"
+    rats <- S.printingOf s registry "Typhoid Rats"
+    wall <- S.printingOf s registry "Wall of Stone"
+    let (bobs, g0) = S.addPermanent piker S.bob (S.landsFor plains S.alice 3 S.fourPlayerGame)
+        (daves, g1) = S.addPermanent rats S.dave g0
+        (carols, g2) = S.addPermanent wall S.carol g1
+        (board, spell) = S.handOne judgment g2
+        prefers = [(S.alice, [bobs]), (S.bob, [daves]), (S.carol, [daves]), (S.dave, [daves])]
+        outcome gs =
+          let after = S.runPure (votingAs [] prefers) (onMain gs) (S.cast S.alice spell >> Stack.resolveTop)
+           in fmap (`S.onBattlefield` after) [bobs, daves, carols]
+    Spec.assertEqWith s "CR 801.5a at range 1 bob votes for his own Piker, which alice's vote makes the one exiled" (outcome (S.withRange 1 board)) [False, True, True]
+    Spec.assertEqWith s "at an unlimited range bob, carol and dave exile the Rats" (outcome board) [True, False, True]
+
+  -- CR 101.3 for the cut above: on alice's Council's Judgment at range 1, bob
+  -- controls only a Mountain, and dave's Typhoid Rats and Goblin Piker lie
+  -- outside his range, so he casts no ballot and alice's vote and dave's tie.
+  -- A voter falling back to a choice he could not make would break the tie.
+  Spec.it s "CR 801.5a / 101.3 a voter with no permanent in his own range casts no ballot" $ do
+    plains <- S.printingOf s registry "Plains"
+    mountain <- S.printingOf s registry "Mountain"
+    judgment <- S.printingOf s registry "Council's Judgment"
+    piker <- S.printingOf s registry "Goblin Piker"
+    rats <- S.printingOf s registry "Typhoid Rats"
+    let (_, g0) = S.addPermanent mountain S.bob (S.landsFor plains S.alice 3 S.fourPlayerGame)
+        (ratsId, g1) = S.addPermanent rats S.dave g0
+        (pikerId, g2) = S.addPermanent piker S.dave g1
+        (board, spell) = S.handOne judgment g2
+        prefers = [(S.alice, [pikerId]), (S.dave, [ratsId])]
+        after = S.runPure (votingAs [] prefers) (onMain (S.withRange 1 board)) (S.cast S.alice spell >> Stack.resolveTop)
+    Spec.assertEqWith s "CR 101.3 the Rats and the Piker tie on one vote each, so both are exiled" (fmap (`S.onBattlefield` after) [ratsId, pikerId]) [False, False]
+
+  -- CR 801.5a for a new target chosen for another player's spell: dave's
+  -- Lightning Bolt at alice, then alice's Deflection ("Change the target of
+  -- target spell with a single target.") or Redirect ("You may choose new
+  -- targets for target spell.") at the Bolt. Carol is in dave's range but two
+  -- seats from alice, so at range 1 alice may move the Bolt only to dave. She
+  -- moves it to carol where she may, else to dave. Paired with the board at an
+  -- unlimited range.
+  Monad.forM_ ["Deflection", "Redirect"] $ \name ->
+    Spec.it s ("CR 801.5a " <> name <> " offers only new targets within its caster's range") $ do
+      let outcome gs = do
+            after <- retargetBolt s registry name gs
+            pure (S.lifeOf S.carol after, S.lifeOf S.dave after)
+      limited <- outcome (S.withRange 1 S.fourPlayerGame)
+      unlimited <- outcome S.fourPlayerGame
+      Spec.assertEqWith s ("CR 801.5a at range 1 " <> name <> " sends the Bolt to dave and not carol") limited (Just 20, Just 17)
+      Spec.assertEqWith s "at an unlimited range it sends it to carol" unlimited (Just 17, Just 20)
+
+  -- CR 801.5a for assist's "another player" (CR 702.132a): alice's Charging
+  -- Binox ({7}{G}, "Assist") with one Forest, and bob, seated two seats from
+  -- her, holding seven Plains to help with. Only bob's help makes the Binox
+  -- castable. Paired with the board at an unlimited range.
+  Spec.it s "CR 801.5a assist offers only players within the caster's range" $ do
+    forest <- S.printingOf s registry "Forest"
+    plains <- S.printingOf s registry "Plains"
+    binox <- S.printingOf s registry "Charging Binox"
+    let seated = Setup.emptyGame (S.alice NonEmpty.:| [S.carol, S.bob, S.dave])
+        (forestId, g0) = S.addPermanent forest S.alice seated
+        (plainsIds, g1) = List.foldl' (\(ids, gs) _ -> let (oid, next) = S.addPermanent plains S.bob gs in (ids <> [oid], next)) ([], g0) [1 .. 7 :: Int]
+        (spell, board) = S.addHandCard binox S.alice g1
+        cast gs = GameState.stack (S.runPure (assisting (Just S.bob) 7 forestId plainsIds) (onMain gs) (S.cast S.alice spell))
+    Spec.assertEqWith s "CR 801.5a at range 1 alice may not name bob, so the Binox is not cast" (length (cast (S.withRange 1 board))) 0
+    Spec.assertEqWith s "at an unlimited range bob helps and it is" (length (cast board)) 1
+
+  -- CR 801.5a for an entering copy's choice: alice's Clone ("You may have this
+  -- creature enter as a copy of any creature on the battlefield.") with bob's
+  -- Goblin Piker beside her and carol's Hill Giant two seats away. She copies
+  -- the Giant where she may, else the Piker. Paired with the board at an
+  -- unlimited range.
+  Spec.it s "CR 801.5a an entering copy is offered only creatures within its controller's range" $ do
+    island <- S.printingOf s registry "Island"
+    clone <- S.printingOf s registry "Clone"
+    piker <- S.printingOf s registry "Goblin Piker"
+    giant <- S.printingOf s registry "Hill Giant"
+    let (pikerId, g0) = S.addPermanent piker S.bob (S.landsFor island S.alice 4 S.fourPlayerGame)
+        (giantId, g1) = S.addPermanent giant S.carol g0
+        (spell, board) = S.addHandCard clone S.alice g1
+        copying :: Prompt.Prompt r -> r
+        copying p = case p of
+          Prompt.ChooseCopyTarget _ _ _ offered -> List.find (`elem` offered) [giantId, pikerId]
+          _ -> S.identityAnswer p
+        cloned gs =
+          let after = S.runPure copying (onMain gs) (S.cast S.alice spell >> Stack.resolveTop)
+           in fmap (`S.powerToughnessOf` after) (filter (`notElem` Game.zoneMembers Zone.Battlefield S.alice board) (Game.zoneMembers Zone.Battlefield S.alice after))
+    Spec.assertEqWith s "CR 801.5a at range 1 the Clone enters as a copy of bob's Piker" (cloned (S.withRange 1 board)) [Just (2, 1)]
+    Spec.assertEqWith s "at an unlimited range it copies carol's Giant" (cloned board) [Just (3, 3)]
+
   -- CR 801.10 for a chosen player: alice's Stuffy Doll chose erin, beside her
   -- at five seats, and bob now controls it. Bob's {T} has the Doll deal 1 to
   -- itself, and its trigger -- bob's -- would deal 1 to erin, two seats from bob.
@@ -757,3 +875,45 @@ spec s registry = Spec.describe s "Range of influence" $ do
       let upkeep = Phase.Beginning BeginningStep.Upkeep
           began = Event.recordEvent (GameEvent.StepBegan (StepBegan.MkStepBegan upkeep pid)) (gs {GameState.phase = upkeep, GameState.activePlayer = pid})
        in resolveAll (S.runPure S.identityAnswer began Engine.settleForPriority)
+
+-- Answers each Prompt.ChooseVotePlayer and Prompt.ChooseVote with the first of
+-- the voting seat's preferences it is offered, else the first offered; anything
+-- else defers to S.identityAnswer. Pure, since each ballot names its seat.
+votingAs :: [(PlayerId.PlayerId, [PlayerId.PlayerId])] -> [(PlayerId.PlayerId, [ObjectId.ObjectId])] -> Prompt.Prompt r -> r
+votingAs players objects p = case p of
+  Prompt.ChooseVotePlayer _ who _ offered -> preferred (lookup who players) offered
+  Prompt.ChooseVote _ who _ offered -> preferred (lookup who objects) offered
+  _ -> S.identityAnswer p
+  where
+    preferred :: (Eq a) => Maybe [a] -> NonEmpty.NonEmpty a -> a
+    preferred prefs offered = Maybe.fromMaybe (NonEmpty.head offered) (List.find (`elem` offered) (concat prefs))
+
+-- Dave's Lightning Bolt cast at alice on `base`, then alice's `name` cast at
+-- the Bolt and both resolved. Alice answers each target prompt with the Bolt,
+-- else carol, else dave, wherever offered; dave aims at alice.
+retargetBolt :: (Monad m) => Spec.Spec m n -> Registry.Registry m -> String -> GameState.GameState -> m GameState.GameState
+retargetBolt s registry name base = do
+  island <- S.printingOf s registry "Island"
+  mountain <- S.printingOf s registry "Mountain"
+  bolt <- S.printingOf s registry "Lightning Bolt"
+  retarget <- S.printingOf s registry name
+  let (boltId, g0) = S.addHandCard bolt S.dave (S.landsFor mountain S.dave 1 (S.landsFor island S.alice 4 base))
+      (retargetId, board) = S.addHandCard retarget S.alice g0
+      aimed = S.runPure (aimingFirst [(S.dave, [(== Just S.alice) . Recipient.playerOf])]) board (S.cast S.dave boltId)
+      spell = take 1 (GameState.stack aimed)
+      alices = [(S.alice, fmap (\oid -> (== Just oid) . Recipient.objectOf) spell <> fmap (\pid -> (== Just pid) . Recipient.playerOf) [S.carol, S.dave])]
+      cast = S.runPure (aimingFirst alices) aimed (S.cast S.alice retargetId)
+  Monad.when (null spell) (Spec.assertFailure s "the Bolt never reached the stack")
+  pure (S.runPure (aimingFirst alices) cast (Stack.resolveTop >> Stack.resolveTop))
+
+-- Answers each Prompt.ChooseTargets put to a seat with, per slot, the one
+-- offered recipient matching the first of that seat's predicates any matches,
+-- else nothing; anything else defers to S.identityAnswer.
+aimingFirst :: [(PlayerId.PlayerId, [Recipient.Recipient -> Bool])] -> Prompt.Prompt r -> r
+aimingFirst prefs p = case p of
+  Prompt.ChooseTargets _ who _ asked ->
+    let pick offered = case filter (not . Set.null) (fmap (`Set.filter` offered) (Maybe.fromMaybe [] (lookup who prefs))) of
+          hits : _ -> Set.take 1 hits
+          [] -> Set.empty
+     in fmap (pick . snd) asked
+  _ -> S.identityAnswer p

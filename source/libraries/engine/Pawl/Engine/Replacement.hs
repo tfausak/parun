@@ -2689,15 +2689,19 @@ applyCopyExceptions this own exceptions snapshot =
 -- it. Perspective and source are the ENTERING object's controller and the
 -- entering object, so a filter naming "you" or "this" resolves against the
 -- player making the choice (CR 109.5); nothing printed today uses either, and
--- supplying Nothing would silently answer False if one did.
+-- supplying Nothing would silently answer False if one did. That player chooses
+-- only within their range (CR 801.5a).
 legalCopyTargets :: Set ObjectId -> Filter.Type.Filter Keyword.Type.Keyword -> CopyDomain.CopyDomain -> ObjectId -> GameState -> [ObjectId]
 legalCopyTargets batch filter_ among self gs =
-  let context = Projection.sourceContext gs (Projection.controllerOf self gs) self
+  let chooser = Projection.controllerOf self gs
+      context = Projection.sourceContext gs chooser self
       viewOf = Projection.viewsOf gs
+      grants = Projection.controlGrants gs
       eligible oid =
         oid /= self
           && not (Set.member oid batch)
           && Filter.matches context (viewOf oid) filter_
+          && all (\you -> Projection.objectInRangeGiven grants you oid gs) chooser
       domain = case among of
         CopyDomain.InZone Zone.Battlefield -> Set.toAscList (GameState.battlefield gs)
         CopyDomain.InZone Zone.Graveyard -> concatMap (\pid -> Game.zoneMembers Zone.Graveyard pid gs) (GameState.turnOrder gs)
