@@ -2382,7 +2382,7 @@ facesTurned before after =
 -- and back with the night".
 --
 -- Where a pile's double-faced components show different faces the CR defines
--- no answer, and the topmost double-faced one still decides: docs/rulings.md,
+-- no answer, and the topmost double-faced one still decides: docs/decisions.md,
 -- "Which component of a merged permanent answers for day and night".
 isFrontFaceUp :: ObjectId -> GameState -> Bool
 isFrontFaceUp oid gs = case lookupObject oid gs of

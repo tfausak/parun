@@ -1,18 +1,19 @@
-# Rulings
+# Decisions
 
-Every behaviour pawl commits to that the rules do not force: a question the CR
-leaves undefined, ambiguous, or open to more than one reading. Each entry
-records the reading chosen so nobody re-derives it, possibly differently, and
-names the rules it rests on so a new CR or errata can be checked against it.
+Every behaviour pawl commits to that nothing official forces: a question the
+CR leaves undefined, ambiguous, or open to more than one reading, and no
+Gatherer ruling or erratum settles. Each entry records the reading chosen so
+nobody re-derives it, possibly differently, and names the rules it rests on so
+a new CR can be checked against it.
 
-An entry is owed whenever a change picks a reading the CR does not compel. It
-lands in the same PR as the code, and the code site cites it by heading. An
-elision is not an entry: an elision is a known gap with an issue, and an entry
-is a settled answer.
+An entry is owed whenever a change picks such a reading. It lands in the same
+PR as the code, and the code site cites it by heading. Two things are not
+entries: a reading an official ruling settles, which the card's test pins, and
+an elision, which is a known gap with an issue rather than a settled answer.
 
-When `docs/rules.txt` is updated, or errata or a ruling touches a cited rule,
-re-read each entry's rules against the new text. An entry the new text decides
-is either confirmed, and dropped from here, or contradicted, and filed as
+When `docs/rules.txt` is updated, or a ruling lands on a question here,
+re-read each entry against the new text. An entry it decides is either
+confirmed, and dropped from here, or contradicted, and filed as
 `rules-correctness`.
 
 Each entry gives:

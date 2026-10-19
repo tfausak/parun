@@ -45,7 +45,7 @@ Design notes live in `docs/`. Read them by section, on demand --- a whole doc
   number quoted in an issue or a brief; those have been wrong.
 
 - Readings the rules don't force:
-  `docs/rulings.md`, checked before deciding one and on every CR update
+  `docs/decisions.md`, checked before deciding one and on every CR update
 
 - Prior-art evidence:
   `docs/prior-art-lessons.md`
@@ -204,8 +204,8 @@ to agents as written. What it doesn't say:
   Illegitimate when the absence is rules-*enforced*, because then the elision
   is provably sound --- close that issue as wontfix.
 
-- A reading the CR does not force gets an entry in `docs/rulings.md`, in the
-  same PR, and the code site cites the entry. Check there before deciding such
+- A reading neither the CR nor an official ruling forces gets an entry in
+  `docs/decisions.md`, in the same PR, and the code site cites the entry. Check there before deciding such
   a question, so a settled one is not decided again differently.
 
 - File the issue, cite it inline. An elision gets an issue carrying the status,
