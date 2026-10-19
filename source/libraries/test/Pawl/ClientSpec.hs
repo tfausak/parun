@@ -120,6 +120,39 @@ spec s registry = Spec.describe s "Client" $ do
         shown = reverse (written (State.execState (Except.runExceptT (State.evalStateT (State.evalStateT twice (SplitMix.MkSplitMix 0)) Hotseat.fresh {Hotseat.facing = Just S.alice, Hotseat.autoPass = False})) blank))
     Spec.assertEqWith s "once" (filter (Text.isPrefixOf (Text.pack "Since you last looked: ")) shown) [Text.pack "Since you last looked: Player 2 reveals a face-down card."]
 
+  Spec.it s "a seat passed for while facing the screen is shown its creature spell resolving" $ do
+    gs <- started s registry
+    lands <- mapM (S.printingOf s registry) ["Mountain", "Mountain", "Forest"]
+    bears <- S.printingOf s registry "Grizzly Bears"
+    let (board, _) = S.handOne bears (List.foldl' (\g p -> snd (S.addPermanent p S.alice g)) gs lands)
+        turn = GameState.turnNumber board
+        seats = Driver.bySeat (Map.singleton S.alice (Game.human (screen 200 (castsOnce "Grizzly Bears")) (const Nothing))) Bot.bot
+        run = Driver.drive [] seats 40 (pure . (> turn) . GameState.turnNumber) board
+        (outcome, sc) = State.runState (Except.runExceptT (State.evalStateT (State.evalStateT run (SplitMix.MkSplitMix 1)) Hotseat.fresh {Hotseat.facing = Just S.alice})) blank
+        -- Since alice last answered: the auto payment ends her questions.
+        unanswered = pending sc
+    Spec.assertBool s (any (\l -> Text.isPrefixOf (Text.pack "Since you last looked: ") l && Text.isInfixOf (Text.pack "Grizzly Bears moves from the stack to the battlefield") l) unanswered) ("shown the bear resolve: " <> show unanswered)
+    Spec.assertBool s (Text.pack "Player 1 passes (no other actions)." `elem` unanswered) "passed for"
+    Spec.assertEqWith s "into the next turn" (fmap ((> turn) . GameState.turnNumber) outcome) (Right True)
+
+  Spec.it s "news read at a pass made for a seat the screen does not face waits for its next question, past the turn's end" $ do
+    gs <- started s registry
+    hand <- maybe (Spec.assertFailure s "no card in hand") pure (Maybe.listToMaybe (Game.Engine.zoneMembers Zone.Hand S.alice gs))
+    let revealed = GameEvent.Revealed (Revealed.MkRevealed S.bob (ObjectId.MkObjectId 7) RevealCause.LeavingFaceDown S.emptyCharacteristics)
+        decider = Decider.MkDecider S.alice
+        witnessing = gs {GameState.events = Seq.singleton (LoggedEvent.MkLoggedEvent (EventGroup.MkEventGroup 0) revealed)}
+        nextTurn = gs {GameState.events = Seq.empty, GameState.turnNumber = GameState.turnNumber gs + 1}
+        passing = Answerer.unwrap human (Asked.MkAsked [] witnessing (Prompt.ChooseAction decider S.alice [Action.Pass]))
+        acting = Answerer.unwrap human (Asked.MkAsked [] nextTurn (Prompt.ChooseAction decider S.alice [Action.Play hand Nothing, Action.Pass]))
+        -- Enter at the hand-off, then Pass.
+        human = Game.human (screen 2 (\sc -> Just (Text.pack (if typed sc == 0 then "" else "2")))) (const Nothing)
+        shown = reverse (written (State.execState (Except.runExceptT (State.evalStateT (State.evalStateT (passing >> acting) (SplitMix.MkSplitMix 0)) Hotseat.fresh {Hotseat.facing = Just S.bob})) blank))
+        (facingBob, facingAlice) = break (Text.isPrefixOf (Text.pack "Pass to Player 1")) shown
+        news = filter (Text.isPrefixOf (Text.pack "Since you last looked: "))
+    Spec.assertEqWith s "not shown while the screen faces Player 2" (news facingBob) []
+    Spec.assertEqWith s "shown at its next question, a turn later" (news facingAlice) [Text.pack "Since you last looked: Player 2 reveals a face-down card."]
+    Spec.assertBool s (Text.pack "Player 1 passes (no other actions)." `elem` facingBob) "passed for"
+
   Spec.it s "each reader's answer reads as its prompt's answer" $ do
     gs <- started s registry
     let o5 = ObjectId.MkObjectId 5
@@ -212,10 +245,11 @@ spec s registry = Spec.describe s "Client" $ do
     Spec.assertEqWith s "no source makes green" (unmade, refusal `elem` unmadeShown) (Right (Just m), True)
     Spec.assertEqWith s "a hybrid symbol" (unread, refusal `elem` unreadShown) (Right (Just m), True)
     Spec.assertEqWith s "a generic cost" (fst (asking facing ["auto"] board (paying [ManaSymbol.Generic 1]))) (Right (Just m))
+    -- An empty log, so the screen shows no news either.
     Spec.assertEqWith
       s
       "floats nothing once covered"
-      (asking facing {Hotseat.paying = Map.singleton S.alice Set.empty} [] board (Prompt.ChooseExtraManaSource decider S.alice (m NonEmpty.:| [])))
+      (asking facing {Hotseat.paying = Map.singleton S.alice Set.empty} [] board {GameState.events = Seq.empty} (Prompt.ChooseExtraManaSource decider S.alice (m NonEmpty.:| [])))
       (Right Nothing, [])
 
   Spec.it s "a seat's battlefield is grouped lands, creatures, then the rest, each by mana value and name" $ do

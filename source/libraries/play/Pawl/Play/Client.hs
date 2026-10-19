@@ -10,9 +10,11 @@ import qualified Control.Monad.Trans.State.Strict as State
 import qualified Data.Char as Char
 import qualified Data.Containers.ListUtils as ListUtils
 import qualified Data.Either as Either
+import qualified Data.Foldable as Foldable
 import qualified Data.List as List
 import qualified Data.Map.Strict as Map
 import qualified Data.Maybe as Maybe
+import qualified Data.Sequence as Seq
 import qualified Data.Set as Set
 import qualified Data.Text as Text
 import Numeric.Natural (Natural)
@@ -58,6 +60,7 @@ respond terminal lookUp line = do
   request <- either (stop . (Text.pack "unreadable request: " <>)) pure (Common.parse line >>= Codec.decode Codec.Request.codec)
   let question = Request.question request
       seat = Question.seat question
+  collect (Request.view request)
   fmap (Common.render . Codec.Reply.toValue) $
     if Question.kind question == Text.pack "Concede"
       then do
@@ -65,8 +68,14 @@ respond terminal lookUp line = do
         pure (R.Text (Text.pack (if conceding then "Concedes" else "Continues")))
       else do
         (said, automatic) <- unasked request
-        mapM_ (say terminal) said
-        maybe (asked terminal lookUp request) pure automatic
+        case automatic of
+          Nothing -> mapM_ (say terminal) said >> asked terminal lookUp request
+          Just reply -> do
+            -- Only the seat the screen faces is shown its news unasked.
+            facing <- State.gets Hotseat.facing
+            news <- if facing == Just seat then tell seat else pure []
+            mapM_ (say terminal) (news <> said)
+            pure reply
 
 -- | Asks the seat, handing the screen to it first.
 asked :: (Monad m) => Terminal.Terminal m -> (CardName.CardName -> Maybe Card.Card) -> Request.Request -> Client m R.Reply
@@ -75,12 +84,13 @@ asked terminal lookUp request = do
       view = Request.view request
       seat = Question.seat question
   handOff terminal seat
-  first <- State.gets (Map.notMember seat . Hotseat.shown)
-  news <- unseen view
+  first <- State.gets (Set.notMember seat . Hotseat.greeted)
+  State.modify' (\h -> h {Hotseat.greeted = Set.insert seat (Hotseat.greeted h)})
+  news <- tell seat
   mapM_ (say terminal) $
     [Text.empty]
       <> Render.board view
-      <> [Text.pack "Since you last looked: " <> Text.intercalate (Text.pack "; ") news | not (null news)]
+      <> news
       <> Render.hand view
       <> [Text.pack "Type card and a number from a list, or a card's name, to read that card." | first]
       <> foldMap (\p -> [Text.pack "That answer was refused: " <> p]) (Request.problem request)
@@ -469,18 +479,34 @@ handOff terminal seat = do
     lift2 (Terminal.clear terminal)
     State.modify' (\h -> h {Hotseat.facing = Just seat})
 
--- | The seat's witnessed entries it has not been shown this turn.
-unseen :: (Monad m) => PlayerView.PlayerView -> Client m [Text.Text]
-unseen view = do
+-- | Adds the view's witnessed entries the client has not read yet to its
+-- seat's news. Every request's view is read, answered automatically or not,
+-- since the view holds only this turn's entries.
+--
+-- Not implemented: an entry after the seat's last request of a turn, such as
+-- another seat's discard at cleanup, is never read (#5315).
+collect :: (Monad m) => PlayerView.PlayerView -> Client m ()
+collect view = do
   let seat = PlayerView.viewer view
       turn = PlayerView.turn view
       entries = PlayerView.witnessed view
-  before <- State.gets (Map.lookup seat . Hotseat.shown)
-  State.modify' (\h -> h {Hotseat.shown = Map.insert seat (turn, Natural.length entries) (Hotseat.shown h)})
+  before <- State.gets (Map.lookup seat . Hotseat.seen)
   let skipped = case before of
         Just (t, n) | t == turn -> n
         _ -> 0
-  pure (Maybe.mapMaybe (Render.event view) (List.genericDrop skipped entries))
+      unread = Seq.fromList (Maybe.mapMaybe (Render.event view) (List.genericDrop skipped entries))
+  State.modify' $ \h ->
+    h
+      { Hotseat.seen = Map.insert seat (turn, Natural.length entries) (Hotseat.seen h),
+        Hotseat.news = Map.insertWith (flip (<>)) seat unread (Hotseat.news h)
+      }
+
+-- | The line showing the seat its news, if it has any, emptying it.
+tell :: (Monad m) => PlayerId.PlayerId -> Client m [Text.Text]
+tell seat = do
+  news <- State.gets (foldMap Foldable.toList . Map.lookup seat . Hotseat.news)
+  State.modify' (\h -> h {Hotseat.news = Map.delete seat (Hotseat.news h)})
+  pure [Text.pack "Since you last looked: " <> Text.intercalate (Text.pack "; ") news | not (null news)]
 
 say :: (Monad m) => Terminal.Terminal m -> Text.Text -> Client m ()
 say terminal = lift2 . Terminal.say terminal
