@@ -2381,9 +2381,9 @@ facesTurned before after =
 -- "CR 730.2i/702.145c a Cubwarden over a nightbound Werewolf turns with the day
 -- and back with the night".
 --
--- Not implemented: a ruling on which component answers for a merged permanent
--- whose double-faced components show different faces, which the CR leaves
--- undefined (#5037).
+-- Where a pile's double-faced components show different faces the CR defines
+-- no answer, and the topmost double-faced one still decides: docs/decisions.md,
+-- "Which component of a merged permanent answers for day and night".
 isFrontFaceUp :: ObjectId -> GameState -> Bool
 isFrontFaceUp oid gs = case lookupObject oid gs of
   Nothing -> True
