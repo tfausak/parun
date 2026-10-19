@@ -2086,7 +2086,7 @@ effectLintSpec s registry = Spec.describe s "Lint" $ do
           Effect.MoveToZone (MoveToZone.MkMoveToZone ref _ _ mSlot _ _ _) | not (movesAtMostOne ref) -> Maybe.maybeToList mSlot
           Effect.LookAt (LookAt.MkLookAt ref slot _) | not (movesAtMostOne ref) -> [slot]
           Effect.Reveal (Reveal.MkReveal ref mSlot) | not (movesAtMostOne ref) -> Maybe.maybeToList mSlot
-          -- CR 701.17c's slot, plural at every depth and every seat count: a
+          -- CR 701.17c's slot, plural at every depth and every seat count: an
           -- InstructionR row resizes the INSTRUCTION (Bruvac the Grandiloquent
           -- doubles it), so even a literal 1 can reach Resolve's `several ->
           -- bindObjectsSlot` arm and a singular reader over that slot would
