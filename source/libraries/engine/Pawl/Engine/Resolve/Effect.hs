@@ -3004,6 +3004,11 @@ copyForEachTargets controller copier resolving source legal original candidateRe
 -- offering no chance to change it -- or, for a spell that announced nothing
 -- (`unannounced`), the count its text fixes.
 --
+-- Legal is judged from `controller`, the object's own; a changed target must
+-- also lie in the range of `chooser`, asked for an effect of `source` (CR
+-- 801.5a, Target.inChooserRange) -- Redirect's caster choosing for another
+-- player's spell.
+--
 -- Not raised when no slot can be answered any other way -- the offered set is
 -- exactly what is already chosen -- because then the options are
 -- indistinguishable.
@@ -3028,8 +3033,8 @@ copyForEachTargets controller copier resolving source legal original candidateRe
 -- particular choice restores exactly that state. CR 733.2's redo has no analogue
 -- inside a resolution: nobody holds priority, and a pure prompt-to-answer
 -- decider re-asked would loop on a stubborn answer.
-chooseNewTargetsFor :: Bool -> PlayerId -> PlayerId -> ObjectId -> Game ()
-chooseNewTargetsFor unannounced chooser controller copyId = do
+chooseNewTargetsFor :: Bool -> ObjectId -> PlayerId -> PlayerId -> ObjectId -> Game ()
+chooseNewTargetsFor unannounced source chooser controller copyId = do
   gs <- State.get
   Monad.forM_ (Game.lookupObject copyId gs) $ \copy -> do
     let slots = stackTargetSlots copy copyId gs
@@ -3080,7 +3085,7 @@ chooseNewTargetsFor unannounced chooser controller copyId = do
         -- the pile it sits in, exactly as at CR 601.2c. The targets already
         -- CHOSEN are offered unchanged whatever they are, rule 707.10c letting
         -- one stand even when it is now illegal.
-        piled slot n = Target.piledOffer (Just n) (Just chooser) gs (Map.findWithDefault Set.empty slot fresh)
+        piled slot n = Target.piledOffer (Just n) (Just chooser) gs (Target.inChooserRange source chooser gs (Map.findWithDefault Set.empty slot fresh))
         offer slot (n, recipients) = (n, Set.union recipients (piled slot n))
         asked = Map.mapWithKey offer (Map.union (fmap (\recipients -> (Natural.length recipients, recipients)) current) (fmap (\n -> (n, Set.empty)) blank))
         held = Map.union current (Set.empty <$ blank)
@@ -3148,8 +3153,8 @@ retargetEach reaim legal resolving controller source ref = do
 -- target that can't be "is unchanged, even if the original target is itself
 -- illegal by then", and "if all the targets aren't changed to other legal
 -- targets, none of them are changed". Effect.ChangeTargets' re-aim, with
--- chooseNewTargetsFor's two seats: `chooser` is asked, `controller` -- the
--- object's own -- is who legality is judged from.
+-- chooseNewTargetsFor's two seats and range cut: `chooser` is asked,
+-- `controller` -- the object's own -- is who legality is judged from.
 --
 -- Per slot, the OFFER is the recipients legal now less what that slot already
 -- targets ("another"), and the count is what the slot holds. A slot offering
@@ -3168,8 +3173,8 @@ retargetEach reaim legal resolving controller source ref = do
 -- the final set) leaves every target unchanged. Pawl.ExileSpec's "CR 115.7a a
 -- change of target that draws a card the spell refuses leaves the old target,
 -- so the spell resolves" proves the refused draw.
-changeTargetsFor :: PlayerId -> PlayerId -> ObjectId -> Game ()
-changeTargetsFor chooser controller oid = do
+changeTargetsFor :: ObjectId -> PlayerId -> PlayerId -> ObjectId -> Game ()
+changeTargetsFor source chooser controller oid = do
   gs <- State.get
   Monad.forM_ (Game.lookupObject oid gs) $ \obj -> do
     let slots = stackTargetSlots obj oid gs
@@ -3180,7 +3185,7 @@ changeTargetsFor chooser controller oid = do
         another old = Set.filter (\r -> not (any (Recipient.sameReferent r) old))
         -- CR 406.4's draws capped at the slot's count, chooseNewTargetsFor's
         -- cap. A REGRESSION FENCE: no test drives a pile through this road.
-        offer slot old = (Natural.length old, Target.piledOffer (Just (Natural.length old)) (Just chooser) gs (another old (Map.findWithDefault Set.empty slot fresh)))
+        offer slot old = (Natural.length old, Target.piledOffer (Just (Natural.length old)) (Just chooser) gs (Target.inChooserRange source chooser gs (another old (Map.findWithDefault Set.empty slot fresh))))
         asked = Map.mapWithKey offer current
         enough (n, offered) = Natural.length offered >= n
         settled (n, offered) = Natural.length offered == n
@@ -6966,7 +6971,8 @@ applyOneEffect runSubgame resolving source controller legal chosen effect = case
   --
   -- An object vote's listed choices are swept ONCE, off the board as the vote
   -- begins, so every voter chooses from the same list -- rule 701.38a votes "for
-  -- one choice from a list", singular. Through battlefieldMatching, so the sweep
+  -- one choice from a list", singular -- less what lies outside their own range
+  -- (CR 801.5a). Through battlefieldMatching, so the sweep
   -- reads the projection and a permanent that is a copy of something is judged
   -- by the characteristics it copied.
   --
@@ -7018,14 +7024,19 @@ applyOneEffect runSubgame resolving source controller legal chosen effect = case
     case choices of
       VoteChoices.Objects objects -> do
         let candidates = battlefieldMatching legal resolving controller source gs (VoteObjects.filter objects)
+            grants = Projection.controlGrants gs
+            -- CR 801.5a: each voter's share of the list is what lies in their
+            -- own range as well, a voter left with none casting no ballot (CR
+            -- 101.3).
+            candidatesFor voter = filter (\oid -> all (\you -> Projection.objectInRangeGiven grants you oid gs) (Plane.rangePerspective source voter gs)) candidates
         case candidates of
           -- CR 101.3: an empty list of choices, so nobody votes and nothing is bound.
           [] -> pure ()
-          first : _ -> do
+          _ : _ -> do
             -- Through Game.chooseAmong, rule 701.38a stating no way to abstain.
-            let choiceOf oid = BallotChoice.ForObject <$> Projection.objectSnapshot oid gs
-            ballots <- cast choiceOf $ \voter -> Maybe.fromMaybe first <$> Game.chooseAmong (\decider who -> Prompt.ChooseVote decider who resolving) voter candidates
-            let tallyOf oid = List.length (filter (== oid) ballots)
+            let choiceOf picked = picked >>= \oid -> BallotChoice.ForObject <$> Projection.objectSnapshot oid gs
+            ballots <- cast choiceOf $ \voter -> Game.chooseAmong (\decider who -> Prompt.ChooseVote decider who resolving) voter (candidatesFor voter)
+            let tallyOf oid = List.length (filter (== Just oid) ballots)
                 best = List.maximum (0 : fmap tallyOf candidates)
                 -- Every candidate on the winning tally, and none at all where nobody
                 -- voted. Rule 701.38a's vote determines "some aspect of the effect",
@@ -7054,11 +7065,14 @@ applyOneEffect runSubgame resolving source controller legal chosen effect = case
       -- for Mob Verdict's "another player". A voter left with no candidate casts
       -- no ballot, Objects' CR 101.3 answer.
       --
+      -- CR 801.5a: within the voter's range as well as the controller's,
+      -- neither applying to a planar source (CR 801.18).
+      --
       -- The tally keys every candidate, zeros included, and is bound on the
       -- resolving object, where effectContext's slotVotes reads it.
       VoteChoices.Players (VotePlayers.MkVotePlayers another slot) -> do
         let table = Players.table (Plane.rangePerspective source controller gs) gs
-            candidatesFor voter = if another then filter (/= voter) table else table
+            candidatesFor voter = filter (\pid -> not (another && pid == voter) && List.elem pid (Players.table (Plane.rangePerspective source voter gs) gs)) table
         picks <- cast (fmap BallotChoice.ForPlayer) $ \voter -> Game.chooseAmong (\decider who -> Prompt.ChooseVotePlayer decider who resolving) voter (candidatesFor voter)
         let tally = Map.fromList (fmap (\pid -> (pid, Natural.length (filter (== Just pid) picks))) (concatMap candidatesFor voters))
         State.modify' (overHolderBindings resolving (Map.insert slot (Binding.toVotes tally)))
@@ -7493,7 +7507,7 @@ applyOneEffect runSubgame resolving source controller legal chosen effect = case
         g <- State.get
         Monad.forM_ (Game.lookupObject spell g) $ \obj ->
           let spellController = Maybe.fromMaybe (Projection.defaultControllerOf obj) (Projection.controllerOf spell g)
-           in chooseNewTargetsFor (Maybe.isNothing mOriginalOf) spellController spellController spell
+           in chooseNewTargetsFor (Maybe.isNothing mOriginalOf) source spellController spellController spell
   Effect.CopyStackObject (CopyStackObject.MkCopyStackObject ref targets quantity copierRef exceptions) -> do
     gs <- State.get
     -- CR 707.10: `quantity` copies of each named object, each put onto the stack.
@@ -7709,7 +7723,7 @@ applyOneEffect runSubgame resolving source controller legal chosen effect = case
             -- CR 707.10c's chooser is the COPY's controller and not the copying
             -- effect's: Meletis Charlatan's "that player may choose new targets
             -- for the copy". Proved by Pawl.CopySpec's Charlatan group.
-            Monad.when (targets == CopyTargets.ChosenByController) (chooseNewTargetsFor False copier copier copyId)
+            Monad.when (targets == CopyTargets.ChosenByController) (chooseNewTargetsFor False source copier copier copyId)
             -- CR 115.1: "these targets are declared as part of the process of
             -- putting the spell or ability on the stack", and CR 707.10c puts the
             -- copy on the stack once its controller has decided what its targets
@@ -7731,9 +7745,9 @@ applyOneEffect runSubgame resolving source controller legal chosen effect = case
             -- cast, is the event magecraft's "or copy" watches (SpellCast.copies).
             Monad.when (kind == StackObjectKind.Spell) (State.modify' (Event.recordEvent (GameEvent.SpellCopied (SpellWasCopied.MkSpellWasCopied copier copyId))))
   -- CR 115.7d over each named spell or ability still on the stack.
-  Effect.ChooseNewTargets ref -> retargetEach (chooseNewTargetsFor False controller) legal resolving controller source ref
+  Effect.ChooseNewTargets ref -> retargetEach (chooseNewTargetsFor False source controller) legal resolving controller source ref
   -- CR 115.7a, the same walk with the stricter re-aim.
-  Effect.ChangeTargets ref -> retargetEach (changeTargetsFor controller) legal resolving controller source ref
+  Effect.ChangeTargets ref -> retargetEach (changeTargetsFor source controller) legal resolving controller source ref
   Effect.ArmDelayedTrigger arm@(ArmDelayedTrigger.MkArmDelayedTrigger name onset duration _) -> do
     gs <- State.get
     -- CR 608.2h's last-known fallback, and not belt and braces: the source can
@@ -8718,11 +8732,15 @@ applyOneEffect runSubgame resolving source controller legal chosen effect = case
   -- Prompt.ChooseAttachment would name -- and asked even when nothing moves,
   -- since the instruction still makes the choice. None admitted: nothing moves
   -- (CR 609.3). A mover that cannot go there stays put (CR 701.3b, CR 303.4j),
-  -- which Event.attach applies.
+  -- which Event.attach applies. Only a destination within the controller's
+  -- range (CR 801.5a), every one for a planar source (CR 801.18): Fumble's
+  -- "another creature".
   Effect.AttachAll (AttachAll.MkAttachAll ref filter_) -> do
     movers <- askingObjects resolving source controller legal chosen ref
     gs <- State.get
-    destination <- Game.chooseAmong (\decider who -> Prompt.ChoosePermanent decider who source) controller (Attach.groupHostsFor (effectContext gs resolving controller source legal (slotBindings resolving gs)) movers filter_ gs)
+    let grants = Projection.controlGrants gs
+        inReach oid = all (\you -> Projection.objectInRangeGiven grants you oid gs) (Plane.rangePerspective source controller gs)
+    destination <- Game.chooseAmong (\decider who -> Prompt.ChoosePermanent decider who source) controller (filter inReach (Attach.groupHostsFor (effectContext gs resolving controller source legal (slotBindings resolving gs)) movers filter_ gs))
     -- Proposed as a bare ToObject; Event.attach re-tags it per mover, as
     -- AttachTarget's arm says.
     Foldable.for_ destination (attachTogether movers . Recipient.ToObject)
