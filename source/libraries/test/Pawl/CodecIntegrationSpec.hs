@@ -45,6 +45,7 @@ import qualified Pawl.Types.Counter as Counter
 import qualified Pawl.Types.CounterKind as CounterKind
 import qualified Pawl.Types.Counterability as Counterability
 import qualified Pawl.Types.Effect as Effect
+import qualified Pawl.Types.EventGroup as EventGroup
 import qualified Pawl.Types.Face as Face
 import qualified Pawl.Types.Filter as Filter.Type
 import qualified Pawl.Types.GameEvent as GameEvent
@@ -369,6 +370,13 @@ gameStateRoundTripSpec s registry = do
   Spec.it s "a played card round trips" $ do
     mountain <- S.printingOf s registry "Mountain"
     roundTrips "a play" (S.oneMountainState mountain Phase.PrecombatMain) {GameState.cardsPlayed = Map.singleton (ObjectId.MkObjectId 7) S.bob}
+
+  -- GameState.boardAfterEvent, CR 603.4's board per event: a whole GameState
+  -- under a GameState's own codec.
+  Spec.it s "a board after an event round trips" $ do
+    mountain <- S.printingOf s registry "Mountain"
+    let board = S.oneMountainState mountain Phase.PrecombatMain
+    roundTrips "a board after an event" board {GameState.boardAfterEvent = Map.singleton EventGroup.first board}
 
   Spec.it s "a non-empty stack round trips" $ do
     mountain <- S.printingOf s registry "Mountain"

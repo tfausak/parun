@@ -163,6 +163,11 @@ data GameState = MkGameState
     -- event, keyed by group, one lazy entry per group; read by
     -- Event.eventTriggers, cleared as the scan consumes the log.
     battlefieldWhenTriggered :: Map.Map EventGroup.EventGroup (Map.Map ObjectId.ObjectId (BattlefieldCandidate.BattlefieldCandidate ProjectedCharacteristics.ProjectedCharacteristics)),
+    -- | CR 603.4: the whole game as it stood immediately after each unscanned
+    -- event, keyed by group, which an intervening "if" is checked against; each
+    -- entry's own copy of this field is empty. Written by
+    -- Pawl.Engine.Event.Trigger.fileBoards, cleared with `battlefieldWhenTriggered`.
+    boardAfterEvent :: Map.Map EventGroup.EventGroup GameState,
     -- | Who controlled each permanent the last time
     -- Pawl.Engine.Engine.sampleControl looked; diffing it against the live
     -- projection is what yields GameEvent.ControlChanged (CR 603.2). Rebuilt
