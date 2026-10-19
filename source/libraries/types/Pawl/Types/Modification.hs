@@ -257,7 +257,9 @@ data Modification ability
     --
     -- AddCreatureSubtype sits beside it, the way AddColor sits beside SetColor
     -- below. CR 205.1a allows several creature types and this carries exactly
-    -- one, the same narrowing SetLandSubtype takes.
+    -- one, the same narrowing SetLandSubtype takes. A card setting two
+    -- (Otherworldly Escort's "It's a Spirit Detective") lists this, then
+    -- AddCreatureSubtype, in one effect.
     SetCreatureSubtype Subtype.Subtype
   | -- | layer 4, CR 205.1b add (Life and Limb -> Saproling). The ADD beside the
     -- SET above, standing to it as AddLandSubtype stands to SetLandSubtype: the
