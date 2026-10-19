@@ -78,6 +78,7 @@ import qualified Pawl.Types.PlayPermissionOrigin as PlayPermissionOrigin
 import qualified Pawl.Types.PlayerChoice as PlayerChoice
 import qualified Pawl.Types.PlayerEffect as PlayerEffect
 import Pawl.Types.PlayerId (PlayerId)
+import qualified Pawl.Types.PlayerInstruction as PlayerInstruction
 import qualified Pawl.Types.PlayerRef as PlayerRef
 import qualified Pawl.Types.PlayerRelation as PlayerRelation
 import qualified Pawl.Types.PlayerScope as PlayerScope
@@ -1222,7 +1223,7 @@ facedVillainously picked cIdx clause = case Clause.orElse clause of
 -- readable: the limb's reads are re-taken after the bind, where chosenBranch's
 -- callers had captured theirs before the question was put.
 --
--- CR 701.55c: each seat's facing is first proposed as WouldFaceVillainousChoice,
+-- CR 701.55c: each seat's facing is first proposed as an instruction (WouldPerform),
 -- so a row like The Valeyard's can make it several -- the whole of rule 701.55a
 -- performed that many times for that seat, one at a time, each its own choice
 -- read off the board the previous one left. Pawl.ResolveSpec's "CR 701.55c The
@@ -1235,8 +1236,8 @@ villainousPass resolving source controller idx legal orElse limbs performLimb ac
   fmap fst $
     Monad.foldM
       ( \seat chooser -> do
-          outcome <- Event.applyReplacements (ProposedEvent.WouldFaceVillainousChoice chooser 1)
-          let times = maybe 0 (Natural.toIntSaturating . snd) (outcome >>= Replacement.asVillainousChoice)
+          outcome <- Event.applyReplacements (ProposedEvent.WouldPerform PlayerInstruction.FaceVillainousChoice chooser 1)
+          let times = maybe 0 (Natural.toIntSaturating . snd) (outcome >>= Replacement.asPerformed PlayerInstruction.FaceVillainousChoice)
           Monad.foldM (\faced _ -> face chooser faced) seat (List.replicate times ())
       )
       (acc0, Seq.empty)

@@ -17,6 +17,7 @@ import qualified Pawl.Types.PhaseSelector as PhaseSelector
 import qualified Pawl.Types.PlaneswalkCause as PlaneswalkCause
 import qualified Pawl.Types.PlayerCounterKind as PlayerCounterKind
 import qualified Pawl.Types.PlayerId as PlayerId
+import qualified Pawl.Types.PlayerInstruction as PlayerInstruction
 import qualified Pawl.Types.Regenerability as Regenerability
 import qualified Pawl.Types.TokenLot as TokenLot
 import qualified Pawl.Types.TurnUpProcedure as TurnUpProcedure
@@ -179,64 +180,22 @@ data ProposedEvent
     --
     -- ONE draw and no count: CR 121.2 makes an instruction to draw several cards
     -- that many individual card draws, and this funnel runs once per draw. The
-    -- INSTRUCTION is WouldDrawCards below, a different event class that CR 616.1g
-    -- settles first.
+    -- INSTRUCTION is WouldPerform's DrawCards below, a different event class that
+    -- CR 616.1g settles first.
     --
     -- The PlayerId and nothing else: rule 121.1's action has no source, no amount
     -- and no destination a replacement could rewrite, and the card it would move
     -- is not chosen until the draw happens.
     WouldDraw PlayerId.PlayerId
-  | -- | CR 121.2a: a player would be instructed to draw this many cards. Raised by
-    -- Pawl.Engine.Resolve's Effect.Draw arm once per drawer, after the quantity is
-    -- evaluated and before any of CR 121.2's individual draws -- rule 121.2a's
-    -- "this modification occurs before considering any of the individual card
-    -- draws", and rule 616.1g's containment: the instruction is settled here, then
-    -- each draw it leaves raises its own WouldDraw.
+  | -- | CR 614.1a: this player would be instructed to carry out this
+    -- Pawl.Types.PlayerInstruction this many times; each constructor of that
+    -- type names its rule and the funnel that raises it.
     --
-    -- The count is the number the instruction NAMES, never a library or a hand
-    -- size, so a row that resizes it answers in the same currency and CR 616.2's
-    -- next iteration sees a differently-numbered instruction rather than a
-    -- differently-shaped event.
-    --
-    -- Effect.Draw is the only funnel that raises it, which is CR 121.2a's own
-    -- scope: rule 121.1's other two roads are the draw step's turn-based action
-    -- and CR 103.5's opening hand. The first draws one card, which is no
-    -- instruction to draw multiple; the second runs before any replacement effect
-    -- can exist, so the two readings are indistinguishable there.
-    WouldDrawCards PlayerId.PlayerId Natural.Natural
-  | -- | CR 701.17a \/ 614.1a: a player would be instructed to mill this many
-    -- cards. Raised by Pawl.Engine.Event.millFrom, the one funnel every mill in
-    -- the engine goes through -- Resolve's Effect.Mill arm, a MillCards cost
-    -- component and dredge's replacement alike, since rule 701.17a makes all
-    -- three a mill and Bruvac the Grandiloquent's clause names none of them.
-    --
-    -- The count is the number the instruction NAMES, never the library's size,
-    -- WouldDrawCards' currency and for its reason: a row resizing it leaves CR
-    -- 616.2's next iteration a differently-numbered instruction, and CR 701.17b's
-    -- "as many as possible" is then read off the resized count when the cards are
-    -- taken.
-    --
-    -- ONE event for the whole instruction, where a draw of several cards raises
-    -- WouldDraw per card as well: rule 701.17a puts them into the graveyard at
-    -- once, so there is no individual mill for an inner event to be about.
-    WouldMillCards PlayerId.PlayerId Natural.Natural
-  | -- | CR 705.1 / 614.1a: this player would flip a coin, and this many coins
-    -- would be flipped to settle it. Raised by Pawl.Engine.Event.flipOneCoin,
-    -- the one funnel every flip in the engine goes through -- Effect.FlipCoin's
-    -- coins and the flip an EntryRewrite.ChoiceByCoinFlip makes as a permanent
-    -- enters.
-    --
-    -- ONE flip carrying a COUNT of coins, not a count of flips: rule 705.1's
-    -- flip has ONE result, and Krark's Thumb's own ruling scopes its replacement
-    -- to "each individual coin flip" rather than to an instruction's set of them
-    -- ("if an effect tells you to flip two coins, you don't flip four coins and
-    -- ignore any two"). So a row that resizes this field leaves one flip whose
-    -- result the flipper picks out of more coins, and an instruction flipping
-    -- five raises this event five times.
-    --
-    -- The PlayerId is CR 705.2's flipper, the only seat rule 705.2's last
-    -- sentence leaves involved.
-    WouldFlipCoin PlayerId.PlayerId Natural.Natural
+    -- The count is the number the instruction NAMES, never a library's size or a
+    -- hand's, so a row that resizes it answers in the same currency and CR
+    -- 616.2's next iteration sees a differently-numbered instruction rather than
+    -- a differently-shaped event.
+    WouldPerform PlayerInstruction.PlayerInstruction PlayerId.PlayerId Natural.Natural
   | -- | CR 706.1 / 614.1a: this player would be instructed to roll this many
     -- dice, with this many of the lowest rolls ignored (CR 706.6). Raised by
     -- Pawl.Engine.Event.proposeDiceRoll, the one funnel every roll in the engine
@@ -244,7 +203,7 @@ data ProposedEvent
     -- and CR 703.4g's roll to visit, since no cost rolls.
     --
     -- ONE event for the whole INSTRUCTION, where a flip of several coins raises
-    -- WouldFlipCoin per coin: Pixie Guide's sentence is scoped to the
+    -- WouldPerform's FlipCoin per coin: Pixie Guide's sentence is scoped to the
     -- instruction ("if you would roll ONE OR MORE dice, instead roll THAT MANY
     -- dice plus one"), where Krark's Thumb's own ruling scopes the coin
     -- replacement to each individual flip. So a row that resizes this event
@@ -255,21 +214,6 @@ data ProposedEvent
     -- rule 706.1's "one or more" is not met, so there is no event for a row to
     -- replace.
     WouldRollDice DiceRoll.DiceRoll
-  | -- | CR 701.34a / 614.1a: this player would proliferate this many times, each
-    -- its own choice of permanents and players. Raised once per proliferate
-    -- instruction by Pawl.Engine.Resolve.Effect's Proliferate arm.
-    WouldProliferate PlayerId.PlayerId Natural.Natural
-  | -- | CR 701.22a / 614.1a: this player would scry this many cards. Raised by
-    -- Pawl.Engine.Resolve.Effect's Scry arm for a positive count only, CR
-    -- 701.22b's scry 0 being no scry event.
-    WouldScry PlayerId.PlayerId Natural.Natural
-  | -- | CR 701.55a / 701.55c: this player would face a villainous choice this many
-    -- times. Raised once per facing seat by Pawl.Engine.Resolve.villainousPass.
-    WouldFaceVillainousChoice PlayerId.PlayerId Natural.Natural
-  | -- | The Unstable FAQ: this player would assemble this many Contraptions, the
-    -- permanent assembling them named where one is (a Rigger's "it assembles").
-    -- Raised once per instruction by Pawl.Engine.Contraption.assemble.
-    WouldAssemble (Maybe ObjectId.ObjectId) PlayerId.PlayerId Natural.Natural
   | -- | CR 104.3 / 614.1a: this player would lose the game, for every reason
     -- at once. Raised by Pawl.Engine.Departure.leaveTogether, the one funnel
     -- every loss goes through; a concession (CR 104.3a) is not one.

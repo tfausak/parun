@@ -34,6 +34,7 @@ import qualified Pawl.Types.PermanentActed as PermanentActed
 import qualified Pawl.Types.PermanentAction as PermanentAction
 import qualified Pawl.Types.Player as Player
 import Pawl.Types.PlayerId (PlayerId)
+import qualified Pawl.Types.PlayerInstruction as PlayerInstruction
 import qualified Pawl.Types.ProjectedCharacteristics as PC
 import qualified Pawl.Types.Prompt as Prompt
 import qualified Pawl.Types.ProposedEvent as ProposedEvent
@@ -44,12 +45,12 @@ import qualified Pawl.Types.Subtype as Subtype
 -- which Steamflogger Boss's row reads -- reveals the top card of their
 -- Contraption deck and puts it face up onto one of their sprockets, chosen for
 -- each Contraption apart ("you choose individually for each one"). Proposed
--- first as WouldAssemble, so a row can change how many. An empty deck
+-- first as an instruction (WouldPerform), so a row can change how many. An empty deck
 -- assembles nothing and loses nobody the game.
 assemble :: Maybe ObjectId -> PlayerId -> Game ()
 assemble assembler pid = do
-  outcome <- Event.applyReplacements (ProposedEvent.WouldAssemble assembler pid 1)
-  Monad.forM_ (outcome >>= Replacement.asAssemble) $ \(_, assembling, times) ->
+  outcome <- Event.applyReplacements (ProposedEvent.WouldPerform (PlayerInstruction.Assemble assembler) pid 1)
+  Monad.forM_ (outcome >>= Replacement.asPerformed (PlayerInstruction.Assemble assembler)) $ \(assembling, times) ->
     Monad.replicateM_ (Natural.toIntSaturating times) (assembleOne assembling)
 
 -- One Contraption: onto the battlefield first, then onto the sprocket its

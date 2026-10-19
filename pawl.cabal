@@ -2727,6 +2727,7 @@ library types
     Pawl.Types.PlayerDrawsNthCard
     Pawl.Types.PlayerEffect
     Pawl.Types.PlayerId
+    Pawl.Types.PlayerInstruction
     Pawl.Types.PlayerMeasure
     Pawl.Types.PlayerQuantity
     Pawl.Types.PlayerRef

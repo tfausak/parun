@@ -41,6 +41,7 @@ import qualified Pawl.Types.Face as Face
 import Pawl.Types.Game (Game)
 import qualified Pawl.Types.Layout as Layout
 import Pawl.Types.PlayerId (PlayerId)
+import qualified Pawl.Types.PlayerInstruction as PlayerInstruction
 import qualified Pawl.Types.Power as Power
 import qualified Pawl.Types.Prompt as Prompt
 import qualified Pawl.Types.ProposedEvent as ProposedEvent
@@ -152,8 +153,8 @@ recruit :: PlayerId -> Game ()
 recruit pid = do
   -- CR 121.2a: the one-card draw is one replaceable instruction, Effect.Draw's
   -- arm line for line.
-  outcome <- Event.applyReplacements (ProposedEvent.WouldDrawCards pid 1)
-  Monad.forM_ (outcome >>= Replacement.asDrawCount) $ \(drawer, settled) ->
+  outcome <- Event.applyReplacements (ProposedEvent.WouldPerform PlayerInstruction.DrawCards pid 1)
+  Monad.forM_ (outcome >>= Replacement.asPerformed PlayerInstruction.DrawCards) $ \(drawer, settled) ->
     Monad.replicateM_ (Natural.toIntSaturating settled) (Event.drawCard drawer)
   drawn <- State.get
   let held = Game.zoneMembers Zone.Hand pid drawn
