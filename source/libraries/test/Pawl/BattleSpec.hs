@@ -205,7 +205,7 @@ repairSpec s registry = Spec.describe s "Repair" $ do
     -- performStateBasedActions' own answer, which is the value that loop reads;
     -- nothing else about the repair is visible to it.
     let gone = S.departs Departure.Type.Conceded S.carol entered
-        (acted, _) = S.runPureWith S.identityAnswer gone (Sba.performStateBasedActions S.insteadOfLoss)
+        (acted, _) = S.runPureWith S.identityAnswer gone (Sba.performStateBasedActions S.insteadOfLoss [])
     Spec.assertBool s acted "the pass reports the repair"
 
 -- CR 310.5: battles can be attacked, and everything that follows from WHOM they
@@ -361,7 +361,7 @@ defeatSpec s registry = Spec.describe s "Defeat" $ do
     -- that the case below shows the RIDER and not the clause doing the holding.
     (entered, battle) <- castInvasionThreeSeated s registry (protectTo S.carol)
     let drained = drain battle entered
-    Spec.assertEqWith s "it is named" (Battle.defeated (Projection.projectAll drained) (Event.triggeredSources drained) drained) [battle]
+    Spec.assertEqWith s "it is named" (Battle.defeated (Projection.projectAll drained) (Event.triggeredSources [] drained) drained) [battle]
   Spec.it s "CR 704.3 and the pass that buries it reports that an action was performed" $ do
     -- CR 704.3: the check repeats while a state-based action was performed, so a
     -- pass whose only action is a defeat must SAY it acted -- otherwise
@@ -370,7 +370,7 @@ defeatSpec s registry = Spec.describe s "Defeat" $ do
     -- assertion is what says the defeat is the only thing this pass does.
     (entered, battle) <- castInvasionThreeSeated s registry (protectTo S.carol)
     let drained = drain battle entered
-        (acted, after) = S.runPureWith S.identityAnswer drained (Sba.performStateBasedActions S.insteadOfLoss)
+        (acted, after) = S.runPureWith S.identityAnswer drained (Sba.performStateBasedActions S.insteadOfLoss [])
     Spec.assertBool s acted "the pass reports the defeat"
     Spec.assertBool s (not (S.onBattlefield battle after)) "and the battle has left the battlefield"
   Spec.it s "CR 704.5v and is NOT while its defeat ability is still owed a resolution" $ do
@@ -380,7 +380,7 @@ defeatSpec s registry = Spec.describe s "Defeat" $ do
     -- hypothetical, and it is the whole reason the Siege above reaches exile.
     (entered, battle) <- castInvasionThreeSeated s registry (protectTo S.carol)
     let removed = removal battle (drain battle entered)
-        owing = Event.triggeredSources removed
+        owing = Event.triggeredSources [] removed
     Spec.assertBool s (Battle.awaitingAbility owing removed battle) "the ability has triggered"
     Spec.assertEqWith s "so nothing is buried" (Battle.defeated (Projection.projectAll removed) owing removed) []
   Spec.it s "CR 704.5w a NON-Siege battle at defense 0 is buried anyway" $ do
@@ -397,7 +397,7 @@ defeatSpec s registry = Spec.describe s "Defeat" $ do
     -- the board coherent -- 704.5w's world is one where no defeat ability is owed.
     (entered, battle) <- castInvasionThreeSeated s registry (protectTo S.carol)
     let removed = removal battle (drain battle entered)
-        owing = Event.triggeredSources removed
+        owing = Event.triggeredSources [] removed
         pcs = Map.adjust (\pc -> pc {PC.subtypes = Set.empty}) battle (Projection.projectAll removed)
     Spec.assertBool s (Battle.awaitingAbility owing removed battle) "an ability has still triggered"
     Spec.assertEqWith s "and CR 704.5w exempts nothing" (Battle.defeated pcs owing removed) [battle]
@@ -421,7 +421,7 @@ castAt battle caster spell gs =
 -- the battle is owed, and CR 704.5v holds the battle for it too.
 drain :: ObjectId.ObjectId -> GameState.GameState -> GameState.GameState
 drain oid gs =
-  let entered = S.runPure S.identityAnswer gs (Engine.placePendingTriggers >> Stack.resolveTop)
+  let entered = S.runPure S.identityAnswer gs (Engine.placePendingTriggers [] >> Stack.resolveTop)
       empty obj = obj {Object.counters = Map.insert CounterKind.Defense 0 (Object.counters obj)}
    in entered {GameState.objects = Map.adjust empty oid (GameState.objects entered)}
 

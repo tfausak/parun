@@ -199,7 +199,7 @@ spec s registry = Spec.describe s "Pawl.Engine.Departure" $ do
             { GameState.result = Just Result.Drawn,
               GameState.players = Map.adjust dying S.alice (GameState.players (Setup.emptyGame S.bothPlayers))
             }
-        after = S.runPure S.identityAnswer gs (Sba.performStateBasedActions S.insteadOfLoss)
+        after = S.runPure S.identityAnswer gs (Sba.performStateBasedActions S.insteadOfLoss [])
     Spec.assertEqWith s "the decided draw stands" (GameState.result after) (Just Result.Drawn)
     Spec.assertEqWith s "alice still left the game (CR 704.5a is unaffected)" (statusOf S.alice after) (Just (Status.Departed Departure.Type.Lost))
 
@@ -990,7 +990,7 @@ spec s registry = Spec.describe s "Pawl.Engine.Departure" $ do
         board = controlled {GameState.players = Map.adjust dying S.alice (Map.adjust dying S.dave (GameState.players controlled))}
         -- bob takes Reclamation's library row, anyone else Diversion's.
         wanted pid = if pid == S.bob then reclamationId else diversionId
-        (asked, after) = replacementRace wanted board (Sba.performStateBasedActions S.insteadOfLoss)
+        (asked, after) = replacementRace wanted board (Sba.performStateBasedActions S.insteadOfLoss [])
     Spec.assertEqWith s "dave controls bob's Island by CR 110.2a alone" (Projection.controllerOf islandId board) (Just S.dave)
     Spec.assertEqWith s "CR 800.4h bob, past alice, chose Reclamation's row: the Island is in bob's library" (fmap (Object.zone . snd) (soleObjectOf island after)) (Just Zone.Library)
     Spec.assertEqWith s "and bob was the only seat asked" asked [S.bob]

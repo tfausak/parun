@@ -100,7 +100,7 @@ arrested :: Printing.Printing -> Printing.Printing -> (ObjectId.ObjectId, Object
 arrested arrester printing =
   let (victim, control, g2) = twins printing
       (_, g3) = S.entersWithTrigger arrester S.alice g2
-      placed = S.runPure (detainAt victim) g3 Engine.placePendingTriggers
+      placed = S.runPure (detainAt victim) g3 (Engine.placePendingTriggers [])
    in (victim, control, S.runPure (detainAt victim) placed Stack.resolveTop)
 
 -- Bob attacking alice, mid-declaration. Stated rather than run, exactly as

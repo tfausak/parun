@@ -225,7 +225,7 @@ bossSpec s registry = Spec.describe s "Steamflogger Boss" $ do
               riggerGone = do
                 S.cast S.alice spellId
                 Monad.void Stack.resolveTop
-                Monad.void Engine.placePendingTriggers
+                Monad.void (Engine.placePendingTriggers [])
                 g <- State.get
                 Monad.forM_ (filter (\oid -> Projection.namesOf oid g == Set.singleton (CardName.MkCardName (Text.pack "Wrench-Rigger"))) (Set.toList (GameState.battlefield g))) $ \oid ->
                   Event.changeZone oid Zone.Graveyard

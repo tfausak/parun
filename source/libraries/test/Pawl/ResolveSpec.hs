@@ -2838,7 +2838,7 @@ brassHeraldSpec s registry =
         (heraldId, g5) = S.entersWithTrigger herald S.alice g4
         resolved chosen =
           let chose = g5 {GameState.objects = Map.adjust (\o -> o {Object.chosenSubtype = Map.singleton Acquisition.Own chosen}) heraldId (GameState.objects g5)}
-              placed = S.runPure S.identityAnswer chose Engine.placePendingTriggers
+              placed = S.runPure S.identityAnswer chose (Engine.placePendingTriggers [])
            in S.runPure S.identityAnswer placed Stack.resolveTop
         top g = Seq.lookup 0 =<< Map.lookup S.alice (GameState.library g)
         goblins = resolved Subtype.Goblin

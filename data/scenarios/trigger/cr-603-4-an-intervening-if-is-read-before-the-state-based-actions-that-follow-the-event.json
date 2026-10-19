@@ -1,0 +1,167 @@
+{
+  "description": "CR 603.4 an intervening if true as Moonlit Scavengers enters triggers although a state-based action then makes it false",
+  "note": "Rise of the Dark Realms puts Moonlit Scavengers and Nyxborn Rollicker onto the battlefield at once, so alice controls an enchantment as the Scavengers enters. Bob's Curse of Death's Hold makes the Rollicker 0/0, and the settle's first state-based action check buries it (CR 704.5f) before triggers are placed (CR 704.3). The ability triggered anyway: it goes on the stack targeting bob's Aurelia's Vindicator, whose ward triggers in turn (CR 702.21a). Read at placement instead, the Scavengers never triggers and the stack is empty.",
+  "board": {
+    "seats": [
+      {
+        "name": "alice",
+        "battlefield": [
+          {
+            "card": "Swamp",
+            "label": "swamp1",
+            "ready": true
+          },
+          {
+            "card": "Swamp",
+            "label": "swamp2",
+            "ready": true
+          },
+          {
+            "card": "Swamp",
+            "label": "swamp3",
+            "ready": true
+          },
+          {
+            "card": "Swamp",
+            "label": "swamp4",
+            "ready": true
+          },
+          {
+            "card": "Swamp",
+            "label": "swamp5",
+            "ready": true
+          },
+          {
+            "card": "Swamp",
+            "label": "swamp6",
+            "ready": true
+          },
+          {
+            "card": "Swamp",
+            "label": "swamp7",
+            "ready": true
+          },
+          {
+            "card": "Swamp",
+            "label": "swamp8",
+            "ready": true
+          },
+          {
+            "card": "Swamp",
+            "label": "swamp9",
+            "ready": true
+          }
+        ],
+        "hand": [
+          {
+            "card": "Rise of the Dark Realms",
+            "label": "rise"
+          }
+        ],
+        "graveyard": [
+          {
+            "card": "Moonlit Scavengers"
+          },
+          {
+            "card": "Nyxborn Rollicker"
+          }
+        ]
+      },
+      {
+        "name": "bob",
+        "battlefield": [
+          {
+            "card": "Curse of Death's Hold",
+            "label": "curse",
+            "attached": "alice"
+          },
+          {
+            "card": "Aurelia's Vindicator",
+            "label": "vindicator"
+          }
+        ]
+      }
+    ],
+    "active": "alice",
+    "step": "PrecombatMain"
+  },
+  "timeline": [
+    {
+      "turn": 1,
+      "step": "PrecombatMain",
+      "player": "alice",
+      "do": {
+        "Cast": {
+          "object": "$rise",
+          "mana": [
+            "$swamp1",
+            "$swamp2",
+            "$swamp3",
+            "$swamp4",
+            "$swamp5",
+            "$swamp6",
+            "$swamp7",
+            "$swamp8",
+            "$swamp9"
+          ]
+        }
+      }
+    },
+    {
+      "turn": 1,
+      "step": "PrecombatMain",
+      "player": "alice",
+      "do": "Pass"
+    },
+    {
+      "turn": 1,
+      "step": "PrecombatMain",
+      "player": "alice",
+      "do": {
+        "OrderTimestamps": [
+          "Moonlit Scavengers",
+          "Nyxborn Rollicker"
+        ]
+      }
+    },
+    {
+      "turn": 1,
+      "step": "PrecombatMain",
+      "player": "alice",
+      "do": {
+        "ChooseTargets": {
+          "creature": [
+            "$vindicator"
+          ]
+        }
+      }
+    },
+    {
+      "turn": 1,
+      "step": "PrecombatMain",
+      "player": "alice",
+      "check": {
+        "View": {
+          "of": "Stack",
+          "is": [
+            "trigger of $vindicator",
+            "trigger of Moonlit Scavengers"
+          ]
+        }
+      }
+    },
+    {
+      "turn": 1,
+      "step": "PrecombatMain",
+      "player": "alice",
+      "check": {
+        "Count": {
+          "player": "alice",
+          "zone": "Graveyard",
+          "card": "Nyxborn Rollicker",
+          "count": 1
+        }
+      }
+    }
+  ]
+}

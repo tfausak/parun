@@ -643,7 +643,7 @@ burningTreeResolved :: Printing.Printing -> PlayerId.PlayerId -> (ObjectId.Objec
 burningTreeResolved bte pid =
   let (base, handId) = S.handOne bte (Setup.emptyGame S.bothPlayers)
       (_, entered) = S.entersWithTrigger bte pid base
-      placed = snd (Engine.runGamePure S.identityAnswer entered Engine.placePendingTriggers)
+      placed = snd (Engine.runGamePure S.identityAnswer entered (Engine.placePendingTriggers []))
    in (handId, snd (Engine.runGamePure S.identityAnswer placed Stack.resolveTop))
 
 -- One green mana with no production tags, plainRed's twin: what the Emissary's
@@ -691,7 +691,7 @@ stadiumVendorsSpec s registry =
       arranged vendors piker =
         let (base, pikerId) = S.handOne piker S.threePlayerGame
             (_, entered) = S.entersWithTrigger vendors S.alice base
-         in (pikerId, snd (Engine.runGamePure S.identityAnswer entered Engine.placePendingTriggers))
+         in (pikerId, snd (Engine.runGamePure S.identityAnswer entered (Engine.placePendingTriggers [])))
       resolved who (pikerId, placed) =
         let ((_, after), offer) = State.runState (Engine.runGame (answering who) placed Stack.resolveTop) []
          in (pikerId, after, offer)
@@ -797,7 +797,7 @@ shizukoUpkeep shizuko upkeep =
         S.withEvents
           [GameEvent.StepBegan (StepBegan.MkStepBegan (Phase.Beginning BeginningStep.Upkeep) upkeep)]
           board {GameState.activePlayer = upkeep, GameState.phase = Phase.Beginning BeginningStep.Upkeep}
-      placed = snd (Engine.runGamePure S.identityAnswer began Engine.placePendingTriggers)
+      placed = snd (Engine.runGamePure S.identityAnswer began (Engine.placePendingTriggers []))
    in snd (Engine.runGamePure S.identityAnswer placed Stack.resolveTop)
 
 -- CR 307.1 / 117.1a: carol active with priority in her own precombat main phase,
@@ -1325,7 +1325,7 @@ pyromancersGogglesSpec s registry = Spec.describe s "Pyromancer's Goggles" $ do
         castOff printing sources =
           let (cardId, inHand) = S.addHandCard printing S.alice board
               cast_ = S.runPure (gogglesAnswer sources) inHand (S.cast S.alice cardId)
-           in drained (gogglesAnswer sources) (S.runPure (gogglesAnswer sources) cast_ Engine.placePendingTriggers)
+           in drained (gogglesAnswer sources) (S.runPure (gogglesAnswer sources) cast_ (Engine.placePendingTriggers []))
         boltedByGoggles = castOff bolt [gogglesId]
         boltedByMountain = castOff bolt [mountainId]
         pikerByGoggles = castOff piker [gogglesId, mountainId]
@@ -1340,7 +1340,7 @@ drained :: (forall r. Prompt.Prompt r -> r) -> GameState.GameState -> GameState.
 drained answer =
   let go fuel gs
         | fuel <= 0 || null (GameState.stack gs) = gs
-        | otherwise = go (fuel - 1 :: Int) (S.runPure answer (S.runPure answer gs Stack.resolveTop) Engine.placePendingTriggers)
+        | otherwise = go (fuel - 1 :: Int) (S.runPure answer (S.runPure answer gs Stack.resolveTop) (Engine.placePendingTriggers []))
    in go 10
 
 -- `tapsOnly`, with every target slot answered with bob, so a Bolt and its copy
@@ -1509,7 +1509,7 @@ quirionPlaced :: Printing.Printing -> Printing.Printing -> (ObjectId.ObjectId, G
 quirionPlaced quirion spy =
   let (base, spyId) = S.handOne spy (Setup.emptyGame S.bothPlayers)
       (_, entered) = S.entersWithTrigger quirion S.alice base
-   in (spyId, snd (Engine.runGamePure S.identityAnswer entered Engine.placePendingTriggers))
+   in (spyId, snd (Engine.runGamePure S.identityAnswer entered (Engine.placePendingTriggers [])))
 
 -- That board with the trigger resolved, every Prompt.ChooseManaType answered
 -- `manaType`.
