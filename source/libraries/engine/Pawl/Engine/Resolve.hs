@@ -59,7 +59,6 @@ import qualified Pawl.Types.GrantedAbility as GrantedAbility
 import qualified Pawl.Types.IfTaken as IfTaken
 import qualified Pawl.Types.Keyword as Keyword
 import qualified Pawl.Types.ManaAddition as ManaAddition
-import qualified Pawl.Types.ManaSpending as ManaSpending
 import qualified Pawl.Types.Mode as Mode
 import Pawl.Types.ModeIndex (ModeIndex)
 import Pawl.Types.ModeInstance (ModeInstance)
@@ -73,7 +72,6 @@ import qualified Pawl.Types.OrElse as OrElse
 import qualified Pawl.Types.PayBranch as PayBranch
 import qualified Pawl.Types.PayGate as PayGate
 import qualified Pawl.Types.PayObligation as PayObligation
-import qualified Pawl.Types.PermissionVerb as PermissionVerb
 import qualified Pawl.Types.PlayPermissionOrigin as PlayPermissionOrigin
 import qualified Pawl.Types.PlayerChoice as PlayerChoice
 import qualified Pawl.Types.PlayerEffect as PlayerEffect
@@ -89,7 +87,6 @@ import qualified Pawl.Types.Recipient as Recipient
 import Pawl.Types.Result (Result)
 import Pawl.Types.SlotName (SlotName)
 import qualified Pawl.Types.Source as Source
-import qualified Pawl.Types.TapState as TapState
 import qualified Pawl.Types.WhenSpent as WhenSpent
 import qualified Pawl.Types.Zone as Zone
 
@@ -735,25 +732,14 @@ finishSpell oid face controller = do
     -- 400.7 -- leaving exile mints a new incarnation, and newIncarnation clears
     -- the field.
     permission newId =
-      ExilePlayPermission.MkExilePlayPermission
-        { ExilePlayPermission.player = controller,
-          ExilePlayPermission.source = newId,
-          ExilePlayPermission.expiry = Expiry.Type.Never,
-          -- CR 715.3d says nothing about mana, in either sense: neither
-          -- CR 118.14's rider nor CR 118.9a's alternative cost, so the Adventure
-          -- half is cast for its printed cost.
-          ExilePlayPermission.spending = ManaSpending.AsProduced,
-          ExilePlayPermission.alternativeCost = Nothing,
-          ExilePlayPermission.condition = Nothing,
-          -- This IS rule 715.3d's permission, and so the one its next sentence
+      -- CR 715.3d says nothing about mana, in either sense: neither CR
+      -- 118.14's rider nor CR 118.9a's alternative cost, so the Adventure half
+      -- is cast for its printed cost. Its "that player may play it" counts no
+      -- plays.
+      (ExilePlayPermission.defaultValue controller newId)
+        { -- This IS rule 715.3d's permission, and so the one its next sentence
           -- excludes the Adventure half from.
-          ExilePlayPermission.origin = PlayPermissionOrigin.Adventure,
-          -- CR 715.3d: "that player may play it".
-          ExilePlayPermission.verb = PermissionVerb.Play,
-          ExilePlayPermission.increase = 0,
-          ExilePlayPermission.landEnters = TapState.Untapped,
-          -- CR 715.3d's "may play it" counts no plays.
-          ExilePlayPermission.budget = Nothing
+          ExilePlayPermission.origin = PlayPermissionOrigin.Adventure
         }
 
 -- The no-subgame spell resolver (Stack's default path and every direct caller).

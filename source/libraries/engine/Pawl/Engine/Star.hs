@@ -103,10 +103,8 @@ substituteStar star quantity = case quantity of
   Quantity.AgainstSlot {} -> quantity
   -- No descent, the Count arm's reason again: the payload is read against the
   -- exiled card, where a star would be THAT card's box and not this one's.
-  Quantity.AgainstCardsExiledWith {} -> quantity
+  Quantity.AgainstExiledPile {} -> quantity
   Quantity.AgainstLastCardExiledWith {} -> quantity
-  -- CR 702.167c: AgainstCardsExiledWith's answer, over the craft link alone.
-  Quantity.AgainstCraftMaterials {} -> quantity
 
 -- Does a printed box hold CR 208.2's star anywhere inside it? A calculation
 -- descends for substituteStar's reason: *+1 is a star box, and the star is what
@@ -123,7 +121,7 @@ containsStar :: Quantity -> Bool
 containsStar quantity = case quantity of
   Quantity.Star -> True
   Quantity.Arithmetic arithmetic -> any containsStar arithmetic
-  -- No descent into a Count, nor into AgainstSlot or AgainstCardsExiledWith:
+  -- No descent into a Count, nor into AgainstSlot or AgainstExiledPile:
   -- CR 208.2a's star is a printed box's own symbol, and each of those three
   -- reads its payload against ANOTHER object, where a star would be that
   -- object's box and not this one's.

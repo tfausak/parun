@@ -3,20 +3,30 @@
     {
       "characteristicPT": {
         "power": {
-          "type": "AgainstCardsExiledWith",
+          "type": "AgainstExiledPile",
           "value": {
-            "type": "Measure",
-            "value": {
-              "type": "ManaValue"
+            "pile": {
+              "type": "OwnAbilities"
+            },
+            "quantity": {
+              "type": "Measure",
+              "value": {
+                "type": "ManaValue"
+              }
             }
           }
         },
         "toughness": {
-          "type": "AgainstCardsExiledWith",
+          "type": "AgainstExiledPile",
           "value": {
-            "type": "Measure",
-            "value": {
-              "type": "ManaValue"
+            "pile": {
+              "type": "OwnAbilities"
+            },
+            "quantity": {
+              "type": "Measure",
+              "value": {
+                "type": "ManaValue"
+              }
             }
           }
         }
@@ -96,7 +106,12 @@
                             "withoutPayingManaCost": true
                           },
                           "ref": {
-                            "type": "EachCardExiledWithSource"
+                            "type": "EachCardInExiledPile",
+                            "value": {
+                              "pile": {
+                                "type": "OwnAbilities"
+                              }
+                            }
                           }
                         }
                       }

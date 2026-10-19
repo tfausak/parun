@@ -1311,7 +1311,7 @@ fortifyingDraughtSpec s registry = Spec.describe s "Fortifying Draught" $ do
 -- creature card's power and Y is its toughness."
 --
 -- CR 607.2a is what makes the second ability find the first one's card, and
--- Quantity.AgainstCardsExiledWith is the read: a STATIC ability (CR 604.1) has no
+-- Quantity.AgainstExiledPile is the read: a STATIC ability (CR 604.1) has no
 -- resolution and so no slot for Quantity.AgainstSlot to aim at, which is what
 -- separates this card from Bioplasm above. The number is recomputed at every
 -- projection rather than frozen (CR 613.4c layer 7c, applied by

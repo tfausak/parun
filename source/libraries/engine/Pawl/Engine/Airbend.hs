@@ -30,12 +30,10 @@ import Pawl.Types.Effect (Effect)
 import qualified Pawl.Types.Effect as Effect
 import qualified Pawl.Types.EntryRiders as EntryRiders
 import qualified Pawl.Types.ExilePlayPermission as ExilePlayPermission
-import qualified Pawl.Types.Expiry as Expiry
 import qualified Pawl.Types.GameState as GameState
 import qualified Pawl.Types.GrantedAbility as GrantedAbility
 import qualified Pawl.Types.LibraryPlacement as LibraryPlacement
 import qualified Pawl.Types.ManaCost as ManaCost
-import qualified Pawl.Types.ManaSpending as ManaSpending
 import qualified Pawl.Types.ManaSymbol as ManaSymbol
 import qualified Pawl.Types.MoveToZone as MoveToZone
 import qualified Pawl.Types.Object as Object
@@ -43,10 +41,8 @@ import Pawl.Types.ObjectId (ObjectId)
 import qualified Pawl.Types.ObjectRef as ObjectRef
 import qualified Pawl.Types.PermissionCost as PermissionCost
 import qualified Pawl.Types.PermissionVerb as PermissionVerb
-import qualified Pawl.Types.PlayPermissionOrigin as PlayPermissionOrigin
 import Pawl.Types.PlayerId (PlayerId)
 import qualified Pawl.Types.Source as Source
-import qualified Pawl.Types.TapState as TapState
 import qualified Pawl.Types.Zone as Zone
 
 -- | CR 701.65a's first sentence: "that player exiles those objects". Handed to
@@ -93,19 +89,10 @@ exile ref =
 -- the {2} is paid with mana as produced.
 permission :: ObjectId -> PlayerId -> ExilePlayPermission.ExilePlayPermission
 permission source owner =
-  ExilePlayPermission.MkExilePlayPermission
-    { ExilePlayPermission.player = owner,
-      ExilePlayPermission.source = source,
-      ExilePlayPermission.expiry = Expiry.Never,
-      ExilePlayPermission.spending = ManaSpending.AsProduced,
-      ExilePlayPermission.alternativeCost = Just (PermissionCost.InsteadOfManaCost (ManaCost.MkManaCost [ManaSymbol.Generic 2])),
-      ExilePlayPermission.condition = Nothing,
-      ExilePlayPermission.origin = PlayPermissionOrigin.Granted,
+  (ExilePlayPermission.defaultValue owner source)
+    { ExilePlayPermission.alternativeCost = Just (PermissionCost.InsteadOfManaCost (ManaCost.MkManaCost [ManaSymbol.Generic 2])),
       -- CR 701.65a: "may cast it".
-      ExilePlayPermission.verb = PermissionVerb.Cast,
-      ExilePlayPermission.increase = 0,
-      ExilePlayPermission.landEnters = TapState.Untapped,
-      ExilePlayPermission.budget = Nothing
+      ExilePlayPermission.verb = PermissionVerb.Cast
     }
 
 -- | CR 701.65a's "for each CARD exiled this way": stamp 'permission' onto one

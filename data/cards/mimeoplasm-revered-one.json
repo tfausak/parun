@@ -64,7 +64,7 @@
                         {
                           "type": "IsExiledWithSource",
                           "value": {
-                            "type": "ExiledAsItEntered"
+                            "type": "AsItEntered"
                           }
                         }
                       ]

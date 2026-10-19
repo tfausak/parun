@@ -5,6 +5,7 @@ import qualified Data.Text as Text
 import qualified Pawl.Codec.Quantity as Quantity
 import qualified Pawl.JsonCodec.Common as Common
 import qualified Pawl.Spec as Spec
+import qualified Pawl.Types.AgainstExiledPile as AgainstExiledPile
 import qualified Pawl.Types.AgainstLastCardExiledWith as AgainstLastCardExiledWith
 import qualified Pawl.Types.AgainstSlot as AgainstSlot
 import qualified Pawl.Types.Aggregation as Aggregation
@@ -21,6 +22,7 @@ import qualified Pawl.Types.DamageKind as DamageKind
 import qualified Pawl.Types.Designation as Designation
 import qualified Pawl.Types.Devotion as Devotion
 import qualified Pawl.Types.DistinctOf as DistinctOf
+import qualified Pawl.Types.ExiledPile as ExiledPile
 import qualified Pawl.Types.Filter as Filter
 import qualified Pawl.Types.Halved as Halved
 import qualified Pawl.Types.InZone as InZone
@@ -790,21 +792,21 @@ spec s = Spec.describe s "Pawl.Codec.Quantity" $ do
       Quantity.codec
       (Quantity.Arithmetic (Arithmetic.Plus (Plus.MkPlus (Quantity.Literal 1) (Quantity.AgainstSlot (AgainstSlot.MkAgainstSlot slot (Quantity.ObjectCounters CounterKind.PlusOnePlusOne))))))
       " {\"type\":\"Plus\",\"value\":{\"left\":{\"type\":\"Literal\",\"value\":1},\"right\":{\"type\":\"AgainstSlot\",\"value\":{\"slot\":\"creature\",\"quantity\":{\"type\":\"ObjectCounters\",\"value\":{\"type\":\"PlusOnePlusOne\"}}}}}} "
-  -- No slot to carry, so the payload IS the wire value. Nested once for
+  -- A pile, then what to read off each card in it. Nested once for
   -- AgainstSlot's reason -- a recursive decoder is where a payload gets lost --
-  -- and over the toughness half of CR 607.2a's read, so the two assertions
-  -- cannot agree by accident.
-  Spec.it s "AgainstCardsExiledWith, bare and nested" $ do
+  -- and over another pile and the toughness half of CR 607.2a's read, so the
+  -- two assertions cannot agree by accident.
+  Spec.it s "AgainstExiledPile, bare and nested" $ do
     Common.assertCodec
       s
       Quantity.codec
-      (Quantity.AgainstCardsExiledWith (Quantity.Measure Measure.Power))
-      " {\"type\":\"AgainstCardsExiledWith\",\"value\":{\"type\":\"Measure\",\"value\":{\"type\":\"Power\"}}} "
+      (Quantity.AgainstExiledPile (AgainstExiledPile.MkAgainstExiledPile ExiledPile.OwnAbilities (Quantity.Measure Measure.Power)))
+      " {\"type\":\"AgainstExiledPile\",\"value\":{\"pile\":{\"type\":\"OwnAbilities\"},\"quantity\":{\"type\":\"Measure\",\"value\":{\"type\":\"Power\"}}}} "
     Common.assertCodec
       s
       Quantity.codec
-      (Quantity.Arithmetic (Arithmetic.Plus (Plus.MkPlus (Quantity.Literal 1) (Quantity.AgainstCardsExiledWith (Quantity.Measure Measure.Toughness)))))
-      " {\"type\":\"Plus\",\"value\":{\"left\":{\"type\":\"Literal\",\"value\":1},\"right\":{\"type\":\"AgainstCardsExiledWith\",\"value\":{\"type\":\"Measure\",\"value\":{\"type\":\"Toughness\"}}}}} "
+      (Quantity.Arithmetic (Arithmetic.Plus (Plus.MkPlus (Quantity.Literal 1) (Quantity.AgainstExiledPile (AgainstExiledPile.MkAgainstExiledPile ExiledPile.CraftMaterials (Quantity.Measure Measure.Toughness))))))
+      " {\"type\":\"Plus\",\"value\":{\"left\":{\"type\":\"Literal\",\"value\":1},\"right\":{\"type\":\"AgainstExiledPile\",\"value\":{\"pile\":{\"type\":\"CraftMaterials\"},\"quantity\":{\"type\":\"Measure\",\"value\":{\"type\":\"Toughness\"}}}}}} "
   -- CR 607.2a / 613.7d (Duplicant): the filter picking the card, then what to
   -- read off it.
   Spec.it s "AgainstLastCardExiledWith" $
@@ -813,13 +815,6 @@ spec s = Spec.describe s "Pawl.Codec.Quantity" $ do
       Quantity.codec
       (Quantity.AgainstLastCardExiledWith (AgainstLastCardExiledWith.MkAgainstLastCardExiledWith (Filter.HasCardType CardType.Creature) (Quantity.Measure Measure.Toughness)))
       " {\"type\":\"AgainstLastCardExiledWith\",\"value\":{\"filter\":{\"type\":\"HasCardType\",\"value\":{\"type\":\"Creature\"}},\"quantity\":{\"type\":\"Measure\",\"value\":{\"type\":\"Toughness\"}}}} "
-  -- CR 702.167c: the arm above's shape, over the craft materials alone.
-  Spec.it s "AgainstCraftMaterials" $
-    Common.assertCodec
-      s
-      Quantity.codec
-      (Quantity.AgainstCraftMaterials (Quantity.Measure Measure.Power))
-      " {\"type\":\"AgainstCraftMaterials\",\"value\":{\"type\":\"Measure\",\"value\":{\"type\":\"Power\"}}} "
   -- CR 107.1a's direction and the value it applies to, in that order. Nested
   -- once for AgainstSlot's reason -- a recursive decoder is where a payload gets
   -- lost -- and over a Count, which is the shape both producers print.

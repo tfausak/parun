@@ -727,7 +727,7 @@ castExtractPower s registry = do
 -- producer.
 --
 -- The ability printed under it is Effect.OfferCast over
--- ObjectRef.EachCardExiledWithSource -- CR 607.2a's linked set -- under a
+-- ObjectRef.EachCardInExiledPile -- CR 607.2a's linked set -- under a
 -- Clause.condition comparing Quantity.AttackersDeclaredThisTurn against 3,
 -- under PermissionVerb.Play so a hidden land is offered as CR 305.2a's land play.
 --

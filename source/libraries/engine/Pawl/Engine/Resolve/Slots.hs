@@ -109,6 +109,7 @@ import qualified Pawl.Types.DrawRewrite as DrawRewrite
 import qualified Pawl.Types.Duration as Duration
 import qualified Pawl.Types.DurationEvent as DurationEvent
 import qualified Pawl.Types.EachCardFromAmong as EachCardFromAmong
+import qualified Pawl.Types.EachCardInExiledPile as EachCardInExiledPile
 import qualified Pawl.Types.EachCardInGraveyard as EachCardInGraveyard
 import qualified Pawl.Types.EachCardInHand as EachCardInHand
 import qualified Pawl.Types.Earthbend as Earthbend
@@ -130,7 +131,6 @@ import qualified Pawl.Types.ExchangeZones as ExchangeZones
 import qualified Pawl.Types.ExchangedValue as ExchangedValue
 import qualified Pawl.Types.ExileFromGraveyard as ExileFromGraveyard
 import qualified Pawl.Types.ExileHaunting as ExileHaunting
-import qualified Pawl.Types.ExileLink as ExileLink
 import qualified Pawl.Types.Face as Face
 import qualified Pawl.Types.Fight as Fight
 import qualified Pawl.Types.Filter as Filter.Type
@@ -493,8 +493,7 @@ objectRefSlots ref = joinTwo (joinSlots (fmap playerRefSlots (objectRefPlayerRef
   ObjectRef.EachCardInYourLibrary _ -> Map.empty
   -- The arm above's answer: the owner is CR 109.5's "you".
   ObjectRef.EachCardYouOwn _ -> Map.empty
-  ObjectRef.EachCardExiledWithSource {} -> Map.empty
-  ObjectRef.EachCardExiledWithAbility _ -> Map.empty
+  ObjectRef.EachCardInExiledPile _ -> Map.empty
   ObjectRef.EachCardEncodedOnSource {} -> Map.empty
   ObjectRef.EachSpell _ -> Map.empty
   ObjectRef.EachAbility _ -> Map.empty
@@ -576,8 +575,7 @@ objectRefQuantities ref = case ref of
   ObjectRef.EachCardInHand (EachCardInHand.MkEachCardInHand _ _) -> []
   ObjectRef.EachCardInYourLibrary _ -> []
   ObjectRef.EachCardYouOwn _ -> []
-  ObjectRef.EachCardExiledWithSource _ -> []
-  ObjectRef.EachCardExiledWithAbility _ -> []
+  ObjectRef.EachCardInExiledPile _ -> []
   ObjectRef.EachCardEncodedOnSource _ -> []
   ObjectRef.EachSpell _ -> []
   ObjectRef.EachAbility _ -> []
@@ -635,8 +633,7 @@ objectRefPlayerRefs ref = case ref of
   ObjectRef.EachCardInHand (EachCardInHand.MkEachCardInHand _ _) -> []
   ObjectRef.EachCardInYourLibrary _ -> []
   ObjectRef.EachCardYouOwn _ -> []
-  ObjectRef.EachCardExiledWithSource _ -> []
-  ObjectRef.EachCardExiledWithAbility _ -> []
+  ObjectRef.EachCardInExiledPile _ -> []
   ObjectRef.EachCardEncodedOnSource _ -> []
   ObjectRef.EachSpell _ -> []
   ObjectRef.EachAbility _ -> []
@@ -3037,13 +3034,11 @@ objectRefObjects legal resolving controller source gs ref = case ref of
         viewOf = Projection.viewsOf gs
         owned oid obj = Object.owner obj == controller && Game.isCardObject oid gs && Filter.matches context (viewOf oid) filter_
      in Map.keys (Map.filterWithKey owned (GameState.objects gs))
-  -- CR 607.2a's linked set: the cards GameState.exiledWith files against this
-  -- effect's SOURCE. The relation, not a zone sweep, is the membership test, so a
-  -- card exiled by a second copy of the same printing is not named; a stated
-  -- Filter then narrows it. `source` and not `resolving`, since rule 607.2a links
-  -- two abilities of one OBJECT and for a dies trigger the two ids differ. Read
-  -- off GameState.exile directly because CR 400.1 makes exile one SHARED zone --
-  -- no player to ask, and no APNAP sort, so ascending id and thus arrival order.
+  -- CR 607.2a's linked set: the cards Game.linkedPile files against this
+  -- effect's SOURCE, which a stated Filter then narrows. `source` and not
+  -- `resolving`, since rule 607.2a links two abilities of one OBJECT and for a
+  -- dies trigger the two ids differ. CR 400.1 makes exile one SHARED zone -- no
+  -- player to ask, and no APNAP sort, so ascending id and thus arrival order.
   --
   -- Only what the exiling abilities paired with the RESOLVING one exiled
   -- (Binding.isLinkedExile): a printed reader skips what an ability acquired
@@ -3056,25 +3051,18 @@ objectRefObjects legal resolving controller source gs ref = case ref of
   -- names the slot that instruction bound instead -- Hanweir Battlements' "exile
   -- them, then meld them into Hanweir, the Writhing Township" is that printing,
   -- and its Meld reads an InSlot.
-  ObjectRef.EachCardExiledWithSource mFilter ->
+  --
+  -- A NAMED pile is the cards that one ability exiled: CR 607.2a links the
+  -- reference to it, so another exiling ability of the same object is not
+  -- read. Pawl.ResolveSpec's "CR 607.2a Synthetic Split Reliquary returns only
+  -- what its warden ability exiled" is what proves it.
+  ObjectRef.EachCardInExiledPile (EachCardInExiledPile.MkEachCardInExiledPile pile mFilter) ->
     let context = effectContext gs resolving controller source legal (slotBindings resolving gs)
         viewOf = Projection.viewsOf gs
         stated oid = case mFilter of
           Nothing -> True
           Just filter_ -> Filter.matches context (viewOf oid) filter_
-     in filter
-          (\oid -> maybe False (Binding.isLinkedExile (resolvingAbilityName resolving gs) source) (Map.lookup oid (GameState.exiledWith gs)) && stated oid)
-          (Set.toList (GameState.exile gs))
-  -- The arm above's relation, narrowed to the cards the NAMED ability exiled:
-  -- CR 607.2a links the reference to that one ability, so another exiling
-  -- ability of the same object is not read. Pawl.ResolveSpec's "CR 607.2a
-  -- Synthetic Split Reliquary returns only what its warden ability exiled" is
-  -- what proves it.
-  ObjectRef.EachCardExiledWithAbility name ->
-    let linked = ExileLink.MkExileLink {ExileLink.source = source, ExileLink.ability = Just name}
-     in filter
-          (\oid -> Map.lookup oid (GameState.exiledWith gs) == Just linked)
-          (Set.toList (GameState.exile gs))
+     in filter stated (Game.linkedPile (resolvingAbilityName resolving gs) pile source gs)
   -- CR 702.99b's relation, the arm above's shape over GameState.encoded. Keyed
   -- on the source's id alone, so a trigger whose creature has since left still
   -- finds the card; no Gatherer ruling on cipher covers that case.

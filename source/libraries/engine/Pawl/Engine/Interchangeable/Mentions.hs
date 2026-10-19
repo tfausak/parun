@@ -32,6 +32,7 @@ import qualified Pawl.Types.Affected as Affected
 import qualified Pawl.Types.AffectedPlayers as AffectedPlayers
 import qualified Pawl.Types.AffectedUnless as AffectedUnless
 import qualified Pawl.Types.AfterObjectTurn as AfterObjectTurn
+import qualified Pawl.Types.AgainstExiledPile as AgainstExiledPile
 import qualified Pawl.Types.AgainstLastCardExiledWith as AgainstLastCardExiledWith
 import qualified Pawl.Types.AgainstSlot as AgainstSlot
 import qualified Pawl.Types.Aggregation as Aggregation
@@ -161,6 +162,7 @@ import qualified Pawl.Types.DungeonRoom as DungeonRoom
 import qualified Pawl.Types.Duration as Duration
 import qualified Pawl.Types.DurationEvent as DurationEvent
 import qualified Pawl.Types.EachCardFromAmong as EachCardFromAmong
+import qualified Pawl.Types.EachCardInExiledPile as EachCardInExiledPile
 import qualified Pawl.Types.EachCardInGraveyard as EachCardInGraveyard
 import qualified Pawl.Types.EachCardInHand as EachCardInHand
 import qualified Pawl.Types.Earthbend as Earthbend
@@ -479,6 +481,7 @@ filterNames asking criterion = case criterion of
   Filter.HasChosenColor -> False
   Filter.HasChosenSubtype -> False
   Filter.IsExiledWithSource _ -> False
+  Filter.IsLastExiledWithSource -> False
   Filter.OfChosenPlayer -> False
   Filter.OfRelatedPlayer _ -> False
   Filter.IsPlayer _relation -> False
@@ -2078,8 +2081,7 @@ objectRefNames asking x = case x of
   ObjectRef.EachCardInHand eachCardInHand -> eachCardInHandNames asking eachCardInHand
   ObjectRef.EachCardInYourLibrary filter_ -> any (filterNames asking) filter_
   ObjectRef.EachCardYouOwn filter_ -> filterNames asking filter_
-  ObjectRef.EachCardExiledWithSource filter_ -> any (filterNames asking) filter_
-  ObjectRef.EachCardExiledWithAbility _abilityName -> False
+  ObjectRef.EachCardInExiledPile (EachCardInExiledPile.MkEachCardInExiledPile _pile filter_) -> any (filterNames asking) filter_
   ObjectRef.EachCardEncodedOnSource filter_ -> any (filterNames asking) filter_
   ObjectRef.EachSpell filter_ -> filterNames asking filter_
   ObjectRef.EachAbility filter_ -> filterNames asking filter_
@@ -2458,9 +2460,8 @@ quantityNames asking x = case x of
   Quantity.WasCastFrom castFrom -> castFromNames asking castFrom
   Quantity.BlockersBeyondFirst -> False
   Quantity.AgainstSlot againstSlot -> againstSlotNames asking (quantityNames asking) againstSlot
-  Quantity.AgainstCardsExiledWith quantity -> quantityNames asking quantity
+  Quantity.AgainstExiledPile (AgainstExiledPile.MkAgainstExiledPile _pile quantity) -> quantityNames asking quantity
   Quantity.AgainstLastCardExiledWith againstLastCardExiledWith -> againstLastCardExiledWithNames asking (quantityNames asking) againstLastCardExiledWith
-  Quantity.AgainstCraftMaterials quantity -> quantityNames asking quantity
   Quantity.StationMeasure -> False
 
 randomCardInGraveyardNames :: Asking -> RandomCardInGraveyard.RandomCardInGraveyard -> Bool
