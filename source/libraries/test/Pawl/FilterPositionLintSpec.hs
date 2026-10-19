@@ -1951,9 +1951,20 @@ filterPositionLintSpec s registry = Spec.describe s "Lint" $ do
     let offenders = filter (anyFace ((/= 0) . snd . otherCandidateCounts) . Printing.card) ps
     Spec.assertEqWith s "the operand sits only in an edict's filter" (fmap (S.nameOf . Printing.card) offenders) []
     -- NOT vacuous: these author it, and are accepted.
-    let authors = ["Crackling Doom", "Soul Shatter", "Break Under Pressure", "Witch-king, Bringer of Ruin"]
+    let authors =
+          [ "Break Under Pressure",
+            "Consumed by Greed",
+            "Crackling Doom",
+            "Extract a Confession",
+            "Flare of Malice",
+            "Myrkul's Edict",
+            "Riveteers Charm",
+            "Soul Shatter",
+            "Witch-king, Bringer of Ruin"
+          ]
     counted <- traverse (\name -> fmap (\p -> (name, otherCandidateCounts (S.combinedFace p))) (S.printingOf s registry name)) authors
     Spec.assertEqWith s "each author's one operand is in its edict" counted (fmap (\name -> (name, (1, 0))) authors)
+    Spec.assertEqWith s "and they are the pool's only ones" (sum (fmap (uncurry (+) . otherCandidateCounts . S.combinedFace) ps)) (length authors)
     -- The rejected side: the same atom in a target slot's filter.
     piker <- S.printingOf s registry "Goblin Piker"
     let atom = Filter.Type.And [Filter.Type.HasCardType CardType.Creature, Filter.Type.Measures (Measures.MkMeasures Measure.Power Comparison.AtLeast (Operand.OfEachOtherCandidate Measure.Power))]
