@@ -3,6 +3,7 @@
 module Pawl.Play.Render where
 
 import qualified Data.Char as Char
+import qualified Data.Foldable as Foldable
 import qualified Data.List as List
 import qualified Data.Map.Strict as Map
 import qualified Data.Maybe as Maybe
@@ -12,21 +13,39 @@ import Numeric.Natural (Natural)
 import qualified Pawl.Codec.GameEvent as Codec.GameEvent
 import qualified Pawl.Codec.Reply as Codec.Reply
 import qualified Pawl.JsonCodec.Codec as Codec
+import qualified Pawl.Types.AttackTarget as AttackTarget
+import qualified Pawl.Types.AttackerDeclared as AttackerDeclared
+import qualified Pawl.Types.BecameBlocking as BecameBlocking
 import qualified Pawl.Types.BeginningStep as BeginningStep
 import qualified Pawl.Types.CardName as CardName
 import qualified Pawl.Types.CombatStep as CombatStep
+import qualified Pawl.Types.Countering as Countering
+import qualified Pawl.Types.DamageEvent as DamageEvent
+import qualified Pawl.Types.Discarded as Discarded
+import qualified Pawl.Types.Drew as Drew
 import qualified Pawl.Types.EndingStep as EndingStep
+import qualified Pawl.Types.GameEvent as GameEvent
+import qualified Pawl.Types.LandPlayed as LandPlayed
+import qualified Pawl.Types.LifeChange as LifeChange
 import qualified Pawl.Types.LoggedEvent as LoggedEvent
+import qualified Pawl.Types.Looked as Looked
+import qualified Pawl.Types.Milled as Milled
+import qualified Pawl.Types.Moved as Moved
 import qualified Pawl.Types.ObjectId as ObjectId
 import qualified Pawl.Types.ObjectView as ObjectView
 import qualified Pawl.Types.Phase as Phase
 import qualified Pawl.Types.PlayerId as PlayerId
 import qualified Pawl.Types.PlayerView as PlayerView
 import qualified Pawl.Types.ProjectedCharacteristics as ProjectedCharacteristics
+import qualified Pawl.Types.Recipient as Recipient
 import qualified Pawl.Types.Reply as R
 import qualified Pawl.Types.Result as Result
+import qualified Pawl.Types.Revealed as Revealed
 import qualified Pawl.Types.SeatView as SeatView
+import qualified Pawl.Types.SpellWasCast as SpellWasCast
 import qualified Pawl.Types.TapState as TapState
+import qualified Pawl.Types.Zone as Zone
+import qualified Pawl.Types.ZoneChange as ZoneChange
 
 -- | Seats are numbered from one on screen.
 player :: PlayerId.PlayerId -> Text.Text
@@ -108,17 +127,119 @@ objects view =
       <> PlayerView.stack view
       <> concatMap (\s -> SeatView.hand s <> SeatView.library s <> SeatView.graveyard s <> SeatView.exile s) (PlayerView.seats view)
 
--- | An object by id, named as the view shows it.
+-- | An object by id, named as the view shows it, or else as the last witnessed
+-- move of it showed it, so one that has since left still has a name.
 named :: PlayerView.PlayerView -> ObjectId.ObjectId -> Text.Text
-named view oid = maybe (Text.pack ("object " <> show (ObjectId.unwrap oid))) nameOf (Map.lookup oid (objects view))
+named view oid = case Map.lookup oid (objects view) of
+  Just o -> nameOf o
+  Nothing -> maybe (Text.pack ("object " <> show (ObjectId.unwrap oid))) snapshotName (Map.lookup oid (snapshots view))
 
--- | A witnessed event, by its kind.
---
--- Not implemented: the cards, players and amounts an event names (#5229).
-event :: LoggedEvent.LoggedEvent -> Text.Text
-event logged = case Codec.Reply.fromValue (Codec.encode Codec.GameEvent.codec (LoggedEvent.event logged)) of
+-- | What each witnessed move showed the object it moved as, by
+-- either end's id, the latest winning.
+snapshots :: PlayerView.PlayerView -> Map.Map ObjectId.ObjectId ProjectedCharacteristics.ProjectedCharacteristics
+snapshots view =
+  Map.fromList
+    [ (oid, Moved.characteristics m)
+    | GameEvent.Moved m <- fmap LoggedEvent.event (PlayerView.witnessed view),
+      oid <- ZoneChange.departed (Moved.change m) : Foldable.toList (Moved.arrivals m)
+    ]
+
+-- | CR 708.2a: a face-down object has no name.
+snapshotName :: ProjectedCharacteristics.ProjectedCharacteristics -> Text.Text
+snapshotName c = case Set.toList (ProjectedCharacteristics.names c) of
+  [] -> Text.pack "a face-down card"
+  names -> Text.intercalate (Text.pack " // ") (fmap CardName.unwrap names)
+
+-- | A witnessed entry as a sentence naming its cards, players and amounts, or
+-- nothing for the bookkeeping a seat can read off the board (a step, a tap,
+-- mana, a trigger) or another entry already tells (a cast's, land play's,
+-- discard's or mill's move, a block's per-attacker records).
+event :: PlayerView.PlayerView -> LoggedEvent.LoggedEvent -> Maybe Text.Text
+event view logged = case LoggedEvent.event logged of
+  GameEvent.SpellCast c -> said [player (SpellWasCast.player c), Text.pack "casts", snapshotName (SpellWasCast.characteristics c)]
+  GameEvent.LandPlayed l -> said [player (LandPlayed.player l), Text.pack "plays", name (LandPlayed.land l)]
+  GameEvent.AttackerDeclared a -> said [name (AttackerDeclared.attacker a), Text.pack "attacks", attacked (AttackerDeclared.target a)]
+  GameEvent.BecameBlocking b -> said [name (BecameBlocking.blocker b), Text.pack "blocks", name (BecameBlocking.attacker b)]
+  GameEvent.DamageDealt d -> said [name (DamageEvent.source d), Text.pack "deals", Text.pack (show (DamageEvent.amount d)), Text.pack "damage to", recipient (DamageEvent.target d)]
+  GameEvent.LifeLost l -> said [player (LifeChange.player l), Text.pack "loses", Text.pack (show (LifeChange.amount l)), Text.pack "life"]
+  GameEvent.LifeGained l -> said [player (LifeChange.player l), Text.pack "gains", Text.pack (show (LifeChange.amount l)), Text.pack "life"]
+  GameEvent.Moved m
+    | any (`Set.member` told view) (Moved.arrivals m) -> Nothing
+    | to == Zone.Graveyard -> said [snapshotName (Moved.characteristics m), Text.pack "is put into a graveyard from", zone from]
+    | otherwise -> said [snapshotName (Moved.characteristics m), Text.pack "moves from", zone from, Text.pack "to", zone to]
+    where
+      from = ZoneChange.from (Moved.change m)
+      to = ZoneChange.to (Moved.change m)
+  GameEvent.Discarded d -> said [player (Discarded.player d), Text.pack "discards", name (Discarded.card d)]
+  GameEvent.Milled m -> said [player (Milled.player m), Text.pack "mills", Text.intercalate (Text.pack ", ") (fmap name (Foldable.toList (Milled.cards m)))]
+  GameEvent.Drew d -> said [player (Drew.player d), Text.pack "draws a card"]
+  GameEvent.Revealed r -> said [player (Revealed.player r), Text.pack "reveals", snapshotName (Revealed.characteristics r)]
+  GameEvent.Looked l -> said [Text.pack "Looked at", snapshotName (Looked.characteristics l)]
+  GameEvent.SpellCountered c -> said [name (Countering.countered c), Text.pack "is countered"]
+  GameEvent.StepBegan {} -> Nothing
+  GameEvent.CardArrived {} -> Nothing
+  GameEvent.AttackersDeclared {} -> Nothing
+  GameEvent.BecameAttacked {} -> Nothing
+  GameEvent.AttackerBlocked {} -> Nothing
+  GameEvent.AttackerUnblocked {} -> Nothing
+  GameEvent.BlocksDeclared {} -> Nothing
+  GameEvent.BecameTapped {} -> Nothing
+  GameEvent.BecameUntapped {} -> Nothing
+  GameEvent.TappedForMana {} -> Nothing
+  GameEvent.ManaAdded {} -> Nothing
+  GameEvent.ManaAbilityResolved {} -> Nothing
+  GameEvent.AbilityTriggered {} -> Nothing
+  GameEvent.ActivatedAbilityResolved {} -> Nothing
+  GameEvent.TriggeredAbilityResolved {} -> Nothing
+  GameEvent.BecameTarget {} -> Nothing
+  GameEvent.PermanentActed {} -> Nothing
+  GameEvent.PlayerActed {} -> Nothing
+  other -> Just (kindOf other)
+  where
+    name = named view
+    said parts = Just (Text.unwords parts <> Text.pack ".")
+    attacked target = case target of
+      AttackTarget.OfPlayer pid -> player pid
+      AttackTarget.OfPlaneswalker oid -> name oid
+      AttackTarget.OfBattle oid -> name oid
+    recipient r = case r of
+      Recipient.ToPlayer pid -> player pid
+      Recipient.ToCreature oid -> name oid
+      Recipient.ToPlaneswalker oid -> name oid
+      Recipient.ToBattle oid -> name oid
+      Recipient.ToObject oid -> name oid
+      Recipient.ToPile _ -> Text.pack "a pile"
+
+-- | The objects whose arrival another witnessed entry already tells: a spell
+-- cast, a land played, a card discarded or milled. Only the move that made
+-- one is told; a later move of it is not.
+told :: PlayerView.PlayerView -> Set.Set ObjectId.ObjectId
+told view =
+  Set.fromList . concatMap (telling . LoggedEvent.event) $ PlayerView.witnessed view
+  where
+    telling e = case e of
+      GameEvent.SpellCast c -> [SpellWasCast.spell c]
+      GameEvent.LandPlayed l -> [LandPlayed.land l]
+      GameEvent.Discarded d -> [Discarded.card d]
+      GameEvent.Milled m -> Foldable.toList (Milled.cards m)
+      _ -> []
+
+-- | An entry by its kind: "SpellCast" as "spell cast".
+kindOf :: GameEvent.GameEvent -> Text.Text
+kindOf e = case Codec.Reply.fromValue (Codec.encode Codec.GameEvent.codec e) of
   Right (R.Object pairs) | Just (R.Text kind) <- List.lookup (Text.pack "type") pairs -> spaced kind
   _ -> Text.pack "something happened"
+
+zone :: Zone.Zone -> Text.Text
+zone z = Text.pack $ case z of
+  Zone.Library -> "a library"
+  Zone.Hand -> "a hand"
+  Zone.Graveyard -> "a graveyard"
+  Zone.Battlefield -> "the battlefield"
+  Zone.Stack -> "the stack"
+  Zone.Exile -> "exile"
+  Zone.Command -> "the command zone"
+  Zone.Ante -> "the ante"
 
 result :: Result.Result -> Text.Text
 result r = case r of
