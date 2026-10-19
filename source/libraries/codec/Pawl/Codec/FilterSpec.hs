@@ -16,7 +16,7 @@ import qualified Pawl.Types.CounterKind as CounterKind
 import qualified Pawl.Types.DamagedParty as DamagedParty
 import qualified Pawl.Types.DealtDamageTo as DealtDamageTo
 import qualified Pawl.Types.Designation as Designation
-import qualified Pawl.Types.ExiledWith as ExiledWith
+import qualified Pawl.Types.ExiledPile as ExiledPile
 import qualified Pawl.Types.Expansion as Expansion
 import qualified Pawl.Types.Filter as Filter
 import qualified Pawl.Types.Keyword as Keyword
@@ -295,8 +295,14 @@ spec s = Spec.describe s "Pawl.Codec.Filter" $ do
     Common.assertCodec
       s
       codec
-      (Filter.IsExiledWithSource ExiledWith.LastExiled)
-      " {\"type\":\"IsExiledWithSource\",\"value\":{\"type\":\"LastExiled\"}} "
+      (Filter.IsExiledWithSource ExiledPile.AsItEntered)
+      " {\"type\":\"IsExiledWithSource\",\"value\":{\"type\":\"AsItEntered\"}} "
+  Spec.it s "IsLastExiledWithSource" $
+    Common.assertCodec
+      s
+      codec
+      Filter.IsLastExiledWithSource
+      " {\"type\":\"IsLastExiledWithSource\"} "
   Spec.it s "OfChosenPlayer" $
     Common.assertCodec
       s

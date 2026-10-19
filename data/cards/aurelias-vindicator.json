@@ -156,7 +156,12 @@
                         "type": "MoveToZone",
                         "value": {
                           "ref": {
-                            "type": "EachCardExiledWithSource"
+                            "type": "EachCardInExiledPile",
+                            "value": {
+                              "pile": {
+                                "type": "OwnAbilities"
+                              }
+                            }
                           },
                           "zone": {
                             "type": "Hand"

@@ -50,10 +50,15 @@
                 }
               },
               "perEach": {
-                "type": "AgainstCardsExiledWith",
+                "type": "AgainstExiledPile",
                 "value": {
-                  "type": "Literal",
-                  "value": 1
+                  "pile": {
+                    "type": "OwnAbilities"
+                  },
+                  "quantity": {
+                    "type": "Literal",
+                    "value": 1
+                  }
                 }
               },
               "subject": {

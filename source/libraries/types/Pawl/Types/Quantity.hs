@@ -1,6 +1,7 @@
 module Pawl.Types.Quantity where
 
 import qualified Data.Text as Text
+import qualified Pawl.Types.AgainstExiledPile as AgainstExiledPile
 import qualified Pawl.Types.AgainstLastCardExiledWith as AgainstLastCardExiledWith
 import qualified Pawl.Types.AgainstSlot as AgainstSlot
 import qualified Pawl.Types.Arithmetic as Arithmetic
@@ -33,7 +34,7 @@ import qualified Pawl.Types.VotesReceived as VotesReceived
 -- Arms that name no object (Measure, ObjectCounters, HasDesignation, ...) read
 -- the object the evaluation is aimed at, most of them through the injected
 -- view, which is what lets CR 608.2h last known information answer for an
--- object that is gone; AgainstSlot and AgainstCardsExiledWith are how a card
+-- object that is gone; AgainstSlot and AgainstExiledPile are how a card
 -- aims them elsewhere.
 data Quantity
   = Literal Integer
@@ -333,17 +334,13 @@ data Quantity
   | -- | Read the inner quantity against the object that slot names rather than
     -- the effect's source (CR 113.7); Nothing when the slot names no object.
     AgainstSlot (AgainstSlot.AgainstSlot Quantity)
-  | -- | CR 607.2a / 614.14: the inner quantity read against each card this
-    -- quantity's source exiled, summed (CR 607.3); an empty pile reads 0.
-    AgainstCardsExiledWith Quantity
+  | -- | CR 607.2a: the inner quantity read against each card in one of this
+    -- quantity's source's linked piles, summed (CR 607.3); an empty pile reads 0.
+    AgainstExiledPile (AgainstExiledPile.AgainstExiledPile Quantity)
   | -- | CR 607.2a / 613.7d: the inner quantity read against the card this
     -- quantity's source exiled LAST among those the filter matches (Duplicant);
     -- Nothing when none does.
     AgainstLastCardExiledWith (AgainstLastCardExiledWith.AgainstLastCardExiledWith Quantity)
-  | -- | CR 702.167c: the inner quantity read against each exiled card used to
-    -- craft this quantity's source, summed; AgainstCardsExiledWith narrowed to
-    -- the craft link (Mastercraft Raptor).
-    AgainstCraftMaterials Quantity
   | -- | CR 702.184c: the tapped creature's power, or its toughness where that is
     -- greater and the ability's controller controls a permanent carrying
     -- Modification.GrantsStationToughness. Engine-only, a leaf like Measure:

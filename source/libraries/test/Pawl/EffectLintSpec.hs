@@ -544,10 +544,8 @@ printedBoxQuantity quantity = case quantity of
   Quantity.Type.AgainstSlot {} -> False
   -- AgainstSlot's answer: CR 607.2a's linked pile is read off the board, which
   -- a printed box (CR 208.2) cannot name.
-  Quantity.Type.AgainstCardsExiledWith {} -> False
+  Quantity.Type.AgainstExiledPile {} -> False
   Quantity.Type.AgainstLastCardExiledWith {} -> False
-  -- CR 702.167c: AgainstCardsExiledWith's answer, over the craft link alone.
-  Quantity.Type.AgainstCraftMaterials {} -> False
 
 -- Does this face print a power or toughness box CR 208.1/208.2 could not print?
 --
@@ -1301,8 +1299,7 @@ questionOf ref = case ref of
   ObjectRef.EachCardInHand {} -> Nothing
   ObjectRef.EachCardInYourLibrary {} -> Nothing
   ObjectRef.EachCardYouOwn _ -> Nothing
-  ObjectRef.EachCardExiledWithSource {} -> Nothing
-  ObjectRef.EachCardExiledWithAbility _ -> Nothing
+  ObjectRef.EachCardInExiledPile _ -> Nothing
   ObjectRef.EachCardEncodedOnSource {} -> Nothing
   ObjectRef.EachSpell {} -> Nothing
   ObjectRef.EachAbility {} -> Nothing
@@ -1941,8 +1938,7 @@ effectLintSpec s registry = Spec.describe s "Lint" $ do
           -- CR 607.3 is what makes this one plural even where the card's own
           -- words are singular: an ability referring to "the exiled card" whose
           -- linked ability exiled several performs its action on each of them.
-          ObjectRef.EachCardExiledWithSource {} -> False
-          ObjectRef.EachCardExiledWithAbility _ -> False
+          ObjectRef.EachCardInExiledPile _ -> False
           ObjectRef.EachCardEncodedOnSource {} -> False
           ObjectRef.EachSpell _ -> False
           ObjectRef.EachAbility _ -> False

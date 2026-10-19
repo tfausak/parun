@@ -130,7 +130,12 @@
                         "type": "MoveToZone",
                         "value": {
                           "ref": {
-                            "type": "EachCardExiledWithSource"
+                            "type": "EachCardInExiledPile",
+                            "value": {
+                              "pile": {
+                                "type": "OwnAbilities"
+                              }
+                            }
                           },
                           "riders": {
                             "underOwner": true

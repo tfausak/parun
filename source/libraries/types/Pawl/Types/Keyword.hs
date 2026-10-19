@@ -370,7 +370,7 @@ data Keyword
     -- "another" and "you control" are the rule's own and are written into the
     -- entry ability, Affinity's split. Rule 702.72b links the pair through the
     -- exile pile (CR 607.2k), which is why the return names
-    -- ObjectRef.EachCardExiledWithSource rather than a slot of its own.
+    -- ObjectRef.EachCardInExiledPile rather than a slot of its own.
     --
     -- Not implemented: CR 702.72c's "championed by", which no trigger can watch
     -- -- Mistbind Clique's "When a Faerie is championed with this creature"

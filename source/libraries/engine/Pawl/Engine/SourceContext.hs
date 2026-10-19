@@ -1,7 +1,7 @@
 -- CR 607.2d / 109.5: the Filter.Context a source's OWN ability is matched in,
 -- with every answer the board gives about that source filled in one place --
 -- its host (CR 303.4b), its owner (CR 108.3), what it put onto the battlefield
--- (CR 400.7) and every choice it made as it entered (CR 614.1c) or while
+-- (CR 400.7), what it exiled (CR 607.2a) and every choice it made as it entered (CR 614.1c) or while
 -- resolving (CR 608.2c) -- so no position can fill one and forget another.
 --
 -- Not the source's power, toughness, mana value, colours or names: those are
@@ -18,6 +18,7 @@ import qualified Pawl.Engine.Filter as Filter
 import qualified Pawl.Engine.Game as Game
 import qualified Pawl.Types.Acquisition as Acquisition
 import qualified Pawl.Types.Chosen as Chosen
+import qualified Pawl.Types.ExileLink as ExileLink
 import qualified Pawl.Types.GameState as GameState
 import qualified Pawl.Types.Object as Object
 import qualified Pawl.Types.ObjectId as ObjectId
@@ -50,7 +51,9 @@ framedWith choices source gs context =
       -- CR 108.3 fixes an owner when the game starts, so a live read; a source
       -- the state no longer holds answers Nothing.
       Filter.sourceOwner = fmap Object.owner (Game.lookupObject source gs),
-      Filter.sourceEntrants = Map.keysSet (Map.filter (== source) (GameState.enteredWith gs))
+      Filter.sourceEntrants = Map.keysSet (Map.filter (== source) (GameState.enteredWith gs)),
+      -- CR 607.2a: the cards in exile now (CR 400.7) linked to the source.
+      Filter.sourceExiled = Map.filter ((== source) . ExileLink.source) (Map.restrictKeys (GameState.exiledWith gs) (GameState.exile gs))
     }
 
 -- | The choices `source`'s abilities acquired as `acquisition` have made so

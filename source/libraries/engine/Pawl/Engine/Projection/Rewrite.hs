@@ -22,6 +22,7 @@ import qualified Pawl.Types.ActivationRestriction as ActivationRestriction
 import qualified Pawl.Types.AffectPlayers as AffectPlayers
 import qualified Pawl.Types.Affected as Affected
 import qualified Pawl.Types.AffectedUnless as AffectedUnless
+import qualified Pawl.Types.AgainstExiledPile as AgainstExiledPile
 import qualified Pawl.Types.AgainstLastCardExiledWith as AgainstLastCardExiledWith
 import qualified Pawl.Types.AgainstSlot as AgainstSlot
 import qualified Pawl.Types.Aggregation as Aggregation
@@ -112,6 +113,7 @@ import qualified Pawl.Types.DrawRewrite as DrawRewrite
 import qualified Pawl.Types.Duration as Duration
 import qualified Pawl.Types.DurationEvent as DurationEvent
 import qualified Pawl.Types.EachCardFromAmong as EachCardFromAmong
+import qualified Pawl.Types.EachCardInExiledPile as EachCardInExiledPile
 import qualified Pawl.Types.EachCardInGraveyard as EachCardInGraveyard
 import qualified Pawl.Types.EachCardInHand as EachCardInHand
 import qualified Pawl.Types.Earthbend as Earthbend
@@ -1158,8 +1160,7 @@ rewriteObjectRef pairs ref = case ref of
   -- the text of, so dropping the rewrite here leaves the suite green.
   ObjectRef.EachCardInYourLibrary f -> ObjectRef.EachCardInYourLibrary (fmap (Filter.rewrite pairs) f)
   ObjectRef.EachCardYouOwn f -> ObjectRef.EachCardYouOwn (Filter.rewrite pairs f)
-  ObjectRef.EachCardExiledWithSource f -> ObjectRef.EachCardExiledWithSource (fmap (Filter.rewrite pairs) f)
-  ObjectRef.EachCardExiledWithAbility name -> ObjectRef.EachCardExiledWithAbility name
+  ObjectRef.EachCardInExiledPile e -> ObjectRef.EachCardInExiledPile e {EachCardInExiledPile.filter = fmap (Filter.rewrite pairs) (EachCardInExiledPile.filter e)}
   ObjectRef.EachCardEncodedOnSource f -> ObjectRef.EachCardEncodedOnSource (fmap (Filter.rewrite pairs) f)
   ObjectRef.EachSpell f -> ObjectRef.EachSpell (Filter.rewrite pairs f)
   ObjectRef.EachAbility f -> ObjectRef.EachAbility (Filter.rewrite pairs f)
@@ -2308,11 +2309,9 @@ rewriteQuantity pairs quantity = case quantity of
   -- Not a leaf: the payload is a whole Quantity and may hide a Count.
   Quantity.Type.AgainstSlot (AgainstSlot.MkAgainstSlot slot inner) -> Quantity.Type.AgainstSlot (AgainstSlot.MkAgainstSlot slot (rewriteQuantity pairs inner))
   -- AgainstSlot's answer: not a leaf, and the payload may hide a Count.
-  Quantity.Type.AgainstCardsExiledWith inner -> Quantity.Type.AgainstCardsExiledWith (rewriteQuantity pairs inner)
+  Quantity.Type.AgainstExiledPile a -> Quantity.Type.AgainstExiledPile a {AgainstExiledPile.quantity = rewriteQuantity pairs (AgainstExiledPile.quantity a)}
   -- And its filter, which may carry a creature type ("the last Goblin card").
   Quantity.Type.AgainstLastCardExiledWith (AgainstLastCardExiledWith.MkAgainstLastCardExiledWith criterion inner) -> Quantity.Type.AgainstLastCardExiledWith (AgainstLastCardExiledWith.MkAgainstLastCardExiledWith (Filter.rewrite pairs criterion) (rewriteQuantity pairs inner))
-  -- CR 702.167c: AgainstCardsExiledWith's answer, over the craft link alone.
-  Quantity.Type.AgainstCraftMaterials inner -> Quantity.Type.AgainstCraftMaterials (rewriteQuantity pairs inner)
 
 -- CR 612.1 over a damage clause: the recipient's ref, and the amount CR 120.1
 -- has that recipient dealt.

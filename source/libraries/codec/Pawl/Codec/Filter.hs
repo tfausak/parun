@@ -9,7 +9,7 @@ import qualified Pawl.Codec.Color as Color
 import qualified Pawl.Codec.CounterKind as CounterKind
 import qualified Pawl.Codec.DealtDamageTo as DealtDamageTo
 import qualified Pawl.Codec.Designation as Designation
-import qualified Pawl.Codec.ExiledWith as ExiledWith
+import qualified Pawl.Codec.ExiledPile as ExiledPile
 import qualified Pawl.Codec.Expansion as Expansion
 import qualified Pawl.Codec.KeywordDesignator as KeywordDesignator
 import qualified Pawl.Codec.KeywordFamily as KeywordFamily
@@ -97,7 +97,8 @@ codec keywordCodec =
       Arm.payload "HasChosenName" NameChooser.codec Filter.HasChosenName (\x -> case x of Filter.HasChosenName y -> Just y; _ -> Nothing),
       Arm.nullary "HasChosenColor" Filter.HasChosenColor,
       Arm.nullary "HasChosenSubtype" Filter.HasChosenSubtype,
-      Arm.payload "IsExiledWithSource" ExiledWith.codec Filter.IsExiledWithSource (\x -> case x of Filter.IsExiledWithSource y -> Just y; _ -> Nothing),
+      Arm.payload "IsExiledWithSource" ExiledPile.codec Filter.IsExiledWithSource (\x -> case x of Filter.IsExiledWithSource y -> Just y; _ -> Nothing),
+      Arm.nullary "IsLastExiledWithSource" Filter.IsLastExiledWithSource,
       Arm.nullary "OfChosenPlayer" Filter.OfChosenPlayer,
       Arm.payload "OfRelatedPlayer" PlayerRelation.codec Filter.OfRelatedPlayer (\x -> case x of Filter.OfRelatedPlayer y -> Just y; _ -> Nothing),
       Arm.nullary "IsAttacking" Filter.IsAttacking,
@@ -221,6 +222,7 @@ tagOf x = case x of
   Filter.HasChosenColor {} -> "HasChosenColor"
   Filter.HasChosenSubtype {} -> "HasChosenSubtype"
   Filter.IsExiledWithSource {} -> "IsExiledWithSource"
+  Filter.IsLastExiledWithSource -> "IsLastExiledWithSource"
   Filter.OfChosenPlayer {} -> "OfChosenPlayer"
   Filter.OfRelatedPlayer {} -> "OfRelatedPlayer"
   Filter.IsAttacking {} -> "IsAttacking"

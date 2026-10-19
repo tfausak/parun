@@ -23,6 +23,7 @@ import qualified Pawl.Types.ActivationRestriction as ActivationRestriction
 import qualified Pawl.Types.Activator as Activator
 import qualified Pawl.Types.Affected as Affected
 import qualified Pawl.Types.AffectedUnless as AffectedUnless
+import qualified Pawl.Types.AgainstExiledPile as AgainstExiledPile
 import qualified Pawl.Types.AgainstSlot as AgainstSlot
 import qualified Pawl.Types.Aggregation as Aggregation
 import qualified Pawl.Types.Arithmetic as Arithmetic
@@ -92,6 +93,7 @@ import qualified Pawl.Types.DrawRewrite as DrawRewrite
 import qualified Pawl.Types.Duration as Duration
 import qualified Pawl.Types.DuringPhase as DuringPhase
 import qualified Pawl.Types.EachCardFromAmong as EachCardFromAmong
+import qualified Pawl.Types.EachCardInExiledPile as EachCardInExiledPile
 import qualified Pawl.Types.Effect as Effect
 import qualified Pawl.Types.Emerge as Emerge
 import qualified Pawl.Types.EndingStep as EndingStep
@@ -103,6 +105,7 @@ import qualified Pawl.Types.Equip as Equip
 import qualified Pawl.Types.EquipTarget as EquipTarget
 import qualified Pawl.Types.ExchangeCardZones as ExchangeCardZones
 import qualified Pawl.Types.ExileHaunting as ExileHaunting
+import qualified Pawl.Types.ExiledPile as ExiledPile
 import qualified Pawl.Types.Face as Face
 import Pawl.Types.Filter (Filter)
 import qualified Pawl.Types.Filter as Filter
@@ -9375,7 +9378,7 @@ championEnters quality =
       nothingExiled =
         Condition.Compares
           ( Compares.MkCompares
-              (Quantity.AgainstCardsExiledWith (Quantity.Literal 1))
+              (Quantity.AgainstExiledPile (AgainstExiledPile.MkAgainstExiledPile ExiledPile.OwnAbilities (Quantity.Literal 1)))
               Comparison.AtMost
               (Quantity.Literal 0)
           )
@@ -9389,14 +9392,14 @@ championEnters quality =
         (Mint.oneModeOf Map.empty (Seq.fromList [exile, sacrifice]))
 
 -- CR 702.72a's SECOND ability, Wormfang Crab's sentence written once for the
--- keyword: the return names ObjectRef.EachCardExiledWithSource, which is CR
+-- keyword: the return names ObjectRef.EachCardInExiledPile, which is CR
 -- 607.2k's link, and CR 702.72a's "under its owner's control" is the rider.
 championLeaves :: TriggeredAbility Card (GrantedAbility.GrantedAbility Card)
 championLeaves =
   let effect =
         Effect.MoveToZone
           ( MoveToZone.MkMoveToZone
-              (ObjectRef.EachCardExiledWithSource Nothing)
+              (ObjectRef.EachCardInExiledPile (EachCardInExiledPile.MkEachCardInExiledPile ExiledPile.OwnAbilities Nothing))
               Zone.Battlefield
               championRiders {EntryRiders.underOwner = True}
               Nothing
