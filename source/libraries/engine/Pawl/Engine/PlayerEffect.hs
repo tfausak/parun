@@ -2045,9 +2045,9 @@ castPermissionsFrom pid zone oid gs =
       holder source = Maybe.fromMaybe pid (source >>= \sid -> Projection.controllerOf sid gs)
       -- CR 607.2a: the linked set is the cards GameState.exiledWith files
       -- against this very source object, under the granting ability's pair
-      -- (CR 607.5, Binding.isLinkedExile). Pawl's scenarios
-      -- urianger-augurelt-s-play-arcanum-skips-what-an-acquired-ability-exiled.json
-      -- and patchwork-crawler-s-acquired-play-arcanum-plays-only-what-its-pair-exiled.json
+      -- (CR 607.5, Binding.isLinkedExile).
+      -- data/scenarios/urianger-augurelt-s-play-arcanum-skips-what-an-acquired-ability-exiled.json
+      -- and data/scenarios/patchwork-crawler-s-acquired-play-arcanum-plays-only-what-its-pair-exiled.json
       -- prove both directions.
       inPool source pool = case pool of
         PermissionPool.EveryCard -> True
