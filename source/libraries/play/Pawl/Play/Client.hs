@@ -1,12 +1,13 @@
 -- | The text client: a person answering request lines at a terminal. It reads
--- only the decoded line, never the game, so anything it cannot show is a gap
--- in the protocol.
+-- only the decoded line and the card data, never the game, so anything it
+-- cannot show is a gap in the protocol.
 module Pawl.Play.Client where
 
 import qualified Control.Monad as Monad
 import qualified Control.Monad.Trans.Class as Trans
 import qualified Control.Monad.Trans.Except as Except
 import qualified Control.Monad.Trans.State.Strict as State
+import qualified Data.Char as Char
 import qualified Data.Containers.ListUtils as ListUtils
 import qualified Data.List as List
 import qualified Data.Map.Strict as Map
@@ -21,6 +22,8 @@ import qualified Pawl.Extra.Natural as Natural
 import qualified Pawl.JsonCodec.Codec as Codec
 import qualified Pawl.JsonCodec.Common as Common
 import qualified Pawl.Play.Render as Render
+import qualified Pawl.Types.Card as Card
+import qualified Pawl.Types.CardName as CardName
 import qualified Pawl.Types.Hotseat as Hotseat
 import qualified Pawl.Types.ObjectId as ObjectId
 import qualified Pawl.Types.PlayerId as PlayerId
@@ -39,9 +42,10 @@ type Client m = State.StateT Hotseat.Hotseat (Except.ExceptT Text.Text m)
 -- player. Fails with why play stopped: the end of input, or "quit".
 --
 -- CR 104.3a: a seat concedes by typing "concede" at any question, and the
--- client answers the engine's next Concede prompt for that seat with it.
-respond :: (Monad m) => Terminal.Terminal m -> Text.Text -> Client m Text.Text
-respond terminal line = do
+-- client answers the engine's next Concede prompt for that seat with it. A
+-- card's printed text comes from the card data, by a name the view shows.
+respond :: (Monad m) => Terminal.Terminal m -> (CardName.CardName -> Maybe Card.Card) -> Text.Text -> Client m Text.Text
+respond terminal lookUp line = do
   request <- either (stop . (Text.pack "unreadable request: " <>)) pure (Common.parse line >>= Codec.decode Codec.Request.codec)
   let question = Request.question request
       view = Request.view request
@@ -53,23 +57,26 @@ respond terminal line = do
         pure (R.Text (Text.pack (if conceding then "Concedes" else "Continues")))
       else do
         handOff terminal seat
+        first <- State.gets (Map.notMember seat . Hotseat.shown)
         news <- unseen view
         mapM_ (say terminal) $
           [Text.empty]
             <> Render.board view
             <> [Text.pack "Since you last looked: " <> Text.intercalate (Text.pack "; ") news | not (null news)]
             <> Render.hand view
+            <> [Text.pack "Type card and a number from a list, or a card's name, to read that card." | first]
             <> foldMap (\p -> [Text.pack "That answer was refused: " <> p]) (Request.problem request)
-        answer terminal seat view question
+        answer terminal lookUp seat view question
 
--- | CR 104.3a's concession and quitting are typed at any question; everything
--- else is read by the question's own reader until it reads.
-answer :: (Monad m) => Terminal.Terminal m -> PlayerId.PlayerId -> PlayerView.PlayerView -> Question.Question -> Client m R.Reply
-answer terminal seat view question = case (Question.kind question, slotsOf question) of
+-- | CR 104.3a's concession, quitting and reading a card are typed at any
+-- question; everything else is read by the question's own reader until it
+-- reads.
+answer :: (Monad m) => Terminal.Terminal m -> (CardName.CardName -> Maybe Card.Card) -> PlayerId.PlayerId -> PlayerView.PlayerView -> Question.Question -> Client m R.Reply
+answer terminal lookUp seat view question = case (Question.kind question, slotsOf question) of
   (kind, Just (source, slots)) | kind == Text.pack "ChooseTargets" -> fmap R.Array (mapM (target source) slots)
-  _ -> ask (choice view question)
+  _ -> ask (listedObjects (Question.offer question)) (choice view question)
   where
-    ask (shown, reader) = do
+    ask listed (shown, reader) = do
       mapM_ (say terminal) shown
       let loop = do
             typed <- fmap Text.strip (listen terminal)
@@ -79,6 +86,11 @@ answer terminal seat view question = case (Question.kind question, slotsOf quest
                 State.modify' (\h -> h {Hotseat.conceding = Set.insert seat (Hotseat.conceding h)})
                 say terminal (Text.pack "You concede at your next priority. Answer this question first.")
                 loop
+              _
+                | Just wanted <- Text.stripPrefix (Text.pack "card") typed,
+                  maybe True (Char.isSpace . fst) (Text.uncons wanted) -> do
+                    mapM_ (say terminal) (reading lookUp view listed (Text.strip wanted))
+                    loop
               _ -> either (\problem -> say terminal problem >> loop) pure (reader typed)
       loop
     target source (slot, wanted, legal) = do
@@ -86,7 +98,7 @@ answer terminal seat view question = case (Question.kind question, slotsOf quest
           shown =
             Text.concat [Text.pack "Choose ", Render.count n "target", Text.pack " for ", objectName view source, Text.pack " (", slotName slot, Text.pack "):"]
               : numbered (fmap (recipientName view) legal)
-      picked <- ask (shown, exactly n legal)
+      picked <- ask (fmap recipientObject legal) (shown, exactly n legal)
       pure (R.Array [slot, R.Array picked])
 
 -- | What a question shows, and how a typed line is read into its answer.
@@ -167,6 +179,34 @@ choice view question = Maybe.fromMaybe generic $ case Text.unpack (Question.kind
           <> [Text.pack "Type the answer as JSON:"],
         Common.parse Monad.>=> Codec.Reply.fromValue
       )
+
+-- | What "card" followed by a number from the question's list, or by a name,
+-- shows: each object of the view it names, in full. Only what the view shows
+-- is read, so a card the seat may not see is never found.
+reading :: (CardName.CardName -> Maybe Card.Card) -> PlayerView.PlayerView -> [Maybe ObjectId.ObjectId] -> Text.Text -> [Text.Text]
+reading lookUp view listed wanted
+  | Text.null wanted = [Text.pack "Type card and a number from a list, or a card's name."]
+  | Right [i] <- numbers wanted = case Monad.join (Maybe.listToMaybe (List.genericDrop (pred (max 1 i)) listed)) >>= (`Map.lookup` Render.objects view) of
+      Just o | i >= 1 -> Render.details lookUp o
+      _ -> [Text.pack ("Number " <> show i <> " in this list is not a card you can see.")]
+  | otherwise = case ListUtils.nubOrd (fmap (Render.details lookUp) (filter matches (Map.elems (Render.objects view)))) of
+      [] -> [Text.pack "No card you can see is named " <> wanted <> Text.pack "."]
+      found -> List.intercalate [Text.empty] found
+  where
+    matches = any ((== Text.toCaseFold wanted) . Text.toCaseFold . CardName.unwrap) . Set.toList . Render.cardNames
+
+-- | The object behind each numbered option of an offer, where it names one:
+-- the offer's own list, or the cards or sources it chooses from.
+listedObjects :: R.Reply -> [Maybe ObjectId.ObjectId]
+listedObjects offer = foldMap (fmap optionObject) (Monad.msum [arrayOf offer, field "from" offer >>= arrayOf, field "sources" offer >>= arrayOf])
+  where
+    optionObject option = Monad.msum [objectOf option, field "object" option >>= objectOf, field "source" option >>= objectOf]
+
+-- | The object a recipient names, if it is not a player.
+recipientObject :: R.Reply -> Maybe ObjectId.ObjectId
+recipientObject reply = case reply of
+  R.Array [R.Text tag, x] | tag /= Text.pack "Player" -> objectOf x
+  _ -> Nothing
 
 -- | One number from 1 to n.
 one :: Natural -> Text.Text -> Either Text.Text Natural

@@ -14,6 +14,8 @@ import qualified Pawl.Play.Chance as Chance
 import qualified Pawl.Play.Client as Client
 import qualified Pawl.Play.Protocol as Protocol
 import qualified Pawl.Types.Answerer as Answerer
+import qualified Pawl.Types.Card as Card
+import qualified Pawl.Types.CardName as CardName
 import qualified Pawl.Types.Deck as Deck
 import qualified Pawl.Types.GameSettings as GameSettings
 import qualified Pawl.Types.GameState as GameState
@@ -27,9 +29,9 @@ import qualified Pawl.Types.Terminal as Terminal
 -- | The generator over the client's monad.
 type Play m = State.StateT SplitMix.SplitMix (Client.Client m)
 
--- | A person at the terminal.
-human :: (Monad m) => Terminal.Terminal m -> Answerer.Answerer (Play m)
-human terminal = Protocol.over (Trans.lift . Client.respond terminal) Chance.chance
+-- | A person at the terminal, reading cards' printed text from the card data.
+human :: (Monad m) => Terminal.Terminal m -> (CardName.CardName -> Maybe Card.Card) -> Answerer.Answerer (Play m)
+human terminal lookUp = Protocol.over (Trans.lift . Client.respond terminal lookUp) Chance.chance
 
 -- | A program speaking the protocol: each request line out, its reply line
 -- back, Nothing at the end of input.

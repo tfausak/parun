@@ -6,6 +6,7 @@ import qualified Control.Exception as Exception
 import qualified Control.Monad as Monad
 import qualified Data.Bifunctor as Bifunctor
 import qualified Data.ByteString as ByteString
+import qualified Data.Functor.Identity as Identity
 import qualified Data.IORef as IORef
 import qualified Data.List.NonEmpty as NonEmpty
 import qualified Data.Map.Strict as Map
@@ -26,6 +27,8 @@ import qualified Pawl.Play.Game as Game
 import qualified Pawl.Play.Record as Record
 import qualified Pawl.Play.Render as Render
 import qualified Pawl.Registry as Registry
+import qualified Pawl.Types.Card as Card
+import qualified Pawl.Types.CardName as CardName
 import qualified Pawl.Types.Deck as Deck
 import qualified Pawl.Types.Hotseat as Hotseat
 import qualified Pawl.Types.Label as Label
@@ -43,8 +46,9 @@ main arguments = case GetOpt.getOpt GetOpt.Permute flags arguments of
   (updates, [one, two], []) -> case foldr (=<<) (Right PlayOptions.none) updates of
     Left problem -> usage [problem]
     Right options -> do
-      decks <- (,) <$> load one <*> load two
-      play options decks
+      registry <- Registry.defaultRoot >>= Registry.fileRegistry
+      decks <- (,) <$> load registry one <*> load registry two
+      play options (Identity.runIdentity . Registry.fetchCard registry) decks
   (_, _, problems) -> usage problems
 
 flags :: [GetOpt.OptDescr (PlayOptions.PlayOptions -> Either String PlayOptions.PlayOptions)]
@@ -67,21 +71,18 @@ usage problems = do
   Exit.exitFailure
 
 -- | A deck list file, as `pawl deck` reads it.
-load :: FilePath -> IO Deck.Deck
-load path = do
+load :: Registry.Registry Identity.Identity -> FilePath -> IO Deck.Deck
+load registry path = do
   bytes <- ByteString.readFile path
   contents <- either (\err -> failWith (path <> ": not valid UTF-8: " <> show err)) pure (Encoding.decodeUtf8' bytes)
-  root <- Registry.defaultRoot
-  registry <- Registry.fileRegistry root
-  parsed <- DeckList.parse registry contents
-  case parsed of
+  case Identity.runIdentity (DeckList.parse registry contents) of
     Left problems -> do
       mapM_ (TextIO.hPutStrLn IO.stderr . (\p -> Text.pack (path <> ": ") <> DeckList.explain p)) problems
       Exit.exitFailure
     Right deck -> pure deck
 
-play :: PlayOptions.PlayOptions -> (Deck.Deck, Deck.Deck) -> IO ()
-play options (one, two) = do
+play :: PlayOptions.PlayOptions -> (CardName.CardName -> Maybe Card.Card) -> (Deck.Deck, Deck.Deck) -> IO ()
+play options lookUp (one, two) = do
   IO.hSetBuffering IO.stdout IO.LineBuffering
   seed <- maybe Clock.getMonotonicTimeNSec pure (PlayOptions.seed options)
   IO.hPutStrLn IO.stderr ("Seed " <> show seed <> ".")
@@ -97,7 +98,7 @@ play options (one, two) = do
       answerer n
         | Set.member n (PlayOptions.bots options) = Bot.bot
         | PlayOptions.json options = Game.wired exchange
-        | otherwise = Game.human terminal
+        | otherwise = Game.human terminal lookUp
       seats = Map.fromList [(idOf n, answerer n) | n <- [1, 2]]
       hotseat = case people of
         [only] -> Hotseat.fresh {Hotseat.facing = Just (idOf only)}
