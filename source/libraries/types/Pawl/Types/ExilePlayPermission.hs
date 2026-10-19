@@ -7,6 +7,7 @@ import qualified Pawl.Types.ManaSpending as ManaSpending
 import qualified Pawl.Types.ObjectId as ObjectId
 import qualified Pawl.Types.PermissionCost as PermissionCost
 import qualified Pawl.Types.PermissionVerb as PermissionVerb
+import qualified Pawl.Types.PlayBudget as PlayBudget
 import qualified Pawl.Types.PlayPermissionOrigin as PlayPermissionOrigin
 import qualified Pawl.Types.PlayerId as PlayerId
 import qualified Pawl.Types.TapState as TapState
@@ -105,6 +106,11 @@ data ExilePlayPermission = MkExilePlayPermission
     increase :: Natural.Natural,
     -- | CR 400.7i / 614.1d: how a land played under it enters -- Lightstall
     -- Inquisitor\'s "each land played this way enters tapped".
-    landEnters :: TapState.TapState
+    landEnters :: TapState.TapState,
+    -- | CR 601.3: the plays left among the cards one grant covers, shared by
+    -- each of their permissions -- March of Reckless Joy\'s "up to two of
+    -- those cards". Nothing is no limit. Spent by
+    -- Pawl.Engine.Cast.spendPlayBudget.
+    budget :: Maybe PlayBudget.PlayBudget
   }
   deriving (Eq, Ord, Show)

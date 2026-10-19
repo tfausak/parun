@@ -497,6 +497,7 @@ import qualified Pawl.Codec.PlanarDieRolledSpec
 import qualified Pawl.Codec.PlaneswalkCauseSpec
 import qualified Pawl.Codec.PlaneswalkRSpec
 import qualified Pawl.Codec.PlaneswalkRewriteSpec
+import qualified Pawl.Codec.PlayBudgetSpec
 import qualified Pawl.Codec.PlayPermissionOriginSpec
 import qualified Pawl.Codec.PlayerActionSpec
 import qualified Pawl.Codec.PlayerAttacksPlayerSpec
@@ -1414,6 +1415,7 @@ spec s registry = do
   Pawl.Codec.PlayerScopeSpec.spec s
   Pawl.Codec.PlayerSpec.spec s
   Pawl.Codec.PlayerStaticAbilitySpec.spec s
+  Pawl.Codec.PlayBudgetSpec.spec s
   Pawl.Codec.PlayPermissionOriginSpec.spec s
   Pawl.Codec.PlaysLandSpec.spec s
   Pawl.Codec.PlotFromZoneSpec.spec s

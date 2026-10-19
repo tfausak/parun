@@ -749,7 +749,9 @@ finishSpell oid face controller = do
           -- CR 715.3d: "that player may play it".
           ExilePlayPermission.verb = PermissionVerb.Play,
           ExilePlayPermission.increase = 0,
-          ExilePlayPermission.landEnters = TapState.Untapped
+          ExilePlayPermission.landEnters = TapState.Untapped,
+          -- CR 715.3d's "may play it" counts no plays.
+          ExilePlayPermission.budget = Nothing
         }
 
 -- The no-subgame spell resolver (Stack's default path and every direct caller).

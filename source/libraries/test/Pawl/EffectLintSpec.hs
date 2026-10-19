@@ -1613,13 +1613,17 @@ inertChoosers :: Effect.Effect Card.Type.Card (GrantedAbility.GrantedAbility Car
 inertChoosers effect =
   [ref | (allowed, ref) <- effectObjectRefs effect, Just question <- [questionOf ref], question `notElem` allowed]
 
--- An ObjectRef.AllOf written anywhere but a move's ref. Only MoveToZone
--- gathers it member by member (Pawl.Engine.Resolve.Effect's gather); the other
--- opcodes' one-ref reads (a sticker's candidates, a copy's archived source, a
--- reveal's shower) would read the union as a single arm.
-allOfOutsideMove :: Effect.Effect Card.Type.Card (GrantedAbility.GrantedAbility Card.Type.Card) -> Bool
-allOfOutsideMove effect = case effect of
+-- An ObjectRef.AllOf written anywhere but a move's ref or a play grant's.
+-- MoveToZone gathers it member by member (Pawl.Engine.Resolve.Effect's gather),
+-- and GrantPlayFromExile reads its ref through Resolve.Slots.objectRefObjects,
+-- whose AllOf arm is the union -- the scenario
+-- cr-601-3-flameskull-played-land-closes-flameskull-s-own-cast proves it. The
+-- other opcodes' one-ref reads (a sticker's candidates, a copy's archived
+-- source, a reveal's shower) would read the union as a single arm.
+strayAllOf :: Effect.Effect Card.Type.Card (GrantedAbility.GrantedAbility Card.Type.Card) -> Bool
+strayAllOf effect = case effect of
   Effect.MoveToZone {} -> False
+  Effect.GrantPlayFromExile {} -> False
   _ -> any (holdsAllOf . snd) (effectObjectRefs effect)
   where
     holdsAllOf ref = case ref of
@@ -2565,9 +2569,9 @@ effectLintSpec s registry = Spec.describe s "Lint" $ do
     -- Exhume, Elvish Piper, Commune with the Gods and Merfolk Spy print them.
     Spec.assertBool s asks "the pool has a card asking a player to pick a card"
     Spec.assertEqWith s "a chosen card under an opcode that cannot ask (CR 608.2d)" (fmap (S.nameOf . Printing.card) offenders) []
-  Spec.it s "no AllOf outside a move" $ do
+  Spec.it s "no AllOf outside a move or a play grant" $ do
     ps <- S.allPrintings s
-    let offenders = filter (anyFace (any allOfOutsideMove . cardAuthoredEffects) . Printing.card) ps
+    let offenders = filter (anyFace (any strayAllOf . cardAuthoredEffects) . Printing.card) ps
         moved = any (anyFace (any (any (isAllOf . snd) . effectObjectRefs) . cardAuthoredEffects) . Printing.card) ps
         isAllOf ref = case ref of
           ObjectRef.AllOf _ -> True
@@ -2652,8 +2656,8 @@ effectLintSpec s registry = Spec.describe s "Lint" $ do
     let exactlyTwo = ObjectRef.ChosenPermanents (ChosenPermanents.MkChosenPermanents anyCard (PlayerRef.Relative PlayerRelation.You) (HowMany.Exactly (Quantity.Type.Literal 2)))
     Spec.assertEqWith s "two exactly chosen permanents are allowed nowhere" (inert [moves exactlyTwo, Effect.Transform exactlyTwo, Effect.Untap exactlyTwo]) [True, True, True]
     -- Hanweir Battlements' "exile them": the source beside one chosen
-    -- permanent, fenced by its member's question, and refused outside a move by
-    -- allOfOutsideMove.
+    -- permanent, fenced by its member's question, and refused outside a move or a
+    -- play grant by strayAllOf.
     Spec.assertEqWith
       s
       "the source with one chosen permanent is allowed where one chosen permanent is"
@@ -2661,8 +2665,8 @@ effectLintSpec s registry = Spec.describe s "Lint" $ do
       [False, False, True, True]
     Spec.assertEqWith
       s
-      "AllOf is refused outside a move"
-      (fmap allOfOutsideMove [moves sourceAndOne, Effect.Transform sourceAndOne, Effect.Tap (ObjectRef.AllOf (ObjectRef.EachMatching anyCard NonEmpty.:| []))])
+      "AllOf is refused outside a move or a play grant"
+      (fmap strayAllOf [moves sourceAndOne, Effect.Transform sourceAndOne, Effect.Tap (ObjectRef.AllOf (ObjectRef.EachMatching anyCard NonEmpty.:| []))])
       [False, True, True]
     -- The at-random arm one zone over, allowed by a move alone -- Ghoulraiser's
     -- "return a Zombie card at random from your graveyard to your hand".

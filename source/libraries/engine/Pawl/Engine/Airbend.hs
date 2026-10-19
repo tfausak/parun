@@ -104,7 +104,8 @@ permission source owner =
       -- CR 701.65a: "may cast it".
       ExilePlayPermission.verb = PermissionVerb.Cast,
       ExilePlayPermission.increase = 0,
-      ExilePlayPermission.landEnters = TapState.Untapped
+      ExilePlayPermission.landEnters = TapState.Untapped,
+      ExilePlayPermission.budget = Nothing
     }
 
 -- | CR 701.65a's "for each CARD exiled this way": stamp 'permission' onto one

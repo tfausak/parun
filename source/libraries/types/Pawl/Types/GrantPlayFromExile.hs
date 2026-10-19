@@ -57,6 +57,10 @@ data GrantPlayFromExile = MkGrantPlayFromExile
     increase :: Natural.Natural,
     -- | CR 400.7i / 614.1d: how a land played under it enters -- Lightstall
     -- Inquisitor\'s "each land played this way enters tapped".
-    landEnters :: TapState.TapState
+    landEnters :: TapState.TapState,
+    -- | CR 601.3: how many of the covered cards may be played under it, all
+    -- told -- March of Reckless Joy\'s "you may play up to two of those
+    -- cards". Nothing is every one of them.
+    upTo :: Maybe Natural.Natural
   }
   deriving (Eq, Ord, Show)
