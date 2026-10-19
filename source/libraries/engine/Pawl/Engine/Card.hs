@@ -559,7 +559,8 @@ merge2 l r =
           -- halves, which is exactly what CR 709.5a's shared type line is, survives
           -- unionTypeLines and would be doubled here.
           -- docs/decisions.md, "Which half of a split card answers for a box
-          -- both halves have".
+          -- both halves have". Pawl.CardSpec's "CR 709.4 the left half answers
+          -- for a box both halves print or define" proves it for toughness.
           --
           -- The power and toughness boxes are picked by definedBox rather than by
           -- firstJust, because CR 709.4c reaches THEM through the ability that
@@ -595,7 +596,8 @@ merge2 l r =
           -- player either, since CR 613 hands nobody a choice of order, so the bias
           -- is where the rules run out, as it is for the printed boxes above.
           -- docs/decisions.md, "Which half of a split card answers for a box
-          -- both halves have".
+          -- both halves have". Pawl.CardSpec's "CR 709.4 the left half answers
+          -- for a box both halves print or define" proves it for power.
           Face.characteristicPT = case (snd powerBox, snd toughnessBox) of
             (Nothing, Nothing) -> Nothing
             -- CR 208.2's star stands in where one box has no ability behind it: the

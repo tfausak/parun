@@ -8064,14 +8064,15 @@ realSplitCardSpec s registry = Spec.describe s "RealSplitCard" $ do
 -- so the split printings that ARE permanents are Rooms, which print no P/T box.
 -- A printed split card with a creature half is what would refute that.
 --
--- Every card but the twinned pair puts its box on the RIGHT half alone, which is
+-- Every card but the twinned and rival pairs puts its box on the RIGHT half alone, which is
 -- what makes those proofs rather than restatements: merge2 is a record UPDATE
 -- over the left half, so a line that fell out of it -- or one written
 -- `Face.power l` -- answers Nothing, and the permanent is a 0/0 (CR 208.5), a
 -- planeswalker with no loyalty counters (CR 306.5b) or a battle with no defense
 -- counters (CR 310.4b). Synthetic Twinned Colossus // Synthetic Twinned Titan
 -- prints a P/T box on BOTH halves, each half defining one of the two boxes, which
--- is the pair CR 709.4c combines.
+-- is the pair CR 709.4c combines. Synthetic Rival Golem // Synthetic Rival Giant
+-- has both halves print a toughness and both define power.
 --
 -- The precondition every case asserts on the board: the PERMANENT shows CR 709.4's
 -- combined view and not CR 709.3b's single half. Naming the half is what casting
@@ -8118,6 +8119,18 @@ splitBoxSpec s registry = Spec.describe s "SplitBox" $ do
         -- four readings is a different number. Keeping the left half's ability
         -- alone reads 4/2.
         Spec.assertEqWith s "the left half's power and the right half's toughness" (S.powerToughnessOf oid after) (Just (4, 1))
+        Spec.assertEqWith s "and it is the halves combined" (Set.size (Projection.namesOf oid after)) 2
+  -- docs/decisions.md, "Which half of a split card answers for a box both halves
+  -- have": the halves print toughness 3 and 5, and define power by the four
+  -- Forests and by the one creature. The left half answers each box, 4/3;
+  -- summing the printed boxes reads 4/8, the right half's ability 1/3.
+  Spec.it s "CR 709.4 the left half answers for a box both halves print or define" $ do
+    forest <- S.printingOf s registry "Forest"
+    printing <- S.printingOf s registry "Synthetic Rival Golem"
+    case castHalf forest printing "Synthetic Rival Golem" of
+      (_, Nothing) -> Spec.assertFailure s "expected one nonland permanent"
+      (after, Just oid) -> do
+        Spec.assertEqWith s "the left half's ability and printed toughness" (S.powerToughnessOf oid after) (Just (4, 3))
         Spec.assertEqWith s "and it is the halves combined" (Set.size (Projection.namesOf oid after)) 2
   Spec.it s "CR 306.5b the combined view has the one half's printed loyalty" $ do
     forest <- S.printingOf s registry "Forest"
