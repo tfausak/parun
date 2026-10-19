@@ -504,6 +504,7 @@ planarDieRolled event = case event of
 -- control case is the board where the nesting happens, its Grim Poppet case
 -- the announcement, its Freed from the Real cases the payment and the mana
 -- ability, and its Fatestitcher case a choice at resolution.
+-- docs/decisions.md, "What a fragmented loop forbids, and who is involved".
 forbidden :: StateDigest -> GameState -> PlayerId -> LoopTrail -> (Set.Set Action, Set.Set (Action, Completion.Completion))
 forbidden here gs pid loopTrail =
   case Map.findWithDefault [] here (LoopTrail.seen loopTrail) of

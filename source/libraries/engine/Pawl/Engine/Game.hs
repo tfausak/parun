@@ -2641,7 +2641,8 @@ componentIsToken component = case component of
   -- `sourceIsToken`'s OfSpellCopy arm answers the same for the same rule. A
   -- REGRESSION FENCE rather than a proved answer: only a merged permanent whose
   -- TOPMOST component is a copy reads it, and answering True leaves the suite
-  -- green (2026-09-09).
+  -- green (2026-09-09). docs/decisions.md, "Whether a merged copy of a
+  -- mutating spell is a token".
   MergeComponent.OfSpellCopy _ -> False
 
 -- CR 108.2 / 903.9c: is this component of a merged permanent a CARD? Not
@@ -2916,6 +2917,8 @@ primaryOf gs pid =
 -- players. Without the shared team turns option Turn.activePlayers is the
 -- active seat alone, so nothing is asked. The team scenario "CR 725.4 the
 -- active team's primary player names the new monarch" proves it.
+-- docs/decisions.md, "Which active player takes the monarch or initiative
+-- under shared team turns".
 --
 -- Not implemented: any CR 801.5a / 801.5c range cut on this team choice under
 -- limited range (#4918).

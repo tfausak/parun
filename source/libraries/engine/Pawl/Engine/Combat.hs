@@ -295,8 +295,9 @@ attackTargetKind target = case target of
 -- and CR 802.4a bars every other defending player, so it stays on that one
 -- player's list alone. Folded onto every list instead, CR 802.4b's separate
 -- judgement of each player's blocks let two players block it at once.
--- Pawl.CombatEffectSpec's "CR 802.4a" pair under SplitDefendingPlayer is the
--- three-seat board that tells the readings apart.
+-- Pawl.PlaneswalkerCombatSpec's SplitDefendingPlayer group is the three-seat
+-- board that tells the readings apart. docs/decisions.md, "Who may block a
+-- creature attacking nothing".
 --
 -- A creature attacking a player who has left the game keeps naming that player,
 -- who defends nothing any more, so it is on no list: CR 800.4e drops its damage,

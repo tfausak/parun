@@ -1343,6 +1343,7 @@ supplyOf admitting unit =
 -- forbids, and the union is the reading that keeps CR 101.2 out of it -- an
 -- "only" clause names types the mana may be spent as rather than saying "can't".
 -- No printing pairs them, so no board tells that reading from another.
+-- docs/decisions.md, "How two only-clauses about spending one mana combine".
 spendableAs :: [SpendManaAsThough.SpendManaAsThough] -> ManaType -> Set.Set ManaType
 spendableAs clauses manaType =
   case filter (\clause -> ManaFilter.matchesType (SpendManaAsThough.which clause) manaType) clauses of

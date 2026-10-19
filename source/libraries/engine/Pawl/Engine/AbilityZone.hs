@@ -46,7 +46,8 @@ import qualified Pawl.Types.Zone as Zone
 -- another functions in neither, since the cost is unpayable outside the first
 -- and CR 113.6m gives one zone. No printing writes such an ability, and pawl
 -- reports the cost's zone rather than inventing a "functions nowhere" answer no
--- reader has a use for.
+-- reader has a use for: docs/decisions.md, "Which zone an ability functions
+-- in when its cost and effect disagree".
 --
 -- ALL MODES, and their effects in printed order: CR 700.2 makes a modal
 -- ability's modes alternatives, so a zone stated by any of them is a zone the

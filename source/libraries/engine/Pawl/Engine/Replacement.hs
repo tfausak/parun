@@ -2932,6 +2932,8 @@ splitDamage covered event = case event of
 -- trigger's "damage dealt" to the sources it names. CR 701.14c is the rule's own
 -- worked instance of this collapse: a creature that fights itself "deals damage
 -- to itself equal to twice its power" -- one blow, not its power twice.
+-- docs/decisions.md, "Whether one instruction naming a recipient twice deals
+-- one damage event".
 --
 -- Keyed on the whole event but its amount, so two events merge only when their
 -- source, their recipient, their kind and every CR 702 deal-time rider agree --

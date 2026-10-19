@@ -596,10 +596,11 @@ applyClauseEffects resolving source applyOne =
 -- A deny-list and not an allow-list: an allow-list fails as the event-log
 -- reading did, on every state-only instruction writing a field it does not
 -- name, which grows with the open half; this one fails only on a closed-half write made whether
--- or not anything happened, a finite set.
+-- or not anything happened, a finite set. docs/decisions.md,
+-- "What counts as an instruction having happened".
 --
--- Pawl.ResolveSpec's "CR 603.12 an empty mill after a token ceased in exile
--- arms no reflexive" proves the exiledWith copy. The rest is a REGRESSION
+-- The scenario "CR 603.12 an empty mill after a token ceased in exile arms
+-- no reflexive" proves the exiledWith copy. The rest is a REGRESSION
 -- FENCE rather than a proved line: no pool card puts an offering, drawing or
 -- tallying instruction directly before a reflexive arm, so un-copying
 -- lastChoice leaves the suite green. Miasma Demon ("you may discard any number
@@ -10971,6 +10972,7 @@ throwDice runSubgame controller sides named perDie = do
       -- 605.3b's mana ability does -- the only reading in which the reroll
       -- reaches the die. Pawl.CardSpec keeps such an ability to an untargeted
       -- Effect.Reroll, which is what lets Prompt.RerollDie ask for it.
+      -- docs/decisions.md, "When Goblin Bookie can be activated".
       --
       -- In APNAP order, and within a player in object order, behind the static
       -- offers: the order the roller's pick starts from.

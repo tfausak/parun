@@ -618,7 +618,9 @@ gathered gs =
       --     earlier and leaves both in place, and one that arrived later wipes
       --     both. `keepsAbilities`'s blanket removal question cannot tell the two
       --     apart, which is why this row asks `removedAfter` instead -- and what
-      --     CombatSpec's pair of boards proves.
+      --     the cr-613-7 Humility scenario pair in data/scenarios/combat
+      --     proves. docs/decisions.md,
+      --     "Which timestamp the suspected designation's abilities have".
       --   * CR 305.7's layer-4 strip is NOT asked, unlike the printed rows below.
       --     That rule reaches "all abilities generated from its rules text" and
       --     then says outright that it "doesn't remove any abilities that were
