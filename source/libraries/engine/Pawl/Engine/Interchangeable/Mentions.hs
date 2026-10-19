@@ -1204,7 +1204,7 @@ durationNames asking x = case x of
   Duration.Indefinite -> False
   Duration.Perpetual -> False
   Duration.UntilYourNextTurn -> False
-  Duration.UntilYourNextUpkeep -> False
+  Duration.UntilYourNextStep _ -> False
   Duration.UntilEndOfYourNextTurn -> False
   Duration.UntilEndOfNextTurnOf playerRef -> playerRefNames asking playerRef
   Duration.DuringNextTurnOf playerRef -> playerRefNames asking playerRef
@@ -1541,7 +1541,7 @@ expiryNames asking x = case x of
   Expiry.Perpetual -> False
   Expiry.While while -> whileNames asking while
   Expiry.AtTurnOf _playerId -> False
-  Expiry.AtUpkeepOf _playerId -> False
+  Expiry.AtStepOf _stepBegan -> False
   Expiry.AtEndOfTurnOf _afterTurn -> False
   Expiry.DuringTurnOf _afterTurn -> False
   Expiry.DuringTurnOfControllerOf afterObjectTurn -> AfterObjectTurn.object afterObjectTurn == object asking

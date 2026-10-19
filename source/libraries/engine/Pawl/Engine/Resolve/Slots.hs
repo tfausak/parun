@@ -1584,7 +1584,7 @@ durationPlayerRefs duration = case duration of
   Duration.Indefinite -> []
   Duration.Perpetual -> []
   Duration.UntilYourNextTurn -> []
-  Duration.UntilYourNextUpkeep -> []
+  Duration.UntilYourNextStep _ -> []
   Duration.UntilEndOfYourNextTurn -> []
   -- A Condition's own references are Quantity.bakePlayerRef's half, reached
   -- through conditionSlots rather than through a list of references.
@@ -1603,7 +1603,7 @@ durationSlots duration = case duration of
   Duration.Indefinite -> Map.empty
   Duration.Perpetual -> Map.empty
   Duration.UntilYourNextTurn -> Map.empty
-  Duration.UntilYourNextUpkeep -> Map.empty
+  Duration.UntilYourNextStep _ -> Map.empty
   Duration.UntilEndOfYourNextTurn -> Map.empty
   -- The seat the window is counted against, read exactly as every other
   -- PlayerRef position is (CR 601.2c).
@@ -2319,7 +2319,7 @@ durationSlotsAreExhaustive duration = case duration of
   Duration.Indefinite -> True
   Duration.Perpetual -> True
   Duration.UntilYourNextTurn -> True
-  Duration.UntilYourNextUpkeep -> True
+  Duration.UntilYourNextStep _ -> True
   Duration.UntilEndOfYourNextTurn -> True
   -- playerRefSlots' answer is complete for every arm: a PlayerRef names at
   -- most one slot and nothing nested inside it names another.

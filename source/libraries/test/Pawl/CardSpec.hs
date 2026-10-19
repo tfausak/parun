@@ -883,7 +883,7 @@ durationConditions duration = case duration of
   Duration.Indefinite -> []
   Duration.Perpetual -> []
   Duration.UntilYourNextTurn -> []
-  Duration.UntilYourNextUpkeep -> []
+  Duration.UntilYourNextStep _ -> []
   Duration.UntilEndOfYourNextTurn -> []
   -- A PlayerRef carries no Condition, and so no Count.
   Duration.UntilEndOfNextTurnOf _ -> []
@@ -4253,7 +4253,7 @@ durationFilters duration =
           Duration.Indefinite -> []
           Duration.Perpetual -> []
           Duration.UntilYourNextTurn -> []
-          Duration.UntilYourNextUpkeep -> []
+          Duration.UntilYourNextStep _ -> []
           Duration.UntilEndOfYourNextTurn -> []
           Duration.UntilEndOfNextTurnOf _ -> []
           Duration.DuringNextTurnOf _ -> []
