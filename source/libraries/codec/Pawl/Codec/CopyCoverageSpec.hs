@@ -23,4 +23,10 @@ spec s = Spec.describe s "Pawl.Codec.CopyCoverage" $ do
       CopyCoverage.codec
       (CopyCoverage.SourceHost (Map.singleton (ObjectId.MkObjectId 3) (Timestamp.MkTimestamp 7)))
       " {\"type\":\"SourceHost\",\"value\":{\"3\":7}} "
+  Spec.it s "Attachment" $
+    Common.assertCodec
+      s
+      CopyCoverage.codec
+      (CopyCoverage.Attachment (ObjectId.MkObjectId 3))
+      " {\"type\":\"Attachment\",\"value\":3} "
   Spec.it s "has a schema" $ Common.assertHasSchema s CopyCoverage.codec

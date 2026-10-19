@@ -2101,16 +2101,23 @@ latestStoredCopy oid gs =
 -- member (CR 611.2c), or what the row's source is attached to while the source
 -- is phased in on the battlefield (CR 611.3a, 611.3b, 702.26b), where no later
 -- copy effect took it over since the source was last restamped (CR 613.7,
--- 613.7e).
+-- 613.7e) -- or, for one attachment carved off such a row, where the source
+-- has not been restamped since.
 copyCovers :: GameState -> ObjectId -> ActiveCopy.ActiveCopy -> Bool
 copyCovers gs oid row = case ActiveCopy.covers row of
   CopyCoverage.These oids -> Set.member oid oids
-  CopyCoverage.SourceHost overtaken -> case lookupObject (ActiveCopy.source row) gs of
-    Just src ->
-      Set.member (ActiveCopy.source row) (GameState.battlefield gs)
-        && hostOf (ActiveCopy.source row) gs == Just oid
-        && Map.lookup oid overtaken /= Just (Object.timestamp src)
-    Nothing -> False
+  CopyCoverage.SourceHost overtaken -> hostedUnder (\ts -> Map.lookup oid overtaken /= Just ts)
+  -- The timestamp check is a regression fence: once the source is attached
+  -- again, its own row covers the host under a later timestamp and outranks
+  -- this one (CR 613.7e).
+  CopyCoverage.Attachment host -> oid == host && hostedUnder (== ActiveCopy.timestamp row)
+  where
+    hostedUnder current = case lookupObject (ActiveCopy.source row) gs of
+      Just src ->
+        Set.member (ActiveCopy.source row) (GameState.battlefield gs)
+          && hostOf (ActiveCopy.source row) gs == Just oid
+          && current (Object.timestamp src)
+      Nothing -> False
 
 -- | CR 613.7: the timestamp a stored copy effect is ordered by -- its own, or
 -- for a static ability's following its source's attachment, the source's (CR
@@ -2119,6 +2126,7 @@ copyCovers gs oid row = case ActiveCopy.covers row of
 copyRowTimestamp :: GameState -> ActiveCopy.ActiveCopy -> Timestamp.Timestamp
 copyRowTimestamp gs row = case ActiveCopy.covers row of
   CopyCoverage.These _ -> ActiveCopy.timestamp row
+  CopyCoverage.Attachment _ -> ActiveCopy.timestamp row
   CopyCoverage.SourceHost _ -> maybe (ActiveCopy.timestamp row) Object.timestamp (lookupObject (ActiveCopy.source row) gs)
 
 -- | CR 607.5: the acquisition of the abilities layer 1a leaves this object --
@@ -2178,15 +2186,19 @@ lookupLayerOne oid gs = withStoredCopy <$> lookupObject oid gs
 -- coverage rather than ordered at the read, because a stamp carries no
 -- timestamp; the rows stand for whatever else they cover. A row following its
 -- source's host notes the source's timestamp beside the object, so the row
--- covers it again once a re-attachment restamps the source (CR 613.7e).
+-- covers it again once a re-attachment restamps the source (CR 613.7e). A
+-- row covering one attachment is dropped, its timestamp being fixed:
+-- data/scenarios/mutate's "a copy effect made after a merge onto Metamorphic
+-- Alteration's copy outranks both" proves it.
 supersedeStoredCopies :: Set.Set ObjectId -> GameState -> GameState
 supersedeStoredCopies oids gs =
   let overtake row = case ActiveCopy.covers row of
-        CopyCoverage.These covered -> row {ActiveCopy.covers = CopyCoverage.These (Set.difference covered oids)}
+        CopyCoverage.These covered -> Just row {ActiveCopy.covers = CopyCoverage.These (Set.difference covered oids)}
         CopyCoverage.SourceHost overtaken -> case lookupObject (ActiveCopy.source row) gs of
-          Just src -> row {ActiveCopy.covers = CopyCoverage.SourceHost (Map.union (Map.fromSet (const (Object.timestamp src)) (Set.filter (\oid -> copyCovers gs oid row) oids)) overtaken)}
-          Nothing -> row
-   in gs {GameState.copyEffects = fmap overtake (GameState.copyEffects gs)}
+          Just src -> Just row {ActiveCopy.covers = CopyCoverage.SourceHost (Map.union (Map.fromSet (const (Object.timestamp src)) (Set.filter (\oid -> copyCovers gs oid row) oids)) overtaken)}
+          Nothing -> Just row
+        CopyCoverage.Attachment host -> if Set.member host oids then Nothing else Just row
+   in gs {GameState.copyEffects = Maybe.mapMaybe overtake (GameState.copyEffects gs)}
 
 -- | CR 710.1b / 707.3: do this object's COPIABLE values include a flip card's
 -- alternative half? Its copy snapshot's answer when it has one -- the flipped

@@ -16,4 +16,8 @@ data CopyCoverage
     -- that moment: a re-attachment restamps the source (CR 613.7e), and the row
     -- covers that object again.
     SourceHost (Map.Map ObjectId.ObjectId Timestamp.Timestamp)
+  | -- | CR 611.3a / 613.7e: this object while the row's source stays attached
+    -- to it under the row's own timestamp -- one attachment of a SourceHost
+    -- row, carved off it by a merge (CR 730.2a).
+    Attachment ObjectId.ObjectId
   deriving (Eq, Ord, Show)
