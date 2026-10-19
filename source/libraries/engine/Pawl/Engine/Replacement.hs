@@ -131,6 +131,7 @@ import qualified Pawl.Types.Player as Player
 import qualified Pawl.Types.PlayerChoice as PlayerChoice
 import qualified Pawl.Types.PlayerCounterKind as PlayerCounterKind
 import Pawl.Types.PlayerId (PlayerId)
+import qualified Pawl.Types.PlayerInstruction as PlayerInstruction
 import qualified Pawl.Types.PlayerRef as PlayerRef
 import qualified Pawl.Types.PlayerRelation as PlayerRelation
 import Pawl.Types.PlayerScope (PlayerScope)
@@ -198,16 +199,10 @@ asZoneChange event = case event of
   ProposedEvent.WouldLoseLife {} -> Nothing
   ProposedEvent.WouldGainLife {} -> Nothing
   ProposedEvent.WouldDraw _ -> Nothing
-  ProposedEvent.WouldDrawCards {} -> Nothing
-  ProposedEvent.WouldMillCards {} -> Nothing
-  ProposedEvent.WouldFlipCoin {} -> Nothing
+  ProposedEvent.WouldPerform {} -> Nothing
   ProposedEvent.WouldRollDice _ -> Nothing
-  ProposedEvent.WouldProliferate {} -> Nothing
-  ProposedEvent.WouldAssemble {} -> Nothing
   ProposedEvent.WouldLoseGame {} -> Nothing
   ProposedEvent.WouldPlaneswalk {} -> Nothing
-  ProposedEvent.WouldScry {} -> Nothing
-  ProposedEvent.WouldFaceVillainousChoice {} -> Nothing
 
 -- Every replacement effect instance in the game, in the engine's canonical
 -- order, which is what the ChooseReplacement prompt indexes into:
@@ -734,16 +729,22 @@ affected event = case event of
   ProposedEvent.WouldLoseLife _ pid _ -> ([], [pid])
   ProposedEvent.WouldGainLife pid _ -> ([], [pid])
   ProposedEvent.WouldDraw pid -> ([], [pid])
-  ProposedEvent.WouldDrawCards pid _ -> ([], [pid])
-  ProposedEvent.WouldMillCards pid _ -> ([], [pid])
-  ProposedEvent.WouldFlipCoin pid _ -> ([], [pid])
+  ProposedEvent.WouldPerform instruction pid _ -> (Maybe.maybeToList (performerOf instruction), [pid])
   ProposedEvent.WouldRollDice roll -> ([], [DiceRoll.roller roll])
-  ProposedEvent.WouldProliferate pid _ -> ([], [pid])
-  ProposedEvent.WouldAssemble assembler pid _ -> (Maybe.maybeToList assembler, [pid])
   ProposedEvent.WouldLoseGame pid -> ([], [pid])
   ProposedEvent.WouldPlaneswalk pid _ -> ([], [pid])
-  ProposedEvent.WouldScry pid _ -> ([], [pid])
-  ProposedEvent.WouldFaceVillainousChoice pid _ -> ([], [pid])
+
+-- The permanent carrying out an instruction for its player, where one is (a
+-- Rigger's "it assembles"). Total for `affected`'s reason.
+performerOf :: PlayerInstruction.PlayerInstruction -> Maybe ObjectId
+performerOf instruction = case instruction of
+  PlayerInstruction.DrawCards -> Nothing
+  PlayerInstruction.MillCards -> Nothing
+  PlayerInstruction.FlipCoin -> Nothing
+  PlayerInstruction.Proliferate -> Nothing
+  PlayerInstruction.Scry -> Nothing
+  PlayerInstruction.FaceVillainousChoice -> Nothing
+  PlayerInstruction.Assemble assembler -> assembler
 
 -- CR 614.1: does this replacement's printed pattern match this event?
 matchesPrinted :: (ObjectId -> Filter.View) -> GameState -> ProposedEvent -> ReplacementCandidate -> Bool
@@ -944,14 +945,14 @@ matchesPrinted viewOf gs event candidate =
         -- the event rather than a rewrite that changes nothing, LifeLossR's third
         -- conjunct above: an instruction naming one card never reaches CR 616.1's
         -- choice and is never spent under CR 614.5.
-        (ReplacementEffect.DrawCountR pat, ProposedEvent.WouldDrawCards pid n) ->
+        (ReplacementEffect.DrawCountR pat, ProposedEvent.WouldPerform PlayerInstruction.DrawCards pid n) ->
           n >= DrawCountR.atLeast pat
             && matchesPlayer gs candidate (DrawCountR.whose pat) pid
         -- CR 701.17a / 614.1a: Bruvac the Grandiloquent watches the mill
         -- INSTRUCTION and who it names. No threshold conjunct where DrawCountR has
         -- one: rule 701.17a's "one or more" is met by every instruction that mills
         -- at all, since `millFrom` raises this event only for a positive count.
-        (ReplacementEffect.MillCountR pat, ProposedEvent.WouldMillCards pid _) ->
+        (ReplacementEffect.MillCountR pat, ProposedEvent.WouldPerform PlayerInstruction.MillCards pid _) ->
           matchesPlayer gs candidate (MillCountR.whose pat) pid
         -- CR 705.1 / 614.1a: whose coin flips the row watches (CR 109.5's "you"),
         -- which is the whole of the pattern -- rule 705.2's last sentence leaves
@@ -959,7 +960,7 @@ matchesPrinted viewOf gs event candidate =
         -- source, no amount and no destination to narrow by. No `admits` beside
         -- it either: every arm of Pawl.Types.CoinFlipRewrite changes the count of
         -- coins, so there is no board on which the rewrite would change nothing.
-        (ReplacementEffect.CoinFlipR (CoinFlipR.MkCoinFlipR whose _), ProposedEvent.WouldFlipCoin pid _) ->
+        (ReplacementEffect.CoinFlipR (CoinFlipR.MkCoinFlipR whose _), ProposedEvent.WouldPerform PlayerInstruction.FlipCoin pid _) ->
           matchesPlayer gs candidate whose pid
         -- CR 706.1 / 614.1a: whose die rolls the row watches (CR 109.5's "you"),
         -- the CoinFlipR arm above and for its reason -- an instruction to roll
@@ -972,17 +973,17 @@ matchesPrinted viewOf gs event candidate =
         -- CR 701.34a / 614.1a: whose proliferates the row watches (CR 109.5's
         -- "you"), the CoinFlipR arm's posture and for its reason. No `admits`:
         -- ProliferateRewrite.Doubled always changes the count.
-        (ReplacementEffect.ProliferateR (ProliferateR.MkProliferateR whose _), ProposedEvent.WouldProliferate pid _) ->
+        (ReplacementEffect.ProliferateR (ProliferateR.MkProliferateR whose _), ProposedEvent.WouldPerform PlayerInstruction.Proliferate pid _) ->
           matchesPlayer gs candidate whose pid
         -- CR 701.22a / 614.1a: whose scries the row watches (CR 109.5's "you"),
         -- the ProliferateR arm's posture. No `admits`: both rewrites change the
         -- event, and CR 701.22b's scry 0 is never proposed.
-        (ReplacementEffect.ScryR (ScryR.MkScryR whose _), ProposedEvent.WouldScry pid _) ->
+        (ReplacementEffect.ScryR (ScryR.MkScryR whose _), ProposedEvent.WouldPerform PlayerInstruction.Scry pid _) ->
           matchesPlayer gs candidate whose pid
         -- CR 701.55c / 614.1a: whose villainous choices the row watches -- The
         -- Valeyard's "an opponent" -- the ProliferateR arm's posture. No `admits`:
         -- VillainousChoiceRewrite.AdditionalTime always changes the count.
-        (ReplacementEffect.VillainousChoiceR (VillainousChoiceR.MkVillainousChoiceR whose _), ProposedEvent.WouldFaceVillainousChoice pid _) ->
+        (ReplacementEffect.VillainousChoiceR (VillainousChoiceR.MkVillainousChoiceR whose _), ProposedEvent.WouldPerform PlayerInstruction.FaceVillainousChoice pid _) ->
           matchesPlayer gs candidate whose pid
         -- The Unstable FAQ with CR 614.1a: the permanent assembling, judged by
         -- the row's Filter (Steamflogger Boss's "a Rigger you control"). An
@@ -992,7 +993,7 @@ matchesPrinted viewOf gs event candidate =
         -- Read through last known information (CR 608.2h): a Rigger that left
         -- before its "it assembles" resolved still assembles, as the Rigger it
         -- last was -- matchesDamageSource's fallback.
-        (ReplacementEffect.AssembleR matching, ProposedEvent.WouldAssemble (Just oid) _ _) ->
+        (ReplacementEffect.AssembleR matching, ProposedEvent.WouldPerform (PlayerInstruction.Assemble (Just oid)) _ _) ->
           Filter.matches (candidateContext gs candidate) (Maybe.fromMaybe (viewOf oid) (Projection.viewWithLastKnownAnywhere gs oid)) matching
         -- CR 104.3 / 614.1a: whose losses of the game the row watches -- Lich's
         -- Mirror's "you".
@@ -2553,32 +2554,15 @@ affectedChooserOf gs event = case event of
   -- reason. There is no affected OBJECT: CR 121.1's card is not chosen until the
   -- draw happens.
   ProposedEvent.WouldDraw pid -> Just pid
-  -- CR 616.1 / 121.2a: the instruction is addressed to that same player, so
-  -- the seat that chooses among applicable rows is the one it names.
-  ProposedEvent.WouldDrawCards pid _ -> Just pid
-  -- CR 616.1 / 701.17a: DrawCountR's answer one keyword action over -- the
-  -- instruction names the milling player, so that is the seat that chooses.
-  ProposedEvent.WouldMillCards pid _ -> Just pid
-  -- CR 616.1's affected player is the one the event happens to, and CR 705.2's
-  -- last sentence says who that is outright: "only the player who flips the coin
-  -- wins or loses the flip; no other players are involved".
-  ProposedEvent.WouldFlipCoin pid _ -> Just pid
+  -- CR 616.1: an instruction is addressed to the player it names, so that is
+  -- the seat choosing among applicable rows -- for a coin flip CR 705.2's last
+  -- sentence says so outright ("no other players are involved"), and where a
+  -- Rigger assembles it is the Rigger's controller. data/scenarios/library-order's "CR
+  -- 616.1 Eligeth and Kenessos: the scryer orders them" proves it for a scry.
+  ProposedEvent.WouldPerform _ pid _ -> Just pid
   -- CR 616.1 / 706.1: the instruction is addressed to the roller, and rule 706's
-  -- roll involves no other seat -- WouldFlipCoin's answer one rule over.
+  -- roll involves no other seat -- WouldPerform's answer.
   ProposedEvent.WouldRollDice roll -> Just (DiceRoll.roller roll)
-  -- CR 616.1 / 701.34a: the instruction is addressed to the proliferator, whose
-  -- choice rule 701.34a makes it -- WouldRollDice's answer.
-  ProposedEvent.WouldProliferate pid _ -> Just pid
-  -- CR 616.1 / 701.22a: the scrying player, WouldProliferate's answer. Proved by
-  -- Pawl.LibraryOrderSpec's "CR 616.1 Eligeth and Kenessos: the scryer orders
-  -- them".
-  ProposedEvent.WouldScry pid _ -> Just pid
-  -- CR 616.1 / 701.55a: the player facing the choice, WouldScry's answer.
-  ProposedEvent.WouldFaceVillainousChoice pid _ -> Just pid
-  -- CR 616.1 with the Unstable FAQ: the assembling player, whose Contraption
-  -- deck and sprockets the instruction is about -- the Rigger's controller where
-  -- a Rigger assembles.
-  ProposedEvent.WouldAssemble _ pid _ -> Just pid
   ProposedEvent.WouldLoseGame pid -> Just pid
   -- CR 616.1 / 701.31a: the planeswalking player, the planar controller.
   ProposedEvent.WouldPlaneswalk pid _ -> Just pid
@@ -3873,16 +3857,10 @@ asDamageEvent event = case event of
   ProposedEvent.WouldLoseLife {} -> Nothing
   ProposedEvent.WouldGainLife {} -> Nothing
   ProposedEvent.WouldDraw _ -> Nothing
-  ProposedEvent.WouldDrawCards {} -> Nothing
-  ProposedEvent.WouldMillCards {} -> Nothing
-  ProposedEvent.WouldFlipCoin {} -> Nothing
+  ProposedEvent.WouldPerform {} -> Nothing
   ProposedEvent.WouldRollDice _ -> Nothing
-  ProposedEvent.WouldProliferate {} -> Nothing
-  ProposedEvent.WouldAssemble {} -> Nothing
   ProposedEvent.WouldLoseGame {} -> Nothing
   ProposedEvent.WouldPlaneswalk {} -> Nothing
-  ProposedEvent.WouldScry {} -> Nothing
-  ProposedEvent.WouldFaceVillainousChoice {} -> Nothing
 
 asDestruction :: ProposedEvent -> Maybe ObjectId
 asDestruction event = case event of
@@ -3900,16 +3878,10 @@ asDestruction event = case event of
   ProposedEvent.WouldLoseLife {} -> Nothing
   ProposedEvent.WouldGainLife {} -> Nothing
   ProposedEvent.WouldDraw _ -> Nothing
-  ProposedEvent.WouldDrawCards {} -> Nothing
-  ProposedEvent.WouldMillCards {} -> Nothing
-  ProposedEvent.WouldFlipCoin {} -> Nothing
+  ProposedEvent.WouldPerform {} -> Nothing
   ProposedEvent.WouldRollDice _ -> Nothing
-  ProposedEvent.WouldProliferate {} -> Nothing
-  ProposedEvent.WouldAssemble {} -> Nothing
   ProposedEvent.WouldLoseGame {} -> Nothing
   ProposedEvent.WouldPlaneswalk {} -> Nothing
-  ProposedEvent.WouldScry {} -> Nothing
-  ProposedEvent.WouldFaceVillainousChoice {} -> Nothing
 
 -- asDestruction's twin one event class over: the permanent that actually becomes
 -- untapped, or Nothing when a replacement took the event.
@@ -3929,32 +3901,20 @@ asUntap event = case event of
   ProposedEvent.WouldLoseLife {} -> Nothing
   ProposedEvent.WouldGainLife {} -> Nothing
   ProposedEvent.WouldDraw _ -> Nothing
-  ProposedEvent.WouldDrawCards {} -> Nothing
-  ProposedEvent.WouldMillCards {} -> Nothing
-  ProposedEvent.WouldFlipCoin {} -> Nothing
+  ProposedEvent.WouldPerform {} -> Nothing
   ProposedEvent.WouldRollDice _ -> Nothing
-  ProposedEvent.WouldProliferate {} -> Nothing
-  ProposedEvent.WouldAssemble {} -> Nothing
   ProposedEvent.WouldLoseGame {} -> Nothing
   ProposedEvent.WouldPlaneswalk {} -> Nothing
-  ProposedEvent.WouldScry {} -> Nothing
-  ProposedEvent.WouldFaceVillainousChoice {} -> Nothing
 
 -- asUntap's twin one event class over: the player who actually draws a card, or
 -- Nothing when a replacement took the event (CR 614.6).
 asDraw :: ProposedEvent -> Maybe PlayerId
 asDraw event = case event of
   ProposedEvent.WouldDraw pid -> Just pid
-  ProposedEvent.WouldDrawCards {} -> Nothing
-  ProposedEvent.WouldMillCards {} -> Nothing
-  ProposedEvent.WouldFlipCoin {} -> Nothing
+  ProposedEvent.WouldPerform {} -> Nothing
   ProposedEvent.WouldRollDice _ -> Nothing
-  ProposedEvent.WouldProliferate {} -> Nothing
-  ProposedEvent.WouldAssemble {} -> Nothing
   ProposedEvent.WouldLoseGame {} -> Nothing
   ProposedEvent.WouldPlaneswalk {} -> Nothing
-  ProposedEvent.WouldScry {} -> Nothing
-  ProposedEvent.WouldFaceVillainousChoice {} -> Nothing
   ProposedEvent.WouldChangeZone {} -> Nothing
   ProposedEvent.WouldEnter _ -> Nothing
   ProposedEvent.WouldDealDamage _ -> Nothing
@@ -3969,21 +3929,20 @@ asDraw event = case event of
   ProposedEvent.WouldLoseLife {} -> Nothing
   ProposedEvent.WouldGainLife {} -> Nothing
 
--- asDraw's twin one event class up (CR 121.2a): who was instructed to draw and how
--- many cards the instruction names once CR 616.1's loop has settled it, or Nothing
--- when a row replaced the instruction outright.
-asDrawCount :: ProposedEvent -> Maybe (PlayerId, Natural)
-asDrawCount event = case event of
-  ProposedEvent.WouldDrawCards pid n -> Just (pid, n)
-  ProposedEvent.WouldMillCards {} -> Nothing
-  ProposedEvent.WouldFlipCoin {} -> Nothing
+-- asDraw's twin one event class up: who was instructed to carry out THIS
+-- instruction and how many times once CR 616.1's loop has settled it, or Nothing
+-- when a row replaced it outright (CR 614.6). The whole instruction is compared,
+-- assembler included: every row resizes the count and none rewrites the rest,
+-- and a row that turns one instruction into another (Eligeth, Crossroads Augur's
+-- draw instead of a scry) proposes the new one as an event of its own.
+asPerformed :: PlayerInstruction.PlayerInstruction -> ProposedEvent -> Maybe (PlayerId, Natural)
+asPerformed instruction event = case event of
+  ProposedEvent.WouldPerform performed pid n
+    | performed == instruction -> Just (pid, n)
+    | otherwise -> Nothing
   ProposedEvent.WouldRollDice _ -> Nothing
-  ProposedEvent.WouldProliferate {} -> Nothing
-  ProposedEvent.WouldAssemble {} -> Nothing
   ProposedEvent.WouldLoseGame {} -> Nothing
   ProposedEvent.WouldPlaneswalk {} -> Nothing
-  ProposedEvent.WouldScry {} -> Nothing
-  ProposedEvent.WouldFaceVillainousChoice {} -> Nothing
   ProposedEvent.WouldDraw _ -> Nothing
   ProposedEvent.WouldChangeZone {} -> Nothing
   ProposedEvent.WouldEnter _ -> Nothing
@@ -3999,198 +3958,15 @@ asDrawCount event = case event of
   ProposedEvent.WouldLoseLife {} -> Nothing
   ProposedEvent.WouldGainLife {} -> Nothing
 
--- CR 705.1: the flipper and the number of coins one flip is settled with, off a
--- proposed event that survived CR 616.1's loop. asDrawCount's shape one event
--- class over.
--- asDrawCount's twin one keyword action over (CR 701.17a): who was instructed to
--- mill and how many cards the instruction names once CR 616.1's loop has settled
--- it, or Nothing when a row replaced the instruction outright.
-asMillCount :: ProposedEvent -> Maybe (PlayerId, Natural)
-asMillCount event = case event of
-  ProposedEvent.WouldMillCards pid n -> Just (pid, n)
-  ProposedEvent.WouldDrawCards {} -> Nothing
-  ProposedEvent.WouldFlipCoin {} -> Nothing
-  ProposedEvent.WouldRollDice _ -> Nothing
-  ProposedEvent.WouldProliferate {} -> Nothing
-  ProposedEvent.WouldAssemble {} -> Nothing
-  ProposedEvent.WouldLoseGame {} -> Nothing
-  ProposedEvent.WouldPlaneswalk {} -> Nothing
-  ProposedEvent.WouldScry {} -> Nothing
-  ProposedEvent.WouldFaceVillainousChoice {} -> Nothing
-  ProposedEvent.WouldDraw _ -> Nothing
-  ProposedEvent.WouldChangeZone {} -> Nothing
-  ProposedEvent.WouldEnter _ -> Nothing
-  ProposedEvent.WouldDealDamage _ -> Nothing
-  ProposedEvent.WouldBeDestroyed {} -> Nothing
-  ProposedEvent.WouldPutCounters {} -> Nothing
-  ProposedEvent.WouldPutPlayerCounters {} -> Nothing
-  ProposedEvent.WouldCreateTokens {} -> Nothing
-  ProposedEvent.WouldBeginPhase {} -> Nothing
-  ProposedEvent.WouldTurnFaceUp {} -> Nothing
-  ProposedEvent.WouldBecomeAttached {} -> Nothing
-  ProposedEvent.WouldUntap _ -> Nothing
-  ProposedEvent.WouldLoseLife {} -> Nothing
-  ProposedEvent.WouldGainLife {} -> Nothing
-
-asCoinFlip :: ProposedEvent -> Maybe (PlayerId, Natural)
-asCoinFlip event = case event of
-  ProposedEvent.WouldFlipCoin pid n -> Just (pid, n)
-  ProposedEvent.WouldRollDice _ -> Nothing
-  ProposedEvent.WouldProliferate {} -> Nothing
-  ProposedEvent.WouldAssemble {} -> Nothing
-  ProposedEvent.WouldLoseGame {} -> Nothing
-  ProposedEvent.WouldPlaneswalk {} -> Nothing
-  ProposedEvent.WouldScry {} -> Nothing
-  ProposedEvent.WouldFaceVillainousChoice {} -> Nothing
-  ProposedEvent.WouldDrawCards {} -> Nothing
-  ProposedEvent.WouldMillCards {} -> Nothing
-  ProposedEvent.WouldDraw _ -> Nothing
-  ProposedEvent.WouldChangeZone {} -> Nothing
-  ProposedEvent.WouldEnter _ -> Nothing
-  ProposedEvent.WouldDealDamage _ -> Nothing
-  ProposedEvent.WouldBeDestroyed {} -> Nothing
-  ProposedEvent.WouldPutCounters {} -> Nothing
-  ProposedEvent.WouldPutPlayerCounters {} -> Nothing
-  ProposedEvent.WouldCreateTokens {} -> Nothing
-  ProposedEvent.WouldBeginPhase {} -> Nothing
-  ProposedEvent.WouldTurnFaceUp {} -> Nothing
-  ProposedEvent.WouldBecomeAttached {} -> Nothing
-  ProposedEvent.WouldUntap _ -> Nothing
-  ProposedEvent.WouldLoseLife {} -> Nothing
-  ProposedEvent.WouldGainLife {} -> Nothing
-
--- asCoinFlip one rule over. Answers the WHOLE payload rather than a pair, since
+-- asPerformed one rule over. Answers the WHOLE payload rather than a pair, since
 -- Pawl.Types.DiceRoll's two counts are both read back by
 -- Pawl.Engine.Event.proposeDiceRoll and naming them beats ordering them.
 asDiceRoll :: ProposedEvent -> Maybe DiceRoll.DiceRoll
 asDiceRoll event = case event of
   ProposedEvent.WouldRollDice roll -> Just roll
-  ProposedEvent.WouldFlipCoin {} -> Nothing
-  ProposedEvent.WouldProliferate {} -> Nothing
-  ProposedEvent.WouldAssemble {} -> Nothing
+  ProposedEvent.WouldPerform {} -> Nothing
   ProposedEvent.WouldLoseGame {} -> Nothing
   ProposedEvent.WouldPlaneswalk {} -> Nothing
-  ProposedEvent.WouldScry {} -> Nothing
-  ProposedEvent.WouldFaceVillainousChoice {} -> Nothing
-  ProposedEvent.WouldDrawCards {} -> Nothing
-  ProposedEvent.WouldMillCards {} -> Nothing
-  ProposedEvent.WouldDraw _ -> Nothing
-  ProposedEvent.WouldChangeZone {} -> Nothing
-  ProposedEvent.WouldEnter _ -> Nothing
-  ProposedEvent.WouldDealDamage _ -> Nothing
-  ProposedEvent.WouldBeDestroyed {} -> Nothing
-  ProposedEvent.WouldPutCounters {} -> Nothing
-  ProposedEvent.WouldPutPlayerCounters {} -> Nothing
-  ProposedEvent.WouldCreateTokens {} -> Nothing
-  ProposedEvent.WouldBeginPhase {} -> Nothing
-  ProposedEvent.WouldTurnFaceUp {} -> Nothing
-  ProposedEvent.WouldBecomeAttached {} -> Nothing
-  ProposedEvent.WouldUntap _ -> Nothing
-  ProposedEvent.WouldLoseLife {} -> Nothing
-  ProposedEvent.WouldGainLife {} -> Nothing
-
--- CR 701.22a: the scryer and how many cards once CR 616.1's loop has settled the
--- instruction, or Nothing when a row replaced it outright (CR 614.6).
-asScry :: ProposedEvent -> Maybe (PlayerId, Natural)
-asScry event = case event of
-  ProposedEvent.WouldScry pid n -> Just (pid, n)
-  ProposedEvent.WouldProliferate {} -> Nothing
-  ProposedEvent.WouldAssemble {} -> Nothing
-  ProposedEvent.WouldLoseGame {} -> Nothing
-  ProposedEvent.WouldPlaneswalk {} -> Nothing
-  ProposedEvent.WouldFaceVillainousChoice {} -> Nothing
-  ProposedEvent.WouldRollDice _ -> Nothing
-  ProposedEvent.WouldFlipCoin {} -> Nothing
-  ProposedEvent.WouldDrawCards {} -> Nothing
-  ProposedEvent.WouldMillCards {} -> Nothing
-  ProposedEvent.WouldDraw _ -> Nothing
-  ProposedEvent.WouldChangeZone {} -> Nothing
-  ProposedEvent.WouldEnter _ -> Nothing
-  ProposedEvent.WouldDealDamage _ -> Nothing
-  ProposedEvent.WouldBeDestroyed {} -> Nothing
-  ProposedEvent.WouldPutCounters {} -> Nothing
-  ProposedEvent.WouldPutPlayerCounters {} -> Nothing
-  ProposedEvent.WouldCreateTokens {} -> Nothing
-  ProposedEvent.WouldBeginPhase {} -> Nothing
-  ProposedEvent.WouldTurnFaceUp {} -> Nothing
-  ProposedEvent.WouldBecomeAttached {} -> Nothing
-  ProposedEvent.WouldUntap _ -> Nothing
-  ProposedEvent.WouldLoseLife {} -> Nothing
-  ProposedEvent.WouldGainLife {} -> Nothing
-
--- CR 701.34a: the proliferator and how many times it proliferates once CR
--- 616.1's loop has settled the instruction. asCoinFlip's shape.
-asProliferate :: ProposedEvent -> Maybe (PlayerId, Natural)
-asProliferate event = case event of
-  ProposedEvent.WouldProliferate pid n -> Just (pid, n)
-  ProposedEvent.WouldAssemble {} -> Nothing
-  ProposedEvent.WouldLoseGame {} -> Nothing
-  ProposedEvent.WouldPlaneswalk {} -> Nothing
-  ProposedEvent.WouldScry {} -> Nothing
-  ProposedEvent.WouldFaceVillainousChoice {} -> Nothing
-  ProposedEvent.WouldRollDice _ -> Nothing
-  ProposedEvent.WouldFlipCoin {} -> Nothing
-  ProposedEvent.WouldDrawCards {} -> Nothing
-  ProposedEvent.WouldMillCards {} -> Nothing
-  ProposedEvent.WouldDraw _ -> Nothing
-  ProposedEvent.WouldChangeZone {} -> Nothing
-  ProposedEvent.WouldEnter _ -> Nothing
-  ProposedEvent.WouldDealDamage _ -> Nothing
-  ProposedEvent.WouldBeDestroyed {} -> Nothing
-  ProposedEvent.WouldPutCounters {} -> Nothing
-  ProposedEvent.WouldPutPlayerCounters {} -> Nothing
-  ProposedEvent.WouldCreateTokens {} -> Nothing
-  ProposedEvent.WouldBeginPhase {} -> Nothing
-  ProposedEvent.WouldTurnFaceUp {} -> Nothing
-  ProposedEvent.WouldBecomeAttached {} -> Nothing
-  ProposedEvent.WouldUntap _ -> Nothing
-  ProposedEvent.WouldLoseLife {} -> Nothing
-  ProposedEvent.WouldGainLife {} -> Nothing
-
--- The Unstable FAQ: the assembling permanent, the assembling player and how many
--- Contraptions they assemble once CR 616.1's loop has settled the instruction.
--- asProliferate's shape.
-asAssemble :: ProposedEvent -> Maybe (Maybe ObjectId, PlayerId, Natural)
-asAssemble event = case event of
-  ProposedEvent.WouldAssemble assembler pid n -> Just (assembler, pid, n)
-  ProposedEvent.WouldLoseGame {} -> Nothing
-  ProposedEvent.WouldPlaneswalk {} -> Nothing
-  ProposedEvent.WouldFaceVillainousChoice {} -> Nothing
-  ProposedEvent.WouldProliferate {} -> Nothing
-  ProposedEvent.WouldScry {} -> Nothing
-  ProposedEvent.WouldRollDice _ -> Nothing
-  ProposedEvent.WouldFlipCoin {} -> Nothing
-  ProposedEvent.WouldDrawCards {} -> Nothing
-  ProposedEvent.WouldMillCards {} -> Nothing
-  ProposedEvent.WouldDraw _ -> Nothing
-  ProposedEvent.WouldChangeZone {} -> Nothing
-  ProposedEvent.WouldEnter _ -> Nothing
-  ProposedEvent.WouldDealDamage _ -> Nothing
-  ProposedEvent.WouldBeDestroyed {} -> Nothing
-  ProposedEvent.WouldPutCounters {} -> Nothing
-  ProposedEvent.WouldPutPlayerCounters {} -> Nothing
-  ProposedEvent.WouldCreateTokens {} -> Nothing
-  ProposedEvent.WouldBeginPhase {} -> Nothing
-  ProposedEvent.WouldTurnFaceUp {} -> Nothing
-  ProposedEvent.WouldBecomeAttached {} -> Nothing
-  ProposedEvent.WouldUntap _ -> Nothing
-  ProposedEvent.WouldLoseLife {} -> Nothing
-  ProposedEvent.WouldGainLife {} -> Nothing
-
--- CR 701.55c: the facing player and how many times they face the choice once
--- CR 616.1's loop has settled the instruction. asProliferate's shape.
-asVillainousChoice :: ProposedEvent -> Maybe (PlayerId, Natural)
-asVillainousChoice event = case event of
-  ProposedEvent.WouldFaceVillainousChoice pid n -> Just (pid, n)
-  ProposedEvent.WouldProliferate {} -> Nothing
-  ProposedEvent.WouldAssemble {} -> Nothing
-  ProposedEvent.WouldLoseGame {} -> Nothing
-  ProposedEvent.WouldPlaneswalk {} -> Nothing
-  ProposedEvent.WouldScry {} -> Nothing
-  ProposedEvent.WouldRollDice _ -> Nothing
-  ProposedEvent.WouldFlipCoin {} -> Nothing
-  ProposedEvent.WouldDrawCards {} -> Nothing
-  ProposedEvent.WouldMillCards {} -> Nothing
   ProposedEvent.WouldDraw _ -> Nothing
   ProposedEvent.WouldChangeZone {} -> Nothing
   ProposedEvent.WouldEnter _ -> Nothing
@@ -4222,16 +3998,10 @@ asCounters event = case event of
   ProposedEvent.WouldLoseLife {} -> Nothing
   ProposedEvent.WouldGainLife {} -> Nothing
   ProposedEvent.WouldDraw _ -> Nothing
-  ProposedEvent.WouldDrawCards {} -> Nothing
-  ProposedEvent.WouldMillCards {} -> Nothing
-  ProposedEvent.WouldFlipCoin {} -> Nothing
+  ProposedEvent.WouldPerform {} -> Nothing
   ProposedEvent.WouldRollDice _ -> Nothing
-  ProposedEvent.WouldProliferate {} -> Nothing
-  ProposedEvent.WouldAssemble {} -> Nothing
   ProposedEvent.WouldLoseGame {} -> Nothing
   ProposedEvent.WouldPlaneswalk {} -> Nothing
-  ProposedEvent.WouldScry {} -> Nothing
-  ProposedEvent.WouldFaceVillainousChoice {} -> Nothing
 
 -- asCounters' player half. The CAUSE is dropped by both, for the same reason: what
 -- the funnel needs back is the placement to carry out, and the provenance has
@@ -4252,16 +4022,10 @@ asPlayerCounters event = case event of
   ProposedEvent.WouldLoseLife {} -> Nothing
   ProposedEvent.WouldGainLife {} -> Nothing
   ProposedEvent.WouldDraw _ -> Nothing
-  ProposedEvent.WouldDrawCards {} -> Nothing
-  ProposedEvent.WouldMillCards {} -> Nothing
-  ProposedEvent.WouldFlipCoin {} -> Nothing
+  ProposedEvent.WouldPerform {} -> Nothing
   ProposedEvent.WouldRollDice _ -> Nothing
-  ProposedEvent.WouldProliferate {} -> Nothing
-  ProposedEvent.WouldAssemble {} -> Nothing
   ProposedEvent.WouldLoseGame {} -> Nothing
   ProposedEvent.WouldPlaneswalk {} -> Nothing
-  ProposedEvent.WouldScry {} -> Nothing
-  ProposedEvent.WouldFaceVillainousChoice {} -> Nothing
 
 -- asPlayerCounters' sibling one event class over: the player who would lose life
 -- and how much of the loss has survived, or Nothing when a replacement took the
@@ -4284,16 +4048,10 @@ asLifeLoss event = case event of
   ProposedEvent.WouldBecomeAttached {} -> Nothing
   ProposedEvent.WouldUntap _ -> Nothing
   ProposedEvent.WouldDraw _ -> Nothing
-  ProposedEvent.WouldDrawCards {} -> Nothing
-  ProposedEvent.WouldMillCards {} -> Nothing
-  ProposedEvent.WouldFlipCoin {} -> Nothing
+  ProposedEvent.WouldPerform {} -> Nothing
   ProposedEvent.WouldRollDice _ -> Nothing
-  ProposedEvent.WouldProliferate {} -> Nothing
-  ProposedEvent.WouldAssemble {} -> Nothing
   ProposedEvent.WouldLoseGame {} -> Nothing
   ProposedEvent.WouldPlaneswalk {} -> Nothing
-  ProposedEvent.WouldScry {} -> Nothing
-  ProposedEvent.WouldFaceVillainousChoice {} -> Nothing
 
 -- asLifeLoss the other direction: the player who would gain life and how much of
 -- the gain has survived, or Nothing when a replacement took the event outright.
@@ -4313,16 +4071,10 @@ asLifeGain event = case event of
   ProposedEvent.WouldBecomeAttached {} -> Nothing
   ProposedEvent.WouldUntap _ -> Nothing
   ProposedEvent.WouldDraw _ -> Nothing
-  ProposedEvent.WouldDrawCards {} -> Nothing
-  ProposedEvent.WouldMillCards {} -> Nothing
-  ProposedEvent.WouldFlipCoin {} -> Nothing
+  ProposedEvent.WouldPerform {} -> Nothing
   ProposedEvent.WouldRollDice _ -> Nothing
-  ProposedEvent.WouldProliferate {} -> Nothing
-  ProposedEvent.WouldAssemble {} -> Nothing
   ProposedEvent.WouldLoseGame {} -> Nothing
   ProposedEvent.WouldPlaneswalk {} -> Nothing
-  ProposedEvent.WouldScry {} -> Nothing
-  ProposedEvent.WouldFaceVillainousChoice {} -> Nothing
 
 asTokens :: ProposedEvent -> Maybe (PlayerId, Seq.Seq TokenLot.TokenLot)
 asTokens event = case event of
@@ -4340,16 +4092,10 @@ asTokens event = case event of
   ProposedEvent.WouldLoseLife {} -> Nothing
   ProposedEvent.WouldGainLife {} -> Nothing
   ProposedEvent.WouldDraw _ -> Nothing
-  ProposedEvent.WouldDrawCards {} -> Nothing
-  ProposedEvent.WouldMillCards {} -> Nothing
-  ProposedEvent.WouldFlipCoin {} -> Nothing
+  ProposedEvent.WouldPerform {} -> Nothing
   ProposedEvent.WouldRollDice _ -> Nothing
-  ProposedEvent.WouldProliferate {} -> Nothing
-  ProposedEvent.WouldAssemble {} -> Nothing
   ProposedEvent.WouldLoseGame {} -> Nothing
   ProposedEvent.WouldPlaneswalk {} -> Nothing
-  ProposedEvent.WouldScry {} -> Nothing
-  ProposedEvent.WouldFaceVillainousChoice {} -> Nothing
 
 -- CR 500.11 / 614.1b: an extra turn is beginning, so the steps and phases IT
 -- skips become floating replacement effects, one per selector. Called by
@@ -4548,13 +4294,7 @@ asPhaseBegin event = case event of
   ProposedEvent.WouldLoseLife {} -> Nothing
   ProposedEvent.WouldGainLife {} -> Nothing
   ProposedEvent.WouldDraw _ -> Nothing
-  ProposedEvent.WouldDrawCards {} -> Nothing
-  ProposedEvent.WouldMillCards {} -> Nothing
-  ProposedEvent.WouldFlipCoin {} -> Nothing
+  ProposedEvent.WouldPerform {} -> Nothing
   ProposedEvent.WouldRollDice _ -> Nothing
-  ProposedEvent.WouldProliferate {} -> Nothing
-  ProposedEvent.WouldAssemble {} -> Nothing
   ProposedEvent.WouldLoseGame {} -> Nothing
   ProposedEvent.WouldPlaneswalk {} -> Nothing
-  ProposedEvent.WouldScry {} -> Nothing
-  ProposedEvent.WouldFaceVillainousChoice {} -> Nothing

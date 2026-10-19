@@ -218,6 +218,7 @@ import qualified Pawl.Types.PlayerAttacksWith as PlayerAttacksWith
 import qualified Pawl.Types.PlayerChoice as PlayerChoice
 import qualified Pawl.Types.PlayerCounterKind as PlayerCounterKind
 import Pawl.Types.PlayerId (PlayerId)
+import qualified Pawl.Types.PlayerInstruction as PlayerInstruction
 import qualified Pawl.Types.PlayerRef as PlayerRef
 import qualified Pawl.Types.PlayerRelation as PlayerRelation
 import Pawl.Types.Prevention (Prevention)
@@ -3968,14 +3969,14 @@ apply batch candidate event =
     -- Each of these is an individual draw through `drawCard`, so CR 616.1g's inner
     -- events still raise their own WouldDraw and a per-draw row (Words of Worship)
     -- still applies to them.
-    (ReplacementEffect.DrawCountR (DrawCountR.MkDrawCountR _ _ rewrite), ProposedEvent.WouldDrawCards pid _) -> case rewrite of
+    (ReplacementEffect.DrawCountR (DrawCountR.MkDrawCountR _ _ rewrite), ProposedEvent.WouldPerform PlayerInstruction.DrawCards pid _) -> case rewrite of
       DrawCountRewrite.EachDrawOne -> do
         Replacement.consume (ReplacementCandidate.identity candidate)
         gs <- State.get
         let drawers = filter (\p -> p == pid || Just p == ReplacementCandidate.controller candidate) (Game.apnapOrder gs)
         Monad.mapM_ drawCard drawers
         pure Nothing
-    -- Unreachable: `applies` admits DrawCountR only against WouldDrawCards.
+    -- Unreachable: `applies` admits DrawCountR only against a draw instruction.
     (ReplacementEffect.DrawCountR {}, _) -> pure (Just event)
     -- CR 614.1a / 701.17a: Bruvac the Grandiloquent's "they mill twice that many
     -- cards instead". The event is left STANDING at a rewritten count rather than
@@ -3984,15 +3985,15 @@ apply batch candidate event =
     --
     -- The seat is the one the EVENT named -- rule 701.17a's "they" is the milling
     -- player, never the row's controller.
-    (ReplacementEffect.MillCountR (MillCountR.MkMillCountR _ rewrite), ProposedEvent.WouldMillCards pid n) -> case rewrite of
+    (ReplacementEffect.MillCountR (MillCountR.MkMillCountR _ rewrite), ProposedEvent.WouldPerform PlayerInstruction.MillCards pid n) -> case rewrite of
       -- The proposed count IS the whole input: the scaling is stated on the
       -- instruction and not on the library, so nothing is read off the board.
       -- CR 701.17b's "as many as possible" is applied where the cards are taken,
       -- not here, so a doubled count exceeding the library is not clamped yet.
       MillCountRewrite.Scaled scaling -> do
         Replacement.consume (ReplacementCandidate.identity candidate)
-        pure (Just (ProposedEvent.WouldMillCards pid (Replacement.scale scaling n)))
-    -- Unreachable: `applies` admits MillCountR only against WouldMillCards.
+        pure (Just (ProposedEvent.WouldPerform PlayerInstruction.MillCards pid (Replacement.scale scaling n)))
+    -- Unreachable: `applies` admits MillCountR only against a mill instruction.
     (ReplacementEffect.MillCountR {}, _) -> pure (Just event)
     -- CR 705.1 / 614.1a: Krark's Thumb's "instead flip two coins and ignore one".
     -- The event is left STANDING at a doubled count rather than cancelled, the
@@ -4005,11 +4006,11 @@ apply batch candidate event =
     -- flipper which face to keep, which is the order Krark's Thumb's own ruling
     -- requires -- "you will know the results of all simultaneous flips before
     -- choosing which to ignore".
-    (ReplacementEffect.CoinFlipR (CoinFlipR.MkCoinFlipR _ rewrite), ProposedEvent.WouldFlipCoin pid n) -> case rewrite of
+    (ReplacementEffect.CoinFlipR (CoinFlipR.MkCoinFlipR _ rewrite), ProposedEvent.WouldPerform PlayerInstruction.FlipCoin pid n) -> case rewrite of
       CoinFlipRewrite.Doubled -> do
         Replacement.consume (ReplacementCandidate.identity candidate)
-        pure (Just (ProposedEvent.WouldFlipCoin pid (n * 2)))
-    -- Unreachable: `applies` admits CoinFlipR only against WouldFlipCoin.
+        pure (Just (ProposedEvent.WouldPerform PlayerInstruction.FlipCoin pid (n * 2)))
+    -- Unreachable: `applies` admits CoinFlipR only against a coin flip.
     (ReplacementEffect.CoinFlipR {}, _) -> pure (Just event)
     -- CR 706.1 / 614.1a: Pixie Guide's "instead roll that many dice plus one and
     -- ignore the lowest roll". The event is left STANDING with one more die and
@@ -4041,11 +4042,11 @@ apply batch candidate event =
     -- instead". Left STANDING at a doubled count, the CoinFlipR arm above for its
     -- reason: CR 616.1f repeats the choice against it, so a second row doubles
     -- again, and CR 614.5 keeps this row off the event it just made.
-    (ReplacementEffect.ProliferateR (ProliferateR.MkProliferateR _ rewrite), ProposedEvent.WouldProliferate pid n) -> case rewrite of
+    (ReplacementEffect.ProliferateR (ProliferateR.MkProliferateR _ rewrite), ProposedEvent.WouldPerform PlayerInstruction.Proliferate pid n) -> case rewrite of
       ProliferateRewrite.Doubled -> do
         Replacement.consume (ReplacementCandidate.identity candidate)
-        pure (Just (ProposedEvent.WouldProliferate pid (n * 2)))
-    -- Unreachable: `applies` admits ProliferateR only against WouldProliferate.
+        pure (Just (ProposedEvent.WouldPerform PlayerInstruction.Proliferate pid (n * 2)))
+    -- Unreachable: `applies` admits ProliferateR only against a proliferate.
     (ReplacementEffect.ProliferateR {}, _) -> pure (Just event)
     -- CR 701.22a / 614.1a: Kenessos, Priest of Thassa's "scry that many cards
     -- plus one instead" leaves the event STANDING one card larger, the
@@ -4053,35 +4054,35 @@ apply batch candidate event =
     -- that many cards instead" cancels it (CR 614.6) -- no scry, so no CR 701.22d
     -- event -- and draws through CR 121.2a's instruction, so a draw replacement
     -- still gets its say (CR 616.2).
-    (ReplacementEffect.ScryR (ScryR.MkScryR _ rewrite), ProposedEvent.WouldScry pid n) -> case rewrite of
+    (ReplacementEffect.ScryR (ScryR.MkScryR _ rewrite), ProposedEvent.WouldPerform PlayerInstruction.Scry pid n) -> case rewrite of
       ScryRewrite.PlusOne -> do
         Replacement.consume (ReplacementCandidate.identity candidate)
-        pure (Just (ProposedEvent.WouldScry pid (n + 1)))
+        pure (Just (ProposedEvent.WouldPerform PlayerInstruction.Scry pid (n + 1)))
       ScryRewrite.DrawInstead -> do
         Replacement.consume (ReplacementCandidate.identity candidate)
-        outcome <- applyReplacements (ProposedEvent.WouldDrawCards pid n)
-        Monad.forM_ (outcome >>= Replacement.asDrawCount) $ \(drawer, settled) ->
+        outcome <- applyReplacements (ProposedEvent.WouldPerform PlayerInstruction.DrawCards pid n)
+        Monad.forM_ (outcome >>= Replacement.asPerformed PlayerInstruction.DrawCards) $ \(drawer, settled) ->
           Monad.replicateM_ (Natural.toIntSaturating settled) (drawCard drawer)
         pure Nothing
-    -- Unreachable: `applies` admits ScryR only against WouldScry.
+    -- Unreachable: `applies` admits ScryR only against a scry.
     (ReplacementEffect.ScryR {}, _) -> pure (Just event)
     -- CR 701.55c / 614.1a: The Valeyard's "they face that choice an additional
     -- time" leaves the event STANDING one facing larger, the ProliferateR arm
     -- above for its reason.
-    (ReplacementEffect.VillainousChoiceR (VillainousChoiceR.MkVillainousChoiceR _ rewrite), ProposedEvent.WouldFaceVillainousChoice pid n) -> case rewrite of
+    (ReplacementEffect.VillainousChoiceR (VillainousChoiceR.MkVillainousChoiceR _ rewrite), ProposedEvent.WouldPerform PlayerInstruction.FaceVillainousChoice pid n) -> case rewrite of
       VillainousChoiceRewrite.AdditionalTime -> do
         Replacement.consume (ReplacementCandidate.identity candidate)
-        pure (Just (ProposedEvent.WouldFaceVillainousChoice pid (n + 1)))
-    -- Unreachable: `applies` admits VillainousChoiceR only against
-    -- WouldFaceVillainousChoice.
+        pure (Just (ProposedEvent.WouldPerform PlayerInstruction.FaceVillainousChoice pid (n + 1)))
+    -- Unreachable: `applies` admits VillainousChoiceR only against a villainous
+    -- choice.
     (ReplacementEffect.VillainousChoiceR {}, _) -> pure (Just event)
     -- The Unstable FAQ with CR 614.1a: Steamflogger Boss's "it assembles two
     -- Contraptions instead" leaves the event STANDING at a doubled count, the
     -- ProliferateR arm above for its reason.
-    (ReplacementEffect.AssembleR _, ProposedEvent.WouldAssemble assembler pid n) -> do
+    (ReplacementEffect.AssembleR _, ProposedEvent.WouldPerform instruction@(PlayerInstruction.Assemble _) pid n) -> do
       Replacement.consume (ReplacementCandidate.identity candidate)
-      pure (Just (ProposedEvent.WouldAssemble assembler pid (n * 2)))
-    -- Unreachable: `applies` admits AssembleR only against WouldAssemble.
+      pure (Just (ProposedEvent.WouldPerform instruction pid (n * 2)))
+    -- Unreachable: `applies` admits AssembleR only against an assembly.
     (ReplacementEffect.AssembleR {}, _) -> pure (Just event)
     -- CR 104.3 / 614.1a: Lich's Mirror's "if you would lose the game, instead
     -- ...". The loss does not happen, and the effects run in its place --
@@ -5448,11 +5449,11 @@ flipOneCoin mFlipper stated = do
   coins <- case mFlipper of
     Nothing -> pure 1
     Just pid -> do
-      outcome <- applyReplacements (ProposedEvent.WouldFlipCoin pid 1)
+      outcome <- applyReplacements (ProposedEvent.WouldPerform PlayerInstruction.FlipCoin pid 1)
       -- A cancelled event is unreachable: no arm of Pawl.Types.CoinFlipRewrite
       -- replaces the flip with nothing. Defensive, and in the direction rule
       -- 705.1 leaves standing -- the flip still happens, on its own one coin.
-      pure (maybe 1 snd (outcome >>= Replacement.asCoinFlip))
+      pure (maybe 1 snd (outcome >>= Replacement.asPerformed PlayerInstruction.FlipCoin))
   faces <- Monad.replicateM (Natural.toIntSaturating coins) (Game.ask Prompt.FlipCoin)
   -- CR 705.1 designates exactly two sides, so the coins that came up carry at
   -- most two distinct answers and every face this prompt is raised with is one a
@@ -5928,8 +5929,8 @@ millFromReturningTaken pid n
       -- CR 614.1a with CR 616.1g: the INSTRUCTION is its own replaceable event and
       -- is settled before any card moves, so the take below runs on the count this
       -- loop leaves standing and a row that replaced it outright leaves none.
-      outcome <- applyReplacements (ProposedEvent.WouldMillCards pid n)
-      case outcome >>= Replacement.asMillCount of
+      outcome <- applyReplacements (ProposedEvent.WouldPerform PlayerInstruction.MillCards pid n)
+      case outcome >>= Replacement.asPerformed PlayerInstruction.MillCards of
         Nothing -> pure ([], [])
         Just (miller, settled) -> do
           gs <- State.get
