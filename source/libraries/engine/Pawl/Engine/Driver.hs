@@ -94,7 +94,7 @@ deciderOf prompt = case prompt of
   Prompt.AdjustDieRoll decider _ _ _ _ -> Just (Decider.unwrap decider)
   Prompt.ChooseRollModifier decider _ _ -> Just (Decider.unwrap decider)
   Prompt.ChooseDefender decider _ _ -> Just (Decider.unwrap decider)
-  Prompt.ChooseManaSource decider _ _ -> Just (Decider.unwrap decider)
+  Prompt.ChooseManaSource decider _ _ _ -> Just (Decider.unwrap decider)
   Prompt.ChooseExtraManaSource decider _ _ -> Just (Decider.unwrap decider)
   Prompt.ReverseManaAbilities decider _ _ -> Just (Decider.unwrap decider)
   Prompt.ChooseManaYield decider _ _ _ -> Just (Decider.unwrap decider)
