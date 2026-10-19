@@ -5,6 +5,7 @@ import qualified Pawl.Codec.CantSearchLibraries as CantSearchLibraries
 import qualified Pawl.Codec.CastFromZone as CastFromZone
 import qualified Pawl.Codec.CostModifier as CostModifier
 import qualified Pawl.Codec.DamagePattern as DamagePattern
+import qualified Pawl.Codec.ExtraVotes as ExtraVotes
 import qualified Pawl.Codec.Filter as Filter
 import qualified Pawl.Codec.GameOutcome as GameOutcome
 import qualified Pawl.Codec.InZone as InZone
@@ -69,7 +70,7 @@ codec =
           Arm.payload "CantGetCounters" (Common.maybe PlayerCounterKind.codec) PlayerEffect.CantGetCounters (\x -> case x of PlayerEffect.CantGetCounters y -> Just y; _ -> Nothing),
           Arm.payload "StateCoinFlip" StatedFlip.codec PlayerEffect.StateCoinFlip (\x -> case x of PlayerEffect.StateCoinFlip y -> Just y; _ -> Nothing),
           Arm.payload "ModifyDieRoll" ModifiedRoll.codec PlayerEffect.ModifyDieRoll (\x -> case x of PlayerEffect.ModifyDieRoll y -> Just y; _ -> Nothing),
-          Arm.payload "AdditionalVotes" Common.natural PlayerEffect.AdditionalVotes (\x -> case x of PlayerEffect.AdditionalVotes y -> Just y; _ -> Nothing),
+          Arm.payload "AdditionalVotes" ExtraVotes.codec PlayerEffect.AdditionalVotes (\x -> case x of PlayerEffect.AdditionalVotes y -> Just y; _ -> Nothing),
           Arm.payload "AdditionalSurveilCards" Common.natural PlayerEffect.AdditionalSurveilCards (\x -> case x of PlayerEffect.AdditionalSurveilCards y -> Just y; _ -> Nothing),
           Arm.payload "PutTappedAsYouCascade" filterCodec PlayerEffect.PutTappedAsYouCascade (\x -> case x of PlayerEffect.PutTappedAsYouCascade y -> Just y; _ -> Nothing),
           Arm.nullary "CantGainLife" PlayerEffect.CantGainLife,

@@ -6,6 +6,7 @@ import qualified Pawl.Types.CantSearchLibraries as CantSearchLibraries
 import qualified Pawl.Types.CastFromZone as CastFromZone
 import qualified Pawl.Types.CostModifier as CostModifier
 import qualified Pawl.Types.DamagePattern as DamagePattern
+import qualified Pawl.Types.ExtraVotes as ExtraVotes
 import qualified Pawl.Types.Filter as Filter
 import qualified Pawl.Types.GameOutcome as GameOutcome
 import qualified Pawl.Types.InZone as InZone
@@ -197,10 +198,9 @@ data PlayerEffect
     -- 706.2's other-source modifier both reach a piece of randomness a
     -- resolution is in the middle of, and neither names an object to hang on.
     ModifyDieRoll ModifiedRoll.ModifiedRoll
-  | -- | CR 701.38d / Brago's Representative: this player gets this many votes
-    -- beyond the one CR 701.38a gives every seat, cast at the same time they
-    -- would otherwise have voted.
-    AdditionalVotes Natural.Natural
+  | -- | CR 701.38d / Brago's Representative, Ballot Broker: votes this player
+    -- gets beyond the one CR 701.38a gives every seat.
+    AdditionalVotes ExtraVotes.ExtraVotes
   | -- | CR 701.25b / Enhanced Surveillance: this player may look at this many
     -- more cards each time they surveil.
     AdditionalSurveilCards Natural.Natural

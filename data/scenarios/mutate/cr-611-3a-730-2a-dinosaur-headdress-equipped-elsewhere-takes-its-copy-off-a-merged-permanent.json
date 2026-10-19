@@ -1,0 +1,77 @@
+{
+  "description": "CR 611.3a/730.2a Dinosaur Headdress equipped elsewhere takes its copy off a merged permanent",
+  "note": "Crafted from Goblin Piker and Craw Wurm, the Headdress makes alice's Hill Giant a Craw Wurm; Cubwarden mutates under the Giant, and equip moves the Headdress to her Grizzly Bears choosing the Piker. The Headdress's copy now applies to the Bears alone (CR 611.3a, 301.5), so the merge is applied over the Giant's own values: a 3/3 Hill Giant with Cubwarden's lifelink. Distinct printed pairs: the Giant's 3/3, the Wurm's 6/4, the Piker's 2/1, the Bears' 2/2, Cubwarden's 3/5.",
+  "board": {
+    "active": "alice",
+    "step": "PostcombatMain",
+    "seats": [
+      {
+        "name": "alice",
+        "battlefield": [
+          { "card": "Swamp", "label": "s1" },
+          { "card": "Swamp", "label": "s2" },
+          { "card": "Swamp", "label": "s3" },
+          { "card": "Swamp", "label": "s4" },
+          { "card": "Swamp", "label": "s5" },
+          { "card": "Swamp", "label": "s6" },
+          { "card": "Swamp", "label": "s7" },
+          { "card": "Plains", "label": "p1" },
+          { "card": "Plains", "label": "p2" },
+          { "card": "Plains", "label": "p3" },
+          { "card": "Plains", "label": "p4" },
+          { "card": "Paleontologist's Pick-Axe", "label": "axe" },
+          { "card": "Goblin Piker", "label": "piker" },
+          { "card": "Hill Giant", "label": "giant" },
+          { "card": "Grizzly Bears", "label": "bears" }
+        ],
+        "graveyard": [{ "card": "Craw Wurm", "label": "wurm" }],
+        "hand": [{ "card": "Cubwarden", "label": "cubwarden" }],
+        "library": [{ "card": "Swamp" }, { "card": "Swamp" }]
+      },
+      {
+        "name": "bob",
+        "library": [{ "card": "Swamp" }, { "card": "Swamp" }]
+      }
+    ]
+  },
+  "timeline": [
+    { "turn": 1, "step": "PostcombatMain", "player": "alice", "do": { "Answer": { "prompt": "ChooseMaterials", "with": ["$piker", "$wurm"] } } },
+    { "turn": 1, "step": "PostcombatMain", "player": "alice", "do": { "Activate": { "object": "$axe", "ability": 1, "costOrder": [0, 1], "mana": ["$s1", "$s2", "$s3", "$s4", "$s5", null] } } },
+    { "turn": 1, "step": "PostcombatMain", "player": "alice", "do": "Pass" },
+    { "turn": 1, "step": "PostcombatMain", "player": "alice", "do": { "ChooseTargets": { "equipped": ["$giant"] } } },
+    { "turn": 1, "step": "PostcombatMain", "player": "alice", "do": "Pass" },
+    { "turn": 1, "step": "PostcombatMain", "player": "alice", "do": { "Answer": { "prompt": "ChooseCardFromAmong", "with": "Craw Wurm" } } },
+    { "turn": 1, "step": "PostcombatMain", "player": "alice", "check": { "Names": { "object": "$giant", "names": ["Craw Wurm"] } } },
+    { "turn": 1, "step": "PostcombatMain", "player": "alice", "do": { "Answer": { "prompt": "ChooseMutateSide", "with": "Under" } } },
+    { "turn": 1, "step": "PostcombatMain", "player": "alice", "do": { "Answer": { "prompt": "OrderTimestamps", "with": [0, 1] } } },
+    {
+      "turn": 1,
+      "step": "PostcombatMain",
+      "player": "alice",
+      "do": {
+        "Cast": {
+          "object": "$cubwarden",
+          "targets": ["$giant"],
+          "cost": [
+            { "type": "Generic", "value": 2 },
+            { "type": "OfType", "value": { "type": "Colored", "value": { "type": "White" } } },
+            { "type": "OfType", "value": { "type": "Colored", "value": { "type": "White" } } }
+          ],
+          "mana": ["$p1", "$p2", "$p3", "$p4", null]
+        }
+      }
+    },
+    { "turn": 1, "step": "PostcombatMain", "player": "alice", "do": "Pass" },
+    { "turn": 1, "step": "PostcombatMain", "player": "alice", "do": "Pass" },
+    { "turn": 1, "step": "PostcombatMain", "player": "alice", "check": { "Keywords": { "object": "$giant", "keyword": { "type": "Lifelink" }, "count": 1 } } },
+    { "turn": 1, "step": "PostcombatMain", "player": "alice", "check": { "Names": { "object": "$giant", "names": ["Craw Wurm"] } } },
+    { "turn": 1, "step": "PostcombatMain", "player": "alice", "check": { "PowerToughness": { "object": "$giant", "power": 6, "toughness": 4 } } },
+    { "turn": 1, "step": "PostcombatMain", "player": "alice", "do": { "Activate": { "object": "Dinosaur Headdress", "ability": 0, "targets": ["$bears"], "mana": ["$s6", "$s7"] } } },
+    { "turn": 1, "step": "PostcombatMain", "player": "alice", "do": "Pass" },
+    { "turn": 1, "step": "PostcombatMain", "player": "alice", "do": { "Answer": { "prompt": "ChooseCardFromAmong", "with": "Goblin Piker" } } },
+    { "turn": 1, "step": "PostcombatMain", "player": "alice", "check": { "Names": { "object": "$giant", "names": ["Hill Giant"] } } },
+    { "turn": 1, "step": "PostcombatMain", "player": "alice", "check": { "PowerToughness": { "object": "$giant", "power": 3, "toughness": 3 } } },
+    { "turn": 1, "step": "PostcombatMain", "player": "alice", "check": { "Keywords": { "object": "$giant", "keyword": { "type": "Lifelink" }, "count": 1 } } },
+    { "turn": 1, "step": "PostcombatMain", "player": "alice", "check": { "Names": { "object": "$bears", "names": ["Goblin Piker"] } } }
+  ]
+}

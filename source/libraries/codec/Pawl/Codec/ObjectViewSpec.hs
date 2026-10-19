@@ -19,14 +19,23 @@ spec s = Spec.describe s "Pawl.Codec.ObjectView" $ do
       (hidden {ObjectView.characteristics = Just ProjectedCharacteristicsSpec.testCharacteristics})
       ( "{\"object\":7,\"owner\":0,\"controller\":1,\"tapped\":true,\"damage\":2,\"counters\":[],\"attachedTo\":null,\"characteristics\":"
           <> ProjectedCharacteristicsSpec.testCharacteristicsJson
-          <> "}"
+          <> ",\"face\":null}"
       )
   Spec.it s "a hidden object" $
     Common.assertCodec
       s
       ObjectView.codec
       hidden
-      "{\"object\":7,\"owner\":0,\"controller\":1,\"tapped\":true,\"damage\":2,\"counters\":[],\"attachedTo\":null,\"characteristics\":null}"
+      "{\"object\":7,\"owner\":0,\"controller\":1,\"tapped\":true,\"damage\":2,\"counters\":[],\"attachedTo\":null,\"characteristics\":null,\"face\":null}"
+  Spec.it s "a face-down object its seat may look at" $
+    Common.assertCodec
+      s
+      ObjectView.codec
+      (hidden {ObjectView.face = Just ProjectedCharacteristicsSpec.testCharacteristics})
+      ( "{\"object\":7,\"owner\":0,\"controller\":1,\"tapped\":true,\"damage\":2,\"counters\":[],\"attachedTo\":null,\"characteristics\":null,\"face\":"
+          <> ProjectedCharacteristicsSpec.testCharacteristicsJson
+          <> "}"
+      )
   Spec.it s "has a schema" $ Common.assertHasSchema s ObjectView.codec
 
 -- Tapped and damaged, so neither status key encodes a default.
@@ -40,5 +49,6 @@ hidden =
       ObjectView.damage = 2,
       ObjectView.counters = Map.empty,
       ObjectView.attachedTo = Nothing,
-      ObjectView.characteristics = Nothing
+      ObjectView.characteristics = Nothing,
+      ObjectView.face = Nothing
     }

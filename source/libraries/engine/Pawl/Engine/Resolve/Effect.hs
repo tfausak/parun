@@ -232,6 +232,7 @@ import qualified Pawl.Types.ExilePlayPermission as ExilePlayPermission
 import qualified Pawl.Types.Expiry as Expiry.Type
 import qualified Pawl.Types.Exploited as Exploited
 import qualified Pawl.Types.ExtraTurn as ExtraTurn
+import qualified Pawl.Types.ExtraVotes as ExtraVotes
 import qualified Pawl.Types.Face as Face
 import qualified Pawl.Types.FaceDownReason as FaceDownReason
 import qualified Pawl.Types.FaceDownState as FaceDownState
@@ -330,6 +331,7 @@ import qualified Pawl.Types.PlayerAction as PlayerAction
 import qualified Pawl.Types.PlayerChoice as PlayerChoice
 import qualified Pawl.Types.PlayerControl as PlayerControl
 import qualified Pawl.Types.PlayerCounters as PlayerCounters
+import qualified Pawl.Types.PlayerEffect as PlayerEffect.Type
 import Pawl.Types.PlayerId (PlayerId)
 import qualified Pawl.Types.PlayerQuantity as PlayerQuantity
 import Pawl.Types.PlayerRef (PlayerRef)
@@ -2375,10 +2377,14 @@ controlledTeam controller target gs =
   filter (\pid -> pid == target || (pid /= controller && Turn.sharesTurn gs target pid)) (GameState.turnOrder gs)
 
 -- CR 402.3 with a CR 608.2d choice: each hand the reference names is offered to
--- its OWN owner (a hand's cards are that player's alone), who picks one card
--- matching the filter. The candidates are read as the instruction is reached (CR
--- 608.2c), the asks run in APNAP order (CR 608.2e, CR 101.4) through
--- handChoosers, through Game.chooseAmong (CR 101.3, CR 609.3).
+-- its OWN owner (a hand's cards are that player's alone), who picks the ref's
+-- count of DISTINCT cards matching the filter, each pick dropped from the
+-- candidates before the next ask (CR 608.2d). The candidates are read as the
+-- instruction is reached (CR 608.2c), the asks run in APNAP order (CR 608.2e,
+-- CR 101.4) through handChoosers, through Game.chooseAmong (CR 101.3, CR 609.3).
+-- Every card comes back in ONE list, so the instruction moves them as one event
+-- (CR 608.2f) -- proved by the scenario "CR 608.2f Aquatic Subtlety bottoms its
+-- two cards in one event".
 --
 -- askingObjects' ChosenCardInHand arm.
 chooseCardsInHand ::
@@ -2388,11 +2394,19 @@ chooseCardsInHand ::
   Map.Map SlotName (Set Recipient) ->
   ChosenCardInHand.ChosenCardInHand ->
   Game [ObjectId]
-chooseCardsInHand resolving source controller legal (ChosenCardInHand.MkChosenCardInHand player filter_) = do
+chooseCardsInHand resolving source controller legal (ChosenCardInHand.MkChosenCardInHand player filter_ count) = do
   gs <- State.get
-  let context = effectContext gs resolving controller source legal (slotBindings resolving gs)
-      ask asked candidates = Maybe.maybeToList <$> Game.chooseAmong (\decider who -> Prompt.ChooseCardInHand decider who source) asked candidates
-  fmap concat . Monad.mapM (\pid -> ask pid (handCardsOf context gs pid filter_)) $
+  let viewOf = effectViewOf source legal gs
+      context = effectContext gs resolving controller source legal (slotBindings resolving gs)
+      wanted = maybe 0 Integer.toNaturalSaturating (Quantity.evaluateFor viewOf context gs resolving source count)
+      pick asked n candidates
+        | n <= (0 :: Natural) = pure []
+        | otherwise = do
+            picked <- Game.chooseAmong (\decider who -> Prompt.ChooseCardInHand decider who source) asked candidates
+            case picked of
+              Nothing -> pure []
+              Just taken -> (taken :) <$> pick asked (n - 1) (List.delete taken candidates)
+  fmap concat . Monad.mapM (\pid -> pick pid wanted (handCardsOf context gs pid filter_)) $
     handChoosers legal resolving source controller gs player
 
 -- The printed "from among them", a CR 608.2d choice: the candidates are the
@@ -3663,9 +3677,9 @@ effectIsImpossible resolving source controller legal gs effect = case effect of
     -- same pick with randomness choosing; a ref naming no chooser, a choice
     -- the empty answer satisfies, and every ref that reads, answers False.
     choosesFromNothing ref = case ref of
-      ObjectRef.ChosenCardInHand (ChosenCardInHand.MkChosenCardInHand player filter_) ->
+      ObjectRef.ChosenCardInHand (ChosenCardInHand.MkChosenCardInHand player filter_ count) ->
         let choosers = handChoosers legal resolving source controller gs player
-         in not (null choosers) && all (\pid -> null (handCardsOf context gs pid filter_)) choosers
+         in positive count && not (null choosers) && all (\pid -> null (handCardsOf context gs pid filter_)) choosers
       -- randomCardsInHand's pool: Pillaging Horde's "unless you discard a card
       -- at random" over an empty hand (CR 118.3, 118.12a), which the scenario
       -- "CR 118.3 Pillaging Horde is sacrificed over an empty hand" proves.
@@ -6336,8 +6350,8 @@ applyOneEffect runSubgame resolving source controller legal chosen effect = case
           -- it. CR 701.25b's extra cards join the ones looked at, each grant's
           -- "may" asked on its own, read off the board the surveil begins on.
           Just n | n > 0 -> do
-            extras <- Monad.forM (PlayerEffect.surveilExtra pid gs) $ \(grant, count) -> do
-              answer <- Game.choose (Prompt.OfferedExtraLook (Decide.deciderFor pid gs) pid grant count)
+            extras <- Monad.forM [(grant, grantEffect, count) | (grant, grantEffect@(PlayerEffect.Type.AdditionalSurveilCards count)) <- PlayerEffect.offeredExtras pid gs] $ \(grant, grantEffect, count) -> do
+              answer <- Game.choose (Prompt.OfferedExtra (Decide.deciderFor pid gs) pid grant grantEffect)
               case answer of
                 OptionalDecision.Exercises -> pure count
                 OptionalDecision.Declines -> pure 0
@@ -6968,7 +6982,18 @@ applyOneEffect runSubgame resolving source controller legal chosen effect = case
         -- voted" (Brago's Representative). Each is its own prompt: that card's
         -- reminder text has the votes go to different choices or the same one, so
         -- nothing lets the engine answer the second from the first.
-        ballotsOf ask voter = Monad.replicateM (Natural.toIntSaturating (PlayerEffect.votesAllowed voter gs)) (ask voter)
+        --
+        -- The votes a grant only OFFERS (Ballot Broker's "you may vote an
+        -- additional time") come after the seat's own, each grant's "may" asked on
+        -- its own and its ballots cast at once, still before the next seat votes.
+        ballotsOf ask voter = do
+          own <- Monad.replicateM (Natural.toIntSaturating (PlayerEffect.votesAllowed voter gs)) (ask voter)
+          offered <- Monad.forM [(grant, grantEffect, count) | (grant, grantEffect@(PlayerEffect.Type.AdditionalVotes (ExtraVotes.Optional count))) <- PlayerEffect.offeredExtras voter gs] $ \(grant, grantEffect, count) -> do
+            answer <- Game.choose (Prompt.OfferedExtra (Decide.deciderFor voter gs) voter grant grantEffect)
+            case answer of
+              OptionalDecision.Exercises -> Monad.replicateM (Natural.toIntSaturating count) (ask voter)
+              OptionalDecision.Declines -> pure []
+          pure (own <> concat offered)
         -- Each ballot is logged as it is cast, and a secret vote's are revealed
         -- together once the last is in, in voting order.
         cast choiceOf ask = do

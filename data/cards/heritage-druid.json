@@ -8,7 +8,10 @@
               {
                 "type": "TapPermanents",
                 "value": {
-                  "count": 3,
+                  "count": {
+                    "type": "Fixed",
+                    "value": 3
+                  },
                   "whichPermanents": {
                     "type": "And",
                     "value": [

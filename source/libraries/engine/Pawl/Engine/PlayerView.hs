@@ -11,6 +11,7 @@ import qualified Pawl.Engine.Projection as Projection
 import qualified Pawl.Engine.Projection.View as Projection.View
 import qualified Pawl.Engine.Visibility as Visibility
 import qualified Pawl.Extra.Natural as Natural
+import qualified Pawl.Types.Facing as Facing
 import qualified Pawl.Types.GameState as GameState
 import qualified Pawl.Types.Mana as Mana
 import qualified Pawl.Types.Object as Object
@@ -64,14 +65,16 @@ seatView pid gs seat = do
         SeatView.manaPool = Map.findWithDefault (Mana.MkMana []) seat (GameState.manaPool gs)
       }
 
--- | CR 110.5: an object's status for anyone, its characteristics (as projected,
--- CR 613) only for a seat that may see it.
---
--- Not implemented: a face-down permanent or spell showing its face to its
--- controller (CR 708.5) and its face-down values to everyone else (#5222).
+-- | CR 110.5: an object's status for anyone; its characteristics (as projected,
+-- CR 613) for a seat that may see them, which for a face-down permanent or
+-- spell is every seat (CR 708.2); and the card behind a face-down object for a
+-- seat that may look at it (CR 406.3, 708.5).
 objectView :: PlayerId.PlayerId -> GameState.GameState -> ObjectId.ObjectId -> Maybe ObjectView.ObjectView
 objectView pid gs oid = do
   object <- Game.lookupObject oid gs
+  let seen = Visibility.sees pid oid gs == Visibility.Type.Visible
+      public = Facing.isFaceDown (Object.facing object) && (Game.zoneOf oid gs == Just Zone.Battlefield || Game.zoneOf oid gs == Just Zone.Stack)
+      faceDown = Facing.isFaceDown (Object.facing object) || Object.exiledFaceDown object
   pure
     ObjectView.MkObjectView
       { ObjectView.object = oid,
@@ -82,7 +85,11 @@ objectView pid gs oid = do
         ObjectView.counters = Object.counters object,
         ObjectView.attachedTo = Object.attachedTo object,
         ObjectView.characteristics =
-          if Visibility.sees pid oid gs == Visibility.Type.Visible
+          if public || (seen && not faceDown)
             then Just (Projection.project oid gs)
+            else Nothing,
+        ObjectView.face =
+          if seen && faceDown
+            then Just (Projection.projectShown oid gs)
             else Nothing
       }

@@ -15,6 +15,7 @@ import qualified Pawl.Types.Comparison as Comparison
 import qualified Pawl.Types.Cost as Cost
 import qualified Pawl.Types.CounterKind as CounterKind
 import qualified Pawl.Types.Cycling as Cycling
+import qualified Pawl.Types.DamagedParty as DamagedParty
 import qualified Pawl.Types.Designation as Designation
 import qualified Pawl.Types.Expansion as Expansion
 import qualified Pawl.Types.Filter as Filter.Type
@@ -98,6 +99,7 @@ blackCreature =
       Filter.crewedThisTurn = Set.empty,
       Filter.convokedThisTurn = Set.empty,
       Filter.saddledThisTurn = Set.empty,
+      Filter.dealtDamageTo = Set.empty,
       Filter.controlledSinceTurnBegan = False,
       Filter.attachedToView = Nothing,
       Filter.attachedViews = [],
@@ -180,6 +182,7 @@ devoidBigCreature =
       Filter.crewedThisTurn = Set.empty,
       Filter.convokedThisTurn = Set.empty,
       Filter.saddledThisTurn = Set.empty,
+      Filter.dealtDamageTo = Set.empty,
       Filter.controlledSinceTurnBegan = False,
       Filter.attachedToView = Nothing,
       Filter.attachedViews = [],
@@ -1703,6 +1706,37 @@ spec s = Spec.describe s "Pawl.Engine.Filter" $ do
     Spec.it s "reads the same field for a player candidate" $ do
       Spec.assertBool s (Filter.matches self (aPlayer {Filter.dealtDamageThisTurn = True}) Filter.Type.DealtDamageThisTurn) "a damaged player"
       Spec.assertBool s (not (Filter.matches self aPlayer Filter.Type.DealtDamageThisTurn)) "and an undamaged one"
+
+  -- CR 120.1, the CrewedSourceThisTurn group's split: object 31 is the source,
+  -- player 0 the perspective, and player 1 someone else. Pawl.DamageSpec's
+  -- Brine Hag and Reciprocate cases are where a real board fills the field.
+  Spec.describe s "DealtDamageToThisTurn" $ do
+    let damaged rs = blackCreature {Filter.dealtDamageTo = Set.fromList rs}
+        asked n = self {Filter.source = Just (ObjectId.MkObjectId n)}
+        toSource = Filter.Type.DealtDamageToThisTurn DamagedParty.Source
+        toYou = Filter.Type.DealtDamageToThisTurn (DamagedParty.Related PlayerRelation.You)
+        toOpponent = Filter.Type.DealtDamageToThisTurn (DamagedParty.Related PlayerRelation.Opponent)
+        player n = Recipient.ToPlayer (PlayerId.MkPlayerId n)
+        creature n = Recipient.ToCreature (ObjectId.MkObjectId n)
+
+    Spec.it s "matches a creature that dealt damage to the source" $ do
+      Spec.assertBool s (Filter.matches (asked 31) (damaged [creature 31]) toSource) "damaged it"
+      Spec.assertBool s (not (Filter.matches (asked 31) (damaged [creature 32]) toSource)) "damaged something else"
+      Spec.assertBool s (not (Filter.matches self (damaged [creature 31]) toSource)) "no source"
+
+    Spec.it s "matches a creature that dealt damage to a player in the relation" $ do
+      Spec.assertBool s (Filter.matches self (damaged [player 0]) toYou) "damaged you"
+      Spec.assertBool s (not (Filter.matches self (damaged [player 1]) toYou)) "damaged someone else"
+      Spec.assertBool s (Filter.matches self (damaged [player 1]) toOpponent) "damaged an opponent"
+      Spec.assertBool s (not (Filter.matches (self {Filter.perspective = Nothing}) (damaged [player 0]) toYou)) "no perspective"
+
+    -- CR 120.1 names a player and the permanents they control apart.
+    Spec.it s "damage to a creature is not damage to a player, nor the reverse" $ do
+      Spec.assertBool s (not (Filter.matches (asked 31) (damaged [player 0]) toSource)) "a player is not the source"
+      Spec.assertBool s (not (Filter.matches (asked 31) (damaged [creature 31]) toYou)) "the source is not you"
+
+    Spec.it s "being dealt damage is not dealing it" $ do
+      Spec.assertBool s (not (Filter.matches (asked 31) (blackCreature {Filter.dealtDamageThisTurn = True}) toSource)) "was dealt damage"
 
   Spec.describe s "ControlledSinceTurnBegan" $ do
     Spec.it s "matches a view whose controller settled it" $ do

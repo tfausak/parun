@@ -81,6 +81,7 @@ import qualified Pawl.Types.PermissionPool as PermissionPool
 import qualified Pawl.Types.PermissionVerb as PermissionVerb
 import qualified Pawl.Types.Phase as Phase
 import qualified Pawl.Types.PhyrexianPayment as PhyrexianPayment
+import qualified Pawl.Types.PlayerEffect as PlayerEffect
 import qualified Pawl.Types.PlayerId as PlayerId
 import qualified Pawl.Types.PlayerRef as PlayerRef
 import qualified Pawl.Types.PlayerRelation as PlayerRelation
@@ -378,8 +379,8 @@ combatReplaySpec s =
           Spec.assertEqWith s "a short transcript stops" (Replay.defaultAnswer p) OptionalDecision.Declines
         -- CR 701.25b: an extra look's "may" has miracle's reveal payload, so its
         -- own constructor keeps one from replaying as the other.
-        Spec.it s "OfferedExtraLook records and replays an OptionalDecision, and rejects a miracle reveal's" $ do
-          let p = Prompt.OfferedExtraLook decider S.alice oid 2
+        Spec.it s "OfferedExtra records and replays an OptionalDecision, and rejects a miracle reveal's" $ do
+          let p = Prompt.OfferedExtra decider S.alice oid (PlayerEffect.AdditionalSurveilCards 2)
           Monad.forM_ [OptionalDecision.Declines, OptionalDecision.Exercises] $ \decision ->
             Spec.assertEqWith s "round trip" (Replay.decode p (Replay.encode p decision)) (Just decision)
           Spec.assertEqWith s "a miracle reveal is not an answer to it" (Replay.decode p (Response.ChoseMiracleReveal OptionalDecision.Exercises)) Nothing

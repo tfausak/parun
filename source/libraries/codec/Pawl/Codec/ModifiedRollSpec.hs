@@ -61,7 +61,7 @@ spec s = Spec.describe s "Pawl.Codec.ModifiedRoll" $ do
                   Cost.components =
                     [ CostComponent.TapPermanents
                         TapPermanents.MkTapPermanents
-                          { TapPermanents.count = 1,
+                          { TapPermanents.count = CostAmount.Fixed 1,
                             TapPermanents.whichPermanents = Filter.HasSubtype Subtype.Wall,
                             TapPermanents.sharingACreatureType = False
                           }
@@ -69,7 +69,7 @@ spec s = Spec.describe s "Pawl.Codec.ModifiedRoll" $ do
                 },
           ModifiedRoll.limit = PermissionLimit.Unlimited
         }
-      " {\"modifier\":{\"type\":\"Reroll\"},\"cost\":{\"mana\":[],\"components\":[{\"type\":\"TapPermanents\",\"value\":{\"count\":1,\"whichPermanents\":{\"type\":\"HasSubtype\",\"value\":{\"type\":\"Wall\"}}}}]}} "
+      " {\"modifier\":{\"type\":\"Reroll\"},\"cost\":{\"mana\":[],\"components\":[{\"type\":\"TapPermanents\",\"value\":{\"count\":{\"type\":\"Fixed\",\"value\":1},\"whichPermanents\":{\"type\":\"HasSubtype\",\"value\":{\"type\":\"Wall\"}}}}]}} "
   -- CR 706.2b's second step with a life cost and a budget, the wire form
   -- data/cards/night-shift-of-the-living-dead.json writes.
   Spec.it s "MkModifiedRoll, Night Shift of the Living Dead's budgeted adjustment" $
