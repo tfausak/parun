@@ -2688,7 +2688,8 @@ playLand offered pid oid mName = do
 -- CR 601.3: the exile permission a play of `oid` by `pid` is made under when
 -- it names no other: the card's own, open to `pid` where the card lies.
 -- Nothing for a play an effect instructs (`offered`, CR 608.2g), which is made
--- under that effect.
+-- under that effect -- a regression fence, no card in data/cards/ offering a
+-- cast of a card a budgeted grant covers.
 ownExilePermission :: Bool -> PlayerId -> ObjectId -> GameState -> Maybe ExilePlayPermission.ExilePlayPermission
 ownExilePermission offered pid oid gs
   | offered || Game.zoneOf oid gs /= Just Zone.Exile || not (permitsPlayFromExile pid oid gs) = Nothing
@@ -2698,7 +2699,9 @@ ownExilePermission offered pid oid gs
 -- shares with the other cards its grant covered (Pawl.Types.PlayBudget), and
 -- every one of their permissions closed once none is left. Only a permission
 -- still holding that same budget is touched, so a card a later grant took over
--- keeps the later one. Nothing for a permission with no budget.
+-- keeps the later one -- a regression fence, since no card in data/cards/ grants
+-- a second permission to a card a budgeted grant covers; see #5294. Nothing
+-- for a permission with no budget.
 spendPlayBudget :: Maybe ExilePlayPermission.ExilePlayPermission -> GameState -> GameState
 spendPlayBudget permission gs = case permission >>= ExilePlayPermission.budget of
   Nothing -> gs
