@@ -57,7 +57,8 @@ flags =
     GetOpt.Option [] ["first"] (GetOpt.ReqArg (\s o -> fmap (\n -> o {PlayOptions.first = Just n}) (seat s)) "1|2") "which seat plays first; asked when absent",
     GetOpt.Option [] ["bot"] (GetOpt.ReqArg (\s o -> fmap (\n -> o {PlayOptions.bots = Set.insert n (PlayOptions.bots o)}) (seat s)) "1|2") "a seat the random bot plays",
     GetOpt.Option [] ["json"] (GetOpt.NoArg (\o -> Right o {PlayOptions.json = True})) "speak the line protocol on standard input and output",
-    GetOpt.Option [] ["save"] (GetOpt.ReqArg (\s o -> Right o {PlayOptions.save = Just s}) "FILE") "save the game as a scenario, even one cut short"
+    GetOpt.Option [] ["save"] (GetOpt.ReqArg (\s o -> Right o {PlayOptions.save = Just s}) "FILE") "save the game as a scenario, even one cut short",
+    GetOpt.Option [] ["no-auto-pass"] (GetOpt.NoArg (\o -> Right o {PlayOptions.autoPass = False})) "ask at every priority, even when passing and mana abilities are all there is"
   ]
   where
     seat s = case Read.readMaybe s of
@@ -100,9 +101,10 @@ play options lookUp (one, two) = do
         | PlayOptions.json options = Game.wired exchange
         | otherwise = Game.human terminal lookUp
       seats = Map.fromList [(idOf n, answerer n) | n <- [1, 2]]
+      screen = Hotseat.fresh {Hotseat.autoPass = PlayOptions.autoPass options}
       hotseat = case people of
-        [only] -> Hotseat.fresh {Hotseat.facing = Just (idOf only)}
-        _ -> Hotseat.fresh
+        [only] -> screen {Hotseat.facing = Just (idOf only)}
+        _ -> screen
   entries <- IORef.newIORef Seq.empty
   let labels = Map.fromList [(idOf n, Label.MkLabel (Text.pack ("player" <> show n))) | n <- [1, 2 :: Natural]]
       observers = [Record.recording labels (Game.underneath . IORef.modifyIORef' entries . flip (Seq.|>)) | Maybe.isJust (PlayOptions.save options)]

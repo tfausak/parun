@@ -1111,7 +1111,7 @@ activating :: ObjectId.ObjectId -> ObjectId.ObjectId -> Prompt.Prompt r -> r
 activating landId plainsId p = case p of
   Prompt.ChooseAction _ _ actions ->
     Maybe.fromMaybe A.Pass (List.find (isActivationOf landId) actions)
-  Prompt.ChooseManaSource _ _ candidates ->
+  Prompt.ChooseManaSource _ _ _ candidates ->
     Just (Maybe.fromMaybe (NonEmpty.head candidates) (List.find (== plainsId) (NonEmpty.toList candidates)))
   Prompt.OfferedCast {} -> OptionalDecision.Exercises
   _ -> S.identityAnswer p

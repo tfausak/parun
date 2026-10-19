@@ -9,12 +9,15 @@ import qualified Control.Monad.Trans.Except as Except
 import qualified Control.Monad.Trans.State.Strict as State
 import qualified Data.Char as Char
 import qualified Data.Containers.ListUtils as ListUtils
+import qualified Data.Either as Either
 import qualified Data.List as List
 import qualified Data.Map.Strict as Map
 import qualified Data.Maybe as Maybe
 import qualified Data.Set as Set
 import qualified Data.Text as Text
 import Numeric.Natural (Natural)
+import qualified Pawl.Codec.ManaCost as Codec.ManaCost
+import qualified Pawl.Codec.ManaType as Codec.ManaType
 import qualified Pawl.Codec.Reply as Codec.Reply
 import qualified Pawl.Codec.Request as Codec.Request
 import qualified Pawl.Extra.Integer as Integer
@@ -25,12 +28,18 @@ import qualified Pawl.Play.Render as Render
 import qualified Pawl.Types.Card as Card
 import qualified Pawl.Types.CardName as CardName
 import qualified Pawl.Types.Hotseat as Hotseat
+import qualified Pawl.Types.Mana as Mana
+import qualified Pawl.Types.ManaCost as ManaCost
+import qualified Pawl.Types.ManaSymbol as ManaSymbol
+import qualified Pawl.Types.ManaType as ManaType
+import qualified Pawl.Types.ManaUnit as ManaUnit
 import qualified Pawl.Types.ObjectId as ObjectId
 import qualified Pawl.Types.PlayerId as PlayerId
 import qualified Pawl.Types.PlayerView as PlayerView
 import qualified Pawl.Types.Question as Question
 import qualified Pawl.Types.Reply as R
 import qualified Pawl.Types.Request as Request
+import qualified Pawl.Types.SeatView as SeatView
 import qualified Pawl.Types.Terminal as Terminal
 import qualified Text.Read as Read
 
@@ -48,7 +57,6 @@ respond :: (Monad m) => Terminal.Terminal m -> (CardName.CardName -> Maybe Card.
 respond terminal lookUp line = do
   request <- either (stop . (Text.pack "unreadable request: " <>)) pure (Common.parse line >>= Codec.decode Codec.Request.codec)
   let question = Request.question request
-      view = Request.view request
       seat = Question.seat question
   fmap (Common.render . Codec.Reply.toValue) $
     if Question.kind question == Text.pack "Concede"
@@ -56,21 +64,31 @@ respond terminal lookUp line = do
         conceding <- State.gets (Set.member seat . Hotseat.conceding)
         pure (R.Text (Text.pack (if conceding then "Concedes" else "Continues")))
       else do
-        handOff terminal seat
-        first <- State.gets (Map.notMember seat . Hotseat.shown)
-        news <- unseen view
-        mapM_ (say terminal) $
-          [Text.empty]
-            <> Render.board view
-            <> [Text.pack "Since you last looked: " <> Text.intercalate (Text.pack "; ") news | not (null news)]
-            <> Render.hand view
-            <> [Text.pack "Type card and a number from a list, or a card's name, to read that card." | first]
-            <> foldMap (\p -> [Text.pack "That answer was refused: " <> p]) (Request.problem request)
-        answer terminal lookUp seat view question
+        (said, automatic) <- unasked request
+        mapM_ (say terminal) said
+        maybe (asked terminal lookUp request) pure automatic
+
+-- | Asks the seat, handing the screen to it first.
+asked :: (Monad m) => Terminal.Terminal m -> (CardName.CardName -> Maybe Card.Card) -> Request.Request -> Client m R.Reply
+asked terminal lookUp request = do
+  let question = Request.question request
+      view = Request.view request
+      seat = Question.seat question
+  handOff terminal seat
+  first <- State.gets (Map.notMember seat . Hotseat.shown)
+  news <- unseen view
+  mapM_ (say terminal) $
+    [Text.empty]
+      <> Render.board view
+      <> [Text.pack "Since you last looked: " <> Text.intercalate (Text.pack "; ") news | not (null news)]
+      <> Render.hand view
+      <> [Text.pack "Type card and a number from a list, or a card's name, to read that card." | first]
+      <> foldMap (\p -> [Text.pack "That answer was refused: " <> p]) (Request.problem request)
+  answer terminal lookUp seat view question
 
 -- | CR 104.3a's concession, quitting and reading a card are typed at any
--- question; everything else is read by the question's own reader until it
--- reads.
+-- question, and "auto" at a mana source; everything else is read by the
+-- question's own reader until it reads.
 answer :: (Monad m) => Terminal.Terminal m -> (CardName.CardName -> Maybe Card.Card) -> PlayerId.PlayerId -> PlayerView.PlayerView -> Question.Question -> Client m R.Reply
 answer terminal lookUp seat view question = case (Question.kind question, slotsOf question) of
   (kind, Just (source, slots)) | kind == Text.pack "ChooseTargets" -> fmap R.Array (mapM (target source) slots)
@@ -91,6 +109,12 @@ answer terminal lookUp seat view question = case (Question.kind question, slotsO
                   maybe True (Char.isSpace . fst) (Text.uncons wanted) -> do
                     mapM_ (say terminal) (reading lookUp view listed (Text.strip wanted))
                     loop
+              -- The rest of this payment, by autoSource.
+              "auto"
+                | Question.kind question == Text.pack "ChooseManaSource" ->
+                    autoPay seat view (Question.offer question) >>= \paid -> case paid of
+                      Just (said, reply) -> say terminal said >> pure reply
+                      Nothing -> say terminal (Text.pack "Auto can't pay the rest of this cost. Choose a source.") >> loop
               _ -> either (\problem -> say terminal problem >> loop) pure (reader typed)
       loop
     target source (slot, wanted, legal) = do
@@ -98,8 +122,8 @@ answer terminal lookUp seat view question = case (Question.kind question, slotsO
           shown =
             Text.concat [Text.pack "Choose ", Render.count n "target", Text.pack " for ", objectName view source, Text.pack " (", slotName slot, Text.pack "):"]
               : numbered (fmap (recipientName view) legal)
-      picked <- ask (fmap recipientObject legal) (shown, exactly n legal)
-      pure (R.Array [slot, R.Array picked])
+      picked <- ask (fmap recipientObject legal) (shown, fmap R.Array . exactly n legal)
+      pure (R.Array [slot, picked])
 
 -- | What a question shows, and how a typed line is read into its answer.
 choice :: PlayerView.PlayerView -> Question.Question -> ([Text.Text], Text.Text -> Either Text.Text R.Reply)
@@ -138,8 +162,17 @@ choice view question = Maybe.fromMaybe generic $ case Text.unpack (Question.kind
           <> [Text.pack "Type blocker:attacker pairs, such as 1:2, separated by spaces, or press Enter for no blocks:"],
         blocks blockers attackers
       )
-  "ChooseManaSource" -> sourcePick "Choose a source to pay with, or 0 to stop paying:"
-  "ChooseExtraManaSource" -> sourcePick "The cost is covered. Choose another source to activate, or 0 to pay now:"
+  "ChooseManaSource" -> do
+    cost <- field "cost" offer >>= decoded Codec.ManaCost.codec
+    sourcePick (Text.pack "Paying " <> Render.manaCost cost <> Text.pack ". Choose a source to pay with, 0 to stop paying, or auto to pay the rest:")
+  "ChooseExtraManaSource" -> sourcePick (Text.pack "The cost is covered. Choose another source to activate, or 0 to pay now:")
+  "ChooseManaYield" -> do
+    source <- field "source" offer
+    yields <- field "yields" offer >>= decoded (Common.list (Common.list Codec.ManaType.codec))
+    pure
+      ( Text.pack "Choose the mana " <> objectName view source <> Text.pack " makes:" : numbered (fmap (foldMap Render.manaType) yields),
+        fmap (R.Number . toInteger . subtract 1) . one (Natural.length yields)
+      )
   "ChooseX" -> do
     source <- field "source" offer
     least <- field "least" offer >>= naturalOf
@@ -160,9 +193,11 @@ choice view question = Maybe.fromMaybe generic $ case Text.unpack (Question.kind
   where
     offer = Question.offer question
     sourcePick heading = do
-      sources <- arrayOf offer
+      offered <- field "sources" offer >>= arrayOf >>= mapM manaSource
+      let sources = fmap fst offered
+          makes yields = if null yields then Text.empty else Text.pack " (makes " <> Text.intercalate (Text.pack " or ") (fmap (foldMap Render.manaType) yields) <> Text.pack ")"
       pure
-        ( Text.pack heading : numbered (fmap (objectName view) sources),
+        ( heading : numbered (fmap (\(source, yields) -> objectName view source <> makes yields) offered),
           \typed -> if Text.strip typed == Text.pack "0" then Right R.Null else fmap (pickFrom sources) (one (Natural.length sources) typed)
         )
     pickCount purpose = do
@@ -207,6 +242,108 @@ recipientObject :: R.Reply -> Maybe ObjectId.ObjectId
 recipientObject reply = case reply of
   R.Array [R.Text tag, x] | tag /= Text.pack "Player" -> objectOf x
   _ -> Nothing
+
+-- | What to say, and the answer the seat opted into ahead of the question,
+-- if any: passing a priority that offers nothing but passing and
+-- mana abilities, and the rest of a payment the seat typed "auto" at. A
+-- payment's other prompts and a refused answer end "auto", and a refused
+-- answer is always asked.
+unasked :: (Monad m) => Request.Request -> Client m ([Text.Text], Maybe R.Reply)
+unasked request = do
+  let question = Request.question request
+      seat = Question.seat question
+      offer = Question.offer question
+      kind = Text.unpack (Question.kind question)
+      refused = Maybe.isJust (Request.problem request)
+  hotseat <- State.get
+  let paying = Map.lookup seat (Hotseat.paying hotseat)
+  Monad.when (refused || kind `notElem` ["ChooseManaSource", "ChooseExtraManaSource", "ChooseManaYield", "ChooseManaToSpend"]) (stopPaying seat)
+  case kind of
+    _ | refused -> pure ([], Nothing)
+    "ChooseAction"
+      | Hotseat.autoPass hotseat,
+        Just pass <- onlyPass offer ->
+          pure ([Render.player seat <> Text.pack " passes (no other actions)."], Just (R.Number pass))
+    "ChooseManaSource"
+      | Maybe.isJust paying ->
+          autoPay seat (Request.view request) offer >>= \paid -> case paid of
+            Just (said, reply) -> pure ([said], Just reply)
+            Nothing -> stopPaying seat >> pure ([Text.pack "Auto can't pay the rest of this cost."], Nothing)
+    -- CR 605.3b: the mana the source was tapped for.
+    "ChooseManaYield"
+      | Just wanted <- paying,
+        Just yields <- field "yields" offer >>= decoded (Common.list (Common.list Codec.ManaType.codec)),
+        (i, yield) : _ <- filter (\(_, yield) -> Set.null wanted || not (Set.disjoint wanted (Set.fromList yield))) (zip [0 :: Integer ..] yields) ->
+          pure ([Text.pack "Auto takes " <> foldMap Render.manaType yield <> Text.pack "."], Just (R.Number i))
+    -- CR 605.3a: auto never floats mana past the cost.
+    "ChooseExtraManaSource" | Maybe.isJust paying -> stopPaying seat >> pure ([], Just R.Null)
+    _ -> pure ([], Nothing)
+
+-- | Auto's next source for the seat, and the line saying so, remembering the
+-- colors the source is tapped for.
+autoPay :: (Monad m) => PlayerId.PlayerId -> PlayerView.PlayerView -> R.Reply -> Client m (Maybe (Text.Text, R.Reply))
+autoPay seat view offer = case autoSource view offer of
+  Nothing -> pure Nothing
+  Just (source, wanted) -> do
+    State.modify' (\h -> h {Hotseat.paying = Map.insert seat wanted (Hotseat.paying h)})
+    pure (Just (Text.pack "Auto pays with " <> objectName view source <> Text.pack ".", source))
+
+stopPaying :: (Monad m) => PlayerId.PlayerId -> Client m ()
+stopPaying seat = State.modify' (\h -> h {Hotseat.paying = Map.delete seat (Hotseat.paying h)})
+
+-- | Where Pass sits in a ChooseAction offer whose every other action is a
+-- mana ability (CR 605.3a), which the text client does not ask about.
+onlyPass :: R.Reply -> Maybe Integer
+onlyPass offer = do
+  kinds <- arrayOf offer >>= mapM (field "action" Monad.>=> textOf)
+  Monad.guard (all (`elem` [Text.pack "Pass", Text.pack "ActivateManaAbility"]) kinds)
+  fmap toInteger (List.elemIndex (Text.pack "Pass") kinds)
+
+-- | CR 601.2g: the next source auto taps, and the colors it is tapped for
+-- (none for generic mana). The payer's pool goes first against the cost; then
+-- each colored symbol still owed is paid from the source that makes the
+-- fewest of the colors still owed, then generic mana from the source that
+-- makes the fewest types. Nothing when the cost holds a symbol other than
+-- generic or one type of mana, when the pool already covers it, or when no
+-- source makes what is still owed.
+autoSource :: PlayerView.PlayerView -> R.Reply -> Maybe (R.Reply, Set.Set ManaType.ManaType)
+autoSource view offer = do
+  payer <- field "payer" offer >>= textOf >>= Read.readMaybe . Text.unpack
+  cost <- field "cost" offer >>= decoded Codec.ManaCost.codec
+  owed <- mapM owedOf (ManaCost.unwrap cost)
+  sources <- field "sources" offer >>= arrayOf >>= mapM manaSource
+  let pool = foldMap (fmap ManaUnit.manaType . Mana.unwrap . SeatView.manaPool) (List.find ((== PlayerId.MkPlayerId payer) . SeatView.player) (PlayerView.seats view))
+      (colored, unspent) = List.foldl' spendOne ([], pool) (Either.rights owed)
+      generic = sum (Either.lefts owed)
+      wanted = Set.fromList colored
+      makes (_, yields) = Set.fromList (concat yields)
+      fewest by = Maybe.listToMaybe . List.sortOn by
+  source <-
+    if not (Set.null wanted)
+      then fewest (\s -> (Set.size (Set.intersection wanted (makes s)), Set.size (makes s))) (filter (not . Set.disjoint wanted . makes) sources)
+      else
+        if generic > Natural.length unspent
+          then fewest (Set.size . makes) (filter (not . Set.null . makes) sources)
+          else Nothing
+  pure (fst source, Set.intersection wanted (makes source))
+  where
+    owedOf symbol = case symbol of
+      ManaSymbol.Generic n -> Just (Left n)
+      ManaSymbol.OfType t -> Just (Right t)
+      _ -> Nothing
+    spendOne (still, pool) t = case List.elemIndex t pool of
+      Just i -> (still, take i pool <> drop (i + 1) pool)
+      Nothing -> (still <> [t], pool)
+
+-- | A mana source as an offer names it, beside the mana types of each yield.
+manaSource :: R.Reply -> Maybe (R.Reply, [[ManaType.ManaType]])
+manaSource reply = do
+  source <- field "source" reply
+  makes <- field "makes" reply >>= decoded (Common.list (Common.list Codec.ManaType.codec))
+  pure (source, makes)
+
+decoded :: Codec.Codec a -> R.Reply -> Maybe a
+decoded codec = either (const Nothing) Just . Codec.decode codec . Codec.Reply.toValue
 
 -- | One number from 1 to n.
 one :: Natural -> Text.Text -> Either Text.Text Natural

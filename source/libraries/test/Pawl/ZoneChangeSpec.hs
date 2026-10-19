@@ -1212,7 +1212,7 @@ conduitAnswer sides p =
         Prompt.ChooseAction _ _ options -> case filter isActivation options of
           a : _ -> a
           [] -> A.Pass
-        Prompt.ChooseManaSource _ _ candidates -> Just (NonEmpty.head candidates)
+        Prompt.ChooseManaSource _ _ _ candidates -> Just (NonEmpty.head candidates)
         Prompt.ChooseTargets _ _ _ sets -> S.preferring wanted sets
         _ -> S.identityAnswer p
 
