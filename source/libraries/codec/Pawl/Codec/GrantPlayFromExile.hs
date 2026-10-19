@@ -38,6 +38,7 @@ codec = Fields.object $ do
   verb <- Fields.defaulted "verb" PermissionVerb.Type.Play PermissionVerb.codec GrantPlayFromExile.verb
   increase <- Fields.defaulted "increase" 0 Common.natural GrantPlayFromExile.increase
   landEnters <- Fields.defaulted "landEnters" TapState.Type.Untapped TapState.codec GrantPlayFromExile.landEnters
+  upTo <- Fields.defaulted "upTo" Nothing (Common.maybe Common.natural) GrantPlayFromExile.upTo
   pure
     GrantPlayFromExile.MkGrantPlayFromExile
       { GrantPlayFromExile.duration = duration,
@@ -48,5 +49,6 @@ codec = Fields.object $ do
         GrantPlayFromExile.condition = condition,
         GrantPlayFromExile.verb = verb,
         GrantPlayFromExile.increase = increase,
-        GrantPlayFromExile.landEnters = landEnters
+        GrantPlayFromExile.landEnters = landEnters,
+        GrantPlayFromExile.upTo = upTo
       }

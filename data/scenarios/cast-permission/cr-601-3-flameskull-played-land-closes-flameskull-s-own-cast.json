@@ -1,0 +1,38 @@
+{
+  "description": "CR 601.3 Flameskull's dies trigger exiles it and the top card, and playing that land uses the one play, so Flameskull is no longer castable from exile",
+  "note": "Bolt kills Flameskull; its trigger exiles it and then the Plains. Before the land play both are offered, with three Mountains untapped to pay Flameskull's {1}{R}{R}; after it Flameskull is not, with the same three Mountains.",
+  "board": {
+    "seats": [
+      {
+        "name": "alice",
+        "battlefield": [
+          { "card": "Flameskull", "label": "skull", "ready": true },
+          { "card": "Mountain", "label": "m1", "ready": true },
+          { "card": "Mountain", "label": "m2", "ready": true },
+          { "card": "Mountain", "label": "m3", "ready": true },
+          { "card": "Mountain", "label": "m4", "ready": true }
+        ],
+        "hand": [{ "card": "Lightning Bolt", "label": "bolt" }],
+        "library": [{ "card": "Plains" }, { "card": "Hill Giant" }]
+      },
+      {
+        "name": "bob",
+        "library": [{ "card": "Ogre Sentry" }]
+      }
+    ],
+    "active": "alice",
+    "step": "PrecombatMain"
+  },
+  "timeline": [
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": { "Cast": { "object": "$bolt", "targets": ["$skull"], "mana": ["$m1", null] } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass" },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass" },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "check": { "View": { "of": "Offered", "player": "alice", "is": ["Pass", "PlayLand Plains", "Cast Flameskull", "ActivateManaAbility $m2", "ActivateManaAbility $m3", "ActivateManaAbility $m4"] } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": { "PlayLand": "Plains" } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "check": { "View": { "of": "Offered", "player": "alice", "is": ["Pass", "ActivateManaAbility $m2", "ActivateManaAbility $m3", "ActivateManaAbility $m4", "ActivateManaAbility Plains"] } } }
+  ],
+  "final": [
+    { "Count": { "player": "alice", "zone": "Battlefield", "card": "Plains", "count": 1 } },
+    { "Count": { "player": "alice", "zone": "Exile", "card": "Flameskull", "count": 1 } }
+  ]
+}

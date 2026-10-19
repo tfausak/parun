@@ -40,6 +40,7 @@ import qualified Pawl.Types.Object as Object
 import qualified Pawl.Types.ObjectId as ObjectId
 import qualified Pawl.Types.PermissionCost as PermissionCost
 import qualified Pawl.Types.PermissionVerb as PermissionVerb
+import qualified Pawl.Types.PlayBudget as PlayBudget
 import qualified Pawl.Types.PlayPermissionOrigin as PlayPermissionOrigin
 import qualified Pawl.Types.PlayerChoice as PlayerChoice
 import qualified Pawl.Types.PlayerId as PlayerId
@@ -148,7 +149,8 @@ spec s = Spec.describe s "Pawl.Codec.Object" $ do
                   ExilePlayPermission.origin = PlayPermissionOrigin.Granted,
                   ExilePlayPermission.verb = PermissionVerb.Cast,
                   ExilePlayPermission.increase = 1,
-                  ExilePlayPermission.landEnters = TapState.Tapped
+                  ExilePlayPermission.landEnters = TapState.Tapped,
+                  ExilePlayPermission.budget = Just (PlayBudget.MkPlayBudget 2 (Set.fromList [ObjectId.MkObjectId 30, ObjectId.MkObjectId 31]))
                 },
           Object.plotted = Just 0,
           Object.foretold = Just 15,
@@ -220,7 +222,7 @@ spec s = Spec.describe s "Pawl.Codec.Object" $ do
           <> ",\"timestamp\":10,\"face\":\"Delver of Secrets\",\"turnedOverAt\":11"
           <> ",\"worldSince\":12"
           <> ",\"playableFromExile\":{\"player\":13,\"source\":14,\"expiry\":{\"type\":\"AtCleanup\"}"
-          <> ",\"spending\":{\"type\":\"AnyType\"},\"alternativeCost\":{\"type\":\"InsteadOfManaCost\",\"value\":[]},\"condition\":null,\"origin\":{\"type\":\"Granted\"},\"verb\":{\"type\":\"Cast\"},\"increase\":1,\"landEnters\":{\"type\":\"Tapped\"}}"
+          <> ",\"spending\":{\"type\":\"AnyType\"},\"alternativeCost\":{\"type\":\"InsteadOfManaCost\",\"value\":[]},\"condition\":null,\"origin\":{\"type\":\"Granted\"},\"verb\":{\"type\":\"Cast\"},\"increase\":1,\"landEnters\":{\"type\":\"Tapped\"},\"budget\":{\"remaining\":2,\"covers\":[30,31]}}"
           <> ",\"plotted\":0,\"foretold\":15"
           <> ",\"foretellCostReduction\":[{\"type\":\"Generic\",\"value\":29}]"
           <> ",\"warped\":28,\"preparedCopyOf\":26"

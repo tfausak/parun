@@ -1,0 +1,43 @@
+{
+  "description": "CR 601.3 Fire Lord Ozai's {6} exiles the top card of each opponent's library and lets one of the two be cast free; after the Hill Giant, the Raging Goblin is no longer offered",
+  "note": "Two opponents put two cards in exile. Both are offered free before the first cast and the Goblin is not after it.",
+  "board": {
+    "seats": [
+      {
+        "name": "alice",
+        "battlefield": [
+          { "card": "Fire Lord Ozai", "label": "ozai", "ready": true },
+          { "card": "Mountain", "label": "m1", "ready": true },
+          { "card": "Mountain", "label": "m2", "ready": true },
+          { "card": "Mountain", "label": "m3", "ready": true },
+          { "card": "Mountain", "label": "m4", "ready": true },
+          { "card": "Mountain", "label": "m5", "ready": true },
+          { "card": "Mountain", "label": "m6", "ready": true }
+        ],
+        "library": [{ "card": "Plains" }]
+      },
+      {
+        "name": "bob",
+        "library": [{ "card": "Hill Giant" }, { "card": "Ogre Sentry" }]
+      },
+      {
+        "name": "carol",
+        "library": [{ "card": "Raging Goblin" }, { "card": "Ogre Sentry" }]
+      }
+    ],
+    "active": "alice",
+    "step": "PrecombatMain"
+  },
+  "timeline": [
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": { "Activate": { "object": "$ozai", "ability": 0, "mana": ["$m1", "$m2", "$m3", "$m4", "$m5", "$m6"] } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass" },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "check": { "View": { "of": "Offered", "player": "alice", "is": ["Pass", "Cast Hill Giant", "Cast Raging Goblin"] } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": { "Cast": { "object": "Hill Giant" } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass" },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "check": { "View": { "of": "Offered", "player": "alice", "is": ["Pass"] } } }
+  ],
+  "final": [
+    { "Count": { "player": "alice", "zone": "Battlefield", "card": "Hill Giant", "count": 1 } },
+    { "Count": { "player": "carol", "zone": "Exile", "card": "Raging Goblin", "count": 1 } }
+  ]
+}

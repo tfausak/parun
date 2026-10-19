@@ -38,7 +38,8 @@ spec s = Spec.describe s "Pawl.Codec.GrantPlayFromExile" $ do
             GrantPlayFromExile.condition = Nothing,
             GrantPlayFromExile.verb = PermissionVerb.Play,
             GrantPlayFromExile.increase = 0,
-            GrantPlayFromExile.landEnters = TapState.Untapped
+            GrantPlayFromExile.landEnters = TapState.Untapped,
+            GrantPlayFromExile.upTo = Nothing
           }
       )
       " {\"duration\":{\"type\":\"UntilEndOfTurn\"},\"ref\":{\"type\":\"InSlot\",\"value\":\"exiled\"}} "
@@ -56,7 +57,8 @@ spec s = Spec.describe s "Pawl.Codec.GrantPlayFromExile" $ do
             GrantPlayFromExile.condition = Nothing,
             GrantPlayFromExile.verb = PermissionVerb.Play,
             GrantPlayFromExile.increase = 0,
-            GrantPlayFromExile.landEnters = TapState.Untapped
+            GrantPlayFromExile.landEnters = TapState.Untapped,
+            GrantPlayFromExile.upTo = Nothing
           }
       )
       " {\"duration\":{\"type\":\"UntilEndOfTurn\"},\"ref\":{\"type\":\"InSlot\",\"value\":\"exiled\"},\"spending\":{\"type\":\"AnyType\"}} "
@@ -75,7 +77,8 @@ spec s = Spec.describe s "Pawl.Codec.GrantPlayFromExile" $ do
             GrantPlayFromExile.condition = Nothing,
             GrantPlayFromExile.verb = PermissionVerb.Play,
             GrantPlayFromExile.increase = 0,
-            GrantPlayFromExile.landEnters = TapState.Untapped
+            GrantPlayFromExile.landEnters = TapState.Untapped,
+            GrantPlayFromExile.upTo = Nothing
           }
       )
       " {\"duration\":{\"type\":\"Indefinite\"},\"ref\":{\"type\":\"InSlot\",\"value\":\"exiled\"},\"alternativeCost\":{\"type\":\"InsteadOfManaCost\",\"value\":[]}} "
@@ -94,7 +97,8 @@ spec s = Spec.describe s "Pawl.Codec.GrantPlayFromExile" $ do
             GrantPlayFromExile.condition = Nothing,
             GrantPlayFromExile.verb = PermissionVerb.Play,
             GrantPlayFromExile.increase = 0,
-            GrantPlayFromExile.landEnters = TapState.Untapped
+            GrantPlayFromExile.landEnters = TapState.Untapped,
+            GrantPlayFromExile.upTo = Nothing
           }
       )
       " {\"duration\":{\"type\":\"UntilEndOfTurn\"},\"player\":{\"type\":\"InSlot\",\"value\":\"thatPlayer\"},\"ref\":{\"type\":\"InSlot\",\"value\":\"exiled\"}} "
@@ -113,7 +117,8 @@ spec s = Spec.describe s "Pawl.Codec.GrantPlayFromExile" $ do
             GrantPlayFromExile.condition = Nothing,
             GrantPlayFromExile.verb = PermissionVerb.Cast,
             GrantPlayFromExile.increase = 0,
-            GrantPlayFromExile.landEnters = TapState.Untapped
+            GrantPlayFromExile.landEnters = TapState.Untapped,
+            GrantPlayFromExile.upTo = Nothing
           }
       )
       " {\"duration\":{\"type\":\"UntilEndOfTurn\"},\"ref\":{\"type\":\"InSlot\",\"value\":\"exiled\"},\"verb\":{\"type\":\"Cast\"}} "
@@ -131,7 +136,8 @@ spec s = Spec.describe s "Pawl.Codec.GrantPlayFromExile" $ do
             GrantPlayFromExile.condition = Nothing,
             GrantPlayFromExile.verb = PermissionVerb.Play,
             GrantPlayFromExile.increase = 0,
-            GrantPlayFromExile.landEnters = TapState.Untapped
+            GrantPlayFromExile.landEnters = TapState.Untapped,
+            GrantPlayFromExile.upTo = Nothing
           }
       )
   -- Hama, the Bloodbender's: CR 118.9's waterbend alternative, open only
@@ -149,7 +155,8 @@ spec s = Spec.describe s "Pawl.Codec.GrantPlayFromExile" $ do
             GrantPlayFromExile.condition = Just (Condition.Compares (Compares.MkCompares (Quantity.IsActivePlayer (PlayerRef.Relative PlayerRelation.You)) Comparison.Exactly (Quantity.Literal 1))),
             GrantPlayFromExile.verb = PermissionVerb.Cast,
             GrantPlayFromExile.increase = 0,
-            GrantPlayFromExile.landEnters = TapState.Untapped
+            GrantPlayFromExile.landEnters = TapState.Untapped,
+            GrantPlayFromExile.upTo = Nothing
           }
       )
       " {\"duration\":{\"type\":\"Indefinite\"},\"ref\":{\"type\":\"InSlot\",\"value\":\"exiled\"},\"alternativeCost\":{\"type\":\"WaterbendManaValue\"},\"condition\":{\"type\":\"Compares\",\"value\":{\"comparison\":{\"type\":\"Exactly\"},\"measured\":{\"type\":\"IsActivePlayer\",\"value\":{\"type\":\"Relative\",\"value\":{\"type\":\"You\"}}},\"threshold\":{\"type\":\"Literal\",\"value\":1}}},\"verb\":{\"type\":\"Cast\"}} "
@@ -168,8 +175,28 @@ spec s = Spec.describe s "Pawl.Codec.GrantPlayFromExile" $ do
             GrantPlayFromExile.condition = Nothing,
             GrantPlayFromExile.verb = PermissionVerb.Play,
             GrantPlayFromExile.increase = 1,
-            GrantPlayFromExile.landEnters = TapState.Tapped
+            GrantPlayFromExile.landEnters = TapState.Tapped,
+            GrantPlayFromExile.upTo = Nothing
           }
       )
       " {\"duration\":{\"type\":\"Indefinite\"},\"player\":{\"type\":\"InSlot\",\"value\":\"opponent\"},\"ref\":{\"type\":\"InSlot\",\"value\":\"exiled\"},\"increase\":1,\"landEnters\":{\"type\":\"Tapped\"}} "
+  -- March of Reckless Joy's: CR 601.3's "up to two of those cards" written out.
+  Spec.it s "MkGrantPlayFromExile, March of Reckless Joy's limit" $
+    Common.assertCodec
+      s
+      GrantPlayFromExile.codec
+      ( GrantPlayFromExile.MkGrantPlayFromExile
+          { GrantPlayFromExile.duration = Duration.UntilEndOfYourNextTurn,
+            GrantPlayFromExile.player = PlayerRef.Relative PlayerRelation.You,
+            GrantPlayFromExile.ref = ObjectRef.InSlot (SlotName.MkSlotName (Text.pack "exiled")),
+            GrantPlayFromExile.spending = ManaSpending.AsProduced,
+            GrantPlayFromExile.alternativeCost = Nothing,
+            GrantPlayFromExile.condition = Nothing,
+            GrantPlayFromExile.verb = PermissionVerb.Play,
+            GrantPlayFromExile.increase = 0,
+            GrantPlayFromExile.landEnters = TapState.Untapped,
+            GrantPlayFromExile.upTo = Just 2
+          }
+      )
+      " {\"duration\":{\"type\":\"UntilEndOfYourNextTurn\"},\"ref\":{\"type\":\"InSlot\",\"value\":\"exiled\"},\"upTo\":2} "
   Spec.it s "has a schema" $ Common.assertHasSchema s GrantPlayFromExile.codec

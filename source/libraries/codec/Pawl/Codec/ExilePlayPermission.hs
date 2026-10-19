@@ -8,6 +8,7 @@ import qualified Pawl.Codec.ManaSpending as ManaSpending
 import qualified Pawl.Codec.ObjectId as ObjectId
 import qualified Pawl.Codec.PermissionCost as PermissionCost
 import qualified Pawl.Codec.PermissionVerb as PermissionVerb
+import qualified Pawl.Codec.PlayBudget as PlayBudget
 import qualified Pawl.Codec.PlayPermissionOrigin as PlayPermissionOrigin
 import qualified Pawl.Codec.PlayerId as PlayerId
 import qualified Pawl.Codec.TapState as TapState
@@ -18,7 +19,8 @@ import qualified Pawl.Types.ExilePlayPermission as ExilePlayPermission
 
 -- | Every axis 'Fields.required', because none of them has a default the rules
 -- give: `spending` is CR 118.14's rider, `alternativeCost` is CR 118.9a's,
--- `increase` and `landEnters` are CR 601.2f's and CR 614.1d's, and `origin`
+-- `increase` and `landEnters` are CR 601.2f's and CR 614.1d's, `budget` is
+-- CR 601.3's count of plays left, and `origin`
 -- is CR 715.3d's own question -- a permission written without any of them
 -- would decode as a different permission rather than as an incomplete
 -- one. The type's haddock argues each field. Unlike
@@ -37,6 +39,7 @@ codec = Fields.object $ do
   verb <- Fields.required "verb" PermissionVerb.codec ExilePlayPermission.verb
   increase <- Fields.required "increase" Common.natural ExilePlayPermission.increase
   landEnters <- Fields.required "landEnters" TapState.codec ExilePlayPermission.landEnters
+  budget <- Fields.required "budget" (Common.maybe PlayBudget.codec) ExilePlayPermission.budget
   pure
     ExilePlayPermission.MkExilePlayPermission
       { ExilePlayPermission.player = player,
@@ -48,5 +51,6 @@ codec = Fields.object $ do
         ExilePlayPermission.origin = origin,
         ExilePlayPermission.verb = verb,
         ExilePlayPermission.increase = increase,
-        ExilePlayPermission.landEnters = landEnters
+        ExilePlayPermission.landEnters = landEnters,
+        ExilePlayPermission.budget = budget
       }

@@ -90,6 +90,7 @@ import qualified Pawl.Types.Payment as Payment
 import qualified Pawl.Types.PaymentMoment as PaymentMoment
 import qualified Pawl.Types.PaymentSubject as PaymentSubject
 import qualified Pawl.Types.PermissionVerb as PermissionVerb
+import qualified Pawl.Types.PlayBudget as PlayBudget
 import qualified Pawl.Types.PlayPermissionOrigin as PlayPermissionOrigin
 import qualified Pawl.Types.PlayerCounterKind as PlayerCounterKind
 import Pawl.Types.PlayerId (PlayerId)
@@ -2590,7 +2591,7 @@ castSpellWith perform timed offered applied widened pid oid name facing = Event.
                  in PlayerEffect.prohibitsAtManaValue pid oid manaValue board
                       || not (PlayerEffect.admitsAtManaValue pid permission oid manaValue board)
                       || (timed && flashRefusedAt pid oid name manaValue board)
-          castProposed perform spending pid oid sid face castFrom preparedFor keywordsBefore candidates spent permissions (riders sid) refusedAt before
+          castProposed perform spending pid oid sid face castFrom preparedFor keywordsBefore candidates spent permissions (riders sid) refusedAt (ownExilePermission offered pid oid before) before
 
 -- CR 305.2a / 305.3: whether `pid` may play a land at all now -- it is their
 -- turn, and the lands they have played this turn fall short of the lands they
@@ -2663,6 +2664,9 @@ playLand offered pid oid mName = do
   Monad.unless (Seq.null moved && not refused) $ do
     State.modify' (PlayerEffect.consume spent)
     State.modify' (PlayerEffect.spendCastPermission (PlayerEffect.permissionSpent permission))
+    -- CR 601.3: a land played under the card's own exile permission spends
+    -- its budget, as a cast does.
+    Monad.when (Maybe.isNothing permission) (State.modify' (spendPlayBudget (ownExilePermission offered pid oid before)))
     State.modify' (\g -> g {GameState.continuousEffects = concatMap riders (filter (`Set.member` GameState.battlefield g) (Foldable.toList moved)) <> GameState.continuousEffects g})
     -- CR 305.1 / 400.7i: the card was played, under its pre-move id and the
     -- permanent's.
@@ -2680,6 +2684,34 @@ playLand offered pid oid mName = do
   -- flagging. CR 305.4: the only tally, an effect that PUTS a land onto the
   -- battlefield not being one.
   State.modify' (\g -> g {GameState.landsPlayed = Map.insertWith (+) pid 1 (GameState.landsPlayed g)})
+
+-- CR 601.3: the exile permission a play of `oid` by `pid` is made under when
+-- it names no other: the card's own, open to `pid` where the card lies.
+-- Nothing for a play an effect instructs (`offered`, CR 608.2g), which is made
+-- under that effect -- a regression fence, no card in data/cards/ offering a
+-- cast of a card a budgeted grant covers.
+ownExilePermission :: Bool -> PlayerId -> ObjectId -> GameState -> Maybe ExilePlayPermission.ExilePlayPermission
+ownExilePermission offered pid oid gs
+  | offered || Game.zoneOf oid gs /= Just Zone.Exile || not (permitsPlayFromExile pid oid gs) = Nothing
+  | otherwise = Game.lookupObject oid gs >>= Object.playableFromExile
+
+-- CR 601.3: one play spent from the budget a played card's exile permission
+-- shares with the other cards its grant covered (Pawl.Types.PlayBudget), and
+-- every one of their permissions closed once none is left. Only a permission
+-- still holding that same budget is touched, so a card a later grant took over
+-- keeps the later one -- a regression fence, since no card in data/cards/ grants
+-- a second permission to a card a budgeted grant covers; see #5294. Nothing
+-- for a permission with no budget.
+spendPlayBudget :: Maybe ExilePlayPermission.ExilePlayPermission -> GameState -> GameState
+spendPlayBudget permission gs = case permission >>= ExilePlayPermission.budget of
+  Nothing -> gs
+  Just budget ->
+    let spend held
+          | ExilePlayPermission.budget held /= Just budget = Just held
+          | PlayBudget.remaining budget <= 1 = Nothing
+          | otherwise = Just held {ExilePlayPermission.budget = Just budget {PlayBudget.remaining = PlayBudget.remaining budget - 1}}
+        adjust o = o {Object.playableFromExile = Object.playableFromExile o >>= spend}
+     in gs {GameState.objects = foldr (Map.adjust adjust) (GameState.objects gs) (Set.toList (PlayBudget.covers budget))}
 
 -- CR 400.7i / 614.1d: how a land `pid` plays out of exile under the card's own
 -- permission enters (ExilePlayPermission.landEnters); untapped for a land
@@ -3013,8 +3045,8 @@ trimModalForCandidate castFor paid modal = modal {Modal.Type.modes = fmap (trimM
 -- of the pre-move state for `spent`'s reason; the one chosen spends its budget
 -- beside `spent`, and `riders` is what it gives the spell (CR 611.3d), asked
 -- there too and stored beside it.
-castProposed :: ManaAbilityPerformer.ManaAbilityPerformer -> ManaSpending -> PlayerId -> ObjectId -> ObjectId -> Face.Face Card.Type.Card -> Maybe Zone.Zone -> Maybe ObjectId -> Set Keyword -> [CandidateCost.CandidateCost] -> [ActivePlayerEffect.ActivePlayerEffect] -> [Maybe (ObjectId, CastFromZone.CastFromZone)] -> (Maybe (ObjectId, CastFromZone.CastFromZone) -> [ContinuousEffect.ContinuousEffect Card.Type.Card]) -> (Maybe Keyword -> Maybe (ObjectId, CastFromZone.CastFromZone) -> Integer -> Bool) -> GameState -> Game ()
-castProposed perform spending pid oid sid face castFrom preparedFor keywordsBefore candidateCosts spent permissions riders refusedAt before = do
+castProposed :: ManaAbilityPerformer.ManaAbilityPerformer -> ManaSpending -> PlayerId -> ObjectId -> ObjectId -> Face.Face Card.Type.Card -> Maybe Zone.Zone -> Maybe ObjectId -> Set Keyword -> [CandidateCost.CandidateCost] -> [ActivePlayerEffect.ActivePlayerEffect] -> [Maybe (ObjectId, CastFromZone.CastFromZone)] -> (Maybe (ObjectId, CastFromZone.CastFromZone) -> [ContinuousEffect.ContinuousEffect Card.Type.Card]) -> (Maybe Keyword -> Maybe (ObjectId, CastFromZone.CastFromZone) -> Integer -> Bool) -> Maybe ExilePlayPermission.ExilePlayPermission -> GameState -> Game ()
+castProposed perform spending pid oid sid face castFrom preparedFor keywordsBefore candidateCosts spent permissions riders refusedAt exilePermission before = do
   gs <- State.get
   let candidates = fmap (\candidate -> (CandidateCost.reductions candidate, CandidateCost.cost candidate)) candidateCosts
       decider = Decide.deciderFor pid gs
@@ -3798,6 +3830,10 @@ castProposed perform spending pid oid sid face castFrom preparedFor keywordsBefo
                           -- here rejects, and CR 733.1's reversal restores the
                           -- whole field (Pawl.Engine.Reversal).
                           State.modify' (PlayerEffect.spendCastPermission (PlayerEffect.permissionSpent permissionUsed))
+                          -- CR 601.3: and a cast made under the card's own exile
+                          -- permission spends that permission's budget, for the
+                          -- same reason.
+                          Monad.when (not ownPermission && Maybe.isNothing permissionUsed) (State.modify' (spendPlayBudget exilePermission))
                           -- CR 601.2c: each chosen object became a target of this
                           -- spell, which is what CR 702.21a's ward watches. Here
                           -- rather than beside `chosen` above for CR 601.2i's

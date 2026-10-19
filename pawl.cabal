@@ -1051,6 +1051,8 @@ library codec
     Pawl.Codec.PlaneswalkRewrite
     Pawl.Codec.PlaneswalkRewriteSpec
     Pawl.Codec.PlaneswalkRSpec
+    Pawl.Codec.PlayBudget
+    Pawl.Codec.PlayBudgetSpec
     Pawl.Codec.Player
     Pawl.Codec.PlayerActed
     Pawl.Codec.PlayerAction
@@ -2707,6 +2709,7 @@ library types
     Pawl.Types.PlaneswalkCause
     Pawl.Types.PlaneswalkR
     Pawl.Types.PlaneswalkRewrite
+    Pawl.Types.PlayBudget
     Pawl.Types.Player
     Pawl.Types.PlayerActed
     Pawl.Types.PlayerAction

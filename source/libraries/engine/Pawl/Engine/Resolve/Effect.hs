@@ -324,6 +324,7 @@ import qualified Pawl.Types.Phase as Phase
 import qualified Pawl.Types.PhasePattern as PhasePattern
 import qualified Pawl.Types.PhaseSelector as PhaseSelector
 import qualified Pawl.Types.PlaneswalkCause as PlaneswalkCause
+import qualified Pawl.Types.PlayBudget as PlayBudget
 import qualified Pawl.Types.PlayPermissionOrigin as PlayPermissionOrigin
 import qualified Pawl.Types.Player as Player
 import qualified Pawl.Types.PlayerActed as PlayerActed
@@ -2360,7 +2361,8 @@ exileFoundFor agent exiled =
               ExilePlayPermission.origin = PlayPermissionOrigin.Granted,
               ExilePlayPermission.verb = PermissionVerb.Play,
               ExilePlayPermission.increase = 0,
-              ExilePlayPermission.landEnters = TapState.Untapped
+              ExilePlayPermission.landEnters = TapState.Untapped,
+              ExilePlayPermission.budget = Nothing
             }
         grant you o = o {Object.playableFromExile = Just (permission you)}
         granted = case Projection.controllerOf agent gs of
@@ -5804,7 +5806,7 @@ applyOneEffect runSubgame resolving source controller legal chosen effect = case
   --
   -- NOT gated on the object being in exile: CR 601.3's permissions are not
   -- zone-scoped, so a zone test would be the rules core reading the effect.
-  Effect.GrantPlayFromExile (GrantPlayFromExile.MkGrantPlayFromExile duration player ref spending alternativeCost condition verb increase landEnters) ->
+  Effect.GrantPlayFromExile (GrantPlayFromExile.MkGrantPlayFromExile duration player ref spending alternativeCost condition verb increase landEnters upTo) ->
     State.modify' $ \gs ->
       -- The sweep every ObjectRef-taking opcode shares: a player recipient, an
       -- illegal slot (CR 608.2b) and a set that matched nothing all arrive empty.
@@ -5842,7 +5844,10 @@ applyOneEffect runSubgame resolving source controller legal chosen effect = case
                         -- unread; Pawl.Engine.Cost and Pawl.Engine.Cast.playLand
                         -- act on them.
                         ExilePlayPermission.increase = increase,
-                        ExilePlayPermission.landEnters = landEnters
+                        ExilePlayPermission.landEnters = landEnters,
+                        -- CR 601.3: one budget over every object granted,
+                        -- so a play of any of them spends it for all.
+                        ExilePlayPermission.budget = fmap (\n -> PlayBudget.MkPlayBudget n (Set.fromList targets)) upTo
                       }
                   grant o = o {Object.playableFromExile = Just permission}
                in gs {GameState.objects = foldr (Map.adjust grant) (GameState.objects gs) targets}

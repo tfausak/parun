@@ -1,0 +1,51 @@
+{
+  "description": "CR 601.3 March of Reckless Joy lets two of the three cards it exiles be played: a land play and a cast spend the two, and the third is no longer offered",
+  "note": "X = 3 exiles the Plains, the Piker and the Raging Goblin. Before either play the Goblin is offered; after the Plains is played and the Piker cast it is not, though a Mountain is still untapped to pay its {R}. A Piker cast refused for want of mana spends nothing, so the Piker is still offered after it. Each card is the only one of its name in the game, so naming it by card finds the exiled one.",
+  "board": {
+    "seats": [
+      {
+        "name": "alice",
+        "battlefield": [
+          { "card": "Mountain", "label": "m1", "ready": true },
+          { "card": "Mountain", "label": "m2", "ready": true },
+          { "card": "Mountain", "label": "m3", "ready": true },
+          { "card": "Mountain", "label": "m4", "ready": true },
+          { "card": "Mountain", "label": "m5", "ready": true },
+          { "card": "Mountain", "label": "m6", "ready": true },
+          { "card": "Mountain", "label": "m7", "ready": true }
+        ],
+        "hand": [{ "card": "March of Reckless Joy", "label": "march" }],
+        "library": [
+          { "card": "Plains" },
+          { "card": "Goblin Piker" },
+          { "card": "Raging Goblin" },
+          { "card": "Hill Giant" },
+          { "card": "Bird Maiden" }
+        ]
+      },
+      {
+        "name": "bob",
+        "library": [{ "card": "Ogre Sentry" }]
+      }
+    ],
+    "active": "alice",
+    "step": "PrecombatMain"
+  },
+  "timeline": [
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": { "Answer": { "prompt": "ChooseX", "with": 0 } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": { "Cast": { "object": "$march", "x": 3, "mana": ["$m1", "$m2", "$m3", "$m4", null] } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass" },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "check": { "View": { "of": "Offered", "player": "alice", "is": ["Pass", "PlayLand Plains", "Cast Goblin Piker", "Cast Raging Goblin", "ActivateManaAbility $m5", "ActivateManaAbility $m6", "ActivateManaAbility $m7"] } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": { "PlayLand": "Plains" } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "refuse": { "Cast": { "object": "Goblin Piker", "mana": ["$m5", null] } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": { "ChooseOptional": { "type": "Exercises" } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": { "Cast": { "object": "Goblin Piker", "mana": ["$m5", "$m6", null] } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass" },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "check": { "View": { "of": "Offered", "player": "alice", "is": ["Pass", "ActivateManaAbility $m7", "ActivateManaAbility Plains"] } } }
+  ],
+  "final": [
+    { "Count": { "player": "alice", "zone": "Battlefield", "card": "Plains", "count": 1 } },
+    { "Count": { "player": "alice", "zone": "Battlefield", "card": "Goblin Piker", "count": 1 } },
+    { "Count": { "player": "alice", "zone": "Exile", "card": "Raging Goblin", "count": 1 } }
+  ]
+}
