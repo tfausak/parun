@@ -34,6 +34,7 @@ import qualified Pawl.Engine.Replacement as Replacement
 import qualified Pawl.Engine.Resolve.Slots as Slots
 import qualified Pawl.Engine.Turn as Turn
 import qualified Pawl.Engine.Vanguard as Vanguard
+import qualified Pawl.Extra.Natural as Natural
 import qualified Pawl.Types.AbilityName as AbilityName
 import qualified Pawl.Types.AbilityTriggered as AbilityTriggered
 import qualified Pawl.Types.ActivatedAbilitySource as ActivatedAbilitySource
@@ -197,6 +198,26 @@ resampleEntry :: ObjectId -> GameState -> GameState
 resampleEntry oid gs = case entryGroup oid gs of
   Nothing -> gs
   Just group -> gs {GameState.battlefieldWhenTriggered = Map.adjust (const (battlefieldCandidates gs)) group (GameState.battlefieldWhenTriggered gs)}
+
+-- CR 603.4: file `gs` as the board after every unscanned event that has none
+-- yet (GameState.boardAfterEvent). Called where an event is over with whatever
+-- else its instruction or action does: as each instruction of a resolution
+-- finishes (CR 608.2c, Resolve.applyEffectWith) and before each state-based
+-- action check (Sba.performStateBasedActions). The first filing stands, and a group a
+-- `simultaneously` bracket still holds open is left for the filing after it
+-- closes (CR 608.2f). Each board's own copy of the field is empty.
+--
+-- The open-group exemption is a regression fence: filing the open group too
+-- leaves the suite green, no pool card reading an intervening "if" off a
+-- multi-instruction CR 608.2f group.
+fileBoards :: GameState -> GameState
+fileBoards gs =
+  let filed = GameState.boardAfterEvent gs
+      open group = GameState.eventGroupDepth gs > 0 && group == GameState.nextEventGroup gs
+      unfiled = Seq.takeWhileR (\logged -> Map.notMember (LoggedEvent.group logged) filed) (Seq.drop (Natural.toIntSaturating (GameState.scannedThrough gs)) (GameState.events gs))
+      groups = filter (not . open) (fmap LoggedEvent.group (Foldable.toList unfiled))
+      board = gs {GameState.boardAfterEvent = Map.empty}
+   in if null groups then gs else gs {GameState.boardAfterEvent = List.foldl' (\m group -> Map.insert group board m) filed groups}
 
 -- The event group of the log entry that put `oid` onto the battlefield.
 entryGroup :: ObjectId -> GameState -> Maybe EventGroup.EventGroup
@@ -2420,8 +2441,8 @@ oncePerBatch entries =
 -- Ability outer, then groups, then events: each controller's own triggers come
 -- out in the order of the abilities' list, which the CR 603.3b ordering prompt
 -- indexes into.
-inherentTriggers :: [(TriggerSource.TriggerSource, PlayerId, TriggeredAbility.TriggeredAbility Card (GrantedAbility.GrantedAbility Card))] -> [LoggedEvent.LoggedEvent] -> [GameState] -> GameState -> [PendingTrigger]
-inherentTriggers held events boards gs =
+inherentTriggers :: [(TriggerSource.TriggerSource, PlayerId, TriggeredAbility.TriggeredAbility Card (GrantedAbility.GrantedAbility Card))] -> [LoggedEvent.LoggedEvent] -> GameState -> [PendingTrigger]
+inherentTriggers held events gs =
   let forHeld (source, you, ability) = concatMap (scanBlock source you ability) (eventGroups events)
       scanBlock source you ability block =
         let board = battlefieldAt (LoggedEvent.group (NonEmpty.head block)) gs
@@ -2442,7 +2463,7 @@ inherentTriggers held events boards gs =
             pend logged = PendingTrigger.MkPendingTrigger source you ability (eventBindingsOver board gs Nothing Map.empty bearer you cond (LoggedEvent.event logged)) Nothing (Just logged) 1 frozen
             key trigger = if batchScoped cond then Just (batchPartition cond (PendingTrigger.bindings trigger)) else Nothing
          in oncePerBatch [(key trigger, trigger) | logged <- NonEmpty.toList block, let event = LoggedEvent.event logged, fires event, trigger <- stepCopies gs you cond event ability (pend logged)]
-   in concatMap (filter (interveningHolds boards gs) . forHeld) held
+   in concatMap (filter (interveningHolds gs) . forHeld) held
 
 -- CR 113.6m, read off a TRIGGERED ability: "an ability whose cost or effect
 -- specifies that it moves the object it's on out of a particular zone functions
@@ -3463,7 +3484,7 @@ stateTriggersOn gs
        in fmap (pend . snd) (filter armed (zip (List.inits lives) lives))
 
 -- CR 603.8 across one settle: a state trigger triggers "as soon as the game
--- state matches", so one armed on any of `boards` (`boardWhenTriggered`'s) has
+-- state matches", so one armed on any of `boards` (Engine.settlePasses') has
 -- triggered although a later state-based action check made its condition false,
 -- and is gathered off the board it was armed on, CR 603.4's check with it. Each
 -- earlier board adds only the instances of a source's ability beyond what the
@@ -3471,10 +3492,14 @@ stateTriggersOn gs
 -- ability, CR 603.8 holding it back until it has left the stack. The live
 -- reading comes first and keeps its order. data/scenarios/trigger's City in a
 -- Bottle scenario proves it.
+--
+-- Not implemented: a state matched only before a check no settle keeps a board
+-- for (Engine.checkSba in a step that grants no priority or as a step ends, CR
+-- 724.1c's and 724.2c's) has not triggered (#5283).
 stateTriggers :: [GameState] -> GameState -> [PendingTrigger]
 stateTriggers boards live = List.foldl' widen (armedOn live) (reverse boards)
   where
-    armedOn board = filter (interveningHolds [] board) (stateTriggersOn board)
+    armedOn board = filter (interveningHolds board) (stateTriggersOn board)
     key pending = (PendingTrigger.source pending, PendingTrigger.ability pending)
     held k = length . filter ((== k) . key)
     widen acc board =
@@ -3574,8 +3599,8 @@ copiesIn abilities ability = List.genericLength (filter (== ability) abilities)
 -- against 603.7b's one shot, and it stays armed for the next occurrence. No other
 -- 603.7 subrule evicts an entry, so triggering and a stated duration remain its
 -- only two exits.
-delayedPending :: [LoggedEvent.LoggedEvent] -> [GameState] -> GameState -> Game ([PendingTrigger], Seq.Seq DelayedTrigger)
-delayedPending grouped boards gs =
+delayedPending :: [LoggedEvent.LoggedEvent] -> GameState -> Game ([PendingTrigger], Seq.Seq DelayedTrigger)
+delayedPending grouped gs =
   let -- WHICH events fired the entry, rather than merely whether one did: the
       -- payload reads CR 603.2's event through eventBindings below, so the match
       -- has to hand each event forward.
@@ -3734,8 +3759,8 @@ delayedPending grouped boards gs =
       -- occurrences whose "if" holds: CR 603.7b gives the controller every event
       -- that OCCURRED, and CR 603.4 then answers for the one they picked.
       triggered entry
-        | isReflexive entry = pure (filter (interveningHolds boards gs) (if delayedArmed gs entry then [reflexiveFiring gs entry] else []))
-        | otherwise = fmap (filter (interveningHolds boards gs) . fmap (pend entry)) (firedBy entry)
+        | isReflexive entry = pure (filter (interveningHolds gs) (if delayedArmed gs entry then [reflexiveFiring gs entry] else []))
+        | otherwise = fmap (filter (interveningHolds gs) . fmap (pend entry)) (firedBy entry)
       -- Triggering spends the one shot only for an entry with no stated duration.
       spent (entry, fired) = not (null fired) && Maybe.isNothing (DelayedTrigger.expiry entry)
    in do
@@ -3798,10 +3823,11 @@ delayedPending grouped boards gs =
 -- as the trigger event occurs. Decided at the gather rather than at placement,
 -- because "doesn't trigger" must be indistinguishable from "no ability existed",
 -- including to the CR 117.5 settle loop's re-run flag -- but READ off the board
--- the event left (`boardWhenTriggered`), not the one the gather sees: CR 704.3
--- holds placement back until a state-based action check performs nothing, and
--- each check that does can change the answer. data/scenarios/trigger's Moonlit
--- Scavengers scenario proves it.
+-- the event left (`boardWhenTriggered`), not the one the gather sees: a later
+-- instruction of the same resolution (CR 608.2c), and each state-based action
+-- check CR 704.3 holds placement back for, can change the answer.
+-- data/scenarios/trigger's Moonlit Scavengers and Slaughterhouse Bouncer
+-- scenarios prove it.
 --
 -- A SOURCELESS pending trigger (inherentTriggers) is asked too: CR 702.179d's
 -- "if your speed is less than 4" and CR 728.1's "if that player has one or more
@@ -3834,9 +3860,9 @@ delayedPending grouped boards gs =
 -- construction while its own entry is being gathered, and a PLAYER slot needs no
 -- view at all. So this is a fence keeping the two checks reading alike, not a
 -- proved behaviour -- the proved one is Stack's re-check.
-interveningHolds :: [GameState] -> GameState -> PendingTrigger -> Bool
-interveningHolds boards live pending =
-  let gs = boardWhenTriggered boards live pending
+interveningHolds :: GameState -> PendingTrigger -> Bool
+interveningHolds live pending =
+  let gs = boardWhenTriggered live pending
       -- An inherent ability has no source, so an id naming no object stands in
       -- for one, as the ability object itself does at Stack's re-check: either
       -- way the subject has no characteristics, and the clause reads a player.
@@ -3857,21 +3883,12 @@ interveningHolds boards live pending =
             oid
             cond
 
--- CR 603.4's "when the trigger event occurs", as finely as a settle can tell it:
--- `boards` are the states the CR 117.5 settle stood in before each state-based
--- action check that performed something since triggers were last placed, oldest
--- first, and an event is answered by the first of them recorded after it -- the
--- board before the check that followed it. An event no such board follows, and
--- an ability no event fired (a reflexive one), is answered by `live`.
---
--- Not implemented: a trigger event in the middle of a resolution is answered by
--- the board the whole resolution left, not by the one standing at the event, and
--- one before a check no settle keeps a board for (Engine.checkSba in a step that
--- grants no priority or as a step ends, CR 724.1c's) by the board after it
--- (#5270).
-boardWhenTriggered :: [GameState] -> GameState -> PendingTrigger -> GameState
-boardWhenTriggered boards live pending = case PendingTrigger.firedBy pending of
-  Just logged -> Maybe.fromMaybe live (List.find (\board -> GameState.nextEventGroup board > LoggedEvent.group logged) boards)
+-- CR 603.4's "when the trigger event occurs": the board `fileBoards` filed
+-- under the event's group (GameState.boardAfterEvent). An ability no event fired
+-- (a reflexive one), and an event none is filed for yet, is answered by `live`.
+boardWhenTriggered :: GameState -> PendingTrigger -> GameState
+boardWhenTriggered live pending = case PendingTrigger.firedBy pending of
+  Just logged -> Map.findWithDefault live (LoggedEvent.group logged) (GameState.boardAfterEvent live)
   Nothing -> live
 
 -- CR 801.16: the players a triggered ability's placement names as in a loop
@@ -3964,13 +3981,14 @@ firesWithout gone pending gs =
               { GameState.battlefield = Set.difference (GameState.battlefield gs) gone,
                 GameState.command = Set.difference (GameState.command gs) gone,
                 GameState.continuousEffects = filter (\e -> Set.notMember (ContinuousEffect.source e) gone) (GameState.continuousEffects gs),
+                GameState.boardAfterEvent = Map.empty,
                 GameState.battlefieldWhenTriggered = Map.empty
               }
           same p =
             PendingTrigger.source p == PendingTrigger.source pending
               && PendingTrigger.controller p == PendingTrigger.controller pending
               && PendingTrigger.ability p == PendingTrigger.ability pending
-              && interveningHolds [] without p
+              && interveningHolds without p
        in case resnapshot gs without (LoggedEvent.event logged) of
             Nothing -> False
             Just event' -> any same (eventTriggers [LoggedEvent.MkLoggedEvent (GameState.nextEventGroup gs) event'] without)

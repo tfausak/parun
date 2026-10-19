@@ -710,6 +710,10 @@ checkStateBasedActions instead = Monad.void (performStateBasedActions instead []
 -- (Event.triggeredSources).
 performStateBasedActions :: (PendingReplacementEffect.PendingReplacementEffect -> Game ()) -> [GameState] -> Game Bool
 performStateBasedActions instead boards = do
+  -- CR 603.4: the board the events before this check left, which the check can
+  -- change before their triggers are placed (CR 704.3). data/scenarios/trigger's
+  -- Lone Revenant scenario proves it.
+  State.modify' Trigger.fileBoards
   -- CR 800.4a's fourth clause comes "Then", after the departures this pass
   -- performs, so it runs once the pass's event has closed
   -- (Departure.leaveTogether).

@@ -613,6 +613,7 @@ happenedBetween before after =
       comparable gs =
         gs
           { GameState.events = Seq.empty,
+            GameState.boardAfterEvent = Map.empty,
             GameState.battlefieldWhenTriggered = Map.empty,
             GameState.nextEventGroup = GameState.nextEventGroup before,
             GameState.eventGroupDepth = GameState.eventGroupDepth before,
@@ -2570,6 +2571,10 @@ applyEffectWith runSubgame resolving source controller legal chosen effect = do
   -- no test loses a player the game mid-resolution and reads the board after,
   -- so Engine.performSettle's drain answers every test the same without it.
   runReplacementEffects runSubgame
+  -- CR 603.4: the board this instruction's events left, before the next one
+  -- changes it. data/scenarios/trigger's Slaughterhouse Bouncer scenario proves
+  -- it.
+  State.modify' Trigger.fileBoards
 
 -- CR 702.167c: the cards exiled to pay the cost of the craft ability resolving
 -- as `resolving` (Binding.craftMaterials), linked to the permanent it put onto
@@ -10127,6 +10132,7 @@ applyOneEffect runSubgame resolving source controller legal chosen effect = case
     State.modify' $ \gs ->
       gs
         { GameState.scannedThrough = Natural.length (GameState.events gs),
+          GameState.boardAfterEvent = Map.empty,
           GameState.battlefieldWhenTriggered = Map.empty
         }
     -- CR 724.1b: exile every object on the stack, INCLUDING the one that is
@@ -10233,6 +10239,7 @@ applyOneEffect runSubgame resolving source controller legal chosen effect = case
         State.modify' $ \gs ->
           gs
             { GameState.scannedThrough = Natural.length (GameState.events gs),
+              GameState.boardAfterEvent = Map.empty,
               GameState.battlefieldWhenTriggered = Map.empty
             }
         -- CR 724.2b: exile every object on the stack, the resolving one included.

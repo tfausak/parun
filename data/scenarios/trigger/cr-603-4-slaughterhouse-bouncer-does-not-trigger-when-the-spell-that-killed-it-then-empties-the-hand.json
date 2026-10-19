@@ -1,0 +1,41 @@
+{
+  "description": "CR 603.4 Slaughterhouse Bouncer does not trigger when the spell that killed it then empties bob's hand",
+  "note": "Assassin's Strike destroys bob's Slaughterhouse Bouncer, then makes bob discard his one card. As the Bouncer dies bob holds a card, so its intervening if is false at the event and the ability never triggers: the stack stays empty and bob is asked for no target. Read off the board the whole resolution leaves, the hand is empty and bob is asked to target. The scenario with bob's hand already empty is the pair.",
+  "board": {
+    "seats": [
+      {
+        "name": "alice",
+        "battlefield": [
+          { "card": "Swamp", "label": "swamp1", "ready": true },
+          { "card": "Swamp", "label": "swamp2", "ready": true },
+          { "card": "Swamp", "label": "swamp3", "ready": true },
+          { "card": "Swamp", "label": "swamp4", "ready": true },
+          { "card": "Swamp", "label": "swamp5", "ready": true },
+          { "card": "Swamp", "label": "swamp6", "ready": true },
+          { "card": "Hill Giant", "label": "giant" }
+        ],
+        "hand": [{ "card": "Assassin's Strike", "label": "strike" }]
+      },
+      {
+        "name": "bob",
+        "battlefield": [{ "card": "Slaughterhouse Bouncer", "label": "bouncer" }],
+        "hand": [{ "card": "Grizzly Bears", "label": "bears" }]
+      }
+    ],
+    "active": "alice",
+    "step": "PrecombatMain"
+  },
+  "timeline": [
+    {
+      "turn": 1,
+      "step": "PrecombatMain",
+      "player": "alice",
+      "do": { "Cast": { "object": "$strike", "targets": ["$bouncer"], "mana": ["$swamp1", "$swamp2", "$swamp3", "$swamp4", "$swamp5", "$swamp6"] } }
+    },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass" },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "check": { "View": { "of": "Stack", "is": [] } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "check": { "Count": { "player": "bob", "zone": "Graveyard", "card": "Grizzly Bears", "count": 1 } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "check": { "Count": { "player": "bob", "zone": "Graveyard", "card": "Slaughterhouse Bouncer", "count": 1 } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "check": { "PowerToughness": { "object": "$giant", "power": 3, "toughness": 3 } } }
+  ]
+}

@@ -131,7 +131,7 @@ gathered gs = gatheredIn (Event.unscannedGrouped gs) gs
 delayedFrom :: [GameEvent.GameEvent] -> GameState.GameState -> ([PendingTrigger.PendingTrigger], Seq.Seq DelayedTrigger.DelayedTrigger)
 delayedFrom events gs =
   let grouped = zipWith (\group event -> LoggedEvent.MkLoggedEvent {LoggedEvent.group = group, LoggedEvent.event = event}) (iterate EventGroup.next EventGroup.first) events
-   in fst (S.runPureWith S.identityAnswer gs (Event.delayedPending grouped [] gs))
+   in fst (S.runPureWith S.identityAnswer gs (Event.delayedPending grouped gs))
 
 -- CR 608.2i: the log records; it is never emptied by a reader.
 logSpec :: (Monad m, Monad n) => Spec.Spec m n -> Registry.Registry m -> n ()
