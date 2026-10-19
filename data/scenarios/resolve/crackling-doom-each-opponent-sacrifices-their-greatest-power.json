@@ -1,0 +1,61 @@
+{
+  "description": "CR 608.2d Crackling Doom: each opponent sacrifices a creature with the greatest power among their own",
+  "note": "bob's Hill Giant and Centaur Courser tie at power 3, so bob chooses between them: the Goblin Piker (power 2) is refused, and bob takes the Courser. carol's Aeon Chronicler is printed */* and projects 5/5 off her five-card hand, so it, not the Barbarian Horde (3/3), is the only candidate and no prompt is raised. alice's Craw Wurm is no opponent's.",
+  "board": {
+    "seats": [
+      {
+        "name": "alice",
+        "battlefield": [
+          { "card": "Mountain", "label": "mountain" },
+          { "card": "Plains", "label": "plains" },
+          { "card": "Swamp", "label": "swamp" },
+          { "card": "Craw Wurm", "label": "wurm" }
+        ],
+        "hand": [
+          { "card": "Crackling Doom", "label": "doom" }
+        ]
+      },
+      {
+        "name": "bob",
+        "battlefield": [
+          { "card": "Hill Giant", "label": "giant" },
+          { "card": "Centaur Courser", "label": "courser" },
+          { "card": "Goblin Piker", "label": "piker" }
+        ]
+      },
+      {
+        "name": "carol",
+        "battlefield": [
+          { "card": "Barbarian Horde", "label": "horde" },
+          { "card": "Aeon Chronicler", "label": "chronicler" }
+        ],
+        "hand": [
+          { "card": "Island" },
+          { "card": "Island" },
+          { "card": "Island" },
+          { "card": "Island" },
+          { "card": "Island" }
+        ]
+      }
+    ],
+    "active": "alice",
+    "step": "PrecombatMain"
+  },
+  "timeline": [
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "check": { "PowerToughness": { "object": "$chronicler", "power": 5, "toughness": 5 } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": { "Cast": { "object": "$doom", "mana": ["$mountain", "$plains", "$swamp"] } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass" },
+    { "turn": 1, "step": "PrecombatMain", "player": "bob", "refuse": { "Answer": { "prompt": "ChooseSacrifices", "with": ["$piker"] } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "bob", "do": { "Answer": { "prompt": "ChooseSacrifices", "with": ["$courser"] } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "check": { "View": { "of": "Zone", "player": "bob", "zone": "Graveyard", "is": ["Centaur Courser"] } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "check": { "View": { "of": "Zone", "player": "carol", "zone": "Graveyard", "is": ["Aeon Chronicler"] } } }
+  ],
+  "final": [
+    { "View": { "of": "Zone", "player": "bob", "zone": "Battlefield", "is": ["$giant", "$piker"] } },
+    { "View": { "of": "Zone", "player": "carol", "zone": "Battlefield", "is": ["$horde"] } },
+    { "View": { "of": "Zone", "player": "alice", "zone": "Battlefield", "is": ["$mountain", "$plains", "$swamp", "$wurm"] } },
+    { "Life": { "player": "bob", "life": 18 } },
+    { "Life": { "player": "carol", "life": 18 } },
+    { "Life": { "player": "alice", "life": 20 } }
+  ]
+}

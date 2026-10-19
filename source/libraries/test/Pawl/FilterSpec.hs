@@ -468,6 +468,18 @@ spec s = Spec.describe s "Pawl.Engine.Filter" $ do
       Spec.assertBool s (Filter.matches (self {Filter.boundUnannounced = True}) blackCreature atMost) "an amount not yet announced"
       Spec.assertBool s (not (Filter.matches (self {Filter.boundUnannounced = True}) noCost atMost)) "but never a candidate with no mana value"
       Spec.assertBool s (not (Filter.matches (self {Filter.boundUnannounced = True}) blackCreature (power Comparison.AtMost (Operand.AmountInSlot (SlotName.MkSlotName (Text.pack "x")))))) "and no other operand widens"
+    -- CR 608.2d: blackCreature is object 7 with power 2. Its own entry in the
+    -- pool is skipped, which is what lets a strict comparison hold at all.
+    Spec.it s "OfEachOtherCandidate compares against every other candidate" $ do
+      let pooled entries = self {Filter.candidateMeasures = Just (Map.fromList [(ObjectId.MkObjectId oid, Map.singleton Measure.Power n) | (oid, n) <- entries])}
+          greatest = power Comparison.AtLeast (Operand.OfEachOtherCandidate Measure.Power)
+          strictly = power Comparison.GreaterThan (Operand.OfEachOtherCandidate Measure.Power)
+      Spec.assertBool s (Filter.matches (pooled [(7, 2), (8, 1), (9, 2)]) blackCreature greatest) "tied for the greatest"
+      Spec.assertBool s (not (Filter.matches (pooled [(7, 2), (8, 3)]) blackCreature greatest)) "3 is greater"
+      Spec.assertBool s (Filter.matches (pooled [(7, 2), (8, 1)]) blackCreature strictly) "its own 2 is not compared"
+      Spec.assertBool s (Filter.matches (pooled []) blackCreature strictly) "no other candidate, as the pool is gathered"
+      Spec.assertBool s (not (Filter.matches self blackCreature greatest)) "no pool"
+      Spec.assertBool s (not (Filter.matches (pooled []) noPower greatest)) "no power"
   -- CR 702.39a's "defending player controls", whose player comes from the
   -- Context rather than from the perspective. blackCreature is controlled by
   -- player 0 and OWNED by player 1, so a reading that consulted the wrong field

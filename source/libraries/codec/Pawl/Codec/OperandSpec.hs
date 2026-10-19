@@ -47,4 +47,10 @@ spec s = Spec.describe s "Pawl.Codec.Operand" $ do
       Operand.codec
       Operand.EnclosingAmount
       " {\"type\":\"EnclosingAmount\"} "
+  Spec.it s "OfEachOtherCandidate" $
+    Common.assertCodec
+      s
+      Operand.codec
+      (Operand.OfEachOtherCandidate Measure.ManaValue)
+      " {\"type\":\"OfEachOtherCandidate\",\"value\":{\"type\":\"ManaValue\"}} "
   Spec.it s "has a schema" $ Common.assertHasSchema s Operand.codec

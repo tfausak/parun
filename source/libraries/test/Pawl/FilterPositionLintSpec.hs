@@ -629,6 +629,37 @@ enclosingAmountCounts card =
 enclosingAmountOffends :: Face.Face Card.Type.Card -> Bool
 enclosingAmountOffends card = snd (enclosingAmountCounts card) /= 0
 
+-- The CR 608.2d other-candidates operand's tag, spelled once.
+otherCandidateTag :: Text.Text
+otherCandidateTag = Text.pack "OfEachOtherCandidate"
+
+-- How many of those operands sit in an edict's own filter, and how many anywhere
+-- else. Pawl.Engine.Replacement.sacrificeCandidates is the one filler of
+-- Filter.Context.candidateMeasures, so the operand anywhere else is a silent
+-- False. Counted off the encoding for amountedSlotAtoms' reason: the position is
+-- the enclosing PlayerSacrifices, which no Framing names.
+otherCandidateCounts :: Face.Face Card.Type.Card -> (Int, Int)
+otherCandidateCounts card =
+  let encoded = Codec.encode (Face.Codec.codec Card.codec) card
+      edicts value = case value of
+        Value.Array a -> sum (fmap edicts (Array.unwrap a))
+        Value.Object o ->
+          let pairs = Object.unwrap o
+              keyed k = fmap Pair.value (filter (\pair -> String.unwrap (Pair.name pair) == Text.pack k) pairs)
+              isEdict = any (\v -> case v of Value.String t -> String.unwrap t == Text.pack "PlayerSacrifices"; _ -> False) (keyed "type")
+              filterOf v = case v of
+                Value.Object x -> [Pair.value pair | pair <- Object.unwrap x, String.unwrap (Pair.name pair) == Text.pack "filter"]
+                _ -> []
+           in if isEdict
+                then sum (fmap (jsonAtoms otherCandidateTag) (concatMap filterOf (keyed "value")))
+                else sum (fmap (edicts . Pair.value) pairs)
+        Value.String _ -> 0
+        Value.Null _ -> 0
+        Value.Boolean _ -> 0
+        Value.Number _ -> 0
+      held = edicts encoded
+   in (held, jsonAtoms otherCandidateTag encoded - held)
+
 -- CR 701.3a is answerable only where an attach FRAMES the match, and
 -- Filter.CanHostSubject is vacuously False in every other Filter position. A card
 -- author who wrote it into a target slot, a static ability's affected set, a Count
@@ -1913,6 +1944,38 @@ filterPositionLintSpec s registry = Spec.describe s "Lint" $ do
             }
     Spec.assertEqWith s "a planted atom in a reference pick naming no amount is an offence" (enclosingAmountCounts (conjuring Nothing)) (0, 1)
     Spec.assertEqWith s "and one naming an amount is not" (enclosingAmountCounts (conjuring (Just (Quantity.Type.Literal 4)))) (1, 0)
+  -- CR 608.2d's other-candidates operand is answerable only in an edict's own
+  -- filter. See otherCandidateCounts.
+  Spec.it s "CR 608.2d no card compares against other candidates outside an edict" $ do
+    ps <- S.allPrintings s
+    let offenders = filter (anyFace ((/= 0) . snd . otherCandidateCounts) . Printing.card) ps
+    Spec.assertEqWith s "the operand sits only in an edict's filter" (fmap (S.nameOf . Printing.card) offenders) []
+    -- NOT vacuous: these author it, and are accepted.
+    let authors =
+          [ "Break Under Pressure",
+            "Consumed by Greed",
+            "Crackling Doom",
+            "Extract a Confession",
+            "Flare of Malice",
+            "Myrkul's Edict",
+            "Professor Onyx",
+            "Riveteers Charm",
+            "Soul Shatter",
+            "The Dining Car",
+            "Witch-king, Bringer of Ruin"
+          ]
+    counted <- traverse (\name -> fmap (\p -> (name, otherCandidateCounts (S.combinedFace p))) (S.printingOf s registry name)) authors
+    Spec.assertEqWith s "each author's one operand is in its edict" counted (fmap (\name -> (name, (1, 0))) authors)
+    Spec.assertEqWith s "and they are the pool's only ones" (sum (fmap (uncurry (+) . otherCandidateCounts . S.combinedFace) ps)) (length authors)
+    -- The rejected side: the same atom in a target slot's filter.
+    piker <- S.printingOf s registry "Goblin Piker"
+    let atom = Filter.Type.And [Filter.Type.HasCardType CardType.Creature, Filter.Type.Measures (Measures.MkMeasures Measure.Power Comparison.AtLeast (Operand.OfEachOtherCandidate Measure.Power))]
+        planted =
+          (S.combinedFace piker)
+            { Face.spell =
+                Mint.oneModeTargeting (Map.singleton (SlotName.MkSlotName (Text.pack "target")) (TargetSlot.required Pool.Creatures (Just atom))) Seq.empty
+            }
+    Spec.assertEqWith s "a planted atom in a target slot is an offence" (otherCandidateCounts planted) (0, 1)
   -- CR 303.4b's Filter.IsHostOfSource is CR 709.4a's atom one axis over again:
   -- answerable only in the positions `hostFramed` admits. See hostOfSourceOffends for the two offences.
   Spec.it s "CR 303.4b no card asks IsHostOfSource where the source's host is unknown" $ do

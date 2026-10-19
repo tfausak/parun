@@ -23,4 +23,6 @@ data Operand
     -- reference names (Pawl.Types.TargetSlot's and Pawl.Types.FromReference's
     -- @amount@).
     EnclosingAmount
+  | -- | CR 608.2d: that measure of every other candidate the enclosing choice offers (Crackling Doom).
+    OfEachOtherCandidate Measure.Measure
   deriving (Eq, Ord, Show)
