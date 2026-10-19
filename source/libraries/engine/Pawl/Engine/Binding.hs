@@ -1683,6 +1683,11 @@ fromChoices targets mAmount mModes =
         then withX
         else Map.insertWith mergeBinding chosenModes (Binding.empty {Binding.modes = Just mModes}) withX
 
+-- CR 601.2b: the counts announced beside X (Pawl.Engine.Cost.announcedCounts),
+-- each bound as an amount under its own slot, as `fromChoices` binds X.
+fromAnnounced :: Map SlotName Natural -> Map SlotName Binding
+fromAnnounced = fmap (\n -> Binding.empty {Binding.amount = Just n})
+
 -- Combine two bindings for the same slot, preferring the left's present choice
 -- in each field. Inputs are disjoint per field by construction, so this is a
 -- total, order-independent merge.

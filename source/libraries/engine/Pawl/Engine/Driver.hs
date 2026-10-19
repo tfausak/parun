@@ -154,7 +154,7 @@ deciderOf prompt = case prompt of
   Prompt.ChooseSearchZones decider _ _ -> Just (Decider.unwrap decider)
   Prompt.Search decider _ _ _ -> Just (Decider.unwrap decider)
   Prompt.CastWhileSearching decider _ _ -> Just (Decider.unwrap decider)
-  Prompt.ChooseX decider _ _ _ _ -> Just (Decider.unwrap decider)
+  Prompt.ChooseX decider _ _ _ _ _ -> Just (Decider.unwrap decider)
   Prompt.ChooseMutateSide decider _ _ _ -> Just (Decider.unwrap decider)
   Prompt.ChooseForage decider _ _ -> Just (Decider.unwrap decider)
   Prompt.ChooseLearn decider _ _ _ -> Just (Decider.unwrap decider)

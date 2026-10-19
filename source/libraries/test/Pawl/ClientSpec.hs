@@ -17,6 +17,7 @@ import qualified Data.Set as Set
 import qualified Data.Text as Text
 import Numeric.Natural (Natural)
 import qualified Pawl.BotSpec as BotSpec
+import qualified Pawl.Engine.Binding as Binding
 import qualified Pawl.Engine.Driver as Driver
 import qualified Pawl.Engine.Engine as Engine
 import qualified Pawl.Engine.Resolve.Effect as Resolve
@@ -108,7 +109,7 @@ spec s registry = Spec.describe s "Client" $ do
     Spec.assertEqWith s "blockers" (answering gs "2:1" (Prompt.DeclareBlockers bob S.bob [o5, o9] [o7])) (Right (Map.singleton o9 (Set.singleton o7)))
     Spec.assertEqWith s "targets" (answering gs "1" (Prompt.ChooseTargets alice S.alice o7 (Map.singleton slot (1, Set.fromList [Recipient.ToPlayer S.bob, Recipient.ToCreature o9])))) (Right (Map.singleton slot (Set.singleton (Recipient.ToCreature o9))))
     Spec.assertEqWith s "optional" (answering gs "2" (Prompt.ChooseOptional alice S.alice o7 (ModeIndex.MkModeIndex 0) (ClauseIndex.MkClauseIndex 0) mempty)) (Right OptionalDecision.Declines)
-    Spec.assertEqWith s "x" (answering gs "3" (Prompt.ChooseX alice S.alice o7 1 5)) (Right 3)
+    Spec.assertEqWith s "x" (answering gs "3" (Prompt.ChooseX alice S.alice o7 Binding.variableX 1 5)) (Right 3)
     Spec.assertEqWith s "mana source" (answering gs "0" (Prompt.ChooseManaSource alice S.alice (o7 NonEmpty.:| [o9]))) (Right Nothing)
 
 -- What the screen showed, newest first, and how many lines were typed.

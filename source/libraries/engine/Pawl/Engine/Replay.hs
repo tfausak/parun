@@ -1076,7 +1076,7 @@ defaultAnswer p = case p of
   Prompt.CastWhileSearching {} -> Nothing
   -- CR 601.2b: the least X the card permits, which the gate that offered the
   -- action measured payable (CR 101.1).
-  Prompt.ChooseX _ _ _ least _ -> least
+  Prompt.ChooseX _ _ _ _ least _ -> least
   -- CR 107.14's payment is "any amount", zero included, and paying nothing is
   -- how a transcript that ran out declines it.
   Prompt.ChoosePaidEnergy {} -> 0

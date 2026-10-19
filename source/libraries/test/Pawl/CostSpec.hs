@@ -28,6 +28,7 @@ import qualified Numeric.Natural as Natural
 import qualified Pawl.Engine.Action as Action
 import qualified Pawl.Engine.Activatable as Activatable
 import qualified Pawl.Engine.Activate as Activate
+import qualified Pawl.Engine.Binding as Binding
 import qualified Pawl.Engine.Cast as Cast
 import qualified Pawl.Engine.Combat as Combat
 import qualified Pawl.Engine.Cost as Cost
@@ -808,7 +809,7 @@ headlessSkaabSpec s registry =
 -- Cadaverous Bloom {3}{B}{G} Enchantment: "Exile a card from your hand: Add
 -- {B}{B} or {G}{G}." (Oracle checked against Scryfall 2026-09-07.)
 --
--- The gate card for CostComponent.ExileCardFromHand, the first component that
+-- The gate card for CostComponent.ExileCardsFromHand, the first component that
 -- exiles a card out of a HIDDEN zone (CR 400.2) rather than a graveyard. What
 -- separates it from CostComponent.DiscardCards is only the destination, so the
 -- exile assertion leads every case: a payment that put the card in a graveyard
@@ -1497,7 +1498,7 @@ answerHatredXOf n p = case p of
 -- what the mana-cost-only reading of CR 601.2b leaves behind on this card.
 answerHatredAtBound :: Prompt.Prompt r -> State.State [Natural.Natural] r
 answerHatredAtBound p = case p of
-  Prompt.ChooseX _ _ _ _ bound -> do
+  Prompt.ChooseX _ _ _ _ _ bound -> do
     State.modify' (\seen -> seen <> [bound])
     pure bound
   _ -> pure (S.identityAnswer p)
@@ -1621,10 +1622,10 @@ hatredSpec s registry =
       hatred <- S.printingOf s registry "Hatred"
       let (_, _, gs) = hatredBoard swamp piker hatred 20
           printed = Cost.Type.MkCost (Face.manaCost (S.combinedFace hatred)) (Face.additionalCosts (S.combinedFace hatred))
-      Spec.assertEqWith s "the printed additional cost is CR 601.2b's variable" (Face.additionalCosts (S.combinedFace hatred)) [CostComponent.PayLife CostAmount.AnnouncedX]
+      Spec.assertEqWith s "the printed additional cost is CR 601.2b's variable" (Face.additionalCosts (S.combinedFace hatred)) [CostComponent.PayLife (CostAmount.Announced Binding.variableX)]
       Spec.assertBool s (Cost.hasVariable printed) "so the cost has a variable, though its mana part has none"
       Spec.assertBool s (notElem ManaSymbol.Variable (foldMap ManaCost.unwrap (Face.manaCost (S.combinedFace hatred)))) "the mana part really has none"
-      Spec.assertBool s (not (Cost.canPayComponent Map.empty S.alice S.noSource (CostComponent.PayLife CostAmount.AnnouncedX) gs)) "and it is unpayable until announced"
+      Spec.assertBool s (not (Cost.canPayComponent Map.empty S.alice S.noSource (CostComponent.PayLife (CostAmount.Announced Binding.variableX)) gs)) "and it is unpayable until announced"
       Spec.assertBool s (Cost.canPayComponent Map.empty S.alice S.noSource (CostComponent.PayLife (CostAmount.Fixed 20)) gs) "while the announced 20 it substitutes to is payable"
     -- The same fence one keyword action over, and the same board serves: alice
     -- controls a Goblin Piker, so CR 701.68b's only refusal does not apply and
@@ -1639,11 +1640,11 @@ hatredSpec s registry =
       piker <- S.printingOf s registry "Goblin Piker"
       hatred <- S.printingOf s registry "Hatred"
       let (_, _, gs) = hatredBoard swamp piker hatred 20
-      Spec.assertBool s (not (Cost.canPayComponent Map.empty S.alice S.noSource (CostComponent.Blight CostAmount.AnnouncedX) gs)) "unpayable until announced"
+      Spec.assertBool s (not (Cost.canPayComponent Map.empty S.alice S.noSource (CostComponent.Blight (CostAmount.Announced Binding.variableX)) gs)) "unpayable until announced"
       Spec.assertBool s (Cost.canPayComponent Map.empty S.alice S.noSource (CostComponent.Blight (CostAmount.Fixed 1)) gs) "an announced 1 is payable"
       Spec.assertBool s (Cost.canPayComponent Map.empty S.alice S.noSource (CostComponent.Blight (CostAmount.Fixed 99)) gs) "and so is an announced 99, CR 701.68b naming no number that is too many"
-      Spec.assertBool s (Cost.hasVariable (Cost.Type.MkCost Nothing [CostComponent.Blight CostAmount.AnnouncedX])) "it is a CR 107.3 variable"
-      Spec.assertBool s (not (Cost.demandGrowsWithX (Cost.Type.MkCost Nothing [CostComponent.Blight CostAmount.AnnouncedX]))) "whose demand never grows, so only CR 101.1 can refuse a value"
+      Spec.assertBool s (Cost.hasVariable (Cost.Type.MkCost Nothing [CostComponent.Blight (CostAmount.Announced Binding.variableX)])) "it is a CR 107.3 variable"
+      Spec.assertBool s (not (Cost.demandGrowsWithX (Cost.Type.MkCost Nothing [CostComponent.Blight (CostAmount.Announced Binding.variableX)]))) "whose demand never grows, so only CR 101.1 can refuse a value"
     -- The fence one keyword action further over, and the half that differs: a
     -- waterbend cost's demand is the {X} in its own MANA part, so the cost
     -- Katara, Water Tribe's Hope states does grow with the value and the board
@@ -1656,10 +1657,10 @@ hatredSpec s registry =
       piker <- S.printingOf s registry "Goblin Piker"
       hatred <- S.printingOf s registry "Hatred"
       let (_, _, gs) = hatredBoard swamp piker hatred 20
-          announced = Cost.Type.MkCost (Just (ManaCost.MkManaCost [ManaSymbol.Variable])) [CostComponent.Waterbend CostAmount.AnnouncedX]
-      Spec.assertBool s (not (Cost.canPayComponent Map.empty S.alice S.noSource (CostComponent.Waterbend CostAmount.AnnouncedX) gs)) "unpayable until announced"
+          announced = Cost.Type.MkCost (Just (ManaCost.MkManaCost [ManaSymbol.Variable])) [CostComponent.Waterbend (CostAmount.Announced Binding.variableX)]
+      Spec.assertBool s (not (Cost.canPayComponent Map.empty S.alice S.noSource (CostComponent.Waterbend (CostAmount.Announced Binding.variableX)) gs)) "unpayable until announced"
       Spec.assertBool s (Cost.canPayComponent Map.empty S.alice S.noSource (CostComponent.Waterbend (CostAmount.Fixed 4)) gs) "while the announced 4 it substitutes to is payable, rule 701.67a's licence spending nothing of its own"
-      Spec.assertBool s (Cost.hasVariable (Cost.Type.MkCost Nothing [CostComponent.Waterbend CostAmount.AnnouncedX])) "it is a CR 107.3 variable on its own"
+      Spec.assertBool s (Cost.hasVariable (Cost.Type.MkCost Nothing [CostComponent.Waterbend (CostAmount.Announced Binding.variableX)])) "it is a CR 107.3 variable on its own"
       Spec.assertBool s (Cost.demandGrowsWithX announced) "and the cost it is printed in grows with the value, the {X} beside it being real mana"
     -- The third substrate, and the classification that separates it from the
     -- blight above: CR 118.3 measures an announced "Pay X {E}" against the
@@ -1673,11 +1674,11 @@ hatredSpec s registry =
       hatred <- S.printingOf s registry "Hatred"
       let (_, _, gs0) = hatredBoard swamp piker hatred 20
           gs = S.addPlayerCounter PlayerCounterKind.Energy 2 S.alice gs0
-      Spec.assertBool s (not (Cost.canPayComponent Map.empty S.alice S.noSource (CostComponent.PayEnergy CostAmount.AnnouncedX) gs)) "unpayable until announced"
+      Spec.assertBool s (not (Cost.canPayComponent Map.empty S.alice S.noSource (CostComponent.PayEnergy (CostAmount.Announced Binding.variableX)) gs)) "unpayable until announced"
       Spec.assertBool s (Cost.canPayComponent Map.empty S.alice S.noSource (CostComponent.PayEnergy (CostAmount.Fixed 2)) gs) "an announced 2 is payable off two counters"
       Spec.assertBool s (not (Cost.canPayComponent Map.empty S.alice S.noSource (CostComponent.PayEnergy (CostAmount.Fixed 3)) gs)) "and an announced 3 is not"
-      Spec.assertBool s (Cost.hasVariable (Cost.Type.MkCost Nothing [CostComponent.PayEnergy CostAmount.AnnouncedX])) "it is a CR 107.3 variable"
-      Spec.assertBool s (Cost.demandGrowsWithX (Cost.Type.MkCost Nothing [CostComponent.PayEnergy CostAmount.AnnouncedX])) "whose demand grows, so the board itself refuses a big enough value"
+      Spec.assertBool s (Cost.hasVariable (Cost.Type.MkCost Nothing [CostComponent.PayEnergy (CostAmount.Announced Binding.variableX)])) "it is a CR 107.3 variable"
+      Spec.assertBool s (Cost.demandGrowsWithX (Cost.Type.MkCost Nothing [CostComponent.PayEnergy (CostAmount.Announced Binding.variableX)])) "whose demand grows, so the board itself refuses a big enough value"
 
 -- Living Destiny {3}{G} Instant: "As an additional cost to cast this spell,
 -- reveal a creature card from your hand. You gain life equal to the revealed
@@ -4285,7 +4286,7 @@ retributionAnswers x target answer p = case p of
 -- the record needs.
 recordXBound :: Prompt.Prompt r -> State.State [Natural.Natural] r
 recordXBound p = case p of
-  Prompt.ChooseX _ _ _ _ bound -> do
+  Prompt.ChooseX _ _ _ _ _ bound -> do
     State.modify' (<> [bound])
     pure 0
   _ -> pure (S.identityAnswer p)
@@ -5311,7 +5312,7 @@ unpaidLeaper s leaperId gs = case Projection.abilitiesOf leaperId gs of
 -- CR 107.3a's variable in a waterbend cost, and ONE announcement fixes both
 -- halves of it: the {X} the licence scopes, in the cost's own mana part, and CR
 -- 701.67b's ceiling on how much of that generic taps may pay
--- (CostComponent.Waterbend's CostAmount.AnnouncedX). The base power and
+-- (CostComponent.Waterbend's (CostAmount.Announced Binding.variableX)). The base power and
 -- toughness is what a paid cost is read off -- a Goblin Piker is printed 2/1, so
 -- neither number the assertions read can be its own.
 --
@@ -5380,7 +5381,7 @@ mindGrindSpec s registry = Spec.describe s "Mind Grind" $ do
     let castAt :: (forall r. Prompt.Prompt r -> r) -> GameState.GameState
         castAt answer = S.runPure answer gs (do Cast.castSpell S.manaPerformer S.alice spell (S.soleFaceName spell gs) Facing.FaceUp; Stack.resolveTop)
         zero = castAt (\p -> case p of Prompt.ChooseX {} -> 0; _ -> S.identityAnswer p)
-        least = castAt (\p -> case p of Prompt.ChooseX _ _ _ floorX _ -> floorX; _ -> S.identityAnswer p)
+        least = castAt (\p -> case p of Prompt.ChooseX _ _ _ _ floorX _ -> floorX; _ -> S.identityAnswer p)
         graveyard pid = length . Game.zoneMembers Zone.Graveyard pid
     Spec.assertEqWith s "CR 101.1 at X=0 Mind Grind is still in alice's hand" (S.handSize S.alice zero) 1
     Spec.assertEqWith s "and bob milled nothing" (graveyard S.bob zero) 0

@@ -5,7 +5,8 @@
         {
           "type": "PayLife",
           "value": {
-            "type": "AnnouncedX"
+            "type": "Announced",
+            "value": "X"
           }
         }
       ],

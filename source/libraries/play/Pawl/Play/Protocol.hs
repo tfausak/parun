@@ -123,7 +123,7 @@ offerOf prompt = case prompt of
       ]
   Prompt.ChooseManaSource _ _ sources -> objects (Foldable.toList sources)
   Prompt.ChooseExtraManaSource _ _ sources -> objects (Foldable.toList sources)
-  Prompt.ChooseX _ _ source least greatest -> fields [("source", object source), ("least", natural least), ("greatest", natural greatest)]
+  Prompt.ChooseX _ _ source variable least greatest -> fields [("source", object source), ("variable", Reply.encode (Reply.viaCodec Codec.SlotName.codec) namer variable), ("least", natural least), ("greatest", natural greatest)]
   Prompt.ChooseOptional _ _ source _ _ _ -> fields [("source", object source)]
   _ -> R.Null
 
