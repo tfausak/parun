@@ -55,8 +55,8 @@ Entries are ordered by the first rule each cites.
   anyway.
 - **Site**: `Pawl.Engine.AbilityZone.zonesFunctionedIn`, proved by the
   scenario "CR 113.6m a cost's zone outranks an effect's other zone" on
-  Synthetic Errant Courier: no printing moves itself out of a zone its cost
-  did not put it into.
+  Synthetic Errant Courier: no printing's effect moves the card out of a
+  zone other than the one its cost put it into.
 - **Issue**: none.
 
 ## Whether a concession restarts the pass count
