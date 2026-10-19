@@ -1,0 +1,43 @@
+{
+  "description": "CR 603.4 / 603.10a a stolen Otherworldly Escort returns to bob once as a Spirit Detective",
+  "note": "Bob owns the Escort and alice controls it, so the return lands under its owner's control (CR 110.2a) while alice controls the trigger (CR 603.3a). The first Doom Blade kills a Human Detective: the intervening if (CR 603.4) reads its last-known types (CR 603.10a) and holds, and it comes back with four charge counters and its creature types set to exactly Spirit Detective (CR 205.1a). The second kills the same card as a Spirit -- its printed type line still says Human -- so it does not trigger and stays in bob's graveyard.",
+  "board": {
+    "seats": [
+      {
+        "name": "alice",
+        "battlefield": [
+          { "card": "Swamp", "label": "swamp-1", "ready": true },
+          { "card": "Swamp", "label": "swamp-2", "ready": true },
+          { "card": "Swamp", "label": "swamp-3", "ready": true },
+          { "card": "Swamp", "label": "swamp-4", "ready": true }
+        ],
+        "hand": [
+          { "card": "Doom Blade", "label": "blade-1" },
+          { "card": "Doom Blade", "label": "blade-2" }
+        ]
+      },
+      {
+        "name": "bob",
+        "battlefield": [
+          { "card": "Otherworldly Escort", "label": "escort", "controller": "alice", "ready": true }
+        ]
+      }
+    ],
+    "active": "alice",
+    "step": "PrecombatMain"
+  },
+  "timeline": [
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": { "Cast": { "object": "$blade-1", "targets": ["$escort"], "mana": ["$swamp-1", "$swamp-2", null] } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass" },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "check": { "View": { "of": "Stack", "is": ["trigger of $escort"] } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass" },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "check": { "Subtypes": { "object": "Otherworldly Escort", "subtypes": ["Detective", "Spirit"] } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "check": { "Counters": { "object": "Otherworldly Escort", "kind": { "type": "Named", "value": "charge" }, "count": 4 } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "check": { "View": { "of": "Controller", "object": "Otherworldly Escort", "is": "bob" } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": { "Cast": { "object": "$blade-2", "targets": ["Otherworldly Escort"], "mana": ["$swamp-3", "$swamp-4"] } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass" },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "check": { "View": { "of": "Stack", "is": [] } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "check": { "Count": { "player": "bob", "zone": "Graveyard", "card": "Otherworldly Escort", "count": 1 } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "check": { "Count": { "player": "bob", "zone": "Battlefield", "card": "Otherworldly Escort", "count": 0 } } }
+  ]
+}
