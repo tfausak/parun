@@ -86,8 +86,8 @@ spec s registry = Spec.describe s "Protocol" $ do
     Spec.assertBool s (not (null (to S.bob))) "bob asked"
     Spec.assertBool s (not (any leaks (to S.bob))) "no leak"
   Spec.it s "a prompt no seat answers is never sent" $ do
-    Spec.assertBool s (Maybe.isNothing (Protocol.questionOf (Prompt.Shuffle [ObjectId.MkObjectId 7, ObjectId.MkObjectId 8]))) "shuffle"
-    Spec.assertBool s (Maybe.isNothing (Protocol.questionOf (Prompt.RollDie 6))) "die"
+    Spec.assertBool s (Maybe.isNothing (Protocol.questionOf S.threePlayerGame (Prompt.Shuffle [ObjectId.MkObjectId 7, ObjectId.MkObjectId 8]))) "shuffle"
+    Spec.assertBool s (Maybe.isNothing (Protocol.questionOf S.threePlayerGame (Prompt.RollDie 6))) "die"
   Spec.it s "a reply that cannot be read is asked again with the problem" $ do
     gs <- started s registry
     let garbled = State.execState (Driver.drive [observer] (Protocol.over (exchanging once) chance) 10000 (pure . (>= 3) . GameState.turnNumber) gs) []

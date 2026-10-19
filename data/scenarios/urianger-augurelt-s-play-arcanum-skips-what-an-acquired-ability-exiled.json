@@ -1,0 +1,64 @@
+{
+  "description": "CR 607.2a / 607.5 Urianger Augurelt's Play Arcanum plays what its Draw Arcanum exiled, not what the ability Steward of the Harvest gave it exiled",
+  "note": "Steward of the Harvest exiles Scavenger Grounds, so Urianger has its \"Exile all graveyards\", which exiles bob's Grizzly Bears. Draw Arcanum then exiles Balduvian Bears off the library. The printed Play Arcanum is linked to the printed Draw Arcanum alone, so Balduvian Bears is castable, and neither Grizzly Bears, which costs the same, nor the exiled Desert is playable.",
+  "board": {
+    "seats": [
+      {
+        "name": "alice",
+        "battlefield": [
+          { "card": "Urianger Augurelt", "label": "urianger", "ready": true },
+          { "card": "Forest", "label": "forest" },
+          { "card": "Forest", "label": "forest-2" },
+          { "card": "Forest", "label": "forest-3" },
+          { "card": "Forest", "label": "forest-4" },
+          { "card": "Island", "label": "island" },
+          { "card": "Island", "label": "island-2" },
+          { "card": "Desert", "label": "desert" }
+        ],
+        "hand": [
+          { "card": "Steward of the Harvest", "label": "steward" }
+        ],
+        "graveyard": [
+          { "card": "Scavenger Grounds", "label": "grounds" }
+        ],
+        "library": [
+          { "card": "Hill Giant" },
+          { "card": "Balduvian Bears" },
+          { "card": "Hill Giant" },
+          { "card": "Hill Giant" }
+        ]
+      },
+      {
+        "name": "bob",
+        "graveyard": [
+          { "card": "Grizzly Bears", "label": "grizzly" }
+        ],
+        "library": [
+          { "card": "Hill Giant" },
+          { "card": "Hill Giant" },
+          { "card": "Hill Giant" }
+        ]
+      }
+    ],
+    "active": "alice",
+    "step": "PrecombatMain"
+  },
+  "timeline": [
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": { "Cast": { "object": "$steward", "mana": ["$forest", "$forest-2", "$forest-3", "$forest-4", null] } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass" },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": { "Answer": { "prompt": "AnnounceTargets", "with": [["target", 1]] } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": { "ChooseTargets": { "target": ["$grounds"] } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass" },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": { "Activate": { "object": "$urianger", "ability": 3, "mana": ["$island", "$island-2", null], "costOrder": [0, 1] } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass" },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "check": { "Count": { "player": "bob", "zone": "Exile", "card": "Grizzly Bears", "count": 1 } } },
+    { "turn": 3, "step": "PrecombatMain", "player": "alice", "do": { "Activate": { "object": "$urianger", "ability": 0, "mana": [null] } } },
+    { "turn": 3, "step": "PrecombatMain", "player": "alice", "do": "Pass" },
+    { "turn": 3, "step": "PrecombatMain", "player": "alice", "do": { "Answer": { "prompt": "ChooseOptional", "with": { "type": "Exercises" } } } },
+    { "turn": 3, "step": "PrecombatMain", "player": "alice", "check": { "Count": { "player": "alice", "zone": "Exile", "card": "Balduvian Bears", "count": 1 } } },
+    { "turn": 3, "step": "DeclareAttackers", "player": "alice", "do": { "Attack": [] } },
+    { "turn": 5, "step": "PrecombatMain", "player": "alice", "do": { "Activate": { "object": "$urianger", "ability": 1, "mana": [null] } } },
+    { "turn": 5, "step": "PrecombatMain", "player": "alice", "do": "Pass" },
+    { "turn": 5, "step": "PrecombatMain", "player": "alice", "check": { "View": { "of": "Offered", "player": "alice", "is": ["Pass", "Cast Balduvian Bears", "ActivateManaAbility $forest", "ActivateManaAbility $forest-2", "ActivateManaAbility $forest-3", "ActivateManaAbility $forest-4", "ActivateManaAbility $island", "ActivateManaAbility $island-2", "ActivateManaAbility Steward of the Harvest"] } } }
+  ]
+}

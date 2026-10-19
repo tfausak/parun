@@ -7310,6 +7310,7 @@ changeZoneWithCause discarded asOf batch oid requestedDest requestedPosition see
                   -- other zone carries no attachment for CR 701.3a to have made.
                   Monad.when (fromZone == Zone.Battlefield) $
                     Monad.forM_ (Object.attachedTo obj) (unattach oid)
+                  seenArriving <- State.gets (Visibility.seenByEveryone newId)
                   State.modify'
                     . recordEvent
                     . GameEvent.Moved
@@ -7323,7 +7324,8 @@ changeZoneWithCause discarded asOf batch oid requestedDest requestedPosition see
                         -- is True only at changeZoneResolvingReturning's door, and CR
                         -- 608.3's onto the battlefield, Pawl.Engine.Stack's Carried.
                         Moved.duringResolution = resolving || (carrying == CarryOver.Carried && dest == Zone.Battlefield),
-                        Moved.revealed = revealedLeaving
+                        Moved.revealed = revealedLeaving,
+                        Moved.seenArriving = seenArriving
                       }
                   -- CR 712.21's second clause: "two cards are put into the
                   -- appropriate zone". One event per card AFTER the leading one,
@@ -8520,7 +8522,7 @@ recordMintedEntry newId = do
   let snapshot = Projection.project newId placed
   -- Moved.revealed is read by no look-back here: none reaches a battlefield
   -- destination (Event.Trigger.looksBack), so the public origin answers.
-  State.modify' (recordEvent (GameEvent.Moved ((Moved.moved (ZoneChange.MkZoneChange newId newId Zone.Battlefield Zone.Battlefield) snapshot) {Moved.revealed = True})))
+  State.modify' (recordEvent (GameEvent.Moved ((Moved.moved (ZoneChange.MkZoneChange newId newId Zone.Battlefield Zone.Battlefield) snapshot) {Moved.revealed = True, Moved.seenArriving = Visibility.seenByEveryone newId placed})))
 
 -- CR 701.42a: meld these cards -- "put them onto the battlefield with their back
 -- faces up and combined. The resulting permanent is a single object represented by
@@ -8661,7 +8663,7 @@ meld controller victims resultCard = do
           -- Moved.revealed is read by no look-back here: none reaches a
           -- battlefield destination (Event.Trigger.looksBack), so the origin's
           -- zone answers.
-          entry = (Moved.moved (ZoneChange.MkZoneChange (fst (NonEmpty.head melding)) newId origin Zone.Battlefield) snapshot) {Moved.otherDepartures = Seq.fromList (fmap fst (NonEmpty.tail melding)), Moved.revealed = not (Game.isHiddenZone origin)}
+          entry = (Moved.moved (ZoneChange.MkZoneChange (fst (NonEmpty.head melding)) newId origin Zone.Battlefield) snapshot) {Moved.otherDepartures = Seq.fromList (fmap fst (NonEmpty.tail melding)), Moved.revealed = not (Game.isHiddenZone origin), Moved.seenArriving = Visibility.seenByEveryone newId placed}
       State.modify' (recordEvent (GameEvent.Moved entry))
       pure (Just newId)
 
@@ -10094,8 +10096,8 @@ settleOnsets begun gs =
 --
 -- Takes the GROUPED events, because eventTriggers is the one gatherer whose
 -- answer depends on which of them were simultaneous (CR 603.10a). The other two
--- take the events alone. `boards` are the states CR 603.4 and CR 603.8 read
--- (Trigger.boardWhenTriggered).
+-- take the events alone. `boards` are the states CR 603.8 reads
+-- (Trigger.stateTriggers).
 gatherTriggers :: [LoggedEvent.LoggedEvent] -> [GameState] -> GameState -> Game ([PendingTrigger], Seq.Seq DelayedTrigger)
 gatherTriggers grouped boards gs = do
   -- Already CR 603.4-filtered: delayedPending has to run the check itself,
@@ -10106,8 +10108,8 @@ gatherTriggers grouped boards gs = do
   -- In Game rather than pure because CR 603.7b's second sentence is a QUESTION
   -- for the entry's controller, and every prompt goes through Game.ask. The
   -- other two gatherers stay pure and are merged in here.
-  (fromDelayed, surviving) <- delayedPending grouped boards gs
-  pure (filter (interveningHolds boards gs) (eventTriggers grouped gs) <> stateTriggers boards gs <> fromDelayed, surviving)
+  (fromDelayed, surviving) <- delayedPending grouped gs
+  pure (filter (interveningHolds gs) (eventTriggers grouped gs) <> stateTriggers boards gs <> fromDelayed, surviving)
 
 -- | CR 603.3b: the abilities a round of GameEvent.AbilityTriggered records fires,
 -- for Pawl.Engine.Engine.reactions to fold into the same batch.
@@ -10117,7 +10119,7 @@ gatherTriggers grouped boards gs = do
 -- at all, so a second call would duplicate every one of them. The CR 603.7
 -- delayed store is re-run by Engine.reactions itself, which writes it back.
 reactionTriggers :: [LoggedEvent.LoggedEvent] -> GameState -> [PendingTrigger]
-reactionTriggers events gs = filter (interveningHolds [] gs) (eventTriggers events gs)
+reactionTriggers events gs = filter (interveningHolds gs) (eventTriggers events gs)
 
 -- CR 704.5v's "the source of an ability that has triggered": the objects an
 -- ability has triggered from since the last scan, before any of it is placed.
@@ -10143,7 +10145,7 @@ reactionTriggers events gs = filter (interveningHolds [] gs) (eventTriggers even
 triggeredSources :: [GameState] -> GameState -> Set ObjectId
 triggeredSources boards gs =
   let reflexive = [reflexiveFiring gs entry | entry <- Foldable.toList (GameState.delayedTriggers gs), isReflexive entry, delayedArmed gs entry]
-      pending = filter (interveningHolds boards gs) (eventTriggers (unscannedGrouped gs) gs <> reflexive) <> stateTriggers boards gs
+      pending = filter (interveningHolds gs) (eventTriggers (unscannedGrouped gs) gs <> reflexive) <> stateTriggers boards gs
    in Set.fromList [oid | TriggerSource.OfObject oid <- fmap PendingTrigger.source (withinTriggerLimit gs pending)]
 
 -- The printed riders "This ability triggers only once each turn" and "This

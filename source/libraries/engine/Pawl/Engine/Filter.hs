@@ -27,7 +27,9 @@ import qualified Pawl.Types.CounterKind as CounterKind
 import qualified Pawl.Types.CountersFromPermanents as CountersFromPermanents
 import qualified Pawl.Types.Craft as Craft
 import qualified Pawl.Types.Cycling as Cycling
+import qualified Pawl.Types.DamageKind as DamageKind
 import qualified Pawl.Types.DamagedParty as DamagedParty
+import qualified Pawl.Types.DealtDamageTo as DealtDamageTo
 import qualified Pawl.Types.Designation as Designation
 import qualified Pawl.Types.Devour as Devour
 import qualified Pawl.Types.DiscardCards as DiscardCards
@@ -372,9 +374,10 @@ data View = MkView
     saddledThisTurn :: Set.Set ObjectId.ObjectId,
     -- CR 120.1 / 608.2i: whom did this candidate deal damage to earlier this
     -- turn? Every recipient of a GameEvent.DamageDealt it was the source of,
-    -- LAZY for `crewedThisTurn`'s reason; DealtDamageToThisTurn compares them
-    -- against the party the card names.
-    dealtDamageTo :: Set.Set Recipient.Recipient,
+    -- each beside that event's CR 510 / 608 kind, LAZY for `crewedThisTurn`'s
+    -- reason; DealtDamageToThisTurn compares them against the party and the
+    -- kind the card names.
+    dealtDamageTo :: Set.Set (Recipient.Recipient, DamageKind.DamageKind),
     -- CR 302.6: has this candidate's CONTROLLER controlled it continuously since
     -- their most recent turn began? Read from Object.sickness, the field CR
     -- 302.6's own gates on attacking and the tap symbol are read from, and
@@ -2066,14 +2069,23 @@ matches context view predicate = case predicate of
   -- split -- the candidate's own field says whom it dealt damage to, and the
   -- party says which of them the card names. The source is the id it had, so a
   -- dies trigger's "it" still finds the damage (CR 603.10a) -- Pawl.DamageSpec's
-  -- Brine Hag case is what proves it. Vacuously False for
-  -- a context with no source or no perspective, where the party names nothing.
-  Filter.DealtDamageToThisTurn party ->
-    let hit damaged = case party of
+  -- Brine Hag case is what proves it. A slot party is MEMBERSHIP, IsBound's
+  -- reading, and a dies trigger's departed permanent is the id the damage
+  -- named (CR 400.7, 603.10a). The kind narrows to CR 510.2's combat damage.
+  -- The Hawkeye, Autumn Willow and Witch-king scenarios under
+  -- data/scenarios/damage prove the slot and the kind. Vacuously False for a
+  -- context with no source, no perspective or nothing in the slot, where the
+  -- party names nothing.
+  Filter.DealtDamageToThisTurn (DealtDamageTo.MkDealtDamageTo party wanted) ->
+    let toParty damaged = case party of
           DamagedParty.Source -> Maybe.isJust (source context) && Recipient.objectOf damaged == source context
           DamagedParty.Related relation -> case (Recipient.playerOf damaged, perspective context) of
             (Just player, Just you) -> PlayerRelation.holds (teams context) relation you player
             _ -> False
+          DamagedParty.InSlot slot -> case Recipient.objectOf damaged of
+            Just oid -> Set.member oid (Map.findWithDefault Set.empty slot (slotObjects context))
+            Nothing -> False
+        hit (damaged, dealtKind) = toParty damaged && all (== dealtKind) wanted
      in any hit (dealtDamageTo view)
   -- CR 400.7 / 608.2i: the same look-back over the entries. A permanent that
   -- left and came back is a new object whose entry this is; one that phased in
@@ -3813,7 +3825,11 @@ overBoundSlotsWith f predicate = case predicate of
   Filter.MilledThisTurn -> pure predicate
   Filter.CantCrewVehicles -> pure predicate
   Filter.DealtDamageThisTurn -> pure predicate
-  Filter.DealtDamageToThisTurn _ -> pure predicate
+  -- MANY: a slot party is membership, IsBound's reading.
+  Filter.DealtDamageToThisTurn asked -> case DealtDamageTo.party asked of
+    DamagedParty.InSlot slot -> fmap (\renamed -> Filter.DealtDamageToThisTurn asked {DealtDamageTo.party = DamagedParty.InSlot renamed}) (f SlotArity.Many slot)
+    DamagedParty.Source -> pure predicate
+    DamagedParty.Related _ -> pure predicate
   Filter.EnteredThisTurn -> pure predicate
   Filter.CrewedSourceThisTurn -> pure predicate
   Filter.ConvokedSourceThisTurn -> pure predicate

@@ -1,0 +1,35 @@
+{
+  "description": "CR 603.4 / 603.10a Hawkeye, Avenging Archer draws when the creature it pinged dies",
+  "note": "The pair of cr-603-4-hawkeye-draws-nothing-for-a-creature-it-did-not-damage, differing only in which of alice's two pingers aims at which of bob's creatures.",
+  "board": {
+    "active": "alice",
+    "step": "PrecombatMain",
+    "seats": [
+      {
+        "name": "alice",
+        "battlefield": [
+          { "card": "Hawkeye, Avenging Archer", "label": "hawkeye", "ready": true },
+          { "card": "Prodigal Sorcerer", "label": "sorcerer", "ready": true }
+        ],
+        "library": [{ "card": "Island" }, { "card": "Island" }]
+      },
+      {
+        "name": "bob",
+        "battlefield": [
+          { "card": "Prodigal Sorcerer", "label": "victim" },
+          { "card": "Hill Giant", "label": "giant" }
+        ],
+        "library": [{ "card": "Island" }, { "card": "Island" }]
+      }
+    ]
+  },
+  "timeline": [
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": { "Activate": { "object": "$sorcerer", "ability": 0, "targets": ["$giant"] } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass" },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": { "Activate": { "object": "$hawkeye", "ability": 0, "targets": ["$victim"] } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass" },
+    { "turn": 1, "step": "BeginningOfCombat", "player": "alice", "check": { "Count": { "player": "alice", "zone": "Hand", "card": "Island", "count": 1 } } },
+    { "turn": 1, "step": "BeginningOfCombat", "player": "alice", "check": { "Count": { "player": "bob", "zone": "Graveyard", "card": "Prodigal Sorcerer", "count": 1 } } },
+    { "turn": 1, "step": "BeginningOfCombat", "player": "alice", "check": { "Damage": { "object": "$giant", "damage": 1 } } }
+  ]
+}

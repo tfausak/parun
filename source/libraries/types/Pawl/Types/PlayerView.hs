@@ -19,7 +19,7 @@ data PlayerView = MkPlayerView
     battlefield :: [ObjectView.ObjectView],
     -- | Top first, as GameState.stack.
     stack :: [ObjectView.ObjectView],
-    -- | This turn's log entries the seat witnessed (CR 701.20a, 701.20e).
+    -- | This turn's log entries the seat witnessed (CR 400.2, 701.20a, 701.20e).
     witnessed :: [LoggedEvent.LoggedEvent],
     result :: Maybe Result.Result
   }

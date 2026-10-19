@@ -40,6 +40,7 @@ import qualified Pawl.Types.Count as Count.Type
 import qualified Pawl.Types.CounterKind as CounterKind
 import qualified Pawl.Types.Crewing as Crewing
 import qualified Pawl.Types.DamageEvent as DamageEvent
+import qualified Pawl.Types.DamageKind as DamageKind
 import qualified Pawl.Types.DistinctOf as DistinctOf
 import qualified Pawl.Types.EventShape as EventShape
 import qualified Pawl.Types.Filter as Filter.Type
@@ -644,7 +645,7 @@ slotPlayers context gs name = case Map.lookup name (Filter.slotPlayers context) 
 -- itself is: Pawl.Engine.Projection imports this module.
 snapshotView :: ViewOf -> GameState -> EventShape.EventShape -> GameEvent.GameEvent -> Maybe Filter.View
 snapshotView viewOf gs shape event = case event of
-  GameEvent.Moved (Moved.MkMoved zc snapshot _ _ _ _) -> case shape of
+  GameEvent.Moved (Moved.MkMoved zc snapshot _ _ _ _ _) -> case shape of
     EventShape.MovedBetween (MovedBetween.MkMovedBetween from to) ->
       if ZoneChange.from zc == from && ZoneChange.to zc == to then Just (departedView viewOf gs zc snapshot) else Nothing
     -- CR 603.6c: to another zone, so Event.recordMintedEntry's Battlefield to
@@ -1039,11 +1040,12 @@ saddledThisTurn oid gs =
 -- recipient of a damage event it was the source of, through
 -- Game.damageRecipient so CR 120.8's zero is no damage here either. The
 -- recipient is the one the damage was finally dealt to, so CR 614.9's
--- redirection counts against where it landed.
-dealtDamageTo :: ObjectId -> GameState -> Set.Set Recipient.Recipient
+-- redirection counts against where it landed. Each recipient rides beside the
+-- event's kind (CR 510 / 608), for a card that asks about combat damage alone.
+dealtDamageTo :: ObjectId -> GameState -> Set.Set (Recipient.Recipient, DamageKind.DamageKind)
 dealtDamageTo oid gs =
   let byIt event = case event of
-        GameEvent.DamageDealt ev | DamageEvent.source ev == oid -> Game.damageRecipient event
+        GameEvent.DamageDealt ev | DamageEvent.source ev == oid -> fmap (\recipient -> (recipient, DamageEvent.kind ev)) (Game.damageRecipient event)
         _ -> Nothing
    in Set.fromList (Maybe.mapMaybe (byIt . LoggedEvent.event) (Foldable.toList (GameState.events gs)))
 

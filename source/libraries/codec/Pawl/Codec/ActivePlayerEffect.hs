@@ -2,6 +2,7 @@
 
 module Pawl.Codec.ActivePlayerEffect where
 
+import qualified Pawl.Codec.AbilityName as AbilityName
 import qualified Pawl.Codec.AffectedPlayers as AffectedPlayers
 import qualified Pawl.Codec.Expiry as Expiry
 import qualified Pawl.Codec.ObjectId as ObjectId
@@ -10,6 +11,7 @@ import qualified Pawl.Codec.PlayerId as PlayerId
 import qualified Pawl.Codec.SourceChoices as SourceChoices
 import qualified Pawl.Codec.Timestamp as Timestamp
 import qualified Pawl.JsonCodec.Codec as Codec
+import qualified Pawl.JsonCodec.Common as Common
 import qualified Pawl.JsonCodec.Fields as Fields
 import qualified Pawl.Types.ActivePlayerEffect as ActivePlayerEffect
 
@@ -26,6 +28,7 @@ codec = Fields.object $ do
   expiry <- Fields.required "expiry" Expiry.codec ActivePlayerEffect.expiry
   scope <- Fields.required "scope" (AffectedPlayers.codec PlayerId.codec) ActivePlayerEffect.scope
   effect <- Fields.required "effect" PlayerEffect.codec ActivePlayerEffect.effect
+  ability <- Fields.defaulted "ability" Nothing (Common.maybe AbilityName.codec) ActivePlayerEffect.ability
   pure
     ActivePlayerEffect.MkActivePlayerEffect
       { ActivePlayerEffect.source = source,
@@ -34,5 +37,6 @@ codec = Fields.object $ do
         ActivePlayerEffect.timestamp = timestamp,
         ActivePlayerEffect.expiry = expiry,
         ActivePlayerEffect.scope = scope,
-        ActivePlayerEffect.effect = effect
+        ActivePlayerEffect.effect = effect,
+        ActivePlayerEffect.ability = ability
       }

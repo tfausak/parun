@@ -999,7 +999,7 @@ withinOffer prompt chosen = case prompt of
   Prompt.Type.MulliganAction _ _ actions -> all (`elem` actions) chosen
   Prompt.Type.OpeningHandAction _ _ actions -> all (`elem` actions) chosen
   Prompt.Type.ChooseCost _ _ _ costs -> chosen `elem` costs
-  Prompt.Type.ChooseManaSource _ _ candidates -> all (`elem` candidates) chosen
+  Prompt.Type.ChooseManaSource _ _ _ candidates -> all (`elem` candidates) chosen
   Prompt.Type.ChooseExtraManaSource _ _ candidates -> all (`elem` candidates) chosen
   Prompt.Type.ChooseCopyTarget _ _ _ objects -> all (`elem` objects) chosen
   Prompt.Type.ChooseManaYield _ _ _ options -> chosen `elem` options
@@ -1317,7 +1317,7 @@ answerActionChoice key verb choices asked =
                 updateChoices (\current -> current {Choices.costOrder = Nothing})
                 pure order
           _ -> unexpected
-        Prompt.Type.ChooseManaSource _ _ candidates -> answerManaSource gs key verb choices kind candidates
+        Prompt.Type.ChooseManaSource _ _ _ candidates -> answerManaSource gs key verb choices kind candidates
         Prompt.Type.ChooseExtraManaSource _ _ candidates -> answerManaSource gs key verb choices kind candidates
         Prompt.Type.ChooseManaYield _ _ _ candidates -> case Seq.viewl (Choices.manaYields choices) of
           Seq.EmptyL -> unexpected
