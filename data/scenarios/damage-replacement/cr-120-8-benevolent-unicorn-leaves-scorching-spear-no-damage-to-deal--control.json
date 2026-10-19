@@ -1,0 +1,29 @@
+{
+  "description": "CR 120.8 Benevolent Unicorn leaves Scorching Spear no damage to deal (control)",
+  "note": "The Scorching Spear board with Lightning Bolt in its place: the Unicorn makes 3 damage 2, the Raptor is dealt it, and its enrage draws one Plains. So the Spear board's undrawn Plains is the zero, and not a trigger that could never fire.",
+  "board": {
+    "seats": [
+      {
+        "name": "alice",
+        "battlefield": [
+          { "card": "Benevolent Unicorn", "label": "unicorn" },
+          { "card": "Ripjaw Raptor", "label": "raptor" },
+          { "card": "Mountain", "label": "m1" }
+        ],
+        "hand": [{ "card": "Lightning Bolt", "label": "spell" }],
+        "library": [{ "card": "Plains" }, { "card": "Plains" }]
+      },
+      {
+        "name": "bob",
+        "library": [{ "card": "Island" }]
+      }
+    ],
+    "active": "alice",
+    "step": "PrecombatMain"
+  },
+  "timeline": [
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": { "Cast": { "object": "$spell", "targets": ["$raptor"], "mana": ["$m1"] } } },
+    { "turn": 1, "step": "EndStep", "player": "alice", "check": { "Count": { "player": "alice", "zone": "Hand", "card": "Plains", "count": 1 } } },
+    { "turn": 1, "step": "EndStep", "player": "alice", "check": { "Damage": { "object": "$raptor", "damage": 2 } } }
+  ]
+}

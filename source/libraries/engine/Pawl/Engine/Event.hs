@@ -2098,6 +2098,15 @@ applyInertly candidate rewrite event = do
     DamageRewrite.RunEffects _ -> pure ()
   pure (Just event)
 
+-- CR 120.8: a damage event an amount rewrite left at 0 is no event at all, so
+-- nothing later in the CR 616.1 loop has one to replace and nothing downstream
+-- deals, marks or triggers on it. The two arms of `apply` that can answer 0
+-- without preventing anything (SetAmount, Scale) go through here; the
+-- prevention arms already answer Nothing at 0 (CR 615.6). Proved by
+-- data/scenarios/damage-replacement's Benevolent Unicorn case.
+dealing :: DamageEvent.DamageEvent -> Maybe ProposedEvent
+dealing de = if DamageEvent.amount de == 0 then Nothing else Just (ProposedEvent.WouldDealDamage de)
+
 -- CR 614.6: apply one chosen effect. Nothing means the event does not happen.
 --
 -- One arm per ReplacementEffect constructor, same shape as `applies`, so a new
@@ -3546,13 +3555,13 @@ apply batch candidate event =
       -- deal-time rider it was proposed with.
       DamageRewrite.SetAmount n -> do
         Replacement.consume (ReplacementCandidate.identity candidate)
-        pure (Just (ProposedEvent.WouldDealDamage de {DamageEvent.amount = n}))
+        pure (dealing de {DamageEvent.amount = n})
       -- CR 614.1a: Furnace of Rath's "it deals double that damage ... instead".
       -- Through the same `scale` the counter and token rewrites use, so a
       -- doubling means one thing across every event class.
       DamageRewrite.Scale scaling -> do
         Replacement.consume (ReplacementCandidate.identity candidate)
-        pure (Just (ProposedEvent.WouldDealDamage de {DamageEvent.amount = Replacement.scale scaling (DamageEvent.amount de)}))
+        pure (dealing de {DamageEvent.amount = Replacement.scale scaling (DamageEvent.amount de)})
       -- CR 614.9: a redirection effect replaces the damage's RECIPIENT with
       -- another and nothing else -- "the same damage dealt to another battle,
       -- creature, planeswalker, or player". Every other field rides along for

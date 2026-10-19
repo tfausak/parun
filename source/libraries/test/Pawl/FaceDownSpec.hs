@@ -198,6 +198,7 @@ import qualified Pawl.Types.Phase as Phase
 import qualified Pawl.Types.PlayerId as PlayerId
 import qualified Pawl.Types.PrintedReplacement as PrintedReplacement
 import qualified Pawl.Types.Printing as Printing
+import qualified Pawl.Types.ProjectedCharacteristics as PC
 import qualified Pawl.Types.Prompt as Prompt
 import qualified Pawl.Types.Recipient as Recipient
 import qualified Pawl.Types.ReplacementEffect as ReplacementEffect
@@ -1928,6 +1929,37 @@ manifestSpec s registry = Spec.describe s "Manifest" $ do
         Spec.assertEqWith s "six lands are untapped, enough for {5}{R}" (S.tappedCount S.alice gs) 3
         Spec.assertEqWith s "CR 701.40b only the morph procedure is offered" (FaceDown.turnableFaceUp S.alice gs) [(permanent, TurnUpProcedure.Morph)]
 
+  -- CR 701.40b asks about "the CARD representing that permanent", and Soul
+  -- Summons' ruling says how: "revealing that it's a creature card (ignoring any
+  -- copy effects or type-changing effects that might be applying to it) and
+  -- paying its mana cost". Metamorphic Alteration makes the face-down permanent a
+  -- copy of Grizzly Bears (CR 708.10), a creature card at {1}{G}; the card
+  -- underneath is still what decides.
+  --
+  -- Lightning Bolt underneath, two Forests to pay the Bears' {1}{G}: the card is
+  -- an instant, so the procedure is closed (CR 701.40b's parenthetical).
+  Spec.it s "CR 701.40b a manifested instant under a copy of a creature is not offered the manifest procedure" $ do
+    bolt <- S.printingOf s registry "Lightning Bolt"
+    forest <- S.printingOf s registry "Forest"
+    (gs, entered) <- alteredManifest s registry bolt forest 2
+    case entered of
+      Nothing -> Spec.assertFailure s "the manifest did not reach the battlefield"
+      Just permanent -> do
+        Spec.assertEqWith s "CR 701.40b no procedure is offered" (FaceDown.turnableFaceUp S.alice gs) []
+        Spec.assertEqWith s "CR 708.10 the permanent carries the Bears' copiable values" (fmap PC.names (Game.copyStampOf =<< Game.lookupLayerOne permanent gs)) (Just (Set.singleton (CardName.MkCardName (Text.pack "Grizzly Bears"))))
+
+  -- The same board with Ainok Tracker underneath and six Mountains: the card's
+  -- {5}{R} is the price, which they pay, where the Bears' {1}{G} is one they
+  -- cannot. CR 708.10's Wandering Ones example is why no morph procedure is
+  -- offered beside it: the copy has no morph.
+  Spec.it s "CR 701.40b a manifested creature under a copy is priced at its own card's mana cost" $ do
+    ainok <- S.printingOf s registry "Ainok Tracker"
+    mountain <- S.printingOf s registry "Mountain"
+    (gs, entered) <- alteredManifest s registry ainok mountain 6
+    case entered of
+      Nothing -> Spec.assertFailure s "the manifest did not reach the battlefield"
+      Just permanent -> Spec.assertEqWith s "CR 701.40b the manifest procedure is offered for {5}{R}" (FaceDown.turnableFaceUp S.alice gs) [(permanent, TurnUpProcedure.Manifest)]
+
   -- CR 702.37b's condition, which CR 701.40c is what makes reachable: "put a
   -- +1/+1 counter on it IF ITS MEGAMORPH COST WAS PAID to turn it face up". A
   -- manifested megamorph card has two roads face up and only one of them pays
@@ -2014,6 +2046,26 @@ manifestedWith s registry land top extra = do
       (_, before) = S.addLibraryCard top S.alice g2
       after = S.runPure S.identityAnswer before (S.cast S.alice summonsId >> Stack.resolveTop)
   pure (after, enteredOne before after)
+
+-- manifestedWith's permanent made a copy of alice's Grizzly Bears by Metamorphic
+-- Alteration, cast off two Islands at it while the Bears are the other creature
+-- it could enchant. `n` untapped lands of `land` are added only after, so the
+-- Aura's payment cannot spend them.
+alteredManifest :: (Monad m) => Spec.Spec m n -> Registry.Registry m -> Printing.Printing -> Printing.Printing -> Int -> m (GameState.GameState, Maybe ObjectId.ObjectId)
+alteredManifest s registry top land n = do
+  island <- S.printingOf s registry "Island"
+  bears <- S.printingOf s registry "Grizzly Bears"
+  alteration <- S.printingOf s registry "Metamorphic Alteration"
+  (manifested, entered) <- manifestedWith s registry island top 0
+  let (bearsId, g1) = S.addPermanent bears S.alice (S.landsFor island S.alice 2 manifested)
+      (g2, auraId) = S.handOne alteration g1
+      answer :: Prompt.Prompt r -> r
+      answer p = case p of
+        Prompt.ChooseTargets _ _ _ sets -> fmap (Set.filter ((==) entered . Recipient.objectOf) . snd) sets
+        Prompt.ChoosePermanent _ _ _ candidates -> if elem bearsId candidates then bearsId else NonEmpty.head candidates
+        _ -> S.identityAnswer p
+      resolved = S.runPure answer g2 (S.cast S.alice auraId >> Stack.resolveTop)
+  pure (S.landsFor land S.alice n resolved, entered)
 
 -- One card from a library onto the battlefield through the door an
 -- Effect.MoveToZone takes, with CR 708.3's rider set or not and nothing else

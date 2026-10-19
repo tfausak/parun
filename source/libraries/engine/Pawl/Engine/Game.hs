@@ -1480,24 +1480,6 @@ copiedHalfOf obj = do
 alternativeSpellOf :: ObjectId -> GameState -> Maybe (Face Card)
 alternativeSpellOf = faceUpCopiable (copiableOf PC.alternativeSpell Card.alternativeSpellFace)
 
--- CR 702.37e / 702.168d / 701.40b: faceUpFaceOf with the copy stamp's values
--- laid over it (castingFaceOf), so a face-down card carrying copied values is
--- turned face up by the copied card's morph or disguise and priced at the copied
--- mana cost. Pawl.ConjureSpec's "CR 707.2/702.37e a duplicate of a Clone of
--- Ainok Tracker is cast face down and turned up for its morph cost" proves the
--- morph read.
---
--- Off `lookupLayerOne`'s object, so a STORED copy (Mirrorweave) lays its values
--- over the face as a stamp does (CR 708.8, 707.2). faceUpFaceOf itself stays on
--- the printed object, since CR 708.12 and 730.2g read the card. A regression
--- fence: no test turns a face-down creature under Mirrorweave face up.
-faceUpCastingFaceOf :: ObjectId -> GameState -> Maybe (Face Card)
-faceUpCastingFaceOf oid gs = do
-  obj <- lookupLayerOne oid gs
-  card <- cardOf oid gs
-  printing <- printingOfObject oid gs
-  pure (castingFaceOf obj card (resolveFaceFor (Just obj) (Printing.card printing)))
-
 -- CR 722.2a / 722.2b: the PREPARE SPELL this object has -- the copy snapshot's
 -- when the object is copying something, and its own printed card's otherwise
 -- (copiableOf). The rule states the same thing rule 709.5b
@@ -3463,10 +3445,9 @@ movedChange event = case event of
 -- The `amount > 0` test below is CR 120.8 -- "if a source would deal 0 damage, it does
 -- not deal damage at all" -- and a FENCE rather than a reachable filter on the
 -- pool as it stands: Resolve's DealDamage gates on `n > 0`, combat events are
--- built with amount > 0 (CR 510.1a), and a fully prevented event is dropped
--- rather than shrunk to nothing (CR 615.6, Event.applyDamageRewrite's PreventNext
--- arm). What could still reach here is a DamageRewrite.SetAmount 0 or a
--- Scale to 0, and neither has a producer in the pool.
+-- built with amount > 0 (CR 510.1a), a fully prevented event is dropped rather
+-- than shrunk to nothing (CR 615.6), and an amount rewrite that leaves 0 drops
+-- the event too (Event.dealing).
 --
 -- The LifeLost event the same damage also files is deliberately not an arm. CR
 -- 120.3a makes the life loss a RESULT of the damage rather than the damage, so
