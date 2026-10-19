@@ -1958,8 +1958,10 @@ filterPositionLintSpec s registry = Spec.describe s "Lint" $ do
             "Extract a Confession",
             "Flare of Malice",
             "Myrkul's Edict",
+            "Professor Onyx",
             "Riveteers Charm",
             "Soul Shatter",
+            "The Dining Car",
             "Witch-king, Bringer of Ruin"
           ]
     counted <- traverse (\name -> fmap (\p -> (name, otherCandidateCounts (S.combinedFace p))) (S.printingOf s registry name)) authors

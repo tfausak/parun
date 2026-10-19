@@ -1,0 +1,38 @@
+{
+  "description": "CR 101.4 Professor Onyx's -8: each of seven rounds, each opponent discards a card or loses 3 life",
+  "note": "Onyx starts at 9 loyalty so it survives paying 8. bob holds one card and discards it in the first round; with an empty hand he cannot in the six after, so he loses 18 life. carol holds none, so she loses 3 life in every round: 21.",
+  "board": {
+    "seats": [
+      {
+        "name": "alice",
+        "battlefield": [
+          { "card": "Professor Onyx", "label": "onyx", "counters": [{ "key": { "type": "Loyalty" }, "value": 9 }] }
+        ]
+      },
+      {
+        "name": "bob",
+        "hand": [
+          { "card": "Island", "label": "island" }
+        ]
+      },
+      {
+        "name": "carol",
+        "life": 30
+      }
+    ],
+    "active": "alice",
+    "step": "PrecombatMain"
+  },
+  "timeline": [
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": { "Activate": { "object": "$onyx", "ability": 2 } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass" },
+    { "turn": 1, "step": "PrecombatMain", "player": "bob", "do": { "ChooseToPay": { "decision": { "type": "Pays" } } }, "source": "$onyx" },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "check": { "View": { "of": "Stack", "is": [] } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "check": { "Life": { "player": "bob", "life": 2 } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "check": { "Life": { "player": "carol", "life": 9 } } }
+  ],
+  "final": [
+    { "View": { "of": "Zone", "player": "bob", "zone": "Graveyard", "is": ["Island"] } },
+    { "View": { "of": "Zone", "player": "bob", "zone": "Hand", "is": [] } }
+  ]
+}
