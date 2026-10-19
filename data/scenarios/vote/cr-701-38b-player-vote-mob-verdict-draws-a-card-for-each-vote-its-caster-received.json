@@ -104,7 +104,7 @@
       "player": "alice",
       "do": {
         "Answer": {
-          "prompt": "ChooseVotePlayer",
+          "prompt": "ChooseVote",
           "with": "bob"
         }
       }
@@ -115,7 +115,7 @@
       "player": "bob",
       "do": {
         "Answer": {
-          "prompt": "ChooseVotePlayer",
+          "prompt": "ChooseVote",
           "with": "alice"
         }
       }
@@ -126,7 +126,7 @@
       "player": "carol",
       "do": {
         "Answer": {
-          "prompt": "ChooseVotePlayer",
+          "prompt": "ChooseVote",
           "with": "alice"
         }
       }

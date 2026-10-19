@@ -30,7 +30,7 @@ data VoteChoices
     -- and no card has to name a tie.
     --
     -- A NonEmpty of slots and not a Set: the wire order is the printed order,
-    -- which is the order Prompt.ChooseVoteWord offers them in. Rule 701.38b's
+    -- which is the order Prompt.ChooseVote offers them in. Rule 701.38b's
     -- "each connected to a DIFFERENT effect" makes a repeated word meaningless,
     -- and Pawl.CardSpec is what holds a card to distinct ones.
     Words (NonEmpty.NonEmpty SlotName.SlotName)

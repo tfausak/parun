@@ -10,6 +10,7 @@ import qualified Numeric.Natural as Natural
 import qualified Pawl.Types.Action as Action
 import qualified Pawl.Types.AnyNumberOf as AnyNumberOf
 import qualified Pawl.Types.AttackTarget as AttackTarget
+import qualified Pawl.Types.BallotChoice as BallotChoice
 import qualified Pawl.Types.BuybackDecision as BuybackDecision
 import qualified Pawl.Types.CandidateCost as CandidateCost
 import qualified Pawl.Types.Card as Card
@@ -287,19 +288,12 @@ data Prompt r where
   -- the ObjectId being the object the cost is on. Asked once per object; not
   -- raised where the candidates left are no more than the objects still owed.
   ChooseBehold :: Decider.Decider -> PlayerId.PlayerId -> ObjectId.ObjectId -> NonEmpty.NonEmpty ObjectId.ObjectId -> Prompt ObjectId.ObjectId
-  -- | CR 701.38a: which of the listed choices this player votes for; the seats
-  -- are asked one at a time, starting with the one the effect specifies and
-  -- proceeding in turn order. Not raised for one candidate, where rule 701.38a's
-  -- list holds a single choice and voting decides nothing.
-  ChooseVote :: Decider.Decider -> PlayerId.PlayerId -> ObjectId.ObjectId -> NonEmpty.NonEmpty ObjectId.ObjectId -> Prompt ObjectId.ObjectId
-  -- | CR 701.38b: ChooseVote where the listed choices are words rather than
-  -- objects, each word named by the slot its tally is bound at (Plea for
-  -- Power's time and knowledge). Not raised for one candidate, ChooseVote's
-  -- reason.
-  ChooseVoteWord :: Decider.Decider -> PlayerId.PlayerId -> ObjectId.ObjectId -> NonEmpty.NonEmpty SlotName.SlotName -> Prompt SlotName.SlotName
-  -- | CR 701.38b: ChooseVote where the listed choices are players (Mob
-  -- Verdict). Not raised for one candidate, ChooseVote's reason.
-  ChooseVotePlayer :: Decider.Decider -> PlayerId.PlayerId -> ObjectId.ObjectId -> NonEmpty.NonEmpty PlayerId.PlayerId -> Prompt PlayerId.PlayerId
+  -- | CR 701.38a / 701.38b: which of the listed choices -- objects, words or
+  -- players -- this player votes for; the seats are asked one at a time,
+  -- starting with the one the effect specifies and proceeding in turn order.
+  -- Not raised for one candidate, where rule 701.38a's list holds a single
+  -- choice and voting decides nothing.
+  ChooseVote :: Decider.Decider -> PlayerId.PlayerId -> ObjectId.ObjectId -> NonEmpty.NonEmpty (BallotChoice.BallotChoice ObjectId.ObjectId) -> Prompt (BallotChoice.BallotChoice ObjectId.ObjectId)
   -- | Which one of these counter kinds, the CounterKindFor saying what for: a
   -- CR 122.5 move or a CR 614.1c entry. Not raised for one kind.
   -- Pawl.Engine.Replay answers each CounterKindFor with its own Response

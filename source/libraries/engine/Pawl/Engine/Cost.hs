@@ -5770,9 +5770,9 @@ genericOf symbol = case symbol of
 -- own condition -- a cost with none leaves the chosen player nothing to pay and
 -- the rule offers no choice.
 --
--- The candidates are every OTHER player still in the game (CR 104.2a), not the
--- caster's opponents: rule 702.132a says "another player", and a teammate is one
--- (CR 102.3).
+-- The candidates are every OTHER player still in the game (CR 104.2a) within
+-- the caster's range (CR 801.5a), not the caster's opponents: rule 702.132a
+-- says "another player", and a teammate is one (CR 102.3).
 --
 -- NEVER ELIDED for a lone candidate, `chooseSource`'s posture: declining is an
 -- answer on every board, and a player who is asked gets a mana window the
@@ -5791,7 +5791,7 @@ offerAssist perform subject pid sid cost = do
   gs <- State.get
   if genericMana cost == 0 || not (Map.member Keyword.Type.Assist (spellKeywords pid sid gs))
     then pure Nothing
-    else case NonEmpty.nonEmpty (filter (/= pid) (Game.stillPlaying gs)) of
+    else case NonEmpty.nonEmpty (filter (/= pid) (Players.offer pid gs PlayerRelation.AnyPlayer)) of
       Nothing -> pure Nothing
       Just candidates -> do
         answer <- Game.choose (Prompt.ChooseAssistant (Decide.deciderFor pid gs) pid sid candidates)
