@@ -23,4 +23,8 @@ data Operand
     -- reference names (Pawl.Types.TargetSlot's and Pawl.Types.FromReference's
     -- @amount@).
     EnclosingAmount
+  | -- | CR 608.2d: that measure of every OTHER candidate the enclosing choice
+    -- offers, the comparison holding against each -- Crackling Doom's "a creature
+    -- with the greatest power among creatures that player controls".
+    OfEachOtherCandidate Measure.Measure
   deriving (Eq, Ord, Show)

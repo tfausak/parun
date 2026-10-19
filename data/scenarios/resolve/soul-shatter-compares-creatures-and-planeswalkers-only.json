@@ -1,0 +1,49 @@
+{
+  "description": "CR 608.2d Soul Shatter: the greatest mana value among creatures and planeswalkers, and nothing else",
+  "note": "bob's Ashiok (mana value 5) outranks his Hill Giant (4), and his Keening Stone (6) is no creature or planeswalker, so Ashiok goes without a prompt. carol's Craw Wurm and Elspeth tie at 6, so carol chooses: the Barbarian Horde (4) is refused, and she gives up the planeswalker.",
+  "board": {
+    "seats": [
+      {
+        "name": "alice",
+        "battlefield": [
+          { "card": "Swamp", "label": "swamp" },
+          { "card": "Swamp", "label": "swamp-2" },
+          { "card": "Swamp", "label": "swamp-3" }
+        ],
+        "hand": [
+          { "card": "Soul Shatter", "label": "shatter" }
+        ]
+      },
+      {
+        "name": "bob",
+        "battlefield": [
+          { "card": "Ashiok, Wicked Manipulator", "label": "ashiok", "counters": [{ "key": { "type": "Loyalty" }, "value": 5 }] },
+          { "card": "Hill Giant", "label": "giant" },
+          { "card": "Keening Stone", "label": "stone" }
+        ]
+      },
+      {
+        "name": "carol",
+        "battlefield": [
+          { "card": "Craw Wurm", "label": "wurm" },
+          { "card": "Elspeth, Sun's Champion", "label": "elspeth", "counters": [{ "key": { "type": "Loyalty" }, "value": 4 }] },
+          { "card": "Barbarian Horde", "label": "horde" }
+        ]
+      }
+    ],
+    "active": "alice",
+    "step": "PrecombatMain"
+  },
+  "timeline": [
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": { "Cast": { "object": "$shatter", "mana": ["$swamp", "$swamp-2", "$swamp-3"] } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass" },
+    { "turn": 1, "step": "PrecombatMain", "player": "carol", "refuse": { "Answer": { "prompt": "ChooseSacrifices", "with": ["$horde"] } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "carol", "do": { "Answer": { "prompt": "ChooseSacrifices", "with": ["$elspeth"] } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "check": { "View": { "of": "Zone", "player": "bob", "zone": "Graveyard", "is": ["Ashiok, Wicked Manipulator"] } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "check": { "View": { "of": "Zone", "player": "carol", "zone": "Graveyard", "is": ["Elspeth, Sun's Champion"] } } }
+  ],
+  "final": [
+    { "View": { "of": "Zone", "player": "bob", "zone": "Battlefield", "is": ["$giant", "$stone"] } },
+    { "View": { "of": "Zone", "player": "carol", "zone": "Battlefield", "is": ["$wurm", "$horde"] } }
+  ]
+}

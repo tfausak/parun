@@ -1565,7 +1565,15 @@ data Context = MkContext
     -- linked to it, for IsExiledWithSource ExiledAsItEntered. Filled where a target slot's filter is
     -- judged (Pawl.Engine.Target), off GameState.exiledWith; empty everywhere
     -- else, so the atom is vacuously False there.
-    sourceExiled :: Set.Set ObjectId.ObjectId
+    sourceExiled :: Set.Set ObjectId.ObjectId,
+    -- CR 608.2d: every candidate the enclosing choice offers, with its
+    -- measures, for the Measures atom's OfEachOtherCandidate operand. Filled by
+    -- one caller only, Pawl.Engine.Replacement.sacrificeCandidates, whose pool is
+    -- the edict's; Nothing everywhere else, so the operand is vacuously False
+    -- there, and Pawl.FilterPositionLintSpec keeps a card to an edict's filter.
+    -- `Just Map.empty` is the pool-gathering read: with no other candidate to
+    -- compare against, every comparison holds.
+    candidateMeasures :: Maybe (Map.Map ObjectId.ObjectId (Map.Map Measure.Measure Integer))
   }
   deriving (Eq, Ord, Show)
 
@@ -1622,7 +1630,7 @@ data Context = MkContext
 -- here owes both halves of the same pair: which way its unfilled read answers,
 -- and what holds a card to the positions that fill it.
 contextFor :: Teams.Teams -> Maybe PlayerId.PlayerId -> Maybe ObjectId.ObjectId -> Context
-contextFor t p s = MkContext {teams = t, perspective = p, source = s, sourceMeasures = Map.empty, sourceColors = Set.empty, sourceSectors = Set.empty, sourceNames = Set.empty, slotAmount = Nothing, defendingPlayers = [], recipient = Nothing, slotObjects = Map.empty, cantCrewVehicles = Set.empty, slotNames = Map.empty, slotControllers = Map.empty, slotHostControllers = Map.empty, subjectHostCardTypes = Set.empty, slotCreatureTypes = Map.empty, slotMeasures = Map.empty, slotPlayers = Map.empty, boundAmounts = Map.empty, slotStickers = Map.empty, slotVotes = Map.empty, boundUnannounced = False, sourceAttachedTo = Nothing, evaluated = Nothing, sourceEntrants = Set.empty, sourceOwner = Nothing, sourceChosenNames = Map.empty, carrierChosenPlayer = Nothing, aimingController = Nothing, sourceChosenColors = Set.empty, sourceChosenSubtype = Nothing, sourceLastExiled = Nothing, sourceExiled = Set.empty}
+contextFor t p s = MkContext {teams = t, perspective = p, source = s, sourceMeasures = Map.empty, sourceColors = Set.empty, sourceSectors = Set.empty, sourceNames = Set.empty, slotAmount = Nothing, defendingPlayers = [], recipient = Nothing, slotObjects = Map.empty, cantCrewVehicles = Set.empty, slotNames = Map.empty, slotControllers = Map.empty, slotHostControllers = Map.empty, subjectHostCardTypes = Set.empty, slotCreatureTypes = Map.empty, slotMeasures = Map.empty, slotPlayers = Map.empty, boundAmounts = Map.empty, slotStickers = Map.empty, slotVotes = Map.empty, boundUnannounced = False, sourceAttachedTo = Nothing, evaluated = Nothing, sourceEntrants = Set.empty, sourceOwner = Nothing, sourceChosenNames = Map.empty, carrierChosenPlayer = Nothing, aimingController = Nothing, sourceChosenColors = Set.empty, sourceChosenSubtype = Nothing, sourceLastExiled = Nothing, sourceExiled = Set.empty, candidateMeasures = Nothing}
 
 -- The ONE object a slot names, for the readers that can take no more than one --
 -- Quantity.AgainstSlot's evaluation, Count's IsControllerOfBound. Nothing where
@@ -1664,6 +1672,9 @@ operandValue context view operand = case operand of
   Operand.OfBound bound -> Map.lookup (BoundMeasure.slot bound, BoundMeasure.measure bound) (slotMeasures context)
   Operand.AmountInSlot slot -> toInteger <$> Map.lookup slot (boundAmounts context)
   Operand.EnclosingAmount -> slotAmount context
+  -- Not one number but one per other candidate, which the Measures arm of
+  -- `matches` reads itself.
+  Operand.OfEachOtherCandidate _ -> Nothing
 
 -- Does the measured number relate thus to the threshold? Pawl.Types.Comparison's
 -- one reader: this module's Measures atom and Pawl.Engine.Condition's Compares.
@@ -1736,6 +1747,14 @@ matches context view predicate = case predicate of
   -- permissive direction keeps the castability gate from refusing a spell the
   -- announcement could still make legal. A candidate with no measure is still
   -- excluded.
+  --
+  -- OfEachOtherCandidate holds against EVERY other candidate's number, so a tie
+  -- for the greatest admits each tied candidate and leaves the choice among them
+  -- to the chooser (CR 608.2d); a candidate lacking the operand's measure is not
+  -- compared against.
+  Filter.Measures (Measures.MkMeasures measure comparison (Operand.OfEachOtherCandidate other)) -> case (measureOf measure view, candidateMeasures context) of
+    (Just n, Just pool) -> all (compares comparison n) [t | (oid, measures) <- Map.toList pool, Just oid /= identity view, Just t <- [Map.lookup other measures]]
+    _ -> False
   Filter.Measures m -> case (measureOf (Measures.measure m) view, operandValue context view (Measures.operand m)) of
     (Just n, Just t) -> compares (Measures.comparison m) n t
     (Just _, Nothing) | Measures.operand m == Operand.EnclosingAmount -> boundUnannounced context
@@ -3257,6 +3276,7 @@ manaValueThresholds predicate = case predicate of
     Operand.OfBound _ -> []
     Operand.AmountInSlot _ -> []
     Operand.EnclosingAmount -> []
+    Operand.OfEachOtherCandidate _ -> []
   Filter.And fs -> concatMap manaValueThresholds fs
   Filter.Or fs -> concatMap manaValueThresholds fs
   Filter.Not f -> manaValueThresholds f
@@ -3585,6 +3605,7 @@ readsSourceValues predicate = case predicate of
     Operand.OfBound _ -> False
     Operand.AmountInSlot _ -> False
     Operand.EnclosingAmount -> False
+    Operand.OfEachOtherCandidate _ -> False
   Filter.ManaValueIsEven -> False
   Filter.HasCardType _ -> False
   Filter.HasSupertype _ -> False
@@ -3748,6 +3769,7 @@ overBoundSlotsWith f predicate = case predicate of
           Operand.OfSource _ -> pure predicate
           Operand.Own _ -> pure predicate
           Operand.EnclosingAmount -> pure predicate
+          Operand.OfEachOtherCandidate _ -> pure predicate
   Filter.ManaValueIsEven -> pure predicate
   Filter.ControlledBy _ -> pure predicate
   Filter.ControlledByDefendingPlayer -> pure predicate

@@ -1627,9 +1627,13 @@ matchesZoneOwner gs candidate rel oid = relationHolds gs candidate rel (fmap Obj
 -- "Sacrifice a creature of the chosen type" (Pawl.CostSpec's Doom Cannon group).
 matchesPermanent :: (ObjectId -> Filter.View) -> GameState -> Maybe PlayerId -> Map.Map SlotName.SlotName (Set Recipient.Recipient) -> Maybe ObjectId -> Filter.Type.Filter Keyword.Type.Keyword -> ObjectId -> Bool
 matchesPermanent viewOf gs you slots source filter_ oid =
+  Filter.matches (permanentContext gs you slots source) (viewOf oid) filter_
+
+-- matchesPermanent's Context, which sacrificeCandidates also frames its pool by.
+permanentContext :: GameState -> Maybe PlayerId -> Map.Map SlotName.SlotName (Set Recipient.Recipient) -> Maybe ObjectId -> Filter.Context
+permanentContext gs you slots source =
   let base = Projection.contextWithSlots gs you source slots
-      context = maybe base (\asking -> Projection.framedBy asking gs base) source
-   in Filter.matches context (viewOf oid) filter_
+   in maybe base (\asking -> Projection.framedBy asking gs base) source
 
 -- CR 701.21a: the permanents this player may sacrifice for a Filter, ascending --
 -- the order Prompt.ChooseSacrifices and Prompt.ChooseAnyNumber offer
@@ -1669,7 +1673,16 @@ matchesPermanent viewOf gs you slots source filter_ oid =
 sacrificeCandidates :: Maybe PlayerId -> Map.Map SlotName.SlotName (Set Recipient.Recipient) -> PlayerId -> Maybe ObjectId -> Filter.Type.Filter Keyword.Type.Keyword -> GameState -> [ObjectId]
 sacrificeCandidates you slots pid source filter_ gs =
   let viewOf = Projection.viewsOf gs
-      matching = List.sort (filter (matchesPermanent viewOf gs you slots source filter_) (Projection.controls pid gs))
+      context = permanentContext gs you slots source
+      offeredAgainst pool oid = Filter.matches context {Filter.candidateMeasures = Just pool} (viewOf oid) filter_
+      -- CR 608.2d: the OfEachOtherCandidate operand compares against the
+      -- permanents the edict would offer were it absent -- "the greatest power
+      -- among creatures that player controls" -- so the pool is gathered with
+      -- every such comparison holding, then narrowed by them. Before CR 101.2's
+      -- subtraction below: a creature that can't be sacrificed is still among
+      -- the creatures that player controls.
+      pooled = filter (offeredAgainst Map.empty) (Projection.controls pid gs)
+      matching = List.sort (filter (offeredAgainst (Map.fromList [(oid, Filter.measuresOf (viewOf oid)) | oid <- pooled])) pooled)
       forbidden = SacrificeRestriction.cantBeSacrificed matching gs
    in filter (\oid -> not (Set.member oid forbidden)) matching
 

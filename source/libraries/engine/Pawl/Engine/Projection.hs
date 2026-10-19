@@ -3693,6 +3693,8 @@ filterReads f = case f of
       Operand.Literal _ -> Set.empty
       Operand.AmountInSlot _ -> Set.empty
       Operand.EnclosingAmount -> Set.empty
+      -- Another object's projection, declared as the candidate's (Aspect's note).
+      Operand.OfEachOtherCandidate measure -> measureReads measure
   Filter.Type.ControlledBy _ -> Set.singleton Controller
   -- The candidate's controller; who defends is a combat-record fact.
   Filter.Type.ControlledByDefendingPlayer -> Set.singleton Controller
@@ -3959,13 +3961,14 @@ filterReads f = case f of
   Filter.Type.Or fs -> foldMap filterReads fs
   Filter.Type.Not g -> filterReads g
 
--- Whether a Filter's answer can turn on ANOTHER object's projection. Exactly the
--- five Filter.View fields viewOfCharacteristics fills through `peers` --
+-- Whether a Filter's answer can turn on ANOTHER object's projection: the five
+-- Filter.View fields viewOfCharacteristics fills through `peers` --
 -- attachedToView, attachedViews, attackingPlaneswalkerController,
--- attackingBattleProtector and nonManaActivatedAbility -- since Filter.matches
--- reads no other channel into a second object and every other field of that view
--- comes from the candidate's own partial or from the GameState, which no layer
--- writes.
+-- attackingBattleProtector and nonManaActivatedAbility -- and the
+-- OfEachOtherCandidate operand's Filter.Context.candidateMeasures, since
+-- Filter.matches reads no other channel into a second object and every other
+-- field of that view comes from the candidate's own partial or from the
+-- GameState, which no layer writes.
 --
 -- What it buys is which arm of `movesSet` runs: a filter answering False here
 -- reads exactly what it read before the other effect was applied, at every object
@@ -4032,7 +4035,17 @@ filterReadsPeers f = case f of
   -- The SOURCE's and a bound object's numbers arrive on the Context, which
   -- affectsGiven builds with Filter.contextFor -- no projection of a second
   -- object is read.
-  Filter.Type.Measures _ -> False
+  -- Every operand but OfEachOtherCandidate reads the candidate, the source or a
+  -- binding; that one reads the other candidates' projections, through
+  -- Filter.Context rather than a view field.
+  Filter.Type.Measures m -> case Measures.operand m of
+    Operand.OfEachOtherCandidate _ -> True
+    Operand.Literal _ -> False
+    Operand.OfSource _ -> False
+    Operand.Own _ -> False
+    Operand.OfBound _ -> False
+    Operand.AmountInSlot _ -> False
+    Operand.EnclosingAmount -> False
   Filter.Type.ControlledBy _ -> False
   Filter.Type.ControlledByDefendingPlayer -> False
   Filter.Type.ControlledByBound _ -> False
