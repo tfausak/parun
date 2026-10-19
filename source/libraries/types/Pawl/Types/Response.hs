@@ -6,6 +6,7 @@ import qualified Data.Set as Set
 import qualified Numeric.Natural as Natural
 import qualified Pawl.Types.Action as Action
 import qualified Pawl.Types.AttackTarget as AttackTarget
+import qualified Pawl.Types.BallotChoice as BallotChoice
 import qualified Pawl.Types.BuybackDecision as BuybackDecision
 import qualified Pawl.Types.CandidateCost as CandidateCost
 import qualified Pawl.Types.Card as Card
@@ -246,20 +247,13 @@ data Response
   | -- | CR 122.1: the division by permanent AND kind a paying or resolving
     -- player chose where the removal names no kind.
     ChoseMixedCounterRemoval (Map.Map ObjectId.ObjectId (Map.Map (CounterKind.CounterKind Keyword.Keyword) Natural.Natural))
-  | -- | CR 701.38a: the choice one player voted for.
+  | -- | CR 701.38a / 701.38b: the object, word or player one player voted
+    -- for.
     --
     -- Its own constructor for ChoseBolster's reason: a vote's candidates are an
     -- arbitrary sweep of the battlefield, which can coincide with any of the
     -- object choices above.
-    ChoseVote ObjectId.ObjectId
-  | -- | CR 701.38b: the word one player voted for, named by the slot its tally
-    -- is bound at.
-    --
-    -- Its own constructor for ChoseBolster's reason, and it could not reuse
-    -- ChoseVote in any case: a word vote's choices are not objects.
-    ChoseVoteWord SlotName.SlotName
-  | -- | CR 701.38b: the player one player voted for.
-    ChoseVotePlayer PlayerId.PlayerId
+    ChoseVote (BallotChoice.BallotChoice ObjectId.ObjectId)
   | -- | CR 107.14: how much {E} a player chose to pay to an
     -- Effect.PayAnyEnergy.
     --

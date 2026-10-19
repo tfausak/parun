@@ -113,8 +113,6 @@ deciderOf prompt = case prompt of
   Prompt.ChooseCounterDistribution decider _ _ _ _ -> Just (Decider.unwrap decider)
   Prompt.ChooseMixedCounterRemoval decider _ _ _ _ _ -> Just (Decider.unwrap decider)
   Prompt.ChooseVote decider _ _ _ -> Just (Decider.unwrap decider)
-  Prompt.ChooseVoteWord decider _ _ _ -> Just (Decider.unwrap decider)
-  Prompt.ChooseVotePlayer decider _ _ _ -> Just (Decider.unwrap decider)
   Prompt.ChooseCounterKind decider _ _ _ -> Just (Decider.unwrap decider)
   Prompt.ChooseMovedCounters decider _ _ _ _ -> Just (Decider.unwrap decider)
   Prompt.ChooseStoredRerolls decider _ _ _ -> Just (Decider.unwrap decider)

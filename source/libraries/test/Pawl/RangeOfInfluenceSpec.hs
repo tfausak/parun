@@ -62,6 +62,7 @@ import qualified Pawl.Support as S
 import qualified Pawl.Types.Acquisition as Acquisition
 import qualified Pawl.Types.Action as A
 import qualified Pawl.Types.AttackTarget as AttackTarget
+import qualified Pawl.Types.BallotChoice as BallotChoice
 import qualified Pawl.Types.BeginningStep as BeginningStep
 import qualified Pawl.Types.Combat as Combat.Type
 import qualified Pawl.Types.CombatStep as CombatStep
@@ -906,13 +907,12 @@ spec s registry = Spec.describe s "Range of influence" $ do
           began = Event.recordEvent (GameEvent.StepBegan (StepBegan.MkStepBegan upkeep pid)) (gs {GameState.phase = upkeep, GameState.activePlayer = pid})
        in resolveAll (S.runPure S.identityAnswer began Engine.settleForPriority)
 
--- Answers each Prompt.ChooseVotePlayer and Prompt.ChooseVote with the first of
--- the voting seat's preferences it is offered, else the first offered; anything
+-- Answers each Prompt.ChooseVote with the first of the voting seat's
+-- preferences, players or objects, it is offered, else the first offered; anything
 -- else defers to S.identityAnswer. Pure, since each ballot names its seat.
 votingAs :: [(PlayerId.PlayerId, [PlayerId.PlayerId])] -> [(PlayerId.PlayerId, [ObjectId.ObjectId])] -> Prompt.Prompt r -> r
 votingAs players objects p = case p of
-  Prompt.ChooseVotePlayer _ who _ offered -> preferred (lookup who players) offered
-  Prompt.ChooseVote _ who _ offered -> preferred (lookup who objects) offered
+  Prompt.ChooseVote _ who _ offered -> preferred (fmap (fmap BallotChoice.ForPlayer) (lookup who players) <> fmap (fmap BallotChoice.ForObject) (lookup who objects)) offered
   _ -> S.identityAnswer p
   where
     preferred :: (Eq a) => Maybe [a] -> NonEmpty.NonEmpty a -> a

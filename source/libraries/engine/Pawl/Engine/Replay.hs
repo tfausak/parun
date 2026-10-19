@@ -110,8 +110,6 @@ encode p answer = case p of
   Prompt.ChooseCounterDistribution {} -> Response.ChoseCounterDistribution answer
   Prompt.ChooseMixedCounterRemoval {} -> Response.ChoseMixedCounterRemoval answer
   Prompt.ChooseVote {} -> Response.ChoseVote answer
-  Prompt.ChooseVoteWord {} -> Response.ChoseVoteWord answer
-  Prompt.ChooseVotePlayer {} -> Response.ChoseVotePlayer answer
   Prompt.ChoosePaidEnergy {} -> Response.ChosePaidEnergy answer
   Prompt.ChooseNumber {} -> Response.ChoseNumber answer
   Prompt.ChooseReadAheadChapter {} -> Response.ChoseReadAheadChapter answer
@@ -380,13 +378,7 @@ decode p response = case p of
     Response.ChoseMixedCounterRemoval division -> Just division
     _ -> Nothing
   Prompt.ChooseVote {} -> case response of
-    Response.ChoseVote oid -> Just oid
-    _ -> Nothing
-  Prompt.ChooseVoteWord {} -> case response of
-    Response.ChoseVoteWord slot -> Just slot
-    _ -> Nothing
-  Prompt.ChooseVotePlayer {} -> case response of
-    Response.ChoseVotePlayer pid -> Just pid
+    Response.ChoseVote choice -> Just choice
     _ -> Nothing
   Prompt.ChoosePaidEnergy {} -> case response of
     Response.ChosePaidEnergy n -> Just n
@@ -920,12 +912,6 @@ defaultAnswer p = case p of
   -- CR 701.38a: the prompt is only raised with two or more listed choices, and
   -- every one of them is a legal vote.
   Prompt.ChooseVote _ _ _ candidates -> NonEmpty.head candidates
-  -- CR 701.38b: the prompt is only raised with two or more listed words, and
-  -- every one of them is a legal vote.
-  Prompt.ChooseVoteWord _ _ _ candidates -> NonEmpty.head candidates
-  -- CR 701.38b: the prompt is only raised with two or more players, and every
-  -- one of them is a legal vote.
-  Prompt.ChooseVotePlayer _ _ _ candidates -> NonEmpty.head candidates
   -- CR 609.7a: the prompt is only raised with two or more sources matching the
   -- shield's printed properties, and every one of them is a legal choice.
   Prompt.ChooseDamageSource _ _ _ candidates -> NonEmpty.head candidates

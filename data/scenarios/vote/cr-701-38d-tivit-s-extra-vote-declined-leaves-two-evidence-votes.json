@@ -61,7 +61,7 @@
       "player": "alice",
       "do": {
         "Answer": {
-          "prompt": "ChooseVoteWord",
+          "prompt": "ChooseVote",
           "with": "evidence"
         }
       }
@@ -85,7 +85,7 @@
       "player": "bob",
       "do": {
         "Answer": {
-          "prompt": "ChooseVoteWord",
+          "prompt": "ChooseVote",
           "with": "evidence"
         }
       }
@@ -96,7 +96,7 @@
       "player": "carol",
       "do": {
         "Answer": {
-          "prompt": "ChooseVoteWord",
+          "prompt": "ChooseVote",
           "with": "bribery"
         }
       }
