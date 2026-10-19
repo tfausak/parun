@@ -1162,12 +1162,13 @@ settleForPriority :: Game ()
 settleForPriority = Monad.void performSettle
 
 -- CR 117.5: each time a player would receive priority, sweep expired "for as
--- long as" effects, perform state-based actions, then put triggered abilities on
--- the stack, repeating until none of the three does anything. Every pass also
--- pays a sample of derived state for each rule that stores what a projection
--- answers live -- sampleWorldSince for CR 704.5k, sampleControl for CR 603.2,
--- Exile.accrueLookers for CR 406.3, checkControlContinuity for CR 302.6,
--- Combat.removeChanged for CR 506.4, Ring.endOnControlChange for CR 701.54a.
+-- long as" effects, perform state-based actions, then -- on a pass that performed
+-- none -- put triggered abilities on the stack, repeating until none of the three
+-- does anything. Every pass also pays a sample of derived state for each rule
+-- that stores what a projection answers live -- sampleWorldSince for CR 704.5k,
+-- sampleControl for CR 603.2, Exile.accrueLookers for CR 406.3,
+-- checkControlContinuity for CR 302.6, Combat.removeChanged for CR 506.4,
+-- Ring.endOnControlChange for CR 701.54a.
 --
 -- CR 704.3 makes "whenever a player would get priority" the coarsest moment
 -- anything could observe CR 611.2b's condition, so settling here is
@@ -1251,7 +1252,10 @@ settlePasses passes = do
   -- the pass (its `instead`); anything else queued runs HERE, before the
   -- triggers are placed.
   Resolve.runReplacementEffects playSubgame
-  placed <- placePendingTriggers
+  -- CR 704.3: triggers wait for a check that performs no state-based action, so
+  -- a pass that acted repeats the check first. Proved by the scenario "CR 704.3
+  -- triggers from two state-based action passes go on the stack together".
+  placed <- if acted then pure False else placePendingTriggers
   -- Last, and for the same reason the conditional sweep runs first: all three read
   -- state this settle can still change -- CONTROL for all three, and CARD TYPES
   -- for the CR 506.4 scan. Outside the recursion guard on purpose: none makes

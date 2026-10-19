@@ -207,6 +207,8 @@ viewOfCardLapsed lapsed face =
           -- CR 702.171c relates a creature to a Mount it saddled; the field
           -- above's reason.
           Filter.saddledThisTurn = Set.empty,
+          -- CR 120.1: an OBJECT deals damage; the field above's reason.
+          Filter.dealtDamageTo = Set.empty,
           -- CR 302.6 asks about an OBJECT a player controls; this builder
           -- describes a printed FACE, which is none -- `milledThisTurn` above's
           -- reason.
@@ -642,6 +644,7 @@ viewOfCharacteristics peers oid pc controller counters gs =
       Filter.crewedThisTurn = Count.crewedThisTurn oid gs,
       Filter.convokedThisTurn = Count.convokedThisTurn oid gs,
       Filter.saddledThisTurn = Count.saddledThisTurn oid gs,
+      Filter.dealtDamageTo = Count.dealtDamageTo oid gs,
       -- CR 302.6: Object.sickness, compared against the PROJECTED controller
       -- rather than read as a bare flag -- rule 302.6's subject is a player, so
       -- `Settled` names one, and Pawl.Engine.Engine.checkControlContinuity drops a
@@ -1709,10 +1712,11 @@ baseCharacteristics oid gs = case Game.faceOf oid gs of
   Nothing -> noCharacteristics
   -- CR 406.3a: a card exiled face down has no characteristics, so the seed CR
   -- 613.1 starts the layers from holds none either -- the card behind it is
-  -- read only by the one reader the rules entitle, which is Pawl.Engine.Cast's
-  -- offer of a play the exiling effect permitted (CR 406.3b) and never this
-  -- projection. CR 110.5d keeps this apart from Object.facing, which is CR
-  -- 708's face-down PERMANENT and reaches the projection through Game.faceOf.
+  -- read only by the readers the rules entitle, Pawl.Engine.Cast's offer of a
+  -- play the exiling effect permitted (CR 406.3b) and Projection.projectShown's
+  -- look (CR 406.3), and never this projection. CR 110.5d keeps this apart from
+  -- Object.facing, which is CR 708's face-down PERMANENT and reaches the
+  -- projection through Game.faceOf.
   Just _ | any Object.exiledFaceDown (Game.lookupObject oid gs) -> noCharacteristics
   -- CR 121.8: so is a card drawn while a spell is being cast or an ability
   -- activated, until it becomes cast or activated. Pawl.Engine.Cost's

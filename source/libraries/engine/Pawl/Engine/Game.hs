@@ -3394,8 +3394,9 @@ movedChange event = case event of
 --
 -- castOf's, discardOf's and enteredBattlefield's sibling, and here for their
 -- import-graph reason: the callers are Pawl.Engine.Quantity's
--- PlayersDealtDamageThisTurn arm and Pawl.Engine.Projection's fold for
--- Filter.DealtDamageThisTurn.
+-- PlayersDealtDamageThisTurn arm, Pawl.Engine.Projection's fold for
+-- Filter.DealtDamageThisTurn and Pawl.Engine.Count.dealtDamageTo's for
+-- Filter.DealtDamageToThisTurn.
 --
 -- The `amount > 0` test below is CR 120.8 -- "if a source would deal 0 damage, it does
 -- not deal damage at all" -- and a FENCE rather than a reachable filter on the
