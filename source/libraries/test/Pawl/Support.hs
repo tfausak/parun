@@ -1416,6 +1416,7 @@ withEvents events gs =
       -- different event. Cleared rather than left standing, which sends
       -- Event.eventTriggers to its live reading -- the only honest one for an event
       -- no funnel recorded.
+      GameState.boardAfterEvent = Map.empty,
       GameState.battlefieldWhenTriggered = Map.empty
     }
 
@@ -1502,7 +1503,8 @@ addPlayerEffect expiry scope effect controller gs =
             ActivePlayerEffect.timestamp = ts,
             ActivePlayerEffect.expiry = expiry,
             ActivePlayerEffect.scope = scope,
-            ActivePlayerEffect.effect = effect
+            ActivePlayerEffect.effect = effect,
+            ActivePlayerEffect.ability = Nothing
           }
    in gs1 {GameState.playerEffects = active : GameState.playerEffects gs1}
 
@@ -1641,6 +1643,7 @@ oneMountainState mountain ph =
           GameState.payingOnResolution = False,
           GameState.lastKnown = Map.empty,
           GameState.scannedThrough = 0,
+          GameState.boardAfterEvent = Map.empty,
           GameState.battlefieldWhenTriggered = Map.empty,
           GameState.controlSample = Map.empty,
           GameState.damageScannedThrough = 0,

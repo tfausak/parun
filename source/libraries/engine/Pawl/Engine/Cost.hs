@@ -5585,7 +5585,7 @@ payManaWindow perform inFlight record subject spending pid substituting cost = d
         case offered of
           [] -> settle activated
           candidate : rest -> do
-            answer <- chooseSource covered pid (Interchangeable.representatives pcs gs (candidate NonEmpty.:| rest)) gs
+            answer <- chooseSource covered cost pid (Interchangeable.representatives pcs gs (candidate NonEmpty.:| rest)) gs
             case answer of
               Nothing -> settle activated
               Just oid -> do
@@ -5709,7 +5709,8 @@ payMana :: ManaAbilityPerformer.ManaAbilityPerformer -> PaymentSubject.PaymentSu
 payMana perform = payManaExcept perform Set.empty Nothing
 
 -- Which source to tap next, or none. `covered` says whether the pool already
--- pays the cost, which picks between CR 118.3c's question and CR 601.2g's.
+-- pays `cost`, which picks between CR 118.3c's question and CR 601.2g's; the
+-- latter carries `cost` so that the payer is told what they are paying.
 --
 -- Asked on every pass, and NEVER elided, not even for a single candidate:
 -- declining is an answer on every board, and Mana Confluence's "{T}, Pay 1 life"
@@ -5722,14 +5723,14 @@ payMana perform = payManaExcept perform Set.empty Nothing
 --
 -- FILTERED, NOT TRUSTED. An unrecognised id reads as declining rather than as
 -- the head candidate, since the fallback must not tap something for the player.
-chooseSource :: Bool -> PlayerId -> NonEmpty.NonEmpty ObjectId -> GameState -> Game (Maybe ObjectId)
-chooseSource covered pid candidates gs = do
+chooseSource :: Bool -> ManaCost.ManaCost -> PlayerId -> NonEmpty.NonEmpty ObjectId -> GameState -> Game (Maybe ObjectId)
+chooseSource covered cost pid candidates gs = do
   let decider = Decide.deciderFor pid gs
   answer <-
     Game.choose $
       if covered
         then Prompt.ChooseExtraManaSource decider pid candidates
-        else Prompt.ChooseManaSource decider pid candidates
+        else Prompt.ChooseManaSource decider pid cost candidates
   pure $ case answer of
     Just oid | List.elem oid (NonEmpty.toList candidates) -> Just oid
     _ -> Nothing

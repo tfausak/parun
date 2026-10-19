@@ -130,7 +130,7 @@ aimedAt oid p = case p of
 -- it decided about its other prompts.
 sparing :: ObjectId.ObjectId -> (forall a. Prompt.Prompt a -> a) -> Prompt.Prompt r -> r
 sparing oid inner p = case p of
-  Prompt.ChooseManaSource _ _ candidates -> List.find (/= oid) (NonEmpty.toList candidates)
+  Prompt.ChooseManaSource _ _ _ candidates -> List.find (/= oid) (NonEmpty.toList candidates)
   _ -> inner p
 
 -- `sparing` over S.identityAnswer, as an interpreter's answerer beneath.

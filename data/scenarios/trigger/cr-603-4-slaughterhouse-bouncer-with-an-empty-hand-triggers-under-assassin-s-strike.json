@@ -1,0 +1,40 @@
+{
+  "description": "CR 603.4 Slaughterhouse Bouncer with an empty hand triggers under Assassin's Strike",
+  "note": "The pair of the scenario where bob holds a card: here his hand is empty as the Bouncer dies, so the ability triggers, bob targets alice's Hill Giant, and the Giant dies to the -3/-3 (CR 704.5f). The discard finds no card (CR 609.3).",
+  "board": {
+    "seats": [
+      {
+        "name": "alice",
+        "battlefield": [
+          { "card": "Swamp", "label": "swamp1", "ready": true },
+          { "card": "Swamp", "label": "swamp2", "ready": true },
+          { "card": "Swamp", "label": "swamp3", "ready": true },
+          { "card": "Swamp", "label": "swamp4", "ready": true },
+          { "card": "Swamp", "label": "swamp5", "ready": true },
+          { "card": "Swamp", "label": "swamp6", "ready": true },
+          { "card": "Hill Giant", "label": "giant" }
+        ],
+        "hand": [{ "card": "Assassin's Strike", "label": "strike" }]
+      },
+      {
+        "name": "bob",
+        "battlefield": [{ "card": "Slaughterhouse Bouncer", "label": "bouncer" }]
+      }
+    ],
+    "active": "alice",
+    "step": "PrecombatMain"
+  },
+  "timeline": [
+    {
+      "turn": 1,
+      "step": "PrecombatMain",
+      "player": "alice",
+      "do": { "Cast": { "object": "$strike", "targets": ["$bouncer"], "mana": ["$swamp1", "$swamp2", "$swamp3", "$swamp4", "$swamp5", "$swamp6"] } }
+    },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass" },
+    { "turn": 1, "step": "PrecombatMain", "player": "bob", "do": { "ChooseTargets": { "target": ["$giant"] } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "check": { "View": { "of": "Stack", "is": ["trigger of $bouncer"] } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass" },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "check": { "Count": { "player": "alice", "zone": "Graveyard", "card": "Hill Giant", "count": 1 } } }
+  ]
+}

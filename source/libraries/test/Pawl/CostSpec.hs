@@ -4803,7 +4803,7 @@ carnosaurBoard carnosaur bloom mountain piker =
 -- Bloom has been named yet, so the second source is the Mountain.
 bloomExiling :: ObjectId.ObjectId -> ObjectId.ObjectId -> ObjectId.ObjectId -> Prompt.Prompt r -> State.State Bool r
 bloomExiling bloomId fuel victim p = case p of
-  Prompt.ChooseManaSource _ _ candidates -> do
+  Prompt.ChooseManaSource _ _ _ candidates -> do
     used <- State.get
     let offered = NonEmpty.toList candidates
     if not used && elem bloomId offered
@@ -4887,7 +4887,7 @@ altarBoard subject altar land piker n =
 -- cannot name it again.
 feeding :: ObjectId.ObjectId -> ObjectId.ObjectId -> Prompt.Prompt r -> r
 feeding altarId victim p = case p of
-  Prompt.ChooseManaSource _ _ candidates ->
+  Prompt.ChooseManaSource _ _ _ candidates ->
     Just (Maybe.fromMaybe (NonEmpty.head candidates) (List.find (== altarId) (NonEmpty.toList candidates)))
   _ -> targeting victim p
 
@@ -4895,7 +4895,7 @@ feeding altarId victim p = case p of
 -- anything BUT the Altar, and Nothing once the Altar is all that is offered.
 sparing :: ObjectId.ObjectId -> ObjectId.ObjectId -> Prompt.Prompt r -> r
 sparing altarId victim p = case p of
-  Prompt.ChooseManaSource _ _ candidates -> List.find (/= altarId) (NonEmpty.toList candidates)
+  Prompt.ChooseManaSource _ _ _ candidates -> List.find (/= altarId) (NonEmpty.toList candidates)
   _ -> targeting victim p
 
 ashnodsAltarSpec :: (Monad m, Monad n) => Spec.Spec m n -> Registry.Registry m -> n ()
@@ -4938,7 +4938,7 @@ poolSize pid gs = case Game.poolOf pid gs of
 -- goes to `rest`.
 keepingOrNot :: OptionalDecision.OptionalDecision -> [ObjectId.ObjectId] -> (forall a. Prompt.Prompt a -> a) -> Prompt.Prompt r -> State.State Int r
 keepingOrNot decision wanted rest p = case p of
-  Prompt.ChooseManaSource _ _ candidates -> pure (List.find (`elem` NonEmpty.toList candidates) wanted)
+  Prompt.ChooseManaSource _ _ _ candidates -> pure (List.find (`elem` NonEmpty.toList candidates) wanted)
   Prompt.ReverseManaAbilities _ player _ | player == S.alice -> do
     State.modify' (+ 1)
     pure decision
@@ -5126,7 +5126,7 @@ convokeWindowSpec s registry = Spec.describe s "Siege Wurm" $ do
         note tag = State.modify' (<> [Text.pack tag])
         answer :: Prompt.Prompt r -> State.State [Text.Text] r
         answer p = case p of
-          Prompt.ChooseManaSource _ _ candidates -> do
+          Prompt.ChooseManaSource _ _ _ candidates -> do
             note "window"
             pure (if elem birdsId (NonEmpty.toList candidates) then Just birdsId else Nothing)
           Prompt.ChooseManaYield _ _ _ candidates -> pure (S.optionYielding green candidates)
@@ -5885,7 +5885,7 @@ assisting helper amount forestId plainsIds p =
           Just who | elem who (NonEmpty.toList candidates) -> Just who
           _ -> Nothing
         Prompt.ChooseAssistAmount {} -> amount
-        Prompt.ChooseManaSource _ who candidates -> pick who candidates
+        Prompt.ChooseManaSource _ who _ candidates -> pick who candidates
         Prompt.ChooseExtraManaSource _ who candidates -> pick who candidates
         _ -> S.identityAnswer p
 
@@ -6055,7 +6055,7 @@ partialReversalBoard mountain first second card =
 -- asked before and the first source named, and recorded in order.
 reversingSome :: [ManaType.ManaType] -> (Int -> ObjectId.ObjectId -> OptionalDecision.OptionalDecision) -> Prompt.Prompt r -> State.State ([ObjectId.ObjectId], [[ObjectId.ObjectId]]) r
 reversingSome wanted decide p = case p of
-  Prompt.ChooseManaSource _ _ candidates -> next candidates
+  Prompt.ChooseManaSource _ _ _ candidates -> next candidates
   Prompt.ChooseExtraManaSource _ _ candidates -> next candidates
   Prompt.ReverseManaAbilities _ _ sources -> do
     (queue, asked) <- State.get
