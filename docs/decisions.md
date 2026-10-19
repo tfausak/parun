@@ -52,8 +52,10 @@ Entries are ordered by the first rule each cites.
 - **Rejected**: Functions nowhere, the conjunction of the two answers: no
   reader has a use for it, and the cost is unpayable outside its own zone
   anyway.
-- **Site**: `Pawl.Engine.AbilityZone.zonesFunctionedIn`. No test found: no
-  printing writes such an ability.
+- **Site**: `Pawl.Engine.AbilityZone.zonesFunctionedIn`, proved by the
+  scenario "CR 113.6m a cost's zone outranks an effect's other zone" on
+  Synthetic Errant Courier: no printing moves itself out of a zone its cost
+  did not put it into.
 - **Issue**: none.
 
 ## Whether a concession restarts the pass count
@@ -260,8 +262,10 @@ Entries are ordered by the first rule each cites.
 - **Rejected**: Nothing moves, since the card was in no zone. It loses
   because a library still gains a card, which is what the clause keeps out
   of mana abilities.
-- **Site**: `Pawl.Engine.ManaAbility.movesLibraryCard`'s `Effect.Conjure` arm.
-  No test found: no printing conjures inside an ability that could add mana.
+- **Site**: `Pawl.Engine.ManaAbility.movesLibraryCard`'s `Effect.Conjure` arm,
+  proved by the scenario "CR 605.1a conjuring into a library keeps an ability
+  that adds mana off the mana path" on Synthetic Seeded Grove: no printing
+  conjures inside an ability that could add mana.
 - **Issue**: none.
 
 ## Which board an entry inside a batch collects replacement effects from
@@ -287,8 +291,10 @@ Entries are ordered by the first rule each cites.
   names permitted types rather than saying "can't".
 - **Rejected**: Each "only" as a prohibition, which pulls in CR 101.2 and has
   the two clauses forbid each other's types.
-- **Site**: `Pawl.Engine.Mana.spendableAs`. No test found: no printing pairs
-  two such clauses.
+- **Site**: `Pawl.Engine.Mana.spendableAs`, proved by the scenario "CR 609.4b
+  two only-clauses about one red mana each permit their own type" on
+  Celestial Dawn and Synthetic Verdant Prism: Celestial Dawn is the one
+  printing with such a clause.
 - **Issue**: none.
 
 ## Whether a condition that cannot be evaluated holds
@@ -447,7 +453,10 @@ Entries are ordered by the first rule each cites.
   timestamp.
 - **Site**: `Pawl.Engine.Card.merge2` and its `definedBox`, reached through
   `combined`. `Pawl.CardSpec`'s SplitBox group proves the disjoint and
-  one-half cases; no test of two printed boxes or two abilities on one box.
+  one-half cases, and "CR 709.4 the left half answers for a box both halves
+  print or define" the power and toughness boxes on Synthetic Rival Golem //
+  Synthetic Rival Giant: no split printing has a creature half. Loyalty,
+  defense, intensity and vanguard boxes on both halves are untested.
 - **Issue**: #658, #2019.
 
 ## How perpetual effects follow a meld

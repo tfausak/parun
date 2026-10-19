@@ -47,7 +47,8 @@ import qualified Pawl.Types.Zone as Zone
 -- and CR 113.6m gives one zone. No printing writes such an ability, and pawl
 -- reports the cost's zone rather than inventing a "functions nowhere" answer no
 -- reader has a use for: docs/decisions.md, "Which zone an ability functions
--- in when its cost and effect disagree".
+-- in when its cost and effect disagree". The scenario "CR 113.6m a cost's zone
+-- outranks an effect's other zone" proves it on Synthetic Errant Courier.
 --
 -- ALL MODES, and their effects in printed order: CR 700.2 makes a modal
 -- ability's modes alternatives, so a zone stated by any of them is a zone the
