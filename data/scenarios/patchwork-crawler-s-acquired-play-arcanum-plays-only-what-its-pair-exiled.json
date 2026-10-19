@@ -1,0 +1,55 @@
+{
+  "description": "CR 607.5 the Play Arcanum Patchwork Crawler acquired from Urianger Augurelt plays what its acquired Draw Arcanum exiled, not the creature cards the Crawler's own ability exiled",
+  "note": "The Crawler exiles Urianger Augurelt and Grizzly Bears from alice's graveyard with its printed ability, gaining both Arcanum abilities, and the acquired Draw Arcanum exiles Balduvian Bears off the library. The acquired Play Arcanum is linked to the acquired Draw Arcanum alone, so a turn later Balduvian Bears is castable and Grizzly Bears, which costs the same, is not.",
+  "board": {
+    "seats": [
+      {
+        "name": "alice",
+        "battlefield": [
+          { "card": "Patchwork Crawler", "label": "crawler", "ready": true },
+          { "card": "Island", "label": "island" },
+          { "card": "Island", "label": "island-2" },
+          { "card": "Island", "label": "island-3" },
+          { "card": "Island", "label": "island-4" },
+          { "card": "Island", "label": "island-5" },
+          { "card": "Island", "label": "island-6" },
+          { "card": "Forest", "label": "forest" }
+        ],
+        "graveyard": [
+          { "card": "Urianger Augurelt", "label": "urianger" },
+          { "card": "Grizzly Bears", "label": "grizzly" }
+        ],
+        "library": [
+          { "card": "Balduvian Bears" },
+          { "card": "Hill Giant" },
+          { "card": "Hill Giant" },
+          { "card": "Hill Giant" }
+        ]
+      },
+      {
+        "name": "bob",
+        "library": [
+          { "card": "Hill Giant" },
+          { "card": "Hill Giant" },
+          { "card": "Hill Giant" }
+        ]
+      }
+    ],
+    "active": "alice",
+    "step": "PrecombatMain"
+  },
+  "timeline": [
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": { "Activate": { "object": "$crawler", "ability": 0, "mana": ["$island", "$island-2", "$island-3", null], "targets": ["$urianger"] } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass" },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": { "Activate": { "object": "$crawler", "ability": 0, "mana": ["$island-4", "$island-5", "$island-6", null], "targets": ["$grizzly"] } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass" },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "check": { "Count": { "player": "alice", "zone": "Exile", "card": "Grizzly Bears", "count": 1 } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": { "Activate": { "object": "$crawler", "ability": 1, "mana": [null] } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass" },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": { "Answer": { "prompt": "ChooseOptional", "with": { "type": "Exercises" } } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "check": { "Count": { "player": "alice", "zone": "Exile", "card": "Balduvian Bears", "count": 1 } } },
+    { "turn": 3, "step": "PrecombatMain", "player": "alice", "do": { "Activate": { "object": "$crawler", "ability": 2, "mana": [null] } } },
+    { "turn": 3, "step": "PrecombatMain", "player": "alice", "do": "Pass" },
+    { "turn": 3, "step": "PrecombatMain", "player": "alice", "check": { "View": { "of": "Offered", "player": "alice", "is": ["Pass", "Cast Balduvian Bears", "ActivateManaAbility $island", "ActivateManaAbility $island-2", "ActivateManaAbility $island-3", "ActivateManaAbility $island-4", "ActivateManaAbility $island-5", "ActivateManaAbility $island-6", "ActivateManaAbility $forest"] } } }
+  ]
+}
