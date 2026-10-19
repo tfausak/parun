@@ -2382,9 +2382,8 @@ facesTurned before after =
 -- and back with the night".
 --
 -- Where a pile's double-faced components show different faces the CR defines
--- no answer, and the topmost double-faced one still decides. Every printed pile
--- holds at most one such component, where all readings agree; this one keeps a
--- single face that each transform inverts (CR 730.2i).
+-- no answer, and the topmost double-faced one still decides: docs/rulings.md,
+-- "Which component of a merged permanent answers for day and night".
 isFrontFaceUp :: ObjectId -> GameState -> Bool
 isFrontFaceUp oid gs = case lookupObject oid gs of
   Nothing -> True
