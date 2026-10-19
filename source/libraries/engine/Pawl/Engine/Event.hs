@@ -8501,7 +8501,7 @@ settleMinted start ids = do
   Restamp.settle start ids
   -- CR 603.2e: a token created attached became attached, as a cast Aura does
   -- (Bramble Elemental under a Role token). The card-trigger scenario named
-  -- for CR 303.4 proves it.
+  -- for CR 603.2e proves it.
   Monad.mapM_ arrivedAttached ids
   deferred <- State.gets GameState.enteringTogether
   case deferred of
