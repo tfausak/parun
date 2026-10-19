@@ -6,6 +6,7 @@ import qualified Data.Text as Text
 import qualified Pawl.Codec.ActivePlayerEffect as ActivePlayerEffect
 import qualified Pawl.JsonCodec.Common as Common
 import qualified Pawl.Spec as Spec
+import qualified Pawl.Types.AbilityName as AbilityName
 import qualified Pawl.Types.ActivePlayerEffect as ActivePlayerEffect
 import qualified Pawl.Types.AffectedPlayers as AffectedPlayers
 import qualified Pawl.Types.CardName as CardName
@@ -35,7 +36,8 @@ spec s = Spec.describe s "Pawl.Codec.ActivePlayerEffect" $ do
           ActivePlayerEffect.timestamp = Timestamp.MkTimestamp 3,
           ActivePlayerEffect.expiry = Expiry.AtCleanup,
           ActivePlayerEffect.scope = AffectedPlayers.Scoped (PlayerScope.Related PlayerRelation.Opponent),
-          ActivePlayerEffect.effect = PlayerEffect.CantCastSpells
+          ActivePlayerEffect.effect = PlayerEffect.CantCastSpells,
+          ActivePlayerEffect.ability = Nothing
         }
       " {\"source\":1,\"controller\":2,\"choices\":{},\"timestamp\":3,\"expiry\":{\"type\":\"AtCleanup\"},\"scope\":{\"type\":\"Scoped\",\"value\":{\"type\":\"Opponent\"}},\"effect\":{\"type\":\"CantCastSpells\"}} "
   -- The Named arm, which is the half no printed carrier has: the seat CR 601.2c
@@ -52,10 +54,12 @@ spec s = Spec.describe s "Pawl.Codec.ActivePlayerEffect" $ do
           ActivePlayerEffect.timestamp = Timestamp.MkTimestamp 7,
           ActivePlayerEffect.expiry = Expiry.Never,
           ActivePlayerEffect.scope = AffectedPlayers.Named (PlayerId.MkPlayerId 8),
-          ActivePlayerEffect.effect = PlayerEffect.NoMaximumHandSize
+          ActivePlayerEffect.effect = PlayerEffect.NoMaximumHandSize,
+          ActivePlayerEffect.ability = Nothing
         }
       " {\"source\":5,\"controller\":6,\"choices\":{},\"timestamp\":7,\"expiry\":{\"type\":\"Never\"},\"scope\":{\"type\":\"Named\",\"value\":8},\"effect\":{\"type\":\"NoMaximumHandSize\"}} "
-  -- CR 608.2h: the names baked as the effect began, Cheering Fanatic's row.
+  -- CR 608.2h: the names baked as the effect began, Cheering Fanatic's row,
+  -- and CR 607.5's pairing name, an acquired ability's.
   Spec.it s "an effect carrying the names its source had chosen" $
     Common.assertCodec
       s
@@ -67,8 +71,9 @@ spec s = Spec.describe s "Pawl.Codec.ActivePlayerEffect" $ do
           ActivePlayerEffect.timestamp = Timestamp.MkTimestamp 11,
           ActivePlayerEffect.expiry = Expiry.AtCleanup,
           ActivePlayerEffect.scope = AffectedPlayers.Scoped (PlayerScope.Related PlayerRelation.AnyPlayer),
-          ActivePlayerEffect.effect = PlayerEffect.CantCastSpells
+          ActivePlayerEffect.effect = PlayerEffect.CantCastSpells,
+          ActivePlayerEffect.ability = Just (AbilityName.MkAbilityName (Text.pack "thatExiledCard13"))
         }
-      " {\"source\":9,\"controller\":10,\"choices\":{\"names\":{\"12\":\"Shock\"}},\"timestamp\":11,\"expiry\":{\"type\":\"AtCleanup\"},\"scope\":{\"type\":\"Scoped\",\"value\":{\"type\":\"AnyPlayer\"}},\"effect\":{\"type\":\"CantCastSpells\"}} "
+      " {\"source\":9,\"controller\":10,\"choices\":{\"names\":{\"12\":\"Shock\"}},\"timestamp\":11,\"expiry\":{\"type\":\"AtCleanup\"},\"scope\":{\"type\":\"Scoped\",\"value\":{\"type\":\"AnyPlayer\"}},\"effect\":{\"type\":\"CantCastSpells\"},\"ability\":\"thatExiledCard13\"} "
   Spec.it s "has a schema" $
     Common.assertHasSchema s ActivePlayerEffect.codec
