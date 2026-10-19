@@ -217,7 +217,7 @@ tableAnswer n p = case p of
 
 -- The pending enters trigger, put on the stack and not yet resolved.
 placeTable :: Natural.Natural -> GameState.GameState -> GameState.GameState
-placeTable n board = S.runPure (tableAnswer n) board Engine.placePendingTriggers
+placeTable n board = S.runPure (tableAnswer n) board (Engine.placePendingTriggers [])
 
 -- And resolved, under the same answerer, so the roll and the scry it selects are
 -- the same run.
@@ -887,7 +887,7 @@ nightShiftSpec s registry = Spec.describe s "IncreaseOrDecrease" $ do
         shiftAnswer direction p = case p of
           Prompt.AdjustDieRoll {} -> Just (0, direction)
           _ -> tableAnswer 20 p
-        run direction = S.runPure (shiftAnswer direction) (S.runPure (shiftAnswer direction) shifted Engine.placePendingTriggers) Stack.resolveTop
+        run direction = S.runPure (shiftAnswer direction) (S.runPure (shiftAnswer direction) shifted (Engine.placePendingTriggers [])) Stack.resolveTop
     case ids of
       [first, _, third, _, _, _] -> do
         Spec.assertEqWith s "CR 706.3a: 21 is not 20, so nothing is scried" (Maybe.listToMaybe (tableLibrary (run RollAdjustment.Increase))) (Just first)
@@ -936,7 +936,7 @@ nightShiftRun rolls rerolls shifts index spell board =
       drain n = do
         gs <- State.get
         Monad.unless (n <= 0 || null (GameState.stack gs)) (Stack.resolveTop >> drain (n - 1))
-      script = S.cast S.alice spell >> Stack.resolveTop >> Engine.placePendingTriggers >> drain 8
+      script = S.cast S.alice spell >> Stack.resolveTop >> Engine.placePendingTriggers [] >> drain 8
       ((_, after), (_, _, _, shown)) = State.runState (Engine.runGame (nightShiftAnswer index) board script) (rolls, rerolls, shifts, [])
    in (after, reverse shown)
 

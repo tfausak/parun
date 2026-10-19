@@ -187,7 +187,7 @@ angelOfFinalitySpec s registry = Spec.describe s "AngelOfFinality" $ do
         atBob p = case p of
           Prompt.ChooseTargets _ _ _ slots -> fmap (Set.filter (== Recipient.ToPlayer S.bob) . snd) slots
           _ -> S.identityAnswer p
-        placed = S.runPure atBob entered Engine.placePendingTriggers
+        placed = S.runPure atBob entered (Engine.placePendingTriggers [])
         after = S.runPure atBob placed Stack.resolveTop
         named = Just . CardName.MkCardName . Text.pack
         exiled gs = List.sort (fmap (\oid -> fmap S.nameOf (Game.cardOf oid gs)) (Set.toList (GameState.exile gs)))
@@ -261,7 +261,7 @@ enduranceSpec s registry = Spec.describe s "Endurance" $ do
           Prompt.ChooseTargets _ _ _ slots -> fmap (Set.filter (== Recipient.ToPlayer S.bob) . snd) slots
           Prompt.Shuffle _ -> [judgmentId, murderId, maidenId]
           _ -> S.identityAnswer p
-        placed = S.runPure ordering entered Engine.placePendingTriggers
+        placed = S.runPure ordering entered (Engine.placePendingTriggers [])
         after = S.runPure ordering placed Stack.resolveTop
         named = Just . CardName.MkCardName . Text.pack
     Spec.assertEqWith
@@ -1308,7 +1308,7 @@ carthTheLionSpec s registry =
               order = fmap (idOf ids) ["Murder", "Bird Maiden", "Island", "Forest", "Jace Beleren", "Goblin Piker"]
               answer :: Prompt.Prompt r -> r
               answer = answering (Just 1) (Just order)
-              placed = S.runPure answer entered Engine.placePendingTriggers
+              placed = S.runPure answer entered (Engine.placePendingTriggers [])
               after = S.runPure answer placed Stack.resolveTop
           Spec.assertEqWith s "the second planeswalker card among the seven is the one in alice's hand" (namesIn Zone.Hand S.alice after) [named "Chandra, Fire Artisan"]
           Spec.assertEqWith s "and it is the one object the trigger revealed -- one reveal, not seven" (revealed after) [idOf ids "Chandra, Fire Artisan"]
@@ -1332,7 +1332,7 @@ carthTheLionSpec s registry =
               (_, entered) = S.entersWithTrigger carth S.alice stocked
               answer :: Prompt.Prompt r -> r
               answer = answering (Just 0) Nothing
-              placed = S.runPure answer entered Engine.placePendingTriggers
+              placed = S.runPure answer entered (Engine.placePendingTriggers [])
               after = S.runPure answer placed Stack.resolveTop
           Spec.assertEqWith s "the first planeswalker card comes to hand instead" (namesIn Zone.Hand S.alice after) [named "Jace Beleren"]
           Spec.assertEqWith s "and that is the object revealed" (revealed after) [idOf ids "Jace Beleren"]
@@ -1346,7 +1346,7 @@ carthTheLionSpec s registry =
               (_, entered) = S.entersWithTrigger carth S.alice stocked
               answer :: Prompt.Prompt r -> r
               answer = answering (Just 0) Nothing
-              placed = S.runPure answer entered Engine.placePendingTriggers
+              placed = S.runPure answer entered (Engine.placePendingTriggers [])
               ((_, after), asked) = Replay.record answer placed Stack.resolveTop
           Spec.assertEqWith s "CR 608.2d the may was never put" [d | Response.ChoseOptional d <- asked] []
           Spec.assertEqWith s "nothing reached alice's hand" (namesIn Zone.Hand S.alice after) []
@@ -1372,7 +1372,7 @@ carthTheLionSpec s registry =
               (_, entered) = S.entersWithTrigger (Printing.ofCard variant) S.alice stocked
               answer :: Prompt.Prompt r -> r
               answer = answering (Just 0) Nothing
-              placed = S.runPure answer entered Engine.placePendingTriggers
+              placed = S.runPure answer entered (Engine.placePendingTriggers [])
               ((_, after), asked) = Replay.record answer placed Stack.resolveTop
           Spec.assertEqWith s "CR 608.2d the may was never put" [d | Response.ChoseOptional d <- asked] []
           Spec.assertEqWith s "and nothing was revealed" (revealed after) []
@@ -1387,7 +1387,7 @@ carthTheLionSpec s registry =
               order = fmap (idOf ids) ["Chandra, Fire Artisan", "Island", "Bird Maiden", "Jace Beleren", "Murder", "Forest", "Goblin Piker"]
               answer :: Prompt.Prompt r -> r
               answer = answering Nothing (Just order)
-              placed = S.runPure answer entered Engine.placePendingTriggers
+              placed = S.runPure answer entered (Engine.placePendingTriggers [])
               after = S.runPure answer placed Stack.resolveTop
           Spec.assertEqWith s "nothing reached alice's hand" (namesIn Zone.Hand S.alice after) []
           Spec.assertEqWith s "and nothing was revealed" (revealed after) []
@@ -1417,7 +1417,7 @@ carthTheLionSpec s registry =
               buried = S.settleSba withHis
               answer :: Prompt.Prompt r -> r
               answer = answering (Just 1) Nothing
-              placed = S.runPure answer buried Engine.placePendingTriggers
+              placed = S.runPure answer buried (Engine.placePendingTriggers [])
               after = S.runPure answer placed (Monad.replicateM_ 2 Stack.resolveTop)
           Spec.assertEqWith s "one trigger resolved, so exactly the chosen planeswalker card is in alice's hand" (namesIn Zone.Hand S.alice after) [named "Chandra, Fire Artisan"]
           Spec.assertEqWith s "and exactly one card was revealed" (revealed after) [idOf ids "Chandra, Fire Artisan"]
@@ -1614,7 +1614,7 @@ blossomingTortoiseSpec s registry = Spec.describe s "BlossomingTortoise" $ do
       Just chosen ->
         let answer :: Prompt.Prompt r -> r
             answer = choosing chosen
-            placed = S.runPure answer gs Engine.placePendingTriggers
+            placed = S.runPure answer gs (Engine.placePendingTriggers [])
             resolved = S.runPure answer placed Stack.resolveTop
          in do
               Spec.assertEqWith

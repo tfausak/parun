@@ -176,7 +176,7 @@ import qualified Pawl.Types.ZoneChange as ZoneChange
 -- all, so nothing here is ever asked; Pawl.EventTriggerSpec's Synthetic Singular
 -- Cure is where the question is.
 gathered :: GameState.GameState -> [PendingTrigger.PendingTrigger]
-gathered gs = fst (fst (S.runPureWith S.identityAnswer gs (Event.gatherTriggers (Event.unscannedGrouped gs) gs)))
+gathered gs = fst (fst (S.runPureWith S.identityAnswer gs (Event.gatherTriggers (Event.unscannedGrouped gs) [] gs)))
 
 -- CR 702.29c: "'When you cycle this card' means 'When you discard this card to
 -- pay an activation cost of a cycling ability.' These abilities trigger from

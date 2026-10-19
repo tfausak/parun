@@ -329,7 +329,7 @@ afterMutalith :: [CoinFace.CoinFace] -> GameState.GameState -> GameState.GameSta
 afterMutalith faces board =
   let run :: GameState.GameState -> Game.Type.Game a -> GameState.GameState
       run g game = snd (State.evalState (Engine.runGame (mutalithAnswer faces) g game) 0)
-   in S.settleSba (run (run board Engine.placePendingTriggers) Stack.resolveTop)
+   in S.settleSba (run (run board (Engine.placePendingTriggers [])) Stack.resolveTop)
 
 missesSpec :: (Monad m, Monad n) => Spec.Spec m n -> Registry.Registry m -> n ()
 missesSpec s registry = Spec.describe s "FlipCoin tallies the flips lost (CR 705.2)" $ do

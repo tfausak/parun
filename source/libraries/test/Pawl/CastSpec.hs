@@ -4545,7 +4545,7 @@ mayhemSpec s registry = Spec.describe s "Mayhem" $ do
         played = case oscorpIn discarded of
           Just oid ->
             let entered = S.runPure S.identityAnswer discarded (Cast.playLand False S.alice oid Nothing)
-             in S.runPure S.identityAnswer (S.runPure S.identityAnswer entered Engine.placePendingTriggers) Stack.resolveTop
+             in S.runPure S.identityAnswer (S.runPure S.identityAnswer entered (Engine.placePendingTriggers [])) Stack.resolveTop
           Nothing -> discarded
     Spec.assertEqWith s "the discarded Oscorp is the one land play offered from the graveyard" (plays discarded) (Maybe.maybeToList (oscorpIn discarded))
     Spec.assertEqWith s "and none where it lay in the graveyard undiscarded" (plays notDiscarded) []
@@ -4619,7 +4619,7 @@ madnessSpec s registry = Spec.describe s "Madness" $ do
     wurm <- S.printingOf s registry "Arrogant Wurm"
     reunion <- S.printingOf s registry "Cathartic Reunion"
     let discarded = madnessBoard mountain forest wurm reunion
-        placed = S.runPure S.identityAnswer discarded Engine.placePendingTriggers
+        placed = S.runPure S.identityAnswer discarded (Engine.placePendingTriggers [])
         -- S.identityAnswer declines every optional decision, so this resolution
         -- takes rule 702.35a's "if that player doesn't" leg.
         declined = S.runPure S.identityAnswer placed Stack.resolveTop
@@ -4656,8 +4656,8 @@ madnessSpec s registry = Spec.describe s "Madness" $ do
         (gorgerId, withGorger) = S.addPermanent gorger S.alice stocked
         (vampireId, handed) = S.addHandCard vampire S.alice withGorger
         (tweezeId, ready) = S.addHandCard tweeze S.alice handed
-        resolved = S.runPure (gorgerTweezeAnswer gorgerId vampireId) ready (S.cast S.alice tweezeId >> Stack.resolveTop >> Monad.void (Sba.performStateBasedActions S.insteadOfLoss))
-        placed = S.runPure (gorgerTweezeAnswer gorgerId vampireId) resolved Engine.placePendingTriggers
+        resolved = S.runPure (gorgerTweezeAnswer gorgerId vampireId) ready (S.cast S.alice tweezeId >> Stack.resolveTop >> Monad.void (Sba.performStateBasedActions S.insteadOfLoss []))
+        placed = S.runPure (gorgerTweezeAnswer gorgerId vampireId) resolved (Engine.placePendingTriggers [])
         entered = S.runPure (gorgerTweezeAnswer gorgerId vampireId) (S.runPure (gorgerTweezeAnswer gorgerId vampireId) placed Stack.resolveTop) Stack.resolveTop
     Spec.assertEqWith s "CR 702.35a the Vampire is cast for {2}{B} though the Gorger has died" (S.countOnBattlefieldByName (S.printingName vampire) S.alice entered) 1
     Spec.assertBool s (elem (S.printingName gorger) (namesIn Zone.Graveyard resolved)) "setup: the Gorger was in the graveyard before triggers were placed"
@@ -4673,7 +4673,7 @@ madnessSpec s registry = Spec.describe s "Madness" $ do
     gorger <- S.printingOf s registry "Falkenrath Gorger"
     let (reunionId, ready) = gorgerBoard True mountain swamp visitor reunion gorger
         discarded = S.runPure madnessAnswer ready (S.cast S.alice reunionId)
-        placed = S.runPure madnessAnswer discarded Engine.placePendingTriggers
+        placed = S.runPure madnessAnswer discarded (Engine.placePendingTriggers [])
     Spec.assertEqWith s "CR 702.35a the Reunion and one madness trigger are on the stack" (length (GameState.stack placed)) 2
   -- CR 616.1 / 702.35a: Bloodmad Vampire prints madness {1}{R} and the Gorger
   -- grants one at its mana cost {2}{R}; its owner chooses which exiles it, and
@@ -4691,7 +4691,7 @@ madnessSpec s registry = Spec.describe s "Madness" $ do
         red = ManaSymbol.OfType (ManaType.Colored Color.Red)
         cheap = ManaCost.MkManaCost [ManaSymbol.Generic 1, red]
         dear = ManaCost.MkManaCost [ManaSymbol.Generic 2, red]
-        placed = S.runPure (bloodmadAnswer cheap) (S.runPure (bloodmadAnswer cheap) ready (S.cast S.alice reunionId)) Engine.placePendingTriggers
+        placed = S.runPure (bloodmadAnswer cheap) (S.runPure (bloodmadAnswer cheap) ready (S.cast S.alice reunionId)) (Engine.placePendingTriggers [])
         untapped gs = length (filter (\oid -> S.soleFaceName oid gs == S.printingName mountain && fmap Object.tapped (Game.lookupObject oid gs) == Just TapState.Untapped) (Game.zoneMembers Zone.Battlefield S.alice gs))
         outcome want =
           let after = gorgerRunWith (bloodmadAnswer want) (reunionId, ready)
@@ -4730,7 +4730,7 @@ gorgerRun = gorgerRunWith madnessAnswer
 gorgerRunWith :: (forall r. Prompt.Prompt r -> r) -> (ObjectId.ObjectId, GameState.GameState) -> GameState.GameState
 gorgerRunWith answer (reunionId, ready) =
   let discarded = S.runPure answer ready (S.cast S.alice reunionId)
-      placed = S.runPure answer discarded Engine.placePendingTriggers
+      placed = S.runPure answer discarded (Engine.placePendingTriggers [])
       first = S.runPure answer placed Stack.resolveTop
    in S.runPure answer first Stack.resolveTop
 

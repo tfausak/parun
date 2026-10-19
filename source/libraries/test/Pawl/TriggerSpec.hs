@@ -120,7 +120,7 @@ castWave tidalWave island =
 -- reached; Pawl.EventTriggerSpec's Synthetic Singular Cure is where the
 -- question is.
 gatheredIn :: [LoggedEvent.LoggedEvent] -> GameState.GameState -> [PendingTrigger.PendingTrigger]
-gatheredIn grouped gs = fst (fst (S.runPureWith S.identityAnswer gs (Event.gatherTriggers grouped gs)))
+gatheredIn grouped gs = fst (fst (S.runPureWith S.identityAnswer gs (Event.gatherTriggers grouped [] gs)))
 
 gathered :: GameState.GameState -> [PendingTrigger.PendingTrigger]
 gathered gs = gatheredIn (Event.unscannedGrouped gs) gs
@@ -131,7 +131,7 @@ gathered gs = gatheredIn (Event.unscannedGrouped gs) gs
 delayedFrom :: [GameEvent.GameEvent] -> GameState.GameState -> ([PendingTrigger.PendingTrigger], Seq.Seq DelayedTrigger.DelayedTrigger)
 delayedFrom events gs =
   let grouped = zipWith (\group event -> LoggedEvent.MkLoggedEvent {LoggedEvent.group = group, LoggedEvent.event = event}) (iterate EventGroup.next EventGroup.first) events
-   in fst (S.runPureWith S.identityAnswer gs (Event.delayedPending grouped gs))
+   in fst (S.runPureWith S.identityAnswer gs (Event.delayedPending grouped [] gs))
 
 -- CR 608.2i: the log records; it is never emptied by a reader.
 logSpec :: (Monad m, Monad n) => Spec.Spec m n -> Registry.Registry m -> n ()
@@ -169,7 +169,7 @@ logSpec s registry =
       let (_, gs) = S.addPermanent restInPeace S.alice (Setup.emptyGame S.bothPlayers)
           (pikerId, gs1) = S.addPermanent piker S.bob gs
           moved = S.runPure S.identityAnswer gs1 (Event.changeZone pikerId Zone.Hand)
-          scanned = snd (Engine.runGamePure S.identityAnswer moved Engine.placePendingTriggers)
+          scanned = snd (Engine.runGamePure S.identityAnswer moved (Engine.placePendingTriggers []))
       Spec.assertEqWith s "nothing left unscanned" (Event.unscannedEvents scanned) []
       Spec.assertBool s (not (null (S.zoneChangesOf scanned))) "the zone change is still recorded"
     -- The turn is the log's scope (CR 608.2i). Clearing at cleanup would be
@@ -402,7 +402,7 @@ sacrificeSpec s registry =
       let (ripId, gs0) = S.addPermanent restInPeace S.alice (Setup.emptyGame S.bothPlayers)
           entered = ZoneChange.MkZoneChange ripId ripId Zone.Stack Zone.Battlefield
           gs1 = S.withEvents [GameEvent.Moved (Moved.moved entered (Projection.project ripId gs0))] gs0
-          placed = snd (Engine.runGamePure S.identityAnswer gs1 Engine.placePendingTriggers)
+          placed = snd (Engine.runGamePure S.identityAnswer gs1 (Engine.placePendingTriggers []))
           bindingsOn oid = maybe Map.empty Object.bindings (Game.lookupObject oid placed)
           selfOf oid = Map.lookup Binding.triggerSource (Binding.targetsOf (bindingsOn oid))
       Spec.assertEqWith s "the trigger names its source" (fmap selfOf (GameState.stack placed)) [Just (Set.singleton (Recipient.ToObject ripId))]
@@ -1290,8 +1290,8 @@ delayedSpec s registry =
               armed = S.runPure S.identityAnswer cast Engine.priorityLoop
               gone = S.departs Departure.Type.Conceded S.bob armed
               began = Event.recordEvent (GameEvent.StepBegan (StepBegan.MkStepBegan endStep S.alice)) (gone {GameState.phase = endStep})
-              (placedAny, placed) = S.runPureWith S.identityAnswer began Engine.placePendingTriggers
-              (controlAny, control) = S.runPureWith S.identityAnswer (Event.recordEvent (GameEvent.StepBegan (StepBegan.MkStepBegan endStep S.alice)) (armed {GameState.phase = endStep})) Engine.placePendingTriggers
+              (placedAny, placed) = S.runPureWith S.identityAnswer began (Engine.placePendingTriggers [])
+              (controlAny, control) = S.runPureWith S.identityAnswer (Event.recordEvent (GameEvent.StepBegan (StepBegan.MkStepBegan endStep S.alice)) (armed {GameState.phase = endStep})) (Engine.placePendingTriggers [])
           Spec.assertEqWith s "the fixture really armed one delayed ability" (Seq.length (GameState.delayedTriggers armed)) 1
           Spec.assertEqWith s "bob's ability is not put on the stack" (GameState.stack placed) []
           Spec.assertEqWith s "CR 603.7b: it still triggered, so its one shot is spent" (Seq.length (GameState.delayedTriggers placed)) 0
@@ -1701,7 +1701,7 @@ orderingSpec s registry =
           let gs0 = Setup.emptyGame S.bothPlayers
               (_, gs1) = S.addPermanent barbarianOutcast S.alice gs0
               (_, gs2) = S.addPermanent barbarianOutcast S.bob gs1
-              placed = snd (Engine.runGamePure S.identityAnswer gs2 Engine.placePendingTriggers)
+              placed = snd (Engine.runGamePure S.identityAnswer gs2 (Engine.placePendingTriggers []))
               controllerOf oid = fmap Object.owner (Game.lookupObject oid placed)
               stack = GameState.stack placed
           case stack of
@@ -1731,7 +1731,7 @@ orderingSpec s registry =
               (bobsOutcast, gs2) = S.addPermanent barbarianOutcast S.bob gs1
               (_, gs3) = S.addPermanent barbarianOutcast S.carol gs2
               gone = S.departs Departure.Type.Conceded S.bob gs3
-              placed = snd (Engine.runGamePure S.identityAnswer gone Engine.placePendingTriggers)
+              placed = snd (Engine.runGamePure S.identityAnswer gone (Engine.placePendingTriggers []))
               controllerOf oid = fmap Object.owner (Game.lookupObject oid placed)
           Spec.assertBool s (Maybe.isJust (Game.lookupObject bobsOutcast gs3)) "the fixture really gave bob one"
           Spec.assertEqWith s "CR 800.4a: bob's Outcast left the game with him, so it has no trigger to place" (Game.lookupObject bobsOutcast gone) Nothing

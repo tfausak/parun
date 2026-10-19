@@ -1,0 +1,140 @@
+{
+  "description": "CR 603.8 City in a Bottle's state trigger triggers on a permanent a state-based action then buries",
+  "note": "Rise of the Dark Realms puts alice's Flying Men onto the battlefield, an Arabian Nights name, so bob's City in a Bottle's state trigger matches. Bob's Curse of Death's Hold makes the Flying Men 0/0, and the settle's first state-based action check buries it (CR 704.5f) before triggers are placed (CR 704.3). The ability triggered as soon as the state matched, so it goes on the stack and later sacrifices nothing. Read at placement instead, no Arabian Nights permanent stands and the stack is empty.",
+  "board": {
+    "seats": [
+      {
+        "name": "alice",
+        "battlefield": [
+          {
+            "card": "Swamp",
+            "label": "swamp1",
+            "ready": true
+          },
+          {
+            "card": "Swamp",
+            "label": "swamp2",
+            "ready": true
+          },
+          {
+            "card": "Swamp",
+            "label": "swamp3",
+            "ready": true
+          },
+          {
+            "card": "Swamp",
+            "label": "swamp4",
+            "ready": true
+          },
+          {
+            "card": "Swamp",
+            "label": "swamp5",
+            "ready": true
+          },
+          {
+            "card": "Swamp",
+            "label": "swamp6",
+            "ready": true
+          },
+          {
+            "card": "Swamp",
+            "label": "swamp7",
+            "ready": true
+          },
+          {
+            "card": "Swamp",
+            "label": "swamp8",
+            "ready": true
+          },
+          {
+            "card": "Swamp",
+            "label": "swamp9",
+            "ready": true
+          }
+        ],
+        "hand": [
+          {
+            "card": "Rise of the Dark Realms",
+            "label": "rise"
+          }
+        ],
+        "graveyard": [
+          {
+            "card": "Flying Men"
+          }
+        ]
+      },
+      {
+        "name": "bob",
+        "battlefield": [
+          {
+            "card": "Curse of Death's Hold",
+            "label": "curse",
+            "attached": "alice"
+          },
+          {
+            "card": "City in a Bottle",
+            "label": "city"
+          }
+        ]
+      }
+    ],
+    "active": "alice",
+    "step": "PrecombatMain"
+  },
+  "timeline": [
+    {
+      "turn": 1,
+      "step": "PrecombatMain",
+      "player": "alice",
+      "do": {
+        "Cast": {
+          "object": "$rise",
+          "mana": [
+            "$swamp1",
+            "$swamp2",
+            "$swamp3",
+            "$swamp4",
+            "$swamp5",
+            "$swamp6",
+            "$swamp7",
+            "$swamp8",
+            "$swamp9"
+          ]
+        }
+      }
+    },
+    {
+      "turn": 1,
+      "step": "PrecombatMain",
+      "player": "alice",
+      "do": "Pass"
+    },
+    {
+      "turn": 1,
+      "step": "PrecombatMain",
+      "player": "alice",
+      "check": {
+        "View": {
+          "of": "Stack",
+          "is": [
+            "trigger of $city"
+          ]
+        }
+      }
+    },
+    {
+      "turn": 1,
+      "step": "PrecombatMain",
+      "player": "alice",
+      "check": {
+        "Count": {
+          "player": "alice",
+          "zone": "Graveyard",
+          "card": "Flying Men",
+          "count": 1
+        }
+      }
+    }
+  ]
+}

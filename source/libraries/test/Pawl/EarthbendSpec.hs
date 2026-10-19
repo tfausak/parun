@@ -120,7 +120,7 @@ earthbent forest lesson =
 -- The delayed ability placed and resolved without anything having killed
 -- anything: what a zone change the condition does not admit leaves behind.
 settled :: GameState.GameState -> GameState.GameState
-settled gs = S.runPure S.identityAnswer (S.settleSba gs) (Engine.placePendingTriggers *> Stack.resolveTop)
+settled gs = S.runPure S.identityAnswer (S.settleSba gs) (Engine.placePendingTriggers [] *> Stack.resolveTop)
 
 -- Alice's battlefield permanents that were not there before.
 arrivals :: GameState.GameState -> GameState.GameState -> [ObjectId.ObjectId]
@@ -227,7 +227,7 @@ atBeginningOfCombat :: ObjectId.ObjectId -> GameState.GameState -> GameState.Gam
 atBeginningOfCombat target gs =
   let step = Phase.Combat CombatStep.BeginningOfCombat
       began = Event.recordEvent (GameEvent.StepBegan (StepBegan.MkStepBegan step S.alice)) (gs {GameState.phase = step, GameState.activePlayer = S.alice})
-   in S.runPure (aimedAt target) began (Engine.placePendingTriggers *> Stack.resolveTop)
+   in S.runPure (aimedAt target) began (Engine.placePendingTriggers [] *> Stack.resolveTop)
 
 -- The two printings that write the opcode, and the one thing that separates them.
 producerSpec :: (Monad m) => Spec.Spec m n -> Registry.Registry m -> n ()
