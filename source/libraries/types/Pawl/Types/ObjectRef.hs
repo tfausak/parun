@@ -129,9 +129,10 @@ data ObjectRef
     -- Pawl.Engine.Resolve.Effect.askingObjects; Pawl.EffectLintSpec's
     -- inertChoosers states which opcodes may carry it.
     ChosenCardInGraveyard ChosenCardInGraveyard.ChosenCardInGraveyard
-  | -- | CR 608.2d / 402.3 / Karn Liberated: a card in a hand matching the Filter,
-    -- chosen as the effect runs by the seat whose hand it is -- which is why one
-    -- PlayerRef does the chooser's and the zone's duty at once.
+  | -- | CR 608.2d / 402.3 / Karn Liberated: cards in a hand matching the Filter,
+    -- as many as the payload's count, chosen as the effect runs by the seat whose
+    -- hand it is -- which is why one PlayerRef does the chooser's and the zone's
+    -- duty at once.
     --
     -- Never a target, because pawl has no target pool over a hidden zone (#559).
     ChosenCardInHand ChosenCardInHand.ChosenCardInHand

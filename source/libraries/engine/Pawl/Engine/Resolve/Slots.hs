@@ -518,9 +518,9 @@ objectRefSlots ref = joinTwo (joinSlots (fmap playerRefSlots (objectRefPlayerRef
   -- Joined with the COUNT's own slots, TopOfLibrary's arm above and for its
   -- reason.
   ObjectRef.ChosenCardInGraveyard (ChosenCardInGraveyard.MkChosenCardInGraveyard chooser scope _ count) -> joinTwo (joinTwo (chooserSlots chooser) (zoneScopeSlots scope)) (quantitySlots count)
-  -- CR 402.3: the choosers own the hands, so the PlayerRef is the whole read --
-  -- reported by objectRefPlayerRefs rather than here.
-  ObjectRef.ChosenCardInHand (ChosenCardInHand.MkChosenCardInHand _ _) -> Map.empty
+  -- CR 402.3: the choosers own the hands, so the PlayerRef is reported by
+  -- objectRefPlayerRefs rather than here; the COUNT's slots are this arm's.
+  ObjectRef.ChosenCardInHand (ChosenCardInHand.MkChosenCardInHand _ _ count) -> quantitySlots count
   -- The first of the two arms whose CANDIDATES come from a slot -- the plural is
   -- below -- where the two chosen arms above name a slot only through their
   -- chooser. Reported for EachCardInGraveyard's
@@ -588,11 +588,12 @@ objectRefQuantities ref = case ref of
   ObjectRef.TopOfLibraryUntil (TopOfLibraryUntil.MkTopOfLibraryUntil _ _ count) -> [count]
   -- CR 404.1's top card is ONE card, so the graveyard arm states no depth at all.
   ObjectRef.TopOfGraveyard _ -> []
-  -- How many cards each chooser picks out of a graveyard -- Fall of the Thran's
-  -- printed two. A REGRESSION FENCE for the ChosenCardFromAmong arm below's
-  -- reason: every count in the pool is a Literal, which reads no slot.
+  -- How many cards each chooser picks out of a graveyard or a hand -- Fall of
+  -- the Thran's and Aquatic Subtlety's printed two. A REGRESSION FENCE for the
+  -- ChosenCardFromAmong arm below's reason: every count in the pool is a
+  -- Literal, which reads no slot.
   ObjectRef.ChosenCardInGraveyard (ChosenCardInGraveyard.MkChosenCardInGraveyard _ _ _ count) -> [count]
-  ObjectRef.ChosenCardInHand (ChosenCardInHand.MkChosenCardInHand _ _) -> []
+  ObjectRef.ChosenCardInHand (ChosenCardInHand.MkChosenCardInHand _ _ count) -> [count]
   -- How many cards are picked out of the group -- Ancestral Memories' printed
   -- two, the library walks' counts above being the only other ObjectRef numbers.
   -- A REGRESSION FENCE rather than proven behaviour: every count in the pool is a
@@ -647,7 +648,7 @@ objectRefPlayerRefs ref = case ref of
   -- per-player zone.
   ObjectRef.TopOfGraveyard player -> [player]
   ObjectRef.ChosenCardInGraveyard (ChosenCardInGraveyard.MkChosenCardInGraveyard _ _ _ _) -> []
-  ObjectRef.ChosenCardInHand (ChosenCardInHand.MkChosenCardInHand player _) -> [player]
+  ObjectRef.ChosenCardInHand (ChosenCardInHand.MkChosenCardInHand player _ _) -> [player]
   -- The seat that picks out of the group -- Animal Magnetism's opponent, and by
   -- default CR 608.2c's resolving controller.
   --

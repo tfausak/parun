@@ -2378,10 +2378,14 @@ controlledTeam controller target gs =
   filter (\pid -> pid == target || (pid /= controller && Turn.sharesTurn gs target pid)) (GameState.turnOrder gs)
 
 -- CR 402.3 with a CR 608.2d choice: each hand the reference names is offered to
--- its OWN owner (a hand's cards are that player's alone), who picks one card
--- matching the filter. The candidates are read as the instruction is reached (CR
--- 608.2c), the asks run in APNAP order (CR 608.2e, CR 101.4) through
--- handChoosers, through Game.chooseAmong (CR 101.3, CR 609.3).
+-- its OWN owner (a hand's cards are that player's alone), who picks the ref's
+-- count of DISTINCT cards matching the filter, each pick dropped from the
+-- candidates before the next ask (CR 608.2d). The candidates are read as the
+-- instruction is reached (CR 608.2c), the asks run in APNAP order (CR 608.2e,
+-- CR 101.4) through handChoosers, through Game.chooseAmong (CR 101.3, CR 609.3).
+-- Every card comes back in ONE list, so the instruction moves them as one event
+-- (CR 608.2f) -- proved by the scenario "CR 608.2f Aquatic Subtlety bottoms its
+-- two cards in one event".
 --
 -- askingObjects' ChosenCardInHand arm.
 chooseCardsInHand ::
@@ -2391,11 +2395,19 @@ chooseCardsInHand ::
   Map.Map SlotName (Set Recipient) ->
   ChosenCardInHand.ChosenCardInHand ->
   Game [ObjectId]
-chooseCardsInHand resolving source controller legal (ChosenCardInHand.MkChosenCardInHand player filter_) = do
+chooseCardsInHand resolving source controller legal (ChosenCardInHand.MkChosenCardInHand player filter_ count) = do
   gs <- State.get
-  let context = effectContext gs resolving controller source legal (slotBindings resolving gs)
-      ask asked candidates = Maybe.maybeToList <$> Game.chooseAmong (\decider who -> Prompt.ChooseCardInHand decider who source) asked candidates
-  fmap concat . Monad.mapM (\pid -> ask pid (handCardsOf context gs pid filter_)) $
+  let viewOf = effectViewOf source legal gs
+      context = effectContext gs resolving controller source legal (slotBindings resolving gs)
+      wanted = maybe 0 Integer.toNaturalSaturating (Quantity.evaluateFor viewOf context gs resolving source count)
+      pick asked n candidates
+        | n <= (0 :: Natural) = pure []
+        | otherwise = do
+            picked <- Game.chooseAmong (\decider who -> Prompt.ChooseCardInHand decider who source) asked candidates
+            case picked of
+              Nothing -> pure []
+              Just taken -> (taken :) <$> pick asked (n - 1) (List.delete taken candidates)
+  fmap concat . Monad.mapM (\pid -> pick pid wanted (handCardsOf context gs pid filter_)) $
     handChoosers legal resolving source controller gs player
 
 -- The printed "from among them", a CR 608.2d choice: the candidates are the
@@ -3685,9 +3697,9 @@ effectIsImpossible resolving source controller legal gs effect = case effect of
     -- same pick with randomness choosing; a ref naming no chooser, a choice
     -- the empty answer satisfies, and every ref that reads, answers False.
     choosesFromNothing ref = case ref of
-      ObjectRef.ChosenCardInHand (ChosenCardInHand.MkChosenCardInHand player filter_) ->
+      ObjectRef.ChosenCardInHand (ChosenCardInHand.MkChosenCardInHand player filter_ count) ->
         let choosers = handChoosers legal resolving source controller gs player
-         in not (null choosers) && all (\pid -> null (handCardsOf context gs pid filter_)) choosers
+         in positive count && not (null choosers) && all (\pid -> null (handCardsOf context gs pid filter_)) choosers
       -- randomCardsInHand's pool: Pillaging Horde's "unless you discard a card
       -- at random" over an empty hand (CR 118.3, 118.12a), which the scenario
       -- "CR 118.3 Pillaging Horde is sacrificed over an empty hand" proves.
