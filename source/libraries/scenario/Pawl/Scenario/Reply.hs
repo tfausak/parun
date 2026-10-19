@@ -457,7 +457,7 @@ shapeOf prompt = case prompt of
   Prompt.OfferedCast {} -> viaCodec Codec.OptionalDecision.codec
   Prompt.ChooseOfferedCastSpell {} -> pairOf object (viaCodec Codec.CardName.codec)
   Prompt.OfferedMiracleReveal {} -> viaCodec Codec.OptionalDecision.codec
-  Prompt.OfferedExtraLook {} -> viaCodec Codec.OptionalDecision.codec
+  Prompt.OfferedExtra {} -> viaCodec Codec.OptionalDecision.codec
   Prompt.ChooseToPay {} -> viaCodec Codec.PaymentDecision.codec
   Prompt.AnnouncePhyrexianPayment {} -> named [PhyrexianPayment.PaysMana, PhyrexianPayment.PaysLife]
   Prompt.AnnounceHybridPayment {} -> named [HybridPayment.PaysTyped, HybridPayment.PaysGeneric]

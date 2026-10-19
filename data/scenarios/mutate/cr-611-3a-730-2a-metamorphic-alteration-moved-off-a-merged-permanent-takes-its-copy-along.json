@@ -1,0 +1,86 @@
+{
+  "description": "CR 611.3a/730.2a Metamorphic Alteration moved off a merged permanent takes its copy along",
+  "note": "Alice's Metamorphic Alteration makes her Goblin Piker a War Mammoth, Cubwarden mutates under it, and Crown of the Ages moves the Aura to her Grizzly Bears. The Aura's copy now applies to the Bears alone (CR 611.3a), so the merge is applied over the Piker's own values: a 2/1 Goblin Piker with Cubwarden's lifelink and nothing of the Mammoth's trample, which is what a Clone of it then copies (CR 707.3). Distinct printed pairs: the Piker's 2/1, the Mammoth's 3/3, the Bears' 2/2, Cubwarden's 3/5.",
+  "board": {
+    "seats": [
+      {
+        "name": "alice",
+        "battlefield": [
+          { "card": "Goblin Piker", "label": "piker" },
+          { "card": "War Mammoth", "label": "mammoth" },
+          { "card": "Grizzly Bears", "label": "bears" },
+          { "card": "Crown of the Ages", "label": "crown", "ready": true },
+          { "card": "Island", "label": "island-1", "ready": true },
+          { "card": "Island", "label": "island-2", "ready": true },
+          { "card": "Island", "label": "island-3", "ready": true },
+          { "card": "Island", "label": "island-4", "ready": true },
+          { "card": "Island", "label": "island-5", "ready": true },
+          { "card": "Island", "label": "island-6", "ready": true },
+          { "card": "Plains", "label": "plains-1", "ready": true },
+          { "card": "Plains", "label": "plains-2", "ready": true },
+          { "card": "Plains", "label": "plains-3", "ready": true },
+          { "card": "Plains", "label": "plains-4", "ready": true },
+          { "card": "Swamp", "label": "swamp-1", "ready": true },
+          { "card": "Swamp", "label": "swamp-2", "ready": true },
+          { "card": "Swamp", "label": "swamp-3", "ready": true },
+          { "card": "Swamp", "label": "swamp-4", "ready": true }
+        ],
+        "hand": [
+          { "card": "Metamorphic Alteration", "label": "alteration" },
+          { "card": "Cubwarden", "label": "cubwarden" },
+          { "card": "Clone", "label": "clone" }
+        ]
+      },
+      {
+        "name": "bob"
+      }
+    ],
+    "active": "alice",
+    "step": "PrecombatMain"
+  },
+  "timeline": [
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": { "Cast": { "object": "$alteration", "targets": ["$piker"], "mana": ["$island-1", "$island-2", null] } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass" },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": { "Answer": { "prompt": "ChoosePermanent", "with": "$mammoth" } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "check": { "Names": { "object": "$piker", "names": ["War Mammoth"] } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": { "Answer": { "prompt": "ChooseMutateSide", "with": "Under" } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": { "Answer": { "prompt": "OrderTimestamps", "with": [0, 1] } } },
+    {
+      "turn": 1,
+      "step": "PrecombatMain",
+      "player": "alice",
+      "do": {
+        "Cast": {
+          "object": "$cubwarden",
+          "targets": ["$piker"],
+          "cost": [
+            { "type": "Generic", "value": 2 },
+            { "type": "OfType", "value": { "type": "Colored", "value": { "type": "White" } } },
+            { "type": "OfType", "value": { "type": "Colored", "value": { "type": "White" } } }
+          ],
+          "mana": ["$plains-1", "$plains-2", "$plains-3", "$plains-4", null]
+        }
+      }
+    },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass" },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass" },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "check": { "Keywords": { "object": "$piker", "keyword": { "type": "Lifelink" }, "count": 1 } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "check": { "Names": { "object": "$piker", "names": ["War Mammoth"] } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "check": { "Keywords": { "object": "$piker", "keyword": { "type": "Trample" }, "count": 1 } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": { "Activate": { "object": "$crown", "ability": 0, "targets": ["Metamorphic Alteration"], "mana": ["$swamp-1", "$swamp-2", "$swamp-3", "$swamp-4", null] } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass" },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": { "Answer": { "prompt": "ChooseAttachment", "with": "$bears" } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "check": { "Names": { "object": "$piker", "names": ["Goblin Piker"] } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "check": { "PowerToughness": { "object": "$piker", "power": 2, "toughness": 1 } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "check": { "Keywords": { "object": "$piker", "keyword": { "type": "Trample" }, "count": 0 } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "check": { "Keywords": { "object": "$piker", "keyword": { "type": "Lifelink" }, "count": 1 } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "check": { "Names": { "object": "$bears", "names": ["War Mammoth"] } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "check": { "View": { "of": "AttachedTo", "object": "Metamorphic Alteration", "is": "$bears" } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": { "Cast": { "object": "$clone", "mana": ["$island-3", "$island-4", "$island-5", "$island-6"] } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass" },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": { "ChooseCopyTarget": "$piker" } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "check": { "Names": { "object": "Clone", "names": ["Goblin Piker"] } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "check": { "PowerToughness": { "object": "Clone", "power": 2, "toughness": 1 } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "check": { "Keywords": { "object": "Clone", "keyword": { "type": "Lifelink" }, "count": 1 } } }
+  ]
+}

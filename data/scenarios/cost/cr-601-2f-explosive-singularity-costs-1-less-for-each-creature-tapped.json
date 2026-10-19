@@ -1,0 +1,37 @@
+{
+  "description": "CR 601.2f Explosive Singularity costs {1} less for each creature its additional cost taps",
+  "note": "Five Mountains pay {8}{R}{R} only with five creatures tapped, so the cast is offered only if the gate looks past X = 0, and X = 4 is refused for the {4}{R}{R} it leaves. Six untapped creatures, none ready, make the tap a real choice: the Piker, first in id order, stays untapped, and CR 302.6 does not stop a summoning-sick creature paying a cost that is not {T}. Bob at 20 takes 10.",
+  "board": {
+    "seats": [
+      {
+        "name": "alice",
+        "battlefield": [
+          { "card": "Mountain", "label": "m1" },
+          { "card": "Mountain", "label": "m2" },
+          { "card": "Mountain", "label": "m3" },
+          { "card": "Mountain", "label": "m4" },
+          { "card": "Mountain", "label": "m5" },
+          { "card": "Goblin Piker", "label": "piker" },
+          { "card": "Hill Giant", "label": "giant" },
+          { "card": "Bog Wraith", "label": "wraith" },
+          { "card": "Grizzly Bears", "label": "bears" },
+          { "card": "Raging Goblin", "label": "goblin" },
+          { "card": "Gray Ogre", "label": "ogre" }
+        ],
+        "hand": [{ "card": "Explosive Singularity", "label": "singularity" }]
+      },
+      { "name": "bob" }
+    ],
+    "active": "alice",
+    "step": "PrecombatMain"
+  },
+  "timeline": [
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "refuse": { "Cast": { "object": "$singularity", "x": 4, "targets": ["$bob"], "mana": ["$m1", "$m2", "$m3", "$m4", "$m5"] } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": { "Answer": { "prompt": "ChooseTaps", "with": ["$giant", "$wraith", "$bears", "$goblin", "$ogre"] } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": { "Cast": { "object": "$singularity", "x": 5, "targets": ["$bob"], "mana": ["$m1", "$m2", "$m3", "$m4", "$m5"] } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass" },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "check": { "Life": { "player": "bob", "life": 10 } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "check": { "Tapped": { "object": "$ogre", "tapped": true } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "check": { "Tapped": { "object": "$piker", "tapped": false } } }
+  ]
+}

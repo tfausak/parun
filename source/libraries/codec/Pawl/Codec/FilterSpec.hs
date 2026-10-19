@@ -13,6 +13,7 @@ import qualified Pawl.Types.CardType as CardType
 import qualified Pawl.Types.Color as Color
 import qualified Pawl.Types.Comparison as Comparison
 import qualified Pawl.Types.CounterKind as CounterKind
+import qualified Pawl.Types.DamagedParty as DamagedParty
 import qualified Pawl.Types.Designation as Designation
 import qualified Pawl.Types.ExiledWith as ExiledWith
 import qualified Pawl.Types.Expansion as Expansion
@@ -403,6 +404,12 @@ spec s = Spec.describe s "Pawl.Codec.Filter" $ do
       codec
       Filter.DealtDamageThisTurn
       " {\"type\":\"DealtDamageThisTurn\"} "
+  Spec.it s "DealtDamageToThisTurn" $
+    Common.assertCodec
+      s
+      codec
+      (Filter.DealtDamageToThisTurn DamagedParty.Source)
+      " {\"type\":\"DealtDamageToThisTurn\",\"value\":{\"type\":\"Source\"}} "
   Spec.it s "EnteredThisTurn" $
     Common.assertCodec
       s

@@ -736,9 +736,9 @@ data Response
     -- LINKED ability's later "may": one reveal can be followed by a declined
     -- cast, so two answers in one replay are not a duplicate.
     ChoseMiracleReveal OptionalDecision.OptionalDecision
-  | -- | CR 701.25b: whether a player surveilling looked at the extra cards one
-    -- permanent's ability offered.
-    ChoseExtraLook OptionalDecision.OptionalDecision
+  | -- | CR 701.25b / 701.38d: whether a player took up the extra cards or votes
+    -- one permanent's ability offered.
+    ChoseExtra OptionalDecision.OptionalDecision
   | -- | CR 118.12a: whether the player a resolving spell or ability offered a
     -- cost to chose to pay it. Distinct from ChoseOptional, which records CR
     -- 603.5's "may" and is always answered by the resolving controller.
