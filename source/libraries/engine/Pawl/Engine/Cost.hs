@@ -77,6 +77,7 @@ import qualified Pawl.Types.Card as Card.Type
 import qualified Pawl.Types.CardName as CardName
 import qualified Pawl.Types.CardType as CardType
 import qualified Pawl.Types.CastingPermission as CastingPermission
+import qualified Pawl.Types.Chosen as Chosen
 import Pawl.Types.Claim (Claim)
 import qualified Pawl.Types.Claim as Claim.Type
 import qualified Pawl.Types.ClaimAxis as ClaimAxis
@@ -6287,20 +6288,13 @@ chooseManaYield pid oid candidates gs = case candidates of
 nextPromise :: ObjectId -> Gift.Gift -> GameState -> PlayerChoice.PlayerChoice
 nextPromise oid gift gs =
   let keyword = Keyword.Type.Gift gift
-      promised = foldMap Map.keys (Game.currentChoice Object.chosenPlayers oid gs)
+      promised = foldMap Map.keys (Game.currentChoice Chosen.Players oid gs)
       paid = foldMap (Map.findWithDefault Map.empty keyword . Object.paidCosts) (Game.lookupObject oid gs)
       owed = [PlayerChoice.Promised gift which | (which, times) <- Map.toAscList paid, times > 0]
       -- Past every instance the object can have, for a payment no instance is
       -- left to take.
       spare = PlayerChoice.Promised gift (KeywordInstance.Own (Natural.length paid + Natural.length promised + 1))
    in Maybe.fromMaybe spare (List.find (`notElem` promised) owed)
-
--- Object.chosenPlayers' entry for one choice, written on the object.
-stampChosen :: ObjectId -> PlayerChoice.PlayerChoice -> PlayerId -> Game ()
-stampChosen oid choice pid =
-  State.modify' $ \gs ->
-    let stamp object = object {Object.chosenPlayers = Map.insertWith Map.union (Game.acquisitionOf oid gs) (Map.singleton choice pid) (Object.chosenPlayers object)}
-     in gs {GameState.objects = Map.adjust stamp oid (GameState.objects gs)}
 
 -- CR 118.3 asked AGAIN as each component is paid, and not only at the gate: CR
 -- 601.2g's window activates mana abilities before any part is paid and CR 601.2h
@@ -6940,13 +6934,13 @@ payPayable moment paidFor slots pid oid component = case component of
   CostComponent.ChooseOpponent gift -> do
     gs <- State.get
     let promise = nextPromise oid gift gs
-    chosen <- Game.chooseAmong (\decider asked -> Prompt.ChooseOpponent decider asked oid (Just promise)) pid (Players.offer pid gs PlayerRelation.Opponent)
+    chosen <- Players.chooseOne pid oid (Just promise) (Players.offer pid gs PlayerRelation.Opponent)
     case chosen of
       -- Unreachable behind `payComponent`'s guard, which reads the same offer;
       -- defensive, as CR 118.3 would have it.
       Nothing -> pure Payment.Unpaid
       Just opponent -> do
-        stampChosen oid promise opponent
+        State.modify' $ \g -> Game.recordChoice Chosen.Players (Game.acquisitionOf oid g) (Just . Map.insert promise opponent . Maybe.fromMaybe Map.empty) oid g
         pure bindsNothing
   -- NOTHING TO PAY. Rule 701.67a's waterbend cost is the mana this component
   -- scopes, and that mana is in the cost's own mana part, paid by `payMana`

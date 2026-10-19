@@ -42,6 +42,7 @@ import qualified Pawl.Types.Binding as Binding.Type
 import qualified Pawl.Types.Card as Card.Type
 import qualified Pawl.Types.CardType as CardType
 import qualified Pawl.Types.ChoosePlayer as ChoosePlayer
+import qualified Pawl.Types.Chosen as Chosen
 import Pawl.Types.Claim (Claim)
 import qualified Pawl.Types.Claim as Claim.Type
 import qualified Pawl.Types.ClaimAxis as ClaimAxis
@@ -253,7 +254,7 @@ produced oid gs production = case production of
     Offers
       (fmap ManaType.Colored (Color.White NonEmpty.:| [Color.Blue, Color.Black, Color.Red, Color.Green]))
   ManaProduction.Chosen ->
-    case fmap ManaType.Colored (Set.toList (Maybe.fromMaybe Set.empty (Game.currentChoice Object.chosenColors oid gs))) of
+    case fmap ManaType.Colored (Set.toList (Maybe.fromMaybe Set.empty (Game.currentChoice Chosen.Colors oid gs))) of
       first : second : more -> Offers (first NonEmpty.:| (second : more))
       settled -> Settles settled
   ManaProduction.SnowSymbol -> Settles [ManaType.Colorless]

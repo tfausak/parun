@@ -56,6 +56,7 @@ import qualified Pawl.Types.AttackTargetKind as AttackTargetKind
 import qualified Pawl.Types.CantAttackPlayer as CantAttackPlayer
 import qualified Pawl.Types.CantBeBlockedBy as CantBeBlockedBy
 import qualified Pawl.Types.CantBlockCreatures as CantBlockCreatures
+import qualified Pawl.Types.Chosen as Chosen
 import qualified Pawl.Types.CombatRestriction as CombatRestriction
 import qualified Pawl.Types.Condition as Condition.Type
 import qualified Pawl.Types.CounterKind as CounterKind
@@ -943,7 +944,7 @@ cantBeBlockedBy defending blockers attackers gs =
               -- player comes off the same object the power does.
               context attacker =
                 (Projection.pairwiseContext gs attacker)
-                  { Filter.carrierChosenPlayer = Game.currentChoice Object.chosenPlayers attacker gs >>= Map.lookup PlayerChoice.AsEnters
+                  { Filter.carrierChosenPlayer = Game.currentChoice Chosen.Players attacker gs >>= Map.lookup PlayerChoice.AsEnters
                   }
               matched attacker blocker = Filter.matches (context attacker) (Projection.viewOfObject blocker gs) wanted
               barred attacker = fmap (\blocker -> (blocker, attacker)) (filter (matched attacker) blockers)

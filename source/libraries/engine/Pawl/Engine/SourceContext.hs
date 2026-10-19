@@ -12,9 +12,12 @@
 module Pawl.Engine.SourceContext where
 
 import qualified Data.Map.Strict as Map
+import qualified Data.Maybe as Maybe
+import qualified Data.Set as Set
 import qualified Pawl.Engine.Filter as Filter
 import qualified Pawl.Engine.Game as Game
 import qualified Pawl.Types.Acquisition as Acquisition
+import qualified Pawl.Types.Chosen as Chosen
 import qualified Pawl.Types.GameState as GameState
 import qualified Pawl.Types.Object as Object
 import qualified Pawl.Types.ObjectId as ObjectId
@@ -56,9 +59,9 @@ framedWith choices source gs context =
 choicesOf :: Acquisition.Acquisition -> ObjectId.ObjectId -> GameState.GameState -> SourceChoices.SourceChoices
 choicesOf acquisition source gs =
   SourceChoices.MkSourceChoices
-    { SourceChoices.names = Game.chosenNamesWithLastKnown acquisition source gs,
-      SourceChoices.colors = Game.chosenColorsWithLastKnown acquisition source gs,
-      SourceChoices.subtype = Game.chosenSubtypeWithLastKnown acquisition source gs
+    { SourceChoices.names = Maybe.fromMaybe Map.empty (Game.choiceWithLastKnown Chosen.Names acquisition source gs),
+      SourceChoices.colors = Maybe.fromMaybe Set.empty (Game.choiceWithLastKnown Chosen.Colors acquisition source gs),
+      SourceChoices.subtype = Game.choiceWithLastKnown Chosen.Subtype acquisition source gs
     }
 
 -- | `context` with these choices as the source's: CR 105.2's colours, CR

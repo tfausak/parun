@@ -1,3 +1,5 @@
+{-# LANGUAGE GADTs #-}
+
 module Pawl.Engine.Game where
 
 import qualified Control.Applicative as Applicative
@@ -34,7 +36,7 @@ import qualified Pawl.Types.Card as Card.Type
 import qualified Pawl.Types.CardIdentity as CardIdentity
 import qualified Pawl.Types.CardName as CardName
 import qualified Pawl.Types.CardType as CardType
-import qualified Pawl.Types.Color as Color
+import qualified Pawl.Types.Chosen as Chosen
 import qualified Pawl.Types.Combat as Combat
 import qualified Pawl.Types.ComponentCard as ComponentCard
 import qualified Pawl.Types.CopyCoverage as CopyCoverage
@@ -75,7 +77,6 @@ import qualified Pawl.Types.ObjectId as ObjectId
 import qualified Pawl.Types.Player as Player
 import qualified Pawl.Types.PlayerActed as PlayerActed
 import qualified Pawl.Types.PlayerAction as PlayerAction
-import qualified Pawl.Types.PlayerChoice as PlayerChoice
 import qualified Pawl.Types.PlayerCounterKind as PlayerCounterKind
 import Pawl.Types.PlayerId (PlayerId)
 import qualified Pawl.Types.Printing as Printing
@@ -744,35 +745,61 @@ attackTargetOf oid gs =
 attackTargetWithLastKnown :: ObjectId -> GameState -> Maybe AttackTarget.AttackTarget
 attackTargetWithLastKnown oid gs = Monad.join (liveOrLastKnown (const (attackTargetOf oid gs)) LastKnown.attackTarget oid gs)
 
--- CR 614.1c / 702.174a's chosen player for one choice, through CR 608.2h: the
--- live object's Object.chosenPlayers, else the ones it carried as it left
--- (Pawl.Types.LastKnown.chosenPlayers) -- each only the ones the abilities
--- acquired as `acquisition` made (CR 607.5), and Nothing for a choice they never
--- made (CR 607.5a).
-chosenPlayerWithLastKnown :: Acquisition.Acquisition -> PlayerChoice.PlayerChoice -> ObjectId -> GameState -> Maybe PlayerId
-chosenPlayerWithLastKnown acquisition choice oid gs = Map.lookup choice =<< Map.lookup acquisition =<< liveOrLastKnown Object.chosenPlayers LastKnown.chosenPlayers oid gs
-
--- CR 614.1c / 607.2d's chosen colours, chosenPlayerWithLastKnown's read of
--- Object.chosenColors; none for a choice never made.
-chosenColorsWithLastKnown :: Acquisition.Acquisition -> ObjectId -> GameState -> Set.Set Color.Color
-chosenColorsWithLastKnown acquisition oid gs = Maybe.fromMaybe Set.empty (Map.lookup acquisition =<< liveOrLastKnown Object.chosenColors LastKnown.chosenColors oid gs)
-
--- chosenColorsWithLastKnown one choice over, for Object.chosenSubtype. The
--- fallback is proved by the Kindred Boon scenario in data/scenarios/activate.
-chosenSubtypeWithLastKnown :: Acquisition.Acquisition -> ObjectId -> GameState -> Maybe Subtype.Subtype
-chosenSubtypeWithLastKnown acquisition oid gs = Map.lookup acquisition =<< liveOrLastKnown Object.chosenSubtype LastKnown.chosenSubtype oid gs
-
--- chosenColorsWithLastKnown for CR 201.4's chosen names (Object.chosenNames). The
--- empty map where neither the object nor its last known information exists.
-chosenNamesWithLastKnown :: Acquisition.Acquisition -> ObjectId -> GameState -> Map.Map PlayerId CardName.CardName
-chosenNamesWithLastKnown acquisition oid gs = Maybe.fromMaybe Map.empty (Map.lookup acquisition =<< liveOrLastKnown Object.chosenNames LastKnown.chosenNames oid gs)
+-- | CR 607.5 / 608.2h: the choice `field` holds for the abilities acquired as
+-- `acquisition` -- the live object's, else the ones its last known information
+-- kept as it left. Nothing for a choice those abilities never made (CR 607.5a).
+-- The fallback is proved by the Kindred Boon scenario in data/scenarios/activate
+-- and Conundrum Sphinx's CR 608.2h scenario under data/scenarios.
+choiceWithLastKnown :: Chosen.Chosen a -> Acquisition.Acquisition -> ObjectId -> GameState -> Maybe a
+choiceWithLastKnown field acquisition oid gs = Map.lookup acquisition =<< liveOrLastKnown (objectChoices field) (lastKnownChoices field) oid gs
 
 -- | CR 607.5: the choice `field` holds for the abilities the LIVE object has
 -- now (acquisitionOf), for a static ability or a restriction read off its
 -- source. Nothing for an id naming no object, and for a choice those abilities
 -- never made (CR 607.5a).
-currentChoice :: (Object -> Map.Map Acquisition.Acquisition a) -> ObjectId -> GameState -> Maybe a
-currentChoice field oid gs = Map.lookup (acquisitionOf oid gs) . field =<< lookupObject oid gs
+currentChoice :: Chosen.Chosen a -> ObjectId -> GameState -> Maybe a
+currentChoice field oid gs = Map.lookup (acquisitionOf oid gs) . objectChoices field =<< lookupObject oid gs
+
+-- | CR 607.5: `change` the choice `field` holds for the abilities acquired as
+-- `acquisition`, on the live object, else on its last known information (CR
+-- 608.2h) -- choiceWithLastKnown's two halves, so a choice written is the one
+-- read back.
+recordChoice :: Chosen.Chosen a -> Acquisition.Acquisition -> (Maybe a -> Maybe a) -> ObjectId -> GameState -> GameState
+recordChoice field acquisition change oid gs = case lookupObject oid gs of
+  Just _ -> gs {GameState.objects = Map.adjust (overObjectChoices field (Map.alter change acquisition)) oid (GameState.objects gs)}
+  Nothing -> gs {GameState.lastKnown = Map.adjust (overLastKnownChoices field (Map.alter change acquisition)) oid (GameState.lastKnown gs)}
+
+-- | The Object field `field` names.
+objectChoices :: Chosen.Chosen a -> Object -> Map.Map Acquisition.Acquisition a
+objectChoices field = case field of
+  Chosen.Colors -> Object.chosenColors
+  Chosen.Subtype -> Object.chosenSubtype
+  Chosen.Names -> Object.chosenNames
+  Chosen.Players -> Object.chosenPlayers
+
+-- | objectChoices' field, rewritten.
+overObjectChoices :: Chosen.Chosen a -> (Map.Map Acquisition.Acquisition a -> Map.Map Acquisition.Acquisition a) -> Object -> Object
+overObjectChoices field f o = case field of
+  Chosen.Colors -> o {Object.chosenColors = f (Object.chosenColors o)}
+  Chosen.Subtype -> o {Object.chosenSubtype = f (Object.chosenSubtype o)}
+  Chosen.Names -> o {Object.chosenNames = f (Object.chosenNames o)}
+  Chosen.Players -> o {Object.chosenPlayers = f (Object.chosenPlayers o)}
+
+-- | The LastKnown field `field` names: objectChoices' as the object left.
+lastKnownChoices :: Chosen.Chosen a -> LastKnown.LastKnown -> Map.Map Acquisition.Acquisition a
+lastKnownChoices field = case field of
+  Chosen.Colors -> LastKnown.chosenColors
+  Chosen.Subtype -> LastKnown.chosenSubtype
+  Chosen.Names -> LastKnown.chosenNames
+  Chosen.Players -> LastKnown.chosenPlayers
+
+-- | lastKnownChoices' field, rewritten.
+overLastKnownChoices :: Chosen.Chosen a -> (Map.Map Acquisition.Acquisition a -> Map.Map Acquisition.Acquisition a) -> LastKnown.LastKnown -> LastKnown.LastKnown
+overLastKnownChoices field f lk = case field of
+  Chosen.Colors -> lk {LastKnown.chosenColors = f (LastKnown.chosenColors lk)}
+  Chosen.Subtype -> lk {LastKnown.chosenSubtype = f (LastKnown.chosenSubtype lk)}
+  Chosen.Names -> lk {LastKnown.chosenNames = f (LastKnown.chosenNames lk)}
+  Chosen.Players -> lk {LastKnown.chosenPlayers = f (LastKnown.chosenPlayers lk)}
 
 -- CR 509.1g: is this creature blocking? Combat.blockers is keyed by ATTACKER, so
 -- the answer is membership in some attacker's set rather than a key lookup, or

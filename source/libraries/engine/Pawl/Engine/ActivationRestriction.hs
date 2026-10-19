@@ -36,6 +36,7 @@ import qualified Pawl.Types.AbilityKind as AbilityKind
 import qualified Pawl.Types.ActivatedAbility as ActivatedAbility
 import qualified Pawl.Types.ActivationRestriction as ActivationRestriction
 import qualified Pawl.Types.Card as Card
+import qualified Pawl.Types.Chosen as Chosen
 import qualified Pawl.Types.DuringPhase as DuringPhase
 import Pawl.Types.GameState (GameState)
 import qualified Pawl.Types.GameState as GameState
@@ -384,7 +385,7 @@ refusedMidPayment restriction = case restriction of
 spendableTypes :: ObjectId -> [ActivationRestriction.ActivationRestriction] -> GameState -> Maybe (Set.Set ManaType.ManaType)
 spendableTypes srcId restrictions gs =
   let named restriction = case restriction of
-        ActivationRestriction.SpendOnly ManaSpecification.ChosenColor -> Just (Set.map ManaType.Colored (Game.chosenColorsWithLastKnown (Game.acquisitionOf srcId gs) srcId gs))
+        ActivationRestriction.SpendOnly ManaSpecification.ChosenColor -> Just (Set.map ManaType.Colored (Maybe.fromMaybe Set.empty (Game.choiceWithLastKnown Chosen.Colors (Game.acquisitionOf srcId gs) srcId gs)))
         ActivationRestriction.SpendOnly ManaSpecification.AnyMana -> Nothing
         -- The rest time or count an activation and say nothing of its mana.
         _ -> Nothing
