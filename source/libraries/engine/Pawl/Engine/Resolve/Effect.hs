@@ -8189,7 +8189,8 @@ applyOneEffect runSubgame resolving source controller legal chosen effect = case
                       ActivePlayerEffect.timestamp = ts,
                       ActivePlayerEffect.expiry = expiry,
                       ActivePlayerEffect.scope = scope,
-                      ActivePlayerEffect.effect = bakedEffect
+                      ActivePlayerEffect.effect = bakedEffect,
+                      ActivePlayerEffect.ability = resolvingAbilityName resolving gs
                     }
              in g1 {GameState.playerEffects = active : GameState.playerEffects g1}
        in List.foldl' install gs ((,) <$> armed <*> bakedEffects)

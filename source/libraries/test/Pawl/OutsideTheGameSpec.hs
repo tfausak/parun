@@ -195,7 +195,7 @@ meldedBoard base battlements garrison mountain =
 -- {T} the ability still needs (CR 107.5). Duplicated from Pawl.SetupSpec.
 sparing :: ObjectId.ObjectId -> Prompt.Prompt r -> r
 sparing oid p = case p of
-  Prompt.ChooseManaSource _ _ candidates -> List.find (/= oid) (NonEmpty.toList candidates)
+  Prompt.ChooseManaSource _ _ _ candidates -> List.find (/= oid) (NonEmpty.toList candidates)
   _ -> S.identityAnswer p
 
 spec :: (Monad m, Monad n) => Spec.Spec m n -> Registry.Registry m -> n ()
@@ -765,7 +765,7 @@ spec s registry = Spec.describe s "Pawl.Engine.Event (CR 400.11)" $ do
         -- itself inside the subgame, whose log is its own, and a resolved ability
         -- ceases to exist rather than moving).
         isSpellFinishing e = case e of
-          GameEvent.Moved (Moved.MkMoved zc _ _ _ _ _) -> ZoneChange.from zc == Zone.Stack && ZoneChange.to zc == Zone.Graveyard
+          GameEvent.Moved (Moved.MkMoved zc _ _ _ _ _ _) -> ZoneChange.from zc == Zone.Stack && ZoneChange.to zc == Zone.Graveyard
           _ -> False
         -- CR 729.5's last sentence, read off the one log all three are recorded
         -- in. The chain: Shahrazad's own LoseLife clause runs during resolution,

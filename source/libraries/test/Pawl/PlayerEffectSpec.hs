@@ -2386,7 +2386,8 @@ addPlayerEffectAt source expiry scope effect controller gs =
             ActivePlayerEffect.timestamp = ts,
             ActivePlayerEffect.expiry = expiry,
             ActivePlayerEffect.scope = scope,
-            ActivePlayerEffect.effect = effect
+            ActivePlayerEffect.effect = effect,
+            ActivePlayerEffect.ability = Nothing
           }
    in gs1 {GameState.playerEffects = active : GameState.playerEffects gs1}
 
@@ -2550,7 +2551,7 @@ silenceAfter plains silence mountain prodigalSorcerer piker =
 -- DECLINES a Prompt.ChooseManaSource, leaving a cast unpaid.
 payingAnswer :: Prompt.Prompt r -> r
 payingAnswer p = case p of
-  Prompt.ChooseManaSource _ _ candidates -> Just (NonEmpty.head candidates)
+  Prompt.ChooseManaSource _ _ _ candidates -> Just (NonEmpty.head candidates)
   _ -> S.identityAnswer p
 
 -- payingAnswer with every target slot aimed at `who`, for a Lightning Bolt that

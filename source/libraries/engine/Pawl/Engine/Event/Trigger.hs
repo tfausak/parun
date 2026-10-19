@@ -228,7 +228,7 @@ entryGroup oid gs =
 -- The zone change an event describes, if it is one.
 movedOf :: GameEvent -> Maybe ZoneChange
 movedOf event = case event of
-  GameEvent.Moved (Moved.MkMoved zc _ _ _ _ _) -> Just zc
+  GameEvent.Moved (Moved.MkMoved zc _ _ _ _ _ _) -> Just zc
   -- CR 712.21 / CR 730.3: each component card after the leading one DID change
   -- zones, so the event that announces it answers with its zone change like any
   -- other. That is what puts it in front of the two graveyard candidate sources
@@ -1341,7 +1341,7 @@ eventTriggers events gs =
       -- 113.6m's final sentence reads the CR 603.7 declarations, which the
       -- characteristics carry (PC.delayedAbilities).
       leftBattlefield event = case event of
-        GameEvent.Moved (Moved.MkMoved zc _ _ _ _ _)
+        GameEvent.Moved (Moved.MkMoved zc _ _ _ _ _ _)
           | ZoneChange.from zc == Zone.Battlefield && ZoneChange.to zc /= Zone.Battlefield ->
               case Map.lookup (ZoneChange.departed zc) (GameState.lastKnown gs) of
                 Nothing -> Map.empty
