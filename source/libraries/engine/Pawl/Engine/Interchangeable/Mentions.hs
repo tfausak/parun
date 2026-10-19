@@ -2115,6 +2115,9 @@ operandNames asking x = case x of
   Operand.OfBound bound -> boundMeasureNames asking bound
   Operand.AmountInSlot slot -> slotNames asking slot
   Operand.EnclosingAmount -> contextNames asking
+  -- The other candidates' numbers: two objects alike in every respect read
+  -- each other's, so the answer is the same for both.
+  Operand.OfEachOtherCandidate _measure -> False
 
 optionalityNames :: Asking -> Optionality.Optionality -> Bool
 optionalityNames asking x = case x of

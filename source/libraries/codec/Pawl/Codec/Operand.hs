@@ -17,7 +17,8 @@ codec =
       Arm.payload "Own" Measure.codec Operand.Own (\x -> case x of Operand.Own y -> Just y; _ -> Nothing),
       Arm.payload "OfBound" BoundMeasure.codec Operand.OfBound (\x -> case x of Operand.OfBound y -> Just y; _ -> Nothing),
       Arm.payload "AmountInSlot" SlotName.codec Operand.AmountInSlot (\x -> case x of Operand.AmountInSlot y -> Just y; _ -> Nothing),
-      Arm.nullary "EnclosingAmount" Operand.EnclosingAmount
+      Arm.nullary "EnclosingAmount" Operand.EnclosingAmount,
+      Arm.payload "OfEachOtherCandidate" Measure.codec Operand.OfEachOtherCandidate (\x -> case x of Operand.OfEachOtherCandidate y -> Just y; _ -> Nothing)
     ]
 
 tagOf :: Operand.Operand -> String
@@ -28,3 +29,4 @@ tagOf x = case x of
   Operand.OfBound {} -> "OfBound"
   Operand.AmountInSlot {} -> "AmountInSlot"
   Operand.EnclosingAmount {} -> "EnclosingAmount"
+  Operand.OfEachOtherCandidate {} -> "OfEachOtherCandidate"

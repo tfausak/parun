@@ -1,0 +1,41 @@
+{
+  "description": "CR 608.2d Witch-king, Bringer of Ruin: the defending player sacrifices a creature with the least power among their own",
+  "note": "Witch-king attacks bob, whose Memnite (power 1) is under his Goblin Piker (2) and Hill Giant (3), so the Memnite goes without a prompt. carol's Phyrexian Walker (power 0) is the least on the table but carol is not defending.",
+  "board": {
+    "seats": [
+      {
+        "name": "alice",
+        "battlefield": [
+          { "card": "Witch-king, Bringer of Ruin", "label": "witch-king", "ready": true }
+        ]
+      },
+      {
+        "name": "bob",
+        "battlefield": [
+          { "card": "Hill Giant", "label": "giant" },
+          { "card": "Memnite", "label": "memnite" },
+          { "card": "Goblin Piker", "label": "piker" }
+        ]
+      },
+      {
+        "name": "carol",
+        "battlefield": [
+          { "card": "Phyrexian Walker", "label": "walker" }
+        ]
+      }
+    ],
+    "active": "alice",
+    "step": "BeginningOfCombat"
+  },
+  "timeline": [
+    { "turn": 1, "step": "DeclareAttackers", "player": "alice", "do": { "Attack": ["$witch-king"] } },
+    { "turn": 1, "step": "DeclareAttackers", "player": "alice", "do": { "ChooseAttackTarget": "$bob" } },
+    { "turn": 1, "step": "DeclareAttackers", "player": "alice", "check": { "Attackers": { "attackers": { "$witch-king": "$bob" } } } },
+    { "turn": 1, "step": "DeclareAttackers", "player": "alice", "do": "Pass" },
+    { "turn": 1, "step": "DeclareAttackers", "player": "alice", "check": { "View": { "of": "Zone", "player": "bob", "zone": "Graveyard", "is": ["Memnite"] } } }
+  ],
+  "final": [
+    { "View": { "of": "Zone", "player": "bob", "zone": "Battlefield", "is": ["$giant", "$piker"] } },
+    { "View": { "of": "Zone", "player": "carol", "zone": "Battlefield", "is": ["$walker"] } }
+  ]
+}

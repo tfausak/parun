@@ -1,0 +1,41 @@
+{
+  "description": "CR 101.2 / 609.3 Crackling Doom: bob's greatest creature can't be sacrificed, so he sacrifices none",
+  "note": "bob controls alice's Craw Wurm, which his Garland, Royal Kidnapper makes 8/6 and unsacrificeable. It is still the greatest power among the creatures bob controls, so no other creature is one Crackling Doom names: Garland and the Hill Giant (both power 3) stay, and no prompt is raised (an unscheduled one fails the run).",
+  "board": {
+    "seats": [
+      {
+        "name": "alice",
+        "battlefield": [
+          { "card": "Mountain", "label": "mountain" },
+          { "card": "Plains", "label": "plains" },
+          { "card": "Swamp", "label": "swamp" },
+          { "card": "Craw Wurm", "label": "wurm", "controller": "bob" }
+        ],
+        "hand": [
+          { "card": "Crackling Doom", "label": "doom" }
+        ]
+      },
+      {
+        "name": "bob",
+        "battlefield": [
+          { "card": "Garland, Royal Kidnapper", "label": "garland" },
+          { "card": "Hill Giant", "label": "giant" }
+        ]
+      }
+    ],
+    "active": "alice",
+    "step": "PrecombatMain"
+  },
+  "timeline": [
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "check": { "PowerToughness": { "object": "$wurm", "power": 8, "toughness": 6 } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": { "Cast": { "object": "$doom", "mana": ["$mountain", "$plains", "$swamp"] } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass" },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "check": { "View": { "of": "Stack", "is": [] } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "check": { "View": { "of": "Zone", "player": "bob", "zone": "Graveyard", "is": [] } } }
+  ],
+  "final": [
+    { "View": { "of": "Controller", "object": "$wurm", "is": "bob" } },
+    { "View": { "of": "Zone", "player": "bob", "zone": "Battlefield", "is": ["$garland", "$giant"] } },
+    { "Life": { "player": "bob", "life": 18 } }
+  ]
+}
