@@ -10,6 +10,7 @@ import qualified Data.Foldable as Foldable
 import qualified Data.List.NonEmpty as NonEmpty
 import qualified Data.Map.Strict as Map
 import qualified Data.Maybe as Maybe
+import qualified Data.Monoid as Monoid
 import qualified Data.Sequence as Seq
 import qualified Data.Set as Set
 import qualified Data.Text as Text
@@ -186,173 +187,186 @@ searchZoneSets =
 -- Counted rather than merely detected, because the completeness cross-check below
 -- compares this hand-maintained traversal against the codec's independent one,
 -- and that comparison needs a number.
+canHostSubjects :: Filter.Type.Filter Keyword.Keyword -> Int
+canHostSubjects =
+  Monoid.getSum
+    . filterAtomsOf
+      ( \atom -> case atom of
+          Filter.Type.CanHostSubject -> Monoid.Sum 1
+          _ -> Monoid.Sum 0
+      )
+
+-- Every ATOM inside ONE Filter, each handed to `leaf` and the answers combined:
+-- under And/Or/Not and into every nest a card author can write a Filter into,
+-- the keyword payloads included (CR 702.29e). The typed walk the per-atom lints
+-- share (canHostSubjects, Pawl.AbilitySlotLintSpec's exile-pile names).
 --
 -- Written out exhaustively rather than with a catch-all, so a later atom that can
 -- hold a Filter fails to compile here instead of silently hiding one.
-canHostSubjects :: Filter.Type.Filter Keyword.Keyword -> Int
-canHostSubjects predicate = case predicate of
-  Filter.Type.CanHostSubject -> 1
-  Filter.Type.And fs -> sum (fmap canHostSubjects fs)
-  Filter.Type.Or fs -> sum (fmap canHostSubjects fs)
-  Filter.Type.Not f -> canHostSubjects f
+filterAtomsOf :: (Monoid m) => (Filter.Type.Filter Keyword.Keyword -> m) -> Filter.Type.Filter Keyword.Keyword -> m
+filterAtomsOf leaf predicate = case predicate of
+  Filter.Type.CanHostSubject -> leaf predicate
+  Filter.Type.And fs -> foldMap (filterAtomsOf leaf) fs
+  Filter.Type.Or fs -> foldMap (filterAtomsOf leaf) fs
+  Filter.Type.Not f -> filterAtomsOf leaf f
   -- A Filter position like the combinators above, and the only ATOM that is one:
   -- CR 110.2's comparison carries the description of what is being counted, which
   -- a card author writes exactly as they write any other filter.
-  Filter.Type.ControlsMoreThanYou _ f -> canHostSubjects f
+  Filter.Type.ControlsMoreThanYou _ f -> filterAtomsOf leaf f
   -- CR 702.29e's "[type]cycling" carries a Filter of its own, and any Cost a
   -- keyword names can carry one through a Sacrifice component. Never EVALUATED
   -- against a candidate -- HasKeyword asks whether the key is present in the
   -- projection's keyword map, so what is inside the keyword is compared and not
   -- run -- but still a Filter position a card author can write the atom into,
   -- which is the only thing this lint is about.
-  Filter.Type.HasKeyword keyword -> sum (fmap (canHostSubjects . snd) (keywordFilters keyword))
+  Filter.Type.HasKeyword keyword -> foldMap (filterAtomsOf leaf . snd) (keywordFilters keyword)
   -- CR 122.1b's keyword counter carries a whole Keyword, so a Filter can hide one
   -- level further down than the atom above -- and this lint is about the
   -- positions, not about which of them a card has used.
   Filter.Type.HasCounters kind -> case kind of
-    CounterKind.Keyword keyword -> sum (fmap (canHostSubjects . snd) (keywordFilters keyword))
-    CounterKind.PlusOnePlusOne -> 0
-    CounterKind.MinusOneMinusOne -> 0
-    CounterKind.Loyalty -> 0
-    CounterKind.Lore -> 0
-    CounterKind.Defense -> 0
-    CounterKind.Time -> 0
-    CounterKind.Fade -> 0
-    CounterKind.Age -> 0
-    CounterKind.Shield -> 0
-    CounterKind.Finality -> 0
-    CounterKind.Stun -> 0
-    CounterKind.Level -> 0
-    CounterKind.Hone -> 0
-    CounterKind.UnsafePowerToughness _ _ -> 0
-    CounterKind.Named _ -> 0
-  -- Zero for the reason the FAMILY below is: this atom is payload-free, so there
+    CounterKind.Keyword keyword -> foldMap (filterAtomsOf leaf . snd) (keywordFilters keyword)
+    CounterKind.PlusOnePlusOne -> leaf predicate
+    CounterKind.MinusOneMinusOne -> leaf predicate
+    CounterKind.Loyalty -> leaf predicate
+    CounterKind.Lore -> leaf predicate
+    CounterKind.Defense -> leaf predicate
+    CounterKind.Time -> leaf predicate
+    CounterKind.Fade -> leaf predicate
+    CounterKind.Age -> leaf predicate
+    CounterKind.Shield -> leaf predicate
+    CounterKind.Finality -> leaf predicate
+    CounterKind.Stun -> leaf predicate
+    CounterKind.Level -> leaf predicate
+    CounterKind.Hone -> leaf predicate
+    CounterKind.UnsafePowerToughness _ _ -> leaf predicate
+    CounterKind.Named _ -> leaf predicate
+  -- A leaf for the reason the FAMILY below is: this atom is payload-free, so there
   -- is no Filter position inside it for a card author to reach -- the descent
   -- above exists only because a CounterKind can carry a Keyword.
-  Filter.Type.HasCountersOfAnyKind -> 0
-  Filter.Type.HasSticker _ -> 0
-  Filter.Type.Stickered -> 0
-  -- Zero and not a descent, unlike the atom above: a family is payload-free, so
+  Filter.Type.HasCountersOfAnyKind -> leaf predicate
+  Filter.Type.HasSticker _ -> leaf predicate
+  Filter.Type.Stickered -> leaf predicate
+  -- A leaf and not a descent, unlike the atom above: a family is payload-free, so
   -- there is no Filter position inside it for a card author to reach.
-  Filter.Type.HasKeywordFamily _ -> 0
-  Filter.Type.HasCardType _ -> 0
-  Filter.Type.HasSupertype _ -> 0
-  Filter.Type.HasColor _ -> 0
-  Filter.Type.SharesWithSource _ -> 0
-  Filter.Type.HasSubtype _ -> 0
-  Filter.Type.HasName _ -> 0
-  Filter.Type.NameWordsAtLeast _ -> 0
-  Filter.Type.HasNameOriginallyPrintedIn _ -> 0
-  Filter.Type.Measures _ -> 0
-  Filter.Type.ControlledByDefendingPlayer -> 0
-  -- Zero for ControlledBy's reason: one carries a slot name and the other a
+  Filter.Type.HasKeywordFamily _ -> leaf predicate
+  Filter.Type.HasCardType _ -> leaf predicate
+  Filter.Type.HasSupertype _ -> leaf predicate
+  Filter.Type.HasColor _ -> leaf predicate
+  Filter.Type.SharesWithSource _ -> leaf predicate
+  Filter.Type.HasSubtype _ -> leaf predicate
+  Filter.Type.HasName _ -> leaf predicate
+  Filter.Type.NameWordsAtLeast _ -> leaf predicate
+  Filter.Type.HasNameOriginallyPrintedIn _ -> leaf predicate
+  Filter.Type.Measures _ -> leaf predicate
+  Filter.Type.ControlledByDefendingPlayer -> leaf predicate
+  -- A leaf for ControlledBy's reason: one carries a slot name and the other a
   -- PlayerId, and neither holds a Filter for a card author to reach.
-  Filter.Type.ControlledByBound _ -> 0
-  Filter.Type.ControlledByPlayer _ -> 0
-  -- Zero for the two above's reason: a nullary atom holds no Filter for a card
+  Filter.Type.ControlledByBound _ -> leaf predicate
+  Filter.Type.ControlledByPlayer _ -> leaf predicate
+  -- A leaf for the two above's reason: a nullary atom holds no Filter for a card
   -- author to reach.
-  Filter.Type.ControlledByRecipient -> 0
-  Filter.Type.ManaValueIsEven -> 0
-  Filter.Type.ControlledBy _ -> 0
-  -- Zero for ControlledBy's reason: CR 108.3's owner atom carries a
+  Filter.Type.ControlledByRecipient -> leaf predicate
+  Filter.Type.ManaValueIsEven -> leaf predicate
+  Filter.Type.ControlledBy _ -> leaf predicate
+  -- A leaf for ControlledBy's reason: CR 108.3's owner atom carries a
   -- PlayerRelation, which holds no Filter for a card author to reach.
-  Filter.Type.OwnedBy _ -> 0
-  Filter.Type.OwnedByRecipient -> 0
-  Filter.Type.IsSource -> 0
-  Filter.Type.IsObject _ -> 0
-  Filter.Type.TargetsSource -> 0
-  Filter.Type.HasSingleTarget -> 0
-  -- A DESCENT and not a zero, for AttachedTo's reason below: CR 115.1's atom
+  Filter.Type.OwnedBy _ -> leaf predicate
+  Filter.Type.OwnedByRecipient -> leaf predicate
+  Filter.Type.IsSource -> leaf predicate
+  Filter.Type.IsObject _ -> leaf predicate
+  Filter.Type.TargetsSource -> leaf predicate
+  Filter.Type.HasSingleTarget -> leaf predicate
+  -- A DESCENT and not a leaf, for AttachedTo's reason below: CR 115.1's atom
   -- carries the one target's description, a Filter position a card author
   -- writes into like any other.
-  Filter.Type.TargetsOnlyOne f -> canHostSubjects f
-  Filter.Type.TargetsMatching f -> canHostSubjects f
-  Filter.Type.TargetsPlayer _ -> 0
-  Filter.Type.IsPlayer _ -> 0
-  Filter.Type.IsBound _ -> 0
-  Filter.Type.IsTarget -> 0
-  Filter.Type.SameNameAsBound _ -> 0
-  Filter.Type.SameControllerAsBound _ -> 0
-  Filter.Type.SameControllerAsHostOfBound _ -> 0
-  Filter.Type.SharesCreatureTypeWithBound _ -> 0
-  Filter.Type.HasChosenName {} -> 0
-  Filter.Type.HasChosenColor -> 0
-  Filter.Type.HasChosenSubtype -> 0
-  Filter.Type.IsExiledWithSource _ -> 0
-  Filter.Type.IsLastExiledWithSource -> 0
-  Filter.Type.OfChosenPlayer -> 0
-  Filter.Type.OfRelatedPlayer _ -> 0
-  Filter.Type.IsControllerOfBound _ -> 0
-  -- Zero for the nullary atoms' reason, a payload over: CR 400.1's card count is
+  Filter.Type.TargetsOnlyOne f -> filterAtomsOf leaf f
+  Filter.Type.TargetsMatching f -> filterAtomsOf leaf f
+  Filter.Type.TargetsPlayer _ -> leaf predicate
+  Filter.Type.IsPlayer _ -> leaf predicate
+  Filter.Type.IsBound _ -> leaf predicate
+  Filter.Type.IsTarget -> leaf predicate
+  Filter.Type.SameNameAsBound _ -> leaf predicate
+  Filter.Type.SameControllerAsBound _ -> leaf predicate
+  Filter.Type.SameControllerAsHostOfBound _ -> leaf predicate
+  Filter.Type.SharesCreatureTypeWithBound _ -> leaf predicate
+  Filter.Type.HasChosenName {} -> leaf predicate
+  Filter.Type.HasChosenColor -> leaf predicate
+  Filter.Type.HasChosenSubtype -> leaf predicate
+  Filter.Type.IsExiledWithSource _ -> leaf predicate
+  Filter.Type.IsLastExiledWithSource -> leaf predicate
+  Filter.Type.OfChosenPlayer -> leaf predicate
+  Filter.Type.OfRelatedPlayer _ -> leaf predicate
+  Filter.Type.IsControllerOfBound _ -> leaf predicate
+  -- A leaf for the nullary atoms' reason, a payload over: CR 400.1's card count is
   -- a Natural, which holds no Filter for a card author to reach.
-  Filter.Type.CardsInGraveyardAtLeast _ -> 0
-  Filter.Type.IsAttacking -> 0
-  Filter.Type.IsAttackingPlayer _ -> 0
-  Filter.Type.IsAttackingPlaneswalker _ -> 0
-  Filter.Type.IsAttackingBattle _ -> 0
-  Filter.Type.DeclaredAttackedThisCombat -> 0
-  Filter.Type.IsBlocking -> 0
-  Filter.Type.HasBlockStatus _ -> 0
-  Filter.Type.AttackedThisTurn -> 0
-  Filter.Type.DeclaredAttackerThisCombat -> 0
-  Filter.Type.DeclaredBlockerThisCombat -> 0
-  Filter.Type.MilledThisTurn -> 0
-  Filter.Type.CantCrewVehicles -> 0
-  Filter.Type.DealtDamageThisTurn -> 0
-  Filter.Type.DealtDamageToThisTurn _ -> 0
-  Filter.Type.EnteredThisTurn -> 0
-  Filter.Type.CrewedSourceThisTurn -> 0
-  Filter.Type.ConvokedSourceThisTurn -> 0
-  Filter.Type.SaddledSourceThisTurn -> 0
-  Filter.Type.ControlledSinceTurnBegan -> 0
-  -- A DESCENT and not a zero, unlike every other atom here: CR 303.4's atom
+  Filter.Type.CardsInGraveyardAtLeast _ -> leaf predicate
+  Filter.Type.IsAttacking -> leaf predicate
+  Filter.Type.IsAttackingPlayer _ -> leaf predicate
+  Filter.Type.IsAttackingPlaneswalker _ -> leaf predicate
+  Filter.Type.IsAttackingBattle _ -> leaf predicate
+  Filter.Type.DeclaredAttackedThisCombat -> leaf predicate
+  Filter.Type.IsBlocking -> leaf predicate
+  Filter.Type.HasBlockStatus _ -> leaf predicate
+  Filter.Type.AttackedThisTurn -> leaf predicate
+  Filter.Type.DeclaredAttackerThisCombat -> leaf predicate
+  Filter.Type.DeclaredBlockerThisCombat -> leaf predicate
+  Filter.Type.MilledThisTurn -> leaf predicate
+  Filter.Type.CantCrewVehicles -> leaf predicate
+  Filter.Type.DealtDamageThisTurn -> leaf predicate
+  Filter.Type.DealtDamageToThisTurn _ -> leaf predicate
+  Filter.Type.EnteredThisTurn -> leaf predicate
+  Filter.Type.CrewedSourceThisTurn -> leaf predicate
+  Filter.Type.ConvokedSourceThisTurn -> leaf predicate
+  Filter.Type.SaddledSourceThisTurn -> leaf predicate
+  Filter.Type.ControlledSinceTurnBegan -> leaf predicate
+  -- A DESCENT and not a leaf, unlike every other atom here: CR 303.4's atom
   -- carries the host's description, which a card author writes exactly as they
-  -- write any other filter. Zero would under-count against jsonAtoms, which counts
+  -- write any other filter. A leaf would under-count against jsonAtoms, which counts
   -- the tag at any depth, and turn a legitimate card into a reported offence.
-  Filter.Type.AttachedTo f -> canHostSubjects f
+  Filter.Type.AttachedTo f -> filterAtomsOf leaf f
   -- A DESCENT for the atom above's reason, the nest describing the ATTACHER: CR
   -- 303.4b's atom is a Filter position a card author writes into like any other.
-  Filter.Type.HasAttached f -> canHostSubjects f
-  Filter.Type.IsAttachedToSource -> 0
-  Filter.Type.IsAttachedToEvaluated -> 0
-  Filter.Type.IsHostOfSource -> 0
-  Filter.Type.EnteredWithSource -> 0
-  Filter.Type.AttachedNoLaterThanSource -> 0
-  -- Zero: the MIRROR atom is not this one, and its own lint counts it through the
+  Filter.Type.HasAttached f -> filterAtomsOf leaf f
+  Filter.Type.IsAttachedToSource -> leaf predicate
+  Filter.Type.IsAttachedToEvaluated -> leaf predicate
+  Filter.Type.IsHostOfSource -> leaf predicate
+  Filter.Type.EnteredWithSource -> leaf predicate
+  Filter.Type.AttachedNoLaterThanSource -> leaf predicate
+  -- A leaf: the MIRROR atom is not this one, and its own lint counts it through the
   -- codec (canAttachToSubjectCounts) rather than through this recursion.
-  Filter.Type.CanAttachToSubject -> 0
-  -- Zero for the atom above's reason: CR 205.2a's read of the subject's host is
+  Filter.Type.CanAttachToSubject -> leaf predicate
+  -- A leaf for the atom above's reason: CR 205.2a's read of the subject's host is
   -- a different atom with a lint of its own (hostOfSubjectCardTypeCounts), even
   -- though it is admitted in exactly the positions this one counts.
-  Filter.Type.HostOfSubjectHasCardType _ -> 0
-  Filter.Type.IsCommander -> 0
-  Filter.Type.IsToken -> 0
-  Filter.Type.IsActivatedAbility -> 0
-  Filter.Type.IsAbility -> 0
-  Filter.Type.IsEmblem -> 0
+  Filter.Type.HostOfSubjectHasCardType _ -> leaf predicate
+  Filter.Type.IsCommander -> leaf predicate
+  Filter.Type.IsToken -> leaf predicate
+  Filter.Type.IsActivatedAbility -> leaf predicate
+  Filter.Type.IsAbility -> leaf predicate
+  Filter.Type.IsEmblem -> leaf predicate
   -- A DESCENT for RepresentedByCard's reason below, the nest describing the
   -- ability's SOURCE.
-  Filter.Type.FromSource f -> canHostSubjects f
-  Filter.Type.IsTapped -> 0
-  Filter.Type.IsFaceDown -> 0
+  Filter.Type.FromSource f -> filterAtomsOf leaf f
+  Filter.Type.IsTapped -> leaf predicate
+  Filter.Type.IsFaceDown -> leaf predicate
   -- A DESCENT for AttachedTo's reason, the nest describing the CARD representing
   -- the candidate: CR 708.12's atom is a Filter position a card author writes
   -- into like any other.
-  Filter.Type.RepresentedByCard f -> canHostSubjects f
-  Filter.Type.IsExiledFaceDown -> 0
-  Filter.Type.Transformed -> 0
-  Filter.Type.HasNonManaActivatedAbility -> 0
-  Filter.Type.HasActivatedAbility -> 0
-  Filter.Type.IsInZone _ -> 0
-  Filter.Type.WasCastFrom _ -> 0
-  Filter.Type.TagWasSpent _ -> 0
-  Filter.Type.Paid _ -> 0
-  Filter.Type.IsPrototyped -> 0
-  Filter.Type.IsRingBearer -> 0
-  Filter.Type.IsPaired -> 0
-  Filter.Type.IsPairedWithSource -> 0
-  Filter.Type.IsBlockedBySource -> 0
-  Filter.Type.HasDesignation _ -> 0
+  Filter.Type.RepresentedByCard f -> filterAtomsOf leaf f
+  Filter.Type.IsExiledFaceDown -> leaf predicate
+  Filter.Type.Transformed -> leaf predicate
+  Filter.Type.HasNonManaActivatedAbility -> leaf predicate
+  Filter.Type.HasActivatedAbility -> leaf predicate
+  Filter.Type.IsInZone _ -> leaf predicate
+  Filter.Type.WasCastFrom _ -> leaf predicate
+  Filter.Type.TagWasSpent _ -> leaf predicate
+  Filter.Type.Paid _ -> leaf predicate
+  Filter.Type.IsPrototyped -> leaf predicate
+  Filter.Type.IsRingBearer -> leaf predicate
+  Filter.Type.IsPaired -> leaf predicate
+  Filter.Type.IsPairedWithSource -> leaf predicate
+  Filter.Type.IsBlockedBySource -> leaf predicate
+  Filter.Type.HasDesignation _ -> leaf predicate
 
 -- Does this position's evaluator frame its context by the SOURCE, through
 -- Pawl.Engine.SourceContext? Those are the positions that answer every

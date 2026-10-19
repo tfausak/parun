@@ -30,7 +30,7 @@ import qualified Data.Maybe as Maybe
 import qualified Data.Sequence as Seq
 import qualified Data.Set as Set
 import qualified Data.Text as Text
-import Pawl.CardSpec (anyFace, anyFaceOrMinted, cardAuthoredEffects, cardCounts, cardResolutionEffects, collectsEvidenceAsCost, createToken, declaresVariable, delayedDeclarations, effectCounts, effectWithNested, grantedActivatedAbilities, grantedTriggeredAbilities, instantLine, lintMode, mintingSpell, modalActivated, modalSlotsOffend, oneEffectActivated, oneEffectTrigger, payGateBound, removesCountersAsCost, sacrificesAsCost, spellCostsOf, triggerConditionSlots, vanillaFace, waterbendsAsCost, withMinted)
+import Pawl.CardSpec (anyFace, anyFaceOrMinted, cardAuthoredEffects, cardCounts, cardFilters, cardResolutionEffects, collectsEvidenceAsCost, createToken, declaresVariable, delayedDeclarations, effectCounts, effectWithNested, grantedActivatedAbilities, grantedTriggeredAbilities, instantLine, lintMode, mintingSpell, modalActivated, modalSlotsOffend, oneEffectActivated, oneEffectTrigger, payGateBound, removesCountersAsCost, sacrificesAsCost, spellCostsOf, triggerConditionSlots, vanillaFace, waterbendsAsCost, withMinted)
 import qualified Pawl.Engine.Binding as Binding
 import qualified Pawl.Engine.Card as Card
 import qualified Pawl.Engine.Engine as Engine
@@ -43,12 +43,16 @@ import qualified Pawl.Engine.Modal as Modal
 import qualified Pawl.Engine.Resolve as Resolve
 import qualified Pawl.Engine.Resolve.Slots as Resolve
 import qualified Pawl.Engine.RuleAbilities as RuleAbilities.Engine
+import Pawl.FilterPositionLintSpec (filterAtomsOf)
 import qualified Pawl.Registry as Registry
 import qualified Pawl.Spec as Spec
 import qualified Pawl.Support as S
 import qualified Pawl.Types.AbilityName as AbilityName
 import qualified Pawl.Types.ActivatedAbility as ActivatedAbility
 import qualified Pawl.Types.ActivationProhibition as ActivationProhibition
+import qualified Pawl.Types.AffectPlayers as AffectPlayers
+import qualified Pawl.Types.AffectedPlayers as AffectedPlayers
+import qualified Pawl.Types.AgainstExiledPile as AgainstExiledPile
 import qualified Pawl.Types.AgainstSlot as AgainstSlot
 import qualified Pawl.Types.Aggregation as Aggregation
 import qualified Pawl.Types.Arithmetic as Arithmetic
@@ -57,6 +61,7 @@ import qualified Pawl.Types.AttachAll as AttachAll
 import qualified Pawl.Types.BoundMeasure as BoundMeasure
 import qualified Pawl.Types.Card as Card.Type
 import qualified Pawl.Types.CardType as CardType
+import qualified Pawl.Types.CastFromZone as CastFromZone
 import qualified Pawl.Types.Chooser as Chooser
 import qualified Pawl.Types.ChosenCardInGraveyard as ChosenCardInGraveyard
 import qualified Pawl.Types.Clause as Clause
@@ -72,7 +77,7 @@ import qualified Pawl.Types.CountedDiscard as CountedDiscard
 import qualified Pawl.Types.CounterKind as CounterKind
 import qualified Pawl.Types.Discard as Discard
 import qualified Pawl.Types.Draw as Draw
-import qualified Pawl.Types.EachCardInExiledPile as EachCardInExiledPile
+import qualified Pawl.Types.Duration as Duration
 import qualified Pawl.Types.Effect as Effect
 import qualified Pawl.Types.EntryRiders as EntryRiders
 import qualified Pawl.Types.ExiledPile as ExiledPile
@@ -102,9 +107,14 @@ import qualified Pawl.Types.Optionality as Optionality
 import qualified Pawl.Types.PayBranch as PayBranch
 import qualified Pawl.Types.PayGate as PayGate
 import qualified Pawl.Types.PayObligation as PayObligation
+import qualified Pawl.Types.PermissionLimit as PermissionLimit
+import qualified Pawl.Types.PermissionPool as PermissionPool
+import qualified Pawl.Types.PermissionVerb as PermissionVerb
 import qualified Pawl.Types.Phase as Phase
+import qualified Pawl.Types.PlayerEffect as PlayerEffect
 import qualified Pawl.Types.PlayerRef as PlayerRef
 import qualified Pawl.Types.PlayerRelation as PlayerRelation
+import qualified Pawl.Types.PlayerSacrifices as PlayerSacrifices
 import qualified Pawl.Types.PlayerScope as PlayerScope
 import qualified Pawl.Types.PlayerStaticAbility as PlayerStaticAbility
 import qualified Pawl.Types.Plus as Plus
@@ -671,10 +681,11 @@ abilitySlotLintSpec s registry = Spec.describe s "Lint" $ do
   -- Per FACE, because the name is written on one face's ability and read by that
   -- same face's text -- so two faces may reuse a name without colliding.
   --
-  -- CR 607.2a's ObjectRef.EachCardInExiledPile, over ExiledPile.OfAbility, is the name's third reader,
-  -- and joins the same namespace: a reference naming no exiling ability of its
-  -- face would read an empty pile. It must name an ACTIVATED ability, the one
-  -- carrier Pawl.Engine.Resolve.Slots.resolvingAbilityName files a name for.
+  -- CR 607.2a's ExiledPile.OfAbility is the name's third reader, wherever a pile
+  -- is written (namedExileReferences), and joins the same namespace: a
+  -- reference naming no exiling ability of its face would read an empty pile.
+  -- It must name an ACTIVATED ability, the one carrier
+  -- Pawl.Engine.Resolve.Slots.resolvingAbilityName files a name for.
   --
   -- A removal may name any carrier, the rule and player abilities CR 116.2d's
   -- ignore names included (Synthetic Grounded Sentry, Synthetic Hushed Warden),
@@ -682,14 +693,29 @@ abilitySlotLintSpec s registry = Spec.describe s "Lint" $ do
   -- removal, an exile reference or an ignore reads it.
   Spec.it s "CR 613.1f/607.2a every named removal or exile reference names an ability its face declares, and every named ability is read" $ do
     ps <- S.allPrintings s
-    let faceOffends face =
-          let declared = Set.union (declaredAbilityNames face) (declaredIgnorableAbilityNames face)
-              readNames = Set.unions [namedRemovals face, namedExileReferences face, ignoredAbilityNames face]
-           in not (Set.isSubsetOf (Set.union (namedRemovals face) (namedExileReferences face)) declared)
-                || declared /= readNames
-                || not (Set.isSubsetOf (namedExileReferences face) (Set.fromList (Maybe.mapMaybe ActivatedAbility.name (Face.activatedAbilities face))))
-        offenders = filter (anyFace faceOffends . Printing.card) ps
+    let offenders = filter (anyFace abilityNameOffends . Printing.card) ps
     Spec.assertEqWith s "no dangling or unused ability names" (fmap (S.nameOf . Printing.card) offenders) []
+  -- The case above's exile half in every position a pile can be written --
+  -- a Quantity, a Filter and a CR 601.3 permission pool -- on a fixture whose
+  -- one activated ability is named "warden". Each pile naming "warden" is
+  -- accepted and the same pile naming "nobody" rejected, a pair differing in
+  -- the name alone, so no position is silently unread.
+  Spec.it s "CR 607.2a a named exile pile is read in a quantity, a filter and a permission pool" $ do
+    let named n = AbilityName.MkAbilityName (Text.pack n)
+        pileOf n = ExiledPile.OfAbility (named n)
+        you = PlayerRef.Relative PlayerRelation.You
+        positions =
+          [ ("quantity", \n -> Effect.Draw (Draw.MkDraw you (Quantity.Type.AgainstExiledPile (AgainstExiledPile.MkAgainstExiledPile (pileOf n) (Quantity.Type.Literal 1))) Nothing)),
+            ("filter", \n -> Effect.PlayerSacrifices (PlayerSacrifices.MkPlayerSacrifices you (Filter.Type.IsExiledWithSource (pileOf n)) (Quantity.Type.Literal 1))),
+            ("permission pool", \n -> Effect.AffectPlayers (AffectPlayers.MkAffectPlayers Duration.UntilEndOfTurn (AffectedPlayers.Scoped (PlayerScope.Related PlayerRelation.You)) (PlayerEffect.CastFrom (CastFromZone.MkCastFromZone (InZone.MkInZone Zone.Exile (PlayerRef.Relative PlayerRelation.AnyPlayer)) (Filter.Type.And []) PermissionLimit.Unlimited PermissionVerb.Cast (PermissionPool.InExiledPile (pileOf n)) [] 0))))
+          ]
+        fixture effect = (vanillaFace "Synthetic Dangling Pile" instantLine) {Face.activatedAbilities = [(oneEffectActivated Nothing effect) {ActivatedAbility.name = Just (named "warden")}]}
+        verdict (label, plant) = (label, abilityNameOffends (fixture (plant "warden")), abilityNameOffends (fixture (plant "nobody")))
+    Spec.assertEqWith
+      s
+      "each position's own name is accepted and a dangling one rejected"
+      (fmap verdict positions)
+      (fmap (\(label, _) -> (label, False, True)) positions)
   -- CR 116.2d's join, the same shape one rule over: an ignore naming an ability
   -- its face does not declare as ignorable is a payment that suppresses
   -- nothing. Whether every named ability is read is the case above's question,
@@ -1545,14 +1571,30 @@ namedRemovals face =
             <> concatMap removals (concatMap stored (cardAuthoredEffects face))
         )
 
+-- CR 613.1f / 607.2a / 116.2d: does a face name an ability it does not
+-- declare, declare one nothing reads, or name a non-activated one as an exile
+-- pile? The case "every named removal or exile reference names an ability its
+-- face declares" asks it of every printing.
+abilityNameOffends :: Face.Face Card.Type.Card -> Bool
+abilityNameOffends face =
+  let declared = Set.union (declaredAbilityNames face) (declaredIgnorableAbilityNames face)
+      readNames = Set.unions [namedRemovals face, namedExileReferences face, ignoredAbilityNames face]
+   in not (Set.isSubsetOf (Set.union (namedRemovals face) (namedExileReferences face)) declared)
+        || declared /= readNames
+        || not (Set.isSubsetOf (namedExileReferences face) (Set.fromList (Maybe.mapMaybe ActivatedAbility.name (Face.activatedAbilities face))))
+
 -- Every AbilityName a face's CR 607.2a references name: the exiling ability
--- each EachCardInExiledPile's OfAbility pile reads.
+-- each OfAbility pile reads, wherever one is written. Pawl.CardSpec.cardFilters
+-- lists every pile -- an ObjectRef's, a Quantity's, a permission pool's, a
+-- copy domain's, an acquired-abilities grant's -- as the IsExiledWithSource
+-- atom naming the same cards, so the typed fold over its filters
+-- (Pawl.FilterPositionLintSpec.filterAtomsOf) finds each.
 namedExileReferences :: Face.Face Card.Type.Card -> Set.Set AbilityName.AbilityName
 namedExileReferences face =
-  let named ref = case ref of
-        ObjectRef.EachCardInExiledPile (EachCardInExiledPile.MkEachCardInExiledPile (ExiledPile.OfAbility name) _) -> [name]
+  let named atom = case atom of
+        Filter.Type.IsExiledWithSource (ExiledPile.OfAbility name) -> [name]
         _ -> []
-   in Set.fromList (concatMap named (concatMap Resolve.effectObjectRefs (cardAuthoredEffects face)))
+   in Set.fromList (concatMap (filterAtomsOf named . snd) (cardFilters face))
 
 -- Every AbilityName a face declares FOR A LAYER-6 REMOVAL OR AN EXILE REFERENCE
 -- to name -- the other side of the join above. Every carrier of one: an
