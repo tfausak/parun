@@ -1,0 +1,49 @@
+{
+  "description": "CR 603.12 an empty mill after a face-down card left exile arms no reflexive",
+  "note": "Synthetic Communal Toll: \"When this enters, for each opponent, that player mills a card. When they do, you gain 1 life.\" Both opponents' libraries are empty, so nothing is milled and the reflexive must never arm. First Extract Power exiles alice's Forest face down, which CR 406.4 files in a pile, and she plays it from exile as a land, a move no instruction makes, so the pile's bookkeeping outlives the card's stay in exile; pruning it is not the mill happening. Life is read at the end step, so a reflexive that armed would have resolved by then.",
+  "board": {
+    "seats": [
+      {
+        "name": "alice",
+        "battlefield": [
+          { "card": "Island", "label": "island" },
+          { "card": "Island", "label": "island-2" },
+          { "card": "Island", "label": "island-3" },
+          { "card": "Island", "label": "island-4" },
+          { "card": "Island", "label": "island-5" },
+          { "card": "Island", "label": "island-6" },
+          { "card": "Island", "label": "island-7" },
+          { "card": "Island", "label": "island-8" }
+        ],
+        "hand": [
+          { "card": "Extract Power", "label": "extract" },
+          { "card": "Synthetic Communal Toll", "label": "toll" }
+        ],
+        "library": [
+          { "card": "Forest" }
+        ]
+      },
+      {
+        "name": "bob"
+      },
+      {
+        "name": "carol"
+      }
+    ],
+    "active": "alice",
+    "step": "PrecombatMain"
+  },
+  "timeline": [
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": { "Cast": { "object": "$extract", "mana": ["$island", "$island-2", "$island-3", "$island-4", "$island-5", "$island-6", null] } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass" },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "check": { "Count": { "player": "alice", "zone": "Exile", "card": "Forest", "count": 1 } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": { "PlayLand": "Forest" } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "check": { "Count": { "player": "alice", "zone": "Exile", "card": "Forest", "count": 0 } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "check": { "Count": { "player": "alice", "zone": "Battlefield", "card": "Forest", "count": 1 } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": { "Cast": { "object": "$toll", "mana": ["$island-7", "$island-8", null] } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass" },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "check": { "Count": { "player": "alice", "zone": "Battlefield", "card": "Synthetic Communal Toll", "count": 1 } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass" },
+    { "turn": 1, "step": "EndStep", "player": "alice", "check": { "Life": { "player": "alice", "life": 20 } } }
+  ]
+}
