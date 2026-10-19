@@ -8867,6 +8867,15 @@ merge sid target side = do
               let plain pc = pc {PC.flipped = Nothing}
                in if plain down == plain up then plain up else (plain up) {PC.flipped = Just (plain down)}
             (resulting, resultingTurned) = readings unrowed
+            -- CR 701.20a: the reading a reveal of the face-down pile shows,
+            -- each side under no copy effect -- the permanent's stamp left
+            -- out, and a merged permanent's own shown reading in place of its
+            -- merge (Binding.withoutCopyEffect). A copy effect changes the
+            -- permanent and never its cards, so the reading carries none.
+            -- data/scenarios/visibility's "Hauntwoods Shrieker reveals a pile
+            -- mutated under a Clone as the Clone" proves it.
+            uncopied o = o {Object.bindings = Binding.withoutCopyEffect (Object.bindings o)}
+            shown = fst (readings unrowed {GameState.objects = Map.adjust uncopied target (GameState.objects unrowed)})
             -- CR 613.7 / 611.2a: a stored copy row covering the permanent is
             -- earlier than the merge, so while it lasts the merge applies OVER
             -- it, and once it ends over the stamp above. Each row keeps its own
@@ -8912,7 +8921,7 @@ merge sid target side = do
                                 { Object.source = Source.OfMerge merged,
                                   Object.face = Nothing,
                                   Object.facing = facing,
-                                  Object.bindings = Binding.setMergeCopy resulting resultingTurned (Object.bindings o),
+                                  Object.bindings = Binding.setMergeCopy resulting resultingTurned shown (Object.bindings o),
                                   Object.stickers = Seq.sortOn StickerPlacement.timestamp (Object.stickers o <> Object.stickers spell)
                                 }
                           )
