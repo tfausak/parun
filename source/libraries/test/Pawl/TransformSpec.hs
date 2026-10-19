@@ -1712,8 +1712,8 @@ moreThanMeetsTheEyeSpec s registry = Spec.describe s "MoreThanMeetsTheEye" $ do
 -- THE PAIR IS TWO MOMENTS OF ONE BOARD rather than two boards: the suspect loses
 -- rule 701.60c's ability to a Humility younger than it, and gets it back when the
 -- transform restamps it past that Humility. Nothing else differs, so the flip is
--- the stamp's doing alone. Pawl.CombatSpec's SuspectedAbilityRemoval group is
--- where the "before" reading is proved on its own.
+-- the stamp's doing alone. The cr-613-7 Humility scenario pair in
+-- data/scenarios/combat is where the "before" reading is proved on its own.
 --
 -- The second Goblin Piker is the anti-vacuity leg: it stands beside the suspect,
 -- was never suspected, and is no Human for Moonmist to turn over, so a board on
@@ -1761,10 +1761,10 @@ suspectedRangerBoard piker ranger humility forest =
    in (declared, suspect, other, attacker)
 
 -- CR 701.60b's designation, written straight onto the permanent -- a FIXTURE.
--- The road that sets it is Reasonable Doubt's, and Pawl.CombatSpec's
--- SuspectedAbilityRemoval group proves it; what this file needs is only that the
--- designation outlives a transform and carries the permanent's own timestamp into
--- layer 6.
+-- The road that sets it is Reasonable Doubt's, and the cr-613-7
+-- Humility scenario pair in data/scenarios/combat proves it; what this file
+-- needs is only that the designation outlives a transform and carries the
+-- permanent's own timestamp into layer 6.
 suspecting :: ObjectId.ObjectId -> GameState.GameState -> GameState.GameState
 suspecting oid gs =
   gs

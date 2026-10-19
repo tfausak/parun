@@ -406,6 +406,8 @@ endsAt gs moment source expiry = case expiry of
   -- CR 500.8: the FIRST combat phase of that turn to end ends it, so an added
   -- combat phase after it finds nothing left. A turn with no combat phase takes
   -- it at cleanup rather than handing it to a later turn of theirs.
+  -- docs/decisions.md, "Which combat phase ends a duration until combat on
+  -- your next turn".
   Expiry.AtEndOfCombatOn afterTurn ->
     namedTurnEnds (EndOf PhaseSelector.CombatPhase) afterTurn || namedTurnEnds Cleanup afterTurn
   -- CR 116.2c: only a payment ends this, and CR 800.4m does not reach it -- the

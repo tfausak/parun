@@ -3078,6 +3078,8 @@ objectRefObjects legal resolving controller source gs ref = case ref of
   -- CR 702.99b's relation, the arm above's shape over GameState.encoded. Keyed
   -- on the source's id alone, so a trigger whose creature has since left still
   -- finds the card; no Gatherer ruling on cipher covers that case.
+  -- docs/decisions.md, "Whether a cipher trigger finds its card after the
+  -- creature leaves".
   ObjectRef.EachCardEncodedOnSource mFilter ->
     let context = effectContext gs resolving controller source legal (slotBindings resolving gs)
         viewOf = Projection.viewsOf gs

@@ -139,6 +139,7 @@ crown pid gs =
 -- rejected reading is the literal one, where an ineligible active player blocks
 -- sentence 1, fails sentence 2's departure condition and leaves the crown
 -- unmoved -- which makes sentence 3 unreachable.
+-- docs/decisions.md, "Whether an ineligible active player takes the crown".
 --
 -- The write, the CR 725.1 event record and the exile watches are ONE step,
 -- because this crowns through `crown` -- for the reason

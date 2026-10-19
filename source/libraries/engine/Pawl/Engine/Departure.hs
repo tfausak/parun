@@ -371,6 +371,8 @@ objectsLeaveWith pid gs =
 -- untouched as the backstop for an entry that names a departed player for some
 -- other reason (CR 800.4i's last known information, an instruction directed at
 -- that player), which is where Event.createTokens' guard still stands.
+-- docs/decisions.md, "Whether a player leaving ends a control-on-entry
+-- replacement".
 --
 -- Control has a FOURTH source that is deliberately absent from that list: a
 -- layer-2 control-granting STATIC ability (Control Magic's

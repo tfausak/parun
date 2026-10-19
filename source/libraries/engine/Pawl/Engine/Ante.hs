@@ -55,7 +55,8 @@ ownershipChanges gs =
 -- included, so the team decides which of them takes each card, asked card by
 -- card and elided for a team of one. CR 805.2 gives a team's choice to its
 -- primary player; without the shared team turns option no rule names who
--- speaks for a team, and its first seat still playing does. The scenario
+-- speaks for a team, and its first seat still playing does (docs/decisions.md,
+-- "Who on a winning team takes the ante"). The scenario
 -- "CR 407.2 / 104.2c the winning team's primary player shares out the ante"
 -- proves it.
 payOut :: Game ()

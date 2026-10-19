@@ -2552,7 +2552,9 @@ castSpellWith perform timed offered applied widened pid oid name facing = Event.
       --
       -- Nothing means the id was unknown or the CR 616.1 replacement loop
       -- cancelled the move, and a proposal whose first step did not happen is
-      -- one the game returns from (CR 601.2).
+      -- one the game returns from (CR 601.2). A redirect that lands the card
+      -- elsewhere is not Nothing, and the cast runs on: docs/decisions.md,
+      -- "Whether a cast redirected off the stack is still a cast".
       --
       -- CR 708.4 is the same claim about the other status: the object is turned
       -- face down BEFORE it is put onto the stack, so the move carries the

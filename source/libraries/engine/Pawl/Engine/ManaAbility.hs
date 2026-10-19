@@ -844,7 +844,8 @@ movesLibraryCard effect = case effect of
   --
   -- Unproven either way: no printing conjures inside an ability that could add
   -- mana, so no board tells the two answers apart. A regression fence, not a
-  -- test-backed behaviour.
+  -- test-backed behaviour. docs/decisions.md, "Whether conjuring into a
+  -- library is a library move for a mana ability".
   Effect.Conjure (Conjure.MkConjure _ _ _ destination _) -> case destination of
     ConjureDestination.Hand -> False
     ConjureDestination.Library _ -> True

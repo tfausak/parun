@@ -972,6 +972,7 @@ placeObject pid mkObj dest position = do
 --
 -- Not routed through Event.changeZone for that shared reason: a zone change
 -- would announce a departure from a zone the card was never in.
+-- docs/decisions.md, "Whether conjuring a card is a zone change".
 --
 -- The MATERIALIZATION only. A battlefield destination is an entry as well, and
 -- CR 616.1's loop and the CR 603.6a scan run after this rather than inside it --
@@ -1264,6 +1265,7 @@ createEmblem pid card = do
 -- object IS -- an object's copiable values would then have to be recomputed from
 -- its printing at every frame boundary, which no rule asks for -- and it makes
 -- the wish able to name a card by a face the rules say the object does not have.
+-- docs/decisions.md, "How a subgame's wish sees a face-down main-game object".
 --
 -- Reading it leaks nothing CR 708.5 protects, and less than the printed face
 -- did: what the filter is matched against is CR 708.2a's public 2/2, and every
@@ -4677,6 +4679,8 @@ copiedSnapshotWithLastKnown oid gs = case Game.lastKnownOf oid gs of
 -- speaks only to the ORDER the two events' effects are chosen in, not to which
 -- board each collects from. That a contained event keeps its own footing is this
 -- engine's reading, resting on CR 614.12; no rule states it outright.
+-- docs/decisions.md, "Which board an entry inside a batch collects replacement
+-- effects from".
 runEntry :: Set ObjectId -> ObjectId -> Game (Maybe EntryRefusal.EntryRefusal)
 runEntry given oid = do
   -- CR 608.2f / 614.12: inside one action (`together`), what an EARLIER call
@@ -7514,6 +7518,7 @@ rewatch oldId newId row = case ActiveReplacement.effect row of
 -- THIRD difference from carryOver beside it, which names the head alone because
 -- CR 400.7a's exception is about the permanent a SPELL becomes and a spell melds
 -- into nothing. Pawl.MeldSpec's departure case is the proof.
+-- docs/decisions.md, "How perpetual effects follow a meld".
 --
 -- meld calls this too, one component at a time -- the same shape read backwards,
 -- two departures with one arrival each. Its own comment has the reason.
