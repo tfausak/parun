@@ -39,7 +39,8 @@ Entries are ordered by the first rule each cites.
 - **Rejected**: Making it a token, on CR 111.13 and 707.10f's unconditional
   "as it resolves".
 - **Site**: `Pawl.Engine.Game.componentIsToken`'s `OfSpellCopy` arm, and
-  `sourceIsToken`'s. No test found: answering True leaves the suite green.
+  `sourceIsToken`'s, proved by `Pawl.MutateSpec`'s "CR 730.2d/608.3f a merged
+  permanent whose topmost component is a spell copy is no token".
 - **Issue**: none.
 
 ## Which zone an ability functions in when its cost and effect disagree
@@ -207,9 +208,9 @@ Entries are ordered by the first rule each cites.
   it never does.
 - **Rejected**: Reading them as synonyms: the gained-late case tells them
   apart.
-- **Site**: `Pawl.Types.TriggerLimit` and `Pawl.Types.TriggerFrequency`. No
-  gained-late test found; `Pawl.SpeedSpec`'s "CR 702.179d the increase happens
-  only once each turn" covers one side alone.
+- **Site**: `Pawl.Types.TriggerLimit` and `Pawl.Types.TriggerFrequency`;
+  `Pawl.SpeedSpec`'s "CR 702.179d an ability gained after the turn's first
+  life loss still triggers once" proves the gained-late case.
 - **Issue**: none.
 
 ## Whether conjuring a card is a zone change
@@ -275,7 +276,9 @@ Entries are ordered by the first rule each cites.
 - **Rejected**: The pre-batch board that the batch's other members are judged
   against. CR 616.1g speaks only to the order the two events' effects are
   chosen in, not to which board each collects from.
-- **Site**: `Pawl.Engine.Event.runEntry`. No test found.
+- **Site**: `Pawl.Engine.Event.runEntry`, proved by the scenario "CR 614.12
+  a Clone reanimated by a sweep collects its own copy effect from the live
+  board".
 - **Issue**: none.
 
 ## How two only-clauses about spending one mana combine
@@ -301,7 +304,9 @@ Entries are ordered by the first rule each cites.
   own, so an `All` with an unevaluable conjunct is false.
 - **Rejected**: Substituting 0: CR 208.2a is scoped to characteristic-defining
   abilities, which a condition is not.
-- **Site**: `Pawl.Engine.Condition.holds`. No test found.
+- **Site**: `Pawl.Engine.Condition.holds`, proved by the scenario "CR
+  702.100c a Raptor One with the Stars made an enchantment keeps evolve and
+  does not evolve", where CR 702.100c agrees with this reading.
 - **Issue**: none.
 
 ## Which timestamp the suspected designation's abilities have
@@ -345,9 +350,9 @@ Entries are ordered by the first rule each cites.
   trigger still finds the exiled card.
 - **Rejected**: not recorded.
 - **Site**: `Pawl.Engine.Resolve.Slots.objectRefObjects`'s
-  `ObjectRef.EachCardEncodedOnSource` arm. No test found: the scenario "CR
-  702.99c a flickered Piker is no longer encoded and offers nothing" covers
-  leaving before the trigger, not after.
+  `ObjectRef.EachCardEncodedOnSource` arm, proved by the scenario "CR 702.99c
+  a Piker killed with its cipher trigger on the stack still casts the
+  copy".
 - **Issue**: none.
 
 ## Which component of a merged permanent answers for day and night
