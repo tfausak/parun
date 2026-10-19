@@ -258,20 +258,18 @@
                         }
                       },
                       {
-                        "type": "GrantPlayFromExile",
+                        "type": "OfferCast",
                         "value": {
-                          "alternativeCost": {
-                            "type": "InsteadOfManaCost",
-                            "value": []
-                          },
-                          "duration": {
-                            "type": "Indefinite"
+                          "offer": {
+                            "withoutPayingManaCost": true
                           },
                           "ref": {
                             "type": "InSlot",
                             "value": "exiled"
                           },
-                          "upTo": 1
+                          "verb": {
+                            "type": "Play"
+                          }
                         }
                       }
                     ]
