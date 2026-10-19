@@ -111,6 +111,7 @@ import qualified Pawl.Types.CopyStackObject as CopyStackObject
 import qualified Pawl.Types.CopyTargets as CopyTargets
 import qualified Pawl.Types.Cost as Cost
 import qualified Pawl.Types.CostAddition as CostAddition
+import qualified Pawl.Types.CostAmount as CostAmount
 import qualified Pawl.Types.CostBasis as CostBasis
 import qualified Pawl.Types.CostChange as CostChange
 import qualified Pawl.Types.CostChoice as CostChoice
@@ -185,6 +186,7 @@ import qualified Pawl.Types.ExchangeValues as ExchangeValues
 import qualified Pawl.Types.ExchangeZones as ExchangeZones
 import qualified Pawl.Types.ExchangedValue as ExchangedValue
 import qualified Pawl.Types.ExileCardsFromGraveyard as ExileCardsFromGraveyard
+import qualified Pawl.Types.ExileCardsFromHand as ExileCardsFromHand
 import qualified Pawl.Types.ExileFromGraveyard as ExileFromGraveyard
 import qualified Pawl.Types.ExileHaunting as ExileHaunting
 import qualified Pawl.Types.ExileMaterials as ExileMaterials
@@ -961,7 +963,7 @@ costComponentNames asking onKeyword x = case x of
   CostComponent.UntapThis -> False
   CostComponent.SacrificeThis -> False
   CostComponent.ReturnThis -> False
-  CostComponent.PayLife _amount -> False
+  CostComponent.PayLife amount -> costAmountNames asking amount
   CostComponent.PayHalfLife _rounding -> False
   CostComponent.Sacrifice sacrifice -> sacrificeNames asking sacrifice
   CostComponent.TapForTotalPower tapForTotalPower -> tapForTotalPowerNames asking tapForTotalPower
@@ -971,13 +973,13 @@ costComponentNames asking onKeyword x = case x of
   CostComponent.DiscardCards discardCards -> discardCardsNames asking discardCards
   CostComponent.DiscardThis _discardCause -> False
   CostComponent.PutCardFromHandOntoBattlefield filter_ -> filterNames asking filter_
-  CostComponent.PayEnergy _amount -> False
+  CostComponent.PayEnergy amount -> costAmountNames asking amount
   CostComponent.AddLoyaltyToThis _natural -> False
-  CostComponent.RemoveLoyaltyFromThis _amount -> False
+  CostComponent.RemoveLoyaltyFromThis amount -> costAmountNames asking amount
   CostComponent.RemoveCountersFromThis countersFromThis -> countersFromThisNames asking onKeyword countersFromThis
   CostComponent.RemoveCounters countersFromPermanents -> countersFromPermanentsNames asking onKeyword countersFromPermanents
   CostComponent.PutPlusOneCountersOnThis _natural -> False
-  CostComponent.Blight _amount -> False
+  CostComponent.Blight amount -> costAmountNames asking amount
   CostComponent.Forage -> False
   CostComponent.FlipCoin -> False
   CostComponent.ExileThisFromGraveyard -> False
@@ -987,15 +989,20 @@ costComponentNames asking onKeyword x = case x of
   CostComponent.ExileTopFromGraveyard filter_ -> filterNames asking filter_
   CostComponent.CollectEvidence _natural -> False
   CostComponent.CollectEvidenceOfTargets -> False
-  CostComponent.ExileCardFromHand filter_ -> filterNames asking filter_
+  CostComponent.ExileCardsFromHand exileCardsFromHand -> exileCardsFromHandNames asking exileCardsFromHand
   CostComponent.RevealCardFromHand filter_ -> filterNames asking filter_
   CostComponent.Behold behold -> beholdNames asking behold
   CostComponent.BeholdAndExile filter_ -> filterNames asking filter_
   CostComponent.MillCards _natural -> False
   CostComponent.RevealTopOfLibrary _natural -> False
   CostComponent.ChooseOpponent _ -> False
-  CostComponent.Waterbend _amount -> False
+  CostComponent.Waterbend amount -> costAmountNames asking amount
   CostComponent.WaterbendInstead _natural -> False
+
+costAmountNames :: Asking -> CostAmount.CostAmount -> Bool
+costAmountNames asking x = case x of
+  CostAmount.Fixed _natural -> False
+  CostAmount.Announced slot -> slotNames asking slot
 
 costReductionNames :: Asking -> CostReduction.CostReduction -> Bool
 costReductionNames asking x = case x of
@@ -1060,7 +1067,7 @@ counterSubjectNames asking x = case x of
 
 countersFromPermanentsNames :: Asking -> (keyword -> Bool) -> CountersFromPermanents.CountersFromPermanents keyword -> Bool
 countersFromPermanentsNames asking onKeyword x = case x of
-  CountersFromPermanents.MkCountersFromPermanents _count kind whichPermanent _spread -> whichCountersNames asking onKeyword kind || filterNames asking whichPermanent
+  CountersFromPermanents.MkCountersFromPermanents count kind whichPermanent _spread -> costAmountNames asking count || whichCountersNames asking onKeyword kind || filterNames asking whichPermanent
 
 countersFromThisNames :: Asking -> (keyword -> Bool) -> CountersFromThis.CountersFromThis keyword -> Bool
 countersFromThisNames asking onKeyword x = case x of
@@ -1204,7 +1211,7 @@ durationNames asking x = case x of
   Duration.Indefinite -> False
   Duration.Perpetual -> False
   Duration.UntilYourNextTurn -> False
-  Duration.UntilYourNextUpkeep -> False
+  Duration.UntilYourNextStep _ -> False
   Duration.UntilEndOfYourNextTurn -> False
   Duration.UntilEndOfNextTurnOf playerRef -> playerRefNames asking playerRef
   Duration.DuringNextTurnOf playerRef -> playerRefNames asking playerRef
@@ -1522,6 +1529,10 @@ exchangedValueNames asking x = case x of
   ExchangedValue.Power objectRef -> objectRefNames asking objectRef
   ExchangedValue.Toughness objectRef -> objectRefNames asking objectRef
 
+exileCardsFromHandNames :: Asking -> ExileCardsFromHand.ExileCardsFromHand keyword -> Bool
+exileCardsFromHandNames asking x = case x of
+  ExileCardsFromHand.MkExileCardsFromHand count whichCards -> costAmountNames asking count || filterNames asking whichCards
+
 exileCardsFromGraveyardNames :: Asking -> ExileCardsFromGraveyard.ExileCardsFromGraveyard keyword -> Bool
 exileCardsFromGraveyardNames asking x = case x of
   ExileCardsFromGraveyard.MkExileCardsFromGraveyard _count whichCards -> filterNames asking whichCards
@@ -1541,7 +1552,7 @@ expiryNames asking x = case x of
   Expiry.Perpetual -> False
   Expiry.While while -> whileNames asking while
   Expiry.AtTurnOf _playerId -> False
-  Expiry.AtUpkeepOf _playerId -> False
+  Expiry.AtStepOf _stepBegan -> False
   Expiry.AtEndOfTurnOf _afterTurn -> False
   Expiry.DuringTurnOf _afterTurn -> False
   Expiry.DuringTurnOfControllerOf afterObjectTurn -> AfterObjectTurn.object afterObjectTurn == object asking
@@ -2575,7 +2586,7 @@ ruleAbilitiesNames asking x = case x of
 
 sacrificeNames :: Asking -> Sacrifice.Sacrifice keyword -> Bool
 sacrificeNames asking x = case x of
-  Sacrifice.MkSacrifice _count whichPermanents -> filterNames asking whichPermanents
+  Sacrifice.MkSacrifice count whichPermanents -> costAmountNames asking count || filterNames asking whichPermanents
 
 exileFromGraveyardNames :: Asking -> ExileFromGraveyard.ExileFromGraveyard -> Bool
 exileFromGraveyardNames asking x = case x of
@@ -2695,7 +2706,7 @@ tapForTotalPowerNames asking x = case x of
 
 tapPermanentsNames :: Asking -> TapPermanents.TapPermanents keyword -> Bool
 tapPermanentsNames asking x = case x of
-  TapPermanents.MkTapPermanents _count whichPermanents _sharingACreatureType -> filterNames asking whichPermanents
+  TapPermanents.MkTapPermanents count whichPermanents _sharingACreatureType -> costAmountNames asking count || filterNames asking whichPermanents
 
 targetChooserNames :: Asking -> TargetChooser.TargetChooser -> Bool
 targetChooserNames asking x = case x of

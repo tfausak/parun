@@ -1656,6 +1656,12 @@ filterPositionLintSpec s registry = Spec.describe s "Lint" $ do
       "Bifurcate's one atom is in its search's filter"
       (sameNameAsBoundCounts (S.combinedFace bifurcate))
       (1, 0)
+    burgeoning <- S.printingOf s registry "March of Burgeoning Life"
+    Spec.assertEqWith
+      s
+      "March of Burgeoning Life's one atom is in its search's filter"
+      (sameNameAsBoundCounts (S.combinedFace burgeoning))
+      (1, 0)
     glory <- S.printingOf s registry "Hour of Glory"
     Spec.assertEqWith
       s
@@ -1672,7 +1678,7 @@ filterPositionLintSpec s registry = Spec.describe s "Lint" $ do
       s
       "and they are the pool's only ones"
       (sum (fmap (uncurry (+) . sameNameAsBoundCounts . S.combinedFace) ps))
-      4
+      5
     -- Both sides of the split, with room to spare under the pool's real figures:
     -- a traversal that had stopped walking, or a Framing that had stopped marking
     -- target slots, would fail here rather than pass the sweep above by iterating
@@ -1879,6 +1885,10 @@ filterPositionLintSpec s registry = Spec.describe s "Lint" $ do
     -- Imitations in a reference pick, at the top level and inside a ForEachNumber
     -- body.
     --
+    -- At most and less than, against the mana value on a SPELL whose X shares the
+    -- cost with a count announced beside it: March of Otherworldly Light and March
+    -- of Burgeoning Life.
+    --
     -- At most, against the power: Spawnbroker's `theirs` slot and Nihiloor's.
     let authors =
           [ "Celestine, the Living Saint",
@@ -1895,7 +1905,9 @@ filterPositionLintSpec s registry = Spec.describe s "Lint" $ do
             "Fear of Change",
             "Ornate Imitations",
             "Spawnbroker",
-            "Nihiloor"
+            "Nihiloor",
+            "March of Otherworldly Light",
+            "March of Burgeoning Life"
           ]
     counted <- traverse (\name -> fmap (\p -> (name, enclosingAmountCounts (S.combinedFace p))) (S.printingOf s registry name)) authors
     Spec.assertEqWith s "each author's one operand is in the slot that names its bound" counted (fmap (\name -> (name, (1, 0))) authors)

@@ -4,6 +4,7 @@ import qualified Pawl.Types.Condition as Condition
 import qualified Pawl.Types.Cost as Cost
 import qualified Pawl.Types.DurationEvent as DurationEvent
 import qualified Pawl.Types.Keyword as Keyword
+import qualified Pawl.Types.Phase as Phase
 import qualified Pawl.Types.PlayerRef as PlayerRef
 
 -- | How long a stored continuous effect lasts, as the CARD says it (CR 611.2).
@@ -24,10 +25,10 @@ data Duration
     -- resolved to a concrete player by Pawl.Engine.Expiry.arm (CR 109.5) -- it cannot
     -- be a PlayerId here, because a printed card does not know one.
     UntilYourNextTurn
-  | -- | CR 611.2a / 503: "until the beginning of your next upkeep" (Grinning
-    -- Totem), ending as that upkeep step begins, after the untap step. "Your" is
-    -- resolved the way the arm above's is.
-    UntilYourNextUpkeep
+  | -- | CR 611.2a: "until the beginning of your next upkeep" (Grinning
+    -- Totem), "until your next end step" (Haste Magic): ends as that step of
+    -- your turn next begins. "Your" is resolved the way the arm above's is.
+    UntilYourNextStep Phase.Phase
   | -- | CR 611.2a: "until the end of your next turn" (Soulfire Eruption), which
     -- ends a whole turn later than the arm above: as that turn ENDS, in its
     -- cleanup step (CR 514), rather than as it begins. Both "your"s are resolved

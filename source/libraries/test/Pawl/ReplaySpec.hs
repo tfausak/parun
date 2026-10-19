@@ -11,6 +11,7 @@ import qualified Data.Sequence as Seq
 import qualified Data.Set as Set
 import qualified Data.Text as Text
 import qualified Numeric.Natural as Natural
+import qualified Pawl.Engine.Binding as Binding
 import qualified Pawl.Engine.Decide as Decide
 import qualified Pawl.Engine.Engine as Engine
 import qualified Pawl.Engine.Mana as Mana
@@ -169,7 +170,7 @@ combatReplaySpec s =
         -- the board can pay. A codec that folded the bound into the response
         -- would replay a different game (#417).
         Spec.it s "ChooseX records and replays a Natural" $ do
-          let p = Prompt.ChooseX decider S.alice oid 0 2
+          let p = Prompt.ChooseX decider S.alice oid Binding.variableX 0 2
           Spec.assertEqWith s "round trip" (Replay.decode p (Replay.encode p 4)) (Just (4 :: Natural.Natural))
         -- CR 601.2b / 700.2a: a modal choice (Response.ChoseModes, a Seq
         -- ModeIndex) round-trips through the DecisionLog exactly like every
@@ -1084,7 +1085,7 @@ combatReplaySpec s =
         Spec.it s "ChooseManaSource round-trips through the transcript" $ do
           let a = ObjectId.MkObjectId 7
               b = ObjectId.MkObjectId 9
-              p = Prompt.ChooseManaSource decider S.alice (a NonEmpty.:| [b])
+              p = Prompt.ChooseManaSource decider S.alice (ManaCost.MkManaCost [ManaSymbol.Generic 1]) (a NonEmpty.:| [b])
           Spec.assertEqWith s "the second source round trips" (Replay.decode p (Replay.encode p (Just b))) (Just (Just b))
           -- Discriminating for the same reason ChooseDefender's pair is: a
           -- decode that ignored the response and returned the head would
@@ -1112,13 +1113,13 @@ combatReplaySpec s =
         Spec.it s "a discard choice does not decode as a mana-source choice" $ do
           -- Discriminating: this fails if ChooseManaSource reuses another
           -- ObjectId-shaped response instead of getting its own constructor.
-          let p = Prompt.ChooseManaSource decider S.alice (ObjectId.MkObjectId 7 NonEmpty.:| [ObjectId.MkObjectId 9])
+          let p = Prompt.ChooseManaSource decider S.alice (ManaCost.MkManaCost [ManaSymbol.Generic 1]) (ObjectId.MkObjectId 7 NonEmpty.:| [ObjectId.MkObjectId 9])
           Spec.assertEqWith s "mismatch" (Replay.decode p (Response.ChoseDiscard [ObjectId.MkObjectId 7])) Nothing
         Spec.it s "a short transcript taps the first offered source" $
           Spec.assertEqWith
             s
             "the head"
-            (Replay.defaultAnswer (Prompt.ChooseManaSource decider S.alice (ObjectId.MkObjectId 7 NonEmpty.:| [ObjectId.MkObjectId 9])))
+            (Replay.defaultAnswer (Prompt.ChooseManaSource decider S.alice (ManaCost.MkManaCost [ManaSymbol.Generic 1]) (ObjectId.MkObjectId 7 NonEmpty.:| [ObjectId.MkObjectId 9])))
             (Just (ObjectId.MkObjectId 7))
         -- CR 605.3b / 105.4: the mana an any-colour source was tapped for is a
         -- decision, so it has to survive a transcript like any other.

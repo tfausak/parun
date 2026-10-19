@@ -1357,7 +1357,7 @@ gogglesAnswer wanted p = case p of
 -- after a mutation.
 tapsOnly :: [ObjectId.ObjectId] -> Prompt.Prompt r -> r
 tapsOnly wanted p = case p of
-  Prompt.ChooseManaSource _ _ candidates -> List.find (`elem` NonEmpty.toList candidates) wanted
+  Prompt.ChooseManaSource _ _ _ candidates -> List.find (`elem` NonEmpty.toList candidates) wanted
   Prompt.ChooseExtraManaSource {} -> Nothing
   _ -> S.identityAnswer p
 
@@ -2058,7 +2058,7 @@ castResolving lands spell aimed board =
       answer :: Prompt.Prompt r -> r
       answer p = case p of
         Prompt.ChooseTargets _ _ _ offer -> S.preferring ((==) (Just aimed) . Recipient.objectOf) offer
-        Prompt.ChooseManaSource _ _ candidates -> Just (Maybe.fromMaybe (NonEmpty.head candidates) (List.find (`Set.member` lands) (NonEmpty.toList candidates)))
+        Prompt.ChooseManaSource _ _ _ candidates -> Just (Maybe.fromMaybe (NonEmpty.head candidates) (List.find (`Set.member` lands) (NonEmpty.toList candidates)))
         _ -> S.identityAnswer p
    in S.runPure answer (S.runPure answer inHand (S.cast S.alice card)) Stack.resolveTop
 

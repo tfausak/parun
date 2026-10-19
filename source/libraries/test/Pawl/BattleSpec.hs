@@ -495,7 +495,7 @@ sacrificedMidToll s registry theirs hers = do
           -- offered, then the Ironworks, whose sacrifice takes the Siege.
           pay :: Prompt.Prompt r -> r
           pay p = case p of
-            Prompt.ChooseManaSource _ _ candidates ->
+            Prompt.ChooseManaSource _ _ _ candidates ->
               List.find (== mountain) (NonEmpty.toList candidates) Applicative.<|> List.find (== ironworks) (NonEmpty.toList candidates)
             Prompt.ChooseSacrifices _ _ _ candidates _ _ -> Set.filter (== battle) (Set.fromList candidates)
             _ -> attackTheBattle battle p

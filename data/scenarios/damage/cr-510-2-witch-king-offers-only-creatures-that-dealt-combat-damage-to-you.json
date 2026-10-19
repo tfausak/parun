@@ -1,0 +1,51 @@
+{
+  "description": "CR 510.2 / 120.1 Witch-king of Angmar makes each opponent sacrifice only a creature that dealt combat damage to its controller",
+  "note": "bob holds one creature of each kind: two that hit alice in combat, a Sorcerer that pinged her outside combat, and a Giant whose combat damage went to her Palace Guard. Offering the two that hit her makes the choice a real one, and the refusals prove the other two are not offered. carol's Bears dealt no damage, so she sacrifices nothing.",
+  "board": {
+    "active": "bob",
+    "step": "PrecombatMain",
+    "seats": [
+      {
+        "name": "alice",
+        "battlefield": [
+          { "card": "Witch-king of Angmar", "label": "witchking", "ready": true },
+          { "card": "Palace Guard", "label": "guard", "ready": true }
+        ],
+        "library": [{ "card": "Swamp" }, { "card": "Swamp" }]
+      },
+      {
+        "name": "bob",
+        "battlefield": [
+          { "card": "Grizzly Bears", "label": "bears", "ready": true },
+          { "card": "Goblin Piker", "label": "piker", "ready": true },
+          { "card": "Prodigal Sorcerer", "label": "sorcerer", "ready": true },
+          { "card": "Hill Giant", "label": "giant", "ready": true }
+        ],
+        "library": [{ "card": "Swamp" }, { "card": "Swamp" }]
+      },
+      {
+        "name": "carol",
+        "battlefield": [{ "card": "Grizzly Bears", "label": "idle", "ready": true }],
+        "library": [{ "card": "Swamp" }, { "card": "Swamp" }]
+      }
+    ]
+  },
+  "timeline": [
+    { "turn": 1, "step": "PrecombatMain", "player": "bob", "do": { "Activate": { "object": "$sorcerer", "ability": 0, "targets": ["$alice"] } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "bob", "do": "Pass" },
+    { "turn": 1, "step": "DeclareAttackers", "player": "bob", "do": { "Attack": ["$bears", "$piker", "$giant"] } },
+    { "turn": 1, "step": "DeclareAttackers", "player": "bob", "source": "$bears", "do": { "ChooseAttackTarget": "$alice" } },
+    { "turn": 1, "step": "DeclareAttackers", "player": "bob", "source": "$piker", "do": { "ChooseAttackTarget": "$alice" } },
+    { "turn": 1, "step": "DeclareAttackers", "player": "bob", "source": "$giant", "do": { "ChooseAttackTarget": "$alice" } },
+    { "turn": 1, "step": "DeclareBlockers", "player": "alice", "do": { "Block": { "$guard": ["$giant"] } } },
+    { "turn": 1, "step": "CombatDamage", "player": "bob", "refuse": { "Answer": { "prompt": "ChooseSacrifices", "with": ["$sorcerer"] } } },
+    { "turn": 1, "step": "CombatDamage", "player": "bob", "refuse": { "Answer": { "prompt": "ChooseSacrifices", "with": ["$giant"] } } },
+    { "turn": 1, "step": "CombatDamage", "player": "bob", "do": { "Answer": { "prompt": "ChooseSacrifices", "with": ["$piker"] } } },
+    { "turn": 1, "step": "CombatDamage", "player": "alice", "do": { "Answer": { "prompt": "ChooseRingBearer", "with": "$witchking" } } },
+    { "turn": 1, "step": "EndOfCombat", "player": "bob", "check": { "Count": { "player": "bob", "zone": "Graveyard", "card": "Goblin Piker", "count": 1 } } },
+    { "turn": 1, "step": "EndOfCombat", "player": "bob", "check": { "View": { "of": "Zone", "player": "bob", "zone": "Battlefield", "is": ["$bears", "$sorcerer", "$giant"] } } },
+    { "turn": 1, "step": "EndOfCombat", "player": "bob", "check": { "View": { "of": "Zone", "player": "carol", "zone": "Battlefield", "is": ["$idle"] } } },
+    { "turn": 1, "step": "EndOfCombat", "player": "bob", "check": { "Life": { "player": "alice", "life": 15 } } },
+    { "turn": 1, "step": "EndOfCombat", "player": "bob", "check": { "Damage": { "object": "$guard", "damage": 3 } } }
+  ]
+}

@@ -6,10 +6,16 @@
           "cost": {
             "components": [
               {
-                "type": "ExileCardFromHand",
+                "type": "ExileCardsFromHand",
                 "value": {
-                  "type": "And",
-                  "value": []
+                  "count": {
+                    "type": "Fixed",
+                    "value": 1
+                  },
+                  "whichCards": {
+                    "type": "And",
+                    "value": []
+                  }
                 }
               }
             ],

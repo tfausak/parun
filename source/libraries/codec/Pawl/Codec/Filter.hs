@@ -7,7 +7,7 @@ import qualified Pawl.Codec.CardName as CardName
 import qualified Pawl.Codec.CardType as CardType
 import qualified Pawl.Codec.Color as Color
 import qualified Pawl.Codec.CounterKind as CounterKind
-import qualified Pawl.Codec.DamagedParty as DamagedParty
+import qualified Pawl.Codec.DealtDamageTo as DealtDamageTo
 import qualified Pawl.Codec.Designation as Designation
 import qualified Pawl.Codec.ExiledWith as ExiledWith
 import qualified Pawl.Codec.Expansion as Expansion
@@ -116,7 +116,7 @@ codec keywordCodec =
       Arm.nullary "SaddledSourceThisTurn" Filter.SaddledSourceThisTurn,
       Arm.nullary "CantCrewVehicles" Filter.CantCrewVehicles,
       Arm.nullary "DealtDamageThisTurn" Filter.DealtDamageThisTurn,
-      Arm.payload "DealtDamageToThisTurn" DamagedParty.codec Filter.DealtDamageToThisTurn (\x -> case x of Filter.DealtDamageToThisTurn y -> Just y; _ -> Nothing),
+      Arm.payload "DealtDamageToThisTurn" DealtDamageTo.codec Filter.DealtDamageToThisTurn (\x -> case x of Filter.DealtDamageToThisTurn y -> Just y; _ -> Nothing),
       Arm.nullary "EnteredThisTurn" Filter.EnteredThisTurn,
       Arm.nullary "ControlledSinceTurnBegan" Filter.ControlledSinceTurnBegan,
       -- Recursive for ControlsMoreThanYou's reason: the payload describes the

@@ -56,7 +56,13 @@
                         "type": "GrantPlayFromExile",
                         "value": {
                           "duration": {
-                            "type": "UntilYourNextUpkeep"
+                            "type": "UntilYourNextStep",
+                            "value": {
+                              "type": "Beginning",
+                              "value": {
+                                "type": "Upkeep"
+                              }
+                            }
                           },
                           "ref": {
                             "type": "InSlot",

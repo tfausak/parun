@@ -9,7 +9,8 @@
                 "type": "RemoveCounters",
                 "value": {
                   "count": {
-                    "type": "AnnouncedX"
+                    "type": "Announced",
+                    "value": "X"
                   },
                   "kind": {
                     "type": "OfKind",

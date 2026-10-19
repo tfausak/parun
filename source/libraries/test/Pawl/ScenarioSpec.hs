@@ -15,6 +15,7 @@ import qualified Data.Set as Set
 import qualified Data.Text as Text
 import qualified Data.Text.Encoding as Encoding
 import qualified Pawl.Codec.Scenario as Codec.Scenario
+import qualified Pawl.Engine.Binding as Binding
 import qualified Pawl.Engine.Engine as Engine
 import qualified Pawl.Engine.Game as Game
 import qualified Pawl.JsonCodec.Codec as Codec
@@ -260,7 +261,7 @@ spec s registry = Spec.describe s "Scenario" $ do
             actionPrompt = Prompt.ChooseAction (Decider.MkDecider S.alice) S.alice [A.Pass, action]
             mode = ModeIndex.MkModeIndex 1
             modePrompt = Prompt.ChooseModes (Decider.MkDecider S.alice) S.alice spellId (Set.singleton mode) (ModeSelection.ChooseExactly 1)
-            xPrompt = Prompt.ChooseX (Decider.MkDecider S.alice) S.alice spellId 0 9
+            xPrompt = Prompt.ChooseX (Decider.MkDecider S.alice) S.alice spellId Binding.variableX 0 9
             cost = Cost.MkCost {Cost.mana = Just (ManaCost.MkManaCost []), Cost.components = []}
             costPrompt = Prompt.ChooseCost (Decider.MkDecider S.alice) S.alice spellId [CandidateCost.plain Nothing cost]
             slot = SlotName.MkSlotName (Text.pack "target")
@@ -329,7 +330,7 @@ spec s registry = Spec.describe s "Scenario" $ do
       Just oid -> do
         let action = A.Cast oid (CardName.MkCardName (Text.pack "Goblin Piker")) Facing.FaceUp
             actionPrompt = Prompt.ChooseAction (Decider.MkDecider S.alice) S.alice [A.Pass, action]
-            xPrompt = Prompt.ChooseX (Decider.MkDecider S.bob) S.bob oid 0 9
+            xPrompt = Prompt.ChooseX (Decider.MkDecider S.bob) S.bob oid Binding.variableX 0 9
         case Scenario.rehearse script built (Game.ask actionPrompt *> Game.ask xPrompt) of
           Left (ScenarioFailure.MkUnusedActionChoices _ failed _) ->
             Spec.assertEqWith s "the unfinished verb" failed verb
@@ -801,6 +802,6 @@ manaSourceAnswer s registry named flagged = do
   built <- S.buildBoardOrFail s registry setup
   case (Map.lookup (Label.MkLabel (Text.pack "f1")) (Staged.objects built), Map.lookup (Label.MkLabel (Text.pack "f2")) (Staged.objects built)) of
     (Just first, Just second) -> do
-      let prompt = Prompt.ChooseManaSource (Decider.MkDecider S.alice) S.alice (first NonEmpty.:| [])
+      let prompt = Prompt.ChooseManaSource (Decider.MkDecider S.alice) S.alice (ManaCost.MkManaCost []) (first NonEmpty.:| [])
       pure (fmap (\(chosen, _) -> (chosen, second)) (Scenario.rehearse script built (Game.ask prompt)))
     _ -> Spec.assertFailure s "the board omitted an alias"

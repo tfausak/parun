@@ -9,7 +9,8 @@
                 "type": "Sacrifice",
                 "value": {
                   "count": {
-                    "type": "AnnouncedX"
+                    "type": "Announced",
+                    "value": "X"
                   },
                   "whichPermanents": {
                     "type": "HasCardType",

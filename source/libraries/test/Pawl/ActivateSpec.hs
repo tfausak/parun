@@ -1256,7 +1256,7 @@ forecastAnswer p = case p of
   Prompt.ChooseAction _ _ options -> case filter isForecast options of
     a : _ -> a
     [] -> A.Pass
-  Prompt.ChooseManaSource _ _ candidates -> Just (NonEmpty.head candidates)
+  Prompt.ChooseManaSource _ _ _ candidates -> Just (NonEmpty.head candidates)
   _ -> S.identityAnswer p
 
 -- alice holds Steeling Stance with a Goblin Piker (2\/1) and three Plains on the
@@ -1800,7 +1800,7 @@ answerXAt x who p = case p of
 -- WITH it is what proves the bound is payable rather than merely reported.
 answerAtBound :: PlayerId.PlayerId -> Prompt.Prompt r -> State.State [Natural] r
 answerAtBound who p = case p of
-  Prompt.ChooseX _ _ _ _ bound -> do
+  Prompt.ChooseX _ _ _ _ _ bound -> do
     State.modify' (\seen -> seen <> [bound])
     pure bound
   _ -> pure (aimAt who p)
@@ -1809,7 +1809,7 @@ answerAtBound who p = case p of
 -- construction, whatever the board is.
 answerAboveBound :: PlayerId.PlayerId -> Prompt.Prompt r -> r
 answerAboveBound who p = case p of
-  Prompt.ChooseX _ _ _ _ bound -> bound + 1
+  Prompt.ChooseX _ _ _ _ _ bound -> bound + 1
   _ -> aimAt who p
 
 -- answerAtBound and answerAboveBound in one, COUNTING the CR 601.2c target
@@ -1819,7 +1819,7 @@ answerAboveBound who p = case p of
 -- one reversed earlier.
 answerAtBoundOffsetCounting :: Natural -> PlayerId.PlayerId -> Prompt.Prompt r -> State.State Int r
 answerAtBoundOffsetCounting offset who p = case p of
-  Prompt.ChooseX _ _ _ _ bound -> pure (bound + offset)
+  Prompt.ChooseX _ _ _ _ _ bound -> pure (bound + offset)
   Prompt.ChooseTargets {} -> do
     State.modify' (+ 1)
     pure (aimAt who p)
@@ -2046,7 +2046,7 @@ variableActivationCostSpec s registry = Spec.describe s "VariableActivationCost"
       let (hubId, g2) = S.addPermanent hub S.alice g1
           naming :: Prompt.Prompt r -> r
           naming p = case p of
-            Prompt.ChooseManaSource _ _ candidates ->
+            Prompt.ChooseManaSource _ _ _ candidates ->
               let wanted c = (c == hubId) == viaHub
                in Just (Maybe.fromMaybe (NonEmpty.head candidates) (List.find wanted (NonEmpty.toList candidates)))
             _ -> answerXMakingBlue 2 S.bob p
@@ -4117,7 +4117,7 @@ answerBlightXTargeting x blighted wanted p = case p of
 -- treatment for a cost whose X is a blight.
 answerBlightAtBound :: ObjectId.ObjectId -> Prompt.Prompt r -> State.State [Natural] r
 answerBlightAtBound blighted p = case p of
-  Prompt.ChooseX _ _ _ _ bound -> do
+  Prompt.ChooseX _ _ _ _ _ bound -> do
     State.modify' (\seen -> seen <> [bound])
     pure bound
   Prompt.ChooseBlight {} -> pure blighted
@@ -4196,7 +4196,7 @@ scholarAnswer p = case p of
     [] -> case filter isCast options of
       c : _ -> c
       [] -> A.Pass
-  Prompt.ChooseManaSource _ _ candidates -> Just (NonEmpty.head candidates)
+  Prompt.ChooseManaSource _ _ _ candidates -> Just (NonEmpty.head candidates)
   _ -> S.identityAnswer p
 
 isCast :: A.Action -> Bool
@@ -4266,7 +4266,7 @@ onlyOnceAnswer p = case p of
   Prompt.ChooseAction _ _ options -> case filter isOnlyOnce options of
     a : _ -> a
     [] -> A.Pass
-  Prompt.ChooseManaSource _ _ candidates -> Just (NonEmpty.head candidates)
+  Prompt.ChooseManaSource _ _ _ candidates -> Just (NonEmpty.head candidates)
   _ -> S.identityAnswer p
 
 printedActivationOnlyOnceSpec :: (Monad m, Monad n) => Spec.Spec m n -> Registry.Registry m -> n ()
@@ -4341,7 +4341,7 @@ onlyOnceEachTurnAnswer p = case p of
   Prompt.ChooseAction _ _ options -> case filter isOnlyOnceEachTurn options of
     a : _ -> a
     [] -> A.Pass
-  Prompt.ChooseManaSource _ _ candidates -> Just (NonEmpty.head candidates)
+  Prompt.ChooseManaSource _ _ _ candidates -> Just (NonEmpty.head candidates)
   _ -> S.identityAnswer p
 
 -- CR 500.5 / 502.3: two handoffs, the pools swept and everything untapped -- the

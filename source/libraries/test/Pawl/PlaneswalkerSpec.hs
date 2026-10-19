@@ -978,7 +978,7 @@ answerXAt x wanted p = case p of
 -- Records the bound Prompt.ChooseX carries and announces it.
 answerAtBoundX :: Prompt.Prompt r -> State.State [Natural] r
 answerAtBoundX p = case p of
-  Prompt.ChooseX _ _ _ _ bound -> do
+  Prompt.ChooseX _ _ _ _ _ bound -> do
     State.modify' (<> [bound])
     pure bound
   _ -> pure (S.identityAnswer p)

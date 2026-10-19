@@ -2071,7 +2071,7 @@ noTollAsks = MkTollAsks {tollDeclarations = 0, tollReversals = 0, tollTapped = F
 -- retryAttackAnswer's posture.
 oneLandPerWindow :: OptionalDecision.OptionalDecision -> [ObjectId.ObjectId] -> Prompt.Prompt r -> State.State TollAsks r
 oneLandPerWindow decision lands p = case p of
-  Prompt.ChooseManaSource _ _ candidates -> do
+  Prompt.ChooseManaSource _ _ _ candidates -> do
     asks <- State.get
     if tollTapped asks
       then do
@@ -2144,7 +2144,7 @@ tollReversalSpec s registry = Spec.describe s "Reversal at a combat toll" $ do
         let (forests, board) = addForestsFor S.bob forest 2 (raying rays blocker gs)
             everyForest :: OptionalDecision.OptionalDecision -> Prompt.Prompt r -> State.State TollAsks r
             everyForest decision p = case p of
-              Prompt.ChooseManaSource _ _ candidates -> pure (List.find (`elem` NonEmpty.toList candidates) forests)
+              Prompt.ChooseManaSource _ _ _ candidates -> pure (List.find (`elem` NonEmpty.toList candidates) forests)
               _ -> oneLandPerWindow decision forests p
             run decision = State.runState (Engine.runGame (everyForest decision) board (Combat.declareBlockers S.manaPerformer)) noTollAsks
             ((_, kept), keptAsks) = run OptionalDecision.Declines

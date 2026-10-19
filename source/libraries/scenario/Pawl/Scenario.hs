@@ -34,6 +34,7 @@ import qualified Pawl.DeckList as DeckList
 import qualified Pawl.Engine.Action as ActionEngine
 import qualified Pawl.Engine.Ante as Ante
 import qualified Pawl.Engine.Attach as Attach
+import qualified Pawl.Engine.Binding as Binding
 import qualified Pawl.Engine.Card as Engine.Card
 import qualified Pawl.Engine.Combat as Combat
 import qualified Pawl.Engine.Damage as Damage
@@ -625,7 +626,8 @@ subChoiceFor key prompt decider choices =
     Prompt.Type.ChooseTargets {} -> holdsTargets
     Prompt.Type.AnnounceTargets {} -> holdsTargets
     Prompt.Type.ChooseModes {} -> True
-    Prompt.Type.ChooseX {} -> True
+    -- X alone: a count announced beside it (CR 601.2b) is an Answer's.
+    Prompt.Type.ChooseX _ _ _ variable _ _ -> variable == Binding.variableX
     Prompt.Type.ChooseCost {} -> True
     Prompt.Type.OrderCostComponents {} -> True
     Prompt.Type.ChooseManaSource {} -> True
@@ -962,7 +964,7 @@ withinOffer prompt chosen = case prompt of
   Prompt.Type.ChooseEnlist _ _ _ objects -> all (`elem` objects) chosen
   Prompt.Type.ChooseEncode _ _ _ objects -> all (`elem` objects) chosen
   Prompt.Type.ChooseSearchZones _ _ places -> all (`Set.member` places) chosen
-  Prompt.Type.ChooseX _ _ _ least greatest -> least <= chosen && chosen <= greatest
+  Prompt.Type.ChooseX _ _ _ _ least greatest -> least <= chosen && chosen <= greatest
   Prompt.Type.ChooseLearn _ _ _ modes -> all (`elem` modes) chosen
   Prompt.Type.ChooseSplice _ _ _ offers -> all (`elem` fmap fst offers) chosen
   Prompt.Type.ChooseAssistant _ _ _ players -> all (`elem` players) chosen
@@ -999,7 +1001,7 @@ withinOffer prompt chosen = case prompt of
   Prompt.Type.MulliganAction _ _ actions -> all (`elem` actions) chosen
   Prompt.Type.OpeningHandAction _ _ actions -> all (`elem` actions) chosen
   Prompt.Type.ChooseCost _ _ _ costs -> chosen `elem` costs
-  Prompt.Type.ChooseManaSource _ _ candidates -> all (`elem` candidates) chosen
+  Prompt.Type.ChooseManaSource _ _ _ candidates -> all (`elem` candidates) chosen
   Prompt.Type.ChooseExtraManaSource _ _ candidates -> all (`elem` candidates) chosen
   Prompt.Type.ChooseCopyTarget _ _ _ objects -> all (`elem` objects) chosen
   Prompt.Type.ChooseManaYield _ _ _ options -> chosen `elem` options
@@ -1291,7 +1293,7 @@ answerActionChoice key verb choices asked =
                 updateChoices (\current -> current {Choices.modes = Nothing})
                 pure modes
           _ -> unexpected
-        Prompt.Type.ChooseX _ _ _ minimumX maximumX -> do
+        Prompt.Type.ChooseX _ _ _ _ minimumX maximumX -> do
           undoing <- State.gets reversing
           case Choices.x choices of
             Just x
@@ -1317,7 +1319,7 @@ answerActionChoice key verb choices asked =
                 updateChoices (\current -> current {Choices.costOrder = Nothing})
                 pure order
           _ -> unexpected
-        Prompt.Type.ChooseManaSource _ _ candidates -> answerManaSource gs key verb choices kind candidates
+        Prompt.Type.ChooseManaSource _ _ _ candidates -> answerManaSource gs key verb choices kind candidates
         Prompt.Type.ChooseExtraManaSource _ _ candidates -> answerManaSource gs key verb choices kind candidates
         Prompt.Type.ChooseManaYield _ _ _ candidates -> case Seq.viewl (Choices.manaYields choices) of
           Seq.EmptyL -> unexpected

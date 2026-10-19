@@ -1,0 +1,45 @@
+{
+  "description": "CR 601.2f March of Wretched Sorrow costs {2} less for each black card its additional cost exiles, a count announced beside its X",
+  "note": "One Swamp under Thalia pays {X}{B} plus {1} only with a card exiled, so the cast is offered only if the gate looks past a count of 0. Announcing 1 card at X = 3 leaves {2}{B} and is refused; 2 cards leave {B}. X and the count differ, so the Giant dies to 3 damage and alice gains 3, not 2. Three black cards make the exile a real choice: the Wraith and the Gravedigger go, the Nighthawk and the red Goblin stay.",
+  "board": {
+    "seats": [
+      {
+        "name": "alice",
+        "battlefield": [{ "card": "Swamp", "label": "s1" }],
+        "hand": [
+          { "card": "March of Wretched Sorrow", "label": "march" },
+          { "card": "Bog Wraith", "label": "wraith" },
+          { "card": "Gravedigger", "label": "digger" },
+          { "card": "Vampire Nighthawk", "label": "nighthawk" },
+          { "card": "Raging Goblin", "label": "goblin" }
+        ]
+      },
+      {
+        "name": "bob",
+        "battlefield": [
+          { "card": "Thalia, Guardian of Thraben", "label": "thalia" },
+          { "card": "Hill Giant", "label": "giant" }
+        ]
+      }
+    ],
+    "active": "alice",
+    "step": "PrecombatMain"
+  },
+  "timeline": [
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": { "Answer": { "prompt": "ChooseX", "with": 1 } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "refuse": { "Cast": { "object": "$march", "x": 3, "targets": ["$giant"], "mana": ["$s1"] } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": { "Answer": { "prompt": "ChooseX", "with": 2 } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": { "Answer": { "prompt": "ChooseExiles", "with": ["$wraith", "$digger"] } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": { "Cast": { "object": "$march", "x": 3, "targets": ["$giant"], "mana": ["$s1"] } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass" },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "check": { "Life": { "player": "alice", "life": 23 } } }
+  ],
+  "final": [
+    { "Count": { "player": "bob", "zone": "Graveyard", "card": "Hill Giant", "count": 1 } },
+    { "Count": { "player": "alice", "zone": "Exile", "card": "Bog Wraith", "count": 1 } },
+    { "Count": { "player": "alice", "zone": "Exile", "card": "Gravedigger", "count": 1 } },
+    { "Count": { "player": "alice", "zone": "Hand", "card": "Vampire Nighthawk", "count": 1 } },
+    { "Count": { "player": "alice", "zone": "Hand", "card": "Raging Goblin", "count": 1 } },
+    { "Count": { "player": "alice", "zone": "Graveyard", "card": "March of Wretched Sorrow", "count": 1 } }
+  ]
+}
