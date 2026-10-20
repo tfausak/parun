@@ -137,6 +137,7 @@ withoutAnnouncement before entry closed = do
   -- than the choice that began it, so no loop's window can reach them.
   loopInvolvement <- newest GameState.loopInvolvement
   drewFromEmpty <- setOf GameState.drewFromEmpty
+  fellShort <- newest GameState.fellShort
   landsPlayed <- mapOf GameState.landsPlayed
   cardsPlayed <- mapOf GameState.cardsPlayed
   drawsThisTurn <- mapOf GameState.drawsThisTurn
@@ -254,6 +255,7 @@ withoutAnnouncement before entry closed = do
         GameState.lastChoice = lastChoice,
         GameState.loopInvolvement = loopInvolvement,
         GameState.drewFromEmpty = drewFromEmpty,
+        GameState.fellShort = fellShort,
         GameState.landsPlayed = landsPlayed,
         GameState.cardsPlayed = cardsPlayed,
         GameState.drawsThisTurn = drawsThisTurn,

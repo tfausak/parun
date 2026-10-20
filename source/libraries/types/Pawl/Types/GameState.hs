@@ -345,6 +345,10 @@ data GameState = MkGameState
     -- players.
     loopInvolvement :: Map.Map PlayerId.PlayerId Timestamp.Timestamp,
     drewFromEmpty :: Set.Set PlayerId.PlayerId,
+    -- | CR 603.12: how many draw or mill instructions have done fewer than the
+    -- number they named. It only rises, so one instruction's shortfall is a
+    -- difference across it (Pawl.Engine.Resolve.Effect.applyClauseEffects).
+    fellShort :: Natural.Natural,
     -- | CR 305.2a: how many lands each player has played this turn, a count
     -- because CR 305.2 lets an effect raise the allowance; cleared per player
     -- at their untap step.
