@@ -188,15 +188,15 @@ targetSpec s registry = Spec.describe s "Target" $ do
     piker <- S.printingOf s registry "Goblin Piker"
     let (oid, gs) = S.addPermanent piker S.bob (Setup.emptyGame S.bothPlayers)
         gone = S.runPure S.identityAnswer gs (Event.changeZone oid Zone.Graveyard)
-    Spec.assertBool s (Target.stillLegal Nothing Map.empty Acquisition.Own S.noSource (Recipient.ToCreature oid) (TargetSlot.required Pool.AnyTarget Nothing) gs) "legal while fielded"
-    Spec.assertBool s (not (Target.stillLegal Nothing Map.empty Acquisition.Own S.noSource (Recipient.ToCreature oid) (TargetSlot.required Pool.AnyTarget Nothing) gone)) "illegal once moved"
+    Spec.assertBool s (Target.stillLegal Nothing Nothing Map.empty Acquisition.Own S.noSource (Recipient.ToCreature oid) (TargetSlot.required Pool.AnyTarget Nothing) gs) "legal while fielded"
+    Spec.assertBool s (not (Target.stillLegal Nothing Nothing Map.empty Acquisition.Own S.noSource (Recipient.ToCreature oid) (TargetSlot.required Pool.AnyTarget Nothing) gone)) "illegal once moved"
   Spec.it s "legalSets maps each slot to its legal recipients" $ do
     let slots = Map.singleton (SlotName.MkSlotName (Text.pack "target")) (TargetSlot.required Pool.AnyTarget Nothing)
         gs = Setup.emptyGame S.bothPlayers
     Spec.assertEqWith
       s
       "one slot, two players"
-      (Target.legalSets Nothing False Map.empty S.noSource slots gs)
+      (Target.legalSets Nothing Nothing False Map.empty S.noSource slots gs)
       (Map.singleton (SlotName.MkSlotName (Text.pack "target")) (Set.fromList [Recipient.ToPlayer S.alice, Recipient.ToPlayer S.bob]))
   Spec.it s "CR 115.4 CreatureTarget offers creatures but no players" $ do
     piker <- S.printingOf s registry "Goblin Piker"
@@ -215,8 +215,8 @@ targetSpec s registry = Spec.describe s "Target" $ do
     piker <- S.printingOf s registry "Goblin Piker"
     let (oid, gs) = S.addPermanent piker S.bob (Setup.emptyGame S.bothPlayers)
         gone = S.runPure S.identityAnswer gs (Event.changeZone oid Zone.Graveyard)
-    Spec.assertBool s (Target.stillLegal Nothing Map.empty Acquisition.Own S.noSource (Recipient.ToCreature oid) (TargetSlot.required Pool.Creatures Nothing) gs) "legal while fielded"
-    Spec.assertBool s (not (Target.stillLegal Nothing Map.empty Acquisition.Own S.noSource (Recipient.ToCreature oid) (TargetSlot.required Pool.Creatures Nothing) gone)) "illegal once moved"
+    Spec.assertBool s (Target.stillLegal Nothing Nothing Map.empty Acquisition.Own S.noSource (Recipient.ToCreature oid) (TargetSlot.required Pool.Creatures Nothing) gs) "legal while fielded"
+    Spec.assertBool s (not (Target.stillLegal Nothing Nothing Map.empty Acquisition.Own S.noSource (Recipient.ToCreature oid) (TargetSlot.required Pool.Creatures Nothing) gone)) "illegal once moved"
   Spec.it s "CR 115 SpellOrPermanentTarget offers battlefield permanents and stack spells" $ do
     piker <- S.printingOf s registry "Goblin Piker"
     let (permId, gs) = S.addPermanent piker S.bob (Setup.emptyGame S.bothPlayers)
@@ -253,7 +253,7 @@ targetSpec s registry = Spec.describe s "Target" $ do
     let (wallId, base) = S.addPermanent wallOfStone S.bob (Setup.emptyGame S.bothPlayers)
         (pikerId, gs) = S.addPermanent piker S.alice base
         slot = SlotName.MkSlotName (Text.pack "target")
-        legal = Map.findWithDefault Set.empty slot (Target.legalSets Nothing False Map.empty S.noSource (Map.singleton slot (TargetSlot.required Pool.Creatures (Just (Filter.Type.HasSubtype Subtype.Wall)))) gs)
+        legal = Map.findWithDefault Set.empty slot (Target.legalSets Nothing Nothing False Map.empty S.noSource (Map.singleton slot (TargetSlot.required Pool.Creatures (Just (Filter.Type.HasSubtype Subtype.Wall)))) gs)
     Spec.assertBool s (Set.member (Recipient.ToCreature wallId) legal) "the Wall is legal"
     Spec.assertBool s (not (Set.member (Recipient.ToCreature pikerId) legal)) "the non-Wall creature is not legal"
   -- The same "target Wall", against a Wall that Ashaya animated into a land
@@ -270,7 +270,7 @@ targetSpec s registry = Spec.describe s "Target" $ do
         (_, g2) = S.addPermanent ashaya S.alice g1
         (_, gs) = S.addPermanent bloodMoon S.alice g2
         slot = SlotName.MkSlotName (Text.pack "target")
-        legal = Map.findWithDefault Set.empty slot (Target.legalSets Nothing False Map.empty S.noSource (Map.singleton slot (TargetSlot.required Pool.Creatures (Just (Filter.Type.HasSubtype Subtype.Wall)))) gs)
+        legal = Map.findWithDefault Set.empty slot (Target.legalSets Nothing Nothing False Map.empty S.noSource (Map.singleton slot (TargetSlot.required Pool.Creatures (Just (Filter.Type.HasSubtype Subtype.Wall)))) gs)
     Spec.assertBool s (Set.member Subtype.Mountain (Projection.subtypesOf wallId gs)) "it really is a Mountain"
     Spec.assertBool s (Projection.isCreatureOf wallId gs) "and still a creature (CR 305.7 removes no card types)"
     Spec.assertBool s (Set.member (Recipient.ToCreature wallId) legal) "so \"target Wall\" still offers it"
@@ -421,7 +421,7 @@ targetSpec s registry = Spec.describe s "Target" $ do
     Spec.assertEqWith
       s
       "source excluded from its own set"
-      (Target.legalSets Nothing False Map.empty srcId slots gs)
+      (Target.legalSets Nothing Nothing False Map.empty srcId slots gs)
       (Map.singleton slot (Set.singleton (Recipient.ToCreature otherId)))
   -- The other half of the same claim: a slot carrying no Not IsSource does
   -- not exclude, so Prodigal Sorcerer may still ping itself (CR 115.4).
@@ -434,7 +434,7 @@ targetSpec s registry = Spec.describe s "Target" $ do
     Spec.assertEqWith
       s
       "source is its own legal target"
-      (Target.legalSets Nothing False Map.empty srcId slots gs)
+      (Target.legalSets Nothing Nothing False Map.empty srcId slots gs)
       (Map.singleton slot (Set.singleton (Recipient.ToCreature srcId)))
   -- Gate cards for P9 Task 5: Terror and Reprisal. Both cards' printed text ends
   -- "It can't be regenerated.", which both card files carry as

@@ -93,8 +93,7 @@ data CopyException ability
     --
     -- A Set for GainKeywords' reason: one printed clause names as many as it
     -- likes at once (Dollhouse of Horrors' "a 0/0 Construct artifact creature").
-    -- CR 205.1a's replacement is a different sentence and no copy exception
-    -- prints it.
+    -- CR 205.1a's replacement is a different sentence, SetCardTypes below.
     --
     -- NOTHING ELSE MOVES, and that is CR 707.9d's last two sentences rather than
     -- an omission: its strip of the copied object's characteristic-defining
@@ -141,6 +140,12 @@ data CopyException ability
     -- characteristic-defining ability stays -- and there would be nothing to
     -- strip in any case, RemoveSupertypes' reason below.
     AddSupertypes (Set.Set Supertype.Supertype)
+  | -- | CR 707.9b / 205.1a: the copy is these card types instead of its own
+    -- (Dino DNA's "it's a ... creature").
+    SetCardTypes (Set.Set CardType.CardType)
+  | -- | CR 707.9b / 205.1a: the copy's creature types are these instead of its
+    -- own (Dino DNA's "a ... Dinosaur creature").
+    SetCreatureSubtypes (Set.Set Subtype.Subtype)
   | -- | CR 707.9b: the copy is NOT these supertypes, whatever the copied object's
     -- were ("except it isn't legendary", Multiversal Recruitment).
     --

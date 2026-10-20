@@ -2381,7 +2381,7 @@ textChangedTargetSpec s registry =
         Nothing -> []
         Just ability -> case Seq.lookup 0 (Modal.modes (ActivatedAbility.modal ability)) of
           Nothing -> []
-          Just mode -> fmap Set.toList (Map.elems (Target.legalSets (Just S.alice) False Map.empty elfId (Mode.targetSlots mode) gs))
+          Just mode -> fmap Set.toList (Map.elems (Target.legalSets Nothing (Just S.alice) False Map.empty elfId (Mode.targetSlots mode) gs))
       run hacked = do
         arborElf <- S.printingOf s registry "Arbor Elf"
         forest <- S.printingOf s registry "Forest"

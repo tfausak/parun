@@ -28,7 +28,7 @@ import qualified Pawl.Engine.Game as Game
 import qualified Pawl.Engine.Keyword as Keyword
 import qualified Pawl.Engine.NameWords as NameWords
 import Pawl.Engine.Projection.Rewrite (Modification, composeWordChanges, rewriteActivatedAbility, rewriteAffected, rewriteCharacteristicPT, rewriteCondition, rewriteMinted, rewriteModification, rewritePlayerStaticAbility, rewritePrintedReplacement, rewriteRuleAbilities, rewriteStaticAbility, rewriteTriggeredAbility)
-import Pawl.Engine.Projection.View (ControlGrant, abilitiesFromCharacteristics, abilityFaceOf, abilityFaceOfId, abilitySources, controlGrants, controllerOf, controllerOfGiven, copiableCharacteristics, copiableRuleAbilitiesOf, copiableSnapshotOf, copiableSpecialActionsOf, countersOf, definesColorless, definesEveryCreatureType, enchantedPlayerOf, functionsFromZone, grantedStaticAbilitiesOf, inSourceRangeGiven, lapsedGrantsOf, staticAbilitiesOf, staticTimestampOf, viewOfCard, viewOfCharacteristics, withAnnouncedX)
+import Pawl.Engine.Projection.View (ControlGrant, abilitiesFromCharacteristics, abilityFaceOf, abilityFaceOfId, abilitySources, controlGrants, controllerOf, controllerOfGiven, copiableCharacteristics, copiableRuleAbilitiesOf, copiableSnapshotOf, copiableSpecialActionsOf, correspondsTo, countersOf, definesColorless, definesEveryCreatureType, enchantedPlayerOf, functionsFromZone, grantedStaticAbilitiesOf, inSourceRangeGiven, lapsedGrantsOf, retainedThroughCardTypeSet, staticAbilitiesOf, staticTimestampOf, viewOfCard, viewOfCharacteristics, withAnnouncedX)
 import qualified Pawl.Engine.Quantity as Quantity
 import qualified Pawl.Engine.RuleAbilities as RuleAbilities.Engine
 import qualified Pawl.Engine.Saga as Saga
@@ -697,29 +697,6 @@ applyModification textBoxOf viewOf src stamp gs oid unitTypes affected m pc =
         Modification.Intensify n ->
           pc {PC.intensity = fmap (Maybe.fromMaybe 0 (PC.intensity pc) +) (Quantity.evaluate viewOf context gs oid n)}
 
--- CR 205.3d: an object can't gain a subtype that doesn't correspond to one of
--- its types. CR 205.1a's removal clause is the same question in the other
--- direction, so the SetCardType arm asks this too -- one predicate, so a subtype
--- a card-type set would strip is one a later grant cannot put back.
---
--- The card types are the ones the WHOLE effect gives (cardTypesAfter, threaded
--- through applyModification's unitTypes), not the ones the fold has reached: CR
--- 613.7 orders EFFECTS within a layer and nothing orders one effect's own parts
--- against each other, CR 613.6 those parts being the parts of one effect wherever
--- they land. CR 613.6's Svogthos example is this rule in the CR's own words -- one
--- effect gives the Plant Zombie types and the Creature card type they correspond
--- to. So an effect may grant the card type and the subtype in either written
--- order: Song of the Dryads reads "a colorless Forest land" and Life and Limb
--- "Saproling creatures and Forest lands", each naming the subtype first, and both
--- are transcribed that way. Proved by Pawl.ProjectionSpec's "CR 205.3d/305.6 Song
--- of the Dryads' Forest lands on the creature the same effect makes a land" and
--- "CR 613.7/205.3d Life and Limb's Forest lands on the Saproling the same effect
--- makes a land", one on each of projectDeciding's two roads.
-correspondsTo :: Set CardType.CardType -> Subtype.Type.Subtype -> Bool
-correspondsTo types subtype =
-  let family = Subtype.correlatedCardTypes subtype
-   in Set.null family || not (Set.disjoint family types)
-
 -- One grant, dropped when CR 205.3d refuses it. The refusal is proved at the
 -- land-type direction (Pawl.ProjectionSpec's Synthetic Marsh Song case) and is a
 -- regression fence at the creature-type one, where every grant in data/cards
@@ -802,10 +779,6 @@ cardTypesAfter m types = case m of
   Modification.AddChosenColor -> types
   Modification.SetController _ -> types
   Modification.SetControllerToSource -> types
-
--- CR 205.1a's named exception to its own set: instant and sorcery are retained.
-retainedThroughCardTypeSet :: CardType.CardType -> Bool
-retainedThroughCardTypeSet t = t == CardType.Instant || t == CardType.Sorcery
 
 -- CR 612.5 / 611.2c: the OTHER side of a two-object exchange, read out of the
 -- effect's own frozen affected set. Nothing when the set is not exactly the two
