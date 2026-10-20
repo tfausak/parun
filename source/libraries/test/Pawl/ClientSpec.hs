@@ -625,7 +625,7 @@ slavesBob sc
   | any (Text.isPrefixOf (Text.pack "Choose 1 target for ")) shown = numberOf ". Player 2"
   -- Tap, then sacrifice: the protocol offers nothing for this prompt (#5225).
   | Text.pack "order cost components:" `elem` shown = Just (Text.pack "[0,1]")
-  | any menuHeading shown, Just n <- numberOf ". Activate an ability of Mindslaver" = Just n
+  | any menuHeading shown, Just n <- numberOf ". Activate ability 1 of Mindslaver" = Just n
   | any (Text.isPrefixOf (Text.pack "Choose 1 card to discard")) shown = Monad.mplus (numberOf ". Hill Giant") (Just (Text.pack "1"))
   | otherwise = discardsGiant sc
   where
