@@ -1763,6 +1763,8 @@ beginTurn extra pid gs =
             -- turn") where rule 731.2 asks only about the outgoing active player.
             -- The scalar above is read out of THIS map, so the two cannot drift.
             GameState.castsLastTurn = casts,
+            -- The outgoing log, kept for the per-seat view before it is cleared above.
+            GameState.eventsLastTurn = GameState.events gs,
             -- CR 601.2i: the outgoing turn's casts join the game-long record
             -- before the log holding them is cleared above.
             GameState.castsBeforeThisTurn = GameState.castsBeforeThisTurn gs <> Game.castsInLog gs,

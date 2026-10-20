@@ -241,9 +241,14 @@ snapshots :: PlayerView.PlayerView -> Map.Map ObjectId.ObjectId ProjectedCharact
 snapshots view =
   Map.fromList
     [ (oid, Moved.characteristics m)
-    | GameEvent.Moved m <- fmap LoggedEvent.event (PlayerView.witnessed view),
+    | GameEvent.Moved m <- fmap LoggedEvent.event (witnessed view),
       oid <- ZoneChange.departed (Moved.change m) : Foldable.toList (Moved.arrivals m)
     ]
+
+-- | The entries the view says the seat witnessed, last turn's and this
+-- turn's, oldest first.
+witnessed :: PlayerView.PlayerView -> [LoggedEvent.LoggedEvent]
+witnessed view = PlayerView.witnessedLastTurn view <> PlayerView.witnessed view
 
 -- | CR 708.2a: a face-down object has no name.
 snapshotName :: ProjectedCharacteristics.ProjectedCharacteristics -> Text.Text
@@ -327,7 +332,7 @@ event view logged = case LoggedEvent.event logged of
 -- one is told; a later move of it is not.
 told :: PlayerView.PlayerView -> Set.Set ObjectId.ObjectId
 told view =
-  Set.fromList . concatMap (telling . LoggedEvent.event) $ PlayerView.witnessed view
+  Set.fromList . concatMap (telling . LoggedEvent.event) $ witnessed view
   where
     telling e = case e of
       GameEvent.SpellCast c -> [SpellWasCast.spell c]

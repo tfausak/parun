@@ -21,6 +21,9 @@ data PlayerView = MkPlayerView
     stack :: [ObjectView.ObjectView],
     -- | This turn's log entries the seat witnessed (CR 400.2, 701.20a, 701.20e).
     witnessed :: [LoggedEvent.LoggedEvent],
+    -- | The previous turn's log entries the seat witnessed, for a client that
+    -- last looked before that turn ended (CR 514.1's discard, for one).
+    witnessedLastTurn :: [LoggedEvent.LoggedEvent],
     result :: Maybe Result.Result
   }
   deriving (Eq, Show)
