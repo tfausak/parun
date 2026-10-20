@@ -208,6 +208,22 @@ choice view question = Maybe.fromMaybe generic $ case Text.unpack (Question.kind
       ( [objectName view source <> Text.pack ": use its optional effect?", Text.pack "  1. Yes", Text.pack "  2. No"],
         fmap (\i -> R.Object [(Text.pack "type", R.Text (Text.pack (if i == 1 then "Exercises" else "Declines")))]) . one 2
       )
+  -- CR 510.1c-d: one amount per recipient, in the order offered.
+  "AssignCombatDamage" -> do
+    source <- field "source" offer
+    lethal <- field "lethal" offer >>= arrayOf >>= mapM entryOf
+    total <- field "total" offer >>= naturalOf
+    let needs threshold = if threshold > 0 then Text.pack (" (lethal " <> show threshold <> ")") else Text.empty
+        wrong = Text.pack ("Type " <> show (length lethal) <> " amounts that add up to " <> show total <> ".")
+    pure
+      ( Text.concat [Text.pack "Divide ", objectName view source, Text.pack ("'s " <> show total <> " damage, one amount each, separated by spaces:")]
+          : numbered (fmap (\(recipient, threshold) -> recipientName view recipient <> needs threshold) lethal),
+        \typed -> case numbers typed of
+          Right amounts
+            | length amounts == length lethal && sum amounts == total ->
+                Right (R.Array [R.Array [recipient, R.Number (toInteger amount)] | ((recipient, _), amount) <- zip lethal amounts, amount > 0])
+          _ -> Left wrong
+      )
   _ -> Nothing
   where
     offer = Question.offer question
@@ -499,6 +515,12 @@ field key reply = case reply of
 arrayOf :: R.Reply -> Maybe [R.Reply]
 arrayOf reply = case reply of
   R.Array xs -> Just xs
+  _ -> Nothing
+
+-- | A map's entry, as the line protocol writes one.
+entryOf :: R.Reply -> Maybe (R.Reply, Natural)
+entryOf reply = case reply of
+  R.Array [key, value] -> fmap ((,) key) (naturalOf value)
   _ -> Nothing
 
 textOf :: R.Reply -> Maybe Text.Text
