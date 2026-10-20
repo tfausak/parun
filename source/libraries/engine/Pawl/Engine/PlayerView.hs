@@ -12,6 +12,7 @@ import qualified Pawl.Engine.Projection as Projection
 import qualified Pawl.Engine.Projection.View as Projection.View
 import qualified Pawl.Engine.Visibility as Visibility
 import qualified Pawl.Extra.Natural as Natural
+import qualified Pawl.Types.AbilityView as AbilityView
 import qualified Pawl.Types.Facing as Facing
 import qualified Pawl.Types.GameState as GameState
 import qualified Pawl.Types.LoggedEvent as LoggedEvent
@@ -73,8 +74,8 @@ seatView pid gs seat = do
 
 -- | CR 110.5: an object's status for anyone; its characteristics (as projected,
 -- CR 613) for a seat that may see them, which for a face-down permanent or
--- spell is every seat (CR 708.2); and the card behind a face-down object for a
--- seat that may look at it (CR 406.3, 708.5).
+-- spell is every seat (CR 708.2); the card behind a face-down object for a
+-- seat that may look at it (CR 406.3, 708.5); and what an ability came from.
 objectView :: PlayerId.PlayerId -> GameState.GameState -> ObjectId.ObjectId -> Maybe ObjectView.ObjectView
 objectView pid gs oid = do
   object <- Game.lookupObject oid gs
@@ -97,5 +98,18 @@ objectView pid gs oid = do
         ObjectView.face =
           if seen && faceDown
             then Just (Projection.projectShown oid gs)
-            else Nothing
+            else Nothing,
+        ObjectView.ability = abilityView pid gs oid
       }
+
+-- | CR 113.7a / 602.2a: an ability on the stack by its source, where `pid` may
+-- know that object: one in a public zone, one `pid` sees in a hidden zone, or
+-- one that has left, which the seat can name only by what it witnessed.
+abilityView :: PlayerId.PlayerId -> GameState.GameState -> ObjectId.ObjectId -> Maybe AbilityView.AbilityView
+abilityView pid gs oid
+  | Game.isAbility oid gs = Just (AbilityView.MkAbilityView (Game.abilitySourceOf oid gs >>= known))
+  | otherwise = Nothing
+  where
+    known source = case Game.zoneOf source gs of
+      Just zone | Game.isHiddenZone zone && Visibility.sees pid source gs /= Visibility.Type.Visible -> Nothing
+      _ -> Just source

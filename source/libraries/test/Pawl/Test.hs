@@ -35,6 +35,7 @@ import qualified Pawl.Codec.AbilityAddsManaSpec
 import qualified Pawl.Codec.AbilityKindSpec
 import qualified Pawl.Codec.AbilityNameSpec
 import qualified Pawl.Codec.AbilityTriggeredSpec
+import qualified Pawl.Codec.AbilityViewSpec
 import qualified Pawl.Codec.AcquisitionSpec
 import qualified Pawl.Codec.ActingPermanentSpec
 import qualified Pawl.Codec.ActivateManaAbilitiesSpec
@@ -1281,6 +1282,7 @@ spec s registry = do
   Pawl.Codec.QuestionSpec.spec s
   Pawl.Codec.RequestSpec.spec s
   Pawl.Codec.ObjectViewSpec.spec s
+  Pawl.Codec.AbilityViewSpec.spec s
   Pawl.Codec.LoopMembersSpec.spec s
   Pawl.Codec.LoyaltyKindSpec.spec s
   Pawl.Codec.LoyaltySpec.spec s

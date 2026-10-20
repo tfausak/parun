@@ -243,9 +243,9 @@ reading :: (CardName.CardName -> Maybe Card.Card) -> PlayerView.PlayerView -> [M
 reading lookUp view listed wanted
   | Text.null wanted = [Text.pack "Type card and a number from a list, or a card's name."]
   | Right [i] <- numbers wanted = case Monad.join (Maybe.listToMaybe (List.genericDrop (pred (max 1 i)) listed)) >>= (`Map.lookup` Render.objects view) of
-      Just o | i >= 1 -> Render.details lookUp o
+      Just o | i >= 1 -> Render.details lookUp view o
       _ -> [Text.pack ("Number " <> show i <> " in this list is not a card you can see.")]
-  | otherwise = case ListUtils.nubOrd (fmap (Render.details lookUp) (filter matches (Map.elems (Render.objects view)))) of
+  | otherwise = case ListUtils.nubOrd (fmap (Render.details lookUp view) (filter matches (Map.elems (Render.objects view)))) of
       [] -> [Text.pack "No card you can see is named " <> wanted <> Text.pack "."]
       found -> List.intercalate [Text.empty] found
   where

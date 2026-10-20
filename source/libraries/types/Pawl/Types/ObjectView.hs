@@ -2,6 +2,7 @@ module Pawl.Types.ObjectView where
 
 import qualified Data.Map.Strict as Map
 import qualified Numeric.Natural as Natural
+import qualified Pawl.Types.AbilityView as AbilityView
 import qualified Pawl.Types.CounterKind as CounterKind
 import qualified Pawl.Types.Keyword as Keyword
 import qualified Pawl.Types.ObjectId as ObjectId
@@ -23,6 +24,8 @@ data ObjectView = MkObjectView
     attachedTo :: Maybe Recipient.Recipient,
     characteristics :: Maybe ProjectedCharacteristics.ProjectedCharacteristics,
     -- | CR 406.3 / 708.5: the card a face-down object is, for a seat that may look at it.
-    face :: Maybe ProjectedCharacteristics.ProjectedCharacteristics
+    face :: Maybe ProjectedCharacteristics.ProjectedCharacteristics,
+    -- | CR 113.7a / 602.2a: what an ability on the stack came from, and Nothing for anything else.
+    ability :: Maybe AbilityView.AbilityView
   }
   deriving (Eq, Show)
