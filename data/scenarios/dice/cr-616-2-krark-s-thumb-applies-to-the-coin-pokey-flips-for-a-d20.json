@@ -69,6 +69,19 @@
       "player": "alice",
       "do": {
         "Answer": {
+          "prompt": "CallCoin",
+          "with": {
+            "type": "Heads"
+          }
+        }
+      }
+    },
+    {
+      "turn": 1,
+      "step": "CombatDamage",
+      "player": "alice",
+      "do": {
+        "Answer": {
           "prompt": "FlipCoin",
           "with": {
             "type": "Heads"

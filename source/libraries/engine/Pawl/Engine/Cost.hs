@@ -6929,8 +6929,8 @@ payPayable moment paidFor slots pid oid component = case component of
   -- above says why -- and the flip BINDS NOTHING: rule 705.1 names nothing the
   -- rest of the cost or a later clause could read.
   --
-  -- No CR 706 thrower reaches this module, so Pokey, the Scallywagg's roll is
-  -- not offered for a cost's flip (#5350).
+  -- Not implemented: Pokey, the Scallywagg's roll instead of a cost's flip, no
+  -- CR 706 thrower reaching this module (#5350).
   CostComponent.FlipCoin -> do
     statements <- Coin.statementsFor (Just pid)
     _ <- Event.flipWinLoseCoin Nothing pid statements

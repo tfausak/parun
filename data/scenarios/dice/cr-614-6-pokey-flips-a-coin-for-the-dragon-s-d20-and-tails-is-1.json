@@ -1,6 +1,6 @@
 {
   "description": "CR 614.6 Pokey flips a coin for the dragon's d20 and tails is 1",
-  "note": "The control: tails reads as 1, so one Treasure.",
+  "note": "The control: tails reads as 1, so one Treasure. The call of heads loses the flip, so Tavern Scoundrel makes nothing.",
   "board": {
     "seats": [
       {
@@ -17,6 +17,9 @@
           },
           {
             "card": "Feywild Trickster"
+          },
+          {
+            "card": "Tavern Scoundrel"
           }
         ]
       },
@@ -57,6 +60,19 @@
       "do": {
         "ChooseOptional": {
           "type": "Declines"
+        }
+      }
+    },
+    {
+      "turn": 1,
+      "step": "CombatDamage",
+      "player": "alice",
+      "do": {
+        "Answer": {
+          "prompt": "CallCoin",
+          "with": {
+            "type": "Heads"
+          }
         }
       }
     },

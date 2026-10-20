@@ -10873,7 +10873,10 @@ throwDice runSubgame controller sides named perDie = do
   case settled of
     Left result -> pure ([result], [controller], [])
     Right roll -> do
-      (results, throwers) <- throwSettled runSubgame roll perDie
+      -- A roll standing for Pokey's flip throws with no modifier of the
+      -- instruction's own, throwForCoin's reason: the flip named none, and
+      -- the instruction sees only the 1 or 20 the face is read as.
+      (results, throwers) <- throwSettled runSubgame roll (if DiceRoll.forCoin roll then pure 0 else perDie)
       let readBack = if DiceRoll.forCoin roll then foldMap (pure . Event.resultOfFace) (Event.faceOfRoll results) else results
       pure (readBack, throwers, results)
 

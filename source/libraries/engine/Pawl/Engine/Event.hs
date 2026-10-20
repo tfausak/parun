@@ -2297,9 +2297,9 @@ apply batch candidate event =
         before <- State.get
         let flipper = Projection.controllerOf oid before
         statements <- Coin.statementsFor flipper
-        -- No CR 706 thrower reaches this module, so Pokey, the Scallywagg's roll
-        -- is not offered here (#5350); `flipOneCoin` says how it is kept out. The Left
-        -- arm is unreachable for that reason.
+        -- Not implemented: Pokey, the Scallywagg's roll instead of this flip, no
+        -- CR 706 thrower reaching this module (#5350). `flipOneCoin` says how it
+        -- is kept out, and the Left arm is unreachable for that reason.
         flipped <- flipOneCoin Nothing flipper statements
         let (face, stated) = either (\rolled -> (Maybe.fromMaybe CoinFace.Tails rolled, False)) id flipped
             picked = case face of
@@ -5430,10 +5430,9 @@ resolveLifeGain pid n =
 --
 -- `throw` is the caller's CR 706 road for that roll (Pawl.Engine.Resolve.Effect's
 -- throwForCoin), which this module cannot reach. A caller with no thrower passes
--- Nothing, and the substitution is then kept out of CR 616.1's offer by a share
--- of 0 in CR 615.7's allowances, the door Replacement.allocatedOut already gives
--- a row. Not implemented: substituting a roll on a road with no CR 706 thrower
--- (#5350).
+-- Nothing, and the substitution is then kept out of CR 616.1's offer through
+-- Replacement.allocatedOut, a share of 0 in the loop's allowances. Not
+-- implemented: substituting a roll on a road with no CR 706 thrower (#5350).
 flipOneCoin :: Maybe (DiceRoll.DiceRoll -> Game [Natural]) -> Maybe PlayerId -> [StatedFlip.StatedFlip] -> Game (Either (Maybe CoinFace.CoinFace) (CoinFace.CoinFace, Bool))
 flipOneCoin throw mFlipper stated = case mFlipper of
   Nothing -> Right <$> flipCoins Nothing 1 stated
@@ -5535,9 +5534,9 @@ flipCoins mFlipper coins stated = do
 -- Answers Left where CR 614.6 replaced the roll with a coin flip (Pokey, the
 -- Scallywagg): the flip is made HERE, with its CR 705.3 statements and its CR
 -- 705.1 event, and the number it stands for is the answer. No die was thrown, so
--- the caller records no roll. The flip is CR 705.2's face-only kind -- Pokey's
--- "tails is 1 and heads is 20" names no call -- so nobody wins it but by a
--- statement.
+-- the caller records no roll. The flip is CALLED and won or lost, CR 705.2's
+-- second kind, per Pokey's 2024-11-08 ruling: "after the roll, the ability of
+-- Tavern Scoundrel would trigger". The face alone decides the number.
 --
 -- A cancelled event is unreachable -- no arm of Pawl.Types.DieRollRewrite replaces
 -- the roll with nothing -- so the fallback is defensive, and in the direction rule
@@ -5553,13 +5552,15 @@ proposeDiceRoll pid sides named = do
         (Just roll, _) -> pure (Right roll)
         (Nothing, Just (flipper, coins)) -> do
           statements <- Coin.statementsFor (Just flipper)
-          (face, won) <- flipCoins (Just flipper) coins statements
+          gs <- State.get
+          called <- Game.choose (Prompt.CallCoin (Decide.deciderFor flipper gs) flipper)
+          (face, stated) <- flipCoins (Just flipper) coins statements
           State.modify'
             ( recordEvent
                 ( GameEvent.CoinFlipped
                     CoinFlipped.MkCoinFlipped
                       { CoinFlipped.flipper = flipper,
-                        CoinFlipped.won = if won then Just True else Nothing
+                        CoinFlipped.won = Just (stated || face == called)
                       }
                 )
             )

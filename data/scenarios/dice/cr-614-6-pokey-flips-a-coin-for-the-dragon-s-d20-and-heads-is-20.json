@@ -1,6 +1,6 @@
 {
   "description": "CR 614.6 Pokey flips a coin for the dragon's d20 and heads is 20",
-  "note": "No RollDie answer is scheduled, so a die rolled anyway fails the scenario. The flip counts as flipping a coin, not rolling a die, so Feywild Trickster makes no Faerie Dragon.",
+  "note": "No RollDie answer is scheduled, so a die rolled anyway fails the scenario. The flip counts as flipping a coin, not rolling a die, so Feywild Trickster makes no Faerie Dragon. The call does not match, so the flip is lost, and heads still reads as 20.",
   "board": {
     "seats": [
       {
@@ -57,6 +57,19 @@
       "do": {
         "ChooseOptional": {
           "type": "Declines"
+        }
+      }
+    },
+    {
+      "turn": 1,
+      "step": "CombatDamage",
+      "player": "alice",
+      "do": {
+        "Answer": {
+          "prompt": "CallCoin",
+          "with": {
+            "type": "Tails"
+          }
         }
       }
     },
