@@ -1,0 +1,54 @@
+{
+  "description": "CR 707.9b / 707.9d / 205.1a: Dino DNA's copy of Dryad Arbor is no land and no Forest, and its copy of Avian Changeling is no longer every creature type",
+  "note": "Setting the card types to creature removes Land, so the Forest subtype goes with it (CR 205.1a) and the token has no intrinsic {G} ability (CR 305.6). Setting the creature types to Dinosaur provides a value for subtypes, so the copied changeling is not copied (CR 707.9d) and the token is a Dinosaur alone.",
+  "board": {
+    "seats": [
+      {
+        "name": "alice",
+        "battlefield": [
+          { "card": "Dino DNA", "label": "dna" },
+          { "card": "Island", "label": "island" },
+          { "card": "Island", "label": "island-2" },
+          { "card": "Island", "label": "island-3" },
+          { "card": "Island", "label": "island-4" },
+          { "card": "Island", "label": "island-5" },
+          { "card": "Island", "label": "island-6" },
+          { "card": "Island", "label": "island-7" }
+        ],
+        "graveyard": [
+          { "card": "Dryad Arbor" },
+          { "card": "Avian Changeling" }
+        ],
+        "library": [
+          { "card": "Hill Giant" },
+          { "card": "Hill Giant" },
+          { "card": "Hill Giant" }
+        ]
+      },
+      {
+        "name": "bob",
+        "library": [
+          { "card": "Hill Giant" },
+          { "card": "Hill Giant" },
+          { "card": "Hill Giant" }
+        ]
+      }
+    ],
+    "active": "alice",
+    "step": "PrecombatMain"
+  },
+  "timeline": [
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": { "Activate": { "object": "$dna", "ability": 0, "targets": ["Dryad Arbor"], "mana": ["$island", null] } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass" },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": { "Activate": { "object": "$dna", "ability": 1, "targets": ["Dryad Arbor"], "mana": ["$island-2", "$island-3", "$island-4", "$island-5", "$island-6", "$island-7"] } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass" },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "check": { "Types": { "object": "Dryad Arbor#2", "types": ["Creature"] } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "check": { "Subtypes": { "object": "Dryad Arbor#2", "subtypes": ["Dinosaur"] } } },
+    { "turn": 3, "step": "PrecombatMain", "player": "alice", "check": { "View": { "of": "Offered", "player": "alice", "is": ["Pass", "Activate $dna", "Activate $dna", "ActivateManaAbility $island", "ActivateManaAbility $island-2", "ActivateManaAbility $island-3", "ActivateManaAbility $island-4", "ActivateManaAbility $island-5", "ActivateManaAbility $island-6", "ActivateManaAbility $island-7"] } } },
+    { "turn": 3, "step": "PrecombatMain", "player": "alice", "do": { "Activate": { "object": "$dna", "ability": 0, "targets": ["Avian Changeling"], "mana": ["$island", null] } } },
+    { "turn": 3, "step": "PrecombatMain", "player": "alice", "do": "Pass" },
+    { "turn": 3, "step": "PrecombatMain", "player": "alice", "do": { "Activate": { "object": "$dna", "ability": 1, "targets": ["Avian Changeling"], "mana": ["$island-2", "$island-3", "$island-4", "$island-5", "$island-6", "$island-7"] } } },
+    { "turn": 3, "step": "PrecombatMain", "player": "alice", "do": "Pass" },
+    { "turn": 3, "step": "PrecombatMain", "player": "alice", "check": { "Subtypes": { "object": "Avian Changeling#2", "subtypes": ["Dinosaur"] } } }
+  ]
+}

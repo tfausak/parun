@@ -1121,13 +1121,15 @@ applyCopyException this own snapshot exception = case exception of
   -- instant and sorcery kept, and a subtype correlating with no card type the
   -- copy still has goes with the type that carried it -- Projection's
   -- SetCardType arm over the copiable values.
+  -- data/scenarios/dino-dna-copies-drop-the-copied-land-type-and-changeling.json
+  -- proves the strip (Dryad Arbor's Forest).
   CopyException.SetCardTypes types ->
     let kept = Set.union types (Set.filter retainedThroughCardTypeSet (PC.cardTypes snapshot))
      in snapshot {PC.cardTypes = kept, PC.subtypes = Set.filter (correspondsTo kept) (PC.subtypes snapshot)}
   -- CR 707.9b / 205.1a's set over CR 205.3m's creature types: every copied
   -- creature type goes and the clause's come in. CR 707.9d strips changeling
-  -- (CR 702.73a), the ability that would define them. That strip is a
-  -- REGRESSION FENCE: no test copies a changeling card with Dino DNA.
+  -- (CR 702.73a), the ability that would define them; the same scenario
+  -- proves it (Avian Changeling).
   CopyException.SetCreatureSubtypes subtypes ->
     snapshot
       { PC.subtypes = Set.union subtypes (Set.filter (not . Subtype.isCreatureType) (PC.subtypes snapshot)),
@@ -2573,14 +2575,16 @@ lastZoneOf = Game.liveOrLastKnown Object.zone LastKnown.zone
 
 -- CR 205.3d: an object can't gain a subtype that doesn't correspond to one of
 -- its types. CR 205.1a's removal clause is the same question in the other
--- direction, so the SetCardType arm asks this too -- one predicate, so a subtype
--- a card-type set would strip is one a later grant cannot put back.
+-- direction, so Pawl.Engine.Projection's SetCardType arm and the SetCardTypes
+-- copy exception above ask this too -- one predicate, so a subtype a card-type
+-- set would strip is one a later grant cannot put back.
 --
--- The card types are the ones the WHOLE effect gives (cardTypesAfter, threaded
--- through applyModification's unitTypes), not the ones the fold has reached: CR
--- 613.7 orders EFFECTS within a layer and nothing orders one effect's own parts
--- against each other, CR 613.6 those parts being the parts of one effect wherever
--- they land. CR 613.6's Svogthos example is this rule in the CR's own words -- one
+-- For a modification the card types are the ones the WHOLE effect gives
+-- (Pawl.Engine.Projection.cardTypesAfter, threaded through
+-- Pawl.Engine.Projection.applyModification's unitTypes), not the ones the fold
+-- has reached: CR 613.7 orders EFFECTS within a layer and nothing orders one
+-- effect's own parts against each other, CR 613.6 those parts being the parts of
+-- one effect wherever they land. CR 613.6's Svogthos example is this rule in the CR's own words -- one
 -- effect gives the Plant Zombie types and the Creature card type they correspond
 -- to. So an effect may grant the card type and the subtype in either written
 -- order: Song of the Dryads reads "a colorless Forest land" and Life and Limb
@@ -2588,12 +2592,15 @@ lastZoneOf = Game.liveOrLastKnown Object.zone LastKnown.zone
 -- are transcribed that way. Proved by Pawl.ProjectionSpec's "CR 205.3d/305.6 Song
 -- of the Dryads' Forest lands on the creature the same effect makes a land" and
 -- "CR 613.7/205.3d Life and Limb's Forest lands on the Saproling the same effect
--- makes a land", one on each of projectDeciding's two roads.
+-- makes a land", one on each of Pawl.Engine.Projection.projectDeciding's two
+-- roads.
 correspondsTo :: Set CardType.CardType -> Subtype.Type.Subtype -> Bool
 correspondsTo types subtype =
   let family = Subtype.correlatedCardTypes subtype
    in Set.null family || not (Set.disjoint family types)
 
 -- CR 205.1a's named exception to its own set: instant and sorcery are retained.
+-- Read by Pawl.Engine.Projection.cardTypesAfter and the SetCardTypes copy
+-- exception above.
 retainedThroughCardTypeSet :: CardType.CardType -> Bool
 retainedThroughCardTypeSet t = t == CardType.Instant || t == CardType.Sorcery
