@@ -8063,11 +8063,13 @@ realSplitCardSpec s registry = Spec.describe s "RealSplitCard" $ do
   basicLandSpec s
 
 -- CR 709.4 for the boxes CR 709.4b and CR 709.4c do not reach: power, toughness,
--- loyalty, defense, and the characteristic-defining ability a printed star stands
--- for. Every producer is synthetic, because no printing carries any of them on a
--- split half -- Scryfall `is:split (t:creature or t:planeswalker or t:battle)` and
--- `is:split pow=*`, 2026-09-02, no hit -- nor `is:split is:permanent -t:room`,
--- so the split printings that ARE permanents are Rooms, which print no P/T box.
+-- loyalty, defense, Alchemy's starting intensity, and the characteristic-defining
+-- ability a printed star stands for. Every producer is synthetic, because no
+-- printing carries any of them on a split half -- Scryfall `is:split (t:creature
+-- or t:planeswalker or t:battle)` and `is:split pow=*`, 2026-09-02, and
+-- `layout:split o:"intensity"`, 2026-10-19, no hit -- nor `is:split
+-- is:permanent -t:room`, so the split printings that ARE permanents are Rooms,
+-- which print no P/T box.
 -- A printed split card with a creature half is what would refute that.
 --
 -- Every card but the twinned and rival pairs puts its box on the RIGHT half alone, which is
@@ -8078,7 +8080,8 @@ realSplitCardSpec s registry = Spec.describe s "RealSplitCard" $ do
 -- counters (CR 310.4b). Synthetic Twinned Colossus // Synthetic Twinned Titan
 -- prints a P/T box on BOTH halves, each half defining one of the two boxes, which
 -- is the pair CR 709.4c combines. Synthetic Rival Golem // Synthetic Rival Giant
--- has both halves print a toughness and both define power.
+-- has both halves print a toughness and both define power; the other rival pairs
+-- print a loyalty, a defense and a starting intensity on both halves.
 --
 -- The precondition every case asserts on the board: the PERMANENT shows CR 709.4's
 -- combined view and not CR 709.3b's single half. Naming the half is what casting
@@ -8138,6 +8141,36 @@ splitBoxSpec s registry = Spec.describe s "SplitBox" $ do
       (after, Just oid) -> do
         Spec.assertEqWith s "the left half's ability and printed toughness" (S.powerToughnessOf oid after) (Just (4, 3))
         Spec.assertEqWith s "and it is the halves combined" (Set.size (Projection.namesOf oid after)) 2
+  -- The same entry for the boxes merge2 picks by firstJust. The RIGHT half is
+  -- cast, so the half on the stack (CR 709.3b) is not the half that answers once
+  -- the halves combine: loyalty 3 and 5 enter as 3, not 5 or 8.
+  Spec.it s "CR 709.4 the left half answers for a loyalty both halves print" $ do
+    forest <- S.printingOf s registry "Forest"
+    printing <- S.printingOf s registry "Synthetic Rival Oath"
+    case castHalf forest printing "Synthetic Rival Vow" of
+      (_, Nothing) -> Spec.assertFailure s "expected one nonland permanent"
+      (after, Just oid) -> do
+        Spec.assertEqWith s "the left half's loyalty counters" (S.counterOf CounterKind.Loyalty oid after) 3
+        Spec.assertEqWith s "and the projection carries the left half's number" (PC.loyalty (Projection.project oid after)) (Just (Loyalty.Literal 3))
+        Spec.assertEqWith s "and it is the halves combined" (Set.size (Projection.namesOf oid after)) 2
+  -- Defense 4 and 6, the right half cast: 4, not 6 or 10.
+  Spec.it s "CR 709.4 the left half answers for a defense both halves print" $ do
+    swamp <- S.printingOf s registry "Swamp"
+    printing <- S.printingOf s registry "Synthetic Rival Front"
+    case castHalf swamp printing "Synthetic Rival Line" of
+      (_, Nothing) -> Spec.assertFailure s "expected one nonland permanent"
+      (after, Just oid) -> do
+        Spec.assertEqWith s "the left half's defense counters" (S.counterOf CounterKind.Defense oid after) 4
+        Spec.assertEqWith s "and the projection carries the left half's number" (PC.defense (Projection.project oid after)) (Just (Defense.MkDefense 4))
+        Spec.assertEqWith s "and it is the halves combined" (Set.size (Projection.namesOf oid after)) 2
+  -- Starting intensity 1 and 2, read in hand: CR 709.4 combines the halves in
+  -- every zone but the stack, where CR 709.3b leaves only the cast half's.
+  Spec.it s "CR 709.4 the left half answers for a starting intensity both halves print" $ do
+    mountain <- S.printingOf s registry "Mountain"
+    printing <- S.printingOf s registry "Synthetic Rival Spark"
+    let (gs, oid) = S.handOne printing (S.landsInPlay mountain 1)
+    Spec.assertEqWith s "the left half's intensity" (PC.intensity (Projection.project oid gs)) (Just 1)
+    Spec.assertEqWith s "and it is the halves combined" (Set.size (Projection.namesOf oid gs)) 2
   Spec.it s "CR 306.5b the combined view has the one half's printed loyalty" $ do
     forest <- S.printingOf s registry "Forest"
     printing <- S.printingOf s registry "Synthetic Warden Ascendant"
