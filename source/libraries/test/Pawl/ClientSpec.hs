@@ -179,6 +179,20 @@ spec s registry = Spec.describe s "Client" $ do
     Spec.assertBool s (not (any (Text.isInfixOf (Text.pack "Hill Giant is put into a graveyard")) news)) ("the discard's move, told once: " <> show news)
     Spec.assertBool s (any discarding shown) "Player 1 discarded at cleanup"
 
+  Spec.it s "CR 113.7a Mindslaver's ability is named by its source at its target prompt and on the stack" $ do
+    gs <- started s registry
+    mindslaver <- S.printingOf s registry "Mindslaver"
+    mountains <- mapM (S.printingOf s registry) ["Mountain", "Mountain", "Mountain", "Mountain"]
+    let board = List.foldl' (\g p -> snd (S.addPermanent p S.alice g)) gs (mindslaver : mountains)
+        turn = GameState.turnNumber board
+        seats = Driver.bySeat (Map.singleton S.alice (Game.human (screen 200 slavesBob) (const Nothing))) Bot.bot
+        run = Driver.drive [] seats 200 (pure . (> turn) . GameState.turnNumber) board
+        shown = reverse (written (State.execState (Except.runExceptT (State.evalStateT (State.evalStateT run (SplitMix.MkSplitMix 1)) Hotseat.fresh {Hotseat.facing = Just S.alice, Hotseat.autoPass = False})) blank))
+    -- Asked while Mindslaver is on the battlefield, and shown once its sacrifice has moved it.
+    Spec.assertBool s (any (Text.isPrefixOf (Text.pack "Choose 1 target for Mindslaver's ability ")) shown) "the target prompt names it"
+    Spec.assertBool s (Text.pack "Stack, top first: Mindslaver's ability" `elem` shown) "the stack names it"
+    Spec.assertEqWith s "no face-down card" (filter (Text.isInfixOf (Text.pack "face-down")) shown) []
+
   Spec.it s "CR 723.6 a seat controlled for its turn is still shown the rest of the turn before, and that turn, at its next question" $ do
     gs <- started s registry
     giant <- S.printingOf s registry "Hill Giant"

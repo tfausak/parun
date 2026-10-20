@@ -15,6 +15,7 @@ import Numeric.Natural (Natural)
 import qualified Pawl.Codec.GameEvent as Codec.GameEvent
 import qualified Pawl.Codec.Reply as Codec.Reply
 import qualified Pawl.JsonCodec.Codec as Codec
+import qualified Pawl.Types.AbilityView as AbilityView
 import qualified Pawl.Types.AttackTarget as AttackTarget
 import qualified Pawl.Types.AttackerDeclared as AttackerDeclared
 import qualified Pawl.Types.BecameBlocking as BecameBlocking
@@ -95,34 +96,34 @@ board view =
                 Text.pack (show (SeatView.librarySize s) <> " in library")
               ]
           ]
-            <> listed "  Lands: " (ordered lands)
-            <> listed "  Creatures: " (ordered creatures)
-            <> listed "  Other permanents: " (ordered others)
-            <> listed "  Graveyard: " (SeatView.graveyard s)
-            <> listed "  Exile: " (SeatView.exile s)
-    stack = listed "Stack, top first: " (PlayerView.stack view)
+            <> listed view "  Lands: " (ordered view lands)
+            <> listed view "  Creatures: " (ordered view creatures)
+            <> listed view "  Other permanents: " (ordered view others)
+            <> listed view "  Graveyard: " (SeatView.graveyard s)
+            <> listed view "  Exile: " (SeatView.exile s)
+    stack = listed view "Stack, top first: " (PlayerView.stack view)
 
 -- | The deciding seat's hand.
 hand :: PlayerView.PlayerView -> [Text.Text]
 hand view =
   let held = concatMap SeatView.hand (filter ((== PlayerView.viewer view) . SeatView.player) (PlayerView.seats view))
       (lands, spells) = List.partition (isA CardType.Land) held
-   in [Text.pack "Your hand: " <> if null held then Text.pack "empty" else Text.intercalate (Text.pack ", ") (fmap describe (ordered lands <> ordered spells))]
+   in [Text.pack "Your hand: " <> if null held then Text.pack "empty" else Text.intercalate (Text.pack ", ") (fmap (describe view) (ordered view lands <> ordered view spells))]
 
 -- | Whether the seat sees the object as having a card type.
 isA :: CardType.CardType -> ObjectView.ObjectView -> Bool
 isA t = maybe False (Set.member t . ProjectedCharacteristics.cardTypes) . ObjectView.characteristics
 
 -- | By mana value, then name, ties in the view's order.
-ordered :: [ObjectView.ObjectView] -> [ObjectView.ObjectView]
-ordered = List.sortOn (\o -> (Maybe.fromMaybe 0 (ObjectView.characteristics o >>= ProjectedCharacteristics.manaValue), Text.toLower (nameOf o)))
+ordered :: PlayerView.PlayerView -> [ObjectView.ObjectView] -> [ObjectView.ObjectView]
+ordered view = List.sortOn (\o -> (Maybe.fromMaybe 0 (ObjectView.characteristics o >>= ProjectedCharacteristics.manaValue), Text.toLower (nameOf view o)))
 
-listed :: String -> [ObjectView.ObjectView] -> [Text.Text]
-listed label shown = [Text.pack label <> Text.intercalate (Text.pack ", ") (fmap describe shown) | not (null shown)]
+listed :: PlayerView.PlayerView -> String -> [ObjectView.ObjectView] -> [Text.Text]
+listed view label shown = [Text.pack label <> Text.intercalate (Text.pack ", ") (fmap (describe view) shown) | not (null shown)]
 
 -- | An object's name, power and toughness, and status.
-describe :: ObjectView.ObjectView -> Text.Text
-describe o =
+describe :: PlayerView.PlayerView -> ObjectView.ObjectView -> Text.Text
+describe view o =
   let pt = do
         c <- ObjectView.characteristics o
         p <- ProjectedCharacteristics.power c
@@ -132,12 +133,19 @@ describe o =
         [Text.pack "tapped" | ObjectView.tapped o == TapState.Tapped]
           <> [Text.pack (show (ObjectView.damage o) <> " damage") | ObjectView.damage o > 0]
           <> [count (sum (ObjectView.counters o)) "counter" | not (Map.null (ObjectView.counters o))]
-   in nameOf o <> Maybe.fromMaybe Text.empty pt <> if null status then Text.empty else Text.pack " (" <> Text.intercalate (Text.pack ", ") status <> Text.pack ")"
+   in nameOf view o <> Maybe.fromMaybe Text.empty pt <> if null status then Text.empty else Text.pack " (" <> Text.intercalate (Text.pack ", ") status <> Text.pack ")"
 
 -- | CR 708.2a: a face-down object has no name, and a hidden one shows none;
 -- CR 406.3 / 708.5: a face-down card the seat may look at names its card too.
-nameOf :: ObjectView.ObjectView -> Text.Text
-nameOf o =
+-- CR 113.7a / 602.2a: an ability has no name, so it is named by its source.
+nameOf :: PlayerView.PlayerView -> ObjectView.ObjectView -> Text.Text
+nameOf view o = case ObjectView.ability o of
+  Just a -> maybe (Text.pack "an ability") (<> Text.pack "'s ability") (AbilityView.source a >>= knownName view)
+  Nothing -> cardName o
+
+-- | A card's name as the seat sees it.
+cardName :: ObjectView.ObjectView -> Text.Text
+cardName o =
   let shown = case ObjectView.characteristics o of
         Nothing | Maybe.isNothing (ObjectView.face o) -> Text.pack "a hidden card"
         Just c | names <- Set.toList (ProjectedCharacteristics.names c), not (null names) -> joined names
@@ -155,9 +163,9 @@ cardNames o = maybe (foldMap ProjectedCharacteristics.names (ObjectView.characte
 -- | An object in full, as the seat sees it: its summary, its characteristics
 -- now, the card behind it when face down and the seat may look, its
 -- counters, and the printed Oracle text of the faces it is named for.
-details :: (CardName.CardName -> Maybe Card.Card) -> ObjectView.ObjectView -> [Text.Text]
-details lookUp o =
-  [describe o]
+details :: (CardName.CardName -> Maybe Card.Card) -> PlayerView.PlayerView -> ObjectView.ObjectView -> [Text.Text]
+details lookUp view o =
+  [describe view o]
     <> foldMap characteristicLines (ObjectView.characteristics o)
     <> foldMap (\f -> Text.pack "Face down. You may look at it:" : characteristicLines f) (ObjectView.face o)
     <> [Text.pack "Counters: " <> Text.intercalate (Text.pack ", ") (fmap counted (Map.toList (ObjectView.counters o))) | not (Map.null (ObjectView.counters o))]
@@ -231,9 +239,13 @@ objects view =
 -- | An object by id, named as the view shows it, or else as the last witnessed
 -- move of it showed it, so one that has since left still has a name.
 named :: PlayerView.PlayerView -> ObjectId.ObjectId -> Text.Text
-named view oid = case Map.lookup oid (objects view) of
-  Just o -> nameOf o
-  Nothing -> maybe (Text.pack ("object " <> show (ObjectId.unwrap oid))) snapshotName (Map.lookup oid (snapshots view))
+named view oid = Maybe.fromMaybe (Text.pack ("object " <> show (ObjectId.unwrap oid))) (knownName view oid)
+
+-- | An object's name, if the view shows it or a witnessed move of it.
+knownName :: PlayerView.PlayerView -> ObjectId.ObjectId -> Maybe Text.Text
+knownName view oid = case Map.lookup oid (objects view) of
+  Just o -> Just (nameOf view o)
+  Nothing -> fmap snapshotName (Map.lookup oid (snapshots view))
 
 -- | What each witnessed move showed the object it moved as, by
 -- either end's id, the latest winning.
