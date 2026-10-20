@@ -350,9 +350,9 @@ evaluateAgainst viewOf context gs announcedOn mOid mView quantity =
         -- REGRESSION FENCE: no board in the suite gives a crafted permanent that
         -- reads it an exiling ability too.
         --
-        -- Not implemented: a reader that is itself an acquired ability, which
-        -- would read only its own pair's exiles; Filter.Context names no
-        -- reading ability, so every reader here is the source's own (#5268).
+        -- A reader that is itself an acquired ability reads only its own pair's
+        -- exiles (Filter.reader): data/scenarios/myr-welder-acquired-soul-foundry-reads-no-card.json
+        -- is the proof.
         --
         -- Not implemented: CR 607.5's narrowing for a reference a copy effect
         -- brought, which sees only what its own copied pair exiled -- Mimeoplasm,
@@ -362,7 +362,7 @@ evaluateAgainst viewOf context gs announcedOn mOid mView quantity =
         Quantity.AgainstExiledPile (AgainstExiledPile.MkAgainstExiledPile pile inner) ->
           case Filter.source context of
             Nothing -> Nothing
-            Just src -> fmap sum (traverse (\o -> evaluateAgainst viewOf context gs announcedOn (Just o) (viewOf o) inner) (Game.linkedPile Nothing pile src gs))
+            Just src -> fmap sum (traverse (\o -> evaluateAgainst viewOf context gs announcedOn (Just o) (viewOf o) inner) (Game.linkedPile (Filter.reader context) pile src gs))
         -- The arm above narrowed to ONE card, lastCardExiledWith's, so there is
         -- nothing to sum. Nothing when no linked card matches: "the last creature
         -- card exiled with it" is then no card at all.
@@ -1783,10 +1783,12 @@ greatestOfOneValue stored =
 --
 -- The membership test is Quantity.AgainstExiledPile's, Game.linkedPile's
 -- OwnAbilities: data/scenarios/duplicant-ignores-what-an-acquired-ability-exiled.json
--- proves it skips what an acquired ability exiled. Nothing when the context
--- names no source or nothing matches.
+-- proves it skips what an acquired ability exiled. Read as the context's
+-- reader (Filter.reader), a REGRESSION FENCE: no ability in data/cards/ an
+-- object can acquire reads "the last card exiled with it". Nothing when the
+-- context names no source or nothing matches.
 lastCardExiledWith :: Count.ViewOf -> Filter.Context -> GameState -> Filter.Type.Filter Keyword.Type.Keyword -> Maybe ObjectId
 lastCardExiledWith viewOf context gs criterion = do
   src <- Filter.source context
   let matching o = maybe False (\view -> Filter.matches context view criterion) (viewOf o)
-  Game.lastExiled (filter matching (Game.linkedPile Nothing ExiledPile.OwnAbilities src gs)) gs
+  Game.lastExiled (filter matching (Game.linkedPile (Filter.reader context) ExiledPile.OwnAbilities src gs)) gs

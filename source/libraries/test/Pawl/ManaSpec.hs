@@ -487,6 +487,7 @@ manaSpec s registry = Spec.describe s "Mana" $ do
               ActivatedAbility.modal = Mint.oneMode (Seq.singleton (Effect.AddMana (ManaAddition.MkManaAddition (PlayerRef.Relative PlayerRelation.You) (ManaProduction.OfType (ManaType.Colored Color.Green)) (Quantity.Literal 1) ManaRetention.Ordinary Nothing Nothing Nothing))),
               ActivatedAbility.maximumX = [],
               ActivatedAbility.minimumX = 0,
+              ActivatedAbility.definedX = Nothing,
               ActivatedAbility.restrictions = [],
               ActivatedAbility.activator = Activator.Controller,
               ActivatedAbility.condition = Nothing,
@@ -505,6 +506,7 @@ manaSpec s registry = Spec.describe s "Mana" $ do
                   (Seq.singleton (Effect.AddMana (ManaAddition.MkManaAddition (PlayerRef.Relative PlayerRelation.You) (ManaProduction.OfType (ManaType.Colored Color.Green)) (Quantity.Literal 1) ManaRetention.Ordinary Nothing Nothing Nothing))),
               ActivatedAbility.maximumX = [],
               ActivatedAbility.minimumX = 0,
+              ActivatedAbility.definedX = Nothing,
               ActivatedAbility.restrictions = [],
               ActivatedAbility.activator = Activator.Controller,
               ActivatedAbility.condition = Nothing,
@@ -523,6 +525,7 @@ manaSpec s registry = Spec.describe s "Mana" $ do
                   (Seq.singleton (Effect.DealDamage (DealDamage.MkDealDamage (Seq.singleton (DamagePart.MkDamagePart (ObjectRef.InSlot (SlotName.MkSlotName (Text.pack "x"))) (Quantity.Literal 1))) Nothing Nothing))),
               ActivatedAbility.maximumX = [],
               ActivatedAbility.minimumX = 0,
+              ActivatedAbility.definedX = Nothing,
               ActivatedAbility.restrictions = [],
               ActivatedAbility.activator = Activator.Controller,
               ActivatedAbility.condition = Nothing,
@@ -4211,7 +4214,7 @@ atLife n gs = gs {GameState.players = Map.adjust (\p -> p {Player.life = n}) S.a
 theAbility :: Printing.Printing -> ActivatedAbility.ActivatedAbility Card.Type.Card (GrantedAbility.GrantedAbility Card.Type.Card)
 theAbility p = case Face.activatedAbilities (S.combinedFace p) of
   ab : _ -> ab
-  [] -> ActivatedAbility.MkActivatedAbility (Cost.Type.MkCost (Just (ManaCost.MkManaCost [])) []) [] 0 (Mint.oneMode Seq.empty) [] Activator.Controller Nothing Nothing Nothing
+  [] -> ActivatedAbility.MkActivatedAbility (Cost.Type.MkCost (Just (ManaCost.MkManaCost [])) []) [] 0 Nothing (Mint.oneMode Seq.empty) [] Activator.Controller Nothing Nothing Nothing
 
 -- CR 106.3's count read off the BOARD rather than off the card: Cabal Coffers
 -- (Torment) prints "{2}, {T}: Add {B} for each Swamp you control." Oracle text

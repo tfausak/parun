@@ -13,6 +13,7 @@ import qualified Pawl.Engine.Binding as Binding
 import qualified Pawl.Engine.Keyword as Keyword
 import qualified Pawl.Engine.NameWords as NameWords
 import qualified Pawl.Engine.Sector as Sector
+import qualified Pawl.Types.AbilityName as AbilityName
 import qualified Pawl.Types.Behold as Behold
 import qualified Pawl.Types.BlockStatus as BlockStatus
 import qualified Pawl.Types.BoundMeasure as BoundMeasure
@@ -1572,6 +1573,16 @@ data Context = MkContext
     -- the referring ability (CR 607.1a, 607.5). Empty in contextFor below, so
     -- the atom is vacuously False wherever no source frames the read.
     sourceExiled :: Map.Map ObjectId.ObjectId ExileLink.ExileLink,
+    -- | CR 607.5: the name of the ability doing the reading, for what it means by
+    -- "exiled with" its source (Binding.isLinkedExile): the resolving ability's
+    -- (Pawl.Engine.Resolve.Slots.effectContext) or the one being activated
+    -- (Pawl.Engine.Cost.ceilingOf). Nothing for a reader the source has as its
+    -- own, which is every static ability, and in contextFor below.
+    --
+    -- Not implemented: a target slot's context
+    -- (Pawl.Engine.Target.slotContext) names no reader, so an acquired
+    -- ability's "target card exiled with this" reads the holder's pile (#5349).
+    reader :: Maybe AbilityName.AbilityName,
     -- CR 608.2d: every candidate the enclosing choice offers, with its
     -- measures, for the Measures atom's OfEachOtherCandidate operand. Filled by
     -- one caller only, Pawl.Engine.Replacement.sacrificeCandidates, whose pool is
@@ -1639,7 +1650,7 @@ data Context = MkContext
 -- here owes both halves of the same pair: which way its unfilled read answers,
 -- and what holds a card to the positions that fill it.
 contextFor :: Teams.Teams -> Maybe PlayerId.PlayerId -> Maybe ObjectId.ObjectId -> Context
-contextFor t p s = MkContext {teams = t, perspective = p, source = s, sourceMeasures = Map.empty, sourceColors = Set.empty, sourceSectors = Set.empty, sourceNames = Set.empty, slotAmount = Nothing, defendingPlayers = [], recipient = Nothing, slotObjects = Map.empty, cantCrewVehicles = Set.empty, slotNames = Map.empty, slotControllers = Map.empty, slotHostControllers = Map.empty, subjectHostCardTypes = Set.empty, slotCreatureTypes = Map.empty, slotMeasures = Map.empty, slotPlayers = Map.empty, boundAmounts = Map.empty, slotStickers = Map.empty, slotVotes = Map.empty, boundUnannounced = False, sourceAttachedTo = Nothing, evaluated = Nothing, sourceEntrants = Set.empty, sourceOwner = Nothing, sourceChosenNames = Map.empty, carrierChosenPlayer = Nothing, aimingController = Nothing, sourceChosenColors = Set.empty, sourceChosenSubtype = Nothing, sourceLastExiled = Nothing, sourceExiled = Map.empty, candidateMeasures = Nothing}
+contextFor t p s = MkContext {teams = t, perspective = p, source = s, sourceMeasures = Map.empty, sourceColors = Set.empty, sourceSectors = Set.empty, sourceNames = Set.empty, slotAmount = Nothing, defendingPlayers = [], recipient = Nothing, slotObjects = Map.empty, cantCrewVehicles = Set.empty, slotNames = Map.empty, slotControllers = Map.empty, slotHostControllers = Map.empty, subjectHostCardTypes = Set.empty, slotCreatureTypes = Map.empty, slotMeasures = Map.empty, slotPlayers = Map.empty, boundAmounts = Map.empty, slotStickers = Map.empty, slotVotes = Map.empty, boundUnannounced = False, sourceAttachedTo = Nothing, evaluated = Nothing, sourceEntrants = Set.empty, sourceOwner = Nothing, sourceChosenNames = Map.empty, carrierChosenPlayer = Nothing, aimingController = Nothing, sourceChosenColors = Set.empty, sourceChosenSubtype = Nothing, sourceLastExiled = Nothing, sourceExiled = Map.empty, reader = Nothing, candidateMeasures = Nothing}
 
 -- The ONE object a slot names, for the readers that can take no more than one --
 -- Quantity.AgainstSlot's evaluation, Count's IsControllerOfBound. Nothing where
@@ -1958,9 +1969,12 @@ matches context view predicate = case predicate of
   -- chosen none matches nothing.
   Filter.HasChosenSubtype -> maybe False (`Set.member` subtypes view) (sourceChosenSubtype context)
   -- CR 607.2a off the Context: the candidate's link to the source, judged as
-  -- the source's own ability reads it (Binding.isLinkedExile). A
-  -- candidate outside that pile matches nothing.
-  Filter.IsExiledWithSource pile -> maybe False (\link -> Binding.isLinkedExile Nothing pile (ExileLink.source link) link) (identity view >>= (`Map.lookup` sourceExiled context))
+  -- the reading ability reads it (Binding.isLinkedExile). A candidate outside
+  -- that pile matches nothing. The reader is a REGRESSION FENCE: the one
+  -- ability in data/cards/ an object can acquire that states this atom
+  -- (Mimeoplasm, Revered One's, through Patchwork Crawler) names the
+  -- AsItEntered pile, which no reader changes.
+  Filter.IsExiledWithSource pile -> maybe False (\link -> Binding.isLinkedExile (reader context) pile (ExileLink.source link) link) (identity view >>= (`Map.lookup` sourceExiled context))
   -- CR 607.2a off the Context, which the mana-spending road alone fills: no
   -- card exiled with the source matches nothing.
   Filter.IsLastExiledWithSource -> maybe False (\card -> identity view == Just card) (sourceLastExiled context)

@@ -98,7 +98,7 @@ answersFor answer gs game = snd (Replay.record answer gs game)
 theAbility :: Printing.Printing -> ActivatedAbility.ActivatedAbility Card.Card (GrantedAbility.GrantedAbility Card.Card)
 theAbility p = case Face.activatedAbilities (S.combinedFace p) of
   ab : _ -> ab
-  [] -> ActivatedAbility.MkActivatedAbility (Cost.Type.MkCost (Just (ManaCost.MkManaCost [])) []) [] 0 (Mint.oneModeOf Map.empty Seq.empty) [] Activator.Controller Nothing Nothing Nothing
+  [] -> ActivatedAbility.MkActivatedAbility (Cost.Type.MkCost (Just (ManaCost.MkManaCost [])) []) [] 0 Nothing (Mint.oneModeOf Map.empty Seq.empty) [] Activator.Controller Nothing Nothing Nothing
 
 wasAskedToReplace :: [Response.Response] -> Bool
 wasAskedToReplace responses =

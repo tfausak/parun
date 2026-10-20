@@ -1480,6 +1480,8 @@ activatedAbilityCounts ability =
   -- CR 101.1's ceiling on the X this ability's own activation announces, the
   -- cardCounts treatment of Face.maximumX one type over (Blighted Nightmare).
   concatMap quantityCounts (ActivatedAbility.maximumX ability)
+    -- CR 107.3c's defined X, the same position.
+    <> foldMap quantityCounts (ActivatedAbility.definedX ability)
     <> foldMap conditionCounts (ActivatedAbility.condition ability)
     -- CR 602.5's "activate only if [board condition]" rider, whose Condition is
     -- a Count position like any other -- and the one ActivatedAbility field the
@@ -2665,6 +2667,7 @@ oneEffectActivated mana effect =
         Mint.oneMode (Seq.singleton effect),
       ActivatedAbility.maximumX = [],
       ActivatedAbility.minimumX = 0,
+      ActivatedAbility.definedX = Nothing,
       ActivatedAbility.restrictions = [],
       ActivatedAbility.activator = Activator.Controller,
       ActivatedAbility.condition = Nothing,
@@ -2697,6 +2700,7 @@ modalActivated modes =
       ActivatedAbility.modal = Modal.MkModal (Seq.fromList modes) (ModeSelection.ChooseExactly 1),
       ActivatedAbility.maximumX = [],
       ActivatedAbility.minimumX = 0,
+      ActivatedAbility.definedX = Nothing,
       ActivatedAbility.restrictions = [],
       ActivatedAbility.activator = Activator.Controller,
       ActivatedAbility.condition = Nothing,
@@ -6432,6 +6436,8 @@ activatedAbilityFilters ability =
     -- CR 101.1's ceiling on this ability's own X, through a Count -- cardFilters'
     -- treatment of Face.maximumX one type over (Blighted Nightmare).
     <> frame Unframed (concatMap quantityFilters (ActivatedAbility.maximumX ability))
+    -- CR 107.3c's defined X, the same position.
+    <> frame Unframed (foldMap quantityFilters (ActivatedAbility.definedX ability))
     -- CR 702.178a's "as long as" gate, the triggeredAbilityFilters treatment of
     -- CR 603.4's intervening "if" one field over.
     <> frame Unframed (concatMap conditionFilters (Maybe.maybeToList (ActivatedAbility.condition ability)))
@@ -7473,10 +7479,16 @@ lintSpec s registry = Spec.describe s "Lint" $ do
         -- CR 607.2e's note reads what the {X} was PAID with rather than X
         -- itself, Ice Cauldron's ruling, so it declares an X no effect reads.
         notesSpent ab = elem Effect.NoteManaSpent (Modal.allEffects (ActivatedAbility.modal ab))
+        -- CR 107.3c's defined X (ActivatedAbility.definedX) is read by its
+        -- definition, which Pawl.Engine.Activate evaluates once to price the
+        -- cost; an effect reading the stamped X would then miss a change the
+        -- rule lets happen while the ability is on the stack, so none may.
+        defined ab = Maybe.isJust (ActivatedAbility.definedX ab)
         offends (_, ab) =
-          let readsIt = Resolve.readsX (Modal.allEffects (ActivatedAbility.modal ab)) || modalReadsAnnouncedX (ActivatedAbility.modal ab)
+          let effectsReadIt = Resolve.readsX (Modal.allEffects (ActivatedAbility.modal ab)) || modalReadsAnnouncedX (ActivatedAbility.modal ab)
+              readsIt = effectsReadIt || defined ab
               declared = declaresVariable (ActivatedAbility.cost ab)
-           in readsIt /= declared && not (declared && notesSpent ab)
+           in (readsIt /= declared && not (declared && notesSpent ab)) || (defined ab && effectsReadIt)
     -- Guards the sweep against passing vacuously, in both directions: an empty
     -- pool of abilities, and a pool in which no activation cost declares an X at
     -- all (where the lint would hold for every card by agreeing on False).

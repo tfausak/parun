@@ -1421,7 +1421,9 @@ rewriteActivatedAbility pairs ability =
       -- printing pairs a bounded X on an activated ability with a Quantity
       -- naming a land type word, so no board can tell this line from its
       -- absence.
-      ActivatedAbility.maximumX = fmap (rewriteQuantity pairs) (ActivatedAbility.maximumX ability)
+      ActivatedAbility.maximumX = fmap (rewriteQuantity pairs) (ActivatedAbility.maximumX ability),
+      -- CR 107.3c's defined X, the ceiling's fence for its reason.
+      ActivatedAbility.definedX = fmap (rewriteQuantity pairs) (ActivatedAbility.definedX ability)
     }
 
 -- CR 612.1 over a GRANTED ability (CR 613.1f), whichever of CR 113.3's kinds it

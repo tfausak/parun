@@ -35,6 +35,12 @@ data ActivatedAbility card ability = MkActivatedAbility
     -- -- Katara, Water Tribe's Hope's "X can't be 0" is 1. Zero for every ability
     -- that states none.
     minimumX :: Natural.Natural,
+    -- | CR 107.3c: the value of X this ability's own text defines -- Soul
+    -- Foundry's "X is the mana value of that card" -- so its activator announces
+    -- none (CR 107.3a), or Nothing for an X the activator chooses. Evaluated once
+    -- at CR 601.2b's position, off the ability as it reads (Filter.reader), and
+    -- stamped as the announced X the cost is paid at.
+    definedX :: Maybe Quantity.Quantity,
     modal :: Modal.Modal card ability,
     -- | CR 602.5: every clause of the "activate only ..." rider the ability
     -- carries, ALL of which must hold. Empty for an ability without one, which is
