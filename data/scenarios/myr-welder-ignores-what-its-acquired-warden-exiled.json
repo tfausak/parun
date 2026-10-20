@@ -1,0 +1,49 @@
+{
+  "description": "CR 607.5: what Myr Welder's acquired warden ability exiles is linked to that warden alone, so the Welder gains nothing from it and the acquired return ability gets it back",
+  "note": "The Welder imprints Synthetic Split Reliquary, then uses the acquired warden ability to exile Palladium Myr. The Welder's static is linked only to its imprint (CR 607.2a), so it must not gain the Myr's mana ability, which Offered would show as ActivateManaAbility. The acquired return ability is linked to the acquired warden (CR 607.5), so it returns the Myr to hand.",
+  "board": {
+    "seats": [
+      {
+        "name": "alice",
+        "battlefield": [
+          { "card": "Myr Welder", "label": "welder", "ready": true }
+        ],
+        "graveyard": [
+          { "card": "Synthetic Split Reliquary", "label": "reliquary" },
+          { "card": "Palladium Myr", "label": "myr" }
+        ],
+        "library": [
+          { "card": "Hill Giant" },
+          { "card": "Hill Giant" },
+          { "card": "Hill Giant" },
+          { "card": "Hill Giant" },
+          { "card": "Hill Giant" }
+        ]
+      },
+      {
+        "name": "bob",
+        "library": [
+          { "card": "Hill Giant" },
+          { "card": "Hill Giant" },
+          { "card": "Hill Giant" },
+          { "card": "Hill Giant" },
+          { "card": "Hill Giant" }
+        ]
+      }
+    ],
+    "active": "alice",
+    "step": "PrecombatMain"
+  },
+  "timeline": [
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": { "Activate": { "object": "$welder", "ability": 0, "targets": ["$reliquary"] } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass" },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "check": { "Count": { "player": "alice", "zone": "Exile", "card": "Synthetic Split Reliquary", "count": 1 } } },
+    { "turn": 3, "step": "PrecombatMain", "player": "alice", "do": { "Activate": { "object": "$welder", "ability": 1, "targets": ["$myr"] } } },
+    { "turn": 3, "step": "PrecombatMain", "player": "alice", "do": "Pass" },
+    { "turn": 3, "step": "PrecombatMain", "player": "alice", "check": { "Count": { "player": "alice", "zone": "Exile", "card": "Palladium Myr", "count": 1 } } },
+    { "turn": 5, "step": "PrecombatMain", "player": "alice", "check": { "View": { "of": "Offered", "player": "alice", "is": ["Pass", "Activate $welder"] } } },
+    { "turn": 5, "step": "PrecombatMain", "player": "alice", "do": { "Activate": { "object": "$welder", "ability": 3, "costOrder": [0, 1] } } },
+    { "turn": 5, "step": "PrecombatMain", "player": "alice", "do": "Pass" },
+    { "turn": 5, "step": "PrecombatMain", "player": "alice", "check": { "Count": { "player": "alice", "zone": "Hand", "card": "Palladium Myr", "count": 1 } } }
+  ]
+}

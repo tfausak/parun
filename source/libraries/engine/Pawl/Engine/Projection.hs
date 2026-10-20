@@ -357,12 +357,12 @@ applyModification textBoxOf viewOf src stamp gs oid unitTypes affected m pc =
         -- this ability only to exiling abilities printed beside it, and CR
         -- 607.5 an acquired one only to its own pair.
         --
-        -- CR 602.5c: an unnamed ability is named for the card it came from
-        -- (Binding.exiledCardAbility), so two identically worded abilities
-        -- from two cards are two to a restriction on their use. A named one
-        -- keeps its name, which its linked twin refers to (CR 607.5), and two
-        -- cards' equal copies of it are told apart by count instead
-        -- (ActivationRestriction.unspent).
+        -- CR 602.5c / 607.5: each is named for the card it came from and its
+        -- own name (Binding.exiledCardAbility), so two identically worded
+        -- abilities from two cards are two to a restriction on their use, and
+        -- a named one is not the holder's own ability of that name. A name
+        -- stated inside it means its twin from the same card
+        -- (Binding.nameAsRead).
         --
         -- Pawl.ActivateSpec's Locus of Enlightenment case proves all three, and
         -- its Gliding Licid case the named twins. The Steward of the Harvest
@@ -370,7 +370,7 @@ applyModification textBoxOf viewOf src stamp gs oid unitTypes affected m pc =
         -- an acquired ability exiled.
         Modification.GainExiledCardAbilities (ExiledCardAbilities.MkExiledCardAbilities pile extra) ->
           let cards = Game.linkedPile Nothing pile src gs
-              named card a = a {ActivatedAbility.name = ActivatedAbility.name a Applicative.<|> Just (Binding.exiledCardAbility card)}
+              named card a = a {ActivatedAbility.name = Just (Binding.exiledCardAbility card (ActivatedAbility.name a))}
               -- CR 113.6 / 702.178b: a card has, in exile, only the "as long
               -- as" grants that function there (AbilityZone.grantFunctionsIn).
               inExile card = let copied = copiableCharacteristics card gs in filter (AbilityZone.grantFunctionsIn Zone.Battlefield (PC.delayedAbilities copied) Zone.Exile) (PC.activatedAbilities copied)
@@ -4258,11 +4258,11 @@ modificationWrites m = case m of
 
 -- Which aspects a Modification reads -- CR 613.8a clause (b)'s last limb:
 -- applying another effect can change "what it does to any of the things it
--- applies to" without touching what it applies to. Two shapes reach it: a
--- quantity, which only the two power/toughness arms carry, and a rewrite of
--- the object's own text, which the two layer-3 arms are. A new arm of either
--- shape has to be classified here, or the dependency would silently stop being
--- seen.
+-- applies to" without touching what it applies to. Three shapes reach it: a
+-- quantity, which only the two power/toughness arms carry, a rewrite of the
+-- object's own text, which the two layer-3 arms are, and a removal of an
+-- ability by name. A new arm of any of them has to be classified here, or the
+-- dependency would silently stop being seen.
 modificationReads :: Modification -> Set Aspect
 modificationReads m = case m of
   Modification.SetBasePowerToughness (SetBasePowerToughness.MkSetBasePowerToughness p t) -> foldMap quantityReads p <> foldMap quantityReads t
@@ -4282,8 +4282,13 @@ modificationReads m = case m of
   Modification.GainExiledCardAbilities _ -> Set.empty
   Modification.GainAbilitiesOfStickers -> Set.empty
   Modification.LoseAllAbilities -> Set.empty
-  -- Carries a name, which is not a Quantity.
-  Modification.LoseNamedAbility _ -> Set.empty
+  -- Reads the ability lists, for which ability carries its name: a layer-6
+  -- grant of an ability of that name changes what it removes, so it waits for
+  -- the grant (CR 613.8a), changesText's question. Pawl.ActivateSpec's "CR
+  -- 602.5c two Gliding Licids give the Locus two once-each-turn animate
+  -- abilities" proves it, the Locus's grant timestamped after the removal by
+  -- its attachment (CR 613.7e).
+  Modification.LoseNamedAbility _ -> Set.singleton Keywords
   -- Carries a Keyword, whose own Filter is read where the keyword is matched.
   Modification.LoseKeyword _ -> Set.empty
   -- Carries a payload-free family, so there is no Filter here to read anything.
@@ -5024,7 +5029,7 @@ projectDecidingFrom finish seedOf admits cands =
                           -- effect that reads the TEXT of the things it applies
                           -- to rather than a magnitude: applying `b` can change
                           -- what `a` does to an object by changing the text `a`
-                          -- rewrites there.
+                          -- rewrites, or the abilities `a` removes by name, there.
                           --
                           -- Between two CR 612 word swaps the test is exact: `b`
                           -- changes what `a` does exactly when it rewrites

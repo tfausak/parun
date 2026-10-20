@@ -386,7 +386,7 @@ copyNames oid row = case row of
 playerEffectRowNames :: ObjectId -> ActivePlayerEffect.ActivePlayerEffect -> Bool
 playerEffectRowNames oid row = case row of
   ActivePlayerEffect.MkActivePlayerEffect source _controller _choices _timestamp expiry _scope effect ability ->
-    source == oid || Mentions.expiryNames (unread oid) expiry || Mentions.playerEffectNames (unread oid) effect || ability == Just (Binding.exiledCardAbility oid)
+    source == oid || Mentions.expiryNames (unread oid) expiry || Mentions.playerEffectNames (unread oid) effect || any (Binding.isAcquiredFrom oid) ability
 
 blockRequirementNames :: ObjectId -> ActiveBlockRequirement.ActiveBlockRequirement -> Bool
 blockRequirementNames oid row = case row of

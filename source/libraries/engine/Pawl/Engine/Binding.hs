@@ -2,6 +2,7 @@ module Pawl.Engine.Binding where
 
 import Control.Applicative ((<|>))
 import qualified Control.Monad as Monad
+import qualified Data.Char as Char
 import qualified Data.Foldable as Foldable
 import Data.Map.Strict (Map)
 import qualified Data.Map.Strict as Map
@@ -548,12 +549,16 @@ craftLink = AbilityName.MkAbilityName (Text.pack "thoseCraftMaterials")
 entryExileLink :: AbilityName.AbilityName
 entryExileLink = AbilityName.MkAbilityName (Text.pack "exiledAsThisEntered")
 
--- CR 602.5c: the name each activated ability an object acquires from one
--- exiled card carries (Modification.GainExiledCardAbilities), drawn from that
--- card's id, so two identically worded abilities acquired from two cards are
--- two abilities to a restriction on their use. Reserved, as craftLink is.
-exiledCardAbility :: ObjectId -> AbilityName.AbilityName
-exiledCardAbility oid = AbilityName.MkAbilityName (exiledCardPrefix <> Text.pack (show (ObjectId.unwrap oid)))
+-- CR 602.5c / 607.5: the name each activated ability an object acquires from
+-- one exiled card carries (Modification.GainExiledCardAbilities), drawn from
+-- that card's id and, for a named one, its own name, so two identically worded
+-- abilities acquired from two cards are two abilities to a restriction on their
+-- use, and none is the holder's own ability of that name. Reserved, as
+-- craftLink is.
+exiledCardAbility :: ObjectId -> Maybe AbilityName.AbilityName -> AbilityName.AbilityName
+exiledCardAbility oid = AbilityName.MkAbilityName . maybe card (\n -> card <> exiledCardSeparator <> AbilityName.unwrap n)
+  where
+    card = exiledCardPrefix <> Text.pack (show (ObjectId.unwrap oid))
 
 -- CR 607.2a / 607.5: whether exiledCardAbility gave this name, so what an
 -- ability acquired that way exiled is linked to none of its holder's own
@@ -561,31 +566,49 @@ exiledCardAbility oid = AbilityName.MkAbilityName (exiledCardPrefix <> Text.pack
 isExiledCardAbility :: AbilityName.AbilityName -> Bool
 isExiledCardAbility = Text.isPrefixOf exiledCardPrefix . AbilityName.unwrap
 
+-- Whether exiledCardAbility drew this name from `oid`.
+isAcquiredFrom :: ObjectId -> AbilityName.AbilityName -> Bool
+isAcquiredFrom oid name = pairOf (Just name) == Just (exiledCardAbility oid Nothing)
+
+-- | CR 607.5: the ability a name stated inside the ability `reader` means. A
+-- reader acquired from an exiled card means that card's ability of the name,
+-- as acquired beside it (exiledCardAbility); any other reader the name as
+-- written. Synthetic Split Reliquary's "the cards exiled with warden" and
+-- Gliding Licid's "loses this ability" are the readers.
+-- data/scenarios/myr-welder-ignores-what-its-acquired-warden-exiled.json is
+-- the proof.
+nameAsRead :: Maybe AbilityName.AbilityName -> AbilityName.AbilityName -> AbilityName.AbilityName
+nameAsRead reader name = maybe name (\card -> AbilityName.MkAbilityName (AbilityName.unwrap card <> exiledCardSeparator <> AbilityName.unwrap name)) (pairOf reader)
+
 -- | CR 607.2a / 607.5: whether `link` files its card against `src` in `pile`,
 -- as a reader named `reader` means it. THE one membership test every reader of
 -- GameState.exiledWith goes through (Pawl.Engine.Game.linkedPile).
 --
 -- OwnAbilities is every exiling ability paired with the reader: a reader
--- acquired from an exiled card (isExiledCardAbility) is linked only to its own
--- pair, which shares its name; every other reader -- printed, or "printed" by
--- CR 607.1a's grant -- only to exiling abilities that were not acquired that
--- way. The other three piles name one exiling ability outright, the reserved
--- ones under entryExileLink and craftLink.
---
--- Not implemented: telling a NAMED acquired ability from a printed one of that
--- name, since exiledCardAbility names only an unnamed one (#5267).
+-- acquired from an exiled card (isExiledCardAbility) is linked only to the
+-- abilities acquired from that card; every other reader -- printed, or
+-- "printed" by CR 607.1a's grant -- only to exiling abilities that were not
+-- acquired that way. OfAbility names one exiling ability as the reader means
+-- it (nameAsRead), the other two the reserved ones under entryExileLink and
+-- craftLink.
 isLinkedExile :: Maybe AbilityName.AbilityName -> ExiledPile.ExiledPile -> ObjectId -> ExileLink.ExileLink -> Bool
 isLinkedExile reader pile src link =
   ExileLink.source link == src && case pile of
     ExiledPile.OwnAbilities -> pairOf (ExileLink.ability link) == pairOf reader
-    ExiledPile.OfAbility name -> ExileLink.ability link == Just name
+    ExiledPile.OfAbility name -> ExileLink.ability link == Just (nameAsRead reader name)
     ExiledPile.AsItEntered -> ExileLink.ability link == Just entryExileLink
     ExiledPile.CraftMaterials -> ExileLink.ability link == Just craftLink
 
--- The acquired pair a link's or a reader's ability name stands for, Nothing
--- for the holder's own.
+-- The exiled card a link's or a reader's ability name was acquired from, as
+-- exiledCardAbility names an unnamed ability of it; Nothing for the holder's
+-- own.
 pairOf :: Maybe AbilityName.AbilityName -> Maybe AbilityName.AbilityName
-pairOf = Monad.mfilter isExiledCardAbility
+pairOf = fmap (AbilityName.MkAbilityName . card . AbilityName.unwrap) . Monad.mfilter isExiledCardAbility
+  where
+    card t = exiledCardPrefix <> Text.takeWhile Char.isDigit (Text.drop (Text.length exiledCardPrefix) t)
+
+exiledCardSeparator :: Text.Text
+exiledCardSeparator = Text.pack "/"
 
 exiledCardPrefix :: Text.Text
 exiledCardPrefix = Text.pack "thatExiledCard"
