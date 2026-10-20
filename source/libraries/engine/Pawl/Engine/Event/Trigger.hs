@@ -1262,7 +1262,7 @@ eventTriggers events gs =
       -- return it to its owner's hand") is the shape the rule means, though its
       -- own payload never reaches the exception today: its effect states no
       -- ORIGIN, which is the zone CR 113.6m pins to, so
-      -- Pawl.Engine.EffectZone.zoneFunctionedFrom already answers Nothing for it
+      -- Pawl.Engine.EffectZone.zonesFunctionedFrom already names no zone for it
       -- (Pawl.ZoneTriggerSpec's `becameSlotSpec` proves the trigger fires either
       -- way). Ivory Gargoyle's delayed-trigger pair (CR 113.6m's final
       -- sentence, #2500) is what reaches the exception instead, its delayed
@@ -2478,9 +2478,12 @@ inherentTriggers held events gs =
 -- read instead, and only for the rule's own exception: `enchantedObjectLeaves`
 -- below.
 --
--- ALL MODES, in printed order, for AbilityZone.zonesFunctionedIn's reason: CR
--- 700.2 makes a modal ability's modes alternatives, so a zone stated by any of
--- them is a zone the ability can move its object out of.
+-- ALL MODES, and every effect of each, for AbilityZone.zonesFunctionedIn's
+-- reason: CR 700.2 makes a modal ability's modes alternatives, so a zone stated
+-- by any of them is a zone the ability can move its object out of. The zones
+-- conjoin as that function's do (EffectZone.conjoin): two the condition does not
+-- exempt leave the ability functioning nowhere, a regression fence since no
+-- triggered ability in the pool names two.
 --
 -- Not a case on an effect's identity: Pawl.Engine.EffectZone answers the one
 -- question, and this folds its answer. The condition case below is not one
@@ -2547,14 +2550,12 @@ conditionZones :: Set.Set Subtype.Subtype -> Map.Map AbilityName.AbilityName (Tr
 conditionZones subtypes delayed ability
   | not (Set.null (TriggeredAbility.functionsFrom ability)) = const (TriggeredAbility.functionsFrom ability)
   | otherwise =
-      let pinned = Maybe.listToMaybe (Maybe.mapMaybe (EffectZone.zoneFunctionedFrom (selfNamingSlots (TriggeredAbility.condition ability)) delayed) (Modal.allEffects (TriggeredAbility.modal ability)))
+      let pinned = foldMap (EffectZone.zonesFunctionedFrom (selfNamingSlots (TriggeredAbility.condition ability)) delayed) (Modal.allEffects (TriggeredAbility.modal ability))
           exempted c zone = (Set.member Subtype.Aura subtypes && enchantedObjectLeaves c) || conditionPutsSelfInto c zone
           zonesOf c = case c of
             -- The empty list keeps zonesTriggeredFrom's own reading.
             TriggerCondition.AnyOf cs@(_ : _) -> Set.unions (fmap zonesOf cs)
-            _ -> case pinned of
-              Just zone | not (exempted c zone) -> Set.singleton zone
-              _ -> zonesTriggeredFrom c
+            _ -> Maybe.fromMaybe (zonesTriggeredFrom c) (EffectZone.conjoin (Set.filter (not . exempted c) pinned))
        in zonesOf
 
 -- Which slots name "the object it's on" for CR 113.6m, given what the ability
