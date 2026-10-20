@@ -533,9 +533,9 @@ targetSlotsOf obj oid gs face =
 -- (`happenedBetween`), and an ignored one did neither. A board difference, the
 -- posture applyEffectWith's CR 607.2a filing already takes, so the rules core
 -- never asks which effect it was; the two ruled shapes below read a
--- classification of its choice and a shortfall it recorded. Ratchet, Field Medic's two trigger instances
--- are Pawl.TransformSpec's "CR 701.28e / 603.12 an ignored convert arms no
--- reflexive", the event-log half; Strax, Sontaran Nurse's random choice records
+-- classification of its choice and a shortfall it recorded. Ratchet, Field
+-- Medic's two trigger instances are Pawl.TransformSpec's "CR 701.28e / 603.12
+-- an ignored convert arms no reflexive", the event-log half; Strax, Sontaran Nurse's random choice records
 -- no event and only binds a slot, and Pawl.ResolveSpec's "CR 603.12 a choice
 -- that records no event still arms its when you do" is the state half.
 --
@@ -572,8 +572,9 @@ targetSlotsOf obj oid gs face =
 -- found too few cards (`GameState.fellShort`) is not done: The Royal Scions'
 -- 2019-10-04 ruling, proved by "CR 603.12 The Royal Scions drawing two of four
 -- arms no reflexive", and Wick's Patrol's for the mill, by "CR 603.12 Wick's
--- Patrol milling two of three arms no reflexive". Both are CR 603.12's alone: CR 118.12's "If you do"
--- asks whether a cost was started, whatever it came to (Resolve.recordTaken).
+-- Patrol milling two of three arms no reflexive". Both are CR 603.12's alone:
+-- CR 118.12's "If you do" asks whether a cost was started, whatever it came to
+-- (Resolve.recordTaken).
 applyClauseEffects ::
   ObjectId ->
   ObjectId ->
