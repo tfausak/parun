@@ -21,14 +21,18 @@ import qualified Pawl.Registry as Registry
 import qualified Pawl.Scenario as Scenario
 import qualified Pawl.Spec as Spec
 import qualified Pawl.Support as S
+import qualified Pawl.Types.Answer as Answer
 import qualified Pawl.Types.Answerer as Answerer
 import qualified Pawl.Types.Asked as Asked
 import qualified Pawl.Types.Deck as Deck
+import qualified Pawl.Types.Entry as Entry
 import qualified Pawl.Types.GameState as GameState
 import qualified Pawl.Types.Hotseat as Hotseat
 import qualified Pawl.Types.Label as Label
+import qualified Pawl.Types.Move as Move
 import qualified Pawl.Types.Observer as Observer
 import qualified Pawl.Types.PlayerId as PlayerId
+import qualified Pawl.Types.Reply as Reply
 import qualified Pawl.Types.Result as Result
 import qualified Pawl.Types.Scenario as Scenario.Type
 import qualified Pawl.Types.SplitMix as SplitMix
@@ -59,8 +63,18 @@ spec s registry = Spec.describe s "Record" $ do
   Spec.it s "a timeline missing an answer fails to replay" $ do
     matchup <- BotSpec.bears s registry
     let (_, timeline) = recorded bots matchup
-    replayed <- Scenario.run registry (saved matchup (Seq.deleteAt (Seq.length timeline `div` 2) timeline))
+        half = Seq.length timeline `div` 2
+    -- An attack from the second half on: a passed priority left out replays
+    -- the same, the runner passing for a seat with nothing scheduled.
+    missing <- maybe (Spec.assertFailure s "no attack to leave out") (pure . (+ half)) (Seq.findIndexL attacks (Seq.drop half timeline))
+    replayed <- Scenario.run registry (saved matchup (Seq.deleteAt missing timeline))
     Spec.assertBool s (Either.isLeft replayed) "desync"
+
+-- Whether an entry declares attackers, any at all.
+attacks :: Timed.Timed -> Bool
+attacks timed = case Timed.entry timed of
+  Entry.Do (Move.Answer answer) -> Answer.prompt answer == Text.pack "DeclareAttackers" && Answer.with answer /= Reply.Array []
+  _ -> False
 
 -- The entries recorded so far and the state the last prompt was asked in,
 -- over the screen a person reads.

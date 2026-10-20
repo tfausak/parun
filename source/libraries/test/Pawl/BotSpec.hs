@@ -6,32 +6,52 @@ module Pawl.BotSpec where
 
 import qualified Control.Monad.Trans.Class as Trans
 import qualified Control.Monad.Trans.State.Strict as State
+import qualified Data.List as List
 import qualified Data.List.NonEmpty as NonEmpty
 import qualified Data.Map.Strict as Map
+import qualified Data.Sequence as Seq
+import qualified Data.Set as Set
 import qualified Data.Word as Word
+import Numeric.Natural (Natural)
+import qualified Pawl.Engine.Decide as Decide
 import qualified Pawl.Engine.Driver as Driver
 import qualified Pawl.Engine.Engine as Engine
 import qualified Pawl.Engine.Game as Game
+import qualified Pawl.Engine.Monarch as Monarch
 import qualified Pawl.Engine.Replay as Replay
 import qualified Pawl.Engine.Resolve.Effect as Resolve
 import qualified Pawl.Engine.Setup as Setup
+import qualified Pawl.ManaSourceSpec as ManaSourceSpec
 import qualified Pawl.Play.Bot as Bot
 import qualified Pawl.Play.Chance as Chance
 import qualified Pawl.Registry as Registry
+import qualified Pawl.ReplaySpec as ReplaySpec
 import qualified Pawl.Scenario as Scenario
 import qualified Pawl.Spec as Spec
 import qualified Pawl.Support as S
 import qualified Pawl.Types.Answerer as Answerer
 import qualified Pawl.Types.Asked as Asked
+import qualified Pawl.Types.ClauseIndex as ClauseIndex
+import qualified Pawl.Types.Color as Color
+import qualified Pawl.Types.Cost as Cost
+import qualified Pawl.Types.Decider as Decider
 import qualified Pawl.Types.Deck as Deck
 import qualified Pawl.Types.GameSettings as GameSettings
 import qualified Pawl.Types.GameState as GameState
+import qualified Pawl.Types.ManaCost as ManaCost
+import qualified Pawl.Types.ManaSymbol as ManaSymbol
+import qualified Pawl.Types.ModeIndex as ModeIndex
 import qualified Pawl.Types.ObjectId as ObjectId
 import qualified Pawl.Types.Observer as Observer
+import qualified Pawl.Types.PayOffer as PayOffer
+import qualified Pawl.Types.PaymentDecision as PaymentDecision
 import qualified Pawl.Types.PlayerId as PlayerId
 import qualified Pawl.Types.Prompt as Prompt
+import qualified Pawl.Types.Recipient as Recipient
 import qualified Pawl.Types.Result as Result
 import qualified Pawl.Types.SplitMix as SplitMix
+import qualified Pawl.Types.TriggerEntry as TriggerEntry
+import qualified Pawl.Types.TriggerSource as TriggerSource
 import qualified Pawl.Types.Zone as Zone
 
 spec :: (Monad m, Monad n) => Spec.Spec m n -> Registry.Registry m -> n ()
@@ -52,6 +72,63 @@ spec s registry = Spec.describe s "Bot" $ do
     Spec.assertBool s (all within answers) "within offer"
     Spec.assertBool s (any attacked answers) "attacked"
     Spec.assertEq s (fst (played 1 matchup)) (result, gs)
+
+  Spec.it s "picks among every mana a source's ability can produce" $ do
+    let options = ReplaySpec.oneMana Color.Red NonEmpty.:| [ReplaySpec.oneMana Color.Green, ReplaySpec.oneMana Color.Blue]
+    Spec.assertEqWith s "yields" (drawn (Prompt.ChooseManaYield decider S.alice oid options)) (Set.fromList (NonEmpty.toList options))
+
+  Spec.it s "puts triggers on the stack in every order" $ do
+    let entries =
+          [ TriggerEntry.MkTriggerEntry (TriggerSource.OfObject oid) Monarch.crownSteal,
+            TriggerEntry.MkTriggerEntry TriggerSource.Sourceless Monarch.endStepDraw,
+            TriggerEntry.MkTriggerEntry (TriggerSource.OfObject (ObjectId.MkObjectId 8)) Monarch.crownSteal
+          ]
+    Spec.assertEqWith s "orders" (drawn (Prompt.OrderTriggers decider S.alice entries)) (Set.fromList (List.permutations [0, 1, 2]))
+
+  -- CR 510.1c / 702.19b: a trampler with power 4 blocked by creatures two and
+  -- one short of lethal. Fifteen ways to divide 4 among three; the six legal
+  -- ones keep the player at nothing until both blockers have lethal.
+  Spec.it s "divides combat damage every legal way and no other" $ do
+    let first = Recipient.ToCreature (ObjectId.MkObjectId 8)
+        second = Recipient.ToCreature (ObjectId.MkObjectId 9)
+        player = Recipient.ToPlayer S.bob
+        thresholds :: Map.Map Recipient.Recipient Natural
+        thresholds = Map.fromList [(first, 2), (second, 1), (player, 0)]
+        legal :: [Map.Map Recipient.Recipient Natural]
+        legal =
+          fmap
+            (Map.filter (> 0) . Map.fromList . zip [first, second, player])
+            [[4, 0, 0], [3, 1, 0], [2, 2, 0], [1, 3, 0], [0, 4, 0], [2, 1, 1]]
+    Spec.assertEqWith s "divisions" (drawn (Prompt.AssignCombatDamage decider S.alice oid thresholds 4)) (Set.fromList legal)
+
+  Spec.it s "pays or declines what a resolving spell offers" $ do
+    let offer = PayOffer.AtClause (ModeIndex.MkModeIndex 0) (ClauseIndex.MkClauseIndex 0)
+        cost = Cost.MkCost {Cost.mana = Just (ManaCost.MkManaCost [ManaSymbol.Generic 3]), Cost.components = []}
+    Spec.assertEqWith s "decisions" (drawn (Prompt.ChooseToPay decider S.alice oid offer cost Seq.empty)) (Set.fromList [PaymentDecision.Declines, PaymentDecision.Pays])
+
+  Spec.it s "taps another source or pays now once the cost is covered" $ do
+    let sources = ObjectId.MkObjectId 8 NonEmpty.:| [ObjectId.MkObjectId 9]
+    Spec.assertEqWith s "sources" (drawn (Prompt.ChooseExtraManaSource decider S.alice sources)) (Set.fromList (Nothing : fmap Just (NonEmpty.toList sources)))
+
+  Spec.it s "spends any unit the pool offers" $ do
+    let units = ManaSourceSpec.plainColor Color.Red NonEmpty.:| [ManaSourceSpec.plainColor Color.Green]
+    Spec.assertEqWith s "units" (drawn (Prompt.ChooseManaToSpend decider S.alice units)) (Set.fromList (NonEmpty.toList units))
+
+  -- CR 701.23b: a search for cards of a stated quality may find fewer, so
+  -- every group of at most two of the three matches is an answer.
+  Spec.it s "finds any group of at most so many matching cards" $ do
+    let cards = fmap ObjectId.MkObjectId [8, 9, 10]
+    Spec.assertEqWith s "groups" (Set.map List.sort (drawn (Prompt.Search decider S.alice cards 2))) (Set.fromList (filter ((<= 2) . length) (List.subsequences cards)))
+
+-- Every answer the bot gives the prompt over many seeds.
+drawn :: (Ord r) => Prompt.Prompt r -> Set.Set r
+drawn prompt = Set.fromList (fmap (State.evalState (Answerer.unwrap Bot.bot (Asked.MkAsked [] (Setup.emptyGame S.bothPlayers) prompt)) . SplitMix.MkSplitMix) [1 .. 256])
+
+decider :: Decider.Decider
+decider = Decide.deciderFor S.alice (Setup.emptyGame S.bothPlayers)
+
+oid :: ObjectId.ObjectId
+oid = ObjectId.MkObjectId 7
 
 -- One seated answer: whether the prompt offered it, and whether it declared
 -- an attack.
