@@ -12,8 +12,9 @@
 -- through a payment or a mana ability is Freed from the Real's on Birds of
 -- Paradise, one through a keyword-family removal is Shadowspear's, and one
 -- through an all-abilities removal is Synthetic Hushing Adept's ("{T}: Target
--- creature loses all abilities until end of turn"). No printing reaches that
--- last: MTGJSON AtomicCards, 2026-10-16, Oracle text matching `loses? all
+-- creature loses all abilities until end of turn"), and one logging damage is
+-- Prodigal Sorcerer's wearing Basilisk Collar. No printing reaches the Adept's
+-- loop: MTGJSON AtomicCards, 2026-10-16, Oracle text matching `loses? all
 -- abilities` on a line with {T} in its cost, answers Immovable Rod, whose
 -- effect ends when it untaps, and Soul Sculptor, whose second activation
 -- under Opalescence leaves its target no creature to aim at again (CR 613.8c,
