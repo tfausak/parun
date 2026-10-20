@@ -1948,7 +1948,7 @@ lifeLossRNames asking x = case x of
 
 limitUnlessNames :: (Monoid r) => Asking r -> LimitUnless.LimitUnless -> r
 limitUnlessNames asking x = case x of
-  LimitUnless.MkLimitUnless _limit unless -> foldMap (conditionNames asking) unless
+  LimitUnless.MkLimitUnless _limit attackers unless -> foldMap (affectedNames asking) attackers <> foldMap (conditionNames asking) unless
 
 lookAtNames :: (Monoid r) => Asking r -> LookAt.LookAt -> r
 lookAtNames asking x = case x of

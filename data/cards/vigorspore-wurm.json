@@ -1,0 +1,174 @@
+{
+  "faces": [
+    {
+      "combatRestrictions": [
+        {
+          "type": "CantBlockMoreThan",
+          "value": {
+            "attackers": {
+              "type": "Matching",
+              "value": {
+                "type": "IsSource"
+              }
+            },
+            "limit": 1
+          }
+        }
+      ],
+      "manaCost": [
+        {
+          "type": "Generic",
+          "value": 5
+        },
+        {
+          "type": "OfType",
+          "value": {
+            "type": "Colored",
+            "value": {
+              "type": "Green"
+            }
+          }
+        }
+      ],
+      "name": "Vigorspore Wurm",
+      "oracleText": "Undergrowth — When this creature enters, target creature gains vigilance and gets +X/+X until end of turn, where X is the number of creature cards in your graveyard.\nThis creature can't be blocked by more than one creature.",
+      "power": {
+        "type": "Literal",
+        "value": 6
+      },
+      "toughness": {
+        "type": "Literal",
+        "value": 4
+      },
+      "triggeredAbilities": [
+        {
+          "condition": {
+            "type": "SelfEnters"
+          },
+          "modal": {
+            "modes": [
+              {
+                "clauses": [
+                  {
+                    "effects": [
+                      {
+                        "type": "ModifyTarget",
+                        "value": {
+                          "duration": {
+                            "type": "UntilEndOfTurn"
+                          },
+                          "modification": {
+                            "type": "GainKeyword",
+                            "value": {
+                              "type": "Vigilance"
+                            }
+                          },
+                          "ref": {
+                            "type": "InSlot",
+                            "value": "target"
+                          }
+                        }
+                      },
+                      {
+                        "type": "ModifyTarget",
+                        "value": {
+                          "duration": {
+                            "type": "UntilEndOfTurn"
+                          },
+                          "modification": {
+                            "type": "ModifyPowerToughness",
+                            "value": {
+                              "power": {
+                                "type": "Count",
+                                "value": {
+                                  "aggregation": {
+                                    "type": "Members"
+                                  },
+                                  "filter": {
+                                    "type": "HasCardType",
+                                    "value": {
+                                      "type": "Creature"
+                                    }
+                                  },
+                                  "scope": {
+                                    "type": "InZone",
+                                    "value": {
+                                      "player": {
+                                        "type": "Relative",
+                                        "value": {
+                                          "type": "You"
+                                        }
+                                      },
+                                      "zone": {
+                                        "type": "Graveyard"
+                                      }
+                                    }
+                                  }
+                                }
+                              },
+                              "toughness": {
+                                "type": "Count",
+                                "value": {
+                                  "aggregation": {
+                                    "type": "Members"
+                                  },
+                                  "filter": {
+                                    "type": "HasCardType",
+                                    "value": {
+                                      "type": "Creature"
+                                    }
+                                  },
+                                  "scope": {
+                                    "type": "InZone",
+                                    "value": {
+                                      "player": {
+                                        "type": "Relative",
+                                        "value": {
+                                          "type": "You"
+                                        }
+                                      },
+                                      "zone": {
+                                        "type": "Graveyard"
+                                      }
+                                    }
+                                  }
+                                }
+                              }
+                            }
+                          },
+                          "ref": {
+                            "type": "InSlot",
+                            "value": "target"
+                          }
+                        }
+                      }
+                    ]
+                  }
+                ],
+                "targetSlots": {
+                  "target": {
+                    "pool": {
+                      "type": "Creatures"
+                    }
+                  }
+                }
+              }
+            ]
+          }
+        }
+      ],
+      "typeLine": {
+        "subtypes": [
+          {
+            "type": "Wurm"
+          }
+        ],
+        "types": [
+          {
+            "type": "Creature"
+          }
+        ]
+      }
+    }
+  ]
+}

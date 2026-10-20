@@ -24,11 +24,6 @@ declared").
 - King's Assassin: "{T}: Destroy target tapped creature. Activate only ..." (gideon-jura has the tapped filter)
 - Stern Marshal: "{T}: Target creature gets +2/+2 until end of turn. Activate only ..."
 
-### A creature can't be blocked by more than one creature (CR 509.1b) (#4790)
-CombatRestriction's CantBeBlockedBy takes a blocker Filter; CantBlockMoreThan
-bounds the whole declaration. Nothing bounds blockers per attacker.
-- Charging Rhino, Stalking Tiger: "This creature can't be blocked by more than one creature."
-
 ### Damage divided among targets at announcement (CR 601.2d) (#5235)
 DealDamage parts take fixed quantities per ref. No pool card divides damage
 (grepped oracleText "divided"). CounterSpread/DistributeCounters divide counters only.

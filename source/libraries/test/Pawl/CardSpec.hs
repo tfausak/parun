@@ -1708,7 +1708,7 @@ combatRestrictionCounts restriction = case restriction of
   CombatRestriction.CantAttackPlayer (CantAttackPlayer.MkCantAttackPlayer _ _ _ condition _) -> foldMap conditionCounts condition
   CombatRestriction.CantAttackAlone (AffectedUnless.MkAffectedUnless _ condition _) -> foldMap conditionCounts condition
   CombatRestriction.CantAttackMoreThan (AttackLimitUnless.MkAttackLimitUnless _ _ condition) -> foldMap conditionCounts condition
-  CombatRestriction.CantBlockMoreThan (LimitUnless.MkLimitUnless _ condition) -> foldMap conditionCounts condition
+  CombatRestriction.CantBlockMoreThan (LimitUnless.MkLimitUnless _ _ condition) -> foldMap conditionCounts condition
 
 -- Every Count reachable from a blocking permission: CR 604.2's "as long as" gate,
 -- and the counted arity beside it (Kemba's Legion). The subject is an Affected,
@@ -5283,7 +5283,8 @@ combatRestrictionFilters restriction = case restriction of
   CombatRestriction.CantAttackPlayer (CantAttackPlayer.MkCantAttackPlayer affected _ _ condition _) -> affectedSet affected <> foldMap conditionFilters condition
   CombatRestriction.CantAttackAlone (AffectedUnless.MkAffectedUnless affected condition _) -> affectedSet affected <> foldMap conditionFilters condition
   CombatRestriction.CantAttackMoreThan (AttackLimitUnless.MkAttackLimitUnless _ _ condition) -> foldMap conditionFilters condition
-  CombatRestriction.CantBlockMoreThan (LimitUnless.MkLimitUnless _ condition) -> foldMap conditionFilters condition
+  -- The attackers a per-attacker bound counts against are an Affected.
+  CombatRestriction.CantBlockMoreThan (LimitUnless.MkLimitUnless _ attackers condition) -> foldMap affectedSet attackers <> foldMap conditionFilters condition
   where
     -- AffectedSetFramed for staticAbilityFilters' reason: Pawl.Engine.CombatRestriction
     -- matches it through Projection.affectsOn, whose context is

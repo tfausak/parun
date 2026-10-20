@@ -330,6 +330,9 @@ attacksAloneSpec s registry = Spec.describe s "AttacksAlone" $ do
 -- The Crawlspace cases are CR 802.3a's OTHER sentence: a bound scoped to one
 -- seat, which every case before them is the unscoped counterpart of. Those
 -- naming carol need three seats, and say why at the site.
+--
+-- The Charging Rhino cases are the blocking side's scope: a bound counted
+-- separately against each attacker it names.
 boundedDeclarationSpec :: (Monad m, Monad n) => Spec.Spec m n -> Registry.Registry m -> n ()
 boundedDeclarationSpec s registry = Spec.describe s "BoundedDeclaration" $ do
   Spec.it s "CR 508.1c a Silent Arbiter allows EITHER attacker but not both" $ do
@@ -679,6 +682,56 @@ boundedDeclarationSpec s registry = Spec.describe s "BoundedDeclaration" $ do
         Spec.assertEqWith s "the lone Arbiter does block" (Combat.blockersOf b blocked) (Set.singleton loneArbiter)
         Spec.assertEqWith s "and without one, two Pikers do" (Combat.blockersOf c doubled) (Set.fromList [x, y])
       _ -> Spec.assertFailure s "fixture should have one attacker on each board"
+  Spec.it s "CR 509.1b Charging Rhino can't be blocked by more than one creature" $ do
+    -- The per-attacker bound in a real declare blockers step: S.aggressiveAnswer
+    -- blocks the Rhino with both Pikers, which is refused, and the forced
+    -- declaration is the empty one. The Piker-for-Rhino control shows two
+    -- blockers are not refused as such.
+    rhino <- S.printingOf s registry "Charging Rhino"
+    piker <- S.printingOf s registry "Goblin Piker"
+    let (gs, mine, theirs) = attacking [rhino] [piker, piker]
+        (plain, mineToo, theirsToo) = attacking [piker] [piker, piker]
+    case (mine, theirs, mineToo, theirsToo) of
+      ([a], [x, y], [b], [x', y']) -> do
+        let refused = S.runPure S.aggressiveAnswer gs (Combat.declareBlockers S.manaPerformer)
+            doubled = S.runPure S.aggressiveAnswer plain (Combat.declareBlockers S.manaPerformer)
+        Spec.assertEqWith s "nobody blocks the Rhino" (Combat.blockersOf a refused) Set.empty
+        Spec.assertEqWith s "while two Pikers block a Piker" (Combat.blockersOf b doubled) (Set.fromList [x', y'])
+        Spec.assertBool s (not (Combat.legalBlockDeclaration S.bob (Map.fromList [(x, Set.singleton a), (y, Set.singleton a)]) gs)) "two blockers are refused"
+        Spec.assertBool s (Combat.legalBlockDeclaration S.bob (Map.singleton y (Set.singleton a)) gs) "one blocker is legal"
+      _ -> Spec.assertFailure s "fixture should have one attacker on each board"
+  Spec.it s "CR 509.1b the Rhino's bound is counted per attacker, not over the declaration" $ do
+    -- Two Rhinos, one Piker on each: Silent Arbiter's whole-declaration bound
+    -- of one would refuse this, and the per-attacker bound does not.
+    rhino <- S.printingOf s registry "Charging Rhino"
+    piker <- S.printingOf s registry "Goblin Piker"
+    let (gs, mine, theirs) = attacking [rhino, rhino] [piker, piker]
+    case (mine, theirs) of
+      ([a, b], [x, y]) -> do
+        Spec.assertBool s (Combat.legalBlockDeclaration S.bob (Map.fromList [(x, Set.singleton a), (y, Set.singleton b)]) gs) "one blocker on each Rhino is legal"
+        Spec.assertBool s (not (Combat.legalBlockDeclaration S.bob (Map.fromList [(x, Set.singleton b), (y, Set.singleton b)]) gs)) "two on the second Rhino are not"
+      _ -> Spec.assertFailure s "fixture should have two attackers and two blockers"
+  Spec.it s "CR 509.1c a Lure on Charging Rhino: the maximum is ONE blocker" $ do
+    -- Lure's requirement on each of bob's three Pikers against the Rhino's
+    -- bound of one blocker: CR 509.1c counts the most requirements obeyable
+    -- WITHOUT disobeying a restriction, which is one. The forced declaration
+    -- the search returns blocks with exactly one. The Lured Piker control is
+    -- the same board without the bound.
+    lure <- S.printingOf s registry "Lure"
+    rhino <- S.printingOf s registry "Charging Rhino"
+    piker <- S.printingOf s registry "Goblin Piker"
+    let (gs, mine, theirs) = luring lure [rhino] [piker, piker, piker]
+        (control, plain, others) = luring lure [piker] [piker, piker, piker]
+    case (mine, theirs, plain, others) of
+      ([a], [first, second, _], [b], [x, y, z]) -> do
+        let forced = S.runPure S.aggressiveAnswer gs (Combat.declareBlockers S.manaPerformer)
+        Spec.assertEqWith s "exactly one Piker blocks the Rhino" (Set.size (Combat.blockersOf a forced)) 1
+        Spec.assertBool s (not (Combat.legalBlockDeclaration S.bob Map.empty gs)) "declining is illegal under the Lure"
+        Spec.assertBool s (Combat.legalBlockDeclaration S.bob (Map.singleton second (Set.singleton a)) gs) "one blocker attains the maximum"
+        Spec.assertBool s (not (Combat.legalBlockDeclaration S.bob (Map.fromList [(first, Set.singleton a), (second, Set.singleton a)]) gs)) "two are over the bound"
+        Spec.assertBool s (not (Combat.legalBlockDeclaration S.bob (Map.singleton x (Set.singleton b)) control)) "without the bound one blocker no longer attains it"
+        Spec.assertEqWith s "and all three block the Lured Piker" (Combat.blockersOf b (S.runPure S.aggressiveAnswer control (Combat.declareBlockers S.manaPerformer))) (Set.fromList [x, y, z])
+      _ -> Spec.assertFailure s "fixture should have one attacker and bob's blockers"
 
 -- CR 508.1d's Example board: alice controls a Kormus Bell animating her Swamp
 -- into a 1/1, a Synthetic Wetland Frenzy requiring Swamps to attack, and a Goblin

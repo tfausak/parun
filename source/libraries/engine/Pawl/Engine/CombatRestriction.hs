@@ -14,7 +14,8 @@
 -- The only module that may CASE on Pawl.Types.CombatRestriction.
 -- Pawl.Engine.Keyword constructs one -- rule 702.98a's unleash -- and reads none.
 -- Pawl.Engine.Combat asks for a SET OF IDS, for a SET OF ROWS, or for NUMBERS
--- (CR 802.3a's bounds, keyed by the seat each is scoped to), and never learns
+-- (CR 802.3a's bounds, keyed by the seat each is scoped to, and CR 509.1b's
+-- per-attacker ones, keyed by the attacker), and never learns
 -- which card, or which keyword, produced any of them. The rows
 -- are the two pairwise restrictions, which no set of creatures could state: CR
 -- 509.1b's (cantBeBlockedBy), a pair, and CR 508.1c's aimed-at one
@@ -355,9 +356,32 @@ attackLimit gs =
           perDefender = Map.fromList (Maybe.mapMaybe (\player -> fmap ((,) player) (forSeat player)) defenders)
         }
 
--- CR 509.1b, the blocking counterpart. Silent Arbiter's second sentence.
+-- CR 509.1b, the blocking counterpart. Silent Arbiter's second sentence: the
+-- bounds naming no attacker, judged against the whole declaration.
 blockLimit :: Maybe PlayerId -> GameState -> Maybe Natural
-blockLimit = bounded blockingMoreThan
+blockLimit =
+  bounded
+    ( \restriction -> case blockingMoreThan restriction of
+        Just (n, Nothing) -> Just n
+        _ -> Nothing
+    )
+
+-- CR 509.1b: the tightest bound in force on how many creatures may block each
+-- of `attackers`, keyed by attacker; one absent from the map is unbounded.
+-- Charging Rhino's "can't be blocked by more than one creature". Read through
+-- the rows `blockLimit` reads, so its gate, CR 801.10 cut and CR 509.1b
+-- minimum hold here unchanged; the attackers named are resolved as
+-- `restrictedIn` resolves a subject, CR 612.1's rewrite included.
+blockedLimits :: Maybe PlayerId -> [ObjectId] -> GameState -> Map.Map ObjectId Natural
+blockedLimits defending attackers gs =
+  let pcs = Projection.projectAll gs
+      grants = Projection.controlGrants gs
+      fromRestriction (source, changes, restriction) = case blockingMoreThan restriction of
+        Just (n, Just affected) ->
+          let named = if null changes then affected else Projection.rewriteAffected changes affected
+           in fmap (\attacker -> (attacker, n)) (filter (\attacker -> Projection.affectsOn pcs grants source attacker named gs) attackers)
+        _ -> []
+   in Map.fromListWith min (concatMap fromRestriction (filter (reachesDeclarer defending gs) (inForce defending gs)))
 
 -- The selectors, written out rather than a wildcard: an exhaustive case is what
 -- makes a new arm a compile error at every site that would have to decide about
@@ -447,9 +471,8 @@ attackingPlayer cr = case cr of
 -- and seventh of them, because what they answer is a NUMBER and no Affected can
 -- stand in for one -- which is the whole reason the arms exist.
 --
--- The attacking one answers CR 802.3a's SCOPE beside the number, which the
--- blocking one has no sentence for: the two are one pair for the same reason the
--- five above are one family, and the pairing stops here.
+-- Each answers the scope beside the number: the attacking one CR 802.3a's
+-- seats, the blocking one the attackers a per-attacker bound counts against.
 attackingMoreThan :: CombatRestriction.CombatRestriction -> Maybe (Natural, Maybe PlayerScope.PlayerScope)
 attackingMoreThan cr = case cr of
   CombatRestriction.CantAttack {} -> Nothing
@@ -461,7 +484,7 @@ attackingMoreThan cr = case cr of
   CombatRestriction.CantAttackMoreThan (AttackLimitUnless.MkAttackLimitUnless n scope _) -> Just (n, scope)
   CombatRestriction.CantBlockMoreThan {} -> Nothing
 
-blockingMoreThan :: CombatRestriction.CombatRestriction -> Maybe Natural
+blockingMoreThan :: CombatRestriction.CombatRestriction -> Maybe (Natural, Maybe Affected.Affected)
 blockingMoreThan cr = case cr of
   CombatRestriction.CantAttack {} -> Nothing
   CombatRestriction.CantBlock {} -> Nothing
@@ -470,7 +493,7 @@ blockingMoreThan cr = case cr of
   CombatRestriction.CantAttackPlayer {} -> Nothing
   CombatRestriction.CantAttackAlone {} -> Nothing
   CombatRestriction.CantAttackMoreThan {} -> Nothing
-  CombatRestriction.CantBlockMoreThan (LimitUnless.MkLimitUnless n _) -> Just n
+  CombatRestriction.CantBlockMoreThan (LimitUnless.MkLimitUnless n attackers _) -> Just (n, attackers)
 
 -- CR 508.1c / CR 509.1b's second clause: the condition the creature can't
 -- attack (or block) UNLESS. Read off any arm, because the clause is the same
@@ -488,7 +511,7 @@ gate cr = case cr of
   CombatRestriction.CantAttackPlayer (CantAttackPlayer.MkCantAttackPlayer _ _ _ c _) -> c
   CombatRestriction.CantAttackAlone (AffectedUnless.MkAffectedUnless _ c _) -> c
   CombatRestriction.CantAttackMoreThan (AttackLimitUnless.MkAttackLimitUnless _ _ c) -> c
-  CombatRestriction.CantBlockMoreThan (LimitUnless.MkLimitUnless _ c) -> c
+  CombatRestriction.CantBlockMoreThan (LimitUnless.MkLimitUnless _ _ c) -> c
 
 -- Every combat restriction some permanent on the battlefield -- or some object in
 -- the command zone, whose abilities CR 114.4 makes function there -- states right
@@ -867,8 +890,8 @@ namedSubjects source name gs =
 
 -- The union of the six subject-naming selectors above -- what CR 116.2d's offer
 -- reads, where each declaration's reader takes one of them. The two BOUNDING
--- arms name no creature, Pawl.Engine.RuleAbilities.nameOf's reason for refusing
--- them a name at all.
+-- arms carry no name (Pawl.Engine.RuleAbilities.nameOf), so no offer could
+-- reach a creature through them.
 subjectOf :: CombatRestriction.CombatRestriction -> Maybe Affected.Affected
 subjectOf cr = case cr of
   CombatRestriction.CantAttack (AffectedUnless.MkAffectedUnless a _ _) -> Just a
