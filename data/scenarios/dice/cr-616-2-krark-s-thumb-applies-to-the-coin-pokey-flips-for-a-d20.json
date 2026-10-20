@@ -1,0 +1,145 @@
+{
+  "description": "CR 616.2 Krark's Thumb applies to the coin Pokey flips for a d20",
+  "note": "Pokey's ruling: once the roll is a coin flip, Krark's Thumb applies to it. Two coins come up and alice keeps tails, which reads as 1.",
+  "board": {
+    "seats": [
+      {
+        "name": "alice",
+        "battlefield": [
+          {
+            "card": "Ancient Copper Dragon",
+            "label": "dragon",
+            "ready": true
+          },
+          {
+            "card": "Pokey, the Scallywagg",
+            "label": "pokey"
+          },
+          {
+            "card": "Feywild Trickster"
+          },
+          {
+            "card": "Krark's Thumb"
+          }
+        ]
+      },
+      {
+        "name": "bob"
+      }
+    ],
+    "active": "alice",
+    "step": "DeclareAttackers"
+  },
+  "timeline": [
+    {
+      "turn": 1,
+      "step": "DeclareAttackers",
+      "player": "alice",
+      "do": {
+        "Attack": [
+          "$dragon"
+        ]
+      }
+    },
+    {
+      "turn": 1,
+      "step": "CombatDamage",
+      "player": "alice",
+      "source": "$pokey",
+      "do": {
+        "ChooseOptional": {
+          "type": "Exercises"
+        }
+      }
+    },
+    {
+      "turn": 1,
+      "step": "CombatDamage",
+      "player": "alice",
+      "do": {
+        "Answer": {
+          "prompt": "ChooseReplacement",
+          "with": 1
+        }
+      }
+    },
+    {
+      "turn": 1,
+      "step": "CombatDamage",
+      "player": "alice",
+      "do": {
+        "Answer": {
+          "prompt": "CallCoin",
+          "with": {
+            "type": "Heads"
+          }
+        }
+      }
+    },
+    {
+      "turn": 1,
+      "step": "CombatDamage",
+      "player": "alice",
+      "do": {
+        "Answer": {
+          "prompt": "FlipCoin",
+          "with": {
+            "type": "Heads"
+          }
+        }
+      }
+    },
+    {
+      "turn": 1,
+      "step": "CombatDamage",
+      "player": "alice",
+      "do": {
+        "Answer": {
+          "prompt": "FlipCoin",
+          "with": {
+            "type": "Tails"
+          }
+        }
+      }
+    },
+    {
+      "turn": 1,
+      "step": "CombatDamage",
+      "player": "alice",
+      "do": {
+        "Answer": {
+          "prompt": "ChooseCoinResult",
+          "with": {
+            "type": "Tails"
+          }
+        }
+      }
+    },
+    {
+      "turn": 1,
+      "step": "PostcombatMain",
+      "player": "alice",
+      "check": {
+        "Count": {
+          "player": "alice",
+          "zone": "Battlefield",
+          "card": "Treasure Token",
+          "count": 1
+        }
+      }
+    },
+    {
+      "turn": 1,
+      "step": "PostcombatMain",
+      "player": "alice",
+      "check": {
+        "Count": {
+          "player": "alice",
+          "zone": "Battlefield",
+          "card": "Faerie Dragon Token",
+          "count": 0
+        }
+      }
+    }
+  ]
+}

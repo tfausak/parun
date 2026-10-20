@@ -26,13 +26,17 @@ import qualified Pawl.Types.PlayerId as PlayerId
 -- that HAPPENED and is then treated as never having happened, so the die is
 -- thrown and its face asked for either way.
 --
--- No die SIZE here, although rule 706.1 makes it part of the instruction: nothing
--- that replaces this event may look at it (see Pawl.Types.DieRollR), and an event
--- field no rewrite and no pattern reads is a field this type does not need. It
--- appears when a card needs it.
+-- `sides` is CR 706.1a's N, which Pokey, the Scallywagg's "if you would roll a
+-- d20" reads (DieRollRewrite.FlipCoinInstead).
+--
+-- `forCoin` marks a roll made INSTEAD of a coin flip (InstructionRewrite's
+-- RollD20Instead), so the funnel that proposed a roll reads the result back as
+-- the flip it stands for: Pokey's "1-10 is tails and 11-20 is heads".
 data DiceRoll = MkDiceRoll
   { roller :: PlayerId.PlayerId,
     dice :: Natural.Natural,
-    ignored :: Natural.Natural
+    ignored :: Natural.Natural,
+    sides :: Natural.Natural,
+    forCoin :: Bool
   }
   deriving (Eq, Ord, Show)

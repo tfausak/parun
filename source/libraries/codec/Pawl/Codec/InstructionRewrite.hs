@@ -10,10 +10,12 @@ codec =
   Arm.tagged
     tagOf
     [ Arm.payload "Scaled" Scaling.codec InstructionRewrite.Scaled (\x -> case x of InstructionRewrite.Scaled y -> Just y; _ -> Nothing),
-      Arm.nullary "DrawInstead" InstructionRewrite.DrawInstead
+      Arm.nullary "DrawInstead" InstructionRewrite.DrawInstead,
+      Arm.nullary "RollD20Instead" InstructionRewrite.RollD20Instead
     ]
 
 tagOf :: InstructionRewrite.InstructionRewrite -> String
 tagOf x = case x of
   InstructionRewrite.Scaled {} -> "Scaled"
   InstructionRewrite.DrawInstead -> "DrawInstead"
+  InstructionRewrite.RollD20Instead -> "RollD20Instead"

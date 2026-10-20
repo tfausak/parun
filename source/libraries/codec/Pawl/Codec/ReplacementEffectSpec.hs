@@ -241,7 +241,7 @@ spec s =
             codec
             (ReplacementEffect.InstructionR (InstructionR.MkInstructionR PlayerInstruction.MillCards (ControllerRelation.Related PlayerRelation.Opponent) (InstructionRewrite.Scaled (Scaling.Multiply 2))))
             " {\"type\":\"InstructionR\",\"value\":{\"instruction\":{\"type\":\"MillCards\"},\"whose\":{\"type\":\"Opponent\"},\"rewrite\":{\"type\":\"Scaled\",\"value\":{\"type\":\"Multiply\",\"value\":2}}}} "
-        -- CR 706.6: Pixie Guide, the one DieRollR producer.
+        -- CR 706.6: Pixie Guide.
         Spec.it s "DieRollR (Pixie Guide)" $
           Common.assertCodec
             s
