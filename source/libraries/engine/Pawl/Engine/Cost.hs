@@ -12,7 +12,7 @@
 -- isLoyaltyCost (CR 606.2/606.3), statesHiddenQuality (CR 118.8c). The two
 -- classifications that are NOT here are CR 605.1a's library clause
 -- (Pawl.Engine.ManaAbility.costMovesLibraryCard) and CR 113.6m's cost half
--- (Pawl.Engine.AbilityZone.zoneFunctionedFrom), this module being unreachable
+-- (Pawl.Engine.AbilityZone.costZones), this module being unreachable
 -- from either (Cost -> Mana -> Projection -> ManaAbility, AbilityZone).
 module Pawl.Engine.Cost where
 

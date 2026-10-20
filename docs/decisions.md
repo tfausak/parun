@@ -43,22 +43,6 @@ Entries are ordered by the first rule each cites.
   component is a spell copy is no token".
 - **Issue**: none.
 
-## Which zone an ability functions in when its cost and effect disagree
-
-- **Question**: CR 113.6m restricts an ability to the zone its cost or effect
-  moves its object out of. When the cost names one zone and the effect
-  another, the rule answers twice.
-- **Rules**: CR 113.6m, 113.6; CR of 2026-08-07.
-- **Decision**: The cost's zone wins.
-- **Rejected**: Functions nowhere, the conjunction of the two answers: no
-  reader has a use for it, and the cost is unpayable outside its own zone
-  anyway.
-- **Site**: `Pawl.Engine.AbilityZone.zonesFunctionedIn`, proved by the
-  scenario "CR 113.6m a cost's zone outranks an effect's other zone" on
-  Synthetic Errant Courier: no printing's effect moves the card out of a
-  zone other than the one its cost put it into.
-- **Issue**: none.
-
 ## Whether a concession restarts the pass count
 
 - **Question**: CR 117.4 resolves the top object once all players pass in

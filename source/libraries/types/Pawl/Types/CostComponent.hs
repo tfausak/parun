@@ -131,7 +131,7 @@ data CostComponent keyword
     FlipCoin
   | -- | CR 406.2 as a cost / Loxodon Surveyor: exile the card the cost is on, from
     -- the graveyard it is in -- the zone CR 113.6m then functions the ability in,
-    -- read off the constructor by Pawl.Engine.AbilityZone.zoneFunctionedFrom.
+    -- read off the constructor by Pawl.Engine.AbilityZone.costZones.
     ExileThisFromGraveyard
   | -- | CR 406.2 as a cost, from the other zone / Brittle Effigy: exile the
     -- permanent the cost is on, off the battlefield.

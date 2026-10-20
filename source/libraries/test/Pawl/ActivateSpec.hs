@@ -2423,8 +2423,8 @@ namedSkeleton gs oid = case Game.faceOf oid gs of
 --
 -- Reassembling Skeleton {1}{B} Creature -- Skeleton Warrior 1/1, "{1}{B}: Return
 -- this card from your graveyard to the battlefield tapped." (checked against
--- Scryfall). Its cost is mana and nothing else, so AbilityZone.zoneFunctionedFrom -- the
--- whole of pawl's CR 113.6m reading before this -- answers Nothing for it, and
+-- Scryfall). Its cost is mana and nothing else, so AbilityZone.costZones -- the
+-- whole of pawl's CR 113.6m reading before this -- names no zone for it, and
 -- the graveyard is named only by what the ability DOES. Loxodon Surveyor proves
 -- the cost half in Pawl.SpeedSpec; this is the other half of the same sentence,
 -- and the two cards divide it cleanly.
@@ -2439,8 +2439,8 @@ graveyardEffectZoneSpec s registry = Spec.describe s "GraveyardEffectZone" $ do
       [ability] ->
         -- THE control this whole unit turns on: nothing in the cost names a zone,
         -- so the cost half cannot be what offered the ability. If this ever
-        -- answers Just, the two cases below stop proving the effect half.
-        Spec.assertEqWith s "and its cost names no zone (CR 113.6m's other half)" (AbilityZone.zoneFunctionedFrom (ActivatedAbility.cost ability)) Nothing
+        -- names a zone, the two cases below stop proving the effect half.
+        Spec.assertEqWith s "and its cost names no zone (CR 113.6m's other half)" (AbilityZone.costZones (ActivatedAbility.cost ability)) Set.empty
       abilities -> Spec.assertEqWith s "exactly one ability from the graveyard" (length abilities) 1
     Spec.assertBool s (any (isActivationOf gyId) (Action.legalActions S.alice gs)) "and the activation is a legal action"
   -- The other direction of "functions ONLY in that zone", and the case the cost
