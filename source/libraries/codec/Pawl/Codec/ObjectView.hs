@@ -2,6 +2,7 @@
 
 module Pawl.Codec.ObjectView where
 
+import qualified Pawl.Codec.AbilityView as AbilityView
 import qualified Pawl.Codec.CounterKind as CounterKind
 import qualified Pawl.Codec.Keyword as Keyword
 import qualified Pawl.Codec.ObjectId as ObjectId
@@ -16,7 +17,8 @@ import qualified Pawl.Types.ObjectView as ObjectView
 
 -- | A bare object keyed by the record's field names; `characteristics` is
 -- null for an object the seat may not see, and `face` for any but a face-down
--- one the seat may look at.
+-- one the seat may look at; `ability` is null for anything but an ability on
+-- the stack.
 codec :: Codec.Codec ObjectView.ObjectView
 codec = Fields.object $ do
   object <- Fields.required "object" ObjectId.codec ObjectView.object
@@ -28,6 +30,7 @@ codec = Fields.object $ do
   attachedTo <- Fields.required "attachedTo" (Common.maybe Recipient.codec) ObjectView.attachedTo
   characteristics <- Fields.required "characteristics" (Common.maybe ProjectedCharacteristics.codec) ObjectView.characteristics
   face <- Fields.required "face" (Common.maybe ProjectedCharacteristics.codec) ObjectView.face
+  ability <- Fields.required "ability" (Common.maybe AbilityView.codec) ObjectView.ability
   pure
     ObjectView.MkObjectView
       { ObjectView.object = object,
@@ -38,5 +41,6 @@ codec = Fields.object $ do
         ObjectView.counters = counters,
         ObjectView.attachedTo = attachedTo,
         ObjectView.characteristics = characteristics,
-        ObjectView.face = face
+        ObjectView.face = face,
+        ObjectView.ability = ability
       }

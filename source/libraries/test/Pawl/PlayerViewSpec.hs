@@ -25,11 +25,15 @@ import qualified Pawl.Play.Render as Render
 import qualified Pawl.Registry as Registry
 import qualified Pawl.Spec as Spec
 import qualified Pawl.Support as S
+import qualified Pawl.Types.AbilityView as AbilityView
+import qualified Pawl.Types.Acquisition as Acquisition
+import qualified Pawl.Types.ActivatedAbilitySource as ActivatedAbilitySource
 import qualified Pawl.Types.Answer as Answer
 import qualified Pawl.Types.AttackTarget as AttackTarget
 import qualified Pawl.Types.AttackerDeclared as AttackerDeclared
 import qualified Pawl.Types.BeginningStep as BeginningStep
 import qualified Pawl.Types.Board as Board
+import qualified Pawl.Types.Card as Card
 import qualified Pawl.Types.CardName as CardName
 import qualified Pawl.Types.Casting as Casting
 import qualified Pawl.Types.Choices as Choices
@@ -40,6 +44,7 @@ import qualified Pawl.Types.Discarded as Discarded
 import qualified Pawl.Types.Drew as Drew
 import qualified Pawl.Types.EventGroup as EventGroup
 import qualified Pawl.Types.ExileLooker as ExileLooker
+import qualified Pawl.Types.Face as Face
 import qualified Pawl.Types.FaceDownReason as FaceDownReason
 import qualified Pawl.Types.Facing as Facing
 import qualified Pawl.Types.GameEvent as GameEvent
@@ -63,6 +68,7 @@ import qualified Pawl.Types.Recipient as Recipient
 import qualified Pawl.Types.Reply as Reply
 import qualified Pawl.Types.Seat as Seat
 import qualified Pawl.Types.SeatView as SeatView
+import qualified Pawl.Types.Source as Source
 import qualified Pawl.Types.SpellWasCast as SpellWasCast
 import qualified Pawl.Types.Timestamp as Timestamp
 import qualified Pawl.Types.Zone as Zone
@@ -107,6 +113,24 @@ spec s registry = Spec.describe s "PlayerView" $ do
           [] -> Nothing
     Spec.assertBool s (Maybe.isJust (topOf S.alice)) "alice sees it"
     Spec.assertBool s (Maybe.isJust (topOf S.bob)) "bob sees it"
+  -- The board puts the ability on the stack by hand rather than through a
+  -- card: a regression fence on the source's visibility, not a card-driven
+  -- proof.
+  Spec.it s "CR 113.7a an ability names its source only to a seat that may see it" $ do
+    card <- S.cardOf s registry "Mindslaver"
+    ability <- maybe (Spec.assertFailure s "Mindslaver has no activated ability") pure (Maybe.listToMaybe (concatMap Face.activatedAbilities (NonEmpty.toList (Card.faces card))))
+    mindslaver <- S.printingOf s registry "Mindslaver"
+    let (held, g1) = S.addHandCard mindslaver S.bob (Setup.emptyGame S.bothPlayers)
+        (oid, g2) = Game.freshObjectId g1
+        (ts, g3) = Game.freshTimestamp g2
+        source = ActivatedAbilitySource.MkActivatedAbilitySource {ActivatedAbilitySource.source = held, ActivatedAbilitySource.ability = ability, ActivatedAbilitySource.delayed = Map.empty, ActivatedAbilitySource.acquisition = Acquisition.Own}
+        gs = g3 {GameState.objects = Map.insert oid (Object.newSettled S.bob (Source.OfAbility source) Zone.Stack ts) (GameState.objects g3), GameState.stack = [oid]}
+        abilityFor pid = fmap ObjectView.ability (PlayerView.Type.stack (PlayerView.viewFor pid gs))
+        nameFor pid = let view = PlayerView.viewFor pid gs in Render.named view oid
+    Spec.assertEqWith s "alice is not told the hand card" (abilityFor S.alice) [Just (AbilityView.MkAbilityView Nothing)]
+    Spec.assertEqWith s "bob is" (abilityFor S.bob) [Just (AbilityView.MkAbilityView (Just held))]
+    Spec.assertEqWith s "alice's drawing" (nameFor S.alice) (Text.pack "an ability")
+    Spec.assertEqWith s "bob's drawing" (nameFor S.bob) (Text.pack "Mindslaver's ability")
   Spec.it s "CR 406.3 a card exiled face down shows its owner nothing of itself" $ do
     piker <- S.printingOf s registry "Goblin Piker"
     let (oid, placed) = S.addObjectIn Zone.Exile piker S.alice (Setup.emptyGame S.bothPlayers)
@@ -353,8 +377,8 @@ faceDownViews s tracker gs zoneOf = do
   Spec.assertEqWith s "CR 708.5 bob may not" (card S.bob) [Nothing]
   Spec.assertEqWith s "CR 708.2 alice's permanent is the 2/2 all the same" (shown S.alice) [nameless]
   Spec.assertBool s (not (Text.unpack (CardName.unwrap name) `List.isInfixOf` rendered)) "no name in bob's encoded view"
-  Spec.assertEqWith s "bob's drawing" (fmap Render.describe (viewOf S.bob)) [Text.pack "a face-down card 2/2"]
-  Spec.assertEqWith s "alice's drawing" (fmap Render.describe (viewOf S.alice)) [Text.pack "a face-down card (Ainok Tracker) 2/2"]
+  Spec.assertEqWith s "bob's drawing" (fmap (Render.describe (PlayerView.viewFor S.bob gs)) (viewOf S.bob)) [Text.pack "a face-down card 2/2"]
+  Spec.assertEqWith s "alice's drawing" (fmap (Render.describe (PlayerView.viewFor S.alice gs)) (viewOf S.alice)) [Text.pack "a face-down card (Ainok Tracker) 2/2"]
 
 -- A game after setup: alice red, bob green, hands drawn.
 started :: (Monad m) => Spec.Spec m n -> Registry.Registry m -> m GameState.GameState
