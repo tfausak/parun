@@ -10,9 +10,7 @@
 -- does: Pawl.Engine.Cost is unreachable from below the projection.
 module Pawl.Engine.AbilityZone where
 
-import Control.Applicative ((<|>))
 import qualified Data.Map.Strict as Map
-import qualified Data.Maybe as Maybe
 import qualified Data.Set as Set
 import qualified Pawl.Engine.Binding as Binding
 import qualified Pawl.Engine.EffectZone as EffectZone
@@ -36,23 +34,20 @@ import qualified Pawl.Types.Zone as Zone
 -- stack, everything else's on the battlefield.
 --
 -- The two halves are read by the two functions that own the two shapes:
--- zoneFunctionedFrom below walks the cost's components, Pawl.Engine.EffectZone
+-- costZones below walks the cost's components, Pawl.Engine.EffectZone
 -- classifies one effect. Neither is a case on which ability this is, and this
 -- function is not one either -- it asks the same question of both halves of the
--- rule's own sentence and takes whichever answers.
+-- rule's own sentence and conjoins every answer (EffectZone.conjoin).
 --
--- The COST answer wins a disagreement, and the choice is arbitrary because the
--- disagreement is: an ability whose cost names one zone and whose effect names
--- another functions in neither, since the cost is unpayable outside the first
--- and CR 113.6m gives one zone. No printing writes such an ability, and pawl
--- reports the cost's zone rather than inventing a "functions nowhere" answer no
--- reader has a use for: docs/decisions.md, "Which zone an ability functions
--- in when its cost and effect disagree". The scenario "CR 113.6m a cost's zone
--- outranks an effect's other zone" proves it on Synthetic Errant Courier.
+-- CR 113.6m applies once per zone named, so an ability whose cost names one
+-- zone and whose effect names another functions only in the first AND only in
+-- the second: in neither. The scenario "CR 113.6m an ability whose cost and
+-- effect name different zones functions in neither" proves it on Synthetic
+-- Errant Courier.
 --
--- ALL MODES, and their effects in printed order: CR 700.2 makes a modal
--- ability's modes alternatives, so a zone stated by any of them is a zone the
--- ability can move its object out of. No modal ability in the pool states one.
+-- ALL MODES, and every effect of each: CR 700.2 makes a modal ability's modes
+-- alternatives, so a zone stated by any of them is a zone the ability can move
+-- its object out of. No modal ability in the pool states one.
 --
 -- This is the ACTIVATED reading of a rule that says "an ability";
 -- Pawl.Engine.Event.Trigger.zonesFunctionedIn is the triggered one, and has only the
@@ -65,7 +60,7 @@ import qualified Pawl.Types.Zone as Zone
 -- CR 113.7a's source nothing to move -- a later part has to name the ARRIVAL
 -- instead (Pawl.Engine.Binding.became, or a slot the move itself minted, as
 -- Meandering Towershell's "exiled" is), and this caller gives
--- Pawl.Engine.EffectZone the reserved source slot alone. So first-answer-wins
+-- Pawl.Engine.EffectZone the reserved source slot alone. So the conjunction
 -- and the rule's order-sensitive reading agree on every ability that can be
 -- written, and a card whose later part moved the reserved source slot out of a
 -- zone an earlier part put it into is what would refute that; see #2501.
@@ -74,7 +69,7 @@ import qualified Pawl.Types.Zone as Zone
 -- ArmDelayedTrigger arm answering off the `delayed` map this carries. The one
 -- card in data/cards/ whose ACTIVATED ability arms a delayed trigger is Grist,
 -- the Hunger Tide, and what it arms destroys a target rather than moving Grist,
--- so the walk answers Nothing there. This reading is therefore a regression
+-- so the walk names no zone there. This reading is therefore a regression
 -- fence; the sentence itself is proved through the TRIGGERED one, on Prized
 -- Amalgam in Pawl.ZoneTriggerSpec.
 --
@@ -88,13 +83,14 @@ zonesFunctionedIn delayed ability =
     stated
       | not (Set.null stated) -> Just stated
       | otherwise ->
-          fmap Set.singleton $
-            zoneFunctionedFrom (ActivatedAbility.cost ability)
-              <|> Maybe.listToMaybe
+          EffectZone.conjoin $
+            costZones (ActivatedAbility.cost ability)
+              <> foldMap
                 -- CR 113.7's source slot ALONE is "the object it's on" here: an
                 -- activation is not an event, so Pawl.Engine.Event.Binding.eventBindings
                 -- never runs for one and CR 400.7e's `became` names nothing.
-                (Maybe.mapMaybe (EffectZone.zoneFunctionedFrom (Set.singleton Binding.triggerSource) delayed) (Modal.allEffects (ActivatedAbility.modal ability)))
+                (EffectZone.zonesFunctionedFrom (Set.singleton Binding.triggerSource) delayed)
+                (Modal.allEffects (ActivatedAbility.modal ability))
 
 -- CR 113.6m's "functions only in that zone", asked of one zone: does this
 -- ability function from there? For an ability that names no zone at all, only
@@ -107,17 +103,15 @@ functionsIn home delayed zone ability = case zonesFunctionedIn delayed ability o
 
 -- CR 113.6m's COST half: an ability whose cost moves the object it's on out of a
 -- particular zone functions only in that zone. The "or effect" half is
--- Pawl.Engine.EffectZone, and zonesFunctionedIn above joins them.
+-- Pawl.Engine.EffectZone, and zonesFunctionedIn above conjoins them.
 --
--- Nothing means the cost names no zone, leaving the effect half to answer and CR
--- 113.6's battlefield default otherwise -- SacrificeThis' answer too, CR 701.21a
--- moving the object off the battlefield where CR 113.6 already had it.
---
--- One zone and never a set (CR 113.6m: "a particular zone"). Two components
--- naming DIFFERENT zones would make the ability unpayable in either, so the
--- FIRST is the answer and a disagreement is a card-data error.
-zoneFunctionedFrom :: Cost Keyword.Type.Keyword -> Maybe Zone.Zone
-zoneFunctionedFrom cost = Maybe.listToMaybe (Maybe.mapMaybe zoneOfComponent (Cost.components cost))
+-- Every component's zone: empty when the cost names none, leaving the effect
+-- half to answer and CR 113.6's battlefield default otherwise -- SacrificeThis'
+-- answer too, CR 701.21a moving the object off the battlefield where CR 113.6
+-- already had it. Two components naming different zones leave the ability
+-- functioning nowhere, by the same conjunction.
+costZones :: Cost Keyword.Type.Keyword -> Set.Set Zone.Zone
+costZones cost = foldMap (foldMap Set.singleton . zoneOfComponent) (Cost.components cost)
 
 zoneOfComponent :: CostComponent.CostComponent Keyword.Type.Keyword -> Maybe Zone.Zone
 zoneOfComponent component = case component of
