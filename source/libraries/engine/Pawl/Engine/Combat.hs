@@ -1337,8 +1337,9 @@ pairAllowedGiven board@(Snapshot.MkSnapshot pcs _) barred candidates attackers b
 --
 -- All three shapes of restriction are asked here, one conjunct each: pairAllowed
 -- over the pairs, blockerCountsAllowedGiven over the creatures blocking each
--- attacker, and the bound over the declaration's SIZE. CR 509.1a's per-creature ARITY is a fourth
--- conjunct -- not a restriction, but a fact about the declaration. This is also
+-- attacker, and the bound over the declaration's SIZE. CR 509.1a's per-creature
+-- ARITY is a fourth conjunct -- not a restriction, but a fact about the
+-- declaration. This is also
 -- the seam bestBlockDeclaration's search judges each leaf through, and it takes
 -- a projected board and a hoisted `limit` because it is asked once per leaf.
 blockDeclarationAllowed :: Maybe Natural -> Map ObjectId Natural -> (ObjectId -> Maybe Natural) -> Map ObjectId PC.ProjectedCharacteristics -> (ObjectId -> ObjectId -> Bool) -> Map ObjectId (Set ObjectId) -> GameState -> Bool
@@ -1546,10 +1547,11 @@ legalBlockDeclaration pid declaration gs =
 
 -- CR 509.1 / 805.10d: what a block declaration by `pid`'s side is judged over --
 -- its candidate blockers, the attackers they may block, CR 509.1b's barred pairs
--- and its bounds: on the whole declaration, and per attacker. One defending player's own under CR 802.4a / 802.4b, judged
--- ignoring any creature attacking anyone else; under the shared team turns
--- option the defending team's one combined block, whose creatures may block a
--- creature attacking any of its players.
+-- and its bounds, on the whole declaration and per attacker. One defending
+-- player's own under CR 802.4a / 802.4b, judged ignoring any creature
+-- attacking anyone else; under the shared team turns option the defending
+-- team's one combined block, whose creatures may block a creature attacking any
+-- of its players.
 --
 -- Each player's bound is read at their own seat, the defending player CR 509.1a
 -- names, and the tightest among them binds the whole block; a pairwise gate is
