@@ -42,5 +42,10 @@ bot = Answerer.MkAnswerer $ \asked -> case Asked.prompt asked of
   Prompt.ChooseOptional {} -> SplitMix.pick (OptionalDecision.Exercises NonEmpty.:| [OptionalDecision.Declines])
   prompt -> pure (Replay.defaultAnswer prompt)
 
+-- | CR 103.1: whether the bot, picked to choose who plays first, plays first
+-- rather than draws, each equally likely.
+playsFirst :: (Monad m) => State.StateT SplitMix.Type.SplitMix m Bool
+playsFirst = coin
+
 coin :: (Monad m) => State.StateT SplitMix.Type.SplitMix m Bool
 coin = SplitMix.pick (True NonEmpty.:| [False])
