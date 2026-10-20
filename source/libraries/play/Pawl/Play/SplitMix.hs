@@ -27,6 +27,12 @@ next = State.state $ \(SplitMix.MkSplitMix state) ->
   where
     mix n z = Bits.xor z (Bits.shiftR z n)
 
+-- | A seed from a clock reading: the first draw of a generator seeded with
+-- it, so every digit varies however coarsely the clock ticks, and distinct
+-- readings give distinct seeds.
+fromClock :: Natural -> Word.Word64
+fromClock reading = State.evalState next (SplitMix.MkSplitMix (Maybe.fromMaybe 0 (Natural.toWord64 (mod reading (2 ^ (64 :: Natural))))))
+
 -- | Uniform from least to greatest, both included; least when they cross. A
 -- range wider than 2^64 is drawn from its first 2^64 values.
 between :: (Monad m) => Natural -> Natural -> State.StateT SplitMix.SplitMix m Natural

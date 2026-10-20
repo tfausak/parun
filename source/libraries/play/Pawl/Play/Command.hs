@@ -16,16 +16,18 @@ import qualified Data.Set as Set
 import qualified Data.Text as Text
 import qualified Data.Text.Encoding as Encoding
 import qualified Data.Text.IO as TextIO
-import qualified GHC.Clock as Clock
+import qualified Data.Time.Clock.System as Clock
 import Numeric.Natural (Natural)
 import qualified Pawl.Codec.Scenario as Codec.Scenario
 import qualified Pawl.DeckList as DeckList
+import qualified Pawl.Extra.Integer as Integer
 import qualified Pawl.JsonCodec.Codec as Codec
 import qualified Pawl.JsonCodec.Common as Common
 import qualified Pawl.Play.Bot as Bot
 import qualified Pawl.Play.Game as Game
 import qualified Pawl.Play.Record as Record
 import qualified Pawl.Play.Render as Render
+import qualified Pawl.Play.SplitMix as SplitMix.Play
 import qualified Pawl.Registry as Registry
 import qualified Pawl.Types.Card as Card
 import qualified Pawl.Types.CardName as CardName
@@ -82,10 +84,14 @@ load registry path = do
       Exit.exitFailure
     Right deck -> pure deck
 
+-- | Nanoseconds since the epoch; on macOS only microseconds tick.
+nanoseconds :: Clock.SystemTime -> Natural
+nanoseconds t = Integer.toNaturalSaturating (toInteger (Clock.systemSeconds t) * 1000000000 + toInteger (Clock.systemNanoseconds t))
+
 play :: PlayOptions.PlayOptions -> (CardName.CardName -> Maybe Card.Card) -> (Deck.Deck, Deck.Deck) -> IO ()
 play options lookUp (one, two) = do
   IO.hSetBuffering IO.stdout IO.LineBuffering
-  seed <- maybe Clock.getMonotonicTimeNSec pure (PlayOptions.seed options)
+  seed <- maybe (fmap (SplitMix.Play.fromClock . nanoseconds) Clock.getSystemTime) pure (PlayOptions.seed options)
   IO.hPutStrLn IO.stderr ("Seed " <> show seed <> ".")
   let people = filter (`Set.notMember` PlayOptions.bots options) [1, 2]
   first <- case PlayOptions.first options of
