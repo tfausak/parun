@@ -1726,7 +1726,7 @@ oneMountainState mountain ph =
           GameState.turnAnchor = Nothing,
           GameState.extraTurnUnderWay = Nothing,
           GameState.rollingDie = Nothing,
-          GameState.rerolledTo = Nothing
+          GameState.rerollRequested = False
         }
 
 drawStep :: Game.Type.Game ()

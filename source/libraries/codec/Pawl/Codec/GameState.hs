@@ -221,7 +221,7 @@ codec resolve = Fields.object $ do
   turnAnchor <- Fields.defaulted "turnAnchor" Nothing (Common.maybe PlayerId.codec) GameState.turnAnchor
   extraTurnUnderWay <- Fields.defaulted "extraTurnUnderWay" Nothing (Common.maybe Timestamp.codec) GameState.extraTurnUnderWay
   rollingDie <- Fields.defaulted "rollingDie" Nothing (Common.maybe Common.natural) GameState.rollingDie
-  rerolledTo <- Fields.defaulted "rerolledTo" Nothing (Common.maybe Common.natural) GameState.rerolledTo
+  rerollRequested <- Fields.defaulted "rerollRequested" False Common.boolean GameState.rerollRequested
   pure
     GameState.MkGameState
       { GameState.settings = settings,
@@ -333,7 +333,7 @@ codec resolve = Fields.object $ do
         GameState.turnAnchor = turnAnchor,
         GameState.extraTurnUnderWay = extraTurnUnderWay,
         GameState.rollingDie = rollingDie,
-        GameState.rerolledTo = rerolledTo,
+        GameState.rerollRequested = rerollRequested,
         -- Derived rather than written: see the note above.
         GameState.printingIds = invert printings
       }

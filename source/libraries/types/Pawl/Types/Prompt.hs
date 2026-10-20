@@ -160,8 +160,10 @@ data Prompt r where
   -- results, which are in roll order and may compare equal. A choice and not a
   -- roll, so unlike RollDie above it carries a Decider and the seat. Not
   -- raised where every result is the same number, which no card can tell from
-  -- either answer.
-  ChooseDieResult :: Decider.Decider -> PlayerId.PlayerId -> ObjectId.ObjectId -> NonEmpty.NonEmpty Natural.Natural -> Prompt Natural.Natural
+  -- either answer. Also which d20 of several Pokey, the Scallywagg rolled for
+  -- Krark's Thumb's coins is kept (the Thumb's "ignore one"), where no
+  -- resolving object is at hand.
+  ChooseDieResult :: Decider.Decider -> PlayerId.PlayerId -> Maybe ObjectId.ObjectId -> NonEmpty.NonEmpty Natural.Natural -> Prompt Natural.Natural
   -- | CR 706.8b: how many of each stored result on the object the seat
   -- rerolls (Centaur of Attention's "reroll any number of this creature's
   -- stored results"); the Map is what the object has, the answer clamped to

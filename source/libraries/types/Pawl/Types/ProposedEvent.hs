@@ -7,7 +7,6 @@ import qualified Pawl.Types.CounterCause as CounterCause
 import qualified Pawl.Types.CounterKind as CounterKind
 import qualified Pawl.Types.DamageEvent as DamageEvent
 import qualified Pawl.Types.DestructionCause as DestructionCause
-import qualified Pawl.Types.DiceRoll as DiceRoll
 import qualified Pawl.Types.DiscardCause as DiscardCause
 import qualified Pawl.Types.Keyword as Keyword
 import qualified Pawl.Types.LibraryPosition as LibraryPosition
@@ -19,6 +18,7 @@ import qualified Pawl.Types.PlayerCounterKind as PlayerCounterKind
 import qualified Pawl.Types.PlayerId as PlayerId
 import qualified Pawl.Types.PlayerInstruction as PlayerInstruction
 import qualified Pawl.Types.Regenerability as Regenerability
+import qualified Pawl.Types.Throw as Throw
 import qualified Pawl.Types.TokenLot as TokenLot
 import qualified Pawl.Types.TurnUpProcedure as TurnUpProcedure
 import qualified Pawl.Types.ZoneChange as ZoneChange
@@ -200,24 +200,23 @@ data ProposedEvent
     -- where one is (a Rigger's "it assembles"): CR 801.13a's affected object, and
     -- what Pawl.Types.ReplacementEffect's AssembleR judges.
     WouldPerform PlayerInstruction.PlayerInstruction (Maybe ObjectId.ObjectId) PlayerId.PlayerId Natural.Natural
-  | -- | CR 706.1 / 614.1a: this player would be instructed to roll this many
-    -- dice, with this many of the lowest rolls ignored (CR 706.6). Raised by
-    -- Pawl.Engine.Event.proposeDiceRoll, the one funnel every roll in the engine
-    -- goes through -- today that is Resolve.Effect.throwDice, for Effect.RollDie
-    -- and CR 703.4g's roll to visit, since no cost rolls.
+  | -- | CR 705.1 / 706.1 / 614.1a: this player would be instructed to flip
+    -- coins or roll dice, as Pawl.Types.Throw describes. Raised by
+    -- Pawl.Engine.Event.flipOneCoin once per coin and by
+    -- Pawl.Engine.Event.proposeDiceRoll once per roll instruction, the one
+    -- funnel each kind goes through.
     --
-    -- ONE event for the whole INSTRUCTION, where a flip of several coins raises
-    -- WouldPerform's FlipCoin per coin: Pixie Guide's sentence is scoped to the
-    -- instruction ("if you would roll ONE OR MORE dice, instead roll THAT MANY
-    -- dice plus one"), where Krark's Thumb's own ruling scopes the coin
-    -- replacement to each individual flip. So a row that resizes this event
-    -- leaves ONE instruction throwing more dice, and an instruction rolling five
-    -- dice raises this event once.
+    -- ONE event for a whole roll INSTRUCTION, where a flip of several coins
+    -- raises one per coin: Pixie Guide's sentence is scoped to the instruction
+    -- ("if you would roll ONE OR MORE dice, instead roll THAT MANY dice plus
+    -- one"), where Krark's Thumb's own ruling scopes the coin replacement to
+    -- each individual flip. So an instruction rolling five dice raises this
+    -- event once.
     --
     -- An instruction that rolls NO dice raises nothing, having rolled none --
     -- rule 706.1's "one or more" is not met, so there is no event for a row to
     -- replace.
-    WouldRollDice DiceRoll.DiceRoll
+    WouldThrow Throw.Throw
   | -- | CR 104.3 / 614.1a: this player would lose the game, for every reason
     -- at once. Raised by Pawl.Engine.Departure.leaveTogether, the one funnel
     -- every loss goes through; a concession (CR 104.3a) is not one.

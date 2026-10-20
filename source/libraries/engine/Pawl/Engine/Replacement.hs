@@ -86,7 +86,6 @@ import qualified Pawl.Types.Daytime as Daytime
 import qualified Pawl.Types.DestructionCause as DestructionCause
 import qualified Pawl.Types.DestructionR as DestructionR
 import qualified Pawl.Types.DestructionRewrite as DestructionRewrite
-import qualified Pawl.Types.DiceRoll as DiceRoll
 import qualified Pawl.Types.DieRollR as DieRollR
 import qualified Pawl.Types.DieRollRewrite as DieRollRewrite
 import qualified Pawl.Types.DrawCountR as DrawCountR
@@ -159,6 +158,8 @@ import qualified Pawl.Types.Scaling as Scaling
 import qualified Pawl.Types.SlotName as SlotName
 import qualified Pawl.Types.Source as Source
 import qualified Pawl.Types.Subtype as Subtype
+import qualified Pawl.Types.Throw as Throw
+import qualified Pawl.Types.ThrowKind as ThrowKind
 import Pawl.Types.Timestamp (Timestamp)
 import qualified Pawl.Types.TokenLot as TokenLot
 import qualified Pawl.Types.TokenPattern as TokenPattern
@@ -192,7 +193,7 @@ asZoneChange event = case event of
   ProposedEvent.WouldGainLife {} -> Nothing
   ProposedEvent.WouldDraw _ -> Nothing
   ProposedEvent.WouldPerform {} -> Nothing
-  ProposedEvent.WouldRollDice _ -> Nothing
+  ProposedEvent.WouldThrow _ -> Nothing
   ProposedEvent.WouldLoseGame {} -> Nothing
   ProposedEvent.WouldPlaneswalk {} -> Nothing
 
@@ -722,7 +723,7 @@ affected event = case event of
   ProposedEvent.WouldGainLife pid _ -> ([], [pid])
   ProposedEvent.WouldDraw pid -> ([], [pid])
   ProposedEvent.WouldPerform _ performer pid _ -> (Maybe.maybeToList performer, [pid])
-  ProposedEvent.WouldRollDice roll -> ([], [DiceRoll.roller roll])
+  ProposedEvent.WouldThrow throw -> ([], [Throw.thrower throw])
   ProposedEvent.WouldLoseGame pid -> ([], [pid])
   ProposedEvent.WouldPlaneswalk pid _ -> ([], [pid])
 
@@ -935,28 +936,37 @@ matchesPrinted viewOf gs event candidate =
         -- threshold where DrawCountR has one: Bruvac the Grandiloquent's "one or
         -- more" is met by every proposed instruction. No `admits` either: every
         -- printed rewrite changes the event.
-        --
-        -- Pokey, the Scallywagg's "if you would flip a coin" is one coin: a flip
-        -- an earlier row resized is not one Pokey's d20 can stand for. Not
-        -- implemented: Pokey after Krark's Thumb (#5351).
-        (ReplacementEffect.InstructionR row, ProposedEvent.WouldPerform instruction _ pid n) ->
+        (ReplacementEffect.InstructionR row, ProposedEvent.WouldPerform instruction _ pid _) ->
           InstructionR.instruction row == instruction
             && matchesPlayer gs candidate (InstructionR.whose row) pid
-            && (InstructionR.rewrite row /= InstructionRewrite.RollD20Instead || n == 1)
+        -- The same, for the one instruction no WouldPerform carries: a flip is a
+        -- WouldThrow of coins (Pawl.Types.Throw), and a row naming FlipCoin
+        -- watches its flipper.
+        --
+        -- Every rewrite reaches a flip however earlier rows left it (CR 616.2):
+        -- Krark's Thumb's ruling has a second Thumb replace each coin of the
+        -- first's "flip two coins and ignore one", so Pokey, the Scallywagg's "if
+        -- you would flip a coin" reaches each coin of it too.
+        (ReplacementEffect.InstructionR row, ProposedEvent.WouldThrow throw) ->
+          InstructionR.instruction row == PlayerInstruction.FlipCoin
+            && Throw.kind throw == ThrowKind.Coins
+            && matchesPlayer gs candidate (InstructionR.whose row) (Throw.thrower throw)
         -- CR 706.1 / 614.1a: whose die rolls the row watches (CR 109.5's "you"),
         -- the InstructionR arm above and for its reason -- an instruction to roll
         -- concerns the roller and nobody else. Pixie Guide's sentence says "one
         -- or more dice" with no dN and no count to narrow by, and always adds a
         -- die, so there is no board on which it would change nothing.
         --
-        -- Pokey, the Scallywagg's "if you would roll a d20" is one d20, a roll
-        -- an earlier row has not already resized. Not implemented: Pokey after
-        -- Pixie Guide (#5351).
-        (ReplacementEffect.DieRollR (DieRollR.MkDieRollR whose rewrite), ProposedEvent.WouldRollDice roll) ->
-          matchesPlayer gs candidate whose (DiceRoll.roller roll)
-            && case rewrite of
-              DieRollRewrite.ExtraIgnoringLowest -> True
-              DieRollRewrite.FlipCoinInstead -> DiceRoll.sides roll == 20 && DiceRoll.dice roll == 1 && DiceRoll.ignored roll == 0
+        -- Pokey, the Scallywagg's "if you would roll a d20" reaches every roll of
+        -- d20s, however many and however many ignored: the InstructionR arm's
+        -- reading of Krark's Thumb's ruling, die for coin.
+        (ReplacementEffect.DieRollR (DieRollR.MkDieRollR whose rewrite), ProposedEvent.WouldThrow throw) -> case Throw.kind throw of
+          ThrowKind.Coins -> False
+          ThrowKind.Dice sides ->
+            matchesPlayer gs candidate whose (Throw.thrower throw)
+              && case rewrite of
+                DieRollRewrite.ExtraIgnoringLowest -> True
+                DieRollRewrite.FlipCoinInstead -> sides == 20
         -- The Unstable FAQ with CR 614.1a: the permanent assembling, judged by
         -- the row's Filter (Steamflogger Boss's "a Rigger you control"). An
         -- instruction a player carries out names no permanent, so no row of
@@ -2538,14 +2548,14 @@ affectedChooserOf gs event = case event of
   -- draw happens.
   ProposedEvent.WouldDraw pid -> Just pid
   -- CR 616.1: an instruction is addressed to the player it names, so that is
-  -- the seat choosing among applicable rows -- for a coin flip CR 705.2's last
-  -- sentence says so outright ("no other players are involved"), and where a
-  -- Rigger assembles it is the Rigger's controller. data/scenarios/library-order's "CR
+  -- the seat choosing among applicable rows -- where a Rigger assembles it is
+  -- the Rigger's controller. data/scenarios/library-order's "CR
   -- 616.1 Eligeth and Kenessos: the scryer orders them" proves it for a scry.
   ProposedEvent.WouldPerform _ _ pid _ -> Just pid
-  -- CR 616.1 / 706.1: the instruction is addressed to the roller, and rule 706's
-  -- roll involves no other seat -- WouldPerform's answer.
-  ProposedEvent.WouldRollDice roll -> Just (DiceRoll.roller roll)
+  -- CR 616.1 / 705.2 / 706.1: the instruction is addressed to the flipper or
+  -- the roller, and neither rule involves another seat -- CR 705.2's last
+  -- sentence says so outright of a flip ("no other players are involved").
+  ProposedEvent.WouldThrow throw -> Just (Throw.thrower throw)
   ProposedEvent.WouldLoseGame pid -> Just pid
   -- CR 616.1 / 701.31a: the planeswalking player, the planar controller.
   ProposedEvent.WouldPlaneswalk pid _ -> Just pid
@@ -3837,7 +3847,7 @@ asDamageEvent event = case event of
   ProposedEvent.WouldGainLife {} -> Nothing
   ProposedEvent.WouldDraw _ -> Nothing
   ProposedEvent.WouldPerform {} -> Nothing
-  ProposedEvent.WouldRollDice _ -> Nothing
+  ProposedEvent.WouldThrow _ -> Nothing
   ProposedEvent.WouldLoseGame {} -> Nothing
   ProposedEvent.WouldPlaneswalk {} -> Nothing
 
@@ -3858,7 +3868,7 @@ asDestruction event = case event of
   ProposedEvent.WouldGainLife {} -> Nothing
   ProposedEvent.WouldDraw _ -> Nothing
   ProposedEvent.WouldPerform {} -> Nothing
-  ProposedEvent.WouldRollDice _ -> Nothing
+  ProposedEvent.WouldThrow _ -> Nothing
   ProposedEvent.WouldLoseGame {} -> Nothing
   ProposedEvent.WouldPlaneswalk {} -> Nothing
 
@@ -3881,7 +3891,7 @@ asUntap event = case event of
   ProposedEvent.WouldGainLife {} -> Nothing
   ProposedEvent.WouldDraw _ -> Nothing
   ProposedEvent.WouldPerform {} -> Nothing
-  ProposedEvent.WouldRollDice _ -> Nothing
+  ProposedEvent.WouldThrow _ -> Nothing
   ProposedEvent.WouldLoseGame {} -> Nothing
   ProposedEvent.WouldPlaneswalk {} -> Nothing
 
@@ -3891,7 +3901,7 @@ asDraw :: ProposedEvent -> Maybe PlayerId
 asDraw event = case event of
   ProposedEvent.WouldDraw pid -> Just pid
   ProposedEvent.WouldPerform {} -> Nothing
-  ProposedEvent.WouldRollDice _ -> Nothing
+  ProposedEvent.WouldThrow _ -> Nothing
   ProposedEvent.WouldLoseGame {} -> Nothing
   ProposedEvent.WouldPlaneswalk {} -> Nothing
   ProposedEvent.WouldChangeZone {} -> Nothing
@@ -3918,7 +3928,7 @@ asPerformed instruction event = case event of
   ProposedEvent.WouldPerform performed _ pid n
     | performed == instruction -> Just (pid, n)
     | otherwise -> Nothing
-  ProposedEvent.WouldRollDice _ -> Nothing
+  ProposedEvent.WouldThrow _ -> Nothing
   ProposedEvent.WouldLoseGame {} -> Nothing
   ProposedEvent.WouldPlaneswalk {} -> Nothing
   ProposedEvent.WouldDraw _ -> Nothing
@@ -3937,11 +3947,11 @@ asPerformed instruction event = case event of
   ProposedEvent.WouldGainLife {} -> Nothing
 
 -- asPerformed one rule over. Answers the WHOLE payload rather than a pair, since
--- Pawl.Types.DiceRoll's two counts are both read back by
--- Pawl.Engine.Event.proposeDiceRoll and naming them beats ordering them.
-asDiceRoll :: ProposedEvent -> Maybe DiceRoll.DiceRoll
-asDiceRoll event = case event of
-  ProposedEvent.WouldRollDice roll -> Just roll
+-- Pawl.Types.Throw's fields are all read back by Pawl.Engine.Event's flip and
+-- roll funnels and naming them beats ordering them.
+asThrow :: ProposedEvent -> Maybe Throw.Throw
+asThrow event = case event of
+  ProposedEvent.WouldThrow throw -> Just throw
   ProposedEvent.WouldPerform {} -> Nothing
   ProposedEvent.WouldLoseGame {} -> Nothing
   ProposedEvent.WouldPlaneswalk {} -> Nothing
@@ -3977,7 +3987,7 @@ asCounters event = case event of
   ProposedEvent.WouldGainLife {} -> Nothing
   ProposedEvent.WouldDraw _ -> Nothing
   ProposedEvent.WouldPerform {} -> Nothing
-  ProposedEvent.WouldRollDice _ -> Nothing
+  ProposedEvent.WouldThrow _ -> Nothing
   ProposedEvent.WouldLoseGame {} -> Nothing
   ProposedEvent.WouldPlaneswalk {} -> Nothing
 
@@ -4001,7 +4011,7 @@ asPlayerCounters event = case event of
   ProposedEvent.WouldGainLife {} -> Nothing
   ProposedEvent.WouldDraw _ -> Nothing
   ProposedEvent.WouldPerform {} -> Nothing
-  ProposedEvent.WouldRollDice _ -> Nothing
+  ProposedEvent.WouldThrow _ -> Nothing
   ProposedEvent.WouldLoseGame {} -> Nothing
   ProposedEvent.WouldPlaneswalk {} -> Nothing
 
@@ -4027,7 +4037,7 @@ asLifeLoss event = case event of
   ProposedEvent.WouldUntap _ -> Nothing
   ProposedEvent.WouldDraw _ -> Nothing
   ProposedEvent.WouldPerform {} -> Nothing
-  ProposedEvent.WouldRollDice _ -> Nothing
+  ProposedEvent.WouldThrow _ -> Nothing
   ProposedEvent.WouldLoseGame {} -> Nothing
   ProposedEvent.WouldPlaneswalk {} -> Nothing
 
@@ -4050,7 +4060,7 @@ asLifeGain event = case event of
   ProposedEvent.WouldUntap _ -> Nothing
   ProposedEvent.WouldDraw _ -> Nothing
   ProposedEvent.WouldPerform {} -> Nothing
-  ProposedEvent.WouldRollDice _ -> Nothing
+  ProposedEvent.WouldThrow _ -> Nothing
   ProposedEvent.WouldLoseGame {} -> Nothing
   ProposedEvent.WouldPlaneswalk {} -> Nothing
 
@@ -4071,7 +4081,7 @@ asTokens event = case event of
   ProposedEvent.WouldGainLife {} -> Nothing
   ProposedEvent.WouldDraw _ -> Nothing
   ProposedEvent.WouldPerform {} -> Nothing
-  ProposedEvent.WouldRollDice _ -> Nothing
+  ProposedEvent.WouldThrow _ -> Nothing
   ProposedEvent.WouldLoseGame {} -> Nothing
   ProposedEvent.WouldPlaneswalk {} -> Nothing
 
@@ -4273,6 +4283,6 @@ asPhaseBegin event = case event of
   ProposedEvent.WouldGainLife {} -> Nothing
   ProposedEvent.WouldDraw _ -> Nothing
   ProposedEvent.WouldPerform {} -> Nothing
-  ProposedEvent.WouldRollDice _ -> Nothing
+  ProposedEvent.WouldThrow _ -> Nothing
   ProposedEvent.WouldLoseGame {} -> Nothing
   ProposedEvent.WouldPlaneswalk {} -> Nothing

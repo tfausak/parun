@@ -23,8 +23,8 @@ data DieRollRewrite
     -- no card exercises.
     ExtraIgnoringLowest
   | -- | Pokey, the Scallywagg's "if you would roll a d20, you may instead flip a
-    -- coin. Tails is 1 and heads is 20" (CR 614.1a / 614.6): one d20's roll does
-    -- not happen, and a coin flip does, read back as the roll's result. Counts
-    -- as flipping a coin.
+    -- coin. Tails is 1 and heads is 20" (CR 614.1a / 614.6): the roll does not
+    -- happen, and a coin is flipped for each of its d20s, read back as that
+    -- die's result. Counts as flipping a coin.
     FlipCoinInstead
   deriving (Bounded, Enum, Eq, Ord, Show)
