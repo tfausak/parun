@@ -6377,7 +6377,7 @@ payPayable moment paidFor slots pid oid component = case component of
     payPayable moment paidFor slots pid oid (CostComponent.PayLife (CostAmount.Fixed (halfLifeOf rounding pid gs)))
   -- CR 701.17a: the top `n` cards of the PAYING player's own library (CR 400.3),
   -- moved to their graveyard. `canPayComponent` above has already refused a cost
-  -- milling more than the library holds (CR 701.17b); a MillCountR row resizing
+  -- milling more than the library holds (CR 701.17b); an InstructionR row resizing
   -- the instruction can still take it past that, which is why the funnel clamps.
   --
   -- Through Event.millFrom, which is CR 614.1a's road as well as CR 400.7's: rule

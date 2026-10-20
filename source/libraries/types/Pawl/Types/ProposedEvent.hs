@@ -195,7 +195,11 @@ data ProposedEvent
     -- hand's, so a row that resizes it answers in the same currency and CR
     -- 616.2's next iteration sees a differently-numbered instruction rather than
     -- a differently-shaped event.
-    WouldPerform PlayerInstruction.PlayerInstruction PlayerId.PlayerId Natural.Natural
+    --
+    -- The ObjectId is the permanent carrying the instruction out for its player,
+    -- where one is (a Rigger's "it assembles"): CR 801.13a's affected object, and
+    -- what Pawl.Types.ReplacementEffect's AssembleR judges.
+    WouldPerform PlayerInstruction.PlayerInstruction (Maybe ObjectId.ObjectId) PlayerId.PlayerId Natural.Natural
   | -- | CR 706.1 / 614.1a: this player would be instructed to roll this many
     -- dice, with this many of the lowest rolls ignored (CR 706.6). Raised by
     -- Pawl.Engine.Event.proposeDiceRoll, the one funnel every roll in the engine

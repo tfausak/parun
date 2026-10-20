@@ -68,8 +68,6 @@ import qualified Pawl.Types.CandidateId as CandidateId
 import Pawl.Types.Card (Card)
 import qualified Pawl.Types.Card as Card.Type
 import qualified Pawl.Types.Chosen as Chosen
-import qualified Pawl.Types.CoinFlipR as CoinFlipR
-import qualified Pawl.Types.CoinFlipRewrite as CoinFlipRewrite
 import Pawl.Types.ControllerRelation (ControllerRelation)
 import qualified Pawl.Types.ControllerRelation as ControllerRelation
 import qualified Pawl.Types.CopyCoverage as CopyCoverage
@@ -111,6 +109,8 @@ import Pawl.Types.GameState (GameState)
 import qualified Pawl.Types.GameState as GameState
 import qualified Pawl.Types.GrantedAbility as GrantedAbility
 import qualified Pawl.Types.InstanceOrdinal as InstanceOrdinal
+import qualified Pawl.Types.InstructionR as InstructionR
+import qualified Pawl.Types.InstructionRewrite as InstructionRewrite
 import qualified Pawl.Types.Keyword as Keyword.Type
 import qualified Pawl.Types.LibraryPosition as LibraryPosition
 import qualified Pawl.Types.LifeGainR as LifeGainR
@@ -118,8 +118,6 @@ import qualified Pawl.Types.LifeGainRewrite as LifeGainRewrite
 import qualified Pawl.Types.LifeLossPattern as LifeLossPattern
 import qualified Pawl.Types.LifeLossR as LifeLossR
 import qualified Pawl.Types.LifeLossRewrite as LifeLossRewrite
-import qualified Pawl.Types.MillCountR as MillCountR
-import qualified Pawl.Types.MillCountRewrite as MillCountRewrite
 import qualified Pawl.Types.Object as Object
 import Pawl.Types.ObjectId (ObjectId)
 import qualified Pawl.Types.PermanentCandidate as PermanentCandidate
@@ -140,8 +138,6 @@ import Pawl.Types.Prevention (Prevention)
 import qualified Pawl.Types.Prevention as Prevention
 import qualified Pawl.Types.PreventionRider as PreventionRider
 import qualified Pawl.Types.ProjectedCharacteristics as PC
-import qualified Pawl.Types.ProliferateR as ProliferateR
-import qualified Pawl.Types.ProliferateRewrite as ProliferateRewrite
 import qualified Pawl.Types.Prompt as Prompt
 import Pawl.Types.ProposedEvent (ProposedEvent)
 import qualified Pawl.Types.ProposedEvent as ProposedEvent
@@ -160,8 +156,6 @@ import qualified Pawl.Types.ReplacementOrigin as ReplacementOrigin
 import qualified Pawl.Types.ReplacementProvenance as ReplacementProvenance
 import qualified Pawl.Types.SacrificeToEnter as SacrificeToEnter
 import qualified Pawl.Types.Scaling as Scaling
-import qualified Pawl.Types.ScryR as ScryR
-import qualified Pawl.Types.ScryRewrite as ScryRewrite
 import qualified Pawl.Types.SlotName as SlotName
 import qualified Pawl.Types.Source as Source
 import qualified Pawl.Types.Subtype as Subtype
@@ -175,8 +169,6 @@ import qualified Pawl.Types.TurnUpR as TurnUpR
 import qualified Pawl.Types.TurnUpRewrite as TurnUpRewrite
 import qualified Pawl.Types.UntapR as UntapR
 import qualified Pawl.Types.Uses as Uses
-import qualified Pawl.Types.VillainousChoiceR as VillainousChoiceR
-import qualified Pawl.Types.VillainousChoiceRewrite as VillainousChoiceRewrite
 import qualified Pawl.Types.Zone as Zone
 import Pawl.Types.ZoneChange (ZoneChange)
 import qualified Pawl.Types.ZoneChange as ZoneChange
@@ -729,22 +721,10 @@ affected event = case event of
   ProposedEvent.WouldLoseLife _ pid _ -> ([], [pid])
   ProposedEvent.WouldGainLife pid _ -> ([], [pid])
   ProposedEvent.WouldDraw pid -> ([], [pid])
-  ProposedEvent.WouldPerform instruction pid _ -> (Maybe.maybeToList (performerOf instruction), [pid])
+  ProposedEvent.WouldPerform _ performer pid _ -> (Maybe.maybeToList performer, [pid])
   ProposedEvent.WouldRollDice roll -> ([], [DiceRoll.roller roll])
   ProposedEvent.WouldLoseGame pid -> ([], [pid])
   ProposedEvent.WouldPlaneswalk pid _ -> ([], [pid])
-
--- The permanent carrying out an instruction for its player, where one is (a
--- Rigger's "it assembles"). Total for `affected`'s reason.
-performerOf :: PlayerInstruction.PlayerInstruction -> Maybe ObjectId
-performerOf instruction = case instruction of
-  PlayerInstruction.DrawCards -> Nothing
-  PlayerInstruction.MillCards -> Nothing
-  PlayerInstruction.FlipCoin -> Nothing
-  PlayerInstruction.Proliferate -> Nothing
-  PlayerInstruction.Scry -> Nothing
-  PlayerInstruction.FaceVillainousChoice -> Nothing
-  PlayerInstruction.Assemble assembler -> assembler
 
 -- CR 614.1: does this replacement's printed pattern match this event?
 matchesPrinted :: (ObjectId -> Filter.View) -> GameState -> ProposedEvent -> ReplacementCandidate -> Bool
@@ -945,46 +925,27 @@ matchesPrinted viewOf gs event candidate =
         -- the event rather than a rewrite that changes nothing, LifeLossR's third
         -- conjunct above: an instruction naming one card never reaches CR 616.1's
         -- choice and is never spent under CR 614.5.
-        (ReplacementEffect.DrawCountR pat, ProposedEvent.WouldPerform PlayerInstruction.DrawCards pid n) ->
+        (ReplacementEffect.DrawCountR pat, ProposedEvent.WouldPerform PlayerInstruction.DrawCards _ pid n) ->
           n >= DrawCountR.atLeast pat
             && matchesPlayer gs candidate (DrawCountR.whose pat) pid
-        -- CR 701.17a / 614.1a: Bruvac the Grandiloquent watches the mill
-        -- INSTRUCTION and who it names. No threshold conjunct where DrawCountR has
-        -- one: rule 701.17a's "one or more" is met by every instruction that mills
-        -- at all, since `millFrom` raises this event only for a positive count.
-        (ReplacementEffect.MillCountR pat, ProposedEvent.WouldPerform PlayerInstruction.MillCards pid _) ->
-          matchesPlayer gs candidate (MillCountR.whose pat) pid
-        -- CR 705.1 / 614.1a: whose coin flips the row watches (CR 109.5's "you"),
-        -- which is the whole of the pattern -- rule 705.2's last sentence leaves
-        -- the flipper the only seat a flip involves, and rule 705.1's flip has no
-        -- source, no amount and no destination to narrow by. No `admits` beside
-        -- it either: every arm of Pawl.Types.CoinFlipRewrite changes the count of
-        -- coins, so there is no board on which the rewrite would change nothing.
-        (ReplacementEffect.CoinFlipR (CoinFlipR.MkCoinFlipR whose _), ProposedEvent.WouldPerform PlayerInstruction.FlipCoin pid _) ->
-          matchesPlayer gs candidate whose pid
+        -- CR 614.1a: which instruction the row watches and whose (CR 109.5's
+        -- "you"), which is the whole of the pattern -- each instruction concerns
+        -- the player it names, CR 705.2's last sentence saying so outright of a
+        -- flip, and has no source, amount or destination to narrow by. No
+        -- threshold where DrawCountR has one: Bruvac the Grandiloquent's "one or
+        -- more" is met by every proposed instruction. No `admits` either: every
+        -- printed rewrite changes the event.
+        (ReplacementEffect.InstructionR row, ProposedEvent.WouldPerform instruction _ pid _) ->
+          InstructionR.instruction row == instruction
+            && matchesPlayer gs candidate (InstructionR.whose row) pid
         -- CR 706.1 / 614.1a: whose die rolls the row watches (CR 109.5's "you"),
-        -- the CoinFlipR arm above and for its reason -- an instruction to roll
+        -- the InstructionR arm above and for its reason -- an instruction to roll
         -- concerns the roller and nobody else, and every printing of the sentence
         -- says "one or more dice" with no dN and no count to narrow by. No
         -- `admits` beside it: DieRollRewrite's one arm always adds a die, so there
         -- is no board on which the rewrite would change nothing.
         (ReplacementEffect.DieRollR (DieRollR.MkDieRollR whose _), ProposedEvent.WouldRollDice roll) ->
           matchesPlayer gs candidate whose (DiceRoll.roller roll)
-        -- CR 701.34a / 614.1a: whose proliferates the row watches (CR 109.5's
-        -- "you"), the CoinFlipR arm's posture and for its reason. No `admits`:
-        -- ProliferateRewrite.Doubled always changes the count.
-        (ReplacementEffect.ProliferateR (ProliferateR.MkProliferateR whose _), ProposedEvent.WouldPerform PlayerInstruction.Proliferate pid _) ->
-          matchesPlayer gs candidate whose pid
-        -- CR 701.22a / 614.1a: whose scries the row watches (CR 109.5's "you"),
-        -- the ProliferateR arm's posture. No `admits`: both rewrites change the
-        -- event, and CR 701.22b's scry 0 is never proposed.
-        (ReplacementEffect.ScryR (ScryR.MkScryR whose _), ProposedEvent.WouldPerform PlayerInstruction.Scry pid _) ->
-          matchesPlayer gs candidate whose pid
-        -- CR 701.55c / 614.1a: whose villainous choices the row watches -- The
-        -- Valeyard's "an opponent" -- the ProliferateR arm's posture. No `admits`:
-        -- VillainousChoiceRewrite.AdditionalTime always changes the count.
-        (ReplacementEffect.VillainousChoiceR (VillainousChoiceR.MkVillainousChoiceR whose _), ProposedEvent.WouldPerform PlayerInstruction.FaceVillainousChoice pid _) ->
-          matchesPlayer gs candidate whose pid
         -- The Unstable FAQ with CR 614.1a: the permanent assembling, judged by
         -- the row's Filter (Steamflogger Boss's "a Rigger you control"). An
         -- instruction a player carries out names no permanent, so no row of
@@ -993,7 +954,7 @@ matchesPrinted viewOf gs event candidate =
         -- Read through last known information (CR 608.2h): a Rigger that left
         -- before its "it assembles" resolved still assembles, as the Rigger it
         -- last was -- matchesDamageSource's fallback.
-        (ReplacementEffect.AssembleR matching, ProposedEvent.WouldPerform (PlayerInstruction.Assemble (Just oid)) _ _) ->
+        (ReplacementEffect.AssembleR matching, ProposedEvent.WouldPerform PlayerInstruction.Assemble (Just oid) _ _) ->
           Filter.matches (candidateContext gs candidate) (Maybe.fromMaybe (viewOf oid) (Projection.viewWithLastKnownAnywhere gs oid)) matching
         -- CR 104.3 / 614.1a: whose losses of the game the row watches -- Lich's
         -- Mirror's "you".
@@ -1021,12 +982,8 @@ matchesPrinted viewOf gs event candidate =
         (ReplacementEffect.LifeGainR {}, _) -> False
         (ReplacementEffect.DrawR {}, _) -> False
         (ReplacementEffect.DrawCountR {}, _) -> False
-        (ReplacementEffect.MillCountR {}, _) -> False
-        (ReplacementEffect.CoinFlipR {}, _) -> False
+        (ReplacementEffect.InstructionR {}, _) -> False
         (ReplacementEffect.DieRollR {}, _) -> False
-        (ReplacementEffect.ProliferateR {}, _) -> False
-        (ReplacementEffect.ScryR {}, _) -> False
-        (ReplacementEffect.VillainousChoiceR {}, _) -> False
         (ReplacementEffect.AssembleR {}, _) -> False
         (ReplacementEffect.GameLossR {}, _) -> False
         (ReplacementEffect.PlaneswalkR {}, _) -> False
@@ -2003,20 +1960,15 @@ bucketOfEffect re = case re of
   -- CR 616.1a-d are all about entering the battlefield and copying; an instruction
   -- to draw cards is neither, so CR 616.1e.
   ReplacementEffect.DrawCountR {} -> ReplacementBucket.Other
-  -- CR 616.1a-d are all about entering the battlefield and copying; an instruction
-  -- to mill cards is neither, so CR 616.1e.
-  ReplacementEffect.MillCountR {} -> ReplacementBucket.Other
-  -- CR 616.1a-d are all about entering the battlefield and copying; flipping a
-  -- coin is neither, so CR 616.1e.
-  ReplacementEffect.CoinFlipR {} -> ReplacementBucket.Other
+  -- CR 616.1a-d are all about entering the battlefield and copying; a player's
+  -- instruction to mill, flip, proliferate, scry or face a choice is neither, so
+  -- CR 616.1e.
+  ReplacementEffect.InstructionR {} -> ReplacementBucket.Other
   -- CR 616.1a-d are all about entries and copies; rolling dice is none of them, so
-  -- CR 616.1e. CoinFlipR's answer one rule over.
+  -- CR 616.1e. InstructionR's answer one rule over.
   ReplacementEffect.DieRollR {} -> ReplacementBucket.Other
-  -- CR 616.1a-d are all about entries and copies; proliferating is none of them,
-  -- so CR 616.1e.
-  ReplacementEffect.ProliferateR {} -> ReplacementBucket.Other
-  ReplacementEffect.ScryR {} -> ReplacementBucket.Other
-  ReplacementEffect.VillainousChoiceR {} -> ReplacementBucket.Other
+  -- CR 616.1a-d are all about entries and copies; assembling is none of them, so
+  -- CR 616.1e.
   ReplacementEffect.AssembleR {} -> ReplacementBucket.Other
   -- CR 616.1a-d are all about entering the battlefield and copying; losing
   -- the game is neither, so CR 616.1e.
@@ -2283,38 +2235,25 @@ readsApplier re = case re of
   -- under different controllers are told apart, and the drawer chooses" is what
   -- proves the drawer is asked which one applies.
   ReplacementEffect.DrawCountR (DrawCountR.MkDrawCountR _ _ DrawCountRewrite.EachDrawOne) -> True
-  -- CR 701.17a: Bruvac the Grandiloquent's "they mill twice that many cards" names
-  -- the MILLING player and nobody else, so the resized instruction is the same
-  -- whichever candidate carries it. LifeGainRewrite.Scaled's answer, and for its
-  -- reason.
-  ReplacementEffect.MillCountR (MillCountR.MkMillCountR _ (MillCountRewrite.Scaled _)) -> False
-  -- The coins are flipped by the seat the EVENT named and the doubling is the
-  -- effect's own field, so two rows alike in `effect` leave the same flipper the
-  -- same number of coins whoever holds them. LifeGainR's answer, and for its
+  -- The instruction is carried out by the seat the EVENT named, and a resized
+  -- count is the effect's own field, so two rows alike in `effect` leave the same
+  -- player the same instruction whoever holds them -- Bruvac the Grandiloquent's
+  -- "they mill twice that many" names the milling player and nobody else, and
+  -- Eligeth's drawer is the scryer. LifeGainRewrite.Scaled's answer, and for its
   -- reason; the inner sum is cased so a rewrite that DOES read the applier has to
   -- be decided here.
-  ReplacementEffect.CoinFlipR (CoinFlipR.MkCoinFlipR _ CoinFlipRewrite.Doubled) -> False
+  ReplacementEffect.InstructionR (InstructionR.MkInstructionR _ _ (InstructionRewrite.Scaled _)) -> False
+  ReplacementEffect.InstructionR (InstructionR.MkInstructionR _ _ InstructionRewrite.DrawInstead) -> False
   -- The dice are thrown by the seat the EVENT named and the extra die is the
   -- effect's own field, so two rows alike in `effect` leave the same roller the
   -- same number of dice and the same number ignored whoever holds them.
-  -- CoinFlipR's answer, and for its reason; the inner sum is cased so a rewrite
-  -- that DOES read the applier has to be decided here.
+  -- InstructionR's answer, and for its reason.
   ReplacementEffect.DieRollR (DieRollR.MkDieRollR _ DieRollRewrite.ExtraIgnoringLowest) -> False
-  -- The proliferator is the seat the EVENT named and the doubling is the
-  -- effect's own field. CoinFlipR's answer, and for its reason.
-  ReplacementEffect.ProliferateR (ProliferateR.MkProliferateR _ ProliferateRewrite.Doubled) -> False
-  -- The scryer, or the drawer instead, is the seat the EVENT named, and the count
-  -- is the event's own. ProliferateR's answer, and for its reason.
-  ReplacementEffect.ScryR (ScryR.MkScryR _ ScryRewrite.PlusOne) -> False
-  ReplacementEffect.ScryR (ScryR.MkScryR _ ScryRewrite.DrawInstead) -> False
-  -- The facing seat is the one the EVENT named and the extra facing is the
-  -- effect's own field. ProliferateR's answer, and for its reason.
-  ReplacementEffect.VillainousChoiceR (VillainousChoiceR.MkVillainousChoiceR _ VillainousChoiceRewrite.AdditionalTime) -> False
   ReplacementEffect.AssembleR {} -> False
   -- CR 109.5: the effects run as the row's own controller, the reset's "you".
   ReplacementEffect.GameLossR {} -> True
   -- Susan Foreman's arrangement is of the planar deck of the player the EVENT
-  -- named, who also chooses. ProliferateR's answer, and for its reason.
+  -- named, who also chooses. InstructionR's answer, and for its reason.
   ReplacementEffect.PlaneswalkR (PlaneswalkR.MkPlaneswalkR _ _ PlaneswalkRewrite.ArrangeTopTwo) -> False
   -- GameLossR's answer, and for its reason.
   ReplacementEffect.PlaneswalkR (PlaneswalkR.MkPlaneswalkR _ _ (PlaneswalkRewrite.RunEffects _)) -> True
@@ -2371,12 +2310,8 @@ readsSource effect = case effect of
   ReplacementEffect.LifeLossR {} -> False
   ReplacementEffect.LifeGainR {} -> False
   ReplacementEffect.DrawCountR {} -> False
-  ReplacementEffect.MillCountR {} -> False
-  ReplacementEffect.CoinFlipR {} -> False
+  ReplacementEffect.InstructionR {} -> False
   ReplacementEffect.DieRollR {} -> False
-  ReplacementEffect.ProliferateR {} -> False
-  ReplacementEffect.ScryR {} -> False
-  ReplacementEffect.VillainousChoiceR {} -> False
   ReplacementEffect.AssembleR {} -> False
   -- CR 113.7: the effects run with the candidate's source as theirs, so one
   -- naming its source reaches a different object under each.
@@ -2559,7 +2494,7 @@ affectedChooserOf gs event = case event of
   -- sentence says so outright ("no other players are involved"), and where a
   -- Rigger assembles it is the Rigger's controller. data/scenarios/library-order's "CR
   -- 616.1 Eligeth and Kenessos: the scryer orders them" proves it for a scry.
-  ProposedEvent.WouldPerform _ pid _ -> Just pid
+  ProposedEvent.WouldPerform _ _ pid _ -> Just pid
   -- CR 616.1 / 706.1: the instruction is addressed to the roller, and rule 706's
   -- roll involves no other seat -- WouldPerform's answer.
   ProposedEvent.WouldRollDice roll -> Just (DiceRoll.roller roll)
@@ -3822,19 +3757,15 @@ contestedResource gs candidate = case ReplacementCandidate.effect candidate of
   -- The instruction class one rule up, and the same answer for the same reason:
   -- `contested` asks only about a damage batch.
   ReplacementEffect.DrawCountR {} -> Nothing
-  -- The mill instruction's class, and the same answer for the same reason.
-  ReplacementEffect.MillCountR {} -> Nothing
-  -- Doubling a count of coins is arithmetic on whatever arrives, and `contested`
-  -- above asks only about a damage batch in any case. DrawCountR's answer.
-  ReplacementEffect.CoinFlipR {} -> Nothing
+  -- Resizing an instruction's count is arithmetic on whatever arrives, and
+  -- `contested` above asks only about a damage batch in any case. DrawCountR's
+  -- answer.
+  ReplacementEffect.InstructionR {} -> Nothing
   -- Adding a die to an instruction is arithmetic on whatever arrives, and
-  -- `contested` above asks only about a damage batch. CoinFlipR's answer.
+  -- `contested` above asks only about a damage batch. InstructionR's answer.
   ReplacementEffect.DieRollR {} -> Nothing
-  -- Doubling a count of proliferates is arithmetic on whatever arrives.
-  -- CoinFlipR's answer.
-  ReplacementEffect.ProliferateR {} -> Nothing
-  ReplacementEffect.ScryR {} -> Nothing
-  ReplacementEffect.VillainousChoiceR {} -> Nothing
+  -- Doubling a count of Contraptions is arithmetic on whatever arrives.
+  -- InstructionR's answer.
   ReplacementEffect.AssembleR {} -> Nothing
   -- `contested` asks only about a damage batch.
   ReplacementEffect.GameLossR {} -> Nothing
@@ -3931,13 +3862,12 @@ asDraw event = case event of
 
 -- asDraw's twin one event class up: who was instructed to carry out THIS
 -- instruction and how many times once CR 616.1's loop has settled it, or Nothing
--- when a row replaced it outright (CR 614.6). The whole instruction is compared,
--- assembler included: every row resizes the count and none rewrites the rest,
--- and a row that turns one instruction into another (Eligeth, Crossroads Augur's
--- draw instead of a scry) proposes the new one as an event of its own.
+-- when a row replaced it outright (CR 614.6). A row that turns one instruction
+-- into another (Eligeth, Crossroads Augur's draw instead of a scry) proposes the
+-- new one as an event of its own, so a different instruction here is none.
 asPerformed :: PlayerInstruction.PlayerInstruction -> ProposedEvent -> Maybe (PlayerId, Natural)
 asPerformed instruction event = case event of
-  ProposedEvent.WouldPerform performed pid n
+  ProposedEvent.WouldPerform performed _ pid n
     | performed == instruction -> Just (pid, n)
     | otherwise -> Nothing
   ProposedEvent.WouldRollDice _ -> Nothing

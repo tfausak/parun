@@ -67,7 +67,6 @@ import qualified Pawl.Types.ChosenCardInGraveyard as ChosenCardInGraveyard
 import qualified Pawl.Types.ChosenCardInHand as ChosenCardInHand
 import qualified Pawl.Types.ChosenPermanents as ChosenPermanents
 import qualified Pawl.Types.Clause as Clause
-import qualified Pawl.Types.CoinFlipR as CoinFlipR
 import qualified Pawl.Types.Compares as Compares
 import qualified Pawl.Types.Condition as Condition.Type
 import qualified Pawl.Types.Conjure as Conjure
@@ -151,6 +150,7 @@ import qualified Pawl.Types.GrantPlayFromExile as GrantPlayFromExile
 import qualified Pawl.Types.GrantedAbility as GrantedAbility
 import qualified Pawl.Types.HowMany as HowMany
 import qualified Pawl.Types.InitiativeTarget as InitiativeTarget
+import qualified Pawl.Types.InstructionR as InstructionR
 import qualified Pawl.Types.Keyword as Keyword.Type
 import qualified Pawl.Types.LastKnown as LastKnown
 import qualified Pawl.Types.LibraryPlacement as LibraryPlacement
@@ -163,7 +163,6 @@ import qualified Pawl.Types.MakeForetold as MakeForetold
 import qualified Pawl.Types.ManaAddition as ManaAddition
 import qualified Pawl.Types.Meld as Meld
 import qualified Pawl.Types.Mill as Mill
-import qualified Pawl.Types.MillCountR as MillCountR
 import qualified Pawl.Types.MillTally as MillTally
 import qualified Pawl.Types.Modal as Modal
 import qualified Pawl.Types.Mode as Mode
@@ -196,7 +195,6 @@ import qualified Pawl.Types.PreventAllDamage as PreventAllDamage
 import qualified Pawl.Types.PreventNextDamage as PreventNextDamage
 import qualified Pawl.Types.PreventNextDamageInstance as PreventNextDamageInstance
 import qualified Pawl.Types.Prohibit as Prohibit
-import qualified Pawl.Types.ProliferateR as ProliferateR
 import qualified Pawl.Types.PutCounters as PutCounters
 import qualified Pawl.Types.PutCountersFrom as PutCountersFrom
 import qualified Pawl.Types.PutSticker as PutSticker
@@ -223,7 +221,6 @@ import qualified Pawl.Types.RollDie as RollDie
 import qualified Pawl.Types.SacrificeAnyNumber as SacrificeAnyNumber
 import qualified Pawl.Types.SacrificeEffect as SacrificeEffect
 import qualified Pawl.Types.SacrificeToEnter as SacrificeToEnter
-import qualified Pawl.Types.ScryR as ScryR
 import qualified Pawl.Types.Search as Search
 import qualified Pawl.Types.SetClassLevel as SetClassLevel
 import qualified Pawl.Types.SetHalfLocked as SetHalfLocked
@@ -250,7 +247,6 @@ import qualified Pawl.Types.TriggeredAbility as TriggeredAbility
 import qualified Pawl.Types.TurnFaceDown as TurnFaceDown
 import qualified Pawl.Types.TurnUpR as TurnUpR
 import qualified Pawl.Types.TurnUpRewrite as TurnUpRewrite
-import qualified Pawl.Types.VillainousChoiceR as VillainousChoiceR
 import qualified Pawl.Types.Vote as Vote
 import qualified Pawl.Types.VoteChoices as VoteChoices
 import qualified Pawl.Types.VoteObjects as VoteObjects
@@ -1702,16 +1698,12 @@ replacementRowReads re = case re of
   -- A DrawCountR is one ControllerRelation, one threshold and one nullary rewrite.
   -- DrawR's answer, and for its reason.
   ReplacementEffect.DrawCountR {} -> ([], [])
-  -- A MillCountR is one ControllerRelation and one scaling. DrawCountR's answer,
-  -- and for its reason.
-  ReplacementEffect.MillCountR {} -> ([], [])
+  -- An InstructionR is one instruction, one ControllerRelation and one scaling
+  -- or DrawInstead. DrawCountR's answer, and for its reason.
+  ReplacementEffect.InstructionR {} -> ([], [])
   -- One ControllerRelation and one nullary rewrite: no read at all, DrawCountR's
   -- answer and for its reason.
-  ReplacementEffect.CoinFlipR {} -> ([], [])
   ReplacementEffect.DieRollR {} -> ([], [])
-  ReplacementEffect.ProliferateR {} -> ([], [])
-  ReplacementEffect.ScryR {} -> ([], [])
-  ReplacementEffect.VillainousChoiceR {} -> ([], [])
   ReplacementEffect.AssembleR matching -> ([matching], [])
   -- One ControllerRelation; the effects run instead are replacementRowEffects'.
   ReplacementEffect.GameLossR {} -> ([], [])
@@ -1890,12 +1882,8 @@ overRelations f re = case re of
   ReplacementEffect.LifeGainR r -> (\w -> ReplacementEffect.LifeGainR r {LifeGainR.whose = w}) <$> f (LifeGainR.whose r)
   ReplacementEffect.DrawR r -> (\w -> ReplacementEffect.DrawR r {DrawR.whose = w}) <$> f (DrawR.whose r)
   ReplacementEffect.DrawCountR r -> (\w -> ReplacementEffect.DrawCountR r {DrawCountR.whose = w}) <$> f (DrawCountR.whose r)
-  ReplacementEffect.MillCountR r -> (\w -> ReplacementEffect.MillCountR r {MillCountR.whose = w}) <$> f (MillCountR.whose r)
-  ReplacementEffect.CoinFlipR r -> (\w -> ReplacementEffect.CoinFlipR r {CoinFlipR.whose = w}) <$> f (CoinFlipR.whose r)
+  ReplacementEffect.InstructionR r -> (\w -> ReplacementEffect.InstructionR r {InstructionR.whose = w}) <$> f (InstructionR.whose r)
   ReplacementEffect.DieRollR r -> (\w -> ReplacementEffect.DieRollR r {DieRollR.whose = w}) <$> f (DieRollR.whose r)
-  ReplacementEffect.ProliferateR r -> (\w -> ReplacementEffect.ProliferateR r {ProliferateR.whose = w}) <$> f (ProliferateR.whose r)
-  ReplacementEffect.ScryR r -> (\w -> ReplacementEffect.ScryR r {ScryR.whose = w}) <$> f (ScryR.whose r)
-  ReplacementEffect.VillainousChoiceR r -> (\w -> ReplacementEffect.VillainousChoiceR r {VillainousChoiceR.whose = w}) <$> f (VillainousChoiceR.whose r)
   ReplacementEffect.AssembleR _ -> pure re
   ReplacementEffect.GameLossR r -> (\w -> ReplacementEffect.GameLossR r {GameLossR.whose = w}) <$> f (GameLossR.whose r)
   ReplacementEffect.PlaneswalkR r -> (\w -> ReplacementEffect.PlaneswalkR r {PlaneswalkR.whose = w}) <$> f (PlaneswalkR.whose r)
@@ -1949,12 +1937,8 @@ replacementRowEffects re = case re of
   ReplacementEffect.LifeGainR _ -> []
   ReplacementEffect.DrawR _ -> []
   ReplacementEffect.DrawCountR _ -> []
-  ReplacementEffect.MillCountR _ -> []
-  ReplacementEffect.CoinFlipR _ -> []
+  ReplacementEffect.InstructionR _ -> []
   ReplacementEffect.DieRollR _ -> []
-  ReplacementEffect.ProliferateR _ -> []
-  ReplacementEffect.ScryR _ -> []
-  ReplacementEffect.VillainousChoiceR _ -> []
   ReplacementEffect.AssembleR _ -> []
   -- CR 614.1a's "instead [do something]" for a loss of the game (Lich's Mirror).
   ReplacementEffect.GameLossR (GameLossR.MkGameLossR _ effects) -> Foldable.toList effects

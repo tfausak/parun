@@ -93,7 +93,6 @@ import qualified Pawl.Types.ChosenCardInGraveyard as ChosenCardInGraveyard
 import qualified Pawl.Types.ChosenCardInHand as ChosenCardInHand
 import qualified Pawl.Types.ChosenPermanents as ChosenPermanents
 import qualified Pawl.Types.Clause as Clause
-import qualified Pawl.Types.CoinFlipR as CoinFlipR
 import qualified Pawl.Types.CombatRestriction as CombatRestriction
 import qualified Pawl.Types.Compares as Compares
 import qualified Pawl.Types.CompletedDungeon as CompletedDungeon
@@ -221,6 +220,7 @@ import qualified Pawl.Types.HandAction as HandAction
 import qualified Pawl.Types.HowMany as HowMany
 import qualified Pawl.Types.Impending as Impending
 import qualified Pawl.Types.InZone as InZone
+import qualified Pawl.Types.InstructionR as InstructionR
 import qualified Pawl.Types.Keyword as Keyword
 import qualified Pawl.Types.KeywordCount as KeywordCount
 import qualified Pawl.Types.KeywordDesignator as KeywordDesignator
@@ -242,7 +242,6 @@ import qualified Pawl.Types.ManaRider as ManaRider
 import qualified Pawl.Types.Measures as Measures
 import qualified Pawl.Types.Meld as Meld
 import qualified Pawl.Types.Mill as Mill
-import qualified Pawl.Types.MillCountR as MillCountR
 import qualified Pawl.Types.MillTally as MillTally
 import qualified Pawl.Types.Modal as Modal
 import qualified Pawl.Types.Mode as Mode
@@ -303,7 +302,6 @@ import qualified Pawl.Types.PreventionRider as PreventionRider
 import qualified Pawl.Types.PrintedReplacement as PrintedReplacement
 import qualified Pawl.Types.Prohibit as Prohibit
 import qualified Pawl.Types.ProjectedCharacteristics as ProjectedCharacteristics
-import qualified Pawl.Types.ProliferateR as ProliferateR
 import qualified Pawl.Types.Protection as Protection
 import qualified Pawl.Types.PutCounters as PutCounters
 import qualified Pawl.Types.PutCountersFrom as PutCountersFrom
@@ -336,7 +334,6 @@ import qualified Pawl.Types.SacrificeEffect as SacrificeEffect
 import qualified Pawl.Types.SacrificeRestriction as SacrificeRestriction
 import qualified Pawl.Types.SacrificeToEnter as SacrificeToEnter
 import qualified Pawl.Types.Scope as Scope
-import qualified Pawl.Types.ScryR as ScryR
 import qualified Pawl.Types.Search as Search
 import qualified Pawl.Types.SelfCountersReached as SelfCountersReached
 import qualified Pawl.Types.SelfCountersRemoved as SelfCountersRemoved
@@ -376,7 +373,6 @@ import qualified Pawl.Types.TurnUpRewrite as TurnUpRewrite
 import qualified Pawl.Types.UntapR as UntapR
 import qualified Pawl.Types.UntapRestriction as UntapRestriction
 import qualified Pawl.Types.UntapRewrite as UntapRewrite
-import qualified Pawl.Types.VillainousChoiceR as VillainousChoiceR
 import qualified Pawl.Types.Vote as Vote
 import qualified Pawl.Types.VoteChoices as VoteChoices
 import qualified Pawl.Types.VoteObjects as VoteObjects
@@ -851,10 +847,6 @@ chosenPermanentsNames asking x = case x of
 clauseNames :: Asking -> (card -> Bool) -> (ability -> Bool) -> Clause.Clause card ability -> Bool
 clauseNames asking onCard onAbility x = case x of
   Clause.MkClause _ifTaken condition orElse optionality payGate effects -> any (conditionNames asking) condition || any (orElseNames asking) orElse || optionalityNames asking optionality || any (payGateNames asking) payGate || any (effectNames asking onCard onAbility) effects
-
-coinFlipRNames :: Asking -> CoinFlipR.CoinFlipR -> Bool
-coinFlipRNames asking x = case x of
-  CoinFlipR.MkCoinFlipR whose _rewrite -> controllerRelationNames asking whose
 
 combatRestrictionNames :: Asking -> CombatRestriction.CombatRestriction -> Bool
 combatRestrictionNames asking x = case x of
@@ -1674,6 +1666,10 @@ inZoneNames :: Asking -> InZone.InZone -> Bool
 inZoneNames asking x = case x of
   InZone.MkInZone _zone player -> playerRefNames asking player
 
+instructionRNames :: Asking -> InstructionR.InstructionR -> Bool
+instructionRNames asking x = case x of
+  InstructionR.MkInstructionR _instruction whose _rewrite -> controllerRelationNames asking whose
+
 keywordNames :: Asking -> Keyword.Keyword -> Bool
 keywordNames asking x = case x of
   Keyword.Deathtouch -> False
@@ -1962,10 +1958,6 @@ meldNames asking onCard x = case x of
 millNames :: Asking -> Mill.Mill -> Bool
 millNames asking x = case x of
   Mill.MkMill player quantity tally slot -> playerRefNames asking player || quantityNames asking quantity || any (millTallyNames asking) tally || any (slotNames asking) slot
-
-millCountRNames :: Asking -> MillCountR.MillCountR -> Bool
-millCountRNames asking x = case x of
-  MillCountR.MkMillCountR whose _rewrite -> controllerRelationNames asking whose
 
 millTallyNames :: Asking -> MillTally.MillTally -> Bool
 millTallyNames asking x = case x of
@@ -2364,10 +2356,6 @@ projectedCharacteristicsNames :: Asking -> ProjectedCharacteristics.ProjectedCha
 projectedCharacteristicsNames asking x = case x of
   ProjectedCharacteristics.MkProjectedCharacteristics _names _supertypes keywords _colors _manaCost _manaValue _power _toughness _loyalty _defense _intensity characteristicPT _cardTypes _subtypes staticAbilities playerAbilities grantedPlayerAbilities grantedStaticAbilities grantedRuleAbilities specialActions activatedAbilities replacementEffects triggeredAbilities delayedAbilities enchant _castingPermissions ruleAbilities _lostAllAbilities _hasFullText _subtypeWordChanges textChangedKeywords _assignsCombatDamageWithToughness _grantsStationToughness additionalCosts additionalCostChoices alternativeCosts costReductions grantedCostReductions grantedAlternativeCosts _grantedSpendManaAsThough _halves exceptions mergedDonors prepare alternativeSpell _prototyped spell flipped -> any (keywordNames asking) (Map.keys keywords) || any (characteristicPTNames asking) characteristicPT || any (staticAbilityNames asking (grantedAbilityNames asking (const False))) staticAbilities || any (playerStaticAbilityNames asking) playerAbilities || any (playerStaticAbilityNames asking . snd) grantedPlayerAbilities || any (staticAbilityNames asking (grantedAbilityNames asking (const False)) . snd) grantedStaticAbilities || ruleAbilitiesNames asking grantedRuleAbilities || any (specialActionNames asking) specialActions || any (activatedAbilityNames asking (const False) (grantedAbilityNames asking (const False))) activatedAbilities || any (printedReplacementNames asking (const False) (grantedAbilityNames asking (const False)) (effectNames asking (const False) (grantedAbilityNames asking (const False)))) replacementEffects || any (triggeredAbilityNames asking (const False) (grantedAbilityNames asking (const False))) triggeredAbilities || any (triggeredAbilityNames asking (const False) (grantedAbilityNames asking (const False))) delayedAbilities || any (targetSlotNames asking) enchant || ruleAbilitiesNames asking ruleAbilities || any (keywordNames asking) (Map.keys textChangedKeywords) || any (costComponentNames asking (keywordNames asking)) additionalCosts || any (costChoiceNames asking) additionalCostChoices || any (alternativeCostNames asking) alternativeCosts || any (costReductionNames asking) costReductions || any (costReductionNames asking) grantedCostReductions || any (alternativeCostNames asking) grantedAlternativeCosts || any (copyExceptionNames asking (grantedAbilityNames asking (const False))) exceptions || any (projectedCharacteristicsNames asking) mergedDonors || any (faceNames asking (const False)) prepare || any (faceNames asking (const False)) alternativeSpell || modalNames asking (const False) (grantedAbilityNames asking (const False)) spell || any (projectedCharacteristicsNames asking) flipped
 
-proliferateRNames :: Asking -> ProliferateR.ProliferateR -> Bool
-proliferateRNames asking x = case x of
-  ProliferateR.MkProliferateR whose _rewrite -> controllerRelationNames asking whose
-
 -- What is prohibited names no object.
 prohibitNames :: Asking -> Prohibit.Prohibit -> Bool
 prohibitNames asking x = case x of
@@ -2538,12 +2526,8 @@ replacementEffectNames asking onCard onAbility onEffect x = case x of
   ReplacementEffect.LifeGainR lifeGainR -> lifeGainRNames asking lifeGainR
   ReplacementEffect.DrawR drawR -> drawRNames asking drawR
   ReplacementEffect.DrawCountR drawCountR -> drawCountRNames asking drawCountR
-  ReplacementEffect.MillCountR millCountR -> millCountRNames asking millCountR
-  ReplacementEffect.CoinFlipR coinFlipR -> coinFlipRNames asking coinFlipR
+  ReplacementEffect.InstructionR instructionR -> instructionRNames asking instructionR
   ReplacementEffect.DieRollR dieRollR -> dieRollRNames asking dieRollR
-  ReplacementEffect.ProliferateR proliferateR -> proliferateRNames asking proliferateR
-  ReplacementEffect.ScryR scryR -> scryRNames asking scryR
-  ReplacementEffect.VillainousChoiceR villainousChoiceR -> villainousChoiceRNames asking villainousChoiceR
   ReplacementEffect.AssembleR matching -> filterNames asking matching
   ReplacementEffect.GameLossR (GameLossR.MkGameLossR whose effects) -> controllerRelationNames asking whose || any onEffect effects
   ReplacementEffect.PlaneswalkR (PlaneswalkR.MkPlaneswalkR whose _cause rewrite) ->
@@ -2616,10 +2600,6 @@ scopeNames asking x = case x of
   Scope.OverPlayers playerRef -> playerRefNames asking playerRef
   Scope.OverBound slotName -> slotNames asking slotName
   Scope.TopOfGraveyard playerRef -> playerRefNames asking playerRef
-
-scryRNames :: Asking -> ScryR.ScryR -> Bool
-scryRNames asking x = case x of
-  ScryR.MkScryR whose _rewrite -> controllerRelationNames asking whose
 
 searchNames :: Asking -> Search.Search -> Bool
 searchNames asking x = case x of
@@ -2929,10 +2909,6 @@ untapRewriteNames :: Asking -> UntapRewrite.UntapRewrite -> Bool
 untapRewriteNames asking x = case x of
   UntapRewrite.RemoveStunCounter -> False
   UntapRewrite.RemoveCounterToUntap counterKind -> counterKindNames asking (keywordNames asking) counterKind
-
-villainousChoiceRNames :: Asking -> VillainousChoiceR.VillainousChoiceR -> Bool
-villainousChoiceRNames asking x = case x of
-  VillainousChoiceR.MkVillainousChoiceR whose _rewrite -> controllerRelationNames asking whose
 
 voteNames :: Asking -> Vote.Vote -> Bool
 voteNames asking x = case x of

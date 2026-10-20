@@ -13,8 +13,6 @@ import qualified Pawl.Types.AttachR as AttachR
 import qualified Pawl.Types.AttachRewrite as AttachRewrite
 import qualified Pawl.Types.BeginningStep as BeginningStep
 import qualified Pawl.Types.CardType as CardType
-import qualified Pawl.Types.CoinFlipR as CoinFlipR
-import qualified Pawl.Types.CoinFlipRewrite as CoinFlipRewrite
 import qualified Pawl.Types.ControllerRelation as ControllerRelation
 import qualified Pawl.Types.CopyDomain as CopyDomain
 import qualified Pawl.Types.CopyRecipient as CopyRecipient
@@ -39,6 +37,8 @@ import qualified Pawl.Types.EntryR as EntryR
 import qualified Pawl.Types.EntryRewrite as EntryRewrite
 import qualified Pawl.Types.ExiledPile as ExiledPile
 import qualified Pawl.Types.Filter as Filter
+import qualified Pawl.Types.InstructionR as InstructionR
+import qualified Pawl.Types.InstructionRewrite as InstructionRewrite
 import qualified Pawl.Types.Keyword as Keyword
 import qualified Pawl.Types.LibraryPosition as LibraryPosition
 import qualified Pawl.Types.LifeGainR as LifeGainR
@@ -47,22 +47,17 @@ import qualified Pawl.Types.LifeLossCause as LifeLossCause
 import qualified Pawl.Types.LifeLossPattern as LifeLossPattern
 import qualified Pawl.Types.LifeLossR as LifeLossR
 import qualified Pawl.Types.LifeLossRewrite as LifeLossRewrite
-import qualified Pawl.Types.MillCountR as MillCountR
-import qualified Pawl.Types.MillCountRewrite as MillCountRewrite
 import qualified Pawl.Types.Phase as Phase
 import qualified Pawl.Types.PhasePattern as PhasePattern
 import qualified Pawl.Types.PhaseSelector as PhaseSelector
 import qualified Pawl.Types.PlaneswalkR as PlaneswalkR
 import qualified Pawl.Types.PlaneswalkRewrite as PlaneswalkRewrite
 import qualified Pawl.Types.PlayerId as PlayerId
+import qualified Pawl.Types.PlayerInstruction as PlayerInstruction
 import qualified Pawl.Types.PlayerRelation as PlayerRelation
-import qualified Pawl.Types.ProliferateR as ProliferateR
-import qualified Pawl.Types.ProliferateRewrite as ProliferateRewrite
 import qualified Pawl.Types.Quantity as Quantity
 import qualified Pawl.Types.ReplacementEffect as ReplacementEffect
 import qualified Pawl.Types.Scaling as Scaling
-import qualified Pawl.Types.ScryR as ScryR
-import qualified Pawl.Types.ScryRewrite as ScryRewrite
 import qualified Pawl.Types.Subtype as Subtype
 import qualified Pawl.Types.TokenPattern as TokenPattern
 import qualified Pawl.Types.TokenR as TokenR
@@ -71,8 +66,6 @@ import qualified Pawl.Types.TurnUpR as TurnUpR
 import qualified Pawl.Types.TurnUpRewrite as TurnUpRewrite
 import qualified Pawl.Types.UntapR as UntapR
 import qualified Pawl.Types.UntapRewrite as UntapRewrite
-import qualified Pawl.Types.VillainousChoiceR as VillainousChoiceR
-import qualified Pawl.Types.VillainousChoiceRewrite as VillainousChoiceRewrite
 import qualified Pawl.Types.WithCounters as WithCounters
 import qualified Pawl.Types.Zone as Zone
 import qualified Pawl.Types.ZoneChangePattern as ZoneChangePattern
@@ -241,20 +234,13 @@ spec s =
             codec
             (ReplacementEffect.DrawCountR (DrawCountR.MkDrawCountR (ControllerRelation.Related PlayerRelation.Opponent) 2 DrawCountRewrite.EachDrawOne))
             " {\"type\":\"DrawCountR\",\"value\":{\"whose\":{\"type\":\"Opponent\"},\"atLeast\":2,\"rewrite\":{\"type\":\"EachDrawOne\"}}} "
-        -- CR 701.17a: Bruvac the Grandiloquent, the one MillCountR producer.
-        Spec.it s "MillCountR (Bruvac the Grandiloquent)" $
+        -- CR 701.17a: Bruvac the Grandiloquent.
+        Spec.it s "InstructionR (Bruvac the Grandiloquent)" $
           Common.assertCodec
             s
             codec
-            (ReplacementEffect.MillCountR (MillCountR.MkMillCountR (ControllerRelation.Related PlayerRelation.Opponent) (MillCountRewrite.Scaled (Scaling.Multiply 2))))
-            " {\"type\":\"MillCountR\",\"value\":{\"whose\":{\"type\":\"Opponent\"},\"rewrite\":{\"type\":\"Scaled\",\"value\":{\"type\":\"Multiply\",\"value\":2}}}} "
-        -- CR 705.1: Krark's Thumb, the one CoinFlipR producer.
-        Spec.it s "CoinFlipR (Krark's Thumb)" $
-          Common.assertCodec
-            s
-            codec
-            (ReplacementEffect.CoinFlipR (CoinFlipR.MkCoinFlipR (ControllerRelation.Related PlayerRelation.You) CoinFlipRewrite.Doubled))
-            " {\"type\":\"CoinFlipR\",\"value\":{\"whose\":{\"type\":\"You\"},\"rewrite\":{\"type\":\"Doubled\"}}} "
+            (ReplacementEffect.InstructionR (InstructionR.MkInstructionR PlayerInstruction.MillCards (ControllerRelation.Related PlayerRelation.Opponent) (InstructionRewrite.Scaled (Scaling.Multiply 2))))
+            " {\"type\":\"InstructionR\",\"value\":{\"instruction\":{\"type\":\"MillCards\"},\"whose\":{\"type\":\"Opponent\"},\"rewrite\":{\"type\":\"Scaled\",\"value\":{\"type\":\"Multiply\",\"value\":2}}}} "
         -- CR 706.6: Pixie Guide, the one DieRollR producer.
         Spec.it s "DieRollR (Pixie Guide)" $
           Common.assertCodec
@@ -269,13 +255,6 @@ spec s =
             codec
             (ReplacementEffect.AssembleR (Filter.HasSubtype Subtype.Rigger))
             " {\"type\":\"AssembleR\",\"value\":{\"type\":\"HasSubtype\",\"value\":{\"type\":\"Rigger\"}}} "
-        -- CR 701.34a: Tekuthal, Inquiry Dominus.
-        Spec.it s "ProliferateR (Tekuthal, Inquiry Dominus)" $
-          Common.assertCodec
-            s
-            codec
-            (ReplacementEffect.ProliferateR (ProliferateR.MkProliferateR (ControllerRelation.Related PlayerRelation.You) ProliferateRewrite.Doubled))
-            " {\"type\":\"ProliferateR\",\"value\":{\"whose\":{\"type\":\"You\"},\"rewrite\":{\"type\":\"Doubled\"}}} "
         -- CR 701.31 / 614.1a: Susan Foreman.
         Spec.it s "PlaneswalkR (Susan Foreman)" $
           Common.assertCodec
@@ -284,19 +263,12 @@ spec s =
             (ReplacementEffect.PlaneswalkR (PlaneswalkR.MkPlaneswalkR (ControllerRelation.Related PlayerRelation.You) Nothing PlaneswalkRewrite.ArrangeTopTwo))
             " {\"type\":\"PlaneswalkR\",\"value\":{\"whose\":{\"type\":\"You\"},\"rewrite\":{\"type\":\"ArrangeTopTwo\"}}} "
         -- CR 701.22a: Eligeth, Crossroads Augur.
-        Spec.it s "ScryR (Eligeth, Crossroads Augur)" $
+        Spec.it s "InstructionR (Eligeth, Crossroads Augur)" $
           Common.assertCodec
             s
             codec
-            (ReplacementEffect.ScryR (ScryR.MkScryR (ControllerRelation.Related PlayerRelation.You) ScryRewrite.DrawInstead))
-            " {\"type\":\"ScryR\",\"value\":{\"whose\":{\"type\":\"You\"},\"rewrite\":{\"type\":\"DrawInstead\"}}} "
-        -- CR 701.55c: The Valeyard.
-        Spec.it s "VillainousChoiceR (The Valeyard)" $
-          Common.assertCodec
-            s
-            codec
-            (ReplacementEffect.VillainousChoiceR (VillainousChoiceR.MkVillainousChoiceR (ControllerRelation.Related PlayerRelation.Opponent) VillainousChoiceRewrite.AdditionalTime))
-            " {\"type\":\"VillainousChoiceR\",\"value\":{\"whose\":{\"type\":\"Opponent\"},\"rewrite\":{\"type\":\"AdditionalTime\"}}} "
+            (ReplacementEffect.InstructionR (InstructionR.MkInstructionR PlayerInstruction.Scry (ControllerRelation.Related PlayerRelation.You) InstructionRewrite.DrawInstead))
+            " {\"type\":\"InstructionR\",\"value\":{\"instruction\":{\"type\":\"Scry\"},\"whose\":{\"type\":\"You\"},\"rewrite\":{\"type\":\"DrawInstead\"}}} "
         -- A fixed kind, a real filter, and CR 614.16's AddMore.
         Spec.it s "CounterR (Hardened Scales)" $
           Common.assertCodec

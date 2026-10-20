@@ -2115,12 +2115,8 @@ referentsOfReplacement re = case re of
   ReplacementEffect.LifeGainR _ -> []
   ReplacementEffect.DrawR _ -> []
   ReplacementEffect.DrawCountR _ -> []
-  ReplacementEffect.MillCountR _ -> []
-  ReplacementEffect.CoinFlipR _ -> []
+  ReplacementEffect.InstructionR _ -> []
   ReplacementEffect.DieRollR _ -> []
-  ReplacementEffect.ProliferateR _ -> []
-  ReplacementEffect.ScryR _ -> []
-  ReplacementEffect.VillainousChoiceR _ -> []
   ReplacementEffect.AssembleR _ -> []
   ReplacementEffect.GameLossR _ -> []
   ReplacementEffect.PlaneswalkR _ -> []
@@ -6126,7 +6122,7 @@ applyOneEffect runSubgame resolving source controller legal chosen effect = case
               -- 616.1g settles it before any of the individual draws below -- so
               -- the count those draws run on is the one this loop leaves standing,
               -- and a row that replaced the instruction outright leaves none.
-              outcome <- Event.applyReplacements (ProposedEvent.WouldPerform PlayerInstruction.DrawCards pid (Integer.toNaturalSaturating n))
+              outcome <- Event.applyReplacements (ProposedEvent.WouldPerform PlayerInstruction.DrawCards Nothing pid (Integer.toNaturalSaturating n))
               case outcome >>= Replacement.asPerformed PlayerInstruction.DrawCards of
                 Nothing -> pure []
                 -- CR 121.2: draw the settled count one at a time, so each draw
@@ -6321,7 +6317,7 @@ applyOneEffect runSubgame resolving source controller legal chosen effect = case
           -- CR 701.22b: scry 0 is not a scry, so zero raises no prompt and
           -- proposes no event for a CR 614.1a row to replace.
           Just n | n > 0 -> do
-            outcome <- Event.applyReplacements (ProposedEvent.WouldPerform PlayerInstruction.Scry pid (Integer.toNaturalSaturating n))
+            outcome <- Event.applyReplacements (ProposedEvent.WouldPerform PlayerInstruction.Scry Nothing pid (Integer.toNaturalSaturating n))
             -- A row that replaced the scry outright (Eligeth, Crossroads Augur)
             -- has done its own work: nothing to decide and, CR 614.6, no scry.
             Monad.forM (outcome >>= Replacement.asPerformed PlayerInstruction.Scry) $ \(scryer, settled) ->
@@ -9696,9 +9692,9 @@ applyOneEffect runSubgame resolving source controller legal chosen effect = case
   -- CR 614.1a: the instruction is first proposed as WouldPerform, so a row
   -- like Tekuthal, Inquiry Dominus's can make it several proliferates -- each its
   -- own CR 701.34a choice, read off the board the previous one left. No
-  -- ProliferateRewrite cancels the event; a cancelled one proliferates nothing.
+  -- printed row cancels the event; a cancelled one proliferates nothing.
   Effect.Proliferate -> do
-    outcome <- Event.applyReplacements (ProposedEvent.WouldPerform PlayerInstruction.Proliferate controller 1)
+    outcome <- Event.applyReplacements (ProposedEvent.WouldPerform PlayerInstruction.Proliferate Nothing controller 1)
     Monad.forM_ (outcome >>= Replacement.asPerformed PlayerInstruction.Proliferate) $ \(_, times) ->
       Monad.replicateM_ (Natural.toIntSaturating times) (proliferateOnce source controller)
   -- CR 701.39a: "bolster N" -- put N +1/+1 counters on a creature you control
@@ -11903,7 +11899,7 @@ conniveOne n oid = Monad.when (n > 0) $ do
   Monad.forM_ (Projection.controllerWithLastKnown oid gs) $ \pid -> do
     -- CR 121.2a: the N-card draw is one replaceable instruction, settled before
     -- any of CR 121.2's individual draws -- Effect.Draw's arm, line for line.
-    outcome <- Event.applyReplacements (ProposedEvent.WouldPerform PlayerInstruction.DrawCards pid n)
+    outcome <- Event.applyReplacements (ProposedEvent.WouldPerform PlayerInstruction.DrawCards Nothing pid n)
     Monad.forM_ (outcome >>= Replacement.asPerformed PlayerInstruction.DrawCards) $ \(drawer, settled) ->
       Monad.replicateM_ (Natural.toIntSaturating settled) (Event.drawCard drawer)
     drawn <- State.get

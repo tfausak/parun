@@ -151,10 +151,17 @@
       "replacementEffects": [
         {
           "effect": {
-            "type": "ProliferateR",
+            "type": "InstructionR",
             "value": {
+              "instruction": {
+                "type": "Proliferate"
+              },
               "rewrite": {
-                "type": "Doubled"
+                "type": "Scaled",
+                "value": {
+                  "type": "Multiply",
+                  "value": 2
+                }
               },
               "whose": {
                 "type": "You"
