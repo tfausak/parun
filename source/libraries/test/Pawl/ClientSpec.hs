@@ -17,6 +17,7 @@ import qualified Data.Maybe as Maybe
 import qualified Data.Sequence as Seq
 import qualified Data.Set as Set
 import qualified Data.Text as Text
+import qualified Data.Word as Word
 import Numeric.Natural (Natural)
 import qualified Pawl.BotSpec as BotSpec
 import qualified Pawl.Engine.Binding as Binding
@@ -66,6 +67,7 @@ import qualified Pawl.Types.Object as Object
 import qualified Pawl.Types.ObjectId as ObjectId
 import qualified Pawl.Types.OptionalDecision as OptionalDecision
 import qualified Pawl.Types.Phase as Phase
+import qualified Pawl.Types.PlayOptions as PlayOptions
 import qualified Pawl.Types.PlayerId as PlayerId
 import qualified Pawl.Types.Prompt as Prompt
 import qualified Pawl.Types.Recipient as Recipient
@@ -442,6 +444,40 @@ spec s registry = Spec.describe s "Client" $ do
         seenBy pid = cardLines (readout lookUp gs ["card Goblin Piker", "1"] (priority pid))
     Spec.assertEqWith s "alice" (seenBy S.alice) [Text.pack "No card you can see is named Goblin Piker."]
     Spec.assertEqWith s "bob" (take 2 (seenBy S.bob)) [Text.pack "Goblin Piker 2/1", Text.pack "Goblin Piker {1}{R}"]
+
+  Spec.it s "CR 103.1 a seat picked at random from the seed chooses to play first or draw" $ do
+    let seeds = [0 .. 15 :: Word.Word64]
+        firstWhen answers seed = fst (fst (starting PlayOptions.none answers seed))
+        asked seed = written (snd (starting PlayOptions.none [Text.pack "play"] seed))
+    Spec.assertEqWith s "the answer decides" (fmap (\seed -> (firstWhen [Text.pack "play"] seed, firstWhen [Text.pack "draw"] seed)) seeds) (fmap (\seed -> let chooser = firstWhen [Text.pack "play"] seed in (chooser, fmap otherSeat chooser)) seeds)
+    Spec.assertEqWith s "either seat may be picked" (Set.fromList (fmap (firstWhen [Text.pack "play"]) seeds)) (Set.fromList [Just 1, Just 2])
+    Spec.assertBool s (all (\seed -> maybe False (\n -> Text.pack ("Seat " <> show n <> ", play first or draw?") `elem` asked seed) (firstWhen [Text.pack "play"] seed)) seeds) "the picked seat is asked"
+    Spec.assertBool s (all (\seed -> snd (fst (starting PlayOptions.none [Text.pack "play"] seed)) /= SplitMix.MkSplitMix seed) seeds) "drawn from the game's generator"
+    Spec.assertEqWith s "asked again" (fst (fst (starting PlayOptions.none [Text.pack "first", Text.pack " D "] 3))) (firstWhen [Text.pack "draw"] 3)
+    Spec.assertEqWith s "end of input" (fst (fst (starting PlayOptions.none [] 3))) Nothing
+
+  Spec.it s "CR 103.1 --first names the seat that plays first, asking and drawing nothing" $ do
+    let ((first, generator), shown) = starting PlayOptions.none {PlayOptions.first = Just 2} [] 5
+    Spec.assertEqWith s "first" first (Just 2)
+    Spec.assertEqWith s "generator" generator (SplitMix.MkSplitMix 5)
+    Spec.assertEqWith s "shown" (written shown) []
+
+  Spec.it s "CR 103.1 a bot picked to choose answers for itself" $ do
+    let bots = PlayOptions.none {PlayOptions.bots = Set.fromList [1, 2]}
+        runs = fmap (starting bots []) [0 .. 15 :: Word.Word64]
+    Spec.assertEqWith s "first" (Set.fromList (fmap (fst . fst) runs)) (Set.fromList [Just 1, Just 2])
+    Spec.assertEqWith s "typed" (fmap (typed . snd) runs) (fmap (const 0) runs)
+    Spec.assertBool s (any (\((first, _), shown) -> any (\n -> Text.pack ("Seat " <> show (otherSeat n) <> " was picked at random to choose who plays first.") `elem` written shown) first) runs) "the bot sometimes draws"
+
+-- The seat across the table.
+otherSeat :: Natural -> Natural
+otherSeat n = if n == 1 then 2 else 1
+
+-- Game.starter from this seed, a person typing these lines in turn: the seat
+-- that plays first and the generator after, and the screen.
+starting :: PlayOptions.PlayOptions -> [Text.Text] -> Word.Word64 -> ((Maybe Natural, SplitMix.SplitMix), Screen)
+starting options answers seed =
+  State.runState (State.runStateT (Game.starter (screen (List.genericLength answers) (\sc -> Maybe.listToMaybe (List.genericDrop (typed sc) answers))) options) (SplitMix.MkSplitMix seed)) blank
 
 -- What the screen showed, newest first, and how many lines were typed.
 data Screen = MkScreen {written :: [Text.Text], typed :: Natural}

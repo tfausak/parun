@@ -4,6 +4,7 @@ module Pawl.Play.Command where
 
 import qualified Control.Exception as Exception
 import qualified Control.Monad as Monad
+import qualified Control.Monad.Trans.State.Strict as State
 import qualified Data.Bifunctor as Bifunctor
 import qualified Data.ByteString as ByteString
 import qualified Data.Functor.Identity as Identity
@@ -56,7 +57,7 @@ main arguments = case GetOpt.getOpt GetOpt.Permute flags arguments of
 flags :: [GetOpt.OptDescr (PlayOptions.PlayOptions -> Either String PlayOptions.PlayOptions)]
 flags =
   [ GetOpt.Option [] ["seed"] (GetOpt.ReqArg (\s o -> maybe (Left ("not a seed: " <> s)) (\n -> Right o {PlayOptions.seed = Just n}) (Read.readMaybe s)) "N") "the generator's seed; the clock's when absent",
-    GetOpt.Option [] ["first"] (GetOpt.ReqArg (\s o -> fmap (\n -> o {PlayOptions.first = Just n}) (seat s)) "1|2") "which seat plays first; asked when absent",
+    GetOpt.Option [] ["first"] (GetOpt.ReqArg (\s o -> fmap (\n -> o {PlayOptions.first = Just n}) (seat s)) "1|2") "which seat plays first; a seat picked at random chooses when absent",
     GetOpt.Option [] ["bot"] (GetOpt.ReqArg (\s o -> fmap (\n -> o {PlayOptions.bots = Set.insert n (PlayOptions.bots o)}) (seat s)) "1|2") "a seat the random bot plays",
     GetOpt.Option [] ["json"] (GetOpt.NoArg (\o -> Right o {PlayOptions.json = True})) "speak the line protocol on standard input and output",
     GetOpt.Option [] ["save"] (GetOpt.ReqArg (\s o -> Right o {PlayOptions.save = Just s}) "FILE") "save the game as a scenario, even one cut short",
@@ -94,10 +95,8 @@ play options lookUp (one, two) = do
   seed <- maybe (fmap (SplitMix.Play.fromClock . nanoseconds) Clock.getSystemTime) pure (PlayOptions.seed options)
   IO.hPutStrLn IO.stderr ("Seed " <> show seed <> ".")
   let people = filter (`Set.notMember` PlayOptions.bots options) [1, 2]
-  first <- case PlayOptions.first options of
-    Just n -> pure n
-    Nothing | PlayOptions.json options || null people -> pure 1
-    Nothing -> askFirst
+  (starter, generator) <- State.runStateT (Game.starter terminal options) (SplitMix.MkSplitMix seed)
+  first <- maybe (failWith "end of input") pure starter
   let matchup =
         if first == 2
           then (idOf 2, two) NonEmpty.:| [(idOf 1, one)]
@@ -117,7 +116,7 @@ play options lookUp (one, two) = do
       interrupted e = case e of
         Exception.UserInterrupt -> pure (Left (Text.pack "interrupted"))
         _ -> Exception.throwIO e
-  outcome <- Exception.catch (Game.run observers seats hotseat (SplitMix.MkSplitMix seed) matchup) interrupted
+  outcome <- Exception.catch (Game.run observers seats hotseat generator matchup) interrupted
   Monad.forM_ (PlayOptions.save options) $ \path -> do
     timeline <- IORef.readIORef entries
     let entrants = fmap (Bifunctor.first (Record.labelOf labels)) matchup
@@ -127,16 +126,6 @@ play options lookUp (one, two) = do
   case outcome of
     Right (result, _) -> (if PlayOptions.json options then TextIO.hPutStrLn IO.stderr else TextIO.putStrLn) (Render.result result)
     Left reason -> TextIO.hPutStrLn IO.stderr (Text.pack "Stopped: " <> reason <> Text.pack ".")
-
--- | CR 103.1: the players agree on who plays first, before the game begins.
-askFirst :: IO Natural
-askFirst = do
-  TextIO.putStrLn (Text.pack "Which seat plays first, 1 or 2?")
-  typed <- Terminal.listen terminal
-  case fmap (Read.readMaybe . Text.unpack . Text.strip) typed of
-    Nothing -> failWith "end of input"
-    Just (Just n) | n == 1 || n == 2 -> pure n
-    Just _ -> askFirst
 
 idOf :: Natural -> PlayerId.PlayerId
 idOf n = PlayerId.MkPlayerId (n - 1)
