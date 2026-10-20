@@ -574,7 +574,8 @@ isAcquiredFrom oid name = pairOf (Just name) == Just (exiledCardAbility oid Noth
 -- reader acquired from an exiled card means that card's ability of the name,
 -- as acquired beside it (exiledCardAbility); any other reader the name as
 -- written. Synthetic Split Reliquary's "the cards exiled with warden" and
--- Gliding Licid's "loses this ability" are the readers.
+-- Gliding Licid's "loses this ability" are the readers, the second only for
+-- its own object (Pawl.Engine.Resolve.Effect's ModifyTarget).
 -- data/scenarios/myr-welder-ignores-what-its-acquired-warden-exiled.json is
 -- the proof.
 nameAsRead :: Maybe AbilityName.AbilityName -> AbilityName.AbilityName -> AbilityName.AbilityName

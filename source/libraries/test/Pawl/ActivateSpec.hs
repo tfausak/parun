@@ -4642,10 +4642,11 @@ tetheringCharmSpec s registry = Spec.describe s "Synthetic Tethering Charm (CR 6
 -- effect such as Twiddle -- the second is still offered, and a third is not.
 -- The negative is the same board with a Brothers of Fire for the second Licid,
 -- so the Locus holds one copy and the offer goes after one spend. Once the
--- first resolves, "this ability" is that one alone (CR 607.5), so its twin
--- stays; and the removal waits for the Locus's grant (CR 613.8a), though
--- attaching gave the Locus the later timestamp (CR 613.7e). No material has a mana ability, which the Locus would otherwise tap to
--- pay the Licid's {U} and so leave its {T} unpaid.
+-- first resolves, attaching gives the Locus a new timestamp (CR 613.7e), so
+-- its grant applies after the removal and both abilities stand: the grant and
+-- the removal are independent (CR 613.9's first example). No material has a
+-- mana ability, which the Locus would otherwise tap to pay the Licid's {U} and
+-- so leave its {T} unpaid.
 locusLicidSpec :: (Monad m) => Spec.Spec m n -> Registry.Registry m -> n ()
 locusLicidSpec s registry =
   Spec.it s "CR 602.5c two Gliding Licids give the Locus two once-each-turn animate abilities" $ do
@@ -4676,8 +4677,8 @@ locusLicidSpec s registry =
     Spec.assertEqWith s "CR 602.5b a Locus with one Licid ability is offered it, then not again" (fmap (null . offered) [craftWith single, animate (craftWith single)]) [False, True]
     let licidsOn g = [a | o <- locusIn g, a <- Projection.abilitiesOf o g, ActivatedAbility.modal a `elem` licidModals]
         resolved = S.runPure (aimAtOffered giantId) once Stack.resolveTop
-    Spec.assertEqWith s "CR 607.5 / 113.2c the resolved Licid ability loses itself and not its twin" (length (licidsOn resolved)) 1
-    Spec.assertEqWith s "the Locus held both Licid abilities before it resolved" (length (licidsOn once)) 2
+    Spec.assertEqWith s "CR 613.7e / 613.9 the attached Locus's later grant gives back the ability the Licid's resolution removed" (length (licidsOn resolved)) 2
+    Spec.assertEqWith s "the resolution attached the Locus" (length [o | o <- locusIn resolved, ((Object.attachedTo =<< Game.lookupObject o resolved) >>= Recipient.objectOf) == Just giantId]) 1
 
 -- CR 113.6 / 604.2: Villainous Ogre's "As long as you control a Demon, this
 -- creature has '{B}: Regenerate this creature.'" is a static ability, so it

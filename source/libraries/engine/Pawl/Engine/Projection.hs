@@ -4258,11 +4258,11 @@ modificationWrites m = case m of
 
 -- Which aspects a Modification reads -- CR 613.8a clause (b)'s last limb:
 -- applying another effect can change "what it does to any of the things it
--- applies to" without touching what it applies to. Three shapes reach it: a
--- quantity, which only the two power/toughness arms carry, a rewrite of the
--- object's own text, which the two layer-3 arms are, and a removal of an
--- ability by name. A new arm of any of them has to be classified here, or the
--- dependency would silently stop being seen.
+-- applies to" without touching what it applies to. Two shapes reach it: a
+-- quantity, which only the two power/toughness arms carry, and a rewrite of
+-- the object's own text, which the two layer-3 arms are. A new arm of either
+-- shape has to be classified here, or the dependency would silently stop being
+-- seen.
 modificationReads :: Modification -> Set Aspect
 modificationReads m = case m of
   Modification.SetBasePowerToughness (SetBasePowerToughness.MkSetBasePowerToughness p t) -> foldMap quantityReads p <> foldMap quantityReads t
@@ -4282,13 +4282,11 @@ modificationReads m = case m of
   Modification.GainExiledCardAbilities _ -> Set.empty
   Modification.GainAbilitiesOfStickers -> Set.empty
   Modification.LoseAllAbilities -> Set.empty
-  -- Reads the ability lists, for which ability carries its name: a layer-6
-  -- grant of an ability of that name changes what it removes, so it waits for
-  -- the grant (CR 613.8a), changesText's question. Pawl.ActivateSpec's "CR
-  -- 602.5c two Gliding Licids give the Locus two once-each-turn animate
-  -- abilities" proves it, the Locus's grant timestamped after the removal by
-  -- its attachment (CR 613.7e).
-  Modification.LoseNamedAbility _ -> Set.singleton Keywords
+  -- Carries a name, which is not a Quantity: a grant and a removal of one
+  -- ability are independent, the later winning (CR 613.9's first example).
+  -- Pawl.ActivateSpec's "CR 602.5c two Gliding Licids give the Locus two
+  -- once-each-turn animate abilities" proves it.
+  Modification.LoseNamedAbility _ -> Set.empty
   -- Carries a Keyword, whose own Filter is read where the keyword is matched.
   Modification.LoseKeyword _ -> Set.empty
   -- Carries a payload-free family, so there is no Filter here to read anything.
@@ -5029,7 +5027,7 @@ projectDecidingFrom finish seedOf admits cands =
                           -- effect that reads the TEXT of the things it applies
                           -- to rather than a magnitude: applying `b` can change
                           -- what `a` does to an object by changing the text `a`
-                          -- rewrites, or the abilities `a` removes by name, there.
+                          -- rewrites there.
                           --
                           -- Between two CR 612 word swaps the test is exact: `b`
                           -- changes what `a` does exactly when it rewrites
