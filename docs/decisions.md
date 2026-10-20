@@ -472,7 +472,7 @@ Entries are ordered by the first rule each cites.
   one-half cases, and "CR 709.4 the left half answers for a box both halves
   print or define" the power and toughness boxes on Synthetic Rival Golem //
   Synthetic Rival Giant: no split printing has a creature half. Loyalty,
-  defense, intensity and vanguard boxes on both halves are untested.
+  defense and intensity boxes on both halves are untested (#5339).
 - **Issue**: #658, #2019.
 
 ## How perpetual effects follow a meld
