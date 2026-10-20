@@ -10,6 +10,8 @@
 
 *§11 adds a **fourth wave** (2026-08-16), asking a different question — not what pawl's architecture should be, but whether the permissive prior art can speed up an ordinary backlog issue. It reclassifies **phase** (§8.7 had it wrong) and covers **mtgish**, which no earlier wave saw. The corpora it reads live in the gitignored `_scratch/`, so treat every one as possibly absent.*
 
+*§12 (2026-10-20) covers **ironsmith**, a Rust/WASM engine that compiles oracle text at load time, read at source level from a shallow clone.*
+
 ---
 
 ## 0. The seven findings that change what you do
@@ -173,13 +175,14 @@ Tail (rank 61→190) = 130 opcodes sharing <8% of usage — the long cheap tail 
 |---|---|---|
 | **Argentum** | **MIT** | Study, port, derive **code and card data freely**, *with* the MIT copyright/permission notice for substantial portions. Carry the same "unaffiliated fan work / Wizards trademark" disclaimer (constrains branding, not code). **Your most reusable source.** |
 | **Forge** | **GPLv3** (repo + cardsfolder) | Study the DSL and use the frequency table (facts, not derivative). **Do not** bundle/transpile-and-ship cardsfolder data or copy `*Effect.java` unless pawl goes GPLv3. Keep it a **read-only dev-time oracle**; generate pawl's cards independently (e.g. from Scryfall/MTGJSON oracle text). |
-| **XMage** | (per-repo; verify before reuse) | Studied here for architecture lessons only — nothing to port. |
+| **XMage** | **MIT** (`magefree/mage`, checked 2026-10-20) | Permissive. Studied for architecture lessons only, but its card-level test suite is portable with the notice (§12). |
 | **mtg-pure** | **BSD-3** | Permissive. Study and port freely with the notice. **The other permissive MTG-specific source besides Argentum.** |
 | **MedeaMelana's Magic** | **BSD-3** | Permissive — the third portable source (© 2012–2016 Martijn van Steenbergen). Free-monad `Interact` + layers-as-data are directly relevant; effects are closures (§10.2). |
 | **mtgish** | **MIT** | Permissive. The whole card pool as first-order typed ASTs, plus the vocabulary that expresses them — the most directly comparable artifact to pawl's open half in the field. Derive freely with the notice. |
 | **phase** | **MIT / Apache-2.0** (dual) | Permissive. Its architecture is not a model for pawl (§8.7), but its per-card test corpus is a card-finding oracle, and facts drawn from it are not derivative works. |
 | **jinteki.net** | **MIT** | Permissive — safe to read freely, unlike Forge. Not MTG, so lessons are structural only. |
 | **ygopro-core** | **AGPL-3** | **Reference only** — same posture as Forge, and AGPL is stricter (network use triggers it). Read for the core/data seam; do not copy structure. |
+| **ironsmith** | **AGPL-3.0-or-later** (declared per crate; no root `LICENSE`) | **Reference only**, as with ygopro-core (§12). |
 | **Magarena** | **GPL-3** | **Reference only.** The `requires_groovy_code` ratio (§8.8) is a fact, not a derivative work — safe to cite. |
 | **SabberStone / Fireplace** | **AGPL** | **Reference only.** Read the task/effect *vocabulary*; do not port. |
 | **Shandalar / Manalink** | (unclear; derived from a 1997 proprietary binary) | **Do not port anything.** Cite as an architectural specimen only. Original MicroProse source is lost. |
@@ -416,3 +419,22 @@ Unchecked, and worth checking before leaning on it hard: how it represents what 
 - **Consult after deriving, not before.** Reading another engine's model before working the rule out from `docs/rules.txt` imports that model, and phase's and mtgish's are both parser-shaped where pawl's is AST-shaped.
 - **Facts travel; code needs the notice.** Which card exercises a rule, and how often an opcode appears, are facts. Ported code and card data carry MIT/BSD obligations, and card text is Wizards IP regardless (§7).
 - **None of it is guaranteed present.** `_scratch/` is gitignored, so every clone named here may be absent. A missing corpus makes this a skipped step, never a blocked one.
+
+## 12. Fifth wave — ironsmith, the oracle compiler with an open effect layer
+
+*(2026-10-20. [ironsmith](https://github.com/chiplis/ironsmith), read at source level from a shallow clone of `main` at `72816a2c`. It is about seven months old and moves fast, so paths and counts are as of that commit.)*
+
+**What it is.** A Rust engine, compiled to WebAssembly and driven by a React client, with no server. Cards are compiled from oracle English at load time (source, syntax, grammar, AST, resolve, semantic, lowering, each its own crate), and the compiler ships to the browser, so a user can type a custom card and play it. It claims over 31,000 compiled cards. Roughly 2.5M lines of Rust: `ironsmith-engine` is about 0.9M, `ironsmith-compiler-grammar` about 0.6M. One principal author, with heavy agent assistance; `architecture/` holds hundreds of `card-failure-*.md` campaign notes, which is pawl's drain-loop shape seen from outside.
+
+**Its novel asset is serverless verified multiplayer.** Every peer runs the full engine and checks every action; shuffles use mental poker, and each shuffle and reveal carries a zero-knowledge proof (`architecture/serverless-cheaterless-magic.md` is the protocol, `architecture/mental-poker-ironsmith-multiplayer.md` the essay). Nothing else in this survey attempts it. It is relevant to pawl only if its clients (#10) ever have to run without a trusted server.
+
+**The invariant does not hold, and is not attempted.** Effects are trait objects (`Box<dyn EffectExecutor>`, `crates/ironsmith-engine/src/effects/executor_trait.rs`), an open set of Rust types, and the rules core recovers their identity by downcasting: around 800 `downcast_ref::<…>` sites outside test files. They sit in the closed half, not just in card helpers: `game_loop/stack_resolution.rs` downcasts to `FightEffect`, `AttachObjectsEffect`, `RedirectNextDamageToTargetEffect` and `ApplyContinuousEffect`; `game_loop/targeting.rs` and `game_loop/priority_cast.rs` do the same. So the data is the oracle text, and the semantics live in code. Structurally that is a step past phase (§11.1), whose effects are at least a closed enum, toward Forge's `*Effect.java`: §8.7's universal pattern, with the leaves being the whole effect layer.
+
+**Its coverage figure measures parsing, not play.** "Parity" (the `100% card desired parity reached` commit) is the score `ironsmith-semantic-compare` gives after `ironsmith-text` renders a compiled card back to English and compares it with the oracle text. A round trip shows the parser understood the wording; it does not show the engine plays it. The client's "card fidelity threshold" setting concedes that cards below full fidelity are playable. Gameplay evidence comes separately: about 1,700 XMage tests ported to JavaScript (`scripts/ported-mage-tests/`, run by `run-mage-tests.sh`) plus the crates' Rust unit tests.
+
+**What is worth taking.**
+
+- **XMage's test suite as a gameplay oracle.** XMage is MIT (§7), so its card-level tests can be ported with the notice, as ironsmith did. Like phase's corpus (§11.1), they are first a card-finding index; their expected outcomes are claims to check against `docs/rules.txt`, never ground truth (§11.3).
+- **Render-and-compare as an ingestion check.** For #9, rendering a pawl card back to English and diffing it against MTGJSON's oracle text would catch what a hand-written card silently dropped. It is a lint, not a correctness claim, for the reason above.
+
+**What is not.** Its architecture, which is the fusion `design.md` exists to prevent, and its code, which is AGPL.
