@@ -2301,8 +2301,8 @@ apply batch candidate event =
         let flipper = Projection.controllerOf oid before
         statements <- Coin.statementsFor flipper
         -- Not implemented: Pokey, the Scallywagg's roll instead of this flip, no
-        -- CR 706 thrower reaching this module (#5350). `flipOneCoin` says how it
-        -- is kept out, so the face is always a coin's.
+        -- CR 706 thrower reaching the zone-change funnel (#5354). `flipOneCoin`
+        -- says how it is kept out, so the face is always a coin's.
         (face, _) <- flipOneCoin Nothing flipper Nothing statements
         let picked = case Maybe.fromMaybe CoinFace.Tails face of
               CoinFace.Heads -> EntryFlip.heads entryFlip
@@ -5398,8 +5398,10 @@ resolveLifeGain pid n =
 
 -- CR 705.1's flip of ONE coin. The ONE road every flip in the engine takes:
 -- Pawl.Engine.Resolve's Effect.FlipCoin arm calls it once per coin its
--- instruction names, and the EntryRewrite.ChoiceByCoinFlip arm above calls it for
--- the flip a permanent makes as it enters (Molten Sentry).
+-- instruction names, Pawl.Engine.Cost's CostComponent.FlipCoin arm calls it
+-- through `flipWinLoseCoin` (Karplusan Minotaur), and the
+-- EntryRewrite.ChoiceByCoinFlip arm above calls it for the flip a permanent makes
+-- as it enters (Molten Sentry).
 --
 -- HERE rather than in Pawl.Engine.Coin, which holds the rest of rule 705, because
 -- the flip is a replaceable event: CR 614's loop lives in this module and this
@@ -5431,10 +5433,12 @@ resolveLifeGain pid n =
 -- stands for the d20 and is called, `settleCoins`' posture.
 --
 -- `throw` is the caller's CR 706 road for that roll (Pawl.Engine.Resolve.Effect's
--- throwForCoin), which this module cannot reach. A caller with no thrower passes
--- Nothing, and the substitution is then kept out of CR 616.1's offer through
--- Replacement.allocatedOut, a share of 0 in the loop's allowances. Not
--- implemented: substituting a roll on a road with no CR 706 thrower (#5350).
+-- throwForCoin), which this module cannot reach: Resolve passes it directly and
+-- Pawl.Engine.Cost through Pawl.Types.ManaAbilityPerformer. A caller with no
+-- thrower passes Nothing, and the substitution is then kept out of CR 616.1's
+-- offer through Replacement.allocatedOut, a share of 0 in the loop's allowances.
+-- Not implemented: substituting a roll on the entry road, which has no CR 706
+-- thrower (#5354).
 flipOneCoin :: Maybe (Throw.Throw -> Game [Natural]) -> Maybe PlayerId -> Maybe CoinFace.CoinFace -> [StatedFlip.StatedFlip] -> Game (Maybe CoinFace.CoinFace, Bool)
 flipOneCoin throw mFlipper called stated = case mFlipper of
   Nothing -> do

@@ -11173,9 +11173,10 @@ withRollingDie sides act = do
   State.modify' (\g -> g {GameState.rollingDie = GameState.rollingDie previous, GameState.rerollRequested = GameState.rerollRequested previous})
   pure result
 
--- The two halves Pawl.Engine.Cost reaches through the
--- Pawl.Types.ManaAbilityPerformer parameter: CR 405.6c's other effects of the
--- activated mana ability being paid, and CR 605.4a's triggered mana ability.
+-- What Pawl.Engine.Cost reaches through the Pawl.Types.ManaAbilityPerformer
+-- parameter: CR 405.6c's other effects of the activated mana ability being paid,
+-- CR 605.4a's triggered mana ability, CR 118.12's resolution cost, and the CR
+-- 706 roll Pokey, the Scallywagg makes for a cost's coin flip (throwForCoin).
 --
 -- `runSubgame` is CR 729.1a's runner for a subgame either one starts. Only the
 -- triggered half can: CR 605.1a's library clause (ManaAbility.movesLibraryCard)
@@ -11187,7 +11188,8 @@ performManaAbility runSubgame =
   ManaAbilityPerformer.MkManaAbilityPerformer
     { ManaAbilityPerformer.effects = performManaAbilityEffects runSubgame,
       ManaAbilityPerformer.triggered = performTriggeredManaAbility runSubgame,
-      ManaAbilityPerformer.payGate = performManaPayGate runSubgame
+      ManaAbilityPerformer.payGate = performManaPayGate runSubgame,
+      ManaAbilityPerformer.throwForCoin = throwForCoin runSubgame
     }
 
 -- CR 118.12 on a mana ability's clause, which CR 605.3b gives no stack object:

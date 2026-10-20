@@ -1,6 +1,6 @@
 {
   "description": "CR 614.1a Pokey is not offered for Molten Sentry's entry flip",
-  "note": "The entry road has no CR 706 thrower, so Pokey's row is kept out of the offer (#5350): no ChooseSubstitute is scheduled, so one asked fails the scenario, and the one coin flipped comes up heads.",
+  "note": "The entry road has no CR 706 thrower, so Pokey's row is kept out of the offer (#5354): no ChooseSubstitute is scheduled, so one asked fails the scenario, and the one coin flipped comes up heads.",
   "board": {
     "active": "alice",
     "step": "PrecombatMain",

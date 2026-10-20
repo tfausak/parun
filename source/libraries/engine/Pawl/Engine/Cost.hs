@@ -4880,7 +4880,7 @@ paySubstitutingReading refuses slots perform began earlier moment subject announ
       (paidMana, substitutes, own) <- payManaWindow perform Set.empty announced subject spending pid announceMana manaCost
       paidOwn <-
         if paidMana
-          then payComponents moment announced slots pid oid (Cost.components cost)
+          then payComponents perform moment announced slots pid oid (Cost.components cost)
           else pure Payment.Unpaid
       -- The convoking taps are paid as a group of their own so that their
       -- bindings stay apart (CR 702.51c), after the other substitutes. The
@@ -4890,11 +4890,11 @@ paySubstitutingReading refuses slots perform began earlier moment subject announ
       (outcome, substituted) <- case paidOwn of
         Payment.Unpaid -> pure (Payment.Unpaid, Map.empty)
         Payment.Paid bound -> do
-          paidOthers <- payComponents moment announced slots pid oid (substituteComponents others)
+          paidOthers <- payComponents perform moment announced slots pid oid (substituteComponents others)
           case paidOthers of
             Payment.Unpaid -> pure (Payment.Unpaid, Map.empty)
             Payment.Paid _ -> do
-              paidConvoking <- payComponents moment announced slots pid oid (substituteComponents convoking)
+              paidConvoking <- payComponents perform moment announced slots pid oid (substituteComponents convoking)
               pure $ case paidConvoking of
                 Payment.Unpaid -> (Payment.Unpaid, Map.empty)
                 Payment.Paid convoked -> (mergeBound bound (mergeBound convoked paidOthers), convoked)
@@ -5005,7 +5005,7 @@ payToll perform began earlier pid charges =
                 -- payPass's posture below.
                 pure (Game.permute tagged answer)
               else pure tagged
-          (outcome, stretches) <- payTagged pid ordered
+          (outcome, stretches) <- payTagged perform pid ordered
           case outcome of
             Payment.Paid _ -> pure (Just (earlier <> windows <> stretches))
             Payment.Unpaid -> refused (earlier <> windows <> stretches)
@@ -5135,8 +5135,8 @@ tollOrderObservable charges = case filter (any orderSensitive . snd) charges of
 -- combat-cost/cr-733-1-a-card-milled-to-attack-stays-milled-when-a-later-toll-fails
 -- is the proof for a mill, and CombatCostSpec's "CR 733.1 a card revealed to
 -- attack stays revealed when a later toll fails" for a reveal.
-payTagged :: PlayerId -> [(ObjectId, [CostComponent.CostComponent Keyword.Type.Keyword])] -> Game (Payment.Payment, [ManaWindow.ManaWindow])
-payTagged pid charges = case charges of
+payTagged :: ManaAbilityPerformer.ManaAbilityPerformer -> PlayerId -> [(ObjectId, [CostComponent.CostComponent Keyword.Type.Keyword])] -> Game (Payment.Payment, [ManaWindow.ManaWindow])
+payTagged perform pid charges = case charges of
   [] -> pure (bindsNothing, [])
   (oid, components) : rest -> do
     -- CR 508.1j / 509.1f: a toll is paid during the declaration, which is a
@@ -5148,7 +5148,7 @@ payTagged pid charges = case charges of
           [] -> pure (bindsNothing, reverse stretches)
           component : others -> do
             opened <- State.get
-            outcome <- payComponent PaymentMoment.OutsideResolution Nothing Map.empty pid oid component
+            outcome <- payComponent perform PaymentMoment.OutsideResolution Nothing Map.empty pid oid component
             closed <- State.get
             let kept = [unreversibleStretch pid oid opened closed | touchedLibrary opened closed] <> stretches
             case outcome of
@@ -5160,7 +5160,7 @@ payTagged pid charges = case charges of
     case outcome of
       Payment.Unpaid -> pure (Payment.Unpaid, stretches)
       Payment.Paid bound -> do
-        (rested, later) <- payTagged pid rest
+        (rested, later) <- payTagged perform pid rest
         pure (mergeBound bound rested, stretches <> later)
 
 -- A stretch of a payment that did what CR 733.1's last sentence names
@@ -5236,18 +5236,18 @@ shownCard logged = case LoggedEvent.event logged of
 --
 -- FILTERED, NOT TRUSTED: Game.permute keeps the printed order for an answer that
 -- is not a permutation of the offered indices.
-payComponents :: PaymentMoment.PaymentMoment -> Maybe ObjectId -> Map.Map SlotName.SlotName (Set.Set Recipient.Recipient) -> PlayerId -> ObjectId -> [CostComponent.CostComponent Keyword.Type.Keyword] -> Game Payment.Payment
-payComponents moment paidFor slots pid oid components = do
+payComponents :: ManaAbilityPerformer.ManaAbilityPerformer -> PaymentMoment.PaymentMoment -> Maybe ObjectId -> Map.Map SlotName.SlotName (Set.Set Recipient.Recipient) -> PlayerId -> ObjectId -> [CostComponent.CostComponent Keyword.Type.Keyword] -> Game Payment.Payment
+payComponents perform moment paidFor slots pid oid components = do
   let (second, first) = List.partition paidInSecondPass components
-  outcome <- payPass moment paidFor slots pid oid first
+  outcome <- payPass perform moment paidFor slots pid oid first
   case outcome of
     Payment.Unpaid -> pure Payment.Unpaid
-    Payment.Paid bound -> fmap (mergeBound bound) (payPass moment paidFor slots pid oid second)
+    Payment.Paid bound -> fmap (mergeBound bound) (payPass perform moment paidFor slots pid oid second)
 
 -- ONE of CR 601.2h's two passes: the payer orders it where the order is
 -- observable, then it is paid in that order.
-payPass :: PaymentMoment.PaymentMoment -> Maybe ObjectId -> Map.Map SlotName.SlotName (Set.Set Recipient.Recipient) -> PlayerId -> ObjectId -> [CostComponent.CostComponent Keyword.Type.Keyword] -> Game Payment.Payment
-payPass moment paidFor slots pid oid components = payInOrder moment paidFor slots pid oid =<< orderPass pid oid components
+payPass :: ManaAbilityPerformer.ManaAbilityPerformer -> PaymentMoment.PaymentMoment -> Maybe ObjectId -> Map.Map SlotName.SlotName (Set.Set Recipient.Recipient) -> PlayerId -> ObjectId -> [CostComponent.CostComponent Keyword.Type.Keyword] -> Game Payment.Payment
+payPass perform moment paidFor slots pid oid components = payInOrder perform moment paidFor slots pid oid =<< orderPass pid oid components
 
 -- The payer's order for one pass, asked only where it is observable.
 orderPass :: PlayerId -> ObjectId -> [CostComponent.CostComponent Keyword.Type.Keyword] -> Game [CostComponent.CostComponent Keyword.Type.Keyword]
@@ -5331,14 +5331,14 @@ paidInSecondPass component = case component of
   -- library, so the header's first pass holds it.
   CostComponent.BeholdAndExile _ -> False
 
-payInOrder :: PaymentMoment.PaymentMoment -> Maybe ObjectId -> Map.Map SlotName.SlotName (Set.Set Recipient.Recipient) -> PlayerId -> ObjectId -> [CostComponent.CostComponent Keyword.Type.Keyword] -> Game Payment.Payment
-payInOrder moment paidFor slots pid oid components = case components of
+payInOrder :: ManaAbilityPerformer.ManaAbilityPerformer -> PaymentMoment.PaymentMoment -> Maybe ObjectId -> Map.Map SlotName.SlotName (Set.Set Recipient.Recipient) -> PlayerId -> ObjectId -> [CostComponent.CostComponent Keyword.Type.Keyword] -> Game Payment.Payment
+payInOrder perform moment paidFor slots pid oid components = case components of
   [] -> pure bindsNothing
   component : rest -> do
-    outcome <- payComponent moment paidFor slots pid oid component
+    outcome <- payComponent perform moment paidFor slots pid oid component
     case outcome of
       Payment.Unpaid -> pure Payment.Unpaid
-      Payment.Paid bound -> fmap (mergeBound bound) (payInOrder moment paidFor slots pid oid rest)
+      Payment.Paid bound -> fmap (mergeBound bound) (payInOrder perform moment paidFor slots pid oid rest)
 
 -- The slots two components of one cost bound, in one map: see
 -- Pawl.Engine.Binding.mergePaid.
@@ -6249,7 +6249,7 @@ payActivation perform inFlight pid oid cost = do
   -- No slots, by CR 605.1a rather than by this caller's position: a mana ability
   -- "doesn't require a target", so its announcement binds nothing a criterion
   -- could read.
-  outcome <- if paid then payComponents PaymentMoment.OutsideResolution Nothing Map.empty pid oid (Cost.components cost) else pure Payment.Unpaid
+  outcome <- if paid then payComponents perform PaymentMoment.OutsideResolution Nothing Map.empty pid oid (Cost.components cost) else pure Payment.Unpaid
   let settled = case outcome of
         Payment.Paid _ -> paid
         Payment.Unpaid -> False
@@ -6329,16 +6329,16 @@ nextPromise oid gift gs =
 --
 -- `paidFor` is the stack object the cost is paid for, `pay`'s `announced`, which
 -- a cost's reveal is kept for (`revealPaying`).
-payComponent :: PaymentMoment.PaymentMoment -> Maybe ObjectId -> Map.Map SlotName.SlotName (Set.Set Recipient.Recipient) -> PlayerId -> ObjectId -> CostComponent.CostComponent Keyword.Type.Keyword -> Game Payment.Payment
-payComponent moment paidFor slots pid oid component = do
+payComponent :: ManaAbilityPerformer.ManaAbilityPerformer -> PaymentMoment.PaymentMoment -> Maybe ObjectId -> Map.Map SlotName.SlotName (Set.Set Recipient.Recipient) -> PlayerId -> ObjectId -> CostComponent.CostComponent Keyword.Type.Keyword -> Game Payment.Payment
+payComponent perform moment paidFor slots pid oid component = do
   gs <- State.get
   if canPayComponent slots pid oid component gs
-    then payPayable moment paidFor slots pid oid component
+    then payPayable perform moment paidFor slots pid oid component
     else pure Payment.Unpaid
 
 -- `payComponent`'s arms, each reached only once CR 118.3 holds.
-payPayable :: PaymentMoment.PaymentMoment -> Maybe ObjectId -> Map.Map SlotName.SlotName (Set.Set Recipient.Recipient) -> PlayerId -> ObjectId -> CostComponent.CostComponent Keyword.Type.Keyword -> Game Payment.Payment
-payPayable moment paidFor slots pid oid component = case component of
+payPayable :: ManaAbilityPerformer.ManaAbilityPerformer -> PaymentMoment.PaymentMoment -> Maybe ObjectId -> Map.Map SlotName.SlotName (Set.Set Recipient.Recipient) -> PlayerId -> ObjectId -> CostComponent.CostComponent Keyword.Type.Keyword -> Game Payment.Payment
+payPayable perform moment paidFor slots pid oid component = case component of
   -- CR 701.26a through tapObject; CR 107.5's "already tapped" is `payComponent`'s
   -- guard.
   CostComponent.TapThis -> do
@@ -6386,7 +6386,7 @@ payPayable moment paidFor slots pid oid component = case component of
   -- no card in `data/cards/` adds a half-life cost that way.
   CostComponent.PayHalfLife rounding -> do
     gs <- State.get
-    payPayable moment paidFor slots pid oid (CostComponent.PayLife (CostAmount.Fixed (halfLifeOf rounding pid gs)))
+    payPayable perform moment paidFor slots pid oid (CostComponent.PayLife (CostAmount.Fixed (halfLifeOf rounding pid gs)))
   -- CR 701.17a: the top `n` cards of the PAYING player's own library (CR 400.3),
   -- moved to their graveyard. `canPayComponent` above has already refused a cost
   -- milling more than the library holds (CR 701.17b); an InstructionR row resizing
@@ -6929,11 +6929,13 @@ payPayable moment paidFor slots pid oid component = case component of
   -- above says why -- and the flip BINDS NOTHING: rule 705.1 names nothing the
   -- rest of the cost or a later clause could read.
   --
-  -- Not implemented: Pokey, the Scallywagg's roll instead of a cost's flip, no
-  -- CR 706 thrower reaching this module (#5350).
+  -- Pokey, the Scallywagg's roll instead (CR 614.6) is thrown through the
+  -- performer's CR 706 road. The scenario
+  -- coin/cr-614-6-pokey-rolls-a-d20-to-pay-karplusan-minotaur-s-cumulative-upkeep
+  -- is the proof.
   CostComponent.FlipCoin -> do
     statements <- Coin.statementsFor (Just pid)
-    _ <- Event.flipWinLoseCoin Nothing pid statements
+    _ <- Event.flipWinLoseCoin (Just (ManaAbilityPerformer.throwForCoin perform)) pid statements
     pure bindsNothing
   -- CR 702.174a's first ability, paid by naming the opponent the gift is
   -- promised to, through Prompt.ChooseOpponent carrying the promise it records,
@@ -7096,7 +7098,7 @@ payPayable moment paidFor slots pid oid component = case component of
   -- Necropsy's ruling, so a payment reaching here unfixed has no caller.
   CostComponent.CollectEvidenceOfTargets -> do
     gs <- State.get
-    payPayable moment paidFor slots pid oid (fixComputed slots gs component)
+    payPayable perform moment paidFor slots pid oid (fixComputed slots gs component)
   -- CR 406.2 with no prompt: CR 404.2's order determines the card. Unpaid where
   -- the graveyard holds no matching card, agreeing with canPayComponent above.
   CostComponent.ExileTopFromGraveyard criterion -> do
