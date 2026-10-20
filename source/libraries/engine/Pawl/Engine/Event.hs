@@ -2101,10 +2101,12 @@ applyInertly candidate rewrite event = do
 
 -- CR 120.8: a damage event an amount rewrite left at 0 is no event at all, so
 -- nothing later in the CR 616.1 loop has one to replace and nothing downstream
--- deals, marks or triggers on it. The two arms of `apply` that can answer 0
--- without preventing anything (SetAmount, Scale) go through here; the
--- prevention arms already answer Nothing at 0 (CR 615.6). Proved by
--- data/scenarios/damage-replacement's Benevolent Unicorn case.
+-- deals, marks or triggers on it. The arms of `apply` that can answer 0
+-- without preventing anything go through here -- SetAmount, Scale, and
+-- RedirectNext's share where CR 615.7's allocation gave the event none; the
+-- prevention arms already answer Nothing at 0 (CR 615.6). Proved for Scale by
+-- data/scenarios/damage-replacement's Benevolent Unicorn case; the other two
+-- are regression fences.
 dealing :: DamageEvent.DamageEvent -> Maybe ProposedEvent
 dealing de = if DamageEvent.amount de == 0 then Nothing else Just (ProposedEvent.WouldDealDamage de)
 
@@ -3603,7 +3605,7 @@ apply batch candidate event =
           Just live -> do
             let moved = min remaining (DamageEvent.amount de)
             Replacement.setShield (ReplacementCandidate.identity candidate) damageR (DamageRewrite.RedirectNext (remaining - moved) dest)
-            pure (Just (ProposedEvent.WouldDealDamage de {DamageEvent.amount = moved, DamageEvent.target = live}))
+            pure (dealing de {DamageEvent.amount = moved, DamageEvent.target = live})
       -- CR 614.9 with the destination PRINTED rather than baked -- Pariah's
       -- "all damage that would be dealt to you is dealt to enchanted creature
       -- instead". The arm above with `dest` found by description instead of read
