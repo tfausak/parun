@@ -35,6 +35,12 @@ codec abilityCodec =
       Arm.payload "AddSupertypes" (Common.set Supertype.codec) CopyException.AddSupertypes $ \x -> case x of
         CopyException.AddSupertypes y -> Just y
         _ -> Nothing,
+      Arm.payload "SetCardTypes" (Common.set CardType.codec) CopyException.SetCardTypes $ \x -> case x of
+        CopyException.SetCardTypes y -> Just y
+        _ -> Nothing,
+      Arm.payload "SetCreatureSubtypes" (Common.set Subtype.codec) CopyException.SetCreatureSubtypes $ \x -> case x of
+        CopyException.SetCreatureSubtypes y -> Just y
+        _ -> Nothing,
       Arm.payload "RemoveSupertypes" (Common.set Supertype.codec) CopyException.RemoveSupertypes $ \x -> case x of
         CopyException.RemoveSupertypes y -> Just y
         _ -> Nothing,
@@ -59,6 +65,8 @@ tagOf x = case x of
   CopyException.AddCardTypes {} -> "AddCardTypes"
   CopyException.AddSubtypes {} -> "AddSubtypes"
   CopyException.AddSupertypes {} -> "AddSupertypes"
+  CopyException.SetCardTypes {} -> "SetCardTypes"
+  CopyException.SetCreatureSubtypes {} -> "SetCreatureSubtypes"
   CopyException.RemoveSupertypes {} -> "RemoveSupertypes"
   CopyException.SetName {} -> "SetName"
   CopyException.SetColors {} -> "SetColors"

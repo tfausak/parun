@@ -84,6 +84,7 @@ import qualified Pawl.Types.Source as Source
 import qualified Pawl.Types.SpecialAction as SpecialAction
 import qualified Pawl.Types.StaticAbility as StaticAbility
 import qualified Pawl.Types.StickerPlacement as StickerPlacement
+import qualified Pawl.Types.Subtype as Subtype.Type
 import qualified Pawl.Types.Teams as Teams
 import Pawl.Types.Timestamp (Timestamp)
 import qualified Pawl.Types.Toughness as Toughness
@@ -969,6 +970,8 @@ settleCopyException this own exception = case exception of
   CopyException.AddCardTypes _ -> [exception]
   CopyException.AddSubtypes _ -> [exception]
   CopyException.AddSupertypes _ -> [exception]
+  CopyException.SetCardTypes _ -> [exception]
+  CopyException.SetCreatureSubtypes _ -> [exception]
   CopyException.RemoveSupertypes _ -> [exception]
   CopyException.SetName _ -> [exception]
   CopyException.SetColors _ -> [exception]
@@ -1114,6 +1117,22 @@ applyCopyException this own snapshot exception = case exception of
   -- supertype, and no pawl characteristic-defining ability defines one anyway.
   CopyException.AddSupertypes supertypes ->
     snapshot {PC.supertypes = Set.union (PC.supertypes snapshot) supertypes}
+  -- CR 707.9b / 205.1a's set: the clause's card types replace the copied ones,
+  -- instant and sorcery kept, and a subtype correlating with no card type the
+  -- copy still has goes with the type that carried it -- Projection's
+  -- SetCardType arm over the copiable values.
+  CopyException.SetCardTypes types ->
+    let kept = Set.union types (Set.filter retainedThroughCardTypeSet (PC.cardTypes snapshot))
+     in snapshot {PC.cardTypes = kept, PC.subtypes = Set.filter (correspondsTo kept) (PC.subtypes snapshot)}
+  -- CR 707.9b / 205.1a's set over CR 205.3m's creature types: every copied
+  -- creature type goes and the clause's come in. CR 707.9d strips changeling
+  -- (CR 702.73a), the ability that would define them. That strip is a
+  -- REGRESSION FENCE: no test copies a changeling card with Dino DNA.
+  CopyException.SetCreatureSubtypes subtypes ->
+    snapshot
+      { PC.subtypes = Set.union subtypes (Set.filter (not . Subtype.isCreatureType) (PC.subtypes snapshot)),
+        PC.keywords = Map.delete Keyword.Type.Changeling (PC.keywords snapshot)
+      }
   -- CR 707.9b over CR 205.4a's part of the type line: "except it isn't legendary"
   -- (Multiversal Recruitment), so a DIFFERENCE rather than an empty set -- the
   -- clause names one supertype and a copy of a snow legendary permanent is still
@@ -2551,3 +2570,30 @@ defaultControllerOf obj = Maybe.fromMaybe (Object.owner obj) (Object.enteredUnde
 -- zone its last-known record was filed from.
 lastZoneOf :: ObjectId -> GameState -> Maybe Zone.Zone
 lastZoneOf = Game.liveOrLastKnown Object.zone LastKnown.zone
+
+-- CR 205.3d: an object can't gain a subtype that doesn't correspond to one of
+-- its types. CR 205.1a's removal clause is the same question in the other
+-- direction, so the SetCardType arm asks this too -- one predicate, so a subtype
+-- a card-type set would strip is one a later grant cannot put back.
+--
+-- The card types are the ones the WHOLE effect gives (cardTypesAfter, threaded
+-- through applyModification's unitTypes), not the ones the fold has reached: CR
+-- 613.7 orders EFFECTS within a layer and nothing orders one effect's own parts
+-- against each other, CR 613.6 those parts being the parts of one effect wherever
+-- they land. CR 613.6's Svogthos example is this rule in the CR's own words -- one
+-- effect gives the Plant Zombie types and the Creature card type they correspond
+-- to. So an effect may grant the card type and the subtype in either written
+-- order: Song of the Dryads reads "a colorless Forest land" and Life and Limb
+-- "Saproling creatures and Forest lands", each naming the subtype first, and both
+-- are transcribed that way. Proved by Pawl.ProjectionSpec's "CR 205.3d/305.6 Song
+-- of the Dryads' Forest lands on the creature the same effect makes a land" and
+-- "CR 613.7/205.3d Life and Limb's Forest lands on the Saproling the same effect
+-- makes a land", one on each of projectDeciding's two roads.
+correspondsTo :: Set CardType.CardType -> Subtype.Type.Subtype -> Bool
+correspondsTo types subtype =
+  let family = Subtype.correlatedCardTypes subtype
+   in Set.null family || not (Set.disjoint family types)
+
+-- CR 205.1a's named exception to its own set: instant and sorcery are retained.
+retainedThroughCardTypeSet :: CardType.CardType -> Bool
+retainedThroughCardTypeSet t = t == CardType.Instant || t == CardType.Sorcery

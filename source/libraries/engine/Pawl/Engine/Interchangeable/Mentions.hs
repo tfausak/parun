@@ -917,6 +917,8 @@ copyExceptionNames asking onAbility x = case x of
   CopyException.AddCardTypes _cardType -> False
   CopyException.AddSubtypes _subtype -> False
   CopyException.AddSupertypes _supertype -> False
+  CopyException.SetCardTypes _cardType -> False
+  CopyException.SetCreatureSubtypes _subtype -> False
   CopyException.RemoveSupertypes _supertype -> False
   CopyException.SetName _cardName -> False
   CopyException.SetColors _color -> False

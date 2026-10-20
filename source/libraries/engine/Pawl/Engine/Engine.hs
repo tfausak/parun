@@ -926,7 +926,7 @@ placeBorne srcId pending = do
       enteredX = case TriggeredAbility.condition ability of
         TriggerCondition.SelfEnters -> Just inheritedX
         _ -> Nothing
-      legal = Target.fillableModes (Just controller) bound srcId Map.empty modal gs
+      legal = Target.fillableModes Nothing (Just controller) bound srcId Map.empty modal gs
       selection = Modal.Type.selection modal
       obj =
         Object.newSettled
@@ -967,7 +967,7 @@ placeBorne srcId pending = do
       -- CR 603.3d: targets for the chosen mode(s) only, chosen as the ability is
       -- placed. A mode with no target slots asks nothing.
       let slots = Target.announcedSlots controller srcId gs (Modal.modesTargetSlots chosenModes modal)
-          sets = Target.legalSets (Just controller) False bound srcId slots gs
+          sets = Target.legalSets Nothing (Just controller) False bound srcId slots gs
           -- CR 603.3d's "identical to the process ... listed in rules 601.2c-d",
           -- and 601.2c's "all at once": an answer whose slots read each other is
           -- judged WHOLE, exactly as a cast's is (Target.selectionLegal's third
@@ -1018,8 +1018,8 @@ placeBorne srcId pending = do
           -- The cast road (Cast.castProposed) and the activation road
           -- (Activate.activateAbility) ask the same three.
           attempt rejected = do
-            chosen <- Target.chooseTargets controller abilId srcId bound inheritedX slots sets
-            if Target.selectionLegal (Just controller) bound srcId inheritedX slots sets chosen gs
+            chosen <- Target.chooseTargets Nothing controller abilId srcId bound inheritedX slots sets
+            if Target.selectionLegal Nothing (Just controller) bound srcId inheritedX slots sets chosen gs
               then pure (Just chosen)
               else
                 let key = Map.intersectionWith Set.intersection chosen sets

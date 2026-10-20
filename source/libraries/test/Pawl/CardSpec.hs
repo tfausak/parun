@@ -4991,6 +4991,8 @@ copyExceptionFilters exception = case exception of
   CopyException.GainKeywords keywords -> concatMap keywordFilters (Set.toList keywords)
   CopyException.AddCardTypes _ -> []
   CopyException.AddSubtypes _ -> []
+  CopyException.SetCardTypes _ -> []
+  CopyException.SetCreatureSubtypes _ -> []
   CopyException.AddSupertypes _ -> []
   CopyException.RemoveSupertypes _ -> []
   CopyException.SetName _ -> []

@@ -1,0 +1,187 @@
+{
+  "faces": [
+    {
+      "activatedAbilities": [
+        {
+          "cost": {
+            "components": [
+              {
+                "type": "TapThis"
+              }
+            ],
+            "mana": [
+              {
+                "type": "Generic",
+                "value": 1
+              }
+            ]
+          },
+          "modal": {
+            "modes": [
+              {
+                "clauses": [
+                  {
+                    "effects": [
+                      {
+                        "type": "MoveToZone",
+                        "value": {
+                          "ref": {
+                            "type": "InSlot",
+                            "value": "target"
+                          },
+                          "zone": {
+                            "type": "Exile"
+                          }
+                        }
+                      }
+                    ]
+                  }
+                ],
+                "targetSlots": {
+                  "target": {
+                    "filter": {
+                      "type": "HasCardType",
+                      "value": {
+                        "type": "Creature"
+                      }
+                    },
+                    "pool": {
+                      "type": "CardsInGraveyard",
+                      "value": {
+                        "type": "Scoped",
+                        "value": {
+                          "type": "AnyPlayer"
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            ]
+          },
+          "restrictions": [
+            {
+              "type": "SorcerySpeed"
+            }
+          ]
+        },
+        {
+          "cost": {
+            "mana": [
+              {
+                "type": "Generic",
+                "value": 6
+              }
+            ]
+          },
+          "modal": {
+            "modes": [
+              {
+                "clauses": [
+                  {
+                    "effects": [
+                      {
+                        "type": "CreateCopy",
+                        "value": {
+                          "exceptions": [
+                            {
+                              "type": "SetPowerToughness",
+                              "value": {
+                                "power": 6,
+                                "toughness": 6
+                              }
+                            },
+                            {
+                              "type": "SetColors",
+                              "value": [
+                                {
+                                  "type": "Green"
+                                }
+                              ]
+                            },
+                            {
+                              "type": "SetCardTypes",
+                              "value": [
+                                {
+                                  "type": "Creature"
+                                }
+                              ]
+                            },
+                            {
+                              "type": "SetCreatureSubtypes",
+                              "value": [
+                                {
+                                  "type": "Dinosaur"
+                                }
+                              ]
+                            },
+                            {
+                              "type": "GainKeywords",
+                              "value": [
+                                {
+                                  "type": "Trample"
+                                }
+                              ]
+                            }
+                          ],
+                          "ref": {
+                            "type": "InSlot",
+                            "value": "target"
+                          }
+                        }
+                      }
+                    ]
+                  }
+                ],
+                "targetSlots": {
+                  "target": {
+                    "filter": {
+                      "type": "And",
+                      "value": [
+                        {
+                          "type": "HasCardType",
+                          "value": {
+                            "type": "Creature"
+                          }
+                        },
+                        {
+                          "type": "IsExiledWithSource",
+                          "value": {
+                            "type": "OwnAbilities"
+                          }
+                        }
+                      ]
+                    },
+                    "pool": {
+                      "type": "CardsInExile"
+                    }
+                  }
+                }
+              }
+            ]
+          },
+          "restrictions": [
+            {
+              "type": "SorcerySpeed"
+            }
+          ]
+        }
+      ],
+      "manaCost": [
+        {
+          "type": "Generic",
+          "value": 1
+        }
+      ],
+      "name": "Dino DNA",
+      "oracleText": "Imprint — {1}, {T}: Exile target creature card from a graveyard. Activate only as a sorcery.\n{6}: Create a token that's a copy of target creature card exiled with this artifact, except it's a 6/6 green Dinosaur creature with trample. Activate only as a sorcery.",
+      "typeLine": {
+        "types": [
+          {
+            "type": "Artifact"
+          }
+        ]
+      }
+    }
+  ]
+}

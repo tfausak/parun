@@ -1664,11 +1664,15 @@ rewriteCopyException pairs exception = case exception of
   -- CR 707.9b's type clause names CARD types (CR 205.2a's list), and CR 612.2's
   -- swap reaches only subtypes, so there is nothing here for a pair to change.
   CopyException.AddCardTypes _ -> exception
+  CopyException.SetCardTypes _ -> exception
   -- CR 707.9b's subtype clause DOES name a word CR 612.2's swap reaches -- "a
   -- Wall in addition to its other types" is one of the "all instances of one
   -- creature type" Artificial Evolution changes -- so the pairs apply, exactly as
   -- they do to a Filter's HasSubtype atom (Filter.rewrite).
   CopyException.AddSubtypes subtypes -> CopyException.AddSubtypes (Set.map (\t -> Maybe.fromMaybe t (lookup t pairs)) subtypes)
+  -- The same swap over the replacing clause's subtypes (Dino DNA's "Dinosaur").
+  -- A REGRESSION FENCE: no test changes Dino DNA's text.
+  CopyException.SetCreatureSubtypes subtypes -> CopyException.SetCreatureSubtypes (Set.map (\t -> Maybe.fromMaybe t (lookup t pairs)) subtypes)
   -- CR 205.4a's supertypes for the same reason CR 707.9b's card types are left
   -- alone, whichever direction the clause runs: CR 612.2's swap reaches subtypes
   -- alone.

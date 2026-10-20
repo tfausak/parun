@@ -3041,7 +3041,7 @@ kindredSpec s registry =
         Map.findWithDefault
           Set.empty
           slot
-          (Target.legalSets (Just S.alice) False Map.empty S.noSource (Map.singleton slot (TargetSlot.required pool (Just (Filter.Type.HasSubtype Subtype.Faerie)))) gs)
+          (Target.legalSets Nothing (Just S.alice) False Map.empty S.noSource (Map.singleton slot (TargetSlot.required pool (Just (Filter.Type.HasSubtype Subtype.Faerie)))) gs)
    in Spec.describe s "Kindred" $ do
         -- The proving test for CR 308. CR 308.2 makes the kindred subtypes
         -- "the same as the set of creature subtypes", so the ENCHANTMENT

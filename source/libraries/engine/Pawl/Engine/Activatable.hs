@@ -26,6 +26,7 @@ import qualified Pawl.Engine.Target as Target
 import qualified Pawl.Engine.Turn as Turn
 import qualified Pawl.Engine.Vanguard as Vanguard
 import qualified Pawl.Types.AbilityKind as AbilityKind
+import qualified Pawl.Types.AbilityName as AbilityName
 import qualified Pawl.Types.ActivatedAbility as ActivatedAbility
 import qualified Pawl.Types.Activator as Activator
 import qualified Pawl.Types.Card as Card
@@ -528,8 +529,8 @@ recipientObjects = Set.fromList . Maybe.mapMaybe Recipient.objectOf . Set.toList
 -- Only the FILLABLE modes (CR 700.2a), which is the set activatableGiven's mode
 -- conjunct measures: a slot belonging to a mode this board cannot choose is not
 -- a target this activation could name.
-candidateSlotsGiven :: Target.Pools -> PlayerId -> ObjectId -> Modal.Type.Modal Card.Card (GrantedAbility.GrantedAbility Card.Card) -> Set.Set ModeIndex.ModeIndex -> GameState -> [(Map.Map SlotName (Natural, Natural), Map.Map SlotName (Set.Set ObjectId))]
-candidateSlotsGiven pools pid srcId modal fillable gs =
+candidateSlotsGiven :: Maybe AbilityName.AbilityName -> Target.Pools -> PlayerId -> ObjectId -> Modal.Type.Modal Card.Card (GrantedAbility.GrantedAbility Card.Card) -> Set.Set ModeIndex.ModeIndex -> GameState -> [(Map.Map SlotName (Natural, Natural), Map.Map SlotName (Set.Set ObjectId))]
+candidateSlotsGiven reader pools pid srcId modal fillable gs =
   let -- CR 601.2c's per-player copies, as the announcement will offer them. A
       -- REGRESSION FENCE: no card pairs a per-player slot with a target-reading cost.
       slotsOf chosen = Target.announcedSlots pid srcId gs (Modal.modesTargetSlots chosen modal)
@@ -541,9 +542,9 @@ candidateSlotsGiven pools pid srcId modal fillable gs =
       -- agree, which they must: one is the offer gate and the other is what
       -- affordableX measures the cost against, and a gate and an announcement may
       -- not disagree about what a cost is.
-      setsOf slots = Target.legalSetsGiven pools (Just pid) True Map.empty srcId slots gs
+      setsOf slots = Target.legalSetsGiven reader pools (Just pid) True Map.empty srcId slots gs
       -- Before CR 601.2b, so a count reading the X admits every count.
-      aimableOf slots = let sets = setsOf slots in (Target.aimingRanges (Just pid) srcId Nothing slots sets gs, fmap recipientObjects sets)
+      aimableOf slots = let sets = setsOf slots in (Target.aimingRanges reader (Just pid) srcId Nothing slots sets gs, fmap recipientObjects sets)
    in fmap (aimableOf . slotsOf) (Modal.selections fillable (Modal.Type.selection modal))
 
 -- | CR 101.1 / 107.3c: the least X this ability's activator may announce --
@@ -632,12 +633,12 @@ activatableGiven :: Target.Pools -> [ObjectId] -> PlayerId -> ObjectId -> Activa
 activatableGiven pools sources pid srcId ability gs =
   let Snapshot.MkSnapshot pcs grants = Target.board pools
       modal = ActivatedAbility.modal ability
-      fillable = Target.fillableModesGiven pools (Just pid) Map.empty srcId Map.empty modal gs
+      fillable = Target.fillableModesGiven (ActivatedAbility.name ability) pools (Just pid) Map.empty srcId Map.empty modal gs
       -- CR 601.2c's targets do not exist at an offer, so the cost conjunct is
       -- handed the ones this activation could still name -- see
       -- aimingSomewhere. Shared with the mode conjunct's own `fillable` rather
       -- than taken twice: they are the same question (CR 700.2a).
-      aimable = candidateSlotsGiven pools pid srcId modal fillable gs
+      aimable = candidateSlotsGiven (ActivatedAbility.name ability) pools pid srcId modal fillable gs
    in mayActivateGiven grants pid srcId ability gs
         -- CR 801.6. Not asked of a mana ability's windows (Cost.manaActivations):
         -- their sources are the permanents the player controls

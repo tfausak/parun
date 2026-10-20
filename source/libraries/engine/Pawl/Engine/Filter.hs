@@ -1576,12 +1576,9 @@ data Context = MkContext
     -- | CR 607.5: the name of the ability doing the reading, for what it means by
     -- "exiled with" its source (Binding.isLinkedExile): the resolving ability's
     -- (Pawl.Engine.Resolve.Slots.effectContext) or the one being activated
-    -- (Pawl.Engine.Cost.ceilingOf). Nothing for a reader the source has as its
-    -- own, which is every static ability, and in contextFor below.
-    --
-    -- Not implemented: a target slot's context
-    -- (Pawl.Engine.Target.slotContext) names no reader, so an acquired
-    -- ability's "target card exiled with this" reads the holder's pile (#5349).
+    -- (Pawl.Engine.Cost.ceilingOf), or the one announcing a target slot
+    -- (Pawl.Engine.Target.slotContext). Nothing for a reader the source has as
+    -- its own, which is every static ability, and in contextFor below.
     reader :: Maybe AbilityName.AbilityName,
     -- CR 608.2d: every candidate the enclosing choice offers, with its
     -- measures, for the Measures atom's OfEachOtherCandidate operand. Filled by
