@@ -164,8 +164,9 @@ to agents as written. What it doesn't say:
   trigger already fired. An `area:*` label goes on where one genuinely fits:
   beyond the subsystem names there are `area:keywords` (CR 701/702),
   `area:effects` (the effect DSL), `area:cards` (card data, faces, layouts,
-  schemas, lints), `area:stack` (CR 601/602/608) and `area:variants` (CR
-  313/315, subgames, Commander, the Ring, dungeons).
+  schemas, lints), `area:stack` (CR 601/602/608), `area:variants` (CR
+  313/315, subgames, Commander, the Ring, dungeons) and `area:client` (`pawl
+  play`: the text client, the line protocol, hotseat and bot seats).
 
 - Verify Oracle text with `curl -s
   'https://api.scryfall.com/cards/named?fuzzy=<name>'`; WebFetch gets 403s.

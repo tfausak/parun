@@ -1712,6 +1712,7 @@ oneMountainState mountain ph =
           GameState.daytime = Nothing,
           GameState.spellsCastLastTurn = 0,
           GameState.castsLastTurn = mempty,
+          GameState.eventsLastTurn = mempty,
           GameState.castsBeforeThisTurn = mempty,
           GameState.attacksInOwnLastTurn = mempty,
           GameState.resolvedNames = Map.empty,

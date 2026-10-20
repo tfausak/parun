@@ -6,6 +6,7 @@ module Pawl.Engine.PlayerView where
 import qualified Data.Foldable as Foldable
 import qualified Data.Map.Strict as Map
 import qualified Data.Maybe as Maybe
+import qualified Data.Sequence as Seq
 import qualified Pawl.Engine.Game as Game
 import qualified Pawl.Engine.Projection as Projection
 import qualified Pawl.Engine.Projection.View as Projection.View
@@ -13,6 +14,7 @@ import qualified Pawl.Engine.Visibility as Visibility
 import qualified Pawl.Extra.Natural as Natural
 import qualified Pawl.Types.Facing as Facing
 import qualified Pawl.Types.GameState as GameState
+import qualified Pawl.Types.LoggedEvent as LoggedEvent
 import qualified Pawl.Types.Mana as Mana
 import qualified Pawl.Types.Object as Object
 import qualified Pawl.Types.ObjectId as ObjectId
@@ -36,9 +38,13 @@ viewFor pid gs =
       PlayerView.seats = Maybe.mapMaybe (seatView pid gs) (GameState.turnOrder gs),
       PlayerView.battlefield = Maybe.mapMaybe (objectView pid gs) (Foldable.toList (GameState.battlefield gs)),
       PlayerView.stack = Maybe.mapMaybe (objectView pid gs) (GameState.stack gs),
-      PlayerView.witnessed = filter (\logged -> Visibility.witnessed pid logged == Visibility.Type.Visible) (Foldable.toList (GameState.events gs)),
+      PlayerView.witnessed = witnessedIn (GameState.events gs),
+      PlayerView.witnessedLastTurn = witnessedIn (GameState.eventsLastTurn gs),
       PlayerView.result = GameState.result gs
     }
+  where
+    witnessedIn :: Seq.Seq LoggedEvent.LoggedEvent -> [LoggedEvent.LoggedEvent]
+    witnessedIn = filter (\logged -> Visibility.witnessed pid logged == Visibility.Type.Visible) . Foldable.toList
 
 -- | CR 400.2: a hidden zone by its size and the members `pid` may see; a public
 -- one in full.

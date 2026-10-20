@@ -207,6 +207,7 @@ codec resolve = Fields.object $ do
   daytime <- Fields.defaulted "daytime" Nothing (Common.maybe Daytime.codec) GameState.daytime
   spellsCastLastTurn <- Fields.defaulted "spellsCastLastTurn" 0 Common.natural GameState.spellsCastLastTurn
   castsLastTurn <- Fields.defaulted "castsLastTurn" Map.empty (Common.naturalMap PlayerId.codec Common.natural) GameState.castsLastTurn
+  eventsLastTurn <- Fields.defaulted "eventsLastTurn" Seq.empty (Common.seq LoggedEvent.codec) GameState.eventsLastTurn
   castsBeforeThisTurn <- Fields.defaulted "castsBeforeThisTurn" Seq.empty (Common.seq SpellWasCast.codec) GameState.castsBeforeThisTurn
   attacksInOwnLastTurn <- Fields.defaulted "attacksInOwnLastTurn" Map.empty (Common.naturalMap PlayerId.codec (Common.seq AttackerDeclared.codec)) GameState.attacksInOwnLastTurn
   resolvedNames <- Fields.defaulted "resolvedNames" Map.empty (Common.naturalMap PlayerId.codec (Common.set CardName.codec)) GameState.resolvedNames
@@ -319,6 +320,7 @@ codec resolve = Fields.object $ do
         GameState.daytime = daytime,
         GameState.spellsCastLastTurn = spellsCastLastTurn,
         GameState.castsLastTurn = castsLastTurn,
+        GameState.eventsLastTurn = eventsLastTurn,
         GameState.castsBeforeThisTurn = castsBeforeThisTurn,
         GameState.attacksInOwnLastTurn = attacksInOwnLastTurn,
         GameState.resolvedNames = resolvedNames,

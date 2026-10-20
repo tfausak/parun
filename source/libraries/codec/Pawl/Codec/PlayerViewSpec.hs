@@ -27,6 +27,7 @@ testView =
       PlayerView.battlefield = [],
       PlayerView.stack = [],
       PlayerView.witnessed = [],
+      PlayerView.witnessedLastTurn = [],
       PlayerView.result = Just (Result.Won (PlayerId.MkPlayerId 1))
     }
 
@@ -34,7 +35,7 @@ testViewJson :: String
 testViewJson =
   "{\"viewer\":0,\"turn\":3,\"phase\":{\"type\":\"PrecombatMain\"},\"active\":1,\"priority\":1,\"seats\":["
     <> SeatViewSpec.testSeatJson
-    <> "],\"battlefield\":[],\"stack\":[],\"witnessed\":[],\"result\":"
+    <> "],\"battlefield\":[],\"stack\":[],\"witnessed\":[],\"witnessedLastTurn\":[],\"result\":"
     <> wonJson
     <> "}"
 

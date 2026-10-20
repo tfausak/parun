@@ -168,6 +168,9 @@ spec s registry = Spec.describe s "PlayerView" $ do
         gs = placed {GameState.events = GameState.events placed Seq.|> look}
     Spec.assertEqWith s "alice witnessed it" (length (PlayerView.Type.witnessed (PlayerView.viewFor S.alice gs))) 1
     Spec.assertEqWith s "bob did not" (length (PlayerView.Type.witnessed (PlayerView.viewFor S.bob gs))) 0
+    let lastTurn = placed {GameState.eventsLastTurn = Seq.singleton look}
+    Spec.assertEqWith s "bob did not, read a turn later" (length (PlayerView.Type.witnessedLastTurn (PlayerView.viewFor S.bob lastTurn))) 0
+    Spec.assertEqWith s "alice witnessed it, read a turn later" (length (PlayerView.Type.witnessedLastTurn (PlayerView.viewFor S.alice lastTurn))) 1
     Spec.assertEqWith s "alice's drawing" (drawnFor S.alice gs) [Text.pack "Looked at Goblin Piker."]
   Spec.it s "CR 601.2a / 701.9a / 119.3 a spell cast, its discards, its damage and a life change are witnessed by both seats, by name" $ do
     let lands = [("s1", "Swamp"), ("s2", "Swamp"), ("s3", "Swamp"), ("m1", "Mountain"), ("m2", "Mountain"), ("p1", "Plains"), ("p2", "Plains")]

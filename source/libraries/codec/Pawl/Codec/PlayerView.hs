@@ -26,6 +26,7 @@ codec = Fields.object $ do
   battlefield <- Fields.required "battlefield" (Common.list ObjectView.codec) PlayerView.battlefield
   stack <- Fields.required "stack" (Common.list ObjectView.codec) PlayerView.stack
   witnessed <- Fields.required "witnessed" (Common.list LoggedEvent.codec) PlayerView.witnessed
+  witnessedLastTurn <- Fields.required "witnessedLastTurn" (Common.list LoggedEvent.codec) PlayerView.witnessedLastTurn
   result <- Fields.required "result" (Common.maybe Result.codec) PlayerView.result
   pure
     PlayerView.MkPlayerView
@@ -38,5 +39,6 @@ codec = Fields.object $ do
         PlayerView.battlefield = battlefield,
         PlayerView.stack = stack,
         PlayerView.witnessed = witnessed,
+        PlayerView.witnessedLastTurn = witnessedLastTurn,
         PlayerView.result = result
       }

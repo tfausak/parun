@@ -514,21 +514,21 @@ handOff terminal seat = do
     State.modify' (\h -> h {Hotseat.facing = Just seat})
 
 -- | Adds the view's witnessed entries the client has not read yet to its
--- seat's news. Every request's view is read, answered automatically or not,
--- since the view holds only this turn's entries.
---
--- Not implemented: an entry after the seat's last request of a turn, such as
--- another seat's discard at cleanup, is never read (#5315).
+-- seat's news: the rest of the previous turn's, where the seat last looked
+-- during it, and this turn's. Every request's view is read, answered
+-- automatically or not, since the view holds only those two turns' entries.
 collect :: (Monad m) => PlayerView.PlayerView -> Client m ()
 collect view = do
   let seat = PlayerView.viewer view
       turn = PlayerView.turn view
       entries = PlayerView.witnessed view
   before <- State.gets (Map.lookup seat . Hotseat.seen)
-  let skipped = case before of
-        Just (t, n) | t == turn -> n
-        _ -> 0
-      unread = Seq.fromList (Render.events view (List.genericDrop skipped entries))
+  let missed = case before of
+        Just (t, n)
+          | t == turn -> List.genericDrop n entries
+          | t + 1 == turn -> List.genericDrop n (PlayerView.witnessedLastTurn view) <> entries
+        _ -> entries
+      unread = Seq.fromList (Render.events view missed)
   State.modify' $ \h ->
     h
       { Hotseat.seen = Map.insert seat (turn, Natural.length entries) (Hotseat.seen h),

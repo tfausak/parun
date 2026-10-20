@@ -158,6 +158,8 @@ withoutAnnouncement before entry closed = do
   spellsCastLastTurn <- one GameState.spellsCastLastTurn
   castsLastTurn <- mapOf GameState.castsLastTurn
   -- Written only at the turn handoff, which no announcement spans.
+  eventsLastTurn <- one GameState.eventsLastTurn
+  -- Written only at the turn handoff, which no announcement spans.
   castsBeforeThisTurn <- one GameState.castsBeforeThisTurn
   attacksInOwnLastTurn <- one GameState.attacksInOwnLastTurn
   resolvedNames <- mapOf GameState.resolvedNames
@@ -273,6 +275,7 @@ withoutAnnouncement before entry closed = do
         GameState.daytime = daytime,
         GameState.spellsCastLastTurn = spellsCastLastTurn,
         GameState.castsLastTurn = castsLastTurn,
+        GameState.eventsLastTurn = eventsLastTurn,
         GameState.castsBeforeThisTurn = castsBeforeThisTurn,
         GameState.attacksInOwnLastTurn = attacksInOwnLastTurn,
         GameState.resolvedNames = resolvedNames,

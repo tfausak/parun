@@ -233,6 +233,8 @@ representatives pcs gs candidates =
 --     GameState.battlefieldWhenTriggered (CR 603.10's look-back) are keyed by
 --     every permanent alike, so objects COMPARES the two entries in each
 --     rather than searching for the ids.
+--   * GameState.eventsLastTurn is read by the per-seat view alone, never by a
+--     rule, so no choice can turn on it.
 --   * GameState.outsideObjects (CR 729.4) is keyed by ids belonging to a game
 --     this one is nested inside, and its value names no object -- an owner, a
 --     printing and a face-up/face-down status (CR 110.5); the id supplies of

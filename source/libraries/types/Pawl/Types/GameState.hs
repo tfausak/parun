@@ -445,6 +445,9 @@ data GameState = MkGameState
     -- just ended, sparse, snapshotted at the same handoff; spellsCastLastTurn
     -- is read out of it by Engine.beginTurnOf so the two cannot disagree.
     castsLastTurn :: Map.Map PlayerId.PlayerId Natural.Natural,
+    -- | The turn just ended's `events`, kept at the handoff for the per-seat
+    -- view (Pawl.Engine.PlayerView) alone; no rule reads it.
+    eventsLastTurn :: Seq.Seq LoggedEvent.LoggedEvent,
     -- | CR 601.2i / 608.2i: every spell cast this game BEFORE the turn in
     -- progress, oldest first, appended at the turn handoff from the log it
     -- clears. Pawl.Engine.Count's EventShape.SpellCastThisGame fold joins it

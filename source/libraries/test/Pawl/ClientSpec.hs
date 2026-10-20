@@ -156,6 +156,23 @@ spec s registry = Spec.describe s "Client" $ do
     Spec.assertEqWith s "shown at its next question, a turn later" (news facingAlice) [Text.pack "Since you last looked: Player 2 reveals a face-down card."]
     Spec.assertBool s (any (Text.isPrefixOf (Text.pack "Player 1 passes in ")) facingBob) "passed for"
 
+  Spec.it s "CR 514.1 a discard to hand size at cleanup is shown the other seat at its next question, a turn later" $ do
+    gs <- started s registry
+    giant <- S.printingOf s registry "Hill Giant"
+    let board = snd (S.addHandCard giant S.alice gs)
+        turn = GameState.turnNumber board
+        person = Game.human (screen 200 discardsGiant) (const Nothing)
+        seats = Driver.bySeat (Map.fromList [(S.alice, person), (S.bob, person)]) Bot.bot
+        run = Driver.drive [] seats 200 (pure . (> turn + 1) . GameState.turnNumber) board
+        shown = reverse (written (State.execState (Except.runExceptT (State.evalStateT (State.evalStateT run (SplitMix.MkSplitMix 1)) Hotseat.fresh {Hotseat.facing = Just S.alice})) blank))
+        discarding = Text.isPrefixOf (Text.pack "Choose 1 card to discard")
+        -- Bob's first screen after the discard.
+        facingBob = takeWhile (not . Text.isPrefixOf (Text.pack "Pass to Player 1")) (dropWhile (not . Text.isPrefixOf (Text.pack "Pass to Player 2")) (dropWhile (not . discarding) shown))
+        news = filter (Text.isPrefixOf (Text.pack "Since you last looked: ")) facingBob
+    Spec.assertBool s (any (Text.isInfixOf (Text.pack "Player 1 discards Hill Giant.")) news) ("shown the discard: " <> show news)
+    Spec.assertBool s (not (any (Text.isInfixOf (Text.pack "Hill Giant is put into a graveyard")) news)) ("the discard's move, told once: " <> show news)
+    Spec.assertBool s (any discarding shown) "Player 1 discarded at cleanup"
+
   Spec.it s "each reader's answer reads as its prompt's answer" $ do
     gs <- started s registry
     let o5 = ObjectId.MkObjectId 5
@@ -477,6 +494,17 @@ castsOnce spell sc
   | otherwise = plays sc
   where
     shown = pending sc
+
+-- Passes, declares no attackers or blockers, and discards Hill Giant.
+discardsGiant :: Screen -> Maybe Text.Text
+discardsGiant sc
+  | any (Text.isPrefixOf (Text.pack "Pass to ")) shown = Just Text.empty
+  | any (Text.isPrefixOf (Text.pack "Choose 1 card to discard")) shown = numberOf ". Hill Giant"
+  | Text.pack "Choose an action:" `elem` shown = numberOf ". Pass"
+  | otherwise = Just Text.empty
+  where
+    shown = pending sc
+    numberOf wanted = Maybe.listToMaybe [n | line <- shown, (n, rest) <- [Text.breakOn (Text.pack ". ") (Text.strip line)], not (Text.null n), Text.all (`elem` ['0' .. '9']) n, rest == Text.pack wanted]
 
 -- Each action menu shown, by its options.
 actionMenus :: [Text.Text] -> [[Text.Text]]
