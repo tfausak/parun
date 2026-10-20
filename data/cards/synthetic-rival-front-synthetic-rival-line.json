@@ -1,0 +1,59 @@
+{
+  "faces": [
+    {
+      "defense": 4,
+      "manaCost": [
+        {
+          "type": "Generic",
+          "value": 1
+        },
+        {
+          "type": "OfType",
+          "value": {
+            "type": "Colored",
+            "value": {
+              "type": "Black"
+            }
+          }
+        }
+      ],
+      "name": "Synthetic Rival Front",
+      "typeLine": {
+        "types": [
+          {
+            "type": "Battle"
+          }
+        ]
+      }
+    },
+    {
+      "defense": 6,
+      "manaCost": [
+        {
+          "type": "Generic",
+          "value": 2
+        },
+        {
+          "type": "OfType",
+          "value": {
+            "type": "Colored",
+            "value": {
+              "type": "Black"
+            }
+          }
+        }
+      ],
+      "name": "Synthetic Rival Line",
+      "typeLine": {
+        "types": [
+          {
+            "type": "Battle"
+          }
+        ]
+      }
+    }
+  ],
+  "layout": {
+    "type": "Split"
+  }
+}
