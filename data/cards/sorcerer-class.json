@@ -455,11 +455,16 @@
                         "value": {
                           "type": "Counted",
                           "value": {
+                            "player": {
+                              "type": "Relative",
+                              "value": {
+                                "type": "You"
+                              }
+                            },
                             "quantity": {
                               "type": "Literal",
                               "value": 2
-                            },
-                            "slot": "you"
+                            }
                           }
                         }
                       }

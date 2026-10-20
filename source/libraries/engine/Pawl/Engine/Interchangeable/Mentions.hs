@@ -1033,7 +1033,7 @@ countNames asking onQuantity x = case x of
 
 countedDiscardNames :: (Monoid r) => Asking r -> CountedDiscard.CountedDiscard -> r
 countedDiscardNames asking x = case x of
-  CountedDiscard.MkCountedDiscard slot quantity discarded -> slotNames asking slot <> quantityNames asking quantity <> foldMap (slotNames asking) discarded
+  CountedDiscard.MkCountedDiscard player quantity discarded -> playerRefNames asking player <> quantityNames asking quantity <> foldMap (slotNames asking) discarded
 
 counterNames :: (Monoid r) => Asking r -> Counter.Counter -> r
 counterNames asking x = case x of

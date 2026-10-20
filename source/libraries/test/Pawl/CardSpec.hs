@@ -765,6 +765,7 @@ playerRefPositions =
         ("cloak", Effect.Cloak (plantedPlayer "ck"), [plantedPlayer "ck"]),
         ("manifestDread", Effect.ManifestDread (plantedPlayer "md"), [plantedPlayer "md"]),
         ("choose-permanents", Effect.ChoosePermanents (ChoosePermanents.MkChoosePermanents (ChosenPermanents.MkChosenPermanents (Filter.Type.And []) (plantedPlayer "cp") (HowMany.UpTo Nothing)) (SlotName.MkSlotName (Text.pack "cp"))), [plantedPlayer "cp"]),
+        ("discard-counted", Effect.Discard (Discard.Counted (CountedDiscard.MkCountedDiscard (plantedPlayer "dc") one Nothing)), [plantedPlayer "dc"]),
         ("discard-any-number", Effect.Discard (Discard.AnyNumber (AnyNumberDiscard.MkAnyNumberDiscard (plantedPlayer "da") (AnyNumberMatching.MkAnyNumberMatching (Filter.Type.And []) Nothing) Nothing)), [plantedPlayer "da"]),
         ("player-sacrifices", Effect.PlayerSacrifices (PlayerSacrifices.MkPlayerSacrifices (plantedPlayer "ps") (Filter.Type.And []) one), [plantedPlayer "ps"]),
         ("choose-card-name", Effect.ChooseCardName (ChooseCardName.MkChooseCardName (plantedPlayer "cn") (Filter.Type.And [])), [plantedPlayer "cn"]),

@@ -20,8 +20,7 @@ module Pawl.Types.SlotArity where
 -- reports a read while claiming nothing about how many recipients it sees.
 data SlotArity
   = -- | The reader takes one recipient, or none -- most bare SlotName fields, and
-    -- every PlayerRef.InSlot. Not ALL bare SlotName fields: Pawl.Types.CountedDiscard's
-    -- is read with legalMany, so its arity is Many below.
+    -- every PlayerRef.InSlot.
     One
   | -- | The reader takes the whole set (CR 608.2f's simultaneous batch): every
     -- ObjectRef.InSlot, which is what "up to two target creatures" is written

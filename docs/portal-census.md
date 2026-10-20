@@ -45,12 +45,6 @@ diverges when False Peace targets its caster before their own combat (it skips
 this turn's combat, not next turn's), and when a turn has extra combats.
 - False Peace: "Target player skips all combat phases of their next turn."
 
-### "Each opponent discards a card" without targeting (#5238)
-Discard.Counted (CountedDiscard) names ONE player slot. PlayerSacrifices takes
-`players` Relative Opponent, but Discard has no group arm. No pool card prints
-"each opponent discards a card".
-- Noxious Toad: "When this creature dies, each opponent discards a card."
-
 ### A per-player "may draw up to N" with a per-player follow-up (#5239)
 ChooseNumber has no chooser, and Repeat/ForEach/ForEachNumber don't loop over
 players with each one choosing.

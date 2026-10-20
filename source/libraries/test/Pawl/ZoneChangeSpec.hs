@@ -850,6 +850,37 @@ zoneChangeSpec s registry = Spec.describe s "ZoneChange" $ do
     Spec.assertEqWith s "bob's graveyard holds his own sentry" (namesIn Zone.Graveyard S.bob after) [Just (S.printingName sentry)]
     Spec.assertEqWith s "carol's graveyard holds her own rats" (namesIn Zone.Graveyard S.carol after) [Just (S.printingName rats)]
     Spec.assertEqWith s "CR 101.4: asked in turn order from the active player" asked [S.alice, S.bob, S.carol]
+  -- Noxious Toad's "each opponent discards a card", with no slot at all. bob
+  -- controls the Toad at a three-seat table on alice's turn, so "each opponent"
+  -- is two seats and excludes the controller, and CR 101.4's order starts from
+  -- the ACTIVE player: alice, then carol, where turn order from the controller
+  -- would ask carol first.
+  Spec.it s "CR 701.9 / 101.4 Noxious Toad has each opponent discard, in APNAP order" $ do
+    piker <- S.printingOf s registry "Goblin Piker"
+    sentry <- S.printingOf s registry "Ogre Sentry"
+    rats <- S.printingOf s registry "Typhoid Rats"
+    toad <- S.printingOf s registry "Noxious Toad"
+    let (toadId, placed) = S.addPermanent toad S.bob S.threePlayerGame
+        gs = S.markDamage toadId 1 (handCards rats S.carol 2 (handCards sentry S.bob 2 (handCards piker S.alice 2 placed)))
+        answer :: Prompt.Prompt r -> State.State [PlayerId.PlayerId] r
+        answer p = case p of
+          Prompt.ChooseDiscard _ victim held _ -> do
+            State.modify' (<> [victim])
+            pure (take 1 held)
+          _ -> pure (S.identityAnswer p)
+        (after, asked) =
+          flip State.runState [] $ do
+            -- CR 704.5g kills the Toad, and settling puts its CR 603.6c dies
+            -- trigger on the stack.
+            (_, died) <- Engine.runGame answer gs Engine.settleForPriority
+            (_, resolved) <- Engine.runGame answer died Stack.resolveTop
+            pure resolved
+    Spec.assertEqWith s "alice discarded one of her two" (S.handSize S.alice after) 1
+    Spec.assertEqWith s "carol discarded one of her two" (S.handSize S.carol after) 1
+    Spec.assertEqWith s "bob, the controller, kept both" (S.handSize S.bob after) 2
+    Spec.assertEqWith s "alice's graveyard holds her own piker" (namesIn Zone.Graveyard S.alice after) [Just (S.printingName piker)]
+    Spec.assertEqWith s "carol's graveyard holds her own rats" (namesIn Zone.Graveyard S.carol after) [Just (S.printingName rats)]
+    Spec.assertEqWith s "CR 101.4: asked in turn order from the active player, not the controller" asked [S.alice, S.carol]
 
 -- CR 401.7's "Nth from the top": Temporal Cleansing leaves the depth or the
 -- bottom to the OWNER, Oust states the depth, and Unexpectedly Absent reads it

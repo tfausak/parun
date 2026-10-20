@@ -28,12 +28,12 @@ spec s = Spec.describe s "Pawl.Codec.Discard" $ do
       Discard.codec
       ( Discard.Counted
           CountedDiscard.MkCountedDiscard
-            { CountedDiscard.slot = SlotName.MkSlotName (Text.pack "player"),
+            { CountedDiscard.player = PlayerRef.InSlot (SlotName.MkSlotName (Text.pack "player")),
               CountedDiscard.quantity = Quantity.Literal 1,
               CountedDiscard.discarded = Nothing
             }
       )
-      " {\"type\":\"Counted\",\"value\":{\"slot\":\"player\",\"quantity\":{\"type\":\"Literal\",\"value\":1}}} "
+      " {\"type\":\"Counted\",\"value\":{\"player\":{\"type\":\"InSlot\",\"value\":\"player\"},\"quantity\":{\"type\":\"Literal\",\"value\":1}}} "
   -- The card names the set instead, so CR 701.9b's choice does not arise --
   -- Amnesia's "discards all nonland cards".
   Spec.it s "These" $

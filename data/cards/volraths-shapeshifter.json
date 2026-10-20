@@ -22,11 +22,16 @@
                         "value": {
                           "type": "Counted",
                           "value": {
+                            "player": {
+                              "type": "Relative",
+                              "value": {
+                                "type": "You"
+                              }
+                            },
                             "quantity": {
                               "type": "Literal",
                               "value": 1
-                            },
-                            "slot": "you"
+                            }
                           }
                         }
                       }
@@ -138,11 +143,16 @@
                                     "value": {
                                       "type": "Counted",
                                       "value": {
+                                        "player": {
+                                          "type": "Relative",
+                                          "value": {
+                                            "type": "You"
+                                          }
+                                        },
                                         "quantity": {
                                           "type": "Literal",
                                           "value": 1
-                                        },
-                                        "slot": "you"
+                                        }
                                       }
                                     }
                                   }

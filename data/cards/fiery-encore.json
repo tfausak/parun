@@ -113,11 +113,16 @@
                       "type": "Counted",
                       "value": {
                         "discarded": "discarded",
+                        "player": {
+                          "type": "Relative",
+                          "value": {
+                            "type": "You"
+                          }
+                        },
                         "quantity": {
                           "type": "Literal",
                           "value": 1
-                        },
-                        "slot": "you"
+                        }
                       }
                     }
                   },
