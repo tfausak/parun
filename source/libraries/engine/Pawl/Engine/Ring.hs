@@ -264,13 +264,9 @@ yourRingBearer =
 -- 609.3 never clamps this discard to nothing and CR 701.9b's choice is a real one
 -- whenever the hand held anything else.
 --
--- They spell their player differently because the two payloads offer different
--- spellings of it and neither offers the other's: Pawl.Types.Draw takes a
--- Pawl.Types.PlayerRef, so Relative You reaches CR 109.5's seat with no slot
--- (Pawl.Engine.Monarch.endStepDraw's shape), while Pawl.Types.CountedDiscard takes
--- a SlotName, so it reaches the same seat through Pawl.Engine.Binding.you --
--- which Pawl.Engine.Engine stamps on every triggered ability as it places it. No
--- `discarded` slot: nothing here looks back at what was discarded.
+-- Both name CR 109.5's seat as Relative You, with no slot
+-- (Pawl.Engine.Monarch.endStepDraw's shape). No `discarded` slot: nothing here
+-- looks back at what was discarded.
 --
 -- No intervening "if" (CR 603.4) and TriggerLimit.Unlimited, for
 -- theRingDrainsOnCombatDamage's reasons.
@@ -281,7 +277,7 @@ theRingLootsOnAttack =
         Effect.Discard
           ( Discard.Counted
               CountedDiscard.MkCountedDiscard
-                { CountedDiscard.slot = Binding.you,
+                { CountedDiscard.player = PlayerRef.Relative PlayerRelation.You,
                   CountedDiscard.quantity = Quantity.Literal 1,
                   CountedDiscard.discarded = Nothing
                 }

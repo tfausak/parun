@@ -10,9 +10,7 @@ import qualified Pawl.Types.SlotName as SlotName
 -- Fblthp's "you may discard any number of land cards", Flux's "each player
 -- discards any number of cards".
 --
--- Pawl.Types.CountedDiscard's shape with the count replaced by the choice. The
--- discarders are a PlayerRef, Pawl.Types.Draw's `player`, rather than that
--- record's slot: Flux's "each player" is no slot a card can declare.
+-- Pawl.Types.CountedDiscard's shape with the count replaced by the choice.
 data AnyNumberDiscard = MkAnyNumberDiscard
   { player :: PlayerRef.PlayerRef,
     cards :: AnyNumberMatching.AnyNumberMatching,

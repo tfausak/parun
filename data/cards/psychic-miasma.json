@@ -30,11 +30,14 @@
                       "type": "Counted",
                       "value": {
                         "discarded": "discarded",
+                        "player": {
+                          "type": "InSlot",
+                          "value": "target"
+                        },
                         "quantity": {
                           "type": "Literal",
                           "value": 1
-                        },
-                        "slot": "target"
+                        }
                       }
                     }
                   }

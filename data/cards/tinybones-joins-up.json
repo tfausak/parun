@@ -30,11 +30,14 @@
                         "value": {
                           "type": "Counted",
                           "value": {
+                            "player": {
+                              "type": "EachInSlot",
+                              "value": "targets"
+                            },
                             "quantity": {
                               "type": "Literal",
                               "value": 1
-                            },
-                            "slot": "targets"
+                            }
                           }
                         }
                       }
