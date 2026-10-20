@@ -517,6 +517,11 @@ handOff terminal seat = do
 -- seat's news: the rest of the previous turn's, where the seat last looked
 -- during it, and this turn's. Every request's view is read, answered
 -- automatically or not, since the view holds only those two turns' entries.
+-- A seat is sent a request every turn, even one it is controlled for: each
+-- priority asks the seat itself whether it concedes (CR 104.3a, 723.6).
+--
+-- Not implemented: telling a subgame's or a restarted game's turns from the
+-- parent's or the old game's, whose turn numbers the mark shares (#5369).
 collect :: (Monad m) => PlayerView.PlayerView -> Client m ()
 collect view = do
   let seat = PlayerView.viewer view

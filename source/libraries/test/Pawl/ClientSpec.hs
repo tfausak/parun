@@ -173,6 +173,26 @@ spec s registry = Spec.describe s "Client" $ do
     Spec.assertBool s (not (any (Text.isInfixOf (Text.pack "Hill Giant is put into a graveyard")) news)) ("the discard's move, told once: " <> show news)
     Spec.assertBool s (any discarding shown) "Player 1 discarded at cleanup"
 
+  Spec.it s "CR 723.6 a seat controlled for its turn is still shown the rest of the turn before, and that turn, at its next question" $ do
+    gs <- started s registry
+    giant <- S.printingOf s registry "Hill Giant"
+    mindslaver <- S.printingOf s registry "Mindslaver"
+    mountains <- mapM (S.printingOf s registry) ["Mountain", "Mountain", "Mountain", "Mountain"]
+    let board = snd (S.addHandCard giant S.alice (List.foldl' (\g p -> snd (S.addPermanent p S.alice g)) gs (mindslaver : mountains)))
+        turn = GameState.turnNumber board
+        person = Game.human (screen 400 slavesBob) (const Nothing)
+        seats = Driver.bySeat (Map.fromList [(S.alice, person), (S.bob, person)]) Bot.bot
+        run = Driver.drive [] seats 400 (pure . (> turn + 3) . GameState.turnNumber) board
+        shown = reverse (written (State.execState (Except.runExceptT (State.evalStateT (State.evalStateT run (SplitMix.MkSplitMix 1)) Hotseat.fresh {Hotseat.facing = Just S.alice})) blank))
+        facingBob = facedBy (Text.pack "Pass to Player 2") shown
+        news = filter (Text.isPrefixOf (Text.pack "Since you last looked: ")) facingBob
+    Spec.assertBool s (any (Text.isInfixOf (Text.pack "Player 1 discards Hill Giant.")) news) ("shown the turn before's discard: " <> show news)
+    Spec.assertBool s (any (Text.isInfixOf (Text.pack "Player 2 discards ")) news) ("shown its own turn's discard: " <> show news)
+    -- One discard each turn; Player 2 answered only its turn 4's, Player 1
+    -- the rest, its turn 2's included.
+    let discards = length . filter (Text.isPrefixOf (Text.pack "Choose 1 card to discard"))
+    Spec.assertEqWith s "discards, and those Player 2 answered" (discards shown, discards facingBob) (4, 1)
+
   Spec.it s "each reader's answer reads as its prompt's answer" $ do
     gs <- started s registry
     let o5 = ObjectId.MkObjectId 5
@@ -505,6 +525,30 @@ discardsGiant sc
   where
     shown = pending sc
     numberOf wanted = Maybe.listToMaybe [n | line <- shown, (n, rest) <- [Text.breakOn (Text.pack ". ") (Text.strip line)], not (Text.null n), Text.all (`elem` ['0' .. '9']) n, rest == Text.pack wanted]
+
+-- Activates Mindslaver targeting Player 2 and pays with auto; otherwise as
+-- discardsGiant, discarding the first card listed when Hill Giant is not.
+slavesBob :: Screen -> Maybe Text.Text
+slavesBob sc
+  | any (Text.isPrefixOf (Text.pack "Paying ")) shown = Just (Text.pack "auto")
+  | any (Text.isPrefixOf (Text.pack "Choose 1 target for ")) shown = numberOf ". Player 2"
+  -- Tap, then sacrifice: the protocol offers nothing for this prompt (#5225).
+  | Text.pack "order cost components:" `elem` shown = Just (Text.pack "[0,1]")
+  | Text.pack "Choose an action:" `elem` shown, Just n <- numberOf ". Activate an ability of Mindslaver" = Just n
+  | any (Text.isPrefixOf (Text.pack "Choose 1 card to discard")) shown = Monad.mplus (numberOf ". Hill Giant") (Just (Text.pack "1"))
+  | otherwise = discardsGiant sc
+  where
+    shown = pending sc
+    numberOf wanted = Maybe.listToMaybe [n | line <- shown, (n, rest) <- [Text.breakOn (Text.pack ". ") (Text.strip line)], not (Text.null n), Text.all (`elem` ['0' .. '9']) n, rest == Text.pack wanted]
+
+-- The lines shown while the screen faced the seat each such hand-off line
+-- passes it to.
+facedBy :: Text.Text -> [Text.Text] -> [Text.Text]
+facedBy handOff shown = case dropWhile (not . Text.isPrefixOf handOff) shown of
+  [] -> []
+  _ : rest ->
+    let (here, later) = break (Text.isPrefixOf (Text.pack "Pass to ")) rest
+     in here <> facedBy handOff later
 
 -- Each action menu shown, by its options.
 actionMenus :: [Text.Text] -> [[Text.Text]]
