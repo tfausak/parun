@@ -188,6 +188,7 @@ codec resolve = Fields.object $ do
   lastChoice <- Fields.required "lastChoice" Timestamp.codec GameState.lastChoice
   loopInvolvement <- Fields.defaulted "loopInvolvement" Map.empty (Common.naturalMap PlayerId.codec Timestamp.codec) GameState.loopInvolvement
   drewFromEmpty <- Fields.defaulted "drewFromEmpty" Set.empty (Common.set PlayerId.codec) GameState.drewFromEmpty
+  fellShort <- Fields.defaulted "fellShort" 0 Common.natural GameState.fellShort
   landsPlayed <- Fields.defaulted "landsPlayed" Map.empty (Common.naturalMap PlayerId.codec Common.natural) GameState.landsPlayed
   cardsPlayed <- Fields.defaulted "cardsPlayed" Map.empty (Common.naturalMap ObjectId.codec PlayerId.codec) GameState.cardsPlayed
   drawsThisTurn <- Fields.defaulted "drawsThisTurn" Map.empty (Common.naturalMap PlayerId.codec Common.natural) GameState.drawsThisTurn
@@ -300,6 +301,7 @@ codec resolve = Fields.object $ do
         GameState.lastChoice = lastChoice,
         GameState.loopInvolvement = loopInvolvement,
         GameState.drewFromEmpty = drewFromEmpty,
+        GameState.fellShort = fellShort,
         GameState.landsPlayed = landsPlayed,
         GameState.cardsPlayed = cardsPlayed,
         GameState.drawsThisTurn = drawsThisTurn,

@@ -227,12 +227,15 @@ Entries are ordered by the first rule each cites.
 - **Decision**: It happened if it recorded a game event or changed any state
   but bookkeeping. Bookkeeping is whatever an instruction that did not happen
   can still write (event-log samples, allocators, the last choice, a draw from
-  an empty library, exile-link prunes, bound zero amounts, vote tallies), and
-  is copied across from the state before.
+  an empty library, a shortfall, exile-link prunes, bound zero amounts, vote
+  tallies), and is copied across from the state before. Not covered, because
+  rulings settle them for CR 603.12: an "any number" choice, which happened
+  even at zero, and a draw or mill finding too few cards, which did not.
 - **Rejected**: An allow-list of state that counts, the earlier event-log
   reading, which misses every state-only instruction writing a field it does
   not name.
-- **Site**: `Pawl.Engine.Resolve.Effect.happenedBetween`. The state half is
+- **Site**: `Pawl.Engine.Resolve.Effect.happenedBetween`, with the two ruled
+  shapes in `applyClauseEffects`'s `instructionDone`. The state half is
   proved by the scenario "CR 603.12 a choice that records no event still arms
   its when you do". Copies proved: `exiledWith` by "CR 603.12 an empty mill
   after a token ceased in exile arms no reflexive", `exilePiles` by "CR 603.12
@@ -240,11 +243,8 @@ Entries are ordered by the first rule each cites.
   `nextTimestamp` by "CR 701.28e / 603.12 an ignored convert arms no
   reflexive", `nextEventGroup` by `Pawl.ResolveSpec`'s "CR 118.12 Victimize
   with no creature to sacrifice returns nothing". The other copies are a
-  regression fence: no card in `data/cards/` puts an instruction writing them
-  ahead of a "when you do" or "if you do".
-- **Issue**: none. Rulings contradict it in two shapes, filed as #5334 (an
-  "any number" choice of zero still counts) and #5335 (a numbered instruction
-  done only in part does not).
+  regression fence.
+- **Issue**: none.
 
 ## Whether conjuring into a library is a library move for a mana ability
 

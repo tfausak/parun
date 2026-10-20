@@ -296,6 +296,7 @@ gameWith settings order =
           GameState.lastChoice = Timestamp.MkTimestamp 0,
           GameState.loopInvolvement = Map.empty,
           GameState.drewFromEmpty = mempty,
+          GameState.fellShort = 0,
           GameState.landsPlayed = mempty,
           GameState.cardsPlayed = mempty,
           GameState.drawsThisTurn = mempty,

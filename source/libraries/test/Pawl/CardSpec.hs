@@ -3154,6 +3154,9 @@ namedTokens =
       -- CR 111.10j's Cursed Role (Spiteful Hexmage).
       CardName.MkCardName (Text.pack "Cursed"),
       CardName.MkCardName (Text.pack "Nalaar Aetherjet"),
+      -- Yotia Declares War's "a 0/2 colorless Thopter artifact creature token
+      -- with flying named Ornithopter".
+      CardName.MkCardName (Text.pack "Ornithopter"),
       CardName.MkCardName (Text.pack "Rabid Sheep"),
       -- Preston Garvey, Minuteman's "create a green Aura enchantment token named
       -- Settlement attached to up to one target land you control".

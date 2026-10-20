@@ -532,9 +532,10 @@ targetSlotsOf obj oid gs face =
 -- when it recorded a game event or left the game state different
 -- (`happenedBetween`), and an ignored one did neither. A board difference, the
 -- posture applyEffectWith's CR 607.2a filing already takes, so the rules core
--- never asks which effect it was. Ratchet, Field Medic's two trigger instances
--- are Pawl.TransformSpec's "CR 701.28e / 603.12 an ignored convert arms no
--- reflexive", the event-log half; Strax, Sontaran Nurse's random choice records
+-- never asks which effect it was; the two ruled shapes below read a
+-- classification of its choice and a shortfall it recorded. Ratchet, Field
+-- Medic's two trigger instances are Pawl.TransformSpec's "CR 701.28e / 603.12
+-- an ignored convert arms no reflexive", the event-log half; Strax, Sontaran Nurse's random choice records
 -- no event and only binds a slot, and Pawl.ResolveSpec's "CR 603.12 a choice
 -- that records no event still arms its when you do" is the state half.
 --
@@ -558,7 +559,22 @@ targetSlotsOf obj oid gs face =
 -- occurred, and "this way" is the objects A acted on. Fiery Encore's "discard a
 -- card, then draw a card" is the case; its scenario "CR 603.12 whole card: Fiery
 -- Encore cast from an otherwise empty hand discards nothing, still draws, and
--- creates no reflexive" proves the draw is not what it reads.
+-- creates no reflexive" proves the draw is not what it reads. The one widening
+-- is a CR 608.2d choice written as its own opcode ahead of the act on it
+-- (`choiceAhead`): "tap any number of untapped artifacts you control" is one
+-- printed instruction, so the choice's classification rides with the tap.
+--
+-- Two rulings settle what happenedBetween's board difference cannot
+-- (`instructionDone`). An "any number" choice is done whatever it picks,
+-- since CR 107.1c makes zero a full answer: Yotia Declares War's
+-- 2022-09-09 ruling, proved by the scenario "CR 603.12 Yotia Declares War
+-- tapping zero artifacts still arms its reflexive". And a draw or a mill that
+-- found too few cards (`GameState.fellShort`) is not done: The Royal Scions'
+-- 2019-10-04 ruling, proved by "CR 603.12 The Royal Scions drawing two of four
+-- arms no reflexive", and Wick's Patrol's for the mill, by "CR 603.12 Wick's
+-- Patrol milling two of three arms no reflexive". Both are CR 603.12's alone:
+-- CR 118.12's "If you do" asks whether a cost was started, whatever it came to
+-- (Resolve.recordTaken).
 applyClauseEffects ::
   ObjectId ->
   ObjectId ->
@@ -568,12 +584,71 @@ applyClauseEffects ::
 applyClauseEffects resolving source applyOne =
   let step previous effect = do
         arms <- State.gets (armsReflexive resolving source effect)
-        let skipped = arms && maybe False (not . uncurry happenedBetween) previous
+        let skipped = arms && maybe False (not . instructionDone) previous
         before <- State.get
         Monad.unless skipped (applyOne effect)
         after <- State.get
-        pure (Just (before, after))
+        let ahead = maybe False (\asked -> aheadOfNext asked && admitsNone asked) previous
+        pure (Just (MkAsked before after (ahead || choosesAnyNumber effect) (choiceAhead effect)))
    in Monad.foldM_ step Nothing
+
+-- One instruction of applyClauseEffects' fold, as the next one asks about it:
+-- the states it ran between, whether its choice -- or one written ahead of it
+-- (`choiceAhead`) -- admitted choosing none, and whether it is itself such a
+-- choice.
+data Asked = MkAsked
+  { askedBefore :: GameState,
+    askedAfter :: GameState,
+    admitsNone :: Bool,
+    aheadOfNext :: Bool
+  }
+
+-- CR 603.12's "when you do", asked of the instruction before an arm.
+instructionDone :: Asked -> Bool
+instructionDone asked =
+  admitsNone asked
+    || ( happenedBetween (askedBefore asked) (askedAfter asked)
+           && GameState.fellShort (askedAfter asked) == GameState.fellShort (askedBefore asked)
+       )
+
+-- CR 107.1c: does this instruction choose "any number", so that choosing none
+-- is a full answer? A classification of the choice it makes, read off its
+-- count. "Up to N" is not: Nihiloor's 2021-07-23 ruling puts a reflexive on
+-- the stack "for each creature you tapped", and the scenario "CR 603.12 /
+-- 608.2f Nihiloor tapping nothing for one opponent arms no reflexive for them"
+-- holds it. The ObjectRef half goes through effectObjectRefs, the one
+-- enumeration of where a ref sits; the opcodes carrying a count of their own
+-- are named. Only ChoosePermanents is observed (Yotia Declares War); the other
+-- arms are a REGRESSION FENCE, since no card in data/cards/ puts them ahead of
+-- a mandatory "when you do".
+choosesAnyNumber :: Effect card ability -> Bool
+choosesAnyNumber effect =
+  any refChoosesAnyNumber (effectObjectRefs effect) || case effect of
+    Effect.ChoosePermanents choice -> anyNumber (ChosenPermanents.count (ChoosePermanents.permanents choice))
+    Effect.Discard (Discard.AnyNumber discard) -> Maybe.isNothing (AnyNumberMatching.atMost (AnyNumberDiscard.cards discard))
+    Effect.RemoveCountersAmong removal -> case RemoveCountersAmong.count removal of
+      RemovalCount.Exactly {} -> False
+      RemovalCount.UpTo {} -> False
+      RemovalCount.AnyNumber -> True
+    _ -> False
+  where
+    anyNumber howMany = howMany == HowMany.UpTo Nothing
+    refChoosesAnyNumber ref = case ref of
+      ObjectRef.ChosenPermanents chosen -> anyNumber (ChosenPermanents.count chosen)
+      ObjectRef.ChosenCardFromAmong chosen -> anyNumber (ChosenCardFromAmong.count chosen)
+      ObjectRef.AllOf refs -> any refChoosesAnyNumber refs
+      _ -> False
+
+-- CR 608.2d: a choice bound for the NEXT instruction to act on, which is how
+-- pawl writes the choosing half of one printed instruction.
+choiceAhead :: Effect card ability -> Bool
+choiceAhead effect = case effect of
+  Effect.ChoosePermanents {} -> True
+  _ -> False
+
+-- CR 603.12: record that an instruction did fewer than the number it named.
+fallShort :: Game ()
+fallShort = State.modify' (\gs -> gs {GameState.fellShort = GameState.fellShort gs + 1})
 
 -- CR 603.12: did the instruction that took the game from `before` to `after`
 -- HAPPEN? Also CR 118.12's "started to pay a mandatory cost", for
@@ -584,7 +659,8 @@ applyClauseEffects resolving source applyOne =
 -- deliberately unforced), the allocators, interning and Oracle-reference memos
 -- an instruction advances before finding nothing to do, CR 104.4b's lastChoice
 -- (an offer answered with nothing), CR 121.4's drewFromEmpty (an attempted
--- draw), CR 607.2a's exiledWith and CR 406.4's exilePiles (applyEffectWith
+-- draw) and fellShort (an instruction finding too few cards, which only
+-- applyClauseEffects reads), CR 607.2a's exiledWith and CR 406.4's exilePiles (applyEffectWith
 -- prunes both after EVERY instruction, and a card can leave exile off that
 -- road -- CR 704.5d ceasing a token -- so the prune of a stale key is no act;
 -- a real exile already shows in `exile` and `objects`), and every bound
@@ -601,12 +677,8 @@ applyClauseEffects resolving source applyOne =
 --
 -- docs/decisions.md's Site line names the tests proving the exiledWith,
 -- exilePiles, nextTimestamp and nextEventGroup copies. The rest is a
--- REGRESSION FENCE rather than a proved line: no pool card puts an offering,
--- drawing or tallying instruction directly before a reflexive arm or an "If
--- you do", so un-copying lastChoice leaves the suite green.
---
--- Not implemented: an "any number" choice of zero counting as done (#5334),
--- and a numbered instruction done only in part not counting (#5335).
+-- REGRESSION FENCE rather than a proved line: un-copying lastChoice leaves the
+-- suite green.
 happenedBetween :: GameState -> GameState -> Bool
 happenedBetween before after =
   let tallyless :: Map.Map SlotName Binding.Type.Binding -> Map.Map SlotName Binding.Type.Binding
@@ -629,6 +701,7 @@ happenedBetween before after =
             GameState.referenceNames = GameState.referenceNames before,
             GameState.lastChoice = GameState.lastChoice before,
             GameState.drewFromEmpty = GameState.drewFromEmpty before,
+            GameState.fellShort = GameState.fellShort before,
             GameState.exiledWith = GameState.exiledWith before,
             GameState.exilePiles = GameState.exilePiles before,
             GameState.ambientAmounts = GameState.ambientAmounts before,
@@ -4596,7 +4669,10 @@ applyOneEffect runSubgame resolving source controller legal chosen effect = case
     gs <- State.get
     let handIds = Game.zoneMembers Zone.Hand controller gs
     Monad.void (Event.changeZonesTogether (fmap (\oid -> (oid, Zone.Exile)) handIds))
-    Monad.replicateM_ (length handIds) (Event.drawCard controller)
+    got <- Maybe.catMaybes <$> Monad.replicateM (length handIds) (Event.drawCardReturning controller)
+    -- CR 603.12: the Draw arm's shortfall. A REGRESSION FENCE: nothing arms a
+    -- reflexive after it.
+    Monad.when (length got < length handIds) fallShort
   -- CR 607.2e: the note is the ACTIVATION's CR 602.2b payment -- recorded on
   -- the ability object as Object.manaSpent -- filed against the SOURCE, whose linked
   -- mana ability reads it back (ManaProduction.Noted). Ice Cauldron's ruling
@@ -6134,13 +6210,18 @@ applyOneEffect runSubgame resolving source controller legal chosen effect = case
               -- the count those draws run on is the one this loop leaves standing,
               -- and a row that replaced the instruction outright leaves none.
               outcome <- Event.applyReplacements (ProposedEvent.WouldPerform PlayerInstruction.DrawCards Nothing pid (Integer.toNaturalSaturating n))
-              case outcome >>= Replacement.asPerformed PlayerInstruction.DrawCards of
+              got <- case outcome >>= Replacement.asPerformed PlayerInstruction.DrawCards of
                 Nothing -> pure []
                 -- CR 121.2: draw the settled count one at a time, so each draw
                 -- re-reads the library top and the CR 104.3c empty-library loss is
                 -- preserved.
                 Just (drawer, settled) ->
                   Maybe.catMaybes <$> Monad.replicateM (Natural.toIntSaturating settled) (Event.drawCardReturning drawer)
+              -- CR 603.12: fewer cards drawn than the instruction named, against
+              -- the count BEFORE any replacement -- The Royal Scions' 2019-10-04
+              -- rulings, fewer than four does not trigger and five or more does.
+              Monad.when (List.genericLength got < n) fallShort
+              pure got
         _ -> pure []
     -- CR 121.1's "and reveal IT": the cards the draw put into a hand, for a later
     -- clause of this resolution to name (#1899). The ids are the ones the CR 400.7
@@ -6187,6 +6268,9 @@ applyOneEffect runSubgame resolving source controller legal chosen effect = case
     milledBy <- Monad.forM wanted $ \(pid, n) -> do
       (taken, arrived) <- Event.millFromReturningTaken pid n
       Monad.unless (null arrived) (State.modify' (Event.recordEvent (GameEvent.Milled (Milled.MkMilled pid (Seq.fromList arrived)))))
+      -- CR 701.17b / 603.12: a library too short for the count named, the Draw
+      -- arm's shortfall (Wick's Patrol's 2024-07-26 ruling).
+      Monad.when (List.genericLength taken < n) fallShort
       pure (taken, arrived)
     let milled = concatMap fst milledBy
         arrivals = concatMap snd milledBy
