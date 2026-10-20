@@ -22,8 +22,10 @@ import qualified Pawl.Types.RuleAbilities as RuleAbilities
 -- The two BOUNDING arms answer Nothing and carry no such field: CR 116.2d's
 -- offer goes to a player, every printed producer's sentence derives that player
 -- from the object the effect is aimed at ("that creature's controller"), and a
--- bound names no creature for anyone to be the controller of. So a named bound
--- would be a name nothing could ever pay to ignore.
+-- whole-declaration bound names no creature for anyone to be the controller of.
+-- A per-attacker bound (Charging Rhino) does name one, but none of CR 116.2d's
+-- four printed producers -- Leonin Arbiter, Damping Engine, Volrath's Curse,
+-- Lost in Thought -- states a bound, so it carries no name either.
 nameOf :: CombatRestriction.CombatRestriction -> Maybe AbilityName.AbilityName
 nameOf cr = case cr of
   CombatRestriction.CantAttack (AffectedUnless.MkAffectedUnless _ _ n) -> n

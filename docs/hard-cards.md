@@ -43,7 +43,7 @@ issue; an expressible card not yet in the pool is a plain card add.
 | Knowledge Pool | A cast trigger exiling the spell into a linked pool, then the caster casting another pooled card mid-resolution (CR 601.2i, 607.2a, 608.2g, 118.12) | Expressible, not in pool |
 | Doubling Season | Effect-only replacements on tokens and counters, ordered by the affected player against others; costs untouched (CR 614.16, 616.1) | Proven: `data/scenarios/replacement/cr-616-1-*` with Hardened Scales, planeswalker loyalty scenarios |
 | Wear // Tear | Split-card characteristics varying by zone; fuse casting both halves from hand (CR 709.4, 702.102) | Proven: `CastRestrictionSpec` `wearTearSpec`; hand-only gate untested (#4791) |
-| Nacatl War-Pride | Blocking requirements and a per-attacker restriction maximised across token copies (CR 509.1b, 509.1c) | Gap (#4790) |
+| Nacatl War-Pride | A requirement obeyed only by exactly one blocker, maximised across token copies (CR 509.1c) | Gap (#5380) |
 | Deflection | Changing a spell's single target (CR 115.7a, 601.2c) | Proven: `TargetSpec` `deflectionSpec` |
 | Fork | Copying a spell with a colour exception and new targets (CR 707.10, 707.9b) | Expressible, not in pool |
 | Isochron Scepter | Linked imprint; casting a copy of an exiled card, repeatably (CR 607.2a, 707.12) | Expressible, not in pool |

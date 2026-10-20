@@ -1342,7 +1342,7 @@ rewriteCombatRestriction pairs restriction =
               }
         CombatRestriction.CantAttackPlayer x -> CombatRestriction.CantAttackPlayer x {CantAttackPlayer.affected = rewriteAffected pairs (CantAttackPlayer.affected x), CantAttackPlayer.unless = unlessOf (CantAttackPlayer.unless x)}
         CombatRestriction.CantAttackMoreThan x -> CombatRestriction.CantAttackMoreThan x {AttackLimitUnless.unless = unlessOf (AttackLimitUnless.unless x)}
-        CombatRestriction.CantBlockMoreThan x -> CombatRestriction.CantBlockMoreThan x {LimitUnless.unless = unlessOf (LimitUnless.unless x)}
+        CombatRestriction.CantBlockMoreThan x -> CombatRestriction.CantBlockMoreThan x {LimitUnless.attackers = fmap (rewriteAffected pairs) (LimitUnless.attackers x), LimitUnless.unless = unlessOf (LimitUnless.unless x)}
 
 -- CR 612.2a's name half, gated on both words being creature types -- CR 612.2
 -- prohibits every other family. EVERY occurrence, since CR 111.4's derived name

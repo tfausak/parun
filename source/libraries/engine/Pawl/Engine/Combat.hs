@@ -1265,8 +1265,10 @@ landwalkAllowsGiven (Snapshot.MkSnapshot pcs grants) attacker gs =
          in Set.member CardType.Land (Filter.cardTypes view) && Filter.matches context view criterion
    in not (any (\criterion -> any (matchesCriterion criterion) defendersLands) walked)
 
--- CR 702.111b: a creature with menace can't be blocked except by two or more
--- creatures.
+-- CR 509.1b's restrictions on HOW MANY creatures block one attacker, both
+-- directions: CR 702.111b's menace, which can't be blocked except by two or
+-- more creatures, and a card's "can't be blocked by more than N creatures"
+-- (Charging Rhino), whose bounds `most` carries keyed by attacker.
 --
 -- The blocking side's SET-SHAPED restriction, aloneAllows' twin, and the reason
 -- this takes the whole declaration where its siblings above take a pair.
@@ -1278,18 +1280,17 @@ landwalkAllowsGiven (Snapshot.MkSnapshot pcs grants) attacker gs =
 -- evasionAllows' asymmetry, so a creature with menace blocking alone is legal.
 -- Membership rather than a per-keyword count (CR 702.111c), so a creature with two
 -- instances still needs two blockers rather than four.
-menaceAllows :: Map ObjectId (Set ObjectId) -> GameState -> Bool
-menaceAllows = menaceAllowsGiven Map.empty
-
-menaceAllowsGiven :: Map ObjectId PC.ProjectedCharacteristics -> Map ObjectId (Set ObjectId) -> GameState -> Bool
-menaceAllowsGiven pcs declaration gs =
+blockerCountsAllowedGiven :: Map ObjectId Natural -> Map ObjectId PC.ProjectedCharacteristics -> Map ObjectId (Set ObjectId) -> GameState -> Bool
+blockerCountsAllowedGiven most pcs declaration gs =
   let -- blocker -> attackers inverted into attacker -> how many blockers. One
       -- blocker declared against two attackers counts once for each of them and
       -- never twice: CR 702.111b counts CREATURES blocking, not blocks.
       blockerCounts = Map.fromListWith (+) (fmap (\attacker -> (attacker, 1 :: Int)) (concatMap Set.toList (Map.elems declaration)))
       -- The count first, so a comfortably blocked attacker never pays for a
       -- keyword read inside bestBlockDeclaration's search.
-      allowed (attacker, count) = count >= 2 || not (Projection.hasKeywordGiven pcs Keyword.Menace attacker gs)
+      allowed (attacker, count) =
+        withinLimit (Map.lookup attacker most) count
+          && (count >= 2 || not (Projection.hasKeywordGiven pcs Keyword.Menace attacker gs))
    in all allowed (Map.toList blockerCounts)
 
 -- CR 509.1b asked of ONE (blocker, attacker) pair: may this creature block that
@@ -1335,13 +1336,14 @@ pairAllowedGiven board@(Snapshot.MkSnapshot pcs _) barred candidates attackers b
 -- constrains the SET blocking an attacker, which no per-pair predicate can express.
 --
 -- All three shapes of restriction are asked here, one conjunct each: pairAllowed
--- over the pairs, menaceAllows over the creatures blocking each attacker, and the
--- bound over the declaration's SIZE. CR 509.1a's per-creature ARITY is a fourth
--- conjunct -- not a restriction, but a fact about the declaration. This is also
+-- over the pairs, blockerCountsAllowedGiven over the creatures blocking each
+-- attacker, and the bound over the declaration's SIZE. CR 509.1a's per-creature
+-- ARITY is a fourth conjunct -- not a restriction, but a fact about the
+-- declaration. This is also
 -- the seam bestBlockDeclaration's search judges each leaf through, and it takes
 -- a projected board and a hoisted `limit` because it is asked once per leaf.
-blockDeclarationAllowed :: Maybe Natural -> (ObjectId -> Maybe Natural) -> Map ObjectId PC.ProjectedCharacteristics -> (ObjectId -> ObjectId -> Bool) -> Map ObjectId (Set ObjectId) -> GameState -> Bool
-blockDeclarationAllowed limit arity pcs able declaration gs =
+blockDeclarationAllowed :: Maybe Natural -> Map ObjectId Natural -> (ObjectId -> Maybe Natural) -> Map ObjectId PC.ProjectedCharacteristics -> (ObjectId -> ObjectId -> Bool) -> Map ObjectId (Set ObjectId) -> GameState -> Bool
+blockDeclarationAllowed limit most arity pcs able declaration gs =
   -- CR 509.1b restriction-checks every creature against every creature it is
   -- declared against: a blocker may block a flier and a non-flier only if it could
   -- block each alone.
@@ -1349,7 +1351,7 @@ blockDeclarationAllowed limit arity pcs able declaration gs =
     -- withinLimit and not a bare comparison, so Palace Guard's unbounded arity is
     -- the same Nothing Silent Arbiter's absent bound already is.
     && all (\(blocker, attackers) -> withinLimit (arity blocker) (Set.size attackers)) (Map.toList declaration)
-    && menaceAllowsGiven pcs declaration gs
+    && blockerCountsAllowedGiven most pcs declaration gs
     -- Silent Arbiter's second sentence counts BLOCKING CREATURES, so an entry
     -- naming two attackers is still one creature. Empty entries are dropped.
     && withinLimit limit (Map.size (Map.filter (not . Set.null) declaration))
@@ -1398,8 +1400,8 @@ declaredPairs declaration =
 -- maximum with a number that is not the maximum. The worst case is still
 -- exponential -- an unbounded arity against wanted menace attackers -- but it
 -- is now the worst case rather than every case.
-bestBlockDeclaration :: Requirement.Instances (ObjectId, ObjectId) -> Maybe Natural -> (ObjectId -> Maybe Natural) -> Map ObjectId PC.ProjectedCharacteristics -> (ObjectId -> ObjectId -> Bool) -> [ObjectId] -> [ObjectId] -> GameState -> Map ObjectId (Set ObjectId)
-bestBlockDeclaration requirements limit arity pcs able candidates attackers gs =
+bestBlockDeclaration :: Requirement.Instances (ObjectId, ObjectId) -> Maybe Natural -> Map ObjectId Natural -> (ObjectId -> Maybe Natural) -> Map ObjectId PC.ProjectedCharacteristics -> (ObjectId -> ObjectId -> Bool) -> [ObjectId] -> [ObjectId] -> GameState -> Map ObjectId (Set ObjectId)
+bestBlockDeclaration requirements limit most arity pcs able candidates attackers gs =
   let weights = Requirement.pairs requirements
       -- Every pair some requirement names, a GROUP's members included: a block
       -- of one of those is what obeys the group, so the same options walk
@@ -1424,6 +1426,11 @@ bestBlockDeclaration requirements limit arity pcs able candidates attackers gs =
               )
               candidates
           )
+      -- Whether `attacker` already has as many blockers as its CR 509.1b
+      -- per-attacker bound allows.
+      full declaration attacker = case Map.lookup attacker most of
+        Nothing -> False
+        Just n -> not (withinLimit (Just n) (length (filter (Set.member attacker) (Map.elems declaration)) + 1))
       -- How many more blockers may block under `limit`.
       room used = case limit of
         Nothing -> Nothing
@@ -1440,13 +1447,16 @@ bestBlockDeclaration requirements limit arity pcs able candidates attackers gs =
           then best
           else case remaining of
             [] ->
-              if blockDeclarationAllowed limit arity pcs able declaration gs
+              if blockDeclarationAllowed limit most arity pcs able declaration gs
                 then (declaration, met)
                 else best
             (blocker, options, _) : rest ->
               let try acc chosen
                     | Set.null chosen = go acc declaration met used rest obeyed
                     | room used == Just 0 = acc
+                    -- A per-attacker bound already met stays exceeded at every
+                    -- leaf below, so the branch is cut here.
+                    | any (full declaration) (Set.toList chosen) = acc
                     | otherwise =
                         -- A REGRESSION FENCE rather than a proved line: with
                         -- every group weighing one, neutralizing this gain
@@ -1500,7 +1510,7 @@ blockCeiling pid gs = blockCeilingGiven (Snapshot.whole gs) pid gs
 
 blockCeilingGiven :: Snapshot.Snapshot -> PlayerId -> GameState -> (Requirement.Instances (ObjectId, ObjectId), Map ObjectId (Set ObjectId))
 blockCeilingGiven board pid gs =
-  let (candidates, attackers, barred, limit) = blockScopeGiven board pid gs
+  let (candidates, attackers, barred, (limit, most)) = blockScopeGiven board pid gs
       able blocker attacker = pairAllowedGiven board barred candidates attackers blocker attacker gs
       arity = blockArityGiven candidates gs
       requirements = BlockRequirement.instances able candidates attackers gs
@@ -1512,7 +1522,7 @@ blockCeilingGiven board pid gs =
    in ( requirements,
         if Requirement.vacuous requirements
           then Map.empty
-          else bestBlockDeclaration requirements limit arity (Snapshot.projected board) freely candidates attackers gs
+          else bestBlockDeclaration requirements limit most arity (Snapshot.projected board) freely candidates attackers gs
       )
 
 -- CR 509.1: is this declaration one the defending player may make? Both checks
@@ -1528,26 +1538,28 @@ legalBlockDeclaration pid declaration gs =
   let board = Snapshot.whole gs
       -- pairAllowedGiven refuses a pair whose attacker is not on `attackers`,
       -- which is CR 802.4a's restriction.
-      (candidates, attackers, barred, limit) = blockScopeGiven board pid gs
+      (candidates, attackers, barred, (limit, most)) = blockScopeGiven board pid gs
       able blocker attacker = pairAllowedGiven board barred candidates attackers blocker attacker gs
       arity = blockArityGiven candidates gs
       (requirements, best) = blockCeilingGiven board pid gs
-   in blockDeclarationAllowed limit arity (Snapshot.projected board) able declaration gs
+   in blockDeclarationAllowed limit most arity (Snapshot.projected board) able declaration gs
         && requirementsMet requirements declaration >= requirementsMet requirements best
 
 -- CR 509.1 / 805.10d: what a block declaration by `pid`'s side is judged over --
 -- its candidate blockers, the attackers they may block, CR 509.1b's barred pairs
--- and its bound. One defending player's own under CR 802.4a / 802.4b, judged
--- ignoring any creature attacking anyone else; under the shared team turns
--- option the defending team's one combined block, whose creatures may block a
--- creature attacking any of its players.
+-- and its bounds, on the whole declaration and per attacker. One defending
+-- player's own under CR 802.4a / 802.4b, judged ignoring any creature
+-- attacking anyone else; under the shared team turns option the defending
+-- team's one combined block, whose creatures may block a creature attacking any
+-- of its players.
 --
 -- Each player's bound is read at their own seat, the defending player CR 509.1a
 -- names, and the tightest among them binds the whole block; a pairwise gate is
--- read at the attacker's defending player instead (`barredBlocks`).
+-- read at the attacker's defending player instead (`barredBlocks`), and a
+-- per-attacker bound at the seat that attacker is attacking.
 -- One walk for the whole search: CR 509.1b's pairwise restrictions are decided
 -- once here and read by every pair the caller judges.
-blockScopeGiven :: Snapshot.Snapshot -> PlayerId -> GameState -> ([ObjectId], [ObjectId], Set (ObjectId, ObjectId), Maybe Natural)
+blockScopeGiven :: Snapshot.Snapshot -> PlayerId -> GameState -> ([ObjectId], [ObjectId], Set (ObjectId, ObjectId), (Maybe Natural, Map ObjectId Natural))
 blockScopeGiven board pid gs =
   let side = sideOf pid gs
       attackers = concatMap (`attackersOn` gs) side
@@ -1556,7 +1568,8 @@ blockScopeGiven board pid gs =
       limit = case Maybe.mapMaybe (\p -> CombatRestriction.blockLimit (Just p) gs) side of
         [] -> Nothing
         bounds -> Just (minimum bounds)
-   in (concatMap snd seats, attackers, barred, limit)
+      most = Map.unionsWith min (fmap (\p -> CombatRestriction.blockedLimits (Just p) (attackersOn p gs) gs) side)
+   in (concatMap snd seats, attackers, barred, (limit, most))
 
 -- CR 509.1a: how many attacking creatures each of `candidates` may be declared
 -- blocking -- the rule's one, plus whatever Pawl.Engine.BlockPermission adds, and

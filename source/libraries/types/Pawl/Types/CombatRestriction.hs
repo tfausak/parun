@@ -47,9 +47,11 @@ import qualified Pawl.Types.LimitUnless as LimitUnless
 -- The THIRD shape bounds the SIZE of a declaration from above, which is Silent
 -- Arbiter's "no more than one creature can attack each combat". CantAttackAlone
 -- is not it turned around: it NAMES creatures and asks whether the declaration
--- holds one of them and nothing else, where a bound names no creature at all --
--- so those two arms carry a NUMBER where every other arm carries an Affected,
--- and no Affected could have stood in for it. CR 508.1d's own Example writes the
+-- holds one of them and nothing else, where a bound needs name no creature at
+-- all -- so those two arms carry a NUMBER where every other arm carries an
+-- Affected, and no Affected could have stood in for it. A blocking bound MAY
+-- name the attackers it is counted against (Charging Rhino), which scopes the
+-- number rather than replacing it. CR 508.1d's own Example writes the
 -- sentence with no subject to name -- "An effect states 'No more than one
 -- creature can attack each turn.'" -- and a vacuous Affected would be read by
 -- Pawl.Engine.CombatRestriction and reported by Pawl.CardSpec as card data the
@@ -250,7 +252,8 @@ data CombatRestriction
     -- exclude it anyway.
     CantAttackMoreThan AttackLimitUnless.AttackLimitUnless
   | -- | CR 509.1b, the same bound on the other declaration. Silent Arbiter's
-    -- second sentence, and the arm above's reasoning holds unchanged: CR 506.1
+    -- second sentence; scoped to attackers, the bound on the creatures blocking
+    -- each of them (Charging Rhino). The arm above's reasoning holds unchanged: CR 506.1
     -- gives a combat phase one declare blockers step, CR 703.4j makes
     -- Pawl.Engine.Combat.declareBlockers its turn-based action, and CR 509.1a
     -- names a single defending player to make it.
