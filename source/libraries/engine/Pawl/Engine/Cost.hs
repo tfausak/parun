@@ -6916,9 +6916,12 @@ payPayable moment paidFor slots pid oid component = case component of
   -- ALWAYS PAID. The outcome is not a payment condition -- `canPayComponent`
   -- above says why -- and the flip BINDS NOTHING: rule 705.1 names nothing the
   -- rest of the cost or a later clause could read.
+  --
+  -- No CR 706 thrower reaches this module, so Pokey, the Scallywagg's roll is
+  -- not offered for a cost's flip (#5350).
   CostComponent.FlipCoin -> do
     statements <- Coin.statementsFor (Just pid)
-    _ <- Event.flipWinLoseCoin pid statements
+    _ <- Event.flipWinLoseCoin Nothing pid statements
     pure bindsNothing
   -- CR 702.174a's first ability, paid by naming the opponent the gift is
   -- promised to, through Prompt.ChooseOpponent carrying the promise it records,

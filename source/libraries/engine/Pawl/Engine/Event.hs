@@ -2297,8 +2297,12 @@ apply batch candidate event =
         before <- State.get
         let flipper = Projection.controllerOf oid before
         statements <- Coin.statementsFor flipper
-        (face, stated) <- flipOneCoin flipper statements
-        let picked = case face of
+        -- No CR 706 thrower reaches this module, so Pokey, the Scallywagg's roll
+        -- is not offered here (#5350); `flipOneCoin` says how it is kept out. The Left
+        -- arm is unreachable for that reason.
+        flipped <- flipOneCoin Nothing flipper statements
+        let (face, stated) = either (\rolled -> (Maybe.fromMaybe CoinFace.Tails rolled, False)) id flipped
+            picked = case face of
               CoinFace.Heads -> EntryFlip.heads entryFlip
               CoinFace.Tails -> EntryFlip.tails entryFlip
         -- CR 614.3, ChoiceOf's call verbatim. UNPROVEN by any board: `consume`
@@ -3999,6 +4003,18 @@ apply batch candidate event =
         Monad.forM_ (outcome >>= Replacement.asPerformed PlayerInstruction.DrawCards) $ \(drawer, settled) ->
           Monad.replicateM_ (Natural.toIntSaturating settled) (drawCard drawer)
         pure Nothing
+      -- Pokey, the Scallywagg's "you may instead roll a d20" (CR 614.6): the
+      -- flip becomes a roll IN THIS LOOP rather than an event proposed apart, so
+      -- CR 616.2 offers it to Pixie Guide, CR 614.5 keeps every row already
+      -- applied off it -- Pokey's ruling, "the nonsense stops there" -- and a
+      -- flip row such as Krark's Thumb no longer applies to it. `flipOneCoin`
+      -- throws the roll it settles to and reads the face back.
+      InstructionRewrite.RollD20Instead -> do
+        exercised <- substitutes candidate
+        pure . Just $
+          if not exercised
+            then event
+            else ProposedEvent.WouldRollDice DiceRoll.MkDiceRoll {DiceRoll.roller = pid, DiceRoll.dice = 1, DiceRoll.ignored = 0, DiceRoll.sides = 20, DiceRoll.forCoin = True}
     -- Unreachable: `applies` admits InstructionR only against an instruction.
     (ReplacementEffect.InstructionR {}, _) -> pure (Just event)
     -- CR 706.1 / 614.1a: Pixie Guide's "instead roll that many dice plus one and
@@ -4025,6 +4041,16 @@ apply batch candidate event =
                     }
               )
           )
+      -- The mirror of InstructionRewrite.RollD20Instead above, and for its
+      -- reason: Pokey's "you may instead flip a coin" leaves a flip standing in
+      -- this loop, which Krark's Thumb may then resize, and `proposeDiceRoll`
+      -- flips it and reads the result back.
+      DieRollRewrite.FlipCoinInstead -> do
+        exercised <- substitutes candidate
+        pure . Just $
+          if not exercised
+            then event
+            else ProposedEvent.WouldPerform PlayerInstruction.FlipCoin Nothing (DiceRoll.roller roll) 1
     -- Unreachable: `applies` admits DieRollR only against WouldRollDice.
     (ReplacementEffect.DieRollR {}, _) -> pure (Just event)
     -- The Unstable FAQ with CR 614.1a: Steamflogger Boss's "it assembles two
@@ -5395,18 +5421,75 @@ resolveLifeGain pid n =
 -- Projection.controllerOf, which is a Maybe. No seat means no replacement can
 -- apply -- CR 614.1a's rows for this class are all about a particular player --
 -- so the flip is settled with the one coin rule 705.1 gives it.
-flipOneCoin :: Maybe PlayerId -> [StatedFlip.StatedFlip] -> Game (CoinFace.CoinFace, Bool)
-flipOneCoin mFlipper stated = do
-  coins <- case mFlipper of
-    Nothing -> pure 1
-    Just pid -> do
-      outcome <- applyReplacements (ProposedEvent.WouldPerform PlayerInstruction.FlipCoin Nothing pid 1)
+--
+-- Answers Left where CR 614.6 replaced the flip with a die roll (Pokey, the
+-- Scallywagg): the face that roll is read as, Nothing for a result outside
+-- Pokey's 1-20 -- its ruling's "doesn't see heads nor tails". No coin was flipped,
+-- so no CR 705.3 statement applies and the caller records no CoinFlipped; the
+-- roll records its own events, through `throw`.
+--
+-- `throw` is the caller's CR 706 road for that roll (Pawl.Engine.Resolve.Effect's
+-- throwDice), which this module cannot reach. Nothing keeps the substitution out
+-- of CR 616.1's offer: a share of 0 in CR 615.7's allowances, the door
+-- Replacement.allocatedOut already gives a row. Not implemented: substituting a
+-- roll on a road with no CR 706 thrower (#5350).
+flipOneCoin :: Maybe (DiceRoll.DiceRoll -> Game [Natural]) -> Maybe PlayerId -> [StatedFlip.StatedFlip] -> Game (Either (Maybe CoinFace.CoinFace) (CoinFace.CoinFace, Bool))
+flipOneCoin throw mFlipper stated = case mFlipper of
+  Nothing -> Right <$> flipCoins Nothing 1 stated
+  Just pid -> do
+    gs <- State.get
+    let proposal = ProposedEvent.WouldPerform PlayerInstruction.FlipCoin Nothing pid 1
+        kept :: Map CandidateId Natural
+        kept = case throw of
+          Just _ -> Map.empty
+          Nothing -> Map.fromList [(ReplacementCandidate.identity c, 0) | c <- Replacement.applicable Nothing gs proposal, Replacement.substitutesAction (ReplacementCandidate.effect c)]
+    (outcome, _, _, _, _, _) <- applyReplacementsFully Nothing Set.empty kept proposal
+    case (outcome >>= Replacement.asDiceRoll, throw) of
+      (Just roll, Just thrower) -> Left . faceOfRoll <$> thrower roll
       -- A cancelled flip is unreachable: Pawl.EffectLintSpec's "no card pairs an
       -- instruction with a rewrite the engine cannot carry out" admits
       -- InstructionRewrite.DrawInstead on a scry alone. A row that cancelled a
       -- flip would be WRONG here, not merely defended against -- CR 614.6's flip
-      -- would not happen, and this still flips one coin.
-      pure (maybe 1 snd (outcome >>= Replacement.asPerformed PlayerInstruction.FlipCoin))
+      -- would not happen, and this still flips one coin. A roll with no thrower
+      -- is unreachable too, `kept` above being what keeps it out.
+      _ -> Right <$> flipCoins mFlipper (maybe 1 snd (outcome >>= Replacement.asPerformed PlayerInstruction.FlipCoin)) stated
+
+-- Pokey, the Scallywagg's "1-10 is tails and 11-20 is heads", read off the one
+-- roll its d20 kept (CR 706.6 drops Pixie Guide's extra). Nothing for any other
+-- number -- a modifier can carry the result past 20 -- or for no result at all.
+faceOfRoll :: [Natural] -> Maybe CoinFace.CoinFace
+faceOfRoll results = case results of
+  [result]
+    | result >= 1 && result <= 10 -> Just CoinFace.Tails
+    | result >= 11 && result <= 20 -> Just CoinFace.Heads
+  _ -> Nothing
+
+-- Pokey's "tails is 1 and heads is 20": the number a coin flipped instead of a
+-- d20 stands for.
+resultOfFace :: CoinFace.CoinFace -> Natural
+resultOfFace face = case face of
+  CoinFace.Tails -> 1
+  CoinFace.Heads -> 20
+
+-- Pokey, the Scallywagg's "you may" (CR 614.1a), asked of the row's controller,
+-- whose flip or roll its "you" watches; spent under CR 614.3 when taken. With no
+-- controller nobody is asked and the row is not applied, ZoneChangeR's optional
+-- posture.
+substitutes :: ReplacementCandidate -> Game Bool
+substitutes candidate = case ReplacementCandidate.controller candidate of
+  Nothing -> pure False
+  Just pid -> do
+    gs <- State.get
+    answer <- Game.choose (Prompt.ChooseSubstitute (Decide.deciderFor pid gs) pid (ReplacementCandidate.source candidate))
+    let exercised = answer == OptionalDecision.Exercises
+    Monad.when exercised (Replacement.consume (ReplacementCandidate.identity candidate))
+    pure exercised
+
+-- CR 705.1: flip the settled number of coins, keep one (Krark's Thumb's "ignore
+-- one"), and apply CR 705.3's statements -- `flipOneCoin`'s flip once CR 614's
+-- loop has settled it, and `proposeDiceRoll`'s for a roll Pokey replaced.
+flipCoins :: Maybe PlayerId -> Natural -> [StatedFlip.StatedFlip] -> Game (CoinFace.CoinFace, Bool)
+flipCoins mFlipper coins stated = do
   faces <- Monad.replicateM (Natural.toIntSaturating coins) (Game.ask Prompt.FlipCoin)
   -- CR 705.1 designates exactly two sides, so the coins that came up carry at
   -- most two distinct answers and every face this prompt is raised with is one a
@@ -5438,9 +5521,9 @@ flipOneCoin mFlipper stated = do
 -- the roll is a replaceable event, CR 614's loop lives in this module, and this
 -- module is on the importing side of that edge.
 --
--- Takes the count the INSTRUCTION named and answers what to actually do: how many
--- dice to throw, and how many of the lowest rolls CR 706.6 then ignores. Both
--- numbers rather than the count alone, because a row that adds a die adds an
+-- Takes the die and the count the INSTRUCTION named and answers the settled roll:
+-- how many dice to throw, and how many of the lowest rolls CR 706.6 then ignores.
+-- Both numbers rather than the count alone, because a row that adds a die adds an
 -- ignore with it and the caller cannot recover which from the count -- see
 -- Pawl.Types.DiceRoll.
 --
@@ -5448,18 +5531,39 @@ flipOneCoin mFlipper stated = do
 -- instruction that rolls none, so there is no event to replace and no row gets its
 -- CR 614.5 opportunity. (CR 107.2's posture upstream is what produces that count.)
 --
+-- Answers Left where CR 614.6 replaced the roll with a coin flip (Pokey, the
+-- Scallywagg): the flip is made HERE, with its CR 705.3 statements and its CR
+-- 705.1 event, and the number it stands for is the answer. No die was thrown, so
+-- the caller records no roll. The flip is CR 705.2's face-only kind -- Pokey's
+-- "tails is 1 and heads is 20" names no call -- so nobody wins it but by a
+-- statement.
+--
 -- A cancelled event is unreachable -- no arm of Pawl.Types.DieRollRewrite replaces
 -- the roll with nothing -- so the fallback is defensive, and in the direction rule
 -- 706.1 leaves standing: the instruction's own dice, none of them ignored.
-proposeDiceRoll :: PlayerId -> Natural -> Game (Natural, Natural)
-proposeDiceRoll pid named =
+proposeDiceRoll :: PlayerId -> Natural -> Natural -> Game (Either Natural DiceRoll.DiceRoll)
+proposeDiceRoll pid sides named = do
+  let proposed = DiceRoll.MkDiceRoll {DiceRoll.roller = pid, DiceRoll.dice = named, DiceRoll.ignored = 0, DiceRoll.sides = sides, DiceRoll.forCoin = False}
   if named == 0
-    then pure (0, 0)
+    then pure (Right proposed)
     else do
-      let proposed = DiceRoll.MkDiceRoll {DiceRoll.roller = pid, DiceRoll.dice = named, DiceRoll.ignored = 0}
       outcome <- applyReplacements (ProposedEvent.WouldRollDice proposed)
-      let roll = Maybe.fromMaybe proposed (outcome >>= Replacement.asDiceRoll)
-      pure (DiceRoll.dice roll, DiceRoll.ignored roll)
+      case (outcome >>= Replacement.asDiceRoll, outcome >>= Replacement.asPerformed PlayerInstruction.FlipCoin) of
+        (Just roll, _) -> pure (Right roll)
+        (Nothing, Just (flipper, coins)) -> do
+          statements <- Coin.statementsFor (Just flipper)
+          (face, won) <- flipCoins (Just flipper) coins statements
+          State.modify'
+            ( recordEvent
+                ( GameEvent.CoinFlipped
+                    CoinFlipped.MkCoinFlipped
+                      { CoinFlipped.flipper = flipper,
+                        CoinFlipped.won = if won then Just True else Nothing
+                      }
+                )
+            )
+          pure (Left (resultOfFace face))
+        (Nothing, Nothing) -> pure (Right proposed)
 
 -- CR 705.2's win/lose flip, whole: the call, the flip, the comparison and the CR
 -- 705.1 event. The ONE road for the kind of flip a player wins or loses --
@@ -5483,24 +5587,32 @@ proposeDiceRoll pid named =
 -- ignored when an effect states this player wins. Its stated FACE is applied
 -- inside `flipOneCoin`, before the comparison here sees the face, which is why a
 -- statement of heads alone still loses this flip against a call of tails.
-flipWinLoseCoin :: PlayerId -> [StatedFlip.StatedFlip] -> Game Bool
-flipWinLoseCoin pid statements = do
+--
+-- Where Pokey, the Scallywagg rolled instead, the instruction sees the face the
+-- roll is read as against the call, and no CR 705.1 event is recorded: Pokey's
+-- reminder, "it counts as rolling a die, not flipping a coin", so "whenever you
+-- win a coin flip" does not trigger.
+flipWinLoseCoin :: Maybe (DiceRoll.DiceRoll -> Game [Natural]) -> PlayerId -> [StatedFlip.StatedFlip] -> Game Bool
+flipWinLoseCoin throw pid statements = do
   gs <- State.get
   called <- Game.choose (Prompt.CallCoin (Decide.deciderFor pid gs) pid)
-  (face, stated) <- flipOneCoin (Just pid) statements
-  let matched = stated || face == called
-  State.modify'
-    ( recordEvent
-        ( GameEvent.CoinFlipped
-            CoinFlipped.MkCoinFlipped
-              { CoinFlipped.flipper = pid,
-                -- CR 705.2's win or loss, which this kind of flip always has --
-                -- the flipper made the call.
-                CoinFlipped.won = Just matched
-              }
+  flipped <- flipOneCoin throw (Just pid) statements
+  case flipped of
+    Left face -> pure (face == Just called)
+    Right (face, stated) -> do
+      let matched = stated || face == called
+      State.modify'
+        ( recordEvent
+            ( GameEvent.CoinFlipped
+                CoinFlipped.MkCoinFlipped
+                  { CoinFlipped.flipper = pid,
+                    -- CR 705.2's win or loss, which this kind of flip always has --
+                    -- the flipper made the call.
+                    CoinFlipped.won = Just matched
+                  }
+            )
         )
-    )
-  pure matched
+      pure matched
 
 -- CR 111.1: settle a proposed token creation. Nothing means none are created.
 resolveTokens :: PlayerId -> Seq.Seq TokenLot.TokenLot -> Game (Maybe (PlayerId, Seq.Seq TokenLot.TokenLot))

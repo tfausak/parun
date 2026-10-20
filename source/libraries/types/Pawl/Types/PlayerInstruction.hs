@@ -26,7 +26,9 @@ data PlayerInstruction
   | -- | CR 705.1: flip one coin, settled with this many coins. Raised by
     -- Pawl.Engine.Event.flipOneCoin once per flip, Krark's Thumb's ruling scoping
     -- its replacement to "each individual coin flip"; the flipper is CR 705.2's
-    -- only involved seat.
+    -- only involved seat. Also the event a d20 roll becomes inside its own CR
+    -- 616.1 loop when Pokey, the Scallywagg flips instead
+    -- (DieRollRewrite.FlipCoinInstead).
     FlipCoin
   | -- | CR 701.34a: proliferate this many times. Raised once per instruction by
     -- Pawl.Engine.Resolve.Effect's Proliferate arm.

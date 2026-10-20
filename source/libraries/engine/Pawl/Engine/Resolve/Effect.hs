@@ -204,6 +204,7 @@ import qualified Pawl.Types.Designate as Designate
 import qualified Pawl.Types.Designation as Designation
 import qualified Pawl.Types.Destroy as Destroy
 import qualified Pawl.Types.DiceReading as DiceReading
+import qualified Pawl.Types.DiceRoll as DiceRoll
 import qualified Pawl.Types.DieResult as DieResult
 import qualified Pawl.Types.DifferentIn as DifferentIn
 import qualified Pawl.Types.Discard as Discard
@@ -4889,7 +4890,7 @@ applyOneEffect runSubgame resolving source controller legal chosen effect = case
         -- playing, and in the instruction's scope.
         rollers = filter (\pid -> Game.inRangeOf controller pid before && PlayerEffect.inScope pid controller before (RollDie.roller rollDie)) (Game.apnapOrder before)
     rolled <- Monad.forM rollers $ \roller -> do
-      (results, throwers) <- throwDice runSubgame roller sides named perDie
+      (results, throwers, thrown) <- throwDice runSubgame roller sides named perDie
       used <- case (RollDie.store rollDie, RollDie.reading rollDie) of
         -- CR 706.8a: a storing instruction keeps every result rather than
         -- using one, so CR 706.4's reading is never asked.
@@ -4935,14 +4936,14 @@ applyOneEffect runSubgame resolving source controller legal chosen effect = case
               [rest] -> State.modify' (bindAmountSlot resolving source other rest)
               _ -> pure ()
           pure (Replacement.at results index (NonEmpty.head offered))
-      pure (roller, used, throwers, results)
+      pure (roller, used, (throwers, thrown), results)
     let top = fmap maximum (NonEmpty.nonEmpty [n | (_, Just n, _, _) <- rolled])
     Foldable.for_ top $ \n -> do
       State.modify' (bindAmountSlot resolving source (RollDie.slot rollDie) n)
       Foldable.for_ (RollDie.highest rollDie) $ \slot ->
         State.modify' (bindPlayerSlot resolving slot (Set.fromList [roller | (roller, Just m, _, _) <- rolled, m == n]))
-    Foldable.for_ rolled $ \(roller, _, throwers, results) ->
-      Monad.unless (null results) (recordRoll roller throwers results)
+    Foldable.for_ rolled $ \(roller, _, (throwers, thrown), _) ->
+      Monad.unless (null thrown) (recordRoll roller throwers thrown)
     -- CR 706.8a: every kept result, noted with its kind of die, on the slot's
     -- permanent.
     Foldable.for_ (RollDie.store rollDie >>= \slot -> legalOne slot legal >>= Recipient.objectOf) $ \target -> do
@@ -4981,8 +4982,8 @@ applyOneEffect runSubgame resolving source controller legal chosen effect = case
       let rerolled = Map.filter (> 0) (Map.intersectionWith min answer stored)
           kinds = Map.fromListWith (+) [(StoredResult.sides result, n) | (result, n) <- Map.toList rerolled]
       thrown <- Monad.forM (Map.toList kinds) $ \(dieSides, n) -> do
-        (results, throwers) <- throwDice runSubgame controller dieSides n (pure 0)
-        Monad.unless (null results) (recordRoll controller throwers results)
+        (results, throwers, rolled) <- throwDice runSubgame controller dieSides n (pure 0)
+        Monad.unless (null rolled) (recordRoll controller throwers rolled)
         pure (dieSides, results)
       -- Swapped only once every die is up, in the rule's order.
       let unstore o = o {Object.storedResults = Map.filter (not . Map.null) (Map.adjust (\held -> Map.differenceWith (\have gone -> if have > gone then Just (have - gone) else Nothing) held rerolled) acquisition (Object.storedResults o))}
@@ -5057,7 +5058,7 @@ applyOneEffect runSubgame resolving source controller legal chosen effect = case
             -- That module's haddock argues the order of the two questions, and
             -- Pawl.CoinSpec's "only the flipping player calls" proves it by what
             -- the engine ASKED rather than by anything the board shows.
-            CoinReading.Wins -> Event.flipWinLoseCoin controller statements
+            CoinReading.Wins -> Event.flipWinLoseCoin (Just (throwForCoin runSubgame)) controller statements
             -- CR 705.2's first sentence: the effect cares only about the face, so
             -- no Prompt.CallCoin is asked -- "no player wins or loses a coin flip
             -- for this kind of effect", so there is no call to make and nothing
@@ -5069,18 +5070,24 @@ applyOneEffect runSubgame resolving source controller legal chosen effect = case
             -- the rule itself names, Pawl.Engine.Event's entry road verbatim: an
             -- effect may state that a player WINS a flip that would ordinarily
             -- have no winner.
+            --
+            -- Where Pokey, the Scallywagg rolled instead, the face the roll is
+            -- read as counts and no CR 705.1 event is recorded.
             CoinReading.Heads -> do
-              (face, stated) <- Event.flipOneCoin (Just controller) statements
-              State.modify'
-                ( Event.recordEvent
-                    ( GameEvent.CoinFlipped
-                        CoinFlipped.MkCoinFlipped
-                          { CoinFlipped.flipper = controller,
-                            CoinFlipped.won = if stated then Just True else Nothing
-                          }
+              flipped <- Event.flipOneCoin (Just (throwForCoin runSubgame)) (Just controller) statements
+              case flipped of
+                Left face -> pure (face == Just CoinFace.Heads)
+                Right (face, stated) -> do
+                  State.modify'
+                    ( Event.recordEvent
+                        ( GameEvent.CoinFlipped
+                            CoinFlipped.MkCoinFlipped
+                              { CoinFlipped.flipper = controller,
+                                CoinFlipped.won = if stated then Just True else Nothing
+                              }
+                        )
                     )
-                )
-              pure (face == CoinFace.Heads)
+                  pure (face == CoinFace.Heads)
           pure (if hit then acc + 1 else acc)
     -- Bound AFTER every coin, since CR 705.2 asks how many of the flips matched
     -- and one instruction's flips are all of them.
@@ -10840,8 +10847,8 @@ recordRoll controller throwers results = do
 -- roll like any other (CR 706), then the result the Visit triggers read.
 rollToVisit :: Game Result -> PlayerId -> Game ()
 rollToVisit runSubgame pid = do
-  (results, throwers) <- throwDice runSubgame pid 6 1 (pure 0)
-  recordRoll pid throwers results
+  (results, throwers, rolled) <- throwDice runSubgame pid 6 1 (pure 0)
+  Monad.unless (null rolled) (recordRoll pid throwers rolled)
   -- CR 706.6 can throw a second die and ignore the lower; one is left.
   Foldable.for_ (Maybe.listToMaybe results) $ \result ->
     State.modify' (Event.recordEvent (GameEvent.RolledToVisit DieResult.MkDieResult {DieResult.roller = pid, DieResult.result = result}))
@@ -10853,9 +10860,42 @@ rollToVisit runSubgame pid = do
 -- `perDie` is the instruction's own modifier (CR 706.2). Shared by
 -- Effect.RollDie's arm and CR 701.52a's roll to visit, which records nothing
 -- here: each caller records its own events.
-throwDice :: Game Result -> PlayerId -> Natural -> Natural -> Game Integer -> Game ([Natural], [PlayerId])
+--
+-- Answers what the INSTRUCTION reads, the throwers, and what was actually
+-- ROLLED, which is what a caller records. They part where Pokey, the Scallywagg
+-- replaced the roll (CR 614.6): a coin flipped instead reads as 1 or 20 and
+-- rolls nothing, and a roll standing for that flip (Pokey's other half, applied
+-- in the same loop) is recorded as rolled and read back through the face it is
+-- -- nothing where it was neither.
+throwDice :: Game Result -> PlayerId -> Natural -> Natural -> Game Integer -> Game ([Natural], [PlayerId], [Natural])
 throwDice runSubgame controller sides named perDie = do
-  let -- CR 706.1a's outcomes "numbered from 1 to N", BOTH ends included: the
+  settled <- Event.proposeDiceRoll controller sides named
+  case settled of
+    Left result -> pure ([result], [controller], [])
+    Right roll -> do
+      (results, throwers) <- throwSettled runSubgame roll perDie
+      let readBack = if DiceRoll.forCoin roll then foldMap (pure . Event.resultOfFace) (Event.faceOfRoll results) else results
+      pure (readBack, throwers, results)
+
+-- | CR 706.1: the roll Pokey, the Scallywagg makes instead of a coin flip,
+-- thrown through `throwSettled` and recorded -- the CR 706 road
+-- Pawl.Engine.Event.flipOneCoin cannot reach. No modifier of the instruction's
+-- own: the flip named none.
+throwForCoin :: Game Result -> DiceRoll.DiceRoll -> Game [Natural]
+throwForCoin runSubgame roll = do
+  (results, throwers) <- throwSettled runSubgame roll (pure 0)
+  Monad.unless (null results) (recordRoll (DiceRoll.roller roll) throwers results)
+  pure results
+
+-- | `throwDice` once CR 614.1a's loop has settled the roll: how many dice to
+-- throw and how many of the lowest CR 706.6 then ignores.
+throwSettled :: Game Result -> DiceRoll.DiceRoll -> Game Integer -> Game ([Natural], [PlayerId])
+throwSettled runSubgame roll perDie = do
+  let controller = DiceRoll.roller roll
+      sides = DiceRoll.sides roll
+      dice = DiceRoll.dice roll
+      ignored = DiceRoll.ignored roll
+      -- CR 706.1a's outcomes "numbered from 1 to N", BOTH ends included: the
       -- answer filtered back to a face the die could show. Its own binding
       -- because a reroll runs it a second time.
       faceOf rolled = if rolled >= 1 && rolled <= sides then rolled else 1
@@ -11070,11 +11110,6 @@ throwDice runSubgame controller sides named perDie = do
         -- modifier, so a shift from another source applies to this sum as it
         -- stands, negative or not, and only the final figure is clamped below.
         pure (toInteger natural + modifier, thrower)
-  -- CR 614.1a over CR 706.1: the instruction's count is offered to the
-  -- replacement effects watching this roller's rolls (Pixie Guide) before the
-  -- first die is thrown, and what comes back is how many dice to throw and how
-  -- many of the lowest rolls CR 706.6 then ignores.
-  (dice, ignored) <- Event.proposeDiceRoll controller named
   -- CR 706.6: every die is thrown and every face asked for -- an ignored roll
   -- HAPPENED and is only then treated as never having happened -- so the ignore
   -- runs on the results and not on the count -- and could not run any earlier
