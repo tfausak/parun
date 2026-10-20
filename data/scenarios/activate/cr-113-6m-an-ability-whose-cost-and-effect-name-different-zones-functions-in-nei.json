@@ -1,0 +1,28 @@
+{
+  "description": "CR 113.6m an ability whose cost and effect name different zones functions in neither",
+  "note": "Synthetic Errant Courier's one ability costs discarding itself (the hand) and its effect returns itself from exile, so CR 113.6m confines it to the hand and to exile at once, and no earlier part puts the card into exile to lift the second: it functions nowhere, so no Courier offers it, in the hand, on the battlefield, in the graveyard or in exile. Faerie Macabre's discard ability is the control: the hand's abilities are otherwise live. Synthetic because no printing pairs a self-moving cost with an effect moving the same card out of a zone the cost does not put it into: MTGJSON AtomicCards of 2026-10-08, every activated ability whose cost discards, exiles, returns or sacrifices the card itself and whose effect moves the card itself, 2026-10-19, turned up only Kogla and Yidaro, whose effect moves the card out of the graveyard its discard put it into, which CR 113.6m's own exception settles.",
+  "board": {
+    "seats": [
+      {
+        "name": "alice",
+        "hand": [
+          { "card": "Synthetic Errant Courier", "label": "courier" },
+          { "card": "Faerie Macabre", "label": "macabre" }
+        ],
+        "battlefield": [{ "card": "Synthetic Errant Courier", "label": "courier-2" }],
+        "graveyard": [{ "card": "Synthetic Errant Courier", "label": "courier-3" }],
+        "exile": [{ "card": "Synthetic Errant Courier", "label": "courier-4" }],
+        "library": [{ "card": "Island" }, { "card": "Island" }]
+      },
+      {
+        "name": "bob",
+        "library": [{ "card": "Island" }, { "card": "Island" }]
+      }
+    ],
+    "active": "alice",
+    "step": "PrecombatMain"
+  },
+  "timeline": [
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "check": { "View": { "of": "Offered", "player": "alice", "is": ["Pass", "Activate $macabre"] } } }
+  ]
+}

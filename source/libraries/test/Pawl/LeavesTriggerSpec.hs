@@ -3630,7 +3630,7 @@ banewaspAfflictionSpec s registry =
 -- hand.
 --
 -- Endless Cockroaches cannot prove this: its own effect names no ORIGIN, so
--- Pawl.Engine.EffectZone.zoneFunctionedFrom already answers Nothing for it and
+-- Pawl.Engine.EffectZone.zonesFunctionedFrom already names no zone for it and
 -- the exception is never reached (`becameSlotSpec` above proves the trigger
 -- fires either way). Here the delayed ability's own effect states the graveyard
 -- it moves the card out of, so the fold DOES pin the graveyard, and only
