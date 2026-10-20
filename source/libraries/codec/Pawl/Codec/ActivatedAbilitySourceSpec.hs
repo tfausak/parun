@@ -29,6 +29,7 @@ ability =
     (Cost.MkCost (Just (ManaCost.MkManaCost [ManaSymbol.Generic 1])) [])
     []
     0
+    Nothing
     (Modal.MkModal (Seq.singleton (Mode.MkMode Seq.empty Map.empty)) (ModeSelection.ChooseExactly 1))
     []
     Activator.Controller

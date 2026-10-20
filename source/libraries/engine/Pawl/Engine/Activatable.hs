@@ -546,6 +546,12 @@ candidateSlotsGiven pools pid srcId modal fillable gs =
       aimableOf slots = let sets = setsOf slots in (Target.aimingRanges (Just pid) srcId Nothing slots sets gs, fmap recipientObjects sets)
    in fmap (aimableOf . slotsOf) (Modal.selections fillable (Modal.Type.selection modal))
 
+-- | CR 101.1 / 107.3c: the least X this ability's activator may announce --
+-- its printed floor (ActivatedAbility.minimumX) -- or, for an X its own text
+-- defines (Cost.definedX), that X, which is then the only one.
+leastX :: PlayerId -> ObjectId -> ActivatedAbility.ActivatedAbility card ability -> GameState -> Natural
+leastX pid srcId ability gs = Maybe.fromMaybe (ActivatedAbility.minimumX ability) (Cost.definedX pid srcId ability gs)
+
 -- CR 601.2b via 602.2b: the greatest X this player could actually pay for, which
 -- is what Prompt.ChooseX carries. The climb itself is Cost.greatestPayableX,
 -- shared with Cast.affordableX; only the predicate differs, and only by WHICH
@@ -675,4 +681,4 @@ activatableGiven pools sources pid srcId ability gs =
         && riderOk pid srcId ability gs
         && loyaltyOk pid srcId ability gs
         && Modal.selectionPossible fillable (Modal.Type.selection modal)
-        && any (payableCostAtGiven aimable sources pcs (ActivatedAbility.minimumX ability) (ActivatedAbility.keyword ability) (ActivationRestriction.spendableTypes srcId (ActivatedAbility.restrictions ability) gs) pid srcId gs) (costsFor pid ability gs)
+        && any (payableCostAtGiven aimable sources pcs (leastX pid srcId ability gs) (ActivatedAbility.keyword ability) (ActivationRestriction.spendableTypes srcId (ActivatedAbility.restrictions ability) gs) pid srcId gs) (costsFor pid ability gs)

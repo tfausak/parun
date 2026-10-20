@@ -658,7 +658,7 @@ resolveSpec s registry = Spec.describe s "Resolve" $ do
     let (srcId, g0) = S.addPermanent prodigalSorcerer S.alice (Setup.emptyGame S.bothPlayers)
         ability = case Face.activatedAbilities (S.combinedFace prodigalSorcerer) of
           ab : _ -> ab
-          [] -> ActivatedAbility.MkActivatedAbility (Cost.Type.MkCost (Just (ManaCost.MkManaCost [])) []) [] 0 (Mint.oneModeOf Map.empty Seq.empty) [] Activator.Controller Nothing Nothing Nothing
+          [] -> ActivatedAbility.MkActivatedAbility (Cost.Type.MkCost (Just (ManaCost.MkManaCost [])) []) [] 0 Nothing (Mint.oneModeOf Map.empty Seq.empty) [] Activator.Controller Nothing Nothing Nothing
         (abilId, g1) = Game.freshObjectId g0
         (ts, g2) = Game.freshTimestamp g1
         slot = SlotName.MkSlotName (Text.pack "target")
@@ -698,6 +698,7 @@ resolveSpec s registry = Spec.describe s "Resolve" $ do
             (Cost.Type.MkCost (Just (ManaCost.MkManaCost [])) [])
             []
             0
+            Nothing
             (Mint.oneMode (Seq.fromList [Effect.Search Search.MkSearch {Search.searcher = PlayerRef.Relative PlayerRelation.You, Search.owner = PlayerRef.Relative PlayerRelation.You, Search.zones = Set.singleton Zone.Library, Search.outsideTheGame = False, Search.quantity = Just (Quantity.Literal 1), Search.filter = basicLandFilter, Search.upTo = False, Search.destination = SearchDestination.BattlefieldTapped, Search.subject = Nothing, Search.slot = Nothing, Search.differentIn = Set.empty, Search.exactly = False, Search.andOr = False}]))
             []
             Activator.Controller
@@ -719,7 +720,7 @@ resolveSpec s registry = Spec.describe s "Resolve" $ do
     mountain <- S.printingOf s registry "Mountain"
     let base = Setup.emptyGame S.bothPlayers
         (_, g1) = S.addLibraryCard mountain S.alice base
-        ability = ActivatedAbility.MkActivatedAbility (Cost.Type.MkCost (Just (ManaCost.MkManaCost [])) []) [] 0 (Mint.oneMode (Seq.fromList [Effect.Search Search.MkSearch {Search.searcher = PlayerRef.Relative PlayerRelation.You, Search.owner = PlayerRef.Relative PlayerRelation.You, Search.zones = Set.singleton Zone.Library, Search.outsideTheGame = False, Search.quantity = Just (Quantity.Literal 1), Search.filter = basicLandFilter, Search.upTo = False, Search.destination = SearchDestination.BattlefieldTapped, Search.subject = Nothing, Search.slot = Nothing, Search.differentIn = Set.empty, Search.exactly = False, Search.andOr = False}])) [] Activator.Controller Nothing Nothing Nothing
+        ability = ActivatedAbility.MkActivatedAbility (Cost.Type.MkCost (Just (ManaCost.MkManaCost [])) []) [] 0 Nothing (Mint.oneMode (Seq.fromList [Effect.Search Search.MkSearch {Search.searcher = PlayerRef.Relative PlayerRelation.You, Search.owner = PlayerRef.Relative PlayerRelation.You, Search.zones = Set.singleton Zone.Library, Search.outsideTheGame = False, Search.quantity = Just (Quantity.Literal 1), Search.filter = basicLandFilter, Search.upTo = False, Search.destination = SearchDestination.BattlefieldTapped, Search.subject = Nothing, Search.slot = Nothing, Search.differentIn = Set.empty, Search.exactly = False, Search.andOr = False}])) [] Activator.Controller Nothing Nothing Nothing
         (abilId, g2) = Game.freshObjectId g1
         (ts, g3) = Game.freshTimestamp g2
         abilObj =
@@ -749,6 +750,7 @@ resolveSpec s registry = Spec.describe s "Resolve" $ do
             (Cost.Type.MkCost (Just (ManaCost.MkManaCost [])) [])
             []
             0
+            Nothing
             (Mint.oneMode (Seq.fromList [Effect.Search Search.MkSearch {Search.searcher = PlayerRef.Relative PlayerRelation.You, Search.owner = PlayerRef.Relative PlayerRelation.You, Search.zones = Set.singleton Zone.Library, Search.outsideTheGame = False, Search.quantity = Just (Quantity.Literal 1), Search.filter = basicLandFilter, Search.upTo = False, Search.destination = SearchDestination.BattlefieldTapped, Search.subject = Nothing, Search.slot = Nothing, Search.differentIn = Set.empty, Search.exactly = False, Search.andOr = False}]))
             []
             Activator.Controller
@@ -780,6 +782,7 @@ resolveSpec s registry = Spec.describe s "Resolve" $ do
             (Cost.Type.MkCost (Just (ManaCost.MkManaCost [])) [])
             []
             0
+            Nothing
             (Mint.oneMode (Seq.fromList [Effect.Search Search.MkSearch {Search.searcher = PlayerRef.Relative PlayerRelation.You, Search.owner = PlayerRef.Relative PlayerRelation.You, Search.zones = Set.singleton Zone.Library, Search.outsideTheGame = False, Search.quantity = Just (Quantity.Literal 1), Search.filter = basicLandFilter, Search.upTo = False, Search.destination = SearchDestination.BattlefieldTapped, Search.subject = Nothing, Search.slot = Nothing, Search.differentIn = Set.empty, Search.exactly = False, Search.andOr = False}]))
             []
             Activator.Controller
@@ -1322,6 +1325,7 @@ resolveSpec s registry = Spec.describe s "Resolve" $ do
                 Mint.oneModeTargeting (Map.singleton slot (TargetSlot.required Pool.Players Nothing)) (Seq.fromList [Effect.ControlPlayerNextTurn slot]),
               ActivatedAbility.maximumX = [],
               ActivatedAbility.minimumX = 0,
+              ActivatedAbility.definedX = Nothing,
               ActivatedAbility.restrictions = [],
               ActivatedAbility.activator = Activator.Controller,
               ActivatedAbility.condition = Nothing,
@@ -1392,6 +1396,7 @@ resolveSpec s registry = Spec.describe s "Resolve" $ do
                 Mint.oneMode (Seq.singleton (Effect.RestartGame Nothing)),
               ActivatedAbility.maximumX = [],
               ActivatedAbility.minimumX = 0,
+              ActivatedAbility.definedX = Nothing,
               ActivatedAbility.restrictions = [],
               ActivatedAbility.activator = Activator.Controller,
               ActivatedAbility.condition = Nothing,
@@ -1630,6 +1635,7 @@ installControlBy mindslaver controller target gs0 =
               Mint.oneModeTargeting (Map.singleton slot (TargetSlot.required Pool.Players Nothing)) (Seq.fromList [Effect.ControlPlayerNextTurn slot]),
             ActivatedAbility.maximumX = [],
             ActivatedAbility.minimumX = 0,
+            ActivatedAbility.definedX = Nothing,
             ActivatedAbility.restrictions = [],
             ActivatedAbility.activator = Activator.Controller,
             ActivatedAbility.condition = Nothing,

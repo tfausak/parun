@@ -348,6 +348,9 @@ slotContext perspective unannounced bindings acquisition source amount gs =
       -- Not implemented: CR 608.2b's last sentence blanking a departed
       -- sibling TARGET's names, controller and creature types here, as
       -- slotAmount's bound below does (#4865).
+      --
+      -- Not implemented: the reading ability's name (Filter.reader), so an
+      -- acquired ability's slot reads the holder's exiled pile (#5349).
       base = Projection.framedBySlots gs (Binding.recipientsBySlot targets bindings) framed
       framed =
         -- CR 607.5: the choices of the abilities `acquisition` names -- the

@@ -1,0 +1,57 @@
+{
+  "description": "CR 107.3c: Soul Foundry's X is the mana value of the card it imprinted, which its controller pays without announcing, and the token is a copy of that card",
+  "note": "Soul Foundry imprints Hill Giant (mana value 4) over Grizzly Bears. Eight Plains pay the Foundry's {4} and then exactly the X its text defines, so nothing is asked and no Plains is left untapped; a free X, or an X of 0, would leave the last four Plains offering their mana.",
+  "board": {
+    "seats": [
+      {
+        "name": "alice",
+        "battlefield": [
+          { "card": "Plains", "label": "p1", "ready": true },
+          { "card": "Plains", "label": "p2", "ready": true },
+          { "card": "Plains", "label": "p3", "ready": true },
+          { "card": "Plains", "label": "p4", "ready": true },
+          { "card": "Plains", "label": "p5", "ready": true },
+          { "card": "Plains", "label": "p6", "ready": true },
+          { "card": "Plains", "label": "p7", "ready": true },
+          { "card": "Plains", "label": "p8", "ready": true }
+        ],
+        "hand": [
+          { "card": "Soul Foundry", "label": "foundry" },
+          { "card": "Hill Giant", "label": "giant" },
+          { "card": "Grizzly Bears", "label": "bears" }
+        ],
+        "library": [
+          { "card": "Hill Giant" },
+          { "card": "Hill Giant" },
+          { "card": "Hill Giant" },
+          { "card": "Hill Giant" },
+          { "card": "Hill Giant" }
+        ]
+      },
+      {
+        "name": "bob",
+        "library": [
+          { "card": "Hill Giant" },
+          { "card": "Hill Giant" },
+          { "card": "Hill Giant" },
+          { "card": "Hill Giant" },
+          { "card": "Hill Giant" }
+        ]
+      }
+    ],
+    "active": "alice",
+    "step": "PrecombatMain"
+  },
+  "timeline": [
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": { "Cast": { "object": "$foundry", "mana": ["$p1", "$p2", "$p3", "$p4", null] } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass" },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass" },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": { "Answer": { "prompt": "ChooseOptional", "with": { "type": "Exercises" } } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": { "Answer": { "prompt": "ChooseCardInHand", "with": "$giant" } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "check": { "Count": { "player": "alice", "zone": "Exile", "card": "Hill Giant", "count": 1 } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": { "Activate": { "object": "Soul Foundry", "ability": 0, "mana": ["$p5", "$p6", "$p7", "$p8"] } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass" },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "check": { "View": { "of": "Offered", "player": "alice", "is": ["Pass"] } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "check": { "Count": { "player": "alice", "zone": "Battlefield", "card": "Hill Giant", "count": 1 } } }
+  ]
+}

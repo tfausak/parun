@@ -3307,7 +3307,13 @@ effectContext gs resolving controller source legal bindings =
         -- group half's own read, so a clause reads what the clause before it bound.
         Filter.boundAmounts = Map.mapMaybe Binding.Type.amount bindings,
         Filter.slotStickers = Map.mapMaybe Binding.Type.sticker bindings,
-        Filter.slotVotes = Map.mapMaybe Binding.Type.votes bindings
+        Filter.slotVotes = Map.mapMaybe Binding.Type.votes bindings,
+        -- CR 607.5: the resolving ability's own name, so what it means by
+        -- "exiled with" its source is its own pair's. A REGRESSION FENCE: no
+        -- ability in data/cards/ an object can acquire reads a quantity or a
+        -- filter of its pile as it resolves; its EachCardInExiledPile is
+        -- objectRefObjects' own resolvingAbilityName read.
+        Filter.reader = resolvingAbilityName resolving gs
       }
 
 -- effectContext with `slot` naming `oid` alone, for an effect applied once per
