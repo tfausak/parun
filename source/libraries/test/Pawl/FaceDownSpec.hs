@@ -204,6 +204,7 @@ import qualified Pawl.Types.Recipient as Recipient
 import qualified Pawl.Types.ReplacementEffect as ReplacementEffect
 import qualified Pawl.Types.RevealCause as RevealCause
 import qualified Pawl.Types.Revealed as Revealed
+import qualified Pawl.Types.RoomHalf as RoomHalf
 import qualified Pawl.Types.Sacrifice as Sacrifice
 import qualified Pawl.Types.Subtype as Subtype
 import qualified Pawl.Types.TapState as TapState
@@ -1959,6 +1960,36 @@ manifestSpec s registry = Spec.describe s "Manifest" $ do
     case entered of
       Nothing -> Spec.assertFailure s "the manifest did not reach the battlefield"
       Just permanent -> Spec.assertEqWith s "CR 701.40b the manifest procedure is offered for {5}{R}" (FaceDown.turnableFaceUp S.alice gs) [(permanent, TurnUpProcedure.Manifest)]
+
+  -- A copy STAMP rather than a stored copy: Infinite Reflection's "each other
+  -- nontoken creature you control becomes a copy of that creature" has no
+  -- duration, and Opalescence has made Spiked Corridor // Torture Pit, its left
+  -- door open, the creature it enchants. The manifested Grizzly Bears becomes a
+  -- copy of that Room (CR 708.10), whose halves are copiable (CR 709.5b); the
+  -- card underneath is still the Bears at {1}{G}, which two Forests pay.
+  Spec.it s "CR 701.40b a manifested creature stamped a copy of a Room is priced at its own card's mana cost" $ do
+    bears <- S.printingOf s registry "Grizzly Bears"
+    island <- S.printingOf s registry "Island"
+    forest <- S.printingOf s registry "Forest"
+    corridor <- S.printingOf s registry "Spiked Corridor"
+    opalescence <- S.printingOf s registry "Opalescence"
+    reflection <- S.printingOf s registry "Infinite Reflection"
+    (manifested, entered) <- manifestedWith s registry island bears 0
+    let (_, g1) = S.addPermanent opalescence S.alice (S.landsFor island S.alice 6 manifested)
+        (corridorId, g2) = S.addPermanent corridor S.alice g1
+        opened = g2 {GameState.objects = Map.adjust (\o -> o {Object.unlockedHalves = Set.singleton RoomHalf.LeftHalf}) corridorId (GameState.objects g2)}
+        (staged, auraId) = S.handOne reflection opened
+        answer :: Prompt.Prompt r -> r
+        answer p = case p of
+          Prompt.ChooseTargets _ _ _ sets -> fmap (Set.filter ((== Just corridorId) . Recipient.objectOf) . snd) sets
+          _ -> S.identityAnswer p
+        reflected = S.runPure answer staged (S.cast S.alice auraId >> Stack.resolveTop >> Engine.settleForPriority >> Stack.resolveTop)
+        gs = S.landsFor forest S.alice 2 reflected
+    case entered of
+      Nothing -> Spec.assertFailure s "the manifest did not reach the battlefield"
+      Just permanent -> do
+        Spec.assertEqWith s "CR 701.40b the manifest procedure is offered for {1}{G}" (FaceDown.turnableFaceUp S.alice gs) [(permanent, TurnUpProcedure.Manifest)]
+        Spec.assertBool s (Maybe.isJust (PC.halves =<< Game.copyStampOf =<< Game.lookupObject permanent gs)) "CR 709.5b the permanent is stamped with the Room's halves"
 
   -- CR 702.37b's condition, which CR 701.40c is what makes reachable: "put a
   -- +1/+1 counter on it IF ITS MEGAMORPH COST WAS PAID to turn it face up". A

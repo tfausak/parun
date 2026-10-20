@@ -74,6 +74,7 @@ import qualified Pawl.Types.Object as Object
 import Pawl.Types.ObjectId (ObjectId)
 import qualified Pawl.Types.PaymentSubject as PaymentSubject
 import Pawl.Types.PlayerId (PlayerId)
+import qualified Pawl.Types.Printing as Printing
 import qualified Pawl.Types.ProjectedCharacteristics as PC
 import qualified Pawl.Types.Prompt as Prompt
 import qualified Pawl.Types.ProposedEvent as ProposedEvent
@@ -147,12 +148,17 @@ creatureCardCostOf oid gs = do
 -- be applying to it) and paying its mana cost". A conjured duplicate's values
 -- (Object.duplicate) are the card's own, so those do count. Pawl.FaceDownSpec's
 -- "CR 701.40b a manifested creature under a copy is priced at its own card's
--- mana cost" proves the copy is ignored; the duplicate arm is a regression
--- fence, since no test manifests a duplicate.
+-- mana cost" proves a stored copy is ignored. The face is the printed card's
+-- own (Game.resolveFace), never Game.faceUpFaceOf, whose Room and copied-half
+-- arms read a copy STAMP: "CR 701.40b a manifested creature stamped a copy of a
+-- Room is priced at its own card's mana cost" proves that. The printing is a
+-- meld's result and a merged permanent's top component (Game.printingOfObject).
+-- The duplicate arm is a regression fence: no test manifests a duplicate.
 representingCardOf :: ObjectId -> GameState -> Maybe (Face Card, Set.Set CardType.CardType)
 representingCardOf oid gs = do
   object <- Game.lookupObject oid gs
-  face <- Game.faceUpFaceOf oid gs
+  printing <- Game.printingOfObject oid gs
+  let face = Game.resolveFace (Game.shownFace object) (Printing.card printing)
   pure $ case Object.duplicate object of
     Nothing -> (face, TypeLine.types (Face.typeLine face))
     Just values -> (face {Face.manaCost = PC.manaCost values}, PC.cardTypes values)
