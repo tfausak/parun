@@ -608,9 +608,13 @@ chooseLegendVictims (controller, candidates) = do
 -- "CR 704.5k the clock is when it became world, not when it entered" is that
 -- board.
 --
--- An unstamped world permanent is not a candidate. Unreachable rather than
--- tolerated: Engine.sampleWorldSince runs ahead of every pass Engine.performSettle
--- makes, so anything world here has a stamp. Deliberately NOT defaulted to
+-- An unstamped world permanent is not a candidate. Engine.sampleWorldSince runs
+-- ahead of every pass Engine.performSettle makes, so anything world there has a
+-- stamp. The CR 724.1c and 724.2c passes (Resolve.Effect's EndTurn and
+-- EndCombatPhase arms) sample nothing, so a permanent that became world earlier
+-- in the same resolution would go unjudged until the next settle. No card does
+-- that: MTGJSON AtomicCards.json `[Ee]nd the (turn|combat phase)`, 2026-10-20,
+-- none of whose hits makes a permanent world. Deliberately NOT defaulted to
 -- Object.timestamp, which would restore the proxy on exactly the boards the clock
 -- exists for.
 --
