@@ -188,9 +188,12 @@ spec s registry = Spec.describe s "Client" $ do
         seats = Driver.bySeat (Map.singleton S.alice (Game.human (screen 200 slavesBob) (const Nothing))) Bot.bot
         run = Driver.drive [] seats 200 (pure . (> turn) . GameState.turnNumber) board
         shown = reverse (written (State.execState (Except.runExceptT (State.evalStateT (State.evalStateT run (SplitMix.MkSplitMix 1)) Hotseat.fresh {Hotseat.facing = Just S.alice, Hotseat.autoPass = False})) blank))
-    -- Asked while Mindslaver is on the battlefield, and shown once its sacrifice has moved it.
+        stacks = filter (Text.isPrefixOf (Text.pack "Stack, top first: "))
+        stackLine = Text.pack "Stack, top first: Mindslaver's ability"
+    -- Asked while Mindslaver is on the battlefield; the stack shown then and
+    -- once its sacrifice has moved it, a witnessed move naming it.
     Spec.assertBool s (any (Text.isPrefixOf (Text.pack "Choose 1 target for Mindslaver's ability ")) shown) "the target prompt names it"
-    Spec.assertBool s (Text.pack "Stack, top first: Mindslaver's ability" `elem` shown) "the stack names it"
+    Spec.assertEqWith s "the stack names it, then once it is sacrificed" (Set.toList (Set.fromList (stacks shown)), take 1 (stacks (dropWhile (/= Text.pack "  Graveyard: Mindslaver") shown))) ([stackLine], [stackLine])
     Spec.assertEqWith s "no face-down card" (filter (Text.isInfixOf (Text.pack "face-down")) shown) []
 
   Spec.it s "CR 723.6 a seat controlled for its turn is still shown the rest of the turn before, and that turn, at its next question" $ do
