@@ -90,16 +90,16 @@ spec s registry = Spec.describe s "Client" $ do
 
   Spec.it s "a seat that types concede loses at its next priority" $ do
     matchup <- BotSpec.bears s registry
-    let conceding sc = if not (typedYet "concede" sc) && saw "Choose an action:" sc then Just (Text.pack "concede") else plays sc
+    let conceding sc = if not (typedYet "concede" sc) && any menuHeading (pending sc) then Just (Text.pack "concede") else plays sc
     Spec.assertEq s (fmap fst (fst (against conceding matchup))) (Right (Result.Won S.bob))
 
   Spec.it s "an option that is not offered is asked again before reaching the engine" $ do
     matchup <- BotSpec.bears s registry
-    let straying sc = if not (typedYet "99" sc) && saw "Choose an action:" sc then Just (Text.pack "99") else plays sc
+    let straying sc = if not (typedYet "99" sc) && any menuHeading (pending sc) then Just (Text.pack "99") else plays sc
         shown = snd (against straying matchup)
         after = drop 1 (dropWhile (/= Text.pack "> 99") shown)
     Spec.assertBool s (any (Text.isPrefixOf (Text.pack "Type one number from 1 to")) (take 1 after)) "asked again"
-    Spec.assertBool s (Text.pack "Choose an action:" `elem` after) "played on"
+    Spec.assertBool s (any menuHeading after) "played on"
 
   Spec.it s "a change of seat waits for the seat leaving to finish reading, clears the screen, and waits before showing the next seat" $ do
     matchup <- BotSpec.bears s registry
@@ -212,7 +212,40 @@ spec s registry = Spec.describe s "Client" $ do
     Spec.assertEqWith s "targets" (answering gs "1" (Prompt.ChooseTargets alice S.alice o7 (Map.singleton slot (1, Set.fromList [Recipient.ToPlayer S.bob, Recipient.ToCreature o9])))) (Right (Map.singleton slot (Set.singleton (Recipient.ToCreature o9))))
     Spec.assertEqWith s "optional" (answering gs "2" (Prompt.ChooseOptional alice S.alice o7 (ModeIndex.MkModeIndex 0) (ClauseIndex.MkClauseIndex 0) mempty)) (Right OptionalDecision.Declines)
     Spec.assertEqWith s "x" (answering gs "3" (Prompt.ChooseX alice S.alice o7 Binding.variableX 1 5)) (Right 3)
-    Spec.assertEqWith s "mana source" (answering gs "0" (Prompt.ChooseManaSource alice S.alice (ManaCost.MkManaCost [ManaSymbol.Generic 1]) (o7 NonEmpty.:| [o9]))) (Right Nothing)
+    Spec.assertEqWith s "mana source" (answering gs "stop" (Prompt.ChooseManaSource alice S.alice (ManaCost.MkManaCost [ManaSymbol.Generic 1]) (o7 NonEmpty.:| [o9]))) (Right Nothing)
+
+  Spec.it s "Enter passes at a priority offering Pass, and the menu says so" $ do
+    (forest, gs) <- withForest s registry
+    hand <- maybe (Spec.assertFailure s "no card in hand") pure (Maybe.listToMaybe (Game.Engine.zoneMembers Zone.Hand S.alice gs))
+    let decider = Decider.MkDecider S.alice
+        facing = Hotseat.fresh {Hotseat.facing = Just S.alice}
+        (passed, shown) = asking facing [""] gs (Prompt.ChooseAction decider S.alice [Action.Play hand Nothing, Action.ActivateManaAbility forest, Action.Pass])
+        (unpassable, unpassableShown) = asking facing [""] gs (Prompt.ChooseAction decider S.alice [Action.Play hand Nothing, Action.ActivateManaAbility forest])
+    Spec.assertEqWith s "passed" passed (Right Action.Pass)
+    Spec.assertBool s (Text.pack "Choose an action, or press Enter to pass:" `elem` shown) "the menu names Enter"
+    Spec.assertEqWith s "refused with no Pass to pick" unpassable (Left (Text.pack "end of input"))
+    Spec.assertBool s (Text.pack "Choose an action:" `elem` unpassableShown) "the menu names no Enter"
+
+  Spec.it s "a mana source takes stop and auto as words, and Enter as auto; a covered cost takes Enter to pay now" $ do
+    gs <- started s registry
+    taiga <- S.printingOf s registry "Taiga"
+    plateau <- S.printingOf s registry "Plateau"
+    let (t, g1) = S.addPermanent taiga S.alice gs
+        (p, board) = S.addPermanent plateau S.alice g1
+        decider = Decider.MkDecider S.alice
+        facing = Hotseat.fresh {Hotseat.facing = Just S.alice}
+        cost = ManaCost.MkManaCost [ManaSymbol.OfType (ManaType.Colored Color.Red), ManaSymbol.OfType (ManaType.Colored Color.Green)]
+        paying = Prompt.ChooseManaSource decider S.alice cost (t NonEmpty.:| [p])
+        covered = Prompt.ChooseExtraManaSource decider S.alice (t NonEmpty.:| [p])
+        (entered, shown) = asking facing [""] board paying
+        (coveredEntered, coveredShown) = asking facing [""] board covered
+    Spec.assertEqWith s "Enter pays with auto's Plateau" entered (Right (Just p))
+    Spec.assertBool s (Text.pack "Paying {R}{G}. Choose a source to pay with, stop to stop paying, or auto (or press Enter) to pay the rest:" `elem` shown) "the words and Enter listed"
+    Spec.assertEqWith s "stop stops" (fst (asking facing ["stop"] board paying)) (Right Nothing)
+    Spec.assertEqWith s "0 is no longer a word" (fst (asking facing ["0"] board paying)) (Left (Text.pack "end of input"))
+    Spec.assertEqWith s "Enter pays now" coveredEntered (Right Nothing)
+    Spec.assertBool s (Text.pack "The cost is covered. Choose another source to activate, or press Enter to pay now:" `elem` coveredShown) "Enter listed"
+    Spec.assertEqWith s "0 is no longer pay now" (fst (asking facing ["0"] board covered)) (Left (Text.pack "end of input"))
 
   Spec.it s "all and a range pick options, and a count-bound pick takes them only at its count" $ do
     gs <- started s registry
@@ -258,7 +291,7 @@ spec s registry = Spec.describe s "Client" $ do
         facingAlice = Hotseat.fresh {Hotseat.facing = Just S.alice}
         upkeep = gs {GameState.phase = Phase.Beginning BeginningStep.Upkeep, GameState.activePlayer = S.bob}
     Spec.assertEqWith s "passed for, in the other seat's upkeep" (asking facingBob [] upkeep manaOnly) (Right Action.Pass, [Text.pack "Player 1 passes in Player 2's upkeep (no other actions)."])
-    let menu (outcome, shown) = (outcome, Text.pack "Choose an action:" `elem` shown)
+    let menu (outcome, shown) = (outcome, any menuHeading shown)
     Spec.assertEqWith s "asked when turned off" (menu (asking facingAlice {Hotseat.autoPass = False} [] gs manaOnly)) (Left (Text.pack "end of input"), True)
     Spec.assertEqWith s "asked with a land to play" (menu (asking facingAlice [] gs (Prompt.ChooseAction decider S.alice [Action.Play hand Nothing, Action.Pass]))) (Left (Text.pack "end of input"), True)
 
@@ -424,9 +457,6 @@ against typist matchup =
 pending :: Screen -> [Text.Text]
 pending = reverse . takeWhile (not . Text.isPrefixOf (Text.pack "> ")) . written
 
-saw :: String -> Screen -> Bool
-saw line = elem (Text.pack line) . pending
-
 typedYet :: String -> Screen -> Bool
 typedYet line = elem (Text.pack ("> " <> line)) . written
 
@@ -438,12 +468,12 @@ plays sc
   | any (Text.isPrefixOf (Text.pack "Type the answer as JSON")) shown = Nothing
   | Just n <- Maybe.listToMaybe (Maybe.mapMaybe wanted shown) = Just (Text.unwords (fmap (Text.pack . show) [1 .. n]))
   | any (Text.isPrefixOf (Text.pack "Type blocker:attacker")) shown = Just Text.empty
-  | Text.pack "Choose an action:" `elem` shown =
+  | any menuHeading shown =
       let options = Maybe.mapMaybe option shown
           pick = List.find (\(_, t) -> any (`Text.isPrefixOf` t) [Text.pack "Play ", Text.pack "Cast "]) options
        in fmap fst (Monad.mplus pick (List.find ((== Text.pack "Pass") . snd) options))
   | Just least <- Maybe.listToMaybe (Maybe.mapMaybe leastX shown) = Just least
-  | any (Text.isPrefixOf (Text.pack "The cost is covered.")) shown = Just (Text.pack "0")
+  | any (Text.isPrefixOf (Text.pack "The cost is covered.")) shown = Just Text.empty
   | otherwise = Just (Text.pack "1")
   where
     shown = pending sc
@@ -513,7 +543,7 @@ withForest s registry = do
 castsOnce :: String -> Screen -> Maybe Text.Text
 castsOnce spell sc
   | any (Text.isPrefixOf (Text.pack "Paying ")) shown = Just (Text.pack "auto")
-  | Text.pack "Choose an action:" `elem` shown =
+  | any menuHeading shown =
       let options = [(n, rest) | line <- shown, (n, rest) <- [Text.breakOn (Text.pack ". ") (Text.strip line)], Text.all (`elem` ['0' .. '9']) n, not (Text.null n)]
           cast = [n | not (typedYet "auto" sc), (n, rest) <- options, rest == Text.pack (". Cast " <> spell)]
        in Maybe.listToMaybe (cast <> [n | (n, rest) <- options, rest == Text.pack ". Pass"])
@@ -526,7 +556,7 @@ discardsGiant :: Screen -> Maybe Text.Text
 discardsGiant sc
   | any (Text.isPrefixOf (Text.pack "Pass to ")) shown = Just Text.empty
   | any (Text.isPrefixOf (Text.pack "Choose 1 card to discard")) shown = numberOf ". Hill Giant"
-  | Text.pack "Choose an action:" `elem` shown = numberOf ". Pass"
+  | any menuHeading shown = numberOf ". Pass"
   | otherwise = Just Text.empty
   where
     shown = pending sc
@@ -540,7 +570,7 @@ slavesBob sc
   | any (Text.isPrefixOf (Text.pack "Choose 1 target for ")) shown = numberOf ". Player 2"
   -- Tap, then sacrifice: the protocol offers nothing for this prompt (#5225).
   | Text.pack "order cost components:" `elem` shown = Just (Text.pack "[0,1]")
-  | Text.pack "Choose an action:" `elem` shown, Just n <- numberOf ". Activate an ability of Mindslaver" = Just n
+  | any menuHeading shown, Just n <- numberOf ". Activate an ability of Mindslaver" = Just n
   | any (Text.isPrefixOf (Text.pack "Choose 1 card to discard")) shown = Monad.mplus (numberOf ". Hill Giant") (Just (Text.pack "1"))
   | otherwise = discardsGiant sc
   where
@@ -556,9 +586,13 @@ facedBy handOff shown = case dropWhile (not . Text.isPrefixOf handOff) shown of
     let (here, later) = break (Text.isPrefixOf (Text.pack "Pass to ")) rest
      in here <> facedBy handOff later
 
+-- An action menu's heading, whether or not it offers Enter to pass.
+menuHeading :: Text.Text -> Bool
+menuHeading = Text.isPrefixOf (Text.pack "Choose an action")
+
 -- Each action menu shown, by its options.
 actionMenus :: [Text.Text] -> [[Text.Text]]
-actionMenus shown = case dropWhile (/= Text.pack "Choose an action:") shown of
+actionMenus shown = case dropWhile (not . menuHeading) shown of
   [] -> []
   _ : rest ->
     let (menu, after) = span (Text.isPrefixOf (Text.pack "  ")) rest
