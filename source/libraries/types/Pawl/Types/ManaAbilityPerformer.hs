@@ -38,9 +38,8 @@ import qualified Pawl.Types.SlotName as SlotName
 -- A RECORD rather than one function, so that CR 605.4a's triggered mana ability,
 -- CR 118.12's resolution cost and CR 706's roll for a cost's coin flip ride the
 -- same injection: the payment path needs them too, and all live in
--- Pawl.Engine.Resolve, so a parameter of each
--- own would have to be threaded through every caller of Pawl.Engine.Cost.pay for
--- no gain.
+-- Pawl.Engine.Resolve, so a parameter of each own would have to be threaded
+-- through every caller of Pawl.Engine.Cost.pay for no gain.
 data ManaAbilityPerformer = MkManaAbilityPerformer
   { -- | CR 405.6c / 608.2c: the ability's source, its controller, the slots
     -- its earlier clauses bound, and the non-mana effects to run; answers those
