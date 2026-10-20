@@ -101,7 +101,7 @@ spec s registry = Spec.describe s "Client" $ do
     Spec.assertBool s (any (Text.isPrefixOf (Text.pack "Type one number from 1 to")) (take 1 after)) "asked again"
     Spec.assertBool s (any menuHeading after) "played on"
 
-  Spec.it s "a change of seat clears the screen and waits before showing the next seat" $ do
+  Spec.it s "a change of seat waits for the seat leaving to finish reading, clears the screen, and waits before showing the next seat" $ do
     matchup <- BotSpec.bears s registry
     let people = Map.fromList [(S.alice, Game.human (screen 300 plays) (const Nothing)), (S.bob, Game.human (screen 300 plays) (const Nothing))]
         shown = reverse (written (State.execState (Game.run [] people Hotseat.fresh (SplitMix.MkSplitMix 1) matchup) blank))
@@ -109,6 +109,11 @@ spec s registry = Spec.describe s "Client" $ do
         at i = Maybe.listToMaybe (drop i shown)
         -- The last hand-off may be cut short by the end of input.
         cleared i = at (i - 1) == Just (Text.pack "<clear>") && (at (i + 2) == Just (Text.pack "<clear>") || at (i + 1) == Just (Text.pack "<eof>"))
+        -- Nothing said since the seat leaving last typed a line, or the first
+        -- hand-off, with no seat yet looking.
+        readFirst i = i < 2 || maybe False (Text.isPrefixOf (Text.pack "> ")) (at (i - 2))
+    Spec.assertBool s (all readFirst handOffs) ("read before the clear: " <> show [take 3 (drop (i - 3) shown) | i <- handOffs, not (readFirst i)])
+    Spec.assertBool s (Text.pack "Press Enter to pass the screen on." `elem` shown) "asked to finish reading"
     Spec.assertBool s (any (Text.isPrefixOf (Text.pack "Pass to Player 1")) shown && any (Text.isPrefixOf (Text.pack "Pass to Player 2")) shown) "both seats"
     Spec.assertBool s (all cleared handOffs) "cleared"
     Spec.assertEqWith s "seen by the seat passed to" (mismatches shown) []
@@ -121,7 +126,7 @@ spec s registry = Spec.describe s "Client" $ do
         twice = Answerer.unwrap human acting >> Answerer.unwrap human acting
         human = Game.human (screen 2 (const (Just (Text.pack "1")))) (const Nothing)
         shown = reverse (written (State.execState (Except.runExceptT (State.evalStateT (State.evalStateT twice (SplitMix.MkSplitMix 0)) Hotseat.fresh {Hotseat.facing = Just S.alice, Hotseat.autoPass = False})) blank))
-    Spec.assertEqWith s "once" (filter (Text.isPrefixOf (Text.pack "Since you last looked: ")) shown) [Text.pack "Since you last looked: Player 2 reveals a face-down card."]
+    Spec.assertEqWith s "once" (filter (Text.isInfixOf (Text.pack "reveals")) shown) [Text.pack "Player 2 reveals a face-down card."]
 
   Spec.it s "a seat passed for while facing the screen is shown its creature spell resolving" $ do
     gs <- started s registry
@@ -134,7 +139,8 @@ spec s registry = Spec.describe s "Client" $ do
         (outcome, sc) = State.runState (Except.runExceptT (State.evalStateT (State.evalStateT run (SplitMix.MkSplitMix 1)) Hotseat.fresh {Hotseat.facing = Just S.alice})) blank
         -- Since alice last answered: the auto payment ends her questions.
         unanswered = pending sc
-    Spec.assertBool s (any (\l -> Text.isPrefixOf (Text.pack "Since you last looked: ") l && Text.isInfixOf (Text.pack "Grizzly Bears moves from the stack to the battlefield") l) unanswered) ("shown the bear resolve: " <> show unanswered)
+    Spec.assertBool s (any (Text.isPrefixOf (Text.pack "Grizzly Bears moves from the stack to the battlefield")) unanswered) ("shown the bear resolve: " <> show unanswered)
+    Spec.assertEqWith s "as a line of its own, to a seat that never stopped looking" (filter (Text.isPrefixOf (Text.pack "Since you last looked")) unanswered) []
     Spec.assertBool s (Text.pack "Player 1 passes in their precombat main phase (no other actions)." `elem` unanswered) "passed for, in its main phase"
     Spec.assertEqWith s "into the next turn" (fmap ((> turn) . GameState.turnNumber) outcome) (Right True)
 
@@ -260,7 +266,7 @@ spec s registry = Spec.describe s "Client" $ do
     let drew pid n = LoggedEvent.MkLoggedEvent (EventGroup.MkEventGroup n) (GameEvent.Drew (Drew.MkDrew pid n))
         drawing = gs {GameState.events = Seq.fromList [drew S.bob 1, drew S.bob 2, drew S.alice 1, drew S.bob 3]}
         shown = snd (asking Hotseat.fresh {Hotseat.facing = Just S.alice, Hotseat.autoPass = False} [] drawing (Prompt.ChooseAction (Decider.MkDecider S.alice) S.alice [Action.Pass]))
-    Spec.assertEqWith s "told" (filter (Text.isPrefixOf (Text.pack "Since you last looked: ")) shown) [Text.pack "Since you last looked: Player 2 draws 2 cards.; Player 1 draws a card.; Player 2 draws a card."]
+    Spec.assertEqWith s "told" (filter (Text.isInfixOf (Text.pack " draws ")) shown) [Text.pack "Player 2 draws 2 cards.", Text.pack "Player 1 draws a card.", Text.pack "Player 2 draws a card."]
 
   Spec.it s "options for cards in hand the view shows alike merge, and a card shown otherwise under the same name stays apart" $ do
     forest <- S.printingOf s registry "Forest"

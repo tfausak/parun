@@ -74,7 +74,7 @@ respond terminal lookUp line = do
           Just reply -> do
             -- Only the seat the screen faces is shown its news unasked.
             facing <- State.gets Hotseat.facing
-            news <- if facing == Just seat then tell seat else pure []
+            news <- if facing == Just seat then tell False seat else pure []
             mapM_ (say terminal) (news <> said)
             pure reply
 
@@ -84,10 +84,10 @@ asked terminal lookUp request = do
   let question = Request.question request
       view = Request.view request
       seat = Question.seat question
-  handOff terminal seat
+  handed <- handOff terminal seat
   first <- State.gets (Set.notMember seat . Hotseat.greeted)
   State.modify' (\h -> h {Hotseat.greeted = Set.insert seat (Hotseat.greeted h)})
-  news <- tell seat
+  news <- tell handed seat
   mapM_ (say terminal) $
     [Text.empty]
       <> Render.board view
@@ -511,16 +511,23 @@ naturalOf reply = case reply of
   _ -> Nothing
 
 -- | No seat may read another's screen, so a change of seat clears it and
--- waits for the next player to say they are there.
-handOff :: (Monad m) => Terminal.Terminal m -> PlayerId.PlayerId -> Client m ()
+-- waits for the next player to say they are there; whether it did. A seat
+-- that has lines left to read says when it is done first.
+handOff :: (Monad m) => Terminal.Terminal m -> PlayerId.PlayerId -> Client m Bool
 handOff terminal seat = do
   facing <- State.gets Hotseat.facing
-  Monad.unless (facing == Just seat) $ do
+  let handing = facing /= Just seat
+  Monad.when handing $ do
+    unread <- State.gets Hotseat.unread
+    Monad.when (Maybe.isJust facing && unread) $ do
+      say terminal (Text.pack "Press Enter to pass the screen on.")
+      Monad.void (listen terminal)
     lift2 (Terminal.clear terminal)
     say terminal (Text.pack "Pass to " <> Render.player seat <> Text.pack ", then press Enter.")
     _ <- listen terminal
     lift2 (Terminal.clear terminal)
     State.modify' (\h -> h {Hotseat.facing = Just seat})
+  pure handing
 
 -- | Adds the view's witnessed entries the client has not read yet to its
 -- seat's news: the rest of the previous turn's, where the seat last looked
@@ -549,18 +556,28 @@ collect view = do
         Hotseat.news = Map.insertWith (flip (<>)) seat unread (Hotseat.news h)
       }
 
--- | The line showing the seat its news, if it has any, emptying it.
-tell :: (Monad m) => PlayerId.PlayerId -> Client m [Text.Text]
-tell seat = do
+-- | The lines showing the seat its news, emptying it: one line saying what
+-- happened since it last looked, where the screen was just handed to it,
+-- and otherwise a line each, for a seat that never stopped looking.
+tell :: (Monad m) => Bool -> PlayerId.PlayerId -> Client m [Text.Text]
+tell handed seat = do
   news <- State.gets (foldMap Foldable.toList . Map.lookup seat . Hotseat.news)
   State.modify' (\h -> h {Hotseat.news = Map.delete seat (Hotseat.news h)})
-  pure [Text.pack "Since you last looked: " <> Text.intercalate (Text.pack "; ") news | not (null news)]
+  pure $
+    if handed
+      then [Text.pack "Since you last looked: " <> Text.intercalate (Text.pack "; ") news | not (null news)]
+      else news
 
 say :: (Monad m) => Terminal.Terminal m -> Text.Text -> Client m ()
-say terminal = lift2 . Terminal.say terminal
+say terminal line = do
+  lift2 (Terminal.say terminal line)
+  State.modify' (\h -> h {Hotseat.unread = True})
 
 listen :: (Monad m) => Terminal.Terminal m -> Client m Text.Text
-listen terminal = lift2 (Terminal.listen terminal) >>= maybe (stop (Text.pack "end of input")) pure
+listen terminal = do
+  typed <- lift2 (Terminal.listen terminal)
+  State.modify' (\h -> h {Hotseat.unread = False})
+  maybe (stop (Text.pack "end of input")) pure typed
 
 stop :: (Monad m) => Text.Text -> Client m a
 stop = Trans.lift . Except.throwE
