@@ -1577,7 +1577,11 @@ data Context = MkContext
     -- "exiled with" its source (Binding.isLinkedExile): the resolving ability's
     -- (Pawl.Engine.Resolve.Slots.effectContext) or the one being activated
     -- (Pawl.Engine.Cost.ceilingOf). Nothing for a reader the source has as its
-    -- own, which is every static ability and every context below.
+    -- own, which is every static ability, and in contextFor below.
+    --
+    -- Not implemented: a target slot's context
+    -- (Pawl.Engine.Target.slotContext) names no reader, so an acquired
+    -- ability's "target card exiled with this" reads the holder's pile (#5349).
     reader :: Maybe AbilityName.AbilityName,
     -- CR 608.2d: every candidate the enclosing choice offers, with its
     -- measures, for the Measures atom's OfEachOtherCandidate operand. Filled by
@@ -1966,8 +1970,10 @@ matches context view predicate = case predicate of
   Filter.HasChosenSubtype -> maybe False (`Set.member` subtypes view) (sourceChosenSubtype context)
   -- CR 607.2a off the Context: the candidate's link to the source, judged as
   -- the reading ability reads it (Binding.isLinkedExile). A candidate outside
-  -- that pile matches nothing. The reader is a REGRESSION FENCE: no ability in
-  -- data/cards/ an object can acquire states this atom.
+  -- that pile matches nothing. The reader is a REGRESSION FENCE: the one
+  -- ability in data/cards/ an object can acquire that states this atom
+  -- (Mimeoplasm, Revered One's, through Patchwork Crawler) names the
+  -- AsItEntered pile, which no reader changes.
   Filter.IsExiledWithSource pile -> maybe False (\link -> Binding.isLinkedExile (reader context) pile (ExileLink.source link) link) (identity view >>= (`Map.lookup` sourceExiled context))
   -- CR 607.2a off the Context, which the mana-spending road alone fills: no
   -- card exiled with the source matches nothing.

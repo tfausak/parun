@@ -1,6 +1,6 @@
 {
-  "description": "CR 607.5: the Soul Foundry ability Myr Welder acquired is linked to no exiling ability of the Welder's, so its X is the mana value of no card and the Bronze Sable the Welder imprinted does not set it",
-  "note": "The Welder imprints Soul Foundry, then Bronze Sable (mana value 2). The acquired ability's \"the exiled card\" means a card its Imprint trigger exiled, which the Welder never acquired (CR 607.2a), so X is 0: with no mana at all the ability is still offered, and it makes no token. Read as the Welder's own, X would be 2 and the ability unaffordable.",
+  "description": "CR 607.5: the Soul Foundry ability Myr Welder acquired is linked to no exiling ability of the Welder's, so its X is the mana value of no card, not the summed mana values of the Soul Foundry and Bronze Sable the Welder's own ability exiled",
+  "note": "The Welder imprints Soul Foundry, then Bronze Sable (mana value 2). The acquired ability's \"the exiled card\" means a card its Imprint trigger exiled, which the Welder never acquired (CR 607.2a), so X is 0: with no mana at all the ability is still offered, and it makes no token. Read as the Welder's own, X would be 6, the Foundry's 4 and the Sable's 2 summed (CR 607.3), and the ability unaffordable.",
   "board": {
     "seats": [
       {
