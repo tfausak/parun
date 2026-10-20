@@ -65,6 +65,20 @@ spec s = Spec.describe s "Pawl.Codec.CopyException" $ do
       (CopyException.AddSupertypes (Set.fromList [Supertype.Snow, Supertype.Legendary]))
       " {\"type\":\"AddSupertypes\",\"value\":[{\"type\":\"Legendary\"},{\"type\":\"Snow\"}]} "
 
+  Spec.it s "SetCardTypes round-trips, ascending by card type" $
+    Common.assertCodec
+      s
+      (CopyException.codec Common.text)
+      (CopyException.SetCardTypes (Set.fromList [CardType.Enchantment, CardType.Creature]))
+      " {\"type\":\"SetCardTypes\",\"value\":[{\"type\":\"Creature\"},{\"type\":\"Enchantment\"}]} "
+
+  Spec.it s "SetCreatureSubtypes round-trips, ascending by subtype" $
+    Common.assertCodec
+      s
+      (CopyException.codec Common.text)
+      (CopyException.SetCreatureSubtypes (Set.fromList [Subtype.Shapeshifter, Subtype.Dinosaur]))
+      " {\"type\":\"SetCreatureSubtypes\",\"value\":[{\"type\":\"Dinosaur\"},{\"type\":\"Shapeshifter\"}]} "
+
   Spec.it s "RemoveSupertypes round-trips, ascending by supertype" $
     Common.assertCodec
       s

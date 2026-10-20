@@ -513,7 +513,7 @@ unburySpec s registry = Spec.describe s "Unbury" $ do
   Spec.it s "CR 601.2c the second slot's offer is every creature card" $ do
     (unbury, board, _, giantA, giantB, pikerId, changelingId) <- fixture
     let slots = Modal.allTargetSlots (Face.spell (S.combinedFace unbury))
-        offered = Target.legalSets (Just S.alice) False Map.empty S.noSource slots board
+        offered = Target.legalSets Nothing (Just S.alice) False Map.empty S.noSource slots board
     Spec.assertEqWith
       s
       "every creature card in alice's graveyard"
@@ -536,7 +536,7 @@ spec s registry = Spec.describe s "Pawl.Engine.Target" $ do
     piker <- S.printingOf s registry "Goblin Piker"
     let (pikerId, gs) = S.addPermanent piker S.bob (Setup.emptyGame S.bothPlayers)
         slot = SlotName.MkSlotName (Text.pack "who")
-        context bindings = Target.slotContext (Just S.alice) False bindings Acquisition.Own S.noSource Nothing gs
+        context bindings = Target.slotContext Nothing (Just S.alice) False bindings Acquisition.Own S.noSource Nothing gs
         admits bindings = Filter.matches (context bindings) (Projection.viewOfObject pikerId gs) (Filter.Type.SameControllerAsBound slot)
     Spec.assertEqWith
       s
@@ -1832,7 +1832,7 @@ spec s registry = Spec.describe s "Pawl.Engine.Target" $ do
         (hersId, g4) = S.addGraveyardCard bolt S.carol g3
         (board, dwellId) = S.handOne dwell g4
         slots = Modal.allTargetSlots (Face.spell (S.combinedFace dwell))
-        offered = Target.legalSets (Just S.alice) False Map.empty S.noSource slots board
+        offered = Target.legalSets Nothing (Just S.alice) False Map.empty S.noSource slots board
         slotNamed name = Map.findWithDefault Set.empty (SlotName.MkSlotName (Text.pack name)) offered
         run oids =
           let cast = S.runPure (aimingDwell oids) board (S.cast S.alice dwellId)
@@ -1933,7 +1933,7 @@ spec s registry = Spec.describe s "Pawl.Engine.Target" $ do
         (_, atRats) = run ratsId
         (_, atWall) = run wallId
         slots = Modal.allTargetSlots (Face.spell (S.combinedFace hammer))
-        offered = Target.legalSets (Just S.alice) False Map.empty S.noSource slots board
+        offered = Target.legalSets Nothing (Just S.alice) False Map.empty S.noSource slots board
         slotNamed name = Map.findWithDefault Set.empty (SlotName.MkSlotName (Text.pack name)) offered
     -- The behaviour first: naming the Piker in both slots is not an announcement
     -- the rule allows, so CR 601.2e returns the game to before the proposal.
@@ -1978,7 +1978,7 @@ spec s registry = Spec.describe s "Pawl.Engine.Target" $ do
         (alone, hammerId) = S.handOne hammer g1
         (_, together) = S.addPermanent rats S.bob alone
         slots = Modal.allTargetSlots (Face.spell (S.combinedFace hammer))
-        offered = Target.legalSets (Just S.alice) False Map.empty S.noSource slots alone
+        offered = Target.legalSets Nothing (Just S.alice) False Map.empty S.noSource slots alone
         slotNamed name = Map.findWithDefault Set.empty (SlotName.MkSlotName (Text.pack name)) offered
     Spec.assertBool s (not (any (S.isCastOf hammerId) (Action.legalActions S.alice alone))) "with only the Piker on the board, the cast is not offered at all"
     Spec.assertBool s (any (S.isCastOf hammerId) (Action.legalActions S.alice together)) "and with bob's Rats beside it, the same spell off the same mana is offered"
@@ -2070,7 +2070,7 @@ spec s registry = Spec.describe s "Pawl.Engine.Target" $ do
         (castAtSelf, atSelf) = run secondDealerId
         (_, atWall) = run wallId
         slots = Modal.modesTargetSlots (Seq.fromList [ModeIndex.MkModeIndex 0, ModeIndex.MkModeIndex 0]) (Face.spell (S.combinedFace refrain))
-        offered = Target.legalSets (Just S.alice) False Map.empty S.noSource slots board
+        offered = Target.legalSets Nothing (Just S.alice) False Map.empty S.noSource slots board
         slotNamed name = Map.findWithDefault Set.empty (SlotName.MkSlotName (Text.pack name)) offered
     -- The behaviour first: occurrence 1 naming its own dealer is not an
     -- announcement the rule allows, so CR 601.2e returns the game to before the
@@ -2143,7 +2143,7 @@ spec s registry = Spec.describe s "Pawl.Engine.Target" $ do
         (_, atCheap) = run cheapId
         onBattlefield gs oid = elem oid (Game.zoneMembers Zone.Battlefield S.bob gs)
         slots = Modal.modesTargetSlots (Seq.fromList [ModeIndex.MkModeIndex 0, ModeIndex.MkModeIndex 0]) (Face.spell (S.combinedFace refrain))
-        offered = Target.legalSets (Just S.alice) False Map.empty S.noSource slots board
+        offered = Target.legalSets Nothing (Just S.alice) False Map.empty S.noSource slots board
         slotNamed name = Map.findWithDefault Set.empty (SlotName.MkSlotName (Text.pack name)) offered
     -- The behaviour first: occurrence 1's gauge slot holds ONE creature, so a
     -- mana value 2 victim is not an announcement the rule allows, CR 601.2e
@@ -2187,7 +2187,7 @@ spec s registry = Spec.describe s "Pawl.Engine.Target" $ do
   Spec.it s "CR 601.2c a bound counting a sibling slot is offered against every announcement that slot could make" $ do
     verdictBoard s registry 4 $ \verdict rats piker giant board verdictId -> do
       let slots = Modal.allTargetSlots (Face.spell (S.combinedFace verdict))
-          offered = Target.legalSets (Just S.alice) False Map.empty S.noSource slots board
+          offered = Target.legalSets Nothing (Just S.alice) False Map.empty S.noSource slots board
           victims = Map.findWithDefault Set.empty (SlotName.MkSlotName (Text.pack "victim")) offered
           after = castVerdict (take 2 rats) piker board verdictId
       Spec.assertBool s (notElem piker (Game.zoneMembers Zone.Battlefield S.bob after)) "tapping two Rats, the mana value 2 Piker is destroyed"
@@ -2208,7 +2208,7 @@ spec s registry = Spec.describe s "Pawl.Engine.Target" $ do
   Spec.it s "CR 601.2c past the subset budget the sibling-count bound is left open, never narrowed" $ do
     verdictBoard s registry 40 $ \verdict rats piker giant board verdictId -> do
       let slots = Modal.allTargetSlots (Face.spell (S.combinedFace verdict))
-          offered = Target.legalSets (Just S.alice) False Map.empty S.noSource slots board
+          offered = Target.legalSets Nothing (Just S.alice) False Map.empty S.noSource slots board
           victims = Map.findWithDefault Set.empty (SlotName.MkSlotName (Text.pack "victim")) offered
           after = castVerdict (take 2 rats) piker board verdictId
           refused = castVerdict (take 2 rats) giant board verdictId
@@ -2254,7 +2254,7 @@ spec s registry = Spec.describe s "Pawl.Engine.Target" $ do
         (castAtTheirs, ontoTheirs) = run theirsId
         counters = S.counterOf CounterKind.PlusOnePlusOne
         slots = Modal.allTargetSlots (Face.spell (S.combinedFace bioshift))
-        offered = Target.legalSets (Just S.alice) False Map.empty S.noSource slots board
+        offered = Target.legalSets Nothing (Just S.alice) False Map.empty S.noSource slots board
         slotNamed name = Map.findWithDefault Set.empty (SlotName.MkSlotName (Text.pack name)) offered
     Spec.assertEqWith s "alice's first Wall bears the three counters and nothing else does" (fmap (`counters` board) [giverId, mineId, theirsId]) [3, 0, 0]
     -- THE GAMEPLAY-LEVEL ASSERTIONS, ahead of the reversal's: the counters cross
@@ -2642,7 +2642,7 @@ celestineSpec s registry = Spec.describe s "EnclosingAmount (CR 202.3)" $ do
             (sourceId, board) = S.addPermanent piker S.alice noGain
             name = SlotName.MkSlotName (Text.pack "target")
             slotted = theSlot {TargetSlot.amount = Just (Quantity.Type.InSlot Binding.eventAmount)}
-            offer seed = Map.findWithDefault Set.empty name (Target.legalSets (Just S.alice) False seed sourceId (Map.singleton name slotted) board)
+            offer seed = Map.findWithDefault Set.empty name (Target.legalSets Nothing (Just S.alice) False seed sourceId (Map.singleton name slotted) board)
             announcing n = Map.singleton Binding.eventAmount (Binding.toAmount n)
         Spec.assertEqWith s "an announcement of 2 reaches the mana value 2 card alone" (offer (announcing 2)) (Set.singleton (Recipient.ToObject pikerId))
         Spec.assertEqWith s "and one of 4 reaches the mana value 4 card as well" (offer (announcing 4)) (Set.fromList [Recipient.ToObject pikerId, Recipient.ToObject wolvesId])
@@ -2824,7 +2824,7 @@ borrowedExhumationSpec s registry = Spec.describe s "EnclosingAmount (CR 202.3)"
         -- insensitive to the joint check -- which is what lets the pair say the
         -- offer and the re-check agree rather than merely that something was
         -- rejected.
-        offered = Target.legalSets (Just S.alice) False (Binding.fromChoices Map.empty (Just 2) mempty) S.noSource slots board
+        offered = Target.legalSets Nothing (Just S.alice) False (Binding.fromChoices Map.empty (Just 2) mempty) S.noSource slots board
         slotNamed name = Map.findWithDefault Set.empty (SlotName.MkSlotName (Text.pack name)) offered
         run oid =
           let cast = S.runPure (aimingExhumation 2 oid) board (S.cast S.alice spellId)

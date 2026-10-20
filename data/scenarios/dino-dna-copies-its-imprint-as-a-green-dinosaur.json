@@ -1,0 +1,45 @@
+{
+  "description": "CR 607.2a / 707.9b: Dino DNA copies only a creature card its Imprint exiled, as a 6/6 green Dinosaur creature with trample",
+  "note": "Grizzly Bears starts in exile linked to nothing, so Dino DNA's copy ability refuses it (CR 607.2a). The Imprint exiles Bronze Sable, which the copy ability then takes. The exception replaces the copied card types, creature types and colour (CR 205.1a), so the token is a green Dinosaur creature, neither an artifact nor a Sable, and 6/6 with trample.",
+  "board": {
+    "seats": [
+      {
+        "name": "alice",
+        "battlefield": [
+          { "card": "Dino DNA", "label": "dna" },
+          { "card": "Island", "label": "island" },
+          { "card": "Island", "label": "island-2" },
+          { "card": "Island", "label": "island-3" },
+          { "card": "Island", "label": "island-4" },
+          { "card": "Island", "label": "island-5" },
+          { "card": "Island", "label": "island-6" },
+          { "card": "Island", "label": "island-7" }
+        ],
+        "graveyard": [
+          { "card": "Bronze Sable" }
+        ],
+        "exile": [
+          { "card": "Grizzly Bears" }
+        ]
+      },
+      {
+        "name": "bob"
+      }
+    ],
+    "active": "alice",
+    "step": "PrecombatMain"
+  },
+  "timeline": [
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": { "Activate": { "object": "$dna", "ability": 0, "targets": ["Bronze Sable"], "mana": ["$island", null] } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass" },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "check": { "Count": { "player": "alice", "zone": "Exile", "card": "Bronze Sable", "count": 1 } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "refuse": { "Activate": { "object": "$dna", "ability": 1, "targets": ["Grizzly Bears"], "mana": ["$island-2", "$island-3", "$island-4", "$island-5", "$island-6", "$island-7"] } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": { "Activate": { "object": "$dna", "ability": 1, "targets": ["Bronze Sable"], "mana": ["$island-2", "$island-3", "$island-4", "$island-5", "$island-6", "$island-7"] } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass" },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "check": { "PowerToughness": { "object": "Bronze Sable#2", "power": 6, "toughness": 6 } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "check": { "Types": { "object": "Bronze Sable#2", "types": ["Creature"] } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "check": { "Subtypes": { "object": "Bronze Sable#2", "subtypes": ["Dinosaur"] } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "check": { "View": { "of": "Colors", "object": "Bronze Sable#2", "is": ["Green"] } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "check": { "Keywords": { "object": "Bronze Sable#2", "keyword": { "type": "Trample" }, "count": 1 } } }
+  ]
+}
