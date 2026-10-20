@@ -13,7 +13,6 @@ import qualified Pawl.Engine.Projection.View as Projection.View
 import qualified Pawl.Engine.Visibility as Visibility
 import qualified Pawl.Extra.Natural as Natural
 import qualified Pawl.Types.AbilityView as AbilityView
-import qualified Pawl.Types.ActivatedAbilitySource as ActivatedAbilitySource
 import qualified Pawl.Types.Facing as Facing
 import qualified Pawl.Types.GameState as GameState
 import qualified Pawl.Types.LoggedEvent as LoggedEvent
@@ -25,8 +24,6 @@ import qualified Pawl.Types.Player as Player
 import qualified Pawl.Types.PlayerId as PlayerId
 import qualified Pawl.Types.PlayerView as PlayerView
 import qualified Pawl.Types.SeatView as SeatView
-import qualified Pawl.Types.Source as Source
-import qualified Pawl.Types.TriggeredAbilitySource as TriggeredAbilitySource
 import qualified Pawl.Types.Visibility as Visibility.Type
 import qualified Pawl.Types.Zone as Zone
 
@@ -102,25 +99,17 @@ objectView pid gs oid = do
           if seen && faceDown
             then Just (Projection.projectShown oid gs)
             else Nothing,
-        ObjectView.ability = abilityView pid gs (Object.source object)
+        ObjectView.ability = abilityView pid gs oid
       }
 
 -- | CR 113.7a / 602.2a: an ability on the stack by its source, where `pid` may
 -- know that object: one in a public zone, one `pid` sees in a hidden zone, or
 -- one that has left, which the seat can name only by what it witnessed.
-abilityView :: PlayerId.PlayerId -> GameState.GameState -> Source.Source -> Maybe AbilityView.AbilityView
-abilityView pid gs source = case source of
-  Source.OfAbility a -> Just (from (ActivatedAbilitySource.source a))
-  Source.OfTrigger t -> Just (from (TriggeredAbilitySource.source t))
-  Source.OfInherentTrigger _ -> Just (AbilityView.MkAbilityView Nothing)
-  Source.OfCard _ -> Nothing
-  Source.OfMeld _ -> Nothing
-  Source.OfMerge _ -> Nothing
-  Source.OfToken _ -> Nothing
-  Source.OfEmblem _ -> Nothing
-  Source.OfSpellCopy _ -> Nothing
-  Source.OfCardCopy _ -> Nothing
+abilityView :: PlayerId.PlayerId -> GameState.GameState -> ObjectId.ObjectId -> Maybe AbilityView.AbilityView
+abilityView pid gs oid
+  | Game.isAbility oid gs = Just (AbilityView.MkAbilityView (Game.abilitySourceOf oid gs >>= known))
+  | otherwise = Nothing
   where
-    from oid = AbilityView.MkAbilityView $ case Game.zoneOf oid gs of
-      Just zone | Game.isHiddenZone zone && Visibility.sees pid oid gs /= Visibility.Type.Visible -> Nothing
-      _ -> Just oid
+    known source = case Game.zoneOf source gs of
+      Just zone | Game.isHiddenZone zone && Visibility.sees pid source gs /= Visibility.Type.Visible -> Nothing
+      _ -> Just source
