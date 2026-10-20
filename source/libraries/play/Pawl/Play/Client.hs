@@ -209,7 +209,7 @@ choice view question = Maybe.fromMaybe generic $ case Text.unpack (Question.kind
   _ -> Nothing
   where
     offer = Question.offer question
-    -- A source by number, or the word that answers none.
+    -- A source by number, or the line `none` for no source.
     sourcePick heading none others = do
       offered <- field "sources" offer >>= arrayOf >>= mapM manaSource
       let sources = fmap fst offered
@@ -286,7 +286,7 @@ recipientObject reply = case reply of
 
 -- | What to say, and the answer the seat opted into ahead of the question,
 -- if any: passing a priority that offers nothing but passing and
--- mana abilities, and the rest of a payment the seat typed "auto" at. A
+-- mana abilities, and the rest of a payment the seat chose auto at. A
 -- payment's other prompts and a refused answer end "auto", and a refused
 -- answer is always asked.
 unasked :: (Monad m) => Request.Request -> Client m ([Text.Text], Maybe R.Reply)
