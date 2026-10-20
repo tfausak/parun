@@ -2,8 +2,10 @@ module Pawl.Types.ManaAbilityPerformer where
 
 import qualified Data.Map.Strict as Map
 import qualified Data.Set as Set
+import qualified Numeric.Natural as Natural
 import qualified Pawl.Types.Card as Card
 import qualified Pawl.Types.ClauseIndex as ClauseIndex
+import qualified Pawl.Types.DiceRoll as DiceRoll
 import qualified Pawl.Types.Effect as Effect
 import qualified Pawl.Types.Game as Game
 import qualified Pawl.Types.GrantedAbility as GrantedAbility
@@ -33,11 +35,11 @@ import qualified Pawl.Types.SlotName as SlotName
 -- and one would silently drop the damage Ancient Tomb charges for its mana at
 -- whichever call site forgot it.
 --
--- A RECORD rather than one function, so that CR 605.4a's triggered mana ability
--- and CR 118.12's resolution cost ride the same injection: the payment path
--- needs both too, and both live in Pawl.Engine.Resolve, so a parameter of each
--- own would have to be threaded through every caller of Pawl.Engine.Cost.pay for
--- no gain.
+-- A RECORD rather than one function, so that CR 605.4a's triggered mana ability,
+-- CR 118.12's resolution cost and CR 706's roll for a cost's coin flip ride the
+-- same injection: the payment path needs them too, and all live in
+-- Pawl.Engine.Resolve, so a parameter of each own would have to be threaded
+-- through every caller of Pawl.Engine.Cost.pay for no gain.
 data ManaAbilityPerformer = MkManaAbilityPerformer
   { -- | CR 405.6c / 608.2c: the ability's source, its controller, the slots
     -- its earlier clauses bound, and the non-mana effects to run; answers those
@@ -52,5 +54,8 @@ data ManaAbilityPerformer = MkManaAbilityPerformer
     -- controller, the clause's ordinal and gate, and the answers already
     -- recorded by ordinal (PayGate.offeredAt) -- and say whether the clause
     -- happens. Rhystic Cave's "unless any player pays {1}".
-    payGate :: ObjectId.ObjectId -> PlayerId.PlayerId -> ClauseIndex.ClauseIndex -> PayGate.PayGate -> Map.Map ClauseIndex.ClauseIndex (Map.Map PlayerId.PlayerId Bool) -> Game.Game (Bool, Map.Map ClauseIndex.ClauseIndex (Map.Map PlayerId.PlayerId Bool))
+    payGate :: ObjectId.ObjectId -> PlayerId.PlayerId -> ClauseIndex.ClauseIndex -> PayGate.PayGate -> Map.Map ClauseIndex.ClauseIndex (Map.Map PlayerId.PlayerId Bool) -> Game.Game (Bool, Map.Map ClauseIndex.ClauseIndex (Map.Map PlayerId.PlayerId Bool)),
+    -- | CR 614.6 / 706.1: throw and record the die roll Pokey, the Scallywagg
+    -- makes instead of a cost's coin flip, answering the kept results.
+    throwForCoin :: DiceRoll.DiceRoll -> Game.Game [Natural.Natural]
   }
