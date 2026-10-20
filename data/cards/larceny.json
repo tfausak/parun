@@ -65,11 +65,14 @@
                         "value": {
                           "type": "Counted",
                           "value": {
+                            "player": {
+                              "type": "InSlot",
+                              "value": "thatPlayer"
+                            },
                             "quantity": {
                               "type": "Literal",
                               "value": 1
-                            },
-                            "slot": "thatPlayer"
+                            }
                           }
                         }
                       }

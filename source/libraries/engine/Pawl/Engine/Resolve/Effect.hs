@@ -3464,15 +3464,15 @@ effectIsImpossible resolving source controller legal gs effect = case effect of
   Effect.Discard (Discard.These (TheseDiscard.MkTheseDiscard ref _)) -> choosesFromNothing ref
   -- CR 107.1c: zero is a legal answer, so no hand makes it impossible.
   Effect.Discard (Discard.AnyNumber {}) -> False
-  Effect.Discard (Discard.Counted (CountedDiscard.MkCountedDiscard slot quantity _)) ->
-    -- CR 701.9a: the victims are the slot's player recipients, read through
-    -- legalMany and Recipient.playerOf as the executing arm reads them, and the
-    -- amount is read per victim because a card may count something about them.
+  Effect.Discard (Discard.Counted (CountedDiscard.MkCountedDiscard ref quantity _)) ->
+    -- CR 701.9a: the victims are the players the reference names, read through
+    -- playerRefPlayers as the executing arm reads them, and the amount is read
+    -- per victim because a card may count something about them.
     -- Short of the count is impossible, not merely an empty hand: Thrilling
     -- Discovery's "you may discard two cards" over a one-card hand is
     -- Pawl.ResolveSpec's "CR 608.2d Thrilling Discovery's discard of two is not
     -- offered over a one-card hand".
-    let victims = Maybe.mapMaybe Recipient.playerOf (legalMany slot legal)
+    let victims = playerRefPlayers legal resolving source controller gs ref
         shortHanded victim = case evaluateForRecipient viewOf context gs resolving source victim quantity of
           Just n | n > 0 -> n > List.genericLength (Game.zoneMembers Zone.Hand victim gs)
           _ -> False
@@ -6542,15 +6542,15 @@ applyOneEffect runSubgame resolving source controller legal chosen effect = case
     -- One event group, CR 608.2f, through the other arms' burial, so what
     -- moved is bound the same way.
     buryDiscards resolving mDiscarded (Maybe.mapMaybe owned named)
-  Effect.Discard (Discard.Counted (CountedDiscard.MkCountedDiscard slot quantity mDiscarded)) -> do
+  Effect.Discard (Discard.Counted (CountedDiscard.MkCountedDiscard ref quantity mDiscarded)) -> do
     gs <- State.get
     let viewOf = effectViewOf source legal gs
         context = effectContext gs resolving controller source legal (slotBindings resolving gs)
-    let -- Every player recipient the slot holds, in APNAP order (CR 101.4): a
-        -- slot that is unfilled, illegal (CR 608.2b) or names an object
-        -- contributes nobody, and apnapOrder supplies the ORDER while `named`
-        -- supplies the MEMBERSHIP.
-        named = Maybe.mapMaybe Recipient.playerOf (legalMany slot legal)
+    let -- Every player the reference names, in APNAP order (CR 101.4): a slot
+        -- that is unfilled, illegal (CR 608.2b) or names an object contributes
+        -- nobody, and apnapOrder supplies the ORDER while `named` supplies the
+        -- MEMBERSHIP.
+        named = playerRefPlayers legal resolving source controller gs ref
         victims = filter (\pid -> List.elem pid named) (Game.apnapOrder gs)
         -- Read against the VICTIM, not the controller, so "cards equal to the
         -- number of creatures they control" is answered per discarding player.

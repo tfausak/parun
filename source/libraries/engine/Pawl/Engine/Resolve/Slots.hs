@@ -978,7 +978,7 @@ effectPlayerRefs effect = case effect of
   Effect.ArrangeInLibrary {} -> []
   Effect.Connive {} -> []
   Effect.Discard subject -> case subject of
-    Discard.Counted {} -> []
+    Discard.Counted (CountedDiscard.MkCountedDiscard ref _ _) -> [ref]
     Discard.These {} -> []
     Discard.AnyNumber (AnyNumberDiscard.MkAnyNumberDiscard ref _ _) -> [ref]
   Effect.LoseLife (LifeLoss.MkLifeLoss ref _ _ _) -> [ref]
@@ -1306,9 +1306,8 @@ slotsOf effect = joinTwo (joinTwo (joinSlots (fmap objectRefSlots (effectObjectR
   Effect.Connive (Connive.MkConnive quantity _) -> quantitySlots quantity
   Effect.Discard subject -> case subject of
     -- The bound slot is a DEFINITION, not a read, so it is not joined in here.
-    -- Many: CR 101.4's worked example is a table-wide instruction, and the
-    -- resolution arm below folds over every player the slot names.
-    Discard.Counted (CountedDiscard.MkCountedDiscard slot quantity _) -> joinTwo (Map.singleton slot SlotArity.Many) (quantitySlots quantity)
+    -- The discarders are a PlayerRef, reported at the head with every other one.
+    Discard.Counted (CountedDiscard.MkCountedDiscard _ quantity _) -> quantitySlots quantity
     Discard.These {} -> Map.empty
     -- The ceiling's read joined with what the card filter reads. The discarders
     -- are a PlayerRef, reported at the head with every other one.

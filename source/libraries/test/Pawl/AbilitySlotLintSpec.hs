@@ -1346,9 +1346,9 @@ abilitySlotLintSpec s registry = Spec.describe s "Lint" $ do
     brothers <- S.printingOf s registry "Brothers of Fire"
     let free = Just (ManaCost.MkManaCost [])
         variable = Just (ManaCost.MkManaCost [ManaSymbol.Variable])
-        -- CR 109.5's "you", in the shape Baral, Chief of Compliance's TRIGGERED
-        -- ability uses it: a bare-SlotName opcode naming the controller.
-        youDiscards = Effect.Discard (Discard.Counted (CountedDiscard.MkCountedDiscard Binding.you (Quantity.Type.Literal 1) Nothing))
+        -- CR 109.5's "you", read through its reserved slot: an opcode naming the
+        -- controller by Binding.you.
+        youDiscards = Effect.Discard (Discard.Counted (CountedDiscard.MkCountedDiscard (PlayerRef.InSlot Binding.you) (Quantity.Type.Literal 1) Nothing))
         -- Endless Cockroaches' payload (CR 400.7e) and rule 702.70a's, the two
         -- event slots, neither of which an activation has an event to bind.
         returnIt = Effect.MoveToZone (MoveToZone.MkMoveToZone (ObjectRef.InSlot Binding.became) Zone.Hand EntryRiders.defaultValue Nothing Nothing LibraryPlacement.defaultValue Nothing)

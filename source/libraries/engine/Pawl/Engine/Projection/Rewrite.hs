@@ -694,8 +694,8 @@ rewriteEffect pairs effect = case effect of
   Effect.ArrangeInLibrary ref -> Effect.ArrangeInLibrary (rewriteObjectRef pairs ref)
   Effect.Connive (Connive.MkConnive quantity ref) -> Effect.Connive (Connive.MkConnive (rewriteQuantity pairs quantity) (rewriteObjectRef pairs ref))
   -- The These arm's ref carries a Filter, so rule 612's text change reaches it
-  -- exactly as Reveal's does; the Counted arm holds two slot NAMES and a count,
-  -- and only the count is a word rule 612 can reach -- a slot name is not.
+  -- exactly as Reveal's does; the Counted arm holds a player reference, a slot
+  -- NAME and a count, and only the count is a word rule 612 can reach.
   Effect.Discard subject -> case subject of
     Discard.Counted x -> Effect.Discard (Discard.Counted x {CountedDiscard.quantity = rewriteQuantity pairs (CountedDiscard.quantity x)})
     Discard.These (TheseDiscard.MkTheseDiscard ref mDiscarded) -> Effect.Discard (Discard.These (TheseDiscard.MkTheseDiscard (rewriteObjectRef pairs ref) mDiscarded))

@@ -2,6 +2,7 @@
 
 module Pawl.Codec.CountedDiscard where
 
+import qualified Pawl.Codec.PlayerRef as PlayerRef
 import qualified Pawl.Codec.Quantity as Quantity
 import qualified Pawl.Codec.SlotName as SlotName
 import qualified Pawl.JsonCodec.Codec as Codec
@@ -16,12 +17,12 @@ import qualified Pawl.Types.CountedDiscard as CountedDiscard
 -- never looks back at what it discarded writes only the two keys it always did.
 codec :: Codec.Codec CountedDiscard.CountedDiscard
 codec = Fields.object $ do
-  slot <- Fields.required "slot" SlotName.codec CountedDiscard.slot
+  player <- Fields.required "player" PlayerRef.codec CountedDiscard.player
   quantity <- Fields.required "quantity" Quantity.codec CountedDiscard.quantity
   discarded <- Fields.defaulted "discarded" Nothing (Common.maybe SlotName.codec) CountedDiscard.discarded
   pure
     CountedDiscard.MkCountedDiscard
-      { CountedDiscard.slot = slot,
+      { CountedDiscard.player = player,
         CountedDiscard.quantity = quantity,
         CountedDiscard.discarded = discarded
       }

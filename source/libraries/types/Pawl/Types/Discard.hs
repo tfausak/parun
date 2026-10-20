@@ -18,8 +18,8 @@ import qualified Pawl.Types.TheseDiscard as TheseDiscard
 -- Pawl.Engine.EffectZone, Pawl.Engine.ManaAbility, Pawl.Engine.Projection's
 -- rewrite -- would otherwise have to learn rule 701.9 twice.
 data Discard
-  = -- | CR 701.9b: the slot names one player, who picks. CR 609.3 caps the count
-    -- at the hand's size, and a full hand is forced rather than asked.
+  = -- | CR 701.9b: each player the reference names picks. CR 609.3 caps the
+    -- count at the hand's size, and a full hand is forced rather than asked.
     Counted CountedDiscard.CountedDiscard
   | -- | The card names the set, so the discarding player's CR 701.9b choice does
     -- not arise; the ref may name it at random (Hymn to Tourach) or by another

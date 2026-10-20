@@ -2410,7 +2410,7 @@ effectLintSpec s registry = Spec.describe s "Lint" $ do
                 (PlayerRef.Relative PlayerRelation.You)
             )
         victimSlot = SlotName.MkSlotName (Text.pack "victim")
-        discarding = Effect.Discard (Discard.Counted (CountedDiscard.MkCountedDiscard victimSlot (Quantity.Type.Literal 1) (Just destroyedSlot)))
+        discarding = Effect.Discard (Discard.Counted (CountedDiscard.MkCountedDiscard (PlayerRef.InSlot victimSlot) (Quantity.Type.Literal 1) (Just destroyedSlot)))
         minting n = Effect.Create (Create.MkCreate (Quantity.Type.Literal n) (oneFaced (vanillaFace "Soldier" (spellLine CardType.Creature Set.empty Set.empty))) EntryRiders.defaultValue (Just destroyedSlot) (PlayerRef.Relative PlayerRelation.You))
     -- Half the rejected shape is in the pool: Act on Impulse binds a group. No
     -- card in data/cards/ pairs one with a singular read of the same slot, so the
