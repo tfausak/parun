@@ -26,6 +26,7 @@ import qualified Pawl.JsonCodec.Codec as Codec
 import qualified Pawl.JsonCodec.Common as Common
 import qualified Pawl.Play.Bot as Bot
 import qualified Pawl.Play.Game as Game
+import qualified Pawl.Play.Protocol as Protocol
 import qualified Pawl.Play.Record as Record
 import qualified Pawl.Play.Render as Render
 import qualified Pawl.Play.SplitMix as SplitMix.Play
@@ -95,7 +96,10 @@ play options lookUp (one, two) = do
   seed <- maybe (fmap (SplitMix.Play.fromClock . nanoseconds) Clock.getSystemTime) pure (PlayOptions.seed options)
   IO.hPutStrLn IO.stderr ("Seed " <> show seed <> ".")
   let people = filter (`Set.notMember` PlayOptions.bots options) [1, 2]
-  (starter, generator) <- State.runStateT (Game.starter terminal options) (SplitMix.MkSplitMix seed)
+  let (tell, ask)
+        | PlayOptions.json options = (TextIO.hPutStrLn IO.stderr, Protocol.playOrDraw exchange . idOf)
+        | otherwise = (TextIO.putStrLn, Game.playOrDraw terminal)
+  (starter, generator) <- State.runStateT (Game.starter tell ask options) (SplitMix.MkSplitMix seed)
   first <- maybe (failWith "end of input") pure starter
   let matchup =
         if first == 2

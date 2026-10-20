@@ -73,7 +73,7 @@ render = Common.render . Codec.encode Codec.Request.codec
 requestFor :: Asked.Asked r -> Maybe Request.Request
 requestFor asked =
   fmap
-    (\question -> Request.MkRequest (PlayerView.viewFor (Question.seat question) (Asked.game asked)) question Nothing)
+    (\question -> Request.MkRequest (Just (PlayerView.viewFor (Question.seat question) (Asked.game asked))) question Nothing)
     (questionOf (Asked.game asked) (Asked.prompt asked))
 
 questionOf :: GameState.GameState -> Prompt.Prompt r -> Maybe Question.Question
@@ -184,3 +184,21 @@ objects = Reply.encode (Reply.list Reply.object) namer
 
 natural :: Natural -> R.Reply
 natural = Reply.encode Reply.natural namer
+
+-- | CR 103.1: whether this seat plays first rather than draws, asked over the
+-- line before the game begins, so with no view; asked again with the problem
+-- until the reply is Play or Draw. Nothing at the end of input.
+playOrDraw :: (Monad m) => (Text.Text -> m (Maybe Text.Text)) -> PlayerId.PlayerId -> m (Maybe Bool)
+playOrDraw send seat = go Nothing
+  where
+    choices = [(Text.pack "Play", True), (Text.pack "Draw", False)]
+    question = Question.MkQuestion seat (Text.pack "PlayOrDraw") (R.Array (fmap (R.Text . fst) choices))
+    go problem = do
+      line <- send (render (Request.MkRequest Nothing question problem))
+      case fmap (\l -> Common.parse l >>= Codec.Reply.fromValue >>= chosen) line of
+        Nothing -> pure Nothing
+        Just (Right plays) -> pure (Just plays)
+        Just (Left again) -> go (Just again)
+    chosen reply = case reply of
+      R.Text word | Just plays <- lookup word choices -> Right plays
+      _ -> Left (Text.pack "expected Play or Draw")

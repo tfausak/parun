@@ -56,25 +56,21 @@ underneath = Trans.lift . Client.lift2
 
 -- | CR 103.1: the seat that plays first. `--first` names it; otherwise a seat
 -- drawn from the generator chooses whether to play first or draw, the bot
--- through 'Bot.playsFirst' and a person at the terminal. Nothing at the end
--- of input.
---
--- Not implemented: asking a seat over the line protocol, so with --json seat
--- 1 plays first (#5374).
-starter :: (Monad m) => Terminal.Terminal m -> PlayOptions.PlayOptions -> State.StateT SplitMix.SplitMix m (Maybe Natural)
-starter terminal options = case PlayOptions.first options of
+-- through 'Bot.playsFirst' and any other seat by `ask`, which is Nothing at
+-- the end of input. Each step is told through `tell`.
+starter :: (Monad m) => (Text.Text -> m ()) -> (Natural -> m (Maybe Bool)) -> PlayOptions.PlayOptions -> State.StateT SplitMix.SplitMix m (Maybe Natural)
+starter tell ask options = case PlayOptions.first options of
   Just seat -> pure (Just seat)
-  Nothing | PlayOptions.json options -> pure (Just 1)
   Nothing -> do
     chooser <- SplitMix.Play.pick (1 NonEmpty.:| [2])
-    Trans.lift (Terminal.say terminal (Text.pack ("Seat " <> show chooser <> " was picked at random to choose who plays first.")))
+    Trans.lift (tell (Text.pack ("Seat " <> show chooser <> " was picked at random to choose who plays first.")))
     plays <-
       if Set.member chooser (PlayOptions.bots options)
         then fmap Just Bot.playsFirst
-        else Trans.lift (playOrDraw terminal chooser)
+        else Trans.lift (ask chooser)
     Monad.forM plays $ \chooses -> do
       let seat = if chooses == (chooser == 1) then 1 else 2 :: Natural
-      Trans.lift (Terminal.say terminal (Text.pack ("Seat " <> show seat <> " plays first.")))
+      Trans.lift (tell (Text.pack ("Seat " <> show seat <> " plays first.")))
       pure seat
 
 -- | Whether this seat's person plays first rather than draws, asked until

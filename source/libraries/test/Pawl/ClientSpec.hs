@@ -477,7 +477,9 @@ otherSeat n = if n == 1 then 2 else 1
 -- that plays first and the generator after, and the screen.
 starting :: PlayOptions.PlayOptions -> [Text.Text] -> Word.Word64 -> ((Maybe Natural, SplitMix.SplitMix), Screen)
 starting options answers seed =
-  State.runState (State.runStateT (Game.starter (screen (List.genericLength answers) (\sc -> Maybe.listToMaybe (List.genericDrop (typed sc) answers))) options) (SplitMix.MkSplitMix seed)) blank
+  State.runState (State.runStateT (Game.starter (Terminal.say terminal) (Game.playOrDraw terminal) options) (SplitMix.MkSplitMix seed)) blank
+  where
+    terminal = screen (List.genericLength answers) (\sc -> Maybe.listToMaybe (List.genericDrop (typed sc) answers))
 
 -- What the screen showed, newest first, and how many lines were typed.
 data Screen = MkScreen {written :: [Text.Text], typed :: Natural}
