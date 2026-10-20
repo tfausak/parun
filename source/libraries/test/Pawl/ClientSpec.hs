@@ -231,6 +231,7 @@ spec s registry = Spec.describe s "Client" $ do
     Spec.assertEqWith s "targets" (answering gs "1" (Prompt.ChooseTargets alice S.alice o7 (Map.singleton slot (1, Set.fromList [Recipient.ToPlayer S.bob, Recipient.ToCreature o9])))) (Right (Map.singleton slot (Set.singleton (Recipient.ToCreature o9))))
     Spec.assertEqWith s "optional" (answering gs "2" (Prompt.ChooseOptional alice S.alice o7 (ModeIndex.MkModeIndex 0) (ClauseIndex.MkClauseIndex 0) mempty)) (Right OptionalDecision.Declines)
     Spec.assertEqWith s "x" (answering gs "3" (Prompt.ChooseX alice S.alice o7 Binding.variableX 1 5)) (Right 3)
+    Spec.assertEqWith s "combat damage" (answering gs "1 2" (Prompt.AssignCombatDamage alice S.alice o7 (Map.fromList [(Recipient.ToCreature o5, 0), (Recipient.ToCreature o9, 0)]) 3)) (Right (Map.fromList [(Recipient.ToCreature o5, 1), (Recipient.ToCreature o9, 2)]))
     Spec.assertEqWith s "mana source" (answering gs "stop" (Prompt.ChooseManaSource alice S.alice (ManaCost.MkManaCost [ManaSymbol.Generic 1]) (o7 NonEmpty.:| [o9]))) (Right Nothing)
 
   Spec.it s "Enter passes at a priority offering Pass, and the menu says so" $ do
@@ -516,13 +517,16 @@ typedYet :: String -> Screen -> Bool
 typedYet line = elem (Text.pack ("> " <> line)) . written
 
 -- Plays a land or casts a spell when it can, attacks with its first creature,
--- never blocks, pays with the first source, and keeps its hand.
+-- never blocks, pays with the first source, puts all of a divided combat
+-- damage on the first recipient, and keeps its hand.
 plays :: Screen -> Maybe Text.Text
 plays sc
   | any (Text.isPrefixOf (Text.pack "Pass to ")) shown = Just Text.empty
   | any (Text.isPrefixOf (Text.pack "Type the answer as JSON")) shown = Nothing
   | Just n <- Maybe.listToMaybe (Maybe.mapMaybe wanted shown) = Just (Text.unwords (fmap (Text.pack . show) [1 .. n]))
   | any (Text.isPrefixOf (Text.pack "Type blocker:attacker")) shown = Just Text.empty
+  | Just total <- Maybe.listToMaybe (Maybe.mapMaybe divided shown) =
+      Just (Text.unwords (total : replicate (length (Maybe.mapMaybe option shown) - 1) (Text.pack "0")))
   | any menuHeading shown =
       let options = Maybe.mapMaybe option shown
           pick = List.find (\(_, t) -> any (`Text.isPrefixOf` t) [Text.pack "Play ", Text.pack "Cast "]) options
@@ -539,6 +543,9 @@ plays sc
     option line = case Text.breakOn (Text.pack ". ") (Text.strip line) of
       (n, rest) | Just _ <- (Read.readMaybe (Text.unpack n) :: Maybe Natural), not (Text.null rest) -> Just (n, Text.drop 2 rest)
       _ -> Nothing
+    divided line
+      | Text.isPrefixOf (Text.pack "Divide ") line = Maybe.listToMaybe (reverse (takeWhile (/= Text.pack "damage,") (Text.words line)))
+      | otherwise = Nothing
     leastX line
       | Text.isPrefixOf (Text.pack "Choose X") line = Maybe.listToMaybe (drop 1 (dropWhile (/= Text.pack "from") (Text.words line)))
       | otherwise = Nothing
