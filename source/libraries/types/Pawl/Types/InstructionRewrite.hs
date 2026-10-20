@@ -17,7 +17,8 @@ data InstructionRewrite
     -- does, proposed as an event of its own (CR 121.2a).
     DrawInstead
   | -- | Pokey, the Scallywagg's "you may instead roll a d20. 1-10 is tails and
-    -- 11-20 is heads" (CR 614.1a / 614.6): one coin's flip does not happen, and a
-    -- d20 roll does, read back as the flip's face. Counts as rolling a die.
+    -- 11-20 is heads" (CR 614.1a / 614.6): the flip does not happen, and a d20
+    -- is rolled for each of its coins, read back as that coin's face. Counts as
+    -- rolling a die.
     RollD20Instead
   deriving (Eq, Ord, Show)

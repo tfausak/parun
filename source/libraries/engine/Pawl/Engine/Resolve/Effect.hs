@@ -158,7 +158,6 @@ import qualified Pawl.Types.Clause as Clause
 import Pawl.Types.ClauseIndex (ClauseIndex)
 import qualified Pawl.Types.ClauseIndex as ClauseIndex
 import qualified Pawl.Types.CoinFace as CoinFace
-import qualified Pawl.Types.CoinFlipped as CoinFlipped
 import qualified Pawl.Types.CoinReading as CoinReading
 import qualified Pawl.Types.Comparison as Comparison
 import qualified Pawl.Types.Conjure as Conjure
@@ -204,7 +203,6 @@ import qualified Pawl.Types.Designate as Designate
 import qualified Pawl.Types.Designation as Designation
 import qualified Pawl.Types.Destroy as Destroy
 import qualified Pawl.Types.DiceReading as DiceReading
-import qualified Pawl.Types.DiceRoll as DiceRoll
 import qualified Pawl.Types.DieResult as DieResult
 import qualified Pawl.Types.DifferentIn as DifferentIn
 import qualified Pawl.Types.Discard as Discard
@@ -409,6 +407,8 @@ import qualified Pawl.Types.TapState as TapState
 import qualified Pawl.Types.TargetSlot as TargetSlot
 import qualified Pawl.Types.Teams as Teams
 import qualified Pawl.Types.TheseDiscard as TheseDiscard
+import qualified Pawl.Types.Throw as Throw
+import qualified Pawl.Types.ThrowKind as ThrowKind
 import qualified Pawl.Types.Toughness as Toughness
 import qualified Pawl.Types.TriggerCondition as TriggerCondition
 import qualified Pawl.Types.TriggerSource as TriggerSource
@@ -4835,9 +4835,9 @@ applyOneEffect runSubgame resolving source controller legal chosen effect = case
   -- order (CR 101.4), each through throwDice as the player CR 706.2b's pick and
   -- CR 706.2a's modifiers belong to, and each chooses their own CR 706.4 result.
   --
-  -- One writer per road: Prompt.RollDie is asked from this arm and from
-  -- Effect.Reroll below, and each records the roll it throws -- a reroll inside
-  -- this arm included, see `rerolling`.
+  -- One writer per road: Prompt.RollDie is asked from throwSettled alone, and
+  -- this arm records the roll it throws -- a reroll records its own, see
+  -- `rethrow`.
   --
   -- Recorded AFTER the binding, so a trigger placed by CR 603.3 sees the same
   -- state a later effect of this resolution would. Nothing observes the order --
@@ -4922,7 +4922,7 @@ applyOneEffect runSubgame resolving source controller legal chosen effect = case
             if all (== NonEmpty.head offered) (NonEmpty.tail offered)
               then pure 0
               else do
-                answer <- Game.choose (Prompt.ChooseDieResult (Decide.deciderFor roller gs) roller resolving offered)
+                answer <- Game.choose (Prompt.ChooseDieResult (Decide.deciderFor roller gs) roller (Just resolving) offered)
                 pure (if answer < List.genericLength results then answer else 0)
           -- CR 706.4's "the other result", off the same throw rather than
           -- re-derived from the count, FlipCoin's `misses` below and for its
@@ -4949,21 +4949,12 @@ applyOneEffect runSubgame resolving source controller legal chosen effect = case
     Foldable.for_ (RollDie.store rollDie >>= \slot -> legalOne slot legal >>= Recipient.objectOf) $ \target -> do
       acquisition <- State.gets (\g -> Game.readingAcquisition resolving source g target)
       State.modify' (storeOn acquisition target sides (foldMap (\(_, _, _, results) -> results) rolled))
-  -- CR 706.2b's reroll, thrown by the ability Goblin Bookie activates inside
-  -- throwDice's window: the same die, the new face filtered back to
-  -- CR 706.1a's range, and handed back through GameState.rerolledTo. No window
-  -- open, no die to reroll, and nothing happens.
-  --
-  -- Recorded as the rerolling player's roll: Pippa, Duchess of Dice's ruling
-  -- has a reroll of another player's die trigger the rerolling player's
-  -- "whenever you roll a die".
-  Effect.Reroll -> do
-    gs <- State.get
-    Foldable.for_ (GameState.rollingDie gs) $ \dieSides -> do
-      again <- Game.ask (Prompt.RollDie dieSides)
-      let face = if again >= 1 && again <= dieSides then again else 1
-      State.modify' (\g -> g {GameState.rerolledTo = Just face})
-      State.modify' (Event.recordEvent (GameEvent.PlayerActed (PlayerActed.MkPlayerActed PlayerAction.RollDice controller)))
+  -- CR 706.2b's reroll, asked for by the ability Goblin Bookie activates inside
+  -- throwDice's window, through GameState.rerollRequested. The die is thrown
+  -- again once the ability is done, by throwSettled's `rethrow`, as the
+  -- activating player's CR 706.1 roll. No window open, no die to reroll, and
+  -- nothing happens.
+  Effect.Reroll -> State.modify' (\g -> if Maybe.isJust (GameState.rollingDie g) then g {GameState.rerollRequested = True} else g)
   -- CR 706.8b: the controller chooses which of the slot's stored results to
   -- reroll, rolls one die of each noted kind per result through throwDice --
   -- so CR 706.2's modifiers and CR 614.1a's replacements reach it, and each
@@ -5072,22 +5063,12 @@ applyOneEffect runSubgame resolving source controller legal chosen effect = case
             -- have no winner.
             --
             -- Where Pokey, the Scallywagg rolled instead, the face the roll is
-            -- read as counts and no CR 705.1 event is recorded.
+            -- read as counts and no CR 705.1 event is recorded; where it then
+            -- flipped a coin for that d20, the coin is called
+            -- (Event.settleCoins).
             CoinReading.Heads -> do
-              flipped <- Event.flipOneCoin (Just (throwForCoin runSubgame)) (Just controller) statements
-              case flipped of
-                Left face -> pure (face == Just CoinFace.Heads)
-                Right (face, stated) -> do
-                  State.modify'
-                    ( Event.recordEvent
-                        ( GameEvent.CoinFlipped
-                            CoinFlipped.MkCoinFlipped
-                              { CoinFlipped.flipper = controller,
-                                CoinFlipped.won = if stated then Just True else Nothing
-                              }
-                        )
-                    )
-                  pure (face == CoinFace.Heads)
+              (face, _) <- Event.flipOneCoin (Just (throwForCoin runSubgame)) (Just controller) Nothing statements
+              pure (face == Just CoinFace.Heads)
           pure (if hit then acc + 1 else acc)
     -- Bound AFTER every coin, since CR 705.2 asks how many of the flips matched
     -- and one instruction's flips are all of them.
@@ -10871,33 +10852,36 @@ throwDice :: Game Result -> PlayerId -> Natural -> Natural -> Game Integer -> Ga
 throwDice runSubgame controller sides named perDie = do
   settled <- Event.proposeDiceRoll controller sides named
   case settled of
-    Left result -> pure ([result], [controller], [])
+    Left results -> pure (results, fmap (const controller) results, [])
     Right roll -> do
       -- A roll standing for Pokey's flip throws with no modifier of the
       -- instruction's own, throwForCoin's reason: the flip named none, and
       -- the instruction sees only the 1 or 20 the face is read as.
-      (results, throwers) <- throwSettled runSubgame roll (if DiceRoll.forCoin roll then pure 0 else perDie)
-      let readBack = if DiceRoll.forCoin roll then foldMap (pure . Event.resultOfFace) (Event.faceOfRoll results) else results
+      (results, throwers) <- throwSettled runSubgame roll (if Throw.instead roll then pure 0 else perDie)
+      let readBack = if Throw.instead roll then Maybe.mapMaybe (fmap Event.resultOfFace . Event.faceOfResult) results else results
       pure (readBack, throwers, results)
 
 -- | CR 706.1: the roll Pokey, the Scallywagg makes instead of a coin flip,
 -- thrown through `throwSettled` and recorded -- the CR 706 road
 -- Pawl.Engine.Event.flipOneCoin cannot reach. No modifier of the instruction's
 -- own: the flip named none.
-throwForCoin :: Game Result -> DiceRoll.DiceRoll -> Game [Natural]
+throwForCoin :: Game Result -> Throw.Throw -> Game [Natural]
 throwForCoin runSubgame roll = do
   (results, throwers) <- throwSettled runSubgame roll (pure 0)
-  Monad.unless (null results) (recordRoll (DiceRoll.roller roll) throwers results)
+  Monad.unless (null results) (recordRoll (Throw.thrower roll) throwers results)
   pure results
 
 -- | `throwDice` once CR 614.1a's loop has settled the roll: how many dice to
--- throw and how many of the lowest CR 706.6 then ignores.
-throwSettled :: Game Result -> DiceRoll.DiceRoll -> Game Integer -> Game ([Natural], [PlayerId])
+-- throw, which to keep, and how many of the lowest CR 706.6 then ignores
+-- (Pawl.Types.Throw).
+throwSettled :: Game Result -> Throw.Throw -> Game Integer -> Game ([Natural], [PlayerId])
 throwSettled runSubgame roll perDie = do
-  let controller = DiceRoll.roller roll
-      sides = DiceRoll.sides roll
-      dice = DiceRoll.dice roll
-      ignored = DiceRoll.ignored roll
+  let controller = Throw.thrower roll
+      -- Unreachable for coins: both funnels settle a flip themselves
+      -- (Event.settleCoins), so a thrower is handed dice alone.
+      sides = case Throw.kind roll of
+        ThrowKind.Dice n -> n
+        ThrowKind.Coins -> 1
       -- CR 706.1a's outcomes "numbered from 1 to N", BOTH ends included: the
       -- answer filtered back to a face the die could show. Its own binding
       -- because a reroll runs it a second time.
@@ -10926,11 +10910,16 @@ throwSettled runSubgame roll perDie = do
       -- or whoever activated a reroll in the window below (`windowCandidates`).
       -- The static offers and those activations compete in the one step, so
       -- both are candidates for the roller's pick.
-      rerolling thrower natural = do
+      rerolling = rerollingWith True
+      -- `byNumber` False for a natural result a coin gave (`rethrow`): no die
+      -- came up that number, so an offer gated on one ("if you roll a 3") is
+      -- not made, where one that reaches any die the player rolled is.
+      rerollingWith byNumber thrower natural = do
         gs <- State.get
         modifiers <- Dice.modifiersFor controller
         activations <- duringRoll (State.gets windowCandidates)
-        let static = fmap (\(payer, stated, offer) -> (payer, stated, Left offer)) (distinct Set.empty (fmap (offerOf gs) (Dice.rerollOffers sides natural modifiers)))
+        let gated (_, offer) = byNumber || Maybe.isNothing (ModifiedRoll.natural offer)
+            static = fmap (\(payer, stated, offer) -> (payer, stated, Left offer)) (distinct Set.empty (fmap (offerOf gs) (filter gated (Dice.rerollOffers sides natural modifiers))))
         offering (static <> activations) thrower natural
       -- CR 109.5's "you" on the modifier, which is the player its "may" and
       -- its CR 706.2a cost belong to -- Clam-I-Am's own controller, who is
@@ -10971,21 +10960,50 @@ throwSettled runSubgame roll perDie = do
                 paid <- payModifier payer stated mCost
                 if not paid
                   then offering rest thrower natural
-                  else do
-                    again <- Game.ask (Prompt.RollDie sides)
-                    -- The roller throws it: Clam-I-Am's "you may reroll
-                    -- it", Wall of Fortune's "have any player reroll a die
-                    -- that player rolled".
-                    State.modify' (Event.recordEvent (GameEvent.PlayerActed (PlayerActed.MkPlayerActed PlayerAction.RollDice controller)))
-                    rerolling controller (faceOf again)
+                  -- The roller throws it: Clam-I-Am's "you may reroll
+                  -- it", Wall of Fortune's "have any player reroll a die
+                  -- that player rolled".
+                  else rethrow controller
               (OptionalDecision.Exercises, Right (oid, ability)) -> do
-                rerolled <- duringRoll $ do
+                requested <- duringRoll $ do
                   activated <- activateWhileRolling runSubgame payer oid ability
                   after <- State.get
-                  pure (if activated then GameState.rerolledTo after else Nothing)
-                case rerolled of
-                  Nothing -> offering rest thrower natural
-                  Just face -> rerolling payer face
+                  pure (activated && GameState.rerollRequested after)
+                if requested
+                  then rethrow payer
+                  else offering rest thrower natural
+      -- CR 706.2b's reroll is a roll: Pippa, Duchess of Dice's ruling has it
+      -- trigger "whenever you roll a die", so it is CR 706.1's event and goes
+      -- through CR 614's loop, Event.proposeDiceRoll, as one die of the same
+      -- size. Pixie Guide adds a die to it and ignores the lowest; Pokey, the
+      -- Scallywagg may flip a coin for a d20, whose 1 or 20 is the die's new
+      -- natural result. Each die it throws is offered its own rerolls, before
+      -- CR 706.6 drops any, so the number that comes back has had every offer
+      -- already.
+      --
+      -- The die a coin stood in for is still one the player rolled, so it is
+      -- offered again -- Wall of Fortune's ruling, "you can tap another
+      -- untapped Wall ... to have them reroll again" -- but only by an offer
+      -- that names no number: the coin "counts as flipping a coin, not rolling
+      -- a die" (Pokey), so no die came up that 1 or 20.
+      --
+      -- Recorded as the rerolling player's roll: Pippa's ruling gives a reroll
+      -- of another player's die to the rerolling player's "whenever you roll
+      -- a die".
+      rethrow by = do
+        settled <- Event.proposeDiceRoll by sides 1
+        case settled of
+          Left results -> rerollingWith False by (Maybe.fromMaybe 1 (Maybe.listToMaybe results))
+          Right again -> do
+            State.modify' (Event.recordEvent (GameEvent.PlayerActed (PlayerActed.MkPlayerActed PlayerAction.RollDice by)))
+            kept <- naturals again (pure 0)
+            -- One kept: a reroll names one die, and every die a row adds comes
+            -- with an ignore. A d20 rolled for a coin flipped for the reroll
+            -- reads back as that coin's 1 or 20.
+            pure $ case kept of
+              (total, thrower) : _ -> (thrower, readBack again (Integer.toNaturalSaturating total))
+              [] -> (by, 1)
+      readBack again natural = if Throw.instead again then maybe natural Event.resultOfFace (Event.faceOfResult natural) else natural
       -- Whether an offer can still go through: a static offer's cost is
       -- payable, an activation passes the gate a priority activation takes.
       live gs (payer, stated, kind) = case kind of
@@ -11102,45 +11120,68 @@ throwSettled runSubgame roll perDie = do
           elem ActivationRestriction.Type.DuringDieRoll (ActivatedAbility.restrictions ability)
         ]
       duringRoll = withRollingDie sides
-      rollOne = do
+      rollOne by modifierOf = do
         rolled <- Game.ask (Prompt.RollDie sides)
-        (thrower, natural) <- rerolling controller (faceOf rolled)
+        (thrower, natural) <- rerolling by (faceOf rolled)
         -- After the rerolls above, which is CR 706.2b's order: rerolls are
         -- considered first, and what they leave is the natural result the
         -- instruction's own modifier adds to.
-        modifier <- perDie
+        modifier <- modifierOf
         -- Left unclamped: CR 706.2's result is the number after EVERY
         -- modifier, so a shift from another source applies to this sum as it
         -- stands, negative or not, and only the final figure is clamped below.
         pure (toInteger natural + modifier, thrower)
-  -- CR 706.6: every die is thrown and every face asked for -- an ignored roll
-  -- HAPPENED and is only then treated as never having happened -- so the ignore
-  -- runs on the results and not on the count -- and could not run any earlier
-  -- in any case, the lowest roll not being known until every die has come up.
-  thrown <- traverse (const rollOne) [1 .. dice]
+      -- CR 706.6: every die is thrown and every face asked for -- an ignored
+      -- roll HAPPENED and is only then treated as never having happened -- so
+      -- the ignore runs on the results and not on the count -- and could not
+      -- run any earlier in any case, the lowest roll not being known until
+      -- every die has come up.
+      --
+      -- A unit of several dice is Krark's Thumb's "flip two coins and ignore
+      -- one" carried across by Pokey (Pawl.Types.Throw): one of them is kept,
+      -- chosen once every die is up, the Thumb's ruling's order -- "you will
+      -- know the results of all simultaneous flips before choosing which to
+      -- ignore". Through Prompt.ChooseDieResult, CR 706.4's question of which
+      -- result to use; elided where they agree, since no board can tell the
+      -- answers apart: the same number thrown by the same player. FILTERED,
+      -- NOT TRUSTED: an index past the end keeps the first die.
+      --
+      -- Each die keeps the player who threw its final natural result, which a
+      -- Goblin Bookie reroll can make another seat's (Pippa's ruling), so
+      -- dice tied for CR 706.6's lowest but thrown by different players are
+      -- asked about (Dice.ignoreLowest).
+      naturals settled modifierOf = do
+        units <- traverse (\n -> traverse (const (rollOne (Throw.thrower settled) modifierOf)) [1 .. n]) (Foldable.toList (Throw.units settled))
+        picked <- Monad.forM units $ \dice -> case NonEmpty.nonEmpty dice of
+          -- Unreachable: a unit starts at one die and only a scaling that
+          -- cannot reach zero resizes it. Defensive: a die of 1.
+          Nothing -> pure (1, Throw.thrower settled)
+          Just offered
+            | all (== NonEmpty.head offered) (NonEmpty.tail offered) -> pure (NonEmpty.head offered)
+            | otherwise -> do
+                gs <- State.get
+                answer <- Game.choose (Prompt.ChooseDieResult (Decide.deciderFor (Throw.thrower settled) gs) (Throw.thrower settled) Nothing (fmap (Integer.toNaturalSaturating . fst) offered))
+                pure (Replacement.at dice answer (NonEmpty.head offered))
+        Dice.ignoreLowest (Throw.thrower settled) fst snd (Throw.ignored settled) picked
+  kept <- naturals roll perDie
   -- CR 706.6 before the second step: an ignored roll is one "no effects apply
   -- to", so it is not offered for an adjustment.
   --
   -- CR 107.1b once, on the final figure, after every modifier: The Deck of
   -- Many Things' natural 3, four cards in hand and a shift up is a 0, not a 1
   -- (Pawl.DiceSpec's "CR 706.2 a shift applies to the unclamped sum").
-  --
-  -- Each die keeps the player who threw its final natural result, paired by
-  -- position so CR 706.6's tie still drops the first of the lowest.
-  let kept = Dice.ignoreLowest ignored (zip (fmap fst thrown) [0 :: Int ..])
-      throwers = fmap (\(_, i) -> maybe controller snd (Maybe.listToMaybe (drop i thrown))) kept
   results <- fmap (fmap Integer.toNaturalSaturating) (adjusting (fmap fst kept))
-  pure (results, throwers)
+  pure (results, fmap snd kept)
 
 -- | The stamp on GameState that ActivationRestriction.DuringDieRoll reads and
--- Effect.Reroll throws against, open for `act` and restored on the way out so a
+-- Effect.Reroll asks against, open for `act` and restored on the way out so a
 -- roll nested inside the window's own resolution cannot leave it open.
 withRollingDie :: Natural -> Game a -> Game a
 withRollingDie sides act = do
   previous <- State.get
-  State.modify' (\g -> g {GameState.rollingDie = Just sides, GameState.rerolledTo = Nothing})
+  State.modify' (\g -> g {GameState.rollingDie = Just sides, GameState.rerollRequested = False})
   result <- act
-  State.modify' (\g -> g {GameState.rollingDie = GameState.rollingDie previous, GameState.rerolledTo = GameState.rerolledTo previous})
+  State.modify' (\g -> g {GameState.rollingDie = GameState.rollingDie previous, GameState.rerollRequested = GameState.rerollRequested previous})
   pure result
 
 -- What Pawl.Engine.Cost reaches through the Pawl.Types.ManaAbilityPerformer

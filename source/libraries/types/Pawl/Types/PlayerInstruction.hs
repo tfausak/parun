@@ -23,11 +23,10 @@ data PlayerInstruction
     -- once; CR 701.17b's "as many as possible" is read off the settled count when
     -- the cards are taken.
     MillCards
-  | -- | CR 705.1: flip one coin, settled with this many coins. Raised by
-    -- Pawl.Engine.Event.flipOneCoin once per flip, Krark's Thumb's ruling scoping
-    -- its replacement to "each individual coin flip"; the flipper is CR 705.2's
-    -- only involved seat. Also the event a d20 roll becomes inside its own CR
-    -- 616.1 loop when Pokey, the Scallywagg flips instead
+  | -- | CR 705.1: flip a coin. The one instruction no WouldPerform carries: an
+    -- InstructionR naming it watches ProposedEvent's WouldThrow of coins, which
+    -- Pawl.Engine.Event.flipOneCoin raises once per flip -- and which a d20
+    -- roll becomes when Pokey, the Scallywagg flips instead
     -- (DieRollRewrite.FlipCoinInstead).
     FlipCoin
   | -- | CR 701.34a: proliferate this many times. Raised once per instruction by

@@ -2405,7 +2405,6 @@ library types
     Pawl.Types.Devour
     Pawl.Types.DevourCount
     Pawl.Types.DiceReading
-    Pawl.Types.DiceRoll
     Pawl.Types.DieResult
     Pawl.Types.DieRollR
     Pawl.Types.DieRollRewrite
@@ -2886,6 +2885,8 @@ library types
     Pawl.Types.Terminal
     Pawl.Types.TheseDiscard
     Pawl.Types.Threshold
+    Pawl.Types.Throw
+    Pawl.Types.ThrowKind
     Pawl.Types.Timed
     Pawl.Types.Times
     Pawl.Types.Timestamp

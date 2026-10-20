@@ -49,7 +49,7 @@ import qualified Pawl.Types.SlotName as SlotName
 -- reason. Nothing for every roll that reads one result.
 --
 -- CR 706.6's ignored roll is not a field here YET: the count of ignored rolls
--- rides Pawl.Types.DiceRoll, where a replacement over the roll can change it,
+-- rides Pawl.Types.Throw, where a replacement over the roll can change it,
 -- and the only printings of the word in data\/cards\/ are such replacements
 -- (Pawl.Types.DieRollRewrite, Pixie Guide). An instruction that prints the
 -- ignore itself -- Berserker's Frenzy, "roll two d20 and ignore the lower roll"

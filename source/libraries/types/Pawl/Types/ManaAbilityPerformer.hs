@@ -5,7 +5,6 @@ import qualified Data.Set as Set
 import qualified Numeric.Natural as Natural
 import qualified Pawl.Types.Card as Card
 import qualified Pawl.Types.ClauseIndex as ClauseIndex
-import qualified Pawl.Types.DiceRoll as DiceRoll
 import qualified Pawl.Types.Effect as Effect
 import qualified Pawl.Types.Game as Game
 import qualified Pawl.Types.GrantedAbility as GrantedAbility
@@ -15,6 +14,7 @@ import qualified Pawl.Types.PendingTrigger as PendingTrigger
 import qualified Pawl.Types.PlayerId as PlayerId
 import qualified Pawl.Types.Recipient as Recipient
 import qualified Pawl.Types.SlotName as SlotName
+import qualified Pawl.Types.Throw as Throw
 
 -- | CR 405.6c: how the closed half runs the NON-MANA effects of a mana ability
 -- -- the ability's source, its controller, and the effects themselves. CR 605.3b
@@ -57,5 +57,5 @@ data ManaAbilityPerformer = MkManaAbilityPerformer
     payGate :: ObjectId.ObjectId -> PlayerId.PlayerId -> ClauseIndex.ClauseIndex -> PayGate.PayGate -> Map.Map ClauseIndex.ClauseIndex (Map.Map PlayerId.PlayerId Bool) -> Game.Game (Bool, Map.Map ClauseIndex.ClauseIndex (Map.Map PlayerId.PlayerId Bool)),
     -- | CR 614.6 / 706.1: throw and record the die roll Pokey, the Scallywagg
     -- makes instead of a cost's coin flip, answering the kept results.
-    throwForCoin :: DiceRoll.DiceRoll -> Game.Game [Natural.Natural]
+    throwForCoin :: Throw.Throw -> Game.Game [Natural.Natural]
   }

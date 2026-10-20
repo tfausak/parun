@@ -331,7 +331,7 @@ gameWith settings order =
           GameState.turnAnchor = Nothing,
           GameState.extraTurnUnderWay = Nothing,
           GameState.rollingDie = Nothing,
-          GameState.rerolledTo = Nothing
+          GameState.rerollRequested = False
         }
 
 createCard :: PlayerId -> PrintingId.PrintingId -> Game ObjectId
@@ -1065,7 +1065,7 @@ restartGame perform exempt starter = do
             GameState.turnAnchor = Nothing,
             GameState.extraTurnUnderWay = Nothing,
             GameState.rollingDie = Nothing,
-            GameState.rerolledTo = Nothing
+            GameState.rerollRequested = False
           }
   startGameFromCards perform exempt
 
@@ -1333,7 +1333,7 @@ subgameStateFrom starter parent =
           GameState.turnAnchor = Nothing,
           GameState.extraTurnUnderWay = Nothing,
           GameState.rollingDie = Nothing,
-          GameState.rerolledTo = Nothing
+          GameState.rerollRequested = False
         }
 
 -- CR 729.4a: the cards the subgame brought in have left the main game, so the

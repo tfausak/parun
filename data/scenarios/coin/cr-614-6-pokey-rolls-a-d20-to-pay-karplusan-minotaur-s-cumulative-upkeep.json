@@ -1,6 +1,6 @@
 {
   "description": "CR 614.6 Pokey rolls a d20 to pay Karplusan Minotaur's cumulative upkeep",
-  "note": "The cost's flip becomes a d20 roll, so no FlipCoin answer is scheduled and a coin flipped anyway fails the scenario. Pixie Guide is chosen ahead of Pokey's flip-instead, which a two-die roll then no longer admits, so two RollDie answers are asked and the 15 is kept; the roll triggers Feywild Trickster. No coin was flipped, so neither of the Minotaur's own flip triggers nor Tavern Scoundrel's fires, and the cost is paid all the same.",
+  "note": "The cost's flip becomes a d20 roll, so no FlipCoin answer is scheduled and a coin flipped anyway fails the scenario. Pixie Guide is chosen ahead of Pokey's flip-instead, which is then offered for the two dice and declined, so two RollDie answers are asked and the 15 is kept; the roll triggers Feywild Trickster. No coin was flipped, so neither of the Minotaur's own flip triggers nor Tavern Scoundrel's fires, and the cost is paid all the same.",
   "board": {
     "seats": [
       {
@@ -114,6 +114,17 @@
           "with": 1
         }
       }
+    },
+    {
+      "turn": 1,
+      "step": "Upkeep",
+      "player": "alice",
+      "do": {
+        "ChooseOptional": {
+          "type": "Declines"
+        }
+      },
+      "source": "$pokey"
     },
     {
       "turn": 1,

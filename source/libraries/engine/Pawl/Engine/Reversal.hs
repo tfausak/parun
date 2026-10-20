@@ -174,7 +174,7 @@ withoutAnnouncement before entry closed = do
   turnAnchor <- one GameState.turnAnchor
   extraTurnUnderWay <- one GameState.extraTurnUnderWay
   rollingDie <- one GameState.rollingDie
-  rerolledTo <- one GameState.rerolledTo
+  rerollRequested <- one GameState.rerollRequested
   pure
     GameState.MkGameState
       { GameState.settings = settings,
@@ -287,7 +287,7 @@ withoutAnnouncement before entry closed = do
         GameState.turnAnchor = turnAnchor,
         GameState.extraTurnUnderWay = extraTurnUnderWay,
         GameState.rollingDie = rollingDie,
-        GameState.rerolledTo = rerolledTo
+        GameState.rerollRequested = rerollRequested
       }
   where
     -- A whole value, compared as one leaf.

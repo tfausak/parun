@@ -509,7 +509,8 @@ data GameState = MkGameState
     -- | CR 706.2: the sides of the die whose modification step is open, while
     -- Pawl.Engine.Resolve.Effect.throwDice asks about it; Nothing otherwise.
     rollingDie :: Maybe Natural.Natural,
-    -- | CR 706.2b: the natural result a reroll made inside that step threw.
-    rerolledTo :: Maybe Natural.Natural
+    -- | CR 706.2b: whether an ability activated inside that step asked for the
+    -- die to be rerolled (Goblin Bookie).
+    rerollRequested :: Bool
   }
   deriving (Eq, Ord, Show)
