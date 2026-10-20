@@ -560,7 +560,8 @@ merge2 l r =
           -- unionTypeLines and would be doubled here.
           -- docs/decisions.md, "Which half of a split card answers for a box
           -- both halves have". Pawl.CardSpec's "CR 709.4 the left half answers
-          -- for a box both halves print or define" proves it for toughness.
+          -- for a box both halves print or define" proves it for toughness, and
+          -- its siblings there for loyalty, defense and starting intensity.
           --
           -- The power and toughness boxes are picked by definedBox rather than by
           -- firstJust, because CR 709.4c reaches THEM through the ability that
