@@ -17,6 +17,7 @@ import qualified Pawl.Engine.Decide as Decide
 import qualified Pawl.Engine.Game as Game
 import qualified Pawl.Engine.PlayerEffect as PlayerEffect
 import qualified Pawl.Engine.Turn as Turn
+import qualified Pawl.Extra.Integer as Integer
 import Pawl.Types.Game (Game)
 import Pawl.Types.GameState (GameState)
 import qualified Pawl.Types.GameState as GameState
@@ -125,41 +126,52 @@ spendLimit stated modifier gs = case stated of
 -- is the rolls the instruction may still read. Rule 706.6 makes an ignored roll
 -- one that HAPPENED -- the die was thrown and its face asked for -- and is then
 -- treated as never having happened, so this runs on the results rather than on
--- the count of dice, and the caller has already asked for every face.
+-- the count of dice, and the caller has already asked for every face. `value` is
+-- the number a roll is compared by: a die's result, or the 1 or 20 a coin stands
+-- for (Pokey, the Scallywagg).
 --
 -- ONE AT A TIME, re-finding the minimum after each, because CR 706.6's sentence
 -- is "the lowest roll" singular and two rows each ignore their own: over [1,1,5]
 -- a single ignore leaves [1,5] and a second leaves [5], where a pass that took
 -- every copy of the minimum at once would leave [5] for both.
 --
--- A TIE is not asked about. Rule 706.6's second sentence gives the roller the
--- choice "if multiple results are tied for the lowest", and the tied rolls are
--- equal NUMBERS -- so dropping either leaves the same multiset of results for the
--- instruction to read, and no board can tell the answers apart. Where the rules
--- leave nothing to ask, don't prompt (Pawl.Engine.Event.flipOneCoin's agreed
--- faces, and for its reason). The first is taken, so a transcript replays.
+-- A TIE is asked about only where the board can tell the tied rolls apart.
+-- Rule 706.6's second sentence gives the roller the choice "if multiple results
+-- are tied for the lowest". Tied rolls are equal NUMBERS, so where nothing else
+-- separates them dropping either leaves the instruction the same results, and
+-- where the rules leave nothing to ask, don't prompt -- the first is taken, so a
+-- transcript replays. `key` is what else a roll carries: the player who threw it
+-- (Pippa, Duchess of Dice's ruling gives a reroll to its thrower's "whenever you
+-- roll"), or the outcome of the call a coin standing for a die was flipped
+-- against. Where the tied rolls differ in it, the roller chooses which is
+-- ignored, through Prompt.ChooseDieResult, offered one roll per distinct key,
+-- earliest first. FILTERED, NOT TRUSTED: an index past the end ignores the
+-- first.
 --
 -- Ignoring more rolls than were made leaves none rather than failing; the
 -- instruction then binds nothing and reads an unbound slot. Unreachable from card
 -- data -- every ignore comes from a row that added the die it ignores -- and so
 -- defensive.
-ignoreLowest :: (Ord a) => Natural.Natural -> [a] -> [a]
-ignoreLowest n rolls =
-  if n == 0
-    then rolls
-    else case rolls of
-      [] -> []
-      _ -> ignoreLowest (n - 1) (dropOneLowest rolls)
-
--- | CR 706.6's singular "the lowest roll": the FIRST roll holding the least
--- number, dropped. Total on the empty list, which `ignoreLowest` above never
--- reaches it with.
-dropOneLowest :: (Ord a) => [a] -> [a]
-dropOneLowest rolls = case rolls of
-  [] -> []
-  _ -> case List.elemIndex (minimum rolls) rolls of
-    -- Unreachable: the minimum of a non-empty list is one of its members.
-    -- Defensive, in the direction rule 706.6 leaves standing -- an ignore that
-    -- found nothing to ignore leaves every roll readable.
-    Nothing -> rolls
-    Just i -> let (before, after) = splitAt i rolls in before <> drop 1 after
+ignoreLowest :: (Ord k) => PlayerId -> (a -> Integer) -> (a -> k) -> Natural.Natural -> [a] -> Game [a]
+ignoreLowest roller valueOf keyOf n rolls = case NonEmpty.nonEmpty rolls of
+  Just held | n > 0 -> do
+    let low = minimum (fmap valueOf held)
+        tied = [i | (i, roll) <- zip [0 :: Int ..] rolls, valueOf roll == low]
+        firstOfEach seen indices = case indices of
+          [] -> []
+          i : rest -> case drop i rolls of
+            roll : _
+              | Set.member (keyOf roll) seen -> firstOfEach seen rest
+              | otherwise -> i : firstOfEach (Set.insert (keyOf roll) seen) rest
+            [] -> firstOfEach seen rest
+    dropped <- case firstOfEach Set.empty tied of
+      first : rest@(_ : _) -> do
+        gs <- State.get
+        answer <- Game.choose (Prompt.ChooseDieResult (Decide.deciderFor roller gs) roller Nothing (fmap (const (Integer.toNaturalSaturating low)) (first NonEmpty.:| rest)))
+        pure (Maybe.fromMaybe first (Maybe.listToMaybe (List.genericDrop answer (first : rest))))
+      first : _ -> pure first
+      -- Unreachable: the minimum of a non-empty list is one of its members.
+      [] -> pure 0
+    let (before, after) = splitAt dropped rolls
+    ignoreLowest roller valueOf keyOf (n - 1) (before <> drop 1 after)
+  _ -> pure rolls

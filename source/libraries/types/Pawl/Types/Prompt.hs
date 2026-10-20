@@ -161,8 +161,9 @@ data Prompt r where
   -- roll, so unlike RollDie above it carries a Decider and the seat. Not
   -- raised where every result is the same number, which no card can tell from
   -- either answer. Also which d20 of several Pokey, the Scallywagg rolled for
-  -- Krark's Thumb's coins is kept (the Thumb's "ignore one"), where no
-  -- resolving object is at hand.
+  -- Krark's Thumb's coins is kept (the Thumb's "ignore one"), and which of
+  -- rolls tied for the lowest CR 706.6 ignores where they differ in thrower or
+  -- call (Pawl.Engine.Dice.ignoreLowest), where no resolving object is at hand.
   ChooseDieResult :: Decider.Decider -> PlayerId.PlayerId -> Maybe ObjectId.ObjectId -> NonEmpty.NonEmpty Natural.Natural -> Prompt Natural.Natural
   -- | CR 706.8b: how many of each stored result on the object the seat
   -- rerolls (Centaur of Attention's "reroll any number of this creature's

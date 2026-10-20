@@ -10910,11 +10910,16 @@ throwSettled runSubgame roll perDie = do
       -- or whoever activated a reroll in the window below (`windowCandidates`).
       -- The static offers and those activations compete in the one step, so
       -- both are candidates for the roller's pick.
-      rerolling thrower natural = do
+      rerolling = rerollingWith True
+      -- `byNumber` False for a natural result a coin gave (`rethrow`): no die
+      -- came up that number, so an offer gated on one ("if you roll a 3") is
+      -- not made, where one that reaches any die the player rolled is.
+      rerollingWith byNumber thrower natural = do
         gs <- State.get
         modifiers <- Dice.modifiersFor controller
         activations <- duringRoll (State.gets windowCandidates)
-        let static = fmap (\(payer, stated, offer) -> (payer, stated, Left offer)) (distinct Set.empty (fmap (offerOf gs) (Dice.rerollOffers sides natural modifiers)))
+        let gated (_, offer) = byNumber || Maybe.isNothing (ModifiedRoll.natural offer)
+            static = fmap (\(payer, stated, offer) -> (payer, stated, Left offer)) (distinct Set.empty (fmap (offerOf gs) (filter gated (Dice.rerollOffers sides natural modifiers))))
         offering (static <> activations) thrower natural
       -- CR 109.5's "you" on the modifier, which is the player its "may" and
       -- its CR 706.2a cost belong to -- Clam-I-Am's own controller, who is
@@ -10972,10 +10977,15 @@ throwSettled runSubgame roll perDie = do
       -- through CR 614's loop, Event.proposeDiceRoll, as one die of the same
       -- size. Pixie Guide adds a die to it and ignores the lowest; Pokey, the
       -- Scallywagg may flip a coin for a d20, whose 1 or 20 is the die's new
-      -- natural result, with no die left for a later reroll to reach -- "it
-      -- counts as flipping a coin, not rolling a die". Each die it throws is
-      -- offered its own rerolls, before CR 706.6 drops any, so the number
-      -- that comes back has had every offer already.
+      -- natural result. Each die it throws is offered its own rerolls, before
+      -- CR 706.6 drops any, so the number that comes back has had every offer
+      -- already.
+      --
+      -- The die a coin stood in for is still one the player rolled, so it is
+      -- offered again -- Wall of Fortune's ruling, "you can tap another
+      -- untapped Wall ... to have them reroll again" -- but only by an offer
+      -- that names no number: the coin "counts as flipping a coin, not rolling
+      -- a die" (Pokey), so no die came up that 1 or 20.
       --
       -- Recorded as the rerolling player's roll: Pippa's ruling gives a reroll
       -- of another player's die to the rerolling player's "whenever you roll
@@ -10983,7 +10993,7 @@ throwSettled runSubgame roll perDie = do
       rethrow by = do
         settled <- Event.proposeDiceRoll by sides 1
         case settled of
-          Left results -> pure (by, Maybe.fromMaybe 1 (Maybe.listToMaybe results))
+          Left results -> rerollingWith False by (Maybe.fromMaybe 1 (Maybe.listToMaybe results))
           Right again -> do
             State.modify' (Event.recordEvent (GameEvent.PlayerActed (PlayerActed.MkPlayerActed PlayerAction.RollDice by)))
             kept <- naturals again (pure 0)
@@ -11133,11 +11143,13 @@ throwSettled runSubgame roll perDie = do
       -- know the results of all simultaneous flips before choosing which to
       -- ignore". Through Prompt.ChooseDieResult, CR 706.4's question of which
       -- result to use; elided where they agree, since no board can tell the
-      -- answers apart. FILTERED, NOT TRUSTED: an index past the end keeps the
-      -- first die.
+      -- answers apart: the same number thrown by the same player. FILTERED,
+      -- NOT TRUSTED: an index past the end keeps the first die.
       --
-      -- Each die keeps the player who threw its final natural result, paired by
-      -- position so CR 706.6's tie still drops the first of the lowest.
+      -- Each die keeps the player who threw its final natural result, which a
+      -- Goblin Bookie reroll can make another seat's (Pippa's ruling), so
+      -- dice tied for CR 706.6's lowest but thrown by different players are
+      -- asked about (Dice.ignoreLowest).
       naturals settled modifierOf = do
         units <- traverse (\n -> traverse (const (rollOne (Throw.thrower settled) modifierOf)) [1 .. n]) (Foldable.toList (Throw.units settled))
         picked <- Monad.forM units $ \dice -> case NonEmpty.nonEmpty dice of
@@ -11145,13 +11157,12 @@ throwSettled runSubgame roll perDie = do
           -- cannot reach zero resizes it. Defensive: a die of 1.
           Nothing -> pure (1, Throw.thrower settled)
           Just offered
-            | all ((== fst (NonEmpty.head offered)) . fst) (NonEmpty.tail offered) -> pure (NonEmpty.head offered)
+            | all (== NonEmpty.head offered) (NonEmpty.tail offered) -> pure (NonEmpty.head offered)
             | otherwise -> do
                 gs <- State.get
                 answer <- Game.choose (Prompt.ChooseDieResult (Decide.deciderFor (Throw.thrower settled) gs) (Throw.thrower settled) Nothing (fmap (Integer.toNaturalSaturating . fst) offered))
                 pure (Replacement.at dice answer (NonEmpty.head offered))
-        let standing = Dice.ignoreLowest (Throw.ignored settled) (zip (fmap fst picked) [0 :: Int ..])
-        pure [die | (_, i) <- standing, die <- take 1 (drop i picked)]
+        Dice.ignoreLowest (Throw.thrower settled) fst snd (Throw.ignored settled) picked
   kept <- naturals roll perDie
   -- CR 706.6 before the second step: an ignored roll is one "no effects apply
   -- to", so it is not offered for an adjustment.

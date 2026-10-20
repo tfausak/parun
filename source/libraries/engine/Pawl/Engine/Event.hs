@@ -4004,8 +4004,11 @@ apply batch candidate event =
     -- already applied off it -- Pokey's ruling, "the nonsense stops there" --
     -- and a flip row such as Krark's Thumb no longer applies to it. The Thumb's
     -- extra coins become extra dice, of which one is still kept. One "you may"
-    -- for the whole event, which is CR 614.5's one opportunity. `flipOneCoin`
-    -- throws the roll it settles to and reads the face back.
+    -- for the whole event, reading CR 614.5's one opportunity as one choice.
+    -- `flipOneCoin` throws the roll it settles to and reads the face back.
+    --
+    -- Not implemented: rolling for some of the Thumb's coins and flipping the
+    -- rest (#5357).
     (ReplacementEffect.InstructionR row, ProposedEvent.WouldThrow throw) -> case InstructionR.rewrite row of
       InstructionRewrite.Scaled scaling -> do
         Replacement.consume (ReplacementCandidate.identity candidate)
@@ -4049,6 +4052,9 @@ apply batch candidate event =
       -- this loop, a coin for each d20 and Pixie Guide's ignored die an ignored
       -- coin, which Krark's Thumb may then resize; `proposeDiceRoll` flips it
       -- and reads the results back.
+      --
+      -- Not implemented: flipping for some of the roll's d20s and rolling the
+      -- rest (#5357).
       DieRollRewrite.FlipCoinInstead -> do
         exercised <- substitutes candidate
         pure . Just $
@@ -5552,22 +5558,14 @@ settleCoins flipper settled called stated = do
     face <- keepCoin flipper faces
     pure (call, Maybe.fromMaybe face (Coin.statedFace stated))
   let wins = any StatedFlip.wins stated
-      standing = Set.fromList (fmap snd (Dice.ignoreLowest (Throw.ignored settled) [(resultOfFace face, i) | (i, (_, face)) <- zip [0 :: Int ..] kept]))
-      survivors = [unit | (i, unit) <- zip [0 :: Int ..] kept, Set.member i standing]
-  Monad.forM survivors $ \(call, face) -> do
-    State.modify'
-      ( recordEvent
-          ( GameEvent.CoinFlipped
-              CoinFlipped.MkCoinFlipped
-                { CoinFlipped.flipper = flipper,
-                  -- CR 705.2's win or loss where a call was made; otherwise its
-                  -- first sentence, no outcome, save CR 705.3's stated win.
-                  CoinFlipped.won = case call of
-                    Just face' -> Just (wins || face == face')
-                    Nothing -> if wins then Just True else Nothing
-                }
-          )
-      )
+      -- CR 705.2's win or loss where a call was made; otherwise its first
+      -- sentence, no outcome, save CR 705.3's stated win.
+      outcomes = [(face, won) | (call, face) <- kept, let won = maybe (if wins then Just True else Nothing) (\face' -> Just (wins || face == face')) call]
+  -- Two coins tied for the lowest can be a won flip and a lost one, so CR
+  -- 706.6's "the player chooses" is asked of them (Dice.ignoreLowest).
+  survivors <- Dice.ignoreLowest flipper (toInteger . resultOfFace . fst) snd (Throw.ignored settled) outcomes
+  Monad.forM survivors $ \(face, won) -> do
+    State.modify' (recordEvent (GameEvent.CoinFlipped CoinFlipped.MkCoinFlipped {CoinFlipped.flipper = flipper, CoinFlipped.won = won}))
     pure (face, wins)
 
 -- The face kept of one unit's coins (Krark's Thumb's "ignore one").
