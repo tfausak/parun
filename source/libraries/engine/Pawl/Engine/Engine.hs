@@ -2091,7 +2091,8 @@ runStepThatBegan phase = do
         Monad.when (phase == Phase.Combat CombatStep.DeclareAttackers) (State.modify' Combat.skipEmptyCombat)
         -- No CR 704.3 check as the step ends: no player gets priority here, so a
         -- state this step's end leaves waits for the next step's settle, which
-        -- keeps its board for CR 603.8.
+        -- keeps its board for CR 603.8. The Teferi's Curse scenario proves it as
+        -- the untap step ends.
         stillFinished <- State.gets (Maybe.isJust . GameState.result)
         Monad.unless stillFinished advance
 
