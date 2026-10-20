@@ -1,0 +1,29 @@
+{
+  "description": "CR 120.8 Benevolent Unicorn leaves Scorching Spear no damage to deal, so Ripjaw Raptor's enrage does not trigger",
+  "note": "Scorching Spear would deal 1 damage to alice's Ripjaw Raptor, and Benevolent Unicorn makes it 1 minus 1. A source that would deal 0 deals no damage at all, so the Raptor's \"whenever this creature is dealt damage, draw a card\" has nothing to trigger on and no Plains is drawn. The control board casts Lightning Bolt instead, whose 3 the Unicorn makes 2, and that one draws.",
+  "board": {
+    "seats": [
+      {
+        "name": "alice",
+        "battlefield": [
+          { "card": "Benevolent Unicorn", "label": "unicorn" },
+          { "card": "Ripjaw Raptor", "label": "raptor" },
+          { "card": "Mountain", "label": "m1" }
+        ],
+        "hand": [{ "card": "Scorching Spear", "label": "spell" }],
+        "library": [{ "card": "Plains" }, { "card": "Plains" }]
+      },
+      {
+        "name": "bob",
+        "library": [{ "card": "Island" }]
+      }
+    ],
+    "active": "alice",
+    "step": "PrecombatMain"
+  },
+  "timeline": [
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": { "Cast": { "object": "$spell", "targets": ["$raptor"], "mana": ["$m1"] } } },
+    { "turn": 1, "step": "EndStep", "player": "alice", "check": { "Count": { "player": "alice", "zone": "Hand", "card": "Plains", "count": 0 } } },
+    { "turn": 1, "step": "EndStep", "player": "alice", "check": { "Damage": { "object": "$raptor", "damage": 0 } } }
+  ]
+}
