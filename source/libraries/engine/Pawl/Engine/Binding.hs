@@ -556,9 +556,9 @@ entryExileLink = AbilityName.MkAbilityName (Text.pack "exiledAsThisEntered")
 -- use, and none is the holder's own ability of that name. Reserved, as
 -- craftLink is.
 exiledCardAbility :: ObjectId -> Maybe AbilityName.AbilityName -> AbilityName.AbilityName
-exiledCardAbility oid = AbilityName.MkAbilityName . maybe card (\n -> card <> exiledCardSeparator <> AbilityName.unwrap n)
+exiledCardAbility oid = maybe card (qualified card)
   where
-    card = exiledCardPrefix <> Text.pack (show (ObjectId.unwrap oid))
+    card = AbilityName.MkAbilityName (exiledCardPrefix <> Text.pack (show (ObjectId.unwrap oid)))
 
 -- CR 607.2a / 607.5: whether exiledCardAbility gave this name, so what an
 -- ability acquired that way exiled is linked to none of its holder's own
@@ -578,7 +578,7 @@ isAcquiredFrom oid name = pairOf (Just name) == Just (exiledCardAbility oid Noth
 -- data/scenarios/myr-welder-ignores-what-its-acquired-warden-exiled.json is
 -- the proof.
 nameAsRead :: Maybe AbilityName.AbilityName -> AbilityName.AbilityName -> AbilityName.AbilityName
-nameAsRead reader name = maybe name (\card -> AbilityName.MkAbilityName (AbilityName.unwrap card <> exiledCardSeparator <> AbilityName.unwrap name)) (pairOf reader)
+nameAsRead reader name = maybe name (`qualified` name) (pairOf reader)
 
 -- | CR 607.2a / 607.5: whether `link` files its card against `src` in `pile`,
 -- as a reader named `reader` means it. THE one membership test every reader of
@@ -601,14 +601,18 @@ isLinkedExile reader pile src link =
 
 -- The exiled card a link's or a reader's ability name was acquired from, as
 -- exiledCardAbility names an unnamed ability of it; Nothing for the holder's
--- own.
+-- own. Dropping a named one's own name is a REGRESSION FENCE: no card in
+-- data/cards/ pairs an acquired "exiled with" reader with a NAMED exiling
+-- ability beside it, so keeping the whole name leaves the suite green.
 pairOf :: Maybe AbilityName.AbilityName -> Maybe AbilityName.AbilityName
 pairOf = fmap (AbilityName.MkAbilityName . card . AbilityName.unwrap) . Monad.mfilter isExiledCardAbility
   where
     card t = exiledCardPrefix <> Text.takeWhile Char.isDigit (Text.drop (Text.length exiledCardPrefix) t)
 
-exiledCardSeparator :: Text.Text
-exiledCardSeparator = Text.pack "/"
+-- The name exiledCardAbility gives the ability named `name` acquired from the
+-- card whose unnamed abilities it names `card`.
+qualified :: AbilityName.AbilityName -> AbilityName.AbilityName -> AbilityName.AbilityName
+qualified card name = AbilityName.MkAbilityName (AbilityName.unwrap card <> Text.pack "/" <> AbilityName.unwrap name)
 
 exiledCardPrefix :: Text.Text
 exiledCardPrefix = Text.pack "thatExiledCard"
