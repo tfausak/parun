@@ -7,7 +7,8 @@ import qualified Pawl.Types.Reply as Reply
 -- | CR 723.5: a prompt as the seat answering it is shown it.
 data Question = MkQuestion
   { seat :: PlayerId.PlayerId,
-    -- | The prompt's constructor name.
+    -- | The prompt's constructor name, or PlayOrDraw for CR 103.1's choice
+    -- before the game begins.
     kind :: Text.Text,
     -- | What the prompt offers, in its answer's vocabulary.
     offer :: Reply.Reply

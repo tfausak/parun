@@ -6,7 +6,8 @@ import qualified Pawl.Types.Question as Question
 
 -- | One line to a client: what its seat sees, and what it is asked.
 data Request = MkRequest
-  { view :: PlayerView.PlayerView,
+  { -- | Nothing before the game begins (CR 103.1's play or draw).
+    view :: Maybe PlayerView.PlayerView,
     question :: Question.Question,
     -- | Why the previous answer to this question could not be read.
     problem :: Maybe Text.Text

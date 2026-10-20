@@ -61,16 +61,19 @@ respond terminal lookUp line = do
   request <- either (stop . (Text.pack "unreadable request: " <>)) pure (Common.parse line >>= Codec.decode Codec.Request.codec)
   let question = Request.question request
       seat = Question.seat question
-  collect (Request.view request)
+  -- The hotseat asks CR 103.1's play or draw at the terminal itself
+  -- (Pawl.Play.Game.playOrDraw), so every request it reads has a view.
+  view <- maybe (stop (Text.pack "a request with no view")) pure (Request.view request)
+  collect view
   fmap (Common.render . Codec.Reply.toValue) $
     if Question.kind question == Text.pack "Concede"
       then do
         conceding <- State.gets (Set.member seat . Hotseat.conceding)
         pure (R.Text (Text.pack (if conceding then "Concedes" else "Continues")))
       else do
-        (said, automatic) <- unasked request
+        (said, automatic) <- unasked view request
         case automatic of
-          Nothing -> mapM_ (say terminal) said >> asked terminal lookUp request
+          Nothing -> mapM_ (say terminal) said >> asked terminal lookUp view request
           Just reply -> do
             -- Only the seat the screen faces is shown its news unasked.
             facing <- State.gets Hotseat.facing
@@ -79,10 +82,9 @@ respond terminal lookUp line = do
             pure reply
 
 -- | Asks the seat, handing the screen to it first.
-asked :: (Monad m) => Terminal.Terminal m -> (CardName.CardName -> Maybe Card.Card) -> Request.Request -> Client m R.Reply
-asked terminal lookUp request = do
+asked :: (Monad m) => Terminal.Terminal m -> (CardName.CardName -> Maybe Card.Card) -> PlayerView.PlayerView -> Request.Request -> Client m R.Reply
+asked terminal lookUp view request = do
   let question = Request.question request
-      view = Request.view request
       seat = Question.seat question
   handed <- handOff terminal seat
   first <- State.gets (Set.notMember seat . Hotseat.greeted)
@@ -289,8 +291,8 @@ recipientObject reply = case reply of
 -- mana abilities, and the rest of a payment the seat chose auto at. A
 -- payment's other prompts and a refused answer end "auto", and a refused
 -- answer is always asked.
-unasked :: (Monad m) => Request.Request -> Client m ([Text.Text], Maybe R.Reply)
-unasked request = do
+unasked :: (Monad m) => PlayerView.PlayerView -> Request.Request -> Client m ([Text.Text], Maybe R.Reply)
+unasked view request = do
   let question = Request.question request
       seat = Question.seat question
       offer = Question.offer question
@@ -304,13 +306,12 @@ unasked request = do
     "ChooseAction"
       | Hotseat.autoPass hotseat,
         Just pass <- onlyPass offer ->
-          let view = Request.view request
-              active = PlayerView.active view
+          let active = PlayerView.active view
               whose = if active == seat then Text.pack "their " else Render.player active <> Text.pack "'s "
            in pure ([Render.player seat <> Text.pack " passes in " <> whose <> Render.phase (PlayerView.phase view) <> Text.pack " (no other actions)."], Just (R.Number pass))
     "ChooseManaSource"
       | Maybe.isJust paying ->
-          autoPay seat (Request.view request) offer >>= \paid -> case paid of
+          autoPay seat view offer >>= \paid -> case paid of
             Just (said, reply) -> pure ([said], Just reply)
             Nothing -> stopPaying seat >> pure ([Text.pack "Auto can't pay the rest of this cost."], Nothing)
     -- CR 605.3b: the mana the source was tapped for.

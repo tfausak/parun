@@ -72,6 +72,16 @@ spec s registry = Spec.describe s "Protocol" $ do
     Spec.assertBool s (survives (Prompt.DeclareAttackers (Decider.MkDecider S.alice) S.alice [o7, o9]) [o9]) "attackers"
     Spec.assertBool s (survives (Prompt.DeclareBlockers (Decider.MkDecider S.bob) S.bob [o9] [o7]) (Map.singleton o9 (Set.singleton o7))) "blockers"
     Spec.assertBool s (survives (Prompt.ChooseTargets (Decider.MkDecider S.alice) S.alice o7 (Map.singleton slot (1, Set.fromList [Recipient.ToPlayer S.bob, Recipient.ToCreature o9]))) (Map.singleton slot (Set.singleton (Recipient.ToPlayer S.bob)))) "targets"
+  Spec.it s "CR 103.1 a seat on the line is asked to play first or draw before the game, with no view" $ do
+    let asking replies = State.runState (Protocol.playOrDraw (\line -> State.state (\(out, rest) -> (Maybe.listToMaybe rest, (out <> [line], drop 1 rest)))) S.bob) ([], fmap Text.pack replies)
+        (drew, (sent, _)) = asking ["\"Maybe\"", "\"Draw\""]
+        requests = fmap (requestOf . Text.unpack) sent
+    Spec.assertEqWith s "draws" drew (Just False)
+    Spec.assertEqWith s "plays" (fst (asking ["\"Play\""])) (Just True)
+    Spec.assertEqWith s "end of input" (fst (asking [])) Nothing
+    Spec.assertEqWith s "views" (fmap (fmap Request.view) requests) [Just Nothing, Just Nothing]
+    Spec.assertEqWith s "questions" (fmap (fmap Request.question) requests) (replicate 2 (Just (Question.MkQuestion S.bob (Text.pack "PlayOrDraw") (R.Array [R.Text (Text.pack "Play"), R.Text (Text.pack "Draw")]))))
+    Spec.assertEqWith s "problems" (fmap (fmap Request.problem) requests) [Just Nothing, Just (Just (Text.pack "expected Play or Draw"))]
   Spec.it s "a hidden card reaches no line sent to the other seat" $ do
     gs <- started s registry
     let logged = State.execState (Driver.drive [observer] (Protocol.over (exchanging client) chance) 10000 (pure . (>= 5) . GameState.turnNumber) gs) []
