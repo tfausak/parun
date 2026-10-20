@@ -175,6 +175,7 @@ encode p answer = case p of
   Prompt.ChooseTribute {} -> Response.ChoseTribute answer
   Prompt.ChooseDredge {} -> Response.ChoseDredge answer
   Prompt.ChooseRedirect {} -> Response.ChoseRedirect answer
+  Prompt.ChooseSubstitute {} -> Response.ChoseSubstitute answer
   Prompt.ChoosePayLifeOnEntry {} -> Response.ChosePayLifeOnEntry answer
   Prompt.ChooseRevealOnEntry {} -> Response.ChoseRevealOnEntry answer
   Prompt.ChooseEnlist {} -> Response.ChoseEnlist answer
@@ -521,6 +522,9 @@ decode p response = case p of
     _ -> Nothing
   Prompt.ChooseRedirect {} -> case response of
     Response.ChoseRedirect d -> Just d
+    _ -> Nothing
+  Prompt.ChooseSubstitute {} -> case response of
+    Response.ChoseSubstitute d -> Just d
     _ -> Nothing
   Prompt.ChoosePayLifeOnEntry {} -> case response of
     Response.ChosePayLifeOnEntry d -> Just d
@@ -1105,6 +1109,9 @@ defaultAnswer p = case p of
   -- CR 614.1a: declining, for ChooseRiot's reason -- the move the effect
   -- proposed stands.
   Prompt.ChooseRedirect {} -> OptionalDecision.Declines
+  -- CR 614.1a: declining, for ChooseRiot's reason -- the flip or roll the
+  -- instruction named stands.
+  Prompt.ChooseSubstitute {} -> OptionalDecision.Declines
   -- CR 614.1c: declining, for ChooseRiot's reason above and one more. Declining
   -- is the branch the card itself states as the default -- "if you don't, it
   -- enters tapped" -- and it is the half that spends nothing, so a transcript

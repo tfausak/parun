@@ -22,4 +22,11 @@ spec s = Spec.describe s "Pawl.Codec.InstructionRewrite" $ do
       InstructionRewrite.codec
       InstructionRewrite.DrawInstead
       " {\"type\":\"DrawInstead\"} "
+  -- Pokey, the Scallywagg's "you may instead roll a d20".
+  Spec.it s "RollD20Instead" $
+    Common.assertCodec
+      s
+      InstructionRewrite.codec
+      InstructionRewrite.RollD20Instead
+      " {\"type\":\"RollD20Instead\"} "
   Spec.it s "has a schema" $ Common.assertHasSchema s InstructionRewrite.codec

@@ -935,17 +935,28 @@ matchesPrinted viewOf gs event candidate =
         -- threshold where DrawCountR has one: Bruvac the Grandiloquent's "one or
         -- more" is met by every proposed instruction. No `admits` either: every
         -- printed rewrite changes the event.
-        (ReplacementEffect.InstructionR row, ProposedEvent.WouldPerform instruction _ pid _) ->
+        --
+        -- Pokey, the Scallywagg's "if you would flip a coin" is one coin: a flip
+        -- an earlier row resized is not one Pokey's d20 can stand for. Not
+        -- implemented: Pokey after Krark's Thumb (#5351).
+        (ReplacementEffect.InstructionR row, ProposedEvent.WouldPerform instruction _ pid n) ->
           InstructionR.instruction row == instruction
             && matchesPlayer gs candidate (InstructionR.whose row) pid
+            && (InstructionR.rewrite row /= InstructionRewrite.RollD20Instead || n == 1)
         -- CR 706.1 / 614.1a: whose die rolls the row watches (CR 109.5's "you"),
         -- the InstructionR arm above and for its reason -- an instruction to roll
-        -- concerns the roller and nobody else, and every printing of the sentence
-        -- says "one or more dice" with no dN and no count to narrow by. No
-        -- `admits` beside it: DieRollRewrite's one arm always adds a die, so there
-        -- is no board on which the rewrite would change nothing.
-        (ReplacementEffect.DieRollR (DieRollR.MkDieRollR whose _), ProposedEvent.WouldRollDice roll) ->
+        -- concerns the roller and nobody else. Pixie Guide's sentence says "one
+        -- or more dice" with no dN and no count to narrow by, and always adds a
+        -- die, so there is no board on which it would change nothing.
+        --
+        -- Pokey, the Scallywagg's "if you would roll a d20" is one d20, a roll
+        -- an earlier row has not already resized. Not implemented: Pokey after
+        -- Pixie Guide (#5351).
+        (ReplacementEffect.DieRollR (DieRollR.MkDieRollR whose rewrite), ProposedEvent.WouldRollDice roll) ->
           matchesPlayer gs candidate whose (DiceRoll.roller roll)
+            && case rewrite of
+              DieRollRewrite.ExtraIgnoringLowest -> True
+              DieRollRewrite.FlipCoinInstead -> DiceRoll.sides roll == 20 && DiceRoll.dice roll == 1 && DiceRoll.ignored roll == 0
         -- The Unstable FAQ with CR 614.1a: the permanent assembling, judged by
         -- the row's Filter (Steamflogger Boss's "a Rigger you control"). An
         -- instruction a player carries out names no permanent, so no row of
@@ -2244,11 +2255,16 @@ readsApplier re = case re of
   -- be decided here.
   ReplacementEffect.InstructionR (InstructionR.MkInstructionR _ _ (InstructionRewrite.Scaled _)) -> False
   ReplacementEffect.InstructionR (InstructionR.MkInstructionR _ _ InstructionRewrite.DrawInstead) -> False
+  -- Pokey's "you may" is asked of the row's controller, who is the flipper its
+  -- "you" names: the seat the EVENT named.
+  ReplacementEffect.InstructionR (InstructionR.MkInstructionR _ _ InstructionRewrite.RollD20Instead) -> False
   -- The dice are thrown by the seat the EVENT named and the extra die is the
   -- effect's own field, so two rows alike in `effect` leave the same roller the
   -- same number of dice and the same number ignored whoever holds them.
   -- InstructionR's answer, and for its reason.
   ReplacementEffect.DieRollR (DieRollR.MkDieRollR _ DieRollRewrite.ExtraIgnoringLowest) -> False
+  -- InstructionR's RollD20Instead answer, and for its reason.
+  ReplacementEffect.DieRollR (DieRollR.MkDieRollR _ DieRollRewrite.FlipCoinInstead) -> False
   ReplacementEffect.AssembleR {} -> False
   -- CR 109.5: the effects run as the row's own controller, the reset's "you".
   ReplacementEffect.GameLossR {} -> True
@@ -2260,6 +2276,38 @@ readsApplier re = case re of
   -- CR 614.10: a skip replaces the step or phase with nothing. The player it is
   -- ABOUT is baked into PhasePattern.whosePhase, on the EFFECT, where this
   -- comparison already sees it.
+  ReplacementEffect.PhaseR _ -> False
+
+-- CR 614.6: does applying this effect replace a coin flip with a die roll or a
+-- roll with a flip (Pokey, the Scallywagg), so the funnel that proposed one has
+-- to carry out the other? Pawl.Engine.Event.flipOneCoin keeps such a row out of
+-- the offer on a road that cannot. A CLASSIFICATION of the row, one arm per
+-- constructor and no wildcard, readsApplier's discipline.
+substitutesAction :: ReplacementEffect Card (GrantedAbility.GrantedAbility Card) (Effect.Effect Card (GrantedAbility.GrantedAbility Card)) -> Bool
+substitutesAction effect = case effect of
+  ReplacementEffect.InstructionR row -> case InstructionR.rewrite row of
+    InstructionRewrite.Scaled _ -> False
+    InstructionRewrite.DrawInstead -> False
+    InstructionRewrite.RollD20Instead -> True
+  ReplacementEffect.DieRollR row -> case DieRollR.rewrite row of
+    DieRollRewrite.ExtraIgnoringLowest -> False
+    DieRollRewrite.FlipCoinInstead -> True
+  ReplacementEffect.DrawR {} -> False
+  ReplacementEffect.ZoneChangeR {} -> False
+  ReplacementEffect.EntryR {} -> False
+  ReplacementEffect.DamageR {} -> False
+  ReplacementEffect.DestructionR _ -> False
+  ReplacementEffect.CounterR {} -> False
+  ReplacementEffect.TokenR {} -> False
+  ReplacementEffect.TurnUpR {} -> False
+  ReplacementEffect.AttachR {} -> False
+  ReplacementEffect.UntapR _ -> False
+  ReplacementEffect.LifeLossR {} -> False
+  ReplacementEffect.LifeGainR {} -> False
+  ReplacementEffect.DrawCountR {} -> False
+  ReplacementEffect.AssembleR {} -> False
+  ReplacementEffect.GameLossR {} -> False
+  ReplacementEffect.PlaneswalkR {} -> False
   ReplacementEffect.PhaseR _ -> False
 
 -- Does applying this effect read the candidate's SOURCE -- the object the row

@@ -819,6 +819,12 @@ answerDedicated decider asked =
           onEntry unscheduled key kind [] (takeForSource gs key source) $ \verb -> case verb of
             Move.ChooseOptional decision -> Just (pure decision)
             _ -> Nothing
+        -- CR 614.1a's optional substitution, ChooseRedirect's keying.
+        Prompt.Type.ChooseSubstitute who _ source -> do
+          key <- whenOf gs (Decider.unwrap who)
+          onEntry unscheduled key kind [] (takeForSource gs key source) $ \verb -> case verb of
+            Move.ChooseOptional decision -> Just (pure decision)
+            _ -> Nothing
         -- The order named is the whole group, each object once; the engine
         -- wants it as positions in the group it offered.
         Prompt.Type.OrderTimestamps who _ group -> do
@@ -1053,6 +1059,7 @@ withinOffer prompt chosen = case prompt of
   Prompt.Type.ChooseTribute {} -> True
   Prompt.Type.ChooseRepeat {} -> True
   Prompt.Type.ChooseRedirect {} -> True
+  Prompt.Type.ChooseSubstitute {} -> True
   Prompt.Type.ChoosePayLifeOnEntry {} -> True
   Prompt.Type.ChooseTurnUpAttachment {} -> True
   Prompt.Type.ChooseCommandZoneOfferFirst {} -> True

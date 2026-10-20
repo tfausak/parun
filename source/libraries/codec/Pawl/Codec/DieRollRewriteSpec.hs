@@ -14,4 +14,11 @@ spec s = Spec.describe s "Pawl.Codec.DieRollRewrite" $ do
       DieRollRewrite.codec
       DieRollRewrite.ExtraIgnoringLowest
       " {\"type\":\"ExtraIgnoringLowest\"} "
+  -- CR 614.6: Pokey, the Scallywagg.
+  Spec.it s "FlipCoinInstead" $
+    Common.assertCodec
+      s
+      DieRollRewrite.codec
+      DieRollRewrite.FlipCoinInstead
+      " {\"type\":\"FlipCoinInstead\"} "
   Spec.it s "has a schema" $ Common.assertHasSchema s DieRollRewrite.codec
