@@ -357,12 +357,12 @@ applyModification textBoxOf viewOf src stamp gs oid unitTypes affected m pc =
         -- this ability only to exiling abilities printed beside it, and CR
         -- 607.5 an acquired one only to its own pair.
         --
-        -- CR 602.5c: an unnamed ability is named for the card it came from
-        -- (Binding.exiledCardAbility), so two identically worded abilities
-        -- from two cards are two to a restriction on their use. A named one
-        -- keeps its name, which its linked twin refers to (CR 607.5), and two
-        -- cards' equal copies of it are told apart by count instead
-        -- (ActivationRestriction.unspent).
+        -- CR 602.5c / 607.5: each is named for the card it came from and its
+        -- own name (Binding.exiledCardAbility), so two identically worded
+        -- abilities from two cards are two to a restriction on their use, and
+        -- a named one is not the holder's own ability of that name. A name
+        -- stated inside it means its twin from the same card
+        -- (Binding.nameAsRead).
         --
         -- Pawl.ActivateSpec's Locus of Enlightenment case proves all three, and
         -- its Gliding Licid case the named twins. The Steward of the Harvest
@@ -370,7 +370,7 @@ applyModification textBoxOf viewOf src stamp gs oid unitTypes affected m pc =
         -- an acquired ability exiled.
         Modification.GainExiledCardAbilities (ExiledCardAbilities.MkExiledCardAbilities pile extra) ->
           let cards = Game.linkedPile Nothing pile src gs
-              named card a = a {ActivatedAbility.name = ActivatedAbility.name a Applicative.<|> Just (Binding.exiledCardAbility card)}
+              named card a = a {ActivatedAbility.name = Just (Binding.exiledCardAbility card (ActivatedAbility.name a))}
               -- CR 113.6 / 702.178b: a card has, in exile, only the "as long
               -- as" grants that function there (AbilityZone.grantFunctionsIn).
               inExile card = let copied = copiableCharacteristics card gs in filter (AbilityZone.grantFunctionsIn Zone.Battlefield (PC.delayedAbilities copied) Zone.Exile) (PC.activatedAbilities copied)
@@ -4282,7 +4282,10 @@ modificationReads m = case m of
   Modification.GainExiledCardAbilities _ -> Set.empty
   Modification.GainAbilitiesOfStickers -> Set.empty
   Modification.LoseAllAbilities -> Set.empty
-  -- Carries a name, which is not a Quantity.
+  -- Carries a name, which is not a Quantity: a grant and a removal of one
+  -- ability are independent, the later winning (CR 613.9's first example).
+  -- Pawl.ActivateSpec's "CR 602.5c two Gliding Licids give the Locus two
+  -- once-each-turn animate abilities" proves it.
   Modification.LoseNamedAbility _ -> Set.empty
   -- Carries a Keyword, whose own Filter is read where the keyword is matched.
   Modification.LoseKeyword _ -> Set.empty
