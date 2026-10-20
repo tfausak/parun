@@ -191,6 +191,29 @@ spec s registry = Spec.describe s "a fragmented loop (CR 732.3)" $ do
     -- the first left, so the third activation is refused.
     Spec.assertEqWith s "CR 732.3 alice's third activation is refused" (hushAttempts adept rouser bears) [True, True, False]
 
+  Spec.it s "a card reading no history leaves the loop detected, whatever its name spells" $ do
+    sorcerer <- S.printingOf s registry "Prodigal Sorcerer"
+    collar <- S.printingOf s registry "Basilisk Collar"
+    rouser <- S.printingOf s registry "Synthetic Rouser"
+    serpopard <- S.printingOf s registry "Prowling Serpopard"
+    -- alice's Prodigal Sorcerer, wearing Basilisk Collar, pings her, and its
+    -- lifelink gives the life back (CR 702.15b); bob untaps it. Each lap logs
+    -- the damage. Prowling Serpopard, in bob's library, reads no history,
+    -- though its name spells a reader's keyword, prowl's: the state recurs,
+    -- and alice's second activation is refused.
+    Spec.assertEqWith s "CR 732.3 Prowling Serpopard leaves alice's repeated aim refused" (pingAttempts sorcerer collar rouser serpopard) [True, False]
+
+  Spec.it s "a keyword the engine expands into a history reader keeps the loop's states distinct" $ do
+    sorcerer <- S.printingOf s registry "Prodigal Sorcerer"
+    collar <- S.printingOf s registry "Basilisk Collar"
+    rouser <- S.printingOf s registry "Synthetic Rouser"
+    vampire <- S.printingOf s registry "Bloodrage Vampire"
+    -- The same loop, with Bloodrage Vampire in bob's library: its bloodthirst
+    -- asks whether an opponent was dealt damage this turn (CR 702.54a), off
+    -- the log the loop writes, though the card spells only the keyword. So
+    -- the answerer's budget is what stops alice.
+    Spec.assertEqWith s "CR 732.3 Bloodrage Vampire keeps every attempt" (pingAttempts sorcerer collar rouser vampire) (replicate budget True)
+
 -- How many times the answerer has the tapper activate before it passes
 -- instead, since without CR 732.3 the loop never ends.
 budget :: Int
@@ -581,15 +604,33 @@ hushAttempts adept rouser bears =
   let (adeptId, gs1) = S.addPermanent adept S.alice (Setup.emptyGame S.bothPlayers)
       (rouserId, gs2) = S.addPermanent rouser S.bob gs1
       (bearsId, gs3) = S.addPermanent bears S.bob gs2
-      ((_, _), (_, _, _, made)) = State.runState (Engine.runGameAsked (hushing adeptId rouserId bearsId) (inMain gs3) Engine.priorityLoop) (budget, False, True, [])
+      ((_, _), (_, _, _, made)) = State.runState (Engine.runGameAsked (lapping adeptId rouserId (Recipient.ToCreature bearsId)) (inMain gs3) Engine.priorityLoop) (budget, False, True, [])
    in made
 
-hushing :: ObjectId.ObjectId -> ObjectId.ObjectId -> ObjectId.ObjectId -> Asked.Asked r -> State.State Spearing r
-hushing adeptId rouserId bearsId asked = case Asked.prompt asked of
+-- alice, active in her precombat main phase, controls Prodigal Sorcerer
+-- equipped with Basilisk Collar; bob controls a Synthetic Rouser, with
+-- `reader` in his library. alice opens each lap pinging herself, up to
+-- `budget` times, and bob answers each that resolves by untapping the
+-- Sorcerer.
+pingAttempts :: Printing.Printing -> Printing.Printing -> Printing.Printing -> Printing.Printing -> [Bool]
+pingAttempts sorcerer collar rouser reader =
+  let (sorcererId, gs1) = S.addPermanent sorcerer S.alice (Setup.emptyGame S.bothPlayers)
+      (collarId, gs2) = S.addPermanent collar S.alice gs1
+      (rouserId, gs3) = S.addPermanent rouser S.bob gs2
+      (_, gs4) = S.addLibraryCard reader S.bob gs3
+      board = inMain (S.attach collarId sorcererId gs4)
+      ((_, _), (_, _, _, made)) = State.runState (Engine.runGameAsked (lapping sorcererId rouserId (Recipient.ToPlayer S.alice)) board Engine.priorityLoop) (budget, False, True, [])
+   in made
+
+-- One lap's script: alice opens it activating `tapperId` at `aim`, and bob
+-- answers with his Rouser at the tapper once it has resolved. Answers alice's
+-- attempts, each as whether it went on the stack.
+lapping :: ObjectId.ObjectId -> ObjectId.ObjectId -> Recipient.Recipient -> Asked.Asked r -> State.State Spearing r
+lapping tapperId rouserId aim asked = case Asked.prompt asked of
   Prompt.ChooseAction _ pid actions -> do
     (left, attempted, alicesLap, made) <- State.get
     let stacked = not (null (GameState.stack (Asked.game asked)))
-        open recorded = case List.find (activates adeptId) actions of
+        open recorded = case List.find (activates tapperId) actions of
           Just action | left > 0 -> do
             State.put (left - 1, True, alicesLap, recorded)
             pure action
@@ -618,11 +659,11 @@ hushing adeptId rouserId bearsId asked = case Asked.prompt asked of
           pure action
         _ -> pure Action.Pass
   -- FILTERED out of the offer, never built (CR 608.2b re-reads it): alice's
-  -- attempt aims at the Bears, bob's untap at the Adept.
+  -- attempt at `aim`, bob's untap at the tapper.
   Prompt.ChooseTargets _ _ _ sets -> do
     (_, attempted, _, _) <- State.get
-    let aim = if attempted then bearsId else adeptId
-    pure (fmap (Set.filter (== Recipient.ToCreature aim) . snd) sets)
+    let aimed = if attempted then aim else Recipient.ToCreature tapperId
+    pure (fmap (Set.filter (== aimed) . snd) sets)
   Prompt.ChooseExtraManaSource {} -> pure Nothing
   prompt -> pure (S.identityAnswer prompt)
 

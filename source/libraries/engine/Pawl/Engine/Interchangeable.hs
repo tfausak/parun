@@ -13,6 +13,7 @@ import qualified Data.List as List
 import qualified Data.List.NonEmpty as NonEmpty
 import qualified Data.Map.Strict as Map
 import qualified Data.Maybe as Maybe
+import qualified Data.Monoid as Monoid
 import qualified Data.Sequence as Seq
 import qualified Data.Set as Set
 import qualified Pawl.Engine.Binding as Binding
@@ -287,9 +288,9 @@ quiet gs =
 -- read through Pawl.Engine.Interchangeable.Mentions. A replacement, a delayed
 -- trigger and the three pending queues store the environment their slots read
 -- (a pending entry effect reads none), which the same traversal searches, so
--- they are asked as Mentions.Searched;
+-- they are asked as `searched`;
 -- every other row stores none, so a slot it reads might name anything
--- (Mentions.Unread).
+-- (`unread`).
 --
 -- Pawl.ManaSourceSpec proves the replacement arm (Mending Hands, through
 -- DamagePattern's recipient) and the delayed-trigger arm (Salt Road Skirmish,
@@ -307,21 +308,28 @@ namedByStored oid gs =
     || any (attackProhibitionNames oid) (GameState.attackProhibitions gs)
     || any (evasionNames oid) (GameState.evasions gs)
     || any (ignoredNames oid) (GameState.ignoredAbilities gs)
-    || any (Mentions.activeReplacementNames (searched oid)) (GameState.replacements gs)
-    || any (Mentions.delayedTriggerNames (searched oid)) (GameState.delayedTriggers gs)
-    || any (Mentions.preventionNames (searched oid)) (GameState.pendingPreventionRiders gs)
-    || any (Mentions.pendingDamageEffectNames (searched oid)) (GameState.pendingReplacementEffects gs)
-    || any (Mentions.pendingEntryEffectNames (searched oid)) (GameState.pendingEntryEffects gs)
+    || any (Monoid.getAny . Mentions.activeReplacementNames (searched oid)) (GameState.replacements gs)
+    || any (Monoid.getAny . Mentions.delayedTriggerNames (searched oid)) (GameState.delayedTriggers gs)
+    || any (Monoid.getAny . Mentions.preventionNames (searched oid)) (GameState.pendingPreventionRiders gs)
+    || any (Monoid.getAny . Mentions.pendingDamageEffectNames (searched oid)) (GameState.pendingReplacementEffects gs)
+    || any (Monoid.getAny . Mentions.pendingEntryEffectNames (searched oid)) (GameState.pendingEntryEffects gs)
 
 -- The question asked of a row that stores the environment its slots read --
 -- searched alongside the row's trees, so a slot read is answered there.
-searched :: ObjectId -> Mentions.Asking
-searched oid = Mentions.MkAsking oid Mentions.Searched
+searched :: ObjectId -> Mentions.Asking Monoid.Any
+searched oid = (unread oid) {Mentions.context = mempty}
 
 -- The question asked of a row that stores no environment, so every slot read
--- might name the object.
-unread :: ObjectId -> Mentions.Asking
-unread oid = Mentions.MkAsking oid Mentions.Unread
+-- might name the object. A history read names none, the look-back atoms that
+-- single an object out answering through Mentions.keyed.
+unread :: ObjectId -> Mentions.Asking Monoid.Any
+unread oid =
+  Mentions.MkAsking
+    { Mentions.names = \named -> Monoid.Any (named oid),
+      Mentions.context = Monoid.Any True,
+      Mentions.keyed = Monoid.Any True,
+      Mentions.history = mempty
+    }
 
 -- CR 613.7a: an object's static abilities apply at its own timestamp, so a
 -- stored layered row stamped strictly BETWEEN the two can apply after one's
@@ -371,14 +379,14 @@ attackTargetNames oid target = case target of
 continuousNames :: ObjectId -> GameState -> ContinuousEffect.ContinuousEffect Card.Card -> Bool
 continuousNames oid gs row = case row of
   ContinuousEffect.MkContinuousEffect source _timestamp expiry modification affected ->
-    source == oid || Mentions.expiryNames (unread oid) expiry || Mentions.modificationNames (unread oid) (Mentions.grantedAbilityNames (unread oid) (const False)) modification || affectedNames oid source gs affected
+    source == oid || Monoid.getAny (Mentions.expiryNames (unread oid) expiry) || Monoid.getAny (Mentions.modificationNames (unread oid) (Mentions.grantedAbilityNames (unread oid) (const mempty)) modification) || affectedNames oid source gs affected
 
 -- CR 707.2: the snapshot is copiable values, which hold printed text and no
 -- runtime id, exactly as a printed card does.
 copyNames :: ObjectId -> ActiveCopy.ActiveCopy -> Bool
 copyNames oid row = case row of
   ActiveCopy.MkActiveCopy source _timestamp expiry covers _snapshot _turned ->
-    source == oid || Mentions.expiryNames (unread oid) expiry || case covers of
+    source == oid || Monoid.getAny (Mentions.expiryNames (unread oid) expiry) || case covers of
       CopyCoverage.These copied -> Set.member oid copied
       CopyCoverage.SourceHost overtaken -> Map.member oid overtaken
       CopyCoverage.Attachment host -> oid == host
@@ -386,28 +394,28 @@ copyNames oid row = case row of
 playerEffectRowNames :: ObjectId -> ActivePlayerEffect.ActivePlayerEffect -> Bool
 playerEffectRowNames oid row = case row of
   ActivePlayerEffect.MkActivePlayerEffect source _controller _choices _timestamp expiry _scope effect ability ->
-    source == oid || Mentions.expiryNames (unread oid) expiry || Mentions.playerEffectNames (unread oid) effect || any (Binding.isAcquiredFrom oid) ability
+    source == oid || Monoid.getAny (Mentions.expiryNames (unread oid) expiry) || Monoid.getAny (Mentions.playerEffectNames (unread oid) effect) || any (Binding.isAcquiredFrom oid) ability
 
 blockRequirementNames :: ObjectId -> ActiveBlockRequirement.ActiveBlockRequirement -> Bool
 blockRequirementNames oid row = case row of
   ActiveBlockRequirement.MkActiveBlockRequirement source _timestamp expiry blocker attacker ->
-    source == oid || Mentions.expiryNames (unread oid) expiry || blocker == oid || attacker == oid
+    source == oid || Monoid.getAny (Mentions.expiryNames (unread oid) expiry) || blocker == oid || attacker == oid
 
 attackRequirementNames :: ObjectId -> ActiveAttackRequirement.ActiveAttackRequirement -> Bool
 attackRequirementNames oid row = case row of
   ActiveAttackRequirement.MkActiveAttackRequirement source _controller _timestamp expiry attacker defender ->
-    source == oid || Mentions.expiryNames (unread oid) expiry || restrictedNames oid attacker || attackTargetNames oid defender
+    source == oid || Monoid.getAny (Mentions.expiryNames (unread oid) expiry) || restrictedNames oid attacker || attackTargetNames oid defender
 
 objectProhibitionNames :: ObjectId -> ActiveObjectProhibition.ActiveObjectProhibition -> Bool
 objectProhibitionNames oid row = case row of
   ActiveObjectProhibition.MkActiveObjectProhibition source _timestamp expiry _what object ->
-    source == oid || Mentions.expiryNames (unread oid) expiry || object == oid
+    source == oid || Monoid.getAny (Mentions.expiryNames (unread oid) expiry) || object == oid
 
 -- AimedAt names players and target kinds, never an object.
 attackProhibitionNames :: ObjectId -> ActiveAttackProhibition.ActiveAttackProhibition -> Bool
 attackProhibitionNames oid row = case row of
   ActiveAttackProhibition.MkActiveAttackProhibition source _controller _timestamp expiry affected aimedAt ->
-    source == oid || Mentions.expiryNames (unread oid) expiry || restrictedNames oid affected || maybe False aimedAtNames aimedAt
+    source == oid || Monoid.getAny (Mentions.expiryNames (unread oid) expiry) || restrictedNames oid affected || maybe False aimedAtNames aimedAt
 
 aimedAtNames :: AimedAt.AimedAt -> Bool
 aimedAtNames aimed = case aimed of
@@ -419,18 +427,18 @@ aimedAtNames aimed = case aimed of
 evasionNames :: ObjectId -> ActiveEvasion.ActiveEvasion -> Bool
 evasionNames oid row = case row of
   ActiveEvasion.MkActiveEvasion source _controller _timestamp expiry affected barred ->
-    source == oid || Mentions.expiryNames (unread oid) expiry || Mentions.filterNames (unread oid) affected || Mentions.filterNames (unread oid) barred
+    source == oid || Monoid.getAny (Mentions.expiryNames (unread oid) expiry) || Monoid.getAny (Mentions.filterNames (unread oid) affected) || Monoid.getAny (Mentions.filterNames (unread oid) barred)
 
 -- CR 116.2d: the ignored ability is its source's, so the source is the subject.
 ignoredNames :: ObjectId -> IgnoredAbility.IgnoredAbility -> Bool
 ignoredNames oid row = case row of
   IgnoredAbility.MkIgnoredAbility _player source _ability expiry ->
-    source == oid || Mentions.expiryNames (unread oid) expiry
+    source == oid || Monoid.getAny (Mentions.expiryNames (unread oid) expiry)
 
 restrictedNames :: ObjectId -> RestrictedCreatures.RestrictedCreatures ObjectId -> Bool
 restrictedNames oid restricted = case restricted of
   RestrictedCreatures.Named named -> named == oid
-  RestrictedCreatures.Matching criterion -> Mentions.filterNames (unread oid) criterion
+  RestrictedCreatures.Matching criterion -> Monoid.getAny (Mentions.filterNames (unread oid) criterion)
 
 -- CR 611.2c: who a stored continuous effect applies to. A fixed set is
 -- searched; a predicate is filterNames' question; CR 303.4m's "enchanted"
@@ -438,11 +446,11 @@ restrictedNames oid restricted = case restricted of
 affectedNames :: ObjectId -> ObjectId -> GameState -> Affected.Affected -> Bool
 affectedNames oid source gs affected = case affected of
   Affected.TheseObjects held -> Set.member oid held
-  Affected.Matching criterion -> Mentions.filterNames (unread oid) criterion
-  Affected.MatchingAnywhere criterion -> Mentions.filterNames (unread oid) criterion
-  Affected.MatchingOffBattlefield criterion -> Mentions.filterNames (unread oid) criterion
+  Affected.Matching criterion -> Monoid.getAny (Mentions.filterNames (unread oid) criterion)
+  Affected.MatchingAnywhere criterion -> Monoid.getAny (Mentions.filterNames (unread oid) criterion)
+  Affected.MatchingOffBattlefield criterion -> Monoid.getAny (Mentions.filterNames (unread oid) criterion)
   Affected.Attached -> Game.hostOf source gs == Just oid
-  Affected.AttachedPlayerControls criterion -> Mentions.filterNames (unread oid) criterion
+  Affected.AttachedPlayerControls criterion -> Monoid.getAny (Mentions.filterNames (unread oid) criterion)
   -- CR 611.3d: applied by storing a TheseObjects row (Event.permissionRiders),
   -- and Pawl.Engine.Projection applies this template to nothing.
   Affected.PlayedThisWay _duration -> False
@@ -620,7 +628,7 @@ namedByAnother oid gs =
         other /= oid
           && ( (Object.attachedTo obj >>= Recipient.objectOf) == Just oid
                  || any (bindingNames oid) (Map.elems (Object.bindings obj))
-                 || any (Mentions.playerChoiceNames (unread oid)) (foldMap Map.keys (Object.chosenPlayers obj))
+                 || any (Monoid.getAny . Mentions.playerChoiceNames (unread oid)) (foldMap Map.keys (Object.chosenPlayers obj))
              )
    in any names (Map.toList (GameState.objects gs))
         || any ((== Just oid) . LastKnown.host) (GameState.lastKnown gs)
