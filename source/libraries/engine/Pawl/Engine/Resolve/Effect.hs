@@ -10254,6 +10254,9 @@ applyOneEffect runSubgame resolving source controller legal chosen effect = case
     -- A loss the pass replaced runs its effects inside the pass
     -- (runDamageRewriteEffect), and a pass that replaces it forever is CR
     -- 104.4b's draw (Departure.checkMandatoryLoop).
+    --
+    -- Not implemented: keeping the board before each pass, which CR 603.8
+    -- reads, for the next settle, here and in the EndCombatPhase arm (#5359).
     let checkToFixpoint passes = do
           begun <- State.gets GameState.lastChoice
           performed <- Sba.performStateBasedActions (runDamageRewriteEffect runSubgame) []
@@ -10268,9 +10271,9 @@ applyOneEffect runSubgame resolving source controller legal chosen effect = case
     -- cleanup step, or to a NEW cleanup step if this IS one.
     --
     -- What ends the step is Engine.runStepThatBegan, which resumes after the
-    -- signal below stops the priority round and runs CR 500.5's expiries, CR
-    -- 703.4q's mana emptying and CR 704.3 for the step exactly as it would for a
-    -- step that ended by itself. Nothing of that is duplicated here.
+    -- signal below stops the priority round and runs CR 500.5's expiries and CR
+    -- 703.4q's mana emptying exactly as it would for a step that ended by
+    -- itself. Nothing of that is duplicated here.
     --
     -- The PHASE-scoped half of CR 500.5 is taken here and not there, on rule
     -- 724.1d's "the current phase and/or step ends": Turn.phaseEndingAt answers

@@ -609,9 +609,8 @@ chooseLegendVictims (controller, candidates) = do
 -- board.
 --
 -- An unstamped world permanent is not a candidate. Unreachable rather than
--- tolerated: Engine.sampleWorldSince runs ahead of every pass this module has,
--- both inside Engine.performSettle and at Engine.checkSba, so anything world here
--- has a stamp. Deliberately NOT defaulted to
+-- tolerated: Engine.sampleWorldSince runs ahead of every pass Engine.performSettle
+-- makes, so anything world here has a stamp. Deliberately NOT defaulted to
 -- Object.timestamp, which would restore the proxy on exactly the boards the clock
 -- exists for.
 --

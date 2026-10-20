@@ -569,7 +569,7 @@ restartSpec s registry = Spec.describe s "restart (CR 727)" $ do
     mountain <- S.printingOf s registry "Mountain"
     let g0 = addMany mountain 3 S.bob (addMany mountain 8 S.alice (Setup.emptyGame S.bothPlayers))
         afterRestart = snd (Engine.runGamePure S.identityAnswer g0 (Setup.restartGame S.performer Set.empty S.alice))
-        afterSba = snd (Engine.runGamePure S.identityAnswer afterRestart Engine.checkSba)
+        afterSba = snd (Engine.runGamePure S.identityAnswer afterRestart Engine.settleForPriority)
     Spec.assertEqWith s "bob drew from an empty library during the opening draw" (Set.member S.bob (GameState.drewFromEmpty afterRestart)) True
     Spec.assertEqWith s "CR 727.3: bob loses, alice wins at the SBA check" (GameState.result afterSba) (Just (Result.Won S.alice))
 

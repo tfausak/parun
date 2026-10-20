@@ -222,14 +222,6 @@ passPriorityFrom gs pid =
           p : _ -> p
           [] -> nextStillPlaying gs pid
 
--- The step's own CR 704.3 check. Samples CR 704.5k's clock first, this site
--- following the turn-based actions and CR 514.2's sweep being able to change who
--- is world. A loss the pass replaced runs its effects inside the pass
--- (Resolve.runDamageRewriteEffect, the pass's `instead`); anything else those
--- effects queued runs before anything checks again.
-checkSba :: Game ()
-checkSba = sampleWorldSince >> Sba.checkStateBasedActions (Resolve.runDamageRewriteEffect playSubgame) >> Resolve.runReplacementEffects playSubgame
-
 -- CR 502.3's untap, and its own "effects can keep one or more of a player's
 -- permanents from untapping": such an effect takes the permanent out of the set
 -- below and leaves it as it was (Pawl.Engine.UntapRestriction), CR 101.2 being
@@ -2050,16 +2042,16 @@ runStepThatBegan phase = do
   -- the creature CR 514.2 just dropped to zero toughness (CR 704.5f), and CR
   -- 514.3a then finds a settled board and grants nothing.
   grants <- grantsPriorityNow phase
-  -- CR 704.3, the step's own check. A step that grants priority takes it as
-  -- the settle a player is about to get priority after, so CR 603.8 reads the
-  -- board a turn-based action (combat damage) left before the check buries
-  -- anything (settlePasses' `boards`). A regression fence: taking `checkSba`
-  -- here leaves the suite green, no scenario arming a state trigger on a
-  -- combat damage board alone. Nothing is left for a cleanup step that
-  -- grants, since `grantsPriorityNow` has just settled it to a fixpoint. A step
-  -- that grants none takes one unlooped pass (Sba.checkStateBasedActions says
-  -- why one is enough there).
-  if grants then Monad.void performSettle else checkSba
+  -- CR 704.3, the step's own check, taken as the settle a player is about to
+  -- get priority after, so CR 603.8 reads the board a turn-based action (combat
+  -- damage) left before the check buries anything (settlePasses' `boards`).
+  -- Nothing is left for a cleanup step that grants, since `grantsPriorityNow`
+  -- has just settled it to a fixpoint. A step that grants none checks nothing:
+  -- CR 704.3 checks only where a player would get priority, and the cleanup
+  -- step's first check is `cleanupException`'s. So a state the untap step
+  -- leaves (CR 502.4) is the upkeep settle's first board, which is how CR
+  -- 603.8 sees it; data/scenarios/trigger's Teferi's Curse scenario proves it.
+  Monad.when grants (Monad.void performSettle)
   finished <- State.gets (Maybe.isJust . GameState.result)
   Monad.unless finished $ do
     Monad.when grants priorityLoop
@@ -2097,7 +2089,9 @@ runStepThatBegan phase = do
         -- line sits after (Hanweir Garrison). NOT guarded by `live`: a turn
         -- with no active player declares no attackers, CR 508.8's own condition.
         Monad.when (phase == Phase.Combat CombatStep.DeclareAttackers) (State.modify' Combat.skipEmptyCombat)
-        checkSba
+        -- No CR 704.3 check as the step ends: no player gets priority here, so a
+        -- state this step's end leaves waits for the next step's settle, which
+        -- keeps its board for CR 603.8.
         stillFinished <- State.gets (Maybe.isJust . GameState.result)
         Monad.unless stillFinished advance
 

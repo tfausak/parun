@@ -386,7 +386,7 @@ deckedOut s registry = scenario s registry $ do
         GameState.turnNumber = 3
       }
   S.drawStep
-  Engine.checkSba
+  Engine.settleForPriority
 
 librarySize :: PlayerId.PlayerId -> GameState.GameState -> Int
 librarySize pid gs = length (Game.zoneMembers Zone.Library pid gs)

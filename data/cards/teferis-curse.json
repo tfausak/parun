@@ -1,0 +1,80 @@
+{
+  "faces": [
+    {
+      "enchant": [
+        {
+          "filter": {
+            "type": "Or",
+            "value": [
+              {
+                "type": "HasCardType",
+                "value": {
+                  "type": "Artifact"
+                }
+              },
+              {
+                "type": "HasCardType",
+                "value": {
+                  "type": "Creature"
+                }
+              }
+            ]
+          },
+          "pool": {
+            "type": "Permanents"
+          }
+        }
+      ],
+      "manaCost": [
+        {
+          "type": "Generic",
+          "value": 1
+        },
+        {
+          "type": "OfType",
+          "value": {
+            "type": "Colored",
+            "value": {
+              "type": "Blue"
+            }
+          }
+        }
+      ],
+      "name": "Teferi's Curse",
+      "oracleText": "Enchant artifact or creature\nEnchanted permanent has phasing. (It phases in or out before its controller untaps during each of their untap steps. While it's phased out, it's treated as though it doesn't exist.)",
+      "staticAbilities": [
+        {
+          "affected": {
+            "type": "Matching",
+            "value": {
+              "type": "HasAttached",
+              "value": {
+                "type": "IsSource"
+              }
+            }
+          },
+          "modifications": [
+            {
+              "type": "GainKeyword",
+              "value": {
+                "type": "Phasing"
+              }
+            }
+          ]
+        }
+      ],
+      "typeLine": {
+        "subtypes": [
+          {
+            "type": "Aura"
+          }
+        ],
+        "types": [
+          {
+            "type": "Enchantment"
+          }
+        ]
+      }
+    }
+  ]
+}
