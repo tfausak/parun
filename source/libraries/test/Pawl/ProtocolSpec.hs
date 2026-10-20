@@ -10,7 +10,10 @@ import qualified Data.Map.Strict as Map
 import qualified Data.Maybe as Maybe
 import qualified Data.Set as Set
 import qualified Data.Text as Text
+import Numeric.Natural (Natural)
 import qualified Pawl.Cards as Cards
+import qualified Pawl.Codec.Cost as Codec.Cost
+import qualified Pawl.Codec.Keyword as Codec.Keyword
 import qualified Pawl.Codec.Reply as Codec.Reply
 import qualified Pawl.Codec.Request as Codec.Request
 import qualified Pawl.Engine.Driver as Driver
@@ -27,15 +30,20 @@ import qualified Pawl.Registry as Registry
 import qualified Pawl.Scenario.Prompt as Scenario.Prompt
 import qualified Pawl.Spec as Spec
 import qualified Pawl.Support as S
+import qualified Pawl.Types.Action as Action
+import qualified Pawl.Types.ActivatedAbility as ActivatedAbility
 import qualified Pawl.Types.Answerer as Answerer
 import qualified Pawl.Types.Asked as Asked
 import qualified Pawl.Types.CardName as CardName
+import qualified Pawl.Types.ClauseIndex as ClauseIndex
 import qualified Pawl.Types.Decider as Decider
 import qualified Pawl.Types.Deck as Deck
 import qualified Pawl.Types.GameSettings as GameSettings
 import qualified Pawl.Types.GameState as GameState
+import qualified Pawl.Types.ModeIndex as ModeIndex
 import qualified Pawl.Types.ObjectId as ObjectId
 import qualified Pawl.Types.Observer as Observer
+import qualified Pawl.Types.PayOffer as PayOffer
 import qualified Pawl.Types.PlayerId as PlayerId
 import qualified Pawl.Types.Prompt as Prompt
 import qualified Pawl.Types.Question as Question
@@ -82,6 +90,31 @@ spec s registry = Spec.describe s "Protocol" $ do
     Spec.assertEqWith s "views" (fmap (fmap Request.view) requests) [Just Nothing, Just Nothing]
     Spec.assertEqWith s "questions" (fmap (fmap Request.question) requests) (replicate 2 (Just (Question.MkQuestion S.bob (Text.pack "PlayOrDraw") (R.Array [R.Text (Text.pack "Play"), R.Text (Text.pack "Draw")]))))
     Spec.assertEqWith s "problems" (fmap (fmap Request.problem) requests) [Just Nothing, Just (Just (Text.pack "expected Play or Draw"))]
+  Spec.it s "an activated ability is offered by its place among its source's, so two abilities of one source differ" $ do
+    vane <- S.printingOf s registry "Arcum's Weathervane"
+    let (oid, gs) = S.addPermanent vane S.alice (Setup.emptyGame S.bothPlayers)
+        offered = Protocol.offerOf gs (Prompt.ChooseAction (Decider.MkDecider S.alice) S.alice (fmap (Action.Activate oid) (Projection.abilitiesOf oid gs)))
+        activate i = R.Object [(Text.pack "action", R.Text (Text.pack "Activate")), (Text.pack "object", Protocol.object oid), (Text.pack "ability", R.Number i)]
+    Spec.assertEqWith s "offer" offered (R.Array [activate 0, activate 1])
+
+  Spec.it s "CR 510.1 a combat damage assignment offers each recipient's lethal damage in the answer's vocabulary" $ do
+    let o7 = ObjectId.MkObjectId 7
+        lethal = Map.fromList [(Recipient.ToCreature (ObjectId.MkObjectId 9), 2), (Recipient.ToCreature (ObjectId.MkObjectId 11), 3 :: Natural)]
+        prompt = Prompt.AssignCombatDamage (Decider.MkDecider S.alice) S.alice o7 lethal 5
+        offer = Protocol.offerOf (Setup.emptyGame S.bothPlayers) prompt
+    Spec.assertEqWith s "lethal" (fmap (Protocol.decodeAnswer prompt) (field "lethal" offer)) (Just (Right lethal))
+    Spec.assertEqWith s "total" (field "total" offer) (Just (R.Number 5))
+    Spec.assertEqWith s "source" (field "source" offer) (Just (Protocol.object o7))
+
+  Spec.it s "CR 118.12 an offer to pay names the cost and what offers it" $ do
+    vane <- S.printingOf s registry "Arcum's Weathervane"
+    let (oid, gs) = S.addPermanent vane S.alice (Setup.emptyGame S.bothPlayers)
+        costs = fmap ActivatedAbility.cost (Projection.abilitiesOf oid gs)
+        offers = [Protocol.offerOf gs (Prompt.ChooseToPay (Decider.MkDecider S.bob) S.bob oid (PayOffer.AtClause (ModeIndex.MkModeIndex 0) (ClauseIndex.MkClauseIndex 0)) cost mempty) | cost <- costs]
+        decodedCost offer = fmap (\c -> Common.parse (Common.render (Codec.Reply.toValue c)) >>= Codec.decode (Codec.Cost.codec Codec.Keyword.codec)) (field "cost" offer)
+    Spec.assertEqWith s "cost" (fmap decodedCost offers) (fmap (Just . Right) costs)
+    Spec.assertEqWith s "source" (fmap (field "source") offers) (fmap (const (Just (Protocol.object oid))) costs)
+
   Spec.it s "a hidden card reaches no line sent to the other seat" $ do
     gs <- started s registry
     let logged = State.execState (Driver.drive [observer] (Protocol.over (exchanging client) chance) 10000 (pure . (>= 5) . GameState.turnNumber) gs) []

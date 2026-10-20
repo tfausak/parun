@@ -11,7 +11,9 @@ import qualified Data.Foldable as Foldable
 import qualified Data.List.NonEmpty as NonEmpty
 import qualified Data.Text as Text
 import Numeric.Natural (Natural)
+import qualified Pawl.Codec.Cost as Codec.Cost
 import qualified Pawl.Codec.Facing as Codec.Facing
+import qualified Pawl.Codec.Keyword as Codec.Keyword
 import qualified Pawl.Codec.ManaCost as Codec.ManaCost
 import qualified Pawl.Codec.ManaType as Codec.ManaType
 import qualified Pawl.Codec.Reference as Codec.Reference
@@ -21,6 +23,8 @@ import qualified Pawl.Codec.SlotName as Codec.SlotName
 import qualified Pawl.Engine.Driver as Driver
 import qualified Pawl.Engine.Mana as Mana
 import qualified Pawl.Engine.PlayerView as PlayerView
+import qualified Pawl.Engine.Projection as Projection
+import qualified Pawl.Extra.Natural as Natural
 import qualified Pawl.JsonCodec.Codec as Codec
 import qualified Pawl.JsonCodec.Common as Common
 import qualified Pawl.Scenario as Scenario
@@ -117,7 +121,7 @@ idOf label =
 -- null (#5225).
 offerOf :: GameState.GameState -> Prompt.Prompt r -> R.Reply
 offerOf gs prompt = case prompt of
-  Prompt.ChooseAction _ _ offered -> R.Array (fmap actionOffer offered)
+  Prompt.ChooseAction _ _ offered -> R.Array (fmap (actionOffer gs) offered)
   Prompt.DeclareMulligan _ _ offer ->
     fields [("taken", natural (MulliganOffer.taken offer)), ("bottom", natural (MulliganOffer.bottomCount offer))]
   Prompt.Bottom _ _ from count -> fields [("from", objects from), ("count", natural count)]
@@ -135,20 +139,22 @@ offerOf gs prompt = case prompt of
   Prompt.ChooseManaYield _ _ source options -> fields [("source", object source), ("yields", Reply.encode (Reply.list (Reply.list (Reply.viaCodec Codec.ManaType.codec))) namer (fmap (fmap ManaUnit.manaType . Mana.yieldUnits) (Foldable.toList options)))]
   Prompt.ChooseX _ _ source variable least greatest -> fields [("source", object source), ("variable", Reply.encode (Reply.viaCodec Codec.SlotName.codec) namer variable), ("least", natural least), ("greatest", natural greatest)]
   Prompt.ChooseOptional _ _ source _ _ _ -> fields [("source", object source)]
+  Prompt.AssignCombatDamage _ _ source lethal total ->
+    fields [("source", object source), ("lethal", Reply.encode (Reply.mapOf Reply.recipient Reply.natural) namer lethal), ("total", natural total)]
+  Prompt.ChooseToPay _ _ source _ cost _ -> fields [("source", object source), ("cost", Reply.encode (Reply.viaCodec (Codec.Cost.codec Codec.Keyword.codec)) namer cost)]
   _ -> R.Null
 
 -- | An action as an offer names it: its constructor, the object it acts on,
--- and the face or half it names.
---
--- Not implemented: which of its source's abilities an Activate names (#5225).
-actionOffer :: Action.Action -> R.Reply
-actionOffer action = fields (("action", R.Text (Text.pack kind)) : rest)
+-- the face or half it names, and for an Activate, the ability's place among
+-- its source's (Projection.abilitiesOf, as a scenario's Activation names it).
+actionOffer :: GameState.GameState -> Action.Action -> R.Reply
+actionOffer gs action = fields (("action", R.Text (Text.pack kind)) : rest)
   where
     (kind, rest) = case action of
       Action.Pass -> ("Pass", [])
       Action.Play oid name -> ("Play", on oid <> foldMap named name)
       Action.Cast oid name facing -> ("Cast", on oid <> named name <> [("facing", Reply.encode (Reply.viaCodec Codec.Facing.codec) namer facing)])
-      Action.Activate oid _ -> ("Activate", on oid)
+      Action.Activate oid ability -> ("Activate", on oid <> [("ability", natural (Natural.length (takeWhile (/= ability) abilities))) | let abilities = Projection.abilitiesOf oid gs, ability `elem` abilities])
       Action.ActivateManaAbility oid -> ("ActivateManaAbility", on oid)
       Action.TurnFaceUp oid _ -> ("TurnFaceUp", on oid)
       Action.TurnConspiracyFaceUp oid -> ("TurnConspiracyFaceUp", on oid)

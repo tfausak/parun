@@ -455,7 +455,7 @@ actionName view action =
         "Pass" -> Text.pack "Pass"
         "Play" -> Text.pack "Play " <> subject
         "Cast" -> Text.pack "Cast " <> subject
-        "Activate" -> Text.pack "Activate an ability of " <> subject
+        "Activate" -> maybe (Text.pack "Activate an ability of ") (\i -> Text.pack ("Activate ability " <> show (i + 1) <> " of ")) (field "ability" action >>= naturalOf) <> subject
         "ActivateManaAbility" -> Text.pack "Activate a mana ability of " <> subject
         kind -> Render.spaced (Text.pack kind) <> maybe Text.empty (Text.pack " " <>) object
 
