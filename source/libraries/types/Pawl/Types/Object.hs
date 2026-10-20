@@ -885,8 +885,8 @@ data Object = MkObject
     --
     -- COUNTED per value, for CR 602.5c: an acquired ability's restriction
     -- "doesn't apply to other, identically worded abilities", so an object
-    -- bearing two equal copies (CR 113.2c) -- Locus of Enlightenment crafted with
-    -- two Gliding Licids -- may spend each once.
+    -- bearing two equal copies (CR 113.2c) -- two Auras granting one ability --
+    -- may spend each once.
     -- Pawl.Engine.ActivationRestriction's OnlyOnce arm compares the count with
     -- the copies the object bears.
     activatedOnce :: Map.Map (ActivatedAbility.ActivatedAbility Card.Card (GrantedAbility.GrantedAbility Card.Card)) Natural.Natural,

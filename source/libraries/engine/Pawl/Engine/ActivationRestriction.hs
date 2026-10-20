@@ -244,16 +244,20 @@ atInstantSpeed restriction = case restriction of
 -- CR 602.5b / 602.5c: does `srcId` bear a copy of `this` not yet spent? Each
 -- identically worded copy (CR 113.2c) is its own ability to a restriction on
 -- its use, so the counted spends are compared with the copies the source now
--- bears -- Locus of Enlightenment crafted with two Gliding Licids may activate
--- each Licid's ability once each turn. At least one copy, so an ability no
--- projection lists (a rule-702 minted one, off the battlefield) keeps the plain
--- "not yet" reading. The projection is asked only once something is spent.
+-- bears. At least one copy, so an ability no projection lists (a rule-702
+-- minted one, off the battlefield) keeps the plain "not yet" reading. The
+-- projection is asked only once something is spent.
 --
 -- Not implemented: the count cannot say WHICH copy spent, so when the spent
 -- copy's grant goes and an unspent twin stays, the twin reads as spent (#4627).
 --
 -- Pawl.ActivateSpec's "CR 602.5c two Gliding Licids give the Locus two
--- once-each-turn animate abilities" proves the per-turn record.
+-- once-each-turn animate abilities" proves the per-turn record. The count is
+-- a REGRESSION FENCE: abilities acquired from two exiled cards are unequal
+-- (Binding.exiledCardAbility), so only two equal grants of one ability
+-- printing the rider reach it -- two Auras quoting one. No card in
+-- data/cards/ carries both an OnlyOnce rider and a GainAbility (grep,
+-- 2026-10-19).
 unspent :: ObjectId -> ActivatedAbility.ActivatedAbility Card.Card (GrantedAbility.GrantedAbility Card.Card) -> Map.Map (ActivatedAbility.ActivatedAbility Card.Card (GrantedAbility.GrantedAbility Card.Card)) Natural -> GameState -> Bool
 unspent srcId this spent gs = case Map.findWithDefault 0 this spent of
   0 -> True

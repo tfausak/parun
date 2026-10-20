@@ -4002,8 +4002,19 @@ applyOneEffect runSubgame resolving source controller legal chosen effect = case
             -- With `each` named, CR 701.10b's "that creature's power" instead: the
             -- freeze runs once per affected object with that object bound under
             -- the name, and each gets an effect of its own value.
+            --
+            -- A name the modification states for the resolving ability's own
+            -- object is that object's ability as acquired beside it
+            -- (Binding.nameAsRead), so an acquired Gliding Licid's "loses this
+            -- ability" names that ability alone; a name stated for another
+            -- object stays as written. A REGRESSION FENCE: the Licid's attach
+            -- re-timestamps the grant past the removal (CR 613.7e), so no
+            -- board observes the qualified name.
             let context = effectContext gs resolving controller source legal (slotBindings resolving gs)
-                freezeFor objs ctx = (objs, Projection.freezeQuantities (effectViewOf source legal gs) gs resolving source ctx modification)
+                asRead = case modification of
+                  Modification.LoseNamedAbility name | targets == [source] -> Modification.LoseNamedAbility (Binding.nameAsRead (resolvingAbilityName resolving gs) name)
+                  _ -> modification
+                freezeFor objs ctx = (objs, Projection.freezeQuantities (effectViewOf source legal gs) gs resolving source ctx asRead)
                 frozenSets = case each of
                   Nothing -> [freezeFor targets context]
                   Just slot -> [freezeFor [t] (effectContextNaming slot t gs resolving controller source legal (slotBindings resolving gs)) | t <- targets]

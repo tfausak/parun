@@ -1983,7 +1983,7 @@ modificationNames asking onAbility x = case x of
   Modification.GainExiledCardAbilities (ExiledCardAbilities.MkExiledCardAbilities _ items) -> any (activationRestrictionNames asking) items
   Modification.GainAbilitiesOfStickers -> False
   Modification.LoseAllAbilities -> False
-  Modification.LoseNamedAbility _abilityName -> False
+  Modification.LoseNamedAbility abilityName -> Binding.Engine.isAcquiredFrom (object asking) abilityName
   Modification.LoseKeyword keyword -> keywordNames asking keyword
   Modification.LoseKeywordFamily _keywordFamily -> False
   Modification.SetBasePowerToughness setBasePowerToughness -> setBasePowerToughnessNames asking setBasePowerToughness
