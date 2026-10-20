@@ -98,8 +98,8 @@ asked terminal lookUp request = do
   answer terminal lookUp seat view question
 
 -- | CR 104.3a's concession, quitting and reading a card are typed at any
--- question, and "auto" at a mana source; everything else is read by the
--- question's own reader until it reads.
+-- question, and "auto" or an empty line at a mana source; everything else is
+-- read by the question's own reader until it reads.
 answer :: (Monad m) => Terminal.Terminal m -> (CardName.CardName -> Maybe Card.Card) -> PlayerId.PlayerId -> PlayerView.PlayerView -> Question.Question -> Client m R.Reply
 answer terminal lookUp seat view question = case (Question.kind question, slotsOf question) of
   (kind, Just (source, slots)) | kind == Text.pack "ChooseTargets" -> fmap R.Array (mapM (target source) slots)
@@ -121,8 +121,9 @@ answer terminal lookUp seat view question = case (Question.kind question, slotsO
                     mapM_ (say terminal) (reading lookUp view listed (Text.strip wanted))
                     loop
               -- The rest of this payment, by autoSource.
-              "auto"
-                | Question.kind question == Text.pack "ChooseManaSource" ->
+              word
+                | word `elem` ["auto", ""],
+                  Question.kind question == Text.pack "ChooseManaSource" ->
                     autoPay seat view (Question.offer question) >>= \paid -> case paid of
                       Just (said, reply) -> say terminal said >> pure reply
                       Nothing -> say terminal (Text.pack "Auto can't pay the rest of this cost. Choose a source.") >> loop
@@ -141,9 +142,12 @@ choice :: PlayerView.PlayerView -> Question.Question -> ([Text.Text], Text.Text 
 choice view question = Maybe.fromMaybe generic $ case Text.unpack (Question.kind question) of
   "ChooseAction" -> do
     shown <- fmap (distinct view) (arrayOf offer)
+    let pass = List.find ((== Just (Text.pack "Pass")) . (field "action" Monad.>=> textOf) . snd) shown
     pure
-      ( Text.pack "Choose an action:" : numbered (fmap (actionName view . snd) shown),
-        fmap (\i -> R.Number (maybe 0 fst (Maybe.listToMaybe (List.genericDrop (i - 1) shown)))) . one (Natural.length shown)
+      ( Text.pack (if Maybe.isJust pass then "Choose an action, or press Enter to pass:" else "Choose an action:") : numbered (fmap (actionName view . snd) shown),
+        \typed -> case pass of
+          Just (i, _) | Text.null typed -> Right (R.Number i)
+          _ -> fmap (\i -> R.Number (maybe 0 fst (Maybe.listToMaybe (List.genericDrop (i - 1) shown)))) (one (Natural.length shown) typed)
       )
   "DeclareMulligan" -> do
     bottom <- field "bottom" offer >>= naturalOf
@@ -175,8 +179,9 @@ choice view question = Maybe.fromMaybe generic $ case Text.unpack (Question.kind
       )
   "ChooseManaSource" -> do
     cost <- field "cost" offer >>= decoded Codec.ManaCost.codec
-    sourcePick (Text.pack "Paying " <> Render.manaCost cost <> Text.pack ". Choose a source to pay with, 0 to stop paying, or auto to pay the rest:")
-  "ChooseExtraManaSource" -> sourcePick (Text.pack "The cost is covered. Choose another source to activate, or 0 to pay now:")
+    sourcePick (Text.pack "Paying " <> Render.manaCost cost <> Text.pack ". Choose a source to pay with, stop to stop paying, or auto (or press Enter) to pay the rest:") (Text.pack "stop") (Text.pack ", stop, or auto")
+  -- CR 601.2g: mana abilities are activated before the cost is paid.
+  "ChooseExtraManaSource" -> sourcePick (Text.pack "The cost is covered. Choose another source to activate, or press Enter to pay now:") Text.empty (Text.pack ", or press Enter to pay now")
   "ChooseManaYield" -> do
     source <- field "source" offer
     yields <- field "yields" offer >>= decoded (Common.list (Common.list Codec.ManaType.codec))
@@ -204,13 +209,17 @@ choice view question = Maybe.fromMaybe generic $ case Text.unpack (Question.kind
   _ -> Nothing
   where
     offer = Question.offer question
-    sourcePick heading = do
+    -- A source by number, or the word that answers none.
+    sourcePick heading none others = do
       offered <- field "sources" offer >>= arrayOf >>= mapM manaSource
       let sources = fmap fst offered
           makes yields = if null yields then Text.empty else Text.pack " (makes " <> Text.intercalate (Text.pack " or ") (fmap (foldMap Render.manaType) yields) <> Text.pack ")"
       pure
         ( heading : numbered (fmap (\(source, yields) -> objectName view source <> makes yields) offered),
-          \typed -> if Text.strip typed == Text.pack "0" then Right R.Null else fmap (pickFrom sources) (one (Natural.length sources) typed)
+          \typed ->
+            if Text.toCaseFold typed == none
+              then Right R.Null
+              else either (const (Left (Text.pack ("Type one number from 1 to " <> show (Natural.length sources)) <> others <> Text.pack "."))) (Right . pickFrom sources) (one (Natural.length sources) typed)
         )
     pickCount purpose = do
       from <- field "from" offer >>= arrayOf
