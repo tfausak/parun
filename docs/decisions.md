@@ -38,9 +38,9 @@ Entries are ordered by the first rule each cites.
   battlefield, so CR 608.3f never confers token-ness.
 - **Rejected**: Making it a token, on CR 111.13 and 707.10f's unconditional
   "as it resolves".
-- **Site**: `Pawl.Engine.Game.componentIsToken`'s `OfSpellCopy` arm, and
-  `sourceIsToken`'s, proved by `Pawl.MutateSpec`'s "CR 730.2d/608.3f a merged
-  permanent whose topmost component is a spell copy is no token".
+- **Site**: `Pawl.Engine.Game.componentIsToken`'s `OfSpellCopy` arm, proved by
+  `Pawl.MutateSpec`'s "CR 730.2d/608.3f a merged permanent whose topmost
+  component is a spell copy is no token".
 - **Issue**: none.
 
 ## Which zone an ability functions in when its cost and effect disagree
@@ -363,7 +363,9 @@ Entries are ordered by the first rule each cites.
 - **Rules**: CR 702.99c, 608.2h, 702.99a, 702.99b; CR of 2026-08-07.
 - **Decision**: Yes. The relation is keyed on the source's id alone, so the
   trigger still finds the exiled card.
-- **Rejected**: not recorded.
+- **Rejected**: Finding nothing, since CR 702.99c ends the encoding when the
+  creature leaves. CR 608.2h reads a departed source as it last existed, and
+  the card was encoded on it then.
 - **Site**: `Pawl.Engine.Resolve.Slots.objectRefObjects`'s
   `ObjectRef.EachCardEncodedOnSource` arm, proved by the scenario "CR 702.99c
   a Piker killed with its cipher trigger on the stack still casts the
@@ -470,7 +472,7 @@ Entries are ordered by the first rule each cites.
   one-half cases, and "CR 709.4 the left half answers for a box both halves
   print or define" the power and toughness boxes on Synthetic Rival Golem //
   Synthetic Rival Giant: no split printing has a creature half. Loyalty,
-  defense, intensity and vanguard boxes on both halves are untested.
+  defense and intensity boxes on both halves are untested (#5339).
 - **Issue**: #658, #2019.
 
 ## How perpetual effects follow a meld
