@@ -455,8 +455,10 @@ Entries are ordered by the first rule each cites.
   `combined`. `Pawl.CardSpec`'s SplitBox group proves the disjoint and
   one-half cases, and "CR 709.4 the left half answers for a box both halves
   print or define" the power and toughness boxes on Synthetic Rival Golem //
-  Synthetic Rival Giant: no split printing has a creature half. Loyalty,
-  defense and intensity boxes on both halves are untested (#5339).
+  Synthetic Rival Giant: no split printing has a creature half. "CR 709.4
+  the left half answers for a loyalty both halves print", and its defense
+  and starting intensity siblings, prove the `firstJust` boxes on the other
+  Synthetic Rival pairs.
 - **Issue**: #658, #2019.
 
 ## How perpetual effects follow a meld
