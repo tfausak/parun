@@ -9,7 +9,7 @@ data HistoryRead
     Activations
   | -- | Attackers declared (CR 508.1).
     Attacks
-  | -- | Bending actions taken (CR 701.65a).
+  | -- | Bending actions taken (CR 701.65b, 701.66b, 701.67c, 702.189b).
     Bendings
   | -- | Attackers that became blocked (CR 509.1h).
     Blocks
@@ -39,7 +39,7 @@ data HistoryRead
     MonarchChanges
   | -- | Cards milled (CR 701.17a).
     Mills
-  | -- | Zone changes, and players leaving the game (CR 400.7).
+  | -- | Zone changes, and players leaving the game (CR 400.7, 800.4a).
     Moves
   | -- | Planar die rolls (CR 901.9).
     PlanarRolls

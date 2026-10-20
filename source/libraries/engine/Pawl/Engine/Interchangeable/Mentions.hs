@@ -442,7 +442,8 @@ contextNames = context
 --   * The turn's EVENT LOG: the look-back atoms (AttackedThisTurn,
 --     MilledThisTurn, DealtDamageThisTurn, EnteredThisTurn, the
 --     crewed/convoked/saddled-the-source atoms) and EnteredWithSource
---     (GameState.enteredWith) read a record kept per object id.
+--     (GameState.enteredWith) read a record kept per object id, answered by
+--     Asking's keyed -- and the look-back atoms by its history too.
 --   * A RESOLUTION CONTEXT: the slot atoms, the slot and amount operands, the
 --     attach and search subject atoms, CantCrewVehicles and
 --     AttachedNoLaterThanSource's baked set, answered by slotNames and
