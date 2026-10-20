@@ -56,9 +56,11 @@ import qualified Pawl.Engine.Game as Game
 import qualified Pawl.Engine.Keyword as Keyword
 import qualified Pawl.Engine.Projection as Projection
 import qualified Pawl.Engine.Projection.View as Projection
+import Pawl.Types.Card (Card)
 import qualified Pawl.Types.CardType as CardType
 import Pawl.Types.Cost (Cost)
 import qualified Pawl.Types.Cost as Cost.Type
+import Pawl.Types.Face (Face)
 import qualified Pawl.Types.Face as Face
 import qualified Pawl.Types.FaceDownReason as FaceDownReason
 import qualified Pawl.Types.Facing as Facing
@@ -72,6 +74,7 @@ import qualified Pawl.Types.Object as Object
 import Pawl.Types.ObjectId (ObjectId)
 import qualified Pawl.Types.PaymentSubject as PaymentSubject
 import Pawl.Types.PlayerId (PlayerId)
+import qualified Pawl.Types.Printing as Printing
 import qualified Pawl.Types.ProjectedCharacteristics as PC
 import qualified Pawl.Types.Prompt as Prompt
 import qualified Pawl.Types.ProposedEvent as ProposedEvent
@@ -127,23 +130,38 @@ faceUpKeywords oid gs =
 -- which permanents each rule is open to is its subject rather than its cost, and
 -- that lives in canTurnFaceUp's `eligible` below.
 --
--- Read through Game.faceUpFaceOf for morphCostsOf's reason, and the rule words it
--- even more plainly: both guards are about "the CARD representing that
--- permanent" rather than about the permanent, and CR 708.2a has left the
--- permanent itself with no card type and no mana cost at all -- so a projected
--- read would refuse every manifested permanent ever put onto the battlefield.
---
--- The card's own printed types, not its projected ones, for the same reason and
--- morphCostsOf's: the rule's subject is the card, so a CR 613 read of the
--- permanent answers a different question.
+-- Both guards are about "the CARD representing that permanent", so they read
+-- representingCardOf below and never the permanent, which CR 708.2a has left
+-- with no card type and no mana cost at all.
 creatureCardCostOf :: ObjectId -> GameState -> Maybe (Cost Keyword)
 creatureCardCostOf oid gs = do
-  face <- Game.faceUpCastingFaceOf oid gs
-  -- CR 707.2: card types are copiable too, so a copy stamp's types decide.
-  let types = maybe (TypeLine.types (Face.typeLine face)) PC.cardTypes (Game.copyStampOf =<< Game.lookupObject oid gs)
+  (face, types) <- representingCardOf oid gs
   Monad.guard (Set.member CardType.Creature types)
   manaCost <- Face.manaCost face
   pure (Cost.Type.MkCost (Just manaCost) [])
+
+-- CR 701.40b / 701.40g and CR 701.58b / 701.58g: the card representing a
+-- face-down permanent -- its face and its card types -- which is what those
+-- rules show, price and reveal. Copy effects do not change the card: Soul
+-- Summons' ruling turns a manifested creature face up "revealing that it's a
+-- creature card (ignoring any copy effects or type-changing effects that might
+-- be applying to it) and paying its mana cost". A conjured duplicate's values
+-- (Object.duplicate) are the card's own, so those do count. Pawl.FaceDownSpec's
+-- "CR 701.40b a manifested creature under a copy is priced at its own card's
+-- mana cost" proves a stored copy is ignored. The face is the printed card's
+-- own (Game.resolveFace), never Game.faceUpFaceOf, whose Room and copied-half
+-- arms read a copy STAMP: "CR 701.40b a manifested creature stamped a copy of a
+-- Room is priced at its own card's mana cost" proves that. The printing is a
+-- meld's result and a merged permanent's top component (Game.printingOfObject).
+-- The duplicate arm is a regression fence: no test manifests a duplicate.
+representingCardOf :: ObjectId -> GameState -> Maybe (Face Card, Set.Set CardType.CardType)
+representingCardOf oid gs = do
+  object <- Game.lookupObject oid gs
+  printing <- Game.printingOfObject oid gs
+  let face = Game.resolveFace (Game.shownFace object) (Printing.card printing)
+  pure $ case Object.duplicate object of
+    Nothing -> (face, TypeLine.types (Face.typeLine face))
+    Just values -> (face {Face.manaCost = PC.manaCost values}, PC.cardTypes values)
 
 -- What one of CR 708.7's four procedures may cost on this permanent, empty when
 -- that procedure is closed to it. A classification of the four rules, never of
@@ -297,9 +315,7 @@ turnFaceUp perform pid procedure oid = do
 -- TWO conjuncts and both are the rules' own words. MANIFESTED OR CLOAKED, so the
 -- reason on the status is asked (CR 708.6) and a morph-cast permanent is not
 -- covered; and the CARD it is REPRESENTED BY is an instant or a sorcery, so the
--- read goes through Game.faceUpFaceOf for creatureCardCostOf's reason -- CR
--- 708.2a has left the permanent itself with no card type at all, so a projected
--- read would answer about the 2/2 rather than about the card.
+-- read is representingCardOf's, the one CR 701.40b's guard takes.
 --
 -- performTurnFaceUp performs the reveal, by the permanent's controller, and
 -- leaves the permanent face down.
@@ -315,16 +331,16 @@ turnFaceUp perform pid procedure oid = do
 revealsInsteadOfTurningUp :: ObjectId -> GameState -> Bool
 revealsInsteadOfTurningUp oid gs =
   let instantOrSorcery = Set.fromList [CardType.Instant, CardType.Sorcery]
-      isInstantOrSorcery = not . Set.null . Set.intersection instantOrSorcery . TypeLine.types . Face.typeLine
+      isInstantOrSorcery = not . Set.null . Set.intersection instantOrSorcery
       object = Game.lookupObject oid gs
       reason = fmap (Facing.reasonOf . Object.facing) object
       manifested =
         (reason == Just (Just FaceDownReason.Manifested) || reason == Just (Just FaceDownReason.Cloaked) || reason == Just (Just FaceDownReason.EnteredFaceDown))
-          && maybe False isInstantOrSorcery (Game.faceUpFaceOf oid gs)
+          && maybe False (isInstantOrSorcery . snd) (representingCardOf oid gs)
       components = foldMap (Seq.filter Game.componentIsCard . Game.componentsOf . Object.source) object
       merged =
         maybe False (Facing.isFaceDown . Object.facing) object
-          && any (maybe False (isInstantOrSorcery . Card.combined) . (`Game.cardOfPrinting` gs) . Game.printingOfComponent) components
+          && any (maybe False (isInstantOrSorcery . TypeLine.types . Face.typeLine . Card.combined) . (`Game.cardOfPrinting` gs) . Game.printingOfComponent) components
    in manifested || merged
 
 -- The turning-over itself, once whatever allowed it has allowed it: the status
