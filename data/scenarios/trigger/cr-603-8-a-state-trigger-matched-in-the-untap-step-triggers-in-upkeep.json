@@ -1,0 +1,93 @@
+{
+  "description": "CR 603.8 City in a Bottle's state trigger matches a 0/0 Flying Men that phases in during the untap step and goes on the stack in upkeep",
+  "note": "Teferi's Curse gives alice's Flying Men phasing, so it phases out in turn 1's untap step and back in during turn 3's (CR 502.1). Bob's Curse of Death's Hold makes it 0/0, and bob's City in a Bottle's state trigger matches the moment it phases in. No state-based action check happens in the untap step, where no player gets priority (CR 502.4, CR 704.3), so upkeep's first check buries it (CR 704.5f) after the trigger has already triggered. A check in the untap step instead would bury it there and leave upkeep's stack empty.",
+  "board": {
+    "seats": [
+      {
+        "name": "alice",
+        "battlefield": [
+          {
+            "card": "Flying Men",
+            "label": "men"
+          },
+          {
+            "card": "Teferi's Curse",
+            "label": "phasing",
+            "attached": "men"
+          }
+        ],
+        "library": [
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          }
+        ]
+      },
+      {
+        "name": "bob",
+        "battlefield": [
+          {
+            "card": "Curse of Death's Hold",
+            "label": "curse",
+            "attached": "alice"
+          },
+          {
+            "card": "City in a Bottle",
+            "label": "city"
+          }
+        ],
+        "library": [
+          {
+            "card": "Swamp"
+          },
+          {
+            "card": "Swamp"
+          }
+        ]
+      }
+    ],
+    "active": "alice",
+    "step": "Untap"
+  },
+  "timeline": [
+    {
+      "turn": 1,
+      "step": "Upkeep",
+      "player": "alice",
+      "check": {
+        "View": {
+          "of": "Stack",
+          "is": []
+        }
+      }
+    },
+    {
+      "turn": 3,
+      "step": "Upkeep",
+      "player": "alice",
+      "check": {
+        "View": {
+          "of": "Stack",
+          "is": [
+            "trigger of $city"
+          ]
+        }
+      }
+    },
+    {
+      "turn": 3,
+      "step": "Upkeep",
+      "player": "alice",
+      "check": {
+        "Count": {
+          "player": "alice",
+          "zone": "Graveyard",
+          "card": "Flying Men",
+          "count": 1
+        }
+      }
+    }
+  ]
+}

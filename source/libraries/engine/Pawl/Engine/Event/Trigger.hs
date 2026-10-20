@@ -3494,9 +3494,8 @@ stateTriggersOn gs
 -- reading comes first and keeps its order. data/scenarios/trigger's City in a
 -- Bottle scenario proves it.
 --
--- Not implemented: a state matched only before a check no settle keeps a board
--- for (Engine.checkSba in a step that grants no priority or as a step ends, CR
--- 724.1c's and 724.2c's) has not triggered (#5283).
+-- Not implemented: a state matched only before CR 724.1c's or 724.2c's check,
+-- which no settle keeps a board for, has not triggered (#5359).
 stateTriggers :: [GameState] -> GameState -> [PendingTrigger]
 stateTriggers boards live = List.foldl' widen (armedOn live) (reverse boards)
   where
