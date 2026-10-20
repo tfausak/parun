@@ -49,8 +49,8 @@ import qualified Pawl.Types.Subtype as Subtype
 -- assembles nothing and loses nobody the game.
 assemble :: Maybe ObjectId -> PlayerId -> Game ()
 assemble assembler pid = do
-  outcome <- Event.applyReplacements (ProposedEvent.WouldPerform (PlayerInstruction.Assemble assembler) pid 1)
-  Monad.forM_ (outcome >>= Replacement.asPerformed (PlayerInstruction.Assemble assembler)) $ \(assembling, times) ->
+  outcome <- Event.applyReplacements (ProposedEvent.WouldPerform PlayerInstruction.Assemble assembler pid 1)
+  Monad.forM_ (outcome >>= Replacement.asPerformed PlayerInstruction.Assemble) $ \(assembling, times) ->
     Monad.replicateM_ (Natural.toIntSaturating times) (assembleOne assembling)
 
 -- One Contraption: onto the battlefield first, then onto the sprocket its

@@ -1530,18 +1530,13 @@ rewriteReplacementEffect pairs effect = case effect of
   -- CR 614.1a / 119.10: a LifeGainR is one CR 109.5 relation and one scaling.
   -- No printed word, so nothing to swap.
   ReplacementEffect.LifeGainR {} -> effect
-  -- CR 614.1a / 705.1: a CoinFlipR is one CR 109.5 relation and one nullary
-  -- rewrite. LifeGainR's answer, and for its reason.
-  ReplacementEffect.CoinFlipR {} -> effect
+  -- CR 614.1a: an InstructionR is one instruction, one CR 109.5 relation and one
+  -- scaling or DrawInstead; no Filter and no card. LifeGainR's answer, and for
+  -- its reason.
+  ReplacementEffect.InstructionR {} -> effect
   -- CR 614.1a / 706.1: a DieRollR is one CR 109.5 relation and one nullary
   -- rewrite, so CR 612.1's text change has nothing to walk into.
   ReplacementEffect.DieRollR {} -> effect
-  -- CR 614.1a / 701.34a / 701.22a / 701.55c: a ProliferateR, a ScryR or a
-  -- VillainousChoiceR is one CR 109.5 relation and one nullary rewrite,
-  -- DieRollR's answer.
-  ReplacementEffect.ProliferateR {} -> effect
-  ReplacementEffect.ScryR {} -> effect
-  ReplacementEffect.VillainousChoiceR {} -> effect
   -- The Unstable FAQ: an AssembleR's Filter names a subtype (Steamflogger Boss's
   -- Rigger), which CR 612.1's text change reaches.
   ReplacementEffect.AssembleR matching -> ReplacementEffect.AssembleR (Filter.rewrite pairs matching)
@@ -1557,9 +1552,6 @@ rewriteReplacementEffect pairs effect = case effect of
   -- A DrawCountR is one CR 109.5 relation, one count and one nullary rewrite; no
   -- Filter and no card, so no printed word to swap. DrawR's answer.
   ReplacementEffect.DrawCountR {} -> effect
-  -- A MillCountR is one CR 109.5 relation and one scaling; no Filter and no card,
-  -- so no printed word to swap. DrawCountR's answer.
-  ReplacementEffect.MillCountR {} -> effect
   ReplacementEffect.CounterR r ->
     ReplacementEffect.CounterR
       r

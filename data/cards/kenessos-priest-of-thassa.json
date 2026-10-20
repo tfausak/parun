@@ -246,10 +246,17 @@
       "replacementEffects": [
         {
           "effect": {
-            "type": "ScryR",
+            "type": "InstructionR",
             "value": {
+              "instruction": {
+                "type": "Scry"
+              },
               "rewrite": {
-                "type": "PlusOne"
+                "type": "Scaled",
+                "value": {
+                  "type": "AddMore",
+                  "value": 1
+                }
               },
               "whose": {
                 "type": "You"

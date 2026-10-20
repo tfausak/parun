@@ -153,7 +153,7 @@ recruit :: PlayerId -> Game ()
 recruit pid = do
   -- CR 121.2a: the one-card draw is one replaceable instruction, Effect.Draw's
   -- arm line for line.
-  outcome <- Event.applyReplacements (ProposedEvent.WouldPerform PlayerInstruction.DrawCards pid 1)
+  outcome <- Event.applyReplacements (ProposedEvent.WouldPerform PlayerInstruction.DrawCards Nothing pid 1)
   Monad.forM_ (outcome >>= Replacement.asPerformed PlayerInstruction.DrawCards) $ \(drawer, settled) ->
     Monad.replicateM_ (Natural.toIntSaturating settled) (Event.drawCard drawer)
   drawn <- State.get

@@ -344,10 +344,6 @@ library codec
     Pawl.Codec.CoinFaceSpec
     Pawl.Codec.CoinFlipped
     Pawl.Codec.CoinFlippedSpec
-    Pawl.Codec.CoinFlipR
-    Pawl.Codec.CoinFlipRewrite
-    Pawl.Codec.CoinFlipRewriteSpec
-    Pawl.Codec.CoinFlipRSpec
     Pawl.Codec.CoinReading
     Pawl.Codec.CoinReadingSpec
     Pawl.Codec.Color
@@ -768,6 +764,10 @@ library codec
     Pawl.Codec.InitiativeTargetSpec
     Pawl.Codec.InstanceOrdinal
     Pawl.Codec.InstanceOrdinalSpec
+    Pawl.Codec.InstructionR
+    Pawl.Codec.InstructionRewrite
+    Pawl.Codec.InstructionRewriteSpec
+    Pawl.Codec.InstructionRSpec
     Pawl.Codec.InZone
     Pawl.Codec.InZoneSpec
     Pawl.Codec.Keyword
@@ -888,10 +888,6 @@ library codec
     Pawl.Codec.MergeComponent
     Pawl.Codec.MergeComponentSpec
     Pawl.Codec.Mill
-    Pawl.Codec.MillCountR
-    Pawl.Codec.MillCountRewrite
-    Pawl.Codec.MillCountRewriteSpec
-    Pawl.Codec.MillCountRSpec
     Pawl.Codec.Milled
     Pawl.Codec.MilledSpec
     Pawl.Codec.MillSpec
@@ -1085,6 +1081,8 @@ library codec
     Pawl.Codec.PlayerEffectSpec
     Pawl.Codec.PlayerId
     Pawl.Codec.PlayerIdSpec
+    Pawl.Codec.PlayerInstruction
+    Pawl.Codec.PlayerInstructionSpec
     Pawl.Codec.PlayerMeasure
     Pawl.Codec.PlayerQuantity
     Pawl.Codec.PlayerQuantitySpec
@@ -1141,10 +1139,6 @@ library codec
     Pawl.Codec.ProhibitSpec
     Pawl.Codec.ProjectedCharacteristics
     Pawl.Codec.ProjectedCharacteristicsSpec
-    Pawl.Codec.ProliferateR
-    Pawl.Codec.ProliferateRewrite
-    Pawl.Codec.ProliferateRewriteSpec
-    Pawl.Codec.ProliferateRSpec
     Pawl.Codec.Protection
     Pawl.Codec.ProtectionSpec
     Pawl.Codec.Prototype
@@ -1256,10 +1250,6 @@ library codec
     Pawl.Codec.ScenarioSpec
     Pawl.Codec.Scope
     Pawl.Codec.ScopeSpec
-    Pawl.Codec.ScryR
-    Pawl.Codec.ScryRewrite
-    Pawl.Codec.ScryRewriteSpec
-    Pawl.Codec.ScryRSpec
     Pawl.Codec.Search
     Pawl.Codec.SearchDestination
     Pawl.Codec.SearchDestinationSpec
@@ -1451,10 +1441,6 @@ library codec
     Pawl.Codec.VentureMarkerEnteredSpec
     Pawl.Codec.ViewIs
     Pawl.Codec.ViewIsSpec
-    Pawl.Codec.VillainousChoiceR
-    Pawl.Codec.VillainousChoiceRewrite
-    Pawl.Codec.VillainousChoiceRewriteSpec
-    Pawl.Codec.VillainousChoiceRSpec
     Pawl.Codec.Vote
     Pawl.Codec.VoteChoices
     Pawl.Codec.Voted
@@ -2306,8 +2292,6 @@ library types
     Pawl.Types.ClauseIndex
     Pawl.Types.CoinFace
     Pawl.Types.CoinFlipped
-    Pawl.Types.CoinFlipR
-    Pawl.Types.CoinFlipRewrite
     Pawl.Types.CoinReading
     Pawl.Types.Color
     Pawl.Types.Combat
@@ -2546,6 +2530,8 @@ library types
     Pawl.Types.InherentTriggerSource
     Pawl.Types.InitiativeTarget
     Pawl.Types.InstanceOrdinal
+    Pawl.Types.InstructionR
+    Pawl.Types.InstructionRewrite
     Pawl.Types.InZone
     Pawl.Types.Keyword
     Pawl.Types.KeywordCount
@@ -2616,8 +2602,6 @@ library types
     Pawl.Types.Mentored
     Pawl.Types.MergeComponent
     Pawl.Types.Mill
-    Pawl.Types.MillCountR
-    Pawl.Types.MillCountRewrite
     Pawl.Types.Milled
     Pawl.Types.MillTally
     Pawl.Types.Modal
@@ -2762,8 +2746,6 @@ library types
     Pawl.Types.Prohibit
     Pawl.Types.Prohibition
     Pawl.Types.ProjectedCharacteristics
-    Pawl.Types.ProliferateR
-    Pawl.Types.ProliferateRewrite
     Pawl.Types.Prompt
     Pawl.Types.ProposedEvent
     Pawl.Types.Protection
@@ -2832,8 +2814,6 @@ library types
     Pawl.Types.Scenario
     Pawl.Types.ScenarioFailure
     Pawl.Types.Scope
-    Pawl.Types.ScryR
-    Pawl.Types.ScryRewrite
     Pawl.Types.Search
     Pawl.Types.SearchDestination
     Pawl.Types.SearchPlace
@@ -2946,8 +2926,6 @@ library types
     Pawl.Types.VentureMarkerEntered
     Pawl.Types.View
     Pawl.Types.ViewIs
-    Pawl.Types.VillainousChoiceR
-    Pawl.Types.VillainousChoiceRewrite
     Pawl.Types.Visibility
     Pawl.Types.Vote
     Pawl.Types.VoteChoices
