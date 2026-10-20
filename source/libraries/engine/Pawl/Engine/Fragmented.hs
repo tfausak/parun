@@ -12,7 +12,6 @@
 -- here errs towards seeing no loop.
 module Pawl.Engine.Fragmented where
 
-import qualified Data.Char as Char
 import qualified Data.Foldable as Foldable
 import qualified Data.List as List
 import qualified Data.Map.Strict as Map
@@ -20,6 +19,7 @@ import qualified Data.Maybe as Maybe
 import qualified Data.Sequence as Seq
 import qualified Data.Set as Set
 import qualified Pawl.Engine.Game as Game
+import qualified Pawl.Engine.Interchangeable.Mentions as Mentions
 import qualified Pawl.Engine.Keyword as Keyword
 import qualified Pawl.Engine.Planechase as Planechase
 import qualified Pawl.Extra.Int as Int
@@ -37,6 +37,7 @@ import Pawl.Types.GameEvent (GameEvent)
 import qualified Pawl.Types.GameEvent as GameEvent
 import Pawl.Types.GameState (GameState)
 import qualified Pawl.Types.GameState as GameState
+import qualified Pawl.Types.HistoryRead as HistoryRead
 import qualified Pawl.Types.Keyword as Keyword.Type
 import qualified Pawl.Types.LoggedEvent as LoggedEvent
 import Pawl.Types.LoopTrail (LoopTrail)
@@ -244,9 +245,9 @@ lapIsRead :: StateDigest -> GameState -> Bool
 lapIsRead there gs =
   case (appended (StateDigest.events there) (GameState.events gs), appended (StateDigest.activations there) (GameState.activationsThisTurn gs)) of
     (Just events, Just activations) ->
-      let wrote reader = case reader of
-            Nothing -> not (Seq.null events && Seq.null activations)
-            Just readsEvent -> any (readsEvent . LoggedEvent.event) events
+      let wrote reading = case reading of
+            HistoryRead.Activations -> not (Seq.null activations)
+            _ -> any (records reading . LoggedEvent.event) events
        in any wrote (readers gs)
     _ -> True
   where
@@ -255,153 +256,74 @@ lapIsRead there gs =
       let (prefix, rest) = Seq.splitAt (Seq.length before) after
        in if prefix == before then Just rest else Nothing
 
--- | What one reader of the history reads: the logged events it folds over, or
--- Nothing for the whole of it, GameState.activationsThisTurn included.
-type Reads = Maybe (GameEvent -> Bool)
-
--- | Every reader of the history in the game. Every printing, in every zone and
--- outside the game, through GameState.printings, which interns them all; a
--- token or copy spec nests inside its creator's face.
+-- | Every reader of the history in the game, as what it reads. Every
+-- printing, in every zone and outside the game, through GameState.printings,
+-- which interns them all, as Pawl.Engine.Interchangeable.Mentions classifies
+-- it; a token or copy spec nests inside its creator's face.
 --
--- A walk over each card's derived Show rather than a hand-written traversal
--- of Card, which is where nesting gets missed. A single-word entry of
--- `historyReaders` claims an identifier it equals, and failing any such, one
--- containing it; a two-word entry claims an adjacent pair, such as a record
--- field and its value. A false match costs only a detection.
-readers :: GameState -> [Reads]
-readers gs =
-  let single = [(word, reader) | ([word], reader) <- historyReaders]
-      double = [(pair, reader) | ([first, second], reader) <- historyReaders, let pair = (first, second)]
-      readersOf printing =
-        let words_ = identifiers (show (Printing.card printing))
-            pairs = Set.fromList (zip words_ (drop 1 words_))
-            claim word = case [reader | (entry, reader) <- single, entry == word] of
-              [] -> [reader | (entry, reader) <- single, entry `List.isInfixOf` word]
-              exact -> exact
-         in concatMap claim (Set.toList (Set.fromList words_)) <> [reader | (pair, reader) <- double, Set.member pair pairs]
-   in -- The rules' own readers: Pawl.Engine.Planechase.rollCost (CR 901.9),
-      -- and Pawl.Engine.Speed's once-each-turn trigger (CR 702.179d), minted
-      -- for any player with a speed and limited off the AbilityTriggered log.
-      [Just planarDieRolled | Planechase.isPlanechase gs]
-        <> [Just abilityTriggered | any (Maybe.isJust . Player.speed) (GameState.players gs)]
-        <> concatMap readersOf (Map.elems (GameState.printings gs))
-
--- The identifiers in a derived Show, in order.
-identifiers :: String -> [String]
-identifiers text = case dropWhile (not . isIdentifier) text of
-  [] -> []
-  rest ->
-    let (word, more) = span isIdentifier rest
-     in word : identifiers more
-  where
-    isIdentifier c = Char.isAlphaNum c || c == '_'
-
--- | Every construct whose engine read site consults GameState.events or
--- GameState.activationsThisTurn as history, named as Show spells it, with the
--- events that read site folds over -- through the read site's own projection
--- wherever it has one. A new reader of either field owes an entry here -- and
--- so does a construct the engine EXPANDS into one (a keyword's minted ability
--- or rider, as Pawl.Engine.Keyword builds them), since the card's Show then
--- spells only the keyword.
---
--- Read sites needing none: the readers of the CURRENT action's own events
--- (Pawl.Engine.Resolve.Effect, Pawl.Engine.Cost's reversal and mana
+-- Read sites needing no classification: the readers of the CURRENT action's
+-- own events (Pawl.Engine.Resolve.Effect, Pawl.Engine.Cost's reversal and mana
 -- triggers, the trigger scan, the CR 704.5h watermark); readers keyed by an
 -- id that has moved (Pawl.Engine.Game.arrivalsOf, revealedArriving,
--- Pawl.Engine.MoveDuration.departedIn, Pawl.Engine.Event.Trigger.entryGroup),
--- which a lap cannot move again under the same id; and
--- Pawl.Engine.Engine.beginTurnOf's fold of the casts and attacks, which a
--- priority-only lap without a zone change cannot write.
-historyReaders :: [([String], Reads)]
-historyReaders =
-  [ -- Pawl.Engine.Count.evaluate's Scope.InHistory arm (CR 608.2i), every
-    -- event Pawl.Engine.Count.snapshotView answers for some shape.
-    (["InHistory"], Just inHistory),
-    -- Pawl.Engine.Quantity.evaluateAgainst's arms over Pawl.Engine.Game's
-    -- folds, and Pawl.Engine.Filter's atoms off Pawl.Engine.Projection.View's
-    -- and Pawl.Engine.Count.playerView's folds, each by name; and, for a
-    -- this-turn construct not named here, all of the history.
-    (["ThisTurn"], Nothing),
-    (["WasBlockedThisTurn"], via Game.blockedAttacker),
-    (["DamageDealtToThisTurn"], via Game.damageDealt),
-    (["AttackersDeclaredThisTurn"], Just attackerDeclared),
-    (["CardsDiscardedThisTurn"], via Game.discardOf),
-    -- GameState.drawsThisTurn, which `digest` keeps.
-    (["CardsDrawnThisTurn"], Just (const False)),
-    (["BendingsThisTurn"], Just bent),
-    (["LifeGainedThisTurn"], via Game.lifeGainOf),
-    (["PlayersDealtDamageThisTurn"], via Game.damagedPlayer),
-    (["DamageDealtToPlayersThisTurn"], via Game.damageDealt),
-    (["SpellsCastThisTurn"], via Game.castOf),
-    (["TimesResolvedThisTurn"], via Game.abilityResolved),
-    (["PermanentsDiedThisTurn"], via Game.diedChange),
-    (["SpellsCastUsingThisTurn"], via Game.castOf),
-    (["EnteredThisTurn"], via Game.enteredBattlefield),
-    (["AttackedThisTurn"], Just attackerDeclared),
-    (["MilledThisTurn"], Just milled),
-    (["DealtDamageThisTurn"], Just (\event -> Maybe.isJust (Game.damagedObject event) || Maybe.isJust (Game.damagedPlayer event))),
-    (["DealtDamageToThisTurn"], via Game.damageRecipient),
-    (["CrewedSourceThisTurn"], Just crewed),
-    (["ConvokedSourceThisTurn"], Just convokedOrMoved),
-    (["SaddledSourceThisTurn"], Just saddled),
-    -- Quantity.AttackersInTheirLastTurn (Game.attackersInTheirLastTurn).
-    (["AttackersInTheirLastTurn"], Just attackerDeclared),
-    -- Quantity.SpellsCastBefore, EnteredFrom and WasCastFrom
-    -- (Pawl.Engine.Quantity's entriesOf).
-    (["SpellsCastBefore"], via Game.castOf),
-    (["EnteredFrom"], via Game.enteredBattlefieldChange),
-    (["WasCastFrom"], via Game.enteredBattlefieldChange),
-    -- ObjectRef.FromAnywhere (Game.currentIncarnation), which follows a card
-    -- through the move log.
-    (["FromAnywhere"], via Game.movedChange),
-    -- Pawl.Engine.Cost.candidateCostsGiven's surge, spectacle, prowl,
-    -- freerunning and mayhem clauses, and
-    -- Pawl.Engine.PlayerEffect.mayPlayByMayhem.
-    (["Surge"], via Game.castOf),
-    (["Spectacle"], Just lifeLost),
-    (["Prowl"], Just dealtDamage),
-    (["Freerunning"], Just dealtDamage),
-    (["Mayhem"], via Game.discardOf),
-    -- Pawl.Engine.PlayerEffect.prohibitsCasting's CantCastMoreThan, through
-    -- Game.castsPerPlayer.
-    (["CantCastMoreThan"], via Game.castOf),
-    -- Pawl.Engine.Activatable.loyaltyOk (CR 606.3), every loyalty cost.
-    (["Loyalty"], Just loyaltyActivated),
-    -- Pawl.Engine.Event.Match's StepBegins ordinal (mainPhasesBegun) and
-    -- SpellCast ordinal (castOrdinal).
-    (["ordinal", "Just"], Just (\event -> stepBegan event || Maybe.isJust (Game.castOf event))),
-    -- Pawl.Engine.Event.Match's declarationsOf and crewingsOf.
-    (["FirstTimeEachTurn"], Just (\event -> attackerDeclared event || becameCrewed event)),
-    -- Pawl.Engine.Event.withinTriggerLimit.
-    (["OncePerTurn"], Just abilityTriggered),
-    -- Pawl.Engine.Saga.readAheadRestricted (CR 702.155a).
-    (["ReadAhead"], via Game.enteredBattlefield),
-    -- Pawl.Engine.Coin.statedFor's flipsThisTurn.
-    (["firstEachTurn", "True"], Just coinFlipped),
-    -- Pawl.Engine.PlayerEffect.firstActivation, over activationsThisTurn.
-    (["onlyFirst", "Just"], Nothing),
-    -- Keyword expansions, whose readers the printed keyword does not spell:
-    -- Pawl.Engine.Keyword.storm's Quantity.SpellsCastBefore (CR 702.40a),
-    -- Keyword.gravestorm's Quantity.PermanentsDiedThisTurn (CR 702.69a), and
-    -- Keyword.printedRiders' Boast arm, a Count over Filter.AttackedThisTurn
-    -- (CR 702.142a). Separate entries, the walk being case-sensitive.
-    (["Storm"], via Game.castOf),
-    (["Gravestorm"], via Game.diedChange),
-    (["Boast"], Just attackerDeclared),
-    -- Pawl.Engine.MoveDuration.hasHappened's CR 610.3a/b crowning look-back.
-    (["UntilAnOpponentBecomesTheMonarch"], Just becameMonarch)
-  ]
-  where
-    via :: (GameEvent -> Maybe a) -> Reads
-    via projection = Just (Maybe.isJust . projection)
+-- Pawl.Engine.MoveDuration.departedIn, Pawl.Engine.Event.Trigger.entryGroup)
+-- or that mints a new one (Pawl.Engine.Event.forgetShown), which a lap cannot
+-- move again under the same id; Pawl.Engine.Engine.beginTurnOf's fold of the
+-- casts and attacks, which a priority-only lap without a zone change cannot
+-- write; and Pawl.Engine.PlayerView's witnessed log, which no rule reads.
+readers :: GameState -> Set.Set HistoryRead.HistoryRead
+readers gs =
+  -- The rules' own readers: Pawl.Engine.Planechase.rollCost (CR 901.9), and
+  -- Pawl.Engine.Speed's once-each-turn trigger (CR 702.179d), minted for any
+  -- player with a speed and limited off the AbilityTriggered log.
+  Set.fromList ([HistoryRead.PlanarRolls | Planechase.isPlanechase gs] <> [HistoryRead.Triggers | any (Maybe.isJust . Player.speed) (GameState.players gs)])
+    <> foldMap (Mentions.cardNames historyReads . Printing.card) (GameState.printings gs)
 
--- The events a Scope.InHistory fold can answer for.
-inHistory :: GameEvent -> Bool
-inHistory event = case event of
+-- The history question, asked of every leaf.
+historyReads :: Mentions.Asking (Set.Set HistoryRead.HistoryRead)
+historyReads =
+  Mentions.MkAsking
+    { Mentions.names = const Set.empty,
+      Mentions.context = Set.empty,
+      Mentions.keyed = Set.empty,
+      Mentions.history = Set.singleton
+    }
+
+-- | Does this logged event record part of what `reading` reads? Through the read
+-- site's own projection wherever it has one. GameState.activationsThisTurn
+-- records the activations, so no event does.
+records :: HistoryRead.HistoryRead -> GameEvent -> Bool
+records reading event = case reading of
+  HistoryRead.Activations -> False
+  HistoryRead.Attacks -> attackerDeclared event
+  HistoryRead.Bendings -> bent event
+  HistoryRead.Blocks -> Maybe.isJust (Game.blockedAttacker event)
+  HistoryRead.Casts -> Maybe.isJust (Game.castOf event)
+  HistoryRead.CoinFlips -> coinFlipped event
+  HistoryRead.Convokes -> convoked event
+  HistoryRead.Crews -> crewed event
+  HistoryRead.Damage -> dealtDamage event
+  HistoryRead.Deaths -> Maybe.isJust (Game.diedChange event)
+  HistoryRead.Discards -> Maybe.isJust (Game.discardOf event)
+  HistoryRead.Entries -> Maybe.isJust (Game.enteredBattlefieldChange event)
+  HistoryRead.LifeGains -> Maybe.isJust (Game.lifeGainOf event)
+  HistoryRead.LifeLosses -> lifeLost event
+  HistoryRead.LoyaltyActivations -> loyaltyActivated event
+  HistoryRead.MonarchChanges -> becameMonarch event
+  HistoryRead.Mills -> milled event
+  HistoryRead.Moves -> moved event
+  HistoryRead.PlanarRolls -> planarDieRolled event
+  HistoryRead.Resolutions -> Maybe.isJust (Game.abilityResolved event)
+  HistoryRead.Saddles -> saddled event
+  HistoryRead.StepBegins -> stepBegan event
+  HistoryRead.Triggers -> abilityTriggered event
+
+-- The zone changes, and a player leaving the game: what a Scope.InHistory
+-- fold can answer for, bar the casts.
+moved :: GameEvent -> Bool
+moved event = case event of
   GameEvent.Moved {} -> True
   GameEvent.CardArrived {} -> True
   GameEvent.LeftTheGame {} -> True
-  GameEvent.SpellCast {} -> True
   _ -> False
 
 becameMonarch :: GameEvent -> Bool
@@ -429,22 +351,16 @@ milled event = case event of
   GameEvent.Milled {} -> True
   _ -> False
 
+-- A creature crewing a vehicle, and a vehicle becoming crewed.
 crewed :: GameEvent -> Bool
 crewed event = case event of
   GameEvent.Crewed {} -> True
-  _ -> False
-
-becameCrewed :: GameEvent -> Bool
-becameCrewed event = case event of
   GameEvent.BecameCrewed {} -> True
   _ -> False
 
--- Pawl.Engine.Count.convokedThisTurn follows the convoked spell
--- onto the battlefield through the move log.
-convokedOrMoved :: GameEvent -> Bool
-convokedOrMoved event = case event of
+convoked :: GameEvent -> Bool
+convoked event = case event of
   GameEvent.Convoked {} -> True
-  GameEvent.Moved {} -> True
   _ -> False
 
 saddled :: GameEvent -> Bool

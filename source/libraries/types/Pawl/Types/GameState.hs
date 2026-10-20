@@ -114,7 +114,8 @@ data GameState = MkGameState
     -- | CR 608.2i: what happened this turn, in order, each entry stamped with
     -- its EventGroup (CR 608.2f's single event). Cleared at turn handoff
     -- (Engine.handoffTurn), never by a reader. A new reader of it as history
-    -- owes an entry in Pawl.Engine.Fragmented.historyReaders (CR 732.3).
+    -- owes its construct's arm in Pawl.Engine.Interchangeable.Mentions a
+    -- Pawl.Types.HistoryRead (CR 732.3).
     events :: Seq.Seq LoggedEvent.LoggedEvent,
     -- | The group Event.recordEvent stamps on the next event; advanced per
     -- record except inside an Event.simultaneously bracket. Not reset at turn
@@ -381,7 +382,8 @@ data GameState = MkGameState
     -- | CR 602.2: every activated ability begun this turn, oldest first, as
     -- Pawl.Types.CostModifier.onlyFirst asks after it; cleared at turn
     -- handoff. Written by Pawl.Engine.ActivationRestriction.logActivation. A
-    -- new reader owes an entry in Pawl.Engine.Fragmented.historyReaders.
+    -- new reader owes its construct's arm in Pawl.Engine.Interchangeable.Mentions
+    -- HistoryRead.Activations.
     activationsThisTurn :: Seq.Seq PastActivation.PastActivation,
     -- | CR 601.3: which once-each-turn permissions have been used this turn, by
     -- a cast or (a Play-verb one) a land play, read only for a budgeted
