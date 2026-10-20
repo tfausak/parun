@@ -383,6 +383,7 @@ spec s = Spec.describe s "Pawl.Codec.Modification" $ do
                   (Cost.MkCost Nothing [CostComponent.TapThis])
                   []
                   0
+                  Nothing
                   (Modal.MkModal (Seq.singleton (Mode.MkMode Seq.empty Map.empty)) (ModeSelection.ChooseExactly 1))
                   []
                   Activator.Controller

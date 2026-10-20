@@ -66,6 +66,7 @@ import qualified Pawl.Engine.Summoning as Summoning
 import qualified Pawl.Extra.Integer as Integer
 import qualified Pawl.Extra.Natural as Natural
 import qualified Pawl.Types.AbilityKind as AbilityKind
+import qualified Pawl.Types.AbilityName as AbilityName
 import qualified Pawl.Types.ActivatedAbility as ActivatedAbility
 import qualified Pawl.Types.Activations as Activations
 import qualified Pawl.Types.AlternativeCost as AlternativeCost
@@ -1870,19 +1871,30 @@ componentDemandGrowsWith slot component = case component of
 -- 101.2 makes the printed "can't" beat the permission, so an unreadable ceiling
 -- refuses rather than permits.
 maximumX :: PlayerId -> ObjectId -> Face.Face card -> GameState -> Maybe Natural
-maximumX pid oid face = ceilingOf pid oid (Face.maximumX face)
+maximumX pid oid face = ceilingOf Nothing pid oid (Face.maximumX face)
 
 -- The same reduction over ceilings a caller has already gathered, shared with
 -- Pawl.Engine.Activate: CR 602.2b routes an activation through rule 601.2b, so an
 -- ability's own ceilings (Pawl.Types.ActivatedAbility.maximumX) are read exactly
--- as a face's are, off the ability's source and its activator.
-ceilingOf :: PlayerId -> ObjectId -> [Quantity.Type.Quantity] -> GameState -> Maybe Natural
-ceilingOf pid oid quantities gs =
-  let context = Projection.sourceContext gs (Just pid) oid
-      evaluated quantity = Integer.toNaturalSaturating (Maybe.fromMaybe 0 (Quantity.evaluate (Projection.fullView gs) context gs oid quantity))
-   in case fmap evaluated quantities of
-        [] -> Nothing
-        ceilings -> Just (minimum ceilings)
+-- as a face's are, off the ability's source and its activator, as the ability
+-- named `reader` reads them (Filter.reader, CR 607.5).
+ceilingOf :: Maybe AbilityName.AbilityName -> PlayerId -> ObjectId -> [Quantity.Type.Quantity] -> GameState -> Maybe Natural
+ceilingOf reader pid oid quantities gs = case fmap (xValue reader pid oid gs) quantities of
+  [] -> Nothing
+  ceilings -> Just (minimum ceilings)
+
+-- | CR 107.3c: the X an activated ability's own text defines
+-- (ActivatedAbility.definedX), read off its source as it reads, ceilingOf's
+-- way; Nothing for an X its activator announces.
+definedX :: PlayerId -> ObjectId -> ActivatedAbility.ActivatedAbility card ability -> GameState -> Maybe Natural
+definedX pid oid ability gs = fmap (xValue (ActivatedAbility.name ability) pid oid gs) (ActivatedAbility.definedX ability)
+
+-- One quantity bounding or defining an X, off `oid` as the ability named
+-- `reader` reads it. Unreadable or negative is 0.
+xValue :: Maybe AbilityName.AbilityName -> PlayerId -> ObjectId -> GameState -> Quantity.Type.Quantity -> Natural
+xValue reader pid oid gs quantity =
+  let context = (Projection.sourceContext gs (Just pid) oid) {Filter.reader = reader}
+   in Integer.toNaturalSaturating (Maybe.fromMaybe 0 (Quantity.evaluate (Projection.fullView gs) context gs oid quantity))
 
 -- CR 118.13: a mana symbol payable in multiple ways has its payment chosen by
 -- the payer -- CR 107.4f's Phyrexian symbol and both of CR 107.4e's hybrids.

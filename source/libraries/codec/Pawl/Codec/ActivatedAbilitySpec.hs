@@ -31,6 +31,7 @@ import qualified Pawl.Types.Phase as Phase
 import qualified Pawl.Types.PhaseSelector as PhaseSelector
 import qualified Pawl.Types.PlayerRelation as PlayerRelation
 import qualified Pawl.Types.Pool as Pool
+import qualified Pawl.Types.Quantity as Quantity
 import qualified Pawl.Types.SlotName as SlotName
 import qualified Pawl.Types.TargetSlot as TargetSlot
 import qualified Pawl.Types.TurnScope as TurnScope
@@ -72,6 +73,7 @@ spec s = Spec.describe s "Pawl.Codec.ActivatedAbility" $ do
           (Cost.MkCost (Just (ManaCost.MkManaCost [ManaSymbol.Generic 1])) [])
           []
           0
+          Nothing
           ( Modal.MkModal
               ( Seq.singleton
                   ( Mode.MkMode
@@ -99,6 +101,7 @@ spec s = Spec.describe s "Pawl.Codec.ActivatedAbility" $ do
           (Cost.MkCost Nothing [CostComponent.TapThis])
           []
           0
+          Nothing
           (Modal.MkModal (Seq.singleton (Mode.MkMode Seq.empty Map.empty)) (ModeSelection.ChooseExactly 1))
           [ ActivationRestriction.DuringPhase (DuringPhase.MkDuringPhase (PhaseSelector.Step (Phase.Combat CombatStep.DeclareAttackers)) TurnScope.EachTurn),
             ActivationRestriction.AttackedThisStep
@@ -122,6 +125,7 @@ spec s = Spec.describe s "Pawl.Codec.ActivatedAbility" $ do
           (Cost.MkCost (Just (ManaCost.MkManaCost [ManaSymbol.Generic 1])) [])
           []
           0
+          Nothing
           (Modal.MkModal (Seq.singleton (Mode.MkMode Seq.empty Map.empty)) (ModeSelection.ChooseExactly 1))
           [ActivationRestriction.SorcerySpeed]
           Activator.Controller
@@ -141,6 +145,7 @@ spec s = Spec.describe s "Pawl.Codec.ActivatedAbility" $ do
           (Cost.MkCost Nothing [])
           []
           0
+          Nothing
           (Modal.MkModal (Seq.singleton (Mode.MkMode Seq.empty Map.empty)) (ModeSelection.ChooseExactly 1))
           []
           Activator.Controller
@@ -160,6 +165,7 @@ spec s = Spec.describe s "Pawl.Codec.ActivatedAbility" $ do
           (Cost.MkCost Nothing [])
           []
           1
+          Nothing
           (Modal.MkModal (Seq.singleton (Mode.MkMode Seq.empty Map.empty)) (ModeSelection.ChooseExactly 1))
           []
           Activator.Controller
@@ -168,3 +174,23 @@ spec s = Spec.describe s "Pawl.Codec.ActivatedAbility" $ do
           Nothing
       )
       " {\"cost\":{\"mana\":null},\"minimumX\":1,\"modal\":{\"modes\":[{}]}} "
+  -- CR 107.3c: Soul Foundry's "X is the mana value of that card" is the key's
+  -- producer; Nothing stays out of the JSON, as above.
+  Spec.it s "an ability's defined X round-trips" $
+    Common.assertJsonCodec
+      s
+      toJson
+      fromJson
+      ( ActivatedAbility.MkActivatedAbility
+          (Cost.MkCost Nothing [])
+          []
+          0
+          (Just (Quantity.Literal 2))
+          (Modal.MkModal (Seq.singleton (Mode.MkMode Seq.empty Map.empty)) (ModeSelection.ChooseExactly 1))
+          []
+          Activator.Controller
+          Nothing
+          Nothing
+          Nothing
+      )
+      " {\"cost\":{\"mana\":null},\"definedX\":{\"type\":\"Literal\",\"value\":2},\"modal\":{\"modes\":[{}]}} "

@@ -910,6 +910,7 @@ cycling cost searchFor =
             Mint.oneMode (Seq.singleton effect),
           ActivatedAbility.maximumX = [],
           ActivatedAbility.minimumX = 0,
+          ActivatedAbility.definedX = Nothing,
           ActivatedAbility.restrictions = [],
           ActivatedAbility.activator = Activator.Controller,
           -- CR 702.29a gives the card this ability outright, with no "as long as".
@@ -951,6 +952,7 @@ reinforce n cost =
           -- default, and gives the ability outright with no "as long as".
           ActivatedAbility.maximumX = [],
           ActivatedAbility.minimumX = 0,
+          ActivatedAbility.definedX = Nothing,
           ActivatedAbility.restrictions = [],
           ActivatedAbility.activator = Activator.Controller,
           ActivatedAbility.condition = Nothing,
@@ -1026,6 +1028,7 @@ craft spec =
             Mint.oneMode (Seq.singleton returned),
           ActivatedAbility.maximumX = [],
           ActivatedAbility.minimumX = 0,
+          ActivatedAbility.definedX = Nothing,
           -- CR 602.5d, rule 702.167a's "Activate only as a sorcery" -- scavenge's
           -- restriction.
           ActivatedAbility.restrictions = [ActivationRestriction.SorcerySpeed],
@@ -1089,6 +1092,7 @@ searchForSameManaValue cost filter_ destination =
             Mint.oneMode (Seq.singleton effect),
           ActivatedAbility.maximumX = [],
           ActivatedAbility.minimumX = 0,
+          ActivatedAbility.definedX = Nothing,
           ActivatedAbility.restrictions = [ActivationRestriction.SorcerySpeed],
           ActivatedAbility.activator = Activator.Controller,
           -- Both rules give the ability outright, with no "as long as".
@@ -1181,6 +1185,7 @@ ninjutsu (Ninjutsu.MkNinjutsu cost variant) =
             Mint.oneMode (Seq.singleton effect),
           ActivatedAbility.maximumX = [],
           ActivatedAbility.minimumX = 0,
+          ActivatedAbility.definedX = Nothing,
           -- Rule 702.49a states no timing restriction, which leaves CR 117.1b's
           -- default: a ninja may arrive after blockers are declared.
           ActivatedAbility.restrictions = [],
@@ -1518,6 +1523,7 @@ unearth cost =
             Mint.oneMode (Seq.fromList [returned, hasted, armed, redirected]),
           ActivatedAbility.maximumX = [],
           ActivatedAbility.minimumX = 0,
+          ActivatedAbility.definedX = Nothing,
           -- CR 602.5d, rule 702.84a's "Activate only as a sorcery" -- levelUp's
           -- restriction.
           ActivatedAbility.restrictions = [ActivationRestriction.SorcerySpeed],
@@ -1628,6 +1634,7 @@ graveyardTokenCopy exceptions cost =
             Mint.oneMode (Seq.singleton copied),
           ActivatedAbility.maximumX = [],
           ActivatedAbility.minimumX = 0,
+          ActivatedAbility.definedX = Nothing,
           -- CR 602.5d, the rules' "Activate only as a sorcery".
           ActivatedAbility.restrictions = [ActivationRestriction.SorcerySpeed],
           ActivatedAbility.activator = Activator.Controller,
@@ -1670,6 +1677,7 @@ scavenge cost =
             Mint.oneModeTargeting (Map.singleton scavengeTarget slot) (Seq.singleton effect),
           ActivatedAbility.maximumX = [],
           ActivatedAbility.minimumX = 0,
+          ActivatedAbility.definedX = Nothing,
           -- CR 602.5d, rule 702.97a's "Activate only as a sorcery".
           ActivatedAbility.restrictions = [ActivationRestriction.SorcerySpeed],
           ActivatedAbility.activator = Activator.Controller,
@@ -1774,6 +1782,7 @@ encore cost =
             Mint.oneMode (Seq.fromList [loop, hasted, armed]),
           ActivatedAbility.maximumX = [],
           ActivatedAbility.minimumX = 0,
+          ActivatedAbility.definedX = Nothing,
           -- CR 602.5d, rule 702.141a's "Activate only as a sorcery".
           ActivatedAbility.restrictions = [ActivationRestriction.SorcerySpeed],
           ActivatedAbility.activator = Activator.Controller,
@@ -2125,6 +2134,7 @@ crew n =
             Mint.oneMode (Seq.fromList [becomes CardType.Artifact, becomes CardType.Creature]),
           ActivatedAbility.maximumX = [],
           ActivatedAbility.minimumX = 0,
+          ActivatedAbility.definedX = Nothing,
           ActivatedAbility.restrictions = [],
           ActivatedAbility.activator = Activator.Controller,
           -- CR 702.122a gives the permanent this ability outright, with no "as long
@@ -2179,6 +2189,7 @@ saddle n =
             Mint.oneMode (Seq.singleton (Effect.Designate (Designate.MkDesignate Designation.Saddled Binding.triggerSource Nothing))),
           ActivatedAbility.maximumX = [],
           ActivatedAbility.minimumX = 0,
+          ActivatedAbility.definedX = Nothing,
           ActivatedAbility.restrictions = [ActivationRestriction.SorcerySpeed],
           ActivatedAbility.activator = Activator.Controller,
           ActivatedAbility.condition = Nothing,
@@ -2248,6 +2259,7 @@ station =
             Mint.oneMode (Seq.singleton load),
           ActivatedAbility.maximumX = [],
           ActivatedAbility.minimumX = 0,
+          ActivatedAbility.definedX = Nothing,
           ActivatedAbility.restrictions = [ActivationRestriction.SorcerySpeed],
           ActivatedAbility.activator = Activator.Controller,
           ActivatedAbility.condition = Nothing,
@@ -2292,6 +2304,7 @@ levelUp cost =
             Mint.oneMode (Seq.singleton gain),
           ActivatedAbility.maximumX = [],
           ActivatedAbility.minimumX = 0,
+          ActivatedAbility.definedX = Nothing,
           ActivatedAbility.restrictions = [ActivationRestriction.SorcerySpeed],
           ActivatedAbility.activator = Activator.Controller,
           ActivatedAbility.condition = Nothing,
@@ -2321,6 +2334,7 @@ outlast cost =
             Mint.oneMode (Seq.singleton grow),
           ActivatedAbility.maximumX = [],
           ActivatedAbility.minimumX = 0,
+          ActivatedAbility.definedX = Nothing,
           ActivatedAbility.restrictions = [ActivationRestriction.SorcerySpeed],
           ActivatedAbility.activator = Activator.Controller,
           ActivatedAbility.condition = Nothing,
@@ -2382,6 +2396,7 @@ equip payload =
           -- CR 702.6a's "Activate only as a sorcery", which CR 307.5 spells out.
           ActivatedAbility.maximumX = [],
           ActivatedAbility.minimumX = 0,
+          ActivatedAbility.definedX = Nothing,
           ActivatedAbility.restrictions = [ActivationRestriction.SorcerySpeed],
           ActivatedAbility.activator = Activator.Controller,
           ActivatedAbility.condition = Nothing,
@@ -2429,6 +2444,7 @@ fortify cost =
           -- CR 702.67a's "Activate only as a sorcery", which CR 307.5 spells out.
           ActivatedAbility.maximumX = [],
           ActivatedAbility.minimumX = 0,
+          ActivatedAbility.definedX = Nothing,
           ActivatedAbility.restrictions = [ActivationRestriction.SorcerySpeed],
           ActivatedAbility.activator = Activator.Controller,
           ActivatedAbility.condition = Nothing,
@@ -2473,6 +2489,7 @@ reconfigure cost =
           -- CR 702.151a's "Activate only as a sorcery", which CR 307.5 spells out.
           ActivatedAbility.maximumX = [],
           ActivatedAbility.minimumX = 0,
+          ActivatedAbility.definedX = Nothing,
           ActivatedAbility.restrictions = [ActivationRestriction.SorcerySpeed],
           ActivatedAbility.activator = Activator.Controller,
           ActivatedAbility.condition = Nothing,
@@ -2502,6 +2519,7 @@ reconfigureOff cost =
         Mint.oneMode (Seq.singleton (Effect.Unattach (ObjectRef.EachMatching Filter.IsSource))),
       ActivatedAbility.maximumX = [],
       ActivatedAbility.minimumX = 0,
+      ActivatedAbility.definedX = Nothing,
       ActivatedAbility.restrictions =
         [ ActivationRestriction.OnlyIf
             ( Condition.Compares
@@ -2541,6 +2559,7 @@ auraSwap cost =
             Mint.oneModeOf Map.empty (Seq.singleton (Mint.youMay (Seq.singleton effect))),
           ActivatedAbility.maximumX = [],
           ActivatedAbility.minimumX = 0,
+          ActivatedAbility.definedX = Nothing,
           ActivatedAbility.restrictions = [],
           ActivatedAbility.activator = Activator.Controller,
           ActivatedAbility.condition = Nothing,
@@ -7768,6 +7787,7 @@ predefinedArtifactToken name subtype mana effect =
             Mint.oneMode (Seq.singleton effect),
           ActivatedAbility.maximumX = [],
           ActivatedAbility.minimumX = 0,
+          ActivatedAbility.definedX = Nothing,
           ActivatedAbility.restrictions = [],
           ActivatedAbility.activator = Activator.Controller,
           ActivatedAbility.condition = Nothing,

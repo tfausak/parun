@@ -136,7 +136,7 @@ import qualified Pawl.Types.Zone as Zone
 theAbility :: Printing.Printing -> ActivatedAbility.ActivatedAbility Card.Type.Card (GrantedAbility.GrantedAbility Card.Type.Card)
 theAbility p = case Face.activatedAbilities (S.combinedFace p) of
   ab : _ -> ab
-  [] -> ActivatedAbility.MkActivatedAbility (Cost.Type.MkCost (Just (ManaCost.MkManaCost [])) []) [] 0 (Face.spell (S.combinedFace p)) [] Activator.Controller Nothing Nothing Nothing
+  [] -> ActivatedAbility.MkActivatedAbility (Cost.Type.MkCost (Just (ManaCost.MkManaCost [])) []) [] 0 Nothing (Face.spell (S.combinedFace p)) [] Activator.Controller Nothing Nothing Nothing
 
 -- CR 607.2d: Doom Cannon's "{3}, {T}, Sacrifice a creature of the chosen type:
 -- This artifact deals 3 damage to any target" is linked to its "As this artifact

@@ -554,7 +554,7 @@ activateManaAbilitiesNames asking x = case x of
 
 activatedAbilityNames :: Asking -> (card -> Bool) -> (ability -> Bool) -> ActivatedAbility.ActivatedAbility card ability -> Bool
 activatedAbilityNames asking onCard onAbility x = case x of
-  ActivatedAbility.MkActivatedAbility cost maximumX _minimumX modal restrictions _activator condition _name keyword -> costNames asking (keywordNames asking) cost || any (quantityNames asking) maximumX || modalNames asking onCard onAbility modal || any (activationRestrictionNames asking) restrictions || any (conditionNames asking) condition || any (keywordNames asking) keyword
+  ActivatedAbility.MkActivatedAbility cost maximumX _minimumX definedX modal restrictions _activator condition _name keyword -> costNames asking (keywordNames asking) cost || any (quantityNames asking) maximumX || any (quantityNames asking) definedX || modalNames asking onCard onAbility modal || any (activationRestrictionNames asking) restrictions || any (conditionNames asking) condition || any (keywordNames asking) keyword
 
 activationProhibitionNames :: Asking -> ActivationProhibition.ActivationProhibition -> Bool
 activationProhibitionNames asking x = case x of

@@ -225,10 +225,13 @@ activateAbilityWith refused runSubgame pid srcId ability = Event.announcing $ do
           -- 113.7 makes that permanent the ability's source, and it is the object
           -- every other quantity on this road is evaluated against. It is still in
           -- its zone here, the activation cost being unpaid until below.
-          mCeiling = Cost.ceilingOf pid srcId (ActivatedAbility.maximumX ability) gs
+          mCeiling = Cost.ceilingOf (ActivatedAbility.name ability) pid srcId (ActivatedAbility.maximumX ability) gs
+          -- CR 107.3c: the X the ability's own text defines, which its activator
+          -- does not get to choose -- read here and once, the ceiling's timing.
+          defined = Cost.definedX pid srcId ability gs
           -- CR 101.1: the floor the same words put on it -- Katara, Water Tribe's
-          -- Hope's "X can't be 0". Printed, so there is nothing to evaluate.
-          floorX = ActivatedAbility.minimumX ability
+          -- Hope's "X can't be 0" -- or the defined X itself (Activatable.leastX).
+          floorX = Activatable.leastX pid srcId ability gs
       -- CR 601.2b / 118.9 through CR 602.2b: announce which cost is paid, the
       -- printed activation cost or an alternative an effect offers in its place
       -- (Kíli the Resourceful's {0} for an equip cost) -- after the modes and
@@ -243,7 +246,7 @@ activateAbilityWith refused runSubgame pid srcId ability = Event.announcing $ do
         [] -> pure (ActivatedAbility.cost ability)
       mAmount <-
         if Cost.hasVariable printedCost
-          then fmap Just (Game.choose (Prompt.ChooseX decider pid abilId Binding.variableX floorX (Activatable.affordableX mCeiling aimableUnannounced stamp spendable pid srcId gs printedCost)))
+          then maybe (fmap Just (Game.choose (Prompt.ChooseX decider pid abilId Binding.variableX floorX (Activatable.affordableX mCeiling aimableUnannounced stamp spendable pid srcId gs printedCost)))) (pure . Just) defined
           else pure Nothing
       let announcedAtX = maybe printedCost (\x -> Cost.substituteX x printedCost) mAmount
           -- CR 101.1, and CR 101.2 for its direction, exactly as Cast.castProposed
