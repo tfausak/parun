@@ -5429,10 +5429,11 @@ resolveLifeGain pid n =
 -- roll records its own events, through `throw`.
 --
 -- `throw` is the caller's CR 706 road for that roll (Pawl.Engine.Resolve.Effect's
--- throwDice), which this module cannot reach. Nothing keeps the substitution out
--- of CR 616.1's offer: a share of 0 in CR 615.7's allowances, the door
--- Replacement.allocatedOut already gives a row. Not implemented: substituting a
--- roll on a road with no CR 706 thrower (#5350).
+-- throwForCoin), which this module cannot reach. A caller with no thrower passes
+-- Nothing, and the substitution is then kept out of CR 616.1's offer by a share
+-- of 0 in CR 615.7's allowances, the door Replacement.allocatedOut already gives
+-- a row. Not implemented: substituting a roll on a road with no CR 706 thrower
+-- (#5350).
 flipOneCoin :: Maybe (DiceRoll.DiceRoll -> Game [Natural]) -> Maybe PlayerId -> [StatedFlip.StatedFlip] -> Game (Either (Maybe CoinFace.CoinFace) (CoinFace.CoinFace, Bool))
 flipOneCoin throw mFlipper stated = case mFlipper of
   Nothing -> Right <$> flipCoins Nothing 1 stated
