@@ -27,7 +27,7 @@ data Hotseat = MkHotseat
     -- | Whether a priority offering only passing and mana abilities is passed
     -- without asking.
     autoPass :: Bool,
-    -- | Each seat that typed "auto" during the payment now under way, beside
+    -- | Each seat that chose auto during the payment now under way, beside
     -- the colors the source auto last tapped is for.
     paying :: Map.Map PlayerId.PlayerId (Set.Set ManaType.ManaType)
   }
