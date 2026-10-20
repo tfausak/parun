@@ -130,6 +130,8 @@ import qualified Pawl.Types.GrantLookAtExiled as GrantLookAtExiled
 import qualified Pawl.Types.GrantPlayFromExile as GrantPlayFromExile
 import qualified Pawl.Types.GrantedAbility as GrantedAbility
 import qualified Pawl.Types.HowMany as HowMany
+import qualified Pawl.Types.InstructionR as InstructionR
+import qualified Pawl.Types.InstructionRewrite as InstructionRewrite
 import qualified Pawl.Types.Keyword as Keyword
 import qualified Pawl.Types.Layer as Layer
 import qualified Pawl.Types.Layout as Layout
@@ -162,6 +164,7 @@ import qualified Pawl.Types.PhasePattern as PhasePattern
 import qualified Pawl.Types.PlayerCounters as PlayerCounters
 import qualified Pawl.Types.PlayerEffect as PlayerEffect
 import qualified Pawl.Types.PlayerId as PlayerId
+import qualified Pawl.Types.PlayerInstruction as PlayerInstruction
 import qualified Pawl.Types.PlayerQuantity as PlayerQuantity
 import qualified Pawl.Types.PlayerRef as PlayerRef
 import qualified Pawl.Types.PlayerRelation as PlayerRelation
@@ -661,6 +664,53 @@ phasePatternOffends replacement = case replacement of
   ReplacementEffect.AssembleR {} -> False
   ReplacementEffect.GameLossR {} -> False
   ReplacementEffect.PlaneswalkR {} -> False
+
+-- CR 614.1a: an InstructionR pairing an instruction with a rewrite its funnel
+-- cannot carry out. Pawl.Types.InstructionR admits every pair, and three go
+-- silently wrong:
+--
+-- - DrawInstead on anything but a scry. A flip has no road for "it does not
+--   happen" (CR 614.6) -- Event.flipOneCoin flips one coin anyway -- and a draw
+--   instruction replaced by a draw instruction re-proposes itself through a fresh
+--   CR 616.1 loop, where CR 614.5 no longer keeps the row off it.
+-- - A scaling that can settle at zero (Subtract, Halve, Multiply 0). A scry 0
+--   still asks and records CR 701.22d's event, where CR 701.22b says no scry
+--   happens, and a flip of no coins asks for one.
+--
+-- Every printed row is Multiply 2, AddMore 1 or Eligeth's DrawInstead on a scry.
+-- Exhaustive rather than a wildcard, this file's discipline for a sum.
+instructionRowOffends :: ReplacementEffect.ReplacementEffect Card.Type.Card (GrantedAbility.GrantedAbility Card.Type.Card) (Effect.Effect Card.Type.Card (GrantedAbility.GrantedAbility Card.Type.Card)) -> Bool
+instructionRowOffends replacement = case replacement of
+  ReplacementEffect.InstructionR row -> case InstructionR.rewrite row of
+    InstructionRewrite.DrawInstead -> InstructionR.instruction row /= PlayerInstruction.Scry
+    InstructionRewrite.Scaled scaling -> case scaling of
+      Scaling.Multiply m -> m == 0
+      Scaling.AddMore _ -> False
+      Scaling.Subtract _ -> True
+      Scaling.Halve -> True
+  ReplacementEffect.PhaseR _ -> False
+  ReplacementEffect.CounterR {} -> False
+  ReplacementEffect.ZoneChangeR {} -> False
+  ReplacementEffect.EntryR {} -> False
+  ReplacementEffect.DamageR {} -> False
+  ReplacementEffect.DestructionR _ -> False
+  ReplacementEffect.TokenR {} -> False
+  ReplacementEffect.TurnUpR {} -> False
+  ReplacementEffect.AttachR {} -> False
+  ReplacementEffect.UntapR _ -> False
+  ReplacementEffect.LifeLossR {} -> False
+  ReplacementEffect.LifeGainR {} -> False
+  ReplacementEffect.DrawR {} -> False
+  ReplacementEffect.DrawCountR {} -> False
+  ReplacementEffect.DieRollR {} -> False
+  ReplacementEffect.AssembleR {} -> False
+  ReplacementEffect.GameLossR {} -> False
+  ReplacementEffect.PlaneswalkR {} -> False
+
+isInstructionR :: ReplacementEffect.ReplacementEffect Card.Type.Card (GrantedAbility.GrantedAbility Card.Type.Card) (Effect.Effect Card.Type.Card (GrantedAbility.GrantedAbility Card.Type.Card)) -> Bool
+isInstructionR replacement = case replacement of
+  ReplacementEffect.InstructionR _ -> True
+  _ -> False
 
 -- Every replacement shape the codec accepts and no card may author, for
 -- phasePatternOffends' reason and one more. A card cannot name an ObjectId or a
@@ -2952,6 +3002,35 @@ effectLintSpec s registry = Spec.describe s "Lint" $ do
   -- The sibling of the lint above, for the OTHER PlayerId the engine bakes and
   -- the codec accepts. See phasePatternOffends for why a card cannot name a
   -- player, and for why this is a lint rather than a type split (#437).
+  Spec.it s "no card pairs an instruction with a rewrite the engine cannot carry out" $ do
+    ps <- S.allPrintings s
+    let rowsOf = anyFace (any isInstructionR . cardReplacementEffects) . Printing.card
+        offenders = filter (anyFace (any instructionRowOffends . cardReplacementEffects) . Printing.card) ps
+    -- Guards against a vacuous sweep: the six cards printing an InstructionR
+    -- as this lint landed are all swept.
+    Spec.assertEqWith s "the pool's instruction rows include the six" (filter (`notElem` fmap (S.nameOf . Printing.card) (filter rowsOf ps)) (fmap (CardName.MkCardName . Text.pack) ["Bruvac the Grandiloquent", "Eligeth, Crossroads Augur", "Kenessos, Priest of Thassa", "Krark's Thumb", "Tekuthal, Inquiry Dominus", "The Valeyard"])) []
+    Spec.assertEqWith s "every instruction row is one its funnel carries out" (fmap (S.nameOf . Printing.card) offenders) []
+  -- The rejecting direction, against Eligeth's and Krark's Thumb's real rows with
+  -- one field changed, never a card file -- Eon Hub's posture below.
+  Spec.it s "the lint itself catches an instruction row the engine cannot carry out" $ do
+    eligeth <- S.printingOf s registry "Eligeth, Crossroads Augur"
+    thumb <- S.printingOf s registry "Krark's Thumb"
+    let rowsOf = filter isInstructionR . cardReplacementEffects . S.combinedFace
+        naming instruction replacement = case replacement of
+          ReplacementEffect.InstructionR row -> ReplacementEffect.InstructionR row {InstructionR.instruction = instruction}
+          other -> other
+        scaledBy scaling replacement = case replacement of
+          ReplacementEffect.InstructionR row -> ReplacementEffect.InstructionR row {InstructionR.rewrite = InstructionRewrite.Scaled scaling}
+          other -> other
+    Spec.assertBool s (not (null (rowsOf eligeth)) && not (null (rowsOf thumb))) "setup: both cards print an instruction row"
+    Spec.assertBool s (not (any instructionRowOffends (rowsOf eligeth))) "Eligeth's draw instead of a scry is accepted"
+    Spec.assertBool s (all (instructionRowOffends . naming PlayerInstruction.FlipCoin) (rowsOf eligeth)) "while drawing instead of flipping a coin is rejected"
+    Spec.assertBool s (all (instructionRowOffends . naming PlayerInstruction.DrawCards) (rowsOf eligeth)) "and so is drawing instead of drawing"
+    Spec.assertBool s (not (any instructionRowOffends (rowsOf thumb))) "Krark's Thumb's doubling is accepted"
+    Spec.assertBool s (not (any (instructionRowOffends . scaledBy (Scaling.AddMore 1)) (rowsOf thumb))) "and so is one more coin"
+    Spec.assertBool s (all (instructionRowOffends . scaledBy (Scaling.Subtract 1)) (rowsOf thumb)) "while one coin fewer is rejected"
+    Spec.assertBool s (all (instructionRowOffends . scaledBy Scaling.Halve) (rowsOf thumb)) "and so is half as many"
+    Spec.assertBool s (all (instructionRowOffends . scaledBy (Scaling.Multiply 0)) (rowsOf thumb)) "and so is none"
   Spec.it s "no card authors a player-scoped phase skip (#437)" $ do
     ps <- S.allPrintings s
     let offenders = filter (anyFace (any phasePatternOffends . cardReplacementEffects) . Printing.card) ps

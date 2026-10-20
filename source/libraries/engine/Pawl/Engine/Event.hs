@@ -5390,10 +5390,11 @@ flipOneCoin mFlipper stated = do
     Nothing -> pure 1
     Just pid -> do
       outcome <- applyReplacements (ProposedEvent.WouldPerform PlayerInstruction.FlipCoin Nothing pid 1)
-      -- A cancelled flip is unreachable from data/cards/: the one cancelling
-      -- rewrite, InstructionRewrite.DrawInstead, is Eligeth's and names a scry.
-      -- Defensive, and in the direction rule 705.1 leaves standing -- the flip
-      -- still happens, on its own one coin.
+      -- A cancelled flip is unreachable: Pawl.EffectLintSpec's "no card pairs an
+      -- instruction with a rewrite the engine cannot carry out" admits
+      -- InstructionRewrite.DrawInstead on a scry alone. A row that cancelled a
+      -- flip would be WRONG here, not merely defended against -- CR 614.6's flip
+      -- would not happen, and this still flips one coin.
       pure (maybe 1 snd (outcome >>= Replacement.asPerformed PlayerInstruction.FlipCoin))
   faces <- Monad.replicateM (Natural.toIntSaturating coins) (Game.ask Prompt.FlipCoin)
   -- CR 705.1 designates exactly two sides, so the coins that came up carry at
@@ -5401,8 +5402,9 @@ flipOneCoin mFlipper stated = do
   -- coin actually landed on -- which is why the answer needs no filtering back
   -- against the candidates, where an object choice would.
   actual <- case ListUtils.nubOrd faces of
-    -- Unreachable: `coins` is at least one and every rewrite only multiplies it.
-    -- Defensive: a flip with no face is no flip, so ask rule 705.1's one coin.
+    -- Unreachable: `coins` starts at one, and the same lint admits only a scaling
+    -- that cannot reach zero (Multiply by one or more, AddMore). A row that did
+    -- reach zero would be wrong here too: this asks rule 705.1's one coin anyway.
     [] -> Game.ask Prompt.FlipCoin
     -- One face is not a choice: with every coin agreeing, which one is ignored is
     -- indistinguishable, so where the rules leave nothing to ask, don't prompt.
