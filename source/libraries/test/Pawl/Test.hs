@@ -1753,6 +1753,7 @@ spec s registry = do
   Pawl.ReplySpec.spec s registry
   Pawl.ScenarioSpec.corpusSpec s registry
   Pawl.ScenarioSpec.loadSpec s
+  Pawl.ScenarioSpec.referenceSpec s
   Pawl.ScenarioSpec.spec s registry
   Pawl.SetupSpec.spec s registry
   Pawl.ShieldCounterSpec.spec s registry
