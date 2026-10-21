@@ -295,6 +295,28 @@ Entries are ordered by the first rule each cites.
   board".
 - **Issue**: none.
 
+## When each player choosing how many to draw draws
+
+- **Question**: "Each player may draw up to two cards" (Temporary Truce,
+  Truce): do all players choose their numbers first and then draw, or does
+  each player choose and draw before the next one chooses?
+- **Rules**: CR 608.2f, 101.4, 121.2, 608.2e; CR of 2026-08-07.
+- **Decision**: Each player in APNAP order chooses and then draws before the
+  next one chooses. Diminishing Returns' 2016-06-08 ruling on the same "each
+  player draws up to" sentence says exactly this. CR 121.2 says draws can't
+  happen at the same time, so CR 608.2f handles each player on their own, and
+  the ruling counts the choice as part of that player's turn at it. A discard
+  can happen all at once, so Mind Bomb's "each player may discard up to three
+  cards" keeps CR 101.4's order instead: every choice first, then one
+  simultaneous discard, which is Balance's 2016-06-08 ruling.
+- **Rejected**: Every player chooses first and then everyone draws, CR 101.4
+  read on its own. The only ruling on this sentence contradicts it.
+- **Site**: Temporary Truce and Truce in `data/cards/` (a `ForEach` over the
+  players whose body is `ChooseNumber` then `Draw`), proved by
+  `Pawl.ResolveSpec`'s "CR 608.2f a seat's draw, dredge included, happens before
+  the next seat chooses".
+- **Issue**: #5239.
+
 ## How two only-clauses about spending one mana combine
 
 - **Question**: Two effects each say a mana may be spent "only as though it

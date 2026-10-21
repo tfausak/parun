@@ -1,0 +1,146 @@
+{
+  "faces": [
+    {
+      "manaCost": [
+        {
+          "type": "Generic",
+          "value": 2
+        },
+        {
+          "type": "OfType",
+          "value": {
+            "type": "Colored",
+            "value": {
+              "type": "White"
+            }
+          }
+        }
+      ],
+      "name": "Truce",
+      "oracleText": "Each player may draw up to two cards. For each card less than two a player draws this way, that player gains 2 life.",
+      "spell": {
+        "modes": [
+          {
+            "clauses": [
+              {
+                "effects": [
+                  {
+                    "type": "ForEach",
+                    "value": {
+                      "body": [
+                        {
+                          "type": "ChooseNumber",
+                          "value": {
+                            "chooser": {
+                              "type": "InSlot",
+                              "value": "player"
+                            },
+                            "slot": "number",
+                            "upTo": 2
+                          }
+                        },
+                        {
+                          "type": "Draw",
+                          "value": {
+                            "player": {
+                              "type": "InSlot",
+                              "value": "player"
+                            },
+                            "quantity": {
+                              "type": "InSlot",
+                              "value": "number"
+                            },
+                            "slot": "drawn"
+                          }
+                        }
+                      ],
+                      "individually": true,
+                      "ref": {
+                        "type": "EachPlayer"
+                      },
+                      "slot": "player"
+                    }
+                  }
+                ]
+              },
+              {
+                "effects": [
+                  {
+                    "type": "GainLife",
+                    "value": {
+                      "player": {
+                        "type": "Relative",
+                        "value": {
+                          "type": "AnyPlayer"
+                        }
+                      },
+                      "quantity": {
+                        "type": "Plus",
+                        "value": {
+                          "left": {
+                            "type": "Literal",
+                            "value": 4
+                          },
+                          "right": {
+                            "type": "Negate",
+                            "value": {
+                              "type": "Times",
+                              "value": {
+                                "factor": 2,
+                                "quantity": {
+                                  "type": "Count",
+                                  "value": {
+                                    "aggregation": {
+                                      "type": "Members"
+                                    },
+                                    "filter": {
+                                      "type": "And",
+                                      "value": [
+                                        {
+                                          "type": "IsBound",
+                                          "value": "drawn"
+                                        },
+                                        {
+                                          "type": "OwnedByRecipient"
+                                        }
+                                      ]
+                                    },
+                                    "scope": {
+                                      "type": "InZone",
+                                      "value": {
+                                        "player": {
+                                          "type": "Relative",
+                                          "value": {
+                                            "type": "AnyPlayer"
+                                          }
+                                        },
+                                        "zone": {
+                                          "type": "Hand"
+                                        }
+                                      }
+                                    }
+                                  }
+                                }
+                              }
+                            }
+                          }
+                        }
+                      }
+                    }
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      "typeLine": {
+        "types": [
+          {
+            "type": "Instant"
+          }
+        ]
+      }
+    }
+  ]
+}

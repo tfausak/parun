@@ -13,8 +13,3 @@ Every expressible Portal card has been added to `data/cards/`.
 ## Needs a capability
 
 Each group is tracked by its issue; its cards are added when it lands.
-
-### A per-player "may draw up to N" with a per-player follow-up (#5239)
-ChooseNumber has no chooser, and Repeat/ForEach/ForEachNumber don't loop over
-players with each one choosing.
-- Temporary Truce: "Each player may draw up to two cards. For each card less than two a player draws this way, that player gains 2 life."

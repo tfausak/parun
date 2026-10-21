@@ -1,0 +1,40 @@
+{
+  "description": "CR 608.2d Arcane Denial lets the countered spell's controller choose how many to draw",
+  "note": "bob counters alice's Goblin Piker. At the next upkeep, bob's own, the delayed ability's ChooseNumber is put to alice, the countered spell's controller, not to bob, who controls the ability: she names 2, which the prompt's fallback (0) would not. bob draws his one card off the other delayed ability.",
+  "board": {
+    "seats": [
+      {
+        "name": "alice",
+        "battlefield": [
+          { "card": "Mountain", "label": "m1" },
+          { "card": "Mountain", "label": "m2" }
+        ],
+        "hand": [{ "card": "Goblin Piker", "label": "piker" }],
+        "library": [{ "card": "Hill Giant" }, { "card": "Hill Giant" }, { "card": "Hill Giant" }]
+      },
+      {
+        "name": "bob",
+        "battlefield": [
+          { "card": "Island", "label": "i1" },
+          { "card": "Island", "label": "i2" }
+        ],
+        "hand": [{ "card": "Arcane Denial", "label": "denial" }],
+        "library": [{ "card": "Llanowar Elves" }, { "card": "Llanowar Elves" }, { "card": "Llanowar Elves" }]
+      }
+    ],
+    "active": "alice",
+    "step": "PrecombatMain"
+  },
+  "timeline": [
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": { "Cast": { "object": "$piker", "mana": ["$m1", "$m2"] } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "bob", "do": { "Cast": { "object": "$denial", "targets": ["Goblin Piker"], "mana": ["$i1", "$i2"] } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "bob", "do": "Pass" },
+    { "turn": 1, "step": "EndStep", "player": "alice", "check": { "Count": { "player": "alice", "zone": "Graveyard", "card": "Goblin Piker", "count": 1 } } },
+    { "turn": 2, "step": "Upkeep", "player": "bob", "do": { "Answer": { "prompt": "OrderTriggers", "with": [0, 1] } } },
+    { "turn": 2, "step": "Upkeep", "player": "alice", "do": { "Answer": { "prompt": "ChooseNumber", "with": 2 } } },
+    { "turn": 2, "step": "Upkeep", "player": "bob", "do": "Pass" },
+    { "turn": 2, "step": "Upkeep", "player": "bob", "do": "Pass" },
+    { "turn": 2, "step": "Upkeep", "player": "bob", "check": { "Count": { "player": "alice", "zone": "Hand", "card": "Hill Giant", "count": 2 } } },
+    { "turn": 2, "step": "Upkeep", "player": "bob", "check": { "Count": { "player": "bob", "zone": "Hand", "card": "Llanowar Elves", "count": 1 } } }
+  ]
+}

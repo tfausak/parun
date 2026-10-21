@@ -838,9 +838,9 @@ chooseCardNameNames :: (Monoid r) => Asking r -> ChooseCardName.ChooseCardName -
 chooseCardNameNames asking x = case x of
   ChooseCardName.MkChooseCardName player restriction -> playerRefNames asking player <> filterNames asking restriction
 
-chooseNumberNames :: Asking r -> ChooseNumber.ChooseNumber -> r
+chooseNumberNames :: (Monoid r) => Asking r -> ChooseNumber.ChooseNumber -> r
 chooseNumberNames asking x = case x of
-  ChooseNumber.MkChooseNumber slot _upTo -> slotNames asking slot
+  ChooseNumber.MkChooseNumber slot _upTo chooser -> slotNames asking slot <> playerRefNames asking chooser
 
 choosePermanentsNames :: (Monoid r) => Asking r -> ChoosePermanents.ChoosePermanents -> r
 choosePermanentsNames asking x = case x of
