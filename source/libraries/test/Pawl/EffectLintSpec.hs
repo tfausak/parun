@@ -401,7 +401,7 @@ ownQuantities effect = case effect of
   Effect.ExchangeControl _ -> []
   Effect.ArmDelayedTrigger {} -> []
   Effect.AffectPlayers (AffectPlayers.MkAffectPlayers duration _ _) -> durationQuantities duration
-  Effect.RequireBlock (RequireBlock.MkRequireBlock duration _ _) -> durationQuantities duration
+  Effect.RequireBlock (RequireBlock.MkRequireBlock duration _ _ _) -> durationQuantities duration
   Effect.Prohibit (Prohibit.MkProhibit _ duration _) -> durationQuantities duration
   Effect.ForbidAttack (ForbidAttack.MkForbidAttack duration _ _) -> durationQuantities duration
   Effect.ForbidBeingBlocked (ForbidBeingBlocked.MkForbidBeingBlocked duration _ _) -> durationQuantities duration
@@ -1579,7 +1579,7 @@ effectObjectRefs effect =
         Effect.ExchangeControl _ -> []
         Effect.ArmDelayedTrigger {} -> []
         Effect.AffectPlayers {} -> []
-        Effect.RequireBlock (RequireBlock.MkRequireBlock _ blocker attacker) -> read_ (namedRef blocker <> [attacker])
+        Effect.RequireBlock (RequireBlock.MkRequireBlock _ blocker attacker _) -> read_ (namedRef blocker <> foldMap namedRef attacker)
         Effect.Prohibit (Prohibit.MkProhibit _ _ affected) -> read_ (namedRef affected)
         Effect.ForbidAttack (ForbidAttack.MkForbidAttack _ affected _) -> read_ (namedRef affected)
         Effect.ForbidBeingBlocked {} -> []

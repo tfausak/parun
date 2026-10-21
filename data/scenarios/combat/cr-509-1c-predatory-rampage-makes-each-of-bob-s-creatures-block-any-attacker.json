@@ -1,0 +1,37 @@
+{
+  "description": "CR 509.1c Predatory Rampage makes each of bob's creatures block, and any attacker will do",
+  "note": "CR 509.1c: \"each creature your opponents control blocks this turn if able\" names no attacker, so it is one requirement per creature, each obeyed by blocking either attacker. With two attackers and two able blockers, a declaration where only the Piker blocks obeys one requirement where two can be obeyed; the Bear blocking the OTHER attacker obeys both. A requirement aimed at one attacker would refuse that split.",
+  "board": {
+    "active": "alice",
+    "step": "PrecombatMain",
+    "seats": [
+      {
+        "name": "alice",
+        "battlefield": [
+          { "card": "Hill Giant", "label": "giant", "ready": true },
+          { "card": "Grizzly Bears", "label": "bears", "ready": true },
+          { "card": "Forest", "label": "f1" },
+          { "card": "Forest", "label": "f2" },
+          { "card": "Forest", "label": "f3" },
+          { "card": "Forest", "label": "f4" },
+          { "card": "Forest", "label": "f5" }
+        ],
+        "hand": [{ "card": "Predatory Rampage", "label": "rampage" }]
+      },
+      {
+        "name": "bob",
+        "battlefield": [
+          { "card": "Goblin Piker", "label": "piker", "ready": true },
+          { "card": "Runeclaw Bear", "label": "runeclaw", "ready": true }
+        ]
+      }
+    ]
+  },
+  "timeline": [
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": { "Cast": { "object": "$rampage", "mana": ["$f1", "$f2", "$f3", "$f4", "$f5"] } } },
+    { "turn": 1, "step": "DeclareAttackers", "player": "alice", "do": { "Attack": ["$giant", "$bears"] } },
+    { "turn": 1, "step": "DeclareBlockers", "player": "bob", "refuse": { "Block": { "$piker": ["$giant"] } } },
+    { "turn": 1, "step": "DeclareBlockers", "player": "bob", "do": { "Block": { "$piker": ["$giant"], "$runeclaw": ["$bears"] } } },
+    { "turn": 1, "step": "DeclareBlockers", "player": "alice", "check": { "Blockers": { "attacker": "$bears", "blockers": ["$runeclaw"] } } }
+  ]
+}

@@ -1,0 +1,34 @@
+{
+  "description": "CR 509.1c Predatory Rampage lets a Palace Guard block just one of two attackers",
+  "note": "CR 509.1c: \"blocks this turn if able\" is ONE requirement on the Guard, obeyed by blocking any attacker. The Guard can block both (CR 509.1a, its own ability), but blocking both obeys the same single requirement, so blocking the Giant alone attains the maximum. A requirement per attacker would score the double block higher and refuse the single one.",
+  "board": {
+    "active": "alice",
+    "step": "PrecombatMain",
+    "seats": [
+      {
+        "name": "alice",
+        "battlefield": [
+          { "card": "Hill Giant", "label": "giant", "ready": true },
+          { "card": "Grizzly Bears", "label": "bears", "ready": true },
+          { "card": "Forest", "label": "f1" },
+          { "card": "Forest", "label": "f2" },
+          { "card": "Forest", "label": "f3" },
+          { "card": "Forest", "label": "f4" },
+          { "card": "Forest", "label": "f5" }
+        ],
+        "hand": [{ "card": "Predatory Rampage", "label": "rampage" }]
+      },
+      {
+        "name": "bob",
+        "battlefield": [{ "card": "Palace Guard", "label": "guard", "ready": true }]
+      }
+    ]
+  },
+  "timeline": [
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": { "Cast": { "object": "$rampage", "mana": ["$f1", "$f2", "$f3", "$f4", "$f5"] } } },
+    { "turn": 1, "step": "DeclareAttackers", "player": "alice", "do": { "Attack": ["$giant", "$bears"] } },
+    { "turn": 1, "step": "DeclareBlockers", "player": "bob", "refuse": { "Block": {} } },
+    { "turn": 1, "step": "DeclareBlockers", "player": "bob", "do": { "Block": { "$guard": ["$giant"] } } },
+    { "turn": 1, "step": "DeclareBlockers", "player": "alice", "check": { "Blockers": { "attacker": "$bears", "blockers": null } } }
+  ]
+}

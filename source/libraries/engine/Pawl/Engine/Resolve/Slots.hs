@@ -824,8 +824,8 @@ effectObjectRefs effect = case effect of
   Effect.ArmDelayedTrigger {} -> []
   Effect.AffectPlayers {} -> []
   -- CR 509.1a's two sides, the creature required to block and what it blocks,
-  -- the blocker only when a ref names it: the Matching arm is a Filter.
-  Effect.RequireBlock (RequireBlock.MkRequireBlock _ blocker attacker) -> namedRefs blocker <> [attacker]
+  -- each only when a ref names it: the Matching arm is a Filter.
+  Effect.RequireBlock (RequireBlock.MkRequireBlock _ blocker attacker _) -> namedRefs blocker <> foldMap namedRefs attacker
   Effect.Prohibit (Prohibit.MkProhibit _ _ affected) -> namedRefs affected
   -- Both sides, each only when a ref names it: the attacker's Matching arm is a
   -- Filter, and a defender naming players is effectPlayerRefs'.
@@ -1459,7 +1459,7 @@ slotsOf effect = joinTwo (joinTwo (joinSlots (fmap objectRefSlots (effectObjectR
       (affectedPlayersSlots affected)
       (joinSlots (fmap (\slot -> Map.singleton slot SlotArity.Many) (PlayerEffect.boundRecipientSlots playerEffect)))
   -- RequireAttack's reading below, for a Matching blocker or class.
-  Effect.RequireBlock (RequireBlock.MkRequireBlock duration blocker _) -> joinTwo (durationSlots duration) (matchingSlots blocker)
+  Effect.RequireBlock (RequireBlock.MkRequireBlock duration blocker attacker _) -> joinTwo (durationSlots duration) (joinTwo (matchingSlots blocker) (foldMap matchingSlots attacker))
   Effect.Prohibit (Prohibit.MkProhibit _ duration affected) -> joinTwo (durationSlots duration) (matchingSlots affected)
   Effect.ForbidAttack {} -> Map.empty
   -- The class is a FILTER read, RequireAttack's Matching arm below.
@@ -2228,7 +2228,7 @@ ownSlotsAreExhaustive effect = case effect of
     Map.null (durationSlots duration) && durationSlotsAreExhaustive duration
   -- slotsOf reports the Duration and a Matching class's Filter, RequireAttack's
   -- reading below.
-  Effect.RequireBlock (RequireBlock.MkRequireBlock duration _ _) -> durationSlotsAreExhaustive duration
+  Effect.RequireBlock (RequireBlock.MkRequireBlock duration _ _ _) -> durationSlotsAreExhaustive duration
   Effect.Prohibit (Prohibit.MkProhibit _ duration _) -> durationSlotsAreExhaustive duration
   Effect.ForbidAttack (ForbidAttack.MkForbidAttack duration _ _) ->
     Map.null (durationSlots duration) && durationSlotsAreExhaustive duration

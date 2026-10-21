@@ -177,6 +177,7 @@ import qualified Pawl.Types.ReplacementEffect as ReplacementEffect
 import qualified Pawl.Types.ReplacementOrigin as ReplacementOrigin
 import qualified Pawl.Types.RequireAttack as RequireAttack
 import qualified Pawl.Types.RequireBlock as RequireBlock
+import qualified Pawl.Types.RequirementArity as RequirementArity
 import qualified Pawl.Types.RestrictedCreatures as RestrictedCreatures
 import qualified Pawl.Types.Reveal as Reveal
 import qualified Pawl.Types.RollDie as RollDie
@@ -2064,8 +2065,8 @@ spec s = Spec.describe s "Pawl.Codec.Effect" $ do
       s
       toJson
       fromJson
-      (Effect.RequireBlock (RequireBlock.MkRequireBlock Duration.UntilEndOfCombat (RestrictedCreatures.Matching (Filter.HasCardType CardType.Creature)) (ObjectRef.InSlot (SlotName.MkSlotName (Text.pack "target")))))
-      " {\"type\":\"RequireBlock\",\"value\":{\"duration\":{\"type\":\"UntilEndOfCombat\"},\"blocker\":{\"type\":\"Matching\",\"value\":{\"type\":\"HasCardType\",\"value\":{\"type\":\"Creature\"}}},\"attacker\":{\"type\":\"InSlot\",\"value\":\"target\"}}} "
+      (Effect.RequireBlock (RequireBlock.MkRequireBlock Duration.UntilEndOfCombat (RestrictedCreatures.Matching (Filter.HasCardType CardType.Creature)) (Just (RestrictedCreatures.Named (ObjectRef.InSlot (SlotName.MkSlotName (Text.pack "target"))))) RequirementArity.EachSubject))
+      " {\"type\":\"RequireBlock\",\"value\":{\"duration\":{\"type\":\"UntilEndOfCombat\"},\"blocker\":{\"type\":\"Matching\",\"value\":{\"type\":\"HasCardType\",\"value\":{\"type\":\"Creature\"}}},\"attacker\":{\"type\":\"Named\",\"value\":{\"type\":\"InSlot\",\"value\":\"target\"}}}} "
   Spec.it s "Prohibit" $
     Common.assertCodec
       s

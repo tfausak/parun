@@ -71,35 +71,29 @@
                         }
                       },
                       {
-                        "type": "ModifyTarget",
+                        "type": "RequireBlock",
                         "value": {
-                          "duration": {
-                            "type": "UntilEndOfTurn"
+                          "arity": {
+                            "type": "AnySubject"
                           },
-                          "modification": {
-                            "type": "GainAbility",
+                          "attacker": {
+                            "type": "Named",
                             "value": {
-                              "type": "Rules",
+                              "type": "InSlot",
+                              "value": "self"
+                            }
+                          },
+                          "blocker": {
+                            "type": "Matching",
+                            "value": {
+                              "type": "HasCardType",
                               "value": {
-                                "blockRequirements": [
-                                  {
-                                    "arity": {
-                                      "type": "AnySubject"
-                                    },
-                                    "attacker": {
-                                      "type": "Matching",
-                                      "value": {
-                                        "type": "IsSource"
-                                      }
-                                    }
-                                  }
-                                ]
+                                "type": "Creature"
                               }
                             }
                           },
-                          "ref": {
-                            "type": "InSlot",
-                            "value": "self"
+                          "duration": {
+                            "type": "UntilEndOfTurn"
                           }
                         }
                       }

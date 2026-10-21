@@ -3,6 +3,7 @@ module Pawl.Types.ActiveBlockRequirement where
 import qualified Pawl.Types.Expiry as Expiry
 import qualified Pawl.Types.ObjectId as ObjectId
 import qualified Pawl.Types.PlayerId as PlayerId
+import qualified Pawl.Types.RequirementArity as RequirementArity
 import qualified Pawl.Types.RestrictedCreatures as RestrictedCreatures
 import qualified Pawl.Types.Timestamp as Timestamp
 
@@ -13,18 +14,19 @@ import qualified Pawl.Types.Timestamp as Timestamp
 -- object that made them may be long gone. CR 702.39a's provoke and Alluring
 -- Scent are producers.
 --
--- The subject axis is Pawl.Types.ActiveAttackRequirement's: a Named id the
--- resolution froze (provoke TARGETS its creature, CR 115.1), or a Matching class
--- CR 611.2c keeps dynamic (Alluring Scent's "all creatures able to block"). The
--- attacker is a bare ObjectId: every producer targets it.
+-- The subject and attacker axes are Pawl.Types.ActiveAttackRequirement's: a
+-- Named id the resolution froze (provoke TARGETS its creature, CR 115.1), or a
+-- Matching class CR 611.2c keeps dynamic (Alluring Scent's "all creatures able
+-- to block", Joraga Invocation's "each creature you control ... must be
+-- blocked").
 --
 -- `expiry` decides when a Pawl.Engine.Expiry sweep drops it (CR 514.2, 611.2a,
 -- 611.2b); provoke's "this combat" arms Expiry.AtEndOf CombatPhase.
 --
--- `timestamp` is stored for ActivePlayerEffect's reason: CR 613.11 orders by
--- timestamp (CR 613.7), and nothing observes it yet because two requirements
--- cannot conflict -- CR 509.1c counts them and never resolves them against each
--- other.
+-- `timestamp` is stored for ActivePlayerEffect's reason, CR 613.11 ordering by
+-- timestamp (CR 613.7), and it also names the RESOLUTION a row came from: the
+-- rows one AnySubject requirement stored are one group
+-- (Pawl.Engine.BlockRequirement's storedGroups).
 --
 -- Runtime-only: card data writes the printed carrier, never one of these. It
 -- does have a codec (Pawl.Codec.ActiveBlockRequirement), because a game in
@@ -38,7 +40,9 @@ data ActiveBlockRequirement = MkActiveBlockRequirement
     expiry :: Expiry.Expiry,
     -- | The creatures that must block -- CR 509.1c's subject axis.
     blocker :: RestrictedCreatures.RestrictedCreatures ObjectId.ObjectId,
-    -- | The attacking creature it must block.
-    attacker :: ObjectId.ObjectId
+    -- | The attacking creatures to be blocked; Nothing names none.
+    attacker :: Maybe (RestrictedCreatures.RestrictedCreatures ObjectId.ObjectId),
+    -- | Pawl.Types.RequireBlock's `arity`.
+    arity :: RequirementArity.RequirementArity
   }
   deriving (Eq, Ord, Show)

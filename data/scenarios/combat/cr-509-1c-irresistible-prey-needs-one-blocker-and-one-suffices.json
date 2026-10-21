@@ -1,0 +1,33 @@
+{
+  "description": "CR 509.1c Irresistible Prey's target must be blocked, and one blocker suffices",
+  "note": "CR 509.1c: \"must be blocked this turn if able\" is ONE requirement on the attacker that any single able blocker obeys. Bob has two able blockers: declining to block is illegal, and the Piker blocking alone is legal. A requirement per blocker would make the Runeclaw Bear stay out a disobeyed requirement and refuse that declaration.",
+  "board": {
+    "active": "alice",
+    "step": "PrecombatMain",
+    "seats": [
+      {
+        "name": "alice",
+        "battlefield": [
+          { "card": "Hill Giant", "label": "giant", "ready": true },
+          { "card": "Forest", "label": "f1" }
+        ],
+        "hand": [{ "card": "Irresistible Prey", "label": "prey" }],
+        "library": [{ "card": "Forest" }, { "card": "Forest" }]
+      },
+      {
+        "name": "bob",
+        "battlefield": [
+          { "card": "Goblin Piker", "label": "piker", "ready": true },
+          { "card": "Runeclaw Bear", "label": "runeclaw", "ready": true }
+        ]
+      }
+    ]
+  },
+  "timeline": [
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": { "Cast": { "object": "$prey", "targets": ["$giant"], "mana": ["$f1"] } } },
+    { "turn": 1, "step": "DeclareAttackers", "player": "alice", "do": { "Attack": ["$giant"] } },
+    { "turn": 1, "step": "DeclareBlockers", "player": "bob", "refuse": { "Block": {} } },
+    { "turn": 1, "step": "DeclareBlockers", "player": "bob", "do": { "Block": { "$piker": ["$giant"] } } },
+    { "turn": 1, "step": "DeclareBlockers", "player": "alice", "check": { "Blockers": { "attacker": "$giant", "blockers": ["$piker"] } } }
+  ]
+}

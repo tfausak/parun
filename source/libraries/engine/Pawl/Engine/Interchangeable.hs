@@ -400,8 +400,8 @@ playerEffectRowNames oid row = case row of
 
 blockRequirementNames :: ObjectId -> ActiveBlockRequirement.ActiveBlockRequirement -> Bool
 blockRequirementNames oid row = case row of
-  ActiveBlockRequirement.MkActiveBlockRequirement source _controller _timestamp expiry blocker attacker ->
-    source == oid || Monoid.getAny (Mentions.expiryNames (unread oid) expiry) || restrictedNames oid blocker || attacker == oid
+  ActiveBlockRequirement.MkActiveBlockRequirement source _controller _timestamp expiry blocker attacker _arity ->
+    source == oid || Monoid.getAny (Mentions.expiryNames (unread oid) expiry) || restrictedNames oid blocker || any (restrictedNames oid) attacker
 
 attackRequirementNames :: ObjectId -> ActiveAttackRequirement.ActiveAttackRequirement -> Bool
 attackRequirementNames oid row = case row of

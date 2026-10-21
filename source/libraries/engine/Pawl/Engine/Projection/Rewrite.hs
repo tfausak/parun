@@ -939,8 +939,8 @@ rewriteEffect pairs effect = case effect of
           AffectPlayers.effect = rewritePlayerEffect pairs (AffectPlayers.effect x)
         }
   -- CR 612.1 reaches the creatures on either arm, ForbidAttack's reading.
-  Effect.RequireBlock (RequireBlock.MkRequireBlock duration blocker attacker) ->
-    Effect.RequireBlock (RequireBlock.MkRequireBlock (rewriteDuration pairs duration) (rewriteRestricted pairs blocker) (rewriteObjectRef pairs attacker))
+  Effect.RequireBlock (RequireBlock.MkRequireBlock duration blocker attacker arity) ->
+    Effect.RequireBlock (RequireBlock.MkRequireBlock (rewriteDuration pairs duration) (rewriteRestricted pairs blocker) (fmap (rewriteRestricted pairs) attacker) arity)
   Effect.Prohibit (Prohibit.MkProhibit what duration affected) ->
     Effect.Prohibit (Prohibit.MkProhibit what (rewriteDuration pairs duration) (rewriteRestricted pairs affected))
   -- CR 612.1 reaches the creatures' words on either arm -- a Named ref's Filters

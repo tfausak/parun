@@ -37,8 +37,11 @@
                     "type": "RequireBlock",
                     "value": {
                       "attacker": {
-                        "type": "InSlot",
-                        "value": "target"
+                        "type": "Named",
+                        "value": {
+                          "type": "InSlot",
+                          "value": "target"
+                        }
                       },
                       "blocker": {
                         "type": "Matching",
