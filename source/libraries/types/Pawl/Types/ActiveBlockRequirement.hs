@@ -26,7 +26,7 @@ import qualified Pawl.Types.Timestamp as Timestamp
 -- `timestamp` is stored for ActivePlayerEffect's reason, CR 613.11 ordering by
 -- timestamp (CR 613.7), and it also names the RESOLUTION a row came from: the
 -- rows one AnySubject requirement stored are one group
--- (Pawl.Engine.BlockRequirement's fromStored).
+-- (Pawl.Engine.BlockRequirement's storedGroups).
 --
 -- Runtime-only: card data writes the printed carrier, never one of these. It
 -- does have a codec (Pawl.Codec.ActiveBlockRequirement), because a game in

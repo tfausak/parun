@@ -211,8 +211,8 @@ instances able candidates attackers gs =
       -- requirement between them. No file in data/cards/ writes a Named blocker
       -- beside AnySubject (2026-10-21), so that key is a fence with no observer;
       -- a "target creatures, one of them must block" card would observe it. The
-      -- arity itself is
-      -- proved by the Irresistible Prey and Joraga Invocation scenarios.
+      -- arity itself is proved by the Irresistible Prey and Joraga Invocation
+      -- scenarios.
       storedPairs active =
         let covered = RestrictedCreatures.covered (ActiveBlockRequirement.controller active) (ActiveBlockRequirement.source active)
             blockers = covered (ActiveBlockRequirement.blocker active) candidates gs
