@@ -181,8 +181,10 @@ data Rehearsal = MkRehearsal
     -- priority prompt shows the engine made it. The engine's priority loop asks
     -- again after reversing one; a run ending first had no engine acting on it.
     awaiting :: Maybe (When.When, Move.Move, GameState.GameState),
-    -- | CR 108.1: the Oracle card reference, as far as the timeline names it.
-    reference :: Map.Map CardName.CardName Card.Card,
+    -- | CR 108.1: the Oracle card reference, as far as the run has asked it,
+    -- a name it lacks mapped to Nothing; Nothing for a run holding none, whose
+    -- every lookup answers Nothing.
+    reference :: Maybe (Map.Map CardName.CardName (Maybe Card.Card)),
     -- | Whether the run replays a game from its decks, which ends at the
     -- game's result or where its recording stops.
     replaying :: Bool,
@@ -191,38 +193,46 @@ data Rehearsal = MkRehearsal
     ended :: Maybe GameState.GameState
   }
 
-type Run = State.StateT Rehearsal (Either Failure.ScenarioFailure)
+type Run = State.StateT Rehearsal (Either Halt)
+
+-- | Why a run stopped short: a failure, or a name its reference has yet to be
+-- asked, which `run` fetches before running again from the start.
+data Halt
+  = Failed Failure.ScenarioFailure
+  | Fetching CardName.CardName
 
 -- | Build, run from the board's step, check. The entry point for a scenario
 -- written as data: whole steps (CR 500.1) until the timeline is spent, the game
 -- is over, or the turn passes the last one the timeline names. A game from
 -- decks is set up first (CR 103) and runs to its result or to where its
 -- recording stops. Its final checks then run on that state.
+--
+-- The run is pure, so the engine's card lookups (CR 108.1) are answered from
+-- the cards fetched so far. A lookup of any other name halts the run, which
+-- fetches that name and runs again from the start: a run looks up the names
+-- the engine asks and nothing else a scenario says.
+-- Pawl.ScenarioSpec's "a run looks up only the cards its scenario names"
+-- proves it.
 run :: (Monad m) => Registry.Registry m -> Scenario.Scenario -> m (Either Failure.ScenarioFailure GameState.GameState)
 run registry scenario = do
-  let placed = case Scenario.start scenario of
-        Start.FromBoard board -> fmap Placement.card (placementsOf board)
-        Start.FromDecks _ -> []
-      names =
-        Set.toList
-          ( foldMap (namesIn . encoded Codec.Timed.codec) (Scenario.timeline scenario)
-              <> foldMap (namesIn . encoded Codec.Check.codec) (Scenario.final scenario)
-              <> Set.fromList placed
-          )
-  found <- mapM (\name -> fmap (fmap ((,) name)) (Registry.fetchCard registry name)) names
   staging <- case Scenario.start scenario of
     Start.FromBoard board -> fmap (fmap (\placed' -> (placed', Driver.drive [] scripted stepBudget finished (Staged.state placed')))) (stage registry board)
     Start.FromDecks entrants -> fmap (fmap (\(seated, matchup) -> (seated, setUp matchup (Staged.state seated)))) (enter registry entrants)
-  pure $ do
-    (board, playing) <- staging
-    let fromDecks = case Scenario.start scenario of
-          Start.FromBoard _ -> False
-          Start.FromDecks _ -> True
-    (reached, rehearsal) <- State.runStateT playing ((rehearsalOf (Scenario.timeline scenario) board) {reference = Map.fromList (Maybe.catMaybes found), replaying = fromDecks})
-    let final = Maybe.fromMaybe reached (ended rehearsal)
-    settle rehearsal final
-    State.evalStateT (mapM_ (expect Nothing final) (Scenario.final scenario)) rehearsal
-    pure final
+  let fromDecks = case Scenario.start scenario of
+        Start.FromBoard _ -> False
+        Start.FromDecks _ -> True
+      attempt known = do
+        (board, playing) <- Bifunctor.first Failed staging
+        (reached, rehearsal) <- State.runStateT playing ((rehearsalOf (Scenario.timeline scenario) board) {reference = Just known, replaying = fromDecks})
+        let final = Maybe.fromMaybe reached (ended rehearsal)
+        Bifunctor.first Failed (settle rehearsal final)
+        State.evalStateT (mapM_ (expect Nothing final) (Scenario.final scenario)) rehearsal
+        pure final
+      fetching known = case attempt known of
+        Left (Fetching name) -> Registry.fetchCard registry name >>= fetching . flip (Map.insert name) known
+        Left (Failed failure) -> pure (Left failure)
+        Right final -> pure (Right final)
+  fetching Map.empty
   where
     setUp matchup gs = do
       (_, set) <- Engine.runGameAsked answerPrompt gs (Setup.newGame (Resolve.performHandAction Engine.playSubgame) matchup)
@@ -244,15 +254,6 @@ enter registry entrants = do
 -- | How many steps a replayed game may run: a whole game's worth.
 replayBudget :: Natural
 replayBudget = 100000
-
--- | Every string an entry or check holds, read as a card name: with the board's
--- cards, the names a CR 201.4 answer or a copy can ask Prompt.LookUpCard about.
-namesIn :: ReplyType.Reply -> Set.Set CardName.CardName
-namesIn reply = case reply of
-  ReplyType.Text t -> Set.singleton (CardName.MkCardName t)
-  ReplyType.Array xs -> foldMap namesIn xs
-  ReplyType.Object kvs -> foldMap (namesIn . snd) kvs
-  _ -> Set.empty
 
 -- | How many steps a data scenario may run: a bound, so a scenario whose moment
 -- never comes fails rather than hangs.
@@ -276,7 +277,11 @@ finished gs = do
 -- never arrives is a failure, not a silently skipped claim.
 rehearse :: Seq.Seq Timed.Timed -> Staged.Staged -> Game.Type.Game a -> Either Failure.ScenarioFailure (a, GameState.GameState)
 rehearse timeline board game = do
-  ((value, final), rehearsal) <- State.runStateT (Engine.runGameAsked answerPrompt (Staged.state board) game) (rehearsalOf timeline board)
+  let halted halt = case halt of
+        Failed failure -> failure
+        -- Unreached: rehearsalOf holds no reference, which never fetches.
+        Fetching name -> Failure.MkUnknownCard name
+  ((value, final), rehearsal) <- Bifunctor.first halted (State.runStateT (Engine.runGameAsked answerPrompt (Staged.state board) game) (rehearsalOf timeline board))
   settle rehearsal final
   pure (value, final)
 
@@ -290,7 +295,7 @@ rehearsalOf timeline board =
           refusing = Nothing,
           reversing = Nothing,
           awaiting = Nothing,
-          reference = Map.empty,
+          reference = Nothing,
           replaying = False,
           ended = Nothing
         }
@@ -661,7 +666,7 @@ answerDedicated decider asked =
    in case prompt of
         Prompt.Type.ChooseAction who _ actions -> answerActionPrompt gs (Decider.unwrap who) actions prompt
         -- CR 108.1: the interpreter's question, answered from the reference.
-        Prompt.Type.LookUpCard name -> State.gets (Map.lookup name . reference)
+        Prompt.Type.LookUpCard name -> lookUp name
         -- CR 723.6: keyed on the conceding player, whom no one decides for.
         Prompt.Type.Concede pid -> do
           key <- whenOf gs pid
@@ -903,8 +908,8 @@ answerGeneric gs key kind index timed prompt = case Timed.entry timed of
 legalAnswer :: GameState.GameState -> Prompt.Type.Prompt r -> r -> Run Bool
 legalAnswer gs prompt chosen = case prompt of
   Prompt.Type.ChooseCardName _ chooser _ restriction _ -> do
-    known <- State.gets reference
-    pure $ case Map.lookup chosen known >>= Engine.Card.faceNamed chosen of
+    known <- lookUp chosen
+    pure $ case known >>= Engine.Card.faceNamed chosen of
       Nothing -> False
       Just face -> Filter.matches (Filter.contextFor (Game.teams gs) (Just chooser) Nothing) (Projection.viewOfCard face) restriction
   _ -> pure True
@@ -1387,9 +1392,9 @@ onEntry unscheduled key kind offers select match = do
             -- A refused move naming something the prompt did not offer is
             -- refused already: the prompt takes the next entry instead.
             case State.runStateT action before {refusing = Just (key, verb, kind)} of
-              Left Failure.MkUnofferedObject {} -> onEntry unscheduled key kind offers select match
-              Left Failure.MkActionNotOffered {} -> onEntry unscheduled key kind offers select match
-              Left failure -> failWith failure
+              Left (Failed Failure.MkUnofferedObject {}) -> onEntry unscheduled key kind offers select match
+              Left (Failed Failure.MkActionNotOffered {}) -> onEntry unscheduled key kind offers select match
+              Left halt -> State.StateT (const (Left halt))
               Right (answer, after) -> answer <$ State.put after
       entry -> failWith (Failure.MkUnexpectedPrompt key entry kind offers)
 
@@ -1552,7 +1557,16 @@ popAt key index =
      in rehearsal {queues = remaining}
 
 failWith :: Failure.ScenarioFailure -> Run a
-failWith failure = State.StateT (const (Left failure))
+failWith failure = State.StateT (const (Left (Failed failure)))
+
+-- | CR 108.1: the card the reference gives a name, halting the run for `run`
+-- to fetch a name it has not yet been asked.
+lookUp :: CardName.CardName -> Run (Maybe Card.Card)
+lookUp name = do
+  held <- State.gets reference
+  case held of
+    Nothing -> pure Nothing
+    Just fetched -> maybe (State.StateT (const (Left (Fetching name)))) pure (Map.lookup name fetched)
 
 -- References -------------------------------------------------------------------
 
