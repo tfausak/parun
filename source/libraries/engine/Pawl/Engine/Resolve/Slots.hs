@@ -41,6 +41,7 @@ import qualified Pawl.Types.Amass as Amass.Type
 import qualified Pawl.Types.Ante as Ante
 import qualified Pawl.Types.AnyNumberDiscard as AnyNumberDiscard
 import qualified Pawl.Types.AnyNumberMatching as AnyNumberMatching
+import qualified Pawl.Types.ArrangeInLibrary as ArrangeInLibrary
 import qualified Pawl.Types.AsCopy as AsCopy
 import qualified Pawl.Types.AttachAll as AttachAll
 import qualified Pawl.Types.AttachBound as AttachBound
@@ -732,7 +733,7 @@ effectObjectRefs effect = case effect of
   Effect.AsYouCascade slot -> [ObjectRef.InSlot slot]
   Effect.Explore ref -> [ref]
   Effect.Assemble ref -> Maybe.maybeToList ref
-  Effect.ArrangeInLibrary ref -> [ref]
+  Effect.ArrangeInLibrary (ArrangeInLibrary.MkArrangeInLibrary ref _) -> [ref]
   Effect.Connive (Connive.MkConnive _ ref) -> [ref]
   Effect.Discard subject -> case subject of
     Discard.Counted {} -> []
@@ -975,7 +976,7 @@ effectPlayerRefs effect = case effect of
   Effect.AsYouCascade {} -> []
   Effect.Explore {} -> []
   Effect.Assemble {} -> []
-  Effect.ArrangeInLibrary {} -> []
+  Effect.ArrangeInLibrary (ArrangeInLibrary.MkArrangeInLibrary _ chooser) -> [chooser]
   Effect.Connive {} -> []
   Effect.Discard subject -> case subject of
     Discard.Counted (CountedDiscard.MkCountedDiscard ref _ _) -> [ref]

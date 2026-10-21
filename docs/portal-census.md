@@ -49,9 +49,3 @@ RestrictedCreatures.Matching arm for this; RequireBlock and DoesNotUntapNext
 don't (every pool use of DoesNotUntapNext is InSlot).
 - Alluring Scent: "All creatures able to block target creature this turn do so." RequireBlock (lineprancers) needs a Matching blocker side. BlockRequirement's haddock already names Alluring Scent as the "Nothing subject" shape, but that is the static carrier.
 - Exhaustion: "Creatures and lands target opponent controls don't untap during their next untap step." DoesNotUntapNext needs a filter arm (ControlledByBound target, Or(creature, land)). Freezing at resolution misses a permanent that comes under that player's control before their untap step.
-
-### The caster orders another player's library cards (#5243)
-ArrangeInLibrary asks the cards' owner (CR 401.4), but "in any order" on a
-spell that reorders an opponent's library is the caster's choice (Portent's
-ruling). Ponder and Tome of the Infinite only reorder their caster's own.
-- Cruel Fate: "Look at the top five cards of target opponent's library. Put one of those cards into that player's graveyard and the rest on top of their library in any order."

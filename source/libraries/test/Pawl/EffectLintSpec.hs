@@ -54,6 +54,7 @@ import qualified Pawl.Types.Ante as Ante
 import qualified Pawl.Types.AnyNumberDiscard as AnyNumberDiscard
 import qualified Pawl.Types.AnyNumberMatching as AnyNumberMatching
 import qualified Pawl.Types.Arithmetic as Arithmetic
+import qualified Pawl.Types.ArrangeInLibrary as ArrangeInLibrary
 import qualified Pawl.Types.AsCopy as AsCopy
 import qualified Pawl.Types.AttachAll as AttachAll
 import qualified Pawl.Types.AttachBound as AttachBound
@@ -1473,7 +1474,7 @@ effectObjectRefs effect =
         Effect.AsYouCascade slot -> read_ [ObjectRef.InSlot slot]
         Effect.Explore ref -> read_ [ref]
         Effect.Assemble ref -> read_ (Maybe.maybeToList ref)
-        Effect.ArrangeInLibrary ref -> read_ [ref]
+        Effect.ArrangeInLibrary (ArrangeInLibrary.MkArrangeInLibrary ref _) -> read_ [ref]
         Effect.Connive (Connive.MkConnive _ ref) -> read_ [ref]
         Effect.Discard subject -> case subject of
           Discard.Counted {} -> []

@@ -22,6 +22,7 @@ import qualified Pawl.Types.Aggregation as Aggregation
 import qualified Pawl.Types.Amass as Amass
 import qualified Pawl.Types.Ante as Ante
 import qualified Pawl.Types.ArmDelayedTrigger as ArmDelayedTrigger
+import qualified Pawl.Types.ArrangeInLibrary as ArrangeInLibrary
 import qualified Pawl.Types.AttachAll as AttachAll
 import qualified Pawl.Types.AttachBound as AttachBound
 import qualified Pawl.Types.AttachTarget as AttachTarget
@@ -701,8 +702,8 @@ spec s = Spec.describe s "Pawl.Codec.Effect" $ do
       s
       toJson
       fromJson
-      (Effect.ArrangeInLibrary (ObjectRef.InSlot (SlotName.MkSlotName (Text.pack "looked"))))
-      " {\"type\":\"ArrangeInLibrary\",\"value\":{\"type\":\"InSlot\",\"value\":\"looked\"}} "
+      (Effect.ArrangeInLibrary (ArrangeInLibrary.MkArrangeInLibrary (ObjectRef.InSlot (SlotName.MkSlotName (Text.pack "looked"))) (PlayerRef.Relative PlayerRelation.You)))
+      " {\"type\":\"ArrangeInLibrary\",\"value\":{\"ref\":{\"type\":\"InSlot\",\"value\":\"looked\"}}} "
   -- Raffine's Informant's "it connives", against the trigger-source slot.
   Spec.it s "Connive" $
     Common.assertJsonCodec

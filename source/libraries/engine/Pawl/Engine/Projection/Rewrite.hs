@@ -33,6 +33,7 @@ import qualified Pawl.Types.AnyNumberDiscard as AnyNumberDiscard
 import qualified Pawl.Types.AnyNumberMatching as AnyNumberMatching
 import qualified Pawl.Types.Arithmetic as Arithmetic
 import qualified Pawl.Types.ArmDelayedTrigger as ArmDelayedTrigger
+import qualified Pawl.Types.ArrangeInLibrary as ArrangeInLibrary
 import qualified Pawl.Types.AsCopy as AsCopy
 import qualified Pawl.Types.AttachAll as AttachAll
 import qualified Pawl.Types.AttachR as AttachR
@@ -691,7 +692,7 @@ rewriteEffect pairs effect = case effect of
   Effect.AsYouCascade {} -> effect
   Effect.Explore ref -> Effect.Explore (rewriteObjectRef pairs ref)
   Effect.Assemble ref -> Effect.Assemble (fmap (rewriteObjectRef pairs) ref)
-  Effect.ArrangeInLibrary ref -> Effect.ArrangeInLibrary (rewriteObjectRef pairs ref)
+  Effect.ArrangeInLibrary (ArrangeInLibrary.MkArrangeInLibrary ref chooser) -> Effect.ArrangeInLibrary (ArrangeInLibrary.MkArrangeInLibrary (rewriteObjectRef pairs ref) chooser)
   Effect.Connive (Connive.MkConnive quantity ref) -> Effect.Connive (Connive.MkConnive (rewriteQuantity pairs quantity) (rewriteObjectRef pairs ref))
   -- The These arm's ref carries a Filter, so rule 612's text change reaches it
   -- exactly as Reveal's does; the Counted arm holds a player reference, a slot

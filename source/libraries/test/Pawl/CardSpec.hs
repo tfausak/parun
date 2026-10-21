@@ -76,6 +76,7 @@ import qualified Pawl.Types.Ante as Ante
 import qualified Pawl.Types.AnyNumberDiscard as AnyNumberDiscard
 import qualified Pawl.Types.AnyNumberMatching as AnyNumberMatching
 import qualified Pawl.Types.ArmDelayedTrigger as ArmDelayedTrigger
+import qualified Pawl.Types.ArrangeInLibrary as ArrangeInLibrary
 import qualified Pawl.Types.AsCopy as AsCopy
 import qualified Pawl.Types.AttachAll as AttachAll
 import qualified Pawl.Types.AttachR as AttachR
@@ -657,7 +658,7 @@ objectRefPositions =
         ("look-at", Effect.LookAt (LookAt.MkLookAt (plantedRef "la") (SlotName.MkSlotName (Text.pack "seen")) (PlayerRef.Relative PlayerRelation.You)), [plantedRef "la"]),
         ("explore", Effect.Explore (plantedRef "ex"), [plantedRef "ex"]),
         ("assemble", Effect.Assemble (Just (plantedRef "as")), [plantedRef "as"]),
-        ("arrange-in-library", Effect.ArrangeInLibrary (plantedRef "al"), [plantedRef "al"]),
+        ("arrange-in-library", Effect.ArrangeInLibrary (ArrangeInLibrary.MkArrangeInLibrary (plantedRef "al") (PlayerRef.Relative PlayerRelation.You)), [plantedRef "al"]),
         ("connive", Effect.Connive (Connive.MkConnive (Quantity.Type.Literal 1) (plantedRef "cn")), [plantedRef "cn"]),
         ("discard-these", Effect.Discard (Discard.These (TheseDiscard.MkTheseDiscard (plantedRef "di") Nothing)), [plantedRef "di"]),
         ("create-copy", Effect.CreateCopy (CreateCopy.MkCreateCopy (Quantity.Type.Literal 1) (plantedRef "cc") plainRiders Nothing []), [plantedRef "cc"]),
@@ -740,6 +741,7 @@ playerRefPositions =
         ("surveil", Effect.Surveil (playerQuantity "su"), [plantedPlayer "su"]),
         ("fateseal", Effect.Fateseal (playerQuantity "fs"), [plantedPlayer "fs"]),
         ("look-at", Effect.LookAt (LookAt.MkLookAt (plantedRef "la") (SlotName.MkSlotName (Text.pack "seen")) (plantedPlayer "lk")), [plantedPlayer "lk"]),
+        ("arrange-in-library", Effect.ArrangeInLibrary (ArrangeInLibrary.MkArrangeInLibrary (plantedRef "al") (plantedPlayer "ac")), [plantedPlayer "ac"]),
         ("lose-life", Effect.LoseLife (LifeLoss.MkLifeLoss (plantedPlayer "ll") one LifeLossCause.ByEffect Nothing), [plantedPlayer "ll"]),
         ("gain-life", Effect.GainLife (playerQuantity "gl"), [plantedPlayer "gl"]),
         ("set-life-total", Effect.SetLifeTotal (playerQuantity "sl"), [plantedPlayer "sl"]),
@@ -5940,7 +5942,7 @@ effectFilters effect = case effect of
   -- reaches it, as PutCounters' does.
   Effect.Explore ref -> frame SourceHostFramed (objectRefFilters ref)
   Effect.Assemble ref -> foldMap (frame SourceHostFramed . objectRefFilters) ref
-  Effect.ArrangeInLibrary ref -> frame SourceHostFramed (objectRefFilters ref)
+  Effect.ArrangeInLibrary (ArrangeInLibrary.MkArrangeInLibrary ref _) -> frame SourceHostFramed (objectRefFilters ref)
   Effect.Connive (Connive.MkConnive quantity ref) -> frame Unframed (quantityFilters quantity) <> frame SourceHostFramed (objectRefFilters ref)
   -- The These arm's ref carries a Filter a card author writes -- Amnesia's
   -- "nonland" -- so the lint reaches it, as Reveal's does.

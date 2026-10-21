@@ -705,8 +705,10 @@
                                                 {
                                                   "type": "ArrangeInLibrary",
                                                   "value": {
-                                                    "type": "InSlot",
-                                                    "value": "looked"
+                                                    "ref": {
+                                                      "type": "InSlot",
+                                                      "value": "looked"
+                                                    }
                                                   }
                                                 }
                                               ]

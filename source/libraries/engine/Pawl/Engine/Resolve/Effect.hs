@@ -120,6 +120,7 @@ import qualified Pawl.Types.AnyNumberDiscard as AnyNumberDiscard
 import qualified Pawl.Types.AnyNumberMatching as AnyNumberMatching
 import qualified Pawl.Types.AnyNumberOf as AnyNumberOf
 import qualified Pawl.Types.ArmDelayedTrigger as ArmDelayedTrigger
+import qualified Pawl.Types.ArrangeInLibrary as ArrangeInLibrary
 import qualified Pawl.Types.AttachAll as AttachAll
 import qualified Pawl.Types.AttachBound as AttachBound
 import qualified Pawl.Types.AttachTarget as AttachTarget
@@ -1237,6 +1238,9 @@ settleArrivals depthOf zone placement targets =
               LibraryPlacement.RandomOrder _ -> do
                 answer <- Game.ask (Prompt.Shuffle batch)
                 pure (Game.honourShuffle batch answer)
+              -- Not implemented: text putting another player's cards there "in
+              -- any order" is the instruction's player's to arrange (CR 608.2c),
+              -- not the owner's (#5399).
               _ -> do
                 gs <- State.get
                 answer <- Game.choose (Prompt.ArrangeLibraryArrivals (Decide.deciderFor owner gs) owner position batch)
@@ -4687,7 +4691,7 @@ applyOneEffect runSubgame resolving source controller legal chosen effect = case
               then do
                 onTop <- concat <$> traverse (\oid -> Foldable.toList <$> Event.changeZoneAttaching Nothing Set.empty oid Zone.Library LibraryPosition.Top Nothing TapState.Untapped Map.empty Nothing Nothing Facing.FaceUp False CarryOver.NotCarried False Seq.empty) (reverse arrivals)
                 owners <- State.gets (\gs -> ListUtils.nubOrd (Maybe.mapMaybe (\oid -> fmap Object.owner (Game.lookupObject oid gs)) onTop))
-                Monad.forM_ owners (`arrangeInLibrary` onTop)
+                Monad.forM_ owners (\owner -> arrangeInLibrary owner onTop owner)
                 pure onTop
               else pure arrivals
           -- CR 608.2c: "that card" in a later clause, or in a delayed ability
@@ -6410,19 +6414,22 @@ applyOneEffect runSubgame resolving source controller legal chosen effect = case
     -- Several cards take the group, which Filter.IsBound reads as CR 701.20e's
     -- "among them".
     bindObjects resolving (Just slot) named
-  Effect.ArrangeInLibrary ref -> do
+  Effect.ArrangeInLibrary (ArrangeInLibrary.MkArrangeInLibrary ref chooser) -> do
+    -- CR 608.2c / 608.2d: the instruction's player states the order, not the
+    -- library's owner -- Cruel Fate's caster orders an opponent's cards. A
+    -- chooser naming nobody leaves the cards where they are (CR 101.3).
+    asked <- askedChooser resolving source controller legal chooser
     gs <- State.get
     -- CR 608.2c: the cards are named as this instruction is reached, which for
     -- Ponder is the slot the look bound one clause earlier.
     let named = objectRefObjects legal resolving controller source gs ref
-        -- CR 400.3 makes every library its owner's, so the owner is both the
-        -- seat whose library is rewritten and CR 401.4's arranger -- never the
-        -- resolving controller, which is the same reading
-        -- Pawl.Types.LibraryPlacement takes of CR 401.2.
+        -- CR 400.3 makes every library its owner's, so the owner is the seat
+        -- whose library is rewritten.
         owners = ListUtils.nubOrd (Maybe.mapMaybe (\oid -> fmap Object.owner (Game.lookupObject oid gs)) named)
     -- APNAP (CR 101.4) for a reference that could name two seats' cards at once;
-    -- each owner's library is rewritten before the next is asked.
-    Monad.mapM_ (`arrangeInLibrary` named) (filter (\pid -> List.elem pid owners) (Game.apnapOrder gs))
+    -- each library is rewritten before the next is asked.
+    Monad.forM_ asked $ \arranger ->
+      Monad.mapM_ (arrangeInLibrary arranger named) (filter (\pid -> List.elem pid owners) (Game.apnapOrder gs))
   Effect.Scry (PlayerQuantity.MkPlayerQuantity ref quantity) -> do
     gs <- State.get
     let viewOf = effectViewOf source legal gs
@@ -11844,8 +11851,10 @@ reorderLibrary :: PlayerId -> [ObjectId] -> [ObjectId] -> GameState -> GameState
 reorderLibrary pid placed order gs =
   Event.forgetAllShown placed gs {GameState.library = Map.insert pid (Seq.fromList order) (GameState.library gs)}
 
--- CR 401.4: one owner puts the cards `cards` names back into their library, in
--- an order they state, at the positions those cards already occupy.
+-- `arranger` puts the cards `cards` names back into `owner`'s library, in an
+-- order they state, at the positions those cards already occupy: CR 401.4's
+-- owner for a search's find, the instruction's player (CR 608.2c) for
+-- Effect.ArrangeInLibrary.
 --
 -- The library is REWRITTEN rather than funnelled through Event.changeZone, for
 -- decideScry's reason one rule over: nothing crosses a zone boundary, so CR 400.7
@@ -11863,14 +11872,14 @@ reorderLibrary pid placed order gs =
 -- reference swept them, which is what makes the answer's indices mean what
 -- Prompt.ArrangeLibraryCards says they mean. A card the reference named that has
 -- left the library since (CR 603.7c) is simply not among them.
-arrangeInLibrary :: PlayerId -> [ObjectId] -> Game ()
-arrangeInLibrary pid cards = do
+arrangeInLibrary :: PlayerId -> [ObjectId] -> PlayerId -> Game ()
+arrangeInLibrary arranger cards owner = do
   gs <- State.get
-  let whole = Game.zoneMembers Zone.Library pid gs
+  let whole = Game.zoneMembers Zone.Library owner gs
       moving = filter (\oid -> List.elem oid cards) whole
   Monad.when (length moving > 1) $ do
-    answer <- Game.choose (Prompt.ArrangeLibraryCards (Decide.deciderFor pid gs) pid moving)
-    State.modify' (reorderLibrary pid moving (refill whole moving (Game.permute moving answer)))
+    answer <- Game.choose (Prompt.ArrangeLibraryCards (Decide.deciderFor arranger gs) arranger moving)
+    State.modify' (reorderLibrary owner moving (refill whole moving (Game.permute moving answer)))
 
 -- Put `ordered` back at the positions `moving` occupies in `whole`, leaving
 -- every other card where it was. Game.permute answers a permutation of `moving`
