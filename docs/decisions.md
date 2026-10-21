@@ -136,6 +136,33 @@ Entries are ordered by the first rule each cites.
   whole maximum Nothing".
 - **Issue**: none.
 
+## When a target drawn out of a face-down pile is revealed, and for how long
+
+- **Question**: CR 406.4 says a card drawn at random out of a face-down pile
+  while casting a spell or activating an ability "isn't revealed until after
+  that cost is fully paid". No rule orders the reveal, and CR 701.20a gives it
+  no duration.
+- **Rules**: CR 406.4, 406.3, 601.2h, 601.2i, 602.2b, 608.2b, 701.20a; CR of
+  2026-08-07.
+- **Decision**: Once the cost is paid and the spell becomes cast (CR 601.2i),
+  or the ability becomes activated (CR 602.2b), the caster reveals the drawn
+  card to every player. It stays revealed until the spell or ability leaves
+  the stack, CR 701.20a's duration for a card revealed as part of casting or
+  activating, so the table can check the target as it resolves (CR 608.2b).
+  Until then nobody sees it, the caster included.
+- **Rejected**: No reveal at all, reading the sentence as forbidding only an
+  early one (owner, 2026-10-21). A momentary reveal, the `Revealed` event
+  alone: the reveal lets the table follow the target, which matters until it
+  resolves. Revealed until it leaves exile, as CR 406.3's lasting look: a
+  reveal is not an instruction letting a player look, and the card would stay
+  public after the spell is gone.
+- **Site**: `Pawl.Engine.Cast.castProposed` and
+  `Pawl.Engine.Activate.activateAbilityWith`, revealing what
+  `Pawl.Engine.Target.chooseTargets` drew; proved by `Pawl.ExileSpec`'s "CR
+  406.4 the card drawn for a spell's target is hidden while it is paid for,
+  and revealed to both seats once cast" and its activation twin.
+- **Issue**: #2568.
+
 ## Who on a winning team takes the ante
 
 - **Question**: CR 407.2 gives the ante to "the winner", but a team win (CR
