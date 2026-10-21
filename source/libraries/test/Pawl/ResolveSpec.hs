@@ -2878,6 +2878,7 @@ truceSpec s registry =
       answer :: Prompt.Prompt r -> r
       answer p = case p of
         Prompt.ChooseNumber _ pid _ _ -> Map.findWithDefault 0 pid choices
+        Prompt.ChooseDredge {} -> OptionalDecision.Exercises
         _ -> S.identityAnswer p
       resolved (truceId, gs) =
         let cast = S.runPure answer gs (S.cast S.alice truceId)
@@ -2893,6 +2894,20 @@ truceSpec s registry =
         Spec.it s "CR 121.1 a card a seat chose but could not draw counts toward its life" $ do
           ((_, after), _) <- fmap resolved (board 1)
           Spec.assertEqWith s "carol chose two off a one-card library, drew one, and gains 2" (S.lifeOf S.carol after, S.handSize S.carol after) (Just 22, 1)
+        -- docs/decisions.md, "When each player choosing how many to draw
+        -- draws". bob's Darkblast (dredge 3) offers to replace the card he draws.
+        -- If the draws waited until every seat had chosen, that offer would come
+        -- after carol's and alice's numbers instead of between bob's and carol's.
+        Spec.it s "CR 608.2f a seat's draw, dredge included, happens before the next seat chooses" $ do
+          darkblast <- S.printingOf s registry "Darkblast"
+          (truceId, gs) <- board 3
+          let ((_, after), transcript) = resolved (truceId, snd (S.addGraveyardCard darkblast S.bob gs))
+          Spec.assertEqWith
+            s
+            "CR 608.2f bob chose, then was offered dredge for his draw, and only then did carol and alice choose"
+            [r | r <- transcript, case r of Response.ChoseNumber _ -> True; Response.ChoseDredge _ -> True; _ -> False]
+            [Response.ChoseNumber 1, Response.ChoseDredge OptionalDecision.Exercises, Response.ChoseNumber 2, Response.ChoseNumber 0]
+          Spec.assertEqWith s "CR 614.1a bob dredged instead of drawing, so he drew none this way and gains 4" (S.lifeOf S.bob after) (Just 24)
 
 spec :: (Monad m, Monad n) => Spec.Spec m n -> Registry.Registry m -> n ()
 spec s registry = Spec.describe s "Pawl.Engine.Resolve" $ do
