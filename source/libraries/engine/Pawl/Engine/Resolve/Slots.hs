@@ -226,7 +226,7 @@ import qualified Pawl.Types.SetClassLevel as SetClassLevel
 import qualified Pawl.Types.SetHalfLocked as SetHalfLocked
 import qualified Pawl.Types.SetOwner as SetOwner
 import qualified Pawl.Types.ShuffleIntoLibrary as ShuffleIntoLibrary
-import qualified Pawl.Types.SkipNextPhase as SkipNextPhase
+import qualified Pawl.Types.SkipPhase as SkipPhase
 import Pawl.Types.SlotArity (SlotArity)
 import qualified Pawl.Types.SlotArity as SlotArity
 import qualified Pawl.Types.SlotCount as SlotCount
@@ -771,7 +771,7 @@ effectObjectRefs effect = case effect of
   -- slot it reads is as much a read of this effect's as the copied object's.
   Effect.CopyStackObject (CopyStackObject.MkCopyStackObject ref targets _ _ _) -> ref : copyTargetsRefs targets
   Effect.Replace {} -> []
-  Effect.SkipNextPhase {} -> []
+  Effect.SkipPhase {} -> []
   -- Absent where the shield's recipients are described rather than named.
   Effect.PreventNextDamage (PreventNextDamage.MkPreventNextDamage _ _ ref _ _ _ _ _) -> Maybe.maybeToList ref
   Effect.PreventAllDamage (PreventAllDamage.MkPreventAllDamage _ _ ref _ _ _ _ _ _) -> Maybe.maybeToList ref
@@ -1001,7 +1001,7 @@ effectPlayerRefs effect = case effect of
   Effect.BecomeCopy x -> foldMap durationPlayerRefs (BecomeCopy.duration x)
   Effect.CopyStackObject (CopyStackObject.MkCopyStackObject _ _ _ copier _) -> [copier]
   Effect.Replace x -> durationPlayerRefs (Replace.duration x)
-  Effect.SkipNextPhase (SkipNextPhase.MkSkipNextPhase ref _) -> [ref]
+  Effect.SkipPhase (SkipPhase.MkSkipPhase ref _ _ duration) -> ref : durationPlayerRefs duration
   Effect.PreventNextDamage x -> durationPlayerRefs (PreventNextDamage.duration x)
   Effect.PreventAllDamage x -> durationPlayerRefs (PreventAllDamage.duration x)
   Effect.PreventNextDamageInstance x -> durationPlayerRefs (PreventNextDamageInstance.duration x)
@@ -1352,7 +1352,7 @@ slotsOf effect = joinTwo (joinTwo (joinSlots (fmap objectRefSlots (effectObjectR
   -- row's captured environment answers at CR 616.1.
   Effect.Replace (Replace.MkReplace duration _ _ condition re) ->
     joinSlots [durationSlots duration, joinSlots (fmap conditionSlots (Maybe.maybeToList condition)), replacementRowSlots re]
-  Effect.SkipNextPhase {} -> Map.empty
+  Effect.SkipPhase x -> durationSlots (SkipPhase.duration x)
   -- CR 615.5's rider reads slots of its own, so its reads join this effect's,
   -- LESS the reserved amount and source slots: the prevention binds those
   -- itself, and Resolve.runPreventionRider is the writer.
@@ -2170,7 +2170,7 @@ ownSlotsAreExhaustive effect = case effect of
       && all conditionSlotsAreExhaustive condition
       && all Quantity.slotsAreExhaustive (snd (replacementRowReads re))
       && all slotsAreExhaustive (replacementRowEffects re)
-  Effect.SkipNextPhase (SkipNextPhase.MkSkipNextPhase _ _) -> True
+  Effect.SkipPhase (SkipPhase.MkSkipPhase _ _ _ duration) -> durationSlotsAreExhaustive duration
   Effect.PreventNextDamage (PreventNextDamage.MkPreventNextDamage duration _ _ _ _ _ quantity rider) ->
     durationSlotsAreExhaustive duration && Quantity.slotsAreExhaustive quantity && all slotsAreExhaustive rider
   Effect.PreventAllDamage (PreventAllDamage.MkPreventAllDamage duration _ _ _ _ _ _ _ rider) ->
@@ -2442,7 +2442,7 @@ readsX =
         -- CR 601.2b's X reaches the effects a rewrite or a CR 615.5 rider nests,
         -- the three prevention opcodes' posture with their own riders.
         Effect.Replace (Replace.MkReplace _ _ _ _ re) -> readsX (replacementRowEffects re)
-        Effect.SkipNextPhase {} -> False
+        Effect.SkipPhase {} -> False
         -- CR 601.2b's X reaches the rider too.
         Effect.PreventNextDamage (PreventNextDamage.MkPreventNextDamage _ _ _ _ _ _ quantity rider) -> Quantity.readsX quantity || readsX (Foldable.toList rider)
         Effect.PreventAllDamage (PreventAllDamage.MkPreventAllDamage _ _ _ _ _ _ _ _ rider) -> readsX (Foldable.toList rider)
@@ -2711,7 +2711,7 @@ boundSlots effect = case effect of
   -- A name the nested effects author, the three prevention opcodes' posture with
   -- their own riders.
   Effect.Replace (Replace.MkReplace _ _ _ _ re) -> foldMap boundSlots (replacementRowEffects re)
-  Effect.SkipNextPhase {} -> Set.empty
+  Effect.SkipPhase {} -> Set.empty
   -- The shield itself binds nothing; CR 615.5's rider is an effect list, so a
   -- name IT authors is a name this card authors. All three shields.
   Effect.PreventNextDamage (PreventNextDamage.MkPreventNextDamage _ _ _ _ _ _ _ rider) -> foldMap boundSlots rider

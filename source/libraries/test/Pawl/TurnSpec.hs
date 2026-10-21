@@ -839,7 +839,7 @@ turnScopedSkipSpec s registry = Spec.describe s "TurnScopedSkip" $ do
   -- and A second -- and the skip belongs to A.
   --
   -- Fails against a "skip your NEXT untap step" reading, which is what
-  -- Effect.SkipNextPhase's CR 614.10a floating replacement would give: it
+  -- Effect.SkipPhase's CR 614.10a floating replacement would give: it
   -- would take B's untap step (the next one there is) and leave A's
   -- alone, inverting both assertions below.
   Spec.it s "CR 500.7 the skip stays on Savor's own extra turn, not on a later-created one" $ do

@@ -44,6 +44,7 @@ import qualified Pawl.Engine.Condition as Condition
 import qualified Pawl.Engine.Count as Count
 import qualified Pawl.Engine.Decide as Decide
 import qualified Pawl.Engine.Deploy as Deploy
+import qualified Pawl.Engine.Expiry as Expiry.Engine
 import qualified Pawl.Engine.Filter as Filter
 import qualified Pawl.Engine.Game as Game
 import qualified Pawl.Engine.Mint as Mint
@@ -442,15 +443,19 @@ collect sources floating =
       -- there is nothing live to derive either from. The row's captured slots
       -- ride along, so a clause and its pattern read one context
       -- (candidateContext's).
-      lives active = case ActiveReplacement.condition active of
-        Nothing -> True
-        Just condition ->
-          Condition.holds
-            (Projection.fullView sources)
-            (Projection.framedBySlots sources (fmap (Set.map Recipient.ToObject) (ActiveReplacement.slots active)) (Projection.sourceContext sources (Just (ActiveReplacement.controller active)) (ActiveReplacement.source active)))
-            (Projection.boardAsEntering sources)
-            (ActiveReplacement.source active)
-            condition
+      --
+      -- CR 611.2a: a row under a window waits for that window first -- False
+      -- Peace's "all combat phases of their next turn" (Expiry.begun).
+      lives active =
+        Expiry.Engine.begun sources (ActiveReplacement.expiry active) && case ActiveReplacement.condition active of
+          Nothing -> True
+          Just condition ->
+            Condition.holds
+              (Projection.fullView sources)
+              (Projection.framedBySlots sources (fmap (Set.map Recipient.ToObject) (ActiveReplacement.slots active)) (Projection.sourceContext sources (Just (ActiveReplacement.controller active)) (ActiveReplacement.source active)))
+              (Projection.boardAsEntering sources)
+              (ActiveReplacement.source active)
+              condition
    in fmap fromPermanent (numberInstances (Projection.replacementsAffecting sources))
         <> fmap fromFloating (filter lives floating)
         <> fmap fromProtectedPlayer (PlayerEffect.protectionCarriers sources)
@@ -4090,12 +4095,13 @@ asTokens event = case event of
 -- Engine.takeNextTurn at the moment the turn actually begins, and only for a turn
 -- that does begin (CR 800.4k).
 --
--- Here rather than in Pawl.Engine.Resolve, which installs Effect.SkipNextPhase's
+-- Here rather than in Pawl.Engine.Resolve, which installs Effect.SkipPhase's
 -- rows: the two differ only on WHEN the row exists, and this module is the one
--- that reads GameState.replacements. The row is the same shape Resolve builds --
--- PhaseR, scoped to the taker, Uses.Once -- so Event.beginsPhase answers a
--- turn-scoped skip and a next-occurrence skip through one mechanism, and CR
--- 616.1's loop orders them against each other for free.
+-- that reads GameState.replacements. The row is the shape Resolve builds for a
+-- "next" skip -- PhaseR, scoped to the taker, Uses.Once -- so
+-- Event.beginsPhase answers a turn-scoped skip and a next-occurrence skip
+-- through one mechanism, and CR 616.1's loop orders them against each other
+-- for free.
 --
 -- Installed AT THE TURN'S START rather than at the resolution that created the
 -- turn, which is the whole point: CR 614.10a's "next" would otherwise name

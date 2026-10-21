@@ -231,6 +231,7 @@ import qualified Pawl.Types.SetClassLevel as SetClassLevel
 import qualified Pawl.Types.SetHalfLocked as SetHalfLocked
 import qualified Pawl.Types.SetOwner as SetOwner
 import qualified Pawl.Types.ShuffleIntoLibrary as ShuffleIntoLibrary
+import qualified Pawl.Types.SkipPhase as SkipPhase
 import qualified Pawl.Types.SlotCount as SlotCount
 import qualified Pawl.Types.SpeedDecrease as SpeedDecrease
 import qualified Pawl.Types.SpellCast as SpellCast
@@ -774,7 +775,7 @@ rewriteEffect pairs effect = case effect of
   -- prove them.
   Effect.Replace (Replace.MkReplace duration uses origin condition replacement) ->
     Effect.Replace (Replace.MkReplace (rewriteDuration pairs duration) uses origin (fmap (rewriteCondition pairs) condition) (rewriteReplacementEffect pairs replacement))
-  Effect.SkipNextPhase {} -> effect
+  Effect.SkipPhase x -> Effect.SkipPhase x {SkipPhase.duration = rewriteDuration pairs (SkipPhase.duration x)}
   -- CR 612.1 through every half of the shield that holds printed words: the
   -- objects it covers, the predicates describing its recipients and its source,
   -- the countdown's amount, the duration and the CR 615.5 rider. `kind`,

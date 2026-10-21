@@ -1285,8 +1285,8 @@ library codec
     Pawl.Codec.SicknessSpec
     Pawl.Codec.SideDeck
     Pawl.Codec.SideDeckSpec
-    Pawl.Codec.SkipNextPhase
-    Pawl.Codec.SkipNextPhaseSpec
+    Pawl.Codec.SkipPhase
+    Pawl.Codec.SkipPhaseSpec
     Pawl.Codec.SlotCount
     Pawl.Codec.SlotCountSpec
     Pawl.Codec.SlotName
@@ -2837,7 +2837,7 @@ library types
     Pawl.Types.ShuffleIntoLibrary
     Pawl.Types.Sickness
     Pawl.Types.SideDeck
-    Pawl.Types.SkipNextPhase
+    Pawl.Types.SkipPhase
     Pawl.Types.SlotArity
     Pawl.Types.SlotCount
     Pawl.Types.SlotName

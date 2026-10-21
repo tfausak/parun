@@ -211,7 +211,7 @@ import qualified Pawl.Types.SetClassLevel as SetClassLevel
 import qualified Pawl.Types.SetHalfLocked as SetHalfLocked
 import qualified Pawl.Types.SetOwner as SetOwner
 import qualified Pawl.Types.ShuffleIntoLibrary as ShuffleIntoLibrary
-import qualified Pawl.Types.SkipNextPhase as SkipNextPhase
+import qualified Pawl.Types.SkipPhase as SkipPhase
 import qualified Pawl.Types.SlotArity as SlotArity
 import qualified Pawl.Types.SlotName as SlotName
 import qualified Pawl.Types.SpeedDecrease as SpeedDecrease
@@ -352,7 +352,7 @@ ownQuantities effect = case effect of
   Effect.BecomeCopy (BecomeCopy.MkBecomeCopy _ _ duration _ _) -> foldMap durationQuantities duration
   Effect.CopyStackObject (CopyStackObject.MkCopyStackObject _ _ quantity _ _) -> [quantity]
   Effect.Replace (Replace.MkReplace duration _ _ condition _) -> durationQuantities duration <> foldMap Resolve.conditionQuantities condition
-  Effect.SkipNextPhase (SkipNextPhase.MkSkipNextPhase _ _) -> []
+  Effect.SkipPhase (SkipPhase.MkSkipPhase _ _ _ duration) -> durationQuantities duration
   Effect.PreventNextDamage (PreventNextDamage.MkPreventNextDamage duration _ _ _ _ _ quantity _) -> quantity : durationQuantities duration
   Effect.PreventAllDamage (PreventAllDamage.MkPreventAllDamage duration _ _ _ _ _ _ _ _) -> durationQuantities duration
   Effect.PreventNextDamageInstance (PreventNextDamageInstance.MkPreventNextDamageInstance duration _ _ _) -> durationQuantities duration
@@ -617,7 +617,7 @@ isTokenR replacement = case replacement of
 -- PhasePattern.whosePhase is meant to be runtime-only. Nothing is the value card
 -- data writes -- Eon Hub's "players skip their upkeep steps" is symmetric and
 -- names nobody -- and Just is baked by the engine out of a player a resolution
--- named (Resolve.applyEffect's SkipNextPhase arm, Fatigue's target) or out of a
+-- named (Resolve.applyEffect's SkipPhase arm, Fatigue's target) or out of a
 -- pending extra turn (Replacement.installTurnSkips). Card data cannot name a
 -- player at all.
 --
@@ -1510,7 +1510,7 @@ effectObjectRefs effect =
         Effect.BecomeCopy (BecomeCopy.MkBecomeCopy original subject _ _ _) -> read_ (case original of CopyOriginal.OfObject ref -> [ref, subject]; CopyOriginal.Named _ -> [subject])
         Effect.CopyStackObject (CopyStackObject.MkCopyStackObject ref targets _ _ _) -> read_ (ref : copyTargetsRefs targets)
         Effect.Replace {} -> []
-        Effect.SkipNextPhase {} -> []
+        Effect.SkipPhase {} -> []
         Effect.PreventNextDamage (PreventNextDamage.MkPreventNextDamage _ _ ref _ _ _ _ _) -> read_ (Maybe.maybeToList ref)
         Effect.PreventAllDamage (PreventAllDamage.MkPreventAllDamage _ _ ref _ _ _ _ _ _) -> read_ (Maybe.maybeToList ref)
         Effect.PreventNextDamageInstance (PreventNextDamageInstance.MkPreventNextDamageInstance _ ref _ _) -> read_ [ref]
@@ -3662,10 +3662,10 @@ spec s registry = Spec.describe s "Pawl.Engine.Card" $ do
   effectLintSpec s registry
 
 -- CR 611.2a: a "during X's next turn" duration arms a window that
--- Pawl.Engine.Expiry.begun alone holds back until that turn. Four carriers ask
--- it -- player effects, attack prohibitions, attack requirements and exile play
--- permissions -- so a window on any other would apply from the moment it is
--- stored, and offends. Counted against the ENCODED face for untilUsedOffends'
+-- Pawl.Engine.Expiry.begun alone holds back until that turn. Five carriers ask
+-- it -- player effects, attack prohibitions, attack requirements, exile play
+-- permissions and a skip's floating replacement -- so a window on any other
+-- would apply from the moment it is stored, and offends. Counted against the ENCODED face for untilUsedOffends'
 -- reason.
 windowOffends :: Face.Face Card.Type.Card -> Bool
 windowOffends card =
@@ -3681,6 +3681,7 @@ begunWindows card =
         Effect.ForbidAttack e -> Just (ForbidAttack.duration e)
         Effect.RequireAttack e -> Just (RequireAttack.duration e)
         Effect.GrantPlayFromExile e -> Just (GrantPlayFromExile.duration e)
+        Effect.SkipPhase e -> Just (SkipPhase.duration e)
         _ -> Nothing
       window duration = case duration of
         Duration.DuringNextTurnOf _ -> True
