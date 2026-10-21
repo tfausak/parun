@@ -102,8 +102,8 @@ shallow forest: the overwhelming majority of merged units unblock nothing, so
 backlog.
 
 `needs-planning` covers two things: an issue-to-issue blocker, and an issue
-awaiting a design call from the owner (#146, #1828, #2167 carry the label with
-no linked blocker). Neither is dispatchable unattended.
+awaiting a design call from the owner, which carries the label with no linked
+blocker. Neither is dispatchable unattended.
 
 Dispatch an implementation agent, with `isolation: "worktree"`, to work it end
 to end and open a PR. Claim the pick first by assigning it to `tfausak`, and

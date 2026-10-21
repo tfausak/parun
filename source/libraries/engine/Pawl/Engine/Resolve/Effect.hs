@@ -89,6 +89,7 @@ import qualified Pawl.Engine.Soulbond as Soulbond
 import qualified Pawl.Engine.SourceContext as SourceContext
 import qualified Pawl.Engine.Star as Star
 import qualified Pawl.Engine.Sticker as Sticker
+import qualified Pawl.Engine.Subtype as Subtype
 import qualified Pawl.Engine.Target as Target
 import qualified Pawl.Engine.TimeTravel as TimeTravel
 import qualified Pawl.Engine.Turn as Turn
@@ -4101,8 +4102,11 @@ applyOneEffect runSubgame resolving source controller legal chosen effect = case
               SubtypeFamily.BasicLandType -> Prompt.ChooseLandTypeSwap decider controller resolving slot forbidden
               SubtypeFamily.CreatureType -> Prompt.ChooseCreatureTypeSwap decider controller resolving slot forbidden
               SubtypeFamily.EnchantmentType -> Prompt.ChooseEnchantmentTypeSwap decider controller resolving slot forbidden
-        (from, to) <- Game.choose question
-        State.modify' $ \gs ->
+        answer <- Game.choose question
+        -- CR 612.2: an unswappable answer is filtered, not trusted (the
+        -- chooseAmong posture), and a card leaving no legal swap changes
+        -- nothing. Proved by Pawl.CounterspellSpec's TextSwapLegality.
+        Foldable.for_ (if Subtype.swappable family forbidden answer then Just answer else Subtype.firstSwap family forbidden) $ \(from, to) -> State.modify' $ \gs ->
           -- CR 611.2a: no stated duration, so Duration.Indefinite, armed through
           -- Expiry like the other storing arms. Indefinite always arms; the
           -- Nothing branch is written out only because arm is total.

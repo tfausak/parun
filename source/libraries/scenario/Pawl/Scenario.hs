@@ -2,8 +2,8 @@
 
 -- Runs a scenario: places its board, answers the engine's prompts from its
 -- timeline, and evaluates its checks. The one boundary through which something
--- other than the rules core says what happens in a game (#146), and the test
--- suite's gameplay harness.
+-- other than the rules core says what happens in a game, as #146 set out, and
+-- the test suite's gameplay harness.
 module Pawl.Scenario where
 
 import Control.Applicative ((<|>))
@@ -50,6 +50,7 @@ import qualified Pawl.Engine.Projection.View as Projection
 import qualified Pawl.Engine.Resolve.Effect as Resolve
 import qualified Pawl.Engine.Script as Script
 import qualified Pawl.Engine.Setup as Setup
+import qualified Pawl.Engine.Subtype as Engine.Subtype
 import qualified Pawl.Engine.Target as Target
 import qualified Pawl.Engine.Turn as Turn
 import qualified Pawl.Engine.Visibility as Visibility
@@ -144,6 +145,7 @@ import qualified Pawl.Types.SlotName as SlotName
 import qualified Pawl.Types.Source as Source
 import qualified Pawl.Types.Staged as Staged
 import qualified Pawl.Types.Start as Start
+import qualified Pawl.Types.SubtypeFamily as SubtypeFamily
 import qualified Pawl.Types.SubtypesAre as SubtypesAre
 import qualified Pawl.Types.Taking as Taking
 import qualified Pawl.Types.TappedIs as TappedIs
@@ -933,9 +935,9 @@ withinOffer prompt chosen = case prompt of
   Prompt.Type.ChooseOfferedCastSpell _ _ offers -> chosen `elem` offers
   Prompt.Type.RollDie sides -> 1 <= chosen && chosen <= sides
   Prompt.Type.ChooseMixedCounterRemoval _ _ _ _ _ bearers -> Map.isSubmapOfBy (Map.isSubmapOfBy (<=)) chosen bearers
-  Prompt.Type.ChooseLandTypeSwap _ _ _ _ forbidden -> Set.notMember (snd chosen) forbidden
-  Prompt.Type.ChooseCreatureTypeSwap _ _ _ _ forbidden -> Set.notMember (snd chosen) forbidden
-  Prompt.Type.ChooseEnchantmentTypeSwap _ _ _ _ forbidden -> Set.notMember (snd chosen) forbidden
+  Prompt.Type.ChooseLandTypeSwap _ _ _ _ forbidden -> Engine.Subtype.swappable SubtypeFamily.BasicLandType forbidden chosen
+  Prompt.Type.ChooseCreatureTypeSwap _ _ _ _ forbidden -> Engine.Subtype.swappable SubtypeFamily.CreatureType forbidden chosen
+  Prompt.Type.ChooseEnchantmentTypeSwap _ _ _ _ forbidden -> Engine.Subtype.swappable SubtypeFamily.EnchantmentType forbidden chosen
   Prompt.Type.RandomFirstPlayer players -> chosen `elem` players
   Prompt.Type.RandomObject objects -> chosen `elem` objects
   Prompt.Type.RandomStickerSheet slots -> chosen `elem` slots

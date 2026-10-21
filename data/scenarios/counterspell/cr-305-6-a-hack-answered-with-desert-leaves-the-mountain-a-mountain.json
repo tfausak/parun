@@ -1,0 +1,25 @@
+{
+  "description": "CR 305.6 a Hack answered with Desert leaves the Mountain a Mountain",
+  "note": "Desert is a land type (CR 205.3i) but not a basic one, so the swap prompt does not offer it and the answer is flagged unoffered; the engine falls back to a legal swap, which leaves Mountain alone.",
+  "board": {
+    "seats": [
+      {
+        "name": "alice",
+        "battlefield": [{ "card": "Island", "label": "island" }],
+        "hand": [{ "card": "Magical Hack", "label": "hack" }]
+      },
+      {
+        "name": "bob",
+        "battlefield": [{ "card": "Mountain", "label": "mountain" }]
+      }
+    ],
+    "active": "alice",
+    "step": "PrecombatMain"
+  },
+  "timeline": [
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": { "Cast": { "object": "$hack", "targets": ["$mountain"], "mana": ["$island"] } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass" },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": { "Answer": { "prompt": "ChooseLandTypeSwap", "with": [{ "type": "Mountain" }, { "type": "Desert" }], "unoffered": true } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "check": { "Subtypes": { "object": "$mountain", "subtypes": ["Mountain"] } } }
+  ]
+}
