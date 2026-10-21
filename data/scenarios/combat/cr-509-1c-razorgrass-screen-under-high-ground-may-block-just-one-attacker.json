@@ -1,0 +1,30 @@
+{
+  "description": "CR 509.1c Razorgrass Screen under High Ground may block just one of two attackers",
+  "note": "CR 509.1c: \"blocks each combat if able\" is ONE requirement on the Screen, obeyed by blocking any attacker. High Ground lets it block two (CR 509.1a), but blocking both obeys the same single requirement, so blocking the Piker alone attains the maximum. A requirement per attacker would score the double block higher and refuse the single one.",
+  "board": {
+    "active": "alice",
+    "step": "BeginningOfCombat",
+    "seats": [
+      {
+        "name": "alice",
+        "battlefield": [
+          { "card": "Goblin Piker", "label": "piker", "ready": true },
+          { "card": "Grizzly Bears", "label": "bears", "ready": true }
+        ]
+      },
+      {
+        "name": "bob",
+        "battlefield": [
+          { "card": "Razorgrass Screen", "label": "wall", "ready": true },
+          { "card": "High Ground", "label": "ground" }
+        ]
+      }
+    ]
+  },
+  "timeline": [
+    { "turn": 1, "step": "DeclareAttackers", "player": "alice", "do": { "Attack": ["$piker", "$bears"] } },
+    { "turn": 1, "step": "DeclareBlockers", "player": "bob", "refuse": { "Block": {} } },
+    { "turn": 1, "step": "DeclareBlockers", "player": "bob", "do": { "Block": { "$wall": ["$piker"] } } },
+    { "turn": 1, "step": "DeclareBlockers", "player": "alice", "check": { "Blockers": { "attacker": "$bears", "blockers": null } } }
+  ]
+}

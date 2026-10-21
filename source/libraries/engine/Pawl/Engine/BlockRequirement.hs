@@ -11,6 +11,7 @@
 module Pawl.Engine.BlockRequirement where
 
 import qualified Data.Map.Strict as Map
+import qualified Data.Maybe as Maybe
 import qualified Data.Set as Set
 import qualified Pawl.Engine.Condition as Condition
 import qualified Pawl.Engine.Projection as Projection
@@ -147,9 +148,11 @@ instances able candidates attackers gs =
       --
       -- An absent clause is UNRESTRICTED on that axis, not empty: Nothing on the
       -- subject is Lure's "all creatures able to", and Nothing on the attacker is
-      -- Razorgrass Screen's "each combat", which mints one pair per attacker the
-      -- Screen may legally block. CR 509.1a caps how many of those it can obey at
-      -- one, so blocking either attains the maximum.
+      -- Razorgrass Screen's "each combat": ONE requirement on the Screen, a group
+      -- of a pair per attacker it may legally block, obeyed by blocking any of
+      -- them. Not a pair each: a Screen under High Ground can block two attackers,
+      -- and blocking both still obeys one requirement (CR 509.1c counts
+      -- requirements). Proved by the Razorgrass Screen and High Ground scenario.
       fromRequirement source changes requirement =
         let rewrite clause = if null changes then clause else Projection.rewriteAffected changes clause
             narrow field these = case field requirement of
@@ -161,7 +164,9 @@ instances able candidates attackers gs =
          in if not (inForce source changes requirement)
               then ([], [])
               else case BlockRequirement.arity requirement of
-                RequirementArity.EachSubject -> (concatMap blockersOf wanted, [])
+                RequirementArity.EachSubject -> case BlockRequirement.attacker requirement of
+                  Nothing -> ([], fmap (anyAttacker wanted) subjects)
+                  Just _ -> (concatMap blockersOf wanted, [])
                 -- ONE group per ATTACKER the object axis names, which is what
                 -- Gaea's Protector's sentence is about; the subject set is the
                 -- creatures that could obey it. Two attackers under one such
@@ -213,12 +218,19 @@ instances able candidates attackers gs =
       -- a "target creatures, one of them must block" card would observe it. The
       -- arity itself is proved by the Irresistible Prey and Joraga Invocation
       -- scenarios.
+      --
+      -- A row naming no attacker under EachSubject is the printed carrier's
+      -- Razorgrass Screen reading: one group per blocker (Predatory Rampage).
+      storedBlockers active = RestrictedCreatures.covered (ActiveBlockRequirement.controller active) (ActiveBlockRequirement.source active) (ActiveBlockRequirement.blocker active) candidates gs
       storedPairs active =
-        let covered = RestrictedCreatures.covered (ActiveBlockRequirement.controller active) (ActiveBlockRequirement.source active)
-            blockers = covered (ActiveBlockRequirement.blocker active) candidates gs
-            wanted = maybe attackers (\side -> covered side attackers gs) (ActiveBlockRequirement.attacker active)
-         in [(blocker, attacker) | attacker <- wanted, blocker <- blockers, able blocker attacker]
-      storedEach = concatMap storedPairs (filter ((== RequirementArity.EachSubject) . ActiveBlockRequirement.arity) (GameState.blockRequirements gs))
+        let wanted = maybe attackers (\side -> RestrictedCreatures.covered (ActiveBlockRequirement.controller active) (ActiveBlockRequirement.source active) side attackers gs) (ActiveBlockRequirement.attacker active)
+         in [(blocker, attacker) | attacker <- wanted, blocker <- storedBlockers active, able blocker attacker]
+      eachRows = filter ((== RequirementArity.EachSubject) . ActiveBlockRequirement.arity) (GameState.blockRequirements gs)
+      storedEach = concatMap storedPairs (filter (Maybe.isJust . ActiveBlockRequirement.attacker) eachRows)
+      storedBlockerGroups = concatMap (fmap (anyAttacker attackers) . storedBlockers) (filter (Maybe.isNothing . ActiveBlockRequirement.attacker) eachRows)
+      -- The attackers `blocker` may legally block, as one group: a requirement
+      -- naming no attacker, obeyed by blocking any of them.
+      anyAttacker these blocker = Set.fromList [(blocker, attacker) | attacker <- these, able blocker attacker]
       storedGroups =
         Map.elems
           ( Map.fromListWith
@@ -231,4 +243,4 @@ instances able candidates attackers gs =
           )
       gathered =
         fmap (\source -> fromPermanent source <> fromGrant source) (Set.toList (GameState.battlefield gs))
-   in Requirement.gather (concatMap fst gathered <> storedEach) (concatMap snd gathered <> storedGroups)
+   in Requirement.gather (concatMap fst gathered <> storedEach) (concatMap snd gathered <> storedBlockerGroups <> storedGroups)
