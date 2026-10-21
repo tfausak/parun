@@ -851,7 +851,7 @@ restrictionConditions restriction = case restriction of
   ActivationRestriction.AttackedThisStep -> []
   ActivationRestriction.AfterBlockersDeclared -> []
   ActivationRestriction.BeforeCombatDamage -> []
-  ActivationRestriction.BeforeEndStep -> []
+  ActivationRestriction.BeforeStep _ -> []
   ActivationRestriction.OnlyIf condition -> [condition]
   ActivationRestriction.OnlyOnce -> []
   ActivationRestriction.OnlyOnceEachTurn -> []

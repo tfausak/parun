@@ -14,16 +14,6 @@ Every expressible Portal card has been added to `data/cards/`.
 
 Each group is tracked by its issue; its cards are added when it lands.
 
-### Activation window "during your turn, before attackers are declared" (#5234)
-ActivationRestriction has DuringPhase (one PhaseSelector), DuringTurn,
-BeforeCombatDamage, BeforeEndStep and so on; its list is a conjunction, so it
-can't say "beginning phase, precombat main or beginning of combat, on your turn".
-No pool card prints the rider (grepped oracleText for "before attackers are
-declared").
-- Capricious Sorcerer: "{T}: deals 1 damage to any target. Activate only during your turn, before attackers are declared."
-- King's Assassin: "{T}: Destroy target tapped creature. Activate only ..." (gideon-jura has the tapped filter)
-- Stern Marshal: "{T}: Target creature gets +2/+2 until end of turn. Activate only ..."
-
 ### A per-player "may draw up to N" with a per-player follow-up (#5239)
 ChooseNumber has no chooser, and Repeat/ForEach/ForEachNumber don't loop over
 players with each one choosing.

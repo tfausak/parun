@@ -3,14 +3,15 @@ module Pawl.Codec.ActivationRestriction where
 import qualified Pawl.Codec.Condition as Condition
 import qualified Pawl.Codec.DuringPhase as DuringPhase
 import qualified Pawl.Codec.ManaSpecification as ManaSpecification
+import qualified Pawl.Codec.Phase as Phase
 import qualified Pawl.Codec.TurnScope as TurnScope
 import qualified Pawl.JsonCodec.Arm as Arm
 import qualified Pawl.JsonCodec.Codec as Codec
 import qualified Pawl.Types.ActivationRestriction as ActivationRestriction
 
 -- | Tagged rather than bare-nullary since CR 500.1's DuringPhase carries a
--- window, CR 102.1's DuringTurn a scope and CR 602.5's OnlyIf a condition;
--- the other arms still render as bare tags.
+-- window, CR 102.1's DuringTurn a scope, CR 506.7a's BeforeStep a step and CR
+-- 602.5's OnlyIf a condition; the other arms still render as bare tags.
 --
 -- There is no tag for "no rider": CR 602.2's default is the EMPTY LIST on the
 -- ability, which Pawl.Codec.ActivatedAbility writes by omitting the key.
@@ -24,7 +25,7 @@ codec =
       Arm.nullary "AttackedThisStep" ActivationRestriction.AttackedThisStep,
       Arm.nullary "AfterBlockersDeclared" ActivationRestriction.AfterBlockersDeclared,
       Arm.nullary "BeforeCombatDamage" ActivationRestriction.BeforeCombatDamage,
-      Arm.nullary "BeforeEndStep" ActivationRestriction.BeforeEndStep,
+      Arm.payload "BeforeStep" Phase.codec ActivationRestriction.BeforeStep (\x -> case x of ActivationRestriction.BeforeStep y -> Just y; _ -> Nothing),
       Arm.payload "OnlyIf" Condition.codec ActivationRestriction.OnlyIf (\x -> case x of ActivationRestriction.OnlyIf y -> Just y; _ -> Nothing),
       Arm.nullary "OnlyOnce" ActivationRestriction.OnlyOnce,
       Arm.nullary "OnlyOnceEachTurn" ActivationRestriction.OnlyOnceEachTurn,
@@ -41,7 +42,7 @@ tagOf x = case x of
   ActivationRestriction.AttackedThisStep {} -> "AttackedThisStep"
   ActivationRestriction.AfterBlockersDeclared {} -> "AfterBlockersDeclared"
   ActivationRestriction.BeforeCombatDamage {} -> "BeforeCombatDamage"
-  ActivationRestriction.BeforeEndStep {} -> "BeforeEndStep"
+  ActivationRestriction.BeforeStep {} -> "BeforeStep"
   ActivationRestriction.OnlyIf {} -> "OnlyIf"
   ActivationRestriction.OnlyOnce {} -> "OnlyOnce"
   ActivationRestriction.OnlyOnceEachTurn {} -> "OnlyOnceEachTurn"

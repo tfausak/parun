@@ -1730,6 +1730,9 @@ restrictionMet pid gs restriction = case restriction of
   -- clause on an activation, where CR 506.7g sends
   -- Pawl.Engine.ActivationRestriction to this same reader.
   CastingRestriction.AfterBlockersDeclared -> Turn.afterBlockersDeclared gs
+  -- CR 506.7a, 506.7d and 506.7e; Turn.beforeStep, shared with the activation
+  -- side's arm of this name by CR 506.7g, says why it reads the turn's log.
+  CastingRestriction.BeforeStep target -> Turn.beforeStep target gs
 
 -- CR 709.3a / 715.3a: the half being cast, RECORDED ON THE OBJECT, so that every
 -- characteristic read of it resolves through Game.resolveFace to that half alone

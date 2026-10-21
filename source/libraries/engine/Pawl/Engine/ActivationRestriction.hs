@@ -143,8 +143,9 @@ restrictionMet pid srcId ability gs restriction = case restriction of
   -- than the combat record, since CR 510.2's damage is a turn-based action of one
   -- step and CR 506.7c admits every combat phase of the turn. Save Point.
   ActivationRestriction.BeforeCombatDamage -> Turn.beforeCombatDamage (GameState.phase gs)
-  -- CR 500.1's order, asked of the phase alone for BeforeCombatDamage's reason.
-  ActivationRestriction.BeforeEndStep -> Turn.beforeEndStep (GameState.phase gs)
+  -- CR 506.7a, 506.7d and 506.7e through CR 506.7g; Turn.beforeStep says why it
+  -- reads the turn's log. Capricious Sorcerer and Mana Cache.
+  ActivationRestriction.BeforeStep target -> Turn.beforeStep target gs
   -- CR 602.5's prohibition over a fact about the board rather than a window:
   -- Barbarian Ring's "Activate only if there are seven or more cards in your
   -- graveyard". Projection.fullView because nothing here is inside a layer fold
@@ -233,7 +234,7 @@ atInstantSpeed restriction = case restriction of
   ActivationRestriction.AttackedThisStep -> restriction
   ActivationRestriction.AfterBlockersDeclared -> restriction
   ActivationRestriction.BeforeCombatDamage -> restriction
-  ActivationRestriction.BeforeEndStep -> restriction
+  ActivationRestriction.BeforeStep _ -> restriction
   ActivationRestriction.OnlyIf _ -> restriction
   ActivationRestriction.OnlyOnce -> restriction
   ActivationRestriction.OnlyOnceEachTurn -> restriction
@@ -325,12 +326,13 @@ logActivation asOf pid srcId stamp kind targets gs =
 -- itself, and the two agree because the move between them is exactly the fact
 -- this reports.
 --
--- SorcerySpeed alone, and the four window arms are not a default: each of them
--- reads a phase, a turn or a combat record, and CR 500.12 puts no game event
--- between the gate and the payment while CR 601.2a's move changes no phase -- so
--- their two windows agree already (riderWindowSpec's pair in Pawl.ManaSpec is
--- that argument for the phase axis). The arms below that read no window say for
--- themselves why each answers False without that argument.
+-- SorcerySpeed alone, and the window arms are not a default: each of them reads
+-- a phase, a turn, the steps begun this turn or a combat record, and CR 500.12
+-- puts no game event between the gate and the payment while CR 601.2a's move
+-- changes no phase and begins no step -- so their two windows agree already
+-- (riderWindowSpec's pair in Pawl.ManaSpec is that argument for the phase axis).
+-- The arms below that read no window say for themselves why each answers False
+-- without that argument.
 needsEmptyStack :: ActivationRestriction.ActivationRestriction -> Bool
 needsEmptyStack restriction = case restriction of
   ActivationRestriction.SorcerySpeed -> True
@@ -339,7 +341,7 @@ needsEmptyStack restriction = case restriction of
   ActivationRestriction.AttackedThisStep -> False
   ActivationRestriction.AfterBlockersDeclared -> False
   ActivationRestriction.BeforeCombatDamage -> False
-  ActivationRestriction.BeforeEndStep -> False
+  ActivationRestriction.BeforeStep _ -> False
   -- A board condition reads no stack, so the empty-stack question is not its
   -- question. What CR 601.2a's move does to the zone the card leaves,
   -- `restrictionMet` reads for itself (Game.withoutBeingCast).
@@ -376,7 +378,7 @@ refusedMidPayment restriction = case restriction of
   ActivationRestriction.AttackedThisStep -> False
   ActivationRestriction.AfterBlockersDeclared -> False
   ActivationRestriction.BeforeCombatDamage -> False
-  ActivationRestriction.BeforeEndStep -> False
+  ActivationRestriction.BeforeStep _ -> False
   ActivationRestriction.OnlyIf _ -> False
   ActivationRestriction.OnlyOnce -> False
   ActivationRestriction.OnlyOnceEachTurn -> False
