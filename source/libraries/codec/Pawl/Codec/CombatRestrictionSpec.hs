@@ -101,7 +101,7 @@ spec s = Spec.describe s "Pawl.Codec.CombatRestriction" $ do
     Common.assertCodec
       s
       CombatRestriction.codec
-      (CombatRestriction.CantBlockMoreThan (LimitUnless.MkLimitUnless 2 Nothing))
+      (CombatRestriction.CantBlockMoreThan (LimitUnless.MkLimitUnless 2 Nothing Nothing))
       " {\"type\":\"CantBlockMoreThan\",\"value\":{\"limit\":2}} "
   -- CR 802.3a: the attacking bound SCOPED to a seat, which is the one key the
   -- two payloads above do not share. Crawlspace writes it; Silent Arbiter's
