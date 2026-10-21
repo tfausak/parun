@@ -3486,6 +3486,23 @@ effectLintSpec s registry = Spec.describe s "Lint" $ do
     -- nothing. Wax // Wane is what makes it non-vacuous.
     Spec.assertBool s (any ((> 1) . length . Card.Type.faces . Printing.card) ps) "the pool has a multi-face card to lint"
     Spec.assertEqWith s "no card repeats a face name" (fmap (S.nameOf . Printing.card) offenders) []
+  -- The other half, across cards: a name answers for one card, so a lookup by
+  -- it is well-defined. A lazy registry parses only the files a
+  -- lookup reaches and so cannot hold this for the whole corpus itself.
+  -- Compared by slug, the key a lookup uses, over every face name.
+  Spec.it s "no two cards claim one name" $ do
+    root <- Registry.defaultRoot
+    loaded <- Registry.loadRoot root
+    let claims = Map.fromListWith Set.union $ do
+          (path, result) <- loaded
+          card <- case result of Right parsed -> [parsed]; Left _ -> []
+          face <- NonEmpty.toList (Card.Type.faces card)
+          pure (Registry.slugFor (Face.name face), Set.singleton path)
+        offenders = Map.filter (\paths -> Set.size paths > 1) claims
+    -- The sibling lints' guard: a sweep that never sees a name beyond a file's
+    -- own proves nothing about the names a lookup reaches only by fallback.
+    Spec.assertBool s (Map.size claims > length loaded) "the pool has a card with more than one name"
+    Spec.assertEqWith s "no name is claimed by two cards" (fmap (fmap Set.toAscList) (Map.toAscList offenders)) []
   -- CR 710.1a with CR 710.1b: a flip card's frame has a top half and a bottom
   -- half, so a Flip card prints exactly two faces. Held over the pool rather
   -- than by construction, for the pairwise-distinct lint's reason -- a card file

@@ -2,24 +2,25 @@
 -- cards are there?
 --
 -- The registry is those two functions and nothing else. It is parameterized over the
--- monad a LOOKUP works in, which is what lets a registry that does no work to
+-- monad a LOOKUP works in, which is what lets a registry that does no IO to
 -- answer -- a fixture map, a pool compiled in, a generated one, or the
--- file-backed one below, which reads everything before the registry exists --
--- be used at whatever monad the caller has, without pretending to do IO. The
--- parameter earns its keep at the other end: a registry fetching cards on
--- demand from a remote source genuinely needs effects at lookup time, mid-game
--- where Pawl.Interpreter.lookingUpCards asks, and m is the difference. Failure
--- is a returned value rather than an exception for the same reason: a pure
--- registry cannot throw. How a registry answers is not part of the type.
+-- file-backed one below, which reads every file's bytes before the registry
+-- exists and parses them only as lookups reach them -- be used at whatever monad
+-- the caller has, without pretending to do IO. The parameter earns its keep at
+-- the other end: a registry fetching cards on demand from a remote source
+-- genuinely needs effects at lookup time, mid-game where
+-- Pawl.Interpreter.lookingUpCards asks, and m is the difference. How a registry
+-- answers is not part of the type.
 --
 -- Enumerating the pool is in the interface for the questions a game asks about
 -- the whole reference: which cards an Alchemy conjure picks over, and which
 -- names Spy Kit's CR 612.7 grant reaches (Pawl.Interpreter.lookingUpCards). A
 -- lint of the corpus pawl ships is a claim about the data rather than a
--- question for a registry, and that lives in the
--- test suite, which borrows cardPath, listRoot, loadRoot, parseCard and
--- filedAs -- facts about the on-disk format rather than about looking a card
--- up.
+-- question for a registry, and that lives in the test suite -- every file
+-- parses (Pawl.CardsSpec), no card repeats a face name and no two cards claim
+-- one (Pawl.EffectLintSpec) -- which borrows cardPath, listRoot, loadRoot,
+-- parseCard and filedAs: facts about the on-disk format rather than about
+-- looking a card up.
 module Pawl.Registry where
 
 import qualified Control.Exception as Exception
@@ -43,10 +44,9 @@ import qualified Pawl.Types.CardName as CardName
 import qualified Pawl.Types.Face as Face
 import qualified System.Directory as Directory
 
--- Nothing rather than an error value: with the file registry loading its root up
--- front, a pool that cannot be used fails when the registry is BUILT, so the
--- only thing left for a lookup to say is that no card has that name -- and the
--- caller supplied the name (#649).
+-- Nothing says only that no card has that name, and the caller supplied the
+-- name (#649). A file registry whose lookup reaches a file it cannot use throws
+-- InvalidCorpus instead, so a broken root never reads as a missing card.
 data Registry m = MkRegistry
   { fetchCard :: CardName.CardName -> m (Maybe Card.Card),
     -- | Every card of the Oracle card reference the pool holds, once each. A
@@ -68,26 +68,32 @@ named registry = fetchCard registry . CardName.MkCardName . Text.pack
 defaultRoot :: IO FilePath
 defaultRoot = Paths.getDataFileName "cards"
 
--- A registry over a directory of one-card-per-file JSON, read once, here.
+-- A registry over a directory of one-card-per-file JSON, read once, here, and
+-- parsed only as far as lookups reach.
 --
 -- The root is checked before anything else because a mistyped --cards-dir
 -- otherwise surfaces as N identical failures, one per card, instead of one
--- clear failure at startup (#167). Every other way the pool can be broken is
--- reported the same way and at the same moment, by `index`.
+-- clear failure at startup (#167).
 --
--- Eager rather than memoized per name: the map makes "each file is parsed at
--- most once" true by construction, where the MVar it replaces made it true by
--- holding a lock across a read (#265). The cost is that a caller wanting one
--- card parses the whole pool; the pool is hand-authored and card-driven, and
--- the test suite already reads it whole many times over per run --
--- Pawl.Support.allPrintings alone is unmemoized and is called repeatedly from
--- CardSpec, CardsSpec and CodecIntegrationSpec.
+-- Every file's bytes are read now and its parse is a pure thunk, shared by
+-- every lookup and by `cards`, so each file is parsed at most once (#265)
+-- without a lock or unsafeInterleaveIO. A lookup parses the files whose names
+-- hold its slug as a run of words, which under filedAs is every file the name
+-- can belong to; failing that, it falls back to one index of the whole root,
+-- built once, which is what still finds a card in a misfiled root and what
+-- answers Nothing. `cards` forces that same index.
+--
+-- A lookup or enumeration that reaches a file that will not parse, or a name
+-- two cards claim, throws InvalidCorpus naming every such problem among the
+-- files it reached. It throws as the lookup's action is evaluated, the one
+-- moment an Applicative m allows. The rest of the root is not validated here;
+-- the corpus pawl ships is, by the lints the module header names.
 --
 -- The two halves of the signature are construction and lookup, and they are not
 -- the same monad: building the registry reads the directory, so construction is
--- IO, while a lookup that has already been paid for is a Map.lookup wrapped in
--- pure, so it works in any Applicative. Applicative rather than Monad because
--- pure is the only thing the body needs of m.
+-- IO, while a lookup is pure work wrapped in pure, so it works in any
+-- Applicative. Applicative rather than Monad because pure is the only thing the
+-- body needs of m.
 fileRegistry :: (Applicative m) => FilePath -> IO (Registry m)
 fileRegistry root = do
   exists <- Directory.doesDirectoryExist root
@@ -95,9 +101,34 @@ fileRegistry root = do
     then Exception.throwIO MissingRoot.MkMissingRoot {MissingRoot.path = root}
     else do
       loaded <- loadRoot root
-      case index loaded of
-        Left problems -> Exception.throwIO InvalidCorpus.MkInvalidCorpus {InvalidCorpus.root = root, InvalidCorpus.problems = problems}
-        Right keyed -> pure MkRegistry {fetchCard = \name -> pure (Map.lookup (slugFor name) keyed), cards = pure (Maybe.mapMaybe referenceCard loaded)}
+      let usable result = case result of
+            Left problems -> Exception.throw InvalidCorpus.MkInvalidCorpus {InvalidCorpus.root = root, InvalidCorpus.problems = problems}
+            Right keyed -> keyed
+          whole = usable (index loaded)
+          byRun = Map.fromListWith (<>) (concatMap (\entry -> fmap (\run -> (run, [entry])) (Set.toList (runs (stemOf (fst entry))))) loaded)
+          find name =
+            let slug = slugFor name
+             in case Map.lookup slug (usable (index (Map.findWithDefault [] slug byRun))) of
+                  Just card -> Just card
+                  Nothing -> Map.lookup slug whole
+          strictly x = seq x (pure x)
+      pure MkRegistry {fetchCard = strictly . find, cards = seq whole (pure (Maybe.mapMaybe referenceCard loaded))}
+
+-- The slug a card file is named by: its file name, less the directory and the
+-- extension.
+stemOf :: FilePath -> Slug.Slug
+stemOf path = Slug.fromText (Text.pack (List.reverse (List.drop (List.length ".json") (List.takeWhile (/= '/') (List.reverse path)))))
+
+-- Every run of consecutive words in a slug, each once however often it recurs.
+-- filedAs joins a card's face names, so each face name's slug is one of these
+-- runs of the card's file name.
+runs :: Slug.Slug -> Set.Set Slug.Slug
+runs slug =
+  let segments = Text.splitOn (Text.singleton '-') (Slug.unwrap slug)
+   in Set.fromList $ do
+        start <- List.tails segments
+        size <- [1 .. List.length start]
+        pure (Slug.fromText (Text.intercalate (Text.singleton '-') (List.take size start)))
 
 -- A parsed card of the Oracle card reference, which a synthetic is not: a card
 -- no printing carries, written only to reach a rule, and filed as
@@ -128,9 +159,8 @@ slugFor = Slug.fromText . CardName.unwrap
 -- keyed here for the same reason an adventurer card's alternative name is.
 --
 -- A name claimed twice is fatal wherever it comes from -- two cards, or one card
--- repeating its own face name. Pawl.CardSpec's "a card's face names are pairwise
--- distinct" lint is the INTRA-card half of that and holds only over the corpus
--- pawl ships; this holds over whatever root a caller points at.
+-- repeating its own face name -- among the files indexed. Over the corpus pawl
+-- ships, Pawl.EffectLintSpec's lints hold both halves for every file.
 index :: [(FilePath, Either Text.Text Card.Card)] -> Either [String] (Map.Map Slug.Slug Card.Card)
 index loaded =
   let parsed = Maybe.mapMaybe (\entry -> case entry of (path, Right card) -> Just (path, card); _ -> Nothing) loaded
