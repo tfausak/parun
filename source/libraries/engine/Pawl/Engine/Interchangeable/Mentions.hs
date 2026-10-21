@@ -56,6 +56,7 @@ import qualified Pawl.Types.AnyNumberMatching as AnyNumberMatching
 import qualified Pawl.Types.Arithmetic as Arithmetic
 import qualified Pawl.Types.ArmDelayedTrigger as ArmDelayedTrigger
 import qualified Pawl.Types.ArrangeInLibrary as ArrangeInLibrary
+import qualified Pawl.Types.ArrangedArrival as ArrangedArrival
 import qualified Pawl.Types.AsCopy as AsCopy
 import qualified Pawl.Types.AttachAll as AttachAll
 import qualified Pawl.Types.AttachBound as AttachBound
@@ -1936,6 +1937,7 @@ libraryPlacementNames asking x = case x of
   LibraryPlacement.Stated _libraryPosition -> mempty
   LibraryPlacement.OwnerChooses -> mempty
   LibraryPlacement.RandomOrder _libraryPosition -> mempty
+  LibraryPlacement.ArrangedBy (ArrangedArrival.MkArrangedArrival _libraryPosition chooser) -> playerRefNames asking chooser
   LibraryPlacement.Beneath quantity -> quantityNames asking quantity
   LibraryPlacement.BeneathOrBottom quantity -> quantityNames asking quantity
 

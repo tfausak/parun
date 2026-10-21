@@ -121,6 +121,7 @@ import qualified Pawl.Types.AnyNumberMatching as AnyNumberMatching
 import qualified Pawl.Types.AnyNumberOf as AnyNumberOf
 import qualified Pawl.Types.ArmDelayedTrigger as ArmDelayedTrigger
 import qualified Pawl.Types.ArrangeInLibrary as ArrangeInLibrary
+import qualified Pawl.Types.ArrangedArrival as ArrangedArrival
 import qualified Pawl.Types.AttachAll as AttachAll
 import qualified Pawl.Types.AttachBound as AttachBound
 import qualified Pawl.Types.AttachTarget as AttachTarget
@@ -1190,7 +1191,8 @@ handChoosers legal resolving source controller gs player =
 -- order (CR 101.4); CR 401.4 once per (owner, end) group of two or more, whose
 -- decider is the owner rather than CR 608.2f's resolving controller -- except
 -- where the effect states a RANDOM order, which takes that arrangement back from
--- the owner and randomises the group instead (CR 701.24a's standard).
+-- the owner and randomises the group instead (CR 701.24a's standard), or names
+-- who orders it (LibraryPlacement.ArrangedBy, asked through `chooserOf`).
 --
 -- The arrangement answer names the cards from the chosen end INWARD, and
 -- Game.insertIntoZone puts every arrival AT that end, so the batch is performed
@@ -1202,8 +1204,8 @@ handChoosers legal resolving source controller gs player =
 -- only at the top: LibraryPlacement.Beneath's depth, read through `depthOf`
 -- once for the whole batch (CR 608.2h). moveOne arrives it on top and sinks it
 -- that far, so a depth group arranged from the top inward lands in that order.
-settleArrivals :: (Quantity.Type.Quantity -> Natural) -> Zone.Zone -> LibraryPlacement.LibraryPlacement -> [ObjectId] -> Game [(ObjectId, (LibraryPosition.LibraryPosition, Natural))]
-settleArrivals depthOf zone placement targets =
+settleArrivals :: (PlayerRef -> Game (Maybe PlayerId)) -> (Quantity.Type.Quantity -> Natural) -> Zone.Zone -> LibraryPlacement.LibraryPlacement -> [ObjectId] -> Game [(ObjectId, (LibraryPosition.LibraryPosition, Natural))]
+settleArrivals chooserOf depthOf zone placement targets =
   let upperOrBottom above owner oid gs = do
         position <- Game.choose (Prompt.ChooseLibraryEnd (Decide.deciderFor owner gs) owner oid above)
         pure $ case position of
@@ -1218,6 +1220,7 @@ settleArrivals depthOf zone placement targets =
             spot <- case placement of
               LibraryPlacement.Stated stated -> pure (stated, 0)
               LibraryPlacement.RandomOrder stated -> pure (stated, 0)
+              LibraryPlacement.ArrangedBy arrival -> pure (ArrangedArrival.position arrival, 0)
               LibraryPlacement.OwnerChooses -> upperOrBottom 0 owner oid gs
               LibraryPlacement.Beneath quantity -> pure (LibraryPosition.Top, depthOf quantity)
               LibraryPlacement.BeneathOrBottom quantity -> upperOrBottom (depthOf quantity) owner oid gs
@@ -1238,12 +1241,16 @@ settleArrivals depthOf zone placement targets =
               LibraryPlacement.RandomOrder _ -> do
                 answer <- Game.ask (Prompt.Shuffle batch)
                 pure (Game.honourShuffle batch answer)
-              -- Not implemented: text putting another player's cards there "in
-              -- any order" is the instruction's player's to arrange (CR 608.2c),
-              -- not the owner's (#5399).
               _ -> do
+                -- CR 608.2c / 608.2d: text naming who orders the batch hands
+                -- CR 401.4's question to that player; a chooser naming nobody
+                -- leaves it the owner's.
+                named <- case placement of
+                  LibraryPlacement.ArrangedBy arrival -> chooserOf (ArrangedArrival.chooser arrival)
+                  _ -> pure Nothing
+                let arranger = Maybe.fromMaybe owner named
                 gs <- State.get
-                answer <- Game.choose (Prompt.ArrangeLibraryArrivals (Decide.deciderFor owner gs) owner position batch)
+                answer <- Game.choose (Prompt.ArrangeLibraryArrivals (Decide.deciderFor arranger gs) arranger position batch)
                 pure (Game.permute batch answer)
             pure (fmap (\oid -> (oid, spot)) (reverse ordered))
           -- One card is one order, which is CR 401.4's own "two or more".
@@ -5555,7 +5562,7 @@ applyOneEffect runSubgame resolving source controller legal chosen effect = case
             depthBoard <- State.get
             let depthOf quantity =
                   maybe 0 Integer.toNaturalSaturating (Quantity.evaluateFor (effectViewOf source legal depthBoard) (chooseContext depthBoard) depthBoard resolving source quantity)
-            arrivals <- settleArrivals depthOf zone placement targets
+            arrivals <- settleArrivals (askedChooser resolving source controller legal) depthOf zone placement targets
             -- The batch's own board, read after CR 401.4's arrangement asks (which
             -- move nothing) and before any member does.
             before <- State.get

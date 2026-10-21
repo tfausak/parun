@@ -572,9 +572,10 @@ data Prompt r where
   -- The Natural is how many cards stay above the upper option, which a Top
   -- answer picks: 0 for the top itself, 1 for "second from the top".
   ChooseLibraryEnd :: Decider.Decider -> PlayerId.PlayerId -> ObjectId.ObjectId -> Natural.Natural -> Prompt LibraryPosition.LibraryPosition
-  -- | CR 401.4: the owner arranges two or more cards arriving at one end of a
-  -- library at once; the answer permutes the indices, reading from that end
-  -- inward.
+  -- | CR 401.4 / 608.2c: the player arranges two or more cards arriving at one
+  -- end of a library at once -- the owner, or the player the text names
+  -- (Agonizing Memories' caster); the answer permutes the indices, reading from
+  -- that end inward.
   ArrangeLibraryArrivals :: Decider.Decider -> PlayerId.PlayerId -> LibraryPosition.LibraryPosition -> [ObjectId.ObjectId] -> Prompt [Natural.Natural]
   -- | CR 401.4 / 608.2c: the player arranges two or more cards an effect puts
   -- back into their owner's library at the positions those cards already occupy

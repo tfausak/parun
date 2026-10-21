@@ -42,6 +42,7 @@ import qualified Pawl.Types.Ante as Ante
 import qualified Pawl.Types.AnyNumberDiscard as AnyNumberDiscard
 import qualified Pawl.Types.AnyNumberMatching as AnyNumberMatching
 import qualified Pawl.Types.ArrangeInLibrary as ArrangeInLibrary
+import qualified Pawl.Types.ArrangedArrival as ArrangedArrival
 import qualified Pawl.Types.AsCopy as AsCopy
 import qualified Pawl.Types.AttachAll as AttachAll
 import qualified Pawl.Types.AttachBound as AttachBound
@@ -341,6 +342,7 @@ placementQuantities placement = case placement of
   LibraryPlacement.Stated _ -> []
   LibraryPlacement.OwnerChooses -> []
   LibraryPlacement.RandomOrder _ -> []
+  LibraryPlacement.ArrangedBy _ -> []
   LibraryPlacement.Beneath quantity -> [quantity]
   LibraryPlacement.BeneathOrBottom quantity -> [quantity]
 
@@ -962,7 +964,9 @@ effectPlayerRefs effect = case effect of
   Effect.AttachTargetToEach {} -> []
   Effect.AttachBound {} -> []
   Effect.AttachAll {} -> []
-  Effect.MoveToZone {} -> []
+  Effect.MoveToZone move -> case MoveToZone.placement move of
+    LibraryPlacement.ArrangedBy arrival -> [ArrangedArrival.chooser arrival]
+    _ -> []
   Effect.Draw (Draw.MkDraw ref _ _) -> [ref]
   Effect.Mill (Mill.MkMill ref _ _ _) -> [ref]
   Effect.Reveal {} -> []
