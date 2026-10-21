@@ -66,5 +66,12 @@ spec s = Spec.describe s "Pawl.Codec.CastingRestriction" $ do
       CastingRestriction.codec
       CastingRestriction.AfterBlockersDeclared
       " {\"type\":\"AfterBlockersDeclared\"} "
+  -- Blood Frenzy's "only before the combat damage step" (CR 506.7a, 506.7d).
+  Spec.it s "BeforeStep" $
+    Common.assertCodec
+      s
+      CastingRestriction.codec
+      (CastingRestriction.BeforeStep (Phase.Combat CombatStep.CombatDamage))
+      " {\"type\":\"BeforeStep\",\"value\":{\"type\":\"Combat\",\"value\":{\"type\":\"CombatDamage\"}}} "
   Spec.it s "has a schema" $
     Common.assertHasSchema s CastingRestriction.codec

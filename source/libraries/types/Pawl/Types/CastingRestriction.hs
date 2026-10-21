@@ -1,6 +1,7 @@
 module Pawl.Types.CastingRestriction where
 
 import qualified Pawl.Types.DuringPhase as DuringPhase
+import qualified Pawl.Types.Phase as Phase
 
 -- | CR 601.3's PROHIBITION half -- a rule or effect that stops a player casting a
 -- spell -- printed on a card about itself (Rally the Troops).
@@ -80,10 +81,10 @@ data CastingRestriction
     -- 506.7g, the rule that says CR 506.7's points govern an activation exactly
     -- as they govern a cast.
     --
-    -- NULLARY, rather than a before/after pair over the six points CR 506.7
-    -- enumerates. The pool prints one of them, and the vocabulary grows at the
-    -- card that needs the next: "only during combat before blockers are
-    -- declared" (Blaze of Glory) is a different window with no producer here.
+    -- NULLARY, rather than an after half beside BeforeStep below: the printed
+    -- "during combat" gives it CR 506.7c's every-combat reading, which BeforeStep
+    -- does not have. "Only during combat before blockers are declared" (Blaze of
+    -- Glory) is a third window, and neither arm says it.
     --
     -- Two clauses of CR 506.7 ride along rather than needing gates of their own,
     -- because the reader asks about the combat record instead of about the phase
@@ -92,4 +93,9 @@ data CastingRestriction
     -- "during combat" gives every combat phase of the turn its own window rather
     -- than only the first (CR 506.7d).
     AfterBlockersDeclared
+  | -- | CR 506.7a / 506.7d: "Cast this spell only before [the step]" -- Blood
+    -- Frenzy's "before the combat damage step". The mirror of
+    -- Pawl.Types.ActivationRestriction's arm of this name (CR 506.7g), sharing
+    -- Pawl.Engine.Turn.beforeStep as its reader.
+    BeforeStep Phase.Phase
   deriving (Eq, Ord, Show)
