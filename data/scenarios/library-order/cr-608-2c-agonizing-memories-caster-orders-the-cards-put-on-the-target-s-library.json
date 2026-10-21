@@ -1,0 +1,90 @@
+{
+  "description": "CR 608.2c Agonizing Memories' caster orders the cards put on the target's library",
+  "note": "alice looks at bob's hand, picks Bird Maiden then Goblin Piker, and is asked their order on top of bob's library (Misinformation's ruling); bob, who owns them, is not asked. The order alice states is not the default, which would leave the first pick on top.",
+  "board": {
+    "seats": [
+      {
+        "name": "alice",
+        "battlefield": [
+          { "card": "Swamp", "label": "swamp", "ready": true },
+          { "card": "Swamp", "label": "swamp-2", "ready": true },
+          { "card": "Swamp", "label": "swamp-3", "ready": true },
+          { "card": "Swamp", "label": "swamp-4", "ready": true }
+        ],
+        "hand": [{ "card": "Agonizing Memories", "label": "memories", "ready": true }],
+        "library": [{ "card": "Hill Giant" }]
+      },
+      {
+        "name": "bob",
+        "hand": [
+          { "card": "Goblin Piker", "label": "piker" },
+          { "card": "Bird Maiden", "label": "maiden" },
+          { "card": "Grizzly Bears", "label": "bears" }
+        ],
+        "library": [{ "card": "Plains" }]
+      },
+      {
+        "name": "carol",
+        "library": [{ "card": "Llanowar Elves" }]
+      }
+    ],
+    "active": "alice",
+    "step": "PrecombatMain"
+  },
+  "timeline": [
+    {
+      "turn": 1,
+      "step": "PrecombatMain",
+      "player": "alice",
+      "do": { "Answer": { "prompt": "ChooseCardFromAmong", "with": "$maiden" } }
+    },
+    {
+      "turn": 1,
+      "step": "PrecombatMain",
+      "player": "alice",
+      "do": { "Answer": { "prompt": "ChooseCardFromAmong", "with": "$piker" } }
+    },
+    {
+      "turn": 1,
+      "step": "PrecombatMain",
+      "player": "alice",
+      "do": { "Answer": { "prompt": "ArrangeLibraryArrivals", "with": [1, 0] } }
+    },
+    {
+      "turn": 1,
+      "step": "PrecombatMain",
+      "player": "alice",
+      "do": {
+        "Cast": {
+          "object": "$memories",
+          "targets": ["$bob"],
+          "mana": ["$swamp", "$swamp-2", "$swamp-3", "$swamp-4"]
+        }
+      }
+    },
+    {
+      "turn": 1,
+      "step": "PrecombatMain",
+      "player": "alice",
+      "check": {
+        "View": { "of": "Zone", "player": "bob", "zone": "Library", "is": ["Goblin Piker", "Bird Maiden", "Plains"] }
+      }
+    },
+    {
+      "turn": 1,
+      "step": "PrecombatMain",
+      "player": "alice",
+      "check": {
+        "View": { "of": "Zone", "player": "bob", "zone": "Hand", "is": ["$bears"] }
+      }
+    },
+    {
+      "turn": 1,
+      "step": "PrecombatMain",
+      "player": "alice",
+      "check": {
+        "View": { "of": "Witnessed", "player": "alice", "is": ["Goblin Piker", "Bird Maiden", "Grizzly Bears"] }
+      }
+    }
+  ]
+}

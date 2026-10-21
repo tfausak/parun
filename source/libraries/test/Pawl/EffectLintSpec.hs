@@ -2577,6 +2577,7 @@ effectLintSpec s registry = Spec.describe s "Lint" $ do
           LibraryPlacement.BeneathOrBottom _ -> True
           LibraryPlacement.Stated _ -> False
           LibraryPlacement.RandomOrder _ -> False
+          LibraryPlacement.ArrangedBy _ -> False
           LibraryPlacement.Beneath _ -> False
         offenders = filter (anyFace (any offends . cardResolutionEffects) . Printing.card) ps
     -- Guards against a vacuous sweep: with no owner-chosen end in the pool this

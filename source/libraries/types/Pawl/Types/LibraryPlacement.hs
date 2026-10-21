@@ -1,5 +1,6 @@
 module Pawl.Types.LibraryPlacement where
 
+import qualified Pawl.Types.ArrangedArrival as ArrangedArrival
 import qualified Pawl.Types.LibraryPosition as LibraryPosition
 import qualified Pawl.Types.Quantity as Quantity
 
@@ -19,8 +20,9 @@ import qualified Pawl.Types.Quantity as Quantity
 --
 -- The OWNER and not the resolving spell's controller, which is CR 401.2 read
 -- through the card ("its owner puts it") and is the same decider CR 401.4 names
--- for the arrangement. A reader who knows CR 608.2f's secondary sentence would
--- otherwise hand this to the controller.
+-- for the arrangement where the text names nobody else ('ArrangedBy'). A reader
+-- who knows CR 608.2f's secondary sentence would otherwise hand this to the
+-- controller.
 data LibraryPlacement
   = Stated LibraryPosition.LibraryPosition
   | OwnerChooses
@@ -34,6 +36,10 @@ data LibraryPlacement
     -- arriving cards are randomised, the library they join keeps its order, and
     -- nothing that triggers on a library being shuffled sees this.
     RandomOrder LibraryPosition.LibraryPosition
+  | -- | CR 608.2c / 608.2d: the end is stated and the ORDER is the payload's
+    -- chooser's rather than the owner's -- Agonizing Memories' "put them on top
+    -- of that player's library in any order", which the caster orders.
+    ArrangedBy ArrangedArrival.ArrangedArrival
   | -- | CR 401.7: just beneath this many cards from the top, or the bottom of
     -- a library holding fewer. Oust's "second from the top" is 1, Unexpectedly
     -- Absent's "just beneath the top X cards" is X.

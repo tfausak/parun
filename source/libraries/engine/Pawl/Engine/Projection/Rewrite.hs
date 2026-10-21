@@ -2214,6 +2214,7 @@ rewritePlacement pairs placement = case placement of
   LibraryPlacement.Stated _ -> placement
   LibraryPlacement.OwnerChooses -> placement
   LibraryPlacement.RandomOrder _ -> placement
+  LibraryPlacement.ArrangedBy _ -> placement
   LibraryPlacement.Beneath quantity -> LibraryPlacement.Beneath (rewriteQuantity pairs quantity)
   LibraryPlacement.BeneathOrBottom quantity -> LibraryPlacement.BeneathOrBottom (rewriteQuantity pairs quantity)
 
