@@ -6,6 +6,7 @@ import qualified Pawl.Types.AffectPlayers as AffectPlayers
 import qualified Pawl.Types.Amass as Amass
 import qualified Pawl.Types.Ante as Ante
 import qualified Pawl.Types.ArmDelayedTrigger as ArmDelayedTrigger
+import qualified Pawl.Types.ArrangeInLibrary as ArrangeInLibrary
 import qualified Pawl.Types.AttachAll as AttachAll
 import qualified Pawl.Types.AttachBound as AttachBound
 import qualified Pawl.Types.AttachTarget as AttachTarget
@@ -241,9 +242,9 @@ data Effect card ability
     -- player rather than all -- and bound into the slot, so a later clause of
     -- the same resolution can act on what was seen (Into the Wilds).
     LookAt LookAt.LookAt
-  | -- | CR 401.4: the cards the ObjectRef names go back into their owner's
-    -- library at the positions they already occupy, in an order that owner
-    -- states (Ponder's "then put them back in any order").
+  | -- | CR 608.2c / 608.2d: the cards the ObjectRef names go back into their owner's
+    -- library at the positions they already occupy, in an order the payload's
+    -- chooser states (Ponder's "then put them back in any order").
     --
     -- The cards never leave the library, so this is a rewrite of its order and
     -- no zone change at all -- Scry's road (Pawl.Engine.Resolve.Effect's
@@ -254,7 +255,7 @@ data Effect card ability
     -- Scry, Surveil and Fateseal split the looked-at cards two ways; this asks
     -- for ONE ordered list back, which is a third question and not a special
     -- case of theirs.
-    ArrangeInLibrary ObjectRef.ObjectRef
+    ArrangeInLibrary ArrangeInLibrary.ArrangeInLibrary
   | -- | CR 701.22a: the players the PlayerRef names each scry this many, the
     -- ordered partition being theirs (Prompt.ChooseScry). One library rewrite
     -- and no zone change.

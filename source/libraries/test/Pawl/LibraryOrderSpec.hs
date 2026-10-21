@@ -38,6 +38,7 @@ import qualified Pawl.Support as S
 import qualified Pawl.Types.ActivatedAbility as ActivatedAbility
 import qualified Pawl.Types.Activator as Activator
 import qualified Pawl.Types.AnyNumberOf as AnyNumberOf
+import qualified Pawl.Types.ArrangeInLibrary as ArrangeInLibrary
 import qualified Pawl.Types.Asked as Asked
 import qualified Pawl.Types.BeginningStep as BeginningStep
 import qualified Pawl.Types.Card as Card.Type
@@ -1337,7 +1338,7 @@ ponderSpec s registry = Spec.describe s "PutBackInOrder" $ do
   -- pair differs in the ref's count alone, on one board.
   Spec.it s "CR 401.4 one card is one order and raises no prompt, where two do" $ do
     (_, _, board) <- ponderBoard s registry
-    let topOf n = Effect.ArrangeInLibrary (ObjectRef.TopOfLibrary (TopOfLibrary.MkTopOfLibrary (PlayerRef.Relative PlayerRelation.You) (Quantity.Literal n)))
+    let topOf n = Effect.ArrangeInLibrary (ArrangeInLibrary.MkArrangeInLibrary (ObjectRef.TopOfLibrary (TopOfLibrary.MkTopOfLibrary (PlayerRef.Relative PlayerRelation.You) (Quantity.Literal n))) (PlayerRef.Relative PlayerRelation.You))
         counting :: Prompt.Prompt r -> State.State Int r
         counting p = case p of
           Prompt.ArrangeLibraryCards {} -> do

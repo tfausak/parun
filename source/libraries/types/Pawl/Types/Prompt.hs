@@ -576,9 +576,10 @@ data Prompt r where
   -- library at once; the answer permutes the indices, reading from that end
   -- inward.
   ArrangeLibraryArrivals :: Decider.Decider -> PlayerId.PlayerId -> LibraryPosition.LibraryPosition -> [ObjectId.ObjectId] -> Prompt [Natural.Natural]
-  -- | CR 401.4: the owner arranges two or more cards an effect puts back into
-  -- their library at the positions those cards already occupy (Ponder); the
-  -- answer permutes the indices, reading from the top of the library inward.
+  -- | CR 401.4 / 608.2c: the player arranges two or more cards an effect puts
+  -- back into their owner's library at the positions those cards already occupy
+  -- (Ponder, Cruel Fate); the answer permutes the indices, reading from the top
+  -- of the library inward.
   --
   -- No LibraryPosition, which is the difference from ArrangeLibraryArrivals
   -- above: nothing arrives, so there is no end for the effect to have stated.

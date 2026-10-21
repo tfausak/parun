@@ -18,6 +18,7 @@ import qualified Pawl.Codec.AffectPlayers as AffectPlayers
 import qualified Pawl.Codec.Amass as Amass
 import qualified Pawl.Codec.Ante as Ante
 import qualified Pawl.Codec.ArmDelayedTrigger as ArmDelayedTrigger
+import qualified Pawl.Codec.ArrangeInLibrary as ArrangeInLibrary
 import qualified Pawl.Codec.AttachAll as AttachAll
 import qualified Pawl.Codec.AttachBound as AttachBound
 import qualified Pawl.Codec.AttachTarget as AttachTarget
@@ -195,7 +196,7 @@ codec cardCodec abilityCodec =
           Arm.payload "Clash" SlotName.codec Effect.Clash (\x -> case x of Effect.Clash y -> Just y; _ -> Nothing),
           Arm.payload "AsYouCascade" SlotName.codec Effect.AsYouCascade (\x -> case x of Effect.AsYouCascade y -> Just y; _ -> Nothing),
           Arm.payload "Explore" ObjectRef.codec Effect.Explore (\x -> case x of Effect.Explore y -> Just y; _ -> Nothing),
-          Arm.payload "ArrangeInLibrary" ObjectRef.codec Effect.ArrangeInLibrary (\x -> case x of Effect.ArrangeInLibrary y -> Just y; _ -> Nothing),
+          Arm.payload "ArrangeInLibrary" ArrangeInLibrary.codec Effect.ArrangeInLibrary (\x -> case x of Effect.ArrangeInLibrary y -> Just y; _ -> Nothing),
           Arm.payload "Connive" Connive.codec Effect.Connive (\x -> case x of Effect.Connive y -> Just y; _ -> Nothing),
           Arm.payload "Mill" Mill.codec Effect.Mill (\x -> case x of Effect.Mill y -> Just y; _ -> Nothing),
           Arm.payload "Discard" Discard.codec Effect.Discard (\x -> case x of Effect.Discard y -> Just y; _ -> Nothing),

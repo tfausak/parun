@@ -55,6 +55,7 @@ import qualified Pawl.Types.AnyNumberDiscard as AnyNumberDiscard
 import qualified Pawl.Types.AnyNumberMatching as AnyNumberMatching
 import qualified Pawl.Types.Arithmetic as Arithmetic
 import qualified Pawl.Types.ArmDelayedTrigger as ArmDelayedTrigger
+import qualified Pawl.Types.ArrangeInLibrary as ArrangeInLibrary
 import qualified Pawl.Types.AsCopy as AsCopy
 import qualified Pawl.Types.AttachAll as AttachAll
 import qualified Pawl.Types.AttachBound as AttachBound
@@ -1307,7 +1308,7 @@ effectNames asking onCard onAbility x = case x of
   Effect.FromOutsideTheGame fromOutsideTheGame -> fromOutsideTheGameNames asking fromOutsideTheGame
   Effect.ExileThisSpell -> mempty
   Effect.LookAt lookAt -> lookAtNames asking lookAt
-  Effect.ArrangeInLibrary objectRef -> objectRefNames asking objectRef
+  Effect.ArrangeInLibrary (ArrangeInLibrary.MkArrangeInLibrary objectRef chooser) -> objectRefNames asking objectRef <> playerRefNames asking chooser
   Effect.Scry playerQuantity -> playerQuantityNames asking playerQuantity
   Effect.Surveil playerQuantity -> playerQuantityNames asking playerQuantity
   Effect.Fateseal playerQuantity -> playerQuantityNames asking playerQuantity

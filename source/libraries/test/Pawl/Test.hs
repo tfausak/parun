@@ -71,6 +71,7 @@ import qualified Pawl.Codec.AnswerSpec
 import qualified Pawl.Codec.AnyNumberDiscardSpec
 import qualified Pawl.Codec.AnyNumberMatchingSpec
 import qualified Pawl.Codec.ArmDelayedTriggerSpec
+import qualified Pawl.Codec.ArrangeInLibrarySpec
 import qualified Pawl.Codec.ArrivalSpec
 import qualified Pawl.Codec.AsCopySpec
 import qualified Pawl.Codec.AttachAllSpec
@@ -1275,6 +1276,7 @@ spec s registry = do
   Pawl.Codec.LimitUnlessSpec.spec s
   Pawl.Codec.LoggedEventSpec.spec s
   Pawl.Codec.LookAtSpec.spec s
+  Pawl.Codec.ArrangeInLibrarySpec.spec s
   Pawl.Codec.LookedSpec.spec s
   Pawl.Codec.PlayerInstructionSpec.spec s
   Pawl.Codec.SeatViewSpec.spec s
