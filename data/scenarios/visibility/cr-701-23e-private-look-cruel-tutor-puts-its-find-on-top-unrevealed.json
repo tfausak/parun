@@ -1,0 +1,36 @@
+{
+  "description": "CR 701.23e private look Cruel Tutor puts its find on top unrevealed",
+  "note": "The search finds the Lightning Bolt, the second card of three. The shuffle is offered only the Goblin Piker and the Plains (CR 701.24b) and its answer swaps them; the Bolt then goes on top. alice looked at all three cards (CR 701.23a), but nothing reveals the Bolt (CR 701.23e), so bob was shown nothing and nobody sees the top card's face (CR 401.2). The scenario resolve/cr-701-24b-mystical-tutor-s-find-is-left-out-of-the-shuffle-and-put-on-top is the control, whose reveal bob does see.",
+  "board": {
+    "seats": [
+      {
+        "name": "alice",
+        "battlefield": [
+          { "card": "Swamp", "label": "s0", "ready": true },
+          { "card": "Swamp", "label": "s1", "ready": true },
+          { "card": "Swamp", "label": "s2", "ready": true }
+        ],
+        "hand": [{ "card": "Cruel Tutor", "label": "tutor" }],
+        "library": [
+          { "card": "Goblin Piker", "label": "piker" },
+          { "card": "Lightning Bolt", "label": "bolt" },
+          { "card": "Plains", "label": "plains" }
+        ]
+      },
+      { "name": "bob", "library": [{ "card": "Forest" }] }
+    ],
+    "active": "alice",
+    "step": "PrecombatMain"
+  },
+  "timeline": [
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": { "Cast": { "object": "$tutor", "mana": ["$s0", "$s1", "$s2"] } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass" },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": { "Answer": { "prompt": "Search", "with": ["$bolt"] } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": { "Answer": { "prompt": "Shuffle", "with": ["$plains", "$piker"] } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "check": { "View": { "of": "Witnessed", "player": "bob", "is": [] } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "check": { "View": { "of": "Witnessed", "player": "alice", "is": ["Goblin Piker", "Lightning Bolt", "Plains"] } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "check": { "View": { "of": "Zone", "player": "alice", "zone": "Library", "is": ["Lightning Bolt", "Plains", "Goblin Piker"] } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "check": { "View": { "of": "Seers", "object": "Lightning Bolt", "is": [] } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "check": { "Life": { "player": "alice", "life": 18 } } }
+  ]
+}

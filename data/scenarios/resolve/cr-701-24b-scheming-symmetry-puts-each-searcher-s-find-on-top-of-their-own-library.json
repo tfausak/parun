@@ -1,0 +1,40 @@
+{
+  "description": "CR 701.24b Scheming Symmetry puts each searcher's find on top of their own library",
+  "note": "alice targets herself and bob. Each searches their own library (CR 701.23i, APNAP order) and finds its middle card; each library's shuffle leaves its own find out (CR 701.24b), and each find goes on top of its owner's library. The finds are unrevealed (CR 701.23e): each player saw only their own library.",
+  "board": {
+    "seats": [
+      {
+        "name": "alice",
+        "battlefield": [{ "card": "Swamp", "label": "swamp", "ready": true }],
+        "hand": [{ "card": "Scheming Symmetry", "label": "symmetry" }],
+        "library": [
+          { "card": "Goblin Piker", "label": "piker" },
+          { "card": "Lightning Bolt", "label": "bolt" },
+          { "card": "Plains", "label": "plains" }
+        ]
+      },
+      {
+        "name": "bob",
+        "library": [
+          { "card": "Forest", "label": "forest" },
+          { "card": "Hill Giant", "label": "giant" },
+          { "card": "Island", "label": "island" }
+        ]
+      }
+    ],
+    "active": "alice",
+    "step": "PrecombatMain"
+  },
+  "timeline": [
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": { "Cast": { "object": "$symmetry", "targets": ["$alice", "$bob"], "mana": ["$swamp"] } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass" },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": { "Answer": { "prompt": "Search", "with": ["$bolt"] } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "bob", "do": { "Answer": { "prompt": "Search", "with": ["$giant"] } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": { "Answer": { "prompt": "Shuffle", "with": ["$plains", "$piker"] } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": { "Answer": { "prompt": "Shuffle", "with": ["$island", "$forest"] } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "check": { "View": { "of": "Zone", "player": "alice", "zone": "Library", "is": ["Lightning Bolt", "Plains", "Goblin Piker"] } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "check": { "View": { "of": "Zone", "player": "bob", "zone": "Library", "is": ["Hill Giant", "Island", "Forest"] } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "check": { "View": { "of": "Witnessed", "player": "alice", "is": ["Goblin Piker", "Lightning Bolt", "Plains"] } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "check": { "View": { "of": "Witnessed", "player": "bob", "is": ["Forest", "Hill Giant", "Island"] } } }
+  ]
+}
