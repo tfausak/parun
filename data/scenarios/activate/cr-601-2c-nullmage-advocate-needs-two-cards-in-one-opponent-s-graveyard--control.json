@@ -1,0 +1,135 @@
+{
+  "description": "CR 601.2c Nullmage Advocate needs two cards in one opponent's graveyard, not one in each (control)",
+  "board": {
+    "seats": [
+      {
+        "name": "alice",
+        "battlefield": [
+          {
+            "card": "Nullmage Advocate",
+            "label": "advocate",
+            "ready": true
+          }
+        ],
+        "library": [
+          {
+            "card": "Hill Giant"
+          }
+        ]
+      },
+      {
+        "name": "bob",
+        "battlefield": [
+          {
+            "card": "Bronze Sable",
+            "label": "sable"
+          }
+        ],
+        "graveyard": [
+          {
+            "card": "Goblin Piker",
+            "label": "piker"
+          },
+          {
+            "card": "Grizzly Bears",
+            "label": "bears"
+          }
+        ],
+        "library": [
+          {
+            "card": "Plains"
+          }
+        ]
+      },
+      {
+        "name": "carol",
+        "graveyard": [
+          {
+            "card": "Lightning Bolt",
+            "label": "bolt"
+          }
+        ],
+        "library": [
+          {
+            "card": "Forest"
+          }
+        ]
+      }
+    ],
+    "active": "alice",
+    "step": "PrecombatMain"
+  },
+  "timeline": [
+    {
+      "turn": 1,
+      "step": "PrecombatMain",
+      "player": "alice",
+      "check": {
+        "View": {
+          "of": "Offered",
+          "player": "alice",
+          "is": [
+            "Pass",
+            "Activate $advocate"
+          ]
+        }
+      }
+    },
+    {
+      "turn": 1,
+      "step": "PrecombatMain",
+      "player": "alice",
+      "do": {
+        "Activate": {
+          "object": "$advocate",
+          "targetsBySlot": {
+            "cards": [
+              "$piker",
+              "$bears"
+            ],
+            "target": [
+              "$sable"
+            ]
+          }
+        }
+      }
+    },
+    {
+      "turn": 1,
+      "step": "PrecombatMain",
+      "player": "alice",
+      "do": "Pass"
+    }
+  ],
+  "final": [
+    {
+      "View": {
+        "of": "Zone",
+        "player": "bob",
+        "zone": "Hand",
+        "is": [
+          "Goblin Piker",
+          "Grizzly Bears"
+        ]
+      }
+    },
+    {
+      "Count": {
+        "player": "bob",
+        "zone": "Graveyard",
+        "card": "Bronze Sable",
+        "count": 1
+      }
+    },
+    {
+      "View": {
+        "of": "Zone",
+        "player": "carol",
+        "zone": "Graveyard",
+        "is": [
+          "$bolt"
+        ]
+      }
+    }
+  ]
+}
