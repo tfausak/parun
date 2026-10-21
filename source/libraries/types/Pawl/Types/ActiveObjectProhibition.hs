@@ -11,8 +11,8 @@ import qualified Pawl.Types.Timestamp as Timestamp
 -- permanents it names or a class of them, held in GameState.objectProhibitions and left by
 -- Pawl.Types.Effect's Prohibit.
 --
--- Read through Pawl.Engine.Prohibition.prohibited, one 'Prohibition.Prohibition'
--- at a time: CR 602.5 at Pawl.Engine.ActivationProhibition.cantActivate, CR
+-- Read through Pawl.Engine.RestrictedCreatures.prohibited, one
+-- 'Prohibition.Prohibition' at a time: CR 602.5 at Pawl.Engine.ActivationProhibition.cantActivate, CR
 -- 509.1b at Pawl.Engine.CombatRestriction.blockProhibited, CR 502.3 at
 -- Pawl.Engine.UntapRestriction.doesNotUntap -- each unioned beside its printed
 -- carrier's rows, so no gate learns which road a prohibition took -- and CR
