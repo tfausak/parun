@@ -49,6 +49,10 @@ data Quantity
     -- Nothing when it holds no amount. CR 601.2b's X is this arm, at
     -- Pawl.Engine.Binding.variableX.
     InSlot SlotName.SlotName
+  | -- | CR 601.2d: the part of that slot's announced division given to the
+    -- recipient the amount is read for (Pawl.Types.TargetSlot's `divided`);
+    -- Nothing for a recipient it gave none, which CR 608.2b's illegal target is.
+    Share SlotName.SlotName
   | -- | CR 701.4b: 1 if that slot of the surrounding announcement names at least
     -- one object or holds an amount, else 0 -- Osseous Exhale's "if a Dragon
     -- was beheld", CR 701.59c's "if evidence was collected" (Vitu-Ghazi

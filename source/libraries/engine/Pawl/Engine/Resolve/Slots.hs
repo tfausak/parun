@@ -3443,6 +3443,8 @@ targetSlotSlots slot =
         -- way its bound does, so it is reported beside it or a slot named only
         -- there would dangle.
         maybe Map.empty quantitySlots (SlotCount.quantity (TargetSlot.count slot)),
+        -- CR 601.2d's divided total names slots the same way (Rolling Thunder's X).
+        maybe Map.empty quantitySlots (TargetSlot.divided slot),
         -- And the seat a CR 115.1 chooser names through a binding -- Curse of
         -- Inertia's "that attacking player", which its condition must supply.
         case TargetSlot.chooser slot of

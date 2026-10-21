@@ -10,7 +10,10 @@ import qualified Pawl.Types.Filter as Filter
 import qualified Pawl.Types.PlayerRelation as PlayerRelation
 import qualified Pawl.Types.PlayerScope as PlayerScope
 import qualified Pawl.Types.Pool as Pool
+import qualified Pawl.Types.Quantity as Quantity
+import qualified Pawl.Types.SlotCount as SlotCount
 import qualified Pawl.Types.SlotName as SlotName
+import qualified Pawl.Types.TargetCount as TargetCount
 import qualified Pawl.Types.TargetSlot as TargetSlot
 import qualified Pawl.Types.ZoneScope as ZoneScope
 
@@ -84,6 +87,14 @@ spec s = Spec.describe s "Pawl.Codec.TargetSlot" $ do
       TargetSlot.codec
       (TargetSlot.forEachPlayer PlayerRelation.Opponent (SlotName.MkSlotName (Text.pack "thatPlayer")) (TargetSlot.upTo 1 Pool.Permanents Nothing))
       " {\"pool\":{\"type\":\"Permanents\"},\"count\":{\"type\":\"Printed\",\"value\":{\"least\":0,\"most\":1}},\"perPlayer\":{\"players\":{\"type\":\"Opponent\"},\"slot\":\"thatPlayer\"}} "
+  -- CR 601.2d's divided slot: the one case that spends the divided key (Forked
+  -- Lightning).
+  Spec.it s "a divided spec" $
+    Common.assertCodec
+      s
+      TargetSlot.codec
+      ((TargetSlot.required Pool.Creatures Nothing) {TargetSlot.count = SlotCount.Printed (TargetCount.MkTargetCount 1 (Just 3)), TargetSlot.divided = Just (Quantity.Literal 4)})
+      " {\"pool\":{\"type\":\"Creatures\"},\"count\":{\"type\":\"Printed\",\"value\":{\"least\":1,\"most\":3}},\"divided\":{\"type\":\"Literal\",\"value\":4}} "
   -- The slot-keyed map is a JSON OBJECT keyed by the slot name (#1303). The two
   -- entries are inserted in DESCENDING slot-name order, so a trip that emitted
   -- the map's incidental traversal order rather than Map.toAscList fails this

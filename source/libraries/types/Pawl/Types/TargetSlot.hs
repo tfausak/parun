@@ -109,7 +109,12 @@ data TargetSlot = MkTargetSlot
     -- | CR 601.2c: "for each opponent, ... target ... that player controls" --
     -- the slot announced once per player, each copy with its own "that player"
     -- (Pawl.Engine.Target.announcedSlots). Nothing is one ordinary slot.
-    perPlayer :: Maybe SlotPerPlayer.SlotPerPlayer
+    perPlayer :: Maybe SlotPerPlayer.SlotPerPlayer,
+    -- | CR 601.2d: the total the caster divides among this slot's targets as
+    -- the spell is cast, each target getting at least one (Forked Lightning's
+    -- "4 damage divided as you choose"); Quantity.Share reads a target's part.
+    -- Nothing is an undivided slot.
+    divided :: Maybe Quantity.Quantity
   }
   deriving (Eq, Ord, Show)
 
@@ -117,22 +122,22 @@ data TargetSlot = MkTargetSlot
 -- almost every slot in the engine and the corpus is one, so writing the count out
 -- at each would bury the handful that are not.
 required :: Pool.Pool -> Maybe (Filter.Filter Keyword.Keyword) -> TargetSlot
-required p f = MkTargetSlot p f (SlotCount.Printed TargetCount.one) Nothing Nothing Nothing
+required p f = MkTargetSlot p f (SlotCount.Printed TargetCount.one) Nothing Nothing Nothing Nothing
 
 -- CR 115.6 / 601.2c's "up to N targets": a slot the caster may fill any number of
 -- times up to N, the empty answer included.
 upTo :: Natural.Natural -> Pool.Pool -> Maybe (Filter.Filter Keyword.Keyword) -> TargetSlot
-upTo n p f = MkTargetSlot p f (SlotCount.Printed (TargetCount.upTo n)) Nothing Nothing Nothing
+upTo n p f = MkTargetSlot p f (SlotCount.Printed (TargetCount.upTo n)) Nothing Nothing Nothing Nothing
 
 -- CR 601.2c's "any number of target ...": the same slot with no printed ceiling,
 -- so the board's candidates are the only bound.
 anyNumber :: Pool.Pool -> Maybe (Filter.Filter Keyword.Keyword) -> TargetSlot
-anyNumber p f = MkTargetSlot p f (SlotCount.Printed TargetCount.anyNumber) Nothing Nothing Nothing
+anyNumber p f = MkTargetSlot p f (SlotCount.Printed TargetCount.anyNumber) Nothing Nothing Nothing Nothing
 
 -- CR 601.2c with CR 601.2b: a slot taking exactly the X the caster announced
 -- ("each of X target creatures", Rot-Curse Rakshasa).
 announcedX :: Pool.Pool -> Maybe (Filter.Filter Keyword.Keyword) -> TargetSlot
-announcedX p f = MkTargetSlot p f SlotCount.AnnouncedX Nothing Nothing Nothing
+announcedX p f = MkTargetSlot p f SlotCount.AnnouncedX Nothing Nothing Nothing Nothing
 
 -- CR 601.2c: the same slot with the computed bound its Filter compares against --
 -- see `amount` above. Separate from the three builders so that the slots that

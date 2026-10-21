@@ -2948,7 +2948,8 @@ targetSlotSiblingNames slot =
     [ poolSiblingName (TargetSlot.pool slot),
       maybe Set.empty Filter.boundSlots (TargetSlot.filter slot),
       maybe Set.empty (Map.keysSet . Slots.quantitySlots) (TargetSlot.amount slot),
-      maybe Set.empty (Map.keysSet . Slots.quantitySlots) (SlotCount.quantity (TargetSlot.count slot))
+      maybe Set.empty (Map.keysSet . Slots.quantitySlots) (SlotCount.quantity (TargetSlot.count slot)),
+      maybe Set.empty (Map.keysSet . Slots.quantitySlots) (TargetSlot.divided slot)
     ]
 
 -- The sibling slot ONE pool names, Card.instancePool's own two arms: only
@@ -3581,6 +3582,8 @@ castProposed perform spending pid oid sid face castFrom preparedFor keywordsBefo
                   if not (Target.selectionLegal Nothing (Just pid) seed sid (Maybe.fromMaybe 0 mAmount) slots sets chosen bestowedGs)
                     then reject
                     else do
+                      -- CR 601.2d: the division among the targets just fixed.
+                      divisions <- Target.announceDivision Nothing pid sid sid seed slots chosen
                       -- CR 601.2c's RECORD, stamped on `sid` itself -- the
                       -- incarnation CR 601.2a put on the stack, rather than
                       -- whatever is on top of it now -- and written before CR
@@ -3624,7 +3627,7 @@ castProposed perform spending pid oid sid face castFrom preparedFor keywordsBefo
                             g
                               { GameState.objects =
                                   Map.adjust
-                                    (\o -> o {Object.bindings = Binding.setAnnouncedTargets chosen (Binding.setYou pid (Binding.setTriggerSource sid (Target.stampDefendingPlayers sid chosen g (Map.union (Binding.fromAnnounced counts) (Binding.fromChoices chosen mAmount chosenModes)))))})
+                                    (\o -> o {Object.bindings = Binding.setAnnouncedTargets chosen (Binding.setYou pid (Binding.setTriggerSource sid (Target.stampDefendingPlayers sid chosen g (Map.union (Binding.fromAnnounced counts) (Binding.setDivisions divisions (Binding.fromChoices chosen mAmount chosenModes))))))})
                                     sid
                                     (GameState.objects g)
                               }

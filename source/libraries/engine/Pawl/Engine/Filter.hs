@@ -1134,6 +1134,12 @@ data Context = MkContext
     --
     -- Nothing wherever the atom cannot appear, which is everywhere else.
     recipient :: Maybe PlayerId.PlayerId,
+    -- CR 601.2d: what each divided slot's announced division gave the
+    -- recipient the surrounding effect is CURRENTLY BEING APPLIED TO, for
+    -- Quantity.Share -- Forked Lightning's part of its 4 damage for each target.
+    -- Filled by Pawl.Engine.Resolve.Effect's DealDamage arm, once per recipient;
+    -- empty everywhere else, where Share answers Nothing.
+    shares :: Map.Map SlotName.SlotName Natural.Natural,
     -- The objects the surrounding announcement's or resolution's slots name,
     -- for Quantity.AgainstSlot to aim an evaluation at one, for Count's
     -- OverBound fold and for the IsBound atom above. It rides here because
@@ -1647,7 +1653,7 @@ data Context = MkContext
 -- here owes both halves of the same pair: which way its unfilled read answers,
 -- and what holds a card to the positions that fill it.
 contextFor :: Teams.Teams -> Maybe PlayerId.PlayerId -> Maybe ObjectId.ObjectId -> Context
-contextFor t p s = MkContext {teams = t, perspective = p, source = s, sourceMeasures = Map.empty, sourceColors = Set.empty, sourceSectors = Set.empty, sourceNames = Set.empty, slotAmount = Nothing, defendingPlayers = [], recipient = Nothing, slotObjects = Map.empty, cantCrewVehicles = Set.empty, slotNames = Map.empty, slotControllers = Map.empty, slotHostControllers = Map.empty, subjectHostCardTypes = Set.empty, slotCreatureTypes = Map.empty, slotMeasures = Map.empty, slotPlayers = Map.empty, boundAmounts = Map.empty, slotStickers = Map.empty, slotVotes = Map.empty, boundUnannounced = False, sourceAttachedTo = Nothing, evaluated = Nothing, sourceEntrants = Set.empty, sourceOwner = Nothing, sourceChosenNames = Map.empty, carrierChosenPlayer = Nothing, aimingController = Nothing, sourceChosenColors = Set.empty, sourceChosenSubtype = Nothing, sourceLastExiled = Nothing, sourceExiled = Map.empty, reader = Nothing, candidateMeasures = Nothing}
+contextFor t p s = MkContext {teams = t, perspective = p, source = s, sourceMeasures = Map.empty, sourceColors = Set.empty, sourceSectors = Set.empty, sourceNames = Set.empty, slotAmount = Nothing, defendingPlayers = [], recipient = Nothing, shares = Map.empty, slotObjects = Map.empty, cantCrewVehicles = Set.empty, slotNames = Map.empty, slotControllers = Map.empty, slotHostControllers = Map.empty, subjectHostCardTypes = Set.empty, slotCreatureTypes = Map.empty, slotMeasures = Map.empty, slotPlayers = Map.empty, boundAmounts = Map.empty, slotStickers = Map.empty, slotVotes = Map.empty, boundUnannounced = False, sourceAttachedTo = Nothing, evaluated = Nothing, sourceEntrants = Set.empty, sourceOwner = Nothing, sourceChosenNames = Map.empty, carrierChosenPlayer = Nothing, aimingController = Nothing, sourceChosenColors = Set.empty, sourceChosenSubtype = Nothing, sourceLastExiled = Nothing, sourceExiled = Map.empty, reader = Nothing, candidateMeasures = Nothing}
 
 -- The ONE object a slot names, for the readers that can take no more than one --
 -- Quantity.AgainstSlot's evaluation, Count's IsControllerOfBound. Nothing where

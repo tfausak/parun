@@ -57,6 +57,7 @@ kindOf prompt = Text.pack $ case prompt of
   Prompt.ChooseCounterRemovalAtLeast {} -> "ChooseCounterRemovalAtLeast"
   Prompt.ChooseCounterRemovalUpTo {} -> "ChooseCounterRemovalUpTo"
   Prompt.ChooseCounterDistribution {} -> "ChooseCounterDistribution"
+  Prompt.ChooseDivision {} -> "ChooseDivision"
   Prompt.ChooseMixedCounterRemoval {} -> "ChooseMixedCounterRemoval"
   Prompt.ChooseVote {} -> "ChooseVote"
   -- The names scenario files answer these by, one per CounterKindFor.

@@ -499,7 +499,7 @@ fallsOff pools gs oid = case Map.lookup oid pcs of
 -- matched rather than widened.
 stillLegalEnchant :: Target.Pools -> GameState -> ObjectId -> TargetSlot.TargetSlot -> Recipient.Recipient -> Bool
 stillLegalEnchant pools gs source slot recipient = case (slot, recipient) of
-  (TargetSlot.MkTargetSlot Pool.Creatures Nothing count Nothing Nothing Nothing, Recipient.ToCreature target) | count == SlotCount.Printed TargetCount.one ->
+  (TargetSlot.MkTargetSlot Pool.Creatures Nothing count Nothing Nothing Nothing _, Recipient.ToCreature target) | count == SlotCount.Printed TargetCount.one ->
     case Map.lookup target (Snapshot.projected (Target.board pools)) of
       Nothing -> False
       Just pc ->

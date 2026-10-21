@@ -2173,12 +2173,12 @@ handActionSlotsOffend card =
 -- TARGET SLOT's count -- "each of X target creatures" (Rot-Curse Rakshasa),
 -- "up to X target artifacts and/or enchantments" (Pest Infestation) -- or
 -- through a slot's CR 202.3 computed BOUND, "mana value X or less" (Stir the
--- Grave)? Two readers Resolve.readsX cannot see, that one walking effects and
--- both of these sitting on the slot, so the two reads-equal-declares lints below
--- ask all three.
+-- Grave) -- or through CR 601.2d's divided TOTAL (Rolling Thunder)? Three
+-- readers Resolve.readsX cannot see, that one walking effects and these sitting
+-- on the slot, so the two reads-equal-declares lints below ask all four.
 modalReadsAnnouncedX :: Modal.Modal Card.Type.Card (GrantedAbility.GrantedAbility Card.Type.Card) -> Bool
 modalReadsAnnouncedX =
-  any (\slot -> countReadsX (TargetSlot.count slot) || any (Set.member Binding.variableX . QuantitySlot.slots) (TargetSlot.amount slot))
+  any (\slot -> countReadsX (TargetSlot.count slot) || any (Set.member Binding.variableX . QuantitySlot.slots) (TargetSlot.amount slot) || any (Set.member Binding.variableX . QuantitySlot.slots) (TargetSlot.divided slot))
     . Modal.allTargetSlots
 
 -- CR 601.2c with CR 601.2b: does this slot's COUNT read the announced X?
@@ -2547,6 +2547,27 @@ modeBranchesOffend mode =
           OrElse.sibling orElse == cIdx
             || fmap Clause.orElse (Map.lookup (OrElse.sibling orElse) byIndex) /= names cIdx (OrElse.chooser orElse) (OrElse.villainous orElse)
    in any offends indexed
+
+-- CR 601.2d: does a divided slot go unread, or a Quantity.Share read anything
+-- but its own slot's targets? A division is read as the part a DealDamage
+-- clause deals to the divided slot's own targets, `{ref: InSlot s, quantity:
+-- Share s}`; a divided slot nothing reads that way deals nothing, and a Share
+-- anywhere else answers Nothing -- silently, which is why this is a lint.
+cardDivisionsDangle :: Face.Face Card.Type.Card -> Bool
+cardDivisionsDangle = any (any modeDivisionDangles . Modal.modes) . faceModals
+
+-- One mode's half of that lint.
+modeDivisionDangles :: Mode.Mode Card.Type.Card (GrantedAbility.GrantedAbility Card.Type.Card) -> Bool
+modeDivisionDangles mode =
+  let divided = Map.keysSet (Map.filter (Maybe.isJust . TargetSlot.divided) (Mode.targetSlots mode))
+      parts = do
+        clause <- Foldable.toList (Mode.clauses mode)
+        Effect.DealDamage dealt <- Foldable.toList (Clause.effects clause)
+        Foldable.toList (DealDamage.parts dealt)
+      sharing = [(slot, DamagePart.ref part) | part <- parts, Quantity.Type.Share slot <- [DamagePart.quantity part]]
+      reads_ = Set.fromList [slot | (slot, ObjectRef.InSlot named) <- sharing, slot == named]
+      offends (slot, ref) = ref /= ObjectRef.InSlot slot || not (Set.member slot divided)
+   in any offends sharing || not (Set.isSubsetOf divided reads_)
 
 -- CR 118.6: does any clause state a cost DESCRIBED in terms of another object's
 -- mana cost (Pawl.Types.CostBasis) and a mana part of its own beside it?
@@ -3898,6 +3919,8 @@ targetSlotFilters slot =
     <> concatMap quantityFilters (Maybe.maybeToList (TargetSlot.amount slot))
     -- CR 601.2c's computed count is a Quantity on the same footing.
     <> concatMap quantityFilters (Maybe.maybeToList (SlotCount.quantity (TargetSlot.count slot)))
+    -- And CR 601.2d's divided total.
+    <> concatMap quantityFilters (Maybe.maybeToList (TargetSlot.divided slot))
 
 -- A continuous effect's affected set (Pawl.Types.Affected), wherever one is
 -- written -- a static ability, a combat restriction, an attack or block
@@ -4123,6 +4146,7 @@ quantityKindFilters quantity = case quantity of
   Quantity.Type.Measure _ -> []
   Quantity.Type.Intensity -> []
   Quantity.Type.InSlot _ -> []
+  Quantity.Type.Share _ -> []
   Quantity.Type.WasBound _ -> []
   Quantity.Type.BoundCount _ -> []
   Quantity.Type.UniqueVowelsOnSticker _ -> []
@@ -6988,6 +7012,24 @@ lintSpec s registry = Spec.describe s "Lint" $ do
     -- rejects the name on every card rather than only on the ones carrying it.
     let mutated = face {Face.spell = (Face.spell face) {Modal.modes = Seq.singleton (lintMode [tap Card.mutateSlot] [Card.mutateSlot])}}
     Spec.assertBool s (cardSlotNamesCollide mutated) "a spell mode declaring the mutate slot's name is rejected"
+  -- CR 601.2d's division, which a card must read as the part each of the
+  -- divided slot's own targets is dealt.
+  Spec.it s "no card's division goes unread or is read elsewhere" $ do
+    ps <- S.allPrintings s
+    let offenders = filter (anyFace cardDivisionsDangle . Printing.card) ps
+    Spec.assertBool s (any (anyFace (any (any (any (Maybe.isJust . TargetSlot.divided) . Mode.targetSlots) . Modal.modes) . faceModals) . Printing.card) ps) "the pool has a divided slot"
+    Spec.assertEqWith s "no dangling division" (fmap (S.nameOf . Printing.card) offenders) []
+  -- And the rejecting direction, against Forked Lightning misauthored on
+  -- purpose.
+  Spec.it s "the lint itself catches a division nothing reads, and a part read elsewhere" $ do
+    lightning <- S.printingOf s registry "Forked Lightning"
+    let face = S.combinedFace lightning
+        rewrite f = face {Face.spell = (Face.spell face) {Modal.modes = fmap f (Modal.modes (Face.spell face))}}
+        undivided mode = mode {Mode.targetSlots = fmap (\slot -> slot {TargetSlot.divided = Nothing}) (Mode.targetSlots mode)}
+        unread mode = mode {Mode.clauses = fmap (\clause -> clause {Clause.effects = Seq.empty}) (Mode.clauses mode)}
+    Spec.assertBool s (not (cardDivisionsDangle face)) "Forked Lightning reads its division, and is accepted"
+    Spec.assertBool s (cardDivisionsDangle (rewrite undivided)) "a part read off an undivided slot is rejected"
+    Spec.assertBool s (cardDivisionsDangle (rewrite unread)) "a division nothing reads is rejected"
   -- CR 608.2d's either-or, whose two branches must name each other: the corpus
   -- half, with the same shape the slot-name pair above has.
   Spec.it s "no card's either-or names a sibling that does not name it back" $ do

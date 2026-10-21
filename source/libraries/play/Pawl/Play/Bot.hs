@@ -15,10 +15,12 @@ import qualified Data.Traversable as Traversable
 import Numeric.Natural (Natural)
 import qualified Pawl.Engine.Damage as Damage
 import qualified Pawl.Engine.Replay as Replay
+import qualified Pawl.Engine.Target as Target
 import qualified Pawl.Play.SplitMix as SplitMix
 import qualified Pawl.Types.Action as Action
 import qualified Pawl.Types.Answerer as Answerer
 import qualified Pawl.Types.Asked as Asked
+import qualified Pawl.Types.Dividing as Dividing
 import qualified Pawl.Types.MulliganDecision as MulliganDecision
 import qualified Pawl.Types.OptionalDecision as OptionalDecision
 import qualified Pawl.Types.PaymentDecision as PaymentDecision
@@ -55,6 +57,10 @@ bot = Answerer.MkAnswerer $ \asked -> case Asked.prompt asked of
     maybe (pure (Replay.defaultAnswer (Asked.prompt asked))) SplitMix.pick . NonEmpty.nonEmpty $
       filter (\division -> Damage.tiersCleared thresholds division Set.empty division) (divisions (Map.keys thresholds) power)
   Prompt.Search _ _ cards most -> atMost most cards
+  -- CR 601.2d / 115.7f: every division the prompt allows.
+  Prompt.ChooseDivision _ _ _ dividing targets ->
+    maybe (pure (Replay.defaultAnswer (Asked.prompt asked))) SplitMix.pick . NonEmpty.nonEmpty $
+      filter (Target.divides dividing targets) (divisions (NonEmpty.toList targets) (Dividing.total dividing))
   Prompt.ChooseToPay {} -> SplitMix.pick (PaymentDecision.Declines NonEmpty.:| [PaymentDecision.Pays])
   prompt -> pure (Replay.defaultAnswer prompt)
 

@@ -29,11 +29,6 @@ CombatRestriction's CantBeBlockedBy takes a blocker Filter; CantBlockMoreThan
 bounds the whole declaration. Nothing bounds blockers per attacker.
 - Charging Rhino, Stalking Tiger: "This creature can't be blocked by more than one creature."
 
-### Damage divided among targets at announcement (CR 601.2d) (#5235)
-DealDamage parts take fixed quantities per ref. No pool card divides damage
-(grepped oracleText "divided"). CounterSpread/DistributeCounters divide counters only.
-- Forked Lightning: "deals 4 damage divided as you choose among one, two, or three target creatures."
-
 ### Tutor to the top without revealing (#5236)
 SearchDestination has RevealThenTop (Mystical Tutor) and no unrevealed
 shuffle-then-top arm (Vampiric Tutor's shape, not in the pool).

@@ -354,6 +354,8 @@ activateAbilityWith refused runSubgame pid srcId ability = Event.announcing $ do
           if not (Target.selectionLegal (ActivatedAbility.name ability) (Just pid) seed srcId (Maybe.fromMaybe 0 mAmount) slots sets chosen gs)
             then Nothing <$ State.put before -- reject: the whole activation is a no-op
             else do
+              -- CR 602.2b / 601.2d: the division among the targets just fixed.
+              divisions <- Target.announceDivision (ActivatedAbility.name ability) pid abilId srcId seed slots chosen
               -- CR 113.7: bind the source permanent under the reserved self slot, so
               -- an activated ability that refers to "this creature" (Longtusk Cub)
               -- resolves the reference as a slot read -- exactly as
@@ -374,7 +376,7 @@ activateAbilityWith refused runSubgame pid srcId ability = Event.announcing $ do
               -- ability keeps all three once its source is gone: "Once activated or
               -- triggered, an ability exists on the stack independently of its
               -- source."
-              State.modify' (\g -> g {GameState.objects = Map.adjust (\o -> o {Object.bindings = Binding.setAnnouncedTargets chosen (Binding.setThisAbility abilId (Binding.setYou pid (Binding.setTriggerSource srcId (Target.stampDefendingPlayers srcId chosen g (Binding.fromChoices chosen mAmount chosenModes)))))}) abilId (GameState.objects g)})
+              State.modify' (\g -> g {GameState.objects = Map.adjust (\o -> o {Object.bindings = Binding.setAnnouncedTargets chosen (Binding.setThisAbility abilId (Binding.setYou pid (Binding.setTriggerSource srcId (Target.stampDefendingPlayers srcId chosen g (Binding.setDivisions divisions (Binding.fromChoices chosen mAmount chosenModes))))))}) abilId (GameState.objects g)})
               -- CR 601.2c's board, before CR 601.2g/h's window and payment can
               -- change it: what Event.becameTarget samples below.
               announced <- State.get

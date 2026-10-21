@@ -1,0 +1,40 @@
+{
+  "description": "CR 601.2d / 608.2b Forked Lightning keeps its announced division when a target turns illegal",
+  "note": "Alice divides 4 damage 2 onto the Troll and 1 onto each Wurm as she casts, the Troll being the last object placed so that the default division (the remainder to the first target) would put the 2 on a Wurm instead. Bob answers with the Troll's hexproof, so CR 608.2b makes it an illegal target: it takes nothing, and its 2 is not reassigned -- each Wurm still takes exactly its 1.",
+  "board": {
+    "seats": [
+      {
+        "name": "alice",
+        "battlefield": [
+          { "card": "Mountain", "label": "mountain1" },
+          { "card": "Mountain", "label": "mountain2" },
+          { "card": "Mountain", "label": "mountain3" },
+          { "card": "Mountain", "label": "mountain4" }
+        ],
+        "hand": [{ "card": "Forked Lightning", "label": "lightning" }]
+      },
+      {
+        "name": "bob",
+        "battlefield": [
+          { "card": "Forest", "label": "forest" },
+          { "card": "Craw Wurm", "label": "wurm-a" },
+          { "card": "Craw Wurm", "label": "wurm-b" },
+          { "card": "Barkhide Troll", "label": "troll", "counters": [{ "key": { "type": "PlusOnePlusOne" }, "value": 1 }] }
+        ]
+      }
+    ],
+    "active": "alice",
+    "step": "PrecombatMain"
+  },
+  "timeline": [
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": { "Cast": { "object": "$lightning", "targets": ["$wurm-a", "$wurm-b", "$troll"], "mana": ["$mountain1", "$mountain2", "$mountain3", "$mountain4"] } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": { "Answer": { "prompt": "ChooseDivision", "with": [[["Creature", "$troll"], 2], [["Creature", "$wurm-a"], 1], [["Creature", "$wurm-b"], 1]] } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass" },
+    { "turn": 1, "step": "PrecombatMain", "player": "bob", "do": { "Activate": { "object": "$troll", "ability": 0, "mana": ["$forest"] } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass" },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass" },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "check": { "Damage": { "object": "$wurm-a", "damage": 1 } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "check": { "Damage": { "object": "$wurm-b", "damage": 1 } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "check": { "Damage": { "object": "$troll", "damage": 0 } } }
+  ]
+}

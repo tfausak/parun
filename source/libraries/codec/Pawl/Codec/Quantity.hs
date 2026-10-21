@@ -54,6 +54,7 @@ codec =
       Arm.payload "Measure" Measure.codec Quantity.Measure (\x -> case x of Quantity.Measure y -> Just y; _ -> Nothing),
       Arm.nullary "Intensity" Quantity.Intensity,
       Arm.payload "InSlot" SlotName.codec Quantity.InSlot (\x -> case x of Quantity.InSlot y -> Just y; _ -> Nothing),
+      Arm.payload "Share" SlotName.codec Quantity.Share (\x -> case x of Quantity.Share y -> Just y; _ -> Nothing),
       Arm.payload "WasBound" SlotName.codec Quantity.WasBound (\x -> case x of Quantity.WasBound y -> Just y; _ -> Nothing),
       Arm.payload "BoundCount" SlotName.codec Quantity.BoundCount (\x -> case x of Quantity.BoundCount y -> Just y; _ -> Nothing),
       Arm.payload "LettersOnNameStickers" Common.text Quantity.LettersOnNameStickers (\x -> case x of Quantity.LettersOnNameStickers y -> Just y; _ -> Nothing),
@@ -238,6 +239,7 @@ tagOf x = case x of
   Quantity.Measure {} -> "Measure"
   Quantity.Intensity {} -> "Intensity"
   Quantity.InSlot {} -> "InSlot"
+  Quantity.Share {} -> "Share"
   Quantity.WasBound {} -> "WasBound"
   Quantity.BoundCount {} -> "BoundCount"
   Quantity.UniqueVowelsOnSticker {} -> "UniqueVowelsOnSticker"

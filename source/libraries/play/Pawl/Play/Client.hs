@@ -224,6 +224,21 @@ choice view question = Maybe.fromMaybe generic $ case Text.unpack (Question.kind
                 Right (R.Array [R.Array [recipient, R.Number (toInteger amount)] | ((recipient, _), amount) <- zip lethal amounts, amount > 0])
           _ -> Left wrong
       )
+  -- CR 601.2d / 115.7f: one amount per target, in the order offered.
+  "ChooseDivision" -> do
+    source <- field "source" offer
+    targets <- field "targets" offer >>= arrayOf
+    let fixed = field "parts" offer >>= arrayOf >>= mapM naturalOf
+    total <- maybe (field "total" offer >>= naturalOf) (Just . sum) fixed
+    let wrong = Text.pack ("Type " <> show (length targets) <> " amounts of at least 1 that add up to " <> show total <> maybe "" (\parts -> ", using exactly " <> unwords (fmap show parts)) fixed <> ".")
+        fits amounts = length amounts == length targets && all (>= 1) amounts && sum amounts == total && all ((== List.sort amounts) . List.sort) fixed
+    pure
+      ( Text.concat [Text.pack "Divide ", objectName view source, Text.pack ("'s " <> show total <> ", one amount per target, separated by spaces:")]
+          : numbered (fmap (recipientName view) targets),
+        \typed -> case numbers typed of
+          Right amounts | fits amounts -> Right (R.Array [R.Array [recipient, R.Number (toInteger amount)] | (recipient, amount) <- zip targets amounts])
+          _ -> Left wrong
+      )
   _ -> Nothing
   where
     offer = Question.offer question

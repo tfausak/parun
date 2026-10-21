@@ -251,6 +251,9 @@ evaluateAgainst viewOf context gs announcedOn mOid mView quantity =
         Quantity.InSlot slot ->
           let boundOn holder = Binding.amountOf slot (maybe (Map.findWithDefault Map.empty holder (GameState.detachedBindings gs)) Object.bindings (Game.lookupObject holder gs))
            in fmap toInteger ((mOid >>= boundOn) <|> boundOn announcedOn <|> Map.lookup slot (Filter.boundAmounts context) <|> Map.lookup slot (GameState.ambientAmounts gs))
+        -- CR 601.2d: the recipient's part of the slot's announced division, which
+        -- the caller applying the effect to that recipient hands over.
+        Quantity.Share slot -> fmap toInteger (Map.lookup slot (Filter.shares context))
         -- CR 701.4b: was the action taken at all? The BINDING alone answers it,
         -- read out of the announcement's context rather than off the board, which
         -- is what the rule's "regardless of whether or not the revealed card or
@@ -1266,6 +1269,9 @@ objectSlots :: Quantity -> Set SlotName
 objectSlots quantity = case quantity of
   -- The amount reader, left out for the reason above.
   Quantity.InSlot _ -> Set.empty
+  -- CR 601.2d's part, left out for WasBound's reason below: it reads the
+  -- slot's division and reaches Filter.slotOneObject on no road.
+  Quantity.Share _ -> Set.empty
   -- CR 701.4b's reader, left out for the SAME reason from the other side: it
   -- names an object slot but reaches Filter.slotOneObject on no road, asking
   -- only whether the slot is bound, so a plural slot does not damage it.
@@ -1538,6 +1544,9 @@ bakePlayerRef players objects ref = case ref of
 readsX :: Quantity -> Bool
 readsX quantity = case quantity of
   Quantity.InSlot slot -> slot == Binding.variableX
+  -- Never X: CR 601.2d's part names a target slot, whose total is the slot's
+  -- own `divided` quantity -- read there, not here.
+  Quantity.Share _ -> False
   -- Never X: CR 601.2b's announcement binds an AMOUNT, and this arm asks whether
   -- a slot names an OBJECT, which Binding.variableX never does.
   Quantity.WasBound _ -> False

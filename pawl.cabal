@@ -2418,6 +2418,7 @@ library types
     Pawl.Types.DiscardCause
     Pawl.Types.Discarded
     Pawl.Types.DistinctOf
+    Pawl.Types.Dividing
     Pawl.Types.DoesNotUntapNext
     Pawl.Types.Draw
     Pawl.Types.DrawCountR

@@ -206,6 +206,7 @@ import qualified Pawl.Types.DiceReading as DiceReading
 import qualified Pawl.Types.DieResult as DieResult
 import qualified Pawl.Types.DifferentIn as DifferentIn
 import qualified Pawl.Types.Discard as Discard
+import qualified Pawl.Types.Dividing as Dividing
 import qualified Pawl.Types.DoesNotUntapNext as DoesNotUntapNext
 import qualified Pawl.Types.Draw as Draw
 import qualified Pawl.Types.Duration as Duration
@@ -3181,8 +3182,10 @@ chooseNewTargetsFor unannounced source chooser controller copyId = do
             caused slot refused = not (Set.isSubsetOf refused (Map.findWithDefault Set.empty slot already))
             coherent = not (or (Map.mapWithKey caused (Target.jointlyIllegal (resolvingAbilityName copyId gs) (Just controller) seed aimer slots drawn gs)))
         Monad.when (and (Map.elems (Map.mapWithKey stands drawn)) && coherent) $ do
-          let write o = o {Object.bindings = Map.union (fmap Binding.toRecipients (Map.filter (not . Set.null) drawn)) (Object.bindings o)}
-          State.modify' (\g -> g {GameState.objects = Map.adjust write copyId (GameState.objects g)})
+          rebound <- reaimDivisions chooser copyId (Object.bindings copy) (Map.filter (not . Set.null) drawn)
+          Monad.forM_ rebound $ \bindings -> do
+            let write o = o {Object.bindings = Map.union bindings (Object.bindings o)}
+            State.modify' (\g -> g {GameState.objects = Map.adjust write copyId (GameState.objects g)})
 
 -- Effect.ChooseNewTargets' and Effect.ChangeTargets' shared walk: over each
 -- named spell or ability still on the stack, the re-aim is asked of the
@@ -3262,8 +3265,35 @@ changeTargetsFor source chooser controller oid = do
                 && another (Map.findWithDefault Set.empty slot current) picked == picked
             coherent = all Set.null (Target.jointlyIllegal (resolvingAbilityName oid gs) (Just controller) seed aimer slots drawn gs)
         Monad.when (and (Map.elems (Map.mapWithKey stands drawn)) && coherent) $ do
-          let write o = o {Object.bindings = Map.union (fmap Binding.toRecipients drawn) (Object.bindings o)}
-          State.modify' (\g -> g {GameState.objects = Map.adjust write oid (GameState.objects g)})
+          rebound <- reaimDivisions chooser oid (Object.bindings obj) drawn
+          Monad.forM_ rebound $ \bindings -> do
+            let write o = o {Object.bindings = Map.union bindings (Object.bindings o)}
+            State.modify' (\g -> g {GameState.objects = Map.adjust write oid (GameState.objects g)})
+
+-- CR 115.7f: each re-aimed slot's new binding, "the original division can't be
+-- changed": a target left standing keeps its part, and the parts of the
+-- replaced targets go to the new ones -- each the same where they are equal, and
+-- otherwise as the chooser hands them out (Prompt.ChooseDivision's Parts). An
+-- answer that does not hand out exactly those parts reverses the whole re-aim,
+-- chooseNewTargetsFor's reject-not-repair. An undivided slot is its targets
+-- alone, as before.
+reaimDivisions :: PlayerId -> ObjectId -> Map.Map SlotName Binding.Type.Binding -> Map.Map SlotName (Set Recipient) -> Game (Maybe (Map.Map SlotName Binding.Type.Binding))
+reaimDivisions chooser oid bindings picked =
+  fmap sequence . flip Map.traverseWithKey picked $ \slot new ->
+    case Binding.Type.division =<< Map.lookup slot bindings of
+      Nothing -> pure (Just (Binding.toRecipients new))
+      Just division -> do
+        let kept = Map.restrictKeys division new
+            dividedAs parts = Just ((Binding.toRecipients new) {Binding.Type.division = Just (Map.union kept parts)})
+        case (NonEmpty.nonEmpty (List.sort (Map.elems (Map.withoutKeys division new))), NonEmpty.nonEmpty (Set.toList (Set.difference new (Map.keysSet division)))) of
+          (Just parts, Just added)
+            | any (/= NonEmpty.head parts) parts -> do
+                gs <- State.get
+                let dividing = Dividing.Parts parts
+                answer <- Game.choose (Prompt.ChooseDivision (Decide.deciderFor chooser gs) chooser oid dividing added)
+                pure (if Target.divides dividing added answer then dividedAs answer else Nothing)
+            | otherwise -> pure (dividedAs (Map.fromList (fmap (\r -> (r, NonEmpty.head parts)) (NonEmpty.toList added))))
+          _ -> pure (dividedAs Map.empty)
 
 -- CR 707.2: a spell on the stack that becomes a copy acquires the original's
 -- "choices made when casting or activating it (mode, targets, the value of X,
@@ -3869,9 +3899,16 @@ applyOneEffect runSubgame resolving source controller legal chosen effect = case
         -- 608.2f, since every read is against the same pre-effect state. Both
         -- kinds of recipient get it, keyed to recipientSeat. An unevaluable
         -- amount drops that recipient, and so does a zero (CR 120.8).
-        let amountFor quantity recipient = case recipientSeat gs recipient of
-              Nothing -> Quantity.evaluateFor viewOf context gs resolving source quantity
-              Just pid -> evaluateForRecipient viewOf context gs resolving source pid quantity
+        --
+        -- CR 601.2d's division is read the same way, each recipient handed its
+        -- own part (Quantity.Share). A target CR 608.2b found illegal is never
+        -- reached, so its part is dealt to nobody rather than reassigned:
+        -- data/scenarios/divide's Forked Lightning case proves it.
+        let amountFor quantity recipient =
+              let sharing = context {Filter.shares = Binding.sharesOf recipient (slotBindings resolving gs)}
+               in case recipientSeat gs recipient of
+                    Nothing -> Quantity.evaluateFor viewOf sharing gs resolving source quantity
+                    Just pid -> evaluateForRecipient viewOf sharing gs resolving source pid quantity
             -- ONE event list from EVERY clause the instruction names, so a
             -- sentence naming objects and players at once -- Molten Disaster's
             -- "each creature without flying and each player" -- reaches

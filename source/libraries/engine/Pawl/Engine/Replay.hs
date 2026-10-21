@@ -14,6 +14,7 @@ import qualified Data.Text as Text
 import Numeric.Natural (Natural)
 import qualified Pawl.Engine.Cost as Cost
 import qualified Pawl.Engine.Modal as Modal
+import qualified Pawl.Engine.Target as Target
 import qualified Pawl.Extra.Natural as Natural
 import qualified Pawl.Types.Action as Action
 import qualified Pawl.Types.AnyNumberOf as AnyNumberOf
@@ -108,6 +109,7 @@ encode p answer = case p of
   Prompt.ChooseCounterRemovalAtLeast {} -> Response.ChoseCounterRemovalAtLeast answer
   Prompt.ChooseCounterRemovalUpTo {} -> Response.ChoseCounterRemovalUpTo answer
   Prompt.ChooseCounterDistribution {} -> Response.ChoseCounterDistribution answer
+  Prompt.ChooseDivision {} -> Response.ChoseDivision answer
   Prompt.ChooseMixedCounterRemoval {} -> Response.ChoseMixedCounterRemoval answer
   Prompt.ChooseVote {} -> Response.ChoseVote answer
   Prompt.ChoosePaidEnergy {} -> Response.ChosePaidEnergy answer
@@ -374,6 +376,9 @@ decode p response = case p of
     _ -> Nothing
   Prompt.ChooseCounterDistribution {} -> case response of
     Response.ChoseCounterDistribution division -> Just division
+    _ -> Nothing
+  Prompt.ChooseDivision {} -> case response of
+    Response.ChoseDivision division -> Just division
     _ -> Nothing
   Prompt.ChooseMixedCounterRemoval {} -> case response of
     Response.ChoseMixedCounterRemoval division -> Just division
@@ -910,6 +915,8 @@ defaultAnswer p = case p of
   Prompt.ChooseCounterRemovalUpTo {} -> Map.empty
   -- CR 608.2d: the whole total on the first candidate, a legal division.
   Prompt.ChooseCounterDistribution _ _ _ total candidates -> Map.singleton (NonEmpty.head candidates) total
+  -- CR 601.2d / 115.7f: Target.defaultDivision's, a legal division.
+  Prompt.ChooseDivision _ _ _ dividing candidates -> Target.defaultDivision dividing candidates
   -- The same by permanent and kind, off the first permanent alone under a
   -- spread FromOne, whose offer holds only permanents carrying the count.
   Prompt.ChooseMixedCounterRemoval _ _ _ spread owed offered -> Cost.fillMixedInOrder spread owed offered
