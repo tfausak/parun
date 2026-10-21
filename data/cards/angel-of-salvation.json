@@ -6,10 +6,10 @@
           "type": "Flash"
         },
         {
-          "type": "Convoke"
+          "type": "Flying"
         },
         {
-          "type": "Flying"
+          "type": "Convoke"
         }
       ],
       "manaCost": [
