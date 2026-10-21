@@ -2,8 +2,8 @@
 
 -- Runs a scenario: places its board, answers the engine's prompts from its
 -- timeline, and evaluates its checks. The one boundary through which something
--- other than the rules core says what happens in a game (#146), and the test
--- suite's gameplay harness.
+-- other than the rules core says what happens in a game, as #146 set out, and
+-- the test suite's gameplay harness.
 module Pawl.Scenario where
 
 import Control.Applicative ((<|>))
