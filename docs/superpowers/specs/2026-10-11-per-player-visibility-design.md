@@ -162,8 +162,8 @@ owner alone before), Thunderous Wrath (both seats while the miracle trigger is
 on the stack), Serum Powder or Chancellor of the Forge (both seats until turn
 1 begins).
 
-#2568's inverse (a card hidden until a cost is paid) waits on Jester's Scepter
-and its two other blockers; the window type gains an obscuring arm then.
+#2568's inverse (a card hidden until a cost is paid) needed no obscuring arm:
+the drawn target's `WhileOnStack` window is stamped only once the cost is paid.
 
 ## Unit 3: standing grants (#3237, #3035)
 
