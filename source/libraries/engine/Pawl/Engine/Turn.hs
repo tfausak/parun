@@ -1,5 +1,6 @@
 module Pawl.Engine.Turn where
 
+import qualified Data.Foldable as Foldable
 import qualified Data.List as List
 import Data.Sequence (Seq)
 import qualified Data.Sequence as Seq
@@ -12,15 +13,18 @@ import qualified Pawl.Types.EndingStep as EndingStep
 import Pawl.Types.ExtraPhase (ExtraPhase)
 import qualified Pawl.Types.ExtraPhase as ExtraPhase
 import qualified Pawl.Types.ExtraTurn as ExtraTurn
+import qualified Pawl.Types.GameEvent as GameEvent
 import qualified Pawl.Types.GameSettings as GameSettings
 import Pawl.Types.GameState (GameState)
 import qualified Pawl.Types.GameState as GameState
+import qualified Pawl.Types.LoggedEvent as LoggedEvent
 import Pawl.Types.ObjectId (ObjectId)
 import Pawl.Types.Phase (Phase)
 import qualified Pawl.Types.Phase as Phase
 import Pawl.Types.PhaseSelector (PhaseSelector)
 import qualified Pawl.Types.PhaseSelector as PhaseSelector
 import Pawl.Types.PlayerId (PlayerId)
+import qualified Pawl.Types.StepBegan as StepBegan
 import qualified Pawl.Types.Teams as Teams
 import qualified Pawl.Types.Timestamp as Timestamp
 import qualified Pawl.Types.TurnScope as TurnScope
@@ -420,13 +424,19 @@ beforeCombatDamage phase = case phase of
   Phase.PostcombatMain -> False
   Phase.Ending _ -> False
 
--- CR 500.1: is the game in a phase or step of the turn ahead of the end step?
--- Mana Cache's "before the end step". The phase alone answers, CR 500.1 fixing
--- the order; CR 514's cleanup step comes after the end step, so it is not before.
-beforeEndStep :: Phase -> Bool
-beforeEndStep phase = case phase of
-  Phase.Beginning _ -> True
-  Phase.PrecombatMain -> True
-  Phase.Combat _ -> True
-  Phase.PostcombatMain -> True
-  Phase.Ending _ -> False
+-- CR 506.7a / 506.7g: is the game short of the first time this turn that
+-- `target` begins? Every step begun this turn, the current one among them,
+-- precedes it in CR 500.1's order, which Phase's Ord follows.
+--
+-- The turn's LOG and not the phase alone, for CR 506.7d: a clause printing no
+-- "during combat" names the FIRST combat phase, so a later combat's beginning
+-- step is past the point although it precedes the step named. The same question
+-- answers CR 506.7e: a skipped step or phase records no beginning (CR 500.11),
+-- but the next one to begin does and is past the point. GameState.events is
+-- cleared at the turn handoff, so it holds this turn's beginnings and no other.
+beforeStep :: Phase -> GameState -> Bool
+beforeStep target gs = all (< target) (GameState.phase gs : began)
+  where
+    began = do
+      GameEvent.StepBegan (StepBegan.MkStepBegan phase _) <- fmap LoggedEvent.event (Foldable.toList (GameState.events gs))
+      pure phase

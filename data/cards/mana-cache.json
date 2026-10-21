@@ -52,7 +52,13 @@
               }
             },
             {
-              "type": "BeforeEndStep"
+              "type": "BeforeStep",
+              "value": {
+                "type": "Ending",
+                "value": {
+                  "type": "EndStep"
+                }
+              }
             }
           ]
         }

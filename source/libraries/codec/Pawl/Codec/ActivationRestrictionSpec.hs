@@ -104,13 +104,13 @@ spec s = Spec.describe s "Pawl.Codec.ActivationRestriction" $ do
       ActivationRestriction.codec
       ActivationRestriction.BeforeCombatDamage
       " {\"type\":\"BeforeCombatDamage\"} "
-  -- Mana Cache's "only during their turn before the end step" (CR 500.1).
-  Spec.it s "BeforeEndStep" $
+  -- Capricious Sorcerer's "before attackers are declared" (CR 506.7a).
+  Spec.it s "BeforeStep" $
     Common.assertCodec
       s
       ActivationRestriction.codec
-      ActivationRestriction.BeforeEndStep
-      " {\"type\":\"BeforeEndStep\"} "
+      (ActivationRestriction.BeforeStep (Phase.Combat CombatStep.DeclareAttackers))
+      " {\"type\":\"BeforeStep\",\"value\":{\"type\":\"Combat\",\"value\":{\"type\":\"DeclareAttackers\"}}} "
   -- CR 602.5 over a fact about the board rather than a window: Barbarian Ring's
   -- "Activate only if there are seven or more cards in your graveyard".
   Spec.it s "OnlyIf, Barbarian Ring's threshold rider" $
