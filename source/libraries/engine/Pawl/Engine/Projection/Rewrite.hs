@@ -1927,7 +1927,8 @@ rewriteTargetSlot pairs slot =
   slot
     { TargetSlot.filter = fmap (Filter.rewrite pairs) (TargetSlot.filter slot),
       TargetSlot.amount = fmap (rewriteQuantity pairs) (TargetSlot.amount slot),
-      TargetSlot.count = SlotCount.mapQuantity (rewriteQuantity pairs) (TargetSlot.count slot)
+      TargetSlot.count = SlotCount.mapQuantity (rewriteQuantity pairs) (TargetSlot.count slot),
+      TargetSlot.divided = fmap (rewriteQuantity pairs) (TargetSlot.divided slot)
     }
 
 -- CR 612.1 through a trigger's own condition. Exhaustive rather than a wildcard,
@@ -2227,6 +2228,7 @@ rewriteQuantity pairs quantity = case quantity of
   Quantity.Type.Measure _ -> quantity
   Quantity.Type.Intensity -> quantity
   Quantity.Type.InSlot _ -> quantity
+  Quantity.Type.Share _ -> quantity
   Quantity.Type.WasBound _ -> quantity
   Quantity.Type.BoundCount _ -> quantity
   Quantity.Type.UniqueVowelsOnSticker _ -> quantity

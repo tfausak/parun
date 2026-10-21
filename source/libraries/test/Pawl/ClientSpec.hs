@@ -47,6 +47,7 @@ import qualified Pawl.Types.Color as Color
 import qualified Pawl.Types.CounterKind as CounterKind
 import qualified Pawl.Types.Decider as Decider
 import qualified Pawl.Types.Deck as Deck
+import qualified Pawl.Types.Dividing as Dividing
 import qualified Pawl.Types.Drew as Drew
 import qualified Pawl.Types.EventGroup as EventGroup
 import qualified Pawl.Types.Face as Face
@@ -232,6 +233,8 @@ spec s registry = Spec.describe s "Client" $ do
     Spec.assertEqWith s "optional" (answering gs "2" (Prompt.ChooseOptional alice S.alice o7 (ModeIndex.MkModeIndex 0) (ClauseIndex.MkClauseIndex 0) mempty)) (Right OptionalDecision.Declines)
     Spec.assertEqWith s "x" (answering gs "3" (Prompt.ChooseX alice S.alice o7 Binding.variableX 1 5)) (Right 3)
     Spec.assertEqWith s "combat damage" (answering gs "1 2" (Prompt.AssignCombatDamage alice S.alice o7 (Map.fromList [(Recipient.ToCreature o5, 0), (Recipient.ToCreature o9, 0)]) 3)) (Right (Map.fromList [(Recipient.ToCreature o5, 1), (Recipient.ToCreature o9, 2)]))
+    Spec.assertEqWith s "division" (answering gs "3 1" (Prompt.ChooseDivision alice S.alice o7 (Dividing.Total 4) (Recipient.ToCreature o9 NonEmpty.:| [Recipient.ToPlayer S.bob]))) (Right (Map.fromList [(Recipient.ToCreature o9, 3), (Recipient.ToPlayer S.bob, 1)]))
+    Spec.assertEqWith s "fixed parts" (answering gs "1 3" (Prompt.ChooseDivision alice S.alice o7 (Dividing.Parts (1 NonEmpty.:| [3])) (Recipient.ToCreature o9 NonEmpty.:| [Recipient.ToCreature o5]))) (Right (Map.fromList [(Recipient.ToCreature o9, 1), (Recipient.ToCreature o5, 3)]))
     Spec.assertEqWith s "mana source" (answering gs "stop" (Prompt.ChooseManaSource alice S.alice (ManaCost.MkManaCost [ManaSymbol.Generic 1]) (o7 NonEmpty.:| [o9]))) (Right Nothing)
 
   Spec.it s "Enter passes at a priority offering Pass, and the menu says so" $ do

@@ -36,6 +36,7 @@ import qualified Pawl.Types.Color as Color
 import qualified Pawl.Types.Cost as Cost
 import qualified Pawl.Types.Decider as Decider
 import qualified Pawl.Types.Deck as Deck
+import qualified Pawl.Types.Dividing as Dividing
 import qualified Pawl.Types.GameSettings as GameSettings
 import qualified Pawl.Types.GameState as GameState
 import qualified Pawl.Types.ManaCost as ManaCost
@@ -100,6 +101,17 @@ spec s registry = Spec.describe s "Bot" $ do
             (Map.filter (> 0) . Map.fromList . zip [first, second, player])
             [[4, 0, 0], [3, 1, 0], [2, 2, 0], [1, 3, 0], [0, 4, 0], [2, 1, 1]]
     Spec.assertEqWith s "divisions" (drawn (Prompt.AssignCombatDamage decider S.alice oid thresholds 4)) (Set.fromList legal)
+
+  -- CR 601.2d: 4 among three targets, each at least 1, is three ways; CR
+  -- 115.7f's fixed parts 1 and 3 between two targets are two.
+  Spec.it s "divides among targets every legal way and no other" $ do
+    let first = Recipient.ToCreature (ObjectId.MkObjectId 8)
+        second = Recipient.ToCreature (ObjectId.MkObjectId 9)
+        player = Recipient.ToPlayer S.bob
+        ways :: [[Natural]] -> [Recipient.Recipient] -> Set.Set (Map.Map Recipient.Recipient Natural)
+        ways parts targets = Set.fromList (fmap (Map.fromList . zip targets) parts)
+    Spec.assertEqWith s "totals" (drawn (Prompt.ChooseDivision decider S.alice oid (Dividing.Total 4) (first NonEmpty.:| [second, player]))) (ways [[2, 1, 1], [1, 2, 1], [1, 1, 2]] [first, second, player])
+    Spec.assertEqWith s "parts" (drawn (Prompt.ChooseDivision decider S.alice oid (Dividing.Parts (1 NonEmpty.:| [3])) (first NonEmpty.:| [second]))) (ways [[1, 3], [3, 1]] [first, second])
 
   Spec.it s "pays or declines what a resolving spell offers" $ do
     let offer = PayOffer.AtClause (ModeIndex.MkModeIndex 0) (ClauseIndex.MkClauseIndex 0)

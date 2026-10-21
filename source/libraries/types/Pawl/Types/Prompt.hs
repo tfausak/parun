@@ -29,6 +29,7 @@ import qualified Pawl.Types.CounterSpread as CounterSpread
 import qualified Pawl.Types.DamageEvent as DamageEvent
 import qualified Pawl.Types.Decider as Decider
 import qualified Pawl.Types.Designation as Designation
+import qualified Pawl.Types.Dividing as Dividing
 import qualified Pawl.Types.EntryOption as EntryOption
 import qualified Pawl.Types.EntwineDecision as EntwineDecision
 import qualified Pawl.Types.Facing as Facing
@@ -793,6 +794,10 @@ data Prompt r where
   -- the answer naming only candidates, each at least one, summing to it.
   -- Elided at one candidate.
   ChooseCounterDistribution :: Decider.Decider -> PlayerId.PlayerId -> ObjectId.ObjectId -> Natural.Natural -> NonEmpty.NonEmpty ObjectId.ObjectId -> Prompt (Map.Map ObjectId.ObjectId Natural.Natural)
+  -- | CR 601.2d / 115.7f: what each of a slot's targets gets of the Dividing,
+  -- the answer naming every one, each at least one. Elided where only one
+  -- division exists.
+  ChooseDivision :: Decider.Decider -> PlayerId.PlayerId -> ObjectId.ObjectId -> Dividing.Dividing -> NonEmpty.NonEmpty Recipient.Recipient -> Prompt (Map.Map Recipient.Recipient Natural.Natural)
   -- | CR 122.1 / CR 601.2h: how many counters of EACH kind come off each
   -- permanent, where a cost names no kind (Tayam, Luminous Enigma), or an effect
   -- does not (Eventide's Shadow, CR 608.2d); the Map is what each candidate

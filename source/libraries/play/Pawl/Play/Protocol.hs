@@ -34,6 +34,7 @@ import qualified Pawl.Types.Action as Action
 import qualified Pawl.Types.Answerer as Answerer
 import qualified Pawl.Types.Asked as Asked
 import qualified Pawl.Types.CardName as CardName
+import qualified Pawl.Types.Dividing as Dividing
 import qualified Pawl.Types.GameState as GameState
 import qualified Pawl.Types.Label as Label
 import qualified Pawl.Types.Mana as Mana.Type
@@ -142,6 +143,13 @@ offerOf gs prompt = case prompt of
   Prompt.AssignCombatDamage _ _ source lethal total ->
     fields [("source", object source), ("lethal", Reply.encode (Reply.mapOf Reply.recipient Reply.natural) namer lethal), ("total", natural total)]
   Prompt.ChooseToPay _ _ source _ cost _ -> fields [("source", object source), ("cost", Reply.encode (Reply.viaCodec (Codec.Cost.codec Codec.Keyword.codec)) namer cost)]
+  Prompt.ChooseDivision _ _ source dividing targets ->
+    fields
+      ( [("source", object source), ("targets", Reply.encode (Reply.list Reply.recipient) namer (NonEmpty.toList targets))]
+          <> case dividing of
+            Dividing.Total total -> [("total", natural total)]
+            Dividing.Parts parts -> [("parts", Reply.encode (Reply.list Reply.natural) namer (NonEmpty.toList parts))]
+      )
   _ -> R.Null
 
 -- | An action as an offer names it: its constructor, the object it acts on,

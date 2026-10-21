@@ -445,6 +445,7 @@ shapeOf prompt = case prompt of
   Prompt.ChooseCounterRemovalAtLeast {} -> mapOf object natural
   Prompt.ChooseCounterRemovalUpTo {} -> mapOf object natural
   Prompt.ChooseCounterDistribution {} -> mapOf object natural
+  Prompt.ChooseDivision {} -> mapOf recipient natural
   Prompt.ChooseMixedCounterRemoval {} -> mapOf object (mapOf counterKind natural)
   Prompt.ChooseAttachment {} -> object
   Prompt.ChooseTurnUpAttachment {} -> viaCodec Codec.OptionalDecision.codec

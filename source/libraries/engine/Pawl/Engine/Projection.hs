@@ -4342,6 +4342,7 @@ quantityReads q = case q of
   Quantity.Type.AgainstLastCardExiledWith l -> quantityReads (AgainstLastCardExiledWith.quantity l)
   Quantity.Type.Literal _ -> Set.empty
   Quantity.Type.InSlot _ -> Set.empty
+  Quantity.Type.Share _ -> Set.empty
   -- InSlot's answer: a binding is not a projected aspect, so neither half of the
   -- slot reads one.
   Quantity.Type.WasBound _ -> Set.empty

@@ -1,0 +1,46 @@
+{
+  "description": "CR 115.7f Redirect hands Forked Lightning's announced parts to its new targets, as bob chooses",
+  "note": "Alice divides 4 damage 1 onto the first Wurm and 3 onto the second. Bob's Redirect moves both targets to the other two Wurms, and since the replaced parts differ he says which new target takes which: 3 onto the third Wurm and 1 onto the fourth, the opposite of the default (smallest part to the earliest target). The division itself does not change, so nothing else is dealt.",
+  "board": {
+    "seats": [
+      {
+        "name": "alice",
+        "battlefield": [
+          { "card": "Mountain", "label": "mountain1" },
+          { "card": "Mountain", "label": "mountain2" },
+          { "card": "Mountain", "label": "mountain3" },
+          { "card": "Mountain", "label": "mountain4" }
+        ],
+        "hand": [{ "card": "Forked Lightning", "label": "lightning" }]
+      },
+      {
+        "name": "bob",
+        "battlefield": [
+          { "card": "Island", "label": "island1" },
+          { "card": "Island", "label": "island2" },
+          { "card": "Craw Wurm", "label": "wurm-a" },
+          { "card": "Craw Wurm", "label": "wurm-b" },
+          { "card": "Craw Wurm", "label": "wurm-c" },
+          { "card": "Craw Wurm", "label": "wurm-d" }
+        ],
+        "hand": [{ "card": "Redirect", "label": "redirect" }]
+      }
+    ],
+    "active": "alice",
+    "step": "PrecombatMain"
+  },
+  "timeline": [
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": { "Cast": { "object": "$lightning", "targets": ["$wurm-a", "$wurm-b"], "mana": ["$mountain1", "$mountain2", "$mountain3", "$mountain4"] } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": { "Answer": { "prompt": "ChooseDivision", "with": [[["Creature", "$wurm-a"], 1], [["Creature", "$wurm-b"], 3]] } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass" },
+    { "turn": 1, "step": "PrecombatMain", "player": "bob", "do": { "Cast": { "object": "$redirect", "targets": ["Forked Lightning"], "mana": ["$island1", "$island2"] } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "bob", "do": { "ChooseTargets": { "creatures": ["$wurm-c", "$wurm-d"] } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "bob", "do": { "Answer": { "prompt": "ChooseDivision", "with": [[["Creature", "$wurm-c"], 3], [["Creature", "$wurm-d"], 1]] } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass" },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass" },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "check": { "Damage": { "object": "$wurm-c", "damage": 3 } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "check": { "Damage": { "object": "$wurm-d", "damage": 1 } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "check": { "Damage": { "object": "$wurm-a", "damage": 0 } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "check": { "Damage": { "object": "$wurm-b", "damage": 0 } } }
+  ]
+}

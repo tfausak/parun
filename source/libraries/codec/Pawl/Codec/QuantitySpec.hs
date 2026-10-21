@@ -97,6 +97,13 @@ spec s = Spec.describe s "Pawl.Codec.Quantity" $ do
       Quantity.codec
       (Quantity.Arithmetic (Arithmetic.Plus (Plus.MkPlus (Quantity.Literal 1) (Quantity.InSlot slot))))
       " {\"type\":\"Plus\",\"value\":{\"left\":{\"type\":\"Literal\",\"value\":1},\"right\":{\"type\":\"InSlot\",\"value\":\"destroyed\"}}} "
+  -- CR 601.2d's part of a divided slot, InSlot's wire shape under its own tag.
+  Spec.it s "Share" $
+    Common.assertCodec
+      s
+      Quantity.codec
+      (Quantity.Share (SlotName.MkSlotName (Text.pack "creatures")))
+      " {\"type\":\"Share\",\"value\":\"creatures\"} "
   -- CR 701.4b's yes-or-no over the same slot name, whose wire shape is InSlot's
   -- and whose reading is not: this one asks whether the slot is bound at all.
   Spec.it s "WasBound" $
