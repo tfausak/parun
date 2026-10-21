@@ -24,11 +24,6 @@ declared").
 - King's Assassin: "{T}: Destroy target tapped creature. Activate only ..." (gideon-jura has the tapped filter)
 - Stern Marshal: "{T}: Target creature gets +2/+2 until end of turn. Activate only ..."
 
-### Tutor to the top without revealing (#5236)
-SearchDestination has RevealThenTop (Mystical Tutor) and no unrevealed
-shuffle-then-top arm (Vampiric Tutor's shape, not in the pool).
-- Cruel Tutor: "Search your library for a card, then shuffle and put that card on top. You lose 2 life."
-
 ### A per-player "may draw up to N" with a per-player follow-up (#5239)
 ChooseNumber has no chooser, and Repeat/ForEach/ForEachNumber don't loop over
 players with each one choosing.

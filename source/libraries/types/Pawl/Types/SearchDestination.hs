@@ -75,6 +75,10 @@ data SearchDestination
   | -- | Mystical Tutor's "reveal it, then shuffle and put that card on top": left
     -- out of the shuffle (CR 701.24b), then put on top.
     RevealThenTop
+  | -- | Cruel Tutor's "then shuffle and put that card on top", unrevealed (CR
+    -- 701.23e): RevealThenTop's move with no reveal, as Hand is
+    -- RevealThenHand's.
+    Top
   | -- | Rhystic Tutor's "put that card into your hand", unrevealed (CR 701.23e).
     Hand
   deriving (Bounded, Enum, Eq, Ord, Show)
