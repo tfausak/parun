@@ -10142,10 +10142,15 @@ applyOneEffect runSubgame resolving source controller legal chosen effect = case
   -- reason.
   -- CR 608.2d: a player "can't choose an option that's illegal", so an answer
   -- past the bound is clamped to it.
-  Effect.ChooseNumber (ChooseNumber.MkChooseNumber slot upTo) -> do
-    gs <- State.get
-    answer <- Game.choose (Prompt.ChooseNumber (Decide.deciderFor controller gs) controller resolving upTo)
-    State.modify' (bindAmountSlot resolving source slot (maybe answer (min answer) upTo))
+  --
+  -- The chooser is askedChooser's one seat (CR 608.2c / 800.4g); a reference
+  -- naming none binds nothing (CR 101.3).
+  Effect.ChooseNumber (ChooseNumber.MkChooseNumber slot upTo chooser) -> do
+    asked <- askedChooser resolving source controller legal chooser
+    Monad.forM_ asked $ \pid -> do
+      gs <- State.get
+      answer <- Game.choose (Prompt.ChooseNumber (Decide.deciderFor pid gs) pid resolving upTo)
+      State.modify' (bindAmountSlot resolving source slot (maybe answer (min answer) upTo))
   -- CR 701.26a: turn each named permanent sideways. The victims are enumerated
   -- ONCE (CR 608.2f) and off the board as it stands before any of them is tapped,
   -- so an illegal slot (CR 608.2b), a player recipient and a set that matched

@@ -1,0 +1,157 @@
+{
+  "faces": [
+    {
+      "manaCost": [
+        {
+          "type": "Generic",
+          "value": 2
+        },
+        {
+          "type": "OfType",
+          "value": {
+            "type": "Colored",
+            "value": {
+              "type": "Blue"
+            }
+          }
+        },
+        {
+          "type": "OfType",
+          "value": {
+            "type": "Colored",
+            "value": {
+              "type": "Blue"
+            }
+          }
+        }
+      ],
+      "name": "Diminishing Returns",
+      "oracleText": "Each player shuffles their hand and graveyard into their library. You exile the top ten cards of your library. Then each player draws up to seven cards.",
+      "spell": {
+        "modes": [
+          {
+            "clauses": [
+              {
+                "effects": [
+                  {
+                    "type": "ShuffleIntoLibrary",
+                    "value": {
+                      "library": {
+                        "type": "Relative",
+                        "value": {
+                          "type": "AnyPlayer"
+                        }
+                      },
+                      "refs": [
+                        {
+                          "type": "EachCardInHand",
+                          "value": {
+                            "hands": {
+                              "type": "Scoped",
+                              "value": {
+                                "type": "AnyPlayer"
+                              }
+                            }
+                          }
+                        },
+                        {
+                          "type": "EachCardInGraveyard",
+                          "value": {
+                            "filter": {
+                              "type": "And",
+                              "value": []
+                            },
+                            "graveyards": {
+                              "type": "Scoped",
+                              "value": {
+                                "type": "AnyPlayer"
+                              }
+                            }
+                          }
+                        }
+                      ]
+                    }
+                  }
+                ]
+              },
+              {
+                "effects": [
+                  {
+                    "type": "MoveToZone",
+                    "value": {
+                      "ref": {
+                        "type": "TopOfLibrary",
+                        "value": {
+                          "count": {
+                            "type": "Literal",
+                            "value": 10
+                          },
+                          "player": {
+                            "type": "Relative",
+                            "value": {
+                              "type": "You"
+                            }
+                          }
+                        }
+                      },
+                      "zone": {
+                        "type": "Exile"
+                      }
+                    }
+                  }
+                ]
+              },
+              {
+                "effects": [
+                  {
+                    "type": "ForEach",
+                    "value": {
+                      "body": [
+                        {
+                          "type": "ChooseNumber",
+                          "value": {
+                            "chooser": {
+                              "type": "InSlot",
+                              "value": "player"
+                            },
+                            "slot": "number",
+                            "upTo": 7
+                          }
+                        },
+                        {
+                          "type": "Draw",
+                          "value": {
+                            "player": {
+                              "type": "InSlot",
+                              "value": "player"
+                            },
+                            "quantity": {
+                              "type": "InSlot",
+                              "value": "number"
+                            }
+                          }
+                        }
+                      ],
+                      "individually": true,
+                      "ref": {
+                        "type": "EachPlayer"
+                      },
+                      "slot": "player"
+                    }
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      "typeLine": {
+        "types": [
+          {
+            "type": "Sorcery"
+          }
+        ]
+      }
+    }
+  ]
+}

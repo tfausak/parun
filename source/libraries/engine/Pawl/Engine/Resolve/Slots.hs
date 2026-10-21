@@ -1021,7 +1021,7 @@ effectPlayerRefs effect = case effect of
   Effect.GainPlayerCounters (PlayerCounters.MkPlayerCounters ref _ _) -> [ref]
   Effect.RemovePlayerCounters removal -> [RemovePlayerCounters.player removal]
   Effect.PayAnyEnergy {} -> []
-  Effect.ChooseNumber {} -> []
+  Effect.ChooseNumber number -> [ChooseNumber.chooser number]
   Effect.Tap {} -> []
   Effect.Untap {} -> []
   Effect.Unattach {} -> []
@@ -2742,7 +2742,7 @@ boundSlots effect = case effect of
   -- CR 107.14: how much {E} the payer paid, for a later effect of the same
   -- resolution to read as Quantity.InSlot.
   Effect.PayAnyEnergy slot -> Set.singleton slot
-  Effect.ChooseNumber (ChooseNumber.MkChooseNumber slot _) -> Set.singleton slot
+  Effect.ChooseNumber (ChooseNumber.MkChooseNumber slot _ _) -> Set.singleton slot
   Effect.Tap _ -> Set.empty
   Effect.Untap _ -> Set.empty
   Effect.Unattach _ -> Set.empty

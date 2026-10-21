@@ -9,8 +9,7 @@ import qualified Pawl.Types.SlotName as SlotName
 -- "These players, this many" plus the slot the cards CR 121.1 put into a hand are
 -- remembered under, so a later clause of the same resolution can say "it":
 -- Shahrazad and Sindbad's "draw a card and reveal it. If it isn't a land card,
--- discard it." Absent for every draw nothing looks back at, which is all but one
--- card in the corpus.
+-- discard it." Absent for every draw nothing looks back at.
 --
 -- A type of its own rather than a fourth field on Pawl.Types.PlayerQuantity, and
 -- that record's haddock is where the rule is written: a Maybe carried for exactly
@@ -26,8 +25,9 @@ import qualified Pawl.Types.SlotName as SlotName
 -- reach it, and it is the printed "and reveal it" that keeps the card findable --
 -- rule 701.20a leaves a revealed card revealed "for as long as necessary to
 -- complete the parts of the effect that card is relevant to". A draw with no
--- reveal beside it has no business writing this slot, and no printing in the
--- corpus does.
+-- reveal beside it may still COUNT what it drew, which asks nothing of the
+-- cards: Temporary Truce's "for each card less than two a player draws this
+-- way" is a Count over the hands of the cards the slot holds.
 --
 -- ACROSS drawers and across the individual draws CR 121.2 breaks an instruction
 -- into, since the slot is one name and no reader is per-player. One card drawn

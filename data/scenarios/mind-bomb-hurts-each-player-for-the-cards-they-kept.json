@@ -1,0 +1,47 @@
+{
+  "description": "CR 608.2e Mind Bomb deals each player 3 minus the cards they discarded",
+  "note": "Three seats each holding three cards discard none, one and three of them. Each seat's damage reads only its own discards, so alice takes 3, bob 2 and carol none.",
+  "board": {
+    "seats": [
+      {
+        "name": "alice",
+        "battlefield": [{ "card": "Island", "label": "island" }],
+        "hand": [
+          { "card": "Mind Bomb", "label": "bomb" },
+          { "card": "Hill Giant" },
+          { "card": "Hill Giant" },
+          { "card": "Hill Giant" }
+        ]
+      },
+      {
+        "name": "bob",
+        "hand": [
+          { "card": "Llanowar Elves", "label": "bob-1" },
+          { "card": "Llanowar Elves" },
+          { "card": "Llanowar Elves" }
+        ]
+      },
+      {
+        "name": "carol",
+        "hand": [
+          { "card": "Goblin Piker", "label": "carol-1" },
+          { "card": "Goblin Piker", "label": "carol-2" },
+          { "card": "Goblin Piker", "label": "carol-3" }
+        ]
+      }
+    ],
+    "active": "alice",
+    "step": "PrecombatMain"
+  },
+  "timeline": [
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": { "Cast": { "object": "$bomb", "mana": ["$island"] } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass" },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": { "Answer": { "prompt": "ChooseAnyNumberToDiscard", "with": [] } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "bob", "do": { "Answer": { "prompt": "ChooseAnyNumberToDiscard", "with": ["$bob-1"] } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "carol", "do": { "Answer": { "prompt": "ChooseAnyNumberToDiscard", "with": ["$carol-1", "$carol-2", "$carol-3"] } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "check": { "Life": { "player": "alice", "life": 17 } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "check": { "Life": { "player": "bob", "life": 18 } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "check": { "Life": { "player": "carol", "life": 20 } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "check": { "Count": { "player": "bob", "zone": "Hand", "card": "Llanowar Elves", "count": 2 } } }
+  ]
+}
