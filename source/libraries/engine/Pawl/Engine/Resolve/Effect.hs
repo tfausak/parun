@@ -3275,8 +3275,9 @@ changeTargetsFor source chooser controller oid = do
 -- replaced targets go to the new ones -- each the same where they are equal, and
 -- otherwise as the chooser hands them out (Prompt.ChooseDivision's Parts). An
 -- answer that does not hand out exactly those parts reverses the whole re-aim,
--- chooseNewTargetsFor's reject-not-repair. An undivided slot is its targets
--- alone, as before.
+-- chooseNewTargetsFor's reject-not-repair. An undivided slot binds its targets
+-- alone. docs/decisions.md, "Who says which new target takes a replaced
+-- target's part of a division".
 reaimDivisions :: PlayerId -> ObjectId -> Map.Map SlotName Binding.Type.Binding -> Map.Map SlotName (Set Recipient) -> Game (Maybe (Map.Map SlotName Binding.Type.Binding))
 reaimDivisions chooser oid bindings picked =
   fmap sequence . flip Map.traverseWithKey picked $ \slot new ->
