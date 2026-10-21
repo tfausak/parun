@@ -1383,6 +1383,8 @@ library codec
     Pawl.Codec.TimesSpec
     Pawl.Codec.Timestamp
     Pawl.Codec.TimestampSpec
+    Pawl.Codec.Together
+    Pawl.Codec.TogetherSpec
     Pawl.Codec.TokenPattern
     Pawl.Codec.TokenPatternSpec
     Pawl.Codec.TokenPlus
@@ -2903,6 +2905,7 @@ library types
     Pawl.Types.Times
     Pawl.Types.Timestamp
     Pawl.Types.TimeTravelChoice
+    Pawl.Types.Together
     Pawl.Types.TokenLot
     Pawl.Types.TokenPattern
     Pawl.Types.TokenPlus

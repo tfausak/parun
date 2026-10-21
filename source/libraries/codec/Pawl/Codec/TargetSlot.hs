@@ -10,6 +10,7 @@ import qualified Pawl.Codec.Quantity as Quantity
 import qualified Pawl.Codec.SlotCount as SlotCount
 import qualified Pawl.Codec.SlotPerPlayer as SlotPerPlayer
 import qualified Pawl.Codec.TargetChooser as TargetChooser
+import qualified Pawl.Codec.Together as Together
 import qualified Pawl.JsonCodec.Codec as Codec
 import qualified Pawl.JsonCodec.Common as Common
 import qualified Pawl.JsonCodec.Fields as Fields
@@ -32,7 +33,8 @@ import qualified Pawl.Types.TargetSlot as TargetSlot
 -- unchanged. The chooser key is omitted on the same terms: CR 115.1's default is
 -- the ability's controller, which nearly every slot takes.
 -- The perPlayer key likewise: only CR 601.2c's "for each opponent" and "for each
--- player" slots name one, and the divided key: only CR 601.2d's divided slots.
+-- player" slots name one, the divided key: only CR 601.2d's divided slots, and
+-- the together key: only a slot whose targets must share a zone.
 codec :: Codec.Codec TargetSlot.TargetSlot
 codec = Fields.object $ do
   pool <- Fields.required "pool" Pool.codec TargetSlot.pool
@@ -42,6 +44,7 @@ codec = Fields.object $ do
   chooser <- Fields.defaulted "chooser" Nothing (Common.maybe TargetChooser.codec) TargetSlot.chooser
   perPlayer <- Fields.defaulted "perPlayer" Nothing (Common.maybe SlotPerPlayer.codec) TargetSlot.perPlayer
   divided <- Fields.defaulted "divided" Nothing (Common.maybe Quantity.codec) TargetSlot.divided
+  together <- Fields.defaulted "together" Nothing (Common.maybe Together.codec) TargetSlot.together
   pure
     TargetSlot.MkTargetSlot
       { TargetSlot.pool = pool,
@@ -50,7 +53,8 @@ codec = Fields.object $ do
         TargetSlot.amount = amount,
         TargetSlot.chooser = chooser,
         TargetSlot.perPlayer = perPlayer,
-        TargetSlot.divided = divided
+        TargetSlot.divided = divided,
+        TargetSlot.together = together
       }
 
 -- | A slot-keyed map as a JSON object keyed by the slot name (#1303).

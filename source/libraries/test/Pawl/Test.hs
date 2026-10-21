@@ -655,6 +655,7 @@ import qualified Pawl.Codec.TheseDiscardSpec
 import qualified Pawl.Codec.TimedSpec
 import qualified Pawl.Codec.TimesSpec
 import qualified Pawl.Codec.TimestampSpec
+import qualified Pawl.Codec.TogetherSpec
 import qualified Pawl.Codec.TokenPatternSpec
 import qualified Pawl.Codec.TokenRSpec
 import qualified Pawl.Codec.TopOfLibrarySpec
@@ -1546,6 +1547,7 @@ spec s registry = do
   Pawl.Codec.TimedSpec.spec s
   Pawl.Codec.TimesSpec.spec s
   Pawl.Codec.TimestampSpec.spec s
+  Pawl.Codec.TogetherSpec.spec s
   Pawl.Codec.TokenPatternSpec.spec s
   Pawl.Codec.TokenRSpec.spec s
   Pawl.Codec.TopOfLibrarySpec.spec s
