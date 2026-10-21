@@ -1137,7 +1137,8 @@ data Context = MkContext
     -- CR 601.2d: what each divided slot's announced division gave the
     -- recipient the surrounding effect is CURRENTLY BEING APPLIED TO, for
     -- Quantity.Share -- Forked Lightning's part of its 4 damage for each target.
-    -- Filled by Pawl.Engine.Resolve.Effect's DealDamage arm, once per recipient;
+    -- Filled by Pawl.Engine.Resolve.Effect's DealDamage and PreventNextDamage
+    -- arms, once per recipient;
     -- empty everywhere else, where Share answers Nothing.
     shares :: Map.Map SlotName.SlotName Natural.Natural,
     -- The objects the surrounding announcement's or resolution's slots name,

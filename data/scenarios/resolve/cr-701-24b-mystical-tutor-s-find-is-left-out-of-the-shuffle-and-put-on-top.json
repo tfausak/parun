@@ -1,6 +1,6 @@
 {
   "description": "CR 701.24b Mystical Tutor's find is left out of the shuffle and put on top",
-  "note": "The search finds the Lightning Bolt, the second card of three, and reveals it. The shuffle is offered only the Goblin Piker and the Plains (CR 701.24b), and its answer swaps them; the Bolt then goes on top. Every card ends a new object: the Piker and the Plains were looked at by the search (CR 701.23a) and shuffled, and the revealed Bolt was reordered onto the top (CR 701.20d, 701.20e).",
+  "note": "The search finds the Lightning Bolt, the second card of three, and reveals it. The shuffle is offered only the Goblin Piker and the Plains (CR 701.24b), and its answer swaps them; the Bolt then goes on top. Every card ends a new object: the Piker and the Plains were looked at by the search (CR 701.23a) and shuffled, and the revealed Bolt was reordered onto the top (CR 701.20d, 701.20e). bob sees the reveal (CR 701.20a), which the unrevealed scenario visibility/cr-701-23e-private-look-cruel-tutor-puts-its-find-on-top-unrevealed denies him.",
   "board": {
     "seats": [
       {
@@ -50,6 +50,7 @@
     {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass"},
     {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": {"Answer": {"prompt": "Search", "with": ["$bolt"]}}},
     {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": {"Answer": {"prompt": "Shuffle", "with": ["$plains", "$piker"]}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "check": {"View": {"of": "Witnessed", "player": "bob", "is": ["Lightning Bolt"]}}},
     {"turn": 1, "step": "PrecombatMain", "player": "alice", "check": {"View": {"of": "Zone", "player": "alice", "zone": "Library", "is": ["Lightning Bolt", "Plains", "Goblin Piker"]}}},
     {"turn": 1, "step": "PrecombatMain", "player": "alice", "check": {"Count": {"player": "alice", "zone": "Graveyard", "card": "Mystical Tutor", "count": 1}}}
   ]

@@ -14,11 +14,6 @@ Every expressible Portal card has been added to `data/cards/`.
 
 Each group is tracked by its issue; its cards are added when it lands.
 
-### Tutor to the top without revealing (#5236)
-SearchDestination has RevealThenTop (Mystical Tutor) and no unrevealed
-shuffle-then-top arm (Vampiric Tutor's shape, not in the pool).
-- Cruel Tutor: "Search your library for a card, then shuffle and put that card on top. You lose 2 life."
-
 ### Skip all combat phases of target player's NEXT TURN (#5237)
 SkipNextPhase (stonehorn-dignitary) skips the player's next combat phase. That
 diverges when False Peace targets its caster before their own combat (it skips

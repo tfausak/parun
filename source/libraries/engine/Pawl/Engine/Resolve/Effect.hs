@@ -4664,23 +4664,26 @@ applyOneEffect runSubgame resolving source controller legal chosen effect = case
           -- clause still names it -- CR 701.24b's exclusion, and CR 701.20d's
           -- new object for a card Grim Reminder leaves behind.
           --
-          -- RevealThenTop's found cards are still in the library at its shuffle,
-          -- and CR 701.24b leaves them out of it: not reordered, they stay the
-          -- objects the search found until they are put on top, which reorders
-          -- them (CR 701.20d). Several would go on top in the order their owner
-          -- states (CR 401.4, arrangeInLibrary) -- a regression fence, no card in
-          -- data/cards finding more than one. The scenario
+          -- RevealThenTop's and Top's found cards are still in the library at
+          -- its shuffle, and CR 701.24b leaves them out of it: not reordered,
+          -- they stay the objects the search found until they are put on top,
+          -- which reorders them (CR 701.20d). Several would go on top in the
+          -- order their owner states (CR 401.4, arrangeInLibrary) -- a
+          -- regression fence, no card in data/cards putting more than one into
+          -- one library; Insidious Dreams would (gap #5394). The scenarios
           -- cr-701-24b-mystical-tutor-s-find-is-left-out-of-the-shuffle-and-put-on-top
-          -- is the proof.
+          -- and, unrevealed and one library per searcher,
+          -- cr-701-24b-scheming-symmetry-puts-each-searcher-s-find-on-top-of-their-own-library
+          -- are the proof.
           let shuffled
                 | destination == SearchDestination.Reveal = []
                 | otherwise = ListUtils.nubOrd [owner | (_, owner, chosenZones, _, _, _) <- decisions, Set.member Zone.Library chosenZones]
               leftOut
-                | destination == SearchDestination.RevealThenTop = Set.fromList arrivals
+                | putsOnTop destination = Set.fromList arrivals
                 | otherwise = Set.empty
           Monad.forM_ shuffled (Event.shuffleLibraryExcept leftOut)
           placed <-
-            if destination == SearchDestination.RevealThenTop
+            if putsOnTop destination
               then do
                 onTop <- concat <$> traverse (\oid -> Foldable.toList <$> Event.changeZoneAttaching Nothing Set.empty oid Zone.Library LibraryPosition.Top Nothing TapState.Untapped Map.empty Nothing Nothing Facing.FaceUp False CarryOver.NotCarried False Seq.empty) (reverse arrivals)
                 owners <- State.gets (\gs -> ListUtils.nubOrd (Maybe.mapMaybe (\oid -> fmap Object.owner (Game.lookupObject oid gs)) onTop))
@@ -7990,31 +7993,33 @@ applyOneEffect runSubgame resolving source controller legal chosen effect = case
         -- CR 615.5: the additional effect, BAKED onto the row with this
         -- resolution's chosen targets and CR 109.5's "you".
         rider = preventionRider chosen controller source riderEffects
-    case Quantity.evaluateFor viewOf context gs resolving source quantity of
-      -- An unevaluable quantity is a no-op, DealDamage's posture.
-      Nothing -> pure ()
-      Just n ->
+        -- HOW MUCH, read once per row, so a named row is handed its recipient's
+        -- part of CR 601.2d's division (Quantity.Share), DealDamage's posture. A
+        -- target CR 608.2b found illegal has no row, so its part shields nobody:
+        -- data/scenarios/divide's Remedy case proves it. An unevaluable amount
+        -- installs no row, DealDamage's posture too.
+        amountOf row = Quantity.evaluateFor viewOf (maybe context (\recipient -> context {Filter.shares = Binding.sharesOf recipient (slotBindings resolving gs)}) row) gs resolving source quantity
         -- CR 615.7: a shield of 0 can prevent nothing, so none is installed --
-        -- and neither is CR 609.7a's choice raised, a choice existing only to be
-        -- baked into a row. The rows are counted for the same reason: CR 608.2b's
-        -- gone target leaves a named shield no recipient, so there is nothing to
-        -- shield. A DESCRIBED shield always has its one row, its recipients being
-        -- read at the damage event rather than settled here.
-        Monad.when (n > 0 && not (null rows)) $ do
-          -- CR 609.7a: "the source is chosen when the effect is created", so the
-          -- choice is made ONCE here and every shield this resolution installs
-          -- watches the object it landed on.
-          sourceChoice <- chooseDamageSource controller resolving context gs sourceFilter
-          case (sourceFilter, sourceChoice) of
-            -- The card asked for a source and CR 609.7a's pool was empty, so
-            -- there is nothing to shield against and no row is installed --
-            -- stricter than printed rather than weaker, which a row watching
-            -- every source would be.
-            (Just _, Nothing) -> pure ()
-            _ ->
-              State.modify' $ \g0 ->
-                let amount = Integer.toNaturalSaturating n
-                 in List.foldl' (installDamageRow resolving legal (Filter.slotObjects context) controller source duration kind (DamageRewrite.PreventNext amount) Uses.Unlimited rider (Filter.Type.And []) describedRecipient) g0 (fmap (\recipient -> (recipient, sourceChoice)) rows)
+        -- and neither is CR 609.7a's choice raised when no row is, a choice
+        -- existing only to be baked into a row. CR 608.2b's gone target leaves a
+        -- named shield no recipient, so there is nothing to shield. A DESCRIBED
+        -- shield always has its one row, its recipients being read at the
+        -- damage event rather than settled here.
+        shields = [(row, Integer.toNaturalSaturating n) | row <- rows, Just n <- [amountOf row], n > 0]
+    Monad.unless (null shields) $ do
+      -- CR 609.7a: "the source is chosen when the effect is created", so the
+      -- choice is made ONCE here and every shield this resolution installs
+      -- watches the object it landed on.
+      sourceChoice <- chooseDamageSource controller resolving context gs sourceFilter
+      case (sourceFilter, sourceChoice) of
+        -- The card asked for a source and CR 609.7a's pool was empty, so
+        -- there is nothing to shield against and no row is installed --
+        -- stricter than printed rather than weaker, which a row watching
+        -- every source would be.
+        (Just _, Nothing) -> pure ()
+        _ ->
+          State.modify' $ \g0 ->
+            List.foldl' (\g (row, amount) -> installDamageRow resolving legal (Filter.slotObjects context) controller source duration kind (DamageRewrite.PreventNext amount) Uses.Unlimited rider (Filter.Type.And []) describedRecipient g (row, sourceChoice)) g0 shields
   Effect.PreventAllDamage (PreventAllDamage.MkPreventAllDamage duration kind ref whatRecipient whoRecipient direction sourceFilter printedSource riderEffects) -> do
     -- CR 615.1 / 615.3: one floating shield per object the ref names, with no
     -- amount to count down. PreventNextDamage's row but for its rewrite, hence
@@ -11635,6 +11640,22 @@ outsideArrival destination = case destination of
   SearchDestination.BattlefieldAttached -> Nothing
   SearchDestination.Reveal -> Nothing
   SearchDestination.RevealThenTop -> Nothing
+  SearchDestination.Top -> Nothing
+
+-- CR 701.24b: whether the found cards stay in the library, left out of its
+-- shuffle, to be put on top after it.
+putsOnTop :: SearchDestination.SearchDestination -> Bool
+putsOnTop destination = case destination of
+  SearchDestination.RevealThenTop -> True
+  SearchDestination.Top -> True
+  SearchDestination.Battlefield -> False
+  SearchDestination.BattlefieldTapped -> False
+  SearchDestination.RevealThenHand -> False
+  SearchDestination.Exile -> False
+  SearchDestination.BattlefieldAttachedOrHand -> False
+  SearchDestination.BattlefieldAttached -> False
+  SearchDestination.Reveal -> False
+  SearchDestination.Hand -> False
 
 -- Search.differentIn: the cards, in order, that keep the group apart -- each
 -- shares no value on any named axis with a card kept ahead of it.
@@ -11753,6 +11774,10 @@ putFound resolving asOf searcher subject destination cardId = case destination o
   SearchDestination.RevealThenTop -> do
     Event.revealResolving resolving searcher cardId
     pure [cardId]
+  -- Cruel Tutor's: the same, with no reveal (CR 701.23e). The scenario
+  -- visibility/cr-701-23e-private-look-cruel-tutor-puts-its-find-on-top-unrevealed
+  -- is the proof.
+  SearchDestination.Top -> pure [cardId]
   -- Rhystic Tutor's "put that card into your hand": the move alone, with no
   -- reveal, CR 701.23e.
   SearchDestination.Hand -> Foldable.toList <$> Event.changeZoneInBatchReturning asOf cardId Zone.Hand
