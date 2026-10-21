@@ -217,7 +217,7 @@ beingCast gs candidate = case lookupObject candidate gs of
 -- leaves the mark behind with its old id (CR 400.7).
 --
 -- Pawl.Engine.Visibility.sees answers CR 708.5's who-may-look. Not
--- implemented: a prompt still names the card to its owner (#10).
+-- implemented: a prompt still names the card to its owner (#5418).
 keptFaceDown :: ObjectId -> GameState -> Bool
 keptFaceDown oid gs =
   maybe False (Map.member oid) (GameState.keptFaceDown gs)
@@ -1527,7 +1527,7 @@ halvesOf = faceUpCopiable halvesCardOf
 -- The object still HAS its card (Object.source), and faceUpFaceOf below is how
 -- CR 702.37e reads the morph cost off it. Pawl.Engine.Visibility.sees answers
 -- CR 708.5's who-may-look. Not implemented: an answerer is still handed the
--- printing, which nothing hides from a reader that goes looking (#10).
+-- printing, which nothing hides from a reader that goes looking (#5418).
 faceOf :: ObjectId -> GameState -> Maybe (Face Card)
 faceOf oid gs = faceOfObject gs =<< lookupLayerOne oid gs
 
