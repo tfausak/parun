@@ -38,7 +38,7 @@
                   {
                     "effects": [
                       {
-                        "type": "SkipNextPhase",
+                        "type": "SkipPhase",
                         "value": {
                           "player": {
                             "type": "InSlot",

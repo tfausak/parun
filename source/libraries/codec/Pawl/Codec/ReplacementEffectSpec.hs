@@ -324,7 +324,7 @@ spec s =
             (ReplacementEffect.PhaseR PhasePattern.MkPhasePattern {PhasePattern.whichPhase = PhaseSelector.Step (Phase.Beginning BeginningStep.Upkeep), PhasePattern.whosePhase = Nothing})
             " {\"type\":\"PhaseR\",\"value\":{\"whichPhase\":{\"type\":\"Step\",\"value\":{\"type\":\"Beginning\",\"value\":{\"type\":\"Upkeep\"}}}}} "
         -- The baked player-scoped whosePhase = Just, which only Resolve's
-        -- SkipNextPhase arm produces and no card authors (#437). The codec has to
+        -- SkipPhase arm produces and no card authors (#437). The codec has to
         -- carry it either way.
         Spec.it s "PhaseR (Fatigue, player-scoped skip)" $
           Common.assertCodec

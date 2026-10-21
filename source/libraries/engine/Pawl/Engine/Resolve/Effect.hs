@@ -392,7 +392,7 @@ import qualified Pawl.Types.SetOwner as SetOwner
 import qualified Pawl.Types.ShuffleIntoLibrary as ShuffleIntoLibrary
 import qualified Pawl.Types.Sickness as Sickness
 import qualified Pawl.Types.SideDeck as SideDeck
-import qualified Pawl.Types.SkipNextPhase as SkipNextPhase
+import qualified Pawl.Types.SkipPhase as SkipPhase
 import Pawl.Types.SlotName (SlotName)
 import qualified Pawl.Types.Source as Source
 import qualified Pawl.Types.SpeedDecrease as SpeedDecrease
@@ -3537,7 +3537,7 @@ effectIsImpossible resolving source controller legal gs effect = case effect of
   Effect.ChooseNewTargets {} -> False
   Effect.ChangeTargets {} -> False
   Effect.Replace {} -> False
-  Effect.SkipNextPhase {} -> False
+  Effect.SkipPhase {} -> False
   Effect.PreventNextDamage {} -> False
   Effect.PreventAllDamage {} -> False
   Effect.PreventNextDamageInstance {} -> False
@@ -8202,52 +8202,55 @@ applyOneEffect runSubgame resolving source controller legal chosen effect = case
             (Just _, Nothing) -> pure ()
             _ -> State.modify' $ \g0 -> List.foldl' (installDamageRow resolving legal (Filter.slotObjects context) controller source duration kind rewrite Uses.Unlimited Nothing (Filter.Type.And []) describedRecipient) g0 (fmap (\recipient -> (recipient, sourceChoice)) rows)
       _ -> pure ()
-  Effect.SkipNextPhase (SkipNextPhase.MkSkipNextPhase ref selector) -> do
+  Effect.SkipPhase (SkipPhase.MkSkipPhase ref selector uses duration) -> do
     -- CR 614.1b: "skip" is a replacement effect, installed floating because a
     -- sorcery's skip outlives the sorcery (CR 614.3). CR 614.10a: one instance
-    -- PER NAMED PLAYER, each with Uses.Once and its own row rather than merged,
-    -- so "skip the next two" is two rows and Replacement.consume spends the one
-    -- it applied.
+    -- PER NAMED PLAYER, each its own row rather than merged, so "skip the next
+    -- two" is two rows and Replacement.consume spends the one it applied.
     --
-    -- Expiry.Never, and no Duration on the opcode: CR 614.3's other terminator
-    -- never fires and the skip waits however many turns it must (CR 614.10a). The
-    -- PhaseSelector goes in untouched: step or whole phase (CR 500.1) is card
-    -- data.
+    -- CR 614.3's two terminators are card data. "Next" is Uses.Once under
+    -- Duration.Indefinite, waiting however many turns it must (CR 614.10a);
+    -- "all combat phases of their next turn" is Uses.Unlimited under a window
+    -- that Replacement.collect holds back until that turn (Expiry.begun). A
+    -- window that cannot begin stores nothing (Expiry.arm). The PhaseSelector
+    -- goes in untouched: step or whole phase (CR 500.1) is card data.
     --
     -- CR 805.8: under the shared team turns option one effect naming several
     -- players on a team skips that team's step once, so the team's first named
     -- player takes the one row. Replacement.applies matches it for the team.
     gs <- State.get
     let named = List.foldl' (\kept pid -> if any (Turn.sharesTurn gs pid) kept then kept else kept <> [pid]) [] (playerRefPlayers legal resolving source controller gs ref)
-        install pid g =
-          let (ts, g1) = Game.freshTimestamp g
-              active =
-                ActiveReplacement.MkActiveReplacement
-                  { ActiveReplacement.effect =
-                      ReplacementEffect.PhaseR
-                        PhasePattern.MkPhasePattern
-                          { PhasePattern.whichPhase = selector,
-                            -- The player the resolution named, baked now. Card
-                            -- data cannot name one (see
-                            -- Pawl.Types.PhasePattern).
-                            PhasePattern.whosePhase = Just pid
-                          },
-                    ActiveReplacement.source = source,
-                    -- CR 109.5: the resolution's controller, not `pid` above,
-                    -- which the effect NAMED; nothing reads this, a PhaseR
-                    -- resolving no ControllerRelation.
-                    ActiveReplacement.controller = controller,
-                    ActiveReplacement.timestamp = ts,
-                    ActiveReplacement.expiry = Expiry.Type.Never,
-                    ActiveReplacement.uses = Uses.Once,
-                    ActiveReplacement.origin = ReplacementOrigin.Other,
-                    -- No clause: CR 614.10a's skip states none (see
-                    -- Pawl.Types.ActiveReplacement).
-                    ActiveReplacement.condition = Nothing,
-                    ActiveReplacement.rider = Nothing,
-                    ActiveReplacement.slots = Map.empty
-                  }
-           in g1 {GameState.replacements = active : GameState.replacements g1}
+        install pid g = case Expiry.arm (Game.readingAcquisition resolving source) legal controller source duration g of
+          Nothing -> g
+          Just expiry ->
+            let (ts, g1) = Game.freshTimestamp g
+                active =
+                  ActiveReplacement.MkActiveReplacement
+                    { ActiveReplacement.effect =
+                        ReplacementEffect.PhaseR
+                          PhasePattern.MkPhasePattern
+                            { PhasePattern.whichPhase = selector,
+                              -- The player the resolution named, baked now. Card
+                              -- data cannot name one (see
+                              -- Pawl.Types.PhasePattern).
+                              PhasePattern.whosePhase = Just pid
+                            },
+                      ActiveReplacement.source = source,
+                      -- CR 109.5: the resolution's controller, not `pid` above,
+                      -- which the effect NAMED; nothing reads this, a PhaseR
+                      -- resolving no ControllerRelation.
+                      ActiveReplacement.controller = controller,
+                      ActiveReplacement.timestamp = ts,
+                      ActiveReplacement.expiry = expiry,
+                      ActiveReplacement.uses = uses,
+                      ActiveReplacement.origin = ReplacementOrigin.Other,
+                      -- No clause: CR 614.10a's skip states none (see
+                      -- Pawl.Types.ActiveReplacement).
+                      ActiveReplacement.condition = Nothing,
+                      ActiveReplacement.rider = Nothing,
+                      ActiveReplacement.slots = Map.empty
+                    }
+             in g1 {GameState.replacements = active : GameState.replacements g1}
     State.modify' (\g -> List.foldl' (flip install) g named)
   Effect.AffectPlayers (AffectPlayers.MkAffectPlayers duration affected playerEffect) ->
     -- CR 611.1 / 613.11: install the stored player effect. CR 109.5: the
@@ -10522,7 +10525,7 @@ applyOneEffect runSubgame resolving source controller legal chosen effect = case
         --
         -- CR 805.8: under the shared team turns option one effect giving several
         -- players on a team the same turn gives that team one, so the team's
-        -- first player in APNAP order takes the entry, as Effect.SkipNextPhase's
+        -- first player in APNAP order takes the entry, as Effect.SkipPhase's
         -- arm keeps one skip. Proved by Pawl.TeamSpec's "CR 805.8 one effect
         -- gives a team one extra turn".
         takers = List.foldl' (\kept pid -> if any (Turn.sharesTurn gs pid) kept then kept else kept <> [pid]) [] (filter (\pid -> List.elem pid named) (Game.apnapOrder gs))

@@ -347,7 +347,7 @@ import qualified Pawl.Types.SetBasePowerToughness as SetBasePowerToughness
 import qualified Pawl.Types.SetClassLevel as SetClassLevel
 import qualified Pawl.Types.SetOwner as SetOwner
 import qualified Pawl.Types.ShuffleIntoLibrary as ShuffleIntoLibrary
-import qualified Pawl.Types.SkipNextPhase as SkipNextPhase
+import qualified Pawl.Types.SkipPhase as SkipPhase
 import qualified Pawl.Types.SlotCount as SlotCount
 import qualified Pawl.Types.SlotName as SlotName
 import qualified Pawl.Types.SpecialAction as SpecialAction
@@ -378,6 +378,7 @@ import qualified Pawl.Types.TurnUpR as TurnUpR
 import qualified Pawl.Types.TurnUpRewrite as TurnUpRewrite
 import qualified Pawl.Types.TypeLine as TypeLine
 import qualified Pawl.Types.UntapRestriction as UntapRestriction
+import qualified Pawl.Types.Uses as Uses
 import qualified Pawl.Types.Vote as Vote
 import qualified Pawl.Types.VoteChoices as VoteChoices
 import qualified Pawl.Types.VoteObjects as VoteObjects
@@ -750,7 +751,7 @@ playerRefPositions =
         ("increase-speed", Effect.IncreaseSpeed (playerQuantity "is"), [plantedPlayer "is"]),
         ("decrease-speed", Effect.DecreaseSpeed (SpeedDecrease.MkSpeedDecrease (plantedPlayer "ds") one 0), [plantedPlayer "ds"]),
         ("create", Effect.Create (Create.MkCreate one () EntryRiders.defaultValue Nothing (plantedPlayer "cr")), [plantedPlayer "cr"]),
-        ("skip-next-phase", Effect.SkipNextPhase (SkipNextPhase.MkSkipNextPhase (plantedPlayer "sn") PhaseSelector.CombatPhase), [plantedPlayer "sn"]),
+        ("skip-phase", Effect.SkipPhase (SkipPhase.MkSkipPhase (plantedPlayer "sn") PhaseSelector.CombatPhase Uses.Once Duration.Indefinite), [plantedPlayer "sn"]),
         ("gain-player-counters", Effect.GainPlayerCounters (PlayerCounters.MkPlayerCounters (plantedPlayer "gp") PlayerCounterKind.Rad one), [plantedPlayer "gp"]),
         ("remove-player-counters", Effect.RemovePlayerCounters (RemovePlayerCounters.MkRemovePlayerCounters (plantedPlayer "rp") PlayerCounterKind.Rad one Nothing), [plantedPlayer "rp"]),
         ("require-attack", Effect.RequireAttack (RequireAttack.MkRequireAttack Duration.UntilEndOfTurn (RestrictedCreatures.Named (plantedRef "ra")) (AttackTargetRef.Players (plantedPlayer "ra-defender"))), [plantedPlayer "ra-defender"]),
@@ -1346,8 +1347,8 @@ ownCounts effect = case effect of
   -- control three or more artifacts", and its Counts are as much card data as a
   -- Duration's.
   Effect.Replace (Replace.MkReplace duration _ _ condition replacement) -> durationCounts duration <> foldMap conditionCounts condition <> concatMap effectCounts (replacementEffectRiders replacement) <> concatMap (overFaces cardCounts) (replacementMintedCards replacement)
-  -- CR 614.10a's "next" is a use count, not a Duration and not a Quantity.
-  Effect.SkipNextPhase (SkipNextPhase.MkSkipNextPhase _ _) -> []
+  -- CR 614.10a's "next" is a use count, not a Quantity.
+  Effect.SkipPhase (SkipPhase.MkSkipPhase _ _ _ duration) -> durationCounts duration
   -- CR 615.5's rider is an effect list a card authors, so its Counts are this
   -- card's Counts -- the same recursion Create takes into a minted token.
   Effect.PreventNextDamage (PreventNextDamage.MkPreventNextDamage duration _ _ _ _ _ quantity rider) -> durationCounts duration <> quantityCounts quantity <> concatMap effectCounts rider
@@ -1858,7 +1859,7 @@ effectNestedEffects effect = case effect of
   Effect.RedistributeLifeTotals -> []
   Effect.IncreaseSpeed {} -> []
   Effect.DecreaseSpeed {} -> []
-  Effect.SkipNextPhase {} -> []
+  Effect.SkipPhase {} -> []
   Effect.RedirectDamage {} -> []
   Effect.TurnFaceDown {} -> []
   Effect.TurnFaceUp {} -> []
@@ -2398,7 +2399,7 @@ effectReplacements effect = case effect of
   Effect.RedistributeLifeTotals -> []
   Effect.IncreaseSpeed (PlayerQuantity.MkPlayerQuantity _ _) -> []
   Effect.DecreaseSpeed _ -> []
-  Effect.SkipNextPhase (SkipNextPhase.MkSkipNextPhase _ _) -> []
+  Effect.SkipPhase {} -> []
   -- CR 615.5's rider can carry an Effect.Replace, so this descends.
   Effect.PreventNextDamage (PreventNextDamage.MkPreventNextDamage _ _ _ _ _ _ _ rider) -> concatMap effectReplacements rider
   Effect.PreventAllDamage (PreventAllDamage.MkPreventAllDamage _ _ _ _ _ _ _ _ rider) -> concatMap effectReplacements rider
@@ -2950,7 +2951,7 @@ effectMintedFaces effect = case effect of
   Effect.RedistributeLifeTotals -> []
   Effect.IncreaseSpeed (PlayerQuantity.MkPlayerQuantity _ _) -> []
   Effect.DecreaseSpeed _ -> []
-  Effect.SkipNextPhase (SkipNextPhase.MkSkipNextPhase _ _) -> []
+  Effect.SkipPhase {} -> []
   -- CR 615.5's rider can mint a token or emblem of its own, so this descends.
   Effect.PreventNextDamage (PreventNextDamage.MkPreventNextDamage _ _ _ _ _ _ _ rider) -> concatMap effectMintedFaces rider
   Effect.PreventAllDamage (PreventAllDamage.MkPreventAllDamage _ _ _ _ _ _ _ _ rider) -> concatMap effectMintedFaces rider
@@ -5987,7 +5988,7 @@ effectFilters effect = case effect of
   -- Pawl.Engine.Replacement.candidateContext a printed one is, where the
   -- duration and the CR 604.2 clause beside it are not.
   Effect.Replace (Replace.MkReplace duration _ _ condition replacement) -> frame Unframed (durationFilters duration <> foldMap conditionFilters condition) <> frame ReplacementRowFramed (replacementEffectFilters replacement) <> concatMap effectFilters (replacementEffectRiders replacement) <> concatMap (overFaces cardFilters) (replacementMintedCards replacement)
-  Effect.SkipNextPhase (SkipNextPhase.MkSkipNextPhase _ _) -> []
+  Effect.SkipPhase (SkipPhase.MkSkipPhase _ _ _ duration) -> frame Unframed (durationFilters duration)
   -- The rider's Filters too, for CR 615.5. This is the traversal that dropped
   -- landwalk's payload once, so a nested effect list is exactly what it must not
   -- stop at.

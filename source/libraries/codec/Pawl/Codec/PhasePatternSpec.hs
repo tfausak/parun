@@ -21,7 +21,7 @@ spec s = Spec.describe s "Pawl.Codec.PhasePattern" $ do
       PhasePattern.codec
       PhasePattern.MkPhasePattern {PhasePattern.whichPhase = PhaseSelector.Step (Phase.Beginning BeginningStep.Upkeep), PhasePattern.whosePhase = Nothing}
       " {\"whichPhase\":{\"type\":\"Step\",\"value\":{\"type\":\"Beginning\",\"value\":{\"type\":\"Upkeep\"}}}} "
-  -- The only Just Resolve's SkipNextPhase arm produces, never authored on a
+  -- The only Just Resolve's SkipPhase arm produces, never authored on a
   -- card (#437).
   Spec.it s "Fatigue's player-scoped whosePhase = Just" $
     Common.assertCodec

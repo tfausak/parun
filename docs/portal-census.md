@@ -14,12 +14,6 @@ Every expressible Portal card has been added to `data/cards/`.
 
 Each group is tracked by its issue; its cards are added when it lands.
 
-### Skip all combat phases of target player's NEXT TURN (#5237)
-SkipNextPhase (stonehorn-dignitary) skips the player's next combat phase. That
-diverges when False Peace targets its caster before their own combat (it skips
-this turn's combat, not next turn's), and when a turn has extra combats.
-- False Peace: "Target player skips all combat phases of their next turn."
-
 ### A per-player "may draw up to N" with a per-player follow-up (#5239)
 ChooseNumber has no chooser, and Repeat/ForEach/ForEachNumber don't loop over
 players with each one choosing.

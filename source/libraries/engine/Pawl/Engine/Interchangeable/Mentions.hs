@@ -356,7 +356,7 @@ import qualified Pawl.Types.SetClassLevel as SetClassLevel
 import qualified Pawl.Types.SetHalfLocked as SetHalfLocked
 import qualified Pawl.Types.SetOwner as SetOwner
 import qualified Pawl.Types.ShuffleIntoLibrary as ShuffleIntoLibrary
-import qualified Pawl.Types.SkipNextPhase as SkipNextPhase
+import qualified Pawl.Types.SkipPhase as SkipPhase
 import qualified Pawl.Types.SlotCount as SlotCount
 import qualified Pawl.Types.SlotName as SlotName
 import qualified Pawl.Types.SlotPerPlayer as SlotPerPlayer
@@ -1336,7 +1336,7 @@ effectNames asking onCard onAbility x = case x of
   Effect.BecomeCopy becomeCopy -> becomeCopyNames asking onAbility becomeCopy
   Effect.CopyStackObject copyStackObject -> copyStackObjectNames asking onAbility copyStackObject
   Effect.Replace replace -> replaceNames asking onCard onAbility (effectNames asking onCard onAbility) replace
-  Effect.SkipNextPhase skipNextPhase -> skipNextPhaseNames asking skipNextPhase
+  Effect.SkipPhase skipPhase -> skipPhaseNames asking skipPhase
   Effect.PreventNextDamage preventNextDamage -> preventNextDamageNames asking (effectNames asking onCard onAbility) preventNextDamage
   Effect.PreventAllDamage preventAllDamage -> preventAllDamageNames asking (effectNames asking onCard onAbility) preventAllDamage
   Effect.PreventNextDamageInstance preventNextDamageInstance -> preventNextDamageInstanceNames asking (effectNames asking onCard onAbility) preventNextDamageInstance
@@ -2683,9 +2683,9 @@ shuffleIntoLibraryNames :: (Monoid r) => Asking r -> ShuffleIntoLibrary.ShuffleI
 shuffleIntoLibraryNames asking x = case x of
   ShuffleIntoLibrary.MkShuffleIntoLibrary library refs -> foldMap (playerRefNames asking) library <> foldMap (objectRefNames asking) refs
 
-skipNextPhaseNames :: (Monoid r) => Asking r -> SkipNextPhase.SkipNextPhase -> r
-skipNextPhaseNames asking x = case x of
-  SkipNextPhase.MkSkipNextPhase player _selector -> playerRefNames asking player
+skipPhaseNames :: (Monoid r) => Asking r -> SkipPhase.SkipPhase -> r
+skipPhaseNames asking x = case x of
+  SkipPhase.MkSkipPhase player _selector _uses duration -> playerRefNames asking player <> durationNames asking duration
 
 slotCountNames :: (Monoid r) => Asking r -> SlotCount.SlotCount -> r
 slotCountNames asking x = case x of

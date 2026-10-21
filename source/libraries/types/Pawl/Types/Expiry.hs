@@ -66,13 +66,14 @@ data Expiry
     -- only "has this ended" sees this row from the moment it is stored and
     -- applies it a turn early.
     --
-    -- Four carriers ask `begun`: GameState.attackProhibitions (Wall of Dust),
+    -- Five carriers ask `begun`: GameState.attackProhibitions (Wall of Dust),
     -- GameState.attackRequirements (Taunt, Gideon, Battle-Forged),
-    -- GameState.playerEffects (Sphinx's Decree) and Object.playableFromExile
-    -- (Galvanic Relay). A row on any other would apply from the moment it is
-    -- stored, so Pawl.EffectLintSpec's windowOffends refuses a card writing one
-    -- (Scryfall o:/during [^.]*next turn/, 2026-10-11: every hit is one of the
-    -- four or CR 723's player control).
+    -- GameState.playerEffects (Sphinx's Decree), Object.playableFromExile
+    -- (Galvanic Relay) and GameState.replacements (False Peace). A row on any
+    -- other would apply from the moment it is stored, so Pawl.EffectLintSpec's
+    -- windowOffends refuses a card writing one (Scryfall o:/during [^.]*next
+    -- turn/, 2026-10-11: every hit is one of the first four or CR 723's player
+    -- control).
     DuringTurnOf AfterTurn.AfterTurn
   | -- | CR 611.2a: DuringTurnOf with its seat not yet known -- "during its
     -- controller's next turn", open on any later turn while that object's

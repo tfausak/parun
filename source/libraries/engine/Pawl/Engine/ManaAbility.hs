@@ -388,7 +388,7 @@ manaProduced effect = case effect of
   Effect.BecomeCopy {} -> Nothing
   Effect.CopyStackObject {} -> Nothing
   Effect.Replace {} -> Nothing
-  Effect.SkipNextPhase {} -> Nothing
+  Effect.SkipPhase {} -> Nothing
   -- CR 615.5's rider is not descended into, the same stop Effect.Create makes at
   -- a minted token's abilities: this asks what the effect ITSELF adds, and a
   -- prevention adds no mana. A rider that did would be a mana clause nothing in
@@ -586,7 +586,7 @@ playerChoice effect = case effect of
   Effect.BecomeCopy {} -> Nothing
   Effect.CopyStackObject {} -> Nothing
   Effect.Replace {} -> Nothing
-  Effect.SkipNextPhase {} -> Nothing
+  Effect.SkipPhase {} -> Nothing
   Effect.PreventNextDamage {} -> Nothing
   Effect.PreventAllDamage {} -> Nothing
   Effect.PreventNextDamageInstance {} -> Nothing
@@ -860,7 +860,7 @@ movesLibraryCard effect = case effect of
   -- is no card at all (CR 112.1a).
   Effect.CopyStackObject {} -> False
   Effect.Replace {} -> False
-  Effect.SkipNextPhase {} -> False
+  Effect.SkipPhase {} -> False
   -- CR 615.5's rider is not descended into, the same stop `manaProduced` makes:
   -- this asks what the effect ITSELF does, and Resolve.runPreventionRider runs
   -- the rider against the effect's own source, later, rather than as part of

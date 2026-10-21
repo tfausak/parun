@@ -97,7 +97,7 @@ import qualified Pawl.Types.SetClassLevel as SetClassLevel
 import qualified Pawl.Types.SetHalfLocked as SetHalfLocked
 import qualified Pawl.Types.SetOwner as SetOwner
 import qualified Pawl.Types.ShuffleIntoLibrary as ShuffleIntoLibrary
-import qualified Pawl.Types.SkipNextPhase as SkipNextPhase
+import qualified Pawl.Types.SkipPhase as SkipPhase
 import qualified Pawl.Types.SlotName as SlotName
 import qualified Pawl.Types.SpeedDecrease as SpeedDecrease
 import qualified Pawl.Types.Subtype as Subtype
@@ -374,9 +374,9 @@ data Effect card ability
     -- with a use count, an origin and an optional condition asked as the event
     -- would happen (CR 614.1). Targetless.
     Replace (Replace.Replace card ability (Effect card ability))
-  | -- | CR 614.10a: each player the PlayerRef names skips their next occurrence
-    -- of this step or phase (Fatigue, Stonehorn Dignitary).
-    SkipNextPhase SkipNextPhase.SkipNextPhase
+  | -- | CR 614.10: each player the PlayerRef names skips this step or phase,
+    -- once or within a window (Fatigue, False Peace).
+    SkipPhase SkipPhase.SkipPhase
   | -- | CR 615.7: install a prevention shield of the printed size over the
     -- recipients an ObjectRef or a described recipient side names, for a
     -- duration (Mending Hands). PreventNextDamage.riders is CR 615.5's
