@@ -39,7 +39,7 @@ import qualified Pawl.Types.SlotName as SlotName
 -- 701.20a) and a look is not (CR 701.20e): a GameEvent.Looked names its
 -- audience, so an opponent-chooser over a looked-at group chooses among cards
 -- its log never showed it. Not implemented: the prompt names them to it
--- regardless (#10).
+-- regardless (#5418).
 --
 -- The fields are named rather than positional for ChosenCardInHand's reason.
 data ChosenCardFromAmong = MkChosenCardFromAmong
