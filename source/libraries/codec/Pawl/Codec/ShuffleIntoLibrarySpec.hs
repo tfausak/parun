@@ -20,7 +20,8 @@ spec s = Spec.describe s "Pawl.Codec.ShuffleIntoLibrary" $ do
       ShuffleIntoLibrary.codec
       ( ShuffleIntoLibrary.MkShuffleIntoLibrary
           { ShuffleIntoLibrary.library = Nothing,
-            ShuffleIntoLibrary.refs = NonEmpty.singleton (ObjectRef.InSlot (SlotName.MkSlotName (Text.pack "target")))
+            ShuffleIntoLibrary.refs = NonEmpty.singleton (ObjectRef.InSlot (SlotName.MkSlotName (Text.pack "target"))),
+            ShuffleIntoLibrary.slot = Nothing
           }
       )
       " {\"refs\":[{\"type\":\"InSlot\",\"value\":\"target\"}]} "
@@ -32,7 +33,8 @@ spec s = Spec.describe s "Pawl.Codec.ShuffleIntoLibrary" $ do
       ShuffleIntoLibrary.codec
       ( ShuffleIntoLibrary.MkShuffleIntoLibrary
           { ShuffleIntoLibrary.library = Just (PlayerRef.InSlot (SlotName.MkSlotName (Text.pack "player"))),
-            ShuffleIntoLibrary.refs = NonEmpty.singleton (ObjectRef.InSlot (SlotName.MkSlotName (Text.pack "cards")))
+            ShuffleIntoLibrary.refs = NonEmpty.singleton (ObjectRef.InSlot (SlotName.MkSlotName (Text.pack "cards"))),
+            ShuffleIntoLibrary.slot = Nothing
           }
       )
       " {\"library\":{\"type\":\"InSlot\",\"value\":\"player\"},\"refs\":[{\"type\":\"InSlot\",\"value\":\"cards\"}]} "
@@ -43,8 +45,21 @@ spec s = Spec.describe s "Pawl.Codec.ShuffleIntoLibrary" $ do
       ShuffleIntoLibrary.codec
       ( ShuffleIntoLibrary.MkShuffleIntoLibrary
           { ShuffleIntoLibrary.library = Nothing,
-            ShuffleIntoLibrary.refs = ObjectRef.InSlot (SlotName.MkSlotName (Text.pack "hand")) NonEmpty.:| [ObjectRef.InSlot (SlotName.MkSlotName (Text.pack "graveyard"))]
+            ShuffleIntoLibrary.refs = ObjectRef.InSlot (SlotName.MkSlotName (Text.pack "hand")) NonEmpty.:| [ObjectRef.InSlot (SlotName.MkSlotName (Text.pack "graveyard"))],
+            ShuffleIntoLibrary.slot = Nothing
           }
       )
       " {\"refs\":[{\"type\":\"InSlot\",\"value\":\"hand\"},{\"type\":\"InSlot\",\"value\":\"graveyard\"}]} "
+  -- Winds of Change's "then draws that many": the shuffled-in cards bound.
+  Spec.it s "MkShuffleIntoLibrary, slot named" $
+    Common.assertCodec
+      s
+      ShuffleIntoLibrary.codec
+      ( ShuffleIntoLibrary.MkShuffleIntoLibrary
+          { ShuffleIntoLibrary.library = Nothing,
+            ShuffleIntoLibrary.refs = NonEmpty.singleton (ObjectRef.InSlot (SlotName.MkSlotName (Text.pack "hand"))),
+            ShuffleIntoLibrary.slot = Just (SlotName.MkSlotName (Text.pack "shuffled"))
+          }
+      )
+      " {\"refs\":[{\"type\":\"InSlot\",\"value\":\"hand\"}],\"slot\":\"shuffled\"} "
   Spec.it s "has a schema" $ Common.assertHasSchema s ShuffleIntoLibrary.codec

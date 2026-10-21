@@ -19,12 +19,6 @@ ChooseNumber has no chooser, and Repeat/ForEach/ForEachNumber don't loop over
 players with each one choosing.
 - Temporary Truce: "Each player may draw up to two cards. For each card less than two a player draws this way, that player gains 2 life."
 
-### "That many" after cards are shuffled away (#5240)
-ShuffleIntoLibrary has no slot for the moved cards (fields `library`, `refs`),
-and a Count read after the shuffle sees an empty hand. timetwister draws a
-literal 7, and flux binds `discarded`, which a shuffle can't.
-- Winds of Change: "Each player shuffles the cards from their hand into their library, then draws that many cards."
-
 ### A spell's rules-modifying effect over a live set of objects (CR 611.2c second sentence) (#5241)
 The resolution-created carriers take an ObjectRef, which freezes the set when
 the spell resolves. CR 611.2c says an effect that doesn't modify
