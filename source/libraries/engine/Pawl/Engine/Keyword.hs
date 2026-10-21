@@ -7124,7 +7124,7 @@ provoke =
         Effect.RequireBlock
           ( RequireBlock.MkRequireBlock
               Duration.UntilEndOfCombat
-              (ObjectRef.InSlot provokeTarget)
+              (RestrictedCreatures.Named (ObjectRef.InSlot provokeTarget))
               (ObjectRef.InSlot Binding.triggerSource)
           )
       untap = Effect.Untap (ObjectRef.InSlot provokeTarget)

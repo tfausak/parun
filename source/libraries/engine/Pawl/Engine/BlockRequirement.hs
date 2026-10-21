@@ -16,6 +16,7 @@ import qualified Pawl.Engine.Projection as Projection
 import qualified Pawl.Engine.Projection.Rewrite as Projection
 import qualified Pawl.Engine.Projection.View as Projection
 import qualified Pawl.Engine.Requirement as Requirement
+import qualified Pawl.Engine.RestrictedCreatures as RestrictedCreatures
 import qualified Pawl.Types.ActiveBlockRequirement as ActiveBlockRequirement
 import qualified Pawl.Types.BlockRequirement as BlockRequirement
 import Pawl.Types.GameState (GameState)
@@ -199,12 +200,14 @@ instances able candidates attackers gs =
       -- Pruned by `able` and by membership exactly as the printed pairs are: a
       -- provoked creature that has since left the battlefield, or that the
       -- defending player no longer controls, is not among `candidates`, and its
-      -- attacker may have left combat.
+      -- attacker may have left combat. A Matching class is read against the live
+      -- board, CR 611.2c, so a creature that entered after Alluring Scent
+      -- resolved is inside it.
       fromStored active =
-        let blocker = ActiveBlockRequirement.blocker active
+        let blockers = RestrictedCreatures.covered (ActiveBlockRequirement.controller active) (ActiveBlockRequirement.source active) (ActiveBlockRequirement.blocker active) candidates gs
             attacker = ActiveBlockRequirement.attacker active
-         in ( if elem blocker candidates && elem attacker attackers && able blocker attacker
-                then [(blocker, attacker)]
+         in ( if elem attacker attackers
+                then fmap (\blocker -> (blocker, attacker)) (filter (`able` attacker) blockers)
                 else [],
               []
             )

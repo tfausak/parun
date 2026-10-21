@@ -47,6 +47,7 @@ import qualified Pawl.Types.ActivePlayerEffect as ActivePlayerEffect
 import qualified Pawl.Types.ActiveReplacement as ActiveReplacement
 import qualified Pawl.Types.AfterObjectTurn as AfterObjectTurn
 import qualified Pawl.Types.AfterTurn as AfterTurn
+import qualified Pawl.Types.BeginningStep as BeginningStep
 import qualified Pawl.Types.CombatStep as CombatStep
 import qualified Pawl.Types.ContinuousEffect as ContinuousEffect
 import qualified Pawl.Types.CopyCoverage as CopyCoverage
@@ -151,6 +152,11 @@ arm acquisition targets controller source duration gs = case duration of
       fmap
         (\pid -> Expiry.DuringTurnOf (AfterTurn.MkAfterTurn pid (GameState.turnNumber gs)))
         (seatOf (acquisition gs) targets controller gs ref)
+  -- CR 611.2a / 502.3: the arm above's seat, sampled the same way, with the
+  -- untap step for the window. No turn is sampled: no player receives priority
+  -- during an untap step (CR 502.4), so nothing arms this inside the window it
+  -- names, and the first of that player's untap steps to begin is the next one.
+  Duration.DuringNextUntapStepOf ref -> fmap Expiry.DuringUntapStepOf (seatOf (acquisition gs) targets controller gs ref)
   -- CR 611.2a: the arm above's window with the seat taken from CR 109.5's "you",
   -- as UntilYourNextTurn takes it. Never Nothing -- a controller is always a
   -- seat, so this window always begins.
@@ -253,6 +259,8 @@ perSeat duration = case duration of
   Duration.UntilEndOfNextTurnOf _ -> Nothing
   Duration.DuringNextTurnOf PlayerRef.Candidate -> Just (Duration.DuringNextTurnOf . PlayerRef.Specific)
   Duration.DuringNextTurnOf _ -> Nothing
+  Duration.DuringNextUntapStepOf PlayerRef.Candidate -> Just (Duration.DuringNextUntapStepOf . PlayerRef.Specific)
+  Duration.DuringNextUntapStepOf _ -> Nothing
   Duration.UntilEndOfTurn -> Nothing
   Duration.Indefinite -> Nothing
   Duration.Perpetual -> Nothing
@@ -280,11 +288,11 @@ perSeat duration = case duration of
 follows :: Expiry -> Bool
 follows = (== Expiry.Perpetual)
 
--- CR 611.2a: has this duration's window BEGUN? Every arm but DuringTurnOf and
--- DuringExtraTurn states only an end, so the answer for them is True from the
--- moment the effect is stored and a sweep is the whole of their life cycle.
--- Those two name a turn that has not started yet, and a reader that asks only
--- whether the row was swept applies it early.
+-- CR 611.2a: has this duration's window BEGUN? Every arm but DuringTurnOf,
+-- DuringUntapStepOf and DuringExtraTurn states only an end, so the answer for
+-- them is True from the moment the effect is stored and a sweep is the whole of
+-- their life cycle. Those three name a turn or step that has not started yet,
+-- and a reader that asks only whether the row was swept applies it early.
 --
 -- The reading is dropAtCleanup's, one turn shifted: the window is the first turn
 -- of the named player numbered ABOVE the one the duration began on, so it is
@@ -293,14 +301,17 @@ follows = (== Expiry.Perpetual)
 -- bound needs no upper half.
 --
 -- Asked by Pawl.Engine.CombatRestriction, Pawl.Engine.AttackRequirement,
--- Pawl.Engine.Cast.permitsPlayFromExile, Pawl.Engine.PlayerEffect.applying and
--- Pawl.Engine.Replacement.collect;
+-- Pawl.Engine.Cast.permitsPlayFromExile, Pawl.Engine.PlayerEffect.applying,
+-- Pawl.Engine.Replacement.collect and Pawl.Engine.RestrictedCreatures.prohibited;
 -- Pawl.EffectLintSpec's windowOffends keeps a window off every other carrier.
 begun :: GameState -> Expiry -> Bool
 begun gs expiry = case expiry of
   Expiry.DuringTurnOf afterTurn ->
     Turn.isActive gs (AfterTurn.player afterTurn)
       && GameState.turnNumber gs > AfterTurn.turn afterTurn
+  -- CR 502.3: open while that player's untap step is under way. A skipped untap
+  -- step (CR 500.11) never is, so the window waits for the next one that runs.
+  Expiry.DuringUntapStepOf pid -> Turn.isActive gs pid && GameState.phase gs == untapStep
   -- Read live until pinned: open on a turn that is its window.
   Expiry.DuringTurnOfControllerOf afterObjectTurn -> windowReached gs afterObjectTurn
   -- CR 500.7: open exactly while the extra turn it names is the one under way.
@@ -387,6 +398,10 @@ endsAt gs moment source expiry = case expiry of
   -- began is one whose turn came and went. A departed player's window never
   -- begins either, so CR 800.4m ends it at the same moment.
   Expiry.DuringTurnOf afterTurn -> namedTurnEnds Cleanup afterTurn
+  -- CR 500.5: ended as the untap step it names ends; a departed player's never
+  -- begins (CR 800.4m).
+  Expiry.DuringUntapStepOf pid ->
+    (moment == EndOf (PhaseSelector.Step untapStep) && Turn.isActive gs pid) || departedTurnOf pid
   -- Unpinned. Ended by the cleanup of a turn that was its window but had no
   -- declare attackers step to pin it (CR 500.11, a skipped combat), and dropped
   -- as hygiene once its object is gone. Named by an object, so no seat's turn
@@ -698,3 +713,7 @@ paidExpiries gs = [(source, paid) | (source, Expiry.WhenPaid paid) <- sourcedExp
 -- traverseExpiries read rather than rebuilt.
 sourcedExpiries :: GameState -> [(ObjectId, Expiry)]
 sourcedExpiries = Const.getConst . traverseExpiries (\source expiry -> Const.Const [(source, expiry)])
+
+-- CR 502: the untap step, the window Expiry.DuringUntapStepOf names.
+untapStep :: Phase.Phase
+untapStep = Phase.Beginning BeginningStep.Untap

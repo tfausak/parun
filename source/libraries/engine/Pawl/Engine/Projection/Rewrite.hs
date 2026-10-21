@@ -938,18 +938,16 @@ rewriteEffect pairs effect = case effect of
         { AffectPlayers.duration = rewriteDuration pairs (AffectPlayers.duration x),
           AffectPlayers.effect = rewritePlayerEffect pairs (AffectPlayers.effect x)
         }
+  -- CR 612.1 reaches the creatures on either arm, ForbidAttack's reading.
   Effect.RequireBlock (RequireBlock.MkRequireBlock duration blocker attacker) ->
-    Effect.RequireBlock (RequireBlock.MkRequireBlock (rewriteDuration pairs duration) (rewriteObjectRef pairs blocker) (rewriteObjectRef pairs attacker))
-  Effect.Prohibit (Prohibit.MkProhibit what duration ref) ->
-    Effect.Prohibit (Prohibit.MkProhibit what (rewriteDuration pairs duration) (rewriteObjectRef pairs ref))
+    Effect.RequireBlock (RequireBlock.MkRequireBlock (rewriteDuration pairs duration) (rewriteRestricted pairs blocker) (rewriteObjectRef pairs attacker))
+  Effect.Prohibit (Prohibit.MkProhibit what duration affected) ->
+    Effect.Prohibit (Prohibit.MkProhibit what (rewriteDuration pairs duration) (rewriteRestricted pairs affected))
   -- CR 612.1 reaches the creatures' words on either arm -- a Named ref's Filters
   -- and a Matching class's -- and not the AimedAt: a PlayerScope prints no word
   -- a text-changing effect reaches, and the kinds are CR 506.3's list.
   Effect.ForbidAttack (ForbidAttack.MkForbidAttack duration affected aimedAt) ->
-    let rewritten = case affected of
-          RestrictedCreatures.Named ref -> RestrictedCreatures.Named (rewriteObjectRef pairs ref)
-          RestrictedCreatures.Matching f -> RestrictedCreatures.Matching (Filter.rewrite pairs f)
-     in Effect.ForbidAttack (ForbidAttack.MkForbidAttack (rewriteDuration pairs duration) rewritten aimedAt)
+    Effect.ForbidAttack (ForbidAttack.MkForbidAttack (rewriteDuration pairs duration) (rewriteRestricted pairs affected) aimedAt)
   -- CR 612.1 reaches the class's words, ForbidAttack's Matching arm.
   Effect.ForbidBeingBlocked (ForbidBeingBlocked.MkForbidBeingBlocked duration f barred) ->
     Effect.ForbidBeingBlocked (ForbidBeingBlocked.MkForbidBeingBlocked (rewriteDuration pairs duration) (Filter.rewrite pairs f) (Filter.rewrite pairs barred))
@@ -957,13 +955,10 @@ rewriteEffect pairs effect = case effect of
   -- defender only where it names permanents: a PlayerRef prints no word a
   -- Filter could name (Alluring Siren's "you").
   Effect.RequireAttack (RequireAttack.MkRequireAttack duration attacker defender) ->
-    let rewritten = case attacker of
-          RestrictedCreatures.Named ref -> RestrictedCreatures.Named (rewriteObjectRef pairs ref)
-          RestrictedCreatures.Matching f -> RestrictedCreatures.Matching (Filter.rewrite pairs f)
-        rewrittenDefender = case defender of
+    let rewrittenDefender = case defender of
           AttackTargetRef.Players _ -> defender
           AttackTargetRef.Permanents ref -> AttackTargetRef.Permanents (rewriteObjectRef pairs ref)
-     in Effect.RequireAttack (RequireAttack.MkRequireAttack (rewriteDuration pairs duration) rewritten rewrittenDefender)
+     in Effect.RequireAttack (RequireAttack.MkRequireAttack (rewriteDuration pairs duration) (rewriteRestricted pairs attacker) rewrittenDefender)
   -- CR 114.3 leaves an emblem no type line and no name, so its ABILITIES are the
   -- whole of what CR 612.1 can reach.
   Effect.CreateEmblem card -> Effect.CreateEmblem (rewriteCard pairs card)
@@ -1143,6 +1138,13 @@ rewriteConjureCards pairs cards = case cards of
   ConjureCards.Written written -> ConjureCards.Written (fmap (rewriteCard pairs) written)
   ConjureCards.Duplicate ref -> ConjureCards.Duplicate (rewriteObjectRef pairs ref)
   ConjureCards.Reference (FromReference.MkFromReference predicate amount) -> ConjureCards.Reference (FromReference.MkFromReference (Filter.rewrite pairs predicate) (fmap (rewriteQuantity pairs) amount))
+
+-- CR 612.1 through either arm of a Pawl.Types.RestrictedCreatures: a Named
+-- ref's Filters and a Matching class's.
+rewriteRestricted :: [(Subtype.Type.Subtype, Subtype.Type.Subtype)] -> RestrictedCreatures.RestrictedCreatures ObjectRef.ObjectRef -> RestrictedCreatures.RestrictedCreatures ObjectRef.ObjectRef
+rewriteRestricted pairs restricted = case restricted of
+  RestrictedCreatures.Named ref -> RestrictedCreatures.Named (rewriteObjectRef pairs ref)
+  RestrictedCreatures.Matching f -> RestrictedCreatures.Matching (Filter.rewrite pairs f)
 
 -- CR 612.1 through an ObjectRef. An InSlot names an object chosen at cast time,
 -- and the player-naming arms hold no subtype word; only the Filters and the
@@ -2166,6 +2168,7 @@ rewriteDuration pairs duration = case duration of
   -- carries no word CR 612.1 can swap, so the reference is left alone.
   Duration.UntilEndOfNextTurnOf _ -> duration
   Duration.DuringNextTurnOf _ -> duration
+  Duration.DuringNextUntapStepOf _ -> duration
   Duration.DuringYourNextTurn -> duration
   Duration.DuringThatExtraTurn -> duration
   Duration.UntilEndOfCombat -> duration

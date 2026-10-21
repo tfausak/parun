@@ -400,8 +400,8 @@ playerEffectRowNames oid row = case row of
 
 blockRequirementNames :: ObjectId -> ActiveBlockRequirement.ActiveBlockRequirement -> Bool
 blockRequirementNames oid row = case row of
-  ActiveBlockRequirement.MkActiveBlockRequirement source _timestamp expiry blocker attacker ->
-    source == oid || Monoid.getAny (Mentions.expiryNames (unread oid) expiry) || blocker == oid || attacker == oid
+  ActiveBlockRequirement.MkActiveBlockRequirement source _controller _timestamp expiry blocker attacker ->
+    source == oid || Monoid.getAny (Mentions.expiryNames (unread oid) expiry) || restrictedNames oid blocker || attacker == oid
 
 attackRequirementNames :: ObjectId -> ActiveAttackRequirement.ActiveAttackRequirement -> Bool
 attackRequirementNames oid row = case row of
@@ -410,8 +410,8 @@ attackRequirementNames oid row = case row of
 
 objectProhibitionNames :: ObjectId -> ActiveObjectProhibition.ActiveObjectProhibition -> Bool
 objectProhibitionNames oid row = case row of
-  ActiveObjectProhibition.MkActiveObjectProhibition source _timestamp expiry _what object ->
-    source == oid || Monoid.getAny (Mentions.expiryNames (unread oid) expiry) || object == oid
+  ActiveObjectProhibition.MkActiveObjectProhibition source _controller _timestamp expiry _what affected ->
+    source == oid || Monoid.getAny (Mentions.expiryNames (unread oid) expiry) || restrictedNames oid affected
 
 -- AimedAt names players and target kinds, never an object.
 attackProhibitionNames :: ObjectId -> ActiveAttackProhibition.ActiveAttackProhibition -> Bool

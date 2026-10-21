@@ -25,7 +25,6 @@ import qualified Pawl.Types.AbilityName as AbilityName
 import qualified Pawl.Types.Acquisition as Acquisition
 import qualified Pawl.Types.ActivatedAbilitySource as ActivatedAbilitySource
 import qualified Pawl.Types.ActiveCopy as ActiveCopy
-import qualified Pawl.Types.ActiveObjectProhibition as ActiveObjectProhibition
 import qualified Pawl.Types.ArmDelayedTrigger as ArmDelayedTrigger
 import qualified Pawl.Types.Asked as Asked
 import qualified Pawl.Types.AttackTarget as AttackTarget
@@ -83,7 +82,6 @@ import Pawl.Types.PlayerId (PlayerId)
 import qualified Pawl.Types.Printing as Printing
 import qualified Pawl.Types.PrintingId as PrintingId
 import qualified Pawl.Types.Program as Program
-import qualified Pawl.Types.Prohibition as Prohibition
 import qualified Pawl.Types.ProjectedCharacteristics as PC
 import qualified Pawl.Types.Prompt as Prompt
 import qualified Pawl.Types.Quantity as Quantity
@@ -3913,17 +3911,6 @@ declaredBy :: PlayerId -> GameEvent -> Bool
 declaredBy pid event = case event of
   GameEvent.AttackerDeclared x -> AttackerDeclared.attackingPlayer x == pid
   _ -> False
-
--- | CR 611.2a / 613.11: the permanents a stored prohibition of this kind covers
--- right now. A row is in force until Pawl.Engine.Expiry's sweep drops it, so its
--- presence is the whole answer, asked of nothing but the id, which CR 400.7
--- makes a zone change outdate.
-prohibitedObjects :: Prohibition.Prohibition -> GameState -> Set.Set ObjectId
-prohibitedObjects what =
-  Set.fromList
-    . fmap ActiveObjectProhibition.object
-    . filter ((== what) . ActiveObjectProhibition.what)
-    . GameState.objectProhibitions
 
 -- | CR 608.2d's choice of objects out of candidates, at a count read through
 -- `amount`: the one place a HowMany is asked, shared by

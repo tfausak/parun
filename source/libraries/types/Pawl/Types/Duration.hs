@@ -58,6 +58,10 @@ data Duration
     -- can't cast instant or sorcery spells during that player's next turn" --
     -- and arms one window per member (Pawl.Engine.Expiry.perSeat).
     DuringNextTurnOf PlayerRef.PlayerRef
+  | -- | CR 611.2a / 502.3: "during their next untap step" (Exhaustion) -- a
+    -- WINDOW, the arm above's with the untap step for the turn, its seat sampled
+    -- the same way.
+    DuringNextUntapStepOf PlayerRef.PlayerRef
   | -- | CR 611.2a: "during your next turn" (Galvanic Relay) -- the arm above's
     -- window with the seat taken from CR 109.5's "you" instead of sampled from a
     -- reference, as UntilYourNextTurn stands to UntilEndOfNextTurnOf.

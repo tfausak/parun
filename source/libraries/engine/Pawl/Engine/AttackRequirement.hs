@@ -15,13 +15,13 @@ import qualified Data.Map as Map
 import qualified Data.Set as Set
 import qualified Pawl.Engine.Condition as Condition
 import qualified Pawl.Engine.Expiry as Expiry
-import qualified Pawl.Engine.Filter as Filter
 import qualified Pawl.Engine.Game as Game
 import qualified Pawl.Engine.Goad as Goad
 import qualified Pawl.Engine.Projection as Projection
 import qualified Pawl.Engine.Projection.Rewrite as Projection
 import qualified Pawl.Engine.Projection.View as Projection
 import qualified Pawl.Engine.Requirement as Requirement
+import qualified Pawl.Engine.RestrictedCreatures as RestrictedCreatures
 import qualified Pawl.Types.ActiveAttackRequirement as ActiveAttackRequirement
 import qualified Pawl.Types.AttackRequirement as AttackRequirement
 import qualified Pawl.Types.AttackTarget as AttackTarget
@@ -32,7 +32,6 @@ import qualified Pawl.Types.Player as Player
 import Pawl.Types.PlayerId (PlayerId)
 import qualified Pawl.Types.RequiredDefender as RequiredDefender
 import qualified Pawl.Types.RequirementArity as RequirementArity
-import qualified Pawl.Types.RestrictedCreatures as RestrictedCreatures
 import qualified Pawl.Types.RuleAbilities as RuleAbilities
 
 -- CR 508.1d: every requirement in force right now, INSTANTIATED against the
@@ -310,10 +309,7 @@ instances candidates targets gs =
       -- as Pawl.Engine.CombatRestriction.storedSubjects reads a prohibition's.
       fromStored active =
         let target = ActiveAttackRequirement.defender active
-            context = Projection.sourceContext gs (Just (ActiveAttackRequirement.controller active)) (ActiveAttackRequirement.source active)
-            creatures = case ActiveAttackRequirement.attacker active of
-              RestrictedCreatures.Named oid -> filter (== oid) candidates
-              RestrictedCreatures.Matching f -> filter (\oid -> Filter.matches context (Projection.viewOfObject oid gs) f) candidates
+            creatures = RestrictedCreatures.covered (ActiveAttackRequirement.controller active) (ActiveAttackRequirement.source active) (ActiveAttackRequirement.attacker active) candidates gs
          in ( if Expiry.begun gs (ActiveAttackRequirement.expiry active) && elem target targets
                 then fmap (\creature -> (creature, target)) creatures
                 else [],

@@ -111,6 +111,12 @@ spec s = Spec.describe s "Pawl.Codec.Expiry" $ do
             }
       )
       " {\"type\":\"DuringTurnOf\",\"value\":{\"player\":1,\"turn\":3}} "
+  Spec.it s "DuringUntapStepOf carries its player" $
+    Common.assertCodec
+      s
+      Expiry.codec
+      (Expiry.DuringUntapStepOf (PlayerId.MkPlayerId 2))
+      " {\"type\":\"DuringUntapStepOf\",\"value\":2} "
   Spec.it s "DuringTurnOfControllerOf carries its object and turn" $
     Common.assertCodec
       s

@@ -547,14 +547,14 @@ data Effect card ability
     AffectPlayers AffectPlayers.AffectPlayers
   | -- | CR 509.1c / 613.11: install a stored blocking requirement for a
     -- duration, one instance per (blocker, attacker) pair -- provoke (CR
-    -- 702.39a) is this opcode.
+    -- 702.39a), Alluring Scent.
     RequireBlock RequireBlock.RequireBlock
   | -- | CR 508.1d / 613.11: install a stored attacking requirement for a
     -- duration (Alluring Siren), one instance per (attacker, defender) pair --
     -- rule 508.1d's two axes being a creature and what CR 508.1b lets it attack.
     RequireAttack RequireAttack.RequireAttack
   | -- | CR 611.2a / 613.11: install a stored prohibition over the permanents
-    -- the ref names, for a duration (Hurr Jackal, Zirda, Deadlock Trap).
+    -- named or a class of them, for a duration (Hurr Jackal, Exhaustion).
     Prohibit Prohibit.Prohibit
   | -- | CR 508.1c / 613.11: install a stored attacking restriction for a
     -- duration (Netter en-Dal).

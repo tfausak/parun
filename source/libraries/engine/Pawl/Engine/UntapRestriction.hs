@@ -26,10 +26,10 @@ module Pawl.Engine.UntapRestriction where
 
 import Data.Set (Set)
 import qualified Data.Set as Set
-import qualified Pawl.Engine.Game as Game
 import qualified Pawl.Engine.Projection as Projection
 import qualified Pawl.Engine.Projection.Rewrite as Projection
 import qualified Pawl.Engine.Projection.View as Projection
+import qualified Pawl.Engine.RestrictedCreatures as RestrictedCreatures
 import Pawl.Types.GameState (GameState)
 import qualified Pawl.Types.GameState as GameState
 import Pawl.Types.ObjectId (ObjectId)
@@ -79,6 +79,7 @@ doesNotUntap candidates gs =
       fromRestriction source changes restriction =
         let affected = UntapRestriction.affected restriction
          in filter (named source (if null changes then affected else Projection.rewriteAffected changes affected)) candidates
-      -- CR 611.2b: a stored row is in force until Expiry's sweep drops it.
-      stored = Game.prohibitedObjects Prohibition.Untap gs
-   in Set.fromList (filter (`Set.member` stored) candidates <> concatMap (\source -> fromPermanent source <> fromGrant source) (Set.toList (GameState.battlefield gs)))
+      -- CR 611.2b: a stored row is in force from the moment its window opens
+      -- (Expiry.begun) until Expiry's sweep drops it.
+      stored = RestrictedCreatures.prohibited Prohibition.Untap candidates gs
+   in stored <> Set.fromList (concatMap (\source -> fromPermanent source <> fromGrant source) (Set.toList (GameState.battlefield gs)))

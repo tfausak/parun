@@ -29,6 +29,7 @@ codec =
       Arm.payload "AtStepOf" StepBegan.codec Expiry.AtStepOf (\x -> case x of Expiry.AtStepOf y -> Just y; _ -> Nothing),
       Arm.payload "AtEndOfTurnOf" AfterTurn.codec Expiry.AtEndOfTurnOf (\x -> case x of Expiry.AtEndOfTurnOf y -> Just y; _ -> Nothing),
       Arm.payload "DuringTurnOf" AfterTurn.codec Expiry.DuringTurnOf (\x -> case x of Expiry.DuringTurnOf y -> Just y; _ -> Nothing),
+      Arm.payload "DuringUntapStepOf" PlayerId.codec Expiry.DuringUntapStepOf (\x -> case x of Expiry.DuringUntapStepOf y -> Just y; _ -> Nothing),
       Arm.payload "DuringTurnOfControllerOf" AfterObjectTurn.codec Expiry.DuringTurnOfControllerOf (\x -> case x of Expiry.DuringTurnOfControllerOf y -> Just y; _ -> Nothing),
       Arm.payload "DuringExtraTurn" Timestamp.codec Expiry.DuringExtraTurn (\x -> case x of Expiry.DuringExtraTurn y -> Just y; _ -> Nothing),
       Arm.payload "AtEndOf" PhaseSelector.codec Expiry.AtEndOf (\x -> case x of Expiry.AtEndOf y -> Just y; _ -> Nothing),
@@ -48,6 +49,7 @@ tagOf x = case x of
   Expiry.AtStepOf {} -> "AtStepOf"
   Expiry.AtEndOfTurnOf {} -> "AtEndOfTurnOf"
   Expiry.DuringTurnOf {} -> "DuringTurnOf"
+  Expiry.DuringUntapStepOf {} -> "DuringUntapStepOf"
   Expiry.DuringTurnOfControllerOf {} -> "DuringTurnOfControllerOf"
   Expiry.DuringExtraTurn {} -> "DuringExtraTurn"
   Expiry.AtEndOf {} -> "AtEndOf"

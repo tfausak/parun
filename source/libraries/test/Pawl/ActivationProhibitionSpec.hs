@@ -47,6 +47,7 @@ import qualified Pawl.Types.Phase as Phase
 import qualified Pawl.Types.PlayerCounterKind as PlayerCounterKind
 import qualified Pawl.Types.Prompt as Prompt
 import qualified Pawl.Types.Recipient as Recipient
+import qualified Pawl.Types.RestrictedCreatures as RestrictedCreatures
 import qualified Pawl.Types.TapState as TapState
 import qualified Pawl.Types.Zone as Zone
 
@@ -174,7 +175,7 @@ storedSpec s registry = Spec.describe s "Stored" $ do
     let offered = twinOffers victim twin resolved
     Spec.assertBool s (notElem victim offered) "the named Troll's regeneration is withheld"
     Spec.assertEqWith s "and its twin's is the one Troll offer left" offered [twin]
-    Spec.assertEqWith s "one prohibition was stored, over the Troll named" (fmap ActiveObjectProhibition.object (GameState.objectProhibitions resolved)) [victim]
+    Spec.assertEqWith s "one prohibition was stored, over the Troll named" (fmap ActiveObjectProhibition.affected (GameState.objectProhibitions resolved)) [RestrictedCreatures.Named victim]
     Spec.assertEqWith s "and the ability's other clause tapped that same Troll" (fmap Object.tapped (Game.lookupObject victim resolved)) (Just TapState.Tapped)
   -- CR 400.7: the replayed Troll is a new object, so the row names nothing on
   -- the board and that Troll may regenerate. `replayed` below has the board.
@@ -187,7 +188,7 @@ storedSpec s registry = Spec.describe s "Stored" $ do
     Spec.assertBool s (elem returned offered) "the replayed Troll's regeneration is offered again"
     Spec.assertBool s (elem twin offered) "and so is the twin's, which the Trap never named"
     Spec.assertEqWith s "exactly one permanent arrived on the replay" (length arrivals) 1
-    Spec.assertEqWith s "and the stored row still names the Troll that left" (fmap ActiveObjectProhibition.object (GameState.objectProhibitions final)) [victim]
+    Spec.assertEqWith s "and the stored row still names the Troll that left" (fmap ActiveObjectProhibition.affected (GameState.objectProhibitions final)) [RestrictedCreatures.Named victim]
 
 -- The two twins bob may activate right now, narrowed off `activatableIds` so
 -- bob's Mountain -- which CR 605.3a offers him on every board here -- cannot
