@@ -7990,31 +7990,33 @@ applyOneEffect runSubgame resolving source controller legal chosen effect = case
         -- CR 615.5: the additional effect, BAKED onto the row with this
         -- resolution's chosen targets and CR 109.5's "you".
         rider = preventionRider chosen controller source riderEffects
-    case Quantity.evaluateFor viewOf context gs resolving source quantity of
-      -- An unevaluable quantity is a no-op, DealDamage's posture.
-      Nothing -> pure ()
-      Just n ->
+        -- HOW MUCH, read once per row, so a named row is handed its recipient's
+        -- part of CR 601.2d's division (Quantity.Share), DealDamage's posture. A
+        -- target CR 608.2b found illegal has no row, so its part shields nobody:
+        -- data/scenarios/divide's Remedy case proves it. An unevaluable amount
+        -- installs no row, DealDamage's posture too.
+        amountOf row = Quantity.evaluateFor viewOf (maybe context (\recipient -> context {Filter.shares = Binding.sharesOf recipient (slotBindings resolving gs)}) row) gs resolving source quantity
         -- CR 615.7: a shield of 0 can prevent nothing, so none is installed --
-        -- and neither is CR 609.7a's choice raised, a choice existing only to be
-        -- baked into a row. The rows are counted for the same reason: CR 608.2b's
-        -- gone target leaves a named shield no recipient, so there is nothing to
-        -- shield. A DESCRIBED shield always has its one row, its recipients being
-        -- read at the damage event rather than settled here.
-        Monad.when (n > 0 && not (null rows)) $ do
-          -- CR 609.7a: "the source is chosen when the effect is created", so the
-          -- choice is made ONCE here and every shield this resolution installs
-          -- watches the object it landed on.
-          sourceChoice <- chooseDamageSource controller resolving context gs sourceFilter
-          case (sourceFilter, sourceChoice) of
-            -- The card asked for a source and CR 609.7a's pool was empty, so
-            -- there is nothing to shield against and no row is installed --
-            -- stricter than printed rather than weaker, which a row watching
-            -- every source would be.
-            (Just _, Nothing) -> pure ()
-            _ ->
-              State.modify' $ \g0 ->
-                let amount = Integer.toNaturalSaturating n
-                 in List.foldl' (installDamageRow resolving legal (Filter.slotObjects context) controller source duration kind (DamageRewrite.PreventNext amount) Uses.Unlimited rider (Filter.Type.And []) describedRecipient) g0 (fmap (\recipient -> (recipient, sourceChoice)) rows)
+        -- and neither is CR 609.7a's choice raised when no row is, a choice
+        -- existing only to be baked into a row. CR 608.2b's gone target leaves a
+        -- named shield no recipient, so there is nothing to shield. A DESCRIBED
+        -- shield always has its one row, its recipients being read at the
+        -- damage event rather than settled here.
+        shields = [(row, Integer.toNaturalSaturating n) | row <- rows, Just n <- [amountOf row], n > 0]
+    Monad.unless (null shields) $ do
+      -- CR 609.7a: "the source is chosen when the effect is created", so the
+      -- choice is made ONCE here and every shield this resolution installs
+      -- watches the object it landed on.
+      sourceChoice <- chooseDamageSource controller resolving context gs sourceFilter
+      case (sourceFilter, sourceChoice) of
+        -- The card asked for a source and CR 609.7a's pool was empty, so
+        -- there is nothing to shield against and no row is installed --
+        -- stricter than printed rather than weaker, which a row watching
+        -- every source would be.
+        (Just _, Nothing) -> pure ()
+        _ ->
+          State.modify' $ \g0 ->
+            List.foldl' (\g (row, amount) -> installDamageRow resolving legal (Filter.slotObjects context) controller source duration kind (DamageRewrite.PreventNext amount) Uses.Unlimited rider (Filter.Type.And []) describedRecipient g (row, sourceChoice)) g0 shields
   Effect.PreventAllDamage (PreventAllDamage.MkPreventAllDamage duration kind ref whatRecipient whoRecipient direction sourceFilter printedSource riderEffects) -> do
     -- CR 615.1 / 615.3: one floating shield per object the ref names, with no
     -- amount to count down. PreventNextDamage's row but for its rewrite, hence

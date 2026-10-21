@@ -1,0 +1,42 @@
+{
+  "description": "CR 601.2d / 615.7 Remedy's shields are each its target's part, and an illegal target's part is lost",
+  "note": "Bob divides Remedy's 5 as 3 onto his Baloth and 2 onto alice's Troll, the opposite of the default (the remainder to the Troll, the earlier object). Alice answers with the Troll's hexproof, so CR 608.2b makes it an illegal target and its 2 shields nobody. Alice's Forked Lightning then deals all 4 to the Baloth, whose shield prevents exactly 3: 1 damage is marked, where a reassigned part would have prevented it all and an undivided shield of 5 likewise.",
+  "board": {
+    "seats": [
+      {
+        "name": "alice",
+        "battlefield": [
+          { "card": "Mountain", "label": "mountain1" },
+          { "card": "Mountain", "label": "mountain2" },
+          { "card": "Mountain", "label": "mountain3" },
+          { "card": "Mountain", "label": "mountain4" },
+          { "card": "Mountain", "label": "mountain5" },
+          { "card": "Barkhide Troll", "label": "troll", "counters": [{ "key": { "type": "PlusOnePlusOne" }, "value": 1 }] }
+        ],
+        "hand": [{ "card": "Forked Lightning", "label": "lightning" }]
+      },
+      {
+        "name": "bob",
+        "battlefield": [
+          { "card": "Plains", "label": "plains1" },
+          { "card": "Plains", "label": "plains2" },
+          { "card": "Enormous Baloth", "label": "baloth" }
+        ],
+        "hand": [{ "card": "Remedy", "label": "remedy" }]
+      }
+    ],
+    "active": "alice",
+    "step": "PrecombatMain"
+  },
+  "timeline": [
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass" },
+    { "turn": 1, "step": "PrecombatMain", "player": "bob", "do": { "Cast": { "object": "$remedy", "targets": ["$baloth", "$troll"], "mana": ["$plains1", "$plains2"] } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "bob", "do": { "Answer": { "prompt": "ChooseDivision", "with": [[["Creature", "$baloth"], 3], [["Creature", "$troll"], 2]] } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": { "Activate": { "object": "$troll", "ability": 0, "mana": ["$mountain1", null] } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass" },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass" },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": { "Cast": { "object": "$lightning", "targets": ["$baloth"], "mana": ["$mountain2", "$mountain3", "$mountain4", "$mountain5"] } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass" },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "check": { "Damage": { "object": "$baloth", "damage": 1 } } }
+  ]
+}

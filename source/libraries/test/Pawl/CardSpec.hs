@@ -2550,9 +2550,10 @@ modeBranchesOffend mode =
 
 -- CR 601.2d: does a divided slot go unread, or a Quantity.Share read anything
 -- but its own slot's targets? A division is read as the part a DealDamage
--- clause deals to the divided slot's own targets, `{ref: InSlot s, quantity:
--- Share s}`; a divided slot nothing reads that way deals nothing, and a Share
--- anywhere else answers Nothing -- silently, which is why this is a lint.
+-- clause deals, or a PreventNextDamage shield prevents, for the divided slot's
+-- own targets, `{ref: InSlot s, quantity: Share s}`; a divided slot nothing
+-- reads that way does nothing, and a Share anywhere else answers Nothing --
+-- silently, which is why this is a lint.
 cardDivisionsDangle :: Face.Face Card.Type.Card -> Bool
 cardDivisionsDangle = any (any modeDivisionDangles . Modal.modes) . faceModals
 
@@ -2560,11 +2561,16 @@ cardDivisionsDangle = any (any modeDivisionDangles . Modal.modes) . faceModals
 modeDivisionDangles :: Mode.Mode Card.Type.Card (GrantedAbility.GrantedAbility Card.Type.Card) -> Bool
 modeDivisionDangles mode =
   let divided = Map.keysSet (Map.filter (Maybe.isJust . TargetSlot.divided) (Mode.targetSlots mode))
-      parts = do
+      -- Each (ref, amount) pair whose amount is read per recipient: a damage
+      -- clause, and a named prevention shield (CR 615.7).
+      amounts = do
         clause <- Foldable.toList (Mode.clauses mode)
-        Effect.DealDamage dealt <- Foldable.toList (Clause.effects clause)
-        Foldable.toList (DealDamage.parts dealt)
-      sharing = [(slot, DamagePart.ref part) | part <- parts, Quantity.Type.Share slot <- [DamagePart.quantity part]]
+        effect <- Foldable.toList (Clause.effects clause)
+        case effect of
+          Effect.DealDamage dealt -> fmap (\part -> (Just (DamagePart.ref part), DamagePart.quantity part)) (Foldable.toList (DealDamage.parts dealt))
+          Effect.PreventNextDamage shield -> [(PreventNextDamage.ref shield, PreventNextDamage.quantity shield)]
+          _ -> []
+      sharing = [(slot, ref) | (Just ref, Quantity.Type.Share slot) <- amounts]
       reads_ = Set.fromList [slot | (slot, ObjectRef.InSlot named) <- sharing, slot == named]
       offends (slot, ref) = ref /= ObjectRef.InSlot slot || not (Set.member slot divided)
    in any offends sharing || not (Set.isSubsetOf divided reads_)
