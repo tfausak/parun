@@ -34,6 +34,7 @@ import Pawl.Types.ObjectId (ObjectId)
 import qualified Pawl.Types.Phase as Phase
 import qualified Pawl.Types.PlayerCounterKind as PlayerCounterKind
 import qualified Pawl.Types.PlayerId as PlayerId
+import qualified Pawl.Types.Prompt as Prompt
 import qualified Pawl.Types.Regenerability as Regenerability
 import qualified Pawl.Types.SideDeck as SideDeck
 import qualified Pawl.Types.Zone as Zone
@@ -56,13 +57,15 @@ spec s registry = Spec.describe s "Pawl.Engine.Archenemy" $ do
 
   -- CR 904.6 / 904.2 through Setup.newGame: carol, seated last, brings the only
   -- scheme deck. The pair differs only in bob bringing one too, CR 904.12's
-  -- Supervillain Rumble: a free-for-all from the head of the order.
+  -- Supervillain Rumble: a free-for-all from the head of the order. Any random
+  -- first-player draw takes its last candidate, so CR 808.4's team draw, which
+  -- CR 103.1b replaces, would hand bob the first turn.
   Spec.it s "CR 904.6 the archenemy takes the first turn, and CR 904.2 the rest are one team sharing turns" $ do
     forest <- S.printingOf s registry "Forest"
     look <- S.printingOf s registry "Look Skyward and Despair"
     let plain = Deck.fromCards (Map.singleton forest 20)
         schemer = plain {Deck.sideDecks = Map.singleton SideDeck.Scheme (Map.singleton look 2)}
-        started bobs = S.runPure S.identityAnswer (Setup.emptyGame S.threePlayers) (Setup.newGame (Resolve.performHandAction Resolve.noSubgame) ((S.alice, plain) NonEmpty.:| [(S.bob, bobs), (S.carol, schemer)]))
+        started bobs = S.runPure lastDrawn (Setup.emptyGame S.threePlayers) (Setup.newGame (Resolve.performHandAction Resolve.noSubgame) ((S.alice, plain) NonEmpty.:| [(S.bob, bobs), (S.carol, schemer)]))
         sides gs = (fmap (`Game.opponentsOf` gs) [S.alice, S.bob, S.carol], Turn.sharesTurn gs S.alice S.bob)
     Spec.assertEqWith s "CR 904.6 carol takes the first turn, the cyclic order kept" (GameState.activePlayer (started plain), GameState.turnOrder (started plain)) (S.carol, [S.carol, S.alice, S.bob])
     Spec.assertEqWith s "CR 904.2 alice and bob are teammates sharing turns, each carol's opponent" (sides (started plain)) ([[S.carol], [S.carol], [S.alice, S.bob]], True)
@@ -183,3 +186,10 @@ names oids gs = Maybe.mapMaybe (\oid -> fmap (Text.unpack . CardName.unwrap . Fa
 
 creaturesOf :: PlayerId.PlayerId -> GameState.GameState -> [ObjectId]
 creaturesOf pid gs = filter (`Projection.isCreatureOf` gs) (Projection.controls pid gs)
+
+-- Every Prompt.RandomFirstPlayer answered with its last candidate; everything
+-- else is S.identityAnswer's.
+lastDrawn :: Prompt.Prompt r -> r
+lastDrawn p = case p of
+  Prompt.RandomFirstPlayer candidates -> NonEmpty.last candidates
+  _ -> S.identityAnswer p
