@@ -6,9 +6,13 @@ import qualified Pawl.Codec.LibraryPlacement as LibraryPlacement
 import qualified Pawl.JsonCodec.Codec as Codec
 import qualified Pawl.JsonCodec.Common as Common
 import qualified Pawl.Spec as Spec
+import qualified Pawl.Types.ArrangedArrival as ArrangedArrival
 import qualified Pawl.Types.LibraryPlacement as LibraryPlacement
 import qualified Pawl.Types.LibraryPosition as LibraryPosition
+import qualified Pawl.Types.PlayerRef as PlayerRef
+import qualified Pawl.Types.PlayerRelation as PlayerRelation
 import qualified Pawl.Types.Quantity as Quantity
+import qualified Pawl.Types.SlotName as SlotName
 
 spec :: (Monad m, Monad n) => Spec.Spec m n -> n ()
 spec s = Spec.describe s "Pawl.Codec.LibraryPlacement" $ do
@@ -26,6 +30,19 @@ spec s = Spec.describe s "Pawl.Codec.LibraryPlacement" $ do
       LibraryPlacement.codec
       (LibraryPlacement.Stated LibraryPosition.Bottom)
       " {\"type\":\"Stated\",\"value\":{\"type\":\"Bottom\"}} "
+  -- Agonizing Memories' "on top of that player's library in any order".
+  Spec.it s "ArrangedBy Top" $
+    Common.assertCodec
+      s
+      LibraryPlacement.codec
+      (LibraryPlacement.ArrangedBy (ArrangedArrival.MkArrangedArrival LibraryPosition.Top (PlayerRef.Relative PlayerRelation.You)))
+      " {\"type\":\"ArrangedBy\",\"value\":{\"position\":{\"type\":\"Top\"}}} "
+  Spec.it s "ArrangedBy Top, a named chooser" $
+    Common.assertCodec
+      s
+      LibraryPlacement.codec
+      (LibraryPlacement.ArrangedBy (ArrangedArrival.MkArrangedArrival LibraryPosition.Top (PlayerRef.InSlot (SlotName.MkSlotName (Text.pack "target")))))
+      " {\"type\":\"ArrangedBy\",\"value\":{\"chooser\":{\"type\":\"InSlot\",\"value\":\"target\"},\"position\":{\"type\":\"Top\"}}} "
   Spec.it s "OwnerChooses" $
     Common.assertCodec
       s
