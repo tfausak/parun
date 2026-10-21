@@ -558,11 +558,11 @@ spec s registry = Spec.describe s "Meld" $ do
         melding settled = case Projection.abilitiesOf bId settled of
           [_, _, ability] -> Just (Activate.activateAbility S.alice bId ability >> Stack.resolveTop)
           _ -> Nothing
-    (_, settled) <- Engine.runGameAsked (Interpreter.lookingUpCards registry (sparingAsked bId)) board Engine.settleForPriority
+    (_, settled) <- Engine.runGameAsked (Interpreter.lookingUpCards registry (S.brokenCorpus s) (sparingAsked bId)) board Engine.settleForPriority
     let unasked = S.runPure (sparing bId S.identityAnswer) board Engine.settleForPriority
     case (melding settled, melding unasked) of
       (Just act, Just actUnasked) -> do
-        (_, after) <- Engine.runGameAsked (Interpreter.lookingUpCards registry (sparingAsked bId)) settled act
+        (_, after) <- Engine.runGameAsked (Interpreter.lookingUpCards registry (S.brokenCorpus s) (sparingAsked bId)) settled act
         let afterUnasked = S.runPure (sparing bId S.identityAnswer) unasked actUnasked
         Spec.assertEqWith s "CR 701.42c the land and the host both stay exiled" (List.sort (exileNames after)) (List.sort [S.nameOf (Printing.card battlements), S.nameOf (Printing.card giant)])
         Spec.assertEqWith s "CR 701.42b nothing melded" (S.countOnBattlefieldByName townshipName S.alice after) 0

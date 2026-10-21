@@ -1,5 +1,6 @@
 module Pawl.Executable where
 
+import qualified Control.Exception as Exception
 import qualified Control.Monad as Monad
 import qualified Data.ByteString as ByteString
 import qualified Data.ByteString.Builder as Builder
@@ -79,10 +80,13 @@ deck path = do
       registry <- Registry.fileRegistry root
       result <- DeckList.parse registry contents
       case result of
-        Left problems -> do
+        Left corpus -> do
+          IO.hPutStrLn IO.stderr (Exception.displayException corpus)
+          Exit.exitFailure
+        Right (Left problems) -> do
           mapM_ (TextIO.hPutStrLn IO.stderr . (\p -> Text.pack (path <> ": ") <> DeckList.explain p)) problems
           Exit.exitFailure
-        Right parsed -> TextIO.putStr (DeckList.render parsed)
+        Right (Right parsed) -> TextIO.putStr (DeckList.render parsed)
 
 -- | Reads script/ingest/candidates.jq's reduction of MTGJSON's AtomicCards and
 -- writes a card file for every keyword-only card it holds, Oracle text included

@@ -1104,7 +1104,7 @@ legendRuleSpec s registry =
           (kb, g3) = S.addPermanent kit S.alice g2
           board = S.attachTo kb (Recipient.ToObject b) (S.attachTo ka (Recipient.ToObject a) g3)
           unasked = S.runPure (keepsLegend a) board Engine.settleForPriority
-      (_, asked) <- Engine.runGameAsked (Interpreter.lookingUpCards registry (pure . keepsLegend a . Asked.prompt)) board Engine.settleForPriority
+      (_, asked) <- Engine.runGameAsked (Interpreter.lookingUpCards registry (S.brokenCorpus s) (pure . keepsLegend a . Asked.prompt)) board Engine.settleForPriority
       Spec.assertBool s (inPlay a asked && not (inPlay b asked)) "the legend rule kept the Jedit alice chose and buried Rograkh"
       Spec.assertBool s (inPlay a unasked && inPlay b unasked) "with the reference never consulted both stay"
       -- Spy Kit's ruling: a back face counts. Befriending the Moths is a Saga

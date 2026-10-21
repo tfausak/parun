@@ -239,7 +239,7 @@ perfectly good-looking line of output. Read the label, then decide.
 
 After any merge from `origin/main`, run the suite first --- a card file in a
 superseded wire spelling fails `Pawl.CardsSpec`'s case for it and makes every
-lookup that reaches it throw `InvalidCorpus`, so unrelated tests fail too; grep
+lookup that reaches it answer `InvalidCorpus`, so unrelated tests fail too; grep
 the corpus for the old spelling rather than eyeballing your diff --- then
 re-run the load-bearing mutations, since a bad conflict resolution can neuter a
 test while leaving the suite green.

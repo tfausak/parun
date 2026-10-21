@@ -1,9 +1,11 @@
 module Pawl.Exceptions.InvalidCorpus where
 
 import qualified Control.Exception as Exception
+import qualified Data.List as List
 
 -- | A file registry's lookup or enumeration reached files it could not use:
--- files that would not parse, or one name claimed by more than one card.
+-- files that would not parse, or one name claimed by more than one card. A
+-- lookup returns it as a value, and the host decides what it means.
 --
 -- Every problem among the files reached rather than the first, so a broken
 -- pool is one report rather than N runs (#167).
@@ -17,4 +19,6 @@ data InvalidCorpus = MkInvalidCorpus
   }
   deriving (Eq, Ord, Show)
 
-instance Exception.Exception InvalidCorpus
+-- | The problems on one line, each already naming its file.
+instance Exception.Exception InvalidCorpus where
+  displayException corpus = "card files under " <> root corpus <> " cannot be used: " <> List.intercalate "; " (problems corpus)

@@ -1726,6 +1726,7 @@ library interpreter
   import: library
   build-depends:
     pawl:engine,
+    pawl:exceptions,
     pawl:registry,
     pawl:types,
 
@@ -1848,6 +1849,7 @@ library play
     containers ^>=0.7,
     pawl:codec,
     pawl:engine,
+    pawl:exceptions,
     pawl:extra,
     pawl:json-codec,
     pawl:registry,
@@ -2146,6 +2148,7 @@ library types
   import: library
   build-depends:
     containers ^>=0.7,
+    pawl:exceptions,
     text ^>=2.1.3,
     transformers ^>=0.6.1,
 

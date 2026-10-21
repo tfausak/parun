@@ -5,6 +5,7 @@
 -- person on the same screen.
 module Pawl.ClientSpec where
 
+import qualified Control.Exception as Exception
 import qualified Control.Monad as Monad
 import qualified Control.Monad.Trans.Except as Except
 import qualified Control.Monad.Trans.State.Strict as State
@@ -28,6 +29,7 @@ import qualified Pawl.Engine.Mana as Mana
 import qualified Pawl.Engine.PlayerView as PlayerView
 import qualified Pawl.Engine.Resolve.Effect as Resolve
 import qualified Pawl.Engine.Setup as Setup
+import qualified Pawl.Exceptions.InvalidCorpus as InvalidCorpus
 import qualified Pawl.Extra.Natural as Natural
 import qualified Pawl.ManaSpec as ManaSpec
 import qualified Pawl.Play.Bot as Bot
@@ -106,7 +108,7 @@ spec s registry = Spec.describe s "Client" $ do
 
   Spec.it s "a change of seat waits for the seat leaving to finish reading, clears the screen, and waits before showing the next seat" $ do
     matchup <- BotSpec.bears s registry
-    let people = Map.fromList [(S.alice, Game.human (screen 300 plays) (const Nothing)), (S.bob, Game.human (screen 300 plays) (const Nothing))]
+    let people = Map.fromList [(S.alice, Game.human (screen 300 plays) (const (Right Nothing))), (S.bob, Game.human (screen 300 plays) (const (Right Nothing)))]
         shown = reverse (written (State.execState (Game.run [] people Hotseat.fresh (SplitMix.MkSplitMix 1) matchup) blank))
         handOffs = [i | (i, l) <- zip [0 :: Int ..] shown, Text.isPrefixOf (Text.pack "Pass to ") l]
         at i = Maybe.listToMaybe (drop i shown)
@@ -127,7 +129,7 @@ spec s registry = Spec.describe s "Client" $ do
         witnessing = gs {GameState.events = Seq.singleton (LoggedEvent.MkLoggedEvent (EventGroup.MkEventGroup 0) revealed)}
         acting = Asked.MkAsked [] witnessing (Prompt.ChooseAction (Decider.MkDecider S.alice) S.alice [Action.Pass])
         twice = Answerer.unwrap human acting >> Answerer.unwrap human acting
-        human = Game.human (screen 2 (const (Just (Text.pack "1")))) (const Nothing)
+        human = Game.human (screen 2 (const (Just (Text.pack "1")))) (const (Right Nothing))
         shown = reverse (written (State.execState (Except.runExceptT (State.evalStateT (State.evalStateT twice (SplitMix.MkSplitMix 0)) Hotseat.fresh {Hotseat.facing = Just S.alice, Hotseat.autoPass = False})) blank))
     Spec.assertEqWith s "once" (filter (Text.isInfixOf (Text.pack "reveals")) shown) [Text.pack "Player 2 reveals a face-down card."]
 
@@ -137,7 +139,7 @@ spec s registry = Spec.describe s "Client" $ do
     bears <- S.printingOf s registry "Grizzly Bears"
     let (board, _) = S.handOne bears (List.foldl' (\g p -> snd (S.addPermanent p S.alice g)) gs lands)
         turn = GameState.turnNumber board
-        seats = Driver.bySeat (Map.singleton S.alice (Game.human (screen 200 (castsOnce "Grizzly Bears")) (const Nothing))) Bot.bot
+        seats = Driver.bySeat (Map.singleton S.alice (Game.human (screen 200 (castsOnce "Grizzly Bears")) (const (Right Nothing)))) Bot.bot
         run = Driver.drive [] seats 40 (pure . (> turn) . GameState.turnNumber) board
         (outcome, sc) = State.runState (Except.runExceptT (State.evalStateT (State.evalStateT run (SplitMix.MkSplitMix 1)) Hotseat.fresh {Hotseat.facing = Just S.alice})) blank
         -- Since alice last answered: the auto payment ends her questions.
@@ -157,7 +159,7 @@ spec s registry = Spec.describe s "Client" $ do
         passing = Answerer.unwrap human (Asked.MkAsked [] witnessing (Prompt.ChooseAction decider S.alice [Action.Pass]))
         acting = Answerer.unwrap human (Asked.MkAsked [] nextTurn (Prompt.ChooseAction decider S.alice [Action.Play hand Nothing, Action.Pass]))
         -- Enter at the hand-off, then Pass.
-        human = Game.human (screen 2 (\sc -> Just (Text.pack (if typed sc == 0 then "" else "2")))) (const Nothing)
+        human = Game.human (screen 2 (\sc -> Just (Text.pack (if typed sc == 0 then "" else "2")))) (const (Right Nothing))
         shown = reverse (written (State.execState (Except.runExceptT (State.evalStateT (State.evalStateT (passing >> acting) (SplitMix.MkSplitMix 0)) Hotseat.fresh {Hotseat.facing = Just S.bob})) blank))
         (facingBob, facingAlice) = break (Text.isPrefixOf (Text.pack "Pass to Player 1")) shown
         news = filter (Text.isPrefixOf (Text.pack "Since you last looked: "))
@@ -170,7 +172,7 @@ spec s registry = Spec.describe s "Client" $ do
     giant <- S.printingOf s registry "Hill Giant"
     let board = snd (S.addHandCard giant S.alice gs)
         turn = GameState.turnNumber board
-        person = Game.human (screen 200 discardsGiant) (const Nothing)
+        person = Game.human (screen 200 discardsGiant) (const (Right Nothing))
         seats = Driver.bySeat (Map.fromList [(S.alice, person), (S.bob, person)]) Bot.bot
         run = Driver.drive [] seats 200 (pure . (> turn + 1) . GameState.turnNumber) board
         shown = reverse (written (State.execState (Except.runExceptT (State.evalStateT (State.evalStateT run (SplitMix.MkSplitMix 1)) Hotseat.fresh {Hotseat.facing = Just S.alice})) blank))
@@ -188,7 +190,7 @@ spec s registry = Spec.describe s "Client" $ do
     mountains <- mapM (S.printingOf s registry) ["Mountain", "Mountain", "Mountain", "Mountain"]
     let board = List.foldl' (\g p -> snd (S.addPermanent p S.alice g)) gs (mindslaver : mountains)
         turn = GameState.turnNumber board
-        seats = Driver.bySeat (Map.singleton S.alice (Game.human (screen 200 slavesBob) (const Nothing))) Bot.bot
+        seats = Driver.bySeat (Map.singleton S.alice (Game.human (screen 200 slavesBob) (const (Right Nothing)))) Bot.bot
         run = Driver.drive [] seats 200 (pure . (> turn) . GameState.turnNumber) board
         shown = reverse (written (State.execState (Except.runExceptT (State.evalStateT (State.evalStateT run (SplitMix.MkSplitMix 1)) Hotseat.fresh {Hotseat.facing = Just S.alice, Hotseat.autoPass = False})) blank))
         stacks = filter (Text.isPrefixOf (Text.pack "Stack, top first: "))
@@ -206,7 +208,7 @@ spec s registry = Spec.describe s "Client" $ do
     mountains <- mapM (S.printingOf s registry) ["Mountain", "Mountain", "Mountain", "Mountain"]
     let board = snd (S.addHandCard giant S.alice (List.foldl' (\g p -> snd (S.addPermanent p S.alice g)) gs (mindslaver : mountains)))
         turn = GameState.turnNumber board
-        person = Game.human (screen 400 slavesBob) (const Nothing)
+        person = Game.human (screen 400 slavesBob) (const (Right Nothing))
         seats = Driver.bySeat (Map.fromList [(S.alice, person), (S.bob, person)]) Bot.bot
         run = Driver.drive [] seats 400 (pure . (> turn + 3) . GameState.turnNumber) board
         shown = reverse (written (State.execState (Except.runExceptT (State.evalStateT (State.evalStateT run (SplitMix.MkSplitMix 1)) Hotseat.fresh {Hotseat.facing = Just S.alice})) blank))
@@ -440,6 +442,17 @@ spec s registry = Spec.describe s "Client" $ do
     Spec.assertBool s (any (Text.isInfixOf (Text.pack "Ainok Tracker")) (seenBy S.bob) && all (`elem` seenBy S.bob) (Text.lines text)) ("bob looks at it: " <> show (seenBy S.bob))
     Spec.assertEqWith s "alice cannot name it" (cardLines (readout lookUp gs ["card Ainok Tracker", "1"] (targeting S.alice))) [Text.pack "No card you can see is named Ainok Tracker."]
 
+  -- `pawl play`'s answer to card data it cannot read: play stops, saying why,
+  -- rather than showing the card as one with no text.
+  Spec.it s "card stops play, saying why, when the card data cannot be read" $ do
+    piker <- S.printingOf s registry "Goblin Piker"
+    let (_, gs) = S.addPermanent piker S.alice (Setup.emptyGame S.bothPlayers)
+        priority = Prompt.ChooseAction (Decider.MkDecider S.alice) S.alice [Action.Pass]
+        corpus = InvalidCorpus.MkInvalidCorpus "cards" ["cards/goblin-piker.json: unreadable"]
+        reading found = fst (consulting (const found) gs ["card Goblin Piker", "1"] priority)
+    Spec.assertEqWith s "play stops, naming the file" (Either.fromLeft Text.empty (reading (Left corpus))) (Text.pack (Exception.displayException corpus))
+    Spec.assertBool s (Either.isRight (reading (Right Nothing))) "with no card by that name, play goes on"
+
   Spec.it s "card shows nothing of a card in another seat's hand" $ do
     piker <- S.printingOf s registry "Goblin Piker"
     lookUp <- cardsNamed s registry ["Goblin Piker"]
@@ -508,7 +521,7 @@ screen budget typist =
 -- Alice at the terminal, the bot as bob.
 against :: (Screen -> Maybe Text.Text) -> NonEmpty.NonEmpty (PlayerId.PlayerId, Deck.Deck) -> (Either Text.Text (Result.Result, GameState.GameState), [Text.Text])
 against typist matchup =
-  let seats = Map.fromList [(S.alice, Game.human (screen 3000 typist) (const Nothing)), (S.bob, Bot.bot)]
+  let seats = Map.fromList [(S.alice, Game.human (screen 3000 typist) (const (Right Nothing))), (S.bob, Bot.bot)]
       (outcome, sc) = State.runState (Game.run [] seats Hotseat.fresh {Hotseat.facing = Just S.alice} (SplitMix.MkSplitMix 1) matchup) blank
    in (outcome, reverse (written sc))
 
@@ -573,7 +586,7 @@ asking :: Hotseat.Hotseat -> [String] -> GameState.GameState -> Prompt.Prompt r 
 asking hotseat typing gs prompt =
   let typist now = fmap Text.pack (Maybe.listToMaybe (List.genericDrop (typed now) typing))
       terminal = screen (List.genericLength typing) typist
-      (outcome, sc) = State.runState (Except.runExceptT (State.evalStateT (State.evalStateT (Answerer.unwrap (Game.human terminal (const Nothing)) (Asked.MkAsked [] gs prompt)) (SplitMix.MkSplitMix 0)) hotseat)) blank
+      (outcome, sc) = State.runState (Except.runExceptT (State.evalStateT (State.evalStateT (Answerer.unwrap (Game.human terminal (const (Right Nothing))) (Asked.MkAsked [] gs prompt)) (SplitMix.MkSplitMix 0)) hotseat)) blank
    in (outcome, reverse (written sc))
 
 -- Alice casting a creature spell with auto from a game after setup and the
@@ -588,7 +601,7 @@ autoCast s registry spell names = do
       (lands, withLands) = List.foldl' place ([], gs) printings
       board = snd (S.addHandCard card S.alice withLands)
       bears = S.countOnBattlefieldByName (CardName.MkCardName (Text.pack spell)) S.alice
-      seats = Driver.bySeat (Map.singleton S.alice (Game.human (screen 200 (castsOnce spell)) (const Nothing))) Bot.bot
+      seats = Driver.bySeat (Map.singleton S.alice (Game.human (screen 200 (castsOnce spell)) (const (Right Nothing)))) Bot.bot
       run = Driver.drive [] seats 20 (pure . (> bears board) . bears) board
       (outcome, sc) = State.runState (Except.runExceptT (State.evalStateT (State.evalStateT run (SplitMix.MkSplitMix 1)) Hotseat.fresh {Hotseat.facing = Just S.alice})) blank
       -- A game that stopped is read as the board it started from.
@@ -667,26 +680,31 @@ actionMenus shown = case dropWhile (not . menuHeading) shown of
 answering :: GameState.GameState -> String -> Prompt.Prompt r -> Either Text.Text r
 answering gs line prompt =
   State.evalState
-    (Except.runExceptT (State.evalStateT (State.evalStateT (Answerer.unwrap (Game.human (screen 1 (const (Just (Text.pack line)))) (const Nothing)) (Asked.MkAsked [] gs prompt)) (SplitMix.MkSplitMix 0)) Hotseat.fresh {Hotseat.facing = Driver.deciderOf prompt}))
+    (Except.runExceptT (State.evalStateT (State.evalStateT (Answerer.unwrap (Game.human (screen 1 (const (Just (Text.pack line)))) (const (Right Nothing))) (Asked.MkAsked [] gs prompt)) (SplitMix.MkSplitMix 0)) Hotseat.fresh {Hotseat.facing = Driver.deciderOf prompt}))
     blank
 
 -- What one prompt showed its seat, the lines typed one after another.
-readout :: (CardName.CardName -> Maybe Card.Card) -> GameState.GameState -> [String] -> Prompt.Prompt r -> [Text.Text]
-readout lookUp gs typing prompt =
-  let typist sc = fmap Text.pack (Maybe.listToMaybe (List.genericDrop (typed sc) typing))
+readout :: (CardName.CardName -> Either InvalidCorpus.InvalidCorpus (Maybe Card.Card)) -> GameState.GameState -> [String] -> Prompt.Prompt r -> [Text.Text]
+readout lookUp gs typing prompt = snd (consulting lookUp gs typing prompt)
+
+-- readout's run, with its answer or why play stopped.
+consulting :: (CardName.CardName -> Either InvalidCorpus.InvalidCorpus (Maybe Card.Card)) -> GameState.GameState -> [String] -> Prompt.Prompt r -> (Either Text.Text r, [Text.Text])
+consulting lookUp gs typing prompt =
+  let typist now = fmap Text.pack (Maybe.listToMaybe (List.genericDrop (typed now) typing))
       human = Game.human (screen (Natural.length typing) typist) lookUp
-   in reverse (written (State.execState (Except.runExceptT (State.evalStateT (State.evalStateT (Answerer.unwrap human (Asked.MkAsked [] gs prompt)) (SplitMix.MkSplitMix 0)) Hotseat.fresh {Hotseat.facing = Driver.deciderOf prompt, Hotseat.autoPass = False})) blank))
+      (outcome, sc) = State.runState (Except.runExceptT (State.evalStateT (State.evalStateT (Answerer.unwrap human (Asked.MkAsked [] gs prompt)) (SplitMix.MkSplitMix 0)) Hotseat.fresh {Hotseat.facing = Driver.deciderOf prompt, Hotseat.autoPass = False})) blank
+   in (outcome, reverse (written sc))
 
 -- What the first "card" line typed showed.
 cardLines :: [Text.Text] -> [Text.Text]
 cardLines = takeWhile (not . Text.isPrefixOf (Text.pack "> ")) . drop 1 . dropWhile (not . Text.isPrefixOf (Text.pack "> card"))
 
 -- The card data for these cards, by each face's name.
-cardsNamed :: (Monad m) => Spec.Spec m n -> Registry.Registry m -> [String] -> m (CardName.CardName -> Maybe Card.Card)
+cardsNamed :: (Monad m) => Spec.Spec m n -> Registry.Registry m -> [String] -> m (CardName.CardName -> Either InvalidCorpus.InvalidCorpus (Maybe Card.Card))
 cardsNamed s registry names = do
   cards <- mapM (S.cardOf s registry) names
   let byName = Map.fromList [(Face.name f, card) | card <- cards, f <- Foldable.toList (Card.faces card)]
-  pure (`Map.lookup` byName)
+  pure (Right . (`Map.lookup` byName))
 
 -- A one-faced card's printed Oracle text.
 oracleOf :: (Monad m) => Spec.Spec m n -> Registry.Registry m -> String -> m Text.Text

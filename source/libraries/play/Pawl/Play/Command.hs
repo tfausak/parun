@@ -21,6 +21,7 @@ import qualified Data.Time.Clock.System as Clock
 import Numeric.Natural (Natural)
 import qualified Pawl.Codec.Scenario as Codec.Scenario
 import qualified Pawl.DeckList as DeckList
+import qualified Pawl.Exceptions.InvalidCorpus as InvalidCorpus
 import qualified Pawl.Extra.Integer as Integer
 import qualified Pawl.JsonCodec.Codec as Codec
 import qualified Pawl.JsonCodec.Common as Common
@@ -81,16 +82,17 @@ load registry path = do
   bytes <- ByteString.readFile path
   contents <- either (\err -> failWith (path <> ": not valid UTF-8: " <> show err)) pure (Encoding.decodeUtf8' bytes)
   case Identity.runIdentity (DeckList.parse registry contents) of
-    Left problems -> do
+    Left corpus -> failWith (Exception.displayException corpus)
+    Right (Left problems) -> do
       mapM_ (TextIO.hPutStrLn IO.stderr . (\p -> Text.pack (path <> ": ") <> DeckList.explain p)) problems
       Exit.exitFailure
-    Right deck -> pure deck
+    Right (Right deck) -> pure deck
 
 -- | Nanoseconds since the epoch; on macOS only microseconds tick.
 nanoseconds :: Clock.SystemTime -> Natural
 nanoseconds t = Integer.toNaturalSaturating (toInteger (Clock.systemSeconds t) * 1000000000 + toInteger (Clock.systemNanoseconds t))
 
-play :: PlayOptions.PlayOptions -> (CardName.CardName -> Maybe Card.Card) -> (Deck.Deck, Deck.Deck) -> IO ()
+play :: PlayOptions.PlayOptions -> (CardName.CardName -> Either InvalidCorpus.InvalidCorpus (Maybe Card.Card)) -> (Deck.Deck, Deck.Deck) -> IO ()
 play options lookUp (one, two) = do
   IO.hSetBuffering IO.stdout IO.LineBuffering
   seed <- maybe (fmap (SplitMix.Play.fromClock . nanoseconds) Clock.getSystemTime) pure (PlayOptions.seed options)

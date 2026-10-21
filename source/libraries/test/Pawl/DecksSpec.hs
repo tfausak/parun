@@ -2,6 +2,7 @@
 -- Portal starter decks play a whole game that replays.
 module Pawl.DecksSpec where
 
+import qualified Control.Exception as Exception
 import qualified Control.Monad as Monad
 import qualified Control.Monad.IO.Class as MonadIO
 import qualified Data.Either as Either
@@ -24,13 +25,13 @@ spec s registry = do
   Spec.describe s "Decks" $ do
     Monad.forM_ paths $ \path -> Spec.it s (reverse (takeWhile (/= '/') (reverse path)) <> " reads") $ do
       contents <- Decks.loadFile path
-      parsed <- either (pure . Left . (: []) . Text.unpack) (fmap (either (Left . fmap (Text.unpack . DeckList.explain)) Right) . DeckList.parse registry) contents
+      parsed <- either (pure . Left . (: []) . Text.unpack) (fmap (either (Left . (: []) . Exception.displayException) (either (Left . fmap (Text.unpack . DeckList.explain)) Right)) . DeckList.parse registry) contents
       Spec.assertEqWith s (path <> ": problems") (Either.fromLeft [] parsed) []
 
     Spec.it s "two bots finish a game with the Portal starter decks, and it replays clean" $ do
       let read' name = do
             contents <- Decks.loadFile (root <> "/" <> name)
-            either (const (pure (Left []))) (DeckList.parse registry) contents
+            either (const (pure (Left []))) (fmap (Either.fromRight (Left [])) . DeckList.parse registry) contents
       decksRead <- (,) <$> read' "portal-starter-1.txt" <*> read' "portal-starter-2.txt"
       case decksRead of
         (Right one, Right two) -> played (S.alice, one) (S.bob, two)

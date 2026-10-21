@@ -3,6 +3,7 @@
 -- cannot show is a gap in the protocol.
 module Pawl.Play.Client where
 
+import qualified Control.Exception as Exception
 import qualified Control.Monad as Monad
 import qualified Control.Monad.Trans.Class as Trans
 import qualified Control.Monad.Trans.Except as Except
@@ -22,6 +23,7 @@ import qualified Pawl.Codec.ManaCost as Codec.ManaCost
 import qualified Pawl.Codec.ManaType as Codec.ManaType
 import qualified Pawl.Codec.Reply as Codec.Reply
 import qualified Pawl.Codec.Request as Codec.Request
+import qualified Pawl.Exceptions.InvalidCorpus as InvalidCorpus
 import qualified Pawl.Extra.Integer as Integer
 import qualified Pawl.Extra.Natural as Natural
 import qualified Pawl.JsonCodec.Codec as Codec
@@ -55,8 +57,9 @@ type Client m = State.StateT Hotseat.Hotseat (Except.ExceptT Text.Text m)
 --
 -- CR 104.3a: a seat concedes by typing "concede" at any question, and the
 -- client answers the engine's next Concede prompt for that seat with it. A
--- card's printed text comes from the card data, by a name the view shows.
-respond :: (Monad m) => Terminal.Terminal m -> (CardName.CardName -> Maybe Card.Card) -> Text.Text -> Client m Text.Text
+-- card's printed text comes from the card data, by a name the view shows, and
+-- card data that cannot be read stops play, saying why.
+respond :: (Monad m) => Terminal.Terminal m -> (CardName.CardName -> Either InvalidCorpus.InvalidCorpus (Maybe Card.Card)) -> Text.Text -> Client m Text.Text
 respond terminal lookUp line = do
   request <- either (stop . (Text.pack "unreadable request: " <>)) pure (Common.parse line >>= Codec.decode Codec.Request.codec)
   let question = Request.question request
@@ -82,7 +85,7 @@ respond terminal lookUp line = do
             pure reply
 
 -- | Asks the seat, handing the screen to it first.
-asked :: (Monad m) => Terminal.Terminal m -> (CardName.CardName -> Maybe Card.Card) -> PlayerView.PlayerView -> Request.Request -> Client m R.Reply
+asked :: (Monad m) => Terminal.Terminal m -> (CardName.CardName -> Either InvalidCorpus.InvalidCorpus (Maybe Card.Card)) -> PlayerView.PlayerView -> Request.Request -> Client m R.Reply
 asked terminal lookUp view request = do
   let question = Request.question request
       seat = Question.seat question
@@ -102,7 +105,7 @@ asked terminal lookUp view request = do
 -- | CR 104.3a's concession, quitting and reading a card are typed at any
 -- question, and "auto" or an empty line at a mana source; everything else is
 -- read by the question's own reader until it reads.
-answer :: (Monad m) => Terminal.Terminal m -> (CardName.CardName -> Maybe Card.Card) -> PlayerId.PlayerId -> PlayerView.PlayerView -> Question.Question -> Client m R.Reply
+answer :: (Monad m) => Terminal.Terminal m -> (CardName.CardName -> Either InvalidCorpus.InvalidCorpus (Maybe Card.Card)) -> PlayerId.PlayerId -> PlayerView.PlayerView -> Question.Question -> Client m R.Reply
 answer terminal lookUp seat view question = case (Question.kind question, slotsOf question) of
   (kind, Just (source, slots)) | kind == Text.pack "ChooseTargets" -> fmap R.Array (mapM (target source) slots)
   _ -> ask (listedObjects view (Question.offer question)) (choice view question)
@@ -120,7 +123,7 @@ answer terminal lookUp seat view question = case (Question.kind question, slotsO
               _
                 | Just wanted <- Text.stripPrefix (Text.pack "card") typed,
                   maybe True (Char.isSpace . fst) (Text.uncons wanted) -> do
-                    mapM_ (say terminal) (reading lookUp view listed (Text.strip wanted))
+                    either (stop . Text.pack . Exception.displayException) (mapM_ (say terminal)) (reading lookUp view listed (Text.strip wanted))
                     loop
               -- The rest of this payment, by autoSource.
               word
@@ -271,16 +274,18 @@ choice view question = Maybe.fromMaybe generic $ case Text.unpack (Question.kind
 
 -- | What "card" followed by a number from the question's list, or by a name,
 -- shows: each object of the view it names, in full. Only what the view shows
--- is read, so a card the seat may not see is never found.
-reading :: (CardName.CardName -> Maybe Card.Card) -> PlayerView.PlayerView -> [Maybe ObjectId.ObjectId] -> Text.Text -> [Text.Text]
+-- is read, so a card the seat may not see is never found. Left when the card
+-- data could not say, which stops play.
+reading :: (CardName.CardName -> Either InvalidCorpus.InvalidCorpus (Maybe Card.Card)) -> PlayerView.PlayerView -> [Maybe ObjectId.ObjectId] -> Text.Text -> Either InvalidCorpus.InvalidCorpus [Text.Text]
 reading lookUp view listed wanted
-  | Text.null wanted = [Text.pack "Type card and a number from a list, or a card's name."]
+  | Text.null wanted = Right [Text.pack "Type card and a number from a list, or a card's name."]
   | Right [i] <- numbers wanted = case Monad.join (Maybe.listToMaybe (List.genericDrop (pred (max 1 i)) listed)) >>= (`Map.lookup` Render.objects view) of
       Just o | i >= 1 -> Render.details lookUp view o
-      _ -> [Text.pack ("Number " <> show i <> " in this list is not a card you can see.")]
-  | otherwise = case ListUtils.nubOrd (fmap (Render.details lookUp view) (filter matches (Map.elems (Render.objects view)))) of
-      [] -> [Text.pack "No card you can see is named " <> wanted <> Text.pack "."]
-      found -> List.intercalate [Text.empty] found
+      _ -> Right [Text.pack ("Number " <> show i <> " in this list is not a card you can see.")]
+  | otherwise =
+      flip fmap (traverse (Render.details lookUp view) (filter matches (Map.elems (Render.objects view)))) $ \shown -> case ListUtils.nubOrd shown of
+        [] -> [Text.pack "No card you can see is named " <> wanted <> Text.pack "."]
+        found -> List.intercalate [Text.empty] found
   where
     matches = any ((== Text.toCaseFold wanted) . Text.toCaseFold . CardName.unwrap) . Set.toList . Render.cardNames
 

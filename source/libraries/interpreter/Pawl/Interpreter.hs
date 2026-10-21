@@ -16,6 +16,7 @@ import qualified Pawl.Engine.Card as Card
 import qualified Pawl.Engine.Filter as Filter
 import qualified Pawl.Engine.Game as Game
 import qualified Pawl.Engine.Projection.View as Projection
+import qualified Pawl.Exceptions.InvalidCorpus as InvalidCorpus
 import qualified Pawl.Registry as Registry
 import qualified Pawl.Types.Asked as Asked
 import qualified Pawl.Types.Card as Card.Type
@@ -56,16 +57,20 @@ import qualified Pawl.Types.Prompt as Prompt
 -- the game has no object to project (CR 400.11), and rule 201.4a asks about
 -- Oracle text rather than about anything on the board. The chooser is the
 -- context's perspective, since they are the player the restriction is put to.
+--
+-- A lookup reaching a card file the registry cannot use goes to `failed`, the
+-- host's answer to a broken corpus, rather than reading as no such card.
 legalCardName ::
   (Monad m) =>
   Registry.Registry m ->
+  (forall r. InvalidCorpus.InvalidCorpus -> m r) ->
   GameState.GameState ->
   PlayerId.PlayerId ->
   Filter.Type.Filter Keyword.Keyword ->
   CardName.CardName ->
   m Bool
-legalCardName registry gs chooser restriction name = do
-  found <- Registry.fetchCard registry name
+legalCardName registry failed gs chooser restriction name = do
+  found <- fetched failed (Registry.fetchCard registry name)
   pure $ case found of
     Nothing -> False
     Just card -> case Card.faceNamed name card of
@@ -108,14 +113,15 @@ legalCardName registry gs chooser restriction name = do
 policingCardNames ::
   (Monad m) =>
   Registry.Registry m ->
+  (forall r. InvalidCorpus.InvalidCorpus -> m r) ->
   (forall r. Asked.Asked r -> m r) ->
   Asked.Asked a ->
   m a
-policingCardNames registry answer asked = case Asked.prompt asked of
+policingCardNames registry failed answer asked = case Asked.prompt asked of
   Prompt.ChooseCardName _ chooser _ restriction _ ->
     let again = do
           name <- answer asked
-          legal <- legalCardName registry (Asked.game asked) chooser restriction name
+          legal <- legalCardName registry failed (Asked.game asked) chooser restriction name
           if legal then pure name else again
      in again
   _ -> answer asked
@@ -135,20 +141,30 @@ policingCardNames registry answer asked = case Asked.prompt asked of
 -- no zone, is what proves the lookup; Pawl.ConjureSpec's Fear of Change case
 -- proves the enumeration; Pawl.DamageSpec's two legendary Spy Kit hosts prove
 -- the face names, a back face's among them.
+--
+-- A registry that reaches a card file it cannot use is answered by `failed`,
+-- the host's decision; the engine only ever sees a card or none.
+-- Pawl.CastProhibitionSpec's "CR 108.1 a lookup the registry cannot answer goes
+-- to the host's handler" is what proves it.
 lookingUpCards ::
-  (Functor m) =>
+  (Monad m) =>
   Registry.Registry m ->
+  (forall r. InvalidCorpus.InvalidCorpus -> m r) ->
   (forall r. Asked.Asked r -> m r) ->
   Asked.Asked a ->
   m a
-lookingUpCards registry answer asked = case Asked.prompt asked of
-  Prompt.LookUpCard name -> Registry.fetchCard registry name
+lookingUpCards registry failed answer asked = case Asked.prompt asked of
+  Prompt.LookUpCard name -> fetched failed (Registry.fetchCard registry name)
   Prompt.ReferenceCards predicate amount ->
     fmap
       (fmap (Face.name . NonEmpty.head . Card.Type.faces) . filter (Projection.referenceAdmits (Game.teams (Asked.game asked)) amount predicate))
-      (Registry.cards registry)
+      (fetched failed (Registry.cards registry))
   Prompt.ReferenceNames predicate ->
     let context = Filter.contextFor (Game.teams (Asked.game asked)) Nothing Nothing
         admitted face = Filter.matches context (Projection.viewOfCard face) predicate
-     in fmap (concatMap (fmap fst . filter (admitted . snd) . Card.referenceViews)) (Registry.cards registry)
+     in fmap (concatMap (fmap fst . filter (admitted . snd) . Card.referenceViews)) (fetched failed (Registry.cards registry))
   _ -> answer asked
+
+-- A registry's answer, its failure handed to the host's handler.
+fetched :: (Monad m) => (InvalidCorpus.InvalidCorpus -> m a) -> m (Either InvalidCorpus.InvalidCorpus a) -> m a
+fetched failed answering = answering >>= either failed pure

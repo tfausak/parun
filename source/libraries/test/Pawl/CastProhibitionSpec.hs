@@ -9,6 +9,7 @@ module Pawl.CastProhibitionSpec where
 
 import qualified Control.Monad.Trans.Class as Trans
 import qualified Control.Monad.Trans.State.Strict as State
+import qualified Data.Either as Either
 import qualified Data.List as List
 import qualified Data.Map.Strict as Map
 import qualified Data.Maybe as Maybe
@@ -26,6 +27,7 @@ import qualified Pawl.Engine.PlayerEffect as PlayerEffect
 import qualified Pawl.Engine.Projection as Projection
 import qualified Pawl.Engine.Setup as Setup
 import qualified Pawl.Engine.Stack as Stack
+import qualified Pawl.Exceptions.InvalidCorpus as InvalidCorpus
 import qualified Pawl.Interpreter as Interpreter
 import Pawl.PlayerEffectSpec (anySpellId, isCast, silenceAfter, swapAt, threeSeatSilenceBoard)
 import qualified Pawl.Registry as Registry
@@ -853,6 +855,7 @@ queuedChamberAnswer opponent fallback asked = case Asked.prompt asked of
 -- parameterized over the monad a lookup works in exactly so that a caller can.
 policedChamber ::
   (Monad m) =>
+  Spec.Spec m n ->
   Registry.Registry m ->
   PlayerId.PlayerId ->
   CardName.CardName ->
@@ -860,9 +863,9 @@ policedChamber ::
   GameState.GameState ->
   ObjectId.ObjectId ->
   m (GameState.GameState, [CardName.CardName])
-policedChamber registry opponent fallback queue gs oid = do
+policedChamber s registry opponent fallback queue gs oid = do
   let lifted = Registry.MkRegistry {Registry.fetchCard = Trans.lift . Registry.fetchCard registry, Registry.cards = Trans.lift (Registry.cards registry)}
-      play = Engine.runGameAsked (Interpreter.policingCardNames lifted (queuedChamberAnswer opponent fallback)) gs (S.cast S.alice oid >> Stack.resolveTop)
+      play = Engine.runGameAsked (Interpreter.policingCardNames lifted (Trans.lift . S.brokenCorpus s) (queuedChamberAnswer opponent fallback)) gs (S.cast S.alice oid >> Stack.resolveTop)
   ((_, after), left) <- State.runStateT play queue
   pure (after, left)
 
@@ -975,7 +978,7 @@ nullChamberSpec s registry =
       lightningBolt <- S.printingOf s registry "Lightning Bolt"
       let (oid, board) = nullChamberBoard plains mountain nullChamber
           queue = [noSuchCard, S.printingName piker, S.printingName cancel]
-      (after, left) <- policedChamber registry S.bob (S.printingName lightningBolt) queue board oid
+      (after, left) <- policedChamber s registry S.bob (S.printingName lightningBolt) queue board oid
       case enteredOne board after >>= \chamber -> Game.lookupObject chamber after of
         Nothing -> Spec.assertFailure s "Null Chamber did not reach the battlefield"
         Just chamber -> do
@@ -1005,7 +1008,7 @@ nullChamberSpec s registry =
       let (oid, board) = nullChamberBoard plains mountain nullChamber
           queue = [pikerSlug, S.printingName piker, S.printingName cancel]
       fetched <- Registry.fetchCard registry pikerSlug
-      (after, left) <- policedChamber registry S.bob (S.printingName lightningBolt) queue board oid
+      (after, left) <- policedChamber s registry S.bob (S.printingName lightningBolt) queue board oid
       case enteredOne board after >>= \chamber -> Game.lookupObject chamber after of
         Nothing -> Spec.assertFailure s "Null Chamber did not reach the battlefield"
         Just chamber -> do
@@ -1015,7 +1018,7 @@ nullChamberSpec s registry =
             (Map.findWithDefault Map.empty Acquisition.Own (Object.chosenNames chamber))
             (Map.fromList [(S.alice, S.printingName piker), (S.bob, S.printingName cancel)])
           Spec.assertEqWith s "every queued answer was drawn, so alice was asked twice" left []
-      Spec.assertBool s (Maybe.isJust fetched) "the registry does answer to the slug"
+      Spec.assertBool s (either (const False) Maybe.isJust fetched) "the registry does answer to the slug"
 
     -- CR 201.4a's own half, which the case above cannot reach: Island is a name
     -- the reference HAS, and it is refused only because Null Chamber's
@@ -1033,9 +1036,9 @@ nullChamberSpec s registry =
       lightningBolt <- S.printingOf s registry "Lightning Bolt"
       let (oid, board) = nullChamberBoard plains mountain nullChamber
           queue = [S.printingName island, S.printingName piker, S.printingName cancel]
-      unrestricted <- Interpreter.legalCardName registry board S.alice (Filter.Type.And []) (S.printingName island)
-      restricted <- Interpreter.legalCardName registry board S.alice nonBasicLandName (S.printingName island)
-      (after, left) <- policedChamber registry S.bob (S.printingName lightningBolt) queue board oid
+      unrestricted <- Interpreter.legalCardName registry (S.brokenCorpus s) board S.alice (Filter.Type.And []) (S.printingName island)
+      restricted <- Interpreter.legalCardName registry (S.brokenCorpus s) board S.alice nonBasicLandName (S.printingName island)
+      (after, left) <- policedChamber s registry S.bob (S.printingName lightningBolt) queue board oid
       case enteredOne board after >>= \chamber -> Game.lookupObject chamber after of
         Nothing -> Spec.assertFailure s "Null Chamber did not reach the battlefield"
         Just chamber -> do
@@ -1332,9 +1335,9 @@ castHalo name gs oid =
 -- castHalo through Pawl.Interpreter.lookingUpCards over the suite's registry, so
 -- Prompt.LookUpCard is answered the way an interpreter holding the reference
 -- answers it. castHalo is the same cast with the reference never consulted.
-lookedUpHalo :: (Monad m) => Registry.Registry m -> CardName.CardName -> GameState.GameState -> ObjectId.ObjectId -> m GameState.GameState
-lookedUpHalo registry name gs oid = do
-  (_, after) <- Engine.runGameAsked (Interpreter.lookingUpCards registry (namingAnswer name)) gs (S.cast S.alice oid >> Stack.resolveTop)
+lookedUpHalo :: (Monad m) => Spec.Spec m n -> Registry.Registry m -> CardName.CardName -> GameState.GameState -> ObjectId.ObjectId -> m GameState.GameState
+lookedUpHalo s registry name gs oid = do
+  (_, after) <- Engine.runGameAsked (Interpreter.lookingUpCards registry (S.brokenCorpus s) (namingAnswer name)) gs (S.cast S.alice oid >> Stack.resolveTop)
   pure after
 
 -- Names `name` whenever a card name is asked for, and otherwise S.identityAnswer.
@@ -1410,8 +1413,8 @@ runedHaloSpec s registry =
       jedit <- S.printingOf s registry "Jedit Ojanen"
       let (haloId, _, board) = runedHaloBoard plains halo curse
           pikerName = CardName.MkCardName (Text.pack "Goblin Piker")
-      namedPiker <- lookedUpHalo registry pikerName board haloId
-      namedJedit <- lookedUpHalo registry (S.printingName jedit) board haloId
+      namedPiker <- lookedUpHalo s registry pikerName board haloId
+      namedJedit <- lookedUpHalo s registry (S.printingName jedit) board haloId
       let (beforeKit, withKit) = spyKitCombat giant (Just kit) namedPiker
           (beforeBare, bare) = spyKitCombat giant Nothing namedPiker
           (beforeLegend, legend) = spyKitCombat giant (Just kit) namedJedit
@@ -1421,6 +1424,26 @@ runedHaloSpec s registry =
       Spec.assertEqWith s "a legendary creature card's name is not the host's, so alice takes 4" (S.lifeOf S.alice legend) (fmap (subtract 4) (S.lifeOf S.alice beforeLegend))
       Spec.assertEqWith s "with the reference never asked, alice takes 4" (S.lifeOf S.alice unasked) (fmap (subtract 4) (S.lifeOf S.alice beforeUnasked))
       Spec.assertBool s (not (Map.member pikerName (Game.referenceFaces board))) "no Goblin Piker card is anywhere in the game before the Halo names it"
+    -- CR 108.1: the Halo's name looked up in a reference that cannot read its
+    -- card files. The registry's failure goes to the host's handler, here
+    -- Left, rather than reading as no card by that name; the control's
+    -- registry answers no card instead, and the Halo resolves.
+    Spec.it s "CR 108.1 a lookup the registry cannot answer goes to the host's handler" $ do
+      plains <- S.printingOf s registry "Plains"
+      halo <- S.printingOf s registry "Runed Halo"
+      curse <- S.printingOf s registry "Curse of Vitality"
+      let (haloId, _, board) = runedHaloBoard plains halo curse
+          corpus = InvalidCorpus.MkInvalidCorpus "cards" ["cards/goblin-piker.json: unreadable"]
+          answering found = Registry.MkRegistry {Registry.fetchCard = const (pure found), Registry.cards = pure (fmap (const []) found)}
+          naming reference = fmap snd (Engine.runGameAsked (Interpreter.lookingUpCards reference Left (namingAnswer (CardName.MkCardName (Text.pack "Goblin Piker")))) board (S.cast S.alice haloId >> Stack.resolveTop))
+      case naming (answering (Left corpus)) of
+        Left reached -> Spec.assertEqWith s "the registry's failure reaches the handler" reached corpus
+        Right _ -> Spec.assertFailure s "the registry's failure read as no card"
+      Spec.assertBool s (Either.isRight (naming (answering (Right Nothing)))) "a reference with no such card lets the Halo resolve"
+      -- CR 201.4's judgement of a chosen name reads the same reference.
+      let judging found = Interpreter.legalCardName (answering found) Left board S.alice (Filter.Type.And []) (CardName.MkCardName (Text.pack "Goblin Piker"))
+      Spec.assertEqWith s "judging a name hands the failure to the handler too" (judging (Left corpus)) (Left corpus)
+      Spec.assertEqWith s "and a reference with no such card refuses the name" (judging (Right Nothing)) (Right False)
     -- CR 612.7 / 206.3a: City in a Bottle's state trigger (CR 603.8) sweeps the
     -- other nontoken permanents with a name originally printed in Arabian Nights,
     -- and a Spy Kit host has every such nonlegendary creature card's name --
@@ -1442,7 +1465,7 @@ runedHaloSpec s registry =
               }
           kirdApe = CardName.MkCardName (Text.pack "Kird Ape")
           unasked = S.runPure S.identityAnswer board Engine.priorityLoop
-      (_, asked) <- Engine.runGameAsked (Interpreter.lookingUpCards registry (pure . S.identityAnswer . Asked.prompt)) board Engine.priorityLoop
+      (_, asked) <- Engine.runGameAsked (Interpreter.lookingUpCards registry (S.brokenCorpus s) (pure . S.identityAnswer . Asked.prompt)) board Engine.priorityLoop
       Spec.assertBool s (not (S.onBattlefield giantId asked)) "CR 603.8 the host, named Kird Ape among others, was sacrificed"
       Spec.assertBool s (S.onBattlefield giantId unasked) "with the reference never consulted it survives"
       Spec.assertBool s (S.onBattlefield bottleId asked && S.onBattlefield kitId asked) "the Bottle and the Kit themselves stay"

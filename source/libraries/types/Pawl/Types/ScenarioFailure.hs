@@ -3,6 +3,7 @@ module Pawl.Types.ScenarioFailure where
 import qualified Data.Sequence as Seq
 import qualified Data.Text as Text
 import Numeric.Natural (Natural)
+import qualified Pawl.Exceptions.InvalidCorpus as InvalidCorpus
 import qualified Pawl.Types.CardName as CardName
 import qualified Pawl.Types.Check as Check
 import qualified Pawl.Types.Choices as Choices
@@ -22,6 +23,8 @@ data ScenarioFailure
   | MkUnknownActivePlayer Label.Label
   | MkUnknownController Label.Label
   | MkUnknownCard CardName.CardName
+  | -- | A card lookup reached card files the registry cannot use.
+    MkInvalidCorpus InvalidCorpus.InvalidCorpus
   | -- | A new game's deck list that does not read (Pawl.DeckList), by seat.
     MkUnreadableDeck Label.Label Text.Text
   | -- | A placement's protector names no seat (CR 310.9).

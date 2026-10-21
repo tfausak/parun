@@ -13,6 +13,7 @@ import qualified Data.Set as Set
 import qualified Data.Text as Text
 import Numeric.Natural (Natural)
 import qualified Pawl.Engine.Driver as Driver
+import qualified Pawl.Exceptions.InvalidCorpus as InvalidCorpus
 import qualified Pawl.Play.Bot as Bot
 import qualified Pawl.Play.Chance as Chance
 import qualified Pawl.Play.Client as Client
@@ -36,7 +37,7 @@ import qualified Pawl.Types.Terminal as Terminal
 type Play m = State.StateT SplitMix.SplitMix (Client.Client m)
 
 -- | A person at the terminal, reading cards' printed text from the card data.
-human :: (Monad m) => Terminal.Terminal m -> (CardName.CardName -> Maybe Card.Card) -> Answerer.Answerer (Play m)
+human :: (Monad m) => Terminal.Terminal m -> (CardName.CardName -> Either InvalidCorpus.InvalidCorpus (Maybe Card.Card)) -> Answerer.Answerer (Play m)
 human terminal lookUp = Protocol.over (Trans.lift . Client.respond terminal lookUp) Chance.chance
 
 -- | A program speaking the protocol: each request line out, its reply line

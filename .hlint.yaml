@@ -51,10 +51,8 @@
   - name: Data.Text.Encoding.decodeUtf8
     within: []
     message: "Use Data.Text.Encoding.decodeUtf8' instead."
-  # A file registry's lookup works in any Applicative and throws InvalidCorpus
-  # on a file it cannot use, which only a pure throw can do.
   - name: Control.Exception.throw
-    within: [Pawl.Registry.fileRegistry]
+    within: []
     message: "Return Either, or use throwIO in IO."
   - name: [Data.List.nub, Data.List.nubBy, Data.List.NonEmpty.nub, Data.List.NonEmpty.nubBy]
     within: []

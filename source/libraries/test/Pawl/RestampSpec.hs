@@ -20,7 +20,6 @@
 module Pawl.RestampSpec where
 
 import qualified Control.Monad.Trans.State.Strict as State
-import qualified Data.List as List
 import qualified Data.Maybe as Maybe
 import qualified Data.Text as Text
 import qualified Numeric.Natural as Natural
@@ -245,11 +244,7 @@ ornateBoard s registry names withTayam = do
       lands = if withTayam then snd (S.addPermanent tayam S.alice base) else base
       (pikerId, withPiker) = S.addPermanent piker S.bob lands
       (_, withSpell) = S.addHandCard ornate S.alice withPiker
-      fixture =
-        Registry.MkRegistry
-          { Registry.fetchCard = \name -> pure (List.find (\card -> S.nameOf card == name) reference),
-            Registry.cards = pure reference
-          }
+      fixture = S.fixtureRegistry reference
   pure
     ( withSpell
         { GameState.activePlayer = S.alice,
@@ -276,5 +271,5 @@ ornateImitations fixture permutation gs =
       spell = case Game.zoneMembers Zone.Hand S.alice gs of
         oid : _ -> oid
         [] -> ObjectId.MkObjectId 0
-      ((_, after), asked) = State.runState (Engine.runGameAsked (Interpreter.lookingUpCards fixture answer) gs (S.cast S.alice spell >> Stack.resolveTop >> Engine.settleForPriority)) []
+      ((_, after), asked) = State.runState (Engine.runGameAsked (Interpreter.lookingUpCards fixture S.unreachableCorpus answer) gs (S.cast S.alice spell >> Stack.resolveTop >> Engine.settleForPriority)) []
    in (after, asked)

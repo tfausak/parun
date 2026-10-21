@@ -7,6 +7,7 @@
 module Pawl.Scenario where
 
 import Control.Applicative ((<|>))
+import qualified Control.Exception as Exception
 import qualified Control.Monad as Monad
 import qualified Control.Monad.Trans.State.Strict as State
 import qualified Data.Bifunctor as Bifunctor
@@ -210,9 +211,10 @@ data Halt
 -- The run is pure, so the engine's card lookups (CR 108.1) are answered from
 -- the cards fetched so far. A lookup of any other name halts the run, which
 -- fetches that name and runs again from the start: a run looks up the names
--- the engine asks and nothing else a scenario says.
+-- the engine asks and nothing else a scenario says. A lookup reaching a card
+-- file the registry cannot use fails the run with MkInvalidCorpus.
 -- Pawl.ScenarioSpec's "a run looks up only the cards its scenario names"
--- proves it.
+-- proves both.
 run :: (Monad m) => Registry.Registry m -> Scenario.Scenario -> m (Either Failure.ScenarioFailure GameState.GameState)
 run registry scenario = do
   staging <- case Scenario.start scenario of
@@ -229,7 +231,7 @@ run registry scenario = do
         State.evalStateT (mapM_ (expect Nothing final) (Scenario.final scenario)) rehearsal
         pure final
       fetching known = case attempt known of
-        Left (Fetching name) -> Registry.fetchCard registry name >>= fetching . flip (Map.insert name) known
+        Left (Fetching name) -> Registry.fetchCard registry name >>= either (pure . Left . Failure.MkInvalidCorpus) (fetching . flip (Map.insert name) known)
         Left (Failed failure) -> pure (Left failure)
         Right final -> pure (Right final)
   fetching Map.empty
@@ -244,7 +246,7 @@ enter :: (Monad m) => Registry.Registry m -> NonEmpty.NonEmpty Entrant.Entrant -
 enter registry entrants = do
   let seated = NonEmpty.zip entrants (fmap PlayerId.MkPlayerId (0 NonEmpty.:| [1 ..]))
       ids = Map.fromList (fmap (Bifunctor.first Entrant.name) (NonEmpty.toList seated))
-  decks <- traverse (\(entrant, pid) -> fmap (Bifunctor.bimap (Failure.MkUnreadableDeck (Entrant.name entrant) . Text.intercalate (Text.pack "; ") . fmap DeckList.explain) ((,) pid)) (DeckList.parse registry (Text.unlines (Entrant.deck entrant)))) seated
+  decks <- traverse (\(entrant, pid) -> fmap (either (Left . Failure.MkInvalidCorpus) (Bifunctor.bimap (Failure.MkUnreadableDeck (Entrant.name entrant) . Text.intercalate (Text.pack "; ") . fmap DeckList.explain) ((,) pid))) (DeckList.parse registry (Text.unlines (Entrant.deck entrant)))) seated
   pure $ case List.find ((> 1) . length) (List.group (List.sort (fmap Entrant.name (NonEmpty.toList entrants)))) of
     Just (label : _) -> Left (Failure.MkDuplicateLabel label)
     _ -> do
@@ -483,10 +485,11 @@ placeAll registry zone owner placements board = case placements of
   placement : rest -> do
     found <- Registry.fetchCard registry (Placement.card placement)
     case found of
-      Nothing -> pure (Left (Failure.MkUnknownCard (Placement.card placement)))
-      Just _ | Placement.token placement && zone /= Zone.Battlefield -> pure (Left (Failure.MkTokenOffBattlefield (Placement.card placement)))
-      Just card | Just name <- Placement.face placement, Maybe.isNothing (Engine.Card.faceNamed name card) -> pure (Left (Failure.MkUnknownFace (Placement.card placement) name))
-      Just card -> do
+      Left corpus -> pure (Left (Failure.MkInvalidCorpus corpus))
+      Right Nothing -> pure (Left (Failure.MkUnknownCard (Placement.card placement)))
+      Right (Just _) | Placement.token placement && zone /= Zone.Battlefield -> pure (Left (Failure.MkTokenOffBattlefield (Placement.card placement)))
+      Right (Just card) | Just name <- Placement.face placement, Maybe.isNothing (Engine.Card.faceNamed name card) -> pure (Left (Failure.MkUnknownFace (Placement.card placement) name))
+      Right (Just card) -> do
         let (printingId, interned) = Game.intern (Printing.ofCard card) (Staged.state board)
             (oid, placedCard) = Setup.placeCard zone owner printingId interned
             -- CR 903.3: a commander is designated by its card identity, which
@@ -1932,6 +1935,7 @@ render failure = case failure of
   Failure.MkUnknownActivePlayer label -> Label.unwrap label <> Text.pack " is active but has no seat"
   Failure.MkUnknownController label -> Label.unwrap label <> Text.pack " controls a placed card but has no seat"
   Failure.MkUnknownCard name -> Text.pack "no card named " <> CardName.unwrap name
+  Failure.MkInvalidCorpus corpus -> Text.pack (Exception.displayException corpus)
   Failure.MkUnreadableDeck label problem -> Label.unwrap label <> Text.pack "'s deck: " <> problem
   Failure.MkUnknownProtector label -> Label.unwrap label <> Text.pack " protects a placed battle but has no seat"
   Failure.MkUnknownFace name face -> CardName.unwrap name <> Text.pack " has no face named " <> CardName.unwrap face

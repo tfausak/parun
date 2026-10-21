@@ -4,7 +4,6 @@
 -- scenarios under data/scenarios are its gameplay-level cases.
 module Pawl.ScenarioSpec where
 
-import qualified Control.Exception as Exception
 import qualified Control.Monad.IO.Class as MonadIO
 import qualified Control.Monad.Trans.State.Strict as State
 import qualified Data.ByteString as ByteString
@@ -670,12 +669,13 @@ loadSpec s = Spec.describe s "Pawl.Scenario.Load" $ do
 
 -- A run looks up the cards it places and the names the engine asks, nothing
 -- else: over a root holding a malformed file, a lookup that misses reaches
--- that file (Pawl.Registry.fileRegistry's whole-root fallback) and throws
--- InvalidCorpus. The board places Goblin Piker; every other string (seats,
--- steps, zones, a label, a card the final check counts) is no card the pool
--- holds, and looking any of them up would throw. The control places a card no
--- file holds, whose lookup misses and so reaches the file.
-referenceSpec :: Spec.Spec IO n -> n ()
+-- that file (Pawl.Registry.fileRegistry's whole-root fallback) and the run
+-- fails with MkInvalidCorpus naming it. The board places Goblin Piker; every
+-- other string (seats, steps, zones, a label, a card the final check counts)
+-- is no card the pool holds, and looking any of them up would fail the run.
+-- The control places a card no file holds, whose lookup misses and so reaches
+-- the file.
+referenceSpec :: (Monad n) => Spec.Spec IO n -> n ()
 referenceSpec s = Spec.describe s "Scenario reference" $ do
   Spec.it s "a run looks up only the cards its scenario names" $ do
     piker <- S.pikerJson
@@ -686,18 +686,43 @@ referenceSpec s = Spec.describe s "Scenario reference" $ do
             <> "\"timeline\":[{\"turn\":1,\"step\":\"PrecombatMain\",\"player\":\"alice\",\"check\":{\"Count\":{\"player\":\"alice\",\"zone\":\"Battlefield\",\"card\":\""
             <> card
             <> "\",\"count\":1}}}],\"final\":[{\"Count\":{\"player\":\"bob\",\"zone\":\"Graveyard\",\"card\":\"Lightning Bolt\",\"count\":0}}]}"
-        attempt registry card = Exception.try (runJson s registry (scenario card)) :: IO (Either InvalidCorpus.InvalidCorpus (Either ScenarioFailure.ScenarioFailure GameState.GameState))
     S.withCorpusDir "scenario-reference" [("goblin-piker.json", piker), ("bird-maiden.json", Text.pack "{oh no")] $ \dir -> do
       registry <- Registry.fileRegistry dir
-      named <- attempt registry "Goblin Piker"
+      named <- runJson s registry (scenario "Goblin Piker")
       case named of
-        Left err -> Spec.assertFailure s ("a run naming only Goblin Piker reached the malformed file: " <> show err)
-        Right (Left failure) -> Spec.assertFailure s ("the run failed: " <> S.renderFailure failure)
-        Right (Right _) -> pure ()
-      missing <- attempt registry "Goblin Pikers"
+        Left failure -> Spec.assertFailure s ("a run naming only Goblin Piker failed: " <> S.renderFailure failure)
+        Right _ -> pure ()
+      missing <- runJson s registry (scenario "Goblin Pikers")
       case missing of
-        Left err -> Spec.assertEqWith s "the control's miss reaches the malformed file" (fmap (List.isInfixOf "bird-maiden.json") (InvalidCorpus.problems err)) [True]
+        Left (ScenarioFailure.MkInvalidCorpus err) -> Spec.assertEqWith s "the control's miss fails the run, naming the malformed file" (fmap (List.isInfixOf "bird-maiden.json") (InvalidCorpus.problems err)) [True]
+        Left failure -> Spec.assertFailure s ("the control's miss failed otherwise: " <> S.renderFailure failure)
         Right _ -> Spec.assertFailure s "the control's miss should reach the malformed file"
+
+  -- The run's own fetch: a name the engine asks (CR 108.1, the name alice
+  -- chooses as Runed Halo enters, CR 614.1c) and the board never placed.
+  -- Plains is filed under its name and never reaches the malformed file;
+  -- Goblin Piker is in no file, so its lookup falls back to the whole root.
+  Spec.it s "a name the engine asks that reaches a malformed card file fails the run, naming it" $ do
+    plains <- S.committedJson "plains.json"
+    halo <- S.committedJson "runed-halo.json"
+    let scenario name =
+          "{\"description\":\"x\",\"board\":{\"seats\":[{\"name\":\"alice\",\"battlefield\":[{\"card\":\"Plains\",\"label\":\"a1\"},{\"card\":\"Plains\",\"label\":\"a2\"}],\"hand\":[{\"card\":\"Runed Halo\",\"label\":\"halo\"}],\"library\":[{\"card\":\"Plains\"}]},{\"name\":\"bob\",\"library\":[{\"card\":\"Plains\"}]}],\"active\":\"alice\",\"step\":\"PrecombatMain\"},"
+            <> "\"timeline\":[{\"turn\":1,\"step\":\"PrecombatMain\",\"player\":\"alice\",\"do\":{\"Cast\":{\"object\":\"$halo\",\"mana\":[\"$a1\",\"$a2\"]}}},"
+            <> "{\"turn\":1,\"step\":\"PrecombatMain\",\"player\":\"alice\",\"do\":\"Pass\"},"
+            <> "{\"turn\":1,\"step\":\"PrecombatMain\",\"player\":\"alice\",\"do\":{\"Answer\":{\"prompt\":\"ChooseCardName\",\"with\":\""
+            <> name
+            <> "\"}}}],\"final\":[{\"Count\":{\"player\":\"alice\",\"zone\":\"Battlefield\",\"card\":\"Runed Halo\",\"count\":1}}]}"
+    S.withCorpusDir "scenario-reference-asked" [("plains.json", plains), ("runed-halo.json", halo), ("bird-maiden.json", Text.pack "{oh no")] $ \dir -> do
+      registry <- Registry.fileRegistry dir
+      broken <- runJson s registry (scenario "Goblin Piker")
+      case broken of
+        Left (ScenarioFailure.MkInvalidCorpus err) -> Spec.assertEqWith s "the asked name fails the run, naming the malformed file" (fmap (List.isInfixOf "bird-maiden.json") (InvalidCorpus.problems err)) [True]
+        Left failure -> Spec.assertFailure s ("the asked name failed the run otherwise: " <> S.renderFailure failure)
+        Right _ -> Spec.assertFailure s "the asked name should reach the malformed file"
+      sound <- runJson s registry (scenario "Plains")
+      case sound of
+        Left failure -> Spec.assertFailure s ("a name filed under itself failed the run: " <> S.renderFailure failure)
+        Right _ -> pure ()
 
 corpusSpec :: (MonadIO.MonadIO n) => Spec.Spec IO n -> Registry.Registry IO -> n ()
 corpusSpec s registry = Spec.describe s "Scenarios" $ do

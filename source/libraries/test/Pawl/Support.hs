@@ -45,6 +45,7 @@ import qualified Pawl.Engine.Sba as Sba
 import qualified Pawl.Engine.Script as Script
 import qualified Pawl.Engine.Setup as Setup
 import qualified Pawl.Engine.Turn as Turn
+import qualified Pawl.Exceptions.InvalidCorpus as InvalidCorpus
 import qualified Pawl.Extra.Natural as Natural
 import qualified Pawl.Registry as Registry
 import qualified Pawl.Scenario as Scenario
@@ -459,17 +460,13 @@ withCorpusDir label files action = do
 -- corpus. Read rather than inlined so no spec becomes a second source of truth
 -- for a card's contents.
 pikerJson :: IO Text.Text
-pikerJson = do
-  root <- Registry.defaultRoot
-  TextIO.readFile (root <> "/goblin-piker.json")
+pikerJson = committedJson "goblin-piker.json"
 
 -- The committed Wax // Wane file, pikerJson's two-faced counterpart: the only
 -- card in the pool whose faces have names of their own (CR 709.4a), and so the
 -- one a throwaway corpus needs to exercise a by-either-name lookup.
 waxWaneJson :: IO Text.Text
-waxWaneJson = do
-  root <- Registry.defaultRoot
-  TextIO.readFile (root <> "/wax-wane.json")
+waxWaneJson = committedJson "wax-wane.json"
 
 -- The committed Nightmare file: "Nightmare's power and toughness are each equal
 -- to the number of Swamps you control", written as CR 400.1's shared
@@ -477,23 +474,47 @@ waxWaneJson = do
 -- conjunct. Read for the same reason the two above are, and used where a case
 -- needs a card whose scope it can divide by hand.
 nightmareJson :: IO Text.Text
-nightmareJson = do
+nightmareJson = committedJson "nightmare.json"
+
+-- A committed card file's text, by its file name under data/cards.
+committedJson :: FilePath -> IO Text.Text
+committedJson file = do
   root <- Registry.defaultRoot
-  TextIO.readFile (root <> "/nightmare.json")
+  TextIO.readFile (root <> "/" <> file)
 
 printingOf :: (Monad m) => Spec.Spec m n -> Registry.Registry m -> String -> m Printing.Printing
 printingOf s registry = fmap Printing.ofCard . cardOf s registry
 
 -- How a spec case fetches a card: a Nothing becomes an assertion failure naming
 -- the card, so a missing card fails the case that wanted it rather than
--- escaping as an exception. This is the adapter for everything inside a
--- Spec.it, and the reason those modules need no IO.
+-- escaping as an exception, and so does a card file the registry cannot use.
+-- This is the adapter for everything inside a Spec.it, and the reason those
+-- modules need no IO.
 cardOf :: (Monad m) => Spec.Spec m n -> Registry.Registry m -> String -> m Card.Type.Card
 cardOf s registry name = do
   result <- Registry.named registry name
   case result of
-    Nothing -> Spec.assertFailure s ("no such card: " <> name)
-    Just card -> pure card
+    Left corpus -> brokenCorpus s corpus
+    Right Nothing -> Spec.assertFailure s ("no such card: " <> name)
+    Right (Just card) -> pure card
+
+-- The test suite's answer to a registry that reached a card file it cannot
+-- use: the case fails, naming the files.
+brokenCorpus :: Spec.Spec m n -> InvalidCorpus.InvalidCorpus -> m r
+brokenCorpus s = Spec.assertFailure s . Exception.displayException
+
+-- A registry over these cards alone, each by its name, which reaches no file.
+fixtureRegistry :: (Applicative m) => [Card.Type.Card] -> Registry.Registry m
+fixtureRegistry reference =
+  Registry.MkRegistry
+    { Registry.fetchCard = \name -> pure (Right (List.find ((== name) . nameOf) reference)),
+      Registry.cards = pure (Right reference)
+    }
+
+-- The answer to a broken corpus where a case has no Spec to fail through: a
+-- fixtureRegistry never gives one, so reaching it is a broken test.
+unreachableCorpus :: InvalidCorpus.InvalidCorpus -> m r
+unreachableCorpus = error . Exception.displayException
 
 buildBoardOrFail :: (Monad m) => Spec.Spec m n -> Registry.Registry m -> Board.Board -> m Staged.Staged
 buildBoardOrFail s registry setup = do
