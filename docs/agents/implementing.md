@@ -238,10 +238,11 @@ perfectly good-looking line of output. Read the label, then decide.
   green read as coverage.
 
 After any merge from `origin/main`, run the suite first --- a card file in a
-superseded wire spelling makes the registry throw `InvalidCorpus` and aborts
-the WHOLE corpus load; grep the corpus for the old spelling rather than
-eyeballing your diff --- then re-run the load-bearing mutations, since a bad
-conflict resolution can neuter a test while leaving the suite green.
+superseded wire spelling fails `Pawl.CardsSpec`'s case for it and makes every
+lookup that reaches it throw `InvalidCorpus`, so unrelated tests fail too; grep
+the corpus for the old spelling rather than eyeballing your diff --- then
+re-run the load-bearing mutations, since a bad conflict resolution can neuter a
+test while leaving the suite green.
 
 A wire rewrite through a decode alias and a re-encode cannot see a field whose
 default changes meaning: a file that omits it decodes through the NEW codec

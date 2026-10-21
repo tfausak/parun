@@ -7134,14 +7134,11 @@ lintSpec s registry = Spec.describe s "Lint" $ do
     root <- Registry.defaultRoot
     loaded <- Registry.loadRoot root
     Spec.assertBool s (not (null loaded)) "the corpus is not empty"
-    let stemOf path =
-          let file = reverse (takeWhile (/= '/') (reverse path))
-           in reverse (drop (length ".json") (reverse file))
-        offends (path, result) = case result of
+    let offends (path, result) = case result of
           Left reason -> Just (path <> ": " <> Text.unpack reason)
           Right card ->
             let belongs = Registry.filedAs card
-             in if Slug.fromText (Text.pack (stemOf path)) == belongs
+             in if Registry.stemOf path == belongs
                   then Nothing
                   else Just (path <> ": belongs at " <> Text.unpack (Slug.unwrap belongs) <> ".json")
     Spec.assertEqWith s "every file is filed under its own name" (Maybe.mapMaybe offends loaded) []
