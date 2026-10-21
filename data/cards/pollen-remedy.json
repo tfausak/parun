@@ -1,0 +1,116 @@
+{
+  "faces": [
+    {
+      "keywords": [
+        {
+          "type": "Kicker",
+          "value": {
+            "components": [
+              {
+                "type": "Sacrifice",
+                "value": {
+                  "count": {
+                    "type": "Fixed",
+                    "value": 1
+                  },
+                  "whichPermanents": {
+                    "type": "HasCardType",
+                    "value": {
+                      "type": "Land"
+                    }
+                  }
+                }
+              }
+            ],
+            "mana": []
+          }
+        }
+      ],
+      "manaCost": [
+        {
+          "type": "OfType",
+          "value": {
+            "type": "Colored",
+            "value": {
+              "type": "White"
+            }
+          }
+        }
+      ],
+      "name": "Pollen Remedy",
+      "oracleText": "Kicker—Sacrifice a land. (You may sacrifice a land in addition to any other costs as you cast this spell.)\nPrevent the next 3 damage that would be dealt this turn to any number of targets, divided as you choose. If this spell was kicked, prevent the next 6 damage this way instead.",
+      "spell": {
+        "modes": [
+          {
+            "clauses": [
+              {
+                "effects": [
+                  {
+                    "type": "PreventNextDamage",
+                    "value": {
+                      "duration": {
+                        "type": "UntilEndOfTurn"
+                      },
+                      "quantity": {
+                        "type": "Share",
+                        "value": "targets"
+                      },
+                      "ref": {
+                        "type": "InSlot",
+                        "value": "targets"
+                      }
+                    }
+                  }
+                ]
+              }
+            ],
+            "targetSlots": {
+              "targets": {
+                "count": {
+                  "type": "Printed",
+                  "value": {
+                    "least": 0
+                  }
+                },
+                "divided": {
+                  "type": "Plus",
+                  "value": {
+                    "left": {
+                      "type": "Literal",
+                      "value": 3
+                    },
+                    "right": {
+                      "type": "Times",
+                      "value": {
+                        "factor": 3,
+                        "quantity": {
+                          "type": "TimesPaid",
+                          "value": {
+                            "type": "Printed",
+                            "value": {
+                              "type": "Kicker"
+                            }
+                          }
+                        }
+                      }
+                    }
+                  }
+                },
+                "pool": {
+                  "type": "AnyTarget"
+                }
+              }
+            }
+          }
+        ]
+      },
+      "typeLine": {
+        "types": [
+          {
+            "type": "Instant"
+          }
+        ]
+      }
+    }
+  ]
+}
