@@ -810,8 +810,8 @@ hackBoard mountain island magicalHack cancel =
    in (mountainId, hackId, cancelId, g5)
 
 -- Hacks Mountain -> Island, and takes the identity fallback elsewhere (the liar
--- pattern). Deliberately unlike identityAnswer's Mountain -> Mountain, so a
--- test can tell an honoured answer from the fallback.
+-- pattern). Deliberately unlike identityAnswer's Forest -> Island, which leaves
+-- a Mountain alone, so a test can tell an honoured answer from the fallback.
 hackToIsland :: Prompt.Prompt r -> r
 hackToIsland p = case p of
   Prompt.ChooseLandTypeSwap {} -> (Subtype.Mountain, Subtype.Island)
@@ -866,8 +866,8 @@ magicalHackTimingSpec s registry = Spec.describe s "MagicalHackTiming" $ do
       (basicLandTypeResponses resolveTranscript)
       [Response.ChoseLandTypeSwap (Subtype.Mountain, Subtype.Island)]
     -- CR 612 / 305.6: the answer is honoured, so the choice did not go missing
-    -- when it moved. Mountain -> Island, not identityAnswer's Mountain ->
-    -- Mountain, is what tells the two apart.
+    -- when it moved. Mountain -> Island, not identityAnswer's Forest ->
+    -- Island, is what tells the two apart.
     Spec.assertEqWith s "the hacked Mountain projects Island" (Projection.subtypesOf mountainId resolved) (Set.singleton Subtype.Island)
     -- M0 determinism: the prompt moved, so the recorded stream has to still
     -- feed a replay of the same run back to the same state.
@@ -989,18 +989,51 @@ turnToFrogChain s registry swap = do
             Stack.resolveTop
   pure (wraithId, S.runPure S.identityAnswer evolved Stack.resolveTop)
 
+-- CR 612.2 with both cards' rulings: an answer the swap prompt does not offer
+-- is filtered, not trusted. Each case pairs the refused answer with a legal one
+-- on the same board, so the refusal is the only difference.
+textSwapLegalitySpec :: (Monad m, Monad n) => Spec.Spec m n -> Registry.Registry m -> n ()
+textSwapLegalitySpec s registry = Spec.describe s "TextSwapLegality" $ do
+  -- "The new creature type can't be Wall."
+  Spec.it s "CR 612 an Evolution answered with Wall makes nothing a Wall" $ do
+    (refusedId, refused) <- turnToFrogChain s registry (Just (Subtype.Frog, Subtype.Wall))
+    (honouredId, honoured) <- turnToFrogChain s registry (Just (Subtype.Frog, Subtype.Elf))
+    Spec.assertEqWith s "the Wall answer leaves a Frog" (Projection.subtypesOf refusedId refused) (Set.singleton Subtype.Frog)
+    Spec.assertEqWith s "the Elf answer makes an Elf" (Projection.subtypesOf honouredId honoured) (Set.singleton Subtype.Elf)
+  -- "One basic land type with another": Desert is a land type (CR 205.3i) but
+  -- not a basic one (CR 305.6).
+  Spec.it s "CR 305.6 a Hack answered with a nonbasic land type changes nothing to it" $ do
+    mountain <- S.printingOf s registry "Mountain"
+    island <- S.printingOf s registry "Island"
+    magicalHack <- S.printingOf s registry "Magical Hack"
+    cancel <- S.printingOf s registry "Cancel"
+    let (mountainId, hackId, _cancelId, gs) = hackBoard mountain island magicalHack cancel
+        hacked to = S.runPure (hackAt mountainId Subtype.Mountain to) gs (S.cast S.alice hackId >> Stack.resolveTop)
+    Spec.assertEqWith s "the Desert answer leaves a Mountain" (Projection.subtypesOf mountainId (hacked Subtype.Desert)) (Set.singleton Subtype.Mountain)
+    Spec.assertEqWith s "the Island answer makes an Island" (Projection.subtypesOf mountainId (hacked Subtype.Island)) (Set.singleton Subtype.Island)
+  -- Both cards' ruling: "It can't change a word to the same word."
+  Spec.it s "CR 612 a swap of a word for itself is never stored" $ do
+    mountain <- S.printingOf s registry "Mountain"
+    island <- S.printingOf s registry "Island"
+    magicalHack <- S.printingOf s registry "Magical Hack"
+    cancel <- S.printingOf s registry "Cancel"
+    let (mountainId, hackId, _cancelId, gs) = hackBoard mountain island magicalHack cancel
+        swaps = Projection.textChangesAffecting mountainId (S.runPure (hackAt mountainId Subtype.Mountain Subtype.Mountain) gs (S.cast S.alice hackId >> Stack.resolveTop))
+    Spec.assertEqWith s "no stored swap names one word twice" (filter (uncurry (==)) swaps) []
+    Spec.assertEqWith s "the Hack still stored one swap" (length swaps) 1
+
 -- Records the words a swap prompt says the new one may not be, so a test can
 -- assert what the player was actually offered. Targets go to `oid` (a
 -- text-changer aimed at a permanent needs no second card on the stack), and the
--- swap itself is answered with an identity on a word neither family forbids.
+-- swap itself is answered with Replay.defaultAnswer's legal one.
 recordingForbidden :: ObjectId.ObjectId -> Prompt.Prompt r -> State.State (Set.Set Subtype.Subtype) r
 recordingForbidden oid p = case p of
   Prompt.ChooseCreatureTypeSwap _ _ _ _ forbidden -> do
     State.modify' (Set.union forbidden)
-    pure (Subtype.Elf, Subtype.Elf)
+    pure (Replay.defaultAnswer p)
   Prompt.ChooseLandTypeSwap _ _ _ _ forbidden -> do
     State.modify' (Set.union forbidden)
-    pure (Subtype.Mountain, Subtype.Mountain)
+    pure (Replay.defaultAnswer p)
   Prompt.ChooseTargets _ _ _ sets -> pure (fmap (const (Set.singleton (Recipient.ToObject oid))) sets)
   _ -> pure (S.identityAnswer p)
 
@@ -2178,6 +2211,7 @@ spec s registry = Spec.describe s "Pawl.Engine.Resolve" $ do
   magicalHackTimingSpec s registry
   magicalHackDurationSpec s registry
   artificialEvolutionSpec s registry
+  textSwapLegalitySpec s registry
   counterKindTextChangeSpec s registry
   stifleSpec s registry
   weighTheTriggerSpec s registry

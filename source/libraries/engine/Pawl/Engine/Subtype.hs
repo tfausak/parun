@@ -7,6 +7,7 @@
 -- effect's.
 module Pawl.Engine.Subtype where
 
+import qualified Data.List as List
 import qualified Data.Maybe as Maybe
 import qualified Data.Set as Set
 import qualified Data.Text as Text
@@ -21,10 +22,8 @@ import qualified Pawl.Types.SubtypeFamily as SubtypeFamily
 -- family is named by a card's text rather than fixed by a constructor.
 --
 -- BasicLandType answers with the whole of CR 205.3i, not CR 305.6's five: the
--- narrowing to basics is on what a player may CHOOSE, while the family a swap
--- may reach is the land types. Unobservable while the only basic-land
--- text-changer offers the five, and stating the family is what CR 612.2
--- actually says.
+-- narrowing to basics is on what a player may CHOOSE (`swappable`), while the
+-- family a swap may reach is the land types.
 inFamily :: SubtypeFamily.SubtypeFamily -> Subtype.Subtype -> Bool
 inFamily family = case family of
   SubtypeFamily.BasicLandType -> isLandType
@@ -33,6 +32,29 @@ inFamily family = case family of
   -- regression fence: its one reader is Rewrite.swapWordIn over a ChangeText's
   -- forbidden set, and Synthetic Enchanted Evolution forbids nothing.
   SubtypeFamily.EnchantmentType -> Set.member CardType.Enchantment . correlatedCardTypes
+
+-- | CR 612.2: whether a text change naming this family may replace @from@
+-- with @to@ -- both words the family's, BasicLandType narrowed to CR 305.6's
+-- five, @to@ outside the card's @forbidden@, and, per both Magical Hack's and
+-- Artificial Evolution's rulings, two different words. Neither word need
+-- appear on the target (the same rulings).
+swappable :: SubtypeFamily.SubtypeFamily -> Set.Set Subtype.Subtype -> (Subtype.Subtype, Subtype.Subtype) -> Bool
+swappable family forbidden (from, to) = from /= to && choosable family from && choosable family to && Set.notMember to forbidden
+
+-- `swappable`'s family test, apart from the pair.
+choosable :: SubtypeFamily.SubtypeFamily -> Subtype.Subtype -> Bool
+choosable family = case family of
+  SubtypeFamily.BasicLandType -> Maybe.isJust . subtypeMana
+  _ -> inFamily family
+
+-- | The first `swappable` pair in Subtype's order: what a swap prompt's
+-- answer falls back to when it is not swappable, the filter-not-trust posture
+-- of Pawl.Engine.Game.chooseAmong. Nothing only when the card forbids all but
+-- one word of the family.
+firstSwap :: SubtypeFamily.SubtypeFamily -> Set.Set Subtype.Subtype -> Maybe (Subtype.Subtype, Subtype.Subtype)
+firstSwap family forbidden =
+  let offered = filter (choosable family) [minBound ..]
+   in List.find (swappable family forbidden) [(from, to) | from <- offered, to <- offered]
 
 -- | CR 305.6: the mana an object with the land card type and this basic land
 -- type has an intrinsic "{T}: Add [mana symbol]" ability for, or Nothing for
