@@ -3486,8 +3486,8 @@ effectLintSpec s registry = Spec.describe s "Lint" $ do
     -- nothing. Wax // Wane is what makes it non-vacuous.
     Spec.assertBool s (any ((> 1) . length . Card.Type.faces . Printing.card) ps) "the pool has a multi-face card to lint"
     Spec.assertEqWith s "no card repeats a face name" (fmap (S.nameOf . Printing.card) offenders) []
-  -- The other half, across cards: a name answers for one card (CR 709.4a), so
-  -- a lookup by it is well-defined. A lazy registry parses only the files a
+  -- The other half, across cards: a name answers for one card, so a lookup by
+  -- it is well-defined. A lazy registry parses only the files a
   -- lookup reaches and so cannot hold this for the whole corpus itself.
   -- Compared by slug, the key a lookup uses, over every face name.
   Spec.it s "no two cards claim one name" $ do
