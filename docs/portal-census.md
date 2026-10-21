@@ -14,22 +14,10 @@ Every expressible Portal card has been added to `data/cards/`.
 
 Each group is tracked by its issue; its cards are added when it lands.
 
-### Skip all combat phases of target player's NEXT TURN (#5237)
-SkipNextPhase (stonehorn-dignitary) skips the player's next combat phase. That
-diverges when False Peace targets its caster before their own combat (it skips
-this turn's combat, not next turn's), and when a turn has extra combats.
-- False Peace: "Target player skips all combat phases of their next turn."
-
 ### A per-player "may draw up to N" with a per-player follow-up (#5239)
 ChooseNumber has no chooser, and Repeat/ForEach/ForEachNumber don't loop over
 players with each one choosing.
 - Temporary Truce: "Each player may draw up to two cards. For each card less than two a player draws this way, that player gains 2 life."
-
-### "That many" after cards are shuffled away (#5240)
-ShuffleIntoLibrary has no slot for the moved cards (fields `library`, `refs`),
-and a Count read after the shuffle sees an empty hand. timetwister draws a
-literal 7, and flux binds `discarded`, which a shuffle can't.
-- Winds of Change: "Each player shuffles the cards from their hand into their library, then draws that many cards."
 
 ### A spell's rules-modifying effect over a live set of objects (CR 611.2c second sentence) (#5241)
 The resolution-created carriers take an ObjectRef, which freezes the set when

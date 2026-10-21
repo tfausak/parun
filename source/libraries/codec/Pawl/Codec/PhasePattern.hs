@@ -10,7 +10,7 @@ import qualified Pawl.JsonCodec.Fields as Fields
 import qualified Pawl.Types.PhasePattern as PhasePattern
 
 -- | `whosePhase` is runtime-only -- a player-scoped skip is baked by Resolve's
--- SkipNextPhase arm, not authored on a card -- but this codec is structural
+-- SkipPhase arm, not authored on a card -- but this codec is structural
 -- over the record and so accepts one from card JSON. Nothing needs a baked
 -- pattern to survive a round trip: neither Pawl.Types.ActiveReplacement nor
 -- GameState has a codec at all (#126). A corpus lint is what keeps the pool

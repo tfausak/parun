@@ -293,7 +293,8 @@ follows = (== Expiry.Perpetual)
 -- bound needs no upper half.
 --
 -- Asked by Pawl.Engine.CombatRestriction, Pawl.Engine.AttackRequirement,
--- Pawl.Engine.Cast.permitsPlayFromExile and Pawl.Engine.PlayerEffect.applying;
+-- Pawl.Engine.Cast.permitsPlayFromExile, Pawl.Engine.PlayerEffect.applying and
+-- Pawl.Engine.Replacement.collect;
 -- Pawl.EffectLintSpec's windowOffends keeps a window off every other carrier.
 begun :: GameState -> Expiry -> Bool
 begun gs expiry = case expiry of

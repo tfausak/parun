@@ -232,6 +232,7 @@ import qualified Pawl.Types.SetClassLevel as SetClassLevel
 import qualified Pawl.Types.SetHalfLocked as SetHalfLocked
 import qualified Pawl.Types.SetOwner as SetOwner
 import qualified Pawl.Types.ShuffleIntoLibrary as ShuffleIntoLibrary
+import qualified Pawl.Types.SkipPhase as SkipPhase
 import qualified Pawl.Types.SlotCount as SlotCount
 import qualified Pawl.Types.SpeedDecrease as SpeedDecrease
 import qualified Pawl.Types.SpellCast as SpellCast
@@ -775,7 +776,7 @@ rewriteEffect pairs effect = case effect of
   -- prove them.
   Effect.Replace (Replace.MkReplace duration uses origin condition replacement) ->
     Effect.Replace (Replace.MkReplace (rewriteDuration pairs duration) uses origin (fmap (rewriteCondition pairs) condition) (rewriteReplacementEffect pairs replacement))
-  Effect.SkipNextPhase {} -> effect
+  Effect.SkipPhase x -> Effect.SkipPhase x {SkipPhase.duration = rewriteDuration pairs (SkipPhase.duration x)}
   -- CR 612.1 through every half of the shield that holds printed words: the
   -- objects it covers, the predicates describing its recipients and its source,
   -- the countdown's amount, the duration and the CR 615.5 rider. `kind`,
@@ -1007,7 +1008,7 @@ rewriteEffect pairs effect = case effect of
   -- The number of turns is the Quantity, FlipCoin's descent above; the
   -- PlayerRef and the skips no word rule 612 can swap.
   Effect.TakeExtraTurn x -> Effect.TakeExtraTurn x {TakeExtraTurn.count = rewriteQuantity pairs (TakeExtraTurn.count x)}
-  Effect.ShuffleIntoLibrary (ShuffleIntoLibrary.MkShuffleIntoLibrary named refs) -> Effect.ShuffleIntoLibrary (ShuffleIntoLibrary.MkShuffleIntoLibrary named (fmap (rewriteObjectRef pairs) refs))
+  Effect.ShuffleIntoLibrary (ShuffleIntoLibrary.MkShuffleIntoLibrary named refs mSlot) -> Effect.ShuffleIntoLibrary (ShuffleIntoLibrary.MkShuffleIntoLibrary named (fmap (rewriteObjectRef pairs) refs) mSlot)
   -- ShuffleIntoLibrary's descent: the ref's filters are card text.
   Effect.Ante (Ante.MkAnte player ref mSlot) -> Effect.Ante (Ante.MkAnte player (rewriteObjectRef pairs ref) mSlot)
   Effect.PutSticker (PutSticker.MkPutSticker player ref kinds cap free bound) -> Effect.PutSticker (PutSticker.MkPutSticker player (rewriteObjectRef pairs ref) kinds (fmap (rewriteQuantity pairs) cap) free bound)

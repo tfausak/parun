@@ -110,7 +110,7 @@ import qualified Pawl.Codec.SetClassLevel as SetClassLevel
 import qualified Pawl.Codec.SetHalfLocked as SetHalfLocked
 import qualified Pawl.Codec.SetOwner as SetOwner
 import qualified Pawl.Codec.ShuffleIntoLibrary as ShuffleIntoLibrary
-import qualified Pawl.Codec.SkipNextPhase as SkipNextPhase
+import qualified Pawl.Codec.SkipPhase as SkipPhase
 import qualified Pawl.Codec.SlotName as SlotName
 import qualified Pawl.Codec.SpeedDecrease as SpeedDecrease
 import qualified Pawl.Codec.Subtype as Subtype
@@ -219,7 +219,7 @@ codec cardCodec abilityCodec =
           Arm.payload "CopyStackObject" (CopyStackObject.codec abilityCodec) Effect.CopyStackObject (\x -> case x of Effect.CopyStackObject y -> Just y; _ -> Nothing),
           Arm.payload "BecomeCopy" (BecomeCopy.codec abilityCodec) Effect.BecomeCopy (\x -> case x of Effect.BecomeCopy y -> Just y; _ -> Nothing),
           Arm.payload "Replace" replaceCodec Effect.Replace (\x -> case x of Effect.Replace y -> Just y; _ -> Nothing),
-          Arm.payload "SkipNextPhase" SkipNextPhase.codec Effect.SkipNextPhase (\x -> case x of Effect.SkipNextPhase y -> Just y; _ -> Nothing),
+          Arm.payload "SkipPhase" SkipPhase.codec Effect.SkipPhase (\x -> case x of Effect.SkipPhase y -> Just y; _ -> Nothing),
           Arm.payload "PreventNextDamage" preventCodec Effect.PreventNextDamage (\x -> case x of Effect.PreventNextDamage y -> Just y; _ -> Nothing),
           Arm.payload "PreventAllDamage" preventAllCodec Effect.PreventAllDamage (\x -> case x of Effect.PreventAllDamage y -> Just y; _ -> Nothing),
           Arm.payload "PreventNextDamageInstance" preventInstanceCodec Effect.PreventNextDamageInstance (\x -> case x of Effect.PreventNextDamageInstance y -> Just y; _ -> Nothing),
@@ -396,7 +396,7 @@ tagOf x = case x of
   Effect.CopyStackObject {} -> "CopyStackObject"
   Effect.BecomeCopy {} -> "BecomeCopy"
   Effect.Replace {} -> "Replace"
-  Effect.SkipNextPhase {} -> "SkipNextPhase"
+  Effect.SkipPhase {} -> "SkipPhase"
   Effect.PreventNextDamage {} -> "PreventNextDamage"
   Effect.PreventAllDamage {} -> "PreventAllDamage"
   Effect.PreventNextDamageInstance {} -> "PreventNextDamageInstance"

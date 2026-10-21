@@ -17,7 +17,7 @@ import qualified Pawl.Types.Timestamp as Timestamp
 --
 -- The skips travel WITH the turn rather than referencing it, which makes the
 -- scoping structural. CR 500.7 takes the most recently created turn first, so a
--- skip phrased as "your next untap step" (CR 614.10a, what Effect.SkipNextPhase
+-- skip phrased as "your next untap step" (CR 614.10a, what Effect.SkipPhase
 -- installs) would land on the wrong turn as soon as a second extra-turn effect
 -- resolved after this one -- Time Warp and Savor the Moment in the same turn.
 --
