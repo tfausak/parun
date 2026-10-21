@@ -1,0 +1,202 @@
+{
+  "description": "CR 115.7d Redirect cannot split Decompose's cards across two graveyards, so it keeps its own (control)",
+  "board": {
+    "seats": [
+      {
+        "name": "alice",
+        "battlefield": [
+          {
+            "card": "Swamp",
+            "label": "swamp",
+            "ready": true
+          },
+          {
+            "card": "Swamp",
+            "label": "swamp-2",
+            "ready": true
+          }
+        ],
+        "hand": [
+          {
+            "card": "Decompose",
+            "label": "decompose",
+            "ready": true
+          }
+        ],
+        "library": [
+          {
+            "card": "Hill Giant"
+          }
+        ]
+      },
+      {
+        "name": "bob",
+        "battlefield": [
+          {
+            "card": "Island",
+            "label": "island1",
+            "ready": true
+          },
+          {
+            "card": "Island",
+            "label": "island2",
+            "ready": true
+          }
+        ],
+        "hand": [
+          {
+            "card": "Redirect",
+            "label": "redirect",
+            "ready": true
+          }
+        ],
+        "graveyard": [
+          {
+            "card": "Goblin Piker",
+            "label": "piker"
+          },
+          {
+            "card": "Grizzly Bears",
+            "label": "bears"
+          },
+          {
+            "card": "Craw Wurm",
+            "label": "wurm"
+          }
+        ],
+        "library": [
+          {
+            "card": "Plains"
+          }
+        ]
+      },
+      {
+        "name": "carol",
+        "graveyard": [
+          {
+            "card": "Lightning Bolt",
+            "label": "bolt"
+          },
+          {
+            "card": "Llanowar Elves",
+            "label": "elves"
+          }
+        ],
+        "library": [
+          {
+            "card": "Forest"
+          }
+        ]
+      }
+    ],
+    "active": "alice",
+    "step": "PrecombatMain"
+  },
+  "timeline": [
+    {
+      "turn": 1,
+      "step": "PrecombatMain",
+      "player": "alice",
+      "do": {
+        "Cast": {
+          "object": "$decompose",
+          "targets": [
+            "$piker",
+            "$bears"
+          ],
+          "mana": [
+            "$swamp",
+            "$swamp-2"
+          ]
+        }
+      }
+    },
+    {
+      "turn": 1,
+      "step": "PrecombatMain",
+      "player": "alice",
+      "do": "Pass"
+    },
+    {
+      "turn": 1,
+      "step": "PrecombatMain",
+      "player": "bob",
+      "do": {
+        "Cast": {
+          "object": "$redirect",
+          "targets": [
+            "Decompose"
+          ],
+          "mana": [
+            "$island1",
+            "$island2"
+          ]
+        }
+      }
+    },
+    {
+      "turn": 1,
+      "step": "PrecombatMain",
+      "player": "bob",
+      "do": {
+        "ChooseTargets": {
+          "cards": [
+            "$bolt",
+            "$elves"
+          ]
+        }
+      }
+    },
+    {
+      "turn": 1,
+      "step": "PrecombatMain",
+      "player": "alice",
+      "do": "Pass"
+    },
+    {
+      "turn": 1,
+      "step": "PrecombatMain",
+      "player": "alice",
+      "do": "Pass"
+    }
+  ],
+  "final": [
+    {
+      "View": {
+        "of": "Zone",
+        "player": "carol",
+        "zone": "Graveyard",
+        "is": []
+      }
+    },
+    {
+      "Count": {
+        "player": "carol",
+        "zone": "Exile",
+        "card": "Lightning Bolt",
+        "count": 1
+      }
+    },
+    {
+      "Count": {
+        "player": "carol",
+        "zone": "Exile",
+        "card": "Llanowar Elves",
+        "count": 1
+      }
+    },
+    {
+      "View": {
+        "of": "Zone",
+        "player": "bob",
+        "zone": "Graveyard",
+        "is": [
+          "$piker",
+          "$bears",
+          "$wurm",
+          "Redirect"
+        ]
+      }
+    }
+  ]
+}

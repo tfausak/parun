@@ -51,6 +51,7 @@ import qualified Pawl.Types.Modal as Modal
 import qualified Pawl.Types.Mode as Mode
 import Pawl.Types.ModeIndex (ModeIndex)
 import qualified Pawl.Types.ModeIndex as ModeIndex
+import qualified Pawl.Types.Object as Object
 import Pawl.Types.ObjectId (ObjectId)
 import qualified Pawl.Types.Pile as Pile
 import qualified Pawl.Types.PileDraw as PileDraw
@@ -76,6 +77,7 @@ import qualified Pawl.Types.TargetCount as TargetCount
 import Pawl.Types.TargetSlot (TargetSlot)
 import qualified Pawl.Types.TargetSlot as TargetSlot
 import qualified Pawl.Types.Teams as Teams
+import qualified Pawl.Types.Together as Together
 import qualified Pawl.Types.Zone as Zone
 import qualified Pawl.Types.ZoneScope as ZoneScope
 
@@ -1445,6 +1447,9 @@ boundSiblings declared slot =
 --     one announcement -- Fall of the Hammer's Not (IsBound "dealer");
 --   * the CR 202.3 computed BOUND names one (boundNamesSibling above).
 --
+-- A fourth reads no sibling but the slot's OWN other targets: TargetSlot's
+-- `together`, Decompose's "from a single graveyard" (togetherRefused).
+--
 -- Filter.boundSlots is the read half, the same set Pawl.Engine.Resolve's dataflow
 -- lint folds over a mode's slots, so an atom that function does not report is one
 -- this gate does not fire for -- which is the pairing that comment insists on.
@@ -1474,6 +1479,7 @@ jointlyJudged declared slot =
     -- against the UNION of what the named slot could take, which for a bound is a
     -- widening -- so this is where the announcement's own choice narrows it back.
     || boundNamesSibling declared slot
+    || Maybe.isJust (TargetSlot.together slot)
 
 -- Does this pool's candidate set depend on what another target slot is answered
 -- with (CR 601.2c)? A ZoneScope's InSlot is the one axis that does, wherever
@@ -1615,10 +1621,23 @@ announcedRange counting x slot capacity =
 -- The named slot's own capacity is its plain candidate count rather than another
 -- pass through here, which is what makes this terminate: legalSetsGiven's second
 -- pass already answers a slot naming a dependent slot with nothing.
+--
+-- A slot whose `together` asks for one zone is narrowed the same way, to the
+-- most of its candidates one graveyard holds. data/scenarios/activate's Nullmage
+-- Advocate case proves it.
 slotCapacities :: (Quantity -> Natural) -> Natural -> Map SlotName TargetSlot -> Map SlotName (Set Recipient) -> GameState -> Map SlotName Natural
 slotCapacities counting x slots sets gs =
   let legalOf name = Map.findWithDefault Set.empty name sets
-      capacity name slot =
+      capacity name slot = min (scoped name slot) (togetherCapacity slot (legalOf name))
+      -- TargetSlot's `together`: the most of the legal set one zone holds, plus
+      -- whatever is in none (togetherRefused).
+      togetherCapacity slot legal = case TargetSlot.together slot of
+        Nothing -> Natural.length legal
+        Just Together.InOneZone ->
+          let held = Map.fromListWith (+) [(zone, 1 :: Natural) | Just zone <- fmap (zoneHolding gs) (Set.toList legal)]
+              loose = Natural.length (Set.filter (Maybe.isNothing . zoneHolding gs) legal)
+           in loose + Foldable.foldl' max 0 held
+      scoped name slot =
         let legal = legalOf name
          in case scopeSlot (TargetSlot.pool slot) of
               Nothing -> Natural.length legal
@@ -2059,10 +2078,34 @@ jointlyIllegalGiven :: Maybe AbilityName.AbilityName -> Pools -> Maybe PlayerId 
 jointlyIllegalGiven reader pools perspective unannounced seed source slots chosen gs =
   let bindings = Map.union (fmap Binding.toRecipients chosen) seed
       refused slot targetSlot =
-        Set.difference
-          (Map.findWithDefault Set.empty slot chosen)
-          (legalRecipientsGiven reader pools perspective unannounced bindings (Game.acquisitionOf source gs) source targetSlot gs)
+        let picked = Map.findWithDefault Set.empty slot chosen
+         in Set.union
+              (Set.difference picked (legalRecipientsGiven reader pools perspective unannounced bindings (Game.acquisitionOf source gs) source targetSlot gs))
+              (togetherRefused targetSlot picked gs)
    in Map.mapWithKey refused (Map.filter (jointlyJudged (Map.keysSet slots)) slots)
+
+-- CR 601.2c: the targets a slot's `together` refuses as a whole -- every one of
+-- them when they do not share what it names, since no one of them is the
+-- illegal one. Judged at each road jointlyIllegalGiven serves, the
+-- announcement and CR 115.7's change of targets; CR 608.2b has nothing of it
+-- left to re-check, a card leaving its graveyard being illegal on its own (CR
+-- 400.7) and a card's graveyard being its owner's (CR 400.3).
+togetherRefused :: TargetSlot -> Set Recipient -> GameState -> Set Recipient
+togetherRefused slot picked gs = case TargetSlot.together slot of
+  Nothing -> Set.empty
+  Just Together.InOneZone
+    | Set.size (Set.fromList (Maybe.mapMaybe (zoneHolding gs) (Set.toList picked))) > 1 -> picked
+    | otherwise -> Set.empty
+
+-- CR 400.1: the zone holding a recipient's object, a player's own zone named
+-- with its player -- the owner, CR 400.3 -- and a shared one alone. Nothing for
+-- a player.
+zoneHolding :: GameState -> Recipient -> Maybe (Zone.Zone, Maybe PlayerId)
+zoneHolding gs recipient = do
+  oid <- Recipient.objectOf recipient
+  obj <- Game.lookupObject oid gs
+  let zone = Object.zone obj
+  pure (zone, if Zone.shared zone then Nothing else Just (Object.owner obj))
 
 -- CR 601.2c: is there ONE announcement that fills every slot at once, rather than
 -- a minimum each slot can meet by itself? jointlyJudged's filter and bound halves

@@ -12,21 +12,6 @@ import qualified Pawl.Types.PlayerRef as PlayerRef
 import qualified Pawl.Types.PlayerRelation as PlayerRelation
 import qualified Pawl.Types.Zone as Zone
 
--- | CR 400.1: "each player has their own library, hand, and graveyard. The other
--- zones are shared by all players." Exhaustive rather than a fallthrough, so a
--- new zone has to say which half of that sentence it is in and @-Werror@ is what
--- asks.
-shared :: Zone.Zone -> Bool
-shared zone = case zone of
-  Zone.Library -> False
-  Zone.Hand -> False
-  Zone.Graveyard -> False
-  Zone.Battlefield -> True
-  Zone.Stack -> True
-  Zone.Exile -> True
-  Zone.Command -> True
-  Zone.Ante -> True
-
 -- | The invariant Pawl.Types.InZone states, enforced HERE, this being where a
 -- scope enters the engine at all: a shared zone is undivided, so "one player's
 -- share of the battlefield" names nothing, and the reference beside such a zone
@@ -43,7 +28,7 @@ shared zone = case zone of
 -- rules do not have (#161).
 undividedShared :: InZone.InZone -> Either Text.Text InZone.InZone
 undividedShared inZone
-  | shared (InZone.zone inZone) && InZone.player inZone /= PlayerRef.Relative PlayerRelation.AnyPlayer =
+  | Zone.shared (InZone.zone inZone) && InZone.player inZone /= PlayerRef.Relative PlayerRelation.AnyPlayer =
       Left (Text.pack ("InZone: CR 400.1 makes " <> show (InZone.zone inZone) <> " shared by all players, so it cannot be scoped to " <> show (InZone.player inZone)))
   | otherwise = Right inZone
 
