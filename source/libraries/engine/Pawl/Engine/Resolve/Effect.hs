@@ -8352,14 +8352,19 @@ applyOneEffect runSubgame resolving source controller legal chosen effect = case
        in List.foldl' install gs ((,) <$> armed <*> bakedEffects)
   Effect.RequireBlock (RequireBlock.MkRequireBlock duration blockerRef attackerRef) ->
     -- CR 509.1c / 613.11: store one requirement per (blocker, attacker) pair the
-    -- two refs name, rule 509.1c counting requirements PER CREATURE. Both sets are
-    -- enumerated ONCE, for the CR 608.2f simultaneity objectRefObjects buys; an
-    -- illegal slot (CR 608.2b) stores nothing, which is provoke's fizzle.
+    -- two sides name, rule 509.1c counting requirements PER CREATURE. A Named
+    -- side and the attacker are enumerated ONCE, for the CR 608.2f simultaneity
+    -- objectRefObjects buys; an illegal slot (CR 608.2b) stores nothing, which
+    -- is provoke's fizzle. A Matching class is RequireAttack's below: one row
+    -- per attacker, its bound players baked now, since CR 611.2c keeps a
+    -- requirement on a declaration dynamic (Alluring Scent).
     State.modify' $ \gs -> case Expiry.arm (Game.readingAcquisition resolving source) legal controller source duration gs of
       -- CR 611.2b: the duration never started, so nothing is stored.
       Nothing -> gs
       Just expiry ->
-        let blockers = objectRefObjects legal resolving controller source gs blockerRef
+        let blockers = case blockerRef of
+              RestrictedCreatures.Named ref -> fmap RestrictedCreatures.Named (objectRefObjects legal resolving controller source gs ref)
+              RestrictedCreatures.Matching f -> [RestrictedCreatures.Matching (Filter.bakeBound (Binding.playersIn legal) f)]
             attackers = objectRefObjects legal resolving controller source gs attackerRef
             (ts, gs1) = Game.freshTimestamp gs
             stored = do
@@ -8368,22 +8373,27 @@ applyOneEffect runSubgame resolving source controller legal chosen effect = case
               pure
                 ActiveBlockRequirement.MkActiveBlockRequirement
                   { ActiveBlockRequirement.source = source,
+                    ActiveBlockRequirement.controller = controller,
                     ActiveBlockRequirement.timestamp = ts,
                     ActiveBlockRequirement.expiry = expiry,
                     ActiveBlockRequirement.blocker = blocker,
                     ActiveBlockRequirement.attacker = attacker
                   }
          in gs1 {GameState.blockRequirements = stored <> GameState.blockRequirements gs1}
-  Effect.Prohibit (Prohibit.MkProhibit what duration ref) ->
-    -- CR 611.2a / 613.11: store one prohibition per permanent the ref names. The
-    -- ref is enumerated ONCE, for the CR 608.2f simultaneity objectRefObjects
-    -- buys, and an illegal slot (CR 608.2b) stores nothing, which is Hurr
-    -- Jackal's fizzle.
+  Effect.Prohibit (Prohibit.MkProhibit what duration affected) ->
+    -- CR 611.2a / 613.11: store one prohibition per permanent a Named ref names,
+    -- or ONE row for a Matching class -- ForbidAttack's two readings below, and
+    -- for its reasons: the ref is enumerated ONCE, for the CR 608.2f
+    -- simultaneity objectRefObjects buys, and an illegal slot (CR 608.2b) stores
+    -- nothing, which is Hurr Jackal's fizzle; the class is CR 611.2c's, a
+    -- prohibition modifying no characteristic and no controller, so it reaches
+    -- permanents that arrive after this resolution (Exhaustion), with its bound
+    -- players baked now.
     --
     -- Nothing is written onto the permanent itself, and nothing is projected: CR
     -- 613.11 keeps each of these out of the layers, so the row is read through
-    -- Game.prohibitedObjects and never by a projection. CR 701.19c makes the
-    -- Regenerate row a property the DESTRUCTION acquires, at
+    -- Pawl.Engine.RestrictedCreatures.prohibited and never by a projection. CR
+    -- 701.19c makes the Regenerate row a property the DESTRUCTION acquires, at
     -- Event.resolveDestruction.
     State.modify' $ \gs -> case Expiry.arm (Game.readingAcquisition resolving source) legal controller source duration gs of
       -- CR 611.2b: the duration never started, or a "for as long as" one has
@@ -8391,20 +8401,23 @@ applyOneEffect runSubgame resolving source controller legal chosen effect = case
       -- resolved), so nothing is stored.
       Nothing -> gs
       Just expiry ->
-        let objects = objectRefObjects legal resolving controller source gs ref
+        let subjects = case affected of
+              RestrictedCreatures.Named ref -> fmap RestrictedCreatures.Named (objectRefObjects legal resolving controller source gs ref)
+              RestrictedCreatures.Matching f -> [RestrictedCreatures.Matching (Filter.bakeBound (Binding.playersIn legal) f)]
             (ts, gs1) = Game.freshTimestamp gs
             stored =
               fmap
-                ( \object ->
+                ( \subject ->
                     ActiveObjectProhibition.MkActiveObjectProhibition
                       { ActiveObjectProhibition.source = source,
+                        ActiveObjectProhibition.controller = controller,
                         ActiveObjectProhibition.timestamp = ts,
                         ActiveObjectProhibition.expiry = expiry,
                         ActiveObjectProhibition.what = what,
-                        ActiveObjectProhibition.object = object
+                        ActiveObjectProhibition.affected = subject
                       }
                 )
-                objects
+                subjects
          in gs1 {GameState.objectProhibitions = stored <> GameState.objectProhibitions gs1}
   Effect.ForbidAttack (ForbidAttack.MkForbidAttack duration affected aimedAt) ->
     -- CR 508.1c / 611.1: store one restriction per permanent a Named ref names,

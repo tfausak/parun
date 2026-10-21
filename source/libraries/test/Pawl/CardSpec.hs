@@ -695,8 +695,8 @@ objectRefPositions =
         ("turn-face-down", Effect.TurnFaceDown (TurnFaceDown.MkTurnFaceDown (plantedRef "tf") FaceDownCharacteristics.defaultValue), [plantedRef "tf"]),
         ("remove-from-combat", Effect.RemoveFromCombat (plantedRef "rc"), [plantedRef "rc"]),
         ("gain-control", Effect.GainControl (GainControl.MkGainControl Duration.UntilEndOfTurn (plantedRef "gc") (PlayerRef.Relative PlayerRelation.You)), [plantedRef "gc"]),
-        ("require-block", Effect.RequireBlock (RequireBlock.MkRequireBlock Duration.UntilEndOfTurn (plantedRef "rb-blocker") (plantedRef "rb-attacker")), [plantedRef "rb-blocker", plantedRef "rb-attacker"]),
-        ("prohibit", Effect.Prohibit (Prohibit.MkProhibit Prohibition.Regenerate Duration.UntilEndOfTurn (plantedRef "cb")), [plantedRef "cb"]),
+        ("require-block", Effect.RequireBlock (RequireBlock.MkRequireBlock Duration.UntilEndOfTurn (RestrictedCreatures.Named (plantedRef "rb-blocker")) (plantedRef "rb-attacker")), [plantedRef "rb-blocker", plantedRef "rb-attacker"]),
+        ("prohibit", Effect.Prohibit (Prohibit.MkProhibit Prohibition.Regenerate Duration.UntilEndOfTurn (RestrictedCreatures.Named (plantedRef "cb"))), [plantedRef "cb"]),
         ("require-attack", Effect.RequireAttack (RequireAttack.MkRequireAttack Duration.UntilEndOfTurn (RestrictedCreatures.Named (plantedRef "ra")) (AttackTargetRef.Players (PlayerRef.Relative PlayerRelation.You))), [plantedRef "ra"]),
         ("require-attack-permanent", Effect.RequireAttack (RequireAttack.MkRequireAttack Duration.UntilEndOfTurn (RestrictedCreatures.Named (plantedRef "rp-attacker")) (AttackTargetRef.Permanents (plantedRef "rp-defender"))), [plantedRef "rp-attacker", plantedRef "rp-defender"]),
         ("forbid-attack", Effect.ForbidAttack (ForbidAttack.MkForbidAttack Duration.UntilEndOfTurn (RestrictedCreatures.Named (plantedRef "fa")) Nothing), [plantedRef "fa"]),
@@ -901,6 +901,7 @@ durationConditions duration = case duration of
   -- A PlayerRef carries no Condition, and so no Count.
   Duration.UntilEndOfNextTurnOf _ -> []
   Duration.DuringNextTurnOf _ -> []
+  Duration.DuringNextUntapStepOf _ -> []
   Duration.DuringYourNextTurn -> []
   Duration.DuringThatExtraTurn -> []
   Duration.ForAsLongAs condition -> [condition]
@@ -4310,6 +4311,7 @@ durationFilters duration =
           Duration.UntilEndOfYourNextTurn -> []
           Duration.UntilEndOfNextTurnOf _ -> []
           Duration.DuringNextTurnOf _ -> []
+          Duration.DuringNextUntapStepOf _ -> []
           Duration.DuringYourNextTurn -> []
           Duration.DuringThatExtraTurn -> []
           Duration.ForAsLongAs _ -> []
@@ -5718,6 +5720,14 @@ framedSlotsReadSingly (framing, predicate)
 unframed :: [Filter.Type.Filter Keyword.Keyword] -> [(Framing, Filter.Type.Filter Keyword.Keyword)]
 unframed = fmap ((,) Unframed)
 
+-- A Pawl.Types.RestrictedCreatures' Filters: a Named arm is an effect's
+-- ObjectRef, and a Matching class is read through a bare Filter.contextFor at
+-- Pawl.Engine.RestrictedCreatures.covered, so it is Unframed.
+restrictedFilters :: RestrictedCreatures.RestrictedCreatures ObjectRef.ObjectRef -> [(Framing, Filter.Type.Filter Keyword.Keyword)]
+restrictedFilters restricted = case restricted of
+  RestrictedCreatures.Named ref -> frame SourceHostFramed (objectRefFilters ref)
+  RestrictedCreatures.Matching f -> unframed [f]
+
 -- Tag a Filter position as an EFFECT's ObjectRef -- one whose evaluator supplies
 -- the SOURCE's host AND the resolution's own state. An ObjectRef's own Filter is
 -- always one, whatever
@@ -6085,30 +6095,20 @@ effectFilters effect = case effect of
   Effect.ExchangeControl _ -> []
   Effect.ArmDelayedTrigger arm@(ArmDelayedTrigger.MkArmDelayedTrigger _ _ mDuration _) -> frame Unframed (concatMap durationFilters (Maybe.maybeToList mDuration)) <> foldMap triggeredAbilityFilters (Game.carriedDelayedAbility arm)
   Effect.AffectPlayers (AffectPlayers.MkAffectPlayers duration _ playerEffect) -> frame Unframed (durationFilters duration) <> fmap ((,) StoredPlayerEffectFramed) (playerEffectFilters playerEffect)
-  Effect.RequireBlock (RequireBlock.MkRequireBlock duration blocker attacker) -> frame Unframed (durationFilters duration) <> frame SourceHostFramed (objectRefFilters blocker <> objectRefFilters attacker)
+  Effect.RequireBlock (RequireBlock.MkRequireBlock duration blocker attacker) -> frame Unframed (durationFilters duration) <> restrictedFilters blocker <> frame SourceHostFramed (objectRefFilters attacker)
   -- RequireBlock's arm one axis narrower.
-  Effect.Prohibit (Prohibit.MkProhibit _ duration ref) -> frame Unframed (durationFilters duration) <> frame SourceHostFramed (objectRefFilters ref)
-  -- The Named arm is Prohibit's ref; the Matching arm's class is read
-  -- through a bare Filter.contextFor at
-  -- Pawl.Engine.CombatRestriction.storedSubjects, so it is Unframed. The AimedAt
-  -- is a PlayerScope and CR 506.3 kinds, no Filter in either.
+  Effect.Prohibit (Prohibit.MkProhibit _ duration affected) -> frame Unframed (durationFilters duration) <> restrictedFilters affected
+  -- The AimedAt is a PlayerScope and CR 506.3 kinds, no Filter in either.
   Effect.ForbidAttack (ForbidAttack.MkForbidAttack duration affected _) ->
-    frame Unframed (durationFilters duration) <> case affected of
-      RestrictedCreatures.Named ref -> frame SourceHostFramed (objectRefFilters ref)
-      RestrictedCreatures.Matching f -> unframed [f]
+    frame Unframed (durationFilters duration) <> restrictedFilters affected
   -- ForbidAttack's Matching arm, read at
   -- Pawl.Engine.CombatRestriction.storedEvasions.
   Effect.ForbidBeingBlocked (ForbidBeingBlocked.MkForbidBeingBlocked duration f barred) -> frame Unframed (durationFilters duration) <> unframed [f, barred]
-  -- ForbidAttack's arm: the Matching class is read through a bare
-  -- Filter.contextFor at Pawl.Engine.AttackRequirement. A defender naming
-  -- players carries no Filter; one naming permanents is an ObjectRef like the
-  -- Named attacker.
+  -- A defender naming players carries no Filter; one naming permanents is an
+  -- ObjectRef like the Named attacker.
   Effect.RequireAttack (RequireAttack.MkRequireAttack duration attacker defender) ->
     frame Unframed (durationFilters duration)
-      <> ( case attacker of
-             RestrictedCreatures.Named ref -> frame SourceHostFramed (objectRefFilters ref)
-             RestrictedCreatures.Matching f -> unframed [f]
-         )
+      <> restrictedFilters attacker
       <> case defender of
         AttackTargetRef.Players _ -> []
         AttackTargetRef.Permanents ref -> frame SourceHostFramed (objectRefFilters ref)

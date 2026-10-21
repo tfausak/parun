@@ -1875,7 +1875,7 @@ interchangeableSourcesSpec s registry = Spec.describe s "Interchangeable mana so
   Spec.it s "CR 509.1c an Elf that must block the Bears is a candidate of its own" $ do
     offers <- namedRowOffers s registry $ \bear elf gs ->
       let (ts, gs1) = Game.freshTimestamp gs
-       in gs1 {GameState.blockRequirements = [ActiveBlockRequirement.MkActiveBlockRequirement bear ts Expiry.AtCleanup elf bear]}
+       in gs1 {GameState.blockRequirements = [ActiveBlockRequirement.MkActiveBlockRequirement bear S.alice ts Expiry.AtCleanup (RestrictedCreatures.Named elf) bear]}
     Spec.assertEqWith s "asked once, with the named Elf beside the two that are alike" offers [2]
 
   Spec.it s "CR 116.2d an Elf whose ability a player ignores is a candidate of its own" $ do
@@ -2126,7 +2126,7 @@ nothingMore = Modification.ModifyPowerToughness (ModifyPowerToughness.MkModifyPo
 unregeneratable :: ObjectId.ObjectId -> ObjectId.ObjectId -> GameState.GameState -> GameState.GameState
 unregeneratable source oid gs =
   let (ts, gs1) = Game.freshTimestamp gs
-      row = ActiveObjectProhibition.MkActiveObjectProhibition {ActiveObjectProhibition.source = source, ActiveObjectProhibition.timestamp = ts, ActiveObjectProhibition.expiry = Expiry.AtCleanup, ActiveObjectProhibition.what = Prohibition.Regenerate, ActiveObjectProhibition.object = oid}
+      row = ActiveObjectProhibition.MkActiveObjectProhibition {ActiveObjectProhibition.source = source, ActiveObjectProhibition.controller = S.alice, ActiveObjectProhibition.timestamp = ts, ActiveObjectProhibition.expiry = Expiry.AtCleanup, ActiveObjectProhibition.what = Prohibition.Regenerate, ActiveObjectProhibition.affected = RestrictedCreatures.Named oid}
    in gs1 {GameState.objectProhibitions = row : GameState.objectProhibitions gs1}
 
 -- A fixture write standing in for Veiling Oddity's trigger resolving: the one

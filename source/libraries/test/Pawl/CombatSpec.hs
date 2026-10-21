@@ -2406,13 +2406,13 @@ storedBlockRestrictionSpec s registry = Spec.describe s "StoredBlockRestriction"
         after = S.runPure S.aggressiveAnswer declaring (Combat.declareBlockers S.manaPerformer)
     Spec.assertEqWith s "only the twin ended up blocking" (Combat.blockersOf attacker after) (Set.singleton twin)
     Spec.assertBool s (not (Combat.canBlock S.bob victim declaring)) "and the named creature is off CR 509.1a's candidate list"
-    Spec.assertEqWith s "one restriction was stored, over the creature named" (fmap ActiveObjectProhibition.object (GameState.objectProhibitions resolved)) [victim]
+    Spec.assertEqWith s "one restriction was stored, over the creature named" (fmap ActiveObjectProhibition.affected (GameState.objectProhibitions resolved)) [RestrictedCreatures.Named victim]
   -- The pair's other half: the same activation, aimed at alice's attacker.
   Spec.it s "CR 509.1b aimed elsewhere, both of bob's twins block" $ do
     (attacker, victim, twin, resolved) <- zirdaResolved s registry (\a _ _ -> a)
     let after = S.runPure S.aggressiveAnswer (declaringAttackers resolved) (Combat.declareBlockers S.manaPerformer)
     Spec.assertEqWith s "both twins blocked" (Combat.blockersOf attacker after) (Set.fromList [victim, twin])
-    Spec.assertEqWith s "and the restriction was stored all the same, over the attacker" (fmap ActiveObjectProhibition.object (GameState.objectProhibitions resolved)) [attacker]
+    Spec.assertEqWith s "and the restriction was stored all the same, over the attacker" (fmap ActiveObjectProhibition.affected (GameState.objectProhibitions resolved)) [RestrictedCreatures.Named attacker]
   -- CR 514.2 / 611.2a: "this turn" arms Expiry.AtCleanup, so the cleanup sweep
   -- drops the row and the creature blocks again. Through the sweep directly,
   -- which is the narrowest path that shows it.

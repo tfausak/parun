@@ -62,6 +62,7 @@ import qualified Pawl.Engine.Projection.View as Projection
 import qualified Pawl.Engine.Quantity as Quantity
 import qualified Pawl.Engine.Replacement as Replacement
 import qualified Pawl.Engine.Restamp as Restamp
+import qualified Pawl.Engine.RestrictedCreatures as RestrictedCreatures
 import qualified Pawl.Engine.SacrificeRestriction as SacrificeRestriction
 import qualified Pawl.Engine.Saga as Saga
 import qualified Pawl.Engine.SpaceSculptor as SpaceSculptor
@@ -5016,7 +5017,7 @@ resolveDestruction asOf cause regenerability oid = do
 -- the replacement pass disagree about which board they are on.
 strengthen :: GameState -> ObjectId -> Regenerability.Regenerability -> Regenerability.Regenerability
 strengthen gs oid regenerability =
-  if Set.member oid (Game.prohibitedObjects Prohibition.Regenerate gs)
+  if Set.member oid (RestrictedCreatures.prohibited Prohibition.Regenerate [oid] gs)
     then Regenerability.CantBeRegenerated
     else regenerability
 

@@ -43,6 +43,7 @@ import qualified Pawl.Engine.PlayerEffect as PlayerEffect
 import qualified Pawl.Engine.Projection as Projection
 import qualified Pawl.Engine.Projection.Rewrite as Projection
 import qualified Pawl.Engine.Projection.View as Projection
+import qualified Pawl.Engine.RestrictedCreatures as RestrictedCreatures
 import qualified Pawl.Engine.RuleAbilities as RuleAbilities.Engine
 import qualified Pawl.Engine.Vanguard as Vanguard
 import qualified Pawl.Types.AbilityName as AbilityName
@@ -75,7 +76,6 @@ import Pawl.Types.PlayerId (PlayerId)
 import qualified Pawl.Types.PlayerScope as PlayerScope
 import qualified Pawl.Types.Prohibition as Prohibition
 import qualified Pawl.Types.RangeOfInfluence as RangeOfInfluence
-import qualified Pawl.Types.RestrictedCreatures as RestrictedCreatures
 import qualified Pawl.Types.RuleAbilities as RuleAbilities
 import qualified Pawl.Types.StaticAbility as StaticAbility
 import qualified Pawl.Types.Subtype as Subtype
@@ -219,11 +219,8 @@ liveAttackProhibitions gs =
 -- projected one: the source is a sorcery in a graveyard by now, with no
 -- controller to project (Pawl.Types.ActivePlayerEffect's argument).
 storedSubjects :: [ObjectId] -> GameState -> ActiveAttackProhibition.ActiveAttackProhibition -> [ObjectId]
-storedSubjects candidates gs active = case ActiveAttackProhibition.affected active of
-  RestrictedCreatures.Named oid -> filter (== oid) candidates
-  RestrictedCreatures.Matching f ->
-    let context = Projection.sourceContext gs (Just (ActiveAttackProhibition.controller active)) (ActiveAttackProhibition.source active)
-     in filter (\oid -> Filter.matches context (Projection.viewOfObject oid gs) f) candidates
+storedSubjects candidates gs active =
+  RestrictedCreatures.covered (ActiveAttackProhibition.controller active) (ActiveAttackProhibition.source active) (ActiveAttackProhibition.affected active) candidates gs
 
 -- CR 509.1b / 611.1: the candidates a stored, resolution-generated restriction
 -- forbids blocking. Zirda, the Dawnwaker's "target creature can't block this
@@ -233,8 +230,9 @@ storedSubjects candidates gs active = case ActiveAttackProhibition.affected acti
 -- with one more of its own. A row here has outlived its source (CR 611.2a), so
 -- it opts out of the liveness checks, the CR 612.1 word swap and the CR 305.7 /
 -- CR 613.1f ability gates that every printed row passes -- and it names no
--- Pawl.Types.Affected either, because the ref was read once at resolution and
--- Pawl.Engine.Resolve stored the ids it named. The extra reason is CR 509.1b's
+-- Pawl.Types.Affected either, its subject being the ids a ref named at
+-- resolution or CR 611.2c's class (Pawl.Engine.RestrictedCreatures.covered).
+-- The extra reason is CR 509.1b's
 -- "unless": every gate in the pool is printed beside the restriction it gates,
 -- and Pawl.Types.Prohibit states none, so there is nothing here to ask.
 --
@@ -243,8 +241,7 @@ storedSubjects candidates gs active = case ActiveAttackProhibition.affected acti
 -- Pawl.Types.Modification could have carried it and Pawl.Engine.Projection sees
 -- nothing of it.
 blockProhibited :: [ObjectId] -> GameState -> Set ObjectId
-blockProhibited candidates gs =
-  Set.intersection (Set.fromList candidates) (Game.prohibitedObjects Prohibition.Block gs)
+blockProhibited = RestrictedCreatures.prohibited Prohibition.Block
 
 -- CR 701.35a: the detained permanents among `candidates`, which that rule forbids
 -- both declarations at once -- so one reading serves both gates above.

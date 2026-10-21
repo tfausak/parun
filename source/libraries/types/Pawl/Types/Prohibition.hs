@@ -2,7 +2,7 @@ module Pawl.Types.Prohibition where
 
 -- | What a stored per-object prohibition forbids: one CR 101.2 "can't" that a
 -- resolution puts on the permanents it names (CR 611.2a). The classification
--- Pawl.Engine.Game.prohibitedObjects is asked by; each reader asks for one.
+-- Pawl.Engine.RestrictedCreatures.prohibited is asked by; each reader asks for one.
 data Prohibition
   = -- | Its activated abilities can't be activated (CR 602.5).
     Activate

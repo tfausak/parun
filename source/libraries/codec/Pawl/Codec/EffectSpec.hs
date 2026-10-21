@@ -2064,14 +2064,14 @@ spec s = Spec.describe s "Pawl.Codec.Effect" $ do
       s
       toJson
       fromJson
-      (Effect.RequireBlock (RequireBlock.MkRequireBlock Duration.UntilEndOfCombat (ObjectRef.InSlot (SlotName.MkSlotName (Text.pack "target"))) (ObjectRef.EachMatching (Filter.HasCardType CardType.Creature))))
-      " {\"type\":\"RequireBlock\",\"value\":{\"duration\":{\"type\":\"UntilEndOfCombat\"},\"blocker\":{\"type\":\"InSlot\",\"value\":\"target\"},\"attacker\":{\"type\":\"EachMatching\",\"value\":{\"type\":\"HasCardType\",\"value\":{\"type\":\"Creature\"}}}}} "
+      (Effect.RequireBlock (RequireBlock.MkRequireBlock Duration.UntilEndOfCombat (RestrictedCreatures.Matching (Filter.HasCardType CardType.Creature)) (ObjectRef.InSlot (SlotName.MkSlotName (Text.pack "target")))))
+      " {\"type\":\"RequireBlock\",\"value\":{\"duration\":{\"type\":\"UntilEndOfCombat\"},\"blocker\":{\"type\":\"Matching\",\"value\":{\"type\":\"HasCardType\",\"value\":{\"type\":\"Creature\"}}},\"attacker\":{\"type\":\"InSlot\",\"value\":\"target\"}}} "
   Spec.it s "Prohibit" $
     Common.assertCodec
       s
       codec
-      (Effect.Prohibit (Prohibit.MkProhibit Prohibition.Regenerate Duration.UntilEndOfTurn (ObjectRef.InSlot (SlotName.MkSlotName (Text.pack "target")))))
-      " {\"type\":\"Prohibit\",\"value\":{\"what\":{\"type\":\"Regenerate\"},\"duration\":{\"type\":\"UntilEndOfTurn\"},\"ref\":{\"type\":\"InSlot\",\"value\":\"target\"}}} "
+      (Effect.Prohibit (Prohibit.MkProhibit Prohibition.Regenerate Duration.UntilEndOfTurn (RestrictedCreatures.Named (ObjectRef.InSlot (SlotName.MkSlotName (Text.pack "target"))))))
+      " {\"type\":\"Prohibit\",\"value\":{\"what\":{\"type\":\"Regenerate\"},\"duration\":{\"type\":\"UntilEndOfTurn\"},\"affected\":{\"type\":\"Named\",\"value\":{\"type\":\"InSlot\",\"value\":\"target\"}}}} "
   Spec.it s "RequireAttack" $
     Common.assertCodec
       s

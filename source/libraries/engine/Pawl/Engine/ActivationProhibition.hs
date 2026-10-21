@@ -27,11 +27,11 @@ module Pawl.Engine.ActivationProhibition where
 import qualified Data.Map.Strict as Map
 import Data.Set (Set)
 import qualified Data.Set as Set
-import qualified Pawl.Engine.Game as Game
 import qualified Pawl.Engine.IgnoredAbility as IgnoredAbility
 import qualified Pawl.Engine.Projection as Projection
 import qualified Pawl.Engine.Projection.Rewrite as Projection
 import qualified Pawl.Engine.Projection.View as Projection
+import qualified Pawl.Engine.RestrictedCreatures as RestrictedCreatures
 import qualified Pawl.Types.AbilityKind as AbilityKind
 import qualified Pawl.Types.AbilityName as AbilityName
 import qualified Pawl.Types.ActivationProhibition as ActivationProhibition
@@ -135,8 +135,8 @@ cantActivate asked candidates gs =
       -- And no CR 116.2d filter: a stored row carries no name for a payment to
       -- refer to, which Pawl.Types.ActiveObjectProhibition argues is exact
       -- rather than a shortcut.
-      storedSubjects = Game.prohibitedObjects Prohibition.Activate gs
-   in Set.fromList (concatMap fromProhibition (gathered gs)) <> Set.intersection storedSubjects (Set.fromList candidates)
+      storedSubjects = RestrictedCreatures.prohibited Prohibition.Activate candidates gs
+   in Set.fromList (concatMap fromProhibition (gathered gs)) <> storedSubjects
 
 -- CR 116.2d's WHO on this carrier: the permanents that `source`'s ability named
 -- `name` forbids activations on right now. Unioned with

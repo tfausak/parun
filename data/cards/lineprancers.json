@@ -34,8 +34,11 @@
                             "value": "attacker"
                           },
                           "blocker": {
-                            "type": "InSlot",
-                            "value": "blocker"
+                            "type": "Named",
+                            "value": {
+                              "type": "InSlot",
+                              "value": "blocker"
+                            }
                           },
                           "duration": {
                             "type": "UntilEndOfTurn"

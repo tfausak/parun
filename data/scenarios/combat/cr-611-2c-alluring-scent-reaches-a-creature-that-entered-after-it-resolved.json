@@ -1,0 +1,37 @@
+{
+  "description": "CR 611.2c Alluring Scent's requirement reaches a creature that entered after the sorcery resolved",
+  "note": "CR 611.2c: a blocking requirement modifies no characteristic and no controller, so its class is read at the declaration. Bob flashes in Ambush Viper after Alluring Scent resolved; both of bob's creatures can block the Hill Giant, so CR 509.1c makes a declaration with the Piker alone illegal (it obeys one requirement where two can be obeyed). A set frozen at resolution would have required only the Piker and let that declaration stand.",
+  "board": {
+    "active": "alice",
+    "step": "PrecombatMain",
+    "seats": [
+      {
+        "name": "alice",
+        "battlefield": [
+          { "card": "Hill Giant", "label": "giant", "ready": true },
+          { "card": "Forest", "label": "f1" },
+          { "card": "Forest", "label": "f2" },
+          { "card": "Forest", "label": "f3" }
+        ],
+        "hand": [{ "card": "Alluring Scent", "label": "scent" }]
+      },
+      {
+        "name": "bob",
+        "battlefield": [
+          { "card": "Goblin Piker", "label": "piker", "ready": true },
+          { "card": "Forest", "label": "g1" },
+          { "card": "Forest", "label": "g2" }
+        ],
+        "hand": [{ "card": "Ambush Viper", "label": "viper" }]
+      }
+    ]
+  },
+  "timeline": [
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": { "Cast": { "object": "$scent", "targets": ["$giant"], "mana": ["$f1", "$f2", "$f3"] } } },
+    { "turn": 1, "step": "BeginningOfCombat", "player": "bob", "do": { "Cast": { "object": "$viper", "mana": ["$g1", "$g2"] } } },
+    { "turn": 1, "step": "DeclareAttackers", "player": "alice", "do": { "Attack": ["$giant"] } },
+    { "turn": 1, "step": "DeclareBlockers", "player": "bob", "refuse": { "Block": { "$piker": ["$giant"] } } },
+    { "turn": 1, "step": "DeclareBlockers", "player": "bob", "do": { "Block": { "$piker": ["$giant"], "Ambush Viper": ["$giant"] } } },
+    { "turn": 1, "step": "DeclareBlockers", "player": "alice", "check": { "Blockers": { "attacker": "$giant", "blockers": ["$piker", "Ambush Viper"] } } }
+  ]
+}

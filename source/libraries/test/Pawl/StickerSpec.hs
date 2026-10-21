@@ -88,6 +88,7 @@ import qualified Pawl.Types.ProjectedCharacteristics as PC
 import qualified Pawl.Types.Prompt as Prompt
 import qualified Pawl.Types.Recipient as Recipient
 import qualified Pawl.Types.Regenerability as Regenerability
+import qualified Pawl.Types.RestrictedCreatures as RestrictedCreatures
 import qualified Pawl.Types.SlotName as SlotName
 import qualified Pawl.Types.SpellWasCast as SpellWasCast
 import qualified Pawl.Types.StepBegan as StepBegan
@@ -1132,7 +1133,7 @@ spec s registry = Spec.describe s "Sticker" $ do
         ((_, after), offered) = case Activatable.abilitiesFor lineId board of
           [ability] -> State.runState (Engine.runGame recording board (Activate.activateAbility S.alice lineId ability >> Stack.resolveTop)) Map.empty
           _ -> (((), board), Map.empty)
-    Spec.assertEqWith s "CR 509.1c bob's Piker must block the Bears" (fmap (\r -> (ActiveBlockRequirement.blocker r, ActiveBlockRequirement.attacker r)) (GameState.blockRequirements after)) [(pikerId, bearsId)]
+    Spec.assertEqWith s "CR 509.1c bob's Piker must block the Bears" (fmap (\r -> (ActiveBlockRequirement.blocker r, ActiveBlockRequirement.attacker r)) (GameState.blockRequirements after)) [(RestrictedCreatures.Named pikerId, bearsId)]
     Spec.assertEqWith s "CR 115.1 the attacker slot offers only the Bears" (Map.lookup (SlotName.MkSlotName (Text.pack "attacker")) offered) (Just [bearsId])
     -- "this turn": CR 514.2's sweep ends the requirement, read through the
     -- engine's CR 509.1c reader.
