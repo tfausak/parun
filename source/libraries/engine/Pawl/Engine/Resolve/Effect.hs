@@ -8392,8 +8392,8 @@ applyOneEffect runSubgame resolving source controller legal chosen effect = case
     --
     -- Nothing is written onto the permanent itself, and nothing is projected: CR
     -- 613.11 keeps each of these out of the layers, so the row is read through
-    -- Pawl.Engine.RestrictedCreatures.prohibited and never by a projection. CR 701.19c makes the
-    -- Regenerate row a property the DESTRUCTION acquires, at
+    -- Pawl.Engine.RestrictedCreatures.prohibited and never by a projection. CR
+    -- 701.19c makes the Regenerate row a property the DESTRUCTION acquires, at
     -- Event.resolveDestruction.
     State.modify' $ \gs -> case Expiry.arm (Game.readingAcquisition resolving source) legal controller source duration gs of
       -- CR 611.2b: the duration never started, or a "for as long as" one has
