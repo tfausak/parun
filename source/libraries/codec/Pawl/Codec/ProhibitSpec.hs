@@ -8,6 +8,7 @@ import qualified Pawl.Types.Duration as Duration
 import qualified Pawl.Types.ObjectRef as ObjectRef
 import qualified Pawl.Types.Prohibit as Prohibit
 import qualified Pawl.Types.Prohibition as Prohibition
+import qualified Pawl.Types.RestrictedCreatures as RestrictedCreatures
 import qualified Pawl.Types.SlotName as SlotName
 
 spec :: (Monad m, Monad n) => Spec.Spec m n -> n ()
@@ -20,8 +21,8 @@ spec s = Spec.describe s "Pawl.Codec.Prohibit" $ do
       ( Prohibit.MkProhibit
           { Prohibit.what = Prohibition.Block,
             Prohibit.duration = Duration.UntilEndOfTurn,
-            Prohibit.ref = ObjectRef.InSlot (SlotName.MkSlotName (Text.pack "target"))
+            Prohibit.affected = RestrictedCreatures.Named (ObjectRef.InSlot (SlotName.MkSlotName (Text.pack "target")))
           }
       )
-      " {\"what\":{\"type\":\"Block\"},\"duration\":{\"type\":\"UntilEndOfTurn\"},\"ref\":{\"type\":\"InSlot\",\"value\":\"target\"}} "
+      " {\"what\":{\"type\":\"Block\"},\"duration\":{\"type\":\"UntilEndOfTurn\"},\"affected\":{\"type\":\"Named\",\"value\":{\"type\":\"InSlot\",\"value\":\"target\"}}} "
   Spec.it s "has a schema" $ Common.assertHasSchema s Prohibit.codec

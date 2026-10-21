@@ -25,7 +25,7 @@ data PreventAllDamage effect = MkPreventAllDamage
     -- taking combat and noncombat alike, and is elided rather than written null.
     kind :: Maybe DamageKind.DamageKind,
     -- | The objects or players this RESOLUTION names -- Selfless Squire's
-    -- "permanents you control", swept as the effect is created. Nothing for a
+    -- "you", swept as the effect is created. Nothing for a
     -- shield that DESCRIBES its recipients in @whatRecipient@ below instead; on
     -- the DealtTo side the two spellings are alternatives, and a card writing
     -- both is read as the description alone (Pawl.Engine.Resolve's arm) -- but

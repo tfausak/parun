@@ -60,21 +60,26 @@ data Expiry
     -- Pawl.Types.AfterTurn and by the same reading, and BEGINS where AtTurnOf
     -- ends: the effect does nothing until that turn is under way.
     --
-    -- One of the two arms whose stored row is inert for part of its life (the
-    -- other is DuringExtraTurn below), which is why
+    -- One of the arms whose stored row is inert for part of its life (the
+    -- others are DuringUntapStepOf and DuringExtraTurn below), which is why
     -- Pawl.Engine.Expiry.begun exists beside the sweeps -- a reader that asks
     -- only "has this ended" sees this row from the moment it is stored and
     -- applies it a turn early.
     --
-    -- Five carriers ask `begun`: GameState.attackProhibitions (Wall of Dust),
+    -- Six carriers ask `begun`: GameState.attackProhibitions (Wall of Dust),
     -- GameState.attackRequirements (Taunt, Gideon, Battle-Forged),
     -- GameState.playerEffects (Sphinx's Decree), Object.playableFromExile
-    -- (Galvanic Relay) and GameState.replacements (False Peace). A row on any
+    -- (Galvanic Relay), GameState.replacements (False Peace) and
+    -- GameState.objectProhibitions (Exhaustion). A row on any
     -- other would apply from the moment it is stored, so Pawl.EffectLintSpec's
     -- windowOffends refuses a card writing one (Scryfall o:/during [^.]*next
     -- turn/, 2026-10-11: every hit is one of the first four or CR 723's player
     -- control).
     DuringTurnOf AfterTurn.AfterTurn
+  | -- | CR 611.2a: Duration.DuringNextUntapStepOf, stored -- a WINDOW, open while
+    -- this player's untap step is under way and ended as it ends. A third arm
+    -- whose stored row is inert for part of its life (Pawl.Engine.Expiry.begun).
+    DuringUntapStepOf PlayerId.PlayerId
   | -- | CR 611.2a: DuringTurnOf with its seat not yet known -- "during its
     -- controller's next turn", open on any later turn while that object's
     -- current controller is active, pinned to DuringTurnOf once such a turn's

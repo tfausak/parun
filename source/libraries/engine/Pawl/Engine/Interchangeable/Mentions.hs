@@ -1244,6 +1244,7 @@ durationNames asking x = case x of
   Duration.UntilEndOfYourNextTurn -> mempty
   Duration.UntilEndOfNextTurnOf playerRef -> playerRefNames asking playerRef
   Duration.DuringNextTurnOf playerRef -> playerRefNames asking playerRef
+  Duration.DuringNextUntapStepOf playerRef -> playerRefNames asking playerRef
   Duration.DuringYourNextTurn -> mempty
   Duration.DuringThatExtraTurn -> mempty
   Duration.ForAsLongAs condition -> conditionNames asking condition
@@ -1584,6 +1585,7 @@ expiryNames asking x = case x of
   Expiry.AtStepOf _stepBegan -> mempty
   Expiry.AtEndOfTurnOf _afterTurn -> mempty
   Expiry.DuringTurnOf _afterTurn -> mempty
+  Expiry.DuringUntapStepOf _playerId -> mempty
   Expiry.DuringTurnOfControllerOf afterObjectTurn -> names asking (== AfterObjectTurn.object afterObjectTurn)
   Expiry.DuringExtraTurn _timestamp -> mempty
   Expiry.AtEndOf _phaseSelector -> mempty
@@ -2407,7 +2409,7 @@ projectedCharacteristicsNames asking x = case x of
 -- What is prohibited names no object.
 prohibitNames :: (Monoid r) => Asking r -> Prohibit.Prohibit -> r
 prohibitNames asking x = case x of
-  Prohibit.MkProhibit _what duration ref -> durationNames asking duration <> objectRefNames asking ref
+  Prohibit.MkProhibit _what duration affected -> durationNames asking duration <> restrictedCreaturesNames asking (objectRefNames asking) affected
 
 protectionNames :: (Monoid r) => Asking r -> Protection.Protection keyword -> r
 protectionNames asking x = case x of
@@ -2591,7 +2593,7 @@ requireAttackNames asking x = case x of
 
 requireBlockNames :: (Monoid r) => Asking r -> RequireBlock.RequireBlock -> r
 requireBlockNames asking x = case x of
-  RequireBlock.MkRequireBlock duration blocker attacker -> durationNames asking duration <> objectRefNames asking blocker <> objectRefNames asking attacker
+  RequireBlock.MkRequireBlock duration blocker attacker -> durationNames asking duration <> restrictedCreaturesNames asking (objectRefNames asking) blocker <> objectRefNames asking attacker
 
 restrictedCreaturesNames :: (Monoid r) => Asking r -> (named -> r) -> RestrictedCreatures.RestrictedCreatures named -> r
 restrictedCreaturesNames asking onNamed x = case x of

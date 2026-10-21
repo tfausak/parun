@@ -7,11 +7,12 @@ import qualified Pawl.Spec as Spec
 import qualified Pawl.Types.Duration as Duration
 import qualified Pawl.Types.ObjectRef as ObjectRef
 import qualified Pawl.Types.RequireBlock as RequireBlock
+import qualified Pawl.Types.RestrictedCreatures as RestrictedCreatures
 import qualified Pawl.Types.SlotName as SlotName
 
 spec :: (Monad m, Monad n) => Spec.Spec m n -> n ()
 spec s = Spec.describe s "Pawl.Codec.RequireBlock" $ do
-  -- CR 509.1c. BOTH sides are an ObjectRef, so the fixture names them
+  -- CR 509.1c. BOTH sides name an ObjectRef, so the fixture names them
   -- differently on purpose: only an asymmetric case catches a codec that pointed
   -- the requirement the wrong way.
   Spec.it s "MkRequireBlock, all three keys" $
@@ -20,9 +21,9 @@ spec s = Spec.describe s "Pawl.Codec.RequireBlock" $ do
       RequireBlock.codec
       ( RequireBlock.MkRequireBlock
           { RequireBlock.duration = Duration.UntilEndOfTurn,
-            RequireBlock.blocker = ObjectRef.InSlot (SlotName.MkSlotName (Text.pack "blocker")),
+            RequireBlock.blocker = RestrictedCreatures.Named (ObjectRef.InSlot (SlotName.MkSlotName (Text.pack "blocker"))),
             RequireBlock.attacker = ObjectRef.InSlot (SlotName.MkSlotName (Text.pack "attacker"))
           }
       )
-      " {\"duration\":{\"type\":\"UntilEndOfTurn\"},\"blocker\":{\"type\":\"InSlot\",\"value\":\"blocker\"},\"attacker\":{\"type\":\"InSlot\",\"value\":\"attacker\"}} "
+      " {\"duration\":{\"type\":\"UntilEndOfTurn\"},\"blocker\":{\"type\":\"Named\",\"value\":{\"type\":\"InSlot\",\"value\":\"blocker\"}},\"attacker\":{\"type\":\"InSlot\",\"value\":\"attacker\"}} "
   Spec.it s "has a schema" $ Common.assertHasSchema s RequireBlock.codec

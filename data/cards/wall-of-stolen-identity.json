@@ -72,6 +72,13 @@
                     {
                       "type": "Prohibit",
                       "value": {
+                        "affected": {
+                          "type": "Named",
+                          "value": {
+                            "type": "InSlot",
+                            "value": "thatCopiedObject"
+                          }
+                        },
                         "duration": {
                           "type": "ForAsLongAs",
                           "value": {
@@ -122,10 +129,6 @@
                               }
                             }
                           }
-                        },
-                        "ref": {
-                          "type": "InSlot",
-                          "value": "thatCopiedObject"
                         },
                         "what": {
                           "type": "Untap"

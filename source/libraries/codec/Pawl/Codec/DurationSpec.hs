@@ -88,6 +88,14 @@ spec s = Spec.describe s "Pawl.Codec.Duration" $ do
       Duration.codec
       (Duration.DuringNextTurnOf (PlayerRef.ControllerOfBound (SlotName.MkSlotName (Text.pack "thatAttacker"))))
       " {\"type\":\"DuringNextTurnOf\",\"value\":{\"type\":\"ControllerOfBound\",\"value\":\"thatAttacker\"}} "
+  -- CR 611.2a / 502.3: the untap step's window (Exhaustion's "their next untap
+  -- step").
+  Spec.it s "DuringNextUntapStepOf carries its reference" $
+    Common.assertCodec
+      s
+      Duration.codec
+      (Duration.DuringNextUntapStepOf (PlayerRef.InSlot (SlotName.MkSlotName (Text.pack "target"))))
+      " {\"type\":\"DuringNextUntapStepOf\",\"value\":{\"type\":\"InSlot\",\"value\":\"target\"}} "
   -- CR 611.2a: the same window against CR 109.5's "you" (Galvanic Relay).
   Spec.it s "DuringYourNextTurn" $
     Common.assertCodec

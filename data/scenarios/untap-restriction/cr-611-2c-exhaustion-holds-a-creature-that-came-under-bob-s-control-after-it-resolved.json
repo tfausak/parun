@@ -1,0 +1,47 @@
+{
+  "description": "CR 611.2c Exhaustion holds a creature that came under the target opponent's control after it resolved, for that one untap step",
+  "note": "CR 611.2c: an untap prohibition modifies no characteristic and no controller, so its class is read at the untap step (Exhaustion's 2009-10-01 ruling). Alice's tapped Hill Giant goes to bob by Switcheroo after Exhaustion resolved, and stays tapped through bob's next untap step beside bob's own tapped Forest; a set frozen at resolution would have untapped it. The window is that one step (CR 502.3): at bob's following untap step the Giant untaps.",
+  "board": {
+    "active": "alice",
+    "step": "PrecombatMain",
+    "seats": [
+      {
+        "name": "alice",
+        "battlefield": [
+          { "card": "Hill Giant", "label": "giant", "tapped": true },
+          { "card": "Island", "label": "i1" },
+          { "card": "Island", "label": "i2" },
+          { "card": "Island", "label": "i3" },
+          { "card": "Island", "label": "i4" },
+          { "card": "Island", "label": "i5" },
+          { "card": "Island", "label": "i6" },
+          { "card": "Island", "label": "i7" },
+          { "card": "Island", "label": "i8" }
+        ],
+        "hand": [
+          { "card": "Exhaustion", "label": "exhaustion" },
+          { "card": "Switcheroo", "label": "switcheroo" }
+        ],
+        "library": [{ "card": "Island" }, { "card": "Island" }, { "card": "Island" }]
+      },
+      {
+        "name": "bob",
+        "battlefield": [
+          { "card": "Goblin Piker", "label": "piker", "ready": true },
+          { "card": "Forest", "label": "forest", "tapped": true }
+        ],
+        "library": [{ "card": "Forest" }, { "card": "Forest" }, { "card": "Forest" }]
+      }
+    ]
+  },
+  "timeline": [
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": { "Cast": { "object": "$exhaustion", "targets": ["$bob"], "mana": ["$i1", "$i2", "$i3", null] } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass" },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": { "Cast": { "object": "$switcheroo", "targets": ["$giant", "$piker"], "mana": ["$i4", "$i5", "$i6", "$i7", "$i8"] } } },
+    { "turn": 2, "step": "Upkeep", "player": "bob", "check": { "Tapped": { "object": "$giant", "tapped": true } } },
+    { "turn": 2, "step": "Upkeep", "player": "bob", "check": { "Tapped": { "object": "$forest", "tapped": true } } },
+    { "turn": 2, "step": "Upkeep", "player": "bob", "check": { "View": { "of": "Controller", "object": "$giant", "is": "bob" } } },
+    { "turn": 3, "step": "DeclareAttackers", "player": "alice", "do": { "Attack": [] } },
+    { "turn": 4, "step": "Upkeep", "player": "bob", "check": { "Tapped": { "object": "$giant", "tapped": false } } }
+  ]
+}

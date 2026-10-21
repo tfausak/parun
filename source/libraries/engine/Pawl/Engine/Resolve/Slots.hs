@@ -823,24 +823,20 @@ effectObjectRefs effect = case effect of
   Effect.ExchangeControl _ -> []
   Effect.ArmDelayedTrigger {} -> []
   Effect.AffectPlayers {} -> []
-  -- CR 509.1a's two sides, the creature required to block and what it blocks.
-  Effect.RequireBlock (RequireBlock.MkRequireBlock _ blocker attacker) -> [blocker, attacker]
-  Effect.Prohibit (Prohibit.MkProhibit _ _ ref) -> [ref]
+  -- CR 509.1a's two sides, the creature required to block and what it blocks,
+  -- the blocker only when a ref names it: the Matching arm is a Filter.
+  Effect.RequireBlock (RequireBlock.MkRequireBlock _ blocker attacker) -> namedRefs blocker <> [attacker]
+  Effect.Prohibit (Prohibit.MkProhibit _ _ affected) -> namedRefs affected
   -- Both sides, each only when a ref names it: the attacker's Matching arm is a
   -- Filter, and a defender naming players is effectPlayerRefs'.
   Effect.RequireAttack (RequireAttack.MkRequireAttack _ attacker defender) ->
-    ( case attacker of
-        RestrictedCreatures.Named ref -> [ref]
-        RestrictedCreatures.Matching _ -> []
-    )
+    namedRefs attacker
       <> case defender of
         AttackTargetRef.Players _ -> []
         AttackTargetRef.Permanents ref -> [ref]
   -- One side only, and only when a ref names it: the Matching arm is a Filter
   -- (CR 611.2c's class), and what the attack is aimed at is effectPlayerRefs'.
-  Effect.ForbidAttack (ForbidAttack.MkForbidAttack _ affected _) -> case affected of
-    RestrictedCreatures.Named ref -> [ref]
-    RestrictedCreatures.Matching _ -> []
+  Effect.ForbidAttack (ForbidAttack.MkForbidAttack _ affected _) -> namedRefs affected
   -- No ref at all: the class is a Filter (CR 611.2c).
   Effect.ForbidBeingBlocked {} -> []
   Effect.CreateEmblem {} -> []
@@ -1462,8 +1458,9 @@ slotsOf effect = joinTwo (joinTwo (joinSlots (fmap objectRefSlots (effectObjectR
     joinTwo
       (affectedPlayersSlots affected)
       (joinSlots (fmap (\slot -> Map.singleton slot SlotArity.Many) (PlayerEffect.boundRecipientSlots playerEffect)))
-  Effect.RequireBlock {} -> Map.empty
-  Effect.Prohibit {} -> Map.empty
+  -- RequireAttack's reading below, for a Matching blocker or class.
+  Effect.RequireBlock (RequireBlock.MkRequireBlock duration blocker _) -> joinTwo (durationSlots duration) (matchingSlots blocker)
+  Effect.Prohibit (Prohibit.MkProhibit _ duration affected) -> joinTwo (durationSlots duration) (matchingSlots affected)
   Effect.ForbidAttack {} -> Map.empty
   -- The class is a FILTER read, RequireAttack's Matching arm below.
   Effect.ForbidBeingBlocked (ForbidBeingBlocked.MkForbidBeingBlocked duration f barred) -> joinTwo (durationSlots duration) (joinTwo (filterSlotsOf f) (filterSlotsOf barred))
@@ -1471,9 +1468,7 @@ slotsOf effect = joinTwo (joinTwo (joinSlots (fmap objectRefSlots (effectObjectR
   -- creatures; a Matching class is a FILTER read, Search's, and the Duration is
   -- ModifyTarget's -- Taunt's "target player" is read by both and nothing else.
   Effect.RequireAttack (RequireAttack.MkRequireAttack duration attacker _) ->
-    joinTwo (durationSlots duration) $ case attacker of
-      RestrictedCreatures.Named _ -> Map.empty
-      RestrictedCreatures.Matching f -> filterSlotsOf f
+    joinTwo (durationSlots duration) (matchingSlots attacker)
   Effect.CreateEmblem {} -> Map.empty
   -- CR 725.1's crown names a target slot only in the InSlot arm.
   Effect.BecomeMonarch target -> monarchTargetSlots target
@@ -1574,6 +1569,7 @@ durationPlayerRefs duration = case duration of
   Duration.UntilEndOfNextTurnOf ref -> [ref]
   -- The seat the WINDOW is counted against, read exactly as the arm above's is.
   Duration.DuringNextTurnOf ref -> [ref]
+  Duration.DuringNextUntapStepOf ref -> [ref]
   -- CR 109.5's "you" is no reference at all.
   Duration.DuringYourNextTurn -> []
   Duration.DuringThatExtraTurn -> []
@@ -1606,6 +1602,7 @@ durationSlots duration = case duration of
   -- PlayerRef position is (CR 601.2c).
   Duration.UntilEndOfNextTurnOf ref -> playerRefSlots ref
   Duration.DuringNextTurnOf ref -> playerRefSlots ref
+  Duration.DuringNextUntapStepOf ref -> playerRefSlots ref
   Duration.DuringYourNextTurn -> Map.empty
   Duration.DuringThatExtraTurn -> Map.empty
   Duration.ForAsLongAs condition -> conditionSlots condition
@@ -2229,12 +2226,10 @@ ownSlotsAreExhaustive effect = case effect of
   -- GainControl's reason for the Duration.
   Effect.AffectPlayers (AffectPlayers.MkAffectPlayers duration _ _) ->
     Map.null (durationSlots duration) && durationSlotsAreExhaustive duration
-  -- slotsOf drops the Duration, so the slotless test is made here.
-  Effect.RequireBlock (RequireBlock.MkRequireBlock duration _ _) ->
-    Map.null (durationSlots duration) && durationSlotsAreExhaustive duration
-  -- RequireBlock's reason, one axis narrower.
-  Effect.Prohibit (Prohibit.MkProhibit _ duration _) ->
-    Map.null (durationSlots duration) && durationSlotsAreExhaustive duration
+  -- slotsOf reports the Duration and a Matching class's Filter, RequireAttack's
+  -- reading below.
+  Effect.RequireBlock (RequireBlock.MkRequireBlock duration _ _) -> durationSlotsAreExhaustive duration
+  Effect.Prohibit (Prohibit.MkProhibit _ duration _) -> durationSlotsAreExhaustive duration
   Effect.ForbidAttack (ForbidAttack.MkForbidAttack duration _ _) ->
     Map.null (durationSlots duration) && durationSlotsAreExhaustive duration
   -- slotsOf reports the Duration and the class's Filter, ModifyTarget's and
@@ -2310,6 +2305,7 @@ durationSlotsAreExhaustive duration = case duration of
   -- most one slot and nothing nested inside it names another.
   Duration.UntilEndOfNextTurnOf _ -> True
   Duration.DuringNextTurnOf _ -> True
+  Duration.DuringNextUntapStepOf _ -> True
   Duration.DuringYourNextTurn -> True
   Duration.DuringThatExtraTurn -> True
   Duration.ForAsLongAs condition -> conditionSlotsAreExhaustive condition
@@ -3574,3 +3570,17 @@ resolvingAbilityName resolving gs = case fmap Object.source (Game.lookupObject r
     Source.OfMerge _ -> Nothing
     Source.OfToken _ -> Nothing
     Source.OfEmblem _ -> Nothing
+
+-- The ref a Pawl.Types.RestrictedCreatures names, when its Named arm does; the
+-- Matching arm is a Filter, read by matchingSlots instead.
+namedRefs :: RestrictedCreatures.RestrictedCreatures ObjectRef -> [ObjectRef]
+namedRefs restricted = case restricted of
+  RestrictedCreatures.Named ref -> [ref]
+  RestrictedCreatures.Matching _ -> []
+
+-- The slots a Matching class's Filter reads (CR 611.2c), Search's reading; a
+-- Named ref is reported at the head by namedRefs.
+matchingSlots :: RestrictedCreatures.RestrictedCreatures ObjectRef -> Map.Map SlotName SlotArity
+matchingSlots restricted = case restricted of
+  RestrictedCreatures.Named _ -> Map.empty
+  RestrictedCreatures.Matching f -> filterSlotsOf f

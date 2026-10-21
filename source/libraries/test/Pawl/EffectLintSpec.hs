@@ -1406,6 +1406,11 @@ effectObjectRefs :: Effect.Effect Card.Type.Card (GrantedAbility.GrantedAbility 
 effectObjectRefs effect =
   let read_ :: [ObjectRef.ObjectRef] -> [([Question], ObjectRef.ObjectRef)]
       read_ = fmap ((,) [])
+      -- A Matching class is a Filter, no ref.
+      namedRef :: RestrictedCreatures.RestrictedCreatures ObjectRef.ObjectRef -> [ObjectRef.ObjectRef]
+      namedRef restricted = case restricted of
+        RestrictedCreatures.Named ref -> [ref]
+        RestrictedCreatures.Matching _ -> []
    in case effect of
         Effect.AttachTarget {} -> []
         Effect.AttachTargetToEach {} -> []
@@ -1574,17 +1579,12 @@ effectObjectRefs effect =
         Effect.ExchangeControl _ -> []
         Effect.ArmDelayedTrigger {} -> []
         Effect.AffectPlayers {} -> []
-        Effect.RequireBlock (RequireBlock.MkRequireBlock _ blocker attacker) -> read_ [blocker, attacker]
-        Effect.Prohibit (Prohibit.MkProhibit _ _ ref) -> read_ [ref]
-        Effect.ForbidAttack (ForbidAttack.MkForbidAttack _ affected _) -> case affected of
-          RestrictedCreatures.Named ref -> read_ [ref]
-          RestrictedCreatures.Matching _ -> []
+        Effect.RequireBlock (RequireBlock.MkRequireBlock _ blocker attacker) -> read_ (namedRef blocker <> [attacker])
+        Effect.Prohibit (Prohibit.MkProhibit _ _ affected) -> read_ (namedRef affected)
+        Effect.ForbidAttack (ForbidAttack.MkForbidAttack _ affected _) -> read_ (namedRef affected)
         Effect.ForbidBeingBlocked {} -> []
         Effect.RequireAttack (RequireAttack.MkRequireAttack _ attacker defender) ->
-          ( case attacker of
-              RestrictedCreatures.Named ref -> read_ [ref]
-              RestrictedCreatures.Matching _ -> []
-          )
+          read_ (namedRef attacker)
             <> case defender of
               AttackTargetRef.Players _ -> []
               AttackTargetRef.Permanents ref -> read_ [ref]
@@ -3664,15 +3664,15 @@ spec s registry = Spec.describe s "Pawl.Engine.Card" $ do
   effectLintSpec s registry
 
 -- CR 611.2a: a "during X's next turn" duration arms a window that
--- Pawl.Engine.Expiry.begun alone holds back until that turn. Five carriers ask
+-- Pawl.Engine.Expiry.begun alone holds back until that turn. Six carriers ask
 -- it -- player effects, attack prohibitions, attack requirements, exile play
--- permissions and a skip's floating replacement -- so a window on any other
+-- permissions, a skip's floating replacement and object prohibitions -- so a window on any other
 -- would apply from the moment it is stored, and offends. Counted against the ENCODED face for untilUsedOffends'
 -- reason.
 windowOffends :: Face.Face Card.Type.Card -> Bool
 windowOffends card =
   let encoded = Codec.encode (Face.Codec.codec Card.Codec.codec) card
-   in sum (fmap (\tag -> jsonAtoms (Text.pack tag) encoded) ["DuringNextTurnOf", "DuringYourNextTurn", "DuringThatExtraTurn"]) /= begunWindows card
+   in sum (fmap (\tag -> jsonAtoms (Text.pack tag) encoded) ["DuringNextTurnOf", "DuringNextUntapStepOf", "DuringYourNextTurn", "DuringThatExtraTurn"]) /= begunWindows card
 
 -- How many window durations this face writes on a carrier that asks
 -- Expiry.begun.
@@ -3684,9 +3684,11 @@ begunWindows card =
         Effect.RequireAttack e -> Just (RequireAttack.duration e)
         Effect.GrantPlayFromExile e -> Just (GrantPlayFromExile.duration e)
         Effect.SkipPhase e -> Just (SkipPhase.duration e)
+        Effect.Prohibit e -> Just (Prohibit.duration e)
         _ -> Nothing
       window duration = case duration of
         Duration.DuringNextTurnOf _ -> True
+        Duration.DuringNextUntapStepOf _ -> True
         Duration.DuringYourNextTurn -> True
         Duration.DuringThatExtraTurn -> True
         _ -> False

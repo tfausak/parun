@@ -18,12 +18,3 @@ Each group is tracked by its issue; its cards are added when it lands.
 ChooseNumber has no chooser, and Repeat/ForEach/ForEachNumber don't loop over
 players with each one choosing.
 - Temporary Truce: "Each player may draw up to two cards. For each card less than two a player draws this way, that player gains 2 life."
-
-### A spell's rules-modifying effect over a live set of objects (CR 611.2c second sentence) (#5241)
-The resolution-created carriers take an ObjectRef, which freezes the set when
-the spell resolves. CR 611.2c says an effect that doesn't modify
-characteristics can affect objects that arrive later. RequireAttack has a
-RestrictedCreatures.Matching arm for this; RequireBlock and DoesNotUntapNext
-don't (every pool use of DoesNotUntapNext is InSlot).
-- Alluring Scent: "All creatures able to block target creature this turn do so." RequireBlock (lineprancers) needs a Matching blocker side. BlockRequirement's haddock already names Alluring Scent as the "Nothing subject" shape, but that is the static carrier.
-- Exhaustion: "Creatures and lands target opponent controls don't untap during their next untap step." DoesNotUntapNext needs a filter arm (ControlledByBound target, Or(creature, land)). Freezing at resolution misses a permanent that comes under that player's control before their untap step.

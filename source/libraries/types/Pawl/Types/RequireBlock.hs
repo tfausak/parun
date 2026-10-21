@@ -2,6 +2,7 @@ module Pawl.Types.RequireBlock where
 
 import qualified Pawl.Types.Duration as Duration
 import qualified Pawl.Types.ObjectRef as ObjectRef
+import qualified Pawl.Types.RestrictedCreatures as RestrictedCreatures
 
 -- | The payload of Pawl.Types.Effect's RequireBlock arm (#1305): CR 509.1c's
 -- requirement that the blockers named block the attackers named, for this
@@ -12,7 +13,9 @@ import qualified Pawl.Types.ObjectRef as ObjectRef
 -- decode into a requirement pointing the wrong way.
 data RequireBlock = MkRequireBlock
   { duration :: Duration.Duration,
-    blocker :: ObjectRef.ObjectRef,
+    -- | Named for a creature a ref picks at resolution (Lineprancers), Matching
+    -- for CR 611.2c's class re-read at each declaration (Alluring Scent).
+    blocker :: RestrictedCreatures.RestrictedCreatures ObjectRef.ObjectRef,
     attacker :: ObjectRef.ObjectRef
   }
   deriving (Eq, Ord, Show)
