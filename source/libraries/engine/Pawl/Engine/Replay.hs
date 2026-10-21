@@ -8,12 +8,14 @@ import qualified Control.Monad.Trans.State.Strict as State
 import qualified Data.List as List
 import qualified Data.List.NonEmpty as NonEmpty
 import qualified Data.Map.Strict as Map
+import qualified Data.Maybe as Maybe
 import qualified Data.Sequence as Seq
 import qualified Data.Set as Set
 import qualified Data.Text as Text
 import Numeric.Natural (Natural)
 import qualified Pawl.Engine.Cost as Cost
 import qualified Pawl.Engine.Modal as Modal
+import qualified Pawl.Engine.Subtype as Subtype
 import qualified Pawl.Engine.Target as Target
 import qualified Pawl.Extra.Natural as Natural
 import qualified Pawl.Types.Action as Action
@@ -48,6 +50,7 @@ import qualified Pawl.Types.Recipient as Recipient
 import Pawl.Types.Response (Response)
 import qualified Pawl.Types.Response as Response
 import qualified Pawl.Types.Subtype as Subtype
+import qualified Pawl.Types.SubtypeFamily as SubtypeFamily
 import qualified Pawl.Types.TargetCount as TargetCount
 
 -- | Run `game`, also handing back every answer it was given, in the order it
@@ -1050,16 +1053,11 @@ defaultAnswer p = case p of
   -- announcing fewer is equally legal, and a default that declined would leave
   -- every "up to N" card's effect unexercised by the specs that take this answer.
   Prompt.AnnounceTargets _ _ _ offers -> fmap (\(count, rs) -> TargetCount.ceilingOn (Natural.length rs) count) offers
-  -- A canonical identity swap: Mountain -> Mountain changes nothing.
-  Prompt.ChooseLandTypeSwap {} -> (Subtype.Mountain, Subtype.Mountain)
-  -- The same identity for CR 612.2's creature-type half. Frog is a creature
-  -- type (CR 205.3m) and nothing in the pool forbids it.
-  --
-  -- Not implemented: no swap prompt's stated restrictions are checked against
-  -- the answer that comes back (#641).
-  Prompt.ChooseCreatureTypeSwap {} -> (Subtype.Frog, Subtype.Frog)
-  -- The same identity for CR 205.3h's half, Aura being an enchantment type.
-  Prompt.ChooseEnchantmentTypeSwap {} -> (Subtype.Aura, Subtype.Aura)
+  -- CR 612.2: the swap the engine itself falls back to on an unswappable
+  -- answer (Pawl.Engine.Resolve.Effect's ChangeText arm), so the two agree.
+  Prompt.ChooseLandTypeSwap _ _ _ _ forbidden -> swapDefault SubtypeFamily.BasicLandType forbidden
+  Prompt.ChooseCreatureTypeSwap _ _ _ _ forbidden -> swapDefault SubtypeFamily.CreatureType forbidden
+  Prompt.ChooseEnchantmentTypeSwap _ _ _ _ forbidden -> swapDefault SubtypeFamily.EnchantmentType forbidden
   -- Every zone the card named. Always legal -- "and/or" permits all of them --
   -- and deliberately the MAXIMAL answer rather than a least-eventful one: it is
   -- what pawl did before the searcher was asked at all, so a board that does not
@@ -1161,9 +1159,7 @@ defaultAnswer p = case p of
   Prompt.ChoosePlayer _ _ _ candidates -> NonEmpty.head candidates
   -- CR 725.4 / 726.4: every candidate is a live active player who may take it.
   Prompt.ChooseActivePlayer _ _ candidates -> NonEmpty.head candidates
-  -- CR 305.6: any of the five basic land types is legal. Mountain is what the
-  -- ChooseLandTypeSwap arm above falls back to, so the two agree on which type
-  -- a short transcript conjures.
+  -- CR 305.6: any of the five basic land types is legal.
   Prompt.ChooseBasicLandType {} -> Subtype.Mountain
   -- CR 205.3m: any creature type is legal, and Goblin is one -- the arm above's
   -- posture, conjuring a type the prompt offered no list of.
@@ -1373,6 +1369,11 @@ defaultAnswer p = case p of
   Prompt.ArrangeLibraryCards _ _ oids -> zipWith const [0 ..] oids
   -- CR 404.3: any order is the order the batch moved in, always legal.
   Prompt.ArrangeGraveyardArrivals {} -> GraveyardArrangement.AnyOrder
+
+-- defaultAnswer's swap: Subtype.firstSwap, or, when the card leaves no legal
+-- swap, an identity the engine refuses and so applies nothing for.
+swapDefault :: SubtypeFamily.SubtypeFamily -> Set.Set Subtype.Subtype -> (Subtype.Subtype, Subtype.Subtype)
+swapDefault family = Maybe.fromMaybe (Subtype.Mountain, Subtype.Mountain) . Subtype.firstSwap family
 
 -- Run a game under a base interpreter, keeping every answer in order.
 --
