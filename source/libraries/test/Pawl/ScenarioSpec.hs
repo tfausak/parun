@@ -658,39 +658,38 @@ spec s registry = Spec.describe s "Scenario" $ do
 -- .json file beneath it, ascending by path.
 loadSpec :: Spec.Spec IO n -> n ()
 loadSpec s = Spec.describe s "Pawl.Scenario.Load" $ do
-  Spec.it s "loadRoot finds scenarios in subdirectories, ascending by path" $ do
+  Spec.it s "listRoot finds scenarios in subdirectories, ascending by path" $ do
     found <- S.withCorpusDir "scenario-load-nested" [("b.json", Text.pack "{}"), ("notes.txt", Text.empty)] $ \dir -> do
       Directory.createDirectoryIfMissing True (dir <> "/sub")
       ByteString.writeFile (dir <> "/sub/a.json") (Encoding.encodeUtf8 (Text.pack "{}"))
-      loaded <- Load.loadRoot dir
-      pure (fmap (drop (length dir) . fst) loaded)
+      listed <- Load.listRoot dir
+      pure (fmap (drop (length dir)) listed)
     Spec.assertEqWith s "both .json files, the nested one included" found ["/b.json", "/sub/a.json"]
 
 corpusSpec :: (MonadIO.MonadIO n) => Spec.Spec IO n -> Registry.Registry IO -> n ()
 corpusSpec s registry = Spec.describe s "Scenarios" $ do
+  -- Listed, not decoded: each case is named for its file and decodes it in its
+  -- body, so building the test tree reads no scenario.
   root <- MonadIO.liftIO Load.defaultRoot
-  scenarios <- MonadIO.liftIO $ Load.loadRoot root
-  mapM_ (uncurry $ scenarioCase s registry) scenarios
+  paths <- MonadIO.liftIO (Load.listRoot root)
+  mapM_ (scenarioCase s registry) paths
 
-scenarioCase :: Spec.Spec IO n -> Registry.Registry IO -> FilePath -> Either Text.Text Scenario.Type.Scenario -> n ()
-scenarioCase s registry path decoded =
-  let file = reverse (takeWhile (/= '/') (reverse path))
-      name = case decoded of
-        Left _ -> file
-        Right scenario -> file <> ": " <> Text.unpack (Scenario.Type.description scenario)
-   in Spec.it s name $ case decoded of
+scenarioCase :: Spec.Spec IO n -> Registry.Registry IO -> FilePath -> n ()
+scenarioCase s registry path =
+  Spec.it s (reverse (takeWhile (/= '/') (reverse path))) $ do
+    bytes <- ByteString.readFile path
+    case Encoding.decodeUtf8' bytes of
+      Left problem -> Spec.assertFailure s (path <> ": " <> show problem)
+      Right contents -> case Common.parse contents of
         Left problem -> Spec.assertFailure s (path <> ": " <> Text.unpack problem)
-        Right scenario -> do
-          bytes <- ByteString.readFile path
-          case Encoding.decodeUtf8' bytes of
-            Left problem -> Spec.assertFailure s (path <> ": " <> show problem)
-            Right contents -> case Common.parse contents of
-              Left problem -> Spec.assertFailure s (path <> ": " <> Text.unpack problem)
-              Right value -> Spec.assertEqWith s "matches the scenario schema" (Validate.validate (Define.run (Codec.schema Codec.Scenario.codec)) value) []
-          result <- Scenario.run registry scenario
-          case result of
-            Left failure -> Spec.assertFailure s (S.renderFailure failure)
-            Right _ -> pure ()
+        Right value -> Spec.assertEqWith s (path <> ": matches the scenario schema") (Validate.validate (Define.run (Codec.schema Codec.Scenario.codec)) value) []
+    case Load.parse bytes of
+      Left problem -> Spec.assertFailure s (path <> ": " <> Text.unpack problem)
+      Right scenario -> do
+        result <- Scenario.run registry scenario
+        case result of
+          Left failure -> Spec.assertFailure s (path <> ": " <> Text.unpack (Scenario.Type.description scenario) <> ": " <> S.renderFailure failure)
+          Right _ -> pure ()
 
 -- One scenario decoded and run, failing the case if it will not decode.
 runJson :: (Monad m) => Spec.Spec m n -> Registry.Registry m -> String -> m (Either ScenarioFailure.ScenarioFailure GameState.GameState)

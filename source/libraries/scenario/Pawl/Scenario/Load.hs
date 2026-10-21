@@ -24,13 +24,10 @@ parse bytes = do
   contents <- either (\err -> Left (Text.pack ("not valid UTF-8: " <> show err))) Right (Encoding.decodeUtf8' bytes)
   Common.parse contents >>= Codec.decode Scenario.codec
 
--- | Every .json file beneath a root, ascending by path, each with what it
--- decodes to, so one pass names every file that will not. Pawl.Registry.loadRoot's
--- shape and its caveat: a file that cannot be READ still throws.
-loadRoot :: FilePath -> IO [(FilePath, Either Text.Text Scenario.Type.Scenario)]
-loadRoot root = do
-  paths <- jsonFiles root
-  mapM loadFile (List.sort paths)
+-- | Every .json file beneath a root, ascending by path, read no further: a
+-- caller decodes each with 'loadFile'.
+listRoot :: FilePath -> IO [FilePath]
+listRoot = fmap List.sort . jsonFiles
 
 jsonFiles :: FilePath -> IO [FilePath]
 jsonFiles dir = do

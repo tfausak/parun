@@ -13,10 +13,13 @@ import qualified System.Directory as Directory
 defaultRoot :: IO FilePath
 defaultRoot = Paths.getDataFileName "decks"
 
--- | Every deck file in a root, ascending by path, with its text, decoded as
--- UTF-8 explicitly for Pawl.Registry.parseCard's reason.
-loadRoot :: FilePath -> IO [(FilePath, Either Text.Text Text.Text)]
-loadRoot root = do
+-- | Every deck file in a root, ascending by path.
+listRoot :: FilePath -> IO [FilePath]
+listRoot root = do
   entries <- fmap List.sort (Directory.listDirectory root)
-  let paths = fmap (\entry -> root <> "/" <> entry) (filter (List.isSuffixOf ".txt") entries)
-  mapM (\path -> fmap (\bytes -> (path, either (\err -> Left (Text.pack ("not valid UTF-8: " <> show err))) Right (Encoding.decodeUtf8' bytes))) (ByteString.readFile path)) paths
+  pure (fmap (\entry -> root <> "/" <> entry) (filter (List.isSuffixOf ".txt") entries))
+
+-- | One deck file's text, decoded as UTF-8 explicitly for
+-- Pawl.Registry.parseCard's reason.
+loadFile :: FilePath -> IO (Either Text.Text Text.Text)
+loadFile = fmap (either (\err -> Left (Text.pack ("not valid UTF-8: " <> show err))) Right . Encoding.decodeUtf8') . ByteString.readFile
