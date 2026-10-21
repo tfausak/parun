@@ -20,9 +20,10 @@ import qualified Pawl.Types.Prompt as Prompt
 -- interface has to ask about the game it is displaying.
 --
 -- The state is the WHOLE state, filtered for nobody. Pawl.Engine.Visibility.sees
--- answers what a given player may see of it; not implemented: nothing redacts
--- this state by that answer (#10). This type makes CR 723.4's split
--- decidable, not enforced.
+-- answers what a given player may see of it, and Pawl.Play.Protocol sends a
+-- seat only Pawl.Engine.PlayerView.viewFor's view. Not implemented: an
+-- in-process answerer is still handed this state (#5418). This type makes CR
+-- 723.4's split decidable, not enforced.
 --
 -- 'Prompt' is deliberately untouched: it stays the vocabulary of questions, the
 -- Pawl.Engine.Replay transcript stays keyed on it, and an answerer that does not
