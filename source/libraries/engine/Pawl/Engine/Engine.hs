@@ -1023,6 +1023,8 @@ placeBorne srcId pending = do
         -- CR 603.3d: a required choice with no legal answer forthcoming.
         Nothing -> State.modify' (Game.cease abilId)
         Just chosen -> do
+          -- CR 603.3d / 601.2d: the division among the targets just fixed.
+          divisions <- Target.announceDivision Nothing controller abilId srcId bound slots chosen
           -- CR 113.7: the ability's SOURCE is bound under the reserved slot as it
           -- is placed, so "this creature" resolves as an ordinary slot read even
           -- after the source has left. CR 603.7c: a delayed ability's CAPTURED
@@ -1044,7 +1046,7 @@ placeBorne srcId pending = do
           -- Inserted over the captured environment, whose thisAbility names the
           -- ability that armed a delayed trigger rather than the trigger itself.
           let placedSource = maybe (Projection.copiableCharacteristics srcId gs) LastKnown.copiable (Game.lastKnownOf srcId gs)
-          State.modify' (\g -> g {GameState.objects = Map.adjust (\o -> o {Object.bindings = Binding.setThisAbility abilId (Binding.setPlacedSourceCopy placedSource (Binding.setYou controller (Binding.setTriggerSource srcId (Map.unionWith Binding.mergeBinding (Target.stampDefendingPlayers srcId chosen g (Binding.fromChoices chosen enteredX chosenModes)) (PendingTrigger.bindings pending)))))}) abilId (GameState.objects g)})
+          State.modify' (\g -> g {GameState.objects = Map.adjust (\o -> o {Object.bindings = Binding.setThisAbility abilId (Binding.setPlacedSourceCopy placedSource (Binding.setYou controller (Binding.setTriggerSource srcId (Map.unionWith Binding.mergeBinding (Target.stampDefendingPlayers srcId chosen g (Binding.setDivisions divisions (Binding.fromChoices chosen enteredX chosenModes))) (PendingTrigger.bindings pending)))))}) abilId (GameState.objects g)})
           -- CR 601.2c through CR 603.3d: each chosen object became a target, which
           -- is what CR 702.21a's ward watches. Raised only on an announcement the
           -- joint check accepted, so a re-asked answer never made anything a

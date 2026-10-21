@@ -120,7 +120,8 @@ spec s = Spec.describe s "Pawl.Codec.Object" $ do
                   Binding.copy = Nothing,
                   Binding.objects = Nothing,
                   Binding.sticker = Nothing,
-                  Binding.votes = Nothing
+                  Binding.votes = Nothing,
+                  Binding.division = Nothing
                 },
           Object.counters =
             Map.fromList

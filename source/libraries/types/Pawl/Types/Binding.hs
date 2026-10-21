@@ -84,10 +84,14 @@ data Binding = MkBinding
     sticker :: Maybe StickerRef.StickerRef,
     -- | CR 701.38a: a player vote's tally, every candidate keyed, zeros included
     -- (Pawl.Types.VotePlayers). Nothing for every other slot.
-    votes :: Maybe (Map.Map PlayerId.PlayerId Natural.Natural)
+    votes :: Maybe (Map.Map PlayerId.PlayerId Natural.Natural),
+    -- | CR 601.2d: the division announced among this target slot's targets,
+    -- each at least one; CR 115.7f keeps it through a change of targets.
+    -- Nothing for an undivided slot.
+    division :: Maybe (Map.Map Recipient.Recipient Natural.Natural)
   }
   deriving (Eq, Ord, Show)
 
 -- | The empty binding: no choice of any kind. The unit for merging.
 empty :: Binding
-empty = MkBinding {targets = Nothing, amount = Nothing, modes = Nothing, copy = Nothing, objects = Nothing, sticker = Nothing, votes = Nothing}
+empty = MkBinding {targets = Nothing, amount = Nothing, modes = Nothing, copy = Nothing, objects = Nothing, sticker = Nothing, votes = Nothing, division = Nothing}

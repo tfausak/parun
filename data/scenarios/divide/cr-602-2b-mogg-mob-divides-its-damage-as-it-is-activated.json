@@ -1,0 +1,28 @@
+{
+  "description": "CR 602.2b Mogg Mob's ability divides its damage as it is activated",
+  "note": "Rule 602.2b carries CR 601.2d's division to an activated ability. Alice sacrifices Mogg Mob dividing 1 onto the first Wurm and 2 onto the second, where the default would put the 2 on the first, the earlier object.",
+  "board": {
+    "seats": [
+      {
+        "name": "alice",
+        "battlefield": [{ "card": "Mogg Mob", "label": "mob" }]
+      },
+      {
+        "name": "bob",
+        "battlefield": [
+          { "card": "Craw Wurm", "label": "wurm-a" },
+          { "card": "Craw Wurm", "label": "wurm-b" }
+        ]
+      }
+    ],
+    "active": "alice",
+    "step": "PrecombatMain"
+  },
+  "timeline": [
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": { "Activate": { "object": "$mob", "ability": 0, "targets": ["$wurm-a", "$wurm-b"] } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": { "Answer": { "prompt": "ChooseDivision", "with": [[["Creature", "$wurm-a"], 1], [["Creature", "$wurm-b"], 2]] } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass" },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "check": { "Damage": { "object": "$wurm-a", "damage": 1 } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "check": { "Damage": { "object": "$wurm-b", "damage": 2 } } }
+  ]
+}

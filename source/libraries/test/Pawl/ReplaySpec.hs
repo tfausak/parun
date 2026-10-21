@@ -43,6 +43,7 @@ import qualified Pawl.Types.DamageKind as DamageKind
 import qualified Pawl.Types.Decider as Decider
 import qualified Pawl.Types.Deck as Deck
 import qualified Pawl.Types.Desync as Desync
+import qualified Pawl.Types.Dividing as Dividing
 import qualified Pawl.Types.EntryOption as EntryOption
 import qualified Pawl.Types.EntwineDecision as EntwineDecision
 import qualified Pawl.Types.Face as Face
@@ -1777,6 +1778,15 @@ combatReplaySpec s =
           Spec.assertEqWith s "a split round trips" (Replay.decode p (Replay.encode p split)) (Just split)
           -- Discriminating: fails if it shares a removal prompt's response.
           Spec.assertEqWith s "and a removal transcript does not decode as one" (Replay.decode p (Response.ChoseCounterRemovalAmong split)) Nothing
+        -- CR 601.2d, dividing a total among a spell's announced targets.
+        Spec.it s "ChooseDivision round-trips through the transcript" $ do
+          let a = Recipient.ToCreature (ObjectId.MkObjectId 11)
+              b = Recipient.ToPlayer S.bob
+              p = Prompt.ChooseDivision decider S.alice oid (Dividing.Total 3) (a NonEmpty.:| [b])
+              split = Map.fromList [(a, 1 :: Natural.Natural), (b, 2)]
+          Spec.assertEqWith s "a split round trips" (Replay.decode p (Replay.encode p split)) (Just split)
+          -- Discriminating: fails if it shares combat damage's response.
+          Spec.assertEqWith s "and a combat damage transcript does not decode as one" (Replay.decode p (Response.AssignedCombatDamage split)) Nothing
         -- CR 122.1 / 601.2h, where the payer divides by kind as well.
         Spec.it s "ChooseMixedCounterRemoval round-trips through the transcript" $ do
           let a = ObjectId.MkObjectId 11

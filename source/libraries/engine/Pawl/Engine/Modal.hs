@@ -281,6 +281,7 @@ instanceScope rename slot =
     { TargetSlot.pool = instancePool rename (TargetSlot.pool slot),
       TargetSlot.filter = fmap (Filter.renameBound rename) (TargetSlot.filter slot),
       TargetSlot.amount = fmap (QuantitySlot.renameSlots rename) (TargetSlot.amount slot),
+      TargetSlot.divided = fmap (QuantitySlot.renameSlots rename) (TargetSlot.divided slot),
       TargetSlot.count = SlotCount.mapQuantity (QuantitySlot.renameSlots rename) (TargetSlot.count slot)
     }
 

@@ -743,7 +743,7 @@ beholdNames asking x = case x of
 
 bindingNames :: (Monoid r) => Asking r -> Binding.Binding -> r
 bindingNames asking x = case x of
-  Binding.MkBinding targets _amount _modes copy objects _sticker _votes -> foldMap (foldMap (recipientNames asking)) targets <> foldMap (projectedCharacteristicsNames asking) copy <> names asking (\oid -> any (elem oid) objects)
+  Binding.MkBinding targets _amount _modes copy objects _sticker _votes division -> foldMap (foldMap (recipientNames asking)) targets <> foldMap (projectedCharacteristicsNames asking) copy <> names asking (\oid -> any (elem oid) objects) <> foldMap (foldMap (recipientNames asking) . Map.keys) division
 
 blightNames :: (Monoid r) => Asking r -> Blight.Blight -> r
 blightNames asking x = case x of
@@ -2424,6 +2424,7 @@ quantityNames asking x = case x of
   Quantity.Measure _ -> mempty
   Quantity.Intensity -> mempty
   Quantity.InSlot slotName -> slotNames asking slotName
+  Quantity.Share slotName -> slotNames asking slotName
   Quantity.WasBound slotName -> slotNames asking slotName
   Quantity.BoundCount slotName -> slotNames asking slotName
   Quantity.UniqueVowelsOnSticker slotName -> slotNames asking slotName
@@ -2749,7 +2750,7 @@ targetChooserNames asking x = case x of
 
 targetSlotNames :: (Monoid r) => Asking r -> TargetSlot.TargetSlot -> r
 targetSlotNames asking x = case x of
-  TargetSlot.MkTargetSlot pool filter_ count amount chooser perPlayer -> poolNames asking pool <> foldMap (filterNames asking) filter_ <> slotCountNames asking count <> foldMap (quantityNames asking) amount <> foldMap (targetChooserNames asking) chooser <> foldMap (slotPerPlayerNames asking) perPlayer
+  TargetSlot.MkTargetSlot pool filter_ count amount chooser perPlayer divided -> poolNames asking pool <> foldMap (filterNames asking) filter_ <> slotCountNames asking count <> foldMap (quantityNames asking) amount <> foldMap (targetChooserNames asking) chooser <> foldMap (slotPerPlayerNames asking) perPlayer <> foldMap (quantityNames asking) divided
 
 theseDiscardNames :: (Monoid r) => Asking r -> TheseDiscard.TheseDiscard -> r
 theseDiscardNames asking x = case x of

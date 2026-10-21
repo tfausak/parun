@@ -1,0 +1,37 @@
+{
+  "description": "CR 601.2d Rolling Thunder gives each target at least 1, a player included",
+  "note": "At X 2, three targets cannot each receive 1, so the cast is refused; at X 3 alice names bob and a Wurm and divides 2 onto bob, the opposite of the default (the remainder to the Wurm, which sorts first), so bob loses 2 life and the Wurm takes 1.",
+  "board": {
+    "seats": [
+      {
+        "name": "alice",
+        "battlefield": [
+          { "card": "Mountain", "label": "mountain1" },
+          { "card": "Mountain", "label": "mountain2" },
+          { "card": "Mountain", "label": "mountain3" },
+          { "card": "Mountain", "label": "mountain4" },
+          { "card": "Mountain", "label": "mountain5" }
+        ],
+        "hand": [{ "card": "Rolling Thunder", "label": "thunder" }]
+      },
+      {
+        "name": "bob",
+        "battlefield": [
+          { "card": "Craw Wurm", "label": "wurm-a" },
+          { "card": "Craw Wurm", "label": "wurm-b" }
+        ]
+      }
+    ],
+    "active": "alice",
+    "step": "PrecombatMain"
+  },
+  "timeline": [
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "refuse": { "Cast": { "object": "$thunder", "x": 2, "targets": ["$bob", "$wurm-a", "$wurm-b"], "mana": ["$mountain1", "$mountain2", "$mountain3", "$mountain4"] } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": { "Cast": { "object": "$thunder", "x": 3, "targets": ["$bob", "$wurm-a"], "mana": ["$mountain1", "$mountain2", "$mountain3", "$mountain4", "$mountain5"] } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": { "Answer": { "prompt": "ChooseDivision", "with": [[["Player", "bob"], 2], [["Creature", "$wurm-a"], 1]] } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass" },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "check": { "Life": { "player": "bob", "life": 18 } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "check": { "Damage": { "object": "$wurm-a", "damage": 1 } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "check": { "Damage": { "object": "$wurm-b", "damage": 0 } } }
+  ]
+}

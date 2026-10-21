@@ -43,6 +43,23 @@ Entries are ordered by the first rule each cites.
   component is a spell copy is no token".
 - **Issue**: none.
 
+## Who says which new target takes a replaced target's part of a division
+
+- **Question**: CR 115.7f keeps a divided spell's division through a change of
+  targets. When two or more replaced targets held different parts, which new
+  target takes which part?
+- **Rules**: CR 115.7a, 115.7d, 115.7f, 601.2d; CR of 2026-08-07.
+- **Decision**: The player changing the targets hands the replaced parts out
+  among the new targets, each new target taking exactly one of them; a target
+  left unchanged keeps its own. Where the replaced parts are all equal nobody
+  is asked.
+- **Rejected**: Pairing by some engine order, which makes the changer's choice
+  for them; re-dividing the replaced total freely, which changes the division
+  CR 115.7f forbids.
+- **Site**: Pawl.Engine.Resolve.Effect's reaimDivisions;
+  data/scenarios/divide's Redirect case.
+- **Issue**: #5235.
+
 ## Whether a concession restarts the pass count
 
 - **Question**: CR 117.4 resolves the top object once all players pass in

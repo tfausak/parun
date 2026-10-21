@@ -4,6 +4,7 @@ import qualified Control.Monad as Monad
 import qualified Control.Monad.Trans.State.Strict as State
 import qualified Data.Foldable as Foldable
 import qualified Data.List as List
+import qualified Data.List.NonEmpty as NonEmpty
 import Data.Map.Strict (Map)
 import qualified Data.Map.Strict as Map
 import qualified Data.Maybe as Maybe
@@ -39,6 +40,7 @@ import qualified Pawl.Types.Binding as Binding.Type
 import Pawl.Types.Card (Card)
 import qualified Pawl.Types.CardType as CardType
 import qualified Pawl.Types.Chosen as Chosen
+import qualified Pawl.Types.Dividing as Dividing
 import qualified Pawl.Types.Filter as Filter.Type
 import Pawl.Types.Game (Game)
 import Pawl.Types.GameState (GameState)
@@ -1431,7 +1433,7 @@ boundNamesSibling declared = not . Set.null . boundSiblings declared
 -- follows its mode's occurrence.
 boundSiblings :: Set SlotName -> TargetSlot -> Set SlotName
 boundSiblings declared slot =
-  Set.intersection declared (foldMap QuantitySlot.allSlots (Maybe.maybeToList (TargetSlot.amount slot) <> Maybe.maybeToList (SlotCount.quantity (TargetSlot.count slot))))
+  Set.intersection declared (foldMap QuantitySlot.allSlots (Maybe.maybeToList (TargetSlot.amount slot) <> Maybe.maybeToList (SlotCount.quantity (TargetSlot.count slot)) <> Maybe.maybeToList (TargetSlot.divided slot)))
 
 -- Must this slot's answer be judged against what its SIBLING slots were answered
 -- with (CR 601.2c)? Three ways one slot depends on another, and they are the
@@ -1766,6 +1768,61 @@ askChooser reader controller chooser oid source seed x slots sets mine = do
       -- what then reverses the casting.
       traverse (drawFromPiles (Just chooser)) answer
 
+-- CR 601.2d: each divided slot's announced division, asked of the controller
+-- once CR 601.2c's targets are fixed, every target getting at least one.
+-- Asked of the controller whoever chose the targets (CR 115.1), the rule's
+-- "the player" being the one casting or activating. Not raised where only one
+-- division exists -- one target, or a total equal to the targets -- the options
+-- being indistinguishable.
+--
+-- An answer that does not divide the total among exactly those targets takes
+-- the replay default rather than a repair. A regression fence, not a proved
+-- behaviour: the scenario runner refuses such an answer before it reaches here.
+announceDivision :: Maybe AbilityName.AbilityName -> PlayerId -> ObjectId -> ObjectId -> Map SlotName Binding.Type.Binding -> Map SlotName TargetSlot -> Map SlotName (Set Recipient) -> Game (Map SlotName (Map Recipient Natural))
+announceDivision reader pid oid source seed slots chosen = do
+  gs <- State.get
+  let counting = countingBy reader (Just pid) seed source gs
+      divide total targets
+        | Natural.length (NonEmpty.tail targets) + 1 == total = pure (Map.fromList (fmap (\r -> (r, 1)) (NonEmpty.toList targets)))
+        | null (NonEmpty.tail targets) = pure (Map.singleton (NonEmpty.head targets) total)
+        | otherwise = do
+            let dividing = Dividing.Total total
+            answer <- Game.choose (Prompt.ChooseDivision (Decide.deciderFor pid gs) pid oid dividing targets)
+            pure (if divides dividing targets answer then answer else defaultDivision dividing targets)
+  Map.traverseMaybeWithKey
+    ( \slot quantity -> case NonEmpty.nonEmpty (Set.toList (Map.findWithDefault Set.empty slot chosen)) of
+        Nothing -> pure Nothing
+        Just targets -> fmap Just (divide (counting quantity) targets)
+    )
+    (Map.mapMaybe TargetSlot.divided slots)
+
+-- CR 601.2d / 115.7f: does this answer hand out the Dividing among exactly
+-- these targets, each at least one?
+divides :: Dividing.Dividing -> NonEmpty.NonEmpty Recipient -> Map Recipient Natural -> Bool
+divides dividing targets answer =
+  Map.keysSet answer == Set.fromList (NonEmpty.toList targets)
+    && all (>= 1) answer
+    && case dividing of
+      Dividing.Total total -> sum answer == total
+      Dividing.Parts parts -> List.sort (Map.elems answer) == NonEmpty.toList parts
+
+-- The division nobody chose: for CR 601.2d one to each target and the rest to
+-- the first, for CR 115.7f the parts in the order offered. What a replay with no
+-- recorded answer reads; legal wherever the total covers the targets, which CR
+-- 601.2d's own cap (divisionCap) guarantees.
+defaultDivision :: Dividing.Dividing -> NonEmpty.NonEmpty Recipient -> Map Recipient Natural
+defaultDivision dividing targets = case dividing of
+  Dividing.Total total ->
+    let rest = NonEmpty.tail targets
+     in Map.fromList ((NonEmpty.head targets, Natural.minusSaturating total (Natural.length rest)) : fmap (\r -> (r, 1)) rest)
+  Dividing.Parts parts -> Map.fromList (zip (NonEmpty.toList targets) (NonEmpty.toList parts))
+
+-- CR 601.2d: the most targets a divided slot may be announced with -- each must
+-- receive at least one, so no more than the total. Nothing for an undivided
+-- slot.
+divisionCap :: (Quantity -> Natural) -> TargetSlot -> Maybe Natural
+divisionCap counting = fmap counting . TargetSlot.divided
+
 -- CR 406.4's second half, taken over one slot's legal set as a prompt is built:
 -- a candidate this chooser may not name specifically -- a card exiled face down
 -- that they are not allowed to look at -- is replaced by the PILE it sits in,
@@ -1958,7 +2015,13 @@ selectionLegal reader perspective seed source x slots sets chosen gs =
             -- creatures reverses the whole activation" proves it.
             demanded = TargetCount.least (SlotCount.at counting x (TargetSlot.count targetSlot))
             size = Natural.length picked
-         in Set.isSubsetOf picked legal && size >= demanded && size <= hi
+         in -- CR 601.2d: each target of a divided slot receives at least one, so
+            -- an announcement naming more targets than the total is illegal --
+            -- Rolling Thunder's ruling, "if X is 0, you can't choose any
+            -- targets". Judged here rather than narrowed out of the offer, the
+            -- announced X's posture above.
+            -- data/scenarios/divide's Rolling Thunder case proves it.
+            Set.isSubsetOf picked legal && size >= demanded && size <= hi && all (size <=) (divisionCap counting targetSlot)
    in Set.isSubsetOf (Map.keysSet chosen) (Map.keysSet sets)
         && and (Map.elems (Map.mapWithKey slotLegal slots))
         && jointlyCoherentGiven reader (wholePools gs) perspective False seed source slots chosen gs
@@ -2207,6 +2270,7 @@ bakeSlot players slot =
   slot
     { TargetSlot.filter = fmap (Filter.bakeBound players) (TargetSlot.filter slot),
       TargetSlot.amount = fmap (Quantity.bakeBound players Map.empty) (TargetSlot.amount slot),
+      TargetSlot.divided = fmap (Quantity.bakeBound players Map.empty) (TargetSlot.divided slot),
       -- CR 601.2c's count reads a Quantity of its own, so it is baked beside the
       -- bound for that field's reason. A REGRESSION FENCE rather than a proved
       -- behaviour: no committed count holds a PlayerRef.InSlot -- Mogis's

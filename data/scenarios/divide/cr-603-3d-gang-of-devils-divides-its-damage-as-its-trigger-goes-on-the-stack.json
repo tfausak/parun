@@ -1,0 +1,30 @@
+{
+  "description": "CR 603.3d Gang of Devils' trigger divides its damage as it goes on the stack",
+  "note": "Rule 603.3d carries CR 601.2d's division to a triggered ability. Mogg Mob's whole 3 kills the Gang, a single target with nothing to divide, and the Gang's trigger divides 2 onto bob and 1 onto the Wurm, where the default would put the 2 on the Wurm, which sorts first.",
+  "board": {
+    "seats": [
+      {
+        "name": "alice",
+        "battlefield": [
+          { "card": "Mogg Mob", "label": "mob" },
+          { "card": "Gang of Devils", "label": "gang" }
+        ]
+      },
+      {
+        "name": "bob",
+        "battlefield": [{ "card": "Craw Wurm", "label": "wurm" }]
+      }
+    ],
+    "active": "alice",
+    "step": "PrecombatMain"
+  },
+  "timeline": [
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": { "Activate": { "object": "$mob", "ability": 0, "targets": ["$gang"] } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass" },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": { "ChooseTargets": { "targets": ["$wurm", "$bob"] } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": { "Answer": { "prompt": "ChooseDivision", "with": [[["Creature", "$wurm"], 1], [["Player", "bob"], 2]] } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass" },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "check": { "Life": { "player": "bob", "life": 18 } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "check": { "Damage": { "object": "$wurm", "damage": 1 } } }
+  ]
+}

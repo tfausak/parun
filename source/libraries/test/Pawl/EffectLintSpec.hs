@@ -471,6 +471,7 @@ printedBoxQuantity quantity = case quantity of
   Quantity.Type.Measure _ -> False
   Quantity.Type.Intensity -> False
   Quantity.Type.InSlot _ -> False
+  Quantity.Type.Share _ -> False
   Quantity.Type.WasBound _ -> False
   Quantity.Type.BoundCount _ -> False
   Quantity.Type.UniqueVowelsOnSticker _ -> False

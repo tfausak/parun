@@ -14,11 +14,6 @@ Every expressible Portal card has been added to `data/cards/`.
 
 Each group is tracked by its issue; its cards are added when it lands.
 
-### Damage divided among targets at announcement (CR 601.2d) (#5235)
-DealDamage parts take fixed quantities per ref. No pool card divides damage
-(grepped oracleText "divided"). CounterSpread/DistributeCounters divide counters only.
-- Forked Lightning: "deals 4 damage divided as you choose among one, two, or three target creatures."
-
 ### Tutor to the top without revealing (#5236)
 SearchDestination has RevealThenTop (Mystical Tutor) and no unrevealed
 shuffle-then-top arm (Vampiric Tutor's shape, not in the pool).

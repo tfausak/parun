@@ -4,6 +4,7 @@ import Control.Applicative ((<|>))
 import qualified Control.Monad as Monad
 import qualified Data.Char as Char
 import qualified Data.Foldable as Foldable
+import qualified Data.List as List
 import Data.Map.Strict (Map)
 import qualified Data.Map.Strict as Map
 import qualified Data.Maybe as Maybe
@@ -1721,6 +1722,17 @@ fromChoices targets mAmount mModes =
         then withX
         else Map.insertWith mergeBinding chosenModes (Binding.empty {Binding.modes = Just mModes}) withX
 
+-- CR 601.2d: each divided slot's announced division, stamped beside the
+-- slot's targets.
+setDivisions :: Map SlotName (Map Recipient Natural) -> Map SlotName Binding -> Map SlotName Binding
+setDivisions divisions bindings = Map.foldrWithKey (\slot division -> Map.insertWith mergeBinding slot (Binding.empty {Binding.division = Just division})) bindings divisions
+
+-- CR 601.2d: what each divided slot's division gave this recipient, matched by
+-- referent so a recipient retagged on its way to the effect still finds its
+-- part. A slot that gave it nothing has no key.
+sharesOf :: Recipient -> Map SlotName Binding -> Map SlotName Natural
+sharesOf recipient = Map.mapMaybe (fmap snd . List.find (Recipient.sameReferent recipient . fst) . Map.toList Monad.<=< Binding.division)
+
 -- CR 601.2b: the counts announced beside X (Pawl.Engine.Cost.announcedCounts),
 -- each bound as an amount under its own slot, as `fromChoices` binds X.
 fromAnnounced :: Map SlotName Natural -> Map SlotName Binding
@@ -1738,7 +1750,8 @@ mergeBinding a b =
       Binding.copy = Binding.copy a <|> Binding.copy b,
       Binding.objects = Binding.objects a <|> Binding.objects b,
       Binding.sticker = Binding.sticker a <|> Binding.sticker b,
-      Binding.votes = Binding.votes a <|> Binding.votes b
+      Binding.votes = Binding.votes a <|> Binding.votes b,
+      Binding.division = Binding.division a <|> Binding.division b
     }
 
 -- CR 400.7h: `binding` with every naming of `old` renamed to `new`, each
@@ -1761,5 +1774,6 @@ renameObject old new binding =
           Binding.copy = Binding.copy binding,
           Binding.objects = fmap (fmap rename) (Binding.objects binding),
           Binding.sticker = Binding.sticker binding,
-          Binding.votes = Binding.votes binding
+          Binding.votes = Binding.votes binding,
+          Binding.division = fmap (Map.mapKeys renameRecipient) (Binding.division binding)
         }

@@ -32,7 +32,7 @@ import qualified Pawl.Types.TargetSlot as TargetSlot
 -- unchanged. The chooser key is omitted on the same terms: CR 115.1's default is
 -- the ability's controller, which nearly every slot takes.
 -- The perPlayer key likewise: only CR 601.2c's "for each opponent" and "for each
--- player" slots name one.
+-- player" slots name one, and the divided key: only CR 601.2d's divided slots.
 codec :: Codec.Codec TargetSlot.TargetSlot
 codec = Fields.object $ do
   pool <- Fields.required "pool" Pool.codec TargetSlot.pool
@@ -41,6 +41,7 @@ codec = Fields.object $ do
   amount <- Fields.defaulted "amount" Nothing (Common.maybe Quantity.codec) TargetSlot.amount
   chooser <- Fields.defaulted "chooser" Nothing (Common.maybe TargetChooser.codec) TargetSlot.chooser
   perPlayer <- Fields.defaulted "perPlayer" Nothing (Common.maybe SlotPerPlayer.codec) TargetSlot.perPlayer
+  divided <- Fields.defaulted "divided" Nothing (Common.maybe Quantity.codec) TargetSlot.divided
   pure
     TargetSlot.MkTargetSlot
       { TargetSlot.pool = pool,
@@ -48,7 +49,8 @@ codec = Fields.object $ do
         TargetSlot.count = count,
         TargetSlot.amount = amount,
         TargetSlot.chooser = chooser,
-        TargetSlot.perPlayer = perPlayer
+        TargetSlot.perPlayer = perPlayer,
+        TargetSlot.divided = divided
       }
 
 -- | A slot-keyed map as a JSON object keyed by the slot name (#1303).
