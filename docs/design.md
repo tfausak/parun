@@ -173,7 +173,7 @@ This is load-bearing, not a party trick. **Designing for Little Girl gets you Ta
 
 Sequenced to retire *architectural* risk first, not to maximize card count. The ABI is the thing you can't cheaply change later; Lightning Bolt will still be there in six months and will take an afternoon.
 
-This section **was** the forward plan, and is now largely the record of the path actually taken. Milestones **M0 through M5.6 are complete**, as is the card-driven Auras unit; for what each established — gate card, the decision it proved, the opcodes and types it added, every elision and its expiry — see the completion log in `progress.md`. Only M6 and M7 remain, and they are no longer milestones: they are ordinary GitHub issues, #9 and #10, picked up when they are picked up. Work is issue-driven now — see `CONTRIBUTING.md`.
+This section **was** the forward plan, and is now largely the record of the path actually taken. Milestones **M0 through M5.6 are complete**, as is the card-driven Auras unit; for what each established — gate card, the decision it proved, the opcodes and types it added, every elision and its expiry — see the completion log in `progress.md`. Only M6 and M7 remain, and they are no longer milestones: they are ordinary GitHub issues, picked up when they are picked up. M6 is #9; M7's first clients, the random bot and the text client behind `pawl play`, landed under #10, and its harness, search bot and engine-side redaction are #5417, #5419 and #5418. Work is issue-driven now — see `CONTRIBUTING.md`.
 
 ### M0 — A complete game with zero cards
 
@@ -510,6 +510,8 @@ Only now, once the DSL has shape. Two inputs:
 ### M7 — Interpreters
 
 Bot (MCTS over suspended continuations — resuming twice with different decisions is free; Forge and XMage deep-copy state to search, you just hold the continuation). WASM for the browser. WebSocket server. Headless simulation harness for deckbuilding.
+
+`pawl play` is the first interpreter: a random bot and a text client, over a stdio line protocol (`--json`) that is the server's first form.
 
 ---
 
