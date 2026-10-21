@@ -17,9 +17,9 @@
 -- names Spy Kit's CR 612.7 grant reaches (Pawl.Interpreter.lookingUpCards). A
 -- lint of the corpus pawl ships is a claim about the data rather than a
 -- question for a registry, and that lives in the
--- test suite, which borrows cardPath, loadRoot and filedAs -- facts about the
--- on-disk format rather than about looking a card up. parseCard is an internal
--- helper of loadRoot and has no test-suite caller of its own.
+-- test suite, which borrows cardPath, listRoot, loadRoot, parseCard and
+-- filedAs -- facts about the on-disk format rather than about looking a card
+-- up.
 module Pawl.Registry where
 
 import qualified Control.Exception as Exception
@@ -210,6 +210,12 @@ filedAs = Slug.fromText . CardName.unwrap . CardName.join . fmap Face.name . Car
 -- are ignored outright -- a README is not a broken card.
 loadRoot :: FilePath -> IO [(FilePath, Either Text.Text Card.Card)]
 loadRoot root = do
-  entries <- fmap List.sort (Directory.listDirectory root)
-  let paths = fmap (\entry -> root <> "/" <> entry) (filter (List.isSuffixOf ".json") entries)
+  paths <- listRoot root
   mapM (\path -> fmap (\bytes -> (path, parseCard bytes)) (ByteString.readFile path)) paths
+
+-- Every card file in a root, ascending by path, read no further: the
+-- enumeration half of 'loadRoot', for a caller that parses each file later.
+listRoot :: FilePath -> IO [FilePath]
+listRoot root = do
+  entries <- fmap List.sort (Directory.listDirectory root)
+  pure (fmap (\entry -> root <> "/" <> entry) (filter (List.isSuffixOf ".json") entries))
