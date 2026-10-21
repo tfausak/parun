@@ -1,0 +1,39 @@
+{
+  "description": "CR 707.10d / 115.7f Precursor Golem's copies of Forked Lightning keep its division, each dealing 4 to its own Golem",
+  "note": "Alice aims all 4 of Forked Lightning at the Coal Golem, so the Golem trigger copies it for the Precursor and the Icehide Golem. Each copy re-aims its one target and keeps the division, so each deals 4 and every Golem dies; a copy that lost the division would deal nothing and leave the Precursor (3/3) and Icehide (2/2) standing.",
+  "board": {
+    "seats": [
+      {
+        "name": "alice",
+        "battlefield": [
+          { "card": "Mountain", "label": "mountain1" },
+          { "card": "Mountain", "label": "mountain2" },
+          { "card": "Mountain", "label": "mountain3" },
+          { "card": "Mountain", "label": "mountain4" }
+        ],
+        "hand": [{ "card": "Forked Lightning", "label": "lightning" }]
+      },
+      {
+        "name": "bob",
+        "battlefield": [
+          { "card": "Precursor Golem", "label": "precursor" },
+          { "card": "Coal Golem", "label": "coal" },
+          { "card": "Icehide Golem", "label": "icehide" }
+        ]
+      }
+    ],
+    "active": "alice",
+    "step": "PrecombatMain"
+  },
+  "timeline": [
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": { "Cast": { "object": "$lightning", "targets": ["$coal"], "mana": ["$mountain1", "$mountain2", "$mountain3", "$mountain4"] } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass" },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": { "Answer": { "prompt": "OrderForEach", "with": [0, 1] } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass" },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass" },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass" },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "check": { "Count": { "player": "bob", "zone": "Graveyard", "card": "Precursor Golem", "count": 1 } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "check": { "Count": { "player": "bob", "zone": "Graveyard", "card": "Icehide Golem", "count": 1 } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "check": { "Count": { "player": "bob", "zone": "Graveyard", "card": "Coal Golem", "count": 1 } } }
+  ]
+}

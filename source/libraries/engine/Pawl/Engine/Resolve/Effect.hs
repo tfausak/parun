@@ -7661,6 +7661,13 @@ applyOneEffect runSubgame resolving source controller legal chosen effect = case
             CopyTargets.ForEach candidateRefs -> copyForEachTargets controller copier resolving source legal original candidateRefs
             CopyTargets.Stated newRef -> copyStatedTargets controller copier resolving source legal original newRef
           Monad.forM_ plan $ \retarget -> do
+            -- CR 707.10d / 707.10e with CR 115.7f: a target the effect re-aims
+            -- takes the replaced target's part of the division, reaimDivisions'
+            -- reading. An answer handing out other parts keeps the targets
+            -- alone, a regression fence: every pool copier re-aims one target,
+            -- which asks nothing. data/scenarios/divide's Precursor Golem case
+            -- proves the part carried.
+            rebound <- reaimDivisions copier original (Object.bindings obj) retarget
             gsNow <- State.get
             let (copyId, gs1) = Game.freshObjectId gsNow
                 (ts, gs2) = Game.freshTimestamp gs1
@@ -7820,7 +7827,7 @@ applyOneEffect runSubgame resolving source controller legal chosen effect = case
                       -- chose them, over the decisions CR 707.10 copied. Empty
                       -- for the other two answers, which leave every one of them
                       -- standing.
-                      Object.bindings = Binding.setYou copier (stampSelf (stampCopiable (Map.union (fmap Binding.toRecipients retarget) (Object.bindings obj))))
+                      Object.bindings = Binding.setYou copier (stampSelf (stampCopiable (Map.union (Maybe.fromMaybe (fmap Binding.toRecipients retarget) rebound) (Object.bindings obj))))
                     }
             State.put (Game.insertIntoZone Zone.Stack LibraryPosition.defaultValue copier copyId gs2 {GameState.objects = Map.insert copyId copy (GameState.objects gs2)})
             -- CR 707.10c's chooser is the COPY's controller and not the copying
