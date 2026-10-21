@@ -3,6 +3,7 @@ module Pawl.Types.ActivationRestriction where
 import qualified Pawl.Types.Condition as Condition
 import qualified Pawl.Types.DuringPhase as DuringPhase
 import qualified Pawl.Types.ManaSpecification as ManaSpecification
+import qualified Pawl.Types.Phase as Phase
 import qualified Pawl.Types.TurnScope as TurnScope
 
 -- | CR 602.5: ONE clause of the "activate only ..." rider an activated ability
@@ -125,9 +126,10 @@ data ActivationRestriction
     -- end of combat step. Nor the negation of AfterBlockersDeclared above, which
     -- would exclude the declare blockers step the card admits.
     BeforeCombatDamage
-  | -- | CR 500.1: "before the end step" (Mana Cache) -- any phase of the turn
-    -- ahead of CR 513's end step. Pawl.Engine.Turn.beforeEndStep is the reader.
-    BeforeEndStep
+  | -- | CR 506.7a / 506.7g: only before this step first begins this turn --
+    -- Capricious Sorcerer's "before attackers are declared", Mana Cache's
+    -- "before the end step". Pawl.Engine.Turn.beforeStep is the reader.
+    BeforeStep Phase.Phase
   | -- | CR 602.5: "Activate only if [a fact about the board]" -- Barbarian
     -- Ring's "Activate only if there are seven or more cards in your
     -- graveyard". The first arm here that reads no window at all.
