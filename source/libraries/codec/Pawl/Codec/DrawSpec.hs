@@ -12,8 +12,7 @@ import qualified Pawl.Types.SlotName as SlotName
 
 spec :: (Monad m, Monad n) => Spec.Spec m n -> n ()
 spec s = Spec.describe s "Pawl.Codec.Draw" $ do
-  -- Every draw in the pool but Shahrazad and Sindbad's looks back at nothing, so
-  -- the slot key is absent here and present below.
+  -- A draw nothing looks back at omits the slot key; one that does writes it.
   Spec.it s "MkDraw, no slot: the key is omitted" $
     Common.assertCodec
       s

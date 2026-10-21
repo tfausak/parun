@@ -111,6 +111,7 @@ import qualified Pawl.Types.CastOffer as CastOffer
 import qualified Pawl.Types.CastRepetition as CastRepetition
 import qualified Pawl.Types.CharacteristicPT as CharacteristicPT
 import qualified Pawl.Types.ChooseCardName as ChooseCardName
+import qualified Pawl.Types.ChooseNumber as ChooseNumber
 import qualified Pawl.Types.ChoosePermanents as ChoosePermanents
 import qualified Pawl.Types.ChosenCardFromAmong as ChosenCardFromAmong
 import qualified Pawl.Types.ChosenCardInGraveyard as ChosenCardInGraveyard
@@ -773,6 +774,7 @@ playerRefPositions =
         ("player-sacrifices", Effect.PlayerSacrifices (PlayerSacrifices.MkPlayerSacrifices (plantedPlayer "ps") (Filter.Type.And []) one), [plantedPlayer "ps"]),
         ("choose-card-name", Effect.ChooseCardName (ChooseCardName.MkChooseCardName (plantedPlayer "cn") (Filter.Type.And [])), [plantedPlayer "cn"]),
         ("repeat", Effect.Repeat (Repeat.MkRepeat (plantedPlayer "rp-chooser") Seq.empty Nothing), [plantedPlayer "rp-chooser"]),
+        ("choose-number", Effect.ChooseNumber (ChooseNumber.MkChooseNumber (SlotName.MkSlotName (Text.pack "number")) Nothing (plantedPlayer "cn-chooser")), [plantedPlayer "cn-chooser"]),
         ("offer-cast", Effect.OfferCast (OfferCast.MkOfferCast (plantedRef "oc-ref") (plantedPlayer "oc-caster") CastObligation.Optional PermissionVerb.Cast CastOffer.defaultValue CastRepetition.Once False False Nothing), [plantedPlayer "oc-caster"]),
         ("grant-play-from-exile", Effect.GrantPlayFromExile (GrantPlayFromExile.MkGrantPlayFromExile Duration.UntilEndOfTurn (plantedPlayer "gp-player") (plantedRef "gp-ref") ManaSpending.AsProduced Nothing Nothing PermissionVerb.Play 0 TapState.Untapped Nothing), [plantedPlayer "gp-player"]),
         -- CR 611.2a's reference nested in the DURATION rather than in a field of

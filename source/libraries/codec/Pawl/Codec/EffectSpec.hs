@@ -432,7 +432,7 @@ spec s = Spec.describe s "Pawl.Codec.Effect" $ do
       s
       toJson
       fromJson
-      (Effect.ChooseNumber (ChooseNumber.MkChooseNumber (SlotName.MkSlotName (Text.pack "number")) Nothing))
+      (Effect.ChooseNumber (ChooseNumber.MkChooseNumber (SlotName.MkSlotName (Text.pack "number")) Nothing (PlayerRef.Relative PlayerRelation.You)))
       " {\"type\":\"ChooseNumber\",\"value\":{\"slot\":\"number\"}} "
   Spec.it s "Sacrifice" $
     Common.assertJsonCodec

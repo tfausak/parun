@@ -18,6 +18,7 @@ import qualified Data.Maybe as Maybe
 import qualified Data.Sequence as Seq
 import qualified Data.Set as Set
 import qualified Data.Text as Text
+import qualified Numeric.Natural as Natural
 import qualified Pawl.Engine.Activate as Activate
 import qualified Pawl.Engine.Binding as Binding
 import qualified Pawl.Engine.Cast as Cast
@@ -2854,6 +2855,45 @@ brassHeraldSpec s registry =
     Spec.assertEqWith s "the rest went to the bottom, so the unrevealed Island is on top" (top goblins, top giants) (Just islandId, Just islandId)
     Spec.assertEqWith s "and the library keeps every card that did not go to hand" (fmap Seq.length (Map.lookup S.alice (GameState.library goblins)), fmap Seq.length (Map.lookup S.alice (GameState.library giants))) (Just 3, Just 4)
 
+-- Truce {2}{W} Instant: "Each player may draw up to two cards. For each card
+-- less than two a player draws this way, that player gains 2 life." A CR 608.2f
+-- loop over the players, each choosing and then drawing before the next seat
+-- chooses -- Diminishing Returns' 2016-06-08 ruling on the same "each player
+-- draws up to" sentence. Cast by alice on BOB's turn, so CR 101.4's APNAP order
+-- (bob, carol, alice) is not the seats' id order. Each seat names a different
+-- number, and bob and carol name one the prompt's fallback (0) would not.
+truceSpec :: (Monad m, Monad n) => Spec.Spec m n -> Registry.Registry m -> n ()
+truceSpec s registry =
+  let board carolLibrary = do
+        truce <- S.printingOf s registry "Truce"
+        plains <- S.printingOf s registry "Plains"
+        giant <- S.printingOf s registry "Hill Giant"
+        let lands = S.landsFor plains S.alice 3 S.threePlayerGame
+            (withTruce, truceId) = S.handOne truce lands
+            stock pid n gs = List.foldl' (\g _ -> snd (S.addLibraryCard giant pid g)) gs [1 .. n :: Int]
+            stocked = stock S.carol carolLibrary (stock S.bob 3 (stock S.alice 3 withTruce))
+        pure (truceId, stocked {GameState.activePlayer = S.bob})
+      choices :: Map.Map PlayerId.PlayerId Natural.Natural
+      choices = Map.fromList [(S.alice, 0), (S.bob, 1), (S.carol, 2)]
+      answer :: Prompt.Prompt r -> r
+      answer p = case p of
+        Prompt.ChooseNumber _ pid _ _ -> Map.findWithDefault 0 pid choices
+        _ -> S.identityAnswer p
+      resolved (truceId, gs) =
+        let cast = S.runPure answer gs (S.cast S.alice truceId)
+         in Replay.record answer cast Stack.resolveTop
+      hands gs = (S.handSize S.alice gs, S.handSize S.bob gs, S.handSize S.carol gs)
+      lives gs = (S.lifeOf S.alice gs, S.lifeOf S.bob gs, S.lifeOf S.carol gs)
+   in Spec.describe s "CR 608.2f each player choosing how many to draw" $ do
+        Spec.it s "CR 608.2d each seat draws the number it chose and gains 2 life for each card short of two" $ do
+          ((_, after), transcript) <- fmap resolved (board 3)
+          Spec.assertEqWith s "CR 119.3 alice drew none and gains 4, bob drew one and gains 2, carol drew two and gains nothing" (lives after) (Just 24, Just 22, Just 20)
+          Spec.assertEqWith s "CR 121.1 each seat drew its own number: alice none, bob one, carol two" (hands after) (0, 1, 2)
+          Spec.assertEqWith s "CR 101.4 the choices were made in APNAP order from the active player, bob, then carol, then alice" [n | Response.ChoseNumber n <- transcript] [1, 2, 0]
+        Spec.it s "CR 121.1 a card a seat chose but could not draw counts toward its life" $ do
+          ((_, after), _) <- fmap resolved (board 1)
+          Spec.assertEqWith s "carol chose two off a one-card library, drew one, and gains 2" (S.lifeOf S.carol after, S.handSize S.carol after) (Just 22, 1)
+
 spec :: (Monad m, Monad n) => Spec.Spec m n -> Registry.Registry m -> n ()
 spec s registry = Spec.describe s "Pawl.Engine.Resolve" $ do
   brassHeraldSpec s registry
@@ -2865,6 +2905,7 @@ spec s registry = Spec.describe s "Pawl.Engine.Resolve" $ do
   crabSpec s registry
   snagSpec s registry
   rhysticSpec s registry
+  truceSpec s registry
 
 -- The names of a player's library, top first: what a test reads where a search
 -- looked at the cards and its shuffle re-minted them (CR 701.20d / 701.20e).

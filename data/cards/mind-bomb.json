@@ -1,0 +1,106 @@
+{
+  "faces": [
+    {
+      "manaCost": [
+        {
+          "type": "OfType",
+          "value": {
+            "type": "Colored",
+            "value": {
+              "type": "Blue"
+            }
+          }
+        }
+      ],
+      "name": "Mind Bomb",
+      "oracleText": "Each player may discard up to three cards. Mind Bomb deals damage to each player equal to 3 minus the number of cards they discarded this way.",
+      "spell": {
+        "modes": [
+          {
+            "clauses": [
+              {
+                "effects": [
+                  {
+                    "type": "Discard",
+                    "value": {
+                      "type": "AnyNumber",
+                      "value": {
+                        "cards": {
+                          "atMost": {
+                            "type": "Literal",
+                            "value": 3
+                          },
+                          "filter": {
+                            "type": "And",
+                            "value": []
+                          }
+                        },
+                        "discarded": "discarded",
+                        "player": {
+                          "type": "Relative",
+                          "value": {
+                            "type": "AnyPlayer"
+                          }
+                        }
+                      }
+                    }
+                  }
+                ]
+              },
+              {
+                "effects": [
+                  {
+                    "type": "DealDamage",
+                    "value": {
+                      "parts": [
+                        {
+                          "quantity": {
+                            "type": "Plus",
+                            "value": {
+                              "left": {
+                                "type": "Literal",
+                                "value": 3
+                              },
+                              "right": {
+                                "type": "Negate",
+                                "value": {
+                                  "type": "Count",
+                                  "value": {
+                                    "aggregation": {
+                                      "type": "Members"
+                                    },
+                                    "filter": {
+                                      "type": "OwnedByRecipient"
+                                    },
+                                    "scope": {
+                                      "type": "OverBound",
+                                      "value": "discarded"
+                                    }
+                                  }
+                                }
+                              }
+                            }
+                          },
+                          "ref": {
+                            "type": "EachPlayer"
+                          }
+                        }
+                      ]
+                    }
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      "typeLine": {
+        "types": [
+          {
+            "type": "Sorcery"
+          }
+        ]
+      }
+    }
+  ]
+}
