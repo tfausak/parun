@@ -891,7 +891,7 @@ effectObjectRefs effect = case effect of
   Effect.PlayerSacrifices {} -> []
   Effect.Vote {} -> []
   Effect.TakeExtraTurn {} -> []
-  Effect.ShuffleIntoLibrary (ShuffleIntoLibrary.MkShuffleIntoLibrary _ refs) -> NonEmpty.toList refs
+  Effect.ShuffleIntoLibrary (ShuffleIntoLibrary.MkShuffleIntoLibrary _ refs _) -> NonEmpty.toList refs
   Effect.Ante (Ante.MkAnte _ ref _) -> [ref]
   Effect.PutSticker (PutSticker.MkPutSticker _ ref _ _ _ _) -> [ref]
   Effect.SetOwner (SetOwner.MkSetOwner _ ref) -> [ref]
@@ -1112,7 +1112,7 @@ effectPlayerRefs effect = case effect of
   -- CR 701.38a's specified player, the seat the vote starts with.
   Effect.Vote (Vote.MkVote starter _ _) -> [starter]
   Effect.TakeExtraTurn takeExtraTurn -> [TakeExtraTurn.player takeExtraTurn]
-  Effect.ShuffleIntoLibrary (ShuffleIntoLibrary.MkShuffleIntoLibrary named _) -> Maybe.maybeToList named
+  Effect.ShuffleIntoLibrary (ShuffleIntoLibrary.MkShuffleIntoLibrary named _ _) -> Maybe.maybeToList named
   Effect.Ante (Ante.MkAnte player _ _) -> [player]
   Effect.PutSticker (PutSticker.MkPutSticker player _ _ _ _ _) -> [player]
   Effect.SetOwner (SetOwner.MkSetOwner player _) -> [player]
@@ -2555,6 +2555,8 @@ boundSlots effect = case effect of
   Effect.MoveToZone (MoveToZone.MkMoveToZone _ _ _ mSlot _ _ _) -> foldMap Set.singleton mSlot
   -- MoveToZone's reason: the anted incarnations (CR 400.7).
   Effect.Ante (Ante.MkAnte _ _ mSlot) -> foldMap Set.singleton mSlot
+  -- MoveToZone's reason: the shuffled-in incarnations (CR 400.7).
+  Effect.ShuffleIntoLibrary shuffleIntoLibrary -> foldMap Set.singleton (ShuffleIntoLibrary.slot shuffleIntoLibrary)
   -- CR 123.6e: the placed sticker.
   Effect.PutSticker putSticker -> foldMap Set.singleton (PutSticker.bound putSticker)
   Effect.SetOwner {} -> Set.empty
@@ -2787,7 +2789,6 @@ boundSlots effect = case effect of
   Effect.AttachBound {} -> Set.empty
   Effect.AttachAll {} -> Set.empty
   Effect.TakeExtraTurn {} -> Set.empty
-  Effect.ShuffleIntoLibrary {} -> Set.empty
   Effect.Shuffle {} -> Set.empty
   Effect.OfferNamedCopy {} -> Set.empty
   Effect.OfferNotedCopy {} -> Set.empty

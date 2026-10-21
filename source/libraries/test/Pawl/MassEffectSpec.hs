@@ -1716,6 +1716,51 @@ timetwisterSpec s registry = Spec.describe s "Timetwister" $ do
       (fmap Just [S.printingName forest, S.printingName piker, S.printingName forest])
     Spec.assertEqWith s "and the stack is empty" (length (GameState.stack after)) 0
 
+-- Winds of Change {R} Sorcery, "Each player shuffles the cards from their hand
+-- into their library, then draws that many cards." Molten Psyche {1}{R}{R}
+-- Sorcery, the same, then "Metalcraft -- If you control three or more
+-- artifacts, Molten Psyche deals damage to each opponent equal to the number of
+-- cards that player has drawn this turn." (Oracle text checked against
+-- api.scryfall.com, 2026-10-21.)
+--
+-- CR 400.7: the shuffle binds the cards it moved, and each player's count is
+-- their own (the 2007-09-16 ruling). THREE SEATS with distinct hand sizes, the
+-- caster's not the largest, so neither a shared count nor an empty one passes.
+windsOfChangeSpec :: (Monad m, Monad n) => Spec.Spec m n -> Registry.Registry m -> n ()
+windsOfChangeSpec s registry = Spec.describe s "Winds of Change" $ do
+  let stock printing pid n gs = List.foldl' (\g _ -> snd (S.addLibraryCard printing pid g)) gs [1 :: Int .. n]
+      handOf printing pid n gs = List.foldl' (\g _ -> snd (S.addHandCard printing pid g)) gs [1 :: Int .. n]
+      -- alice: hand 2 beside the spell, library 9. bob: hand 3, library 8.
+      -- carol: hand 1, library 10.
+      board forest piker =
+        stock forest S.alice 9 . stock forest S.bob 8 . stock forest S.carol 10 . handOf piker S.alice 2 . handOf piker S.bob 3 . handOf piker S.carol 1
+      sizes zone gs = fmap (\pid -> length (Game.zoneMembers zone pid gs)) [S.alice, S.bob, S.carol]
+      castNamed name spell gs = S.runPure S.identityAnswer gs (Cast.castSpell S.manaPerformer S.alice spell (CardName.MkCardName (Text.pack name)) Facing.FaceUp >> Stack.resolveTop)
+  Spec.it s "CR 400.7 each player draws as many as they shuffled in" $ do
+    winds <- S.printingOf s registry "Winds of Change"
+    mountain <- S.printingOf s registry "Mountain"
+    forest <- S.printingOf s registry "Forest"
+    piker <- S.printingOf s registry "Goblin Piker"
+    let (withCard, spell) = S.handOne winds (S.landsFor mountain S.alice 1 S.threePlayerGame)
+        after = castNamed "Winds of Change" spell (board forest piker withCard)
+    Spec.assertEqWith s "each player drew their own count" (sizes Zone.Hand after) [2, 3, 1]
+    Spec.assertEqWith s "and every library is back to its size" (sizes Zone.Library after) [9, 8, 10]
+  -- The metalcraft clause reads each opponent's draws, the shuffle's among them.
+  Spec.it s "Molten Psyche with metalcraft deals each opponent their draw count" $ do
+    psyche <- S.printingOf s registry "Molten Psyche"
+    mountain <- S.printingOf s registry "Mountain"
+    forest <- S.printingOf s registry "Forest"
+    piker <- S.printingOf s registry "Goblin Piker"
+    ornithopter <- S.printingOf s registry "Ornithopter"
+    let run artifacts =
+          let (withCard, spell) = S.handOne psyche (S.landsFor mountain S.alice 3 S.threePlayerGame)
+              armed = List.foldl' (\g _ -> snd (S.addPermanent ornithopter S.alice g)) withCard [1 :: Int .. artifacts]
+           in castNamed "Molten Psyche" spell (board forest piker armed)
+        lives gs = fmap (`S.lifeOf` gs) [S.alice, S.bob, S.carol]
+    Spec.assertEqWith s "three artifacts: bob takes 3 and carol 1" (lives (run 3)) (fmap Just [20, 17, 19])
+    Spec.assertEqWith s "two artifacts: no one is dealt damage" (lives (run 2)) (fmap Just [20, 20, 20])
+    Spec.assertEqWith s "each player drew their own count" (sizes Zone.Hand (run 3)) [2, 3, 1]
+
 spec :: (Monad m, Monad n) => Spec.Spec m n -> Registry.Registry m -> n ()
 spec s registry = Spec.describe s "Pawl.Engine.Resolve" $ do
   destroyAllSpec s registry
@@ -1735,3 +1780,4 @@ spec s registry = Spec.describe s "Pawl.Engine.Resolve" $ do
   zimonesExperimentSpec s registry
   blossomingTortoiseSpec s registry
   timetwisterSpec s registry
+  windsOfChangeSpec s registry

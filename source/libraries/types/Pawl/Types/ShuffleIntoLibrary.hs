@@ -3,6 +3,7 @@ module Pawl.Types.ShuffleIntoLibrary where
 import qualified Data.List.NonEmpty as NonEmpty
 import qualified Pawl.Types.ObjectRef as ObjectRef
 import qualified Pawl.Types.PlayerRef as PlayerRef
+import qualified Pawl.Types.SlotName as SlotName
 
 -- | CR 701.24: shuffle the objects the ObjectRefs name into a library, and
 -- shuffle that library whether or not the objects arrived.
@@ -16,6 +17,9 @@ data ShuffleIntoLibrary = MkShuffleIntoLibrary
     library :: Maybe PlayerRef.PlayerRef,
     -- | Every set the one instruction shuffles in -- Timetwister's "their hand
     -- and graveyard" is two -- moved as one event and shuffled once.
-    refs :: NonEmpty.NonEmpty ObjectRef.ObjectRef
+    refs :: NonEmpty.NonEmpty ObjectRef.ObjectRef,
+    -- | CR 400.7: where the incarnations the move minted are bound, for a later
+    -- instruction's count -- Winds of Change's "draws that many".
+    slot :: Maybe SlotName.SlotName
   }
   deriving (Eq, Ord, Show)

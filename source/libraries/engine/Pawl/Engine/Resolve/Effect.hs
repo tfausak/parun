@@ -5762,7 +5762,11 @@ applyOneEffect runSubgame resolving source controller legal chosen effect = case
   -- Every ref's objects move as ONE event (CR 608.2f / 603.2c), so Timetwister's
   -- hand and graveyard are one arrival and one shuffle -- proved by
   -- Pawl.MassEffectSpec's Timetwister group.
-  Effect.ShuffleIntoLibrary (ShuffleIntoLibrary.MkShuffleIntoLibrary named refs) -> do
+  --
+  -- The slot binds the library incarnations (CR 400.7), for a later count:
+  -- Winds of Change's "draws that many", each player's own -- proved by
+  -- Pawl.MassEffectSpec's Winds of Change group.
+  Effect.ShuffleIntoLibrary (ShuffleIntoLibrary.MkShuffleIntoLibrary named refs mSlot) -> do
     gs <- State.get
     let targets = ListUtils.nubOrd (foldMap (objectRefObjects legal resolving controller source gs) refs)
         -- The owners are read from the PRE-MOVE objects (CR 701.24c); an id that
@@ -5770,7 +5774,8 @@ applyOneEffect runSubgame resolving source controller legal chosen effect = case
         owners =
           Set.fromList (Maybe.mapMaybe (\target -> fmap Object.owner (Game.lookupObject target gs)) targets)
             <> Set.fromList (foldMap (playerRefPlayers legal resolving source controller gs) named)
-    Monad.void (Event.changeZonesTogether (fmap (\target -> (target, Zone.Library)) targets))
+    arrivals <- Event.changeZonesTogether (fmap (\target -> (target, Zone.Library)) targets)
+    bindObjects resolving mSlot (concatMap Foldable.toList arrivals)
     -- APNAP (CR 608.2f), which is what makes the ORDER of the Prompt.Shuffle calls
     -- a fact about the rules rather than about PlayerId's Ord.
     Monad.forM_ (filter (`Set.member` owners) (Game.apnapOrder gs)) Event.shuffleLibrary

@@ -1182,7 +1182,8 @@ spec s = Spec.describe s "Pawl.Codec.Effect" $ do
       ( Effect.ShuffleIntoLibrary
           ShuffleIntoLibrary.MkShuffleIntoLibrary
             { ShuffleIntoLibrary.library = Nothing,
-              ShuffleIntoLibrary.refs = NonEmpty.singleton (ObjectRef.InSlot (SlotName.MkSlotName (Text.pack "target")))
+              ShuffleIntoLibrary.refs = NonEmpty.singleton (ObjectRef.InSlot (SlotName.MkSlotName (Text.pack "target"))),
+              ShuffleIntoLibrary.slot = Nothing
             }
       )
       " {\"type\":\"ShuffleIntoLibrary\",\"value\":{\"refs\":[{\"type\":\"InSlot\",\"value\":\"target\"}]}} "
@@ -1196,7 +1197,8 @@ spec s = Spec.describe s "Pawl.Codec.Effect" $ do
       ( Effect.ShuffleIntoLibrary
           ShuffleIntoLibrary.MkShuffleIntoLibrary
             { ShuffleIntoLibrary.library = Just (PlayerRef.InSlot (SlotName.MkSlotName (Text.pack "player"))),
-              ShuffleIntoLibrary.refs = NonEmpty.singleton (ObjectRef.InSlot (SlotName.MkSlotName (Text.pack "cards")))
+              ShuffleIntoLibrary.refs = NonEmpty.singleton (ObjectRef.InSlot (SlotName.MkSlotName (Text.pack "cards"))),
+              ShuffleIntoLibrary.slot = Nothing
             }
       )
       " {\"type\":\"ShuffleIntoLibrary\",\"value\":{\"library\":{\"type\":\"InSlot\",\"value\":\"player\"},\"refs\":[{\"type\":\"InSlot\",\"value\":\"cards\"}]}} "
