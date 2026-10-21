@@ -332,6 +332,7 @@ import qualified Pawl.Types.Replace as Replace
 import qualified Pawl.Types.ReplacementEffect as ReplacementEffect
 import qualified Pawl.Types.RequireAttack as RequireAttack
 import qualified Pawl.Types.RequireBlock as RequireBlock
+import qualified Pawl.Types.RequirementArity as RequirementArity
 import qualified Pawl.Types.RestrictedCreatures as RestrictedCreatures
 import qualified Pawl.Types.ReturnPermanents as ReturnPermanents
 import qualified Pawl.Types.Reveal as Reveal
@@ -695,7 +696,7 @@ objectRefPositions =
         ("turn-face-down", Effect.TurnFaceDown (TurnFaceDown.MkTurnFaceDown (plantedRef "tf") FaceDownCharacteristics.defaultValue), [plantedRef "tf"]),
         ("remove-from-combat", Effect.RemoveFromCombat (plantedRef "rc"), [plantedRef "rc"]),
         ("gain-control", Effect.GainControl (GainControl.MkGainControl Duration.UntilEndOfTurn (plantedRef "gc") (PlayerRef.Relative PlayerRelation.You)), [plantedRef "gc"]),
-        ("require-block", Effect.RequireBlock (RequireBlock.MkRequireBlock Duration.UntilEndOfTurn (RestrictedCreatures.Named (plantedRef "rb-blocker")) (plantedRef "rb-attacker")), [plantedRef "rb-blocker", plantedRef "rb-attacker"]),
+        ("require-block", Effect.RequireBlock (RequireBlock.MkRequireBlock Duration.UntilEndOfTurn (RestrictedCreatures.Named (plantedRef "rb-blocker")) (Just (RestrictedCreatures.Named (plantedRef "rb-attacker"))) RequirementArity.EachSubject), [plantedRef "rb-blocker", plantedRef "rb-attacker"]),
         ("prohibit", Effect.Prohibit (Prohibit.MkProhibit Prohibition.Regenerate Duration.UntilEndOfTurn (RestrictedCreatures.Named (plantedRef "cb"))), [plantedRef "cb"]),
         ("require-attack", Effect.RequireAttack (RequireAttack.MkRequireAttack Duration.UntilEndOfTurn (RestrictedCreatures.Named (plantedRef "ra")) (AttackTargetRef.Players (PlayerRef.Relative PlayerRelation.You))), [plantedRef "ra"]),
         ("require-attack-permanent", Effect.RequireAttack (RequireAttack.MkRequireAttack Duration.UntilEndOfTurn (RestrictedCreatures.Named (plantedRef "rp-attacker")) (AttackTargetRef.Permanents (plantedRef "rp-defender"))), [plantedRef "rp-attacker", plantedRef "rp-defender"]),
@@ -1417,7 +1418,7 @@ ownCounts effect = case effect of
   Effect.ExchangeControl _ -> []
   Effect.ArmDelayedTrigger arm -> foldMap triggeredAbilityCounts (Game.carriedDelayedAbility arm)
   Effect.AffectPlayers (AffectPlayers.MkAffectPlayers duration _ playerEffect) -> durationCounts duration <> playerEffectCounts playerEffect
-  Effect.RequireBlock (RequireBlock.MkRequireBlock duration _ _) -> durationCounts duration
+  Effect.RequireBlock (RequireBlock.MkRequireBlock duration _ _ _) -> durationCounts duration
   Effect.Prohibit (Prohibit.MkProhibit _ duration _) -> durationCounts duration
   Effect.ForbidAttack (ForbidAttack.MkForbidAttack duration _ _) -> durationCounts duration
   Effect.ForbidBeingBlocked (ForbidBeingBlocked.MkForbidBeingBlocked duration _ _) -> durationCounts duration
@@ -6095,7 +6096,7 @@ effectFilters effect = case effect of
   Effect.ExchangeControl _ -> []
   Effect.ArmDelayedTrigger arm@(ArmDelayedTrigger.MkArmDelayedTrigger _ _ mDuration _) -> frame Unframed (concatMap durationFilters (Maybe.maybeToList mDuration)) <> foldMap triggeredAbilityFilters (Game.carriedDelayedAbility arm)
   Effect.AffectPlayers (AffectPlayers.MkAffectPlayers duration _ playerEffect) -> frame Unframed (durationFilters duration) <> fmap ((,) StoredPlayerEffectFramed) (playerEffectFilters playerEffect)
-  Effect.RequireBlock (RequireBlock.MkRequireBlock duration blocker attacker) -> frame Unframed (durationFilters duration) <> restrictedFilters blocker <> frame SourceHostFramed (objectRefFilters attacker)
+  Effect.RequireBlock (RequireBlock.MkRequireBlock duration blocker attacker _) -> frame Unframed (durationFilters duration) <> restrictedFilters blocker <> foldMap restrictedFilters attacker
   -- RequireBlock's arm one axis narrower.
   Effect.Prohibit (Prohibit.MkProhibit _ duration affected) -> frame Unframed (durationFilters duration) <> restrictedFilters affected
   -- The AimedAt is a PlayerScope and CR 506.3 kinds, no Filter in either.

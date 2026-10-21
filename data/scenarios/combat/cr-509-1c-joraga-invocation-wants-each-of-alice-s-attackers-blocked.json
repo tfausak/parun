@@ -1,0 +1,38 @@
+{
+  "description": "CR 509.1c Joraga Invocation wants each of alice's attackers blocked by someone",
+  "note": "CR 509.1c: \"each creature you control ... must be blocked this turn if able\" is one requirement per attacker in the class, each obeyed by any single blocker. Two attackers and two able blockers: both blockers on the Giant obey one requirement where two can be obeyed, so that is refused; one blocker each obeys both.",
+  "board": {
+    "active": "alice",
+    "step": "PrecombatMain",
+    "seats": [
+      {
+        "name": "alice",
+        "battlefield": [
+          { "card": "Hill Giant", "label": "giant", "ready": true },
+          { "card": "Grizzly Bears", "label": "bears", "ready": true },
+          { "card": "Forest", "label": "f1" },
+          { "card": "Forest", "label": "f2" },
+          { "card": "Forest", "label": "f3" },
+          { "card": "Forest", "label": "f4" },
+          { "card": "Forest", "label": "f5" },
+          { "card": "Forest", "label": "f6" }
+        ],
+        "hand": [{ "card": "Joraga Invocation", "label": "invocation" }]
+      },
+      {
+        "name": "bob",
+        "battlefield": [
+          { "card": "Goblin Piker", "label": "piker", "ready": true },
+          { "card": "Runeclaw Bear", "label": "runeclaw", "ready": true }
+        ]
+      }
+    ]
+  },
+  "timeline": [
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": { "Cast": { "object": "$invocation", "mana": ["$f1", "$f2", "$f3", "$f4", "$f5", "$f6"] } } },
+    { "turn": 1, "step": "DeclareAttackers", "player": "alice", "do": { "Attack": ["$giant", "$bears"] } },
+    { "turn": 1, "step": "DeclareBlockers", "player": "bob", "refuse": { "Block": { "$piker": ["$giant"], "$runeclaw": ["$giant"] } } },
+    { "turn": 1, "step": "DeclareBlockers", "player": "bob", "do": { "Block": { "$piker": ["$giant"], "$runeclaw": ["$bears"] } } },
+    { "turn": 1, "step": "DeclareBlockers", "player": "alice", "check": { "Blockers": { "attacker": "$bears", "blockers": ["$runeclaw"] } } }
+  ]
+}

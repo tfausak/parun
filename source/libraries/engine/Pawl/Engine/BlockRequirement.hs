@@ -10,6 +10,7 @@
 -- which card produced one, nor which carrier.
 module Pawl.Engine.BlockRequirement where
 
+import qualified Data.Map.Strict as Map
 import qualified Data.Set as Set
 import qualified Pawl.Engine.Condition as Condition
 import qualified Pawl.Engine.Projection as Projection
@@ -202,16 +203,32 @@ instances able candidates attackers gs =
       -- defending player no longer controls, is not among `candidates`, and its
       -- attacker may have left combat. A Matching class is read against the live
       -- board, CR 611.2c, so a creature that entered after Alluring Scent
-      -- resolved is inside it.
-      fromStored active =
-        let blockers = RestrictedCreatures.covered (ActiveBlockRequirement.controller active) (ActiveBlockRequirement.source active) (ActiveBlockRequirement.blocker active) candidates gs
-            attacker = ActiveBlockRequirement.attacker active
-         in ( if elem attacker attackers
-                then fmap (\blocker -> (blocker, attacker)) (filter (`able` attacker) blockers)
-                else [],
-              []
-            )
+      -- resolved is inside it, on either axis.
+      --
+      -- The arity is the printed carrier's, with one difference: an AnySubject
+      -- requirement's group is keyed by the RESOLUTION as well as the attacker,
+      -- since a Named side stores one row per creature and those rows state one
+      -- requirement between them. No file in data/cards/ writes a Named blocker
+      -- beside AnySubject (2026-10-21), so that key is a fence with no observer;
+      -- a "target creatures, one of them must block" card would observe it. The
+      -- arity itself is
+      -- proved by the Irresistible Prey and Joraga Invocation scenarios.
+      storedPairs active =
+        let covered = RestrictedCreatures.covered (ActiveBlockRequirement.controller active) (ActiveBlockRequirement.source active)
+            blockers = covered (ActiveBlockRequirement.blocker active) candidates gs
+            wanted = maybe attackers (\side -> covered side attackers gs) (ActiveBlockRequirement.attacker active)
+         in [(blocker, attacker) | attacker <- wanted, blocker <- blockers, able blocker attacker]
+      storedEach = concatMap storedPairs (filter ((== RequirementArity.EachSubject) . ActiveBlockRequirement.arity) (GameState.blockRequirements gs))
+      storedGroups =
+        Map.elems
+          ( Map.fromListWith
+              Set.union
+              [ ((ActiveBlockRequirement.source active, ActiveBlockRequirement.timestamp active, attacker), Set.singleton pair)
+              | active <- GameState.blockRequirements gs,
+                ActiveBlockRequirement.arity active == RequirementArity.AnySubject,
+                pair@(_, attacker) <- storedPairs active
+              ]
+          )
       gathered =
         fmap (\source -> fromPermanent source <> fromGrant source) (Set.toList (GameState.battlefield gs))
-          <> fmap fromStored (GameState.blockRequirements gs)
-   in Requirement.gather (concatMap fst gathered) (concatMap snd gathered)
+   in Requirement.gather (concatMap fst gathered <> storedEach) (concatMap snd gathered <> storedGroups)

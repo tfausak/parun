@@ -193,6 +193,7 @@ import qualified Pawl.Types.ReplacementEffect as ReplacementEffect
 import qualified Pawl.Types.ReplacementOrigin as ReplacementOrigin
 import qualified Pawl.Types.RequireAttack as RequireAttack
 import qualified Pawl.Types.RequireBlock as RequireBlock
+import qualified Pawl.Types.RequirementArity as RequirementArity
 import qualified Pawl.Types.RestrictedCreatures as RestrictedCreatures
 import qualified Pawl.Types.ReturnPermanents as ReturnPermanents
 import qualified Pawl.Types.Reveal as Reveal
@@ -7125,7 +7126,8 @@ provoke =
           ( RequireBlock.MkRequireBlock
               Duration.UntilEndOfCombat
               (RestrictedCreatures.Named (ObjectRef.InSlot provokeTarget))
-              (ObjectRef.InSlot Binding.triggerSource)
+              (Just (RestrictedCreatures.Named (ObjectRef.InSlot Binding.triggerSource)))
+              RequirementArity.EachSubject
           )
       untap = Effect.Untap (ObjectRef.InSlot provokeTarget)
    in Mint.triggerOf

@@ -1,0 +1,70 @@
+{
+  "faces": [
+    {
+      "manaCost": [],
+      "name": "Targeting Rocket",
+      "oracleText": "Whenever you crank this Contraption, target creature blocks this turn if able.",
+      "triggeredAbilities": [
+        {
+          "condition": {
+            "type": "PermanentActs",
+            "value": {
+              "action": {
+                "type": "Crank"
+              },
+              "permanent": {
+                "type": "Self"
+              }
+            }
+          },
+          "modal": {
+            "modes": [
+              {
+                "clauses": [
+                  {
+                    "effects": [
+                      {
+                        "type": "RequireBlock",
+                        "value": {
+                          "blocker": {
+                            "type": "Named",
+                            "value": {
+                              "type": "InSlot",
+                              "value": "target"
+                            }
+                          },
+                          "duration": {
+                            "type": "UntilEndOfTurn"
+                          }
+                        }
+                      }
+                    ]
+                  }
+                ],
+                "targetSlots": {
+                  "target": {
+                    "pool": {
+                      "type": "Creatures"
+                    }
+                  }
+                }
+              }
+            ]
+          }
+        }
+      ],
+      "typeLine": {
+        "subtypes": [
+          {
+            "type": "Contraption"
+          }
+        ],
+        "types": [
+          {
+            "type": "Artifact"
+          }
+        ]
+      }
+    }
+  ]
+}

@@ -1,0 +1,39 @@
+{
+  "description": "CR 613.11 Glorfindel must still be blocked after Turn to Frog strips its abilities",
+  "note": "CR 611.2c / 613.11: Glorfindel's \"must be blocked this turn if able\" is a rules effect its trigger's resolution created, not an ability Glorfindel gained, so Turn to Frog's \"loses all abilities\" applied afterwards leaves it standing. Bob declining to block is refused; the Piker blocking is accepted. An ability-grant encoding loses the requirement to the Frog and lets bob decline.",
+  "board": {
+    "active": "alice",
+    "step": "PrecombatMain",
+    "seats": [
+      {
+        "name": "alice",
+        "battlefield": [
+          { "card": "Glorfindel, Dauntless Rescuer", "label": "glorfindel", "ready": true },
+          { "card": "Crystal Ball", "label": "ball" },
+          { "card": "Island", "label": "i1" },
+          { "card": "Island", "label": "i2" },
+          { "card": "Island", "label": "i3" }
+        ],
+        "hand": [{ "card": "Turn to Frog", "label": "frog" }],
+        "library": [{ "card": "Forest", "label": "top" }, { "card": "Forest", "label": "second" }]
+      },
+      {
+        "name": "bob",
+        "battlefield": [{ "card": "Goblin Piker", "label": "piker", "ready": true }]
+      }
+    ]
+  },
+  "timeline": [
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": { "Answer": { "prompt": "ChooseScry", "with": [["$top", "$second"], []] } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": { "Activate": { "object": "$ball", "mana": ["$i1", null] } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass" },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": { "Answer": { "prompt": "ChooseModes", "with": [0] } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass" },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": { "Cast": { "object": "$frog", "targets": ["$glorfindel"], "mana": ["$i2", "$i3"] } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass" },
+    { "turn": 1, "step": "DeclareAttackers", "player": "alice", "do": { "Attack": ["$glorfindel"] } },
+    { "turn": 1, "step": "DeclareBlockers", "player": "bob", "refuse": { "Block": {} } },
+    { "turn": 1, "step": "DeclareBlockers", "player": "bob", "do": { "Block": { "$piker": ["$glorfindel"] } } },
+    { "turn": 1, "step": "DeclareBlockers", "player": "alice", "check": { "Blockers": { "attacker": "$glorfindel", "blockers": ["$piker"] } } }
+  ]
+}

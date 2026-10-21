@@ -38,14 +38,12 @@ import qualified Pawl.Types.RequirementArity as RequirementArity
 -- subject set is the fourth, `arity`. Pawl.Types.AttackRequirement carries the
 -- same four axes on the other side of the combat phase.
 --
--- Pawl.Types.ActiveBlockRequirement is the sibling that carries both axes as
--- bare ObjectIds, and it is still not a widening of this one: it is the
--- RESOLUTION-created carrier (CR 702.39a's provoke), where the creature is named
--- by targeting and so is one object rather than an affected set.
+-- Pawl.Types.ActiveBlockRequirement is the sibling on the same subject, object
+-- and arity axes, and it is still not a widening of this one: it is the
+-- RESOLUTION-created carrier (CR 702.39a's provoke), whose sides are a frozen
+-- ObjectId or a stored class, and which has outlived its source's text.
 -- Pawl.Types.AttackRequirement and Pawl.Types.ActiveAttackRequirement are the
--- same two carriers on the other side of the combat phase. Reshaping this
--- carrier to ObjectIds would freeze a set CR 611.2c keeps dynamic; reshaping
--- that one to Affecteds would fabricate a set where targeting chose one object.
+-- same two carriers on the other side of the combat phase.
 --
 -- Gathered LIVE from the battlefield on every read and never captured, the
 -- posture both siblings take -- so a Lure leaving the battlefield lifts its

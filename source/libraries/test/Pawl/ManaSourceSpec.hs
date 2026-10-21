@@ -98,6 +98,7 @@ import qualified Pawl.Types.Prohibition as Prohibition
 import qualified Pawl.Types.Prompt as Prompt
 import qualified Pawl.Types.Quantity as Quantity
 import qualified Pawl.Types.Recipient as Recipient
+import qualified Pawl.Types.RequirementArity as RequirementArity
 import qualified Pawl.Types.RestrictedCreatures as RestrictedCreatures
 import qualified Pawl.Types.RoomHalf as RoomHalf
 import qualified Pawl.Types.Scope as Scope
@@ -1875,7 +1876,7 @@ interchangeableSourcesSpec s registry = Spec.describe s "Interchangeable mana so
   Spec.it s "CR 509.1c an Elf that must block the Bears is a candidate of its own" $ do
     offers <- namedRowOffers s registry $ \bear elf gs ->
       let (ts, gs1) = Game.freshTimestamp gs
-       in gs1 {GameState.blockRequirements = [ActiveBlockRequirement.MkActiveBlockRequirement bear S.alice ts Expiry.AtCleanup (RestrictedCreatures.Named elf) bear]}
+       in gs1 {GameState.blockRequirements = [ActiveBlockRequirement.MkActiveBlockRequirement bear S.alice ts Expiry.AtCleanup (RestrictedCreatures.Named elf) (Just (RestrictedCreatures.Named bear)) RequirementArity.EachSubject]}
     Spec.assertEqWith s "asked once, with the named Elf beside the two that are alike" offers [2]
 
   Spec.it s "CR 116.2d an Elf whose ability a player ignores is a candidate of its own" $ do

@@ -2593,7 +2593,7 @@ requireAttackNames asking x = case x of
 
 requireBlockNames :: (Monoid r) => Asking r -> RequireBlock.RequireBlock -> r
 requireBlockNames asking x = case x of
-  RequireBlock.MkRequireBlock duration blocker attacker -> durationNames asking duration <> restrictedCreaturesNames asking (objectRefNames asking) blocker <> objectRefNames asking attacker
+  RequireBlock.MkRequireBlock duration blocker attacker _ -> durationNames asking duration <> restrictedCreaturesNames asking (objectRefNames asking) blocker <> foldMap (restrictedCreaturesNames asking (objectRefNames asking)) attacker
 
 restrictedCreaturesNames :: (Monoid r) => Asking r -> (named -> r) -> RestrictedCreatures.RestrictedCreatures named -> r
 restrictedCreaturesNames asking onNamed x = case x of

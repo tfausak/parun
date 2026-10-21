@@ -30,8 +30,11 @@
                         "type": "RequireBlock",
                         "value": {
                           "attacker": {
-                            "type": "InSlot",
-                            "value": "attacker"
+                            "type": "Named",
+                            "value": {
+                              "type": "InSlot",
+                              "value": "attacker"
+                            }
                           },
                           "blocker": {
                             "type": "Named",

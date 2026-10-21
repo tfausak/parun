@@ -8350,22 +8350,24 @@ applyOneEffect runSubgame resolving source controller legal chosen effect = case
                     }
              in g1 {GameState.playerEffects = active : GameState.playerEffects g1}
        in List.foldl' install gs ((,) <$> armed <*> bakedEffects)
-  Effect.RequireBlock (RequireBlock.MkRequireBlock duration blockerRef attackerRef) ->
-    -- CR 509.1c / 613.11: store one requirement per (blocker, attacker) pair the
-    -- two sides name, rule 509.1c counting requirements PER CREATURE. A Named
-    -- side and the attacker are enumerated ONCE, for the CR 608.2f simultaneity
-    -- objectRefObjects buys; an illegal slot (CR 608.2b) stores nothing, which
-    -- is provoke's fizzle. A Matching class is RequireAttack's below: one row
-    -- per attacker, its bound players baked now, since CR 611.2c keeps a
-    -- requirement on a declaration dynamic (Alluring Scent).
+  Effect.RequireBlock (RequireBlock.MkRequireBlock duration blockerRef attackerRef arity) ->
+    -- CR 509.1c / 613.11: store one row per (blocker, attacker) pair the two
+    -- sides name. A Named side is enumerated ONCE, for the CR 608.2f
+    -- simultaneity objectRefObjects buys; an illegal slot (CR 608.2b) stores
+    -- nothing, which is provoke's fizzle. A Matching class is RequireAttack's
+    -- below: one row, its bound players baked now, since CR 611.2c keeps a
+    -- requirement on a declaration dynamic (Alluring Scent). An absent attacker
+    -- is one row naming none (Predatory Rampage). How many requirements the rows
+    -- state is `arity`, read at Pawl.Engine.BlockRequirement.
     State.modify' $ \gs -> case Expiry.arm (Game.readingAcquisition resolving source) legal controller source duration gs of
       -- CR 611.2b: the duration never started, so nothing is stored.
       Nothing -> gs
       Just expiry ->
-        let blockers = case blockerRef of
+        let restricted side = case side of
               RestrictedCreatures.Named ref -> fmap RestrictedCreatures.Named (objectRefObjects legal resolving controller source gs ref)
               RestrictedCreatures.Matching f -> [RestrictedCreatures.Matching (Filter.bakeBound (Binding.playersIn legal) f)]
-            attackers = objectRefObjects legal resolving controller source gs attackerRef
+            blockers = restricted blockerRef
+            attackers = maybe [Nothing] (fmap Just . restricted) attackerRef
             (ts, gs1) = Game.freshTimestamp gs
             stored = do
               blocker <- blockers
@@ -8377,7 +8379,8 @@ applyOneEffect runSubgame resolving source controller legal chosen effect = case
                     ActiveBlockRequirement.timestamp = ts,
                     ActiveBlockRequirement.expiry = expiry,
                     ActiveBlockRequirement.blocker = blocker,
-                    ActiveBlockRequirement.attacker = attacker
+                    ActiveBlockRequirement.attacker = attacker,
+                    ActiveBlockRequirement.arity = arity
                   }
          in gs1 {GameState.blockRequirements = stored <> GameState.blockRequirements gs1}
   Effect.Prohibit (Prohibit.MkProhibit what duration affected) ->
