@@ -1009,8 +1009,11 @@ placeBorne srcId pending = do
           -- own range, per-slot membership for every slot, and the joint check.
           -- The cast road (Cast.castProposed) and the activation road
           -- (Activate.activateAbility) ask the same three.
+          --
+          -- Not implemented: revealing a card CR 406.4's draw picked out of a
+          -- face-down pile here (#5424).
           attempt rejected = do
-            chosen <- Target.chooseTargets Nothing controller abilId srcId bound inheritedX slots sets
+            (chosen, _) <- Target.chooseTargets Nothing controller abilId srcId bound inheritedX slots sets
             if Target.selectionLegal Nothing (Just controller) bound srcId inheritedX slots sets chosen gs
               then pure (Just chosen)
               else

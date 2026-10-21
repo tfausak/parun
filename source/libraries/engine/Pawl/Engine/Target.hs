@@ -1685,7 +1685,10 @@ slotCapacities counting x slots sets gs =
 -- `seed` is the announcement's own bindings, the map the caller's legalSets and
 -- selectionLegal are handed, so a computed count reads the same environment at
 -- the offer and at the check -- see countingBy.
-chooseTargets :: Maybe AbilityName.AbilityName -> PlayerId -> ObjectId -> ObjectId -> Map SlotName Binding.Type.Binding -> Natural -> Map SlotName TargetSlot -> Map SlotName (Set Recipient) -> Game (Map SlotName (Set Recipient))
+--
+-- Beside the announcement, the cards CR 406.4's draws picked out of piles,
+-- which the caller reveals once paid for (drawFromPiles).
+chooseTargets :: Maybe AbilityName.AbilityName -> PlayerId -> ObjectId -> ObjectId -> Map SlotName Binding.Type.Binding -> Natural -> Map SlotName TargetSlot -> Map SlotName (Set Recipient) -> Game (Map SlotName (Set Recipient), Set ObjectId)
 chooseTargets reader pid oid source seed x slots sets = do
   let groups = Map.fromListWith Set.union [(TargetSlot.chooser slot, Set.singleton name) | (name, slot) <- Map.toList slots]
   answers <-
@@ -1697,11 +1700,11 @@ chooseTargets reader pid oid source seed x slots sets = do
             -- seat under an "of an opponent's choice" slot. The slots go unanswered,
             -- which the callers' own gate then refuses (CR 601.2e, CR 602.2, CR
             -- 603.3d's removal).
-            Nothing -> pure Map.empty
+            Nothing -> pure (Map.empty, Set.empty)
             Just chooser -> askChooser reader pid chooser oid source seed x slots sets mine
       )
       (Map.toAscList groups)
-  pure (Map.unions answers)
+  pure (Map.unions (fmap fst answers), foldMap snd answers)
 
 -- CR 115.1 with CR 601.2c: which seat announces the slots a chooser names.
 --
@@ -1756,7 +1759,7 @@ chooserOf controller oid source seed chooser = case chooser of
 --
 -- The answer is NOT validated here -- `selectionLegal` below is that, asked by
 -- the callers that reverse an announcement (CR 601.2e, CR 602.2).
-askChooser :: Maybe AbilityName.AbilityName -> PlayerId -> PlayerId -> ObjectId -> ObjectId -> Map SlotName Binding.Type.Binding -> Natural -> Map SlotName TargetSlot -> Map SlotName (Set Recipient) -> Set SlotName -> Game (Map SlotName (Set Recipient))
+askChooser :: Maybe AbilityName.AbilityName -> PlayerId -> PlayerId -> ObjectId -> ObjectId -> Map SlotName Binding.Type.Binding -> Natural -> Map SlotName TargetSlot -> Map SlotName (Set Recipient) -> Set SlotName -> Game (Map SlotName (Set Recipient), Set ObjectId)
 askChooser reader controller chooser oid source seed x slots sets mine = do
   gs <- State.get
   let decider = Decide.deciderFor chooser gs
@@ -1779,13 +1782,14 @@ askChooser reader controller chooser oid source seed x slots sets mine = do
             ranges
       asked = Map.intersectionWith (,) counts offered
   if Map.null asked
-    then pure Map.empty
+    then pure (Map.empty, Set.empty)
     else do
       answer <- Game.choose (Prompt.ChooseTargets decider chooser oid asked)
       -- CR 406.4's draw, taken before selectionLegal judges the announcement:
       -- the drawn card can be one the slot's Filter refuses, and CR 601.2e is
       -- what then reverses the casting.
-      traverse (drawFromPiles (Just chooser)) answer
+      drawn <- traverse (drawFromPiles (Just chooser)) answer
+      pure (fmap fst drawn, foldMap snd drawn)
 
 -- CR 601.2d: each divided slot's announced division, asked of the controller
 -- once CR 601.2c's targets are fixed, every target getting at least one.
@@ -1938,10 +1942,12 @@ piledOffer most perspective gs recipients =
 -- answer holding it is short by one target, which selectionLegal then refuses
 -- under CR 601.2e. Keeping it would record a pile as a target.
 --
--- Not implemented: CR 406.4's last sentence, which delays the drawn card's
--- reveal until a cost is paid. Nothing in pawl reveals a chosen target at all,
--- and no cost in `data/cards/` chooses an exiled card (#2568).
-drawFromPiles :: Maybe PlayerId -> Set Recipient -> Game (Set Recipient)
+-- Answers the cards it drew beside the whole answer: CR 406.4 reveals them once
+-- the casting or activation is paid for, which is Pawl.Engine.Cast's and
+-- Pawl.Engine.Activate's to do (docs/decisions.md, "When a target drawn out of a
+-- face-down pile is revealed, and for how long"). Nothing reveals here, so
+-- nobody sees the card during CR 601.2g-h.
+drawFromPiles :: Maybe PlayerId -> Set Recipient -> Game (Set Recipient, Set ObjectId)
 drawFromPiles perspective picked = do
   let drawOf recipient = case recipient of
         Recipient.ToPile pileDraw -> Just (PileDraw.pile pileDraw)
@@ -1952,7 +1958,8 @@ drawFromPiles perspective picked = do
       -- "target", which CR 115.3 forbids naming one card twice.
       drawOut pile n = State.gets (pileMembers perspective pile) >>= Game.drawDistinct Prompt.RandomObject n
   drawn <- Map.traverseWithKey drawOut wanted
-  pure (Set.union named (Set.fromList (fmap Recipient.ToObject (concat (Map.elems drawn)))))
+  let cards = concat (Map.elems drawn)
+  pure (Set.union named (Set.fromList (fmap Recipient.ToObject cards)), Set.fromList cards)
 
 -- CR 406.4's pile itself: every exiled card this chooser may not name that
 -- Pawl.Engine.Exile.pileOf sorts into this pile. Ascending by object id, which is

@@ -15,7 +15,8 @@
 -- Pawl.Engine.Exile.pileOf sorts a card into and Pawl.Engine.Target's piledOffer
 -- offers instead, and the draw drawFromPiles takes out of it, taken over the
 -- WHOLE pile, elided at a one-card pile, filtered back against the pile and asked
--- with Game.ask rather than Game.choose (CR 104.4b) -- and
+-- with Game.ask rather than Game.choose (CR 104.4b), and revealed only once a
+-- cast or activation is paid for -- and
 -- ObjectRef.EachCardInYourHand as Pawl.Engine.Resolve sweeps it.
 --
 -- CR 406.4's separate piles are read off the same Ignorant Bliss: one casting
@@ -51,6 +52,8 @@ import qualified Data.Maybe as Maybe
 import qualified Data.Set as Set
 import qualified Data.Text as Text
 import Numeric.Natural (Natural)
+import qualified Pawl.Engine.Activatable as Activatable
+import qualified Pawl.Engine.Activate as Activate
 import qualified Pawl.Engine.Departure as Departure
 import qualified Pawl.Engine.Engine as Engine
 import qualified Pawl.Engine.Event as Event
@@ -58,6 +61,7 @@ import qualified Pawl.Engine.Exile as Exile
 import qualified Pawl.Engine.Foretell as Foretell
 import qualified Pawl.Engine.Game as Game
 import qualified Pawl.Engine.Modal as Modal
+import qualified Pawl.Engine.PlayerView as PlayerView
 import qualified Pawl.Engine.Projection.View as Projection
 import qualified Pawl.Engine.Setup as Setup
 import qualified Pawl.Engine.Stack as Stack
@@ -67,6 +71,7 @@ import qualified Pawl.Spec as Spec
 import qualified Pawl.Support as S
 import qualified Pawl.Types.Acquisition as Acquisition
 import qualified Pawl.Types.Action as A
+import qualified Pawl.Types.Asked as Asked
 import qualified Pawl.Types.BeginningStep as BeginningStep
 import qualified Pawl.Types.CardName as CardName
 import qualified Pawl.Types.Departure as Departure.Type
@@ -76,15 +81,18 @@ import qualified Pawl.Types.GameEvent as GameEvent
 import qualified Pawl.Types.GameState as GameState
 import qualified Pawl.Types.Object as Object
 import qualified Pawl.Types.ObjectId as ObjectId
+import qualified Pawl.Types.ObjectView as ObjectView
 import qualified Pawl.Types.OptionalDecision as OptionalDecision
 import qualified Pawl.Types.Phase as Phase
 import qualified Pawl.Types.Pile as Pile
 import qualified Pawl.Types.PileDraw as PileDraw
 import qualified Pawl.Types.PlayerId as PlayerId
+import qualified Pawl.Types.PlayerView as PlayerView.Type
 import qualified Pawl.Types.Printing as Printing
 import qualified Pawl.Types.Prompt as Prompt
 import qualified Pawl.Types.Recipient as Recipient
 import qualified Pawl.Types.Revealed as Revealed
+import qualified Pawl.Types.SeatView as SeatView
 import qualified Pawl.Types.StepBegan as StepBegan
 import qualified Pawl.Types.TapState as TapState
 import qualified Pawl.Types.TargetSlot as TargetSlot
@@ -152,6 +160,31 @@ spec s registry = Spec.describe s "Face-down exile" $ do
       -- did resolve, and it took exactly one card out of exile.
       Spec.assertEqWith s "the other card of the pile is the one still in exile face down" (namesOf (faceDownExiled after) after) (Set.singleton other)
       Spec.assertEqWith s "one card left exile, of the three that were there" (Set.size (GameState.exile after)) 2
+    -- CR 406.4's last sentence, read through each seat's PlayerView, the view a
+    -- client is handed: the card the draw named is not revealed until the cost
+    -- is paid, and is then revealed to both seats (docs/decisions.md, "When a
+    -- target drawn out of a face-down pile is revealed, and for how long"). The
+    -- prompts between the draw and the end of the cast are CR 601.2g's mana
+    -- window, which ChooseManaSource raises and never elides.
+    --
+    -- The other card of the pile is the control: revealed to nobody before or
+    -- after, so a reveal of the whole pile cannot pass.
+    Spec.it s "CR 406.4 the card drawn for a spell's target is hidden while it is paid for, and revealed to both seats once cast" $ do
+      (drawn, other, spellId, before) <- pileBoardUncast s registry
+      let ((_, after), seen) = State.runState (Engine.runGameAsked watchingPayment before (S.cast S.alice spellId)) Nothing
+      revealedOncePaid s drawn other before after seen
+    -- The same through CR 602.2b, which runs an activation through CR
+    -- 601.2b-i: Synthetic Blind Reclaimer's "{1}, {T}: Shuffle target exiled
+    -- card into its owner's library" in place of the instant.
+    Spec.it s "CR 406.4 / 602.2b the card drawn for an ability's target is hidden while it is paid for, and revealed to both seats once activated" $ do
+      (drawn, other, _, uncast) <- pileBoardUncast s registry
+      reclaimer <- S.printingOf s registry "Synthetic Blind Reclaimer"
+      let (reclaimerId, before) = S.addPermanent reclaimer S.alice uncast
+      case Activatable.abilitiesFor reclaimerId before of
+        [ability] -> do
+          let ((_, after), seen) = State.runState (Engine.runGameAsked watchingPayment before (Activate.activateAbility S.alice reclaimerId ability)) Nothing
+          revealedOncePaid s drawn other before after seen
+        _ -> Spec.assertFailure s "Synthetic Blind Reclaimer should state one activated ability"
     -- CR 406.4's FIRST sentence, which the case above leaves untested: "face-down
     -- cards in exile should be kept in separate piles based on when they were
     -- exiled and how they were exiled". Two castings of Ignorant Bliss are two
@@ -248,7 +281,7 @@ spec s registry = Spec.describe s "Face-down exile" $ do
       case pilesIn exiled of
         [pile] -> do
           let board = exiled {GameState.lastChoice = Timestamp.MkTimestamp 0}
-              (drawn, after) = S.runPureWith throughPile board (Target.drawFromPiles (Just S.alice) (Set.singleton (firstDraw pile)))
+              (drawn, after) = S.runPureWith throughPile board (fst <$> Target.drawFromPiles (Just S.alice) (Set.singleton (firstDraw pile)))
           case membersOfPile board pile of
             [_, second] -> Spec.assertEqWith s "the draw was honoured, naming the last card of the pile" (Set.toList drawn) [Recipient.ToObject second]
             _ -> Spec.assertFailure s "the casting should hide two cards in one pile"
@@ -1315,6 +1348,56 @@ drawing oid p = case p of
 offerTo :: PlayerId.PlayerId -> TargetSlot.TargetSlot -> GameState.GameState -> Set.Set Recipient.Recipient
 offerTo pid slot gs = Target.piledOffer (Target.fixedCount slot) (Just pid) gs (Target.legalRecipients (Just pid) S.noSource slot gs)
 
+-- What each seat's view showed of exile at every prompt after CR 406.4's draw,
+-- newest first, beside whether the prompt was CR 601.2g's mana window.
+type Sightings = [(Bool, Set.Set ObjectId.ObjectId, Set.Set ObjectId.ObjectId)]
+
+-- throughPile, recording what both seats' views show at each prompt raised
+-- after the draw out of the pile -- the window CR 406.4 keeps the card hidden
+-- through. The draw itself is the RandomObject prompt.
+watchingPayment :: Asked.Asked r -> State.State (Maybe Sightings) r
+watchingPayment asked = do
+  let p = Asked.prompt asked
+      gs = Asked.game asked
+      manaWindow = case p of
+        Prompt.ChooseManaSource {} -> True
+        _ -> False
+  State.modify' (fmap ((manaWindow, facesShown S.alice gs, facesShown S.bob gs) :))
+  case p of
+    Prompt.RandomObject _ -> State.put (Just [])
+    _ -> pure ()
+  pure (throughPile p)
+
+-- The exiled cards whose face this seat's PlayerView shows (CR 406.3, 701.20a).
+facesShown :: PlayerId.PlayerId -> GameState.GameState -> Set.Set ObjectId.ObjectId
+facesShown pid gs =
+  Set.fromList
+    [ ObjectView.object view
+    | seat <- PlayerView.Type.seats (PlayerView.viewFor pid gs),
+      view <- SeatView.exile seat,
+      Maybe.isJust (ObjectView.face view)
+    ]
+
+-- The two halves of CR 406.4's last sentence over one cast or activation off
+-- pileBoardUncast: nothing face down is shown to either seat at any prompt
+-- after the draw, and once paid for both seats see the drawn card and not the
+-- other card of its pile.
+revealedOncePaid :: (Monad m) => Spec.Spec m n -> CardName.CardName -> CardName.CardName -> GameState.GameState -> GameState.GameState -> Maybe Sightings -> m ()
+revealedOncePaid s drawn other before after seen = do
+  let named name = List.find (\oid -> namesOf [oid] after == Set.singleton name) (faceDownExiled after)
+      sightings = Maybe.fromMaybe [] seen
+  Spec.assertEqWith s "while it is paid for, neither seat sees a face-down card" [(a, b) | (_, a, b) <- sightings, not (Set.null a && Set.null b)] []
+  case (named drawn, named other) of
+    (Just drawnId, Just otherId) -> do
+      Spec.assertEqWith s "once paid for, alice sees the drawn card and not the rest of its pile" (facesShown S.alice after) (Set.singleton drawnId)
+      Spec.assertEqWith s "and so does bob" (facesShown S.bob after) (Set.singleton drawnId)
+      -- Proxies, AFTER the behaviour so neither can absorb a mutation: the
+      -- draw was asked, a mana window followed it, and nothing showed before.
+      Spec.assertBool s (any (\(window, _, _) -> window) sightings) "a mana window was raised after the draw"
+      Spec.assertEqWith s "before the cast, neither seat sees a face-down card" (facesShown S.alice before <> facesShown S.bob before) Set.empty
+      Spec.assertBool s (drawnId /= otherId) "the pile's two cards are two objects"
+    _ -> Spec.assertFailure s "both cards of the pile should still be in exile face down"
+
 -- The first draw a slot may name out of a pile, which is the only one a
 -- single-target slot is offered (CR 406.4).
 firstDraw :: Pile.Pile -> Recipient.Recipient
@@ -1335,6 +1418,17 @@ pileBoard ::
   Registry.Registry m ->
   m (CardName.CardName, CardName.CardName, GameState.GameState)
 pileBoard s registry = do
+  (drawn, other, spellId, before) <- pileBoardUncast s registry
+  pure (drawn, other, S.runPure throughPile before (S.cast S.alice spellId))
+
+-- pileBoard before the cast: the two names it returns, alice's copy of
+-- Synthetic Blind Reclamation still in hand, and the board she has priority on.
+pileBoardUncast ::
+  (Monad m) =>
+  Spec.Spec m n ->
+  Registry.Registry m ->
+  m (CardName.CardName, CardName.CardName, ObjectId.ObjectId, GameState.GameState)
+pileBoardUncast s registry = do
   bliss <- S.printingOf s registry "Ignorant Bliss"
   mountain <- S.printingOf s registry "Mountain"
   island <- S.printingOf s registry "Island"
@@ -1362,8 +1456,8 @@ pileBoard s registry = do
       -- throughPile's draw answers with.
       nameAt i = Set.toList (namesOf (take 1 (drop i (faceDownExiled before))) before)
    in pure $ case (nameAt 1, nameAt 0) of
-        ([last_], [first_]) -> (last_, first_, S.runPure throughPile before (S.cast S.alice spellId))
-        _ -> (S.printingName bolt, S.printingName piker, before)
+        ([last_], [first_]) -> (last_, first_, spellId, before)
+        _ -> (S.printingName bolt, S.printingName piker, spellId, before)
 
 -- alice casts Ignorant Bliss twice, off four Mountains and with a different hand
 -- each time: the first casting hides Goblin Piker alone, the second hides

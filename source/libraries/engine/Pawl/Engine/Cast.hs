@@ -3581,7 +3581,7 @@ castProposed perform spending pid oid sid face castFrom preparedFor keywordsBefo
                   -- against the announced X" is what proves the two agree.
                   let seed = Binding.fromChoices Map.empty mAmount Seq.empty
                       sets = Target.legalSets Nothing (Just pid) False seed sid slots bestowedGs
-                  chosen <- Target.chooseTargets Nothing pid sid sid seed (Maybe.fromMaybe 0 mAmount) slots sets
+                  (chosen, drawn) <- Target.chooseTargets Nothing pid sid sid seed (Maybe.fromMaybe 0 mAmount) slots sets
                   if not (Target.selectionLegal Nothing (Just pid) seed sid (Maybe.fromMaybe 0 mAmount) slots sets chosen bestowedGs)
                     then reject
                     else do
@@ -3851,6 +3851,12 @@ castProposed perform spending pid oid sid face castFrom preparedFor keywordsBefo
                           -- finished being cast" anyway. The board it samples
                           -- is `pricedGs`, taken before CR 601.2g/h's payment.
                           Event.becameTarget pricedGs sid StackObjectKind.Spell pid chosen
+                          -- CR 406.4: a target drawn out of a face-down pile is
+                          -- revealed only now the cost is paid, and stays so
+                          -- while the spell is on the stack (docs/decisions.md,
+                          -- "When a target drawn out of a face-down pile is
+                          -- revealed, and for how long").
+                          Monad.mapM_ (Cost.revealPaying (Just sid) pid) drawn
                           Monad.when (castFrom == Just Zone.Graveyard) (armCastFromGraveyard pid keywordsBefore castFor sid)
                           -- CR 903.8: the cast is now announced, so this is a
                           -- "previous time they cast it from the command zone"

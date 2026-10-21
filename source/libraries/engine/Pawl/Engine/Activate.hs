@@ -350,7 +350,7 @@ activateAbilityWith refused runSubgame pid srcId ability = Event.announcing $ do
           -- CR 601.2b leaves to the payer rather than to the fallback.
           let totalledCost = Cost.plusComponents gathered announcedAtX
           (announcedCost, _) <- Cost.announce (PaymentSubject.Activating srcId stamp spendable) ManaSpending.AsProduced pid srcId (Cost.substitutedManas (Cost.waterbendSubstitutions (Cost.Type.components totalledCost) Map.empty pid srcId gs) (Cost.totalManas gathered)) totalledCost
-          chosen <- Target.chooseTargets (ActivatedAbility.name ability) pid abilId srcId seed (Maybe.fromMaybe 0 mAmount) slots sets
+          (chosen, drawn) <- Target.chooseTargets (ActivatedAbility.name ability) pid abilId srcId seed (Maybe.fromMaybe 0 mAmount) slots sets
           if not (Target.selectionLegal (ActivatedAbility.name ability) (Just pid) seed srcId (Maybe.fromMaybe 0 mAmount) slots sets chosen gs)
             then Nothing <$ State.put before -- reject: the whole activation is a no-op
             else do
@@ -501,6 +501,10 @@ activateAbilityWith refused runSubgame pid srcId ability = Event.announcing $ do
                   -- After the payment for Cast.castSpell's reason: everything
                   -- above can still restore `before` and unwind the activation.
                   Event.becameTarget announced abilId StackObjectKind.ActivatedAbility pid chosen
+                  -- CR 406.4 through CR 602.2b: Cast.castProposed's reveal of a
+                  -- target drawn out of a face-down pile, kept while the
+                  -- ability is on the stack.
+                  Monad.mapM_ (Cost.revealPaying (Just abilId) pid) drawn
                   -- CR 121.8: the ability has become activated (CR 602.2b), so
                   -- a card drawn while paying for it turns face up and its
                   -- reveal is offered.
