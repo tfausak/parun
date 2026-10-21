@@ -55,10 +55,11 @@ data GameSettings = MkGameSettings
     -- exact for.
     -- Pawl.Engine.Archenemy.setUp writes CR 904.2's two teams.
     --
-    -- Not implemented: CR 808.2's seating is unchecked (#4497), and CR 808.4's
-    -- starting player, no random team being chosen from the caller's list
-    -- (#2847). CR 808.3a's attack multiple players option is the field above,
-    -- which is on by default, so a game with teams gets it without asking. CR 808.5 needs nothing: no
+    -- Pawl.Engine.Setup.randomTeamFirst reads it for CR 808.4's starting team.
+    --
+    -- Not implemented: CR 808.2's seating is unchecked (#4497). CR 808.3a's
+    -- attack multiple players option is the field above, which is on by
+    -- default, so a game with teams gets it without asking. CR 808.5 needs nothing: no
     -- Team vs. Team resource is shared (sharedTeamLife is CR 810's and CR 904's),
     -- and one player has never been able to touch another's cards.
     teams :: Teams.Teams,

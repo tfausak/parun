@@ -21,6 +21,7 @@
 -- like a reading that answered none. Four seats leave alice two opponents and one
 -- teammate, so the count, the poison counters and the attack all separate three
 -- readings: CR 102.3's, CR 806.1's free-for-all, and one that names nobody.
+-- CR 808.4's odd case is the exception, needing three seats a team.
 --
 -- The teams are CR 808.2's -- each team sits together, so turn order
 -- [alice, bob, carol, dave] puts alice's teammate bob in the seat a free-for-all
@@ -50,6 +51,7 @@ import qualified Pawl.Engine.FaceDown as FaceDown
 import qualified Pawl.Engine.Game as Game
 import qualified Pawl.Engine.Mulligan as Mulligan
 import qualified Pawl.Engine.Projection as Projection
+import qualified Pawl.Engine.Setup as Setup
 import qualified Pawl.Engine.Stack as Stack
 import qualified Pawl.Engine.Target as Target
 import qualified Pawl.Engine.Turn as Turn
@@ -68,6 +70,7 @@ import qualified Pawl.Types.CombatStep as CombatStep
 import qualified Pawl.Types.CounterCause as CounterCause
 import qualified Pawl.Types.CounterKind as CounterKind
 import qualified Pawl.Types.Decider as Decider
+import qualified Pawl.Types.Deck as Deck
 import qualified Pawl.Types.Departure as Departure
 import qualified Pawl.Types.EndingStep as EndingStep
 import qualified Pawl.Types.FaceDownReason as FaceDownReason
@@ -82,6 +85,7 @@ import qualified Pawl.Types.Phase as Phase
 import qualified Pawl.Types.Player as Player
 import qualified Pawl.Types.PlayerCounterKind as PlayerCounterKind
 import qualified Pawl.Types.PlayerId as PlayerId
+import qualified Pawl.Types.Printing as Printing
 import qualified Pawl.Types.Prompt as Prompt
 import qualified Pawl.Types.Recipient as Recipient
 import qualified Pawl.Types.Source as Source
@@ -208,6 +212,36 @@ spec s registry = Spec.describe s "Teams" $ do
     Spec.assertEqWith s "CR 102.4 bob, alice's teammate, is on her team: his Piker got two" (plusOnes bobs) 2
     Spec.assertEqWith s "CR 102.3 carol, her opponent, is not: her Piker got one" (plusOnes carols) 1
     Spec.assertEqWith s "CR 102.4 and alice's own Piker got two" (plusOnes alices) 2
+  -- CR 808.4 through the whole of Setup.newGame, every draw answered with its
+  -- second candidate. Three a side: each team's center seat is offered.
+  Spec.it s "CR 808.4 a randomly chosen team's center seat goes first" $ do
+    forest <- S.printingOf s registry "Forest"
+    let erin = PlayerId.MkPlayerId 4
+        frank = PlayerId.MkPlayerId 5
+        seats = S.alice NonEmpty.:| [S.bob, S.carol, S.dave, erin, frank]
+        board = S.inTeams [[S.alice, S.bob, S.carol], [S.dave, erin, frank]] (Setup.emptyGame seats)
+        (started, drawnFrom) = startWith forest board
+    Spec.assertEqWith s "CR 808.4 erin goes first, turn order to her left" (GameState.activePlayer started, GameState.turnOrder started) (erin, [erin, frank, S.alice, S.bob, S.carol, S.dave])
+    Spec.assertEqWith s "the draw was among the center seats" drawnFrom [[S.bob, erin]]
+  -- CR 808.4's even case, on a team that wraps the turn order: dave and alice
+  -- sit together, alice on dave's left, so alice is left of their midpoint.
+  Spec.it s "CR 808.4 an even team's player left of its midpoint goes first" $ do
+    forest <- S.printingOf s registry "Forest"
+    let (started, drawnFrom) = startWith forest (daveAliceTeams S.fourPlayerGame)
+    Spec.assertEqWith s "CR 808.4 carol goes first, turn order to her left" (GameState.activePlayer started, GameState.turnOrder started) (S.carol, [S.carol, S.dave, S.alice, S.bob])
+    Spec.assertEqWith s "the draw was among alice and carol" drawnFrom [[S.alice, S.carol]]
+  -- CR 810 and CR 811 keep CR 103.1's determination. Each board is paired with
+  -- the same teams without the variant, which CR 808.4 rotates.
+  Spec.it s "CR 808.4 does not apply to Two-Headed Giant or Alternating Teams" $ do
+    forest <- S.printingOf s registry "Forest"
+    let giant gs = gs {GameState.settings = (GameState.settings gs) {GameSettings.twoHeadedGiant = True}}
+        alternating gs = gs {GameState.settings = (GameState.settings gs) {GameSettings.alternatingTeams = True}}
+        interleaved = S.inTeams [[S.alice, S.carol], [S.bob, S.dave]] S.fourPlayerGame
+        orderOf = GameState.turnOrder . fst . startWith forest
+    Spec.assertEqWith s "CR 810 the caller's order stands" (orderOf (giant (twoTeams S.fourPlayerGame))) [S.alice, S.bob, S.carol, S.dave]
+    Spec.assertEqWith s "without it dave's team's draw rotates" (orderOf (twoTeams S.fourPlayerGame)) [S.dave, S.alice, S.bob, S.carol]
+    Spec.assertEqWith s "CR 811 the caller's order stands" (orderOf (alternating interleaved)) [S.alice, S.bob, S.carol, S.dave]
+    Spec.assertEqWith s "without it the interleaved teams' draw rotates" (orderOf interleaved) [S.dave, S.alice, S.bob, S.carol]
   sharedTurnsSpec s registry
 
 -- CR 805.1: twoTeams with the shared team turns option on.
@@ -598,3 +632,19 @@ atCombat gs =
       GameState.priority = Just S.alice,
       GameState.remaining = S.phasesAfter (Phase.Combat CombatStep.BeginningOfCombat)
     }
+
+-- Setup.newGame over `board`, twenty Forests a seat, answering every
+-- Prompt.RandomFirstPlayer with its second candidate and recording each
+-- candidate list; everything else is S.identityAnswer's.
+startWith :: Printing.Printing -> GameState.GameState -> (GameState.GameState, [[PlayerId.PlayerId]])
+startWith forest board =
+  let deck = Deck.fromCards (Map.singleton forest 20)
+      matchup = fmap (\pid -> (pid, deck)) (Maybe.fromMaybe (S.alice NonEmpty.:| []) (NonEmpty.nonEmpty (GameState.turnOrder board)))
+      secondDrawn :: Prompt.Prompt r -> State.State [[PlayerId.PlayerId]] r
+      secondDrawn p = case p of
+        Prompt.RandomFirstPlayer candidates -> do
+          State.modify' (<> [NonEmpty.toList candidates])
+          pure (Maybe.fromMaybe (NonEmpty.head candidates) (Maybe.listToMaybe (NonEmpty.tail candidates)))
+        _ -> pure (S.identityAnswer p)
+      ((_, started), drawnFrom) = State.runState (Engine.runGame secondDrawn board (Setup.newGame S.performer matchup)) []
+   in (started, drawnFrom)

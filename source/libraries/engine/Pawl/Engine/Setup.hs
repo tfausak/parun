@@ -500,8 +500,9 @@ newGame perform matchup = do
     Event.shuffleLibrary pid
     -- CR 717.2 / 901.3 / 904.3 / 103.3a.
     Monad.forM_ [minBound .. maxBound] (`Game.shuffleSideDeck` pid)
-  -- CR 809.4, ahead of CR 103.1c's claim.
+  -- CR 809.4 and CR 808.4, ahead of CR 103.1c's claim.
   randomEmperorFirst
+  randomTeamFirst
   -- CR 103.1c, once every conspiracy is in its command zone (CR 315.2).
   claimStartingPlayer
   seated <- State.gets GameState.turnOrder
@@ -820,6 +821,46 @@ randomEmperorFirst = do
   drawn <- Game.drawAmong Prompt.RandomFirstPlayer (filter (Emperors.isEmperor emperors) (GameState.turnOrder gs))
   Monad.forM_ drawn $ \starter ->
     State.modify' (\g -> g {GameState.turnOrder = rotateTo starter (GameState.turnOrder g), GameState.activePlayer = starter})
+
+-- CR 808.4: in a Team vs. Team game a randomly chosen team's starting seat goes
+-- first, turn order to the left. Team vs. Team is a game between teams that is
+-- no other team variant -- CR 800.2 allows one -- and CR 103.1b replaces the
+-- determination in an Archenemy game, which CR 904.2 seats as Team vs. Team.
+-- One starting seat per team, so Prompt.RandomFirstPlayer over those seats
+-- draws a team. A rotation, claimStartingPlayer's, which still supersedes it
+-- (CR 103.1c). Pawl.TeamSpec's "CR 808.4" cases prove it.
+randomTeamFirst :: Game ()
+randomTeamFirst = do
+  gs <- State.get
+  let settings = GameState.settings gs
+      order = GameState.turnOrder gs
+      teamVsTeam =
+        not (Map.null (Teams.unwrap (GameSettings.teams settings)))
+          && not (GameSettings.twoHeadedGiant settings)
+          && not (GameSettings.alternatingTeams settings)
+          && Map.null (Emperors.unwrap (GameSettings.emperors settings))
+          && not (any (`Archenemy.isArchenemy` gs) order)
+  Monad.when teamVsTeam $ do
+    drawn <- Game.drawAmong Prompt.RandomFirstPlayer (teamStarters (GameSettings.teams settings) order)
+    Monad.forM_ drawn $ \starter ->
+      State.modify' (\g -> g {GameState.turnOrder = rotateTo starter (GameState.turnOrder g), GameState.activePlayer = starter})
+
+-- CR 808.4: each team's starting seat, in turn order. A team's seats run left
+-- from its first seat after a non-teammate, wrapping the turn order; the seat
+-- at half the run's length is the center of an odd run and the one left of an
+-- even run's midpoint, turn order going left.
+--
+-- A team split across the table counts its run from its first such seat in
+-- turn order, CR 808.2's seating being unchecked (#4497).
+teamStarters :: Teams.Teams -> [PlayerId] -> [PlayerId]
+teamStarters teams order =
+  let previous = drop (length order - 1) (cycle order)
+      opening = Map.fromListWith (\_ earlier -> earlier) [(team, seat) | (seat, prior) <- zip order previous, Just team <- [Teams.teamOf teams seat], Teams.teamOf teams prior /= Just team]
+      starterOf team open =
+        let run = rotateTo open (filter ((== Just team) . Teams.teamOf teams) order)
+         in Maybe.listToMaybe (drop (length run `div` 2) run)
+      starters = Map.elems (Map.mapMaybeWithKey starterOf opening)
+   in filter (`elem` starters) order
 
 -- CR 103 / 727.1a: put `starter` at the head of the turn order, preserving the
 -- cyclic order. Total: a `starter` not in the order leaves it as-is.
