@@ -107,6 +107,7 @@ import qualified Pawl.Types.Subtype as Subtype
 import qualified Pawl.Types.Supertype as Supertype
 import qualified Pawl.Types.TapState as TapState
 import qualified Pawl.Types.TargetSlot as TargetSlot
+import qualified Pawl.Types.TextWord as TextWord
 import qualified Pawl.Types.Timestamp as Timestamp
 import qualified Pawl.Types.Zone as Zone
 
@@ -3102,7 +3103,7 @@ aspectChain s registry hack = do
 -- re-read with no error.
 hackAt :: ObjectId.ObjectId -> Subtype.Subtype -> Subtype.Subtype -> Prompt.Prompt r -> r
 hackAt oid from to p = case p of
-  Prompt.ChooseLandTypeSwap {} -> (from, to)
+  Prompt.ChooseWordSwap {} -> (TextWord.SubtypeWord from, TextWord.SubtypeWord to)
   _ -> targetingOnly oid p
 
 -- hackAt's target half, which the Aura's own CR 303.4a enchant slot takes too:
@@ -4016,20 +4017,17 @@ auraSwapSpec s registry =
               Spec.assertEqWith s "nobody was asked anything as the ability resolved" responses []
               Spec.assertBool s (Map.member wingsId (GameState.phasedOut phased) && Set.member pikerId (GameState.battlefield phased)) "the Wings alone had phased out before the swap resolved"
             _ -> Spec.assertFailure s "Arcanum Wings has not exactly one ability"
-        -- CR 612.1 through the MINT: rule 702.65a's own "an Aura card", changed
-        -- by Synthetic Enchanted Evolution. Aura -> Background reaches the Wings'
-        -- type line too, so CR 704.5p detaches them, and the swap must offer the
-        -- two Backgrounds and neither Aura.
-        Spec.it s "CR 612.1 an Aura swap changed to Background offers the Backgrounds" $ do
+        -- CR 207.2a / 612.2: rule 702.65a's "an Aura card" is the rule's word,
+        -- not the Wings', so Synthetic Enchanted Evolution's Aura -> Background
+        -- reaches only the Wings' own type line (CR 704.5p detaches them) and the
+        -- swap still offers the two Auras and neither Background
+        -- (docs/decisions.md, "What a text change reaches inside a keyword").
+        Spec.it s "CR 612.2 an Aura swap on Wings changed to Background still offers the Auras" $ do
           (wingsId, evolved, textChanged) <- textChangedSwap s registry ("Raised by Giants", "Master Chef") (Subtype.Aura, Subtype.Background)
           Spec.assertEqWith s "CR 704.5p the changed Wings stay on the battlefield, attached to nothing" (Set.member wingsId (GameState.battlefield evolved), hostOf wingsId evolved) (True, Nothing)
           case textChanged of
-            Just (pikerId, auras, (giantsId, chefId), offers, after) -> do
-              Spec.assertEqWith s "CR 612.1 the swap offered the two Backgrounds" (fmap List.sort offers) [[giantsId, chefId]]
-              Spec.assertEqWith s "Raised by Giants is on the battlefield, attached to nothing" (fmap (`hostOf` after) (namedOnBattlefield "Raised by Giants" after)) [Nothing]
-              Spec.assertEqWith s "the Wings are in alice's hand beside the Auras and Master Chef" (List.sort (handNames S.alice after)) (sorted ["Arcanum Wings", "Master Chef", "Pacifism", "Wild Growth"])
-              Spec.assertBool s (Set.notMember wingsId (GameState.battlefield after) && all (\aura -> Set.notMember aura (GameState.battlefield after)) [fst auras, snd auras]) "and no Aura entered"
-              Spec.assertBool s (not (Projection.hasKeyword Keyword.Flying pikerId after)) "and the Piker, unenchanted since CR 704.5p, has no flying"
+            Just (_, (pacifismId, growthId), _, offers, _) ->
+              Spec.assertEqWith s "the swap offered the two Auras" (fmap List.sort offers) [List.sort [pacifismId, growthId]]
             Nothing -> Spec.assertFailure s "the changed Wings have not exactly one ability"
         -- THE PAIR: the same board and the same Evolution, naming a swap the
         -- Wings' text holds no word of, so rule 702.65a's Aura stands.
@@ -4040,17 +4038,6 @@ auraSwapSpec s registry =
               Spec.assertEqWith s "the swap offered the two Auras" (fmap List.sort offers) [[pacifismId, growthId]]
               Spec.assertEqWith s "Pacifism enchants the Piker" (fmap (`hostOf` after) (namedOnBattlefield "Pacifism" after)) [Just pikerId]
             Nothing -> Spec.assertFailure s "the Wings have not exactly one ability"
-        -- CR 303.4f through the same unattached source: Aura -> Curse, and Curse
-        -- of Death's Hold is an Aura Curse with enchant player, so alice chooses
-        -- the player it enters on. The answerer names bob, not the first offer.
-        Spec.it s "CR 612.1 an Aura swap changed to Curse enters the Curse on the player alice chooses" $ do
-          (_, _, textChanged) <- textChangedSwap s registry ("Curse of Death's Hold", "Curse of Chaos") (Subtype.Aura, Subtype.Curse)
-          case textChanged of
-            Just (_, _, (holdId, chaosId), offers, after) -> do
-              Spec.assertEqWith s "CR 612.1 the swap offered the two Curses" (fmap List.sort offers) [[holdId, chaosId]]
-              Spec.assertEqWith s "CR 303.4f Curse of Death's Hold enchants bob" (fmap (\oid -> Game.lookupObject oid after >>= Object.attachedTo >>= Recipient.playerOf) (namedOnBattlefield "Curse of Death's Hold" after)) [Just S.bob]
-              Spec.assertEqWith s "the Wings are in alice's hand beside the Auras and Curse of Chaos" (List.sort (handNames S.alice after)) (sorted ["Arcanum Wings", "Curse of Chaos", "Pacifism", "Wild Growth"])
-            Nothing -> Spec.assertFailure s "the changed Wings have not exactly one ability"
 
 -- auraSwapSpec's text-change board. Synthetic Enchanted Evolution ({U}
 -- Instant, "Change the text of target spell or permanent by replacing all
@@ -4066,7 +4053,7 @@ auraSwapSpec s registry =
 -- when the Wings still have their one ability there, the Piker, the two Auras,
 -- the two named cards, every ChooseCardInHand offer in order, and the board.
 textChangedSwap :: (Monad m) => Spec.Spec m n -> Registry.Registry m -> (String, String) -> (Subtype.Subtype, Subtype.Subtype) -> m (ObjectId.ObjectId, GameState.GameState, Maybe (ObjectId.ObjectId, (ObjectId.ObjectId, ObjectId.ObjectId), (ObjectId.ObjectId, ObjectId.ObjectId), [[ObjectId.ObjectId]], GameState.GameState))
-textChangedSwap s registry (firstName, secondName) swap = do
+textChangedSwap s registry (firstName, secondName) (from, to) = do
   wings <- S.printingOf s registry "Arcanum Wings"
   island <- S.printingOf s registry "Island"
   piker <- S.printingOf s registry "Goblin Piker"
@@ -4088,7 +4075,7 @@ textChangedSwap s registry (firstName, secondName) swap = do
       evolving :: Prompt.Prompt r -> r
       evolving p = case p of
         Prompt.ChooseTargets _ _ _ offers -> S.preferring ((== Just wingsId) . Recipient.objectOf) offers
-        Prompt.ChooseEnchantmentTypeSwap {} -> swap
+        Prompt.ChooseWordSwap {} -> (TextWord.SubtypeWord from, TextWord.SubtypeWord to)
         _ -> S.identityAnswer p
       evolved = S.runPure evolving g8 {GameState.priority = Just S.alice} (S.cast S.alice evolutionId >> Stack.resolveTop >> Engine.settleForPriority)
       -- Records each hand offer and takes its least id, the first named card

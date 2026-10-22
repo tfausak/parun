@@ -9,9 +9,12 @@
           "type": "Protection",
           "value": {
             "quality": {
-              "type": "HasColor",
+              "type": "Unwritten",
               "value": {
-                "type": "White"
+                "type": "HasColor",
+                "value": {
+                  "type": "White"
+                }
               }
             },
             "spares": null
@@ -21,9 +24,12 @@
           "type": "Protection",
           "value": {
             "quality": {
-              "type": "HasColor",
+              "type": "Unwritten",
               "value": {
-                "type": "Blue"
+                "type": "HasColor",
+                "value": {
+                  "type": "Blue"
+                }
               }
             },
             "spares": null
@@ -33,9 +39,12 @@
           "type": "Protection",
           "value": {
             "quality": {
-              "type": "HasColor",
+              "type": "Unwritten",
               "value": {
-                "type": "Black"
+                "type": "HasColor",
+                "value": {
+                  "type": "Black"
+                }
               }
             },
             "spares": null
@@ -45,9 +54,12 @@
           "type": "Protection",
           "value": {
             "quality": {
-              "type": "HasColor",
+              "type": "Unwritten",
               "value": {
-                "type": "Red"
+                "type": "HasColor",
+                "value": {
+                  "type": "Red"
+                }
               }
             },
             "spares": null
@@ -57,9 +69,12 @@
           "type": "Protection",
           "value": {
             "quality": {
-              "type": "HasColor",
+              "type": "Unwritten",
               "value": {
-                "type": "Green"
+                "type": "HasColor",
+                "value": {
+                  "type": "Green"
+                }
               }
             },
             "spares": null

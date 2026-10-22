@@ -13,6 +13,7 @@ import qualified Pawl.Engine.Binding as Binding
 import qualified Pawl.Engine.Keyword as Keyword
 import qualified Pawl.Engine.NameWords as NameWords
 import qualified Pawl.Engine.Sector as Sector
+import qualified Pawl.Engine.TextWord as TextWord
 import qualified Pawl.Engine.Turn as Turn
 import qualified Pawl.Types.AbilityName as AbilityName
 import qualified Pawl.Types.Behold as Behold
@@ -84,6 +85,7 @@ import qualified Pawl.Types.Suspend as Suspend
 import qualified Pawl.Types.TapForTotalPower as TapForTotalPower
 import qualified Pawl.Types.TapPermanents as TapPermanents
 import qualified Pawl.Types.Teams as Teams
+import qualified Pawl.Types.TextWord as TextWord
 import qualified Pawl.Types.Trait as Trait
 import qualified Pawl.Types.TurnRole as TurnRole
 import qualified Pawl.Types.Ward as Ward
@@ -2370,6 +2372,7 @@ matches context view predicate = case predicate of
   Filter.And fs -> all (matches context view) fs
   Filter.Or fs -> any (matches context view) fs
   Filter.Not f -> not (matches context view f)
+  Filter.Unwritten f -> matches context view f
 
 -- | CR 123.6-123.9: a sticker's kind, from what it says.
 stickerKindOf :: StickerContent.StickerContent -> StickerKind.StickerKind
@@ -2379,16 +2382,16 @@ stickerKindOf content = case content of
   StickerContent.PowerToughness _ -> StickerKind.PowerToughness
   StickerContent.Art -> StickerKind.Art
 
--- CR 612.1: swap subtype words wherever they appear in a Filter. A text-changing
+-- CR 612.1: swap subtype and colour words wherever they appear in a Filter. A text-changing
 -- effect reaches any word printed on the object, and a Filter carried by an
 -- effect is part of that text -- so this is the shape
 -- Pawl.Engine.Projection.Rewrite.rewriteModification already has, for the type THIS
 -- module owns. Pawl.Engine.Resolve threads one call per Filter-carrying effect
 -- arm rather than learning what is inside each one.
 --
--- HasSubtype and HasKeyword are the atoms REWRITTEN here. The rest name a card
--- type, a supertype, a colour, a number, a relation, a status, a designation, or a
--- keyword FAMILY, none of which CR 612's word swap reaches -- see the
+-- HasSubtype, HasColor and HasKeyword are the atoms REWRITTEN here. The rest
+-- name a card type, a supertype, a number, a relation, a status, a designation,
+-- or a keyword FAMILY, none of which CR 612's word swap reaches -- see the
 -- HasKeywordFamily arm below for why the family is in that list while HasKeyword
 -- is not. Written
 -- out exhaustively rather than with a catch-all, so a later atom that can carry a
@@ -2397,21 +2400,29 @@ stickerKindOf content = case content of
 -- CR 612.2's family gate is not restated on the HasSubtype arm, for the reason
 -- Pawl.Engine.Projection's type-line half gives: a HasSubtype atom may name a
 -- word of any family, so the family the word is used as IS the family the word
--- belongs to, and the exact `lookup` already asks CR 612.2's question.
-rewrite :: [(Subtype.Subtype, Subtype.Subtype)] -> Filter.Filter Keyword.Type.Keyword -> Filter.Filter Keyword.Type.Keyword
+-- belongs to, and TextWord.subtypeAfter's exact lookup already asks CR 612.2's
+-- question.
+rewrite :: [(TextWord.TextWord, TextWord.TextWord)] -> Filter.Filter Keyword.Type.Keyword -> Filter.Filter Keyword.Type.Keyword
 rewrite pairs predicate = case predicate of
-  Filter.HasSubtype s -> Filter.HasSubtype (Maybe.fromMaybe s (lookup s pairs))
+  Filter.HasSubtype s -> Filter.HasSubtype (TextWord.subtypeAfter pairs s)
   Filter.And fs -> Filter.And (fmap (rewrite pairs) fs)
   Filter.Or fs -> Filter.Or (fmap (rewrite pairs) fs)
   Filter.Not f -> Filter.Not (rewrite pairs f)
+  -- Stopped, which is the atom's whole point: a colour the card never writes
+  -- as a word is none CR 612.2 can swap. The scenario "CR 702.16h / 612.2 a
+  -- Sleight of Mind on Spectra Ward leaves its protection from each color
+  -- whole" proves it.
+  Filter.Unwritten _ -> predicate
   Filter.HasCardType _ -> predicate
   Filter.HasSupertype _ -> predicate
-  Filter.HasColor _ -> predicate
+  -- CR 612.2's colour word used as a colour word: "black creature", and the
+  -- "black" in "nonblack" under a Not, as Mind Bend's reminder text says.
+  Filter.HasColor c -> Filter.HasColor (TextWord.colorAfter pairs c)
   Filter.SharesWithSource _ -> predicate
   -- Untouched, and CR 612.2 says so outright: "an effect that changes a color
   -- word or a subtype can't change a card name, even if that name contains a
   -- word ... that is the same as a Magic color word, basic land type, or
-  -- creature type". This function's pairs are exactly such a subtype swap.
+  -- creature type". This function's pairs are exactly such a swap.
   Filter.HasName _ -> predicate
   Filter.NameWordsAtLeast _ -> predicate
   -- Untouched for HasName's reason, one indirection along: the atom names an
@@ -2574,7 +2585,7 @@ rewrite pairs predicate = case predicate of
 --
 -- Top-level because Pawl.Engine.Projection needs the same rewrite over the
 -- counter kinds a replacement effect names (CR 612.1 over CR 604.2's text).
-rewriteCounterKind :: [(Subtype.Subtype, Subtype.Subtype)] -> CounterKind.CounterKind Keyword.Type.Keyword -> CounterKind.CounterKind Keyword.Type.Keyword
+rewriteCounterKind :: [(TextWord.TextWord, TextWord.TextWord)] -> CounterKind.CounterKind Keyword.Type.Keyword -> CounterKind.CounterKind Keyword.Type.Keyword
 rewriteCounterKind pairs kind = case kind of
   CounterKind.Keyword k -> CounterKind.Keyword (rewriteKeyword pairs k)
   CounterKind.PlusOnePlusOne -> kind
@@ -2591,8 +2602,8 @@ rewriteCounterKind pairs kind = case kind of
   CounterKind.Level -> kind
   CounterKind.Hone -> kind
   CounterKind.UnsafePowerToughness _ _ -> kind
-  -- CR 612.1 swaps a WORD, and this pair is [(Subtype, Subtype)]. A counter's
-  -- name is Text and never a Subtype, so no word swap can reach inside one --
+  -- CR 612.1 swaps a WORD, and this pair is a TextWord's. A counter's name is
+  -- Text and never a TextWord, so no word swap can reach inside one --
   -- not an oversight, and the reason this stays exhaustive rather than becoming
   -- a wildcard.
   CounterKind.Named _ -> kind
@@ -2628,7 +2639,7 @@ rewriteCounterKind pairs kind = case kind of
 -- printing pairs one of those costs with a basic land type, so each of those arms
 -- is a regression fence rather than a proven path -- Pawl.ActivateSpec's Dark
 -- Heart of the Wood is what proves rewriteCost itself.
-rewriteKeyword :: [(Subtype.Subtype, Subtype.Subtype)] -> Keyword.Type.Keyword -> Keyword.Type.Keyword
+rewriteKeyword :: [(TextWord.TextWord, TextWord.TextWord)] -> Keyword.Type.Keyword -> Keyword.Type.Keyword
 rewriteKeyword pairs keyword = case keyword of
   -- CR 702.14a's "[type]walk".
   Keyword.Type.Landwalk criterion -> Keyword.Type.Landwalk (rewrite pairs criterion)
@@ -2639,15 +2650,16 @@ rewriteKeyword pairs keyword = case keyword of
   -- CR 702.11d's "hexproof from [quality]", rule 702's third carrier of a word.
   -- Not a "[type]" like the two above -- CR 702.11d's quality is any quality, and
   -- the ones cards actually print tend to name a card type or a colour -- but CR
-  -- 612.2 asks the same question of it either way, and `rewrite` answers it: a quality
-  -- naming a creature type is "a creature type word used as a creature type" and
-  -- is swapped; Elenda, Saint of Dusk's "hexproof from instants" comes back
-  -- unchanged because its atom holds no subtype word. CR 702.11b's unqualified
+  -- 612.2 asks the same question of it either way, and `rewrite` answers it: a
+  -- quality naming a creature type or a colour is a word used as one and is
+  -- swapped; Elenda, Saint of Dusk's "hexproof from instants" comes back
+  -- unchanged because its atom holds no such word. CR 702.11b's unqualified
   -- hexproof is the Nothing, which `fmap` leaves standing.
   Keyword.Type.Hexproof quality -> Keyword.Type.Hexproof (fmap (rewrite pairs) quality)
   -- CR 702.16a's "[quality]", which CR 612.2 asks the same question of: a
-  -- protection quality naming a creature type is swapped, and Apostle of
-  -- Purifying Light's colour comes back unchanged. Rule 702.16a always states a
+  -- protection quality naming a creature type or a colour is swapped, so a
+  -- Sleight of Mind turns Apostle of Purifying Light's protection from black
+  -- into protection from blue. Rule 702.16a always states a
   -- quality, so there is no Nothing to leave standing there; rule 702.16n's
   -- exception is the Nothing, which `fmap` leaves standing, and it is a word on
   -- the same card so CR 612.2 reaches it too.
@@ -2702,10 +2714,8 @@ rewriteKeyword pairs keyword = case keyword of
   -- the same way -- a ward cost naming a basic land type is the unprinted case
   -- the arms below are also a fence for.
   --
-  -- CR 702.21b's perEach is left alone HERE and swapped at the mint instead
-  -- (Pawl.Engine.Projection.mintedTriggeredAbilitiesOf, whose rewritePayGate
-  -- takes the gate's own perEach), soulshift's posture: this module is below
-  -- Pawl.Types.Quantity and has no quantity rewriter to call.
+  -- CR 702.21b's perEach is left alone: a player-counter tally names no word
+  -- CR 612.2 swaps.
   Keyword.Type.Ward w -> Keyword.Type.Ward w {Ward.cost = rewriteCost pairs (Ward.cost w)}
   -- CR 702.33a, CR 702.33c, CR 702.34a, CR 702.37a and CR 702.42a: each states a
   -- cost as part of the keyword, so rewriteCost carries CR 612.1 into it.
@@ -2728,10 +2738,9 @@ rewriteKeyword pairs keyword = case keyword of
   Keyword.Type.Buyback cost -> Keyword.Type.Buyback (rewriteCost pairs cost)
   -- CR 702.45a's N is a number and not a word, so CR 612.2 has nothing to swap.
   Keyword.Type.Bushido _ -> keyword
-  -- CR 702.46a's N is a number and not a word, so CR 612.2 has nothing to swap
-  -- HERE. "Spirit" is a word CR 612.2a does reach, but it is in the ability
-  -- Pawl.Engine.Keyword.soulshift mints rather than in this value, so the swap
-  -- arrives there instead (Pawl.Engine.Projection.mintedTriggeredAbilitiesOf).
+  -- CR 702.46a's N is a number and not a word, and "Spirit" is rule 702.46a's
+  -- word, not the card's, so CR 612.2 has nothing to swap (docs/decisions.md,
+  -- "What a text change reaches inside a keyword").
   Keyword.Type.Soulshift _ -> keyword
   Keyword.Type.Dredge _ -> keyword
   -- CR 702.104a's N is a number and not a word, so CR 612.2 has nothing to swap.
@@ -2809,9 +2818,10 @@ rewriteKeyword pairs keyword = case keyword of
   Keyword.Type.Annihilator _ -> keyword
   -- CR 702.181a's and CR 702.189a's N is a number, or a count whose Filter the
   -- CARD writes (Avenger of the Fallen's creature cards), so CR 612.2 swaps
-  -- whatever word that Filter names. Mobilize's "Warrior" is afterlife's
-  -- "Spirit": a word CR 612.2a reaches in the ability Pawl.Engine.Keyword.mobilize
-  -- mints rather than in this value, and firebending's {R} is a mana symbol.
+  -- whatever word that Filter names. Mobilize's "red Warrior" is rule
+  -- 702.181a's text, not the card's, so no swap reaches it (docs/decisions.md,
+  -- "What a text change reaches inside a keyword"), and firebending's {R} is a
+  -- mana symbol.
   Keyword.Type.Mobilize n -> Keyword.Type.Mobilize (rewriteKeywordCount pairs n)
   Keyword.Type.Firebending n -> Keyword.Type.Firebending (rewriteKeywordCount pairs n)
   -- CR 702.75a's N is a number and not a word, so CR 612.2 has nothing to swap;
@@ -2830,9 +2840,9 @@ rewriteKeyword pairs keyword = case keyword of
   Keyword.Type.Amplify _ -> keyword
   Keyword.Type.Exalted -> keyword
   -- CR 702.92a, 702.163a and 702.182a are nullary: their creature-type words
-  -- (Germ, Rebel, Hero) are in the TOKEN Pawl.Engine.Keyword mints, which
-  -- Pawl.Engine.Projection.Rewrite's Effect.Create arm rewrites as card data, so
-  -- CR 612.2a reaches them there rather than here.
+  -- (Germ, Rebel, Hero) are the rule's, in the token Pawl.Engine.Keyword mints,
+  -- and no CR 612.2 text change reaches them (docs/decisions.md, "What a text
+  -- change reaches inside a keyword").
   Keyword.Type.LivingWeapon -> keyword
   Keyword.Type.ForMirrodin -> keyword
   Keyword.Type.JobSelect -> keyword
@@ -2842,10 +2852,9 @@ rewriteKeyword pairs keyword = case keyword of
   Keyword.Type.Spree -> keyword
   Keyword.Type.Tiered -> keyword
   Keyword.Type.Mentor -> keyword
-  -- CR 702.135a's N is a number and not a word, so CR 612.2 has nothing to swap
-  -- HERE. "Spirit" is a word CR 612.2a does reach, but it is in the ability
-  -- Pawl.Engine.Keyword.afterlife mints rather than in this value, so the swap
-  -- arrives there instead (Pawl.Engine.Projection.mintedTriggeredAbilitiesOf).
+  -- CR 702.135a's N is a number and not a word, and "white and black Spirit" is
+  -- rule 702.135a's text, not the card's, so CR 612.2 has nothing to swap
+  -- (docs/decisions.md, "What a text change reaches inside a keyword").
   Keyword.Type.Afterlife _ -> keyword
   Keyword.Type.Provoke -> keyword
   Keyword.Type.Training -> keyword
@@ -2944,8 +2953,9 @@ rewriteKeyword pairs keyword = case keyword of
   Keyword.Type.Ravenous -> keyword
   Keyword.Type.Squad cost -> Keyword.Type.Squad (rewriteCost pairs cost)
   Keyword.Type.Offspring cost -> Keyword.Type.Offspring (rewriteCost pairs cost)
-  -- CR 702.174a's payload is a [something] and not a Cost, so a CR 612.2 land-type
-  -- change has nothing in it to rewrite.
+  -- Not implemented: "a tapped Fish" and "an Octopus" print a creature type a
+  -- CR 612.2 text change should swap, and Gift.Gift has nowhere to hold the new
+  -- word (#5457).
   Keyword.Type.Gift _ -> keyword
   -- CR 702.143a states a cost too, so it is reached the same way. A cost read
   -- off the card's own mana cost prints no word to swap.
@@ -3038,7 +3048,7 @@ rewriteKeyword pairs keyword = case keyword of
 -- rewriteKeyword's descent into mobilize's and firebending's N: only a tally
 -- carries a Filter, and its scope holds no word, as rewriteQuantity leaves
 -- Count's.
-rewriteKeywordCount :: [(Subtype.Subtype, Subtype.Subtype)] -> KeywordCount.KeywordCount Keyword.Type.Keyword -> KeywordCount.KeywordCount Keyword.Type.Keyword
+rewriteKeywordCount :: [(TextWord.TextWord, TextWord.TextWord)] -> KeywordCount.KeywordCount Keyword.Type.Keyword -> KeywordCount.KeywordCount Keyword.Type.Keyword
 rewriteKeywordCount pairs n = case n of
   KeywordCount.Tally tally -> KeywordCount.Tally tally {KeywordTally.filter = rewrite pairs (KeywordTally.filter tally)}
   KeywordCount.Fixed _ -> n
@@ -3069,11 +3079,11 @@ rewriteKeywordCount pairs n = case n of
 -- Exhaustive rather than a catch-all, rewrite's and rewriteKeyword's stated
 -- posture: a later component that can carry a Filter must fail to compile here
 -- instead of silently keeping the printed word.
-rewriteCost :: [(Subtype.Subtype, Subtype.Subtype)] -> Cost.Cost Keyword.Type.Keyword -> Cost.Cost Keyword.Type.Keyword
+rewriteCost :: [(TextWord.TextWord, TextWord.TextWord)] -> Cost.Cost Keyword.Type.Keyword -> Cost.Cost Keyword.Type.Keyword
 rewriteCost pairs cost = cost {Cost.components = fmap (rewriteComponent pairs) (Cost.components cost)}
 
 -- rewriteCounterKind over the kind a counter removal names, where it names one.
-rewriteWhichCounters :: [(Subtype.Subtype, Subtype.Subtype)] -> WhichCounters.WhichCounters Keyword.Type.Keyword -> WhichCounters.WhichCounters Keyword.Type.Keyword
+rewriteWhichCounters :: [(TextWord.TextWord, TextWord.TextWord)] -> WhichCounters.WhichCounters Keyword.Type.Keyword -> WhichCounters.WhichCounters Keyword.Type.Keyword
 rewriteWhichCounters pairs which = case which of
   WhichCounters.OfKind kind -> WhichCounters.OfKind (rewriteCounterKind pairs kind)
   WhichCounters.OfAnyKind -> which
@@ -3095,7 +3105,7 @@ rewriteWhichCounters pairs which = case which of
 -- Insight's "discard a land card" and Hakbal of the Surging Soul's "a land card
 -- from your hand" come closest and are still not one -- CR 612.2 swaps a SUBTYPE
 -- word, and the land CARD TYPE is not one.
-rewriteComponent :: [(Subtype.Subtype, Subtype.Subtype)] -> CostComponent.CostComponent Keyword.Type.Keyword -> CostComponent.CostComponent Keyword.Type.Keyword
+rewriteComponent :: [(TextWord.TextWord, TextWord.TextWord)] -> CostComponent.CostComponent Keyword.Type.Keyword -> CostComponent.CostComponent Keyword.Type.Keyword
 rewriteComponent pairs component = case component of
   CostComponent.Sacrifice (Sacrifice.MkSacrifice n criterion) -> CostComponent.Sacrifice (Sacrifice.MkSacrifice n (rewrite pairs criterion))
   CostComponent.TapForTotalPower (TapForTotalPower.MkTapForTotalPower n criterion) -> CostComponent.TapForTotalPower (TapForTotalPower.MkTapForTotalPower n (rewrite pairs criterion))
@@ -3170,6 +3180,7 @@ bakeBound players objects predicate = case predicate of
   Filter.And fs -> Filter.And (fmap (bakeBound players objects) fs)
   Filter.Or fs -> Filter.Or (fmap (bakeBound players objects) fs)
   Filter.Not f -> Filter.Not (bakeBound players objects f)
+  Filter.Unwritten f -> Filter.Unwritten (bakeBound players objects f)
   -- Descended into for the reason `rewrite` descends: the nested filter is a
   -- filter like any other, and a slot named inside it must be baked before the
   -- match or it can never be answered.
@@ -3357,6 +3368,7 @@ manaValueThresholds predicate = case predicate of
   Filter.And fs -> concatMap manaValueThresholds fs
   Filter.Or fs -> concatMap manaValueThresholds fs
   Filter.Not f -> manaValueThresholds f
+  Filter.Unwritten f -> manaValueThresholds f
   -- Descended into, which OVER-reports: the literals inside bound the mana value
   -- of the permanents being counted, never the candidate's own. Reporting them
   -- only widens CR 601.3a's sample, and the alternative -- an empty list -- would
@@ -3511,6 +3523,7 @@ statesAQuality predicate = case predicate of
   Filter.And fs -> any statesAQuality fs
   Filter.Or fs -> all statesAQuality fs
   Filter.Not _ -> True
+  Filter.Unwritten f -> statesAQuality f
   -- A quality like any other atom's, whatever the nested filter says: a search
   -- whose predicate is this one is looking for cards with a stated quality, so CR
   -- 701.23b applies and no descent could change that.
@@ -3676,6 +3689,7 @@ readsSourceValues predicate = case predicate of
   Filter.And fs -> any readsSourceValues fs
   Filter.Or fs -> any readsSourceValues fs
   Filter.Not f -> readsSourceValues f
+  Filter.Unwritten f -> readsSourceValues f
   Filter.ControlsMoreThanYou _ f -> readsSourceValues f
   Filter.Measures m -> case Measures.operand m of
     Operand.OfSource _ -> True
@@ -3972,6 +3986,7 @@ overBoundSlotsWith f predicate = case predicate of
   Filter.And fs -> fmap Filter.And (traverse (overBoundSlotsWith f) fs)
   Filter.Or fs -> fmap Filter.Or (traverse (overBoundSlotsWith f) fs)
   Filter.Not g -> fmap Filter.Not (overBoundSlotsWith f g)
+  Filter.Unwritten g -> fmap Filter.Unwritten (overBoundSlotsWith f g)
 
 -- overBoundSlotsWith without the arity: CR 700.2d's rename.
 overBoundSlots :: (Applicative f) => (SlotName.SlotName -> f SlotName.SlotName) -> Filter.Filter Keyword.Type.Keyword -> f (Filter.Filter Keyword.Type.Keyword)

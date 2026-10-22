@@ -90,7 +90,7 @@
       "step": "PrecombatMain",
       "player": "alice",
       "do": {
-        "ChooseTypeSwap": {
+        "ChooseWordSwap": {
           "from": {
             "type": "Mountain"
           },

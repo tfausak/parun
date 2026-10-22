@@ -307,10 +307,10 @@ library codec
     Pawl.Codec.CastOfferSpec
     Pawl.Codec.CastRepetition
     Pawl.Codec.CastRepetitionSpec
-    Pawl.Codec.ChangeSubtypeWord
-    Pawl.Codec.ChangeSubtypeWordSpec
     Pawl.Codec.ChangeText
     Pawl.Codec.ChangeTextSpec
+    Pawl.Codec.ChangeWord
+    Pawl.Codec.ChangeWordSpec
     Pawl.Codec.CharacteristicPT
     Pawl.Codec.CharacteristicPTSpec
     Pawl.Codec.Check
@@ -1338,8 +1338,6 @@ library codec
     Pawl.Codec.StoredResult
     Pawl.Codec.StoredResultSpec
     Pawl.Codec.Subtype
-    Pawl.Codec.SubtypeFamily
-    Pawl.Codec.SubtypeFamilySpec
     Pawl.Codec.SubtypesAre
     Pawl.Codec.SubtypesAreSpec
     Pawl.Codec.SubtypeSpec
@@ -1377,6 +1375,8 @@ library codec
     Pawl.Codec.TeamIdSpec
     Pawl.Codec.Teams
     Pawl.Codec.TeamsSpec
+    Pawl.Codec.TextWord
+    Pawl.Codec.TextWordSpec
     Pawl.Codec.TheseDiscard
     Pawl.Codec.TheseDiscardSpec
     Pawl.Codec.Timed
@@ -1436,8 +1436,6 @@ library codec
     Pawl.Codec.TypeLineSpec
     Pawl.Codec.TypesAre
     Pawl.Codec.TypesAreSpec
-    Pawl.Codec.TypeSwap
-    Pawl.Codec.TypeSwapSpec
     Pawl.Codec.UntapR
     Pawl.Codec.UntapRestriction
     Pawl.Codec.UntapRestrictionSpec
@@ -1472,6 +1470,8 @@ library codec
     Pawl.Codec.WhileSpec
     Pawl.Codec.WithCounters
     Pawl.Codec.WithCountersSpec
+    Pawl.Codec.WordFamily
+    Pawl.Codec.WordFamilySpec
     Pawl.Codec.Zone
     Pawl.Codec.ZoneChange
     Pawl.Codec.ZoneChangePattern
@@ -1647,6 +1647,7 @@ library engine
     Pawl.Engine.Summoning
     Pawl.Engine.Suspend
     Pawl.Engine.Target
+    Pawl.Engine.TextWord
     Pawl.Engine.TimeTravel
     Pawl.Engine.Turn
     Pawl.Engine.UntapRestriction
@@ -2286,8 +2287,8 @@ library types
     Pawl.Types.CastObligation
     Pawl.Types.CastOffer
     Pawl.Types.CastRepetition
-    Pawl.Types.ChangeSubtypeWord
     Pawl.Types.ChangeText
+    Pawl.Types.ChangeWord
     Pawl.Types.CharacteristicPT
     Pawl.Types.Check
     Pawl.Types.Choices
@@ -2885,7 +2886,6 @@ library types
     Pawl.Types.StickerSheet
     Pawl.Types.StoredResult
     Pawl.Types.Subtype
-    Pawl.Types.SubtypeFamily
     Pawl.Types.SubtypesAre
     Pawl.Types.Superlative
     Pawl.Types.Supertype
@@ -2905,6 +2905,7 @@ library types
     Pawl.Types.TeamId
     Pawl.Types.Teams
     Pawl.Types.Terminal
+    Pawl.Types.TextWord
     Pawl.Types.TheseDiscard
     Pawl.Types.Threshold
     Pawl.Types.Throw
@@ -2941,7 +2942,6 @@ library types
     Pawl.Types.TurnWindow
     Pawl.Types.TypeLine
     Pawl.Types.TypesAre
-    Pawl.Types.TypeSwap
     Pawl.Types.UntapR
     Pawl.Types.UntapRestriction
     Pawl.Types.UntapRewrite
@@ -2964,6 +2964,7 @@ library types
     Pawl.Types.WhichCounters
     Pawl.Types.While
     Pawl.Types.WithCounters
+    Pawl.Types.WordFamily
     Pawl.Types.Zone
     Pawl.Types.ZoneChange
     Pawl.Types.ZoneChangePattern

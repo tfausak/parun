@@ -110,6 +110,7 @@ import qualified Pawl.Types.CastFromZone as CastFromZone
 import qualified Pawl.Types.CastObligation as CastObligation
 import qualified Pawl.Types.CastOffer as CastOffer
 import qualified Pawl.Types.CastRepetition as CastRepetition
+import qualified Pawl.Types.ChangeText as ChangeText
 import qualified Pawl.Types.CharacteristicPT as CharacteristicPT
 import qualified Pawl.Types.ChooseCardName as ChooseCardName
 import qualified Pawl.Types.ChooseNumber as ChooseNumber
@@ -983,7 +984,7 @@ modificationCounts modification = case modification of
   Modification.LoseCardType _ -> []
   Modification.AddSupertype _ -> []
   Modification.RemoveSupertype _ -> []
-  Modification.ChangeSubtypeWord {} -> []
+  Modification.ChangeWord {} -> []
   Modification.SetController _ -> []
   Modification.SetControllerToSource -> []
   Modification.SetColor _ -> []
@@ -1255,7 +1256,7 @@ ownCounts :: Effect.Effect Card.Type.Card (GrantedAbility.GrantedAbility Card.Ty
 ownCounts effect = case effect of
   Effect.DealDamage (DealDamage.MkDealDamage parts _ _) -> concatMap (quantityCounts . DamagePart.quantity) parts
   Effect.ModifyTarget (ModifyTarget.MkModifyTarget duration modification _ _) -> durationCounts duration <> modificationCounts modification
-  Effect.ChangeText {} -> []
+  Effect.ChangeText x -> durationCounts (ChangeText.duration x)
   Effect.AddMana _ -> []
   Effect.Firebend _ -> []
   Effect.ActivateManaAbilities _ -> []
@@ -3260,10 +3261,13 @@ protectionGroups face =
 protectionDomains :: [Filter.Type.Filter Keyword.Keyword] -> [(String, Bool)]
 protectionDomains qualities =
   Maybe.catMaybes
-    [ domain "color" [color | Filter.Type.HasColor color <- qualities],
-      domain "card type" [cardType | Filter.Type.HasCardType cardType <- qualities]
+    [ domain "color" [color | Filter.Type.HasColor color <- fmap unwritten qualities],
+      domain "card type" [cardType | Filter.Type.HasCardType cardType <- fmap unwritten qualities]
     ]
   where
+    unwritten quality = case quality of
+      Filter.Type.Unwritten nested -> nested
+      _ -> quality
     domain :: (Bounded a, Enum a, Ord a) => String -> [a] -> Maybe (String, Bool)
     domain label named =
       let size = Set.size (Set.fromList named)
@@ -3272,10 +3276,21 @@ protectionDomains qualities =
     universe _ = [minBound .. maxBound]
 
 -- What a face owes CR 702.16g and 702.16h: a group from one domain is
--- classified, and a "from each" group is the whole domain.
+-- classified, and a "from each" group is the whole domain, each quality under
+-- Filter.Unwritten since the card writes no word a CR 612.2 text change could
+-- swap.
 protectionOffences :: Face.Face Card.Type.Card -> [String]
-protectionOffences face = concatMap judge (concatMap protectionDomains (protectionGroups face))
+protectionOffences face =
+  concatMap judge (concatMap protectionDomains (protectionGroups face))
+    <> [ "protection from each holds a written quality"
+       | Set.member (Face.name face) protectionFromEach,
+         quality <- concat (protectionGroups face),
+         not (isUnwritten quality)
+       ]
   where
+    isUnwritten quality = case quality of
+      Filter.Type.Unwritten _ -> True
+      _ -> False
     judge (label, complete)
       | Set.member (Face.name face) protectionFromEach = ["protection from each " <> label <> " misses one" | not complete]
       | Set.member (Face.name face) protectionListed = []
@@ -4385,7 +4400,7 @@ modificationFilters modification = case modification of
   Modification.LoseCardType _ -> []
   Modification.AddSupertype _ -> []
   Modification.RemoveSupertype _ -> []
-  Modification.ChangeSubtypeWord {} -> []
+  Modification.ChangeWord {} -> []
   Modification.SetController _ -> []
   Modification.SetControllerToSource -> []
   Modification.SetColor _ -> []
@@ -5855,7 +5870,7 @@ effectFilters effect = case effect of
   Effect.DealDamage (DealDamage.MkDealDamage parts _ _) -> foldMap (\part -> frame SourceHostFramed (objectRefFilters (DamagePart.ref part)) <> frame Unframed (quantityFilters (DamagePart.quantity part))) parts
   Effect.ModifyTarget (ModifyTarget.MkModifyTarget duration modification ref _) ->
     frame Unframed (durationFilters duration) <> frame Unframed (modificationFilters modification) <> frame SourceHostFramed (objectRefFilters ref)
-  Effect.ChangeText {} -> []
+  Effect.ChangeText x -> frame Unframed (durationFilters (ChangeText.duration x))
   -- CR 106.6's two clauses, and every predicate in them: the restriction's half
   -- per payment kind and the rider's condition are each an ordinary
   -- Filter, and collecting one of them would take every lint in this module off
@@ -7747,7 +7762,7 @@ lintSpec s registry = Spec.describe s "Lint" $ do
     ward <- S.combinedFace <$> S.printingOf s registry "Spectra Ward"
     paladin <- S.combinedFace <$> S.printingOf s registry "Paladin en-Vec"
     let isGreen keyword = case keyword of
-          Keyword.Protection protection -> Protection.quality protection == Filter.Type.HasColor Color.Green
+          Keyword.Protection protection -> Protection.quality protection == Filter.Type.Unwritten (Filter.Type.HasColor Color.Green)
           _ -> False
         keepModification modification = case modification of
           Modification.GainKeyword keyword -> not (isGreen keyword)

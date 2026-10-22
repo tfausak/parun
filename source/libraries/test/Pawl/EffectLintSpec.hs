@@ -269,7 +269,7 @@ ownQuantities :: Effect.Effect Card.Type.Card (GrantedAbility.GrantedAbility Car
 ownQuantities effect = case effect of
   Effect.DealDamage (DealDamage.MkDealDamage parts _ _) -> fmap DamagePart.quantity (Foldable.toList parts)
   Effect.ModifyTarget (ModifyTarget.MkModifyTarget duration modification _ _) -> durationQuantities duration <> Projection.quantitiesOf modification
-  Effect.ChangeText {} -> []
+  Effect.ChangeText x -> durationQuantities (ChangeText.duration x)
   Effect.AddMana _ -> []
   Effect.Firebend _ -> []
   Effect.ActivateManaAbilities _ -> []
@@ -2223,7 +2223,7 @@ effectLintSpec s registry = Spec.describe s "Lint" $ do
         readSingly effect = case effect of
           -- CR 701.14b's pair, which is why both slots count.
           Effect.Fight (Fight.MkFight one two) -> [one, two]
-          Effect.ChangeText (ChangeText.MkChangeText _ _ slot) -> [slot]
+          Effect.ChangeText (ChangeText.MkChangeText _ _ slot _) -> [slot]
           Effect.TurnFaceUp slot -> [slot]
           Effect.BecomesBlocked slot -> [slot]
           Effect.Designate (Designate.MkDesignate _ slot _) -> [slot]

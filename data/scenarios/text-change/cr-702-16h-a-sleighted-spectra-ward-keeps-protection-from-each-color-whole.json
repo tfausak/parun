@@ -1,0 +1,36 @@
+{
+  "description": "CR 702.16h / 612.2 a Sleight of Mind on Spectra Ward leaves its protection from each color whole",
+  "note": "\"Protection from each color\" writes no colour word, so swapping white for blue in Spectra Ward's text changes nothing: the enchanted Bears keep protection from white and alice's white Swords cannot target them. Bob's Llanowar Elves beside them show the Plains still pays for the cast.",
+  "board": {
+    "seats": [
+      {
+        "name": "alice",
+        "battlefield": [
+          { "card": "Island", "label": "island" },
+          { "card": "Plains", "label": "plains" },
+          { "card": "Grizzly Bears", "label": "bears" },
+          { "card": "Spectra Ward", "label": "ward", "attached": "bears" }
+        ],
+        "hand": [
+          { "card": "Sleight of Mind", "label": "sleight" },
+          { "card": "Swords to Plowshares", "label": "swords" }
+        ]
+      },
+      {
+        "name": "bob",
+        "battlefield": [{ "card": "Llanowar Elves", "label": "elves" }]
+      }
+    ],
+    "active": "alice",
+    "step": "PrecombatMain"
+  },
+  "timeline": [
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": { "Cast": { "object": "$sleight", "targets": ["$ward"], "mana": ["$island", null] } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass" },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "source": "Sleight of Mind", "do": { "ChooseWordSwap": { "from": { "type": "White" }, "to": { "type": "Blue" } } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "refuse": { "Cast": { "object": "$swords", "targets": ["$bears"], "mana": ["$plains"] } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": { "Cast": { "object": "$swords", "targets": ["$elves"], "mana": ["$plains"] } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass" },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "check": { "Count": { "player": "bob", "zone": "Exile", "card": "Llanowar Elves", "count": 1 } } }
+  ]
+}

@@ -16,7 +16,7 @@ import qualified Pawl.Types.Activator as Activator
 import qualified Pawl.Types.CardName as CardName
 import qualified Pawl.Types.CardType as CardType
 import qualified Pawl.Types.CastingPermission as CastingPermission
-import qualified Pawl.Types.ChangeSubtypeWord as ChangeSubtypeWord
+import qualified Pawl.Types.ChangeWord as ChangeWord
 import qualified Pawl.Types.Color as Color
 import qualified Pawl.Types.Cost as Cost
 import qualified Pawl.Types.CostComponent as CostComponent
@@ -43,6 +43,7 @@ import qualified Pawl.Types.SetBasePowerToughness as SetBasePowerToughness
 import qualified Pawl.Types.Subtype as Subtype
 import qualified Pawl.Types.Supertype as Supertype
 import qualified Pawl.Types.TargetSlot as TargetSlot
+import qualified Pawl.Types.TextWord as TextWord
 
 -- | The `ability` parameter is instantiated at @GrantedAbility Text@, which is
 -- what every card position holds with `card` in turn instantiated at 'Text.Text'
@@ -247,12 +248,12 @@ spec s = Spec.describe s "Pawl.Codec.Modification" $ do
       (Modification.RemoveSupertype Supertype.Snow)
       " {\"type\":\"RemoveSupertype\",\"value\":{\"type\":\"Snow\"}} "
   -- layer 3, CR 612 (Magical Hack: from -> to).
-  Spec.it s "ChangeSubtypeWord" $
+  Spec.it s "ChangeWord" $
     Common.assertCodec
       s
       codec
-      (Modification.ChangeSubtypeWord (ChangeSubtypeWord.MkChangeSubtypeWord Subtype.Mountain Subtype.Island))
-      " {\"type\":\"ChangeSubtypeWord\",\"value\":{\"from\":{\"type\":\"Mountain\"},\"to\":{\"type\":\"Island\"}}} "
+      (Modification.ChangeWord (ChangeWord.MkChangeWord (TextWord.SubtypeWord Subtype.Mountain) (TextWord.SubtypeWord Subtype.Island)))
+      " {\"type\":\"ChangeWord\",\"value\":{\"from\":{\"type\":\"Mountain\"},\"to\":{\"type\":\"Island\"}}} "
   -- layer 2, CR 613.1b: the PlayerId is BAKED at effect creation, unlike
   -- SetControllerToSource below.
   Spec.it s "SetController carries its baked PlayerId" $

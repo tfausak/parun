@@ -83,6 +83,7 @@ import qualified Pawl.Types.Sickness as Sickness
 import qualified Pawl.Types.Staged as Staged
 import qualified Pawl.Types.Subtype as Subtype
 import qualified Pawl.Types.TapState as TapState
+import qualified Pawl.Types.TextWord as TextWord
 import qualified Pawl.Types.Zone as Zone
 
 declaredAttackers :: GameState.GameState -> [ObjectId.ObjectId]
@@ -684,7 +685,7 @@ castHackAt hackId target from to gs =
   let answer :: Prompt.Prompt r -> r
       answer p = case p of
         Prompt.ChooseTargets _ _ _ sets -> fmap (const (Set.singleton (Recipient.ToObject target))) sets
-        Prompt.ChooseLandTypeSwap {} -> (from, to)
+        Prompt.ChooseWordSwap {} -> (TextWord.SubtypeWord from, TextWord.SubtypeWord to)
         _ -> S.identityAnswer p
    in S.runPure answer (gs {GameState.priority = Just S.alice}) (do S.cast S.alice hackId; Stack.resolveTop)
 
@@ -2132,7 +2133,7 @@ castHackPaying island hackId target from to gs =
   let answer :: Prompt.Prompt r -> r
       answer p = case p of
         Prompt.ChooseTargets _ _ _ sets -> fmap (const (Set.singleton (Recipient.ToObject target))) sets
-        Prompt.ChooseLandTypeSwap {} -> (from, to)
+        Prompt.ChooseWordSwap {} -> (TextWord.SubtypeWord from, TextWord.SubtypeWord to)
         Prompt.ChooseManaSource {} -> Just island
         _ -> S.identityAnswer p
    in S.runPure answer (gs {GameState.priority = Just S.alice}) (do S.cast S.alice hackId; Stack.resolveTop)
