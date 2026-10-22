@@ -8,6 +8,8 @@ import qualified Pawl.Types.AbilityName as AbilityName
 import qualified Pawl.Types.ArmDelayedTrigger as ArmDelayedTrigger
 import qualified Pawl.Types.Duration as Duration
 import qualified Pawl.Types.Onset as Onset
+import qualified Pawl.Types.PlayerRef as PlayerRef
+import qualified Pawl.Types.PlayerRelation as PlayerRelation
 
 spec :: (Monad m, Monad n) => Spec.Spec m n -> n ()
 spec s = Spec.describe s "Pawl.Codec.ArmDelayedTrigger" $ do
@@ -48,12 +50,12 @@ spec s = Spec.describe s "Pawl.Codec.ArmDelayedTrigger" $ do
       (ArmDelayedTrigger.codec Common.text)
       ( ArmDelayedTrigger.MkArmDelayedTrigger
           { ArmDelayedTrigger.name = AbilityName.MkAbilityName (Text.pack "return it"),
-            ArmDelayedTrigger.onset = Onset.FromYourNextTurn,
+            ArmDelayedTrigger.onset = Onset.FromNextTurnOf (PlayerRef.Relative PlayerRelation.You),
             ArmDelayedTrigger.duration = Nothing,
             ArmDelayedTrigger.ability = Nothing
           }
       )
-      " {\"name\":\"return it\",\"onset\":{\"type\":\"FromYourNextTurn\"}} "
+      " {\"name\":\"return it\",\"onset\":{\"type\":\"FromNextTurnOf\",\"value\":{\"type\":\"Relative\",\"value\":{\"type\":\"You\"}}}} "
   -- CR 603.7a: the declaration carried by the arm itself, Splinter Twin's quoted
   -- "Exile that token at the beginning of the next end step".
   Spec.it s "MkArmDelayedTrigger, carried ability" $

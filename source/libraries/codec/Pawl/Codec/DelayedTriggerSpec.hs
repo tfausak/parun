@@ -57,10 +57,10 @@ spec s = Spec.describe s "Pawl.Codec.DelayedTrigger" $ do
     Common.assertCodec
       s
       DelayedTrigger.codec
-      entry {DelayedTrigger.window = TurnWindow.ControllersNextTurn}
+      entry {DelayedTrigger.window = TurnWindow.NextTurnOf (PlayerId.MkPlayerId 2)}
       ( "{\"ability\":{\"condition\":{\"type\":\"SelfEnters\"},\"modal\":{\"modes\":[{}]}},\"source\":4,\"controller\":0,"
           <> "\"bindings\":{\"token\":{\"amount\":9}},"
-          <> "\"window\":{\"type\":\"ControllersNextTurn\"},\"createdAt\":7}"
+          <> "\"window\":{\"type\":\"NextTurnOf\",\"value\":2},\"createdAt\":7}"
       )
   -- 'bindings' at its default and no stated 'expiry'. 'window' stays a required
   -- key regardless: CR 603.7a's "no restriction" is one of TurnWindow's arms,

@@ -1,5 +1,6 @@
 module Pawl.Codec.TurnWindow where
 
+import qualified Pawl.Codec.PlayerId as PlayerId
 import qualified Pawl.Codec.Timestamp as Timestamp
 import qualified Pawl.JsonCodec.Arm as Arm
 import qualified Pawl.JsonCodec.Codec as Codec
@@ -14,7 +15,7 @@ codec =
   Arm.tagged
     tagOf
     [ Arm.nullary "AnyTurn" TurnWindow.AnyTurn,
-      Arm.nullary "ControllersNextTurn" TurnWindow.ControllersNextTurn,
+      Arm.payload "NextTurnOf" PlayerId.codec TurnWindow.NextTurnOf (\x -> case x of TurnWindow.NextTurnOf y -> Just y; _ -> Nothing),
       Arm.payload "OnTurn" Common.natural TurnWindow.OnTurn (\x -> case x of TurnWindow.OnTurn y -> Just y; _ -> Nothing),
       Arm.payload "OnExtraTurn" Timestamp.codec TurnWindow.OnExtraTurn (\x -> case x of TurnWindow.OnExtraTurn y -> Just y; _ -> Nothing)
     ]
@@ -22,6 +23,6 @@ codec =
 tagOf :: TurnWindow.TurnWindow -> String
 tagOf x = case x of
   TurnWindow.AnyTurn {} -> "AnyTurn"
-  TurnWindow.ControllersNextTurn {} -> "ControllersNextTurn"
+  TurnWindow.NextTurnOf {} -> "NextTurnOf"
   TurnWindow.OnTurn {} -> "OnTurn"
   TurnWindow.OnExtraTurn {} -> "OnExtraTurn"

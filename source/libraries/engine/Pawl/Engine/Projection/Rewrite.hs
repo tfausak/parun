@@ -956,8 +956,8 @@ rewriteEffect pairs effect = case effect of
   -- Filter could name (Alluring Siren's "you").
   Effect.RequireAttack (RequireAttack.MkRequireAttack duration attacker defender) ->
     let rewrittenDefender = case defender of
-          AttackTargetRef.Players _ -> defender
-          AttackTargetRef.Permanents ref -> AttackTargetRef.Permanents (rewriteObjectRef pairs ref)
+          Just (AttackTargetRef.Permanents ref) -> Just (AttackTargetRef.Permanents (rewriteObjectRef pairs ref))
+          _ -> defender
      in Effect.RequireAttack (RequireAttack.MkRequireAttack (rewriteDuration pairs duration) (rewriteRestricted pairs attacker) rewrittenDefender)
   -- CR 114.3 leaves an emblem no type line and no name, so its ABILITIES are the
   -- whole of what CR 612.1 can reach.

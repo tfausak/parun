@@ -1,0 +1,263 @@
+{
+  "faces": [
+    {
+      "manaCost": [
+        {
+          "type": "Hybrid",
+          "value": {
+            "left": {
+              "type": "Colored",
+              "value": {
+                "type": "Blue"
+              }
+            },
+            "right": {
+              "type": "Colored",
+              "value": {
+                "type": "Red"
+              }
+            }
+          }
+        }
+      ],
+      "name": "Hustle",
+      "oracleText": "Target creature attacks or blocks this turn if able.",
+      "spell": {
+        "modes": [
+          {
+            "clauses": [
+              {
+                "effects": [
+                  {
+                    "type": "RequireAttack",
+                    "value": {
+                      "attacker": {
+                        "type": "Named",
+                        "value": {
+                          "type": "InSlot",
+                          "value": "target"
+                        }
+                      },
+                      "duration": {
+                        "type": "UntilEndOfTurn"
+                      }
+                    }
+                  },
+                  {
+                    "type": "RequireBlock",
+                    "value": {
+                      "blocker": {
+                        "type": "Named",
+                        "value": {
+                          "type": "InSlot",
+                          "value": "target"
+                        }
+                      },
+                      "duration": {
+                        "type": "UntilEndOfTurn"
+                      }
+                    }
+                  }
+                ]
+              }
+            ],
+            "targetSlots": {
+              "target": {
+                "pool": {
+                  "type": "Creatures"
+                }
+              }
+            }
+          }
+        ]
+      },
+      "typeLine": {
+        "types": [
+          {
+            "type": "Instant"
+          }
+        ]
+      }
+    },
+    {
+      "manaCost": [
+        {
+          "type": "Generic",
+          "value": 4
+        },
+        {
+          "type": "Hybrid",
+          "value": {
+            "left": {
+              "type": "Colored",
+              "value": {
+                "type": "Red"
+              }
+            },
+            "right": {
+              "type": "Colored",
+              "value": {
+                "type": "Green"
+              }
+            }
+          }
+        },
+        {
+          "type": "Hybrid",
+          "value": {
+            "left": {
+              "type": "Colored",
+              "value": {
+                "type": "Red"
+              }
+            },
+            "right": {
+              "type": "Colored",
+              "value": {
+                "type": "Green"
+              }
+            }
+          }
+        }
+      ],
+      "name": "Bustle",
+      "oracleText": "Creatures you control get +2/+2 and gain trample until end of turn. You may turn a creature you control face up.",
+      "spell": {
+        "modes": [
+          {
+            "clauses": [
+              {
+                "effects": [
+                  {
+                    "type": "ModifyTarget",
+                    "value": {
+                      "duration": {
+                        "type": "UntilEndOfTurn"
+                      },
+                      "modification": {
+                        "type": "ModifyPowerToughness",
+                        "value": {
+                          "power": {
+                            "type": "Literal",
+                            "value": 2
+                          },
+                          "toughness": {
+                            "type": "Literal",
+                            "value": 2
+                          }
+                        }
+                      },
+                      "ref": {
+                        "type": "EachMatching",
+                        "value": {
+                          "type": "And",
+                          "value": [
+                            {
+                              "type": "HasCardType",
+                              "value": {
+                                "type": "Creature"
+                              }
+                            },
+                            {
+                              "type": "ControlledBy",
+                              "value": {
+                                "type": "You"
+                              }
+                            }
+                          ]
+                        }
+                      }
+                    }
+                  },
+                  {
+                    "type": "ModifyTarget",
+                    "value": {
+                      "duration": {
+                        "type": "UntilEndOfTurn"
+                      },
+                      "modification": {
+                        "type": "GainKeyword",
+                        "value": {
+                          "type": "Trample"
+                        }
+                      },
+                      "ref": {
+                        "type": "EachMatching",
+                        "value": {
+                          "type": "And",
+                          "value": [
+                            {
+                              "type": "HasCardType",
+                              "value": {
+                                "type": "Creature"
+                              }
+                            },
+                            {
+                              "type": "ControlledBy",
+                              "value": {
+                                "type": "You"
+                              }
+                            }
+                          ]
+                        }
+                      }
+                    }
+                  },
+                  {
+                    "type": "ChoosePermanents",
+                    "value": {
+                      "permanents": {
+                        "count": {
+                          "type": "UpTo",
+                          "value": {
+                            "type": "Literal",
+                            "value": 1
+                          }
+                        },
+                        "filter": {
+                          "type": "And",
+                          "value": [
+                            {
+                              "type": "HasCardType",
+                              "value": {
+                                "type": "Creature"
+                              }
+                            },
+                            {
+                              "type": "ControlledBy",
+                              "value": {
+                                "type": "You"
+                              }
+                            },
+                            {
+                              "type": "IsFaceDown"
+                            }
+                          ]
+                        }
+                      },
+                      "slot": "chosen"
+                    }
+                  },
+                  {
+                    "type": "TurnFaceUp",
+                    "value": "chosen"
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      "typeLine": {
+        "types": [
+          {
+            "type": "Sorcery"
+          }
+        ]
+      }
+    }
+  ],
+  "layout": {
+    "type": "Split"
+  }
+}

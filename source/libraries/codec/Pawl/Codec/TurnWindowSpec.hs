@@ -3,11 +3,12 @@ module Pawl.Codec.TurnWindowSpec where
 import qualified Pawl.Codec.TurnWindow as TurnWindow
 import qualified Pawl.JsonCodec.Common as Common
 import qualified Pawl.Spec as Spec
+import qualified Pawl.Types.PlayerId as PlayerId
 import qualified Pawl.Types.Timestamp as Timestamp
 import qualified Pawl.Types.TurnWindow as TurnWindow
 
 -- | One case per arm of the stored onset's life cycle (Pawl.Types.TurnWindow): no
--- restriction, waiting for the controller's next turn or for one extra turn, and
+-- restriction, waiting for a player's next turn or for one extra turn, and
 -- settled on the turn that turned out to be.
 spec :: (Monad m, Monad n) => Spec.Spec m n -> n ()
 spec s = Spec.describe s "Pawl.Codec.TurnWindow" $ do
@@ -17,12 +18,12 @@ spec s = Spec.describe s "Pawl.Codec.TurnWindow" $ do
       TurnWindow.codec
       TurnWindow.AnyTurn
       " {\"type\":\"AnyTurn\"} "
-  Spec.it s "ControllersNextTurn" $
+  Spec.it s "NextTurnOf" $
     Common.assertCodec
       s
       TurnWindow.codec
-      TurnWindow.ControllersNextTurn
-      " {\"type\":\"ControllersNextTurn\"} "
+      (TurnWindow.NextTurnOf (PlayerId.MkPlayerId 3))
+      " {\"type\":\"NextTurnOf\",\"value\":3} "
   Spec.it s "OnTurn carries the settled turn number" $
     Common.assertCodec
       s

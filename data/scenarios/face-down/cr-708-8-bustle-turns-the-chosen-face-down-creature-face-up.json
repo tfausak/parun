@@ -1,0 +1,33 @@
+{
+  "description": "CR 708.8 Bustle turns the face-down creature alice chooses face up, and only that one",
+  "note": "Two manifested creatures, so the choice is a real one and the unchosen Grizzly Bears staying nameless shows Bustle turned up the creature chosen rather than every candidate.",
+  "board": {
+    "active": "alice",
+    "step": "PrecombatMain",
+    "seats": [
+      {
+        "name": "alice",
+        "battlefield": [
+          { "card": "Forest", "label": "f1" },
+          { "card": "Forest", "label": "f2" },
+          { "card": "Forest", "label": "f3" },
+          { "card": "Forest", "label": "f4" },
+          { "card": "Forest", "label": "f5" },
+          { "card": "Forest", "label": "f6" },
+          { "card": "Hill Giant", "label": "giant", "faceDown": { "type": "Manifested" } },
+          { "card": "Grizzly Bears", "label": "bears", "faceDown": { "type": "Manifested" } }
+        ],
+        "hand": [{ "card": "Hustle", "label": "bustle" }],
+        "library": [{ "card": "Island" }]
+      },
+      { "name": "bob", "library": [{ "card": "Island" }] }
+    ]
+  },
+  "timeline": [
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": { "Cast": { "object": "$bustle", "mana": ["$f1", "$f2", "$f3", "$f4", "$f5", "$f6"] } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": { "Answer": { "prompt": "ChooseAnyNumberOfPermanents", "with": ["$giant"] } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "check": { "Names": { "object": "$giant", "names": ["Hill Giant"] } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "check": { "PowerToughness": { "object": "$giant", "power": 5, "toughness": 5 } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "check": { "Names": { "object": "$bears", "names": [] } } }
+  ]
+}

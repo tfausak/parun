@@ -2318,7 +2318,7 @@ bakeSlots players = fmap (bakeSlot players)
 bakeSlot :: Map SlotName PlayerId -> TargetSlot -> TargetSlot
 bakeSlot players slot =
   slot
-    { TargetSlot.filter = fmap (Filter.bakeBound players) (TargetSlot.filter slot),
+    { TargetSlot.filter = fmap (Filter.bakeBound players Map.empty) (TargetSlot.filter slot),
       TargetSlot.amount = fmap (Quantity.bakeBound players Map.empty) (TargetSlot.amount slot),
       TargetSlot.divided = fmap (Quantity.bakeBound players Map.empty) (TargetSlot.divided slot),
       -- CR 601.2c's count reads a Quantity of its own, so it is baked beside the

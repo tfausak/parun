@@ -23,8 +23,20 @@ spec s = Spec.describe s "Pawl.Codec.RequireAttack" $ do
       ( RequireAttack.MkRequireAttack
           { RequireAttack.duration = Duration.UntilEndOfTurn,
             RequireAttack.attacker = RestrictedCreatures.Named (ObjectRef.InSlot (SlotName.MkSlotName (Text.pack "target"))),
-            RequireAttack.defender = AttackTargetRef.Players (PlayerRef.Relative PlayerRelation.You)
+            RequireAttack.defender = Just (AttackTargetRef.Players (PlayerRef.Relative PlayerRelation.You))
           }
       )
       " {\"duration\":{\"type\":\"UntilEndOfTurn\"},\"attacker\":{\"type\":\"Named\",\"value\":{\"type\":\"InSlot\",\"value\":\"target\"}},\"defender\":{\"type\":\"Players\",\"value\":{\"type\":\"Relative\",\"value\":{\"type\":\"You\"}}}} "
+  -- Courtly Provocateur's "attacks this turn if able": no defender, elided.
+  Spec.it s "MkRequireAttack, no defender" $
+    Common.assertCodec
+      s
+      RequireAttack.codec
+      ( RequireAttack.MkRequireAttack
+          { RequireAttack.duration = Duration.UntilEndOfTurn,
+            RequireAttack.attacker = RestrictedCreatures.Named (ObjectRef.InSlot (SlotName.MkSlotName (Text.pack "target"))),
+            RequireAttack.defender = Nothing
+          }
+      )
+      " {\"duration\":{\"type\":\"UntilEndOfTurn\"},\"attacker\":{\"type\":\"Named\",\"value\":{\"type\":\"InSlot\",\"value\":\"target\"}}} "
   Spec.it s "has a schema" $ Common.assertHasSchema s RequireAttack.codec

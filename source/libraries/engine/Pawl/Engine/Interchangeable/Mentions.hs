@@ -275,6 +275,7 @@ import qualified Pawl.Types.Ninjutsu as Ninjutsu
 import Pawl.Types.ObjectId (ObjectId)
 import qualified Pawl.Types.ObjectRef as ObjectRef
 import qualified Pawl.Types.OfferCast as OfferCast
+import qualified Pawl.Types.Onset as Onset
 import qualified Pawl.Types.Operand as Operand
 import qualified Pawl.Types.Optionality as Optionality
 import qualified Pawl.Types.OrElse as OrElse
@@ -680,7 +681,13 @@ arithmeticNames asking onQuantity x = case x of
 
 armDelayedTriggerNames :: (Monoid r) => Asking r -> (ability -> r) -> ArmDelayedTrigger.ArmDelayedTrigger ability -> r
 armDelayedTriggerNames asking onAbility x = case x of
-  ArmDelayedTrigger.MkArmDelayedTrigger _name _onset duration ability -> foldMap (durationNames asking) duration <> foldMap onAbility ability
+  ArmDelayedTrigger.MkArmDelayedTrigger _name onset duration ability -> onsetNames asking onset <> foldMap (durationNames asking) duration <> foldMap onAbility ability
+
+onsetNames :: (Monoid r) => Asking r -> Onset.Onset -> r
+onsetNames asking x = case x of
+  Onset.Immediately -> mempty
+  Onset.FromNextTurnOf playerRef -> playerRefNames asking playerRef
+  Onset.FromThatExtraTurn -> mempty
 
 asCopyNames :: (Monoid r) => Asking r -> (ability -> r) -> (effect -> r) -> AsCopy.AsCopy ability effect -> r
 asCopyNames asking onAbility onEffect x = case x of
@@ -2589,7 +2596,7 @@ replacementEffectNames asking onCard onAbility onEffect x = case x of
 
 requireAttackNames :: (Monoid r) => Asking r -> RequireAttack.RequireAttack -> r
 requireAttackNames asking x = case x of
-  RequireAttack.MkRequireAttack duration attacker defender -> durationNames asking duration <> restrictedCreaturesNames asking (objectRefNames asking) attacker <> attackTargetRefNames asking defender
+  RequireAttack.MkRequireAttack duration attacker defender -> durationNames asking duration <> restrictedCreaturesNames asking (objectRefNames asking) attacker <> foldMap (attackTargetRefNames asking) defender
 
 requireBlockNames :: (Monoid r) => Asking r -> RequireBlock.RequireBlock -> r
 requireBlockNames asking x = case x of

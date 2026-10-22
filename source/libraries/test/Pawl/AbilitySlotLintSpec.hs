@@ -101,7 +101,6 @@ import qualified Pawl.Types.MoveCounters as MoveCounters
 import qualified Pawl.Types.MoveToZone as MoveToZone
 import qualified Pawl.Types.MovedKinds as MovedKinds
 import qualified Pawl.Types.ObjectRef as ObjectRef
-import qualified Pawl.Types.Onset as Onset
 import qualified Pawl.Types.Operand as Operand
 import qualified Pawl.Types.Optionality as Optionality
 import qualified Pawl.Types.PayBranch as PayBranch
@@ -456,8 +455,8 @@ discardsSelfAsCost =
 -- CR 603.7 / 109.5: does this card arm a delayed ability "on your next turn"
 -- whose condition is not scoped to its controller's turn?
 --
--- Pawl.Types.Onset.FromYourNextTurn carries BOTH halves of that phrase on its
--- own: Event.armOnset stores TurnWindow.ControllersNextTurn and
+-- Pawl.Types.Onset.FromNextTurnOf carries BOTH halves of that phrase on its
+-- own: Event.armOnset stores TurnWindow.NextTurnOf and
 -- Event.settleOnsets pins the entry to the one turn that turns out to be, whose
 -- active player is the entry's controller. So the ability's own
 -- TriggerCondition.StepBegins carrying TurnScope.ControllersTurn is redundant
@@ -484,7 +483,7 @@ onsetOffends card =
       -- A carried arm is held to the same pairing off the ability it carries.
       carriedOffends effect = case effect of
         Effect.ArmDelayedTrigger arm
-          | ArmDelayedTrigger.onset arm /= Onset.Immediately ->
+          | Resolve.namesOwnTurn (ArmDelayedTrigger.onset arm) ->
               maybe False (not . Event.controllerTurnScoped . TriggeredAbility.condition) (Game.carriedDelayedAbility arm)
         _ -> False
    in not (all scoped (Set.toList (Resolve.onsetGatedAbilities (cardAuthoredEffects card)))) || any carriedOffends (cardAuthoredEffects card)
@@ -829,7 +828,7 @@ abilitySlotLintSpec s registry = Spec.describe s "Lint" $ do
         declares = modalTrigger TriggerCondition.SelfEnters [lintMode [Effect.Sacrifice SacrificeEffect.MkSacrificeEffect {SacrificeEffect.ref = ObjectRef.InSlot tokens, SacrificeEffect.sacrificer = Sacrificer.EffectController, SacrificeEffect.sacrificed = Nothing}] [tokens]]
     Spec.assertBool s (not (shadowsSlots (Set.singleton tokens) [reads_])) "reading a Create's slot is legal"
     Spec.assertBool s (shadowsSlots (Set.singleton tokens) [declares]) "declaring a target slot under the same name is not"
-  -- The pairing Pawl.Types.Onset.FromYourNextTurn depends on and cannot enforce
+  -- The pairing Pawl.Types.Onset.FromNextTurnOf depends on and cannot enforce
   -- alone. See onsetOffends for why the onset and the condition's TurnScope
   -- are two halves of one printed "your next turn", and what goes wrong when a
   -- card supplies only one of them.

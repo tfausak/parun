@@ -1,0 +1,174 @@
+{
+  "faces": [
+    {
+      "manaCost": [
+        {
+          "type": "Generic",
+          "value": 5
+        },
+        {
+          "type": "OfType",
+          "value": {
+            "type": "Colored",
+            "value": {
+              "type": "Red"
+            }
+          }
+        },
+        {
+          "type": "OfType",
+          "value": {
+            "type": "Colored",
+            "value": {
+              "type": "White"
+            }
+          }
+        }
+      ],
+      "name": "Boros Battleshaper",
+      "oracleText": "At the beginning of each combat, up to one target creature attacks or blocks this combat if able and up to one target creature can't attack or block this combat.",
+      "power": {
+        "type": "Literal",
+        "value": 5
+      },
+      "toughness": {
+        "type": "Literal",
+        "value": 5
+      },
+      "triggeredAbilities": [
+        {
+          "condition": {
+            "type": "StepBegins",
+            "value": {
+              "phase": {
+                "type": "Combat",
+                "value": {
+                  "type": "BeginningOfCombat"
+                }
+              },
+              "scope": {
+                "type": "EachTurn"
+              }
+            }
+          },
+          "modal": {
+            "modes": [
+              {
+                "clauses": [
+                  {
+                    "effects": [
+                      {
+                        "type": "RequireAttack",
+                        "value": {
+                          "attacker": {
+                            "type": "Named",
+                            "value": {
+                              "type": "InSlot",
+                              "value": "forced"
+                            }
+                          },
+                          "duration": {
+                            "type": "UntilEndOfCombat"
+                          }
+                        }
+                      },
+                      {
+                        "type": "RequireBlock",
+                        "value": {
+                          "blocker": {
+                            "type": "Named",
+                            "value": {
+                              "type": "InSlot",
+                              "value": "forced"
+                            }
+                          },
+                          "duration": {
+                            "type": "UntilEndOfCombat"
+                          }
+                        }
+                      },
+                      {
+                        "type": "ForbidAttack",
+                        "value": {
+                          "affected": {
+                            "type": "Named",
+                            "value": {
+                              "type": "InSlot",
+                              "value": "barred"
+                            }
+                          },
+                          "duration": {
+                            "type": "UntilEndOfCombat"
+                          }
+                        }
+                      },
+                      {
+                        "type": "Prohibit",
+                        "value": {
+                          "affected": {
+                            "type": "Named",
+                            "value": {
+                              "type": "InSlot",
+                              "value": "barred"
+                            }
+                          },
+                          "duration": {
+                            "type": "UntilEndOfCombat"
+                          },
+                          "what": {
+                            "type": "Block"
+                          }
+                        }
+                      }
+                    ]
+                  }
+                ],
+                "targetSlots": {
+                  "barred": {
+                    "count": {
+                      "type": "Printed",
+                      "value": {
+                        "least": 0,
+                        "most": 1
+                      }
+                    },
+                    "pool": {
+                      "type": "Creatures"
+                    }
+                  },
+                  "forced": {
+                    "count": {
+                      "type": "Printed",
+                      "value": {
+                        "least": 0,
+                        "most": 1
+                      }
+                    },
+                    "pool": {
+                      "type": "Creatures"
+                    }
+                  }
+                }
+              }
+            ]
+          }
+        }
+      ],
+      "typeLine": {
+        "subtypes": [
+          {
+            "type": "Minotaur"
+          },
+          {
+            "type": "Soldier"
+          }
+        ],
+        "types": [
+          {
+            "type": "Creature"
+          }
+        ]
+      }
+    }
+  ]
+}
