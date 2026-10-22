@@ -5480,6 +5480,11 @@ blockPermissionFilters permission =
 --     condition, matched by Pawl.Engine.Event.Match against the bearer through
 --     Pawl.Engine.SourceContext, which fills the bearer's CR 607.2d choices
 --     (Kindred Discovery). Unframed's answer for every other atom.
+--   * StoredClassFramed -- a combat restriction's class a resolution stores
+--     (RestrictedCreatures.Matching, ForbidBeingBlocked's pair), baked by
+--     Pawl.Engine.Resolve.Effect.storedClass and then matched through a bare
+--     Filter.contextFor. Unframed's answer for every atom but CR 110.2's
+--     Filter.SameControllerAsBound, which the bake writes in (Mark for Death).
 --   * Unframed -- everything else.
 --
 -- CR 303.4a's enchant slot (Face.enchant) is Unframed rather than InTargetSlot,
@@ -5650,6 +5655,9 @@ data Framing
     ManaRestrictionFramed
   | -- | A triggered ability's own trigger condition. See the overview above.
     TriggerConditionFramed
+  | -- | A resolution's stored CR 611.2c combat restriction class. See the
+    -- overview above.
+    StoredClassFramed
   -- Bounded and Enum so the framing coverage case below enumerates
   -- [minBound .. maxBound] rather than a hand-kept list: a constructor added
   -- here joins that case with no edit, which is the tripwire a hand-kept list
@@ -5730,6 +5738,8 @@ sweptForSingularSlots framing = case framing of
   ActivationCostFramed -> True
   ManaRestrictionFramed -> True
   TriggerConditionFramed -> True
+  -- SWEPT, as it was while Unframed: the split is about CR 110.2's bake.
+  StoredClassFramed -> True
 
 -- filterSlotsReadSingly against a TAGGED position, and the one funnel every
 -- reader of that walk goes through, so two routes to the same keyword filter
@@ -5745,12 +5755,11 @@ unframed :: [Filter.Type.Filter Keyword.Keyword] -> [(Framing, Filter.Type.Filte
 unframed = fmap ((,) Unframed)
 
 -- A Pawl.Types.RestrictedCreatures' Filters: a Named arm is an effect's
--- ObjectRef, and a Matching class is read through a bare Filter.contextFor at
--- Pawl.Engine.RestrictedCreatures.covered, so it is Unframed.
+-- ObjectRef, and a Matching class is a stored one (StoredClassFramed).
 restrictedFilters :: RestrictedCreatures.RestrictedCreatures ObjectRef.ObjectRef -> [(Framing, Filter.Type.Filter Keyword.Keyword)]
 restrictedFilters restricted = case restricted of
   RestrictedCreatures.Named ref -> frame SourceHostFramed (objectRefFilters ref)
-  RestrictedCreatures.Matching f -> unframed [f]
+  RestrictedCreatures.Matching f -> [(StoredClassFramed, f)]
 
 -- Tag a Filter position as an EFFECT's ObjectRef -- one whose evaluator supplies
 -- the SOURCE's host AND the resolution's own state. An ObjectRef's own Filter is
@@ -6127,7 +6136,7 @@ effectFilters effect = case effect of
     frame Unframed (durationFilters duration) <> restrictedFilters affected
   -- ForbidAttack's Matching arm, read at
   -- Pawl.Engine.CombatRestriction.storedEvasions.
-  Effect.ForbidBeingBlocked (ForbidBeingBlocked.MkForbidBeingBlocked duration f barred) -> frame Unframed (durationFilters duration) <> unframed [f, barred]
+  Effect.ForbidBeingBlocked (ForbidBeingBlocked.MkForbidBeingBlocked duration f barred) -> frame Unframed (durationFilters duration) <> fmap ((,) StoredClassFramed) [f, barred]
   -- A defender naming players carries no Filter; one naming permanents is an
   -- ObjectRef like the Named attacker.
   Effect.RequireAttack (RequireAttack.MkRequireAttack duration attacker defender) ->

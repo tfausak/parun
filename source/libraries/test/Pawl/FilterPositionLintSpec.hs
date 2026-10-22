@@ -14,7 +14,7 @@ import qualified Data.Monoid as Monoid
 import qualified Data.Sequence as Seq
 import qualified Data.Set as Set
 import qualified Data.Text as Text
-import Pawl.CardSpec (Framing (ActivationCostFramed, AffectedSetFramed, AttachDestination, ClauseGateFramed, EntryAttachDestination, HandSweepFramed, InTargetSlot, KeywordFramed, LifeLossAmountFramed, ManaRestrictionFramed, MillTallyFramed, MintedTargetSlot, OutsideTheGameFramed, PlayerEffectFramed, ReplacementRowFramed, SearchFramed, SlotlessCostFramed, SourceHostFramed, StandingHostFramed, StoredPlayerEffectFramed, TriggerConditionFramed, Unframed), anyFace, cardCounts, cardFilters, cardResolutionEffects, conditionFilters, counterKindFilters, durationFilters, effectFilters, entryRewriteFilters, filterSlotsReadSingly, framedSlotsReadSingly, keywordFilters, modalFilters, objectRefFilters, oneEffectTrigger, oneFaced, payGateFilters, quantityFilters, replacementEffectFilters, riderFilters, triggerConditionFilters, turnUpRewriteFilters)
+import Pawl.CardSpec (Framing (ActivationCostFramed, AffectedSetFramed, AttachDestination, ClauseGateFramed, EntryAttachDestination, HandSweepFramed, InTargetSlot, KeywordFramed, LifeLossAmountFramed, ManaRestrictionFramed, MillTallyFramed, MintedTargetSlot, OutsideTheGameFramed, PlayerEffectFramed, ReplacementRowFramed, SearchFramed, SlotlessCostFramed, SourceHostFramed, StandingHostFramed, StoredClassFramed, StoredPlayerEffectFramed, TriggerConditionFramed, Unframed), anyFace, cardCounts, cardFilters, cardResolutionEffects, conditionFilters, counterKindFilters, durationFilters, effectFilters, entryRewriteFilters, filterSlotsReadSingly, framedSlotsReadSingly, keywordFilters, modalFilters, objectRefFilters, oneEffectTrigger, oneFaced, payGateFilters, quantityFilters, replacementEffectFilters, riderFilters, triggerConditionFilters, turnUpRewriteFilters)
 import qualified Pawl.Codec.Card as Card
 import qualified Pawl.Codec.Face as Face.Codec
 import qualified Pawl.Codec.Filter as Filter.Codec
@@ -409,6 +409,8 @@ sourceFramed framing = case framing of
   -- Conservative for KeywordFramed's reason: everything else, some of it read
   -- with no source at all.
   Unframed -> False
+  -- Matched through a bare Filter.contextFor, Unframed's posture.
+  StoredClassFramed -> False
   -- Pawl.Engine.Resolve.Effect.offerCastOnce pays CastOffer.payingInstead,
   -- which carries this tag, framed by the OFFERED card rather than by the
   -- offering object, so a source-derived atom there is a silent False.
@@ -1083,19 +1085,20 @@ sameControllerAsBoundTag :: Text.Text
 sameControllerAsBoundTag = Text.pack "SameControllerAsBound"
 
 -- How many CR 110.2 shared-controller atoms this card carries inside a MODE's
--- target slot filter or an attach effect's destination, and how many anywhere
--- else. The second number is the offence; the first is what Bioshift and Glamer
+-- target slot filter, an attach effect's destination or a stored combat
+-- restriction class, and how many anywhere else. The second number is the offence; the first is what Bioshift and Glamer
 -- Spinners legitimately have one of.
 sameControllerAsBoundCounts :: Face.Face Card.Type.Card -> (Int, Int)
 sameControllerAsBoundCounts card =
-  let total wanted = sum (fmap (\(_, f) -> filterAtoms sameControllerAsBoundTag f) (filter (\(framing, _) -> elem framing [InTargetSlot, AttachDestination] == wanted) (cardFilters card)))
+  let total wanted = sum (fmap (\(_, f) -> filterAtoms sameControllerAsBoundTag f) (filter (\(framing, _) -> elem framing [InTargetSlot, AttachDestination, StoredClassFramed] == wanted) (cardFilters card)))
    in (total True, total False)
 
 -- CR 110.2's shared-controller comparison is answerable only where
 -- Filter.Context.slotControllers is filled: Pawl.Engine.Target.slotContext, the
 -- one site that matches a MODE's target slot Filter, and
 -- Pawl.Engine.Resolve.Slots.effectContext, which an attach effect's destination
--- is matched against. EntryAttachDestination's bare Context is not one. This is sameNameAsBoundOffends' sweep one characteristic over, and
+-- is matched against and which Pawl.Engine.Resolve.Effect.storedClass bakes a
+-- stored class's atom from. EntryAttachDestination's bare Context is not one. This is sameNameAsBoundOffends' sweep one characteristic over, and
 -- the one place the two differ is what makes it load-bearing rather than tidy:
 -- that atom is a silent False outside its position and this one is a silent TRUE,
 -- so an atom in a Count filter, an affected set or a search filter would ADMIT
@@ -1776,7 +1779,7 @@ filterPositionLintSpec s registry = Spec.describe s "Lint" $ do
   -- where Filter.Context.slotControllers has no key for its slot, so an atom
   -- outside the positions filling it admits every candidate the card meant to
   -- exclude rather than none. See sameControllerAsBoundOffends.
-  Spec.it s "CR 110.2 no card asks SameControllerAsBound outside a mode's target slot or an attach destination" $ do
+  Spec.it s "CR 110.2 no card asks SameControllerAsBound outside a mode's target slot, an attach destination or a stored class" $ do
     ps <- S.allPrintings s
     let offenders = filter (anyFace sameControllerAsBoundOffends . Printing.card) ps
     Spec.assertEqWith s "the atom sits only in a target slot's filter" (fmap (S.nameOf . Printing.card) offenders) []
@@ -1812,11 +1815,19 @@ filterPositionLintSpec s registry = Spec.describe s "Lint" $ do
       "Sorrow's Path's is in its second target slot"
       (sameControllerAsBoundCounts (S.combinedFace path))
       (1, 0)
+    -- The stored class's accepting read: Mark for Death's "other creatures that
+    -- player controls", baked by Pawl.Engine.Resolve.Effect.storedClass.
+    mark <- S.printingOf s registry "Mark for Death"
     Spec.assertEqWith
       s
-      "and those four are the pool's whole authorship of it"
+      "Mark for Death's is in its stored class"
+      (sameControllerAsBoundCounts (S.combinedFace mark))
+      (1, 0)
+    Spec.assertEqWith
+      s
+      "and those five are the pool's whole authorship of it"
       (sum (fmap (uncurry (+) . sameControllerAsBoundCounts . S.combinedFace) ps))
-      4
+      5
     -- The REJECTING direction, hand-built for the reason every sibling lint's is:
     -- a card that offends must not be loadable, so no file can carry one. Buried
     -- under all three combinators, so an implementation reading only the top of a
@@ -2624,7 +2635,8 @@ filterPositionLintSpec s registry = Spec.describe s "Lint" $ do
         (AffectedSetFramed, [bound]),
         (ActivationCostFramed, [bound]),
         (ManaRestrictionFramed, [bound]),
-        (TriggerConditionFramed, [bound])
+        (TriggerConditionFramed, [bound]),
+        (StoredClassFramed, [bound])
       ]
   -- A comparison against the SOURCE's measures, names (CR 702.60a's ripple) or
   -- colours (CR 702.78a's conspire) is answerable only where the CONTEXT

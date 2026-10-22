@@ -1271,7 +1271,7 @@ data Context = MkContext
     -- last-known reader so a bound object that has left is still answerable.
     --
     -- What keeps a card out of the positions this is empty in is Pawl.CardSpec's
-    -- "CR 110.2 no card asks SameControllerAsBound outside a mode's target slot or an attach destination",
+    -- "CR 110.2 no card asks SameControllerAsBound outside a mode's target slot, an attach destination or a stored class",
     -- slotNames' sweep with more riding on it: that atom is a silent False
     -- elsewhere and this one a silent True.
     --
@@ -1664,7 +1664,7 @@ data Context = MkContext
 -- arm in `matches` reads a slot with no key as a relation with only one party and
 -- ADMITS every candidate. Nothing narrows an offer written against that empty
 -- map; what keeps a card out of the positions it is empty in is Pawl.CardSpec's
--- "CR 110.2 no card asks SameControllerAsBound outside a mode's target slot or an attach destination"
+-- "CR 110.2 no card asks SameControllerAsBound outside a mode's target slot, an attach destination or a stored class"
 -- alone, Pawl.Engine.Target.slotContext and Pawl.Engine.Resolve.Slots.effectContext
 -- being the only fillers.
 --
@@ -3159,9 +3159,10 @@ rewriteComponent pairs component = case component of
   CostComponent.WaterbendInstead _ -> component
 
 -- CR 603.2: replace every ControlledByBound atom whose slot this environment
--- names with the baked ControlledByPlayer arm, and every IsBound atom whose slot
--- `objects` names with the objects it holds. What makes "target creature THAT
--- PLAYER controls" answerable at all -- the player is a fact about the EVENT that
+-- names with the baked ControlledByPlayer arm, every IsBound atom whose slot
+-- `objects` names with the objects it holds, and every SameControllerAsBound
+-- atom whose slot `controllers` names with those players. What makes "target
+-- creature THAT PLAYER controls" answerable at all -- the player is a fact about the EVENT that
 -- fired the trigger, and the two sites that judge a target slot
 -- (Pawl.Engine.Engine.placeBorne at CR 603.3d, Pawl.Engine.Resolve.resolveModes
 -- at CR 608.2b) are the ones holding it, so they substitute before the match
@@ -3183,17 +3184,17 @@ rewriteComponent pairs component = case component of
 -- Exhaustive rather than a catch-all, `rewrite`'s posture: a later atom that can
 -- carry a Filter must fail to compile here instead of silently keeping an
 -- unbaked one.
-bakeBound :: Map.Map SlotName.SlotName PlayerId.PlayerId -> Map.Map SlotName.SlotName (Set.Set ObjectId.ObjectId) -> Filter.Filter Keyword.Type.Keyword -> Filter.Filter Keyword.Type.Keyword
-bakeBound players objects predicate = case predicate of
+bakeBound :: Map.Map SlotName.SlotName PlayerId.PlayerId -> Map.Map SlotName.SlotName (Set.Set ObjectId.ObjectId) -> Map.Map SlotName.SlotName (Set.Set PlayerId.PlayerId) -> Filter.Filter Keyword.Type.Keyword -> Filter.Filter Keyword.Type.Keyword
+bakeBound players objects controllers predicate = case predicate of
   Filter.ControlledByBound slot -> maybe predicate Filter.ControlledByPlayer (Map.lookup slot players)
-  Filter.And fs -> Filter.And (fmap (bakeBound players objects) fs)
-  Filter.Or fs -> Filter.Or (fmap (bakeBound players objects) fs)
-  Filter.Not f -> Filter.Not (bakeBound players objects f)
-  Filter.Unwritten f -> Filter.Unwritten (bakeBound players objects f)
+  Filter.And fs -> Filter.And (fmap (bakeBound players objects controllers) fs)
+  Filter.Or fs -> Filter.Or (fmap (bakeBound players objects controllers) fs)
+  Filter.Not f -> Filter.Not (bakeBound players objects controllers f)
+  Filter.Unwritten f -> Filter.Unwritten (bakeBound players objects controllers f)
   -- Descended into for the reason `rewrite` descends: the nested filter is a
   -- filter like any other, and a slot named inside it must be baked before the
   -- match or it can never be answered.
-  Filter.ControlsMoreThanYou n f -> Filter.ControlsMoreThanYou n (bakeBound players objects f)
+  Filter.ControlsMoreThanYou n f -> Filter.ControlsMoreThanYou n (bakeBound players objects controllers f)
   Filter.ControlledByPlayer _ -> predicate
   -- Untouched: CR 603.2's slot is not the recipient an effect has reached, and no
   -- binding could answer this atom -- Pawl.Engine.Filter.Context carries it.
@@ -3227,19 +3228,20 @@ bakeBound players objects predicate = case predicate of
   -- DESCENDED into for the reason AttachedTo below is: the nest is a description
   -- of another object and may name a bound slot, which this function's pairing
   -- with overBoundSlots requires be baked here and reported there.
-  Filter.TargetsOnlyOne f -> Filter.TargetsOnlyOne (bakeBound players objects f)
-  Filter.TargetsMatching f -> Filter.TargetsMatching (bakeBound players objects f)
+  Filter.TargetsOnlyOne f -> Filter.TargetsOnlyOne (bakeBound players objects controllers f)
+  Filter.TargetsMatching f -> Filter.TargetsMatching (bakeBound players objects controllers f)
   Filter.TargetsPlayer _ -> predicate
-  -- Untouched for the reason IsControllerOfBound below is, and one step shorter:
-  -- CR 603.2's binding map holds PLAYERS and this atom names a slot holding an
-  -- OBJECT. Pawl.Engine.Filter.matches answers it as it stands.
   -- The objects the slot holds, named outright, so a class stored past the
   -- resolution still knows them: Oracle en-Vec's "other creatures can't
   -- attack". Left standing where the map does not bind the slot.
   Filter.IsBound slot -> maybe predicate (Filter.Or . fmap Filter.IsObject . Set.toList) (Map.lookup slot objects)
   Filter.IsTarget -> predicate
   Filter.SameNameAsBound _ -> predicate
-  Filter.SameControllerAsBound _ -> predicate
+  -- CR 608.2h: the controllers the slot's objects had as the resolution read
+  -- them, named outright for IsBound's reason -- Mark for Death's "other
+  -- creatures that player controls". Left standing where the map has no key,
+  -- which is CR 601.2c's offer before the sibling target is chosen.
+  Filter.SameControllerAsBound slot -> maybe predicate (Filter.Or . fmap Filter.ControlledByPlayer . Set.toList) (Map.lookup slot controllers)
   Filter.SameControllerAsHostOfBound _ -> predicate
   Filter.SharesCreatureTypeWithBound _ -> predicate
   Filter.HasChosenName {} -> predicate
@@ -3282,15 +3284,15 @@ bakeBound players objects predicate = case predicate of
   -- into the HOST's description is baked exactly as the same atom written at the
   -- top level would be. Pawl.Engine.Filter.boundSlots descends to match, which is
   -- the pairing that function's comment insists on.
-  Filter.AttachedTo f -> Filter.AttachedTo (bakeBound players objects f)
+  Filter.AttachedTo f -> Filter.AttachedTo (bakeBound players objects controllers f)
   -- DESCENT, for the atom above's reason: a ControlledByBound written into the
   -- represented card's description is baked exactly as the same atom at the top
   -- level would be, and Pawl.Engine.Filter.boundSlots descends to match.
-  Filter.RepresentedByCard f -> Filter.RepresentedByCard (bakeBound players objects f)
+  Filter.RepresentedByCard f -> Filter.RepresentedByCard (bakeBound players objects controllers f)
   -- DESCENT, for the atom above's reason: a ControlledByBound written into the
   -- ATTACHER's description is baked exactly as the same atom at the top level
   -- would be, and Pawl.Engine.Filter.boundSlots descends to match.
-  Filter.HasAttached f -> Filter.HasAttached (bakeBound players objects f)
+  Filter.HasAttached f -> Filter.HasAttached (bakeBound players objects controllers f)
   Filter.IsAttachedToSource -> predicate
   Filter.IsAttachedToEvaluated -> predicate
   Filter.IsHostOfSource -> predicate
@@ -3307,7 +3309,7 @@ bakeBound players objects predicate = case predicate of
   -- Descended into, HasAttached's reason: the SOURCE's description is baked
   -- exactly as the same atom at the top level would be, and boundSlots descends
   -- to match.
-  Filter.FromSource f -> Filter.FromSource (bakeBound players objects f)
+  Filter.FromSource f -> Filter.FromSource (bakeBound players objects controllers f)
   Filter.IsTapped -> predicate
   Filter.IsFaceDown -> predicate
   Filter.IsExiledFaceDown -> predicate
