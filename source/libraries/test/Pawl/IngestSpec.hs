@@ -1,6 +1,6 @@
 -- Covers Pawl.Ingest, and Pawl.Oracle against the pool and the keyword codec:
--- every keyword-only card file against its Oracle text (#9). Pawl.OracleSpec
--- covers Pawl.Oracle on hand-built cards.
+-- every card file Pawl.Oracle renders against its Oracle text (#9, #5477).
+-- Pawl.OracleSpec covers Pawl.Oracle on hand-built cards.
 module Pawl.IngestSpec where
 
 import qualified Control.Monad as Monad
@@ -16,6 +16,8 @@ import qualified Pawl.JsonCodec.Codec as Codec
 import qualified Pawl.JsonCodec.Common as Common
 import qualified Pawl.JsonSchema.Define as Define
 import qualified Pawl.Oracle as Oracle
+import qualified Pawl.Oracle.Keyword as Keyword
+import qualified Pawl.Oracle.Normalise as Normalise
 import qualified Pawl.Registry as Registry
 import qualified Pawl.Slug as Slug
 import qualified Pawl.Spec as Spec
@@ -23,20 +25,26 @@ import qualified Pawl.Types.Card as Card
 import qualified Pawl.Types.CardName as CardName
 import qualified Pawl.Types.CardType as CardType
 import qualified Pawl.Types.Face as Face
-import qualified Pawl.Types.Keyword as Keyword
+import qualified Pawl.Types.Keyword as Keyword.Type
 import qualified Pawl.Types.TypeLine as TypeLine
 
 spec :: (Monad n) => Spec.Spec IO n -> n ()
 spec s = Spec.describe s "Pawl.Ingest" $ do
-  Spec.it s "each keyword-only card says what its Oracle text says" $ do
+  -- The invariant the renderer exists for: a card it renders says what its
+  -- Oracle text says, in one of the wordings Oracle uses for it.
+  Spec.it s "each card that renders says what its Oracle text says" $ do
     loaded <- Registry.defaultRoot >>= Registry.loadRoot
-    let keywordOnly = [(card, rendered) | entry@(_, Right card) <- loaded, Maybe.isJust (Registry.referenceCard entry), Just rendered <- [Oracle.render card]]
-    Spec.assertBool s (not (null keywordOnly)) "no keyword-only cards"
-    Monad.forM_ keywordOnly $ \(card, rendered) -> do
-      let name = Text.unpack (Slug.unwrap (Registry.filedAs card))
-      case Face.oracleText (NonEmpty.head (Card.faces card)) of
-        Nothing -> Spec.assertFailure s (name <> ": no Oracle text")
-        Just text -> Spec.assertEqWith s name (Oracle.normalise text) (Oracle.normalise rendered)
+    let rendered = [(card, canonical) | entry@(_, Right card) <- loaded, Maybe.isJust (Registry.referenceCard entry), Just canonical <- [Oracle.render card]]
+        disagreements =
+          [ (Text.unpack (Slug.unwrap (Registry.filedAs card)), fmap (Normalise.normalise name) text, Normalise.normalise name canonical)
+          | (card, canonical) <- rendered,
+            let face = NonEmpty.head (Card.faces card)
+                name = Face.name face
+                text = Face.oracleText face,
+            maybe True (not . Oracle.says card name) text
+          ]
+    Spec.assertBool s (not (null rendered)) "no card renders"
+    Spec.assertEq s [] disagreements
 
   -- `pawl ingest` stamps the text on every card MTGJSON has; a dungeon (CR
   -- 309) is not among them, since MTGJSON files dungeons with the tokens.
@@ -52,33 +60,35 @@ spec s = Spec.describe s "Pawl.Ingest" $ do
           ]
     Spec.assertEq s [] missing
 
-  Spec.it s "render answers for a pool card of keywords alone and not for one with an ability" $ do
+  Spec.it s "render answers for a pool card it renders and not for a split card" $ do
     registry <- Registry.defaultRoot >>= Registry.fileRegistry
     elves <- Registry.named registry "Llanowar Elves"
-    Spec.assertEq s (Right (Just Nothing)) (fmap (fmap Oracle.render) elves)
+    Spec.assertEq s (Right (Just (Just (Text.pack "{T}: Add {G}.")))) (fmap (fmap Oracle.render) elves)
     angel <- Registry.named registry "Serra Angel"
     Spec.assertEq s (Right (Just (Just (Text.pack "Flying\nVigilance")))) (fmap (fmap Oracle.render) angel)
+    wax <- Registry.named registry "Wax"
+    Spec.assertEq s (Right (Just Nothing)) (fmap (fmap Oracle.render) wax)
 
   Spec.it s "each standalone keyword prints as its codec tag spells it" $
     Monad.forM_
-      Oracle.standalone
-      ( \k -> case Oracle.printed k of
-          Nothing -> Spec.assertFailure s (show k <> ": no printed form")
-          Just p -> Spec.assertEqWith s (show k) (Codec.encode Codec.Keyword.codec k) (Common.nullary (tagOf p))
+      Keyword.standalone
+      ( \k -> case Keyword.printed (Text.pack "X") k of
+          [p] -> Spec.assertEqWith s (show k) (Codec.encode Codec.Keyword.codec k) (Common.nullary (tagOf p))
+          _ -> Spec.assertFailure s (show k <> ": not one printed form")
       )
 
-  -- The witness that 'Oracle.standalone' is complete: every arm the keyword
+  -- The witness that 'Keyword.standalone' is complete: every arm the keyword
   -- codec accepts with no value is listed, or is one of the three whose bare
   -- form prints a parameter or is never printed at all.
   Spec.it s "standalone lists every keyword the codec writes as a bare tag" $ do
-    let unprinted = [Keyword.Bloodthirst Nothing, Keyword.Modular Nothing, Keyword.Suspend Nothing]
+    let unprinted = [Keyword.Type.Bloodthirst Nothing, Keyword.Type.Modular Nothing, Keyword.Type.Suspend Nothing]
     case bareTags (Define.run (Codec.schema Codec.Keyword.codec)) of
       Left reason -> Spec.assertFailure s (Text.unpack reason)
       Right tags -> do
-        Spec.assertEq s (length tags) (length Oracle.standalone + length unprinted)
+        Spec.assertEq s (length tags) (length Keyword.standalone + length unprinted)
         Monad.forM_ tags $ \tag -> case Codec.decode Codec.Keyword.codec (Common.nullary tag) of
           Left reason -> Spec.assertFailure s (tag <> ": " <> Text.unpack reason)
-          Right k -> Spec.assertBool s (k `elem` Oracle.standalone || k `elem` unprinted) (tag <> ": not in Pawl.Oracle.standalone")
+          Right k -> Spec.assertBool s (k `elem` Keyword.standalone || k `elem` unprinted) (tag <> ": not in Pawl.Oracle.Keyword.standalone")
 
   -- Each record as script/ingest/candidates.jq writes it, against a card
   -- written by hand and checked against Scryfall, so the two are independent.

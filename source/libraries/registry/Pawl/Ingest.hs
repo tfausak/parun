@@ -1,9 +1,9 @@
 -- Building a card from one record of script/ingest/candidates.jq's reduction
--- of MTGJSON (#9), for the cards 'Pawl.Oracle.render' answers for: a single
--- face whose text is keywords alone. Everything here reads a field MTGJSON
--- carries as structured data (CR 202.1, CR 205) or a keyword name from
--- 'Pawl.Oracle.standalone' or 'Pawl.Oracle.landwalks'; a word it does not
--- know disqualifies the card rather than being guessed at.
+-- of MTGJSON (#9), for a card of a single face whose text is keywords alone.
+-- Everything here reads a field MTGJSON carries as structured data (CR 202.1,
+-- CR 205) or a keyword name from 'Pawl.Oracle.Keyword.standalone' or
+-- 'Pawl.Oracle.Keyword.landwalks'; a word it does not know disqualifies the
+-- card rather than being guessed at.
 module Pawl.Ingest where
 
 import qualified Control.Applicative as Applicative
@@ -16,6 +16,8 @@ import qualified Data.Text as Text
 import qualified Pawl.Json.Value as Value
 import qualified Pawl.JsonCodec.Common as Common
 import qualified Pawl.Oracle as Oracle
+import qualified Pawl.Oracle.Keyword as Oracle.Keyword
+import qualified Pawl.Oracle.Normalise as Normalise
 import qualified Pawl.Types.Card as Card
 import qualified Pawl.Types.CardName as CardName
 import qualified Pawl.Types.CardType as CardType
@@ -57,7 +59,7 @@ candidate value = do
   power <- nullable "power" >>= traverse (fmap Power.MkPower . literal)
   toughness <- nullable "toughness" >>= traverse (fmap Toughness.MkToughness . literal)
   text <- fmap (Maybe.fromMaybe Text.empty) (nullable "text")
-  keywords <- traverse keyword (Oracle.normalise text)
+  keywords <- traverse keyword (Normalise.normalise (CardName.MkCardName name) text)
   let typeLine =
         TypeLine.MkTypeLine
           { TypeLine.supertypes = Set.fromList (supertypes :: [Supertype.Supertype]),
@@ -102,7 +104,7 @@ keyword :: Text.Text -> Either Text.Text Keyword.Keyword
 keyword line = maybe (Left (Text.pack "text: " <> line)) Right (Map.lookup line byPrinted)
 
 byPrinted :: Map.Map Text.Text Keyword.Keyword
-byPrinted = Map.fromList [(Text.toLower p, k) | k <- Oracle.standalone <> Oracle.landwalks, Just p <- [Oracle.printed k]]
+byPrinted = Map.fromList [(Text.toLower p, k) | k <- Oracle.Keyword.standalone <> Oracle.Keyword.landwalks, [p] <- [Oracle.Keyword.printed Text.empty k]]
 
 -- | A type-line word as the enumerated constructor it spells: words joined and
 -- everything but letters dropped, so "Assembly-Worker" is AssemblyWorker and

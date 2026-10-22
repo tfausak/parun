@@ -20,6 +20,7 @@ import qualified Pawl.Json.Value as Value
 import qualified Pawl.JsonCodec.Codec as Codec
 import qualified Pawl.JsonCodec.Common as Common
 import qualified Pawl.JsonSchema.Define as Define
+import qualified Pawl.Oracle as Oracle
 import qualified Pawl.Play.Command
 import qualified Pawl.Registry as Registry
 import qualified Pawl.Scenario as Scenario
@@ -51,13 +52,14 @@ main = do
     ["schema", "scenario"] -> scenarioSchema
     ["deck", path] -> deck path
     ["ingest", path] -> ingest path
+    ["oracle"] -> oracle
     "scenario" : paths@(_ : _) -> scenario paths
     "play" : rest -> Pawl.Play.Command.main rest
     "bench" : rest -> Environment.withArgs rest Pawl.Benchmark.main
     "test" : rest -> Environment.withArgs rest Pawl.Test.main
     _ -> do
       name <- Environment.getProgName
-      IO.hPutStrLn IO.stderr $ "usage: " <> name <> " (schema [scenario] | deck FILE | ingest FILE | scenario FILE... | play [OPTION...] DECK DECK | bench | test)"
+      IO.hPutStrLn IO.stderr $ "usage: " <> name <> " (schema [scenario] | deck FILE | ingest FILE | oracle | scenario FILE... | play [OPTION...] DECK DECK | bench | test)"
       Exit.exitFailure
 
 -- | Reads a deck list and writes back the deck it means, which is what makes a
@@ -126,6 +128,15 @@ ingest path = do
       putStrLn $ "sticker sheets given Oracle text: " <> show sheetsStamped
       putStrLn $ "left out: " <> show (sum reasons)
       mapM_ (\(kind, n) -> TextIO.putStrLn (Text.pack "  " <> kind <> Text.pack (": " <> show n))) (Map.toDescList reasons)
+
+-- | Prints how much of the pool Pawl.Oracle renders: the coverage the Oracle
+-- check measures (#5477). Pawl.IngestSpec checks what it renders.
+oracle :: IO ()
+oracle = do
+  loaded <- Registry.defaultRoot >>= Registry.loadRoot
+  let cards = Maybe.mapMaybe Registry.referenceCard loaded
+      rendered = filter (Maybe.isJust . Oracle.render) cards
+  putStrLn $ "rendered: " <> show (length rendered) <> " of " <> show (length cards)
 
 -- Right True for a card written, Right False for one the pool already holds.
 ingestOne :: FilePath -> Value.Value -> IO (Either Text.Text Bool)
