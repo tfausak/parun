@@ -138,9 +138,11 @@ objects pcs gs a b =
       grants = Projection.View.controlGrants gs
       viewOf oid = Projection.viewOfObjectGiven pcs grants oid gs
       -- Every View field Pawl.Engine.Projection.View fills from the turn's log
-      -- (CR 608.2i). Hand-kept: a new look-back field owes a line here.
+      -- (CR 608.2i) or from GameState.couldAttackThisTurn (CR 508.1).
+      -- Hand-kept: a new look-back field owes a line here.
       lookBack view =
         ( Filter.Engine.attackedThisTurn view,
+          Filter.Engine.couldAttackThisTurn view,
           Filter.Engine.milledThisTurn view,
           Filter.Engine.dealtDamageThisTurn view,
           Filter.Engine.enteredThisTurn view,
@@ -230,6 +232,7 @@ representatives pcs gs candidates =
 --     compares, which is where a Filter's look-back atoms read it, and through
 --     actedOnBy, the relations those views hold from the other end; an event
 --     the choice itself writes names whichever object was chosen, alike.
+--     GameState.couldAttackThisTurn is read through the same two views.
 --     GameState.controlSample (CR 603.2's control diff) and
 --     GameState.battlefieldWhenTriggered (CR 603.10's look-back) are keyed by
 --     every permanent alike, so objects COMPARES the two entries in each

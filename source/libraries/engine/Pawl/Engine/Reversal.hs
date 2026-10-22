@@ -143,6 +143,7 @@ withoutAnnouncement before entry closed = do
   drawsThisTurn <- mapOf GameState.drawsThisTurn
   keptFaceDown <- one GameState.keptFaceDown
   departedThisTurn <- setOf GameState.departedThisTurn
+  couldAttackThisTurn <- setOf GameState.couldAttackThisTurn
   activatedThisTurn <- mapOfMaps GameState.activatedThisTurn
   -- An append-only log, `events`' shape: the announcement's own activation
   -- goes and the window's mana abilities stand.
@@ -263,6 +264,7 @@ withoutAnnouncement before entry closed = do
         GameState.drawsThisTurn = drawsThisTurn,
         GameState.keptFaceDown = keptFaceDown,
         GameState.departedThisTurn = departedThisTurn,
+        GameState.couldAttackThisTurn = couldAttackThisTurn,
         GameState.activatedThisTurn = activatedThisTurn,
         GameState.activationsThisTurn = activationsThisTurn,
         GameState.castPermissionsUsedThisTurn = castPermissionsUsedThisTurn,

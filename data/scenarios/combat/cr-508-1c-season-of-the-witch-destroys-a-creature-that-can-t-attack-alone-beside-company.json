@@ -1,0 +1,25 @@
+{
+  "description": "CR 508.1c Season of the Witch destroys a creature that can't attack alone once it has company",
+  "note": "Bonded Construct and Grizzly Bears could have attacked together, so neither is one that couldn't attack, and both stay home and die.",
+  "board": {
+    "seats": [
+      {
+        "name": "alice",
+        "battlefield": [
+          { "card": "Season of the Witch", "ready": true },
+          { "card": "Bonded Construct", "ready": true },
+          { "card": "Grizzly Bears", "ready": true }
+        ]
+      },
+      { "name": "bob" }
+    ],
+    "active": "alice",
+    "step": "DeclareAttackers"
+  },
+  "timeline": [
+    { "turn": 1, "step": "DeclareAttackers", "player": "alice", "do": { "Attack": [] } },
+    { "turn": 1, "step": "EndStep", "player": "alice", "do": "Pass" },
+    { "turn": 1, "step": "EndStep", "player": "alice", "check": { "Count": { "player": "alice", "zone": "Graveyard", "card": "Bonded Construct", "count": 1 } } },
+    { "turn": 1, "step": "EndStep", "player": "alice", "check": { "Count": { "player": "alice", "zone": "Graveyard", "card": "Grizzly Bears", "count": 1 } } }
+  ]
+}

@@ -330,6 +330,10 @@ data View = MkView
     -- actually contains AttackedThisTurn. That is a cost argument rather than
     -- the recursion hazard that field records.
     attackedThisTurn :: Bool,
+    -- CR 508.1a-d: could this candidate have been declared as an attacker in
+    -- one of this turn's declare attackers steps? Membership of
+    -- GameState.couldAttackThisTurn.
+    couldAttackThisTurn :: Bool,
     -- CR 508.1a: was this candidate DECLARED as an attacker this COMBAT PHASE?
     -- Read from GameState.combat like `attacking`, and off a different field of
     -- it: CR 506.4 removal ends the attacking and CR 506.4a leaves the
@@ -905,6 +909,7 @@ playerView pid =
       blockers = Set.empty,
       -- CR 506.3 again: a player was never declared as an attacker either.
       attackedThisTurn = False,
+      couldAttackThisTurn = False,
       -- CR 506.3 once more, for the two combat-phase-scoped questions: only a
       -- creature is ever declared as an attacker or a blocker.
       declaredAttackerThisCombat = False,
@@ -2114,6 +2119,9 @@ matches context view predicate = case predicate of
   -- creature removed from combat (CR 506.4) still attacked, which is what
   -- Relentless Assault's "creatures that attacked this turn" means.
   Filter.AttackedThisTurn -> attackedThisTurn view
+  -- CR 508.1a-d: the record each declare attackers step wrote as it began, so
+  -- a creature that arrived later, or a turn with no combat, answers False.
+  Filter.CouldAttackThisTurn -> couldAttackThisTurn view
   -- CR 508.1a: a look-back read of the COMBAT PHASE's record rather than the
   -- turn's log, which is what keeps it apart from the atom above -- CR 511.3
   -- empties it, so CR 500.8's second combat phase starts over.
@@ -2501,6 +2509,7 @@ rewrite pairs predicate = case predicate of
   Filter.IsBlocking -> predicate
   Filter.HasBlockStatus _ -> predicate
   Filter.AttackedThisTurn -> predicate
+  Filter.CouldAttackThisTurn -> predicate
   Filter.DeclaredAttackerThisCombat -> predicate
   Filter.DeclaredAttackedThisCombat -> predicate
   Filter.DeclaredBlockerThisCombat -> predicate
@@ -3255,6 +3264,7 @@ bakeBound players objects predicate = case predicate of
   Filter.IsBlocking -> predicate
   Filter.HasBlockStatus _ -> predicate
   Filter.AttackedThisTurn -> predicate
+  Filter.CouldAttackThisTurn -> predicate
   Filter.DeclaredAttackerThisCombat -> predicate
   Filter.DeclaredAttackedThisCombat -> predicate
   Filter.DeclaredBlockerThisCombat -> predicate
@@ -3429,6 +3439,7 @@ manaValueThresholds predicate = case predicate of
   Filter.IsBlocking -> []
   Filter.HasBlockStatus _ -> []
   Filter.AttackedThisTurn -> []
+  Filter.CouldAttackThisTurn -> []
   Filter.DeclaredAttackerThisCombat -> []
   Filter.DeclaredAttackedThisCombat -> []
   Filter.DeclaredBlockerThisCombat -> []
@@ -3600,6 +3611,7 @@ statesAQuality predicate = case predicate of
   Filter.IsBlocking -> True
   Filter.HasBlockStatus _ -> True
   Filter.AttackedThisTurn -> True
+  Filter.CouldAttackThisTurn -> True
   Filter.DeclaredAttackerThisCombat -> True
   Filter.DeclaredAttackedThisCombat -> True
   Filter.DeclaredBlockerThisCombat -> True
@@ -3756,6 +3768,7 @@ readsSourceValues predicate = case predicate of
   Filter.IsBlocking -> False
   Filter.HasBlockStatus _ -> False
   Filter.AttackedThisTurn -> False
+  Filter.CouldAttackThisTurn -> False
   Filter.DeclaredAttackerThisCombat -> False
   Filter.DeclaredAttackedThisCombat -> False
   Filter.DeclaredBlockerThisCombat -> False
@@ -3927,6 +3940,7 @@ overBoundSlotsWith f predicate = case predicate of
   Filter.DeclaredAttackerThisCombat -> pure predicate
   Filter.DeclaredBlockerThisCombat -> pure predicate
   Filter.AttackedThisTurn -> pure predicate
+  Filter.CouldAttackThisTurn -> pure predicate
   Filter.MilledThisTurn -> pure predicate
   Filter.CantCrewVehicles -> pure predicate
   Filter.DealtDamageThisTurn -> pure predicate

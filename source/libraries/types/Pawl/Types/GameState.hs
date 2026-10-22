@@ -372,6 +372,11 @@ data GameState = MkGameState
     -- whose seats still count toward range of influence until the next turn
     -- begins; cleared at turn handoff.
     departedThisTurn :: Set.Set PlayerId.PlayerId,
+    -- | CR 508.1a-d: the creatures that could have been declared as attackers
+    -- in a declare attackers step this turn, written as each such step's
+    -- declaration begins (Pawl.Engine.Combat.declareAttackers) and cleared at
+    -- turn handoff. Filter.CouldAttackThisTurn reads it.
+    couldAttackThisTurn :: Set.Set ObjectId.ObjectId,
     -- | CR 602.5b: which abilities of which objects have been activated this
     -- turn, read by ActivationRestriction.OnlyOnceEachTurn alone; cleared at turn
     -- handoff, which is the whole of "each turn". Keyed by the SOURCE object and

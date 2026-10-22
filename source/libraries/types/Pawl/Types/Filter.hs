@@ -312,6 +312,11 @@ data Filter keyword
     -- Combat.attackers; declared, so CR 508.4's creature put onto the battlefield
     -- attacking never attacked.
     AttackedThisTurn
+  | -- | CR 508.1a-d: the candidate could have been declared as an attacker in
+    -- one of this turn's declare attackers steps -- Season of the Witch's
+    -- "creatures that couldn't attack", negated. Read off
+    -- GameState.couldAttackThisTurn.
+    CouldAttackThisTurn
   | -- | CR 701.17a: the candidate is a card that was MILLED earlier this turn --
     -- The Master, Transcendent's "creature card in a graveyard that was milled
     -- this turn". AttackedThisTurn's look-back read one event arm over

@@ -1737,6 +1737,9 @@ beginTurn extra pid gs =
             -- CR 801.2c: who is in range is fixed as each turn begins, so the
             -- seats emptied during the outgoing turn close up here.
             GameState.departedThisTurn = Set.empty,
+            -- CR 508.1: who could have attacked is asked of THIS turn's
+            -- declare attackers steps.
+            GameState.couldAttackThisTurn = Set.empty,
             -- CR 602.5b's "Activate only once each turn", cleared for every
             -- object rather than the active player's: the rider is about the
             -- object, and a permanent whose controller is not the active player

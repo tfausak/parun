@@ -701,15 +701,27 @@ barredAnnouncements candidates gs =
 -- must be judging the same board.
 attackCeilingGiven :: CombatRestriction.AttackLimits -> Set (ObjectId, AttackTarget.AttackTarget) -> Set (ObjectId, AttackTarget.AttackTarget) -> [ObjectId] -> GameState -> (Requirement.Instances (ObjectId, AttackTarget.AttackTarget), Map ObjectId AttackTarget.AttackTarget)
 attackCeilingGiven limits alone barred candidates gs =
+  -- CR 508.1d's cost clause. AttackCost.costsOn is asked of the ANNOUNCEMENT,
+  -- which is the question that rule's cards ask.
+  ceilingUnder
+    (\oid target -> null (AttackCost.costsOn oid target gs))
+    (AttackRequirement.instances candidates (declarableTargets gs) gs)
+    limits
+    alone
+    barred
+    candidates
+    gs
+
+-- attackCeilingGiven's search over the announcements `freely` admits and the
+-- requirement instances given, so couldAttack can ask it with costs ignored
+-- and a requirement of its own added.
+ceilingUnder :: (ObjectId -> AttackTarget.AttackTarget -> Bool) -> Requirement.Instances (ObjectId, AttackTarget.AttackTarget) -> CombatRestriction.AttackLimits -> Set (ObjectId, AttackTarget.AttackTarget) -> Set (ObjectId, AttackTarget.AttackTarget) -> [ObjectId] -> GameState -> (Requirement.Instances (ObjectId, AttackTarget.AttackTarget), Map ObjectId AttackTarget.AttackTarget)
+ceilingUnder freely required limits alone barred candidates gs =
   let targets = declarableTargets gs
-      required = AttackRequirement.instances candidates targets gs
       -- CR 802.3a's unscoped bounds as the announcements each counts, read once
       -- here rather than per `ceilingOver` call.
       wholeBounds = fmap (\(seats, n) -> (Set.fromList (filter (\target -> countsAt seats target gs) targets), n)) (Map.toList (CombatRestriction.whole limits))
       weights = Requirement.pairs required
-      -- CR 508.1d's cost clause. AttackCost.costsOn is asked of the ANNOUNCEMENT,
-      -- which is the question that rule's cards ask.
-      freely oid target = null (AttackCost.costsOn oid target gs)
       -- CR 508.1c beside CR 508.1d's cost clause: an announcement a restriction
       -- forbids is in no legal declaration, so it is off this list for the same
       -- reason a taxed one is -- and a creature left with no announcement at all
@@ -2012,8 +2024,54 @@ declareAttackers perform pid = do
   -- shape: each creature chooses whom it attacks (CR 802.3, through
   -- declarableTargets), and the entire group of attacking creatures is still
   -- judged as a whole.
-  Monad.unless (null (Defender.defendingPlayers gs)) $
+  Monad.unless (null (Defender.defendingPlayers gs)) $ do
+    -- CR 508.1a-d: who could be declared, recorded as the declaration begins,
+    -- before anything it does changes the board.
+    State.modify' (\g -> g {GameState.couldAttackThisTurn = Set.union (couldAttack pid g) (GameState.couldAttackThisTurn g)})
     attemptAttackDeclaration perform pid Set.empty
+
+-- CR 508.1a / 805.10b: the creatures a declaration by `pid`'s side chooses
+-- from, and CR 508.1c's aimed-at restriction as the set of barred
+-- announcements. The restriction is gathered ONCE and over the WIDER list, so
+-- the narrowing here and the ceiling read one set.
+--
+-- A creature every announcement of which is barred is in no legal declaration
+-- at all, so it is off the list -- legalAttackers' posture for the
+-- per-creature restrictions, one step later because the pair needs an
+-- announcement to be about. legalAttackDeclarationGiven refuses the same
+-- declaration through its announcement conjunct rather than through its
+-- candidate test, so the two agree without sharing this filter.
+attackCandidates :: PlayerId -> GameState -> ([ObjectId], Set (ObjectId, AttackTarget.AttackTarget))
+attackCandidates pid gs =
+  let legal = concatMap (`legalAttackers` gs) (sideOf pid gs)
+      barred = barredAnnouncements legal gs
+   in (filter (\oid -> any (attackTargetAllowed barred oid) (declarableTargets gs)) legal, barred)
+
+-- CR 508.1a-d: the candidates some legal declaration contains -- Season of the
+-- Witch's ruling's "could have been declared as an attacker". A cost to
+-- attack never makes a creature one that couldn't (docs/decisions.md, "Which
+-- creatures could have attacked").
+--
+-- With no set-shaped restriction in force every candidate is in one: the
+-- ceiling's declaration plus the candidate obeys no fewer requirements and
+-- breaks no bound. Otherwise each candidate is put to ceilingUnder under a
+-- requirement on it alone, heavier than every other together: the maximum
+-- reaches that weight plus CR 508.1d's maximum exactly when a declaration
+-- containing the candidate attains CR 508.1d's maximum too.
+couldAttack :: PlayerId -> GameState -> Set ObjectId
+couldAttack pid gs =
+  let (candidates, barred) = attackCandidates pid gs
+      alone = aloneAnnouncements candidates gs
+      limits = CombatRestriction.attackLimit gs
+      (required, best) = attackCeilingGiven limits alone barred candidates gs
+      most = Requirement.met required (Set.fromList (Map.toList best))
+      heavier = 1 + sum (Requirement.pairs required) + sum (Requirement.groups required)
+      declarable oid =
+        let boosted = required {Requirement.pairs = Map.unionWith (+) (Map.fromList [((oid, target), heavier) | target <- declarableTargets gs]) (Requirement.pairs required)}
+            (_, witness) = ceilingUnder (\_ _ -> True) boosted limits alone barred candidates gs
+         in Requirement.met boosted (Set.fromList (Map.toList witness)) >= heavier + most
+      unbounded = Set.null alone && Map.null (CombatRestriction.whole limits) && Map.null (CombatRestriction.perDefender limits)
+   in Set.fromList (if unbounded then candidates else filter declarable candidates)
 
 -- One attempt at CR 508.1's declaration, plus the preamble's retry. Two steps can
 -- make the attempt fail: CR 508.1c/508.1d judge the declaration illegal, and CR
@@ -2041,22 +2099,12 @@ attemptAttackDeclaration perform pid rejected = do
   -- every attacking player's. `pid` is who declares it, the team's primary
   -- player (CR 805.2) on the engine's path.
   let side = sideOf pid gs
-      legal = concatMap (`legalAttackers` gs) side
       -- CR 805.10a / 805.10c: the attacking player a creature is declared by is
       -- the one controlling it, which legalAttackers made one of `side`.
       attackerOf oid = Maybe.fromMaybe pid (Projection.controllerOf oid gs)
-      -- CR 508.1c's aimed-at restriction, gathered ONCE for the whole pass and
-      -- over the WIDER list, so the narrowing below and the ceiling read one set.
-      barred = barredAnnouncements legal gs
-      -- CR 508.1b's announcements this creature may actually make. Every one
-      -- being forbidden is a creature in no legal declaration at all, so it is
-      -- off the candidate list -- legalAttackers' posture for the per-creature
-      -- restrictions, one step later because the pair needs an announcement to
-      -- be about. legalAttackDeclarationGiven refuses the same declaration
-      -- through its announcement conjunct rather than through its candidate
-      -- test, so the two agree without sharing this filter.
+      (candidates, barred) = attackCandidates pid gs
+      -- CR 508.1b's announcements this creature may actually make.
       announceableFor oid = filter (attackTargetAllowed barred oid) (declarableTargets gs)
-      candidates = filter (not . null . announceableFor) legal
   -- CR 508.1b / CR 802.3's candidates -- every defending player's own seat,
   -- planeswalkers and battles -- taken ONCE and from the state the declaration
   -- is judged against. Empty is a combat with no defending player, which
