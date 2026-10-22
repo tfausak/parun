@@ -197,6 +197,7 @@ spec s = Spec.describe s "Pawl.Codec.Object" $ do
                   }
               ],
           Object.announcedX = Just 20,
+          Object.manaCostPaid = Nothing,
           Object.castFrom = Just Zone.Graveyard,
           Object.castUsing = Just Keyword.JumpStart,
           Object.castGrant = Just Keyword.Retrace,

@@ -117,6 +117,7 @@ import qualified Pawl.Types.Counterability as Counterability
 import qualified Pawl.Types.Countering as Countering
 import Pawl.Types.DamageEvent (DamageEvent)
 import qualified Pawl.Types.DamageEvent as DamageEvent
+import qualified Pawl.Types.DamageKind as DamageKind
 import qualified Pawl.Types.DamagePattern as DamagePattern
 import qualified Pawl.Types.DamageR as DamageR
 import qualified Pawl.Types.DamageRewrite as DamageRewrite
@@ -878,6 +879,71 @@ turnFaceUpByEffect oid = do
         && maybe False (Facing.isFaceDown . Object.facing) (Game.lookupObject oid gs)
     )
     (performTurnFaceUp Nothing Nothing oid)
+
+-- One damage event, with its deal-time riders read off the projection HERE
+-- rather than re-derived when they are consumed: each is a fact about the source
+-- AS THE DAMAGE IS DEALT, and the source may be gone by the time the CR 704.5h
+-- SBA or a later reader asks. CR 702.2e, CR 702.90d, CR 702.15c and CR 702.80b
+-- say so outright for deathtouch, infect, lifelink and wither. Rule 702.164 has
+-- NO such clause, so toxic's total value (CR 702.164b) is captured by analogy
+-- rather than by citation -- observably the same today, since applyDamage runs
+-- in the same instant, and it keeps the CR 608.2i record self-contained.
+--
+-- Lifelink's rider carries WHO rather than WHETHER, because CR 702.15b's answer
+-- is a player. Projection.controllerWithLastKnown answers controllerOf for a
+-- source that exists, which is both of that rule's clauses at once and answers in
+-- any zone, which is what CR 702.15d needs.
+--
+-- Read through the ...WithLastKnown readers rather than the plain ones, because
+-- the source may already have CEASED by the time it deals damage -- Ghitu
+-- Fire-Eater sacrifices itself to pay for the ability that then deals its
+-- damage. The plain readers answer False, 0 and Nothing for an id that names
+-- nothing, which would silently report every rider absent rather than as it last
+-- was, against CR 702.2e, CR 702.15c, CR 702.90d, CR 702.80b and CR 608.2h.
+--
+-- One fallback for all of the riders, not one each: they are read here at a
+-- single site off readers that share one liveness test (Game.lastKnownOf),
+-- so deathtouch and lifelink cannot come to disagree about whether the source is
+-- still there. Every damage the engine deals is built here, so no assignment
+-- site can capture two riders and forget the third.
+--
+-- CR 702.76a's and CR 702.173a's three reads join them for that reason and not
+-- only for uniformity: both rules ask what the source WAS "at the time it dealt
+-- that damage", so a creature that connected and then died has to keep
+-- answering. Commander.isCommander is the one read with no last-known fallback
+-- of its own -- CR 903.3's designation sits on the OWNER (Pawl.Types.Player), so
+-- it survives the object, but Game.componentsOf needs the object to find the
+-- card, which is why the answer is frozen here.
+damageEvent :: GameState -> DamageKind.DamageKind -> ObjectId -> Recipient.Recipient -> Natural -> DamageEvent.DamageEvent
+damageEvent gs kind source target amount =
+  let -- One projection for the keyword and creature-type riders.
+      characteristics = Projection.projectWithLastKnown source gs
+      keywords = PC.keywords characteristics
+      has keyword = Map.member keyword keywords
+      -- CR 702.164b: toxic is parameterized, so its rider is the SUM of every
+      -- instance's N rather than a membership test -- Projection.totalToxic's
+      -- fold, taken over the same map so it shares the fallback.
+      toxic = Projection.toxicIn keywords
+      -- CR 608.2h once for the two riders that ask it: rule 702.15b's payee and
+      -- rule 702.76a's and rule 702.173a's "under your control".
+      controller = Projection.controllerWithLastKnown source gs
+   in DamageEvent.MkDamageEvent
+        { DamageEvent.source = source,
+          DamageEvent.target = target,
+          DamageEvent.amount = amount,
+          DamageEvent.dealtByDeathtouch = has Keyword.Type.Deathtouch,
+          DamageEvent.dealtByInfect = has Keyword.Type.Infect,
+          DamageEvent.dealtByWither = has Keyword.Type.Wither,
+          DamageEvent.dealtByToxic = toxic,
+          DamageEvent.dealtByLifelink =
+            if has Keyword.Type.Lifelink
+              then controller
+              else Nothing,
+          DamageEvent.dealtByController = controller,
+          DamageEvent.dealtByCreatureTypes = Set.filter Subtype.Engine.isCreatureType (PC.subtypes characteristics),
+          DamageEvent.dealtByCommander = Commander.isCommander source gs,
+          DamageEvent.kind = kind
+        }
 
 -- CR 701.26a: turn one permanent sideways from an upright position, and record
 -- that it did. The single funnel every route that taps goes through --
@@ -3862,9 +3928,21 @@ apply batch candidate event =
       -- Through turnFaceUpByEffect's guard, so a batch that collected the row
       -- for two events turns the permanent up once. `consume` is skipped for the
       -- stun arm's reason: the status is the resource, and turning face up ends it.
+      --
+      -- The event's deal-time riders are the SOURCE's (damageEvent), so a
+      -- source that turned up has them read again off the face-up creature:
+      -- CR 702.2b's deathtouch and CR 702.15b's lifelink belong to whatever
+      -- deals the damage as it is dealt, and the 2/2 had none. A recipient that
+      -- turned up needs nothing here: its protection and prevention are rows the
+      -- loop's next pass collects (CR 616.2).
       DamageRewrite.TurnFaceUp -> do
-        turnFaceUpByEffect (ReplacementCandidate.source candidate)
-        pure (Just event)
+        let turning = ReplacementCandidate.source candidate
+        turnFaceUpByEffect turning
+        gs <- State.get
+        pure . Just . ProposedEvent.WouldDealDamage $
+          if DamageEvent.source de == turning
+            then damageEvent gs (DamageEvent.kind de) turning (DamageEvent.target de) (DamageEvent.amount de)
+            else de
     -- Unreachable: `applies` admits DamageR only against WouldDealDamage.
     (ReplacementEffect.DamageR {}, _) -> pure (Just event)
     -- CR 701.19a / 122.1c / 702.89a / 614.1a: under every arm the DESTRUCTION does not

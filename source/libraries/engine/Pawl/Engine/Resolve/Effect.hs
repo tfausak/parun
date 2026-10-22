@@ -3959,7 +3959,7 @@ applyOneEffect runSubgame resolving source controller legal chosen effect = case
                       ( \recipient -> do
                           n <- amountFor (DamagePart.quantity part) recipient
                           Monad.guard (n > 0)
-                          pure (Damage.damageEvent gs DamageKind.Noncombat dealt recipient (Integer.toNaturalSaturating n))
+                          pure (Event.damageEvent gs DamageKind.Noncombat dealt recipient (Integer.toNaturalSaturating n))
                       )
                       (recipientsOf (DamagePart.ref part))
                 )
@@ -4011,7 +4011,7 @@ applyOneEffect runSubgame resolving source controller legal chosen effect = case
         -- DealDamage arm above writes.
         let blow dealer victim amount =
               if amount > 0
-                then [Damage.damageEvent gs DamageKind.Noncombat dealer (Recipient.ToCreature victim) (Integer.toNaturalSaturating amount)]
+                then [Event.damageEvent gs DamageKind.Noncombat dealer (Recipient.ToCreature victim) (Integer.toNaturalSaturating amount)]
                 else []
             events
               -- CR 701.14c: "if a creature fights itself, it deals damage to
@@ -5896,11 +5896,17 @@ applyOneEffect runSubgame resolving source controller legal chosen effect = case
         context = effectContext gs resolving controller source legal (slotBindings resolving gs)
         evaluate = Quantity.evaluateFor (effectViewOf source legal gs) context gs resolving source
         -- CastOffer.payableFromSpent: only a card whose mana cost the mana spent
-        -- to activate this ability could pay (Object.manaSpent, recorded on the
-        -- resolving ability object) stays on offer. The CARD's mana cost, which in
-        -- a hand is Card.combined's (CR 709.4, 712.8a, 715.4).
-        spent = maybe (Mana.Type.MkMana []) Object.manaSpent (Game.lookupObject resolving gs)
-        affordable oid = not (CastOffer.payableFromSpent offer) || maybe False (Mana.couldPayFrom spent . Face.manaCost . Card.combined) (Game.cardOf oid gs)
+        -- on this ability's {X} could pay stays on offer. That mana is
+        -- Object.manaSpent less what paid the rest of the total
+        -- (Object.manaCostPaid, Mana.xShares), so a cost increase's mana is not
+        -- counted; any share the payment leaves open will do. The CARD's mana
+        -- cost, which in a hand is Card.combined's (CR 709.4, 712.8a, 715.4).
+        ability = Game.lookupObject resolving gs
+        spent = maybe (Mana.Type.MkMana []) Object.manaSpent ability
+        shares = case (ability >>= Object.manaCostPaid, ability >>= Binding.amountOf Binding.variableX . Object.bindings) of
+          (Just paid, Just x) -> Mana.xShares x paid spent
+          _ -> [spent]
+        affordable oid = not (CastOffer.payableFromSpent offer) || maybe False (\card -> any (`Mana.couldPayFrom` Face.manaCost (Card.combined card)) shares) (Game.cardOf oid gs)
     -- CR 608.2g names "a player", and a reference resolving to nobody offers the
     -- cast to nobody.
     spells <-

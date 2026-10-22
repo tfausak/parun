@@ -90,11 +90,10 @@ data CastOffer = MkCastOffer
     faceDown :: Maybe (Set.Set TurnUpEvent.TurnUpEvent),
     -- | Illusionary Mask's "a creature card in your hand whose mana cost could be
     -- paid by some amount of, or all of, the mana you spent on {X}": only a card
-    -- whose mana cost the mana spent to activate the offering ability could pay
-    -- (CR 602.2b, Pawl.Types.Object.manaSpent) is on offer, colours and all.
-    --
-    -- The whole activation's mana and not {X}'s alone, which is the same mana
-    -- for the one producer, whose cost is {X} and nothing else.
+    -- whose mana cost the mana spent on the offering ability's {X} could pay is
+    -- on offer, colours and all -- the activation's mana (CR 602.2b,
+    -- Pawl.Types.Object.manaSpent) less what paid the rest of its total, a cost
+    -- increase's included (Object.manaCostPaid).
     payableFromSpent :: Bool
   }
   deriving (Eq, Ord, Show)

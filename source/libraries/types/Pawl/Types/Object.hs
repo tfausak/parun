@@ -746,6 +746,12 @@ data Object = MkObject
     -- placeBorne reads it on CR 107.3m's own condition rather than for every
     -- ability the permanent triggers.
     announcedX :: Maybe Natural.Natural,
+    -- | CR 601.2f / 602.2b: the total mana cost an ACTIVATION was paid against,
+    -- its {X} as announced; Nothing for every object no activation paid for.
+    -- What separates the mana spent on {X} from the rest of `manaSpent` --
+    -- Illusionary Mask's "the mana you spent on {X}" under a cost increase
+    -- (Mana.xShares). Written by Pawl.Engine.Activate once the payment settles.
+    manaCostPaid :: Maybe ManaCost.ManaCost,
     -- | CR 601.2a: the zone this spell was moved to the stack FROM, which is what
     -- Aven Interrupter's "spells your opponents cast from graveyards or from
     -- exile" names. Read by Pawl.Engine.Filter's WasCastFrom atom.
@@ -1016,6 +1022,8 @@ new o s z t =
       -- CR 107.3m's exception is written back by the move that carries it, in
       -- Pawl.Engine.Event.changeZoneAttaching's mkObj.
       announcedX = Nothing,
+      -- An ability object never changes zones, so nothing writes it back.
+      manaCostPaid = Nothing,
       -- Nothing writes it back: no permanent reads it.
       castFrom = Nothing,
       -- CR 400.7d's exception is written back by

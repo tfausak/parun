@@ -1334,7 +1334,7 @@ controllerWithLastKnown :: ObjectId -> GameState -> Maybe PlayerId.PlayerId
 controllerWithLastKnown oid gs = Filter.controller =<< viewWithLastKnownAnywhere gs oid
 
 -- `project` with CR 608.2h's fallback, for a reader that wants what the view does
--- not carry: keyword COUNTS (CR 702.164b's toxic total, Damage.damageEvent),
+-- not carry: keyword COUNTS (CR 702.164b's toxic total, Event.damageEvent),
 -- delayed-trigger text, or the whole fold of a gone object: CR 603.3b's "the
 -- final chapter ability of a Saga you control" needs both the subtype and the
 -- chapter abilities of a Saga that may have left the battlefield before CR 117.5

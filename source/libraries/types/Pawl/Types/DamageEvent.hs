@@ -13,7 +13,7 @@ import qualified Pawl.Types.Subtype as Subtype
 --
 -- Every field past the first three is a deal-time RIDER -- a fact about the
 -- source, captured as the damage is dealt because it may be unaskable later.
--- Pawl.Engine.Damage.damageEvent is where they are read.
+-- Pawl.Engine.Event.damageEvent is where they are read.
 data DamageEvent = MkDamageEvent
   { source :: ObjectId.ObjectId,
     target :: Recipient.Recipient,
