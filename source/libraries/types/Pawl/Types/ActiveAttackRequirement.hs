@@ -24,11 +24,10 @@ import qualified Pawl.Types.Timestamp as Timestamp
 -- The object, where one is named, is ONE of CR 508.1b's announcements, which is
 -- the rule: Alluring Siren's ruling is that a creature able to attack either you
 -- or a planeswalker you control must attack YOU, so "attacks you" is obeyed by
--- exactly one
--- announcement, and Gideon Jura's "attack Gideon Jura" by another. Goad (CR
--- 701.15b) wants the COMPLEMENT of a seat instead -- "a player other than the
--- controller of the permanent that caused it to be goaded" -- which this field
--- cannot say: it rides Object.goadedBy, whose seats
+-- exactly one announcement, and Gideon Jura's "attack Gideon Jura" by another.
+-- Goad (CR 701.15b) wants the COMPLEMENT of a seat instead -- "a player other
+-- than the controller of the permanent that caused it to be goaded" -- which
+-- this field cannot say: it rides Object.goadedBy, whose seats
 -- Pawl.Engine.AttackRequirement instantiates against CR 508.1b's list directly.
 -- Rule 701.15a fixes goad's duration and CR 701.15d deduplicates its goaders,
 -- neither of which a row here could state.

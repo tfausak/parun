@@ -9806,9 +9806,8 @@ matchesTrigger gs = matchesTriggerGiven Map.empty (battlefieldCandidates gs) gs
 --
 -- Its customer is the card lint. Onset.FromNextTurnOf over @Relative You@
 -- delivers both halves of "your next turn" on its own, so this no longer guards
--- the firing -- it guards
--- the DATA: a card arming that onset over an EachTurn condition would have its
--- printed "each" silently narrowed by the window.
+-- the firing -- it guards the DATA: a card arming that onset over an EachTurn
+-- condition would have its printed "each" silently narrowed by the window.
 --
 -- Exhaustive with no wildcard, for eventBindingSlots' reason: a new condition must
 -- force a decision rather than defaulting to False.

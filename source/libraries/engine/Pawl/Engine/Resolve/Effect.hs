@@ -8438,9 +8438,9 @@ applyOneEffect runSubgame resolving source controller legal chosen effect = case
     -- The class is NOT enumerated, CR 611.2c's third sentence: a restriction on a
     -- declaration modifies no characteristic and no controller, so it reaches
     -- creatures that enter after this resolution, and the Filter is stored to be
-    -- re-read at each declaration. Its bound player slots are baked now,
-    -- Expiry.arm's reason for baking a ForAsLongAs condition -- the bindings that
-    -- answer them are gone once this resolution is over.
+    -- re-read at each declaration. Its bound player and object slots are baked
+    -- now, Expiry.arm's reason for baking a ForAsLongAs condition -- the bindings
+    -- that answer them are gone once this resolution is over.
     --
     -- CR 109.5's controller is baked, AffectPlayers' reason: the source is a
     -- sorcery in a graveyard by the time "you" is asked of the row.
