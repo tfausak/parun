@@ -347,14 +347,16 @@ applyModification textBoxOf viewOf src stamp gs oid unitTypes affected m pc =
         -- put in GameState.continuousEffects. The identity keeps the walk total,
         -- which is the posture SetController's arm below takes.
         Modification.GainAbilitiesOfSource _ -> pc
-        -- CR 613.1f / 607.2a: the activated abilities of each card in the
-        -- payload's pile, read off its copiable values (CR 707.2), each with the
-        -- payload's restrictions added. Like GainAbility above, the receiver is
-        -- their source (CR 113.7). The craft pile is the cards linked under
-        -- Binding.craftLink (CR 702.167c), so nothing `src`'s other abilities
-        -- exile; OwnAbilities is every card linked to `src` but those an ability
-        -- it acquired this way exiled (Binding.isLinkedExile): CR 607.2a links
-        -- this ability only to exiling abilities printed beside it, and CR
+        -- CR 613.1f / 607.2a: the activated abilities of each card in exile the
+        -- payload's Filter matches, framed by `src`, read off its copiable values
+        -- (CR 707.2), each with the payload's restrictions added. Like
+        -- GainAbility above, the receiver is their source (CR 113.7). The
+        -- Filter's IsExiledWithSource reads as no ability of `src`'s
+        -- (Filter.reader is Nothing), so the craft pile is the cards linked
+        -- under Binding.craftLink (CR 702.167c), nothing `src`'s other abilities
+        -- exile, and OwnAbilities is every card linked to `src` but those an
+        -- ability it acquired this way exiled (Binding.isLinkedExile): CR 607.2a
+        -- links this ability only to exiling abilities printed beside it, and CR
         -- 607.5 an acquired one only to its own pair.
         --
         -- CR 602.5c / 607.5: each is named for the card it came from and its
@@ -367,9 +369,12 @@ applyModification textBoxOf viewOf src stamp gs oid unitTypes affected m pc =
         -- Pawl.ActivateSpec's Locus of Enlightenment case proves all three, and
         -- its Gliding Licid case the named twins. The Steward of the Harvest
         -- scenarios prove the other pile, and the Patchwork Crawler pair what
-        -- an acquired ability exiled.
-        Modification.GainExiledCardAbilities (ExiledCardAbilities.MkExiledCardAbilities pile extra) ->
-          let cards = Game.linkedPile Nothing pile src gs
+        -- an acquired ability exiled. A Filter naming no pile is proved by
+        -- data/scenarios/mairsil-the-pretender-activates-each-caged-ability-once-each-turn.json,
+        -- and two cards' identically worded abilities by
+        -- data/scenarios/mairsil-the-pretender-a-twin-ability-from-another-card-is-not-spent.json.
+        Modification.GainExiledCardAbilities (ExiledCardAbilities.MkExiledCardAbilities criterion extra) ->
+          let cards = filter (maybe False (\view -> Filter.matches context view criterion) . viewOf) (Set.toAscList (GameState.exile gs))
               named card a = a {ActivatedAbility.name = Just (Binding.exiledCardAbility card (ActivatedAbility.name a))}
               -- CR 113.6 / 702.178b: a card has, in exile, only the "as long
               -- as" grants that function there (AbilityZone.grantFunctionsIn).
@@ -1251,7 +1256,7 @@ framedBySlots gs recipients context =
 -- (Pawl.Engine.Replacement.matchesPermanent).
 contextWithSlots :: GameState -> Maybe PlayerId.PlayerId -> Maybe ObjectId -> Map SlotName (Set Recipient.Recipient) -> Filter.Context
 contextWithSlots gs perspective source slots =
-  framedBySlots gs slots (Filter.contextFor (Game.teams gs) perspective source)
+  framedBySlots gs slots (Filter.contextIn gs perspective source)
 
 -- framedBySlots off a whole binding environment as announced
 -- (Binding.recipientsBySlot over its own targets): CR 603.4's intervening "if",
@@ -1267,7 +1272,7 @@ framedByBindings gs bindings = framedBySlots gs (Binding.recipientsBySlot (Bindi
 -- source from inside its own projection would not terminate.
 sourceContext :: GameState -> Maybe PlayerId.PlayerId -> ObjectId -> Filter.Context
 sourceContext gs perspective source =
-  framedBy source gs (Filter.contextFor (Game.teams gs) perspective (Just source))
+  framedBy source gs (Filter.contextIn gs perspective (Just source))
 
 -- SourceContext.framedBy plus withCharacteristicsOf: every source-derived field.
 framedBy :: ObjectId -> GameState -> Filter.Context -> Filter.Context
@@ -1306,7 +1311,7 @@ withCharacteristicsOf object gs context =
 -- source's choices.
 pairwiseContext :: GameState -> ObjectId -> Filter.Context
 pairwiseContext gs creature =
-  withCharacteristicsOf creature gs (Filter.contextFor (Game.teams gs) (controllerOf creature gs) (Just creature))
+  withCharacteristicsOf creature gs (Filter.contextIn gs (controllerOf creature gs) (Just creature))
 
 -- CR 603.10's first sentence: a permanent as a trigger event's own board sample
 -- (Event.Trigger.battlefieldAt) shows it -- the characteristics and controller it
@@ -3660,7 +3665,7 @@ filterReads f = case f of
       Operand.OfEachOtherCandidate measure -> measureReads measure
   Filter.Type.ControlledBy _ -> Set.singleton Controller
   -- The candidate's controller; who defends is a combat-record fact.
-  Filter.Type.ControlledByDefendingPlayer -> Set.singleton Controller
+  Filter.Type.ControlledByRole _ -> Set.singleton Controller
   Filter.Type.ControlledByBound _ -> Set.singleton Controller
   Filter.Type.ControlledByPlayer _ -> Set.singleton Controller
   Filter.Type.ControlledByRecipient -> Set.singleton Controller
@@ -4009,7 +4014,7 @@ filterReadsPeers f = case f of
     Operand.AmountInSlot _ -> False
     Operand.EnclosingAmount -> False
   Filter.Type.ControlledBy _ -> False
-  Filter.Type.ControlledByDefendingPlayer -> False
+  Filter.Type.ControlledByRole _ -> False
   Filter.Type.ControlledByBound _ -> False
   Filter.Type.ControlledByPlayer _ -> False
   Filter.Type.ControlledByRecipient -> False

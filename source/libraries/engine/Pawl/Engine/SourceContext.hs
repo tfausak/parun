@@ -29,7 +29,7 @@ import qualified Pawl.Types.SourceChoices as SourceChoices
 -- filled (framedBy).
 sourceContext :: GameState.GameState -> Maybe PlayerId.PlayerId -> ObjectId.ObjectId -> Filter.Context
 sourceContext gs perspective source =
-  framedBy source gs (Filter.contextFor (Game.teams gs) perspective (Just source))
+  framedBy source gs (Filter.contextIn gs perspective (Just source))
 
 -- | `context` with every source-derived field of `source` filled, its choices
 -- read live through CR 608.2h's last known information (choicesOf), for the

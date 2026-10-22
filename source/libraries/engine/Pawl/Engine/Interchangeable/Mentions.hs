@@ -476,7 +476,7 @@ filterNames asking criterion = case criterion of
   Filter.Measures measures -> measuresNames asking measures
   Filter.ManaValueIsEven -> mempty
   Filter.ControlledBy _relation -> mempty
-  Filter.ControlledByDefendingPlayer -> mempty
+  Filter.ControlledByRole _ -> mempty
   Filter.ControlledByBound slot -> slotNames asking slot
   Filter.ControlledByPlayer _player -> mempty
   Filter.ControlledByRecipient -> mempty
@@ -833,6 +833,7 @@ castingRestrictionNames asking x = case x of
   CastingRestriction.AttackedThisStep -> mempty
   CastingRestriction.AfterBlockersDeclared -> mempty
   CastingRestriction.BeforeStep _phase -> history asking HistoryRead.StepBegins
+  CastingRestriction.DuringTurn _turnScope -> mempty
 
 changeTextNames :: Asking r -> ChangeText.ChangeText -> r
 changeTextNames asking x = case x of
@@ -2037,7 +2038,7 @@ modificationNames asking onAbility x = case x of
   Modification.GainCastingPermission _castingPermission -> mempty
   Modification.GainAbility ability -> onAbility ability
   Modification.GainAbilitiesOfSource keyword -> foldMap (keywordNames asking) keyword
-  Modification.GainExiledCardAbilities (ExiledCardAbilities.MkExiledCardAbilities _ items) -> foldMap (activationRestrictionNames asking) items
+  Modification.GainExiledCardAbilities (ExiledCardAbilities.MkExiledCardAbilities cards items) -> filterNames asking cards <> foldMap (activationRestrictionNames asking) items
   Modification.GainAbilitiesOfStickers -> mempty
   Modification.LoseAllAbilities -> mempty
   Modification.LoseNamedAbility abilityName -> names asking (`Binding.Engine.isAcquiredFrom` abilityName)
@@ -2817,6 +2818,7 @@ triggerConditionNames asking x = case x of
   TriggerCondition.SelfDealsDamageToCreature -> mempty
   TriggerCondition.SelfDealsDamage -> mempty
   TriggerCondition.SelfIsDealtDamage -> mempty
+  TriggerCondition.PlayerIsDealtDamage _playerRelation -> mempty
   TriggerCondition.PermanentDealsCombatDamageToPlayer permanentDealsCombatDamageToPlayer -> permanentDealsCombatDamageToPlayerNames asking permanentDealsCombatDamageToPlayer
   TriggerCondition.PermanentsDealCombatDamageToPlayer permanentsDealCombatDamageToPlayer -> permanentsDealCombatDamageToPlayerNames asking permanentsDealCombatDamageToPlayer
   TriggerCondition.CreatureDealtCombatDamageToMonarch -> mempty

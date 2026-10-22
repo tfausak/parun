@@ -6,6 +6,7 @@ import qualified Pawl.Spec as Spec
 import qualified Pawl.Types.ActivationRestriction as ActivationRestriction
 import qualified Pawl.Types.ExiledCardAbilities as ExiledCardAbilities
 import qualified Pawl.Types.ExiledPile as ExiledPile
+import qualified Pawl.Types.Filter as Filter
 
 spec :: (Monad m, Monad n) => Spec.Spec m n -> n ()
 spec s = Spec.describe s "Pawl.Codec.ExiledCardAbilities" $ do
@@ -13,12 +14,12 @@ spec s = Spec.describe s "Pawl.Codec.ExiledCardAbilities" $ do
     Common.assertCodec
       s
       ExiledCardAbilities.codec
-      ExiledCardAbilities.MkExiledCardAbilities {ExiledCardAbilities.pile = ExiledPile.CraftMaterials, ExiledCardAbilities.restrictions = [ActivationRestriction.OnlyOnceEachTurn]}
-      " {\"pile\":{\"type\":\"CraftMaterials\"},\"restrictions\":[{\"type\":\"OnlyOnceEachTurn\"}]} "
+      ExiledCardAbilities.MkExiledCardAbilities {ExiledCardAbilities.cards = Filter.IsExiledWithSource ExiledPile.CraftMaterials, ExiledCardAbilities.restrictions = [ActivationRestriction.OnlyOnceEachTurn]}
+      " {\"cards\":{\"type\":\"IsExiledWithSource\",\"value\":{\"type\":\"CraftMaterials\"}},\"restrictions\":[{\"type\":\"OnlyOnceEachTurn\"}]} "
   Spec.it s "restrictions default to none" $
     Common.assertCodec
       s
       ExiledCardAbilities.codec
-      ExiledCardAbilities.MkExiledCardAbilities {ExiledCardAbilities.pile = ExiledPile.OwnAbilities, ExiledCardAbilities.restrictions = []}
-      " {\"pile\":{\"type\":\"OwnAbilities\"}} "
+      ExiledCardAbilities.MkExiledCardAbilities {ExiledCardAbilities.cards = Filter.IsExiledWithSource ExiledPile.OwnAbilities, ExiledCardAbilities.restrictions = []}
+      " {\"cards\":{\"type\":\"IsExiledWithSource\",\"value\":{\"type\":\"OwnAbilities\"}}} "
   Spec.it s "has a schema" $ Common.assertHasSchema s ExiledCardAbilities.codec

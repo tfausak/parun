@@ -2086,6 +2086,9 @@ effectLintSpec s registry = Spec.describe s "Lint" $ do
           ZoneScope.Scoped (PlayerScope.Related PlayerRelation.Teammate) -> False
           ZoneScope.Scoped (PlayerScope.Related PlayerRelation.YourTeam) -> False
           ZoneScope.Scoped (PlayerScope.Superlative leading) -> strictSuperlative leading
+          -- A shared team turn has several active players (CR 805.4a), and a
+          -- combat several defending ones (CR 802.2a).
+          ZoneScope.Scoped (PlayerScope.InRole _) -> False
           ZoneScope.InSlot _ -> True
           ZoneScope.ControllerOfBound _ -> True
           ZoneScope.BoundPlayer _ -> True

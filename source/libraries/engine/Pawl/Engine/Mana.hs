@@ -781,7 +781,7 @@ recipientsOf :: PlayerId -> Map.Map SlotName.SlotName (Set.Set PlayerId) -> Game
 recipientsOf controller chosen gs ref =
   Maybe.fromMaybe
     []
-    (Count.playersFor (const Nothing) ((Filter.contextFor (Game.teams gs) (Just controller) Nothing) {Filter.slotPlayers = chosen}) gs ref)
+    (Count.playersFor (const Nothing) ((Filter.contextIn gs (Just controller) Nothing) {Filter.slotPlayers = chosen}) gs ref)
 
 -- CR 607.2d's production-time capture, and THE one place it is decided: what
 -- the source had chosen as it entered (CR 614.1c), baked onto every unit it adds
@@ -1355,7 +1355,7 @@ admitsUnder subject pid gs =
       byKeyword restriction = case subject of
         PaymentSubject.Activating _ stamp _ -> any (\designator -> any (Keyword.Engine.designates designator) stamp) (ManaRestriction.keywordActivations restriction)
         _ -> False
-      asked = fmap (\(half, oid) -> (half, Filter.contextFor (Game.teams gs) (Just pid) Nothing, Projection.viewOfObject oid gs)) paidFor
+      asked = fmap (\(half, oid) -> (half, Filter.contextIn gs (Just pid) Nothing, Projection.viewOfObject oid gs)) paidFor
       -- The ability's own narrowing of what may pay for it (Throne of
       -- Eldraine's "Spend only mana of the chosen color"), asked of every unit
       -- before CR 106.6's question about the unit's own restriction.

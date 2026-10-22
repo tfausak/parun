@@ -6,4 +6,7 @@ data GameOutcome
     Win
   | -- | CR 104.3: losing the game.
     Lose
+  | -- | CR 704.5a / 810.8a: losing the game for having 0 or less life, and no
+    -- other loss (Lich, Transcendence).
+    LoseForZeroLife
   deriving (Bounded, Enum, Eq, Ord, Show)

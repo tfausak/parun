@@ -2,6 +2,7 @@ module Pawl.Types.PlayerScope where
 
 import qualified Pawl.Types.PlayerRelation as PlayerRelation
 import qualified Pawl.Types.Superlative as Superlative
+import qualified Pawl.Types.TurnRole as TurnRole
 
 -- | A SET of players, named relative to a perspective: the player-side analogue of
 -- Pawl.Types.Affected, and much smaller because CR 109.5 fixes what "you" means.
@@ -49,4 +50,8 @@ data PlayerScope
     -- rather than about the two players being compared, which is why inScope
     -- takes a GameState at all.
     Superlative Superlative.Superlative
+  | -- | CR 102.1 / 805.9: the players holding this role, read from the turn --
+    -- the active players a "the active player" ability chooses one of (Siren's
+    -- Call), or the defending players.
+    InRole TurnRole.TurnRole
   deriving (Eq, Ord, Show)

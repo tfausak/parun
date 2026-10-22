@@ -43,6 +43,7 @@ import qualified Pawl.Types.Subtype as Subtype
 import qualified Pawl.Types.Supertype as Supertype
 import qualified Pawl.Types.Teams as Teams
 import qualified Pawl.Types.Trait as Trait
+import qualified Pawl.Types.TurnRole as TurnRole
 import qualified Pawl.Types.Zone as Zone
 
 -- A projected black creature controlled by player 0.
@@ -484,11 +485,11 @@ spec s = Spec.describe s "Pawl.Engine.Filter" $ do
   -- Context rather than from the perspective. blackCreature is controlled by
   -- player 0 and OWNED by player 1, so a reading that consulted the wrong field
   -- would not agree with either arm below.
-  Spec.describe s "ControlledByDefendingPlayer" $ do
+  Spec.describe s "ControlledByRole Defending" $ do
     let defended n = self {Filter.defendingPlayers = [PlayerId.MkPlayerId n]}
     Spec.it s "holds only for the defending player's creature" $ do
-      Spec.assertBool s (Filter.matches (defended 0) blackCreature Filter.Type.ControlledByDefendingPlayer) "controller is the defender"
-      Spec.assertBool s (not (Filter.matches (defended 1) blackCreature Filter.Type.ControlledByDefendingPlayer)) "owner is not the controller"
+      Spec.assertBool s (Filter.matches (defended 0) blackCreature (Filter.Type.ControlledByRole TurnRole.Defending)) "controller is the defender"
+      Spec.assertBool s (not (Filter.matches (defended 1) blackCreature (Filter.Type.ControlledByRole TurnRole.Defending))) "owner is not the controller"
 
     -- NOT ControlledBy Opponent: `self`'s perspective is player 0, so that atom
     -- would answer the opposite of this one on the very same view. CR 506.2a is
@@ -499,11 +500,11 @@ spec s = Spec.describe s "Pawl.Engine.Filter" $ do
     -- ControlledBy's vacuity posture on both sides.
     Spec.it s "is False when either player is absent" $ do
       let noController = blackCreature {Filter.controller = Nothing}
-      Spec.assertBool s (not (Filter.matches (defended 0) noController Filter.Type.ControlledByDefendingPlayer)) "no candidate controller"
-      Spec.assertBool s (not (Filter.matches self blackCreature Filter.Type.ControlledByDefendingPlayer)) "no defending player"
+      Spec.assertBool s (not (Filter.matches (defended 0) noController (Filter.Type.ControlledByRole TurnRole.Defending))) "no candidate controller"
+      Spec.assertBool s (not (Filter.matches self blackCreature (Filter.Type.ControlledByRole TurnRole.Defending))) "no defending player"
 
   -- CR 119.5's "they control", whose player comes from the Context as
-  -- ControlledByDefendingPlayer's does -- Biorhythm asks it once per recipient.
+  -- ControlledByRole's does -- Biorhythm asks it once per recipient.
   -- blackCreature is controlled by player 0 and OWNED by player 1, so a reading
   -- off the wrong field agrees with neither arm below.
   Spec.describe s "ControlledByRecipient" $ do

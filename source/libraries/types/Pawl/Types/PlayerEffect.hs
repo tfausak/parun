@@ -226,8 +226,8 @@ data PlayerEffect
     -- unpayable. Pawl.PlayerEffectSpec's PlatinumEmperion and GreedUnderEmperion
     -- groups prove the two.
     CantLoseLife
-  | -- | CR 104.2b / 104.3 / Abyssal Persecutor, Platinum Angel: this player can't
-    -- win, or can't lose, the game.
+  | -- | CR 104.2b / 104.3 / 704.5a / Abyssal Persecutor, Platinum Angel, Lich: this
+    -- player can't win, can't lose, or doesn't lose for having 0 or less life.
     Precluded GameOutcome.GameOutcome
   | -- | CR 401.5 / 400.2: cards of this player's that are shown, and to whom.
     Shows Shows.Shows

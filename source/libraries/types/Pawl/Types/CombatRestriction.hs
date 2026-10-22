@@ -91,7 +91,7 @@ import qualified Pawl.Types.LimitUnless as LimitUnless
 --
 -- A restriction whose CONDITION is about the DEFENDING PLAYER (Armored Galleon,
 -- Crown-Hunter Hireling) needs no arm of its own: the condition below says it,
--- through Pawl.Types.Filter.ControlledByDefendingPlayer, and
+-- through Pawl.Types.Filter.ControlledByRole Defending, and
 -- Pawl.Engine.CombatRestriction.inForce is what supplies CR 508.5's answer.
 --
 -- The aimed-at axis is CantAttackPlayer's and not the condition's: CR 508.1b's
@@ -206,7 +206,7 @@ data CombatRestriction
     -- Not CantAttack with a Condition, for CantAttackAlone's reason: a Condition
     -- is a predicate over game STATE, and which player a creature is being
     -- announced against is not game state at CR 508.1c time. The condition axis
-    -- that DOES exist -- Filter.ControlledByDefendingPlayer, Armored Galleon --
+    -- that DOES exist -- Filter.ControlledByRole Defending, Armored Galleon --
     -- narrows which CREATURES a restriction reaches and says nothing about what
     -- they may be announced against.
     CantAttackPlayer CantAttackPlayer.CantAttackPlayer

@@ -954,7 +954,8 @@ modificationCounts modification = case modification of
   -- Rule 702.165a's grant names the source, and the keywords it carries are
   -- minted from the card's Backup keyword, swept there.
   Modification.GainAbilitiesOfSource _ -> []
-  -- The rider's CR 602.5 conditions; the abilities are the linked cards'.
+  -- The rider's CR 602.5 conditions; the abilities are the exiled cards', and
+  -- their Filter's Counts are reached through modificationFilters.
   Modification.GainExiledCardAbilities (ExiledCardAbilities.MkExiledCardAbilities _ extra) -> concatMap conditionCounts (concatMap restrictionConditions extra)
   Modification.GainAbilitiesOfStickers -> []
   Modification.LoseAllAbilities -> []
@@ -1088,6 +1089,7 @@ triggerConditionCounts triggerCondition = case triggerCondition of
   TriggerCondition.SelfDealsDamageToCreature -> []
   TriggerCondition.SelfDealsDamage -> []
   TriggerCondition.SelfIsDealtDamage -> []
+  TriggerCondition.PlayerIsDealtDamage _ -> []
   -- Its watcher-scoped sibling carries a Filter, and a Filter holds no Count.
   TriggerCondition.PermanentDealsCombatDamageToPlayer _ -> []
   TriggerCondition.PermanentsDealCombatDamageToPlayer _ -> []
@@ -4353,9 +4355,8 @@ modificationFilters modification = case modification of
   -- Minted, and swept as the Backup keyword -- see modificationCounts.
   Modification.GainAbilitiesOfSource _ -> []
   -- The rider's CR 602.5 conditions, as a printed ability's are swept, and the
-  -- pile as the IsExiledWithSource atom naming the same cards (refFilters'
-  -- EachCardInExiledPile posture).
-  Modification.GainExiledCardAbilities (ExiledCardAbilities.MkExiledCardAbilities pile extra) -> (Unframed, Filter.Type.IsExiledWithSource pile) : frame Unframed (concatMap conditionFilters (concatMap restrictionConditions extra))
+  -- Filter naming the exiled cards.
+  Modification.GainExiledCardAbilities (ExiledCardAbilities.MkExiledCardAbilities cards extra) -> (Unframed, cards) : frame Unframed (concatMap conditionFilters (concatMap restrictionConditions extra))
   Modification.GainAbilitiesOfStickers -> []
   Modification.SetBasePowerToughness (SetBasePowerToughness.MkSetBasePowerToughness p t) -> foldMap quantityFilters p <> foldMap quantityFilters t
   Modification.ModifyPowerToughness (ModifyPowerToughness.MkModifyPowerToughness p t) -> quantityFilters p <> quantityFilters t
@@ -4525,6 +4526,7 @@ triggerConditionFilters triggerCondition = case triggerCondition of
   -- Enrage's condition is nullary: rule 120.3 qualifies the damage in no way, so
   -- there is nothing for a text change to rewrite.
   TriggerCondition.SelfIsDealtDamage -> []
+  TriggerCondition.PlayerIsDealtDamage _ -> []
   -- Its watcher-scoped sibling carries one -- Tovolar's "a Wolf or Werewolf you
   -- control", which the card lint must sweep.
   TriggerCondition.PermanentDealsCombatDamageToPlayer p -> unframed [PermanentDealsCombatDamageToPlayer.filter p]
@@ -4722,6 +4724,7 @@ triggerConditionSlots triggerCondition = case triggerCondition of
   TriggerCondition.SelfDealsDamageToCreature -> []
   TriggerCondition.SelfDealsDamage -> []
   TriggerCondition.SelfIsDealtDamage -> []
+  TriggerCondition.PlayerIsDealtDamage _ -> []
   TriggerCondition.PermanentDealsCombatDamageToPlayer _ -> []
   TriggerCondition.PermanentsDealCombatDamageToPlayer _ -> []
   TriggerCondition.CreatureDealtCombatDamageToMonarch -> []

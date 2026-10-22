@@ -87,12 +87,16 @@ import qualified Pawl.Types.Zone as Zone
 -- Rule 704.6c's disjunct is delegated to Pawl.Engine.Commander, the way CR
 -- 704.5aa's is to Pawl.Engine.Speed: this module owns WHEN a state-based action
 -- is checked, not what each one means.
+--
+-- CR 704.5a's disjunct alone is waived for a player an effect says doesn't lose
+-- for having 0 or less life (Lich); CR 810.8a's example asks it of the team,
+-- which PlayerEffect.precludes does.
 losesNow :: GameState -> PlayerId -> Bool
 losesNow gs pid = case Map.lookup pid (GameState.players gs) of
   Nothing -> False
   Just player ->
     Player.status player == Status.Playing
-      && ( Player.life player <= 0
+      && ( (Player.life player <= 0 && not (PlayerEffect.precludes GameOutcome.LoseForZeroLife pid gs))
              || Set.member pid (GameState.drewFromEmpty gs)
              || Map.findWithDefault 0 PlayerCounterKind.Poison (Player.counters player) >= poisonThreshold gs pid
              || Commander.lethalDamage pid gs

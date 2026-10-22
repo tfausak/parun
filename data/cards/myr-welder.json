@@ -80,8 +80,11 @@
             {
               "type": "GainExiledCardAbilities",
               "value": {
-                "pile": {
-                  "type": "OwnAbilities"
+                "cards": {
+                  "type": "IsExiledWithSource",
+                  "value": {
+                    "type": "OwnAbilities"
+                  }
                 }
               }
             }
