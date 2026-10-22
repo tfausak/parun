@@ -372,6 +372,7 @@ import qualified Pawl.Types.StaticAbility as StaticAbility
 import qualified Pawl.Types.StepBegins as StepBegins
 import qualified Pawl.Types.Suspend as Suspend
 import qualified Pawl.Types.TakeExtraTurn as TakeExtraTurn
+import qualified Pawl.Types.TapForMana as TapForMana
 import qualified Pawl.Types.TapForTotalPower as TapForTotalPower
 import qualified Pawl.Types.TapPermanents as TapPermanents
 import qualified Pawl.Types.TargetChooser as TargetChooser
@@ -1994,6 +1995,10 @@ manaCountNames :: (Monoid r) => Asking r -> ManaCount.ManaCount -> r
 manaCountNames asking x = case x of
   ManaCount.MkManaCount player _filter_ -> playerRefNames asking player
 
+tapForManaNames :: (Monoid r) => Asking r -> TapForMana.TapForMana -> r
+tapForManaNames asking x = case x of
+  TapForMana.MkTapForMana permanents restriction -> filterNames asking permanents <> foldMap (manaRestrictionNames asking) restriction
+
 manaRestrictionNames :: (Monoid r) => Asking r -> ManaRestriction.ManaRestriction -> r
 manaRestrictionNames asking x = case x of
   ManaRestriction.MkManaRestriction casts activations keywordActivations unlocks turnsFaceUp _prohibits -> foldMap (filterNames asking) casts <> foldMap (filterNames asking) activations <> foldMap (keywordDesignatorNames asking) keywordActivations <> foldMap (filterNames asking) unlocks <> foldMap (filterNames asking) turnsFaceUp
@@ -2291,6 +2296,7 @@ playerEffectNames asking x = case x of
   PlayerEffect.MayPlayAsThoughItHadFlash filter_ -> filterNames asking filter_
   PlayerEffect.ActivateKeywordAtInstantSpeed keywordDesignator -> keywordDesignatorNames asking keywordDesignator
   PlayerEffect.ActivateLoyaltyAtInstantSpeed filter_ -> filterNames asking filter_
+  PlayerEffect.MayTapForMana tapForMana -> tapForManaNames asking tapForMana
   PlayerEffect.CantBeCountered filter_ -> filterNames asking filter_
   PlayerEffect.DamageCantBePrevented damagePattern -> damagePatternNames asking damagePattern
   PlayerEffect.DamageCantBeRedirected damagePattern -> damagePatternNames asking damagePattern

@@ -1160,6 +1160,7 @@ unpreventableScopeOffends scope playerEffect = case playerEffect of
   PlayerEffect.MayPlayAsThoughItHadFlash _ -> False
   PlayerEffect.ActivateKeywordAtInstantSpeed _ -> False
   PlayerEffect.ActivateLoyaltyAtInstantSpeed _ -> False
+  PlayerEffect.MayTapForMana _ -> False
   PlayerEffect.CantBeCountered _ -> False
   PlayerEffect.CantCastMatching _ -> False
   PlayerEffect.PutTappedAsYouCascade _ -> False
@@ -1231,6 +1232,7 @@ unpreventablePatternOffends playerEffect = case playerEffect of
   PlayerEffect.MayPlayAsThoughItHadFlash _ -> False
   PlayerEffect.ActivateKeywordAtInstantSpeed _ -> False
   PlayerEffect.ActivateLoyaltyAtInstantSpeed _ -> False
+  PlayerEffect.MayTapForMana _ -> False
   PlayerEffect.CantBeCountered _ -> False
   PlayerEffect.CantCastMatching _ -> False
   PlayerEffect.PutTappedAsYouCascade _ -> False

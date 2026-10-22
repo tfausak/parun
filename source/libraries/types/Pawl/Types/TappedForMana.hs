@@ -3,6 +3,7 @@ module Pawl.Types.TappedForMana where
 import qualified Data.Set as Set
 import qualified Pawl.Types.ManaType as ManaType
 import qualified Pawl.Types.ObjectId as ObjectId
+import qualified Pawl.Types.PlayerId as PlayerId
 
 -- | CR 106.12a's event: which permanent was tapped for mana, and which types of
 -- mana that activation produced. The payload of Pawl.Types.GameEvent's arm of
@@ -22,6 +23,10 @@ import qualified Pawl.Types.ObjectId as ObjectId
 -- amount"), and it is a different sentence about a different kind of effect.
 data TappedForMana = MkTappedForMana
   { permanent :: ObjectId.ObjectId,
-    mana :: Set.Set ManaType.ManaType
+    mana :: Set.Set ManaType.ManaType,
+    -- | The player who tapped it: the mana ability's controller (CR 113.8), who
+    -- differs from the permanent's where an effect lets another player tap it
+    -- (Piracy).
+    player :: PlayerId.PlayerId
   }
   deriving (Eq, Ord, Show)

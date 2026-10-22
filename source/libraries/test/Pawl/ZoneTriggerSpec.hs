@@ -2234,11 +2234,11 @@ representativeEvents cond =
         -- pins the floor for a matching pair too, this arm binding nothing
         -- either way.
         TriggerCondition.SelfBecomesUntapped -> one (GameEvent.BecameUntapped departed)
-        TriggerCondition.AttachedPermanentTappedForMana -> one (GameEvent.TappedForMana (TappedForMana.MkTappedForMana {TappedForMana.permanent = departed, TappedForMana.mana = Set.singleton (ManaType.Colored Color.Green)}))
+        TriggerCondition.AttachedPermanentTappedForMana -> one (GameEvent.TappedForMana (TappedForMana.MkTappedForMana {TappedForMana.permanent = departed, TappedForMana.mana = Set.singleton (ManaType.Colored Color.Green), TappedForMana.player = S.alice}))
         -- The same event for the bystander reading, on `departed` for the arm
         -- above's reason: the arm stamps the tapped permanent under every
         -- relation it admits, so the floor is the same whether the pair matches.
-        TriggerCondition.PermanentTappedForMana {} -> one (GameEvent.TappedForMana (TappedForMana.MkTappedForMana {TappedForMana.permanent = departed, TappedForMana.mana = Set.singleton (ManaType.Colored Color.Green)}))
+        TriggerCondition.PermanentTappedForMana {} -> one (GameEvent.TappedForMana (TappedForMana.MkTappedForMana {TappedForMana.permanent = departed, TappedForMana.mana = Set.singleton (ManaType.Colored Color.Green), TappedForMana.player = S.alice}))
         -- CR 605.1b's mana-added event, on `departed` for the arm above's
         -- reason; the arm binds nothing either way.
         TriggerCondition.AbilityAddsMana {} -> one (GameEvent.ManaAdded (ManaAdded.MkManaAdded {ManaAdded.player = S.alice, ManaAdded.source = departed, ManaAdded.mana = Set.singleton (ManaType.Colored Color.Green), ManaAdded.cause = ManaAddedCause.ManaAbility}))

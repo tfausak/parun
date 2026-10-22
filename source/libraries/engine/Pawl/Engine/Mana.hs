@@ -4,6 +4,7 @@ import qualified Control.Monad as Monad
 import qualified Control.Monad.Trans.State.Strict as State
 import qualified Data.Bifunctor as Bifunctor
 import qualified Data.Containers.ListUtils as ListUtils
+import qualified Data.Either as Either
 import qualified Data.Foldable as Foldable
 import qualified Data.List as List
 import qualified Data.List.NonEmpty as NonEmpty
@@ -56,6 +57,7 @@ import qualified Pawl.Types.Decider as Decider
 import qualified Pawl.Types.Effect as Effect
 import qualified Pawl.Types.ExilePermanents as ExilePermanents
 import qualified Pawl.Types.ExiledPile as ExiledPile
+import qualified Pawl.Types.Filter as Filter.Type
 import Pawl.Types.Game (Game)
 import Pawl.Types.GameState (GameState)
 import qualified Pawl.Types.GameState as GameState
@@ -471,8 +473,11 @@ manaYieldsOfGiven pcs oid gs = ListUtils.nubOrd (fmap (Mana.MkMana . yieldUnits)
 -- sacrifice candidate (`perCandidate` below), whose own claim names just the
 -- candidates that give it. sourceOptions groups by the route, so such yields
 -- are one choice of at most one of them per activation.
-manaSuppliesGiven :: Capacity -> Map.Map ObjectId PC.ProjectedCharacteristics -> PlayerId -> ObjectId -> GameState -> [(Activations.Activations, Mana, ManaCost, Activations.Activations)]
-manaSuppliesGiven capacity pcs pid oid gs =
+--
+-- `borrowed` is PlayerEffect.tapForManaGrants' answer for this permanent,
+-- handed in so a caller sweeping every source walks the player's effects once.
+manaSuppliesGiven :: Capacity -> Map.Map ObjectId PC.ProjectedCharacteristics -> PlayerId -> [Maybe ManaRestriction.ManaRestriction] -> ObjectId -> GameState -> [(Activations.Activations, Mana, ManaCost, Activations.Activations)]
+manaSuppliesGiven capacity pcs pid borrowed oid gs =
   let -- Applied HERE and not left to the caller: this is the one reader of a
       -- route's yield on the supply side, so wrapping it once is what makes the
       -- model a property of the walk rather than of who called it. Idempotent,
@@ -549,10 +554,14 @@ manaSuppliesGiven capacity pcs pid oid gs =
             List.elem pid (Maybe.fromMaybe [] (PlayerEffect.playersInScope (Just pid) (Just pid) gs (ChoosePlayer.scope choice)))
           ]
       options = manaOptionsOfGiven pcs oid gs
-      -- Lazy, and forced only for a permanent mixing open and closed routes:
-      -- manaSourcesGiven hands this nothing else pid does not control.
-      controls = not (any (openToAnyone . ManaOption.ability) options) || Projection.controllerOf oid gs == Just pid
-      counted = concatMap perCandidate (filter (permitsRoute controls . ManaOption.ability) options)
+      -- Lazy, and forced only for a permanent mixing open and closed routes or
+      -- reached by a grant: manaSourcesGiven hands this nothing else pid does
+      -- not control.
+      controls = (not (any (openToAnyone . ManaOption.ability) options) && null borrowed) || Projection.controllerOf oid gs == Just pid
+      -- CR 106.6: a grant's restriction rides on the yield the supply counts,
+      -- as it will on the mana Pawl.Engine.Cost.tapForManaWith adds.
+      restricted extra (activations, yield, manaCost, own) = (activations, maybe yield (`restrictMana` yield) extra, manaCost, own)
+      counted = concatMap (\option -> foldMap (\extra -> fmap (restricted extra) (perCandidate option)) (routeAccess controls borrowed (ManaOption.cost option) (ManaOption.ability option))) options
       available = filter (\(activations, _, _, _) -> Activations.times activations > 0) counted
       yieldOf (_, yield, _, _) = yield
       -- Ordered so `maximumBy` prefers the larger count, and a mana-free route
@@ -1101,10 +1110,12 @@ manaSourcesGiven inFlight capacity grants pcs pid gs =
       -- the tap and sickness rules reach only such a cost. A Blood Pet is a
       -- black source while tapped and on the turn it arrives, because
       -- "Sacrifice this creature: Add {B}" is neither (#1116).
-      isSource oid = any (\(cost, restrictions, ability, _) -> permitsRoute (Set.member oid mine) ability && not (inFlightRoute inFlight oid ability) && Activations.times (capacity ForOffer pcs pid oid cost restrictions ability gs) > 0) (manaRoutesOfGiven pcs oid gs)
-      -- CR 602.2's candidates: what this player controls, then CR 602.1b's
-      -- exception -- a permanent someone else controls, which isSource then
-      -- asks of its "any player may activate" routes alone.
+      isSource oid = any (\(cost, restrictions, ability, _) -> Maybe.isJust (routeAccess (Set.member oid mine) (borrowed oid) cost ability) && not (inFlightRoute inFlight oid ability) && Activations.times (capacity ForOffer pcs pid oid cost restrictions ability gs) > 0) (manaRoutesOfGiven pcs oid gs)
+      -- CR 602.2's candidates: what this player controls, then its exceptions
+      -- -- a permanent someone else controls, which isSource then asks of its
+      -- "any player may activate" routes (CR 602.1b) and of the {T} routes an
+      -- effect lets this player tap for mana (`borrowed`, Piracy).
+      borrowed = PlayerEffect.tapForManaGrants pid gs
       -- Activatable.activationSourcesGiven is the same list for the stack.
       own = Projection.controlsGiven grants pid gs
       mine = Set.fromList own
@@ -1128,12 +1139,93 @@ manaSourcesGiven inFlight capacity grants pcs pid gs =
    in filter (\oid -> isSource oid && (not landsOnly || (isLand oid && Set.member oid mine))) (own <> others)
 
 -- CR 602.2's permission over one mana route: the permanent's controller may
--- take any, and anyone else only one whose ability says any player may
--- activate it (CR 602.1b, Mana Cache). CR 305.6's intrinsic route prints no
--- such clause. Whoever takes it controls it (CR 109.4a, CR 113.8), so the
+-- take any, and anyone else one whose ability says any player may activate it
+-- (CR 602.1b, Mana Cache) or, where an effect lets them tap the permanent for
+-- mana (`borrowed`, PlayerEffect.tapForManaGrants), one whose cost includes
+-- {T} (CR 106.12, Piracy). CR 305.6's intrinsic route prints no such clause
+-- but costs {T}. Whoever takes it controls it (CR 109.4a, CR 113.8), so the
 -- mana is theirs. `controls` is asked second, so a caller may pass it lazily.
-permitsRoute :: Bool -> Maybe (ActivatedAbility.ActivatedAbility c g) -> Bool
-permitsRoute controls ability = openToAnyone ability || controls
+--
+-- Nothing where the route is refused; otherwise the CR 106.6 restriction the
+-- permission adds to the mana, Nothing for none. Taken under a grant, the mana
+-- carries the grant's restriction.
+--
+-- Not implemented: a choice between two grants whose restrictions differ; the
+-- first is taken (#5459).
+routeAccess :: Bool -> [Maybe ManaRestriction.ManaRestriction] -> Cost Keyword.Keyword -> Maybe (ActivatedAbility.ActivatedAbility c g) -> Maybe (Maybe ManaRestriction.ManaRestriction)
+routeAccess controls borrowed cost ability
+  | openToAnyone ability || controls = Just Nothing
+  | List.elem CostComponent.TapThis (Cost.components cost) = case borrowed of
+      grants | any Maybe.isNothing grants -> Just Nothing
+      grant : _ -> Just grant
+      [] -> Nothing
+  | otherwise = Nothing
+
+-- CR 106.6 / 106.6a: every unit of the yield also carries this restriction.
+restrictMana :: ManaRestriction.ManaRestriction -> Mana -> Mana
+restrictMana extra = Mana.MkMana . fmap (restrictUnit extra) . unitsOf
+
+restrictUnit :: ManaRestriction.ManaRestriction -> ManaUnit -> ManaUnit
+restrictUnit extra unit = unit {ManaUnit.restriction = Just (meetRestriction extra (ManaUnit.restriction unit))}
+
+-- CR 106.6: the restriction admitting the payments both admit, as
+-- `admitsUnder` reads them. Pawl.ScenarioSpec's "CR 106.6 mana alice taps from
+-- bob's Workshop under Piracy" proves the Workshop's half survives.
+--
+-- Not implemented: an exact conjunction where both name activations, one by
+-- keyword and the other by filter, or a keyword each under two prohibitions;
+-- the activation half is refused instead (#5459).
+meetRestriction :: ManaRestriction.ManaRestriction -> Maybe ManaRestriction.ManaRestriction -> ManaRestriction.ManaRestriction
+meetRestriction one = maybe one (\other -> if ManaRestriction.prohibits one then (if ManaRestriction.prohibits other then eitherProhibits one other else excluding other one) else (if ManaRestriction.prohibits other then excluding one other else alongside one other))
+  where
+    both a b = Filter.Type.And [a, b]
+    -- Two permissions: each half admits what both admit.
+    alongside a b =
+      let halves r = (ManaRestriction.activations r, ManaRestriction.keywordActivations r)
+          (activations, keywords) = case (halves a, halves b) of
+            (x, y) | x == y -> x
+            ((Just f, Nothing), (Just g, Nothing)) -> (Just (both f g), Nothing)
+            _ -> (Nothing, Nothing)
+       in ManaRestriction.MkManaRestriction
+            { ManaRestriction.casts = both <$> ManaRestriction.casts a <*> ManaRestriction.casts b,
+              ManaRestriction.activations = activations,
+              ManaRestriction.keywordActivations = keywords,
+              ManaRestriction.unlocks = both <$> ManaRestriction.unlocks a <*> ManaRestriction.unlocks b,
+              ManaRestriction.turnsFaceUp = both <$> ManaRestriction.turnsFaceUp a <*> ManaRestriction.turnsFaceUp b,
+              ManaRestriction.prohibits = False
+            }
+    -- A permission less a prohibition: each half the permission admits, less
+    -- what the prohibition names.
+    excluding permit prohibit =
+      let less half = fmap (\allowed -> maybe allowed (both allowed . Filter.Type.Not) (half prohibit)) (half permit)
+          keywordFree = Maybe.isNothing (ManaRestriction.keywordActivations prohibit)
+       in ManaRestriction.MkManaRestriction
+            { ManaRestriction.casts = less ManaRestriction.casts,
+              ManaRestriction.activations = if keywordFree then less ManaRestriction.activations else Nothing,
+              ManaRestriction.keywordActivations = if keywordFree && Maybe.isNothing (ManaRestriction.activations prohibit) then ManaRestriction.keywordActivations permit else Nothing,
+              ManaRestriction.unlocks = less ManaRestriction.unlocks,
+              ManaRestriction.turnsFaceUp = less ManaRestriction.turnsFaceUp,
+              ManaRestriction.prohibits = False
+            }
+    -- Two prohibitions: each half refuses what either names.
+    eitherProhibits a b =
+      let named half = case (half a, half b) of
+            (Just x, Just y) -> Just (Filter.Type.Or [x, y])
+            (x, Nothing) -> x
+            (Nothing, y) -> y
+          keywords = case (ManaRestriction.keywordActivations a, ManaRestriction.keywordActivations b) of
+            (x, Nothing) -> Right x
+            (Nothing, y) -> Right y
+            (x, y) | x == y -> Right x
+            _ -> Left ()
+       in ManaRestriction.MkManaRestriction
+            { ManaRestriction.casts = named ManaRestriction.casts,
+              ManaRestriction.activations = either (const (Just (Filter.Type.And []))) (const (named ManaRestriction.activations)) keywords,
+              ManaRestriction.keywordActivations = Either.fromRight Nothing keywords,
+              ManaRestriction.unlocks = named ManaRestriction.unlocks,
+              ManaRestriction.turnsFaceUp = named ManaRestriction.turnsFaceUp,
+              ManaRestriction.prohibits = True
+            }
 
 -- Does this route's ability say any player may activate it (CR 602.1b)?
 openToAnyone :: Maybe (ActivatedAbility.ActivatedAbility c g) -> Bool
@@ -2559,7 +2651,8 @@ payableResolutionsGiven subject capacity spending sources pcs pid committed comm
       -- then cannot pay.
       clauses = PlayerEffect.spendManaAsThoughFor pid subject gs
       pooled = fmap (rewriteSupply clauses . supplyOf admitting) (unitsOf (Game.poolOf pid gs))
-      suppliesPer = fmap (\oid -> manaSuppliesGiven capacity pcs pid oid gs) sources
+      borrowed = PlayerEffect.tapForManaGrants pid gs
+      suppliesPer = fmap (\oid -> manaSuppliesGiven capacity pcs pid (borrowed oid) oid gs) sources
       -- WHICH groups are worth taking fewer times: the ones whose claims meet
       -- another group's, this source's included, or the cost's own. Asked
       -- GROUPWISE, one entry per sourceOptions group plus `claimed`, so one
