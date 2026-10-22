@@ -719,6 +719,12 @@ spec s = Spec.describe s "Pawl.Codec.Filter" $ do
       codec
       (Filter.Not (Filter.HasColor Color.Black))
       " {\"type\":\"Not\",\"value\":{\"type\":\"HasColor\",\"value\":{\"type\":\"Black\"}}} "
+  Spec.it s "Unwritten" $
+    Common.assertCodec
+      s
+      codec
+      (Filter.Unwritten (Filter.HasColor Color.White))
+      " {\"type\":\"Unwritten\",\"value\":{\"type\":\"HasColor\",\"value\":{\"type\":\"White\"}}} "
   -- Nested And/Or/Not, exercising the recursion the per-constructor cases above
   -- do not.
   Spec.it s "nested And/Or/Not round-trips" $

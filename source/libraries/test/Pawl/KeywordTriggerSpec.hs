@@ -2025,7 +2025,7 @@ championSpec s registry =
           Spec.assertEqWith s "CR 702.72a nothing was exiled" (namesIn Zone.Exile S.bob after) []
           Spec.assertEqWith s "the Russet Wolves alice would have exiled stayed" (S.countOnBattlefieldByName (CardName.MkCardName (Text.pack "Russet Wolves")) S.bob after) 1
           Spec.assertEqWith s "and so did the Goblin Piker" (S.countOnBattlefieldByName pikerName S.alice after) 1
-        -- CR 612.1 / 613.7 through the MINT: two Artificial Evolutions ({U}
+        -- CR 612.1 / 613.7 through the keyword's payload: two Artificial Evolutions ({U}
         -- Instant, "Change the text of target spell or permanent by replacing
         -- all instances of one creature type with another. The new creature
         -- type can't be Wall." -- checked against Scryfall 2026-09-24) on the

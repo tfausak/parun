@@ -413,7 +413,10 @@ Entries are ordered by the first rule each cites.
   Never a mana symbol, so mana an effect produces and every cost keep their
   colour, and never the object's own colour, which comes from its mana cost
   and colour indicator (CR 105.2, 202.2e) rather than from text. "Colorless"
-  is no colour (CR 105.4) and so no colour word.
+  is no colour (CR 105.4) and so no colour word. Neither is a colour a card
+  reaches without naming it: "mana of any color" (CR 609.4b, stored as all
+  five, which only that phrase writes) and "protection from each color" (CR
+  702.16h, stored under `Filter.Unwritten`) keep every colour.
 - **Rejected**: Reaching mana symbols too, on CR 612.1's "words or symbols":
   CR 612.2 limits a colour-word change to words, and the cards' own rulings
   ("It only changes what is printed on the card") describe text. Leaving
@@ -423,6 +426,31 @@ Entries are ordered by the first rule each cites.
   `Pawl.Engine.Projection.Rewrite`'s rewriteModification, rewriteFace,
   rewriteManaFilter, rewriteCostScale and Devotion arm; proved by the
   `data/scenarios/text-change/` scenarios.
+- **Issue**: #4819.
+
+## What a text change reaches inside a keyword
+
+- **Question**: Rule 702 defines what a keyword ability does, and its words
+  (afterlife's "white and black Spirit", mobilize's "red Warrior", Aura
+  swap's "Aura card") appear on the card only as reminder text. Does CR 612's
+  text change reach them?
+- **Rules**: CR 612.1, 612.2, 207.2, 207.2a, 702.14a, 702.135a, 702.181a; CR
+  of 2026-08-07.
+- **Decision**: Only a word the keyword is WRITTEN with: a payload rule 702
+  states as a variable, such as landwalk's "[type]", cycling's "[type]",
+  protection's and hexproof's quality, champion's object. Those are rewritten
+  at layer 3 in the keyword itself. What the rule writes for itself is
+  untouched, so an evolved Ministrant of Obligation still leaves Spirits and a
+  Sleighted Dalkovan Packbeasts still makes red Warriors.
+- **Rejected**: Rewriting the whole ability as it is minted, the earlier
+  reading: CR 612.1 reaches "words or symbols printed on that object", and
+  CR 207.2 gives reminder text no game function, so the rule's own words are
+  not the card's.
+- **Site**: `Pawl.Engine.Projection.mintedTriggeredAbilitiesOf` and
+  `Pawl.Engine.Count.abilitiesOf`, which mint without a swap; proved by the
+  scenarios "CR 207.2a / 612.2 a Sleight of Mind on Dalkovan Packbeasts
+  leaves its mobilized Warriors red" and "CR 207.2a / 612.2 an evolved
+  Ministrant of Obligation still leaves Spirits".
 - **Issue**: #4819.
 
 ## Which timestamp the suspected designation's abilities have

@@ -27,7 +27,7 @@ import qualified Pawl.Engine.Filter as Filter
 import qualified Pawl.Engine.Game as Game
 import qualified Pawl.Engine.Keyword as Keyword
 import qualified Pawl.Engine.NameWords as NameWords
-import Pawl.Engine.Projection.Rewrite (Modification, composeWordChanges, rewriteActivatedAbility, rewriteAffected, rewriteCharacteristicPT, rewriteCondition, rewriteMinted, rewriteModification, rewritePlayerStaticAbility, rewritePrintedReplacement, rewriteRuleAbilities, rewriteStaticAbility, rewriteTriggeredAbility)
+import Pawl.Engine.Projection.Rewrite (Modification, composeWordChanges, rewriteActivatedAbility, rewriteAffected, rewriteCharacteristicPT, rewriteCondition, rewriteModification, rewritePlayerStaticAbility, rewritePrintedReplacement, rewriteRuleAbilities, rewriteStaticAbility, rewriteTriggeredAbility)
 import Pawl.Engine.Projection.View (ControlGrant, abilitiesFromCharacteristics, abilityFaceOf, abilityFaceOfId, abilitySources, controlGrants, controllerOf, controllerOfGiven, copiableCharacteristics, copiableRuleAbilitiesOf, copiableSnapshotOf, copiableSpecialActionsOf, correspondsTo, countersOf, definesColorless, definesEveryCreatureType, enchantedPlayerOf, functionsFromZone, grantedStaticAbilitiesOf, inSourceRangeGiven, lapsedGrantsOf, retainedThroughCardTypeSet, staticAbilitiesOf, staticTimestampOf, viewOfCard, viewOfCharacteristics, withAnnouncedX)
 import qualified Pawl.Engine.Quantity as Quantity
 import qualified Pawl.Engine.RuleAbilities as RuleAbilities.Engine
@@ -576,17 +576,17 @@ applyModification textBoxOf viewOf src stamp gs oid unitTypes affected m pc =
         -- Mind group proves it.
         --
         -- Map.mapKeysWith (+) rather than Map.mapKeys: the swap can collide two
-        -- keys, as with islandwalk and swampwalk hacked Island -> Swamp. Rule
-        -- 702's minted abilities are built after this fold, so the pair is
-        -- recorded in PC.wordChanges for the mint, in CR 613.1 order.
+        -- keys, as with islandwalk and swampwalk hacked Island -> Swamp. The pair
+        -- is recorded in PC.wordChanges, in CR 613.1 order, so CR 612.5's
+        -- exchange can carry it with the text (textChangesAffecting). Rule 702's
+        -- minted abilities take no swap of their own: the keyword's written
+        -- payload is the only word in them a text change reaches, and it is
+        -- rewritten here.
         --
-        -- The REWRITTEN counts also go to PC.textChangedKeywords, which is what
-        -- CR 612.3 costs: the mint has to tell the instances layer 3 reached from
-        -- the ones layer 6 grants afterwards. Taken here rather than beside the
-        -- mint so it lands after the key remap above -- a snapshot of the
-        -- pre-remap keys would miss a keyword whose own payload carries a subtype.
-        -- Later text changes overwrite it, which is right: layer 3 finishes before
-        -- layer 6 begins, so the last one holds the counts every grant follows.
+        -- The REWRITTEN counts also go to PC.textChangedKeywords, the keywords
+        -- as layer 3 leaves them, before layer 6 grants any. Taken here rather
+        -- than later so it lands after the key remap above. Later text changes
+        -- overwrite it, which is right: layer 3 finishes before layer 6 begins.
         --
         -- rewriteWithCounters below guards the same hazard on an ENTRY ROW's
         -- counter kinds, where the values are Quantities and the combiner is
@@ -3930,6 +3930,7 @@ filterReads f = case f of
   Filter.Type.And fs -> foldMap filterReads fs
   Filter.Type.Or fs -> foldMap filterReads fs
   Filter.Type.Not g -> filterReads g
+  Filter.Type.Unwritten g -> filterReads g
 
 -- Whether a Filter's answer can turn on ANOTHER object's projection: the five
 -- Filter.View fields viewOfCharacteristics fills through `peers` --
@@ -3987,6 +3988,7 @@ filterReadsPeers f = case f of
   Filter.Type.And fs -> any filterReadsPeers fs
   Filter.Type.Or fs -> any filterReadsPeers fs
   Filter.Type.Not g -> filterReadsPeers g
+  Filter.Type.Unwritten g -> filterReadsPeers g
   -- Everything below reads the candidate's own view field, or the Context, or the
   -- GameState -- never a second projection.
   Filter.Type.HasCardType _ -> False
@@ -5636,16 +5638,9 @@ intrinsicReplacementsOf announcedX phyrexianLifePaid castUsing pc =
                (Maybe.maybeToList (PC.defense pc))
            else []
        )
-    -- No CR 612.1 rewrite through Rewrite.rewriteMinted, which its sibling mints
-    -- take, because there is nothing for one to change: every subtype word in
-    -- Keyword.mintedReplacementsFor's rows is a keyword PAYLOAD (protection's
-    -- quality, devour's), which layer 3 already rewrote through
-    -- Filter.rewriteKeyword, and rule 702 writes none of its own there. Bestow's
-    -- "becomes an Aura" is not one either: it is CR 702.103b's rule, not the
-    -- ability CR 702.103a defines, and it reaches the fold as
-    -- Keyword.bestowModifications rather than as a row here. rewriteMinted's
-    -- per-instance split would also mint protection's one row per key twice
-    -- once a granted instance joins a printed one.
+    -- No CR 612.1 rewrite, as for every mint (mintedTriggeredAbilitiesOf): a
+    -- keyword PAYLOAD (protection's quality, devour's) was already rewritten at
+    -- layer 3 through Filter.rewriteKeyword.
     <> Keyword.mintedReplacementsOf (PC.keywords pc)
     <> Keyword.castForReplacementsOf castUsing (PC.keywords pc)
     -- CR 714.3a's intrinsic lore counter -- or CR 714.3b's chosen number, which
@@ -6337,11 +6332,13 @@ triggeredAbilitiesOf :: ObjectId -> GameState -> [TriggeredAbility Card.Type.Car
 triggeredAbilitiesOf oid gs = PC.triggeredAbilities (project oid gs)
 
 -- The other half of that list: the triggered abilities rule 702 MINTS from a
--- finished projection's keyword counts, with the object's CR 612 text changes
--- applied by rewriteMinted, which says why the rewrite is at the mint and why it
--- covers the whole ability.
+-- finished projection's keyword counts. No CR 612 text change reaches what the
+-- mint writes: those words are the rule's, which CR 207.2a's reminder text only
+-- summarizes, and a keyword's own written word (champion's quality) was already
+-- swapped at layer 3 (docs/decisions.md, "What a text change reaches inside a
+-- keyword").
 mintedTriggeredAbilitiesOf :: ProjectedCharacteristics -> [TriggeredAbility Card.Type.Card (GrantedAbility.GrantedAbility Card.Type.Card)]
-mintedTriggeredAbilitiesOf = rewriteMinted rewriteTriggeredAbility Keyword.triggeredAbilitiesOf
+mintedTriggeredAbilitiesOf = Keyword.triggeredAbilitiesOf . PC.keywords
 
 -- CR 702.5a / 613 layer 6: the object's enchant abilities after the fold --
 -- printed and granted together, which is what Modification.GainEnchant exists to

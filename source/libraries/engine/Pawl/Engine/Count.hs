@@ -25,7 +25,6 @@ import qualified Pawl.Engine.Game as Game
 import qualified Pawl.Engine.Keyword as Keyword
 import qualified Pawl.Engine.ManaAbility as ManaAbility
 import qualified Pawl.Engine.Players as Players
-import qualified Pawl.Engine.Projection.Rewrite as Rewrite
 import qualified Pawl.Engine.Subtype as Subtype
 import qualified Pawl.Types.ActivatedAbility as ActivatedAbility
 import qualified Pawl.Types.Aggregation as Aggregation
@@ -327,6 +326,7 @@ bakePerspective viewOf context gs candidate predicate =
         Filter.Type.And fs -> Filter.Type.And (fmap recur fs)
         Filter.Type.Or fs -> Filter.Type.Or (fmap recur fs)
         Filter.Type.Not f -> Filter.Type.Not (recur f)
+        Filter.Type.Unwritten f -> Filter.Type.Unwritten (recur f)
         Filter.Type.HasCardType _ -> predicate
         Filter.Type.HasSupertype _ -> predicate
         Filter.Type.HasColor _ -> predicate
@@ -1095,23 +1095,18 @@ becamePermanents spell events =
 
 -- CR 602.1: every activated ability a set of characteristics gives,
 -- Keyword.activatedAbilitiesOf over the projection's own list and rule 702's
--- battlefield mint taken through its CR 612 text changes (Rewrite.rewriteMinted,
--- Pawl.AuraSpec's "CR 612.1 an Aura swap changed to Background" pair). CR
+-- battlefield mint, which no CR 612 text change reaches (Projection's
+-- mintedTriggeredAbilitiesOf says why). CR
 -- 804.2's where `deploys`, which the caller decides: Deploy.grants over the
 -- characteristics, and only for a permanent (CR 109.2).
 --
--- The hand and graveyard mints take no text change, since none can reach them
--- where they function: CR 400.7 ends one when its object changes zones, and
--- every "change the text" printing names a spell or a permanent, or a card type
--- word rather than a subtype (Scryfall `o:"change the text" include:extras`,
--- 2026-10-06, Deceptive Divination the one card-type hit). A card in a hand or
--- graveyard changed by a word swap would refute it.
+-- The hand and graveyard mints take no text change either.
 abilitiesOf :: Bool -> PC.ProjectedCharacteristics -> [ActivatedAbility.ActivatedAbility Card.Card (GrantedAbility.GrantedAbility Card.Card)]
 abilitiesOf deploys pc =
   Keyword.activatedAbilitiesOf
     deploys
     (Map.keysSet (PC.keywords pc))
-    (PC.activatedAbilities pc <> Rewrite.rewriteMinted Rewrite.rewriteActivatedAbility Keyword.battlefieldAbilitiesOf pc)
+    (PC.activatedAbilities pc <> Keyword.battlefieldAbilitiesOf (PC.keywords pc))
 
 -- The Filter.View a recorded snapshot yields, shared by every arm of
 -- snapshotView above so that two shapes of event cannot disagree about what a

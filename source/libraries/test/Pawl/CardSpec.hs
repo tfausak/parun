@@ -3258,10 +3258,13 @@ protectionGroups face =
 protectionDomains :: [Filter.Type.Filter Keyword.Keyword] -> [(String, Bool)]
 protectionDomains qualities =
   Maybe.catMaybes
-    [ domain "color" [color | Filter.Type.HasColor color <- qualities],
-      domain "card type" [cardType | Filter.Type.HasCardType cardType <- qualities]
+    [ domain "color" [color | Filter.Type.HasColor color <- fmap unwritten qualities],
+      domain "card type" [cardType | Filter.Type.HasCardType cardType <- fmap unwritten qualities]
     ]
   where
+    unwritten quality = case quality of
+      Filter.Type.Unwritten nested -> nested
+      _ -> quality
     domain :: (Bounded a, Enum a, Ord a) => String -> [a] -> Maybe (String, Bool)
     domain label named =
       let size = Set.size (Set.fromList named)
@@ -3270,10 +3273,21 @@ protectionDomains qualities =
     universe _ = [minBound .. maxBound]
 
 -- What a face owes CR 702.16g and 702.16h: a group from one domain is
--- classified, and a "from each" group is the whole domain.
+-- classified, and a "from each" group is the whole domain, each quality under
+-- Filter.Unwritten since the card writes no word a CR 612.2 text change could
+-- swap.
 protectionOffences :: Face.Face Card.Type.Card -> [String]
-protectionOffences face = concatMap judge (concatMap protectionDomains (protectionGroups face))
+protectionOffences face =
+  concatMap judge (concatMap protectionDomains (protectionGroups face))
+    <> [ "protection from each holds a written quality"
+       | Set.member (Face.name face) protectionFromEach,
+         quality <- concat (protectionGroups face),
+         not (isUnwritten quality)
+       ]
   where
+    isUnwritten quality = case quality of
+      Filter.Type.Unwritten _ -> True
+      _ -> False
     judge (label, complete)
       | Set.member (Face.name face) protectionFromEach = ["protection from each " <> label <> " misses one" | not complete]
       | Set.member (Face.name face) protectionListed = []
@@ -7741,7 +7755,7 @@ lintSpec s registry = Spec.describe s "Lint" $ do
     ward <- S.combinedFace <$> S.printingOf s registry "Spectra Ward"
     paladin <- S.combinedFace <$> S.printingOf s registry "Paladin en-Vec"
     let isGreen keyword = case keyword of
-          Keyword.Protection protection -> Protection.quality protection == Filter.Type.HasColor Color.Green
+          Keyword.Protection protection -> Protection.quality protection == Filter.Type.Unwritten (Filter.Type.HasColor Color.Green)
           _ -> False
         keepModification modification = case modification of
           Modification.GainKeyword keyword -> not (isGreen keyword)

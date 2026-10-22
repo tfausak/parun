@@ -209,6 +209,7 @@ filterAtomsOf leaf predicate = case predicate of
   Filter.Type.And fs -> foldMap (filterAtomsOf leaf) fs
   Filter.Type.Or fs -> foldMap (filterAtomsOf leaf) fs
   Filter.Type.Not f -> filterAtomsOf leaf f
+  Filter.Type.Unwritten f -> filterAtomsOf leaf f
   -- A Filter position like the combinators above, and the only ATOM that is one:
   -- CR 110.2's comparison carries the description of what is being counted, which
   -- a card author writes exactly as they write any other filter.

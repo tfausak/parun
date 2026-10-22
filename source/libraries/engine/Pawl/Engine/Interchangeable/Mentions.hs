@@ -564,6 +564,7 @@ filterNames asking criterion = case criterion of
   Filter.And nested -> foldMap (filterNames asking) nested
   Filter.Or nested -> foldMap (filterNames asking) nested
   Filter.Not nested -> filterNames asking nested
+  Filter.Unwritten nested -> filterNames asking nested
 
 abilityAddsManaNames :: (Monoid r) => Asking r -> AbilityAddsMana.AbilityAddsMana -> r
 abilityAddsManaNames asking x = case x of

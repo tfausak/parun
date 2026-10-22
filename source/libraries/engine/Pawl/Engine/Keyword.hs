@@ -7366,9 +7366,9 @@ paidTokenCopies keyword quantity exceptions ordinal =
 -- adjectives the token's whole text. Both colours ride the colorIndicator, a token
 -- having no mana cost to read a colour off (CR 105.2).
 --
--- CR 612.2a's text change reaches the Spirit written here even though the mint
--- runs after the CR 613 layer fold: layer 3 records its pairs on the projection
--- and Projection.mintedTriggeredAbilitiesOf applies them to whatever this returns.
+-- No CR 612 text change reaches the Spirit or its colours: they are the rule's
+-- words, not the card's (docs/decisions.md, "What a text change reaches inside a
+-- keyword").
 afterlife :: Natural -> TriggeredAbility Card (GrantedAbility.GrantedAbility Card)
 afterlife n =
   let spawn =

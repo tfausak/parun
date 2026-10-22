@@ -9,7 +9,6 @@ import qualified Data.List as List
 import qualified Data.Map.Strict as Map
 import qualified Data.Set as Set
 import qualified Data.Text as Text
-import Numeric.Natural (Natural)
 import qualified Pawl.Engine.Filter as Filter
 import qualified Pawl.Engine.Subtype as Subtype
 import qualified Pawl.Engine.TextWord as TextWord.Engine
@@ -61,7 +60,6 @@ import qualified Pawl.Types.CastFromZone as CastFromZone
 import qualified Pawl.Types.CastOffer as CastOffer
 import qualified Pawl.Types.CastRepetition as CastRepetition
 import qualified Pawl.Types.ChangeText as ChangeText
-import qualified Pawl.Types.ChangeWord as ChangeWord
 import qualified Pawl.Types.CharacteristicPT as CharacteristicPT
 import qualified Pawl.Types.ChooseCardName as ChooseCardName
 import qualified Pawl.Types.ChoosePermanents as ChoosePermanents
@@ -151,7 +149,6 @@ import qualified Pawl.Types.GrantLookAtExiled as GrantLookAtExiled
 import qualified Pawl.Types.GrantPlayFromExile as GrantPlayFromExile
 import qualified Pawl.Types.GrantedAbility as GrantedAbility
 import qualified Pawl.Types.HowMany as HowMany
-import Pawl.Types.Keyword (Keyword)
 import qualified Pawl.Types.LibraryPlacement as LibraryPlacement
 import qualified Pawl.Types.LifeLoss as LifeLoss
 import qualified Pawl.Types.LimitUnless as LimitUnless
@@ -202,8 +199,6 @@ import qualified Pawl.Types.PreventNextDamage as PreventNextDamage
 import qualified Pawl.Types.PreventNextDamageInstance as PreventNextDamageInstance
 import qualified Pawl.Types.PrintedReplacement as PrintedReplacement
 import qualified Pawl.Types.Prohibit as Prohibit
-import Pawl.Types.ProjectedCharacteristics (ProjectedCharacteristics)
-import qualified Pawl.Types.ProjectedCharacteristics as PC
 import qualified Pawl.Types.PutCounters as PutCounters
 import qualified Pawl.Types.PutCountersFrom as PutCountersFrom
 import qualified Pawl.Types.PutSticker as PutSticker
@@ -1095,53 +1090,6 @@ composeWordChanges pairs =
   let image s = List.foldl' (\x (from, to) -> if x == from then to else x) s pairs
    in Map.toList (Map.filterWithKey (/=) (Map.fromSet image (Set.fromList (fmap fst pairs))))
 
--- CR 612.1 / 612.2a over what rule 702 MINTS from a finished projection's
--- keyword counts, with the object's text changes applied. The rewrite happens at
--- the mint rather than at layer 3 because a keyword's rules text is the rule's,
--- not the card's, so the words a text change reaches do not exist until the mint
--- runs.
---
--- The WHOLE minted ability is rewritten, payload words included. A payload word
--- (Champion's quality, equip's) was already rewritten at layer 3 through
--- Filter.rewriteKeyword and meets the composed table a second time here; outside
--- a dependency loop that is the identity, because CR 613.8b puts every swap
--- after any swap that makes its word, so no word the table produces is one it
--- maps again. Rewriting only the words rule 702's own text writes would need the
--- mint to say which those are, and would answer the same. Pawl.KeywordTriggerSpec's
--- "CR 613.7 two Evolutions on Wanderwine Prophets champion a Merfolk" proves it.
---
--- CR 612.3 stops the rewrite at the instances layer 3 actually reached: an
--- ability GRANTED at CR 613.1f layer 6 arrives after the swap and keeps rule
--- 702's printed word. PC.textChangedKeywords is the layer-3 count and
--- PC.keywords the live one, so the split is per INSTANCE (CR 702.135b) rather
--- than per object -- a permanent printing afterlife and granted afterlife again
--- mints its printed instance with the swapped word and its granted one with rule
--- 702.135a's own. That needs `mint` to answer one result per instance it is
--- handed, and nothing for none.
---
--- `min` keeps `live - changed` total. It cannot bite today, and the mutation that
--- removes it leaves the suite green: every layer-6 write to PC.keywords either
--- adds one instance, DELETES whole keys (Modification.LoseKeyword and
--- Modification.LoseKeywordFamily, which the CR gives no way to spend one
--- instance of) or empties the map, so a live count strictly between zero and the
--- layer-3 count is unreachable, and a deleted key is not walked at all. It is
--- arithmetic insurance, not a rule -- which surviving instance counts as the
--- printed one is a question CR 702.135b leaves moot, the instances being
--- interchangeable.
---
--- One keyword at a time, in Map.toAscList order, which is the walk every mint
--- in Pawl.Engine.Keyword takes, so a reader indexing into the result (CR
--- 603.3b's ordering prompt, an activation's ability index) sees the order it did
--- before the split.
-rewriteMinted :: ([(TextWord.TextWord, TextWord.TextWord)] -> a -> a) -> (Map.Map Keyword Natural -> [a]) -> ProjectedCharacteristics -> [a]
-rewriteMinted rewriteOne mint pc =
-  let pairs = composeWordChanges (fmap (\c -> (ChangeWord.from c, ChangeWord.to c)) (PC.wordChanges pc))
-      mintOne keyword count = mint (Map.singleton keyword count)
-      instances (keyword, live) =
-        let changed = min live (Map.findWithDefault 0 keyword (PC.textChangedKeywords pc))
-         in fmap (rewriteOne pairs) (mintOne keyword changed) <> mintOne keyword (live - changed)
-   in concatMap instances (Map.toAscList (PC.keywords pc))
-
 -- CR 612.2 over a mana type a card WRITES as a word -- "white mana", "spent as
 -- though it were red mana" -- which is a colour word used as one, where a mana
 -- symbol ("Add {W}") is no word and an effect producing mana is never
@@ -1162,10 +1110,14 @@ rewriteWrittenManaType pairs t = case t of
 -- "white mana as though it were red mana".
 rewriteSpendManaAsThough :: [(TextWord.TextWord, TextWord.TextWord)] -> SpendManaAsThough.SpendManaAsThough -> SpendManaAsThough.SpendManaAsThough
 rewriteSpendManaAsThough pairs clause =
-  clause
-    { SpendManaAsThough.which = rewriteManaFilter pairs (SpendManaAsThough.which clause),
-      SpendManaAsThough.asThough = Set.map (rewriteWrittenManaType pairs) (SpendManaAsThough.asThough clause)
-    }
+  let asThough = SpendManaAsThough.asThough clause
+      -- CR 609.4b's "mana of any color" (Celestial Dawn) names no colour word,
+      -- and a set holding all five can only have been written that way.
+      anyColor = all (\c -> Set.member (ManaType.Colored c) asThough) [minBound ..]
+   in clause
+        { SpendManaAsThough.which = rewriteManaFilter pairs (SpendManaAsThough.which clause),
+          SpendManaAsThough.asThough = if anyColor then asThough else Set.map (rewriteWrittenManaType pairs) asThough
+        }
 
 -- CR 612.1 through a damage pattern's two criteria.
 rewriteDamagePattern :: [(TextWord.TextWord, TextWord.TextWord)] -> DamagePattern.DamagePattern -> DamagePattern.DamagePattern
@@ -1195,15 +1147,18 @@ swapWordIn family pairs s = case swapTextWordIn (Set.singleton family) pairs (Te
   TextWord.SubtypeWord t -> t
   TextWord.ColorWord _ -> s
 
--- CR 612.1 through an Alchemy conjure's card half. A written candidate is card
--- data and takes the same walk as any other nested card; a duplicate names an
+-- CR 612.1 through an Alchemy conjure's card half. A written candidate is named,
+-- not written, so it takes no walk; a duplicate names an
 -- object already in the game and takes the ObjectRef walk below, since the card
 -- it duplicates is read off the board rather than out of the opcode; a
 -- reference pick's filter and bound are the opcode's own words, and take the
 -- walks every filter and quantity does.
 rewriteConjureCards :: [(TextWord.TextWord, TextWord.TextWord)] -> ConjureCards.ConjureCards Card.Type.Card -> ConjureCards.ConjureCards Card.Type.Card
 rewriteConjureCards pairs cards = case cards of
-  ConjureCards.Written written -> ConjureCards.Written (fmap (rewriteCard pairs) written)
+  -- Alchemy conjures a card by NAME (Lam, Storm-Crane Elder's "conjure a
+  -- Monastery Mentor"), so the card's own text is that card's and not this
+  -- effect's, and CR 612.2 keeps a swap off the name.
+  ConjureCards.Written _ -> cards
   ConjureCards.Duplicate ref -> ConjureCards.Duplicate (rewriteObjectRef pairs ref)
   ConjureCards.Reference (FromReference.MkFromReference predicate amount) -> ConjureCards.Reference (FromReference.MkFromReference (Filter.rewrite pairs predicate) (fmap (rewriteQuantity pairs) amount))
 

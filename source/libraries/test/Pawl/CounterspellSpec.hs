@@ -1554,15 +1554,13 @@ artificialEvolutionSpec s registry = Spec.describe s "ArtificialEvolution" $ do
     Spec.assertEqWith s "Goblin Warrior while it lived" (Projection.subtypesOf pikerId alive) (Set.fromList [Subtype.Goblin, Subtype.Warrior])
 
   -- CR 702.135b -- "if a permanent has multiple instances of afterlife, each
-  -- triggers separately" -- is what makes this per INSTANCE and not per object. A
-  -- Ministrant of Obligation holding its printed afterlife 2 and the Insurance's
-  -- granted afterlife 1 mints two Elves off the printed instance and one Spirit
-  -- off the granted one. "Never rewrite a minted ability" would give three
-  -- Spirits, and today's rewrite-everything gives three Elves.
-  Spec.it s "CR 702.135b an evolved Ministrant plus a granted afterlife leaves two Elves and a Spirit" $ do
+  -- triggers separately" -- with an Evolution on top: the Spirit is rule
+  -- 702.135a's word and no text change reaches it (CR 207.2a,
+  -- docs/decisions.md "What a text change reaches inside a keyword"), so the
+  -- printed afterlife 2 and the granted afterlife 1 alike leave Spirits.
+  Spec.it s "CR 702.135b an evolved Ministrant plus a granted afterlife leaves three Spirits" $ do
     (ministrantId, alive, tokens, after) <- insuredChain s registry "Ministrant of Obligation" (Just (Subtype.Spirit, Subtype.Elf))
-    Spec.assertEqWith s "two Elves and a Spirit" (tokenSubtypes tokens after) [[Subtype.Elf], [Subtype.Elf], [Subtype.Spirit]]
-    Spec.assertEqWith s "named for their own subtypes" (tokenNames tokens after) [[CardName.MkCardName (Text.pack "Elf Token")], [CardName.MkCardName (Text.pack "Elf Token")], [CardName.MkCardName (Text.pack "Spirit Token")]]
+    Spec.assertEqWith s "three Spirits" (tokenSubtypes tokens after) [[Subtype.Spirit], [Subtype.Spirit], [Subtype.Spirit]]
     Spec.assertBool s (Projection.hasKeyword (Keyword.Afterlife 1) ministrantId alive) "the granted instance"
     Spec.assertBool s (Projection.hasKeyword (Keyword.Afterlife 2) ministrantId alive) "beside the printed one"
 

@@ -2340,6 +2340,7 @@ matches context view predicate = case predicate of
   Filter.And fs -> all (matches context view) fs
   Filter.Or fs -> any (matches context view) fs
   Filter.Not f -> not (matches context view f)
+  Filter.Unwritten f -> matches context view f
 
 -- | CR 123.6-123.9: a sticker's kind, from what it says.
 stickerKindOf :: StickerContent.StickerContent -> StickerKind.StickerKind
@@ -2375,6 +2376,11 @@ rewrite pairs predicate = case predicate of
   Filter.And fs -> Filter.And (fmap (rewrite pairs) fs)
   Filter.Or fs -> Filter.Or (fmap (rewrite pairs) fs)
   Filter.Not f -> Filter.Not (rewrite pairs f)
+  -- Stopped, which is the atom's whole point: a colour the card never writes
+  -- as a word is none CR 612.2 can swap. The scenario "CR 702.16h / 612.2 a
+  -- Sleight of Mind on Spectra Ward leaves its protection from each color
+  -- whole" proves it.
+  Filter.Unwritten _ -> predicate
   Filter.HasCardType _ -> predicate
   Filter.HasSupertype _ -> predicate
   -- CR 612.2's colour word used as a colour word: "black creature", and the
@@ -3144,6 +3150,7 @@ bakeBound players objects predicate = case predicate of
   Filter.And fs -> Filter.And (fmap (bakeBound players objects) fs)
   Filter.Or fs -> Filter.Or (fmap (bakeBound players objects) fs)
   Filter.Not f -> Filter.Not (bakeBound players objects f)
+  Filter.Unwritten f -> Filter.Unwritten (bakeBound players objects f)
   -- Descended into for the reason `rewrite` descends: the nested filter is a
   -- filter like any other, and a slot named inside it must be baked before the
   -- match or it can never be answered.
@@ -3331,6 +3338,7 @@ manaValueThresholds predicate = case predicate of
   Filter.And fs -> concatMap manaValueThresholds fs
   Filter.Or fs -> concatMap manaValueThresholds fs
   Filter.Not f -> manaValueThresholds f
+  Filter.Unwritten f -> manaValueThresholds f
   -- Descended into, which OVER-reports: the literals inside bound the mana value
   -- of the permanents being counted, never the candidate's own. Reporting them
   -- only widens CR 601.3a's sample, and the alternative -- an empty list -- would
@@ -3485,6 +3493,7 @@ statesAQuality predicate = case predicate of
   Filter.And fs -> any statesAQuality fs
   Filter.Or fs -> all statesAQuality fs
   Filter.Not _ -> True
+  Filter.Unwritten f -> statesAQuality f
   -- A quality like any other atom's, whatever the nested filter says: a search
   -- whose predicate is this one is looking for cards with a stated quality, so CR
   -- 701.23b applies and no descent could change that.
@@ -3650,6 +3659,7 @@ readsSourceValues predicate = case predicate of
   Filter.And fs -> any readsSourceValues fs
   Filter.Or fs -> any readsSourceValues fs
   Filter.Not f -> readsSourceValues f
+  Filter.Unwritten f -> readsSourceValues f
   Filter.ControlsMoreThanYou _ f -> readsSourceValues f
   Filter.Measures m -> case Measures.operand m of
     Operand.OfSource _ -> True
@@ -3946,6 +3956,7 @@ overBoundSlotsWith f predicate = case predicate of
   Filter.And fs -> fmap Filter.And (traverse (overBoundSlotsWith f) fs)
   Filter.Or fs -> fmap Filter.Or (traverse (overBoundSlotsWith f) fs)
   Filter.Not g -> fmap Filter.Not (overBoundSlotsWith f g)
+  Filter.Unwritten g -> fmap Filter.Unwritten (overBoundSlotsWith f g)
 
 -- overBoundSlotsWith without the arity: CR 700.2d's rename.
 overBoundSlots :: (Applicative f) => (SlotName.SlotName -> f SlotName.SlotName) -> Filter.Filter Keyword.Type.Keyword -> f (Filter.Filter Keyword.Type.Keyword)

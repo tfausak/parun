@@ -311,10 +311,8 @@ data ProjectedCharacteristics = MkProjectedCharacteristics
     -- | CR 612.1 layer 3: the word swaps applied to the text box this
     -- object carries, in the order they were applied -- CR 612.5's exchange
     -- moves them with the text. A RECORD of what layer 3 did, where every field
-    -- above is the RESULT of it -- kept because rule 702's abilities are minted
-    -- from the finished keyword counts, after the fold, so the mint has no other
-    -- way to learn that the words it is about to write were changed (CR 612.2a,
-    -- Pawl.Engine.Projection.mintedTriggeredAbilitiesOf).
+    -- above is the RESULT of it -- kept so an exchange carries the swaps with the
+    -- text (Pawl.Engine.Projection.textChangesAffecting).
     --
     -- A list rather than a set or a map: two swaps compose in order (Faerie ->
     -- Elf then Elf -> Goblin is not the same pair of effects as the reverse),
@@ -325,21 +323,9 @@ data ProjectedCharacteristics = MkProjectedCharacteristics
     -- seed, so copiableCharacteristics never carries one.
     wordChanges :: [ChangeWord.ChangeWord],
     -- | CR 612.3: the `keywords` counts as the LAST layer-3 text change left
-    -- them. The other half of wordChanges above -- that field says which
-    -- words layer 3 swapped, and this one says which keyword instances layer 3
-    -- was in a position to reach at all, so the mint can tell a printed instance
-    -- (which the swap reached) from one CR 613.1f granted afterwards (which it
-    -- did not, and which keeps rule 702's printed word).
-    --
-    -- Counts and not a Set, because CR 702.135b makes each instance its own
-    -- ability: a permanent printing afterlife and granted afterlife again holds
-    -- two, and only the first is rewritten. The mint reads it against the live
-    -- `keywords` above rather than trusting it alone; the clamp there says why.
-    --
-    -- EMPTY when no text change ran, which reads as "every instance is granted".
-    -- That is inert rather than wrong: wordChanges is empty in the same
-    -- breath, so the mint's rewrite is the identity either way. The two are
-    -- written by the one applyModification arm precisely so they cannot disagree.
+    -- them, before CR 613.1f grants any: what CR 702.161a's full text mints its
+    -- static abilities from. Counts and not a Set, because CR 702.135b makes
+    -- each instance its own ability.
     --
     -- Not copiable, for wordChanges' reason and by the same construction.
     textChangedKeywords :: Map.Map Keyword.Keyword Natural.Natural,
