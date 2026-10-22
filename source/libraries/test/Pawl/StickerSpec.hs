@@ -41,7 +41,8 @@ import qualified Pawl.Extra.Int as Int
 import qualified Pawl.Extra.Natural as Natural
 import qualified Pawl.MeldSpec as MeldSpec
 import qualified Pawl.MutateSpec as MutateSpec
-import qualified Pawl.Oracle as Oracle
+import qualified Pawl.Oracle.Keyword as Oracle.Keyword
+import qualified Pawl.Oracle.Normalise as Normalise
 import qualified Pawl.Registry as Registry
 import qualified Pawl.Slug as Slug
 import qualified Pawl.Spec as Spec
@@ -471,8 +472,8 @@ spec s registry = Spec.describe s "Sticker" $ do
                 ptStickers = Foldable.toList (StickerSheet.powerToughness sheet)
                 ptText p = Text.pack (show (PowerToughnessSticker.power p) <> "/" <> show (PowerToughnessSticker.toughness p))
                 keywordsAgree a (_, rest) =
-                  let printed = [Oracle.printed k | k <- Map.keys (AbilitySticker.keywords a)]
-                   in not (null (AbilitySticker.abilities a)) || any Maybe.isNothing printed || List.sort (Oracle.normalise rest) == List.sort (fmap Text.toLower (Maybe.catMaybes printed))
+                  let printed = [Oracle.Keyword.printed Text.empty k | k <- Map.keys (AbilitySticker.keywords a)]
+                   in not (null (AbilitySticker.abilities a)) || any (\p -> length p /= 1) printed || List.sort (Normalise.normalise (CardName.MkCardName Text.empty) rest) == List.sort (fmap Text.toLower (concat printed))
                 checks =
                   [ ("file named for the sheet", Slug.unwrap (Slug.fromText (StickerSheet.name sheet)) <> Text.pack ".json" == Text.pack (reverse (takeWhile (/= '/') (reverse path)))),
                     ("names join to the name", Text.unwords (Foldable.toList (StickerSheet.names sheet)) == StickerSheet.name sheet),

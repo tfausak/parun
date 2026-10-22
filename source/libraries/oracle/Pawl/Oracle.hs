@@ -1,49 +1,136 @@
--- Oracle text a card file can be checked against, for the cards whose whole
--- text is keywords (#9). Pawl.IngestSpec asserts that 'render' of such a card
--- says what its faces' Face.oracleText says, modulo 'normalise'.
+-- Oracle text a card file can be checked against (#9). Pawl.IngestSpec asserts
+-- that each pool card 'renderings' answers for says what its faces'
+-- Face.oracleText says, modulo Pawl.Oracle.Normalise.normalise.
 --
--- That check sees what a card SAYS, never what it DOES: an ingested flier is
--- right only because Pawl.Engine.Keyword's flying is (docs/design.md section 4).
+-- Rendering is compositional over the DSL, one module per type family, never
+-- a lookup of known cards' wordings: a card that renders back to its Oracle
+-- text is one whose DSL says what the card says (#5477). That check sees what
+-- a card SAYS, never what it DOES: an ingested flier is right only because
+-- Pawl.Engine.Keyword's flying is (docs/design.md section 4).
 module Pawl.Oracle where
 
-import qualified Data.List as List
+import qualified Control.Monad as Monad
 import qualified Data.List.NonEmpty as NonEmpty
 import qualified Data.Map.Strict as Map
+import qualified Data.Maybe as Maybe
 import qualified Data.Sequence as Seq
 import qualified Data.Set as Set
 import qualified Data.Text as Text
 import qualified Numeric.Natural as Natural
+import qualified Pawl.Oracle.Cost as Cost
+import qualified Pawl.Oracle.Effect as Effect
+import qualified Pawl.Oracle.Keyword as Keyword
+import qualified Pawl.Oracle.Normalise as Normalise
+import qualified Pawl.Oracle.Prose as Prose
+import qualified Pawl.Oracle.Target as Target
+import qualified Pawl.Types.ActivatedAbility as ActivatedAbility
+import qualified Pawl.Types.Activator as Activator
 import qualified Pawl.Types.Card as Card
 import qualified Pawl.Types.CardName as CardName
 import qualified Pawl.Types.Color as Color
+import qualified Pawl.Types.Cost as Cost.Type
+import qualified Pawl.Types.CostComponent as CostComponent
 import qualified Pawl.Types.Counterability as Counterability
 import qualified Pawl.Types.Face as Face
-import qualified Pawl.Types.Filter as Filter
-import qualified Pawl.Types.Keyword as Keyword
+import qualified Pawl.Types.Keyword as Keyword.Type
 import qualified Pawl.Types.Layout as Layout
 import qualified Pawl.Types.ManaCost as ManaCost
 import qualified Pawl.Types.Power as Power
-import qualified Pawl.Types.Subtype as Subtype
 import qualified Pawl.Types.Toughness as Toughness
+import qualified Pawl.Types.TriggerCondition as TriggerCondition
+import qualified Pawl.Types.TriggerLimit as TriggerLimit
+import qualified Pawl.Types.TriggeredAbility as TriggeredAbility
 import qualified Pawl.Types.TypeLine as TypeLine
 
--- | The rules text of a single-faced card whose face carries nothing but its
--- printed characteristics (a color indicator among them, CR 204) and keywords
--- printed alone, one keyword per line; 'Nothing' for any other card. A card
--- with no keywords renders as no text, which is what a vanilla creature and a
--- basic land print (CR 305.6, CR 207.2a).
+-- | The card's rules text in its current Oracle wording, or 'Nothing' for a
+-- card some part of which is not rendered yet.
 render :: Card.Card -> Maybe Text.Text
-render card = case Card.faces card of
-  face NonEmpty.:| []
-    | Card.layout card == Layout.Normal,
-      face == bare (Face.name face) (Face.oracleText face) (Face.manaCost face) (Face.colorIndicator face) (Face.typeLine face) (Face.power face) (Face.toughness face) (Face.keywords face) ->
-        fmap (Text.intercalate (Text.pack "\n") . concat) . traverse (\(k, n) -> fmap (List.genericReplicate n) (printed k)) $ Map.toAscList (Face.keywords face)
-  _ -> Nothing
+render = Maybe.listToMaybe . renderings
+
+-- | Every wording of the card's rules text Oracle uses, the current first;
+-- empty for a card some part of which is not rendered yet. Only a single
+-- normal face renders yet, and only the parts of it the fields below name:
+-- its keywords, its spell (CR 112), its activated abilities (CR 602) and its
+-- triggered abilities (CR 603). A
+-- card with no rules text renders as no text, which is what a vanilla
+-- creature and a basic land print (CR 305.6, CR 207.2a).
+renderings :: Card.Card -> [Text.Text]
+renderings card = case Card.faces card of
+  face NonEmpty.:| [] | Card.layout card == Layout.Normal -> faceText face
+  _ -> []
+
+-- | Whether the text is one of the card's renderings, modulo
+-- 'Normalise.normalise'.
+says :: Card.Card -> CardName.CardName -> Text.Text -> Bool
+says card name text = elem (Normalise.normalise name text) (fmap (Normalise.normalise name) (renderings card))
+
+-- | A face's rules text, one ability per line. The face with the fields
+-- rendered here cleared must be 'bare', so a field nothing here renders keeps
+-- the card unrendered rather than silently left out.
+faceText :: Face.Face Card.Card -> [Text.Text]
+faceText face = do
+  let self = CardName.unwrap (Face.name face)
+      context = Target.MkContext self Map.empty (Keyword.keywordWord self)
+      rest = face {Face.keywords = Map.empty, Face.spell = Face.defaultSpell, Face.activatedAbilities = [], Face.triggeredAbilities = []}
+  Monad.guard (rest == bare (Face.name face) (Face.oracleText face) (Face.manaCost face) (Face.colorIndicator face) (Face.typeLine face) (Face.power face) (Face.toughness face) Map.empty)
+  keywords <- Keyword.lines self (Face.keywords face)
+  spell <-
+    if Face.spell face == Face.defaultSpell
+      then [[]]
+      else fmap pure (Effect.modal context (Face.spell face))
+  abilities <- traverse (activated context) (Face.activatedAbilities face)
+  triggers <- traverse (triggered context) (Face.triggeredAbilities face)
+  [Text.intercalate (Text.pack "\n") (keywords <> spell <> abilities <> triggers)]
+
+-- | A triggered ability: "[When/Whenever/At] [trigger event], [effect]" (CR
+-- 603.1), the effect calling the source "it" once the event has named it
+-- (Fire Imp). Only a trigger on its source entering or dying renders yet (CR
+-- 603.6a, CR 700.4), dying in either its current wording or the older "is put
+-- into a graveyard from the battlefield" (Chromatic Star); an intervening
+-- "if", a limit, a name, or a trigger from another zone is not spelled out
+-- here.
+triggered :: Target.Context -> TriggeredAbility.TriggeredAbility card ability -> [Text.Text]
+triggered context t
+  | Maybe.isNothing (TriggeredAbility.intervening t),
+    Maybe.isNothing (TriggeredAbility.name t),
+    TriggeredAbility.limit t == TriggerLimit.Unlimited,
+    Set.null (TriggeredAbility.functionsFrom t) = do
+      event <- case TriggeredAbility.condition t of
+        TriggerCondition.SelfEnters -> [Text.pack " enters"]
+        TriggerCondition.SelfDies -> [Text.pack " dies", Text.pack " is put into a graveyard from the battlefield"]
+        _ -> []
+      let self = Target.self context
+      effect <- concatMap (\c -> Effect.modal c (TriggeredAbility.modal t)) [context, context {Target.self = Text.pack "it"}]
+      let lowered = if Text.isPrefixOf self effect then effect else Prose.decapitalise effect
+      [Text.pack "When " <> self <> event <> Text.pack ", " <> lowered]
+  | otherwise = []
+
+-- | An activated ability: "[Cost]: [Effect.]" (CR 602.1a). An ability whose
+-- cost sacrifices its source may call it "it" after that (Mogg Mob). Only an
+-- ability its controller activates at any time renders yet: a restriction, a
+-- condition, a named or keyword ability, or a bound on X is not spelled out
+-- here.
+activated :: Target.Context -> ActivatedAbility.ActivatedAbility card ability -> [Text.Text]
+activated context a
+  | null (ActivatedAbility.maximumX a),
+    ActivatedAbility.minimumX a == 0,
+    Maybe.isNothing (ActivatedAbility.definedX a),
+    null (ActivatedAbility.restrictions a),
+    ActivatedAbility.activator a == Activator.Controller,
+    Maybe.isNothing (ActivatedAbility.condition a),
+    Maybe.isNothing (ActivatedAbility.name a),
+    Maybe.isNothing (ActivatedAbility.keyword a) = do
+      cost <- Cost.cost (Target.self context) (ActivatedAbility.cost a)
+      let sacrificed = elem CostComponent.SacrificeThis (Cost.Type.components (ActivatedAbility.cost a))
+          selves = context : [context {Target.self = Text.pack "it"} | sacrificed]
+      effect <- concatMap (\c -> Effect.modal c (ActivatedAbility.modal a)) selves
+      [cost <> Text.pack ": " <> effect]
+  | otherwise = []
 
 -- | A face with the given Oracle text, characteristics and keywords and nothing
 -- else. Every
 -- field is spelled out, so a field added to 'Face.Face' fails to compile here
--- rather than being silently ignored by 'render'.
+-- rather than being silently ignored by 'faceText'.
 bare ::
   CardName.CardName ->
   Maybe Text.Text ->
@@ -52,7 +139,7 @@ bare ::
   TypeLine.TypeLine ->
   Maybe Power.Power ->
   Maybe Toughness.Toughness ->
-  Map.Map Keyword.Keyword Natural.Natural ->
+  Map.Map Keyword.Type.Keyword Natural.Natural ->
   Face.Face Card.Card
 bare n t c i l p x k =
   Face.MkFace
@@ -110,349 +197,3 @@ bare n t c i l p x k =
       Face.openingHandActions = [],
       Face.specialActions = []
     }
-
--- | How Oracle text prints a keyword standing alone (CR 702), or 'Nothing' for
--- one carrying a parameter it does not spell; a landwalk over a subtype is
--- "[type]walk" (CR 702.14a). No wildcard arm: a new keyword fails to compile
--- here until it is given its printed form.
-printed :: Keyword.Keyword -> Maybe Text.Text
-printed keyword = case keyword of
-  Keyword.Deathtouch -> Just (Text.pack "Deathtouch")
-  Keyword.Defender -> Just (Text.pack "Defender")
-  Keyword.DoubleStrike -> Just (Text.pack "Double strike")
-  Keyword.Equip {} -> Nothing
-  Keyword.FirstStrike -> Just (Text.pack "First strike")
-  Keyword.Flash -> Just (Text.pack "Flash")
-  Keyword.Flying -> Just (Text.pack "Flying")
-  Keyword.Haste -> Just (Text.pack "Haste")
-  Keyword.Hexproof Nothing -> Just (Text.pack "Hexproof")
-  Keyword.Hexproof (Just _) -> Nothing
-  Keyword.Indestructible -> Just (Text.pack "Indestructible")
-  Keyword.Intimidate -> Just (Text.pack "Intimidate")
-  Keyword.Landwalk (Filter.HasSubtype subtype) -> Just (Text.pack (show subtype <> "walk"))
-  Keyword.Landwalk {} -> Nothing
-  Keyword.Lifelink -> Just (Text.pack "Lifelink")
-  Keyword.LivingMetal -> Just (Text.pack "Living metal")
-  Keyword.MoreThanMeetsTheEye {} -> Nothing
-  Keyword.Protection {} -> Nothing
-  Keyword.Reach -> Just (Text.pack "Reach")
-  Keyword.Shroud -> Just (Text.pack "Shroud")
-  Keyword.Trample -> Just (Text.pack "Trample")
-  Keyword.TrampleOverPlaneswalkers -> Just (Text.pack "Trample over planeswalkers")
-  Keyword.Vigilance -> Just (Text.pack "Vigilance")
-  Keyword.Ward {} -> Nothing
-  Keyword.Banding -> Just (Text.pack "Banding")
-  Keyword.Rampage {} -> Nothing
-  Keyword.CumulativeUpkeep {} -> Nothing
-  Keyword.Flanking -> Just (Text.pack "Flanking")
-  Keyword.Phasing -> Just (Text.pack "Phasing")
-  Keyword.Buyback {} -> Nothing
-  Keyword.Shadow -> Just (Text.pack "Shadow")
-  Keyword.Cycling {} -> Nothing
-  Keyword.Echo {} -> Nothing
-  Keyword.Horsemanship -> Just (Text.pack "Horsemanship")
-  Keyword.Fading {} -> Nothing
-  Keyword.Kicker {} -> Nothing
-  Keyword.Multikicker {} -> Nothing
-  Keyword.StickerKicker {} -> Nothing
-  Keyword.Flashback {} -> Nothing
-  Keyword.Fear -> Just (Text.pack "Fear")
-  Keyword.Morph {} -> Nothing
-  Keyword.Amplify {} -> Nothing
-  Keyword.Provoke -> Just (Text.pack "Provoke")
-  Keyword.Storm -> Just (Text.pack "Storm")
-  Keyword.Affinity {} -> Nothing
-  Keyword.Entwine {} -> Nothing
-  Keyword.Modular {} -> Nothing
-  Keyword.Sunburst -> Just (Text.pack "Sunburst")
-  Keyword.Bushido {} -> Nothing
-  Keyword.Soulshift {} -> Nothing
-  Keyword.Splice {} -> Nothing
-  Keyword.Offering {} -> Nothing
-  Keyword.Ninjutsu {} -> Nothing
-  Keyword.Epic -> Just (Text.pack "Epic")
-  Keyword.Paradigm -> Just (Text.pack "Paradigm")
-  Keyword.Convoke -> Just (Text.pack "Convoke")
-  Keyword.Dredge {} -> Nothing
-  Keyword.Bloodthirst {} -> Nothing
-  Keyword.Haunt -> Just (Text.pack "Haunt")
-  Keyword.Replicate {} -> Nothing
-  Keyword.Graft {} -> Nothing
-  Keyword.Recover {} -> Nothing
-  Keyword.Ripple {} -> Nothing
-  Keyword.SplitSecond -> Just (Text.pack "Split second")
-  Keyword.Suspend {} -> Nothing
-  Keyword.Vanishing Nothing -> Just (Text.pack "Vanishing")
-  Keyword.Vanishing (Just _) -> Nothing
-  Keyword.Absorb {} -> Nothing
-  Keyword.AuraSwap {} -> Nothing
-  Keyword.Delve -> Just (Text.pack "Delve")
-  Keyword.Fortify {} -> Nothing
-  Keyword.Frenzy {} -> Nothing
-  Keyword.Gravestorm -> Just (Text.pack "Gravestorm")
-  Keyword.Poisonous {} -> Nothing
-  Keyword.Champion {} -> Nothing
-  Keyword.Changeling -> Just (Text.pack "Changeling")
-  Keyword.Evoke {} -> Nothing
-  Keyword.Hideaway {} -> Nothing
-  Keyword.Prowl {} -> Nothing
-  Keyword.Reinforce {} -> Nothing
-  Keyword.Conspire -> Just (Text.pack "Conspire")
-  Keyword.Persist -> Just (Text.pack "Persist")
-  Keyword.Wither -> Just (Text.pack "Wither")
-  Keyword.Devour {} -> Nothing
-  Keyword.Exalted -> Just (Text.pack "Exalted")
-  Keyword.Unearth {} -> Nothing
-  Keyword.Cascade -> Just (Text.pack "Cascade")
-  Keyword.Annihilator {} -> Nothing
-  Keyword.LevelUp {} -> Nothing
-  Keyword.Infect -> Just (Text.pack "Infect")
-  Keyword.BattleCry -> Just (Text.pack "Battle cry")
-  Keyword.LivingWeapon -> Just (Text.pack "Living weapon")
-  Keyword.Undying -> Just (Text.pack "Undying")
-  Keyword.Miracle {} -> Nothing
-  Keyword.Soulbond -> Just (Text.pack "Soulbond")
-  Keyword.Overload {} -> Nothing
-  Keyword.Unleash -> Just (Text.pack "Unleash")
-  Keyword.Cipher -> Just (Text.pack "Cipher")
-  Keyword.Evolve -> Just (Text.pack "Evolve")
-  Keyword.Extort -> Just (Text.pack "Extort")
-  Keyword.Fuse -> Just (Text.pack "Fuse")
-  Keyword.Tribute {} -> Nothing
-  Keyword.Dethrone -> Just (Text.pack "Dethrone")
-  Keyword.HiddenAgenda -> Just (Text.pack "Hidden agenda")
-  Keyword.Outlast {} -> Nothing
-  Keyword.Prowess -> Just (Text.pack "Prowess")
-  Keyword.Dash {} -> Nothing
-  Keyword.Exploit -> Just (Text.pack "Exploit")
-  Keyword.Menace -> Just (Text.pack "Menace")
-  Keyword.Renown {} -> Nothing
-  Keyword.Awaken {} -> Nothing
-  Keyword.Devoid -> Just (Text.pack "Devoid")
-  Keyword.Ingest -> Just (Text.pack "Ingest")
-  Keyword.Myriad -> Just (Text.pack "Myriad")
-  Keyword.Surge {} -> Nothing
-  Keyword.Skulk -> Just (Text.pack "Skulk")
-  Keyword.SpaceSculptor -> Just (Text.pack "Space sculptor")
-  Keyword.Emerge {} -> Nothing
-  Keyword.Escalate {} -> Nothing
-  Keyword.Melee -> Just (Text.pack "Melee")
-  Keyword.Crew {} -> Nothing
-  Keyword.Fabricate {} -> Nothing
-  Keyword.Partner -> Just (Text.pack "Partner")
-  Keyword.PartnerText {} -> Nothing
-  Keyword.PartnerWith {} -> Nothing
-  Keyword.ChooseABackground -> Just (Text.pack "Choose a Background")
-  Keyword.DoctorsCompanion -> Just (Text.pack "Doctor's companion")
-  Keyword.Undaunted -> Just (Text.pack "Undaunted")
-  Keyword.Improvise -> Just (Text.pack "Improvise")
-  Keyword.Aftermath -> Just (Text.pack "Aftermath")
-  Keyword.Embalm {} -> Nothing
-  Keyword.Eternalize {} -> Nothing
-  Keyword.Afflict {} -> Nothing
-  Keyword.Ascend -> Just (Text.pack "Ascend")
-  Keyword.Assist -> Just (Text.pack "Assist")
-  Keyword.JumpStart -> Just (Text.pack "Jump-start")
-  Keyword.Mentor -> Just (Text.pack "Mentor")
-  Keyword.Afterlife {} -> Nothing
-  Keyword.Riot -> Just (Text.pack "Riot")
-  Keyword.Spectacle {} -> Nothing
-  Keyword.Escape {} -> Nothing
-  Keyword.Companion {} -> Nothing
-  Keyword.Foretell {} -> Nothing
-  Keyword.Demonstrate -> Just (Text.pack "Demonstrate")
-  Keyword.Daybound -> Just (Text.pack "Daybound")
-  Keyword.Nightbound -> Just (Text.pack "Nightbound")
-  Keyword.Decayed -> Just (Text.pack "Decayed")
-  Keyword.Cleave {} -> Nothing
-  Keyword.Training -> Just (Text.pack "Training")
-  Keyword.Compleated -> Just (Text.pack "Compleated")
-  Keyword.Reconfigure {} -> Nothing
-  Keyword.Blitz {} -> Nothing
-  Keyword.Casualty {} -> Nothing
-  Keyword.ReadAhead -> Just (Text.pack "Read ahead")
-  Keyword.Ravenous -> Just (Text.pack "Ravenous")
-  Keyword.Squad {} -> Nothing
-  Keyword.Prototype {} -> Nothing
-  Keyword.ForMirrodin -> Just (Text.pack "For Mirrodin!")
-  Keyword.Toxic {} -> Nothing
-  Keyword.Backup {} -> Nothing
-  Keyword.Bargain -> Just (Text.pack "Bargain")
-  Keyword.Craft {} -> Nothing
-  Keyword.Disguise {} -> Nothing
-  Keyword.Plot {} -> Nothing
-  Keyword.Saddle {} -> Nothing
-  Keyword.Spree -> Just (Text.pack "Spree")
-  Keyword.Offspring {} -> Nothing
-  Keyword.Gift {} -> Nothing
-  Keyword.Freerunning {} -> Nothing
-  Keyword.Impending {} -> Nothing
-  Keyword.Exhaust -> Just (Text.pack "Exhaust")
-  Keyword.Boast -> Just (Text.pack "Boast")
-  Keyword.PowerUp -> Just (Text.pack "Power-up")
-  Keyword.ClassLevel {} -> Nothing
-  Keyword.Forecast -> Just (Text.pack "Forecast")
-  Keyword.StartYourEngines -> Just (Text.pack "Start your engines!")
-  Keyword.JobSelect -> Just (Text.pack "Job select")
-  Keyword.Tiered -> Just (Text.pack "Tiered")
-  Keyword.Exert -> Just (Text.pack "Exert")
-  Keyword.Enlist -> Just (Text.pack "Enlist")
-  Keyword.Bestow {} -> Nothing
-  Keyword.Station -> Just (Text.pack "Station")
-  Keyword.Mutate {} -> Nothing
-  Keyword.UmbraArmor -> Just (Text.pack "Umbra armor")
-  Keyword.Retrace -> Just (Text.pack "Retrace")
-  Keyword.Mayhem Nothing -> Just (Text.pack "Mayhem")
-  Keyword.Mayhem (Just _) -> Nothing
-  Keyword.Madness {} -> Nothing
-  Keyword.Rebound -> Just (Text.pack "Rebound")
-  Keyword.Scavenge {} -> Nothing
-  Keyword.Encore {} -> Nothing
-  Keyword.Teamwork {} -> Nothing
-  Keyword.WebSlinging {} -> Nothing
-  Keyword.Sneak {} -> Nothing
-  Keyword.Increment -> Just (Text.pack "Increment")
-  Keyword.Storied -> Just (Text.pack "Storied")
-  Keyword.Mobilize {} -> Nothing
-  Keyword.Firebending {} -> Nothing
-  Keyword.Transmute {} -> Nothing
-  Keyword.Transfigure {} -> Nothing
-  Keyword.Warp {} -> Nothing
-  Keyword.Disturb {} -> Nothing
-  Keyword.Harmonize {} -> Nothing
-
--- | Every keyword 'printed' answers for: the words an ingested card's text may
--- consist of. Pawl.IngestSpec checks it against the keyword codec's arms.
-standalone :: [Keyword.Keyword]
-standalone =
-  [ Keyword.Deathtouch,
-    Keyword.Defender,
-    Keyword.DoubleStrike,
-    Keyword.FirstStrike,
-    Keyword.Flash,
-    Keyword.Flying,
-    Keyword.Haste,
-    Keyword.Hexproof Nothing,
-    Keyword.Indestructible,
-    Keyword.Intimidate,
-    Keyword.Lifelink,
-    Keyword.LivingMetal,
-    Keyword.Reach,
-    Keyword.Shroud,
-    Keyword.Trample,
-    Keyword.TrampleOverPlaneswalkers,
-    Keyword.Vigilance,
-    Keyword.Banding,
-    Keyword.Flanking,
-    Keyword.Phasing,
-    Keyword.Shadow,
-    Keyword.Horsemanship,
-    Keyword.Fear,
-    Keyword.Provoke,
-    Keyword.Storm,
-    Keyword.Sunburst,
-    Keyword.Epic,
-    Keyword.Paradigm,
-    Keyword.Convoke,
-    Keyword.Haunt,
-    Keyword.SplitSecond,
-    Keyword.Vanishing Nothing,
-    Keyword.Delve,
-    Keyword.Gravestorm,
-    Keyword.Changeling,
-    Keyword.Conspire,
-    Keyword.Persist,
-    Keyword.Wither,
-    Keyword.Exalted,
-    Keyword.Cascade,
-    Keyword.Infect,
-    Keyword.BattleCry,
-    Keyword.LivingWeapon,
-    Keyword.Undying,
-    Keyword.Soulbond,
-    Keyword.Unleash,
-    Keyword.Cipher,
-    Keyword.Evolve,
-    Keyword.Extort,
-    Keyword.Fuse,
-    Keyword.Dethrone,
-    Keyword.HiddenAgenda,
-    Keyword.Prowess,
-    Keyword.Exploit,
-    Keyword.Menace,
-    Keyword.Devoid,
-    Keyword.Ingest,
-    Keyword.Myriad,
-    Keyword.Skulk,
-    Keyword.Melee,
-    Keyword.Partner,
-    Keyword.ChooseABackground,
-    Keyword.DoctorsCompanion,
-    Keyword.Undaunted,
-    Keyword.Improvise,
-    Keyword.Aftermath,
-    Keyword.Ascend,
-    Keyword.Assist,
-    Keyword.JumpStart,
-    Keyword.Mentor,
-    Keyword.Riot,
-    Keyword.Demonstrate,
-    Keyword.Daybound,
-    Keyword.Nightbound,
-    Keyword.Decayed,
-    Keyword.Training,
-    Keyword.Compleated,
-    Keyword.ReadAhead,
-    Keyword.Ravenous,
-    Keyword.ForMirrodin,
-    Keyword.Bargain,
-    Keyword.SpaceSculptor,
-    Keyword.Spree,
-    Keyword.Exhaust,
-    Keyword.Boast,
-    Keyword.PowerUp,
-    Keyword.Forecast,
-    Keyword.StartYourEngines,
-    Keyword.JobSelect,
-    Keyword.Tiered,
-    Keyword.Exert,
-    Keyword.Enlist,
-    Keyword.Station,
-    Keyword.UmbraArmor,
-    Keyword.Retrace,
-    Keyword.Rebound,
-    Keyword.Increment,
-    Keyword.Storied,
-    Keyword.Mayhem Nothing
-  ]
-
--- | The landwalks 'printed' answers for that an ingested card's text may
--- name: one per basic land type (CR 702.14a, CR 305.6). Apart from
--- 'standalone', which holds the keywords the codec writes as a bare tag.
-landwalks :: [Keyword.Keyword]
-landwalks = [Keyword.Landwalk (Filter.HasSubtype subtype) | subtype <- [Subtype.Plains, Subtype.Island, Subtype.Swamp, Subtype.Mountain, Subtype.Forest]]
-
--- | Oracle text as a multiset of lowercase lines: reminder text dropped (CR
--- 207.2a), and a line of comma-separated keywords split, so "Flying, vigilance"
--- and "Flying\nVigilance" agree. A semicolon separates them too, as older
--- Oracle text writes a keyword line ("Haste; horsemanship", Lu Bu,
--- Master-at-Arms).
-normalise :: Text.Text -> [Text.Text]
-normalise =
-  List.sort
-    . filter (not . Text.null)
-    . fmap (Text.strip . Text.toLower)
-    . concatMap (Text.splitOn (Text.pack ", "))
-    . concatMap (Text.splitOn (Text.pack "; "))
-    . Text.lines
-    . withoutReminders
-
--- | The text with every parenthesised span removed, nested ones included.
-withoutReminders :: Text.Text -> Text.Text
-withoutReminders = Text.pack . go (0 :: Int) . Text.unpack
-  where
-    go depth string = case string of
-      [] -> []
-      '(' : rest -> go (depth + 1) rest
-      ')' : rest | depth > 0 -> go (depth - 1) rest
-      c : rest -> if depth > 0 && c /= '\n' then go depth rest else c : go depth rest

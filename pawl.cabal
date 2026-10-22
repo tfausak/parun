@@ -1683,6 +1683,7 @@ library executable
     pawl:json,
     pawl:json-codec,
     pawl:json-schema,
+    pawl:oracle,
     pawl:play,
     pawl:registry,
     pawl:scenario,
@@ -1866,6 +1867,13 @@ library oracle
   -- cabal-gild: discover source/libraries/oracle
   exposed-modules:
     Pawl.Oracle
+    Pawl.Oracle.Cost
+    Pawl.Oracle.Effect
+    Pawl.Oracle.Filter
+    Pawl.Oracle.Keyword
+    Pawl.Oracle.Normalise
+    Pawl.Oracle.Prose
+    Pawl.Oracle.Target
     Pawl.OracleSpec
 
 -- The line protocol a client plays a game through: each seat's decisions as
