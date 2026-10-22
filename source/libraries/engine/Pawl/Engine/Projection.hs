@@ -347,14 +347,16 @@ applyModification textBoxOf viewOf src stamp gs oid unitTypes affected m pc =
         -- put in GameState.continuousEffects. The identity keeps the walk total,
         -- which is the posture SetController's arm below takes.
         Modification.GainAbilitiesOfSource _ -> pc
-        -- CR 613.1f / 607.2a: the activated abilities of each card in the
-        -- payload's pile, read off its copiable values (CR 707.2), each with the
-        -- payload's restrictions added. Like GainAbility above, the receiver is
-        -- their source (CR 113.7). The craft pile is the cards linked under
-        -- Binding.craftLink (CR 702.167c), so nothing `src`'s other abilities
-        -- exile; OwnAbilities is every card linked to `src` but those an ability
-        -- it acquired this way exiled (Binding.isLinkedExile): CR 607.2a links
-        -- this ability only to exiling abilities printed beside it, and CR
+        -- CR 613.1f / 607.2a: the activated abilities of each card in exile the
+        -- payload's Filter matches, framed by `src`, read off its copiable values
+        -- (CR 707.2), each with the payload's restrictions added. Like
+        -- GainAbility above, the receiver is their source (CR 113.7). The
+        -- Filter's IsExiledWithSource reads as no ability of `src`'s
+        -- (Filter.reader is Nothing), so the craft pile is the cards linked
+        -- under Binding.craftLink (CR 702.167c), nothing `src`'s other abilities
+        -- exile, and OwnAbilities is every card linked to `src` but those an
+        -- ability it acquired this way exiled (Binding.isLinkedExile): CR 607.2a
+        -- links this ability only to exiling abilities printed beside it, and CR
         -- 607.5 an acquired one only to its own pair.
         --
         -- CR 602.5c / 607.5: each is named for the card it came from and its
@@ -367,9 +369,12 @@ applyModification textBoxOf viewOf src stamp gs oid unitTypes affected m pc =
         -- Pawl.ActivateSpec's Locus of Enlightenment case proves all three, and
         -- its Gliding Licid case the named twins. The Steward of the Harvest
         -- scenarios prove the other pile, and the Patchwork Crawler pair what
-        -- an acquired ability exiled.
-        Modification.GainExiledCardAbilities (ExiledCardAbilities.MkExiledCardAbilities pile extra) ->
-          let cards = Game.linkedPile Nothing pile src gs
+        -- an acquired ability exiled. A Filter naming no pile is proved by
+        -- data/scenarios/mairsil-the-pretender-activates-each-caged-ability-once-each-turn.json,
+        -- and two cards' identically worded abilities by
+        -- data/scenarios/mairsil-the-pretender-a-twin-ability-from-another-card-is-not-spent.json.
+        Modification.GainExiledCardAbilities (ExiledCardAbilities.MkExiledCardAbilities criterion extra) ->
+          let cards = filter (maybe False (\view -> Filter.matches context view criterion) . viewOf) (Set.toAscList (GameState.exile gs))
               named card a = a {ActivatedAbility.name = Just (Binding.exiledCardAbility card (ActivatedAbility.name a))}
               -- CR 113.6 / 702.178b: a card has, in exile, only the "as long
               -- as" grants that function there (AbilityZone.grantFunctionsIn).
