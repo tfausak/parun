@@ -1,6 +1,7 @@
 module Pawl.Types.TurnWindow where
 
 import qualified Numeric.Natural as Natural
+import qualified Pawl.Types.PlayerId as PlayerId
 import qualified Pawl.Types.Timestamp as Timestamp
 
 -- | CR 603.7a: WHICH TURNS a stored delayed triggered ability may fire on, as the
@@ -16,7 +17,7 @@ import qualified Pawl.Types.Timestamp as Timestamp
 --
 -- The arms are one LIFE CYCLE rather than independent choices, and it only
 -- ever narrows: AnyTurn stands still, and an onset-gated entry goes
--- ControllersNextTurn or OnExtraTurn -> OnTurn n -> gone. Pawl.Engine.Event is
+-- NextTurnOf or OnExtraTurn -> OnTurn n -> gone. Pawl.Engine.Event is
 -- the only engine module that may case on this type, the standing
 -- Pawl.Engine.Expiry has over Expiry; Pawl.Engine.Engine.beginTurn asks it for
 -- the transitions at the one moment they can happen.
@@ -25,21 +26,19 @@ data TurnWindow
     -- and the common case. The
     -- floor itself is the event scan's watermark, not this type's business.
     AnyTurn
-  | -- | Onset.FromYourNextTurn, before that turn has arrived: the entry watches
-    -- for nothing yet, whatever its condition matches.
+  | -- | Onset.FromNextTurnOf, before that player's next turn has arrived: the
+    -- entry watches for nothing yet, whatever its condition matches. The player
+    -- is read once, at arming. This is the exact mirror of Expiry.AtTurnOf,
+    -- which ENDS a stored effect at the boundary this one OPENS a delayed
+    -- ability at.
     --
-    -- No player of its own, because DelayedTrigger.controller is already the
-    -- answer (CR 603.7d-f bake it in at arming) and two copies could disagree.
-    -- This is the exact mirror of Expiry.AtTurnOf, which ENDS a stored effect at
-    -- the boundary this one OPENS a delayed ability at.
-    --
-    -- No turn number of its own either, and that is the point: the number of the
-    -- controller's next turn is not knowable when the ability is armed. An
-    -- intervening opponent's turn and an extra turn (CR 500.7) each move it, and
-    -- a seat whose turn never begins at all (CR 800.4k) does not supply it -- so
-    -- the only honest thing to store is the boundary, and the number when the
-    -- turn arrives.
-    ControllersNextTurn
+    -- No turn number of its own, and that is the point: the number of that
+    -- player's next turn is not knowable when the ability is armed. An
+    -- intervening turn and an extra turn (CR 500.7) each move it, and a seat
+    -- whose turn never begins at all (CR 800.4k) does not supply it -- so the
+    -- only honest thing to store is the boundary, and the number when the turn
+    -- arrives.
+    NextTurnOf PlayerId.PlayerId
   | -- | The same onset once that turn has begun: the number
     -- Pawl.Engine.Event.settleOnsets read off GameState.turnNumber as it did, and
     -- NO other turn.

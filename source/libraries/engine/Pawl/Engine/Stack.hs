@@ -52,7 +52,6 @@ import qualified Pawl.Types.LibraryPosition as LibraryPosition
 import qualified Pawl.Types.Modification as Modification
 import qualified Pawl.Types.Object as Object
 import Pawl.Types.ObjectId (ObjectId)
-import qualified Pawl.Types.Onset as Onset
 import qualified Pawl.Types.PlayerChoice as PlayerChoice
 import qualified Pawl.Types.PlayerControl as PlayerControl
 import Pawl.Types.PlayerId (PlayerId)
@@ -67,6 +66,7 @@ import qualified Pawl.Types.TapState as TapState
 import qualified Pawl.Types.TriggerCondition as TriggerCondition
 import qualified Pawl.Types.TriggeredAbility as TriggeredAbility
 import qualified Pawl.Types.TriggeredAbilitySource as TriggeredAbilitySource
+import qualified Pawl.Types.TurnWindow as TurnWindow
 import qualified Pawl.Types.Zone as Zone
 
 -- The runner-aware resolve-the-top-of-stack: resolve one object, then let go of
@@ -694,7 +694,7 @@ armBecame oid obj gs1 arrivals = do
   let permanents = filter (\arrival -> fmap Object.zone (Game.lookupObject arrival gs) == Just Zone.Battlefield) (Foldable.toList arrivals)
       stillHas keyword = Map.member keyword (Projection.keywordsOf oid gs1)
       ability = Keyword.resolutionDelayedAbility (Monad.mfilter stillHas (Object.castUsing obj)) >>= Keyword.mintedDelayedAbility
-      arm delayed permanent = Event.armDelayed delayed oid (Resolve.spellController obj oid gs1) (Map.singleton Keyword.becameSlot (Binding.toObject permanent)) Onset.Immediately Nothing
+      arm delayed permanent = Event.armDelayed delayed oid (Resolve.spellController obj oid gs1) (Map.singleton Keyword.becameSlot (Binding.toObject permanent)) (Just TurnWindow.AnyTurn) Nothing
   Foldable.for_ ability (\delayed -> State.modify' (\g -> List.foldl' (flip (arm delayed)) g permanents))
   -- CR 702.62a's last sentence, off the same record and at the same moment the
   -- delayed abilities above are armed: a spell cast for the cost suspend's third

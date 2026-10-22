@@ -1,5 +1,7 @@
 module Pawl.Types.Onset where
 
+import qualified Pawl.Types.PlayerRef as PlayerRef
+
 -- | CR 603.7: when a delayed triggered ability BECOMES ARMED, as the card says it
 -- -- the half of a printed clause like "at the beginning of the declare
 -- attackers step on your next turn" that a TriggerCondition cannot carry, since
@@ -14,7 +16,7 @@ module Pawl.Types.Onset where
 -- Throttle both watch for their event from the moment they are created, which is
 -- CR 603.7a's floor and the only gate those two need.
 --
--- FromYourNextTurn is Meandering Towershell's "on your next turn". The gate is
+-- FromNextTurnOf is Meandering Towershell's "on your next turn". The gate is
 -- NOT vacuous and not expressible by the trigger condition alone:
 -- TriggerCondition.StepBegins carries a TurnScope, and ControllersTurn admits
 -- the very turn the ability was armed on -- so an extra combat phase in that
@@ -30,26 +32,28 @@ module Pawl.Types.Onset where
 -- to.
 data Onset
   = Immediately
-  | -- | Duration.UntilYourNextTurn read as a beginning instead of an end.
+  | -- | Duration.DuringNextTurnOf read as a beginning instead of an end: "on
+    -- your next turn" (Meandering Towershell) is @Relative You@, "that turn's
+    -- end step" after "during that player's next turn" (Oracle en-Vec) the
+    -- player a slot holds.
     --
-    -- BOTH HALVES of "your next turn" are stored, and neither as a number read at
-    -- arming: Pawl.Engine.Event.armOnset turns this into
-    -- TurnWindow.ControllersNextTurn, which names the boundary rather than the
-    -- turn, and Pawl.Engine.Event.settleOnsets replaces it with the turn number
-    -- that boundary turns out to be. "Your" is the entry's own
-    -- DelayedTrigger.controller (CR 109.5, fixed by CR 603.3a and CR 603.7d-f).
+    -- BOTH HALVES of "next turn" are stored, and neither as a number read at
+    -- arming: Pawl.Engine.Event.armOnset reads the player and turns this into
+    -- TurnWindow.NextTurnOf, which names the boundary rather than the turn, and
+    -- Pawl.Engine.Event.settleOnsets replaces it with the turn number that
+    -- boundary turns out to be.
     --
-    -- The delayed ability's own TriggerCondition.StepBegins carries
-    -- TurnScope.ControllersTurn as well, which the settled window makes redundant
-    -- for FIRING. The pairing is still lint-enforced, because a card that armed
-    -- this onset over an EachTurn condition would have its printed "each"
-    -- silently narrowed to the controller's turn. Card data must say what the
-    -- card says instead of leaning on the engine to mean it.
-    FromYourNextTurn
+    -- For "your" the delayed ability's own TriggerCondition.StepBegins carries
+    -- TurnScope.ControllersTurn as well, which the settled window makes
+    -- redundant for FIRING. The pairing is still lint-enforced, because a card
+    -- that armed this onset over an EachTurn condition would have its printed
+    -- "each" silently narrowed to the controller's turn. Card data must say what
+    -- the card says instead of leaning on the engine to mean it.
+    FromNextTurnOf PlayerRef.PlayerRef
   | -- | CR 500.7: "that turn", the extra turn the same resolution just created for
-    -- the entry's controller (Final Fortune). Not FromYourNextTurn: the most
+    -- the entry's controller (Final Fortune). Not FromNextTurnOf: the most
     -- recently created turn is taken first, so a second extra turn created later
     -- would become "your next turn". Pawl.Engine.Event.armOnset names the turn by
     -- its ExtraTurn.createdAt.
     FromThatExtraTurn
-  deriving (Bounded, Enum, Eq, Ord, Show)
+  deriving (Eq, Ord, Show)

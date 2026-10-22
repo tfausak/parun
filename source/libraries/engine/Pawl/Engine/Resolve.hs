@@ -87,6 +87,7 @@ import qualified Pawl.Types.Recipient as Recipient
 import Pawl.Types.Result (Result)
 import Pawl.Types.SlotName (SlotName)
 import qualified Pawl.Types.Source as Source
+import qualified Pawl.Types.TurnWindow as TurnWindow
 import qualified Pawl.Types.WhenSpent as WhenSpent
 import qualified Pawl.Types.Zone as Zone
 
@@ -102,15 +103,23 @@ armedAbilities effects =
         _ -> Nothing
    in Set.fromList (Maybe.mapMaybe named effects)
 
--- CR 603.7: armedAbilities narrowed to the arms whose firing is gated past the
--- turn that armed them, i.e. not Onset.Immediately.
+-- CR 603.7: armedAbilities narrowed to the arms gated to a later turn of the
+-- arming controller's own -- "your next turn", or "that turn" for an extra turn
+-- the controller takes.
 onsetGatedAbilities :: [Effect Card.Type.Card (GrantedAbility.GrantedAbility Card.Type.Card)] -> Set AbilityName
 onsetGatedAbilities effects =
   let named effect = case effect of
-        Effect.ArmDelayedTrigger (ArmDelayedTrigger.MkArmDelayedTrigger _ Onset.Immediately _ _) -> Nothing
-        Effect.ArmDelayedTrigger (ArmDelayedTrigger.MkArmDelayedTrigger name _ _ Nothing) -> Just name
+        Effect.ArmDelayedTrigger (ArmDelayedTrigger.MkArmDelayedTrigger name onset _ Nothing)
+          | namesOwnTurn onset -> Just name
         _ -> Nothing
    in Set.fromList (Maybe.mapMaybe named effects)
+
+-- Does this onset gate an ability to a later turn of its controller's own?
+namesOwnTurn :: Onset.Onset -> Bool
+namesOwnTurn onset = case onset of
+  Onset.Immediately -> False
+  Onset.FromNextTurnOf ref -> ref == PlayerRef.Relative PlayerRelation.You
+  Onset.FromThatExtraTurn -> True
 
 -- boundSlots over a whole effect list: the write half of the dataflow lint.
 definedSlots :: [Effect Card.Type.Card (GrantedAbility.GrantedAbility Card.Type.Card)] -> Set SlotName
@@ -564,7 +573,7 @@ applyEpic oid controller = do
               oid
               controller
               (Map.singleton Keyword.Engine.epicSlot (Binding.toObject oid))
-              Onset.Immediately
+              (Just TurnWindow.AnyTurn)
               (Just Expiry.Type.Never)
               g {GameState.stackArchive = Map.insert oid archived (GameState.stackArchive g)}
 
@@ -611,7 +620,7 @@ applyParadigm oid controller firstOfName = do
           oid
           controller
           (Map.singleton Keyword.Engine.paradigmSlot (Binding.toObject oid))
-          Onset.Immediately
+          (Just TurnWindow.AnyTurn)
           (Just Expiry.Type.Never)
       Event.changeZone oid Zone.Exile
       pure True
@@ -698,7 +707,7 @@ finishSpell oid face controller = do
     -- Rule 702.88a makes the delayed ability part of the SAME rewrite as the
     -- exile, so it is armed only where that rewrite is what moved the card.
     Monad.when (took reboundRow) $
-      State.modify' (Event.armDelayed Keyword.Engine.reboundUpkeep newId controller (Map.singleton Keyword.Engine.reboundSlot (Binding.toObject newId)) Onset.Immediately Nothing)
+      State.modify' (Event.armDelayed Keyword.Engine.reboundUpkeep newId controller (Map.singleton Keyword.Engine.reboundSlot (Binding.toObject newId)) (Just TurnWindow.AnyTurn) Nothing)
     -- CR 715.3d's "for as long as that card remains exiled, that player may play
     -- it", which is the same sentence as the exile it hangs off.
     Monad.when (took adventureRow) . State.modify' $ \gs ->
