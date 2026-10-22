@@ -1,0 +1,42 @@
+{
+  "description": "CR 700.4 / 118.12 whole card: Soul Net triggers on any creature dying and gains 1 life only when its controller pays {1}",
+  "note": "Bob's Grizzly Bears die first and alice pays; her own Goblin Piker dies next and she declines. Gaining on both, on neither, only on her own creature, or gaining without paying all read differently from 21 life and one Mountain left untapped.",
+  "board": {
+    "active": "alice",
+    "step": "PrecombatMain",
+    "seats": [
+      {
+        "name": "alice",
+        "library": [{ "card": "Island" }, { "card": "Island" }],
+        "battlefield": [
+          { "card": "Soul Net", "label": "net" },
+          { "card": "Goblin Piker", "label": "piker" },
+          { "card": "Mountain", "label": "m1" },
+          { "card": "Mountain", "label": "m2" },
+          { "card": "Mountain", "label": "m3" },
+          { "card": "Mountain", "label": "m4" }
+        ],
+        "hand": [{ "card": "Shock", "label": "shock-1" }, { "card": "Shock", "label": "shock-2" }]
+      },
+      {
+        "name": "bob",
+        "library": [{ "card": "Island" }, { "card": "Island" }],
+        "battlefield": [{ "card": "Grizzly Bears", "label": "bears" }]
+      }
+    ]
+  },
+  "timeline": [
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": { "Cast": { "object": "$shock-1", "targets": ["$bears"], "mana": ["$m1", null] } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass" },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass" },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": { "ChooseToPay": { "decision": { "type": "Pays" }, "mana": ["$m2", null] } }, "source": "$net" },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "check": { "Life": { "player": "alice", "life": 21 } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": { "Cast": { "object": "$shock-2", "targets": ["$piker"], "mana": ["$m3", null] } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass" },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass" },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": { "ChooseToPay": { "decision": { "type": "Declines" } } }, "source": "$net" },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "check": { "Life": { "player": "alice", "life": 21 } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "check": { "Count": { "player": "alice", "zone": "Graveyard", "card": "Goblin Piker", "count": 1 } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "check": { "Tapped": { "object": "$m4", "tapped": false } } }
+  ]
+}
