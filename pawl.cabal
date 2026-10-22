@@ -205,6 +205,8 @@ library codec
     Pawl.Codec.AttackerDeclaredSpec
     Pawl.Codec.AttackersAre
     Pawl.Codec.AttackersAreSpec
+    Pawl.Codec.AttackerUnblocked
+    Pawl.Codec.AttackerUnblockedSpec
     Pawl.Codec.AttackingPlayers
     Pawl.Codec.AttackingPlayersSpec
     Pawl.Codec.AttackLimitUnless
@@ -2232,6 +2234,7 @@ library types
     Pawl.Types.AttackerBlocked
     Pawl.Types.AttackerDeclared
     Pawl.Types.AttackersAre
+    Pawl.Types.AttackerUnblocked
     Pawl.Types.AttackingPlayers
     Pawl.Types.AttackLimitUnless
     Pawl.Types.AttackOption

@@ -1117,7 +1117,7 @@ selfBecomesBlockedSpec s registry =
 -- alice's library is stocked, or the draw would find nothing and CR 121.4 would
 -- lose her the game -- leaving the leg that is supposed to show a card in hand
 -- showing 0 for a reason that is not the trigger.
-selfAttacksUnblockedSpec :: (Monad m) => Spec.Spec m n -> Registry.Registry m -> n ()
+selfAttacksUnblockedSpec :: (Monad m, Monad n) => Spec.Spec m n -> Registry.Registry m -> n ()
 selfAttacksUnblockedSpec s registry =
   let -- Attacks `who` with everything and lets them block with everything.
       attacking :: PlayerId.PlayerId -> Prompt.Prompt r -> r
@@ -1157,6 +1157,29 @@ selfAttacksUnblockedSpec s registry =
               Spec.assertEqWith s "blocked: no draw, and afflict 2 instead of damage" (state blocked) (Just 20, Just 18, Just 20, 0)
               Spec.assertBool s (S.onBattlefield piker unblocked) "the unblocked leg left bob's Piker alone"
             _ -> Spec.assertFailure s "fixture should give bob one Goblin Piker"
+        -- CR 508.5 / 802.2a: "defending player" is the player THIS creature
+        -- attacks, which at three seats is one opponent of two. Abyssal
+        -- Nightstalker attacks carol, so carol discards and bob, the other
+        -- opponent and the first defending seat, keeps his hand. Distinct hand
+        -- sizes, so a discard landing on the wrong seat reads differently.
+        Spec.it s "CR 508.5 Abyssal Nightstalker unblocked makes only the player it attacks discard" $ do
+          stalker <- S.printingOf s registry "Abyssal Nightstalker"
+          piker <- S.printingOf s registry "Goblin Piker"
+          let (gs0, _, _, _) = S.threePlayerCombat [stalker] [] []
+              gs = List.foldl' (\g pid -> snd (S.addHandCard piker pid g)) gs0 [S.bob, S.bob, S.bob, S.carol, S.carol]
+              after = S.runCombat (declining S.carol) gs
+          Spec.assertEqWith s "carol, the defending player, discarded one; bob kept three" (S.handSize S.bob after, S.handSize S.carol after) (3, 1)
+          Spec.assertEqWith s "and the Nightstalker's 2 went to carol" (S.lifeOf S.bob after, S.lifeOf S.carol after) (Just 20, Just 18)
+        -- The same slot read through a Count: Guiltfeeder's "for each card in
+        -- THEIR graveyard" is the defending player's graveyard, not either
+        -- opponent's. Guiltfeeder has power 0, so every life lost is the trigger.
+        Spec.it s "CR 508.5 Guiltfeeder unblocked counts the graveyard of the player it attacks" $ do
+          feeder <- S.printingOf s registry "Guiltfeeder"
+          piker <- S.printingOf s registry "Goblin Piker"
+          let (gs0, _, _, _) = S.threePlayerCombat [feeder] [] []
+              gs = List.foldl' (\g pid -> snd (S.addGraveyardCard piker pid g)) gs0 [S.bob, S.bob, S.bob, S.carol, S.carol]
+              after = S.runCombat (declining S.carol) gs
+          Spec.assertEqWith s "carol lost 2, one per card in her graveyard; bob lost nothing" (S.lifeOf S.bob after, S.lifeOf S.carol after) (Just 20, Just 18)
 
 -- CR 702.85a's cascade, the first keyword ability that functions on the STACK:
 -- "When you cast this spell, exile cards from the top of your library until you

@@ -32,6 +32,7 @@ import qualified Pawl.Types.AttackTarget as AttackTarget
 import qualified Pawl.Types.AttackedPlayer as AttackedPlayer
 import qualified Pawl.Types.AttackerBlocked as AttackerBlocked
 import qualified Pawl.Types.AttackerDeclared as AttackerDeclared
+import qualified Pawl.Types.AttackerUnblocked as AttackerUnblocked
 import qualified Pawl.Types.BattlefieldCandidate as BattlefieldCandidate
 import qualified Pawl.Types.BecameAttached as BecameAttached
 import qualified Pawl.Types.BecameAttacked as BecameAttacked
@@ -4445,7 +4446,7 @@ matchesTriggerGiven bindings board gs bearer you cond event = case cond of
   -- the board at scan time, and rule 509.1h's last sentence is what that gets
   -- wrong: an attacker whose blockers all left combat is still blocked.
   TriggerCondition.SelfAttacksUnblocked -> case event of
-    GameEvent.AttackerUnblocked oid -> oid == bearer
+    GameEvent.AttackerUnblocked u -> AttackerUnblocked.attacker u == bearer
     -- CR 509.1i's declaration events are the blocked side of the same action; an
     -- attacker this one names got a blocker, so it is not unblocked.
     GameEvent.AttackerDeclared {} -> False
