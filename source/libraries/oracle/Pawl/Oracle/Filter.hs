@@ -19,7 +19,7 @@ import qualified Pawl.Types.Supertype as Supertype
 -- | A description in three parts, in the order English puts them: words
 -- before the noun ("tapped", "nonblack"), the noun ("creature"), and words
 -- after it ("with flying", "you control"). Conjoined filters merge part by
--- part (CR 109.2).
+-- part.
 data Phrase = MkPhrase
   { adjectives :: [Qualifier],
     nouns :: [Noun],

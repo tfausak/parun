@@ -51,9 +51,9 @@ render = Maybe.listToMaybe . renderings
 -- empty for a card some part of which is not rendered yet. Only a single
 -- normal face renders yet, and only the parts of it the fields below name:
 -- its keywords, its spell (CR 112), its activated abilities (CR 602) and its
--- triggered abilities (CR 603). A
--- card with no rules text renders as no text, which is what a vanilla
--- creature and a basic land print (CR 305.6, CR 207.2a).
+-- triggered abilities (CR 603). A card with no rules text renders as no
+-- text, which is what a vanilla creature and a basic land print (CR 305.6, CR
+-- 207.2a).
 renderings :: Card.Card -> [Text.Text]
 renderings card = case Card.faces card of
   face NonEmpty.:| [] | Card.layout card == Layout.Normal -> faceText face
@@ -128,9 +128,8 @@ activated context a
   | otherwise = []
 
 -- | A face with the given Oracle text, characteristics and keywords and nothing
--- else. Every
--- field is spelled out, so a field added to 'Face.Face' fails to compile here
--- rather than being silently ignored by 'faceText'.
+-- else. Every field is spelled out, so a field added to 'Face.Face' fails to
+-- compile here rather than being silently ignored by 'faceText'.
 bare ::
   CardName.CardName ->
   Maybe Text.Text ->

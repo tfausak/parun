@@ -102,7 +102,8 @@ addedTogether p rest = case (mana p, rest) of
   _ -> p : rest
 
 -- | The instructions of one clause as Oracle text strings them: one sentence
--- with "and", or two sentences, as printings differ. When two share a subject
+-- with "and", or two sentences or paragraphs, as printings differ (Bargain
+-- prints its two on two lines). When two share a subject
 -- the second drops it ("draws two cards and loses 2 life"), though older
 -- printings repeat a "you". Three or more are not strung together here yet.
 joined :: [Predicate] -> [(Text.Text, [SlotName.SlotName])]

@@ -69,7 +69,7 @@ spec s = Spec.describe s "Pawl.Oracle" $ do
     Spec.assertEq s [] (Normalise.normalise x (Text.pack "({T}: Add {G}.)"))
     Spec.assertEq s (fmap Text.pack ["haste", "horsemanship"]) (Normalise.normalise x (Text.pack "Haste; horsemanship (This creature can't be blocked except by creatures with horsemanship.)"))
 
-  -- CR 201.4c / 201.5: a card names itself by its name, a legendary one by
+  -- CR 201.5 / 201.5c: a card names itself by its name, a legendary one by
   -- the part before the comma, and newer Oracle text as "this creature".
   Spec.it s "normalise writes every self-reference alike, and only whole words" $ do
     let rograkh = CardName.MkCardName (Text.pack "Rograkh, Son of Rohgahh")
@@ -117,7 +117,7 @@ spec s = Spec.describe s "Pawl.Oracle" $ do
         arc = spell [clause [Effect.DealDamage (DealDamage.MkDealDamage (Seq.singleton (DamagePart.MkDamagePart (ObjectRef.InSlot target) (Quantity.Share target))) Nothing Nothing)]] [(target, slot)]
     Spec.assertEq s (Just (Text.pack "Spark deals 3 damage divided as you choose among one, two, or three targets.")) (Oracle.render arc)
 
-  -- CR 701.8 / 701.19c: "destroy", and "can't be regenerated" after it; the
+  -- CR 701.8 / 608.2c: "destroy", and "can't be regenerated" after it; the
   -- type adjective before the colour one, as Terror prints them.
   Spec.it s "render prints a destroy spell and its filter" $ do
     let terror = spell [clause [destroy (ObjectRef.InSlot target) Regenerability.CantBeRegenerated]] [(target, TargetSlot.required Pool.Creatures (Just (Filter.And [Filter.Not (Filter.HasColor Color.Black), Filter.Not (Filter.HasCardType CardType.Artifact)])))]

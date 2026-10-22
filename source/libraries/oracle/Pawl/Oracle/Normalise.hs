@@ -29,7 +29,7 @@ normalise name =
     . withoutReminders
 
 -- | Lowercase text with every way a card names itself written "~": its name,
--- the part of a legendary name before the comma (CR 201.4c), and "this
+-- the part of a legendary name before the comma (CR 201.5c), and "this
 -- creature" and its siblings, which Oracle text uses for the same thing on
 -- newer cards (CR 201.5).
 selfReferences :: CardName.CardName -> Text.Text -> Text.Text
