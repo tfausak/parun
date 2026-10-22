@@ -2058,11 +2058,19 @@ filterPositionLintSpec s registry = Spec.describe s "Lint" $ do
       "Freed from the Real's tap and untap are framed too"
       (hostOfSourceCounts (S.combinedFace freed))
       (2, 0)
+    -- And Infinite Reflection's CR 707.5 "enter as a copy of enchanted
+    -- creature", read through candidateContext as Pariah's is.
+    reflection <- S.printingOf s registry "Infinite Reflection"
+    Spec.assertEqWith
+      s
+      "Infinite Reflection's copy entry is framed too"
+      (hostOfSourceCounts (S.combinedFace reflection))
+      (1, 0)
     Spec.assertEqWith
       s
       "and they are the pool's only ones"
       (sum (fmap (uncurry (+) . hostOfSourceCounts . S.combinedFace) ps))
-      13
+      14
     -- The rejected side, which the sweep above cannot show while the pool has no
     -- offender: the same atom planted in a SPELL's target slot -- the position a
     -- card author would most plausibly reach for -- IS counted as elsewhere.

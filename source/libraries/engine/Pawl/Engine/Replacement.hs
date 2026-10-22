@@ -732,6 +732,15 @@ affected event = case event of
   ProposedEvent.WouldLoseGame pid -> ([], [pid])
   ProposedEvent.WouldPlaneswalk pid _ -> ([], [pid])
 
+-- CR 614.12: does this entry pattern confine itself to its own source ("this
+-- permanent"), rather than naming a general subset of permanents that happens
+-- to include it? A conjunct of Filter.IsSource is the only atom that confines.
+confinedToSource :: Filter.Type.Filter keyword -> Bool
+confinedToSource pat = case pat of
+  Filter.Type.IsSource -> True
+  Filter.Type.And fs -> any confinedToSource fs
+  _ -> False
+
 -- CR 614.1: does this replacement's printed pattern match this event?
 matchesPrinted :: (ObjectId -> Filter.View) -> GameState -> ProposedEvent -> ReplacementCandidate -> Bool
 matchesPrinted viewOf gs event candidate =
@@ -839,7 +848,18 @@ matchesPrinted viewOf gs event candidate =
         -- Filter over the entering object (see Pawl.Types.ReplacementEffect).
         -- 614.1c's self-scope is Filter.IsSource; 614.1d's is a characteristic
         -- filter.
-        (ReplacementEffect.EntryR (EntryR.MkEntryR pat rewrite), ProposedEvent.WouldEnter oid) -> matchesFiltered viewOf gs candidate pat oid && admitsEntry gs oid rewrite
+        --
+        -- CR 614.12: the entering permanent's own ability applies to it only
+        -- where it affects that permanent alone. A creature entering as a copy
+        -- of Essence of the Wild has "creatures you control enter as a copy",
+        -- which names a subset that includes it, so it is not offered against
+        -- its own entry. The scenario
+        -- cr-616-1f-grizzly-bears-applying-essence-then-infinite-reflection-enters-a-hill-giant
+        -- proves it.
+        (ReplacementEffect.EntryR (EntryR.MkEntryR pat rewrite), ProposedEvent.WouldEnter oid) ->
+          matchesFiltered viewOf gs candidate pat oid
+            && admitsEntry gs oid rewrite
+            && (src /= oid || confinedToSource pat)
         -- CR 614.1e: which permanents turning face up this replacement watches.
         -- The same Filter language the entry arm above uses, and every producer
         -- writes Filter.IsSource -- CR 614.1e's printed wording is always "as
@@ -2031,11 +2051,10 @@ readsApplier re = case re of
   -- (CR 400.3), never the row's controller. An OPTIONAL row does read it:
   -- Event.apply asks the candidate's controller its "you may".
   ReplacementEffect.ZoneChangeR r -> ZoneChangeR.optional r
-  -- CR 707.5 / 109.5: Clone's "you" is the ENTERING object's controller, read
-  -- live off the board at CR 614.12a's moment, not the candidate's -- so two
-  -- such rows offer the same player the same legal set. Both halves of the
-  -- payload ride the effect -- the eligible filter and CR 707.9's exceptions --
-  -- so two rows carrying the same ones are still the same offer.
+  -- CR 707.5 / 109.5: the eligible filter's "you" is the candidate's
+  -- controller (legalCopyTargets reads candidateContext), but readsSource
+  -- already folds the source in for this arm, and two rows on one source share
+  -- its controller, so the controller distinguishes nothing more.
   ReplacementEffect.EntryR (EntryR.MkEntryR _ (EntryRewrite.AsCopy _)) -> False
   -- Same chooser, and the options ride the effect: CR 614.1c's "enters as"
   -- (Primal Plasma).
@@ -2367,6 +2386,11 @@ readsSource effect = case effect of
   -- differently coloured sources are a choice" prove them.
   ReplacementEffect.DrawR (DrawR.MkDrawR _ (DrawRewrite.FromOutsideTheGame payload)) -> Filter.readsSourceValues (FromOutsideTheGame.filter payload)
   ReplacementEffect.ZoneChangeR {} -> False
+  -- CR 707.5: the object copied is read relative to the source (Essence of the
+  -- Wild's "this creature", Infinite Reflection's "enchanted creature"), so
+  -- two such rows on different sources make different copies and the entering
+  -- creature's controller is asked which applies last.
+  ReplacementEffect.EntryR (EntryR.MkEntryR _ (EntryRewrite.AsCopy _)) -> True
   ReplacementEffect.EntryR {} -> False
   ReplacementEffect.DamageR {} -> False
   ReplacementEffect.DestructionR _ -> False
@@ -2674,15 +2698,16 @@ applyCopyExceptions this own exceptions snapshot =
 --
 -- Matched through each candidate's own CR 613 projection, revealableFromHand's
 -- reading, so a continuous effect that made a permanent an enchantment reaches
--- it. Perspective and source are the ENTERING object's controller and the
--- entering object, so a filter naming "you" or "this" resolves against the
--- player making the choice (CR 109.5); nothing printed today uses either, and
--- supplying Nothing would silently answer False if one did. That player chooses
--- only within their range (CR 801.5a).
-legalCopyTargets :: Set ObjectId -> Filter.Type.Filter Keyword.Type.Keyword -> CopyDomain.CopyDomain -> ObjectId -> GameState -> [ObjectId]
-legalCopyTargets batch filter_ among self gs =
+-- it. The Context is the REPLACEMENT's (candidateContext): its source is what
+-- "this" names and its controller is CR 109.5's "you". For Clone's own ability
+-- that is the entering object; for another permanent's (Essence of the Wild's
+-- "a copy of this creature", Filter.IsSource, and Infinite Reflection's "of
+-- enchanted creature", Filter.IsHostOfSource) it is that permanent. The linked
+-- pile is the source's too (CR 607.2a). The entering object's controller
+-- chooses, and only within their range (CR 801.5a).
+legalCopyTargets :: Filter.Context -> Set ObjectId -> Filter.Type.Filter Keyword.Type.Keyword -> CopyDomain.CopyDomain -> ObjectId -> GameState -> [ObjectId]
+legalCopyTargets context batch filter_ among self gs =
   let chooser = Projection.controllerOf self gs
-      context = Projection.sourceContext gs chooser self
       viewOf = Projection.viewsOf gs
       grants = Projection.controlGrants gs
       eligible oid =
@@ -2694,7 +2719,7 @@ legalCopyTargets batch filter_ among self gs =
         CopyDomain.InZone Zone.Battlefield -> Set.toAscList (GameState.battlefield gs)
         CopyDomain.InZone Zone.Graveyard -> concatMap (\pid -> Game.zoneMembers Zone.Graveyard pid gs) (GameState.turnOrder gs)
         CopyDomain.InZone _ -> []
-        CopyDomain.InPile pile -> Game.linkedPile Nothing pile self gs
+        CopyDomain.InPile pile -> Game.linkedPile Nothing pile (Maybe.fromMaybe self (Filter.source context)) gs
    in filter eligible domain
 
 -- CR 707.9g / 603.11: the triggered ability linked to a CR 707.5 entry

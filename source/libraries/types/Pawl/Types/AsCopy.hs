@@ -20,7 +20,10 @@ import qualified Pawl.Types.Keyword as Keyword
 -- It is NOT the rewrite's @matching@ field, which says which ENTERING permanent
 -- the replacement modifies (CR 614.12's subject); these are two different
 -- objects and Clone writes @IsSource@ for the one and @HasCardType Creature@ for
--- the other.
+-- the other. Both are read with the replacement's source as "this", so Essence
+-- of the Wild's "enter as a copy of this creature" is the reverse, @IsSource@
+-- as the Filter, and Infinite Reflection's "of enchanted creature" is
+-- @IsHostOfSource@.
 --
 -- "On the battlefield" is not in the Filter and cannot be: the zone is the
 -- offer's domain rather than a quality of a candidate. It is `among` instead,
@@ -75,7 +78,8 @@ data AsCopy ability effect = MkAsCopy
     -- the host for as long as the source exists (CopyCoverage.SourceHost).
     recipient :: CopyRecipient.CopyRecipient,
     -- | CR 707.5's "you may" (Clone), False for a printed "choose"
-    -- (Metamorphic Alteration's "choose a creature").
+    -- (Metamorphic Alteration's "choose a creature") or a mandatory "enter as
+    -- a copy" (Essence of the Wild).
     optional :: Bool
   }
   deriving (Eq, Ord, Show)
