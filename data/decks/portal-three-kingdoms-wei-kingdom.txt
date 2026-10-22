@@ -1,0 +1,17 @@
+5 Swamp
+5 Swamp
+5 Swamp
+1 Cao Cao, Lord of Wei
+2 Cunning Advisor
+1 Sima Yi, Wei Field Marshal
+2 Wei Assassins
+2 Wei Ambush Force
+2 Wei Elite Companions
+2 Wei Infantry
+2 Wei Scout
+2 Wei Strike Force
+2 Return to Battle
+2 Imperial Edict
+2 Deception
+2 Ghostly Visit
+1 Ambition's Cost

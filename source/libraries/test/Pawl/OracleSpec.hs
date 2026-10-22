@@ -54,6 +54,7 @@ spec s = Spec.describe s "Pawl.Oracle" $ do
   Spec.it s "normalise drops reminder text and splits a keyword line" $ do
     Spec.assertEq s (fmap Text.pack ["flying", "trample", "vigilance"]) (Oracle.normalise (Text.pack "Flying, vigilance\nTrample (This creature can deal excess combat damage.)"))
     Spec.assertEq s [] (Oracle.normalise (Text.pack "({T}: Add {G}.)"))
+    Spec.assertEq s (fmap Text.pack ["haste", "horsemanship"]) (Oracle.normalise (Text.pack "Haste; horsemanship (This creature can't be blocked except by creatures with horsemanship.)"))
 
   Spec.it s "render answers only for a single face of characteristics and keywords" $ do
     registry <- Registry.defaultRoot >>= Registry.fileRegistry

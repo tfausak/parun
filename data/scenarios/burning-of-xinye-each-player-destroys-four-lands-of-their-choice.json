@@ -1,0 +1,54 @@
+{
+  "description": "CR 608.2d whole card: Burning of Xinye has each player destroy four lands they choose, then deals 4 damage to each creature",
+  "note": "Each player holds five lands and keeps the one listed first, so destroying the first four, or every land, reads differently from destroying the four chosen. The 3/3 dies to the damage; the Wall of Swords (3/5) survives it. Alice's lands start tapped so the cast pays from her pool without a mana-source prompt.",
+  "board": {
+    "active": "alice",
+    "step": "PrecombatMain",
+    "seats": [
+      {
+        "name": "alice",
+        "manaPool": "RRRRRR",
+        "library": [{ "card": "Island" }, { "card": "Island" }],
+        "hand": [{ "card": "Burning of Xinye", "label": "burning" }],
+        "battlefield": [
+          { "card": "Plains", "label": "kept", "tapped": true },
+          { "card": "Mountain", "label": "m1", "tapped": true },
+          { "card": "Mountain", "label": "m2", "tapped": true },
+          { "card": "Mountain", "label": "m3", "tapped": true },
+          { "card": "Mountain", "label": "m4", "tapped": true },
+          { "card": "Wall of Swords", "label": "wall" }
+        ]
+      },
+      {
+        "name": "bob",
+        "library": [{ "card": "Island" }, { "card": "Island" }],
+        "battlefield": [
+          { "card": "Island", "label": "theirs" },
+          { "card": "Forest", "label": "f1" },
+          { "card": "Forest", "label": "f2" },
+          { "card": "Forest", "label": "f3" },
+          { "card": "Forest", "label": "f4" },
+          { "card": "Hill Giant", "label": "giant" }
+        ]
+      }
+    ]
+  },
+  "timeline": [
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": { "Cast": { "object": "$burning", "targets": ["$bob"] } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass" },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": { "Answer": { "prompt": "ChoosePermanent", "with": "$m1" } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": { "Answer": { "prompt": "ChoosePermanent", "with": "$m2" } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": { "Answer": { "prompt": "ChoosePermanent", "with": "$m3" } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": { "Answer": { "prompt": "ChoosePermanent", "with": "$m4" } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "bob", "do": { "Answer": { "prompt": "ChoosePermanent", "with": "$f1" } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "bob", "do": { "Answer": { "prompt": "ChoosePermanent", "with": "$f2" } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "bob", "do": { "Answer": { "prompt": "ChoosePermanent", "with": "$f3" } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "bob", "do": { "Answer": { "prompt": "ChoosePermanent", "with": "$f4" } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "check": { "Count": { "player": "alice", "zone": "Battlefield", "card": "Plains", "count": 1 } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "check": { "Count": { "player": "alice", "zone": "Graveyard", "card": "Mountain", "count": 4 } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "check": { "Count": { "player": "bob", "zone": "Battlefield", "card": "Island", "count": 1 } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "check": { "Count": { "player": "bob", "zone": "Graveyard", "card": "Forest", "count": 4 } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "check": { "Count": { "player": "bob", "zone": "Graveyard", "card": "Hill Giant", "count": 1 } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "check": { "Damage": { "object": "$wall", "damage": 4 } } }
+  ]
+}

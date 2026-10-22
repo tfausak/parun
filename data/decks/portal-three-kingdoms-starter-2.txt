@@ -1,0 +1,26 @@
+1 Forest
+1 Forest
+1 Forest
+2 Island
+2 Island
+1 Island
+2 Plains
+2 Plains
+1 Plains
+1 Forest Bear
+1 Shu Cavalry
+1 Shu Elite Companions
+1 Shu Elite Infantry
+1 Shu Foot Soldiers
+1 Shu Grain Caravan
+1 Southern Elephant
+1 Straw Soldiers
+1 Volunteer Militia
+1 Wu Elite Cavalry
+1 Wu Light Cavalry
+1 Wu Scout
+1 Borrowing 100,000 Arrows
+1 Council of Advisors
+1 Forced Retreat
+1 Misfortune's Gain
+1 Trip Wire
