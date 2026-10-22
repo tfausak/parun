@@ -1,8 +1,9 @@
 -- English the rest of Pawl.Oracle builds sentences from. Every renderer there
 -- answers a list: empty when it cannot render its value, and otherwise the
 -- wordings Oracle text uses for it, the current one first. More than one
--- arises where Oracle wording drifted across printings for the same
--- instruction ("Draw two cards." and the older "You draw two cards.").
+-- arises only where Oracle text words the same value two ways and nothing the
+-- DSL records picks between them; where the card or the value decides, the
+-- renderer decides with it.
 module Pawl.Oracle.Prose where
 
 import qualified Data.Char as Char

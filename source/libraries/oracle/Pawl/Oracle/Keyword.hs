@@ -1,6 +1,7 @@
 -- Keyword abilities (CR 702) as Oracle text prints them.
 module Pawl.Oracle.Keyword where
 
+import qualified Data.Char as Char
 import qualified Data.List as List
 import qualified Data.Map.Strict as Map
 import qualified Data.Maybe as Maybe
@@ -20,6 +21,7 @@ import qualified Pawl.Types.Filter as Filter.Type
 import qualified Pawl.Types.ForetellCost as ForetellCost
 import qualified Pawl.Types.Keyword as Keyword
 import qualified Pawl.Types.KeywordCount as KeywordCount
+import qualified Pawl.Types.KeywordFamily as KeywordFamily
 import qualified Pawl.Types.MadnessCost as MadnessCost
 import qualified Pawl.Types.Morph as Morph
 import qualified Pawl.Types.MorphVariant as MorphVariant
@@ -32,10 +34,9 @@ import qualified Pawl.Types.SuspendCounters as SuspendCounters
 import qualified Pawl.Types.Ward as Ward
 
 -- | A face's keywords, one line per instance (a keyword printed twice is two
--- instances, CR 702.1), except that protections may share a line ("Protection
--- from black and from red", Paladin en-Vec). Lines come out in no particular
--- order, which Pawl.Oracle.Normalise absorbs: the face keeps no printed order
--- to follow.
+-- instances, CR 702.1), except that protections share one. Lines come out in
+-- no particular order, which Pawl.Oracle.Normalise absorbs: the face keeps no
+-- printed order to follow.
 lines :: Text.Text -> Map.Map Keyword.Keyword Natural.Natural -> [[Text.Text]]
 lines self keywords = do
   let instances = concatMap (\(k, n) -> List.genericReplicate n k) (Map.toAscList keywords)
@@ -50,17 +51,19 @@ isProtection k = case k of
   Keyword.Protection _ -> True
   _ -> False
 
--- | Protections one to a line, or all on one: "Protection from black and from
--- red", "Protection from white, from blue, and from black".
+-- | Protections all on one line, as Oracle text prints more than one:
+-- "Protection from black and from red" (Paladin en-Vec), "Protection from
+-- white, from blue, and from black".
 protectionLines :: Text.Text -> [Keyword.Keyword] -> [[Text.Text]]
-protectionLines self protections = do
-  separate <- traverse (printed self) protections
-  let froms = traverse from protections
-      from k = case k of
-        Keyword.Protection p | Maybe.isNothing (Protection.spares p) -> fmap (Text.pack "from " <>) (quality self (Protection.quality p))
-        _ -> []
-      shared = [[Text.pack "Protection " <> Prose.listing "and" qs] | length protections > 1, qs <- froms]
-  separate : shared
+protectionLines self protections = case protections of
+  [] -> [[]]
+  [one] -> traverse (printed self) [one]
+  _ -> do
+    let from k = case k of
+          Keyword.Protection p | Maybe.isNothing (Protection.spares p) -> fmap (Text.pack "from " <>) (quality self (Protection.quality p))
+          _ -> []
+    qs <- traverse from protections
+    [[Text.pack "Protection " <> Prose.listing "and" qs]]
 
 -- | How Oracle text prints a keyword, given what the card calls itself; none
 -- for one this does not spell yet. A landwalk over a subtype is "[type]walk"
@@ -303,6 +306,17 @@ printed self keyword = case keyword of
   Keyword.Disturb c -> Cost.keyworded self (Text.pack "Disturb") c
   Keyword.Harmonize c -> Cost.keyworded self (Text.pack "Harmonize") c
 
+-- | A keyword family as Oracle text names every keyword of it, in lower case
+-- ("loses hexproof"), landwalk's as its abilities (Hammerheim, CR 702.14a),
+-- for a family whose name is one word; a longer one is not spelled out here
+-- yet.
+family :: KeywordFamily.KeywordFamily -> [Text.Text]
+family f = case f of
+  KeywordFamily.Landwalk -> [Text.pack "all landwalk abilities"]
+  _ ->
+    let name = Text.pack (show f)
+     in [Text.toLower name | Text.length (Text.filter Char.isUpper name) == 1]
+
 -- | A keyword counting a printed number: "Mobilize 3".
 counted :: String -> KeywordCount.KeywordCount keyword -> [Text.Text]
 counted name c = case c of
@@ -325,15 +339,16 @@ keywordWord :: Text.Text -> Keyword.Keyword -> [Text.Text]
 keywordWord self k = fmap Text.toLower (printed self k)
 
 -- | A landwalk's quality as the word before "walk": "swamp" for a Swamp,
--- "snow swamp" for a snow Swamp, "nonbasic land" for a nonbasic land (CR
--- 702.14a).
+-- "snow swamp" for a snow Swamp, "nonbasic land" for a nonbasic land, and
+-- "artifact land" for an artifact land (CR 702.14a, CR 702.14c).
 landwalk :: Text.Text -> Filter.Type.Filter Keyword.Keyword -> [Text.Text]
 landwalk self f = do
   p <- Filter.phrase f (keywordWord self)
   before <- Filter.adjectiveText Filter.Singular (Filter.adjectives p)
-  word <- case (Filter.nouns p, Filter.qualifiers p) of
-    ([], []) -> [Text.pack "landwalk"]
-    ([n], []) -> [Text.toLower (Filter.singular n) <> Text.pack "walk"]
+  word <- case (Filter.nouns p, Filter.qualifiers p, f) of
+    ([], [], _) -> [Text.pack "landwalk"]
+    ([n], [], Filter.Type.HasCardType _) -> [Text.toLower (Filter.singular n) <> Text.pack " landwalk"]
+    ([n], [], _) -> [Text.toLower (Filter.singular n) <> Text.pack "walk"]
     _ -> []
   [Prose.capitalise (Text.unwords (before <> [word]))]
 

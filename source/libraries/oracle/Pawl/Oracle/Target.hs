@@ -2,6 +2,7 @@
 -- 115), the objects and players a reference names, and the numbers it reads.
 module Pawl.Oracle.Target where
 
+import qualified Data.Bifunctor as Bifunctor
 import qualified Data.Map.Strict as Map
 import qualified Data.Maybe as Maybe
 import qualified Data.Text as Text
@@ -27,7 +28,8 @@ data Context = MkContext
     -- | What may separate two sentences of one ability: a space, and for a
     -- spell's instructions a paragraph break too, since all of them are one
     -- spell ability (CR 113.3a). Anywhere else a paragraph break starts
-    -- another ability (CR 113.2c).
+    -- another ability (CR 113.2c). Free in a spell: one paragraph (Dark
+    -- Offering) or two (Bargain).
     breaks :: [Text.Text]
   }
 
@@ -42,10 +44,15 @@ data Reference = MkReference
   deriving (Eq, Show)
 
 -- | Whether a description of many objects reads "each" or "all": damage is
--- dealt to "each creature" and destruction is of "all creatures".
+-- dealt to "each creature" and destruction is of "all creatures". A
+-- continuous effect's objects read "all" only when described by their noun
+-- alone: "All creatures get -1/-1" (Night of Souls' Betrayal), "All Sliver
+-- creatures have frenzy 1", but "Black creatures get +1/+1" (Bad Moon) and
+-- "Creatures you control get +1/+1" (Glorious Anthem).
 data Determiner
   = Each
   | All
+  | Affected
   deriving (Eq, Show)
 
 -- | The slot the engine binds the object an instruction is on to, which CR
@@ -100,6 +107,10 @@ object context determiner ref = case ref of
       All -> do
         text <- Filter.describe Filter.Plural permanent p
         [MkReference (Text.pack "all " <> text) [] Filter.Plural]
+      Affected -> do
+        text <- Filter.describe Filter.Plural permanent p
+        let bare = null (Filter.adjectives p) && null (Filter.qualifiers p)
+        [MkReference (if bare then Text.pack "all " <> text else text) [] Filter.Plural]
   ObjectRef.EachPlayer -> [MkReference (Text.pack "each player") [] Filter.Plural]
   ObjectRef.EachOpponent -> [MkReference (Text.pack "each opponent") [] Filter.Plural]
   _ -> []
@@ -160,27 +171,35 @@ among context s = case Map.lookup s (slots context) of
 -- | A slot's head in both numbers, "target" included: ("target creature",
 -- "target creatures"), or ("any target", "targets") for CR 115.4's phrase.
 heads :: Context -> TargetSlot.TargetSlot -> [(Text.Text, Text.Text)]
-heads context slot =
-  let described fallback p = do
+heads context slot = case (TargetSlot.pool slot, TargetSlot.filter slot) of
+  (Pool.AnyTarget, Nothing) -> [(Text.pack "any target", Text.pack "targets")]
+  (Pool.PlayersAndPlaneswalkers, Nothing) -> [(Text.pack "target player or planeswalker", Text.pack "target players and/or planeswalkers")]
+  _ -> fmap (Bifunctor.bimap (Text.pack "target " <>) (Text.pack "target " <>)) (described context slot)
+
+-- | What a slot's objects are, in both numbers and without "target":
+-- ("creature", "creatures"), as an Aura's enchant ability names them too
+-- ("Enchant creature", CR 702.5a).
+described :: Context -> TargetSlot.TargetSlot -> [(Text.Text, Text.Text)]
+described context slot =
+  let both fallback p = do
         one <- Filter.describe Filter.Singular fallback p
         many <- Filter.describe Filter.Plural fallback p
-        [(Text.pack "target " <> one, Text.pack "target " <> many)]
+        [(one, many)]
       filtered = case TargetSlot.filter slot of
         Nothing -> [Filter.empty]
         Just f -> Filter.phrase f (keyword context)
       noun s = Filter.MkNoun (Text.pack s) (Just (Text.pack (s <> "s")))
    in case (TargetSlot.pool slot, TargetSlot.filter slot) of
-        (Pool.AnyTarget, Nothing) -> [(Text.pack "any target", Text.pack "targets")]
-        (Pool.AnyTarget, Just _) -> filtered >>= described (Filter.MkNoun Text.empty Nothing)
-        (Pool.Creatures, _) -> filtered >>= described (noun "creature") . (\p -> Filter.merge p (Filter.MkPhrase [] [noun "creature"] []))
-        (Pool.Players, _) -> filtered >>= described (noun "player")
-        (Pool.PlayersAndPlaneswalkers, Nothing) -> [(Text.pack "target player or planeswalker", Text.pack "target players and/or planeswalkers")]
-        (Pool.Permanents, _) -> filtered >>= described (noun "permanent")
-        (Pool.Spells, _) -> filtered >>= described (noun "spell") . (\p -> Filter.merge p (Filter.MkPhrase [] [noun "spell"] []))
+        (Pool.AnyTarget, Just _) -> filtered >>= both (Filter.MkNoun Text.empty Nothing)
+        (Pool.Creatures, _) -> filtered >>= both (noun "creature") . (\p -> Filter.merge p (Filter.MkPhrase [] [noun "creature"] []))
+        (Pool.Players, _) -> filtered >>= both (noun "player")
+        (Pool.Permanents, _) -> filtered >>= both (noun "permanent")
+        (Pool.Spells, _) -> filtered >>= both (noun "spell") . (\p -> Filter.merge p (Filter.MkPhrase [] [noun "spell"] []))
         _ -> []
 
 -- | A slot's count before its head: one target reads singular, a fixed number
--- or a range plural.
+-- or a range plural ("up to three target creatures", "one or two target
+-- creatures").
 counted :: SlotCount.SlotCount -> Text.Text -> Text.Text -> [(Text.Text, Filter.Number)]
 counted c one many = case c of
   SlotCount.Printed (TargetCount.MkTargetCount 1 (Just 1)) -> [(one, Filter.Singular)]
@@ -188,6 +207,7 @@ counted c one many = case c of
   SlotCount.Printed (TargetCount.MkTargetCount least (Just most))
     | least == most -> [(Prose.cardinal (toInteger most) <> Text.pack " " <> many, Filter.Plural)]
     | least == 0 -> [(Text.pack "up to " <> Prose.cardinal (toInteger most) <> Text.pack " " <> many, Filter.Plural)]
+    | least == 1 -> [(Prose.listing "or" (fmap (Prose.cardinal . toInteger) [1 .. most]) <> Text.pack " " <> many, Filter.Plural)]
   SlotCount.Printed (TargetCount.MkTargetCount 0 Nothing) -> [(Text.pack "any number of " <> many, Filter.Plural)]
   SlotCount.AnnouncedX -> [(Text.pack "X " <> many, Filter.Plural)]
   _ -> []
