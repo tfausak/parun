@@ -24,6 +24,7 @@
 module Pawl.Registry where
 
 import qualified Control.Exception as Exception
+import qualified Data.Bifunctor as Bifunctor
 import qualified Data.ByteString as ByteString
 import qualified Data.List as List
 import qualified Data.List.NonEmpty as NonEmpty
@@ -45,20 +46,21 @@ import qualified Pawl.Types.Face as Face
 import qualified System.Directory as Directory
 
 -- Nothing says only that no card has that name, and the caller supplied the
--- name (#649). A file registry whose lookup reaches a file it cannot use throws
--- InvalidCorpus instead, so a broken root never reads as a missing card.
+-- name (#649). A lookup that reaches a file the registry cannot use answers
+-- InvalidCorpus instead, so a broken root never reads as a missing card; what
+-- that means is the caller's to decide.
 data Registry m = MkRegistry
-  { fetchCard :: CardName.CardName -> m (Maybe Card.Card),
+  { fetchCard :: CardName.CardName -> m (Either InvalidCorpus.InvalidCorpus (Maybe Card.Card)),
     -- | Every card of the Oracle card reference the pool holds, once each. A
     -- synthetic test fixture is in the pool without being such a card.
-    cards :: m [Card.Card]
+    cards :: m (Either InvalidCorpus.InvalidCorpus [Card.Card])
   }
 
 -- A card by name ("Goblin Piker") or by slug ("goblin-piker") -- a file-backed
 -- registry slugifies, and slugify is idempotent, so both are the same lookup.
 -- Takes a String because pawl does not enable OverloadedStrings: the newtype is
 -- what the interface speaks, this is what callers write.
-named :: Registry m -> String -> m (Maybe Card.Card)
+named :: Registry m -> String -> m (Either InvalidCorpus.InvalidCorpus (Maybe Card.Card))
 named registry = fetchCard registry . CardName.MkCardName . Text.pack
 
 -- The card corpus's default root: data/cards declared as cabal data-files,
@@ -84,10 +86,9 @@ defaultRoot = Paths.getDataFileName "cards"
 -- answers Nothing. `cards` forces that same index.
 --
 -- A lookup or enumeration that reaches a file that will not parse, or a name
--- two cards claim, throws InvalidCorpus naming every such problem among the
--- files it reached. It throws as the lookup's action is evaluated, the one
--- moment an Applicative m allows. The rest of the root is not validated here;
--- the corpus pawl ships is, by the lints the module header names.
+-- two cards claim, answers InvalidCorpus naming every such problem among the
+-- files it reached. The rest of the root is not validated here; the corpus
+-- pawl ships is, by the lints the module header names.
 --
 -- The two halves of the signature are construction and lookup, and they are not
 -- the same monad: building the registry reads the directory, so construction is
@@ -101,18 +102,17 @@ fileRegistry root = do
     then Exception.throwIO MissingRoot.MkMissingRoot {MissingRoot.path = root}
     else do
       loaded <- loadRoot root
-      let usable result = case result of
-            Left problems -> Exception.throw InvalidCorpus.MkInvalidCorpus {InvalidCorpus.root = root, InvalidCorpus.problems = problems}
-            Right keyed -> keyed
+      let usable :: Either [String] a -> Either InvalidCorpus.InvalidCorpus a
+          usable = Bifunctor.first (\problems -> InvalidCorpus.MkInvalidCorpus {InvalidCorpus.root = root, InvalidCorpus.problems = problems})
           whole = usable (index loaded)
           byRun = Map.fromListWith (<>) (concatMap (\entry -> fmap (\run -> (run, [entry])) (Set.toList (runs (stemOf (fst entry))))) loaded)
-          find name =
+          find name = do
             let slug = slugFor name
-             in case Map.lookup slug (usable (index (Map.findWithDefault [] slug byRun))) of
-                  Just card -> Just card
-                  Nothing -> Map.lookup slug whole
-          strictly x = seq x (pure x)
-      pure MkRegistry {fetchCard = strictly . find, cards = seq whole (pure (Maybe.mapMaybe referenceCard loaded))}
+            near <- usable (index (Map.findWithDefault [] slug byRun))
+            case Map.lookup slug near of
+              Just card -> Right (Just card)
+              Nothing -> fmap (Map.lookup slug) whole
+      pure MkRegistry {fetchCard = pure . find, cards = pure (fmap (const (Maybe.mapMaybe referenceCard loaded)) whole)}
 
 -- The slug a card file is named by: its file name, less the directory and the
 -- extension.

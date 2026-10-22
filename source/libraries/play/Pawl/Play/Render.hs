@@ -14,6 +14,7 @@ import qualified Data.Text as Text
 import Numeric.Natural (Natural)
 import qualified Pawl.Codec.GameEvent as Codec.GameEvent
 import qualified Pawl.Codec.Reply as Codec.Reply
+import qualified Pawl.Exceptions.InvalidCorpus as InvalidCorpus
 import qualified Pawl.JsonCodec.Codec as Codec
 import qualified Pawl.Types.AbilityView as AbilityView
 import qualified Pawl.Types.AttackTarget as AttackTarget
@@ -162,18 +163,21 @@ cardNames o = maybe (foldMap ProjectedCharacteristics.names (ObjectView.characte
 
 -- | An object in full, as the seat sees it: its summary, its characteristics
 -- now, the card behind it when face down and the seat may look, its
--- counters, and the printed Oracle text of the faces it is named for.
-details :: (CardName.CardName -> Maybe Card.Card) -> PlayerView.PlayerView -> ObjectView.ObjectView -> [Text.Text]
-details lookUp view o =
-  [describe view o]
-    <> foldMap characteristicLines (ObjectView.characteristics o)
-    <> foldMap (\f -> Text.pack "Face down. You may look at it:" : characteristicLines f) (ObjectView.face o)
-    <> [Text.pack "Counters: " <> Text.intercalate (Text.pack ", ") (fmap counted (Map.toList (ObjectView.counters o))) | not (Map.null (ObjectView.counters o))]
-    <> foldMap oracle faces
+-- counters, and the printed Oracle text of the faces it is named for; or why
+-- the card data could not say.
+details :: (CardName.CardName -> Either InvalidCorpus.InvalidCorpus (Maybe Card.Card)) -> PlayerView.PlayerView -> ObjectView.ObjectView -> Either InvalidCorpus.InvalidCorpus [Text.Text]
+details lookUp view o = do
+  looked <- traverse lookUp (Set.toList names)
+  let faces = concatMap (filter ((`Set.member` names) . Face.name) . Foldable.toList . Card.faces) (ListUtils.nubOrd (Maybe.catMaybes looked))
+      oracle f = [CardName.unwrap (Face.name f) <> Text.pack ":" | length faces > 1] <> foldMap Text.lines (Face.oracleText f)
+  pure $
+    [describe view o]
+      <> foldMap characteristicLines (ObjectView.characteristics o)
+      <> foldMap (\f -> Text.pack "Face down. You may look at it:" : characteristicLines f) (ObjectView.face o)
+      <> [Text.pack "Counters: " <> Text.intercalate (Text.pack ", ") (fmap counted (Map.toList (ObjectView.counters o))) | not (Map.null (ObjectView.counters o))]
+      <> foldMap oracle faces
   where
     names = cardNames o
-    faces = concatMap (filter ((`Set.member` names) . Face.name) . Foldable.toList . Card.faces) (ListUtils.nubOrd (Maybe.mapMaybe lookUp (Set.toList names)))
-    oracle f = [CardName.unwrap (Face.name f) <> Text.pack ":" | length faces > 1] <> foldMap Text.lines (Face.oracleText f)
     counted (kind, n) = Text.pack (show n <> " ") <> counterName kind
 
 -- | CR 201.1 / 202.1 / 205.1 / 208.1: the name line with its mana cost, the type line, and

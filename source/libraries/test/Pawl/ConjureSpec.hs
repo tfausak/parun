@@ -877,8 +877,8 @@ spec s registry = Spec.describe s "Pawl.Conjure" $ do
             pure (Maybe.fromMaybe (NonEmpty.head offered) (List.find synthetic (NonEmpty.toList offered)))
           p -> pure (S.identityAnswer p)
         run = do
-          (_, settled) <- Engine.runGameAsked (Interpreter.lookingUpCards lifted answer) entered Engine.settleForPriority
-          Engine.runGameAsked (Interpreter.lookingUpCards lifted answer) settled Engine.priorityLoop
+          (_, settled) <- Engine.runGameAsked (Interpreter.lookingUpCards lifted (Trans.lift . S.brokenCorpus s) answer) entered Engine.settleForPriority
+          Engine.runGameAsked (Interpreter.lookingUpCards lifted (Trans.lift . S.brokenCorpus s) answer) settled Engine.priorityLoop
     ((_, final), logged) <- State.runStateT run []
     let arrived = filter (`notElem` [fearOfChange, llanowarElves]) (namesIn Zone.Battlefield final)
     Spec.assertEqWith
@@ -1088,11 +1088,7 @@ calimsBreath s registry leyline others = do
       ability = case Game.faceOf calimId board of
         Just face -> take 1 (Face.activatedAbilities face)
         Nothing -> []
-      fixture =
-        Registry.MkRegistry
-          { Registry.fetchCard = \name -> pure (List.find (\card -> S.nameOf card == name) reference),
-            Registry.cards = pure reference
-          }
+      fixture = S.fixtureRegistry reference
       answer :: Asked.Asked r -> State.State Int r
       answer asked = case Asked.prompt asked of
         Prompt.ChooseToPay {} -> do
@@ -1101,7 +1097,7 @@ calimsBreath s registry leyline others = do
         Prompt.ChooseTargets _ _ _ sets -> pure (fmap (Set.filter ((== Just pikerId) . Recipient.objectOf) . snd) sets)
         p -> pure (S.identityAnswer p)
       asking :: Asked.Asked r -> State.State Int r
-      asking = Interpreter.lookingUpCards fixture answer
+      asking = Interpreter.lookingUpCards fixture S.unreachableCorpus answer
       run = do
         (_, activated) <- Engine.runGameAsked asking board (Monad.mapM_ (Activate.activateAbility S.alice calimId) ability)
         Engine.runGameAsked asking activated Engine.priorityLoop
@@ -1113,11 +1109,7 @@ calimsBreath s registry leyline others = do
 -- randomness was asked over come back in order.
 conjureDepthRun :: [Card.Card] -> Numeric.Natural.Natural -> GameState.GameState -> (GameState.GameState, [Numeric.Natural.Natural])
 conjureDepthRun reference depth board =
-  let fixture =
-        Registry.MkRegistry
-          { Registry.fetchCard = \name -> pure (List.find (\card -> S.nameOf card == name) reference),
-            Registry.cards = pure reference
-          }
+  let fixture = S.fixtureRegistry reference
       answer :: Asked.Asked r -> State.State [Numeric.Natural.Natural] r
       answer asked = case Asked.prompt asked of
         Prompt.RandomDepth reach -> do
@@ -1125,8 +1117,8 @@ conjureDepthRun reference depth board =
           pure depth
         p -> pure (S.identityAnswer p)
       run = do
-        (_, settled) <- Engine.runGameAsked (Interpreter.lookingUpCards fixture answer) board Engine.settleForPriority
-        Engine.runGameAsked (Interpreter.lookingUpCards fixture answer) settled Engine.priorityLoop
+        (_, settled) <- Engine.runGameAsked (Interpreter.lookingUpCards fixture S.unreachableCorpus answer) board Engine.settleForPriority
+        Engine.runGameAsked (Interpreter.lookingUpCards fixture S.unreachableCorpus answer) settled Engine.priorityLoop
       ((_, final), logged) = State.runState run []
    in (final, reverse logged)
 
@@ -1184,11 +1176,7 @@ fearOfChangeRun s registry withPiker lying = do
   reference <- mapM (S.cardOf s registry) ["Goblin Piker", "Hill Giant", "Ancient Vendetta", "Giant Spider"]
   let board0 = if withPiker then snd (S.addPermanent piker S.alice (Setup.emptyGame S.bothPlayers)) else Setup.emptyGame S.bothPlayers
       (_, entered) = S.entersWithTrigger fear S.alice board0
-      fixture =
-        Registry.MkRegistry
-          { Registry.fetchCard = \name -> pure (List.find (\card -> S.nameOf card == name) reference),
-            Registry.cards = pure reference
-          }
+      fixture = S.fixtureRegistry reference
       answer :: Asked.Asked r -> State.State [[CardName.CardName]] r
       answer asked = case Asked.prompt asked of
         Prompt.RandomCard offered -> do
@@ -1199,7 +1187,7 @@ fearOfChangeRun s registry withPiker lying = do
       asking asked = case Asked.prompt asked of
         Prompt.ReferenceCards {}
           | lying -> pure (fmap S.nameOf reference)
-        _ -> Interpreter.lookingUpCards fixture answer asked
+        _ -> Interpreter.lookingUpCards fixture S.unreachableCorpus answer asked
       run = do
         (_, settled) <- Engine.runGameAsked asking entered Engine.settleForPriority
         Engine.runGameAsked asking settled Engine.priorityLoop

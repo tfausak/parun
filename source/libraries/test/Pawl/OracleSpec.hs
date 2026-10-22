@@ -58,9 +58,9 @@ spec s = Spec.describe s "Pawl.Oracle" $ do
   Spec.it s "render answers only for a single face of characteristics and keywords" $ do
     registry <- Registry.defaultRoot >>= Registry.fileRegistry
     elves <- Registry.named registry "Llanowar Elves"
-    Spec.assertEq s (Just Nothing) (fmap Oracle.render elves)
+    Spec.assertEq s (Right (Just Nothing)) (fmap (fmap Oracle.render) elves)
     angel <- Registry.named registry "Serra Angel"
-    Spec.assertEq s (Just (Just (Text.pack "Flying\nVigilance"))) (fmap Oracle.render angel)
+    Spec.assertEq s (Right (Just (Just (Text.pack "Flying\nVigilance")))) (fmap (fmap Oracle.render) angel)
 
   Spec.it s "each standalone keyword prints as its codec tag spells it" $
     Monad.forM_
@@ -96,7 +96,7 @@ spec s = Spec.describe s "Pawl.Oracle" $ do
       $ \(name, json) -> do
         card <- Registry.named registry name
         case (Common.parse (Text.pack json), card) of
-          (Right value, Just expected) -> Spec.assertEqWith s name (Right expected) (Ingest.candidate value)
+          (Right value, Right (Just expected)) -> Spec.assertEqWith s name (Right expected) (Ingest.candidate value)
           _ -> Spec.assertFailure s (name <> ": no record or no card")
 
   -- Replenish is reprinted as the spell face of Eiganjo Dynastorian, whose
@@ -108,7 +108,7 @@ spec s = Spec.describe s "Pawl.Oracle" $ do
         json = "[{\"card\":\"Eiganjo Dynastorian // Replenish\",\"name\":\"Replenish\",\"text\":\"Return all enchantment cards from your graveyard to the battlefield.\"},{\"card\":\"Replenish\",\"name\":\"Replenish\",\"text\":\"" <> own <> "\"}]"
         unstamped c = c {Card.faces = fmap (\f -> f {Face.oracleText = Nothing}) (Card.faces c)}
     case (Common.parse (Text.pack json) >>= Ingest.texts, replenish) of
-      (Right known, Just card) -> Spec.assertEq s (Just (Text.pack own)) (Face.oracleText (NonEmpty.head (Card.faces (Ingest.stamp known (unstamped card)))))
+      (Right known, Right (Just card)) -> Spec.assertEq s (Just (Text.pack own)) (Face.oracleText (NonEmpty.head (Card.faces (Ingest.stamp known (unstamped card)))))
       _ -> Spec.assertFailure s "Replenish: no texts or no card"
 
   Spec.it s "candidate leaves out a card it would have to guess at" $ do

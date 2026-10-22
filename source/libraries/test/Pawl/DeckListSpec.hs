@@ -10,6 +10,7 @@ import qualified Data.Map.Strict as Map
 import qualified Data.Text as Text
 import qualified Numeric.Natural as Natural
 import qualified Pawl.DeckList as DeckList
+import qualified Pawl.Exceptions.InvalidCorpus as InvalidCorpus
 import qualified Pawl.Registry as Registry
 import qualified Pawl.Spec as Spec
 import qualified Pawl.Support as S
@@ -37,16 +38,18 @@ deckOf :: Spec.Spec IO n -> String -> Registry.Registry IO -> String -> IO Deck.
 deckOf s label registry text = do
   result <- DeckList.parse registry (Text.pack text)
   case result of
-    Right deck -> pure deck
-    Left problems -> Spec.assertFailure s (label <> ": " <> show (fmap DeckList.explain problems))
+    Right (Right deck) -> pure deck
+    Right (Left problems) -> Spec.assertFailure s (label <> ": " <> show (fmap DeckList.explain problems))
+    Left corpus -> S.brokenCorpus s corpus
 
 -- The problems a list raises, failing the case when it unexpectedly parses.
 problemsOf :: Spec.Spec IO n -> String -> Registry.Registry IO -> String -> IO [DeckList.Problem]
 problemsOf s label registry text = do
   result <- DeckList.parse registry (Text.pack text)
   case result of
-    Left problems -> pure problems
-    Right _ -> Spec.assertFailure s (label <> ": expected the list to be rejected")
+    Right (Left problems) -> pure problems
+    Right (Right _) -> Spec.assertFailure s (label <> ": expected the list to be rejected")
+    Left corpus -> S.brokenCorpus s corpus
 
 spec :: (Monad n) => Spec.Spec IO n -> n ()
 spec s = Spec.describe s "Pawl.DeckList" $ do
@@ -88,9 +91,9 @@ spec s = Spec.describe s "Pawl.DeckList" $ do
       half <- deckOf s "half" registry "3 Wane\n"
       Spec.assertEqWith s "one card, three times" (entriesOf (Deck.cards half)) [(Text.pack "Wax//Wane", 3)]
       spaced <- DeckList.parse registry (Text.pack "3 Wax // Wane\n")
-      Spec.assertEqWith s "the printed spelling is that same deck" spaced (Right half)
+      Spec.assertEqWith s "the printed spelling is that same deck" spaced (Right (Right half))
       unspaced <- DeckList.parse registry (Text.pack "3 Wax//Wane\n")
-      Spec.assertEqWith s "and so is the unspaced spelling" unspaced (Right half)
+      Spec.assertEqWith s "and so is the unspaced spelling" unspaced (Right (Right half))
 
   -- A joined name whose halves are two cards names no one card. Without this
   -- the parser could take the first half and silently drop the rest, which
@@ -110,6 +113,18 @@ spec s = Spec.describe s "Pawl.DeckList" $ do
       deck <- deckOf s "sideboard" registry "4 Goblin Piker\n\nSideboard\n2 Wax // Wane\n"
       Spec.assertEqWith s "the deck" (entriesOf (Deck.cards deck)) [(Text.pack "Goblin Piker", 4)]
       Spec.assertEqWith s "and the sideboard" (entriesOf (Deck.sideboard deck)) [(Text.pack "Wax//Wane", 2)]
+
+  -- A name no file is named for reaches the whole root, and a malformed file
+  -- there is the registry's failure rather than a line's problem: the list
+  -- is not a deck with one bad line, it is a list the card data cannot read.
+  Spec.it s "a name that reaches a malformed card file fails the parse, naming the file" $ do
+    piker <- S.pikerJson
+    S.withCorpusDir "deck-list-malformed" [("goblin-piker.json", piker), ("bird-maiden.json", Text.pack "{oh no")] $ \dir -> do
+      registry <- Registry.fileRegistry dir
+      broken <- DeckList.parse registry (Text.pack "4 Goblin Piker\n2 Shivan Dragon\n")
+      Spec.assertEqWith s "the registry's failure, naming the file" (fmap (fmap (List.isInfixOf "bird-maiden.json") . InvalidCorpus.problems) (either Just (const Nothing) broken)) (Just [True])
+      sound <- DeckList.parse registry (Text.pack "4 Goblin Piker\n")
+      Spec.assertBool s (either (const False) (either (const False) (const True)) sound) "a list reaching only the good file reads"
 
   -- Every bad line is reported rather than the first, for Pawl.Registry.index's
   -- reason: a report naming one offender at a time is read once per offender.

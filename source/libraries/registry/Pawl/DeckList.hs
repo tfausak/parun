@@ -17,6 +17,7 @@ import qualified Data.List.NonEmpty as NonEmpty
 import qualified Data.Map.Strict as Map
 import qualified Data.Text as Text
 import qualified Numeric.Natural as Natural
+import qualified Pawl.Exceptions.InvalidCorpus as InvalidCorpus
 import qualified Pawl.Registry as Registry
 import qualified Pawl.Types.Card as Card
 import qualified Pawl.Types.CardName as CardName
@@ -29,9 +30,8 @@ import qualified Text.Read as Read
 -- Every arm carries the one-based line number, since a report that cannot say
 -- WHERE is not worth reading.
 --
--- A returned value rather than an exception, for Pawl.Registry's reason: a
--- parse over a pure registry cannot throw. Every bad line is reported, not just
--- the first.
+-- A returned value rather than an exception, as a registry's lookup is. Every
+-- bad line is reported, not just the first.
 data Problem
   = -- | A line that is neither blank, a section header, nor a count and a name.
     Unreadable Natural.Natural Text.Text
@@ -59,7 +59,8 @@ data Section
   | Side
   deriving (Eq, Ord, Show)
 
--- | The deck a deck list describes, or every line that stopped it.
+-- | The deck a deck list describes, or every line that stopped it; outside
+-- both, the registry's failure to read a card file a lookup reached.
 --
 -- The two sections a deck list has are the two fields this fills. CR 903.3's
 -- commander, CR 902.3's vanguard card and CR 309.2's dungeon cards are brought
@@ -69,9 +70,14 @@ data Section
 -- Not implemented: CR 717.2's Attraction deck and the Unstable FAQ's Contraption
 -- deck, and naming which printing of an Attraction a line means, whose lights
 -- CR 717.1 lets differ (#4118).
-parse :: (Monad m) => Registry.Registry m -> Text.Text -> m (Either [Problem] Deck.Deck)
+parse :: (Monad m) => Registry.Registry m -> Text.Text -> m (Either InvalidCorpus.InvalidCorpus (Either [Problem] Deck.Deck))
 parse registry text = do
-  results <- mapM (lineOf registry) (List.zip [1 ..] (Text.lines text))
+  looked <- mapM (lineOf registry) (List.zip [1 ..] (Text.lines text))
+  pure (fmap assemble (sequence looked))
+
+-- The deck the lines' meanings add up to, or every line that stopped it.
+assemble :: [Either Problem (Maybe (Either Section (Natural.Natural, Card.Card)))] -> Either [Problem] Deck.Deck
+assemble results =
   let step (section, entries, problems) result = case result of
         Left problem -> (section, entries, problem : problems)
         Right Nothing -> (section, entries, problems)
@@ -80,22 +86,22 @@ parse registry text = do
       (_, found, bad) = List.foldl' step (Main, [], []) results
       gather want = Map.fromListWith (+) [(Printing.ofCard card, count) | (section, card, count) <- found, section == want, count /= 0]
       deck = Deck.fromCards (gather Main)
-   in pure $ case List.reverse bad of
+   in case List.reverse bad of
         [] -> Right deck {Deck.sideboard = gather Side}
         problems -> Left problems
 
 -- What one line means: nothing (blank), the section the lines after it belong
 -- to, or a count and the card it names.
-lineOf :: (Monad m) => Registry.Registry m -> (Natural.Natural, Text.Text) -> m (Either Problem (Maybe (Either Section (Natural.Natural, Card.Card))))
+lineOf :: (Monad m) => Registry.Registry m -> (Natural.Natural, Text.Text) -> m (Either InvalidCorpus.InvalidCorpus (Either Problem (Maybe (Either Section (Natural.Natural, Card.Card)))))
 lineOf registry (number, raw) =
   let trimmed = Text.strip raw
    in if Text.null trimmed
-        then pure (Right Nothing)
+        then pure (Right (Right Nothing))
         else case sectionNamed trimmed of
-          Just section -> pure (Right (Just (Left section)))
+          Just section -> pure (Right (Right (Just (Left section))))
           Nothing -> case entryOf trimmed of
-            Nothing -> pure (Left (Unreadable number trimmed))
-            Just (count, name) -> fmap (fmap (\card -> Just (Right (count, card)))) (resolve registry number name)
+            Nothing -> pure (Right (Left (Unreadable number trimmed)))
+            Just (count, name) -> fmap (fmap (fmap (\card -> Just (Right (count, card))))) (resolve registry number name)
 
 -- The section a header line names, if it is one. Only the two headers a deck
 -- list actually carries: everything else on a line of its own is a card name
@@ -141,10 +147,10 @@ entryOf text =
 -- Splitting on "//" and trimming reconciles the two spellings in the tree at
 -- once: the printed, spaced "Wax // Wane" and Pawl.Types.CardName.join's
 -- unspaced "Wax//Wane", which is what docs/rules.txt's own examples use.
-resolve :: (Monad m) => Registry.Registry m -> Natural.Natural -> CardName.CardName -> m (Either Problem Card.Card)
+resolve :: (Monad m) => Registry.Registry m -> Natural.Natural -> CardName.CardName -> m (Either InvalidCorpus.InvalidCorpus (Either Problem Card.Card))
 resolve registry number name = do
-  found <- mapM (Registry.fetchCard registry) (halvesOf name)
-  pure $ case sequence found of
+  looked <- mapM (Registry.fetchCard registry) (halvesOf name)
+  pure . flip fmap (sequence looked) $ \found -> case sequence found of
     Nothing -> Left (NoSuchCard number name)
     Just (card NonEmpty.:| rest)
       | all (== card) rest -> Right card
