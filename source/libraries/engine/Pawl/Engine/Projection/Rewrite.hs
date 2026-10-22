@@ -331,9 +331,16 @@ rewriteModification pairs m =
         -- expandGrant).
         Modification.GainAbilitiesOfSource _ -> acc
         -- CR 612.1 through the Filter naming the exiled cards, printed on the
-        -- granter (CR 612.3) as AddNamesMatching's is. The abilities are the
-        -- cards', read at projection time, and the restrictions name no word.
-        Modification.GainExiledCardAbilities e -> Modification.GainExiledCardAbilities e {ExiledCardAbilities.cards = Filter.rewrite [(from, to)] (ExiledCardAbilities.cards e)}
+        -- granter (CR 612.3) as AddNamesMatching's is, and through the extra
+        -- restrictions, printed there too. The abilities are the cards', read
+        -- at projection time. Unproven: no card in data/cards/ gives such a
+        -- grant a subtype word.
+        Modification.GainExiledCardAbilities e ->
+          Modification.GainExiledCardAbilities
+            e
+              { ExiledCardAbilities.cards = Filter.rewrite [(from, to)] (ExiledCardAbilities.cards e),
+                ExiledCardAbilities.restrictions = fmap (rewriteRestriction [(from, to)]) (ExiledCardAbilities.restrictions e)
+              }
         -- Carries no word: the abilities are the stickers', read at projection
         -- time.
         Modification.GainAbilitiesOfStickers -> acc

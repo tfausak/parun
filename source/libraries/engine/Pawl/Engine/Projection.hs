@@ -369,9 +369,10 @@ applyModification textBoxOf viewOf src stamp gs oid unitTypes affected m pc =
         -- Pawl.ActivateSpec's Locus of Enlightenment case proves all three, and
         -- its Gliding Licid case the named twins. The Steward of the Harvest
         -- scenarios prove the other pile, and the Patchwork Crawler pair what
-        -- an acquired ability exiled. A Filter naming no pile, and two cards'
-        -- identically worded abilities, are proved by
-        -- data/scenarios/mairsil-the-pretender-activates-each-caged-ability-once-each-turn.json.
+        -- an acquired ability exiled. A Filter naming no pile is proved by
+        -- data/scenarios/mairsil-the-pretender-activates-each-caged-ability-once-each-turn.json,
+        -- and two cards' identically worded abilities by
+        -- data/scenarios/mairsil-the-pretender-a-twin-ability-from-another-card-is-not-spent.json.
         Modification.GainExiledCardAbilities (ExiledCardAbilities.MkExiledCardAbilities criterion extra) ->
           let cards = filter (maybe False (\view -> Filter.matches context view criterion) . viewOf) (Set.toAscList (GameState.exile gs))
               named card a = a {ActivatedAbility.name = Just (Binding.exiledCardAbility card (ActivatedAbility.name a))}

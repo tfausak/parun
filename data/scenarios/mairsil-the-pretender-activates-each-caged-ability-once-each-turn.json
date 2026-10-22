@@ -1,5 +1,5 @@
 {
-  "description": "CR 602.5c / 613.1f: Mairsil, the Pretender has the activated abilities of the cards alice owns in exile with cage counters, and may activate each of them once each turn",
+  "description": "CR 602.5c / 113.2c / 613.1f: Mairsil, the Pretender has the activated abilities of the cards alice owns in exile with cage counters, and may activate each of them once each turn",
   "note": "Shivan Dragon and Spitfire Handler print the same {R}: +1/+0, so Mairsil has two instances of it (Mairsil's ruling), each its own to the once-each-turn rider: the Dragon's is refused a second time while the Handler's is still offered. The Buzzardiers' flying ability is a third. The uncaged Shivan Dragon and bob's caged one lend nothing, so no fourth ability is offered. On alice's next turn the Dragon's ability is offered again.",
   "board": {
     "active": "alice",
