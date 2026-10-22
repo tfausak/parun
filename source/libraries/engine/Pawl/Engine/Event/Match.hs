@@ -1095,6 +1095,94 @@ matchesTriggerGiven bindings board gs bearer you cond event = case cond of
     GameEvent.ActivatedAbilityResolved _ -> False
     GameEvent.TriggeredAbilityResolved _ -> False
     GameEvent.CardArrived _ -> False
+  -- CR 120.3: a player the relation admits was DEALT damage, by any source and
+  -- of any kind -- the arm above with the recipient a player rather than the
+  -- bearer.
+  TriggerCondition.PlayerIsDealtDamage relation -> case event of
+    GameEvent.DamageDealt ev -> maybe False (PlayerRelation.holds (Game.teams gs) relation you) (Recipient.playerOf (DamageEvent.target ev))
+    GameEvent.Moved {} -> False
+    GameEvent.StepBegan {} -> False
+    GameEvent.SpellCast {} -> False
+    GameEvent.SpellCopied _ -> False
+    GameEvent.DamagePrevented {} -> False
+    GameEvent.BecameMonarch _ -> False
+    GameEvent.TookInitiative _ -> False
+    GameEvent.Discarded {} -> False
+    GameEvent.Drew {} -> False
+    GameEvent.Revealed {} -> False
+    GameEvent.Looked {} -> False
+    GameEvent.Voted {} -> False
+    GameEvent.VotesRevealed {} -> False
+    GameEvent.AttackerDeclared {} -> False
+    GameEvent.BecameBlocking {} -> False
+    GameEvent.BlocksDeclared {} -> False
+    GameEvent.AttackerBlocked {} -> False
+    GameEvent.AttackerUnblocked _ -> False
+    GameEvent.SpellCountered _ -> False
+    GameEvent.AbilityCountered _ -> False
+    GameEvent.HalfUnlocked {} -> False
+    GameEvent.TurnedFaceUp _ -> False
+    GameEvent.PermanentActed _ -> False
+    GameEvent.Transformed {} -> False
+    GameEvent.BecameDesignated {} -> False
+    GameEvent.Mentored {} -> False
+    GameEvent.Exploited {} -> False
+    GameEvent.BecameCrewed _ -> False
+    GameEvent.Convoked _ -> False
+    GameEvent.Saddled _ -> False
+    GameEvent.Crewed _ -> False
+    GameEvent.PermanentSacrificed {} -> False
+    GameEvent.AbilityTriggered {} -> False
+    GameEvent.LoyaltyAbilityActivated _ -> False
+    GameEvent.LifeLost {} -> False
+    GameEvent.LifeGained {} -> False
+    GameEvent.CountersPut {} -> False
+    GameEvent.CountersRemoved {} -> False
+    GameEvent.ControlChanged {} -> False
+    GameEvent.VentureMarkerEntered {} -> False
+    GameEvent.BecameTarget {} -> False
+    GameEvent.BecameAttached {} -> False
+    GameEvent.BecameUnattached {} -> False
+    GameEvent.LeftTheGame _ -> False
+    GameEvent.Milled {} -> False
+    GameEvent.PlayerActed _ -> False
+    GameEvent.LandPlayed {} -> False
+    GameEvent.LostTheGame _ -> False
+    GameEvent.ManifestedDread {} -> False
+    GameEvent.DieResultSettled _ -> False
+    GameEvent.RolledToVisit _ -> False
+    GameEvent.PlanarDieRolled _ -> False
+    GameEvent.TurnedUpOffDeck _ -> False
+    GameEvent.ChaosEnsued -> False
+    GameEvent.ClassLevelSet _ -> False
+    GameEvent.Plotted _ -> False
+    GameEvent.BecameAttacked _ -> False
+    GameEvent.AttackersDeclared _ -> False
+    GameEvent.BecameTapped _ -> False
+    GameEvent.BecameUntapped _ -> False
+    GameEvent.TappedForMana _ -> False
+    GameEvent.ManaAdded _ -> False
+    GameEvent.ManaAbilityResolved _ -> False
+    GameEvent.CoinFlipped {} -> False
+    GameEvent.StickerPut _ -> False
+    GameEvent.ActivatedAbilityResolved _ -> False
+    GameEvent.TriggeredAbilityResolved _ -> False
+    GameEvent.CardArrived _ -> False
+  -- The same event read by a BYSTANDER (CR 510.1b / 510.2): a permanent the Filter
+  -- admits dealt combat damage to a player the relation admits, read like
+  -- SelfDealsCombatDamageToPlayer's: Teysa, Envoy of Ghosts' "to you", which
+  -- data/scenarios/event-trigger's "Teysa ignores combat damage dealt to another
+  -- player" proves. The Filter reads the event's DAMAGER, the bearer
+  -- contributing only CR 109.5's "you" and the Filter.Context's source -- which
+  -- is what would make Filter.IsSource the self-scoped reading.
+  --
+  -- The damager off `board` (Event.Binding.postEventView), not the live view:
+  -- CR 603.10's first sentence wants it as it existed immediately after the
+  -- damage, and pawl scans the log after CR 704's pass, which may have buried
+  -- what granted the quality the Filter asks about. data/scenarios/event-trigger's
+  -- "The Raven's Warning sees Venser's Sliver fly as it hit" proves it. The
+  -- DamageKind test is a fence rather than a tested branch: no card in the pool
+  -- makes a Wolf or Werewolf deal NONCOMBAT damage while a Tovolar watches.
   -- The same event read by a BYSTANDER (CR 510.1b / 510.2): a permanent the Filter
   -- admits dealt combat damage to a player the relation admits, read like
   -- SelfDealsCombatDamageToPlayer's: Teysa, Envoy of Ghosts' "to you", which

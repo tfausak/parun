@@ -1087,6 +1087,7 @@ triggerConditionCounts triggerCondition = case triggerCondition of
   TriggerCondition.SelfDealsDamageToCreature -> []
   TriggerCondition.SelfDealsDamage -> []
   TriggerCondition.SelfIsDealtDamage -> []
+  TriggerCondition.PlayerIsDealtDamage _ -> []
   -- Its watcher-scoped sibling carries a Filter, and a Filter holds no Count.
   TriggerCondition.PermanentDealsCombatDamageToPlayer _ -> []
   TriggerCondition.PermanentsDealCombatDamageToPlayer _ -> []
@@ -4524,6 +4525,7 @@ triggerConditionFilters triggerCondition = case triggerCondition of
   -- Enrage's condition is nullary: rule 120.3 qualifies the damage in no way, so
   -- there is nothing for a text change to rewrite.
   TriggerCondition.SelfIsDealtDamage -> []
+  TriggerCondition.PlayerIsDealtDamage _ -> []
   -- Its watcher-scoped sibling carries one -- Tovolar's "a Wolf or Werewolf you
   -- control", which the card lint must sweep.
   TriggerCondition.PermanentDealsCombatDamageToPlayer p -> unframed [PermanentDealsCombatDamageToPlayer.filter p]
@@ -4721,6 +4723,7 @@ triggerConditionSlots triggerCondition = case triggerCondition of
   TriggerCondition.SelfDealsDamageToCreature -> []
   TriggerCondition.SelfDealsDamage -> []
   TriggerCondition.SelfIsDealtDamage -> []
+  TriggerCondition.PlayerIsDealtDamage _ -> []
   TriggerCondition.PermanentDealsCombatDamageToPlayer _ -> []
   TriggerCondition.PermanentsDealCombatDamageToPlayer _ -> []
   TriggerCondition.CreatureDealtCombatDamageToMonarch -> []

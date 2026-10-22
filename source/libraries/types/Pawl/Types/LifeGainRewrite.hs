@@ -7,7 +7,7 @@ import qualified Pawl.Types.Scaling as Scaling
 -- A type rather than a bare payload-free arm on Pawl.Types.ReplacementEffect for
 -- Pawl.Types.UntapRewrite's reason: a replacement effect is classified by the
 -- event class it intercepts AND the rewrite shape it applies.
-newtype LifeGainRewrite
+data LifeGainRewrite
   = -- | Boon Reflection's "you gain twice that much life instead": the gain is
     -- resized, and the resized amount is what the player's total moves by.
     --
@@ -16,4 +16,7 @@ newtype LifeGainRewrite
     -- many \/ that many plus one" and a life-total clause resizes by the same
     -- arithmetic.
     Scaled Scaling.Scaling
+  | -- | CR 614.6 / Lich: "draw that many cards instead" -- the gain never
+    -- happens, and the player the event named draws one card per life.
+    DrawInstead
   deriving (Eq, Ord, Show)

@@ -67,6 +67,7 @@ codec =
           Arm.nullary "SelfDealsDamageToCreature" TriggerCondition.SelfDealsDamageToCreature,
           Arm.nullary "SelfDealsDamage" TriggerCondition.SelfDealsDamage,
           Arm.nullary "SelfIsDealtDamage" TriggerCondition.SelfIsDealtDamage,
+          Arm.payload "PlayerIsDealtDamage" PlayerRelation.codec TriggerCondition.PlayerIsDealtDamage (\x -> case x of TriggerCondition.PlayerIsDealtDamage y -> Just y; _ -> Nothing),
           Arm.payload "PermanentDealsCombatDamageToPlayer" PermanentDealsCombatDamageToPlayer.codec TriggerCondition.PermanentDealsCombatDamageToPlayer (\x -> case x of TriggerCondition.PermanentDealsCombatDamageToPlayer y -> Just y; _ -> Nothing),
           Arm.payload "PermanentsDealCombatDamageToPlayer" PermanentsDealCombatDamageToPlayer.codec TriggerCondition.PermanentsDealCombatDamageToPlayer (\x -> case x of TriggerCondition.PermanentsDealCombatDamageToPlayer y -> Just y; _ -> Nothing),
           Arm.nullary "CreatureDealtCombatDamageToMonarch" TriggerCondition.CreatureDealtCombatDamageToMonarch,
@@ -211,6 +212,7 @@ tagOf x = case x of
   TriggerCondition.SelfDealsDamageToCreature {} -> "SelfDealsDamageToCreature"
   TriggerCondition.SelfDealsDamage {} -> "SelfDealsDamage"
   TriggerCondition.SelfIsDealtDamage {} -> "SelfIsDealtDamage"
+  TriggerCondition.PlayerIsDealtDamage {} -> "PlayerIsDealtDamage"
   TriggerCondition.PermanentDealsCombatDamageToPlayer {} -> "PermanentDealsCombatDamageToPlayer"
   TriggerCondition.PermanentsDealCombatDamageToPlayer {} -> "PermanentsDealCombatDamageToPlayer"
   TriggerCondition.CreatureDealtCombatDamageToMonarch {} -> "CreatureDealtCombatDamageToMonarch"

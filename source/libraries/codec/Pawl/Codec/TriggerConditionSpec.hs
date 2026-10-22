@@ -170,6 +170,12 @@ spec s = Spec.describe s "Pawl.Codec.TriggerCondition" $ do
       TriggerCondition.codec
       TriggerCondition.SelfIsDealtDamage
       " {\"type\":\"SelfIsDealtDamage\"} "
+  Spec.it s "PlayerIsDealtDamage" $
+    Common.assertCodec
+      s
+      TriggerCondition.codec
+      (TriggerCondition.PlayerIsDealtDamage PlayerRelation.You)
+      " {\"type\":\"PlayerIsDealtDamage\",\"value\":{\"type\":\"You\"}} "
   -- The same event read by a bystander, carrying Tovolar's "you control" and
   -- Teysa's "to you": two relations, so a crossed codec would not round-trip.
   Spec.it s "PermanentDealsCombatDamageToPlayer round-trips with its Filter and recipient" $
