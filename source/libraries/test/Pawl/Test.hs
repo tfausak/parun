@@ -770,6 +770,7 @@ import qualified Pawl.GameSpec
 import qualified Pawl.GoadSpec
 import qualified Pawl.HarnessSpec
 import qualified Pawl.HealSpec
+import qualified Pawl.IngestSpec
 import qualified Pawl.InitiativeSpec
 import qualified Pawl.InvestigateSpec
 import qualified Pawl.Json.ArraySpec
@@ -1679,6 +1680,7 @@ spec s registry = do
   Pawl.GoadSpec.spec s registry
   Pawl.HarnessSpec.spec s registry
   Pawl.HealSpec.spec s registry
+  Pawl.IngestSpec.spec s
   Pawl.InitiativeSpec.spec s registry
   Pawl.InvestigateSpec.spec s registry
   Pawl.Json.ArraySpec.spec s

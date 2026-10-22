@@ -1,5 +1,5 @@
 -- Oracle text a card file can be checked against, for the cards whose whole
--- text is keywords (#9). Pawl.OracleSpec asserts that 'render' of such a card
+-- text is keywords (#9). Pawl.IngestSpec asserts that 'render' of such a card
 -- says what its faces' Face.oracleText says, modulo 'normalise'.
 --
 -- That check sees what a card SAYS, never what it DOES: an ingested flier is
@@ -322,7 +322,7 @@ printed keyword = case keyword of
   Keyword.Harmonize {} -> Nothing
 
 -- | Every keyword 'printed' answers for: the words an ingested card's text may
--- consist of. Pawl.OracleSpec checks it against the keyword codec's arms.
+-- consist of. Pawl.IngestSpec checks it against the keyword codec's arms.
 standalone :: [Keyword.Keyword]
 standalone =
   [ Keyword.Deathtouch,
