@@ -1110,8 +1110,9 @@ breaches gs you rewrite pid n = case rewrite of
   LifeLossRewrite.GainInstead -> True
 
 -- CR 614.1a: would this rewrite actually change the gain? `breaches` above, for
--- the gain class -- and simpler, since every arm of Pawl.Types.LifeGainRewrite
--- is arithmetic on the proposed amount and none reads the board.
+-- the gain class -- and simpler, since no arm of Pawl.Types.LifeGainRewrite
+-- reads the board. A gain the funnel proposes is never 0 (CR 119.10), so
+-- DrawInstead always changes it.
 --
 -- `Scaled (Multiply 1)` and `Scaled (AddMore 0)` resize nothing and are refused,
 -- which is `breaches`' Scaled arm carried over word for word: a fence rather than
@@ -1120,6 +1121,7 @@ breaches gs you rewrite pid n = case rewrite of
 resizes :: LifeGainRewrite.LifeGainRewrite -> Natural -> Bool
 resizes rewrite n = case rewrite of
   LifeGainRewrite.Scaled scaling -> scale scaling n /= n
+  LifeGainRewrite.DrawInstead -> True
 
 -- Does the REWRITE itself admit this entry, over and above the pattern matching
 -- the entering object? `admits` and `unspent` above, for the entry class.
@@ -2247,6 +2249,9 @@ readsApplier re = case re of
   -- the scaling is the effect's own field and the player is the one the event
   -- named. Cased on the inner sum, LifeLossR's discipline above for its reason.
   ReplacementEffect.LifeGainR (LifeGainR.MkLifeGainR _ (LifeGainRewrite.Scaled _)) -> False
+  -- The drawer is the player the EVENT named and the count is the event's own,
+  -- the arm above's answer.
+  ReplacementEffect.LifeGainR (LifeGainR.MkLifeGainR _ LifeGainRewrite.DrawInstead) -> False
   -- The player who gains the life is the one the EVENT named, and the amount is
   -- the effect's own field, so two rows alike in `effect` gain the same seat the
   -- same life whoever holds them. CR 109.5's "you" is read in `applies` rather

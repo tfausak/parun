@@ -1064,6 +1064,12 @@ eventBindingsOver board gs bearerBecame becameInGraveyard bearer you cond event 
   -- bearer, whom CR 113.7a's source slot already names.
   (TriggerCondition.SelfIsDealtDamage, GameEvent.DamageDealt ev) ->
     Binding.setCombatDamager (DamageEvent.source ev) (Binding.setEventAmount (DamageEvent.amount ev) Map.empty)
+  -- CR 120.3's "that many" for a damaged player (Lich), summed across the
+  -- batch by batchBindings, and the damaged player under `triggerPlayer`, which
+  -- batchPartition splits the batch by. Unconditional given a match, which
+  -- admits only damage to a player.
+  (TriggerCondition.PlayerIsDealtDamage _, GameEvent.DamageDealt ev) ->
+    maybe id Binding.setTriggerPlayer (Recipient.playerOf (DamageEvent.target ev)) (Binding.setEventAmount (DamageEvent.amount ev) Map.empty)
   -- CR 603.2c's "that many" (Rakshasa Vizier): THIS event's contribution to the
   -- batch, the number of cards it moved that the condition admits. A meld's entry
   -- is one event moving two (CR 701.42a); every other move, one. batchBindings
@@ -1148,6 +1154,8 @@ batchPartition cond bindings = case cond of
   -- CR 726.2's "one or more creatures A PLAYER controls": one occurrence per
   -- damagers' controller. The damaged player is the holder, one seat already.
   TriggerCondition.CreaturesDealtCombatDamageToInitiative -> seat Binding.damagersController
+  -- CR 603.2c: one occurrence per damaged player.
+  TriggerCondition.PlayerIsDealtDamage _ -> seat Binding.triggerPlayer
   -- The branch that matched is the one that stamped, eventBindings' AnyOf arm's
   -- reading.
   TriggerCondition.AnyOf conditions -> Maybe.fromMaybe Seq.empty (List.find (not . Seq.null) (fmap (`batchPartition` bindings) conditions))
@@ -1433,6 +1441,7 @@ eventBindingSlots cond = case cond of
   -- reads, and equally guaranteed -- every DamageDealt event carries one. No slot
   -- for the recipient, who is the bearer. See the eventBindings arm above.
   TriggerCondition.SelfIsDealtDamage -> Set.fromList [Binding.combatDamager, Binding.eventAmount]
+  TriggerCondition.PlayerIsDealtDamage _ -> Set.fromList [Binding.eventAmount, Binding.triggerPlayer]
   -- CR 510.2's damager, which the bystander's form needs and the self-scoped one
   -- above does not: there the damager IS the bearer, already bound as CR 113.7a's
   -- source. Aragorn, Hornburg Hero's "double the number of +1/+1 counters on it"

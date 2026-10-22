@@ -15,4 +15,11 @@ spec s = Spec.describe s "Pawl.Codec.LifeGainRewrite" $ do
       LifeGainRewrite.codec
       (LifeGainRewrite.Scaled (Scaling.Multiply 2))
       " {\"type\":\"Scaled\",\"value\":{\"type\":\"Multiply\",\"value\":2}} "
+  -- Lich's "draw that many cards instead".
+  Spec.it s "DrawInstead" $
+    Common.assertCodec
+      s
+      LifeGainRewrite.codec
+      LifeGainRewrite.DrawInstead
+      " {\"type\":\"DrawInstead\"} "
   Spec.it s "has a schema" $ Common.assertHasSchema s LifeGainRewrite.codec
