@@ -1,0 +1,36 @@
+{
+  "description": "CR 611.3a whole card: Orcish Oriflamme gives +1/+0 to attacking creatures its controller controls, and to no other creature",
+  "note": "Alice's Grizzly Bears attack and her Hill Giant stays home; on bob's turn his own Grizzly Bears attack. Pumping every creature alice controls, every attacking creature, or none reads differently from 3/2, 3/3 and 2/2 and from the life totals 17 and 18.",
+  "board": {
+    "active": "alice",
+    "step": "PrecombatMain",
+    "seats": [
+      {
+        "name": "alice",
+        "library": [{ "card": "Island" }, { "card": "Island" }],
+        "battlefield": [
+          { "card": "Orcish Oriflamme" },
+          { "card": "Grizzly Bears", "label": "alice-bears", "ready": true },
+          { "card": "Hill Giant", "label": "giant", "ready": true }
+        ]
+      },
+      {
+        "name": "bob",
+        "library": [{ "card": "Island" }, { "card": "Island" }],
+        "battlefield": [{ "card": "Grizzly Bears", "label": "bob-bears", "ready": true }]
+      }
+    ]
+  },
+  "timeline": [
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "check": { "PowerToughness": { "object": "$alice-bears", "power": 2, "toughness": 2 } } },
+    { "turn": 1, "step": "DeclareAttackers", "player": "alice", "do": { "Attack": ["$alice-bears"] } },
+    { "turn": 1, "step": "DeclareAttackers", "player": "alice", "check": { "PowerToughness": { "object": "$alice-bears", "power": 3, "toughness": 2 } } },
+    { "turn": 1, "step": "DeclareAttackers", "player": "alice", "check": { "PowerToughness": { "object": "$giant", "power": 3, "toughness": 3 } } },
+    { "turn": 1, "step": "DeclareBlockers", "player": "bob", "do": { "Block": {} } },
+    { "turn": 1, "step": "PostcombatMain", "player": "alice", "check": { "Life": { "player": "bob", "life": 17 } } },
+    { "turn": 2, "step": "DeclareAttackers", "player": "bob", "do": { "Attack": ["$bob-bears"] } },
+    { "turn": 2, "step": "DeclareAttackers", "player": "bob", "check": { "PowerToughness": { "object": "$bob-bears", "power": 2, "toughness": 2 } } },
+    { "turn": 2, "step": "DeclareBlockers", "player": "alice", "do": { "Block": {} } },
+    { "turn": 2, "step": "PostcombatMain", "player": "bob", "check": { "Life": { "player": "alice", "life": 18 } } }
+  ]
+}
