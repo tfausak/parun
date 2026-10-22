@@ -41,6 +41,7 @@ import qualified Pawl.Types.ActivatedAbilitySource as ActivatedAbilitySource
 import qualified Pawl.Types.AttackTarget as AttackTarget
 import qualified Pawl.Types.AttackerBlocked as AttackerBlocked
 import qualified Pawl.Types.AttackerDeclared as AttackerDeclared
+import qualified Pawl.Types.AttackerUnblocked as AttackerUnblocked
 import qualified Pawl.Types.Ballot as Ballot
 import qualified Pawl.Types.BallotChoice as BallotChoice
 import qualified Pawl.Types.BattlefieldCandidate as BattlefieldCandidate
@@ -407,7 +408,7 @@ participants event =
         GameEvent.AttackersDeclared pid -> player pid
         GameEvent.BecameBlocking b -> ([BecameBlocking.blocker b, BecameBlocking.attacker b], [])
         GameEvent.AttackerBlocked b -> one (AttackerBlocked.attacker b)
-        GameEvent.AttackerUnblocked oid -> one oid
+        GameEvent.AttackerUnblocked u -> one (AttackerUnblocked.attacker u)
         GameEvent.BlocksDeclared b -> one (BlocksDeclared.blocker b)
         GameEvent.Revealed r -> ([Revealed.card r], [Revealed.player r])
         GameEvent.Looked l -> ([Looked.card l], Set.toList (Looked.audience l))

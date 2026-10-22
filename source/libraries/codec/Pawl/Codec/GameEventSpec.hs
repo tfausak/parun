@@ -17,6 +17,7 @@ import qualified Pawl.Types.ActivatedAbilitySource as ActivatedAbilitySource
 import qualified Pawl.Types.AttackTarget as AttackTarget
 import qualified Pawl.Types.AttackerBlocked as AttackerBlocked
 import qualified Pawl.Types.AttackerDeclared as AttackerDeclared
+import qualified Pawl.Types.AttackerUnblocked as AttackerUnblocked
 import qualified Pawl.Types.Ballot as Ballot
 import qualified Pawl.Types.BallotChoice as BallotChoice
 import qualified Pawl.Types.BecameAttached as BecameAttached
@@ -276,14 +277,14 @@ spec s = Spec.describe s "Pawl.Codec.GameEvent" $ do
       GameEvent.codec
       (GameEvent.AttackerBlocked (AttackerBlocked.MkAttackerBlocked (ObjectId.MkObjectId 8) (PlayerId.MkPlayerId 2) 3))
       " {\"type\":\"AttackerBlocked\",\"value\":{\"attacker\":8,\"defender\":2,\"blockers\":3}} "
-  -- CR 509.1h's other branch: a bare object, carrying neither the blockers there
-  -- were none of nor a defending player no reader in the pool asks for.
+  -- CR 509.1h's other branch: the attacker and CR 508.5's defending player, and
+  -- no count of the blockers there were none of.
   Spec.it s "AttackerUnblocked" $
     Common.assertCodec
       s
       GameEvent.codec
-      (GameEvent.AttackerUnblocked (ObjectId.MkObjectId 8))
-      " {\"type\":\"AttackerUnblocked\",\"value\":8} "
+      (GameEvent.AttackerUnblocked (AttackerUnblocked.MkAttackerUnblocked (ObjectId.MkObjectId 8) (PlayerId.MkPlayerId 2)))
+      " {\"type\":\"AttackerUnblocked\",\"value\":{\"attacker\":8,\"defender\":2}} "
   Spec.it s "SpellCountered" $
     Common.assertCodec
       s

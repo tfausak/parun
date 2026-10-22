@@ -13,8 +13,6 @@ Every expressible Portal Second Age card has been added to `data/cards/`.
 
 Each group is tracked by its issue; its cards are added when it lands.
 
-- #5436: Abyssal Nightstalker ("attacks and isn't blocked, defending player
-  discards").
 - #5437: Lone Wolf and Deathcoil Wurm (assign combat damage as though it
   weren't blocked), Cunning Giant (an unblocked creature assigns its damage to
   a creature).
@@ -24,7 +22,7 @@ Each group is tracked by its issue; its cards are added when it lands.
 
 ## Decks
 
-MTGJSON lists nine P02 decks. Eight are in `data/decks/` as
+MTGJSON lists nine P02 decks, all in `data/decks/` as
 `portal-second-age-*.txt`: both demo decks, both preconstructed starter decks,
-and the Goblin Fire, Martial Law, Nature's Assault and Spellweaver theme decks.
-The Nightstalkers theme deck waits on Abyssal Nightstalker (#5436).
+and the Goblin Fire, Martial Law, Nature's Assault, Spellweaver and The
+Nightstalkers theme decks.

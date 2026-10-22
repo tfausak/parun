@@ -40,6 +40,7 @@ import qualified Pawl.Types.AttackTarget as AttackTarget
 import qualified Pawl.Types.AttackedPlayer as AttackedPlayer
 import qualified Pawl.Types.AttackerBlocked as AttackerBlocked
 import qualified Pawl.Types.AttackerDeclared as AttackerDeclared
+import qualified Pawl.Types.AttackerUnblocked as AttackerUnblocked
 import qualified Pawl.Types.BecameAttached as BecameAttached
 import qualified Pawl.Types.BecameAttacked as BecameAttacked
 import qualified Pawl.Types.BecameBlocking as BecameBlocking
@@ -2003,8 +2004,8 @@ representativeEvents cond =
           noTable (GameEvent.AttackerBlocked (AttackerBlocked.MkAttackerBlocked departed S.carol 1))
             NonEmpty.:| [noTable (GameEvent.BecameBlocking (BecameBlocking.MkBecameBlocking {BecameBlocking.blocker = ObjectId.MkObjectId 42, BecameBlocking.attacker = departed, BecameBlocking.producer = BlockProducer.PutOntoBattlefield, BecameBlocking.attackerWasBlocked = True, BecameBlocking.blockersBefore = Set.singleton (ObjectId.MkObjectId 43)}))]
         -- The same declaration's unblocked branch, which carries the attacker
-        -- and nothing else -- so the floor it pins is the empty set.
-        TriggerCondition.SelfAttacksUnblocked -> one (GameEvent.AttackerUnblocked departed)
+        -- and CR 508.5's defending player.
+        TriggerCondition.SelfAttacksUnblocked -> one (GameEvent.AttackerUnblocked (AttackerUnblocked.MkAttackerUnblocked departed S.carol))
         TriggerCondition.SelfPutIntoGraveyardFromLibrary -> one (moved Zone.Library Zone.Graveyard)
         -- Every origin zone is admitted, but the floor is the same for all of
         -- them: the destination is always a graveyard, which CR 400.2 makes

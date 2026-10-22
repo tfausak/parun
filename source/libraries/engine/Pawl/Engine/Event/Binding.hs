@@ -21,6 +21,7 @@ import qualified Pawl.Types.AbilityTriggered as AbilityTriggered
 import qualified Pawl.Types.AttackTarget as AttackTarget
 import qualified Pawl.Types.AttackerBlocked as AttackerBlocked
 import qualified Pawl.Types.AttackerDeclared as AttackerDeclared
+import qualified Pawl.Types.AttackerUnblocked as AttackerUnblocked
 import qualified Pawl.Types.BattlefieldCandidate as BattlefieldCandidate
 import qualified Pawl.Types.BecameAttached as BecameAttached
 import qualified Pawl.Types.BecameAttacked as BecameAttacked
@@ -618,6 +619,10 @@ eventBindingsOver board gs bearerBecame becameInGraveyard bearer you cond event 
   -- Combat.putOntoBattlefieldBlocking (CR 509.4).
   (TriggerCondition.SelfBecomesBlocked, GameEvent.AttackerBlocked (AttackerBlocked.MkAttackerBlocked _ defending _)) ->
     Binding.setTriggerPlayer defending Map.empty
+  -- The same slot off CR 509.1h's other branch, stamped there by its one writer,
+  -- Combat.declareBlockers: Abyssal Nightstalker's "defending player".
+  (TriggerCondition.SelfAttacksUnblocked, GameEvent.AttackerUnblocked u) ->
+    Binding.setTriggerPlayer (AttackerUnblocked.defender u) Map.empty
   -- CR 615.13's "that many": how much this prevention effect prevented, which is
   -- the whole reason the event carries a number. The first reserved slot holding
   -- an AMOUNT rather than a reference, read back by Quantity.InSlot off the stack
@@ -1621,10 +1626,10 @@ eventBindingSlots cond = case cond of
   -- Seifer, Balamb Rival's "that attacking creature", the same reserved slot
   -- CreatureAttacksYou fills off its own event.
   TriggerCondition.CreatureBecomesBlockedByAtLeast {} -> Set.singleton Binding.attackingCreature
-  -- CR 509.1h's unblocked branch names no second object at all -- no blocker,
-  -- and no defending player on GameEvent.AttackerUnblocked to bind one from.
-  -- eventBindings therefore has no arm and falls through to the empty map.
-  TriggerCondition.SelfAttacksUnblocked -> Set.empty
+  -- CR 508.5's defending player, which GameEvent.AttackerUnblocked carries for
+  -- SelfBecomesBlocked's reason: Abyssal Nightstalker's "defending player
+  -- discards a card". No blocker -- CR 509.1h's unblocked branch has none.
+  TriggerCondition.SelfAttacksUnblocked -> Set.singleton Binding.triggerPlayer
   -- CR 113.6k: the bearer of a library-to-graveyard trigger IS the arriving
   -- incarnation, so binding it again under `became` would be a second name for
   -- one object. Narcomoeba reads the source slot instead.
