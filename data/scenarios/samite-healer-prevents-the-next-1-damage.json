@@ -1,0 +1,32 @@
+{
+  "description": "CR 615.7 whole card: Samite Healer's shield prevents only the next 1 damage to its target",
+  "note": "Alice taps the Healer to shield bob's Grizzly Bears, then Shocks them: preventing all 2 or none reads differently from the bears surviving with 1 damage.",
+  "board": {
+    "active": "alice",
+    "step": "PrecombatMain",
+    "seats": [
+      {
+        "name": "alice",
+        "library": [{ "card": "Island" }, { "card": "Island" }],
+        "battlefield": [
+          { "card": "Samite Healer", "label": "healer", "ready": true },
+          { "card": "Mountain", "label": "m1" }
+        ],
+        "hand": [{ "card": "Shock", "label": "shock" }]
+      },
+      {
+        "name": "bob",
+        "library": [{ "card": "Island" }, { "card": "Island" }],
+        "battlefield": [{ "card": "Grizzly Bears", "label": "bears" }]
+      }
+    ]
+  },
+  "timeline": [
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": { "Activate": { "object": "$healer", "targets": ["$bears"], "mana": [null] } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass" },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": { "Cast": { "object": "$shock", "targets": ["$bears"], "mana": ["$m1"] } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass" },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "check": { "Damage": { "object": "$bears", "damage": 1 } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "check": { "Tapped": { "object": "$healer", "tapped": true } } }
+  ]
+}
