@@ -39,6 +39,7 @@ import qualified Pawl.Codec.SlotName as Codec.SlotName
 import qualified Pawl.Codec.StickerRef as Codec.StickerRef
 import qualified Pawl.Codec.StoredResult as Codec.StoredResult
 import qualified Pawl.Codec.Subtype as Codec.Subtype
+import qualified Pawl.Codec.TextWord as Codec.TextWord
 import qualified Pawl.Codec.Zone as Codec.Zone
 import qualified Pawl.Extra.Natural as Natural
 import qualified Pawl.JsonCodec.Codec as Codec
@@ -72,6 +73,7 @@ import qualified Pawl.Types.RollAdjustment as RollAdjustment
 import qualified Pawl.Types.RoomIndex as RoomIndex
 import qualified Pawl.Types.SearchPlace as SearchPlace
 import qualified Pawl.Types.Subtype as Subtype
+import qualified Pawl.Types.TextWord as TextWord
 import qualified Pawl.Types.TimeTravelChoice as TimeTravelChoice
 
 -- | An answer still waiting on the run to name its objects and players.
@@ -307,6 +309,9 @@ counterKind = viaCodec (Codec.CounterKind.codec Codec.Keyword.codec)
 subtype :: Shape Subtype.Subtype
 subtype = viaCodec Codec.Subtype.codec
 
+textWord :: Shape TextWord.TextWord
+textWord = viaCodec Codec.TextWord.codec
+
 -- | Every prompt's answer shape; one arm each, so a new prompt is a compile error.
 shapeOf :: Prompt.Prompt r -> Shape r
 shapeOf prompt = case prompt of
@@ -382,9 +387,7 @@ shapeOf prompt = case prompt of
   Prompt.AssignCombatDamage {} -> mapOf recipient natural
   Prompt.ChooseTargets {} -> mapOf (viaCodec Codec.SlotName.codec) (setOf recipient)
   Prompt.AnnounceTargets {} -> mapOf (viaCodec Codec.SlotName.codec) natural
-  Prompt.ChooseLandTypeSwap {} -> pairOf subtype subtype
-  Prompt.ChooseCreatureTypeSwap {} -> pairOf subtype subtype
-  Prompt.ChooseEnchantmentTypeSwap {} -> pairOf subtype subtype
+  Prompt.ChooseWordSwap {} -> pairOf textWord textWord
   Prompt.ChooseBasicLandType {} -> subtype
   Prompt.ChooseCreatureType {} -> subtype
   Prompt.ChooseSearchZones {} -> setOf searchPlace

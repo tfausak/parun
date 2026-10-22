@@ -77,6 +77,7 @@ import qualified Pawl.Types.StepBegan as StepBegan
 import qualified Pawl.Types.Subtype as Subtype
 import qualified Pawl.Types.TapState as TapState
 import qualified Pawl.Types.TargetSlot as TargetSlot
+import qualified Pawl.Types.TextWord as TextWord
 import qualified Pawl.Types.Zone as Zone
 
 -- manaLeakBoard one step earlier, with the Leak still in alice's hand. Split out
@@ -814,7 +815,7 @@ hackBoard mountain island magicalHack cancel =
 -- a Mountain alone, so a test can tell an honoured answer from the fallback.
 hackToIsland :: Prompt.Prompt r -> r
 hackToIsland p = case p of
-  Prompt.ChooseLandTypeSwap {} -> (Subtype.Mountain, Subtype.Island)
+  Prompt.ChooseWordSwap {} -> (TextWord.SubtypeWord Subtype.Mountain, TextWord.SubtypeWord Subtype.Island)
   _ -> S.identityAnswer p
 
 -- The basic-land-type answers in a transcript, in order.
@@ -823,7 +824,7 @@ basicLandTypeResponses = filter isBasicLandTypesResponse
 
 isBasicLandTypesResponse :: Response.Response -> Bool
 isBasicLandTypesResponse response = case response of
-  Response.ChoseLandTypeSwap _ -> True
+  Response.ChoseWordSwap _ -> True
   _ -> False
 
 -- CR 608.2d: Magical Hack's "replacing all instances of one basic land type
@@ -864,7 +865,7 @@ magicalHackTimingSpec s registry = Spec.describe s "MagicalHackTiming" $ do
       s
       "the resolution asked exactly once"
       (basicLandTypeResponses resolveTranscript)
-      [Response.ChoseLandTypeSwap (Subtype.Mountain, Subtype.Island)]
+      [Response.ChoseWordSwap (TextWord.SubtypeWord Subtype.Mountain, TextWord.SubtypeWord Subtype.Island)]
     -- CR 612 / 305.6: the answer is honoured, so the choice did not go missing
     -- when it moved. Mountain -> Island, not identityAnswer's Forest ->
     -- Island, is what tells the two apart.
@@ -882,7 +883,7 @@ magicalHackTimingSpec s registry = Spec.describe s "MagicalHackTiming" $ do
 hackAt :: ObjectId.ObjectId -> Subtype.Subtype -> Subtype.Subtype -> Prompt.Prompt r -> r
 hackAt oid from to p = case p of
   Prompt.ChooseTargets _ _ _ sets -> fmap (\(_, candidates) -> Set.filter (\r -> r == Recipient.ToObject oid || r == Recipient.ToCreature oid) candidates) sets
-  Prompt.ChooseLandTypeSwap {} -> (from, to)
+  Prompt.ChooseWordSwap {} -> (TextWord.SubtypeWord from, TextWord.SubtypeWord to)
   _ -> S.identityAnswer p
 
 -- CR 611.2b's duration read through CR 612.1. alice casts Synthetic Conditional
@@ -961,7 +962,7 @@ magicalHackDurationSpec s registry = Spec.describe s "MagicalHackDuration" $ do
 evolveAt :: ObjectId.ObjectId -> Subtype.Subtype -> Subtype.Subtype -> Prompt.Prompt r -> r
 evolveAt oid from to p = case p of
   Prompt.ChooseTargets _ _ _ sets -> fmap (const (Set.singleton (Recipient.ToObject oid))) sets
-  Prompt.ChooseCreatureTypeSwap {} -> (from, to)
+  Prompt.ChooseWordSwap {} -> (TextWord.SubtypeWord from, TextWord.SubtypeWord to)
   _ -> S.identityAnswer p
 
 -- Cast Turn to Frog at alice's Bog Wraith; optionally cast Artificial Evolution
@@ -1026,12 +1027,9 @@ textSwapLegalitySpec s registry = Spec.describe s "TextSwapLegality" $ do
 -- assert what the player was actually offered. Targets go to `oid` (a
 -- text-changer aimed at a permanent needs no second card on the stack), and the
 -- swap itself is answered with Replay.defaultAnswer's legal one.
-recordingForbidden :: ObjectId.ObjectId -> Prompt.Prompt r -> State.State (Set.Set Subtype.Subtype) r
+recordingForbidden :: ObjectId.ObjectId -> Prompt.Prompt r -> State.State (Set.Set TextWord.TextWord) r
 recordingForbidden oid p = case p of
-  Prompt.ChooseCreatureTypeSwap _ _ _ _ forbidden -> do
-    State.modify' (Set.union forbidden)
-    pure (Replay.defaultAnswer p)
-  Prompt.ChooseLandTypeSwap _ _ _ _ forbidden -> do
+  Prompt.ChooseWordSwap _ _ _ _ _ forbidden -> do
     State.modify' (Set.union forbidden)
     pure (Replay.defaultAnswer p)
   Prompt.ChooseTargets _ _ _ sets -> pure (fmap (const (Set.singleton (Recipient.ToObject oid))) sets)
@@ -1135,7 +1133,7 @@ charmAt oid p = case p of
   Prompt.ChooseTargets _ _ _ sets -> fmap (\(_, candidates) -> Set.filter (\r -> r == Recipient.ToCreature oid || r == Recipient.ToObject oid) candidates) sets
   _ -> S.identityAnswer p
 
--- CR 612.3's half of the same mint: alice controls `host`, optionally resolves an
+-- CR 612.3 over afterlife: alice controls `host`, optionally resolves an
 -- Artificial Evolution at it, then resolves an Afterlife Insurance ({1}{W/B}
 -- Instant -- "Creatures you control gain afterlife 1 until end of turn. Draw a
 -- card.", checked against Scryfall) and Murders the host. Returns the host's id,
@@ -1452,7 +1450,7 @@ artificialEvolutionSpec s registry = Spec.describe s "ArtificialEvolution" $ do
     Spec.assertEqWith s "CR 613.7 Creature -- Goblin" (Projection.subtypesOf wraithId after) (Set.singleton Subtype.Goblin)
     -- The anti-vacuity check, after the behaviour: both swaps really landed on
     -- the spell.
-    Spec.assertEqWith s "the two Evolutions resolved onto the spell" (Projection.textChangesAffecting spellId both) [(Subtype.Elf, Subtype.Goblin), (Subtype.Frog, Subtype.Goblin)]
+    Spec.assertEqWith s "the two Evolutions resolved onto the spell" (Projection.textChangesAffecting spellId both) [(TextWord.SubtypeWord Subtype.Elf, TextWord.SubtypeWord Subtype.Goblin), (TextWord.SubtypeWord Subtype.Frog, TextWord.SubtypeWord Subtype.Goblin)]
 
   -- "The new creature type can't be Wall" is printed card text, so it travels
   -- with the card: the data says it, Effect.ChangeText carries it, and the
@@ -1469,7 +1467,7 @@ artificialEvolutionSpec s registry = Spec.describe s "ArtificialEvolution" $ do
                 S.cast S.alice spellId
                 Stack.resolveTop
            in State.execState (Engine.runGame (recordingForbidden wraithId) g2 cast) Set.empty
-    Spec.assertEqWith s "the Evolution forbids Wall, and nothing else" (forbiddenBy artificialEvolution) (Set.singleton Subtype.Wall)
+    Spec.assertEqWith s "the Evolution forbids Wall, and nothing else" (forbiddenBy artificialEvolution) (Set.singleton (TextWord.SubtypeWord Subtype.Wall))
     -- The falsifier for "the engine hard-codes Wall somewhere": Magical Hack
     -- prints no restriction, so its swap forbids nothing.
     Spec.assertEqWith s "and the Hack forbids nothing" (forbiddenBy magicalHack) Set.empty
@@ -1497,7 +1495,7 @@ artificialEvolutionSpec s registry = Spec.describe s "ArtificialEvolution" $ do
           S.cast S.alice firstId
           Stack.resolveTop
         forbidden = State.execState (Engine.runGame (recordingForbidden wraithId) evolved Stack.resolveTop) Set.empty
-    Spec.assertEqWith s "the evolved Evolution forbids Frog, not Wall" forbidden (Set.singleton Subtype.Frog)
+    Spec.assertEqWith s "the evolved Evolution forbids Frog, not Wall" forbidden (Set.singleton (TextWord.SubtypeWord Subtype.Frog))
 
   -- CR 612.2a's OTHER half: "or an object with such an ability". Bitterblossom
   -- {1}{B} Kindred Enchantment -- Faerie ("At the beginning of your upkeep, you
@@ -1540,7 +1538,7 @@ artificialEvolutionSpec s registry = Spec.describe s "ArtificialEvolution" $ do
     mapM_ (\oid -> Spec.assertEqWith s "named Time Lord Token" (Projection.namesOf oid after) (Set.singleton (CardName.MkCardName (Text.pack "Time Lord Token")))) tokens
     mapM_ (\oid -> Spec.assertEqWith s "Creature -- Time Lord" (Projection.subtypesOf oid after) (Set.singleton Subtype.TimeLord)) tokens
 
-  -- CR 612.3's boundary on the same mint: "any abilities that are granted to an
+  -- CR 612.3's boundary on afterlife: "any abilities that are granted to an
   -- object can't be modified by text-changing effects that affect that object".
   -- Afterlife Insurance grants afterlife 1 at CR 613.1f layer 6, after the
   -- Evolution's layer-3 swap, so rule 702.135a's Spirit survives.
@@ -1556,15 +1554,13 @@ artificialEvolutionSpec s registry = Spec.describe s "ArtificialEvolution" $ do
     Spec.assertEqWith s "Goblin Warrior while it lived" (Projection.subtypesOf pikerId alive) (Set.fromList [Subtype.Goblin, Subtype.Warrior])
 
   -- CR 702.135b -- "if a permanent has multiple instances of afterlife, each
-  -- triggers separately" -- is what makes this per INSTANCE and not per object. A
-  -- Ministrant of Obligation holding its printed afterlife 2 and the Insurance's
-  -- granted afterlife 1 mints two Elves off the printed instance and one Spirit
-  -- off the granted one. "Never rewrite a minted ability" would give three
-  -- Spirits, and today's rewrite-everything gives three Elves.
-  Spec.it s "CR 702.135b an evolved Ministrant plus a granted afterlife leaves two Elves and a Spirit" $ do
+  -- triggers separately" -- with an Evolution on top: the Spirit is rule
+  -- 702.135a's word and no text change reaches it (CR 207.2a,
+  -- docs/decisions.md "What a text change reaches inside a keyword"), so the
+  -- printed afterlife 2 and the granted afterlife 1 alike leave Spirits.
+  Spec.it s "CR 702.135b an evolved Ministrant plus a granted afterlife leaves three Spirits" $ do
     (ministrantId, alive, tokens, after) <- insuredChain s registry "Ministrant of Obligation" (Just (Subtype.Spirit, Subtype.Elf))
-    Spec.assertEqWith s "two Elves and a Spirit" (tokenSubtypes tokens after) [[Subtype.Elf], [Subtype.Elf], [Subtype.Spirit]]
-    Spec.assertEqWith s "named for their own subtypes" (tokenNames tokens after) [[CardName.MkCardName (Text.pack "Elf Token")], [CardName.MkCardName (Text.pack "Elf Token")], [CardName.MkCardName (Text.pack "Spirit Token")]]
+    Spec.assertEqWith s "three Spirits" (tokenSubtypes tokens after) [[Subtype.Spirit], [Subtype.Spirit], [Subtype.Spirit]]
     Spec.assertBool s (Projection.hasKeyword (Keyword.Afterlife 1) ministrantId alive) "the granted instance"
     Spec.assertBool s (Projection.hasKeyword (Keyword.Afterlife 2) ministrantId alive) "beside the printed one"
 

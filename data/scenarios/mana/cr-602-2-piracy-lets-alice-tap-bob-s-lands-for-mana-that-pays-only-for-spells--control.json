@@ -1,0 +1,129 @@
+{
+  "description": "CR 602.2 Piracy lets alice tap bob's lands for mana that pays only for spells (control)",
+  "note": "Bob's Mountains and his settled Dryad Arbor are offered to alice once Piracy resolves (CR 106.12: their {T} abilities). The {R} she floats from one carries Piracy's restriction, so Uthden Troll's {R} ability is never offered, while Goblin Piker is cast off the other. On bob's turn the permission has ended. The control gives alice a Mountain of her own, whose unrestricted {R} the Troll is offered for.",
+  "board": {
+    "seats": [
+      {
+        "name": "alice",
+        "battlefield": [
+          {
+            "card": "Island",
+            "label": "i1",
+            "ready": true
+          },
+          {
+            "card": "Island",
+            "label": "i2",
+            "ready": true
+          },
+          {
+            "card": "Uthden Troll",
+            "label": "troll"
+          },
+          {
+            "card": "Mountain",
+            "label": "own",
+            "ready": true
+          }
+        ],
+        "hand": [
+          {
+            "card": "Piracy",
+            "label": "piracy"
+          },
+          {
+            "card": "Goblin Piker",
+            "label": "piker"
+          }
+        ],
+        "library": [
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          }
+        ]
+      },
+      {
+        "name": "bob",
+        "battlefield": [
+          {
+            "card": "Mountain",
+            "label": "m1",
+            "ready": true
+          },
+          {
+            "card": "Mountain",
+            "label": "m2",
+            "ready": true
+          },
+          {
+            "card": "Dryad Arbor",
+            "label": "arbor",
+            "ready": true
+          }
+        ],
+        "library": [
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          }
+        ]
+      }
+    ],
+    "active": "alice",
+    "step": "PrecombatMain"
+  },
+  "timeline": [
+    {
+      "turn": 1,
+      "step": "PrecombatMain",
+      "player": "alice",
+      "do": {
+        "Cast": {
+          "object": "$piracy",
+          "mana": [
+            "$i1",
+            "$i2",
+            null
+          ]
+        }
+      }
+    },
+    {
+      "turn": 1,
+      "step": "PrecombatMain",
+      "player": "alice",
+      "do": "Pass"
+    },
+    {
+      "turn": 1,
+      "step": "PrecombatMain",
+      "player": "alice",
+      "check": {
+        "View": {
+          "of": "Offered",
+          "player": "alice",
+          "is": [
+            "Pass",
+            "Cast $piker",
+            "Activate $troll",
+            "ActivateManaAbility $own",
+            "ActivateManaAbility $m1",
+            "ActivateManaAbility $m2",
+            "ActivateManaAbility $arbor"
+          ]
+        }
+      }
+    }
+  ]
+}

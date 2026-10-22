@@ -53,6 +53,7 @@ import qualified Pawl.Types.SlotName as SlotName
 import qualified Pawl.Types.StickerRef as StickerRef
 import qualified Pawl.Types.StoredResult as StoredResult
 import qualified Pawl.Types.Subtype as Subtype
+import qualified Pawl.Types.TextWord as TextWord
 import qualified Pawl.Types.TimeTravelChoice as TimeTravelChoice
 
 -- | One answer to a prompt, serialized so a DecisionLog replays the game
@@ -434,17 +435,10 @@ data Response
     -- the printed words leave variable (CR 115.6's "up to one", and every larger
     -- range). A slot answered with zero is one they declined.
     AnnouncedTargets (Map.Map SlotName.SlotName Natural.Natural)
-  | -- | CR 612: the (from, to) basic land types a text-changer's caster chose.
-    -- Named for the swap rather than for the pair, matching
-    -- Prompt.ChooseLandTypeSwap.
-    ChoseLandTypeSwap (Subtype.Subtype, Subtype.Subtype)
-  | -- | CR 612 again, for the creature-type half: the (from, to) creature types
-    -- Artificial Evolution's caster chose.
-    ChoseCreatureTypeSwap (Subtype.Subtype, Subtype.Subtype)
-  | -- | CR 612 for the enchantment-type half (CR 205.3h).
-    ChoseEnchantmentTypeSwap (Subtype.Subtype, Subtype.Subtype)
+  | -- | CR 612: the (from, to) words a text-changer's caster chose.
+    ChoseWordSwap (TextWord.TextWord, TextWord.TextWord)
   | -- | CR 614.1c: the basic land type a player chose as an object entered.
-    -- Singular, and distinct from ChoseLandTypeSwap above for
+    -- Singular, and distinct from ChoseWordSwap above for
     -- Prompt.ChooseBasicLandType's reason.
     ChoseBasicLandType Subtype.Subtype
   | -- | CR 614.1c: the creature type a player chose as an object entered.

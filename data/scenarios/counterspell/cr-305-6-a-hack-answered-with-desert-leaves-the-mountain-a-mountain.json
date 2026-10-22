@@ -19,7 +19,7 @@
   "timeline": [
     { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": { "Cast": { "object": "$hack", "targets": ["$mountain"], "mana": ["$island"] } } },
     { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass" },
-    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": { "Answer": { "prompt": "ChooseLandTypeSwap", "with": [{ "type": "Mountain" }, { "type": "Desert" }], "unoffered": true } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": { "Answer": { "prompt": "ChooseWordSwap", "with": [{ "type": "Mountain" }, { "type": "Desert" }], "unoffered": true } } },
     { "turn": 1, "step": "PrecombatMain", "player": "alice", "check": { "Subtypes": { "object": "$mountain", "subtypes": ["Mountain"] } } }
   ]
 }

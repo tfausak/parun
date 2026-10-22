@@ -7,13 +7,13 @@ import Numeric.Natural (Natural)
 import qualified Pawl.Types.Activation as Activation
 import qualified Pawl.Types.Answer as Answer
 import qualified Pawl.Types.Casting as Casting
+import qualified Pawl.Types.ChangeWord as ChangeWord
 import qualified Pawl.Types.Label as Label
 import qualified Pawl.Types.OptionalDecision as OptionalDecision
 import qualified Pawl.Types.Paying as Paying
 import qualified Pawl.Types.Reference as Reference
 import qualified Pawl.Types.SlotName as SlotName
 import qualified Pawl.Types.Taking as Taking
-import qualified Pawl.Types.TypeSwap as TypeSwap
 
 -- | One decision a scenario makes for a player.
 data Move
@@ -40,8 +40,8 @@ data Move
     ChooseOptional OptionalDecision.OptionalDecision
   | -- | CR 118.12a: whether the deciding player pays a cost a resolving object offers.
     ChooseToPay Paying.Paying
-  | -- | CR 612.1: the land or creature type a text-changing effect swaps.
-    ChooseTypeSwap TypeSwap.TypeSwap
+  | -- | CR 612.1: the word a text-changing effect swaps, and its replacement.
+    ChooseWordSwap ChangeWord.ChangeWord
   | -- | CR 707.5 / 614.12a: what an object entering as a copy copies, Nothing
     -- declining the card's "may".
     ChooseCopyTarget (Maybe Reference.Reference)

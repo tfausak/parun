@@ -22,9 +22,11 @@
                   {
                     "type": "ChangeText",
                     "value": {
-                      "family": {
-                        "type": "EnchantmentType"
-                      },
+                      "families": [
+                        {
+                          "type": "EnchantmentType"
+                        }
+                      ],
                       "forbidden": [],
                       "slot": "target"
                     }

@@ -16,7 +16,7 @@ module Pawl.Types.Activator where
 -- this widens WHO, and every clause of both must hold.
 --
 -- The readers are Pawl.Engine.Activatable.mayActivateGiven, which is CR 602.2's
--- whole permission conjunct, and Pawl.Engine.Mana.permitsRoute, the same
+-- whole permission conjunct, and Pawl.Engine.Mana.routeAccess, the same
 -- conjunct for a mana ability CR 605.3b keeps off the stack. Nothing here says who PAYS: CR 602.1a gives the cost to
 -- the player activating the ability whichever arm this is.
 data Activator

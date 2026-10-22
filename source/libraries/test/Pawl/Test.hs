@@ -135,8 +135,8 @@ import qualified Pawl.Codec.CastRepetitionSpec
 import qualified Pawl.Codec.CastingPermissionSpec
 import qualified Pawl.Codec.CastingRestrictionSpec
 import qualified Pawl.Codec.CastingSpec
-import qualified Pawl.Codec.ChangeSubtypeWordSpec
 import qualified Pawl.Codec.ChangeTextSpec
+import qualified Pawl.Codec.ChangeWordSpec
 import qualified Pawl.Codec.CharacteristicPTSpec
 import qualified Pawl.Codec.CheckSpec
 import qualified Pawl.Codec.ChoicesSpec
@@ -633,7 +633,6 @@ import qualified Pawl.Codec.StepBeginsSpec
 import qualified Pawl.Codec.StickerKindSpec
 import qualified Pawl.Codec.StickerSheetSpec
 import qualified Pawl.Codec.StoredResultSpec
-import qualified Pawl.Codec.SubtypeFamilySpec
 import qualified Pawl.Codec.SubtypeSpec
 import qualified Pawl.Codec.SubtypesAreSpec
 import qualified Pawl.Codec.SuperlativeSpec
@@ -642,6 +641,7 @@ import qualified Pawl.Codec.SuspendCountersSpec
 import qualified Pawl.Codec.SuspendSpec
 import qualified Pawl.Codec.TakeExtraTurnSpec
 import qualified Pawl.Codec.TakingSpec
+import qualified Pawl.Codec.TapForManaSpec
 import qualified Pawl.Codec.TapForTotalPowerSpec
 import qualified Pawl.Codec.TapPermanentsSpec
 import qualified Pawl.Codec.TapStateSpec
@@ -652,6 +652,7 @@ import qualified Pawl.Codec.TargetCountSpec
 import qualified Pawl.Codec.TargetSlotSpec
 import qualified Pawl.Codec.TeamIdSpec
 import qualified Pawl.Codec.TeamsSpec
+import qualified Pawl.Codec.TextWordSpec
 import qualified Pawl.Codec.TheseDiscardSpec
 import qualified Pawl.Codec.TimedSpec
 import qualified Pawl.Codec.TimesSpec
@@ -680,7 +681,6 @@ import qualified Pawl.Codec.TurnWindowSpec
 import qualified Pawl.Codec.TurnedFaceUpSpec
 import qualified Pawl.Codec.TurnedUpOffDeckSpec
 import qualified Pawl.Codec.TypeLineSpec
-import qualified Pawl.Codec.TypeSwapSpec
 import qualified Pawl.Codec.TypesAreSpec
 import qualified Pawl.Codec.UntapRSpec
 import qualified Pawl.Codec.UntapRestrictionSpec
@@ -697,6 +697,7 @@ import qualified Pawl.Codec.WhenSpentSpec
 import qualified Pawl.Codec.WhichCountersSpec
 import qualified Pawl.Codec.WhileSpec
 import qualified Pawl.Codec.WithCountersSpec
+import qualified Pawl.Codec.WordFamilySpec
 import qualified Pawl.Codec.ZoneChangePatternSpec
 import qualified Pawl.Codec.ZoneChangeRSpec
 import qualified Pawl.Codec.ZoneChangeSpec
@@ -1024,7 +1025,7 @@ spec s registry = do
   Pawl.Codec.CastObligationSpec.spec s
   Pawl.Codec.CastOfferSpec.spec s
   Pawl.Codec.CastRepetitionSpec.spec s
-  Pawl.Codec.ChangeSubtypeWordSpec.spec s
+  Pawl.Codec.ChangeWordSpec.spec s
   Pawl.Codec.ChangeTextSpec.spec s
   Pawl.Codec.CharacteristicPTSpec.spec s
   Pawl.Codec.CheckSpec.spec s
@@ -1528,7 +1529,8 @@ spec s registry = do
   Pawl.Codec.StickerKindSpec.spec s
   Pawl.Codec.StickerSheetSpec.spec s
   Pawl.Codec.StoredResultSpec.spec s
-  Pawl.Codec.SubtypeFamilySpec.spec s
+  Pawl.Codec.TextWordSpec.spec s
+  Pawl.Codec.WordFamilySpec.spec s
   Pawl.Codec.SubtypesAreSpec.spec s
   Pawl.Codec.SubtypeSpec.spec s
   Pawl.Codec.SupertypeSpec.spec s
@@ -1536,6 +1538,7 @@ spec s registry = do
   Pawl.Codec.SuspendSpec.spec s
   Pawl.Codec.TakeExtraTurnSpec.spec s
   Pawl.Codec.TakingSpec.spec s
+  Pawl.Codec.TapForManaSpec.spec s
   Pawl.Codec.TapForTotalPowerSpec.spec s
   Pawl.Codec.TappedForManaSpec.spec s
   Pawl.Codec.TappedIsSpec.spec s
@@ -1574,7 +1577,6 @@ spec s registry = do
   Pawl.Codec.TurnWindowSpec.spec s
   Pawl.Codec.TypeLineSpec.spec s
   Pawl.Codec.TypesAreSpec.spec s
-  Pawl.Codec.TypeSwapSpec.spec s
   Pawl.Codec.UntapRestrictionSpec.spec s
   Pawl.Codec.UntapRewriteSpec.spec s
   Pawl.Codec.UntapRSpec.spec s

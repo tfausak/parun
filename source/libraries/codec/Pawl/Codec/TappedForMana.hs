@@ -4,6 +4,7 @@ module Pawl.Codec.TappedForMana where
 
 import qualified Pawl.Codec.ManaType as ManaType
 import qualified Pawl.Codec.ObjectId as ObjectId
+import qualified Pawl.Codec.PlayerId as PlayerId
 import qualified Pawl.JsonCodec.Codec as Codec
 import qualified Pawl.JsonCodec.Common as Common
 import qualified Pawl.JsonCodec.Fields as Fields
@@ -17,4 +18,5 @@ codec :: Codec.Codec TappedForMana.TappedForMana
 codec = Fields.object $ do
   permanent <- Fields.required "permanent" ObjectId.codec TappedForMana.permanent
   mana <- Fields.required "mana" (Common.set ManaType.codec) TappedForMana.mana
-  pure TappedForMana.MkTappedForMana {TappedForMana.permanent = permanent, TappedForMana.mana = mana}
+  player <- Fields.required "player" PlayerId.codec TappedForMana.player
+  pure TappedForMana.MkTappedForMana {TappedForMana.permanent = permanent, TappedForMana.mana = mana, TappedForMana.player = player}

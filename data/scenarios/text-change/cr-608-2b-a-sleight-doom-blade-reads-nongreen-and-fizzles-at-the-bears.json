@@ -1,0 +1,38 @@
+{
+  "description": "CR 608.2b a Doom Blade whose \"nonblack\" Sleight of Mind made \"nongreen\" finds its green target illegal and fizzles",
+  "note": "alice's Doom Blade aims at bob's Grizzly Bears, legal when chosen. bob answers with Sleight of Mind on the spell, swapping black for green, so CR 608.2b's re-check reads \"destroy target nongreen creature\" and the Bears are no longer a legal target: the Blade does nothing and the Bears survive.",
+  "board": {
+    "seats": [
+      {
+        "name": "alice",
+        "battlefield": [
+          { "card": "Swamp", "label": "s1" },
+          { "card": "Swamp", "label": "s2" }
+        ],
+        "hand": [{ "card": "Doom Blade", "label": "blade" }]
+      },
+      {
+        "name": "bob",
+        "battlefield": [
+          { "card": "Island", "label": "island" },
+          { "card": "Grizzly Bears", "label": "bears" }
+        ],
+        "hand": [{ "card": "Sleight of Mind", "label": "sleight" }]
+      }
+    ],
+    "active": "alice",
+    "step": "PrecombatMain"
+  },
+  "timeline": [
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": { "Cast": { "object": "$blade", "targets": ["$bears"], "mana": ["$s1", "$s2"] } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass" },
+    { "turn": 1, "step": "PrecombatMain", "player": "bob", "do": { "Cast": { "object": "$sleight", "targets": ["Doom Blade"], "mana": ["$island"] } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "bob", "do": "Pass" },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass" },
+    { "turn": 1, "step": "PrecombatMain", "player": "bob", "source": "Sleight of Mind", "do": { "ChooseWordSwap": { "from": { "type": "Black" }, "to": { "type": "Green" } } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass" },
+    { "turn": 1, "step": "PrecombatMain", "player": "bob", "do": "Pass" },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "check": { "Count": { "player": "bob", "zone": "Battlefield", "card": "Grizzly Bears", "count": 1 } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "check": { "Count": { "player": "alice", "zone": "Graveyard", "card": "Doom Blade", "count": 1 } } }
+  ]
+}

@@ -106,7 +106,7 @@
       "player": "alice",
       "source": "Artificial Evolution",
       "do": {
-        "ChooseTypeSwap": {
+        "ChooseWordSwap": {
           "from": {
             "type": "Zombie"
           },

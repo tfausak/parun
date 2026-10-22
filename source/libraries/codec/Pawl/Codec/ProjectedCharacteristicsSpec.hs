@@ -17,7 +17,7 @@ import qualified Pawl.Types.Card as Card.Type
 import qualified Pawl.Types.CardName as CardName
 import qualified Pawl.Types.CardType as CardType
 import qualified Pawl.Types.CastingPermission as CastingPermission
-import qualified Pawl.Types.ChangeSubtypeWord as ChangeSubtypeWord
+import qualified Pawl.Types.ChangeWord as ChangeWord
 import qualified Pawl.Types.Color as Color
 import qualified Pawl.Types.CopyException as CopyException
 import qualified Pawl.Types.Cost as Cost
@@ -47,6 +47,7 @@ import qualified Pawl.Types.StaticAbility as StaticAbility
 import qualified Pawl.Types.Subtype as Subtype
 import qualified Pawl.Types.Supertype as Supertype
 import qualified Pawl.Types.TargetSlot as TargetSlot
+import qualified Pawl.Types.TextWord as TextWord
 import qualified Pawl.Types.Timestamp as Timestamp
 
 -- | `name` and `cardTypes` are the only required keys; every other field is
@@ -99,7 +100,7 @@ testCharacteristics =
       -- round trip to the same JSON.
       PC.lostAllAbilities = True,
       PC.hasFullText = True,
-      PC.subtypeWordChanges = [ChangeSubtypeWord.MkChangeSubtypeWord Subtype.Spirit Subtype.Elf],
+      PC.wordChanges = [ChangeWord.MkChangeWord (TextWord.SubtypeWord Subtype.Spirit) (TextWord.SubtypeWord Subtype.Elf)],
       -- A different keyword from `keywords` above, so a codec arm reading the
       -- wrong field would not round trip to the same JSON.
       PC.textChangedKeywords = Map.singleton Keyword.Trample 1,
@@ -162,7 +163,7 @@ testCharacteristicsJson =
     <> ","
     <> "\"lostAllAbilities\":true,"
     <> "\"hasFullText\":true,"
-    <> "\"subtypeWordChanges\":[{\"from\":{\"type\":\"Spirit\"},\"to\":{\"type\":\"Elf\"}}],"
+    <> "\"wordChanges\":[{\"from\":{\"type\":\"Spirit\"},\"to\":{\"type\":\"Elf\"}}],"
     <> "\"textChangedKeywords\":[{\"key\":{\"type\":\"Trample\"},\"value\":1}],"
     <> "\"assignsCombatDamageWithToughness\":true,"
     <> "\"grantsStationToughness\":true,"
@@ -215,7 +216,7 @@ minimalCharacteristics =
       PC.ruleAbilities = mempty,
       PC.lostAllAbilities = False,
       PC.hasFullText = False,
-      PC.subtypeWordChanges = [],
+      PC.wordChanges = [],
       PC.textChangedKeywords = Map.empty,
       PC.assignsCombatDamageWithToughness = False,
       PC.grantsStationToughness = False,

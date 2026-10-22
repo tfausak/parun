@@ -41,7 +41,7 @@ import Pawl.Types.ObjectId (ObjectId)
 import qualified Pawl.Types.Prohibition as Prohibition
 import qualified Pawl.Types.ProjectedCharacteristics as ProjectedCharacteristics
 import qualified Pawl.Types.RuleAbilities as RuleAbilities
-import qualified Pawl.Types.Subtype as Subtype
+import qualified Pawl.Types.TextWord as TextWord
 
 -- Every activation prohibition some permanent on the battlefield states right
 -- now, each paired with its SOURCE and with CR 612.1's word swap over that
@@ -53,7 +53,7 @@ import qualified Pawl.Types.Subtype as Subtype
 -- CR 605.1a's kind is NOT applied here. `cantActivate` asks about one activation
 -- window and `namedSubjects` about the whole ability, so which rows survive is
 -- the reader's question rather than the walk's.
-gathered :: GameState -> [(ObjectId, [(Subtype.Subtype, Subtype.Subtype)], ActivationProhibition.ActivationProhibition)]
+gathered :: GameState -> [(ObjectId, [(TextWord.TextWord, TextWord.TextWord)], ActivationProhibition.ActivationProhibition)]
 gathered gs =
   let -- Hoisted out of the walk as SacrificeRestriction.cantBeSacrificed hoists
       -- them, and both unforced until some permanent actually declares a
@@ -169,7 +169,7 @@ namedSubjects source name gs =
 --
 -- CR 612.1 again, on the other half of the same printed sentence: the AFFECTED
 -- set is rewritten before it is asked.
-named :: Map.Map ObjectId ProjectedCharacteristics.ProjectedCharacteristics -> [Projection.ControlGrant] -> ObjectId -> [(Subtype.Subtype, Subtype.Subtype)] -> ActivationProhibition.ActivationProhibition -> ObjectId -> GameState -> Bool
+named :: Map.Map ObjectId ProjectedCharacteristics.ProjectedCharacteristics -> [Projection.ControlGrant] -> ObjectId -> [(TextWord.TextWord, TextWord.TextWord)] -> ActivationProhibition.ActivationProhibition -> ObjectId -> GameState -> Bool
 named pcs grants source changes prohibition candidate gs =
   let affected = ActivationProhibition.affected prohibition
    in Projection.affectsOn

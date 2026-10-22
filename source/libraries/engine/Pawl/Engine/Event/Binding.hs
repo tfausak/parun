@@ -939,10 +939,10 @@ eventBindingsOver board gs bearerBecame becameInGraveyard bearer you cond event 
   (TriggerCondition.AttachedPermanentTappedForMana, GameEvent.TappedForMana tapped) ->
     Binding.setManaSource (TappedForMana.permanent tapped) Map.empty
   -- The same slot for the bystander reading: Autumn Willow, Harmony's "add an
-  -- additional {G}" goes to CR 109.5's "you", but a printing of this shape whose
-  -- recipient is the tapping player instead reads the source through
-  -- PlayerRef.ControllerOfBound, and the two seats come apart under an Opponent
-  -- relation.
+  -- additional {G}" goes to CR 109.5's "you", and a printing of this shape
+  -- whose recipient is the permanent's controller reads it through
+  -- PlayerRef.ControllerOfBound. That is not the tapping player where an
+  -- effect lets another player tap it (Piracy), which this slot does not name.
   --
   -- Unconditional given a match, the arm above's reason: matchesTrigger accepts
   -- only a GameEvent.TappedForMana, which carries the permanent outright.
