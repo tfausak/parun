@@ -38,6 +38,7 @@ import Numeric.Natural (Natural)
 import qualified Pawl.Engine.Binding as Binding
 import qualified Pawl.Engine.Condition as Condition
 import qualified Pawl.Engine.Count as Count
+import qualified Pawl.Engine.Defender as Defender
 import qualified Pawl.Engine.Expiry as Expiry
 import qualified Pawl.Engine.Filter as Filter
 import qualified Pawl.Engine.Game as Game
@@ -64,7 +65,6 @@ import qualified Pawl.Types.AlternativeActivationCost as AlternativeActivationCo
 import qualified Pawl.Types.AppliedReduction as AppliedReduction
 import qualified Pawl.Types.CantSearchLibraries as CantSearchLibraries
 import qualified Pawl.Types.CastFromZone as CastFromZone
-import qualified Pawl.Types.Combat as Combat
 import qualified Pawl.Types.CostAddition as CostAddition
 import Pawl.Types.CostAdjustments (CostAdjustments)
 import qualified Pawl.Types.CostAdjustments as CostAdjustments
@@ -206,11 +206,13 @@ playersInScope reach perspective gs scope = case scope of
   PlayerScope.Superlative leading -> Just (leaders reach gs leading)
   PlayerScope.InRole role -> Just (filter (`List.elem` roleHolders role gs) (Players.table reach gs))
 
--- CR 102.1 / 805.4a / 506.2: the players holding a role the turn hands out.
+-- CR 102.1 / 805.4a / 802.2: the players holding a role the turn hands out --
+-- every defending player, CR 811.4's barred ones included, as Yare's controller
+-- chooses among them.
 roleHolders :: TurnRole.TurnRole -> GameState -> [PlayerId]
 roleHolders role gs = case role of
   TurnRole.Active -> Turn.activePlayers gs
-  TurnRole.Defending -> Combat.defenders (GameState.combat gs)
+  TurnRole.Defending -> Defender.designatedPlayers gs
 
 -- CR 707.2a: the player abilities this permanent's copiable rules text gives it
 -- -- its copy snapshot's when it has one, its printed face's otherwise. The

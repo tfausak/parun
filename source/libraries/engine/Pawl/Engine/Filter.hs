@@ -1835,9 +1835,9 @@ matches context view predicate = case predicate of
   -- player, the posture the Measures atom takes.
   --
   -- CR 102.1 / 805.4a: an active player the Context carries, any of them under
-  -- shared team turns. A targeting restriction is the one place a card writes it,
-  -- and there CR 805.9's choice of which active player the ability means is still
-  -- the controller's to make, so any one admits the candidate.
+  -- shared team turns. Not implemented: CR 805.9's choice, at the time the effect
+  -- is applied, of which active player a targeting restriction means, which
+  -- could make the target illegal at CR 608.2b's recheck (#5458).
   Filter.ControlledByRole role -> case controller view of
     Just c ->
       List.elem
