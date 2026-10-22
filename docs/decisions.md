@@ -250,6 +250,27 @@ Entries are ordered by the first rule each cites.
   regression fence: no board drives it.
 - **Issue**: #5440.
 
+## Whether Cunning Giant attacking nothing may still assign to a creature
+
+- **Question**: Cunning Giant, unblocked, "may ... assign its combat damage to
+  a creature defending player controls". Attacking a planeswalker that has
+  left, it attacks nothing and CR 510.1b gives it no recipient. Is the option
+  still open, and does Illusionary Mask's "would assign" count a creature
+  whose option could give it a recipient?
+- **Rules**: CR 510.1b, 506.4c, 508.5, 614.1a; CR of 2026-08-07.
+- **Decision**: Yes to both. The option names its own recipient, and CR
+  508.5's second sentence still names the defending player, so it stands
+  apart from what the creature is attacking. A creature whose option could
+  give it a recipient is one that would assign, its controller having yet to
+  decline.
+- **Rejected**: Closing the option with CR 510.1b: the text is a permission
+  to assign elsewhere, not a reading of what the creature attacks. Leaving
+  the Mask's creature face down: a later "yes" would then have it assign as
+  the face-down 2/2.
+- **Site**: `Pawl.Engine.Damage.attackerAssignment` and `wouldAssign`. Both
+  halves are regression fences: no board drives either.
+- **Issue**: #5437.
+
 ## Whether a cast redirected off the stack is still a cast
 
 - **Question**: A CR 614 replacement sends a card being cast somewhere other

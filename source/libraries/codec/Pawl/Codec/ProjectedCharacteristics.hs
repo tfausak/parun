@@ -13,6 +13,7 @@ import qualified Pawl.Codec.CastingPermission as CastingPermission
 import qualified Pawl.Codec.ChangeWord as ChangeWord
 import qualified Pawl.Codec.CharacteristicPT as CharacteristicPT
 import qualified Pawl.Codec.Color as Color
+import qualified Pawl.Codec.CombatDamageOption as CombatDamageOption
 import qualified Pawl.Codec.CopyException as CopyException
 import qualified Pawl.Codec.CostChoice as CostChoice
 import qualified Pawl.Codec.CostComponent as CostComponent
@@ -80,6 +81,7 @@ codec = Fields.object $ do
   wordChanges <- Fields.defaulted "wordChanges" [] (Common.list ChangeWord.codec) PC.wordChanges
   textChangedKeywords <- Fields.defaulted "textChangedKeywords" Map.empty (Common.multiset Keyword.codec) PC.textChangedKeywords
   assignsCombatDamageWithToughness <- Fields.defaulted "assignsCombatDamageWithToughness" False Common.boolean PC.assignsCombatDamageWithToughness
+  combatDamageOptions <- Fields.defaulted "combatDamageOptions" Set.empty (Common.set CombatDamageOption.codec) PC.combatDamageOptions
   grantsStationToughness <- Fields.defaulted "grantsStationToughness" False Common.boolean PC.grantsStationToughness
   additionalCosts <- Fields.defaulted "additionalCosts" [] (Common.list (CostComponent.codec Keyword.codec)) PC.additionalCosts
   additionalCostChoices <- Fields.defaulted "additionalCostChoices" [] (Common.list CostChoice.codec) PC.additionalCostChoices
@@ -130,6 +132,7 @@ codec = Fields.object $ do
         PC.wordChanges = wordChanges,
         PC.textChangedKeywords = textChangedKeywords,
         PC.assignsCombatDamageWithToughness = assignsCombatDamageWithToughness,
+        PC.combatDamageOptions = combatDamageOptions,
         PC.grantsStationToughness = grantsStationToughness,
         PC.additionalCosts = additionalCosts,
         PC.additionalCostChoices = additionalCostChoices,

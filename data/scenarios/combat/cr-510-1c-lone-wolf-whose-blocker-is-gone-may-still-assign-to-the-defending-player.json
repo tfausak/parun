@@ -1,0 +1,30 @@
+{
+  "description": "CR 510.1c Lone Wolf's blocker is bolted before damage: blocked and blocked by nothing, it assigns as though unblocked to bob",
+  "board": {
+    "active": "alice",
+    "step": "BeginningOfCombat",
+    "seats": [
+      {
+        "name": "alice",
+        "hand": [{ "card": "Lightning Bolt", "label": "bolt" }],
+        "battlefield": [
+          { "card": "Lone Wolf", "label": "wolf", "ready": true },
+          { "card": "Mountain", "label": "mountain", "ready": true }
+        ]
+      },
+      {
+        "name": "bob",
+        "battlefield": [{ "card": "Barbarian Horde", "label": "horde", "ready": true }]
+      }
+    ]
+  },
+  "timeline": [
+    { "turn": 1, "step": "DeclareAttackers", "player": "alice", "do": { "Attack": ["$wolf"] } },
+    { "turn": 1, "step": "DeclareBlockers", "player": "bob", "do": { "Block": { "$horde": ["$wolf"] } } },
+    { "turn": 1, "step": "DeclareBlockers", "player": "alice", "do": { "Cast": { "object": "$bolt", "targets": ["$horde"], "mana": ["$mountain"] } } },
+    { "turn": 1, "step": "DeclareBlockers", "player": "alice", "do": "Pass" },
+    { "turn": 1, "step": "CombatDamage", "player": "alice", "source": "$wolf", "do": { "ChooseOptional": { "type": "Exercises" } } },
+    { "turn": 1, "step": "EndOfCombat", "player": "alice", "check": { "Life": { "player": "bob", "life": 18 } } },
+    { "turn": 1, "step": "EndOfCombat", "player": "alice", "check": { "Count": { "player": "bob", "zone": "Graveyard", "card": "Barbarian Horde", "count": 1 } } }
+  ]
+}

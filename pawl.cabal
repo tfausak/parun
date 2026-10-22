@@ -356,6 +356,8 @@ library codec
     Pawl.Codec.Color
     Pawl.Codec.ColorSpec
     Pawl.Codec.Combat
+    Pawl.Codec.CombatDamageOption
+    Pawl.Codec.CombatDamageOptionSpec
     Pawl.Codec.CombatRestriction
     Pawl.Codec.CombatRestrictionSpec
     Pawl.Codec.CombatSpec
@@ -2320,6 +2322,7 @@ library types
     Pawl.Types.CoinReading
     Pawl.Types.Color
     Pawl.Types.Combat
+    Pawl.Types.CombatDamageOption
     Pawl.Types.CombatRestriction
     Pawl.Types.CombatStep
     Pawl.Types.CommandZoneDecision

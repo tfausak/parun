@@ -492,6 +492,10 @@ data Response
   | -- | CR 614.1a: whether an optional redirect applied (Exercises) or the move
     -- stood (Declines). Distinct from ChoseDredge for its reason.
     ChoseRedirect OptionalDecision.OptionalDecision
+  | -- | CR 510.1b-c: whether a creature assigned its combat damage as its
+    -- option allows (Exercises) or as those rules say (Declines). Distinct
+    -- from ChoseDredge for its reason.
+    ChoseCombatDamageOption OptionalDecision.OptionalDecision
   | -- | CR 614.1a: whether an optional substitution applied (Exercises) or the
     -- flip or roll stood (Declines). Distinct from ChoseDredge for its reason.
     ChoseSubstitute OptionalDecision.OptionalDecision

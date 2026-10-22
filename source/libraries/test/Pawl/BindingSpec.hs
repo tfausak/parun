@@ -54,6 +54,7 @@ sampleSnapshot =
       PC.wordChanges = [],
       PC.textChangedKeywords = Map.empty,
       PC.assignsCombatDamageWithToughness = False,
+      PC.combatDamageOptions = Set.empty,
       PC.grantsStationToughness = False,
       PC.additionalCosts = [],
       PC.additionalCostChoices = [],

@@ -382,6 +382,8 @@ rewriteModification pairs m =
               -- Nothing to rewrite: two bare markers naming no subtype word.
               Modification.AssignCombatDamageWithToughness -> acc
               Modification.GrantsStationToughness -> acc
+              -- Nor here: an option names no word either.
+              Modification.MayAssignCombatDamage _ -> acc
               -- CR 612.1 through the amount, ModifyPowerToughness's descent below.
               Modification.Intensify n -> Modification.Intensify (rewriteQuantity [(from, to)] n)
               -- CR 612.1 through both boxes: a Quantity.Count carries a Filter, so a

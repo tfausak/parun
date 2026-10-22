@@ -1,0 +1,27 @@
+{
+  "description": "CR 510.1b the same board, declined: unblocked Cunning Giant assigns its damage to the player it attacks",
+  "board": {
+    "active": "alice",
+    "step": "BeginningOfCombat",
+    "seats": [
+      {
+        "name": "alice",
+        "battlefield": [{ "card": "Cunning Giant", "label": "giant", "ready": true }]
+      },
+      {
+        "name": "bob",
+        "battlefield": [
+          { "card": "Barbarian Horde", "label": "horde", "ready": true },
+          { "card": "Axebane Beast", "label": "beast", "ready": true }
+        ]
+      }
+    ]
+  },
+  "timeline": [
+    { "turn": 1, "step": "DeclareAttackers", "player": "alice", "do": { "Attack": ["$giant"] } },
+    { "turn": 1, "step": "DeclareBlockers", "player": "bob", "do": { "Block": {} } },
+    { "turn": 1, "step": "CombatDamage", "player": "alice", "source": "$giant", "do": { "ChooseOptional": { "type": "Declines" } } },
+    { "turn": 1, "step": "EndOfCombat", "player": "alice", "check": { "Life": { "player": "bob", "life": 16 } } },
+    { "turn": 1, "step": "EndOfCombat", "player": "alice", "check": { "Damage": { "object": "$beast", "damage": 0 } } }
+  ]
+}

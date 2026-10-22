@@ -179,6 +179,7 @@ encode p answer = case p of
   Prompt.ChooseTribute {} -> Response.ChoseTribute answer
   Prompt.ChooseDredge {} -> Response.ChoseDredge answer
   Prompt.ChooseRedirect {} -> Response.ChoseRedirect answer
+  Prompt.ChooseCombatDamageOption {} -> Response.ChoseCombatDamageOption answer
   Prompt.ChooseSubstitute {} -> Response.ChoseSubstitute answer
   Prompt.ChoosePayLifeOnEntry {} -> Response.ChosePayLifeOnEntry answer
   Prompt.ChooseRevealOnEntry {} -> Response.ChoseRevealOnEntry answer
@@ -525,6 +526,9 @@ decode p response = case p of
     _ -> Nothing
   Prompt.ChooseRedirect {} -> case response of
     Response.ChoseRedirect d -> Just d
+    _ -> Nothing
+  Prompt.ChooseCombatDamageOption {} -> case response of
+    Response.ChoseCombatDamageOption d -> Just d
     _ -> Nothing
   Prompt.ChooseSubstitute {} -> case response of
     Response.ChoseSubstitute d -> Just d
@@ -1110,6 +1114,9 @@ defaultAnswer p = case p of
   -- CR 614.1a: declining, for ChooseRiot's reason -- the move the effect
   -- proposed stands.
   Prompt.ChooseRedirect {} -> OptionalDecision.Declines
+  -- CR 510.1b-c: declining, for ChooseRiot's reason -- the creature assigns
+  -- its damage as those rules say.
+  Prompt.ChooseCombatDamageOption {} -> OptionalDecision.Declines
   -- CR 614.1a: declining, for ChooseRiot's reason -- the flip or roll the
   -- instruction named stands.
   Prompt.ChooseSubstitute {} -> OptionalDecision.Declines

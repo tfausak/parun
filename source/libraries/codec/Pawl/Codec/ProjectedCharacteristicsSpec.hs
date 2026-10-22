@@ -19,6 +19,7 @@ import qualified Pawl.Types.CardType as CardType
 import qualified Pawl.Types.CastingPermission as CastingPermission
 import qualified Pawl.Types.ChangeWord as ChangeWord
 import qualified Pawl.Types.Color as Color
+import qualified Pawl.Types.CombatDamageOption as CombatDamageOption
 import qualified Pawl.Types.CopyException as CopyException
 import qualified Pawl.Types.Cost as Cost
 import qualified Pawl.Types.CostChoice as CostChoice
@@ -105,6 +106,7 @@ testCharacteristics =
       -- wrong field would not round trip to the same JSON.
       PC.textChangedKeywords = Map.singleton Keyword.Trample 1,
       PC.assignsCombatDamageWithToughness = True,
+      PC.combatDamageOptions = Set.singleton CombatDamageOption.ToDefendingCreature,
       PC.grantsStationToughness = True,
       -- Pawl.Codec.FaceSpec's own values for the four cost fields.
       PC.additionalCosts = [CostComponent.TapThis],
@@ -166,6 +168,7 @@ testCharacteristicsJson =
     <> "\"wordChanges\":[{\"from\":{\"type\":\"Spirit\"},\"to\":{\"type\":\"Elf\"}}],"
     <> "\"textChangedKeywords\":[{\"key\":{\"type\":\"Trample\"},\"value\":1}],"
     <> "\"assignsCombatDamageWithToughness\":true,"
+    <> "\"combatDamageOptions\":[{\"type\":\"ToDefendingCreature\"}],"
     <> "\"grantsStationToughness\":true,"
     <> "\"additionalCosts\":[{\"type\":\"TapThis\"}],"
     <> "\"additionalCostChoices\":[[{\"components\":[{\"type\":\"TapThis\"}],\"mana\":[]},{\"mana\":[{\"type\":\"Generic\",\"value\":1}]}]],"
@@ -219,6 +222,7 @@ minimalCharacteristics =
       PC.wordChanges = [],
       PC.textChangedKeywords = Map.empty,
       PC.assignsCombatDamageWithToughness = False,
+      PC.combatDamageOptions = Set.empty,
       PC.grantsStationToughness = False,
       PC.additionalCosts = [],
       PC.additionalCostChoices = [],

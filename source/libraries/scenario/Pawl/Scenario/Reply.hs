@@ -433,6 +433,7 @@ shapeOf prompt = case prompt of
   Prompt.ChooseReplacement {} -> natural
   Prompt.ChooseDredge {} -> viaCodec Codec.OptionalDecision.codec
   Prompt.ChooseRedirect {} -> viaCodec Codec.OptionalDecision.codec
+  Prompt.ChooseCombatDamageOption {} -> viaCodec Codec.OptionalDecision.codec
   Prompt.ChooseSubstitute {} -> viaCodec Codec.OptionalDecision.codec
   Prompt.ChooseSacrifices {} -> setOf object
   Prompt.ChooseExilesFromGraveyard {} -> setOf object

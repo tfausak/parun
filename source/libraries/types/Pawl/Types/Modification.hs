@@ -7,6 +7,7 @@ import qualified Pawl.Types.CardType as CardType
 import qualified Pawl.Types.CastingPermission as CastingPermission
 import qualified Pawl.Types.ChangeWord as ChangeWord
 import qualified Pawl.Types.Color as Color
+import qualified Pawl.Types.CombatDamageOption as CombatDamageOption
 import qualified Pawl.Types.CostKeyword as CostKeyword
 import qualified Pawl.Types.ExiledCardAbilities as ExiledCardAbilities
 import qualified Pawl.Types.Filter as Filter
@@ -452,6 +453,9 @@ data Modification ability
     SwitchPowerToughness
   | -- | CR 510.1a: this creature assigns combat damage equal to its toughness.
     AssignCombatDamageWithToughness
+  | -- | CR 510.1b-c: this creature's controller may have it assign all its
+    -- combat damage where the option says instead.
+    MayAssignCombatDamage CombatDamageOption.CombatDamageOption
   | -- | CR 702.184c: while this object's controller controls it, that player's
     -- station abilities read the tapped creature's toughness where it exceeds
     -- its power (Tapestry Warden). Self-only, like DestructionR: a fact about the

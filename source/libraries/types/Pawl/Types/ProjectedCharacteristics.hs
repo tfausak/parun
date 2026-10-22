@@ -13,6 +13,7 @@ import qualified Pawl.Types.CastingPermission as CastingPermission
 import qualified Pawl.Types.ChangeWord as ChangeWord
 import qualified Pawl.Types.CharacteristicPT as CharacteristicPT
 import qualified Pawl.Types.Color as Color
+import qualified Pawl.Types.CombatDamageOption as CombatDamageOption
 import qualified Pawl.Types.CopyException as CopyException
 import qualified Pawl.Types.CostChoice as CostChoice
 import qualified Pawl.Types.CostComponent as CostComponent
@@ -331,6 +332,9 @@ data ProjectedCharacteristics = MkProjectedCharacteristics
     textChangedKeywords :: Map.Map Keyword.Keyword Natural.Natural,
     -- | CR 510.1a: does this creature assign combat damage equal to toughness?
     assignsCombatDamageWithToughness :: Bool,
+    -- | CR 510.1b-c: where this creature's controller may have it assign all
+    -- its combat damage instead.
+    combatDamageOptions :: Set.Set CombatDamageOption.CombatDamageOption,
     -- | CR 702.184c: does this object's controller's station abilities read a
     -- tapped creature's toughness instead of its power?
     -- Modification.GrantsStationToughness's only writer. Read by

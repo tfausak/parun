@@ -1,0 +1,24 @@
+{
+  "description": "CR 702.22j blocked by a creature with banding, Lone Wolf's assigning as though unblocked is bob's choice, not alice's",
+  "board": {
+    "active": "alice",
+    "step": "BeginningOfCombat",
+    "seats": [
+      {
+        "name": "alice",
+        "battlefield": [{ "card": "Lone Wolf", "label": "wolf", "ready": true }]
+      },
+      {
+        "name": "bob",
+        "battlefield": [{ "card": "Benalish Hero", "label": "hero", "ready": true }]
+      }
+    ]
+  },
+  "timeline": [
+    { "turn": 1, "step": "DeclareAttackers", "player": "alice", "do": { "Attack": ["$wolf"] } },
+    { "turn": 1, "step": "DeclareBlockers", "player": "bob", "do": { "Block": { "$hero": ["$wolf"] } } },
+    { "turn": 1, "step": "CombatDamage", "player": "bob", "source": "$wolf", "do": { "ChooseOptional": { "type": "Exercises" } } },
+    { "turn": 1, "step": "EndOfCombat", "player": "alice", "check": { "Life": { "player": "bob", "life": 18 } } },
+    { "turn": 1, "step": "EndOfCombat", "player": "alice", "check": { "Damage": { "object": "$hero", "damage": 0 } } }
+  ]
+}
