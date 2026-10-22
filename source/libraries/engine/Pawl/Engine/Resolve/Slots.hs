@@ -2880,7 +2880,7 @@ battlefieldMatching legal resolving controller source gs filter_ =
       -- Total War's "destroy all untapped non-Wall creatures that player
       -- controls" is the phrase, and Pawl.CardTriggerSpec's Total War group is
       -- what proves it.
-      baked = Filter.bakeBound (Binding.playerSlots (slotBindings resolving gs)) Map.empty filter_
+      baked = Filter.bakeBound (Binding.playerSlots (slotBindings resolving gs)) Map.empty Map.empty filter_
       grants = Projection.controlGrants gs
       -- CR 801.10 / 801.5a: only permanents in the controller's range, so the
       -- sweep and the ChosenPermanents offer agree -- every one for CR 801.18's

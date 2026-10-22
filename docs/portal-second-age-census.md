@@ -16,8 +16,6 @@ Each group is tracked by its issue; its cards are added when it lands.
 - #5437: Lone Wolf and Deathcoil Wurm (assign combat damage as though it
   weren't blocked), Cunning Giant (an unblocked creature assigns its damage to
   a creature).
-- #5413: Goblin War Cry ("other creatures they control can't block", leaving
-  out a chosen creature).
 
 ## Decks
 

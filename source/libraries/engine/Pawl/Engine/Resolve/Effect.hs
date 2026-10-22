@@ -2052,6 +2052,20 @@ bakeRelation players rel = case rel of
   ControllerRelation.EnchantedPlayers -> rel
   ControllerRelation.Among _ -> rel
 
+-- CR 611.2c: a combat restriction's stored class, every slot it names baked
+-- (Pawl.Engine.Filter.bakeBound) since the slots die with this resolution: its
+-- players, its objects, and its objects' controllers through the resolution's
+-- own CR 608.2h reader (effectContext). Read live afterwards, so a permanent
+-- arriving later is in the class.
+storedClass :: Map.Map SlotName (Set Recipient) -> ObjectId -> PlayerId -> ObjectId -> GameState -> Filter.Type.Filter Keyword.Type.Keyword -> Filter.Type.Filter Keyword.Type.Keyword
+storedClass legal resolving controller source gs =
+  Filter.bakeBound
+    (Map.union (Binding.playersIn legal) (Binding.playerSlots bindings))
+    (Binding.objectsBySlot legal bindings)
+    (Filter.slotControllers (effectContext gs resolving controller source legal bindings))
+  where
+    bindings = slotBindings resolving gs
+
 -- CR 601.2c / 615.12: the same bake one carrier over. A stored CR 615.12 or CR
 -- 614.9 prohibition narrows the damage event by a DamagePattern too, and a card
 -- that aims its sentence at the recipient its own resolution chose
@@ -8424,7 +8438,7 @@ applyOneEffect runSubgame resolving source controller legal chosen effect = case
       Just expiry ->
         let restricted side = case side of
               RestrictedCreatures.Named ref -> fmap RestrictedCreatures.Named (objectRefObjects legal resolving controller source gs ref)
-              RestrictedCreatures.Matching f -> [RestrictedCreatures.Matching (Filter.bakeBound (Map.union (Binding.playersIn legal) (Binding.playerSlots (slotBindings resolving gs))) (Binding.objectsBySlot legal (slotBindings resolving gs)) f)]
+              RestrictedCreatures.Matching f -> [RestrictedCreatures.Matching (storedClass legal resolving controller source gs f)]
             blockers = restricted blockerRef
             attackers = maybe [Nothing] (fmap Just . restricted) attackerRef
             (ts, gs1) = Game.freshTimestamp gs
@@ -8465,7 +8479,7 @@ applyOneEffect runSubgame resolving source controller legal chosen effect = case
       Just expiry ->
         let subjects = case affected of
               RestrictedCreatures.Named ref -> fmap RestrictedCreatures.Named (objectRefObjects legal resolving controller source gs ref)
-              RestrictedCreatures.Matching f -> [RestrictedCreatures.Matching (Filter.bakeBound (Map.union (Binding.playersIn legal) (Binding.playerSlots (slotBindings resolving gs))) (Binding.objectsBySlot legal (slotBindings resolving gs)) f)]
+              RestrictedCreatures.Matching f -> [RestrictedCreatures.Matching (storedClass legal resolving controller source gs f)]
             (ts, gs1) = Game.freshTimestamp gs
             stored =
               fmap
@@ -8508,7 +8522,7 @@ applyOneEffect runSubgame resolving source controller legal chosen effect = case
       Just expiry ->
         let subjects = case affected of
               RestrictedCreatures.Named ref -> fmap RestrictedCreatures.Named (objectRefObjects legal resolving controller source gs ref)
-              RestrictedCreatures.Matching f -> [RestrictedCreatures.Matching (Filter.bakeBound (Map.union (Binding.playersIn legal) (Binding.playerSlots (slotBindings resolving gs))) (Binding.objectsBySlot legal (slotBindings resolving gs)) f)]
+              RestrictedCreatures.Matching f -> [RestrictedCreatures.Matching (storedClass legal resolving controller source gs f)]
             -- A slot's players baked now, one row each, for the class's reason:
             -- the binding is gone once this resolution is over. A slot naming
             -- nobody stores nothing (Chaos Dragon's "those players").
@@ -8547,8 +8561,8 @@ applyOneEffect runSubgame resolving source controller legal chosen effect = case
                   ActiveEvasion.controller = controller,
                   ActiveEvasion.timestamp = ts,
                   ActiveEvasion.expiry = expiry,
-                  ActiveEvasion.affected = Filter.bakeBound (Map.union (Binding.playersIn legal) (Binding.playerSlots (slotBindings resolving gs))) (Binding.objectsBySlot legal (slotBindings resolving gs)) f,
-                  ActiveEvasion.blockers = Filter.bakeBound (Map.union (Binding.playersIn legal) (Binding.playerSlots (slotBindings resolving gs))) (Binding.objectsBySlot legal (slotBindings resolving gs)) barred
+                  ActiveEvasion.affected = storedClass legal resolving controller source gs f,
+                  ActiveEvasion.blockers = storedClass legal resolving controller source gs barred
                 }
          in gs1 {GameState.evasions = stored : GameState.evasions gs1}
   Effect.RequireAttack (RequireAttack.MkRequireAttack duration attackerRef defenderRef) ->
@@ -8564,7 +8578,7 @@ applyOneEffect runSubgame resolving source controller legal chosen effect = case
       Just expiry ->
         let attackers = case attackerRef of
               RestrictedCreatures.Named ref -> fmap RestrictedCreatures.Named (objectRefObjects legal resolving controller source gs ref)
-              RestrictedCreatures.Matching f -> [RestrictedCreatures.Matching (Filter.bakeBound (Map.union (Binding.playersIn legal) (Binding.playerSlots (slotBindings resolving gs))) (Binding.objectsBySlot legal (slotBindings resolving gs)) f)]
+              RestrictedCreatures.Matching f -> [RestrictedCreatures.Matching (storedClass legal resolving controller source gs f)]
             -- Through playerRefPlayers and objectRefObjects so a ref is read
             -- exactly as every other opcode reads one, CR 608.2b's empty answer
             -- included. A permanent becomes the announcement CR 508.1b names it

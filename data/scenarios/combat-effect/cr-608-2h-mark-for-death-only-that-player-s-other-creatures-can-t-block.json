@@ -1,0 +1,50 @@
+{
+  "description": "CR 608.2h / 611.2c Mark for Death: the target untaps and must block, that player's other creatures can't block, and another player's creatures still can",
+  "note": "Three seats, because the stored class names the target's controller: an unbaked SameControllerAsBound admits every creature, so carol's Bears blocking is the case that fails. Bob's refused declaration includes the Giant, so the requirement is met and only the prohibition refuses it.",
+  "board": {
+    "seats": [
+      {
+        "name": "alice",
+        "hand": [
+          { "card": "Mark for Death", "label": "mark" }
+        ],
+        "battlefield": [
+          { "card": "Mountain", "label": "mountain" },
+          { "card": "Mountain", "label": "mountain-2" },
+          { "card": "Mountain", "label": "mountain-3" },
+          { "card": "Mountain", "label": "mountain-4" },
+          { "card": "Craw Wurm", "label": "wurm", "ready": true },
+          { "card": "Gray Ogre", "label": "ogre", "ready": true }
+        ]
+      },
+      {
+        "name": "bob",
+        "battlefield": [
+          { "card": "Hill Giant", "label": "giant", "ready": true, "tapped": true },
+          { "card": "Grizzly Bears", "label": "bears", "ready": true }
+        ]
+      },
+      {
+        "name": "carol",
+        "battlefield": [
+          { "card": "Grizzly Bears", "label": "carol-bears", "ready": true }
+        ]
+      }
+    ],
+    "active": "alice",
+    "step": "PrecombatMain"
+  },
+  "timeline": [
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": { "Cast": { "object": "$mark", "targets": ["$giant"], "mana": ["$mountain", "$mountain-2", "$mountain-3", "$mountain-4"] } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass" },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "check": { "Tapped": { "object": "$giant", "tapped": false } } },
+    { "turn": 1, "step": "DeclareAttackers", "player": "alice", "do": { "Attack": ["$wurm", "$ogre"] } },
+    { "turn": 1, "step": "DeclareAttackers", "player": "alice", "source": "$wurm", "do": { "ChooseAttackTarget": "$bob" } },
+    { "turn": 1, "step": "DeclareAttackers", "player": "alice", "source": "$ogre", "do": { "ChooseAttackTarget": "$carol" } },
+    { "turn": 1, "step": "DeclareBlockers", "player": "bob", "refuse": { "Block": { "$giant": ["$wurm"], "$bears": ["$wurm"] } } },
+    { "turn": 1, "step": "DeclareBlockers", "player": "bob", "do": { "Block": { "$giant": ["$wurm"] } } },
+    { "turn": 1, "step": "DeclareBlockers", "player": "carol", "do": { "Block": { "$carol-bears": ["$ogre"] } } },
+    { "turn": 1, "step": "DeclareBlockers", "player": "alice", "check": { "Blockers": { "attacker": "$wurm", "blockers": ["$giant"] } } },
+    { "turn": 1, "step": "DeclareBlockers", "player": "alice", "check": { "Blockers": { "attacker": "$ogre", "blockers": ["$carol-bears"] } } }
+  ]
+}

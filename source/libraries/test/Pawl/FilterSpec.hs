@@ -569,17 +569,28 @@ spec s = Spec.describe s "Pawl.Engine.Filter" $ do
       Spec.assertEqWith
         s
         "the atom is replaced in place"
-        (Filter.bakeBound bound Map.empty (buried (Filter.Type.ControlledByBound slot)))
+        (Filter.bakeBound bound Map.empty Map.empty (buried (Filter.Type.ControlledByBound slot)))
         (buried (Filter.Type.ControlledByPlayer (player 0)))
       Spec.assertEqWith
         s
         "and left standing when the slot names nobody"
-        (Filter.bakeBound Map.empty Map.empty (Filter.Type.ControlledByBound slot))
+        (Filter.bakeBound Map.empty Map.empty Map.empty (Filter.Type.ControlledByBound slot))
         (Filter.Type.ControlledByBound slot)
       Spec.assertBool
         s
-        (Filter.matches self blackCreature (Filter.bakeBound bound Map.empty (Filter.Type.ControlledByBound slot)))
+        (Filter.matches self blackCreature (Filter.bakeBound bound Map.empty Map.empty (Filter.Type.ControlledByBound slot)))
         "so the baked filter matches where the unbaked one did not"
+    -- CR 608.2h: a bound object's controller, baked to the player the
+    -- resolution read, so a stored class says "that player controls" after the
+    -- slot is gone (Mark for Death). Unbaked, the atom is vacuously True.
+    Spec.it s "bakeBound substitutes a bound object's controller" $ do
+      let object = SlotName.MkSlotName (Text.pack "target")
+          atom = Filter.Type.SameControllerAsBound object
+          baked = Filter.bakeBound Map.empty Map.empty (Map.singleton object (Set.singleton (player 1))) atom
+      Spec.assertEqWith s "the atom names the controller" baked (Filter.Type.Or [Filter.Type.ControlledByPlayer (player 1)])
+      Spec.assertBool s (not (Filter.matches self blackCreature baked)) "player 0's creature is not that player's"
+      Spec.assertBool s (Filter.matches self blackCreature atom) "where the unbaked atom admitted it"
+      Spec.assertEqWith s "and left standing when the slot is unnamed" (Filter.bakeBound Map.empty Map.empty Map.empty atom) atom
   -- CR 702.60a's "with the same name as this spell", the Measures atom's OfSource
   -- shape over a SET of NAMES: CR 201.2 makes the comparison an intersection, so an
   -- object showing two names (CR 709.4a's split card) has the source's name if it
