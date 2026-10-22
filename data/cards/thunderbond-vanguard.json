@@ -1,0 +1,162 @@
+{
+  "faces": [
+    {
+      "characteristicPT": {
+        "power": {
+          "type": "Count",
+          "value": {
+            "aggregation": {
+              "type": "Members"
+            },
+            "filter": {
+              "type": "And",
+              "value": [
+                {
+                  "type": "HasCardType",
+                  "value": {
+                    "type": "Creature"
+                  }
+                },
+                {
+                  "type": "ControlledBy",
+                  "value": {
+                    "type": "You"
+                  }
+                }
+              ]
+            },
+            "scope": {
+              "type": "InZone",
+              "value": {
+                "player": {
+                  "type": "Relative",
+                  "value": {
+                    "type": "AnyPlayer"
+                  }
+                },
+                "zone": {
+                  "type": "Battlefield"
+                }
+              }
+            }
+          }
+        },
+        "toughness": {
+          "type": "Count",
+          "value": {
+            "aggregation": {
+              "type": "Members"
+            },
+            "filter": {
+              "type": "And",
+              "value": [
+                {
+                  "type": "HasCardType",
+                  "value": {
+                    "type": "Creature"
+                  }
+                },
+                {
+                  "type": "ControlledBy",
+                  "value": {
+                    "type": "You"
+                  }
+                }
+              ]
+            },
+            "scope": {
+              "type": "InZone",
+              "value": {
+                "player": {
+                  "type": "Relative",
+                  "value": {
+                    "type": "AnyPlayer"
+                  }
+                },
+                "zone": {
+                  "type": "Battlefield"
+                }
+              }
+            }
+          }
+        }
+      },
+      "manaCost": [
+        {
+          "type": "Generic",
+          "value": 2
+        },
+        {
+          "type": "OfType",
+          "value": {
+            "type": "Colored",
+            "value": {
+              "type": "White"
+            }
+          }
+        }
+      ],
+      "name": "Thunderbond Vanguard",
+      "oracleText": "Thunderbond Vanguard's power and toughness are each equal to the number of creatures you control.\nEach creature token you control enters as a copy of this creature.",
+      "power": {
+        "type": "Star"
+      },
+      "replacementEffects": [
+        {
+          "effect": {
+            "type": "EntryR",
+            "value": {
+              "matching": {
+                "type": "And",
+                "value": [
+                  {
+                    "type": "HasCardType",
+                    "value": {
+                      "type": "Creature"
+                    }
+                  },
+                  {
+                    "type": "IsToken"
+                  },
+                  {
+                    "type": "ControlledBy",
+                    "value": {
+                      "type": "You"
+                    }
+                  }
+                ]
+              },
+              "rewrite": {
+                "type": "AsCopy",
+                "value": {
+                  "eligible": {
+                    "type": "IsSource"
+                  },
+                  "optional": false
+                }
+              }
+            }
+          }
+        }
+      ],
+      "toughness": {
+        "type": "Star"
+      },
+      "typeLine": {
+        "subtypes": [
+          {
+            "type": "Human"
+          },
+          {
+            "type": "Warrior"
+          }
+        ],
+        "types": [
+          {
+            "type": "Creature"
+          }
+        ]
+      }
+    }
+  ]
+}

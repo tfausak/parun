@@ -609,10 +609,10 @@ carryGrants oid gs =
 --
 -- A lost instance's payment is dropped with its promise: no ability the
 -- permanent has is linked to it (CR 607.2i, 607.5), and an own instance a copy
--- effect overwrote is already gone (Event.unlinkLostPayments). So a Mimic
--- entering as Grizzly Bears gives the Host's gift to the opponent promised it,
--- which the scenarios
--- cr-607-5-the-mimic-entering-as-grizzly-bears-gives-the-host-s-gift-to-bob-and-not-its-own-to-carol
+-- effect overwrote is already gone (Event.unlinkLostPayments). So a
+-- Scrapshooter entering as Essence of the Wild gives the Host's gift to the
+-- opponent promised it, which the scenarios
+-- cr-607-5-scrapshooter-entering-as-essence-of-the-wild-gives-the-host-s-gift-to-bob-and-not-its-own-to-carol
 -- and cr-607-5-a-clone-of-scrapshooter-whose-paid-host-gift-was-lost-gives-no-gift
 -- prove.
 settlePromises :: ObjectId -> GameState.GameState -> GameState.GameState
