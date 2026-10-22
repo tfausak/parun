@@ -9,6 +9,7 @@ import qualified Pawl.Codec.PlayerId as PlayerId
 import qualified Pawl.Codec.RestrictedCreatures as RestrictedCreatures
 import qualified Pawl.Codec.Timestamp as Timestamp
 import qualified Pawl.JsonCodec.Codec as Codec
+import qualified Pawl.JsonCodec.Common as Common
 import qualified Pawl.JsonCodec.Fields as Fields
 import qualified Pawl.Types.ActiveAttackRequirement as ActiveAttackRequirement
 
@@ -19,7 +20,7 @@ codec = Fields.object $ do
   timestamp <- Fields.required "timestamp" Timestamp.codec ActiveAttackRequirement.timestamp
   expiry <- Fields.required "expiry" Expiry.codec ActiveAttackRequirement.expiry
   attacker <- Fields.required "attacker" (RestrictedCreatures.codec ObjectId.codec) ActiveAttackRequirement.attacker
-  defender <- Fields.required "defender" AttackTarget.codec ActiveAttackRequirement.defender
+  defender <- Fields.defaulted "defender" Nothing (Common.maybe AttackTarget.codec) ActiveAttackRequirement.defender
   pure
     ActiveAttackRequirement.MkActiveAttackRequirement
       { ActiveAttackRequirement.source = source,

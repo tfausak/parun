@@ -3613,9 +3613,8 @@ effectIsImpossible resolving source controller legal gs effect = case effect of
   -- permanent on the battlefield turns face up. A regression fence: the one
   -- "may" in data/cards reaching this opcode, Hauntwoods Shrieker's, targets a
   -- face-down permanent, so CR 608.2b drops a face-up one first.
-  Effect.TurnFaceUp slot -> case legalOne slot legal >>= Recipient.objectOf of
-    Nothing -> False
-    Just target -> not (Set.member target (GameState.battlefield gs) && maybe False (Facing.isFaceDown . Object.facing) (Game.lookupObject target gs))
+  Effect.TurnFaceUp slot ->
+    not (any (\target -> Set.member target (GameState.battlefield gs) && maybe False (Facing.isFaceDown . Object.facing) (Game.lookupObject target gs)) (objectRefObjects legal resolving controller source gs (ObjectRef.InSlot slot)))
   Effect.RemoveFromCombat {} -> False
   Effect.BecomesBlocked {} -> False
   Effect.SwitchBlockers {} -> False
@@ -5356,12 +5355,13 @@ applyOneEffect runSubgame resolving source controller legal chosen effect = case
   -- action shares: this arm decides only WHICH permanent, never what turning it
   -- over does. CR 701.40g lives inside that funnel and so applies here without
   -- this arm knowing the rule exists.
-  Effect.TurnFaceUp slot -> case legalOne slot legal of
-    Just recipient -> case Recipient.objectOf recipient of
-      Nothing -> pure () -- a player is not a permanent and has no face
-      Just target -> FaceDown.turnFaceUpByEffect target
-    -- Illegal slot (CR 608.2b) or a non-object recipient: no-op.
-    _ -> pure ()
+  --
+  -- Read as ObjectRef.InSlot reads it, so a slot an earlier clause CHOSE into
+  -- (Bustle's "you may turn a creature you control face up", CR 608.2d) is
+  -- reached as a target slot is; an illegal target (CR 608.2b) turns nothing.
+  Effect.TurnFaceUp slot -> do
+    gs <- State.get
+    Monad.mapM_ FaceDown.turnFaceUpByEffect (objectRefObjects legal resolving controller source gs (ObjectRef.InSlot slot))
   Effect.RemoveFromCombat ref ->
     State.modify' $ \gs ->
       -- CR 506.4: through Game.removeFromCombat, the one performer of every
@@ -7931,7 +7931,7 @@ applyOneEffect runSubgame resolving source controller legal chosen effect = case
             -- the OUTER Maybe is the card printing no duration; the inner one is
             -- Expiry.arm reporting that a printed duration never STARTED (CR
             -- 611.2b).
-            State.put (Event.armDelayed ability source controller captured onset (duration >>= \d -> Expiry.arm (Game.readingAcquisition resolving source) legal controller source d gs) gs)
+            State.put (Event.armDelayed ability source controller captured (Event.armOnset (oneSeat legal resolving source controller gs) source controller gs onset) (duration >>= \d -> Expiry.arm (Game.readingAcquisition resolving source) legal controller source d gs) gs)
   Effect.Replace (Replace.MkReplace duration uses origin condition re) ->
     -- CR 614.3 / 615.3: install the floating replacement. Targetless and
     -- unprompted. CR 113.7: the SOURCE is this effect's source, which with the
@@ -8371,7 +8371,7 @@ applyOneEffect runSubgame resolving source controller legal chosen effect = case
       Just expiry ->
         let restricted side = case side of
               RestrictedCreatures.Named ref -> fmap RestrictedCreatures.Named (objectRefObjects legal resolving controller source gs ref)
-              RestrictedCreatures.Matching f -> [RestrictedCreatures.Matching (Filter.bakeBound (Binding.playersIn legal) f)]
+              RestrictedCreatures.Matching f -> [RestrictedCreatures.Matching (Filter.bakeBound (Binding.playersIn legal) (Binding.objectsBySlot legal (slotBindings resolving gs)) f)]
             blockers = restricted blockerRef
             attackers = maybe [Nothing] (fmap Just . restricted) attackerRef
             (ts, gs1) = Game.freshTimestamp gs
@@ -8412,7 +8412,7 @@ applyOneEffect runSubgame resolving source controller legal chosen effect = case
       Just expiry ->
         let subjects = case affected of
               RestrictedCreatures.Named ref -> fmap RestrictedCreatures.Named (objectRefObjects legal resolving controller source gs ref)
-              RestrictedCreatures.Matching f -> [RestrictedCreatures.Matching (Filter.bakeBound (Binding.playersIn legal) f)]
+              RestrictedCreatures.Matching f -> [RestrictedCreatures.Matching (Filter.bakeBound (Binding.playersIn legal) (Binding.objectsBySlot legal (slotBindings resolving gs)) f)]
             (ts, gs1) = Game.freshTimestamp gs
             stored =
               fmap
@@ -8455,7 +8455,7 @@ applyOneEffect runSubgame resolving source controller legal chosen effect = case
       Just expiry ->
         let subjects = case affected of
               RestrictedCreatures.Named ref -> fmap RestrictedCreatures.Named (objectRefObjects legal resolving controller source gs ref)
-              RestrictedCreatures.Matching f -> [RestrictedCreatures.Matching (Filter.bakeBound (Binding.playersIn legal) f)]
+              RestrictedCreatures.Matching f -> [RestrictedCreatures.Matching (Filter.bakeBound (Binding.playersIn legal) (Binding.objectsBySlot legal (slotBindings resolving gs)) f)]
             -- A slot's players baked now, one row each, for the class's reason:
             -- the binding is gone once this resolution is over. A slot naming
             -- nobody stores nothing (Chaos Dragon's "those players").
@@ -8494,8 +8494,8 @@ applyOneEffect runSubgame resolving source controller legal chosen effect = case
                   ActiveEvasion.controller = controller,
                   ActiveEvasion.timestamp = ts,
                   ActiveEvasion.expiry = expiry,
-                  ActiveEvasion.affected = Filter.bakeBound (Binding.playersIn legal) f,
-                  ActiveEvasion.blockers = Filter.bakeBound (Binding.playersIn legal) barred
+                  ActiveEvasion.affected = Filter.bakeBound (Binding.playersIn legal) (Binding.objectsBySlot legal (slotBindings resolving gs)) f,
+                  ActiveEvasion.blockers = Filter.bakeBound (Binding.playersIn legal) (Binding.objectsBySlot legal (slotBindings resolving gs)) barred
                 }
          in gs1 {GameState.evasions = stored : GameState.evasions gs1}
   Effect.RequireAttack (RequireAttack.MkRequireAttack duration attackerRef defenderRef) ->
@@ -8511,17 +8511,20 @@ applyOneEffect runSubgame resolving source controller legal chosen effect = case
       Just expiry ->
         let attackers = case attackerRef of
               RestrictedCreatures.Named ref -> fmap RestrictedCreatures.Named (objectRefObjects legal resolving controller source gs ref)
-              RestrictedCreatures.Matching f -> [RestrictedCreatures.Matching (Filter.bakeBound (Binding.playersIn legal) f)]
+              RestrictedCreatures.Matching f -> [RestrictedCreatures.Matching (Filter.bakeBound (Binding.playersIn legal) (Binding.objectsBySlot legal (slotBindings resolving gs)) f)]
             -- Through playerRefPlayers and objectRefObjects so a ref is read
             -- exactly as every other opcode reads one, CR 608.2b's empty answer
             -- included. A permanent becomes the announcement CR 508.1b names it
             -- by as of now -- a planeswalker (CR 306.6) or a battle (CR 310.5)
             -- -- and anything else stores nothing. One no longer attackable at
             -- the declaration is pruned there by membership
-            -- (Pawl.Engine.AttackRequirement's fromStored).
+            -- (Pawl.Engine.AttackRequirement's fromStored). A requirement naming
+            -- no defender stores one row per attacker, obeyed by any
+            -- announcement.
             defenders = case defenderRef of
-              AttackTargetRef.Players ref -> fmap AttackTarget.OfPlayer (playerRefPlayers legal resolving source controller gs ref)
-              AttackTargetRef.Permanents ref -> Maybe.mapMaybe announcement (objectRefObjects legal resolving controller source gs ref)
+              Nothing -> [Nothing]
+              Just (AttackTargetRef.Players ref) -> fmap (Just . AttackTarget.OfPlayer) (playerRefPlayers legal resolving source controller gs ref)
+              Just (AttackTargetRef.Permanents ref) -> fmap Just (Maybe.mapMaybe announcement (objectRefObjects legal resolving controller source gs ref))
             announcement oid
               | Projection.isPlaneswalkerOf oid gs = Just (AttackTarget.OfPlaneswalker oid)
               | Projection.isBattleOf oid gs = Just (AttackTarget.OfBattle oid)

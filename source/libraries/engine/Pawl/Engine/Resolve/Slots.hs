@@ -41,6 +41,7 @@ import qualified Pawl.Types.Amass as Amass.Type
 import qualified Pawl.Types.Ante as Ante
 import qualified Pawl.Types.AnyNumberDiscard as AnyNumberDiscard
 import qualified Pawl.Types.AnyNumberMatching as AnyNumberMatching
+import qualified Pawl.Types.ArmDelayedTrigger as ArmDelayedTrigger
 import qualified Pawl.Types.ArrangeInLibrary as ArrangeInLibrary
 import qualified Pawl.Types.ArrangedArrival as ArrangedArrival
 import qualified Pawl.Types.AsCopy as AsCopy
@@ -179,6 +180,7 @@ import Pawl.Types.ObjectId (ObjectId)
 import Pawl.Types.ObjectRef (ObjectRef)
 import qualified Pawl.Types.ObjectRef as ObjectRef
 import qualified Pawl.Types.OfferCast as OfferCast
+import qualified Pawl.Types.Onset as Onset
 import qualified Pawl.Types.Optionality as Optionality
 import qualified Pawl.Types.OrElse as OrElse
 import qualified Pawl.Types.PayGate as PayGate
@@ -832,8 +834,9 @@ effectObjectRefs effect = case effect of
   Effect.RequireAttack (RequireAttack.MkRequireAttack _ attacker defender) ->
     namedRefs attacker
       <> case defender of
-        AttackTargetRef.Players _ -> []
-        AttackTargetRef.Permanents ref -> [ref]
+        Nothing -> []
+        Just (AttackTargetRef.Players _) -> []
+        Just (AttackTargetRef.Permanents ref) -> [ref]
   -- One side only, and only when a ref names it: the Matching arm is a Filter
   -- (CR 611.2c's class), and what the attack is aimed at is effectPlayerRefs'.
   Effect.ForbidAttack (ForbidAttack.MkForbidAttack _ affected _) -> namedRefs affected
@@ -936,7 +939,8 @@ effectObjectRefs effect = case effect of
 -- where slotsOf joins durationSlots. The arms that do NOT are the ones with
 -- nothing to join -- ownSlotsAreExhaustive already refuses a slot-naming
 -- duration on eight of them, and ArmDelayedTrigger captures the whole
--- environment (CR 603.7c) rather than enumerating it.
+-- environment (CR 603.7c) rather than enumerating it -- save the player its
+-- onset names, which the arming itself reads.
 effectPlayerRefs :: Effect card ability -> [PlayerRef]
 effectPlayerRefs effect = case effect of
   Effect.DealDamage {} -> []
@@ -1041,7 +1045,10 @@ effectPlayerRefs effect = case effect of
   Effect.EndCombatPhase -> []
   Effect.GainControl (GainControl.MkGainControl _ _ to) -> [to]
   Effect.ExchangeControl {} -> []
-  Effect.ArmDelayedTrigger {} -> []
+  Effect.ArmDelayedTrigger arm -> case ArmDelayedTrigger.onset arm of
+    Onset.FromNextTurnOf ref -> [ref]
+    Onset.Immediately -> []
+    Onset.FromThatExtraTurn -> []
   -- CR 400.1's zone reference, which lives inside the permission payloads rather
   -- than in a field of the opcode -- so the walk is
   -- Pawl.Engine.PlayerEffect.playerRefsIn's and this arm joins it in, which is
@@ -1050,8 +1057,9 @@ effectPlayerRefs effect = case effect of
   Effect.RequireBlock {} -> []
   Effect.Prohibit {} -> []
   Effect.RequireAttack (RequireAttack.MkRequireAttack duration _ defender) -> case defender of
-    AttackTargetRef.Players ref -> ref : durationPlayerRefs duration
-    AttackTargetRef.Permanents _ -> durationPlayerRefs duration
+    Just (AttackTargetRef.Players ref) -> ref : durationPlayerRefs duration
+    Just (AttackTargetRef.Permanents _) -> durationPlayerRefs duration
+    Nothing -> durationPlayerRefs duration
   -- The players a slot names, where the restriction is aimed at them (Chaos
   -- Dragon's "those players").
   Effect.ForbidAttack (ForbidAttack.MkForbidAttack _ _ aimedAt) -> case fmap AimedAt.defenders aimedAt of
@@ -2863,7 +2871,7 @@ battlefieldMatching legal resolving controller source gs filter_ =
       -- Total War's "destroy all untapped non-Wall creatures that player
       -- controls" is the phrase, and Pawl.CardTriggerSpec's Total War group is
       -- what proves it.
-      baked = Filter.bakeBound (Binding.playerSlots (slotBindings resolving gs)) filter_
+      baked = Filter.bakeBound (Binding.playerSlots (slotBindings resolving gs)) Map.empty filter_
       grants = Projection.controlGrants gs
       -- CR 801.10 / 801.5a: only permanents in the controller's range, so the
       -- sweep and the ChosenPermanents offer agree -- every one for CR 801.18's

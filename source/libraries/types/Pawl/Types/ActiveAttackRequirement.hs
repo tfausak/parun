@@ -21,9 +21,10 @@ import qualified Pawl.Types.Timestamp as Timestamp
 -- resolution froze (Alluring Siren TARGETS its creature, CR 115.1), or a Matching
 -- class CR 611.2c keeps dynamic (Taunt's "creatures that player controls").
 --
--- The object is ONE of CR 508.1b's announcements, which is the rule: Alluring
--- Siren's ruling is that a creature able to attack either you or a planeswalker
--- you control must attack YOU, so "attacks you" is obeyed by exactly one
+-- The object, where one is named, is ONE of CR 508.1b's announcements, which is
+-- the rule: Alluring Siren's ruling is that a creature able to attack either you
+-- or a planeswalker you control must attack YOU, so "attacks you" is obeyed by
+-- exactly one
 -- announcement, and Gideon Jura's "attack Gideon Jura" by another. Goad (CR
 -- 701.15b) wants the COMPLEMENT of a seat instead -- "a player other than the
 -- controller of the permanent that caused it to be goaded" -- which this field
@@ -53,7 +54,7 @@ data ActiveAttackRequirement = MkActiveAttackRequirement
     -- | The creatures that must attack -- CR 508.1d's subject axis.
     attacker :: RestrictedCreatures.RestrictedCreatures ObjectId.ObjectId,
     -- | What it must attack -- CR 508.1d's object axis, as CR 508.1b's
-    -- announcement.
-    defender :: AttackTarget.AttackTarget
+    -- announcement. Nothing names none, so any announcement obeys it.
+    defender :: Maybe AttackTarget.AttackTarget
   }
   deriving (Eq, Ord, Show)

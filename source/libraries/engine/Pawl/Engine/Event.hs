@@ -4536,7 +4536,7 @@ becomeCopyAs batch candidate asCopy oid = do
         let linkedEarlier entry = DelayedTrigger.source entry == oid && Map.member Binding.copiedObject (DelayedTrigger.bindings entry)
         State.modify' (\g -> g {GameState.delayedTriggers = Seq.filter (not . linkedEarlier) (GameState.delayedTriggers g)})
         Foldable.for_ (Replacement.linkedCopyTrigger asCopy) $ \linked ->
-          State.modify' (armDelayed linked oid controller (Map.singleton Binding.copiedObject (Binding.toObject src2)) Onset.Immediately Nothing)
+          State.modify' (armDelayed linked oid controller (Map.singleton Binding.copiedObject (Binding.toObject src2)) (Just TurnWindow.AnyTurn) Nothing)
       pure (fmap (\src2 -> (src2, Maybe.mapMaybe CopyClause.counters applying)) chosen)
 
 -- CR 707.2 / 202.3b / 202.3c: the copiable values a copy takes off the object it
@@ -9804,8 +9804,9 @@ matchesTrigger gs = matchesTriggerGiven Map.empty (battlefieldCandidates gs) gs
 -- A CLASSIFICATION of a trigger condition, the third of the same kind as
 -- eventBindingSlots and zonesTriggeredFrom above.
 --
--- Its customer is the card lint. Onset.FromYourNextTurn delivers both halves of
--- "your next turn" on its own, so this no longer guards the firing -- it guards
+-- Its customer is the card lint. Onset.FromNextTurnOf over @Relative You@
+-- delivers both halves of "your next turn" on its own, so this no longer guards
+-- the firing -- it guards
 -- the DATA: a card arming that onset over an EachTurn condition would have its
 -- printed "each" silently narrowed by the window.
 --
@@ -10119,10 +10120,13 @@ controllerTurnScoped cond = case cond of
 -- for CR 702.109a's, CR 702.152a's and CR 702.185a's spell, and by
 -- Pawl.Engine.Combat for CR 702.154a's reflexive ability at rule 508.1g, and by
 -- becomeCopyAs above for CR 707.9g's linked one.
-armDelayed :: TriggeredAbility.TriggeredAbility Card.Type.Card (GrantedAbility.Type.GrantedAbility Card.Type.Card) -> ObjectId -> PlayerId -> Map.Map SlotName.SlotName Binding.Type.Binding -> Onset -> Maybe Expiry.Type.Expiry -> GameState -> GameState
-armDelayed ability source controller captured onset expiry gs = case armOnset source controller gs onset of
-  -- "That turn" names no turn this resolution created, so the ability could
-  -- never fire (CR 603.7a).
+--
+-- The window is armOnset's answer, taken already armed so the caller reads any
+-- player the onset names against its own slots.
+armDelayed :: TriggeredAbility.TriggeredAbility Card.Type.Card (GrantedAbility.Type.GrantedAbility Card.Type.Card) -> ObjectId -> PlayerId -> Map.Map SlotName.SlotName Binding.Type.Binding -> Maybe TurnWindow -> Maybe Expiry.Type.Expiry -> GameState -> GameState
+armDelayed ability source controller captured armed expiry gs = case armed of
+  -- "That turn" names no turn this resolution created, or "that player's next
+  -- turn" no player, so the ability could never fire (CR 603.7a).
   Nothing -> gs
   Just window ->
     let -- CR 603.7a's creation moment, from the same counter every other moment
@@ -10148,11 +10152,13 @@ armDelayed ability source controller captured onset expiry gs = case armOnset so
 -- so settleOnsets supplies its number later.
 --
 -- CR 500.7: "that turn" is the extra turn this resolution just created for the
--- controller (Turn.thatExtraTurn).
-armOnset :: ObjectId -> PlayerId -> GameState -> Onset -> Maybe TurnWindow
-armOnset source controller gs onset = case onset of
+-- controller (Turn.thatExtraTurn). "That player's next turn" is the one seat
+-- `seat` reads the ref as, and none -- an unfilled or illegal slot -- arms
+-- nothing.
+armOnset :: (PlayerRef.PlayerRef -> Maybe PlayerId) -> ObjectId -> PlayerId -> GameState -> Onset -> Maybe TurnWindow
+armOnset seat source controller gs onset = case onset of
   Onset.Immediately -> Just TurnWindow.AnyTurn
-  Onset.FromYourNextTurn -> Just TurnWindow.ControllersNextTurn
+  Onset.FromNextTurnOf ref -> fmap TurnWindow.NextTurnOf (seat ref)
   Onset.FromThatExtraTurn -> fmap TurnWindow.OnExtraTurn (Turn.thatExtraTurn source controller gs)
 
 -- CR 603.7a: a turn has BEGUN, so settle every delayed entry waiting for one and
@@ -10165,8 +10171,8 @@ armOnset source controller gs onset = case onset of
 -- makes this a boundary sweep rather than something derived on demand. Two of
 -- them, in this order:
 --
--- 1. WAITING -> THIS TURN, for an entry whose controller is the player whose turn
---    this is. The number is sampled here because nothing in GameState remembers
+-- 1. WAITING -> THIS TURN, for an entry waiting for the player whose turn this
+--    is. The number is sampled here because nothing in GameState remembers
 --    which player each earlier turn belonged to, so the question cannot be
 --    answered later. Sampled once and thereafter only ever cleared.
 --
@@ -10190,12 +10196,12 @@ settleOnsets :: Maybe Timestamp.Timestamp -> GameState -> GameState
 settleOnsets begun gs =
   let settled entry = case DelayedTrigger.window entry of
         -- The turn that is beginning IS the one the printed phrase named exactly
-        -- when it belongs to the entry's controller (CR 603.7d-f).
-        TurnWindow.ControllersNextTurn
-          | Turn.isActive gs (DelayedTrigger.controller entry) ->
+        -- when it belongs to the player the onset named.
+        TurnWindow.NextTurnOf pid
+          | Turn.isActive gs pid ->
               entry {DelayedTrigger.window = TurnWindow.OnTurn (GameState.turnNumber gs)}
-        -- Anyone else's turn, including an intervening opponent's: still waiting.
-        TurnWindow.ControllersNextTurn -> entry
+        -- Anyone else's turn, including an intervening one: still waiting.
+        TurnWindow.NextTurnOf _ -> entry
         -- CR 500.7: the extra turn the entry names, and no other, including
         -- another extra turn created after it and so taken first.
         TurnWindow.OnExtraTurn stamp
@@ -10207,7 +10213,7 @@ settleOnsets begun gs =
         TurnWindow.OnTurn _ -> entry
       live entry = case DelayedTrigger.window entry of
         TurnWindow.AnyTurn -> True
-        TurnWindow.ControllersNextTurn -> True
+        TurnWindow.NextTurnOf _ -> True
         TurnWindow.OnExtraTurn stamp -> any ((== stamp) . ExtraTurn.createdAt) (GameState.extraTurns gs)
         TurnWindow.OnTurn n -> n >= GameState.turnNumber gs
    in gs {GameState.delayedTriggers = Seq.filter live (fmap settled (GameState.delayedTriggers gs))}

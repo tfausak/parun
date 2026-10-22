@@ -307,11 +307,17 @@ instances candidates targets gs =
       -- Taunt's "during target player's next turn" is stored as the spell
       -- resolves. A Matching class is read against the live board, CR 611.2c,
       -- as Pawl.Engine.CombatRestriction.storedSubjects reads a prohibition's.
+      --
+      -- A row naming no defender mints a pair per target, the posture a printed
+      -- requirement naming no object takes above (Courtly Provocateur).
       fromStored active =
-        let target = ActiveAttackRequirement.defender active
+        let obeying = maybe targets (\target -> filter (== target) targets) (ActiveAttackRequirement.defender active)
             creatures = RestrictedCreatures.covered (ActiveAttackRequirement.controller active) (ActiveAttackRequirement.source active) (ActiveAttackRequirement.attacker active) candidates gs
-         in ( if Expiry.begun gs (ActiveAttackRequirement.expiry active) && elem target targets
-                then fmap (\creature -> (creature, target)) creatures
+         in ( if Expiry.begun gs (ActiveAttackRequirement.expiry active)
+                then do
+                  creature <- creatures
+                  target <- obeying
+                  pure (creature, target)
                 else [],
               []
             )

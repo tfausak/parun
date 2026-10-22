@@ -128,7 +128,13 @@
                         "value": {
                           "name": "return it",
                           "onset": {
-                            "type": "FromYourNextTurn"
+                            "type": "FromNextTurnOf",
+                            "value": {
+                              "type": "Relative",
+                              "value": {
+                                "type": "You"
+                              }
+                            }
                           }
                         }
                       }
