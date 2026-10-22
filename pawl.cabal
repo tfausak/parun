@@ -1851,6 +1851,23 @@ library json-schema
     Pawl.JsonSchema.Validate
     Pawl.JsonSchema.ValidateSpec
 
+-- A card's Oracle text: rendering it from card data, and normalising it for
+-- comparison. Depends on the types alone (and the base-only spec), so neither
+-- it nor the engine depends on the other.
+library oracle
+  import: library
+  build-depends:
+    containers ^>=0.7,
+    pawl:spec,
+    pawl:types,
+    text ^>=2.1.3,
+
+  hs-source-dirs: source/libraries/oracle
+  -- cabal-gild: discover source/libraries/oracle
+  exposed-modules:
+    Pawl.Oracle
+    Pawl.OracleSpec
+
 -- The line protocol a client plays a game through: each seat's decisions as
 -- JSON lines out and answers back.
 library play
@@ -1896,6 +1913,7 @@ library registry
     pawl:exceptions,
     pawl:json,
     pawl:json-codec,
+    pawl:oracle,
     pawl:slug,
     pawl:types,
     text ^>=2.1.3,
@@ -1908,7 +1926,6 @@ library registry
     Pawl.DeckList
     Pawl.Decks
     Pawl.Ingest
-    Pawl.Oracle
     Pawl.Registry
     Pawl.StickerSheets
 
@@ -1980,6 +1997,7 @@ library test
     pawl:json-codec,
     pawl:json-pointer,
     pawl:json-schema,
+    pawl:oracle,
     pawl:play,
     pawl:registry,
     pawl:scenario,
@@ -2075,6 +2093,7 @@ library test
     Pawl.GoadSpec
     Pawl.HarnessSpec
     Pawl.HealSpec
+    Pawl.IngestSpec
     Pawl.InitiativeSpec
     Pawl.InvestigateSpec
     Pawl.KeywordTriggerSpec
@@ -2094,7 +2113,6 @@ library test
     Pawl.MulliganSpec
     Pawl.MutateSpec
     Pawl.OmenSpec
-    Pawl.OracleSpec
     Pawl.OutsideTheGameSpec
     Pawl.PhasingSpec
     Pawl.PlanechaseSpec

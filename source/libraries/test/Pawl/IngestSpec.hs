@@ -1,6 +1,7 @@
--- Covers Pawl.Oracle and Pawl.Ingest, and every keyword-only card file against
--- its Oracle text (#9).
-module Pawl.OracleSpec where
+-- Covers Pawl.Ingest, and Pawl.Oracle against the pool and the keyword codec:
+-- every keyword-only card file against its Oracle text (#9). Pawl.OracleSpec
+-- covers Pawl.Oracle on hand-built cards.
+module Pawl.IngestSpec where
 
 import qualified Control.Monad as Monad
 import qualified Data.Char as Char
@@ -26,7 +27,7 @@ import qualified Pawl.Types.Keyword as Keyword
 import qualified Pawl.Types.TypeLine as TypeLine
 
 spec :: (Monad n) => Spec.Spec IO n -> n ()
-spec s = Spec.describe s "Pawl.Oracle" $ do
+spec s = Spec.describe s "Pawl.Ingest" $ do
   Spec.it s "each keyword-only card says what its Oracle text says" $ do
     loaded <- Registry.defaultRoot >>= Registry.loadRoot
     let keywordOnly = [(card, rendered) | entry@(_, Right card) <- loaded, Maybe.isJust (Registry.referenceCard entry), Just rendered <- [Oracle.render card]]
@@ -51,12 +52,7 @@ spec s = Spec.describe s "Pawl.Oracle" $ do
           ]
     Spec.assertEq s [] missing
 
-  Spec.it s "normalise drops reminder text and splits a keyword line" $ do
-    Spec.assertEq s (fmap Text.pack ["flying", "trample", "vigilance"]) (Oracle.normalise (Text.pack "Flying, vigilance\nTrample (This creature can deal excess combat damage.)"))
-    Spec.assertEq s [] (Oracle.normalise (Text.pack "({T}: Add {G}.)"))
-    Spec.assertEq s (fmap Text.pack ["haste", "horsemanship"]) (Oracle.normalise (Text.pack "Haste; horsemanship (This creature can't be blocked except by creatures with horsemanship.)"))
-
-  Spec.it s "render answers only for a single face of characteristics and keywords" $ do
+  Spec.it s "render answers for a pool card of keywords alone and not for one with an ability" $ do
     registry <- Registry.defaultRoot >>= Registry.fileRegistry
     elves <- Registry.named registry "Llanowar Elves"
     Spec.assertEq s (Right (Just Nothing)) (fmap (fmap Oracle.render) elves)
