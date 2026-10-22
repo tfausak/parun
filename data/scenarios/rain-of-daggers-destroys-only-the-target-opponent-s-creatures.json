@@ -1,0 +1,35 @@
+{
+  "description": "CR 601.2c whole card: Rain of Daggers announces its target opponent and destroys only that player's creatures",
+  "note": "The target slot's one read is the sweep's filter, so a cast that announced no target would destroy nothing. Carol is the other opponent: her creature survives, and alice loses 2 life for each of bob's three creatures, not for carol's.",
+  "board": {
+    "active": "alice",
+    "step": "PrecombatMain",
+    "seats": [
+      {
+        "name": "alice",
+        "manaPool": "BBBBBB",
+        "library": [{ "card": "Island" }, { "card": "Island" }],
+        "hand": [{ "card": "Rain of Daggers", "label": "daggers" }],
+        "battlefield": [{ "card": "Hill Giant" }]
+      },
+      {
+        "name": "bob",
+        "library": [{ "card": "Island" }, { "card": "Island" }],
+        "battlefield": [{ "card": "Grizzly Bears" }, { "card": "Goblin Piker" }, { "card": "Hill Giant" }]
+      },
+      {
+        "name": "carol",
+        "library": [{ "card": "Island" }, { "card": "Island" }],
+        "battlefield": [{ "card": "Craw Wurm" }]
+      }
+    ]
+  },
+  "timeline": [
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": { "Cast": { "object": "$daggers", "targets": ["$bob"] } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass" },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "check": { "Count": { "player": "bob", "zone": "Graveyard", "card": "Hill Giant", "count": 1 } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "check": { "Count": { "player": "carol", "zone": "Battlefield", "card": "Craw Wurm", "count": 1 } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "check": { "Count": { "player": "alice", "zone": "Battlefield", "card": "Hill Giant", "count": 1 } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "check": { "Life": { "player": "alice", "life": 14 } } }
+  ]
+}
