@@ -4753,6 +4753,9 @@ pendingSacrifices chooser gs =
     Just obj <- [Game.lookupObject member gs],
     Object.zone obj /= Zone.Battlefield,
     (_, ReplacementEffect.EntryR (EntryR.MkEntryR pattern_ rewrite)) <- Projection.replacementsOf Zone.Battlefield member gs,
+    -- CR 614.12: its own row applies to it only where it affects it alone,
+    -- Replacement.matchesPrinted's entry gate.
+    Replacement.confinedToSource pattern_,
     Filter.matches (Projection.sourceContext gs (Just controller) member) (Projection.viewOfObject member gs) pattern_,
     (count, criterion) <- Maybe.maybeToList (Replacement.entryCostOf rewrite)
   ]

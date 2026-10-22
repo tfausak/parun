@@ -2049,11 +2049,10 @@ readsApplier re = case re of
   -- (CR 400.3), never the row's controller. An OPTIONAL row does read it:
   -- Event.apply asks the candidate's controller its "you may".
   ReplacementEffect.ZoneChangeR r -> ZoneChangeR.optional r
-  -- CR 707.5 / 109.5: Clone's "you" is the ENTERING object's controller, read
-  -- live off the board at CR 614.12a's moment, not the candidate's -- so two
-  -- such rows offer the same player the same legal set. Both halves of the
-  -- payload ride the effect -- the eligible filter and CR 707.9's exceptions --
-  -- so two rows carrying the same ones are still the same offer.
+  -- CR 707.5 / 109.5: the eligible filter's "you" is the candidate's
+  -- controller (legalCopyTargets reads candidateContext), but readsSource
+  -- already folds the source in for this arm, and two rows on one source share
+  -- its controller, so the controller distinguishes nothing more.
   ReplacementEffect.EntryR (EntryR.MkEntryR _ (EntryRewrite.AsCopy _)) -> False
   -- Same chooser, and the options ride the effect: CR 614.1c's "enters as"
   -- (Primal Plasma).
