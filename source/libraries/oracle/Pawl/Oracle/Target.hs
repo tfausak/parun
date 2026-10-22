@@ -23,7 +23,12 @@ import qualified Pawl.Types.TargetSlot as TargetSlot
 data Context = MkContext
   { self :: Text.Text,
     slots :: Map.Map SlotName.SlotName TargetSlot.TargetSlot,
-    keyword :: Keyword.Keyword -> [Text.Text]
+    keyword :: Keyword.Keyword -> [Text.Text],
+    -- | What may separate two sentences of one ability: a space, and for a
+    -- spell's instructions a paragraph break too, since all of them are one
+    -- spell ability (CR 113.3a). Anywhere else a paragraph break starts
+    -- another ability (CR 113.2c).
+    breaks :: [Text.Text]
   }
 
 -- | Words that name something, with the target slots they announce (each slot

@@ -61,8 +61,8 @@ modal context m = case (Foldable.toList (Modal.modes m), Modal.selection m) of
 
 -- | A mode's sentences, each of its target slots named exactly once (CR
 -- 601.2c): a slot named twice, or never, means the text is not the mode's.
--- Oracle text runs one sentence on from the last or starts a paragraph, as
--- printings differ (Electrolyze's "Draw a card." stands alone).
+-- A spell's Oracle text runs one sentence on from the last or starts a
+-- paragraph, as printings differ (Electrolyze's "Draw a card." stands alone).
 mode :: Target.Context -> Mode.Mode card ability -> [Text.Text]
 mode context m = do
   let inner = context {Target.slots = Mode.targetSlots m}
@@ -71,11 +71,7 @@ mode context m = do
   Monad.guard (named == Map.keys (Mode.targetSlots m))
   case fmap fst rendered of
     [] -> [Text.empty]
-    first : rest -> Monad.foldM (\text next -> fmap (\separator -> text <> separator <> next) separators) first rest
-
--- | What separates two sentences: a space, or a new paragraph.
-separators :: [Text.Text]
-separators = [Text.pack " ", Text.pack "\n"]
+    first : rest -> Monad.foldM (\text next -> fmap (\separator -> text <> separator <> next) (Target.breaks context)) first rest
 
 -- | A clause's sentences and the slots they name: its instructions, or "you
 -- may" and the one instruction you may follow (CR 603.5). A clause gated by a
@@ -87,7 +83,7 @@ clause context c
   | otherwise = do
       predicates <- traverse (effect context) (Foldable.toList (Clause.effects c))
       case (Clause.optionality c, List.foldr addedTogether [] predicates) of
-        (Optionality.Mandatory, together) -> joined together
+        (Optionality.Mandatory, together) -> joined (Target.breaks context) together
         (Optionality.Optional (PlayerRef.Relative PlayerRelation.You), [p])
           | maybe True ((== Text.pack "you") . Target.wording) (subject p) ->
               [(Prose.sentence (Text.pack "you may " <> verb p) <> trailing p, mentions p)]
@@ -102,12 +98,12 @@ addedTogether p rest = case (mana p, rest) of
   _ -> p : rest
 
 -- | The instructions of one clause as Oracle text strings them: one sentence
--- with "and", or two sentences or paragraphs, as printings differ (Bargain
--- prints its two on two lines). When two share a subject
+-- with "and", or two sentences, broken as the context allows, as printings
+-- differ (Bargain prints its two on two lines). When two share a subject
 -- the second drops it ("draws two cards and loses 2 life"), though older
 -- printings repeat a "you". Three or more are not strung together here yet.
-joined :: [Predicate] -> [(Text.Text, [SlotName.SlotName])]
-joined predicates = case predicates of
+joined :: [Text.Text] -> [Predicate] -> [(Text.Text, [SlotName.SlotName])]
+joined separators predicates = case predicates of
   [p] -> [(sentences p, allMentions p)]
   [p, q]
     | not (null (after p)) -> [(sentences p <> separator <> sentences q, allMentions p <> allMentions q) | separator <- separators]

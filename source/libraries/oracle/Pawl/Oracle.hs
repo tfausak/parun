@@ -70,14 +70,14 @@ says card name text = elem (Normalise.normalise name text) (fmap (Normalise.norm
 faceText :: Face.Face Card.Card -> [Text.Text]
 faceText face = do
   let self = CardName.unwrap (Face.name face)
-      context = Target.MkContext self Map.empty (Keyword.keywordWord self)
+      context = Target.MkContext self Map.empty (Keyword.keywordWord self) [Text.pack " "]
       rest = face {Face.keywords = Map.empty, Face.spell = Face.defaultSpell, Face.activatedAbilities = [], Face.triggeredAbilities = []}
   Monad.guard (rest == bare (Face.name face) (Face.oracleText face) (Face.manaCost face) (Face.colorIndicator face) (Face.typeLine face) (Face.power face) (Face.toughness face) Map.empty)
   keywords <- Keyword.lines self (Face.keywords face)
   spell <-
     if Face.spell face == Face.defaultSpell
       then [[]]
-      else fmap pure (Effect.modal context (Face.spell face))
+      else fmap pure (Effect.modal context {Target.breaks = [Text.pack " ", Text.pack "\n"]} (Face.spell face))
   abilities <- traverse (activated context) (Face.activatedAbilities face)
   triggers <- traverse (triggered context) (Face.triggeredAbilities face)
   [Text.intercalate (Text.pack "\n") (keywords <> spell <> abilities <> triggers)]

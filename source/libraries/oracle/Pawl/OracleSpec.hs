@@ -2,6 +2,7 @@
 -- checks it against the pool and the keyword codec.
 module Pawl.OracleSpec where
 
+import qualified Control.Monad as Monad
 import qualified Data.List.NonEmpty as NonEmpty
 import qualified Data.Map.Strict as Map
 import qualified Data.Sequence as Seq
@@ -175,6 +176,17 @@ spec s = Spec.describe s "Pawl.Oracle" $ do
     Spec.assertEq s [Text.pack "When Spark enters, Spark deals 2 damage to target creature.", Text.pack "When Spark enters, it deals 2 damage to target creature."] (Oracle.renderings (withFace (\f -> f {Face.triggeredAbilities = [imp]})))
     let star = triggered TriggerCondition.SelfDies [clause [draw (PlayerRef.Relative PlayerRelation.You) 1]] []
     Spec.assertEq s (Just (Text.pack "When Spark dies, draw a card.")) (Oracle.render (withFace (\f -> f {Face.triggeredAbilities = [star]})))
+
+  -- CR 113.2c: a paragraph break starts another ability, so only a spell's
+  -- instructions (one spell ability, CR 113.3a) may be broken across lines.
+  Spec.it s "render keeps a triggered ability's sentences in one paragraph" $ do
+    let slots = [(target, TargetSlot.required Pool.Creatures Nothing)]
+        apart = triggered TriggerCondition.SelfEnters [clause [damage [(target, 2)]], clause [gainLife 2]] slots
+        together = triggered TriggerCondition.SelfEnters [clause [damage [(target, 2)], gainLife 2]] slots
+    Monad.forM_ [apart, together] $ \t -> do
+      let rendered = Oracle.renderings (withFace (\f -> f {Face.triggeredAbilities = [t]}))
+      Spec.assertBool s (not (null rendered)) "no rendering"
+      Spec.assertEq s [] (filter (Text.isInfixOf (Text.pack "\n")) rendered)
 
   -- Protections may share a line (Paladin en-Vec); a disjunction of colours
   -- reads "and/or" in the plural (Ignite Disorder), of card types "and"
