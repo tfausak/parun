@@ -23,5 +23,12 @@ spec s = Spec.describe s "Pawl.Codec.IfTaken" $ do
       IfTaken.codec
       (IfTaken.NoneTaken (NonEmpty.singleton (ClauseIndex.MkClauseIndex 2)))
       " {\"type\":\"NoneTaken\",\"value\":[2]} "
+  -- CR 608.2c / 609.3: Lich's "If you can't".
+  Spec.it s "Couldnt" $
+    Common.assertCodec
+      s
+      IfTaken.codec
+      (IfTaken.Couldnt (NonEmpty.singleton (ClauseIndex.MkClauseIndex 0)))
+      " {\"type\":\"Couldnt\",\"value\":[0]} "
   Spec.it s "has a schema" $
     Common.assertHasSchema s IfTaken.codec

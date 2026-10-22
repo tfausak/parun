@@ -1,0 +1,33 @@
+{
+  "description": "CR 609.3 Lich sacrificing three of three keeps alice in",
+  "note": "The two-Swamp scenario's board with a third Swamp: Lightning Bolt's 3 damage has alice sacrifice all three, which she could, so she stays in at 0 life with only her token Lich left.",
+  "board": {
+    "active": "bob",
+    "step": "PrecombatMain",
+    "seats": [
+      {
+        "name": "alice",
+        "life": 0,
+        "battlefield": [
+          { "card": "Lich", "label": "lich", "token": true },
+          { "card": "Swamp" },
+          { "card": "Swamp" },
+          { "card": "Swamp" }
+        ]
+      },
+      {
+        "name": "bob",
+        "battlefield": [{ "card": "Mountain", "label": "mountain" }],
+        "hand": [{ "card": "Lightning Bolt", "label": "bolt" }]
+      }
+    ]
+  },
+  "timeline": [
+    { "turn": 1, "step": "PrecombatMain", "player": "bob", "do": { "Cast": { "object": "$bolt", "targets": ["$alice"], "mana": ["$mountain"] } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "bob", "do": "Pass" },
+    { "turn": 1, "step": "PrecombatMain", "player": "bob", "check": { "View": { "of": "Stack", "is": ["trigger of $lich"] } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "bob", "do": "Pass" },
+    { "turn": 1, "step": "PrecombatMain", "player": "bob", "check": { "View": { "of": "Result", "is": null } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "bob", "check": { "View": { "of": "Zone", "player": "alice", "zone": "Battlefield", "is": ["$lich"] } } }
+  ]
+}

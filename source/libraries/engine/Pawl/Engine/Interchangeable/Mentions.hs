@@ -2812,6 +2812,7 @@ triggerConditionNames asking x = case x of
   TriggerCondition.SelfDealsDamageToCreature -> mempty
   TriggerCondition.SelfDealsDamage -> mempty
   TriggerCondition.SelfIsDealtDamage -> mempty
+  TriggerCondition.PlayerIsDealtDamage _playerRelation -> mempty
   TriggerCondition.PermanentDealsCombatDamageToPlayer permanentDealsCombatDamageToPlayer -> permanentDealsCombatDamageToPlayerNames asking permanentDealsCombatDamageToPlayer
   TriggerCondition.PermanentsDealCombatDamageToPlayer permanentsDealCombatDamageToPlayer -> permanentsDealCombatDamageToPlayerNames asking permanentsDealCombatDamageToPlayer
   TriggerCondition.CreatureDealtCombatDamageToMonarch -> mempty

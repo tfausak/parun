@@ -443,7 +443,7 @@ resolveSpellWith runSubgame oid = do
                             after <- State.get
                             pure (answers2, picked2, recordTaken clause admitted before after cIdx ran)
                     )
-                    (Map.empty, Map.empty, Set.empty)
+                    (Map.empty, Map.empty, Map.empty)
                     indexedClauses
                 firstOfName <- noteResolved oid effectController
                 applyEpic oid effectController
@@ -912,7 +912,7 @@ resolveModesWith runSubgame stackId srcId modes = do
                             after <- State.get
                             pure (answers2, picked2, recordTaken clause admitted before after cIdx ran)
                     )
-                    (Map.empty, Map.empty, Set.empty)
+                    (Map.empty, Map.empty, Map.empty)
                     indexedClauses
        in do
             Monad.unless fizzles $ do
@@ -951,15 +951,19 @@ recordAbilityResolution obj = case Object.source obj of
 -- name the fold has not reached -- a later clause, or one that does not exist --
 -- has not run. ANY of the names is enough, which is what Worms of the Earth's "if
 -- a player does either" prints over the two halves of an either-or pair; the
--- negative, Browbeat's "if no one does", holds when NONE of them ran. Asked
--- BEFORE the other three, so a skipped clause raises no prompt.
+-- negative, Browbeat's "if no one does", holds when NONE of them ran. Lich's
+-- "if you can't" holds when one did not run IN FULL (CR 609.3): it ran short, or
+-- not at all (docs/decisions.md, "Whether "if you can't" holds after doing part
+-- of an instruction"). Asked BEFORE the other three, so a skipped clause raises no
+-- prompt.
 --
 -- A pure function rather than a Game action: it reads nothing but the fold.
-ifTakenHolds :: Set ClauseIndex -> Clause.Clause Card.Type.Card (GrantedAbility.GrantedAbility Card.Type.Card) -> Bool
+ifTakenHolds :: Map.Map ClauseIndex Bool -> Clause.Clause Card.Type.Card (GrantedAbility.GrantedAbility Card.Type.Card) -> Bool
 ifTakenHolds ran clause = case Clause.ifTaken clause of
   Nothing -> True
-  Just (IfTaken.AnyTaken names) -> any (`Set.member` ran) names
-  Just (IfTaken.NoneTaken names) -> not (any (`Set.member` ran) names)
+  Just (IfTaken.AnyTaken names) -> any (`Map.member` ran) names
+  Just (IfTaken.NoneTaken names) -> not (any (`Map.member` ran) names)
+  Just (IfTaken.Couldnt names) -> any (\name -> Map.lookup name ran /= Just True) names
 
 -- CR 118.12: a clause some clause of its mode names with "If [a player] does"
 -- or "doesn't" (Clause.ifTaken) is that sentence's "[do something]" -- "a cost,
@@ -973,6 +977,8 @@ asCostWhenNamed indexed cIdx body =
         Nothing -> []
         Just (IfTaken.AnyTaken named) -> Foldable.toList named
         Just (IfTaken.NoneTaken named) -> Foldable.toList named
+        -- "If you can't" names an instruction, not CR 118.12's cost.
+        Just (IfTaken.Couldnt _) -> []
    in if any (elem cIdx . names . snd) indexed then Event.payingOnResolution body else body
 
 -- The other end of the same fold: a clause's ordinal is recorded exactly when
@@ -991,12 +997,17 @@ asCostWhenNamed indexed cIdx body =
 -- the spell loop, and "CR 118.12 Gristle Glutton with an empty hand draws
 -- nothing" on the ability loop. The two CR 701.55d limb sites are a REGRESSION
 -- FENCE: no "If you do" in data/cards/ hangs off a villainous limb.
-recordTaken :: Clause.Clause Card.Type.Card (GrantedAbility.GrantedAbility Card.Type.Card) -> Bool -> GameState -> GameState -> ClauseIndex -> Set ClauseIndex -> Set ClauseIndex
+--
+-- Recorded beside it is whether the clause ran IN FULL, for CR 609.3's "if you
+-- can't" (IfTaken.Couldnt): no instruction of it fell short
+-- (GameState.fellShort). Pawl.ScenarioSpec's Lich scenarios prove it.
+recordTaken :: Clause.Clause Card.Type.Card (GrantedAbility.GrantedAbility Card.Type.Card) -> Bool -> GameState -> GameState -> ClauseIndex -> Map.Map ClauseIndex Bool -> Map.Map ClauseIndex Bool
 recordTaken clause admitted before after cIdx ran =
   let happened = case Clause.optionality clause of
         Optionality.Mandatory -> happenedBetween before after
         Optionality.Optional _ -> True
-   in if admitted && happened then Set.insert cIdx ran else ran
+      inFull = GameState.fellShort after == GameState.fellShort before
+   in if admitted && happened then Map.insert cIdx inFull ran else ran
 
 -- CR 701.46a: does this clause's printed "if" hold? CR 701.37a prints the same
 -- gate on a proper prefix of a longer ability, which is why the rider is on CR
