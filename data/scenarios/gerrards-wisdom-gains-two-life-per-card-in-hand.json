@@ -1,0 +1,26 @@
+{
+  "description": "CR 608.2h whole card: Gerrard's Wisdom gains its caster 2 life for each card in their hand as it resolves",
+  "note": "Alice holds three other cards and bob four, so counting the spell itself, gaining 1 per card, or counting the opponent's hand reads differently.",
+  "board": {
+    "active": "alice",
+    "step": "PrecombatMain",
+    "seats": [
+      {
+        "name": "alice",
+        "manaPool": "WWWW",
+        "library": [{ "card": "Island" }, { "card": "Island" }],
+        "hand": [{ "card": "Gerrard's Wisdom", "label": "wisdom" }, { "card": "Forest" }, { "card": "Hill Giant" }, { "card": "Grizzly Bears" }]
+      },
+      {
+        "name": "bob",
+        "library": [{ "card": "Island" }, { "card": "Island" }],
+        "hand": [{ "card": "Forest" }, { "card": "Forest" }, { "card": "Forest" }, { "card": "Forest" }]
+      }
+    ]
+  },
+  "timeline": [
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": { "Cast": { "object": "$wisdom" } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass" },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "check": { "Life": { "player": "alice", "life": 26 } } }
+  ]
+}

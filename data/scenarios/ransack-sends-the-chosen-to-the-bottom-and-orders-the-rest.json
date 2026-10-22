@@ -1,0 +1,40 @@
+{
+  "description": "CR 608.2c whole card: Ransack's caster looks at the top five of the target player's library, puts the ones they choose on the bottom in an order they state, and the rest on top in an order they state",
+  "note": "Bob's library is the target, so the caster orders cards she does not own; a sixth card no one looked at sits between the two groups. Every order answered is the reverse of the library's, so leaving either group as it was reads differently.",
+  "board": {
+    "active": "alice",
+    "step": "PrecombatMain",
+    "seats": [
+      {
+        "name": "alice",
+        "manaPool": "UUUU",
+        "library": [{ "card": "Island" }, { "card": "Island" }],
+        "hand": [{ "card": "Ransack", "label": "ransack" }]
+      },
+      {
+        "name": "bob",
+        "library": [
+          { "card": "Forest" },
+          { "card": "Hill Giant", "label": "giant" },
+          { "card": "Grizzly Bears" },
+          { "card": "Llanowar Elves", "label": "elves" },
+          { "card": "Plains" },
+          { "card": "Mountain" }
+        ]
+      }
+    ]
+  },
+  "timeline": [
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": { "Answer": { "prompt": "ChooseCardsFromAmong", "with": ["$giant", "$elves"] } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": { "Answer": { "prompt": "ArrangeLibraryArrivals", "with": [0, 1] } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": { "Answer": { "prompt": "ArrangeLibraryCards", "with": [2, 1, 0] } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": { "Cast": { "object": "$ransack", "targets": ["$bob"] } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass" },
+    {
+      "turn": 1,
+      "step": "PrecombatMain",
+      "player": "alice",
+      "check": { "View": { "of": "Zone", "player": "bob", "zone": "Library", "is": ["Plains", "Grizzly Bears", "Forest", "Mountain", "Llanowar Elves", "Hill Giant"] } }
+    }
+  ]
+}
