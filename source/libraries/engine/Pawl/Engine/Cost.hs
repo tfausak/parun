@@ -6154,7 +6154,7 @@ tapForManaWith perform window inFlight refused activator oid = do
               -- whether the activation PRODUCED mana, which it did whoever's
               -- pool it went to.
               let tappedForMana =
-                    [ GameEvent.TappedForMana (TappedForMana.MkTappedForMana {TappedForMana.permanent = oid, TappedForMana.mana = Set.fromList (fmap ManaUnit.manaType producedUnits)})
+                    [ GameEvent.TappedForMana (TappedForMana.MkTappedForMana {TappedForMana.permanent = oid, TappedForMana.mana = Set.fromList (fmap ManaUnit.manaType producedUnits), TappedForMana.player = controller})
                     | List.elem CostComponent.TapThis (Cost.components (ManaOption.cost chosen)) && not (null producedUnits)
                     ]
                   -- CR 605.1b's other event, whether or not {T} was paid, and

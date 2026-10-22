@@ -651,11 +651,11 @@ spec s = Spec.describe s "Pawl.Codec.GameEvent" $ do
     Common.assertCodec
       s
       GameEvent.codec
-      (GameEvent.TappedForMana (TappedForMana.MkTappedForMana {TappedForMana.permanent = ObjectId.MkObjectId 9, TappedForMana.mana = Set.singleton (ManaType.Colored Color.Green)}))
-      " {\"type\":\"TappedForMana\",\"value\":{\"mana\":[{\"type\":\"Colored\",\"value\":{\"type\":\"Green\"}}],\"permanent\":9}} "
+      (GameEvent.TappedForMana (TappedForMana.MkTappedForMana {TappedForMana.permanent = ObjectId.MkObjectId 9, TappedForMana.mana = Set.singleton (ManaType.Colored Color.Green), TappedForMana.player = PlayerId.MkPlayerId 1}))
+      " {\"type\":\"TappedForMana\",\"value\":{\"mana\":[{\"type\":\"Colored\",\"value\":{\"type\":\"Green\"}}],\"permanent\":9,\"player\":1}} "
     Spec.assertBool
       s
-      (Codec.encode GameEvent.codec (GameEvent.TappedForMana (TappedForMana.MkTappedForMana {TappedForMana.permanent = ObjectId.MkObjectId 9, TappedForMana.mana = Set.singleton (ManaType.Colored Color.Green)})) /= Codec.encode GameEvent.codec (GameEvent.BecameTapped (ObjectId.MkObjectId 9)))
+      (Codec.encode GameEvent.codec (GameEvent.TappedForMana (TappedForMana.MkTappedForMana {TappedForMana.permanent = ObjectId.MkObjectId 9, TappedForMana.mana = Set.singleton (ManaType.Colored Color.Green), TappedForMana.player = PlayerId.MkPlayerId 1})) /= Codec.encode GameEvent.codec (GameEvent.BecameTapped (ObjectId.MkObjectId 9)))
       "a tap for mana and a plain tap of the same object encode differently"
   -- CR 605.1b's other event about one activation, keyed by the recipient as
   -- well as the source.
@@ -672,10 +672,10 @@ spec s = Spec.describe s "Pawl.Codec.GameEvent" $ do
       s
       GameEvent.codec
       (GameEvent.ManaAbilityResolved (ManaAbilityResolved.MkManaAbilityResolved {ManaAbilityResolved.permanent = ObjectId.MkObjectId 9, ManaAbilityResolved.amount = 2}))
-      " {\"type\":\"ManaAbilityResolved\",\"value\":{\"amount\":2,\"permanent\":9}} "
+      " {\"type\":\"ManaAbilityResolved\",\"value\":{\"amount\":2,\"permanent\":9,\"player\":1}} "
     Spec.assertBool
       s
-      (Codec.encode GameEvent.codec (GameEvent.ManaAbilityResolved (ManaAbilityResolved.MkManaAbilityResolved {ManaAbilityResolved.permanent = ObjectId.MkObjectId 9, ManaAbilityResolved.amount = 1})) /= Codec.encode GameEvent.codec (GameEvent.TappedForMana (TappedForMana.MkTappedForMana {TappedForMana.permanent = ObjectId.MkObjectId 9, TappedForMana.mana = Set.singleton (ManaType.Colored Color.Green)})))
+      (Codec.encode GameEvent.codec (GameEvent.ManaAbilityResolved (ManaAbilityResolved.MkManaAbilityResolved {ManaAbilityResolved.permanent = ObjectId.MkObjectId 9, ManaAbilityResolved.amount = 1})) /= Codec.encode GameEvent.codec (GameEvent.TappedForMana (TappedForMana.MkTappedForMana {TappedForMana.permanent = ObjectId.MkObjectId 9, TappedForMana.mana = Set.singleton (ManaType.Colored Color.Green), TappedForMana.player = PlayerId.MkPlayerId 1})))
       "a mana ability resolving and a tap for mana by the same object encode differently"
   -- CR 701.3a's two ends, and the ORDER is what the distinct ids prove: the
   -- attachment first, then what it went onto. A swap would credit the host with
