@@ -40,12 +40,12 @@
   "timeline": [
     {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": {"Cast": {"object": "$hack1", "targets": ["$hag"], "mana": ["$island1", null]}}},
     {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass"},
-    {"turn": 1, "step": "PrecombatMain", "player": "alice", "source": "Magical Hack#2", "do": {"ChooseTypeSwap": {"from": {"type": "Swamp"}, "to": {"type": "Island"}}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "source": "Magical Hack#2", "do": {"ChooseWordSwap": {"from": {"type": "Swamp"}, "to": {"type": "Island"}}}},
     {"turn": 1, "step": "PrecombatMain", "player": "alice", "check": {"Keywords": {"object": "$hag", "keyword": {"type": "Landwalk", "value": {"type": "HasSubtype", "value": {"type": "Forest"}}}, "count": 1}}},
     {"turn": 1, "step": "PrecombatMain", "player": "alice", "check": {"Keywords": {"object": "$hag", "keyword": {"type": "Landwalk", "value": {"type": "HasSubtype", "value": {"type": "Island"}}}, "count": 1}}},
     {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": {"Cast": {"object": "$hack2", "targets": ["$hag"], "mana": ["$island2"]}}},
     {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass"},
-    {"turn": 1, "step": "PrecombatMain", "player": "alice", "source": "Magical Hack#2", "do": {"ChooseTypeSwap": {"from": {"type": "Forest"}, "to": {"type": "Swamp"}}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "source": "Magical Hack#2", "do": {"ChooseWordSwap": {"from": {"type": "Forest"}, "to": {"type": "Swamp"}}}},
     {"turn": 1, "step": "PrecombatMain", "player": "alice", "check": {"Keywords": {"object": "$hag", "keyword": {"type": "Landwalk", "value": {"type": "HasSubtype", "value": {"type": "Island"}}}, "count": 2}}},
     {"turn": 1, "step": "PrecombatMain", "player": "alice", "check": {"Keywords": {"object": "$hag", "keyword": {"type": "Landwalk", "value": {"type": "HasSubtype", "value": {"type": "Swamp"}}}, "count": 0}}},
     {"turn": 1, "step": "PrecombatMain", "player": "alice", "check": {"Keywords": {"object": "$hag", "keyword": {"type": "Landwalk", "value": {"type": "HasSubtype", "value": {"type": "Forest"}}}, "count": 0}}}

@@ -58,7 +58,7 @@
     {"turn": 1, "step": "PrecombatMain", "player": "alice", "check": {"PowerToughness": {"object": "$hacked", "power": 1, "toughness": 1}}},
     {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": {"Cast": {"object": "$hack", "targets": ["$hacked"], "mana": ["$island4"]}}},
     {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass"},
-    {"turn": 1, "step": "PrecombatMain", "player": "alice", "source": "Magical Hack", "do": {"ChooseTypeSwap": {"from": {"type": "Forest"}, "to": {"type": "Island"}}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "source": "Magical Hack", "do": {"ChooseWordSwap": {"from": {"type": "Forest"}, "to": {"type": "Island"}}}},
     {"turn": 1, "step": "PrecombatMain", "player": "alice", "check": {"PowerToughness": {"object": "$other", "power": 2, "toughness": 3}}},
     {"turn": 1, "step": "PrecombatMain", "player": "alice", "check": {"PowerToughness": {"object": "$hacked", "power": 1, "toughness": 1}}}
   ]

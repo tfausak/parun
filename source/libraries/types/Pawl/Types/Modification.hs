@@ -5,7 +5,7 @@ import qualified Pawl.Types.AbilityName as AbilityName
 import qualified Pawl.Types.CardName as CardName
 import qualified Pawl.Types.CardType as CardType
 import qualified Pawl.Types.CastingPermission as CastingPermission
-import qualified Pawl.Types.ChangeSubtypeWord as ChangeSubtypeWord
+import qualified Pawl.Types.ChangeWord as ChangeWord
 import qualified Pawl.Types.Color as Color
 import qualified Pawl.Types.CostKeyword as CostKeyword
 import qualified Pawl.Types.ExiledCardAbilities as ExiledCardAbilities
@@ -369,7 +369,7 @@ data Modification ability
     -- grant above, and the same rule governs it: the object's OTHER supertypes
     -- survive, and neither its card types nor its subtypes move.
     RemoveSupertype Supertype.Supertype
-  | ChangeSubtypeWord ChangeSubtypeWord.ChangeSubtypeWord -- layer 3, CR 612 (Magical Hack, Artificial Evolution: from -> to)
+  | ChangeWord ChangeWord.ChangeWord -- layer 3, CR 612 (Magical Hack, Sleight of Mind: from -> to)
   | -- | layer 3, CR 613.1c / 612.5: the two objects in this effect's affected set
     -- exchange their text boxes (Exchange of Words, which CR 612.5 names as the
     -- only card that does it).

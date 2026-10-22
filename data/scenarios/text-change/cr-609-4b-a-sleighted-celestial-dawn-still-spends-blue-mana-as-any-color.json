@@ -1,0 +1,46 @@
+{
+  "description": "CR 609.4b / 612.2 a Celestial Dawn with white Sleighted to blue lets blue mana pay Swords to Plowshares' {W}",
+  "note": "Sleight of Mind swaps white for blue in Celestial Dawn: \"you may spend blue mana as though it were mana of any color\". \"Any color\" names no colour word, so it still includes white, and the Birds' blue mana pays Swords to Plowshares' {W}. alice's Island is a Plains under the Dawn, and its white mana pays for the Sleight.",
+  "board": {
+    "seats": [
+      {
+        "name": "alice",
+        "battlefield": [
+          { "card": "Celestial Dawn", "label": "dawn" },
+          { "card": "Island", "label": "island" },
+          { "card": "Birds of Paradise", "label": "birds", "ready": true }
+        ],
+        "hand": [
+          { "card": "Sleight of Mind", "label": "sleight" },
+          { "card": "Swords to Plowshares", "label": "swords" }
+        ]
+      },
+      {
+        "name": "bob",
+        "battlefield": [{ "card": "Grizzly Bears", "label": "bears" }]
+      }
+    ],
+    "active": "alice",
+    "step": "PrecombatMain"
+  },
+  "timeline": [
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": { "Cast": { "object": "$sleight", "targets": ["$dawn"], "mana": ["$island", null] } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass" },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "source": "Sleight of Mind", "do": { "ChooseWordSwap": { "from": { "type": "White" }, "to": { "type": "Blue" } } } },
+    {
+      "turn": 1,
+      "step": "PrecombatMain",
+      "player": "alice",
+      "do": {
+        "Cast": {
+          "object": "$swords",
+          "targets": ["$bears"],
+          "mana": ["$birds"],
+          "yields": [[{ "manaType": { "type": "Colored", "value": { "type": "Blue" } }, "tags": [], "retention": { "type": "Ordinary" }, "restriction": null, "rider": null, "sourceChoices": null }]]
+        }
+      }
+    },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass" },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "check": { "Count": { "player": "bob", "zone": "Exile", "card": "Grizzly Bears", "count": 1 } } }
+  ]
+}

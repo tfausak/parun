@@ -611,4 +611,8 @@ data Filter keyword
   | And [Filter keyword]
   | Or [Filter keyword]
   | Not (Filter keyword)
+  | -- | The nested filter, which the card states without writing its words --
+    -- CR 702.16h's "protection from each color" -- so no CR 612.2 text change
+    -- reaches it.
+    Unwritten (Filter keyword)
   deriving (Eq, Ord, Show)

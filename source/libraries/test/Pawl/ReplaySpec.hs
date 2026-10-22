@@ -18,8 +18,8 @@ import qualified Pawl.Engine.Mana as Mana
 import qualified Pawl.Engine.Monarch as Monarch
 import qualified Pawl.Engine.Replay as Replay
 import qualified Pawl.Engine.Setup as Setup
-import qualified Pawl.Engine.Subtype as SubtypeEngine
 import qualified Pawl.Engine.Target as Target
+import qualified Pawl.Engine.TextWord as TextWord.Engine
 import qualified Pawl.Registry as Registry
 import qualified Pawl.Spec as Spec
 import qualified Pawl.Support as S
@@ -101,11 +101,12 @@ import qualified Pawl.Types.SlotName as SlotName
 import qualified Pawl.Types.StickerKind as StickerKind
 import qualified Pawl.Types.StickerRef as StickerRef
 import qualified Pawl.Types.Subtype as Subtype
-import qualified Pawl.Types.SubtypeFamily as SubtypeFamily
+import qualified Pawl.Types.TextWord as TextWord
 import qualified Pawl.Types.TimeTravelChoice as TimeTravelChoice
 import qualified Pawl.Types.TriggerEntry as TriggerEntry
 import qualified Pawl.Types.TriggerSource as TriggerSource
 import qualified Pawl.Types.TriggeredAbility as TriggeredAbility
+import qualified Pawl.Types.WordFamily as WordFamily
 import qualified Pawl.Types.Zone as Zone
 
 -- One way of tapping a single-colour source: CR 305.6's intrinsic "{T}" cost and
@@ -528,34 +529,25 @@ combatReplaySpec s =
           let p = Prompt.ChooseOpponent decider S.alice oid Nothing (S.bob NonEmpty.:| [])
           Spec.assertEqWith s "round trip" (Replay.decode p (Replay.encode p S.bob)) (Just S.bob)
           Spec.assertEqWith s "a defender is not an answer to it" (Replay.decode p (Response.ChoseDefender S.bob)) Nothing
-        -- CR 612.2's word families are asked for by prompts whose answers have
-        -- the SAME shape, so the transcript has to tell them apart: a shared
-        -- Response constructor would replay Magical Hack's basic land types into
-        -- Artificial Evolution's creature-type ask. Each decodes its own and
-        -- rejects the others.
-        Spec.it s "the CR 612 swap prompts do not answer each other" $ do
+        -- CR 612.2: one swap prompt asks for every family, so a recorded swap
+        -- of either kind replays as itself.
+        Spec.it s "the CR 612 swap prompt records and replays both kinds of word" $ do
           let slot = SlotName.MkSlotName (Text.pack "target")
-              landPrompt = Prompt.ChooseLandTypeSwap decider S.alice oid slot Set.empty
-              creaturePrompt = Prompt.ChooseCreatureTypeSwap decider S.alice oid slot (Set.singleton Subtype.Wall)
-              enchantmentPrompt = Prompt.ChooseEnchantmentTypeSwap decider S.alice oid slot Set.empty
-              lands = (Subtype.Mountain, Subtype.Island)
-              creatures = (Subtype.Frog, Subtype.Elf)
-              enchantments = (Subtype.Aura, Subtype.Curse)
-          Spec.assertEqWith s "land round trip" (Replay.decode landPrompt (Replay.encode landPrompt lands)) (Just lands)
-          Spec.assertEqWith s "creature round trip" (Replay.decode creaturePrompt (Replay.encode creaturePrompt creatures)) (Just creatures)
-          Spec.assertEqWith s "enchantment round trip" (Replay.decode enchantmentPrompt (Replay.encode enchantmentPrompt enchantments)) (Just enchantments)
-          Spec.assertEqWith s "a land answer does not fill a creature ask" (Replay.decode creaturePrompt (Replay.encode landPrompt lands)) Nothing
-          Spec.assertEqWith s "nor the other way round" (Replay.decode landPrompt (Replay.encode creaturePrompt creatures)) Nothing
-          Spec.assertEqWith s "a creature answer does not fill an enchantment ask" (Replay.decode enchantmentPrompt (Replay.encode creaturePrompt creatures)) Nothing
-          Spec.assertEqWith s "nor an enchantment answer a land ask" (Replay.decode landPrompt (Replay.encode enchantmentPrompt enchantments)) Nothing
+              prompt = Prompt.ChooseWordSwap decider S.alice oid slot (Set.fromList [WordFamily.Color, WordFamily.BasicLandType]) Set.empty
+              lands = (TextWord.SubtypeWord Subtype.Mountain, TextWord.SubtypeWord Subtype.Island)
+              colors = (TextWord.ColorWord Color.Black, TextWord.ColorWord Color.Blue)
+          Spec.assertEqWith s "land round trip" (Replay.decode prompt (Replay.encode prompt lands)) (Just lands)
+          Spec.assertEqWith s "colour round trip" (Replay.decode prompt (Replay.encode prompt colors)) (Just colors)
         -- CR 612.2: a transcript that runs short answers each swap prompt with a
         -- swap its card allows, Wall forbidden for the creature types.
         Spec.it s "defaultAnswer answers every CR 612 swap prompt with a legal swap" $ do
           let slot = SlotName.MkSlotName (Text.pack "target")
-              wall = Set.singleton Subtype.Wall
-          Spec.assertEqWith s "a basic land swap" (SubtypeEngine.swappable SubtypeFamily.BasicLandType Set.empty (Replay.defaultAnswer (Prompt.ChooseLandTypeSwap decider S.alice oid slot Set.empty))) True
-          Spec.assertEqWith s "a creature swap to no Wall" (SubtypeEngine.swappable SubtypeFamily.CreatureType wall (Replay.defaultAnswer (Prompt.ChooseCreatureTypeSwap decider S.alice oid slot wall))) True
-          Spec.assertEqWith s "an enchantment swap" (SubtypeEngine.swappable SubtypeFamily.EnchantmentType Set.empty (Replay.defaultAnswer (Prompt.ChooseEnchantmentTypeSwap decider S.alice oid slot Set.empty))) True
+              wall = Set.singleton (TextWord.SubtypeWord Subtype.Wall)
+              legal families forbidden = TextWord.Engine.swappable families forbidden (Replay.defaultAnswer (Prompt.ChooseWordSwap decider S.alice oid slot families forbidden))
+          Spec.assertEqWith s "a basic land swap" (legal (Set.singleton WordFamily.BasicLandType) Set.empty) True
+          Spec.assertEqWith s "a creature swap to no Wall" (legal (Set.singleton WordFamily.CreatureType) wall) True
+          Spec.assertEqWith s "an enchantment swap" (legal (Set.singleton WordFamily.EnchantmentType) Set.empty) True
+          Spec.assertEqWith s "a colour swap" (legal (Set.singleton WordFamily.Color) Set.empty) True
         Spec.it s "DeclareMulligan records and replays a MulliganDecision" $ do
           let offer = MulliganOffer.MkMulliganOffer {MulliganOffer.taken = 0, MulliganOffer.bottomCount = 1}
               p = Prompt.DeclareMulligan decider S.alice offer

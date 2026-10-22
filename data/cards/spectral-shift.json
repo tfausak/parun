@@ -1,0 +1,101 @@
+{
+  "faces": [
+    {
+      "keywords": [
+        {
+          "type": "Entwine",
+          "value": {
+            "mana": [
+              {
+                "type": "Generic",
+                "value": 2
+              }
+            ]
+          }
+        }
+      ],
+      "manaCost": [
+        {
+          "type": "Generic",
+          "value": 1
+        },
+        {
+          "type": "OfType",
+          "value": {
+            "type": "Colored",
+            "value": {
+              "type": "Blue"
+            }
+          }
+        }
+      ],
+      "name": "Spectral Shift",
+      "oracleText": "Choose one —\n• Change the text of target spell or permanent by replacing all instances of one basic land type with another. (This effect lasts indefinitely.)\n• Change the text of target spell or permanent by replacing all instances of one color word with another. (This effect lasts indefinitely.)\nEntwine {2} (Choose both if you pay the entwine cost.)",
+      "spell": {
+        "modes": [
+          {
+            "clauses": [
+              {
+                "effects": [
+                  {
+                    "type": "ChangeText",
+                    "value": {
+                      "families": [
+                        {
+                          "type": "BasicLandType"
+                        }
+                      ],
+                      "forbidden": [],
+                      "slot": "land"
+                    }
+                  }
+                ]
+              }
+            ],
+            "targetSlots": {
+              "land": {
+                "pool": {
+                  "type": "SpellsAndPermanents"
+                }
+              }
+            }
+          },
+          {
+            "clauses": [
+              {
+                "effects": [
+                  {
+                    "type": "ChangeText",
+                    "value": {
+                      "families": [
+                        {
+                          "type": "Color"
+                        }
+                      ],
+                      "forbidden": [],
+                      "slot": "color"
+                    }
+                  }
+                ]
+              }
+            ],
+            "targetSlots": {
+              "color": {
+                "pool": {
+                  "type": "SpellsAndPermanents"
+                }
+              }
+            }
+          }
+        ]
+      },
+      "typeLine": {
+        "types": [
+          {
+            "type": "Instant"
+          }
+        ]
+      }
+    }
+  ]
+}

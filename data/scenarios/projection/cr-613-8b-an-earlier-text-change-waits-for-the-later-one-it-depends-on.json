@@ -40,11 +40,11 @@
   "timeline": [
     {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": {"Cast": {"object": "$hack1", "targets": ["$wraith"], "mana": ["$island1", null]}}},
     {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass"},
-    {"turn": 1, "step": "PrecombatMain", "player": "alice", "source": "Magical Hack#2", "do": {"ChooseTypeSwap": {"from": {"type": "Island"}, "to": {"type": "Forest"}}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "source": "Magical Hack#2", "do": {"ChooseWordSwap": {"from": {"type": "Island"}, "to": {"type": "Forest"}}}},
     {"turn": 1, "step": "PrecombatMain", "player": "alice", "check": {"Keywords": {"object": "$wraith", "keyword": {"type": "Landwalk", "value": {"type": "HasSubtype", "value": {"type": "Swamp"}}}, "count": 1}}},
     {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": {"Cast": {"object": "$hack2", "targets": ["$wraith"], "mana": ["$island2"]}}},
     {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass"},
-    {"turn": 1, "step": "PrecombatMain", "player": "alice", "source": "Magical Hack#2", "do": {"ChooseTypeSwap": {"from": {"type": "Swamp"}, "to": {"type": "Island"}}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "source": "Magical Hack#2", "do": {"ChooseWordSwap": {"from": {"type": "Swamp"}, "to": {"type": "Island"}}}},
     {"turn": 1, "step": "PrecombatMain", "player": "alice", "check": {"Keywords": {"object": "$wraith", "keyword": {"type": "Landwalk", "value": {"type": "HasSubtype", "value": {"type": "Forest"}}}, "count": 1}}},
     {"turn": 1, "step": "PrecombatMain", "player": "alice", "check": {"Keywords": {"object": "$wraith", "keyword": {"type": "Landwalk", "value": {"type": "HasSubtype", "value": {"type": "Island"}}}, "count": 0}}},
     {"turn": 1, "step": "PrecombatMain", "player": "alice", "check": {"Keywords": {"object": "$wraith", "keyword": {"type": "Landwalk", "value": {"type": "HasSubtype", "value": {"type": "Swamp"}}}, "count": 0}}}

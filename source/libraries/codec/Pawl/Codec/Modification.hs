@@ -5,7 +5,7 @@ import qualified Pawl.Codec.AbilityName as AbilityName
 import qualified Pawl.Codec.CardName as CardName
 import qualified Pawl.Codec.CardType as CardType
 import qualified Pawl.Codec.CastingPermission as CastingPermission
-import qualified Pawl.Codec.ChangeSubtypeWord as ChangeSubtypeWord
+import qualified Pawl.Codec.ChangeWord as ChangeWord
 import qualified Pawl.Codec.Color as Color
 import qualified Pawl.Codec.CostKeyword as CostKeyword
 import qualified Pawl.Codec.ExiledCardAbilities as ExiledCardAbilities
@@ -67,7 +67,7 @@ codec abilityCodec =
           Arm.payload "LoseCardType" CardType.codec Modification.LoseCardType (\x -> case x of Modification.LoseCardType y -> Just y; _ -> Nothing),
           Arm.payload "AddSupertype" Supertype.codec Modification.AddSupertype (\x -> case x of Modification.AddSupertype y -> Just y; _ -> Nothing),
           Arm.payload "RemoveSupertype" Supertype.codec Modification.RemoveSupertype (\x -> case x of Modification.RemoveSupertype y -> Just y; _ -> Nothing),
-          Arm.payload "ChangeSubtypeWord" ChangeSubtypeWord.codec Modification.ChangeSubtypeWord (\x -> case x of Modification.ChangeSubtypeWord y -> Just y; _ -> Nothing),
+          Arm.payload "ChangeWord" ChangeWord.codec Modification.ChangeWord (\x -> case x of Modification.ChangeWord y -> Just y; _ -> Nothing),
           Arm.payload "SetController" PlayerId.codec Modification.SetController (\x -> case x of Modification.SetController y -> Just y; _ -> Nothing),
           Arm.nullary "SetControllerToSource" Modification.SetControllerToSource,
           Arm.payload "SetColor" colors Modification.SetColor (\x -> case x of Modification.SetColor y -> Just y; _ -> Nothing),
@@ -115,7 +115,7 @@ tagOf x = case x of
   Modification.LoseCardType {} -> "LoseCardType"
   Modification.AddSupertype {} -> "AddSupertype"
   Modification.RemoveSupertype {} -> "RemoveSupertype"
-  Modification.ChangeSubtypeWord {} -> "ChangeSubtypeWord"
+  Modification.ChangeWord {} -> "ChangeWord"
   Modification.SetController {} -> "SetController"
   Modification.SetControllerToSource {} -> "SetControllerToSource"
   Modification.SetColor {} -> "SetColor"
