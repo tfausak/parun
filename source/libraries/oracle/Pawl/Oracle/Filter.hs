@@ -143,9 +143,10 @@ qualifier o m = MkPhrase [] [] [MkQualifier o m]
 
 -- | Disjoined phrases: adjectives alone join into one ("attacking or
 -- blocking"), colours "and/or" in the plural, since one object may have both
--- ("white and/or blue creatures", Ignite Disorder), and whole phrases join into one noun ("artifact or
--- enchantment"), whose plural Oracle text writes with "and" ("all creatures
--- and lands", Devastation) where the nouns are bare, and not at all otherwise.
+-- ("white and/or blue creatures", Ignite Disorder), and whole phrases join
+-- into one noun ("artifact or enchantment"), whose plural Oracle text writes
+-- with "and" ("all creatures and lands", Devastation) where the nouns are
+-- bare, and not at all otherwise.
 disjunction :: [Phrase] -> [Phrase]
 disjunction ps
   | length ps < 2 = []
