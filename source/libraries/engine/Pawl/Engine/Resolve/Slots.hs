@@ -461,12 +461,13 @@ zoneScopeSlots scope = case scope of
   -- Already resolved: names no slot.
   ZoneScope.BoundPlayer _ -> Map.empty
 
--- The slots an ObjectRef reads. InSlot names one directly, and
--- EachCardInGraveyard and EachCardInHand name one through their scope; the other
--- sweeping arms name none. Reporting a scope's slot does not make the SWEPT CARDS targets -- CR
--- 115.10a needs the word "target" against them, and a graveyard scope says it
--- against the PLAYER -- so what CR 608.2b judges is still the card's own target
--- slot, holding that player, and not this read.
+-- The slots an ObjectRef reads. InSlot names one directly,
+-- EachCardInGraveyard and EachCardInHand name one through their scope, and
+-- EachMatching through its Filter; the other sweeping arms name none. Reporting
+-- a scope's slot does not make the SWEPT CARDS targets -- CR 115.10a needs the
+-- word "target" against them, and a graveyard scope says it against the
+-- PLAYER, so what CR 608.2b judges is still the card's own target slot, holding
+-- that player, and not this read.
 --
 -- The PlayerRefs the four per-player arms hold are taken from
 -- objectRefPlayerRefs below rather than arm by arm, so no arm of the case names
@@ -476,8 +477,10 @@ objectRefSlots ref = joinTwo (joinSlots (fmap playerRefSlots (objectRefPlayerRef
   ObjectRef.InSlot slot -> Map.singleton slot SlotArity.Many
   -- InSlot's read of the slot, never a target (CR 115.10a).
   ObjectRef.FromAnywhere (FromAnywhere.MkFromAnywhere slot among) -> Map.fromList [(named, SlotArity.Many) | named <- slot : Foldable.toList among]
-  ObjectRef.EachMatching _ -> Map.empty
-  -- The sweeping arms that DO name a slot are this one and EachCardInHand below:
+  -- Rain of Daggers' "all creatures target opponent controls": the sweep's
+  -- ControlledByBound is the only read of its target slot.
+  ObjectRef.EachMatching filter_ -> filterSlotsOf filter_
+  -- The per-player sweeps that name a slot are this one and EachCardInHand below:
   -- CR 400.1's per-player zones leave "whose" to be said, and Angel of Finality
   -- says it by pointing at the player another slot of the same announcement
   -- targets. Reported, not dropped, because the D4 dataflow lint reads this: a
@@ -549,11 +552,13 @@ objectRefSlots ref = joinTwo (joinSlots (fmap playerRefSlots (objectRefPlayerRef
   -- RandomCardInHand's read one hidden zone over: the seat is reported where
   -- that arm's is, and the COUNT is TopOfLibrary's read.
   ObjectRef.RandomCardInLibrary (RandomCardInLibrary.MkRandomCardInLibrary _ _ count) -> quantitySlots count
-  -- EachMatching's answer: the candidates come off the battlefield, so no slot
-  -- names them. The CHOOSER's slots are the generic playerRefSlots fold this
-  -- case is joined into, ChosenCardFromAmong's route above, which is what makes
-  -- a chooser's slot a read. The CEILING is TopOfLibrary's read.
-  ObjectRef.ChosenPermanents choice -> maybe Map.empty quantitySlots (HowMany.quantity (ChosenPermanents.count choice))
+  -- EachMatching's answer: the candidates come off the battlefield, so only the
+  -- Filter reads a slot of its own. The CHOOSER's slots are the generic
+  -- playerRefSlots fold this case is joined into, ChosenCardFromAmong's route
+  -- above, which is what makes a chooser's slot a read. The CEILING is TopOfLibrary's read.
+  -- The Filter's read is a REGRESSION FENCE: no card in data/cards/ reads a slot
+  -- only through this Filter, so dropping it leaves the suite green.
+  ObjectRef.ChosenPermanents choice -> joinTwo (filterSlotsOf (ChosenPermanents.filter choice)) (maybe Map.empty quantitySlots (HowMany.quantity (ChosenPermanents.count choice)))
   -- The host is read out of the slot, and the Filter over what is attached to
   -- it may name slots of its own.
   ObjectRef.AttachedToBound (AttachedToBound.MkAttachedToBound slot filter_) -> joinTwo (Map.singleton slot SlotArity.Many) (filterSlotsOf filter_)

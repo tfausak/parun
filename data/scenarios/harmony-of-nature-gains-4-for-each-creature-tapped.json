@@ -1,0 +1,36 @@
+{
+  "description": "CR 608.2d whole card: Harmony of Nature taps the creatures chosen and gains 4 life for each",
+  "note": "Two of three untapped creatures are chosen, so tapping every candidate (12) or counting none (0) reads differently from 8. The already-tapped bears are not a candidate, and bob's are not alice's to choose.",
+  "board": {
+    "active": "alice",
+    "step": "PrecombatMain",
+    "seats": [
+      {
+        "name": "alice",
+        "manaPool": "GGG",
+        "library": [{ "card": "Island" }, { "card": "Island" }],
+        "hand": [{ "card": "Harmony of Nature", "label": "harmony" }],
+        "battlefield": [
+          { "card": "Grizzly Bears", "label": "bears" },
+          { "card": "Hill Giant", "label": "giant" },
+          { "card": "Goblin Piker", "label": "piker" },
+          { "card": "Grizzly Bears", "label": "tired", "tapped": true }
+        ]
+      },
+      {
+        "name": "bob",
+        "library": [{ "card": "Island" }, { "card": "Island" }],
+        "battlefield": [{ "card": "Grizzly Bears", "label": "other" }]
+      }
+    ]
+  },
+  "timeline": [
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": { "Cast": { "object": "$harmony" } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass" },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": { "Answer": { "prompt": "ChooseAnyNumberOfPermanents", "with": ["$bears", "$giant"] } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "check": { "Life": { "player": "alice", "life": 28 } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "check": { "Tapped": { "object": "$giant", "tapped": true } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "check": { "Tapped": { "object": "$piker", "tapped": false } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "check": { "Tapped": { "object": "$other", "tapped": false } } }
+  ]
+}
