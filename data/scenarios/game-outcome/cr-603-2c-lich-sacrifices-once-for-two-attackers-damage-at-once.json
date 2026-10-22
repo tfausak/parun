@@ -1,0 +1,36 @@
+{
+  "description": "CR 603.2c Lich sacrifices once for two attackers' damage at once",
+  "note": "Alice controls Lich at 0 life and six Swamps. Bob's Grizzly Bears and Hill Giant deal her 5 combat damage at once: one event of her being dealt damage, so Lich triggers once (its ruling: sacrifice 'for that damage simultaneously') and she picks five permanents in one choice. She could, so she stays in.",
+  "board": {
+    "active": "bob",
+    "step": "BeginningOfCombat",
+    "seats": [
+      {
+        "name": "alice",
+        "life": 0,
+        "battlefield": [
+          { "card": "Lich", "label": "lich" },
+          { "card": "Swamp", "label": "s1" },
+          { "card": "Swamp", "label": "s2" },
+          { "card": "Swamp", "label": "s3" },
+          { "card": "Swamp", "label": "s4" },
+          { "card": "Swamp", "label": "s5" },
+          { "card": "Swamp", "label": "s6" }
+        ]
+      },
+      {
+        "name": "bob",
+        "battlefield": [
+          { "card": "Grizzly Bears", "label": "bears", "ready": true },
+          { "card": "Hill Giant", "label": "giant", "ready": true }
+        ]
+      }
+    ]
+  },
+  "timeline": [
+    { "turn": 1, "step": "DeclareAttackers", "player": "bob", "do": { "Attack": ["$bears", "$giant"] } },
+    { "turn": 1, "step": "CombatDamage", "player": "alice", "do": { "Answer": { "prompt": "ChooseSacrifices", "with": ["$s1", "$s2", "$s3", "$s4", "$s5"] } } },
+    { "turn": 1, "step": "EndOfCombat", "player": "bob", "check": { "View": { "of": "Result", "is": null } } },
+    { "turn": 1, "step": "EndOfCombat", "player": "bob", "check": { "View": { "of": "Zone", "player": "alice", "zone": "Battlefield", "is": ["$lich", "$s6"] } } }
+  ]
+}

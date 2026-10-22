@@ -3837,6 +3837,14 @@ apply batch candidate event =
       LifeGainRewrite.Scaled scaling -> do
         Replacement.consume (ReplacementCandidate.identity candidate)
         pure (Just (ProposedEvent.WouldGainLife pid (Replacement.scale scaling n)))
+      -- CR 614.6: Lich's "draw that many cards instead". The gain never
+      -- happens, so no life total moves and no GameEvent.LifeGained is
+      -- recorded; the player the event named draws through CR 121's funnel, one
+      -- card at a time (CR 121.2), each draw replaceable in its own right.
+      LifeGainRewrite.DrawInstead -> do
+        Replacement.consume (ReplacementCandidate.identity candidate)
+        Monad.replicateM_ (Natural.toIntSaturating n) (drawCard pid)
+        pure Nothing
     -- Unreachable: `applies` admits LifeGainR only against WouldGainLife.
     (ReplacementEffect.LifeGainR {}, _) -> pure (Just event)
     -- CR 614.6 with CR 614.11: Words of Worship's "the next time you would draw a
@@ -5379,8 +5387,8 @@ resolveLifeLoss cause pid n =
 -- DrawRewrite.GainLife arm above -- so a row cannot reach one road and miss
 -- another.
 --
--- The SETTLED amount may be larger than what came in, and for the pool's only
--- producers always is: Pawl.Types.LifeGainRewrite is a scaling.
+-- The SETTLED amount may differ from what came in: larger where a
+-- Pawl.Types.LifeGainRewrite scales it, 0 where one replaced the gain outright.
 --
 -- It does not WRITE the life total, resolveLifeLoss's split and for its reason:
 -- every caller already owns that write, and the lifelink one has to keep its
@@ -9948,6 +9956,7 @@ controllerTurnScoped cond = case cond of
   TriggerCondition.SelfDealsDamageToCreature -> False
   TriggerCondition.SelfDealsDamage -> False
   TriggerCondition.SelfIsDealtDamage -> False
+  TriggerCondition.PlayerIsDealtDamage _ -> False
   TriggerCondition.PermanentDealsCombatDamageToPlayer _ -> False
   TriggerCondition.PermanentsDealCombatDamageToPlayer _ -> False
   TriggerCondition.CreatureDealtCombatDamageToMonarch -> False

@@ -7080,6 +7080,9 @@ applyOneEffect runSubgame resolving source controller legal chosen effect = case
                   let wanted = min count (Natural.length candidates)
                       valid = filter (\oid -> Set.member oid picked) candidates
                       filler = filter (\oid -> List.notElem oid valid) candidates
+                  -- CR 603.12 / 609.3: too few to sacrifice is an instruction
+                  -- that fell short, which Lich's "if you can't" reads.
+                  Monad.when (wanted < count) fallShort
                   pure (victim, List.genericTake wanted (valid <> filler))
             _ -> pure (victim, [])
     doomed <- fmap Foldable.toList (Monad.foldM pickFor Seq.empty victims)

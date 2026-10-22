@@ -368,6 +368,24 @@ Entries are ordered by the first rule each cites.
   the next seat chooses".
 - **Issue**: #5239.
 
+## Whether "if you can't" holds after doing part of an instruction
+
+- **Question**: Lich's "sacrifice that many nontoken permanents. If you can't,
+  you lose the game": does a player who sacrificed some but fewer than that
+  many lose? The CR defines no "if you can't", and no ruling on Lich says.
+- **Rules**: CR 609.3, 608.2c; CR of 2026-08-07.
+- **Decision**: Yes. "If you can't" holds when the named instruction did
+  fewer than it named, including none. A sacrifice falling short counts as
+  not done for CR 603.12's "when you do" too, as a short draw or mill does.
+- **Rejected**: Holding only when nothing was sacrificed, CR 118.12's "started
+  to pay" test: "that many" is the instruction, and CR 609.3's "as much as
+  possible" is not all of it.
+- **Site**: `Pawl.Engine.Resolve.ifTakenHolds` and `recordTaken`, fed by
+  `Pawl.Engine.Resolve.Effect`'s PlayerSacrifices arm. Proved by the
+  scenarios "CR 609.3 Lich sacrificing two of three loses alice the game" and
+  "CR 609.3 Lich sacrificing three of three keeps alice in".
+- **Issue**: #5442.
+
 ## How two only-clauses about spending one mana combine
 
 - **Question**: Two effects each say a mana may be spent "only as though it

@@ -11,10 +11,12 @@ codec =
   Arm.tagged
     tagOf
     [ Arm.payload "AnyTaken" (Common.nonEmpty ClauseIndex.codec) IfTaken.AnyTaken (\x -> case x of IfTaken.AnyTaken y -> Just y; _ -> Nothing),
-      Arm.payload "NoneTaken" (Common.nonEmpty ClauseIndex.codec) IfTaken.NoneTaken (\x -> case x of IfTaken.NoneTaken y -> Just y; _ -> Nothing)
+      Arm.payload "NoneTaken" (Common.nonEmpty ClauseIndex.codec) IfTaken.NoneTaken (\x -> case x of IfTaken.NoneTaken y -> Just y; _ -> Nothing),
+      Arm.payload "Couldnt" (Common.nonEmpty ClauseIndex.codec) IfTaken.Couldnt (\x -> case x of IfTaken.Couldnt y -> Just y; _ -> Nothing)
     ]
 
 tagOf :: IfTaken.IfTaken -> String
 tagOf x = case x of
   IfTaken.AnyTaken {} -> "AnyTaken"
   IfTaken.NoneTaken {} -> "NoneTaken"
+  IfTaken.Couldnt {} -> "Couldnt"
