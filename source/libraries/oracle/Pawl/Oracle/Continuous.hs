@@ -3,6 +3,7 @@
 -- and the static abilities that generate them (CR 604).
 module Pawl.Oracle.Continuous where
 
+import qualified Control.Monad as Monad
 import qualified Data.Foldable as Foldable
 import qualified Data.List as List
 import qualified Data.Maybe as Maybe
@@ -20,6 +21,7 @@ import qualified Pawl.Types.KeywordFamily as KeywordFamily
 import qualified Pawl.Types.Modification as Modification
 import qualified Pawl.Types.ModifyPowerToughness as ModifyPowerToughness
 import qualified Pawl.Types.ObjectRef as ObjectRef
+import qualified Pawl.Types.Pool as Pool
 import qualified Pawl.Types.Quantity as Quantity
 import qualified Pawl.Types.StaticAbility as StaticAbility
 import qualified Pawl.Types.Subtype as Subtype
@@ -141,8 +143,10 @@ attachedWord subtypes bestowed
   | Set.member Subtype.Equipment subtypes = Just (Text.pack "equipped")
   | otherwise = Nothing
 
--- | An Aura's enchant ability (CR 702.5a): "Enchant creature".
+-- | An Aura's enchant ability (CR 702.5a): "Enchant creature". One enchanting
+-- a card in a graveyard is not spelled out here.
 enchant :: Target.Context -> TargetSlot.TargetSlot -> [Text.Text]
 enchant context slot = do
+  Monad.guard (case TargetSlot.pool slot of Pool.CardsInGraveyard _ -> False; _ -> True)
   (one, _) <- Target.described context slot
   [Text.pack "Enchant " <> one]

@@ -8,7 +8,9 @@ import qualified Data.Map.Strict as Map
 import qualified Data.Sequence as Seq
 import qualified Data.Set as Set
 import qualified Data.Text as Text
+import qualified Numeric.Natural as Natural
 import qualified Pawl.Oracle as Oracle
+import qualified Pawl.Oracle.Face as Oracle.Face
 import qualified Pawl.Oracle.Normalise as Normalise
 import qualified Pawl.Spec as Spec
 import qualified Pawl.Types.ActivatedAbility as ActivatedAbility
@@ -17,23 +19,33 @@ import qualified Pawl.Types.Affected as Affected
 import qualified Pawl.Types.Card as Card
 import qualified Pawl.Types.CardName as CardName
 import qualified Pawl.Types.CardType as CardType
+import qualified Pawl.Types.ChosenPermanents as ChosenPermanents
 import qualified Pawl.Types.Clause as Clause
 import qualified Pawl.Types.Color as Color
 import qualified Pawl.Types.Cost as Cost
 import qualified Pawl.Types.CostAmount as CostAmount
 import qualified Pawl.Types.CostComponent as CostComponent
+import qualified Pawl.Types.CountedDiscard as CountedDiscard
 import qualified Pawl.Types.Counter as Counter
+import qualified Pawl.Types.CounterKind as CounterKind
+import qualified Pawl.Types.Create as Create
+import qualified Pawl.Types.DamageKind as DamageKind
 import qualified Pawl.Types.DamagePart as DamagePart
 import qualified Pawl.Types.DealDamage as DealDamage
 import qualified Pawl.Types.Destroy as Destroy
+import qualified Pawl.Types.Discard as Discard
 import qualified Pawl.Types.Draw as Draw
 import qualified Pawl.Types.Duration as Duration
 import qualified Pawl.Types.Effect as Effect
+import qualified Pawl.Types.EntryRiders as EntryRiders
 import qualified Pawl.Types.Face as Face
 import qualified Pawl.Types.Filter as Filter
 import qualified Pawl.Types.GrantedAbility as GrantedAbility
+import qualified Pawl.Types.HowMany as HowMany
 import qualified Pawl.Types.Keyword as Keyword
 import qualified Pawl.Types.Layout as Layout
+import qualified Pawl.Types.LibraryPlacement as LibraryPlacement
+import qualified Pawl.Types.LibraryPosition as LibraryPosition
 import qualified Pawl.Types.LifeLoss as LifeLoss
 import qualified Pawl.Types.LifeLossCause as LifeLossCause
 import qualified Pawl.Types.ManaAddition as ManaAddition
@@ -48,27 +60,39 @@ import qualified Pawl.Types.ModeSelection as ModeSelection
 import qualified Pawl.Types.Modification as Modification
 import qualified Pawl.Types.ModifyPowerToughness as ModifyPowerToughness
 import qualified Pawl.Types.ModifyTarget as ModifyTarget
+import qualified Pawl.Types.MoveToZone as MoveToZone
 import qualified Pawl.Types.ObjectRef as ObjectRef
 import qualified Pawl.Types.Optionality as Optionality
 import qualified Pawl.Types.PlayerQuantity as PlayerQuantity
 import qualified Pawl.Types.PlayerRef as PlayerRef
 import qualified Pawl.Types.PlayerRelation as PlayerRelation
+import qualified Pawl.Types.PlayerScope as PlayerScope
 import qualified Pawl.Types.Pool as Pool
+import qualified Pawl.Types.Power as Power
+import qualified Pawl.Types.PreventNextDamage as PreventNextDamage
 import qualified Pawl.Types.Protection as Protection
+import qualified Pawl.Types.PutCounters as PutCounters
 import qualified Pawl.Types.Quantity as Quantity
+import qualified Pawl.Types.RandomCardInHand as RandomCardInHand
 import qualified Pawl.Types.Regenerability as Regenerability
 import qualified Pawl.Types.SlotCount as SlotCount
 import qualified Pawl.Types.SlotName as SlotName
 import qualified Pawl.Types.StaticAbility as StaticAbility
 import qualified Pawl.Types.Subtype as Subtype
 import qualified Pawl.Types.Supertype as Supertype
+import qualified Pawl.Types.TapState as TapState
 import qualified Pawl.Types.TargetCount as TargetCount
 import qualified Pawl.Types.TargetSlot as TargetSlot
+import qualified Pawl.Types.TheseDiscard as TheseDiscard
+import qualified Pawl.Types.Together as Together
+import qualified Pawl.Types.Toughness as Toughness
 import qualified Pawl.Types.TriggerCondition as TriggerCondition
 import qualified Pawl.Types.TriggerLimit as TriggerLimit
 import qualified Pawl.Types.TriggeredAbility as TriggeredAbility
 import qualified Pawl.Types.TypeLine as TypeLine
 import qualified Pawl.Types.Ward as Ward
+import qualified Pawl.Types.Zone as Zone
+import qualified Pawl.Types.ZoneScope as ZoneScope
 
 spec :: (Monad m, Monad n) => Spec.Spec m n -> n ()
 spec s = Spec.describe s "Pawl.Oracle" $ do
@@ -137,26 +161,28 @@ spec s = Spec.describe s "Pawl.Oracle" $ do
 
   -- "You" is left out of a sentence of its own and kept before "and", where
   -- current Oracle text repeats it (Ancient Craving) and older text does not
-  -- (Ambition's Cost); beside another player's instruction it stands alone
-  -- (Afterlife Insurance).
+  -- (Ambition's Cost), and a second instruction may follow ", then" (Owl
+  -- Familiar); beside another player's instruction it stands alone (Afterlife
+  -- Insurance) or keeps "you" before "and" (Bad Deal).
   Spec.it s "render leaves out a lone you and keeps one before and" $ do
     let divination = spell [clause [draw (PlayerRef.Relative PlayerRelation.You) 2]] []
     Spec.assertEq s [Text.pack "Draw two cards."] (Oracle.renderings divination)
     let craving = spell [clause [draw (PlayerRef.Relative PlayerRelation.You) 3, loseLife (PlayerRef.Relative PlayerRelation.You) 3]] []
     Spec.assertEq s (Just (Text.pack "You draw three cards and you lose 3 life.")) (Oracle.render craving)
-    Spec.assertEq s [Text.pack "You draw three cards and you lose 3 life.", Text.pack "You draw three cards and lose 3 life."] (Oracle.renderings craving)
+    Spec.assertEq s [Text.pack "You draw three cards and you lose 3 life.", Text.pack "You draw three cards and lose 3 life.", Text.pack "Draw three cards, then lose 3 life."] (Oracle.renderings craving)
     let insurance = spell [clause [loseLife (PlayerRef.InSlot target) 2, draw (PlayerRef.Relative PlayerRelation.You) 1]] [(target, TargetSlot.required Pool.Players Nothing)]
-    Spec.assertEq s [Text.pack "Target player loses 2 life. Draw a card.", Text.pack "Target player loses 2 life.\nDraw a card."] (Oracle.renderings insurance)
+    Spec.assertEq s [Text.pack "Target player loses 2 life. Draw a card.", Text.pack "Target player loses 2 life.\nDraw a card.", Text.pack "Target player loses 2 life. Then draw a card.", Text.pack "Target player loses 2 life and you draw a card."] (Oracle.renderings insurance)
 
   -- A second instruction for the same player drops the subject; for another
   -- player it is joined by "and" (Vampiric Feast), starts a sentence (Soul
-  -- Shred) or starts a paragraph (Bargain), as printings differ, "and" first.
+  -- Shred), one opened by "Then" (Return of the Nightstalkers), or starts a
+  -- paragraph (Bargain), as printings differ, "and" first.
   Spec.it s "render strings a clause's instructions together" $ do
     let sign = spell [clause [draw (PlayerRef.InSlot target) 2, loseLife (PlayerRef.InSlot target) 2]] [(target, TargetSlot.required Pool.Players Nothing)]
-    Spec.assertEq s [Text.pack "Target player draws two cards and loses 2 life."] (Oracle.renderings sign)
+    Spec.assertEq s [Text.pack "Target player draws two cards and loses 2 life.", Text.pack "Target player draws two cards, then loses 2 life."] (Oracle.renderings sign)
     let feast = spell [clause [damage [(target, 4)], gainLife 4]] [(target, TargetSlot.required Pool.AnyTarget Nothing)]
     Spec.assertEq s (Just (Text.pack "Spark deals 4 damage to any target and you gain 4 life.")) (Oracle.render feast)
-    Spec.assertEq s [Text.pack "Spark deals 4 damage to any target and you gain 4 life.", Text.pack "Spark deals 4 damage to any target. You gain 4 life.", Text.pack "Spark deals 4 damage to any target.\nYou gain 4 life."] (Oracle.renderings feast)
+    Spec.assertEq s [Text.pack "Spark deals 4 damage to any target and you gain 4 life.", Text.pack "Spark deals 4 damage to any target. You gain 4 life.", Text.pack "Spark deals 4 damage to any target.\nYou gain 4 life.", Text.pack "Spark deals 4 damage to any target. Then you gain 4 life."] (Oracle.renderings feast)
 
   -- CR 601.2c: each target slot is announced once, so text naming a slot
   -- twice, or never, is not the mode's.
@@ -177,7 +203,7 @@ spec s = Spec.describe s "Pawl.Oracle" $ do
     let brothers = spell [clause [damage [(target, 1), (you, 1)]]] [(target, TargetSlot.required Pool.AnyTarget Nothing)]
     Spec.assertEq s [Text.pack "Spark deals 1 damage to any target and 1 damage to you."] (Oracle.renderings brothers)
     let tomb = ring {ActivatedAbility.modal = payload [clause [addMana 1, damage [(you, 2)]]] []}
-    Spec.assertEq s [Text.pack "{T}: Add {G}. Spark deals 2 damage to you."] (Oracle.renderings (withFace (\f -> f {Face.activatedAbilities = [tomb]})))
+    Spec.assertEq s [Text.pack "{T}: Add {G}. Spark deals 2 damage to you.", Text.pack "{T}: Add {G}. Then Spark deals 2 damage to you."] (Oracle.renderings (withFace (\f -> f {Face.activatedAbilities = [tomb]})))
     let earthquake = spell [clause [Effect.DealDamage (DealDamage.MkDealDamage (Seq.fromList [DamagePart.MkDamagePart (ObjectRef.EachMatching (Filter.HasCardType CardType.Creature)) (Quantity.Literal 2), DamagePart.MkDamagePart ObjectRef.EachPlayer (Quantity.Literal 2)]) Nothing Nothing)]] []
     Spec.assertEq s [Text.pack "Spark deals 2 damage to each creature and each player."] (Oracle.renderings earthquake)
     let jagged = spell [clause [damage [(target, 3)]]] [(target, (TargetSlot.required Pool.Creatures Nothing) {TargetSlot.count = SlotCount.Printed (TargetCount.MkTargetCount 2 (Just 2))})]
@@ -272,7 +298,8 @@ spec s = Spec.describe s "Pawl.Oracle" $ do
     Spec.assertEq s (Just (Text.pack "Other Merfolk get +1/+1 and have islandwalk.")) (Oracle.render (withFace (\f -> f {Face.staticAbilities = [static (Affected.Matching others) [pt 1 1, Modification.GainKeyword (Keyword.Landwalk (Filter.HasSubtype Subtype.Island))]]})))
 
   -- CR 702.5a / 303.4b / 301.5a: an Aura's enchant ability and its "enchanted
-  -- creature", an Equipment's "equipped creature".
+  -- creature", an Equipment's "equipped creature"; one enchanting a card in a
+  -- graveyard is not rendered yet.
   Spec.it s "render prints an Aura and an Equipment" $ do
     let attached = Affected.Matching (Filter.And [Filter.HasCardType CardType.Creature, Filter.HasAttached Filter.IsSource])
         boost = static attached [pt 2 2, Modification.GainKeyword Keyword.Trample]
@@ -282,6 +309,149 @@ spec s = Spec.describe s "Pawl.Oracle" $ do
     Spec.assertEq s (Just (Text.pack "Equipped creature gets +2/+0.")) (Oracle.render equipment)
     let unattached = withFace (\f -> (typed [CardType.Creature] [] f) {Face.staticAbilities = [static attached [pt 2 0]]})
     Spec.assertEq s Nothing (Oracle.render unattached)
+    let animate = withFace (\f -> (typed [CardType.Enchantment] [Subtype.Aura] f) {Face.enchant = [graveyard PlayerRelation.AnyPlayer (Just (Filter.HasCardType CardType.Creature))]})
+    Spec.assertEq s Nothing (Oracle.render animate)
+
+  -- CR 400.7 / 400.3: a card returns to its owner's hand, or from your
+  -- graveyard to your hand or the battlefield; it is put on top of or into a
+  -- library by place, and exiled (CR 701.13a).
+  Spec.it s "render prints a zone change by where it goes" $ do
+    let creature = [(target, TargetSlot.required Pool.Creatures Nothing)]
+        mine = [(target, graveyard PlayerRelation.You (Just (Filter.HasCardType CardType.Creature)))]
+        to zone slots = Oracle.renderings (spell [clause [Effect.MoveToZone (move (ObjectRef.InSlot target) zone)]] slots)
+    Spec.assertEq s [Text.pack "Return target creature to its owner's hand."] (to Zone.Hand creature)
+    Spec.assertEq s [Text.pack "Return target creature card from your graveyard to your hand."] (to Zone.Hand mine)
+    Spec.assertEq s [Text.pack "Exile target creature."] (to Zone.Exile creature)
+    Spec.assertEq s [Text.pack "Put target creature on the bottom of its owner's library."] (to Zone.Library creature)
+    Spec.assertEq s [Text.pack "Return target creature card from your graveyard to the battlefield."] (to Zone.Battlefield mine)
+    Spec.assertEq s [] (to Zone.Battlefield creature)
+    let tapped = (move (ObjectRef.InSlot target) Zone.Battlefield) {MoveToZone.riders = EntryRiders.defaultValue {EntryRiders.tapped = TapState.Tapped}}
+    Spec.assertEq s [Text.pack "Return target creature card from your graveyard to the battlefield tapped."] (Oracle.renderings (spell [clause [Effect.MoveToZone tapped]] mine))
+    let placed placement = Oracle.renderings (spell [clause [Effect.MoveToZone (move (ObjectRef.InSlot target) Zone.Library) {MoveToZone.placement = placement}]] creature)
+    Spec.assertEq s [Text.pack "Put target creature on top of its owner's library."] (placed (LibraryPlacement.Stated LibraryPosition.Top))
+    Spec.assertEq s [Text.pack "Put target creature into its owner's library second from the top."] (placed (LibraryPlacement.Beneath (Quantity.Literal 1)))
+    let theirs = [(target, (graveyard PlayerRelation.Opponent Nothing) {TargetSlot.count = SlotCount.Printed (TargetCount.MkTargetCount 2 (Just 2)), TargetSlot.together = Just Together.InOneZone})]
+    Spec.assertEq s [Text.pack "Return two target cards from an opponent's graveyard to their hand."] (to Zone.Hand theirs)
+    let single = [(target, (graveyard PlayerRelation.AnyPlayer Nothing) {TargetSlot.count = SlotCount.Printed (TargetCount.MkTargetCount 0 (Just 3)), TargetSlot.together = Just Together.InOneZone})]
+    Spec.assertEq s [Text.pack "Exile up to three target cards from a single graveyard."] (to Zone.Exile single)
+    let anywhere = [(target, graveyard PlayerRelation.AnyPlayer Nothing)]
+    Spec.assertEq s [Text.pack "Exile target card from a graveyard."] (to Zone.Exile anywhere)
+
+  -- Several objects go to "their owners' hands" (Evacuation) or "their
+  -- owner's hand" (Retract), and a description of them reads "all" or, in the
+  -- singular, "each" (Denizen of the Deep), as printings differ.
+  Spec.it s "render returns several objects to their owners' hands" $ do
+    let evacuation = spell [clause [Effect.MoveToZone (move (ObjectRef.EachMatching (Filter.HasCardType CardType.Creature)) Zone.Hand)]] []
+    Spec.assertEq s (Just (Text.pack "Return all creatures to their owners' hands.")) (Oracle.render evacuation)
+    Spec.assertEq s [Text.pack "Return all creatures to their owners' hands.", Text.pack "Return all creatures to their owner's hand.", Text.pack "Return each creature to its owner's hand."] (Oracle.renderings evacuation)
+
+  -- CR 400.7 / 603.10a: what a dying creature became is "it" after the event
+  -- (Undying Beast); a card returns from your graveyard by name (Reassembling
+  -- Skeleton).
+  Spec.it s "render calls the card a dying creature became it" $ do
+    let beast = triggered TriggerCondition.SelfDies [clause [Effect.MoveToZone (move (ObjectRef.InSlot became) Zone.Hand)]] []
+    Spec.assertEq s (Just (Text.pack "When Spark dies, return it to its owner's hand.")) (Oracle.render (withFace (\f -> (typed [CardType.Creature] [] f) {Face.triggeredAbilities = [beast]})))
+    let rising = activated (Cost.MkCost (Just (ManaCost.MkManaCost [green])) []) (Effect.MoveToZone (move (ObjectRef.InSlot (SlotName.MkSlotName (Text.pack "self"))) Zone.Battlefield) {MoveToZone.origin = Just Zone.Graveyard})
+    Spec.assertEq s (Just (Text.pack "{G}: Return Spark from your graveyard to the battlefield.")) (Oracle.render (withFace (\f -> f {Face.activatedAbilities = [rising]})))
+
+  -- CR 110.4a: every permanent type is "permanent", every one but land
+  -- "nonland permanent" (Restoration Seminar).
+  Spec.it s "render names a permanent card" $ do
+    let permanents = [CardType.Artifact, CardType.Battle, CardType.Creature, CardType.Enchantment, CardType.Planeswalker]
+        seminar = spell [clause [Effect.MoveToZone (move (ObjectRef.InSlot target) Zone.Battlefield)]] [(target, graveyard PlayerRelation.You (Just (Filter.Or (fmap Filter.HasCardType permanents))))]
+    Spec.assertEq s (Just (Text.pack "Return target nonland permanent card from your graveyard to the battlefield.")) (Oracle.render seminar)
+
+  -- A nonlegendary object reads so (Cytoshape) or as one "that isn't
+  -- legendary" (Urza's Ruinous Blast), as printings differ.
+  Spec.it s "render prints a negated supertype both ways" $ do
+    let blast = spell [clause [Effect.MoveToZone (move (ObjectRef.EachMatching (Filter.And [Filter.HasCardType CardType.Creature, Filter.Not (Filter.HasSupertype Supertype.Legendary)])) Zone.Exile)]] []
+    Spec.assertEq s (Just (Text.pack "Exile all nonlegendary creatures.")) (Oracle.render blast)
+    Spec.assertBool s (Oracle.says blast (CardName.MkCardName (Text.pack "Spark")) (Text.pack "Exile all creatures that aren't legendary.")) "no \"that aren't legendary\""
+
+  -- CR 701.7a / 111.4: a token by its size, colours, subtypes in its name's
+  -- order, card types and keywords; one named otherwise is not spelled out.
+  Spec.it s "render prints a token by its characteristics" $ do
+    Spec.assertEq s (Just (Text.pack "Create two 1/1 red Goblin creature tokens.")) (Oracle.render (spell [clause [create 2 (token "Goblin Token" [Color.Red] [Subtype.Goblin] 1 [])]] []))
+    Spec.assertEq s (Just (Text.pack "Create a 1/1 blue Faerie Dragon creature token with flying.")) (Oracle.render (spell [clause [create 1 (token "Faerie Dragon Token" [Color.Blue] [Subtype.Dragon, Subtype.Faerie] 1 [Keyword.Flying])]] []))
+    Spec.assertEq s (Just (Text.pack "Create an 8/8 colorless Elf Warrior creature token.")) (Oracle.render (spell [clause [create 1 (token "Elf Warrior Token" [] [Subtype.Elf, Subtype.Warrior] 8 [])]] []))
+    Spec.assertEq s (Just (Text.pack "Create a 1/1 green and white Elf Warrior creature token.")) (Oracle.render (spell [clause [create 1 (token "Elf Warrior Token" [Color.Green, Color.White] [Subtype.Elf, Subtype.Warrior] 1 [])]] []))
+    Spec.assertEq s Nothing (Oracle.render (spell [clause [create 1 (token "Rabid Sheep" [Color.Green] [Subtype.Sheep] 2 [])]] []))
+
+  -- CR 122.1: counters by kind and number, on "each" of several objects.
+  Spec.it s "render puts counters on objects" $ do
+    let creature = [(target, TargetSlot.required Pool.Creatures Nothing)]
+    Spec.assertEq s (Just (Text.pack "Put a +1/+1 counter on target creature.")) (Oracle.render (spell [clause [counters CounterKind.PlusOnePlusOne 1 (ObjectRef.InSlot target)]] creature))
+    Spec.assertEq s (Just (Text.pack "Put two -1/-1 counters on each creature.")) (Oracle.render (spell [clause [counters CounterKind.MinusOneMinusOne 2 (ObjectRef.EachMatching (Filter.HasCardType CardType.Creature))]] []))
+    Spec.assertEq s (Just (Text.pack "Put an indestructible counter on target creature.")) (Oracle.render (spell [clause [counters (CounterKind.Keyword Keyword.Indestructible) 1 (ObjectRef.InSlot target)]] creature))
+
+  -- CR 701.41a: support names the instruction it means, on a spell for up to
+  -- N target creatures (Lead by Example) and on a permanent for up to N other
+  -- ones (Joraga Auxiliary); a spell may print the instruction instead (Travel
+  -- Preparations), so it renders first.
+  Spec.it s "render prints support as the instruction or its name" $ do
+    let instruction = counters CounterKind.PlusOnePlusOne 1 (ObjectRef.InSlot target)
+    Spec.assertEq s [Text.pack "Put a +1/+1 counter on each of up to two target creatures.", Text.pack "Support 2."] (Oracle.renderings (spell [clause [instruction]] [(target, upTo 2 Nothing)]))
+    let ability slot = withFace (\f -> f {Face.activatedAbilities = [(activated (Cost.MkCost (Just (ManaCost.MkManaCost [green])) []) instruction) {ActivatedAbility.modal = payload [clause [instruction]] [(target, slot)]}]})
+    Spec.assertEq s [Text.pack "{G}: Put a +1/+1 counter on each of up to two other target creatures.", Text.pack "{G}: Support 2."] (Oracle.renderings (ability (upTo 2 (Just (Filter.Not Filter.IsSource)))))
+    Spec.assertEq s [Text.pack "{G}: Put a +1/+1 counter on each of up to two target creatures."] (Oracle.renderings (ability (upTo 2 Nothing)))
+
+  -- CR 701.26a: tapping and untapping; "another target" for one other object.
+  Spec.it s "render taps and untaps" $ do
+    Spec.assertEq s (Just (Text.pack "Tap another target creature.")) (Oracle.render (spell [clause [Effect.Tap (ObjectRef.InSlot target)]] [(target, TargetSlot.required Pool.Creatures (Just (Filter.Not Filter.IsSource)))]))
+    Spec.assertEq s (Just (Text.pack "Untap all creatures you control.")) (Oracle.render (spell [clause [Effect.Untap (ObjectRef.EachMatching (Filter.And [Filter.HasCardType CardType.Creature, Filter.ControlledBy PlayerRelation.You]))]] []))
+    let lands = ObjectRef.ChosenPermanents (ChosenPermanents.MkChosenPermanents (Filter.HasCardType CardType.Land) (PlayerRef.Relative PlayerRelation.You) (HowMany.UpTo (Just (Quantity.Literal 4))))
+    Spec.assertEq s (Just (Text.pack "Untap up to four lands.")) (Oracle.render (spell [clause [Effect.Untap lands]] []))
+
+  -- CR 701.9: a player discards cards of their choice or at random; "you"
+  -- discards in the imperative.
+  Spec.it s "render prints a discard" $ do
+    let player = [(target, TargetSlot.required Pool.Players Nothing)]
+    Spec.assertEq s (Just (Text.pack "Target player discards two cards.")) (Oracle.render (spell [clause [discard (PlayerRef.InSlot target) 2]] player))
+    Spec.assertEq s (Just (Text.pack "Discard a card.")) (Oracle.render (spell [clause [discard (PlayerRef.Relative PlayerRelation.You) 1]] []))
+    let random = Effect.Discard (Discard.These (TheseDiscard.MkTheseDiscard (ObjectRef.RandomCardInHand (RandomCardInHand.MkRandomCardInHand (PlayerRef.InSlot target) (Filter.And []) (Quantity.Literal 2))) Nothing))
+    Spec.assertEq s (Just (Text.pack "Target player discards two cards at random.")) (Oracle.render (spell [clause [random]] player))
+    let loot = spell [clause [draw (PlayerRef.Relative PlayerRelation.You) 1, discard (PlayerRef.Relative PlayerRelation.You) 1]] []
+    Spec.assertBool s (elem (Text.pack "Draw a card, then discard a card.") (Oracle.renderings loot)) "no \", then\""
+
+  -- CR 615.7: a shield preventing the next damage this turn.
+  Spec.it s "render prints a prevention shield" $ do
+    let shield kind ref = Effect.PreventNextDamage (PreventNextDamage.MkPreventNextDamage Duration.UntilEndOfTurn kind (Just ref) Nothing Nothing Nothing (Quantity.Literal 3) Seq.empty)
+    Spec.assertEq s (Just (Text.pack "Prevent the next 3 damage that would be dealt to any target this turn.")) (Oracle.render (spell [clause [shield Nothing (ObjectRef.InSlot target)]] [(target, TargetSlot.required Pool.AnyTarget Nothing)]))
+    Spec.assertEq s (Just (Text.pack "Prevent the next 3 combat damage that would be dealt to you this turn.")) (Oracle.render (spell [clause [shield (Just DamageKind.Combat) (ObjectRef.InSlot you)]] []))
+
+-- A move of these objects to this zone, with nothing else said.
+move :: ObjectRef.ObjectRef -> Zone.Zone -> MoveToZone.MoveToZone (GrantedAbility.GrantedAbility Card.Card)
+move ref zone = MoveToZone.MkMoveToZone ref zone EntryRiders.defaultValue Nothing Nothing LibraryPlacement.defaultValue Nothing
+
+-- A target slot of cards in your graveyard, or a player's, matching the filter.
+graveyard :: PlayerRelation.PlayerRelation -> Maybe (Filter.Filter Keyword.Keyword) -> TargetSlot.TargetSlot
+graveyard whose = TargetSlot.required (Pool.CardsInGraveyard (ZoneScope.Scoped (PlayerScope.Related whose)))
+
+-- A creature token of this name, colours, subtypes, size and keywords.
+token :: String -> [Color.Color] -> [Subtype.Subtype] -> Integer -> [Keyword.Keyword] -> Card.Card
+token name colours subtypes size keywords =
+  let face = Oracle.Face.bare (CardName.MkCardName (Text.pack name)) Nothing Nothing (Set.fromList colours) (TypeLine.MkTypeLine Set.empty (Set.singleton CardType.Creature) (Set.fromList subtypes)) (Just (Power.MkPower (Quantity.Literal size))) (Just (Toughness.MkToughness (Quantity.Literal size))) (Map.fromList (fmap (\k -> (k, 1)) keywords))
+   in Card.MkCard Layout.Normal (NonEmpty.singleton face)
+
+-- An instruction creating this many of the token.
+create :: Integer -> Card.Card -> Effect.Effect Card.Card (GrantedAbility.GrantedAbility Card.Card)
+create n t = Effect.Create (Create.MkCreate (Quantity.Literal n) t EntryRiders.defaultValue Nothing (PlayerRef.Relative PlayerRelation.You))
+
+-- An instruction putting this many counters of the kind on these objects.
+counters :: CounterKind.CounterKind Keyword.Keyword -> Integer -> ObjectRef.ObjectRef -> Effect.Effect Card.Card (GrantedAbility.GrantedAbility Card.Card)
+counters kind n ref = Effect.PutCounters (PutCounters.MkPutCounters kind (Quantity.Literal n) ref)
+
+-- An instruction to the player to discard this many cards of their choice.
+discard :: PlayerRef.PlayerRef -> Integer -> Effect.Effect Card.Card (GrantedAbility.GrantedAbility Card.Card)
+discard who n = Effect.Discard (Discard.Counted (CountedDiscard.MkCountedDiscard who (Quantity.Literal n) Nothing))
+
+-- A slot of up to this many creatures, matching the filter.
+upTo :: Natural.Natural -> Maybe (Filter.Filter Keyword.Keyword) -> TargetSlot.TargetSlot
+upTo n = TargetSlot.upTo n Pool.Creatures
+
+-- The slot the engine binds the card a dying object became to.
+became :: SlotName.SlotName
+became = SlotName.MkSlotName (Text.pack "became")
 
 -- The name the normalisation cases give their card.
 x :: CardName.CardName
@@ -367,4 +537,4 @@ card layout keywords =
 
 -- A face named Spark of no type, carrying these keywords and nothing else.
 blank :: [Keyword.Keyword] -> Face.Face Card.Card
-blank ks = Oracle.bare (CardName.MkCardName (Text.pack "Spark")) Nothing Nothing Set.empty (TypeLine.MkTypeLine Set.empty Set.empty Set.empty) Nothing Nothing (Map.fromList (fmap (\k -> (k, 1)) ks))
+blank ks = Oracle.Face.bare (CardName.MkCardName (Text.pack "Spark")) Nothing Nothing Set.empty (TypeLine.MkTypeLine Set.empty Set.empty Set.empty) Nothing Nothing (Map.fromList (fmap (\k -> (k, 1)) ks))

@@ -7,6 +7,7 @@ import qualified Control.Monad as Monad
 import qualified Data.Char as Char
 import qualified Data.List as List
 import qualified Data.Maybe as Maybe
+import qualified Data.Set as Set
 import qualified Data.Text as Text
 import qualified Pawl.Oracle.Prose as Prose
 import qualified Pawl.Types.CardType as CardType
@@ -56,7 +57,9 @@ phrase f named = case f of
   Filter.And fs -> do
     parts <- traverse (\g -> phrase g named) fs
     pure (List.foldl' merge empty parts)
-  Filter.Or fs -> disjunction =<< traverse (\g -> phrase g named) fs
+  Filter.Or fs
+    | Just ts <- traverse cardTypeOf fs, Just p <- permanentCard (Set.fromList ts) -> [p]
+    | otherwise -> disjunction =<< traverse (\g -> phrase g named) fs
   Filter.HasCardType t -> [noun (cardType Singular t) (Just (cardType Plural t))]
   Filter.HasSubtype s -> do
     name <- subtype s
@@ -65,7 +68,9 @@ phrase f named = case f of
   Filter.HasSupertype s -> [adjective (supertype s)]
   Filter.Not (Filter.HasColor c) -> [adjective (Text.pack "non" <> color c)]
   Filter.Not (Filter.HasCardType t) -> [adjective (Text.pack "non" <> cardType Singular t)]
-  Filter.Not (Filter.HasSupertype s) -> [adjective (Text.pack "non" <> supertype s)]
+  -- Free: "nonlegendary" (Cytoshape) or "that aren't legendary" (Urza's
+  -- Ruinous Blast).
+  Filter.Not (Filter.HasSupertype s) -> [adjective (Text.pack "non" <> supertype s), qualifier (Text.pack "that isn't " <> supertype s) (Text.pack "that aren't " <> supertype s)]
   Filter.Not (Filter.HasSubtype s) -> do
     name <- subtype s
     [adjective (Text.pack "non-" <> name)]
@@ -140,6 +145,24 @@ adjective a = MkPhrase [MkQualifier a a] [] []
 
 qualifier :: Text.Text -> Text.Text -> Phrase
 qualifier o m = MkPhrase [] [] [MkQualifier o m]
+
+-- | The card type a filter names, if that is all it names.
+cardTypeOf :: Filter.Filter k -> Maybe CardType.CardType
+cardTypeOf f = case f of
+  Filter.HasCardType t -> Just t
+  _ -> Nothing
+
+-- | A disjunction of every permanent type as CR 110.4a names it, "permanent",
+-- and of every one but one as "nonland permanent".
+permanentCard :: Set.Set CardType.CardType -> Maybe Phrase
+permanentCard ts =
+  let permanents = Set.fromList [CardType.Artifact, CardType.Battle, CardType.Creature, CardType.Enchantment, CardType.Land, CardType.Planeswalker]
+      thing = noun (Text.pack "permanent") (Just (Text.pack "permanents"))
+   in case Set.toList (Set.difference permanents ts) of
+        _ | not (Set.isSubsetOf ts permanents) -> Nothing
+        [] -> Just thing
+        [t] -> Just (merge (adjective (Text.pack "non" <> cardType Singular t)) thing)
+        _ -> Nothing
 
 -- | Disjoined phrases: adjectives alone join into one ("attacking or
 -- blocking"), colours "and/or" in the plural, since one object may have both

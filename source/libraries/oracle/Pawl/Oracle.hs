@@ -13,13 +13,12 @@ import qualified Control.Monad as Monad
 import qualified Data.List.NonEmpty as NonEmpty
 import qualified Data.Map.Strict as Map
 import qualified Data.Maybe as Maybe
-import qualified Data.Sequence as Seq
 import qualified Data.Set as Set
 import qualified Data.Text as Text
-import qualified Numeric.Natural as Natural
 import qualified Pawl.Oracle.Continuous as Continuous
 import qualified Pawl.Oracle.Cost as Cost
 import qualified Pawl.Oracle.Effect as Effect
+import qualified Pawl.Oracle.Face as Face.Oracle
 import qualified Pawl.Oracle.Keyword as Keyword
 import qualified Pawl.Oracle.Normalise as Normalise
 import qualified Pawl.Oracle.Prose as Prose
@@ -29,16 +28,11 @@ import qualified Pawl.Types.Activator as Activator
 import qualified Pawl.Types.Card as Card
 import qualified Pawl.Types.CardName as CardName
 import qualified Pawl.Types.CardType as CardType
-import qualified Pawl.Types.Color as Color
 import qualified Pawl.Types.Cost as Cost.Type
 import qualified Pawl.Types.CostComponent as CostComponent
-import qualified Pawl.Types.Counterability as Counterability
 import qualified Pawl.Types.Face as Face
 import qualified Pawl.Types.Keyword as Keyword.Type
 import qualified Pawl.Types.Layout as Layout
-import qualified Pawl.Types.ManaCost as ManaCost
-import qualified Pawl.Types.Power as Power
-import qualified Pawl.Types.Toughness as Toughness
 import qualified Pawl.Types.TriggerCondition as TriggerCondition
 import qualified Pawl.Types.TriggerLimit as TriggerLimit
 import qualified Pawl.Types.TriggeredAbility as TriggeredAbility
@@ -68,15 +62,15 @@ says :: Card.Card -> CardName.CardName -> Text.Text -> Bool
 says card name text = elem (Normalise.normalise name text) (fmap (Normalise.normalise name) (renderings card))
 
 -- | A face's rules text, one ability per line. The face with the fields
--- rendered here cleared must be 'bare', so a field nothing here renders keeps
--- the card unrendered rather than silently left out.
+-- rendered here cleared must be 'Face.Oracle.bare', so a field nothing here
+-- renders keeps the card unrendered rather than silently left out.
 faceText :: Face.Face Card.Card -> [Text.Text]
 faceText face = do
   let self = CardName.unwrap (Face.name face)
-      context = Target.MkContext self Map.empty (Keyword.keywordWord self) [Text.pack " "]
+      context = Target.MkContext self Map.empty (Keyword.keywordWord self) [Text.pack " "] Nothing
       rest = face {Face.keywords = Map.empty, Face.spell = Face.defaultSpell, Face.activatedAbilities = [], Face.triggeredAbilities = [], Face.staticAbilities = [], Face.enchant = []}
       subtypes = TypeLine.subtypes (Face.typeLine face)
-  Monad.guard (rest == bare (Face.name face) (Face.oracleText face) (Face.manaCost face) (Face.colorIndicator face) (Face.typeLine face) (Face.power face) (Face.toughness face) Map.empty)
+  Monad.guard (rest == Face.Oracle.bare (Face.name face) (Face.oracleText face) (Face.manaCost face) (Face.colorIndicator face) (Face.typeLine face) (Face.power face) (Face.toughness face) Map.empty)
   keywords <- Keyword.lines self (Face.keywords face)
   spell <-
     if Face.spell face == Face.defaultSpell
@@ -91,24 +85,25 @@ faceText face = do
 
 -- | A triggered ability: "[When/Whenever/At] [trigger event], [effect]" (CR
 -- 603.1), the effect calling the source "it" once the event has named it
--- (Fire Imp). Only a trigger on its source entering or dying renders yet (CR
+-- (Fire Imp), and the card it became in a graveyard "it" too (Undying
+-- Beast). Only a trigger on its source entering or dying renders yet (CR
 -- 603.6a). A creature "dies"; any other permanent "is put into a graveyard
 -- from the battlefield", the same event (CR 700.4) in the words Oracle text
 -- keeps for it (Chromatic Star). An intervening "if", a limit, a name, or a
 -- trigger from another zone is not spelled out here.
-triggered :: Target.Context -> Bool -> TriggeredAbility.TriggeredAbility card ability -> [Text.Text]
+triggered :: (Eq ability) => Target.Context -> Bool -> TriggeredAbility.TriggeredAbility Card.Card ability -> [Text.Text]
 triggered context creature t
   | Maybe.isNothing (TriggeredAbility.intervening t),
     Maybe.isNothing (TriggeredAbility.name t),
     TriggeredAbility.limit t == TriggerLimit.Unlimited,
     Set.null (TriggeredAbility.functionsFrom t) = do
-      event <- case TriggeredAbility.condition t of
-        TriggerCondition.SelfEnters -> [Text.pack " enters"]
+      (event, became) <- case TriggeredAbility.condition t of
+        TriggerCondition.SelfEnters -> [(Text.pack " enters", Nothing)]
         TriggerCondition.SelfDies
-          | creature -> [Text.pack " dies"]
-          | otherwise -> [Text.pack " is put into a graveyard from the battlefield"]
+          | creature -> [(Text.pack " dies", Just (Text.pack "it"))]
+          | otherwise -> [(Text.pack " is put into a graveyard from the battlefield", Just (Text.pack "it"))]
         _ -> []
-      effect <- Effect.modal context {Target.self = Text.pack "it"} (TriggeredAbility.modal t)
+      effect <- Effect.modal context {Target.self = Text.pack "it", Target.became = became} (TriggeredAbility.modal t)
       [Text.pack "When " <> Target.self context <> event <> Text.pack ", " <> Prose.decapitalise effect]
   | otherwise = []
 
@@ -117,7 +112,7 @@ triggered context creature t
 -- ability its controller activates at any time renders yet: a restriction, a
 -- condition, a named or keyword ability, or a bound on X is not spelled out
 -- here.
-activated :: Target.Context -> ActivatedAbility.ActivatedAbility card ability -> [Text.Text]
+activated :: (Eq ability) => Target.Context -> ActivatedAbility.ActivatedAbility Card.Card ability -> [Text.Text]
 activated context a
   | null (ActivatedAbility.maximumX a),
     ActivatedAbility.minimumX a == 0,
@@ -133,73 +128,3 @@ activated context a
       effect <- Effect.modal after (ActivatedAbility.modal a)
       [cost <> Text.pack ": " <> effect]
   | otherwise = []
-
--- | A face with the given Oracle text, characteristics and keywords and nothing
--- else. Every field is spelled out, so a field added to 'Face.Face' fails to
--- compile here rather than being silently ignored by 'faceText'.
-bare ::
-  CardName.CardName ->
-  Maybe Text.Text ->
-  Maybe ManaCost.ManaCost ->
-  Set.Set Color.Color ->
-  TypeLine.TypeLine ->
-  Maybe Power.Power ->
-  Maybe Toughness.Toughness ->
-  Map.Map Keyword.Type.Keyword Natural.Natural ->
-  Face.Face Card.Card
-bare n t c i l p x k =
-  Face.MkFace
-    { Face.name = n,
-      Face.oracleText = t,
-      Face.manaCost = c,
-      Face.typeLine = l,
-      Face.power = p,
-      Face.toughness = x,
-      Face.loyalty = Nothing,
-      Face.defense = Nothing,
-      Face.startingIntensity = Nothing,
-      Face.vanguard = Nothing,
-      Face.canBeYourCommander = False,
-      Face.claimsStartingPlayer = False,
-      Face.anteOnly = False,
-      Face.keywords = k,
-      Face.colorIndicator = i,
-      Face.characteristicPT = Nothing,
-      Face.staticAbilities = [],
-      Face.spell = Face.defaultSpell,
-      Face.activatedAbilities = [],
-      Face.replacementEffects = [],
-      Face.triggeredAbilities = [],
-      Face.delayedAbilities = Map.empty,
-      Face.rooms = Seq.empty,
-      Face.dungeonEntryQuality = Nothing,
-      Face.castingPermissions = [],
-      Face.castingRestrictions = [],
-      Face.enchant = [],
-      Face.counterability = Counterability.Counterable,
-      Face.additionalCosts = [],
-      Face.additionalCostChoices = [],
-      Face.modeCosts = Map.empty,
-      Face.maximumX = [],
-      Face.minimumX = 0,
-      Face.alternativeCosts = [],
-      Face.costReductions = [],
-      Face.playerAbilities = [],
-      Face.blockRequirements = [],
-      Face.blockPermissions = [],
-      Face.attackRequirements = [],
-      Face.combatRestrictions = [],
-      Face.sacrificeRestrictions = [],
-      Face.untapRestrictions = [],
-      Face.crewRestrictions = [],
-      Face.attackPermissions = [],
-      Face.attachRestrictions = [],
-      Face.entryRestrictions = [],
-      Face.counterRestrictions = [],
-      Face.activationProhibitions = [],
-      Face.attackCosts = [],
-      Face.blockCosts = [],
-      Face.mulliganActions = [],
-      Face.openingHandActions = [],
-      Face.specialActions = []
-    }
