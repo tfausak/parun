@@ -71,7 +71,7 @@
       "step": "PrecombatMain",
       "player": "alice",
       "do": {
-        "ChooseTypeSwap": {
+        "ChooseWordSwap": {
           "from": {
             "type": "Forest"
           },
@@ -121,7 +121,7 @@
       "step": "PrecombatMain",
       "player": "alice",
       "do": {
-        "ChooseTypeSwap": {
+        "ChooseWordSwap": {
           "from": {
             "type": "Island"
           },

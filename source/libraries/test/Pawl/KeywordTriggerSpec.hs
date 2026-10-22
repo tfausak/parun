@@ -65,6 +65,7 @@ import qualified Pawl.Types.Recipient as Recipient
 import qualified Pawl.Types.Regenerability as Regenerability
 import qualified Pawl.Types.Response as Response
 import qualified Pawl.Types.Subtype as Subtype
+import qualified Pawl.Types.TextWord as TextWord
 import qualified Pawl.Types.TriggerCondition as TriggerCondition
 import qualified Pawl.Types.TriggerEntry as TriggerEntry
 import qualified Pawl.Types.TriggerFrequency as TriggerFrequency
@@ -2024,7 +2025,7 @@ championSpec s registry =
           Spec.assertEqWith s "CR 702.72a nothing was exiled" (namesIn Zone.Exile S.bob after) []
           Spec.assertEqWith s "the Russet Wolves alice would have exiled stayed" (S.countOnBattlefieldByName (CardName.MkCardName (Text.pack "Russet Wolves")) S.bob after) 1
           Spec.assertEqWith s "and so did the Goblin Piker" (S.countOnBattlefieldByName pikerName S.alice after) 1
-        -- CR 612.1 / 613.7 through the MINT: two Artificial Evolutions ({U}
+        -- CR 612.1 / 613.7 through the keyword's payload: two Artificial Evolutions ({U}
         -- Instant, "Change the text of target spell or permanent by replacing
         -- all instances of one creature type with another. The new creature
         -- type can't be Wall." -- checked against Scryfall 2026-09-24) on the
@@ -2040,9 +2041,9 @@ championSpec s registry =
               (b1, firstId) = S.handOne evolution b0
               (b2, secondId) = S.handOne evolution b1
               evolving :: (Subtype.Subtype, Subtype.Subtype) -> Prompt.Prompt r -> r
-              evolving swap p = case p of
+              evolving (from, to) p = case p of
                 Prompt.ChooseTargets _ _ _ offers -> S.preferring ((== Just prophetId) . Recipient.objectOf) offers
-                Prompt.ChooseCreatureTypeSwap {} -> swap
+                Prompt.ChooseWordSwap {} -> (TextWord.SubtypeWord from, TextWord.SubtypeWord to)
                 _ -> S.identityAnswer p
               toElf = (Subtype.Merfolk, Subtype.Elf)
               toMerfolk = (Subtype.Elf, Subtype.Merfolk)

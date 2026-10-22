@@ -15,8 +15,8 @@ import qualified Data.Text as Text
 import Numeric.Natural (Natural)
 import qualified Pawl.Engine.Cost as Cost
 import qualified Pawl.Engine.Modal as Modal
-import qualified Pawl.Engine.Subtype as Subtype
 import qualified Pawl.Engine.Target as Target
+import qualified Pawl.Engine.TextWord as TextWord
 import qualified Pawl.Extra.Natural as Natural
 import qualified Pawl.Types.Action as Action
 import qualified Pawl.Types.AnyNumberOf as AnyNumberOf
@@ -50,8 +50,9 @@ import qualified Pawl.Types.Recipient as Recipient
 import Pawl.Types.Response (Response)
 import qualified Pawl.Types.Response as Response
 import qualified Pawl.Types.Subtype as Subtype
-import qualified Pawl.Types.SubtypeFamily as SubtypeFamily
 import qualified Pawl.Types.TargetCount as TargetCount
+import qualified Pawl.Types.TextWord as TextWord.Type
+import qualified Pawl.Types.WordFamily as WordFamily
 
 -- | Run `game`, also handing back every answer it was given, in the order it
 -- asked. What lets a caller tell an identical repeated answer from a different
@@ -148,9 +149,7 @@ encode p answer = case p of
   Prompt.AssignCombatDamage {} -> Response.AssignedCombatDamage answer
   Prompt.ChooseTargets {} -> Response.ChoseTargets answer
   Prompt.AnnounceTargets {} -> Response.AnnouncedTargets answer
-  Prompt.ChooseLandTypeSwap {} -> Response.ChoseLandTypeSwap answer
-  Prompt.ChooseCreatureTypeSwap {} -> Response.ChoseCreatureTypeSwap answer
-  Prompt.ChooseEnchantmentTypeSwap {} -> Response.ChoseEnchantmentTypeSwap answer
+  Prompt.ChooseWordSwap {} -> Response.ChoseWordSwap answer
   Prompt.ChooseSearchZones {} -> Response.ChoseSearchZones answer
   Prompt.Search {} -> Response.Searched answer
   Prompt.CastWhileSearching {} -> Response.CastWhileSearched answer
@@ -486,14 +485,8 @@ decode p response = case p of
   Prompt.AnnounceTargets {} -> case response of
     Response.AnnouncedTargets announced -> Just announced
     _ -> Nothing
-  Prompt.ChooseLandTypeSwap {} -> case response of
-    Response.ChoseLandTypeSwap pair -> Just pair
-    _ -> Nothing
-  Prompt.ChooseCreatureTypeSwap {} -> case response of
-    Response.ChoseCreatureTypeSwap pair -> Just pair
-    _ -> Nothing
-  Prompt.ChooseEnchantmentTypeSwap {} -> case response of
-    Response.ChoseEnchantmentTypeSwap pair -> Just pair
+  Prompt.ChooseWordSwap {} -> case response of
+    Response.ChoseWordSwap pair -> Just pair
     _ -> Nothing
   Prompt.ChooseSearchZones {} -> case response of
     Response.ChoseSearchZones zones -> Just zones
@@ -1055,9 +1048,7 @@ defaultAnswer p = case p of
   Prompt.AnnounceTargets _ _ _ offers -> fmap (\(count, rs) -> TargetCount.ceilingOn (Natural.length rs) count) offers
   -- CR 612.2: the swap the engine itself falls back to on an unswappable
   -- answer (Pawl.Engine.Resolve.Effect's ChangeText arm), so the two agree.
-  Prompt.ChooseLandTypeSwap _ _ _ _ forbidden -> swapDefault SubtypeFamily.BasicLandType forbidden
-  Prompt.ChooseCreatureTypeSwap _ _ _ _ forbidden -> swapDefault SubtypeFamily.CreatureType forbidden
-  Prompt.ChooseEnchantmentTypeSwap _ _ _ _ forbidden -> swapDefault SubtypeFamily.EnchantmentType forbidden
+  Prompt.ChooseWordSwap _ _ _ _ families forbidden -> swapDefault families forbidden
   -- Every zone the card named. Always legal -- "and/or" permits all of them --
   -- and deliberately the MAXIMAL answer rather than a least-eventful one: it is
   -- what pawl did before the searcher was asked at all, so a board that does not
@@ -1370,10 +1361,10 @@ defaultAnswer p = case p of
   -- CR 404.3: any order is the order the batch moved in, always legal.
   Prompt.ArrangeGraveyardArrivals {} -> GraveyardArrangement.AnyOrder
 
--- defaultAnswer's swap: Subtype.firstSwap, or, when the card leaves no legal
+-- defaultAnswer's swap: TextWord.firstSwap, or, when the card leaves no legal
 -- swap, an identity the engine refuses and so applies nothing for.
-swapDefault :: SubtypeFamily.SubtypeFamily -> Set.Set Subtype.Subtype -> (Subtype.Subtype, Subtype.Subtype)
-swapDefault family = Maybe.fromMaybe (Subtype.Mountain, Subtype.Mountain) . Subtype.firstSwap family
+swapDefault :: Set.Set WordFamily.WordFamily -> Set.Set TextWord.Type.TextWord -> (TextWord.Type.TextWord, TextWord.Type.TextWord)
+swapDefault families = Maybe.fromMaybe (TextWord.Type.SubtypeWord Subtype.Mountain, TextWord.Type.SubtypeWord Subtype.Mountain) . TextWord.firstSwap families
 
 -- Run a game under a base interpreter, keeping every answer in order.
 --

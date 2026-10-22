@@ -1,0 +1,33 @@
+{
+  "description": "CR 612.2 Sleight of Mind swaps only colour words, so a land-type answer leaves the Bog Wraith swampwalking",
+  "note": "The Mind Bend scenario beside this one with Sleight of Mind instead: Swamp -> Island is no colour swap, so the prompt does not offer it and the answer is flagged unoffered; the engine falls back to a legal colour swap, which the Wraith's text holds no word for. Its swampwalk stands, bob's Island does not stop the block, and the Piker blocks.",
+  "board": {
+    "seats": [
+      {
+        "name": "alice",
+        "battlefield": [
+          { "card": "Bog Wraith", "label": "wraith", "ready": true },
+          { "card": "Island", "label": "island", "ready": true }
+        ],
+        "hand": [{ "card": "Sleight of Mind", "label": "sleight" }]
+      },
+      {
+        "name": "bob",
+        "battlefield": [
+          { "card": "Goblin Piker", "label": "piker", "ready": true },
+          { "card": "Island", "label": "land", "ready": true }
+        ]
+      }
+    ],
+    "active": "alice",
+    "step": "PrecombatMain"
+  },
+  "timeline": [
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": { "Cast": { "object": "$sleight", "targets": ["$wraith"], "mana": ["$island"] } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass" },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": { "Answer": { "prompt": "ChooseWordSwap", "with": [{ "type": "Swamp" }, { "type": "Island" }], "unoffered": true } } },
+    { "turn": 1, "step": "DeclareAttackers", "player": "alice", "do": { "Attack": ["$wraith"] } },
+    { "turn": 1, "step": "DeclareBlockers", "player": "bob", "do": { "Block": { "$piker": ["$wraith"] } } },
+    { "turn": 1, "step": "DeclareBlockers", "player": "alice", "check": { "Blockers": { "attacker": "$wraith", "blockers": ["$piker"] } } }
+  ]
+}

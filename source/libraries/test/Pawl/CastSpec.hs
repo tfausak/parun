@@ -103,6 +103,7 @@ import qualified Pawl.Types.Staged as Staged
 import qualified Pawl.Types.Subtype as Subtype
 import qualified Pawl.Types.TapPermanents as TapPermanents
 import qualified Pawl.Types.TapState as TapState
+import qualified Pawl.Types.TextWord as TextWord
 import qualified Pawl.Types.Zone as Zone
 
 sicknessOf :: ObjectId.ObjectId -> GameState.GameState -> Maybe Sickness.Sickness
@@ -502,7 +503,7 @@ handInPlay printing board =
 -- this has to drive the resolution as well as the cast.
 hackAnswer :: Prompt.Prompt r -> r
 hackAnswer p = case p of
-  Prompt.ChooseLandTypeSwap {} -> (Subtype.Mountain, Subtype.Island)
+  Prompt.ChooseWordSwap {} -> (TextWord.SubtypeWord Subtype.Mountain, TextWord.SubtypeWord Subtype.Island)
   _ -> S.identityAnswer p
 
 magicalHackSpec :: (Monad m, Monad n) => Spec.Spec m n -> Registry.Registry m -> n ()

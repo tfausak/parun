@@ -39,6 +39,7 @@ import qualified Pawl.Types.Recipient as Recipient
 import qualified Pawl.Types.Regenerability as Regenerability
 import qualified Pawl.Types.Source as Source
 import qualified Pawl.Types.Subtype as Subtype
+import qualified Pawl.Types.TextWord as TextWord
 import qualified Pawl.Types.Zone as Zone
 
 -- CR 122.1c: the replacement and the prevention effect one or more shield counters
@@ -383,7 +384,7 @@ globeChain s registry swap entering = do
 evolveAt :: ObjectId.ObjectId -> Subtype.Subtype -> Subtype.Subtype -> Prompt.Prompt r -> r
 evolveAt oid from to p = case p of
   Prompt.ChooseTargets _ _ _ sets -> fmap (const (Set.singleton (Recipient.ToObject oid))) sets
-  Prompt.ChooseCreatureTypeSwap {} -> (from, to)
+  Prompt.ChooseWordSwap {} -> (TextWord.SubtypeWord from, TextWord.SubtypeWord to)
   _ -> S.identityAnswer p
 
 -- The four legs are two pairs differing in exactly one thing. Goblin Piker

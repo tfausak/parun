@@ -75,8 +75,10 @@ import qualified Pawl.Types.StickerRef as StickerRef
 import qualified Pawl.Types.StoredResult as StoredResult
 import qualified Pawl.Types.Subtype as Subtype
 import qualified Pawl.Types.TargetCount as TargetCount
+import qualified Pawl.Types.TextWord as TextWord
 import qualified Pawl.Types.TimeTravelChoice as TimeTravelChoice
 import qualified Pawl.Types.TriggerEntry as TriggerEntry
+import qualified Pawl.Types.WordFamily as WordFamily
 import qualified Pawl.Types.Zone as Zone
 
 -- | A question the engine puts to a player. The resolution-time choices share
@@ -441,15 +443,10 @@ data Prompt r where
   -- (Pawl.Types.TargetCount.ceilingOn). Its PlayerId is ChooseTargets' -- the
   -- seat announcing those slots, not necessarily the controller.
   AnnounceTargets :: Decider.Decider -> PlayerId.PlayerId -> ObjectId.ObjectId -> Map.Map SlotName.SlotName (TargetCount.TargetCount, Set.Set Recipient.Recipient) -> Prompt (Map.Map SlotName.SlotName Natural.Natural)
-  -- | CR 612: the two basic land types a text-changing effect's slot swaps,
-  -- asked as the effect is applied (CR 608.2d); the Set is the words the new
-  -- type may not be.
-  ChooseLandTypeSwap :: Decider.Decider -> PlayerId.PlayerId -> ObjectId.ObjectId -> SlotName.SlotName -> Set.Set Subtype.Subtype -> Prompt (Subtype.Subtype, Subtype.Subtype)
-  -- | CR 612: ChooseLandTypeSwap's sibling for CR 612.2's creature types, the
-  -- family named rather than enumerated.
-  ChooseCreatureTypeSwap :: Decider.Decider -> PlayerId.PlayerId -> ObjectId.ObjectId -> SlotName.SlotName -> Set.Set Subtype.Subtype -> Prompt (Subtype.Subtype, Subtype.Subtype)
-  -- | CR 612: the same for CR 205.3h's enchantment types.
-  ChooseEnchantmentTypeSwap :: Decider.Decider -> PlayerId.PlayerId -> ObjectId.ObjectId -> SlotName.SlotName -> Set.Set Subtype.Subtype -> Prompt (Subtype.Subtype, Subtype.Subtype)
+  -- | CR 612: the two words of one of these families a text-changing effect's
+  -- slot swaps, asked as the effect is applied (CR 608.2d); the second Set is
+  -- the words the new one may not be.
+  ChooseWordSwap :: Decider.Decider -> PlayerId.PlayerId -> ObjectId.ObjectId -> SlotName.SlotName -> Set.Set WordFamily.WordFamily -> Set.Set TextWord.TextWord -> Prompt (TextWord.TextWord, TextWord.TextWord)
   -- | CR 614.1c: the one basic land type an entering object's controller
   -- chooses, written to Object.chosenSubtype; no candidate list (CR 305.6).
   ChooseBasicLandType :: Decider.Decider -> PlayerId.PlayerId -> ObjectId.ObjectId -> Prompt Subtype.Subtype

@@ -130,7 +130,7 @@
       "step": "Upkeep",
       "player": "alice",
       "do": {
-        "ChooseTypeSwap": {
+        "ChooseWordSwap": {
           "from": {
             "type": "Human"
           },

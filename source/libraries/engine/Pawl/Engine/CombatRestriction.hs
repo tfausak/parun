@@ -78,7 +78,7 @@ import qualified Pawl.Types.Prohibition as Prohibition
 import qualified Pawl.Types.RangeOfInfluence as RangeOfInfluence
 import qualified Pawl.Types.RuleAbilities as RuleAbilities
 import qualified Pawl.Types.StaticAbility as StaticAbility
-import qualified Pawl.Types.Subtype as Subtype
+import qualified Pawl.Types.TextWord as TextWord
 
 -- CR 508.1c: which of `candidates` an effect in force right now says CAN'T
 -- ATTACK AT ALL. Pacifism's first half, Blind-Spot Giant's when its gate is shut,
@@ -526,7 +526,7 @@ gate cr = case cr of
 -- checks and the text change belong: both are properties of the SOURCE and of the
 -- printed sentence, and neither depends on whether the reader wants a set of
 -- creatures or a number.
-gathered :: GameState -> [(ObjectId, [(Subtype.Subtype, Subtype.Subtype)], CombatRestriction.CombatRestriction)]
+gathered :: GameState -> [(ObjectId, [(TextWord.TextWord, TextWord.TextWord)], CombatRestriction.CombatRestriction)]
 gathered gs =
   let -- Hoisted out of the walk as AttackRequirement.instances hoists them, and
       -- both unforced until some permanent actually declares a restriction.
@@ -759,7 +759,7 @@ gathered gs =
 -- Nothing is the reading with NO defending player to name, which leaves the atom
 -- False (Filter.matches) and so leaves the restriction in force -- the honest
 -- answer outside combat, there being no attack to make.
-lifted :: Maybe PlayerId -> GameState -> (ObjectId, [(Subtype.Subtype, Subtype.Subtype)], CombatRestriction.CombatRestriction) -> Bool
+lifted :: Maybe PlayerId -> GameState -> (ObjectId, [(TextWord.TextWord, TextWord.TextWord)], CombatRestriction.CombatRestriction) -> Bool
 lifted defending gs (source, changes, restriction) = case gate restriction of
   Nothing -> False
   Just condition ->
@@ -775,7 +775,7 @@ lifted defending gs (source, changes, restriction) = case gate restriction of
 -- The rows `gathered` found whose CR 508.1c / CR 509.1b gate does not lift them,
 -- judged against the defending player the caller names. Every reader below goes
 -- through this rather than through `gathered`.
-inForce :: Maybe PlayerId -> GameState -> [(ObjectId, [(Subtype.Subtype, Subtype.Subtype)], CombatRestriction.CombatRestriction)]
+inForce :: Maybe PlayerId -> GameState -> [(ObjectId, [(TextWord.TextWord, TextWord.TextWord)], CombatRestriction.CombatRestriction)]
 inForce defending gs = filter (not . lifted defending gs) (gathered gs)
 
 -- The shared walk behind the SUBJECT-CARRYING questions above, over the
@@ -804,7 +804,7 @@ restricted select defending candidates gs = restrictedIn (inForce defending gs) 
 -- `restricted` against rows the caller has already gated, so a reader asking the
 -- same board once per defending player pays for one gather rather than one each
 -- (cantAttackDefender).
-restrictedIn :: [(ObjectId, [(Subtype.Subtype, Subtype.Subtype)], CombatRestriction.CombatRestriction)] -> (CombatRestriction.CombatRestriction -> Maybe Affected.Affected) -> [ObjectId] -> GameState -> Set ObjectId
+restrictedIn :: [(ObjectId, [(TextWord.TextWord, TextWord.TextWord)], CombatRestriction.CombatRestriction)] -> (CombatRestriction.CombatRestriction -> Maybe Affected.Affected) -> [ObjectId] -> GameState -> Set ObjectId
 restrictedIn rows select candidates gs =
   let -- CR 613.11 puts these effects after every layer, so the affected set is
       -- One whole-board projection and one grant walk for the whole walk, both

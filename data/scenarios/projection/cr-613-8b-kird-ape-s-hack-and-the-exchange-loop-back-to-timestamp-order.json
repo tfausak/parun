@@ -52,7 +52,7 @@
   "timeline": [
     {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": {"Cast": {"object": "$hack", "targets": ["$ape"], "mana": ["$island1", null]}}},
     {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass"},
-    {"turn": 1, "step": "PrecombatMain", "player": "alice", "source": "Magical Hack", "do": {"ChooseTypeSwap": {"from": {"type": "Forest"}, "to": {"type": "Island"}}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "source": "Magical Hack", "do": {"ChooseWordSwap": {"from": {"type": "Forest"}, "to": {"type": "Island"}}}},
     {"turn": 1, "step": "PrecombatMain", "player": "alice", "check": {"PowerToughness": {"object": "$ape", "power": 2, "toughness": 3}}},
     {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": {"Cast": {"object": "$exchange", "mana": ["$island2", "$island3", "$island4"]}}},
     {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass"},

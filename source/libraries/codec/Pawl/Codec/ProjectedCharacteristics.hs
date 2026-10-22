@@ -10,7 +10,7 @@ import qualified Pawl.Codec.Card as Card
 import qualified Pawl.Codec.CardName as CardName
 import qualified Pawl.Codec.CardType as CardType
 import qualified Pawl.Codec.CastingPermission as CastingPermission
-import qualified Pawl.Codec.ChangeSubtypeWord as ChangeSubtypeWord
+import qualified Pawl.Codec.ChangeWord as ChangeWord
 import qualified Pawl.Codec.CharacteristicPT as CharacteristicPT
 import qualified Pawl.Codec.Color as Color
 import qualified Pawl.Codec.CopyException as CopyException
@@ -77,7 +77,7 @@ codec = Fields.object $ do
   ruleAbilities <- Fields.defaulted "ruleAbilities" mempty RuleAbilities.codec PC.ruleAbilities
   lostAllAbilities <- Fields.defaulted "lostAllAbilities" False Common.boolean PC.lostAllAbilities
   hasFullText <- Fields.defaulted "hasFullText" False Common.boolean PC.hasFullText
-  subtypeWordChanges <- Fields.defaulted "subtypeWordChanges" [] (Common.list ChangeSubtypeWord.codec) PC.subtypeWordChanges
+  wordChanges <- Fields.defaulted "wordChanges" [] (Common.list ChangeWord.codec) PC.wordChanges
   textChangedKeywords <- Fields.defaulted "textChangedKeywords" Map.empty (Common.multiset Keyword.codec) PC.textChangedKeywords
   assignsCombatDamageWithToughness <- Fields.defaulted "assignsCombatDamageWithToughness" False Common.boolean PC.assignsCombatDamageWithToughness
   grantsStationToughness <- Fields.defaulted "grantsStationToughness" False Common.boolean PC.grantsStationToughness
@@ -127,7 +127,7 @@ codec = Fields.object $ do
         PC.ruleAbilities = ruleAbilities,
         PC.lostAllAbilities = lostAllAbilities,
         PC.hasFullText = hasFullText,
-        PC.subtypeWordChanges = subtypeWordChanges,
+        PC.wordChanges = wordChanges,
         PC.textChangedKeywords = textChangedKeywords,
         PC.assignsCombatDamageWithToughness = assignsCombatDamageWithToughness,
         PC.grantsStationToughness = grantsStationToughness,

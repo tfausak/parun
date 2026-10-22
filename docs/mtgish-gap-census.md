@@ -158,7 +158,7 @@ pawl's layer system exists (`Layer`, `ProjectedCharacteristics`, the projection)
 |---|---|---|
 | **1 copy** | `IsACopyOf`, `SetCopiablePT`, `AddCopiableAbility`, mutate | **GAP** — no copy mechanism anywhere (Clone, copy-spell). CR 707 (verify). |
 | **2 control** | `SetController` | **GAP (deep)** — `Object` has only `owner`, **no `controller` field**, so a changed controller has nowhere to live; `Modification` has no control op. Player-control (Mindslaver, `GameState.pendingControl`, CR 723) is a *different* mechanism and does **not** cover Control Magic / Threaten (CR 613 layer 2 — verify). |
-| 3 text | `SetName`, `HasTextOf…` | COVERED for subtype words (`ChangeSubtypeWord`); name-change is VOCAB. |
+| 3 text | `SetName`, `HasTextOf…` | COVERED for subtype and colour words (`ChangeWord`); name-change is VOCAB. |
 | 4 type | add/set/remove card/creature/land types | COVERED (the common ops); breadth is VOCAB. |
 | **5 color** | `AddColor`, `SetColor` | **GAP** — `Modification` cannot change color; `Color` type exists but no op feeds it. |
 | 6 ability | add / lose abilities | COVERED (`GainKeyword`, `LoseAllAbilities`). |
