@@ -39,8 +39,9 @@ import qualified Pawl.Types.WithCounters as WithCounters
 data EntryRewrite ability effect
   = -- | CR 707.5 / 614.1c / Clone, Vesuva: "you may have this permanent enter as a
     -- copy of ...", the payload carrying which permanents the printed noun phrase
-    -- admits, CR 707.9's exceptions, and CR 707.9e's additional counters; and
-    -- Metamorphic Alteration's choice of what its host is a copy of.
+    -- admits, CR 707.9's exceptions, and CR 707.9e's additional counters;
+    -- Metamorphic Alteration's choice of what its host is a copy of; and another
+    -- permanent's mandatory one (Essence of the Wild).
     AsCopy (AsCopy.AsCopy ability effect)
   | -- | CR 208.2b / 614.1c / Primal Plasma: the controller chooses one of these
     -- entry options as it enters.

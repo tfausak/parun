@@ -4339,7 +4339,7 @@ apply batch candidate event =
 -- still has, so a kicker or gift the copy overwrote links to no copied payoff.
 -- An identical keyword the copy has too keeps its payment. Granted keys are
 -- left for Pawl.Engine.Stack.settlePromises. The scenario
--- cr-607-5-the-mimic-kicked-for-its-own-kicker-enters-as-faerie-squadron-without-counters
+-- cr-607-5-prison-barricade-kicked-for-its-own-kicker-enters-as-faerie-squadron-without-counters
 -- proves it.
 unlinkLostPayments :: ObjectId -> GameState -> GameState
 unlinkLostPayments oid gs = case Game.lookupObject oid gs of
@@ -4407,8 +4407,9 @@ becomeCopyAs batch candidate asCopy oid = do
       -- The eligible set is the CARD's, not this function's (#1512): Clone says
       -- "any creature" and Copy Enchantment "any enchantment", and the
       -- battlefield walk that supplies "on the battlefield" is
-      -- legalCopyTargets'.
-      let legal = Replacement.legalCopyTargets batch (AsCopy.eligible asCopy) (AsCopy.among asCopy) oid gs
+      -- legalCopyTargets'. Read in the replacement's own context, so Essence of
+      -- the Wild's "this creature" names Essence rather than what enters.
+      let legal = Replacement.legalCopyTargets (Replacement.candidateContext gs candidate) batch (AsCopy.eligible asCopy) (AsCopy.among asCopy) oid gs
           -- A permanent is asked as one, a card as one from among the rest.
           pick = case AsCopy.among asCopy of
             CopyDomain.InZone Zone.Battlefield -> Prompt.ChoosePermanent
