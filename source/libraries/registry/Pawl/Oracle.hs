@@ -18,10 +18,12 @@ import qualified Pawl.Types.CardName as CardName
 import qualified Pawl.Types.Color as Color
 import qualified Pawl.Types.Counterability as Counterability
 import qualified Pawl.Types.Face as Face
+import qualified Pawl.Types.Filter as Filter
 import qualified Pawl.Types.Keyword as Keyword
 import qualified Pawl.Types.Layout as Layout
 import qualified Pawl.Types.ManaCost as ManaCost
 import qualified Pawl.Types.Power as Power
+import qualified Pawl.Types.Subtype as Subtype
 import qualified Pawl.Types.Toughness as Toughness
 import qualified Pawl.Types.TypeLine as TypeLine
 
@@ -110,7 +112,8 @@ bare n t c i l p x k =
     }
 
 -- | How Oracle text prints a keyword standing alone (CR 702), or 'Nothing' for
--- one that carries a parameter. No wildcard arm: a new keyword fails to compile
+-- one carrying a parameter it does not spell; a landwalk over a subtype is
+-- "[type]walk" (CR 702.14a). No wildcard arm: a new keyword fails to compile
 -- here until it is given its printed form.
 printed :: Keyword.Keyword -> Maybe Text.Text
 printed keyword = case keyword of
@@ -126,6 +129,7 @@ printed keyword = case keyword of
   Keyword.Hexproof (Just _) -> Nothing
   Keyword.Indestructible -> Just (Text.pack "Indestructible")
   Keyword.Intimidate -> Just (Text.pack "Intimidate")
+  Keyword.Landwalk (Filter.HasSubtype subtype) -> Just (Text.pack (show subtype <> "walk"))
   Keyword.Landwalk {} -> Nothing
   Keyword.Lifelink -> Just (Text.pack "Lifelink")
   Keyword.LivingMetal -> Just (Text.pack "Living metal")
@@ -421,6 +425,12 @@ standalone =
     Keyword.Storied,
     Keyword.Mayhem Nothing
   ]
+
+-- | The landwalks 'printed' answers for that an ingested card's text may
+-- name: one per basic land type (CR 702.14a, CR 305.6). Apart from
+-- 'standalone', which holds the keywords the codec writes as a bare tag.
+landwalks :: [Keyword.Keyword]
+landwalks = [Keyword.Landwalk (Filter.HasSubtype subtype) | subtype <- [Subtype.Plains, Subtype.Island, Subtype.Swamp, Subtype.Mountain, Subtype.Forest]]
 
 -- | Oracle text as a multiset of lowercase lines: reminder text dropped (CR
 -- 207.2a), and a line of comma-separated keywords split, so "Flying, vigilance"

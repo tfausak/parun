@@ -1,0 +1,72 @@
+{
+  "faces": [
+    {
+      "keywords": [
+        {
+          "type": "Landwalk",
+          "value": {
+            "type": "HasSubtype",
+            "value": {
+              "type": "Island"
+            }
+          }
+        }
+      ],
+      "manaCost": [
+        {
+          "type": "Generic",
+          "value": 5
+        },
+        {
+          "type": "OfType",
+          "value": {
+            "type": "Colored",
+            "value": {
+              "type": "Blue"
+            }
+          }
+        },
+        {
+          "type": "OfType",
+          "value": {
+            "type": "Colored",
+            "value": {
+              "type": "Blue"
+            }
+          }
+        },
+        {
+          "type": "OfType",
+          "value": {
+            "type": "Colored",
+            "value": {
+              "type": "Blue"
+            }
+          }
+        }
+      ],
+      "name": "Benthic Behemoth",
+      "oracleText": "Islandwalk (This creature can't be blocked as long as defending player controls an Island.)",
+      "power": {
+        "type": "Literal",
+        "value": 7
+      },
+      "toughness": {
+        "type": "Literal",
+        "value": 6
+      },
+      "typeLine": {
+        "subtypes": [
+          {
+            "type": "Serpent"
+          }
+        ],
+        "types": [
+          {
+            "type": "Creature"
+          }
+        ]
+      }
+    }
+  ]
+}

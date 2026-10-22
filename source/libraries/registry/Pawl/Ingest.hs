@@ -2,7 +2,7 @@
 -- of MTGJSON (#9), for the cards 'Pawl.Oracle.render' answers for: a single
 -- face whose text is keywords alone. Everything here reads a field MTGJSON
 -- carries as structured data (CR 202.1, CR 205) or a keyword name from
--- 'Pawl.Oracle.standalone'; a word it does not know disqualifies the card
+-- 'Pawl.Oracle.standalone' or 'Pawl.Oracle.landwalks'; a word it does not know disqualifies the card
 -- rather than being guessed at.
 module Pawl.Ingest where
 
@@ -102,7 +102,7 @@ keyword :: Text.Text -> Either Text.Text Keyword.Keyword
 keyword line = maybe (Left (Text.pack "text: " <> line)) Right (Map.lookup line byPrinted)
 
 byPrinted :: Map.Map Text.Text Keyword.Keyword
-byPrinted = Map.fromList [(Text.toLower p, k) | k <- Oracle.standalone, Just p <- [Oracle.printed k]]
+byPrinted = Map.fromList [(Text.toLower p, k) | k <- Oracle.standalone <> Oracle.landwalks, Just p <- [Oracle.printed k]]
 
 -- | A type-line word as the enumerated constructor it spells: words joined and
 -- everything but letters dropped, so "Assembly-Worker" is AssemblyWorker and

@@ -86,11 +86,13 @@ spec s = Spec.describe s "Pawl.Oracle" $ do
   -- Each record as script/ingest/candidates.jq writes it, against a card
   -- written by hand and checked against Scryfall, so the two are independent.
   -- Rograkh is red only by its color indicator (CR 204), and both cost {0},
-  -- which the pool writes as a cost of no symbols.
+  -- which the pool writes as a cost of no symbols. Mountain Goat's
+  -- mountainwalk is a landwalk over a basic land type (CR 702.14a).
   Spec.it s "candidate builds the card the pool holds" $ do
     registry <- Registry.defaultRoot >>= Registry.fileRegistry
     Monad.forM_
-      [ ("Ornithopter", "{\"name\":\"Ornithopter\",\"manaCost\":\"{0}\",\"colorIndicator\":null,\"supertypes\":[],\"types\":[\"Artifact\",\"Creature\"],\"subtypes\":[\"Thopter\"],\"power\":\"0\",\"toughness\":\"2\",\"text\":\"Flying\"}"),
+      [ ("Mountain Goat", "{\"name\":\"Mountain Goat\",\"manaCost\":\"{R}\",\"colorIndicator\":null,\"supertypes\":[],\"types\":[\"Creature\"],\"subtypes\":[\"Goat\"],\"power\":\"1\",\"toughness\":\"1\",\"text\":\"Mountainwalk (This creature can't be blocked as long as defending player controls a Mountain.)\"}"),
+        ("Ornithopter", "{\"name\":\"Ornithopter\",\"manaCost\":\"{0}\",\"colorIndicator\":null,\"supertypes\":[],\"types\":[\"Artifact\",\"Creature\"],\"subtypes\":[\"Thopter\"],\"power\":\"0\",\"toughness\":\"2\",\"text\":\"Flying\"}"),
         ("Rograkh, Son of Rohgahh", "{\"name\":\"Rograkh, Son of Rohgahh\",\"manaCost\":\"{0}\",\"colorIndicator\":[\"R\"],\"supertypes\":[\"Legendary\"],\"types\":[\"Creature\"],\"subtypes\":[\"Kobold\",\"Warrior\"],\"power\":\"0\",\"toughness\":\"1\",\"text\":\"First strike, menace, trample\\nPartner (You can have two commanders if both have partner.)\"}")
       ]
       $ \(name, json) -> do

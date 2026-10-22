@@ -1,0 +1,60 @@
+{
+  "faces": [
+    {
+      "keywords": [
+        {
+          "type": "Landwalk",
+          "value": {
+            "type": "HasSubtype",
+            "value": {
+              "type": "Island"
+            }
+          }
+        },
+        {
+          "type": "Phasing"
+        }
+      ],
+      "manaCost": [
+        {
+          "type": "Generic",
+          "value": 1
+        },
+        {
+          "type": "OfType",
+          "value": {
+            "type": "Colored",
+            "value": {
+              "type": "Blue"
+            }
+          }
+        }
+      ],
+      "name": "Merfolk Raiders",
+      "oracleText": "Islandwalk (This creature can't be blocked as long as defending player controls an Island.)\nPhasing (This phases in or out before you untap during each of your untap steps. While it's phased out, it's treated as though it doesn't exist.)",
+      "power": {
+        "type": "Literal",
+        "value": 2
+      },
+      "toughness": {
+        "type": "Literal",
+        "value": 3
+      },
+      "typeLine": {
+        "subtypes": [
+          {
+            "type": "Merfolk"
+          },
+          {
+            "type": "Soldier"
+          }
+        ],
+        "types": [
+          {
+            "type": "Creature"
+          }
+        ]
+      }
+    }
+  ]
+}
