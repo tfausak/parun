@@ -1,0 +1,37 @@
+{
+  "description": "CR 614.1a a Craw Wurm Illusionary Mask cast face down turns face up as attacking taps it",
+  "note": "Cast face down on turn 1, the Wurm attacks on alice's next turn. CR 508.1f's tap would make the nameless 2/2 become tapped, so Illusionary Mask's replacement turns it face up first: by the time alice has priority in the declare attackers step it is a tapped 6/4 Craw Wurm, before any combat damage is assigned. bob controls no creature, so no block is asked.",
+  "board": {
+    "seats": [
+      {
+        "name": "alice",
+        "battlefield": [
+          { "card": "Illusionary Mask", "label": "mask" },
+          { "card": "Forest", "label": "f1" },
+          { "card": "Forest", "label": "f2" },
+          { "card": "Forest", "label": "f3" },
+          { "card": "Forest", "label": "f4" },
+          { "card": "Forest", "label": "f5" },
+          { "card": "Forest", "label": "f6" }
+        ],
+        "hand": [{ "card": "Craw Wurm", "label": "wurm" }],
+        "library": [{ "card": "Forest" }, { "card": "Forest" }, { "card": "Forest" }]
+      },
+      { "name": "bob", "library": [{ "card": "Forest" }, { "card": "Forest" }, { "card": "Forest" }] }
+    ],
+    "active": "alice",
+    "step": "PrecombatMain"
+  },
+  "timeline": [
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": { "Activate": { "object": "$mask", "x": 6, "mana": ["$f1", "$f2", "$f3", "$f4", "$f5", "$f6"] } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass" },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": { "Answer": { "prompt": "OfferedCast", "with": { "type": "Exercises" } } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass" },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "check": { "Names": { "object": "Craw Wurm", "names": [] } } },
+    { "turn": 3, "step": "DeclareAttackers", "player": "alice", "do": { "Attack": ["Craw Wurm"] } },
+    { "turn": 3, "step": "DeclareAttackers", "player": "alice", "check": { "Names": { "object": "Craw Wurm", "names": ["Craw Wurm"] } } },
+    { "turn": 3, "step": "DeclareAttackers", "player": "alice", "check": { "Tapped": { "object": "Craw Wurm", "tapped": true } } },
+    { "turn": 3, "step": "DeclareAttackers", "player": "alice", "check": { "PowerToughness": { "object": "Craw Wurm", "power": 6, "toughness": 4 } } },
+    { "turn": 3, "step": "EndOfCombat", "player": "alice", "check": { "Life": { "player": "bob", "life": 14 } } }
+  ]
+}

@@ -83,7 +83,6 @@ import qualified Pawl.Engine.Combat as Combat
 import qualified Pawl.Engine.Engine as Engine
 import qualified Pawl.Engine.Event as Event
 import qualified Pawl.Engine.Event.Trigger as Trigger
-import qualified Pawl.Engine.FaceDown as FaceDown
 import qualified Pawl.Engine.Filter as Filter
 import qualified Pawl.Engine.Game as Game
 import qualified Pawl.Engine.Projection as Projection
@@ -323,7 +322,7 @@ spec s registry = Spec.describe s "Transform" $ do
         manifested = g2 {GameState.objects = Map.adjust (\o -> o {Object.facing = Facing.faceDown FaceDownReason.Manifested}) faceDownId (GameState.objects g2)}
         (moonmistId, staged) = S.addHandCard moonmist S.alice manifested
         misted = S.runPure S.identityAnswer staged {GameState.phase = Phase.PrecombatMain, GameState.priority = Just S.alice} (S.cast S.alice moonmistId *> Stack.resolveTop)
-        turnedUp = S.runPure S.identityAnswer misted (FaceDown.performTurnFaceUp Nothing Nothing faceDownId)
+        turnedUp = S.runPure S.identityAnswer misted (Event.performTurnFaceUp Nothing Nothing faceDownId)
         blightreaper = CardName.MkCardName (Text.pack "Blightreaper Thallid")
         blightsower = CardName.MkCardName (Text.pack "Blightsower Thallid")
     Spec.assertEqWith s "CR 712.15a turned face up, it shows its front face: Blightreaper Thallid, a 2/2" (Projection.namesOf faceDownId turnedUp, S.powerToughnessOf faceDownId turnedUp) (Set.singleton blightreaper, Just (2, 2))
@@ -1671,7 +1670,7 @@ moreThanMeetsTheEyeSpec s registry = Spec.describe s "MoreThanMeetsTheEye" $ do
           Prompt.ChooseOfferedCastSpell _ _ options -> (fst (NonEmpty.head options), ratchetBack)
           Prompt.OfferedCast {} -> OptionalDecision.Exercises
           _ -> S.identityAnswer p
-        offered = CastOffer.MkCastOffer {CastOffer.transformed = False, CastOffer.withoutPayingManaCost = False, CastOffer.payingInstead = Nothing, CastOffer.spending = ManaSpending.AsProduced, CastOffer.restriction = Nothing, CastOffer.offeredBy = Nothing}
+        offered = CastOffer.MkCastOffer {CastOffer.transformed = False, CastOffer.withoutPayingManaCost = False, CastOffer.payingInstead = Nothing, CastOffer.spending = ManaSpending.AsProduced, CastOffer.restriction = Nothing, CastOffer.offeredBy = Nothing, CastOffer.faceDown = Nothing, CastOffer.payableFromSpent = False}
         -- No restriction on either offer, so the context's source is immaterial
         -- here: what this group is about is which FACE a free offer reaches.
         under o = S.runPure wantingBack board (Resolve.offerCast Resolve.noSubgame (Filter.contextFor (Game.teams board) (Just S.alice) Nothing) (const Nothing) [oid] S.alice CastObligation.Optional PermissionVerb.Cast Nothing CastRepetition.Once False o)

@@ -372,6 +372,7 @@ import qualified Pawl.Types.StaticAbility as StaticAbility
 import qualified Pawl.Types.StepBegins as StepBegins
 import qualified Pawl.Types.Suspend as Suspend
 import qualified Pawl.Types.TakeExtraTurn as TakeExtraTurn
+import qualified Pawl.Types.TapForMana as TapForMana
 import qualified Pawl.Types.TapForTotalPower as TapForTotalPower
 import qualified Pawl.Types.TapPermanents as TapPermanents
 import qualified Pawl.Types.TargetChooser as TargetChooser
@@ -819,7 +820,7 @@ castFromZoneNames asking x = case x of
 
 castOfferNames :: (Monoid r) => Asking r -> CastOffer.CastOffer -> r
 castOfferNames asking x = case x of
-  CastOffer.MkCastOffer _transformed _withoutPayingManaCost payingInstead _spending restriction offeredBy -> foldMap (costNames asking (keywordNames asking)) payingInstead <> foldMap (filterNames asking) restriction <> foldMap (keywordNames asking) offeredBy
+  CastOffer.MkCastOffer _transformed _withoutPayingManaCost payingInstead _spending restriction offeredBy _faceDown _payableFromSpent -> foldMap (costNames asking (keywordNames asking)) payingInstead <> foldMap (filterNames asking) restriction <> foldMap (keywordNames asking) offeredBy
 
 castRepetitionNames :: (Monoid r) => Asking r -> CastRepetition.CastRepetition -> r
 castRepetitionNames asking x = case x of
@@ -1160,6 +1161,7 @@ damageRewriteNames asking onEffect x = case x of
   DamageRewrite.RedirectNext _natural recipient -> recipientNames asking recipient
   DamageRewrite.RedirectMatching filter_ -> filterNames asking filter_
   DamageRewrite.RunEffects seq_ -> foldMap onEffect seq_
+  DamageRewrite.TurnFaceUp -> mempty
 
 dealDamageNames :: (Monoid r) => Asking r -> DealDamage.DealDamage -> r
 dealDamageNames asking x = case x of
@@ -1625,7 +1627,7 @@ faceDownCharacteristicsNames asking onAbility x = case x of
 
 faceDownStateNames :: (Monoid r) => Asking r -> (ability -> r) -> FaceDownState.FaceDownState ability -> r
 faceDownStateNames asking onAbility x = case x of
-  FaceDownState.MkFaceDownState _reason listed -> faceDownCharacteristicsNames asking onAbility listed
+  FaceDownState.MkFaceDownState _reason listed _turnsUpBefore -> faceDownCharacteristicsNames asking onAbility listed
 
 fightNames :: (Monoid r) => Asking r -> Fight.Fight -> r
 fightNames asking x = case x of
@@ -1993,6 +1995,10 @@ manaCountNames :: (Monoid r) => Asking r -> ManaCount.ManaCount -> r
 manaCountNames asking x = case x of
   ManaCount.MkManaCount player _filter_ -> playerRefNames asking player
 
+tapForManaNames :: (Monoid r) => Asking r -> TapForMana.TapForMana -> r
+tapForManaNames asking x = case x of
+  TapForMana.MkTapForMana permanents restriction -> filterNames asking permanents <> foldMap (manaRestrictionNames asking) restriction
+
 manaRestrictionNames :: (Monoid r) => Asking r -> ManaRestriction.ManaRestriction -> r
 manaRestrictionNames asking x = case x of
   ManaRestriction.MkManaRestriction casts activations keywordActivations unlocks turnsFaceUp _prohibits -> foldMap (filterNames asking) casts <> foldMap (filterNames asking) activations <> foldMap (keywordDesignatorNames asking) keywordActivations <> foldMap (filterNames asking) unlocks <> foldMap (filterNames asking) turnsFaceUp
@@ -2290,6 +2296,7 @@ playerEffectNames asking x = case x of
   PlayerEffect.MayPlayAsThoughItHadFlash filter_ -> filterNames asking filter_
   PlayerEffect.ActivateKeywordAtInstantSpeed keywordDesignator -> keywordDesignatorNames asking keywordDesignator
   PlayerEffect.ActivateLoyaltyAtInstantSpeed filter_ -> filterNames asking filter_
+  PlayerEffect.MayTapForMana tapForMana -> tapForManaNames asking tapForMana
   PlayerEffect.CantBeCountered filter_ -> filterNames asking filter_
   PlayerEffect.DamageCantBePrevented damagePattern -> damagePatternNames asking damagePattern
   PlayerEffect.DamageCantBeRedirected damagePattern -> damagePatternNames asking damagePattern

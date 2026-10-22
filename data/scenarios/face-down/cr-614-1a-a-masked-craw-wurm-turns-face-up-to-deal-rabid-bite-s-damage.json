@@ -1,0 +1,47 @@
+{
+  "description": "CR 614.1a a Craw Wurm Illusionary Mask cast face down turns face up to deal Rabid Bite's damage, still the 2 its face-down power fixed",
+  "note": "The Wurm is the only thing dealing damage, so only the deals-damage half of Illusionary Mask's replacement can turn it face up. Rabid Bite fixes the amount at the face-down 2/2's power as it resolves (CR 608.2h), and the replacement turns the Wurm face up and lets that same 2 be dealt (docs/decisions.md, 'How much damage a face-down creature Illusionary Mask cast deals as it turns face up'), so bob's 3/3 Hill Giant survives with 2 marked.",
+  "board": {
+    "seats": [
+      {
+        "name": "alice",
+        "battlefield": [
+          { "card": "Illusionary Mask", "label": "mask" },
+          { "card": "Forest", "label": "f1" },
+          { "card": "Forest", "label": "f2" },
+          { "card": "Forest", "label": "f3" },
+          { "card": "Forest", "label": "f4" },
+          { "card": "Forest", "label": "f5" },
+          { "card": "Forest", "label": "f6" },
+          { "card": "Forest", "label": "f7" },
+          { "card": "Forest", "label": "f8" }
+        ],
+        "hand": [
+          { "card": "Craw Wurm", "label": "wurm" },
+          { "card": "Rabid Bite", "label": "bite" }
+        ],
+        "library": [{ "card": "Forest" }, { "card": "Forest" }]
+      },
+      {
+        "name": "bob",
+        "battlefield": [{ "card": "Hill Giant", "label": "giant" }],
+        "library": [{ "card": "Forest" }, { "card": "Forest" }]
+      }
+    ],
+    "active": "alice",
+    "step": "PrecombatMain"
+  },
+  "timeline": [
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": { "Activate": { "object": "$mask", "x": 6, "mana": ["$f1", "$f2", "$f3", "$f4", "$f5", "$f6", null] } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass" },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": { "Answer": { "prompt": "OfferedCast", "with": { "type": "Exercises" } } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": { "Answer": { "prompt": "ChooseExtraManaSource", "with": null } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass" },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "check": { "Names": { "object": "Craw Wurm", "names": [] } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": { "Cast": { "object": "$bite", "targetsBySlot": { "dealer": ["Craw Wurm"], "victim": ["$giant"] }, "mana": ["$f7", "$f8"] } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass" },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "check": { "Names": { "object": "Craw Wurm", "names": ["Craw Wurm"] } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "check": { "Damage": { "object": "$giant", "damage": 2 } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "check": { "Damage": { "object": "Craw Wurm", "damage": 0 } } }
+  ]
+}

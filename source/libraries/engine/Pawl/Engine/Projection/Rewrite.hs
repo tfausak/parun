@@ -241,6 +241,7 @@ import qualified Pawl.Types.SpendManaAsThough as SpendManaAsThough
 import qualified Pawl.Types.StaticAbility as StaticAbility
 import qualified Pawl.Types.Subtype as Subtype.Type
 import qualified Pawl.Types.TakeExtraTurn as TakeExtraTurn
+import qualified Pawl.Types.TapForMana as TapForMana
 import qualified Pawl.Types.TargetSlot as TargetSlot
 import qualified Pawl.Types.TextWord as TextWord
 import qualified Pawl.Types.TheseDiscard as TheseDiscard
@@ -500,6 +501,7 @@ rewritePlayerEffect pairs effect = case effect of
   -- names the permanent, so it descends as CastAsThoughItHadFlash's does.
   PlayerEffect.ActivateKeywordAtInstantSpeed _ -> effect
   PlayerEffect.ActivateLoyaltyAtInstantSpeed f -> PlayerEffect.ActivateLoyaltyAtInstantSpeed (Filter.rewrite pairs f)
+  PlayerEffect.MayTapForMana grant -> PlayerEffect.MayTapForMana (TapForMana.MkTapForMana (Filter.rewrite pairs (TapForMana.permanents grant)) (fmap (rewriteManaRestriction pairs) (TapForMana.restriction grant)))
   PlayerEffect.CantBeCountered f -> PlayerEffect.CantBeCountered (Filter.rewrite pairs f)
   PlayerEffect.CantCastMatching f -> PlayerEffect.CantCastMatching (Filter.rewrite pairs f)
   PlayerEffect.PutTappedAsYouCascade f -> PlayerEffect.PutTappedAsYouCascade (Filter.rewrite pairs f)
@@ -1654,6 +1656,7 @@ rewriteDamageRewrite pairs rewrite = case rewrite of
   -- CR 614.1a's "instead [do something]", the payload shared with an ability's
   -- clauses -- EntryRewrite.RunEffects' arm exactly.
   DamageRewrite.RunEffects es -> DamageRewrite.RunEffects (fmap (rewriteEffect pairs) es)
+  DamageRewrite.TurnFaceUp -> rewrite
 
 -- CR 612.1 through what a CR 614.1a draw replacement does. The wish filter is the
 -- one printed word a draw rewrite can hold, and it is the SAME Filter

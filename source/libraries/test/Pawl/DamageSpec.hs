@@ -1459,7 +1459,7 @@ sbaSpec s =
 
 -- The Piker's own controller and creature types ride each event: CR 702.76a and
 -- CR 702.173a read them at deal time, and these two cases are where the whole
--- record is written out, so they are what holds Pawl.Engine.Damage.damageEvent
+-- record is written out, so they are what holds Pawl.Engine.Event.damageEvent
 -- to filling them from the projection rather than leaving them blank.
 damageEventSpec :: (Monad m, Monad n) => Spec.Spec m n -> Registry.Registry m -> n ()
 damageEventSpec s registry =

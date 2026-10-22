@@ -21,7 +21,6 @@ import Pawl.Engine.Event.Binding (admitsDeparture, admittedAttackers, admittedDe
 import qualified Pawl.Engine.Filter as Filter
 import qualified Pawl.Engine.Game as Game
 import qualified Pawl.Engine.Projection as Projection
-import qualified Pawl.Engine.Projection.View as Projection.View
 import qualified Pawl.Engine.Replacement as Replacement
 import qualified Pawl.Engine.Saga as Saga
 import qualified Pawl.Engine.Turn as Turn
@@ -5434,12 +5433,10 @@ matchesTriggerGiven bindings board gs bearer you cond event = case cond of
   -- narrows none of them spells itself out as AnyPlayer over the trivial Filter
   -- with ManaSpecification.AnyMana.
   --
-  -- The TAPPING player is read as the tapped permanent's controller, CR 602.2's
-  -- default activator. CR 602.1b lets another player activate a route printing
-  -- "any player may activate this ability", but the one such mana ability
-  -- (Mana Cache; MTGJSON AllPrintings, 2026-09-29, "Add ... Any player may
-  -- activate this ability") has no {T} in its cost, so it records no
-  -- TappedForMana. A land anyone could tap for mana would refute this.
+  -- The TAPPING player is the event's own, the mana ability's controller (CR
+  -- 113.8), not the permanent's: Piracy lets a player tap lands they don't
+  -- control. Pawl.ScenarioSpec's "CR 106.12a alice taps bob's Dryad Arbor
+  -- under Piracy" proves both seats.
   --
   -- LIVE, the arm above's reason and not the PermanentSacrificed arm's: nothing
   -- has moved, and Pawl.Engine.Cost.applyManaTriggers records this event with
@@ -5530,16 +5527,12 @@ matchesTriggerGiven bindings board gs bearer you cond event = case cond of
     GameEvent.BecameUntapped _ -> False
     GameEvent.ManaAdded _ -> False
     GameEvent.ManaAbilityResolved _ -> False
-    GameEvent.TappedForMana tapped -> case Projection.View.controllerOf (TappedForMana.permanent tapped) gs of
-      -- Nothing is a permanent that is gone, about which no relation can
-      -- honestly answer -- the PermanentSacrificed arm's closing note.
-      Nothing -> False
-      Just tapper
-        | PlayerRelation.holds (Game.teams gs) relation you tapper && producedSpecified gs bearer specified (TappedForMana.mana tapped) ->
-            case Projection.viewWithLastKnown (TappedForMana.permanent tapped) gs (TappedForMana.permanent tapped) of
-              Nothing -> False
-              Just view -> Filter.matches bearerContext view f
-        | otherwise -> False
+    GameEvent.TappedForMana tapped
+      | PlayerRelation.holds (Game.teams gs) relation you (TappedForMana.player tapped) && producedSpecified gs bearer specified (TappedForMana.mana tapped) ->
+          case Projection.viewWithLastKnown (TappedForMana.permanent tapped) gs (TappedForMana.permanent tapped) of
+            Nothing -> False
+            Just view -> Filter.matches bearerContext view f
+      | otherwise -> False
     GameEvent.Moved {} -> False
     GameEvent.DamageDealt _ -> False
     GameEvent.StepBegan {} -> False
@@ -7727,7 +7720,7 @@ matchesTriggerGiven bindings board gs bearer you cond event = case cond of
   --
   -- Nothing here asks whether the permanent had ALREADY entered the battlefield.
   -- CR 708.7 leaves turning face up something only a permanent can be doing, and
-  -- FaceDown.performTurnFaceUp is the sole writer of this event -- CR 708.3's
+  -- Event.performTurnFaceUp is the sole writer of this event -- CR 708.3's
   -- face-down ENTRY writes a Moved event and never this one, which is what makes
   -- CR 708.8's last sentence fall out rather than needing a clause.
   TriggerCondition.SelfTurnedFaceUp -> case event of

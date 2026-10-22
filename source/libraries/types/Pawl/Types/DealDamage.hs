@@ -38,7 +38,7 @@ data DealDamage = MkDealDamage
     -- about a damage source asks about the dealer. CR 120.3f pays the dealer's
     -- lifelink to the DEALER's controller, CR 702.2b destroys on the dealer's
     -- deathtouch, and CR 120.3b/120.3d/120.3g read the dealer's infect, wither
-    -- and toxic. Pawl.Engine.Damage.damageEvent reads all of them off the one
+    -- and toxic. Pawl.Engine.Event.damageEvent reads all of them off the one
     -- ObjectId Pawl.Engine.Resolve hands it, so naming a different object here
     -- redirects every one of them at once.
     --

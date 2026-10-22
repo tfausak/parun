@@ -2013,6 +2013,7 @@ damageRewriteEffects rewrite = case rewrite of
   DamageRewrite.Redirect _ -> []
   DamageRewrite.RedirectNext _ _ -> []
   DamageRewrite.RedirectMatching _ -> []
+  DamageRewrite.TurnFaceUp -> []
 
 -- The Filters a damage REWRITE holds, which is CR 614.9's printed destination and
 -- nothing else. No wildcard, replacementRowSlots' discipline: a later rewrite
@@ -2033,6 +2034,7 @@ damageRewriteFilters rewrite = case rewrite of
   -- The nested effects are replacementRowEffects' answer above, not a Filter of
   -- the rewrite's own.
   DamageRewrite.RunEffects _ -> []
+  DamageRewrite.TurnFaceUp -> []
 
 -- One Filter's slot reads, each at the arity its atom reads it with
 -- (Filter.slotArities): Many for an atom taking the whole set, which since

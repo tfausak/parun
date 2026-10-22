@@ -406,6 +406,7 @@ objectWith before entry closed = do
   phyrexianLifePaid <- field Object.phyrexianLifePaid
   manaSpent <- field Object.manaSpent
   announcedX <- field Object.announcedX
+  manaCostPaid <- field Object.manaCostPaid
   castFrom <- field Object.castFrom
   castUsing <- field Object.castUsing
   castGrant <- field Object.castGrant
@@ -471,6 +472,7 @@ objectWith before entry closed = do
         Object.phyrexianLifePaid = phyrexianLifePaid,
         Object.manaSpent = manaSpent,
         Object.announcedX = announcedX,
+        Object.manaCostPaid = manaCostPaid,
         Object.castFrom = castFrom,
         Object.castUsing = castUsing,
         Object.castGrant = castGrant,

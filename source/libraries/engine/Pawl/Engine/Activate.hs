@@ -465,6 +465,9 @@ activateAbilityWith refused runSubgame pid srcId ability = Event.announcing $ do
                   -- onto the ABILITY for the reason CR 113.7a gives above: the
                   -- source may itself be what was sacrificed.
                   State.modify' (\g -> g {GameState.objects = Map.adjust (\o -> o {Object.bindings = Binding.setPaid bound (Object.bindings o)}) abilId (GameState.objects g)})
+                  -- CR 601.2f's total the mana was spent against, beside CR
+                  -- 400.7d's record of the mana itself (Object.manaCostPaid).
+                  State.modify' (\g -> g {GameState.objects = Map.adjust (\o -> o {Object.manaCostPaid = Cost.Type.mana paidCost}) abilId (GameState.objects g)})
                   Monad.when
                     (Cost.isLoyaltyCost (ActivatedAbility.cost ability))
                     (State.modify' (Event.recordEvent (GameEvent.LoyaltyAbilityActivated srcId)))

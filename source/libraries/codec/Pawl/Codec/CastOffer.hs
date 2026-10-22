@@ -6,6 +6,7 @@ import qualified Pawl.Codec.Cost as Cost
 import qualified Pawl.Codec.Filter as Filter
 import qualified Pawl.Codec.Keyword as Keyword
 import qualified Pawl.Codec.ManaSpending as ManaSpending
+import qualified Pawl.Codec.TurnUpEvent as TurnUpEvent
 import qualified Pawl.JsonCodec.Codec as Codec
 import qualified Pawl.JsonCodec.Common as Common
 import qualified Pawl.JsonCodec.Fields as Fields
@@ -20,6 +21,8 @@ codec = Fields.object $ do
   spending <- Fields.defaulted "spending" ManaSpending.Type.AsProduced ManaSpending.codec CastOffer.spending
   restriction <- Fields.defaulted "restriction" Nothing (Common.maybe (Filter.codec Keyword.codec)) CastOffer.restriction
   offeredBy <- Fields.defaulted "offeredBy" Nothing (Common.maybe Keyword.codec) CastOffer.offeredBy
+  faceDown <- Fields.defaulted "faceDown" Nothing (Common.maybe (Common.set TurnUpEvent.codec)) CastOffer.faceDown
+  payableFromSpent <- Fields.defaulted "payableFromSpent" False Common.boolean CastOffer.payableFromSpent
   pure
     CastOffer.MkCastOffer
       { CastOffer.transformed = transformed,
@@ -27,7 +30,9 @@ codec = Fields.object $ do
         CastOffer.payingInstead = payingInstead,
         CastOffer.spending = spending,
         CastOffer.restriction = restriction,
-        CastOffer.offeredBy = offeredBy
+        CastOffer.offeredBy = offeredBy,
+        CastOffer.faceDown = faceDown,
+        CastOffer.payableFromSpent = payableFromSpent
       }
 
 -- | The value the codec elides entirely: an offer that transforms nothing,
@@ -43,5 +48,7 @@ defaultValue =
       CastOffer.payingInstead = Nothing,
       CastOffer.spending = ManaSpending.Type.AsProduced,
       CastOffer.restriction = Nothing,
-      CastOffer.offeredBy = Nothing
+      CastOffer.offeredBy = Nothing,
+      CastOffer.faceDown = Nothing,
+      CastOffer.payableFromSpent = False
     }

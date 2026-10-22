@@ -1,0 +1,43 @@
+{
+  "description": "CR 614.1a a Craw Wurm Illusionary Mask cast face down turns face up instead of dying to a Lightning Bolt",
+  "note": "X = 6 off six Forests casts the Craw Wurm face down as a nameless 2/2. The Bolt's 3 damage would kill that 2/2; Illusionary Mask's replacement turns it face up first, so the 3 is dealt to a 6/4 Craw Wurm, which keeps it marked and survives.",
+  "board": {
+    "seats": [
+      {
+        "name": "alice",
+        "battlefield": [
+          { "card": "Illusionary Mask", "label": "mask" },
+          { "card": "Forest", "label": "f1" },
+          { "card": "Forest", "label": "f2" },
+          { "card": "Forest", "label": "f3" },
+          { "card": "Forest", "label": "f4" },
+          { "card": "Forest", "label": "f5" },
+          { "card": "Forest", "label": "f6" },
+          { "card": "Mountain", "label": "mountain" }
+        ],
+        "hand": [
+          { "card": "Craw Wurm", "label": "wurm" },
+          { "card": "Lightning Bolt", "label": "bolt" }
+        ],
+        "library": [{ "card": "Forest" }, { "card": "Forest" }]
+      },
+      { "name": "bob", "library": [{ "card": "Forest" }, { "card": "Forest" }] }
+    ],
+    "active": "alice",
+    "step": "PrecombatMain"
+  },
+  "timeline": [
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": { "Activate": { "object": "$mask", "x": 6, "mana": ["$f1", "$f2", "$f3", "$f4", "$f5", "$f6", null] } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass" },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": { "Answer": { "prompt": "OfferedCast", "with": { "type": "Exercises" } } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": { "Answer": { "prompt": "ChooseExtraManaSource", "with": null } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass" },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "check": { "PowerToughness": { "object": "Craw Wurm", "power": 2, "toughness": 2 } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": { "Cast": { "object": "$bolt", "targets": ["Craw Wurm"], "mana": ["$mountain"] } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass" },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "check": { "Count": { "player": "alice", "zone": "Battlefield", "card": "Craw Wurm", "count": 1 } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "check": { "Names": { "object": "Craw Wurm", "names": ["Craw Wurm"] } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "check": { "PowerToughness": { "object": "Craw Wurm", "power": 6, "toughness": 4 } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "check": { "Damage": { "object": "Craw Wurm", "damage": 3 } } }
+  ]
+}

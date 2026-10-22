@@ -20,6 +20,7 @@ import qualified Pawl.Codec.PlotFromZone as PlotFromZone
 import qualified Pawl.Codec.Shows as Shows
 import qualified Pawl.Codec.SpendManaAsThough as SpendManaAsThough
 import qualified Pawl.Codec.StatedFlip as StatedFlip
+import qualified Pawl.Codec.TapForMana as TapForMana
 import qualified Pawl.JsonCodec.Arm as Arm
 import qualified Pawl.JsonCodec.Codec as Codec
 import qualified Pawl.JsonCodec.Common as Common
@@ -50,6 +51,7 @@ codec =
           Arm.payload "MayPlayAsThoughItHadFlash" filterCodec PlayerEffect.MayPlayAsThoughItHadFlash (\x -> case x of PlayerEffect.MayPlayAsThoughItHadFlash y -> Just y; _ -> Nothing),
           Arm.payload "ActivateKeywordAtInstantSpeed" (KeywordDesignator.codec Keyword.codec) PlayerEffect.ActivateKeywordAtInstantSpeed (\x -> case x of PlayerEffect.ActivateKeywordAtInstantSpeed y -> Just y; _ -> Nothing),
           Arm.payload "ActivateLoyaltyAtInstantSpeed" filterCodec PlayerEffect.ActivateLoyaltyAtInstantSpeed (\x -> case x of PlayerEffect.ActivateLoyaltyAtInstantSpeed y -> Just y; _ -> Nothing),
+          Arm.payload "MayTapForMana" TapForMana.codec PlayerEffect.MayTapForMana (\x -> case x of PlayerEffect.MayTapForMana y -> Just y; _ -> Nothing),
           Arm.payload "CantBeCountered" filterCodec PlayerEffect.CantBeCountered (\x -> case x of PlayerEffect.CantBeCountered y -> Just y; _ -> Nothing),
           Arm.payload "DamageCantBePrevented" DamagePattern.codec PlayerEffect.DamageCantBePrevented (\x -> case x of PlayerEffect.DamageCantBePrevented y -> Just y; _ -> Nothing),
           Arm.payload "DamageCantBeRedirected" DamagePattern.codec PlayerEffect.DamageCantBeRedirected (\x -> case x of PlayerEffect.DamageCantBeRedirected y -> Just y; _ -> Nothing),
@@ -99,6 +101,7 @@ tagOf x = case x of
   PlayerEffect.MayPlayAsThoughItHadFlash {} -> "MayPlayAsThoughItHadFlash"
   PlayerEffect.ActivateKeywordAtInstantSpeed {} -> "ActivateKeywordAtInstantSpeed"
   PlayerEffect.ActivateLoyaltyAtInstantSpeed {} -> "ActivateLoyaltyAtInstantSpeed"
+  PlayerEffect.MayTapForMana {} -> "MayTapForMana"
   PlayerEffect.CantBeCountered {} -> "CantBeCountered"
   PlayerEffect.DamageCantBePrevented {} -> "DamageCantBePrevented"
   PlayerEffect.DamageCantBeRedirected {} -> "DamageCantBeRedirected"
