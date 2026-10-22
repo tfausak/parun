@@ -208,6 +208,27 @@ Entries are ordered by the first rule each cites.
   only ITS controller may block the creature attacking nothing".
 - **Issue**: #2899.
 
+## When a face-down creature Illusionary Mask cast turns face up in combat
+
+- **Question**: Illusionary Mask turns its face-down creature face up when it
+  "would assign" combat damage. CR 510.1 has the attacking player announce
+  every attacker's assignment before the defending player announces the
+  blockers'. Does a face-down blocker turn up before the attackers assign, so
+  a trampler must assign lethal damage to the face-up creature?
+- **Rules**: CR 510.1, 510.1c, 510.1d, 614.1a, 702.19b; CR of 2026-08-07.
+- **Decision**: As its own assignment comes up, in CR 510.1's order. An
+  attacker blocked by a face-down creature assigns against the 2/2; the
+  blocker turns face up when its controller announces, and assigns as the
+  face-up creature.
+- **Rejected**: Turning every such creature face up when the combat damage
+  step begins: the event replaced is the creature's own assignment, which has
+  not happened while the attackers assign.
+- **Site**: `Pawl.Engine.Damage.turnUpToAssign`, proved by
+  data/scenarios/face-down's "CR 510.1 a Craw Wurm Illusionary Mask cast face
+  down turns face up to assign its 6 as it blocks". The trampler half is a
+  regression fence: no board drives it.
+- **Issue**: #5440.
+
 ## Whether a cast redirected off the stack is still a cast
 
 - **Question**: A CR 614 replacement sends a card being cast somewhere other
@@ -367,6 +388,25 @@ Entries are ordered by the first rule each cites.
   `Pawl.ResolveSpec`'s "CR 608.2f a seat's draw, dredge included, happens before
   the next seat chooses".
 - **Issue**: #5239.
+
+## How much damage a face-down creature Illusionary Mask cast deals as it turns face up
+
+- **Question**: An effect has a face-down creature Illusionary Mask cast deal
+  damage equal to its power (Rabid Bite, a fight). The amount is read off the
+  2/2, then Mask's replacement turns it face up "and deals damage". Is the
+  amount the 2 already determined, or the face-up creature's power?
+- **Rules**: CR 608.2h, 614.1a, 614.5, 701.14a; CR of 2026-08-07.
+- **Decision**: The 2. CR 608.2h fixes the amount when the effect is applied,
+  and the replacement modifies the event that amount describes: the creature
+  turns face up and that same event happens.
+- **Rejected**: Re-reading the power after the turn: no rule re-derives an
+  event's amount, and the replacement's text keeps the event rather than
+  restating it.
+- **Site**: `Pawl.Engine.Event`'s `DamageRewrite.TurnFaceUp` arm, proved by
+  data/scenarios/face-down's "CR 614.1a a Craw Wurm Illusionary Mask cast face
+  down turns face up to deal Rabid Bite's damage, still the 2 its face-down
+  power fixed".
+- **Issue**: #5440.
 
 ## Whether "if you can't" holds after doing part of an instruction
 

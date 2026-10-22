@@ -1,0 +1,45 @@
+{
+  "description": "CR 616.1 alice applies Mending Hands' shield before Illusionary Mask's replacement, so the Bolt is prevented and the Craw Wurm stays face down",
+  "note": "The control of the board beside it, answering CR 616.1's choice the other way: the shield applied first prevents the whole 3, so no damage event remains for Illusionary Mask's replacement to turn the Wurm face up before, and it stays a nameless 2/2 with nothing marked.",
+  "board": {
+    "seats": [
+      {
+        "name": "alice",
+        "battlefield": [
+          { "card": "Illusionary Mask", "label": "mask" },
+          { "card": "Forest", "label": "f1" },
+          { "card": "Forest", "label": "f2" },
+          { "card": "Forest", "label": "f3" },
+          { "card": "Forest", "label": "f4" },
+          { "card": "Forest", "label": "f5" },
+          { "card": "Forest", "label": "f6" },
+          { "card": "Plains", "label": "plains" },
+          { "card": "Mountain", "label": "mountain" }
+        ],
+        "hand": [
+          { "card": "Craw Wurm", "label": "wurm" },
+          { "card": "Mending Hands", "label": "hands" },
+          { "card": "Lightning Bolt", "label": "bolt" }
+        ],
+        "library": [{ "card": "Forest" }, { "card": "Forest" }]
+      },
+      { "name": "bob", "library": [{ "card": "Forest" }, { "card": "Forest" }] }
+    ],
+    "active": "alice",
+    "step": "PrecombatMain"
+  },
+  "timeline": [
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": { "Activate": { "object": "$mask", "x": 6, "mana": ["$f1", "$f2", "$f3", "$f4", "$f5", "$f6", null] } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass" },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": { "Answer": { "prompt": "OfferedCast", "with": { "type": "Exercises" } } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": { "Answer": { "prompt": "ChooseExtraManaSource", "with": null } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass" },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": { "Cast": { "object": "$hands", "targets": ["Craw Wurm"], "mana": ["$plains", null] } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass" },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": { "Cast": { "object": "$bolt", "targets": ["Craw Wurm"], "mana": ["$mountain"] } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass" },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": { "Answer": { "prompt": "ChooseReplacement", "with": 1 } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "check": { "Names": { "object": "Craw Wurm", "names": [] } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "check": { "Damage": { "object": "Craw Wurm", "damage": 0 } } }
+  ]
+}

@@ -5292,6 +5292,7 @@ damageRewriteFilters rewrite = case rewrite of
   -- them are reached as ordinary effect filters, through cardResolutionEffects
   -- -- EntryRewrite.RunEffects' answer, and for its reason.
   DamageRewrite.RunEffects _ -> []
+  DamageRewrite.TurnFaceUp -> []
 
 -- A face's printed replacement ability reaches a Filter on a second axis beside
 -- the rewrite's: CR 604.2's "as long as" clause counts objects, exactly as the
@@ -7559,7 +7560,13 @@ lintSpec s registry = Spec.describe s "Lint" $ do
         abilities = concatMap abilitiesOf ps
         -- CR 607.2e's note reads what the {X} was PAID with rather than X
         -- itself, Ice Cauldron's ruling, so it declares an X no effect reads.
-        notesSpent ab = elem Effect.NoteManaSpent (Modal.allEffects (ActivatedAbility.modal ab))
+        -- Illusionary Mask's offer reads the same thing (CastOffer's
+        -- payableFromSpent: "the mana you spent on {X}").
+        readsSpent effect = case effect of
+          Effect.NoteManaSpent -> True
+          Effect.OfferCast offer -> CastOffer.payableFromSpent (OfferCast.offer offer)
+          _ -> False
+        notesSpent ab = any readsSpent (Modal.allEffects (ActivatedAbility.modal ab))
         -- CR 107.3c's defined X (ActivatedAbility.definedX) is read by its
         -- definition, which Pawl.Engine.Activate evaluates once to price the
         -- cost; an effect reading the stamped X would then miss a change the

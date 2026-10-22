@@ -1,0 +1,34 @@
+{
+  "description": "CR 708.4 Illusionary Mask casts Llanowar Elves face down off the green its X spent, and not the Goblin Piker",
+  "note": "X = 2 is paid with two Forests, so the mana spent on X is {G}{G}. Llanowar Elves ({G}) could be paid by some of it; Goblin Piker ({1}{R}) costs the same amount but needs red, so only the Elves is offered and no choice among cards is asked -- an unscheduled ChooseOfferedCastSpell would fail the run. The Elves resolves as CR 708.2a's nameless 2/2, where face up it is a 1/1.",
+  "board": {
+    "seats": [
+      {
+        "name": "alice",
+        "battlefield": [
+          { "card": "Illusionary Mask", "label": "mask" },
+          { "card": "Forest", "label": "f1" },
+          { "card": "Forest", "label": "f2" }
+        ],
+        "hand": [
+          { "card": "Llanowar Elves", "label": "elves" },
+          { "card": "Goblin Piker", "label": "piker" }
+        ],
+        "library": [{ "card": "Forest" }, { "card": "Forest" }]
+      },
+      { "name": "bob", "library": [{ "card": "Forest" }, { "card": "Forest" }] }
+    ],
+    "active": "alice",
+    "step": "PrecombatMain"
+  },
+  "timeline": [
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": { "Activate": { "object": "$mask", "x": 2, "mana": ["$f1", "$f2"] } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass" },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": { "Answer": { "prompt": "OfferedCast", "with": { "type": "Exercises" } } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass" },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "check": { "Names": { "object": "Llanowar Elves", "names": [] } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "check": { "PowerToughness": { "object": "Llanowar Elves", "power": 2, "toughness": 2 } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "check": { "Count": { "player": "alice", "zone": "Hand", "card": "Llanowar Elves", "count": 0 } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "check": { "Count": { "player": "alice", "zone": "Hand", "card": "Goblin Piker", "count": 1 } } }
+  ]
+}

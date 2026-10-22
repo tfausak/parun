@@ -7720,7 +7720,7 @@ matchesTriggerGiven bindings board gs bearer you cond event = case cond of
   --
   -- Nothing here asks whether the permanent had ALREADY entered the battlefield.
   -- CR 708.7 leaves turning face up something only a permanent can be doing, and
-  -- FaceDown.performTurnFaceUp is the sole writer of this event -- CR 708.3's
+  -- Event.performTurnFaceUp is the sole writer of this event -- CR 708.3's
   -- face-down ENTRY writes a Moved event and never this one, which is what makes
   -- CR 708.8's last sentence fall out rather than needing a clause.
   TriggerCondition.SelfTurnedFaceUp -> case event of

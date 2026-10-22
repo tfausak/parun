@@ -17,6 +17,7 @@ module Pawl.CloakSpec where
 
 import qualified Data.List as List
 import qualified Data.Sequence as Seq
+import qualified Data.Set as Set
 import qualified Numeric.Natural as Natural
 import qualified Pawl.Engine.Action as Action
 import qualified Pawl.Engine.Activatable as Activatable
@@ -115,7 +116,7 @@ spec s registry = Spec.describe s "Cloak" $ do
           s
           "CR 701.58a face down, cloaked"
           (fmap Object.facing (Game.lookupObject permanent after))
-          (Just (Facing.FaceDown FaceDownState.MkFaceDownState {FaceDownState.reason = FaceDownReason.Cloaked, FaceDownState.listed = FaceDownCharacteristics.disguisedValue}))
+          (Just (Facing.FaceDown FaceDownState.MkFaceDownState {FaceDownState.reason = FaceDownReason.Cloaked, FaceDownState.listed = FaceDownCharacteristics.disguisedValue, FaceDownState.turnsUpBefore = Set.empty}))
         Spec.assertEqWith s "CR 701.58a and alice controls it" (View.controllerOf permanent after) (Just S.alice)
         -- THE TOP card and no other: the Piker beneath it is where it was, and
         -- the library is one card shorter.

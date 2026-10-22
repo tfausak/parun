@@ -18,6 +18,7 @@ import qualified Control.Monad as Monad
 import qualified Control.Monad.Trans.State.Strict as State
 import qualified Data.Foldable as Foldable
 import qualified Data.Sequence as Seq
+import qualified Data.Set as Set
 import Numeric.Natural (Natural)
 import qualified Pawl.Engine.Event as Event
 import qualified Pawl.Engine.Game as Game
@@ -45,7 +46,8 @@ riders =
         Just
           FaceDownState.MkFaceDownState
             { FaceDownState.reason = FaceDownReason.Manifested,
-              FaceDownState.listed = FaceDownCharacteristics.defaultValue
+              FaceDownState.listed = FaceDownCharacteristics.defaultValue,
+              FaceDownState.turnsUpBefore = Set.empty
             }
     }
 

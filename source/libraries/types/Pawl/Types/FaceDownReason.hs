@@ -71,6 +71,10 @@ data FaceDownReason
     -- turnable by those, and Pawl.Types.TurnUpProcedure has no arm this one
     -- opens.
     EnteredFaceDown
+  | -- | CR 708.2a / 708.4: cast face down by an effect that allowed it, no
+    -- keyword behind it (Illusionary Mask). Opens no procedure of its own,
+    -- EnteredFaceDown's posture one rule over.
+    CastFaceDown
   | -- | CR 702.106a: a conspiracy card put into the command zone face down by its
     -- hidden agenda. CR 702.106c is its own way back up
     -- (Pawl.Types.Action.TurnConspiracyFaceUp), so no

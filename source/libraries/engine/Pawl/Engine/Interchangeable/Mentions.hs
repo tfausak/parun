@@ -820,7 +820,7 @@ castFromZoneNames asking x = case x of
 
 castOfferNames :: (Monoid r) => Asking r -> CastOffer.CastOffer -> r
 castOfferNames asking x = case x of
-  CastOffer.MkCastOffer _transformed _withoutPayingManaCost payingInstead _spending restriction offeredBy -> foldMap (costNames asking (keywordNames asking)) payingInstead <> foldMap (filterNames asking) restriction <> foldMap (keywordNames asking) offeredBy
+  CastOffer.MkCastOffer _transformed _withoutPayingManaCost payingInstead _spending restriction offeredBy _faceDown _payableFromSpent -> foldMap (costNames asking (keywordNames asking)) payingInstead <> foldMap (filterNames asking) restriction <> foldMap (keywordNames asking) offeredBy
 
 castRepetitionNames :: (Monoid r) => Asking r -> CastRepetition.CastRepetition -> r
 castRepetitionNames asking x = case x of
@@ -1161,6 +1161,7 @@ damageRewriteNames asking onEffect x = case x of
   DamageRewrite.RedirectNext _natural recipient -> recipientNames asking recipient
   DamageRewrite.RedirectMatching filter_ -> filterNames asking filter_
   DamageRewrite.RunEffects seq_ -> foldMap onEffect seq_
+  DamageRewrite.TurnFaceUp -> mempty
 
 dealDamageNames :: (Monoid r) => Asking r -> DealDamage.DealDamage -> r
 dealDamageNames asking x = case x of
@@ -1626,7 +1627,7 @@ faceDownCharacteristicsNames asking onAbility x = case x of
 
 faceDownStateNames :: (Monoid r) => Asking r -> (ability -> r) -> FaceDownState.FaceDownState ability -> r
 faceDownStateNames asking onAbility x = case x of
-  FaceDownState.MkFaceDownState _reason listed -> faceDownCharacteristicsNames asking onAbility listed
+  FaceDownState.MkFaceDownState _reason listed _turnsUpBefore -> faceDownCharacteristicsNames asking onAbility listed
 
 fightNames :: (Monoid r) => Asking r -> Fight.Fight -> r
 fightNames asking x = case x of

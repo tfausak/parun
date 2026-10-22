@@ -43,6 +43,12 @@ spec s = Spec.describe s "Pawl.Codec.FaceDownReason" $ do
       FaceDownReason.codec
       FaceDownReason.EnteredFaceDown
       " {\"type\":\"EnteredFaceDown\"} "
+  Spec.it s "CastFaceDown" $
+    Common.assertCodec
+      s
+      FaceDownReason.codec
+      FaceDownReason.CastFaceDown
+      " {\"type\":\"CastFaceDown\"} "
   Spec.it s "HiddenAgenda" $
     Common.assertCodec
       s
