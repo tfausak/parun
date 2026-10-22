@@ -1,0 +1,38 @@
+{
+  "description": "CR 608.2d / 611.2c Goblin War Cry: bob chooses a creature they control, and only that one can block",
+  "note": "Bob chooses the Bears rather than the Giant, so an engine ignoring bob's answer, or leaving the chosen creature in the class, refuses the Bears' block.",
+  "board": {
+    "seats": [
+      {
+        "name": "alice",
+        "hand": [
+          { "card": "Goblin War Cry", "label": "war-cry" }
+        ],
+        "battlefield": [
+          { "card": "Mountain", "label": "mountain" },
+          { "card": "Mountain", "label": "mountain-2" },
+          { "card": "Mountain", "label": "mountain-3" },
+          { "card": "Craw Wurm", "label": "wurm", "ready": true }
+        ]
+      },
+      {
+        "name": "bob",
+        "battlefield": [
+          { "card": "Hill Giant", "label": "giant", "ready": true },
+          { "card": "Grizzly Bears", "label": "bears", "ready": true }
+        ]
+      }
+    ],
+    "active": "alice",
+    "step": "PrecombatMain"
+  },
+  "timeline": [
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": { "Cast": { "object": "$war-cry", "targets": ["$bob"], "mana": ["$mountain", "$mountain-2", "$mountain-3"] } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass" },
+    { "turn": 1, "step": "PrecombatMain", "player": "bob", "do": { "Answer": { "prompt": "ChoosePermanent", "with": "$bears" } } },
+    { "turn": 1, "step": "DeclareAttackers", "player": "alice", "do": { "Attack": ["$wurm"] } },
+    { "turn": 1, "step": "DeclareBlockers", "player": "bob", "refuse": { "Block": { "$giant": ["$wurm"] } } },
+    { "turn": 1, "step": "DeclareBlockers", "player": "bob", "do": { "Block": { "$bears": ["$wurm"] } } },
+    { "turn": 1, "step": "DeclareBlockers", "player": "alice", "check": { "Blockers": { "attacker": "$wurm", "blockers": ["$bears"] } } }
+  ]
+}
