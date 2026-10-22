@@ -114,8 +114,22 @@
             {
               "type": "GainExiledCardAbilities",
               "value": {
-                "pile": {
-                  "type": "OwnAbilities"
+                "cards": {
+                  "type": "And",
+                  "value": [
+                    {
+                      "type": "IsExiledWithSource",
+                      "value": {
+                        "type": "OwnAbilities"
+                      }
+                    },
+                    {
+                      "type": "HasCardType",
+                      "value": {
+                        "type": "Creature"
+                      }
+                    }
+                  ]
                 }
               }
             }
