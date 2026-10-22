@@ -92,6 +92,7 @@ import qualified Pawl.Codec.AttackTargetSpec
 import qualified Pawl.Codec.AttackedPlayerSpec
 import qualified Pawl.Codec.AttackerBlockedSpec
 import qualified Pawl.Codec.AttackerDeclaredSpec
+import qualified Pawl.Codec.AttackerUnblockedSpec
 import qualified Pawl.Codec.AttackersAreSpec
 import qualified Pawl.Codec.AttackingPlayersSpec
 import qualified Pawl.Codec.AudienceSpec
@@ -975,6 +976,7 @@ spec s registry = do
   Pawl.Codec.AttackedPlayerSpec.spec s
   Pawl.Codec.AttackerBlockedSpec.spec s
   Pawl.Codec.AttackerDeclaredSpec.spec s
+  Pawl.Codec.AttackerUnblockedSpec.spec s
   Pawl.Codec.AttackersAreSpec.spec s
   Pawl.Codec.AttackingPlayersSpec.spec s
   Pawl.Codec.AttackLimitUnlessSpec.spec s
