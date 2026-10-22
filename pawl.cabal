@@ -1867,6 +1867,7 @@ library oracle
   -- cabal-gild: discover source/libraries/oracle
   exposed-modules:
     Pawl.Oracle
+    Pawl.Oracle.Continuous
     Pawl.Oracle.Cost
     Pawl.Oracle.Effect
     Pawl.Oracle.Filter

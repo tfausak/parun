@@ -37,12 +37,10 @@ data Noun = MkNoun
 
 -- | Words before or after the noun, which agree with it in number: "a
 -- creature you control" and "creatures you control" agree, "a creature an
--- opponent controls" and "creatures your opponents control" do not. A plural
--- may have more than one wording: "white or blue" is "white and/or blue"
--- (Ignite Disorder) or "attacking or blocking" (Fire at Will) in the plural.
+-- opponent controls" and "creatures your opponents control" do not.
 data Qualifier = MkQualifier
   { one :: Text.Text,
-    many :: [Text.Text]
+    many :: Text.Text
   }
   deriving (Eq, Show)
 
@@ -73,31 +71,41 @@ phrase f named = case f of
     [adjective (Text.pack "non-" <> name)]
   Filter.HasKeyword k -> do
     word <- named k
-    [qualifier (Text.pack "with " <> Text.toLower word) [Text.pack "with " <> Text.toLower word]]
+    [qualifier (Text.pack "with " <> Text.toLower word) (Text.pack "with " <> Text.toLower word)]
   Filter.Not (Filter.HasKeyword k) -> do
     word <- named k
-    [qualifier (Text.pack "without " <> Text.toLower word) [Text.pack "without " <> Text.toLower word]]
+    [qualifier (Text.pack "without " <> Text.toLower word) (Text.pack "without " <> Text.toLower word)]
+  Filter.Not Filter.IsSource -> [adjective (Text.pack "other")]
+  Filter.Not Filter.IsToken -> [adjective (Text.pack "nontoken")]
+  Filter.HasAttached (Filter.HasSubtype Subtype.Aura) -> [adjective (Text.pack "enchanted")]
+  Filter.HasAttached (Filter.HasSubtype Subtype.Equipment) -> [adjective (Text.pack "equipped")]
   Filter.IsTapped -> [adjective (Text.pack "tapped")]
   Filter.Not Filter.IsTapped -> [adjective (Text.pack "untapped")]
   Filter.IsAttacking -> [adjective (Text.pack "attacking")]
   Filter.IsBlocking -> [adjective (Text.pack "blocking")]
-  Filter.ControlledBy PlayerRelation.You -> [qualifier (Text.pack "you control") [Text.pack "you control"]]
-  Filter.ControlledBy PlayerRelation.Opponent -> [qualifier (Text.pack "an opponent controls") [Text.pack "your opponents control"]]
+  Filter.ControlledBy PlayerRelation.You -> [qualifier (Text.pack "you control") (Text.pack "you control")]
+  Filter.ControlledBy PlayerRelation.Opponent -> [qualifier (Text.pack "an opponent controls") (Text.pack "your opponents control")]
   Filter.IsPlayer PlayerRelation.Opponent -> [noun (Text.pack "opponent") (Just (Text.pack "opponents"))]
   Filter.IsPlayer PlayerRelation.AnyPlayer -> [noun (Text.pack "player") (Just (Text.pack "players"))]
   _ -> []
 
 -- | The phrase in the given number, with the noun the context supplies when
 -- the filter names none: a filter over permanents that says only "nonblack"
--- describes a nonblack permanent.
+-- describes a nonblack permanent. Of several nouns the kinds of object (card
+-- types, "spell") stand last and only the last is plural: "Sliver creatures",
+-- "artifact creatures", "creature spells".
 describe :: Number -> Noun -> Phrase -> [Text.Text]
 describe number fallback p = do
   let chosen = case nouns p of
         [] -> [fallback]
         ns -> ns
-  headword <- case number of
-    Singular -> [Text.unwords (fmap singular chosen)]
-    Plural -> Maybe.maybeToList (fmap Text.unwords (traverse plural chosen))
+      kinds = fmap Text.pack ["spell", "permanent", "card"] <> fmap (cardType Singular) [minBound .. maxBound]
+      (typed, named) = List.partition (\n -> elem (singular n) kinds) chosen
+  headword <- case (number, named <> typed) of
+    (Singular, ns) -> [Text.unwords (fmap singular ns)]
+    (Plural, ns) -> case List.unsnoc ns of
+      Just (front, final) -> Maybe.maybeToList (fmap (\many' -> Text.unwords (fmap singular front <> [many'])) (plural final))
+      Nothing -> []
   before <- adjectiveText number (adjectives p)
   after <- traverse (agreeing number) (qualifiers p)
   pure (Text.unwords (filter (not . Text.null) (before <> [headword] <> after)))
@@ -106,16 +114,17 @@ describe number fallback p = do
 agreeing :: Number -> Qualifier -> [Text.Text]
 agreeing number q = case number of
   Singular -> [one q]
-  Plural -> many q
+  Plural -> [many q]
 
--- | Adjectives as Oracle text strings them: "non-" ones separated by commas
--- ("nonartifact, nonblack"), with the type ones first, as Terror prints them.
+-- | Adjectives as Oracle text strings them: "other" first ("other white
+-- creatures"), and "non-" ones separated by commas ("nonartifact, nonblack"),
+-- with the type ones first, as Terror prints them.
 adjectiveText :: Number -> [Qualifier] -> [[Text.Text]]
 adjectiveText number qs = do
   as <- traverse (agreeing number) qs
   let (negated, plain) = List.partition (Text.isPrefixOf (Text.pack "non")) as
       ordered = List.sortOn (\a -> elem (Text.drop 3 a) (fmap color [minBound .. maxBound])) negated
-  [plain <> [Text.intercalate (Text.pack ", ") ordered | not (null ordered)]]
+  [List.sortOn (/= Text.pack "other") plain <> [Text.intercalate (Text.pack ", ") ordered | not (null ordered)]]
 
 empty :: Phrase
 empty = MkPhrase [] [] []
@@ -127,22 +136,25 @@ noun :: Text.Text -> Maybe Text.Text -> Phrase
 noun s p = MkPhrase [] [MkNoun s p] []
 
 adjective :: Text.Text -> Phrase
-adjective a = MkPhrase [MkQualifier a [a]] [] []
+adjective a = MkPhrase [MkQualifier a a] [] []
 
-qualifier :: Text.Text -> [Text.Text] -> Phrase
+qualifier :: Text.Text -> Text.Text -> Phrase
 qualifier o m = MkPhrase [] [] [MkQualifier o m]
 
 -- | Disjoined phrases: adjectives alone join into one ("attacking or
--- blocking"), and whole phrases join into one noun ("artifact or
--- enchantment"), whose plural Oracle text writes with "and" ("all creatures
--- and lands", Devastation) where the nouns are bare, and not at all otherwise.
+-- blocking"), colours "and/or" in the plural, since one object may have both
+-- ("white and/or blue creatures", Ignite Disorder), and whole phrases join
+-- into one noun ("artifact or enchantment"), whose plural Oracle text writes
+-- with "and" ("all creatures and lands", Devastation) where the nouns are
+-- bare, and not at all otherwise.
 disjunction :: [Phrase] -> [Phrase]
 disjunction ps
   | length ps < 2 = []
   | all (\p -> null (nouns p) && null (qualifiers p) && length (adjectives p) == 1) ps = do
       let adjs = concatMap adjectives ps
-          plurals = traverse many adjs
-      [MkPhrase [MkQualifier (Prose.listing "or" (fmap one adjs)) (concatMap (\w -> [Prose.listing "or" w, Prose.listing "and/or" w]) plurals)] [] []]
+          colours = all (\q -> elem (one q) (fmap color [minBound .. maxBound])) adjs
+          conjunction = if colours then "and/or" else "or"
+      [MkPhrase [MkQualifier (Prose.listing "or" (fmap one adjs)) (Prose.listing conjunction (fmap many adjs))] [] []]
   | not (any (null . nouns) ps) = do
       singulars <- traverse (describe Singular (MkNoun Text.empty Nothing)) ps
       let bare p = null (adjectives p) && null (qualifiers p)
@@ -176,7 +188,7 @@ subtype s =
 -- | An English plural.
 pluralOf :: Text.Text -> Text.Text
 pluralOf word =
-  let irregular = [("Plains", "Plains"), ("Elf", "Elves"), ("Dwarf", "Dwarves"), ("Wolf", "Wolves"), ("Werewolf", "Werewolves"), ("Mouse", "Mice"), ("Fungus", "Fungi"), ("Ox", "Oxen"), ("Thief", "Thieves")]
+  let irregular = [("Plains", "Plains"), ("Elf", "Elves"), ("Merfolk", "Merfolk"), ("Dwarf", "Dwarves"), ("Wolf", "Wolves"), ("Werewolf", "Werewolves"), ("Mouse", "Mice"), ("Fungus", "Fungi"), ("Ox", "Oxen"), ("Thief", "Thieves")]
       ends suffix = Text.isSuffixOf (Text.pack suffix) word
    in case lookup (Text.unpack word) irregular of
         Just p -> Text.pack p

@@ -13,6 +13,7 @@ import qualified Pawl.Oracle.Normalise as Normalise
 import qualified Pawl.Spec as Spec
 import qualified Pawl.Types.ActivatedAbility as ActivatedAbility
 import qualified Pawl.Types.Activator as Activator
+import qualified Pawl.Types.Affected as Affected
 import qualified Pawl.Types.Card as Card
 import qualified Pawl.Types.CardName as CardName
 import qualified Pawl.Types.CardType as CardType
@@ -26,6 +27,7 @@ import qualified Pawl.Types.DamagePart as DamagePart
 import qualified Pawl.Types.DealDamage as DealDamage
 import qualified Pawl.Types.Destroy as Destroy
 import qualified Pawl.Types.Draw as Draw
+import qualified Pawl.Types.Duration as Duration
 import qualified Pawl.Types.Effect as Effect
 import qualified Pawl.Types.Face as Face
 import qualified Pawl.Types.Filter as Filter
@@ -43,6 +45,9 @@ import qualified Pawl.Types.ManaType as ManaType
 import qualified Pawl.Types.Modal as Modal
 import qualified Pawl.Types.Mode as Mode
 import qualified Pawl.Types.ModeSelection as ModeSelection
+import qualified Pawl.Types.Modification as Modification
+import qualified Pawl.Types.ModifyPowerToughness as ModifyPowerToughness
+import qualified Pawl.Types.ModifyTarget as ModifyTarget
 import qualified Pawl.Types.ObjectRef as ObjectRef
 import qualified Pawl.Types.Optionality as Optionality
 import qualified Pawl.Types.PlayerQuantity as PlayerQuantity
@@ -54,6 +59,8 @@ import qualified Pawl.Types.Quantity as Quantity
 import qualified Pawl.Types.Regenerability as Regenerability
 import qualified Pawl.Types.SlotCount as SlotCount
 import qualified Pawl.Types.SlotName as SlotName
+import qualified Pawl.Types.StaticAbility as StaticAbility
+import qualified Pawl.Types.Subtype as Subtype
 import qualified Pawl.Types.Supertype as Supertype
 import qualified Pawl.Types.TargetCount as TargetCount
 import qualified Pawl.Types.TargetSlot as TargetSlot
@@ -128,18 +135,27 @@ spec s = Spec.describe s "Pawl.Oracle" $ do
     let salt = spell [clause [destroy (ObjectRef.InSlot target) Regenerability.Regenerable]] [(target, (TargetSlot.required Pool.Permanents (Just (Filter.HasCardType CardType.Land))) {TargetSlot.count = SlotCount.Printed (TargetCount.MkTargetCount 2 (Just 2))})]
     Spec.assertEq s (Just (Text.pack "Destroy two target lands.")) (Oracle.render salt)
 
-  -- Oracle drifted from "You draw" to an imperative "Draw"; both render.
-  Spec.it s "render answers both wordings of drawing" $ do
+  -- "You" is left out of a sentence of its own and kept before "and", where
+  -- current Oracle text repeats it (Ancient Craving) and older text does not
+  -- (Ambition's Cost); beside another player's instruction it stands alone
+  -- (Afterlife Insurance).
+  Spec.it s "render leaves out a lone you and keeps one before and" $ do
     let divination = spell [clause [draw (PlayerRef.Relative PlayerRelation.You) 2]] []
-    Spec.assertEq s [Text.pack "Draw two cards.", Text.pack "You draw two cards."] (Oracle.renderings divination)
+    Spec.assertEq s [Text.pack "Draw two cards."] (Oracle.renderings divination)
+    let craving = spell [clause [draw (PlayerRef.Relative PlayerRelation.You) 3, loseLife (PlayerRef.Relative PlayerRelation.You) 3]] []
+    Spec.assertEq s (Just (Text.pack "You draw three cards and you lose 3 life.")) (Oracle.render craving)
+    Spec.assertEq s [Text.pack "You draw three cards and you lose 3 life.", Text.pack "You draw three cards and lose 3 life."] (Oracle.renderings craving)
+    let insurance = spell [clause [loseLife (PlayerRef.InSlot target) 2, draw (PlayerRef.Relative PlayerRelation.You) 1]] [(target, TargetSlot.required Pool.Players Nothing)]
+    Spec.assertEq s [Text.pack "Target player loses 2 life. Draw a card.", Text.pack "Target player loses 2 life.\nDraw a card."] (Oracle.renderings insurance)
 
   -- A second instruction for the same player drops the subject; for another
-  -- player it is joined by "and", starts a sentence or starts a paragraph, as
-  -- printings differ.
+  -- player it is joined by "and" (Vampiric Feast), starts a sentence (Soul
+  -- Shred) or starts a paragraph (Bargain), as printings differ, "and" first.
   Spec.it s "render strings a clause's instructions together" $ do
     let sign = spell [clause [draw (PlayerRef.InSlot target) 2, loseLife (PlayerRef.InSlot target) 2]] [(target, TargetSlot.required Pool.Players Nothing)]
     Spec.assertEq s [Text.pack "Target player draws two cards and loses 2 life."] (Oracle.renderings sign)
     let feast = spell [clause [damage [(target, 4)], gainLife 4]] [(target, TargetSlot.required Pool.AnyTarget Nothing)]
+    Spec.assertEq s (Just (Text.pack "Spark deals 4 damage to any target and you gain 4 life.")) (Oracle.render feast)
     Spec.assertEq s [Text.pack "Spark deals 4 damage to any target and you gain 4 life.", Text.pack "Spark deals 4 damage to any target. You gain 4 life.", Text.pack "Spark deals 4 damage to any target.\nYou gain 4 life."] (Oracle.renderings feast)
 
   -- CR 601.2c: each target slot is announced once, so text naming a slot
@@ -150,15 +166,20 @@ spec s = Spec.describe s "Pawl.Oracle" $ do
     Spec.assertEq s Nothing (Oracle.render twice)
     Spec.assertEq s Nothing (Oracle.render never)
 
-  -- Oracle text writes consecutive mana in one "Add" (Sol Ring), repeats an
-  -- amount or shares it (Brothers of Fire, Earthquake), and deals damage to
-  -- "each of" several targets (Jagged Lightning).
+  -- Oracle text writes consecutive mana in one "Add" (Sol Ring) and ends the
+  -- sentence there (Ancient Tomb), repeats an amount for a target (Brothers of
+  -- Fire) and shares it among groups (Earthquake), and deals damage to "each
+  -- of" several targets (Jagged Lightning).
   Spec.it s "render joins mana and damage as Oracle text does" $ do
     let ring = activated (Cost.MkCost (Just (ManaCost.MkManaCost [])) [CostComponent.TapThis]) (addMana 1)
         sol = ring {ActivatedAbility.modal = payload [clause [addMana 1, addMana 1]] []}
     Spec.assertEq s (Just (Text.pack "{T}: Add {G}{G}.")) (Oracle.render (withFace (\f -> f {Face.activatedAbilities = [sol]})))
     let brothers = spell [clause [damage [(target, 1), (you, 1)]]] [(target, TargetSlot.required Pool.AnyTarget Nothing)]
-    Spec.assertEq s [Text.pack "Spark deals 1 damage to any target and you.", Text.pack "Spark deals 1 damage to any target and 1 damage to you."] (Oracle.renderings brothers)
+    Spec.assertEq s [Text.pack "Spark deals 1 damage to any target and 1 damage to you."] (Oracle.renderings brothers)
+    let tomb = ring {ActivatedAbility.modal = payload [clause [addMana 1, damage [(you, 2)]]] []}
+    Spec.assertEq s [Text.pack "{T}: Add {G}. Spark deals 2 damage to you."] (Oracle.renderings (withFace (\f -> f {Face.activatedAbilities = [tomb]})))
+    let earthquake = spell [clause [Effect.DealDamage (DealDamage.MkDealDamage (Seq.fromList [DamagePart.MkDamagePart (ObjectRef.EachMatching (Filter.HasCardType CardType.Creature)) (Quantity.Literal 2), DamagePart.MkDamagePart ObjectRef.EachPlayer (Quantity.Literal 2)]) Nothing Nothing)]] []
+    Spec.assertEq s [Text.pack "Spark deals 2 damage to each creature and each player."] (Oracle.renderings earthquake)
     let jagged = spell [clause [damage [(target, 3)]]] [(target, (TargetSlot.required Pool.Creatures Nothing) {TargetSlot.count = SlotCount.Printed (TargetCount.MkTargetCount 2 (Just 2))})]
     Spec.assertEq s (Just (Text.pack "Spark deals 3 damage to each of two target creatures.")) (Oracle.render jagged)
 
@@ -170,12 +191,20 @@ spec s = Spec.describe s "Pawl.Oracle" $ do
     Spec.assertEq s (Just (Text.pack "You may draw a card.")) (Oracle.render maybeDraw)
 
   -- CR 603.6a / 700.4: "When [this] enters" and "When [this] dies", the
-  -- effect naming the source again as "it".
+  -- effect naming the source again as "it"; a noncreature "is put into a
+  -- graveyard from the battlefield" (Chromatic Star).
   Spec.it s "render prints a trigger on entering or dying" $ do
     let imp = triggered TriggerCondition.SelfEnters [clause [damage [(target, 2)]]] [(target, TargetSlot.required Pool.Creatures Nothing)]
-    Spec.assertEq s [Text.pack "When Spark enters, Spark deals 2 damage to target creature.", Text.pack "When Spark enters, it deals 2 damage to target creature."] (Oracle.renderings (withFace (\f -> f {Face.triggeredAbilities = [imp]})))
+    Spec.assertEq s [Text.pack "When Spark enters, it deals 2 damage to target creature."] (Oracle.renderings (withFace (\f -> f {Face.triggeredAbilities = [imp]})))
     let star = triggered TriggerCondition.SelfDies [clause [draw (PlayerRef.Relative PlayerRelation.You) 1]] []
-    Spec.assertEq s (Just (Text.pack "When Spark dies, draw a card.")) (Oracle.render (withFace (\f -> f {Face.triggeredAbilities = [star]})))
+    Spec.assertEq s [Text.pack "When Spark dies, draw a card."] (Oracle.renderings (withFace (\f -> (typed [CardType.Creature] [] f) {Face.triggeredAbilities = [star]})))
+    Spec.assertEq s [Text.pack "When Spark is put into a graveyard from the battlefield, draw a card."] (Oracle.renderings (withFace (\f -> (typed [CardType.Artifact] [] f) {Face.triggeredAbilities = [star]})))
+
+  -- An activated ability whose cost sacrifices its source calls it "it"
+  -- (Mogg Mob).
+  Spec.it s "render calls a sacrificed source it" $ do
+    let mob = activated (Cost.MkCost (Just (ManaCost.MkManaCost [])) [CostComponent.SacrificeThis]) (damage [(you, 3)])
+    Spec.assertEq s [Text.pack "Sacrifice Spark: It deals 3 damage to you."] (Oracle.renderings (withFace (\f -> f {Face.activatedAbilities = [mob]})))
 
   -- CR 113.2c: a paragraph break starts another ability, so only a spell's
   -- instructions (one spell ability, CR 113.3a) may be broken across lines.
@@ -188,17 +217,71 @@ spec s = Spec.describe s "Pawl.Oracle" $ do
       Spec.assertBool s (not (null rendered)) "no rendering"
       Spec.assertEq s [] (filter (Text.isInfixOf (Text.pack "\n")) rendered)
 
-  -- Protections may share a line (Paladin en-Vec); a disjunction of colours
-  -- reads "and/or" in the plural (Ignite Disorder), of card types "and"
-  -- (Devastation).
+  -- Protections share a line (Paladin en-Vec); a disjunction of colours reads
+  -- "and/or" in the plural (Ignite Disorder), of other adjectives "or" (Fire at
+  -- Will), of card types "and" (Devastation).
   Spec.it s "render shares a line of protections and pluralises a disjunction" $ do
     let from c = Keyword.Protection (Protection.MkProtection (Filter.HasColor c) Nothing)
-    Spec.assertEq s [Text.pack "Protection from black\nProtection from red", Text.pack "Protection from black and from red"] (Oracle.renderings (card Layout.Normal [[from Color.Black, from Color.Red]]))
+    Spec.assertEq s [Text.pack "Protection from black and from red"] (Oracle.renderings (card Layout.Normal [[from Color.Black, from Color.Red]]))
     let devastation = spell [clause [destroy (ObjectRef.EachMatching (Filter.Or [Filter.HasCardType CardType.Creature, Filter.HasCardType CardType.Land])) Regenerability.Regenerable]] []
     Spec.assertEq s (Just (Text.pack "Destroy all creatures and lands.")) (Oracle.render devastation)
     let colours = Filter.Or [Filter.HasColor Color.White, Filter.HasColor Color.Blue]
         ignite = spell [clause [destroy (ObjectRef.InSlot target) Regenerability.Regenerable]] [(target, (TargetSlot.required Pool.Creatures (Just colours)) {TargetSlot.count = SlotCount.Printed (TargetCount.MkTargetCount 2 (Just 2))})]
-    Spec.assertEq s [Text.pack "Destroy two target white or blue creatures.", Text.pack "Destroy two target white and/or blue creatures."] (Oracle.renderings ignite)
+    Spec.assertEq s [Text.pack "Destroy two target white and/or blue creatures."] (Oracle.renderings ignite)
+    let combatants = Filter.Or [Filter.IsAttacking, Filter.IsBlocking]
+        fire = spell [clause [destroy (ObjectRef.InSlot target) Regenerability.Regenerable]] [(target, (TargetSlot.required Pool.Creatures (Just combatants)) {TargetSlot.count = SlotCount.Printed (TargetCount.MkTargetCount 2 (Just 2))})]
+    Spec.assertEq s [Text.pack "Destroy two target attacking or blocking creatures."] (Oracle.renderings fire)
+
+  -- CR 611.2a: a change to an object "until end of turn", the duration ending
+  -- the sentence (Giant Growth) or opening it (Aspirant's Ascent), ending it
+  -- first; with no duration stated it lasts indefinitely (Riding the Dilu
+  -- Horse).
+  Spec.it s "render prints a change to power and toughness and its duration" $ do
+    let growth = spell [clause [modify (ObjectRef.InSlot target) Duration.UntilEndOfTurn (pt 3 3)]] [(target, TargetSlot.required Pool.Creatures Nothing)]
+    Spec.assertEq s (Just (Text.pack "Target creature gets +3/+3 until end of turn.")) (Oracle.render growth)
+    Spec.assertEq s [Text.pack "Target creature gets +3/+3 until end of turn.", Text.pack "Until end of turn, target creature gets +3/+3."] (Oracle.renderings growth)
+    let horse = spell [clause [modify (ObjectRef.InSlot target) Duration.Indefinite (pt 2 2), modify (ObjectRef.InSlot target) Duration.Indefinite (Modification.GainKeyword Keyword.Horsemanship)]] [(target, TargetSlot.required Pool.Creatures Nothing)]
+    Spec.assertEq s [Text.pack "Target creature gets +2/+2 and gains horsemanship."] (Oracle.renderings horse)
+
+  -- A zero takes the other change's sign (Saltfield Recluse); several targets
+  -- "each get" a change (Hearts on Fire) but "gain" a keyword (Wind Sail);
+  -- keywords gained join, and lost ones too (Xathrid Slyblade).
+  Spec.it s "render signs a change and joins the keywords an effect grants" $ do
+    let slot = (TargetSlot.required Pool.Creatures Nothing) {TargetSlot.count = SlotCount.Printed (TargetCount.MkTargetCount 1 (Just 2))}
+        recluse = spell [clause [modify (ObjectRef.InSlot target) Duration.UntilEndOfTurn (pt (-2) 0)]] [(target, TargetSlot.required Pool.Creatures Nothing)]
+    Spec.assertEq s (Just (Text.pack "Target creature gets -2/-0 until end of turn.")) (Oracle.render recluse)
+    let hearts = spell [clause [modify (ObjectRef.InSlot target) Duration.UntilEndOfTurn (pt 2 1)]] [(target, slot)]
+    Spec.assertEq s (Just (Text.pack "One or two target creatures each get +2/+1 until end of turn.")) (Oracle.render hearts)
+    let sail = spell [clause [modify (ObjectRef.InSlot target) Duration.UntilEndOfTurn (Modification.GainKeyword Keyword.Flying)]] [(target, slot)]
+    Spec.assertEq s (Just (Text.pack "One or two target creatures gain flying until end of turn.")) (Oracle.render sail)
+    let self = ObjectRef.InSlot (SlotName.MkSlotName (Text.pack "self"))
+        changes = [Modification.LoseKeyword Keyword.Shroud, Modification.GainKeyword Keyword.FirstStrike, Modification.GainKeyword Keyword.Deathtouch]
+        blade = spell [clause (fmap (modify self Duration.UntilEndOfTurn) changes)] []
+    Spec.assertEq s (Just (Text.pack "Spark loses shroud and gains first strike and deathtouch until end of turn.")) (Oracle.render blade)
+
+  -- CR 604.1: a static ability's objects "get" a change and "have" a
+  -- keyword; "all" only before a bare noun (Night of Souls' Betrayal), never
+  -- before a described one (Glorious Anthem, Bad Moon).
+  Spec.it s "render prints an anthem" $ do
+    let mine = Filter.And [Filter.HasCardType CardType.Creature, Filter.ControlledBy PlayerRelation.You]
+    Spec.assertEq s (Just (Text.pack "Creatures you control get +1/+1.")) (Oracle.render (withFace (\f -> f {Face.staticAbilities = [static (Affected.Matching mine) [pt 1 1]]})))
+    Spec.assertEq s (Just (Text.pack "All creatures get -1/-1.")) (Oracle.render (withFace (\f -> f {Face.staticAbilities = [static (Affected.Matching (Filter.HasCardType CardType.Creature)) [pt (-1) (-1)]]})))
+    let black = Filter.And [Filter.HasColor Color.Black, Filter.HasCardType CardType.Creature]
+    Spec.assertEq s (Just (Text.pack "Black creatures get +1/+1.")) (Oracle.render (withFace (\f -> f {Face.staticAbilities = [static (Affected.Matching black) [pt 1 1]]})))
+    let others = Filter.And [Filter.HasSubtype Subtype.Merfolk, Filter.Not Filter.IsSource]
+    Spec.assertEq s (Just (Text.pack "Other Merfolk get +1/+1 and have islandwalk.")) (Oracle.render (withFace (\f -> f {Face.staticAbilities = [static (Affected.Matching others) [pt 1 1, Modification.GainKeyword (Keyword.Landwalk (Filter.HasSubtype Subtype.Island))]]})))
+
+  -- CR 702.5a / 303.4b / 301.5a: an Aura's enchant ability and its "enchanted
+  -- creature", an Equipment's "equipped creature".
+  Spec.it s "render prints an Aura and an Equipment" $ do
+    let attached = Affected.Matching (Filter.And [Filter.HasCardType CardType.Creature, Filter.HasAttached Filter.IsSource])
+        boost = static attached [pt 2 2, Modification.GainKeyword Keyword.Trample]
+        aura = withFace (\f -> (typed [CardType.Enchantment] [Subtype.Aura] f) {Face.enchant = [TargetSlot.required Pool.Creatures Nothing], Face.staticAbilities = [boost]})
+    Spec.assertEq s (Just (Text.pack "Enchant creature\nEnchanted creature gets +2/+2 and has trample.")) (Oracle.render aura)
+    let equipment = withFace (\f -> (typed [CardType.Artifact] [Subtype.Equipment] f) {Face.staticAbilities = [static attached [pt 2 0]]})
+    Spec.assertEq s (Just (Text.pack "Equipped creature gets +2/+0.")) (Oracle.render equipment)
+    let unattached = withFace (\f -> (typed [CardType.Creature] [] f) {Face.staticAbilities = [static attached [pt 2 0]]})
+    Spec.assertEq s Nothing (Oracle.render unattached)
 
 -- The name the normalisation cases give their card.
 x :: CardName.CardName
@@ -232,6 +315,22 @@ loseLife who n = Effect.LoseLife (LifeLoss.MkLifeLoss who (Quantity.Literal n) L
 
 gainLife :: Integer -> Effect.Effect Card.Card (GrantedAbility.GrantedAbility Card.Card)
 gainLife n = Effect.GainLife (PlayerQuantity.MkPlayerQuantity (PlayerRef.Relative PlayerRelation.You) (Quantity.Literal n))
+
+-- A change to an object for a while.
+modify :: ObjectRef.ObjectRef -> Duration.Duration -> Modification.Modification (GrantedAbility.GrantedAbility Card.Card) -> Effect.Effect Card.Card (GrantedAbility.GrantedAbility Card.Card)
+modify ref duration change = Effect.ModifyTarget (ModifyTarget.MkModifyTarget duration change ref Nothing)
+
+-- A change to power and toughness.
+pt :: Integer -> Integer -> Modification.Modification (GrantedAbility.GrantedAbility Card.Card)
+pt p t = Modification.ModifyPowerToughness (ModifyPowerToughness.MkModifyPowerToughness (Quantity.Literal p) (Quantity.Literal t))
+
+-- A static ability that always applies these changes to these objects.
+static :: Affected.Affected -> [Modification.Modification (GrantedAbility.GrantedAbility Card.Card)] -> StaticAbility.StaticAbility (GrantedAbility.GrantedAbility Card.Card)
+static objects changes = StaticAbility.MkStaticAbility {StaticAbility.affected = objects, StaticAbility.condition = Nothing, StaticAbility.functionsFrom = Set.empty, StaticAbility.lingers = Nothing, StaticAbility.name = Nothing, StaticAbility.modifications = NonEmpty.fromList changes}
+
+-- The face with these card types and subtypes.
+typed :: [CardType.CardType] -> [Subtype.Subtype] -> Face.Face Card.Card -> Face.Face Card.Card
+typed types subtypes f = f {Face.typeLine = TypeLine.MkTypeLine Set.empty (Set.fromList types) (Set.fromList subtypes)}
 
 -- A triggered ability on this event, of one mode.
 triggered :: TriggerCondition.TriggerCondition -> [Clause.Clause Card.Card (GrantedAbility.GrantedAbility Card.Card)] -> [(SlotName.SlotName, TargetSlot.TargetSlot)] -> TriggeredAbility.TriggeredAbility Card.Card (GrantedAbility.GrantedAbility Card.Card)

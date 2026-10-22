@@ -17,6 +17,7 @@ import qualified Data.Sequence as Seq
 import qualified Data.Set as Set
 import qualified Data.Text as Text
 import qualified Numeric.Natural as Natural
+import qualified Pawl.Oracle.Continuous as Continuous
 import qualified Pawl.Oracle.Cost as Cost
 import qualified Pawl.Oracle.Effect as Effect
 import qualified Pawl.Oracle.Keyword as Keyword
@@ -27,6 +28,7 @@ import qualified Pawl.Types.ActivatedAbility as ActivatedAbility
 import qualified Pawl.Types.Activator as Activator
 import qualified Pawl.Types.Card as Card
 import qualified Pawl.Types.CardName as CardName
+import qualified Pawl.Types.CardType as CardType
 import qualified Pawl.Types.Color as Color
 import qualified Pawl.Types.Cost as Cost.Type
 import qualified Pawl.Types.CostComponent as CostComponent
@@ -50,9 +52,10 @@ render = Maybe.listToMaybe . renderings
 -- | Every wording of the card's rules text Oracle uses, the current first;
 -- empty for a card some part of which is not rendered yet. Only a single
 -- normal face renders yet, and only the parts of it the fields below name:
--- its keywords, its spell (CR 112), its activated abilities (CR 602) and its
--- triggered abilities (CR 603). A card with no rules text renders as no
--- text, which is what a vanilla creature and a basic land print (CR 305.6, CR
+-- its keywords, its enchant abilities (CR 702.5a), its static abilities (CR
+-- 604), its spell (CR 112), its activated abilities (CR 602) and its
+-- triggered abilities (CR 603). A card with no rules text renders as no text,
+-- which is what a vanilla creature and a basic land print (CR 305.6, CR
 -- 207.2a).
 renderings :: Card.Card -> [Text.Text]
 renderings card = case Card.faces card of
@@ -71,42 +74,46 @@ faceText :: Face.Face Card.Card -> [Text.Text]
 faceText face = do
   let self = CardName.unwrap (Face.name face)
       context = Target.MkContext self Map.empty (Keyword.keywordWord self) [Text.pack " "]
-      rest = face {Face.keywords = Map.empty, Face.spell = Face.defaultSpell, Face.activatedAbilities = [], Face.triggeredAbilities = []}
+      rest = face {Face.keywords = Map.empty, Face.spell = Face.defaultSpell, Face.activatedAbilities = [], Face.triggeredAbilities = [], Face.staticAbilities = [], Face.enchant = []}
+      subtypes = TypeLine.subtypes (Face.typeLine face)
   Monad.guard (rest == bare (Face.name face) (Face.oracleText face) (Face.manaCost face) (Face.colorIndicator face) (Face.typeLine face) (Face.power face) (Face.toughness face) Map.empty)
   keywords <- Keyword.lines self (Face.keywords face)
   spell <-
     if Face.spell face == Face.defaultSpell
       then [[]]
       else fmap pure (Effect.modal context {Target.breaks = [Text.pack " ", Text.pack "\n"]} (Face.spell face))
+  enchants <- traverse (Continuous.enchant context) (Face.enchant face)
+  let bestowed = any (\k -> case k of Keyword.Type.Bestow _ -> True; _ -> False) (Map.keys (Face.keywords face))
+  statics <- traverse (Continuous.static context (Continuous.attachedWord subtypes bestowed) (Face.enchant face)) (Face.staticAbilities face)
   abilities <- traverse (activated context) (Face.activatedAbilities face)
-  triggers <- traverse (triggered context) (Face.triggeredAbilities face)
-  [Text.intercalate (Text.pack "\n") (keywords <> spell <> abilities <> triggers)]
+  triggers <- traverse (triggered context (Set.member CardType.Creature (TypeLine.types (Face.typeLine face)))) (Face.triggeredAbilities face)
+  [Text.intercalate (Text.pack "\n") (keywords <> enchants <> statics <> spell <> abilities <> triggers)]
 
 -- | A triggered ability: "[When/Whenever/At] [trigger event], [effect]" (CR
 -- 603.1), the effect calling the source "it" once the event has named it
 -- (Fire Imp). Only a trigger on its source entering or dying renders yet (CR
--- 603.6a, CR 700.4), dying in either its current wording or the older "is put
--- into a graveyard from the battlefield" (Chromatic Star); an intervening
--- "if", a limit, a name, or a trigger from another zone is not spelled out
--- here.
-triggered :: Target.Context -> TriggeredAbility.TriggeredAbility card ability -> [Text.Text]
-triggered context t
+-- 603.6a). A creature "dies"; any other permanent "is put into a graveyard
+-- from the battlefield", the same event (CR 700.4) in the words Oracle text
+-- keeps for it (Chromatic Star). An intervening "if", a limit, a name, or a
+-- trigger from another zone is not spelled out here.
+triggered :: Target.Context -> Bool -> TriggeredAbility.TriggeredAbility card ability -> [Text.Text]
+triggered context creature t
   | Maybe.isNothing (TriggeredAbility.intervening t),
     Maybe.isNothing (TriggeredAbility.name t),
     TriggeredAbility.limit t == TriggerLimit.Unlimited,
     Set.null (TriggeredAbility.functionsFrom t) = do
       event <- case TriggeredAbility.condition t of
         TriggerCondition.SelfEnters -> [Text.pack " enters"]
-        TriggerCondition.SelfDies -> [Text.pack " dies", Text.pack " is put into a graveyard from the battlefield"]
+        TriggerCondition.SelfDies
+          | creature -> [Text.pack " dies"]
+          | otherwise -> [Text.pack " is put into a graveyard from the battlefield"]
         _ -> []
-      let self = Target.self context
-      effect <- concatMap (\c -> Effect.modal c (TriggeredAbility.modal t)) [context, context {Target.self = Text.pack "it"}]
-      let lowered = if Text.isPrefixOf self effect then effect else Prose.decapitalise effect
-      [Text.pack "When " <> self <> event <> Text.pack ", " <> lowered]
+      effect <- Effect.modal context {Target.self = Text.pack "it"} (TriggeredAbility.modal t)
+      [Text.pack "When " <> Target.self context <> event <> Text.pack ", " <> Prose.decapitalise effect]
   | otherwise = []
 
 -- | An activated ability: "[Cost]: [Effect.]" (CR 602.1a). An ability whose
--- cost sacrifices its source may call it "it" after that (Mogg Mob). Only an
+-- cost sacrifices its source calls it "it" after that (Mogg Mob). Only an
 -- ability its controller activates at any time renders yet: a restriction, a
 -- condition, a named or keyword ability, or a bound on X is not spelled out
 -- here.
@@ -122,8 +129,8 @@ activated context a
     Maybe.isNothing (ActivatedAbility.keyword a) = do
       cost <- Cost.cost (Target.self context) (ActivatedAbility.cost a)
       let sacrificed = elem CostComponent.SacrificeThis (Cost.Type.components (ActivatedAbility.cost a))
-          selves = context : [context {Target.self = Text.pack "it"} | sacrificed]
-      effect <- concatMap (\c -> Effect.modal c (ActivatedAbility.modal a)) selves
+          after = if sacrificed then context {Target.self = Text.pack "it"} else context
+      effect <- Effect.modal after (ActivatedAbility.modal a)
       [cost <> Text.pack ": " <> effect]
   | otherwise = []
 
