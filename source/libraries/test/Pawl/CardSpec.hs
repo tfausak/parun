@@ -367,6 +367,7 @@ import qualified Pawl.Types.Supertype as Supertype
 import qualified Pawl.Types.Suspend as Suspend
 import qualified Pawl.Types.SuspendCounters as SuspendCounters
 import qualified Pawl.Types.TakeExtraTurn as TakeExtraTurn
+import qualified Pawl.Types.TapForMana as TapForMana
 import qualified Pawl.Types.TapForTotalPower as TapForTotalPower
 import qualified Pawl.Types.TapPermanents as TapPermanents
 import qualified Pawl.Types.TapState as TapState
@@ -4967,6 +4968,9 @@ playerEffectFilters playerEffect = case playerEffect of
   -- CR 606.3's names the permanent whose loyalty abilities it reaches (The
   -- Wandering Emperor's is `IsSource`).
   PlayerEffect.ActivateLoyaltyAtInstantSpeed f -> [f]
+  -- CR 602.2's names the permanents it reaches (Piracy's are lands), and CR
+  -- 106.6's restriction on the mana names what it may pay for.
+  PlayerEffect.MayTapForMana grant -> TapForMana.permanents grant : concatMap restrictionFilters (Maybe.maybeToList (TapForMana.restriction grant))
   -- CR 701.6a's "a spell or ability", narrowed by the victim's own qualities
   -- exactly as a cost modifier's is (Spider-Punk's is `And []`, Prowling
   -- Serpopard's is HasCardType Creature).

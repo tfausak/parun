@@ -640,6 +640,7 @@ import qualified Pawl.Codec.SuspendCountersSpec
 import qualified Pawl.Codec.SuspendSpec
 import qualified Pawl.Codec.TakeExtraTurnSpec
 import qualified Pawl.Codec.TakingSpec
+import qualified Pawl.Codec.TapForManaSpec
 import qualified Pawl.Codec.TapForTotalPowerSpec
 import qualified Pawl.Codec.TapPermanentsSpec
 import qualified Pawl.Codec.TapStateSpec
@@ -1535,6 +1536,7 @@ spec s registry = do
   Pawl.Codec.SuspendSpec.spec s
   Pawl.Codec.TakeExtraTurnSpec.spec s
   Pawl.Codec.TakingSpec.spec s
+  Pawl.Codec.TapForManaSpec.spec s
   Pawl.Codec.TapForTotalPowerSpec.spec s
   Pawl.Codec.TappedForManaSpec.spec s
   Pawl.Codec.TappedIsSpec.spec s

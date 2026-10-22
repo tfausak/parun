@@ -1353,6 +1353,8 @@ library codec
     Pawl.Codec.TakeExtraTurnSpec
     Pawl.Codec.Taking
     Pawl.Codec.TakingSpec
+    Pawl.Codec.TapForMana
+    Pawl.Codec.TapForManaSpec
     Pawl.Codec.TapForTotalPower
     Pawl.Codec.TapForTotalPowerSpec
     Pawl.Codec.TappedForMana
@@ -2891,6 +2893,7 @@ library types
     Pawl.Types.SuspendCounters
     Pawl.Types.TakeExtraTurn
     Pawl.Types.Taking
+    Pawl.Types.TapForMana
     Pawl.Types.TapForTotalPower
     Pawl.Types.TappedForMana
     Pawl.Types.TappedIs

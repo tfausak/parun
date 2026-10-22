@@ -42,6 +42,7 @@ import qualified Pawl.Types.Shows as Shows
 import qualified Pawl.Types.SlotName as SlotName
 import qualified Pawl.Types.SpendManaAsThough as SpendManaAsThough
 import qualified Pawl.Types.StatedFlip as StatedFlip
+import qualified Pawl.Types.TapForMana as TapForMana
 import qualified Pawl.Types.Zone as Zone
 
 spec :: (Monad m, Monad n) => Spec.Spec m n -> n ()
@@ -233,6 +234,13 @@ spec s = Spec.describe s "Pawl.Codec.PlayerEffect" $ do
       PlayerEffect.codec
       (PlayerEffect.ActivateLoyaltyAtInstantSpeed Filter.IsSource)
       " {\"type\":\"ActivateLoyaltyAtInstantSpeed\",\"value\":{\"type\":\"IsSource\"}} "
+  -- CR 602.2 / Piracy: "you may tap lands you don't control for mana".
+  Spec.it s "MayTapForMana, Piracy's" $
+    Common.assertCodec
+      s
+      PlayerEffect.codec
+      (PlayerEffect.MayTapForMana (TapForMana.MkTapForMana (Filter.HasCardType CardType.Land) Nothing))
+      " {\"type\":\"MayTapForMana\",\"value\":{\"permanents\":{\"type\":\"HasCardType\",\"value\":{\"type\":\"Land\"}}}} "
   -- CR 601.3b's "certain qualities" (Yeva, Nature's Herald), so a codec that
   -- dropped the payload would round-trip one of these and not both.
   Spec.it s "CastAsThoughItHadFlash, a filter that names qualities" $
