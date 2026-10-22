@@ -38,7 +38,6 @@ import Numeric.Natural (Natural)
 import qualified Pawl.Engine.Binding as Binding
 import qualified Pawl.Engine.Condition as Condition
 import qualified Pawl.Engine.Count as Count
-import qualified Pawl.Engine.Defender as Defender
 import qualified Pawl.Engine.Expiry as Expiry
 import qualified Pawl.Engine.Filter as Filter
 import qualified Pawl.Engine.Game as Game
@@ -121,7 +120,6 @@ import qualified Pawl.Types.StatedFlip as StatedFlip
 import qualified Pawl.Types.Superlative as Superlative
 import qualified Pawl.Types.Teams as Teams
 import Pawl.Types.Timestamp (Timestamp)
-import qualified Pawl.Types.TurnRole as TurnRole
 import qualified Pawl.Types.TurnScope as TurnScope
 import qualified Pawl.Types.VariableChoice as VariableChoice
 import qualified Pawl.Types.Zone as Zone
@@ -153,7 +151,7 @@ inScopeWithin reach pid controller gs scope = case scope of
   -- AnyPlayer includes the controller (Thalia's ruling: "including your own").
   PlayerScope.Related relation -> PlayerRelation.holds (Game.teams gs) relation controller pid
   PlayerScope.Superlative leading -> List.elem pid (leaders reach gs leading)
-  PlayerScope.InRole role -> List.elem pid (roleHolders role gs)
+  PlayerScope.InRole role -> List.elem pid (Turn.roleHolders role gs)
 
 -- The same question over a CARRIER's affected set rather than over a bare scope:
 -- is `pid` one of the players this row applies to? inScope for the Scoped arm,
@@ -204,15 +202,7 @@ playersInScope :: Maybe PlayerId -> Maybe PlayerId -> GameState -> PlayerScope -
 playersInScope reach perspective gs scope = case scope of
   PlayerScope.Related relation -> Players.relatedAmong (Players.table reach gs) perspective gs relation
   PlayerScope.Superlative leading -> Just (leaders reach gs leading)
-  PlayerScope.InRole role -> Just (filter (`List.elem` roleHolders role gs) (Players.table reach gs))
-
--- CR 102.1 / 805.4a / 802.2: the players holding a role the turn hands out --
--- every defending player, CR 811.4's barred ones included, as Yare's controller
--- chooses among them.
-roleHolders :: TurnRole.TurnRole -> GameState -> [PlayerId]
-roleHolders role gs = case role of
-  TurnRole.Active -> Turn.activePlayers gs
-  TurnRole.Defending -> Defender.designatedPlayers gs
+  PlayerScope.InRole role -> Just (filter (`List.elem` Turn.roleHolders role gs) (Players.table reach gs))
 
 -- CR 707.2a: the player abilities this permanent's copiable rules text gives it
 -- -- its copy snapshot's when it has one, its printed face's otherwise. The

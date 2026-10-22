@@ -818,8 +818,8 @@ oneSeat legal resolving source controller gs ref = case playerRefPlayers legal r
 --
 -- The count is pickCounted's, read here -- Teferi, Hero of Dominaria's "up to
 -- two lands".
-chosenPermanents :: Map.Map SlotName (Set Recipient) -> ObjectId -> PlayerId -> ObjectId -> ChosenPermanents.ChosenPermanents -> Game [ObjectId]
-chosenPermanents legal resolving controller source (ChosenPermanents.MkChosenPermanents filter_ chooser count) = do
+chosenPermanents :: AnyNumberOf.AnyNumberOf -> Map.Map SlotName (Set Recipient) -> ObjectId -> PlayerId -> ObjectId -> ChosenPermanents.ChosenPermanents -> Game [ObjectId]
+chosenPermanents purpose legal resolving controller source (ChosenPermanents.MkChosenPermanents filter_ chooser count) = do
   gs <- State.get
   let candidates = battlefieldMatching legal resolving controller source gs filter_
       context = effectContext gs resolving controller source legal (slotBindings resolving gs)
@@ -831,7 +831,7 @@ chosenPermanents legal resolving controller source (ChosenPermanents.MkChosenPer
     legal
     chooser
     (\decider who -> Prompt.ChoosePermanent decider who source)
-    (\decider who pool ceiling_ -> Prompt.ChooseAnyNumber decider who source AnyNumberOf.Permanents pool ceiling_)
+    (\decider who pool ceiling_ -> Prompt.ChooseAnyNumber decider who source purpose pool ceiling_)
     amount
     count
     candidates
@@ -940,7 +940,7 @@ askingObjects resolving source controller legal chosen ref = case ref of
   ObjectRef.RandomCardInLibrary random -> randomCardsInLibrary resolving source controller legal random
   -- Tovolar's "any number of Human Werewolves you control", read off a board CR
   -- 702.145c has already turned him over on.
-  ObjectRef.ChosenPermanents choice -> chosenPermanents legal resolving controller source choice
+  ObjectRef.ChosenPermanents choice -> chosenPermanents AnyNumberOf.Permanents legal resolving controller source choice
   -- Each ref asked or read in the order written, before anything moves; an
   -- object two refs name is named once.
   ObjectRef.AllOf refs -> fmap (ListUtils.nubOrd . concat) (traverse (askingObjects resolving source controller legal chosen) (NonEmpty.toList refs))
@@ -3660,7 +3660,7 @@ effectIsImpossible resolving source controller legal gs effect = case effect of
   Effect.ChoosePlayerAtRandom {} -> False
   -- The ask askingObjects makes of the same choice, so "choose a creature"
   -- over an empty board is impossible and "up to" never is.
-  Effect.ChoosePermanents (ChoosePermanents.MkChoosePermanents choice _) -> choosesFromNothing (ObjectRef.ChosenPermanents choice)
+  Effect.ChoosePermanents (ChoosePermanents.MkChoosePermanents choice _ _) -> choosesFromNothing (ObjectRef.ChosenPermanents choice)
   Effect.RollDie {} -> False
   Effect.FlipCoin {} -> False
   Effect.ExileHandThenDraw {} -> False
@@ -4842,8 +4842,30 @@ applyOneEffect runSubgame resolving source controller legal chosen effect = case
   -- ref naming nobody asks nobody and binds nothing (CR 101.3). Proved by
   -- Pawl.BoardEffectSpec's "CR 608.2d that player chooses the two they keep and
   -- sacrifices the rest".
-  Effect.ChoosePermanents (ChoosePermanents.MkChoosePermanents choice slot) -> do
-    picked <- chosenPermanents legal resolving controller source choice
+  --
+  -- CR 700.3 where a pile chooser is named: the pick is one pile and the rest of
+  -- the matching permanents the other, and the pile chooser's pile is what is
+  -- bound -- Stand or Fall. A single permanent splits only one way, so its
+  -- separation is not asked; piles alike (none matched) are not offered either.
+  -- Proved by the combat-effect scenarios "CR 700.3 / 509.1b Stand or Fall" and
+  -- "CR 700.3 / 802.2 Stand or Fall at three seats".
+  Effect.ChoosePermanents (ChoosePermanents.MkChoosePermanents choice slot pileChooser) -> do
+    picked <- case pileChooser of
+      Nothing -> chosenPermanents AnyNumberOf.Permanents legal resolving controller source choice
+      Just chooserRef -> do
+        gs <- State.get
+        let matching = battlefieldMatching legal resolving controller source gs (ChosenPermanents.filter choice)
+        split <- case matching of
+          [_] -> pure matching
+          _ -> chosenPermanents AnyNumberOf.IntoPile legal resolving controller source choice
+        let first = Set.fromList split
+            rest = Set.difference (Set.fromList matching) first
+            piles = if rest == first then [first] else [first, rest]
+        seat <- askedChooser resolving source controller legal chooserRef
+        taken <- case seat of
+          Nothing -> pure Nothing
+          Just who -> Game.chooseAmong (\decider asked -> Prompt.ChoosePile decider asked source) who piles
+        pure (foldMap Set.toList taken)
     Monad.unless (null picked) (State.modify' (bindObjectsSlot resolving slot (Seq.fromList picked)))
   -- CR 702.158d: "choose one of the three sector designations, then perform
   -- that action on each creature with that designation". The resolving

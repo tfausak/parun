@@ -1022,6 +1022,7 @@ withinOffer prompt chosen = case prompt of
   Prompt.Type.ChooseCopyTarget _ _ _ objects -> all (`elem` objects) chosen
   Prompt.Type.ChooseManaYield _ _ _ options -> chosen `elem` options
   Prompt.Type.ChooseLoopMembers _ _ _ members -> all (`elem` members) chosen
+  Prompt.Type.ChoosePile _ _ _ piles -> chosen `elem` piles
   Prompt.Type.ChooseFromOutsideTheGame _ _ cards least most -> all (`elem` cards) chosen && least <= List.genericLength chosen && List.genericLength chosen <= most
   Prompt.Type.DeclareAttackers _ _ attackers -> all (`elem` attackers) chosen
   Prompt.Type.DeclareBlockers _ _ blockers attackers -> all (`elem` blockers) (Map.keys chosen) && all (all (`elem` attackers)) chosen

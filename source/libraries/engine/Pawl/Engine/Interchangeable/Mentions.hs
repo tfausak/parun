@@ -852,7 +852,7 @@ chooseNumberNames asking x = case x of
 
 choosePermanentsNames :: (Monoid r) => Asking r -> ChoosePermanents.ChoosePermanents -> r
 choosePermanentsNames asking x = case x of
-  ChoosePermanents.MkChoosePermanents permanents slot -> chosenPermanentsNames asking permanents <> slotNames asking slot
+  ChoosePermanents.MkChoosePermanents permanents slot pileChooser -> chosenPermanentsNames asking permanents <> slotNames asking slot <> foldMap (playerRefNames asking) pileChooser
 
 choosePlayerNames :: Asking r -> ChoosePlayer.ChoosePlayer -> r
 choosePlayerNames asking x = case x of
@@ -2346,6 +2346,7 @@ playerRefNames asking x = case x of
   PlayerRef.ChosenPlayerOfBound slotName choice -> slotNames asking slotName <> playerChoiceNames asking choice
   PlayerRef.Attacking attackingPlayers -> attackingPlayersNames asking attackingPlayers
   PlayerRef.Superlative _ -> mempty
+  PlayerRef.InRole _ -> mempty
 
 playerSacrificesNames :: (Monoid r) => Asking r -> PlayerSacrifices.PlayerSacrifices -> r
 playerSacrificesNames asking x = case x of

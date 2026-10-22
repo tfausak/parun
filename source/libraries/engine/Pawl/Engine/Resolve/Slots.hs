@@ -432,6 +432,7 @@ playerRefSlots ref = case ref of
   -- no one player to have been attacked.
   PlayerRef.Attacking (AttackingPlayers.MkAttackingPlayers _ slot) -> Map.singleton slot SlotArity.One
   PlayerRef.Superlative _ -> Map.empty
+  PlayerRef.InRole _ -> Map.empty
 
 -- The slots an AffectedPlayers reads. Only Named does, and only ever one player.
 affectedPlayersSlots :: AffectedPlayers.AffectedPlayers SlotName -> Map.Map SlotName SlotArity
@@ -1088,8 +1089,9 @@ effectPlayerRefs effect = case effect of
   Effect.PlaySubgame {} -> []
   Effect.ChoosePlayer {} -> []
   Effect.ChoosePlayerAtRandom {} -> []
-  -- The seat that picks -- Archfiend of Depravity's "that player".
-  Effect.ChoosePermanents choice -> [ChosenPermanents.chooser (ChoosePermanents.permanents choice)]
+  -- The seat that picks -- Archfiend of Depravity's "that player" -- and the
+  -- one that picks a pile (CR 700.3).
+  Effect.ChoosePermanents choice -> ChosenPermanents.chooser (ChoosePermanents.permanents choice) : Foldable.toList (ChoosePermanents.pileChooser choice)
   Effect.ChooseSector {} -> []
   Effect.RollDie {} -> []
   Effect.FlipCoin {} -> []
@@ -1523,7 +1525,7 @@ slotsOf effect = joinTwo (joinTwo (joinSlots (fmap objectRefSlots (effectObjectR
   Effect.ChoosePlayerAtRandom _ -> Map.empty
   -- The slot is a DEFINITION; the reads are the ceiling's and the Filter's, and
   -- the chooser is a PlayerRef, reported at the head with every other one.
-  Effect.ChoosePermanents (ChoosePermanents.MkChoosePermanents (ChosenPermanents.MkChosenPermanents filter_ _ count) _) ->
+  Effect.ChoosePermanents (ChoosePermanents.MkChoosePermanents (ChosenPermanents.MkChosenPermanents filter_ _ count) _ _) ->
     joinTwo (maybe Map.empty quantitySlots (HowMany.quantity count)) (filterSlotsOf filter_)
   -- A DEFINITION for the result slot (boundSlots below), but CR 706.2's modifier
   -- is a READ: the instruction's own Quantity may name a slot an earlier effect
