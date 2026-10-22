@@ -12,4 +12,4 @@ Every expressible Portal card has been added to `data/cards/`.
 
 ## Needs a capability
 
-Each group is tracked by its issue; its cards are added when it lands.
+Nothing: every Portal card is in the pool.
