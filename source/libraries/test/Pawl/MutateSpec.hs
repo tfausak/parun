@@ -1346,6 +1346,50 @@ spec s registry = Spec.describe s "Mutate" $ do
     -- The paired board, differing in the under component alone.
     Spec.assertEqWith s "CR 508.1 with a Falcon Abomination under it instead, the four Plains all survive" (S.countOnBattlefieldByName (CardName.MkCardName (Text.pack "Plains")) S.alice control) 4
     Spec.assertEqWith s "and that one attacked too" (S.attackerDeclarationsOf control) [cHost]
+  -- CR 702.140e / 604.3: Tarmogoyf's power-and-toughness ability is one of the
+  -- abilities a component brings, so it survives a Cubwarden merged over it.
+  -- The graveyards hold a land and an instant, so the ability says 2/3 where
+  -- Cubwarden's box says 3/5, and both orders and a Clone of the pile read the
+  -- count. Tarmogoyf cannot mutate, so CR 702.140c's two orders are the whole
+  -- of what one Tarmogoyf can be merged into.
+  Spec.it s "CR 702.140e a Cubwarden merged over or under Tarmogoyf keeps its power and toughness ability" $ do
+    plains <- S.printingOf s registry "Plains"
+    bolt <- S.printingOf s registry "Lightning Bolt"
+    goyf <- S.printingOf s registry "Tarmogoyf"
+    cubwarden <- S.printingOf s registry "Cubwarden"
+    clone <- S.printingOf s registry "Clone"
+    let mutated side =
+          let (h, b, sp) = mutateBoard plains goyf cubwarden
+              stocked = snd (S.addGraveyardCard bolt S.bob (snd (S.addGraveyardCard plains S.bob b)))
+           in (h, merging side h stocked sp)
+        (over, overBoard) = mutated MutateSide.Over
+        (under, underBoard) = mutated MutateSide.Under
+        (_, staged) = S.spellOnStack clone S.alice overBoard
+        copied = S.runPure (copying over) staged (Stack.resolveTop >> Engine.settleForPriority)
+    Spec.assertEqWith s "CR 613.4a merged over Tarmogoyf, the pile is 2/3 and not Cubwarden's 3/5" (S.powerToughnessOf over overBoard) (Just (2, 3))
+    Spec.assertEqWith s "CR 730.2a and is otherwise the topmost Cubwarden" (Projection.namesOf over overBoard, Projection.hasKeyword Keyword.Lifelink over overBoard) (Set.singleton (CardName.MkCardName (Text.pack "Cubwarden")), True)
+    Spec.assertEqWith s "CR 613.4a merged under Tarmogoyf, the pile is 2/3 too" (S.powerToughnessOf under underBoard) (Just (2, 3))
+    case cloneOn copied of
+      Nothing -> Spec.assertFailure s "the Clone should have entered as a copy of the merged permanent"
+      Just copy ->
+        Spec.assertEqWith s "CR 707.2a a Clone of the pile copies the ability, so it is a 2/3 Cubwarden" (S.powerToughnessOf copy copied, Projection.namesOf copy copied) (Just (2, 3), Set.singleton (CardName.MkCardName (Text.pack "Cubwarden")))
+    Spec.assertEqWith s "the two cards represent one permanent" (componentNames over overBoard) [CardName.MkCardName (Text.pack "Cubwarden"), CardName.MkCardName (Text.pack "Tarmogoyf")]
+  -- CR 604.3a / 613.4a: the grafted ability stays characteristic-defining, so
+  -- it applies in layer 7a, BEFORE Harmonious Archon's "Non-Archon creatures
+  -- have base power and toughness 3/3" in layer 7b, whatever the timestamps.
+  -- docs/decisions.md, "Whether an ability a merge grafts is still
+  -- characteristic-defining", records the reading. A regression fence: pawl has
+  -- no layer-7b road for a CDA, so no mutation reaches the other reading.
+  Spec.it s "CR 604.3a/613.4a Harmonious Archon's 3/3 outranks the Tarmogoyf ability merged under a Cubwarden" $ do
+    plains <- S.printingOf s registry "Plains"
+    bolt <- S.printingOf s registry "Lightning Bolt"
+    goyf <- S.printingOf s registry "Tarmogoyf"
+    cubwarden <- S.printingOf s registry "Cubwarden"
+    archon <- S.printingOf s registry "Harmonious Archon"
+    let (host, board, spellId) = mutateBoard plains goyf cubwarden
+        stocked = snd (S.addGraveyardCard bolt S.bob (snd (S.addGraveyardCard plains S.bob (snd (S.addPermanent archon S.bob board)))))
+        merged = merging MutateSide.Over host stocked spellId
+    Spec.assertEqWith s "CR 613.4b the Archon's base 3/3 applies after the grafted ability's 2/3" (S.powerToughnessOf host merged) (Just (3, 3))
 
 -- The merged board moved to CR 508.1's declaration, on S.combatBoardOf's terms:
 -- alice active, bob the defending player (CR 506.2), and the beginning of combat

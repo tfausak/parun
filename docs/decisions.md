@@ -290,6 +290,30 @@ Entries are ordered by the first rule each cites.
   regression fence.
 - **Issue**: none.
 
+## Whether an ability a merge grafts is still characteristic-defining
+
+- **Question**: CR 702.140e gives a mutated permanent every component's
+  abilities. Is a component's characteristic-defining ability, such as
+  Tarmogoyf's power and toughness, still one on the merged permanent (layer
+  7a), or a plain static ability (layer 7b, in timestamp order)?
+- **Rules**: CR 604.3a, 613.2a, 613.4a, 613.4b, 613.7a, 702.140e, 730.2a; CR
+  of 2026-08-07.
+- **Decision**: It stays characteristic-defining. CR 604.3a(2)'s copy-effect
+  clause is read as reaching CR 730.2a's merge, which is a copiable effect
+  applied beside copy effects in layer 1a (CR 613.2a); the ability is also
+  printed on a card that represents the permanent.
+- **Rejected**: A plain static ability, on CR 604.3a(2) naming only a copy
+  effect and the card the ability affects. It would apply in layer 7b with
+  CR 613.7a's timestamp, so an earlier base-setting effect would lose to it.
+  It would also split a grafted P/T ability from a grafted changeling or
+  devoid, which pawl already treats as characteristic-defining.
+- **Site**: `Pawl.Engine.Projection.View.withMergedAbilities`, proved by
+  `Pawl.MutateSpec`'s "CR 702.140e a Cubwarden merged over or under
+  Tarmogoyf keeps its power and toughness ability" and fenced by "CR
+  604.3a/613.4a Harmonious Archon's 3/3 outranks the Tarmogoyf ability
+  merged under a Cubwarden".
+- **Issue**: #5323.
+
 ## Whether conjuring into a library is a library move for a mana ability
 
 - **Question**: CR 605.1a disqualifies a mana ability whose effect moves a
