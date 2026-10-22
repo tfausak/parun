@@ -809,9 +809,8 @@ exchangePartner oid a = case a of
 -- text.
 --
 -- PC.textChangedKeywords takes the incoming keywords for ChangeWord's
--- reason: CR 612.3 makes rule 702's mint tell the instances layer 3 left behind
--- from the ones layer 6 grants afterwards, and after this arm the ones layer 3
--- left behind are exactly these.
+-- reason: it is the keywords as layer 3 leaves them, and after this arm those
+-- are exactly these.
 --
 -- PC.wordChanges moves for the same reason: the word changes CR 613.7
 -- applied to `from`'s text before this effect are part of the text that moves

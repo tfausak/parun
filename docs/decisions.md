@@ -439,7 +439,8 @@ Entries are ordered by the first rule each cites.
 - **Decision**: Only a word the keyword is WRITTEN with: a payload rule 702
   states as a variable, such as landwalk's "[type]", cycling's "[type]",
   protection's and hexproof's quality, champion's object. Those are rewritten
-  at layer 3 in the keyword itself. What the rule writes for itself is
+  at layer 3 in the keyword itself, except gift's creature type ("Gift a
+  tapped Fish"), which the keyword cannot yet hold (gap #5457). What the rule writes for itself is
   untouched, so an evolved Ministrant of Obligation still leaves Spirits and a
   Sleighted Dalkovan Packbeasts still makes red Warriors.
 - **Rejected**: Rewriting the whole ability as it is minted, the earlier

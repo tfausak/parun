@@ -1828,8 +1828,9 @@ battlefieldAbilitiesOf counts = concatMap (uncurry battlefieldAbilitiesFor) (Map
 
 -- CR 602.1: every activated ability an object HAS, the one roster every view
 -- builder reads. `abilities` is its own list beside rule 702's battlefield mint,
--- which the caller takes through CR 612's text changes where it has any; then
--- the hand and graveyard mints, and CR 804.2's ability where `deploys`.
+-- which no CR 612 text change reaches (docs/decisions.md, "What a text change
+-- reaches inside a keyword"); then the hand and graveyard mints, and CR 804.2's
+-- ability where `deploys`.
 --
 -- HAS, not can activate here: CR 113.6 says where an ability FUNCTIONS, so crew
 -- is an ability of a Vehicle card in a library (CR 702.122a) as cycling is of a

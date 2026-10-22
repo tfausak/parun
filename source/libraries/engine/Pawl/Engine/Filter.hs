@@ -2682,10 +2682,8 @@ rewriteKeyword pairs keyword = case keyword of
   -- the same way -- a ward cost naming a basic land type is the unprinted case
   -- the arms below are also a fence for.
   --
-  -- CR 702.21b's perEach is left alone HERE and swapped at the mint instead
-  -- (Pawl.Engine.Projection.mintedTriggeredAbilitiesOf, whose rewritePayGate
-  -- takes the gate's own perEach), soulshift's posture: this module is below
-  -- Pawl.Types.Quantity and has no quantity rewriter to call.
+  -- CR 702.21b's perEach is left alone: a player-counter tally names no word
+  -- CR 612.2 swaps.
   Keyword.Type.Ward w -> Keyword.Type.Ward w {Ward.cost = rewriteCost pairs (Ward.cost w)}
   -- CR 702.33a, CR 702.33c, CR 702.34a, CR 702.37a and CR 702.42a: each states a
   -- cost as part of the keyword, so rewriteCost carries CR 612.1 into it.
@@ -2708,10 +2706,9 @@ rewriteKeyword pairs keyword = case keyword of
   Keyword.Type.Buyback cost -> Keyword.Type.Buyback (rewriteCost pairs cost)
   -- CR 702.45a's N is a number and not a word, so CR 612.2 has nothing to swap.
   Keyword.Type.Bushido _ -> keyword
-  -- CR 702.46a's N is a number and not a word, so CR 612.2 has nothing to swap
-  -- HERE. "Spirit" is a word CR 612.2a does reach, but it is in the ability
-  -- Pawl.Engine.Keyword.soulshift mints rather than in this value, so the swap
-  -- arrives there instead (Pawl.Engine.Projection.mintedTriggeredAbilitiesOf).
+  -- CR 702.46a's N is a number and not a word, and "Spirit" is rule 702.46a's
+  -- word, not the card's, so CR 612.2 has nothing to swap (docs/decisions.md,
+  -- "What a text change reaches inside a keyword").
   Keyword.Type.Soulshift _ -> keyword
   Keyword.Type.Dredge _ -> keyword
   -- CR 702.104a's N is a number and not a word, so CR 612.2 has nothing to swap.
@@ -2789,9 +2786,10 @@ rewriteKeyword pairs keyword = case keyword of
   Keyword.Type.Annihilator _ -> keyword
   -- CR 702.181a's and CR 702.189a's N is a number, or a count whose Filter the
   -- CARD writes (Avenger of the Fallen's creature cards), so CR 612.2 swaps
-  -- whatever word that Filter names. Mobilize's "Warrior" is afterlife's
-  -- "Spirit": a word CR 612.2a reaches in the ability Pawl.Engine.Keyword.mobilize
-  -- mints rather than in this value, and firebending's {R} is a mana symbol.
+  -- whatever word that Filter names. Mobilize's "red Warrior" is rule
+  -- 702.181a's text, not the card's, so no swap reaches it (docs/decisions.md,
+  -- "What a text change reaches inside a keyword"), and firebending's {R} is a
+  -- mana symbol.
   Keyword.Type.Mobilize n -> Keyword.Type.Mobilize (rewriteKeywordCount pairs n)
   Keyword.Type.Firebending n -> Keyword.Type.Firebending (rewriteKeywordCount pairs n)
   -- CR 702.75a's N is a number and not a word, so CR 612.2 has nothing to swap;
@@ -2810,9 +2808,9 @@ rewriteKeyword pairs keyword = case keyword of
   Keyword.Type.Amplify _ -> keyword
   Keyword.Type.Exalted -> keyword
   -- CR 702.92a, 702.163a and 702.182a are nullary: their creature-type words
-  -- (Germ, Rebel, Hero) are in the TOKEN Pawl.Engine.Keyword mints, which
-  -- Pawl.Engine.Projection.Rewrite's Effect.Create arm rewrites as card data, so
-  -- CR 612.2a reaches them there rather than here.
+  -- (Germ, Rebel, Hero) are the rule's, in the token Pawl.Engine.Keyword mints,
+  -- and no CR 612.2 text change reaches them (docs/decisions.md, "What a text
+  -- change reaches inside a keyword").
   Keyword.Type.LivingWeapon -> keyword
   Keyword.Type.ForMirrodin -> keyword
   Keyword.Type.JobSelect -> keyword
@@ -2822,10 +2820,9 @@ rewriteKeyword pairs keyword = case keyword of
   Keyword.Type.Spree -> keyword
   Keyword.Type.Tiered -> keyword
   Keyword.Type.Mentor -> keyword
-  -- CR 702.135a's N is a number and not a word, so CR 612.2 has nothing to swap
-  -- HERE. "Spirit" is a word CR 612.2a does reach, but it is in the ability
-  -- Pawl.Engine.Keyword.afterlife mints rather than in this value, so the swap
-  -- arrives there instead (Pawl.Engine.Projection.mintedTriggeredAbilitiesOf).
+  -- CR 702.135a's N is a number and not a word, and "white and black Spirit" is
+  -- rule 702.135a's text, not the card's, so CR 612.2 has nothing to swap
+  -- (docs/decisions.md, "What a text change reaches inside a keyword").
   Keyword.Type.Afterlife _ -> keyword
   Keyword.Type.Provoke -> keyword
   Keyword.Type.Training -> keyword
@@ -2924,8 +2921,9 @@ rewriteKeyword pairs keyword = case keyword of
   Keyword.Type.Ravenous -> keyword
   Keyword.Type.Squad cost -> Keyword.Type.Squad (rewriteCost pairs cost)
   Keyword.Type.Offspring cost -> Keyword.Type.Offspring (rewriteCost pairs cost)
-  -- CR 702.174a's payload is a [something] and not a Cost, so a CR 612.2 land-type
-  -- change has nothing in it to rewrite.
+  -- Not implemented: "a tapped Fish" and "an Octopus" print a creature type a
+  -- CR 612.2 text change should swap, and Gift.Gift has nowhere to hold the new
+  -- word (#5457).
   Keyword.Type.Gift _ -> keyword
   -- CR 702.143a states a cost too, so it is reached the same way. A cost read
   -- off the card's own mana cost prints no word to swap.

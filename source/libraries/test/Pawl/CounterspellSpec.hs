@@ -1133,7 +1133,7 @@ charmAt oid p = case p of
   Prompt.ChooseTargets _ _ _ sets -> fmap (\(_, candidates) -> Set.filter (\r -> r == Recipient.ToCreature oid || r == Recipient.ToObject oid) candidates) sets
   _ -> S.identityAnswer p
 
--- CR 612.3's half of the same mint: alice controls `host`, optionally resolves an
+-- CR 612.3 over afterlife: alice controls `host`, optionally resolves an
 -- Artificial Evolution at it, then resolves an Afterlife Insurance ({1}{W/B}
 -- Instant -- "Creatures you control gain afterlife 1 until end of turn. Draw a
 -- card.", checked against Scryfall) and Murders the host. Returns the host's id,
@@ -1538,7 +1538,7 @@ artificialEvolutionSpec s registry = Spec.describe s "ArtificialEvolution" $ do
     mapM_ (\oid -> Spec.assertEqWith s "named Time Lord Token" (Projection.namesOf oid after) (Set.singleton (CardName.MkCardName (Text.pack "Time Lord Token")))) tokens
     mapM_ (\oid -> Spec.assertEqWith s "Creature -- Time Lord" (Projection.subtypesOf oid after) (Set.singleton Subtype.TimeLord)) tokens
 
-  -- CR 612.3's boundary on the same mint: "any abilities that are granted to an
+  -- CR 612.3's boundary on afterlife: "any abilities that are granted to an
   -- object can't be modified by text-changing effects that affect that object".
   -- Afterlife Insurance grants afterlife 1 at CR 613.1f layer 6, after the
   -- Evolution's layer-3 swap, so rule 702.135a's Spirit survives.
