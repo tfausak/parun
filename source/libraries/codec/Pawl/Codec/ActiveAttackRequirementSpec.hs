@@ -26,8 +26,22 @@ spec s = Spec.describe s "Pawl.Codec.ActiveAttackRequirement" $ do
           ActiveAttackRequirement.timestamp = Timestamp.MkTimestamp 2,
           ActiveAttackRequirement.expiry = Expiry.AtCleanup,
           ActiveAttackRequirement.attacker = RestrictedCreatures.Named (ObjectId.MkObjectId 3),
-          ActiveAttackRequirement.defender = AttackTarget.OfPlayer (PlayerId.MkPlayerId 4)
+          ActiveAttackRequirement.defender = Just (AttackTarget.OfPlayer (PlayerId.MkPlayerId 4))
         }
       " {\"source\":1,\"controller\":5,\"timestamp\":2,\"expiry\":{\"type\":\"AtCleanup\"},\"attacker\":{\"type\":\"Named\",\"value\":3},\"defender\":{\"type\":\"OfPlayer\",\"value\":4}} "
+  -- Courtly Provocateur's row: no defender, elided.
+  Spec.it s "a creature that must attack anything" $
+    Common.assertCodec
+      s
+      ActiveAttackRequirement.codec
+      ActiveAttackRequirement.MkActiveAttackRequirement
+        { ActiveAttackRequirement.source = ObjectId.MkObjectId 1,
+          ActiveAttackRequirement.controller = PlayerId.MkPlayerId 5,
+          ActiveAttackRequirement.timestamp = Timestamp.MkTimestamp 2,
+          ActiveAttackRequirement.expiry = Expiry.AtCleanup,
+          ActiveAttackRequirement.attacker = RestrictedCreatures.Named (ObjectId.MkObjectId 3),
+          ActiveAttackRequirement.defender = Nothing
+        }
+      " {\"source\":1,\"controller\":5,\"timestamp\":2,\"expiry\":{\"type\":\"AtCleanup\"},\"attacker\":{\"type\":\"Named\",\"value\":3}} "
   Spec.it s "has a schema" $
     Common.assertHasSchema s ActiveAttackRequirement.codec

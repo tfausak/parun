@@ -406,7 +406,7 @@ blockRequirementNames oid row = case row of
 attackRequirementNames :: ObjectId -> ActiveAttackRequirement.ActiveAttackRequirement -> Bool
 attackRequirementNames oid row = case row of
   ActiveAttackRequirement.MkActiveAttackRequirement source _controller _timestamp expiry attacker defender ->
-    source == oid || Monoid.getAny (Mentions.expiryNames (unread oid) expiry) || restrictedNames oid attacker || attackTargetNames oid defender
+    source == oid || Monoid.getAny (Mentions.expiryNames (unread oid) expiry) || restrictedNames oid attacker || any (attackTargetNames oid) defender
 
 objectProhibitionNames :: ObjectId -> ActiveObjectProhibition.ActiveObjectProhibition -> Bool
 objectProhibitionNames oid row = case row of

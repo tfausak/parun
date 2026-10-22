@@ -1747,7 +1747,7 @@ encore cost =
           RequireAttack.MkRequireAttack
             { RequireAttack.duration = Duration.UntilEndOfTurn,
               RequireAttack.attacker = RestrictedCreatures.Named (ObjectRef.InSlot encoreTokenSlot),
-              RequireAttack.defender = AttackTargetRef.Players (PlayerRef.InSlot encoreOpponentSlot)
+              RequireAttack.defender = Just (AttackTargetRef.Players (PlayerRef.InSlot encoreOpponentSlot))
             }
       loop =
         Effect.ForEach

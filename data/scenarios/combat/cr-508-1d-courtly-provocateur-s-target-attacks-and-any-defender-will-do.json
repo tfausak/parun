@@ -1,0 +1,27 @@
+{
+  "description": "CR 508.1d Courtly Provocateur's target must attack, and any defender will do",
+  "note": "\"Target creature attacks this turn if able\" names no defender, so attacking bob obeys it though carol activated it. Declining to attack is refused; a requirement aimed at carol would refuse the attack on bob as well.",
+  "board": {
+    "active": "alice",
+    "step": "Upkeep",
+    "seats": [
+      {
+        "name": "alice",
+        "battlefield": [{ "card": "Goblin Piker", "label": "piker", "ready": true }],
+        "library": [{ "card": "Island" }, { "card": "Island" }]
+      },
+      { "name": "bob" },
+      {
+        "name": "carol",
+        "battlefield": [{ "card": "Courtly Provocateur", "label": "provocateur", "ready": true }]
+      }
+    ]
+  },
+  "timeline": [
+    { "turn": 1, "step": "Upkeep", "player": "carol", "do": { "Activate": { "object": "$provocateur", "ability": 0, "targets": ["$piker"] } } },
+    { "turn": 1, "step": "DeclareAttackers", "player": "alice", "refuse": { "Attack": [] } },
+    { "turn": 1, "step": "DeclareAttackers", "player": "alice", "do": { "Attack": ["$piker"] } },
+    { "turn": 1, "step": "DeclareAttackers", "player": "alice", "source": "$piker", "do": { "ChooseAttackTarget": "$bob" } },
+    { "turn": 1, "step": "EndOfCombat", "player": "alice", "check": { "Attackers": { "attackers": { "$piker": "$bob" } } } }
+  ]
+}

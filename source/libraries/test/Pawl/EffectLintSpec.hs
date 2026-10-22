@@ -1586,8 +1586,9 @@ effectObjectRefs effect =
         Effect.RequireAttack (RequireAttack.MkRequireAttack _ attacker defender) ->
           read_ (namedRef attacker)
             <> case defender of
-              AttackTargetRef.Players _ -> []
-              AttackTargetRef.Permanents ref -> read_ [ref]
+              Nothing -> []
+              Just (AttackTargetRef.Players _) -> []
+              Just (AttackTargetRef.Permanents ref) -> read_ [ref]
         Effect.CreateEmblem {} -> []
         Effect.BecomeMonarch {} -> []
         Effect.TakeTheInitiative {} -> []

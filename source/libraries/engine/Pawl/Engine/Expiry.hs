@@ -218,7 +218,7 @@ arm acquisition targets controller source duration gs = case duration of
           ( EventExpiry.MkEventExpiry controller $ case event of
               DurationEvent.SourceTurnedFaceDown -> event
               DurationEvent.Planeswalked -> event
-              DurationEvent.SpellCast criterion -> DurationEvent.SpellCast (Filter.bakeBound (Binding.playersIn targets) criterion)
+              DurationEvent.SpellCast criterion -> DurationEvent.SpellCast (Filter.bakeBound (Binding.playersIn targets) Map.empty criterion)
           )
       )
 

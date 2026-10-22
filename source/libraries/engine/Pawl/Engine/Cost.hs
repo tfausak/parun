@@ -140,7 +140,6 @@ import qualified Pawl.Types.ManaWindow as ManaWindow
 import qualified Pawl.Types.Milled as Milled
 import qualified Pawl.Types.Object as Object
 import Pawl.Types.ObjectId (ObjectId)
-import qualified Pawl.Types.Onset as Onset
 import qualified Pawl.Types.OptionalDecision as OptionalDecision
 import qualified Pawl.Types.Payment as Payment
 import qualified Pawl.Types.PaymentMoment as PaymentMoment
@@ -177,6 +176,7 @@ import qualified Pawl.Types.TapPermanents as TapPermanents
 import qualified Pawl.Types.TapState as TapState
 import qualified Pawl.Types.TappedForMana as TappedForMana
 import qualified Pawl.Types.Threshold as Threshold
+import qualified Pawl.Types.TurnWindow as TurnWindow
 import qualified Pawl.Types.TypeLine as TypeLine
 import qualified Pawl.Types.VariableChoice as VariableChoice
 import qualified Pawl.Types.WhichCounters as WhichCounters
@@ -5718,7 +5718,7 @@ armSpendTriggers sid spent gs =
           (SpendTrigger.source trigger)
           (SpendTrigger.controller trigger)
           (Map.singleton Binding.castSpell (Binding.toObject sid))
-          Onset.Immediately
+          (Just TurnWindow.AnyTurn)
           Nothing
           g
    in List.foldl' arm gs (filter fires (Maybe.mapMaybe ManaUnit.spendTrigger (Mana.Type.unwrap spent)))
