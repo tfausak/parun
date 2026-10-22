@@ -2,8 +2,8 @@
 -- of MTGJSON (#9), for the cards 'Pawl.Oracle.render' answers for: a single
 -- face whose text is keywords alone. Everything here reads a field MTGJSON
 -- carries as structured data (CR 202.1, CR 205) or a keyword name from
--- 'Pawl.Oracle.standalone' or 'Pawl.Oracle.landwalks'; a word it does not know disqualifies the card
--- rather than being guessed at.
+-- 'Pawl.Oracle.standalone' or 'Pawl.Oracle.landwalks'; a word it does not
+-- know disqualifies the card rather than being guessed at.
 module Pawl.Ingest where
 
 import qualified Control.Applicative as Applicative

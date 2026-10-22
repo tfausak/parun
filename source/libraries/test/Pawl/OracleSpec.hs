@@ -85,9 +85,10 @@ spec s = Spec.describe s "Pawl.Oracle" $ do
 
   -- Each record as script/ingest/candidates.jq writes it, against a card
   -- written by hand and checked against Scryfall, so the two are independent.
-  -- Rograkh is red only by its color indicator (CR 204), and both cost {0},
-  -- which the pool writes as a cost of no symbols. Mountain Goat's
-  -- mountainwalk is a landwalk over a basic land type (CR 702.14a).
+  -- Rograkh is red only by its color indicator (CR 204), and it and
+  -- Ornithopter cost {0}, which the pool writes as a cost of no symbols.
+  -- Mountain Goat's mountainwalk is a landwalk over a basic land type (CR
+  -- 702.14a).
   Spec.it s "candidate builds the card the pool holds" $ do
     registry <- Registry.defaultRoot >>= Registry.fileRegistry
     Monad.forM_
