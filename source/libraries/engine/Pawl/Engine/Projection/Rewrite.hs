@@ -132,6 +132,7 @@ import qualified Pawl.Types.ExchangeOwnership as ExchangeOwnership
 import qualified Pawl.Types.ExchangeValues as ExchangeValues
 import qualified Pawl.Types.ExchangedValue as ExchangedValue
 import qualified Pawl.Types.ExileFromGraveyard as ExileFromGraveyard
+import qualified Pawl.Types.ExiledCardAbilities as ExiledCardAbilities
 import qualified Pawl.Types.Face as Face
 import qualified Pawl.Types.FaceDownCharacteristics as FaceDownCharacteristics
 import qualified Pawl.Types.FaceDownState as FaceDownState
@@ -336,9 +337,17 @@ rewriteModification pairs m =
               -- ability was put on the stack (CR 702.165d, Pawl.Engine.Resolve.Effect's
               -- expandGrant).
               Modification.GainAbilitiesOfSource _ -> acc
-              -- Carries no word: the abilities are the linked cards', read at
-              -- projection time, and the restrictions name none.
-              Modification.GainExiledCardAbilities _ -> acc
+              -- CR 612.1 through the Filter naming the exiled cards, printed on the
+              -- granter (CR 612.3) as AddNamesMatching's is, and through the extra
+              -- restrictions, printed there too. The abilities are the cards', read
+              -- at projection time. Unproven: no card in data/cards/ gives such a
+              -- grant a subtype or colour word.
+              Modification.GainExiledCardAbilities e ->
+                Modification.GainExiledCardAbilities
+                  e
+                    { ExiledCardAbilities.cards = Filter.rewrite [(from, to)] (ExiledCardAbilities.cards e),
+                      ExiledCardAbilities.restrictions = fmap (rewriteRestriction [(from, to)]) (ExiledCardAbilities.restrictions e)
+                    }
               -- Carries no word: the abilities are the stickers', read at projection
               -- time.
               Modification.GainAbilitiesOfStickers -> acc

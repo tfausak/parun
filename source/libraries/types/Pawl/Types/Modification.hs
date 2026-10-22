@@ -151,10 +151,9 @@ data Modification ability
     -- gave the creature with backup is not granted. Pawl.KeywordTriggerSpec's Backup group
     -- proves the first half.
     GainAbilitiesOfSource (Set.Set Keyword.Keyword)
-  | -- | layer 6, CR 613.1f / 607.2a: this object has each activated ability of
-    -- the payload's pile of cards exiled with this effect's source, each
-    -- carrying the payload's extra restrictions (Locus of Enlightenment,
-    -- Steward of the Harvest).
+  | -- | layer 6, CR 613.1f: this object has each activated ability of each
+    -- card in exile the payload names, each carrying the payload's extra
+    -- restrictions (Locus of Enlightenment, Mairsil, the Pretender).
     GainExiledCardAbilities ExiledCardAbilities.ExiledCardAbilities
   | -- | layer 6, CR 613.1f / 123.7a: this object has the abilities printed on
     -- the ability stickers on this effect's source, read off the stickers
