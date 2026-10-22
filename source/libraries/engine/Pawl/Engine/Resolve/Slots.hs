@@ -3313,7 +3313,7 @@ effectContext gs resolving controller source legal bindings =
     -- Brass Herald's "creature cards of the chosen type revealed this way" is
     -- the chosen subtype's proof (Pawl.ResolveSpec). CR 607.5: only the choices
     -- of the abilities the resolving one came with (Game.readingAcquisition).
-    (Projection.framedWith (SourceContext.choicesOf (Game.readingAcquisition resolving source gs source) source gs) source gs (Filter.contextFor (Game.teams gs) (Just controller) (Just source)))
+    (Projection.framedWith (SourceContext.choicesOf (Game.readingAcquisition resolving source gs source) source gs) source gs (Filter.contextIn gs (Just controller) (Just source)))
       { -- CR 608.2c: the numbers earlier clauses of THIS resolution stamped on
         -- slots, for the Filter.Measures operand that compares a candidate
         -- against one (AmountInSlot) -- Localized Destruction's "power equal to

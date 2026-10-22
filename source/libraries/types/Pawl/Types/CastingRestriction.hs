@@ -2,6 +2,7 @@ module Pawl.Types.CastingRestriction where
 
 import qualified Pawl.Types.DuringPhase as DuringPhase
 import qualified Pawl.Types.Phase as Phase
+import qualified Pawl.Types.TurnScope as TurnScope
 
 -- | CR 601.3's PROHIBITION half -- a rule or effect that stops a player casting a
 -- spell -- printed on a card about itself (Rally the Troops).
@@ -98,4 +99,8 @@ data CastingRestriction
     -- Pawl.Types.ActivationRestriction's arm of this name (CR 506.7g), sharing
     -- Pawl.Engine.Turn.beforeStep as its reader.
     BeforeStep Phase.Phase
+  | -- | CR 102.1: castable only on a turn the scope admits, in any phase or
+    -- step of it -- Siren's Call's "during an opponent's turn". The mirror of
+    -- Pawl.Types.ActivationRestriction's arm of this name.
+    DuringTurn TurnScope.TurnScope
   deriving (Eq, Ord, Show)

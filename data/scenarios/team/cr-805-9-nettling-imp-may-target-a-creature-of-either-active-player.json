@@ -1,0 +1,32 @@
+{
+  "description": "CR 805.4a / 805.9 Nettling Imp may target a creature of either active player under shared team turns",
+  "note": "A shared team turn: alice and bob are both active players (CR 805.4a), so bob's Piker is \"a creature the active player has controlled\" though alice is the seat whose turn it nominally is. The Piker must then attack.",
+  "board": {
+    "active": "alice",
+    "step": "Upkeep",
+    "sharedTeamTurns": true,
+    "seats": [
+      { "name": "alice", "team": 1, "library": [{ "card": "Island" }] },
+      {
+        "name": "bob",
+        "team": 1,
+        "battlefield": [{ "card": "Goblin Piker", "label": "piker", "ready": true }],
+        "library": [{ "card": "Island" }]
+      },
+      {
+        "name": "carol",
+        "team": 2,
+        "battlefield": [{ "card": "Nettling Imp", "label": "imp", "ready": true }],
+        "library": [{ "card": "Island" }]
+      },
+      { "name": "dave", "team": 2, "library": [{ "card": "Island" }] }
+    ]
+  },
+  "timeline": [
+    { "turn": 1, "step": "Upkeep", "player": "carol", "do": { "Activate": { "object": "$imp", "ability": 0, "targets": ["$piker"] } } },
+    { "turn": 1, "step": "DeclareAttackers", "player": "alice", "refuse": { "Attack": [] } },
+    { "turn": 1, "step": "DeclareAttackers", "player": "alice", "do": { "Attack": ["$piker"] } },
+    { "turn": 1, "step": "DeclareAttackers", "player": "alice", "source": "$piker", "do": { "ChooseAttackTarget": "$dave" } },
+    { "turn": 1, "step": "EndOfCombat", "player": "alice", "check": { "Attackers": { "attackers": { "$piker": "$dave" } } } }
+  ]
+}

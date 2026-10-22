@@ -1418,6 +1418,8 @@ library codec
     Pawl.Codec.TurnedUpOffDeckSpec
     Pawl.Codec.TurnFaceDown
     Pawl.Codec.TurnFaceDownSpec
+    Pawl.Codec.TurnRole
+    Pawl.Codec.TurnRoleSpec
     Pawl.Codec.TurnScope
     Pawl.Codec.TurnScopeSpec
     Pawl.Codec.TurnUpProcedure
@@ -2928,6 +2930,7 @@ library types
     Pawl.Types.TurnedFaceUp
     Pawl.Types.TurnedUpOffDeck
     Pawl.Types.TurnFaceDown
+    Pawl.Types.TurnRole
     Pawl.Types.TurnScope
     Pawl.Types.TurnUpProcedure
     Pawl.Types.TurnUpR

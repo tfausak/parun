@@ -102,7 +102,7 @@ conditionOf printingId gs = do
 -- and CR 903.6 has already put in the command zone.
 fulfilled :: Filter.Type.Filter Keyword -> PlayerId -> GameState -> Bool
 fulfilled predicate pid gs =
-  let context = Filter.contextFor (Game.teams gs) (Just pid) Nothing
+  let context = Filter.contextIn gs (Just pid) Nothing
       deck = maybe Map.empty Player.startingDeck (Map.lookup pid (GameState.players gs))
       admits printingId = case Game.cardOfPrinting printingId gs of
         Nothing -> False
