@@ -1,0 +1,59 @@
+{
+  "description": "CR 602.5b / 613.1f: Mairsil, the Pretender has the activated abilities of the cards alice owns in exile with cage counters, and may activate each of them once each turn",
+  "note": "Shivan Dragon and Spitfire Handler print the same {R}: +1/+0, so Mairsil has two instances of it (Mairsil's ruling), each its own to the once-each-turn rider: the Dragon's is refused a second time while the Handler's is still offered. The Buzzardiers' flying ability is a third. The uncaged Shivan Dragon and bob's caged one lend nothing, so no fourth ability is offered. On alice's next turn the Dragon's ability is offered again.",
+  "board": {
+    "active": "alice",
+    "step": "PrecombatMain",
+    "seats": [
+      {
+        "name": "alice",
+        "battlefield": [
+          { "card": "Mairsil, the Pretender", "label": "mairsil" },
+          { "card": "Mountain", "label": "m1" },
+          { "card": "Mountain", "label": "m2" },
+          { "card": "Mountain", "label": "m3" },
+          { "card": "Mountain", "label": "m4" }
+        ],
+        "exile": [
+          { "card": "Shivan Dragon", "label": "dragon", "counters": [{ "key": { "type": "Named", "value": "cage" }, "value": 1 }] },
+          { "card": "Spitfire Handler", "label": "handler", "counters": [{ "key": { "type": "Named", "value": "cage" }, "value": 1 }] },
+          { "card": "Ironclaw Buzzardiers", "label": "buzzardiers", "counters": [{ "key": { "type": "Named", "value": "cage" }, "value": 1 }] },
+          { "card": "Shivan Dragon", "label": "uncaged" }
+        ],
+        "library": [
+          { "card": "Mountain" },
+          { "card": "Mountain" },
+          { "card": "Mountain" }
+        ]
+      },
+      {
+        "name": "bob",
+        "exile": [
+          { "card": "Shivan Dragon", "label": "bobs", "counters": [{ "key": { "type": "Named", "value": "cage" }, "value": 1 }] }
+        ],
+        "library": [
+          { "card": "Mountain" },
+          { "card": "Mountain" },
+          { "card": "Mountain" }
+        ]
+      }
+    ]
+  },
+  "timeline": [
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": { "Activate": { "object": "$mairsil", "ability": 0, "mana": ["$m1", null] } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass" },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "refuse": { "Activate": { "object": "$mairsil", "ability": 0, "mana": ["$m2", null] } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": { "Activate": { "object": "$mairsil", "ability": 1, "mana": ["$m2", null] } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass" },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "refuse": { "Activate": { "object": "$mairsil", "ability": 1, "mana": ["$m3", null] } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": { "Activate": { "object": "$mairsil", "ability": 2, "mana": ["$m3", null] } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass" },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "refuse": { "Activate": { "object": "$mairsil", "ability": 2, "mana": ["$m4", null] } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "refuse": { "Activate": { "object": "$mairsil", "ability": 3, "mana": ["$m4", null] } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "check": { "PowerToughness": { "object": "$mairsil", "power": 6, "toughness": 4 } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "check": { "Keywords": { "object": "$mairsil", "keyword": { "type": "Flying" }, "count": 1 } } },
+    { "turn": 3, "step": "PrecombatMain", "player": "alice", "do": { "Activate": { "object": "$mairsil", "ability": 0, "mana": ["$m1", null] } } },
+    { "turn": 3, "step": "PrecombatMain", "player": "alice", "do": "Pass" },
+    { "turn": 3, "step": "PrecombatMain", "player": "alice", "check": { "PowerToughness": { "object": "$mairsil", "power": 5, "toughness": 4 } } }
+  ]
+}

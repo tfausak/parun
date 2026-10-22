@@ -2032,7 +2032,7 @@ modificationNames asking onAbility x = case x of
   Modification.GainCastingPermission _castingPermission -> mempty
   Modification.GainAbility ability -> onAbility ability
   Modification.GainAbilitiesOfSource keyword -> foldMap (keywordNames asking) keyword
-  Modification.GainExiledCardAbilities (ExiledCardAbilities.MkExiledCardAbilities _ items) -> foldMap (activationRestrictionNames asking) items
+  Modification.GainExiledCardAbilities (ExiledCardAbilities.MkExiledCardAbilities cards items) -> filterNames asking cards <> foldMap (activationRestrictionNames asking) items
   Modification.GainAbilitiesOfStickers -> mempty
   Modification.LoseAllAbilities -> mempty
   Modification.LoseNamedAbility abilityName -> names asking (`Binding.Engine.isAcquiredFrom` abilityName)

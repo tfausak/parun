@@ -165,8 +165,11 @@
             {
               "type": "GainExiledCardAbilities",
               "value": {
-                "pile": {
-                  "type": "CraftMaterials"
+                "cards": {
+                  "type": "IsExiledWithSource",
+                  "value": {
+                    "type": "CraftMaterials"
+                  }
                 },
                 "restrictions": [
                   {
