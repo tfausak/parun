@@ -438,7 +438,7 @@ attackerAssignment gs contested (attacker, target) = case Projection.combatDamag
                      in offer CombatDamageOption.AsThoughUnblocked (if banded then Maybe.fromMaybe pid defending else pid) toDefender blocked
               _ -> blocked
         if not (Combat.isBlocked attacker gs)
-          then -- CR 510.1b: never blocked, so it hits what it is attacking.
+          then -- CR 510.1b, or its option: never blocked.
             unblocked
           else asThoughUnblocked $ case live of
             -- Blocked, but nothing is blocking it now. CR 702.19d: a trampler

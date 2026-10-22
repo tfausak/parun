@@ -1,0 +1,27 @@
+{
+  "description": "CR 510.1c Indomitable Might's enchanted Grizzly Bears, a 5/5, has its controller's option: blocked, it assigns all 5 to bob as though unblocked",
+  "board": {
+    "active": "alice",
+    "step": "BeginningOfCombat",
+    "seats": [
+      {
+        "name": "alice",
+        "battlefield": [
+          { "card": "Grizzly Bears", "label": "bears", "ready": true },
+          { "card": "Indomitable Might", "attached": "bears" }
+        ]
+      },
+      {
+        "name": "bob",
+        "battlefield": [{ "card": "Axebane Beast", "label": "beast", "ready": true }]
+      }
+    ]
+  },
+  "timeline": [
+    { "turn": 1, "step": "DeclareAttackers", "player": "alice", "do": { "Attack": ["$bears"] } },
+    { "turn": 1, "step": "DeclareBlockers", "player": "bob", "do": { "Block": { "$beast": ["$bears"] } } },
+    { "turn": 1, "step": "CombatDamage", "player": "alice", "source": "$bears", "do": { "ChooseOptional": { "type": "Exercises" } } },
+    { "turn": 1, "step": "EndOfCombat", "player": "alice", "check": { "Life": { "player": "bob", "life": 15 } } },
+    { "turn": 1, "step": "EndOfCombat", "player": "alice", "check": { "Damage": { "object": "$beast", "damage": 0 } } }
+  ]
+}
