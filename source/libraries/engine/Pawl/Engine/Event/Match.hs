@@ -1183,21 +1183,6 @@ matchesTriggerGiven bindings board gs bearer you cond event = case cond of
   -- "The Raven's Warning sees Venser's Sliver fly as it hit" proves it. The
   -- DamageKind test is a fence rather than a tested branch: no card in the pool
   -- makes a Wolf or Werewolf deal NONCOMBAT damage while a Tovolar watches.
-  -- The same event read by a BYSTANDER (CR 510.1b / 510.2): a permanent the Filter
-  -- admits dealt combat damage to a player the relation admits, read like
-  -- SelfDealsCombatDamageToPlayer's: Teysa, Envoy of Ghosts' "to you", which
-  -- data/scenarios/event-trigger's "Teysa ignores combat damage dealt to another
-  -- player" proves. The Filter reads the event's DAMAGER, the bearer
-  -- contributing only CR 109.5's "you" and the Filter.Context's source -- which
-  -- is what would make Filter.IsSource the self-scoped reading.
-  --
-  -- The damager off `board` (Event.Binding.postEventView), not the live view:
-  -- CR 603.10's first sentence wants it as it existed immediately after the
-  -- damage, and pawl scans the log after CR 704's pass, which may have buried
-  -- what granted the quality the Filter asks about. data/scenarios/event-trigger's
-  -- "The Raven's Warning sees Venser's Sliver fly as it hit" proves it. The
-  -- DamageKind test is a fence rather than a tested branch: no card in the pool
-  -- makes a Wolf or Werewolf deal NONCOMBAT damage while a Tovolar watches.
   TriggerCondition.PermanentDealsCombatDamageToPlayer p -> case event of
     GameEvent.DamageDealt ev ->
       DamageEvent.kind ev == DamageKind.Combat
