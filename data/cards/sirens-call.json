@@ -1,0 +1,173 @@
+{
+  "faces": [
+    {
+      "castingRestrictions": [
+        {
+          "type": "DuringTurn",
+          "value": {
+            "type": "OpponentsTurn"
+          }
+        },
+        {
+          "type": "BeforeStep",
+          "value": {
+            "type": "Combat",
+            "value": {
+              "type": "DeclareAttackers"
+            }
+          }
+        }
+      ],
+      "delayedAbilities": {
+        "destroy them": {
+          "condition": {
+            "type": "StepBegins",
+            "value": {
+              "phase": {
+                "type": "Ending",
+                "value": {
+                  "type": "EndStep"
+                }
+              },
+              "scope": {
+                "type": "EachTurn"
+              }
+            }
+          },
+          "modal": {
+            "modes": [
+              {
+                "clauses": [
+                  {
+                    "effects": [
+                      {
+                        "type": "Destroy",
+                        "value": {
+                          "ref": {
+                            "type": "EachMatching",
+                            "value": {
+                              "type": "And",
+                              "value": [
+                                {
+                                  "type": "HasCardType",
+                                  "value": {
+                                    "type": "Creature"
+                                  }
+                                },
+                                {
+                                  "type": "Not",
+                                  "value": {
+                                    "type": "HasSubtype",
+                                    "value": {
+                                      "type": "Wall"
+                                    }
+                                  }
+                                },
+                                {
+                                  "type": "ControlledByBound",
+                                  "value": "namedPlayer"
+                                },
+                                {
+                                  "type": "Not",
+                                  "value": {
+                                    "type": "AttackedThisTurn"
+                                  }
+                                },
+                                {
+                                  "type": "ControlledSinceTurnBegan"
+                                }
+                              ]
+                            }
+                          },
+                          "regenerability": {
+                            "type": "Regenerable"
+                          }
+                        }
+                      }
+                    ]
+                  }
+                ]
+              }
+            ]
+          }
+        }
+      },
+      "manaCost": [
+        {
+          "type": "OfType",
+          "value": {
+            "type": "Colored",
+            "value": {
+              "type": "Blue"
+            }
+          }
+        }
+      ],
+      "name": "Siren's Call",
+      "oracleText": "Cast this spell only during an opponent's turn, before attackers are declared.\nCreatures the active player controls attack this turn if able.\nAt the beginning of the next end step, destroy all non-Wall creatures that player controls that didn't attack this turn. Ignore this effect for each creature the player didn't control continuously since the beginning of the turn.",
+      "spell": {
+        "modes": [
+          {
+            "clauses": [
+              {
+                "effects": [
+                  {
+                    "type": "ChoosePlayer",
+                    "value": {
+                      "scope": {
+                        "type": "InRole",
+                        "value": {
+                          "type": "Active"
+                        }
+                      },
+                      "slot": "namedPlayer"
+                    }
+                  },
+                  {
+                    "type": "RequireAttack",
+                    "value": {
+                      "attacker": {
+                        "type": "Matching",
+                        "value": {
+                          "type": "And",
+                          "value": [
+                            {
+                              "type": "HasCardType",
+                              "value": {
+                                "type": "Creature"
+                              }
+                            },
+                            {
+                              "type": "ControlledByBound",
+                              "value": "namedPlayer"
+                            }
+                          ]
+                        }
+                      },
+                      "duration": {
+                        "type": "UntilEndOfTurn"
+                      }
+                    }
+                  },
+                  {
+                    "type": "ArmDelayedTrigger",
+                    "value": {
+                      "name": "destroy them"
+                    }
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      "typeLine": {
+        "types": [
+          {
+            "type": "Instant"
+          }
+        ]
+      }
+    }
+  ]
+}

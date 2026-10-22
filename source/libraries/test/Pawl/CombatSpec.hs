@@ -1676,7 +1676,7 @@ defendingPlayerRestrictionSpec s registry = Spec.describe s "DefendingPlayerComb
         Spec.assertBool s (Combat.legalAttackDeclaration S.alice [ship] defended) "declaring it is legal"
       _ -> Spec.assertFailure s "fixture should have one creature"
   Spec.it s "CR 508.5 the Island must be the DEFENDING player's, not the attacker's" $ do
-    -- Discriminates ControlledByDefendingPlayer from a bare "an Island is on the
+    -- Discriminates ControlledByRole Defending from a bare "an Island is on the
     -- battlefield" (Glacial Crasher's actual shape, already in the pool) and from
     -- CR 109.5's "you". Same card count as the positive above.
     galleon <- S.printingOf s registry "Armored Galleon"

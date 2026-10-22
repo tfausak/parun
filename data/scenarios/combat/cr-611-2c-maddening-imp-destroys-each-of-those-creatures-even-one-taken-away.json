@@ -1,0 +1,48 @@
+{
+  "description": "CR 611.2c Maddening Imp: alice's non-Wall creatures must attack, and each of them that did not is destroyed at the end step, even one bob has since taken",
+  "note": "The Bears are tapped and cannot attack. Ray of Command then hands them to bob until end of turn, so at the end step they are no longer the active player's: they are destroyed as one of \"those creatures\". The Wall is excluded, the Piker attacked, and carol's Hill Giant was never the active player's.",
+  "board": {
+    "active": "alice",
+    "step": "Upkeep",
+    "seats": [
+      {
+        "name": "alice",
+        "battlefield": [
+          { "card": "Goblin Piker", "label": "piker", "ready": true },
+          { "card": "Wall of Wood", "label": "wall", "ready": true },
+          { "card": "Grizzly Bears", "label": "bears", "ready": true, "tapped": true }
+        ],
+        "library": [{ "card": "Island" }]
+      },
+      {
+        "name": "bob",
+        "battlefield": [
+          { "card": "Maddening Imp", "label": "imp", "ready": true },
+          { "card": "Island", "label": "i1" },
+          { "card": "Island", "label": "i2" },
+          { "card": "Island", "label": "i3" },
+          { "card": "Island", "label": "i4" }
+        ],
+        "hand": [{ "card": "Ray of Command", "label": "ray" }],
+        "library": [{ "card": "Island" }]
+      },
+      {
+        "name": "carol",
+        "battlefield": [{ "card": "Hill Giant", "label": "giant", "ready": true }],
+        "library": [{ "card": "Island" }]
+      }
+    ]
+  },
+  "timeline": [
+    { "turn": 1, "step": "Upkeep", "player": "bob", "do": { "Activate": { "object": "$imp", "ability": 0, "mana": [null] } } },
+    { "turn": 1, "step": "DeclareAttackers", "player": "alice", "refuse": { "Attack": [] } },
+    { "turn": 1, "step": "DeclareAttackers", "player": "alice", "do": { "Attack": ["$piker"] } },
+    { "turn": 1, "step": "DeclareAttackers", "player": "alice", "source": "$piker", "do": { "ChooseAttackTarget": "$bob" } },
+    { "turn": 1, "step": "PostcombatMain", "player": "bob", "do": { "Cast": { "object": "$ray", "targets": ["$bears"], "mana": ["$i1", "$i2", "$i3", "$i4"] } } },
+    { "turn": 1, "step": "EndStep", "player": "alice", "do": "Pass" },
+    { "turn": 1, "step": "EndStep", "player": "alice", "check": { "Count": { "player": "alice", "zone": "Graveyard", "card": "Grizzly Bears", "count": 1 } } },
+    { "turn": 1, "step": "EndStep", "player": "alice", "check": { "Count": { "player": "alice", "zone": "Battlefield", "card": "Wall of Wood", "count": 1 } } },
+    { "turn": 1, "step": "EndStep", "player": "alice", "check": { "Count": { "player": "alice", "zone": "Battlefield", "card": "Goblin Piker", "count": 1 } } },
+    { "turn": 1, "step": "EndStep", "player": "alice", "check": { "Count": { "player": "carol", "zone": "Battlefield", "card": "Hill Giant", "count": 1 } } }
+  ]
+}

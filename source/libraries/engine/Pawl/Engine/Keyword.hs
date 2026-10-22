@@ -225,6 +225,7 @@ import qualified Pawl.Types.TriggerCondition as TriggerCondition
 import qualified Pawl.Types.TriggerFrequency as TriggerFrequency
 import Pawl.Types.TriggeredAbility (TriggeredAbility)
 import qualified Pawl.Types.TriggeredAbility as TriggeredAbility
+import qualified Pawl.Types.TurnRole as TurnRole
 import qualified Pawl.Types.TurnScope as TurnScope
 import qualified Pawl.Types.TurnUpProcedure as TurnUpProcedure
 import qualified Pawl.Types.TurnUpR as TurnUpR
@@ -7111,7 +7112,7 @@ decayedSacrifice =
 -- CR 702.39a's provoke, the first minted payload that creates a CR 509.1c blocking
 -- REQUIREMENT rather than changing a characteristic.
 --
--- The target slot is narrowed by Filter.ControlledByDefendingPlayer (CR 508.5),
+-- The target slot is narrowed by Filter.ControlledByRole Defending (CR 508.5),
 -- one atom rather than ControlledBy Opponent, which CR 506.2a makes too wide: at
 -- three seats only one opponent is the defending player (CR 508.5a).
 --
@@ -7121,7 +7122,7 @@ decayedSacrifice =
 -- never a target (CR 115.10a).
 provoke :: TriggeredAbility Card (GrantedAbility.GrantedAbility Card)
 provoke =
-  let slot = TargetSlot.required Pool.Creatures (Just Filter.ControlledByDefendingPlayer)
+  let slot = TargetSlot.required Pool.Creatures (Just (Filter.ControlledByRole TurnRole.Defending))
       requirement =
         Effect.RequireBlock
           ( RequireBlock.MkRequireBlock

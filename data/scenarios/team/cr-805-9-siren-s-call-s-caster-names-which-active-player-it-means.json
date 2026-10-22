@@ -1,0 +1,41 @@
+{
+  "description": "CR 805.9 Siren's Call's caster names which active player it means, and only that player's creatures are forced and destroyed",
+  "note": "A shared team turn with alice and bob both active. carol names bob: his Piker must attack, and alice's Hill Giant, which stays home, is neither forced nor destroyed at the end step. Reading every active player would refuse the Giant's staying home and destroy it.",
+  "board": {
+    "active": "alice",
+    "step": "Upkeep",
+    "sharedTeamTurns": true,
+    "seats": [
+      {
+        "name": "alice",
+        "team": 1,
+        "battlefield": [{ "card": "Hill Giant", "label": "giant", "ready": true }],
+        "library": [{ "card": "Island" }]
+      },
+      {
+        "name": "bob",
+        "team": 1,
+        "battlefield": [{ "card": "Goblin Piker", "label": "piker", "ready": true }],
+        "library": [{ "card": "Island" }]
+      },
+      {
+        "name": "carol",
+        "team": 2,
+        "battlefield": [{ "card": "Island", "label": "i1" }],
+        "hand": [{ "card": "Siren's Call", "label": "call" }],
+        "library": [{ "card": "Island" }]
+      },
+      { "name": "dave", "team": 2, "library": [{ "card": "Island" }] }
+    ]
+  },
+  "timeline": [
+    { "turn": 1, "step": "Upkeep", "player": "carol", "do": { "Cast": { "object": "$call", "mana": ["$i1"] } } },
+    { "turn": 1, "step": "Upkeep", "player": "carol", "do": { "Answer": { "prompt": "ChooseOpponent", "with": "bob" } } },
+    { "turn": 1, "step": "DeclareAttackers", "player": "alice", "refuse": { "Attack": [] } },
+    { "turn": 1, "step": "DeclareAttackers", "player": "alice", "do": { "Attack": ["$piker"] } },
+    { "turn": 1, "step": "DeclareAttackers", "player": "alice", "source": "$piker", "do": { "ChooseAttackTarget": "$dave" } },
+    { "turn": 1, "step": "EndStep", "player": "alice", "do": "Pass" },
+    { "turn": 1, "step": "EndStep", "player": "alice", "check": { "Count": { "player": "alice", "zone": "Battlefield", "card": "Hill Giant", "count": 1 } } },
+    { "turn": 1, "step": "EndStep", "player": "alice", "check": { "Count": { "player": "bob", "zone": "Battlefield", "card": "Goblin Piker", "count": 1 } } }
+  ]
+}

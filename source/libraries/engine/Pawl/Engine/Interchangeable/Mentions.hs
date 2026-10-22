@@ -475,7 +475,7 @@ filterNames asking criterion = case criterion of
   Filter.Measures measures -> measuresNames asking measures
   Filter.ManaValueIsEven -> mempty
   Filter.ControlledBy _relation -> mempty
-  Filter.ControlledByDefendingPlayer -> mempty
+  Filter.ControlledByRole _ -> mempty
   Filter.ControlledByBound slot -> slotNames asking slot
   Filter.ControlledByPlayer _player -> mempty
   Filter.ControlledByRecipient -> mempty
@@ -833,6 +833,7 @@ castingRestrictionNames asking x = case x of
   CastingRestriction.AttackedThisStep -> mempty
   CastingRestriction.AfterBlockersDeclared -> mempty
   CastingRestriction.BeforeStep _phase -> history asking HistoryRead.StepBegins
+  CastingRestriction.DuringTurn _turnScope -> mempty
 
 changeTextNames :: (Monoid r) => Asking r -> ChangeText.ChangeText -> r
 changeTextNames asking x = case x of
@@ -2812,6 +2813,7 @@ triggerConditionNames asking x = case x of
   TriggerCondition.SelfDealsDamageToCreature -> mempty
   TriggerCondition.SelfDealsDamage -> mempty
   TriggerCondition.SelfIsDealtDamage -> mempty
+  TriggerCondition.PlayerIsDealtDamage _playerRelation -> mempty
   TriggerCondition.PermanentDealsCombatDamageToPlayer permanentDealsCombatDamageToPlayer -> permanentDealsCombatDamageToPlayerNames asking permanentDealsCombatDamageToPlayer
   TriggerCondition.PermanentsDealCombatDamageToPlayer permanentsDealCombatDamageToPlayer -> permanentsDealCombatDamageToPlayerNames asking permanentsDealCombatDamageToPlayer
   TriggerCondition.CreatureDealtCombatDamageToMonarch -> mempty

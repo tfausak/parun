@@ -694,6 +694,7 @@ looksBack condition = case condition of
   TriggerCondition.SelfDealsDamageToCreature -> False
   TriggerCondition.SelfDealsDamage -> False
   TriggerCondition.SelfIsDealtDamage -> False
+  TriggerCondition.PlayerIsDealtDamage _ -> False
   TriggerCondition.PermanentDealsCombatDamageToPlayer _ -> False
   TriggerCondition.PermanentsDealCombatDamageToPlayer _ -> False
   TriggerCondition.CreatureDealtCombatDamageToMonarch -> False
@@ -946,6 +947,10 @@ batchScoped condition = case condition of
   -- instruction -- is one trigger event, its amount summed by batchBindings.
   TriggerCondition.SelfDealsDamage -> True
   TriggerCondition.SelfIsDealtDamage -> False
+  -- CR 603.2c: simultaneous damage to the player is one event of their being
+  -- dealt damage -- Lich's ruling sacrifices "for that damage simultaneously".
+  -- Split per damaged player by batchPartition.
+  TriggerCondition.PlayerIsDealtDamage _ -> True
   TriggerCondition.PermanentDealsCombatDamageToPlayer _ -> False
   -- A True beside PermanentsDie: CR 510.2 deals every combat damage of a step
   -- simultaneously, Pawl.Engine.Damage.dealWave brackets the step as one
@@ -2930,6 +2935,7 @@ zonesTriggeredFrom cond =
         -- a player or a permanent -- so a bearer anywhere but the battlefield can never
         -- be the one damaged.
         TriggerCondition.SelfIsDealtDamage -> battlefield
+        TriggerCondition.PlayerIsDealtDamage _ -> battlefield
         TriggerCondition.PermanentDealsCombatDamageToPlayer _ -> battlefield
         -- The batch reading watches from the battlefield too, and for the arm above's
         -- reason: its bearer is a bystander.
@@ -3282,6 +3288,7 @@ stateTriggersOn gs
             TriggerCondition.SelfDealsDamageToCreature -> False
             TriggerCondition.SelfDealsDamage -> False
             TriggerCondition.SelfIsDealtDamage -> False
+            TriggerCondition.PlayerIsDealtDamage _ -> False
             TriggerCondition.PermanentDealsCombatDamageToPlayer _ -> False
             TriggerCondition.PermanentsDealCombatDamageToPlayer _ -> False
             TriggerCondition.CreatureDealtCombatDamageToMonarch -> False

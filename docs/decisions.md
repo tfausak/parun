@@ -368,6 +368,24 @@ Entries are ordered by the first rule each cites.
   the next seat chooses".
 - **Issue**: #5239.
 
+## Whether "if you can't" holds after doing part of an instruction
+
+- **Question**: Lich's "sacrifice that many nontoken permanents. If you can't,
+  you lose the game": does a player who sacrificed some but fewer than that
+  many lose? The CR defines no "if you can't", and no ruling on Lich says.
+- **Rules**: CR 609.3, 608.2c; CR of 2026-08-07.
+- **Decision**: Yes. "If you can't" holds when the named instruction did
+  fewer than it named, including none. A sacrifice falling short counts as
+  not done for CR 603.12's "when you do" too, as a short draw or mill does.
+- **Rejected**: Holding only when nothing was sacrificed, CR 118.12's "started
+  to pay" test: "that many" is the instruction, and CR 609.3's "as much as
+  possible" is not all of it.
+- **Site**: `Pawl.Engine.Resolve.ifTakenHolds` and `recordTaken`, fed by
+  `Pawl.Engine.Resolve.Effect`'s PlayerSacrifices arm. Proved by the
+  scenarios "CR 609.3 Lich sacrificing two of three loses alice the game" and
+  "CR 609.3 Lich sacrificing three of three keeps alice in".
+- **Issue**: #5442.
+
 ## How two only-clauses about spending one mana combine
 
 - **Question**: Two effects each say a mana may be spent "only as though it
@@ -397,6 +415,28 @@ Entries are ordered by the first rule each cites.
   702.100c a Raptor One with the Stars made an enchantment keeps evolve and
   does not evolve", where CR 702.100c agrees with this reading.
 - **Issue**: none.
+
+## Which creatures are "those creatures" after a forced attack on a class
+
+- **Question**: Maddening Imp makes "non-Wall creatures the active player
+  controls" attack, a rules change that CR 611.2c keeps live over the turn,
+  then destroys "each of those creatures that didn't attack this turn". Is
+  that the set as the ability resolved, or the class as the end step reads it?
+- **Rules**: CR 611.2c, 508.1d, 603.7c, 805.9; CR of 2026-08-07.
+- **Decision**: Both: every creature that was in the class as the ability
+  resolved, together with every creature in it at the end step, that did not
+  attack. A creature the requirement reached at either moment is one of
+  "those creatures". "The active player" is the one named as the ability
+  resolved (CR 805.9), so the end-step class reads that player, not whoever is
+  active then.
+- **Rejected**: The set alone spares a creature that came under the active
+  player's control later, though the requirement reached it. The class alone
+  spares a creature the Imp's controller took after it failed to attack.
+- **Site**: `data/cards/maddening-imp.json`'s delayed ability, proved by the
+  scenario "CR 611.2c Maddening Imp: alice's non-Wall creatures must attack,
+  and each of them that did not is destroyed at the end step, even one bob has
+  since taken".
+- **Issue**: #5445.
 
 ## Colour words a text change reaches
 

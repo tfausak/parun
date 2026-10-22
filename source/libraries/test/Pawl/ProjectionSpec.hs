@@ -3667,7 +3667,7 @@ spec s registry = Spec.describe s "Pawl.Engine.Projection" $ do
           [] -> error "Pawl.ProjectionSpec: landsInPlay should place one Mountain"
         (travelerId, gs) = S.addPermanent traveler S.alice gs0
         snapshotView oid g = Count.viewOfSnapshot False Nothing Nothing False Map.empty Zone.Battlefield Zone.Battlefield Set.empty (Projection.project oid g)
-        asks view = Filter.matches (Filter.contextFor (Game.teams gs) (Just S.alice) Nothing) view Filter.Type.HasActivatedAbility
+        asks view = Filter.matches (Filter.contextIn gs (Just S.alice) Nothing) view Filter.Type.HasActivatedAbility
     Spec.assertBool s (asks (Projection.viewOfCard (S.combinedFace mountain))) "viewOfCard: a Mountain card has one"
     Spec.assertBool s (asks (Projection.viewOfObject landId gs)) "viewOfCharacteristics: and so does the Mountain on the battlefield"
     Spec.assertBool s (asks (snapshotView landId gs)) "viewOfSnapshot: and so does a snapshot of it"
@@ -3696,7 +3696,7 @@ spec s registry = Spec.describe s "Pawl.Engine.Projection" $ do
         (arborId, gs1) = S.addPermanent arbor S.alice gs0
         gs = S.withHumility humility gs1
         snapshotView oid g = Count.viewOfSnapshot False Nothing Nothing False Map.empty Zone.Battlefield Zone.Battlefield Set.empty (Projection.project oid g)
-        asks view = Filter.matches (Filter.contextFor (Game.teams gs) (Just S.alice) Nothing) view Filter.Type.HasActivatedAbility
+        asks view = Filter.matches (Filter.contextIn gs (Just S.alice) Nothing) view Filter.Type.HasActivatedAbility
     Spec.assertBool s (not (asks (Projection.viewOfObject arborId gs))) "viewOfCharacteristics: the ability is gone"
     Spec.assertBool s (not (asks (snapshotView arborId gs))) "viewOfSnapshot: and gone there too"
     Spec.assertBool s (asks (Projection.viewOfObject landId gs)) "viewOfCharacteristics: the Mountain is no creature and keeps its"

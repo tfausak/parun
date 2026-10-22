@@ -1,0 +1,42 @@
+{
+  "description": "CR 724.1e / 603.7 after Time Stop skips bob's end step, Siren's Call's delayed destroy fires at alice's and still means bob",
+  "note": "alice casts Siren's Call on bob's turn, then ends that turn with Time Stop, so its \"next end step\" is alice's own. \"That player\" was fixed as bob when the spell resolved: his Piker, which did not attack this turn, is destroyed, and alice's Hill Giant is not. Reading the active player as the trigger resolves would destroy the Giant instead.",
+  "board": {
+    "active": "bob",
+    "step": "Upkeep",
+    "seats": [
+      {
+        "name": "alice",
+        "battlefield": [
+          { "card": "Hill Giant", "label": "giant", "ready": true },
+          { "card": "Island", "label": "i1" },
+          { "card": "Island", "label": "i2" },
+          { "card": "Island", "label": "i3" },
+          { "card": "Island", "label": "i4" },
+          { "card": "Island", "label": "i5" },
+          { "card": "Island", "label": "i6" },
+          { "card": "Island", "label": "i7" }
+        ],
+        "hand": [
+          { "card": "Siren's Call", "label": "call" },
+          { "card": "Time Stop", "label": "stop" }
+        ],
+        "library": [{ "card": "Island" }, { "card": "Island" }]
+      },
+      {
+        "name": "bob",
+        "battlefield": [{ "card": "Goblin Piker", "label": "piker", "ready": true }],
+        "library": [{ "card": "Island" }, { "card": "Island" }]
+      }
+    ]
+  },
+  "timeline": [
+    { "turn": 1, "step": "Upkeep", "player": "alice", "do": { "Cast": { "object": "$call", "mana": ["$i1", null] } } },
+    { "turn": 1, "step": "Upkeep", "player": "alice", "do": "Pass" },
+    { "turn": 1, "step": "Upkeep", "player": "alice", "do": { "Cast": { "object": "$stop", "mana": ["$i2", "$i3", "$i4", "$i5", "$i6", "$i7"] } } },
+    { "turn": 2, "step": "DeclareAttackers", "player": "alice", "do": { "Attack": [] } },
+    { "turn": 2, "step": "EndStep", "player": "alice", "do": "Pass" },
+    { "turn": 2, "step": "EndStep", "player": "alice", "check": { "Count": { "player": "bob", "zone": "Graveyard", "card": "Goblin Piker", "count": 1 } } },
+    { "turn": 2, "step": "EndStep", "player": "alice", "check": { "Count": { "player": "alice", "zone": "Battlefield", "card": "Hill Giant", "count": 1 } } }
+  ]
+}

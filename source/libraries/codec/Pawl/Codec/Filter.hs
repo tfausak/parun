@@ -24,6 +24,7 @@ import qualified Pawl.Codec.StickerKind as StickerKind
 import qualified Pawl.Codec.Subtype as Subtype
 import qualified Pawl.Codec.Supertype as Supertype
 import qualified Pawl.Codec.Trait as Trait
+import qualified Pawl.Codec.TurnRole as TurnRole
 import qualified Pawl.Codec.Zone as Zone
 import qualified Pawl.JsonCodec.Arm as Arm
 import qualified Pawl.JsonCodec.Codec as Codec
@@ -60,7 +61,7 @@ codec keywordCodec =
       Arm.payload "HasKeyword" keywordCodec Filter.HasKeyword (\x -> case x of Filter.HasKeyword y -> Just y; _ -> Nothing),
       Arm.payload "HasKeywordFamily" KeywordFamily.codec Filter.HasKeywordFamily (\x -> case x of Filter.HasKeywordFamily y -> Just y; _ -> Nothing),
       Arm.payload "Measures" Measures.codec Filter.Measures (\x -> case x of Filter.Measures y -> Just y; _ -> Nothing),
-      Arm.nullary "ControlledByDefendingPlayer" Filter.ControlledByDefendingPlayer,
+      Arm.payload "ControlledByRole" TurnRole.codec Filter.ControlledByRole (\x -> case x of Filter.ControlledByRole y -> Just y; _ -> Nothing),
       Arm.payload "ControlledByBound" SlotName.codec Filter.ControlledByBound (\x -> case x of Filter.ControlledByBound y -> Just y; _ -> Nothing),
       -- Runtime-only, and accepted here anyway: the codec must stay total, so a
       -- corpus lint keeps the pool honest instead (#199) -- the treatment
@@ -193,7 +194,7 @@ tagOf x = case x of
   Filter.HasKeyword {} -> "HasKeyword"
   Filter.HasKeywordFamily {} -> "HasKeywordFamily"
   Filter.Measures {} -> "Measures"
-  Filter.ControlledByDefendingPlayer {} -> "ControlledByDefendingPlayer"
+  Filter.ControlledByRole {} -> "ControlledByRole"
   Filter.ControlledByBound {} -> "ControlledByBound"
   Filter.ControlledByPlayer {} -> "ControlledByPlayer"
   Filter.ControlledByRecipient {} -> "ControlledByRecipient"
