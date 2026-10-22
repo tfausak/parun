@@ -168,7 +168,8 @@ codec keywordCodec =
       Arm.nullary "IsPrototyped" Filter.IsPrototyped,
       Arm.payload "And" (Common.list (codec keywordCodec)) Filter.And (\x -> case x of Filter.And y -> Just y; _ -> Nothing),
       Arm.payload "Or" (Common.list (codec keywordCodec)) Filter.Or (\x -> case x of Filter.Or y -> Just y; _ -> Nothing),
-      Arm.payload "Not" (codec keywordCodec) Filter.Not (\x -> case x of Filter.Not y -> Just y; _ -> Nothing)
+      Arm.payload "Not" (codec keywordCodec) Filter.Not (\x -> case x of Filter.Not y -> Just y; _ -> Nothing),
+      Arm.payload "Unwritten" (codec keywordCodec) Filter.Unwritten (\x -> case x of Filter.Unwritten y -> Just y; _ -> Nothing)
     ]
 
 -- | CR 110.2's comparison keyed by name: the margin, and the filter
@@ -285,3 +286,4 @@ tagOf x = case x of
   Filter.And {} -> "And"
   Filter.Or {} -> "Or"
   Filter.Not {} -> "Not"
+  Filter.Unwritten {} -> "Unwritten"

@@ -1829,8 +1829,9 @@ battlefieldAbilitiesOf counts = concatMap (uncurry battlefieldAbilitiesFor) (Map
 
 -- CR 602.1: every activated ability an object HAS, the one roster every view
 -- builder reads. `abilities` is its own list beside rule 702's battlefield mint,
--- which the caller takes through CR 612's text changes where it has any; then
--- the hand and graveyard mints, and CR 804.2's ability where `deploys`.
+-- which no CR 612 text change reaches (docs/decisions.md, "What a text change
+-- reaches inside a keyword"); then the hand and graveyard mints, and CR 804.2's
+-- ability where `deploys`.
 --
 -- HAS, not can activate here: CR 113.6 says where an ability FUNCTIONS, so crew
 -- is an ability of a Vehicle card in a library (CR 702.122a) as cycling is of a
@@ -7367,9 +7368,9 @@ paidTokenCopies keyword quantity exceptions ordinal =
 -- adjectives the token's whole text. Both colours ride the colorIndicator, a token
 -- having no mana cost to read a colour off (CR 105.2).
 --
--- CR 612.2a's text change reaches the Spirit written here even though the mint
--- runs after the CR 613 layer fold: layer 3 records its pairs on the projection
--- and Projection.mintedTriggeredAbilitiesOf applies them to whatever this returns.
+-- No CR 612 text change reaches the Spirit or its colours: they are the rule's
+-- words, not the card's (docs/decisions.md, "What a text change reaches inside a
+-- keyword").
 afterlife :: Natural -> TriggeredAbility Card (GrantedAbility.GrantedAbility Card)
 afterlife n =
   let spawn =

@@ -1,0 +1,31 @@
+{
+  "description": "CR 612.2 / 111.3 a Sleight of Mind on Bitterblossom makes the token its trigger creates red",
+  "note": "\"A 1/1 black Faerie Rogue creature token\" defines the token's colour with a colour word, so Sleight of Mind swapping black for red on Bitterblossom makes the next token red.",
+  "board": {
+    "seats": [
+      {
+        "name": "alice",
+        "battlefield": [
+          { "card": "Bitterblossom", "label": "blossom" },
+          { "card": "Island", "label": "island", "ready": true }
+        ],
+        "hand": [{ "card": "Sleight of Mind", "label": "sleight" }],
+        "library": [{ "card": "Plains" }, { "card": "Plains" }, { "card": "Plains" }]
+      },
+      {
+        "name": "bob",
+        "library": [{ "card": "Plains" }, { "card": "Plains" }, { "card": "Plains" }]
+      }
+    ],
+    "active": "alice",
+    "step": "PrecombatMain"
+  },
+  "timeline": [
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": { "Cast": { "object": "$sleight", "targets": ["$blossom"], "mana": ["$island"] } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass" },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": { "ChooseWordSwap": { "from": { "type": "Black" }, "to": { "type": "Red" } } } },
+    { "turn": 3, "step": "Upkeep", "player": "alice", "check": { "View": { "of": "Stack", "is": ["trigger of $blossom"] } } },
+    { "turn": 3, "step": "Upkeep", "player": "alice", "do": "Pass" },
+    { "turn": 3, "step": "Upkeep", "player": "alice", "check": { "View": { "of": "Colors", "object": "Faerie Rogue Token", "is": ["Red"] } } }
+  ]
+}

@@ -195,9 +195,9 @@ import qualified Pawl.Types.SlotName as SlotName
 import qualified Pawl.Types.SpeedDecrease as SpeedDecrease
 import qualified Pawl.Types.StickerKind as StickerKind
 import qualified Pawl.Types.Subtype as Subtype
-import qualified Pawl.Types.SubtypeFamily as SubtypeFamily
 import qualified Pawl.Types.TakeExtraTurn as TakeExtraTurn
 import qualified Pawl.Types.TapState as TapState
+import qualified Pawl.Types.TextWord as TextWord
 import qualified Pawl.Types.TopOfLibrary as TopOfLibrary
 import qualified Pawl.Types.TurnFaceDown as TurnFaceDown
 import qualified Pawl.Types.Uses as Uses
@@ -205,6 +205,7 @@ import qualified Pawl.Types.Vote as Vote
 import qualified Pawl.Types.VoteChoices as VoteChoices
 import qualified Pawl.Types.VoteObjects as VoteObjects
 import qualified Pawl.Types.WhichCounters as WhichCounters
+import qualified Pawl.Types.WordFamily as WordFamily
 import qualified Pawl.Types.Zone as Zone
 import qualified Pawl.Types.ZonePair as ZonePair
 
@@ -282,15 +283,15 @@ spec s = Spec.describe s "Pawl.Codec.Effect" $ do
       s
       toJson
       fromJson
-      (Effect.ChangeText (ChangeText.MkChangeText SubtypeFamily.BasicLandType Set.empty (SlotName.MkSlotName (Text.pack "target"))))
-      " {\"type\":\"ChangeText\",\"value\":{\"family\":{\"type\":\"BasicLandType\"},\"forbidden\":[],\"slot\":\"target\"}} "
+      (Effect.ChangeText (ChangeText.MkChangeText (Set.singleton WordFamily.BasicLandType) Set.empty (SlotName.MkSlotName (Text.pack "target")) Duration.Indefinite))
+      " {\"type\":\"ChangeText\",\"value\":{\"families\":[{\"type\":\"BasicLandType\"}],\"forbidden\":[],\"slot\":\"target\"}} "
   Spec.it s "ChangeText, a creature type swap whose new word can't be Wall" $
     Common.assertJsonCodec
       s
       toJson
       fromJson
-      (Effect.ChangeText (ChangeText.MkChangeText SubtypeFamily.CreatureType (Set.singleton Subtype.Wall) (SlotName.MkSlotName (Text.pack "target"))))
-      " {\"type\":\"ChangeText\",\"value\":{\"family\":{\"type\":\"CreatureType\"},\"forbidden\":[{\"type\":\"Wall\"}],\"slot\":\"target\"}} "
+      (Effect.ChangeText (ChangeText.MkChangeText (Set.singleton WordFamily.CreatureType) (Set.singleton (TextWord.SubtypeWord Subtype.Wall)) (SlotName.MkSlotName (Text.pack "target")) Duration.Indefinite))
+      " {\"type\":\"ChangeText\",\"value\":{\"families\":[{\"type\":\"CreatureType\"}],\"forbidden\":[{\"type\":\"Wall\"}],\"slot\":\"target\"}} "
   Spec.it s "AddMana, a fixed type and any color" $ do
     Common.assertJsonCodec
       s

@@ -3,12 +3,12 @@ module Pawl.Codec.Move where
 import qualified Pawl.Codec.Activation as Activation
 import qualified Pawl.Codec.Answer as Answer
 import qualified Pawl.Codec.Casting as Casting
+import qualified Pawl.Codec.ChangeWord as ChangeWord
 import qualified Pawl.Codec.Label as Label
 import qualified Pawl.Codec.OptionalDecision as OptionalDecision
 import qualified Pawl.Codec.Paying as Paying
 import qualified Pawl.Codec.Reference as Reference
 import qualified Pawl.Codec.Taking as Taking
-import qualified Pawl.Codec.TypeSwap as TypeSwap
 import qualified Pawl.JsonCodec.Arm as Arm
 import qualified Pawl.JsonCodec.Codec as Codec
 import qualified Pawl.JsonCodec.Common as Common
@@ -34,7 +34,7 @@ codec =
       Arm.payload "ChooseToPay" Paying.codec Move.ChooseToPay (\x -> case x of Move.ChooseToPay y -> Just y; _ -> Nothing),
       Arm.payload "ChooseCopyTarget" (Common.maybe Reference.codec) Move.ChooseCopyTarget (\x -> case x of Move.ChooseCopyTarget y -> Just y; _ -> Nothing),
       Arm.payload "Answer" Answer.codec Move.Answer (\x -> case x of Move.Answer y -> Just y; _ -> Nothing),
-      Arm.payload "ChooseTypeSwap" TypeSwap.codec Move.ChooseTypeSwap (\x -> case x of Move.ChooseTypeSwap y -> Just y; _ -> Nothing),
+      Arm.payload "ChooseWordSwap" ChangeWord.codec Move.ChooseWordSwap (\x -> case x of Move.ChooseWordSwap y -> Just y; _ -> Nothing),
       Arm.payload "ChooseTargets" (Common.textMap SlotName.unwrap (Right . SlotName.MkSlotName) (Common.seq Reference.codec)) Move.ChooseTargets (\x -> case x of Move.ChooseTargets y -> Just y; _ -> Nothing),
       Arm.payload "OrderTriggers" (Common.seq (Common.maybe Reference.codec)) Move.OrderTriggers (\x -> case x of Move.OrderTriggers y -> Just y; _ -> Nothing),
       Arm.payload "Take" Taking.codec Move.Take (\x -> case x of Move.Take y -> Just y; _ -> Nothing),
@@ -55,7 +55,7 @@ tagOf x = case x of
   Move.OrderTimestamps {} -> "OrderTimestamps"
   Move.ChooseOptional {} -> "ChooseOptional"
   Move.ChooseToPay {} -> "ChooseToPay"
-  Move.ChooseTypeSwap {} -> "ChooseTypeSwap"
+  Move.ChooseWordSwap {} -> "ChooseWordSwap"
   Move.Answer {} -> "Answer"
   Move.ChooseCopyTarget {} -> "ChooseCopyTarget"
   Move.ChooseTargets {} -> "ChooseTargets"

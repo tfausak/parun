@@ -76,9 +76,12 @@
                 "type": "Protection",
                 "value": {
                   "quality": {
-                    "type": "HasColor",
+                    "type": "Unwritten",
                     "value": {
-                      "type": "White"
+                      "type": "HasColor",
+                      "value": {
+                        "type": "White"
+                      }
                     }
                   },
                   "spares": {
@@ -96,9 +99,12 @@
                 "type": "Protection",
                 "value": {
                   "quality": {
-                    "type": "HasColor",
+                    "type": "Unwritten",
                     "value": {
-                      "type": "Blue"
+                      "type": "HasColor",
+                      "value": {
+                        "type": "Blue"
+                      }
                     }
                   },
                   "spares": {
@@ -116,9 +122,12 @@
                 "type": "Protection",
                 "value": {
                   "quality": {
-                    "type": "HasColor",
+                    "type": "Unwritten",
                     "value": {
-                      "type": "Black"
+                      "type": "HasColor",
+                      "value": {
+                        "type": "Black"
+                      }
                     }
                   },
                   "spares": {
@@ -136,9 +145,12 @@
                 "type": "Protection",
                 "value": {
                   "quality": {
-                    "type": "HasColor",
+                    "type": "Unwritten",
                     "value": {
-                      "type": "Red"
+                      "type": "HasColor",
+                      "value": {
+                        "type": "Red"
+                      }
                     }
                   },
                   "spares": {
@@ -156,9 +168,12 @@
                 "type": "Protection",
                 "value": {
                   "quality": {
-                    "type": "HasColor",
+                    "type": "Unwritten",
                     "value": {
-                      "type": "Green"
+                      "type": "HasColor",
+                      "value": {
+                        "type": "Green"
+                      }
                     }
                   },
                   "spares": {

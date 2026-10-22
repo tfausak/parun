@@ -77,7 +77,7 @@
       "player": "alice",
       "source": "Magical Hack",
       "do": {
-        "ChooseTypeSwap": {
+        "ChooseWordSwap": {
           "from": {
             "type": "Forest"
           },

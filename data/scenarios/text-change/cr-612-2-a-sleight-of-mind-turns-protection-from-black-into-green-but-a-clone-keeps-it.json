@@ -1,0 +1,47 @@
+{
+  "description": "CR 612.2 a Sleight of Mind turns the Paladin's protection from black into protection from green, so Terror kills it, but a Clone of it keeps protection from black (CR 707.2)",
+  "note": "Paladin en-Vec has protection from black and from red, so alice's black Terror cannot target it. Sleight of Mind swaps black for green in its text: the protection is now from green, and Terror can. The Clone entering afterwards copies the Paladin's copiable values, which a text change does not touch, so it still has protection from black and the same Terror cannot target it. The refused cast comes first, with the Swamps that then pay for the legal one.",
+  "board": {
+    "seats": [
+      {
+        "name": "alice",
+        "battlefield": [
+          { "card": "Island", "label": "i1" },
+          { "card": "Island", "label": "i2" },
+          { "card": "Island", "label": "i3" },
+          { "card": "Island", "label": "i4" },
+          { "card": "Island", "label": "i5" },
+          { "card": "Swamp", "label": "s1" },
+          { "card": "Swamp", "label": "s2" }
+        ],
+        "hand": [
+          { "card": "Sleight of Mind", "label": "sleight" },
+          { "card": "Clone", "label": "clone" },
+          { "card": "Terror", "label": "terror" }
+        ]
+      },
+      {
+        "name": "bob",
+        "battlefield": [{ "card": "Paladin en-Vec", "label": "paladin" }]
+      }
+    ],
+    "active": "alice",
+    "step": "PrecombatMain"
+  },
+  "timeline": [
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": { "Cast": { "object": "$sleight", "targets": ["$paladin"], "mana": ["$i1", null] } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass" },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "source": "Sleight of Mind", "do": { "ChooseWordSwap": { "from": { "type": "Black" }, "to": { "type": "Green" } } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": { "Cast": { "object": "$clone", "mana": ["$i2", "$i3", "$i4", "$i5", null] } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass" },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": { "ChooseCopyTarget": "$paladin" } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "refuse": { "Cast": { "object": "$terror", "targets": ["Clone"], "mana": ["$s1", "$s2"] } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": { "Cast": { "object": "$terror", "targets": ["$paladin"], "mana": ["$s1", "$s2"] } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass" },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "check": { "Keywords": { "object": "Clone", "keyword": { "type": "Protection", "value": { "quality": { "type": "HasColor", "value": { "type": "Black" } }, "spares": null } }, "count": 1 } } }
+  ],
+  "final": [
+    { "Count": { "player": "bob", "zone": "Graveyard", "card": "Paladin en-Vec", "count": 1 } },
+    { "Count": { "player": "alice", "zone": "Battlefield", "card": "Paladin en-Vec", "count": 1 } }
+  ]
+}

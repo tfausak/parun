@@ -29,7 +29,7 @@
   "timeline": [
     { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": { "Cast": { "object": "$evolution", "targets": ["$clavileno"], "mana": ["$island", null] } } },
     { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass" },
-    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": { "ChooseTypeSwap": { "from": { "type": "Demon" }, "to": { "type": "Elf" } } }, "source": "Artificial Evolution" },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": { "ChooseWordSwap": { "from": { "type": "Demon" }, "to": { "type": "Elf" } } }, "source": "Artificial Evolution" },
     { "turn": 1, "step": "DeclareAttackers", "player": "alice", "do": { "Attack": ["$clavileno", "$victim"] } },
     { "turn": 1, "step": "DeclareAttackers", "player": "alice", "do": { "ChooseTargets": { "target": ["$victim"] } }, "source": "$clavileno" },
     { "turn": 1, "step": "DeclareAttackers", "player": "alice", "do": "Pass" },

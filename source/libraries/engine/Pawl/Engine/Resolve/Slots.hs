@@ -951,7 +951,7 @@ effectPlayerRefs effect = case effect of
   Effect.DealDamage {} -> []
   Effect.Fight {} -> []
   Effect.ModifyTarget x -> durationPlayerRefs (ModifyTarget.duration x)
-  Effect.ChangeText {} -> []
+  Effect.ChangeText x -> durationPlayerRefs (ChangeText.duration x)
   Effect.AddMana (ManaAddition.MkManaAddition ref _ _ _ _ _ _) -> [ref]
   Effect.Firebend (ManaAddition.MkManaAddition ref _ _ _ _ _ _) -> [ref]
   Effect.ActivateManaAbilities (ActivateManaAbilities.MkActivateManaAbilities ref _) -> [ref]
@@ -1215,7 +1215,7 @@ slotsOf effect = joinTwo (joinTwo (joinSlots (fmap objectRefSlots (effectObjectR
   -- binds it while it freezes, and nowhere else.
   Effect.ModifyTarget (ModifyTarget.MkModifyTarget duration modification _ each) ->
     joinTwo (maybe id Map.delete each (joinSlots (fmap quantitySlots (Projection.quantitiesOf modification)))) (durationSlots duration)
-  Effect.ChangeText (ChangeText.MkChangeText _ _ slot) -> oneSlot slot
+  Effect.ChangeText (ChangeText.MkChangeText _ _ slot duration) -> joinTwo (oneSlot slot) (durationSlots duration)
   Effect.AddMana {} -> Map.empty
   Effect.Firebend {} -> Map.empty
   -- The actor is effectPlayerRefs' half, joined at the head; the FILTER is a
@@ -2077,7 +2077,7 @@ ownSlotsAreExhaustive effect = case effect of
   Effect.ModifyTarget (ModifyTarget.MkModifyTarget duration modification _ _) ->
     durationSlotsAreExhaustive duration
       && all Quantity.slotsAreExhaustive (Projection.quantitiesOf modification)
-  Effect.ChangeText {} -> True
+  Effect.ChangeText x -> durationSlotsAreExhaustive (ChangeText.duration x)
   Effect.AddMana _ -> True
   Effect.Firebend _ -> True
   Effect.ActivateManaAbilities _ -> True

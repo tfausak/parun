@@ -1,0 +1,36 @@
+{
+  "description": "CR 612.2 a Sleight of Mind on Aphotic Wisps makes the Bears white instead of black",
+  "note": "\"Becomes black\" is a colour word used as one, so Sleight of Mind swapping black for white on the spell turns the setting effect into \"becomes white\": the Bears end up white, neither black nor their own green.",
+  "board": {
+    "seats": [
+      {
+        "name": "alice",
+        "battlefield": [{ "card": "Swamp", "label": "swamp" }],
+        "hand": [{ "card": "Aphotic Wisps", "label": "wisps" }],
+        "library": [{ "card": "Plains" }, { "card": "Plains" }]
+      },
+      {
+        "name": "bob",
+        "battlefield": [
+          { "card": "Island", "label": "island" },
+          { "card": "Grizzly Bears", "label": "bears" }
+        ],
+        "hand": [{ "card": "Sleight of Mind", "label": "sleight" }]
+      }
+    ],
+    "active": "alice",
+    "step": "PrecombatMain"
+  },
+  "timeline": [
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": { "Cast": { "object": "$wisps", "targets": ["$bears"], "mana": ["$swamp"] } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass" },
+    { "turn": 1, "step": "PrecombatMain", "player": "bob", "do": { "Cast": { "object": "$sleight", "targets": ["Aphotic Wisps"], "mana": ["$island"] } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "bob", "do": "Pass" },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass" },
+    { "turn": 1, "step": "PrecombatMain", "player": "bob", "source": "Sleight of Mind", "do": { "ChooseWordSwap": { "from": { "type": "Black" }, "to": { "type": "White" } } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass" },
+    { "turn": 1, "step": "PrecombatMain", "player": "bob", "do": "Pass" },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "check": { "View": { "of": "Colors", "object": "$bears", "is": ["White"] } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "check": { "Count": { "player": "alice", "zone": "Graveyard", "card": "Aphotic Wisps", "count": 1 } } }
+  ]
+}

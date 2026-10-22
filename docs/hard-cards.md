@@ -19,7 +19,7 @@ issue; an expressible card not yet in the pool is a plain card add.
 | Volrath's Shapeshifter | Graveyard order driving a full-text change (CR 612.6, 404.3) | Proven: `ProjectionSpec` "CR 612.6" cases, `ZoneChangeSpec` |
 | Magical Hack | Swapping a land-type word wherever the text uses it as one: filters, landwalk, mana, counters, shields, durations (CR 612.1, 612.2) | Proven: `CastSpec` `magicalHackSpec`, `CounterspellSpec` `magicalHackTimingSpec`, `data/scenarios/projection/` |
 | Artificial Evolution | A creature-type swap that renames the tokens the text creates, under a word the card forbids (CR 612.2a) | Proven: `data/scenarios/counterspell/cr-612-2a-*`; the forbidden word refused by `CounterspellSpec` `textSwapLegalitySpec` |
-| Sleight of Mind | Swapping a colour word in a spell's or permanent's text (CR 612.2) | Gap (#4819) |
+| Sleight of Mind | Swapping a colour word in a spell's or permanent's text: filters, protection, set colours, token colours, written mana types (CR 612.2) | Proven: `data/scenarios/text-change/`, a Clone of the changed permanent keeping the printed word (CR 707.2) |
 | Ixidron | Mass face-down on entry; a count of face-down creatures as P/T (CR 708.2, 614.1c, 614.12) | Proven: `FaceDownSpec` |
 | Hanweir Battlements + Hanweir Garrison | Meld: two cards, one permanent, leaving as two (CR 701.42, 712.4, 712.21) | Proven: `MeldSpec` |
 | Teferi's Protection | Player protection from everything, a life lock and mass phasing, all until your next turn (CR 702.16j, 119.7, 119.8, 702.26) | Expressible, not in pool |

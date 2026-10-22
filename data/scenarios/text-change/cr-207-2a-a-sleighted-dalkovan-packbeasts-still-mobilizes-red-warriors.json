@@ -1,0 +1,30 @@
+{
+  "description": "CR 207.2a / 612.2 a Sleight of Mind on Dalkovan Packbeasts leaves its mobilized Warriors red",
+  "note": "\"Red\" appears only in mobilize's reminder text; the Warriors are defined by CR 702.181a, not by words on the card, so swapping red for blue in the Packbeasts' text reaches nothing and the tokens are red.",
+  "board": {
+    "seats": [
+      {
+        "name": "alice",
+        "battlefield": [
+          { "card": "Dalkovan Packbeasts", "label": "packbeasts", "ready": true },
+          { "card": "Island", "label": "island" }
+        ],
+        "hand": [{ "card": "Sleight of Mind", "label": "sleight" }]
+      },
+      {
+        "name": "bob"
+      }
+    ],
+    "active": "alice",
+    "step": "PrecombatMain"
+  },
+  "timeline": [
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": { "Cast": { "object": "$sleight", "targets": ["$packbeasts"], "mana": ["$island"] } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass" },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "source": "Sleight of Mind", "do": { "ChooseWordSwap": { "from": { "type": "Red" }, "to": { "type": "Blue" } } } },
+    { "turn": 1, "step": "DeclareAttackers", "player": "alice", "do": { "Attack": ["$packbeasts"] } },
+    { "turn": 1, "step": "DeclareAttackers", "player": "alice", "do": "Pass" },
+    { "turn": 1, "step": "DeclareAttackers", "player": "alice", "do": { "OrderTimestamps": ["Warrior Token", "Warrior Token#2", "Warrior Token#3"] } },
+    { "turn": 1, "step": "DeclareAttackers", "player": "alice", "check": { "View": { "of": "Colors", "object": "Warrior Token", "is": ["Red"] } } }
+  ]
+}

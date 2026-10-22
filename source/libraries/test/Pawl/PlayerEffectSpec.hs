@@ -163,6 +163,7 @@ import qualified Pawl.Types.Recipient as Recipient
 import qualified Pawl.Types.Regenerability as Regenerability
 import qualified Pawl.Types.SpellWasCast as SpellWasCast
 import qualified Pawl.Types.Subtype as Subtype
+import qualified Pawl.Types.TextWord as TextWord
 import qualified Pawl.Types.VariableChoice as VariableChoice
 import qualified Pawl.Types.While as While
 import qualified Pawl.Types.Zone as Zone
@@ -1706,15 +1707,12 @@ hybridDiscountSpec s registry =
       Spec.assertEqWith s "two Swamps tapped" (S.tappedCount S.alice paid) 2
 
 -- Aims the text changer's one target slot at `oid` -- the SpellsAndPermanents
--- pool's recipient shape, which both changers below print -- and answers whichever
--- family's swap prompt the changer asks with (from, to). BOTH prompts are
--- answered because the group casts an Artificial Evolution in one case and a
--- Magical Hack in another; a changer asks only its own.
+-- pool's recipient shape, which both changers below print -- and answers the
+-- swap prompt with (from, to), whichever family the changer names.
 swapAt :: ObjectId.ObjectId -> Subtype.Subtype -> Subtype.Subtype -> Prompt.Prompt r -> r
 swapAt oid from to p = case p of
   Prompt.ChooseTargets _ _ _ sets -> fmap (const (Set.singleton (Recipient.ToObject oid))) sets
-  Prompt.ChooseCreatureTypeSwap {} -> (from, to)
-  Prompt.ChooseLandTypeSwap {} -> (from, to)
+  Prompt.ChooseWordSwap {} -> (TextWord.SubtypeWord from, TextWord.SubtypeWord to)
   _ -> S.identityAnswer p
 
 -- Exchange of Words' two targets, pinned by FILTERING the offered set to `pair`
@@ -1813,7 +1811,7 @@ textChangedEdgewalkerSpec s registry = Spec.describe s "TextChangedEdgewalker" $
       textChangedEdgewalkerBoard s registry "Artificial Evolution" (Just (Subtype.Cleric, Subtype.Zombie))
     -- The anti-vacuity check, first: every assertion below would also hold of an
     -- Evolution that never resolved onto the Edgewalker at all.
-    Spec.assertEqWith s "the Evolution resolved onto the Edgewalker" (Projection.textChangesAffecting walkerId gs) [(Subtype.Cleric, Subtype.Zombie)]
+    Spec.assertEqWith s "the Evolution resolved onto the Edgewalker" (Projection.textChangesAffecting walkerId gs) [(TextWord.SubtypeWord Subtype.Cleric, TextWord.SubtypeWord Subtype.Zombie)]
     Spec.assertEqWith
       s
       "the Zombie spell's {1}{B} becomes {1}"
@@ -1890,7 +1888,7 @@ textChangedEdgewalkerSpec s registry = Spec.describe s "TextChangedEdgewalker" $
       (Just (ManaCost.MkManaCost [ManaSymbol.Generic 1, white, black]))
     -- The anti-vacuity check, after the behaviour: the Evolution really
     -- resolved on the Piker.
-    Spec.assertEqWith s "the Evolution resolved onto the Piker" (Projection.textChangesAffecting pikerId evolved) [(Subtype.Cleric, Subtype.Zombie)]
+    Spec.assertEqWith s "the Evolution resolved onto the Piker" (Projection.textChangesAffecting pikerId evolved) [(TextWord.SubtypeWord Subtype.Cleric, TextWord.SubtypeWord Subtype.Zombie)]
 
   -- CR 612.2's family gate, at this read point: a text-changing effect "changes
   -- only those words that are used in the correct way", and the rule's own
@@ -1903,7 +1901,7 @@ textChangedEdgewalkerSpec s registry = Spec.describe s "TextChangedEdgewalker" $
   Spec.it s "CR 612.2 a land-type pair leaves the creature-type filter alone" $ do
     (gs, walkerId, clericSpell, zombieSpell) <-
       textChangedEdgewalkerBoard s registry "Magical Hack" (Just (Subtype.Swamp, Subtype.Island))
-    Spec.assertEqWith s "the Hack resolved onto the Edgewalker" (Projection.textChangesAffecting walkerId gs) [(Subtype.Swamp, Subtype.Island)]
+    Spec.assertEqWith s "the Hack resolved onto the Edgewalker" (Projection.textChangesAffecting walkerId gs) [(TextWord.SubtypeWord Subtype.Swamp, TextWord.SubtypeWord Subtype.Island)]
     Spec.assertEqWith
       s
       "the Cleric spell is discounted exactly as printed"

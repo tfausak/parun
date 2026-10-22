@@ -1,0 +1,76 @@
+{
+  "faces": [
+    {
+      "keywords": [
+        {
+          "type": "Buyback",
+          "value": {
+            "mana": [
+              {
+                "type": "Generic",
+                "value": 2
+              }
+            ]
+          }
+        }
+      ],
+      "manaCost": [
+        {
+          "type": "OfType",
+          "value": {
+            "type": "Colored",
+            "value": {
+              "type": "Blue"
+            }
+          }
+        }
+      ],
+      "name": "Whim of Volrath",
+      "oracleText": "Buyback {2} (You may pay an additional {2} as you cast this spell. If you do, put this card into your hand as it resolves.)\nChange the text of target permanent by replacing all instances of one color word with another or one basic land type with another until end of turn. (For example, you may change \"nonred creature\" to \"nongreen creature\" or \"plainswalk\" to \"swampwalk.\")",
+      "spell": {
+        "modes": [
+          {
+            "clauses": [
+              {
+                "effects": [
+                  {
+                    "type": "ChangeText",
+                    "value": {
+                      "duration": {
+                        "type": "UntilEndOfTurn"
+                      },
+                      "families": [
+                        {
+                          "type": "BasicLandType"
+                        },
+                        {
+                          "type": "Color"
+                        }
+                      ],
+                      "forbidden": [],
+                      "slot": "target"
+                    }
+                  }
+                ]
+              }
+            ],
+            "targetSlots": {
+              "target": {
+                "pool": {
+                  "type": "Permanents"
+                }
+              }
+            }
+          }
+        ]
+      },
+      "typeLine": {
+        "types": [
+          {
+            "type": "Instant"
+          }
+        ]
+      }
+    }
+  ]
+}

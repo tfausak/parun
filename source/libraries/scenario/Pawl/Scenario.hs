@@ -51,8 +51,8 @@ import qualified Pawl.Engine.Projection.View as Projection
 import qualified Pawl.Engine.Resolve.Effect as Resolve
 import qualified Pawl.Engine.Script as Script
 import qualified Pawl.Engine.Setup as Setup
-import qualified Pawl.Engine.Subtype as Engine.Subtype
 import qualified Pawl.Engine.Target as Target
+import qualified Pawl.Engine.TextWord as Engine.TextWord
 import qualified Pawl.Engine.Turn as Turn
 import qualified Pawl.Engine.Visibility as Visibility
 import qualified Pawl.Extra.Int as Int
@@ -79,6 +79,7 @@ import qualified Pawl.Types.CandidateCost as CandidateCost
 import qualified Pawl.Types.Card as Card
 import qualified Pawl.Types.CardName as CardName
 import qualified Pawl.Types.Casting as Casting
+import qualified Pawl.Types.ChangeWord as ChangeWord
 import qualified Pawl.Types.Check as Check
 import qualified Pawl.Types.Choices as Choices
 import qualified Pawl.Types.Combat as Combat.Type
@@ -146,7 +147,6 @@ import qualified Pawl.Types.SlotName as SlotName
 import qualified Pawl.Types.Source as Source
 import qualified Pawl.Types.Staged as Staged
 import qualified Pawl.Types.Start as Start
-import qualified Pawl.Types.SubtypeFamily as SubtypeFamily
 import qualified Pawl.Types.SubtypesAre as SubtypesAre
 import qualified Pawl.Types.Taking as Taking
 import qualified Pawl.Types.TappedIs as TappedIs
@@ -157,7 +157,6 @@ import qualified Pawl.Types.Timed as Timed
 import qualified Pawl.Types.TriggerEntry as TriggerEntry
 import qualified Pawl.Types.TriggerSource as TriggerSource
 import qualified Pawl.Types.TriggeredAbilitySource as TriggeredAbilitySource
-import qualified Pawl.Types.TypeSwap as TypeSwap
 import qualified Pawl.Types.TypesAre as TypesAre
 import qualified Pawl.Types.View as View
 import qualified Pawl.Types.ViewIs as ViewIs
@@ -797,23 +796,11 @@ answerDedicated decider asked =
               pure (Paying.decision paying)
             _ -> Nothing
         -- CR 612.1's text change, keyed like ChooseOptional by what applies it.
-        Prompt.Type.ChooseLandTypeSwap who _ applying _ _ -> do
+        Prompt.Type.ChooseWordSwap who _ applying _ _ _ -> do
           key <- whenOf gs (Decider.unwrap who)
           let named = Maybe.fromMaybe applying (Game.abilitySourceOf applying gs)
           onEntry unscheduled key kind [] (takeForSource gs key named) $ \verb -> case verb of
-            Move.ChooseTypeSwap swap -> Just (pure (TypeSwap.from swap, TypeSwap.to swap))
-            _ -> Nothing
-        Prompt.Type.ChooseCreatureTypeSwap who _ applying _ _ -> do
-          key <- whenOf gs (Decider.unwrap who)
-          let named = Maybe.fromMaybe applying (Game.abilitySourceOf applying gs)
-          onEntry unscheduled key kind [] (takeForSource gs key named) $ \verb -> case verb of
-            Move.ChooseTypeSwap swap -> Just (pure (TypeSwap.from swap, TypeSwap.to swap))
-            _ -> Nothing
-        Prompt.Type.ChooseEnchantmentTypeSwap who _ applying _ _ -> do
-          key <- whenOf gs (Decider.unwrap who)
-          let named = Maybe.fromMaybe applying (Game.abilitySourceOf applying gs)
-          onEntry unscheduled key kind [] (takeForSource gs key named) $ \verb -> case verb of
-            Move.ChooseTypeSwap swap -> Just (pure (TypeSwap.from swap, TypeSwap.to swap))
+            Move.ChooseWordSwap swap -> Just (pure (ChangeWord.from swap, ChangeWord.to swap))
             _ -> Nothing
         -- CR 707.5 / 614.12a: keyed by the object entering as the copy; an
         -- unoffered permanent fails rather than reaching the engine.
@@ -943,9 +930,7 @@ withinOffer prompt chosen = case prompt of
   Prompt.Type.ChooseOfferedCastSpell _ _ offers -> chosen `elem` offers
   Prompt.Type.RollDie sides -> 1 <= chosen && chosen <= sides
   Prompt.Type.ChooseMixedCounterRemoval _ _ _ _ _ bearers -> Map.isSubmapOfBy (Map.isSubmapOfBy (<=)) chosen bearers
-  Prompt.Type.ChooseLandTypeSwap _ _ _ _ forbidden -> Engine.Subtype.swappable SubtypeFamily.BasicLandType forbidden chosen
-  Prompt.Type.ChooseCreatureTypeSwap _ _ _ _ forbidden -> Engine.Subtype.swappable SubtypeFamily.CreatureType forbidden chosen
-  Prompt.Type.ChooseEnchantmentTypeSwap _ _ _ _ forbidden -> Engine.Subtype.swappable SubtypeFamily.EnchantmentType forbidden chosen
+  Prompt.Type.ChooseWordSwap _ _ _ _ families forbidden -> Engine.TextWord.swappable families forbidden chosen
   Prompt.Type.RandomFirstPlayer players -> chosen `elem` players
   Prompt.Type.RandomObject objects -> chosen `elem` objects
   Prompt.Type.RandomStickerSheet slots -> chosen `elem` slots
