@@ -2217,7 +2217,7 @@ effectLintSpec s registry = Spec.describe s "Lint" $ do
         readSingly effect = case effect of
           -- CR 701.14b's pair, which is why both slots count.
           Effect.Fight (Fight.MkFight one two) -> [one, two]
-          Effect.ChangeText (ChangeText.MkChangeText _ _ slot) -> [slot]
+          Effect.ChangeText (ChangeText.MkChangeText _ _ slot _) -> [slot]
           Effect.TurnFaceUp slot -> [slot]
           Effect.BecomesBlocked slot -> [slot]
           Effect.Designate (Designate.MkDesignate _ slot _) -> [slot]

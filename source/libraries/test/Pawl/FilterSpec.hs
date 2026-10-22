@@ -42,6 +42,7 @@ import qualified Pawl.Types.SlotName as SlotName
 import qualified Pawl.Types.Subtype as Subtype
 import qualified Pawl.Types.Supertype as Supertype
 import qualified Pawl.Types.Teams as Teams
+import qualified Pawl.Types.TextWord as TextWord
 import qualified Pawl.Types.Trait as Trait
 import qualified Pawl.Types.Zone as Zone
 
@@ -1205,27 +1206,27 @@ spec s = Spec.describe s "Pawl.Engine.Filter" $ do
       Spec.assertEqWith
         s
         "Island became Forest"
-        (Filter.rewrite [(Subtype.Island, Subtype.Forest)] (Filter.Type.HasSubtype Subtype.Island))
+        (Filter.rewrite [(TextWord.SubtypeWord Subtype.Island, TextWord.SubtypeWord Subtype.Forest)] (Filter.Type.HasSubtype Subtype.Island))
         (Filter.Type.HasSubtype Subtype.Forest)
 
     Spec.it s "leaves an unnamed subtype word alone" $ do
       Spec.assertEqWith
         s
         "Wall untouched"
-        (Filter.rewrite [(Subtype.Island, Subtype.Forest)] (Filter.Type.HasSubtype Subtype.Wall))
+        (Filter.rewrite [(TextWord.SubtypeWord Subtype.Island, TextWord.SubtypeWord Subtype.Forest)] (Filter.Type.HasSubtype Subtype.Wall))
         (Filter.Type.HasSubtype Subtype.Wall)
 
     Spec.it s "recurses through And, Or and Not" $ do
       let before = Filter.Type.And [Filter.Type.Not (Filter.Type.HasSubtype Subtype.Island), Filter.Type.Or [Filter.Type.HasSubtype Subtype.Island, Filter.Type.IsAttacking]]
           after = Filter.Type.And [Filter.Type.Not (Filter.Type.HasSubtype Subtype.Forest), Filter.Type.Or [Filter.Type.HasSubtype Subtype.Forest, Filter.Type.IsAttacking]]
-      Spec.assertEqWith s "every occurrence" (Filter.rewrite [(Subtype.Island, Subtype.Forest)] before) after
+      Spec.assertEqWith s "every occurrence" (Filter.rewrite [(TextWord.SubtypeWord Subtype.Island, TextWord.SubtypeWord Subtype.Forest)] before) after
 
     -- CR 612.1 changes WORDS, and a card type is not a subtype word.
     Spec.it s "leaves an atom that names no subtype alone" $ do
       Spec.assertEqWith
         s
         "card type untouched"
-        (Filter.rewrite [(Subtype.Island, Subtype.Forest)] (Filter.Type.HasCardType CardType.Creature))
+        (Filter.rewrite [(TextWord.SubtypeWord Subtype.Island, TextWord.SubtypeWord Subtype.Forest)] (Filter.Type.HasCardType CardType.Creature))
         (Filter.Type.HasCardType CardType.Creature)
 
     -- CR 702.14a: landwalk "appears within an object's rules text as
@@ -1237,7 +1238,7 @@ spec s = Spec.describe s "Pawl.Engine.Filter" $ do
       Spec.assertEqWith
         s
         "islandwalk became forestwalk"
-        (Filter.rewrite [(Subtype.Island, Subtype.Forest)] (Filter.Type.HasKeyword (Keyword.Landwalk (Filter.Type.HasSubtype Subtype.Island))))
+        (Filter.rewrite [(TextWord.SubtypeWord Subtype.Island, TextWord.SubtypeWord Subtype.Forest)] (Filter.Type.HasKeyword (Keyword.Landwalk (Filter.Type.HasSubtype Subtype.Island))))
         (Filter.Type.HasKeyword (Keyword.Landwalk (Filter.Type.HasSubtype Subtype.Forest)))
 
     -- CR 702.14a's second clause: the [type] "can also be the card type land
@@ -1249,13 +1250,13 @@ spec s = Spec.describe s "Pawl.Engine.Filter" $ do
       Spec.assertEqWith
         s
         "nonbasic landwalk untouched"
-        (Filter.rewrite [(Subtype.Swamp, Subtype.Island)] (Filter.Type.HasKeyword (Keyword.Landwalk (Filter.Type.Not (Filter.Type.HasSupertype Supertype.Basic)))))
+        (Filter.rewrite [(TextWord.SubtypeWord Subtype.Swamp, TextWord.SubtypeWord Subtype.Island)] (Filter.Type.HasKeyword (Keyword.Landwalk (Filter.Type.Not (Filter.Type.HasSupertype Supertype.Basic)))))
         (Filter.Type.HasKeyword (Keyword.Landwalk (Filter.Type.Not (Filter.Type.HasSupertype Supertype.Basic))))
     Spec.it s "swaps only the land type of a snow swampwalk" $ do
       Spec.assertEqWith
         s
         "snow islandwalk"
-        (Filter.rewrite [(Subtype.Swamp, Subtype.Island)] (Filter.Type.HasKeyword (Keyword.Landwalk (Filter.Type.And [Filter.Type.HasSupertype Supertype.Snow, Filter.Type.HasSubtype Subtype.Swamp]))))
+        (Filter.rewrite [(TextWord.SubtypeWord Subtype.Swamp, TextWord.SubtypeWord Subtype.Island)] (Filter.Type.HasKeyword (Keyword.Landwalk (Filter.Type.And [Filter.Type.HasSupertype Supertype.Snow, Filter.Type.HasSubtype Subtype.Swamp]))))
         (Filter.Type.HasKeyword (Keyword.Landwalk (Filter.Type.And [Filter.Type.HasSupertype Supertype.Snow, Filter.Type.HasSubtype Subtype.Island])))
 
     -- CR 702.29e's "[Type]cycling" is rule 702's OTHER "[type]", and the rule's
@@ -1268,7 +1269,7 @@ spec s = Spec.describe s "Pawl.Engine.Filter" $ do
       Spec.assertEqWith
         s
         "mountaincycling became islandcycling"
-        (Filter.rewrite [(Subtype.Mountain, Subtype.Island)] (Filter.Type.HasKeyword (Keyword.Cycling (Cycling.MkCycling cost (Just (Filter.Type.HasSubtype Subtype.Mountain))))))
+        (Filter.rewrite [(TextWord.SubtypeWord Subtype.Mountain, TextWord.SubtypeWord Subtype.Island)] (Filter.Type.HasKeyword (Keyword.Cycling (Cycling.MkCycling cost (Just (Filter.Type.HasSubtype Subtype.Mountain))))))
         (Filter.Type.HasKeyword (Keyword.Cycling (Cycling.MkCycling cost (Just (Filter.Type.HasSubtype Subtype.Island)))))
 
     -- CR 702.11d's "[quality]" is rule 702's THIRD carrier of a word, and CR
@@ -1282,7 +1283,7 @@ spec s = Spec.describe s "Pawl.Engine.Filter" $ do
       Spec.assertEqWith
         s
         "hexproof from Goblins became hexproof from Zombies"
-        (Filter.rewrite [(Subtype.Goblin, Subtype.Zombie)] (Filter.Type.HasKeyword (Keyword.Hexproof (Just (Filter.Type.HasSubtype Subtype.Goblin)))))
+        (Filter.rewrite [(TextWord.SubtypeWord Subtype.Goblin, TextWord.SubtypeWord Subtype.Zombie)] (Filter.Type.HasKeyword (Keyword.Hexproof (Just (Filter.Type.HasSubtype Subtype.Goblin)))))
         (Filter.Type.HasKeyword (Keyword.Hexproof (Just (Filter.Type.HasSubtype Subtype.Zombie))))
 
     -- Elenda, Saint of Dusk's "hexproof from instants": a card type is not a
@@ -1291,7 +1292,7 @@ spec s = Spec.describe s "Pawl.Engine.Filter" $ do
       Spec.assertEqWith
         s
         "hexproof from instants untouched"
-        (Filter.rewrite [(Subtype.Goblin, Subtype.Zombie)] (Filter.Type.HasKeyword (Keyword.Hexproof (Just (Filter.Type.HasCardType CardType.Instant)))))
+        (Filter.rewrite [(TextWord.SubtypeWord Subtype.Goblin, TextWord.SubtypeWord Subtype.Zombie)] (Filter.Type.HasKeyword (Keyword.Hexproof (Just (Filter.Type.HasCardType CardType.Instant)))))
         (Filter.Type.HasKeyword (Keyword.Hexproof (Just (Filter.Type.HasCardType CardType.Instant))))
 
     -- CR 702.11b's plain hexproof carries no quality at all, which is the
@@ -1300,7 +1301,7 @@ spec s = Spec.describe s "Pawl.Engine.Filter" $ do
       Spec.assertEqWith
         s
         "plain hexproof untouched"
-        (Filter.rewrite [(Subtype.Goblin, Subtype.Zombie)] (Filter.Type.HasKeyword (Keyword.Hexproof Nothing)))
+        (Filter.rewrite [(TextWord.SubtypeWord Subtype.Goblin, TextWord.SubtypeWord Subtype.Zombie)] (Filter.Type.HasKeyword (Keyword.Hexproof Nothing)))
         (Filter.Type.HasKeyword (Keyword.Hexproof Nothing))
 
     -- CR 702.16a's "[quality]" is the same carrier one rule along, and CR 612.2
@@ -1313,7 +1314,7 @@ spec s = Spec.describe s "Pawl.Engine.Filter" $ do
       Spec.assertEqWith
         s
         "protection from Goblins became protection from Zombies"
-        (Filter.rewrite [(Subtype.Goblin, Subtype.Zombie)] (Filter.Type.HasKeyword (Keyword.Protection Protection.MkProtection {Protection.quality = Filter.Type.HasSubtype Subtype.Goblin, Protection.spares = Nothing})))
+        (Filter.rewrite [(TextWord.SubtypeWord Subtype.Goblin, TextWord.SubtypeWord Subtype.Zombie)] (Filter.Type.HasKeyword (Keyword.Protection Protection.MkProtection {Protection.quality = Filter.Type.HasSubtype Subtype.Goblin, Protection.spares = Nothing})))
         (Filter.Type.HasKeyword (Keyword.Protection Protection.MkProtection {Protection.quality = Filter.Type.HasSubtype Subtype.Zombie, Protection.spares = Nothing}))
 
     -- The colour Apostle of Purifying Light actually prints: no subtype word
@@ -1322,7 +1323,7 @@ spec s = Spec.describe s "Pawl.Engine.Filter" $ do
       Spec.assertEqWith
         s
         "protection from black untouched"
-        (Filter.rewrite [(Subtype.Goblin, Subtype.Zombie)] (Filter.Type.HasKeyword (Keyword.Protection Protection.MkProtection {Protection.quality = Filter.Type.HasColor Color.Black, Protection.spares = Nothing})))
+        (Filter.rewrite [(TextWord.SubtypeWord Subtype.Goblin, TextWord.SubtypeWord Subtype.Zombie)] (Filter.Type.HasKeyword (Keyword.Protection Protection.MkProtection {Protection.quality = Filter.Type.HasColor Color.Black, Protection.spares = Nothing})))
         (Filter.Type.HasKeyword (Keyword.Protection Protection.MkProtection {Protection.quality = Filter.Type.HasColor Color.Black, Protection.spares = Nothing}))
 
   Spec.describe s "AttackedThisTurn" $ do
@@ -1861,11 +1862,11 @@ spec s = Spec.describe s "Pawl.Engine.Filter" $ do
       Spec.assertEqWith s "the slot the host's description names" (Filter.boundSlots (Filter.Type.AttachedTo (Filter.Type.ControlledByBound slot))) (Set.singleton slot)
 
     -- CR 612.1's word swap reaches the host's description too, and nothing in
-    -- data/cards/ observes it: grep the corpus for ChangeSubtypeWord and it is
+    -- data/cards/ observes it: grep the corpus for ChangeWord and it is
     -- absent, so no card drives Filter.rewrite at all. This is that arm's only
     -- observer.
     Spec.it s "CR 612.1 rewrites a subtype inside the nest" $ do
-      let swapped = Filter.rewrite [(Subtype.Swamp, Subtype.Island)] (Filter.Type.AttachedTo (Filter.Type.HasSubtype Subtype.Swamp))
+      let swapped = Filter.rewrite [(TextWord.SubtypeWord Subtype.Swamp, TextWord.SubtypeWord Subtype.Island)] (Filter.Type.AttachedTo (Filter.Type.HasSubtype Subtype.Swamp))
       Spec.assertEqWith s "the host's subtype word is swapped" swapped (Filter.Type.AttachedTo (Filter.Type.HasSubtype Subtype.Island))
 
   Spec.describe s "HasAttached" $ do
@@ -1948,7 +1949,7 @@ spec s = Spec.describe s "Pawl.Engine.Filter" $ do
     -- stays the arm's only observer, for the reason the AttachedTo case above
     -- gives.
     Spec.it s "CR 612.1 rewrites a subtype inside the nest" $ do
-      let swapped = Filter.rewrite [(Subtype.Aura, Subtype.Equipment)] byAnAura
+      let swapped = Filter.rewrite [(TextWord.SubtypeWord Subtype.Aura, TextWord.SubtypeWord Subtype.Equipment)] byAnAura
       Spec.assertEqWith s "the attacher's subtype word is swapped" swapped (Filter.Type.HasAttached (Filter.Type.HasSubtype Subtype.Equipment))
 
   Spec.describe s "IsAttachedToSource" $ do

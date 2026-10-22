@@ -28,7 +28,7 @@
     { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": { "Cast": { "object": "$homecoming", "targets": ["$piker-card"], "mana": ["$plains-1", "$plains-2", "$plains-3", null] } } },
     { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": { "Cast": { "object": "$evolution", "targets": ["Synthetic Twinward Homecoming"], "mana": ["$island"] } } },
     { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass" },
-    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": { "ChooseTypeSwap": { "from": { "type": "Zombie" }, "to": { "type": "Skeleton" } } }, "source": "Artificial Evolution" },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": { "ChooseWordSwap": { "from": { "type": "Zombie" }, "to": { "type": "Skeleton" } } }, "source": "Artificial Evolution" },
     { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass" },
     { "turn": 1, "step": "PrecombatMain", "player": "alice", "check": { "Count": { "player": "alice", "zone": "Battlefield", "card": "Goblin Piker", "count": 1 } } },
     { "turn": 1, "step": "PrecombatMain", "player": "alice", "check": { "Counters": { "object": "Goblin Piker", "kind": { "type": "Keyword", "value": { "type": "Hexproof", "value": { "type": "HasSubtype", "value": { "type": "Skeleton" } } } }, "count": 3 } } },

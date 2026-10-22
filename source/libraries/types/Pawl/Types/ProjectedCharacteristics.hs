@@ -10,7 +10,7 @@ import qualified Pawl.Types.Card as Card
 import qualified Pawl.Types.CardName as CardName
 import qualified Pawl.Types.CardType as CardType
 import qualified Pawl.Types.CastingPermission as CastingPermission
-import qualified Pawl.Types.ChangeSubtypeWord as ChangeSubtypeWord
+import qualified Pawl.Types.ChangeWord as ChangeWord
 import qualified Pawl.Types.CharacteristicPT as CharacteristicPT
 import qualified Pawl.Types.Color as Color
 import qualified Pawl.Types.CopyException as CopyException
@@ -292,7 +292,7 @@ data ProjectedCharacteristics = MkProjectedCharacteristics
     -- nothing about -- Pawl.Engine.Projection.applyModification empties the
     -- lists in timestamp order and sets this beside them.
     --
-    -- Not copiable, for subtypeWordChanges' reason and by the same construction:
+    -- Not copiable, for wordChanges' reason and by the same construction:
     -- CR 707.2's list of copiable values holds no layer-6 effect, and this is
     -- written by the fold rather than by the seed, so
     -- Pawl.Engine.Projection.View.copiableCharacteristics never carries it.
@@ -306,7 +306,7 @@ data ProjectedCharacteristics = MkProjectedCharacteristics
     -- playerAbilities, specialActions, ruleAbilities) are the card's it read,
     -- and the readers take them off the projection rather than off the copiable
     -- values (Pawl.Engine.Projection.fullTextOf). Not copiable, for
-    -- subtypeWordChanges' reason.
+    -- wordChanges' reason.
     hasFullText :: Bool,
     -- | CR 612.1 layer 3: the subtype word swaps applied to the text box this
     -- object carries, in the order they were applied -- CR 612.5's exchange
@@ -323,9 +323,9 @@ data ProjectedCharacteristics = MkProjectedCharacteristics
     -- Not copiable, and structurally so: CR 707.2's list of copiable values holds
     -- no text change, and this is written by the layer fold rather than by the
     -- seed, so copiableCharacteristics never carries one.
-    subtypeWordChanges :: [ChangeSubtypeWord.ChangeSubtypeWord],
+    wordChanges :: [ChangeWord.ChangeWord],
     -- | CR 612.3: the `keywords` counts as the LAST layer-3 text change left
-    -- them. The other half of subtypeWordChanges above -- that field says which
+    -- them. The other half of wordChanges above -- that field says which
     -- words layer 3 swapped, and this one says which keyword instances layer 3
     -- was in a position to reach at all, so the mint can tell a printed instance
     -- (which the swap reached) from one CR 613.1f granted afterwards (which it
@@ -337,11 +337,11 @@ data ProjectedCharacteristics = MkProjectedCharacteristics
     -- `keywords` above rather than trusting it alone; the clamp there says why.
     --
     -- EMPTY when no text change ran, which reads as "every instance is granted".
-    -- That is inert rather than wrong: subtypeWordChanges is empty in the same
+    -- That is inert rather than wrong: wordChanges is empty in the same
     -- breath, so the mint's rewrite is the identity either way. The two are
     -- written by the one applyModification arm precisely so they cannot disagree.
     --
-    -- Not copiable, for subtypeWordChanges' reason and by the same construction.
+    -- Not copiable, for wordChanges' reason and by the same construction.
     textChangedKeywords :: Map.Map Keyword.Keyword Natural.Natural,
     -- | CR 510.1a: does this creature assign combat damage equal to toughness?
     assignsCombatDamageWithToughness :: Bool,

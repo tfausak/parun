@@ -77,6 +77,7 @@ import qualified Pawl.Types.StepBegan as StepBegan
 import qualified Pawl.Types.Subtype as Subtype
 import qualified Pawl.Types.TapState as TapState
 import qualified Pawl.Types.TargetSlot as TargetSlot
+import qualified Pawl.Types.TextWord as TextWord
 import qualified Pawl.Types.Zone as Zone
 
 -- manaLeakBoard one step earlier, with the Leak still in alice's hand. Split out
@@ -814,7 +815,7 @@ hackBoard mountain island magicalHack cancel =
 -- a Mountain alone, so a test can tell an honoured answer from the fallback.
 hackToIsland :: Prompt.Prompt r -> r
 hackToIsland p = case p of
-  Prompt.ChooseLandTypeSwap {} -> (Subtype.Mountain, Subtype.Island)
+  Prompt.ChooseWordSwap {} -> (TextWord.SubtypeWord Subtype.Mountain, TextWord.SubtypeWord Subtype.Island)
   _ -> S.identityAnswer p
 
 -- The basic-land-type answers in a transcript, in order.
@@ -823,7 +824,7 @@ basicLandTypeResponses = filter isBasicLandTypesResponse
 
 isBasicLandTypesResponse :: Response.Response -> Bool
 isBasicLandTypesResponse response = case response of
-  Response.ChoseLandTypeSwap _ -> True
+  Response.ChoseWordSwap _ -> True
   _ -> False
 
 -- CR 608.2d: Magical Hack's "replacing all instances of one basic land type
@@ -864,7 +865,7 @@ magicalHackTimingSpec s registry = Spec.describe s "MagicalHackTiming" $ do
       s
       "the resolution asked exactly once"
       (basicLandTypeResponses resolveTranscript)
-      [Response.ChoseLandTypeSwap (Subtype.Mountain, Subtype.Island)]
+      [Response.ChoseWordSwap (TextWord.SubtypeWord Subtype.Mountain, TextWord.SubtypeWord Subtype.Island)]
     -- CR 612 / 305.6: the answer is honoured, so the choice did not go missing
     -- when it moved. Mountain -> Island, not identityAnswer's Forest ->
     -- Island, is what tells the two apart.
@@ -882,7 +883,7 @@ magicalHackTimingSpec s registry = Spec.describe s "MagicalHackTiming" $ do
 hackAt :: ObjectId.ObjectId -> Subtype.Subtype -> Subtype.Subtype -> Prompt.Prompt r -> r
 hackAt oid from to p = case p of
   Prompt.ChooseTargets _ _ _ sets -> fmap (\(_, candidates) -> Set.filter (\r -> r == Recipient.ToObject oid || r == Recipient.ToCreature oid) candidates) sets
-  Prompt.ChooseLandTypeSwap {} -> (from, to)
+  Prompt.ChooseWordSwap {} -> (TextWord.SubtypeWord from, TextWord.SubtypeWord to)
   _ -> S.identityAnswer p
 
 -- CR 611.2b's duration read through CR 612.1. alice casts Synthetic Conditional
@@ -961,7 +962,7 @@ magicalHackDurationSpec s registry = Spec.describe s "MagicalHackDuration" $ do
 evolveAt :: ObjectId.ObjectId -> Subtype.Subtype -> Subtype.Subtype -> Prompt.Prompt r -> r
 evolveAt oid from to p = case p of
   Prompt.ChooseTargets _ _ _ sets -> fmap (const (Set.singleton (Recipient.ToObject oid))) sets
-  Prompt.ChooseCreatureTypeSwap {} -> (from, to)
+  Prompt.ChooseWordSwap {} -> (TextWord.SubtypeWord from, TextWord.SubtypeWord to)
   _ -> S.identityAnswer p
 
 -- Cast Turn to Frog at alice's Bog Wraith; optionally cast Artificial Evolution
@@ -1026,12 +1027,9 @@ textSwapLegalitySpec s registry = Spec.describe s "TextSwapLegality" $ do
 -- assert what the player was actually offered. Targets go to `oid` (a
 -- text-changer aimed at a permanent needs no second card on the stack), and the
 -- swap itself is answered with Replay.defaultAnswer's legal one.
-recordingForbidden :: ObjectId.ObjectId -> Prompt.Prompt r -> State.State (Set.Set Subtype.Subtype) r
+recordingForbidden :: ObjectId.ObjectId -> Prompt.Prompt r -> State.State (Set.Set TextWord.TextWord) r
 recordingForbidden oid p = case p of
-  Prompt.ChooseCreatureTypeSwap _ _ _ _ forbidden -> do
-    State.modify' (Set.union forbidden)
-    pure (Replay.defaultAnswer p)
-  Prompt.ChooseLandTypeSwap _ _ _ _ forbidden -> do
+  Prompt.ChooseWordSwap _ _ _ _ _ forbidden -> do
     State.modify' (Set.union forbidden)
     pure (Replay.defaultAnswer p)
   Prompt.ChooseTargets _ _ _ sets -> pure (fmap (const (Set.singleton (Recipient.ToObject oid))) sets)
@@ -1452,7 +1450,7 @@ artificialEvolutionSpec s registry = Spec.describe s "ArtificialEvolution" $ do
     Spec.assertEqWith s "CR 613.7 Creature -- Goblin" (Projection.subtypesOf wraithId after) (Set.singleton Subtype.Goblin)
     -- The anti-vacuity check, after the behaviour: both swaps really landed on
     -- the spell.
-    Spec.assertEqWith s "the two Evolutions resolved onto the spell" (Projection.textChangesAffecting spellId both) [(Subtype.Elf, Subtype.Goblin), (Subtype.Frog, Subtype.Goblin)]
+    Spec.assertEqWith s "the two Evolutions resolved onto the spell" (Projection.textChangesAffecting spellId both) [(TextWord.SubtypeWord Subtype.Elf, TextWord.SubtypeWord Subtype.Goblin), (TextWord.SubtypeWord Subtype.Frog, TextWord.SubtypeWord Subtype.Goblin)]
 
   -- "The new creature type can't be Wall" is printed card text, so it travels
   -- with the card: the data says it, Effect.ChangeText carries it, and the
@@ -1469,7 +1467,7 @@ artificialEvolutionSpec s registry = Spec.describe s "ArtificialEvolution" $ do
                 S.cast S.alice spellId
                 Stack.resolveTop
            in State.execState (Engine.runGame (recordingForbidden wraithId) g2 cast) Set.empty
-    Spec.assertEqWith s "the Evolution forbids Wall, and nothing else" (forbiddenBy artificialEvolution) (Set.singleton Subtype.Wall)
+    Spec.assertEqWith s "the Evolution forbids Wall, and nothing else" (forbiddenBy artificialEvolution) (Set.singleton (TextWord.SubtypeWord Subtype.Wall))
     -- The falsifier for "the engine hard-codes Wall somewhere": Magical Hack
     -- prints no restriction, so its swap forbids nothing.
     Spec.assertEqWith s "and the Hack forbids nothing" (forbiddenBy magicalHack) Set.empty
@@ -1497,7 +1495,7 @@ artificialEvolutionSpec s registry = Spec.describe s "ArtificialEvolution" $ do
           S.cast S.alice firstId
           Stack.resolveTop
         forbidden = State.execState (Engine.runGame (recordingForbidden wraithId) evolved Stack.resolveTop) Set.empty
-    Spec.assertEqWith s "the evolved Evolution forbids Frog, not Wall" forbidden (Set.singleton Subtype.Frog)
+    Spec.assertEqWith s "the evolved Evolution forbids Frog, not Wall" forbidden (Set.singleton (TextWord.SubtypeWord Subtype.Frog))
 
   -- CR 612.2a's OTHER half: "or an object with such an ability". Bitterblossom
   -- {1}{B} Kindred Enchantment -- Faerie ("At the beginning of your upkeep, you

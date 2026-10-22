@@ -63,6 +63,7 @@ import qualified Pawl.Types.Recipient as Recipient
 import qualified Pawl.Types.Regenerability as Regenerability
 import qualified Pawl.Types.Subtype as Subtype
 import qualified Pawl.Types.Supertype as Supertype
+import qualified Pawl.Types.TextWord as TextWord
 import qualified Pawl.Types.VariableChoice as VariableChoice
 import qualified Pawl.Types.While as While
 import qualified Pawl.Types.Zone as Zone
@@ -515,7 +516,7 @@ conditionalSilenceSpec s registry =
 hackSpellAt :: ObjectId.ObjectId -> Subtype.Subtype -> Subtype.Subtype -> Prompt.Prompt r -> r
 hackSpellAt oid from to p = case p of
   Prompt.ChooseTargets _ _ _ sets -> fmap (\(_, candidates) -> Set.filter (== Recipient.ToObject oid) candidates) sets
-  Prompt.ChooseLandTypeSwap {} -> (from, to)
+  Prompt.ChooseWordSwap {} -> (TextWord.SubtypeWord from, TextWord.SubtypeWord to)
   _ -> S.identityAnswer p
 
 -- conditionalSilenceBoard's no-Swamp shape, plus the two things a Magical Hack

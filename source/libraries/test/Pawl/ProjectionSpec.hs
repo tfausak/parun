@@ -53,7 +53,7 @@ import qualified Pawl.Types.Affected as Affected
 import qualified Pawl.Types.Card as Card
 import qualified Pawl.Types.CardName as CardName
 import qualified Pawl.Types.CardType as CardType
-import qualified Pawl.Types.ChangeSubtypeWord as ChangeSubtypeWord
+import qualified Pawl.Types.ChangeWord as ChangeWord
 import qualified Pawl.Types.Color as Color
 import qualified Pawl.Types.CombatStep as CombatStep
 import qualified Pawl.Types.Compares as Compares
@@ -111,6 +111,7 @@ import qualified Pawl.Types.Subtype as Subtype.Type
 import qualified Pawl.Types.Supertype as Supertype
 import qualified Pawl.Types.TapState as TapState
 import qualified Pawl.Types.Teams as Teams
+import qualified Pawl.Types.TextWord as TextWord
 import qualified Pawl.Types.Timestamp as Timestamp
 import qualified Pawl.Types.TriggerCondition as TriggerCondition
 import qualified Pawl.Types.TriggeredAbility as TriggeredAbility
@@ -1281,25 +1282,25 @@ spec s registry = Spec.describe s "Pawl.Engine.Projection" $ do
     Spec.assertEqWith s "set creature subtype" (Projection.layer (Modification.SetCreatureSubtype Subtype.Type.Frog)) Layer.Type
     Spec.assertEqWith s "add card type" (Projection.layer (Modification.AddCardType CardType.Creature)) Layer.Type
 
-  Spec.it s "CR 613.1c layer 3: ChangeSubtypeWord is Text" $
-    Spec.assertEqWith s "text layer" (Projection.layer (Modification.ChangeSubtypeWord (ChangeSubtypeWord.MkChangeSubtypeWord Subtype.Type.Mountain Subtype.Type.Island))) Layer.Text
+  Spec.it s "CR 613.1c layer 3: ChangeWord is Text" $
+    Spec.assertEqWith s "text layer" (Projection.layer (Modification.ChangeWord (ChangeWord.MkChangeWord (TextWord.SubtypeWord Subtype.Type.Mountain) (TextWord.SubtypeWord Subtype.Type.Island)))) Layer.Text
 
-  Spec.it s "CR 612.1 ChangeSubtypeWord rewrites a Forest's subtype to Island" $ do
+  Spec.it s "CR 612.1 ChangeWord rewrites a Forest's subtype to Island" $ do
     forest <- S.printingOf s registry "Forest"
     let gs0 = S.landsInPlay forest 1
         landId = case Game.zoneMembers Zone.Battlefield S.alice gs0 of
           i : _ -> i
           [] -> ObjectId.MkObjectId 999
-        gs = S.withEffectAt landId (Timestamp.MkTimestamp 100) (Modification.ChangeSubtypeWord (ChangeSubtypeWord.MkChangeSubtypeWord Subtype.Type.Forest Subtype.Type.Island)) gs0
+        gs = S.withEffectAt landId (Timestamp.MkTimestamp 100) (Modification.ChangeWord (ChangeWord.MkChangeWord (TextWord.SubtypeWord Subtype.Type.Forest) (TextWord.SubtypeWord Subtype.Type.Island))) gs0
     Spec.assertEqWith s "only Island" (Projection.subtypesOf landId gs) (Set.singleton Subtype.Type.Island)
 
-  Spec.it s "CR 612.2 ChangeSubtypeWord for an absent type is a no-op" $ do
+  Spec.it s "CR 612.2 ChangeWord for an absent type is a no-op" $ do
     forest <- S.printingOf s registry "Forest"
     let gs0 = S.landsInPlay forest 1
         landId = case Game.zoneMembers Zone.Battlefield S.alice gs0 of
           i : _ -> i
           [] -> ObjectId.MkObjectId 999
-        gs = S.withEffectAt landId (Timestamp.MkTimestamp 100) (Modification.ChangeSubtypeWord (ChangeSubtypeWord.MkChangeSubtypeWord Subtype.Type.Mountain Subtype.Type.Island)) gs0
+        gs = S.withEffectAt landId (Timestamp.MkTimestamp 100) (Modification.ChangeWord (ChangeWord.MkChangeWord (TextWord.SubtypeWord Subtype.Type.Mountain) (TextWord.SubtypeWord Subtype.Type.Island))) gs0
     Spec.assertEqWith s "still Forest" (Projection.subtypesOf landId gs) (Set.singleton Subtype.Type.Forest)
 
   -- CR 612.1 colliding two KEYS of the projection's keyword map. Stalker Hag
@@ -1319,7 +1320,7 @@ spec s registry = Spec.describe s "Pawl.Engine.Projection" $ do
   Spec.it s "CR 612.1 a swap that collides two landwalk keys keeps both abilities" $ do
     stalkerHag <- S.printingOf s registry "Stalker Hag"
     let (hagId, gs0) = S.addPermanent stalkerHag S.alice (Setup.emptyGame S.bothPlayers)
-        gs = S.withEffectAt hagId (Timestamp.MkTimestamp 100) (Modification.ChangeSubtypeWord (ChangeSubtypeWord.MkChangeSubtypeWord Subtype.Type.Forest Subtype.Type.Swamp)) gs0
+        gs = S.withEffectAt hagId (Timestamp.MkTimestamp 100) (Modification.ChangeWord (ChangeWord.MkChangeWord (TextWord.SubtypeWord Subtype.Type.Forest) (TextWord.SubtypeWord Subtype.Type.Swamp))) gs0
         walk t = Keyword.Landwalk (Filter.Type.HasSubtype t)
     Spec.assertEqWith
       s
@@ -1353,7 +1354,7 @@ spec s registry = Spec.describe s "Pawl.Engine.Projection" $ do
         (swampId, g2) = S.addPermanent swamp S.alice g1
         (islandId, plain) = S.addPermanent island S.alice g2
         -- The swap is on the BELL, which is where the words are printed.
-        hacked = S.withEffectAt bellId (Timestamp.MkTimestamp 100) (Modification.ChangeSubtypeWord (ChangeSubtypeWord.MkChangeSubtypeWord Subtype.Type.Swamp Subtype.Type.Island)) plain
+        hacked = S.withEffectAt bellId (Timestamp.MkTimestamp 100) (Modification.ChangeWord (ChangeWord.MkChangeWord (TextWord.SubtypeWord Subtype.Type.Swamp) (TextWord.SubtypeWord Subtype.Type.Island))) plain
     -- Unhacked, the Bell animates the Swamp and nothing else.
     Spec.assertBool s (Projection.isCreatureOf swampId plain) "the Swamp is a creature"
     Spec.assertEqWith s "a 1/1" (Projection.powerOf swampId plain) (Just 1)
@@ -1385,7 +1386,7 @@ spec s registry = Spec.describe s "Pawl.Engine.Projection" $ do
     tidalWarrior <- S.printingOf s registry "Tidal Warrior"
     let base = Setup.emptyGame S.bothPlayers
         (warriorId, plain) = S.addPermanent tidalWarrior S.alice base
-        hacked = S.withEffectAt warriorId (Timestamp.MkTimestamp 100) (Modification.ChangeSubtypeWord (ChangeSubtypeWord.MkChangeSubtypeWord Subtype.Type.Island Subtype.Type.Swamp)) plain
+        hacked = S.withEffectAt warriorId (Timestamp.MkTimestamp 100) (Modification.ChangeWord (ChangeWord.MkChangeWord (TextWord.SubtypeWord Subtype.Type.Island) (TextWord.SubtypeWord Subtype.Type.Swamp))) plain
         setsTo gs = case Projection.abilitiesOf warriorId gs of
           ability : _ -> concatMap (Maybe.mapMaybe landTypeSet . Foldable.toList . Mode.allEffects) (Modal.modes (ActivatedAbility.modal ability))
           [] -> []
@@ -1414,7 +1415,7 @@ spec s registry = Spec.describe s "Pawl.Engine.Projection" $ do
     barbarianOutcast <- S.printingOf s registry "Barbarian Outcast"
     let base = Setup.emptyGame S.bothPlayers
         (outcastId, plain) = S.addPermanent barbarianOutcast S.alice base
-        hacked = S.withEffectAt outcastId (Timestamp.MkTimestamp 100) (Modification.ChangeSubtypeWord (ChangeSubtypeWord.MkChangeSubtypeWord Subtype.Type.Swamp Subtype.Type.Island)) plain
+        hacked = S.withEffectAt outcastId (Timestamp.MkTimestamp 100) (Modification.ChangeWord (ChangeWord.MkChangeWord (TextWord.SubtypeWord Subtype.Type.Swamp) (TextWord.SubtypeWord Subtype.Type.Island))) plain
         asksAbout gs = case Projection.triggeredAbilitiesOf outcastId gs of
           ability : _ -> case TriggeredAbility.condition ability of
             TriggerCondition.StateIs (Condition.Type.Compares (Compares.MkCompares measured _ _)) -> countedSubtypes measured
@@ -1440,7 +1441,7 @@ spec s registry = Spec.describe s "Pawl.Engine.Projection" $ do
   -- returned the condition unchanged would pass every gameplay case in
   -- Pawl.TriggerSpec.
   Spec.it s "CR 612.1 a rule 509.3 condition's Filter is rewritten, and its nullary sibling is not" $ do
-    let rewrite = Projection.rewriteTriggerCondition [(Subtype.Type.Wraith, Subtype.Type.Elf)]
+    let rewrite = Projection.rewriteTriggerCondition [(TextWord.SubtypeWord Subtype.Type.Wraith, TextWord.SubtypeWord Subtype.Type.Elf)]
     Spec.assertEqWith
       s
       "CR 509.3b's Filter over the attacker blocked takes the swap"
@@ -1478,7 +1479,7 @@ spec s registry = Spec.describe s "Pawl.Engine.Projection" $ do
     bogWraith <- S.printingOf s registry "Bog Wraith"
     let (_, withAshaya) = S.addPermanent ashaya S.alice (S.landsInPlay island 3)
         (wraithId, plain) = S.addPermanent bogWraith S.alice withAshaya
-        swapped from to = S.withEffectAt wraithId (Timestamp.MkTimestamp 100) (Modification.ChangeSubtypeWord (ChangeSubtypeWord.MkChangeSubtypeWord from to)) plain
+        swapped from to = S.withEffectAt wraithId (Timestamp.MkTimestamp 100) (Modification.ChangeWord (ChangeWord.MkChangeWord (TextWord.SubtypeWord from) (TextWord.SubtypeWord to))) plain
     Spec.assertEqWith
       s
       "unswapped: Ashaya's Forest beside the printed Wraith"
@@ -1515,7 +1516,7 @@ spec s registry = Spec.describe s "Pawl.Engine.Projection" $ do
   -- creature-type pair rewriting a land-type word is CR 612.2, not a coincidence
   -- of which words the two lists happen to hold.
   Spec.it s "CR 612.2 a modification's subtype word is rewritten only by a pair of its own family" $ do
-    let rewrite from to = Projection.rewriteModification [(from, to)]
+    let rewrite from to = Projection.rewriteModification [(TextWord.SubtypeWord from, TextWord.SubtypeWord to)]
     Spec.assertEqWith
       s
       "a creature pair rewrites a creature-type word"
@@ -2826,7 +2827,7 @@ spec s registry = Spec.describe s "Pawl.Engine.Projection" $ do
         -- A Magical Hack on Conversion: "All Mountains are Plains" becomes "All
         -- Islands are Plains". The swap reaches the AFFECTED set, not a
         -- modification, which is the read-point this card exists to exercise.
-        gs = S.withEffectAt conversionId (Timestamp.MkTimestamp 100) (Modification.ChangeSubtypeWord (ChangeSubtypeWord.MkChangeSubtypeWord Subtype.Type.Mountain Subtype.Type.Island)) g3
+        gs = S.withEffectAt conversionId (Timestamp.MkTimestamp 100) (Modification.ChangeWord (ChangeWord.MkChangeWord (TextWord.SubtypeWord Subtype.Type.Mountain) (TextWord.SubtypeWord Subtype.Type.Island))) g3
     Spec.assertBool s (Set.member Subtype.Type.Plains (Projection.subtypesOf islandId gs)) "the Island is now a Plains"
     Spec.assertBool s (not (Set.member Subtype.Type.Island (Projection.subtypesOf islandId gs))) "and no longer an Island"
     Spec.assertBool s (Set.member Subtype.Type.Mountain (Projection.subtypesOf mountainId gs)) "the Mountain is left alone"
@@ -2866,7 +2867,7 @@ spec s registry = Spec.describe s "Pawl.Engine.Projection" $ do
         -- Mountains are Plains" becomes "All Islands are Plains". The Estuary's
         -- printed type line still says Mountain, so the rewritten clause no longer
         -- names it.
-        hacked = S.withEffectAt conversionId (Timestamp.MkTimestamp 100) (Modification.ChangeSubtypeWord (ChangeSubtypeWord.MkChangeSubtypeWord Subtype.Type.Mountain Subtype.Type.Island)) printed
+        hacked = S.withEffectAt conversionId (Timestamp.MkTimestamp 100) (Modification.ChangeWord (ChangeWord.MkChangeWord (TextWord.SubtypeWord Subtype.Type.Mountain) (TextWord.SubtypeWord Subtype.Type.Island))) printed
         -- The anti-vacuity control: with no Conversion at all the Estuary's
         -- ability plainly works, so "the Forest is a Swamp" below is the strip
         -- lifting rather than the card doing nothing either way.
@@ -3004,7 +3005,7 @@ spec s registry = Spec.describe s "Pawl.Engine.Projection" $ do
     let base = Setup.emptyGame S.bothPlayers
         (nonbasicId, g1) = S.addPermanent urborg S.alice base
         (bloodMoonId, g2) = S.addPermanent bloodMoon S.alice g1
-        gs = S.withEffectAt bloodMoonId (Timestamp.MkTimestamp 500) (Modification.ChangeSubtypeWord (ChangeSubtypeWord.MkChangeSubtypeWord Subtype.Type.Mountain Subtype.Type.Island)) g2
+        gs = S.withEffectAt bloodMoonId (Timestamp.MkTimestamp 500) (Modification.ChangeWord (ChangeWord.MkChangeWord (TextWord.SubtypeWord Subtype.Type.Mountain) (TextWord.SubtypeWord Subtype.Type.Island))) g2
     Spec.assertEqWith s "nonbasic land is now Island" (Projection.subtypesOf nonbasicId gs) (Set.singleton Subtype.Type.Island)
 
   Spec.it s "CR 612 hacking Blood Moon is order-independent (hack older)" $ do
@@ -3015,7 +3016,7 @@ spec s registry = Spec.describe s "Pawl.Engine.Projection" $ do
         (bloodMoonId, g2) = S.addPermanent bloodMoon S.alice g1
         -- Timestamp 1 is older than Blood Moon's own object timestamp; the
         -- outcome must not change.
-        gs = S.withEffectAt bloodMoonId (Timestamp.MkTimestamp 1) (Modification.ChangeSubtypeWord (ChangeSubtypeWord.MkChangeSubtypeWord Subtype.Type.Mountain Subtype.Type.Island)) g2
+        gs = S.withEffectAt bloodMoonId (Timestamp.MkTimestamp 1) (Modification.ChangeWord (ChangeWord.MkChangeWord (TextWord.SubtypeWord Subtype.Type.Mountain) (TextWord.SubtypeWord Subtype.Type.Island))) g2
     Spec.assertEqWith s "nonbasic land is Island, order-independent" (Projection.subtypesOf nonbasicId gs) (Set.singleton Subtype.Type.Island)
 
   Spec.it s "Opalescence makes Humility a creature: legal creature target and SBA-killable" $ do

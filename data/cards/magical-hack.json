@@ -23,9 +23,11 @@
                   {
                     "type": "ChangeText",
                     "value": {
-                      "family": {
-                        "type": "BasicLandType"
-                      },
+                      "families": [
+                        {
+                          "type": "BasicLandType"
+                        }
+                      ],
                       "forbidden": [],
                       "slot": "target"
                     }

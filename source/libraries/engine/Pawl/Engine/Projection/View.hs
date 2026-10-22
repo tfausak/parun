@@ -1677,7 +1677,7 @@ noCharacteristics =
       PC.ruleAbilities = mempty,
       PC.lostAllAbilities = False,
       PC.hasFullText = False,
-      PC.subtypeWordChanges = [],
+      PC.wordChanges = [],
       PC.textChangedKeywords = Map.empty,
       PC.assignsCombatDamageWithToughness = False,
       -- CR 702.184c: an ability on the stack grants nothing to its
@@ -1858,7 +1858,7 @@ baseCharacteristics oid gs = case Game.faceOf oid gs of
               -- Nor has layer 3.
               PC.hasFullText = False,
               -- The seed is CR 613.1's starting point, before layer 3 has run.
-              PC.subtypeWordChanges = [],
+              PC.wordChanges = [],
               PC.textChangedKeywords = Map.empty,
               -- CR 613.1's starting point, before rules-changing effects.
               PC.assignsCombatDamageWithToughness = False,

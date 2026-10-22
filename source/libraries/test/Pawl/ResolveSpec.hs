@@ -51,8 +51,8 @@ import qualified Pawl.Types.BeginningStep as BeginningStep
 import qualified Pawl.Types.Card as Card.Type
 import qualified Pawl.Types.CardName as CardName
 import qualified Pawl.Types.CardType as CardType
-import qualified Pawl.Types.ChangeSubtypeWord as ChangeSubtypeWord
 import qualified Pawl.Types.ChangeText as ChangeText
+import qualified Pawl.Types.ChangeWord as ChangeWord
 import qualified Pawl.Types.ChoosePermanents as ChoosePermanents
 import qualified Pawl.Types.ChosenPermanents as ChosenPermanents
 import qualified Pawl.Types.ClauseIndex as ClauseIndex
@@ -127,15 +127,16 @@ import qualified Pawl.Types.SlotName as SlotName
 import qualified Pawl.Types.Source as Source
 import qualified Pawl.Types.StepBegan as StepBegan
 import qualified Pawl.Types.Subtype as Subtype
-import qualified Pawl.Types.SubtypeFamily as SubtypeFamily
 import qualified Pawl.Types.Supertype as Supertype
 import qualified Pawl.Types.TapState as TapState
 import qualified Pawl.Types.TargetSlot as TargetSlot
 import qualified Pawl.Types.Teams as Teams
+import qualified Pawl.Types.TextWord as TextWord
 import qualified Pawl.Types.Timestamp as Timestamp
 import qualified Pawl.Types.TriggerCondition as TriggerCondition
 import qualified Pawl.Types.TriggeredAbility as TriggeredAbility
 import qualified Pawl.Types.TriggeredAbilitySource as TriggeredAbilitySource
+import qualified Pawl.Types.WordFamily as WordFamily
 import qualified Pawl.Types.Zone as Zone
 
 targetSpec :: (Monad m, Monad n) => Spec.Spec m n -> Registry.Registry m -> n ()
@@ -533,7 +534,7 @@ resolveSpec s registry = Spec.describe s "Resolve" $ do
     Spec.assertEqWith s "one card in the graveyard" (length (Game.zoneMembers Zone.Graveyard S.alice after)) 1
   Spec.it s "CR 612 slotsOf finds a ChangeText slot" $ do
     let slot = SlotName.MkSlotName (Text.pack "target")
-    Spec.assertEqWith s "slotsOf" (Resolve.slotsOf (Effect.ChangeText (ChangeText.MkChangeText SubtypeFamily.CreatureType (Set.singleton Subtype.Wall) slot))) (Map.singleton slot SlotArity.One)
+    Spec.assertEqWith s "slotsOf" (Resolve.slotsOf (Effect.ChangeText (ChangeText.MkChangeText (Set.singleton WordFamily.CreatureType) (Set.singleton (TextWord.SubtypeWord Subtype.Wall)) slot Duration.Indefinite))) (Map.singleton slot SlotArity.One)
   -- The card lint's READ side for CR 106.4's recipient: Shizuko, Caller of
   -- Autumn's "that player" is a slot read, so a payload naming a slot no
   -- condition binds must look dangling. Asserted here because the pool cannot
@@ -586,7 +587,7 @@ resolveSpec s registry = Spec.describe s "Resolve" $ do
     -- Boil ("Destroy all Islands") is the first card whose effect selects by
     -- a BASIC LAND TYPE, so it is the first that can tell whether CR 612.1's
     -- "any words or symbols printed on that object" reaches inside an
-    -- effect's Filter. The stored ChangeSubtypeWord is what a resolved
+    -- effect's Filter. The stored ChangeWord is what a resolved
     -- Magical Hack leaves on the spell.
     --
     -- The Filter half of read-point 3 (Resolve.modesOf) rests on this case
@@ -621,7 +622,7 @@ resolveSpec s registry = Spec.describe s "Resolve" $ do
         resolve g = snd (Engine.runGamePure S.identityAnswer g (Resolve.resolveSpell boilId))
         onBattlefield oid g = Set.member oid (GameState.battlefield g)
         plain = resolve g4
-        hacked = resolve (S.withEffectAt boilId (Timestamp.MkTimestamp 1) (Modification.ChangeSubtypeWord (ChangeSubtypeWord.MkChangeSubtypeWord Subtype.Island Subtype.Forest)) g4)
+        hacked = resolve (S.withEffectAt boilId (Timestamp.MkTimestamp 1) (Modification.ChangeWord (ChangeWord.MkChangeWord (TextWord.SubtypeWord Subtype.Island) (TextWord.SubtypeWord Subtype.Forest))) g4)
     -- The control: unhacked, Boil does what it prints.
     Spec.assertBool s (not (onBattlefield islandId plain)) "unhacked, the Island dies"
     Spec.assertBool s (onBattlefield forestId plain) "unhacked, the Forest lives"
@@ -644,7 +645,7 @@ resolveSpec s registry = Spec.describe s "Resolve" $ do
             { GameState.objects = Map.insert bloodMoonSpellId bmObj (GameState.objects g2),
               GameState.stack = bloodMoonSpellId : GameState.stack g2
             }
-        hacked = S.withEffectAt bloodMoonSpellId (Timestamp.MkTimestamp 1) (Modification.ChangeSubtypeWord (ChangeSubtypeWord.MkChangeSubtypeWord Subtype.Mountain Subtype.Island)) g3
+        hacked = S.withEffectAt bloodMoonSpellId (Timestamp.MkTimestamp 1) (Modification.ChangeWord (ChangeWord.MkChangeWord (TextWord.SubtypeWord Subtype.Mountain) (TextWord.SubtypeWord Subtype.Island))) g3
         after = snd (Engine.runGamePure S.identityAnswer hacked Stack.resolveTop)
     -- CR 400.7 mints a NEW object for the permanent, but CR 400.7a is the
     -- exception: an effect that changes a PERMANENT SPELL's characteristics

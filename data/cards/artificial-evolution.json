@@ -23,9 +23,11 @@
                   {
                     "type": "ChangeText",
                     "value": {
-                      "family": {
-                        "type": "CreatureType"
-                      },
+                      "families": [
+                        {
+                          "type": "CreatureType"
+                        }
+                      ],
                       "forbidden": [
                         {
                           "type": "Wall"

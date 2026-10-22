@@ -103,6 +103,7 @@ import qualified Pawl.Types.Sickness as Sickness
 import qualified Pawl.Types.Subtype as Subtype
 import qualified Pawl.Types.TapState as TapState
 import qualified Pawl.Types.TargetSlot as TargetSlot
+import qualified Pawl.Types.TextWord as TextWord
 import qualified Pawl.Types.Zone as Zone
 import qualified Pawl.Types.ZoneChange as ZoneChange
 
@@ -2168,7 +2169,7 @@ youOnActivatedAbilitySpec s registry = Spec.describe s "YouOnActivatedAbility" $
 hackAt :: ObjectId.ObjectId -> Subtype.Subtype -> Subtype.Subtype -> Prompt.Prompt r -> r
 hackAt spellId from to p = case p of
   Prompt.ChooseTargets _ _ _ sets -> fmap (const (Set.singleton (Recipient.ToObject spellId))) sets
-  Prompt.ChooseLandTypeSwap {} -> (from, to)
+  Prompt.ChooseWordSwap {} -> (TextWord.SubtypeWord from, TextWord.SubtypeWord to)
   _ -> S.identityAnswer p
 
 -- alice's board for the Tidal Warrior chain: a Forest (added FIRST, so it holds
@@ -3580,7 +3581,7 @@ gondEvolvedChain s registry swap = do
 evolveAt :: ObjectId.ObjectId -> Subtype.Subtype -> Subtype.Subtype -> Prompt.Prompt r -> r
 evolveAt oid from to p = case p of
   Prompt.ChooseTargets _ _ _ sets -> fmap (const (Set.singleton (Recipient.ToObject oid))) sets
-  Prompt.ChooseCreatureTypeSwap {} -> (from, to)
+  Prompt.ChooseWordSwap {} -> (TextWord.SubtypeWord from, TextWord.SubtypeWord to)
   _ -> S.identityAnswer p
 
 -- The one ability on the object that the printing did not print: the grant.

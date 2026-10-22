@@ -89,8 +89,8 @@ import qualified Pawl.Engine.Soulbond as Soulbond
 import qualified Pawl.Engine.SourceContext as SourceContext
 import qualified Pawl.Engine.Star as Star
 import qualified Pawl.Engine.Sticker as Sticker
-import qualified Pawl.Engine.Subtype as Subtype
 import qualified Pawl.Engine.Target as Target
+import qualified Pawl.Engine.TextWord as TextWord
 import qualified Pawl.Engine.TimeTravel as TimeTravel
 import qualified Pawl.Engine.Turn as Turn
 import qualified Pawl.Engine.Warp as Warp
@@ -142,8 +142,8 @@ import qualified Pawl.Types.CarryOver as CarryOver
 import qualified Pawl.Types.CastObligation as CastObligation
 import qualified Pawl.Types.CastOffer as CastOffer
 import qualified Pawl.Types.CastRepetition as CastRepetition
-import qualified Pawl.Types.ChangeSubtypeWord as ChangeSubtypeWord
 import qualified Pawl.Types.ChangeText as ChangeText
+import qualified Pawl.Types.ChangeWord as ChangeWord
 import qualified Pawl.Types.ChooseCardName as ChooseCardName
 import qualified Pawl.Types.ChooseNumber as ChooseNumber
 import qualified Pawl.Types.ChoosePermanents as ChoosePermanents
@@ -405,7 +405,6 @@ import qualified Pawl.Types.StackObjectKind as StackObjectKind
 import qualified Pawl.Types.StickerRef as StickerRef
 import qualified Pawl.Types.StoredResult as StoredResult
 import qualified Pawl.Types.Subtype as Subtype
-import qualified Pawl.Types.SubtypeFamily as SubtypeFamily
 import qualified Pawl.Types.TakeExtraTurn as TakeExtraTurn
 import qualified Pawl.Types.TapState as TapState
 import qualified Pawl.Types.TargetSlot as TargetSlot
@@ -4086,31 +4085,28 @@ applyOneEffect runSubgame resolving source controller legal chosen effect = case
                   Nothing -> g
                   Just m -> List.foldl' (store objs) g (expandGrant resolving source gs m)
              in List.foldl' storeSet gs frozenSets
-  -- CR 608.2d: a subtype word swap is not among CR 601.2b-d's announcements, so
-  -- the choice is made here, as the effect applies. Observable: a countered
-  -- Magical Hack is never asked.
-  Effect.ChangeText (ChangeText.MkChangeText family forbidden slot) -> case legalOne slot legal of
+  -- CR 608.2d: a word swap is not among CR 601.2b-d's announcements, so the
+  -- choice is made here, as the effect applies. Observable: a countered Magical
+  -- Hack is never asked.
+  Effect.ChangeText (ChangeText.MkChangeText families forbidden slot duration) -> case legalOne slot legal of
     Just recipient -> case Recipient.objectOf recipient of
       Nothing -> pure ()
       Just target -> do
         gs0 <- State.get
         let decider = Decide.deciderFor controller gs0
             -- CR 612.2: which words are offered is a CLASSIFICATION of the
-            -- effect (which family), never its identity; the "can't be Wall"
+            -- effect (which families), never its identity; the "can't be Wall"
             -- restriction rides in from the data as `forbidden`.
-            question = case family of
-              SubtypeFamily.BasicLandType -> Prompt.ChooseLandTypeSwap decider controller resolving slot forbidden
-              SubtypeFamily.CreatureType -> Prompt.ChooseCreatureTypeSwap decider controller resolving slot forbidden
-              SubtypeFamily.EnchantmentType -> Prompt.ChooseEnchantmentTypeSwap decider controller resolving slot forbidden
+            question = Prompt.ChooseWordSwap decider controller resolving slot families forbidden
         answer <- Game.choose question
         -- CR 612.2: an unswappable answer is filtered, not trusted (the
         -- chooseAmong posture), and a card leaving no legal swap changes
         -- nothing. Proved by Pawl.CounterspellSpec's TextSwapLegality.
-        Foldable.for_ (if Subtype.swappable family forbidden answer then Just answer else Subtype.firstSwap family forbidden) $ \(from, to) -> State.modify' $ \gs ->
-          -- CR 611.2a: no stated duration, so Duration.Indefinite, armed through
-          -- Expiry like the other storing arms. Indefinite always arms; the
-          -- Nothing branch is written out only because arm is total.
-          case Expiry.arm (Game.readingAcquisition resolving source) legal controller source Duration.Indefinite gs of
+        Foldable.for_ (if TextWord.swappable families forbidden answer then Just answer else TextWord.firstSwap families forbidden) $ \(from, to) -> State.modify' $ \gs ->
+          -- CR 611.2a's Indefinite unless the card states a duration (Crystal
+          -- Spray's "until end of turn"), armed through Expiry like the other
+          -- storing arms; Nothing when the duration has already passed.
+          case Expiry.arm (Game.readingAcquisition resolving source) legal controller source duration gs of
             Nothing -> gs
             Just expiry ->
               -- CR 611 / 612: a continuous effect over the one target, with the
@@ -4122,7 +4118,7 @@ applyOneEffect runSubgame resolving source controller legal chosen effect = case
                       { ContinuousEffect.source = source,
                         ContinuousEffect.timestamp = ts,
                         ContinuousEffect.expiry = expiry,
-                        ContinuousEffect.modification = Modification.ChangeSubtypeWord (ChangeSubtypeWord.MkChangeSubtypeWord from to),
+                        ContinuousEffect.modification = Modification.ChangeWord (ChangeWord.MkChangeWord from to),
                         ContinuousEffect.affected = Affected.TheseObjects (Set.singleton target)
                       }
                in gs1 {GameState.continuousEffects = eff : GameState.continuousEffects gs1}

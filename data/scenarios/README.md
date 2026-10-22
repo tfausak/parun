@@ -62,7 +62,7 @@ subdirectory named for that spec; `docs/scenario-burndown.md` lists the ones sti
   too, with no `source`: `Exercises` reverses them. `ChooseToPay`
   answers a cost a resolving object offers (CR 118.12a), keyed the same way:
   its `decision` is `Pays` or `Declines`, and paying takes a cast's choices,
-  such as `mana`. `ChooseTypeSwap` answers a text change's swap (CR 612.1),
+  such as `mana`. `ChooseWordSwap` answers a text change's swap (CR 612.1),
   `{ "from": { "type": "Island" }, "to": { "type": "Swamp" } }`, keyed
   the same way. `ChooseCopyTarget` names what an object entering as a copy
   copies (CR 707.5), `"$bear"`, or `null` to decline its "may", keyed by

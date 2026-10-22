@@ -107,6 +107,7 @@ import qualified Pawl.Types.Subtype as Subtype
 import qualified Pawl.Types.Supertype as Supertype
 import qualified Pawl.Types.TapState as TapState
 import qualified Pawl.Types.TargetSlot as TargetSlot
+import qualified Pawl.Types.TextWord as TextWord
 import qualified Pawl.Types.Timestamp as Timestamp
 import qualified Pawl.Types.Zone as Zone
 
@@ -3102,7 +3103,7 @@ aspectChain s registry hack = do
 -- re-read with no error.
 hackAt :: ObjectId.ObjectId -> Subtype.Subtype -> Subtype.Subtype -> Prompt.Prompt r -> r
 hackAt oid from to p = case p of
-  Prompt.ChooseLandTypeSwap {} -> (from, to)
+  Prompt.ChooseWordSwap {} -> (TextWord.SubtypeWord from, TextWord.SubtypeWord to)
   _ -> targetingOnly oid p
 
 -- hackAt's target half, which the Aura's own CR 303.4a enchant slot takes too:
@@ -4066,7 +4067,7 @@ auraSwapSpec s registry =
 -- when the Wings still have their one ability there, the Piker, the two Auras,
 -- the two named cards, every ChooseCardInHand offer in order, and the board.
 textChangedSwap :: (Monad m) => Spec.Spec m n -> Registry.Registry m -> (String, String) -> (Subtype.Subtype, Subtype.Subtype) -> m (ObjectId.ObjectId, GameState.GameState, Maybe (ObjectId.ObjectId, (ObjectId.ObjectId, ObjectId.ObjectId), (ObjectId.ObjectId, ObjectId.ObjectId), [[ObjectId.ObjectId]], GameState.GameState))
-textChangedSwap s registry (firstName, secondName) swap = do
+textChangedSwap s registry (firstName, secondName) (from, to) = do
   wings <- S.printingOf s registry "Arcanum Wings"
   island <- S.printingOf s registry "Island"
   piker <- S.printingOf s registry "Goblin Piker"
@@ -4088,7 +4089,7 @@ textChangedSwap s registry (firstName, secondName) swap = do
       evolving :: Prompt.Prompt r -> r
       evolving p = case p of
         Prompt.ChooseTargets _ _ _ offers -> S.preferring ((== Just wingsId) . Recipient.objectOf) offers
-        Prompt.ChooseEnchantmentTypeSwap {} -> swap
+        Prompt.ChooseWordSwap {} -> (TextWord.SubtypeWord from, TextWord.SubtypeWord to)
         _ -> S.identityAnswer p
       evolved = S.runPure evolving g8 {GameState.priority = Just S.alice} (S.cast S.alice evolutionId >> Stack.resolveTop >> Engine.settleForPriority)
       -- Records each hand offer and takes its least id, the first named card

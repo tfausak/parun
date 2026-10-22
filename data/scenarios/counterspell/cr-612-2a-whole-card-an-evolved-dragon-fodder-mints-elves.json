@@ -27,7 +27,7 @@
     { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": { "Cast": { "object": "$fodder", "mana": ["$mountain-1", "$mountain-2", null] } } },
     { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": { "Cast": { "object": "$evolution", "targets": ["Dragon Fodder"], "mana": ["$island-1", null] } } },
     { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass" },
-    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": { "ChooseTypeSwap": { "from": { "type": "Goblin" }, "to": { "type": "Elf" } } }, "source": "Artificial Evolution" },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": { "ChooseWordSwap": { "from": { "type": "Goblin" }, "to": { "type": "Elf" } } }, "source": "Artificial Evolution" },
     { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass" },
     { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": { "OrderTimestamps": ["Elf Token", "Elf Token#2"] } },
     { "turn": 1, "step": "PrecombatMain", "player": "alice", "check": { "Count": { "player": "alice", "zone": "Battlefield", "card": "Elf Token", "count": 2 } } },

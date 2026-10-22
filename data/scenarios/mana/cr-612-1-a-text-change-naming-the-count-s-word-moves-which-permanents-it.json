@@ -116,7 +116,7 @@
       "step": "PrecombatMain",
       "player": "bob",
       "do": {
-        "ChooseTypeSwap": {
+        "ChooseWordSwap": {
           "from": {
             "type": "Swamp"
           },
