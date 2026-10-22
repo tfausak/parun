@@ -8113,7 +8113,7 @@ miracle cost =
               -- trigger's controller, and a "may".
               OfferCast.caster = PlayerRef.Relative PlayerRelation.You,
               OfferCast.optionality = CastObligation.Optional,
-              OfferCast.offer = CastOffer.MkCastOffer {CastOffer.transformed = False, CastOffer.withoutPayingManaCost = False, CastOffer.payingInstead = Just cost, CastOffer.spending = ManaSpending.AsProduced, CastOffer.restriction = Nothing, CastOffer.offeredBy = Nothing},
+              OfferCast.offer = CastOffer.MkCastOffer {CastOffer.transformed = False, CastOffer.withoutPayingManaCost = False, CastOffer.payingInstead = Just cost, CastOffer.spending = ManaSpending.AsProduced, CastOffer.restriction = Nothing, CastOffer.offeredBy = Nothing, CastOffer.faceDown = Nothing, CastOffer.payableFromSpent = False},
               -- rule 702.94a's "cast it": one card, the one the slot names.
               OfferCast.repetition = CastRepetition.Once,
               OfferCast.copied = False,
@@ -8542,7 +8542,9 @@ cascade =
                     CastOffer.payingInstead = Nothing,
                     CastOffer.spending = ManaSpending.AsProduced,
                     CastOffer.restriction = Just (Filter.Measures (Measures.MkMeasures Measure.ManaValue Comparison.LessThan (Operand.OfSource Measure.ManaValue))),
-                    CastOffer.offeredBy = Nothing
+                    CastOffer.offeredBy = Nothing,
+                    CastOffer.faceDown = Nothing,
+                    CastOffer.payableFromSpent = False
                   },
               -- Rule 702.85a's "cast IT": one card, the one the walk stopped at.
               OfferCast.repetition = CastRepetition.Once,
@@ -8637,7 +8639,9 @@ ripple n =
                     CastOffer.payingInstead = Nothing,
                     CastOffer.spending = ManaSpending.AsProduced,
                     CastOffer.restriction = Nothing,
-                    CastOffer.offeredBy = Nothing
+                    CastOffer.offeredBy = Nothing,
+                    CastOffer.faceDown = Nothing,
+                    CastOffer.payableFromSpent = False
                   },
               -- Rule 702.60a's "cast ANY OF those cards".
               OfferCast.repetition = CastRepetition.AnyNumber,
@@ -8735,7 +8739,7 @@ suspendLastCounter keyword =
               -- trigger's controller, and a "may".
               OfferCast.caster = PlayerRef.Relative PlayerRelation.You,
               OfferCast.optionality = CastObligation.Optional,
-              OfferCast.offer = CastOffer.MkCastOffer {CastOffer.transformed = False, CastOffer.withoutPayingManaCost = True, CastOffer.payingInstead = Nothing, CastOffer.spending = ManaSpending.AsProduced, CastOffer.restriction = Nothing, CastOffer.offeredBy = Just keyword},
+              OfferCast.offer = CastOffer.MkCastOffer {CastOffer.transformed = False, CastOffer.withoutPayingManaCost = True, CastOffer.payingInstead = Nothing, CastOffer.spending = ManaSpending.AsProduced, CastOffer.restriction = Nothing, CastOffer.offeredBy = Just keyword, CastOffer.faceDown = Nothing, CastOffer.payableFromSpent = False},
               -- rule 702.62a's "cast it": one card, the one the slot names.
               OfferCast.repetition = CastRepetition.Once,
               OfferCast.copied = False,
@@ -8813,7 +8817,7 @@ reboundUpkeep =
               -- and a "may".
               OfferCast.caster = PlayerRef.Relative PlayerRelation.You,
               OfferCast.optionality = CastObligation.Optional,
-              OfferCast.offer = CastOffer.MkCastOffer {CastOffer.transformed = False, CastOffer.withoutPayingManaCost = True, CastOffer.payingInstead = Nothing, CastOffer.spending = ManaSpending.AsProduced, CastOffer.restriction = Nothing, CastOffer.offeredBy = Just Keyword.Rebound},
+              OfferCast.offer = CastOffer.MkCastOffer {CastOffer.transformed = False, CastOffer.withoutPayingManaCost = True, CastOffer.payingInstead = Nothing, CastOffer.spending = ManaSpending.AsProduced, CastOffer.restriction = Nothing, CastOffer.offeredBy = Just Keyword.Rebound, CastOffer.faceDown = Nothing, CastOffer.payableFromSpent = False},
               -- rule 702.88a's "cast it": one card, the one the slot names.
               OfferCast.repetition = CastRepetition.Once,
               OfferCast.copied = False,
@@ -8863,7 +8867,7 @@ cipherTrigger card =
             { OfferCast.ref = ObjectRef.EachCardEncodedOnSource (Just (Filter.IsObject card)),
               OfferCast.caster = PlayerRef.Relative PlayerRelation.You,
               OfferCast.optionality = CastObligation.Optional,
-              OfferCast.offer = CastOffer.MkCastOffer {CastOffer.transformed = False, CastOffer.withoutPayingManaCost = True, CastOffer.payingInstead = Nothing, CastOffer.spending = ManaSpending.AsProduced, CastOffer.restriction = Nothing, CastOffer.offeredBy = Nothing},
+              OfferCast.offer = CastOffer.MkCastOffer {CastOffer.transformed = False, CastOffer.withoutPayingManaCost = True, CastOffer.payingInstead = Nothing, CastOffer.spending = ManaSpending.AsProduced, CastOffer.restriction = Nothing, CastOffer.offeredBy = Nothing, CastOffer.faceDown = Nothing, CastOffer.payableFromSpent = False},
               OfferCast.repetition = CastRepetition.Once,
               OfferCast.copied = True,
               OfferCast.verb = PermissionVerb.Cast,
@@ -8968,7 +8972,7 @@ paradigmCopy =
             { OfferCast.ref = ObjectRef.InSlot paradigmSlot,
               OfferCast.caster = PlayerRef.Relative PlayerRelation.You,
               OfferCast.optionality = CastObligation.Optional,
-              OfferCast.offer = CastOffer.MkCastOffer {CastOffer.transformed = False, CastOffer.withoutPayingManaCost = True, CastOffer.payingInstead = Nothing, CastOffer.spending = ManaSpending.AsProduced, CastOffer.restriction = Nothing, CastOffer.offeredBy = Nothing},
+              OfferCast.offer = CastOffer.MkCastOffer {CastOffer.transformed = False, CastOffer.withoutPayingManaCost = True, CastOffer.payingInstead = Nothing, CastOffer.spending = ManaSpending.AsProduced, CastOffer.restriction = Nothing, CastOffer.offeredBy = Nothing, CastOffer.faceDown = Nothing, CastOffer.payableFromSpent = False},
               OfferCast.repetition = CastRepetition.Once,
               OfferCast.copied = True,
               OfferCast.verb = PermissionVerb.Cast,
@@ -9020,7 +9024,7 @@ madnessCast manaCost payload =
               -- trigger's controller and the two seats coincide.
               OfferCast.caster = PlayerRef.Relative PlayerRelation.You,
               OfferCast.optionality = CastObligation.Optional,
-              OfferCast.offer = CastOffer.MkCastOffer {CastOffer.transformed = False, CastOffer.withoutPayingManaCost = False, CastOffer.payingInstead = Just cost, CastOffer.spending = ManaSpending.AsProduced, CastOffer.restriction = Nothing, CastOffer.offeredBy = Just (Keyword.Madness payload)},
+              OfferCast.offer = CastOffer.MkCastOffer {CastOffer.transformed = False, CastOffer.withoutPayingManaCost = False, CastOffer.payingInstead = Just cost, CastOffer.spending = ManaSpending.AsProduced, CastOffer.restriction = Nothing, CastOffer.offeredBy = Just (Keyword.Madness payload), CastOffer.faceDown = Nothing, CastOffer.payableFromSpent = False},
               -- rule 702.35a's "cast it": one card, the one the slot names.
               OfferCast.repetition = CastRepetition.Once,
               OfferCast.copied = False,

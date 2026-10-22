@@ -107,6 +107,7 @@ import qualified Pawl.Types.CopyClause as CopyClause
 import qualified Pawl.Types.CopyCoverage as CopyCoverage
 import qualified Pawl.Types.CopyDomain as CopyDomain
 import qualified Pawl.Types.CopyRecipient as CopyRecipient
+import qualified Pawl.Types.Cost as Cost
 import qualified Pawl.Types.CounterCause as CounterCause
 import qualified Pawl.Types.CounterChange as CounterChange
 import qualified Pawl.Types.CounterKind as CounterKind
@@ -268,10 +269,13 @@ import qualified Pawl.Types.TriggerLimit as TriggerLimit
 import qualified Pawl.Types.TriggerSource as TriggerSource
 import qualified Pawl.Types.TriggeredAbility as TriggeredAbility
 import qualified Pawl.Types.TurnScope as TurnScope
+import qualified Pawl.Types.TurnUpEvent as TurnUpEvent
+import qualified Pawl.Types.TurnUpProcedure as TurnUpProcedure
 import qualified Pawl.Types.TurnUpR as TurnUpR
 import qualified Pawl.Types.TurnUpRewrite as TurnUpRewrite
 import Pawl.Types.TurnWindow (TurnWindow)
 import qualified Pawl.Types.TurnWindow as TurnWindow
+import qualified Pawl.Types.TurnedFaceUp as TurnedFaceUp
 import qualified Pawl.Types.TypeLine as TypeLine
 import qualified Pawl.Types.UntapR as UntapR
 import qualified Pawl.Types.UntapRewrite as UntapRewrite
@@ -690,6 +694,191 @@ enterTapped oid =
     let stamp obj = obj {Object.tapped = TapState.Tapped}
      in gs {GameState.objects = Map.adjust stamp oid (GameState.objects gs)}
 
+-- CR 701.40b / 701.40g and CR 701.58b / 701.58g: the card representing a
+-- face-down permanent -- its face and its card types -- which is what those
+-- rules show, price and reveal. Copy effects do not change the card: Soul
+-- Summons' ruling turns a manifested creature face up "revealing that it's a
+-- creature card (ignoring any copy effects or type-changing effects that might
+-- be applying to it) and paying its mana cost". A conjured duplicate's values
+-- (Object.duplicate) are the card's own, so those do count. Pawl.FaceDownSpec's
+-- "CR 701.40b a manifested creature under a copy is priced at its own card's
+-- mana cost" proves a stored copy is ignored. The face is the printed card's
+-- own (Game.resolveFace), never Game.faceUpFaceOf, whose Room and copied-half
+-- arms read a copy STAMP: "CR 701.40b a manifested creature stamped a copy of a
+-- Room is priced at its own card's mana cost" proves that. The printing is a
+-- meld's result and a merged permanent's top component (Game.printingOfObject).
+-- The duplicate arm is a regression fence: no test manifests a duplicate.
+representingCardOf :: ObjectId -> GameState -> Maybe (Face.Face Card, Set.Set CardType.CardType)
+representingCardOf oid gs = do
+  object <- Game.lookupObject oid gs
+  printing <- Game.printingOfObject oid gs
+  let face = Game.resolveFace (Game.shownFace object) (Printing.card printing)
+  pure $ case Object.duplicate object of
+    Nothing -> (face, TypeLine.types (Face.typeLine face))
+    Just values -> (face {Face.manaCost = PC.manaCost values}, PC.cardTypes values)
+
+-- CR 701.40g and CR 701.58g, one sentence each and the same sentence: "if a
+-- manifested [cloaked] permanent that's represented by an instant or sorcery
+-- card would turn face up, its controller reveals it and leaves it face down".
+--
+-- TWO conjuncts and both are the rules' own words. MANIFESTED OR CLOAKED, so the
+-- reason on the status is asked (CR 708.6) and a morph-cast permanent is not
+-- covered; and the CARD it is REPRESENTED BY is an instant or a sorcery, so the
+-- read is representingCardOf's, the one CR 701.40b's guard takes.
+--
+-- performTurnFaceUp performs the reveal, by the permanent's controller, and
+-- leaves the permanent face down.
+--
+-- EnteredFaceDown joins them on Magar of the Magic Strings' ruling (2022-10-07),
+-- which gives its face-down instant or sorcery card the same treatment. Yedora,
+-- Grave Gardener's EnteredFaceDown returns whatever card died, so a manifested
+-- Divination it brings back stays face down by the same reading.
+--
+-- CR 730.2g is the same replacement for a face-down MERGED permanent, asked of
+-- every card component (Game.componentsOf) with no reason at all, and read off
+-- each card's own characteristics (Card.combined) rather than the permanent's.
+revealsInsteadOfTurningUp :: ObjectId -> GameState -> Bool
+revealsInsteadOfTurningUp oid gs =
+  let instantOrSorcery = Set.fromList [CardType.Instant, CardType.Sorcery]
+      isInstantOrSorcery = not . Set.null . Set.intersection instantOrSorcery
+      object = Game.lookupObject oid gs
+      reason = fmap (Facing.reasonOf . Object.facing) object
+      manifested =
+        (reason == Just (Just FaceDownReason.Manifested) || reason == Just (Just FaceDownReason.Cloaked) || reason == Just (Just FaceDownReason.EnteredFaceDown))
+          && maybe False (isInstantOrSorcery . snd) (representingCardOf oid gs)
+      components = foldMap (Seq.filter Game.componentIsCard . Game.componentsOf . Object.source) object
+      merged =
+        maybe False (Facing.isFaceDown . Object.facing) object
+          && any (maybe False (isInstantOrSorcery . TypeLine.types . Face.typeLine . Card.combined) . (`Game.cardOfPrinting` gs) . Game.printingOfComponent) components
+   in manifested || merged
+
+-- The turning-over itself, once whatever allowed it has allowed it: the status
+-- write, CR 708.11's replacement loop, and CR 708.7's event, in that order and
+-- for the reasons the notes below give.
+--
+-- ONE funnel for every road up. The special action above reaches it after CR
+-- 116.2b's payment; an Effect.TurnFaceUp reaches it through turnFaceUpByEffect,
+-- having paid nothing. CR 701.40g is the whole reason the two share a body
+-- rather than each writing the status: the rule replaces the TURNING OVER and
+-- says nothing about what proposed it, so a guard on one road would leave the
+-- other one wrong.
+--
+-- The procedure and the cost it paid are Maybe for that same asymmetry -- see
+-- Pawl.Types.ProposedEvent.
+--
+-- CR 708.8 falls out of the shape and is not implemented anywhere: "any effects
+-- that have been applied to the face-down permanent still apply to the face-up
+-- permanent", and this writes one status field on one object -- no CR 400.7
+-- incarnation is minted, so damage, counters, attachments, Auras and every
+-- continuous effect naming the object ride through untouched. Its last sentence
+-- is the same non-event: nothing here is a battlefield entry, so no
+-- enters-the-battlefield ability is offered one.
+--
+-- The TIMESTAMP is the exception on that list, and CR 613.7f is why: "a permanent
+-- receives a new timestamp each time it turns face up or face down". Game.turnFacing
+-- writes it, so this road and Pawl.Engine.Resolve's Effect.TurnFaceDown arm cannot
+-- disagree about the rule.
+--
+-- CR 708.11 is the one thing here that is NOT a bare write: "if a face-down
+-- permanent would have an 'As [this permanent] is turned face up . . .' ability
+-- after it's turned face up, that ability is applied WHILE that permanent is
+-- being turned face up, NOT AFTERWARD". That is why the CR 616.1 loop runs
+-- between the two writes below rather than after both -- see the note at the
+-- call.
+performTurnFaceUp :: Maybe (TurnUpProcedure.TurnUpProcedure, Cost.Cost Keyword.Type.Keyword) -> Maybe Natural -> ObjectId -> Game ()
+performTurnFaceUp road announcedX oid = do
+  gs <- State.get
+  if revealsInsteadOfTurningUp oid gs
+    then
+      -- CR 701.40g / 730.2g: its controller reveals it, it stays face down,
+      -- and NOTHING below runs. The rule's second sentence -- "abilities that
+      -- trigger whenever a permanent is turned face up won't trigger" -- is
+      -- exactly the GameEvent.TurnedFaceUp that is never recorded, and CR
+      -- 614.1e's loop is skipped with it, since a permanent that did not turn
+      -- over was never being turned over. data/scenarios/visibility's CR
+      -- 701.40g case proves the reveal.
+      Monad.forM_ (Projection.controllerOf oid gs) $ \controller ->
+        reveal RevealCause.Ordinary controller oid
+    else do
+      -- CR 708.8: the copiable values revert, which for pawl is the status
+      -- flipping -- Game.faceOf reads it, so the substitution simply stops
+      -- applying and the card's own face answers again. Through Game.turnFacing,
+      -- which carries CR 613.7f's new timestamp with the write.
+      State.modify' (Game.turnFacing Facing.FaceUp oid)
+      -- CR 708.11 / 614.1e: the "as this permanent is turned face up"
+      -- abilities, applied HERE -- after the status write and before the
+      -- event record -- which is the rule's "while that permanent is being
+      -- turned face up, not afterward" written as a position in this
+      -- function.
+      --
+      -- AFTER the status write, and that placement is what makes the rule's
+      -- "would have ... AFTER it's turned face up" answerable without a
+      -- counterfactual: the permanent has its abilities back by now (CR
+      -- 708.2a took them away only while it was face down), so
+      -- Projection.replacementsAffecting simply sees the row. Running the
+      -- loop first would collect from a permanent holding none of the card's
+      -- abilities and apply nothing.
+      --
+      -- BEFORE the event record, and that half is observable: a CR 614.1e
+      -- ability and a CR 708.7 trigger on one card would otherwise be
+      -- ordered the wrong way round, and CR 708.11's "not afterward" is
+      -- exactly the sentence that decides it. Pawl.FaceDownSpec's second
+      -- turnFaceUp call is what proves this body is reached only from
+      -- turnFaceUp's PAID branch rather than on every ask: a permanent that
+      -- is already face up has its megamorph row too, so a loop run on the
+      -- refused call would put a second counter on.
+      --
+      -- Monad.void discards the Nothing that would mean the turning does
+      -- not happen. No arm reachable from this event returns one -- CR
+      -- 614.1e's abilities add to the turning over rather than replacing it
+      -- -- and there is nothing left to cancel by this point anyway: the
+      -- status is already written.
+      Monad.void (applyReplacements (ProposedEvent.WouldTurnFaceUp oid road))
+      -- CR 708.7 through CR 603.2: Skirk Marauder's "when this creature is
+      -- turned face up" watches for this, and this is the only place in the
+      -- engine that writes it.
+      --
+      -- AFTER the status write, matching CR 702.37e's own order. Not
+      -- observable either way: CR 117.5's scan runs at
+      -- Engine.settleForPriority and reads the log later, never between
+      -- these two lines, so no reader can see the permanent mid-turnover.
+      --
+      -- Reached only from a caller that has already refused an
+      -- already-face-up permanent -- turnFaceUp's canTurnFaceUp, and
+      -- turnFaceUpByEffect's own face-down guard -- and THAT is observable:
+      -- such a permanent has its text back, so an event recorded on a
+      -- refused call would fire the ability again. Pawl.FaceDownSpec asks
+      -- twice to prove it.
+      --
+      -- The X chosen for the cost rides the event for CR 702.37f and CR
+      -- 702.168e (Pawl.Types.TurnedFaceUp).
+      State.modify' (recordEvent (GameEvent.TurnedFaceUp TurnedFaceUp.MkTurnedFaceUp {TurnedFaceUp.object = oid, TurnedFaceUp.announcedX = announcedX}))
+
+-- CR 708 by way of an Effect.TurnFaceUp: Showstopping Surprise's "turn it face
+-- up if it's face down", with no cost, no procedure and no CR 116.2b special
+-- action anywhere in it.
+--
+-- TWO guards and no more. It is a permanent, so a card the effect reached in
+-- some other zone has no face to turn (CR 110.1); and it is FACE DOWN, which is
+-- the card's own "if it's face down" -- CR 708.2b's mirror, and the same
+-- conjunct FaceDown.canTurnFaceUp opens with. Nothing about a card type, a mana cost or a
+-- morph ability: those are CR 701.40b's and CR 702.37e's price lists and belong
+-- to the procedures, not to the turning-over. CR 701.40g is the one restriction
+-- that survives, and it lives in performTurnFaceUp because it is about the
+-- turning-over rather than about the road.
+--
+-- No controller argument: the effect's controller is who resolved it, and
+-- CR 701.40g's reveal is the permanent's own controller's, which
+-- performTurnFaceUp reads.
+turnFaceUpByEffect :: ObjectId -> Game ()
+turnFaceUpByEffect oid = do
+  gs <- State.get
+  Monad.when
+    ( Set.member oid (GameState.battlefield gs)
+        && maybe False (Facing.isFaceDown . Object.facing) (Game.lookupObject oid gs)
+    )
+    (performTurnFaceUp Nothing Nothing oid)
+
 -- CR 701.26a: turn one permanent sideways from an upright position, and record
 -- that it did. The single funnel every route that taps goes through --
 -- Pawl.Engine.Cost.tapObject for a cost component, Pawl.Engine.Resolve's
@@ -710,16 +899,35 @@ enterTapped oid =
 -- CR 110.5 makes tapped a PERMANENT's status, which every caller above already
 -- has: a cost's tap candidates, an attacker, a regenerating permanent and the
 -- Effect.Tap opcode's victims are all on the battlefield.
+--
+-- CR 614.1a's Illusionary Mask is applied here, before the write: "would ...
+-- become tapped, instead it's turned face up and ... becomes tapped". No
+-- ProposedEvent carries rule 701.26a's tap, because no other replacement effect
+-- reaches it (Scryfall `o:"become tapped" o:instead`, 2026-10-22, the Mask
+-- alone), so CR 616.1 has one candidate and applying it here is that loop. A
+-- printing that replaced tapping in some other way would want the event.
 tap :: ObjectId -> Game ()
 tap oid = do
-  gs <- State.get
-  case Game.lookupObject oid gs of
+  before <- State.get
+  case Game.lookupObject oid before of
     Just obj
-      | Object.tapped obj == TapState.Untapped ->
+      | Object.tapped obj == TapState.Untapped -> do
+          Monad.when (turnsUpBefore TurnUpEvent.BecomesTapped oid before) (turnFaceUpByEffect oid)
+          gs <- State.get
           State.put
             . recordEvent (GameEvent.BecameTapped oid)
             $ gs {GameState.objects = Map.adjust (\o -> o {Object.tapped = TapState.Tapped}) oid (GameState.objects gs)}
     _ -> pure ()
+
+-- CR 614.1a / Illusionary Mask: does this permanent's face-down status turn it
+-- face up before this event (FaceDownState.turnsUpBefore)? The read the two
+-- funnels that apply it without a proposed event share -- `tap` above and
+-- Pawl.Engine.Damage.gatherCombatDamage's CR 510.1 assignment -- beside
+-- Pawl.Engine.Projection.turnUpOf, which mints the damage half as rows.
+turnsUpBefore :: TurnUpEvent.TurnUpEvent -> ObjectId -> GameState -> Bool
+turnsUpBefore event oid gs = case fmap Object.facing (Game.lookupObject oid gs) of
+  Just (Facing.FaceDown state) -> Set.member event (FaceDownState.turnsUpBefore state)
+  _ -> False
 
 -- CR 701.26b: rotate one permanent back upright from a sideways position, and
 -- let CR 614 have its say first. The single funnel every route that untaps goes
@@ -2088,6 +2296,7 @@ applyInertly candidate rewrite event = do
     DamageRewrite.RedirectNext _ _ -> pure ()
     DamageRewrite.RedirectMatching _ -> pure ()
     DamageRewrite.RunEffects _ -> pure ()
+    DamageRewrite.TurnFaceUp -> pure ()
   pure (Just event)
 
 -- CR 120.8: a damage event an amount rewrite left at 0 is no event at all, so
@@ -3642,6 +3851,20 @@ apply batch candidate event =
                         }
                 }
             pure Nothing
+      -- CR 614.1a / Illusionary Mask: "instead it's turned face up and ... deals
+      -- damage, is dealt damage". The row's own permanent turns face up, and the
+      -- event goes on unchanged: the loop's next pass re-collects against a
+      -- board where it has its abilities back, so a prevention the face-up
+      -- creature prints can still meet the same damage. Unchanged includes its
+      -- amount, fixed off the face-down 2/2 (docs/decisions.md, "How much damage
+      -- a face-down creature Illusionary Mask cast deals as it turns face up").
+      --
+      -- Through turnFaceUpByEffect's guard, so a batch that collected the row
+      -- for two events turns the permanent up once. `consume` is skipped for the
+      -- stun arm's reason: the status is the resource, and turning face up ends it.
+      DamageRewrite.TurnFaceUp -> do
+        turnFaceUpByEffect (ReplacementCandidate.source candidate)
+        pure (Just event)
     -- Unreachable: `applies` admits DamageR only against WouldDealDamage.
     (ReplacementEffect.DamageR {}, _) -> pure (Just event)
     -- CR 701.19a / 122.1c / 702.89a / 614.1a: under every arm the DESTRUCTION does not
@@ -4229,7 +4452,7 @@ apply batch candidate event =
     -- CR 614.1e: "as [this permanent] is turned face up, put N counters on it" --
     -- rule 702.37b's megamorph counter and Bubble Smuggler's four +1/+1 counters
     -- alike -- applied WHILE the permanent turns over (CR 708.11) because
-    -- FaceDown.performTurnFaceUp raises this event there and nowhere else.
+    -- performTurnFaceUp raises this event there and nowhere else.
     --
     -- The counters go through putCounters, the CR 122.6 funnel -- so a CR 614.1
     -- counter replacement applies and Hardened Scales sees a megamorph counter
@@ -4245,7 +4468,7 @@ apply batch candidate event =
     -- posture (#2314), though both producers write exactly one kind.
     --
     -- The event survives: turning face up is not replaced by the counter, only
-    -- accompanied by it, so Just is returned and FaceDown.performTurnFaceUp goes on to
+    -- accompanied by it, so Just is returned and performTurnFaceUp goes on to
     -- record CR 708.7's event.
     (ReplacementEffect.TurnUpR (TurnUpR.MkTurnUpR _ _ _ rewrite), ProposedEvent.WouldTurnFaceUp oid _) -> case rewrite of
       TurnUpRewrite.WithCounters (WithCounters.MkWithCounters counters) -> do
@@ -4260,7 +4483,7 @@ apply batch candidate event =
         pure (Just event)
       -- CR 303.4k with CR 614.1e: Gift of Doom's "as this Aura is turned face
       -- up, you may attach it to a creature", applied WHILE the permanent turns
-      -- over (CR 708.11) because FaceDown.performTurnFaceUp raises this event there and
+      -- over (CR 708.11) because performTurnFaceUp raises this event there and
       -- nowhere else -- and, decisively for this rule, AFTER it has written the
       -- face-up status. Every characteristic Attach.turnUpHosts reads is
       -- therefore the Aura's "as it would exist if it were face up"; see there.
@@ -4278,7 +4501,7 @@ apply batch candidate event =
       --
       -- The event survives either way: turning face up is not replaced by the
       -- attachment, only accompanied by it, so Just is returned and
-      -- FaceDown.performTurnFaceUp goes on to record CR 708.7's event.
+      -- performTurnFaceUp goes on to record CR 708.7's event.
       TurnUpRewrite.MayAttachTo filter_ -> do
         Replacement.consume (ReplacementCandidate.identity candidate)
         gs <- State.get
@@ -8902,7 +9125,7 @@ meldable victims gs = do
 -- rule: no CR 613.7f timestamp, because rule 730.2e's second sentence says
 -- "other effects don't count it as being turned face up" and CR 613.7f's new
 -- timestamp is for a permanent that turns over; and no GameEvent.TurnedFaceUp,
--- so the CR 708.7 abilities Pawl.Engine.FaceDown.performTurnFaceUp records that
+-- so the CR 708.7 abilities performTurnFaceUp records that
 -- event for do not trigger. Each component keeps its own status
 -- (Pawl.Types.ShownComponent), so a face-down card under a face-up topmost one
 -- stays face down (CR 708.9, 712.15a) until CR 730.2f's Game.withFacing turns

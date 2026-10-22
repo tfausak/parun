@@ -1719,6 +1719,19 @@ spend clauses spending budget cost (Mana.MkMana units) =
         pure (Mana.MkMana left, life)
    in Maybe.listToMaybe (Maybe.mapMaybe attempt (resolutions spending cost))
 
+-- Could some of, or all of, this mana pay this mana cost by itself? Illusionary
+-- Mask's "whose mana cost could be paid by some amount of, or all of, the mana
+-- you spent on {X}", whose rulings count the mana's types as well as its amount.
+--
+-- Mana and nothing else, so a Phyrexian symbol's 2 life is no way to pay (a
+-- zero budget), an X is 0 (the least it could be, so any amount that pays a
+-- larger one pays this), and a card with no mana cost answers False: CR 118.6
+-- makes that cost unpayable.
+couldPayFrom :: Mana -> Maybe ManaCost -> Bool
+couldPayFrom mana cost = case cost of
+  Nothing -> False
+  Just printed -> Maybe.isJust (spend [] ManaSpending.AsProduced 0 (substituteX 0 printed) mana)
+
 -- CR 107.4f's 2 life. The one place that number is written.
 phyrexianLife :: Natural
 phyrexianLife = 2

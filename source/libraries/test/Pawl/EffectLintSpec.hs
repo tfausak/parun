@@ -827,6 +827,10 @@ engineMintedDamage rewrite = case rewrite of
   -- CR 614.1a's "instead [do something]" is a card's own sentence: the effects
   -- are card data and the rewrite names no id (Kill-Suit Cultist).
   DamageRewrite.RunEffects _ -> False
+  -- Minted from Illusionary Mask's face-down status
+  -- (Pawl.Types.FaceDownState's `turnsUpBefore`), which is where a card writes
+  -- it instead.
+  DamageRewrite.TurnFaceUp -> True
 
 -- The destruction half of the same question. CR 701.19a's regeneration IS printed
 -- (Drudge Skeletons), where CR 122.1c's removal and CR 702.89a's umbra armor are
@@ -946,6 +950,8 @@ preventsDamage rewrite = case rewrite of
   DamageRewrite.RedirectMatching _ -> False
   -- Kill-Suit Cultist says "destroy that creature instead" and never "prevent".
   DamageRewrite.RunEffects _ -> False
+  -- Illusionary Mask's damage is dealt, to or from the face-up permanent.
+  DamageRewrite.TurnFaceUp -> False
 
 -- The non-vacuity half of riderWithoutPreventionOffends' lint, isPhaseR's shape.
 hasRider :: ReplacementEffect.ReplacementEffect Card.Type.Card (GrantedAbility.GrantedAbility Card.Type.Card) (Effect.Effect Card.Type.Card (GrantedAbility.GrantedAbility Card.Type.Card)) -> Bool

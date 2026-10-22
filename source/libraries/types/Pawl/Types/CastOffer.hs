@@ -1,9 +1,11 @@
 module Pawl.Types.CastOffer where
 
+import qualified Data.Set as Set
 import qualified Pawl.Types.Cost as Cost
 import qualified Pawl.Types.Filter as Filter
 import qualified Pawl.Types.Keyword as Keyword
 import qualified Pawl.Types.ManaSpending as ManaSpending
+import qualified Pawl.Types.TurnUpEvent as TurnUpEvent
 
 -- | What an effect says about a cast IT offers, beyond what casting the card
 -- would ordinarily mean -- CR 310.12b's "you may cast it transformed without
@@ -75,6 +77,24 @@ data CastOffer = MkCastOffer
     -- A rider of its OWN, `payingInstead`'s reason: it names WHO offered the
     -- cost and narrows neither the payment nor the face, and the same cost
     -- offered by an effect rather than by a keyword carries no tag.
-    offeredBy :: Maybe Keyword.Keyword
+    offeredBy :: Maybe Keyword.Keyword,
+    -- | CR 708.4: cast the card face down, as CR 708.2a's 2\/2 under
+    -- FaceDownReason.CastFaceDown -- "unless otherwise specified by the effect
+    -- that ... allowed it to be cast face down", and no producer specifies
+    -- otherwise. The set is the events the offering effect turns the permanent
+    -- face up before (Pawl.Types.FaceDownState's `turnsUpBefore`). Nothing for
+    -- a face-up cast.
+    --
+    -- A rider of its own, `transformed`'s reason: it says which characteristics
+    -- the spell has (CR 708.4) and nothing about what is paid.
+    faceDown :: Maybe (Set.Set TurnUpEvent.TurnUpEvent),
+    -- | Illusionary Mask's "a creature card in your hand whose mana cost could be
+    -- paid by some amount of, or all of, the mana you spent on {X}": only a card
+    -- whose mana cost the mana spent to activate the offering ability could pay
+    -- (CR 602.2b, Pawl.Types.Object.manaSpent) is on offer, colours and all.
+    --
+    -- The whole activation's mana and not {X}'s alone, which is the same mana
+    -- for the one producer, whose cost is {X} and nothing else.
+    payableFromSpent :: Bool
   }
   deriving (Eq, Ord, Show)

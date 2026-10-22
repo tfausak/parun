@@ -405,7 +405,9 @@ spec s registry = Spec.describe s "Adventure" $ do
               CastOffer.payingInstead = Nothing,
               CastOffer.spending = ManaSpending.AsProduced,
               CastOffer.restriction = Just (Filter.Type.Measures (Measures.MkMeasures Measure.ManaValue Comparison.LessThan (Operand.OfSource Measure.ManaValue))),
-              CastOffer.offeredBy = Nothing
+              CastOffer.offeredBy = Nothing,
+              CastOffer.faceDown = Nothing,
+              CastOffer.payableFromSpent = False
             }
         context bound = (Filter.contextFor (Game.teams gs) (Just S.alice) Nothing) {Filter.sourceMeasures = Map.singleton Measure.ManaValue bound}
         under bound = S.runPure preferringTheCreature gs (Resolve.offerCast Resolve.noSubgame (context bound) (const Nothing) [exiledId] S.alice CastObligation.Optional PermissionVerb.Cast Nothing CastRepetition.Once False offer)

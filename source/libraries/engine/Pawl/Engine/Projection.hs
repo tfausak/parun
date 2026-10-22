@@ -75,6 +75,7 @@ import qualified Pawl.Types.EntryR as EntryR
 import qualified Pawl.Types.EntryRewrite as EntryRewrite
 import qualified Pawl.Types.ExiledCardAbilities as ExiledCardAbilities
 import qualified Pawl.Types.Face as Face
+import qualified Pawl.Types.FaceDownState as FaceDownState
 import qualified Pawl.Types.Facing as Facing
 import qualified Pawl.Types.Filter as Filter.Type
 import qualified Pawl.Types.FullText as FullText
@@ -129,6 +130,7 @@ import qualified Pawl.Types.Trait as Trait
 import Pawl.Types.TriggeredAbility (TriggeredAbility)
 import qualified Pawl.Types.TriggeredAbility as TriggeredAbility
 import qualified Pawl.Types.TriggeredAbilitySource as TriggeredAbilitySource
+import qualified Pawl.Types.TurnUpEvent as TurnUpEvent
 import qualified Pawl.Types.TypeLine as TypeLine
 import qualified Pawl.Types.UntapR as UntapR
 import qualified Pawl.Types.UntapRewrite as UntapRewrite
@@ -5327,10 +5329,10 @@ abilitiesGiven :: Map ObjectId ProjectedCharacteristics -> ObjectId -> GameState
 abilitiesGiven pcs oid gs = abilitiesFromCharacteristics (fullView gs) (projectGiven pcs oid gs) oid gs
 
 -- CR 614 / 613 layer 6: an object's replacement effects after the layer system.
--- A Humility'd creature has none -- except the counter-minted rows, which no
--- layer can reach; see shieldOf, finalityOf and stunOf. CR 604.2's "as long as" clause
--- is asked HERE, against a finished projection, with the source's own controller
--- for CR 109.5's "you".
+-- A Humility'd creature has none -- except the counter- and status-minted rows,
+-- which no layer can reach; see shieldOf, finalityOf, stunOf and turnUpOf. CR
+-- 604.2's "as long as" clause is asked HERE, against a finished projection, with
+-- the source's own controller for CR 109.5's "you".
 -- Nothing is latched, so Jared Carthalion's shield goes away the moment the
 -- monarchy does, with no trigger and no resolution in between.
 --
@@ -5370,6 +5372,7 @@ replacementsOfGiven pcs zone oid gs =
         <> fmap ((,) ReplacementProvenance.Minted) (shieldOf oid gs)
         <> fmap ((,) ReplacementProvenance.Minted) (finalityOf oid gs)
         <> fmap ((,) ReplacementProvenance.Minted) (stunOf oid gs)
+        <> fmap ((,) ReplacementProvenance.Minted) (turnUpOf oid gs)
 
 -- CR 604.2's "as long as" clause, asked of one printed row against the board the
 -- event would happen on.
@@ -5562,6 +5565,48 @@ stunOf oid gs =
     then []
     else [ReplacementEffect.UntapR UntapR.MkUntapR {UntapR.during = Nothing, UntapR.rewrite = UntapRewrite.RemoveStunCounter}]
 
+-- CR 614.1a / Illusionary Mask: "if the creature that spell becomes ... has not
+-- been turned face up and would ... deal damage, be dealt damage ..., instead
+-- it's turned face up and ... deals damage, is dealt damage". The damage half of
+-- the replacement a face-down status carries (FaceDownState.turnsUpBefore), as
+-- rows the CR 616.1 loop orders against every other row on the same event --
+-- a prevention shield on the creature among them, which is what makes the order
+-- the affected object's controller's.
+--
+-- Read off Object.facing rather than the projection, stunOf's reason and one
+-- more: the replacement is the resolved ability's and not the permanent's (its
+-- rulings: it "will continue to apply ... even if Illusionary Mask has left the
+-- battlefield"), so no layer can take it away. Turning face up ends the status,
+-- which is what ends the rows.
+--
+-- The other two events are turned up at their own funnels, where no other
+-- replacement effect reaches the event: CR 510.1's assignment
+-- (Pawl.Engine.Damage.gatherCombatDamage) and CR 701.26a's tap
+-- (Pawl.Engine.Event.tap).
+turnUpOf :: ObjectId -> GameState -> [ReplacementEffect Card.Type.Card (GrantedAbility.GrantedAbility Card.Type.Card) (Effect.Effect Card.Type.Card (GrantedAbility.GrantedAbility Card.Type.Card))]
+turnUpOf oid gs = case fmap Object.facing (Game.lookupObject oid gs) of
+  Just (Facing.FaceDown state) -> concatMap row (Set.toList (FaceDownState.turnsUpBefore state))
+  _ -> []
+  where
+    anyDamage =
+      DamagePattern.MkDamagePattern
+        { DamagePattern.whichKind = Nothing,
+          DamagePattern.whatSource = Filter.Type.And [],
+          DamagePattern.whatRecipient = Nothing,
+          DamagePattern.whoRecipient = Nothing,
+          DamagePattern.whichRecipient = Nothing,
+          DamagePattern.whichSource = Nothing,
+          DamagePattern.boundRecipient = Nothing
+        }
+    damageRow matching = [ReplacementEffect.DamageR DamageR.MkDamageR {DamageR.matching = matching, DamageR.rewrite = DamageRewrite.TurnFaceUp, DamageR.riders = Seq.empty}]
+    row event = case event of
+      -- The candidate IS the row's source: the damage's source in the first,
+      -- its recipient in the second.
+      TurnUpEvent.DealsDamage -> damageRow anyDamage {DamagePattern.whatSource = Filter.Type.IsSource}
+      TurnUpEvent.IsDealtDamage -> damageRow anyDamage {DamagePattern.whatRecipient = Just Filter.Type.IsSource}
+      TurnUpEvent.AssignsCombatDamage -> []
+      TurnUpEvent.BecomesTapped -> []
+
 -- CR 122.1d: how many stun counters this object has. shieldCounters' shape, and
 -- for its reason -- the count is what the board stores, and only whether it is
 -- positive decides that the row exists.
@@ -5702,6 +5747,9 @@ replacementsAffecting gs =
       -- COUNTERS, so none of them is on any base face -- which is why all three
       -- are asked before any copiable value is.
       baseHas oid | shieldCounters oid gs > 0 || finalityCounters oid gs > 0 || stunCounters oid gs > 0 = True
+      -- Illusionary Mask's rows are minted from the face-down STATUS
+      -- (turnUpOf), which no base face lists either.
+      baseHas oid | not (null (turnUpOf oid gs)) = True
       baseHas oid =
         not (null (copiableReplacementsOf oid gs))
           -- The TYPE disjunct keeps CR 306.5b's, CR 310.4b's and CR 714.3a's

@@ -1996,7 +1996,7 @@ castFacings oid face gs =
           -- allow one (CR 701.58c and CR 701.58d put both procedures on one
           -- permanent).
           <> ( if not (null (Keyword.disguiseCosts keywords))
-                 then [Facing.FaceDown FaceDownState.MkFaceDownState {FaceDownState.reason = FaceDownReason.Disguised, FaceDownState.listed = FaceDownCharacteristics.disguisedValue}]
+                 then [Facing.FaceDown FaceDownState.MkFaceDownState {FaceDownState.reason = FaceDownReason.Disguised, FaceDownState.listed = FaceDownCharacteristics.disguisedValue, FaceDownState.turnsUpBefore = Set.empty}]
                  else []
              )
 

@@ -53,6 +53,7 @@ import qualified Pawl.Types.ProjectedCharacteristics as PC
 import qualified Pawl.Types.Prompt as Prompt
 import qualified Pawl.Types.Recipient as Recipient
 import qualified Pawl.Types.Teams as Teams
+import qualified Pawl.Types.TurnUpEvent as TurnUpEvent
 
 -- CR 514.2: during the cleanup step, all damage marked on permanents is removed.
 --
@@ -679,9 +680,17 @@ gatherCombatDamage assigns = do
       together a b =
         GameSettings.sharedTeamTurns (GameState.settings gs) && Teams.sameTeam (Game.teams gs) a b
       groups = fmap (concatMap snd) (List.groupBy (\(a, _) (b, _) -> Maybe.fromMaybe False (together <$> a <*> b)) (zip (fmap Just seats <> [Nothing]) waves))
-      assignOne entry = case entry of
-        Left x -> attackerAssignment gs (contestedAssignment gs attackers x) x
-        Right y -> blockerAssignment gs y
+      -- Each creature's assignment reads the board as its turn to assign
+      -- comes, which differs from `gs` only where an earlier creature turned
+      -- face up as it assigned (turnUpToAssign): what that creature now is, its
+      -- banding (CR 702.22k) and its lethal damage (CR 702.19b) included, is
+      -- what a later assignment sees.
+      assignOne entry = do
+        turnUpToAssign entry
+        now <- State.get
+        case entry of
+          Left x -> attackerAssignment now (contestedAssignment now attackers x) x
+          Right y -> blockerAssignment now y
       choosing group (_, (chooser, _, _)) = maybe False (`elem` group) chooser
       -- CR 510.1e: the choosers whose assignment the total makes illegal --
       -- a division that is not one, or an attacking creature's that fails a
@@ -727,6 +736,43 @@ gatherCombatDamage assigns = do
     ( settleAssignments [(divisionEvents division, thresholds) | (Left _, (_, division, thresholds)) <- settled]
         <> concat [divisionEvents division | (Right _, (_, division, _)) <- settled]
     )
+
+-- CR 614.1a / Illusionary Mask: "would assign ... damage ..., instead it's
+-- turned face up and assigns ... damage". Asked as the creature's own
+-- assignment comes up, so the active player's attackers have announced against
+-- a face-down blocker before it turns up to announce its own (CR 510.1's
+-- order): an attacker tramples over it at the 2\/2's lethal damage. See
+-- docs/decisions.md, "When a face-down creature Illusionary Mask cast turns face
+-- up in combat".
+--
+-- No ProposedEvent carries CR 510.1's assignment, because no other replacement
+-- effect reaches it (Scryfall `o:"would assign"`, 2026-10-22, the Mask alone), so
+-- CR 616.1 has one candidate and applying it here is that loop -- Event.tap's
+-- reasoning for the tap, one event over.
+turnUpToAssign :: Either (ObjectId, AttackTarget) (ObjectId, Set.Set ObjectId) -> Game ()
+turnUpToAssign entry = do
+  gs <- State.get
+  let creature = either fst fst entry
+  Monad.when
+    (Event.turnsUpBefore TurnUpEvent.AssignsCombatDamage creature gs && wouldAssign gs entry)
+    (Event.turnFaceUpByEffect creature)
+
+-- Would this creature assign any combat damage on this board? CR 510.1a's power
+-- above 0, and a recipient: what attackerAssignment and blockerAssignment would
+-- address, read the way each reads it. An attacker that is blocked by nothing
+-- still there and lacks trample (CR 510.1c), and a blocker whose attackers have
+-- all gone (CR 510.1d), assign none.
+wouldAssign :: GameState -> Either (ObjectId, AttackTarget) (ObjectId, Set.Set ObjectId) -> Bool
+wouldAssign gs entry =
+  maybe False (> 0) (Projection.combatDamageAmountOf creature gs) && case entry of
+    Left (attacker, target) ->
+      let attacked = Maybe.isJust (combatRecipient gs attacker target)
+          trample = Projection.hasKeyword Keyword.Trample attacker gs || Projection.hasKeyword Keyword.TrampleOverPlaneswalkers attacker gs
+          blocking = any (`onBattlefield` gs) (Combat.blockersOf attacker gs)
+       in if Combat.isBlocked attacker gs then blocking || (trample && attacked) else attacked
+    Right (_, blocked) -> any (`onBattlefield` gs) blocked
+  where
+    creature = either fst fst entry
 
 -- Can any OTHER attacking creature assigning damage this step pay part of a bar
 -- this one is gated by? The two ways CR 702.19b and CR 702.19c let that happen,

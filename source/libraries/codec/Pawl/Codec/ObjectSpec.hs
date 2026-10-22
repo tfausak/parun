@@ -103,7 +103,8 @@ spec s = Spec.describe s "Pawl.Codec.Object" $ do
             Facing.FaceDown
               FaceDownState.MkFaceDownState
                 { FaceDownState.reason = FaceDownReason.Morphed,
-                  FaceDownState.listed = FaceDownCharacteristics.defaultValue
+                  FaceDownState.listed = FaceDownCharacteristics.defaultValue,
+                  FaceDownState.turnsUpBefore = Set.empty
                 },
           Object.flipped = True,
           Object.exiledFaceDown = True,

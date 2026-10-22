@@ -1,0 +1,41 @@
+{
+  "description": "CR 510.1 a Craw Wurm Illusionary Mask cast face down turns face up to assign its 6 as it blocks",
+  "note": "Cast face down on turn 1, the Wurm blocks bob's Hill Giant on turn 2; blocking taps nothing. As the Wurm would assign its combat damage, Illusionary Mask's replacement turns it face up, so it assigns a 6/4's 6 and the Giant dies; a 2/2's 2 would leave the 3/3 alive. The Giant's 3 is dealt to the face-up 6/4, which survives.",
+  "board": {
+    "seats": [
+      {
+        "name": "alice",
+        "battlefield": [
+          { "card": "Illusionary Mask", "label": "mask" },
+          { "card": "Forest", "label": "f1" },
+          { "card": "Forest", "label": "f2" },
+          { "card": "Forest", "label": "f3" },
+          { "card": "Forest", "label": "f4" },
+          { "card": "Forest", "label": "f5" },
+          { "card": "Forest", "label": "f6" }
+        ],
+        "hand": [{ "card": "Craw Wurm", "label": "wurm" }],
+        "library": [{ "card": "Forest" }, { "card": "Forest" }]
+      },
+      {
+        "name": "bob",
+        "battlefield": [{ "card": "Hill Giant", "label": "giant", "ready": true }],
+        "library": [{ "card": "Forest" }, { "card": "Forest" }]
+      }
+    ],
+    "active": "alice",
+    "step": "PrecombatMain"
+  },
+  "timeline": [
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": { "Activate": { "object": "$mask", "x": 6, "mana": ["$f1", "$f2", "$f3", "$f4", "$f5", "$f6"] } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass" },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": { "Answer": { "prompt": "OfferedCast", "with": { "type": "Exercises" } } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass" },
+    { "turn": 2, "step": "DeclareAttackers", "player": "bob", "do": { "Attack": ["$giant"] } },
+    { "turn": 2, "step": "DeclareBlockers", "player": "alice", "do": { "Block": { "Craw Wurm": ["$giant"] } } },
+    { "turn": 2, "step": "DeclareBlockers", "player": "bob", "check": { "Names": { "object": "Craw Wurm", "names": [] } } },
+    { "turn": 2, "step": "EndOfCombat", "player": "bob", "check": { "Count": { "player": "bob", "zone": "Battlefield", "card": "Hill Giant", "count": 0 } } },
+    { "turn": 2, "step": "EndOfCombat", "player": "bob", "check": { "Count": { "player": "alice", "zone": "Battlefield", "card": "Craw Wurm", "count": 1 } } },
+    { "turn": 2, "step": "EndOfCombat", "player": "bob", "check": { "Names": { "object": "Craw Wurm", "names": ["Craw Wurm"] } } }
+  ]
+}

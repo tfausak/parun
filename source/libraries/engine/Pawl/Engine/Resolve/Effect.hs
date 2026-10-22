@@ -49,7 +49,6 @@ import qualified Pawl.Engine.Earthbend as Earthbend
 import qualified Pawl.Engine.Event as Event
 import qualified Pawl.Engine.Event.Trigger as Trigger
 import qualified Pawl.Engine.Expiry as Expiry
-import qualified Pawl.Engine.FaceDown as FaceDown
 import qualified Pawl.Engine.Filter as Filter
 import qualified Pawl.Engine.Forage as Forage
 import qualified Pawl.Engine.Foretell as Foretell
@@ -238,6 +237,7 @@ import qualified Pawl.Types.Exploited as Exploited
 import qualified Pawl.Types.ExtraTurn as ExtraTurn
 import qualified Pawl.Types.ExtraVotes as ExtraVotes
 import qualified Pawl.Types.Face as Face
+import qualified Pawl.Types.FaceDownCharacteristics as FaceDownCharacteristics
 import qualified Pawl.Types.FaceDownReason as FaceDownReason
 import qualified Pawl.Types.FaceDownState as FaceDownState
 import qualified Pawl.Types.Facing as Facing
@@ -1610,7 +1610,9 @@ ordinaryOffer =
       CastOffer.payingInstead = Nothing,
       CastOffer.spending = ManaSpending.AsProduced,
       CastOffer.restriction = Nothing,
-      CastOffer.offeredBy = Nothing
+      CastOffer.offeredBy = Nothing,
+      CastOffer.faceDown = Nothing,
+      CastOffer.payableFromSpent = False
     }
 
 -- One round of the offer above: CR 601.3's choice among the cards `named` still
@@ -1698,12 +1700,23 @@ offerCastOnce runSubgame context named caster optionality verb retake offer = do
       -- fusedProposals is this same offer on the ordinary-action road, and the two
       -- read the same zone for the same reason.
       --
-      -- FACE UP alone, that road's other narrowing, needs no arm here: an
-      -- OfferCast opcode carries no morph rider at all (see `proposed` below).
+      -- FACE UP alone, that road's other narrowing: `faces` below offers a
+      -- face-down cast its one proposal before this is asked.
       fusedFaces oid
         | elem oid (Game.zoneMembers Zone.Hand caster gs) = Maybe.maybeToList (Cast.fusedFaceOf oid gs)
         | otherwise = []
+      -- CR 708.4: CastOffer.faceDown's cast is turned face down before it is put
+      -- onto the stack, as CR 708.2a's 2/2 under the offer's own reason and with
+      -- the events the offer turns it face up before; every other offer is cast
+      -- face up.
+      facing = case CastOffer.faceDown offer of
+        Nothing -> Facing.FaceUp
+        Just events -> Facing.FaceDown FaceDownState.MkFaceDownState {FaceDownState.reason = FaceDownReason.CastFaceDown, FaceDownState.listed = FaceDownCharacteristics.defaultValue, FaceDownState.turnsUpBefore = events}
       faces oid card
+        -- A face-down spell has no halves to choose among (CR 708.2 leaves it
+        -- the listed characteristics alone), so the card is proposed once,
+        -- under its front face's name -- the face it shows when turned up.
+        | Facing.isFaceDown facing = Just [Card.frontFace card]
         | CastOffer.transformed offer = fmap pure (Card.backFace card)
         | alternative = Just (filter (\face -> fmap Face.name (Card.convertedFace card) /= Just (Face.name face)) (Game.castableFacesOfId oid gs) <> fusedFaces oid)
         | otherwise = Just (Cast.castableFacesFor oid gs <> fusedFaces oid)
@@ -1737,12 +1750,15 @@ offerCastOnce runSubgame context named caster optionality verb retake offer = do
             -- board itself offers. CR 702.48a's offering is the other optional
             -- additional cost, and Cost.withOffering adds it the same way.
             appliedOne
-              | CastOffer.withoutPayingManaCost offer = Just (CandidateCost.plain (CastOffer.offeredBy offer) (Cost.withoutPayingManaCost face))
-              | otherwise = fmap (\c -> CandidateCost.plain (CastOffer.offeredBy offer) (c {Cost.Type.components = Cost.Type.components c <> Face.additionalCosts face})) (CastOffer.payingInstead offer)
-            applied = concatMap (Cost.withOffering caster oid proposed) (concatMap (Cost.choiceVariants face) (Maybe.maybeToList appliedOne))
-            -- Face up: CR 708.4's face-down cast is a morph permission (CR
-            -- 702.37d), and an OfferCast opcode carries no such rider.
-            proposed = Cast.asProposed oid name Facing.FaceUp gs
+              | CastOffer.withoutPayingManaCost offer = Just (CandidateCost.plain (CastOffer.offeredBy offer) (Cost.withoutPayingManaCost priced))
+              | otherwise = fmap (\c -> CandidateCost.plain (CastOffer.offeredBy offer) (c {Cost.Type.components = Cost.Type.components c <> Face.additionalCosts priced})) (CastOffer.payingInstead offer)
+            applied = concatMap (Cost.withOffering caster oid proposed) (concatMap (Cost.choiceVariants priced) (Maybe.maybeToList appliedOne))
+            -- CR 708.4: a cast proposed face down is measured against the
+            -- face-down characteristics, so it is the stamped state's face that
+            -- prices it and carries the additional costs -- none, CR 708.2a's 2/2
+            -- printing no text.
+            proposed = Cast.asProposed oid name facing gs
+            priced = if Facing.isFaceDown facing then Maybe.fromMaybe face (Cast.proposedFace oid name proposed) else face
             candidates = if null applied then Cost.candidateCostsGiven True caster name oid proposed else applied
          in -- CR 702.85a's second condition, asked of THIS HALF: the offer may
             -- state a quality the resulting spell must have, and CR 709.3a makes
@@ -1825,7 +1841,7 @@ offerCastOnce runSubgame context named caster optionality verb retake offer = do
     Just (Right (oid, name, applied, excused)) -> do
       let cast = do
             stackBefore <- State.gets GameState.stack
-            Cast.castSpellWith (performManaAbility runSubgame) False True applied (CastOffer.spending offer) caster oid name Facing.FaceUp
+            Cast.castSpellWith (performManaAbility runSubgame) False True applied (CastOffer.spending offer) caster oid name facing
             -- CR 608.2g: the spell is the new topmost object. A cast that was
             -- reversed put nothing new on top.
             stackAfter <- State.gets GameState.stack
@@ -2227,6 +2243,8 @@ damageRewriteRecipients rewrite = case rewrite of
   -- The nested effects name objects through SLOTS rather than baked ids, and
   -- Pawl.Engine.Resolve.Slots' replacementRowSlots is what reports those.
   DamageRewrite.RunEffects _ -> []
+  -- The row's own permanent is its source, which is no baked id of the rewrite's.
+  DamageRewrite.TurnFaceUp -> []
 
 -- What one object on the stack refers to: its CR 113.7 source object, and every
 -- object its bindings name.
@@ -3609,7 +3627,7 @@ effectIsImpossible resolving source controller legal gs effect = case effect of
   Effect.Meld {} -> False
   Effect.PhaseOut {} -> False
   Effect.TurnFaceDown {} -> False
-  -- CR 708, FaceDown.turnFaceUpByEffect's own guard: only a face-down
+  -- CR 708, Event.turnFaceUpByEffect's own guard: only a face-down
   -- permanent on the battlefield turns face up. A regression fence: the one
   -- "may" in data/cards reaching this opcode, Hauntwoods Shrieker's, targets a
   -- face-down permanent, so CR 608.2b drops a face-up one first.
@@ -5304,7 +5322,7 @@ applyOneEffect runSubgame resolving source controller legal chosen effect = case
     -- 701.40b's turn-face-up procedure and leaves CR 702.37e's open. No CR 400.7
     -- incarnation is minted, so the object id, marked damage, counters,
     -- attachments and statuses all ride through -- the mirror of
-    -- FaceDown.performTurnFaceUp.
+    -- Event.performTurnFaceUp.
     --
     -- The TIMESTAMP does NOT ride through, and it is the one thing on that list
     -- that does not: CR 613.7f gives a permanent a new one each time it turns
@@ -5340,7 +5358,7 @@ applyOneEffect runSubgame resolving source controller legal chosen effect = case
     State.modify'
       ( \gs ->
           List.foldl'
-            (flip (Game.turnFacing (Facing.FaceDown FaceDownState.MkFaceDownState {FaceDownState.reason = FaceDownReason.TurnedFaceDown, FaceDownState.listed = listed})))
+            (flip (Game.turnFacing (Facing.FaceDown FaceDownState.MkFaceDownState {FaceDownState.reason = FaceDownReason.TurnedFaceDown, FaceDownState.listed = listed, FaceDownState.turnsUpBefore = Set.empty})))
             gs
             ordered
       )
@@ -5351,7 +5369,7 @@ applyOneEffect runSubgame resolving source controller legal chosen effect = case
     -- Shapeshifter) ends here, for each permanent that actually turned. This
     -- arm is the only road that turns a permanent face down.
     Monad.mapM_ (State.modify' . Expiry.sweep . Expiry.TurnedFaceDown) ordered
-  -- CR 708 through FaceDown.turnFaceUpByEffect, the funnel CR 116.2b's special
+  -- CR 708 through Event.turnFaceUpByEffect, the funnel CR 116.2b's special
   -- action shares: this arm decides only WHICH permanent, never what turning it
   -- over does. CR 701.40g lives inside that funnel and so applies here without
   -- this arm knowing the rule exists.
@@ -5361,7 +5379,7 @@ applyOneEffect runSubgame resolving source controller legal chosen effect = case
   -- reached as a target slot is; an illegal target (CR 608.2b) turns nothing.
   Effect.TurnFaceUp slot -> do
     gs <- State.get
-    Monad.mapM_ FaceDown.turnFaceUpByEffect (objectRefObjects legal resolving controller source gs (ObjectRef.InSlot slot))
+    Monad.mapM_ Event.turnFaceUpByEffect (objectRefObjects legal resolving controller source gs (ObjectRef.InSlot slot))
   Effect.RemoveFromCombat ref ->
     State.modify' $ \gs ->
       -- CR 506.4: through Game.removeFromCombat, the one performer of every
@@ -5875,6 +5893,12 @@ applyOneEffect runSubgame resolving source controller legal chosen effect = case
         -- that named these cards answered.
         context = effectContext gs resolving controller source legal (slotBindings resolving gs)
         evaluate = Quantity.evaluateFor (effectViewOf source legal gs) context gs resolving source
+        -- CastOffer.payableFromSpent: only a card whose mana cost the mana spent
+        -- to activate this ability could pay (Object.manaSpent, recorded on the
+        -- resolving ability object) stays on offer. The CARD's mana cost, which in
+        -- a hand is Card.combined's (CR 709.4, 712.8a, 715.4).
+        spent = maybe (Mana.Type.MkMana []) Object.manaSpent (Game.lookupObject resolving gs)
+        affordable oid = not (CastOffer.payableFromSpent offer) || maybe False (Mana.couldPayFrom spent . Face.manaCost . Card.combined) (Game.cardOf oid gs)
     -- CR 608.2g names "a player", and a reference resolving to nobody offers the
     -- cast to nobody.
     spells <-
@@ -5882,7 +5906,7 @@ applyOneEffect runSubgame resolving source controller legal chosen effect = case
         <$> Monad.forM
           (playerRefPlayers legal resolving source controller gs caster)
           ( \pid ->
-              offerCast runSubgame context evaluate named pid optionality verb (if controlWhileResolving then Just controller else Nothing) repetition copied offer
+              offerCast runSubgame context evaluate (filter affordable named) pid optionality verb (if controlWhileResolving then Just controller else Nothing) repetition copied offer
           )
     -- CR 400.7h: the rest of the effect names the spells, bindObjects's shape.
     bindObjects resolving slot spells
