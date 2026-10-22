@@ -3630,8 +3630,8 @@ spec s registry = Spec.describe s "Pawl.Engine.Projection" $ do
         (cloneId, gs3) = S.addPermanent piker S.alice gs2
         creatures = Filter.Type.HasCardType CardType.Creature
         enchantments = Filter.Type.HasCardType CardType.Enchantment
-    Spec.assertEqWith s "excludes self, includes the other creature" (Replacement.legalCopyTargets Set.empty creatures (CopyDomain.InZone Zone.Battlefield) cloneId gs3) [pikerId]
-    Spec.assertEqWith s "the same board under an enchantment filter" (Replacement.legalCopyTargets Set.empty enchantments (CopyDomain.InZone Zone.Battlefield) cloneId gs3) [scalesId]
+    Spec.assertEqWith s "excludes self, includes the other creature" (Replacement.legalCopyTargets (Projection.sourceContext gs3 (Just S.alice) cloneId) Set.empty creatures (CopyDomain.InZone Zone.Battlefield) cloneId gs3) [pikerId]
+    Spec.assertEqWith s "the same board under an enchantment filter" (Replacement.legalCopyTargets (Projection.sourceContext gs3 (Just S.alice) cloneId) Set.empty enchantments (CopyDomain.InZone Zone.Battlefield) cloneId gs3) [scalesId]
 
   Spec.it s "viewOfObject reads a projected creature's characteristics" $ do
     piker <- S.printingOf s registry "Goblin Piker"

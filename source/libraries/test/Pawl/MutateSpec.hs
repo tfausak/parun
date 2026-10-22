@@ -248,10 +248,6 @@ spec s registry = Spec.describe s "Mutate" $ do
   -- a copy of alice's Hill Giant with no stated ending (CR 708.10). Bob's
   -- Hauntwoods Shrieker, out of the trigger's reach, reveals the pile: the copy
   -- effect changed the permanent, never its merged cards.
-  --
-  -- Not implemented: Infinite Reflection's "nontoken creatures you control
-  -- enter as a copy of enchanted creature" (#5198). No creature of alice's
-  -- enters after it here.
   Spec.it s "CR 730.2a a face-down pile Infinite Reflection made a copy is revealed with its merge" $ do
     plains <- S.printingOf s registry "Plains"
     island <- S.printingOf s registry "Island"
