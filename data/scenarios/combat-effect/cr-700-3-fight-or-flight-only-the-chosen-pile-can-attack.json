@@ -1,0 +1,94 @@
+{
+  "description": "CR 700.3 / 508.1c Fight or Flight: alice splits bob's creatures on his turn, and only the pile bob chooses can attack",
+  "note": "Bob takes the pile alice did NOT pick, the prompt's non-fallback answer. The Giant, in the other pile, is the refused attacker.",
+  "board": {
+    "seats": [
+      {
+        "name": "alice",
+        "battlefield": [
+          {
+            "card": "Fight or Flight",
+            "label": "fight-or-flight"
+          }
+        ]
+      },
+      {
+        "name": "bob",
+        "battlefield": [
+          {
+            "card": "Hill Giant",
+            "label": "giant",
+            "ready": true
+          },
+          {
+            "card": "Grizzly Bears",
+            "label": "bears",
+            "ready": true
+          }
+        ]
+      }
+    ],
+    "active": "bob",
+    "step": "PrecombatMain"
+  },
+  "timeline": [
+    {
+      "turn": 1,
+      "step": "BeginningOfCombat",
+      "player": "alice",
+      "do": {
+        "Answer": {
+          "prompt": "ChooseAnyNumberIntoPile",
+          "with": [
+            "$giant"
+          ]
+        }
+      }
+    },
+    {
+      "turn": 1,
+      "step": "BeginningOfCombat",
+      "player": "bob",
+      "do": {
+        "Answer": {
+          "prompt": "ChoosePile",
+          "with": [
+            "$bears"
+          ]
+        }
+      }
+    },
+    {
+      "turn": 1,
+      "step": "DeclareAttackers",
+      "player": "bob",
+      "refuse": {
+        "Attack": [
+          "$giant"
+        ]
+      }
+    },
+    {
+      "turn": 1,
+      "step": "DeclareAttackers",
+      "player": "bob",
+      "do": {
+        "Attack": [
+          "$bears"
+        ]
+      }
+    },
+    {
+      "turn": 1,
+      "step": "DeclareAttackers",
+      "player": "bob",
+      "check": {
+        "Attackers": {
+          "attackers": {
+            "$bears": "$alice"
+          }
+        }
+      }
+    }
+  ]
+}

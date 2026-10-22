@@ -41,18 +41,6 @@
                   {
                     "effects": [
                       {
-                        "type": "ChoosePlayer",
-                        "value": {
-                          "scope": {
-                            "type": "InRole",
-                            "value": {
-                              "type": "Active"
-                            }
-                          },
-                          "slot": "namedPlayer"
-                        }
-                      },
-                      {
                         "type": "ChoosePermanents",
                         "value": {
                           "permanents": {
@@ -70,14 +58,14 @@
                                 },
                                 {
                                   "type": "ControlledByBound",
-                                  "value": "namedPlayer"
+                                  "value": "thatPlayer"
                                 }
                               ]
                             }
                           },
                           "pileChooser": {
                             "type": "InSlot",
-                            "value": "namedPlayer"
+                            "value": "thatPlayer"
                           },
                           "slot": "chosenPile"
                         }

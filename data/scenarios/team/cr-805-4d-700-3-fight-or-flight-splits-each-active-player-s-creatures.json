@@ -1,0 +1,132 @@
+{
+  "description": "CR 805.4d / 700.3 Fight or Flight under shared team turns triggers once per active opponent, and only a creature in every chosen pile can attack",
+  "note": "Bob's trigger resolves first, so carol splits bob's creatures and then alice's, and each takes the pile carol did not pick, the prompt's non-fallback answer. The Gatherer ruling for two Fight or Flights is that only creatures in both chosen piles can attack; the two piles here share nothing, so nothing attacks though the Bears and the Cadet each sit in their own player's chosen pile; with no creature able to attack, nobody is asked to declare.",
+  "board": {
+    "seats": [
+      {
+        "name": "alice",
+        "team": 1,
+        "battlefield": [
+          {
+            "card": "Hill Giant",
+            "label": "giant",
+            "ready": true
+          },
+          {
+            "card": "Grizzly Bears",
+            "label": "bears",
+            "ready": true
+          }
+        ]
+      },
+      {
+        "name": "bob",
+        "team": 1,
+        "battlefield": [
+          {
+            "card": "Gray Ogre",
+            "label": "ogre",
+            "ready": true
+          },
+          {
+            "card": "Eager Cadet",
+            "label": "cadet",
+            "ready": true
+          }
+        ]
+      },
+      {
+        "name": "carol",
+        "team": 2,
+        "battlefield": [
+          {
+            "card": "Fight or Flight",
+            "label": "fight-or-flight"
+          }
+        ]
+      },
+      {
+        "name": "dave",
+        "team": 2
+      }
+    ],
+    "active": "alice",
+    "step": "PrecombatMain",
+    "sharedTeamTurns": true
+  },
+  "timeline": [
+    {
+      "turn": 1,
+      "step": "BeginningOfCombat",
+      "player": "carol",
+      "do": {
+        "OrderTriggers": [
+          "$fight-or-flight",
+          "$fight-or-flight"
+        ]
+      }
+    },
+    {
+      "turn": 1,
+      "step": "BeginningOfCombat",
+      "player": "carol",
+      "do": {
+        "Answer": {
+          "prompt": "ChooseAnyNumberIntoPile",
+          "with": [
+            "$ogre"
+          ]
+        }
+      }
+    },
+    {
+      "turn": 1,
+      "step": "BeginningOfCombat",
+      "player": "carol",
+      "do": {
+        "Answer": {
+          "prompt": "ChooseAnyNumberIntoPile",
+          "with": [
+            "$giant"
+          ]
+        }
+      }
+    },
+    {
+      "turn": 1,
+      "step": "BeginningOfCombat",
+      "player": "alice",
+      "do": {
+        "Answer": {
+          "prompt": "ChoosePile",
+          "with": [
+            "$bears"
+          ]
+        }
+      }
+    },
+    {
+      "turn": 1,
+      "step": "BeginningOfCombat",
+      "player": "bob",
+      "do": {
+        "Answer": {
+          "prompt": "ChoosePile",
+          "with": [
+            "$cadet"
+          ]
+        }
+      }
+    },
+    {
+      "turn": 1,
+      "step": "DeclareAttackers",
+      "player": "alice",
+      "check": {
+        "Attackers": {
+          "attackers": {}
+        }
+      }
+    }
+  ]
+}
