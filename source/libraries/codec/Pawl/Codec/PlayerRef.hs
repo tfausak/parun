@@ -7,6 +7,7 @@ import qualified Pawl.Codec.PlayerId as PlayerId
 import qualified Pawl.Codec.PlayerRelation as PlayerRelation
 import qualified Pawl.Codec.SlotName as SlotName
 import qualified Pawl.Codec.Superlative as Superlative
+import qualified Pawl.Codec.TurnRole as TurnRole
 import qualified Pawl.JsonCodec.Arm as Arm
 import qualified Pawl.JsonCodec.Codec as Codec
 import qualified Pawl.JsonCodec.Common as Common
@@ -52,7 +53,10 @@ codec =
       Arm.payload "Attacking" AttackingPlayers.codec PlayerRef.Attacking (\x -> case x of PlayerRef.Attacking y -> Just y; _ -> Nothing),
       -- The table's leaders on a measure, which a card writes: Raiders'
       -- Allegiance rewards "each player with the most point counters".
-      Arm.payload "Superlative" Superlative.codec PlayerRef.Superlative (\x -> case x of PlayerRef.Superlative y -> Just y; _ -> Nothing)
+      Arm.payload "Superlative" Superlative.codec PlayerRef.Superlative (\x -> case x of PlayerRef.Superlative y -> Just y; _ -> Nothing),
+      -- The turn's role holders, which a card writes: Stand or Fall's "for each
+      -- defending player".
+      Arm.payload "InRole" TurnRole.codec PlayerRef.InRole (\x -> case x of PlayerRef.InRole y -> Just y; _ -> Nothing)
     ]
 
 tagOf :: PlayerRef.PlayerRef -> String
@@ -71,3 +75,4 @@ tagOf x = case x of
   PlayerRef.ChosenPlayerOfBound {} -> "ChosenPlayerOfBound"
   PlayerRef.Attacking {} -> "Attacking"
   PlayerRef.Superlative {} -> "Superlative"
+  PlayerRef.InRole {} -> "InRole"

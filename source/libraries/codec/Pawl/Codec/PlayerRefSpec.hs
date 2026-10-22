@@ -19,6 +19,7 @@ import qualified Pawl.Types.PlayerRef as PlayerRef
 import qualified Pawl.Types.PlayerRelation as PlayerRelation
 import qualified Pawl.Types.SlotName as SlotName
 import qualified Pawl.Types.Superlative as Superlative
+import qualified Pawl.Types.TurnRole as TurnRole
 
 spec :: (Monad m, Monad n) => Spec.Spec m n -> n ()
 spec s = Spec.describe s "Pawl.Codec.PlayerRef" $ do
@@ -102,6 +103,12 @@ spec s = Spec.describe s "Pawl.Codec.PlayerRef" $ do
       PlayerRef.codec
       (PlayerRef.Superlative (Superlative.MkSuperlative (PlayerMeasure.CountersOf PlayerCounterKind.Point) Comparison.AtLeast))
       " {\"type\":\"Superlative\",\"value\":{\"measure\":{\"type\":\"CountersOf\",\"value\":{\"type\":\"Point\"}},\"comparison\":{\"type\":\"AtLeast\"}}} "
+  Spec.it s "InRole" $
+    Common.assertCodec
+      s
+      PlayerRef.codec
+      (PlayerRef.InRole TurnRole.Defending)
+      " {\"type\":\"InRole\",\"value\":{\"type\":\"Defending\"}} "
   Spec.it s "EachOpponentExcept" $
     Common.assertCodec
       s

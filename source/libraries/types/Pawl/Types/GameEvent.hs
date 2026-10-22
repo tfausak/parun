@@ -5,6 +5,7 @@ import qualified Pawl.Types.AbilityTriggered as AbilityTriggered
 import qualified Pawl.Types.ActivatedAbilitySource as ActivatedAbilitySource
 import qualified Pawl.Types.AttackerBlocked as AttackerBlocked
 import qualified Pawl.Types.AttackerDeclared as AttackerDeclared
+import qualified Pawl.Types.AttackerUnblocked as AttackerUnblocked
 import qualified Pawl.Types.Ballot as Ballot
 import qualified Pawl.Types.BecameAttached as BecameAttached
 import qualified Pawl.Types.BecameAttacked as BecameAttacked
@@ -201,7 +202,10 @@ data GameEvent
     -- half is Pawl.Engine.Combat.becomeBlocked, and no printing states the
     -- unblocked half -- Scryfall has no card whose text makes a creature become
     -- unblocked.
-    AttackerUnblocked ObjectId.ObjectId
+    --
+    -- Carries CR 508.5's defending player for AttackerBlocked's reason; Abyssal
+    -- Nightstalker's "defending player discards a card" reads it.
+    AttackerUnblocked AttackerUnblocked.AttackerUnblocked
   | -- | CR 509.1i / 509.3a: a creature BLOCKED -- one event per blocking
     -- creature, BecameBlocking's grouped twin, splitting a blocker's block by CR
     -- 509.3a against CR 509.3b. The Natural is how many attacking creatures it

@@ -10,6 +10,7 @@ import qualified Pawl.Codec.AbilityTriggered as AbilityTriggered
 import qualified Pawl.Codec.ActivatedAbilitySource as ActivatedAbilitySource
 import qualified Pawl.Codec.AttackerBlocked as AttackerBlocked
 import qualified Pawl.Codec.AttackerDeclared as AttackerDeclared
+import qualified Pawl.Codec.AttackerUnblocked as AttackerUnblocked
 import qualified Pawl.Codec.Ballot as Ballot
 import qualified Pawl.Codec.BecameAttached as BecameAttached
 import qualified Pawl.Codec.BecameAttacked as BecameAttacked
@@ -91,7 +92,7 @@ codec =
       Arm.payload "AttackersDeclared" PlayerId.codec GameEvent.AttackersDeclared (\x -> case x of GameEvent.AttackersDeclared y -> Just y; _ -> Nothing),
       Arm.payload "BecameBlocking" BecameBlocking.codec GameEvent.BecameBlocking (\x -> case x of GameEvent.BecameBlocking y -> Just y; _ -> Nothing),
       Arm.payload "AttackerBlocked" AttackerBlocked.codec GameEvent.AttackerBlocked (\x -> case x of GameEvent.AttackerBlocked y -> Just y; _ -> Nothing),
-      Arm.payload "AttackerUnblocked" ObjectId.codec GameEvent.AttackerUnblocked (\x -> case x of GameEvent.AttackerUnblocked y -> Just y; _ -> Nothing),
+      Arm.payload "AttackerUnblocked" AttackerUnblocked.codec GameEvent.AttackerUnblocked (\x -> case x of GameEvent.AttackerUnblocked y -> Just y; _ -> Nothing),
       Arm.payload "BlocksDeclared" BlocksDeclared.codec GameEvent.BlocksDeclared (\x -> case x of GameEvent.BlocksDeclared y -> Just y; _ -> Nothing),
       Arm.payload "Revealed" Revealed.codec GameEvent.Revealed (\x -> case x of GameEvent.Revealed y -> Just y; _ -> Nothing),
       Arm.payload "Looked" Looked.codec GameEvent.Looked (\x -> case x of GameEvent.Looked y -> Just y; _ -> Nothing),

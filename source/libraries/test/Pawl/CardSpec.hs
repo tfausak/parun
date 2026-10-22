@@ -774,7 +774,7 @@ playerRefPositions =
         ("shuffle", Effect.Shuffle (plantedPlayer "sh"), [plantedPlayer "sh"]),
         ("cloak", Effect.Cloak (plantedPlayer "ck"), [plantedPlayer "ck"]),
         ("manifestDread", Effect.ManifestDread (plantedPlayer "md"), [plantedPlayer "md"]),
-        ("choose-permanents", Effect.ChoosePermanents (ChoosePermanents.MkChoosePermanents (ChosenPermanents.MkChosenPermanents (Filter.Type.And []) (plantedPlayer "cp") (HowMany.UpTo Nothing)) (SlotName.MkSlotName (Text.pack "cp"))), [plantedPlayer "cp"]),
+        ("choose-permanents", Effect.ChoosePermanents (ChoosePermanents.MkChoosePermanents (ChosenPermanents.MkChosenPermanents (Filter.Type.And []) (plantedPlayer "cp") (HowMany.UpTo Nothing)) (SlotName.MkSlotName (Text.pack "cp")) (Just (plantedPlayer "cp-piles"))), [plantedPlayer "cp", plantedPlayer "cp-piles"]),
         ("discard-counted", Effect.Discard (Discard.Counted (CountedDiscard.MkCountedDiscard (plantedPlayer "dc") one Nothing)), [plantedPlayer "dc"]),
         ("discard-any-number", Effect.Discard (Discard.AnyNumber (AnyNumberDiscard.MkAnyNumberDiscard (plantedPlayer "da") (AnyNumberMatching.MkAnyNumberMatching (Filter.Type.And []) Nothing) Nothing)), [plantedPlayer "da"]),
         ("player-sacrifices", Effect.PlayerSacrifices (PlayerSacrifices.MkPlayerSacrifices (plantedPlayer "ps") (Filter.Type.And []) one), [plantedPlayer "ps"]),
@@ -6166,7 +6166,7 @@ effectFilters effect = case effect of
   Effect.ChoosePlayer _ -> []
   Effect.ChoosePlayerAtRandom _ -> []
   Effect.ChooseSector _ -> []
-  Effect.ChoosePermanents (ChoosePermanents.MkChoosePermanents (ChosenPermanents.MkChosenPermanents f _ count) _) -> unframed [f] <> frame Unframed (foldMap quantityFilters (HowMany.quantity count))
+  Effect.ChoosePermanents (ChoosePermanents.MkChoosePermanents (ChosenPermanents.MkChosenPermanents f _ count) _ _) -> unframed [f] <> frame Unframed (foldMap quantityFilters (HowMany.quantity count))
   -- CR 706.2's modifier is a Quantity, so its filters are reachable here.
   Effect.RollDie rollDie -> frame Unframed (quantityFilters (RollDie.count rollDie) <> foldMap quantityFilters (RollDie.modifier rollDie))
   -- CR 705.1's number of coins is a Quantity, so its filters are reachable here.

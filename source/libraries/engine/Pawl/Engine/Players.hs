@@ -8,6 +8,7 @@ import qualified Data.Set as Set
 import qualified Pawl.Engine.Binding as Binding
 import qualified Pawl.Engine.Filter as Filter
 import qualified Pawl.Engine.Game as Game
+import qualified Pawl.Engine.Turn as Turn
 import qualified Pawl.Types.Acquisition as Acquisition
 import qualified Pawl.Types.AttackTarget as AttackTarget
 import qualified Pawl.Types.AttackingPlayers as AttackingPlayers
@@ -262,6 +263,8 @@ namedUncut given gs ref =
         -- CR 801.11 gives a spell or ability no information from outside its
         -- controller's range.
         PlayerRef.Superlative leading -> Just (superlative (controllerOf given) (roster given) gs leading)
+        -- CR 102.1 / 802.2: read off the turn, PlayerScope.InRole's answer.
+        PlayerRef.InRole role -> Just (filter (`elem` Turn.roleHolders role gs) (roster given))
 
 -- | The players among @roster@ whose measure stands in the superlative's
 -- comparison to every OTHER roster player's (Pawl.Types.Superlative): with

@@ -42,6 +42,7 @@ import qualified Pawl.Types.AttackTarget as AttackTarget
 import qualified Pawl.Types.AttackTargetKind as AttackTargetKind
 import qualified Pawl.Types.AttackerBlocked as AttackerBlocked
 import qualified Pawl.Types.AttackerDeclared as AttackerDeclared
+import qualified Pawl.Types.AttackerUnblocked as AttackerUnblocked
 import qualified Pawl.Types.BecameAttacked as BecameAttacked
 import qualified Pawl.Types.BecameBlocking as BecameBlocking
 import qualified Pawl.Types.BlockProducer as BlockProducer
@@ -2810,10 +2811,18 @@ declareBlockers perform = do
     -- proves that timing. Testing the KEY rather than the set is isBlocked's own
     -- reading, but a regression fence here: swapping the two leaves the suite
     -- green.
+    --
+    -- Each event carries CR 508.5's defending player for that attacker, read
+    -- and defaulted as becomeBlocked reads it; Pawl.KeywordTriggerSpec's
+    -- three-seat Abyssal Nightstalker case proves the per-attacker read.
     State.modify' $ \g ->
       let c = GameState.combat g
           unblocked = filter (\oid -> not (Map.member oid (Combat.blockers c))) (Map.keys (Combat.attackers c))
-       in List.foldl' (\h oid -> Event.recordEvent (GameEvent.AttackerUnblocked oid) h) g unblocked
+          defendingFor oid = Defender.playerOfAttacker Projection.controllerWithLastKnown oid g Applicative.<|> Maybe.listToMaybe (Defender.defendingPlayers g)
+          record h oid = case defendingFor oid of
+            Nothing -> h
+            Just defending -> Event.recordEvent (GameEvent.AttackerUnblocked (AttackerUnblocked.MkAttackerUnblocked oid defending)) h
+       in List.foldl' record g unblocked
 
 -- CR 509.1a's record of WHICH creatures were declared as blockers this combat
 -- phase, unioned in. Shared by attemptBlockDeclaration's two writers so the

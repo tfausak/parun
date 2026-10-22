@@ -460,6 +460,7 @@ shapeOf prompt = case prompt of
   Prompt.ChooseStickerKeeper {} -> natural
   Prompt.OrderForEach {} -> list natural
   Prompt.ChooseLoopMembers {} -> setOf recipient
+  Prompt.ChoosePile {} -> setOf object
   Prompt.ChooseRepeat {} -> viaCodec Codec.OptionalDecision.codec
   Prompt.OrderTimestamps {} -> list natural
   Prompt.OrderManaActivations {} -> list natural

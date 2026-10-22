@@ -593,6 +593,7 @@ overPlayerRefSlots f ref = case ref of
   PlayerRef.OwnerOfObject _ -> pure ref
   PlayerRef.Candidate -> pure ref
   PlayerRef.Superlative _ -> pure ref
+  PlayerRef.InRole _ -> pure ref
 
 -- A scope's own slot, renamed -- scopeRefs' Right arm turned around, and paired
 -- with it arm for arm. Only CR 400.7j's fold names a slot outright; the players

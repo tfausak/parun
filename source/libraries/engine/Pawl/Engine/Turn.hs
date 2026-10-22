@@ -27,6 +27,7 @@ import Pawl.Types.PlayerId (PlayerId)
 import qualified Pawl.Types.StepBegan as StepBegan
 import qualified Pawl.Types.Teams as Teams
 import qualified Pawl.Types.Timestamp as Timestamp
+import qualified Pawl.Types.TurnRole as TurnRole
 import qualified Pawl.Types.TurnScope as TurnScope
 
 allPhases :: [Phase]
@@ -96,6 +97,14 @@ activePlayers :: GameState -> [PlayerId]
 activePlayers gs =
   let (before, from) = break (== GameState.activePlayer gs) (GameState.turnOrder gs)
    in filter (isActive gs) (from <> before)
+
+-- | CR 102.1 / 805.4a / 802.2: the players holding a role the turn hands out --
+-- every defending player, CR 811.4's barred ones included (Pawl.Types.Combat's
+-- barred), as Yare's controller chooses among them. Not in APNAP order.
+roleHolders :: TurnRole.TurnRole -> GameState -> [PlayerId]
+roleHolders role gs = case role of
+  TurnRole.Active -> activePlayers gs
+  TurnRole.Defending -> let combat = GameState.combat gs in Combat.defenders combat <> Combat.barred combat
 
 firstPhase :: Phase
 firstPhase = Phase.Beginning BeginningStep.Untap

@@ -3,8 +3,10 @@
 module Pawl.Codec.ChoosePermanents where
 
 import qualified Pawl.Codec.ChosenPermanents as ChosenPermanents
+import qualified Pawl.Codec.PlayerRef as PlayerRef
 import qualified Pawl.Codec.SlotName as SlotName
 import qualified Pawl.JsonCodec.Codec as Codec
+import qualified Pawl.JsonCodec.Common as Common
 import qualified Pawl.JsonCodec.Fields as Fields
 import qualified Pawl.Types.ChoosePermanents as ChoosePermanents
 
@@ -14,8 +16,10 @@ codec :: Codec.Codec ChoosePermanents.ChoosePermanents
 codec = Fields.object $ do
   permanents <- Fields.required "permanents" ChosenPermanents.codec ChoosePermanents.permanents
   slot <- Fields.required "slot" SlotName.codec ChoosePermanents.slot
+  pileChooser <- Fields.defaulted "pileChooser" Nothing (Common.maybe PlayerRef.codec) ChoosePermanents.pileChooser
   pure
     ChoosePermanents.MkChoosePermanents
       { ChoosePermanents.permanents = permanents,
-        ChoosePermanents.slot = slot
+        ChoosePermanents.slot = slot,
+        ChoosePermanents.pileChooser = pileChooser
       }

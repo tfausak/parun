@@ -7,6 +7,7 @@ import qualified Pawl.Types.PlayerId as PlayerId
 import qualified Pawl.Types.PlayerRelation as PlayerRelation
 import qualified Pawl.Types.SlotName as SlotName
 import qualified Pawl.Types.Superlative as Superlative
+import qualified Pawl.Types.TurnRole as TurnRole
 
 -- | CR 400.1: whose zone a scope folds over, per-player zones being a player's
 -- own. And whose MANA POOL, since CR 106.4 attaches a pool to a player exactly as
@@ -198,4 +199,8 @@ data PlayerRef
     Attacking AttackingPlayers.AttackingPlayers
   | -- | CR 110.1 / 122.1: the players leading or trailing the table on a measure.
     Superlative Superlative.Superlative
+  | -- | CR 102.1 / 802.2: the players holding a role the turn hands out --
+    -- Stand or Fall's "for each defending player". PlayerScope's InRole, for a
+    -- position that takes a PlayerRef.
+    InRole TurnRole.TurnRole
   deriving (Eq, Ord, Show)

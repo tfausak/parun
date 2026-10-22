@@ -213,6 +213,7 @@ deciderOf prompt = case prompt of
   Prompt.ChooseStickerKeeper decider _ _ -> Just (Decider.unwrap decider)
   Prompt.OrderForEach decider _ _ _ -> Just (Decider.unwrap decider)
   Prompt.ChooseLoopMembers decider _ _ _ -> Just (Decider.unwrap decider)
+  Prompt.ChoosePile decider _ _ _ -> Just (Decider.unwrap decider)
   Prompt.ChooseRepeat decider _ _ _ -> Just (Decider.unwrap decider)
   Prompt.OrderTimestamps decider _ _ -> Just (Decider.unwrap decider)
   Prompt.OrderManaActivations decider _ _ -> Just (Decider.unwrap decider)
