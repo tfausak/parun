@@ -1,0 +1,26 @@
+{
+  "description": "CR 506.5 whole card: Yuan Shao's Infantry attacking beside another creature can be blocked",
+  "note": "The pair to the attacks-alone scenario: the same block, made legal only because a second attacker means the infantry is not alone.",
+  "board": {
+    "active": "alice",
+    "step": "BeginningOfCombat",
+    "seats": [
+      {
+        "name": "alice",
+        "battlefield": [
+          { "card": "Yuan Shao's Infantry", "label": "infantry", "ready": true },
+          { "card": "Grizzly Bears", "label": "friend", "ready": true }
+        ]
+      },
+      {
+        "name": "bob",
+        "battlefield": [{ "card": "Grizzly Bears", "label": "bears", "ready": true }]
+      }
+    ]
+  },
+  "timeline": [
+    { "turn": 1, "step": "DeclareAttackers", "player": "alice", "do": { "Attack": ["$infantry", "$friend"] } },
+    { "turn": 1, "step": "DeclareBlockers", "player": "bob", "do": { "Block": { "$bears": ["$infantry"] } } },
+    { "turn": 1, "step": "DeclareBlockers", "player": "alice", "check": { "Blockers": { "attacker": "$infantry", "blockers": ["$bears"] } } }
+  ]
+}

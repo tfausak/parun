@@ -1,0 +1,34 @@
+{
+  "description": "CR 611.3a whole card: Liu Bei gets +2/+2 only while its controller controls a permanent named Guan Yu, Sainted Warrior or Zhang Fei, Fierce Warrior",
+  "note": "Bob's Zhang Fei is named right but controlled by the wrong player, so once Guan Yu is gone the bonus must lapse; counting every permanent with the name, or never lapsing, reads differently.",
+  "board": {
+    "active": "alice",
+    "step": "PrecombatMain",
+    "seats": [
+      {
+        "name": "alice",
+        "manaPool": "BBB",
+        "library": [{ "card": "Island" }, { "card": "Island" }],
+        "hand": [{ "card": "Ghostly Visit", "label": "visit" }],
+        "battlefield": [
+          { "card": "Liu Bei, Lord of Shu", "label": "liu" },
+          { "card": "Guan Yu, Sainted Warrior", "label": "guan" }
+        ]
+      },
+      {
+        "name": "bob",
+        "library": [{ "card": "Island" }, { "card": "Island" }],
+        "battlefield": [{ "card": "Zhang Fei, Fierce Warrior", "label": "zhang" }]
+      }
+    ]
+  },
+  "timeline": [
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "check": { "PowerToughness": { "object": "$liu", "power": 4, "toughness": 6 } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": { "Cast": { "object": "$visit", "targets": ["$guan"] } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass" },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": { "ChooseOptional": { "type": "Declines" } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass" },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "check": { "Count": { "player": "alice", "zone": "Graveyard", "card": "Guan Yu, Sainted Warrior", "count": 1 } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "check": { "PowerToughness": { "object": "$liu", "power": 2, "toughness": 4 } } }
+  ]
+}

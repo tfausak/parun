@@ -1,0 +1,30 @@
+{
+  "description": "CR 701.20e whole card: Wu Spy's controller looks at the top two cards of the target player's library and puts the one they choose into that player's graveyard",
+  "note": "Alice picks the second card, so milling the top card, or both, reads differently; the third card is never looked at and stays.",
+  "board": {
+    "active": "alice",
+    "step": "PrecombatMain",
+    "seats": [
+      {
+        "name": "alice",
+        "manaPool": "UU",
+        "library": [{ "card": "Island" }, { "card": "Island" }],
+        "hand": [{ "card": "Wu Spy", "label": "spy" }]
+      },
+      {
+        "name": "bob",
+        "library": [{ "card": "Forest", "label": "top" }, { "card": "Hill Giant", "label": "second" }, { "card": "Grizzly Bears", "label": "third" }]
+      }
+    ]
+  },
+  "timeline": [
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": { "Cast": { "object": "$spy" } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass" },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": { "ChooseTargets": { "target": ["$bob"] } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass" },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": { "Answer": { "prompt": "ChooseCardFromAmong", "with": "$second" } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "check": { "Count": { "player": "bob", "zone": "Graveyard", "card": "Hill Giant", "count": 1 } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "check": { "Count": { "player": "bob", "zone": "Library", "card": "Forest", "count": 1 } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "check": { "Count": { "player": "bob", "zone": "Library", "card": "Grizzly Bears", "count": 1 } } }
+  ]
+}

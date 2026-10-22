@@ -434,13 +434,16 @@ landwalks = [Keyword.Landwalk (Filter.HasSubtype subtype) | subtype <- [Subtype.
 
 -- | Oracle text as a multiset of lowercase lines: reminder text dropped (CR
 -- 207.2a), and a line of comma-separated keywords split, so "Flying, vigilance"
--- and "Flying\nVigilance" agree.
+-- and "Flying\nVigilance" agree. A semicolon separates them too, as older
+-- Oracle text writes a keyword line ("Haste; horsemanship", Lu Bu,
+-- Master-at-Arms).
 normalise :: Text.Text -> [Text.Text]
 normalise =
   List.sort
     . filter (not . Text.null)
     . fmap (Text.strip . Text.toLower)
     . concatMap (Text.splitOn (Text.pack ", "))
+    . concatMap (Text.splitOn (Text.pack "; "))
     . Text.lines
     . withoutReminders
 

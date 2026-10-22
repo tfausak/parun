@@ -28,7 +28,7 @@ spec s registry = do
       parsed <- either (pure . Left . (: []) . Text.unpack) (fmap (either (Left . (: []) . Exception.displayException) (either (Left . fmap (Text.unpack . DeckList.explain)) Right)) . DeckList.parse registry) contents
       Spec.assertEqWith s (path <> ": problems") (Either.fromLeft [] parsed) []
 
-    Monad.forM_ [("Portal", "portal"), ("Portal Second Age", "portal-second-age")] $ \(set, prefix) ->
+    Monad.forM_ [("Portal", "portal"), ("Portal Second Age", "portal-second-age"), ("Portal Three Kingdoms", "portal-three-kingdoms")] $ \(set, prefix) ->
       Spec.it s ("two bots finish a game with the " <> set <> " starter decks, and it replays clean") $ do
         let read' name = do
               contents <- Decks.loadFile (root <> "/" <> prefix <> name)
