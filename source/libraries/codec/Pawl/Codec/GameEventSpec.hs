@@ -672,7 +672,7 @@ spec s = Spec.describe s "Pawl.Codec.GameEvent" $ do
       s
       GameEvent.codec
       (GameEvent.ManaAbilityResolved (ManaAbilityResolved.MkManaAbilityResolved {ManaAbilityResolved.permanent = ObjectId.MkObjectId 9, ManaAbilityResolved.amount = 2}))
-      " {\"type\":\"ManaAbilityResolved\",\"value\":{\"amount\":2,\"permanent\":9,\"player\":1}} "
+      " {\"type\":\"ManaAbilityResolved\",\"value\":{\"amount\":2,\"permanent\":9}} "
     Spec.assertBool
       s
       (Codec.encode GameEvent.codec (GameEvent.ManaAbilityResolved (ManaAbilityResolved.MkManaAbilityResolved {ManaAbilityResolved.permanent = ObjectId.MkObjectId 9, ManaAbilityResolved.amount = 1})) /= Codec.encode GameEvent.codec (GameEvent.TappedForMana (TappedForMana.MkTappedForMana {TappedForMana.permanent = ObjectId.MkObjectId 9, TappedForMana.mana = Set.singleton (ManaType.Colored Color.Green), TappedForMana.player = PlayerId.MkPlayerId 1})))
