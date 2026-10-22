@@ -18,6 +18,7 @@ import qualified Pawl.Types.CardType as CardType
 import qualified Pawl.Types.CastingPermission as CastingPermission
 import qualified Pawl.Types.ChangeWord as ChangeWord
 import qualified Pawl.Types.Color as Color
+import qualified Pawl.Types.CombatDamageOption as CombatDamageOption
 import qualified Pawl.Types.Cost as Cost
 import qualified Pawl.Types.CostComponent as CostComponent
 import qualified Pawl.Types.CostKeyword as CostKeyword
@@ -357,6 +358,12 @@ spec s = Spec.describe s "Pawl.Codec.Modification" $ do
       codec
       Modification.AssignCombatDamageWithToughness
       " {\"type\":\"AssignCombatDamageWithToughness\"} "
+  Spec.it s "MayAssignCombatDamage" $
+    Common.assertCodec
+      s
+      codec
+      (Modification.MayAssignCombatDamage CombatDamageOption.AsThoughUnblocked)
+      " {\"type\":\"MayAssignCombatDamage\",\"value\":{\"type\":\"AsThoughUnblocked\"}} "
   -- layer 6, CR 702.184c: this object's controller's station abilities read
   -- toughness instead of power. Payload-free, self-only.
   Spec.it s "GrantsStationToughness" $

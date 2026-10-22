@@ -1,0 +1,29 @@
+{
+  "description": "CR 510.1b unblocked, Cunning Giant's controller has it assign all its damage to the creature of bob's she chooses",
+  "board": {
+    "active": "alice",
+    "step": "BeginningOfCombat",
+    "seats": [
+      {
+        "name": "alice",
+        "battlefield": [{ "card": "Cunning Giant", "label": "giant", "ready": true }]
+      },
+      {
+        "name": "bob",
+        "battlefield": [
+          { "card": "Barbarian Horde", "label": "horde", "ready": true },
+          { "card": "Axebane Beast", "label": "beast", "ready": true }
+        ]
+      }
+    ]
+  },
+  "timeline": [
+    { "turn": 1, "step": "DeclareAttackers", "player": "alice", "do": { "Attack": ["$giant"] } },
+    { "turn": 1, "step": "DeclareBlockers", "player": "bob", "do": { "Block": {} } },
+    { "turn": 1, "step": "CombatDamage", "player": "alice", "source": "$giant", "do": { "ChooseOptional": { "type": "Exercises" } } },
+    { "turn": 1, "step": "CombatDamage", "player": "alice", "do": { "Answer": { "prompt": "ChoosePermanent", "with": "$beast" } } },
+    { "turn": 1, "step": "EndOfCombat", "player": "alice", "check": { "Life": { "player": "bob", "life": 20 } } },
+    { "turn": 1, "step": "EndOfCombat", "player": "alice", "check": { "Count": { "player": "bob", "zone": "Graveyard", "card": "Axebane Beast", "count": 1 } } },
+    { "turn": 1, "step": "EndOfCombat", "player": "alice", "check": { "Damage": { "object": "$horde", "damage": 0 } } }
+  ]
+}

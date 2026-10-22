@@ -817,6 +817,13 @@ answerDedicated decider asked =
           onEntry unscheduled key kind [] (takeForSource gs key source) $ \verb -> case verb of
             Move.ChooseOptional decision -> Just (pure decision)
             _ -> Nothing
+        -- CR 510.1b-c's "may", keyed by the creature assigning like
+        -- AssignCombatDamage above.
+        Prompt.Type.ChooseCombatDamageOption who _ source _ -> do
+          key <- whenOf gs (Decider.unwrap who)
+          onEntry unscheduled key kind [] (takeForSource gs key source) $ \verb -> case verb of
+            Move.ChooseOptional decision -> Just (pure decision)
+            _ -> Nothing
         -- CR 614.1a's optional substitution, ChooseRedirect's keying.
         Prompt.Type.ChooseSubstitute who _ source -> do
           key <- whenOf gs (Decider.unwrap who)
@@ -1057,6 +1064,7 @@ withinOffer prompt chosen = case prompt of
   Prompt.Type.ChooseTribute {} -> True
   Prompt.Type.ChooseRepeat {} -> True
   Prompt.Type.ChooseRedirect {} -> True
+  Prompt.Type.ChooseCombatDamageOption {} -> True
   Prompt.Type.ChooseSubstitute {} -> True
   Prompt.Type.ChoosePayLifeOnEntry {} -> True
   Prompt.Type.ChooseTurnUpAttachment {} -> True

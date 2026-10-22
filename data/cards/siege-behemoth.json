@@ -1,0 +1,134 @@
+{
+  "faces": [
+    {
+      "keywords": [
+        {
+          "type": "Hexproof"
+        }
+      ],
+      "manaCost": [
+        {
+          "type": "Generic",
+          "value": 5
+        },
+        {
+          "type": "OfType",
+          "value": {
+            "type": "Colored",
+            "value": {
+              "type": "Green"
+            }
+          }
+        },
+        {
+          "type": "OfType",
+          "value": {
+            "type": "Colored",
+            "value": {
+              "type": "Green"
+            }
+          }
+        }
+      ],
+      "name": "Siege Behemoth",
+      "oracleText": "Hexproof\nAs long as this creature is attacking, for each creature you control, you may have that creature assign its combat damage as though it weren't blocked.",
+      "power": {
+        "type": "Literal",
+        "value": 7
+      },
+      "staticAbilities": [
+        {
+          "affected": {
+            "type": "Matching",
+            "value": {
+              "type": "And",
+              "value": [
+                {
+                  "type": "HasCardType",
+                  "value": {
+                    "type": "Creature"
+                  }
+                },
+                {
+                  "type": "ControlledBy",
+                  "value": {
+                    "type": "You"
+                  }
+                }
+              ]
+            }
+          },
+          "condition": {
+            "type": "Compares",
+            "value": {
+              "comparison": {
+                "type": "AtLeast"
+              },
+              "measured": {
+                "type": "Count",
+                "value": {
+                  "aggregation": {
+                    "type": "Members"
+                  },
+                  "filter": {
+                    "type": "And",
+                    "value": [
+                      {
+                        "type": "IsSource"
+                      },
+                      {
+                        "type": "IsAttacking"
+                      }
+                    ]
+                  },
+                  "scope": {
+                    "type": "InZone",
+                    "value": {
+                      "player": {
+                        "type": "Relative",
+                        "value": {
+                          "type": "AnyPlayer"
+                        }
+                      },
+                      "zone": {
+                        "type": "Battlefield"
+                      }
+                    }
+                  }
+                }
+              },
+              "threshold": {
+                "type": "Literal",
+                "value": 1
+              }
+            }
+          },
+          "modifications": [
+            {
+              "type": "MayAssignCombatDamage",
+              "value": {
+                "type": "AsThoughUnblocked"
+              }
+            }
+          ]
+        }
+      ],
+      "toughness": {
+        "type": "Literal",
+        "value": 4
+      },
+      "typeLine": {
+        "subtypes": [
+          {
+            "type": "Beast"
+          }
+        ],
+        "types": [
+          {
+            "type": "Creature"
+          }
+        ]
+      }
+    }
+  ]
+}

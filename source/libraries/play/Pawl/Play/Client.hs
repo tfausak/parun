@@ -211,6 +211,15 @@ choice view question = Maybe.fromMaybe generic $ case Text.unpack (Question.kind
       ( [objectName view source <> Text.pack ": use its optional effect?", Text.pack "  1. Yes", Text.pack "  2. No"],
         fmap (\i -> R.Object [(Text.pack "type", R.Text (Text.pack (if i == 1 then "Exercises" else "Declines")))]) . one 2
       )
+  -- CR 510.1b-c: whether the creature assigns its damage as its option allows.
+  "ChooseCombatDamageOption" -> do
+    source <- field "source" offer
+    option <- field "option" offer >>= field "type" >>= textOf
+    let wording = if option == Text.pack "AsThoughUnblocked" then Text.pack ": assign its combat damage as though it weren't blocked?" else Text.pack ": assign its combat damage to a creature the defending player controls?"
+    pure
+      ( [objectName view source <> wording, Text.pack "  1. Yes", Text.pack "  2. No"],
+        fmap (\i -> R.Object [(Text.pack "type", R.Text (Text.pack (if i == 1 then "Exercises" else "Declines")))]) . one 2
+      )
   -- CR 510.1c-d: one amount per recipient, in the order offered.
   "AssignCombatDamage" -> do
     source <- field "source" offer

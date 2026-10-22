@@ -157,6 +157,7 @@ import qualified Pawl.Codec.CoinFaceSpec
 import qualified Pawl.Codec.CoinFlippedSpec
 import qualified Pawl.Codec.CoinReadingSpec
 import qualified Pawl.Codec.ColorSpec
+import qualified Pawl.Codec.CombatDamageOptionSpec
 import qualified Pawl.Codec.CombatRestrictionSpec
 import qualified Pawl.Codec.CombatSpec
 import qualified Pawl.Codec.CombatStepSpec
@@ -1357,6 +1358,7 @@ spec s registry = do
   Pawl.Codec.OnsetSpec.spec s
   Pawl.Codec.OperandSpec.spec s
   Pawl.Codec.OptionalDecisionSpec.spec s
+  Pawl.Codec.CombatDamageOptionSpec.spec s
   Pawl.Codec.OptionalitySpec.spec s
   Pawl.Codec.OrElseSpec.spec s
   Pawl.Codec.OutsideCardSpec.spec s

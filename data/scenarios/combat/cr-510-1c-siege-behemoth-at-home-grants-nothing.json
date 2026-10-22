@@ -1,0 +1,26 @@
+{
+  "description": "CR 510.1c Siege Behemoth not attacking: alice's blocked Grizzly Bears assigns its damage to its blocker, unasked",
+  "board": {
+    "active": "alice",
+    "step": "BeginningOfCombat",
+    "seats": [
+      {
+        "name": "alice",
+        "battlefield": [
+          { "card": "Siege Behemoth", "label": "behemoth", "ready": true },
+          { "card": "Grizzly Bears", "label": "bears", "ready": true }
+        ]
+      },
+      {
+        "name": "bob",
+        "battlefield": [{ "card": "Barbarian Horde", "label": "horde", "ready": true }]
+      }
+    ]
+  },
+  "timeline": [
+    { "turn": 1, "step": "DeclareAttackers", "player": "alice", "do": { "Attack": ["$bears"] } },
+    { "turn": 1, "step": "DeclareBlockers", "player": "bob", "do": { "Block": { "$horde": ["$bears"] } } },
+    { "turn": 1, "step": "EndOfCombat", "player": "alice", "check": { "Life": { "player": "bob", "life": 20 } } },
+    { "turn": 1, "step": "EndOfCombat", "player": "alice", "check": { "Damage": { "object": "$horde", "damage": 2 } } }
+  ]
+}

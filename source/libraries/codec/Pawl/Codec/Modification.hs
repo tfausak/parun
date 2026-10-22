@@ -7,6 +7,7 @@ import qualified Pawl.Codec.CardType as CardType
 import qualified Pawl.Codec.CastingPermission as CastingPermission
 import qualified Pawl.Codec.ChangeWord as ChangeWord
 import qualified Pawl.Codec.Color as Color
+import qualified Pawl.Codec.CombatDamageOption as CombatDamageOption
 import qualified Pawl.Codec.CostKeyword as CostKeyword
 import qualified Pawl.Codec.ExiledCardAbilities as ExiledCardAbilities
 import qualified Pawl.Codec.Filter as Filter
@@ -80,6 +81,7 @@ codec abilityCodec =
           Arm.payload "InsertNameWords" NameInsertion.codec Modification.InsertNameWords (\x -> case x of Modification.InsertNameWords y -> Just y; _ -> Nothing),
           Arm.nullary "SwitchPowerToughness" Modification.SwitchPowerToughness,
           Arm.nullary "AssignCombatDamageWithToughness" Modification.AssignCombatDamageWithToughness,
+          Arm.payload "MayAssignCombatDamage" CombatDamageOption.codec Modification.MayAssignCombatDamage (\x -> case x of Modification.MayAssignCombatDamage y -> Just y; _ -> Nothing),
           Arm.nullary "GrantsStationToughness" Modification.GrantsStationToughness,
           Arm.payload "Intensify" Quantity.codec Modification.Intensify (\x -> case x of Modification.Intensify y -> Just y; _ -> Nothing)
         ]
@@ -128,5 +130,6 @@ tagOf x = case x of
   Modification.InsertNameWords {} -> "InsertNameWords"
   Modification.SwitchPowerToughness {} -> "SwitchPowerToughness"
   Modification.AssignCombatDamageWithToughness {} -> "AssignCombatDamageWithToughness"
+  Modification.MayAssignCombatDamage {} -> "MayAssignCombatDamage"
   Modification.GrantsStationToughness {} -> "GrantsStationToughness"
   Modification.Intensify {} -> "Intensify"

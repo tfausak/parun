@@ -27,6 +27,7 @@ import Pawl.Types.AttackTarget (AttackTarget)
 import qualified Pawl.Types.AttackTarget as AttackTarget
 import qualified Pawl.Types.CardType as CardType
 import qualified Pawl.Types.Combat as Combat.Type
+import qualified Pawl.Types.CombatDamageOption as CombatDamageOption
 import qualified Pawl.Types.CounterCause as CounterCause
 import qualified Pawl.Types.CounterChange as CounterChange
 import qualified Pawl.Types.CounterKind as CounterKind
@@ -44,6 +45,7 @@ import qualified Pawl.Types.LifeChange as LifeChange
 import qualified Pawl.Types.LifeLossCause as LifeLossCause
 import qualified Pawl.Types.Object as Object
 import Pawl.Types.ObjectId (ObjectId)
+import qualified Pawl.Types.OptionalDecision as OptionalDecision
 import qualified Pawl.Types.Player as Player
 import qualified Pawl.Types.PlayerCounterKind as PlayerCounterKind
 import Pawl.Types.PlayerId (PlayerId)
@@ -397,10 +399,48 @@ attackerAssignment gs contested (attacker, target) = case Projection.combatDamag
                       Just pid -> divide pid defenderEntries
               _ -> pure (Nothing, Right allToAttacked, Map.empty)
             divide = divideAssignment gs attacker power
+            live = filter (\oid -> onBattlefield oid gs) (Set.toList recorded)
+            -- The controller's "you may", asked just before the creature
+            -- assigns (Siege Behemoth's ruling). An assignment it was asked
+            -- for is that player's, so CR 510.1e's return asks it again.
+            offer option pid exercised declined = do
+              answer <- Game.choose (Prompt.ChooseCombatDamageOption (Decide.deciderFor pid gs) pid attacker option)
+              (who, division, thresholds) <- case answer of
+                OptionalDecision.Exercises -> exercised
+                OptionalDecision.Declines -> declined
+              pure (Just (Maybe.fromMaybe pid who), division, thresholds)
+            -- Cunning Giant: all of it to one creature its defending player
+            -- (CR 508.5) controls, whether or not it is attacking anything (see
+            -- docs/decisions.md, "Whether Cunning Giant attacking nothing may
+            -- still assign to a creature").
+            defendingCreatures = foldMap (\pid -> filter (`Projection.isCreatureOf` gs) (Projection.controls pid gs)) defending
+            unblocked = case Projection.controllerOf attacker gs of
+              Just pid
+                | Projection.hasCombatDamageOption CombatDamageOption.ToDefendingCreature attacker gs,
+                  not (null defendingCreatures) ->
+                    offer CombatDamageOption.ToDefendingCreature pid (toCreature pid) toDefender
+              _ -> toDefender
+            toCreature pid = do
+              chosen <- Game.chooseAmong (\decider who -> Prompt.ChoosePermanent decider who attacker) pid defendingCreatures
+              case chosen of
+                Just creature -> pure (Nothing, Right [Event.damageEvent gs DamageKind.Combat attacker (Recipient.ToCreature creature) power], Map.empty)
+                Nothing -> toDefender
+            -- Lone Wolf: all of it to what it is attacking, or nothing when it
+            -- attacks nothing (CR 510.1b), never split with its blockers (the
+            -- card's ruling). Asked only where that differs from CR 510.1c and
+            -- CR 702.19d's own answer. With a banding blocker, CR 702.22j's
+            -- defending player decides (the card's ruling).
+            asThoughUnblocked blocked = case Projection.controllerOf attacker gs of
+              Just pid
+                | Projection.hasCombatDamageOption CombatDamageOption.AsThoughUnblocked attacker gs,
+                  not (null live) || (not trample && Maybe.isJust attacked) ->
+                    let banded = any (\b -> Projection.hasKeyword Keyword.Banding b gs) live
+                     in offer CombatDamageOption.AsThoughUnblocked (if banded then Maybe.fromMaybe pid defending else pid) toDefender blocked
+              _ -> blocked
         if not (Combat.isBlocked attacker gs)
-          then -- CR 510.1b: never blocked, so it hits what it is attacking.
-            toDefender
-          else case filter (\oid -> onBattlefield oid gs) (Set.toList recorded) of
+          then -- CR 510.1b, or its option: never blocked.
+            unblocked
+          else asThoughUnblocked $ case live of
             -- Blocked, but nothing is blocking it now. CR 702.19d: a trampler
             -- assigns everything to the defending player. CR 510.1c: anything
             -- else assigns no combat damage at all -- not damage addressed to an
@@ -694,7 +734,10 @@ turnUpToAssign entry = do
 -- above 0, and a recipient: what attackerAssignment and blockerAssignment would
 -- address, read the way each reads it. An attacker that is blocked by nothing
 -- still there and lacks trample (CR 510.1c), and a blocker whose attackers have
--- all gone (CR 510.1d), assign none.
+-- all gone (CR 510.1d), assign none. An attacker whose CR 510.1b-c option could
+-- give it a recipient counts as one that would, a regression fence (see
+-- docs/decisions.md, "Whether Cunning Giant attacking nothing may still assign
+-- to a creature").
 wouldAssign :: GameState -> Either (ObjectId, AttackTarget) (ObjectId, Set.Set ObjectId) -> Bool
 wouldAssign gs entry =
   maybe False (> 0) (Projection.combatDamageAmountOf creature gs) && case entry of
@@ -702,20 +745,27 @@ wouldAssign gs entry =
       let attacked = Maybe.isJust (combatRecipient gs attacker target)
           trample = Projection.hasKeyword Keyword.Trample attacker gs || Projection.hasKeyword Keyword.TrampleOverPlaneswalkers attacker gs
           blocking = any (`onBattlefield` gs) (Combat.blockersOf attacker gs)
-       in if Combat.isBlocked attacker gs then blocking || (trample && attacked) else attacked
+          asThoughUnblocked = Projection.hasCombatDamageOption CombatDamageOption.AsThoughUnblocked attacker gs
+          toCreature =
+            Projection.hasCombatDamageOption CombatDamageOption.ToDefendingCreature attacker gs
+              && any (\pid -> any (`Projection.isCreatureOf` gs) (Projection.controls pid gs)) (Defender.defenderOfAttack Projection.controllerWithLastKnown attacker target gs)
+       in if Combat.isBlocked attacker gs then blocking || ((trample || asThoughUnblocked) && attacked) else attacked || toCreature
     Right (_, blocked) -> any (`onBattlefield` gs) blocked
   where
     creature = either fst fst entry
 
 -- Can any OTHER attacking creature assigning damage this step pay part of a bar
--- this one is gated by? The two ways CR 702.19b and CR 702.19c let that happen,
--- and the only two -- a creature assigns only to what is blocking it and to what
--- it is attacking (CR 510.1b-c):
+-- this one is gated by? The ways CR 702.19b and CR 702.19c let that happen -- a
+-- creature assigns only to what is blocking it and to what it is attacking (CR
+-- 510.1b-c), unless an option sends it elsewhere:
 --
 --   * a blocker they share, whose lethal damage either may put in (CR 702.19b),
 --   * the same attacked PLANESWALKER, whose loyalty either may pay down (CR
 --     702.19c). Only a planeswalker: the other two attack targets carry threshold
---     0, so no share of them gates anything.
+--     0, so no share of them gates anything. A blocked creature that may assign
+--     as though unblocked reaches it through this same test.
+--   * any blocker of this one, for an unblocked creature that may assign to a
+--     creature its defending player controls (Cunning Giant).
 --
 -- Power 0 or less is nobody's contribution (CR 510.1a), so such a creature leaves
 -- the elision alone rather than turning a forced assignment into a prompt.
@@ -733,11 +783,15 @@ contestedAssignment gs attackers (attacker, target) =
         AttackTarget.OfPlayer _ -> False
         AttackTarget.OfBattle _ -> False
       assigning oid = maybe False (> 0) (Projection.combatDamageAmountOf oid gs)
+      redirects other =
+        not (Combat.isBlocked other gs)
+          && Projection.hasCombatDamageOption CombatDamageOption.ToDefendingCreature other gs
       shares (other, otherTarget) =
         other /= attacker
           && assigning other
           && ( (attackedPlaneswalker && otherTarget == target)
                  || not (Set.disjoint mine (blockersFor other))
+                 || (redirects other && not (Set.null mine))
              )
    in any shares attackers
 

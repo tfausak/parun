@@ -1,0 +1,26 @@
+{
+  "description": "CR 510.1c Proud Wildbonder gives itself, a creature with trample, the option: blocked by a 3/4, it assigns all 4 to bob as though unblocked, with no division asked",
+  "board": {
+    "active": "alice",
+    "step": "BeginningOfCombat",
+    "seats": [
+      {
+        "name": "alice",
+        "battlefield": [
+          { "card": "Proud Wildbonder", "label": "wildbonder", "ready": true }
+        ]
+      },
+      {
+        "name": "bob",
+        "battlefield": [{ "card": "Axebane Beast", "label": "beast", "ready": true }]
+      }
+    ]
+  },
+  "timeline": [
+    { "turn": 1, "step": "DeclareAttackers", "player": "alice", "do": { "Attack": ["$wildbonder"] } },
+    { "turn": 1, "step": "DeclareBlockers", "player": "bob", "do": { "Block": { "$beast": ["$wildbonder"] } } },
+    { "turn": 1, "step": "CombatDamage", "player": "alice", "source": "$wildbonder", "do": { "ChooseOptional": { "type": "Exercises" } } },
+    { "turn": 1, "step": "EndOfCombat", "player": "alice", "check": { "Life": { "player": "bob", "life": 16 } } },
+    { "turn": 1, "step": "EndOfCombat", "player": "alice", "check": { "Damage": { "object": "$beast", "damage": 0 } } }
+  ]
+}

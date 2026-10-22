@@ -19,6 +19,7 @@ import qualified Pawl.Types.CastFromZone as CastFromZone
 import qualified Pawl.Types.ClauseIndex as ClauseIndex
 import qualified Pawl.Types.CoinFace as CoinFace
 import qualified Pawl.Types.Color as Color
+import qualified Pawl.Types.CombatDamageOption as CombatDamageOption
 import qualified Pawl.Types.CommandZoneDecision as CommandZoneDecision
 import qualified Pawl.Types.Concession as Concession
 import qualified Pawl.Types.Cost as Cost
@@ -430,6 +431,10 @@ data Prompt r where
   -- side, CR 510.1d). Damage.wellFormedAssignment and Damage.tiersCleared
   -- validate.
   AssignCombatDamage :: Decider.Decider -> PlayerId.PlayerId -> ObjectId.ObjectId -> Map.Map Recipient.Recipient Natural.Natural -> Natural.Natural -> Prompt (Map.Map Recipient.Recipient Natural.Natural)
+  -- | CR 510.1b-c: whether the creature the ObjectId names assigns all its
+  -- combat damage as the option allows rather than as those rules say. Asked
+  -- just before it assigns, wherever the option changes where its damage goes.
+  ChooseCombatDamageOption :: Decider.Decider -> PlayerId.PlayerId -> ObjectId.ObjectId -> CombatDamageOption.CombatDamageOption -> Prompt OptionalDecision.OptionalDecision
   -- | CR 601.2c: per named slot of the object being cast, how many targets it
   -- takes and the legal recipients; only the slots AnnounceTargets settled
   -- are offered, so a declined CR 115.6 slot is absent. The PlayerId is the seat

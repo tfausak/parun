@@ -1002,6 +1002,8 @@ modificationCounts modification = case modification of
   -- Payload-free, both of them, so there is no Count to sweep.
   Modification.AssignCombatDamageWithToughness -> []
   Modification.GrantsStationToughness -> []
+  -- An enum payload holds neither.
+  Modification.MayAssignCombatDamage _ -> []
 
 -- Every Count reachable from a StaticAbility: its modifications' P/T quantities,
 -- plus CR 604.2's "as long as" gate, which is a Condition and so a pair of
@@ -4418,6 +4420,8 @@ modificationFilters modification = case modification of
   -- Payload-free, both of them, so there is no Filter to sweep.
   Modification.AssignCombatDamageWithToughness -> []
   Modification.GrantsStationToughness -> []
+  -- An enum payload holds neither.
+  Modification.MayAssignCombatDamage _ -> []
 
 -- Four Filter positions, not two: the affected set, each modification's own
 -- keywords and Counts, -- since CR 604.2's "as long as" gate landed -- the

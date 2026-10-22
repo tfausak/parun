@@ -56,6 +56,7 @@ import qualified Pawl.Types.ChangeWord as ChangeWord
 import qualified Pawl.Types.CharacteristicPT as CharacteristicPT
 import qualified Pawl.Types.Chosen as Chosen
 import qualified Pawl.Types.Color as Color
+import qualified Pawl.Types.CombatDamageOption as CombatDamageOption
 import qualified Pawl.Types.Condition as Condition.Type
 import qualified Pawl.Types.ContinuousEffect as ContinuousEffect
 import qualified Pawl.Types.ControllerRelation as ControllerRelation
@@ -209,6 +210,8 @@ layer m = case m of
   Modification.AddChosenColor -> Layer.Color
   Modification.SwitchPowerToughness -> Layer.SwitchPT
   Modification.AssignCombatDamageWithToughness -> Layer.Rules
+  -- CR 613.11, the sibling above's layer: a rules change, not an ability.
+  Modification.MayAssignCombatDamage _ -> Layer.Rules
   -- CR 613.1f, GainKeyword's arm: no rule 613 sublayer is CR 702.184c's own,
   -- so this joins the other ability-shaping grants at layer 6. Nothing else
   -- in the layer system reads or writes PC.grantsStationToughness, so
@@ -701,6 +704,10 @@ applyModification textBoxOf viewOf src stamp gs oid unitTypes affected m pc =
         -- CR 510.1a: a bare marker, read only while assigning combat damage.
         Modification.AssignCombatDamageWithToughness ->
           pc {PC.assignsCombatDamageWithToughness = True}
+        -- CR 510.1b-c: a marker read only while assigning combat damage; a
+        -- second grant of the same option adds nothing.
+        Modification.MayAssignCombatDamage o ->
+          pc {PC.combatDamageOptions = Set.insert o (PC.combatDamageOptions pc)}
         -- CR 702.184c: a SET, not an accumulation -- the fact is a bare marker
         -- with no count and no source to prefer among several grants.
         Modification.GrantsStationToughness ->
@@ -765,6 +772,7 @@ cardTypesAfter m types = case m of
   Modification.ModifyPowerToughness {} -> types
   Modification.SwitchPowerToughness -> types
   Modification.AssignCombatDamageWithToughness -> types
+  Modification.MayAssignCombatDamage _ -> types
   Modification.GrantsStationToughness -> types
   Modification.Intensify _ -> types
   Modification.SetLandSubtype _ -> types
@@ -1606,6 +1614,8 @@ freezeQuantities viewOf gs announcedOn source context m =
         -- No quantity to freeze: two bare markers.
         Modification.AssignCombatDamageWithToughness -> Just m
         Modification.GrantsStationToughness -> Just m
+        -- An enum payload, so no quantity either.
+        Modification.MayAssignCombatDamage _ -> Just m
         Modification.Intensify n -> fmap Modification.Intensify (freeze n)
 
 -- Every Quantity a modification carries, in order. A new Quantity field goes here
@@ -1660,6 +1670,7 @@ quantitiesOf m = case m of
   Modification.HasFullText _ -> []
   Modification.AssignCombatDamageWithToughness -> []
   Modification.GrantsStationToughness -> []
+  Modification.MayAssignCombatDamage _ -> []
   Modification.Intensify n -> [n]
 
 -- CR 612.7 / 108.1: the filter over the Oracle card reference this modification
@@ -1711,6 +1722,7 @@ referenceQuery m = case m of
   Modification.ExchangeTextBoxes -> Nothing
   Modification.AssignCombatDamageWithToughness -> Nothing
   Modification.GrantsStationToughness -> Nothing
+  Modification.MayAssignCombatDamage _ -> Nothing
   Modification.Intensify _ -> Nothing
 
 -- Every filter a live continuous effect asks the reference about
@@ -1779,6 +1791,7 @@ setsLandSubtype m = case m of
   Modification.InsertNameWords _ -> False
   Modification.HasFullText _ -> False
   Modification.AssignCombatDamageWithToughness -> False
+  Modification.MayAssignCombatDamage _ -> False
   Modification.SetColor _ -> False
   Modification.AddColor _ -> False
   Modification.AddChosenColor -> False
@@ -3008,8 +3021,9 @@ removesAbilities m = case m of
   -- alone, so the full-text ability keeps generating the effect that
   -- replaced its text (CR 613.6).
   Modification.HasFullText _ -> False
-  -- CR 613.11 rules-modifying marker rather than a layer-6 ability change.
+  -- CR 613.11 rules-modifying markers rather than layer-6 ability changes.
   Modification.AssignCombatDamageWithToughness -> False
+  Modification.MayAssignCombatDamage _ -> False
   -- A grant, GainKeyword's answer above: not a removal.
   Modification.GrantsStationToughness -> False
   Modification.Intensify _ -> False
@@ -4236,6 +4250,8 @@ modificationWrites m = case m of
   -- Writes a rules marker which, like grantsStationToughness below, has no
   -- dedicated Aspect and no reader inside the layer fold.
   Modification.AssignCombatDamageWithToughness -> Set.singleton Keywords
+  -- The sibling above's reason: a rules marker with no Aspect of its own.
+  Modification.MayAssignCombatDamage _ -> Set.singleton Keywords
   -- Writes ProjectedCharacteristics.grantsStationToughness, which Aspect has no
   -- finer grain for than Keywords -- an ability-shaping write with no reader
   -- inside the layer fold at all (Quantity.StationMeasure reads it OUTSIDE
@@ -4303,6 +4319,7 @@ modificationReads m = case m of
   Modification.HasFullText _ -> Set.empty
   -- Carries no Quantity: two bare markers.
   Modification.AssignCombatDamageWithToughness -> Set.empty
+  Modification.MayAssignCombatDamage _ -> Set.empty
   Modification.GrantsStationToughness -> Set.empty
   Modification.Intensify n -> quantityReads n
   Modification.SetLandSubtype _ -> Set.empty
@@ -5288,6 +5305,11 @@ combatDamageAmountOf oid gs =
         then PC.toughness pc
         else PC.power pc
 
+-- CR 510.1b-c: whether this creature's controller may have it assign all its
+-- combat damage as the option says.
+hasCombatDamageOption :: CombatDamageOption.CombatDamageOption -> ObjectId -> GameState -> Bool
+hasCombatDamageOption option oid gs = Set.member option (PC.combatDamageOptions (project oid gs))
+
 -- CR 702: an object's keyword abilities after the layer fold, counted per
 -- keyword. Most readers want hasKeyword or totalToxic.
 keywordsOf :: ObjectId -> GameState -> Map Keyword Natural
@@ -6196,6 +6218,7 @@ grantsKeywordWhere p m = case m of
   -- Neither marker hands out a Keyword, whatever the station one's name says.
   Modification.AssignCombatDamageWithToughness -> False
   Modification.GrantsStationToughness -> False
+  Modification.MayAssignCombatDamage _ -> False
   Modification.Intensify _ -> False
 
 -- Does this modification write a card type or subtype that intrinsicReplacementsOf
@@ -6278,6 +6301,7 @@ grantsMintingType m = case m of
   -- Neither marker writes a card type or subtype.
   Modification.AssignCombatDamageWithToughness -> False
   Modification.GrantsStationToughness -> False
+  Modification.MayAssignCombatDamage _ -> False
   Modification.Intensify _ -> False
 
 -- CR 614.1 / 613.1f: does this modification hand its affected objects a quoted
@@ -6371,6 +6395,7 @@ grantsAbilityWhere p m = case m of
   Modification.HasFullText ft -> any (\g -> p g || grantedStaticWrites (grantsAbilityWhere p) g) (FullText.alsoHas ft)
   Modification.AssignCombatDamageWithToughness -> False
   Modification.GrantsStationToughness -> False
+  Modification.MayAssignCombatDamage _ -> False
   Modification.Intensify _ -> False
 
 -- CR 306.5b / 310.4b: the card types intrinsicReplacementsOf mints a CR 614.1c row

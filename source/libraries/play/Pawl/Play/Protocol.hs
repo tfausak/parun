@@ -11,6 +11,7 @@ import qualified Data.Foldable as Foldable
 import qualified Data.List.NonEmpty as NonEmpty
 import qualified Data.Text as Text
 import Numeric.Natural (Natural)
+import qualified Pawl.Codec.CombatDamageOption as Codec.CombatDamageOption
 import qualified Pawl.Codec.Cost as Codec.Cost
 import qualified Pawl.Codec.Facing as Codec.Facing
 import qualified Pawl.Codec.Keyword as Codec.Keyword
@@ -142,6 +143,7 @@ offerOf gs prompt = case prompt of
   Prompt.ChooseOptional _ _ source _ _ _ -> fields [("source", object source)]
   Prompt.AssignCombatDamage _ _ source lethal total ->
     fields [("source", object source), ("lethal", Reply.encode (Reply.mapOf Reply.recipient Reply.natural) namer lethal), ("total", natural total)]
+  Prompt.ChooseCombatDamageOption _ _ source option -> fields [("source", object source), ("option", Reply.encode (Reply.viaCodec Codec.CombatDamageOption.codec) namer option)]
   Prompt.ChooseToPay _ _ source _ cost _ -> fields [("source", object source), ("cost", Reply.encode (Reply.viaCodec (Codec.Cost.codec Codec.Keyword.codec)) namer cost)]
   Prompt.ChooseDivision _ _ source dividing targets ->
     fields

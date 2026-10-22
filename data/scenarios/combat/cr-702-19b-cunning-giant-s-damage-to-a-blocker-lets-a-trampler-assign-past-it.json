@@ -1,0 +1,28 @@
+{
+  "description": "CR 702.19b Cunning Giant assigns its 4 to the 3/4 blocking War Mammoth, so the Mammoth may assign all 3 of its own past it to bob",
+  "board": {
+    "active": "alice",
+    "step": "BeginningOfCombat",
+    "seats": [
+      {
+        "name": "alice",
+        "battlefield": [
+          { "card": "Cunning Giant", "label": "giant", "ready": true },
+          { "card": "War Mammoth", "label": "mammoth", "ready": true }
+        ]
+      },
+      {
+        "name": "bob",
+        "battlefield": [{ "card": "Axebane Beast", "label": "beast", "ready": true }]
+      }
+    ]
+  },
+  "timeline": [
+    { "turn": 1, "step": "DeclareAttackers", "player": "alice", "do": { "Attack": ["$giant", "$mammoth"] } },
+    { "turn": 1, "step": "DeclareBlockers", "player": "bob", "do": { "Block": { "$beast": ["$mammoth"] } } },
+    { "turn": 1, "step": "CombatDamage", "player": "alice", "source": "$giant", "do": { "ChooseOptional": { "type": "Exercises" } } },
+    { "turn": 1, "step": "CombatDamage", "player": "alice", "source": "$mammoth", "do": { "AssignDamage": { "$bob": 3 } } },
+    { "turn": 1, "step": "EndOfCombat", "player": "alice", "check": { "Life": { "player": "bob", "life": 17 } } },
+    { "turn": 1, "step": "EndOfCombat", "player": "alice", "check": { "Count": { "player": "bob", "zone": "Graveyard", "card": "Axebane Beast", "count": 1 } } }
+  ]
+}
