@@ -1013,8 +1013,8 @@ rewriteEffect pairs effect = case effect of
   Effect.ChoosePlayer _ -> effect
   Effect.ChooseSector _ -> effect
   Effect.ChoosePlayerAtRandom _ -> effect
-  Effect.ChoosePermanents (ChoosePermanents.MkChoosePermanents choice slot) ->
-    Effect.ChoosePermanents (ChoosePermanents.MkChoosePermanents (rewriteChosenPermanents pairs choice) slot)
+  Effect.ChoosePermanents (ChoosePermanents.MkChoosePermanents choice slot pileChooser) ->
+    Effect.ChoosePermanents (ChoosePermanents.MkChoosePermanents (rewriteChosenPermanents pairs choice) slot pileChooser)
   -- CR 706.1's number of sides is a numeral rather than a computed count; how
   -- many dice, and the modifier added to each result, are the Quantities,
   -- PutCounters' descent above. The slots no word rule 612 can swap.

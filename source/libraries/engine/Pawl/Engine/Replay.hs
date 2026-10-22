@@ -203,6 +203,7 @@ encode p answer = case p of
   Prompt.ChooseStickerKeeper {} -> Response.ChoseStickerKeeper answer
   Prompt.OrderForEach {} -> Response.OrderedForEach answer
   Prompt.ChooseLoopMembers {} -> Response.ChoseLoopMembers answer
+  Prompt.ChoosePile {} -> Response.ChosePile answer
   Prompt.ChooseRepeat {} -> Response.ChoseRepeat answer
   Prompt.OrderTimestamps {} -> Response.OrderedTimestamps answer
   Prompt.OrderManaActivations {} -> Response.OrderedManaActivations answer
@@ -436,6 +437,7 @@ decode p response = case p of
     (AnyNumberOf.ToExile, Response.ChoseExilesFromGraveyard ids) -> Just ids
     (AnyNumberOf.ToDiscard, Response.ChoseAnyNumberToDiscard ids) -> Just ids
     (AnyNumberOf.ToCrank, Response.ChoseCranks ids) -> Just ids
+    (AnyNumberOf.IntoPile, Response.ChosePileSplit ids) -> Just ids
     _ -> Nothing
   Prompt.ChooseDungeon {} -> case response of
     Response.ChoseDungeon printingId -> Just printingId
@@ -595,6 +597,9 @@ decode p response = case p of
     _ -> Nothing
   Prompt.ChooseLoopMembers {} -> case response of
     Response.ChoseLoopMembers members -> Just members
+    _ -> Nothing
+  Prompt.ChoosePile {} -> case response of
+    Response.ChosePile pile -> Just pile
     _ -> Nothing
   Prompt.ChooseRepeat {} -> case response of
     Response.ChoseRepeat d -> Just d
@@ -1186,6 +1191,8 @@ defaultAnswer p = case p of
   -- admits every subset here, so no answer can be illegal. A deterministic
   -- fallback, not a recommendation.
   Prompt.ChooseLoopMembers _ _ _ candidates -> Set.fromList candidates
+  -- CR 700.3: every offered pile is one the chooser may take.
+  Prompt.ChoosePile _ _ _ piles -> NonEmpty.head piles
   -- Stopping, so a transcript that ran out cannot loop forever.
   Prompt.ChooseRepeat {} -> OptionalDecision.Declines
   -- CR 613.7m: likewise, and it is the engine's own APNAP-then-ascending order --
@@ -1431,3 +1438,4 @@ anyNumberResponse purpose = case purpose of
   AnyNumberOf.ToExile -> Response.ChoseExilesFromGraveyard
   AnyNumberOf.ToDiscard -> Response.ChoseAnyNumberToDiscard
   AnyNumberOf.ToCrank -> Response.ChoseCranks
+  AnyNumberOf.IntoPile -> Response.ChosePileSplit

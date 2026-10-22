@@ -639,8 +639,9 @@ data Effect card ability
     -- "choose a player at random"), so Prompt's RandomPlayer carries no Decider.
     -- Elided at one candidate.
     ChoosePlayerAtRandom ChoosePlayerAtRandom.ChoosePlayerAtRandom
-  | -- | CR 608.2d: the payload's chooser picks matching permanents, bound into
-    -- its slot for a later effect of the same resolution to act on.
+  | -- | CR 608.2d / 700.3: the payload's chooser picks matching permanents, or a
+    -- pile of them, bound into its slot for a later effect of the same
+    -- resolution to act on.
     ChoosePermanents ChoosePermanents.ChoosePermanents
   | -- | CR 702.158d: the resolving controller chooses a sector, whose permanents
     -- are bound into the slot.

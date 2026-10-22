@@ -13,12 +13,14 @@ import qualified Control.Applicative as Applicative
 import qualified Data.Map.Strict as Map
 import qualified Data.Set as Set
 import qualified Pawl.Engine.Battle as Battle
+import qualified Pawl.Engine.Turn as Turn
 import qualified Pawl.Types.AttackTarget as AttackTarget
 import qualified Pawl.Types.Combat as Combat
 import Pawl.Types.GameState (GameState)
 import qualified Pawl.Types.GameState as GameState
 import Pawl.Types.ObjectId (ObjectId)
 import Pawl.Types.PlayerId (PlayerId)
+import qualified Pawl.Types.TurnRole as TurnRole
 
 -- CR 506.2 / CR 802.2: the players defending the combat in progress, in APNAP
 -- order (CR 101.4) -- the order CR 802.4 has them declare blockers in and CR
@@ -44,9 +46,11 @@ defendingPlayers = Combat.defenders . GameState.combat
 -- (Pawl.Types.Combat's barred) included. defendingPlayers above is the
 -- attackable part, which every combat rule reads; this is for CR 802.2a's
 -- "defending player" with no attacking creature to resolve it, which the
--- controller chooses from the whole group (Yare). Not in APNAP order.
+-- controller chooses from the whole group (Yare). Pawl.Engine.Turn.roleHolders
+-- holds the definition, since Pawl.Engine.Players reads it and sits below this
+-- module.
 designatedPlayers :: GameState -> [PlayerId]
-designatedPlayers gs = defendingPlayers gs <> Combat.barred (GameState.combat gs)
+designatedPlayers = Turn.roleHolders TurnRole.Defending
 
 -- CR 508.5 / CR 802.2a: the defending player an attacking creature's ability
 -- refers to -- "the player that creature is attacking, the controller of the

@@ -2138,6 +2138,9 @@ effectLintSpec s registry = Spec.describe s "Lint" $ do
           -- A strict lead or trail is at most one seat; any other comparison
           -- admits ties, a SET.
           PlayerRef.Superlative leading -> strictSuperlative leading
+          -- A SET -- Relative Opponent's answer: CR 802.2 names every
+          -- defending player.
+          PlayerRef.InRole _ -> False
         -- WHICH opcodes bind a batch is this enumeration and not this paragraph
         -- -- readSingly's posture below. An opcode belongs here when
         -- Pawl.Engine.Resolve hands its slot to `bindObjectsSlot`, and the guard

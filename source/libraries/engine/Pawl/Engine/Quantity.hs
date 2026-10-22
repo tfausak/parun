@@ -1410,6 +1410,7 @@ playerRefIsSlotless ref = case ref of
   PlayerRef.Attacking _ -> False
   -- A fact about the board, Relative's answer: no slot is read.
   PlayerRef.Superlative _ -> True
+  PlayerRef.InRole _ -> True
 
 -- CR 611.2b: replace every PlayerRef.InSlot this quantity names with the baked
 -- PlayerRef.Specific arm, off the players the resolution's bindings name, and
@@ -1481,6 +1482,7 @@ forCandidate pid =
         PlayerRef.ChosenPlayerOfBound _ _ -> ref
         PlayerRef.Attacking _ -> ref
         PlayerRef.Superlative _ -> ref
+        PlayerRef.InRole _ -> ref
    in QuantitySlot.mapPlayerRefs substitute (\c -> c {Count.Type.scope = QuantitySlot.mapScope substitute (Count.Type.scope c)})
 
 -- One reference, baked. The whole of the substitution: every arm above funnels
@@ -1525,6 +1527,7 @@ bakePlayerRef players objects ref = case ref of
   PlayerRef.Attacking _ -> ref
   -- Nothing to bake: the set is read off the live board, Relative's posture.
   PlayerRef.Superlative _ -> ref
+  PlayerRef.InRole _ -> ref
 
 -- Does this quantity read CR 601.2b's announced X? Since #14 retired X's
 -- dedicated constructor, that read is a Quantity.InSlot naming
