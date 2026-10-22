@@ -6,10 +6,11 @@ import qualified Pawl.Types.ObjectRef as ObjectRef
 import qualified Pawl.Types.RestrictedCreatures as RestrictedCreatures
 
 -- | The payload of Pawl.Types.Effect's RequireAttack arm: CR 508.1d's
--- requirement that the creatures named attack what the defender names, for this
--- duration. Alluring Siren's "target creature an opponent controls attacks you
--- this turn if able"; Gideon Jura's "creatures that player controls attack
--- Gideon Jura if able".
+-- requirement that the creatures named attack what the defender names, or
+-- anything when it names nothing, for this duration. Alluring Siren's "target
+-- creature an opponent controls attacks you this turn if able"; Gideon Jura's
+-- "creatures that player controls attack Gideon Jura if able"; Courtly
+-- Provocateur's "target creature attacks this turn if able".
 --
 -- The two sides are DIFFERENT types where Pawl.Types.RequireBlock's are both
 -- ObjectRefs, and that is CR 508.1b: what a creature attacks is a player, a
@@ -20,6 +21,8 @@ data RequireAttack = MkRequireAttack
     -- | Named for a creature a ref picks at resolution (Alluring Siren), Matching
     -- for CR 611.2c's class re-read at each declaration (Taunt).
     attacker :: RestrictedCreatures.RestrictedCreatures ObjectRef.ObjectRef,
-    defender :: AttackTargetRef.AttackTargetRef
+    -- | Nothing names none, "attacks this turn if able" (Courtly Provocateur):
+    -- any announcement CR 508.1b admits obeys it.
+    defender :: Maybe AttackTargetRef.AttackTargetRef
   }
   deriving (Eq, Ord, Show)

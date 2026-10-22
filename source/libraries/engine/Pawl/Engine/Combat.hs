@@ -60,7 +60,6 @@ import qualified Pawl.Types.Keyword as Keyword
 import qualified Pawl.Types.ManaAbilityPerformer as ManaAbilityPerformer
 import qualified Pawl.Types.Object as Object
 import Pawl.Types.ObjectId (ObjectId)
-import qualified Pawl.Types.Onset as Onset
 import qualified Pawl.Types.OptionalDecision as OptionalDecision
 import qualified Pawl.Types.PermanentActed as PermanentActed
 import qualified Pawl.Types.PermanentAction as PermanentAction
@@ -68,6 +67,7 @@ import Pawl.Types.PlayerId (PlayerId)
 import qualified Pawl.Types.ProjectedCharacteristics as PC
 import qualified Pawl.Types.Prompt as Prompt
 import qualified Pawl.Types.TapState as TapState
+import qualified Pawl.Types.TurnWindow as TurnWindow
 
 emptyCombat :: Combat
 emptyCombat =
@@ -2286,7 +2286,7 @@ attemptAttackDeclaration perform pid rejected = do
             answer <- Game.mayChooseAmong (\enlistDecider who -> Prompt.ChooseEnlist enlistDecider who oid) you enlistCandidates
             Monad.forM_ answer $ \enlisted -> do
               Event.tap enlisted
-              State.modify' (Event.armDelayed Keyword.Engine.enlistReflexive oid you (Map.singleton Binding.tappedPermanent (Binding.toObject enlisted)) Onset.Immediately Nothing)
+              State.modify' (Event.armDelayed Keyword.Engine.enlistReflexive oid you (Map.singleton Binding.tappedPermanent (Binding.toObject enlisted)) (Just TurnWindow.AnyTurn) Nothing)
         gs1 <- State.get
         -- CR 508.1h: the total cost to attack is determined once and then LOCKED
         -- IN -- this `let`. Asking AttackCost.totalCost a second time is what the

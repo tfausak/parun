@@ -4,6 +4,8 @@ import qualified Pawl.Codec.Onset as Onset
 import qualified Pawl.JsonCodec.Common as Common
 import qualified Pawl.Spec as Spec
 import qualified Pawl.Types.Onset as Onset
+import qualified Pawl.Types.PlayerRef as PlayerRef
+import qualified Pawl.Types.PlayerRelation as PlayerRelation
 
 spec :: (Monad m, Monad n) => Spec.Spec m n -> n ()
 spec s = Spec.describe s "Pawl.Codec.Onset" $ do
@@ -13,21 +15,17 @@ spec s = Spec.describe s "Pawl.Codec.Onset" $ do
       Onset.codec
       Onset.Immediately
       " {\"type\":\"Immediately\"} "
-  Spec.it s "FromYourNextTurn" $
+  Spec.it s "FromNextTurnOf" $
     Common.assertCodec
       s
       Onset.codec
-      Onset.FromYourNextTurn
-      " {\"type\":\"FromYourNextTurn\"} "
+      (Onset.FromNextTurnOf (PlayerRef.Relative PlayerRelation.You))
+      " {\"type\":\"FromNextTurnOf\",\"value\":{\"type\":\"Relative\",\"value\":{\"type\":\"You\"}}} "
   Spec.it s "FromThatExtraTurn" $
     Common.assertCodec
       s
       Onset.codec
       Onset.FromThatExtraTurn
       " {\"type\":\"FromThatExtraTurn\"} "
-  -- Exhaustive where the literals above are representative: Arm.enum derives
-  -- the arm list from the type, so this is what would catch a constructor the
-  -- derivation missed or two that encode alike.
-  Spec.it s "round trips every constructor" $ Common.assertEnumCodec s Onset.codec
   Spec.it s "has a schema" $
     Common.assertHasSchema s Onset.codec

@@ -1,0 +1,41 @@
+{
+  "description": "CR 508.1d Oracle en-Vec: on carol's next turn her chosen creatures must attack, the rest can't, and a chosen one that didn't is destroyed at that turn's end step",
+  "note": "Three seats, so bob's turn sits between the activation and carol's next turn: the Wall carol chose is still on the battlefield as her turn begins, so the end-step trigger did not fire at bob's end step. On carol's turn declining to attack is refused (the Piker must attack, to any defender), and so is attacking with the unchosen Bears. The Wall has defender and cannot attack, so it is destroyed; the Piker attacked and survives.",
+  "board": {
+    "active": "alice",
+    "step": "PrecombatMain",
+    "seats": [
+      {
+        "name": "alice",
+        "battlefield": [{ "card": "Oracle en-Vec", "label": "oracle", "ready": true }],
+        "library": [{ "card": "Island" }, { "card": "Island" }]
+      },
+      {
+        "name": "bob",
+        "library": [{ "card": "Island" }, { "card": "Island" }]
+      },
+      {
+        "name": "carol",
+        "battlefield": [
+          { "card": "Goblin Piker", "label": "piker", "ready": true },
+          { "card": "Wall of Wood", "label": "wall", "ready": true },
+          { "card": "Grizzly Bears", "label": "bears", "ready": true }
+        ],
+        "library": [{ "card": "Island" }, { "card": "Island" }]
+      }
+    ]
+  },
+  "timeline": [
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": { "Activate": { "object": "$oracle", "ability": 0, "targets": ["$carol"] } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "carol", "do": { "Answer": { "prompt": "ChooseAnyNumberOfPermanents", "with": ["$piker", "$wall"] } } },
+    { "turn": 3, "step": "Upkeep", "player": "carol", "check": { "Count": { "player": "carol", "zone": "Battlefield", "card": "Wall of Wood", "count": 1 } } },
+    { "turn": 3, "step": "DeclareAttackers", "player": "carol", "refuse": { "Attack": [] } },
+    { "turn": 3, "step": "DeclareAttackers", "player": "carol", "refuse": { "Attack": ["$piker", "$bears"] } },
+    { "turn": 3, "step": "DeclareAttackers", "player": "carol", "do": { "Attack": ["$piker"] } },
+    { "turn": 3, "step": "DeclareAttackers", "player": "carol", "source": "$piker", "do": { "ChooseAttackTarget": "$bob" } },
+    { "turn": 3, "step": "EndStep", "player": "carol", "do": "Pass" },
+    { "turn": 3, "step": "EndStep", "player": "carol", "check": { "Count": { "player": "carol", "zone": "Graveyard", "card": "Wall of Wood", "count": 1 } } },
+    { "turn": 3, "step": "EndStep", "player": "carol", "check": { "Count": { "player": "carol", "zone": "Battlefield", "card": "Goblin Piker", "count": 1 } } },
+    { "turn": 3, "step": "EndStep", "player": "carol", "check": { "Count": { "player": "carol", "zone": "Battlefield", "card": "Grizzly Bears", "count": 1 } } }
+  ]
+}

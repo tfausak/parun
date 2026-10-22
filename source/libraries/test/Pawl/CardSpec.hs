@@ -699,8 +699,8 @@ objectRefPositions =
         ("gain-control", Effect.GainControl (GainControl.MkGainControl Duration.UntilEndOfTurn (plantedRef "gc") (PlayerRef.Relative PlayerRelation.You)), [plantedRef "gc"]),
         ("require-block", Effect.RequireBlock (RequireBlock.MkRequireBlock Duration.UntilEndOfTurn (RestrictedCreatures.Named (plantedRef "rb-blocker")) (Just (RestrictedCreatures.Named (plantedRef "rb-attacker"))) RequirementArity.EachSubject), [plantedRef "rb-blocker", plantedRef "rb-attacker"]),
         ("prohibit", Effect.Prohibit (Prohibit.MkProhibit Prohibition.Regenerate Duration.UntilEndOfTurn (RestrictedCreatures.Named (plantedRef "cb"))), [plantedRef "cb"]),
-        ("require-attack", Effect.RequireAttack (RequireAttack.MkRequireAttack Duration.UntilEndOfTurn (RestrictedCreatures.Named (plantedRef "ra")) (AttackTargetRef.Players (PlayerRef.Relative PlayerRelation.You))), [plantedRef "ra"]),
-        ("require-attack-permanent", Effect.RequireAttack (RequireAttack.MkRequireAttack Duration.UntilEndOfTurn (RestrictedCreatures.Named (plantedRef "rp-attacker")) (AttackTargetRef.Permanents (plantedRef "rp-defender"))), [plantedRef "rp-attacker", plantedRef "rp-defender"]),
+        ("require-attack", Effect.RequireAttack (RequireAttack.MkRequireAttack Duration.UntilEndOfTurn (RestrictedCreatures.Named (plantedRef "ra")) (Just (AttackTargetRef.Players (PlayerRef.Relative PlayerRelation.You)))), [plantedRef "ra"]),
+        ("require-attack-permanent", Effect.RequireAttack (RequireAttack.MkRequireAttack Duration.UntilEndOfTurn (RestrictedCreatures.Named (plantedRef "rp-attacker")) (Just (AttackTargetRef.Permanents (plantedRef "rp-defender")))), [plantedRef "rp-attacker", plantedRef "rp-defender"]),
         ("forbid-attack", Effect.ForbidAttack (ForbidAttack.MkForbidAttack Duration.UntilEndOfTurn (RestrictedCreatures.Named (plantedRef "fa")) Nothing), [plantedRef "fa"]),
         ("unsuspect", Effect.Unsuspect (plantedRef "us"), [plantedRef "us"]),
         ("shuffle-into-library", Effect.ShuffleIntoLibrary (ShuffleIntoLibrary.MkShuffleIntoLibrary Nothing (NonEmpty.singleton (plantedRef "sl")) Nothing), [plantedRef "sl"]),
@@ -762,7 +762,7 @@ playerRefPositions =
         ("skip-phase", Effect.SkipPhase (SkipPhase.MkSkipPhase (plantedPlayer "sn") PhaseSelector.CombatPhase Uses.Once Duration.Indefinite), [plantedPlayer "sn"]),
         ("gain-player-counters", Effect.GainPlayerCounters (PlayerCounters.MkPlayerCounters (plantedPlayer "gp") PlayerCounterKind.Rad one), [plantedPlayer "gp"]),
         ("remove-player-counters", Effect.RemovePlayerCounters (RemovePlayerCounters.MkRemovePlayerCounters (plantedPlayer "rp") PlayerCounterKind.Rad one Nothing), [plantedPlayer "rp"]),
-        ("require-attack", Effect.RequireAttack (RequireAttack.MkRequireAttack Duration.UntilEndOfTurn (RestrictedCreatures.Named (plantedRef "ra")) (AttackTargetRef.Players (plantedPlayer "ra-defender"))), [plantedPlayer "ra-defender"]),
+        ("require-attack", Effect.RequireAttack (RequireAttack.MkRequireAttack Duration.UntilEndOfTurn (RestrictedCreatures.Named (plantedRef "ra")) (Just (AttackTargetRef.Players (plantedPlayer "ra-defender")))), [plantedPlayer "ra-defender"]),
         ("gain-control", Effect.GainControl (GainControl.MkGainControl Duration.Indefinite (plantedRef "gc") (plantedPlayer "gc")), [plantedPlayer "gc"]),
         ("blight", Effect.Blight (Blight.MkBlight (plantedPlayer "bl") one Nothing), [plantedPlayer "bl"]),
         ("take-extra-turn", Effect.TakeExtraTurn TakeExtraTurn.MkTakeExtraTurn {TakeExtraTurn.player = plantedPlayer "te", TakeExtraTurn.skips = Set.empty, TakeExtraTurn.count = Quantity.Type.Literal 1}, [plantedPlayer "te"]),
@@ -6112,8 +6112,9 @@ effectFilters effect = case effect of
     frame Unframed (durationFilters duration)
       <> restrictedFilters attacker
       <> case defender of
-        AttackTargetRef.Players _ -> []
-        AttackTargetRef.Permanents ref -> frame SourceHostFramed (objectRefFilters ref)
+        Nothing -> []
+        Just (AttackTargetRef.Players _) -> []
+        Just (AttackTargetRef.Permanents ref) -> frame SourceHostFramed (objectRefFilters ref)
   -- CR 114.2's emblem is a whole card too.
   Effect.CreateEmblem card -> overFaces cardFilters card
   Effect.BecomeMonarch _ -> []

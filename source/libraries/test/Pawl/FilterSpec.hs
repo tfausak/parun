@@ -566,16 +566,16 @@ spec s = Spec.describe s "Pawl.Engine.Filter" $ do
       Spec.assertEqWith
         s
         "the atom is replaced in place"
-        (Filter.bakeBound bound (buried (Filter.Type.ControlledByBound slot)))
+        (Filter.bakeBound bound Map.empty (buried (Filter.Type.ControlledByBound slot)))
         (buried (Filter.Type.ControlledByPlayer (player 0)))
       Spec.assertEqWith
         s
         "and left standing when the slot names nobody"
-        (Filter.bakeBound Map.empty (Filter.Type.ControlledByBound slot))
+        (Filter.bakeBound Map.empty Map.empty (Filter.Type.ControlledByBound slot))
         (Filter.Type.ControlledByBound slot)
       Spec.assertBool
         s
-        (Filter.matches self blackCreature (Filter.bakeBound bound (Filter.Type.ControlledByBound slot)))
+        (Filter.matches self blackCreature (Filter.bakeBound bound Map.empty (Filter.Type.ControlledByBound slot)))
         "so the baked filter matches where the unbaked one did not"
   -- CR 702.60a's "with the same name as this spell", the Measures atom's OfSource
   -- shape over a SET of NAMES: CR 201.2 makes the comparison an intersection, so an

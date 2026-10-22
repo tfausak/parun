@@ -1,5 +1,5 @@
--- Covers Pawl.Decks and data/decks: every shipped deck list reads, and the
--- Portal starter decks play a whole game that replays.
+-- Covers Pawl.Decks and data/decks: every shipped deck list reads, and each
+-- set's starter pair plays a whole game that replays.
 module Pawl.DecksSpec where
 
 import qualified Control.Exception as Exception
@@ -28,14 +28,15 @@ spec s registry = do
       parsed <- either (pure . Left . (: []) . Text.unpack) (fmap (either (Left . (: []) . Exception.displayException) (either (Left . fmap (Text.unpack . DeckList.explain)) Right)) . DeckList.parse registry) contents
       Spec.assertEqWith s (path <> ": problems") (Either.fromLeft [] parsed) []
 
-    Spec.it s "two bots finish a game with the Portal starter decks, and it replays clean" $ do
-      let read' name = do
-            contents <- Decks.loadFile (root <> "/" <> name)
-            either (const (pure (Left []))) (fmap (Either.fromRight (Left [])) . DeckList.parse registry) contents
-      decksRead <- (,) <$> read' "portal-starter-1.txt" <*> read' "portal-starter-2.txt"
-      case decksRead of
-        (Right one, Right two) -> played (S.alice, one) (S.bob, two)
-        _ -> Spec.assertFailure s "the starter decks did not read"
+    Monad.forM_ [("Portal", "portal"), ("Portal Second Age", "portal-second-age")] $ \(set, prefix) ->
+      Spec.it s ("two bots finish a game with the " <> set <> " starter decks, and it replays clean") $ do
+        let read' name = do
+              contents <- Decks.loadFile (root <> "/" <> prefix <> name)
+              either (const (pure (Left []))) (fmap (Either.fromRight (Left [])) . DeckList.parse registry) contents
+        decksRead <- (,) <$> read' "-starter-1.txt" <*> read' "-starter-2.txt"
+        case decksRead of
+          (Right one, Right two) -> played (S.alice, one) (S.bob, two)
+          _ -> Spec.assertFailure s "the starter decks did not read"
   where
     played seatOne seatTwo = do
       let matchup = seatOne NonEmpty.:| [seatTwo]

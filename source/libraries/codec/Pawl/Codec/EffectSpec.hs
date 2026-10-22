@@ -2027,12 +2027,12 @@ spec s = Spec.describe s "Pawl.Codec.Effect" $ do
       ( Effect.ArmDelayedTrigger
           ArmDelayedTrigger.MkArmDelayedTrigger
             { ArmDelayedTrigger.name = returnIt,
-              ArmDelayedTrigger.onset = Onset.FromYourNextTurn,
+              ArmDelayedTrigger.onset = Onset.FromNextTurnOf (PlayerRef.Relative PlayerRelation.You),
               ArmDelayedTrigger.duration = Nothing,
               ArmDelayedTrigger.ability = Nothing
             }
       )
-      " {\"type\":\"ArmDelayedTrigger\",\"value\":{\"name\":\"return it\",\"onset\":{\"type\":\"FromYourNextTurn\"}}} "
+      " {\"type\":\"ArmDelayedTrigger\",\"value\":{\"name\":\"return it\",\"onset\":{\"type\":\"FromNextTurnOf\",\"value\":{\"type\":\"Relative\",\"value\":{\"type\":\"You\"}}}}} "
     Common.assertJsonCodec
       s
       toJson
@@ -2040,12 +2040,12 @@ spec s = Spec.describe s "Pawl.Codec.Effect" $ do
       ( Effect.ArmDelayedTrigger
           ArmDelayedTrigger.MkArmDelayedTrigger
             { ArmDelayedTrigger.name = returnIt,
-              ArmDelayedTrigger.onset = Onset.FromYourNextTurn,
+              ArmDelayedTrigger.onset = Onset.FromNextTurnOf (PlayerRef.Relative PlayerRelation.You),
               ArmDelayedTrigger.duration = Just Duration.UntilEndOfTurn,
               ArmDelayedTrigger.ability = Nothing
             }
       )
-      " {\"type\":\"ArmDelayedTrigger\",\"value\":{\"name\":\"return it\",\"onset\":{\"type\":\"FromYourNextTurn\"},\"duration\":{\"type\":\"UntilEndOfTurn\"}}} "
+      " {\"type\":\"ArmDelayedTrigger\",\"value\":{\"name\":\"return it\",\"onset\":{\"type\":\"FromNextTurnOf\",\"value\":{\"type\":\"Relative\",\"value\":{\"type\":\"You\"}}},\"duration\":{\"type\":\"UntilEndOfTurn\"}}} "
   Spec.it s "AffectPlayers" $
     Common.assertJsonCodec
       s
@@ -2078,7 +2078,7 @@ spec s = Spec.describe s "Pawl.Codec.Effect" $ do
     Common.assertCodec
       s
       codec
-      (Effect.RequireAttack (RequireAttack.MkRequireAttack Duration.UntilEndOfTurn (RestrictedCreatures.Named (ObjectRef.InSlot (SlotName.MkSlotName (Text.pack "target")))) (AttackTargetRef.Players (PlayerRef.Relative PlayerRelation.You))))
+      (Effect.RequireAttack (RequireAttack.MkRequireAttack Duration.UntilEndOfTurn (RestrictedCreatures.Named (ObjectRef.InSlot (SlotName.MkSlotName (Text.pack "target")))) (Just (AttackTargetRef.Players (PlayerRef.Relative PlayerRelation.You)))))
       " {\"type\":\"RequireAttack\",\"value\":{\"duration\":{\"type\":\"UntilEndOfTurn\"},\"attacker\":{\"type\":\"Named\",\"value\":{\"type\":\"InSlot\",\"value\":\"target\"}},\"defender\":{\"type\":\"Players\",\"value\":{\"type\":\"Relative\",\"value\":{\"type\":\"You\"}}}}} "
   Spec.it s "ForbidAttack" $
     Common.assertCodec
