@@ -2058,13 +2058,15 @@ requiresSicknessCheck cost =
 -- for one that does not (CR 605.3b).
 --
 -- Reads PROJECTED creature-ness, so a plain land is never sick-gated and an
--- animated one is. Keyed to `pid`: CR 302.6 asks about THEIR control since THEIR
--- most recent turn began, so a settle recorded for anyone else does not answer it.
+-- animated one is. Keyed to the creature's CONTROLLER, not to `pid`, the player
+-- activating: CR 302.6 asks about the controller's control since their most
+-- recent turn began, which differs where an effect lets another player tap it
+-- for mana (Piracy, `pid` standing in only where it has no controller).
 sicknessOkGiven :: Map.Map ObjectId PC.ProjectedCharacteristics -> PlayerId -> ObjectId -> Cost Keyword.Type.Keyword -> GameState -> Bool
 sicknessOkGiven pcs pid oid cost gs =
   not (requiresSicknessCheck cost)
     || not (Set.member CardType.Creature (Projection.cardTypesGiven pcs oid gs))
-    || Summoning.settledOrHastyGiven pcs pid oid gs
+    || Summoning.settledOrHastyGiven pcs (Maybe.fromMaybe pid (Projection.controllerOf oid gs)) oid gs
 
 -- CR 606.2: an activated ability with a loyalty symbol in its cost is a loyalty
 -- ability. The CLASSIFICATION Pawl.Engine.Activate reads for CR 606.3's window
@@ -3085,7 +3087,7 @@ manaActivationsGiven effects measure pcs pid oid printedCost restrictions abilit
         -- CR 109.4a and CR 113.8 make `pid` the rider's "you": a mana ability's
         -- controller is the player activating it, which Mana Cache's "during
         -- their turn" reads (Pawl.ManaSpec's Mana Cache group). CR 602.1b's
-        -- other instruction, who may activate at all, is Mana.permitsRoute.
+        -- other instruction, who may activate at all, is Mana.routeAccess.
         && ActivationRestriction.restrictionsOk pid oid ability restrictions gs
         then
           Activations.MkActivations
@@ -4190,11 +4192,12 @@ aimingSignature pid oid gs cost
           evidence r = if computed then [ofObject r (\o -> toInteger (fromEnum (Game.zoneOf o gs == Just Zone.Battlefield))), ofObject r (`evidenceValue` gs)] else []
           axes = Set.fromList (fmap Claim.Type.axis claims)
           capacity = Mana.supplyCapacity (midPayment (manaActivationsGiven (PlayerEffect.applying pid gs)))
+          borrowed = PlayerEffect.tapForManaGrants pid gs
           pcs = Projection.projectAll gs
           supplies =
             if Set.null axes
               then []
-              else [(source, supply) | source <- Mana.manaSourcesGiven Set.empty capacity (Projection.controlGrants gs) pcs pid gs, supply <- Mana.manaSuppliesGiven capacity pcs pid source gs]
+              else [(source, supply) | source <- Mana.manaSourcesGiven Set.empty capacity (Projection.controlGrants gs) pcs pid gs, supply <- Mana.manaSuppliesGiven capacity pcs pid (borrowed source) source gs]
           -- The yield's OWN claims, narrowed per sacrifice candidate where the
           -- supply prices one (Mana.manaSuppliesGiven's fourth element).
           relevant (_, _, _, own) = filter ((`Set.member` axes) . Claim.Type.axis) (Activations.claims own)
@@ -5946,9 +5949,10 @@ tapForManaWith perform window inFlight refused activator oid = do
     Nothing -> pure (False, noActivations, [], everyRoute)
     Just _ -> do
       -- CR 109.4a/113.8: the mana ability's controller is the player
-      -- activating it -- the permanent's controller, or anyone at all for a
-      -- route printing "any player may activate this ability" (CR 602.1b,
-      -- Mana.permitsRoute). That player makes the colour choice and pays the
+      -- activating it -- the permanent's controller, anyone at all for a
+      -- route printing "any player may activate this ability" (CR 602.1b), or
+      -- a player an effect lets tap it for mana (Piracy), all through
+      -- Mana.routeAccess. That player makes the colour choice and pays the
       -- cost (CR 602.1a).
       --
       -- Not whose POOL the mana lands in, which each AddMana's own reference
@@ -5956,7 +5960,9 @@ tapForManaWith perform window inFlight refused activator oid = do
       -- Yurlok of Scorch Thrash's "Each player adds {B}{R}{G}" fills the whole
       -- table's. See the Payment.Paid branch below.
       let controller = activator
-          permitted = Mana.permitsRoute (Projection.controllerOf oid gs == Just activator) . ManaOption.ability
+          borrowed = PlayerEffect.tapForManaGrants controller gs oid
+          access option = Mana.routeAccess (Projection.controllerOf oid gs == Just activator) borrowed (ManaOption.cost option) (ManaOption.ability option)
+          permitted = Maybe.isJust . access
           -- ONE gather of the player's effects for every option this permanent
           -- offers, rather than one per option: `manaActivations` would take its
           -- own, and that walk is the shape #1073 was about.
@@ -6103,7 +6109,11 @@ tapForManaWith perform window inFlight refused activator oid = do
                         -- Mana.manaOptionsOfGiven could only guess as the
                         -- permanent's controller. A fence: no "any player may
                         -- activate" route in data/cards/ prints one.
-                        let activated = fmap (fmap (fmap (\u -> u {ManaUnit.spendTrigger = fmap (\t -> t {SpendTrigger.controller = controller}) (ManaUnit.spendTrigger u)}))) shares
+                        --
+                        -- CR 106.6: mana made under a grant (Piracy) carries the
+                        -- grant's restriction, whoever's pool it reaches, as
+                        -- Mana.manaSuppliesGiven counted it.
+                        let activated = fmap (fmap (fmap (\u -> maybe id Mana.restrictUnit (Monad.join (access chosen)) u {ManaUnit.spendTrigger = fmap (\t -> t {SpendTrigger.controller = controller}) (ManaUnit.spendTrigger u)}))) shares
                         State.modify' (\g -> List.foldl' (\acc (recipient, units) -> Mana.addMana recipient units acc) g activated)
                         bound2 <- ManaAbilityPerformer.effects perform oid controller bound1 (filter (Maybe.isNothing . ManaAbility.manaProduced) trailing)
                         pure (answers2, bound2, filled <> shares, made <> produced)

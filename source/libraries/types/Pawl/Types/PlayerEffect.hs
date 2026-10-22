@@ -21,6 +21,7 @@ import qualified Pawl.Types.PlotFromZone as PlotFromZone
 import qualified Pawl.Types.Shows as Shows
 import qualified Pawl.Types.SpendManaAsThough as SpendManaAsThough
 import qualified Pawl.Types.StatedFlip as StatedFlip
+import qualified Pawl.Types.TapForMana as TapForMana
 
 -- | CR 611.1's third clause: a continuous effect affecting players or the rules
 -- of the game rather than the characteristics of an object. The player analogue
@@ -109,6 +110,9 @@ data PlayerEffect
   | -- | CR 606.3 / The Wandering Emperor: this player may activate the loyalty
     -- abilities of a matching permanent any time they could cast an instant.
     ActivateLoyaltyAtInstantSpeed (Filter.Filter Keyword.Keyword)
+  | -- | CR 602.2 / 106.12 / Piracy: this player may tap matching permanents
+    -- they don't control for mana.
+    MayTapForMana TapForMana.TapForMana
   | -- | CR 701.6a / 613.11 / Spider-Punk: the matching spells and abilities on the
     -- stack controlled by the players this effect's scope names can't be
     -- countered.

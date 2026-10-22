@@ -240,6 +240,7 @@ import qualified Pawl.Types.StaticAbility as StaticAbility
 import qualified Pawl.Types.Subtype as Subtype.Type
 import qualified Pawl.Types.SubtypeFamily as SubtypeFamily
 import qualified Pawl.Types.TakeExtraTurn as TakeExtraTurn
+import qualified Pawl.Types.TapForMana as TapForMana
 import qualified Pawl.Types.TargetSlot as TargetSlot
 import qualified Pawl.Types.TheseDiscard as TheseDiscard
 import qualified Pawl.Types.TokenPattern as TokenPattern
@@ -482,6 +483,7 @@ rewritePlayerEffect pairs effect = case effect of
   -- names the permanent, so it descends as CastAsThoughItHadFlash's does.
   PlayerEffect.ActivateKeywordAtInstantSpeed _ -> effect
   PlayerEffect.ActivateLoyaltyAtInstantSpeed f -> PlayerEffect.ActivateLoyaltyAtInstantSpeed (Filter.rewrite pairs f)
+  PlayerEffect.MayTapForMana grant -> PlayerEffect.MayTapForMana (TapForMana.MkTapForMana (Filter.rewrite pairs (TapForMana.permanents grant)) (fmap (rewriteManaRestriction pairs) (TapForMana.restriction grant)))
   PlayerEffect.CantBeCountered f -> PlayerEffect.CantBeCountered (Filter.rewrite pairs f)
   PlayerEffect.CantCastMatching f -> PlayerEffect.CantCastMatching (Filter.rewrite pairs f)
   PlayerEffect.PutTappedAsYouCascade f -> PlayerEffect.PutTappedAsYouCascade (Filter.rewrite pairs f)
