@@ -2243,7 +2243,8 @@ forestLand =
                 },
             FaceDownCharacteristics.power = Nothing,
             FaceDownCharacteristics.toughness = Nothing
-          }
+          },
+      FaceDownState.turnsUpBefore = Set.empty
     }
 
 -- Exercises every printed "may" and passes on everything else, which for the
@@ -2332,7 +2333,7 @@ faceUpEffectSpec s registry = Spec.describe s "TurnFaceUp (CR 701.40g)" $ do
   -- whoever controls it -- so the leg cannot pass because the trigger was too
   -- narrow to fire.
   --
-  -- Driven through FaceDown.turnFaceUpByEffect rather than through Showstopping
+  -- Driven through Event.turnFaceUpByEffect rather than through Showstopping
   -- Surprise, which is the narrowest path: the Surprise's damage clause would
   -- kill a 1/1 Farseer at the state-based pass before the counter could be read,
   -- and the sentence under test is about the funnel and not about the card.
@@ -2350,7 +2351,7 @@ faceUpEffectSpec s registry = Spec.describe s "TurnFaceUp (CR 701.40g)" $ do
           Nothing -> Nothing
           Just permanent ->
             let (watcher, g1) = S.addPermanent farseer S.alice gs
-             in Just (watcher, S.runPure S.identityAnswer g1 (FaceDown.turnFaceUpByEffect permanent >> Engine.priorityLoop), permanent)
+             in Just (watcher, S.runPure S.identityAnswer g1 (Event.turnFaceUpByEffect permanent >> Engine.priorityLoop), permanent)
     case (flip_ sorceryBoard sorceryEntered, flip_ creatureBoard creatureEntered) of
       (Just (sorceryWatcher, sorceryAfter, sorceryPermanent), Just (creatureWatcher, creatureAfter, creaturePermanent)) -> do
         Spec.assertEqWith s "CR 701.40g no counter, so the trigger never fired" (S.counterOf CounterKind.PlusOnePlusOne sorceryWatcher sorceryAfter) 0
@@ -2521,7 +2522,7 @@ tappedAmong oids gs = length (filter (\oid -> fmap Object.tapped (Game.lookupObj
 -- disguise asserts the same thing about morph on the same board.
 disguiseSpec :: (Monad m, Monad n) => Spec.Spec m n -> Registry.Registry m -> n ()
 disguiseSpec s registry =
-  let disguised = Facing.FaceDown FaceDownState.MkFaceDownState {FaceDownState.reason = FaceDownReason.Disguised, FaceDownState.listed = FaceDownCharacteristics.disguisedValue}
+  let disguised = Facing.FaceDown FaceDownState.MkFaceDownState {FaceDownState.reason = FaceDownReason.Disguised, FaceDownState.listed = FaceDownCharacteristics.disguisedValue, FaceDownState.turnsUpBefore = Set.empty}
       morphed = Facing.faceDown FaceDownReason.Morphed
       -- CR 702.21a's ward {2}, written as the trigger's cost is written, so the
       -- assertion reads the listing rather than restating it.
@@ -3162,7 +3163,7 @@ turnUpReversalSpec s registry = Spec.describe s "Reversal at a special action" $
 -- creature tokens", so its X is read by the EFFECT as the ability resolves.
 turnedUpXSpec :: (Monad m, Monad n) => Spec.Spec m n -> Registry.Registry m -> n ()
 turnedUpXSpec s registry =
-  let disguised = Facing.FaceDown FaceDownState.MkFaceDownState {FaceDownState.reason = FaceDownReason.Disguised, FaceDownState.listed = FaceDownCharacteristics.disguisedValue}
+  let disguised = Facing.FaceDown FaceDownState.MkFaceDownState {FaceDownState.reason = FaceDownReason.Disguised, FaceDownState.listed = FaceDownCharacteristics.disguisedValue, FaceDownState.turnsUpBefore = Set.empty}
    in Spec.describe s "Turned-up X" $ do
         -- THE PROVING TEST for the target count. Nine Plains: {3} for the
         -- face-down cast and {2}{3}{W} for the disguise cost at X = 2. bob has

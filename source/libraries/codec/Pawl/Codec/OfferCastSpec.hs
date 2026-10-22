@@ -53,7 +53,9 @@ spec s = Spec.describe s "Pawl.Codec.OfferCast" $ do
                   CastOffer.Type.payingInstead = Nothing,
                   CastOffer.Type.spending = ManaSpending.AsProduced,
                   CastOffer.Type.restriction = Nothing,
-                  CastOffer.Type.offeredBy = Nothing
+                  CastOffer.Type.offeredBy = Nothing,
+                  CastOffer.Type.faceDown = Nothing,
+                  CastOffer.Type.payableFromSpent = False
                 },
             OfferCast.repetition = CastRepetition.Once,
             OfferCast.copied = False,
@@ -80,7 +82,9 @@ spec s = Spec.describe s "Pawl.Codec.OfferCast" $ do
                   CastOffer.Type.payingInstead = Nothing,
                   CastOffer.Type.spending = ManaSpending.AsProduced,
                   CastOffer.Type.restriction = Nothing,
-                  CastOffer.Type.offeredBy = Nothing
+                  CastOffer.Type.offeredBy = Nothing,
+                  CastOffer.Type.faceDown = Nothing,
+                  CastOffer.Type.payableFromSpent = False
                 },
             OfferCast.repetition = CastRepetition.Once,
             OfferCast.copied = False,

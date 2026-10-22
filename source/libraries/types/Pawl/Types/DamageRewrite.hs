@@ -167,4 +167,8 @@ data DamageRewrite effect
     -- Pawl.Types.PendingReplacementEffect gives: the module that applies a
     -- replacement is below the one that can run a card's effects.
     RunEffects (Seq.Seq effect)
+  | -- | CR 614.1a / Illusionary Mask: the row's own face-down permanent is turned
+    -- face up first, and the damage then happens to or from it all the same.
+    -- Minted from Pawl.Types.FaceDownState's `turnsUpBefore`, never printed.
+    TurnFaceUp
   deriving (Eq, Ord, Show)

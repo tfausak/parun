@@ -111,7 +111,7 @@ data ReplacementEffect card ability effect
     -- CR 708.11 is what makes the arm reachable at all: the ability belongs to a
     -- permanent that has no abilities while it is face down, so it "is applied
     -- while that permanent is being turned face up, not afterward" --
-    -- Pawl.Engine.FaceDown.performTurnFaceUp raises the event between the status write
+    -- Pawl.Engine.Event.performTurnFaceUp raises the event between the status write
     -- and the CR 708.7 record.
     TurnUpR (TurnUpR.TurnUpR ability effect)
   | -- | CR 701.3a: "As this Equipment becomes attached to a creature . . ."

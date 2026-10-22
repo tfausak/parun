@@ -649,6 +649,9 @@ unspent rewrite = case rewrite of
   -- Cultist's "the next time" is Uses.Once on the row that carries it, which the
   -- CR 614.3 use count spends rather than this.
   DamageRewrite.RunEffects _ -> True
+  -- Illusionary Mask's row stores nothing either: turning the permanent face up
+  -- ends the status it is minted from, which is what takes the row away.
+  DamageRewrite.TurnFaceUp -> True
 
 -- CR 122.1c: does this damage rewrite admit the event's RECIPIENT? The shield's
 -- prevention says "if damage would be dealt to THIS permanent", and that
@@ -674,6 +677,9 @@ admitsRecipient src rewrite de = case rewrite of
   DamageRewrite.RedirectNext _ _ -> True
   DamageRewrite.RedirectMatching _ -> True
   DamageRewrite.RunEffects _ -> True
+  -- Illusionary Mask's two rows scope themselves by pattern, one naming the
+  -- source and one the recipient (Projection.turnUpOf).
+  DamageRewrite.TurnFaceUp -> True
 
 -- CR 614.1: does this replacement apply to this event -- its printed pattern
 -- matches (`matchesPrinted`), and CR 801.13a lets it reach (`reaches`)?
@@ -866,7 +872,7 @@ matchesPrinted viewOf gs event candidate =
         -- THIS permanent is turned face up".
         --
         -- Matched against the LIVE projection, which for this event is the
-        -- permanent as it is turning over: FaceDown.performTurnFaceUp has already
+        -- permanent as it is turning over: Event.performTurnFaceUp has already
         -- written Facing.FaceUp when it raises the event, so CR 708.11's "would
         -- have ... after it's turned face up" is answered by asking about the
         -- board rather than by a counterfactual.
@@ -2861,6 +2867,7 @@ remainingOf rewrite = case rewrite of
   DamageRewrite.Redirect _ -> Nothing
   DamageRewrite.RedirectMatching _ -> Nothing
   DamageRewrite.RunEffects _ -> Nothing
+  DamageRewrite.TurnFaceUp -> Nothing
 
 -- CR 614.9 over the counted shape CR 615.7 states for preventions -- the
 -- redirect's own countdown rests on Harm's Way's rulings: how much of this
@@ -2913,6 +2920,9 @@ partialCoverage gs allowances candidate event = case (ReplacementCandidate.effec
     -- the effects replace it rather than covering some of its damage.
     DamageRewrite.RunEffects _ -> Nothing
     DamageRewrite.RedirectMatching _ -> Nothing
+    -- Illusionary Mask's rewrite leaves the event whole: the damage it lets
+    -- through is all of it.
+    DamageRewrite.TurnFaceUp -> Nothing
   _ -> Nothing
 
 -- The two halves of a damage event `partialCoverage` split: the covered part,
@@ -3026,6 +3036,9 @@ prevents rewrite = case rewrite of
   -- so CR 615.1a keeps this one out too -- though, unlike a redirect, no damage
   -- is dealt anywhere. CR 615.13's trigger does not see it.
   DamageRewrite.RunEffects _ -> False
+  -- Illusionary Mask says "instead it's turned face up and ... is dealt damage":
+  -- the damage is dealt, so CR 615.1a has nothing to call a prevention.
+  DamageRewrite.TurnFaceUp -> False
 
 -- CR 615.12: applied to damage that CAN'T be prevented, does this rewrite still
 -- spend what `contestedResource` counts? The rule's middle and last sentences
@@ -3065,6 +3078,7 @@ spentInertly rewrite = case rewrite of
   DamageRewrite.RedirectNext _ _ -> False
   DamageRewrite.RedirectMatching _ -> False
   DamageRewrite.RunEffects _ -> False
+  DamageRewrite.TurnFaceUp -> False
 
 -- CR 801.13b: does this prevention reach this damage from its controller's
 -- range? One naming the source reaches only an in-range source, one naming the
@@ -3267,6 +3281,8 @@ redirects rewrite = case rewrite of
   -- The effects run in the damage's place, so nothing is dealt to anybody: no
   -- recipient moves and CR 614.9's prohibition has nothing to stop.
   DamageRewrite.RunEffects _ -> False
+  -- The damage reaches the recipient it was proposed for.
+  DamageRewrite.TurnFaceUp -> False
 
 -- CR 614.9: may a redirection effect move this damage event, or does a card
 -- forbid it (Lava Burst)?
@@ -3820,6 +3836,11 @@ contestedResource gs candidate = case ReplacementCandidate.effect candidate of
       Just Uses.Once -> Just (1, Int.toNaturalSaturating . length)
       Just Uses.Unlimited -> Nothing
       Nothing -> Nothing
+    -- Turning face up spends the STATUS the row is minted from, and a batch's
+    -- later events then find no row at all, so there is nothing to allocate:
+    -- whichever event comes first turns the permanent up, and every one of them
+    -- is dealt.
+    DamageRewrite.TurnFaceUp -> Nothing
   ReplacementEffect.ZoneChangeR {} -> Nothing
   ReplacementEffect.EntryR {} -> Nothing
   ReplacementEffect.DestructionR _ -> Nothing

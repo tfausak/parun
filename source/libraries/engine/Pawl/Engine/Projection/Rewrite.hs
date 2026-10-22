@@ -1656,6 +1656,7 @@ rewriteDamageRewrite pairs rewrite = case rewrite of
   -- CR 614.1a's "instead [do something]", the payload shared with an ability's
   -- clauses -- EntryRewrite.RunEffects' arm exactly.
   DamageRewrite.RunEffects es -> DamageRewrite.RunEffects (fmap (rewriteEffect pairs) es)
+  DamageRewrite.TurnFaceUp -> rewrite
 
 -- CR 612.1 through what a CR 614.1a draw replacement does. The wish filter is the
 -- one printed word a draw rewrite can hold, and it is the SAME Filter

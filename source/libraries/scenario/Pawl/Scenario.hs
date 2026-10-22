@@ -532,7 +532,7 @@ facingFor reason = case reason of
   FaceDownReason.Cloaked -> listing
   _ -> Facing.faceDown reason
   where
-    listing = Facing.FaceDown FaceDownState.MkFaceDownState {FaceDownState.reason = reason, FaceDownState.listed = FaceDownCharacteristics.disguisedValue}
+    listing = Facing.FaceDown FaceDownState.MkFaceDownState {FaceDownState.reason = reason, FaceDownState.listed = FaceDownCharacteristics.disguisedValue, FaceDownState.turnsUpBefore = Set.empty}
 
 -- Answering -------------------------------------------------------------------
 

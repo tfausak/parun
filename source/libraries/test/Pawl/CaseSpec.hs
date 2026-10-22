@@ -212,7 +212,7 @@ proofBoard proof detective swamp lands =
 -- CR 702.168b's facing, listing and all: a disguise cast is face down with ward
 -- {2}, which CR 708.2a's bare default does not carry.
 disguised :: Facing.Facing
-disguised = Facing.FaceDown FaceDownState.MkFaceDownState {FaceDownState.reason = FaceDownReason.Disguised, FaceDownState.listed = FaceDownCharacteristics.disguisedValue}
+disguised = Facing.FaceDown FaceDownState.MkFaceDownState {FaceDownState.reason = FaceDownReason.Disguised, FaceDownState.listed = FaceDownCharacteristics.disguisedValue, FaceDownState.turnsUpBefore = Set.empty}
 
 -- The permanent a move added to the battlefield, or Nothing when it added none
 -- or several -- which names the new incarnation without asking what card is

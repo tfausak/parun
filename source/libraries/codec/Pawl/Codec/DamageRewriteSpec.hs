@@ -113,4 +113,10 @@ spec s = Spec.describe s "Pawl.Codec.DamageRewrite" $ do
       (DamageRewrite.codec (Effect.codec Card.codec (GrantedAbility.codec Card.codec)))
       (DamageRewrite.RunEffects (Seq.fromList [Effect.Type.Destroy (Destroy.MkDestroy (ObjectRef.InSlot (SlotName.MkSlotName (Text.pack "creature"))) Regenerability.Regenerable Nothing Nothing Nothing)]))
       " {\"type\":\"RunEffects\",\"value\":[{\"type\":\"Destroy\",\"value\":{\"ref\":{\"type\":\"InSlot\",\"value\":\"creature\"},\"regenerability\":{\"type\":\"Regenerable\"}}}]} "
+  Spec.it s "TurnFaceUp" $
+    Common.assertCodec
+      s
+      (DamageRewrite.codec (Effect.codec Card.codec (GrantedAbility.codec Card.codec)))
+      DamageRewrite.TurnFaceUp
+      " {\"type\":\"TurnFaceUp\"} "
   Spec.it s "has a schema" $ Common.assertHasSchema s (DamageRewrite.codec (Effect.codec Card.codec (GrantedAbility.codec Card.codec)))

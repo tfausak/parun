@@ -1902,7 +1902,7 @@ announcedXOf oid gs = Maybe.fromMaybe 0 (Monad.join (liveOrLastKnown Object.anno
 -- it CR 613.7f's new timestamp -- "a permanent receives a new timestamp each time
 -- it turns face up or face down". The primitive BOTH turning-over roads share,
 -- Pawl.Engine.Resolve's Effect.TurnFaceDown arm and
--- Pawl.Engine.FaceDown.performTurnFaceUp, so neither can end up with the write
+-- Pawl.Engine.Event.performTurnFaceUp, so neither can end up with the write
 -- and without the stamp.
 --
 -- ONE object per call and one stamp per call, unlike turnFaceOver above: rule

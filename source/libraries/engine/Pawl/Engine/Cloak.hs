@@ -21,6 +21,7 @@ module Pawl.Engine.Cloak where
 
 import qualified Control.Monad as Monad
 import qualified Control.Monad.Trans.State.Strict as State
+import qualified Data.Set as Set
 import Numeric.Natural (Natural)
 import qualified Pawl.Engine.Event as Event
 import qualified Pawl.Engine.Game as Game
@@ -48,7 +49,8 @@ riders =
         Just
           FaceDownState.MkFaceDownState
             { FaceDownState.reason = FaceDownReason.Cloaked,
-              FaceDownState.listed = FaceDownCharacteristics.disguisedValue
+              FaceDownState.listed = FaceDownCharacteristics.disguisedValue,
+              FaceDownState.turnsUpBefore = Set.empty
             }
     }
 

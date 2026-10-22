@@ -25,6 +25,7 @@ import qualified Pawl.Engine.Combat as Combat
 import qualified Pawl.Engine.Cost as Cost
 import qualified Pawl.Engine.Damage as Damage
 import qualified Pawl.Engine.Engine as Engine
+import qualified Pawl.Engine.Event as Event
 import qualified Pawl.Engine.FaceDown as FaceDown
 import qualified Pawl.Engine.Game as Game
 import qualified Pawl.Engine.Mana as Mana
@@ -1760,7 +1761,7 @@ interchangeableSourcesSpec s registry = Spec.describe s "Interchangeable mana so
         (elfA, elfB) = case NonEmpty.toList elves of
           a : b : _ -> (a, b)
           _ -> (NonEmpty.head elves, NonEmpty.head elves)
-        hit pairs gs = S.runPure S.identityAnswer gs (Damage.applyDamage [Damage.damageEvent gs DamageKind.Combat source (Recipient.ToCreature victim) 1 | (source, victim) <- pairs])
+        hit pairs gs = S.runPure S.identityAnswer gs (Damage.applyDamage [Event.damageEvent gs DamageKind.Combat source (Recipient.ToCreature victim) 1 | (source, victim) <- pairs])
         apart = hit [(first, elfA), (second, elfB)] ready
         together = hit [(first, elfA), (first, elfB)] ready
         (offers, paid, after) = greenWindow apart

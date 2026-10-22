@@ -674,6 +674,7 @@ import qualified Pawl.Codec.TriggeredAbilitySpec
 import qualified Pawl.Codec.TurnFaceDownSpec
 import qualified Pawl.Codec.TurnRoleSpec
 import qualified Pawl.Codec.TurnScopeSpec
+import qualified Pawl.Codec.TurnUpEventSpec
 import qualified Pawl.Codec.TurnUpProcedureSpec
 import qualified Pawl.Codec.TurnUpRSpec
 import qualified Pawl.Codec.TurnUpRewriteSpec
@@ -1571,6 +1572,7 @@ spec s registry = do
   Pawl.Codec.TurnFaceDownSpec.spec s
   Pawl.Codec.TurnRoleSpec.spec s
   Pawl.Codec.TurnScopeSpec.spec s
+  Pawl.Codec.TurnUpEventSpec.spec s
   Pawl.Codec.TurnUpProcedureSpec.spec s
   Pawl.Codec.TurnUpRewriteSpec.spec s
   Pawl.Codec.TurnUpRSpec.spec s

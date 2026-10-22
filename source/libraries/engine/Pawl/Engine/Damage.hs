@@ -20,7 +20,6 @@ import qualified Pawl.Engine.Event as Event
 import qualified Pawl.Engine.Game as Game
 import qualified Pawl.Engine.Projection as Projection
 import qualified Pawl.Engine.Projection.View as Projection
-import qualified Pawl.Engine.Subtype as Subtype
 import qualified Pawl.Engine.Turn as Turn
 import qualified Pawl.Extra.Integer as Integer
 import qualified Pawl.Extra.Natural as Natural
@@ -49,10 +48,10 @@ import qualified Pawl.Types.Player as Player
 import qualified Pawl.Types.PlayerCounterKind as PlayerCounterKind
 import Pawl.Types.PlayerId (PlayerId)
 import qualified Pawl.Types.Prevention as Prevention
-import qualified Pawl.Types.ProjectedCharacteristics as PC
 import qualified Pawl.Types.Prompt as Prompt
 import qualified Pawl.Types.Recipient as Recipient
 import qualified Pawl.Types.Teams as Teams
+import qualified Pawl.Types.TurnUpEvent as TurnUpEvent
 
 -- CR 514.2: during the cleanup step, all damage marked on permanents is removed.
 --
@@ -216,71 +215,6 @@ lethalRemaining gs oid =
         Nothing -> 0
         Just t -> Integer.toNaturalSaturating (t - toInteger marked)
 
--- One damage event, with its deal-time riders read off the projection HERE
--- rather than re-derived when they are consumed: each is a fact about the source
--- AS THE DAMAGE IS DEALT, and the source may be gone by the time the CR 704.5h
--- SBA or a later reader asks. CR 702.2e, CR 702.90d, CR 702.15c and CR 702.80b
--- say so outright for deathtouch, infect, lifelink and wither. Rule 702.164 has
--- NO such clause, so toxic's total value (CR 702.164b) is captured by analogy
--- rather than by citation -- observably the same today, since applyDamage runs
--- in the same instant, and it keeps the CR 608.2i record self-contained.
---
--- Lifelink's rider carries WHO rather than WHETHER, because CR 702.15b's answer
--- is a player. Projection.controllerWithLastKnown answers controllerOf for a
--- source that exists, which is both of that rule's clauses at once and answers in
--- any zone, which is what CR 702.15d needs.
---
--- Read through the ...WithLastKnown readers rather than the plain ones, because
--- the source may already have CEASED by the time it deals damage -- Ghitu
--- Fire-Eater sacrifices itself to pay for the ability that then deals its
--- damage. The plain readers answer False, 0 and Nothing for an id that names
--- nothing, which would silently report every rider absent rather than as it last
--- was, against CR 702.2e, CR 702.15c, CR 702.90d, CR 702.80b and CR 608.2h.
---
--- One fallback for all of the riders, not one each: they are read here at a
--- single site off readers that share one liveness test (Game.lastKnownOf),
--- so deathtouch and lifelink cannot come to disagree about whether the source is
--- still there. Every damage the engine deals is built here, so no assignment
--- site can capture two riders and forget the third.
---
--- CR 702.76a's and CR 702.173a's three reads join them for that reason and not
--- only for uniformity: both rules ask what the source WAS "at the time it dealt
--- that damage", so a creature that connected and then died has to keep
--- answering. Commander.isCommander is the one read with no last-known fallback
--- of its own -- CR 903.3's designation sits on the OWNER (Pawl.Types.Player), so
--- it survives the object, but Game.componentsOf needs the object to find the
--- card, which is why the answer is frozen here.
-damageEvent :: GameState -> DamageKind.DamageKind -> ObjectId -> Recipient.Recipient -> Natural -> DamageEvent.DamageEvent
-damageEvent gs kind source target amount =
-  let -- One projection for the keyword and creature-type riders.
-      characteristics = Projection.projectWithLastKnown source gs
-      keywords = PC.keywords characteristics
-      has keyword = Map.member keyword keywords
-      -- CR 702.164b: toxic is parameterized, so its rider is the SUM of every
-      -- instance's N rather than a membership test -- Projection.totalToxic's
-      -- fold, taken over the same map so it shares the fallback.
-      toxic = Projection.toxicIn keywords
-      -- CR 608.2h once for the two riders that ask it: rule 702.15b's payee and
-      -- rule 702.76a's and rule 702.173a's "under your control".
-      controller = Projection.controllerWithLastKnown source gs
-   in DamageEvent.MkDamageEvent
-        { DamageEvent.source = source,
-          DamageEvent.target = target,
-          DamageEvent.amount = amount,
-          DamageEvent.dealtByDeathtouch = has Keyword.Deathtouch,
-          DamageEvent.dealtByInfect = has Keyword.Infect,
-          DamageEvent.dealtByWither = has Keyword.Wither,
-          DamageEvent.dealtByToxic = toxic,
-          DamageEvent.dealtByLifelink =
-            if has Keyword.Lifelink
-              then controller
-              else Nothing,
-          DamageEvent.dealtByController = controller,
-          DamageEvent.dealtByCreatureTypes = Set.filter Subtype.isCreatureType (PC.subtypes characteristics),
-          DamageEvent.dealtByCommander = Commander.isCommander source gs,
-          DamageEvent.kind = kind
-        }
-
 -- CR 510.1b: what an attacking creature assigns its combat damage TO, or Nothing
 -- when it is not currently attacking anything and so assigns none.
 --
@@ -440,7 +374,7 @@ attackerAssignment gs contested (attacker, target) = case Projection.combatDamag
         let recorded = Combat.blockersOf attacker gs
             allToAttacked :: [DamageEvent.DamageEvent]
             allToAttacked =
-              fmap (\recipient -> damageEvent gs DamageKind.Combat attacker recipient power) (Maybe.maybeToList attacked)
+              fmap (\recipient -> Event.damageEvent gs DamageKind.Combat attacker recipient power) (Maybe.maybeToList attacked)
             -- With no blocker left to gate, everything the creature assigns goes
             -- to what it is attacking -- except under CR 702.19c, where the
             -- attacked planeswalker's controller stands behind it and the split is
@@ -479,7 +413,7 @@ attackerAssignment gs contested (attacker, target) = case Projection.combatDamag
             -- single trample blocker WITH excess falls to the prompt arm.
             [blocker]
               | not trample || (not contested && power <= blockerThreshold gs attacker blocker) ->
-                  pure (Nothing, Right [damageEvent gs DamageKind.Combat attacker (Recipient.ToCreature blocker) power], Map.empty)
+                  pure (Nothing, Right [Event.damageEvent gs DamageKind.Combat attacker (Recipient.ToCreature blocker) power], Map.empty)
             blockers -> case Projection.controllerOf attacker gs of
               Nothing -> pure (Nothing, Right [], Map.empty)
               -- CR 702.19b: the attacker's controller chooses how to assign the
@@ -577,7 +511,7 @@ blockerAssignment gs (blocker, attackers) = case Projection.combatDamageAmountOf
         let power = Integer.toNaturalSaturating p
          in case filter (\attacker -> onBattlefield attacker gs) (Set.toList attackers) of
               [] -> pure (Nothing, Right [], Map.empty)
-              [attacker] -> pure (Nothing, Right [damageEvent gs DamageKind.Combat blocker (Recipient.ToCreature attacker) power], Map.empty)
+              [attacker] -> pure (Nothing, Right [Event.damageEvent gs DamageKind.Combat blocker (Recipient.ToCreature attacker) power], Map.empty)
               blocked -> case Projection.controllerOf blocker gs of
                 Nothing -> pure (Nothing, Right [], Map.empty)
                 -- Every threshold is 0: CR 510.1d's division is unconstrained,
@@ -608,7 +542,7 @@ divideAssignment :: GameState -> ObjectId -> Natural -> PlayerId -> [(Recipient.
 divideAssignment gs source power chooser entries = do
   let thresholds = Map.fromList entries
   chosen <- Game.choose (Prompt.AssignCombatDamage (Decide.deciderFor chooser gs) chooser source thresholds power)
-  let toEvent (recipient, n) = damageEvent gs DamageKind.Combat source recipient n
+  let toEvent (recipient, n) = Event.damageEvent gs DamageKind.Combat source recipient n
   pure
     ( Just chooser,
       if wellFormedAssignment thresholds power chosen
@@ -679,9 +613,17 @@ gatherCombatDamage assigns = do
       together a b =
         GameSettings.sharedTeamTurns (GameState.settings gs) && Teams.sameTeam (Game.teams gs) a b
       groups = fmap (concatMap snd) (List.groupBy (\(a, _) (b, _) -> Maybe.fromMaybe False (together <$> a <*> b)) (zip (fmap Just seats <> [Nothing]) waves))
-      assignOne entry = case entry of
-        Left x -> attackerAssignment gs (contestedAssignment gs attackers x) x
-        Right y -> blockerAssignment gs y
+      -- Each creature's assignment reads the board as its turn to assign
+      -- comes, which differs from `gs` only where an earlier creature turned
+      -- face up as it assigned (turnUpToAssign): what that creature now is, its
+      -- banding (CR 702.22k) and its lethal damage (CR 702.19b) included, is
+      -- what a later assignment sees.
+      assignOne entry = do
+        turnUpToAssign entry
+        now <- State.get
+        case entry of
+          Left x -> attackerAssignment now (contestedAssignment now attackers x) x
+          Right y -> blockerAssignment now y
       choosing group (_, (chooser, _, _)) = maybe False (`elem` group) chooser
       -- CR 510.1e: the choosers whose assignment the total makes illegal --
       -- a division that is not one, or an attacking creature's that fails a
@@ -727,6 +669,43 @@ gatherCombatDamage assigns = do
     ( settleAssignments [(divisionEvents division, thresholds) | (Left _, (_, division, thresholds)) <- settled]
         <> concat [divisionEvents division | (Right _, (_, division, _)) <- settled]
     )
+
+-- CR 614.1a / Illusionary Mask: "would assign ... damage ..., instead it's
+-- turned face up and assigns ... damage". Asked as the creature's own
+-- assignment comes up, so the active player's attackers have announced against
+-- a face-down blocker before it turns up to announce its own (CR 510.1's
+-- order): an attacker tramples over it at the 2\/2's lethal damage. See
+-- docs/decisions.md, "When a face-down creature Illusionary Mask cast turns face
+-- up in combat".
+--
+-- No ProposedEvent carries CR 510.1's assignment, because no other replacement
+-- effect reaches it (Scryfall `o:"would assign"`, 2026-10-22, the Mask alone), so
+-- CR 616.1 has one candidate and applying it here is that loop -- Event.tap's
+-- reasoning for the tap, one event over.
+turnUpToAssign :: Either (ObjectId, AttackTarget) (ObjectId, Set.Set ObjectId) -> Game ()
+turnUpToAssign entry = do
+  gs <- State.get
+  let creature = either fst fst entry
+  Monad.when
+    (Event.turnsUpBefore TurnUpEvent.AssignsCombatDamage creature gs && wouldAssign gs entry)
+    (Event.turnFaceUpByEffect creature)
+
+-- Would this creature assign any combat damage on this board? CR 510.1a's power
+-- above 0, and a recipient: what attackerAssignment and blockerAssignment would
+-- address, read the way each reads it. An attacker that is blocked by nothing
+-- still there and lacks trample (CR 510.1c), and a blocker whose attackers have
+-- all gone (CR 510.1d), assign none.
+wouldAssign :: GameState -> Either (ObjectId, AttackTarget) (ObjectId, Set.Set ObjectId) -> Bool
+wouldAssign gs entry =
+  maybe False (> 0) (Projection.combatDamageAmountOf creature gs) && case entry of
+    Left (attacker, target) ->
+      let attacked = Maybe.isJust (combatRecipient gs attacker target)
+          trample = Projection.hasKeyword Keyword.Trample attacker gs || Projection.hasKeyword Keyword.TrampleOverPlaneswalkers attacker gs
+          blocking = any (`onBattlefield` gs) (Combat.blockersOf attacker gs)
+       in if Combat.isBlocked attacker gs then blocking || (trample && attacked) else attacked
+    Right (_, blocked) -> any (`onBattlefield` gs) blocked
+  where
+    creature = either fst fst entry
 
 -- Can any OTHER attacking creature assigning damage this step pay part of a bar
 -- this one is gated by? The two ways CR 702.19b and CR 702.19c let that happen,
@@ -930,7 +909,7 @@ splitExcess gs event =
     player <- Projection.controllerOf oid gs
     pure $
       (if bar > 0 then [event {DamageEvent.amount = bar}] else [])
-        <> [damageEvent gs (DamageEvent.kind event) (DamageEvent.source event) (Recipient.ToPlayer player) excess]
+        <> [Event.damageEvent gs (DamageEvent.kind event) (DamageEvent.source event) (Recipient.ToPlayer player) excess]
 
 -- CR 120.3: carry out a batch of damage events' results -- mark damage on
 -- creatures (CR 120.3e), drain life from players (CR 120.3a), take loyalty and

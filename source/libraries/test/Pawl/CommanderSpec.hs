@@ -621,7 +621,7 @@ partnerSpec s registry = Spec.describe s "Partner" $ do
         seated = gs {GameState.players = Map.adjust (\p -> p {Player.life = 40}) S.bob (GameState.players gs)}
         (rogOid, withRograkh) = asCommanderCard rograkh (S.addPermanent rograkh S.alice) seated
         (akiriOid, both) = asCommanderCard akiri (S.addPermanent akiri S.alice) withRograkh
-        hit n oid g = S.settleSba (S.runPure S.identityAnswer g (Damage.applyDamage [Damage.damageEvent g DamageKind.Combat oid (Recipient.ToPlayer S.bob) n]))
+        hit n oid g = S.settleSba (S.runPure S.identityAnswer g (Damage.applyDamage [Event.damageEvent g DamageKind.Combat oid (Recipient.ToPlayer S.bob) n]))
         eleven = hit 11 akiriOid (hit 11 rogOid both)
     Spec.assertEqWith s "CR 702.124d: eleven from each leaves bob in the game" (statusOf S.bob eleven) (Just Status.Playing)
     Spec.assertEqWith s "the two tallies stand apart at eleven each" (tallyFrom S.alice S.bob eleven) [11, 11]
@@ -1255,7 +1255,7 @@ commanderDamageSpec s registry = Spec.describe s "CommanderDamage" $ do
     case commanderInPlay S.alice board of
       Nothing -> Spec.assertBool s False "expected alice's commander on the battlefield"
       Just oid -> do
-        let event = Damage.damageEvent board DamageKind.Noncombat oid (Recipient.ToPlayer S.bob) 21
+        let event = Event.damageEvent board DamageKind.Noncombat oid (Recipient.ToPlayer S.bob) 21
             after = S.settleSba (S.runPure S.identityAnswer board (Damage.applyDamage [event]))
         Spec.assertEqWith s "bob lost the 21 life" (S.lifeOf S.bob after) (Just 19)
         Spec.assertEqWith s "nothing was tallied" (tallyFrom S.alice S.bob after) [0]
@@ -1267,7 +1267,7 @@ commanderDamageSpec s registry = Spec.describe s "CommanderDamage" $ do
     jedit <- S.printingOf s registry "Jedit Ojanen"
     let board = intoPlay S.carol (intoPlay S.bob (designating [(S.bob, jedit), (S.carol, jedit)] (Setup.emptyGame S.threePlayers)))
         seated = board {GameState.players = Map.adjust (\p -> p {Player.life = 40}) S.alice (GameState.players board)}
-        hit n oid g = S.settleSba (S.runPure S.identityAnswer g (Damage.applyDamage [Damage.damageEvent g DamageKind.Combat oid (Recipient.ToPlayer S.alice) n]))
+        hit n oid g = S.settleSba (S.runPure S.identityAnswer g (Damage.applyDamage [Event.damageEvent g DamageKind.Combat oid (Recipient.ToPlayer S.alice) n]))
     case (commanderInPlay S.bob seated, commanderInPlay S.carol seated) of
       (Just bobs, Just carols) -> do
         let after = hit 11 carols (hit 11 bobs seated)
