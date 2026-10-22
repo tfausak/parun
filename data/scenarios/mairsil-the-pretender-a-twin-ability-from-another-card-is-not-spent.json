@@ -1,0 +1,58 @@
+{
+  "description": "CR 602.5c / 113.2c: once Mairsil, the Pretender has spent the caged Shivan Dragon's {R}: +1/+0, the identically worded one it gains from a caged Spitfire Handler is still unspent that turn",
+  "note": "The two abilities are never on Mairsil at once, so the activation is never ambiguous: the Dragon's is spent, Pull from Eternity takes the Dragon out of exile, and a second Mairsil's entry cages the Handler from hand before the legend rule keeps the first. A record keyed by the ability's text alone would read the Handler's as spent; keyed by the card it came from, it is offered.",
+  "board": {
+    "active": "alice",
+    "step": "PrecombatMain",
+    "seats": [
+      {
+        "name": "alice",
+        "battlefield": [
+          { "card": "Mairsil, the Pretender", "label": "old" },
+          { "card": "Plains", "label": "p1", "ready": true },
+          { "card": "Island", "label": "i1", "ready": true },
+          { "card": "Swamp", "label": "s1", "ready": true },
+          { "card": "Mountain", "label": "m1", "ready": true },
+          { "card": "Mountain", "label": "m2", "ready": true },
+          { "card": "Mountain", "label": "m3", "ready": true },
+          { "card": "Mountain", "label": "m4", "ready": true }
+        ],
+        "hand": [
+          { "card": "Pull from Eternity", "label": "pull" },
+          { "card": "Mairsil, the Pretender", "label": "new" },
+          { "card": "Spitfire Handler", "label": "handler" }
+        ],
+        "exile": [
+          { "card": "Shivan Dragon", "label": "dragon", "counters": [{ "key": { "type": "Named", "value": "cage" }, "value": 1 }] }
+        ],
+        "library": [
+          { "card": "Mountain" },
+          { "card": "Mountain" }
+        ]
+      },
+      {
+        "name": "bob",
+        "library": [
+          { "card": "Mountain" },
+          { "card": "Mountain" }
+        ]
+      }
+    ]
+  },
+  "timeline": [
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": { "Activate": { "object": "$old", "ability": 0, "mana": ["$m1", null] } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass" },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": { "Cast": { "object": "$pull", "targets": ["$dragon"], "mana": ["$p1", null] } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass" },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "check": { "Count": { "player": "alice", "zone": "Graveyard", "card": "Shivan Dragon", "count": 1 } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": { "Cast": { "object": "$new", "mana": ["$i1", "$s1", "$m2", "$m3", null] } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass" },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": { "Answer": { "prompt": "ChooseLegend", "with": "$old" } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass" },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": { "ChooseOptional": { "type": "Exercises" } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": { "Answer": { "prompt": "Search", "with": ["$handler"] } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": { "Activate": { "object": "$old", "ability": 0, "mana": ["$m4"] } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass" },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "check": { "PowerToughness": { "object": "$old", "power": 6, "toughness": 4 } } }
+  ]
+}

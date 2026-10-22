@@ -306,8 +306,8 @@ spec s = Spec.describe s "Pawl.Codec.Modification" $ do
     Common.assertCodec
       s
       codec
-      (Modification.GainExiledCardAbilities ExiledCardAbilities.MkExiledCardAbilities {ExiledCardAbilities.pile = ExiledPile.CraftMaterials, ExiledCardAbilities.restrictions = [ActivationRestriction.OnlyOnceEachTurn]})
-      " {\"type\":\"GainExiledCardAbilities\",\"value\":{\"pile\":{\"type\":\"CraftMaterials\"},\"restrictions\":[{\"type\":\"OnlyOnceEachTurn\"}]}} "
+      (Modification.GainExiledCardAbilities ExiledCardAbilities.MkExiledCardAbilities {ExiledCardAbilities.cards = Filter.IsExiledWithSource ExiledPile.CraftMaterials, ExiledCardAbilities.restrictions = [ActivationRestriction.OnlyOnceEachTurn]})
+      " {\"type\":\"GainExiledCardAbilities\",\"value\":{\"cards\":{\"type\":\"IsExiledWithSource\",\"value\":{\"type\":\"CraftMaterials\"}},\"restrictions\":[{\"type\":\"OnlyOnceEachTurn\"}]}} "
   -- layer 3, CR 612.5: the two sides come from the effect's affected set, so
   -- the arm itself is payload-free.
   Spec.it s "ExchangeTextBoxes" $
