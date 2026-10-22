@@ -475,8 +475,7 @@ filterNames asking criterion = case criterion of
   Filter.Measures measures -> measuresNames asking measures
   Filter.ManaValueIsEven -> mempty
   Filter.ControlledBy _relation -> mempty
-  Filter.ControlledByDefendingPlayer -> mempty
-  Filter.ControlledByActivePlayer -> mempty
+  Filter.ControlledByRole _ -> mempty
   Filter.ControlledByBound slot -> slotNames asking slot
   Filter.ControlledByPlayer _player -> mempty
   Filter.ControlledByRecipient -> mempty

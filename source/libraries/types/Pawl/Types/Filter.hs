@@ -23,6 +23,7 @@ import qualified Pawl.Types.StickerKind as StickerKind
 import qualified Pawl.Types.Subtype as Subtype
 import qualified Pawl.Types.Supertype as Supertype
 import qualified Pawl.Types.Trait as Trait
+import qualified Pawl.Types.TurnRole as TurnRole
 import qualified Pawl.Types.Zone as Zone
 
 -- | A first-order predicate over one candidate -- an object, or (CR 115.1) a
@@ -84,19 +85,13 @@ data Filter keyword
     -- the stack, where an {X} in a cost counts as zero.
     ManaValueIsEven
   | ControlledBy PlayerRelation.PlayerRelation -- CR 109.5 / 102.2: controller relates thus to the perspective.
-  | -- | CR 508.5: the candidate's controller is the DEFENDING PLAYER for the
-    -- object the evaluation comes from (CR 702.39a's provoke), or, for a source
-    -- with no attack to resolve it, any defending player (CR 802.2a, Yare). Not
-    -- @ControlledBy Opponent@, which on a three-seat board admits a creature
-    -- controlled by an opponent who is not being attacked at all. Vacuously False
-    -- outside combat.
-    ControlledByDefendingPlayer
-  | -- | CR 102.1: the candidate's controller is the ACTIVE PLAYER (Nettling
-    -- Imp's "target non-Wall creature the active player has controlled
-    -- continuously since the beginning of the turn"). Not @ControlledBy
-    -- Opponent@, which on a three-seat board admits a creature of an opponent
-    -- whose turn it is not.
-    ControlledByActivePlayer
+  | -- | CR 102.1 / 508.5: the candidate's controller holds this role -- an active
+    -- player (Nettling Imp's "the active player has controlled"; every member of
+    -- the active team under CR 805.4a) or the defending player for the object the
+    -- evaluation comes from (CR 702.39a's provoke), any defending player for a
+    -- source with no attack (CR 802.2a, Yare). Vacuously False where the Context
+    -- holds no such player.
+    ControlledByRole TurnRole.TurnRole
   | -- | CR 603.2: the candidate's controller is the PLAYER BOUND at this slot --
     -- Trygon Predator's "that player", the one the trigger's own event named.
     -- Answered by rewriting (Pawl.Engine.Filter.bakeBound), and vacuously False

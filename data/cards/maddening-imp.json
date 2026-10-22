@@ -18,6 +18,18 @@
                   {
                     "effects": [
                       {
+                        "type": "ChoosePlayer",
+                        "value": {
+                          "scope": {
+                            "type": "InRole",
+                            "value": {
+                              "type": "Active"
+                            }
+                          },
+                          "slot": "namedPlayer"
+                        }
+                      },
+                      {
                         "type": "ChoosePermanents",
                         "value": {
                           "permanents": {
@@ -48,7 +60,8 @@
                                         }
                                       },
                                       {
-                                        "type": "ControlledByActivePlayer"
+                                        "type": "ControlledByBound",
+                                        "value": "namedPlayer"
                                       }
                                     ]
                                   },
@@ -88,7 +101,8 @@
                                   }
                                 },
                                 {
-                                  "type": "ControlledByActivePlayer"
+                                  "type": "ControlledByBound",
+                                  "value": "namedPlayer"
                                 }
                               ]
                             }
@@ -120,7 +134,8 @@
                                   }
                                 },
                                 {
-                                  "type": "ControlledByActivePlayer"
+                                  "type": "ControlledByBound",
+                                  "value": "namedPlayer"
                                 }
                               ]
                             }
@@ -217,7 +232,8 @@
                                           }
                                         },
                                         {
-                                          "type": "ControlledByActivePlayer"
+                                          "type": "ControlledByBound",
+                                          "value": "namedPlayer"
                                         }
                                       ]
                                     }

@@ -35,6 +35,7 @@ import qualified Pawl.Types.StickerKind as StickerKind
 import qualified Pawl.Types.Subtype as Subtype
 import qualified Pawl.Types.Supertype as Supertype
 import qualified Pawl.Types.Trait as Trait
+import qualified Pawl.Types.TurnRole as TurnRole
 import qualified Pawl.Types.Zone as Zone
 
 -- | The `keyword` parameter is instantiated at 'Keyword.Keyword', the only
@@ -107,18 +108,18 @@ spec s = Spec.describe s "Pawl.Codec.Filter" $ do
       (Filter.SharesWithSource Trait.Sector)
       " {\"type\":\"SharesWithSource\",\"value\":{\"type\":\"Sector\"}} "
     Spec.assertNeWith s "CR 702.60a's source is not CR 709.4a's slot" (Codec.encode codec (Filter.SharesWithSource Trait.Name)) (Codec.encode codec (Filter.SameNameAsBound (SlotName.MkSlotName (Text.pack "castSpell"))))
-  Spec.it s "ControlledByDefendingPlayer" $
+  Spec.it s "ControlledByRole Defending" $
     Common.assertCodec
       s
       codec
-      Filter.ControlledByDefendingPlayer
-      " {\"type\":\"ControlledByDefendingPlayer\"} "
-  Spec.it s "ControlledByActivePlayer" $
+      (Filter.ControlledByRole TurnRole.Defending)
+      " {\"type\":\"ControlledByRole\",\"value\":{\"type\":\"Defending\"}} "
+  Spec.it s "ControlledByRole Active" $
     Common.assertCodec
       s
       codec
-      Filter.ControlledByActivePlayer
-      " {\"type\":\"ControlledByActivePlayer\"} "
+      (Filter.ControlledByRole TurnRole.Active)
+      " {\"type\":\"ControlledByRole\",\"value\":{\"type\":\"Active\"}} "
   Spec.it s "ControlledByBound" $
     Common.assertCodec
       s

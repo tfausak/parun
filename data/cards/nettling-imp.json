@@ -56,7 +56,10 @@
                           }
                         },
                         {
-                          "type": "ControlledByActivePlayer"
+                          "type": "ControlledByRole",
+                          "value": {
+                            "type": "Active"
+                          }
                         },
                         {
                           "type": "ControlledSinceTurnBegan"

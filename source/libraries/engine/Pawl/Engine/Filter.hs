@@ -13,6 +13,7 @@ import qualified Pawl.Engine.Binding as Binding
 import qualified Pawl.Engine.Keyword as Keyword
 import qualified Pawl.Engine.NameWords as NameWords
 import qualified Pawl.Engine.Sector as Sector
+import qualified Pawl.Engine.Turn as Turn
 import qualified Pawl.Types.AbilityName as AbilityName
 import qualified Pawl.Types.Behold as Behold
 import qualified Pawl.Types.BlockStatus as BlockStatus
@@ -84,6 +85,7 @@ import qualified Pawl.Types.TapForTotalPower as TapForTotalPower
 import qualified Pawl.Types.TapPermanents as TapPermanents
 import qualified Pawl.Types.Teams as Teams
 import qualified Pawl.Types.Trait as Trait
+import qualified Pawl.Types.TurnRole as TurnRole
 import qualified Pawl.Types.Ward as Ward
 import qualified Pawl.Types.WhichCounters as WhichCounters
 import qualified Pawl.Types.Zone as Zone
@@ -1110,7 +1112,7 @@ data Context = MkContext
     -- site that can set it True.
     boundUnannounced :: Bool,
     -- CR 508.5: the DEFENDING PLAYER for the source, for the one atom that asks
-    -- (ControlledByDefendingPlayer, CR 702.39a). One player for an attacking
+    -- (ControlledByRole Defending, CR 702.39a). One player for an attacking
     -- source; for a source with no attack to resolve it, CR 802.2a's every
     -- defending player the controller could choose (Yare). Supplied by the caller for
     -- sourceMeasures' reason -- this module holds no game state and cannot read the
@@ -1120,10 +1122,10 @@ data Context = MkContext
     -- LAZY like sourceMeasures, and load-bearingly so: filling it costs a
     -- control-grant walk, and no filter that omits the atom ever forces it.
     defendingPlayers :: [PlayerId.PlayerId],
-    -- CR 102.1: the ACTIVE PLAYER, for the one atom that asks
-    -- (ControlledByActivePlayer). Filled by contextIn from the game it reads;
-    -- Nothing from a bare contextFor, where the atom is vacuously False.
-    activePlayer :: Maybe PlayerId.PlayerId,
+    -- CR 102.1 / 805.4a: the ACTIVE PLAYERS -- one, or every member of the
+    -- active team under shared team turns -- for ControlledByRole Active.
+    -- Filled by contextIn from the game it reads (Turn.activePlayers).
+    activePlayers :: [PlayerId.PlayerId],
     -- The player the surrounding effect is CURRENTLY BEING APPLIED TO, for the
     -- two atoms that ask (ControlledByRecipient, OwnedByRecipient) --
     -- Biorhythm's "the number of creatures they control", Stronghold Discipline's "1 life for each creature
@@ -1657,16 +1659,23 @@ data Context = MkContext
 -- map; what keeps a card out of the positions it is empty in is Pawl.CardSpec's
 -- "CR 110.2 no card asks SameControllerAsBound outside a mode's target slot or an attach destination"
 -- alone, Pawl.Engine.Target.slotContext and Pawl.Engine.Resolve.Slots.effectContext
--- being the only fillers. An atom added
+-- being the only fillers.
+--
+-- CR 102.1's active-player role (ControlledByRole Active, Nettling Imp) reads the
+-- empty `activePlayers` here and matches nothing. What keeps a card out of that
+-- position is construction rather than a lint: every engine Context built over a
+-- game comes from contextIn below, which fills it, leaving only
+-- Pawl.Engine.Projection.View's slot-amount view, which judges no controller.
+-- An atom added
 -- here owes both halves of the same pair: which way its unfilled read answers,
 -- and what holds a card to the positions that fill it.
--- contextFor over a game: its teams (CR 102.4) and its active player (CR 102.1)
--- filled from the state, the two facts about the table a match may ask.
-contextIn :: GameState -> Maybe PlayerId.PlayerId -> Maybe ObjectId.ObjectId -> Context
-contextIn gs p s = (contextFor (GameSettings.teams (GameState.settings gs)) p s) {activePlayer = Just (GameState.activePlayer gs)}
-
 contextFor :: Teams.Teams -> Maybe PlayerId.PlayerId -> Maybe ObjectId.ObjectId -> Context
-contextFor t p s = MkContext {teams = t, perspective = p, source = s, sourceMeasures = Map.empty, sourceColors = Set.empty, sourceSectors = Set.empty, sourceNames = Set.empty, slotAmount = Nothing, defendingPlayers = [], activePlayer = Nothing, recipient = Nothing, shares = Map.empty, slotObjects = Map.empty, cantCrewVehicles = Set.empty, slotNames = Map.empty, slotControllers = Map.empty, slotHostControllers = Map.empty, subjectHostCardTypes = Set.empty, slotCreatureTypes = Map.empty, slotMeasures = Map.empty, slotPlayers = Map.empty, boundAmounts = Map.empty, slotStickers = Map.empty, slotVotes = Map.empty, boundUnannounced = False, sourceAttachedTo = Nothing, evaluated = Nothing, sourceEntrants = Set.empty, sourceOwner = Nothing, sourceChosenNames = Map.empty, carrierChosenPlayer = Nothing, aimingController = Nothing, sourceChosenColors = Set.empty, sourceChosenSubtype = Nothing, sourceLastExiled = Nothing, sourceExiled = Map.empty, reader = Nothing, candidateMeasures = Nothing}
+contextFor t p s = MkContext {teams = t, perspective = p, source = s, sourceMeasures = Map.empty, sourceColors = Set.empty, sourceSectors = Set.empty, sourceNames = Set.empty, slotAmount = Nothing, defendingPlayers = [], activePlayers = [], recipient = Nothing, shares = Map.empty, slotObjects = Map.empty, cantCrewVehicles = Set.empty, slotNames = Map.empty, slotControllers = Map.empty, slotHostControllers = Map.empty, subjectHostCardTypes = Set.empty, slotCreatureTypes = Map.empty, slotMeasures = Map.empty, slotPlayers = Map.empty, boundAmounts = Map.empty, slotStickers = Map.empty, slotVotes = Map.empty, boundUnannounced = False, sourceAttachedTo = Nothing, evaluated = Nothing, sourceEntrants = Set.empty, sourceOwner = Nothing, sourceChosenNames = Map.empty, carrierChosenPlayer = Nothing, aimingController = Nothing, sourceChosenColors = Set.empty, sourceChosenSubtype = Nothing, sourceLastExiled = Nothing, sourceExiled = Map.empty, reader = Nothing, candidateMeasures = Nothing}
+
+-- contextFor over a game: its teams (CR 102.4) and its active players (CR 102.1,
+-- 805.4a) filled from the state, the two facts about the table a match may ask.
+contextIn :: GameState -> Maybe PlayerId.PlayerId -> Maybe ObjectId.ObjectId -> Context
+contextIn gs p s = (contextFor (GameSettings.teams (GameState.settings gs)) p s) {activePlayers = Turn.activePlayers gs}
 
 -- The ONE object a slot names, for the readers that can take no more than one --
 -- Quantity.AgainstSlot's evaluation, Count's IsControllerOfBound. Nothing where
@@ -1824,14 +1833,20 @@ matches context view predicate = case predicate of
   -- about the candidate -- or, for a source with no attack, IS ONE of the
   -- defending players (CR 802.2a, Yare). False with no controller or no defending
   -- player, the posture the Measures atom takes.
-  Filter.ControlledByDefendingPlayer -> case controller view of
-    Just c -> List.elem c (defendingPlayers context)
+  --
+  -- CR 102.1 / 805.4a: an active player the Context carries, any of them under
+  -- shared team turns. A targeting restriction is the one place a card writes it,
+  -- and there CR 805.9's choice of which active player the ability means is still
+  -- the controller's to make, so any one admits the candidate.
+  Filter.ControlledByRole role -> case controller view of
+    Just c ->
+      List.elem
+        c
+        ( case role of
+            TurnRole.Active -> activePlayers context
+            TurnRole.Defending -> defendingPlayers context
+        )
     Nothing -> False
-  -- CR 102.1: the candidate's controller IS the active player the Context
-  -- carries. False with no controller or no active player.
-  Filter.ControlledByActivePlayer -> case (controller view, activePlayer context) of
-    (Just c, Just a) -> c == a
-    _ -> False
   -- CR 603.2's "that player controls". `bakeBound` below replaces the atom before
   -- either of CR 115's moments judges the slot; a COUNT is matched unbaked, so the
   -- atom reads the Context's slotPlayers there -- Mana Cache's "for each untapped
@@ -1848,7 +1863,7 @@ matches context view predicate = case predicate of
   -- The candidate's controller IS the recipient the effect has currently reached,
   -- which the Context supplies because it is a fact about how far the surrounding
   -- effect has got rather than about the candidate. False unless both are
-  -- readable, ControlledByDefendingPlayer's posture: a candidate with no
+  -- readable, ControlledByRole's posture: a candidate with no
   -- controller has nothing to compare, and no recipient at all is every position
   -- but a per-recipient effect's quantity.
   Filter.ControlledByRecipient -> case (controller view, recipient context) of
@@ -2424,8 +2439,7 @@ rewrite pairs predicate = case predicate of
   Filter.ManaValueIsEven -> predicate
   Filter.ControlledBy _ -> predicate
   -- Untouched for ControlledBy's reason.
-  Filter.ControlledByDefendingPlayer -> predicate
-  Filter.ControlledByActivePlayer -> predicate
+  Filter.ControlledByRole _ -> predicate
   -- Untouched for the same reason twice over: neither a slot name nor a player id
   -- is a word CR 612.1's swap can find in the text.
   Filter.ControlledByBound _ -> predicate
@@ -3181,8 +3195,7 @@ bakeBound players objects predicate = case predicate of
   Filter.Measures _ -> predicate
   Filter.ManaValueIsEven -> predicate
   Filter.ControlledBy _ -> predicate
-  Filter.ControlledByDefendingPlayer -> predicate
-  Filter.ControlledByActivePlayer -> predicate
+  Filter.ControlledByRole _ -> predicate
   Filter.OwnedBy _ -> predicate
   Filter.OwnedByRecipient -> predicate
   Filter.IsSource -> predicate
@@ -3364,8 +3377,7 @@ manaValueThresholds predicate = case predicate of
   Filter.HasKeyword _ -> []
   Filter.HasKeywordFamily _ -> []
   Filter.ControlledBy _ -> []
-  Filter.ControlledByDefendingPlayer -> []
-  Filter.ControlledByActivePlayer -> []
+  Filter.ControlledByRole _ -> []
   Filter.ControlledByBound _ -> []
   Filter.ControlledByPlayer _ -> []
   Filter.ControlledByRecipient -> []
@@ -3524,8 +3536,7 @@ statesAQuality predicate = case predicate of
   Filter.HasKeyword _ -> True
   Filter.HasKeywordFamily _ -> True
   Filter.ControlledBy _ -> True
-  Filter.ControlledByDefendingPlayer -> True
-  Filter.ControlledByActivePlayer -> True
+  Filter.ControlledByRole _ -> True
   Filter.ControlledByBound _ -> True
   Filter.ControlledByPlayer _ -> True
   Filter.ControlledByRecipient -> True
@@ -3695,8 +3706,7 @@ readsSourceValues predicate = case predicate of
   Filter.HasKeyword _ -> False
   Filter.HasKeywordFamily _ -> False
   Filter.ControlledBy _ -> False
-  Filter.ControlledByDefendingPlayer -> False
-  Filter.ControlledByActivePlayer -> False
+  Filter.ControlledByRole _ -> False
   Filter.ControlledByBound _ -> False
   Filter.ControlledByPlayer _ -> False
   Filter.ControlledByRecipient -> False
@@ -3842,8 +3852,7 @@ overBoundSlotsWith f predicate = case predicate of
           Operand.OfEachOtherCandidate _ -> pure predicate
   Filter.ManaValueIsEven -> pure predicate
   Filter.ControlledBy _ -> pure predicate
-  Filter.ControlledByDefendingPlayer -> pure predicate
-  Filter.ControlledByActivePlayer -> pure predicate
+  Filter.ControlledByRole _ -> pure predicate
   -- A PLAYER slot, read singly all the same: `matches` answers it off a slot
   -- naming exactly one player, and bakeBound off Binding.playerSlots, which is
   -- Binding.onlyOne.

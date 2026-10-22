@@ -8,6 +8,7 @@ import qualified Pawl.Types.PlayerMeasure as PlayerMeasure
 import qualified Pawl.Types.PlayerRelation as PlayerRelation
 import qualified Pawl.Types.PlayerScope as PlayerScope
 import qualified Pawl.Types.Superlative as Superlative
+import qualified Pawl.Types.TurnRole as TurnRole
 
 spec :: (Monad m, Monad n) => Spec.Spec m n -> n ()
 spec s = Spec.describe s "Pawl.Codec.PlayerScope" $ do
@@ -42,5 +43,12 @@ spec s = Spec.describe s "Pawl.Codec.PlayerScope" $ do
     mapM_
       (\relation -> Common.assertCodec s PlayerScope.codec (PlayerScope.Related relation) (" {\"type\":\"" <> show relation <> "\"} "))
       [minBound .. maxBound :: PlayerRelation.PlayerRelation]
+  -- Siren's Call's "the active player" (CR 102.1, 805.9).
+  Spec.it s "InRole" $
+    Common.assertCodec
+      s
+      PlayerScope.codec
+      (PlayerScope.InRole TurnRole.Active)
+      " {\"type\":\"InRole\",\"value\":{\"type\":\"Active\"}} "
   Spec.it s "has a schema" $
     Common.assertHasSchema s PlayerScope.codec

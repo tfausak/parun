@@ -404,11 +404,13 @@ Entries are ordered by the first rule each cites.
   controls" attack, a rules change that CR 611.2c keeps live over the turn,
   then destroys "each of those creatures that didn't attack this turn". Is
   that the set as the ability resolved, or the class as the end step reads it?
-- **Rules**: CR 611.2c, 508.1d, 603.7c; CR of 2026-08-07.
+- **Rules**: CR 611.2c, 508.1d, 603.7c, 805.9; CR of 2026-08-07.
 - **Decision**: Both: every creature that was in the class as the ability
   resolved, together with every creature in it at the end step, that did not
   attack. A creature the requirement reached at either moment is one of
-  "those creatures".
+  "those creatures". "The active player" is the one named as the ability
+  resolved (CR 805.9), so the end-step class reads that player, not whoever is
+  active then.
 - **Rejected**: The set alone spares a creature that came under the active
   player's control later, though the requirement reached it. The class alone
   spares a creature the Imp's controller took after it failed to attack.

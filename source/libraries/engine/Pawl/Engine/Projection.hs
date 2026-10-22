@@ -3660,8 +3660,7 @@ filterReads f = case f of
       Operand.OfEachOtherCandidate measure -> measureReads measure
   Filter.Type.ControlledBy _ -> Set.singleton Controller
   -- The candidate's controller; who defends is a combat-record fact.
-  Filter.Type.ControlledByDefendingPlayer -> Set.singleton Controller
-  Filter.Type.ControlledByActivePlayer -> Set.singleton Controller
+  Filter.Type.ControlledByRole _ -> Set.singleton Controller
   Filter.Type.ControlledByBound _ -> Set.singleton Controller
   Filter.Type.ControlledByPlayer _ -> Set.singleton Controller
   Filter.Type.ControlledByRecipient -> Set.singleton Controller
@@ -4010,8 +4009,7 @@ filterReadsPeers f = case f of
     Operand.AmountInSlot _ -> False
     Operand.EnclosingAmount -> False
   Filter.Type.ControlledBy _ -> False
-  Filter.Type.ControlledByDefendingPlayer -> False
-  Filter.Type.ControlledByActivePlayer -> False
+  Filter.Type.ControlledByRole _ -> False
   Filter.Type.ControlledByBound _ -> False
   Filter.Type.ControlledByPlayer _ -> False
   Filter.Type.ControlledByRecipient -> False
