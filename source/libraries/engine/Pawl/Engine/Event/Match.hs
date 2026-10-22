@@ -1095,6 +1095,79 @@ matchesTriggerGiven bindings board gs bearer you cond event = case cond of
     GameEvent.ActivatedAbilityResolved _ -> False
     GameEvent.TriggeredAbilityResolved _ -> False
     GameEvent.CardArrived _ -> False
+  -- CR 120.3: a player the relation admits was DEALT damage, by any source and
+  -- of any kind -- the arm above with the recipient a player rather than the
+  -- bearer.
+  TriggerCondition.PlayerIsDealtDamage relation -> case event of
+    GameEvent.DamageDealt ev -> maybe False (PlayerRelation.holds (Game.teams gs) relation you) (Recipient.playerOf (DamageEvent.target ev))
+    GameEvent.Moved {} -> False
+    GameEvent.StepBegan {} -> False
+    GameEvent.SpellCast {} -> False
+    GameEvent.SpellCopied _ -> False
+    GameEvent.DamagePrevented {} -> False
+    GameEvent.BecameMonarch _ -> False
+    GameEvent.TookInitiative _ -> False
+    GameEvent.Discarded {} -> False
+    GameEvent.Drew {} -> False
+    GameEvent.Revealed {} -> False
+    GameEvent.Looked {} -> False
+    GameEvent.Voted {} -> False
+    GameEvent.VotesRevealed {} -> False
+    GameEvent.AttackerDeclared {} -> False
+    GameEvent.BecameBlocking {} -> False
+    GameEvent.BlocksDeclared {} -> False
+    GameEvent.AttackerBlocked {} -> False
+    GameEvent.AttackerUnblocked _ -> False
+    GameEvent.SpellCountered _ -> False
+    GameEvent.AbilityCountered _ -> False
+    GameEvent.HalfUnlocked {} -> False
+    GameEvent.TurnedFaceUp _ -> False
+    GameEvent.PermanentActed _ -> False
+    GameEvent.Transformed {} -> False
+    GameEvent.BecameDesignated {} -> False
+    GameEvent.Mentored {} -> False
+    GameEvent.Exploited {} -> False
+    GameEvent.BecameCrewed _ -> False
+    GameEvent.Convoked _ -> False
+    GameEvent.Saddled _ -> False
+    GameEvent.Crewed _ -> False
+    GameEvent.PermanentSacrificed {} -> False
+    GameEvent.AbilityTriggered {} -> False
+    GameEvent.LoyaltyAbilityActivated _ -> False
+    GameEvent.LifeLost {} -> False
+    GameEvent.LifeGained {} -> False
+    GameEvent.CountersPut {} -> False
+    GameEvent.CountersRemoved {} -> False
+    GameEvent.ControlChanged {} -> False
+    GameEvent.VentureMarkerEntered {} -> False
+    GameEvent.BecameTarget {} -> False
+    GameEvent.BecameAttached {} -> False
+    GameEvent.BecameUnattached {} -> False
+    GameEvent.LeftTheGame _ -> False
+    GameEvent.Milled {} -> False
+    GameEvent.PlayerActed _ -> False
+    GameEvent.LandPlayed {} -> False
+    GameEvent.LostTheGame _ -> False
+    GameEvent.ManifestedDread {} -> False
+    GameEvent.DieResultSettled _ -> False
+    GameEvent.RolledToVisit _ -> False
+    GameEvent.PlanarDieRolled _ -> False
+    GameEvent.TurnedUpOffDeck _ -> False
+    GameEvent.ChaosEnsued -> False
+    GameEvent.ClassLevelSet _ -> False
+    GameEvent.Plotted _ -> False
+    GameEvent.BecameAttacked _ -> False
+    GameEvent.AttackersDeclared _ -> False
+    GameEvent.BecameTapped _ -> False
+    GameEvent.BecameUntapped _ -> False
+    GameEvent.TappedForMana _ -> False
+    GameEvent.ManaAdded _ -> False
+    GameEvent.ManaAbilityResolved _ -> False
+    GameEvent.CoinFlipped {} -> False
+    GameEvent.StickerPut _ -> False
+    GameEvent.ActivatedAbilityResolved _ -> False
+    GameEvent.TriggeredAbilityResolved _ -> False
+    GameEvent.CardArrived _ -> False
   -- The same event read by a BYSTANDER (CR 510.1b / 510.2): a permanent the Filter
   -- admits dealt combat damage to a player the relation admits, read like
   -- SelfDealsCombatDamageToPlayer's: Teysa, Envoy of Ghosts' "to you", which

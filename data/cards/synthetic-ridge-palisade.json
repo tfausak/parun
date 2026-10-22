@@ -28,7 +28,10 @@
                           }
                         },
                         {
-                          "type": "ControlledByDefendingPlayer"
+                          "type": "ControlledByRole",
+                          "value": {
+                            "type": "Defending"
+                          }
                         }
                       ]
                     },

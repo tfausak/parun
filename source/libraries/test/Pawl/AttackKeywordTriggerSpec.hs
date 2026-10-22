@@ -57,6 +57,7 @@ import qualified Pawl.Types.TargetSlot as TargetSlot
 import qualified Pawl.Types.TriggerCondition as TriggerCondition
 import qualified Pawl.Types.TriggerFrequency as TriggerFrequency
 import qualified Pawl.Types.TriggeredAbility as TriggeredAbility
+import qualified Pawl.Types.TurnRole as TurnRole
 
 -- CR 702.68a's frenzy, which rule 702 states as a triggered ability: "'Frenzy N'
 -- means 'Whenever this creature attacks and isn't blocked, it gets +N/+0 until
@@ -771,7 +772,7 @@ larcenySpec s registry =
 -- CR 702.39a's provoke, which rule 702 states as a triggered
 -- ability and the FIRST whose payload creates a CR 509.1c blocking REQUIREMENT
 -- -- so this is the group that runs a resolution-created requirement through the
--- declare blockers step, and with it Filter.ControlledByDefendingPlayer.
+-- declare blockers step, and with it Filter.ControlledByRole Defending.
 --
 -- Goblin Grappler {R} Creature -- Goblin 1/1 is the card: provoke and nothing
 -- else, so every reading below is the keyword's. Its victims are the pool's
@@ -845,7 +846,7 @@ provokeSpec s registry =
         -- 508.3a's condition, and rule 702.39a's one printed narrowing.
         Spec.it s "CR 702.39b two instances mint two targeting abilities" $ do
           let abilities = Keyword.abilitiesFor Keyword.Type.Provoke 2
-              expectedSlot = TargetSlot.required Pool.Creatures (Just Filter.Type.ControlledByDefendingPlayer)
+              expectedSlot = TargetSlot.required Pool.Creatures (Just (Filter.Type.ControlledByRole TurnRole.Defending))
               slotsOf ability = concatMap (Map.elems . Mode.targetSlots) (Modal.modes (TriggeredAbility.modal ability))
           Spec.assertEqWith s "two abilities" (length abilities) 2
           Spec.assertEqWith

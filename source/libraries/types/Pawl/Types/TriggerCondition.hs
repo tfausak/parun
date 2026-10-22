@@ -98,6 +98,9 @@ data TriggerCondition
   | -- | CR 120.3: the bearer was dealt damage -- the enrage trigger's event
     -- (Ripjaw Raptor).
     SelfIsDealtDamage
+  | -- | CR 120.3 / 603.2c: a player the relation admits was dealt damage, once
+    -- per simultaneous batch and damaged player (Lich).
+    PlayerIsDealtDamage PlayerRelation.PlayerRelation
   | -- | CR 603.2 / 509-510 read by a bystander: a permanent the Filter admits
     -- dealt combat damage to a player the relation admits (Tovolar, Dire
     -- Overlord; Teysa, Envoy of Ghosts).

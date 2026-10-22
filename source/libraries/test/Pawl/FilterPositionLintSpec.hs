@@ -164,6 +164,7 @@ import qualified Pawl.Types.TopOfLibraryUntil as TopOfLibraryUntil
 import qualified Pawl.Types.Trait as Trait
 import qualified Pawl.Types.TriggerCondition as TriggerCondition
 import qualified Pawl.Types.TriggeredAbility as TriggeredAbility
+import qualified Pawl.Types.TurnRole as TurnRole
 import qualified Pawl.Types.TurnUpRewrite as TurnUpRewrite
 import qualified Pawl.Types.WhichCounters as WhichCounters
 import qualified Pawl.Types.WithCounters as WithCounters
@@ -258,7 +259,7 @@ filterAtomsOf leaf predicate = case predicate of
   Filter.Type.NameWordsAtLeast _ -> leaf predicate
   Filter.Type.HasNameOriginallyPrintedIn _ -> leaf predicate
   Filter.Type.Measures _ -> leaf predicate
-  Filter.Type.ControlledByDefendingPlayer -> leaf predicate
+  Filter.Type.ControlledByRole _ -> leaf predicate
   -- A leaf for ControlledBy's reason: one carries a slot name and the other a
   -- PlayerId, and neither holds a Filter for a card author to reach.
   Filter.Type.ControlledByBound _ -> leaf predicate
@@ -2707,11 +2708,11 @@ filterPositionLintSpec s registry = Spec.describe s "Lint" $ do
   -- that keeps that true: what it sweeps is the atom outside a combat
   -- restriction, by re-encoding each face with its restrictions dropped, and
   -- outside a mode's target slot, by subtracting what cardFilters finds there.
-  Spec.it s "CR 508.5 no card writes ControlledByDefendingPlayer outside a combat restriction or a target slot" $ do
+  Spec.it s "CR 508.5 no card writes ControlledByRole Defending outside a combat restriction or a target slot" $ do
     ps <- S.allPrintings s
-    let tag = Text.pack "ControlledByDefendingPlayer"
-        atoms c = jsonAtoms tag (Codec.encode (Face.Codec.codec Card.codec) c)
-        inSlots c = sum [filterAtoms tag f | (InTargetSlot, f) <- cardFilters c]
+    let needle = atomJson (Filter.Type.ControlledByRole TurnRole.Defending)
+        atoms c = occurrences needle (Codec.encode (Face.Codec.codec Card.codec) c)
+        inSlots c = sum [occurrences needle (atomJson f) | (InTargetSlot, f) <- cardFilters c]
         elsewhere c = atoms (c {Face.combatRestrictions = []}) - inSlots c
         offenders = filter (anyFace ((/= 0) . elsewhere) . Printing.card) ps
     Spec.assertEqWith s "the atom is the engine's alone outside a gate" (fmap (S.nameOf . Printing.card) offenders) []
@@ -2728,7 +2729,7 @@ filterPositionLintSpec s registry = Spec.describe s "Lint" $ do
     -- slot finds it, and `elsewhere` does not -- the position Sensational
     -- Spider-Man writes it in.
     piker <- S.printingOf s registry "Goblin Piker"
-    let buried = Filter.Type.And [Filter.Type.Or [Filter.Type.HasCardType CardType.Creature, Filter.Type.Not Filter.Type.ControlledByDefendingPlayer]]
+    let buried = Filter.Type.And [Filter.Type.Or [Filter.Type.HasCardType CardType.Creature, Filter.Type.Not (Filter.Type.ControlledByRole TurnRole.Defending)]]
         targetSlot = TargetSlot.required Pool.Creatures (Just buried)
         planted =
           (S.combinedFace piker)

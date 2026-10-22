@@ -1,0 +1,29 @@
+{
+  "description": "CR 609.3 Lich sacrificing two of three loses alice the game",
+  "note": "Alice controls a token Lich at 0 life -- not a nontoken permanent, so neither sacrificed nor able to lose her the game by dying -- and two Swamps. Bob's Lightning Bolt deals her 3: she sacrifices both Swamps, as much as possible (CR 609.3), and since she couldn't sacrifice three, she loses. The paired scenario with a third Swamp keeps her in.",
+  "board": {
+    "active": "bob",
+    "step": "PrecombatMain",
+    "seats": [
+      {
+        "name": "alice",
+        "life": 0,
+        "battlefield": [
+          { "card": "Lich", "token": true },
+          { "card": "Swamp" },
+          { "card": "Swamp" }
+        ]
+      },
+      {
+        "name": "bob",
+        "battlefield": [{ "card": "Mountain", "label": "mountain" }],
+        "hand": [{ "card": "Lightning Bolt", "label": "bolt" }]
+      }
+    ]
+  },
+  "timeline": [
+    { "turn": 1, "step": "PrecombatMain", "player": "bob", "do": { "Cast": { "object": "$bolt", "targets": ["$alice"], "mana": ["$mountain"] } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "bob", "do": "Pass" }
+  ],
+  "final": [{ "View": { "of": "Result", "is": { "won": "bob" } } }]
+}

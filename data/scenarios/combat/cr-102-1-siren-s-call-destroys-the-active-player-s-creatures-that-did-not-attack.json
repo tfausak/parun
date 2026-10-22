@@ -1,0 +1,48 @@
+{
+  "description": "CR 102.1 Siren's Call: the active player's creatures must attack, and at the end step the non-Wall ones that did not are destroyed",
+  "note": "Cast on alice's turn by bob. The tapped Bears cannot attack and are destroyed; the Wall cannot either and is spared as a Wall; the Piker attacked. carol's Hill Giant belongs to an opponent of bob's who is not the active player, and is untouched. On bob's own turn the second copy is not castable: \"during an opponent's turn\".",
+  "board": {
+    "active": "alice",
+    "step": "Upkeep",
+    "seats": [
+      {
+        "name": "alice",
+        "battlefield": [
+          { "card": "Goblin Piker", "label": "piker", "ready": true },
+          { "card": "Wall of Wood", "label": "wall", "ready": true },
+          { "card": "Grizzly Bears", "label": "bears", "ready": true, "tapped": true }
+        ],
+        "library": [{ "card": "Island" }, { "card": "Island" }]
+      },
+      {
+        "name": "bob",
+        "battlefield": [
+          { "card": "Island", "label": "i1" },
+          { "card": "Island", "label": "i2" }
+        ],
+        "hand": [
+          { "card": "Siren's Call", "label": "call" },
+          { "card": "Siren's Call", "label": "again" }
+        ],
+        "library": [{ "card": "Island" }, { "card": "Island" }]
+      },
+      {
+        "name": "carol",
+        "battlefield": [{ "card": "Hill Giant", "label": "giant", "ready": true }],
+        "library": [{ "card": "Island" }, { "card": "Island" }]
+      }
+    ]
+  },
+  "timeline": [
+    { "turn": 1, "step": "Upkeep", "player": "bob", "do": { "Cast": { "object": "$call", "mana": ["$i1", null] } } },
+    { "turn": 1, "step": "DeclareAttackers", "player": "alice", "refuse": { "Attack": [] } },
+    { "turn": 1, "step": "DeclareAttackers", "player": "alice", "do": { "Attack": ["$piker"] } },
+    { "turn": 1, "step": "DeclareAttackers", "player": "alice", "source": "$piker", "do": { "ChooseAttackTarget": "$bob" } },
+    { "turn": 1, "step": "EndStep", "player": "alice", "do": "Pass" },
+    { "turn": 1, "step": "EndStep", "player": "alice", "check": { "Count": { "player": "alice", "zone": "Graveyard", "card": "Grizzly Bears", "count": 1 } } },
+    { "turn": 1, "step": "EndStep", "player": "alice", "check": { "Count": { "player": "alice", "zone": "Battlefield", "card": "Wall of Wood", "count": 1 } } },
+    { "turn": 1, "step": "EndStep", "player": "alice", "check": { "Count": { "player": "alice", "zone": "Battlefield", "card": "Goblin Piker", "count": 1 } } },
+    { "turn": 1, "step": "EndStep", "player": "alice", "check": { "Count": { "player": "carol", "zone": "Battlefield", "card": "Hill Giant", "count": 1 } } },
+    { "turn": 2, "step": "Upkeep", "player": "bob", "refuse": { "Cast": { "object": "$again", "mana": ["$i1"] } } }
+  ]
+}

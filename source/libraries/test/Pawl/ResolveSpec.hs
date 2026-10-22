@@ -986,6 +986,21 @@ resolveSpec s registry = Spec.describe s "Resolve" $ do
       "CR 608.2d one out of none is impossible, one out of one is not, and up to one is neither"
       [impossible bare (choosing HowMany.one), impossible withBear (choosing HowMany.one), impossible bare (choosing (HowMany.UpTo Nothing))]
       [True, False, False]
+  -- CR 608.2d / 609.3: turning face up a slot that names nobody (an up-to-one
+  -- choice left empty) is vacuously carried out, never impossible; one naming
+  -- only a face-up permanent is. A regression fence rather than a gameplay
+  -- proof: no "may" in data/cards reaches Effect.TurnFaceUp over a slot that can
+  -- be empty.
+  Spec.it s "CR 608.2d turning up a slot naming nobody is never impossible, and a face-up one is" $ do
+    forest <- S.printingOf s registry "Forest"
+    let (land, gs) = S.addPermanent forest S.alice (Setup.emptyGame S.bothPlayers)
+        slot = SlotName.MkSlotName (Text.pack "chosen")
+        impossible legal = Resolve.effectIsImpossible land land S.alice legal gs (Effect.TurnFaceUp slot)
+    Spec.assertEqWith
+      s
+      "CR 608.2d an empty slot is not impossible, a face-up Forest is"
+      [impossible Map.empty, impossible (Map.singleton slot (Set.singleton (Recipient.ToObject land)))]
+      [False, True]
   -- The control, the same board with three cards in hand: two can go, so the
   -- option is a real one, the pinned pair is discarded and the rider draws.
   Spec.it s "CR 608.2d Thrilling Discovery's discard of two is offered over a three-card hand" $ do

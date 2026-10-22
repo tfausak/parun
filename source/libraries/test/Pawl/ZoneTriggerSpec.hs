@@ -1843,6 +1843,11 @@ representativeEvents cond =
         TriggerCondition.SelfIsDealtDamage ->
           noTable (GameEvent.DamageDealt (DamageEvent.MkDamageEvent arrived (Recipient.ToCreature departed) 2 False False False 0 Nothing Nothing mempty False DamageKind.Noncombat))
             NonEmpty.:| [noTable (GameEvent.DamageDealt (DamageEvent.MkDamageEvent arrived (Recipient.ToCreature departed) 3 False False False 0 Nothing Nothing mempty False DamageKind.Combat))]
+        -- CR 120.3's event pointed at a player, alice being the "you", in both
+        -- kinds for the arm above's reason.
+        TriggerCondition.PlayerIsDealtDamage _ ->
+          noTable (GameEvent.DamageDealt (DamageEvent.MkDamageEvent arrived (Recipient.ToPlayer S.alice) 2 False False False 0 Nothing Nothing mempty False DamageKind.Noncombat))
+            NonEmpty.:| [noTable (GameEvent.DamageDealt (DamageEvent.MkDamageEvent arrived (Recipient.ToPlayer S.alice) 3 False False False 0 Nothing Nothing mempty False DamageKind.Combat))]
         -- The same event read by a bystander, and the only one this condition
         -- admits.
         TriggerCondition.PermanentDealsCombatDamageToPlayer _ -> one combatDamage
@@ -2392,6 +2397,7 @@ everyTriggerCondition =
     TriggerCondition.SelfDealsDamageToCreature,
     TriggerCondition.SelfDealsDamage,
     TriggerCondition.SelfIsDealtDamage,
+    TriggerCondition.PlayerIsDealtDamage PlayerRelation.You,
     TriggerCondition.PermanentDealsCombatDamageToPlayer (PermanentDealsCombatDamageToPlayer.MkPermanentDealsCombatDamageToPlayer (Filter.Type.And []) PlayerRelation.AnyPlayer),
     TriggerCondition.PermanentsDealCombatDamageToPlayer (PermanentsDealCombatDamageToPlayer.MkPermanentsDealCombatDamageToPlayer (Filter.Type.And []) PlayerRelation.AnyPlayer False),
     TriggerCondition.CreatureDealtCombatDamageToMonarch,

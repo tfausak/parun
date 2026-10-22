@@ -914,7 +914,7 @@ legalAnswer gs prompt chosen = case prompt of
     known <- lookUp chosen
     pure $ case known >>= Engine.Card.faceNamed chosen of
       Nothing -> False
-      Just face -> Filter.matches (Filter.contextFor (Game.teams gs) (Just chooser) Nothing) (Projection.viewOfCard face) restriction
+      Just face -> Filter.matches (Filter.contextIn gs (Just chooser) Nothing) (Projection.viewOfCard face) restriction
   _ -> pure True
 
 -- | Whether an answer names only what its prompt offers, for a prompt that

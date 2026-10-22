@@ -77,7 +77,7 @@ legalCardName registry failed gs chooser restriction name = do
       Nothing -> False
       Just face ->
         Filter.matches
-          (Filter.contextFor (Game.teams gs) (Just chooser) Nothing)
+          (Filter.contextIn gs (Just chooser) Nothing)
           (Projection.viewOfCard face)
           restriction
 
@@ -160,7 +160,7 @@ lookingUpCards registry failed answer asked = case Asked.prompt asked of
       (fmap (Face.name . NonEmpty.head . Card.Type.faces) . filter (Projection.referenceAdmits (Game.teams (Asked.game asked)) amount predicate))
       (fetched failed (Registry.cards registry))
   Prompt.ReferenceNames predicate ->
-    let context = Filter.contextFor (Game.teams (Asked.game asked)) Nothing Nothing
+    let context = Filter.contextIn (Asked.game asked) Nothing Nothing
         admitted face = Filter.matches context (Projection.viewOfCard face) predicate
      in fmap (concatMap (fmap fst . filter (admitted . snd) . Card.referenceViews)) (fetched failed (Registry.cards registry))
   _ -> answer asked

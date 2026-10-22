@@ -52,6 +52,13 @@ spec s = Spec.describe s "Pawl.Codec.CastingRestriction" $ do
             }
       )
       " {\"type\":\"DuringPhase\",\"value\":{\"window\":{\"type\":\"CombatPhase\"},\"scope\":{\"type\":\"OpponentsTurn\"}}} "
+  -- Siren's Call's "during an opponent's turn" (CR 102.1).
+  Spec.it s "DuringTurn" $
+    Common.assertCodec
+      s
+      CastingRestriction.codec
+      (CastingRestriction.DuringTurn TurnScope.OpponentsTurn)
+      " {\"type\":\"DuringTurn\",\"value\":{\"type\":\"OpponentsTurn\"}} "
   Spec.it s "AttackedThisStep" $
     Common.assertCodec
       s
