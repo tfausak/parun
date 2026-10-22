@@ -1308,7 +1308,7 @@ storedPlayerScope effect = case effect of
 -- splits on its count, since Effect.Pair takes one partner (CR 702.95a), and an
 -- exact count other than one is allowed nowhere: no gameplay test reaches it.
 -- ChosenCardFromAmong splits off its uncapped "any number", which only a
--- reveal's test reaches (Lead the Stampede).
+-- reveal's test (Lead the Stampede) and a move's (Ransack) reach.
 data Question
   = CardInGraveyard
   | CardInHand
@@ -1380,9 +1380,11 @@ chooserRef = Maybe.isJust . questionOf
 -- reached, so this is the fence that keeps a card from loading a combination no
 -- test reaches. A position read through the pure objectRefObjects allows none.
 --
--- A move's: every question but SeveralPermanents and AnyCardsFromAmong.
+-- A move's: every question but SeveralPermanents. The scenario
+-- ransack-sends-the-chosen-to-the-bottom-and-orders-the-rest reaches
+-- AnyCardsFromAmong.
 movedQuestions :: [Question]
-movedQuestions = filter (`notElem` [SeveralPermanents, AnyCardsFromAmong]) [minBound .. maxBound]
+movedQuestions = filter (/= SeveralPermanents) [minBound .. maxBound]
 
 -- The battlefield questions, for the opcodes that act on PERMANENTS -- Tovolar,
 -- Dire Overlord's transform, Teferi, Hero of Dominaria's untap, God-Eternal
@@ -2694,9 +2696,9 @@ effectLintSpec s registry = Spec.describe s "Lint" $ do
       (inert [Effect.Transform onePermanent, moves onePermanent, Effect.Pair onePermanent, reveals onePermanent, Effect.Tap onePermanent])
       [False, False, False, True, True]
     Spec.assertBool s (not (null (inertChoosers (Effect.Pair anyNumber)))) "a pair allows no plural choice"
-    -- "Any number from among them" is tested under a reveal alone.
+    -- "Any number from among them" is tested under a reveal and a move.
     let anyFromAmong = ObjectRef.ChosenCardFromAmong (ChosenCardFromAmong.MkChosenCardFromAmong group anyCard (HowMany.UpTo Nothing) (PlayerRef.Relative PlayerRelation.You))
-    Spec.assertEqWith s "any number from among them is allowed by a reveal alone" (inert [reveals anyFromAmong, moves anyFromAmong, discardsThese anyFromAmong]) [False, True, True]
+    Spec.assertEqWith s "any number from among them is allowed by a reveal and a move alone" (inert [reveals anyFromAmong, moves anyFromAmong, discardsThese anyFromAmong]) [False, False, True]
     -- An exact count other than one has no gameplay test, so no site allows it.
     let exactlyTwo = ObjectRef.ChosenPermanents (ChosenPermanents.MkChosenPermanents anyCard (PlayerRef.Relative PlayerRelation.You) (HowMany.Exactly (Quantity.Type.Literal 2)))
     Spec.assertEqWith s "two exactly chosen permanents are allowed nowhere" (inert [moves exactlyTwo, Effect.Transform exactlyTwo, Effect.Untap exactlyTwo]) [True, True, True]

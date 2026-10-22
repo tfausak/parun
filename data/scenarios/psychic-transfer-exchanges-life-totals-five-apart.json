@@ -1,0 +1,46 @@
+{
+  "description": "CR 701.12c whole card: Psychic Transfer exchanges life totals with a target five apart, and not with one six apart",
+  "note": "Carol is six below alice and dave six above her, so a check of the difference one way only reads differently; bob is exactly five above her, so a strict \"less than five\" reads differently.",
+  "board": {
+    "active": "alice",
+    "step": "PrecombatMain",
+    "seats": [
+      {
+        "name": "alice",
+        "life": 15,
+        "manaPool": "UUUUUUUUUUUUUUU",
+        "library": [{ "card": "Island" }, { "card": "Island" }],
+        "hand": [{ "card": "Psychic Transfer", "label": "first" }, { "card": "Psychic Transfer", "label": "second" }, { "card": "Psychic Transfer", "label": "third" }]
+      },
+      {
+        "name": "bob",
+        "life": 20,
+        "library": [{ "card": "Island" }, { "card": "Island" }]
+      },
+      {
+        "name": "carol",
+        "life": 9,
+        "library": [{ "card": "Island" }, { "card": "Island" }]
+      },
+      {
+        "name": "dave",
+        "life": 26,
+        "library": [{ "card": "Island" }, { "card": "Island" }]
+      }
+    ]
+  },
+  "timeline": [
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": { "Cast": { "object": "$first", "targets": ["$carol"] } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass" },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "check": { "Life": { "player": "alice", "life": 15 } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "check": { "Life": { "player": "carol", "life": 9 } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": { "Cast": { "object": "$second", "targets": ["$bob"] } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass" },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "check": { "Life": { "player": "alice", "life": 20 } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "check": { "Life": { "player": "bob", "life": 15 } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": { "Cast": { "object": "$third", "targets": ["$dave"] } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass" },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "check": { "Life": { "player": "alice", "life": 20 } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "check": { "Life": { "player": "dave", "life": 26 } } }
+  ]
+}

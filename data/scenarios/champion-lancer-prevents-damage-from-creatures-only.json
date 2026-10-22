@@ -1,0 +1,31 @@
+{
+  "description": "CR 615.1a whole card: Champion Lancer prevents the damage a creature would deal it, and not the damage a noncreature spell would",
+  "note": "Goblin Commando's trigger is the creature source and Tarfire the noncreature one; preventing all damage, or none, reads differently from preventing only the creature's.",
+  "board": {
+    "active": "alice",
+    "step": "PrecombatMain",
+    "seats": [
+      {
+        "name": "alice",
+        "manaPool": "RRRRRR",
+        "library": [{ "card": "Island" }, { "card": "Island" }],
+        "battlefield": [{ "card": "Champion Lancer", "label": "lancer" }],
+        "hand": [{ "card": "Goblin Commando", "label": "commando" }, { "card": "Tarfire", "label": "tarfire" }]
+      },
+      {
+        "name": "bob",
+        "library": [{ "card": "Island" }, { "card": "Island" }]
+      }
+    ]
+  },
+  "timeline": [
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": { "Cast": { "object": "$commando" } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass" },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": { "ChooseTargets": { "target": ["$lancer"] } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass" },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "check": { "Damage": { "object": "$lancer", "damage": 0 } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": { "Cast": { "object": "$tarfire", "targets": ["$lancer"] } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass" },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "check": { "Damage": { "object": "$lancer", "damage": 2 } } }
+  ]
+}
