@@ -1870,6 +1870,7 @@ library oracle
     Pawl.Oracle.Continuous
     Pawl.Oracle.Cost
     Pawl.Oracle.Effect
+    Pawl.Oracle.Face
     Pawl.Oracle.Filter
     Pawl.Oracle.Keyword
     Pawl.Oracle.Normalise

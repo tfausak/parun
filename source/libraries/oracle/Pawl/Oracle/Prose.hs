@@ -37,6 +37,18 @@ cardinal n = case n of
   20 -> Text.pack "twenty"
   _ -> Text.pack (show n)
 
+-- | A position spelled out, as Oracle text counts places in a library:
+-- "second from the top". Past tenth it is not spelled out here.
+ordinal :: Integer -> [Text.Text]
+ordinal n = [Text.pack word | (i, word) <- zip [1 ..] ["first", "second", "third", "fourth", "fifth", "sixth", "seventh", "eighth", "ninth", "tenth"], i == n]
+
+-- | The indefinite article before a word, as it is said: "a +1/+1 counter",
+-- "an indestructible counter", "an 8/8 token".
+article :: Text.Text -> Text.Text
+article word =
+  let spoken = ["a", "e", "i", "o", "u", "8", "11", "18"]
+   in Text.pack (if any (\v -> Text.isPrefixOf (Text.pack v) (Text.toLower word)) spoken then "an" else "a")
+
 -- | The text with its first letter in upper case.
 capitalise :: Text.Text -> Text.Text
 capitalise text = case Text.uncons text of

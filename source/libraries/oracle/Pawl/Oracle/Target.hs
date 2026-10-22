@@ -8,16 +8,22 @@ import qualified Data.Maybe as Maybe
 import qualified Data.Text as Text
 import qualified Pawl.Oracle.Filter as Filter
 import qualified Pawl.Oracle.Prose as Prose
+import qualified Pawl.Types.ChosenPermanents as ChosenPermanents
+import qualified Pawl.Types.EachCardInGraveyard as EachCardInGraveyard
+import qualified Pawl.Types.HowMany as HowMany
 import qualified Pawl.Types.Keyword as Keyword
 import qualified Pawl.Types.ObjectRef as ObjectRef
 import qualified Pawl.Types.PlayerRef as PlayerRef
 import qualified Pawl.Types.PlayerRelation as PlayerRelation
+import qualified Pawl.Types.PlayerScope as PlayerScope
 import qualified Pawl.Types.Pool as Pool
 import qualified Pawl.Types.Quantity as Quantity
 import qualified Pawl.Types.SlotCount as SlotCount
 import qualified Pawl.Types.SlotName as SlotName
 import qualified Pawl.Types.TargetCount as TargetCount
 import qualified Pawl.Types.TargetSlot as TargetSlot
+import qualified Pawl.Types.Together as Together
+import qualified Pawl.Types.ZoneScope as ZoneScope
 
 -- | What a renderer needs from around the instruction: what the card calls
 -- itself, the mode's target slots, and how to print a keyword a filter names.
@@ -30,7 +36,10 @@ data Context = MkContext
     -- spell ability (CR 113.3a). Anywhere else a paragraph break starts
     -- another ability (CR 113.2c). Free in a spell: one paragraph (Dark
     -- Offering) or two (Bargain).
-    breaks :: [Text.Text]
+    breaks :: [Text.Text],
+    -- | What the instruction calls the object its trigger event made, if
+    -- anything: "it" after "When this creature dies" (CR 400.7, CR 603.10a).
+    became :: Maybe Text.Text
   }
 
 -- | Words that name something, with the target slots they announce (each slot
@@ -60,6 +69,10 @@ data Determiner
 -- Pawl.Engine.Binding's, which this library cannot import.
 selfSlot :: SlotName.SlotName
 selfSlot = SlotName.MkSlotName (Text.pack "self")
+
+-- | The slot the engine binds the object a zone change made to (CR 400.7).
+becameSlot :: SlotName.SlotName
+becameSlot = SlotName.MkSlotName (Text.pack "became")
 
 -- | The slot the engine binds the instruction's controller to, CR 109.5's
 -- "you".
@@ -93,6 +106,7 @@ object context determiner ref = case ref of
   ObjectRef.InSlot s
     | s == selfSlot -> [MkReference (self context) [] Filter.Singular]
     | s == youSlot -> [MkReference (Text.pack "you") [] Filter.Singular]
+    | s == becameSlot, Just it <- became context -> [MkReference it [] Filter.Singular]
     | otherwise -> do
         named <- target context s
         case (determiner, number named) of
@@ -111,6 +125,23 @@ object context determiner ref = case ref of
         text <- Filter.describe Filter.Plural permanent p
         let bare = null (Filter.adjectives p) && null (Filter.qualifiers p)
         [MkReference (if bare then Text.pack "all " <> text else text) [] Filter.Plural]
+  ObjectRef.EachCardInGraveyard e
+    | determiner == All -> do
+        p <- Filter.phrase (EachCardInGraveyard.filter e) (keyword context)
+        from <- graveyard (EachCardInGraveyard.graveyards e) Nothing
+        text <- Filter.describe Filter.Plural permanent (Filter.merge p (Filter.MkPhrase [] [card] [from]))
+        [MkReference (Text.pack "all " <> text) [] Filter.Plural]
+  ObjectRef.ChosenPermanents c
+    | ChosenPermanents.chooser c == PlayerRef.Relative PlayerRelation.You -> do
+        p <- Filter.phrase (ChosenPermanents.filter c) (keyword context)
+        one <- Filter.describe Filter.Singular permanent p
+        many <- Filter.describe Filter.Plural permanent p
+        case ChosenPermanents.count c of
+          HowMany.Exactly (Quantity.Literal 1) -> [MkReference (Prose.article one <> Text.pack " " <> one) [] Filter.Singular]
+          HowMany.Exactly (Quantity.Literal n) | n > 1 -> [MkReference (Prose.cardinal n <> Text.pack " " <> many) [] Filter.Plural]
+          HowMany.UpTo (Just (Quantity.Literal 1)) -> [MkReference (Text.pack "up to one " <> one) [] Filter.Singular]
+          HowMany.UpTo (Just (Quantity.Literal n)) | n > 1 -> [MkReference (Text.pack "up to " <> Prose.cardinal n <> Text.pack " " <> many) [] Filter.Plural]
+          _ -> []
   ObjectRef.EachPlayer -> [MkReference (Text.pack "each player") [] Filter.Plural]
   ObjectRef.EachOpponent -> [MkReference (Text.pack "each opponent") [] Filter.Plural]
   _ -> []
@@ -141,7 +172,6 @@ target context s = case Map.lookup s (slots context) of
   Just slot
     | Maybe.isNothing (TargetSlot.chooser slot),
       Maybe.isNothing (TargetSlot.perPlayer slot),
-      Maybe.isNothing (TargetSlot.together slot),
       Maybe.isNothing (TargetSlot.amount slot),
       Maybe.isNothing (TargetSlot.divided slot) -> do
         (one, many) <- heads context slot
@@ -169,16 +199,21 @@ among context s = case Map.lookup s (slots context) of
   _ -> []
 
 -- | A slot's head in both numbers, "target" included: ("target creature",
--- "target creatures"), or ("any target", "targets") for CR 115.4's phrase.
+-- "target creatures"), ("another target creature", "other target
+-- creatures"), or ("any target", "targets") for CR 115.4's phrase.
 heads :: Context -> TargetSlot.TargetSlot -> [(Text.Text, Text.Text)]
 heads context slot = case (TargetSlot.pool slot, TargetSlot.filter slot) of
   (Pool.AnyTarget, Nothing) -> [(Text.pack "any target", Text.pack "targets")]
   (Pool.PlayersAndPlaneswalkers, Nothing) -> [(Text.pack "target player or planeswalker", Text.pack "target players and/or planeswalkers")]
-  _ -> fmap (Bifunctor.bimap (Text.pack "target " <>) (Text.pack "target " <>)) (described context slot)
+  _ -> fmap (Bifunctor.bimap (targeted (Text.pack "another target ")) (targeted (Text.pack "other target "))) (described context slot)
+  where
+    -- "other" stands before "target", as "another" in the singular.
+    targeted other text = maybe (Text.pack "target " <> text) (other <>) (Text.stripPrefix (Text.pack "other ") text)
 
 -- | What a slot's objects are, in both numbers and without "target":
 -- ("creature", "creatures"), as an Aura's enchant ability names them too
--- ("Enchant creature", CR 702.5a).
+-- ("Enchant creature", CR 702.5a). Only cards in a graveyard are described
+-- as all in one zone ("from a single graveyard").
 described :: Context -> TargetSlot.TargetSlot -> [(Text.Text, Text.Text)]
 described context slot =
   let both fallback p = do
@@ -190,6 +225,11 @@ described context slot =
         Just f -> Filter.phrase f (keyword context)
       noun s = Filter.MkNoun (Text.pack s) (Just (Text.pack (s <> "s")))
    in case (TargetSlot.pool slot, TargetSlot.filter slot) of
+        (Pool.CardsInGraveyard scope, _) -> do
+          p <- filtered
+          from <- graveyard scope (TargetSlot.together slot)
+          both card (Filter.merge p (Filter.MkPhrase [] [card] [from]))
+        _ | Maybe.isJust (TargetSlot.together slot) -> []
         (Pool.AnyTarget, Just _) -> filtered >>= both (Filter.MkNoun Text.empty Nothing)
         (Pool.Creatures, _) -> filtered >>= both (noun "creature") . (\p -> Filter.merge p (Filter.MkPhrase [] [noun "creature"] []))
         (Pool.Players, _) -> filtered >>= both (noun "player")
@@ -211,6 +251,24 @@ counted c one many = case c of
   SlotCount.Printed (TargetCount.MkTargetCount 0 Nothing) -> [(Text.pack "any number of " <> many, Filter.Plural)]
   SlotCount.AnnouncedX -> [(Text.pack "X " <> many, Filter.Plural)]
   _ -> []
+
+-- | Which graveyards cards are in, as words after their noun: "from your
+-- graveyard", "from a graveyard" or "from graveyards", "from a single
+-- graveyard" for cards all in one (CR 601.2c, Carrion Beetles), "from an
+-- opponent's graveyard". Only a card leaving its graveyard is described yet,
+-- so "in your graveyard" is not spelled out here.
+graveyard :: ZoneScope.ZoneScope -> Maybe Together.Together -> [Filter.Qualifier]
+graveyard scope together = case scope of
+  ZoneScope.Scoped (PlayerScope.Related PlayerRelation.You) -> [Filter.MkQualifier (Text.pack "from your graveyard") (Text.pack "from your graveyard")]
+  ZoneScope.Scoped (PlayerScope.Related PlayerRelation.AnyPlayer)
+    | Just Together.InOneZone <- together -> [Filter.MkQualifier (Text.pack "from a single graveyard") (Text.pack "from a single graveyard")]
+    | otherwise -> [Filter.MkQualifier (Text.pack "from a graveyard") (Text.pack "from graveyards")]
+  ZoneScope.Scoped (PlayerScope.Related PlayerRelation.Opponent) -> [Filter.MkQualifier (Text.pack "from an opponent's graveyard") (Text.pack "from an opponent's graveyard")]
+  _ -> []
+
+-- | The noun a description of cards ends in.
+card :: Filter.Noun
+card = Filter.MkNoun (Text.pack "card") (Just (Text.pack "cards"))
 
 -- | The noun a description of permanents falls back to.
 permanent :: Filter.Noun

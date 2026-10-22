@@ -15,7 +15,7 @@ import qualified Data.Set as Set
 import qualified Data.Text as Text
 import qualified Pawl.Json.Value as Value
 import qualified Pawl.JsonCodec.Common as Common
-import qualified Pawl.Oracle as Oracle
+import qualified Pawl.Oracle.Face as Oracle.Face
 import qualified Pawl.Oracle.Keyword as Oracle.Keyword
 import qualified Pawl.Oracle.Normalise as Normalise
 import qualified Pawl.Types.Card as Card
@@ -66,7 +66,7 @@ candidate value = do
             TypeLine.types = Set.fromList (types :: [CardType.CardType]),
             TypeLine.subtypes = Set.fromList (subtypes :: [Subtype.Subtype])
           }
-      face = Oracle.bare (CardName.MkCardName name) (Just text) cost (Set.fromList indicator) typeLine power toughness (Map.fromListWith (+) (fmap (\k -> (k, 1)) keywords))
+      face = Oracle.Face.bare (CardName.MkCardName name) (Just text) cost (Set.fromList indicator) typeLine power toughness (Map.fromListWith (+) (fmap (\k -> (k, 1)) keywords))
   pure Card.MkCard {Card.layout = Layout.Normal, Card.faces = face NonEmpty.:| []}
 
 -- | Every face's Oracle text from the reduction's @texts@, keyed by card name
