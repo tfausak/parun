@@ -398,6 +398,26 @@ Entries are ordered by the first rule each cites.
   does not evolve", where CR 702.100c agrees with this reading.
 - **Issue**: none.
 
+## Which creatures are "those creatures" after a forced attack on a class
+
+- **Question**: Maddening Imp makes "non-Wall creatures the active player
+  controls" attack, a rules change that CR 611.2c keeps live over the turn,
+  then destroys "each of those creatures that didn't attack this turn". Is
+  that the set as the ability resolved, or the class as the end step reads it?
+- **Rules**: CR 611.2c, 508.1d, 603.7c; CR of 2026-08-07.
+- **Decision**: Both: every creature that was in the class as the ability
+  resolved, together with every creature in it at the end step, that did not
+  attack. A creature the requirement reached at either moment is one of
+  "those creatures".
+- **Rejected**: The set alone spares a creature that came under the active
+  player's control later, though the requirement reached it. The class alone
+  spares a creature the Imp's controller took after it failed to attack.
+- **Site**: `data/cards/maddening-imp.json`'s delayed ability, proved by the
+  scenario "CR 611.2c Maddening Imp: alice's non-Wall creatures must attack,
+  and each of them that did not is destroyed at the end step, even one bob has
+  since taken".
+- **Issue**: #5445.
+
 ## Which timestamp the suspected designation's abilities have
 
 - **Question**: CR 701.60c's menace and "can't block" come from the rules, so

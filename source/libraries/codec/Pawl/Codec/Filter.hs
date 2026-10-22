@@ -61,6 +61,7 @@ codec keywordCodec =
       Arm.payload "HasKeywordFamily" KeywordFamily.codec Filter.HasKeywordFamily (\x -> case x of Filter.HasKeywordFamily y -> Just y; _ -> Nothing),
       Arm.payload "Measures" Measures.codec Filter.Measures (\x -> case x of Filter.Measures y -> Just y; _ -> Nothing),
       Arm.nullary "ControlledByDefendingPlayer" Filter.ControlledByDefendingPlayer,
+      Arm.nullary "ControlledByActivePlayer" Filter.ControlledByActivePlayer,
       Arm.payload "ControlledByBound" SlotName.codec Filter.ControlledByBound (\x -> case x of Filter.ControlledByBound y -> Just y; _ -> Nothing),
       -- Runtime-only, and accepted here anyway: the codec must stay total, so a
       -- corpus lint keeps the pool honest instead (#199) -- the treatment
@@ -193,6 +194,7 @@ tagOf x = case x of
   Filter.HasKeywordFamily {} -> "HasKeywordFamily"
   Filter.Measures {} -> "Measures"
   Filter.ControlledByDefendingPlayer {} -> "ControlledByDefendingPlayer"
+  Filter.ControlledByActivePlayer {} -> "ControlledByActivePlayer"
   Filter.ControlledByBound {} -> "ControlledByBound"
   Filter.ControlledByPlayer {} -> "ControlledByPlayer"
   Filter.ControlledByRecipient {} -> "ControlledByRecipient"

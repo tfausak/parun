@@ -1251,7 +1251,7 @@ framedBySlots gs recipients context =
 -- (Pawl.Engine.Replacement.matchesPermanent).
 contextWithSlots :: GameState -> Maybe PlayerId.PlayerId -> Maybe ObjectId -> Map SlotName (Set Recipient.Recipient) -> Filter.Context
 contextWithSlots gs perspective source slots =
-  framedBySlots gs slots (Filter.contextFor (Game.teams gs) perspective source)
+  framedBySlots gs slots (Filter.contextIn gs perspective source)
 
 -- framedBySlots off a whole binding environment as announced
 -- (Binding.recipientsBySlot over its own targets): CR 603.4's intervening "if",
@@ -1267,7 +1267,7 @@ framedByBindings gs bindings = framedBySlots gs (Binding.recipientsBySlot (Bindi
 -- source from inside its own projection would not terminate.
 sourceContext :: GameState -> Maybe PlayerId.PlayerId -> ObjectId -> Filter.Context
 sourceContext gs perspective source =
-  framedBy source gs (Filter.contextFor (Game.teams gs) perspective (Just source))
+  framedBy source gs (Filter.contextIn gs perspective (Just source))
 
 -- SourceContext.framedBy plus withCharacteristicsOf: every source-derived field.
 framedBy :: ObjectId -> GameState -> Filter.Context -> Filter.Context
@@ -1306,7 +1306,7 @@ withCharacteristicsOf object gs context =
 -- source's choices.
 pairwiseContext :: GameState -> ObjectId -> Filter.Context
 pairwiseContext gs creature =
-  withCharacteristicsOf creature gs (Filter.contextFor (Game.teams gs) (controllerOf creature gs) (Just creature))
+  withCharacteristicsOf creature gs (Filter.contextIn gs (controllerOf creature gs) (Just creature))
 
 -- CR 603.10's first sentence: a permanent as a trigger event's own board sample
 -- (Event.Trigger.battlefieldAt) shows it -- the characteristics and controller it
@@ -3661,6 +3661,7 @@ filterReads f = case f of
   Filter.Type.ControlledBy _ -> Set.singleton Controller
   -- The candidate's controller; who defends is a combat-record fact.
   Filter.Type.ControlledByDefendingPlayer -> Set.singleton Controller
+  Filter.Type.ControlledByActivePlayer -> Set.singleton Controller
   Filter.Type.ControlledByBound _ -> Set.singleton Controller
   Filter.Type.ControlledByPlayer _ -> Set.singleton Controller
   Filter.Type.ControlledByRecipient -> Set.singleton Controller
@@ -4010,6 +4011,7 @@ filterReadsPeers f = case f of
     Operand.EnclosingAmount -> False
   Filter.Type.ControlledBy _ -> False
   Filter.Type.ControlledByDefendingPlayer -> False
+  Filter.Type.ControlledByActivePlayer -> False
   Filter.Type.ControlledByBound _ -> False
   Filter.Type.ControlledByPlayer _ -> False
   Filter.Type.ControlledByRecipient -> False

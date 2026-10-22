@@ -113,6 +113,12 @@ spec s = Spec.describe s "Pawl.Codec.Filter" $ do
       codec
       Filter.ControlledByDefendingPlayer
       " {\"type\":\"ControlledByDefendingPlayer\"} "
+  Spec.it s "ControlledByActivePlayer" $
+    Common.assertCodec
+      s
+      codec
+      Filter.ControlledByActivePlayer
+      " {\"type\":\"ControlledByActivePlayer\"} "
   Spec.it s "ControlledByBound" $
     Common.assertCodec
       s

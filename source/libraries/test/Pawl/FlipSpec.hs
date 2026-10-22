@@ -127,7 +127,7 @@ costReadings oid gs = (PC.manaValue (Projection.project oid gs), Projection.colo
 isLegendary :: ObjectId.ObjectId -> GameState.GameState -> Bool
 isLegendary oid gs =
   Filter.matches
-    (Filter.contextFor (Game.teams gs) (Just S.alice) Nothing)
+    (Filter.contextIn gs (Just S.alice) Nothing)
     (Projection.viewOfObject oid gs)
     (Filter.Type.HasSupertype Supertype.Legendary)
 

@@ -341,6 +341,7 @@ bakePerspective viewOf context gs candidate predicate =
         Filter.Type.ManaValueIsEven -> predicate
         Filter.Type.ControlledBy _ -> predicate
         Filter.Type.ControlledByDefendingPlayer -> predicate
+        Filter.Type.ControlledByActivePlayer -> predicate
         Filter.Type.ControlledByBound _ -> predicate
         Filter.Type.ControlledByPlayer _ -> predicate
         Filter.Type.ControlledByRecipient -> predicate

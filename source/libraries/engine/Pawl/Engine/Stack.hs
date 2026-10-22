@@ -276,7 +276,7 @@ interveningStillHolds gs obj srcId trigger =
     (Projection.viewWithLastKnownAnywhere gs)
     -- CR 607.5: the choices of the abilities the trigger came with, which it
     -- froze as it went on the stack, whatever its source has since become.
-    (Projection.framedByBindings gs (Object.bindings obj) (Projection.framedWith (SourceContext.choicesOf (Maybe.fromMaybe (Game.acquisitionOf srcId gs) (Game.frozenAcquisition (Object.source obj))) srcId gs) srcId gs (Filter.contextFor (Game.teams gs) (Just (Object.owner obj)) (Just srcId))) {Filter.boundAmounts = Condition.inheritedX trigger srcId gs})
+    (Projection.framedByBindings gs (Object.bindings obj) (Projection.framedWith (SourceContext.choicesOf (Maybe.fromMaybe (Game.acquisitionOf srcId gs) (Game.frozenAcquisition (Object.source obj))) srcId gs) srcId gs (Filter.contextIn gs (Just (Object.owner obj)) (Just srcId))) {Filter.boundAmounts = Condition.inheritedX trigger srcId gs})
     gs
     srcId
 

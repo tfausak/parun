@@ -259,6 +259,7 @@ filterAtomsOf leaf predicate = case predicate of
   Filter.Type.HasNameOriginallyPrintedIn _ -> leaf predicate
   Filter.Type.Measures _ -> leaf predicate
   Filter.Type.ControlledByDefendingPlayer -> leaf predicate
+  Filter.Type.ControlledByActivePlayer -> leaf predicate
   -- A leaf for ControlledBy's reason: one carries a slot name and the other a
   -- PlayerId, and neither holds a Filter for a card author to reach.
   Filter.Type.ControlledByBound _ -> leaf predicate

@@ -1247,7 +1247,7 @@ contextFor :: Maybe PlayerId -> RowSource -> GameState -> Filter.Context
 contextFor you row gs =
   let src = RowSource.object row
       frame s = Projection.framedWith (Maybe.fromMaybe (SourceContext.choicesOf (Game.acquisitionOf s gs) s gs) (RowSource.choices row)) s gs
-   in maybe id frame src (Filter.contextFor (Game.teams gs) you src)
+   in maybe id frame src (Filter.contextIn gs you src)
 
 -- CR 601.3a's LOOKAHEAD, asked of a prohibition that matches the spell as it
 -- stands: could a choice still to be made during this spell's proposal cause the

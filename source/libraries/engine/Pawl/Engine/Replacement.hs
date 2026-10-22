@@ -1694,7 +1694,7 @@ sacrificeCandidates you slots pid source filter_ gs =
 -- Ghoul pair proves it.
 graveyardCandidates :: PlayerId -> PlayerScope -> Filter.Type.Filter Keyword.Type.Keyword -> GameState -> [ObjectId]
 graveyardCandidates pid scope filter_ gs =
-  let context = Filter.contextFor (Game.teams gs) (Just pid) Nothing
+  let context = Filter.contextIn gs (Just pid) Nothing
       viewOf = Projection.viewsOf gs
       owners = Maybe.fromMaybe [] (PlayerEffect.playersInScope (Just pid) (Just pid) gs scope)
       offered oid = not (Map.member oid (GameState.enteringPending gs)) && Filter.matches context (viewOf oid) filter_
@@ -2723,7 +2723,7 @@ linkedCopyTrigger asCopy
 revealableFromHand :: PlayerId -> Filter.Type.Filter Keyword.Type.Keyword -> GameState -> [ObjectId]
 revealableFromHand pid filter_ gs =
   let viewOf = Projection.viewsOf gs
-      matching oid = Filter.matches (Filter.contextFor (Game.teams gs) Nothing Nothing) (viewOf oid) filter_
+      matching oid = Filter.matches (Filter.contextIn gs Nothing Nothing) (viewOf oid) filter_
    in filter matching (Game.zoneMembers Zone.Hand pid gs)
 
 -- CR 702.38a: the cards a player may reveal from their hand for an amplify
@@ -3210,7 +3210,7 @@ preventable viewOf gs de = not (any (\(src, pat) -> matchesDamagePattern viewOf 
 -- carried. Shared by the two questions of that shape so they cannot disagree
 -- about what "you" and IsSource mean.
 patternContext :: GameState -> Maybe ObjectId -> Filter.Context
-patternContext gs src = maybe id (`Projection.framedBy` gs) src (Filter.contextFor (Game.teams gs) (src >>= \oid -> Projection.controllerOf oid gs) src)
+patternContext gs src = maybe id (`Projection.framedBy` gs) src (Filter.contextIn gs (src >>= \oid -> Projection.controllerOf oid gs) src)
 
 -- CR 614.9: is this rewrite a REDIRECTION -- "dealt instead to another permanent
 -- or player"? The classification `redirectable` below is gated on, in the genre

@@ -476,6 +476,7 @@ filterNames asking criterion = case criterion of
   Filter.ManaValueIsEven -> mempty
   Filter.ControlledBy _relation -> mempty
   Filter.ControlledByDefendingPlayer -> mempty
+  Filter.ControlledByActivePlayer -> mempty
   Filter.ControlledByBound slot -> slotNames asking slot
   Filter.ControlledByPlayer _player -> mempty
   Filter.ControlledByRecipient -> mempty
@@ -832,6 +833,7 @@ castingRestrictionNames asking x = case x of
   CastingRestriction.AttackedThisStep -> mempty
   CastingRestriction.AfterBlockersDeclared -> mempty
   CastingRestriction.BeforeStep _phase -> history asking HistoryRead.StepBegins
+  CastingRestriction.DuringTurn _turnScope -> mempty
 
 changeTextNames :: Asking r -> ChangeText.ChangeText -> r
 changeTextNames asking x = case x of

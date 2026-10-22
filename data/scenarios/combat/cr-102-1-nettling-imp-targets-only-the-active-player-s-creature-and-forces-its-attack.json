@@ -1,0 +1,34 @@
+{
+  "description": "CR 102.1 Nettling Imp targets only a creature the active player controls, and that creature must attack",
+  "note": "Three seats: alice and carol are both bob's opponents, so carol's Hill Giant separates \"the active player\" from \"an opponent\". The Piker alice was made to attack obeys by attacking bob, so it survives the end step.",
+  "board": {
+    "active": "alice",
+    "step": "Upkeep",
+    "seats": [
+      {
+        "name": "alice",
+        "battlefield": [{ "card": "Goblin Piker", "label": "piker", "ready": true }],
+        "library": [{ "card": "Island" }]
+      },
+      {
+        "name": "bob",
+        "battlefield": [{ "card": "Nettling Imp", "label": "imp", "ready": true }],
+        "library": [{ "card": "Island" }]
+      },
+      {
+        "name": "carol",
+        "battlefield": [{ "card": "Hill Giant", "label": "giant", "ready": true }],
+        "library": [{ "card": "Island" }]
+      }
+    ]
+  },
+  "timeline": [
+    { "turn": 1, "step": "Upkeep", "player": "bob", "refuse": { "Activate": { "object": "$imp", "ability": 0, "targets": ["$giant"] } } },
+    { "turn": 1, "step": "Upkeep", "player": "bob", "do": { "Activate": { "object": "$imp", "ability": 0, "targets": ["$piker"] } } },
+    { "turn": 1, "step": "DeclareAttackers", "player": "alice", "refuse": { "Attack": [] } },
+    { "turn": 1, "step": "DeclareAttackers", "player": "alice", "do": { "Attack": ["$piker"] } },
+    { "turn": 1, "step": "DeclareAttackers", "player": "alice", "source": "$piker", "do": { "ChooseAttackTarget": "$bob" } },
+    { "turn": 1, "step": "EndStep", "player": "alice", "do": "Pass" },
+    { "turn": 1, "step": "EndStep", "player": "alice", "check": { "Count": { "player": "alice", "zone": "Battlefield", "card": "Goblin Piker", "count": 1 } } }
+  ]
+}

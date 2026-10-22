@@ -130,5 +130,5 @@ matchesCondition oid gs rider = spentOnMatches oid gs (ManaRider.condition rider
 spentOnMatches :: ObjectId.ObjectId -> GameState.GameState -> Filter.Type.Filter Keyword.Keyword -> Bool
 spentOnMatches oid gs =
   Filter.matches
-    (Filter.contextFor (Game.teams gs) (Projection.controllerOf oid gs) Nothing)
+    (Filter.contextIn gs (Projection.controllerOf oid gs) Nothing)
     (Projection.viewOfObject oid gs)

@@ -91,6 +91,12 @@ data Filter keyword
     -- controlled by an opponent who is not being attacked at all. Vacuously False
     -- outside combat.
     ControlledByDefendingPlayer
+  | -- | CR 102.1: the candidate's controller is the ACTIVE PLAYER (Nettling
+    -- Imp's "target non-Wall creature the active player has controlled
+    -- continuously since the beginning of the turn"). Not @ControlledBy
+    -- Opponent@, which on a three-seat board admits a creature of an opponent
+    -- whose turn it is not.
+    ControlledByActivePlayer
   | -- | CR 603.2: the candidate's controller is the PLAYER BOUND at this slot --
     -- Trygon Predator's "that player", the one the trigger's own event named.
     -- Answered by rewriting (Pawl.Engine.Filter.bakeBound), and vacuously False

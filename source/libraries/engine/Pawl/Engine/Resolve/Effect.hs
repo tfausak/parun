@@ -3613,8 +3613,10 @@ effectIsImpossible resolving source controller legal gs effect = case effect of
   -- permanent on the battlefield turns face up. A regression fence: the one
   -- "may" in data/cards reaching this opcode, Hauntwoods Shrieker's, targets a
   -- face-down permanent, so CR 608.2b drops a face-up one first.
+  -- A slot naming nobody is never impossible, the haddock's invariant.
   Effect.TurnFaceUp slot ->
-    not (any (\target -> Set.member target (GameState.battlefield gs) && maybe False (Facing.isFaceDown . Object.facing) (Game.lookupObject target gs)) (objectRefObjects legal resolving controller source gs (ObjectRef.InSlot slot)))
+    let named = objectRefObjects legal resolving controller source gs (ObjectRef.InSlot slot)
+     in not (null named) && not (any (\target -> Set.member target (GameState.battlefield gs) && maybe False (Facing.isFaceDown . Object.facing) (Game.lookupObject target gs)) named)
   Effect.RemoveFromCombat {} -> False
   Effect.BecomesBlocked {} -> False
   Effect.SwitchBlockers {} -> False

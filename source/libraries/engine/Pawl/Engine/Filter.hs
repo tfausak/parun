@@ -44,6 +44,9 @@ import qualified Pawl.Types.ExilePermanents as ExilePermanents
 import qualified Pawl.Types.Expansion as Expansion
 import qualified Pawl.Types.Filter as Filter
 import qualified Pawl.Types.ForetellCost as ForetellCost
+import qualified Pawl.Types.GameSettings as GameSettings
+import Pawl.Types.GameState (GameState)
+import qualified Pawl.Types.GameState as GameState
 import qualified Pawl.Types.Impending as Impending
 import qualified Pawl.Types.Keyword as Keyword.Type
 import qualified Pawl.Types.KeywordCount as KeywordCount
@@ -1117,6 +1120,10 @@ data Context = MkContext
     -- LAZY like sourceMeasures, and load-bearingly so: filling it costs a
     -- control-grant walk, and no filter that omits the atom ever forces it.
     defendingPlayers :: [PlayerId.PlayerId],
+    -- CR 102.1: the ACTIVE PLAYER, for the one atom that asks
+    -- (ControlledByActivePlayer). Filled by contextIn from the game it reads;
+    -- Nothing from a bare contextFor, where the atom is vacuously False.
+    activePlayer :: Maybe PlayerId.PlayerId,
     -- The player the surrounding effect is CURRENTLY BEING APPLIED TO, for the
     -- two atoms that ask (ControlledByRecipient, OwnedByRecipient) --
     -- Biorhythm's "the number of creatures they control", Stronghold Discipline's "1 life for each creature
@@ -1653,8 +1660,13 @@ data Context = MkContext
 -- being the only fillers. An atom added
 -- here owes both halves of the same pair: which way its unfilled read answers,
 -- and what holds a card to the positions that fill it.
+-- contextFor over a game: its teams (CR 102.4) and its active player (CR 102.1)
+-- filled from the state, the two facts about the table a match may ask.
+contextIn :: GameState -> Maybe PlayerId.PlayerId -> Maybe ObjectId.ObjectId -> Context
+contextIn gs p s = (contextFor (GameSettings.teams (GameState.settings gs)) p s) {activePlayer = Just (GameState.activePlayer gs)}
+
 contextFor :: Teams.Teams -> Maybe PlayerId.PlayerId -> Maybe ObjectId.ObjectId -> Context
-contextFor t p s = MkContext {teams = t, perspective = p, source = s, sourceMeasures = Map.empty, sourceColors = Set.empty, sourceSectors = Set.empty, sourceNames = Set.empty, slotAmount = Nothing, defendingPlayers = [], recipient = Nothing, shares = Map.empty, slotObjects = Map.empty, cantCrewVehicles = Set.empty, slotNames = Map.empty, slotControllers = Map.empty, slotHostControllers = Map.empty, subjectHostCardTypes = Set.empty, slotCreatureTypes = Map.empty, slotMeasures = Map.empty, slotPlayers = Map.empty, boundAmounts = Map.empty, slotStickers = Map.empty, slotVotes = Map.empty, boundUnannounced = False, sourceAttachedTo = Nothing, evaluated = Nothing, sourceEntrants = Set.empty, sourceOwner = Nothing, sourceChosenNames = Map.empty, carrierChosenPlayer = Nothing, aimingController = Nothing, sourceChosenColors = Set.empty, sourceChosenSubtype = Nothing, sourceLastExiled = Nothing, sourceExiled = Map.empty, reader = Nothing, candidateMeasures = Nothing}
+contextFor t p s = MkContext {teams = t, perspective = p, source = s, sourceMeasures = Map.empty, sourceColors = Set.empty, sourceSectors = Set.empty, sourceNames = Set.empty, slotAmount = Nothing, defendingPlayers = [], activePlayer = Nothing, recipient = Nothing, shares = Map.empty, slotObjects = Map.empty, cantCrewVehicles = Set.empty, slotNames = Map.empty, slotControllers = Map.empty, slotHostControllers = Map.empty, subjectHostCardTypes = Set.empty, slotCreatureTypes = Map.empty, slotMeasures = Map.empty, slotPlayers = Map.empty, boundAmounts = Map.empty, slotStickers = Map.empty, slotVotes = Map.empty, boundUnannounced = False, sourceAttachedTo = Nothing, evaluated = Nothing, sourceEntrants = Set.empty, sourceOwner = Nothing, sourceChosenNames = Map.empty, carrierChosenPlayer = Nothing, aimingController = Nothing, sourceChosenColors = Set.empty, sourceChosenSubtype = Nothing, sourceLastExiled = Nothing, sourceExiled = Map.empty, reader = Nothing, candidateMeasures = Nothing}
 
 -- The ONE object a slot names, for the readers that can take no more than one --
 -- Quantity.AgainstSlot's evaluation, Count's IsControllerOfBound. Nothing where
@@ -1815,6 +1827,11 @@ matches context view predicate = case predicate of
   Filter.ControlledByDefendingPlayer -> case controller view of
     Just c -> List.elem c (defendingPlayers context)
     Nothing -> False
+  -- CR 102.1: the candidate's controller IS the active player the Context
+  -- carries. False with no controller or no active player.
+  Filter.ControlledByActivePlayer -> case (controller view, activePlayer context) of
+    (Just c, Just a) -> c == a
+    _ -> False
   -- CR 603.2's "that player controls". `bakeBound` below replaces the atom before
   -- either of CR 115's moments judges the slot; a COUNT is matched unbaked, so the
   -- atom reads the Context's slotPlayers there -- Mana Cache's "for each untapped
@@ -2408,6 +2425,7 @@ rewrite pairs predicate = case predicate of
   Filter.ControlledBy _ -> predicate
   -- Untouched for ControlledBy's reason.
   Filter.ControlledByDefendingPlayer -> predicate
+  Filter.ControlledByActivePlayer -> predicate
   -- Untouched for the same reason twice over: neither a slot name nor a player id
   -- is a word CR 612.1's swap can find in the text.
   Filter.ControlledByBound _ -> predicate
@@ -3164,6 +3182,7 @@ bakeBound players objects predicate = case predicate of
   Filter.ManaValueIsEven -> predicate
   Filter.ControlledBy _ -> predicate
   Filter.ControlledByDefendingPlayer -> predicate
+  Filter.ControlledByActivePlayer -> predicate
   Filter.OwnedBy _ -> predicate
   Filter.OwnedByRecipient -> predicate
   Filter.IsSource -> predicate
@@ -3346,6 +3365,7 @@ manaValueThresholds predicate = case predicate of
   Filter.HasKeywordFamily _ -> []
   Filter.ControlledBy _ -> []
   Filter.ControlledByDefendingPlayer -> []
+  Filter.ControlledByActivePlayer -> []
   Filter.ControlledByBound _ -> []
   Filter.ControlledByPlayer _ -> []
   Filter.ControlledByRecipient -> []
@@ -3505,6 +3525,7 @@ statesAQuality predicate = case predicate of
   Filter.HasKeywordFamily _ -> True
   Filter.ControlledBy _ -> True
   Filter.ControlledByDefendingPlayer -> True
+  Filter.ControlledByActivePlayer -> True
   Filter.ControlledByBound _ -> True
   Filter.ControlledByPlayer _ -> True
   Filter.ControlledByRecipient -> True
@@ -3675,6 +3696,7 @@ readsSourceValues predicate = case predicate of
   Filter.HasKeywordFamily _ -> False
   Filter.ControlledBy _ -> False
   Filter.ControlledByDefendingPlayer -> False
+  Filter.ControlledByActivePlayer -> False
   Filter.ControlledByBound _ -> False
   Filter.ControlledByPlayer _ -> False
   Filter.ControlledByRecipient -> False
@@ -3821,6 +3843,7 @@ overBoundSlotsWith f predicate = case predicate of
   Filter.ManaValueIsEven -> pure predicate
   Filter.ControlledBy _ -> pure predicate
   Filter.ControlledByDefendingPlayer -> pure predicate
+  Filter.ControlledByActivePlayer -> pure predicate
   -- A PLAYER slot, read singly all the same: `matches` answers it off a slot
   -- naming exactly one player, and bakeBound off Binding.playerSlots, which is
   -- Binding.onlyOne.

@@ -365,7 +365,7 @@ slotContext reader perspective unannounced bindings acquisition source amount gs
       framed =
         -- CR 607.5: the choices of the abilities `acquisition` names -- the
         -- one a resolving ability froze, at CR 608.2b's re-check.
-        (Projection.framedWith (SourceContext.choicesOf acquisition source gs) source gs (Filter.contextFor (Game.teams gs) perspective (Just source)))
+        (Projection.framedWith (SourceContext.choicesOf acquisition source gs) source gs (Filter.contextIn gs perspective (Just source)))
           { -- Nothing HERE and filled below: CR 202.3's computed bound is the slot's
             -- own Quantity, and evaluating one takes a Filter.Context -- so this
             -- record is the context the evaluation runs in, and the answer is laid
@@ -644,7 +644,7 @@ targetable pcs rowsOf perspective source sourceView gs recipient =
             -- that rule making it several abilities rather than one compound one.
             stops quality = case quality of
               Nothing -> True
-              Just f -> Filter.matches (Filter.contextFor (Game.teams gs) controller (Just source)) sourceView f
+              Just f -> Filter.matches (Filter.contextIn gs controller (Just source)) sourceView f
             -- CR 702.16b's qualities, read off the same keys for hexproof's
             -- reason: CR 702.16g makes "protection from [A] and from [B]" two
             -- abilities, so a permanent's protection abilities are however many
@@ -673,7 +673,7 @@ targetable pcs rowsOf perspective source sourceView gs recipient =
             -- proves the source half still answers.
             protects =
               Filter.matches
-                (Filter.contextFor (Game.teams gs) controller (Just source))
+                (Filter.contextIn gs controller (Just source))
                   { Filter.carrierChosenPlayer = Game.currentChoice Chosen.Players oid gs >>= Map.lookup PlayerChoice.AsEnters,
                     Filter.aimingController = Just perspective
                   }
