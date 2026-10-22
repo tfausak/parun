@@ -1987,12 +1987,13 @@ withPrototype oid gs face pc = case (maybe False Object.prototyped (Game.lookupO
 -- merge that minted a new one would reorder every layer already on it.
 --
 -- The ability fields and no other, beside the record of the graft (PC.mergedDonors).
--- PC.characteristicPT is deliberately NOT among
--- them although CR 604.3 makes a CDA an ability: rule 730.2a keeps the POWER AND
--- TOUGHNESS characteristic the topmost component's, so a donor CDA that set the
--- box would override the very sentence this function's base implements. No card
--- in data/cards/ prints a CDA box on a creature a mutate spell can target, so
--- nothing tells the two readings apart today.
+-- PC.characteristicPT is one: CR 604.3 makes a power-and-toughness CDA an
+-- ability, and rule 730.2a's topmost box is only the copiable value layer 7a
+-- then overrides (CR 613.4a). It stays characteristic-defining rather than a
+-- layer-7b static ability: docs/decisions.md, "Whether an ability a merge
+-- grafts is still characteristic-defining". Pawl.MutateSpec's "CR 702.140e a
+-- Cubwarden merged over or under Tarmogoyf keeps its power and toughness
+-- ability" proves it.
 --
 -- Each side arrives at LAYER 1a, through `copiableCharacteristicsFaceUp` above,
 -- so a FACE-DOWN component contributes its card's abilities rather than CR
@@ -2027,6 +2028,10 @@ withMergedAbilities donor base =
       -- the eight fields above are written out with; Pawl.Types.RuleAbilities
       -- carries it so a new family cannot be added and left out here.
       PC.ruleAbilities = PC.ruleAbilities base <> PC.ruleAbilities donor,
+      -- One box, so at most one side may carry one: the mutating spell's
+      -- never does (MTGJSON of 2026-08-23, cards with mutate and a * in
+      -- either box, no hit). Base first is arbitrary.
+      PC.characteristicPT = PC.characteristicPT base <|> PC.characteristicPT donor,
       -- CR 702.140e / 118.8 / 118.9: a cost line in a component's rules text is
       -- one of its abilities too, so a duplicate of the merged permanent owes
       -- every component's. Pawl.ConjureSpec's "CR 702.140e a duplicate of a
