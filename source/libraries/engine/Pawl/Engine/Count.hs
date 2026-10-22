@@ -384,6 +384,7 @@ bakePerspective viewOf context gs candidate predicate =
         Filter.Type.IsBlocking -> predicate
         Filter.Type.HasBlockStatus _ -> predicate
         Filter.Type.AttackedThisTurn -> predicate
+        Filter.Type.CouldAttackThisTurn -> predicate
         Filter.Type.DeclaredAttackerThisCombat -> predicate
         Filter.Type.DeclaredBlockerThisCombat -> predicate
         Filter.Type.MilledThisTurn -> predicate
@@ -949,6 +950,7 @@ lastKnownView peers oid gs lastKnown =
           -- disjunction. A regression fence: no card asks it of a departed object.
           Filter.prototyped = PC.prototyped (LastKnown.characteristics lastKnown) || LastKnown.prototyped lastKnown,
           Filter.attackedThisTurn = attackedThisTurn oid gs,
+          Filter.couldAttackThisTurn = couldAttackThisTurn oid gs,
           Filter.declaredAttackerThisCombat = declaredAttackerThisCombat oid gs,
           Filter.declaredAttackedThisCombat = declaredAttackedThisCombat oid gs,
           Filter.declaredBlockerThisCombat = declaredBlockerThisCombat oid gs,
@@ -976,6 +978,12 @@ attackedThisTurn oid gs =
         GameEvent.AttackerDeclared (AttackerDeclared.MkAttackerDeclared declared _ _ _ _) -> declared == oid
         _ -> False
    in any (declaredIt . LoggedEvent.event) (GameState.events gs)
+
+-- CR 508.1a-d: could this object have been declared as an attacker in one of
+-- this turn's declare attackers steps? The record those steps wrote as each
+-- declaration began.
+couldAttackThisTurn :: ObjectId -> GameState -> Bool
+couldAttackThisTurn oid gs = Set.member oid (GameState.couldAttackThisTurn gs)
 
 -- CR 508.1a / 509.1a: from the COMBAT record, which CR 511.3 does clear -- and
 -- not from the log above, which cannot answer it: CR 508.1k and CR 509.1g put
@@ -1196,6 +1204,7 @@ viewOfSnapshot deploy mController mOwner isToken counters zone home lapsed snaps
       Filter.blockStatus = Nothing,
       Filter.blockers = Set.empty,
       Filter.attackedThisTurn = False,
+      Filter.couldAttackThisTurn = False,
       -- CR 508.1a / 509.1a: a snapshot is CR 608.2h's record of an object, and
       -- combat status is no characteristic of one (CR 109.3), so it has nothing
       -- to answer with -- `attacking` and `blocking` above take the same

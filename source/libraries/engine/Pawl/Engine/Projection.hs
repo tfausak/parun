@@ -3774,6 +3774,8 @@ filterReads f = case f of
   Filter.Type.HasBlockStatus _ -> Set.empty
   -- Reads nothing: no Modification writes GameState.events.
   Filter.Type.AttackedThisTurn -> Set.empty
+  -- Reads nothing: no Modification writes GameState.couldAttackThisTurn.
+  Filter.Type.CouldAttackThisTurn -> Set.empty
   -- Reads nothing, for IsAttacking's reason and off the same record: no
   -- Modification writes GameState.combat.
   Filter.Type.DeclaredAttackerThisCombat -> Set.empty
@@ -4069,6 +4071,7 @@ filterReadsPeers f = case f of
   Filter.Type.IsBlocking -> False
   Filter.Type.HasBlockStatus _ -> False
   Filter.Type.AttackedThisTurn -> False
+  Filter.Type.CouldAttackThisTurn -> False
   Filter.Type.DeclaredAttackerThisCombat -> False
   Filter.Type.DeclaredBlockerThisCombat -> False
   Filter.Type.MilledThisTurn -> False

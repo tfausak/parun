@@ -1,0 +1,44 @@
+{
+  "description": "CR 508.1 Season of the Witch destroys only the untapped non-attackers that could have been declared",
+  "note": "Serra Angel attacks and stays untapped (vigilance). The ready Grizzly Bears and the hasty Raging Goblin could have attacked and didn't, so both die. Craw Wurm is summoning sick, the Pacified Bears and Wall of Wood are restricted, bob's Goblin Piker is not the active player's, and the second Raging Goblin is cast after combat: none of them could have attacked, so all stay.",
+  "board": {
+    "seats": [
+      {
+        "name": "alice",
+        "battlefield": [
+          { "card": "Season of the Witch", "ready": true },
+          { "card": "Serra Angel", "label": "angel", "ready": true },
+          { "card": "Grizzly Bears", "ready": true },
+          { "card": "Grizzly Bears", "label": "pacified", "ready": true },
+          { "card": "Pacifism", "attached": "pacified" },
+          { "card": "Raging Goblin", "label": "hasty" },
+          { "card": "Craw Wurm" },
+          { "card": "Wall of Wood", "ready": true },
+          { "card": "Mountain", "label": "mountain", "ready": true }
+        ],
+        "hand": [{ "card": "Raging Goblin", "label": "late" }]
+      },
+      {
+        "name": "bob",
+        "battlefield": [{ "card": "Goblin Piker", "ready": true }]
+      }
+    ],
+    "active": "alice",
+    "step": "DeclareAttackers"
+  },
+  "timeline": [
+    { "turn": 1, "step": "DeclareAttackers", "player": "alice", "do": { "Attack": ["$angel"] } },
+    { "turn": 1, "step": "DeclareBlockers", "player": "bob", "do": { "Block": {} } },
+    { "turn": 1, "step": "PostcombatMain", "player": "alice", "do": { "Cast": { "object": "$late", "mana": ["$mountain"] } } },
+    { "turn": 1, "step": "EndStep", "player": "alice", "do": "Pass" },
+    { "turn": 1, "step": "EndStep", "player": "alice", "check": { "Count": { "player": "alice", "zone": "Graveyard", "card": "Raging Goblin", "count": 1 } } },
+    { "turn": 1, "step": "EndStep", "player": "alice", "check": { "Count": { "player": "alice", "zone": "Battlefield", "card": "Raging Goblin", "count": 1 } } },
+    { "turn": 1, "step": "EndStep", "player": "alice", "check": { "Count": { "player": "alice", "zone": "Graveyard", "card": "Grizzly Bears", "count": 1 } } },
+    { "turn": 1, "step": "EndStep", "player": "alice", "check": { "Count": { "player": "alice", "zone": "Battlefield", "card": "Pacifism", "count": 1 } } },
+    { "turn": 1, "step": "EndStep", "player": "alice", "check": { "Count": { "player": "alice", "zone": "Battlefield", "card": "Craw Wurm", "count": 1 } } },
+    { "turn": 1, "step": "EndStep", "player": "alice", "check": { "Count": { "player": "alice", "zone": "Battlefield", "card": "Wall of Wood", "count": 1 } } },
+    { "turn": 1, "step": "EndStep", "player": "alice", "check": { "Count": { "player": "alice", "zone": "Battlefield", "card": "Serra Angel", "count": 1 } } },
+    { "turn": 1, "step": "EndStep", "player": "alice", "check": { "Tapped": { "object": "$angel", "tapped": false } } },
+    { "turn": 1, "step": "EndStep", "player": "alice", "check": { "Count": { "player": "bob", "zone": "Battlefield", "card": "Goblin Piker", "count": 1 } } }
+  ]
+}

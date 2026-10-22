@@ -1,0 +1,28 @@
+{
+  "description": "CR 508.1d Season of the Witch destroys creatures that could have attacked only by paying a cost",
+  "note": "bob's Ghostly Prison taxes attacking him, and alice has no mana, but a cost never makes a creature one that couldn't attack (docs/decisions.md), so the Bears and the Bonded Construct, which could have attacked together, stay home and die. The Construct puts the question to the search CR 506.5's restriction needs, not only to the shortcut.",
+  "board": {
+    "seats": [
+      {
+        "name": "alice",
+        "battlefield": [
+          { "card": "Season of the Witch", "ready": true },
+          { "card": "Bonded Construct", "ready": true },
+          { "card": "Grizzly Bears", "ready": true }
+        ]
+      },
+      {
+        "name": "bob",
+        "battlefield": [{ "card": "Ghostly Prison", "ready": true }]
+      }
+    ],
+    "active": "alice",
+    "step": "DeclareAttackers"
+  },
+  "timeline": [
+    { "turn": 1, "step": "DeclareAttackers", "player": "alice", "do": { "Attack": [] } },
+    { "turn": 1, "step": "EndStep", "player": "alice", "do": "Pass" },
+    { "turn": 1, "step": "EndStep", "player": "alice", "check": { "Count": { "player": "alice", "zone": "Graveyard", "card": "Grizzly Bears", "count": 1 } } },
+    { "turn": 1, "step": "EndStep", "player": "alice", "check": { "Count": { "player": "alice", "zone": "Graveyard", "card": "Bonded Construct", "count": 1 } } }
+  ]
+}

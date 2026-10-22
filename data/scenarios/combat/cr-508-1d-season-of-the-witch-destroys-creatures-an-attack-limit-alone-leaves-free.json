@@ -1,0 +1,26 @@
+{
+  "description": "CR 508.1d Season of the Witch destroys creatures an attack limit alone leaves free to attack",
+  "note": "Silent Arbiter lets one creature attack and nothing requires any to, so the Bears and the Arbiter could each have been that one; both stay home and die.",
+  "board": {
+    "seats": [
+      {
+        "name": "alice",
+        "battlefield": [
+          { "card": "Season of the Witch", "ready": true },
+          { "card": "Silent Arbiter", "ready": true },
+          { "card": "Hill Giant", "label": "giant", "ready": true },
+          { "card": "Grizzly Bears", "ready": true }
+        ]
+      },
+      { "name": "bob" }
+    ],
+    "active": "alice",
+    "step": "DeclareAttackers"
+  },
+  "timeline": [
+    { "turn": 1, "step": "DeclareAttackers", "player": "alice", "do": { "Attack": ["$giant"] } },
+    { "turn": 1, "step": "EndStep", "player": "alice", "do": "Pass" },
+    { "turn": 1, "step": "EndStep", "player": "alice", "check": { "Count": { "player": "alice", "zone": "Graveyard", "card": "Grizzly Bears", "count": 1 } } },
+    { "turn": 1, "step": "EndStep", "player": "alice", "check": { "Count": { "player": "alice", "zone": "Graveyard", "card": "Silent Arbiter", "count": 1 } } }
+  ]
+}

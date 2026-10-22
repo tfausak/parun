@@ -1,0 +1,26 @@
+{
+  "description": "CR 508.1d Season of the Witch spares creatures that a requirement and an attack limit together keep home",
+  "note": "Silent Arbiter lets one creature attack and Berserkers of Blood Ridge must attack if able, so every legal declaration is the Berserkers alone: the Bears and the Arbiter couldn't have attacked. The scenario beside this one swaps the Berserkers for a Hill Giant, which no requirement names, and both die.",
+  "board": {
+    "seats": [
+      {
+        "name": "alice",
+        "battlefield": [
+          { "card": "Season of the Witch", "ready": true },
+          { "card": "Silent Arbiter", "ready": true },
+          { "card": "Berserkers of Blood Ridge", "label": "berserkers", "ready": true },
+          { "card": "Grizzly Bears", "ready": true }
+        ]
+      },
+      { "name": "bob" }
+    ],
+    "active": "alice",
+    "step": "DeclareAttackers"
+  },
+  "timeline": [
+    { "turn": 1, "step": "DeclareAttackers", "player": "alice", "do": { "Attack": ["$berserkers"] } },
+    { "turn": 1, "step": "EndStep", "player": "alice", "do": "Pass" },
+    { "turn": 1, "step": "EndStep", "player": "alice", "check": { "Count": { "player": "alice", "zone": "Battlefield", "card": "Grizzly Bears", "count": 1 } } },
+    { "turn": 1, "step": "EndStep", "player": "alice", "check": { "Count": { "player": "alice", "zone": "Battlefield", "card": "Silent Arbiter", "count": 1 } } }
+  ]
+}

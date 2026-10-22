@@ -208,6 +208,27 @@ Entries are ordered by the first rule each cites.
   only ITS controller may block the creature attacking nothing".
 - **Issue**: #2899.
 
+## Which creatures could have attacked
+
+- **Question**: Season of the Witch spares "creatures that couldn't attack";
+  its ruling reads that as could not have been declared as an attacker in
+  that turn's declare attackers step. Is a creature that could attack only by
+  paying a cost to attack, payable or not, one that couldn't?
+- **Rules**: CR 508.1, 508.1c, 508.1d, 508.1h, 508.1j; CR of 2026-08-07.
+- **Decision**: No. A creature could have attacked when some declaration
+  obeying CR 508.1a-d contains it, costs aside: CR 508.1d excuses the cost
+  without forbidding the attack, and CR 508.1h asks for it only after the
+  creature is chosen. Asked as each declaration begins, over every declare
+  attackers step of the turn.
+- **Rejected**: Counting a creature as unable when its cost is unpayable:
+  payability turns on mana abilities CR 508.1i offers only after the
+  creatures are chosen. Counting every taxed creature as unable: CR 508.1d
+  makes paying optional, not impossible.
+- **Site**: `Pawl.Engine.Combat.couldAttack`, proved by data/scenarios/combat's
+  "CR 508.1d Season of the Witch destroys creatures that could have attacked
+  only by paying a cost".
+- **Issue**: #5441.
+
 ## When a face-down creature Illusionary Mask cast turns face up in combat
 
 - **Question**: Illusionary Mask turns its face-down creature face up when it
