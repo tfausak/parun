@@ -1,0 +1,34 @@
+{
+  "description": "CR 612.1 Mind Bend's land-type half: a Mind Bent Bog Wraith walks on Islands",
+  "note": "Mind Bend offers a colour word or a basic land type. alice takes the land type, Swamp -> Island, so the Wraith's swampwalk becomes islandwalk and bob's Island stops his Goblin Piker blocking: his declaration is rejected whole (CR 509.1b) and he declares none.",
+  "board": {
+    "seats": [
+      {
+        "name": "alice",
+        "battlefield": [
+          { "card": "Bog Wraith", "label": "wraith", "ready": true },
+          { "card": "Island", "label": "island", "ready": true }
+        ],
+        "hand": [{ "card": "Mind Bend", "label": "bend" }]
+      },
+      {
+        "name": "bob",
+        "battlefield": [
+          { "card": "Goblin Piker", "label": "piker", "ready": true },
+          { "card": "Island", "label": "land", "ready": true }
+        ]
+      }
+    ],
+    "active": "alice",
+    "step": "PrecombatMain"
+  },
+  "timeline": [
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": { "Cast": { "object": "$bend", "targets": ["$wraith"], "mana": ["$island"] } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass" },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "source": "Mind Bend", "do": { "ChooseWordSwap": { "from": { "type": "Swamp" }, "to": { "type": "Island" } } } },
+    { "turn": 1, "step": "DeclareAttackers", "player": "alice", "do": { "Attack": ["$wraith"] } },
+    { "turn": 1, "step": "DeclareBlockers", "player": "bob", "do": { "Block": { "$piker": ["$wraith"] } } },
+    { "turn": 1, "step": "DeclareBlockers", "player": "bob", "do": { "Block": {} } },
+    { "turn": 1, "step": "DeclareBlockers", "player": "alice", "check": { "Blockers": { "attacker": "$wraith", "blockers": null } } }
+  ]
+}

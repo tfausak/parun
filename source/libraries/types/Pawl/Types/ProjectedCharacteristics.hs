@@ -308,7 +308,7 @@ data ProjectedCharacteristics = MkProjectedCharacteristics
     -- values (Pawl.Engine.Projection.fullTextOf). Not copiable, for
     -- wordChanges' reason.
     hasFullText :: Bool,
-    -- | CR 612.1 layer 3: the subtype word swaps applied to the text box this
+    -- | CR 612.1 layer 3: the word swaps applied to the text box this
     -- object carries, in the order they were applied -- CR 612.5's exchange
     -- moves them with the text. A RECORD of what layer 3 did, where every field
     -- above is the RESULT of it -- kept because rule 702's abilities are minted

@@ -110,6 +110,7 @@ import qualified Pawl.Types.CastFromZone as CastFromZone
 import qualified Pawl.Types.CastObligation as CastObligation
 import qualified Pawl.Types.CastOffer as CastOffer
 import qualified Pawl.Types.CastRepetition as CastRepetition
+import qualified Pawl.Types.ChangeText as ChangeText
 import qualified Pawl.Types.CharacteristicPT as CharacteristicPT
 import qualified Pawl.Types.ChooseCardName as ChooseCardName
 import qualified Pawl.Types.ChooseNumber as ChooseNumber
@@ -1252,7 +1253,7 @@ ownCounts :: Effect.Effect Card.Type.Card (GrantedAbility.GrantedAbility Card.Ty
 ownCounts effect = case effect of
   Effect.DealDamage (DealDamage.MkDealDamage parts _ _) -> concatMap (quantityCounts . DamagePart.quantity) parts
   Effect.ModifyTarget (ModifyTarget.MkModifyTarget duration modification _ _) -> durationCounts duration <> modificationCounts modification
-  Effect.ChangeText {} -> []
+  Effect.ChangeText x -> durationCounts (ChangeText.duration x)
   Effect.AddMana _ -> []
   Effect.Firebend _ -> []
   Effect.ActivateManaAbilities _ -> []
@@ -5848,7 +5849,7 @@ effectFilters effect = case effect of
   Effect.DealDamage (DealDamage.MkDealDamage parts _ _) -> foldMap (\part -> frame SourceHostFramed (objectRefFilters (DamagePart.ref part)) <> frame Unframed (quantityFilters (DamagePart.quantity part))) parts
   Effect.ModifyTarget (ModifyTarget.MkModifyTarget duration modification ref _) ->
     frame Unframed (durationFilters duration) <> frame Unframed (modificationFilters modification) <> frame SourceHostFramed (objectRefFilters ref)
-  Effect.ChangeText {} -> []
+  Effect.ChangeText x -> frame Unframed (durationFilters (ChangeText.duration x))
   -- CR 106.6's two clauses, and every predicate in them: the restriction's half
   -- per payment kind and the rider's condition are each an ordinary
   -- Filter, and collecting one of them would take every lint in this module off

@@ -158,8 +158,11 @@ import qualified Pawl.Types.LimitUnless as LimitUnless
 import qualified Pawl.Types.LookAt as LookAt
 import qualified Pawl.Types.MakeForetold as MakeForetold
 import qualified Pawl.Types.ManaAddition as ManaAddition
+import qualified Pawl.Types.ManaCount as ManaCount
+import qualified Pawl.Types.ManaFilter as ManaFilter
 import qualified Pawl.Types.ManaRestriction as ManaRestriction
 import qualified Pawl.Types.ManaRider as ManaRider
+import qualified Pawl.Types.ManaType as ManaType
 import qualified Pawl.Types.Meld as Meld
 import qualified Pawl.Types.Mill as Mill
 import qualified Pawl.Types.MillTally as MillTally
@@ -238,6 +241,7 @@ import qualified Pawl.Types.SkipPhase as SkipPhase
 import qualified Pawl.Types.SlotCount as SlotCount
 import qualified Pawl.Types.SpeedDecrease as SpeedDecrease
 import qualified Pawl.Types.SpellCast as SpellCast
+import qualified Pawl.Types.SpendManaAsThough as SpendManaAsThough
 import qualified Pawl.Types.StaticAbility as StaticAbility
 import qualified Pawl.Types.Subtype as Subtype.Type
 import qualified Pawl.Types.TakeExtraTurn as TakeExtraTurn
@@ -423,7 +427,7 @@ rewriteAffected pairs a = case a of
   Affected.Attached -> a
   Affected.PlayedThisWay _ -> a
 
--- CR 612.1's subtype word swap over a PlayerEffect, rewriteModification's sibling
+-- CR 612.1's word swap over a PlayerEffect, rewriteModification's sibling
 -- for the CR 613.10/613.11 axis. An Artificial Evolution resolved at an
 -- Edgewalker moves "Cleric spells you cast cost {W}{B} less to cast" onto the new
 -- word, because the word naming which spells the ability discounts is text
@@ -504,11 +508,20 @@ rewritePlayerEffect pairs effect = case effect of
   -- word on the card and CR 612.1 swaps it; the chosen-name sibling below is the
   -- arm CR 612.2's second sentence keeps a swap off.
   PlayerEffect.HasProtectionFrom f -> PlayerEffect.HasProtectionFrom (Filter.rewrite pairs f)
-  -- The rest name no word a subtype pair could reach. The two chosen-name arms
-  -- carry nothing at all -- CR 201.4's names are read off the source's
-  -- Object.chosenNames -- and CR 612.2's second sentence says a subtype swap
-  -- could not touch a card name even if they did. A count, a mana filter and a
-  -- player scope are not words either.
+  -- CR 612.2's colour word in "white mana" (Celestial Dawn, Sunglasses of Urza)
+  -- and "green mana" (Omnath, Locus of Mana): rewriteManaFilter's reading.
+  PlayerEffect.DontLoseUnspentMana f -> PlayerEffect.DontLoseUnspentMana (rewriteManaFilter pairs f)
+  PlayerEffect.SpendManaAsThough clause -> PlayerEffect.SpendManaAsThough (rewriteSpendManaAsThough pairs clause)
+  -- CR 612.1 through the source and recipient criteria, as the replacement
+  -- arm's DamageR descent below. A REGRESSION FENCE: every printing in
+  -- `data/cards/` names a card type or none there.
+  PlayerEffect.DamageCantBePrevented p -> PlayerEffect.DamageCantBePrevented (rewriteDamagePattern pairs p)
+  PlayerEffect.DamageCantBeRedirected p -> PlayerEffect.DamageCantBeRedirected (rewriteDamagePattern pairs p)
+  -- The rest name no word a pair could reach. The two chosen-name arms carry
+  -- nothing at all -- CR 201.4's names are read off the source's
+  -- Object.chosenNames -- and CR 612.2's second sentence says a word swap could
+  -- not touch a card name even if they did. A count and a player scope are not
+  -- words either.
   PlayerEffect.CantCastSpells -> effect
   PlayerEffect.CantActivateAbilities _ -> effect
   PlayerEffect.CantCastMoreThan _ -> effect
@@ -517,12 +530,8 @@ rewritePlayerEffect pairs effect = case effect of
   PlayerEffect.SetMaximumHandSize _ -> effect
   PlayerEffect.IncreaseMaximumHandSize _ -> effect
   PlayerEffect.ReduceMaximumHandSize _ -> effect
-  PlayerEffect.DontLoseUnspentMana _ -> effect
   PlayerEffect.LoseLifeForUnspentMana -> effect
-  PlayerEffect.SpendManaAsThough _ -> effect
   PlayerEffect.CantBeTargetedBy _ -> effect
-  PlayerEffect.DamageCantBePrevented _ -> effect
-  PlayerEffect.DamageCantBeRedirected _ -> effect
   PlayerEffect.CantSearchLibraries _ -> effect
   PlayerEffect.CantBecomeMonarch -> effect
   PlayerEffect.CantSetSchemesInMotion -> effect
@@ -531,7 +540,7 @@ rewritePlayerEffect pairs effect = case effect of
   PlayerEffect.CantAttackWithCreatures -> effect
   PlayerEffect.CastOnlyAtSorcerySpeed -> effect
   PlayerEffect.PlayLandsFrom _ -> effect
-  -- A counter KIND is not a word CR 612.2's subtype pairs could reach either.
+  -- A counter KIND is not a word CR 612.2's pairs could reach either.
   PlayerEffect.CantGetCounters _ -> effect
   -- Nor is a coin's face, or the two flags beside it.
   PlayerEffect.StateCoinFlip _ -> effect
@@ -559,7 +568,7 @@ rewriteManaAddition pairs addition =
       ManaAddition.whenSpent = fmap (\w -> w {WhenSpent.casts = Filter.rewrite pairs (WhenSpent.casts w)}) (ManaAddition.whenSpent addition)
     }
 
--- CR 612's subtype word swap over an effect's AST. Cases on an effect's
+-- CR 612's word swap over an effect's AST. Cases on an effect's
 -- STRUCTURE -- does this arm carry a word a swap could reach -- never on which
 -- effect it is.
 rewriteEffect :: [(TextWord.TextWord, TextWord.TextWord)] -> Effect.Effect Card.Type.Card (GrantedAbility.GrantedAbility Card.Type.Card) -> Effect.Effect Card.Type.Card (GrantedAbility.GrantedAbility Card.Type.Card)
@@ -586,14 +595,15 @@ rewriteEffect pairs effect = case effect of
   -- CR 612.1 reaches the COUNT: it is a Quantity, whose Count carries a Filter
   -- that may name a subtype -- Cabal Coffers' "for each Swamp you control"
   -- under a Magical Hack. Pawl.ManaSpec's "Cabal Coffers" hacked board is what
-  -- proves it. The PRODUCTION is not reachable by a subtype pair, naming a mana
-  -- type, which is a symbol rather than a printed subtype word.
+  -- proves it. The PRODUCTION is reachable by no pair, naming a mana type
+  -- written as a symbol rather than a word (docs/decisions.md, "Colour words a
+  -- text change reaches").
   --
   -- CR 106.6's restriction and rider carry a filter each, and rule 612.1 reaches
   -- those by the same sentence. A REGRESSION FENCE rather than a proved
   -- behaviour: every printing in `data/cards/` writing one says "artifact
-  -- spells" or "abilities of artifacts", CR 205.2a card types a subtype pair
-  -- cannot swap, so neutralising these two lines leaves the whole suite green.
+  -- spells" or "abilities of artifacts", CR 205.2a card types no pair can
+  -- swap, so neutralising these two lines leaves the whole suite green.
   Effect.AddMana addition -> Effect.AddMana (rewriteManaAddition pairs addition)
   Effect.Firebend addition -> Effect.Firebend (rewriteManaAddition pairs addition)
   Effect.ActivateManaAbilities (ActivateManaAbilities.MkActivateManaAbilities ref filter_) -> Effect.ActivateManaAbilities (ActivateManaAbilities.MkActivateManaAbilities ref (Filter.rewrite pairs filter_))
@@ -1030,10 +1040,10 @@ rewriteEffect pairs effect = case effect of
   -- `restriction` is the third, and it is a bare Filter, so the first reason
   -- covers it unchanged.
   --
-  -- The rest name no word a subtype pair could reach: the caster is a PlayerRef,
+  -- The rest name no word a pair could reach: the caster is a PlayerRef,
   -- `transformed` is CR 712.11a's Bool, `withoutPayingManaCost` is CR 118.9's
   -- other wording and states no cost of its own, and `spending` is CR 118.14's
-  -- ManaSpending, which speaks of mana types rather than of subtypes.
+  -- ManaSpending, which names no mana type a card writes as a word.
   --
   -- A RECORD UPDATE, so -Werror's missing-fields check does not name a field
   -- added to either record later: a new Filter or Cost here owes its own descent,
@@ -1131,6 +1141,39 @@ rewriteMinted rewriteOne mint pc =
         let changed = min live (Map.findWithDefault 0 keyword (PC.textChangedKeywords pc))
          in fmap (rewriteOne pairs) (mintOne keyword changed) <> mintOne keyword (live - changed)
    in concatMap instances (Map.toAscList (PC.keywords pc))
+
+-- CR 612.2 over a mana type a card WRITES as a word -- "white mana", "spent as
+-- though it were red mana" -- which is a colour word used as one, where a mana
+-- symbol ("Add {W}") is no word and an effect producing mana is never
+-- rewritten (docs/decisions.md, "Colour words a text change reaches").
+-- Colorless is no colour (CR 105.4) and so no colour word.
+rewriteManaFilter :: [(TextWord.TextWord, TextWord.TextWord)] -> ManaFilter.ManaFilter -> ManaFilter.ManaFilter
+rewriteManaFilter pairs f = case f of
+  ManaFilter.Any -> f
+  ManaFilter.OfType t -> ManaFilter.OfType (rewriteWrittenManaType pairs t)
+  ManaFilter.NotOfType t -> ManaFilter.NotOfType (rewriteWrittenManaType pairs t)
+
+rewriteWrittenManaType :: [(TextWord.TextWord, TextWord.TextWord)] -> ManaType.ManaType -> ManaType.ManaType
+rewriteWrittenManaType pairs t = case t of
+  ManaType.Colored c -> ManaType.Colored (TextWord.Engine.colorAfter pairs c)
+  ManaType.Colorless -> t
+
+-- Both halves of CR 609.4b's clause are written as words: Sunglasses of Urza's
+-- "white mana as though it were red mana".
+rewriteSpendManaAsThough :: [(TextWord.TextWord, TextWord.TextWord)] -> SpendManaAsThough.SpendManaAsThough -> SpendManaAsThough.SpendManaAsThough
+rewriteSpendManaAsThough pairs clause =
+  clause
+    { SpendManaAsThough.which = rewriteManaFilter pairs (SpendManaAsThough.which clause),
+      SpendManaAsThough.asThough = Set.map (rewriteWrittenManaType pairs) (SpendManaAsThough.asThough clause)
+    }
+
+-- CR 612.1 through a damage pattern's two criteria.
+rewriteDamagePattern :: [(TextWord.TextWord, TextWord.TextWord)] -> DamagePattern.DamagePattern -> DamagePattern.DamagePattern
+rewriteDamagePattern pairs p =
+  p
+    { DamagePattern.whatSource = Filter.rewrite pairs (DamagePattern.whatSource p),
+      DamagePattern.whatRecipient = fmap (Filter.rewrite pairs) (DamagePattern.whatRecipient p)
+    }
 
 -- CR 612.2 over CostScale.PerColoredSymbol's colour, Drought's "black mana
 -- symbol"; a regression fence, no test changing Drought's text.
@@ -1271,7 +1314,7 @@ rewriteFace pairs face =
               _ -> f
          in renamed
               { -- CR 612.2's colour word in the defining text ("a 1/1 black Rat
-                -- token"), which is where a token's colour comes from (CR 111.4).
+                -- token"), which is where a token's colour comes from (CR 111.3).
                 Face.colorIndicator = Set.map (TextWord.Engine.colorAfter pair) (Face.colorIndicator renamed),
                 -- CR 702.14a's land-type word inside a landwalk. Map.mapKeysWith
                 -- (+), so two instances the rewrite collapses onto one keyword
@@ -1429,7 +1472,7 @@ rewriteManaRestriction pairs restriction =
 
 -- CR 612.1 through CR 106.6a's other clause: the rider's condition says WHICH
 -- objects it is about, and that is printed text too. Its effect
--- (Pawl.Types.ManaRiderEffect) names no word a subtype pair could reach.
+-- (Pawl.Types.ManaRiderEffect) names no word a pair could reach.
 rewriteManaRider :: [(TextWord.TextWord, TextWord.TextWord)] -> ManaRider.ManaRider -> ManaRider.ManaRider
 rewriteManaRider pairs rider = rider {ManaRider.condition = Filter.rewrite pairs (ManaRider.condition rider)}
 
@@ -1486,8 +1529,7 @@ rewriteGrantedAbility pairs granted = case granted of
         { AlternativeCost.condition = fmap (rewriteCondition pairs) (AlternativeCost.condition a),
           AlternativeCost.cost = Filter.rewriteCost pairs (AlternativeCost.cost a)
         }
-  -- Mana types and filters carry no land type word.
-  GrantedAbility.SelfSpendManaAsThough clause -> GrantedAbility.SelfSpendManaAsThough clause
+  GrantedAbility.SelfSpendManaAsThough clause -> GrantedAbility.SelfSpendManaAsThough (rewriteSpendManaAsThough pairs clause)
 
 -- CR 612.1 over a TRIGGERED ability printed on a permanent. Three parts, not
 -- just the payload: the CR 603.8 condition is where the word usually is, and CR
@@ -1543,11 +1585,7 @@ rewriteReplacementEffect pairs effect = case effect of
   ReplacementEffect.DamageR r ->
     ReplacementEffect.DamageR
       r
-        { DamageR.matching =
-            (DamageR.matching r)
-              { DamagePattern.whatSource = Filter.rewrite pairs (DamagePattern.whatSource (DamageR.matching r)),
-                DamagePattern.whatRecipient = fmap (Filter.rewrite pairs) (DamagePattern.whatRecipient (DamageR.matching r))
-              },
+        { DamageR.matching = rewriteDamagePattern pairs (DamageR.matching r),
           DamageR.rewrite = rewriteDamageRewrite pairs (DamageR.rewrite r),
           DamageR.riders = fmap (rewriteEffect pairs) (DamageR.riders r)
         }
@@ -1686,7 +1724,7 @@ rewriteDrawRewrite pairs rewrite = case rewrite of
 -- it. The arms are the rule rather than a proven
 -- behaviour -- an "except it has islandwalk", or that Artificial Evolution, would
 -- be what proves them. CR 707.9b's remaining arms name no word CR 612.2's
--- subtype swap reaches: the pair is two literals, the type clause names CR
+-- swap reaches: the pair is two literals, the type clause names CR
 -- 205.2a's card types, the supertype clauses CR 205.4a's supertypes, and the name
 -- clause a name, which CR 612.2's last sentence puts out of reach outright.
 rewriteCopyException :: [(TextWord.TextWord, TextWord.TextWord)] -> CopyException.CopyException (GrantedAbility.GrantedAbility Card.Type.Card) -> CopyException.CopyException (GrantedAbility.GrantedAbility Card.Type.Card)
@@ -2267,7 +2305,9 @@ rewriteQuantity pairs quantity = case quantity of
   Quantity.Type.UniqueVowelsOnSticker _ -> quantity
   Quantity.Type.VotesReceived _ -> quantity
   Quantity.Type.Star -> quantity
-  Quantity.Type.ManaCount _ -> quantity
+  -- Omnath, Locus of Mana's "each unspent green mana": rewriteManaFilter's
+  -- reading.
+  Quantity.Type.ManaCount count -> Quantity.Type.ManaCount count {ManaCount.filter = rewriteManaFilter pairs (ManaCount.filter count)}
   Quantity.Type.LifeTotal _ -> quantity
   Quantity.Type.StartingLifeTotal _ -> quantity
   Quantity.Type.Speed _ -> quantity

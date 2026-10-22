@@ -370,7 +370,7 @@ data Modification ability
     -- grant above, and the same rule governs it: the object's OTHER supertypes
     -- survive, and neither its card types nor its subtypes move.
     RemoveSupertype Supertype.Supertype
-  | ChangeWord ChangeWord.ChangeWord -- layer 3, CR 612 (Magical Hack, Artificial Evolution: from -> to)
+  | ChangeWord ChangeWord.ChangeWord -- layer 3, CR 612 (Magical Hack, Sleight of Mind: from -> to)
   | -- | layer 3, CR 613.1c / 612.5: the two objects in this effect's affected set
     -- exchange their text boxes (Exchange of Words, which CR 612.5 names as the
     -- only card that does it).

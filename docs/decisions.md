@@ -398,6 +398,33 @@ Entries are ordered by the first rule each cites.
   does not evolve", where CR 702.100c agrees with this reading.
 - **Issue**: none.
 
+## Colour words a text change reaches
+
+- **Question**: CR 612.2 changes "a Magic color word being used as a color
+  word" but lists no positions. Which of a card's colours are such words?
+- **Rules**: CR 612.1, 612.2, 105.1, 105.2, 105.4, 107.4, 202.2e, 700.5; CR
+  of 2026-08-07.
+- **Decision**: Every colour a card writes in words: a filter's colour
+  ("black creature", the "black" in "nonblack", protection or hexproof from
+  black), a set or added colour ("becomes black", a copy "except it's
+  white"), a token's defining colour ("a 1/1 black Rat token"), devotion's
+  colour, Drought's "black mana symbol", and mana a card names in words
+  ("white mana", "spent as though it were red mana", "unspent green mana").
+  Never a mana symbol, so mana an effect produces and every cost keep their
+  colour, and never the object's own colour, which comes from its mana cost
+  and colour indicator (CR 105.2, 202.2e) rather than from text. "Colorless"
+  is no colour (CR 105.4) and so no colour word.
+- **Rejected**: Reaching mana symbols too, on CR 612.1's "words or symbols":
+  CR 612.2 limits a colour-word change to words, and the cards' own rulings
+  ("It only changes what is printed on the card") describe text. Leaving
+  written mana types alone as if they were symbols: Oracle writes them as
+  words.
+- **Site**: `Pawl.Engine.Filter.rewrite`'s HasColor arm and
+  `Pawl.Engine.Projection.Rewrite`'s rewriteModification, rewriteFace,
+  rewriteManaFilter, rewriteCostScale and Devotion arm; proved by the
+  `data/scenarios/text-change/` scenarios.
+- **Issue**: #4819.
+
 ## Which timestamp the suspected designation's abilities have
 
 - **Question**: CR 701.60c's menace and "can't block" come from the rules, so

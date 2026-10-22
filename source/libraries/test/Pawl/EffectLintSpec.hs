@@ -269,7 +269,7 @@ ownQuantities :: Effect.Effect Card.Type.Card (GrantedAbility.GrantedAbility Car
 ownQuantities effect = case effect of
   Effect.DealDamage (DealDamage.MkDealDamage parts _ _) -> fmap DamagePart.quantity (Foldable.toList parts)
   Effect.ModifyTarget (ModifyTarget.MkModifyTarget duration modification _ _) -> durationQuantities duration <> Projection.quantitiesOf modification
-  Effect.ChangeText {} -> []
+  Effect.ChangeText x -> durationQuantities (ChangeText.duration x)
   Effect.AddMana _ -> []
   Effect.Firebend _ -> []
   Effect.ActivateManaAbilities _ -> []

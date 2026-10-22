@@ -5,7 +5,6 @@
 module Pawl.Engine.TextWord where
 
 import qualified Data.List as List
-import qualified Data.Maybe as Maybe
 import qualified Data.Set as Set
 import qualified Pawl.Engine.Subtype as Subtype
 import qualified Pawl.Types.CardType as CardType
@@ -75,10 +74,3 @@ colorAfter :: [(TextWord.TextWord, TextWord.TextWord)] -> Color.Color -> Color.C
 colorAfter pairs c = case lookup (TextWord.ColorWord c) pairs of
   Just (TextWord.ColorWord d) -> d
   _ -> c
-
--- | The subtype pairs of a table, for a reader that only ever meets a subtype
--- word.
-subtypePairs :: [(TextWord.TextWord, TextWord.TextWord)] -> [(Subtype.Type.Subtype, Subtype.Type.Subtype)]
-subtypePairs = Maybe.mapMaybe $ \pair -> case pair of
-  (TextWord.SubtypeWord from, TextWord.SubtypeWord to) -> Just (from, to)
-  _ -> Nothing

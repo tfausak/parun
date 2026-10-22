@@ -193,7 +193,7 @@ layer m = case m of
   Modification.RemoveSupertype _ -> Layer.Type
   Modification.ChangeWord {} -> Layer.Text
   -- CR 613.1c: CR 612.5 is a text-changing effect, so it shares layer 3 with
-  -- the subtype-word swap above. Answering any other layer leaves the suite
+  -- the word swap above. Answering any other layer leaves the suite
   -- green, since nothing else in this unit reads the layer directly.
   Modification.ExchangeTextBoxes -> Layer.Text
   Modification.AddNamesMatching _ -> Layer.Text
@@ -2097,7 +2097,7 @@ setterPartsOf src aff gs =
       granted = [m | (_, sa) <- grantedStaticAbilitiesOf src gs, setting sa, StaticAbility.affected sa == aff, m <- typeParts sa]
    in fmap part (filter setsLandSubtype stored <> printed <> granted)
 
--- CR 612.1: the subtype-word swaps the rules text `oid` carries has taken, as one
+-- CR 612.1: the word swaps the rules text `oid` carries has taken, as one
 -- lookup table -- every word paired with the word it ends up as. CR 612.2's
 -- family gate is applied where a pair meets a word, not here.
 --

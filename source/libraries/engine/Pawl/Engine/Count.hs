@@ -1105,7 +1105,7 @@ becamePermanents spell events =
 -- every "change the text" printing names a spell or a permanent, or a card type
 -- word rather than a subtype (Scryfall `o:"change the text" include:extras`,
 -- 2026-10-06, Deceptive Divination the one card-type hit). A card in a hand or
--- graveyard changed by a subtype swap would refute it.
+-- graveyard changed by a word swap would refute it.
 abilitiesOf :: Bool -> PC.ProjectedCharacteristics -> [ActivatedAbility.ActivatedAbility Card.Card (GrantedAbility.GrantedAbility Card.Card)]
 abilitiesOf deploys pc =
   Keyword.activatedAbilitiesOf
