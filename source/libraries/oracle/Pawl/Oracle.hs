@@ -47,7 +47,7 @@ render = Maybe.listToMaybe . renderings
 -- empty for a card some part of which is not rendered yet. Only a single
 -- normal face renders yet, and only the parts of it the fields below name:
 -- its keywords, its enchant abilities (CR 702.5a), its static abilities (CR
--- 604), its spell (CR 112), its activated abilities (CR 602) and its
+-- 604), its characteristic-defining power and toughness (CR 604.3), its spell (CR 112), its activated abilities (CR 602) and its
 -- triggered abilities (CR 603). A card with no rules text renders as no text,
 -- which is what a vanilla creature and a basic land print (CR 305.6, CR
 -- 207.2a).
@@ -68,7 +68,7 @@ faceText :: Face.Face Card.Card -> [Text.Text]
 faceText face = do
   let self = CardName.unwrap (Face.name face)
       context = Target.MkContext self Map.empty (Keyword.keywordWord self) [Text.pack " "] Nothing
-      rest = face {Face.keywords = Map.empty, Face.spell = Face.defaultSpell, Face.activatedAbilities = [], Face.triggeredAbilities = [], Face.staticAbilities = [], Face.enchant = []}
+      rest = face {Face.keywords = Map.empty, Face.spell = Face.defaultSpell, Face.activatedAbilities = [], Face.triggeredAbilities = [], Face.staticAbilities = [], Face.enchant = [], Face.characteristicPT = Nothing}
       subtypes = TypeLine.subtypes (Face.typeLine face)
   Monad.guard (rest == Face.Oracle.bare (Face.name face) (Face.oracleText face) (Face.manaCost face) (Face.colorIndicator face) (Face.typeLine face) (Face.power face) (Face.toughness face) Map.empty)
   keywords <- Keyword.lines self (Face.keywords face)
@@ -79,9 +79,10 @@ faceText face = do
   enchants <- traverse (Continuous.enchant context) (Face.enchant face)
   let bestowed = any (\k -> case k of Keyword.Type.Bestow _ -> True; _ -> False) (Map.keys (Face.keywords face))
   statics <- traverse (Continuous.static context (Continuous.attachedWord subtypes bestowed) (Face.enchant face)) (Face.staticAbilities face)
+  defined <- traverse (Continuous.defining context (Face.power face) (Face.toughness face)) (Maybe.maybeToList (Face.characteristicPT face))
   abilities <- traverse (activated context) (Face.activatedAbilities face)
   triggers <- traverse (triggered context (Set.member CardType.Creature (TypeLine.types (Face.typeLine face)))) (Face.triggeredAbilities face)
-  [Text.intercalate (Text.pack "\n") (keywords <> enchants <> statics <> spell <> abilities <> triggers)]
+  [Text.intercalate (Text.pack "\n") (keywords <> enchants <> defined <> statics <> spell <> abilities <> triggers)]
 
 -- | A triggered ability: "[When/Whenever/At] [trigger event], [effect]" (CR
 -- 603.1), the effect calling the source "it" once the event has named it

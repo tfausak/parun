@@ -16,15 +16,20 @@ import qualified Pawl.Spec as Spec
 import qualified Pawl.Types.ActivatedAbility as ActivatedAbility
 import qualified Pawl.Types.Activator as Activator
 import qualified Pawl.Types.Affected as Affected
+import qualified Pawl.Types.AgainstSlot as AgainstSlot
+import qualified Pawl.Types.Aggregation as Aggregation
+import qualified Pawl.Types.Arithmetic as Arithmetic
 import qualified Pawl.Types.Card as Card
 import qualified Pawl.Types.CardName as CardName
 import qualified Pawl.Types.CardType as CardType
+import qualified Pawl.Types.CharacteristicPT as CharacteristicPT
 import qualified Pawl.Types.ChosenPermanents as ChosenPermanents
 import qualified Pawl.Types.Clause as Clause
 import qualified Pawl.Types.Color as Color
 import qualified Pawl.Types.Cost as Cost
 import qualified Pawl.Types.CostAmount as CostAmount
 import qualified Pawl.Types.CostComponent as CostComponent
+import qualified Pawl.Types.Count as Count
 import qualified Pawl.Types.CountedDiscard as CountedDiscard
 import qualified Pawl.Types.Counter as Counter
 import qualified Pawl.Types.CounterKind as CounterKind
@@ -42,6 +47,7 @@ import qualified Pawl.Types.Face as Face
 import qualified Pawl.Types.Filter as Filter
 import qualified Pawl.Types.GrantedAbility as GrantedAbility
 import qualified Pawl.Types.HowMany as HowMany
+import qualified Pawl.Types.InZone as InZone
 import qualified Pawl.Types.Keyword as Keyword
 import qualified Pawl.Types.Layout as Layout
 import qualified Pawl.Types.LibraryPlacement as LibraryPlacement
@@ -54,6 +60,7 @@ import qualified Pawl.Types.ManaProduction as ManaProduction
 import qualified Pawl.Types.ManaRetention as ManaRetention
 import qualified Pawl.Types.ManaSymbol as ManaSymbol
 import qualified Pawl.Types.ManaType as ManaType
+import qualified Pawl.Types.Measure as Measure
 import qualified Pawl.Types.Modal as Modal
 import qualified Pawl.Types.Mode as Mode
 import qualified Pawl.Types.ModeSelection as ModeSelection
@@ -75,6 +82,7 @@ import qualified Pawl.Types.PutCounters as PutCounters
 import qualified Pawl.Types.Quantity as Quantity
 import qualified Pawl.Types.RandomCardInHand as RandomCardInHand
 import qualified Pawl.Types.Regenerability as Regenerability
+import qualified Pawl.Types.Scope as Scope
 import qualified Pawl.Types.SlotCount as SlotCount
 import qualified Pawl.Types.SlotName as SlotName
 import qualified Pawl.Types.StaticAbility as StaticAbility
@@ -84,6 +92,7 @@ import qualified Pawl.Types.TapState as TapState
 import qualified Pawl.Types.TargetCount as TargetCount
 import qualified Pawl.Types.TargetSlot as TargetSlot
 import qualified Pawl.Types.TheseDiscard as TheseDiscard
+import qualified Pawl.Types.Times as Times
 import qualified Pawl.Types.Together as Together
 import qualified Pawl.Types.Toughness as Toughness
 import qualified Pawl.Types.TriggerCondition as TriggerCondition
@@ -418,6 +427,113 @@ spec s = Spec.describe s "Pawl.Oracle" $ do
     let shield kind ref = Effect.PreventNextDamage (PreventNextDamage.MkPreventNextDamage Duration.UntilEndOfTurn kind (Just ref) Nothing Nothing Nothing (Quantity.Literal 3) Seq.empty)
     Spec.assertEq s (Just (Text.pack "Prevent the next 3 damage that would be dealt to any target this turn.")) (Oracle.render (spell [clause [shield Nothing (ObjectRef.InSlot target)]] [(target, TargetSlot.required Pool.AnyTarget Nothing)]))
     Spec.assertEq s (Just (Text.pack "Prevent the next 3 combat damage that would be dealt to you this turn.")) (Oracle.render (spell [clause [shield (Just DamageKind.Combat) (ObjectRef.InSlot you)]] []))
+
+  -- CR 608.2h: a count reads "for each" object or "equal to the number of"
+  -- them, as printings differ (Fruition, Clearwater Goblet; Theft of Dreams,
+  -- Dream Salvage), "for each" first; permanents nothing else places are "on
+  -- the battlefield", and a factor reads before "for each" (Gerrard's Wisdom).
+  Spec.it s "render counts objects for each or equal to their number" $ do
+    let forests = countOf (Filter.HasSubtype Subtype.Forest) (onBattlefield (PlayerRef.Relative PlayerRelation.AnyPlayer))
+    Spec.assertEq s [Text.pack "You gain 1 life for each Forest on the battlefield.", Text.pack "You gain life equal to the number of Forests on the battlefield."] (Oracle.renderings (spell [clause [gainLifeBy forests]] []))
+    let hand = countOf (Filter.And []) (InZone.MkInZone Zone.Hand (PlayerRef.Relative PlayerRelation.You))
+    Spec.assertEq s [Text.pack "You gain 2 life for each card in your hand."] (Oracle.renderings (spell [clause [gainLifeBy (Quantity.Arithmetic (Arithmetic.Times (Times.MkTimes 2 hand)))]] []))
+    let tapped = countOf (Filter.And [Filter.HasCardType CardType.Creature, Filter.IsTapped, Filter.ControlledByBound target]) (onBattlefield (PlayerRef.Relative PlayerRelation.AnyPlayer))
+        opponent = [(target, TargetSlot.required Pool.Players (Just (Filter.IsPlayer PlayerRelation.Opponent)))]
+    Spec.assertEq s [Text.pack "Draw a card for each tapped creature target opponent controls.", Text.pack "Draw cards equal to the number of tapped creatures target opponent controls."] (Oracle.renderings (spell [clause [Effect.Draw (Draw.MkDraw (PlayerRef.Relative PlayerRelation.You) tapped Nothing)]] opponent))
+    let swamps = countOf (Filter.And [Filter.HasSubtype Subtype.Swamp, Filter.ControlledBy PlayerRelation.You]) (onBattlefield (PlayerRef.Relative PlayerRelation.AnyPlayer))
+        coffers = activated (Cost.MkCost (Just (ManaCost.MkManaCost [ManaSymbol.Generic 2])) [CostComponent.TapThis]) (Effect.AddMana (ManaAddition.MkManaAddition (PlayerRef.Relative PlayerRelation.You) (ManaProduction.OfType (ManaType.Colored Color.Black)) swamps ManaRetention.Ordinary Nothing Nothing Nothing))
+    Spec.assertEq s [Text.pack "{2}, {T}: Add {B} for each Swamp you control."] (Oracle.renderings (withFace (\f -> f {Face.activatedAbilities = [coffers]})))
+    let theirs = countOf (Filter.HasCardType CardType.Creature) (InZone.MkInZone Zone.Graveyard PlayerRef.Candidate)
+    Spec.assertEq s (Just (Text.pack "Each player draws a card for each creature card in their graveyard.")) (Oracle.render (spell [clause [Effect.Draw (Draw.MkDraw (PlayerRef.Relative PlayerRelation.AnyPlayer) theirs Nothing)]] []))
+
+  -- CR 120.1: damage reads "equal to" a count after its recipients (Rockslide
+  -- Ambush) and a characteristic before them (Soul's Fire), each also the
+  -- other way, as printings differ; a player's lands are the ones "they
+  -- control" (Acidic Soil).
+  Spec.it s "render deals damage equal to a number" $ do
+    let mountains = countOf (Filter.And [Filter.HasSubtype Subtype.Mountain, Filter.ControlledBy PlayerRelation.You]) (onBattlefield (PlayerRef.Relative PlayerRelation.AnyPlayer))
+        ambush = spell [clause [damageBy [(ObjectRef.InSlot target, mountains)]]] [(target, TargetSlot.required Pool.Creatures Nothing)]
+    Spec.assertEq s [Text.pack "Spark deals damage to target creature equal to the number of Mountains you control.", Text.pack "Spark deals damage equal to the number of Mountains you control to target creature."] (Oracle.renderings ambush)
+    let theirs = countOf (Filter.And [Filter.HasCardType CardType.Land, Filter.ControlledByRecipient]) (onBattlefield (PlayerRef.Relative PlayerRelation.AnyPlayer))
+    Spec.assertEq s (Just (Text.pack "Spark deals damage to each player equal to the number of lands they control.")) (Oracle.render (spell [clause [damageBy [(ObjectRef.EachPlayer, theirs)]]] []))
+    let dealer = SlotName.MkSlotName (Text.pack "dealer")
+        fire = Effect.DealDamage (DealDamage.MkDealDamage (Seq.singleton (DamagePart.MkDamagePart (ObjectRef.InSlot target) (powerOf dealer))) (Just dealer) Nothing)
+        slots = [(dealer, TargetSlot.required Pool.Creatures (Just (Filter.ControlledBy PlayerRelation.You))), (target, TargetSlot.required Pool.AnyTarget Nothing)]
+    Spec.assertEq s [Text.pack "Target creature you control deals damage equal to its power to any target.", Text.pack "Target creature you control deals damage to any target equal to its power."] (Oracle.renderings (spell [clause [fire]] slots))
+    let victim f = [(dealer, TargetSlot.required Pool.Creatures (Just (Filter.ControlledBy PlayerRelation.You))), (target, TargetSlot.required Pool.Creatures (Just f))]
+    Spec.assertEq s (Just (Text.pack "Target creature you control deals damage equal to its power to another target creature.")) (Oracle.render (spell [clause [fire]] (victim (Filter.Not (Filter.IsBound dealer)))))
+    Spec.assertEq s (Just (Text.pack "Target creature you control deals damage equal to its power to target creature you don't control.")) (Oracle.render (spell [clause [fire]] (victim (Filter.Not (Filter.ControlledBy PlayerRelation.You)))))
+    let eater = activated (Cost.MkCost (Just (ManaCost.MkManaCost [])) [CostComponent.TapThis]) (damageBy [(ObjectRef.InSlot target, Quantity.Measure Measure.Power)])
+    Spec.assertEq s (Just (Text.pack "{T}: Spark deals damage equal to its power to any target.")) (Oracle.render (withFace (\f -> f {Face.activatedAbilities = [eater {ActivatedAbility.modal = payload [clause [damageBy [(ObjectRef.InSlot target, Quantity.Measure Measure.Power)]]] [(target, TargetSlot.required Pool.AnyTarget Nothing)]}]})))
+
+  -- CR 208.1 / 601.2c: a target's characteristic is "its" once the target is
+  -- named (Swords to Plowshares), and names the target where nothing else
+  -- does (Soul's Majesty).
+  Spec.it s "render reads a target's characteristic as its own" $ do
+    let mine = [(target, TargetSlot.required Pool.Creatures (Just (Filter.ControlledBy PlayerRelation.You)))]
+        majesty = spell [clause [Effect.Draw (Draw.MkDraw (PlayerRef.Relative PlayerRelation.You) (powerOf target) Nothing)]] mine
+    Spec.assertEq s [Text.pack "Draw cards equal to the power of target creature you control."] (Oracle.renderings majesty)
+    let plowshares = spell [clause [Effect.MoveToZone (move (ObjectRef.InSlot target) Zone.Exile), Effect.GainLife (PlayerQuantity.MkPlayerQuantity (PlayerRef.ControllerOfBound target) (powerOf target))]] [(target, TargetSlot.required Pool.Creatures Nothing)]
+    Spec.assertBool s (elem (Text.pack "Exile target creature. Its controller gains life equal to its power.") (Oracle.renderings plowshares)) "no \"its power\""
+
+  -- CR 107.3: a change that counts reads "for each" (Empyrial Armor) or "+X"
+  -- with what X is (Inner Calm, Outer Strength), "for each" first; a change by
+  -- the target's own power is written as doubling is (#5486).
+  Spec.it s "render prints a change to power and toughness that counts" $ do
+    let hand = countOf (Filter.And []) (InZone.MkInZone Zone.Hand (PlayerRef.Relative PlayerRelation.You))
+        creature = [(target, TargetSlot.required Pool.Creatures Nothing)]
+        calm = spell [clause [modify (ObjectRef.InSlot target) Duration.UntilEndOfTurn (ptBy hand hand)]] creature
+    Spec.assertEq s (Just (Text.pack "Target creature gets +1/+1 until end of turn for each card in your hand.")) (Oracle.render calm)
+    Spec.assertBool s (Oracle.says calm (CardName.MkCardName (Text.pack "Spark")) (Text.pack "Target creature gets +X/+X until end of turn, where X is the number of cards in your hand.")) "no \"where X is\""
+    let artifacts = countOf (Filter.And [Filter.HasCardType CardType.Artifact, Filter.ControlledBy PlayerRelation.You]) (onBattlefield (PlayerRef.Relative PlayerRelation.AnyPlayer))
+    Spec.assertEq s (Just (Text.pack "Spark gets +1/+0 for each artifact you control.")) (Oracle.render (withFace (\f -> f {Face.staticAbilities = [static (Affected.Matching Filter.IsSource) [ptBy artifacts (Quantity.Literal 0)]]})))
+    Spec.assertEq s Nothing (Oracle.render (spell [clause [modify (ObjectRef.InSlot target) Duration.UntilEndOfTurn (ptBy (powerOf target) (Quantity.Literal 0))]] creature))
+
+  -- CR 604.3 / 208.2: a characteristic-defining ability gives the stars a face
+  -- prints, both "each" (Nightmare) or one (Sylvan Yeti).
+  Spec.it s "render prints a characteristic-defining power and toughness" $ do
+    let swamps = countOf (Filter.And [Filter.HasSubtype Subtype.Swamp, Filter.ControlledBy PlayerRelation.You]) (onBattlefield (PlayerRef.Relative PlayerRelation.AnyPlayer))
+        starred p t = withFace (\f -> f {Face.power = Just (Power.MkPower p), Face.toughness = Just (Toughness.MkToughness t), Face.characteristicPT = Just (CharacteristicPT.MkCharacteristicPT swamps swamps)})
+    Spec.assertEq s (Just (Text.pack "Spark's power and toughness are each equal to the number of Swamps you control.")) (Oracle.render (starred Quantity.Star Quantity.Star))
+    Spec.assertEq s (Just (Text.pack "Spark's power is equal to the number of Swamps you control.")) (Oracle.render (starred Quantity.Star (Quantity.Literal 4)))
+
+  -- CR 111.1 / 122.1: tokens and counters "for each" object counted, or "a
+  -- number of" them (Endless Swarm, Tyranid Invasion; Khabal Ghoul, Rhovanion
+  -- Rampager), "for each" first.
+  Spec.it s "render creates tokens and puts counters by a count" $ do
+    let hand = countOf (Filter.And []) (InZone.MkInZone Zone.Hand (PlayerRef.Relative PlayerRelation.You))
+        snake = token "Snake Token" [Color.Green] [Subtype.Snake] 1 []
+        swarm = Effect.Create (Create.MkCreate hand snake EntryRiders.defaultValue Nothing (PlayerRef.Relative PlayerRelation.You))
+    Spec.assertEq s [Text.pack "Create a 1/1 green Snake creature token for each card in your hand.", Text.pack "Create a number of 1/1 green Snake creature tokens equal to the number of cards in your hand."] (Oracle.renderings (spell [clause [swarm]] []))
+    let opponents = Quantity.Count (Count.MkCount (Scope.OverPlayers (PlayerRef.Relative PlayerRelation.Opponent)) (Filter.And []) Aggregation.Members)
+        invasion = Effect.Create (Create.MkCreate opponents snake EntryRiders.defaultValue Nothing (PlayerRef.Relative PlayerRelation.You))
+    Spec.assertBool s (Oracle.says (spell [clause [invasion]] []) (CardName.MkCardName (Text.pack "Spark")) (Text.pack "Create a number of 1/1 green Snake creature tokens equal to the number of opponents you have.")) "no \"opponents you have\""
+    let ghoul = Effect.PutCounters (PutCounters.MkPutCounters CounterKind.PlusOnePlusOne hand (ObjectRef.InSlot (SlotName.MkSlotName (Text.pack "self"))))
+    Spec.assertEq s [Text.pack "Put a +1/+1 counter on Spark for each card in your hand.", Text.pack "Put a number of +1/+1 counters on Spark equal to the number of cards in your hand."] (Oracle.renderings (spell [clause [ghoul]] []))
+
+-- A count of the members of a zone matching the filter.
+countOf :: Filter.Filter Keyword.Keyword -> InZone.InZone -> Quantity.Quantity
+countOf f zone = Quantity.Count (Count.MkCount (Scope.InZone zone) f Aggregation.Members)
+
+-- The battlefield, as a count's zone.
+onBattlefield :: PlayerRef.PlayerRef -> InZone.InZone
+onBattlefield = InZone.MkInZone Zone.Battlefield
+
+-- The power of the object a slot names.
+powerOf :: SlotName.SlotName -> Quantity.Quantity
+powerOf slot = Quantity.AgainstSlot (AgainstSlot.MkAgainstSlot slot (Quantity.Measure Measure.Power))
+
+-- Damage of these amounts to these objects.
+damageBy :: [(ObjectRef.ObjectRef, Quantity.Quantity)] -> Effect.Effect Card.Card (GrantedAbility.GrantedAbility Card.Card)
+damageBy parts = Effect.DealDamage (DealDamage.MkDealDamage (Seq.fromList (fmap (uncurry DamagePart.MkDamagePart) parts)) Nothing Nothing)
+
+-- You gain this much life.
+gainLifeBy :: Quantity.Quantity -> Effect.Effect Card.Card (GrantedAbility.GrantedAbility Card.Card)
+gainLifeBy = Effect.GainLife . PlayerQuantity.MkPlayerQuantity (PlayerRef.Relative PlayerRelation.You)
+
+-- A change to power and toughness by these amounts.
+ptBy :: Quantity.Quantity -> Quantity.Quantity -> Modification.Modification (GrantedAbility.GrantedAbility Card.Card)
+ptBy p t = Modification.ModifyPowerToughness (ModifyPowerToughness.MkModifyPowerToughness p t)
 
 -- A move of these objects to this zone, with nothing else said.
 move :: ObjectRef.ObjectRef -> Zone.Zone -> MoveToZone.MoveToZone (GrantedAbility.GrantedAbility Card.Card)

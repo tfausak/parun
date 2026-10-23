@@ -12,12 +12,6 @@
               "type": "And",
               "value": [
                 {
-                  "type": "HasCardType",
-                  "value": {
-                    "type": "Creature"
-                  }
-                },
-                {
                   "type": "HasSubtype",
                   "value": {
                     "type": "Rat"
@@ -56,12 +50,6 @@
             "filter": {
               "type": "And",
               "value": [
-                {
-                  "type": "HasCardType",
-                  "value": {
-                    "type": "Creature"
-                  }
-                },
                 {
                   "type": "HasSubtype",
                   "value": {

@@ -81,6 +81,9 @@ phrase f named = case f of
     word <- named k
     [qualifier (Text.pack "without " <> Text.toLower word) (Text.pack "without " <> Text.toLower word)]
   Filter.Not Filter.IsSource -> [adjective (Text.pack "other")]
+  -- Another of the mode's objects than the one a slot names (Fall of the
+  -- Hammer).
+  Filter.Not (Filter.IsBound _) -> [adjective (Text.pack "other")]
   Filter.Not Filter.IsToken -> [adjective (Text.pack "nontoken")]
   Filter.HasAttached (Filter.HasSubtype Subtype.Aura) -> [adjective (Text.pack "enchanted")]
   Filter.HasAttached (Filter.HasSubtype Subtype.Equipment) -> [adjective (Text.pack "equipped")]
@@ -90,6 +93,7 @@ phrase f named = case f of
   Filter.IsBlocking -> [adjective (Text.pack "blocking")]
   Filter.ControlledBy PlayerRelation.You -> [qualifier (Text.pack "you control") (Text.pack "you control")]
   Filter.ControlledBy PlayerRelation.Opponent -> [qualifier (Text.pack "an opponent controls") (Text.pack "your opponents control")]
+  Filter.Not (Filter.ControlledBy PlayerRelation.You) -> [qualifier (Text.pack "you don't control") (Text.pack "you don't control")]
   Filter.IsPlayer PlayerRelation.Opponent -> [noun (Text.pack "opponent") (Just (Text.pack "opponents"))]
   Filter.IsPlayer PlayerRelation.AnyPlayer -> [noun (Text.pack "player") (Just (Text.pack "players"))]
   _ -> []
