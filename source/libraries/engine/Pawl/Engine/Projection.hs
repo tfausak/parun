@@ -1585,7 +1585,8 @@ freezeQuantities viewOf gs announcedOn source context m =
         -- CR 608.2h: the type the source holds as this resolves is locked in, so
         -- the source's next choice (Effect.ChooseBasicLandType) reaches no
         -- effect already stored. Nothing for a source that chose none. Proved
-        -- by data/scenarios/mystic-compass-*.
+        -- by data/scenarios/'s Mystic Compass scenario, which Disenchants the
+        -- Compass after it resolves.
         Modification.SetLandSubtypeToChosen ->
           Modification.SetLandSubtype <$> Game.choiceWithLastKnown Chosen.Subtype (Game.readingAcquisition announcedOn source gs source) source gs
         Modification.AddLandSubtype _ -> Just m
