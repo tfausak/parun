@@ -3723,6 +3723,7 @@ effectIsImpossible resolving source controller legal gs effect = case effect of
   Effect.Reroll -> False
   Effect.RerollStoredResults _ -> False
   Effect.ChooseCardName {} -> False
+  Effect.ChooseBasicLandType -> False
   Effect.Bolster {} -> False
   Effect.Amass {} -> False
   Effect.Blight {} -> False
@@ -9322,6 +9323,19 @@ applyOneEffect runSubgame resolving source controller legal chosen effect = case
     -- still keeps a named card (its CR 608.2h scenario under data/scenarios).
     Monad.unless (Map.null picked) $
       State.modify' (Game.recordChoice Chosen.Names (Game.readingAcquisition resolving source gs source) (const (Just picked)) source)
+  -- CR 608.2d: Mystic Compass's "the basic land type of your choice", announced
+  -- by the resolving controller as the effect applies. Asked unconditionally,
+  -- EntryRewrite.ChooseBasicLandType's reason: CR 305.6's five are always all
+  -- legal and distinguishable.
+  --
+  -- Written to the SOURCE, ChooseCardName's road above, and read back by the
+  -- next instruction's freeze (Projection.freezeQuantities' arm for
+  -- Modification.SetLandSubtypeToChosen), so a later activation's choice
+  -- rewrites the field without reaching an effect already stored.
+  Effect.ChooseBasicLandType -> do
+    gs <- State.get
+    picked <- Game.choose (Prompt.ChooseBasicLandType (Decide.deciderFor controller gs) controller source)
+    State.modify' (Game.recordChoice Chosen.Subtype (Game.readingAcquisition resolving source gs source) (const (Just picked)) source)
   -- CR 400.11c: the resolving controller reveals a card they own from outside the
   -- game matching the filter and puts it into their hand -- Burning Wish.
   --

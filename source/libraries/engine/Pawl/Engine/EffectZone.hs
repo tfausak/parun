@@ -163,6 +163,7 @@ zonesFunctionedAgainst itself delayed effect = case effect of
   Effect.Reroll -> Set.empty
   Effect.RerollStoredResults _ -> Set.empty
   Effect.ChooseCardName _ -> Set.empty
+  Effect.ChooseBasicLandType -> Set.empty
   Effect.FromOutsideTheGame _ -> Set.empty
   -- CR 608.2n: the spell exiles ITSELF, so this says nothing about where an
   -- ability functions -- and no ability can print it at all.

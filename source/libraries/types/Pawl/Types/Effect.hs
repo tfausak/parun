@@ -687,6 +687,9 @@ data Effect card ability
     -- Pawl.Interpreter.policingCardNames is what judges the answer, the engine
     -- being unable to resolve a name at all.
     ChooseCardName ChooseCardName.ChooseCardName
+  | -- | CR 608.2d / 305.6: the resolving controller chooses a basic land type,
+    -- written to the source's Object.chosenSubtype (Mystic Compass).
+    ChooseBasicLandType
   | -- | CR 701.39a: "bolster N" -- choose a creature the resolving controller
     -- controls with the least toughness, or tied for least, then put that many
     -- +1\/+1 counters on it. Choose, not target.
