@@ -1,0 +1,10 @@
+{
+  "description": "CR 613.1e / 105.3 whole card: Darkest Hour makes every creature black, and nothing else",
+  "note": "Bob's green Grizzly Bears and alice's red Hill Giant are black only; bob's Caltrops, an artifact, stays colorless.",
+  "board": {"active": "alice", "step": "PrecombatMain", "seats": [{"name": "alice", "battlefield": [{"card": "Darkest Hour"}, {"card": "Hill Giant", "label": "giant"}], "library": [{"card": "Island"}, {"card": "Island"}, {"card": "Island"}]}, {"name": "bob", "battlefield": [{"card": "Grizzly Bears", "label": "bears"}, {"card": "Caltrops", "label": "caltrops"}], "library": [{"card": "Island"}, {"card": "Island"}, {"card": "Island"}]}]},
+  "timeline": [
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "check": {"View": {"of": "Colors", "object": "$bears", "is": ["Black"]}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "check": {"View": {"of": "Colors", "object": "$giant", "is": ["Black"]}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "check": {"View": {"of": "Colors", "object": "$caltrops", "is": []}}}
+  ]
+}

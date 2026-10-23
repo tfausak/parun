@@ -1,0 +1,11 @@
+{
+  "description": "CR 504.1 / 513.1 whole card: Grafted Skullcap draws its controller an additional card in their draw step and discards their hand at the beginning of their end step",
+  "note": "Alice starts her third turn with one card, draws two in her draw step and has three; at her end step all three go to her graveyard. Bob's draw step, on turn 4, draws him only one.",
+  "board": {"active": "alice", "turn": 3, "step": "Upkeep", "seats": [{"name": "alice", "battlefield": [{"card": "Grafted Skullcap"}], "hand": [{"card": "Forest"}], "library": [{"card": "Island"}, {"card": "Island"}, {"card": "Island"}, {"card": "Island"}]}, {"name": "bob", "library": [{"card": "Island"}, {"card": "Island"}, {"card": "Island"}]}]},
+  "timeline": [
+    {"turn": 3, "step": "PrecombatMain", "player": "alice", "check": {"View": {"of": "Zone", "player": "alice", "zone": "Hand", "is": ["Forest", "Island#6", "Island#7"]}}},
+    {"turn": 4, "step": "PrecombatMain", "player": "bob", "check": {"View": {"of": "Zone", "player": "alice", "zone": "Hand", "is": []}}},
+    {"turn": 4, "step": "PrecombatMain", "player": "bob", "check": {"Count": {"player": "alice", "zone": "Graveyard", "card": "Island", "count": 2}}},
+    {"turn": 4, "step": "PrecombatMain", "player": "bob", "check": {"Count": {"player": "bob", "zone": "Hand", "card": "Island", "count": 1}}}
+  ]
+}

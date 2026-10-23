@@ -356,6 +356,9 @@ data TriggerCondition
     -- nontoken Merfolk you control become tapped" (Deeproot Pilgrimage), once
     -- per tapping event (CR 603.2c).
     PermanentsBecomeTapped (Filter.Filter Keyword.Keyword)
+  | -- | CR 701.26a by a bystander, once per permanent: "whenever an Island an
+    -- opponent controls becomes tapped" (Thoughtleech).
+    PermanentBecomesTapped (Filter.Filter Keyword.Keyword)
   | -- | CR 701.26b's "becomes untapped" read off the bearer itself (Oreskos Sun
     -- Guide), the other direction of the status the arm above watches.
     SelfBecomesUntapped

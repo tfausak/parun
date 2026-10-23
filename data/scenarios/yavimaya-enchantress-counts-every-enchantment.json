@@ -1,0 +1,8 @@
+{
+  "description": "CR 613.4c whole card: Yavimaya Enchantress gets +1/+1 for each enchantment on the battlefield",
+  "note": "One enchantment is alice's and two are bob's, so the 2/2 Enchantress is 5/5: every controller's enchantments count.",
+  "board": {"active": "alice", "step": "PrecombatMain", "seats": [{"name": "alice", "battlefield": [{"card": "Yavimaya Enchantress", "label": "enchantress"}, {"card": "Bereavement"}], "library": [{"card": "Island"}, {"card": "Island"}, {"card": "Island"}]}, {"name": "bob", "battlefield": [{"card": "Rule of Law"}, {"card": "Darkest Hour"}], "library": [{"card": "Island"}, {"card": "Island"}, {"card": "Island"}]}]},
+  "timeline": [
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "check": {"PowerToughness": {"object": "$enchantress", "power": 5, "toughness": 5}}}
+  ]
+}

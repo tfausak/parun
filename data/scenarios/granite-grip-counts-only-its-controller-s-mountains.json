@@ -1,0 +1,10 @@
+{
+  "description": "CR 613.4c whole card: Granite Grip gives the enchanted creature +1/+0 for each Mountain its controller controls",
+  "note": "Alice controls three Mountains and bob two, so alice's Grizzly Bears become 5/2, not 7/2.",
+  "board": {"active": "alice", "step": "PrecombatMain", "seats": [{"name": "alice", "manaPool": "RRR", "battlefield": [{"card": "Grizzly Bears", "label": "bears"}, {"card": "Mountain"}, {"card": "Mountain"}, {"card": "Mountain"}], "hand": [{"card": "Granite Grip", "label": "grip"}], "library": [{"card": "Island"}, {"card": "Island"}, {"card": "Island"}]}, {"name": "bob", "battlefield": [{"card": "Mountain"}, {"card": "Mountain"}], "library": [{"card": "Island"}, {"card": "Island"}, {"card": "Island"}]}]},
+  "timeline": [
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": {"Cast": {"object": "$grip", "targets": ["$bears"], "mana": [null]}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass"},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "check": {"PowerToughness": {"object": "$bears", "power": 5, "toughness": 2}}}
+  ]
+}

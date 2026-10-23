@@ -857,7 +857,7 @@ matchesTriggerGiven bindings board gs bearer you cond event = case cond of
     GameEvent.TriggeredAbilityResolved _ -> False
     GameEvent.CardArrived _ -> False
   -- CR 603.2 / 120.3: the same arm with rule 120.3's other recipient -- a CREATURE
-  -- rather than a player. Strax, Sontaran Nurse's "Glory of Battle" is the reader,
+  -- rather than a player. Strax, Sontaran Nurse's "Glory of Battle" is a reader,
   -- and its own "Grenades!" fight is a noncombat source, so no CR 510.1 narrowing
   -- here either.
   --
@@ -5349,6 +5349,7 @@ matchesTriggerGiven bindings board gs bearer you cond event = case cond of
   -- CR 701.26a by a bystander: a permanent the filter admits became tapped,
   -- judged off CR 603.10's board just after the event. Firing once for a
   -- batch is `batchScoped` plus eventTriggers' dedup, never this arm.
+  TriggerCondition.PermanentBecomesTapped f -> matchesTriggerGiven bindings board gs bearer you (TriggerCondition.PermanentsBecomeTapped f) event
   TriggerCondition.PermanentsBecomeTapped f -> case event of
     GameEvent.BecameTapped tapped -> case Map.lookup tapped board of
       Nothing -> False

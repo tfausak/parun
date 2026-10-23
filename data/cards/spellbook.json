@@ -1,0 +1,31 @@
+{
+  "faces": [
+    {
+      "manaCost": [],
+      "name": "Spellbook",
+      "oracleText": "You have no maximum hand size.",
+      "playerAbilities": [
+        {
+          "effect": {
+            "type": "NoMaximumHandSize"
+          },
+          "scope": {
+            "type": "You"
+          }
+        }
+      ],
+      "typeLine": {
+        "subtypes": [
+          {
+            "type": "Book"
+          }
+        ],
+        "types": [
+          {
+            "type": "Artifact"
+          }
+        ]
+      }
+    }
+  ]
+}

@@ -173,12 +173,12 @@ eventBindingsOver board gs bearerBecame becameInGraveyard bearer you cond event 
       Recipient.ToObject _ -> Map.empty
       -- Unreachable, for the reason the DamageToPlayerPrevented arm above gives.
       Recipient.ToPile _ -> Map.empty
-  -- CR 120.3's amount for the arm one recipient over. No slot for the damaged
-  -- CREATURE: Strax's "Glory of Battle" puts its counter on the bearer, whom CR
-  -- 113.7a's source slot already names, and the amount is unconditional given a
-  -- match.
+  -- CR 120.3's amount for the arm one recipient over, and the damaged creature
+  -- under `became`, the object the event names: Bellowing Fiend's "that
+  -- creature's controller". Both are unconditional given a match, which admits
+  -- only an object recipient.
   (TriggerCondition.SelfDealsDamageToCreature, GameEvent.DamageDealt ev) ->
-    Binding.setEventAmount (DamageEvent.amount ev) Map.empty
+    maybe id Binding.setBecame (Recipient.objectOf (DamageEvent.target ev)) (Binding.setEventAmount (DamageEvent.amount ev) Map.empty)
   -- Horned Cheetah's "that much" for the any-recipient arm, which batchBindings
   -- sums across one damage event. Unconditional given a match.
   (TriggerCondition.SelfDealsDamage, GameEvent.DamageDealt ev) ->
@@ -942,6 +942,10 @@ eventBindingsOver board gs bearerBecame becameInGraveyard bearer you cond event 
   -- Nothing: Deeproot Pilgrimage's payload names no tapped permanent, and one
   -- slot could not name a batch of them.
   (TriggerCondition.PermanentsBecomeTapped _, _) -> Map.empty
+  -- The one permanent each occurrence names, the AttachedCreatureBecomesTapped
+  -- arm's slot.
+  (TriggerCondition.PermanentBecomesTapped _, GameEvent.BecameTapped tapped) ->
+    Binding.setTappedPermanent tapped Map.empty
   -- Nothing either, and for a plainer reason: the permanent that became
   -- untapped IS the bearer, whom Binding.triggerSource already names.
   (TriggerCondition.SelfBecomesUntapped, _) -> Map.empty
@@ -1450,9 +1454,9 @@ eventBindingSlots cond = case cond of
   -- The same pair for the arm without the combat narrowing, and equally guaranteed
   -- -- every DamageDealt event carries an amount, whichever CR 120.3 kind it was.
   TriggerCondition.SelfDealsDamageToPlayer _ -> Set.fromList [Binding.eventAmount, Binding.triggerPlayer]
-  -- Just the amount for the arm one recipient over, and equally guaranteed -- see
-  -- the eventBindings arm above for why the recipient gets no slot.
-  TriggerCondition.SelfDealsDamageToCreature -> Set.singleton Binding.eventAmount
+  -- The amount and the damaged creature for the arm one recipient over, both
+  -- guaranteed given a match.
+  TriggerCondition.SelfDealsDamageToCreature -> Set.fromList [Binding.eventAmount, Binding.became]
   TriggerCondition.SelfDealsDamage -> Set.singleton Binding.eventAmount
   TriggerCondition.AttachedCreatureDealsDamage -> Set.singleton Binding.eventAmount
   -- CR 120.3's amount for enrage, which Coalhauler Swine's "it deals that much
@@ -1940,6 +1944,7 @@ eventBindingSlots cond = case cond of
   TriggerCondition.AttachedCreatureBecomesTapped -> Set.singleton Binding.tappedPermanent
   -- Empty, eventBindings' arm.
   TriggerCondition.PermanentsBecomeTapped _ -> Set.empty
+  TriggerCondition.PermanentBecomesTapped _ -> Set.singleton Binding.tappedPermanent
   -- Empty for the arm above's reason once more: nothing moved, and the
   -- permanent that untapped is the bearer.
   TriggerCondition.SelfBecomesUntapped -> Set.empty

@@ -1,0 +1,8 @@
+{
+  "description": "CR 402.2 / 514.1 whole card: Spellbook gives its controller no maximum hand size",
+  "note": "Alice ends her turn holding nine cards and keeps all nine through cleanup.",
+  "board": {"active": "alice", "step": "EndStep", "seats": [{"name": "alice", "battlefield": [{"card": "Spellbook"}], "hand": [{"card": "Island"}, {"card": "Island"}, {"card": "Island"}, {"card": "Island"}, {"card": "Island"}, {"card": "Island"}, {"card": "Island"}, {"card": "Island"}, {"card": "Island"}], "library": [{"card": "Island"}, {"card": "Island"}, {"card": "Island"}]}, {"name": "bob", "library": [{"card": "Island"}, {"card": "Island"}, {"card": "Island"}]}]},
+  "timeline": [
+    {"turn": 2, "step": "Upkeep", "player": "bob", "check": {"Count": {"player": "alice", "zone": "Hand", "card": "Island", "count": 9}}}
+  ]
+}
