@@ -1,0 +1,12 @@
+{
+  "description": "CR 701.8a whole card: Tranquility destroys all enchantments, whoever controls them",
+  "note": "Alice's Crusade and bob's Bad Moon go; the Rod of Ruin stays.",
+  "board": {"active": "alice", "step": "PrecombatMain", "seats": [{"name": "alice", "library": [{"card": "Island"}, {"card": "Island"}, {"card": "Island"}], "battlefield": [{"card": "Crusade", "label": "crusade"}, {"card": "Forest", "label": "f1"}, {"card": "Forest", "label": "f2"}, {"card": "Forest", "label": "f3"}], "hand": [{"card": "Tranquility", "label": "tranquility"}]}, {"name": "bob", "library": [{"card": "Island"}, {"card": "Island"}, {"card": "Island"}], "battlefield": [{"card": "Bad Moon", "label": "moon"}, {"card": "Rod of Ruin", "label": "rod"}]}]},
+  "timeline": [
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": {"Cast": {"object": "$tranquility", "mana": ["$f1", "$f2", "$f3"]}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass"},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "check": {"Count": {"player": "alice", "zone": "Battlefield", "card": "Crusade", "count": 0}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "check": {"Count": {"player": "bob", "zone": "Battlefield", "card": "Bad Moon", "count": 0}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "check": {"Count": {"player": "bob", "zone": "Battlefield", "card": "Rod of Ruin", "count": 1}}}
+  ]
+}

@@ -1,0 +1,13 @@
+{
+  "description": "CR 603.6a whole card: when Uktabi Orangutan enters, it destroys target artifact",
+  "note": "Bob has two artifacts; alice targets the Rod of Ruin, which goes, and the Ornithopter stays.",
+  "board": {"active": "alice", "step": "PrecombatMain", "seats": [{"name": "alice", "library": [{"card": "Island"}, {"card": "Island"}, {"card": "Island"}], "battlefield": [{"card": "Forest", "label": "f1"}, {"card": "Forest", "label": "f2"}, {"card": "Forest", "label": "f3"}], "hand": [{"card": "Uktabi Orangutan", "label": "orangutan"}]}, {"name": "bob", "library": [{"card": "Island"}, {"card": "Island"}, {"card": "Island"}], "battlefield": [{"card": "Rod of Ruin", "label": "rod"}, {"card": "Ornithopter", "label": "thopter"}]}]},
+  "timeline": [
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": {"Cast": {"object": "$orangutan", "mana": ["$f1", "$f2", "$f3"]}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass"},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": {"ChooseTargets": {"target": ["$rod"]}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass"},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "check": {"Count": {"player": "bob", "zone": "Battlefield", "card": "Rod of Ruin", "count": 0}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "check": {"Count": {"player": "bob", "zone": "Battlefield", "card": "Ornithopter", "count": 1}}}
+  ]
+}

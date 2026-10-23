@@ -198,7 +198,9 @@ to agents as written. What it doesn't say:
   @FILE | --set CODE)...`, CANDIDATES being that same `candidates.jq` output.
   It writes only cards that render back to their Oracle text and names every
   other on stderr with the node kind it stopped at; `--out DIR` writes the
-  pool's own cards too, for comparing against them.
+  pool's own cards too, for comparing against them. It marks each accepted
+  ability whose wording is `new` to the pool: that ability owes a scenario. A
+  shared one owes one too unless a test of the card it names exercises it.
 
 - `Filter.HasCardType` matches in every zone, but "a creature" with no zone,
   "card" or "spell" means a permanent (CR 109.2). Where nothing else confines

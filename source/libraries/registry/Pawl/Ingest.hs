@@ -1,5 +1,7 @@
 -- Building a card from one record of script/ingest/candidates.jq's reduction
--- of MTGJSON (#9), for a card of a single face whose text is keywords alone.
+-- of MTGJSON (#9), for a card of a single face whose text is keywords alone;
+-- and reading any card's printed characteristics, which `pawl translate`
+-- takes over mtgish's (#5478).
 -- Everything here reads a field MTGJSON carries as structured data (CR 202.1,
 -- CR 205) or a keyword name from 'Pawl.Oracle.Keyword.standalone' or
 -- 'Pawl.Oracle.Keyword.landwalks'; a word it does not know disqualifies the
@@ -41,6 +43,19 @@ import qualified Text.Read as Read
 -- MTGJSON has none), or why it is not one this builds.
 candidate :: Value.Value -> Either Text.Text Card.Card
 candidate value = do
+  (face, printedPower, printedToughness) <- printed value
+  power <- traverse (fmap Power.MkPower . literal) printedPower
+  toughness <- traverse (fmap Toughness.MkToughness . literal) printedToughness
+  keywords <- traverse keyword (Normalise.normalise (Face.name face) (Maybe.fromMaybe Text.empty (Face.oracleText face)))
+  let keyworded = face {Face.power = power, Face.toughness = toughness, Face.keywords = Map.fromListWith (+) (fmap (\k -> (k, 1)) keywords)}
+  pure Card.MkCard {Card.layout = Layout.Normal, Card.faces = keyworded NonEmpty.:| []}
+
+-- | The face a candidate record prints, no rules text read: its name, Oracle
+-- text verbatim (empty where MTGJSON has none), mana cost, colour indicator
+-- and type line; with its power and toughness as printed, which it leaves
+-- off the face.
+printed :: Value.Value -> Either Text.Text (Face.Face Card.Card, Maybe Text.Text, Maybe Text.Text)
+printed value = do
   fields <- Common.asObject value
   let nullable key = case Common.optionalField key fields of
         Nothing -> Right Nothing
@@ -56,18 +71,33 @@ candidate value = do
   supertypes <- words' "supertypes" >>= traverse (enumWord "supertype")
   types <- words' "types" >>= traverse (enumWord "type")
   subtypes <- words' "subtypes" >>= traverse (enumWord "subtype")
-  power <- nullable "power" >>= traverse (fmap Power.MkPower . literal)
-  toughness <- nullable "toughness" >>= traverse (fmap Toughness.MkToughness . literal)
+  power <- nullable "power"
+  toughness <- nullable "toughness"
   text <- fmap (Maybe.fromMaybe Text.empty) (nullable "text")
-  keywords <- traverse keyword (Normalise.normalise (CardName.MkCardName name) text)
   let typeLine =
         TypeLine.MkTypeLine
           { TypeLine.supertypes = Set.fromList (supertypes :: [Supertype.Supertype]),
             TypeLine.types = Set.fromList (types :: [CardType.CardType]),
             TypeLine.subtypes = Set.fromList (subtypes :: [Subtype.Subtype])
           }
-      face = Oracle.Face.bare (CardName.MkCardName name) (Just text) cost (Set.fromList indicator) typeLine power toughness (Map.fromListWith (+) (fmap (\k -> (k, 1)) keywords))
-  pure Card.MkCard {Card.layout = Layout.Normal, Card.faces = face NonEmpty.:| []}
+  pure (Oracle.Face.bare (CardName.MkCardName name) (Just text) cost (Set.fromList indicator) typeLine Nothing Nothing Map.empty, power, toughness)
+
+-- | The card with its face's printed characteristics taken from 'printed':
+-- mana cost, colour indicator, type line, and a power or toughness printed as
+-- a plain number, a star's left as the card has it. mtgish's ASTs are a
+-- snapshot that drifts from MTGJSON's current Oracle (#5478).
+reprint :: (Face.Face Card.Card, Maybe Text.Text, Maybe Text.Text) -> Card.Card -> Card.Card
+reprint (record, printedPower, printedToughness) card = card {Card.faces = fmap set (Card.faces card)}
+  where
+    number wrap kept = maybe Nothing (either (const kept) (Just . wrap) . literal)
+    set face =
+      face
+        { Face.manaCost = Face.manaCost record,
+          Face.colorIndicator = Face.colorIndicator record,
+          Face.typeLine = Face.typeLine record,
+          Face.power = number Power.MkPower (Face.power face) printedPower,
+          Face.toughness = number Toughness.MkToughness (Face.toughness face) printedToughness
+        }
 
 -- | Every face's Oracle text from the reduction's @texts@, keyed by card name
 -- (faces joined by " // ", as MTGJSON names a card) and face name; and, for a

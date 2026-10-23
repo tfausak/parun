@@ -1,0 +1,13 @@
+{
+  "description": "CR 120.3 whole card: Inferno deals 6 damage to each creature and each player",
+  "note": "Both players go to 14; bob's 6/4 Craw Wurm dies and his 0/8 Wall of Stone survives with 6 damage.",
+  "board": {"active": "alice", "step": "PrecombatMain", "seats": [{"name": "alice", "library": [{"card": "Island"}, {"card": "Island"}, {"card": "Island"}], "battlefield": [{"card": "Mountain", "label": "m1"}, {"card": "Mountain", "label": "m2"}, {"card": "Mountain", "label": "m3"}, {"card": "Mountain", "label": "m4"}, {"card": "Mountain", "label": "m5"}, {"card": "Mountain", "label": "m6"}, {"card": "Mountain", "label": "m7"}], "hand": [{"card": "Inferno", "label": "inferno"}]}, {"name": "bob", "library": [{"card": "Island"}, {"card": "Island"}, {"card": "Island"}], "battlefield": [{"card": "Craw Wurm", "label": "wurm"}, {"card": "Wall of Stone", "label": "wall"}]}]},
+  "timeline": [
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": {"Cast": {"object": "$inferno", "mana": ["$m1", "$m2", "$m3", "$m4", "$m5", "$m6", "$m7"]}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass"},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "check": {"Life": {"player": "alice", "life": 14}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "check": {"Life": {"player": "bob", "life": 14}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "check": {"Count": {"player": "bob", "zone": "Battlefield", "card": "Craw Wurm", "count": 0}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "check": {"Damage": {"object": "$wall", "damage": 6}}}
+  ]
+}

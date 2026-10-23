@@ -1,0 +1,14 @@
+{
+  "description": "CR 602.2 whole card: Heavy Ballista taps to deal 2 damage to target attacking or blocking creature",
+  "note": "Bob blocks alice's bears with a Gray Ogre and the Ballista kills it; the blocked bears deal bob nothing.",
+  "board": {"active": "alice", "step": "BeginningOfCombat", "seats": [{"name": "alice", "library": [{"card": "Island"}, {"card": "Island"}, {"card": "Island"}], "battlefield": [{"card": "Heavy Ballista", "label": "ballista", "ready": true}, {"card": "Grizzly Bears", "label": "bears", "ready": true}]}, {"name": "bob", "library": [{"card": "Island"}, {"card": "Island"}, {"card": "Island"}], "battlefield": [{"card": "Gray Ogre", "label": "ogre", "ready": true}]}]},
+  "timeline": [
+    {"turn": 1, "step": "DeclareAttackers", "player": "alice", "do": {"Attack": ["$bears"]}},
+    {"turn": 1, "step": "DeclareBlockers", "player": "bob", "do": {"Block": {"$ogre": ["$bears"]}}},
+    {"turn": 1, "step": "DeclareBlockers", "player": "alice", "do": {"Activate": {"object": "$ballista", "targets": ["$ogre"]}}},
+    {"turn": 1, "step": "DeclareBlockers", "player": "alice", "do": "Pass"},
+    {"turn": 1, "step": "DeclareBlockers", "player": "alice", "check": {"Count": {"player": "bob", "zone": "Battlefield", "card": "Gray Ogre", "count": 0}}},
+    {"turn": 1, "step": "EndOfCombat", "player": "alice", "check": {"Life": {"player": "bob", "life": 20}}},
+    {"turn": 1, "step": "EndOfCombat", "player": "alice", "check": {"Damage": {"object": "$bears", "damage": 0}}}
+  ]
+}

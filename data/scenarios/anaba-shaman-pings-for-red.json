@@ -1,0 +1,12 @@
+{
+  "description": "CR 602.2 whole card: Anaba Shaman pays {R} and taps to deal 1 damage to any target",
+  "note": "The Shaman kills bob's 1/1 Bog Imp; 2 damage would have killed the 2/2 bears had the Shaman aimed there, so the Imp's death and the bears' clean slate read the amount.",
+  "board": {"active": "alice", "step": "PrecombatMain", "seats": [{"name": "alice", "library": [{"card": "Island"}, {"card": "Island"}, {"card": "Island"}], "battlefield": [{"card": "Anaba Shaman", "label": "shaman", "ready": true}, {"card": "Mountain", "label": "mountain"}]}, {"name": "bob", "library": [{"card": "Island"}, {"card": "Island"}, {"card": "Island"}], "battlefield": [{"card": "Bog Imp", "label": "imp"}, {"card": "Grizzly Bears", "label": "bears"}]}]},
+  "timeline": [
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": {"Activate": {"object": "$shaman", "targets": ["$imp"], "mana": ["$mountain"]}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass"},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "check": {"Count": {"player": "bob", "zone": "Battlefield", "card": "Bog Imp", "count": 0}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "check": {"Count": {"player": "bob", "zone": "Graveyard", "card": "Bog Imp", "count": 1}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "check": {"Tapped": {"object": "$mountain", "tapped": true}}}
+  ]
+}

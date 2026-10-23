@@ -1,0 +1,13 @@
+{
+  "description": "CR 701.9a whole card: Abyssal Specter's combat damage makes the player it hit discard a card of their choice",
+  "note": "Bob holds two cards and discards the Hill Giant, which is not the first; alice's own hand is untouched.",
+  "board": {"active": "alice", "step": "BeginningOfCombat", "seats": [{"name": "alice", "library": [{"card": "Island"}, {"card": "Island"}, {"card": "Island"}], "battlefield": [{"card": "Abyssal Specter", "label": "specter", "ready": true}], "hand": [{"card": "Gray Ogre", "label": "ogre"}]}, {"name": "bob", "library": [{"card": "Island"}, {"card": "Island"}, {"card": "Island"}], "hand": [{"card": "Grizzly Bears", "label": "bears"}, {"card": "Hill Giant", "label": "giant"}]}]},
+  "timeline": [
+    {"turn": 1, "step": "DeclareAttackers", "player": "alice", "do": {"Attack": ["$specter"]}},
+    {"turn": 1, "step": "CombatDamage", "player": "bob", "do": {"Answer": {"prompt": "ChooseDiscard", "with": ["$giant"]}}},
+    {"turn": 1, "step": "EndOfCombat", "player": "alice", "check": {"Life": {"player": "bob", "life": 18}}},
+    {"turn": 1, "step": "EndOfCombat", "player": "alice", "check": {"Count": {"player": "bob", "zone": "Graveyard", "card": "Hill Giant", "count": 1}}},
+    {"turn": 1, "step": "EndOfCombat", "player": "alice", "check": {"Count": {"player": "bob", "zone": "Hand", "card": "Grizzly Bears", "count": 1}}},
+    {"turn": 1, "step": "EndOfCombat", "player": "alice", "check": {"Count": {"player": "alice", "zone": "Hand", "card": "Gray Ogre", "count": 1}}}
+  ]
+}

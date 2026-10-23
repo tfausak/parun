@@ -1,0 +1,12 @@
+{
+  "description": "CR 602.2 whole card: Abyssal Hunter taps its target and deals it damage equal to the Hunter's power",
+  "note": "The Hunter is 1/1 and its target a 3/3 Hill Giant: reading the target's power would deal 3 and kill it.",
+  "board": {"active": "alice", "step": "PrecombatMain", "seats": [{"name": "alice", "library": [{"card": "Island"}, {"card": "Island"}, {"card": "Island"}], "battlefield": [{"card": "Abyssal Hunter", "label": "hunter", "ready": true}, {"card": "Swamp", "label": "swamp"}]}, {"name": "bob", "library": [{"card": "Island"}, {"card": "Island"}, {"card": "Island"}], "battlefield": [{"card": "Hill Giant", "label": "giant"}]}]},
+  "timeline": [
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": {"Activate": {"object": "$hunter", "targets": ["$giant"], "mana": ["$swamp"]}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass"},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "check": {"Damage": {"object": "$giant", "damage": 1}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "check": {"Tapped": {"object": "$giant", "tapped": true}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "check": {"Tapped": {"object": "$hunter", "tapped": true}}}
+  ]
+}

@@ -1,0 +1,10 @@
+{
+  "description": "CR 613.4c whole card: Crusade gives every white creature +1/+1, whoever controls it",
+  "note": "Both players' Savannah Lions get it; the green bears do not.",
+  "board": {"active": "alice", "step": "PrecombatMain", "seats": [{"name": "alice", "library": [{"card": "Island"}, {"card": "Island"}, {"card": "Island"}], "battlefield": [{"card": "Crusade", "label": "crusade"}, {"card": "Savannah Lions", "label": "lions"}]}, {"name": "bob", "library": [{"card": "Island"}, {"card": "Island"}, {"card": "Island"}], "battlefield": [{"card": "Savannah Lions", "label": "their-lions"}, {"card": "Grizzly Bears", "label": "bears"}]}]},
+  "timeline": [
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "check": {"PowerToughness": {"object": "$lions", "power": 3, "toughness": 2}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "check": {"PowerToughness": {"object": "$their-lions", "power": 3, "toughness": 2}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "check": {"PowerToughness": {"object": "$bears", "power": 2, "toughness": 2}}}
+  ]
+}
