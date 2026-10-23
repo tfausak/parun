@@ -522,7 +522,7 @@ manaSpec s registry = Spec.describe s "Mana" $ do
               ActivatedAbility.modal =
                 Mint.oneModeTargeting
                   (Map.singleton (SlotName.MkSlotName (Text.pack "x")) (TargetSlot.required Pool.AnyTarget Nothing))
-                  (Seq.singleton (Effect.DealDamage (DealDamage.MkDealDamage (Seq.singleton (DamagePart.MkDamagePart (ObjectRef.InSlot (SlotName.MkSlotName (Text.pack "x"))) (Quantity.Literal 1))) Nothing Nothing))),
+                  (Seq.singleton (Effect.DealDamage (DealDamage.MkDealDamage (Seq.singleton (DamagePart.MkDamagePart (ObjectRef.InSlot (SlotName.MkSlotName (Text.pack "x"))) (Quantity.Literal 1))) Nothing Nothing Nothing))),
               ActivatedAbility.maximumX = [],
               ActivatedAbility.minimumX = 0,
               ActivatedAbility.definedX = Nothing,

@@ -20,9 +20,11 @@ codec = Fields.object $ do
   -- the excess goes -- which is every one of them but Flame Spill -- keeps
   -- parsing unchanged.
   excess <- Fields.defaulted "excess" Nothing (Common.maybe ExcessDestination.codec) DealDamage.excess
+  tally <- Fields.defaulted "tally" Nothing (Common.maybe SlotName.codec) DealDamage.tally
   pure
     DealDamage.MkDealDamage
       { DealDamage.parts = parts,
         DealDamage.dealer = dealer,
-        DealDamage.excess = excess
+        DealDamage.excess = excess,
+        DealDamage.tally = tally
       }
