@@ -108,8 +108,7 @@ describe number fallback p = do
   let chosen = case nouns p of
         [] -> [fallback]
         ns -> ns
-      kinds = fmap Text.pack ["spell", "permanent", "card"] <> fmap (cardType Singular) [minBound .. maxBound]
-      (typed, named) = List.partition (\n -> elem (singular n) kinds) chosen
+      (typed, named) = List.partition kind chosen
   headword <- case (number, named <> typed) of
     (Singular, ns) -> [Text.unwords (fmap singular ns)]
     (Plural, ns) -> case List.unsnoc ns of
@@ -118,6 +117,11 @@ describe number fallback p = do
   before <- adjectiveText number (adjectives p)
   after <- traverse (agreeing number) (qualifiers p)
   pure (Text.unwords (filter (not . Text.null) (before <> [headword] <> after)))
+
+-- | Whether the noun names a kind of object (a card type, "spell") rather
+-- than a subtype.
+kind :: Noun -> Bool
+kind n = elem (singular n) (fmap Text.pack ["spell", "permanent", "card"] <> fmap (cardType Singular) [minBound .. maxBound])
 
 -- | A qualifier's wordings in the given number.
 agreeing :: Number -> Qualifier -> [Text.Text]
