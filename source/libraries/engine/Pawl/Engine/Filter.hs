@@ -1605,14 +1605,16 @@ data Context = MkContext
     reader :: Maybe AbilityName.AbilityName,
     -- CR 608.2d: every candidate the enclosing choice offers, with its
     -- measures, for the Measures atom's OfEachOtherCandidate operand. Filled by
-    -- one caller only, Pawl.Engine.Replacement.sacrificeCandidates, whose pool is
-    -- the edict's; Nothing everywhere else, so the operand is vacuously False
-    -- there, and Pawl.FilterPositionLintSpec keeps a card to an edict's filter.
-    -- `Just Map.empty` is the pool-gathering read: with no other candidate to
-    -- compare against, every comparison holds.
+    -- amongCandidates, whose callers are an edict's pool
+    -- (Pawl.Engine.Replacement.sacrificeCandidates) and the battlefield's
+    -- (Pawl.Engine.Resolve.Slots.battlefieldMatching); Nothing everywhere else,
+    -- so the operand is vacuously False there, and Pawl.FilterPositionLintSpec
+    -- keeps a card to an edict's filter or a chosen permanent's. `Just
+    -- Map.empty` is the pool-gathering read: with no other candidate to compare
+    -- against, every comparison holds.
     --
-    -- Not implemented: the operand in a target slot, a chosen permanent, a
-    -- discard or any other choice's pool (#5311).
+    -- Not implemented: the operand in a target slot, a discard or any other
+    -- choice's pool (#5514).
     candidateMeasures :: Maybe (Map.Map ObjectId.ObjectId (Map.Map Measure.Measure Integer))
   }
   deriving (Eq, Ord, Show)
@@ -1704,6 +1706,18 @@ slotOneObject slot context = case Set.toList (Map.findWithDefault Set.empty slot
 -- slotMeasures hold of one object.
 measuresOf :: View -> Map.Map Measure.Measure Integer
 measuresOf view = Map.fromList [(measure, n) | measure <- [minBound .. maxBound], Just n <- [measureOf measure view]]
+
+-- CR 608.2d: the candidates a choice offers for a Filter that may compare each
+-- against every other one (Operand.OfEachOtherCandidate) -- "the greatest power
+-- among creatures that player controls". The pool is what the choice would
+-- offer were the comparison absent, gathered with every such comparison holding
+-- (`Just Map.empty`), then narrowed by them. A Filter without the operand
+-- answers the same on both passes. In the order given.
+amongCandidates :: Context -> (ObjectId.ObjectId -> View) -> Filter.Filter Keyword.Type.Keyword -> [ObjectId.ObjectId] -> [ObjectId.ObjectId]
+amongCandidates context viewOf filter_ candidates =
+  let against pool oid = matches context {candidateMeasures = Just pool} (viewOf oid) filter_
+      pooled = filter (against Map.empty) candidates
+   in filter (against (Map.fromList [(oid, measuresOf (viewOf oid)) | oid <- pooled])) pooled
 
 -- CR 208.1 / 202.3: the number a Measure names on a view, Nothing where the
 -- object has none (CR 208.3's noncreature, a player).

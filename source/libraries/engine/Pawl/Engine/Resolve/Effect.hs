@@ -10632,7 +10632,9 @@ applyOneEffect runSubgame resolving source controller legal chosen effect = case
   Effect.ExchangeControl sides ->
     State.modify' $ \gs ->
       let twoSides = case sides of
-            ControlSides.BetweenTargets slot -> case Maybe.mapMaybe Recipient.objectOf (legalMany slot legal) of
+            -- A target slot's CR 608.2b-legal recipients, or the group earlier
+            -- instructions of this resolution bound (CR 608.2c).
+            ControlSides.WithinSlot slot -> case Set.toList (Map.findWithDefault Set.empty slot (Binding.objectsBySlot legal (slotBindings resolving gs))) of
               [one, two] -> [one, two]
               _ -> []
             -- CR 113.7's source object, found through the funnel

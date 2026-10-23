@@ -1,0 +1,37 @@
+{
+  "description": "CR 701.12a Juxtapose exchanges no creature when the target player controls none, but still exchanges artifacts, an artifact creature among them",
+  "note": "Alice ties at mana value 3 and is still asked, though nothing is exchanged; she picks the Wind Drake, the second offered. Her only artifact is the Ornithopter, an artifact creature of mana value 0, which goes to Bob for his Crown of the Ages.",
+  "board": {
+    "active": "alice",
+    "step": "PrecombatMain",
+    "seats": [
+      {
+        "name": "alice",
+        "manaPool": "UUUU",
+        "library": [{ "card": "Island" }, { "card": "Island" }],
+        "hand": [{ "card": "Juxtapose", "label": "juxtapose" }],
+        "battlefield": [
+          { "card": "Gray Ogre", "label": "a-ogre" },
+          { "card": "Wind Drake", "label": "a-drake" },
+          { "card": "Ornithopter", "label": "a-thopter" }
+        ]
+      },
+      {
+        "name": "bob",
+        "library": [{ "card": "Island" }, { "card": "Island" }],
+        "battlefield": [
+          { "card": "Crown of the Ages", "label": "b-crown" }
+        ]
+      }
+    ]
+  },
+  "timeline": [
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": { "Cast": { "object": "$juxtapose", "targets": ["$bob"] } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass" },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": { "Answer": { "prompt": "ChoosePermanent", "with": "$a-drake" } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "check": { "View": { "of": "Controller", "object": "$a-thopter", "is": "bob" } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "check": { "View": { "of": "Controller", "object": "$b-crown", "is": "alice" } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "check": { "View": { "of": "Controller", "object": "$a-drake", "is": "alice" } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "check": { "View": { "of": "Controller", "object": "$a-ogre", "is": "alice" } } }
+  ]
+}

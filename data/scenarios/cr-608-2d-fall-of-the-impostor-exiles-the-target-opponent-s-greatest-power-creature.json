@@ -1,0 +1,44 @@
+{
+  "description": "CR 608.2d Fall of the Impostor's chapter III exiles a creature with the greatest power among creatures the target opponent controls",
+  "note": "Bob's Air Elemental and Serra Angel tie at power 4 and Alice picks the Angel, the second offered. Carol's Craw Wurm (power 6) and Alice's own Hill Giant are not the target opponent's, and Bob's Grizzly Bears is not his greatest.",
+  "board": {
+    "active": "alice",
+    "step": "Upkeep",
+    "seats": [
+      {
+        "name": "alice",
+        "library": [{ "card": "Island" }, { "card": "Island" }],
+        "battlefield": [
+          { "card": "Fall of the Impostor", "label": "fall", "counters": [{ "key": { "type": "Lore" }, "value": 2 }] },
+          { "card": "Hill Giant", "label": "a-giant" }
+        ]
+      },
+      {
+        "name": "bob",
+        "library": [{ "card": "Island" }, { "card": "Island" }],
+        "battlefield": [
+          { "card": "Air Elemental", "label": "b-air" },
+          { "card": "Serra Angel", "label": "b-angel" },
+          { "card": "Grizzly Bears", "label": "b-bears" }
+        ]
+      },
+      {
+        "name": "carol",
+        "library": [{ "card": "Island" }, { "card": "Island" }],
+        "battlefield": [
+          { "card": "Craw Wurm", "label": "c-wurm" }
+        ]
+      }
+    ]
+  },
+  "timeline": [
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": { "ChooseTargets": { "opponent": ["$bob"] } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass" },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": { "Answer": { "prompt": "ChoosePermanent", "with": "$b-angel" } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "check": { "Count": { "player": "bob", "zone": "Exile", "card": "Serra Angel", "count": 1 } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "check": { "Count": { "player": "bob", "zone": "Battlefield", "card": "Air Elemental", "count": 1 } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "check": { "Count": { "player": "bob", "zone": "Battlefield", "card": "Grizzly Bears", "count": 1 } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "check": { "Count": { "player": "carol", "zone": "Battlefield", "card": "Craw Wurm", "count": 1 } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "check": { "Count": { "player": "alice", "zone": "Battlefield", "card": "Hill Giant", "count": 1 } } }
+  ]
+}

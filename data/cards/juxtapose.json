@@ -1,0 +1,203 @@
+{
+  "faces": [
+    {
+      "manaCost": [
+        {
+          "type": "Generic",
+          "value": 3
+        },
+        {
+          "type": "OfType",
+          "value": {
+            "type": "Colored",
+            "value": {
+              "type": "Blue"
+            }
+          }
+        }
+      ],
+      "name": "Juxtapose",
+      "oracleText": "You and target player exchange control of the creature you each control with the greatest mana value. Then exchange control of artifacts the same way. If two or more permanents a player controls are tied for greatest, their controller chooses one of them.",
+      "spell": {
+        "modes": [
+          {
+            "clauses": [
+              {
+                "effects": [
+                  {
+                    "type": "ForEach",
+                    "value": {
+                      "body": [
+                        {
+                          "type": "ChoosePermanents",
+                          "value": {
+                            "permanents": {
+                              "chooser": {
+                                "type": "InSlot",
+                                "value": "chooser"
+                              },
+                              "filter": {
+                                "type": "And",
+                                "value": [
+                                  {
+                                    "type": "HasCardType",
+                                    "value": {
+                                      "type": "Creature"
+                                    }
+                                  },
+                                  {
+                                    "type": "ControlledByBound",
+                                    "value": "chooser"
+                                  },
+                                  {
+                                    "type": "Measures",
+                                    "value": {
+                                      "comparison": {
+                                        "type": "AtLeast"
+                                      },
+                                      "measure": {
+                                        "type": "ManaValue"
+                                      },
+                                      "operand": {
+                                        "type": "OfEachOtherCandidate",
+                                        "value": {
+                                          "type": "ManaValue"
+                                        }
+                                      }
+                                    }
+                                  }
+                                ]
+                              }
+                            },
+                            "slot": "creatures"
+                          }
+                        }
+                      ],
+                      "ref": {
+                        "type": "AllOf",
+                        "value": [
+                          {
+                            "type": "Players",
+                            "value": {
+                              "type": "Relative",
+                              "value": {
+                                "type": "You"
+                              }
+                            }
+                          },
+                          {
+                            "type": "InSlot",
+                            "value": "player"
+                          }
+                        ]
+                      },
+                      "slot": "chooser"
+                    }
+                  },
+                  {
+                    "type": "ExchangeControl",
+                    "value": {
+                      "type": "WithinSlot",
+                      "value": "creatures"
+                    }
+                  },
+                  {
+                    "type": "ForEach",
+                    "value": {
+                      "body": [
+                        {
+                          "type": "ChoosePermanents",
+                          "value": {
+                            "permanents": {
+                              "chooser": {
+                                "type": "InSlot",
+                                "value": "chooser"
+                              },
+                              "filter": {
+                                "type": "And",
+                                "value": [
+                                  {
+                                    "type": "HasCardType",
+                                    "value": {
+                                      "type": "Artifact"
+                                    }
+                                  },
+                                  {
+                                    "type": "ControlledByBound",
+                                    "value": "chooser"
+                                  },
+                                  {
+                                    "type": "Measures",
+                                    "value": {
+                                      "comparison": {
+                                        "type": "AtLeast"
+                                      },
+                                      "measure": {
+                                        "type": "ManaValue"
+                                      },
+                                      "operand": {
+                                        "type": "OfEachOtherCandidate",
+                                        "value": {
+                                          "type": "ManaValue"
+                                        }
+                                      }
+                                    }
+                                  }
+                                ]
+                              }
+                            },
+                            "slot": "artifacts"
+                          }
+                        }
+                      ],
+                      "ref": {
+                        "type": "AllOf",
+                        "value": [
+                          {
+                            "type": "Players",
+                            "value": {
+                              "type": "Relative",
+                              "value": {
+                                "type": "You"
+                              }
+                            }
+                          },
+                          {
+                            "type": "InSlot",
+                            "value": "player"
+                          }
+                        ]
+                      },
+                      "slot": "chooser"
+                    }
+                  },
+                  {
+                    "type": "ExchangeControl",
+                    "value": {
+                      "type": "WithinSlot",
+                      "value": "artifacts"
+                    }
+                  }
+                ]
+              }
+            ],
+            "targetSlots": {
+              "player": {
+                "pool": {
+                  "type": "Players"
+                }
+              }
+            }
+          }
+        ]
+      },
+      "typeLine": {
+        "types": [
+          {
+            "type": "Sorcery"
+          }
+        ]
+      }
+    }
+  ]
+}

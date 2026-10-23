@@ -1184,12 +1184,13 @@ exchangedPlayerRefs value = case value of
   ExchangedValue.Power _ -> []
   ExchangedValue.Toughness _ -> []
 
--- exchangeSidesSlots one type over: BetweenTargets takes both permanents out of
--- one instance of the word "target" (CR 601.2c) and so must see the whole set,
--- where WithSource reads the one permanent beside CR 113.7's source object.
+-- exchangeSidesSlots one type over: WithinSlot takes both permanents out of
+-- one slot -- CR 601.2c's target or CR 608.2d's choices -- and so must see the
+-- whole set, where WithSource reads the one permanent beside CR 113.7's source
+-- object.
 controlSidesSlots :: ControlSides.ControlSides -> Map.Map SlotName SlotArity
 controlSidesSlots sides = case sides of
-  ControlSides.BetweenTargets slot -> Map.singleton slot SlotArity.Many
+  ControlSides.WithinSlot slot -> Map.singleton slot SlotArity.Many
   ControlSides.WithSource slot -> Map.singleton slot SlotArity.One
   ControlSides.BetweenSlots (ControlSlots.MkControlSlots one two) -> Map.fromList [(one, SlotArity.One), (two, SlotArity.One)]
 
@@ -2898,13 +2899,17 @@ battlefieldMatching legal resolving controller source gs filter_ =
       -- sweep and the ChosenPermanents offer agree -- every one for CR 801.18's
       -- planar source (Plane.rangePerspective).
       reach = Plane.rangePerspective source controller gs
+      -- CR 608.2d: the OfEachOtherCandidate operand compares against the rest
+      -- of what matches (Filter.amongCandidates) -- Juxtapose's "the creature
+      -- you each control with the greatest mana value".
       matching =
-        filter
-          (\oid -> Filter.matches context (viewOf oid) baked && all (\you -> Projection.objectInRangeGiven grants you oid gs) reach)
-          -- CR 614.12: less a batch an entry loop or its as-enters effects hold
-          -- off the battlefield (GameState.enteringBeside) -- Ixidron's sweep
-          -- misses a creature entering beside it.
-          (Set.toList (Set.difference (GameState.battlefield gs) (GameState.enteringBeside gs)))
+        Filter.amongCandidates context viewOf baked $
+          filter
+            (\oid -> all (\you -> Projection.objectInRangeGiven grants you oid gs) reach)
+            -- CR 614.12: less a batch an entry loop or its as-enters effects hold
+            -- off the battlefield (GameState.enteringBeside) -- Ixidron's sweep
+            -- misses a creature entering beside it.
+            (Set.toList (Set.difference (GameState.battlefield gs) (GameState.enteringBeside gs)))
       order = Game.apnapOrder gs
       last_ = length order
       seat oid = case Projection.controllerOf oid gs of
