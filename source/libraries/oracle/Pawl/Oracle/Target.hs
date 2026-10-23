@@ -48,9 +48,14 @@ data Context = MkContext
     -- another ability (CR 113.2c). Free in a spell: one paragraph (Dark
     -- Offering) or two (Bargain).
     breaks :: [Text.Text],
-    -- | What the instruction calls the object its trigger event made, if
-    -- anything: "it" after "When this creature dies" (CR 400.7, CR 603.10a).
-    became :: Maybe Text.Text
+    -- | What the instruction calls the objects and players its trigger event
+    -- names (CR 603.2): "it" for the card a dying creature became (CR 400.7,
+    -- CR 603.10a), "defending player" for the player an attacker attacks.
+    bound :: Map.Map SlotName.SlotName Text.Text,
+    -- | The slots naming a card the instruction's controller is known to
+    -- own: what the source became once put into "your graveyard" (CR 404.1),
+    -- which returns to "your hand" (Zodiac Dragon).
+    owned :: [SlotName.SlotName]
   }
 
 -- | Words that name something, with the target slots they announce (each slot
@@ -94,11 +99,19 @@ youSlot = SlotName.MkSlotName (Text.pack "you")
 xSlot :: SlotName.SlotName
 xSlot = SlotName.MkSlotName (Text.pack "X")
 
--- | A number as digits ("3 damage", "4 life"), or X.
+-- | The slot the engine binds the amount a trigger event carried to (CR
+-- 603.2), "that much".
+thatMuchSlot :: SlotName.SlotName
+thatMuchSlot = SlotName.MkSlotName (Text.pack "thatMuch")
+
+-- | A number as digits ("3 damage", "4 life"), X, or the amount a trigger
+-- event carried ("that much damage").
 amount :: Quantity.Quantity -> [Text.Text]
 amount q = case q of
   Quantity.Literal n | n >= 0 -> [Text.pack (show n)]
-  Quantity.InSlot s | s == xSlot -> [Text.pack "X"]
+  Quantity.InSlot s
+    | s == xSlot -> [Text.pack "X"]
+    | s == thatMuchSlot -> [Text.pack "that much"]
   _ -> []
 
 -- | A count of cards: "a card", "two cards", "X cards".
@@ -213,7 +226,7 @@ counting context c = case (Count.aggregation c, Count.scope c) of
 
 -- | A zone of a player's that cards are counted in: "in your hand", "in their
 -- graveyard" for the player an instruction is applied to (Nature's
--- Resurgence), "in that player's hand" for one a slot names (Sudden Impact).
+-- Resurgence), "in that player's hand" for one a slot names.
 zoneOf :: Zone.Zone -> PlayerRef.PlayerRef -> [Text.Text]
 zoneOf zone whose = do
   name <- case zone of
@@ -223,7 +236,9 @@ zoneOf zone whose = do
   case whose of
     PlayerRef.Relative PlayerRelation.You -> [Text.pack "in your " <> name]
     PlayerRef.Candidate -> [Text.pack "in their " <> name]
-    PlayerRef.InSlot _ -> [Text.pack "in that player's " <> name]
+    -- Free: "that player's" (Sudden Impact) or "their" after naming them
+    -- (Guiltfeeder).
+    PlayerRef.InSlot _ -> [Text.pack "in that player's " <> name, Text.pack "in their " <> name]
     _ -> []
 
 -- | The objects or players a reference names, with the given determiner for a
@@ -234,7 +249,7 @@ object context determiner ref = case ref of
   ObjectRef.InSlot s
     | s == selfSlot -> [MkReference (self context) [] Filter.Singular]
     | s == youSlot -> [MkReference (Text.pack "you") [] Filter.Singular]
-    | s == becameSlot, Just it <- became context -> [MkReference it [] Filter.Singular]
+    | Just word <- Map.lookup s (bound context) -> [MkReference word [] Filter.Singular]
     | otherwise -> do
         named <- target context s
         case (determiner, number named) of
@@ -287,7 +302,9 @@ player context ref = case ref of
   PlayerRef.Relative PlayerRelation.You -> [(MkReference (Text.pack "you") [] Filter.Singular, Second)]
   PlayerRef.Relative PlayerRelation.Opponent -> [(MkReference (Text.pack "each opponent") [] Filter.Plural, Third)]
   PlayerRef.Relative PlayerRelation.AnyPlayer -> [(MkReference (Text.pack "each player") [] Filter.Plural, Third)]
-  PlayerRef.InSlot s -> fmap (\r -> (r, Third)) (target context s)
+  PlayerRef.InSlot s
+    | Just word <- Map.lookup s (bound context) -> [(MkReference word [] Filter.Singular, Third)]
+    | otherwise -> fmap (\r -> (r, Third)) (target context s)
   PlayerRef.OwnerOfBound _ -> [(MkReference (Text.pack "its owner") [] Filter.Singular, Third)]
   PlayerRef.ControllerOfBound _ -> [(MkReference (Text.pack "its controller") [] Filter.Singular, Third)]
   _ -> []
@@ -359,11 +376,19 @@ described context slot =
           both card (Filter.merge p (Filter.MkPhrase [] [card] [from]))
         _ | Maybe.isJust (TargetSlot.together slot) -> []
         (Pool.AnyTarget, Just _) -> filtered >>= both (Filter.MkNoun Text.empty Nothing)
-        (Pool.Creatures, _) -> filtered >>= both (noun "creature") . (\p -> Filter.merge p (Filter.MkPhrase [] [noun "creature"] []))
+        (Pool.Creatures, _) -> filtered >>= both (noun "creature") . creature
         (Pool.Players, _) -> filtered >>= both (noun "player")
         (Pool.Permanents, _) -> filtered >>= both (noun "permanent")
         (Pool.Spells, _) -> filtered >>= both (noun "spell") . (\p -> Filter.merge p (Filter.MkPhrase [] [noun "spell"] []))
         _ -> []
+
+-- | A description of creatures, which ends in "creature" unless a creature
+-- type already names them: "target attacking Goblin you control" (Boggart
+-- Prankster), "target artifact creature".
+creature :: Filter.Phrase -> Filter.Phrase
+creature p =
+  let named = any (\n -> not (Filter.kind n) || Filter.singular n == Text.pack "creature") (Filter.nouns p)
+   in if named then p else Filter.merge p (Filter.MkPhrase [] [Filter.MkNoun (Text.pack "creature") (Just (Text.pack "creatures"))] [])
 
 -- | A slot's count before its head: one target reads singular, a fixed number
 -- or a range plural ("up to three target creatures", "one or two target

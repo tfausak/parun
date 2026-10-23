@@ -19,6 +19,7 @@ import qualified Pawl.Types.Affected as Affected
 import qualified Pawl.Types.AgainstSlot as AgainstSlot
 import qualified Pawl.Types.Aggregation as Aggregation
 import qualified Pawl.Types.Arithmetic as Arithmetic
+import qualified Pawl.Types.BeginningStep as BeginningStep
 import qualified Pawl.Types.Card as Card
 import qualified Pawl.Types.CardName as CardName
 import qualified Pawl.Types.CardType as CardType
@@ -26,6 +27,10 @@ import qualified Pawl.Types.CharacteristicPT as CharacteristicPT
 import qualified Pawl.Types.ChosenPermanents as ChosenPermanents
 import qualified Pawl.Types.Clause as Clause
 import qualified Pawl.Types.Color as Color
+import qualified Pawl.Types.CombatStep as CombatStep
+import qualified Pawl.Types.Compares as Compares
+import qualified Pawl.Types.Comparison as Comparison
+import qualified Pawl.Types.Condition as Condition
 import qualified Pawl.Types.Cost as Cost
 import qualified Pawl.Types.CostAmount as CostAmount
 import qualified Pawl.Types.CostComponent as CostComponent
@@ -42,6 +47,7 @@ import qualified Pawl.Types.Discard as Discard
 import qualified Pawl.Types.Draw as Draw
 import qualified Pawl.Types.Duration as Duration
 import qualified Pawl.Types.Effect as Effect
+import qualified Pawl.Types.EndingStep as EndingStep
 import qualified Pawl.Types.EntryRiders as EntryRiders
 import qualified Pawl.Types.Face as Face
 import qualified Pawl.Types.Filter as Filter
@@ -70,6 +76,8 @@ import qualified Pawl.Types.ModifyTarget as ModifyTarget
 import qualified Pawl.Types.MoveToZone as MoveToZone
 import qualified Pawl.Types.ObjectRef as ObjectRef
 import qualified Pawl.Types.Optionality as Optionality
+import qualified Pawl.Types.OwnedZone as OwnedZone
+import qualified Pawl.Types.Phase as Phase
 import qualified Pawl.Types.PlayerQuantity as PlayerQuantity
 import qualified Pawl.Types.PlayerRef as PlayerRef
 import qualified Pawl.Types.PlayerRelation as PlayerRelation
@@ -82,10 +90,13 @@ import qualified Pawl.Types.PutCounters as PutCounters
 import qualified Pawl.Types.Quantity as Quantity
 import qualified Pawl.Types.RandomCardInHand as RandomCardInHand
 import qualified Pawl.Types.Regenerability as Regenerability
+import qualified Pawl.Types.SacrificeEffect as SacrificeEffect
+import qualified Pawl.Types.Sacrificer as Sacrificer
 import qualified Pawl.Types.Scope as Scope
 import qualified Pawl.Types.SlotCount as SlotCount
 import qualified Pawl.Types.SlotName as SlotName
 import qualified Pawl.Types.StaticAbility as StaticAbility
+import qualified Pawl.Types.StepBegins as StepBegins
 import qualified Pawl.Types.Subtype as Subtype
 import qualified Pawl.Types.Supertype as Supertype
 import qualified Pawl.Types.TapState as TapState
@@ -96,8 +107,10 @@ import qualified Pawl.Types.Times as Times
 import qualified Pawl.Types.Together as Together
 import qualified Pawl.Types.Toughness as Toughness
 import qualified Pawl.Types.TriggerCondition as TriggerCondition
+import qualified Pawl.Types.TriggerFrequency as TriggerFrequency
 import qualified Pawl.Types.TriggerLimit as TriggerLimit
 import qualified Pawl.Types.TriggeredAbility as TriggeredAbility
+import qualified Pawl.Types.TurnScope as TurnScope
 import qualified Pawl.Types.TypeLine as TypeLine
 import qualified Pawl.Types.Ward as Ward
 import qualified Pawl.Types.Zone as Zone
@@ -186,8 +199,7 @@ spec s = Spec.describe s "Pawl.Oracle" $ do
   -- ability in one of its own wordings, and a spell's instructions are one
   -- ability even across paragraphs (Bargain).
   Spec.it s "says matches each ability against its own wordings" $ do
-    let spark = CardName.MkCardName (Text.pack "Spark")
-        ring = activated (Cost.MkCost (Just (ManaCost.MkManaCost [])) [CostComponent.TapThis]) (addMana 1)
+    let ring = activated (Cost.MkCost (Just (ManaCost.MkManaCost [])) [CostComponent.TapThis]) (addMana 1)
         tomb = ring {ActivatedAbility.modal = payload [clause [addMana 1, damage [(you, 2)]]] []}
         insurance = payload [clause [loseLife (PlayerRef.InSlot target) 2, draw (PlayerRef.Relative PlayerRelation.You) 1]] [(target, TargetSlot.required Pool.Players Nothing)]
         both = withFace (\f -> f {Face.keywords = Map.fromList [(Keyword.Flying, 1), (Keyword.Vigilance, 1)], Face.activatedAbilities = [tomb], Face.spell = insurance})
@@ -249,10 +261,97 @@ spec s = Spec.describe s "Pawl.Oracle" $ do
   -- graveyard from the battlefield" (Chromatic Star).
   Spec.it s "render prints a trigger on entering or dying" $ do
     let imp = triggered TriggerCondition.SelfEnters [clause [damage [(target, 2)]]] [(target, TargetSlot.required Pool.Creatures Nothing)]
-    Spec.assertEq s [[Text.pack "When Spark enters, it deals 2 damage to target creature."]] (Oracle.abilities (withFace (\f -> f {Face.triggeredAbilities = [imp]})))
+    Spec.assertEq s [[Text.pack "When Spark enters, it deals 2 damage to target creature.", Text.pack "When Spark enters, Spark deals 2 damage to target creature."]] (Oracle.abilities (withFace (\f -> f {Face.triggeredAbilities = [imp]})))
     let star = triggered TriggerCondition.SelfDies [clause [draw (PlayerRef.Relative PlayerRelation.You) 1]] []
     Spec.assertEq s [[Text.pack "When Spark dies, draw a card."]] (Oracle.abilities (withFace (\f -> (typed [CardType.Creature] [] f) {Face.triggeredAbilities = [star]})))
     Spec.assertEq s [[Text.pack "When Spark is put into a graveyard from the battlefield, draw a card."]] (Oracle.abilities (withFace (\f -> (typed [CardType.Artifact] [] f) {Face.triggeredAbilities = [star]})))
+
+  -- CR 603.2b: "At the beginning of [step]", in whose turns the scope says;
+  -- the active player the event binds is "that player". Every turn's upkeep
+  -- and end step are free, the modern wording first.
+  Spec.it s "render prints a trigger at the beginning of a step" $ do
+    let at phase scope effects = withFace (\f -> f {Face.triggeredAbilities = [triggered (TriggerCondition.StepBegins (StepBegins.MkStepBegins phase Nothing scope)) [clause effects] []]})
+        upkeep = Phase.Beginning BeginningStep.Upkeep
+        end = Phase.Ending EndingStep.EndStep
+    Spec.assertEq s (Just (Text.pack "At the beginning of your upkeep, you gain 1 life.")) (Oracle.render (at upkeep TurnScope.ControllersTurn [gainLife 1]))
+    Spec.assertEq s [[Text.pack "At the beginning of each player's upkeep, that player draws a card.", Text.pack "At the beginning of each upkeep, that player draws a card."]] (Oracle.abilities (at upkeep TurnScope.EachTurn [draw (PlayerRef.InSlot thatPlayer) 1]))
+    Spec.assertEq s (Just (Text.pack "At the beginning of combat on your turn, you gain 1 life.")) (Oracle.render (at (Phase.Combat CombatStep.BeginningOfCombat) TurnScope.ControllersTurn [gainLife 1]))
+    Spec.assertEq s [[Text.pack "At the beginning of each end step, sacrifice Spark.", Text.pack "At the beginning of the end step, sacrifice Spark.", Text.pack "At the beginning of each player's end step, sacrifice Spark."]] (Oracle.abilities (at end TurnScope.EachTurn [sacrifice]))
+    Spec.assertEq s (Just (Text.pack "At the beginning of each opponent's end step, Spark deals 1 damage to that player.")) (Oracle.render (at end TurnScope.OpponentsTurn [damage [(thatPlayer, 1)]]))
+
+  -- CR 508.3a / 509.3a / 510.1: the source's combat events, which can recur
+  -- and so open with "Whenever", or "When" on a source that destroys itself
+  -- (Loyal Sentry); the defending player and the creature it blocks are named
+  -- as the event names them. Once named, the source is "it" or its name.
+  Spec.it s "render prints a trigger on attacking, blocking and combat damage" $ do
+    let on event effects = withFace (\f -> (typed [CardType.Creature] [] f) {Face.triggeredAbilities = [triggered event [clause effects] []]})
+    Spec.assertEq s [[Text.pack "Whenever Spark attacks, defending player discards a card.", Text.pack "When Spark attacks, defending player discards a card."]] (Oracle.abilities (on (TriggerCondition.SelfAttacks TriggerFrequency.EveryTime) [discard (PlayerRef.InSlot thatPlayer) 1]))
+    let raiders = on (TriggerCondition.SelfDealsCombatDamageToPlayer PlayerRelation.Opponent) [discard (PlayerRef.InSlot thatPlayer) 1]
+    Spec.assertEq s (Just (Text.pack "Whenever Spark deals combat damage to an opponent, that player discards a card.")) (Oracle.render raiders)
+    Spec.assertBool s (Oracle.says raiders spark (Text.pack "Whenever this creature deals combat damage to an opponent, that opponent discards a card.")) "that opponent unsaid"
+    let sentry = on (TriggerCondition.SelfBlocksCreature (Filter.HasCardType CardType.Creature)) [destroy (ObjectRef.InSlot thatAttacker) Regenerability.Regenerable, destroy (ObjectRef.InSlot self) Regenerability.Regenerable]
+    Spec.assertEq s (Just (Text.pack "Whenever Spark blocks a creature, destroy that creature and it.")) (Oracle.render sentry)
+    Spec.assertBool s (Oracle.says sentry spark (Text.pack "When this creature blocks a creature, destroy that creature and this creature.")) "Loyal Sentry's wording unsaid"
+    Spec.assertBool s (Oracle.says sentry spark (Text.pack "When this creature blocks a creature, destroy both creatures.")) "Alaborn Zealot's wording unsaid"
+    let roc = on (TriggerCondition.SelfBlocksCreature (Filter.And [Filter.HasCardType CardType.Creature, Filter.Not (Filter.HasKeyword Keyword.Flying)])) [modify (ObjectRef.InSlot self) Duration.UntilEndOfTurn (pt 1 0)]
+    Spec.assertEq s (Just (Text.pack "Whenever Spark blocks a creature without flying, it gets +1/+0 until end of turn.")) (Oracle.render roc)
+    Spec.assertBool s (Oracle.says roc spark (Text.pack "Whenever this creature blocks a creature without flying, this creature gets +1/+0 until end of turn.")) "the name after the event unsaid"
+    Spec.assertEq s (Just (Text.pack "Whenever Spark enters or attacks, you gain 1 life.")) (Oracle.render (on (TriggerCondition.AnyOf [TriggerCondition.SelfEnters, TriggerCondition.SelfAttacks TriggerFrequency.EveryTime]) [gainLife 1]))
+    let raptor = on TriggerCondition.SelfIsDealtDamage [gainLifeBy (Quantity.InSlot (SlotName.MkSlotName (Text.pack "thatMuch")))]
+    Spec.assertEq s (Just (Text.pack "Whenever Spark is dealt damage, you gain that much life.")) (Oracle.render raptor)
+    Spec.assertBool s (Oracle.says raptor spark (Text.pack "Enrage \8212 Whenever this creature is dealt damage, you gain that much life.")) "enrage unsaid"
+
+  -- CR 603.6a / 700.4 read by a bystander: "Whenever a [type] enters" or
+  -- "dies", the object "it" or "that creature"; landfall's ability word
+  -- (CR 207.2c); a creature among the objects it watches named first
+  -- (Zulaport Cutthroat), never a noncreature.
+  Spec.it s "render prints a trigger on another object entering or dying" $ do
+    let on types event effects = withFace (\f -> (typed types [] f) {Face.triggeredAbilities = [triggered event [clause effects] []]})
+        others = Filter.And [Filter.HasCardType CardType.Creature, Filter.Not Filter.IsSource]
+        mine = Filter.And [Filter.HasCardType CardType.Creature, Filter.ControlledBy PlayerRelation.You]
+    Spec.assertEq s (Just (Text.pack "Whenever another creature enters, you gain 1 life.")) (Oracle.render (on [CardType.Creature] (TriggerCondition.PermanentEnters others) [gainLife 1]))
+    Spec.assertEq s [[Text.pack "Whenever a creature enters, Spark deals 2 damage to it.", Text.pack "Whenever a creature enters, Spark deals 2 damage to that creature."]] (Oracle.abilities (on [CardType.Enchantment] (TriggerCondition.PermanentEnters (Filter.HasCardType CardType.Creature)) [damageBy [(ObjectRef.InSlot became, Quantity.Literal 2)]]))
+    Spec.assertEq s (Just (Text.pack "Landfall \8212 Whenever a land you control enters, you gain 1 life.")) (Oracle.render (on [CardType.Creature] (TriggerCondition.PermanentEnters (Filter.And [Filter.HasCardType CardType.Land, Filter.ControlledBy PlayerRelation.You])) [gainLife 1]))
+    Spec.assertEq s [[Text.pack "Whenever a creature you control dies, you gain 1 life.", Text.pack "Whenever Spark or another creature you control dies, you gain 1 life."]] (Oracle.abilities (on [CardType.Creature] (TriggerCondition.PermanentDies mine) [gainLife 1]))
+    Spec.assertEq s [[Text.pack "Whenever a creature you control dies, you gain 1 life."]] (Oracle.abilities (on [CardType.Artifact] (TriggerCondition.PermanentDies mine) [gainLife 1]))
+    let dragon = on [CardType.Creature] (TriggerCondition.SelfPutFromBattlefieldInto (OwnedZone.MkOwnedZone Zone.Graveyard PlayerRelation.You)) [Effect.MoveToZone (move (ObjectRef.InSlot became) Zone.Hand)]
+    Spec.assertEq s (Just (Text.pack "When Spark is put into your graveyard from the battlefield, return it to your hand.")) (Oracle.render dragon)
+    -- The card the source became is yours to return from your graveyard;
+    -- another creature's is not.
+    let returned = Effect.MoveToZone ((move (ObjectRef.InSlot became) Zone.Hand) {MoveToZone.origin = Just Zone.Graveyard})
+    Spec.assertEq s (Just (Text.pack "When Spark dies, return it from your graveyard to your hand.")) (Oracle.render (on [CardType.Creature] TriggerCondition.SelfDies [returned]))
+    Spec.assertEq s Nothing (Oracle.render (on [CardType.Creature] (TriggerCondition.PermanentDies mine) [returned]))
+
+  -- CR 603.4: "[When/Whenever/At] [event], if [condition], [effect]", the
+  -- condition a count of cards in a hand or of permanents, the source's
+  -- status, or a player's life; hellbent's ability word (CR 207.2c) free.
+  Spec.it s "render prints an intervening if clause" $ do
+    let endStep = TriggerCondition.StepBegins (StepBegins.MkStepBegins (Phase.Ending EndingStep.EndStep) Nothing TurnScope.ControllersTurn)
+        upkeeps scope = TriggerCondition.StepBegins (StepBegins.MkStepBegins (Phase.Beginning BeginningStep.Upkeep) Nothing scope)
+        gated event condition effects = withFace (\f -> f {Face.triggeredAbilities = [(triggered event [clause effects] []) {TriggeredAbility.intervening = Just condition}]})
+        compares q c k = Condition.Compares (Compares.MkCompares q c (Quantity.Literal k))
+        hand who = countOf (Filter.And []) (InZone.MkInZone Zone.Hand who)
+        academy = gated endStep (compares (hand (PlayerRef.Relative PlayerRelation.You)) Comparison.Exactly 0) [draw (PlayerRef.Relative PlayerRelation.You) 1]
+    Spec.assertEq s [[Text.pack "At the beginning of your end step, if you have no cards in hand, draw a card.", Text.pack "Hellbent \8212 At the beginning of your end step, if you have no cards in hand, draw a card."]] (Oracle.abilities academy)
+    Spec.assertEq s (Just (Text.pack "At the beginning of each opponent's upkeep, if that player has seven or more cards in hand, Spark deals 4 damage to that player.")) (Oracle.render (gated (upkeeps TurnScope.OpponentsTurn) (compares (hand (PlayerRef.InSlot thatPlayer)) Comparison.AtLeast 7) [damage [(thatPlayer, 4)]]))
+    Spec.assertEq s [[Text.pack "At the beginning of your upkeep, if there are no Zombies on the battlefield, you gain 1 life.", Text.pack "At the beginning of your upkeep, if no Zombies are on the battlefield, you gain 1 life."]] (Oracle.abilities (gated (upkeeps TurnScope.ControllersTurn) (compares (countOf (Filter.HasSubtype Subtype.Zombie) (onBattlefield (PlayerRef.Relative PlayerRelation.AnyPlayer))) Comparison.Exactly 0) [gainLife 1]))
+    Spec.assertEq s (Just (Text.pack "At the beginning of your upkeep, if you control no other creatures, you gain 1 life.")) (Oracle.render (gated (upkeeps TurnScope.ControllersTurn) (compares (countOf (Filter.And [Filter.HasCardType CardType.Creature, Filter.ControlledBy PlayerRelation.You, Filter.Not Filter.IsSource]) (onBattlefield (PlayerRef.Relative PlayerRelation.AnyPlayer))) Comparison.Exactly 0) [gainLife 1]))
+    Spec.assertEq s (Just (Text.pack "At the beginning of each player's upkeep, if Spark is untapped, that player draws a card.")) (Oracle.render (gated (upkeeps TurnScope.EachTurn) (compares (countOf (Filter.And [Filter.IsSource, Filter.Not Filter.IsTapped]) (onBattlefield (PlayerRef.Relative PlayerRelation.AnyPlayer))) Comparison.AtLeast 1) [draw (PlayerRef.InSlot thatPlayer) 1]))
+    Spec.assertEq s (Just (Text.pack "At the beginning of your upkeep, if you have 40 or more life, you gain 1 life.")) (Oracle.render (gated (upkeeps TurnScope.ControllersTurn) (compares (Quantity.LifeTotal (PlayerRef.Relative PlayerRelation.You)) Comparison.AtLeast 40) [gainLife 1]))
+
+  -- A creature type names creatures alone ("target attacking Goblin you
+  -- control", Boggart Prankster); a change to each of several objects reads
+  -- together or one at a time (Zhang He, Wei General); a player a slot names
+  -- owns "their" graveyard once named (Guiltfeeder).
+  Spec.it s "render names creatures by type and counts in a named player's zone" $ do
+    let prankster = spell [clause [modify (ObjectRef.InSlot target) Duration.UntilEndOfTurn (pt 1 0)]] [(target, TargetSlot.required Pool.Creatures (Just (Filter.And [Filter.IsAttacking, Filter.HasSubtype Subtype.Goblin, Filter.ControlledBy PlayerRelation.You])))]
+    Spec.assertEq s (Just (Text.pack "Target attacking Goblin you control gets +1/+0 until end of turn.")) (Oracle.render prankster)
+    let he = spell [clause [modify (ObjectRef.EachMatching (Filter.And [Filter.HasCardType CardType.Creature, Filter.ControlledBy PlayerRelation.You, Filter.Not Filter.IsSource])) Duration.UntilEndOfTurn (pt 1 0)]] []
+    Spec.assertEq s (Just (Text.pack "Other creatures you control get +1/+0 until end of turn.")) (Oracle.render he)
+    Spec.assertBool s (Oracle.says he spark (Text.pack "Each other creature you control gets +1/+0 until end of turn.")) "each unsaid"
+    let feeder = withFace (\f -> (typed [CardType.Creature] [] f) {Face.triggeredAbilities = [triggered TriggerCondition.SelfAttacksUnblocked [clause [Effect.LoseLife (LifeLoss.MkLifeLoss (PlayerRef.InSlot thatPlayer) (countOf (Filter.And []) (InZone.MkInZone Zone.Graveyard (PlayerRef.InSlot thatPlayer))) LifeLossCause.ByEffect Nothing)]] []]})
+    Spec.assertEq s (Just (Text.pack "Whenever Spark attacks and isn't blocked, defending player loses 1 life for each card in that player's graveyard.")) (Oracle.render feeder)
+    Spec.assertBool s (Oracle.says feeder spark (Text.pack "Whenever this creature attacks and isn't blocked, defending player loses 1 life for each card in their graveyard.")) "their unsaid"
 
   -- An activated ability whose cost sacrifices its source calls it "it"
   -- (Mogg Mob).
@@ -308,9 +407,9 @@ spec s = Spec.describe s "Pawl.Oracle" $ do
     Spec.assertEq s (Just (Text.pack "One or two target creatures each get +2/+1 until end of turn.")) (Oracle.render hearts)
     let sail = spell [clause [modify (ObjectRef.InSlot target) Duration.UntilEndOfTurn (Modification.GainKeyword Keyword.Flying)]] [(target, slot)]
     Spec.assertEq s (Just (Text.pack "One or two target creatures gain flying until end of turn.")) (Oracle.render sail)
-    let self = ObjectRef.InSlot (SlotName.MkSlotName (Text.pack "self"))
+    let itself = ObjectRef.InSlot self
         changes = [Modification.LoseKeyword Keyword.Shroud, Modification.GainKeyword Keyword.FirstStrike, Modification.GainKeyword Keyword.Deathtouch]
-        blade = spell [clause (fmap (modify self Duration.UntilEndOfTurn) changes)] []
+        blade = spell [clause (fmap (modify itself Duration.UntilEndOfTurn) changes)] []
     Spec.assertEq s (Just (Text.pack "Spark loses shroud and gains first strike and deathtouch until end of turn.")) (Oracle.render blade)
 
   -- CR 604.1: a static ability's objects "get" a change and "have" a
@@ -587,6 +686,25 @@ upTo n = TargetSlot.upTo n Pool.Creatures
 -- The slot the engine binds the card a dying object became to.
 became :: SlotName.SlotName
 became = SlotName.MkSlotName (Text.pack "became")
+
+-- The slots the engine binds a trigger event's player, the creature its
+-- source blocks, and the source itself to.
+thatPlayer :: SlotName.SlotName
+thatPlayer = SlotName.MkSlotName (Text.pack "thatPlayer")
+
+thatAttacker :: SlotName.SlotName
+thatAttacker = SlotName.MkSlotName (Text.pack "thatAttacker")
+
+self :: SlotName.SlotName
+self = SlotName.MkSlotName (Text.pack "self")
+
+-- The name the trigger cases' card has.
+spark :: CardName.CardName
+spark = CardName.MkCardName (Text.pack "Spark")
+
+-- The instruction to sacrifice the source.
+sacrifice :: Effect.Effect Card.Card (GrantedAbility.GrantedAbility Card.Card)
+sacrifice = Effect.Sacrifice (SacrificeEffect.MkSacrificeEffect (ObjectRef.InSlot self) Sacrificer.EffectController Nothing)
 
 -- The name the normalisation cases give their card.
 x :: CardName.CardName

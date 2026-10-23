@@ -1876,6 +1876,7 @@ library oracle
     Pawl.Oracle.Normalise
     Pawl.Oracle.Prose
     Pawl.Oracle.Target
+    Pawl.Oracle.Trigger
     Pawl.OracleSpec
 
 -- The line protocol a client plays a game through: each seat's decisions as
