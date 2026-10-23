@@ -316,6 +316,11 @@ spec s = Spec.describe s "Pawl.Oracle" $ do
     Spec.assertEq s [[Text.pack "Whenever a creature you control dies, you gain 1 life."]] (Oracle.abilities (on [CardType.Artifact] (TriggerCondition.PermanentDies mine) [gainLife 1]))
     let dragon = on [CardType.Creature] (TriggerCondition.SelfPutFromBattlefieldInto (OwnedZone.MkOwnedZone Zone.Graveyard PlayerRelation.You)) [Effect.MoveToZone (move (ObjectRef.InSlot became) Zone.Hand)]
     Spec.assertEq s (Just (Text.pack "When Spark is put into your graveyard from the battlefield, return it to your hand.")) (Oracle.render dragon)
+    -- The card the source became is yours to return from your graveyard;
+    -- another creature's is not.
+    let returned = Effect.MoveToZone ((move (ObjectRef.InSlot became) Zone.Hand) {MoveToZone.origin = Just Zone.Graveyard})
+    Spec.assertEq s (Just (Text.pack "When Spark dies, return it from your graveyard to your hand.")) (Oracle.render (on [CardType.Creature] TriggerCondition.SelfDies [returned]))
+    Spec.assertEq s Nothing (Oracle.render (on [CardType.Creature] (TriggerCondition.PermanentDies mine) [returned]))
 
   -- CR 603.4: "[When/Whenever/At] [event], if [condition], [effect]", the
   -- condition a count of cards in a hand or of permanents, the source's
