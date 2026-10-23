@@ -4710,7 +4710,11 @@ applyOneEffect runSubgame resolving source controller legal chosen effect = case
           -- prints its shuffle after those clauses (CR 608.2c), as its own
           -- Effect.Shuffle, so a found card is never shuffled while a later
           -- clause still names it -- CR 701.24b's exclusion, and CR 701.20d's
-          -- new object for a card Grim Reminder leaves behind.
+          -- new object for a card Grim Reminder leaves behind. Nor where it is
+          -- Stay: Doomsday prints no shuffle at all, and a later clause of its
+          -- own puts the finds on top. The scenario
+          -- cr-701-23d-whole-card-doomsday-stacks-the-five-it-found-and-exiles-the-rest
+          -- is the proof.
           --
           -- RevealThenTop's and Top's found cards are still in the library at
           -- its shuffle, and CR 701.24b leaves them out of it: not reordered,
@@ -4724,7 +4728,7 @@ applyOneEffect runSubgame resolving source controller legal chosen effect = case
           -- cr-701-24b-scheming-symmetry-puts-each-searcher-s-find-on-top-of-their-own-library
           -- are the proof.
           let shuffled
-                | destination == SearchDestination.Reveal = []
+                | not (shufflesAfter destination) = []
                 | otherwise = ListUtils.nubOrd [owner | (_, owner, chosenZones, _, _, _) <- decisions, Set.member Zone.Library chosenZones]
               leftOut
                 | putsOnTop destination = Set.fromList arrivals
@@ -11795,6 +11799,7 @@ outsideArrival destination = case destination of
   SearchDestination.BattlefieldAttachedOrHand -> Nothing
   SearchDestination.BattlefieldAttached -> Nothing
   SearchDestination.Reveal -> Nothing
+  SearchDestination.Stay -> Nothing
   SearchDestination.RevealThenTop -> Nothing
   SearchDestination.Top -> Nothing
 
@@ -11811,7 +11816,24 @@ putsOnTop destination = case destination of
   SearchDestination.BattlefieldAttachedOrHand -> False
   SearchDestination.BattlefieldAttached -> False
   SearchDestination.Reveal -> False
+  SearchDestination.Stay -> False
   SearchDestination.Hand -> False
+
+-- CR 701.24: whether the search's own sentence shuffles the library it read --
+-- every arm but the two that leave the found cards for a later clause.
+shufflesAfter :: SearchDestination.SearchDestination -> Bool
+shufflesAfter destination = case destination of
+  SearchDestination.Reveal -> False
+  SearchDestination.Stay -> False
+  SearchDestination.Battlefield -> True
+  SearchDestination.BattlefieldTapped -> True
+  SearchDestination.RevealThenHand -> True
+  SearchDestination.Exile -> True
+  SearchDestination.BattlefieldAttachedOrHand -> True
+  SearchDestination.BattlefieldAttached -> True
+  SearchDestination.RevealThenTop -> True
+  SearchDestination.Top -> True
+  SearchDestination.Hand -> True
 
 -- Search.differentIn: the cards, in order, that keep the group apart -- each
 -- shares no value on any named axis with a card kept ahead of it.
@@ -11925,6 +11947,8 @@ putFound resolving asOf searcher subject destination cardId = case destination o
   SearchDestination.Reveal -> do
     Event.revealResolving resolving searcher cardId
     pure [cardId]
+  -- Doomsday's: the same, with no reveal (CR 701.23e).
+  SearchDestination.Stay -> pure [cardId]
   -- Mystical Tutor's "reveal it": the card stays in the library through the
   -- Search arm's shuffle, which leaves it out, until the move to the top after it.
   SearchDestination.RevealThenTop -> do
