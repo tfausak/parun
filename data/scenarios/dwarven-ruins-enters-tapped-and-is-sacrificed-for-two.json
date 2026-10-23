@@ -1,0 +1,12 @@
+{
+  "description": "CR 614.1d / 701.21a whole card: Dwarven Ruins enters tapped, and taps and is sacrificed for two red mana",
+  "note": "The one played from hand is tapped; the placed one leaves alice's pool holding exactly two red mana and goes to her graveyard.",
+  "board": {"active": "alice", "step": "PrecombatMain", "seats": [{"name": "alice", "library": [{"card": "Island"}, {"card": "Island"}, {"card": "Island"}], "battlefield": [{"card": "Dwarven Ruins", "label": "placed"}], "hand": [{"card": "Dwarven Ruins", "label": "played"}]}, {"name": "bob", "library": [{"card": "Island"}, {"card": "Island"}, {"card": "Island"}]}]},
+  "timeline": [
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": {"PlayLand": "$played"}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "check": {"Tapped": {"object": "Dwarven Ruins#2", "tapped": true}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": {"Take": {"action": "ActivateManaAbility $placed", "yields": [[{"manaType": {"type": "Colored", "value": {"type": "Red"}}, "tags": [], "retention": {"type": "Ordinary"}, "restriction": null, "rider": null, "sourceChoices": null}, {"manaType": {"type": "Colored", "value": {"type": "Red"}}, "tags": [], "retention": {"type": "Ordinary"}, "restriction": null, "rider": null, "sourceChoices": null}]], "costOrder": [0, 1]}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "check": {"View": {"of": "ManaPool", "player": "alice", "is": [{"manaType": {"type": "Colored", "value": {"type": "Red"}}, "tags": [], "retention": {"type": "Ordinary"}, "restriction": null, "rider": null, "sourceChoices": null}, {"manaType": {"type": "Colored", "value": {"type": "Red"}}, "tags": [], "retention": {"type": "Ordinary"}, "restriction": null, "rider": null, "sourceChoices": null}]}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "check": {"Count": {"player": "alice", "zone": "Graveyard", "card": "Dwarven Ruins", "count": 1}}}
+  ]
+}

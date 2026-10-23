@@ -13,19 +13,15 @@ wrong. No Sixth Edition card's whole text is keywords, so `script/ingest` adds
 none of them.
 
 - Abduction: `Permanent:HostPermanent`
-- Adarkar Wastes: `ManaProduce:Or`
 - Animate Wall: `Rule:PermanentRuleEffect`
 - Ankh of Mishra: `Permanent:Trigger_ThatPermanent`
 - Ashen Powder: `Action:PutGraveyardCardOntoBattlefield`
 - Balduvian Horde: `Action:MayCost`
 - Blight: `Trigger:WhenAPermanentBecomesTapped`
-- Blighted Shaman: `Cost:SacrificeAPermanent`
 - Bog Rats: `Rule:PermanentRuleEffect`
 - Bottle of Suleiman: `Action:FlipACoin_OnWinAndLose`
 - Browse: `Action:LookAtTheTopNumberCardsOfLibrary`
-- Brushland: `ManaProduce:Or`
 - Call of the Wild: `Action:RevealTopCardOfLibrary`
-- Charcoal Diamond: `Rule:AsPermanentEnters`
 - Chill: `Rule:EachPlayerEffect`
 - Circle of Protection: Black: `Action:ChooseADamageSource`
 - Circle of Protection: Blue: `Action:ChooseADamageSource`
@@ -34,24 +30,19 @@ none of them.
 - Circle of Protection: White: `Action:ChooseADamageSource`
 - City of Brass: `Trigger:WhenAPermanentBecomesTapped`
 - Conquer: `StaticLayerEffect:SetController`
-- Crystal Rod: `Trigger:WhenAPlayerCastsASpell`
 - Cursed Totem: `Rule:ActivatedAbilityEffect`
 - Derelor: `Rule:PlayerEffect`
 - Dingus Egg: `Trigger:WhenAPermanentIsPutIntoAPlayersGraveyard`
 - Disrupting Scepter: `Rule:ActivatedWithModifiers`
 - Dragon Mask: `Action:CreateFutureTrigger`
 - Dream Cache: `Action:ChooseAnAction`
-- Dwarven Ruins: `Rule:AsPermanentEnters`
 - Early Harvest: `Action:UntapEachPermanent`
-- Ebon Stronghold: `Rule:AsPermanentEnters`
 - Elder Druid: `Action:TapOrUntapPermanent`
 - Elven Riders: `Rule:PermanentRuleEffect`
 - Enlightened Tutor: `Action:SearchLibrary`
 - Ethereal Champion: `Action:CreateFuturePreventDamage`
 - Evil Eye of Orms-by-Gore: `Rule:EachPermanentRuleEffect`
 - Exile: renders as one sentence, "attacking nonwhite"
-- Fallen Angel: `Cost:SacrificeAPermanent`
-- Fire Diamond: `Rule:AsPermanentEnters`
 - Firebreathing: `Permanent:HostPermanent`
 - Fog Elemental: `Action:CreateFutureTrigger`
 - Forget: `Action:PlayerActions`
@@ -60,72 +51,51 @@ none of them.
 - Goblin Elite Infantry: renders "blocks or becomes blocked" as two triggers
 - Goblin Recruiter: `Action:SearchLibrary`
 - Goblin Warrens: `Cost:SacrificeNumberPermanents`
-- Gorilla Chieftain: `Action:RegeneratePermanent`
 - Gravebane Zombie: `Rule:ReplaceWouldPutIntoGraveyard`
 - Hammer of Bogardan: `Rule:FromGraveyard`
-- Havenwood Battleground: `Rule:AsPermanentEnters`
 - Healing Salve: `Action:CreateFuturePreventDamage`
 - Hecatomb: `Action:MayCost`
 - Howl from Beyond: `LayerEffect:AdjustPTX`
 - Howling Mine: `Condition:PermanentPassesFilter`
-- Insight: `Trigger:WhenAPlayerCastsASpell`
-- Iron Star: `Trigger:WhenAPlayerCastsASpell`
-- Ivory Cup: `Trigger:WhenAPlayerCastsASpell`
-- Karplusan Forest: `ManaProduce:Or`
+- Insight: renders "you draw a card" as "draw a card"
 - Kjeldoran Dead: `Action:SacrificeAPermanent`
 - Lead Golem: `Action:PermanentDoesntUntapDuringControllersNextUntap`
 - Light of Day: `Rule:EachPermanentRuleEffect`
 - Living Lands: `StaticLayerEffect:SetPT`
 - Manabarbs: `Trigger:WhenAPlayerTapsAPermanentForMana`
-- Marble Diamond: `Rule:AsPermanentEnters`
 - Millstone: `Action:MillNumberCards`
 - Mind Warp: `Action:LookAtPlayersHandAndChooseNumCardsToDiscard`
-- Mischievous Poltergeist: `Action:RegeneratePermanent`
-- Moss Diamond: `Rule:AsPermanentEnters`
 - Necrosavant: `Rule:FromGraveyard`
 - Orcish Artillery: `Action:PermanentDealsMultipleDamage`
 - Painful Memories: `Action:LookAtPlayersHand`
 - Pentagram of the Ages: `Action:ChooseADamageSource`
-- Phantasmal Terrain: `Rule:AsPermanentEnters`
-- Phyrexian Vault: `Cost:SacrificeAPermanent`
+- Phantasmal Terrain: `ReplacementActionWouldEnter:ChooseABasicLandType`
 - Polymorph: `Action:RevealCardsFromTheTopOfLibraryUntilACardOfTypeIsRevealed`
 - Psychic Venom: `Trigger:WhenAPermanentBecomesTapped`
 - Radjan Spirit: `LayerEffect:LosesAbility`
 - Rag Man: `Rule:ActivatedWithModifiers`
 - Recall: `Action:ReturnNumberCardsFromPlayersGraveyardToHand`
 - Reckless Embermage: `Action:PermanentDealsMultipleDamage`
-- Regeneration: `Action:RegeneratePermanent`
+- Regeneration: `Permanent:HostPermanent`
 - Resistance Fighter: `Action:CreatePreventDamageUntil`
-- River Boa: `Action:RegeneratePermanent`
-- Ruins of Trokair: `Rule:AsPermanentEnters`
 - Sage Owl: `Action:LookAtTheTopNumberCardsOfLibrary`
 - Sea Monster: `Rule:PermanentRuleEffect`
 - Sengir Autocrat: `Trigger:WhenAPermanentLeavesTheBattlefield`
 - Sibilant Spirit: `Action:PlayerMayAction`
-- Skull Catapult: `Cost:SacrificeAPermanent`
-- Sky Diamond: `Rule:AsPermanentEnters`
 - Snake Basket: `Rule:ActivatedWithModifiers`
 - Soldevi Sage: `Cost:SacrificeNumberPermanents`
 - Spell Blast: `Spells:AnySpell`
 - Spirit Link: `Trigger:WhenAPermanentDealsDamage`
 - Spitting Drake: `Rule:ActivatedWithModifiers`
 - Storm Cauldron: `Rule:EachPlayerEffect`
-- Strands of Night: `Cost:SacrificeAPermanent`
+- Strands of Night: `Action:PutGraveyardCardOntoBattlefield`
 - Stupor: `Action:PlayerActions`
-- Sulfurous Springs: `ManaProduce:Or`
-- Svyelunite Temple: `Rule:AsPermanentEnters`
 - Teferi's Puzzle Box: `Action:PlayerActions`
 - The Hive: `CreatableToken:NamedTokenWithPT`
 - Thicket Basilisk: `Action:CreateFutureTrigger`
-- Throne of Bone: `Trigger:WhenAPlayerCastsASpell`
-- Uktabi Wildcats: `Cost:SacrificeAPermanent`
-- Underground River: `ManaProduce:Or`
-- Verduran Enchantress: `Trigger:WhenAPlayerCastsASpell`
 - Vertigo: `LayerEffect:LosesAbility`
 - Waiting in the Weeds: `Action:EachPlayerCreatesTokens`
 - Wand of Denial: `Action:LookAtTheTopCardOfPlayersLibrary`
-- Warmth: `Trigger:WhenAPlayerCastsASpell`
-- Wooden Sphere: `Trigger:WhenAPlayerCastsASpell`
 - Worldly Tutor: `Action:SearchLibrary`
 - Zombie Master: `Rule:Activated`
 
@@ -134,8 +104,6 @@ none of them.
 Each group is tracked by its issue; its cards are added when it lands. Hardest
 first.
 
-- #5311: Juxtapose. "The greatest mana value among" outside an edict, then a
-  swap of each player's pick.
 - #5310: Tariff. A payment priced at the mana cost of the creature a player
   just picked.
 - #5405: Library of Lat-Nam. An opponent chooses the mode.
@@ -157,5 +125,5 @@ first.
 
 MTGJSON lists two 6ED decks, the preconstructed Deck A and Deck B. Neither is in
 `data/decks/` yet, since each holds cards the pool lacks, all of them
-expressible today: Call of the Wild, Gravebane Zombie, Healing Salve and
-Mischievous Poltergeist (Deck A), and Sibilant Spirit (Deck B).
+expressible today: Call of the Wild, Gravebane Zombie and Healing Salve (Deck
+A), and Sibilant Spirit (Deck B).

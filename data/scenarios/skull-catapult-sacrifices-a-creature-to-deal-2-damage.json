@@ -1,0 +1,13 @@
+{
+  "description": "CR 602.2 / 701.21a whole card: Skull Catapult pays {1}, taps and sacrifices a creature to deal 2 damage to any target",
+  "note": "Alice picks the Bears over the Piker; bob's 3/3 Hill Giant survives with 2 damage marked.",
+  "board": {"active": "alice", "step": "PrecombatMain", "seats": [{"name": "alice", "library": [{"card": "Island"}, {"card": "Island"}, {"card": "Island"}], "battlefield": [{"card": "Skull Catapult", "label": "catapult"}, {"card": "Mountain", "label": "m1"}, {"card": "Grizzly Bears", "label": "bears"}, {"card": "Goblin Piker", "label": "piker"}]}, {"name": "bob", "library": [{"card": "Island"}, {"card": "Island"}, {"card": "Island"}], "battlefield": [{"card": "Hill Giant", "label": "giant"}]}]},
+  "timeline": [
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": {"Answer": {"prompt": "ChooseSacrifices", "with": ["$bears"]}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": {"Activate": {"object": "$catapult", "targets": ["$giant"], "mana": ["$m1"], "costOrder": [0, 1]}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass"},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "check": {"Damage": {"object": "$giant", "damage": 2}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "check": {"Count": {"player": "alice", "zone": "Graveyard", "card": "Grizzly Bears", "count": 1}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "check": {"Count": {"player": "alice", "zone": "Battlefield", "card": "Goblin Piker", "count": 1}}}
+  ]
+}

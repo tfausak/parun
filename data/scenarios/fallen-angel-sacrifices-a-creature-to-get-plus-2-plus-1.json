@@ -1,0 +1,13 @@
+{
+  "description": "CR 602.2 / 701.21a whole card: Fallen Angel sacrifices a creature to get +2/+1 until end of turn",
+  "note": "Alice could sacrifice the Angel, the Bears or the Piker; she picks the Bears, and the Angel becomes 5/4.",
+  "board": {"active": "alice", "step": "PrecombatMain", "seats": [{"name": "alice", "library": [{"card": "Island"}, {"card": "Island"}, {"card": "Island"}], "battlefield": [{"card": "Fallen Angel", "label": "angel"}, {"card": "Grizzly Bears", "label": "bears"}, {"card": "Goblin Piker", "label": "piker"}]}, {"name": "bob", "library": [{"card": "Island"}, {"card": "Island"}, {"card": "Island"}]}]},
+  "timeline": [
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": {"Answer": {"prompt": "ChooseSacrifices", "with": ["$bears"]}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": {"Activate": {"object": "$angel"}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass"},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "check": {"PowerToughness": {"object": "$angel", "power": 5, "toughness": 4}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "check": {"Count": {"player": "alice", "zone": "Graveyard", "card": "Grizzly Bears", "count": 1}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "check": {"Count": {"player": "alice", "zone": "Battlefield", "card": "Goblin Piker", "count": 1}}}
+  ]
+}

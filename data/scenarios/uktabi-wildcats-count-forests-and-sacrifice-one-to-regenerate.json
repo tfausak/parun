@@ -1,0 +1,18 @@
+{
+  "description": "CR 604.3 / 701.19a whole card: Uktabi Wildcats are as big as their controller's Forests, and sacrifice a Forest to regenerate",
+  "note": "Alice's three Forests make the Wildcats 3/3; bob's two count for nothing. Sacrificing one leaves them 2/2, and her Lightning Bolt then taps them and removes its damage instead of destroying them.",
+  "board": {"active": "alice", "step": "PrecombatMain", "seats": [{"name": "alice", "library": [{"card": "Island"}, {"card": "Island"}, {"card": "Island"}], "battlefield": [{"card": "Uktabi Wildcats", "label": "cats"}, {"card": "Forest", "label": "f1"}, {"card": "Forest", "label": "f2"}, {"card": "Forest", "label": "f3"}, {"card": "Mountain", "label": "m1"}], "hand": [{"card": "Lightning Bolt", "label": "bolt"}]}, {"name": "bob", "library": [{"card": "Island"}, {"card": "Island"}, {"card": "Island"}], "battlefield": [{"card": "Forest"}, {"card": "Forest"}]}]},
+  "timeline": [
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "check": {"PowerToughness": {"object": "$cats", "power": 3, "toughness": 3}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": {"Answer": {"prompt": "ChooseSacrifices", "with": ["$f3"]}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": {"Activate": {"object": "$cats", "mana": ["$f1", null]}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "check": {"PowerToughness": {"object": "$cats", "power": 2, "toughness": 2}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass"},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": {"Cast": {"object": "$bolt", "targets": ["$cats"], "mana": ["$m1", null]}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass"},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "check": {"Count": {"player": "alice", "zone": "Battlefield", "card": "Uktabi Wildcats", "count": 1}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "check": {"Tapped": {"object": "$cats", "tapped": true}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "check": {"Damage": {"object": "$cats", "damage": 0}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "check": {"Count": {"player": "alice", "zone": "Graveyard", "card": "Forest", "count": 1}}}
+  ]
+}

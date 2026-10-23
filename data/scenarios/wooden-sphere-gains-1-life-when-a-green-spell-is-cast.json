@@ -1,0 +1,18 @@
+{
+  "description": "CR 601.2i / 118.12 whole card: Wooden Sphere triggers on any player's green spell and gains 1 life when its controller pays {1}",
+  "note": "Bob casts Raging Goblin first, which is not green: a trigger would raise a prompt the timeline does not answer. Then his Llanowar Elves triggers it and alice pays with her one Island, going to 21.",
+  "board": {"active": "bob", "step": "PrecombatMain", "seats": [{"name": "alice", "library": [{"card": "Island"}, {"card": "Island"}, {"card": "Island"}], "battlefield": [{"card": "Wooden Sphere", "label": "source"}, {"card": "Island", "label": "i1"}]}, {"name": "bob", "library": [{"card": "Island"}, {"card": "Island"}, {"card": "Island"}], "battlefield": [{"card": "Forest", "label": "l1"}, {"card": "Mountain", "label": "l2"}], "hand": [{"card": "Raging Goblin", "label": "other"}, {"card": "Llanowar Elves", "label": "spell"}]}]},
+  "timeline": [
+    {"turn": 1, "step": "PrecombatMain", "player": "bob", "do": {"Cast": {"object": "$other", "mana": ["$l2", null]}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "bob", "do": "Pass"},
+    {"turn": 1, "step": "PrecombatMain", "player": "bob", "do": {"Cast": {"object": "$spell", "mana": ["$l1"]}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "bob", "do": "Pass"},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": {"ChooseToPay": {"decision": {"type": "Pays"}, "mana": ["$i1"]}}, "source": "$source"},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "check": {"Life": {"player": "alice", "life": 21}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "check": {"Tapped": {"object": "$i1", "tapped": true}}}
+  ],
+  "final": [
+    {"Life": {"player": "alice", "life": 21}},
+    {"Count": {"player": "bob", "zone": "Battlefield", "card": "Llanowar Elves", "count": 1}}
+  ]
+}

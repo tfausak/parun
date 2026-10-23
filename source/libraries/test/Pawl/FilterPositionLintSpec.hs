@@ -1991,6 +1991,7 @@ filterPositionLintSpec s registry = Spec.describe s "Lint" $ do
             ("Purging Scythe", 1),
             ("Riveteers Charm", 1),
             ("Soul Shatter", 1),
+            ("Tariff", 1),
             ("Summon: Valefor", 1),
             ("The Dining Car", 1),
             ("Witch-king, Bringer of Ruin", 1)

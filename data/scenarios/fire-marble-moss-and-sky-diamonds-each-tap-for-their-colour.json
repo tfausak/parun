@@ -1,0 +1,19 @@
+{
+  "description": "CR 106.4 whole card: Fire, Marble, Moss and Sky Diamond each tap for one mana of their colour",
+  "note": "Each Diamond is alice's only source of its colour, and each spell needs that colour: Goblin Piker red (its {1} from the Plains), Savannah Lions white, Llanowar Elves green, Merfolk of the Pearl Trident blue.",
+  "board": {"active": "alice", "step": "PrecombatMain", "seats": [{"name": "alice", "library": [{"card": "Island"}, {"card": "Island"}, {"card": "Island"}], "battlefield": [{"card": "Fire Diamond", "label": "fire"}, {"card": "Marble Diamond", "label": "marble"}, {"card": "Moss Diamond", "label": "moss"}, {"card": "Sky Diamond", "label": "sky"}, {"card": "Plains", "label": "plains"}], "hand": [{"card": "Goblin Piker", "label": "piker"}, {"card": "Savannah Lions", "label": "lions"}, {"card": "Llanowar Elves", "label": "elves"}, {"card": "Merfolk of the Pearl Trident", "label": "merfolk"}]}, {"name": "bob", "library": [{"card": "Island"}, {"card": "Island"}, {"card": "Island"}]}]},
+  "timeline": [
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": {"Cast": {"object": "$piker", "mana": ["$fire", "$plains", null]}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass"},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": {"Cast": {"object": "$lions", "mana": ["$marble", null]}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass"},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": {"Cast": {"object": "$elves", "mana": ["$moss", null]}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass"},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": {"Cast": {"object": "$merfolk", "mana": ["$sky"]}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass"},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "check": {"Count": {"player": "alice", "zone": "Battlefield", "card": "Goblin Piker", "count": 1}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "check": {"Count": {"player": "alice", "zone": "Battlefield", "card": "Savannah Lions", "count": 1}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "check": {"Count": {"player": "alice", "zone": "Battlefield", "card": "Llanowar Elves", "count": 1}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "check": {"Count": {"player": "alice", "zone": "Battlefield", "card": "Merfolk of the Pearl Trident", "count": 1}}}
+  ]
+}
