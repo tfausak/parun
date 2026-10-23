@@ -1,0 +1,13 @@
+{
+  "description": "CR 701.17a whole card: Millstone makes target player mill two cards",
+  "note": "Bob's top two cards, the Grizzly Bears and the Hill Giant, go to his graveyard; the Forest below them stays.",
+  "board": {"active": "alice", "step": "PrecombatMain", "seats": [{"name": "alice", "battlefield": [{"card": "Millstone", "label": "millstone"}, {"card": "Island", "label": "i1"}, {"card": "Island", "label": "i2"}], "library": [{"card": "Island"}, {"card": "Island"}, {"card": "Island"}]}, {"name": "bob", "library": [{"card": "Grizzly Bears"}, {"card": "Hill Giant"}, {"card": "Forest"}]}]},
+  "timeline": [
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": {"Activate": {"object": "$millstone", "targets": ["$bob"], "mana": ["$i1", "$i2"]}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass"},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "check": {"View": {"of": "Zone", "player": "bob", "zone": "Library", "is": ["Forest"]}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "check": {"Count": {"player": "bob", "zone": "Graveyard", "card": "Grizzly Bears", "count": 1}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "check": {"Count": {"player": "bob", "zone": "Graveyard", "card": "Hill Giant", "count": 1}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "check": {"Tapped": {"object": "$millstone", "tapped": true}}}
+  ]
+}

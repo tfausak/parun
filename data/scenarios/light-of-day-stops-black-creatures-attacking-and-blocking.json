@@ -1,0 +1,13 @@
+{
+  "description": "CR 508.1c / 509.1b whole card: Light of Day keeps black creatures from attacking or blocking",
+  "note": "Alice's black Scathe Zombies cannot attack, so only her Grizzly Bears does; bob's black Drudge Skeletons cannot block it, and he leaves his Hill Giant back, so the Bears deal bob 2.",
+  "board": {"active": "alice", "step": "PrecombatMain", "seats": [{"name": "alice", "battlefield": [{"card": "Scathe Zombies", "label": "zombies", "ready": true}, {"card": "Grizzly Bears", "label": "bears", "ready": true}], "library": [{"card": "Island"}, {"card": "Island"}, {"card": "Island"}]}, {"name": "bob", "battlefield": [{"card": "Light of Day", "label": "light"}, {"card": "Drudge Skeletons", "label": "skeletons"}, {"card": "Hill Giant", "label": "giant"}], "library": [{"card": "Island"}, {"card": "Island"}, {"card": "Island"}]}]},
+  "timeline": [
+    {"turn": 1, "step": "DeclareAttackers", "player": "alice", "refuse": {"Attack": ["$zombies"]}},
+    {"turn": 1, "step": "DeclareAttackers", "player": "alice", "do": {"Attack": ["$bears"]}},
+    {"turn": 1, "step": "DeclareBlockers", "player": "bob", "refuse": {"Block": {"$skeletons": ["$bears"]}}},
+    {"turn": 1, "step": "DeclareBlockers", "player": "bob", "do": {"Block": {}}},
+    {"turn": 1, "step": "EndOfCombat", "player": "alice", "check": {"Attackers": {"attackers": {"$bears": "$bob"}}}},
+    {"turn": 1, "step": "EndOfCombat", "player": "alice", "check": {"Life": {"player": "bob", "life": 18}}}
+  ]
+}

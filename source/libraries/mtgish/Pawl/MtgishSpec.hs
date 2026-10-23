@@ -16,15 +16,20 @@ import qualified Pawl.Mtgish.Node as Node
 import qualified Pawl.Oracle.Keyword as Oracle.Keyword
 import qualified Pawl.Spec as Spec
 import qualified Pawl.Types.ActivatedAbility as ActivatedAbility
+import qualified Pawl.Types.ActivationRestriction as ActivationRestriction
 import qualified Pawl.Types.Affected as Affected
+import qualified Pawl.Types.AffectedUnless as AffectedUnless
 import qualified Pawl.Types.Card as Card
 import qualified Pawl.Types.CardType as CardType
 import qualified Pawl.Types.CharacteristicPT as CharacteristicPT
 import qualified Pawl.Types.Clause as Clause
 import qualified Pawl.Types.Color as Color
+import qualified Pawl.Types.CombatRestriction as CombatRestriction
 import qualified Pawl.Types.Cost as Cost
 import qualified Pawl.Types.CostAmount as CostAmount
+import qualified Pawl.Types.CostChange as CostChange
 import qualified Pawl.Types.CostComponent as CostComponent
+import qualified Pawl.Types.CostModifier as CostModifier
 import qualified Pawl.Types.DestructionR as DestructionR
 import qualified Pawl.Types.DestructionRewrite as DestructionRewrite
 import qualified Pawl.Types.Duration as Duration
@@ -39,17 +44,25 @@ import qualified Pawl.Types.Keyword as Keyword
 import qualified Pawl.Types.ManaCost as ManaCost
 import qualified Pawl.Types.ManaSymbol as ManaSymbol
 import qualified Pawl.Types.ManaType as ManaType
+import qualified Pawl.Types.Mill as Mill
 import qualified Pawl.Types.Modal as Modal
 import qualified Pawl.Types.Mode as Mode
+import qualified Pawl.Types.ModifyTarget as ModifyTarget
+import qualified Pawl.Types.ObjectRef as ObjectRef
 import qualified Pawl.Types.PayBranch as PayBranch
 import qualified Pawl.Types.PayGate as PayGate
+import qualified Pawl.Types.PlayerEffect as PlayerEffect
 import qualified Pawl.Types.PlayerRelation as PlayerRelation
+import qualified Pawl.Types.PlayerScope as PlayerScope
+import qualified Pawl.Types.PlayerStaticAbility as PlayerStaticAbility
 import qualified Pawl.Types.Pool as Pool
 import qualified Pawl.Types.PrintedReplacement as PrintedReplacement
 import qualified Pawl.Types.Quantity as Quantity
 import qualified Pawl.Types.Replace as Replace
 import qualified Pawl.Types.ReplacementEffect as ReplacementEffect
 import qualified Pawl.Types.Sacrifice as Sacrifice
+import qualified Pawl.Types.Search as Search
+import qualified Pawl.Types.SearchDestination as SearchDestination
 import qualified Pawl.Types.SlotCount as SlotCount
 import qualified Pawl.Types.SlotName as SlotName
 import qualified Pawl.Types.SpellCast as SpellCast
@@ -58,6 +71,7 @@ import qualified Pawl.Types.TargetCount as TargetCount
 import qualified Pawl.Types.TargetSlot as TargetSlot
 import qualified Pawl.Types.TriggerCondition as TriggerCondition
 import qualified Pawl.Types.TriggeredAbility as TriggeredAbility
+import qualified Pawl.Types.TurnScope as TurnScope
 import qualified Pawl.Types.Uses as Uses
 
 spec :: (Monad m, Monad n) => Spec.Spec m n -> n ()
@@ -74,9 +88,43 @@ spec s = Spec.describe s "Pawl.Mtgish" $ do
     Spec.assertEq s (Left (Text.pack "renders as: Shock deals 2 damage to any target.")) (accepts (fst shock, "Shock deals 3 damage to any target."))
 
   -- A node not translated rejects the whole card, never only its ability:
-  -- Millstone is nothing but the milling ability it stops at.
+  -- Index is nothing but the look at the top of its library it stops at.
   Spec.it s "rejects a card at the first node it does not translate" $ do
-    Spec.assertEq s (Left (Text.pack "_Action:MillNumberCards")) (accepts millstone)
+    Spec.assertEq s (Left (Text.pack "_Action:LookAtTheTopNumberCardsOfLibrary")) (accepts index)
+
+  -- CR 701.17a: "Target player mills two cards."
+  Spec.it s "reads milling" $ do
+    Spec.assertEq s (Right ()) (accepts millstone)
+    Spec.assertEq s [Quantity.Literal 2] [Mill.quantity m | Effect.Mill m <- activatedEffects (translated millstone)]
+
+  -- CR 602.5: "Activate only ..." as the ability's restrictions.
+  Spec.it s "reads the restrictions on activating an ability" $ do
+    Spec.assertEq s (Right ()) (accepts spittingDrake)
+    Spec.assertEq s (Right ()) (accepts disruptingScepter)
+    Spec.assertEq s [[ActivationRestriction.OnlyOnceEachTurn]] (fmap ActivatedAbility.restrictions (Face.activatedAbilities (translated spittingDrake)))
+    Spec.assertEq s [[ActivationRestriction.DuringTurn TurnScope.ControllersTurn]] (fmap ActivatedAbility.restrictions (Face.activatedAbilities (translated disruptingScepter)))
+
+  -- CR 701.23a: a search for a card of a description, revealed and put on
+  -- top after the shuffle.
+  Spec.it s "reads a search of your library" $ do
+    Spec.assertEq s (Right ()) (accepts worldlyTutor)
+    Spec.assertEq s [(Filter.HasCardType CardType.Creature, SearchDestination.RevealThenTop)] [(Search.filter x, Search.destination x) | Effect.Search x <- spellEffects (translated worldlyTutor)]
+
+  -- CR 508.1c / 509.1b: rules each permanent of a description follows.
+  Spec.it s "reads rules on attacking and blocking" $ do
+    Spec.assertEq s (Right ()) (accepts lightOfDay)
+    let black = AffectedUnless.MkAffectedUnless (Affected.Matching (Filter.And [Filter.HasColor Color.Black, Filter.HasCardType CardType.Creature])) Nothing Nothing
+    Spec.assertEq s [CombatRestriction.CantAttack black, CombatRestriction.CantBlock black] (Face.combatRestrictions (translated lightOfDay))
+
+  -- CR 303.4b: an Aura's instructions name the creature it enchants.
+  Spec.it s "reads the host of an Aura in its instructions" $ do
+    Spec.assertEq s (Right ()) (accepts firebreathing)
+    Spec.assertEq s [ObjectRef.EachMatching Filter.IsHostOfSource] [ModifyTarget.ref m | Effect.ModifyTarget m <- activatedEffects (translated firebreathing)]
+
+  -- CR 601.2f: "Red spells cost {2} more to cast."
+  Spec.it s "reads a rule making spells cost more to cast" $ do
+    Spec.assertEq s (Right ()) (accepts chill)
+    Spec.assertEq s [(PlayerScope.Related PlayerRelation.AnyPlayer, Filter.HasColor Color.Red, CostChange.Increase 2)] [(PlayerStaticAbility.scope a, CostModifier.matching m, CostModifier.change m) | a <- Face.playerAbilities (translated chill), PlayerEffect.ModifyCost m <- [PlayerStaticAbility.effect a]]
 
   -- CR 701.19a: "Regenerate this creature" is a shield on the source, for
   -- the rest of the turn and used up once.
@@ -191,6 +239,10 @@ spellSlots = Map.elems . spellSlotMap
 -- | Every instruction of the face's activated abilities.
 activatedEffects :: Face.Face Card.Card -> [Effect.Effect Card.Card (GrantedAbility.GrantedAbility Card.Card)]
 activatedEffects face = [e | a <- Face.activatedAbilities face, m <- Foldable.toList (Modal.modes (ActivatedAbility.modal a)), c <- Foldable.toList (Mode.clauses m), e <- Foldable.toList (Clause.effects c)]
+
+-- | Every instruction of the face's spell.
+spellEffects :: Face.Face Card.Card -> [Effect.Effect Card.Card (GrantedAbility.GrantedAbility Card.Card)]
+spellEffects face = [e | m <- Foldable.toList (Modal.modes (Face.spell face)), c <- Foldable.toList (Mode.clauses m), e <- Foldable.toList (Clause.effects c)]
 
 -- | The filters of the cast triggers of the AST's face, which the test has
 -- already accepted.
@@ -321,4 +373,53 @@ charcoalDiamond :: (String, String)
 charcoalDiamond =
   ( "{\"_OracleCard\":\"Card\",\"Name\":\"Charcoal Diamond\",\"Typeline\":{\"Supertypes\":[],\"Cardtypes\":[\"Artifact\"],\"Subtypes\":[]},\"ManaCost\":[{\"_ManaSymbol\":\"ManaCostGeneric\",\"args\":2}],\"Rules\":[{\"_Rule\":\"AsPermanentEnters\",\"args\":[{\"_Permanent\":\"ThisPermanent\"},[{\"_ReplacementActionWouldEnter\":\"EntersTapped\"}]]},{\"_Rule\":\"Activated\",\"args\":[{\"_Cost\":\"TapPermanent\",\"args\":{\"_Permanent\":\"ThisPermanent\"}},{\"_Actions\":\"ActionList\",\"args\":[{\"_Action\":\"AddMana\",\"args\":{\"_ManaProduce\":\"ManaProduceB\"}}]}]}]}",
     "This artifact enters tapped.\n{T}: Add {B}."
+  )
+
+-- | Spitting Drake's AST, and its Oracle text.
+spittingDrake :: (String, String)
+spittingDrake =
+  ( "{\"_OracleCard\":\"Card\",\"Name\":\"Spitting Drake\",\"Typeline\":{\"Supertypes\":[],\"Cardtypes\":[\"Creature\"],\"Subtypes\":[\"Drake\"]},\"ManaCost\":[{\"_ManaSymbol\":\"ManaCostGeneric\",\"args\":3},{\"_ManaSymbol\":\"ManaCostR\"}],\"Rules\":[{\"_Rule\":\"Flying\"},{\"_Rule\":\"ActivatedWithModifiers\",\"args\":[{\"_Cost\":\"PayMana\",\"args\":[{\"_ManaSymbol\":\"ManaCostR\"}]},{\"_Actions\":\"ActionList\",\"args\":[{\"_Action\":\"CreatePermanentLayerEffectUntil\",\"args\":[{\"_Permanent\":\"ThisPermanent\"},[{\"_LayerEffect\":\"AdjustPT\",\"args\":[1,0]}],{\"_Expiration\":\"UntilEndOfTurn\"}]}]},{\"_ActivateModifier\":\"ActivateOnlyOnceEachTurn\"}]}],\"CardPT\":{\"Power\":2,\"Toughness\":2}}",
+    "Flying\n{R}: This creature gets +1/+0 until end of turn. Activate only once each turn."
+  )
+
+-- | Disrupting Scepter's AST, and its Oracle text.
+disruptingScepter :: (String, String)
+disruptingScepter =
+  ( "{\"_OracleCard\":\"Card\",\"Name\":\"Disrupting Scepter\",\"Typeline\":{\"Supertypes\":[],\"Cardtypes\":[\"Artifact\"],\"Subtypes\":[]},\"ManaCost\":[{\"_ManaSymbol\":\"ManaCostGeneric\",\"args\":3}],\"Rules\":[{\"_Rule\":\"ActivatedWithModifiers\",\"args\":[{\"_Cost\":\"And\",\"args\":[{\"_Cost\":\"PayMana\",\"args\":[{\"_ManaSymbol\":\"ManaCostGeneric\",\"args\":3}]},{\"_Cost\":\"TapPermanent\",\"args\":{\"_Permanent\":\"ThisPermanent\"}}]},{\"_Actions\":\"Targeted\",\"args\":[[{\"_Target\":\"TargetPlayer\",\"args\":{\"_Players\":\"AnyPlayer\"}}],{\"_Actions\":\"ActionList\",\"args\":[{\"_Action\":\"PlayerAction\",\"args\":[{\"_Player\":\"Ref_TargetPlayer\"},{\"_Action\":\"DiscardACard\"}]}]}]},{\"_ActivateModifier\":\"ActivateOnlyIf\",\"args\":{\"_Condition\":\"PlayerPassesFilter\",\"args\":[{\"_Player\":\"You\"},{\"_Players\":\"IsTheirTurn\"}]}}]}]}",
+    "{3}, {T}: Target player discards a card. Activate only during your turn."
+  )
+
+-- | Worldly Tutor's AST, and its Oracle text.
+worldlyTutor :: (String, String)
+worldlyTutor =
+  ( "{\"_OracleCard\":\"Card\",\"Name\":\"Worldly Tutor\",\"Typeline\":{\"Supertypes\":[],\"Cardtypes\":[\"Instant\"],\"Subtypes\":[]},\"ManaCost\":[{\"_ManaSymbol\":\"ManaCostG\"}],\"Rules\":[{\"_Rule\":\"SpellActions\",\"args\":{\"_Actions\":\"ActionList\",\"args\":[{\"_Action\":\"SearchLibrary\",\"args\":[{\"_SearchLibraryAction\":\"FindACardOfType\",\"args\":{\"_CardsInLibrary\":\"IsCardtype\",\"args\":\"Creature\"}},{\"_SearchLibraryAction\":\"RevealFoundCards\"},{\"_SearchLibraryAction\":\"SetAsideFoundCards\"},{\"_SearchLibraryAction\":\"Shuffle\"},{\"_SearchLibraryAction\":\"PutSetAsideCardsOnTopOfLibrary\"}]}]}}]}",
+    "Search your library for a creature card, reveal it, then shuffle and put the card on top."
+  )
+
+-- | Light of Day's AST, and its Oracle text.
+lightOfDay :: (String, String)
+lightOfDay =
+  ( "{\"_OracleCard\":\"Card\",\"Name\":\"Light of Day\",\"Typeline\":{\"Supertypes\":[],\"Cardtypes\":[\"Enchantment\"],\"Subtypes\":[]},\"ManaCost\":[{\"_ManaSymbol\":\"ManaCostGeneric\",\"args\":3},{\"_ManaSymbol\":\"ManaCostW\"}],\"Rules\":[{\"_Rule\":\"EachPermanentRuleEffect\",\"args\":[{\"_Permanents\":\"And\",\"args\":[{\"_Permanents\":\"IsColor\",\"args\":{\"_Color\":\"Black\"}},{\"_Permanents\":\"IsCardtype\",\"args\":\"Creature\"}]},[{\"_PermanentRule\":\"CantAttack\"},{\"_PermanentRule\":\"CantBlock\"}]]}]}",
+    "Black creatures can't attack or block."
+  )
+
+-- | Firebreathing's AST, and its Oracle text.
+firebreathing :: (String, String)
+firebreathing =
+  ( "{\"_OracleCard\":\"Card\",\"Name\":\"Firebreathing\",\"Typeline\":{\"Supertypes\":[],\"Cardtypes\":[\"Enchantment\"],\"Subtypes\":[\"Aura\"]},\"ManaCost\":[{\"_ManaSymbol\":\"ManaCostR\"}],\"Rules\":[{\"_Rule\":\"EnchantPermanent\",\"args\":{\"_Permanents\":\"IsCardtype\",\"args\":\"Creature\"}},{\"_Rule\":\"Activated\",\"args\":[{\"_Cost\":\"PayMana\",\"args\":[{\"_ManaSymbol\":\"ManaCostR\"}]},{\"_Actions\":\"ActionList\",\"args\":[{\"_Action\":\"CreatePermanentLayerEffectUntil\",\"args\":[{\"_Permanent\":\"HostPermanent\"},[{\"_LayerEffect\":\"AdjustPT\",\"args\":[1,0]}],{\"_Expiration\":\"UntilEndOfTurn\"}]}]}]}]}",
+    "Enchant creature\n{R}: Enchanted creature gets +1/+0 until end of turn."
+  )
+
+-- | Chill's AST, and its Oracle text.
+chill :: (String, String)
+chill =
+  ( "{\"_OracleCard\":\"Card\",\"Name\":\"Chill\",\"Typeline\":{\"Supertypes\":[],\"Cardtypes\":[\"Enchantment\"],\"Subtypes\":[]},\"ManaCost\":[{\"_ManaSymbol\":\"ManaCostGeneric\",\"args\":1},{\"_ManaSymbol\":\"ManaCostU\"}],\"Rules\":[{\"_Rule\":\"EachPlayerEffect\",\"args\":[{\"_Players\":\"AnyPlayer\"},[{\"_PlayerEffect\":\"IncreaseSpellCost\",\"args\":[{\"_Spells\":\"IsColor\",\"args\":{\"_Color\":\"Red\"}},{\"_Cost\":\"PayMana\",\"args\":[{\"_ManaSymbol\":\"ManaCostGeneric\",\"args\":2}]}]}]]}]}",
+    "Red spells cost {2} more to cast."
+  )
+
+-- | Index's AST, and its Oracle text.
+index :: (String, String)
+index =
+  ( "{\"_OracleCard\":\"Card\",\"Name\":\"Index\",\"Typeline\":{\"Supertypes\":[],\"Cardtypes\":[\"Sorcery\"],\"Subtypes\":[]},\"ManaCost\":[{\"_ManaSymbol\":\"ManaCostU\"}],\"Rules\":[{\"_Rule\":\"SpellActions\",\"args\":{\"_Actions\":\"ActionList\",\"args\":[{\"_Action\":\"LookAtTheTopNumberCardsOfLibrary\",\"args\":[{\"_GameNumber\":\"Integer\",\"args\":5},[{\"_LookAtTopOfLibraryAction\":\"PutTheRemainingCardsOnTopOfLibraryInAnyOrder\"}]]}]}}]}",
+    "Look at the top five cards of your library, then put them back in any order."
   )

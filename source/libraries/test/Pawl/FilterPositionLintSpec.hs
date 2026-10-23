@@ -2097,11 +2097,18 @@ filterPositionLintSpec s registry = Spec.describe s "Lint" $ do
       "Infinite Reflection's copy entry is framed too"
       (hostOfSourceCounts (S.combinedFace reflection))
       (1, 0)
+    -- And Firebreathing's activated +1/+0 to the creature it enchants.
+    firebreathing <- S.printingOf s registry "Firebreathing"
+    Spec.assertEqWith
+      s
+      "Firebreathing's pump is framed too"
+      (hostOfSourceCounts (S.combinedFace firebreathing))
+      (1, 0)
     Spec.assertEqWith
       s
       "and they are the pool's only ones"
       (sum (fmap (uncurry (+) . hostOfSourceCounts . S.combinedFace) ps))
-      14
+      15
     -- The rejected side, which the sweep above cannot show while the pool has no
     -- offender: the same atom planted in a SPELL's target slot -- the position a
     -- card author would most plausibly reach for -- IS counted as elsewhere.

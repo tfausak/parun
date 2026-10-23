@@ -15,8 +15,13 @@ import qualified Pawl.Oracle.Keyword as Keyword.Oracle
 import qualified Pawl.Oracle.Prose as Prose
 import qualified Pawl.Oracle.Target as Target
 import qualified Pawl.Types.Affected as Affected
+import qualified Pawl.Types.AffectedUnless as AffectedUnless
 import qualified Pawl.Types.Arithmetic as Arithmetic
 import qualified Pawl.Types.CharacteristicPT as CharacteristicPT
+import qualified Pawl.Types.CombatRestriction as CombatRestriction
+import qualified Pawl.Types.CostChange as CostChange
+import qualified Pawl.Types.CostModifier as CostModifier
+import qualified Pawl.Types.CostSubject as CostSubject
 import qualified Pawl.Types.Duration as Duration
 import qualified Pawl.Types.EntryR as EntryR
 import qualified Pawl.Types.EntryRewrite as EntryRewrite
@@ -26,6 +31,10 @@ import qualified Pawl.Types.KeywordFamily as KeywordFamily
 import qualified Pawl.Types.Modification as Modification
 import qualified Pawl.Types.ModifyPowerToughness as ModifyPowerToughness
 import qualified Pawl.Types.ObjectRef as ObjectRef
+import qualified Pawl.Types.PlayerEffect as PlayerEffect
+import qualified Pawl.Types.PlayerRelation as PlayerRelation
+import qualified Pawl.Types.PlayerScope as PlayerScope
+import qualified Pawl.Types.PlayerStaticAbility as PlayerStaticAbility
 import qualified Pawl.Types.Pool as Pool
 import qualified Pawl.Types.Power as Power
 import qualified Pawl.Types.PrintedReplacement as PrintedReplacement
@@ -187,6 +196,64 @@ defining context power toughness pt = do
   Target.EqualTo e <- [Target.reading a]
   Monad.guard (null (Target.names a))
   [Prose.sentence (Target.possessive (Target.self context) <> Text.pack " " <> subject <> Text.pack " equal to " <> e)]
+
+-- | Static abilities restricting how permanents attack and block (CR
+-- 508.1c, CR 509.1b): "This creature can't block.", "Creatures can't
+-- attack.", one ability each, except that a permanent's "can't attack" and
+-- "can't block" are one ability, "can't attack or block" (Pacifism). A
+-- restriction with an "unless" or a name, or any other restriction, is not
+-- spelled out here.
+combatRestrictions :: Target.Context -> Maybe Text.Text -> [TargetSlot.TargetSlot] -> [CombatRestriction.CombatRestriction] -> [[Text.Text]]
+combatRestrictions context attached enchants rs = case rs of
+  [] -> []
+  CombatRestriction.CantAttack a : CombatRestriction.CantBlock b : rest
+    | a == b -> restricted a (Text.pack "can't attack or block") : combatRestrictions context attached enchants rest
+  r : rest -> one r : combatRestrictions context attached enchants rest
+  where
+    one r = case r of
+      CombatRestriction.CantAttack a -> restricted a (Text.pack "can't attack")
+      CombatRestriction.CantBlock a -> restricted a (Text.pack "can't block")
+      _ -> []
+    restricted a verb = case a of
+      AffectedUnless.MkAffectedUnless affected' Nothing Nothing -> do
+        subject <- ruled context attached enchants affected'
+        [Prose.sentence (Target.wording subject <> Text.pack " " <> verb)]
+      _ -> []
+
+-- | A static ability's rule for players (CR 604.1) making spells of a
+-- description cost more generic mana to cast (CR 601.2f): "Red spells cost
+-- {2} more to cast.", "Creature spells your opponents cast cost {1} more to
+-- cast." Spells of one kind or another, any other rule, or one with a
+-- condition or a name is not spelled out here.
+playerRule :: Target.Context -> PlayerStaticAbility.PlayerStaticAbility -> [Text.Text]
+playerRule context a = case a of
+  PlayerStaticAbility.MkPlayerStaticAbility (PlayerScope.Related relation) Nothing Nothing (PlayerEffect.ModifyCost (CostModifier.MkCostModifier CostSubject.Spells f Nothing Nothing Nothing Nothing (CostChange.Increase k)))
+    | k > 0,
+      not (any disjoined (conjuncts f)) -> do
+        casters <- case relation of
+          PlayerRelation.AnyPlayer -> [Text.empty]
+          PlayerRelation.Opponent -> [Text.pack " your opponents cast"]
+          _ -> []
+        let spell = Filter.noun (Text.pack "spell") (Just (Text.pack "spells"))
+        p <- Filter.phrase f (Target.keyword context)
+        many <- Filter.describe Filter.Plural Target.permanent (Filter.merge p spell)
+        [Prose.sentence (many <> casters <> Text.pack (" cost {" <> show k <> "} more to cast"))]
+  _ -> []
+  where
+    conjuncts g = case g of
+      Filter.Type.And gs -> gs
+      _ -> [g]
+    disjoined g = case g of
+      Filter.Type.Or _ -> True
+      _ -> False
+
+-- | The permanents a rule restricts, as its sentence's subject: as a static
+-- ability's, except that permanents described by their noun alone read
+-- without "all": "Creatures can't block." (Bedlam).
+ruled :: Target.Context -> Maybe Text.Text -> [TargetSlot.TargetSlot] -> Affected.Affected -> [Target.Reference]
+ruled context attached enchants a = do
+  subject <- affected context attached enchants a
+  [maybe subject (\rest -> subject {Target.wording = rest}) (Text.stripPrefix (Text.pack "all ") (Target.wording subject))]
 
 -- | The objects a static ability affects, as its sentence's subject. The
 -- object its source is attached to is named by the given word: "enchanted"
