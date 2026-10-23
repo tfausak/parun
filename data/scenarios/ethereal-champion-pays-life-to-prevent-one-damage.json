@@ -1,0 +1,12 @@
+{
+  "description": "CR 615.7 whole card: Ethereal Champion pays 1 life to prevent the next 1 damage to itself",
+  "note": "The shield is made in alice's upkeep; bob's Shock in her main phase deals 2 to the Champion, one is prevented, so it carries 1 damage and alice is at 19.",
+  "board": {"active": "alice", "step": "Upkeep", "seats": [{"name": "alice", "battlefield": [{"card": "Ethereal Champion", "label": "champion"}], "library": [{"card": "Island"}, {"card": "Island"}, {"card": "Island"}]}, {"name": "bob", "battlefield": [{"card": "Mountain", "label": "mountain"}], "hand": [{"card": "Shock", "label": "shock"}], "library": [{"card": "Island"}, {"card": "Island"}, {"card": "Island"}]}]},
+  "timeline": [
+    {"turn": 1, "step": "Upkeep", "player": "alice", "do": {"Activate": {"object": "$champion", "ability": 0}}},
+    {"turn": 1, "step": "Upkeep", "player": "alice", "do": "Pass"},
+    {"turn": 1, "step": "Upkeep", "player": "alice", "check": {"Life": {"player": "alice", "life": 19}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "bob", "do": {"Cast": {"object": "$shock", "targets": ["$champion"], "mana": ["$mountain"]}}},
+    {"turn": 1, "step": "BeginningOfCombat", "player": "alice", "check": {"Damage": {"object": "$champion", "damage": 1}}}
+  ]
+}

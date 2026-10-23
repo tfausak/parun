@@ -1,0 +1,11 @@
+{
+  "description": "CR 701.9 / 608.2c whole card: Forget's target discards two cards and draws as many as they discarded",
+  "note": "Bob holds one card, so he discards one and draws one: the Bears go, the library's top Swamp arrives.",
+  "board": {"active": "alice", "step": "PrecombatMain", "seats": [{"name": "alice", "manaPool": "UU", "hand": [{"card": "Forget", "label": "forget"}], "library": [{"card": "Island"}, {"card": "Island"}, {"card": "Island"}]}, {"name": "bob", "hand": [{"card": "Grizzly Bears", "label": "bears"}], "library": [{"card": "Swamp"}, {"card": "Mountain"}, {"card": "Island"}]}]},
+  "timeline": [
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": {"Cast": {"object": "$forget", "targets": ["$bob"]}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass"},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "check": {"View": {"of": "Zone", "player": "bob", "zone": "Hand", "is": ["Swamp"]}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "check": {"Count": {"player": "bob", "zone": "Graveyard", "card": "Grizzly Bears", "count": 1}}}
+  ]
+}

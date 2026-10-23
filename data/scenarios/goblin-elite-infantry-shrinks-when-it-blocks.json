@@ -1,0 +1,11 @@
+{
+  "description": "CR 509.3a / 509.3c whole card: Goblin Elite Infantry gets -1/-1 until end of turn when it blocks",
+  "note": "Blocking bob's Grizzly Bears, the Infantry is 1/1 before damage.",
+  "board": {"active": "bob", "step": "BeginningOfCombat", "seats": [{"name": "bob", "battlefield": [{"card": "Grizzly Bears", "label": "bears", "ready": true}], "library": [{"card": "Island"}, {"card": "Island"}, {"card": "Island"}]}, {"name": "alice", "battlefield": [{"card": "Goblin Elite Infantry", "label": "infantry"}], "library": [{"card": "Island"}, {"card": "Island"}, {"card": "Island"}]}]},
+  "timeline": [
+    {"turn": 1, "step": "DeclareAttackers", "player": "bob", "do": {"Attack": ["$bears"]}},
+    {"turn": 1, "step": "DeclareBlockers", "player": "alice", "do": {"Block": {"$infantry": ["$bears"]}}},
+    {"turn": 1, "step": "DeclareBlockers", "player": "bob", "do": "Pass"},
+    {"turn": 1, "step": "DeclareBlockers", "player": "bob", "check": {"PowerToughness": {"object": "$infantry", "power": 1, "toughness": 1}}}
+  ]
+}

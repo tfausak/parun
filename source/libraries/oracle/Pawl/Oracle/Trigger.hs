@@ -209,6 +209,13 @@ player relation = case relation of
   PlayerRelation.You -> [("you", "that player")]
   _ -> []
 
+-- | Whether the event is a draw step beginning, whose ability's draw comes
+-- after CR 504.1's own and so is "an additional card" (Howling Mine).
+drawStep :: TriggerCondition.TriggerCondition -> Bool
+drawStep c = case c of
+  TriggerCondition.StepBegins s -> StepBegins.phase s == Phase.Beginning BeginningStep.DrawStep
+  _ -> False
+
 -- | Which step's or phase's beginning, and in whose turns (CR 603.2b): "your
 -- upkeep", "each player's upkeep", "combat on your turn", "your second main
 -- phase" (CR 505.1). The end step of every turn is free: "each end step"

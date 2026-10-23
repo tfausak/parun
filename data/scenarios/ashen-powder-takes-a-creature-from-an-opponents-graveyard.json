@@ -1,0 +1,10 @@
+{
+  "description": "CR 110.2 whole card: Ashen Powder puts a creature card from an opponent's graveyard onto the battlefield under alice's control",
+  "note": "Bob's Hill Giant comes back under alice's control.",
+  "board": {"active": "alice", "step": "PrecombatMain", "seats": [{"name": "alice", "manaPool": "BBBB", "hand": [{"card": "Ashen Powder", "label": "powder"}], "library": [{"card": "Island"}, {"card": "Island"}, {"card": "Island"}]}, {"name": "bob", "graveyard": [{"card": "Hill Giant", "label": "giant"}], "library": [{"card": "Island"}, {"card": "Island"}, {"card": "Island"}]}]},
+  "timeline": [
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": {"Cast": {"object": "$powder", "targets": ["$giant"]}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass"},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "check": {"Count": {"player": "alice", "zone": "Battlefield", "card": "Hill Giant", "count": 1}}}
+  ]
+}

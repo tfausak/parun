@@ -1,0 +1,11 @@
+{
+  "description": "CR 113.6m whole card: Necrosavant returns from alice's graveyard to the battlefield during her upkeep, for a sacrificed creature",
+  "note": "Alice sacrifices her Grizzly Bears; Necrosavant is on the battlefield.",
+  "board": {"active": "alice", "step": "Upkeep", "seats": [{"name": "alice", "manaPool": "BBBBB", "battlefield": [{"card": "Grizzly Bears", "label": "bears"}], "graveyard": [{"card": "Necrosavant", "label": "necro"}], "library": [{"card": "Island"}, {"card": "Island"}, {"card": "Island"}]}, {"name": "bob", "library": [{"card": "Island"}, {"card": "Island"}, {"card": "Island"}]}]},
+  "timeline": [
+    {"turn": 1, "step": "Upkeep", "player": "alice", "do": {"Activate": {"object": "$necro", "ability": 0}}},
+    {"turn": 1, "step": "Upkeep", "player": "alice", "do": "Pass"},
+    {"turn": 1, "step": "Upkeep", "player": "alice", "check": {"Count": {"player": "alice", "zone": "Battlefield", "card": "Necrosavant", "count": 1}}},
+    {"turn": 1, "step": "Upkeep", "player": "alice", "check": {"Count": {"player": "alice", "zone": "Graveyard", "card": "Grizzly Bears", "count": 1}}}
+  ]
+}
