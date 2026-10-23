@@ -1,0 +1,41 @@
+{
+  "description": "CR 700.2e Library of Lat-Nam lets the opponent choose the tutor",
+  "note": "bob, alice's only opponent, chooses the second mode, which the fallback (the first, the delayed draw) would not: alice searches for her Shivan Dragon, and nothing draws her three cards at bob's upkeep.",
+  "board": {
+    "active": "alice",
+    "step": "PrecombatMain",
+    "seats": [
+      {
+        "name": "alice",
+        "battlefield": [
+          { "card": "Island", "label": "i1" },
+          { "card": "Island", "label": "i2" },
+          { "card": "Island", "label": "i3" },
+          { "card": "Island", "label": "i4" },
+          { "card": "Island", "label": "i5" }
+        ],
+        "hand": [{ "card": "Library of Lat-Nam", "label": "library" }],
+        "library": [
+          { "card": "Plains", "label": "p1" },
+          { "card": "Plains", "label": "p2" },
+          { "card": "Plains", "label": "p3" },
+          { "card": "Shivan Dragon", "label": "dragon" },
+          { "card": "Plains", "label": "p4" }
+        ]
+      },
+      {
+        "name": "bob",
+        "library": [{ "card": "Mountain" }, { "card": "Mountain" }]
+      }
+    ]
+  },
+  "timeline": [
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": { "Cast": { "object": "$library", "mana": ["$i1", "$i2", "$i3", "$i4", "$i5"] } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "bob", "do": { "Answer": { "prompt": "ChooseModes", "with": [1] } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass" },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": { "Answer": { "prompt": "Search", "with": ["$dragon"] } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": { "Answer": { "prompt": "Shuffle", "with": ["$p4", "$p3", "$p2", "$p1"] } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "check": { "Count": { "player": "alice", "zone": "Hand", "card": "Shivan Dragon", "count": 1 } } },
+    { "turn": 2, "step": "Upkeep", "player": "bob", "check": { "Count": { "player": "alice", "zone": "Hand", "card": "Plains", "count": 0 } } }
+  ]
+}

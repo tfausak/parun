@@ -183,6 +183,7 @@ theRingEmblem temptations =
               Face.additionalCosts = [],
               Face.additionalCostChoices = [],
               Face.modeCosts = Map.empty,
+              Face.modeChooser = PlayerRelation.You,
               Face.maximumX = [],
               Face.minimumX = 0,
               Face.alternativeCosts = [],

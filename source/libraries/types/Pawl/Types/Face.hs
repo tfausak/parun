@@ -53,6 +53,7 @@ import qualified Pawl.Types.Modal as Modal
 import qualified Pawl.Types.Mode as Mode
 import qualified Pawl.Types.ModeIndex as ModeIndex
 import qualified Pawl.Types.ModeSelection as ModeSelection
+import qualified Pawl.Types.PlayerRelation as PlayerRelation
 import qualified Pawl.Types.PlayerStaticAbility as PlayerStaticAbility
 import qualified Pawl.Types.Power as Power
 import qualified Pawl.Types.PrintedReplacement as PrintedReplacement
@@ -366,6 +367,15 @@ data Face card = MkFace
     -- than ignored here: a card whose cost names a mode it does not have is
     -- mistranscribed, not free.
     modeCosts :: Map.Map ModeIndex.ModeIndex (Cost.Cost Keyword.Keyword),
+    -- | CR 700.2e: who chooses 'spell''s modes, relative to its controller:
+    -- @You@ but for Fatal Lore's "an opponent chooses one". Bound under
+    -- Pawl.Engine.Binding.modeChooser, which its "that player" reads.
+    --
+    -- On the FACE for 'modeCosts''s reason: MTGJSON's AtomicCards, grepped
+    -- 2026-10-23 for "chooses one" after a chooser other than "you", prints it
+    -- on no ability; an ability printing "an opponent chooses one --" would
+    -- refute this.
+    modeChooser :: PlayerRelation.PlayerRelation,
     -- | CR 101.1: the ceilings this face's own words put on the value of X its
     -- controller announces at CR 601.2b -- Soul Immolation's "X can't be greater
     -- than the greatest toughness among creatures you control". Empty for every

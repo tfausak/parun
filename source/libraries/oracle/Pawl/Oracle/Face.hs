@@ -20,6 +20,7 @@ import qualified Pawl.Types.Face as Face
 import qualified Pawl.Types.Keyword as Keyword
 import qualified Pawl.Types.Layout as Layout
 import qualified Pawl.Types.ManaCost as ManaCost
+import qualified Pawl.Types.PlayerRelation as PlayerRelation
 import qualified Pawl.Types.Power as Power
 import qualified Pawl.Types.Quantity as Quantity
 import qualified Pawl.Types.Toughness as Toughness
@@ -120,6 +121,7 @@ bare n t c i l p x k =
       Face.additionalCosts = [],
       Face.additionalCostChoices = [],
       Face.modeCosts = Map.empty,
+      Face.modeChooser = PlayerRelation.You,
       Face.maximumX = [],
       Face.minimumX = 0,
       Face.alternativeCosts = [],

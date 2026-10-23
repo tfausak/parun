@@ -24,6 +24,7 @@ import qualified Pawl.Engine.Game as Game
 import qualified Pawl.Engine.Keyword as Keyword
 import qualified Pawl.Engine.Modal as Modal
 import qualified Pawl.Engine.PlayerEffect as PlayerEffect
+import qualified Pawl.Engine.Players as Players
 import qualified Pawl.Engine.Prepare as Prepare
 import qualified Pawl.Engine.Projection as Projection
 import qualified Pawl.Engine.Projection.View as Projection
@@ -94,6 +95,7 @@ import qualified Pawl.Types.PlayBudget as PlayBudget
 import qualified Pawl.Types.PlayPermissionOrigin as PlayPermissionOrigin
 import qualified Pawl.Types.PlayerCounterKind as PlayerCounterKind
 import Pawl.Types.PlayerId (PlayerId)
+import qualified Pawl.Types.PlayerRelation as PlayerRelation
 import qualified Pawl.Types.Pool as Pool
 import qualified Pawl.Types.ProjectedCharacteristics as PC
 import qualified Pawl.Types.Prompt as Prompt
@@ -400,8 +402,32 @@ targetable castFor pid oid name gs = case proposedFace oid name gs of
         -- asked per candidate (candidateFillable below); the MODES are still
         -- judged.
         given = Map.union (Card.enchantSlotMapGiven (Projection.enchantOf oid gs)) (Card.mutateSlotMapGiven (maybe False Object.mutating (Game.lookupObject oid gs)))
-        fillableWhen paid = Target.fillableModes Nothing (Just pid) Map.empty oid given (trimModalForCandidate castFor paid (Face.spell face)) gs
-     in Modal.selectionPossible (Set.unions (fmap fillableWhen paidReadings)) (Modal.Type.selection (Face.spell face))
+        fillableWhen chosen paid = Target.fillableModes Nothing (Just pid) Map.empty oid given (trimModalForCandidate castFor paid (Face.spell chosen)) gs
+        -- CR 700.2e: castable when SOME player the caster could have choose
+        -- has a selection to make, each reading the slots as that player's
+        -- "that player" bakes them. The bake is a REGRESSION FENCE: Fatal
+        -- Lore's slot admits zero targets, so its unbaked reading is castable
+        -- too.
+        possibleFor chooser =
+          let chosen = chosenBy chooser face
+           in Modal.selectionPossible (Set.unions (fmap (fillableWhen chosen) paidReadings)) (Modal.Type.selection (Face.spell face))
+     in any possibleFor (modeChoosers pid face gs)
+
+-- | CR 700.2e: the players who may choose this face's modes -- its caster, or,
+-- where the face names another chooser, those the caster may pick among
+-- (Players.chooserOffer, CR 801.5c's fallback included).
+modeChoosers :: PlayerId -> Face.Face Card.Type.Card -> GameState -> [PlayerId]
+modeChoosers pid face gs = case Face.modeChooser face of
+  PlayerRelation.You -> [pid]
+  relation -> Players.chooserOffer pid gs relation
+
+-- | CR 700.2e: the face as @chooser@'s choice leaves it -- every target slot's
+-- "that player" (Binding.modeChooser) baked to them (Target.bakeModal), so CR
+-- 601.2c's "target creatures that player controls" is answerable.
+chosenBy :: PlayerId -> Face.Face Card.Type.Card -> Face.Face Card.Type.Card
+chosenBy chooser face = case Face.modeChooser face of
+  PlayerRelation.You -> face
+  _ -> face {Face.spell = Target.bakeModal (Map.singleton Binding.modeChooser chooser) (Face.spell face)}
 
 -- CR 601.2b's least X measured at CR 601.2f's total: a candidate cost is
 -- affordable when it is payable at the least X the caster may announce -- 0, or
@@ -635,12 +661,16 @@ payableCountedAtGiven modes pcs sources x extra spending pid oid gs cost =
 castAimable :: (Ord k) => (Recipient.Recipient -> k) -> Maybe (Seq.Seq ModeIndex.ModeIndex) -> Natural -> PlayerId -> ObjectId -> GameState -> [Map.Map SlotName.SlotName (Set.Set Recipient.Recipient)]
 castAimable key announced x pid oid gs = case Game.faceOf oid gs of
   Nothing -> []
-  Just face ->
+  Just printedFace ->
     let enchants = Projection.enchantOf oid gs
         mutating = maybe False Object.mutating (Game.lookupObject oid gs)
         -- CR 702.140a's slot beside CR 303.4a's, `targetable` above's union: a
         -- mutating creature spell aims at the creature it will merge with.
         enchant = Map.union (Card.enchantSlotMapGiven enchants) (Card.mutateSlotMapGiven mutating)
+        -- CR 700.2e: the slots as castProposed reads them, baked to the mode
+        -- chooser it stamped before pricing anything. A REGRESSION FENCE:
+        -- Fatal Lore's cost reads no target, so nothing it prices reaches here.
+        face = maybe printedFace (`chosenBy` printedFace) (Game.lookupObject oid gs >>= Map.lookup Binding.modeChooser . Binding.playerSlots . Object.bindings)
         -- CR 601.2c's alternative targets: the slots the cost being priced
         -- chooses. Once CR 601.2a's move is made, the board carries every
         -- announcement the price includes (stampCastUsing, stampPaidCosts), so
@@ -3054,7 +3084,18 @@ trimModalForCandidate castFor paid modal = modal {Modal.Type.modes = fmap (trimM
 -- beside `spent`, and `riders` is what it gives the spell (CR 611.3d), asked
 -- there too and stored beside it.
 castProposed :: ManaAbilityPerformer.ManaAbilityPerformer -> ManaSpending -> PlayerId -> ObjectId -> ObjectId -> Face.Face Card.Type.Card -> Maybe Zone.Zone -> Maybe ObjectId -> Set Keyword -> [CandidateCost.CandidateCost] -> [ActivePlayerEffect.ActivePlayerEffect] -> [Maybe (ObjectId, CastFromZone.CastFromZone)] -> (Maybe (ObjectId, CastFromZone.CastFromZone) -> [ContinuousEffect.ContinuousEffect Card.Type.Card]) -> (Maybe Keyword -> Maybe (ObjectId, CastFromZone.CastFromZone) -> Integer -> Bool) -> Maybe ExilePlayPermission.ExilePlayPermission -> GameState -> Game ()
-castProposed perform spending pid oid sid face castFrom preparedFor keywordsBefore candidateCosts spent permissions riders refusedAt exilePermission before = do
+castProposed perform spending pid oid sid printedFace castFrom preparedFor keywordsBefore candidateCosts spent permissions riders refusedAt exilePermission before = do
+  -- CR 700.2e: who chooses the modes, settled first -- the caster where
+  -- several players could (Players.chooseOne, elided at one) -- and bound on the
+  -- spell, so every step below reads the face as that player's "that player"
+  -- leaves it (chosenBy). Nobody to choose rejects the cast below.
+  answeredChooser <- Players.chooseOne pid sid Nothing =<< State.gets (modeChoosers pid printedFace)
+  let modeChooser = Maybe.fromMaybe pid answeredChooser
+      face = chosenBy modeChooser printedFace
+      stampChooser = case Face.modeChooser printedFace of
+        PlayerRelation.You -> id
+        _ -> Binding.setModeChooser modeChooser
+  State.modify' (\g -> g {GameState.objects = Map.adjust (\o -> o {Object.bindings = stampChooser (Object.bindings o)}) sid (GameState.objects g)})
   gs <- State.get
   let candidates = fmap (\candidate -> (CandidateCost.reductions candidate, CandidateCost.cost candidate)) candidateCosts
       decider = Decide.deciderFor pid gs
@@ -3141,11 +3182,12 @@ castProposed perform spending pid oid sid face castFrom preparedFor keywordsBefo
   -- they resolve.
   chosenModes <- case Modal.forcedSelection legal selection of
     Just forced -> pure forced
-    Nothing -> fmap Seq.sort (Game.choose (Prompt.ChooseModes decider pid sid legal selection))
+    -- CR 700.2e: asked of the chooser, who need not be the caster.
+    Nothing -> fmap Seq.sort (Game.choose (Prompt.ChooseModes (Decide.deciderFor modeChooser gs) modeChooser sid legal selection))
   -- Reject-not-repair: an answer that does not satisfy the printed instruction --
   -- wrong size, an illegal mode, or a repeat the instruction does not permit (CR
   -- 700.2d) -- rewinds the whole cast, guarding every step below.
-  if not (Modal.selectionSatisfiedBy legal selection chosenModes)
+  if Maybe.isNothing answeredChooser || not (Modal.selectionSatisfiedBy legal selection chosenModes)
     then reject
     else do
       -- CR 601.2b: the cost to be paid is announced after the modes and before X
@@ -3632,7 +3674,7 @@ castProposed perform spending pid oid sid face castFrom preparedFor keywordsBefo
                             g
                               { GameState.objects =
                                   Map.adjust
-                                    (\o -> o {Object.bindings = Binding.setAnnouncedTargets chosen (Binding.setYou pid (Binding.setTriggerSource sid (Target.stampDefendingPlayers sid chosen g (Map.union (Binding.fromAnnounced counts) (Binding.setDivisions divisions (Binding.fromChoices chosen mAmount chosenModes))))))})
+                                    (\o -> o {Object.bindings = stampChooser (Binding.setAnnouncedTargets chosen (Binding.setYou pid (Binding.setTriggerSource sid (Target.stampDefendingPlayers sid chosen g (Map.union (Binding.fromAnnounced counts) (Binding.setDivisions divisions (Binding.fromChoices chosen mAmount chosenModes)))))))})
                                     sid
                                     (GameState.objects g)
                               }

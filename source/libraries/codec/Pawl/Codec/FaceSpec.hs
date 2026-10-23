@@ -178,6 +178,7 @@ baseFace =
       Face.additionalCosts = [],
       Face.additionalCostChoices = [],
       Face.modeCosts = Map.empty,
+      Face.modeChooser = PlayerRelation.You,
       Face.maximumX = [],
       Face.minimumX = 0,
       Face.alternativeCosts = [],
@@ -225,6 +226,7 @@ minimalFace =
       Face.additionalCosts = [],
       Face.additionalCostChoices = [],
       Face.modeCosts = Map.empty,
+      Face.modeChooser = PlayerRelation.You,
       Face.maximumX = [],
       Face.minimumX = 0,
       Face.alternativeCosts = [],
@@ -302,6 +304,7 @@ populatedFace =
       Face.additionalCosts = [CostComponent.TapThis],
       Face.additionalCostChoices = [],
       Face.modeCosts = Map.empty,
+      Face.modeChooser = PlayerRelation.You,
       Face.maximumX = [Quantity.Measure Measure.ManaValue],
       Face.minimumX = 1,
       Face.alternativeCosts = [AlternativeCost.MkAlternativeCost Nothing (Cost.MkCost (Just (ManaCost.MkManaCost [])) [])],
@@ -636,6 +639,21 @@ spec s = Spec.describe s "Pawl.Codec.Face" $ do
         "CR 700.2h: mode 1 of a one-mode spell is not a mode"
         (Monad.void (Common.parse (Text.pack (init baseFaceJson <> ",\"modeCosts\":{\"1\":{\"mana\":[]}}}")) >>= decodeFace))
         (Left (Text.pack "modeCosts names a mode the spell does not have"))
+    -- CR 700.2e, over two modes: the chooser chooses among modes, so a
+    -- one-mode spell naming one is refused (Pawl.Codec.Face.chooserHasModes).
+    Spec.it s "modeChooser" $
+      Common.assertJsonCodec
+        s
+        encodeFace
+        decodeFace
+        baseFace {Face.modeChooser = PlayerRelation.Opponent, Face.spell = (Face.spell baseFace) {Modal.modes = Modal.modes (Face.spell baseFace) <> Modal.modes (Face.spell baseFace)}}
+        (init baseFaceJson <> ",\"modeChooser\":{\"type\":\"Opponent\"},\"spell\":{\"modes\":[{},{}]}}")
+    Spec.it s "modeChooser on a one-mode spell is rejected" $
+      Spec.assertEqWith
+        s
+        "CR 700.2e: a spell with one mode has no mode to choose"
+        (Monad.void (Common.parse (Text.pack (init baseFaceJson <> ",\"modeChooser\":{\"type\":\"Opponent\"}}")) >>= decodeFace))
+        (Left (Text.pack "modeChooser names a chooser for a spell with one mode"))
     Spec.it s "additionalCosts" $
       Common.assertJsonCodec
         s

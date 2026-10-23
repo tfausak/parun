@@ -41,6 +41,7 @@ import qualified Pawl.Types.Mode as Mode
 import qualified Pawl.Types.ModeIndex as ModeIndex
 import qualified Pawl.Types.ModeInstance as ModeInstance
 import qualified Pawl.Types.ModeSelection as ModeSelection
+import qualified Pawl.Types.PlayerRelation as PlayerRelation
 import qualified Pawl.Types.Pool as Pool
 import qualified Pawl.Types.Power as Power
 import qualified Pawl.Types.Quantity as Quantity
@@ -141,6 +142,7 @@ faceDownFace listed =
       Face.additionalCosts = [],
       Face.additionalCostChoices = [],
       Face.modeCosts = Map.empty,
+      Face.modeChooser = PlayerRelation.You,
       Face.maximumX = [],
       Face.minimumX = 0,
       Face.alternativeCosts = [a | GrantedAbility.SelfAlternativeCost a <- listedAbilities],
@@ -498,6 +500,9 @@ merge2 l r =
           -- half's keys would name modes this view does not have. Never a fused
           -- spell's: fusedFace refuses a half with mode costs.
           Face.modeCosts = Face.modeCosts l,
+          -- Left-biased with Face.spell, for modeCosts' reason: CR 700.2e's
+          -- chooser chooses THAT half's modes.
+          Face.modeChooser = Face.modeChooser l,
           Face.alternativeCosts = Face.alternativeCosts l <> Face.alternativeCosts r,
           -- CR 709.4c again: a cost reduction a half prints about itself is an
           -- ability in that half's text box, so the combined view has both, and CR
@@ -1644,6 +1649,7 @@ subtractHalf face =
       Face.additionalCosts = [],
       Face.additionalCostChoices = [],
       Face.modeCosts = Map.empty,
+      Face.modeChooser = PlayerRelation.You,
       Face.maximumX = [],
       Face.minimumX = 0,
       Face.alternativeCosts = [],

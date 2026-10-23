@@ -1,0 +1,49 @@
+{
+  "description": "CR 700.2e Fatal Lore lets the opponent alice names choose the mode and the draw",
+  "note": "Three seats, so the opponent who chooses is alice's pick and not the only one: she names carol, not bob, who heads the offer. carol, not alice, chooses the second mode, which the fallback (the first) would not. alice then targets two of carol's creatures, which only carol's \"that player\" admits, and carol names 2 of her up to three cards. bob's Hill Giant and carol's Elves stay.",
+  "board": {
+    "active": "alice",
+    "step": "PrecombatMain",
+    "seats": [
+      {
+        "name": "alice",
+        "battlefield": [
+          { "card": "Swamp", "label": "s1" },
+          { "card": "Swamp", "label": "s2" },
+          { "card": "Swamp", "label": "s3" },
+          { "card": "Swamp", "label": "s4" }
+        ],
+        "hand": [{ "card": "Fatal Lore", "label": "lore" }],
+        "library": [{ "card": "Plains" }, { "card": "Plains" }, { "card": "Plains" }]
+      },
+      {
+        "name": "bob",
+        "battlefield": [{ "card": "Hill Giant", "label": "bobGiant" }],
+        "library": [{ "card": "Mountain" }, { "card": "Mountain" }, { "card": "Mountain" }]
+      },
+      {
+        "name": "carol",
+        "battlefield": [
+          { "card": "Hill Giant", "label": "carolGiant" },
+          { "card": "Goblin Piker", "label": "piker" },
+          { "card": "Llanowar Elves", "label": "elves" }
+        ],
+        "library": [{ "card": "Island" }, { "card": "Island" }, { "card": "Island" }, { "card": "Island" }]
+      }
+    ]
+  },
+  "timeline": [
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": { "Cast": { "object": "$lore", "targets": ["$carolGiant", "$piker"], "mana": ["$s1", "$s2", "$s3", "$s4"] } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": { "Answer": { "prompt": "ChooseOpponent", "with": "carol" } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "carol", "do": { "Answer": { "prompt": "ChooseModes", "with": [1] } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass" },
+    { "turn": 1, "step": "PrecombatMain", "player": "carol", "do": { "Answer": { "prompt": "ChooseNumber", "with": 2 } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "check": { "Count": { "player": "carol", "zone": "Graveyard", "card": "Hill Giant", "count": 1 } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "check": { "Count": { "player": "carol", "zone": "Graveyard", "card": "Goblin Piker", "count": 1 } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "check": { "Count": { "player": "carol", "zone": "Hand", "card": "Island", "count": 2 } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "check": { "Count": { "player": "carol", "zone": "Battlefield", "card": "Llanowar Elves", "count": 1 } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "check": { "Count": { "player": "bob", "zone": "Battlefield", "card": "Hill Giant", "count": 1 } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "check": { "Count": { "player": "bob", "zone": "Hand", "card": "Mountain", "count": 0 } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "check": { "Count": { "player": "alice", "zone": "Hand", "card": "Plains", "count": 0 } } }
+  ]
+}
