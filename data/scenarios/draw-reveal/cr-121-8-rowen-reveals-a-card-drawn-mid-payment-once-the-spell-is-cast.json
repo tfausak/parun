@@ -1,0 +1,29 @@
+{
+  "description": "CR 121.8 Rowen reveals a card drawn while a spell is paid for once that spell is cast",
+  "note": "Synthetic Wellspring Growth draws alice's first card of the turn, a Forest, as the Mountain pays for Magmatic Insight. The Forest is kept face down, so it cannot be the discarded land, and is revealed under Rowen after the cast: Rowen's draw and Insight's two take the three Hill Giants.",
+  "board": {
+    "active": "alice",
+    "step": "PrecombatMain",
+    "seats": [
+      {
+        "name": "alice",
+        "battlefield": [
+          { "card": "Rowen", "label": "rowen" },
+          { "card": "Mountain", "label": "mountain", "ready": true },
+          { "card": "Synthetic Wellspring Growth", "attached": "mountain" }
+        ],
+        "hand": [{ "card": "Magmatic Insight", "label": "insight" }, { "card": "Plains", "label": "plains" }],
+        "library": [{ "card": "Forest" }, { "card": "Hill Giant" }, { "card": "Hill Giant" }, { "card": "Hill Giant" }, { "card": "Island" }]
+      },
+      { "name": "bob" }
+    ]
+  },
+  "timeline": [
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": { "Cast": { "object": "$insight", "mana": ["$mountain"] } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "check": { "View": { "of": "Witnessed", "player": "bob", "is": ["Forest"] } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass" },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass" },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "check": { "Count": { "player": "alice", "zone": "Hand", "card": "Hill Giant", "count": 3 } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "check": { "View": { "of": "Zone", "player": "alice", "zone": "Graveyard", "is": ["Plains", "Magmatic Insight"] } } }
+  ]
+}

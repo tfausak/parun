@@ -1,0 +1,252 @@
+{
+  "faces": [
+    {
+      "manaCost": [
+        {
+          "type": "Generic",
+          "value": 2
+        },
+        {
+          "type": "OfType",
+          "value": {
+            "type": "Colored",
+            "value": {
+              "type": "Blue"
+            }
+          }
+        },
+        {
+          "type": "OfType",
+          "value": {
+            "type": "Colored",
+            "value": {
+              "type": "Black"
+            }
+          }
+        }
+      ],
+      "name": "Inquisitor Eisenhorn",
+      "oracleText": "You may reveal the first card you draw each turn as you draw it. Whenever you reveal an instant or sorcery card this way, create Cherubael, a legendary 4/4 black Demon creature token with flying.\nWhenever Inquisitor Eisenhorn deals combat damage to a player, investigate that many times. (Create a Clue token. It's an artifact with \"{2}, Sacrifice this token: Draw a card.\")",
+      "playerAbilities": [
+        {
+          "effect": {
+            "type": "RevealsFirstDraw",
+            "value": {
+              "type": "Optional"
+            }
+          },
+          "scope": {
+            "type": "You"
+          }
+        }
+      ],
+      "power": {
+        "type": "Literal",
+        "value": 2
+      },
+      "toughness": {
+        "type": "Literal",
+        "value": 3
+      },
+      "triggeredAbilities": [
+        {
+          "condition": {
+            "type": "RevealedThisWay",
+            "value": {
+              "type": "Or",
+              "value": [
+                {
+                  "type": "HasCardType",
+                  "value": {
+                    "type": "Instant"
+                  }
+                },
+                {
+                  "type": "HasCardType",
+                  "value": {
+                    "type": "Sorcery"
+                  }
+                }
+              ]
+            }
+          },
+          "modal": {
+            "modes": [
+              {
+                "clauses": [
+                  {
+                    "effects": [
+                      {
+                        "type": "Create",
+                        "value": {
+                          "card": {
+                            "faces": [
+                              {
+                                "colorIndicator": [
+                                  {
+                                    "type": "Black"
+                                  }
+                                ],
+                                "keywords": [
+                                  {
+                                    "type": "Flying"
+                                  }
+                                ],
+                                "name": "Cherubael",
+                                "power": {
+                                  "type": "Literal",
+                                  "value": 4
+                                },
+                                "toughness": {
+                                  "type": "Literal",
+                                  "value": 4
+                                },
+                                "typeLine": {
+                                  "subtypes": [
+                                    {
+                                      "type": "Demon"
+                                    }
+                                  ],
+                                  "supertypes": [
+                                    {
+                                      "type": "Legendary"
+                                    }
+                                  ],
+                                  "types": [
+                                    {
+                                      "type": "Creature"
+                                    }
+                                  ]
+                                }
+                              }
+                            ]
+                          },
+                          "quantity": {
+                            "type": "Literal",
+                            "value": 1
+                          }
+                        }
+                      }
+                    ]
+                  }
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "condition": {
+            "type": "SelfDealsCombatDamageToPlayer",
+            "value": {
+              "type": "AnyPlayer"
+            }
+          },
+          "modal": {
+            "modes": [
+              {
+                "clauses": [
+                  {
+                    "effects": [
+                      {
+                        "type": "Create",
+                        "value": {
+                          "card": {
+                            "faces": [
+                              {
+                                "activatedAbilities": [
+                                  {
+                                    "cost": {
+                                      "components": [
+                                        {
+                                          "type": "SacrificeThis"
+                                        }
+                                      ],
+                                      "mana": [
+                                        {
+                                          "type": "Generic",
+                                          "value": 2
+                                        }
+                                      ]
+                                    },
+                                    "modal": {
+                                      "modes": [
+                                        {
+                                          "clauses": [
+                                            {
+                                              "effects": [
+                                                {
+                                                  "type": "Draw",
+                                                  "value": {
+                                                    "player": {
+                                                      "type": "Relative",
+                                                      "value": {
+                                                        "type": "You"
+                                                      }
+                                                    },
+                                                    "quantity": {
+                                                      "type": "Literal",
+                                                      "value": 1
+                                                    }
+                                                  }
+                                                }
+                                              ]
+                                            }
+                                          ]
+                                        }
+                                      ]
+                                    }
+                                  }
+                                ],
+                                "name": "Clue Token",
+                                "typeLine": {
+                                  "subtypes": [
+                                    {
+                                      "type": "Clue"
+                                    }
+                                  ],
+                                  "types": [
+                                    {
+                                      "type": "Artifact"
+                                    }
+                                  ]
+                                }
+                              }
+                            ]
+                          },
+                          "quantity": {
+                            "type": "InSlot",
+                            "value": "thatMuch"
+                          }
+                        }
+                      }
+                    ]
+                  }
+                ]
+              }
+            ]
+          }
+        }
+      ],
+      "typeLine": {
+        "subtypes": [
+          {
+            "type": "Human"
+          },
+          {
+            "type": "Inquisitor"
+          }
+        ],
+        "supertypes": [
+          {
+            "type": "Legendary"
+          }
+        ],
+        "types": [
+          {
+            "type": "Creature"
+          }
+        ]
+      }
+    }
+  ]
+}
