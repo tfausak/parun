@@ -159,15 +159,15 @@ modified context m more = do
   let distributed = case ModifyTarget.ref m of
         ObjectRef.InSlot _ -> Target.number who == Filter.Plural
         _ -> False
-  change <- Continuous.modifications Continuous.Created (Target.number who) distributed (Target.keyword context) (ModifyTarget.modification m : more)
+  (change, defined) <- Continuous.modifications Continuous.Created (Target.number who) distributed context (ModifyTarget.modification m : more)
   lasting <- Continuous.duration (ModifyTarget.duration m)
   case lasting of
-    Nothing -> [MkPredicate (Just who) change [] [] Nothing False]
+    Nothing -> [MkPredicate (Just who) (change <> defined) [] [] Nothing False]
     -- Free: the duration ends the sentence (Giant Growth) or opens it
     -- (Aspirant's Ascent).
     Just period ->
-      [ MkPredicate (Just who) (change <> Text.pack " " <> period) [] [] Nothing False,
-        MkPredicate Nothing (period <> Text.pack ", " <> Target.wording who <> Text.pack " " <> change) [] (Target.mentions who) Nothing False
+      [ MkPredicate (Just who) (change <> Text.pack " " <> period <> defined) [] [] Nothing False,
+        MkPredicate Nothing (period <> Text.pack ", " <> Target.wording who <> Text.pack " " <> change <> defined) [] (Target.mentions who) Nothing False
       ]
 
 -- | One sentence and the next, as the context's breaks allow, or the next
@@ -245,16 +245,24 @@ effect context e = case e of
   Effect.DealDamage d -> dealDamage context d
   Effect.Draw d
     | Maybe.isNothing (Draw.slot d) -> do
-        count <- Target.cards (Draw.quantity d)
-        imperative context (Draw.player d) (Text.pack "draw " <> count) (Text.pack "draws " <> count)
+        a <- Target.amounts context (Draw.quantity d)
+        count <- case Target.reading a of
+          Target.Stated q -> Target.cards q
+          -- Free for a count: "a card for each" (Theft of Dreams) or "cards
+          -- equal to the number of" (Dream Salvage).
+          Target.ForEach n each' -> fmap (<> Text.pack " for each " <> each') (Target.cards (Quantity.Literal n))
+          Target.EqualTo equal -> [Text.pack "cards equal to " <> equal]
+        naming (Target.names a) (imperative context (Draw.player d) (Text.pack "draw " <> count) (Text.pack "draws " <> count))
   Effect.GainLife g -> do
-    n <- Target.amount (PlayerQuantity.quantity g)
-    declarative context (PlayerQuantity.player g) (Text.pack "gain " <> n <> Text.pack " life") (Text.pack "gains " <> n <> Text.pack " life")
+    a <- Target.amounts context (PlayerQuantity.quantity g)
+    n <- life a
+    naming (Target.names a) (declarative context (PlayerQuantity.player g) (Text.pack "gain " <> n) (Text.pack "gains " <> n))
   Effect.LoseLife l
     | LifeLoss.cause l == LifeLossCause.ByEffect,
       Maybe.isNothing (LifeLoss.tally l) -> do
-        n <- Target.amount (LifeLoss.quantity l)
-        declarative context (LifeLoss.player l) (Text.pack "lose " <> n <> Text.pack " life") (Text.pack "loses " <> n <> Text.pack " life")
+        a <- Target.amounts context (LifeLoss.quantity l)
+        n <- life a
+        naming (Target.names a) (declarative context (LifeLoss.player l) (Text.pack "lose " <> n) (Text.pack "loses " <> n))
   Effect.Destroy d
     | Maybe.isNothing (Destroy.slot d),
       Maybe.isNothing (Destroy.buried d),
@@ -279,21 +287,43 @@ effect context e = case e of
       Maybe.isNothing (ManaAddition.restriction a),
       Maybe.isNothing (ManaAddition.rider a),
       Maybe.isNothing (ManaAddition.whenSpent a) -> do
-        (symbols, phrase) <- added (ManaAddition.production a) (ManaAddition.count a)
-        [MkPredicate Nothing (Text.pack "add " <> phrase) [] [] (Just symbols) False]
+        amount' <- Target.amounts context (ManaAddition.count a)
+        (symbols, phrase) <- case Target.reading amount' of
+          Target.Stated q -> added (ManaAddition.production a) q
+          -- Mana for each object counted stands alone: "Add {B} for each
+          -- Swamp you control." (Cabal Coffers).
+          Target.ForEach n each' -> do
+            (_, phrase) <- added (ManaAddition.production a) (Quantity.Literal n)
+            [(Described, phrase <> Text.pack " for each " <> each')]
+          Target.EqualTo _ -> []
+        [MkPredicate Nothing (Text.pack "add " <> phrase) [] (Target.names amount') (Just symbols) False]
   Effect.MoveToZone m -> moved context m
   Effect.Create c
     | Create.riders c == EntryRiders.defaultValue -> do
         (one, many) <- Face.Oracle.token (Target.keyword context) (Create.card c)
-        tokens <- case Create.quantity c of
-          Quantity.Literal 1 -> [Prose.article one <> Text.pack " " <> one]
-          Quantity.Literal n | n > 1 -> [Prose.cardinal n <> Text.pack " " <> many]
-          _ -> []
-        imperative context (Create.creator c) (Text.pack "create " <> tokens) (Text.pack "creates " <> tokens)
+        a <- Target.amounts context (Create.quantity c)
+        let some q = case q of
+              Quantity.Literal 1 -> [Prose.article one <> Text.pack " " <> one]
+              Quantity.Literal n | n > 1 -> [Prose.cardinal n <> Text.pack " " <> many]
+              _ -> []
+        tokens <- case Target.reading a of
+          Target.Stated q -> some q
+          -- Free for a count: "for each" (Endless Swarm) or "a number of"
+          -- (Tyranid Invasion).
+          Target.ForEach n each' -> fmap (<> Text.pack " for each " <> each') (some (Quantity.Literal n))
+          Target.EqualTo equal -> [Text.pack "a number of " <> many <> Text.pack " equal to " <> equal]
+        naming (Target.names a) (imperative context (Create.creator c) (Text.pack "create " <> tokens) (Text.pack "creates " <> tokens))
   Effect.PutCounters p -> do
     ref <- Target.object context Target.Each (PutCounters.ref p)
-    put <- counters (Target.keyword context) (PutCounters.kind p) (PutCounters.quantity p)
-    MkPredicate Nothing (Text.pack "put " <> put <> Text.pack " on " <> Target.wording ref) [] (Target.mentions ref) Nothing False : supported context p
+    a <- Target.amounts context (PutCounters.quantity p)
+    let on = Text.pack " on " <> Target.wording ref
+    phrase <- case Target.reading a of
+      -- Free for a count: "for each" (Khabal Ghoul) or "a number of"
+      -- (Rhovanion Rampager).
+      Target.Stated q -> fmap (\put -> Text.pack "put " <> put <> on) (counters (Target.keyword context) (PutCounters.kind p) q)
+      Target.ForEach n each' -> fmap (\put -> Text.pack "put " <> put <> on <> Text.pack " for each " <> each') (counters (Target.keyword context) (PutCounters.kind p) (Quantity.Literal n))
+      Target.EqualTo equal -> fmap (\word -> Text.pack "put a number of " <> word <> Text.pack " counters" <> on <> Text.pack " equal to " <> equal) (counterWord (Target.keyword context) (PutCounters.kind p))
+    MkPredicate Nothing phrase [] (Target.mentions ref <> Target.names a) Nothing False : supported context p
   Effect.Tap r -> tapped context (Text.pack "tap ") r
   Effect.Untap r -> tapped context (Text.pack "untap ") r
   Effect.Discard d -> discarded context d
@@ -403,21 +433,25 @@ owner graveyard number zone = case (graveyard, number) of
 -- | "a +1/+1 counter", "two -1/-1 counters", "a flying counter" (CR 122.1).
 counters :: (Keyword.Keyword -> [Text.Text]) -> CounterKind.CounterKind Keyword.Keyword -> Quantity.Quantity -> [Text.Text]
 counters named kind q = do
-  word <- case kind of
-    CounterKind.PlusOnePlusOne -> [Text.pack "+1/+1"]
-    CounterKind.MinusOneMinusOne -> [Text.pack "-1/-1"]
-    CounterKind.Keyword k -> named k
-    CounterKind.UnsafePowerToughness p t -> do
-      power <- Continuous.signed (Quantity.Literal t) (Quantity.Literal p)
-      toughness <- Continuous.signed (Quantity.Literal p) (Quantity.Literal t)
-      [power <> Text.pack "/" <> toughness]
-    CounterKind.Named n -> [CounterName.unwrap n]
-    _ -> [Text.toLower (Text.pack (show kind))]
+  word <- counterWord named kind
   case q of
     Quantity.Literal 1 -> [Prose.article word <> Text.pack " " <> word <> Text.pack " counter"]
     Quantity.Literal n | n > 1 -> [Prose.cardinal n <> Text.pack " " <> word <> Text.pack " counters"]
     Quantity.InSlot s | s == Target.xSlot -> [Text.pack "X " <> word <> Text.pack " counters"]
     _ -> []
+
+-- | A counter's kind as the word before "counter": "+1/+1", "flying".
+counterWord :: (Keyword.Keyword -> [Text.Text]) -> CounterKind.CounterKind Keyword.Keyword -> [Text.Text]
+counterWord named kind = case kind of
+  CounterKind.PlusOnePlusOne -> [Text.pack "+1/+1"]
+  CounterKind.MinusOneMinusOne -> [Text.pack "-1/-1"]
+  CounterKind.Keyword k -> named k
+  CounterKind.UnsafePowerToughness p t -> do
+    power <- Continuous.signed (Quantity.Literal t) (Quantity.Literal p)
+    toughness <- Continuous.signed (Quantity.Literal p) (Quantity.Literal t)
+    [power <> Text.pack "/" <> toughness]
+  CounterKind.Named n -> [CounterName.unwrap n]
+  _ -> [Text.toLower (Text.pack (show kind))]
 
 -- | "Support N" (CR 701.41a), the rules' name for putting a +1/+1 counter on
 -- each of up to N other target creatures, or on a spell up to N target
@@ -481,9 +515,14 @@ added production count = case (production, count) of
 -- Fire).
 dealDamage :: Target.Context -> DealDamage.DealDamage -> [Predicate]
 dealDamage context d
-  | Maybe.isJust (DealDamage.dealer d) || Maybe.isJust (DealDamage.excess d) = []
+  | Maybe.isJust (DealDamage.excess d) = []
   | otherwise = do
-      let source = Target.MkReference (Target.self context) [] Filter.Singular
+      source <- case DealDamage.dealer d of
+        Nothing -> [Target.MkReference (Target.self context) [] Filter.Singular]
+        Just s -> Target.object context Target.All (ObjectRef.InSlot s)
+      -- The source is the sentence's subject, so the amount calls it "it":
+      -- "deals damage equal to its power" (Ghitu Fire-Eater).
+      let measured = context {Target.self = Text.pack "it"}
       case Foldable.toList (DealDamage.parts d) of
         [DamagePart.MkDamagePart (ObjectRef.InSlot s) (Quantity.Share t)]
           | s == t -> do
@@ -495,7 +534,7 @@ dealDamage context d
               groups
                 | shared = List.groupBy (\a b -> DamagePart.quantity a == DamagePart.quantity b) parts
                 | otherwise = fmap pure parts
-          rendered <- traverse (damagePart context) groups
+          rendered <- traverse (damagePart context measured) groups
           [MkPredicate (Just source) (Text.pack "deals " <> Text.intercalate (Text.pack " and ") (fmap fst rendered)) [] (concatMap snd rendered) Nothing False]
 
 -- | Whether the reference names a group rather than one object or player:
@@ -508,14 +547,43 @@ each ref = case ref of
   _ -> False
 
 -- | Damage parts sharing an amount: "2 damage to each creature and each
--- player".
-damagePart :: Target.Context -> [DamagePart.DamagePart] -> [(Text.Text, [SlotName.SlotName])]
-damagePart context group = case group of
+-- player", or damage equal to a number the second context reads. Free:
+-- "equal to" after the recipients (Rockslide Ambush) or before them (Soul's
+-- Fire), after first for a count and before first for anything else. Damage
+-- "for each" object counted is not spelled out here: grep "deals [0-9X]+
+-- damage to [^.]* for each" over data/cards, 2026-10-22, finds no count.
+damagePart :: Target.Context -> Target.Context -> [DamagePart.DamagePart] -> [(Text.Text, [SlotName.SlotName])]
+damagePart context measured group = case group of
   first : _ -> do
-    n <- Target.amount (DamagePart.quantity first)
+    a <- Target.amounts measured (DamagePart.quantity first)
     refs <- traverse (Target.object context Target.Each . DamagePart.ref) group
-    [(n <> Text.pack " damage to " <> Prose.listing "and" (fmap Target.wording refs), concatMap Target.mentions refs)]
+    let recipients = Prose.listing "and" (fmap Target.wording refs)
+        to = Text.pack "damage to " <> recipients
+        counted = case DamagePart.quantity first of
+          Quantity.Count _ -> True
+          _ -> False
+    text <- case Target.reading a of
+      Target.Stated q -> fmap (<> Text.pack " " <> to) (Target.amount q)
+      Target.ForEach _ _ -> []
+      Target.EqualTo e ->
+        let later = to <> Text.pack " equal to " <> e
+            before = Text.pack "damage equal to " <> e <> Text.pack " to " <> recipients
+         in if counted then [later, before] else [before, later]
+    [(text, concatMap Target.mentions refs <> Target.names a)]
   [] -> []
+
+-- | An amount of life: "4 life", "2 life for each creature you control",
+-- "life equal to its power". Free for a count: "for each" (Fruition) or
+-- "equal to the number of" (Clearwater Goblet).
+life :: Target.Amount -> [Text.Text]
+life a = case Target.reading a of
+  Target.Stated q -> fmap (<> Text.pack " life") (Target.amount q)
+  Target.ForEach n each' -> [Text.pack (show n <> " life for each ") <> each']
+  Target.EqualTo e -> [Text.pack "life equal to " <> e]
+
+-- | The predicates with these slots named in them too.
+naming :: [SlotName.SlotName] -> [Predicate] -> [Predicate]
+naming slots = fmap (\p -> p {mentions = mentions p <> slots})
 
 -- | A player's instruction that Oracle text gives "you" as an imperative
 -- when it stands as a sentence of its own ("Draw two cards.").

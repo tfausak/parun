@@ -2,27 +2,38 @@
 -- 115), the objects and players a reference names, and the numbers it reads.
 module Pawl.Oracle.Target where
 
+import qualified Control.Monad as Monad
 import qualified Data.Bifunctor as Bifunctor
 import qualified Data.Map.Strict as Map
 import qualified Data.Maybe as Maybe
 import qualified Data.Text as Text
 import qualified Pawl.Oracle.Filter as Filter
 import qualified Pawl.Oracle.Prose as Prose
+import qualified Pawl.Types.AgainstSlot as AgainstSlot
+import qualified Pawl.Types.Aggregation as Aggregation
+import qualified Pawl.Types.Arithmetic as Arithmetic
 import qualified Pawl.Types.ChosenPermanents as ChosenPermanents
+import qualified Pawl.Types.Count as Count
 import qualified Pawl.Types.EachCardInGraveyard as EachCardInGraveyard
+import qualified Pawl.Types.Filter as Filter.Type
 import qualified Pawl.Types.HowMany as HowMany
+import qualified Pawl.Types.InZone as InZone
 import qualified Pawl.Types.Keyword as Keyword
+import qualified Pawl.Types.Measure as Measure
 import qualified Pawl.Types.ObjectRef as ObjectRef
 import qualified Pawl.Types.PlayerRef as PlayerRef
 import qualified Pawl.Types.PlayerRelation as PlayerRelation
 import qualified Pawl.Types.PlayerScope as PlayerScope
 import qualified Pawl.Types.Pool as Pool
 import qualified Pawl.Types.Quantity as Quantity
+import qualified Pawl.Types.Scope as Scope
 import qualified Pawl.Types.SlotCount as SlotCount
 import qualified Pawl.Types.SlotName as SlotName
 import qualified Pawl.Types.TargetCount as TargetCount
 import qualified Pawl.Types.TargetSlot as TargetSlot
+import qualified Pawl.Types.Times as Times
 import qualified Pawl.Types.Together as Together
+import qualified Pawl.Types.Zone as Zone
 import qualified Pawl.Types.ZoneScope as ZoneScope
 
 -- | What a renderer needs from around the instruction: what the card calls
@@ -97,6 +108,123 @@ cards q = case q of
   Quantity.Literal n | n > 1 -> [Prose.cardinal n <> Text.pack " cards"]
   Quantity.InSlot s | s == xSlot -> [Text.pack "X cards"]
   _ -> []
+
+-- | A number as an instruction states it, with the target slots its words
+-- name.
+data Amount = MkAmount
+  { reading :: Reading,
+    names :: [SlotName.SlotName]
+  }
+  deriving (Eq, Show)
+
+-- | How an amount reads.
+data Reading
+  = -- | A number in its place: "3 damage", "X cards".
+    Stated Quantity.Quantity
+  | -- | So many for each object counted, which reads in the singular: (2,
+    -- "creature you control") in "gain 2 life for each creature you control".
+    ForEach Integer Text.Text
+  | -- | What the number equals: "the number of Mountains you control", "its
+    -- power".
+    EqualTo Text.Text
+  deriving (Eq, Show)
+
+-- | The ways a quantity reads (CR 107.1). A count of objects reads "for
+-- each" of them or "equal to the number of" them, and which of those an
+-- instruction offers, and first, is the instruction's. A characteristic
+-- reads as an object's (CR 208.1): the source's, or a target's, which a mode
+-- names once (CR 601.2c), so "its power" when the target is named already
+-- (Swords to Plowshares) and "the power of target creature you control" when
+-- it is not (Soul's Majesty).
+amounts :: Context -> Quantity.Quantity -> [Amount]
+amounts context q = case q of
+  Quantity.Count c -> do
+    (one, many, ms) <- counting context c
+    [MkAmount (ForEach 1 one) ms, MkAmount (EqualTo (Text.pack "the number of " <> many)) ms]
+  Quantity.Arithmetic (Arithmetic.Times (Times.MkTimes f (Quantity.Count c)))
+    | f > 1 -> do
+        (one, _, ms) <- counting context c
+        [MkAmount (ForEach (toInteger f) one) ms]
+  Quantity.Measure m -> do
+    word <- measure m
+    [MkAmount (EqualTo (possessive (self context) <> Text.pack " " <> word)) []]
+  Quantity.AgainstSlot (AgainstSlot.MkAgainstSlot s (Quantity.Measure m)) -> do
+    word <- measure m
+    whose <- target context s
+    Monad.guard (number whose == Filter.Singular)
+    [MkAmount (EqualTo (Text.pack "its " <> word)) [], MkAmount (EqualTo (Text.pack "the " <> word <> Text.pack " of " <> wording whose)) (mentions whose)]
+  _ -> [MkAmount (Stated q) [] | not (null (amount q))]
+
+-- | A characteristic's name (CR 208.1, CR 202.3).
+measure :: Measure.Measure -> [Text.Text]
+measure m = case m of
+  Measure.Power -> [Text.pack "power"]
+  Measure.Toughness -> [Text.pack "toughness"]
+  Measure.ManaValue -> [Text.pack "mana value"]
+  Measure.ColorCount -> []
+
+-- | What a name or pronoun owns: "its", "Spark's".
+possessive :: Text.Text -> Text.Text
+possessive word
+  | word == Text.pack "it" = Text.pack "its"
+  | otherwise = word <> Text.pack "'s"
+
+-- | The objects a count counts (CR 107.1), in both numbers, and the target
+-- slots the words name: ("Mountain you control", "Mountains you control"),
+-- ("card in your hand", "cards in your hand"). Permanents nothing else places
+-- are "on the battlefield" (Fruition). Only a count of members of a zone is
+-- spelled out here.
+counting :: Context -> Count.Count Quantity.Quantity -> [(Text.Text, Text.Text, [SlotName.SlotName])]
+counting context c = case (Count.aggregation c, Count.scope c) of
+  (Aggregation.Members, Scope.InZone (InZone.MkInZone zone whose)) -> do
+    let conjuncts = case Count.filter c of
+          Filter.Type.And fs -> fs
+          f -> [f]
+        controls f = case f of
+          Filter.Type.ControlledByBound _ -> True
+          Filter.Type.ControlledByRecipient -> True
+          _ -> False
+        (controllers, rest) = (filter controls conjuncts, filter (not . controls) conjuncts)
+    p <- Filter.phrase (Filter.Type.And rest) (keyword context)
+    (placed, fallback, ms) <- case (zone, whose, controllers) of
+      (Zone.Battlefield, PlayerRef.Relative PlayerRelation.AnyPlayer, []) ->
+        let nowhere = null (Filter.qualifiers p)
+         in [(Filter.merge p (Filter.MkPhrase [] [] [Filter.MkQualifier (Text.pack "on the battlefield") (Text.pack "on the battlefield") | nowhere]), permanent, [])]
+      (Zone.Battlefield, PlayerRef.Relative PlayerRelation.AnyPlayer, [controller]) -> do
+        (controls', ms) <- controllerOf controller
+        [(Filter.merge p (Filter.MkPhrase [] [] [Filter.MkQualifier controls' controls']), permanent, ms)]
+      (_, _, []) -> do
+        place <- zoneOf zone whose
+        [(Filter.merge p (Filter.MkPhrase [] [card] [Filter.MkQualifier place place]), card, [])]
+      _ -> []
+    one <- Filter.describe Filter.Singular fallback placed
+    many <- Filter.describe Filter.Plural fallback placed
+    [(one, many, ms)]
+  (Aggregation.Members, Scope.OverPlayers (PlayerRef.Relative PlayerRelation.Opponent))
+    | Count.filter c == Filter.Type.And [] -> [(Text.pack "opponent you have", Text.pack "opponents you have", [])]
+  _ -> []
+  where
+    -- A player a slot names is named there (Theft of Dreams) or, named
+    -- already, "that player"; the mode keeps the one naming it once.
+    controllerOf f = case f of
+      Filter.Type.ControlledByBound s -> [(Text.pack "that player controls", [])] <> fmap (\r -> (wording r <> Text.pack " controls", mentions r)) (target context s)
+      Filter.Type.ControlledByRecipient -> [(Text.pack "they control", [])]
+      _ -> []
+
+-- | A zone of a player's that cards are counted in: "in your hand", "in their
+-- graveyard" for the player an instruction is applied to (Nature's
+-- Resurgence), "in that player's hand" for one a slot names (Sudden Impact).
+zoneOf :: Zone.Zone -> PlayerRef.PlayerRef -> [Text.Text]
+zoneOf zone whose = do
+  name <- case zone of
+    Zone.Hand -> [Text.pack "hand"]
+    Zone.Graveyard -> [Text.pack "graveyard"]
+    _ -> []
+  case whose of
+    PlayerRef.Relative PlayerRelation.You -> [Text.pack "in your " <> name]
+    PlayerRef.Candidate -> [Text.pack "in their " <> name]
+    PlayerRef.InSlot _ -> [Text.pack "in that player's " <> name]
+    _ -> []
 
 -- | The objects or players a reference names, with the given determiner for a
 -- description of many: damage is dealt to "each of two target creatures"
