@@ -33,17 +33,15 @@ import qualified Pawl.Types.Suspend as Suspend
 import qualified Pawl.Types.SuspendCounters as SuspendCounters
 import qualified Pawl.Types.Ward as Ward
 
--- | A face's keywords, one line per instance (a keyword printed twice is two
--- instances, CR 702.1), except that protections share one. Lines come out in
--- no particular order, which Pawl.Oracle.Normalise absorbs: the face keeps no
--- printed order to follow.
-lines :: Text.Text -> Map.Map Keyword.Keyword Natural.Natural -> [[Text.Text]]
-lines self keywords = do
+-- | A face's keywords, each instance with its wordings (a keyword printed
+-- twice is two instances, CR 702.1), except that protections share one line
+-- and so one entry. Entries come out in no particular order: the face keeps
+-- no printed order to follow, and Pawl.Oracle matches them as a multiset.
+abilities :: Text.Text -> Map.Map Keyword.Keyword Natural.Natural -> [[Text.Text]]
+abilities self keywords =
   let instances = concatMap (\(k, n) -> List.genericReplicate n k) (Map.toAscList keywords)
       (protections, others) = List.partition isProtection instances
-  separate <- traverse (printed self) others
-  shared <- protectionLines self protections
-  [separate <> shared]
+   in fmap (printed self) others <> [protectionLine self protections | not (null protections)]
 
 -- | Whether the keyword is a protection (CR 702.16).
 isProtection :: Keyword.Keyword -> Bool
@@ -54,16 +52,15 @@ isProtection k = case k of
 -- | Protections all on one line, as Oracle text prints more than one:
 -- "Protection from black and from red" (Paladin en-Vec), "Protection from
 -- white, from blue, and from black".
-protectionLines :: Text.Text -> [Keyword.Keyword] -> [[Text.Text]]
-protectionLines self protections = case protections of
-  [] -> [[]]
-  [one] -> traverse (printed self) [one]
+protectionLine :: Text.Text -> [Keyword.Keyword] -> [Text.Text]
+protectionLine self protections = case protections of
+  [one] -> printed self one
   _ -> do
     let from k = case k of
           Keyword.Protection p | Maybe.isNothing (Protection.spares p) -> fmap (Text.pack "from " <>) (quality self (Protection.quality p))
           _ -> []
     qs <- traverse from protections
-    [[Text.pack "Protection " <> Prose.listing "and" qs]]
+    [Text.pack "Protection " <> Prose.listing "and" qs]
 
 -- | How Oracle text prints a keyword, given what the card calls itself; none
 -- for one this does not spell yet. A landwalk over a subtype is "[type]walk"

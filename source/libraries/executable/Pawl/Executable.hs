@@ -129,14 +129,19 @@ ingest path = do
       putStrLn $ "left out: " <> show (sum reasons)
       mapM_ (\(kind, n) -> TextIO.putStrLn (Text.pack "  " <> kind <> Text.pack (": " <> show n))) (Map.toDescList reasons)
 
--- | Prints how much of the pool Pawl.Oracle renders: the coverage the Oracle
--- check measures (#5477). Pawl.IngestSpec checks what it renders.
+-- | Prints how much of the pool Pawl.Oracle renders, by card and by ability:
+-- the coverage the Oracle check measures (#5477). Pawl.IngestSpec checks the
+-- cards it renders in full; an ability rendered on any other card is counted
+-- but not checked.
 oracle :: IO ()
 oracle = do
   loaded <- Registry.defaultRoot >>= Registry.loadRoot
   let cards = Maybe.mapMaybe Registry.referenceCard loaded
       rendered = filter (Maybe.isJust . Oracle.render) cards
+      abilities = concatMap Oracle.abilities cards
+      whole = concatMap Oracle.abilities rendered
   putStrLn $ "rendered: " <> show (length rendered) <> " of " <> show (length cards)
+  putStrLn $ "abilities rendered: " <> show (length (filter (not . null) abilities)) <> " of " <> show (length abilities) <> ", " <> show (length whole) <> " of them on cards rendered in full"
 
 -- Right True for a card written, Right False for one the pool already holds.
 ingestOne :: FilePath -> Value.Value -> IO (Either Text.Text Bool)
