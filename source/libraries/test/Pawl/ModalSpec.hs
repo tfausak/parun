@@ -258,7 +258,7 @@ activationModalSpec s registry = Spec.describe s "M4h activation modal (CR 602.2
 
 -- M4h task 5: CR 700.2b/603.3d -- the TRIGGER-placement path (Engine.placeOne)
 -- prompts the mode and, for the chosen mode(s), the targets, exactly like
--- Cast.castSpell does for a spell. Gated by Aether Channeler (a {2}{U} 3/3 Human
+-- Cast.castSpell does for a spell. Gated by Aether Channeler (a {2}{U} 2/1 Human
 -- Wizard whose ETB is ChooseExactly 1 over: create a 1/1 flying Bird, return
 -- ANOTHER nonland permanent to hand, or draw a card). Aether Channeler enters
 -- via S.addPermanent and the SelfEnters trigger is fed to Engine.placePendingTriggers

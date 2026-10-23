@@ -193,6 +193,13 @@ to agents as written. What it doesn't say:
   `oracleText` and names on stderr each pool card that disagrees with MTGJSON;
   re-run it after adding cards by hand.
 
+- A card the DSL already expresses is translated before it is hand-written:
+  `pawl translate _scratch/mtgish/data/mtgish.lines.json CANDIDATES (NAME |
+  @FILE | --set CODE)...`, CANDIDATES being that same `candidates.jq` output.
+  It writes only cards that render back to their Oracle text and names every
+  other on stderr with the node kind it stopped at; `--out DIR` writes the
+  pool's own cards too, for comparing against them.
+
 - `Filter.HasCardType` matches in every zone, but "a creature" with no zone,
   "card" or "spell" means a permanent (CR 109.2). Where nothing else confines
   a filter to the battlefield --- a trigger's object filter, say --- conjoin
