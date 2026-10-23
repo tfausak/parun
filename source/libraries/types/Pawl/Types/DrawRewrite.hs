@@ -57,4 +57,6 @@ data DrawRewrite
     -- other player may pay N life. If a player does, put that card into its
     -- owner's graveyard. Otherwise, that player draws a card."
     OthersMayPayLife Natural.Natural
+  | -- | CR 614.6 / 104.3e: Forbidden Crypt's graveyard card to hand, or the game lost.
+    FromGraveyardOrLose
   deriving (Eq, Ord, Show)

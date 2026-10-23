@@ -197,14 +197,16 @@ data GameState = MkGameState
     -- action check (CR 704.3). Empty at every priority window.
     pendingPreventionRiders :: Seq.Seq Prevention.Prevention,
     -- | CR 614.1a: the effects a replacement applied in an event's place and
-    -- that have not run yet -- a damage event's (DamageRewrite.RunEffects) or a
-    -- loss of the game's (GameLossR) -- drained by Resolve.runReplacementEffects.
+    -- that have not run yet -- a damage event's (DamageRewrite.RunEffects), a
+    -- loss of the game's (GameLossR) or a draw's (DrawRewrite.FromGraveyardOrLose)
+    -- -- drained by Resolve.runReplacementEffects.
     --
     -- Empty at every priority window because every road that can fill it drains
     -- it: for damage, each road into Pawl.Engine.Damage.applyDamage (Resolve's
     -- Effect.DealDamage and Effect.Fight arms, and Pawl.Engine.Engine's combat
-    -- damage step); for a loss, the state-based action pass that met it
-    -- (Sba.checkOnce) and each resolved instruction (Resolve.applyEffectWith).
+    -- damage step); for a loss or a draw, the state-based action pass that met
+    -- it (Sba.checkOnce, Engine.settlePasses) and each resolved instruction
+    -- (Resolve.applyEffectWith).
     pendingReplacementEffects :: Seq.Seq PendingReplacementEffect.PendingReplacementEffect,
     -- | CR 616.1 and Lich's Mirror's ruling: the objects a state-based action
     -- check moves, keyed to the source of the replacement whose effects run in

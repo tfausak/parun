@@ -1,0 +1,32 @@
+{
+  "description": "CR 104.3e Forbidden Crypt with nothing left to return loses alice the game on Divination's second draw",
+  "note": "One card in her graveyard: the first draw returns Hill Giant, the second can't return anything and alice loses, though her library still holds cards.",
+  "board": {
+    "active": "alice",
+    "step": "PrecombatMain",
+    "seats": [
+      {
+        "name": "alice",
+        "battlefield": [
+          { "card": "Forbidden Crypt" },
+          { "card": "Island", "label": "i1" },
+          { "card": "Island", "label": "i2" },
+          { "card": "Island", "label": "i3" }
+        ],
+        "hand": [{ "card": "Divination", "label": "divination" }],
+        "graveyard": [{ "card": "Hill Giant" }],
+        "library": [{ "card": "Mountain" }, { "card": "Mountain" }, { "card": "Mountain" }]
+      },
+      { "name": "bob", "library": [{ "card": "Forest" }] }
+    ]
+  },
+  "timeline": [
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": { "Cast": { "object": "$divination", "mana": ["$i1", "$i2", "$i3"] } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass" }
+  ],
+  "final": [
+    { "View": { "of": "Result", "is": { "won": "bob" } } },
+    { "Count": { "player": "alice", "zone": "Hand", "card": "Hill Giant", "count": 1 } },
+    { "Count": { "player": "alice", "zone": "Library", "card": "Mountain", "count": 3 } }
+  ]
+}
