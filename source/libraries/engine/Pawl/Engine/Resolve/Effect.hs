@@ -7278,16 +7278,14 @@ applyOneEffect runSubgame resolving source controller legal chosen effect = case
         State.modify' (overHolderBindings resolving (Map.insert slot (Binding.toVotes tally)))
   -- CR 608.2d: CR 109.5's "you" holds the opening bid, then each other seat in
   -- turn order may top the high bid, round after round, until every seat but
-  -- the high bidder has passed in a row -- "the bidding ends if the high bid
-  -- stands". A seat that passed may top a later bid. The bidders are the
-  -- seats still playing within the controller's range (CR 801.5a), Vote's
-  -- roster.
+  -- the high bidder has declined to top it (Pain's Reward's ruling), so a seat
+  -- that passed may top a later bid. The bidders are the seats still playing
+  -- within the controller's range (CR 801.10), Vote's roster.
   --
-  -- A bid is a number with no ceiling: the card's ruling has the high bidder
-  -- LOSE that much life rather than pay it, so a bid past the bidder's life
-  -- total is legal. Through Prompt.ChooseNumber with the high bid as its floor,
-  -- an answer at the floor letting the bid stand and one below it clamped up
-  -- to it (CR 608.2d's illegal option).
+  -- A bid is a number with no ceiling: Illicit Auction's ruling has the high
+  -- bidder LOSE that much life rather than pay it, so a bid past the bidder's
+  -- life total is legal. Through Prompt.ChooseNumber with the high bid as its
+  -- floor; an answer at or below it declines to top it.
   --
   -- Nothing on the board changes while the seats bid, so the roster and the
   -- deciders are read off this one `gs`.
