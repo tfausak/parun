@@ -6,6 +6,7 @@ import qualified Pawl.Spec as Spec
 import qualified Pawl.Types.AbilityKind as AbilityKind
 import qualified Pawl.Types.Affected as Affected
 import qualified Pawl.Types.CardType as CardType
+import qualified Pawl.Types.Condition as Condition
 import qualified Pawl.Types.Filter as Filter
 import qualified Pawl.Types.UntapHold as UntapHold
 import qualified Pawl.Types.UntapRestriction as UntapRestriction
@@ -28,6 +29,7 @@ spec s = Spec.describe s "Pawl.Codec.UntapRestriction" $ do
               )
           )
           UntapHold.Forbidden
+          Nothing
       )
       " {\"affected\":{\"type\":\"Matching\",\"value\":{\"type\":\"And\",\"value\":[{\"type\":\"HasCardType\",\"value\":{\"type\":\"Land\"}},{\"type\":\"HasActivatedAbility\",\"value\":{\"type\":\"NonManaAbility\"}}]}}} "
   -- Amber Prison's "You may choose not to untap this artifact during your untap
@@ -36,6 +38,18 @@ spec s = Spec.describe s "Pawl.Codec.UntapRestriction" $ do
     Common.assertCodec
       s
       UntapRestriction.codec
-      (UntapRestriction.MkUntapRestriction (Affected.Matching Filter.IsSource) UntapHold.Elective)
+      (UntapRestriction.MkUntapRestriction (Affected.Matching Filter.IsSource) UntapHold.Elective Nothing)
       " {\"affected\":{\"type\":\"Matching\",\"value\":{\"type\":\"IsSource\"}},\"hold\":{\"type\":\"Elective\"}} "
+  -- Static Orb (CR 502.3 / CR 611.3a): a cap on how many untap, in force as
+  -- long as the artifact is untapped.
+  Spec.it s "AtMost while" $
+    Common.assertCodec
+      s
+      UntapRestriction.codec
+      ( UntapRestriction.MkUntapRestriction
+          (Affected.Matching (Filter.And []))
+          (UntapHold.AtMost 2)
+          (Just (Condition.All []))
+      )
+      " {\"affected\":{\"type\":\"Matching\",\"value\":{\"type\":\"And\",\"value\":[]}},\"hold\":{\"type\":\"AtMost\",\"value\":2},\"while\":{\"type\":\"All\",\"value\":[]}} "
   Spec.it s "has a schema" $ Common.assertHasSchema s UntapRestriction.codec

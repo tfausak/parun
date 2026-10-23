@@ -237,7 +237,7 @@ passPriorityFrom gs pid =
 --
 -- FOUR carriers, subtracted together. The printed static one is re-derived live,
 -- and a resolution's stored rows (GameState.objectProhibitions) are read beside it,
--- both through UntapRestriction.restricted; the other two are stored on the
+-- both through UntapRestriction.gathered; the other two are stored on the
 -- victim, and this is where each both applies and
 -- ENDS, CR 701.43b putting the expiry in the untap step it bites in. They are two
 -- fields because they name different seats: Object.doesNotUntapFor says "its
@@ -249,10 +249,15 @@ passPriorityFrom gs pid =
 --
 -- What survives those is CR 502.3's own determination, the active player's to
 -- make: a printed "you may choose not to untap" (UntapHold.Elective) offers its
--- tapped permanents, and the ones `pid` does not pick stay tapped. Only a
--- tapped permanent nothing else holds back is offered, since for any other the
--- untap's outcome is already settled; a stunned one is, its stun counter
--- (CR 122.1d) taking the untap only once `pid` has chosen it.
+-- tapped permanents, and the ones `pid` does not pick stay tapped; a cap
+-- (UntapHold.AtMost, Static Orb) offers the tapped permanents it counts, and
+-- UntapRestriction.settle keeps every cap. Only a tapped permanent nothing else
+-- holds back is offered, since for any other the untap's outcome is already
+-- settled; a stunned one is, its stun counter (CR 122.1d) taking the untap only
+-- once `pid` has chosen it, so it counts against a cap -- docs/decisions.md,
+-- "An untap cap leaves tapped only what it must". Asked only where the answer
+-- matters: a cap the offered permanents already fit, with nothing elective
+-- among them, leaves every one to untap.
 untapAll :: PlayerId -> Game ()
 untapAll pid = do
   gs <- State.get
@@ -260,8 +265,11 @@ untapAll pid = do
       countDown obj = obj {Object.doesNotUntapFor = Object.doesNotUntapFor obj - 1}
       unexert obj = obj {Object.exertedBy = Set.delete pid (Object.exertedBy obj)}
       ids = Projection.controls pid gs
-      prohibited = UntapRestriction.restricted UntapHold.Forbidden ids gs
-      elective = UntapRestriction.restricted UntapHold.Elective ids gs
+      restrictions = UntapRestriction.gathered ids gs
+      holding hold = Set.unions [named | (h, named) <- restrictions, h == hold]
+      prohibited = holding UntapHold.Forbidden
+      elective = holding UntapHold.Elective
+      caps = [(n, counted) | (UntapHold.AtMost n, counted) <- restrictions]
       asks f oid = maybe False f (Game.lookupObject oid gs)
       oneShot = asks ((> 0) . Object.doesNotUntapFor)
       exerted = asks (Set.member pid . Object.exertedBy)
@@ -270,11 +278,20 @@ untapAll pid = do
       held = filter oneShot ids
   -- The prompt's object is the first permanent offered: a turn-based action has
   -- no source of its own to name (Contraption.crank's reading).
-  untapping <- case filter (\oid -> Set.member oid elective && tapped oid) allowed of
-    [] -> pure allowed
-    offered@(first : _) -> do
-      chosen <- Game.choose (Prompt.ChooseAnyNumber (Decide.deciderFor pid gs) pid first AnyNumberOf.ToUntap offered Nothing)
-      pure (filter (\oid -> List.notElem oid offered || Set.member oid chosen) allowed)
+  let capped oid = any (Set.member oid . snd) caps
+      offered = filter (\oid -> tapped oid && (Set.member oid elective || capped oid)) allowed
+      overflows = any (\(n, counted) -> Natural.length (filter (`Set.member` counted) offered) > n) caps
+      -- The tightest cap counting every offered permanent bounds any answer.
+      ceiling_ = case [n | (n, counted) <- caps, all (`Set.member` counted) offered] of
+        [] -> Nothing
+        ns -> Just (minimum ns)
+  untapping <- case offered of
+    first : _
+      | overflows || any (`Set.member` elective) offered -> do
+          chosen <- Game.choose (Prompt.ChooseAnyNumber (Decide.deciderFor pid gs) pid first AnyNumberOf.ToUntap offered ceiling_)
+          let settled = UntapRestriction.settle caps elective offered chosen
+          pure (filter (\oid -> List.notElem oid offered || Set.member oid settled) allowed)
+    _ -> pure allowed
   -- CR 502.3's two sentences, in its own order: DETERMINE which permanents will
   -- untap, then untap them all SIMULTANEOUSLY. Event.proposeUntap is the
   -- determining half -- rule 701.26b's guard plus the CR 614 loop, which is where

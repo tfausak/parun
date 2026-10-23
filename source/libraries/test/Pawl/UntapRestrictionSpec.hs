@@ -41,6 +41,7 @@
 module Pawl.UntapRestrictionSpec where
 
 import qualified Data.Set as Set
+import Numeric.Natural (Natural)
 import qualified Pawl.Engine.Action as Action
 import qualified Pawl.Engine.Activatable as Activatable
 import qualified Pawl.Engine.Activate as Activate
@@ -49,6 +50,7 @@ import qualified Pawl.Engine.Game as Game
 import qualified Pawl.Engine.Projection as Projection
 import qualified Pawl.Engine.Setup as Setup
 import qualified Pawl.Engine.Stack as Stack
+import qualified Pawl.Extra.Natural as Natural
 import qualified Pawl.Registry as Registry
 import qualified Pawl.Spec as Spec
 import qualified Pawl.Support as S
@@ -181,6 +183,7 @@ spec s registry = Spec.describe s "UntapRestriction" $ do
   powerSpec s registry
   oneShotSpec s registry
   existenceSpec s registry
+  capSpec s registry
 
 -- CR 502.3 / CR 611.2's ONE-SHOT prohibition: Effect.DoesNotUntapNext, the count
 -- it writes, and CR 611.2a's expiry at the untap steps its sentence names. CR
@@ -312,6 +315,77 @@ powerSpec s registry = Spec.describe s "Power" $ do
     Spec.assertBool s (Game.isTapped pikerId untapped) "the 2/1 the anthem made a 3/2 is still tapped"
     Spec.assertBool s (not (Game.isTapped ratsId untapped)) "the 1/1 the anthem made a 2/2 untapped"
     Spec.assertBool s (Game.isTapped giantId untapped) "and the 3/3 the anthem made a 4/4 is still tapped"
+
+-- Alice's board for the CAP: an untapped Static Orb, two tapped Islands and a
+-- tapped Hill Giant, with `winter` deciding whether an untapped Winter Orb is
+-- beside them. Nothing else differs between the two boards this builds.
+orbBoard :: (Monad m) => Spec.Spec m n -> Registry.Registry m -> Bool -> m (ObjectId.ObjectId, ObjectId.ObjectId, ObjectId.ObjectId, GameState.GameState)
+orbBoard s registry winter = do
+  staticOrb <- S.printingOf s registry "Static Orb"
+  winterOrb <- S.printingOf s registry "Winter Orb"
+  island <- S.printingOf s registry "Island"
+  giant <- S.printingOf s registry "Hill Giant"
+  let g0 = snd (S.addPermanent staticOrb S.alice (Setup.emptyGame S.bothPlayers))
+      g1 = if winter then snd (S.addPermanent winterOrb S.alice g0) else g0
+      (firstId, g2) = S.addPermanent island S.alice g1
+      (secondId, g3) = S.addPermanent island S.alice g2
+      (giantId, g4) = S.addPermanent giant S.alice g3
+  pure (firstId, secondId, giantId, S.tapObject giantId (S.tapObject secondId (S.tapObject firstId g4)))
+
+-- The untap step with every ChooseAnyNumber answered by `pick` over what it
+-- offers and the most it says may be named.
+untapAnswering :: ([ObjectId.ObjectId] -> Maybe Natural -> Set.Set ObjectId.ObjectId) -> GameState.GameState -> GameState.GameState
+untapAnswering pick gs = S.runPure answer gs (Engine.runTurnBasedActions (Phase.Beginning BeginningStep.Untap))
+  where
+    answer :: Prompt.Prompt r -> r
+    answer p = case p of
+      Prompt.ChooseAnyNumber _ _ _ _ offered atMost -> pick offered atMost
+      _ -> S.identityAnswer p
+
+-- CR 502.3 / 101.2's CAP (UntapHold.AtMost): Static Orb's "can't untap more
+-- than two permanents", Winter Orb's "more than one land", and the answers
+-- UntapRestriction.settle repairs. The scenarios under
+-- data/scenarios/untap-restriction/ prove the choice itself.
+capSpec :: (Monad m, Monad n) => Spec.Spec m n -> Registry.Registry m -> n ()
+capSpec s registry = Spec.describe s "Cap" $ do
+  -- The default answer takes the first two offered, both Islands, which Static
+  -- Orb allows and Winter Orb does not.
+  Spec.it s "CR 502.3/101.2 Static Orb and Winter Orb both hold: the second Island stays tapped and the Giant untaps" $ do
+    (firstId, secondId, giantId, gs) <- orbBoard s registry True
+    let untapped = untapStep gs
+    Spec.assertBool s (Game.isTapped secondId untapped) "the second Island is still tapped"
+    Spec.assertBool s (not (Game.isTapped giantId untapped)) "the Giant untapped"
+    Spec.assertBool s (not (Game.isTapped firstId untapped)) "the first Island untapped"
+  -- The same board without Winter Orb, so the case above cannot be passing
+  -- because the default answer never takes two Islands.
+  Spec.it s "CR 502.3 Static Orb alone lets the default answer's two Islands untap" $ do
+    (firstId, secondId, giantId, gs) <- orbBoard s registry False
+    let untapped = untapStep gs
+    Spec.assertBool s (not (Game.isTapped secondId untapped)) "the second Island untapped"
+    Spec.assertBool s (Game.isTapped giantId untapped) "the Giant is still tapped"
+    Spec.assertBool s (not (Game.isTapped firstId untapped)) "the first Island untapped"
+  Spec.it s "CR 101.2 an answer naming all three permanents untaps only the first two" $ do
+    (firstId, secondId, giantId, gs) <- orbBoard s registry False
+    let untapped = untapAnswering (\offered _ -> Set.fromList offered) gs
+    Spec.assertBool s (Game.isTapped giantId untapped) "the Giant is still tapped"
+    Spec.assertBool s (not (Game.isTapped firstId untapped)) "the first Island untapped"
+    Spec.assertBool s (not (Game.isTapped secondId untapped)) "the second Island untapped"
+  -- The answerer names the LAST permanents offered, as many as the prompt
+  -- allows: the Giant and the second Island under Static Orb's two. A prompt
+  -- naming no bound would have it name all three, cut back to the first two.
+  Spec.it s "CR 502.3 the prompt bounds the answer by Static Orb's two" $ do
+    (firstId, secondId, giantId, gs) <- orbBoard s registry False
+    let untapped = untapAnswering (\offered atMost -> Set.fromList (maybe offered (\n -> take (Natural.toIntSaturating n) (reverse offered)) atMost)) gs
+    Spec.assertBool s (Game.isTapped firstId untapped) "the first Island is still tapped"
+    Spec.assertBool s (not (Game.isTapped secondId untapped)) "the second Island untapped"
+    Spec.assertBool s (not (Game.isTapped giantId untapped)) "the Giant untapped"
+  -- docs/decisions.md, "An untap cap leaves tapped only what it must".
+  Spec.it s "CR 502.3 an answer naming nothing still untaps two" $ do
+    (firstId, secondId, giantId, gs) <- orbBoard s registry False
+    let untapped = untapAnswering (\_ _ -> Set.empty) gs
+    Spec.assertBool s (not (Game.isTapped firstId untapped)) "the first Island untapped"
+    Spec.assertBool s (not (Game.isTapped secondId untapped)) "the second Island untapped"
+    Spec.assertBool s (Game.isTapped giantId untapped) "the Giant is still tapped"
 
 -- CR 702.77b's two halves, which pull in opposite directions: the ability EXISTS
 -- on the battlefield, and it can be ACTIVATED only from a hand.
