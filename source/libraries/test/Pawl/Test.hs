@@ -104,6 +104,7 @@ import qualified Pawl.Codec.BecameDesignatedSpec
 import qualified Pawl.Codec.BecomeCopySpec
 import qualified Pawl.Codec.BeginningStepSpec
 import qualified Pawl.Codec.BeholdSpec
+import qualified Pawl.Codec.BidSpec
 import qualified Pawl.Codec.BindingSpec
 import qualified Pawl.Codec.BlockCostSpec
 import qualified Pawl.Codec.BlockPermissionSpec
@@ -997,6 +998,7 @@ spec s registry = do
   Pawl.Codec.BecomeCopySpec.spec s
   Pawl.Codec.BeginningStepSpec.spec s
   Pawl.Codec.BeholdSpec.spec s
+  Pawl.Codec.BidSpec.spec s
   Pawl.Codec.BindingSpec.spec s
   Pawl.Codec.BlockCostSpec.spec s
   Pawl.Codec.BlockersAreSpec.spec s
