@@ -1,0 +1,16 @@
+{
+  "description": "CR 608.2c / 701.9a whole card: Soldevi Sage sacrifices two lands, draws three cards, and discards one of those three, never a card alice held before",
+  "note": "Alice keeps her Mountain; her Shock is refused as the discard, and she discards the drawn Hill Giant.",
+  "board": {"active": "alice", "step": "PrecombatMain", "seats": [{"name": "alice", "hand": [{"card": "Shock", "label": "shock"}], "battlefield": [{"card": "Soldevi Sage", "label": "sage", "ready": true}, {"card": "Island", "label": "island"}, {"card": "Forest", "label": "forest"}, {"card": "Mountain", "label": "mountain"}], "library": [{"card": "Hill Giant", "label": "giant"}, {"card": "Grizzly Bears"}, {"card": "Swamp"}, {"card": "Plains"}]}, {"name": "bob", "library": [{"card": "Wall of Stone"}, {"card": "Wall of Stone"}, {"card": "Wall of Stone"}]}]},
+  "timeline": [
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": {"Activate": {"object": "$sage", "ability": 0, "costOrder": [0, 1], "mana": [null]}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": {"Answer": {"prompt": "ChooseSacrifices", "with": ["$island", "$forest"]}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass"},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "refuse": {"Answer": {"prompt": "ChooseCardFromAmong", "with": "$shock"}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": {"Answer": {"prompt": "ChooseCardFromAmong", "with": "Hill Giant"}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "check": {"View": {"of": "Zone", "player": "alice", "zone": "Hand", "is": ["$shock", "Grizzly Bears", "Swamp"]}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "check": {"Count": {"player": "alice", "zone": "Graveyard", "card": "Hill Giant", "count": 1}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "check": {"Count": {"player": "alice", "zone": "Battlefield", "card": "Mountain", "count": 1}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "check": {"View": {"of": "Zone", "player": "alice", "zone": "Library", "is": ["Plains"]}}}
+  ]
+}

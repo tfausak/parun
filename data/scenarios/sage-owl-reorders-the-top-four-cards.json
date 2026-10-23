@@ -1,0 +1,12 @@
+{
+  "description": "CR 401.4 whole card: Sage Owl's entering trigger puts alice's top four cards back in the order she chooses, leaving the fifth where it was",
+  "note": "Five distinct cards; alice reverses the top four, and the Plains under them stays fifth.",
+  "board": {"active": "alice", "step": "PrecombatMain", "seats": [{"name": "alice", "manaPool": "UU", "hand": [{"card": "Sage Owl", "label": "owl"}], "library": [{"card": "Island"}, {"card": "Swamp"}, {"card": "Mountain"}, {"card": "Forest"}, {"card": "Plains"}]}, {"name": "bob", "library": [{"card": "Grizzly Bears"}, {"card": "Grizzly Bears"}, {"card": "Grizzly Bears"}]}]},
+  "timeline": [
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": {"Cast": {"object": "$owl"}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass"},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass"},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": {"Answer": {"prompt": "ArrangeLibraryCards", "with": [3, 2, 1, 0]}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "check": {"View": {"of": "Zone", "player": "alice", "zone": "Library", "is": ["Forest", "Mountain", "Swamp", "Island", "Plains"]}}}
+  ]
+}

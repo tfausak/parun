@@ -1,0 +1,13 @@
+{
+  "description": "CR 303.4a / 702.3b whole card: Animate Wall enchants only a Wall, and the Wall it enchants can attack despite defender while another Wall still can't",
+  "note": "Alice's Grizzly Bears is refused as the Aura's target; enchanting her first Wall of Stone, she cannot attack with both Walls but can with the enchanted one.",
+  "board": {"active": "alice", "step": "PrecombatMain", "seats": [{"name": "alice", "manaPool": "W", "hand": [{"card": "Animate Wall", "label": "aura"}], "battlefield": [{"card": "Wall of Stone", "label": "w1", "ready": true}, {"card": "Wall of Stone", "label": "w2", "ready": true}, {"card": "Grizzly Bears", "label": "bears", "ready": true}], "library": [{"card": "Island"}, {"card": "Island"}, {"card": "Island"}]}, {"name": "bob", "library": [{"card": "Island"}, {"card": "Island"}, {"card": "Island"}]}]},
+  "timeline": [
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "refuse": {"Cast": {"object": "$aura", "targets": ["$bears"]}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": {"Cast": {"object": "$aura", "targets": ["$w1"]}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass"},
+    {"turn": 1, "step": "DeclareAttackers", "player": "alice", "refuse": {"Attack": ["$w1", "$w2"]}},
+    {"turn": 1, "step": "DeclareAttackers", "player": "alice", "do": {"Attack": ["$w1"]}},
+    {"turn": 1, "step": "DeclareAttackers", "player": "alice", "check": {"Attackers": {"attackers": {"$w1": "$bob"}}}}
+  ]
+}

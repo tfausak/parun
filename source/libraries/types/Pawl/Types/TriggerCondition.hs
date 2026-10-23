@@ -349,6 +349,9 @@ data TriggerCondition
   | -- | CR 701.26a's "became tapped" read off the permanent the bearer is
     -- attached to (Betrayal), live rather than through last known information.
     AttachedCreatureBecomesTapped
+  | -- | CR 120.1 / 603.2: "deals damage" read off the permanent the bearer is
+    -- attached to (Spirit Link), once per damage event as SelfDealsDamage is.
+    AttachedCreatureDealsDamage
   | -- | CR 701.26a's batch reading, by a bystander: "whenever one or more
     -- nontoken Merfolk you control become tapped" (Deeproot Pilgrimage), once
     -- per tapping event (CR 603.2c).
