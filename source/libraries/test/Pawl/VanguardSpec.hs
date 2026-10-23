@@ -269,7 +269,7 @@ spec s registry = Spec.describe s "Vanguard" $ do
       Just steward -> do
         let gone = Event.forgetObject placed steward
             control = gone {GameState.lastKnown = Map.adjust (\lk -> lk {LastKnown.home = Zone.Battlefield}) steward (GameState.lastKnown gone)}
-            hasOne g = fmap Filter.hasActivatedAbility (Projection.viewWithLastKnownAnywhere g steward)
+            hasOne g = fmap (not . Set.null . Filter.activatedAbilityKinds) (Projection.viewWithLastKnownAnywhere g steward)
         Spec.assertBool s (hasOne gone == Just True) "CR 608.2h: the record's view has the activated ability"
         Spec.assertBool s (hasOne control == Just False) "and the same record with a battlefield home does not"
 

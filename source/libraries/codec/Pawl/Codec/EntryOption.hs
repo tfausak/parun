@@ -4,6 +4,7 @@ module Pawl.Codec.EntryOption where
 
 import qualified Data.Set as Set
 import qualified Pawl.Codec.Keyword as Keyword
+import qualified Pawl.Codec.Subtype as Subtype
 import qualified Pawl.JsonCodec.Codec as Codec
 import qualified Pawl.JsonCodec.Common as Common
 import qualified Pawl.JsonCodec.Fields as Fields
@@ -17,9 +18,11 @@ codec = Fields.object $ do
   power <- Fields.required "power" Common.integer EntryOption.power
   toughness <- Fields.required "toughness" Common.integer EntryOption.toughness
   keywords <- Fields.defaulted "keywords" Set.empty (Common.set Keyword.codec) EntryOption.keywords
+  subtypes <- Fields.defaulted "subtypes" Set.empty (Common.set Subtype.codec) EntryOption.subtypes
   pure
     EntryOption.MkEntryOption
       { EntryOption.power = power,
         EntryOption.toughness = toughness,
-        EntryOption.keywords = keywords
+        EntryOption.keywords = keywords,
+        EntryOption.subtypes = subtypes
       }

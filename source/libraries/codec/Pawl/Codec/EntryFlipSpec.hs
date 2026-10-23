@@ -18,8 +18,8 @@ spec s = Spec.describe s "Pawl.Codec.EntryFlip" $ do
       s
       EntryFlip.codec
       ( EntryFlip.MkEntryFlip
-          { EntryFlip.heads = EntryOption.MkEntryOption {EntryOption.power = 5, EntryOption.toughness = 2, EntryOption.keywords = Set.singleton Keyword.Haste},
-            EntryFlip.tails = EntryOption.MkEntryOption {EntryOption.power = 2, EntryOption.toughness = 5, EntryOption.keywords = Set.singleton Keyword.Defender}
+          { EntryFlip.heads = EntryOption.MkEntryOption {EntryOption.power = 5, EntryOption.toughness = 2, EntryOption.keywords = Set.singleton Keyword.Haste, EntryOption.subtypes = Set.empty},
+            EntryFlip.tails = EntryOption.MkEntryOption {EntryOption.power = 2, EntryOption.toughness = 5, EntryOption.keywords = Set.singleton Keyword.Defender, EntryOption.subtypes = Set.empty}
           }
       )
       " {\"heads\":{\"power\":5,\"toughness\":2,\"keywords\":[{\"type\":\"Haste\"}]},\"tails\":{\"power\":2,\"toughness\":5,\"keywords\":[{\"type\":\"Defender\"}]}} "

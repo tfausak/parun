@@ -328,7 +328,7 @@ spec s = Spec.describe s "Pawl.Codec.Effect" $ do
       s
       toJson
       fromJson
-      (Effect.MoveMana (MoveMana.MkMoveMana (PlayerRef.InSlot (SlotName.MkSlotName (Text.pack "target"))) (PlayerRef.Relative PlayerRelation.You)))
+      (Effect.MoveMana (MoveMana.MkMoveMana (PlayerRef.InSlot (SlotName.MkSlotName (Text.pack "target"))) (Just (PlayerRef.Relative PlayerRelation.You))))
       " {\"type\":\"MoveMana\",\"value\":{\"from\":{\"type\":\"InSlot\",\"value\":\"target\"},\"to\":{\"type\":\"Relative\",\"value\":{\"type\":\"You\"}}}} "
   Spec.it s "Search" $
     Common.assertJsonCodec
@@ -1159,7 +1159,9 @@ spec s = Spec.describe s "Pawl.Codec.Effect" $ do
               RedirectDamage.whatRecipient = Nothing,
               RedirectDamage.whoRecipient = Nothing,
               RedirectDamage.to = ObjectRef.InSlot (SlotName.MkSlotName (Text.pack "target")),
-              RedirectDamage.chosenSource = Nothing
+              RedirectDamage.chosenSource = Nothing,
+              RedirectDamage.uses = Uses.Unlimited,
+              RedirectDamage.whatSource = Filter.And []
             }
       )
       " {\"type\":\"RedirectDamage\",\"value\":{\"duration\":{\"type\":\"UntilEndOfTurn\"},\"kind\":{\"type\":\"Combat\"},\"from\":{\"type\":\"InSlot\",\"value\":\"you\"},\"to\":{\"type\":\"InSlot\",\"value\":\"target\"}}} "

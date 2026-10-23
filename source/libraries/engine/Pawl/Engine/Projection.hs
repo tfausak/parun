@@ -3891,30 +3891,18 @@ filterReads f = case f of
   -- different order. Pawl.ProjectionSpec's "CR 613.8a the Nexus satisfies the
   -- Ogre's gate, so the Ogre joins the Conversion's set" proves the Subtypes
   -- half.
-  Filter.Type.HasNonManaActivatedAbility -> everyAspect
-  -- CR 602.1 reads the same abilities the neighbour above does, and CR 613.1f's
-  -- layer 6 with them -- but also CR 305.6's intrinsic "{T}: Add [mana symbol]",
-  -- which Projection.View.viewOfCharacteristics adds as a disjunct off the
-  -- projected card types and subtypes. Those are layer 4 (CR 613.1d), so a
-  -- subtype write moves this atom's answer: Blood Moon's SetLandSubtype gives a
-  -- nonbasic the Mountain ability it did not have, and CR 613.8a's dependency on
-  -- an Affected.Matching HasActivatedAbility effect is only seen if the read is
-  -- declared here.
   --
-  -- CR 613.1f's layer-6 wipe reaches the intrinsic ability too
-  -- (ProjectedCharacteristics.lostAllAbilities), and needs no fourth aspect:
-  -- LoseAllAbilities writes Keywords, which this row already declares.
-  --
-  -- And every other aspect for the neighbour above's reason: this field is
-  -- filled from the same abilitiesFromCharacteristics, so CR 604.2's gate is on
-  -- each ability here too.
-  --
-  -- A REGRESSION FENCE rather than a proved behaviour: no card in data/cards/
-  -- writes this atom into an Affected or a Count position -- Zirda, the
-  -- Dawnwaker's companion condition is the pool's only writer and runs through
-  -- viewOfCard, which movableAspects never reaches -- so no board can tell the
-  -- widened row from the narrow one.
-  Filter.Type.HasActivatedAbility -> everyAspect
+  -- The kinds also hold CR 305.6's intrinsic "{T}: Add [mana symbol]", which
+  -- Projection.View.viewOfCharacteristics adds off the projected card types and
+  -- subtypes. Those are layer 4 (CR 613.1d), so a subtype write moves the
+  -- answer of every kind but NonManaAbility: Blood Moon's SetLandSubtype gives a
+  -- nonbasic the Mountain ability it did not have. CR 613.1f's layer-6 wipe
+  -- reaches the intrinsic ability too (ProjectedCharacteristics.lostAllAbilities)
+  -- through Keywords, which this row already declares. The Subtypes read for
+  -- that intrinsic ability is a REGRESSION FENCE rather than a proved
+  -- behaviour: no card in data/cards/ writes a mana-ability kind of this atom
+  -- into an Affected or a Count position.
+  Filter.Type.HasActivatedAbility _ -> everyAspect
   -- CR 400.1 / 109.3: a zone is not a characteristic, so no Modification writes
   -- one and no layer's ordering turns on this atom.
   Filter.Type.IsInZone _ -> Set.empty
@@ -3957,7 +3945,7 @@ filterReads f = case f of
 -- Whether a Filter's answer can turn on ANOTHER object's projection: the five
 -- Filter.View fields viewOfCharacteristics fills through `peers` --
 -- attachedToView, attachedViews, attackingPlaneswalkerController,
--- attackingBattleProtector and nonManaActivatedAbility -- and the
+-- attackingBattleProtector and activatedAbilityKinds -- and the
 -- OfEachOtherCandidate operand's Filter.Context.candidateMeasures, since
 -- Filter.matches reads no other channel into a second object and every other
 -- field of that view comes from the candidate's own partial or from the
@@ -3985,8 +3973,7 @@ filterReadsPeers f = case f of
   -- Condition.holds, which takes `peers` to any object at all.
   -- Pawl.ProjectionSpec's "CR 613.8a the Nexus satisfies the Ogre's gate, so the
   -- Ogre joins the Conversion's set" proves it.
-  Filter.Type.HasNonManaActivatedAbility -> True
-  Filter.Type.HasActivatedAbility -> True
+  Filter.Type.HasActivatedAbility _ -> True
   -- Over-declared, as filterReads over-declares the same two: viewOfCharacteristics
   -- answers both False outright, so no board can move them, but the subject whose
   -- characteristics CR 301.5 and CR 702.5a compare against is another object.
@@ -4171,7 +4158,7 @@ modificationWrites m = case m of
   -- Writes ProjectedCharacteristics.activatedAbilities or .triggeredAbilities,
   -- which Aspect has no finer grain for than Keywords -- the same answer
   -- LoseNamedAbility gives below, this being the same write in the other
-  -- direction. Filter.HasNonManaActivatedAbility is the atom that reads the
+  -- direction. Filter.HasActivatedAbility is the atom that reads the
   -- first list, through abilitiesFromCharacteristics; the triggered half is
   -- over-declared, which is the safe direction, since this is only a SCREEN and
   -- changesAt confirms the dependency by re-asking the set.
@@ -4184,7 +4171,7 @@ modificationWrites m = case m of
   Modification.GainAbilitiesOfStickers -> Set.singleton Keywords
   Modification.LoseAllAbilities -> Set.singleton Keywords
   -- Writes ProjectedCharacteristics.activatedAbilities, which Aspect has no finer
-  -- grain for than Keywords -- Filter.HasNonManaActivatedAbility, the atom that
+  -- grain for than Keywords -- Filter.HasActivatedAbility, the atom that
   -- reads it, declares Keywords among its reads. A REGRESSION FENCE rather than
   -- a proved behaviour: no board in the pool makes another effect's affected set
   -- depend on a named removal, so Set.empty here leaves the suite green.

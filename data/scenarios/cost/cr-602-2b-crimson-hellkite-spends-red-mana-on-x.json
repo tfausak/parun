@@ -1,0 +1,30 @@
+{
+  "description": "CR 602.2b Crimson Hellkite spends red mana on X",
+  "note": "Alice has {R}{R}{G} untapped: X=2 paid with both Mountains resolves; the same board refuses X=3, which needs the Forest's green.",
+  "board": {
+    "seats": [
+      {
+        "name": "alice",
+        "battlefield": [
+          { "card": "Crimson Hellkite", "label": "hellkite", "ready": true },
+          { "card": "Mountain", "label": "m1", "ready": true },
+          { "card": "Mountain", "label": "m2", "ready": true },
+          { "card": "Forest", "label": "f1", "ready": true }
+        ],
+        "library": [{ "card": "Island" }]
+      },
+      {
+        "name": "bob",
+        "battlefield": [{ "card": "Craw Wurm", "label": "wurm" }],
+        "library": [{ "card": "Island" }]
+      }
+    ],
+    "active": "alice",
+    "step": "PrecombatMain"
+  },
+  "timeline": [
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": { "Activate": { "object": "$hellkite", "targets": ["$wurm"], "x": 2, "mana": ["$m1", "$m2", null] } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass" },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "check": { "Damage": { "object": "$wurm", "damage": 2 } } }
+  ]
+}

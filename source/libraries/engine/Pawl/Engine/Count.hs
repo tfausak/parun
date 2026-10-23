@@ -447,8 +447,7 @@ bakePerspective viewOf context gs candidate predicate =
         Filter.Type.HasCountersOfAnyKind -> predicate
         Filter.Type.HasSticker _ -> predicate
         Filter.Type.Stickered -> predicate
-        Filter.Type.HasNonManaActivatedAbility -> predicate
-        Filter.Type.HasActivatedAbility -> predicate
+        Filter.Type.HasActivatedAbility _ -> predicate
         Filter.Type.IsInZone _ -> predicate
         Filter.Type.WasCastFrom _ -> predicate
         Filter.Type.TagWasSpent _ -> predicate
@@ -1333,8 +1332,7 @@ viewOfSnapshot deploy mController mOwner isToken counters zone home lapsed snaps
       -- and `power` too -- so this answers what the object HAD at the event,
       -- through abilitiesOf, the roster every view builder reads, less what CR
       -- 604.2 withheld (snapshotRoster).
-      Filter.nonManaActivatedAbility = hasNonManaAbility (snapshotRoster deploy zone home lapsed snapshot),
-      Filter.hasActivatedAbility = hasAnyAbility (snapshotRoster deploy zone home lapsed snapshot) snapshot,
+      Filter.activatedAbilityKinds = ManaAbility.abilityKinds (Subtype.intrinsicManaAbilityOf snapshot) (snapshotRoster deploy zone home lapsed snapshot),
       -- CR 702.184c off the snapshot, which carries the field: the marker
       -- outlives the object exactly as a keyword or a P/T does.
       Filter.grantsStationToughness = PC.grantsStationToughness snapshot
@@ -1354,19 +1352,6 @@ snapshotRoster deploy zone home lapsed snapshot =
 -- recorded as lapsed? An ability with no clause always is.
 grantHeld :: Set.Set Condition.Condition -> ActivatedAbility.ActivatedAbility card ability -> Bool
 grantHeld lapsed = maybe True (`Set.notMember` lapsed) . ActivatedAbility.condition
-
--- CR 602.1 / 605.1a: does a roster hold an activated ability that is not a
--- mana ability?
-hasNonManaAbility :: [ActivatedAbility.ActivatedAbility Card.Card (GrantedAbility.GrantedAbility Card.Card)] -> Bool
-hasNonManaAbility = not . all ManaAbility.isManaAbility
-
--- CR 602.1 off a roster, without CR 605.1a's exclusion, plus CR 305.6's
--- intrinsic ability, which the roster does not hold. Read off the snapshot's
--- types for Pawl.Engine.Projection.View.viewOfCharacteristics' reason, and
--- through the reader every view builder shares so that the three cannot
--- disagree about one object.
-hasAnyAbility :: [ActivatedAbility.ActivatedAbility Card.Card (GrantedAbility.GrantedAbility Card.Card)] -> PC.ProjectedCharacteristics -> Bool
-hasAnyAbility roster snapshot = not (null roster) || Subtype.intrinsicManaAbilityOf snapshot
 
 -- | The live view of an object with a sample's CHARACTERISTICS written over it,
 -- for an event whose object is still there to be asked about but whose
@@ -1406,8 +1391,7 @@ overlaySnapshot deploy lapsed snapshot live =
           Filter.intensity = Filter.intensity sampled,
           Filter.manaValue = Filter.manaValue sampled,
           Filter.manaCost = Filter.manaCost sampled,
-          Filter.nonManaActivatedAbility = Filter.nonManaActivatedAbility sampled,
-          Filter.hasActivatedAbility = Filter.hasActivatedAbility sampled,
+          Filter.activatedAbilityKinds = Filter.activatedAbilityKinds sampled,
           Filter.grantsStationToughness = Filter.grantsStationToughness sampled
         }
 

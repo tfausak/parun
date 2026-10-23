@@ -19,8 +19,19 @@ spec s = Spec.describe s "Pawl.Codec.MoveMana" $ do
       MoveMana.codec
       ( MoveMana.MkMoveMana
           { MoveMana.from = PlayerRef.InSlot (SlotName.MkSlotName (Text.pack "target")),
-            MoveMana.to = PlayerRef.Relative PlayerRelation.You
+            MoveMana.to = Just (PlayerRef.Relative PlayerRelation.You)
           }
       )
       " {\"from\":{\"type\":\"InSlot\",\"value\":\"target\"},\"to\":{\"type\":\"Relative\",\"value\":{\"type\":\"You\"}}} "
+  -- CR 106.4: Mana Short's "that player loses all unspent mana", no one adding it.
+  Spec.it s "MkMoveMana, no to" $
+    Common.assertCodec
+      s
+      MoveMana.codec
+      ( MoveMana.MkMoveMana
+          { MoveMana.from = PlayerRef.InSlot (SlotName.MkSlotName (Text.pack "target")),
+            MoveMana.to = Nothing
+          }
+      )
+      " {\"from\":{\"type\":\"InSlot\",\"value\":\"target\"}} "
   Spec.it s "has a schema" $ Common.assertHasSchema s MoveMana.codec

@@ -358,8 +358,7 @@ filterAtomsOf leaf predicate = case predicate of
   Filter.Type.RepresentedByCard f -> filterAtomsOf leaf f
   Filter.Type.IsExiledFaceDown -> leaf predicate
   Filter.Type.Transformed -> leaf predicate
-  Filter.Type.HasNonManaActivatedAbility -> leaf predicate
-  Filter.Type.HasActivatedAbility -> leaf predicate
+  Filter.Type.HasActivatedAbility _ -> leaf predicate
   Filter.Type.IsInZone _ -> leaf predicate
   Filter.Type.WasCastFrom _ -> leaf predicate
   Filter.Type.TagWasSpent _ -> leaf predicate
@@ -2377,7 +2376,7 @@ filterPositionLintSpec s registry = Spec.describe s "Lint" $ do
           ]
         -- CR 208.2b's option, distinct P/T so nothing here is a numeric
         -- coincidence, and the keyword is the only thing carrying a Filter.
-        optionWith = EntryOption.MkEntryOption 2 5
+        optionWith keywords = EntryOption.MkEntryOption 2 5 keywords Set.empty
     -- Ordered FIRST, and CR 115.10a's half of the claim: the atom whose offence
     -- is the mirror of the others' is rejected at all three sites a keyword's
     -- Filter is reached from. A site that lost the tag reddens under its own

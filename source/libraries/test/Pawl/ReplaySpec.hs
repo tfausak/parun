@@ -333,7 +333,7 @@ combatReplaySpec s =
         -- this exercises the transcript codec directly, matching the shape
         -- of every other payload-carrying prompt above.
         Spec.it s "ChooseEntryOption records and replays a Natural" $ do
-          let options = [EntryOption.MkEntryOption {EntryOption.power = 3, EntryOption.toughness = 3, EntryOption.keywords = Set.empty}]
+          let options = [EntryOption.MkEntryOption {EntryOption.power = 3, EntryOption.toughness = 3, EntryOption.keywords = Set.empty, EntryOption.subtypes = Set.empty}]
               p = Prompt.ChooseEntryOption decider S.alice oid options
           Spec.assertEqWith s "round trip" (Replay.decode p (Replay.encode p 1)) (Just (1 :: Natural.Natural))
         -- CR 702.136a: riot's "may", answered as a permanent enters. Its payload

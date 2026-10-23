@@ -7,8 +7,8 @@
 -- Pawl.CombatSpec's Exert group proves that carrier) -- plus
 -- the one place all are subtracted (Pawl.Engine.Engine.untapAll); CR 602.1 /
 -- 605.1a read as
--- Pawl.Types.Filter's HasNonManaActivatedAbility atom off
--- Pawl.Engine.Filter.View's `nonManaActivatedAbility` field; and CR 702.77b's
+-- Pawl.Types.Filter's HasActivatedAbility atom off
+-- Pawl.Engine.Filter.View's `activatedAbilityKinds` field; and CR 702.77b's
 -- claim that a reinforce ability "continues to exist while the object is on the
 -- battlefield and in all other zones".
 --

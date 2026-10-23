@@ -1,0 +1,35 @@
+{
+  "description": "CR 609.7b Kjeldoran Royal Guard takes only the unblocked creature's damage",
+  "note": "Bob attacks with Grizzly Bears and a trampling Ebony Rhino; alice chumps the Rhino with Llanowar Elves and taps the Guard. The unblocked Bears' 2 lands on the Guard; the blocked Rhino's 3 trampling over reaches alice.",
+  "board": {
+    "seats": [
+      {
+        "name": "alice",
+        "battlefield": [
+          { "card": "Kjeldoran Royal Guard", "label": "guard", "ready": true },
+          { "card": "Llanowar Elves", "label": "elves", "ready": true }
+        ],
+        "library": [{ "card": "Island" }]
+      },
+      {
+        "name": "bob",
+        "battlefield": [
+          { "card": "Grizzly Bears", "label": "bears", "ready": true },
+          { "card": "Ebony Rhino", "label": "rhino", "ready": true }
+        ],
+        "library": [{ "card": "Island" }]
+      }
+    ],
+    "active": "bob",
+    "step": "DeclareAttackers"
+  },
+  "timeline": [
+    { "turn": 1, "step": "DeclareAttackers", "player": "bob", "do": { "Attack": ["$bears", "$rhino"] } },
+    { "turn": 1, "step": "DeclareBlockers", "player": "alice", "do": { "Block": { "$elves": ["$rhino"] } } },
+    { "turn": 1, "step": "DeclareBlockers", "player": "alice", "do": { "Activate": { "object": "$guard", "ability": 0, "mana": [null] } } },
+    { "turn": 1, "step": "DeclareBlockers", "player": "alice", "do": "Pass" },
+    { "turn": 1, "step": "CombatDamage", "player": "bob", "source": "$rhino", "do": { "AssignDamage": { "$elves": 1, "$alice": 3 } } },
+    { "turn": 1, "step": "EndOfCombat", "player": "bob", "check": { "Life": { "player": "alice", "life": 17 } } },
+    { "turn": 1, "step": "EndOfCombat", "player": "bob", "check": { "Damage": { "object": "$guard", "damage": 2 } } }
+  ]
+}

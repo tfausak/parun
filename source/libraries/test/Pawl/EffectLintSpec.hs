@@ -359,7 +359,7 @@ ownQuantities effect = case effect of
   Effect.PreventNextDamage (PreventNextDamage.MkPreventNextDamage duration _ _ _ _ _ quantity _) -> quantity : durationQuantities duration
   Effect.PreventAllDamage (PreventAllDamage.MkPreventAllDamage duration _ _ _ _ _ _ _ _) -> durationQuantities duration
   Effect.PreventNextDamageInstance (PreventNextDamageInstance.MkPreventNextDamageInstance duration _ _ _) -> durationQuantities duration
-  Effect.RedirectDamage (RedirectDamage.MkRedirectDamage duration _ amount _ _ _ _ _) -> Maybe.maybeToList amount <> durationQuantities duration
+  Effect.RedirectDamage (RedirectDamage.MkRedirectDamage duration _ amount _ _ _ _ _ _ _) -> Maybe.maybeToList amount <> durationQuantities duration
   Effect.TurnFaceDown (TurnFaceDown.MkTurnFaceDown _ listed) ->
     fmap (\(Power.MkPower quantity) -> quantity) (Maybe.maybeToList (FaceDownCharacteristics.power listed))
       <> fmap (\(Toughness.MkToughness quantity) -> quantity) (Maybe.maybeToList (FaceDownCharacteristics.toughness listed))
@@ -1045,7 +1045,7 @@ shieldNamingNothingOffends effect = case effect of
       DamageDirection.DealtTo -> Maybe.isNothing whatRecipient && Maybe.isNothing whoRecipient && Maybe.isNothing chosenSource
   -- CR 614.9's redirection covers a side the same two ways -- Carom names it,
   -- Harm's Way describes it -- and one saying neither installs nothing.
-  Effect.RedirectDamage (RedirectDamage.MkRedirectDamage _ _ _ from whatRecipient whoRecipient _ _) ->
+  Effect.RedirectDamage (RedirectDamage.MkRedirectDamage _ _ _ from whatRecipient whoRecipient _ _ _ _) ->
     Maybe.isNothing from && Maybe.isNothing whatRecipient && Maybe.isNothing whoRecipient
   -- CR 615.8's shield can never offend, and that is the type's doing rather than
   -- this lint's: its ref and its chosen source are both required fields, so
@@ -1535,7 +1535,7 @@ effectObjectRefs effect =
         Effect.PreventNextDamage (PreventNextDamage.MkPreventNextDamage _ _ ref _ _ _ _ _) -> read_ (Maybe.maybeToList ref)
         Effect.PreventAllDamage (PreventAllDamage.MkPreventAllDamage _ _ ref _ _ _ _ _ _) -> read_ (Maybe.maybeToList ref)
         Effect.PreventNextDamageInstance (PreventNextDamageInstance.MkPreventNextDamageInstance _ ref _ _) -> read_ [ref]
-        Effect.RedirectDamage (RedirectDamage.MkRedirectDamage _ _ _ srcRef _ _ destRef _) -> read_ (Maybe.maybeToList srcRef <> [destRef])
+        Effect.RedirectDamage (RedirectDamage.MkRedirectDamage _ _ _ srcRef _ _ destRef _ _ _) -> read_ (Maybe.maybeToList srcRef <> [destRef])
         -- A READ and not an ask: CR 708.2's turning-over takes no choice of its own, and
         -- this arm never reaches the Game monad, so a ChosenPermanents ref written
         -- here would name nothing. inertChoosers is what says so at load time.
