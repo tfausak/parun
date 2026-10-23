@@ -1,0 +1,145 @@
+{
+  "faces": [
+    {
+      "manaCost": [
+        {
+          "type": "Variable"
+        },
+        {
+          "type": "OfType",
+          "value": {
+            "type": "Colored",
+            "value": {
+              "type": "Blue"
+            }
+          }
+        }
+      ],
+      "name": "Power Sink",
+      "oracleText": "Counter target spell unless its controller pays {X}. If that player doesn't, they tap all lands with mana abilities they control and lose all unspent mana.",
+      "spell": {
+        "modes": [
+          {
+            "clauses": [
+              {
+                "effects": [
+                  {
+                    "type": "Counter",
+                    "value": {
+                      "ref": {
+                        "type": "InSlot",
+                        "value": "spell"
+                      }
+                    }
+                  }
+                ],
+                "payGate": {
+                  "branch": {
+                    "type": "IfNotPaid"
+                  },
+                  "cost": {
+                    "mana": [
+                      {
+                        "type": "Variable"
+                      }
+                    ]
+                  },
+                  "payer": {
+                    "type": "ControllerOfBound",
+                    "value": "spell"
+                  }
+                }
+              },
+              {
+                "effects": [
+                  {
+                    "type": "ForEach",
+                    "value": {
+                      "body": [
+                        {
+                          "type": "Tap",
+                          "value": {
+                            "type": "EachMatching",
+                            "value": {
+                              "type": "And",
+                              "value": [
+                                {
+                                  "type": "HasCardType",
+                                  "value": {
+                                    "type": "Land"
+                                  }
+                                },
+                                {
+                                  "type": "HasActivatedAbility",
+                                  "value": {
+                                    "type": "ManaAbility"
+                                  }
+                                },
+                                {
+                                  "type": "ControlledByBound",
+                                  "value": "player"
+                                }
+                              ]
+                            }
+                          }
+                        },
+                        {
+                          "type": "MoveMana",
+                          "value": {
+                            "from": {
+                              "type": "InSlot",
+                              "value": "player"
+                            }
+                          }
+                        }
+                      ],
+                      "ref": {
+                        "type": "Players",
+                        "value": {
+                          "type": "ControllerOfBound",
+                          "value": "spell"
+                        }
+                      },
+                      "slot": "player"
+                    }
+                  }
+                ],
+                "payGate": {
+                  "branch": {
+                    "type": "IfNotPaid"
+                  },
+                  "cost": {
+                    "mana": [
+                      {
+                        "type": "Variable"
+                      }
+                    ]
+                  },
+                  "offeredAt": 0,
+                  "payer": {
+                    "type": "ControllerOfBound",
+                    "value": "spell"
+                  }
+                }
+              }
+            ],
+            "targetSlots": {
+              "spell": {
+                "pool": {
+                  "type": "Spells"
+                }
+              }
+            }
+          }
+        ]
+      },
+      "typeLine": {
+        "types": [
+          {
+            "type": "Instant"
+          }
+        ]
+      }
+    }
+  ]
+}

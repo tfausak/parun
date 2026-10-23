@@ -39,7 +39,10 @@
                       "type": "Members"
                     },
                     "filter": {
-                      "type": "HasNonManaActivatedAbility"
+                      "type": "HasActivatedAbility",
+                      "value": {
+                        "type": "NonManaAbility"
+                      }
                     },
                     "scope": {
                       "type": "InZone",

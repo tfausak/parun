@@ -20,7 +20,7 @@
 -- \* the Mountain is CR 305.6's intrinsic ability, printed on no card, so an
 --   implementation reading only Face.activatedAbilities rejects every real deck;
 -- \* Birds of Paradise's only activated ability is a MANA ability, so an
---   implementation reading Filter.HasNonManaActivatedAbility instead rejects
+--   implementation reading the NonManaAbility kind instead rejects
 --   alice's deck too -- which is rule 605.1a's exclusion, and Zirda does not
 --   write it;
 -- \* the Lightning Bolt is not a permanent card, so an implementation dropping

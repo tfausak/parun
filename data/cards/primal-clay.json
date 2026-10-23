@@ -1,0 +1,79 @@
+{
+  "faces": [
+    {
+      "manaCost": [
+        {
+          "type": "Generic",
+          "value": 4
+        }
+      ],
+      "name": "Primal Clay",
+      "oracleText": "As this creature enters, it becomes your choice of a 3/3 artifact creature, a 2/2 artifact creature with flying, or a 1/6 Wall artifact creature with defender in addition to its other types. (A creature with defender can't attack.)",
+      "power": {
+        "type": "Star"
+      },
+      "replacementEffects": [
+        {
+          "effect": {
+            "type": "EntryR",
+            "value": {
+              "matching": {
+                "type": "IsSource"
+              },
+              "rewrite": {
+                "type": "ChoiceOf",
+                "value": [
+                  {
+                    "power": 3,
+                    "toughness": 3
+                  },
+                  {
+                    "keywords": [
+                      {
+                        "type": "Flying"
+                      }
+                    ],
+                    "power": 2,
+                    "toughness": 2
+                  },
+                  {
+                    "keywords": [
+                      {
+                        "type": "Defender"
+                      }
+                    ],
+                    "power": 1,
+                    "subtypes": [
+                      {
+                        "type": "Wall"
+                      }
+                    ],
+                    "toughness": 6
+                  }
+                ]
+              }
+            }
+          }
+        }
+      ],
+      "toughness": {
+        "type": "Star"
+      },
+      "typeLine": {
+        "subtypes": [
+          {
+            "type": "Shapeshifter"
+          }
+        ],
+        "types": [
+          {
+            "type": "Artifact"
+          },
+          {
+            "type": "Creature"
+          }
+        ]
+      }
+    }
+  ]
+}

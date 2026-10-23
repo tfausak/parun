@@ -7,6 +7,7 @@ import qualified Data.Set as Set
 import qualified Data.Text as Text
 import qualified Pawl.Engine.Filter as Filter
 import qualified Pawl.Spec as Spec
+import qualified Pawl.Types.AbilityKind as AbilityKind
 import qualified Pawl.Types.BoundMeasure as BoundMeasure
 import qualified Pawl.Types.CardName as CardName
 import qualified Pawl.Types.CardType as CardType
@@ -139,8 +140,7 @@ blackCreature =
       Filter.manaSpentAmount = 0,
       -- CR 602.1 / 605.1a: a vanilla creature as far as this axis goes, so the
       -- atom's own cases below say which view they want rather than inheriting it.
-      Filter.nonManaActivatedAbility = False,
-      Filter.hasActivatedAbility = False,
+      Filter.activatedAbilityKinds = Set.empty,
       Filter.grantsStationToughness = False
     }
 
@@ -221,8 +221,7 @@ devoidBigCreature =
       Filter.prototyped = False,
       Filter.manaSpentTagColors = Map.empty,
       Filter.manaSpentAmount = 0,
-      Filter.nonManaActivatedAbility = False,
-      Filter.hasActivatedAbility = False,
+      Filter.activatedAbilityKinds = Set.empty,
       Filter.grantsStationToughness = False
     }
 
@@ -2396,31 +2395,27 @@ spec s = Spec.describe s "Pawl.Engine.Filter" $ do
   -- ability is a mana ability is decided there, not here, so these cases are the
   -- atom's plumbing; Pawl.UntapRestrictionSpec is where the classification itself
   -- is proved against two real lands.
-  Spec.describe s "HasNonManaActivatedAbility" $ do
-    Spec.it s "matches a permanent whose view records one" $ do
-      Spec.assertBool s (Filter.matches self (blackCreature {Filter.nonManaActivatedAbility = True}) Filter.Type.HasNonManaActivatedAbility) "has one"
-
-    Spec.it s "does not match one whose view records none" $ do
-      Spec.assertBool s (not (Filter.matches self blackCreature Filter.Type.HasNonManaActivatedAbility)) "vanilla"
-
-    -- CR 109.1: a player is not an object and has no abilities.
-    Spec.it s "a player candidate is vacuously false" $ do
-      Spec.assertBool s (not (Filter.matches self aPlayer Filter.Type.HasNonManaActivatedAbility)) "player"
-
-  -- CR 602.1 without rule 605.1a's exclusion, the atom beside it. The pair of
-  -- views below is what keeps the two apart: a candidate whose ONLY activated
-  -- ability is a mana ability -- Birds of Paradise, and the reason Zirda, the
-  -- Dawnwaker's condition needs this atom -- records the second field and not the
-  -- first.
+  --
+  -- Nothing is CR 602.1 without rule 605.1a's classification. A candidate whose
+  -- ONLY activated ability is a mana ability -- Birds of Paradise, and the reason
+  -- Zirda, the Dawnwaker's condition asks Nothing -- matches Nothing and
+  -- ManaAbility and not NonManaAbility.
   Spec.describe s "HasActivatedAbility" $ do
+    let has kinds = blackCreature {Filter.activatedAbilityKinds = Set.fromList kinds}
+        asks view kind = Filter.matches self view (Filter.Type.HasActivatedAbility kind)
+    Spec.it s "matches a permanent whose view records a non-mana ability" $ do
+      Spec.assertBool s (asks (has [AbilityKind.NonManaAbility]) (Just AbilityKind.NonManaAbility)) "has one"
+      Spec.assertBool s (not (asks (has [AbilityKind.NonManaAbility]) (Just AbilityKind.ManaAbility))) "and no mana ability"
+
     Spec.it s "matches a permanent whose only activated ability is a mana ability" $ do
-      let birds = blackCreature {Filter.hasActivatedAbility = True}
-      Spec.assertBool s (Filter.matches self birds Filter.Type.HasActivatedAbility) "has one"
-      Spec.assertBool s (not (Filter.matches self birds Filter.Type.HasNonManaActivatedAbility)) "and rule 605.1a excludes it from the atom beside this one"
+      let birds = has [AbilityKind.ManaAbility]
+      Spec.assertBool s (asks birds Nothing) "has one"
+      Spec.assertBool s (asks birds (Just AbilityKind.ManaAbility)) "and it is a mana ability"
+      Spec.assertBool s (not (asks birds (Just AbilityKind.NonManaAbility))) "and rule 605.1a excludes it from NonManaAbility"
 
     Spec.it s "does not match one whose view records none" $ do
-      Spec.assertBool s (not (Filter.matches self blackCreature Filter.Type.HasActivatedAbility)) "vanilla"
+      Spec.assertBool s (not (any (asks blackCreature) [Nothing, Just AbilityKind.ManaAbility, Just AbilityKind.NonManaAbility])) "vanilla"
 
     -- CR 109.1: a player is not an object and has no abilities.
     Spec.it s "a player candidate is vacuously false" $ do
-      Spec.assertBool s (not (Filter.matches self aPlayer Filter.Type.HasActivatedAbility)) "player"
+      Spec.assertBool s (not (any (asks aPlayer) [Nothing, Just AbilityKind.ManaAbility, Just AbilityKind.NonManaAbility])) "player"
