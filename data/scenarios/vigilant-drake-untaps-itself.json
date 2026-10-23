@@ -1,0 +1,10 @@
+{
+  "description": "CR 602.2 whole card: Vigilant Drake pays {2}{U} to untap itself",
+  "note": "The tapped Drake untaps.",
+  "board": {"active": "alice", "step": "PrecombatMain", "seats": [{"name": "alice", "manaPool": "UUU", "battlefield": [{"card": "Vigilant Drake", "label": "drake", "tapped": true}], "library": [{"card": "Island"}, {"card": "Island"}, {"card": "Island"}]}, {"name": "bob", "library": [{"card": "Island"}, {"card": "Island"}, {"card": "Island"}]}]},
+  "timeline": [
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": {"Activate": {"object": "$drake"}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass"},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "check": {"Tapped": {"object": "$drake", "tapped": false}}}
+  ]
+}

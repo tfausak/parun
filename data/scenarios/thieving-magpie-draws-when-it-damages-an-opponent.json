@@ -1,0 +1,10 @@
+{
+  "description": "CR 510.3a / 603.2 whole card: whenever Thieving Magpie deals damage to an opponent, its controller draws a card",
+  "note": "The unblocked Magpie deals bob 1 and alice draws the Hill Giant on top of her library.",
+  "board": {"active": "alice", "step": "BeginningOfCombat", "seats": [{"name": "alice", "battlefield": [{"card": "Thieving Magpie", "label": "magpie", "ready": true}], "library": [{"card": "Hill Giant"}, {"card": "Island"}, {"card": "Island"}]}, {"name": "bob", "library": [{"card": "Island"}, {"card": "Island"}, {"card": "Island"}]}]},
+  "timeline": [
+    {"turn": 1, "step": "DeclareAttackers", "player": "alice", "do": {"Attack": ["$magpie"]}},
+    {"turn": 1, "step": "EndOfCombat", "player": "alice", "check": {"Life": {"player": "bob", "life": 19}}},
+    {"turn": 1, "step": "EndOfCombat", "player": "alice", "check": {"Count": {"player": "alice", "zone": "Hand", "card": "Hill Giant", "count": 1}}}
+  ]
+}

@@ -1,0 +1,12 @@
+{
+  "description": "CR 701.8a whole card: Northern Paladin pays {W}{W} and taps to destroy target black permanent",
+  "note": "Bob's Crusade is refused as a target; his black Pestilence is destroyed.",
+  "board": {"active": "alice", "step": "PrecombatMain", "seats": [{"name": "alice", "manaPool": "WW", "battlefield": [{"card": "Northern Paladin", "label": "paladin", "ready": true}], "library": [{"card": "Island"}, {"card": "Island"}, {"card": "Island"}]}, {"name": "bob", "battlefield": [{"card": "Pestilence", "label": "pestilence"}, {"card": "Crusade", "label": "crusade"}], "library": [{"card": "Island"}, {"card": "Island"}, {"card": "Island"}]}]},
+  "timeline": [
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "refuse": {"Activate": {"object": "$paladin", "targets": ["$crusade"]}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": {"Activate": {"object": "$paladin", "targets": ["$pestilence"]}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass"},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "check": {"Count": {"player": "bob", "zone": "Graveyard", "card": "Pestilence", "count": 1}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "check": {"Count": {"player": "bob", "zone": "Battlefield", "card": "Crusade", "count": 1}}}
+  ]
+}

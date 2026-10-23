@@ -1,0 +1,14 @@
+{
+  "description": "CR 602.2 / 701.8a / 701.19c whole card: Pit Trap pays {2}, taps and sacrifices itself to destroy target attacking creature without flying",
+  "note": "Bob attacks with his bears and a Mesa Falcon: the flier is refused as a target, and the bears are destroyed.",
+  "board": {"active": "bob", "step": "BeginningOfCombat", "seats": [{"name": "alice", "battlefield": [{"card": "Pit Trap", "label": "trap"}, {"card": "Plains", "label": "p1"}, {"card": "Plains", "label": "p2"}], "library": [{"card": "Island"}, {"card": "Island"}, {"card": "Island"}]}, {"name": "bob", "battlefield": [{"card": "Grizzly Bears", "label": "bears", "ready": true}, {"card": "Mesa Falcon", "label": "falcon", "ready": true}], "library": [{"card": "Island"}, {"card": "Island"}, {"card": "Island"}]}]},
+  "timeline": [
+    {"turn": 1, "step": "DeclareAttackers", "player": "bob", "do": {"Attack": ["$bears", "$falcon"]}},
+    {"turn": 1, "step": "DeclareAttackers", "player": "alice", "refuse": {"Activate": {"object": "$trap", "targets": ["$falcon"], "mana": ["$p1", "$p2"], "costOrder": [0, 1]}}},
+    {"turn": 1, "step": "DeclareAttackers", "player": "alice", "do": {"Activate": {"object": "$trap", "targets": ["$bears"], "mana": ["$p1", "$p2"], "costOrder": [0, 1]}}},
+    {"turn": 1, "step": "DeclareAttackers", "player": "alice", "do": "Pass"},
+    {"turn": 1, "step": "DeclareAttackers", "player": "alice", "check": {"Count": {"player": "bob", "zone": "Graveyard", "card": "Grizzly Bears", "count": 1}}},
+    {"turn": 1, "step": "DeclareAttackers", "player": "alice", "check": {"Count": {"player": "alice", "zone": "Graveyard", "card": "Pit Trap", "count": 1}}},
+    {"turn": 1, "step": "EndOfCombat", "player": "alice", "check": {"Life": {"player": "alice", "life": 19}}}
+  ]
+}

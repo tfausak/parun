@@ -1,0 +1,12 @@
+{
+  "description": "CR 602.2 whole card: Jandor's Saddlebags pay {3} and tap to untap target creature",
+  "note": "Alice's tapped bears untap; her tapped Hill Giant stays tapped.",
+  "board": {"active": "alice", "step": "PrecombatMain", "seats": [{"name": "alice", "manaPool": "CCC", "battlefield": [{"card": "Jandor's Saddlebags", "label": "bags"}, {"card": "Grizzly Bears", "label": "bears", "tapped": true}, {"card": "Hill Giant", "label": "giant", "tapped": true}], "library": [{"card": "Island"}, {"card": "Island"}, {"card": "Island"}]}, {"name": "bob", "library": [{"card": "Island"}, {"card": "Island"}, {"card": "Island"}]}]},
+  "timeline": [
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": {"Activate": {"object": "$bags", "targets": ["$bears"]}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass"},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "check": {"Tapped": {"object": "$bears", "tapped": false}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "check": {"Tapped": {"object": "$giant", "tapped": true}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "check": {"Tapped": {"object": "$bags", "tapped": true}}}
+  ]
+}

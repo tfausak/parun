@@ -1,0 +1,17 @@
+{
+  "description": "CR 601.2f whole card: creature spells cost {2} more to cast",
+  "note": "Three Forests do not pay for bob's bears, so that cast is reversed, each of its three mana abilities with it; four do. His Giant Growth, not a creature spell, costs one Forest.",
+  "board": {"active": "bob", "step": "PrecombatMain", "seats": [{"name": "alice", "battlefield": [{"card": "Feroz's Ban"}], "library": [{"card": "Island"}, {"card": "Island"}, {"card": "Island"}]}, {"name": "bob", "battlefield": [{"card": "Forest", "label": "f1"}, {"card": "Forest", "label": "f2"}, {"card": "Forest", "label": "f3"}, {"card": "Forest", "label": "f4"}, {"card": "Forest", "label": "f5"}], "hand": [{"card": "Grizzly Bears", "label": "bears"}, {"card": "Giant Growth", "label": "growth"}], "library": [{"card": "Island"}, {"card": "Island"}, {"card": "Island"}]}]},
+  "timeline": [
+    {"turn": 1, "step": "PrecombatMain", "player": "bob", "refuse": {"Cast": {"object": "$bears", "mana": ["$f1", "$f2", "$f3", null]}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "bob", "do": {"ChooseOptional": {"type": "Exercises"}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "bob", "do": {"ChooseOptional": {"type": "Exercises"}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "bob", "do": {"ChooseOptional": {"type": "Exercises"}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "bob", "do": {"Cast": {"object": "$bears", "mana": ["$f1", "$f2", "$f3", "$f4", null]}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "bob", "do": "Pass"},
+    {"turn": 1, "step": "PrecombatMain", "player": "bob", "check": {"Count": {"player": "bob", "zone": "Battlefield", "card": "Grizzly Bears", "count": 1}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "bob", "do": {"Cast": {"object": "$growth", "targets": ["Grizzly Bears"], "mana": ["$f5"]}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "bob", "do": "Pass"},
+    {"turn": 1, "step": "PrecombatMain", "player": "bob", "check": {"PowerToughness": {"object": "Grizzly Bears", "power": 5, "toughness": 5}}}
+  ]
+}

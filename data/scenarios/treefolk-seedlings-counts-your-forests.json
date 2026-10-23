@@ -1,0 +1,8 @@
+{
+  "description": "CR 604.3 / 208.2a whole card: Treefolk Seedlings' toughness is the number of Forests its controller controls",
+  "note": "Alice's three Forests make it 2/3; bob's Forest and alice's Plains are not counted.",
+  "board": {"active": "alice", "step": "PrecombatMain", "seats": [{"name": "alice", "battlefield": [{"card": "Treefolk Seedlings", "label": "seedlings"}, {"card": "Forest"}, {"card": "Forest"}, {"card": "Forest"}, {"card": "Plains"}], "library": [{"card": "Island"}, {"card": "Island"}, {"card": "Island"}]}, {"name": "bob", "battlefield": [{"card": "Forest"}], "library": [{"card": "Island"}, {"card": "Island"}, {"card": "Island"}]}]},
+  "timeline": [
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "check": {"PowerToughness": {"object": "$seedlings", "power": 2, "toughness": 3}}}
+  ]
+}

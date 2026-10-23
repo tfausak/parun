@@ -1,0 +1,12 @@
+{
+  "description": "CR 602.2 / 701.8a whole card: Scavenger Folk pays {G}, taps and sacrifices itself to destroy target artifact",
+  "note": "Bob's Ornithopter goes; his Crusade is refused as a target, and the Folk is in alice's graveyard.",
+  "board": {"active": "alice", "step": "PrecombatMain", "seats": [{"name": "alice", "manaPool": "G", "battlefield": [{"card": "Scavenger Folk", "label": "folk", "ready": true}], "library": [{"card": "Island"}, {"card": "Island"}, {"card": "Island"}]}, {"name": "bob", "battlefield": [{"card": "Ornithopter", "label": "thopter"}, {"card": "Crusade", "label": "crusade"}], "library": [{"card": "Island"}, {"card": "Island"}, {"card": "Island"}]}]},
+  "timeline": [
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "refuse": {"Activate": {"object": "$folk", "targets": ["$crusade"], "costOrder": [0, 1]}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": {"Activate": {"object": "$folk", "targets": ["$thopter"], "costOrder": [0, 1]}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass"},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "check": {"Count": {"player": "bob", "zone": "Graveyard", "card": "Ornithopter", "count": 1}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "check": {"Count": {"player": "alice", "zone": "Graveyard", "card": "Scavenger Folk", "count": 1}}}
+  ]
+}

@@ -1,0 +1,12 @@
+{
+  "description": "CR 509.2a / 603.2 whole card: whenever Sustainer of the Realm blocks, it gets +0/+2 until end of turn",
+  "note": "The 2/3 Sustainer blocks bob's Hill Giant, becomes 2/5 and survives its 3 damage.",
+  "board": {"active": "bob", "step": "BeginningOfCombat", "seats": [{"name": "alice", "battlefield": [{"card": "Sustainer of the Realm", "label": "sustainer"}], "library": [{"card": "Island"}, {"card": "Island"}, {"card": "Island"}]}, {"name": "bob", "battlefield": [{"card": "Hill Giant", "label": "giant", "ready": true}], "library": [{"card": "Island"}, {"card": "Island"}, {"card": "Island"}]}]},
+  "timeline": [
+    {"turn": 1, "step": "DeclareAttackers", "player": "bob", "do": {"Attack": ["$giant"]}},
+    {"turn": 1, "step": "DeclareBlockers", "player": "alice", "do": {"Block": {"$sustainer": ["$giant"]}}},
+    {"turn": 1, "step": "CombatDamage", "player": "bob", "check": {"PowerToughness": {"object": "$sustainer", "power": 2, "toughness": 5}}},
+    {"turn": 1, "step": "EndOfCombat", "player": "bob", "check": {"Count": {"player": "alice", "zone": "Battlefield", "card": "Sustainer of the Realm", "count": 1}}},
+    {"turn": 1, "step": "EndOfCombat", "player": "bob", "check": {"Life": {"player": "alice", "life": 20}}}
+  ]
+}

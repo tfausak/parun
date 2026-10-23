@@ -1,0 +1,12 @@
+{
+  "description": "CR 611.2c whole card: black creatures get +2/+0 until end of turn",
+  "note": "Alice's Drudge Skeletons and bob's Bog Imp are black and become 3/1; alice's Grizzly Bears stays 2/2.",
+  "board": {"active": "alice", "step": "PrecombatMain", "seats": [{"name": "alice", "manaPool": "BBBB", "battlefield": [{"card": "Drudge Skeletons", "label": "skeletons"}, {"card": "Grizzly Bears", "label": "bears"}], "hand": [{"card": "Nocturnal Raid", "label": "raid"}], "library": [{"card": "Island"}, {"card": "Island"}, {"card": "Island"}]}, {"name": "bob", "battlefield": [{"card": "Bog Imp", "label": "imp"}], "library": [{"card": "Island"}, {"card": "Island"}, {"card": "Island"}]}]},
+  "timeline": [
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": {"Cast": {"object": "$raid"}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass"},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "check": {"PowerToughness": {"object": "$skeletons", "power": 3, "toughness": 1}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "check": {"PowerToughness": {"object": "$imp", "power": 3, "toughness": 1}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "check": {"PowerToughness": {"object": "$bears", "power": 2, "toughness": 2}}}
+  ]
+}
