@@ -38,7 +38,7 @@ data Move
     OrderTimestamps (Seq.Seq Reference.Reference)
   | -- | CR 603.5 / 608.2d: whether the deciding player takes a printed "may".
     ChooseOptional OptionalDecision.OptionalDecision
-  | -- | CR 118.12a: whether the deciding player pays a cost a resolving object offers.
+  | -- | CR 118.12a / 614.6: whether the deciding player pays an offered cost.
     ChooseToPay Paying.Paying
   | -- | CR 612.1: the word a text-changing effect swaps, and its replacement.
     ChooseWordSwap ChangeWord.ChangeWord

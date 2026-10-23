@@ -60,7 +60,8 @@ subdirectory named for that spec; `docs/scenario-burndown.md` lists the ones sti
   whose replacement it is, and CR
   733.1's question whether a reversed action's mana abilities are reversed
   too, with no `source`: `Exercises` reverses them. `ChooseToPay`
-  answers a cost a resolving object offers (CR 118.12a), keyed the same way:
+  answers a cost a resolving object offers (CR 118.12a), or a draw
+  replacement (Zur's Weirding), keyed the same way:
   its `decision` is `Pays` or `Declines`, and paying takes a cast's choices,
   such as `mana`. `ChooseWordSwap` answers a text change's swap (CR 612.1),
   `{ "from": { "type": "Island" }, "to": { "type": "Swamp" } }`, a colour

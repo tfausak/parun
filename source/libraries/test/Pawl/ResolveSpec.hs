@@ -2768,6 +2768,7 @@ cleansingSpec s registry =
           let land = case offer of
                 PayOffer.ForMember member -> Recipient.objectOf member
                 PayOffer.AtClause {} -> Nothing
+                PayOffer.InsteadOfDraw -> Nothing
           State.modify' (<> [(player, land, Foldable.toList earlier)])
           pure (policy player land earlier)
         _ -> pure (S.identityAnswer p)

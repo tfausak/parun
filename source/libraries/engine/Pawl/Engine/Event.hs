@@ -108,6 +108,8 @@ import qualified Pawl.Types.CopyCoverage as CopyCoverage
 import qualified Pawl.Types.CopyDomain as CopyDomain
 import qualified Pawl.Types.CopyRecipient as CopyRecipient
 import qualified Pawl.Types.Cost as Cost
+import qualified Pawl.Types.CostAmount as CostAmount
+import qualified Pawl.Types.CostComponent as CostComponent
 import qualified Pawl.Types.CounterCause as CounterCause
 import qualified Pawl.Types.CounterChange as CounterChange
 import qualified Pawl.Types.CounterKind as CounterKind
@@ -201,6 +203,8 @@ import qualified Pawl.Types.OptionalDecision as OptionalDecision
 import qualified Pawl.Types.OutsideCard as OutsideCard
 import qualified Pawl.Types.OutsideDestination as OutsideDestination
 import qualified Pawl.Types.OutsideObject as OutsideObject
+import qualified Pawl.Types.PayOffer as PayOffer
+import qualified Pawl.Types.PaymentDecision as PaymentDecision
 import qualified Pawl.Types.PendingEntryEffect as PendingEntryEffect
 import qualified Pawl.Types.PendingReplacementEffect as PendingReplacementEffect
 import Pawl.Types.PendingTrigger (PendingTrigger)
@@ -4235,6 +4239,47 @@ apply batch candidate event =
       DrawRewrite.YouDraw -> do
         Replacement.consume (ReplacementCandidate.identity candidate)
         pure (ProposedEvent.WouldDraw <$> ReplacementCandidate.controller candidate)
+      -- CR 614.6: Zur's Weirding's "they reveal it instead. Then any other
+      -- player may pay 2 life. If a player does, put that card into its owner's
+      -- graveyard. Otherwise, that player draws a card."
+      --
+      -- The top card is revealed (CR 701.20a), then every player but the drawer
+      -- is asked in APNAP order, each told the answers before theirs (CR 101.4,
+      -- 101.4b), and every player who agreed pays (Dash Hopes' ruling: the
+      -- remaining players still get the option). A player who cannot pay is not
+      -- asked (CR 118.3). An empty library reveals nothing and still asks (CR
+      -- 614.11).
+      --
+      -- Paid, the card goes from the library to the graveyard: not drawn, and not
+      -- milled (CR 701.17a's instruction is not printed). Unpaid, the event is
+      -- left STANDING, Dredge's declining arm: CR 614.5 keeps this row off it, so
+      -- a dredger may still replace the draw (the card's own ruling).
+      DrawRewrite.OthersMayPayLife n -> do
+        Replacement.consume (ReplacementCandidate.identity candidate)
+        gs <- State.get
+        let source = ReplacementCandidate.source candidate
+            revealed = Maybe.listToMaybe (Game.zoneMembers Zone.Library pid gs)
+            cost = Cost.MkCost Nothing [CostComponent.PayLife (CostAmount.Fixed n)]
+            ask earlier payer = do
+              now <- State.get
+              decision <-
+                if canPayLife payer n now
+                  then Game.choose (Prompt.ChooseToPay (Decide.deciderFor payer now) payer source PayOffer.InsteadOfDraw cost earlier)
+                  else pure PaymentDecision.Declines
+              pure (earlier Seq.|> (payer, decision))
+        Monad.mapM_ (reveal RevealCause.Ordinary pid) revealed
+        answers <- Monad.foldM ask Seq.empty (filter (/= pid) (Game.apnapOrder gs))
+        let payers = [payer | (payer, PaymentDecision.Pays) <- Foldable.toList answers]
+        Monad.mapM_ (`payLife` n) payers
+        if null payers
+          then pure (Just event)
+          else do
+            -- CR 400.7: "that card" is the revealed object, so a card a
+            -- replacement on the payment moved away is not chased.
+            after <- State.get
+            Monad.forM_ revealed $ \oid ->
+              Monad.when (oid `elem` Game.zoneMembers Zone.Library pid after) (changeZone oid Zone.Graveyard)
+            pure Nothing
     -- Unreachable: `applies` admits DrawR only against WouldDraw.
     (ReplacementEffect.DrawR {}, _) -> pure (Just event)
     -- CR 121.2a with CR 614.6: Alms Collector's "if an opponent would draw two or

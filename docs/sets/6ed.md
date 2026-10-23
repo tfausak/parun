@@ -200,8 +200,6 @@ rather than written by hand; no Sixth Edition card's whole text is keywords, so
 Each group is tracked by its issue; its cards are added when it lands. Hardest
 first.
 
-- #5491: Zur's Weirding. A draw replacement whose outcome the other players
-  decide by paying life.
 - #4491: Rowen. A draw-time reveal granted from the battlefield, linked to a
   trigger.
 - #5493: Forbidden Crypt. A draw replacement that returns a graveyard card, and
