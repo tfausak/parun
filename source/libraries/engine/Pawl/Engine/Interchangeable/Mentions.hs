@@ -2269,7 +2269,7 @@ costAdditionNames asking x = case x of
 
 costChangeNames :: (Monoid r) => Asking r -> CostChange.CostChange -> r
 costChangeNames asking x = case x of
-  CostChange.Increase _natural -> mempty
+  CostChange.Increase _manaCost -> mempty
   CostChange.Reduce _appliedReduction -> mempty
   CostChange.Add costAddition -> costAdditionNames asking costAddition
 

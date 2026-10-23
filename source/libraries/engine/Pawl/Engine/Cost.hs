@@ -1095,13 +1095,12 @@ spellAdjustments targets pid oid gs =
               -- 601.2f's own {0} and CR 118.7b-d's spill both stand.
               CostAdjustments.reductions adjustments
                 <> [AppliedReduction.MkAppliedReduction amount 0 False | (CostDirection.Less, amount) <- self],
-            -- Dragon's Prey's "costs {2} more": generic mana, the only kind an
-            -- increase carries (Pawl.Types.CostAdjustments.increases).
+            -- Dragon's Prey's "costs {2} more".
             CostAdjustments.increases =
               CostAdjustments.increases adjustments
-                <> [sum [n | ManaSymbol.Generic n <- ManaCost.unwrap amount] | (CostDirection.More, amount) <- self]
+                <> [amount | (CostDirection.More, amount) <- self]
           }
-      owed = filter (/= 0) [Commander.tax pid oid gs, permissionIncrease pid oid gs]
+      owed = [ManaCost.MkManaCost [ManaSymbol.Generic n] | n <- [Commander.tax pid oid gs, permissionIncrease pid oid gs], n /= 0]
    in withSelf {CostAdjustments.increases = owed <> CostAdjustments.increases withSelf}
 
 -- CR 601.2f: the increase the CR 601.3 permission an exiled `oid` carries puts on
@@ -1953,8 +1952,8 @@ announce subject spending pid oid total_ printed = do
 -- to the choice, so a player may take the half that reduces nothing and strand a
 -- payment the gate allowed on the strength of the other; CR 601.2h reverses it.
 --
--- The INCREASES and the FLOOR ride through untouched: an increase is generic
--- mana with no halves, and a floor is a limit rather than an amount of mana.
+-- The INCREASES and the FLOOR ride through untouched: CR 118.7e's halves are a
+-- reduction's, and a floor is a limit rather than an amount of mana.
 --
 -- CR 601.2f's OTHER choice rides here too, after the halves and for the same
 -- reason -- "if multiple cost reductions apply, the player may apply them in any
@@ -7150,8 +7149,9 @@ counterCause moment pid = case moment of
 
 -- The arithmetic half, pure and board-free.
 --
--- 1. Every INCREASE is added to the generic component (CR 601.2f's order, and
---    Thalia's own ruling: increases first, then reductions).
+-- 1. Every INCREASE is added to the cost, its generic part to the generic
+--    component and its typed symbols after the printed ones (CR 601.2f's order,
+--    and Thalia's own ruling: increases first, then reductions).
 -- 2. A REDUCTION is an amount of mana. Its GENERIC part comes off the generic
 --    component only (CR 118.7a), floored at zero; its TYPED part cancels
 --    matching typed symbols one for one (Edgewalker). CR 118.7f puts a PHYREXIAN
@@ -7305,9 +7305,12 @@ applyAdjustments adjustments cost =
       -- The canonical form point 5's header describes: the generic component as
       -- one leading symbol, then the typed symbols left.
       canonical generic typed = ManaCost.MkManaCost ((if generic == 0 then [] else [ManaSymbol.Generic generic]) <> typed)
-      -- Point 1: every increase, onto the generic component, before any reduction.
-      raise (ManaCost.MkManaCost symbols) =
-        canonical (sum (fmap costGenericOf symbols) + sum increases) (filter isTyped symbols)
+      -- Point 1: every increase, before any reduction -- Derelor's {B} as a
+      -- typed symbol beside the printed ones, Thalia's {1} onto the generic
+      -- component.
+      raise (ManaCost.MkManaCost printed) =
+        let symbols = printed <> concatMap ManaCost.unwrap increases
+         in canonical (sum (fmap costGenericOf symbols)) (filter isTyped symbols)
       -- ONE reduction, with the floor and the coloured-mana confinement its own
       -- effect states.
       reduce (ManaCost.MkManaCost symbols) reduction =

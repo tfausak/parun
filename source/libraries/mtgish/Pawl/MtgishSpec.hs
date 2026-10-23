@@ -125,7 +125,7 @@ spec s = Spec.describe s "Pawl.Mtgish" $ do
   -- CR 601.2f: "Red spells cost {2} more to cast."
   Spec.it s "reads a rule making spells cost more to cast" $ do
     Spec.assertEq s (Right ()) (accepts chill)
-    Spec.assertEq s [(PlayerScope.Related PlayerRelation.AnyPlayer, Filter.HasColor Color.Red, CostChange.Increase 2)] [(PlayerStaticAbility.scope a, CostModifier.matching m, CostModifier.change m) | a <- Face.playerAbilities (translated chill), PlayerEffect.ModifyCost m <- [PlayerStaticAbility.effect a]]
+    Spec.assertEq s [(PlayerScope.Related PlayerRelation.AnyPlayer, Filter.HasColor Color.Red, CostChange.Increase (ManaCost.MkManaCost [ManaSymbol.Generic 2]))] [(PlayerStaticAbility.scope a, CostModifier.matching m, CostModifier.change m) | a <- Face.playerAbilities (translated chill), PlayerEffect.ModifyCost m <- [PlayerStaticAbility.effect a]]
 
   -- CR 701.19a: "Regenerate this creature" is a shield on the source, for
   -- the rest of the turn and used up once.

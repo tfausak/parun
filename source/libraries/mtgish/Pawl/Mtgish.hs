@@ -449,8 +449,8 @@ permanentRule face affected n
     unless = AffectedUnless.MkAffectedUnless {AffectedUnless.affected = affected, AffectedUnless.unless = Nothing, AffectedUnless.name = Nothing}
     combat r = Right face {Face.combatRestrictions = Face.combatRestrictions face <> [r]}
 
--- | A rule players follow: spells of a description cost more generic mana
--- to cast (CR 601.2f).
+-- | A rule players follow: spells of a description cost more mana to cast
+-- (CR 601.2f).
 playerRule :: Node.Node -> Translated PlayerEffect.PlayerEffect
 playerRule n = case Node.tag n of
   "IncreaseSpellCost" -> do
@@ -458,10 +458,17 @@ playerRule n = case Node.tag n of
     f <- spells what
     c <- costOf price
     k <- case (Cost.mana c, Cost.components c) of
-      (Just (ManaCost.MkManaCost [ManaSymbol.Generic k]), []) -> Right k
+      (Just m, []) | not (null (ManaCost.unwrap m)), all plain (ManaCost.unwrap m) -> Right m
       _ -> Node.untranslated n
     Right (PlayerEffect.ModifyCost CostModifier.MkCostModifier {CostModifier.subject = CostSubject.Spells, CostModifier.matching = Maybe.fromMaybe (Filter.And []) f, CostModifier.whichTargets = Nothing, CostModifier.perTarget = Nothing, CostModifier.perEach = Nothing, CostModifier.onlyFirst = Nothing, CostModifier.change = CostChange.Increase k})
   _ -> Node.untranslated n
+  where
+    -- Generic and typed symbols: a hybrid, Phyrexian or {X} symbol in an
+    -- increase would reach CR 601.2f unannounced (CR 601.2b).
+    plain s = case s of
+      ManaSymbol.Generic _ -> True
+      ManaSymbol.OfType _ -> True
+      _ -> False
 
 -- | The objects a static ability of a permanent affects: the one it is
 -- attached to (CR 303.4m), or itself.

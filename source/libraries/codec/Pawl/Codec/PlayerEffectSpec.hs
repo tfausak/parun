@@ -24,7 +24,9 @@ import qualified Pawl.Types.Keyword as Keyword
 import qualified Pawl.Types.KeywordDesignator as KeywordDesignator
 import qualified Pawl.Types.KeywordFamily as KeywordFamily
 import qualified Pawl.Types.LandAllowance as LandAllowance
+import qualified Pawl.Types.ManaCost as ManaCost
 import qualified Pawl.Types.ManaFilter as ManaFilter
+import qualified Pawl.Types.ManaSymbol as ManaSymbol
 import qualified Pawl.Types.ManaType as ManaType
 import qualified Pawl.Types.ModifiedRoll as ModifiedRoll
 import qualified Pawl.Types.PermissionLimit as PermissionLimit
@@ -67,8 +69,8 @@ spec s = Spec.describe s "Pawl.Codec.PlayerEffect" $ do
     Common.assertCodec
       s
       PlayerEffect.codec
-      (PlayerEffect.ModifyCost (CostModifier.MkCostModifier CostSubject.Spells (Filter.Not (Filter.HasCardType CardType.Creature)) Nothing Nothing Nothing Nothing (CostChange.Increase 1)))
-      " {\"type\":\"ModifyCost\",\"value\":{\"subject\":{\"type\":\"Spells\"},\"matching\":{\"type\":\"Not\",\"value\":{\"type\":\"HasCardType\",\"value\":{\"type\":\"Creature\"}}},\"change\":{\"type\":\"Increase\",\"value\":1}}} "
+      (PlayerEffect.ModifyCost (CostModifier.MkCostModifier CostSubject.Spells (Filter.Not (Filter.HasCardType CardType.Creature)) Nothing Nothing Nothing Nothing (CostChange.Increase (ManaCost.MkManaCost [ManaSymbol.Generic 1]))))
+      " {\"type\":\"ModifyCost\",\"value\":{\"subject\":{\"type\":\"Spells\"},\"matching\":{\"type\":\"Not\",\"value\":{\"type\":\"HasCardType\",\"value\":{\"type\":\"Creature\"}}},\"change\":{\"type\":\"Increase\",\"value\":[{\"type\":\"Generic\",\"value\":1}]}}} "
   -- CR 305.2 / Exploration.
   Spec.it s "PlayAdditionalLands, Exploration's one" $
     Common.assertCodec

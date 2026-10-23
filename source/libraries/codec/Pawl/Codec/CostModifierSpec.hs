@@ -28,8 +28,8 @@ spec s = Spec.describe s "Pawl.Codec.CostModifier" $ do
     Common.assertCodec
       s
       CostModifier.codec
-      (CostModifier.Type.MkCostModifier CostSubject.Spells (Filter.Not (Filter.HasCardType CardType.Creature)) Nothing Nothing Nothing Nothing (CostChange.Increase 1))
-      " {\"subject\":{\"type\":\"Spells\"},\"matching\":{\"type\":\"Not\",\"value\":{\"type\":\"HasCardType\",\"value\":{\"type\":\"Creature\"}}},\"change\":{\"type\":\"Increase\",\"value\":1}} "
+      (CostModifier.Type.MkCostModifier CostSubject.Spells (Filter.Not (Filter.HasCardType CardType.Creature)) Nothing Nothing Nothing Nothing (CostChange.Increase (ManaCost.MkManaCost [ManaSymbol.Generic 1])))
+      " {\"subject\":{\"type\":\"Spells\"},\"matching\":{\"type\":\"Not\",\"value\":{\"type\":\"HasCardType\",\"value\":{\"type\":\"Creature\"}}},\"change\":{\"type\":\"Increase\",\"value\":[{\"type\":\"Generic\",\"value\":1}]}} "
   -- Every criterion present on the activation subject: Professor Hojo's first,
   -- Zirda's kind, Dwarven Mauler's target, Henzie's count, Heartstone's floor.
   Spec.it s "an activation reduction with every criterion" $
@@ -49,12 +49,12 @@ spec s = Spec.describe s "Pawl.Codec.CostModifier" $ do
   Spec.it s "refuses a spell's onlyFirst (#4924)" $
     Spec.assertBool
       s
-      (Either.isLeft (Codec.decode CostModifier.codec =<< Common.parse (Text.pack "{\"subject\":{\"type\":\"Spells\"},\"matching\":{\"type\":\"IsSource\"},\"onlyFirst\":{\"type\":\"ControllersTurn\"},\"change\":{\"type\":\"Increase\",\"value\":1}}")))
+      (Either.isLeft (Codec.decode CostModifier.codec =<< Common.parse (Text.pack "{\"subject\":{\"type\":\"Spells\"},\"matching\":{\"type\":\"IsSource\"},\"onlyFirst\":{\"type\":\"ControllersTurn\"},\"change\":{\"type\":\"Increase\",\"value\":[{\"type\":\"Generic\",\"value\":1}]}}")))
       "expected a decode failure"
   Spec.it s "refuses onlyFirst beside whichLoyalty" $
     Spec.assertBool
       s
-      (Either.isLeft (Codec.decode CostModifier.codec =<< Common.parse (Text.pack "{\"subject\":{\"type\":\"Activations\",\"value\":{\"whichLoyalty\":{\"type\":\"LoyaltyAbility\"}}},\"matching\":{\"type\":\"IsSource\"},\"onlyFirst\":{\"type\":\"ControllersTurn\"},\"change\":{\"type\":\"Increase\",\"value\":1}}")))
+      (Either.isLeft (Codec.decode CostModifier.codec =<< Common.parse (Text.pack "{\"subject\":{\"type\":\"Activations\",\"value\":{\"whichLoyalty\":{\"type\":\"LoyaltyAbility\"}}},\"matching\":{\"type\":\"IsSource\"},\"onlyFirst\":{\"type\":\"ControllersTurn\"},\"change\":{\"type\":\"Increase\",\"value\":[{\"type\":\"Generic\",\"value\":1}]}}")))
       "expected a decode failure"
   Spec.it s "refuses a target criterion on an addition to an activation" $
     Spec.assertBool

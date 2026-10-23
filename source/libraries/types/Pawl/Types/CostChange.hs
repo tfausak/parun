@@ -1,15 +1,14 @@
 module Pawl.Types.CostChange where
 
-import qualified Numeric.Natural as Natural
 import qualified Pawl.Types.AppliedReduction as AppliedReduction
 import qualified Pawl.Types.CostAddition as CostAddition
+import qualified Pawl.Types.ManaCost as ManaCost
 
 -- | CR 601.2f: what a Pawl.Types.CostModifier does to the total cost.
 data CostChange
-  = -- | CR 601.2f's "cost increases", this much GENERIC mana (Thalia, Oppressive
-    -- Rays). Not implemented: an increase by a coloured symbol, Derelor's {B}
-    -- (#5524).
-    Increase Natural.Natural
+  = -- | CR 601.2f's "cost increases", these mana symbols (Thalia's {1},
+    -- Derelor's {B}).
+    Increase ManaCost.ManaCost
   | -- | CR 601.2f / 118.7's "cost reductions" (Sapphire Medallion, Heartstone).
     Reduce AppliedReduction.AppliedReduction
   | -- | CR 601.2f / 118.8's additional costs applied from another effect

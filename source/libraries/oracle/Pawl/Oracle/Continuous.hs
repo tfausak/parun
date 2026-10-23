@@ -10,6 +10,7 @@ import qualified Data.List as List
 import qualified Data.Maybe as Maybe
 import qualified Data.Set as Set
 import qualified Data.Text as Text
+import qualified Pawl.Oracle.Cost as Cost
 import qualified Pawl.Oracle.Filter as Filter
 import qualified Pawl.Oracle.Keyword as Keyword.Oracle
 import qualified Pawl.Oracle.Prose as Prose
@@ -28,6 +29,7 @@ import qualified Pawl.Types.EntryRewrite as EntryRewrite
 import qualified Pawl.Types.Filter as Filter.Type
 import qualified Pawl.Types.Keyword as Keyword
 import qualified Pawl.Types.KeywordFamily as KeywordFamily
+import qualified Pawl.Types.ManaCost as ManaCost
 import qualified Pawl.Types.Modification as Modification
 import qualified Pawl.Types.ModifyPowerToughness as ModifyPowerToughness
 import qualified Pawl.Types.ObjectRef as ObjectRef
@@ -221,23 +223,25 @@ combatRestrictions context attached enchants rs = case rs of
       _ -> []
 
 -- | A static ability's rule for players (CR 604.1) making spells of a
--- description cost more generic mana to cast (CR 601.2f): "Red spells cost
--- {2} more to cast.", "Creature spells your opponents cast cost {1} more to
--- cast." Spells of one kind or another, any other rule, or one with a
--- condition or a name is not spelled out here.
+-- description cost more mana to cast (CR 601.2f): "Red spells cost {2} more
+-- to cast.", "Creature spells your opponents cast cost {1} more to cast.",
+-- "Black spells you cast cost {B} more to cast." Spells of one kind or
+-- another, any other rule, or one with a condition or a name is not spelled
+-- out here.
 playerRule :: Target.Context -> PlayerStaticAbility.PlayerStaticAbility -> [Text.Text]
 playerRule context a = case a of
   PlayerStaticAbility.MkPlayerStaticAbility (PlayerScope.Related relation) Nothing Nothing (PlayerEffect.ModifyCost (CostModifier.MkCostModifier CostSubject.Spells f Nothing Nothing Nothing Nothing (CostChange.Increase k)))
-    | k > 0,
+    | not (null (ManaCost.unwrap k)),
       not (any disjoined (conjuncts f)) -> do
         casters <- case relation of
           PlayerRelation.AnyPlayer -> [Text.empty]
           PlayerRelation.Opponent -> [Text.pack " your opponents cast"]
+          PlayerRelation.You -> [Text.pack " you cast"]
           _ -> []
         let spell = Filter.noun (Text.pack "spell") (Just (Text.pack "spells"))
         p <- Filter.phrase f (Target.keyword context)
         many <- Filter.describe Filter.Plural Target.permanent (Filter.merge p spell)
-        [Prose.sentence (many <> casters <> Text.pack (" cost {" <> show k <> "} more to cast"))]
+        [Prose.sentence (many <> casters <> Text.pack " cost " <> Cost.manaCost k <> Text.pack " more to cast")]
   _ -> []
   where
     conjuncts g = case g of

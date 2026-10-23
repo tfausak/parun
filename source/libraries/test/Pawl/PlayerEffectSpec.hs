@@ -318,7 +318,7 @@ phyrexianGreen = ManaSymbol.Phyrexian Color.Green
 -- and Pawl.Types.CostAdjustments.components is Brutal Suppression's, and no
 -- spell-cost effect states either (the activation side of both is proved against
 -- the card in Pawl.ActivateSpec).
-adjustments :: [Natural] -> [ManaCost.ManaCost] -> CostAdjustments.CostAdjustments
+adjustments :: [ManaCost.ManaCost] -> [ManaCost.ManaCost] -> CostAdjustments.CostAdjustments
 adjustments increases reductions =
   CostAdjustments.MkCostAdjustments
     { CostAdjustments.increases = increases,
@@ -362,8 +362,15 @@ adjustmentSpec s =
       Spec.assertEqWith
         s
         "{R} taxed by {1} is {1}{R}"
-        (Cost.applyAdjustments (adjustments [1] []) (ManaCost.MkManaCost [red]))
+        (Cost.applyAdjustments (adjustments [generic 1] []) (ManaCost.MkManaCost [red]))
         (ManaCost.MkManaCost [ManaSymbol.Generic 1, red])
+
+    Spec.it s "CR 601.2f an increase adds a coloured symbol" $
+      Spec.assertEqWith
+        s
+        "{1}{B} taxed by Derelor's {B} is {1}{B}{B}"
+        (Cost.applyAdjustments (adjustments [ManaCost.MkManaCost [black]] []) (ManaCost.MkManaCost [ManaSymbol.Generic 1, black]))
+        (ManaCost.MkManaCost [ManaSymbol.Generic 1, black, black])
 
     -- CR 118.7a: "Effects that reduce a cost by an amount of generic mana
     -- affect only the generic mana component of that cost. They can't affect
@@ -396,7 +403,7 @@ adjustmentSpec s =
       Spec.assertEqWith
         s
         "{U} +{1} -{1} is {U}"
-        (Cost.applyAdjustments (adjustments [1] [generic 1]) (ManaCost.MkManaCost [blue]))
+        (Cost.applyAdjustments (adjustments [generic 1] [generic 1]) (ManaCost.MkManaCost [blue]))
         (ManaCost.MkManaCost [blue])
 
     -- CR 118.7's typed half, which CR 118.7a's generic half above cannot

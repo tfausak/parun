@@ -83,7 +83,12 @@
             "value": {
               "change": {
                 "type": "Increase",
-                "value": 1
+                "value": [
+                  {
+                    "type": "Generic",
+                    "value": 1
+                  }
+                ]
               },
               "matching": {
                 "type": "And",
