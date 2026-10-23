@@ -7,6 +7,7 @@ import qualified Pawl.Types.CardLeavesZone as CardLeavesZone
 import qualified Pawl.Types.CardName as CardName
 import qualified Pawl.Types.CardPutIntoGraveyard as CardPutIntoGraveyard
 import qualified Pawl.Types.CardsPutIntoZone as CardsPutIntoZone
+import qualified Pawl.Types.CausedBy as CausedBy
 import qualified Pawl.Types.ClassLevel as ClassLevel
 import qualified Pawl.Types.Condition as Condition
 import qualified Pawl.Types.ControllerBecomesTarget as ControllerBecomesTarget
@@ -477,6 +478,10 @@ data TriggerCondition
     -- bears them (Balemurk Leech); Pawl.CardSpec's lint forbids a StateIs or a
     -- nested AnyOf inside one.
     AnyOf [TriggerCondition]
+  | -- | CR 609.1: the condition, narrowed to an event a spell or ability's
+    -- effect caused (Sacred Ground, Spiritual Focus). Read off Moved and
+    -- Discarded, the events that record a cause.
+    CausedBy (CausedBy.CausedBy TriggerCondition)
   | -- | CR 708.7 through CR 603.2: "when this creature is turned face up" (Skirk
     -- Marauder). Self-scoped.
     SelfTurnedFaceUp

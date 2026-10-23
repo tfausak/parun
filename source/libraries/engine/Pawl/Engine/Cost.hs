@@ -6342,8 +6342,14 @@ nextPromise oid gift gs =
 --
 -- `paidFor` is the stack object the cost is paid for, `pay`'s `announced`, which
 -- a cost's reveal is kept for (`revealPaying`).
+--
+-- CR 609.1: a cost is not an effect, so nothing a component moves records a
+-- cause (Event.causedBy Nothing), even paid inside a resolution. See
+-- docs/decisions.md, "What a spell or ability causes". A fence rather than a
+-- proof: no test pays a cost that moves a card inside an effect's scope, such
+-- as a sacrificing mana ability activated to pay a resolving pay gate.
 payComponent :: ManaAbilityPerformer.ManaAbilityPerformer -> PaymentMoment.PaymentMoment -> Maybe ObjectId -> Map.Map SlotName.SlotName (Set.Set Recipient.Recipient) -> PlayerId -> ObjectId -> CostComponent.CostComponent Keyword.Type.Keyword -> Game Payment.Payment
-payComponent perform moment paidFor slots pid oid component = do
+payComponent perform moment paidFor slots pid oid component = Event.causedBy Nothing $ do
   gs <- State.get
   if canPayComponent slots pid oid component gs
     then payPayable perform moment paidFor slots pid oid component

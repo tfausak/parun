@@ -21,7 +21,8 @@ spec s = Spec.describe s "Pawl.Codec.Discarded" $ do
           { Discarded.player = PlayerId.MkPlayerId 0,
             Discarded.card = ObjectId.MkObjectId 7,
             Discarded.cause = DiscardCause.ToPayCyclingCost,
-            Discarded.madness = Nothing
+            Discarded.madness = Nothing,
+            Discarded.causedBy = Nothing
           }
       )
       " {\"player\":0,\"card\":7,\"cause\":{\"type\":\"ToPayCyclingCost\"},\"madness\":null} "
@@ -35,8 +36,24 @@ spec s = Spec.describe s "Pawl.Codec.Discarded" $ do
           { Discarded.player = PlayerId.MkPlayerId 1,
             Discarded.card = ObjectId.MkObjectId 5,
             Discarded.cause = DiscardCause.Ordinary,
-            Discarded.madness = Just MadnessCost.OwnManaCost
+            Discarded.madness = Just MadnessCost.OwnManaCost,
+            Discarded.causedBy = Nothing
           }
       )
       " {\"player\":1,\"card\":5,\"cause\":{\"type\":\"Ordinary\"},\"madness\":{\"type\":\"OwnManaCost\"}} "
+  -- CR 609.1's cause: a discard an opponent's effect made, the one shape the
+  -- defaulted key appears in.
+  Spec.it s "MkDiscarded, CR 609.1's discard an effect made" $
+    Common.assertCodec
+      s
+      Discarded.codec
+      ( Discarded.MkDiscarded
+          { Discarded.player = PlayerId.MkPlayerId 0,
+            Discarded.card = ObjectId.MkObjectId 4,
+            Discarded.cause = DiscardCause.ByEffect,
+            Discarded.madness = Nothing,
+            Discarded.causedBy = Just (PlayerId.MkPlayerId 1)
+          }
+      )
+      " {\"player\":0,\"card\":4,\"cause\":{\"type\":\"ByEffect\"},\"madness\":null,\"causedBy\":1} "
   Spec.it s "has a schema" $ Common.assertHasSchema s Discarded.codec

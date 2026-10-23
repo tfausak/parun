@@ -95,6 +95,7 @@ import qualified Pawl.Types.CardLeavesZone as CardLeavesZone
 import qualified Pawl.Types.CardName as CardName
 import qualified Pawl.Types.CardType as CardType
 import qualified Pawl.Types.CarryOver as CarryOver
+import qualified Pawl.Types.CausedBy as CausedBy
 import qualified Pawl.Types.Chosen as Chosen
 import qualified Pawl.Types.CoinFace as CoinFace
 import qualified Pawl.Types.CoinFlipped as CoinFlipped
@@ -6459,7 +6460,8 @@ changeZoneReturning oid requestedDest = changeZoneAttaching Nothing Set.empty oi
 -- or sorcery spell's resolution". The ONE door that stamps
 -- Moved.duringResolution, which is the only thing telling that move apart from a
 -- countered spell's (CR 701.6a) or a fizzled one's (CR 608.2b): all three run
--- stack-to-graveyard and the ZoneChange carries no cause.
+-- stack-to-graveyard, the ZoneChange carries no cause, and Moved.causedBy is
+-- Nothing for a fizzle and for this move alike.
 --
 -- A separate door rather than a parameter on changeZoneReturning, for the reason
 -- changeZoneInBatch is one: the caller is Pawl.Engine.Resolve.finishSpell alone.
@@ -7825,6 +7827,7 @@ changeZoneWithCause discarded asOf batch oid requestedDest requestedPosition see
                   Monad.when (fromZone == Zone.Battlefield) $
                     Monad.forM_ (Object.attachedTo obj) (unattach oid)
                   seenArriving <- State.gets (Visibility.seenByEveryone newId)
+                  causer <- State.gets causeNow
                   State.modify'
                     . recordEvent
                     . GameEvent.Moved
@@ -7839,7 +7842,8 @@ changeZoneWithCause discarded asOf batch oid requestedDest requestedPosition see
                         -- 608.3's onto the battlefield, Pawl.Engine.Stack's Carried.
                         Moved.duringResolution = resolving || (carrying == CarryOver.Carried && dest == Zone.Battlefield),
                         Moved.revealed = revealedLeaving,
-                        Moved.seenArriving = seenArriving
+                        Moved.seenArriving = seenArriving,
+                        Moved.causedBy = causer
                       }
                   -- CR 712.21's second clause: "two cards are put into the
                   -- appropriate zone". One event per card AFTER the leading one,
@@ -9037,7 +9041,7 @@ recordMintedEntry newId = do
   let snapshot = Projection.project newId placed
   -- Moved.revealed is read by no look-back here: none reaches a battlefield
   -- destination (Event.Trigger.looksBack), so the public origin answers.
-  State.modify' (recordEvent (GameEvent.Moved ((Moved.moved (ZoneChange.MkZoneChange newId newId Zone.Battlefield Zone.Battlefield) snapshot) {Moved.revealed = True, Moved.seenArriving = Visibility.seenByEveryone newId placed})))
+  State.modify' (recordEvent (GameEvent.Moved ((Moved.moved (ZoneChange.MkZoneChange newId newId Zone.Battlefield Zone.Battlefield) snapshot) {Moved.revealed = True, Moved.seenArriving = Visibility.seenByEveryone newId placed, Moved.causedBy = causeNow placed})))
 
 -- CR 701.42a: meld these cards -- "put them onto the battlefield with their back
 -- faces up and combined. The resulting permanent is a single object represented by
@@ -9178,7 +9182,7 @@ meld controller victims resultCard = do
           -- Moved.revealed is read by no look-back here: none reaches a
           -- battlefield destination (Event.Trigger.looksBack), so the origin's
           -- zone answers.
-          entry = (Moved.moved (ZoneChange.MkZoneChange (fst (NonEmpty.head melding)) newId origin Zone.Battlefield) snapshot) {Moved.otherDepartures = Seq.fromList (fmap fst (NonEmpty.tail melding)), Moved.revealed = not (Game.isHiddenZone origin), Moved.seenArriving = Visibility.seenByEveryone newId placed}
+          entry = (Moved.moved (ZoneChange.MkZoneChange (fst (NonEmpty.head melding)) newId origin Zone.Battlefield) snapshot) {Moved.otherDepartures = Seq.fromList (fmap fst (NonEmpty.tail melding)), Moved.revealed = not (Game.isHiddenZone origin), Moved.seenArriving = Visibility.seenByEveryone newId placed, Moved.causedBy = causeNow placed}
       State.modify' (recordEvent (GameEvent.Moved entry))
       pure (Just newId)
 
@@ -9980,6 +9984,28 @@ payingOnResolution body = do
   State.modify' (\g -> g {GameState.payingOnResolution = saved})
   pure result
 
+-- CR 609.1: run `body` as the effect of a spell or ability `controller`
+-- controls, or with Nothing as no effect at all -- a cost's payment
+-- (Pawl.Engine.Cost.payComponent). Saved and restored, payingOnResolution's
+-- shape, so a mana ability's effect nested inside another resolution answers
+-- for itself and the outer one resumes after it.
+causedBy :: Maybe PlayerId -> Game a -> Game a
+causedBy controller body = do
+  saved <- State.gets GameState.causing
+  State.modify' (\g -> g {GameState.causing = controller})
+  result <- body
+  State.modify' (\g -> g {GameState.causing = saved})
+  pure result
+
+-- CR 609.1: the cause a move or a discard made now records -- the controller
+-- of the spell or ability whose effect is being performed, and Nothing for CR
+-- 118.12's "[do something]", which is a cost and not an effect (Library of
+-- Leng's ruling). See docs/decisions.md, "What a spell or ability causes".
+causeNow :: GameState -> Maybe PlayerId
+causeNow gs
+  | GameState.payingOnResolution gs = Nothing
+  | otherwise = GameState.causing gs
+
 -- Why a resolving instruction's discard happens: ByEffect (CR 609.1), unless
 -- it is CR 118.12's cost (payingOnResolution) -- Library of Leng's ruling,
 -- "costs aren't effects". Pawl.ZoneChangeSpec's Tweeze case proves it.
@@ -10038,7 +10064,8 @@ discardReturning cause pid oid = do
   -- the sequence never holds two here.
   Monad.forM_ moved $ \newId -> do
     applied <- madnessChoice pid newId (madnessOf newId)
-    State.modify' (recordEvent (GameEvent.Discarded (Discarded.MkDiscarded pid newId cause applied)))
+    causer <- State.gets causeNow
+    State.modify' (recordEvent (GameEvent.Discarded (Discarded.MkDiscarded pid newId cause applied causer)))
   pure moved
 
 -- CR 616.1 / 702.35a: which of the card's madness abilities was the replacement
@@ -10307,6 +10334,7 @@ controllerTurnScoped cond = case cond of
   -- enough to make the answer no. Vacuously True for the empty list, which no card
   -- writes.
   TriggerCondition.AnyOf conditions -> all controllerTurnScoped conditions
+  TriggerCondition.CausedBy narrowed -> controllerTurnScoped (CausedBy.condition narrowed)
   -- CR 702.37e offers the special action "any time you have priority", which is
   -- every turn and not only the controller's own.
   TriggerCondition.SelfTurnedFaceUp -> False

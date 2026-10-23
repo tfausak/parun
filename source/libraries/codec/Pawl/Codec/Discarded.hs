@@ -21,10 +21,13 @@ codec = Fields.object $ do
   card <- Fields.required "card" ObjectId.codec Discarded.card
   cause <- Fields.required "cause" DiscardCause.codec Discarded.cause
   madness <- Fields.required "madness" (Common.maybe (MadnessCost.codec Keyword.codec)) Discarded.madness
+  -- Defaulted: only a discard an effect made sets it.
+  causedBy <- Fields.defaulted "causedBy" Nothing (Common.maybe PlayerId.codec) Discarded.causedBy
   pure
     Discarded.MkDiscarded
       { Discarded.player = player,
         Discarded.card = card,
         Discarded.cause = cause,
-        Discarded.madness = madness
+        Discarded.madness = madness,
+        Discarded.causedBy = causedBy
       }

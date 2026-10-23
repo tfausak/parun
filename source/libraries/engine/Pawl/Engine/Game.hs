@@ -3223,7 +3223,7 @@ abilityResolved event = case event of
 -- The CAUSE is not consulted, CR 702.29a making a cycled card a discarded one.
 discardOf :: GameEvent -> Maybe PlayerId
 discardOf event = case event of
-  GameEvent.Discarded (Discarded.MkDiscarded pid _ _ _) -> Just pid
+  GameEvent.Discarded (Discarded.MkDiscarded pid _ _ _ _) -> Just pid
   -- CR 701.9a's discard moves a card OUT of a hand; CR 121.1's draw moves one
   -- in. Opposite directions, and neither event stands in for the other.
   GameEvent.Drew {} -> Nothing
@@ -3379,7 +3379,7 @@ arrivalsOf oid gs =
 -- than in each of them.
 movedChange :: GameEvent -> Maybe ZoneChange.ZoneChange
 movedChange event = case event of
-  GameEvent.Moved (Moved.MkMoved change _ _ _ _ _ _) -> Just change
+  GameEvent.Moved (Moved.MkMoved change _ _ _ _ _ _ _) -> Just change
   GameEvent.Discarded {} -> Nothing
   GameEvent.Drew {} -> Nothing
   GameEvent.SpellCast {} -> Nothing

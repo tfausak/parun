@@ -4,6 +4,7 @@ module Pawl.Codec.Moved where
 
 import qualified Data.Sequence as Seq
 import qualified Pawl.Codec.ObjectId as ObjectId
+import qualified Pawl.Codec.PlayerId as PlayerId
 import qualified Pawl.Codec.ProjectedCharacteristics as ProjectedCharacteristics
 import qualified Pawl.Codec.ZoneChange as ZoneChange
 import qualified Pawl.JsonCodec.Codec as Codec
@@ -31,6 +32,8 @@ codec = Fields.object $ do
   -- Defaulted for the same reason: a move into a hidden zone or face down
   -- leaves it unset.
   seenArriving <- Fields.defaulted "seenArriving" False Common.boolean Moved.seenArriving
+  -- Defaulted for the same reason: only a move an effect made sets it.
+  causedBy <- Fields.defaulted "causedBy" Nothing (Common.maybe PlayerId.codec) Moved.causedBy
   pure
     Moved.MkMoved
       { Moved.change = change,
@@ -39,5 +42,6 @@ codec = Fields.object $ do
         Moved.otherDepartures = otherDepartures,
         Moved.duringResolution = duringResolution,
         Moved.revealed = revealed,
-        Moved.seenArriving = seenArriving
+        Moved.seenArriving = seenArriving,
+        Moved.causedBy = causedBy
       }

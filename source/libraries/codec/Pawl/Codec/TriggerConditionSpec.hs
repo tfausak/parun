@@ -13,6 +13,7 @@ import qualified Pawl.Types.CardName as CardName
 import qualified Pawl.Types.CardPutIntoGraveyard as CardPutIntoGraveyard
 import qualified Pawl.Types.CardType as CardType
 import qualified Pawl.Types.CardsPutIntoZone as CardsPutIntoZone
+import qualified Pawl.Types.CausedBy as CausedBy
 import qualified Pawl.Types.ClassLevel as ClassLevel
 import qualified Pawl.Types.Color as Color
 import qualified Pawl.Types.Compares as Compares
@@ -1005,6 +1006,13 @@ spec s = Spec.describe s "Pawl.Codec.TriggerCondition" $ do
   -- Balemurk Leech's own pair, which is neither empty nor a singleton on purpose:
   -- a codec that kept only the first branch, or that dropped the list entirely,
   -- would round-trip a one-element list unchanged and pass.
+  -- CR 609.1's narrowing, which holds the condition it narrows.
+  Spec.it s "CausedBy round-trips its relation and its condition" $
+    Common.assertCodec
+      s
+      TriggerCondition.codec
+      (TriggerCondition.CausedBy CausedBy.MkCausedBy {CausedBy.controller = PlayerRelation.Opponent, CausedBy.condition = TriggerCondition.PlayerDiscards PlayerRelation.You})
+      " {\"type\":\"CausedBy\",\"value\":{\"controller\":{\"type\":\"Opponent\"},\"condition\":{\"type\":\"PlayerDiscards\",\"value\":{\"type\":\"You\"}}}} "
   Spec.it s "AnyOf round-trips both of its branches" $
     Common.assertCodec
       s

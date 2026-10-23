@@ -32,6 +32,9 @@ data Discarded = MkDiscarded
     -- A FIELD beside the cause rather than a second event: the act is one
     -- discard, and rule 702.35a's trigger asks about the replacement applied to
     -- it, not about a further thing that happened.
-    madness :: Maybe (MadnessCost.MadnessCost Keyword.Keyword)
+    madness :: Maybe (MadnessCost.MadnessCost Keyword.Keyword),
+    -- | CR 609.1: the controller of the spell or ability whose effect made the
+    -- discard, Pawl.Types.Moved's `causedBy` for the same act.
+    causedBy :: Maybe PlayerId.PlayerId
   }
   deriving (Eq, Ord, Show)

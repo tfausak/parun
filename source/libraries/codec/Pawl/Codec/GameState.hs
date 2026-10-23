@@ -135,6 +135,7 @@ codec resolve = Fields.object $ do
   enteringTogether <- Fields.defaulted "enteringTogether" Nothing (Common.maybe EnteringTogether.codec) GameState.enteringTogether
   arrivals <- Fields.defaulted "arrivals" Nothing (Common.maybe (Common.seq Arrival.codec)) GameState.arrivals
   payingOnResolution <- Fields.defaulted "payingOnResolution" False Common.boolean GameState.payingOnResolution
+  causing <- Fields.defaulted "causing" Nothing (Common.maybe PlayerId.codec) GameState.causing
   lastKnown <- Fields.defaulted "lastKnown" Map.empty (Common.naturalMap ObjectId.codec LastKnown.codec) GameState.lastKnown
   stackArchive <- Fields.defaulted "stackArchive" Map.empty (Common.naturalMap ObjectId.codec Object.codec) GameState.stackArchive
   scannedThrough <- Fields.defaulted "scannedThrough" 0 Common.natural GameState.scannedThrough
@@ -250,6 +251,7 @@ codec resolve = Fields.object $ do
         GameState.enteringTogether = enteringTogether,
         GameState.arrivals = arrivals,
         GameState.payingOnResolution = payingOnResolution,
+        GameState.causing = causing,
         GameState.lastKnown = lastKnown,
         GameState.stackArchive = stackArchive,
         GameState.scannedThrough = scannedThrough,

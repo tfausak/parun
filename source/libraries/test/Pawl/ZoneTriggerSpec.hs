@@ -57,6 +57,7 @@ import qualified Pawl.Types.CardName as CardName
 import qualified Pawl.Types.CardPutIntoGraveyard as CardPutIntoGraveyard
 import qualified Pawl.Types.CardType as CardType
 import qualified Pawl.Types.CardsPutIntoZone as CardsPutIntoZone
+import qualified Pawl.Types.CausedBy as CausedBy
 import qualified Pawl.Types.ClassLevel as ClassLevel
 import qualified Pawl.Types.ClassLevelChange as ClassLevelChange
 import qualified Pawl.Types.CoinFlipped as CoinFlipped
@@ -1103,7 +1104,7 @@ permanentsDieSpec s registry =
         Set.fromList
           ( Maybe.mapMaybe
               ( \logged -> case LoggedEvent.event logged of
-                  GameEvent.Moved (Moved.MkMoved zc _ _ _ _ _ _)
+                  GameEvent.Moved (Moved.MkMoved zc _ _ _ _ _ _ _)
                     | ZoneChange.from zc == Zone.Battlefield && ZoneChange.to zc == Zone.Graveyard -> Just (LoggedEvent.group logged)
                   _ -> Nothing
               )
@@ -1375,7 +1376,7 @@ arrivedLaterSpec s registry =
         Set.fromList
           ( Maybe.mapMaybe
               ( \logged -> case LoggedEvent.event logged of
-                  GameEvent.Moved (Moved.MkMoved zc _ _ _ _ _ _)
+                  GameEvent.Moved (Moved.MkMoved zc _ _ _ _ _ _ _)
                     | ZoneChange.from zc == Zone.Battlefield && ZoneChange.to zc == Zone.Graveyard -> Just (LoggedEvent.group logged)
                   _ -> Nothing
               )
@@ -1865,7 +1866,7 @@ representativeEvents cond =
         TriggerCondition.PlayerTookInitiative -> one (GameEvent.TookInitiative S.alice)
         -- CR 702.179d's own event, an opponent's loss.
         TriggerCondition.OpponentLostLifeDuringYourTurn -> one (GameEvent.LifeLost (LifeChange.MkLifeChange S.bob 2))
-        TriggerCondition.SelfCycled -> one (GameEvent.Discarded (Discarded.MkDiscarded S.alice departed DiscardCause.ToPayCyclingCost Nothing))
+        TriggerCondition.SelfCycled -> one (GameEvent.Discarded (Discarded.MkDiscarded S.alice departed DiscardCause.ToPayCyclingCost Nothing Nothing))
         -- CR 702.94a's cause, so the event is one this condition genuinely
         -- admits; an Ordinary reveal would pin nothing.
         TriggerCondition.SelfRevealedForMiracle -> one (GameEvent.Revealed (Revealed.MkRevealed S.alice departed (RevealCause.ForMiracle (Cost.Type.MkCost {Cost.Type.mana = Nothing, Cost.Type.components = []})) S.emptyCharacteristics))
@@ -1875,19 +1876,19 @@ representativeEvents cond =
         -- discard and a cycle are each an event it genuinely admits, and an arm
         -- that read the cause would pin nothing for one of them.
         TriggerCondition.SelfDiscarded ->
-          noTable (GameEvent.Discarded (Discarded.MkDiscarded S.alice departed DiscardCause.Ordinary Nothing))
-            NonEmpty.:| [noTable (GameEvent.Discarded (Discarded.MkDiscarded S.alice departed DiscardCause.ToPayCyclingCost Nothing))]
+          noTable (GameEvent.Discarded (Discarded.MkDiscarded S.alice departed DiscardCause.Ordinary Nothing Nothing))
+            NonEmpty.:| [noTable (GameEvent.Discarded (Discarded.MkDiscarded S.alice departed DiscardCause.ToPayCyclingCost Nothing Nothing))]
         -- CR 702.35a's own discard: the madness set NON-EMPTY, which is the
         -- only event this condition admits -- the cause is irrelevant to it and
         -- the flag is not, so a False event would pin nothing.
-        TriggerCondition.SelfExiledForMadness -> one (GameEvent.Discarded (Discarded.MkDiscarded S.alice departed DiscardCause.Ordinary (Just MadnessCost.OwnManaCost)))
-        TriggerCondition.PlayerDiscards _ -> one (GameEvent.Discarded (Discarded.MkDiscarded S.alice departed DiscardCause.Ordinary Nothing))
+        TriggerCondition.SelfExiledForMadness -> one (GameEvent.Discarded (Discarded.MkDiscarded S.alice departed DiscardCause.Ordinary (Just MadnessCost.OwnManaCost) Nothing))
+        TriggerCondition.PlayerDiscards _ -> one (GameEvent.Discarded (Discarded.MkDiscarded S.alice departed DiscardCause.Ordinary Nothing Nothing))
         -- The same event, which binds this batch reading's one card as its amount.
-        TriggerCondition.PlayerDiscardsCards _ -> one (GameEvent.Discarded (Discarded.MkDiscarded S.alice departed DiscardCause.Ordinary Nothing))
+        TriggerCondition.PlayerDiscardsCards _ -> one (GameEvent.Discarded (Discarded.MkDiscarded S.alice departed DiscardCause.Ordinary Nothing Nothing))
         -- The CYCLING cause, which is the only one this condition admits -- an
         -- Ordinary discard is an event it rejects, and eventBindings is consulted
         -- only for a match, so it would pin nothing.
-        TriggerCondition.PlayerCycles _ -> one (GameEvent.Discarded (Discarded.MkDiscarded S.alice departed DiscardCause.ToPayCyclingCost Nothing))
+        TriggerCondition.PlayerCycles _ -> one (GameEvent.Discarded (Discarded.MkDiscarded S.alice departed DiscardCause.ToPayCyclingCost Nothing Nothing))
         -- The ordinal matches the condition's own, so the event is one this
         -- condition genuinely admits -- an event it rejected would pin nothing,
         -- eventBindings being consulted only for a match.
@@ -2179,6 +2180,9 @@ representativeEvents cond =
         TriggerCondition.AnyOf conditions -> case conditions of
           [] -> one (GameEvent.StepBegan (StepBegan.MkStepBegan (Phase.Ending EndingStep.EndStep) S.alice))
           c : cs -> Foldable.foldr1 (<>) (fmap representativeEvents (c NonEmpty.:| cs))
+        -- The narrowed condition's own events: the cause narrows which of them
+        -- match, never what a matched one binds.
+        TriggerCondition.CausedBy narrowed -> representativeEvents (CausedBy.condition narrowed)
         -- CR 708.7's own event, and the only one this condition admits, on the
         -- BEARER -- so the pair really matches. Twice: with CR 107.3d's X chosen
         -- for the cost and without, the one key eventBindings stamps only
@@ -2539,6 +2543,8 @@ everyTriggerCondition =
     -- below is what says eventBindings fills it for each branch's event in turn.
     -- The empty pair alone would leave the AnyOf arm free to stamp nothing.
     TriggerCondition.AnyOf [TriggerCondition.PermanentEnters (Filter.Type.And []), TriggerCondition.PermanentTurnedFaceUp (Filter.Type.And [])],
+    -- Sacred Ground's narrowing, over the condition whose bindings it keeps.
+    TriggerCondition.CausedBy CausedBy.MkCausedBy {CausedBy.controller = PlayerRelation.Opponent, CausedBy.condition = TriggerCondition.PermanentDies (Filter.Type.And [])},
     TriggerCondition.SelfTurnedFaceUp,
     TriggerCondition.SelfTransformedInto (CardName.MkCardName (Text.pack "Blightsower Thallid")),
     TriggerCondition.PermanentTransforms (Filter.Type.And []),

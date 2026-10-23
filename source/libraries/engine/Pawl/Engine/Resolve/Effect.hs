@@ -2679,8 +2679,13 @@ randomCardsInLibrary resolving source controller legal (RandomCardInLibrary.MkRa
 
 -- One effect, applied, wrapped in the window CR 607.2a's link is filed from:
 -- what was in exile before, and what is in it after.
+--
+-- CR 609.1: and performed as the effect of a spell or ability `controller`
+-- controls (Event.causedBy), the one door every instruction of a spell, an
+-- ability, a mana ability and a replacement's own effects goes through, so the
+-- moves it makes record their cause. Sacred Ground's scenarios prove it.
 applyEffectWith :: Game Result -> ObjectId -> ObjectId -> PlayerId -> Map.Map SlotName (Set Recipient) -> Map.Map SlotName (Set Recipient) -> Effect Card.Type.Card (GrantedAbility.GrantedAbility Card.Type.Card) -> Game ()
-applyEffectWith runSubgame resolving source controller legal chosen effect = do
+applyEffectWith runSubgame resolving source controller legal chosen effect = Event.causedBy (Just controller) $ do
   before <- State.gets GameState.exile
   -- Read BEFORE the effect runs, while the resolving ability is surely still an
   -- object to read.

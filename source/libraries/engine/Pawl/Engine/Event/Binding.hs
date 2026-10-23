@@ -33,6 +33,7 @@ import qualified Pawl.Types.Binding as Binding.Type
 import qualified Pawl.Types.BlocksDeclared as BlocksDeclared
 import qualified Pawl.Types.CardLeavesZone as CardLeavesZone
 import qualified Pawl.Types.CardType as CardType
+import qualified Pawl.Types.CausedBy as CausedBy
 import qualified Pawl.Types.Combat as Combat
 import qualified Pawl.Types.CounterChange as CounterChange
 import qualified Pawl.Types.Crewing as Crewing
@@ -419,12 +420,12 @@ eventBindingsOver board gs bearerBecame becameInGraveyard bearer you cond event 
   -- RECEIVE what the payload does is the payload's question (CR 120.1a for
   -- damage), and a binding that existed only for creatures would make the slot's
   -- presence depend on the entrant, which eventBindingSlots cannot express.
-  (TriggerCondition.PermanentEnters _, GameEvent.Moved (Moved.MkMoved zc _ _ _ _ _ _)) ->
+  (TriggerCondition.PermanentEnters _, GameEvent.Moved (Moved.MkMoved zc _ _ _ _ _ _ _)) ->
     Binding.setBecame (ZoneChange.object zc) Map.empty
   -- Its batch reading stamps the same entrant as a one-member GROUP, so
   -- batchBindings' append joins the whole entry event's entrants under one
   -- slot (CR 603.2c) where a recipient would keep only the first.
-  (TriggerCondition.PermanentsEnter _, GameEvent.Moved (Moved.MkMoved zc _ _ _ _ _ _)) ->
+  (TriggerCondition.PermanentsEnter _, GameEvent.Moved (Moved.MkMoved zc _ _ _ _ _ _ _)) ->
     Binding.setBecameGroup (Seq.singleton (ZoneChange.object zc)) Map.empty
   -- CR 708.7's "that creature": the permanent that was turned face up, which Pine
   -- Walker untaps. The bearer is a bystander here -- CR 113.7a's source slot names
@@ -504,7 +505,7 @@ eventBindingsOver board gs bearerBecame becameInGraveyard bearer you cond event 
   -- carries directly. The same reserved slot CR 702.70a's poisonous uses, for the
   -- same reason -- a player the EVENT names, which CR 109.5's `you` cannot stand
   -- in for.
-  (TriggerCondition.PlayerDiscards _, GameEvent.Discarded (Discarded.MkDiscarded discarder _ _ _)) ->
+  (TriggerCondition.PlayerDiscards _, GameEvent.Discarded (Discarded.MkDiscarded discarder _ _ _ _)) ->
     Binding.setTriggerPlayer discarder Map.empty
   -- CR 607.2h's "that card": the card the linked static revealed (God-Eternal
   -- Kefnet's "copy that card").
@@ -819,7 +820,7 @@ eventBindingsOver board gs bearerBecame becameInGraveyard bearer you cond event 
   -- 704.5m buried the Aura before the trigger was placed (CR 704.3), which
   -- data/scenarios/copy's Infinite Reflection scenario proves. Bound only for an
   -- entrant that was attached to an object.
-  (TriggerCondition.SelfEnters, GameEvent.Moved (Moved.MkMoved zc _ _ _ _ _ _)) ->
+  (TriggerCondition.SelfEnters, GameEvent.Moved (Moved.MkMoved zc _ _ _ _ _ _ _)) ->
     maybe Map.empty (`Binding.setAttachedHost` Map.empty) (Game.hostWithLastKnown (ZoneChange.object zc) gs)
   -- CR 701.3a's "that creature" read from the ATTACHMENT: the host the bearer
   -- went onto, which Enormous Energy Blade taps. SelfBecomesAttachedBy has no arm
@@ -928,7 +929,7 @@ eventBindingsOver board gs bearerBecame becameInGraveyard bearer you cond event 
   -- a graveyard whose `departed` IS the bearer's host, so the id is always there.
   -- The event is therefore matched rather than wildcarded, unlike every other
   -- arm's use of the first argument.
-  (TriggerCondition.AttachedCreatureDies, GameEvent.Moved (Moved.MkMoved zc _ _ _ _ _ _)) ->
+  (TriggerCondition.AttachedCreatureDies, GameEvent.Moved (Moved.MkMoved zc _ _ _ _ _ _ _)) ->
     Binding.setDepartedPermanent (ZoneChange.departed zc) (maybe Map.empty (`Binding.setBecame` Map.empty) bearerBecame)
   -- CR 701.26a's permanent, bound because the attachment link is NOT enough:
   -- Blight's "destroy it" names the land that became tapped, which the Aura
@@ -1130,6 +1131,8 @@ eventBindingsOver board gs bearerBecame becameInGraveyard bearer you cond event 
   -- binds are eventBindingSlotsSometimes' AnyOf arm.
   (TriggerCondition.AnyOf conditions, _) ->
     Map.unions (fmap (\c -> eventBindingsOver board gs bearerBecame becameInGraveyard bearer you c event) conditions)
+  (TriggerCondition.CausedBy narrowed, _) ->
+    eventBindingsOver board gs bearerBecame becameInGraveyard bearer you (CausedBy.condition narrowed) event
   -- The CR 701/702 keyword-action conditions reach this fallthrough and
   -- stamp nothing, deliberately: no card in the pool reads the scrying player,
   -- the plotted card, the explorer or the forager, and
@@ -1186,6 +1189,7 @@ batchPartition cond bindings = case cond of
   -- The branch that matched is the one that stamped, eventBindings' AnyOf arm's
   -- reading.
   TriggerCondition.AnyOf conditions -> Maybe.fromMaybe Seq.empty (List.find (not . Seq.null) (fmap (`batchPartition` bindings) conditions))
+  TriggerCondition.CausedBy narrowed -> batchPartition (CausedBy.condition narrowed) bindings
   -- A wildcard where batchScoped is exhaustive: a batch condition splits only
   -- where an arm above says by what.
   _ -> Seq.empty
@@ -1863,6 +1867,7 @@ eventBindingSlots cond = case cond of
   TriggerCondition.AnyOf conditions -> case fmap eventBindingSlots conditions of
     [] -> Set.empty
     slots : rest -> List.foldl' Set.intersection slots rest
+  TriggerCondition.CausedBy narrowed -> eventBindingSlots (CausedBy.condition narrowed)
   -- CR 708.7's event names the permanent, and CR 113.7a's source slot already
   -- names it; the X it may carry is bound only sometimes
   -- (eventBindingSlotsSometimes) -- so this is a DELIBERATE empty rather than an
@@ -2158,6 +2163,7 @@ eventBindingSlotsSometimes cond = case cond of
     Set.difference
       (Set.unions (fmap (\c -> Set.union (eventBindingSlots c) (eventBindingSlotsSometimes c)) conditions))
       (eventBindingSlots cond)
+  TriggerCondition.CausedBy narrowed -> eventBindingSlotsSometimes (CausedBy.condition narrowed)
   -- CR 702.37f / 702.168e's X, bound only when the cost that turned the
   -- permanent up had an X in it (Warbreak Trumpeter's morph {X}{X}{R}), and never
   -- down an effect's road up, which chose none.

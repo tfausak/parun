@@ -1430,6 +1430,7 @@ withEvents events gs =
       GameState.enteringTogether = Nothing,
       GameState.arrivals = Nothing,
       GameState.payingOnResolution = False,
+      GameState.causing = Nothing,
       GameState.scannedThrough = 0,
       GameState.damageScannedThrough = 0,
       -- Rewriting the log rewrites the groups, so any sample Event.recordEvent
@@ -1662,6 +1663,7 @@ oneMountainState mountain ph =
           GameState.enteringTogether = Nothing,
           GameState.arrivals = Nothing,
           GameState.payingOnResolution = False,
+          GameState.causing = Nothing,
           GameState.lastKnown = Map.empty,
           GameState.scannedThrough = 0,
           GameState.boardAfterEvent = Map.empty,
