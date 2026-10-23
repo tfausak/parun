@@ -1,0 +1,83 @@
+{
+  "faces": [
+    {
+      "manaCost": [
+        {
+          "type": "Generic",
+          "value": 5
+        }
+      ],
+      "name": "Storm Cauldron",
+      "oracleText": "Each player may play an additional land during each of their turns.\nWhenever a land is tapped for mana, return it to its owner's hand.",
+      "playerAbilities": [
+        {
+          "effect": {
+            "type": "PlayAdditionalLands",
+            "value": {
+              "type": "Additional",
+              "value": 1
+            }
+          },
+          "scope": {
+            "type": "AnyPlayer"
+          }
+        }
+      ],
+      "triggeredAbilities": [
+        {
+          "condition": {
+            "type": "PermanentTappedForMana",
+            "value": {
+              "filter": {
+                "type": "HasCardType",
+                "value": {
+                  "type": "Land"
+                }
+              },
+              "mana": {
+                "type": "AnyMana"
+              },
+              "player": {
+                "type": "AnyPlayer"
+              }
+            }
+          },
+          "modal": {
+            "modes": [
+              {
+                "clauses": [
+                  {
+                    "effects": [
+                      {
+                        "type": "MoveToZone",
+                        "value": {
+                          "origin": {
+                            "type": "Battlefield"
+                          },
+                          "ref": {
+                            "type": "InSlot",
+                            "value": "thatManaSource"
+                          },
+                          "zone": {
+                            "type": "Hand"
+                          }
+                        }
+                      }
+                    ]
+                  }
+                ]
+              }
+            ]
+          }
+        }
+      ],
+      "typeLine": {
+        "types": [
+          {
+            "type": "Artifact"
+          }
+        ]
+      }
+    }
+  ]
+}

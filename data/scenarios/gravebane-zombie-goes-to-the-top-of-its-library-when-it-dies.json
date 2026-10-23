@@ -1,0 +1,11 @@
+{
+  "description": "CR 614.1a whole card: Gravebane Zombie killed by Lightning Bolt goes on top of its owner's library instead of into the graveyard",
+  "note": "Alice bolts bob's Zombie; it is on top of his library, above his Swamp, and his graveyard is empty.",
+  "board": {"active": "alice", "step": "PrecombatMain", "seats": [{"name": "alice", "manaPool": "R", "hand": [{"card": "Lightning Bolt", "label": "bolt"}], "library": [{"card": "Island"}, {"card": "Island"}, {"card": "Island"}]}, {"name": "bob", "battlefield": [{"card": "Gravebane Zombie", "label": "zombie"}], "library": [{"card": "Swamp"}]}]},
+  "timeline": [
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": {"Cast": {"object": "$bolt", "targets": ["$zombie"]}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass"},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "check": {"View": {"of": "Zone", "player": "bob", "zone": "Library", "is": ["Gravebane Zombie", "Swamp"]}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "check": {"Count": {"player": "bob", "zone": "Graveyard", "card": "Gravebane Zombie", "count": 0}}}
+  ]
+}

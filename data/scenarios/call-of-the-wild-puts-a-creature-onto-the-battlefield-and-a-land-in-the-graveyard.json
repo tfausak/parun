@@ -1,0 +1,16 @@
+{
+  "description": "CR 701.20a / 608.2c whole card: Call of the Wild puts a revealed creature card onto the battlefield and any other revealed card into the graveyard",
+  "note": "The first activation reveals Grizzly Bears, which enters; the second reveals a Forest, which goes to alice's graveyard, not the battlefield.",
+  "board": {"active": "alice", "step": "PrecombatMain", "seats": [{"name": "alice", "manaPool": "GGGGGGGG", "battlefield": [{"card": "Call of the Wild", "label": "call"}], "library": [{"card": "Grizzly Bears"}, {"card": "Forest"}, {"card": "Island"}]}, {"name": "bob", "library": [{"card": "Hill Giant"}, {"card": "Hill Giant"}, {"card": "Hill Giant"}]}]},
+  "timeline": [
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": {"Activate": {"object": "$call", "ability": 0}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass"},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "check": {"Count": {"player": "alice", "zone": "Battlefield", "card": "Grizzly Bears", "count": 1}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "check": {"Count": {"player": "alice", "zone": "Graveyard", "card": "Grizzly Bears", "count": 0}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": {"Activate": {"object": "$call", "ability": 0}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass"},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "check": {"Count": {"player": "alice", "zone": "Graveyard", "card": "Forest", "count": 1}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "check": {"Count": {"player": "alice", "zone": "Battlefield", "card": "Forest", "count": 0}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "check": {"View": {"of": "Zone", "player": "alice", "zone": "Library", "is": ["Island"]}}}
+  ]
+}

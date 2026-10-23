@@ -1,0 +1,17 @@
+{
+  "description": "CR 701.9b / 602.5 whole card: Rag Man can't be activated on bob's turn; on alice's, bob reveals his hand and discards a creature card at random from it",
+  "note": "Bob holds two creature cards and two lands; the random pick lands on the Giant, alice sees the whole hand, and both lands stay.",
+  "board": {"active": "bob", "step": "PrecombatMain", "seats": [{"name": "bob", "hand": [{"card": "Grizzly Bears", "label": "bears"}, {"card": "Hill Giant", "label": "giant"}, {"card": "Forest", "label": "forest"}, {"card": "Island", "label": "island"}], "library": [{"card": "Plains"}, {"card": "Plains"}, {"card": "Plains"}]}, {"name": "alice", "battlefield": [{"card": "Rag Man", "label": "rag", "ready": true}, {"card": "Swamp", "label": "s1"}, {"card": "Swamp", "label": "s2"}, {"card": "Swamp", "label": "s3"}], "library": [{"card": "Mountain"}, {"card": "Mountain"}, {"card": "Mountain"}]}]},
+  "timeline": [
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "refuse": {"Activate": {"object": "$rag", "ability": 0, "targets": ["$bob"], "mana": ["$s1", "$s2", "$s3"]}}},
+    {"turn": 2, "step": "PrecombatMain", "player": "alice", "do": {"Activate": {"object": "$rag", "ability": 0, "targets": ["$bob"], "mana": ["$s1", "$s2", "$s3"]}}},
+    {"turn": 2, "step": "PrecombatMain", "player": "alice", "do": "Pass"},
+    {"turn": 2, "step": "PrecombatMain", "player": "alice", "refuse": {"Answer": {"prompt": "RandomObject", "with": "$forest"}}},
+    {"turn": 2, "step": "PrecombatMain", "player": "alice", "do": {"Answer": {"prompt": "RandomObject", "with": "$giant"}}},
+    {"turn": 2, "step": "PrecombatMain", "player": "alice", "check": {"Count": {"player": "bob", "zone": "Graveyard", "card": "Hill Giant", "count": 1}}},
+    {"turn": 2, "step": "PrecombatMain", "player": "alice", "check": {"Count": {"player": "bob", "zone": "Hand", "card": "Grizzly Bears", "count": 1}}},
+    {"turn": 2, "step": "PrecombatMain", "player": "alice", "check": {"Count": {"player": "bob", "zone": "Hand", "card": "Forest", "count": 1}}},
+    {"turn": 2, "step": "PrecombatMain", "player": "alice", "check": {"Count": {"player": "bob", "zone": "Hand", "card": "Island", "count": 1}}},
+    {"turn": 2, "step": "PrecombatMain", "player": "alice", "check": {"View": {"of": "Witnessed", "player": "alice", "is": ["Grizzly Bears", "Hill Giant", "Forest", "Island"]}}}
+  ]
+}

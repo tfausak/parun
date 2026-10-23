@@ -183,6 +183,9 @@ eventBindingsOver board gs bearerBecame becameInGraveyard bearer you cond event 
   -- sums across one damage event. Unconditional given a match.
   (TriggerCondition.SelfDealsDamage, GameEvent.DamageDealt ev) ->
     Binding.setEventAmount (DamageEvent.amount ev) Map.empty
+  -- Spirit Link's "that much", the arm above read off the bearer's host.
+  (TriggerCondition.AttachedCreatureDealsDamage, GameEvent.DamageDealt ev) ->
+    Binding.setEventAmount (DamageEvent.amount ev) Map.empty
   -- Doomskar Warrior's "that many" for the player-or-battle arm, and Aisha of
   -- Sparks and Smoke's "that damage" for the any-recipient one, whose batch
   -- batchBindings sums across the CR 510.2 step. Unconditional given a match.
@@ -786,9 +789,14 @@ eventBindingsOver board gs bearerBecame becameInGraveyard bearer you cond event 
   -- eventBindingSlots' per-condition promise holds with no event in hand.
   --
   -- The ATTACKER on the same event is the bearer, already bound as CR 113.7a's
-  -- source, so it gets no second name.
-  (TriggerCondition.SelfBecomesBlockedBy _, GameEvent.BecameBlocking (BecameBlocking.MkBecameBlocking {BecameBlocking.blocker = blocker})) ->
-    Binding.setBlockingCreature blocker Map.empty
+  -- source, so it gets no second name. Guarded on it, so a declaration in which
+  -- the bearer is the BLOCKER stamps nothing here: under CR 603.1b's AnyOf this
+  -- branch is unioned with SelfBlocksCreature's off one event, and Thicket
+  -- Basilisk's "that creature" would otherwise name the Basilisk itself
+  -- (data/scenarios/thicket-basilisk-destroys-a-non-wall-at-end-of-combat.json).
+  (TriggerCondition.SelfBecomesBlockedBy _, GameEvent.BecameBlocking (BecameBlocking.MkBecameBlocking {BecameBlocking.attacker = attacker, BecameBlocking.blocker = blocker}))
+    | attacker == bearer ->
+        Binding.setBlockingCreature blocker Map.empty
   -- CR 701.54c's "the blocking creature", off the same field and under the same
   -- name. The bystander form: the ATTACKER is not the bearer here, and it gets no
   -- slot, rule 701.54c naming it only as "your Ring-bearer" in the condition.
@@ -801,9 +809,10 @@ eventBindingsOver board gs bearerBecame becameInGraveyard bearer you cond event 
   -- CR 509.3b's "that creature": the ATTACKER on the very same declaration, which
   -- Loyal Sentry's payload destroys. The mirror of the arm above, and
   -- unconditional for the same reason; here it is the BLOCKER that is the bearer
-  -- and so gets no second name.
-  (TriggerCondition.SelfBlocksCreature _, GameEvent.BecameBlocking (BecameBlocking.MkBecameBlocking {BecameBlocking.attacker = attacker})) ->
-    Binding.setBlockedCreature attacker Map.empty
+  -- and so gets no second name. Guarded on it for the arm above's reason.
+  (TriggerCondition.SelfBlocksCreature _, GameEvent.BecameBlocking (BecameBlocking.MkBecameBlocking {BecameBlocking.attacker = attacker, BecameBlocking.blocker = blocker}))
+    | blocker == bearer ->
+        Binding.setBlockedCreature attacker Map.empty
   -- CR 603.6a's "enters attached to a creature": that host, bound as the
   -- trigger is placed, so Infinite Reflection copies it even once the Aura has
   -- moved on (its ruling, 2012-05-01). Through CR 608.2h's record where CR
@@ -1445,6 +1454,7 @@ eventBindingSlots cond = case cond of
   -- the eventBindings arm above for why the recipient gets no slot.
   TriggerCondition.SelfDealsDamageToCreature -> Set.singleton Binding.eventAmount
   TriggerCondition.SelfDealsDamage -> Set.singleton Binding.eventAmount
+  TriggerCondition.AttachedCreatureDealsDamage -> Set.singleton Binding.eventAmount
   -- CR 120.3's amount for enrage, which Coalhauler Swine's "it deals that much
   -- damage to each player" reads: the same slot CR 615.13's prevention and CR
   -- 119.9's life gain stamp, and guaranteed given a match -- every DamageDealt

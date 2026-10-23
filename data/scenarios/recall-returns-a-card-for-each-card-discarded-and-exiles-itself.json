@@ -1,0 +1,15 @@
+{
+  "description": "CR 107.3a / 701.9a whole card: Recall with X=2 discards two cards, returns two cards of alice's choice from her graveyard, one of them just discarded, and exiles itself",
+  "note": "Alice keeps her Swamp, discards Forest and Island, and takes back Hill Giant and the Forest; Grizzly Bears and the Island stay in the graveyard.",
+  "board": {"active": "alice", "step": "PrecombatMain", "seats": [{"name": "alice", "manaPool": "UUUUU", "hand": [{"card": "Recall", "label": "recall"}, {"card": "Forest", "label": "forest"}, {"card": "Island", "label": "island"}, {"card": "Swamp", "label": "swamp"}], "graveyard": [{"card": "Hill Giant", "label": "giant"}, {"card": "Grizzly Bears", "label": "bears"}], "library": [{"card": "Plains"}, {"card": "Plains"}, {"card": "Plains"}]}, {"name": "bob", "library": [{"card": "Plains"}, {"card": "Plains"}, {"card": "Plains"}]}]},
+  "timeline": [
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": {"Cast": {"object": "$recall", "x": 2}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass"},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": {"Answer": {"prompt": "ChooseDiscard", "with": ["$forest", "$island"]}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": {"Answer": {"prompt": "ChooseCardInGraveyard", "with": "$giant"}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": {"Answer": {"prompt": "ChooseCardInGraveyard", "with": "Forest"}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "check": {"View": {"of": "Zone", "player": "alice", "zone": "Hand", "is": ["$swamp", "Hill Giant", "Forest"]}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "check": {"View": {"of": "Zone", "player": "alice", "zone": "Graveyard", "is": ["$bears", "Island"]}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "check": {"Count": {"player": "alice", "zone": "Exile", "card": "Recall", "count": 1}}}
+  ]
+}

@@ -668,6 +668,13 @@ spec s = Spec.describe s "Pawl.Codec.TriggerCondition" $ do
       TriggerCondition.codec
       TriggerCondition.AttachedCreatureBecomesTapped
       " {\"type\":\"AttachedCreatureBecomesTapped\"} "
+  -- CR 120.1's damage read off the enchanted permanent, the same link again.
+  Spec.it s "AttachedCreatureDealsDamage" $
+    Common.assertCodec
+      s
+      TriggerCondition.codec
+      TriggerCondition.AttachedCreatureDealsDamage
+      " {\"type\":\"AttachedCreatureDealsDamage\"} "
   -- CR 701.26a's tap by a bystander, batch-read (CR 603.2c).
   Spec.it s "PermanentsBecomeTapped round-trips with its Filter" $
     Common.assertCodec

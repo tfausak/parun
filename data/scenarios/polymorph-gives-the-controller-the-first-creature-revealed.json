@@ -1,0 +1,14 @@
+{
+  "description": "CR 701.20a / 701.24a whole card: Polymorph destroys bob's creature, and he reveals until a creature card, puts it onto the battlefield, and shuffles the rest back",
+  "note": "Bob reveals an Island and a Forest before his Grizzly Bears; the Bears enters under his control and the two lands, with the Swamp under them, are shuffled back.",
+  "board": {"active": "alice", "step": "PrecombatMain", "seats": [{"name": "alice", "manaPool": "UUUU", "hand": [{"card": "Polymorph", "label": "polymorph"}], "library": [{"card": "Plains"}, {"card": "Plains"}, {"card": "Plains"}]}, {"name": "bob", "battlefield": [{"card": "Hill Giant", "label": "giant"}], "library": [{"card": "Island", "label": "island"}, {"card": "Forest", "label": "forest"}, {"card": "Grizzly Bears"}, {"card": "Swamp", "label": "swamp"}]}]},
+  "timeline": [
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": {"Cast": {"object": "$polymorph", "targets": ["$giant"]}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass"},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": {"Answer": {"prompt": "Shuffle", "with": ["$swamp", "$forest", "$island"]}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "check": {"Count": {"player": "bob", "zone": "Graveyard", "card": "Hill Giant", "count": 1}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "check": {"Count": {"player": "bob", "zone": "Battlefield", "card": "Grizzly Bears", "count": 1}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "check": {"View": {"of": "Witnessed", "player": "alice", "is": ["Island", "Forest", "Grizzly Bears"]}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "check": {"View": {"of": "Zone", "player": "bob", "zone": "Library", "is": ["$swamp", "Forest", "Island"]}}}
+  ]
+}
