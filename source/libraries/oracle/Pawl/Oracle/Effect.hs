@@ -10,6 +10,7 @@ import qualified Data.List as List
 import qualified Data.List.NonEmpty as NonEmpty
 import qualified Data.Map.Strict as Map
 import qualified Data.Maybe as Maybe
+import qualified Data.Sequence as Seq
 import qualified Data.Text as Text
 import qualified Pawl.Oracle.Continuous as Continuous
 import qualified Pawl.Oracle.Cost as Cost
@@ -37,6 +38,8 @@ import qualified Pawl.Types.DamageKind as DamageKind
 import qualified Pawl.Types.DamagePart as DamagePart
 import qualified Pawl.Types.DealDamage as DealDamage
 import qualified Pawl.Types.Destroy as Destroy
+import qualified Pawl.Types.DestructionR as DestructionR
+import qualified Pawl.Types.DestructionRewrite as DestructionRewrite
 import qualified Pawl.Types.Discard as Discard
 import qualified Pawl.Types.Draw as Draw
 import qualified Pawl.Types.Duration as Duration
@@ -77,6 +80,9 @@ import qualified Pawl.Types.PutCounters as PutCounters
 import qualified Pawl.Types.Quantity as Quantity
 import qualified Pawl.Types.RandomCardInHand as RandomCardInHand
 import qualified Pawl.Types.Regenerability as Regenerability
+import qualified Pawl.Types.Replace as Replace
+import qualified Pawl.Types.ReplacementEffect as ReplacementEffect
+import qualified Pawl.Types.ReplacementOrigin as ReplacementOrigin
 import qualified Pawl.Types.SacrificeEffect as SacrificeEffect
 import qualified Pawl.Types.Sacrificer as Sacrificer
 import qualified Pawl.Types.SlotCount as SlotCount
@@ -85,6 +91,7 @@ import qualified Pawl.Types.TapState as TapState
 import qualified Pawl.Types.TargetCount as TargetCount
 import qualified Pawl.Types.TargetSlot as TargetSlot
 import qualified Pawl.Types.TheseDiscard as TheseDiscard
+import qualified Pawl.Types.Uses as Uses
 import qualified Pawl.Types.Zone as Zone
 import qualified Pawl.Types.ZoneScope as ZoneScope
 
@@ -115,7 +122,9 @@ data Mana
 -- | A modal payload's text: its one mode, or the modes as a bulleted list
 -- after the instruction to choose (CR 700.2), each mode one line. Modes that
 -- each add mana read as one choice of mana: "Add {R} or {W}." (Skyshroud
--- Elf).
+-- Elf), and modes that each add mana and then do the same thing read as that
+-- choice and then the rest: "Add {W} or {U}. This land deals 1 damage to
+-- you." (Adarkar Wastes).
 modal :: (Eq ability) => Target.Context -> Modal.Modal Card.Card ability -> [Text.Text]
 modal context m = case (Foldable.toList (Modal.modes m), Modal.selection m) of
   ([only], ModeSelection.ChooseExactly 1) -> mode context only
@@ -123,6 +132,12 @@ modal context m = case (Foldable.toList (Modal.modes m), Modal.selection m) of
     | Just added' <- traverse manaMode modes,
       selection == ModeSelection.ChooseExactly 1 ->
         [Prose.sentence (Text.pack "add " <> Prose.listing "or" added')]
+    | selection == ModeSelection.ChooseExactly 1,
+      Just split <- traverse manaThen modes,
+      (_, rest) : others <- split,
+      all ((== rest) . snd) others -> do
+        following <- mode context rest
+        followedBy context (Prose.sentence (Text.pack "add " <> Prose.listing "or" (fmap fst split))) following
     | otherwise -> do
         heading <- choose selection (length modes)
         bodies <- traverse (mode context {Target.breaks = [Text.pack " "]}) modes
@@ -161,6 +176,17 @@ manaMode m = case (Foldable.toList (Mode.clauses m), Map.null (Mode.targetSlots 
           [(Symbols symbols, _)] <- added (ManaAddition.production a) (ManaAddition.count a) ->
             Just (MkPredicate Nothing (Text.pack "add " <> symbols) [] [] (Just (Symbols symbols)) False)
       _ -> Nothing
+
+-- | A mode whose first instruction adds mana and which does more after it,
+-- split there: the symbols that instruction adds, and the mode without it.
+manaThen :: (Eq ability) => Mode.Mode Card.Card ability -> Maybe (Text.Text, Mode.Mode Card.Card ability)
+manaThen m = case Seq.viewl (Mode.clauses m) of
+  c Seq.:< cs
+    | e Seq.:< es <- Seq.viewl (Clause.effects c),
+      Just symbols <- manaMode m {Mode.clauses = Seq.singleton c {Clause.effects = Seq.singleton e}} ->
+        let rest = if Seq.null es then cs else c {Clause.effects = es} Seq.<| cs
+         in if Seq.null rest then Nothing else Just (symbols, m {Mode.clauses = rest})
+  _ -> Nothing
 
 -- | The clause with every rider dropped: mandatory and ungated.
 unridden :: Clause.Clause card ability -> Clause.Clause card ability
@@ -598,6 +624,15 @@ effect context e = case e of
   -- instruction's controller sacrifices. A sweep is not spelled out here.
   Effect.Sacrifice (SacrificeEffect.MkSacrificeEffect r@(ObjectRef.InSlot _) Sacrificer.EffectController Nothing) -> acted context (Text.pack "sacrifice ") r
   Effect.Untap r -> acted context (Text.pack "untap ") r
+  -- "Regenerate this creature" (CR 701.19a): a shield for the rest of the
+  -- turn, used up by the one destruction it replaces, on the source or on
+  -- the object a slot holds.
+  Effect.Replace (Replace.MkReplace Duration.UntilEndOfTurn Uses.Once ReplacementOrigin.Other Nothing (ReplacementEffect.DestructionR (DestructionR.MkDestructionR matching DestructionRewrite.Regenerate))) -> do
+    r <- case matching of
+      Nothing -> [ObjectRef.InSlot Target.selfSlot]
+      Just (Filter.Type.IsBound s) -> [ObjectRef.InSlot s]
+      _ -> []
+    acted context (Text.pack "regenerate ") r
   Effect.Discard d -> discarded context d
   Effect.PreventNextDamage p
     | PreventNextDamage.duration p == Duration.UntilEndOfTurn,

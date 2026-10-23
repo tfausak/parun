@@ -1,0 +1,22 @@
+{
+  "description": "CR 601.2i / 603.5 whole card: Verduran Enchantress lets its controller draw a card when they cast an enchantment spell",
+  "note": "Alice's Shock is no enchantment: a trigger would raise a prompt the timeline does not answer. Her Burrowing triggers it, she takes the draw, and an Island reaches her hand; bob's Burrowing on his turn is not hers and leaves it be.",
+  "board": {"active": "alice", "step": "PrecombatMain", "seats": [{"name": "alice", "library": [{"card": "Island"}, {"card": "Island"}, {"card": "Island"}], "battlefield": [{"card": "Verduran Enchantress", "label": "ench"}, {"card": "Mountain", "label": "m1"}, {"card": "Mountain", "label": "m2"}], "hand": [{"card": "Shock", "label": "shock"}, {"card": "Burrowing", "label": "burrowing"}]}, {"name": "bob", "library": [{"card": "Island"}, {"card": "Island"}, {"card": "Island"}], "battlefield": [{"card": "Mountain", "label": "bm"}], "hand": [{"card": "Burrowing", "label": "theirs"}]}]},
+  "timeline": [
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": {"Cast": {"object": "$shock", "targets": ["$bob"], "mana": ["$m1", null]}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass"},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "check": {"Count": {"player": "alice", "zone": "Hand", "card": "Island", "count": 0}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": {"Cast": {"object": "$burrowing", "targets": ["$ench"], "mana": ["$m2"]}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass"},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": {"ChooseOptional": {"type": "Exercises"}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "check": {"Count": {"player": "alice", "zone": "Hand", "card": "Island", "count": 1}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass"},
+    {"turn": 2, "step": "PrecombatMain", "player": "bob", "do": {"Cast": {"object": "$theirs", "targets": ["$ench"], "mana": ["$bm"]}}},
+    {"turn": 2, "step": "PrecombatMain", "player": "bob", "do": "Pass"}
+  ],
+  "final": [
+    {"Count": {"player": "alice", "zone": "Hand", "card": "Island", "count": 1}},
+    {"Count": {"player": "alice", "zone": "Battlefield", "card": "Burrowing", "count": 1}},
+    {"Count": {"player": "bob", "zone": "Battlefield", "card": "Burrowing", "count": 1}}
+  ]
+}

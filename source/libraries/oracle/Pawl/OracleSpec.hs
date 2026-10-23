@@ -46,12 +46,16 @@ import qualified Pawl.Types.DamageKind as DamageKind
 import qualified Pawl.Types.DamagePart as DamagePart
 import qualified Pawl.Types.DealDamage as DealDamage
 import qualified Pawl.Types.Destroy as Destroy
+import qualified Pawl.Types.DestructionR as DestructionR
+import qualified Pawl.Types.DestructionRewrite as DestructionRewrite
 import qualified Pawl.Types.Discard as Discard
 import qualified Pawl.Types.DiscardCards as DiscardCards
 import qualified Pawl.Types.Draw as Draw
 import qualified Pawl.Types.Duration as Duration
 import qualified Pawl.Types.Effect as Effect
 import qualified Pawl.Types.EndingStep as EndingStep
+import qualified Pawl.Types.EntryR as EntryR
+import qualified Pawl.Types.EntryRewrite as EntryRewrite
 import qualified Pawl.Types.EntryRiders as EntryRiders
 import qualified Pawl.Types.Face as Face
 import qualified Pawl.Types.Filter as Filter
@@ -96,17 +100,22 @@ import qualified Pawl.Types.PlayerScope as PlayerScope
 import qualified Pawl.Types.Pool as Pool
 import qualified Pawl.Types.Power as Power
 import qualified Pawl.Types.PreventNextDamage as PreventNextDamage
+import qualified Pawl.Types.PrintedReplacement as PrintedReplacement
 import qualified Pawl.Types.Protection as Protection
 import qualified Pawl.Types.PutCounters as PutCounters
 import qualified Pawl.Types.Quantity as Quantity
 import qualified Pawl.Types.RandomCardInHand as RandomCardInHand
 import qualified Pawl.Types.Regenerability as Regenerability
+import qualified Pawl.Types.Replace as Replace
+import qualified Pawl.Types.ReplacementEffect as ReplacementEffect
+import qualified Pawl.Types.ReplacementOrigin as ReplacementOrigin
 import qualified Pawl.Types.Sacrifice as Sacrifice
 import qualified Pawl.Types.SacrificeEffect as SacrificeEffect
 import qualified Pawl.Types.Sacrificer as Sacrificer
 import qualified Pawl.Types.Scope as Scope
 import qualified Pawl.Types.SlotCount as SlotCount
 import qualified Pawl.Types.SlotName as SlotName
+import qualified Pawl.Types.SpellCast as SpellCast
 import qualified Pawl.Types.StaticAbility as StaticAbility
 import qualified Pawl.Types.StepBegins as StepBegins
 import qualified Pawl.Types.Subtype as Subtype
@@ -124,6 +133,7 @@ import qualified Pawl.Types.TriggerLimit as TriggerLimit
 import qualified Pawl.Types.TriggeredAbility as TriggeredAbility
 import qualified Pawl.Types.TurnScope as TurnScope
 import qualified Pawl.Types.TypeLine as TypeLine
+import qualified Pawl.Types.Uses as Uses
 import qualified Pawl.Types.Ward as Ward
 import qualified Pawl.Types.Zone as Zone
 import qualified Pawl.Types.ZoneScope as ZoneScope
@@ -337,7 +347,8 @@ spec s = Spec.describe s "Pawl.Oracle" $ do
 
   -- CR 603.4: "[When/Whenever/At] [event], if [condition], [effect]", the
   -- condition a count of cards in a hand or of permanents, the source's
-  -- status, or a player's life; hellbent's ability word (CR 207.2c) free.
+  -- status, or a player's life; hellbent's and raid's ability words (CR
+  -- 207.2c) free.
   Spec.it s "render prints an intervening if clause" $ do
     let endStep = TriggerCondition.StepBegins (StepBegins.MkStepBegins (Phase.Ending EndingStep.EndStep) Nothing TurnScope.ControllersTurn)
         upkeeps scope = TriggerCondition.StepBegins (StepBegins.MkStepBegins (Phase.Beginning BeginningStep.Upkeep) Nothing scope)
@@ -346,6 +357,8 @@ spec s = Spec.describe s "Pawl.Oracle" $ do
         hand who = countOf (Filter.And []) (InZone.MkInZone Zone.Hand who)
         academy = gated endStep (compares (hand (PlayerRef.Relative PlayerRelation.You)) Comparison.Exactly 0) [draw (PlayerRef.Relative PlayerRelation.You) 1]
     Spec.assertEq s [[Text.pack "At the beginning of your end step, if you have no cards in hand, draw a card.", Text.pack "Hellbent \8212 At the beginning of your end step, if you have no cards in hand, draw a card."]] (Oracle.abilities academy)
+    let raided = gated endStep (compares (Quantity.AttackersDeclaredThisTurn (PlayerRef.Relative PlayerRelation.You)) Comparison.AtLeast 1) [draw (PlayerRef.Relative PlayerRelation.You) 1]
+    Spec.assertEq s [[Text.pack "At the beginning of your end step, if you attacked this turn, draw a card.", Text.pack "Raid \8212 At the beginning of your end step, if you attacked this turn, draw a card."]] (Oracle.abilities raided)
     Spec.assertEq s (Just (Text.pack "At the beginning of each opponent's upkeep, if that player has seven or more cards in hand, Spark deals 4 damage to that player.")) (Oracle.render (gated (upkeeps TurnScope.OpponentsTurn) (compares (hand (PlayerRef.InSlot thatPlayer)) Comparison.AtLeast 7) [damage [(thatPlayer, 4)]]))
     Spec.assertEq s [[Text.pack "At the beginning of your upkeep, if there are no Zombies on the battlefield, you gain 1 life.", Text.pack "At the beginning of your upkeep, if no Zombies are on the battlefield, you gain 1 life."]] (Oracle.abilities (gated (upkeeps TurnScope.ControllersTurn) (compares (countOf (Filter.HasSubtype Subtype.Zombie) (onBattlefield (PlayerRef.Relative PlayerRelation.AnyPlayer))) Comparison.Exactly 0) [gainLife 1]))
     Spec.assertEq s (Just (Text.pack "At the beginning of your upkeep, if you control no other creatures, you gain 1 life.")) (Oracle.render (gated (upkeeps TurnScope.ControllersTurn) (compares (countOf (Filter.And [Filter.HasCardType CardType.Creature, Filter.ControlledBy PlayerRelation.You, Filter.Not Filter.IsSource]) (onBattlefield (PlayerRef.Relative PlayerRelation.AnyPlayer))) Comparison.Exactly 0) [gainLife 1]))
@@ -738,6 +751,40 @@ spec s = Spec.describe s "Pawl.Oracle" $ do
     let wasToken = Condition.Compares (Compares.MkCompares (Quantity.AgainstSlot (AgainstSlot.MkAgainstSlot target Quantity.WasToken)) Comparison.AtLeast (Quantity.Literal 1))
         kirin = triggered TriggerCondition.SelfEnters [clause [Effect.MoveToZone (move (ObjectRef.InSlot target) Zone.Hand)], (clause [draw (PlayerRef.Relative PlayerRelation.You) 1]) {Clause.condition = Just wasToken}] [(target, upTo 1 (Just (Filter.Not Filter.IsSource)))]
     Spec.assertEq s (Just (Text.pack "When Spark enters, return up to one other target creature to its owner's hand. If it was a token, draw a card.")) (Oracle.render (withFace (\f -> (typed [CardType.Creature] [] f) {Face.triggeredAbilities = [kirin]})))
+
+  -- CR 614.1d: a static ability's replacement effect on the source's
+  -- entering; one functioning only under a condition is not spelled out.
+  Spec.it s "render prints a permanent entering tapped" $ do
+    let tapped = PrintedReplacement.MkPrintedReplacement Nothing (ReplacementEffect.EntryR (EntryR.MkEntryR Filter.IsSource EntryRewrite.Tapped)) Set.empty Nothing
+    Spec.assertEq s (Just (Text.pack "Spark enters tapped.")) (Oracle.render (withFace (\f -> f {Face.replacementEffects = [tapped]})))
+    Spec.assertEq s Nothing (Oracle.render (withFace (\f -> f {Face.replacementEffects = [tapped {PrintedReplacement.condition = Just (Condition.Compares (Compares.MkCompares (Quantity.Literal 1) Comparison.AtLeast (Quantity.Literal 1)))}]})))
+
+  -- CR 601.2i: a cast trigger names the caster as the controller the spell's
+  -- filter gives it (CR 112.2), and no controller as "a player".
+  Spec.it s "render prints a trigger on casting a spell" $ do
+    let cast f = withFace (\g -> g {Face.triggeredAbilities = [triggered (TriggerCondition.SpellCast (SpellCast.MkSpellCast f TurnScope.EachTurn Nothing Nothing Nothing False)) [clause [gainLife 1]] []]})
+    Spec.assertEq s (Just (Text.pack "Whenever a player casts a blue spell, you gain 1 life.")) (Oracle.render (cast (Filter.HasColor Color.Blue)))
+    Spec.assertEq s (Just (Text.pack "Whenever you cast an enchantment spell, you gain 1 life.")) (Oracle.render (cast (Filter.And [Filter.HasCardType CardType.Enchantment, Filter.ControlledBy PlayerRelation.You])))
+    Spec.assertEq s (Just (Text.pack "Whenever an opponent casts a spell, you gain 1 life.")) (Oracle.render (cast (Filter.And [Filter.ControlledBy PlayerRelation.Opponent])))
+    Spec.assertEq s (Just (Text.pack "Whenever you cast an instant or sorcery spell, you gain 1 life.")) (Oracle.render (cast (Filter.And [Filter.Or [Filter.HasCardType CardType.Instant, Filter.HasCardType CardType.Sorcery], Filter.ControlledBy PlayerRelation.You])))
+    Spec.assertEq s (Just (Text.pack "Whenever you cast a Zombie spell or creature spell with flying, you gain 1 life.")) (Oracle.render (cast (Filter.And [Filter.Or [Filter.HasSubtype Subtype.Zombie, Filter.And [Filter.HasCardType CardType.Creature, Filter.HasKeyword Keyword.Flying]], Filter.ControlledBy PlayerRelation.You])))
+
+  -- CR 701.19a: regeneration of the source, or of a target.
+  Spec.it s "render prints regeneration" $ do
+    let shield matching = Effect.Replace (Replace.MkReplace Duration.UntilEndOfTurn Uses.Once ReplacementOrigin.Other Nothing (ReplacementEffect.DestructionR (DestructionR.MkDestructionR matching DestructionRewrite.Regenerate)))
+        regenerate matching slots = withFace (\f -> f {Face.activatedAbilities = [(activated (mana [green]) (shield matching)) {ActivatedAbility.modal = payload [clause [shield matching]] slots}]})
+    Spec.assertEq s (Just (Text.pack "{G}: Regenerate Spark.")) (Oracle.render (regenerate Nothing []))
+    Spec.assertEq s (Just (Text.pack "{G}: Regenerate target creature.")) (Oracle.render (regenerate (Just (Filter.IsBound target)) [(target, TargetSlot.required Pool.Creatures Nothing)]))
+
+  -- CR 106.1 / 605.1a: a choice of mana followed by what every choice does
+  -- reads as the choice and then the rest (Adarkar Wastes).
+  Spec.it s "render prints a choice of mana followed by the same instructions" $ do
+    let added colour = Effect.AddMana (ManaAddition.MkManaAddition (PlayerRef.Relative PlayerRelation.You) (ManaProduction.OfType (ManaType.Colored colour)) (Quantity.Literal 1) ManaRetention.Ordinary Nothing Nothing Nothing)
+        mode' colour = Mode.MkMode (Seq.singleton (clause [added colour, damage [(you, 1)]])) Map.empty
+        pain = (activated (Cost.MkCost (Just (ManaCost.MkManaCost [])) [CostComponent.TapThis]) (addMana 1)) {ActivatedAbility.modal = Modal.MkModal (Seq.fromList [mode' Color.White, mode' Color.Blue]) (ModeSelection.ChooseExactly 1)}
+    Spec.assertEq s [[Text.pack "{T}: Add {W} or {U}. Spark deals 1 damage to you.", Text.pack "{T}: Add {W} or {U}. Then Spark deals 1 damage to you."]] (Oracle.abilities (withFace (\f -> f {Face.activatedAbilities = [pain]})))
+    let uneven = pain {ActivatedAbility.modal = Modal.MkModal (Seq.fromList [mode' Color.White, Mode.MkMode (Seq.singleton (clause [added Color.Blue, damage [(you, 2)]])) Map.empty]) (ModeSelection.ChooseExactly 1)}
+    Spec.assertEq s False (any (any (Text.isInfixOf (Text.pack "{W} or {U}"))) (Oracle.abilities (withFace (\f -> f {Face.activatedAbilities = [uneven]}))))
 
 -- A cost paid on resolution, offered to the payer, of which the instructions
 -- are this branch.

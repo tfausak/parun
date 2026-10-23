@@ -18,6 +18,8 @@ import qualified Pawl.Types.Affected as Affected
 import qualified Pawl.Types.Arithmetic as Arithmetic
 import qualified Pawl.Types.CharacteristicPT as CharacteristicPT
 import qualified Pawl.Types.Duration as Duration
+import qualified Pawl.Types.EntryR as EntryR
+import qualified Pawl.Types.EntryRewrite as EntryRewrite
 import qualified Pawl.Types.Filter as Filter.Type
 import qualified Pawl.Types.Keyword as Keyword
 import qualified Pawl.Types.KeywordFamily as KeywordFamily
@@ -26,7 +28,9 @@ import qualified Pawl.Types.ModifyPowerToughness as ModifyPowerToughness
 import qualified Pawl.Types.ObjectRef as ObjectRef
 import qualified Pawl.Types.Pool as Pool
 import qualified Pawl.Types.Power as Power
+import qualified Pawl.Types.PrintedReplacement as PrintedReplacement
 import qualified Pawl.Types.Quantity as Quantity
+import qualified Pawl.Types.ReplacementEffect as ReplacementEffect
 import qualified Pawl.Types.StaticAbility as StaticAbility
 import qualified Pawl.Types.Subtype as Subtype
 import qualified Pawl.Types.TargetSlot as TargetSlot
@@ -225,3 +229,12 @@ enchant context slot = do
   Monad.guard (case TargetSlot.pool slot of Pool.CardsInGraveyard _ -> False; _ -> True)
   (one, _) <- Target.described context slot
   [Text.pack "Enchant " <> one]
+
+-- | A static ability's replacement effect (CR 614.1): "This land enters
+-- tapped." (CR 614.1d). Any other replacement effect, or one with a
+-- condition, a zone it functions from or a name, is not spelled out here.
+replacement :: Target.Context -> PrintedReplacement.PrintedReplacement card ability effect -> [Text.Text]
+replacement context r = case r of
+  PrintedReplacement.MkPrintedReplacement Nothing (ReplacementEffect.EntryR (EntryR.MkEntryR Filter.Type.IsSource EntryRewrite.Tapped)) zones Nothing
+    | Set.null zones -> [Target.self context <> Text.pack " enters tapped."]
+  _ -> []
