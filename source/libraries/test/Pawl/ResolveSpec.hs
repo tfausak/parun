@@ -2352,6 +2352,7 @@ subgameSpellOn borrowed name effects gs0 =
             Face.additionalCosts = [],
             Face.additionalCostChoices = [],
             Face.modeCosts = Map.empty,
+            Face.modeChooser = PlayerRelation.You,
             Face.maximumX = [],
             Face.minimumX = 0,
             Face.alternativeCosts = [],

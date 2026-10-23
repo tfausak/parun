@@ -16,6 +16,7 @@ import qualified Pawl.Types.CardType as CardType
 import qualified Pawl.Types.Counterability as Counterability
 import qualified Pawl.Types.Face as Face
 import qualified Pawl.Types.Layout as Layout
+import qualified Pawl.Types.PlayerRelation as PlayerRelation
 import qualified Pawl.Types.Subtype as Subtype
 import qualified Pawl.Types.Supertype as Supertype
 import qualified Pawl.Types.TypeLine as TypeLine
@@ -62,6 +63,7 @@ bareFace n =
       Face.additionalCosts = [],
       Face.additionalCostChoices = [],
       Face.modeCosts = Map.empty,
+      Face.modeChooser = PlayerRelation.You,
       Face.maximumX = [],
       Face.minimumX = 0,
       Face.alternativeCosts = [],
