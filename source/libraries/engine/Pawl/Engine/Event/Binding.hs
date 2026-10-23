@@ -937,9 +937,10 @@ eventBindingsOver board gs bearerBecame becameInGraveyard bearer you cond event 
   -- untapped IS the bearer, whom Binding.triggerSource already names.
   (TriggerCondition.SelfBecomesUntapped, _) -> Map.empty
   -- CR 106.12a's permanent, bound for the AttachedCreatureBecomesTapped arm's
-  -- reason: Wild Growth's "its controller" is the enchanted land's controller, and PlayerRef.ControllerOfBound is how a card
-  -- names it -- CR 109.5's "you" would answer the Aura's controller instead,
-  -- which an Aura on an opponent's land makes a different seat.
+  -- reason: Wild Growth's "its controller" is the enchanted land's controller,
+  -- and PlayerRef.ControllerOfBound is how a card names it -- CR 109.5's "you"
+  -- would answer the Aura's controller instead, which an Aura on an opponent's
+  -- land makes a different seat.
   --
   -- Unconditional given a match, AttachedCreatureDies' claim and for its
   -- reason: matchesTrigger accepts only a GameEvent.TappedForMana whose
