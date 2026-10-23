@@ -72,6 +72,10 @@ data SearchDestination
     BattlefieldAttached
   | -- | Grim Reminder's "reveal it", the card staying where it was found (CR 701.20b).
     Reveal
+  | -- | Doomsday's "search ... for five cards", the cards staying where they
+    -- were found, unrevealed (CR 701.23e): Reveal's find with no reveal, as Hand
+    -- is RevealThenHand's.
+    Stay
   | -- | Mystical Tutor's "reveal it, then shuffle and put that card on top": left
     -- out of the shuffle (CR 701.24b), then put on top.
     RevealThenTop
