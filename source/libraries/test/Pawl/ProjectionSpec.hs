@@ -3652,13 +3652,9 @@ spec s registry = Spec.describe s "Pawl.Engine.Projection" $ do
   -- keeps this from passing on a field hardwired True: it is a permanent with no
   -- activated ability at all, printed or intrinsic.
   --
-  -- A REGRESSION FENCE and not a proof of observable behaviour, per CLAUDE.md.
-  -- The only card in data/cards/ writing Filter.HasActivatedAbility is Zirda, the
-  -- Dawnwaker, whose CR 702.139a condition is evaluated only through viewOfCard
-  -- (Pawl.Engine.Companion.fulfilled), so no board in the pool can tell the other
-  -- two builders' answers apart yet. Mutating the shared reader out of
-  -- viewOfCharacteristics reddens the second assertion below and nothing else in
-  -- the suite.
+  -- Power Sink's scenario observes viewOfCharacteristics' answer at gameplay
+  -- level (its "lands with mana abilities" taps a Mountain); viewOfSnapshot's
+  -- is a REGRESSION FENCE, no card in data/cards/ asking it of a snapshot.
   Spec.it s "CR 305.6 / 602.1 a Mountain has an activated ability in every view builder" $ do
     mountain <- S.printingOf s registry "Mountain"
     traveler <- S.printingOf s registry "Doomed Traveler"
