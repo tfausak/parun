@@ -47,7 +47,7 @@ render = Maybe.listToMaybe . renderings
 -- empty for a card some part of which is not rendered yet. Only a single
 -- normal face renders yet, and only the parts of it the fields below name:
 -- its keywords, its enchant abilities (CR 702.5a), its static abilities (CR
--- 604), its spell (CR 112), its activated abilities (CR 602) and its
+-- 604), its characteristic-defining power and toughness (CR 604.3), its spell (CR 112), its activated abilities (CR 602) and its
 -- triggered abilities (CR 603). A card with no rules text renders as no text,
 -- which is what a vanilla creature and a basic land print (CR 305.6, CR
 -- 207.2a).

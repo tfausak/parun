@@ -51,8 +51,8 @@ modifications :: Origin -> Filter.Number -> Bool -> Target.Context -> [Modificat
 modifications origin number each context ms = do
   parts <- traverse part (List.groupBy (\a b -> Maybe.isJust (keywordOf a) && fmap fst (keywordOf a) == fmap fst (keywordOf b)) ms)
   case parts of
-    [(change, Trailing following ends)] -> [(change, following <> ends)]
-    _ -> [(Prose.listing "and" [change <> following | (change, Trailing following _) <- parts], Text.concat [ends | (_, Trailing _ ends) <- parts])]
+    [(change, MkTrailing following ends)] -> [(change, following <> ends)]
+    _ -> [(Prose.listing "and" [change <> following | (change, MkTrailing following _) <- parts], Text.concat [ends | (_, MkTrailing _ ends) <- parts])]
   where
     verb one many = Text.pack $ case number of
       Filter.Singular -> one
@@ -67,7 +67,7 @@ modifications origin number each context ms = do
               (False, _) -> verb "loses " "lose "
               (True, Created) -> verb "gains " "gain "
               (True, Static) -> verb "has " "have "
-        [(change <> Prose.listing "and" keywords, Trailing Text.empty Text.empty)]
+        [(change <> Prose.listing "and" keywords, MkTrailing Text.empty Text.empty)]
       _ -> []
 
 -- | What follows a change past its duration: what it is "for each", which
@@ -75,7 +75,7 @@ modifications origin number each context ms = do
 -- each Aura attached to it and has vigilance"), and the clause defining an X,
 -- which ends the sentence. Oracle text puts both after the duration: "gets
 -- +1/+1 until end of turn for each land you control" (Naya).
-data Trailing = Trailing Text.Text Text.Text
+data Trailing = MkTrailing Text.Text Text.Text
   deriving (Eq, Show)
 
 -- | A change to power and toughness, "+3/+3", and the clause defining an X it
@@ -90,7 +90,7 @@ powerToughness context power toughness =
   let plain = do
         p <- signed toughness power
         t <- signed power toughness
-        [(p <> Text.pack "/" <> t, Trailing Text.empty Text.empty)]
+        [(p <> Text.pack "/" <> t, MkTrailing Text.empty Text.empty)]
       perEach = do
         (pn, pc) <- Maybe.maybeToList (unit power)
         (tn, tc) <- Maybe.maybeToList (unit toughness)
@@ -102,7 +102,7 @@ powerToughness context power toughness =
         Monad.guard (null (Target.names a))
         p <- signed (Quantity.Literal tn) (Quantity.Literal pn)
         t <- signed (Quantity.Literal pn) (Quantity.Literal tn)
-        [(p <> Text.pack "/" <> t, Trailing (Text.pack " for each " <> e) Text.empty)]
+        [(p <> Text.pack "/" <> t, MkTrailing (Text.pack " for each " <> e) Text.empty)]
       variable = do
         v <- case filter (/= Quantity.Literal 0) [power, toughness] of
           v@(Quantity.Count _) : vs | all (== v) vs -> [v]
@@ -111,7 +111,7 @@ powerToughness context power toughness =
         Target.EqualTo e <- [Target.reading a]
         Monad.guard (null (Target.names a))
         let x q = Text.pack (if q == v then "+X" else "+0")
-        [(x power <> Text.pack "/" <> x toughness, Trailing Text.empty (Text.pack ", where X is " <> e))]
+        [(x power <> Text.pack "/" <> x toughness, MkTrailing Text.empty (Text.pack ", where X is " <> e))]
    in if null plain then perEach <> variable else plain
   where
     -- How much one counted object changes it by, and the count, if any.

@@ -512,7 +512,8 @@ added production count = case (production, count) of
 -- slot's targets (CR 601.2d). Parts naming groups share an amount they share
 -- ("X damage to each creature and each player", Earthquake); any other part
 -- states its own ("1 damage to any target and 1 damage to you", Brothers of
--- Fire).
+-- Fire). The source is the card, or an object a slot names ("Target creature
+-- you control deals damage", Soul's Fire).
 dealDamage :: Target.Context -> DealDamage.DealDamage -> [Predicate]
 dealDamage context d
   | Maybe.isJust (DealDamage.excess d) = []

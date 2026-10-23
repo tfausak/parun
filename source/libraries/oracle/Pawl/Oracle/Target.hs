@@ -129,7 +129,7 @@ data Reading
     EqualTo Text.Text
   deriving (Eq, Show)
 
--- | The ways a quantity reads (CR 107.1). A count of objects reads "for
+-- | The ways a quantity reads. A count (CR 608.2h) of objects reads "for
 -- each" of them or "equal to the number of" them, and which of those an
 -- instruction offers, and first, is the instruction's. A characteristic
 -- reads as an object's (CR 208.1): the source's, or a target's, which a mode
@@ -169,7 +169,7 @@ possessive word
   | word == Text.pack "it" = Text.pack "its"
   | otherwise = word <> Text.pack "'s"
 
--- | The objects a count counts (CR 107.1), in both numbers, and the target
+-- | The objects a count counts (CR 608.2h), in both numbers, and the target
 -- slots the words name: ("Mountain you control", "Mountains you control"),
 -- ("card in your hand", "cards in your hand"). Permanents nothing else places
 -- are "on the battlefield" (Fruition). Only a count of members of a zone is
@@ -383,8 +383,8 @@ counted c one many = case c of
 -- | Which graveyards cards are in, as words after their noun: "from your
 -- graveyard", "from a graveyard" or "from graveyards", "from a single
 -- graveyard" for cards all in one (CR 601.2c, Carrion Beetles), "from an
--- opponent's graveyard". Only a card leaving its graveyard is described yet,
--- so "in your graveyard" is not spelled out here.
+-- opponent's graveyard". Cards a count reads in a graveyard are described by
+-- 'zoneOf'.
 graveyard :: ZoneScope.ZoneScope -> Maybe Together.Together -> [Filter.Qualifier]
 graveyard scope together = case scope of
   ZoneScope.Scoped (PlayerScope.Related PlayerRelation.You) -> [Filter.MkQualifier (Text.pack "from your graveyard") (Text.pack "from your graveyard")]
