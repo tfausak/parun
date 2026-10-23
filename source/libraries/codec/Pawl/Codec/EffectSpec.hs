@@ -29,6 +29,7 @@ import qualified Pawl.Types.AttachTarget as AttachTarget
 import qualified Pawl.Types.AttackTargetRef as AttackTargetRef
 import qualified Pawl.Types.BecomeCopy as BecomeCopy
 import qualified Pawl.Types.BeginningStep as BeginningStep
+import qualified Pawl.Types.Bid as Bid
 import qualified Pawl.Types.Blight as Blight
 import qualified Pawl.Types.CardName as CardName
 import qualified Pawl.Types.CardType as CardType
@@ -436,6 +437,13 @@ spec s = Spec.describe s "Pawl.Codec.Effect" $ do
       fromJson
       (Effect.ChooseNumber (ChooseNumber.MkChooseNumber (SlotName.MkSlotName (Text.pack "number")) Nothing (PlayerRef.Relative PlayerRelation.You)))
       " {\"type\":\"ChooseNumber\",\"value\":{\"slot\":\"number\"}} "
+  Spec.it s "Bid" $
+    Common.assertJsonCodec
+      s
+      toJson
+      fromJson
+      (Effect.Bid (Bid.MkBid (Quantity.Literal 0) (SlotName.MkSlotName (Text.pack "bid")) (SlotName.MkSlotName (Text.pack "bidder"))))
+      " {\"type\":\"Bid\",\"value\":{\"opening\":{\"type\":\"Literal\",\"value\":0},\"highBid\":\"bid\",\"highBidder\":\"bidder\"}} "
   Spec.it s "Sacrifice" $
     Common.assertJsonCodec
       s

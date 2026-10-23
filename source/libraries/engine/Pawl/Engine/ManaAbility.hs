@@ -343,6 +343,7 @@ manaProduced effect = case effect of
   Effect.NoteManaSpent -> Nothing
   Effect.PlayerSacrifices {} -> Nothing
   Effect.Vote {} -> Nothing
+  Effect.Bid {} -> Nothing
   Effect.RestartGame _ -> Nothing
   Effect.ControlPlayerNextTurn _ -> Nothing
   Effect.ControlPlayerThisResolution _ -> Nothing
@@ -541,6 +542,7 @@ playerChoice effect = case effect of
   Effect.NoteManaSpent -> Nothing
   Effect.PlayerSacrifices {} -> Nothing
   Effect.Vote {} -> Nothing
+  Effect.Bid {} -> Nothing
   Effect.RestartGame _ -> Nothing
   Effect.ControlPlayerNextTurn _ -> Nothing
   Effect.ControlPlayerThisResolution _ -> Nothing
@@ -796,6 +798,7 @@ movesLibraryCard effect = case effect of
   Effect.Venture {} -> False
   Effect.PlayerSacrifices {} -> False
   Effect.Vote {} -> False
+  Effect.Bid {} -> False
   Effect.ControlPlayerNextTurn _ -> False
   Effect.ControlPlayerThisResolution _ -> False
   Effect.Destroy {} -> False

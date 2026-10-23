@@ -1075,8 +1075,9 @@ defaultAnswer p = case p of
   -- CR 107.14's payment is "any amount", zero included, and paying nothing is
   -- how a transcript that ran out declines it.
   Prompt.ChoosePaidEnergy {} -> 0
-  -- CR 107.1c: zero is always a number the player may choose.
-  Prompt.ChooseNumber {} -> 0
+  -- CR 107.1c: the floor is always a number the player may choose -- zero for
+  -- "any number", and for a bid the high bid, which lets it stand.
+  Prompt.ChooseNumber _ _ _ least _ -> least
   -- CR 702.155b's range opens at one, and Pawl.Engine.Event never raises this
   -- prompt for a Saga whose final chapter number is 0, so the floor is always
   -- legal. The smallest answer, for ChooseX's reason.

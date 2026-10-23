@@ -74,6 +74,7 @@ import qualified Pawl.Types.AttackingPlayers as AttackingPlayers
 import qualified Pawl.Types.Backup as Backup
 import qualified Pawl.Types.BecomeCopy as BecomeCopy
 import qualified Pawl.Types.Behold as Behold
+import qualified Pawl.Types.Bid as Bid
 import qualified Pawl.Types.Binding as Binding
 import qualified Pawl.Types.Blight as Blight
 import qualified Pawl.Types.BlockCost as BlockCost
@@ -1446,6 +1447,7 @@ effectNames asking onCard onAbility x = case x of
   Effect.Venture _subtype -> mempty
   Effect.PlayerSacrifices playerSacrifices -> playerSacrificesNames asking playerSacrifices
   Effect.Vote vote -> voteNames asking vote
+  Effect.Bid bid -> bidNames asking bid
   Effect.TakeExtraTurn takeExtraTurn -> takeExtraTurnNames asking takeExtraTurn
   Effect.ShuffleIntoLibrary shuffleIntoLibrary -> shuffleIntoLibraryNames asking shuffleIntoLibrary
   Effect.Ante ante -> anteNames asking ante
@@ -3007,6 +3009,10 @@ untapRewriteNames asking x = case x of
 voteNames :: (Monoid r) => Asking r -> Vote.Vote -> r
 voteNames asking x = case x of
   Vote.MkVote starter choices _ -> playerRefNames asking starter <> voteChoicesNames asking choices
+
+bidNames :: (Monoid r) => Asking r -> Bid.Bid -> r
+bidNames asking x = case x of
+  Bid.MkBid opening highBid highBidder -> quantityNames asking opening <> slotNames asking highBid <> slotNames asking highBidder
 
 voteChoicesNames :: (Monoid r) => Asking r -> VoteChoices.VoteChoices -> r
 voteChoicesNames asking x = case x of

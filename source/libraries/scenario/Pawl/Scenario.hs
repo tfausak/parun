@@ -1047,7 +1047,7 @@ withinOffer prompt chosen = case prompt of
   -- A number up to a bound.
   Prompt.Type.ChooseAssistAmount _ _ _ most -> chosen <= most
   Prompt.Type.ChoosePaidEnergy _ _ _ most -> chosen <= most
-  Prompt.Type.ChooseNumber _ _ _ most -> all (chosen <=) most
+  Prompt.Type.ChooseNumber _ _ _ least most -> least <= chosen && all (chosen <=) most
   -- Every value of the answer's type is on offer: a yes or no, a coin face, a
   -- side, an end of the library, a decision whose every arm the prompt allows.
   Prompt.Type.CallCoin {} -> True

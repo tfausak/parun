@@ -1,0 +1,40 @@
+{
+  "description": "CR 608.2d Illicit Auction goes round in turn order until the high bid stands",
+  "note": "alice opens at 0 for carol's Hill Giant. bob tops to 3; carol cannot name 2, under the high bid, and tops to 5; alice lets 5 stand, then bob tops to 7, so carol and alice are each asked again and let it stand. bob, the high bidder, loses 7 and gains control; nobody else loses life.",
+  "board": {
+    "seats": [
+      {
+        "name": "alice",
+        "battlefield": [
+          { "card": "Mountain", "label": "m1" },
+          { "card": "Mountain", "label": "m2" },
+          { "card": "Mountain", "label": "m3" },
+          { "card": "Mountain", "label": "m4" },
+          { "card": "Mountain", "label": "m5" }
+        ],
+        "hand": [{ "card": "Illicit Auction", "label": "auction" }]
+      },
+      { "name": "bob" },
+      {
+        "name": "carol",
+        "battlefield": [{ "card": "Hill Giant", "label": "giant" }]
+      }
+    ],
+    "active": "alice",
+    "step": "PrecombatMain"
+  },
+  "timeline": [
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": { "Cast": { "object": "$auction", "targets": ["$giant"], "mana": ["$m1", "$m2", "$m3", "$m4", "$m5"] } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "bob", "do": { "Answer": { "prompt": "ChooseNumber", "with": 3 } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "carol", "refuse": { "Answer": { "prompt": "ChooseNumber", "with": 2 } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "carol", "do": { "Answer": { "prompt": "ChooseNumber", "with": 5 } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": { "Answer": { "prompt": "ChooseNumber", "with": 5 } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "bob", "do": { "Answer": { "prompt": "ChooseNumber", "with": 7 } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "carol", "do": { "Answer": { "prompt": "ChooseNumber", "with": 7 } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": { "Answer": { "prompt": "ChooseNumber", "with": 7 } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "check": { "View": { "of": "Controller", "object": "$giant", "is": "bob" } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "check": { "Life": { "player": "bob", "life": 13 } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "check": { "Life": { "player": "carol", "life": 20 } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "check": { "Life": { "player": "alice", "life": 20 } } }
+  ]
+}

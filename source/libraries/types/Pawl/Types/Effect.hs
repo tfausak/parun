@@ -11,6 +11,7 @@ import qualified Pawl.Types.AttachAll as AttachAll
 import qualified Pawl.Types.AttachBound as AttachBound
 import qualified Pawl.Types.AttachTarget as AttachTarget
 import qualified Pawl.Types.BecomeCopy as BecomeCopy
+import qualified Pawl.Types.Bid as Bid
 import qualified Pawl.Types.Blight as Blight
 import qualified Pawl.Types.CardName as CardName
 import qualified Pawl.Types.CastOffer as CastOffer
@@ -779,6 +780,9 @@ data Effect card ability
     -- Pawl.Types.VoteChoices says what the tally then decides (Council's
     -- Judgment, Plea for Power).
     Vote Vote.Vote
+  | -- | CR 608.2d: the players bid in turn order until the high bid stands,
+    -- binding the high bid and the high bidder (Illicit Auction).
+    Bid Bid.Bid
   | -- | CR 500.7: the players the PlayerRef names each get the payload's count
     -- of extra turns (Ral Zarek's "for each coin that comes up heads"), added
     -- directly after the turn this resolves in. CR 500.11 / 614.1b: the
