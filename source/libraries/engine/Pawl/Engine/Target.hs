@@ -98,7 +98,8 @@ import qualified Pawl.Types.ZoneScope as ZoneScope
 -- every caller names it: Cast a spell, Activate an activated ability, Engine a
 -- triggered one, and Resolve.Slots.resolvingKind the object on the stack.
 -- The data/scenarios/target/dense-foliage-* scenarios prove each road but CR
--- 707.10e's (Resolve.Effect.copyRetargets), a regression fence.
+-- 707.10d's and CR 707.10e's (Resolve.Effect.copyRetargets), a regression
+-- fence.
 --
 -- CR 115.5 is subtracted HERE and not in admittedGiven because it is a TARGETING
 -- rule, exactly as rule 702's restrictions are: what an enchant slot admits (CR
