@@ -43,6 +43,11 @@
                           "card": {
                             "faces": [
                               {
+                                "colorIndicator": [
+                                  {
+                                    "type": "White"
+                                  }
+                                ],
                                 "keywords": [
                                   {
                                     "type": "Flying"

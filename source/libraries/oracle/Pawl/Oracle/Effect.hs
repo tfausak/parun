@@ -4,8 +4,10 @@
 module Pawl.Oracle.Effect where
 
 import qualified Control.Monad as Monad
+import qualified Data.Containers.ListUtils as ListUtils
 import qualified Data.Foldable as Foldable
 import qualified Data.List as List
+import qualified Data.List.NonEmpty as NonEmpty
 import qualified Data.Map.Strict as Map
 import qualified Data.Maybe as Maybe
 import qualified Data.Text as Text
@@ -13,10 +15,19 @@ import qualified Pawl.Oracle.Continuous as Continuous
 import qualified Pawl.Oracle.Cost as Cost
 import qualified Pawl.Oracle.Face as Face.Oracle
 import qualified Pawl.Oracle.Filter as Filter
+import qualified Pawl.Oracle.Keyword as Keyword.Oracle
 import qualified Pawl.Oracle.Prose as Prose
 import qualified Pawl.Oracle.Target as Target
+import qualified Pawl.Oracle.Trigger as Trigger
+import qualified Pawl.Types.AgainstSlot as AgainstSlot
 import qualified Pawl.Types.Card as Card
+import qualified Pawl.Types.ChooseBetween as ChooseBetween
 import qualified Pawl.Types.Clause as Clause
+import qualified Pawl.Types.ClauseIndex as ClauseIndex
+import qualified Pawl.Types.Compares as Compares
+import qualified Pawl.Types.Comparison as Comparison
+import qualified Pawl.Types.Condition as Condition
+import qualified Pawl.Types.CostChoice as CostChoice
 import qualified Pawl.Types.CountedDiscard as CountedDiscard
 import qualified Pawl.Types.Counter as Counter
 import qualified Pawl.Types.CounterKind as CounterKind
@@ -33,7 +44,10 @@ import qualified Pawl.Types.EachCardInGraveyard as EachCardInGraveyard
 import qualified Pawl.Types.Effect as Effect
 import qualified Pawl.Types.EntryRiders as EntryRiders
 import qualified Pawl.Types.Filter as Filter.Type
+import qualified Pawl.Types.IfTaken as IfTaken
 import qualified Pawl.Types.Keyword as Keyword
+import qualified Pawl.Types.KeywordDesignator as KeywordDesignator
+import qualified Pawl.Types.KeywordFamily as KeywordFamily
 import qualified Pawl.Types.LibraryPlacement as LibraryPlacement
 import qualified Pawl.Types.LibraryPosition as LibraryPosition
 import qualified Pawl.Types.LifeLoss as LifeLoss
@@ -49,6 +63,10 @@ import qualified Pawl.Types.ModifyTarget as ModifyTarget
 import qualified Pawl.Types.MoveToZone as MoveToZone
 import qualified Pawl.Types.ObjectRef as ObjectRef
 import qualified Pawl.Types.Optionality as Optionality
+import qualified Pawl.Types.OrElse as OrElse
+import qualified Pawl.Types.PayBranch as PayBranch
+import qualified Pawl.Types.PayGate as PayGate
+import qualified Pawl.Types.PayObligation as PayObligation
 import qualified Pawl.Types.PlayerQuantity as PlayerQuantity
 import qualified Pawl.Types.PlayerRef as PlayerRef
 import qualified Pawl.Types.PlayerRelation as PlayerRelation
@@ -94,12 +112,59 @@ data Mana
   | Described
   deriving (Eq, Show)
 
--- | A modal payload's text. Only a payload of one mode renders yet; a modal
--- spell's "Choose one" is not spelled out here.
+-- | A modal payload's text: its one mode, or the modes as a bulleted list
+-- after the instruction to choose (CR 700.2), each mode one line. Modes that
+-- each add mana read as one choice of mana: "Add {R} or {W}." (Skyshroud
+-- Elf).
 modal :: (Eq ability) => Target.Context -> Modal.Modal Card.Card ability -> [Text.Text]
 modal context m = case (Foldable.toList (Modal.modes m), Modal.selection m) of
   ([only], ModeSelection.ChooseExactly 1) -> mode context only
+  (modes@(_ : _ : _), selection)
+    | Just added' <- traverse manaMode modes,
+      selection == ModeSelection.ChooseExactly 1 ->
+        [Prose.sentence (Text.pack "add " <> Prose.listing "or" added')]
+    | otherwise -> do
+        heading <- choose selection (length modes)
+        bodies <- traverse (mode context {Target.breaks = [Text.pack " "]}) modes
+        [heading <> foldMap (Text.pack "\n\8226 " <>) bodies]
   _ -> []
+
+-- | The instruction to choose modes (CR 700.2), given how many there are:
+-- "Choose one \8212", "Choose one or both \8212", "Choose three. You may
+-- choose the same mode more than once." (CR 700.2d).
+choose :: ModeSelection.ModeSelection -> Int -> [Text.Text]
+choose selection count = case selection of
+  ModeSelection.ChooseExactly n -> [Text.pack "Choose " <> Prose.cardinal (toInteger n) <> Text.pack " \8212"]
+  ModeSelection.ChooseExactlyWithRepeats n -> [Text.pack "Choose " <> Prose.cardinal (toInteger n) <> Text.pack ". You may choose the same mode more than once."]
+  ModeSelection.ChooseBetween b
+    | ChooseBetween.least b == 1, toInteger (ChooseBetween.most b) == toInteger count -> [Text.pack (if count == 2 then "Choose one or both \8212" else "Choose one or more \8212")]
+  _ -> []
+
+-- | The symbols a mode adds, when adding mana is all it does and it names no
+-- target.
+manaMode :: (Eq ability) => Mode.Mode Card.Card ability -> Maybe Text.Text
+manaMode m = case (Foldable.toList (Mode.clauses m), Map.null (Mode.targetSlots m)) of
+  ([c], True)
+    | c == (unridden c) {Clause.effects = Clause.effects c},
+      Just ps <- traverse addition (Foldable.toList (Clause.effects c)),
+      [MkPredicate {mana = Just (Symbols symbols)}] <- List.foldr addedTogether [] ps ->
+        Just symbols
+  _ -> Nothing
+  where
+    addition e = case e of
+      Effect.AddMana a
+        | ManaAddition.player a == PlayerRef.Relative PlayerRelation.You,
+          ManaAddition.retention a == ManaRetention.Ordinary,
+          Maybe.isNothing (ManaAddition.restriction a),
+          Maybe.isNothing (ManaAddition.rider a),
+          Maybe.isNothing (ManaAddition.whenSpent a),
+          [(Symbols symbols, _)] <- added (ManaAddition.production a) (ManaAddition.count a) ->
+            Just (MkPredicate Nothing (Text.pack "add " <> symbols) [] [] (Just (Symbols symbols)) False)
+      _ -> Nothing
+
+-- | The clause with every rider dropped: mandatory and ungated.
+unridden :: Clause.Clause card ability -> Clause.Clause card ability
+unridden c = c {Clause.ifTaken = Nothing, Clause.condition = Nothing, Clause.orElse = Nothing, Clause.optionality = Optionality.Mandatory, Clause.payGate = Nothing}
 
 -- | A mode's sentences, each of its target slots named exactly once (CR
 -- 601.2c): a slot named twice, or never, means the text is not the mode's.
@@ -107,28 +172,164 @@ modal context m = case (Foldable.toList (Modal.modes m), Modal.selection m) of
 mode :: (Eq ability) => Target.Context -> Mode.Mode Card.Card ability -> [Text.Text]
 mode context m = do
   let inner = context {Target.slots = Mode.targetSlots m}
-  rendered <- traverse (clause inner) (Foldable.toList (Mode.clauses m))
+  rendered <- steps inner (zip (fmap ClauseIndex.MkClauseIndex [0 ..]) (Foldable.toList (Mode.clauses m)))
   let named = List.sort (concatMap snd rendered)
   Monad.guard (named == Map.keys (Mode.targetSlots m))
   case fmap fst rendered of
     [] -> [Text.empty]
     first : rest -> Monad.foldM (followedBy context) first rest
 
--- | A clause's sentences and the slots they name: its instructions, or "you
--- may" and the one instruction you may follow (CR 603.5). A clause gated by a
--- condition, an "if you do" or a payment is not spelled out here, nor a "may"
--- another player decides or one over more than one instruction.
+-- | A mode's clauses as the steps its text takes, each with the slots it
+-- names. A clause hanging off the one before it reads with it (CR 608.2c):
+-- "You may discard a card. If you do, draw a card." (Tweeze), "sacrifice it
+-- unless you discard a card at random" (Pillaging Horde), and a pair of which
+-- you choose one (CR 608.2d) as "You may tap or untap target permanent."
+-- (Twiddle).
+steps :: (Eq ability) => Target.Context -> [(ClauseIndex.ClauseIndex, Clause.Clause Card.Card ability)] -> [[(Text.Text, [SlotName.SlotName])]]
+steps context cs = case cs of
+  [] -> [[]]
+  (i, c) : (j, d) : rest
+    | Clause.ifTaken d == Just (IfTaken.AnyTaken (NonEmpty.singleton i)) -> do
+        (first, ms) <- clause context c
+        (body, ns) <- clause (noted context [c]) d {Clause.ifTaken = Nothing}
+        fmap ((first <> Text.pack " If you do, " <> lowered context body, ms <> ns) :) (steps (noted context [c, d]) rest)
+    | Clause.ifTaken d == Just (IfTaken.NoneTaken (NonEmpty.singleton i)),
+      Clause.optionality c == Optionality.Optional (PlayerRef.Relative PlayerRelation.You),
+      c == (unridden c) {Clause.optionality = Clause.optionality c},
+      d == (unridden d) {Clause.ifTaken = Clause.ifTaken d} -> do
+        p <- predicate context c
+        q <- predicate context d
+        Monad.guard (maybe True ((== Text.pack "you") . Target.wording) (subject p) && null (after q) && Maybe.isNothing (mana q))
+        let step = (Prose.sentence ((if implied q then verb q else clauseText q) <> Text.pack " unless you " <> verb p), allMentions q <> mentions p)
+        fmap (step :) (steps (noted context [c, d]) rest)
+    | Just o <- Clause.orElse c,
+      Just o' <- Clause.orElse d,
+      OrElse.sibling o == j,
+      OrElse.sibling o' == i,
+      OrElse.chooser o == PlayerRef.Relative PlayerRelation.You,
+      not (OrElse.villainous o),
+      o' == o {OrElse.sibling = i},
+      Clause.optionality c == Clause.optionality d,
+      c == (unridden c) {Clause.optionality = Clause.optionality c, Clause.orElse = Clause.orElse c},
+      d == (unridden d) {Clause.optionality = Clause.optionality d, Clause.orElse = Clause.orElse d} -> do
+        p <- predicate context c
+        q <- predicate context d
+        let (one, object) = Text.breakOn (Text.pack " ") (verb p)
+            (other, object') = Text.breakOn (Text.pack " ") (verb q)
+        Monad.guard (Maybe.isNothing (subject p) && Maybe.isNothing (subject q) && object == object' && mentions p == mentions q && null (after p) && null (after q))
+        let either' = one <> Text.pack " or " <> other <> object
+        text <- case Clause.optionality c of
+          Optionality.Mandatory -> [Prose.sentence either']
+          Optionality.Optional (PlayerRef.Relative PlayerRelation.You) -> [Prose.sentence (Text.pack "you may " <> either')]
+          _ -> []
+        fmap ((text, mentions p) :) (steps (noted context [c, d]) rest)
+  (_, c) : rest -> do
+    step <- clause context c
+    fmap (step :) (steps (noted context [c]) rest)
+
+-- | The context once these clauses have named their objects.
+noted :: Target.Context -> [Clause.Clause card ability] -> Target.Context
+noted context = noting context . concatMap (Foldable.toList . Clause.effects)
+
+-- | A clause's one instruction, its riders aside.
+predicate :: (Eq ability) => Target.Context -> Clause.Clause Card.Card ability -> [Predicate]
+predicate context c = do
+  predicates <- instructions context (Foldable.toList (Clause.effects c))
+  case List.foldr addedTogether [] predicates of
+    [p] -> [p]
+    _ -> []
+
+-- | A sentence as it reads after a word that opens it ("If you do, draw a
+-- card."), the card's name left capitalised.
+lowered :: Target.Context -> Text.Text -> Text.Text
+lowered context text
+  | Target.self context /= Text.pack "it" && Text.isPrefixOf (Target.self context) text = text
+  | otherwise = Prose.decapitalise text
+
+-- | A clause's sentences and the slots they name: its instructions, "you may"
+-- and the one instruction you may follow (CR 603.5), its instructions with a
+-- cost paid on resolution (CR 118.12), or "If [condition], [instructions]."
+-- (CR 608.2c). A clause gated by an "if you do" reads with its neighbour
+-- ('steps'), and a "may" another player decides or one over more than one
+-- instruction is not spelled out here.
 clause :: (Eq ability) => Target.Context -> Clause.Clause Card.Card ability -> [(Text.Text, [SlotName.SlotName])]
 clause context c
-  | Maybe.isJust (Clause.ifTaken c) || Maybe.isJust (Clause.condition c) || Maybe.isJust (Clause.orElse c) || Maybe.isJust (Clause.payGate c) = []
+  | Maybe.isJust (Clause.ifTaken c) || Maybe.isJust (Clause.orElse c) = []
+  | Just gate <- Clause.condition c = do
+      (words', itself) <- condition context gate
+      (body, ms) <- clause (if itself then context {Target.self = Text.pack "it"} else context) c {Clause.condition = Nothing}
+      [(Text.pack "If " <> words' <> Text.pack ", " <> lowered context body, ms)]
   | otherwise = do
       predicates <- instructions context (Foldable.toList (Clause.effects c))
-      case (Clause.optionality c, List.foldr addedTogether [] predicates) of
-        (Optionality.Mandatory, together) -> joined context together
-        (Optionality.Optional (PlayerRef.Relative PlayerRelation.You), [p])
+      case (Clause.payGate c, Clause.optionality c, List.foldr addedTogether [] predicates) of
+        (Just g, Optionality.Mandatory, together) -> paid context g together
+        (Nothing, Optionality.Mandatory, together) -> joined context together
+        (Nothing, Optionality.Optional (PlayerRef.Relative PlayerRelation.You), [p])
           | maybe True ((== Text.pack "you") . Target.wording) (subject p) ->
               [(Prose.sentence (Text.pack "you may " <> verb p) <> trailing p, mentions p)]
         _ -> []
+
+-- | A condition a clause's instructions wait on, and whether its words name
+-- the source, which the instructions then call "it": "this spell was kicked"
+-- (CR 702.33d, Jilt), "this spell's prowl cost was paid" (CR 702.76a, Morsel
+-- Theft), "it was a token" (Sunpearl Kirin), or any condition an intervening
+-- "if" clause reads ('Trigger.condition'). A condition on a spell is about
+-- the spell only in a spell's instructions, the ones a paragraph may break
+-- (CR 113.3a).
+condition :: Target.Context -> Condition.Condition -> [(Text.Text, Bool)]
+condition context c = case c of
+  Condition.Compares (Compares.MkCompares measured Comparison.AtLeast (Quantity.Literal 1)) -> case measured of
+    Quantity.TimesPaid (KeywordDesignator.Printed KeywordFamily.Kicker) | spell -> [(Text.pack "this spell was kicked", True)]
+    Quantity.CastUsing (KeywordDesignator.OfFamily f) | spell -> do
+      name <- Keyword.Oracle.family f
+      [(Text.pack "this spell's " <> name <> Text.pack " cost was paid", False)]
+    Quantity.AgainstSlot (AgainstSlot.MkAgainstSlot s Quantity.WasToken) -> do
+      it <- Target.object context Target.All (ObjectRef.InSlot s)
+      Monad.guard (null (Target.mentions it) && Target.number it == Filter.Singular)
+      [(Target.wording it <> Text.pack " was a token", False)]
+    _ -> stated
+  _ -> stated
+  where
+    spell = elem (Text.pack "\n") (Target.breaks context)
+    stated = fmap (\words' -> (words', False)) (Trigger.condition context c)
+
+-- | Instructions with a cost paid on resolution (CR 118.12): "You may pay
+-- {1}{U}. If you do, draw a card." (Merfolk Seer), "Counter target spell
+-- unless its controller pays {3}." (Mana Leak, CR 118.12a), "unless any
+-- player pays {2}" (Nakaya Shade). A cost that is not one thing, one offered
+-- by an earlier clause or reckoned from an object's mana cost, or one the
+-- payer is not asked about, is not spelled out here.
+paid :: Target.Context -> PayGate.PayGate -> [Predicate] -> [(Text.Text, [SlotName.SlotName])]
+paid context g predicates
+  | Maybe.isJust (PayGate.basis g) || Maybe.isJust (PayGate.offeredAt g) || PayGate.obligation g /= PayObligation.Optional = []
+  | otherwise = do
+      one <- case CostChoice.unwrap (PayGate.cost g) of
+        only NonEmpty.:| [] -> [only]
+        _ -> []
+      (second, third) <- Cost.payment (Target.self context) (Target.keyword context) one
+      (each', counted) <- case PayGate.perEach g of
+        Nothing -> [(Text.empty, [])]
+        Just q -> do
+          a <- Target.amounts context q
+          case Target.reading a of
+            Target.ForEach 1 what -> [(Text.pack " for each " <> what, Target.names a)]
+            _ -> []
+      case PayGate.branch g of
+        PayBranch.IfPaid -> do
+          (_, person) <- Target.player context (PayGate.payer g)
+          Monad.guard (person == Target.Second)
+          (body, ms) <- joined context predicates
+          [(Prose.sentence (Text.pack "you may " <> second <> each') <> Text.pack " If you do, " <> lowered context body, ms <> counted)]
+        branch -> do
+          (who, person) <- case (branch, PayGate.payer g) of
+            (PayBranch.IfNonePaid, PlayerRef.Relative PlayerRelation.AnyPlayer) -> [(Target.MkReference (Text.pack "any player") [] Filter.Singular, Target.Third)]
+            (PayBranch.IfNotPaid, payer) -> Target.player context payer
+            _ -> []
+          p <- case predicates of
+            [p] | null (after p), Maybe.isNothing (mana p) -> [p]
+            _ -> []
+          let pays = if person == Target.Second then second else third
+          [(Prose.sentence ((if implied p then verb p else clauseText p) <> Text.pack " unless " <> Target.wording who <> Text.pack " " <> pays <> each'), allMentions p <> Target.mentions who <> counted)]
 
 -- | A clause's instructions as predicates, consecutive changes to the same
 -- objects for the same duration as one: "gets +2/+2 and gains flying until
@@ -136,21 +337,40 @@ clause context c
 instructions :: (Eq ability) => Target.Context -> [Effect.Effect Card.Card ability] -> [[Predicate]]
 instructions context es = case es of
   [] -> [[]]
-  Effect.ModifyTarget m : rest
+  e@(Effect.ModifyTarget m) : rest
     | Maybe.isNothing (ModifyTarget.each m) -> do
         let alike n = Maybe.isNothing (ModifyTarget.each n) && ModifyTarget.ref n == ModifyTarget.ref m && ModifyTarget.duration n == ModifyTarget.duration m
             (run, others) = span (maybe False alike . modifyTarget) rest
         p <- modified context m (Maybe.mapMaybe (fmap ModifyTarget.modification . modifyTarget) run)
-        fmap (p :) (instructions context others)
+        fmap (p :) (instructions (noting context (e : run)) others)
   e@(Effect.Destroy d) : rest
     | Just _ <- destroyOf e -> do
         let alike n = Destroy.regenerability n == Destroy.regenerability d
             (run, others) = span (maybe False alike . destroyOf) rest
         p <- destroyed context (d : Maybe.mapMaybe destroyOf run)
-        fmap (p :) (instructions context others)
+        fmap (p :) (instructions (noting context (e : run)) others)
   e : rest -> do
     p <- effect context e
-    fmap (p :) (instructions context rest)
+    fmap (p :) (instructions (noting context [e]) rest)
+
+-- | The context once these instructions have named their objects.
+noting :: Target.Context -> [Effect.Effect card ability] -> Target.Context
+noting context es = context {Target.earlier = Target.earlier context <> concatMap objectsOf es}
+
+-- | The objects an instruction names, which a later one calls "it".
+objectsOf :: Effect.Effect card ability -> [ObjectRef.ObjectRef]
+objectsOf e = case e of
+  Effect.ModifyTarget m -> [ModifyTarget.ref m]
+  Effect.Destroy d -> [Destroy.ref d]
+  Effect.Counter c -> [Counter.ref c]
+  Effect.MoveToZone m -> [MoveToZone.ref m]
+  Effect.PutCounters p -> [PutCounters.ref p]
+  Effect.Tap r -> [r]
+  Effect.Untap r -> [r]
+  Effect.Sacrifice s -> [SacrificeEffect.ref s]
+  Effect.DealDamage d -> fmap ObjectRef.InSlot (Maybe.maybeToList (DealDamage.dealer d)) <> fmap DamagePart.ref (Foldable.toList (DealDamage.parts d))
+  Effect.PreventNextDamage p -> Maybe.maybeToList (PreventNextDamage.ref p)
+  _ -> []
 
 -- | The instruction's destruction of the objects a reference names, if it is
 -- one.
@@ -205,7 +425,13 @@ modified context m more = do
   let distributed = case ModifyTarget.ref m of
         ObjectRef.InSlot _ -> Target.number who == Filter.Plural
         _ -> False
-  (change, defined) <- Continuous.modifications Continuous.Created (Target.number who) distributed context (ModifyTarget.modification m : more)
+  (change', defined) <- Continuous.modifications Continuous.Created (Target.number who) distributed context (ModifyTarget.modification m : more)
+  -- Objects a change to power and toughness reaches again get "an
+  -- additional" one: "That creature gets an additional +4/+4" (Wild Might).
+  let again = case ModifyTarget.modification m of
+        Modification.ModifyPowerToughness _ -> elem (ModifyTarget.ref m) (Target.earlier context)
+        _ -> False
+      change = if again then (\(v, rest) -> v <> Text.pack " an additional" <> rest) (Text.breakOn (Text.pack " ") change') else change'
   lasting <- Continuous.duration (ModifyTarget.duration m)
   case lasting of
     Nothing -> [MkPredicate (Just who) (change <> defined) [] [] Nothing False]
@@ -238,10 +464,17 @@ addedTogether p rest = case (mana p, rest) of
 -- sentence (Ancient Tomb). An imperative of "you" beside another instruction
 -- keeps its "you" when joined to it by "and" (Bad Deal). When two share a
 -- subject the second drops it ("draws two cards and loses 2 life"). Three or
--- more are not strung together here yet.
+-- more read one or two at a time: "Draw two cards, then discard two cards.
+-- Untap up to three lands." (Frantic Search).
 joined :: Target.Context -> [Predicate] -> [(Text.Text, [SlotName.SlotName])]
 joined context predicates = case predicates of
   [p] -> [(sentences p, allMentions p)]
+  _ : _ : _ : _ -> ListUtils.nubOrd $ do
+    (first, rest) <- [splitAt 1 predicates, splitAt 2 predicates]
+    (text, ms) <- joined context first
+    (next, ns) <- joined context rest
+    sentence' <- followedBy context text next
+    [(sentence', ms <> ns)]
   [p, q]
     | not (null (after p)) || Maybe.isJust (mana p) || Maybe.isJust (mana q) -> apart
     -- Free for "you": repeated (Ancient Craving) or not (Ambition's Cost).
@@ -559,9 +792,7 @@ dealDamage :: Target.Context -> DealDamage.DealDamage -> [Predicate]
 dealDamage context d
   | Maybe.isJust (DealDamage.excess d) = []
   | otherwise = do
-      source <- case DealDamage.dealer d of
-        Nothing -> [Target.MkReference (Target.self context) [] Filter.Singular]
-        Just s -> Target.object context Target.All (ObjectRef.InSlot s)
+      source <- Target.object context Target.All (ObjectRef.InSlot (Maybe.fromMaybe Target.selfSlot (DealDamage.dealer d)))
       -- The source is the sentence's subject, so the amount calls it "it":
       -- "deals damage equal to its power" (Ghitu Fire-Eater).
       let measured = context {Target.self = Text.pack "it"}
