@@ -1,0 +1,10 @@
+{
+  "description": "CR 601.2f whole card: Derelor's {B} is no generic mana, so a Swamp and two Forests do not pay it",
+  "note": "The same board with a Forest in place of the second Swamp: {B}{G}{G} would pay {1}{B} taxed by a generic {1}, and the cast is not offered against {1}{B}{B}.",
+  "board": {"active": "alice", "step": "PrecombatMain", "seats": [{"name": "alice", "battlefield": [{"card": "Derelor", "label": "derelor"}, {"card": "Swamp", "label": "s1"}, {"card": "Forest", "label": "f1"}, {"card": "Forest", "label": "f2"}], "hand": [{"card": "Cabal Evangel", "label": "evangel"}], "library": [{"card": "Island"}, {"card": "Island"}, {"card": "Island"}]}, {"name": "bob", "library": [{"card": "Island"}, {"card": "Island"}, {"card": "Island"}]}]},
+  "timeline": [
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "check": {"View": {"of": "Offered", "player": "alice", "is": ["Pass", "ActivateManaAbility $s1", "ActivateManaAbility $f1", "ActivateManaAbility $f2"]}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "refuse": {"Cast": {"object": "$evangel", "mana": ["$s1", "$f1", "$f2"]}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "check": {"Count": {"player": "alice", "zone": "Hand", "card": "Cabal Evangel", "count": 1}}}
+  ]
+}

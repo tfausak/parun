@@ -42,7 +42,12 @@
             "value": {
               "change": {
                 "type": "Increase",
-                "value": 2
+                "value": [
+                  {
+                    "type": "Generic",
+                    "value": 2
+                  }
+                ]
               },
               "matching": {
                 "type": "Or",
