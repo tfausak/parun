@@ -36,6 +36,7 @@ import qualified Pawl.Types.PlayerRef as PlayerRef
 import qualified Pawl.Types.PlayerRelation as PlayerRelation
 import qualified Pawl.Types.PlayerScope as PlayerScope
 import qualified Pawl.Types.PlotFromZone as PlotFromZone
+import qualified Pawl.Types.RevealObligation as RevealObligation
 import qualified Pawl.Types.RollModifier as RollModifier
 import qualified Pawl.Types.ShownCards as ShownCards
 import qualified Pawl.Types.Shows as Shows
@@ -539,4 +540,10 @@ spec s = Spec.describe s "Pawl.Codec.PlayerEffect" $ do
       PlayerEffect.codec
       (PlayerEffect.Shows (Shows.MkShows ShownCards.Hand Audience.Everyone))
       " {\"type\":\"Shows\",\"value\":{\"cards\":{\"type\":\"Hand\"},\"to\":{\"type\":\"Everyone\"}}} "
+  Spec.it s "RevealsFirstDraw, Rowen's reveal" $
+    Common.assertCodec
+      s
+      PlayerEffect.codec
+      (PlayerEffect.RevealsFirstDraw RevealObligation.Mandatory)
+      " {\"type\":\"RevealsFirstDraw\",\"value\":{\"type\":\"Mandatory\"}} "
   Spec.it s "has a schema" $ Common.assertHasSchema s PlayerEffect.codec

@@ -23,6 +23,7 @@ codec = Fields.object $ do
   offeredBy <- Fields.defaulted "offeredBy" Nothing (Common.maybe Keyword.codec) CastOffer.offeredBy
   faceDown <- Fields.defaulted "faceDown" Nothing (Common.maybe (Common.set TurnUpEvent.codec)) CastOffer.faceDown
   payableFromSpent <- Fields.defaulted "payableFromSpent" False Common.boolean CastOffer.payableFromSpent
+  reduction <- Fields.defaulted "reduction" 0 Common.natural CastOffer.reduction
   pure
     CastOffer.MkCastOffer
       { CastOffer.transformed = transformed,
@@ -32,14 +33,15 @@ codec = Fields.object $ do
         CastOffer.restriction = restriction,
         CastOffer.offeredBy = offeredBy,
         CastOffer.faceDown = faceDown,
-        CastOffer.payableFromSpent = payableFromSpent
+        CastOffer.payableFromSpent = payableFromSpent,
+        CastOffer.reduction = reduction
       }
 
 -- | The value the codec elides entirely: an offer that transforms nothing,
 -- applies no alternative cost, widens no payment and narrows no half is an
 -- ordinary cast of the card (CR 712.11's default face, CR 601.2b's own
 -- candidates, CR 118.14 unsaid, CR 709.3a's halves all offered, and no keyword
--- ability behind the cost).
+-- ability behind the cost, and nothing taken off it).
 defaultValue :: CastOffer.CastOffer
 defaultValue =
   CastOffer.MkCastOffer
@@ -50,5 +52,6 @@ defaultValue =
       CastOffer.restriction = Nothing,
       CastOffer.offeredBy = Nothing,
       CastOffer.faceDown = Nothing,
-      CastOffer.payableFromSpent = False
+      CastOffer.payableFromSpent = False,
+      CastOffer.reduction = 0
     }

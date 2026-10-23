@@ -844,3 +844,23 @@ Entries are ordered by the first rule each cites.
   scenario "CR 800.4a a departing player's shield is not a control effect, so
   it stays".
 - **Issue**: #592.
+
+## How many times two draw-time reveals reveal one card
+
+- **Question**: Two Rowens each say "reveal the first card you draw each
+  turn", and each has a trigger linked to its own reveal (CR 607.2h). Is the
+  card revealed once, firing both triggers, or once per ability, each firing
+  its own?
+- **Rules**: CR 603.11, 607.1, 607.2h; CR of 2026-08-07.
+- **Decision**: Once per ability, each reveal firing only the trigger linked to
+  the ability that made it. God-Eternal Kefnet's ruling (2019-05-03) says this
+  of its "may" twin: with two Kefnets you reveal for any number of their
+  abilities and each copies once. Rowen's reveal is the same ability with the
+  "may" taken out.
+- **Rejected**: One reveal answering every such ability: it gives each trigger
+  a reveal its own static ability did not take, which CR 607.1's "not by any
+  other ability" excludes.
+- **Site**: `Pawl.Engine.Event.revealUnderStatics` and
+  `RevealCause.AsDrawnUnder`, proved by the scenario "CR 607.2h each of two
+  Rowens reveals the first draw and draws once for its own reveal".
+- **Issue**: none.

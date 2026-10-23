@@ -1869,6 +1869,7 @@ representativeEvents cond =
         -- CR 702.94a's cause, so the event is one this condition genuinely
         -- admits; an Ordinary reveal would pin nothing.
         TriggerCondition.SelfRevealedForMiracle -> one (GameEvent.Revealed (Revealed.MkRevealed S.alice departed (RevealCause.ForMiracle (Cost.Type.MkCost {Cost.Type.mana = Nothing, Cost.Type.components = []})) S.emptyCharacteristics))
+        TriggerCondition.RevealedThisWay _ -> one (GameEvent.Revealed (Revealed.MkRevealed S.alice departed (RevealCause.AsDrawnUnder departed) S.emptyCharacteristics))
         -- BOTH causes, which is this condition's whole difference from
         -- SelfCycled above: CR 702.29a makes cycling a discard, so an ordinary
         -- discard and a cycle are each an event it genuinely admits, and an arm
@@ -2407,6 +2408,7 @@ everyTriggerCondition =
     TriggerCondition.OpponentLostLifeDuringYourTurn,
     TriggerCondition.SelfCycled,
     TriggerCondition.SelfRevealedForMiracle,
+    TriggerCondition.RevealedThisWay (Filter.Type.And []),
     TriggerCondition.SelfDiscarded,
     TriggerCondition.SelfExiledForMadness,
     TriggerCondition.PlayerDiscards PlayerRelation.Opponent,

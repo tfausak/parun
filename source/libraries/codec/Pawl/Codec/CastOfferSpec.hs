@@ -26,7 +26,7 @@ spec s = Spec.describe s "Pawl.Codec.CastOffer" $ do
     Common.assertCodec
       s
       CastOffer.codec
-      CastOffer.MkCastOffer {CastOffer.transformed = True, CastOffer.withoutPayingManaCost = True, CastOffer.payingInstead = Nothing, CastOffer.spending = ManaSpending.AsProduced, CastOffer.restriction = Nothing, CastOffer.offeredBy = Nothing, CastOffer.faceDown = Nothing, CastOffer.payableFromSpent = False}
+      CastOffer.MkCastOffer {CastOffer.transformed = True, CastOffer.withoutPayingManaCost = True, CastOffer.payingInstead = Nothing, CastOffer.spending = ManaSpending.AsProduced, CastOffer.restriction = Nothing, CastOffer.offeredBy = Nothing, CastOffer.faceDown = Nothing, CastOffer.payableFromSpent = False, CastOffer.reduction = 0}
       " {\"transformed\":true,\"withoutPayingManaCost\":true} "
   Spec.it s "MkCastOffer, an ordinary cast omits both keys" $
     Common.assertCodec
@@ -41,13 +41,13 @@ spec s = Spec.describe s "Pawl.Codec.CastOffer" $ do
     Common.assertCodec
       s
       CastOffer.codec
-      CastOffer.MkCastOffer {CastOffer.transformed = True, CastOffer.withoutPayingManaCost = False, CastOffer.payingInstead = Nothing, CastOffer.spending = ManaSpending.AsProduced, CastOffer.restriction = Nothing, CastOffer.offeredBy = Nothing, CastOffer.faceDown = Nothing, CastOffer.payableFromSpent = False}
+      CastOffer.MkCastOffer {CastOffer.transformed = True, CastOffer.withoutPayingManaCost = False, CastOffer.payingInstead = Nothing, CastOffer.spending = ManaSpending.AsProduced, CastOffer.restriction = Nothing, CastOffer.offeredBy = Nothing, CastOffer.faceDown = Nothing, CastOffer.payableFromSpent = False, CastOffer.reduction = 0}
       " {\"transformed\":true} "
   Spec.it s "MkCastOffer, free alone" $
     Common.assertCodec
       s
       CastOffer.codec
-      CastOffer.MkCastOffer {CastOffer.transformed = False, CastOffer.withoutPayingManaCost = True, CastOffer.payingInstead = Nothing, CastOffer.spending = ManaSpending.AsProduced, CastOffer.restriction = Nothing, CastOffer.offeredBy = Nothing, CastOffer.faceDown = Nothing, CastOffer.payableFromSpent = False}
+      CastOffer.MkCastOffer {CastOffer.transformed = False, CastOffer.withoutPayingManaCost = True, CastOffer.payingInstead = Nothing, CastOffer.spending = ManaSpending.AsProduced, CastOffer.restriction = Nothing, CastOffer.offeredBy = Nothing, CastOffer.faceDown = Nothing, CastOffer.payableFromSpent = False, CastOffer.reduction = 0}
       " {\"withoutPayingManaCost\":true} "
   -- CR 702.94a's own offer: the alternative cost STATED, which is the rider
   -- withoutPayingManaCost cannot express -- miracle pays something.
@@ -55,7 +55,7 @@ spec s = Spec.describe s "Pawl.Codec.CastOffer" $ do
     Common.assertCodec
       s
       CastOffer.codec
-      CastOffer.MkCastOffer {CastOffer.transformed = False, CastOffer.withoutPayingManaCost = False, CastOffer.payingInstead = Just (Cost.MkCost (Just (ManaCost.MkManaCost [ManaSymbol.OfType (ManaType.Colored Color.Red)])) []), CastOffer.spending = ManaSpending.AsProduced, CastOffer.restriction = Nothing, CastOffer.offeredBy = Nothing, CastOffer.faceDown = Nothing, CastOffer.payableFromSpent = False}
+      CastOffer.MkCastOffer {CastOffer.transformed = False, CastOffer.withoutPayingManaCost = False, CastOffer.payingInstead = Just (Cost.MkCost (Just (ManaCost.MkManaCost [ManaSymbol.OfType (ManaType.Colored Color.Red)])) []), CastOffer.spending = ManaSpending.AsProduced, CastOffer.restriction = Nothing, CastOffer.offeredBy = Nothing, CastOffer.faceDown = Nothing, CastOffer.payableFromSpent = False, CastOffer.reduction = 0}
       " {\"payingInstead\":{\"mana\":[{\"type\":\"OfType\",\"value\":{\"type\":\"Colored\",\"value\":{\"type\":\"Red\"}}}]}} "
   -- CR 118.14's rider, which Tinybones, the Pickpocket prints beside its offer
   -- and neither cost rider can express: it widens the payment rather than
@@ -64,7 +64,7 @@ spec s = Spec.describe s "Pawl.Codec.CastOffer" $ do
     Common.assertCodec
       s
       CastOffer.codec
-      CastOffer.MkCastOffer {CastOffer.transformed = False, CastOffer.withoutPayingManaCost = False, CastOffer.payingInstead = Nothing, CastOffer.spending = ManaSpending.AnyType, CastOffer.restriction = Nothing, CastOffer.offeredBy = Nothing, CastOffer.faceDown = Nothing, CastOffer.payableFromSpent = False}
+      CastOffer.MkCastOffer {CastOffer.transformed = False, CastOffer.withoutPayingManaCost = False, CastOffer.payingInstead = Nothing, CastOffer.spending = ManaSpending.AnyType, CastOffer.restriction = Nothing, CastOffer.offeredBy = Nothing, CastOffer.faceDown = Nothing, CastOffer.payableFromSpent = False, CastOffer.reduction = 0}
       " {\"spending\":{\"type\":\"AnyType\"}} "
   -- CR 702.85a's second condition, which no cost rider can express: it narrows
   -- which HALF the offer reaches rather than what is paid for it.
@@ -72,7 +72,7 @@ spec s = Spec.describe s "Pawl.Codec.CastOffer" $ do
     Common.assertCodec
       s
       CastOffer.codec
-      CastOffer.MkCastOffer {CastOffer.transformed = False, CastOffer.withoutPayingManaCost = True, CastOffer.payingInstead = Nothing, CastOffer.spending = ManaSpending.AsProduced, CastOffer.restriction = Just (Filter.Measures (Measures.MkMeasures Measure.ManaValue Comparison.LessThan (Operand.OfSource Measure.ManaValue))), CastOffer.offeredBy = Nothing, CastOffer.faceDown = Nothing, CastOffer.payableFromSpent = False}
+      CastOffer.MkCastOffer {CastOffer.transformed = False, CastOffer.withoutPayingManaCost = True, CastOffer.payingInstead = Nothing, CastOffer.spending = ManaSpending.AsProduced, CastOffer.restriction = Just (Filter.Measures (Measures.MkMeasures Measure.ManaValue Comparison.LessThan (Operand.OfSource Measure.ManaValue))), CastOffer.offeredBy = Nothing, CastOffer.faceDown = Nothing, CastOffer.payableFromSpent = False, CastOffer.reduction = 0}
       " {\"withoutPayingManaCost\":true,\"restriction\":{\"type\":\"Measures\",\"value\":{\"measure\":{\"type\":\"ManaValue\"},\"comparison\":{\"type\":\"LessThan\"},\"operand\":{\"type\":\"OfSource\",\"value\":{\"type\":\"ManaValue\"}}}}} "
   -- Illusionary Mask's offer: face down, turning face up before the events
   -- the set names, and only a card the activation's mana could pay for.
@@ -80,11 +80,18 @@ spec s = Spec.describe s "Pawl.Codec.CastOffer" $ do
     Common.assertCodec
       s
       CastOffer.codec
-      CastOffer.MkCastOffer {CastOffer.transformed = False, CastOffer.withoutPayingManaCost = True, CastOffer.payingInstead = Nothing, CastOffer.spending = ManaSpending.AsProduced, CastOffer.restriction = Nothing, CastOffer.offeredBy = Nothing, CastOffer.faceDown = Just (Set.singleton TurnUpEvent.BecomesTapped), CastOffer.payableFromSpent = True}
+      CastOffer.MkCastOffer {CastOffer.transformed = False, CastOffer.withoutPayingManaCost = True, CastOffer.payingInstead = Nothing, CastOffer.spending = ManaSpending.AsProduced, CastOffer.restriction = Nothing, CastOffer.offeredBy = Nothing, CastOffer.faceDown = Just (Set.singleton TurnUpEvent.BecomesTapped), CastOffer.payableFromSpent = True, CastOffer.reduction = 0}
       " {\"withoutPayingManaCost\":true,\"faceDown\":[{\"type\":\"BecomesTapped\"}],\"payableFromSpent\":true} "
+  -- God-Eternal Kefnet's "that copy costs {2} less to cast".
+  Spec.it s "MkCastOffer, a reduction" $
+    Common.assertCodec
+      s
+      CastOffer.codec
+      CastOffer.defaultValue {CastOffer.reduction = 2}
+      " {\"reduction\":2} "
   Spec.describe s "defaultValue" $ do
     Spec.it s "carries no rider" $
-      Spec.assertEq s CastOffer.defaultValue CastOffer.MkCastOffer {CastOffer.transformed = False, CastOffer.withoutPayingManaCost = False, CastOffer.payingInstead = Nothing, CastOffer.spending = ManaSpending.AsProduced, CastOffer.restriction = Nothing, CastOffer.offeredBy = Nothing, CastOffer.faceDown = Nothing, CastOffer.payableFromSpent = False}
+      Spec.assertEq s CastOffer.defaultValue CastOffer.MkCastOffer {CastOffer.transformed = False, CastOffer.withoutPayingManaCost = False, CastOffer.payingInstead = Nothing, CastOffer.spending = ManaSpending.AsProduced, CastOffer.restriction = Nothing, CastOffer.offeredBy = Nothing, CastOffer.faceDown = Nothing, CastOffer.payableFromSpent = False, CastOffer.reduction = 0}
     Spec.it s "a missing transformed key decodes as False" $
       Common.assertFromJson s (Codec.decode CastOffer.codec) "{\"withoutPayingManaCost\":false}" CastOffer.defaultValue
     Spec.it s "a missing withoutPayingManaCost key decodes as False" $

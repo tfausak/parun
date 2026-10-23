@@ -704,6 +704,7 @@ looksBack condition = case condition of
   TriggerCondition.OpponentLostLifeDuringYourTurn -> False
   TriggerCondition.SelfCycled -> False
   TriggerCondition.SelfRevealedForMiracle -> False
+  TriggerCondition.RevealedThisWay _ -> False
   TriggerCondition.SelfDiscarded -> False
   TriggerCondition.SelfExiledForMadness -> False
   TriggerCondition.PlayerDiscards _ -> False
@@ -976,6 +977,7 @@ batchScoped condition = case condition of
   TriggerCondition.OpponentLostLifeDuringYourTurn -> True
   TriggerCondition.SelfCycled -> False
   TriggerCondition.SelfRevealedForMiracle -> False
+  TriggerCondition.RevealedThisWay _ -> False
   TriggerCondition.SelfDiscarded -> False
   TriggerCondition.SelfExiledForMadness -> False
   TriggerCondition.PlayerDiscards _ -> False
@@ -2237,6 +2239,9 @@ eventTriggers events gs =
               abilities -> Map.singleton oid (Object.owner obj, abilities)
           _ -> Map.empty
         GameEvent.Revealed (Revealed.MkRevealed _ _ RevealCause.Ordinary _) -> Map.empty
+        -- CR 607.2h: the linked trigger is on the battlefield permanent whose
+        -- static revealed the card, which the battlefield scan finds.
+        GameEvent.Revealed (Revealed.MkRevealed _ _ (RevealCause.AsDrawnUnder _) _) -> Map.empty
         GameEvent.Revealed (Revealed.MkRevealed _ _ RevealCause.LeavingFaceDown _) -> Map.empty
         GameEvent.Revealed (Revealed.MkRevealed _ _ RevealCause.LeavingFaceDownComponent _) -> Map.empty
         GameEvent.Revealed (Revealed.MkRevealed _ _ RevealCause.FaceDownSpell _) -> Map.empty
@@ -2984,6 +2989,9 @@ zonesTriggeredFrom cond =
         -- battlefield at all and the hand is the one zone it can. eventTriggers'
         -- `revealedInHand` is what serves it.
         TriggerCondition.SelfRevealedForMiracle -> Set.singleton Zone.Hand
+        -- CR 113.6's default: the linked static functions on the battlefield, and
+        -- so does its trigger (Rowen).
+        TriggerCondition.RevealedThisWay _ -> battlefield
         -- CR 113.6k's exception again, on SelfCycled's argument: CR 701.9a discards a
         -- card from a HAND, so this condition can never trigger from the battlefield,
         -- and the graveyard rule 701.9a moves the card to is the one zone the scan
@@ -3323,6 +3331,7 @@ stateTriggersOn gs
             TriggerCondition.SelfAttacksUnblocked -> False
             TriggerCondition.SelfCycled -> False
             TriggerCondition.SelfRevealedForMiracle -> False
+            TriggerCondition.RevealedThisWay _ -> False
             TriggerCondition.SelfDiscarded -> False
             TriggerCondition.SelfExiledForMadness -> False
             TriggerCondition.PlayerDiscards _ -> False

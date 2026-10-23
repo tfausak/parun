@@ -1226,6 +1226,8 @@ library codec
     Pawl.Codec.RevealCauseSpec
     Pawl.Codec.Revealed
     Pawl.Codec.RevealedSpec
+    Pawl.Codec.RevealObligation
+    Pawl.Codec.RevealObligationSpec
     Pawl.Codec.RevealSpec
     Pawl.Codec.RevealWindow
     Pawl.Codec.RevealWindowSpec
@@ -2881,6 +2883,7 @@ library types
     Pawl.Types.Reveal
     Pawl.Types.RevealCause
     Pawl.Types.Revealed
+    Pawl.Types.RevealObligation
     Pawl.Types.RevealWindow
     Pawl.Types.RollAdjustment
     Pawl.Types.RollDie

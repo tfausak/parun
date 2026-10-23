@@ -2,15 +2,17 @@ module Pawl.Types.RevealCause where
 
 import qualified Pawl.Types.Cost as Cost
 import qualified Pawl.Types.Keyword as Keyword
+import qualified Pawl.Types.ObjectId as ObjectId
 
 -- | CR 701.20a: why a reveal happened. Carried by Pawl.Types.GameEvent's Revealed
 -- for Pawl.Types.DiscardCause's reason -- one logged reveal answers both of the
 -- questions the rules ask about it, rather than two log entries describing one
 -- showing of one card.
 --
--- CR 702.94a is what makes the distinction load-bearing. Miracle's linked
--- triggered ability (CR 603.11) is worded "when you reveal this card THIS WAY",
--- so it must not fire when the same card is shown by some other effect. A cause
+-- CR 702.94a and CR 607.2h are what make the distinction load-bearing. Miracle's
+-- linked triggered ability (CR 603.11) is worded "when you reveal this card THIS
+-- WAY", and Rowen's "whenever you reveal a basic land card this way", so neither
+-- may fire when the same card is shown by some other effect. A cause
 -- on the event is how the trigger condition asks that, and it is the same shape
 -- CR 702.29d needed one rule over.
 data RevealCause
@@ -22,6 +24,10 @@ data RevealCause
     -- under the miracle ability with this cost, whose linked trigger alone it
     -- fires (CR 607.2h).
     ForMiracle (Cost.Cost Keyword.Keyword)
+  | -- | CR 603.11 / 607.2h: revealed from a hand as it was drawn, under the
+    -- draw-time reveal (PlayerEffect.RevealsFirstDraw) of this object, whose
+    -- linked triggers alone it fires (Rowen).
+    AsDrawnUnder ObjectId.ObjectId
   | -- | CR 708.9: a face-down permanent, revealed by its owner as it leaves the
     -- battlefield.
     LeavingFaceDown

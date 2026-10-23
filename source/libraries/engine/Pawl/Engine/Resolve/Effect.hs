@@ -267,6 +267,7 @@ import qualified Pawl.Types.InherentTriggerSource as InherentTriggerSource
 import qualified Pawl.Types.InitiativeTarget as InitiativeTarget
 import qualified Pawl.Types.Keyword as Keyword.Type
 import qualified Pawl.Types.KeywordFamily as KeywordFamily
+import qualified Pawl.Types.LastKnown as LastKnown
 import qualified Pawl.Types.LibraryDepth as LibraryDepth
 import qualified Pawl.Types.LibraryPlacement as LibraryPlacement
 import qualified Pawl.Types.LibraryPosition as LibraryPosition
@@ -281,7 +282,9 @@ import qualified Pawl.Types.ManaAbilityPerformer as ManaAbilityPerformer
 import qualified Pawl.Types.ManaAdded as ManaAdded
 import qualified Pawl.Types.ManaAddedCause as ManaAddedCause
 import qualified Pawl.Types.ManaAddition as ManaAddition
+import qualified Pawl.Types.ManaCost as ManaCost
 import qualified Pawl.Types.ManaSpending as ManaSpending
+import qualified Pawl.Types.ManaSymbol as ManaSymbol
 import qualified Pawl.Types.ManaUnit as ManaUnit
 import qualified Pawl.Types.Measure as Measure
 import qualified Pawl.Types.Measures as Measures
@@ -1558,31 +1561,41 @@ offerCast runSubgame context evaluate named caster optionality verb retake repet
 -- zone", and rule 702.192a's "create a copy of this object in exile" is the one
 -- producer whose reference outlives its spell (Keyword.paradigmCopy).
 --
--- Nothing for any other object that has left (CR 400.7) and for one with no card
--- behind it (Game.printingIdOfSource): an offer over a copy that cannot be made is
--- not made, which is offerCastOnce's own posture for a reference that named
--- nothing.
+-- Any other object that has left is copied from its last known information (CR
+-- 608.2h), in the zone it left: God-Eternal Kefnet's ruling (2019-05-03), "if
+-- the card leaves your hand before Kefnet's triggered ability resolves, you'll
+-- copy it using its last known information", the copy "created in and cast from
+-- your hand". The scenario "CR 608.2h Kefnet copies a revealed card cast in
+-- response" proves it.
+--
+-- Nothing for an object with no card behind it (Game.printingIdOfSource): an
+-- offer over a copy that cannot be made is not made, which is offerCastOnce's
+-- own posture for a reference that named nothing.
 castableCopy :: PlayerId -> ObjectId -> Game (Maybe ObjectId)
 castableCopy caster original = do
   gs <- State.get
   let found = case Game.lookupObject original gs of
-        Just obj -> Just (obj, Object.zone obj)
-        Nothing -> fmap (\obj -> (obj, Zone.Exile)) (Map.lookup original (GameState.stackArchive gs))
+        Just obj -> Just (Just obj, Object.source obj, Object.zone obj)
+        Nothing -> case Map.lookup original (GameState.stackArchive gs) of
+          Just obj -> Just (Just obj, Object.source obj, Zone.Exile)
+          Nothing -> fmap (\known -> (Nothing, LastKnown.source known, LastKnown.zone known)) (Map.lookup original (GameState.lastKnown gs))
   case found of
     Nothing -> pure Nothing
-    Just (obj, zone) -> case Game.printingIdOfSource (Object.source obj) of
+    Just (mObj, source, zone) -> case Game.printingIdOfSource source of
       Nothing -> pure Nothing
       Just printingId -> do
         let (copyId, gs1) = Game.freshObjectId gs
             (ts, gs2) = Game.freshTimestamp gs1
-            copy =
-              -- CR 707.12 / 108.2: a copy of a card is no card.
-              (Game.setSource (Source.OfCardCopy printingId) (Object.newIncarnation obj))
-                { Object.owner = caster,
-                  Object.zone = zone,
-                  Object.timestamp = ts,
-                  Object.bindings = maybe Map.empty (\pc -> Binding.setOwnCopy pc Map.empty) (Game.copyStampOf obj)
-                }
+            -- CR 707.12 / 108.2: a copy of a card is no card.
+            copy = case mObj of
+              Just obj ->
+                (Game.setSource (Source.OfCardCopy printingId) (Object.newIncarnation obj))
+                  { Object.owner = caster,
+                    Object.zone = zone,
+                    Object.timestamp = ts,
+                    Object.bindings = maybe Map.empty (\pc -> Binding.setOwnCopy pc Map.empty) (Game.copyStampOf obj)
+                  }
+              Nothing -> Object.new caster (Source.OfCardCopy printingId) zone ts
         State.put (Game.insertIntoZone zone LibraryPosition.Top caster copyId gs2 {GameState.objects = Map.insert copyId copy (GameState.objects gs2)})
         pure (Just copyId)
 
@@ -1612,7 +1625,8 @@ ordinaryOffer =
       CastOffer.restriction = Nothing,
       CastOffer.offeredBy = Nothing,
       CastOffer.faceDown = Nothing,
-      CastOffer.payableFromSpent = False
+      CastOffer.payableFromSpent = False,
+      CastOffer.reduction = 0
     }
 
 -- One round of the offer above: CR 601.3's choice among the cards `named` still
@@ -1759,7 +1773,15 @@ offerCastOnce runSubgame context named caster optionality verb retake offer = do
             -- printing no text.
             proposed = Cast.asProposed oid name facing gs
             priced = if Facing.isFaceDown facing then Maybe.fromMaybe face (Cast.proposedFace oid name proposed) else face
-            candidates = if null applied then Cost.candidateCostsGiven True caster name oid proposed else applied
+            -- CR 601.2f: the offer's own reduction (CastOffer.reduction) rides
+            -- every candidate, the printed cost and an alternative alike, so it
+            -- applies after any increase. The cast is then handed these
+            -- candidates rather than finding its own, which are the same list.
+            lessened candidate = candidate {CandidateCost.reductions = CandidateCost.reductions candidate <> [ManaCost.MkManaCost [ManaSymbol.Generic (CastOffer.reduction offer)]]}
+            candidates
+              | CastOffer.reduction offer == 0 = if null applied then Cost.candidateCostsGiven True caster name oid proposed else applied
+              | otherwise = fmap lessened (if null applied then Cost.candidateCostsGiven True caster name oid proposed else applied)
+            announced = if CastOffer.reduction offer == 0 then applied else candidates
          in -- CR 702.85a's second condition, asked of THIS HALF: the offer may
             -- state a quality the resulting spell must have, and CR 709.3a makes
             -- that a per-half question like the two above. Against the face's own
@@ -1777,7 +1799,7 @@ offerCastOnce runSubgame context named caster optionality verb retake offer = do
                 -- through. Pawl.InvestigateSpec's "CR 118.8c an additional cost
                 -- another effect applies excuses the cast too" proves it.
                 let excused = any (Cost.statesHiddenQuality . Cost.plusComponents (Cost.spellAdjustments Set.empty caster oid proposed) . CandidateCost.cost) candidates
-                 in Just (oid, name, applied, excused)
+                 in Just (oid, name, announced, excused)
               else Nothing
       -- EVERY object the reference names, each contributing one entry per
       -- castable half (CR 709.3a) -- Shell of the Last Kappa's whole exiled pile
@@ -4710,7 +4732,11 @@ applyOneEffect runSubgame resolving source controller legal chosen effect = case
           -- prints its shuffle after those clauses (CR 608.2c), as its own
           -- Effect.Shuffle, so a found card is never shuffled while a later
           -- clause still names it -- CR 701.24b's exclusion, and CR 701.20d's
-          -- new object for a card Grim Reminder leaves behind.
+          -- new object for a card Grim Reminder leaves behind. Nor where it is
+          -- Stay: Doomsday prints no shuffle at all, and a later clause of its
+          -- own puts the finds on top. The scenario
+          -- cr-701-23d-whole-card-doomsday-stacks-the-five-it-found-and-exiles-the-rest
+          -- is the proof.
           --
           -- RevealThenTop's and Top's found cards are still in the library at
           -- its shuffle, and CR 701.24b leaves them out of it: not reordered,
@@ -4724,7 +4750,7 @@ applyOneEffect runSubgame resolving source controller legal chosen effect = case
           -- cr-701-24b-scheming-symmetry-puts-each-searcher-s-find-on-top-of-their-own-library
           -- are the proof.
           let shuffled
-                | destination == SearchDestination.Reveal = []
+                | not (shufflesAfter destination) = []
                 | otherwise = ListUtils.nubOrd [owner | (_, owner, chosenZones, _, _, _) <- decisions, Set.member Zone.Library chosenZones]
               leftOut
                 | putsOnTop destination = Set.fromList arrivals
@@ -11795,6 +11821,7 @@ outsideArrival destination = case destination of
   SearchDestination.BattlefieldAttachedOrHand -> Nothing
   SearchDestination.BattlefieldAttached -> Nothing
   SearchDestination.Reveal -> Nothing
+  SearchDestination.Stay -> Nothing
   SearchDestination.RevealThenTop -> Nothing
   SearchDestination.Top -> Nothing
 
@@ -11811,7 +11838,24 @@ putsOnTop destination = case destination of
   SearchDestination.BattlefieldAttachedOrHand -> False
   SearchDestination.BattlefieldAttached -> False
   SearchDestination.Reveal -> False
+  SearchDestination.Stay -> False
   SearchDestination.Hand -> False
+
+-- CR 701.24: whether the search's own sentence shuffles the library it read --
+-- every arm but the two that leave the found cards for a later clause.
+shufflesAfter :: SearchDestination.SearchDestination -> Bool
+shufflesAfter destination = case destination of
+  SearchDestination.Reveal -> False
+  SearchDestination.Stay -> False
+  SearchDestination.Battlefield -> True
+  SearchDestination.BattlefieldTapped -> True
+  SearchDestination.RevealThenHand -> True
+  SearchDestination.Exile -> True
+  SearchDestination.BattlefieldAttachedOrHand -> True
+  SearchDestination.BattlefieldAttached -> True
+  SearchDestination.RevealThenTop -> True
+  SearchDestination.Top -> True
+  SearchDestination.Hand -> True
 
 -- Search.differentIn: the cards, in order, that keep the group apart -- each
 -- shares no value on any named axis with a card kept ahead of it.
@@ -11925,6 +11969,8 @@ putFound resolving asOf searcher subject destination cardId = case destination o
   SearchDestination.Reveal -> do
     Event.revealResolving resolving searcher cardId
     pure [cardId]
+  -- Doomsday's: the same, with no reveal (CR 701.23e).
+  SearchDestination.Stay -> pure [cardId]
   -- Mystical Tutor's "reveal it": the card stays in the library through the
   -- Search arm's shuffle, which leaves it out, until the move to the top after it.
   SearchDestination.RevealThenTop -> do

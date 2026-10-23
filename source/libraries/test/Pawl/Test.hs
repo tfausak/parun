@@ -577,6 +577,7 @@ import qualified Pawl.Codec.ReturnEndingSpec
 import qualified Pawl.Codec.ReturnPermanentsSpec
 import qualified Pawl.Codec.ReturnWatchSpec
 import qualified Pawl.Codec.RevealCauseSpec
+import qualified Pawl.Codec.RevealObligationSpec
 import qualified Pawl.Codec.RevealSpec
 import qualified Pawl.Codec.RevealWindowSpec
 import qualified Pawl.Codec.RevealedSpec
@@ -1476,6 +1477,7 @@ spec s registry = do
   Pawl.Codec.ReturnPermanentsSpec.spec s
   Pawl.Codec.ReturnWatchSpec.spec s
   Pawl.Codec.RevealCauseSpec.spec s
+  Pawl.Codec.RevealObligationSpec.spec s
   Pawl.Codec.RevealedSpec.spec s
   Pawl.Codec.RevealSpec.spec s
   Pawl.Codec.RevealWindowSpec.spec s

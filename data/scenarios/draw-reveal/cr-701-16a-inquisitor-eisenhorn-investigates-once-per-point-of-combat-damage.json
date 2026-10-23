@@ -1,0 +1,21 @@
+{
+  "description": "CR 701.16a Inquisitor Eisenhorn investigates once for each point of combat damage it deals a player",
+  "note": "Eisenhorn attacks bob unblocked and deals 2, so alice gets two Clues.",
+  "board": {
+    "seats": [
+      {
+        "name": "alice",
+        "battlefield": [{ "card": "Inquisitor Eisenhorn", "label": "eisenhorn", "ready": true }]
+      },
+      { "name": "bob" }
+    ],
+    "active": "alice",
+    "step": "PrecombatMain"
+  },
+  "timeline": [
+    { "turn": 1, "step": "DeclareAttackers", "player": "alice", "do": { "Attack": ["$eisenhorn"] } },
+    { "turn": 1, "step": "CombatDamage", "player": "alice", "do": { "OrderTimestamps": ["Clue Token", "Clue Token#2"] } },
+    { "turn": 1, "step": "EndOfCombat", "player": "alice", "check": { "Life": { "player": "bob", "life": 18 } } },
+    { "turn": 1, "step": "EndOfCombat", "player": "alice", "check": { "Count": { "player": "alice", "zone": "Battlefield", "card": "Clue Token", "count": 2 } } }
+  ]
+}

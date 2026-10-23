@@ -222,6 +222,7 @@ import qualified Pawl.Types.PlayerAttacksPlayer as PlayerAttacksPlayer
 import qualified Pawl.Types.PlayerAttacksWith as PlayerAttacksWith
 import qualified Pawl.Types.PlayerChoice as PlayerChoice
 import qualified Pawl.Types.PlayerCounterKind as PlayerCounterKind
+import qualified Pawl.Types.PlayerEffect as PlayerEffect.Type
 import Pawl.Types.PlayerId (PlayerId)
 import qualified Pawl.Types.PlayerInstruction as PlayerInstruction
 import qualified Pawl.Types.PlayerRef as PlayerRef
@@ -243,6 +244,7 @@ import Pawl.Types.ReplacementCandidate (ReplacementCandidate)
 import qualified Pawl.Types.ReplacementCandidate as ReplacementCandidate
 import qualified Pawl.Types.ReplacementEffect as ReplacementEffect
 import qualified Pawl.Types.RevealCause as RevealCause
+import qualified Pawl.Types.RevealObligation as RevealObligation
 import qualified Pawl.Types.RevealWindow as RevealWindow
 import qualified Pawl.Types.Revealed as Revealed
 import qualified Pawl.Types.RoomHalf as RoomHalf
@@ -9822,9 +9824,10 @@ performDraw pid = do
           case kept of
             Just held -> State.modify' (\g -> g {GameState.keptFaceDown = Just (Map.insert drawn nth held)})
             -- CR 702.94a's "if it's the FIRST card you've drawn this turn",
-            -- asked off the ordinal this draw was just stamped with rather than
-            -- off a second reading of the tally.
-            Nothing -> Monad.when (nth == 1) (offerMiracleReveal pid drawn)
+            -- and Rowen's "the first card you draw each turn", asked off the
+            -- ordinal this draw was just stamped with rather than off a second
+            -- reading of the tally.
+            Nothing -> Monad.when (nth == 1) (offerDrawReveals pid drawn)
           pure (Just drawn)
 
 -- CR 121.8's window: run `body` as the casting of a spell or the activation of
@@ -9859,8 +9862,40 @@ turnUpKeptDraws = do
   Monad.forM_ (foldMap Map.toAscList kept) $ \(drawn, nth) -> do
     gs <- State.get
     case Game.lookupObject drawn gs of
-      Just obj | nth == 1 && Object.zone obj == Zone.Hand -> offerMiracleReveal (Object.owner obj) drawn
+      Just obj | nth == 1 && Object.zone obj == Zone.Hand -> offerDrawReveals (Object.owner obj) drawn
       _ -> pure ()
+
+-- CR 121.9: the reveals a player's first draw of a turn is offered "as it's
+-- drawn" -- the drawn card's own miracle (CR 702.94a) and each draw-time reveal a
+-- static ability states (CR 603.11, PlayerEffect.firstDrawReveals). The
+-- first-draw gate is the caller's.
+offerDrawReveals :: PlayerId -> ObjectId -> Game ()
+offerDrawReveals pid drawn = do
+  offerMiracleReveal pid drawn
+  revealUnderStatics pid drawn
+
+-- CR 603.11's static half: Rowen's "reveal the first card you draw each turn"
+-- and God-Eternal Kefnet's "you may reveal ... as you draw it", one reveal per
+-- ability (Kefnet's ruling, 2019-05-03; docs/decisions.md, "How many times two
+-- draw-time reveals reveal one card"), each under the object whose ability it
+-- is, so only that object's linked trigger fires (CR 607.2h). A "may" is asked
+-- through Prompt.OfferedExtra, after CR 121.9's look.
+--
+-- CR 701.20a's window is miracle's: until a player would next receive priority,
+-- then until a trigger the reveal caused leaves the stack (Engine.placeBorne).
+revealUnderStatics :: PlayerId -> ObjectId -> Game ()
+revealUnderStatics pid drawn = do
+  gs <- State.get
+  let rows = PlayerEffect.firstDrawReveals pid gs
+      decider = Decide.deciderFor pid gs
+  Monad.when (elem RevealObligation.Optional (fmap snd rows)) (look pid drawn)
+  Monad.forM_ rows $ \(source, obligation) -> do
+    revealing <- case obligation of
+      RevealObligation.Mandatory -> pure True
+      RevealObligation.Optional -> (== OptionalDecision.Exercises) <$> Game.choose (Prompt.OfferedExtra decider pid source (PlayerEffect.Type.RevealsFirstDraw obligation))
+    Monad.when revealing $ do
+      reveal (RevealCause.AsDrawnUnder source) pid drawn
+      stampReveal RevealWindow.UntilPriority drawn
 
 -- CR 702.94a's static half, and CR 121.9's window: "you may reveal this card from
 -- your hand as you draw it". Asked of the card that just arrived in the hand, and
@@ -10170,6 +10205,7 @@ revealedObjects revealed gs =
       asMoved = case Revealed.cause revealed of
         RevealCause.Ordinary -> False
         RevealCause.ForMiracle _ -> False
+        RevealCause.AsDrawnUnder _ -> False
         RevealCause.LeavingFaceDown -> True
         RevealCause.LeavingFaceDownComponent -> True
         RevealCause.FaceDownSpell -> True
@@ -10343,6 +10379,7 @@ controllerTurnScoped cond = case cond of
   TriggerCondition.PlayerTookInitiative -> False
   TriggerCondition.SelfCycled -> False
   TriggerCondition.SelfRevealedForMiracle -> False
+  TriggerCondition.RevealedThisWay _ -> False
   TriggerCondition.SelfDiscarded -> False
   TriggerCondition.SelfExiledForMadness -> False
   TriggerCondition.PlayerDiscards _ -> False
