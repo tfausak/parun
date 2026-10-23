@@ -83,6 +83,7 @@ import qualified Pawl.Types.Prompt as Prompt
 import qualified Pawl.Types.RangeOfInfluence as RangeOfInfluence
 import qualified Pawl.Types.Recipient as Recipient
 import qualified Pawl.Types.Result as Result
+import qualified Pawl.Types.StackObjectKind as StackObjectKind
 import qualified Pawl.Types.StepBegan as StepBegan
 import qualified Pawl.Types.Timestamp as Timestamp
 import qualified Pawl.Types.Zone as Zone
@@ -132,7 +133,7 @@ spec s registry = Spec.describe s "Range of influence" $ do
     case S.spellTargetSlot bolt of
       Nothing -> Spec.assertFailure s "Lightning Bolt should declare a target slot"
       Just theSlot -> do
-        let legal = Target.legalRecipients (Just S.alice) S.noSource theSlot
+        let legal = Target.legalRecipients StackObjectKind.Spell (Just S.alice) S.noSource theSlot
         Spec.assertBool s (not (Set.member (Recipient.ToCreature theirs) (legal (S.withRange 1 g1)))) "CR 801.4 at range 1 alice may not bolt carol's creature"
         Spec.assertBool s (Set.member (Recipient.ToCreature theirs) (legal g1)) "at an unlimited range she may"
         Spec.assertBool s (Set.member (Recipient.ToBattle battle) (legal (S.withRange 1 (protectedBy (Just S.bob) g1)))) "CR 801.2d at range 1 she may bolt carol's battle while bob protects it"

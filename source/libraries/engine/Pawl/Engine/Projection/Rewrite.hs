@@ -244,6 +244,7 @@ import qualified Pawl.Types.StaticAbility as StaticAbility
 import qualified Pawl.Types.Subtype as Subtype.Type
 import qualified Pawl.Types.TakeExtraTurn as TakeExtraTurn
 import qualified Pawl.Types.TapForMana as TapForMana
+import qualified Pawl.Types.TargetRestriction as TargetRestriction
 import qualified Pawl.Types.TargetSlot as TargetSlot
 import qualified Pawl.Types.TextWord as TextWord
 import qualified Pawl.Types.TheseDiscard as TheseDiscard
@@ -1335,7 +1336,7 @@ rewritePlayerStaticAbility pairs ability =
       PlayerStaticAbility.effect = rewritePlayerEffect pairs (PlayerStaticAbility.effect ability)
     }
 
--- CR 613.11's fourteen families under CR 612.1, each at the positions its
+-- CR 613.11's fifteen families under CR 612.1, each at the positions its
 -- gatherer module rewrites (Pawl.Engine.CombatRestriction and its siblings), so
 -- the layer fold and the gatherers agree on where a word is. CR 508.1h's and CR
 -- 509.1d's costs stay as printed, as their gatherers leave them.
@@ -1358,6 +1359,7 @@ rewriteRuleAbilities pairs abilities =
           RuleAbilities.crewRestrictions = fmap (\x -> x {CrewRestriction.affected = affected (CrewRestriction.affected x)}) (RuleAbilities.crewRestrictions abilities),
           RuleAbilities.entryRestrictions = fmap (\x -> x {EntryRestriction.affected = affected (EntryRestriction.affected x)}) (RuleAbilities.entryRestrictions abilities),
           RuleAbilities.sacrificeRestrictions = fmap (\x -> x {SacrificeRestriction.affected = affected (SacrificeRestriction.affected x)}) (RuleAbilities.sacrificeRestrictions abilities),
+          RuleAbilities.targetRestrictions = fmap (\x -> x {TargetRestriction.affected = affected (TargetRestriction.affected x)}) (RuleAbilities.targetRestrictions abilities),
           RuleAbilities.untapRestrictions = fmap (\x -> x {UntapRestriction.affected = affected (UntapRestriction.affected x)}) (RuleAbilities.untapRestrictions abilities)
         }
 

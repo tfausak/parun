@@ -127,6 +127,7 @@ armyToken subtype =
               Face.attachRestrictions = [],
               Face.counterRestrictions = [],
               Face.crewRestrictions = [],
+              Face.targetRestrictions = [],
               Face.attackPermissions = [],
               Face.activationProhibitions = [],
               Face.entryRestrictions = [],

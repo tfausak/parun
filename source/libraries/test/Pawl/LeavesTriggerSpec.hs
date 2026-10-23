@@ -93,6 +93,7 @@ import qualified Pawl.Types.ReplacementEffect as ReplacementEffect
 import qualified Pawl.Types.Response as Response
 import qualified Pawl.Types.SlotName as SlotName
 import qualified Pawl.Types.Source as Source
+import qualified Pawl.Types.StackObjectKind as StackObjectKind
 import qualified Pawl.Types.StepBegan as StepBegan
 import qualified Pawl.Types.Subtype as Subtype
 import qualified Pawl.Types.TapState as TapState
@@ -3041,7 +3042,7 @@ kindredSpec s registry =
         Map.findWithDefault
           Set.empty
           slot
-          (Target.legalSets Nothing (Just S.alice) False Map.empty S.noSource (Map.singleton slot (TargetSlot.required pool (Just (Filter.Type.HasSubtype Subtype.Faerie)))) gs)
+          (Target.legalSets StackObjectKind.Spell Nothing (Just S.alice) False Map.empty S.noSource (Map.singleton slot (TargetSlot.required pool (Just (Filter.Type.HasSubtype Subtype.Faerie)))) gs)
    in Spec.describe s "Kindred" $ do
         -- The proving test for CR 308. CR 308.2 makes the kindred subtypes
         -- "the same as the set of creature subtypes", so the ENCHANTMENT

@@ -53,6 +53,7 @@ import qualified Pawl.Types.Quantity as Quantity.Type
 import qualified Pawl.Types.Recipient as Recipient
 import qualified Pawl.Types.Sickness as Sickness
 import qualified Pawl.Types.SlotName as SlotName
+import qualified Pawl.Types.StackObjectKind as StackObjectKind
 import qualified Pawl.Types.TargetSlot as TargetSlot
 import qualified Pawl.Types.TriggerCondition as TriggerCondition
 import qualified Pawl.Types.TriggerFrequency as TriggerFrequency
@@ -819,11 +820,11 @@ provokeSpec s registry =
               Spec.assertEqWith
                 s
                 "carol is the defending player, so only her creature"
-                (Target.legalRecipients (Just S.alice) attacker slot after)
+                (Target.legalRecipients StackObjectKind.Spell (Just S.alice) attacker slot after)
                 (Set.singleton (Recipient.ToCreature carols))
               Spec.assertBool
                 s
-                (Set.notMember (Recipient.ToCreature bobs) (Target.legalRecipients (Just S.alice) attacker slot after))
+                (Set.notMember (Recipient.ToCreature bobs) (Target.legalRecipients StackObjectKind.Spell (Just S.alice) attacker slot after))
                 "bob is an opponent but not the defender"
             _ -> Spec.assertFailure s "fixture should give each seat one creature"
         -- CR 500.5a: "this combat" ends with the combat PHASE, so the stored

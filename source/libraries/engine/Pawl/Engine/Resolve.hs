@@ -29,7 +29,7 @@ import qualified Pawl.Engine.Projection.Rewrite as Projection
 import qualified Pawl.Engine.Projection.View as Projection
 import qualified Pawl.Engine.Replacement as Replacement
 import Pawl.Engine.Resolve.Effect (announcedOnly, apnapDecidersOf, applyClauseEffects, applyEffectWith, branchSelects, clauseIsImpossible, gateAffordable, happenedBetween, noSubgame, payGatePaid, targetSlotsOf)
-import Pawl.Engine.Resolve.Slots (boundSlots, effectContext, resolvingAbilityName, slotsAreExhaustive, slotsOf)
+import Pawl.Engine.Resolve.Slots (boundSlots, effectContext, resolvingAbilityName, resolvingKind, slotsAreExhaustive, slotsOf)
 import qualified Pawl.Engine.SourceContext as SourceContext
 import qualified Pawl.Engine.Target as Target
 import qualified Pawl.Extra.Natural as Natural
@@ -269,7 +269,7 @@ targetsAllIllegal oid gs = case Game.lookupObject oid gs of
           legalSlot slot recipients = case Map.lookup slot slots of
             Nothing -> recipients
             -- CR 608.2b's perspective is the SPELL's controller (CR 405.4).
-            Just targetSlot -> Set.filter (\recipient -> Target.stillLegal Nothing (Just (spellController obj oid gs)) (Object.bindings obj) (Game.acquisitionOf oid gs) oid recipient targetSlot gs) recipients
+            Just targetSlot -> Set.filter (\recipient -> Target.stillLegal (resolvingKind oid gs) Nothing (Just (spellController obj oid gs)) (Object.bindings obj) (Game.acquisitionOf oid gs) oid recipient targetSlot gs) recipients
           legal = Map.mapWithKey legalSlot chosen
           unaimed = if Object.unannounced obj then Map.withoutKeys (Set.empty <$ Map.mapMaybe Target.fixedCount slots) (Map.keysSet chosen) else Map.empty
           targeted = Map.union (Map.restrictKeys legal (Map.keysSet slots)) unaimed
@@ -307,7 +307,7 @@ resolveSpellWith runSubgame oid = do
               Nothing -> recipients
               -- Per RECIPIENT and not per slot (CR 608.2b): the slot's surviving
               -- targets are still affected.
-              Just targetSlot -> Set.filter (\recipient -> Target.stillLegal Nothing (Just (spellController obj oid gs)) (Object.bindings obj) (Game.acquisitionOf oid gs) oid recipient targetSlot gs) recipients
+              Just targetSlot -> Set.filter (\recipient -> Target.stillLegal (resolvingKind oid gs) Nothing (Just (spellController obj oid gs)) (Object.bindings obj) (Game.acquisitionOf oid gs) oid recipient targetSlot gs) recipients
          in if targetsAllIllegal oid gs
               then Event.changeZone oid Zone.Graveyard
               else do
@@ -803,7 +803,7 @@ resolveModesWith runSubgame stackId srcId modes = do
             -- CR 608.2b: the perspective is the ABILITY's controller. `srcId`
             -- stays the source (CR 113.7) and may well be gone -- exactly the
             -- case this rule is about. Judged per RECIPIENT.
-            Just targetSlot -> Set.filter (\recipient -> Target.stillLegal (resolvingAbilityName stackId gs) (Just effectController) (Object.bindings obj) (Game.readingAcquisition stackId srcId gs srcId) srcId recipient targetSlot gs) recipients
+            Just targetSlot -> Set.filter (\recipient -> Target.stillLegal (resolvingKind stackId gs) (resolvingAbilityName stackId gs) (Just effectController) (Object.bindings obj) (Game.readingAcquisition stackId srcId gs srcId) srcId recipient targetSlot gs) recipients
           legal = Map.mapWithKey legalSlot chosen
           -- CR 608.2b's fizzle asks about the TARGETED slots only, measured on
           -- the slots FILLED rather than declared (CR 115.6).

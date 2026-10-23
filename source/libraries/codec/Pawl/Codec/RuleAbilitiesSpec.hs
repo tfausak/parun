@@ -29,7 +29,9 @@ import qualified Pawl.Types.Quantity as Quantity
 import qualified Pawl.Types.RequirementArity as RequirementArity
 import qualified Pawl.Types.RuleAbilities as RuleAbilities
 import qualified Pawl.Types.SacrificeRestriction as SacrificeRestriction
+import qualified Pawl.Types.StackObjectKind as StackObjectKind
 import qualified Pawl.Types.Subtype as Subtype
+import qualified Pawl.Types.TargetRestriction as TargetRestriction
 import qualified Pawl.Types.UntapHold as UntapHold
 import qualified Pawl.Types.UntapRestriction as UntapRestriction
 import qualified Pawl.Types.Zone as Zone
@@ -57,6 +59,7 @@ testRuleAbilities =
       RuleAbilities.crewRestrictions = [CrewRestriction.MkCrewRestriction Affected.Attached],
       RuleAbilities.entryRestrictions = [EntryRestriction.MkEntryRestriction Affected.Attached (Set.singleton Zone.Graveyard)],
       RuleAbilities.sacrificeRestrictions = [SacrificeRestriction.MkSacrificeRestriction Affected.Attached],
+      RuleAbilities.targetRestrictions = [TargetRestriction.MkTargetRestriction Affected.Attached StackObjectKind.Spell],
       RuleAbilities.untapRestrictions = [UntapRestriction.MkUntapRestriction Affected.Attached UntapHold.Forbidden]
     }
 
@@ -75,11 +78,12 @@ testRuleAbilitiesJson =
     <> "\"crewRestrictions\":[{\"affected\":{\"type\":\"Attached\"}}],"
     <> "\"entryRestrictions\":[{\"affected\":{\"type\":\"Attached\"},\"origins\":[{\"type\":\"Graveyard\"}]}],"
     <> "\"sacrificeRestrictions\":[{\"affected\":{\"type\":\"Attached\"}}],"
+    <> "\"targetRestrictions\":[{\"affected\":{\"type\":\"Attached\"},\"kind\":{\"type\":\"Spell\"}}],"
     <> "\"untapRestrictions\":[{\"affected\":{\"type\":\"Attached\"}}]}"
 
 spec :: (Monad m, Monad n) => Spec.Spec m n -> n ()
 spec s = Spec.describe s "Pawl.Codec.RuleAbilities" $ do
-  Spec.it s "MkRuleAbilities, every one of the fourteen lists populated" $
+  Spec.it s "MkRuleAbilities, every one of the fifteen lists populated" $
     Common.assertCodec s RuleAbilities.codec testRuleAbilities testRuleAbilitiesJson
   Spec.it s "an empty bundle omits every key" $
     Common.assertCodec s RuleAbilities.codec mempty " {} "

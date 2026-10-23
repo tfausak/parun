@@ -92,6 +92,7 @@ import qualified Pawl.Types.SideDeck as SideDeck
 import qualified Pawl.Types.SlotName as SlotName
 import qualified Pawl.Types.Source as Source
 import qualified Pawl.Types.SpellWasCast as SpellWasCast
+import qualified Pawl.Types.StackObjectKind as StackObjectKind
 import qualified Pawl.Types.Status as Status
 import qualified Pawl.Types.StickerContent as StickerContent
 import qualified Pawl.Types.StickerKind as StickerKind
@@ -2509,6 +2510,26 @@ isActivatedAbility oid gs = case lookupObject oid gs of
       Source.OfEmblem _ -> False
       Source.OfSpellCopy _ -> False
       Source.OfCardCopy _ -> False
+
+-- CR 112.1 / 113.3b / 113.3c: which of CR 115.1's three kinds a spell or ability
+-- is, off its KIND (its Source) alone, isSpell's and isAbility's reading
+-- without their zone conjunct: CR 608.2h's last-known original
+-- (Pawl.Engine.Resolve.Effect.lastKnownOriginal) is asked too. Nothing for an
+-- object that is neither, and for an unknown id.
+stackObjectKind :: ObjectId -> GameState -> Maybe StackObjectKind.StackObjectKind
+stackObjectKind oid gs = case fmap Object.source (lookupObject oid gs) of
+  Nothing -> Nothing
+  Just src -> case src of
+    Source.OfCard _ -> Just StackObjectKind.Spell
+    Source.OfSpellCopy _ -> Just StackObjectKind.Spell
+    Source.OfCardCopy _ -> Just StackObjectKind.Spell
+    Source.OfAbility _ -> Just StackObjectKind.ActivatedAbility
+    Source.OfTrigger _ -> Just StackObjectKind.TriggeredAbility
+    Source.OfInherentTrigger _ -> Just StackObjectKind.TriggeredAbility
+    Source.OfMeld _ -> Nothing
+    Source.OfMerge _ -> Nothing
+    Source.OfToken _ -> Nothing
+    Source.OfEmblem _ -> Nothing
 
 -- CR 114.5: is this object an emblem -- "neither a card nor a permanent"? Asks
 -- the object's KIND off Object.source, isToken's posture, and never its zone:

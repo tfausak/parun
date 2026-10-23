@@ -86,6 +86,7 @@ import qualified Pawl.Types.ReplacementOrigin as ReplacementOrigin
 import qualified Pawl.Types.Result as Result
 import qualified Pawl.Types.SlotName as SlotName
 import qualified Pawl.Types.Source as Source
+import qualified Pawl.Types.StackObjectKind as StackObjectKind
 import qualified Pawl.Types.Status as Status
 import qualified Pawl.Types.Subtype as Subtype
 import qualified Pawl.Types.Supertype as Supertype
@@ -192,7 +193,7 @@ creaturePlaneswalkerSpec s registry =
           -- Sorcerer's own committed target slot rather than a hand-built one.
           let slot = SlotName.MkSlotName (Text.pack "target")
               offered = Map.lookup slot (Modal.allTargetSlots (ActivatedAbility.modal ping))
-              namingJace = fmap (\targetSlot -> Set.filter (\r -> Recipient.objectOf r == Just jaceId) (Target.legalRecipients (Just S.alice) sorcererId targetSlot coated)) offered
+              namingJace = fmap (\targetSlot -> Set.filter (\r -> Recipient.objectOf r == Just jaceId) (Target.legalRecipients StackObjectKind.Spell (Just S.alice) sorcererId targetSlot coated)) offered
           Spec.assertEqWith s "CR 115.4: Jace is one candidate, not one per card type" (fmap Set.size namingJace) (Just 1)
           -- Both of CR 120.3's results, off one damage.
           let pinged = S.runPure (aimedAt jaceId) coated (do Activate.activateAbility S.alice sorcererId ping; Stack.resolveTop)
@@ -2809,7 +2810,7 @@ dealtDamageThisTurnSpec s registry =
           Spec.assertEqWith
             s
             "CR 120.1 / 608.2i: the pinged Giant is the only legal target"
-            (Set.toList (Target.legalRecipients Nothing S.noSource theSlot board))
+            (Set.toList (Target.legalRecipients StackObjectKind.Spell Nothing S.noSource theSlot board))
             [Recipient.ToCreature hurtId]
           -- The preconditions the offer rests on, asserted AFTER it so neither
           -- can absorb a mutation of the atom.
@@ -2836,8 +2837,8 @@ dealtDamageThisTurnSpec s registry =
               ready = gs2 {GameState.priority = Just S.alice}
               board = S.settleSba (S.runPure (aimedAt hurtId) ready (do Activate.activateAbility S.alice sorcererId ping; Stack.resolveTop))
               nextTurn = Engine.beginTurnOf S.bob board
-          Spec.assertEqWith s "legal while the damage is this turn's" (Set.toList (Target.legalRecipients Nothing S.noSource theSlot board)) [Recipient.ToCreature hurtId]
-          Spec.assertEqWith s "and no candidate at all once the turn has handed over" (Set.toList (Target.legalRecipients Nothing S.noSource theSlot nextTurn)) []
+          Spec.assertEqWith s "legal while the damage is this turn's" (Set.toList (Target.legalRecipients StackObjectKind.Spell Nothing S.noSource theSlot board)) [Recipient.ToCreature hurtId]
+          Spec.assertEqWith s "and no candidate at all once the turn has handed over" (Set.toList (Target.legalRecipients StackObjectKind.Spell Nothing S.noSource theSlot nextTurn)) []
         _ -> Spec.assertFailure s "Prodigal Sorcerer should print an activated ability, and Fatal Blow a 'target' slot"
 
     -- The PLAYER half of the same atom: CR 120.1 has damage dealt to players as
@@ -2876,7 +2877,7 @@ dealtDamageThisTurnSpec s registry =
           Spec.assertEqWith
             s
             "CR 120.1 / 608.2i: the damaged seat is the only legal target"
-            (Set.toList (Target.legalRecipients Nothing S.noSource theSlot board))
+            (Set.toList (Target.legalRecipients StackObjectKind.Spell Nothing S.noSource theSlot board))
             [Recipient.ToPlayer S.bob]
           -- The preconditions the two assertions above rest on, after them so
           -- neither can absorb a mutation of the atom.

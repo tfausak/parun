@@ -151,7 +151,7 @@ activateAbilityWith refused runSubgame pid srcId ability = Event.announcing $ do
       -- one answer is FORCED, unprompted -- every single-mode ability is exactly
       -- {ModeIndex 0}. A real choice issues ChooseModes. Modal.forcedSelection is
       -- what tells the two apart, CR 700.2d's exception included.
-      legal = Target.fillableModes (ActivatedAbility.name ability) (Just pid) Map.empty srcId Map.empty (ActivatedAbility.modal ability) gs
+      legal = Target.fillableModes StackObjectKind.ActivatedAbility (ActivatedAbility.name ability) (Just pid) Map.empty srcId Map.empty (ActivatedAbility.modal ability) gs
       selection = Modal.Type.selection (ActivatedAbility.modal ability)
       -- CR 601.2f's reductions can name the KIND of ability (Fluctuator's
       -- "cycling abilities"), so every totalling below is asked with this
@@ -197,7 +197,7 @@ activateAbilityWith refused runSubgame pid srcId ability = Event.announcing $ do
           -- a cost the targets can still change, so it is handed what they could
           -- be (aimingSomewhere). Read off `gs`, the same pre-stack board
           -- Target.chooseTargets is offered from, so one binding serves both.
-          slots = Target.announcedSlots pid srcId gs (Modal.modesTargetSlots chosenModes (ActivatedAbility.modal ability))
+          slots = Target.announcedSlots StackObjectKind.ActivatedAbility pid srcId gs (Modal.modesTargetSlots chosenModes (ActivatedAbility.modal ability))
           -- The PRE-X map, and it says so: `unannounced` is True, so a slot's CR
           -- 202.3 computed bound reading the X states no bound rather than an
           -- unmeetable one, and the lookahead measures the cost against every
@@ -213,7 +213,7 @@ activateAbilityWith refused runSubgame pid srcId ability = Event.announcing $ do
           --
           -- The map CR 601.2c is ANSWERED from is the second one below, taken once
           -- the X exists.
-          unannouncedSets = Target.legalSets (ActivatedAbility.name ability) (Just pid) True Map.empty srcId slots gs
+          unannouncedSets = Target.legalSets StackObjectKind.ActivatedAbility (ActivatedAbility.name ability) (Just pid) True Map.empty srcId slots gs
           aimableUnannounced = [(Target.aimingRanges (ActivatedAbility.name ability) (Just pid) srcId Nothing slots unannouncedSets gs, fmap Activatable.recipientObjects unannouncedSets)]
           -- CR 101.1: the ceiling this ABILITY's own words put on the value about
           -- to be announced -- Blighted Nightmare's "X can't be greater than the
@@ -275,7 +275,7 @@ activateAbilityWith refused runSubgame pid srcId ability = Event.announcing $ do
           -- it here leave the suite green (Filter.boundUnannounced answers only
           -- where the seed cannot supply the number).
           seed = Binding.fromChoices Map.empty mAmount Seq.empty
-          sets = Target.legalSets (ActivatedAbility.name ability) (Just pid) False seed srcId slots gs
+          sets = Target.legalSets StackObjectKind.ActivatedAbility (ActivatedAbility.name ability) (Just pid) False seed srcId slots gs
           aimable = [(Target.aimingRanges (ActivatedAbility.name ability) (Just pid) srcId (Just (Maybe.fromMaybe 0 mAmount)) slots sets gs, fmap Activatable.recipientObjects sets)]
       -- CR 602.2: an activation a player cannot comply with is illegal, and the
       -- game returns to the moment before it started. The X just named is where
@@ -351,7 +351,7 @@ activateAbilityWith refused runSubgame pid srcId ability = Event.announcing $ do
           let totalledCost = Cost.plusComponents gathered announcedAtX
           (announcedCost, _) <- Cost.announce (PaymentSubject.Activating srcId stamp spendable) ManaSpending.AsProduced pid srcId (Cost.substitutedManas (Cost.waterbendSubstitutions (Cost.Type.components totalledCost) Map.empty pid srcId gs) (Cost.totalManas gathered)) totalledCost
           (chosen, drawn) <- Target.chooseTargets (ActivatedAbility.name ability) pid abilId srcId seed (Maybe.fromMaybe 0 mAmount) slots sets
-          if not (Target.selectionLegal (ActivatedAbility.name ability) (Just pid) seed srcId (Maybe.fromMaybe 0 mAmount) slots sets chosen gs)
+          if not (Target.selectionLegal StackObjectKind.ActivatedAbility (ActivatedAbility.name ability) (Just pid) seed srcId (Maybe.fromMaybe 0 mAmount) slots sets chosen gs)
             then Nothing <$ State.put before -- reject: the whole activation is a no-op
             else do
               -- CR 602.2b / 601.2d: the division among the targets just fixed.
