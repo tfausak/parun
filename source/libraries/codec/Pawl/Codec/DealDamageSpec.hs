@@ -36,9 +36,9 @@ spec s = Spec.describe s "Pawl.Codec.DealDamage" $ do
       )
       " {\"parts\":[{\"ref\":{\"type\":\"InSlot\",\"value\":\"target\"},\"quantity\":{\"type\":\"Literal\",\"value\":3}}]} "
   -- CR 120.2b's dealer, CR 120.4a's excess destination and the tally of what was
-  -- dealt, the keys a card writes only when its sentence says them -- over the SEVERAL clauses one
-  -- instruction may name, which CR 608.2f deals as one batch, and whose amounts
-  -- may differ (Char).
+  -- dealt, the keys a card writes only when its sentence says them -- over the
+  -- SEVERAL clauses one instruction may name, which CR 608.2f deals as one
+  -- batch, and whose amounts may differ (Char).
   Spec.it s "MkDealDamage, two clauses at different amounts plus every optional key" $
     Common.assertCodec
       s

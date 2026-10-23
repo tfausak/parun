@@ -77,8 +77,8 @@ data DealDamage = MkDealDamage
     -- | Where to record how much damage the instruction ACTUALLY dealt, summed
     -- over every recipient, for a later effect of the same resolution to read as
     -- Quantity.InSlot -- Syphon Soul's "the damage dealt this way". Nothing for
-    -- every other printing. The SETTLED total (CR 120.4b), after prevention and
-    -- redirection: Pawl.Types.LifeLoss's `tally`, for damage.
+    -- a sentence that never says it. The SETTLED total (CR 120.4b), after
+    -- prevention and redirection: Pawl.Types.LifeLoss's `tally`, for damage.
     tally :: Maybe SlotName.SlotName
   }
   deriving (Eq, Ord, Show)
