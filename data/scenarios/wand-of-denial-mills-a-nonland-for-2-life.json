@@ -1,0 +1,16 @@
+{
+  "description": "CR 118.12 / 608.2c whole card: Wand of Denial lets alice pay 2 life to put bob's nonland top card into his graveyard, and offers nothing for a land",
+  "note": "The first Wand finds Grizzly Bears and alice pays; the second finds a Forest, where an offer to pay would be an unscheduled prompt, and the Forest stays on top.",
+  "board": {"active": "alice", "step": "PrecombatMain", "seats": [{"name": "alice", "battlefield": [{"card": "Wand of Denial", "label": "w1"}, {"card": "Wand of Denial", "label": "w2"}], "library": [{"card": "Island"}, {"card": "Island"}, {"card": "Island"}]}, {"name": "bob", "library": [{"card": "Grizzly Bears", "label": "bears"}, {"card": "Forest", "label": "forest"}, {"card": "Hill Giant"}]}]},
+  "timeline": [
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": {"Activate": {"object": "$w1", "ability": 0, "targets": ["$bob"]}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass"},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": {"ChooseToPay": {"decision": {"type": "Pays"}}}, "source": "$w1"},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "check": {"Count": {"player": "bob", "zone": "Graveyard", "card": "Grizzly Bears", "count": 1}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "check": {"Life": {"player": "alice", "life": 18}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": {"Activate": {"object": "$w2", "ability": 0, "targets": ["$bob"]}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass"},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "check": {"View": {"of": "Zone", "player": "bob", "zone": "Library", "is": ["$forest", "Hill Giant"]}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "check": {"Life": {"player": "alice", "life": 18}}}
+  ]
+}

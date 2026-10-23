@@ -1,0 +1,15 @@
+{
+  "description": "CR 305.2 / 106.12a whole card: under alice's Storm Cauldron bob may play a second land but not a third, and a land he taps for mana returns to his hand",
+  "note": "Bob plays his Forest and his Mountain, is refused his Island, then taps the Forest for mana; it goes back to his hand while the Mountain stays.",
+  "board": {"active": "bob", "step": "PrecombatMain", "seats": [{"name": "bob", "hand": [{"card": "Forest", "label": "forest"}, {"card": "Mountain", "label": "mountain"}, {"card": "Island", "label": "island"}], "library": [{"card": "Plains"}, {"card": "Plains"}, {"card": "Plains"}]}, {"name": "alice", "battlefield": [{"card": "Storm Cauldron"}], "library": [{"card": "Plains"}, {"card": "Plains"}, {"card": "Plains"}]}]},
+  "timeline": [
+    {"turn": 1, "step": "PrecombatMain", "player": "bob", "do": {"PlayLand": "$forest"}},
+    {"turn": 1, "step": "PrecombatMain", "player": "bob", "do": {"PlayLand": "$mountain"}},
+    {"turn": 1, "step": "PrecombatMain", "player": "bob", "refuse": {"PlayLand": "$island"}},
+    {"turn": 1, "step": "PrecombatMain", "player": "bob", "do": {"Take": {"action": "ActivateManaAbility Forest"}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "bob", "do": "Pass"},
+    {"turn": 1, "step": "PrecombatMain", "player": "bob", "check": {"Count": {"player": "bob", "zone": "Hand", "card": "Forest", "count": 1}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "bob", "check": {"Count": {"player": "bob", "zone": "Battlefield", "card": "Mountain", "count": 1}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "bob", "check": {"Count": {"player": "bob", "zone": "Hand", "card": "Island", "count": 1}}}
+  ]
+}

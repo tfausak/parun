@@ -1,0 +1,16 @@
+{
+  "description": "CR 701.23a / 701.24b whole card: Goblin Recruiter finds any number of Goblin cards, reveals them, and puts them on top of the shuffled library in the order alice chooses",
+  "note": "Grizzly Bears is refused as a find; alice takes both Goblins, bob is shown them, and they sit on top in her order above the shuffled rest.",
+  "board": {"active": "alice", "step": "PrecombatMain", "seats": [{"name": "alice", "manaPool": "RR", "hand": [{"card": "Goblin Recruiter", "label": "recruiter"}], "library": [{"card": "Island", "label": "island"}, {"card": "Goblin Piker", "label": "piker"}, {"card": "Grizzly Bears", "label": "bears"}, {"card": "Raging Goblin", "label": "raging"}]}, {"name": "bob", "library": [{"card": "Hill Giant"}, {"card": "Hill Giant"}, {"card": "Hill Giant"}]}]},
+  "timeline": [
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": {"Cast": {"object": "$recruiter"}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass"},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass"},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "refuse": {"Answer": {"prompt": "Search", "with": ["$bears"]}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": {"Answer": {"prompt": "Search", "with": ["$piker", "$raging"]}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": {"Answer": {"prompt": "Shuffle", "with": ["$bears", "$island"]}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": {"Answer": {"prompt": "ArrangeLibraryCards", "with": [1, 0]}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "check": {"View": {"of": "Witnessed", "player": "bob", "is": ["Goblin Piker", "Raging Goblin"]}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "check": {"View": {"of": "Zone", "player": "alice", "zone": "Library", "is": ["Raging Goblin", "Goblin Piker", "Grizzly Bears", "Island"]}}}
+  ]
+}

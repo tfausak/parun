@@ -1,0 +1,20 @@
+{
+  "description": "CR 509.3b / 509.3d / 603.7 whole card: Thicket Basilisk destroys at end of combat a non-Wall creature it blocks or that blocks it, and not a Wall",
+  "note": "Turn 1 it blocks bob's first Hill Giant; turn 2 his second Hill Giant blocks it; turn 4 his Wall of Stone blocks it and lives. Each Giant survives the 2 damage the Basilisk deals and is destroyed as end of combat begins.",
+  "board": {"active": "bob", "step": "BeginningOfCombat", "seats": [{"name": "bob", "battlefield": [{"card": "Wall of Stone", "label": "wall"}, {"card": "Hill Giant", "label": "g1", "ready": true}, {"card": "Hill Giant", "label": "g2"}], "library": [{"card": "Island"}, {"card": "Island"}, {"card": "Island"}, {"card": "Island"}]}, {"name": "alice", "battlefield": [{"card": "Thicket Basilisk", "label": "basilisk", "ready": true}], "library": [{"card": "Island"}, {"card": "Island"}, {"card": "Island"}, {"card": "Island"}]}]},
+  "timeline": [
+    {"turn": 1, "step": "DeclareAttackers", "player": "bob", "do": {"Attack": ["$g1"]}},
+    {"turn": 1, "step": "DeclareBlockers", "player": "alice", "do": {"Block": {"$basilisk": ["$g1"]}}},
+    {"turn": 1, "step": "CombatDamage", "player": "bob", "check": {"Damage": {"object": "$g1", "damage": 2}}},
+    {"turn": 1, "step": "PostcombatMain", "player": "bob", "check": {"Count": {"player": "bob", "zone": "Graveyard", "card": "Hill Giant", "count": 1}}},
+    {"turn": 1, "step": "PostcombatMain", "player": "bob", "check": {"Count": {"player": "alice", "zone": "Battlefield", "card": "Thicket Basilisk", "count": 1}}},
+    {"turn": 2, "step": "DeclareAttackers", "player": "alice", "do": {"Attack": ["$basilisk"]}},
+    {"turn": 2, "step": "DeclareBlockers", "player": "bob", "do": {"Block": {"$g2": ["$basilisk"]}}},
+    {"turn": 2, "step": "CombatDamage", "player": "alice", "check": {"Damage": {"object": "$g2", "damage": 2}}},
+    {"turn": 2, "step": "PostcombatMain", "player": "alice", "check": {"Count": {"player": "bob", "zone": "Graveyard", "card": "Hill Giant", "count": 2}}},
+    {"turn": 2, "step": "PostcombatMain", "player": "alice", "check": {"Count": {"player": "alice", "zone": "Battlefield", "card": "Thicket Basilisk", "count": 1}}},
+    {"turn": 4, "step": "DeclareAttackers", "player": "alice", "do": {"Attack": ["$basilisk"]}},
+    {"turn": 4, "step": "DeclareBlockers", "player": "bob", "do": {"Block": {"$wall": ["$basilisk"]}}},
+    {"turn": 4, "step": "PostcombatMain", "player": "alice", "check": {"Count": {"player": "bob", "zone": "Battlefield", "card": "Wall of Stone", "count": 1}}}
+  ]
+}

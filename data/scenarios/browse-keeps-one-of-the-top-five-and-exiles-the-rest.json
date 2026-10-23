@@ -1,0 +1,14 @@
+{
+  "description": "CR 406.1 whole card: Browse puts the one card alice picks of her top five into her hand and exiles the other four, leaving the sixth",
+  "note": "Alice picks the Mountain, third from the top; the Grizzly Bears sixth stays in her library.",
+  "board": {"active": "alice", "step": "PrecombatMain", "seats": [{"name": "alice", "manaPool": "UUUU", "battlefield": [{"card": "Browse", "label": "browse"}], "library": [{"card": "Island"}, {"card": "Swamp"}, {"card": "Mountain", "label": "pick"}, {"card": "Forest"}, {"card": "Plains"}, {"card": "Grizzly Bears"}]}, {"name": "bob", "library": [{"card": "Hill Giant"}, {"card": "Hill Giant"}, {"card": "Hill Giant"}]}]},
+  "timeline": [
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": {"Activate": {"object": "$browse", "ability": 0}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass"},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": {"Answer": {"prompt": "ChooseCardFromAmong", "with": "$pick"}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "check": {"View": {"of": "Zone", "player": "alice", "zone": "Hand", "is": ["Mountain"]}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "check": {"View": {"of": "Zone", "player": "alice", "zone": "Library", "is": ["Grizzly Bears"]}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "check": {"Count": {"player": "alice", "zone": "Exile", "card": "Plains", "count": 1}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "check": {"Count": {"player": "alice", "zone": "Exile", "card": "Island", "count": 1}}}
+  ]
+}

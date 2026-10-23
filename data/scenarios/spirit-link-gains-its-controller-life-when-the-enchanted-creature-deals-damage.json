@@ -1,0 +1,12 @@
+{
+  "description": "CR 120.1 / 603.2 whole card: Spirit Link's controller gains as much life as the enchanted creature deals, even to a creature and even as that damage kills its host",
+  "note": "Alice's Spirit Link enchants bob's Grizzly Bears. The Bears attack and alice's Hill Giant blocks; the Bears deal 2 and die, and alice, not bob, gains 2.",
+  "board": {"active": "bob", "step": "BeginningOfCombat", "seats": [{"name": "bob", "battlefield": [{"card": "Grizzly Bears", "label": "bears", "ready": true}], "library": [{"card": "Island"}, {"card": "Island"}, {"card": "Island"}]}, {"name": "alice", "battlefield": [{"card": "Spirit Link", "label": "link", "attached": "bears"}, {"card": "Hill Giant", "label": "giant"}], "library": [{"card": "Island"}, {"card": "Island"}, {"card": "Island"}]}]},
+  "timeline": [
+    {"turn": 1, "step": "DeclareAttackers", "player": "bob", "do": {"Attack": ["$bears"]}},
+    {"turn": 1, "step": "DeclareBlockers", "player": "alice", "do": {"Block": {"$giant": ["$bears"]}}},
+    {"turn": 1, "step": "PostcombatMain", "player": "bob", "check": {"Count": {"player": "bob", "zone": "Graveyard", "card": "Grizzly Bears", "count": 1}}},
+    {"turn": 1, "step": "PostcombatMain", "player": "bob", "check": {"Life": {"player": "alice", "life": 22}}},
+    {"turn": 1, "step": "PostcombatMain", "player": "bob", "check": {"Life": {"player": "bob", "life": 20}}}
+  ]
+}

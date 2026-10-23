@@ -1,0 +1,11 @@
+{
+  "description": "CR 504.1 / 603.2b whole card: Teferi's Puzzle Box, after the normal draw, puts the drawing player's hand on the bottom in the order she chooses and has her draw that many",
+  "note": "Bob controls the Box. Alice draws her Island, puts it under her Hill Giant and Shock on the bottom, and draws the Swamp, Mountain and Plains; the Forest is left on top.",
+  "board": {"turn": 2, "active": "alice", "step": "Upkeep", "seats": [{"name": "alice", "hand": [{"card": "Shock", "label": "shock"}, {"card": "Hill Giant", "label": "giant"}], "library": [{"card": "Island"}, {"card": "Swamp"}, {"card": "Mountain"}, {"card": "Plains"}, {"card": "Forest"}]}, {"name": "bob", "battlefield": [{"card": "Teferi's Puzzle Box"}], "library": [{"card": "Wall of Stone"}, {"card": "Wall of Stone"}, {"card": "Wall of Stone"}]}]},
+  "timeline": [
+    {"turn": 2, "step": "DrawStep", "player": "alice", "do": "Pass"},
+    {"turn": 2, "step": "DrawStep", "player": "alice", "do": {"Answer": {"prompt": "ArrangeLibraryArrivals", "with": [2, 0, 1]}}},
+    {"turn": 2, "step": "DrawStep", "player": "alice", "check": {"View": {"of": "Zone", "player": "alice", "zone": "Hand", "is": ["Swamp", "Mountain", "Plains"]}}},
+    {"turn": 2, "step": "DrawStep", "player": "alice", "check": {"View": {"of": "Zone", "player": "alice", "zone": "Library", "is": ["Forest", "Hill Giant", "Shock", "Island"]}}}
+  ]
+}

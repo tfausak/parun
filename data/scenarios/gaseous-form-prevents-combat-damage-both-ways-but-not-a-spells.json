@@ -1,0 +1,15 @@
+{
+  "description": "CR 615.1 / 510.2 whole card: Gaseous Form prevents the combat damage its creature would deal and be dealt, but not a spell's damage",
+  "note": "Alice's enchanted Hill Giant and bob's blocking Grizzly Bears both end combat undamaged; after combat Shock still deals the Giant 2.",
+  "board": {"active": "alice", "step": "BeginningOfCombat", "seats": [{"name": "alice", "battlefield": [{"card": "Hill Giant", "label": "giant", "ready": true}, {"card": "Gaseous Form", "label": "form", "attached": "giant"}, {"card": "Mountain", "label": "mountain"}], "hand": [{"card": "Shock", "label": "shock"}], "library": [{"card": "Island"}, {"card": "Island"}, {"card": "Island"}]}, {"name": "bob", "battlefield": [{"card": "Grizzly Bears", "label": "bears"}], "library": [{"card": "Island"}, {"card": "Island"}, {"card": "Island"}]}]},
+  "timeline": [
+    {"turn": 1, "step": "DeclareAttackers", "player": "alice", "do": {"Attack": ["$giant"]}},
+    {"turn": 1, "step": "DeclareBlockers", "player": "bob", "do": {"Block": {"$bears": ["$giant"]}}},
+    {"turn": 1, "step": "CombatDamage", "player": "alice", "check": {"Damage": {"object": "$giant", "damage": 0}}},
+    {"turn": 1, "step": "CombatDamage", "player": "alice", "check": {"Damage": {"object": "$bears", "damage": 0}}},
+    {"turn": 1, "step": "PostcombatMain", "player": "alice", "check": {"Count": {"player": "bob", "zone": "Battlefield", "card": "Grizzly Bears", "count": 1}}},
+    {"turn": 1, "step": "PostcombatMain", "player": "alice", "do": {"Cast": {"object": "$shock", "targets": ["$giant"], "mana": ["$mountain"]}}},
+    {"turn": 1, "step": "PostcombatMain", "player": "alice", "do": "Pass"},
+    {"turn": 1, "step": "PostcombatMain", "player": "alice", "check": {"Damage": {"object": "$giant", "damage": 2}}}
+  ]
+}
