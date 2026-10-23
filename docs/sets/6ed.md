@@ -200,8 +200,6 @@ rather than written by hand; no Sixth Edition card's whole text is keywords, so
 Each group is tracked by its issue; its cards are added when it lands. Hardest
 first.
 
-- #5490: Illicit Auction. An open-ended life auction among every player, with
-  a high bid carried from round to round.
 - #5491: Zur's Weirding. A draw replacement whose outcome the other players
   decide by paying life.
 - #5492: Amber Prison. A choice inside the untap step, which asks nobody today,
