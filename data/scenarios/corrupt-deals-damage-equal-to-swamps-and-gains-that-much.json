@@ -1,0 +1,11 @@
+{
+  "description": "CR 120.3 / 119.3 whole card: Corrupt deals damage equal to the Swamps its controller controls and gains life equal to the damage dealt",
+  "note": "Alice controls three Swamps and bob two: bob takes 3, not 5, and alice gains the 3 dealt.",
+  "board": {"active": "alice", "step": "PrecombatMain", "seats": [{"name": "alice", "manaPool": "BBBBBB", "battlefield": [{"card": "Swamp"}, {"card": "Swamp"}, {"card": "Swamp"}], "hand": [{"card": "Corrupt", "label": "corrupt"}], "library": [{"card": "Island"}, {"card": "Island"}, {"card": "Island"}]}, {"name": "bob", "battlefield": [{"card": "Swamp"}, {"card": "Swamp"}], "library": [{"card": "Island"}, {"card": "Island"}, {"card": "Island"}]}]},
+  "timeline": [
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": {"Cast": {"object": "$corrupt", "targets": ["$bob"], "mana": [null]}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass"},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "check": {"Life": {"player": "bob", "life": 17}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "check": {"Life": {"player": "alice", "life": 23}}}
+  ]
+}

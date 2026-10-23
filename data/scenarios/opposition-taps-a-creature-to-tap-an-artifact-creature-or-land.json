@@ -1,0 +1,14 @@
+{
+  "description": "CR 302.6 / 701.26a whole card: Opposition taps an untapped creature its controller controls to tap target artifact, creature, or land",
+  "note": "Alice's Grizzly Bears came under her control this turn, which a {T}-less tap cost doesn't care about; she taps them over her Gray Ogre. Bob's Rule of Law, an enchantment, is refused as a target; his Hill Giant is tapped.",
+  "board": {"active": "alice", "step": "PrecombatMain", "seats": [{"name": "alice", "battlefield": [{"card": "Opposition", "label": "opposition"}, {"card": "Grizzly Bears", "label": "bears"}, {"card": "Gray Ogre", "label": "ogre", "ready": true}], "library": [{"card": "Island"}, {"card": "Island"}, {"card": "Island"}]}, {"name": "bob", "battlefield": [{"card": "Hill Giant", "label": "giant"}, {"card": "Rule of Law", "label": "law"}], "library": [{"card": "Island"}, {"card": "Island"}, {"card": "Island"}]}]},
+  "timeline": [
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "refuse": {"Activate": {"object": "$opposition", "targets": ["$law"]}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": {"Activate": {"object": "$opposition", "targets": ["$giant"]}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": {"Answer": {"prompt": "ChooseTaps", "with": ["$bears"]}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass"},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "check": {"Tapped": {"object": "$giant", "tapped": true}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "check": {"Tapped": {"object": "$bears", "tapped": true}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "check": {"Tapped": {"object": "$ogre", "tapped": false}}}
+  ]
+}

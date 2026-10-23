@@ -478,6 +478,28 @@ Entries are ordered by the first rule each cites.
   power fixed".
 - **Issue**: #5440.
 
+## What a spell or ability causes
+
+- **Question**: Sacred Ground and Spiritual Focus watch for "a spell or
+  ability an opponent controls causes" a move or a discard. Does a cost paid
+  for it count, a CR 118.12 cost paid as it resolves, or the state-based
+  action that follows its damage?
+- **Rules**: CR 609.1, 118.12, 601.2h, 602.2b, 704.3; CR of 2026-08-07.
+- **Decision**: Only an effect (CR 609.1) of a spell or ability counts, with
+  that spell or ability's controller as the effect is performed. A cost,
+  CR 118.12's included, a state-based action, a turn-based action and the
+  cast itself cause nothing. Guerrilla Tactics' ruling says the cost half for
+  a discard: "Only discarding as an effect will trigger the ability."
+- **Rejected**: Counting a cost paid for the spell or ability, which would
+  make a stolen land sacrificed to its controller's cost count; and crediting
+  a state-based action to the spell whose damage led to it, which CR 704.3
+  performs on its own when a player would receive priority.
+- **Site**: `Pawl.Engine.Event.causedBy` and `causeNow`,
+  `Pawl.Engine.Resolve.Effect.applyEffectWith` and
+  `Pawl.Engine.Cost.payComponent`, proved by the `sacred-ground-*` and
+  `spiritual-focus-*` scenarios.
+- **Issue**: #5530.
+
 ## Whether "if you can't" holds after doing part of an instruction
 
 - **Question**: Lich's "sacrifice that many nontoken permanents. If you can't,

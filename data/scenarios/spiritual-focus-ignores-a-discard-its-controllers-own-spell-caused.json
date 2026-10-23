@@ -1,0 +1,13 @@
+{
+  "description": "CR 609.1 / 109.5: Spiritual Focus does nothing when alice's own Mind Rot makes her discard",
+  "note": "The twin of the board where bob casts the Mind Rot, with only the caster changed: the effect is alice's, and \"an opponent controls\" refuses it.",
+  "board": {"active": "alice", "step": "PrecombatMain", "seats": [{"name": "alice", "manaPool": "BBB", "library": [{"card": "Plains"}, {"card": "Plains"}, {"card": "Plains"}], "battlefield": [{"card": "Spiritual Focus", "label": "focus"}], "hand": [{"card": "Mind Rot", "label": "rot"}, {"card": "Hill Giant", "label": "giant"}, {"card": "Island", "label": "island"}, {"card": "Swamp", "label": "swamp"}]}, {"name": "bob", "library": [{"card": "Island"}, {"card": "Island"}, {"card": "Island"}]}]},
+  "timeline": [
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": {"Cast": {"object": "$rot", "targets": ["$alice"]}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass"},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": {"Answer": {"prompt": "ChooseDiscard", "with": ["$giant", "$island"]}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "check": {"View": {"of": "Stack", "is": []}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "check": {"Life": {"player": "alice", "life": 20}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "check": {"Count": {"player": "alice", "zone": "Graveyard", "card": "Hill Giant", "count": 1}}}
+  ]
+}

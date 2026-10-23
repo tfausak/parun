@@ -7,6 +7,7 @@ import qualified Pawl.JsonCodec.Common as Common
 import qualified Pawl.Spec as Spec
 import qualified Pawl.Types.Moved as Moved
 import qualified Pawl.Types.ObjectId as ObjectId
+import qualified Pawl.Types.PlayerId as PlayerId
 import qualified Pawl.Types.Zone as Zone
 import qualified Pawl.Types.ZoneChange as ZoneChange
 
@@ -25,7 +26,8 @@ spec s = Spec.describe s "Pawl.Codec.Moved" $ do
             Moved.otherDepartures = Seq.empty,
             Moved.duringResolution = False,
             Moved.revealed = False,
-            Moved.seenArriving = False
+            Moved.seenArriving = False,
+            Moved.causedBy = Nothing
           }
       )
       ( "{\"change\":{\"departed\":1,\"object\":2,\"from\":{\"type\":\"Battlefield\"},\"to\":{\"type\":\"Graveyard\"}},\"characteristics\":"
@@ -45,7 +47,8 @@ spec s = Spec.describe s "Pawl.Codec.Moved" $ do
             Moved.otherDepartures = Seq.empty,
             Moved.duringResolution = False,
             Moved.revealed = False,
-            Moved.seenArriving = False
+            Moved.seenArriving = False,
+            Moved.causedBy = Nothing
           }
       )
       ( "{\"change\":{\"departed\":1,\"object\":2,\"from\":{\"type\":\"Battlefield\"},\"to\":{\"type\":\"Graveyard\"}},\"characteristics\":"
@@ -65,7 +68,8 @@ spec s = Spec.describe s "Pawl.Codec.Moved" $ do
             Moved.otherDepartures = Seq.fromList [ObjectId.MkObjectId 3],
             Moved.duringResolution = False,
             Moved.revealed = False,
-            Moved.seenArriving = False
+            Moved.seenArriving = False,
+            Moved.causedBy = Nothing
           }
       )
       ( "{\"change\":{\"departed\":1,\"object\":2,\"from\":{\"type\":\"Exile\"},\"to\":{\"type\":\"Battlefield\"}},\"characteristics\":"
@@ -85,7 +89,8 @@ spec s = Spec.describe s "Pawl.Codec.Moved" $ do
             Moved.otherDepartures = Seq.empty,
             Moved.duringResolution = True,
             Moved.revealed = False,
-            Moved.seenArriving = False
+            Moved.seenArriving = False,
+            Moved.causedBy = Nothing
           }
       )
       ( "{\"change\":{\"departed\":1,\"object\":2,\"from\":{\"type\":\"Stack\"},\"to\":{\"type\":\"Graveyard\"}},\"characteristics\":"
@@ -105,7 +110,8 @@ spec s = Spec.describe s "Pawl.Codec.Moved" $ do
             Moved.otherDepartures = Seq.empty,
             Moved.duringResolution = False,
             Moved.revealed = True,
-            Moved.seenArriving = False
+            Moved.seenArriving = False,
+            Moved.causedBy = Nothing
           }
       )
       ( "{\"change\":{\"departed\":1,\"object\":2,\"from\":{\"type\":\"Hand\"},\"to\":{\"type\":\"Library\"}},\"characteristics\":"
@@ -125,11 +131,33 @@ spec s = Spec.describe s "Pawl.Codec.Moved" $ do
             Moved.otherDepartures = Seq.empty,
             Moved.duringResolution = False,
             Moved.revealed = False,
-            Moved.seenArriving = True
+            Moved.seenArriving = True,
+            Moved.causedBy = Nothing
           }
       )
       ( "{\"change\":{\"departed\":1,\"object\":2,\"from\":{\"type\":\"Library\"},\"to\":{\"type\":\"Battlefield\"}},\"characteristics\":"
           <> ProjectedCharacteristicsSpec.testCharacteristicsJson
           <> ",\"otherArrivals\":[],\"seenArriving\":true}"
+      )
+  -- CR 609.1's cause: a land an opponent's effect destroyed, the one shape the
+  -- defaulted key appears in.
+  Spec.it s "MkMoved, CR 609.1's move an effect made" $
+    Common.assertCodec
+      s
+      Moved.codec
+      ( Moved.MkMoved
+          { Moved.change = ZoneChange.MkZoneChange (ObjectId.MkObjectId 1) (ObjectId.MkObjectId 2) Zone.Battlefield Zone.Graveyard,
+            Moved.characteristics = ProjectedCharacteristicsSpec.testCharacteristics,
+            Moved.otherArrivals = Seq.empty,
+            Moved.otherDepartures = Seq.empty,
+            Moved.duringResolution = False,
+            Moved.revealed = False,
+            Moved.seenArriving = False,
+            Moved.causedBy = Just (PlayerId.MkPlayerId 1)
+          }
+      )
+      ( "{\"change\":{\"departed\":1,\"object\":2,\"from\":{\"type\":\"Battlefield\"},\"to\":{\"type\":\"Graveyard\"}},\"characteristics\":"
+          <> ProjectedCharacteristicsSpec.testCharacteristicsJson
+          <> ",\"otherArrivals\":[],\"causedBy\":1}"
       )
   Spec.it s "has a schema" $ Common.assertHasSchema s Moved.codec

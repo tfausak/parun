@@ -1,0 +1,15 @@
+{
+  "description": "CR 701.21a / 608.2d whole card: Reprocess sacrifices any number of its caster's artifacts, creatures, and lands and draws a card for each",
+  "note": "Alice offers her Rule of Law, an enchantment, which is refused; she then sacrifices her Grizzly Bears, Caltrops and Forest, keeps her Swamp, and draws three of her four cards.",
+  "board": {"active": "alice", "step": "PrecombatMain", "seats": [{"name": "alice", "manaPool": "BBBB", "battlefield": [{"card": "Grizzly Bears", "label": "bears"}, {"card": "Caltrops", "label": "caltrops"}, {"card": "Forest", "label": "forest"}, {"card": "Swamp", "label": "swamp"}, {"card": "Rule of Law", "label": "law"}], "hand": [{"card": "Reprocess", "label": "reprocess"}], "library": [{"card": "Island"}, {"card": "Island"}, {"card": "Island"}, {"card": "Plains"}]}, {"name": "bob", "library": [{"card": "Island"}, {"card": "Island"}, {"card": "Island"}]}]},
+  "timeline": [
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": {"Cast": {"object": "$reprocess", "mana": [null]}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass"},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "refuse": {"Answer": {"prompt": "ChooseAnyNumberOfPermanents", "with": ["$bears", "$law"]}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": {"Answer": {"prompt": "ChooseAnyNumberOfPermanents", "with": ["$bears", "$caltrops", "$forest"]}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "check": {"Count": {"player": "alice", "zone": "Hand", "card": "Island", "count": 3}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "check": {"Count": {"player": "alice", "zone": "Library", "card": "Plains", "count": 1}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "check": {"Count": {"player": "alice", "zone": "Battlefield", "card": "Swamp", "count": 1}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "check": {"Count": {"player": "alice", "zone": "Battlefield", "card": "Rule of Law", "count": 1}}}
+  ]
+}

@@ -1,0 +1,12 @@
+{
+  "description": "CR 603.4 / 513.1 whole card: Impatience deals 2 damage at the beginning of each player's end step to that player if they didn't cast a spell this turn",
+  "note": "Bob controls Impatience. On turn 1 alice casts Lightning Bolt at bob, so her end step costs her nothing; on turn 2 bob casts nothing and Impatience hits him, not alice.",
+  "board": {"active": "alice", "step": "PrecombatMain", "seats": [{"name": "alice", "manaPool": "R", "hand": [{"card": "Lightning Bolt", "label": "bolt"}], "library": [{"card": "Island"}, {"card": "Island"}, {"card": "Island"}]}, {"name": "bob", "battlefield": [{"card": "Impatience"}], "library": [{"card": "Island"}, {"card": "Island"}, {"card": "Island"}]}]},
+  "timeline": [
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": {"Cast": {"object": "$bolt", "targets": ["$bob"]}}},
+    {"turn": 2, "step": "Upkeep", "player": "bob", "check": {"Life": {"player": "alice", "life": 20}}},
+    {"turn": 2, "step": "Upkeep", "player": "bob", "check": {"Life": {"player": "bob", "life": 17}}},
+    {"turn": 3, "step": "Upkeep", "player": "alice", "check": {"Life": {"player": "bob", "life": 15}}},
+    {"turn": 3, "step": "Upkeep", "player": "alice", "check": {"Life": {"player": "alice", "life": 20}}}
+  ]
+}

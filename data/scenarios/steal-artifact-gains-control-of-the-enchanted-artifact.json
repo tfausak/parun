@@ -1,0 +1,11 @@
+{
+  "description": "CR 303.4 / 613.1b whole card: Steal Artifact enchants an artifact and gives its controller control of it",
+  "note": "Bob's Grizzly Bears, not an artifact, is refused as a target; alice takes his Caltrops.",
+  "board": {"active": "alice", "step": "PrecombatMain", "seats": [{"name": "alice", "manaPool": "UUUU", "hand": [{"card": "Steal Artifact", "label": "steal"}], "library": [{"card": "Island"}, {"card": "Island"}, {"card": "Island"}]}, {"name": "bob", "battlefield": [{"card": "Caltrops", "label": "caltrops"}, {"card": "Grizzly Bears", "label": "bears"}], "library": [{"card": "Island"}, {"card": "Island"}, {"card": "Island"}]}]},
+  "timeline": [
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "refuse": {"Cast": {"object": "$steal", "targets": ["$bears"]}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": {"Cast": {"object": "$steal", "targets": ["$caltrops"]}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass"},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "check": {"View": {"of": "Controller", "object": "$caltrops", "is": "alice"}}}
+  ]
+}

@@ -187,7 +187,7 @@ spec s = Spec.describe s "Pawl.Codec.GameEvent" $ do
     Common.assertCodec
       s
       GameEvent.codec
-      (GameEvent.Discarded (Discarded.MkDiscarded (PlayerId.MkPlayerId 0) (ObjectId.MkObjectId 7) DiscardCause.ToPayCyclingCost Nothing))
+      (GameEvent.Discarded (Discarded.MkDiscarded (PlayerId.MkPlayerId 0) (ObjectId.MkObjectId 7) DiscardCause.ToPayCyclingCost Nothing Nothing))
       " {\"type\":\"Discarded\",\"value\":{\"player\":0,\"card\":7,\"cause\":{\"type\":\"ToPayCyclingCost\"},\"madness\":null}} "
   -- CR 121.1's draw, with the ordinal CR 702.94a asks about. A player id and an
   -- ordinal, deliberately different numbers, so a codec that swapped them fails.

@@ -55,6 +55,7 @@ import qualified Pawl.Types.BlocksDeclared as BlocksDeclared
 import Pawl.Types.Card (Card)
 import qualified Pawl.Types.CardLeavesZone as CardLeavesZone
 import qualified Pawl.Types.CardsPutIntoZone as CardsPutIntoZone
+import qualified Pawl.Types.CausedBy as CausedBy
 import qualified Pawl.Types.ClassLevelChange as ClassLevelChange
 import qualified Pawl.Types.CoinFlipped as CoinFlipped
 import qualified Pawl.Types.ContinuousEffect as ContinuousEffect
@@ -229,7 +230,7 @@ entryGroup oid gs =
 -- The zone change an event describes, if it is one.
 movedOf :: GameEvent -> Maybe ZoneChange
 movedOf event = case event of
-  GameEvent.Moved (Moved.MkMoved zc _ _ _ _ _ _) -> Just zc
+  GameEvent.Moved (Moved.MkMoved zc _ _ _ _ _ _ _) -> Just zc
   -- CR 712.21 / CR 730.3: each component card after the leading one DID change
   -- zones, so the event that announces it answers with its zone change like any
   -- other. That is what puts it in front of the two graveyard candidate sources
@@ -610,6 +611,7 @@ looksBack condition = case condition of
   -- Nor is dealing damage: the host deals it from the battlefield.
   TriggerCondition.AttachedCreatureDealsDamage -> False
   TriggerCondition.PermanentsBecomeTapped _ -> False
+  TriggerCondition.PermanentBecomesTapped _ -> False
   -- Nor is becoming untapped: CR 701.26b leaves the permanent standing on
   -- the battlefield too, so the same live read is the right one.
   TriggerCondition.SelfBecomesUntapped -> False
@@ -637,6 +639,7 @@ looksBack condition = case condition of
   -- a condition that does not look back is unaffected, since its own matcher
   -- still has to admit the candidate.
   TriggerCondition.AnyOf conditions -> any looksBack conditions
+  TriggerCondition.CausedBy narrowed -> looksBack (CausedBy.condition narrowed)
   -- CR 603.6c's own last sentence puts this OUTSIDE the family: a card put into
   -- a graveyard from anywhere is not a leaves-the-battlefield ability, and CR
   -- 603.10's normal reading applies. The constructor's own Haddock argues it.
@@ -897,6 +900,9 @@ batchScoped condition = case condition of
   -- tapping, however many it tapped -- a cost's taps, CR 508.1f's attackers, or
   -- one Effect.Tap -- so long as each of those sites brackets its loop.
   TriggerCondition.PermanentsBecomeTapped _ -> True
+  -- Thoughtleech's "whenever an Island ... becomes tapped" has no "one or
+  -- more", so each permanent a tapping event taps is its own occurrence.
+  TriggerCondition.PermanentBecomesTapped _ -> False
   -- The untap direction the same way, CR 502.3's simultaneous batch
   -- included: the condition is about the BEARER, so a batch that untaps a
   -- whole board still holds one occurrence of it.
@@ -915,6 +921,7 @@ batchScoped condition = case condition of
   TriggerCondition.HauntedCreatureDies -> False
   TriggerCondition.PermanentSacrificed {} -> False
   TriggerCondition.AnyOf conditions -> any batchScoped conditions
+  TriggerCondition.CausedBy narrowed -> batchScoped (CausedBy.condition narrowed)
   -- CR 603.2c's second sentence: Planar Void's printing is singular, so each
   -- card put into a graveyard is its own trigger event.
   TriggerCondition.CardPutIntoGraveyard _ -> False
@@ -1133,6 +1140,7 @@ stepTriggerPlayers gs you cond event ability = case (cond, event) of
   (TriggerCondition.StepBegins (StepBegins.MkStepBegins wanted _ scope), GameEvent.StepBegan (StepBegan.MkStepBegan began _))
     | began == wanted && Map.member Binding.triggerPlayer (Slots.triggeredAbilitySlots ability) -> Just (filter (\player -> Game.wasInRangeOf you player gs) (stepPlayers gs scope you))
   (TriggerCondition.AnyOf conditions, _) -> Maybe.listToMaybe (Maybe.mapMaybe (\c -> stepTriggerPlayers gs you c event ability) conditions)
+  (TriggerCondition.CausedBy narrowed, _) -> stepTriggerPlayers gs you (CausedBy.condition narrowed) event ability
   _ -> Nothing
 
 -- CR 805.4d: the trigger once per player whose step this is, each naming its own
@@ -1153,6 +1161,7 @@ countersRemovedOccurrences bearer cond event = case (cond, event) of
   (TriggerCondition.SelfCounterRemoved removal, GameEvent.CountersRemoved (CounterChange.MkCounterChange oid kind before after))
     | oid == bearer && kind == SelfCountersRemoved.kind removal && before > after -> Just (before - after)
   (TriggerCondition.AnyOf conditions, _) -> Maybe.listToMaybe (Maybe.mapMaybe (\c -> countersRemovedOccurrences bearer c event) conditions)
+  (TriggerCondition.CausedBy narrowed, _) -> countersRemovedOccurrences bearer (CausedBy.condition narrowed) event
   _ -> Nothing
 
 -- CR 603.6a: every event is checked against every permanent currently on the
@@ -1354,7 +1363,7 @@ eventTriggers events gs =
       -- 113.6m's final sentence reads the CR 603.7 declarations, which the
       -- characteristics carry (PC.delayedAbilities).
       leftBattlefield event = case event of
-        GameEvent.Moved (Moved.MkMoved zc _ _ _ _ _ _)
+        GameEvent.Moved (Moved.MkMoved zc _ _ _ _ _ _ _)
           | ZoneChange.from zc == Zone.Battlefield && ZoneChange.to zc /= Zone.Battlefield ->
               case Map.lookup (ZoneChange.departed zc) (GameState.lastKnown gs) of
                 Nothing -> Map.empty
@@ -1680,13 +1689,13 @@ eventTriggers events gs =
       -- about cycling specifically. An ordinary discard's card reaches the
       -- graveyard too and is offered by `inGraveyards` under CR 113.6k.
       cycledCard event = case event of
-        GameEvent.Discarded (Discarded.MkDiscarded _ oid DiscardCause.ToPayCyclingCost _) -> case Game.lookupObject oid gs of
+        GameEvent.Discarded (Discarded.MkDiscarded _ oid DiscardCause.ToPayCyclingCost _ _) -> case Game.lookupObject oid gs of
           Nothing -> Map.empty
           Just obj -> case Game.faceOf oid gs of
             Nothing -> Map.empty
             Just _ -> Map.singleton oid (Object.owner obj, fmap whole (Projection.triggeredAbilitiesOf oid gs))
-        GameEvent.Discarded (Discarded.MkDiscarded _ _ DiscardCause.Ordinary _) -> Map.empty
-        GameEvent.Discarded (Discarded.MkDiscarded _ _ DiscardCause.ByEffect _) -> Map.empty
+        GameEvent.Discarded (Discarded.MkDiscarded _ _ DiscardCause.Ordinary _ _) -> Map.empty
+        GameEvent.Discarded (Discarded.MkDiscarded _ _ DiscardCause.ByEffect _ _) -> Map.empty
         -- A draw names no object either. The card it puts in a hand may well bear
         -- an ability that triggers from there -- CR 702.94a's miracle -- but that
         -- one fires on the REVEAL rather than on the draw, and `revealedInHand`
@@ -2021,7 +2030,7 @@ eventTriggers events gs =
       -- Gorger dying before the trigger is gathered still casts the Vampire"
       -- proves the grant case.
       exiledForMadness event = case event of
-        GameEvent.Discarded (Discarded.MkDiscarded _ oid _ (Just payload))
+        GameEvent.Discarded (Discarded.MkDiscarded _ oid _ (Just payload) _)
           | Just obj <- Game.lookupObject oid gs ->
               Map.singleton oid (Object.owner obj, [whole (Keyword.madnessCast (PC.manaCost (Projection.project oid gs)) payload)])
         _ -> Map.empty
@@ -2632,6 +2641,7 @@ enchantedObjectLeaves condition = case condition of
   -- where it was, so CR 113.6m's Aura clause has nothing to exempt.
   TriggerCondition.AttachedPermanentTappedForMana -> False
   TriggerCondition.AnyOf conditions -> any enchantedObjectLeaves conditions
+  TriggerCondition.CausedBy narrowed -> enchantedObjectLeaves (CausedBy.condition narrowed)
   _ -> False
 
 -- CR 113.6m's general clause, asked of a trigger condition and the zone a fold
@@ -2693,6 +2703,7 @@ conditionPutsSelfInto condition zone = case condition of
   -- alone, so the answer is the same graveyard.
   TriggerCondition.SelfPutIntoGraveyardDuringResolution -> zone == Zone.Graveyard
   TriggerCondition.AnyOf conditions -> any (`conditionPutsSelfInto` zone) conditions
+  TriggerCondition.CausedBy narrowed -> conditionPutsSelfInto (CausedBy.condition narrowed) zone
   _ -> False
 
 -- CR 113.6, asked of one zone and one triggered ability: does it function from
@@ -2858,6 +2869,9 @@ zonesTriggeredFrom cond =
         TriggerCondition.AnyOf conditions -> case conditions of
           [] -> battlefield
           _ -> Set.unions (fmap zonesTriggeredFrom conditions)
+        -- The narrowed condition's zones: the cause asks which effect made the
+        -- event, never where the watcher is.
+        TriggerCondition.CausedBy narrowed -> zonesTriggeredFrom (CausedBy.condition narrowed)
         -- CR 708.7 is about a PERMANENT being turned face up, and CR 110.1 puts
         -- permanents on the battlefield alone, so CR 113.6k never reaches this.
         TriggerCondition.SelfTurnedFaceUp -> battlefield
@@ -2895,6 +2909,7 @@ zonesTriggeredFrom cond =
         TriggerCondition.AttachedCreatureBecomesTapped -> battlefield
         TriggerCondition.AttachedCreatureDealsDamage -> battlefield
         TriggerCondition.PermanentsBecomeTapped _ -> battlefield
+        TriggerCondition.PermanentBecomesTapped _ -> battlefield
         -- CR 110.5 makes tapped a permanent's status, so only a permanent can
         -- become untapped and only the battlefield can hold one.
         TriggerCondition.SelfBecomesUntapped -> battlefield
@@ -3434,6 +3449,7 @@ stateTriggersOn gs
             TriggerCondition.AttachedCreatureBecomesTapped -> False
             TriggerCondition.AttachedCreatureDealsDamage -> False
             TriggerCondition.PermanentsBecomeTapped _ -> False
+            TriggerCondition.PermanentBecomesTapped _ -> False
             -- CR 701.26b's untap is an EVENT for the identical reason,
             -- read off the bearer instead of its host.
             TriggerCondition.SelfBecomesUntapped -> False
@@ -3496,6 +3512,7 @@ stateTriggersOn gs
             -- so what this arm really says is that the classification stays
             -- coherent if that lint is ever relaxed.
             TriggerCondition.AnyOf conditions -> any liveCondition conditions
+            TriggerCondition.CausedBy narrowed -> liveCondition (CausedBy.condition narrowed)
           lives = filter live abilities
           -- Each live copy against the copies of itself that came earlier in
           -- the list, which gives it a 1-based ordinal among its equals: the
