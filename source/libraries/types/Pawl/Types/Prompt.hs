@@ -943,9 +943,10 @@ data Prompt r where
   -- cast being OfferedCast's separate "may"; asked once per miracle ability,
   -- named by its cost, until one is taken (CR 702.94b).
   OfferedMiracleReveal :: Decider.Decider -> PlayerId.PlayerId -> ObjectId.ObjectId -> CardName.CardName -> Cost.Cost Keyword.Keyword -> Prompt OptionalDecision.OptionalDecision
-  -- | CR 701.25b / 701.38d: whether the player takes up the "may" grant the
-  -- permanent's static ability gives them -- a surveil's extra cards, a vote's
-  -- extra ballots; asked once per such ability.
+  -- | CR 701.25b / 701.38d / 121.9: whether the player takes up the "may" grant
+  -- the permanent's static ability gives them -- a surveil's extra cards, a
+  -- vote's extra ballots, God-Eternal Kefnet's reveal of the card just drawn;
+  -- asked once per such ability.
   OfferedExtra :: Decider.Decider -> PlayerId.PlayerId -> ObjectId.ObjectId -> PlayerEffect.PlayerEffect -> Prompt OptionalDecision.OptionalDecision
   -- | CR 118.12 / 118.12a: whether the named player -- the one the effects are
   -- aimed at, not the resolving controller -- pays the cost a resolving object

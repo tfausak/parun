@@ -1,0 +1,32 @@
+{
+  "description": "CR 608.2h God-Eternal Kefnet copies a revealed card cast in response from its last known information",
+  "note": "alice reveals the Lightning Bolt she draws first, then casts that Bolt at bob with Kefnet's trigger on the stack. The card has left her hand when the trigger resolves, so the copy is made from its last known information (Kefnet's ruling) and cast at bob too: 6 damage. The {2} reduction leaves the copy's {R} to pay.",
+  "board": {
+    "seats": [
+      {
+        "name": "alice",
+        "battlefield": [
+          { "card": "God-Eternal Kefnet", "label": "kefnet" },
+          { "card": "Mountain", "label": "m1" },
+          { "card": "Mountain", "label": "m2" }
+        ],
+        "library": [{ "card": "Lightning Bolt" }, { "card": "Hill Giant" }]
+      },
+      { "name": "bob", "library": [{ "card": "Island" }] }
+    ],
+    "active": "alice",
+    "turn": 2,
+    "step": "Upkeep"
+  },
+  "timeline": [
+    { "turn": 2, "step": "DrawStep", "player": "alice", "do": { "Answer": { "prompt": "OfferedExtra", "with": { "type": "Exercises" } } } },
+    { "turn": 2, "step": "DrawStep", "player": "alice", "do": { "Cast": { "object": "Lightning Bolt", "targets": ["$bob"], "mana": ["$m1", null] } } },
+    { "turn": 2, "step": "DrawStep", "player": "alice", "do": "Pass" },
+    { "turn": 2, "step": "DrawStep", "player": "alice", "check": { "Life": { "player": "bob", "life": 17 } } },
+    { "turn": 2, "step": "DrawStep", "player": "alice", "do": "Pass" },
+    { "turn": 2, "step": "DrawStep", "player": "alice", "do": { "Answer": { "prompt": "OfferedCast", "with": { "type": "Exercises" } } } },
+    { "turn": 2, "step": "DrawStep", "player": "alice", "do": { "ChooseTargets": { "target": ["$bob"] } } },
+    { "turn": 2, "step": "DrawStep", "player": "alice", "do": { "Answer": { "prompt": "ChooseManaSource", "with": "$m2" } } },
+    { "turn": 2, "step": "PrecombatMain", "player": "alice", "check": { "Life": { "player": "bob", "life": 14 } } }
+  ]
+}

@@ -200,8 +200,6 @@ rather than written by hand; no Sixth Edition card's whole text is keywords, so
 Each group is tracked by its issue; its cards are added when it lands. Hardest
 first.
 
-- #4491: Rowen. A draw-time reveal granted from the battlefield, linked to a
-  trigger.
 - #5494: Doomsday. A search over two zones with no shuffle, then an exile of
   everything not found.
 - #5311: Juxtapose. "The greatest mana value among" outside an edict, then a

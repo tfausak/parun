@@ -235,6 +235,13 @@ spec s = Spec.describe s "Pawl.Codec.TriggerCondition" $ do
       TriggerCondition.codec
       TriggerCondition.SelfRevealedForMiracle
       " {\"type\":\"SelfRevealedForMiracle\"} "
+  -- CR 607.2h's linked half: Rowen's.
+  Spec.it s "RevealedThisWay" $
+    Common.assertCodec
+      s
+      TriggerCondition.codec
+      (TriggerCondition.RevealedThisWay (Filter.HasCardType CardType.Land))
+      " {\"type\":\"RevealedThisWay\",\"value\":{\"type\":\"HasCardType\",\"value\":{\"type\":\"Land\"}}} "
   -- CR 701.9a's discard, self-scoped: Bartered Cow's "when you discard this
   -- card". Nullary, SelfCycled's shape -- the ability is printed on the card that
   -- is discarded, so there is nothing left to say.

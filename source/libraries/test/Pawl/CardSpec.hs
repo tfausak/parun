@@ -1153,6 +1153,7 @@ triggerConditionCounts triggerCondition = case triggerCondition of
   TriggerCondition.SelfAttacksUnblocked -> []
   TriggerCondition.SelfCycled -> []
   TriggerCondition.SelfRevealedForMiracle -> []
+  TriggerCondition.RevealedThisWay _ -> []
   TriggerCondition.SelfDiscarded -> []
   TriggerCondition.SelfExiledForMadness -> []
   -- CR 701.9a's discard condition is a PlayerRelation, which holds no Count.
@@ -4625,6 +4626,7 @@ triggerConditionFilters triggerCondition = case triggerCondition of
   TriggerCondition.SelfAttacksUnblocked -> []
   TriggerCondition.SelfCycled -> []
   TriggerCondition.SelfRevealedForMiracle -> []
+  TriggerCondition.RevealedThisWay f -> unframed [f]
   TriggerCondition.SelfDiscarded -> []
   TriggerCondition.SelfExiledForMadness -> []
   TriggerCondition.PlayerDiscards _ -> []
@@ -4757,6 +4759,7 @@ triggerConditionSlots triggerCondition = case triggerCondition of
   TriggerCondition.OpponentLostLifeDuringYourTurn -> []
   TriggerCondition.SelfCycled -> []
   TriggerCondition.SelfRevealedForMiracle -> []
+  TriggerCondition.RevealedThisWay _ -> []
   TriggerCondition.SelfDiscarded -> []
   TriggerCondition.SelfExiledForMadness -> []
   TriggerCondition.PlayerDiscards _ -> []
@@ -5051,6 +5054,7 @@ playerEffectFilters playerEffect = case playerEffect of
   PlayerEffect.AdditionalSurveilCards _ -> []
   PlayerEffect.CantGainLife -> []
   PlayerEffect.CantLoseLife -> []
+  PlayerEffect.RevealsFirstDraw _ -> []
   PlayerEffect.Precluded _ -> []
   PlayerEffect.Shows _ -> []
 

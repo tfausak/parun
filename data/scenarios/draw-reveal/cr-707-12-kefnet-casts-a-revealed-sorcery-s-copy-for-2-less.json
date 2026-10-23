@@ -1,0 +1,25 @@
+{
+  "description": "CR 707.12 God-Eternal Kefnet copies a revealed sorcery and casts the copy for {2} less",
+  "note": "alice looks at the Divination she draws first and reveals it; Kefnet's trigger copies it in her hand and she casts the copy with her one Island, which pays {U} and not {2}{U}. The copy draws the Forest and the Plains, and the Divination card itself stays in her hand.",
+  "board": {
+    "seats": [
+      {
+        "name": "alice",
+        "battlefield": [{ "card": "God-Eternal Kefnet", "label": "kefnet" }, { "card": "Island", "label": "island" }],
+        "library": [{ "card": "Divination" }, { "card": "Forest" }, { "card": "Plains" }, { "card": "Hill Giant" }]
+      },
+      { "name": "bob", "library": [{ "card": "Island" }] }
+    ],
+    "active": "alice",
+    "turn": 2,
+    "step": "Upkeep"
+  },
+  "timeline": [
+    { "turn": 2, "step": "DrawStep", "player": "alice", "do": { "Answer": { "prompt": "OfferedExtra", "with": { "type": "Exercises" } } } },
+    { "turn": 2, "step": "DrawStep", "player": "alice", "do": { "Answer": { "prompt": "OfferedCast", "with": { "type": "Exercises" } } } },
+    { "turn": 2, "step": "DrawStep", "player": "alice", "do": { "Answer": { "prompt": "ChooseManaSource", "with": "$island" } } },
+    { "turn": 2, "step": "PrecombatMain", "player": "alice", "check": { "View": { "of": "Zone", "player": "alice", "zone": "Library", "is": ["Hill Giant"] } } },
+    { "turn": 2, "step": "PrecombatMain", "player": "alice", "check": { "Count": { "player": "alice", "zone": "Hand", "card": "Divination", "count": 1 } } },
+    { "turn": 2, "step": "PrecombatMain", "player": "alice", "check": { "Tapped": { "object": "$island", "tapped": true } } }
+  ]
+}

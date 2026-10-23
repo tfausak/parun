@@ -1,6 +1,7 @@
 module Pawl.Types.CastOffer where
 
 import qualified Data.Set as Set
+import qualified Numeric.Natural as Natural
 import qualified Pawl.Types.Cost as Cost
 import qualified Pawl.Types.Filter as Filter
 import qualified Pawl.Types.Keyword as Keyword
@@ -94,6 +95,12 @@ data CastOffer = MkCastOffer
     -- on offer, colours and all -- the activation's mana (CR 602.2b,
     -- Pawl.Types.Object.manaSpent) less what paid the rest of its total, a cost
     -- increase's included (Object.manaCostPaid).
-    payableFromSpent :: Bool
+    payableFromSpent :: Bool,
+    -- | CR 601.2f: the generic mana the offered cast costs less -- God-Eternal
+    -- Kefnet's "that copy costs {2} less to cast" -- in Pawl.Types.CandidateCost's
+    -- `reductions` shape, so it applies after every increase. 0 for none.
+    -- Pawl.Types.CastFromZone's `reduction` on the offer rather than a
+    -- permission.
+    reduction :: Natural.Natural
   }
   deriving (Eq, Ord, Show)

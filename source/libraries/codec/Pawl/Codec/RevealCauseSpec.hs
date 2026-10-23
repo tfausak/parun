@@ -5,6 +5,7 @@ import qualified Pawl.JsonCodec.Common as Common
 import qualified Pawl.Spec as Spec
 import qualified Pawl.Types.Cost as Cost
 import qualified Pawl.Types.ManaCost as ManaCost
+import qualified Pawl.Types.ObjectId as ObjectId
 import qualified Pawl.Types.RevealCause as RevealCause
 
 spec :: (Monad m, Monad n) => Spec.Spec m n -> n ()
@@ -21,6 +22,12 @@ spec s = Spec.describe s "Pawl.Codec.RevealCause" $ do
       RevealCause.codec
       (RevealCause.ForMiracle (Cost.MkCost {Cost.mana = Just (ManaCost.MkManaCost []), Cost.components = []}))
       " {\"type\":\"ForMiracle\",\"value\":{\"mana\":[]}} "
+  Spec.it s "AsDrawnUnder" $
+    Common.assertCodec
+      s
+      RevealCause.codec
+      (RevealCause.AsDrawnUnder (ObjectId.MkObjectId 7))
+      " {\"type\":\"AsDrawnUnder\",\"value\":7} "
   Spec.it s "LeavingFaceDown" $
     Common.assertCodec
       s

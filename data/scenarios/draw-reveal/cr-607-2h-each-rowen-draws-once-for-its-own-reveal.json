@@ -1,0 +1,22 @@
+{
+  "description": "CR 607.2h each of two Rowens reveals the first draw and draws once for its own reveal",
+  "note": "Each Rowen's static reveals the Forest (God-Eternal Kefnet's ruling for two of one reveal), and each trigger refers only to its own Rowen's reveal, so there are two draws, not four. bob's Rowen reveals nothing of alice's.",
+  "board": {
+    "seats": [
+      {
+        "name": "alice",
+        "battlefield": [{ "card": "Rowen", "label": "first" }, { "card": "Rowen", "label": "second" }],
+        "library": [{ "card": "Forest" }, { "card": "Hill Giant" }, { "card": "Hill Giant" }, { "card": "Hill Giant" }, { "card": "Hill Giant" }, { "card": "Hill Giant" }]
+      },
+      { "name": "bob", "battlefield": [{ "card": "Rowen", "label": "theirs" }], "library": [{ "card": "Island" }] }
+    ],
+    "active": "alice",
+    "turn": 2,
+    "step": "Upkeep"
+  },
+  "timeline": [
+    { "turn": 2, "step": "DrawStep", "player": "alice", "do": { "OrderTriggers": ["$first", "$second"] } },
+    { "turn": 2, "step": "PrecombatMain", "player": "alice", "check": { "View": { "of": "Witnessed", "player": "bob", "is": ["Forest", "Forest"] } } },
+    { "turn": 2, "step": "PrecombatMain", "player": "alice", "check": { "Count": { "player": "alice", "zone": "Hand", "card": "Hill Giant", "count": 2 } } }
+  ]
+}

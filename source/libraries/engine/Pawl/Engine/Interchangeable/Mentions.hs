@@ -823,7 +823,7 @@ castFromZoneNames asking x = case x of
 
 castOfferNames :: (Monoid r) => Asking r -> CastOffer.CastOffer -> r
 castOfferNames asking x = case x of
-  CastOffer.MkCastOffer _transformed _withoutPayingManaCost payingInstead _spending restriction offeredBy _faceDown _payableFromSpent -> foldMap (costNames asking (keywordNames asking)) payingInstead <> foldMap (filterNames asking) restriction <> foldMap (keywordNames asking) offeredBy
+  CastOffer.MkCastOffer _transformed _withoutPayingManaCost payingInstead _spending restriction offeredBy _faceDown _payableFromSpent _reduction -> foldMap (costNames asking (keywordNames asking)) payingInstead <> foldMap (filterNames asking) restriction <> foldMap (keywordNames asking) offeredBy
 
 castRepetitionNames :: (Monoid r) => Asking r -> CastRepetition.CastRepetition -> r
 castRepetitionNames asking x = case x of
@@ -2328,6 +2328,7 @@ playerEffectNames asking x = case x of
   PlayerEffect.PutTappedAsYouCascade filter_ -> filterNames asking filter_
   PlayerEffect.CantGainLife -> mempty
   PlayerEffect.CantLoseLife -> mempty
+  PlayerEffect.RevealsFirstDraw _obligation -> mempty
   PlayerEffect.Precluded _outcome -> mempty
   PlayerEffect.Shows _shows -> mempty
 
@@ -2837,6 +2838,7 @@ triggerConditionNames asking x = case x of
   TriggerCondition.OpponentLostLifeDuringYourTurn -> mempty
   TriggerCondition.SelfCycled -> mempty
   TriggerCondition.SelfRevealedForMiracle -> mempty
+  TriggerCondition.RevealedThisWay filter_ -> filterNames asking filter_
   TriggerCondition.SelfDiscarded -> mempty
   TriggerCondition.SelfExiledForMadness -> mempty
   TriggerCondition.PlayerDiscards _playerRelation -> mempty
