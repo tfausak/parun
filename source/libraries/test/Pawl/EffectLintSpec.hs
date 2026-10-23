@@ -268,7 +268,7 @@ effectQuantities effect = concatMap Resolve.objectRefQuantities (Resolve.effectO
 -- leaves to the Filter sweep.
 ownQuantities :: Effect.Effect Card.Type.Card (GrantedAbility.GrantedAbility Card.Type.Card) -> [Quantity.Type.Quantity]
 ownQuantities effect = case effect of
-  Effect.DealDamage (DealDamage.MkDealDamage parts _ _) -> fmap DamagePart.quantity (Foldable.toList parts)
+  Effect.DealDamage (DealDamage.MkDealDamage parts _ _ _) -> fmap DamagePart.quantity (Foldable.toList parts)
   Effect.ModifyTarget (ModifyTarget.MkModifyTarget duration modification _ _) -> durationQuantities duration <> Projection.quantitiesOf modification
   Effect.ChangeText x -> durationQuantities (ChangeText.duration x)
   Effect.AddMana _ -> []
@@ -1431,7 +1431,7 @@ effectObjectRefs effect =
         Effect.AttachTargetToEach {} -> []
         Effect.AttachBound {} -> []
         Effect.AttachAll (AttachAll.MkAttachAll ref _) -> [(permanentQuestions, ref)]
-        Effect.DealDamage (DealDamage.MkDealDamage parts _ _) -> read_ (fmap DamagePart.ref (Foldable.toList parts))
+        Effect.DealDamage (DealDamage.MkDealDamage parts _ _ _) -> read_ (fmap DamagePart.ref (Foldable.toList parts))
         Effect.ModifyTarget (ModifyTarget.MkModifyTarget _ _ ref _) -> [(permanentQuestions, ref)]
         Effect.ChangeText {} -> []
         Effect.AddMana {} -> []

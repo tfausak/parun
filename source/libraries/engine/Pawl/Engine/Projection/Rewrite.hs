@@ -597,7 +597,7 @@ rewriteEffect pairs effect = case effect of
   -- Strike's "damage equal to the number of Goblins you control". CR 120.2b's
   -- dealer is a slot name and CR 120.4a's excess rider a destination; neither is a
   -- word rule 612 can swap.
-  Effect.DealDamage (DealDamage.MkDealDamage parts dealer excess) -> Effect.DealDamage (DealDamage.MkDealDamage (fmap (rewriteDamagePart pairs) parts) dealer excess)
+  Effect.DealDamage (DealDamage.MkDealDamage parts dealer excess tally) -> Effect.DealDamage (DealDamage.MkDealDamage (fmap (rewriteDamagePart pairs) parts) dealer excess tally)
   -- Two SlotNames and nothing else: no word a swap could reach.
   Effect.Fight _ -> effect
   -- CR 612.1: a text-changer's own restriction clause is text like any other,
