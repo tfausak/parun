@@ -2833,6 +2833,54 @@ cleansingSpec s registry =
           Spec.assertEqWith s "CR 107.3a bob paid X = 2 life, once" (lives after) [Just 20, Just 18, Just 20]
           Spec.assertEqWith s "CR 101.4 alice answered for her Piker, then bob for each of his, and carol controls none" (fmap (\(who, creature, _) -> (who, creature)) asked) [(S.alice, Just hers), (S.bob, Just kept), (S.bob, Just lost)]
 
+-- Tariff: "each player sacrifices the creature they control with the greatest
+-- mana value unless they pay that creature's mana cost". Its 2008-04-01 ruling
+-- puts each player's pick (CR 608.2d) and offer (CR 118.12a) before the next
+-- player's pick, and every sacrifice after the last offer. The answerer logs
+-- every pick and every offer, picks the LAST candidate (not the fallback), and
+-- declines every offer.
+tariffSpec :: (Monad m) => Spec.Spec m n -> Registry.Registry m -> n ()
+tariffSpec s registry =
+  Spec.it s "CR 101.4 / 118.12a each Tariff player picks among their tied creatures and is offered its mana cost before the next player picks" $ do
+    plains <- S.printingOf s registry "Plains"
+    forest <- S.printingOf s registry "Forest"
+    lions <- S.printingOf s registry "Savannah Lions"
+    bears <- S.printingOf s registry "Grizzly Bears"
+    elves <- S.printingOf s registry "Llanowar Elves"
+    tariff <- S.printingOf s registry "Tariff"
+    -- alice: four Plains, two Savannah Lions ({W}). bob: two Forests, two
+    -- Grizzly Bears ({1}{G}) and a Llanowar Elves, which the greatest mana value
+    -- leaves out. carol: nothing.
+    let withLands = S.landsFor forest S.bob 2 (S.landsFor plains S.alice 4 S.threePlayerGame)
+        (lionA, g1) = S.addPermanent lions S.alice withLands
+        (lionB, g2) = S.addPermanent lions S.alice g1
+        (bearA, g3) = S.addPermanent bears S.bob g2
+        (bearB, g4) = S.addPermanent bears S.bob g3
+        (elf, g5) = S.addPermanent elves S.bob g4
+        (gs, tariffId) = S.handOne tariff g5
+        onStack = S.runPure S.identityAnswer gs (S.cast S.alice tariffId)
+        logging :: Prompt.Prompt r -> State.State [(PlayerId.PlayerId, Either [ObjectId.ObjectId] (Maybe ManaCost.ManaCost))] r
+        logging p = case p of
+          Prompt.ChoosePermanent _ who _ candidates -> do
+            State.modify' (<> [(who, Left (NonEmpty.toList candidates))])
+            pure (NonEmpty.last candidates)
+          Prompt.ChooseToPay _ who _ _ cost _ -> do
+            State.modify' (<> [(who, Right (Cost.Type.mana cost))])
+            pure PaymentDecision.Declines
+          _ -> pure (S.identityAnswer p)
+        ((_, after), asked) = State.runState (Engine.runGame logging onStack Stack.resolveTop) []
+        standing = List.sort (filter (`elem` [lionA, lionB, bearA, bearB, elf]) (Game.zoneMembers Zone.Battlefield S.alice after <> Game.zoneMembers Zone.Battlefield S.bob after))
+    Spec.assertEqWith s "CR 701.21a the picked Lion and Bears were sacrificed, and the rest stand" standing (List.sort [lionA, bearA, elf])
+    Spec.assertEqWith
+      s
+      "CR 101.4 alice picks and is offered {W}, then bob picks between his Bears and is offered {1}{G}"
+      asked
+      [ (S.alice, Left (List.sort [lionA, lionB])),
+        (S.alice, Right (Face.manaCost (S.combinedFace lions))),
+        (S.bob, Left (List.sort [bearA, bearB])),
+        (S.bob, Right (Face.manaCost (S.combinedFace bears)))
+      ]
+
 -- CR 607.2d: Brass Herald's "When this creature enters, reveal the top four
 -- cards of your library. Put all creature cards of the chosen type revealed this
 -- way into your hand and the rest on the bottom of your library in any order" is
@@ -2930,6 +2978,7 @@ spec :: (Monad m, Monad n) => Spec.Spec m n -> Registry.Registry m -> n ()
 spec s registry = Spec.describe s "Pawl.Engine.Resolve" $ do
   brassHeraldSpec s registry
   cleansingSpec s registry
+  tariffSpec s registry
   tormentSpec s registry
   targetSpec s registry
   resolveSpec s registry
