@@ -569,9 +569,10 @@ applyModification textBoxOf viewOf src stamp gs oid unitTypes affected m pc =
         -- than guessing a type, the posture AddChosenColor takes toward an
         -- unchosen colour. That leaves this arm disagreeing with setsLandSubtype,
         -- which classifies by CONSTRUCTOR and so would still strip the land's
-        -- abilities; unreachable, since the only producer is an entry replacement
-        -- whose rewrite writes the field before the permanent is on the
-        -- battlefield to be projected.
+        -- abilities; unreachable, since the only static producer is an entry
+        -- replacement whose rewrite writes the field before the permanent is on
+        -- the battlefield to be projected, and a resolution stores this arm
+        -- already baked into SetLandSubtype (freezeQuantities).
         Modification.SetLandSubtypeToChosen ->
           case Game.currentChoice Chosen.Subtype src gs of
             Nothing -> pc
@@ -1581,7 +1582,12 @@ freezeQuantities viewOf gs announcedOn source context m =
         Modification.LoseKeyword _ -> Just m
         Modification.LoseKeywordFamily _ -> Just m
         Modification.SetLandSubtype _ -> Just m
-        Modification.SetLandSubtypeToChosen -> Just m
+        -- CR 608.2h: the type the source holds as this resolves is locked in, so
+        -- the source's next choice (Effect.ChooseBasicLandType) reaches no
+        -- effect already stored. Nothing for a source that chose none. Proved
+        -- by data/scenarios/mystic-compass-*.
+        Modification.SetLandSubtypeToChosen ->
+          Modification.SetLandSubtype <$> Game.choiceWithLastKnown Chosen.Subtype (Game.readingAcquisition announcedOn source gs source) source gs
         Modification.AddLandSubtype _ -> Just m
         Modification.SetCreatureSubtype _ -> Just m
         Modification.AddCreatureSubtype _ -> Just m

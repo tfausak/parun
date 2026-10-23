@@ -48,6 +48,7 @@ import qualified Pawl.Types.EachCardInGraveyard as EachCardInGraveyard
 import qualified Pawl.Types.Effect as Effect
 import qualified Pawl.Types.EntryRiders as EntryRiders
 import qualified Pawl.Types.Filter as Filter.Type
+import qualified Pawl.Types.ForEach as ForEach
 import qualified Pawl.Types.IfTaken as IfTaken
 import qualified Pawl.Types.Keyword as Keyword
 import qualified Pawl.Types.KeywordDesignator as KeywordDesignator
@@ -56,6 +57,7 @@ import qualified Pawl.Types.LibraryPlacement as LibraryPlacement
 import qualified Pawl.Types.LibraryPosition as LibraryPosition
 import qualified Pawl.Types.LifeLoss as LifeLoss
 import qualified Pawl.Types.LifeLossCause as LifeLossCause
+import qualified Pawl.Types.LoopMembers as LoopMembers
 import qualified Pawl.Types.ManaAddition as ManaAddition
 import qualified Pawl.Types.ManaProduction as ManaProduction
 import qualified Pawl.Types.ManaRetention as ManaRetention
@@ -642,6 +644,12 @@ effect context e = case e of
       Just (Filter.Type.IsBound s) -> [ObjectRef.InSlot s]
       _ -> []
     acted context (Text.pack "regenerate ") r
+  -- "Regenerate enchanted creature": the same shield on the permanent a loop
+  -- binds as the instruction resolves.
+  Effect.ForEach (ForEach.MkForEach r LoopMembers.Every slot body False Nothing)
+    | [Effect.Replace (Replace.MkReplace Duration.UntilEndOfTurn Uses.Once ReplacementOrigin.Other Nothing (ReplacementEffect.DestructionR (DestructionR.MkDestructionR (Just (Filter.Type.IsBound bound)) DestructionRewrite.Regenerate)))] <- Foldable.toList body,
+      bound == slot ->
+        acted context (Text.pack "regenerate ") r
   Effect.Discard d -> discarded context d
   Effect.Search s -> searched context s
   -- "Target player mills two cards" (CR 701.17a).
