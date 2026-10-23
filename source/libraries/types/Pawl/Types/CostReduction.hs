@@ -70,8 +70,7 @@ data CostReduction = MkCostReduction
     -- another permanent's effect, of a spell or an activation.
     whichTargets :: Maybe (Filter.Filter Keyword.Keyword),
     -- | Whether 'amount' comes off the total or goes onto it -- Dragon's Prey's
-    -- "costs {2} more". A More amount is generic mana, the only kind CR 601.2f's
-    -- increases carry here (Pawl.Types.CostAdjustments.increases).
+    -- "costs {2} more", which joins Pawl.Types.CostAdjustments.increases whole.
     direction :: CostDirection.CostDirection
   }
   deriving (Eq, Ord, Show)

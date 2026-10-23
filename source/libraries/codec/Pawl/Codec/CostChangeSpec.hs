@@ -19,12 +19,18 @@ import qualified Pawl.Types.Sacrifice as Sacrifice
 
 spec :: (Monad m, Monad n) => Spec.Spec m n -> n ()
 spec s = Spec.describe s "Pawl.Codec.CostChange" $ do
-  Spec.it s "Increase" $
+  Spec.it s "Increase, Thalia's" $
     Common.assertCodec
       s
       CostChange.codec
-      (CostChange.Type.Increase 2)
-      " {\"type\":\"Increase\",\"value\":2} "
+      (CostChange.Type.Increase (ManaCost.MkManaCost [ManaSymbol.Generic 2]))
+      " {\"type\":\"Increase\",\"value\":[{\"type\":\"Generic\",\"value\":2}]} "
+  Spec.it s "Increase, Derelor's" $
+    Common.assertCodec
+      s
+      CostChange.codec
+      (CostChange.Type.Increase (ManaCost.MkManaCost [ManaSymbol.OfType (ManaType.Colored Color.Black)]))
+      " {\"type\":\"Increase\",\"value\":[{\"type\":\"OfType\",\"value\":{\"type\":\"Colored\",\"value\":{\"type\":\"Black\"}}}]} "
   -- The rules' defaults, no floor and CR 118.7b-d's spill, write no key.
   Spec.it s "Reduce, Sapphire Medallion's" $
     Common.assertCodec

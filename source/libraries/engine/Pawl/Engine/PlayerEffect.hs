@@ -1417,7 +1417,7 @@ spellCostAdjustments targets pid oid gs =
 -- distinct announced targets matching, which repeats the change, and `each`
 -- answers `perEach` (perEachCount), which repeats it again.
 --
--- A repeated reduction is its amount REPEATED rather than multiplied, as
+-- A repeated increase or reduction is its amount REPEATED rather than multiplied, as
 -- Pawl.Engine.Cost.selfReductions repeats Thrasta's, so a typed amount needs no
 -- arithmetic; a repeated addition is its components repeated. Each reduction
 -- keeps its OWN floor and colour confinement (Pawl.Types.AppliedReduction),
@@ -1434,7 +1434,7 @@ modifierAdjustments rows aims counted each =
           maybe True (aims source) (CostModifier.whichTargets modifier)
         ]
    in CostAdjustments.MkCostAdjustments
-        { CostAdjustments.increases = [amount * times | (_, modifier, times) <- applying', CostChange.Increase amount <- [CostModifier.change modifier]],
+        { CostAdjustments.increases = [ManaCost.MkManaCost (concat (List.genericReplicate times (ManaCost.unwrap amount))) | (_, modifier, times) <- applying', CostChange.Increase amount <- [CostModifier.change modifier]],
           CostAdjustments.reductions =
             [ reduction {AppliedReduction.amount = ManaCost.MkManaCost (concat (List.genericReplicate times (ManaCost.unwrap (AppliedReduction.amount reduction))))}
             | (_, modifier, times) <- applying',

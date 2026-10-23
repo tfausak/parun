@@ -1,10 +1,10 @@
 module Pawl.Types.CostAdjustments where
 
-import Numeric.Natural (Natural)
 import qualified Pawl.Types.AppliedReduction as AppliedReduction
 import qualified Pawl.Types.CostComponent as CostComponent
 import qualified Pawl.Types.CostScale as CostScale
 import qualified Pawl.Types.Keyword as Keyword
+import qualified Pawl.Types.ManaCost as ManaCost
 
 -- | CR 601.2f's adjustments to one cost: the increases that apply to it, the
 -- reductions that apply to it -- each with the restrictions its own effect
@@ -18,10 +18,10 @@ import qualified Pawl.Types.Keyword as Keyword
 -- delta, for Pawl.Types.CostChange's stated reason: CR 601.2f
 -- applies every increase before any reduction, and CR 118.7a gives a reduction a
 -- restriction an increase does not have. They do not even have the same shape --
--- an increase is an amount of generic mana, and a reduction is an
+-- an increase is mana symbols added to the cost, and a reduction is an
 -- AppliedReduction.
 data CostAdjustments = MkCostAdjustments
-  { increases :: [Natural],
+  { increases :: [ManaCost.ManaCost],
     -- | Each reduction WITH THE RESTRICTIONS ITS OWN EFFECT STATES -- the floor
     -- (Heartstone) and the coloured-mana confinement (Edgewalker), both of them
     -- card text CR 101.1 lets override the rules. See

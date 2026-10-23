@@ -11,14 +11,7 @@ Every expressible Sixth Edition card has been added to `data/cards/`.
 
 ## Needs a capability
 
-Each group is tracked by its issue; its cards are added when it lands. Hardest
-first.
-
-- #5496: Syphon Soul. The amount of damage an instruction dealt; "each other
-  player" is also related to #5404.
-- #5499: Dense Foliage. A targeting restriction for spells only, from any
-  player.
-- #5524: Derelor. A cost increase of coloured mana.
+Nothing: every Sixth Edition card is in the pool.
 
 ## Decks
 

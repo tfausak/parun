@@ -101,7 +101,12 @@
             "value": {
               "change": {
                 "type": "Increase",
-                "value": 3
+                "value": [
+                  {
+                    "type": "Generic",
+                    "value": 3
+                  }
+                ]
               },
               "matching": {
                 "type": "IsHostOfSource"
