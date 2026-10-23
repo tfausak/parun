@@ -458,6 +458,7 @@ vanillaFace name typeLine =
       Face.additionalCosts = [],
       Face.additionalCostChoices = [],
       Face.modeCosts = Map.empty,
+      Face.modeChooser = PlayerRelation.You,
       Face.maximumX = [],
       Face.minimumX = 0,
       Face.alternativeCosts = [],
@@ -2766,6 +2767,7 @@ reservedSlots =
   Set.fromList
     [ Binding.variableX,
       Binding.chosenModes,
+      Binding.modeChooser,
       Binding.copySource,
       Binding.ownCopySource,
       Binding.turnedMergeSource,
@@ -6787,6 +6789,10 @@ lintSpec s registry = Spec.describe s "Lint" $ do
         --     against the same `sacrificesAsCost` for Jarad, Golgari Lich Lord.
         --   * the slot a CR 118.12 cost paid at resolution binds, per
         --     `payGateBound`.
+        --   * Binding.modeChooser, and only when the face names a chooser other
+        --     than its caster (Face.modeChooser): Pawl.Engine.Cast stamps CR
+        --     700.2e's chooser for exactly those, so Fatal Lore's "that player"
+        --     is an ordinary slot read.
         cardOffends card =
           let announcedX =
                 if any declaresVariable (spellCostsOf card)
@@ -6812,7 +6818,11 @@ lintSpec s registry = Spec.describe s "Lint" $ do
                 if any waterbendsAsCost (spellCostsOf card)
                   then Set.singleton Binding.waterbendCost
                   else Set.empty
-           in modalSlotsOffend (Set.unions [Set.fromList [Binding.you, Binding.triggerSource], announcedX, revealed, sacrificed, beheld, collected, waterbent, payGateBound (Face.spell card)]) (Face.spell card)
+              chooser =
+                if Face.modeChooser card /= PlayerRelation.You
+                  then Set.singleton Binding.modeChooser
+                  else Set.empty
+           in modalSlotsOffend (Set.unions [Set.fromList [Binding.you, Binding.triggerSource], announcedX, revealed, sacrificed, beheld, collected, waterbent, chooser, payGateBound (Face.spell card)]) (Face.spell card)
         sweeps = anyFaceOrMinted cardOffends
         offenders = filter (sweeps . Printing.card) ps
         slot = SlotName.MkSlotName (Text.pack "creature")

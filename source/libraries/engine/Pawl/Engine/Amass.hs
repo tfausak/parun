@@ -40,6 +40,7 @@ import qualified Pawl.Types.Layout as Layout
 import qualified Pawl.Types.Modification as Modification
 import Pawl.Types.ObjectId (ObjectId)
 import Pawl.Types.PlayerId (PlayerId)
+import qualified Pawl.Types.PlayerRelation as PlayerRelation
 import qualified Pawl.Types.Power as Power
 import qualified Pawl.Types.Prompt as Prompt
 import qualified Pawl.Types.Quantity as Quantity
@@ -111,6 +112,7 @@ armyToken subtype =
               Face.additionalCosts = [],
               Face.additionalCostChoices = [],
               Face.modeCosts = Map.empty,
+              Face.modeChooser = PlayerRelation.You,
               Face.maximumX = [],
               Face.minimumX = 0,
               Face.alternativeCosts = [],

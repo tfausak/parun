@@ -596,7 +596,8 @@ data Prompt r where
   ArrangeGraveyardArrivals :: Decider.Decider -> PlayerId.PlayerId -> [ObjectId.ObjectId] -> Prompt GraveyardArrangement.GraveyardArrangement
   -- | CR 601.2b / 700.2a: the modes, before X and targets, from the legal ones;
   -- a Seq because CR 700.2d may let one mode be chosen twice. A forced
-  -- selection is not asked.
+  -- selection is not asked. The PlayerId chooses, the caster's opponent under
+  -- CR 700.2e (Fatal Lore).
   ChooseModes :: Decider.Decider -> PlayerId.PlayerId -> ObjectId.ObjectId -> Set.Set ModeIndex.ModeIndex -> ModeSelection.ModeSelection -> Prompt (Seq.Seq ModeIndex.ModeIndex)
   -- | CR 707.5 / 614.1c / 614.12a: which permanent an object entering as a copy
   -- copies, Nothing being the card's "may" declined; asked at one candidate,
