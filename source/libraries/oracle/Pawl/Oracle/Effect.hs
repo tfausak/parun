@@ -11,6 +11,7 @@ import qualified Data.List.NonEmpty as NonEmpty
 import qualified Data.Map.Strict as Map
 import qualified Data.Maybe as Maybe
 import qualified Data.Sequence as Seq
+import qualified Data.Set as Set
 import qualified Data.Text as Text
 import qualified Pawl.Oracle.Continuous as Continuous
 import qualified Pawl.Oracle.Cost as Cost
@@ -58,6 +59,7 @@ import qualified Pawl.Types.LifeLossCause as LifeLossCause
 import qualified Pawl.Types.ManaAddition as ManaAddition
 import qualified Pawl.Types.ManaProduction as ManaProduction
 import qualified Pawl.Types.ManaRetention as ManaRetention
+import qualified Pawl.Types.Mill as Mill
 import qualified Pawl.Types.Modal as Modal
 import qualified Pawl.Types.Mode as Mode
 import qualified Pawl.Types.ModeSelection as ModeSelection
@@ -85,6 +87,8 @@ import qualified Pawl.Types.ReplacementEffect as ReplacementEffect
 import qualified Pawl.Types.ReplacementOrigin as ReplacementOrigin
 import qualified Pawl.Types.SacrificeEffect as SacrificeEffect
 import qualified Pawl.Types.Sacrificer as Sacrificer
+import qualified Pawl.Types.Search as Search
+import qualified Pawl.Types.SearchDestination as SearchDestination
 import qualified Pawl.Types.SlotCount as SlotCount
 import qualified Pawl.Types.SlotName as SlotName
 import qualified Pawl.Types.TapState as TapState
@@ -355,7 +359,12 @@ paid context g predicates
             [p] | null (after p), Maybe.isNothing (mana p) -> [p]
             _ -> []
           let pays = if person == Target.Second then second else third
-          [(Prose.sentence ((if implied p then verb p else clauseText p) <> Text.pack " unless " <> Target.wording who <> Text.pack " " <> pays <> each'), allMentions p <> Target.mentions who <> counted)]
+              instruction = if implied p then verb p else clauseText p
+              payment' = Target.wording who <> Text.pack " " <> pays <> each'
+          -- Free: "unless" after the instruction (Soul Strings) or before it
+          -- (Rhystic Tutor).
+          text <- [instruction <> Text.pack " unless " <> payment', Text.pack "unless " <> payment' <> Text.pack ", " <> instruction]
+          [(Prose.sentence text, allMentions p <> Target.mentions who <> counted)]
 
 -- | A clause's instructions as predicates, consecutive changes to the same
 -- objects for the same duration as one: "gets +2/+2 and gains flying until
@@ -634,6 +643,13 @@ effect context e = case e of
       _ -> []
     acted context (Text.pack "regenerate ") r
   Effect.Discard d -> discarded context d
+  Effect.Search s -> searched context s
+  -- "Target player mills two cards" (CR 701.17a).
+  Effect.Mill m
+    | Maybe.isNothing (Mill.tally m),
+      Maybe.isNothing (Mill.slot m) -> do
+        n <- Target.cards (Mill.quantity m)
+        imperative context (Mill.player m) (Text.pack "mill " <> n) (Text.pack "mills " <> n)
   Effect.PreventNextDamage p
     | PreventNextDamage.duration p == Duration.UntilEndOfTurn,
       Maybe.isNothing (PreventNextDamage.whatRecipient p),
@@ -788,6 +804,47 @@ acted :: Target.Context -> Text.Text -> ObjectRef.ObjectRef -> [Predicate]
 acted context word r = do
   ref <- Target.object context Target.All r
   [MkPredicate Nothing (word <> Target.wording ref) [] (Target.mentions ref) Nothing False]
+
+-- | "Search your library for a card, put that card into your hand, then
+-- shuffle" (CR 701.23a): your search of your own library for one card of a
+-- description, and where the card goes, after which the search shuffles
+-- unless the card stays (Pawl.Types.SearchDestination). Free: "that card"
+-- or "it" for the card put onto the battlefield (Nature's Lore, Three
+-- Visits), "it" or "that card" for the card revealed (Summoner's Pact,
+-- Goblin Matron), and "that card" or "the card" for the card put on top
+-- (Sylvan Tutor, Worldly Tutor). Any other search is not spelled out here.
+searched :: Target.Context -> Search.Search -> [Predicate]
+searched context s
+  | Search.searcher s == you,
+    Search.owner s == you,
+    Search.zones s == Set.singleton Zone.Library,
+    not (Search.outsideTheGame s),
+    Search.quantity s == Just (Quantity.Literal 1),
+    not (Search.upTo s),
+    Maybe.isNothing (Search.subject s),
+    Maybe.isNothing (Search.slot s),
+    Set.null (Search.differentIn s),
+    not (Search.exactly s),
+    not (Search.andOr s) = do
+      p <- Filter.phrase (Search.filter s) (Target.keyword context)
+      one <- Filter.describe Filter.Singular Target.card (Filter.merge p (Filter.MkPhrase [] [Target.card] []))
+      let onto = [Text.pack "put that card onto the battlefield", Text.pack "put it onto the battlefield"]
+          revealed = [Text.pack "reveal it", Text.pack "reveal that card"]
+          onTop = [Text.pack "that card", Text.pack "the card"]
+      gone <- case Search.destination s of
+        SearchDestination.Hand -> [Text.pack ", put that card into your hand, then shuffle"]
+        SearchDestination.RevealThenHand -> fmap (\r -> Text.pack ", " <> r <> Text.pack ", put it into your hand, then shuffle") revealed
+        -- Free besides: "and" and a sentence of its own for the shuffle
+        -- (Spoils of Victory) or commas (Nature's Lore).
+        SearchDestination.Battlefield -> fmap (\o -> Text.pack ", " <> o <> Text.pack ", then shuffle") onto <> [Text.pack " and put that card onto the battlefield. Then shuffle"]
+        SearchDestination.BattlefieldTapped -> fmap (\o -> Text.pack ", " <> o <> Text.pack " tapped, then shuffle") onto
+        SearchDestination.Top -> fmap (\c -> Text.pack ", then shuffle and put " <> c <> Text.pack " on top") onTop
+        SearchDestination.RevealThenTop -> fmap (\c -> Text.pack ", reveal it, then shuffle and put " <> c <> Text.pack " on top") onTop
+        _ -> []
+      [MkPredicate Nothing (Text.pack "search your library for " <> Prose.article one <> Text.pack " " <> one <> gone) [] [] Nothing False]
+  | otherwise = []
+  where
+    you = PlayerRef.Relative PlayerRelation.You
 
 -- | "[Player] discards [cards]", of the player's choice or at random (CR
 -- 701.9). Cards another player chooses, or a set the instruction names, are

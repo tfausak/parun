@@ -12,17 +12,16 @@ Each names the mtgish node the translator stops at, or what its rendering gets
 wrong. No Sixth Edition card's whole text is keywords, so `script/ingest` adds
 none of them.
 
-- Abduction: `Permanent:HostPermanent`
-- Animate Wall: `Rule:PermanentRuleEffect`
+- Abduction: `StaticLayerEffect:SetController`
+- Animate Wall: `Permanent:HostPermanent`
 - Ankh of Mishra: `Permanent:Trigger_ThatPermanent`
 - Ashen Powder: `Action:PutGraveyardCardOntoBattlefield`
 - Balduvian Horde: `Action:MayCost`
 - Blight: `Trigger:WhenAPermanentBecomesTapped`
-- Bog Rats: `Rule:PermanentRuleEffect`
+- Bog Rats: `PermanentRule:CantBeBlockedByDefenders`
 - Bottle of Suleiman: `Action:FlipACoin_OnWinAndLose`
 - Browse: `Action:LookAtTheTopNumberCardsOfLibrary`
 - Call of the Wild: `Action:RevealTopCardOfLibrary`
-- Chill: `Rule:EachPlayerEffect`
 - Circle of Protection: Black: `Action:ChooseADamageSource`
 - Circle of Protection: Blue: `Action:ChooseADamageSource`
 - Circle of Protection: Green: `Action:ChooseADamageSource`
@@ -33,23 +32,20 @@ none of them.
 - Cursed Totem: `Rule:ActivatedAbilityEffect`
 - Derelor: `Rule:PlayerEffect`
 - Dingus Egg: `Trigger:WhenAPermanentIsPutIntoAPlayersGraveyard`
-- Disrupting Scepter: `Rule:ActivatedWithModifiers`
 - Dragon Mask: `Action:CreateFutureTrigger`
 - Dream Cache: `Action:ChooseAnAction`
 - Early Harvest: `Action:UntapEachPermanent`
 - Elder Druid: `Action:TapOrUntapPermanent`
-- Elven Riders: `Rule:PermanentRuleEffect`
-- Enlightened Tutor: `Action:SearchLibrary`
+- Elven Riders: `PermanentRule:CantBeBlockedExceptByDefenders`
 - Ethereal Champion: `Action:CreateFuturePreventDamage`
-- Evil Eye of Orms-by-Gore: `Rule:EachPermanentRuleEffect`
+- Evil Eye of Orms-by-Gore: `PermanentRule:CantBeBlockedExceptByDefenders`
 - Exile: renders as one sentence, "attacking nonwhite"
-- Firebreathing: `Permanent:HostPermanent`
 - Fog Elemental: `Action:CreateFutureTrigger`
 - Forget: `Action:PlayerActions`
 - Gaseous Form: `Rule:PreventDamage`
 - Glasses of Urza: `Action:LookAtPlayersHand`
 - Goblin Elite Infantry: renders "blocks or becomes blocked" as two triggers
-- Goblin Recruiter: `Action:SearchLibrary`
+- Goblin Recruiter: `SearchLibraryAction:FindAnyNumberOfCardsOfType`
 - Goblin Warrens: `Cost:SacrificeNumberPermanents`
 - Gravebane Zombie: `Rule:ReplaceWouldPutIntoGraveyard`
 - Hammer of Bogardan: `Rule:FromGraveyard`
@@ -60,10 +56,8 @@ none of them.
 - Insight: renders "you draw a card" as "draw a card"
 - Kjeldoran Dead: `Action:SacrificeAPermanent`
 - Lead Golem: `Action:PermanentDoesntUntapDuringControllersNextUntap`
-- Light of Day: `Rule:EachPermanentRuleEffect`
 - Living Lands: `StaticLayerEffect:SetPT`
 - Manabarbs: `Trigger:WhenAPlayerTapsAPermanentForMana`
-- Millstone: `Action:MillNumberCards`
 - Mind Warp: `Action:LookAtPlayersHandAndChooseNumCardsToDiscard`
 - Necrosavant: `Rule:FromGraveyard`
 - Orcish Artillery: `Action:PermanentDealsMultipleDamage`
@@ -73,21 +67,19 @@ none of them.
 - Polymorph: `Action:RevealCardsFromTheTopOfLibraryUntilACardOfTypeIsRevealed`
 - Psychic Venom: `Trigger:WhenAPermanentBecomesTapped`
 - Radjan Spirit: `LayerEffect:LosesAbility`
-- Rag Man: `Rule:ActivatedWithModifiers`
+- Rag Man: `Action:RevealHandAndDiscardACardOfTypeAtRandom`
 - Recall: `Action:ReturnNumberCardsFromPlayersGraveyardToHand`
 - Reckless Embermage: `Action:PermanentDealsMultipleDamage`
-- Regeneration: `Permanent:HostPermanent`
 - Resistance Fighter: `Action:CreatePreventDamageUntil`
 - Sage Owl: `Action:LookAtTheTopNumberCardsOfLibrary`
-- Sea Monster: `Rule:PermanentRuleEffect`
+- Sea Monster: `PermanentRule:CantAttackUnlessDefendingPlayer`
 - Sengir Autocrat: `Trigger:WhenAPermanentLeavesTheBattlefield`
 - Sibilant Spirit: `Action:PlayerMayAction`
-- Snake Basket: `Rule:ActivatedWithModifiers`
+- Snake Basket: `Cost:PayManaX`
 - Soldevi Sage: `Cost:SacrificeNumberPermanents`
 - Spell Blast: `Spells:AnySpell`
 - Spirit Link: `Trigger:WhenAPermanentDealsDamage`
-- Spitting Drake: `Rule:ActivatedWithModifiers`
-- Storm Cauldron: `Rule:EachPlayerEffect`
+- Storm Cauldron: `PlayerEffect:MayPlayAnAdditionalLand`
 - Strands of Night: `Action:PutGraveyardCardOntoBattlefield`
 - Stupor: `Action:PlayerActions`
 - Teferi's Puzzle Box: `Action:PlayerActions`
@@ -96,7 +88,6 @@ none of them.
 - Vertigo: `LayerEffect:LosesAbility`
 - Waiting in the Weeds: `Action:EachPlayerCreatesTokens`
 - Wand of Denial: `Action:LookAtTheTopCardOfPlayersLibrary`
-- Worldly Tutor: `Action:SearchLibrary`
 - Zombie Master: `Rule:Activated`
 
 ## Needs a capability
@@ -104,8 +95,6 @@ none of them.
 Each group is tracked by its issue; its cards are added when it lands. Hardest
 first.
 
-- #5310: Tariff. A payment priced at the mana cost of the creature a player
-  just picked.
 - #5405: Library of Lat-Nam. An opponent chooses the mode.
 - #5495: Jade Monolith and Kjeldoran Royal Guard. Two missing parameters on the
   damage redirection: the next hit only, and sources described rather than
@@ -120,6 +109,8 @@ first.
 - #5500: Primal Clay. A creature type among an enters-as choice's values.
 - #5501: Crimson Hellkite. An activation paid only with mana of a printed
   colour.
+- #5520: Regeneration. A regeneration shield on the creature an Aura
+  enchants as the ability resolves.
 
 ## Decks
 

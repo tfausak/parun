@@ -1,0 +1,13 @@
+{
+  "description": "CR 602.5 / 701.9a whole card: Disrupting Scepter makes target player discard a card, activated only during its controller's turn",
+  "note": "On bob's turn the Scepter's activation is not offered to alice, though it is untapped and her Swamps can pay; on her own turn it is, and bob discards the Hill Giant of his two cards.",
+  "board": {"active": "bob", "step": "PrecombatMain", "seats": [{"name": "alice", "battlefield": [{"card": "Disrupting Scepter", "label": "scepter"}, {"card": "Swamp", "label": "s1"}, {"card": "Swamp", "label": "s2"}, {"card": "Swamp", "label": "s3"}], "library": [{"card": "Island"}, {"card": "Island"}, {"card": "Island"}]}, {"name": "bob", "hand": [{"card": "Hill Giant", "label": "giant"}, {"card": "Grizzly Bears", "label": "bears"}], "library": [{"card": "Island"}, {"card": "Island"}, {"card": "Island"}]}]},
+  "timeline": [
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "refuse": {"Activate": {"object": "$scepter", "targets": ["$bob"], "mana": ["$s1", "$s2", "$s3"]}}},
+    {"turn": 2, "step": "PrecombatMain", "player": "alice", "do": {"Activate": {"object": "$scepter", "targets": ["$bob"], "mana": ["$s1", "$s2", "$s3"]}}},
+    {"turn": 2, "step": "PrecombatMain", "player": "alice", "do": "Pass"},
+    {"turn": 2, "step": "PrecombatMain", "player": "bob", "do": {"Answer": {"prompt": "ChooseDiscard", "with": ["$giant"]}}},
+    {"turn": 2, "step": "PrecombatMain", "player": "alice", "check": {"Count": {"player": "bob", "zone": "Graveyard", "card": "Hill Giant", "count": 1}}},
+    {"turn": 2, "step": "PrecombatMain", "player": "alice", "check": {"Count": {"player": "bob", "zone": "Hand", "card": "Grizzly Bears", "count": 1}}}
+  ]
+}
