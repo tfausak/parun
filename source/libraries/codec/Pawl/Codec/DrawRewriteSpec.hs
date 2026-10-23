@@ -47,4 +47,11 @@ spec s = Spec.describe s "Pawl.Codec.DrawRewrite" $ do
       DrawRewrite.codec
       DrawRewrite.YouDraw
       " {\"type\":\"YouDraw\"} "
+  -- CR 614.6: Zur's Weirding.
+  Spec.it s "OthersMayPayLife" $
+    Common.assertCodec
+      s
+      DrawRewrite.codec
+      (DrawRewrite.OthersMayPayLife 2)
+      " {\"type\":\"OthersMayPayLife\",\"value\":2} "
   Spec.it s "has a schema" $ Common.assertHasSchema s DrawRewrite.codec

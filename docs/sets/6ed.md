@@ -202,8 +202,6 @@ first.
 
 - #5490: Illicit Auction. An open-ended life auction among every player, with
   a high bid carried from round to round.
-- #5491: Zur's Weirding. A draw replacement whose outcome the other players
-  decide by paying life.
 - #5492: Amber Prison. A choice inside the untap step, which asks nobody today,
   and a duration that ends when its source untaps.
 - #4491: Rowen. A draw-time reveal granted from the battlefield, linked to a
