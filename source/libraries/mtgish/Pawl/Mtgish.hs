@@ -80,6 +80,7 @@ import qualified Pawl.Types.Equip as Equip
 import qualified Pawl.Types.EquipTarget as EquipTarget
 import qualified Pawl.Types.Face as Face
 import qualified Pawl.Types.Filter as Filter
+import qualified Pawl.Types.ForEach as ForEach
 import qualified Pawl.Types.GrantedAbility as GrantedAbility
 import qualified Pawl.Types.InZone as InZone
 import qualified Pawl.Types.Keyword as Keyword
@@ -88,6 +89,7 @@ import qualified Pawl.Types.LibraryPlacement as LibraryPlacement
 import qualified Pawl.Types.LibraryPosition as LibraryPosition
 import qualified Pawl.Types.LifeLoss as LifeLoss
 import qualified Pawl.Types.LifeLossCause as LifeLossCause
+import qualified Pawl.Types.LoopMembers as LoopMembers
 import qualified Pawl.Types.ManaAddition as ManaAddition
 import qualified Pawl.Types.ManaCost as ManaCost
 import qualified Pawl.Types.ManaProduction as ManaProduction
@@ -1013,15 +1015,19 @@ effects context n = case Node.tag n of
     Monad.unless (ref == ObjectRef.InSlot Oracle.Target.selfSlot) (Node.untranslated n)
     pure [Effect.Sacrifice (SacrificeEffect.MkSacrificeEffect ref Sacrificer.EffectController Nothing)]
   -- A shield used up by the next destruction it replaces this turn (CR
-  -- 701.19a), of the source or of the object a slot holds.
+  -- 701.19a), of the source or of the object a slot holds. Any other
+  -- permanent -- Regeneration's "enchanted creature" -- is bound by a loop as
+  -- the instruction resolves, so the shield names the permanent it named then
+  -- rather than re-reading the reference.
   "RegeneratePermanent" -> do
     ref <- Node.argument n >>= permanent context
-    matching <- case ref of
+    let shield matching = Effect.Replace Replace.MkReplace {Replace.duration = Duration.UntilEndOfTurn, Replace.uses = Uses.Once, Replace.origin = ReplacementOrigin.Other, Replace.condition = Nothing, Replace.effect = ReplacementEffect.DestructionR DestructionR.MkDestructionR {DestructionR.matching = matching, DestructionR.rewrite = DestructionRewrite.Regenerate}}
+        regenerated = SlotName.MkSlotName (Text.pack "regenerated")
+    pure $ case ref of
       ObjectRef.InSlot s
-        | s == Oracle.Target.selfSlot -> Right Nothing
-        | otherwise -> Right (Just (Filter.IsBound s))
-      _ -> Node.untranslated n
-    pure [Effect.Replace Replace.MkReplace {Replace.duration = Duration.UntilEndOfTurn, Replace.uses = Uses.Once, Replace.origin = ReplacementOrigin.Other, Replace.condition = Nothing, Replace.effect = ReplacementEffect.DestructionR DestructionR.MkDestructionR {DestructionR.matching = matching, DestructionR.rewrite = DestructionRewrite.Regenerate}}]
+        | s == Oracle.Target.selfSlot -> [shield Nothing]
+        | otherwise -> [shield (Just (Filter.IsBound s))]
+      _ -> [Effect.ForEach ForEach.MkForEach {ForEach.ref = ref, ForEach.members = LoopMembers.Every, ForEach.slot = regenerated, ForEach.body = Seq.singleton (shield (Just (Filter.IsBound regenerated))), ForEach.individually = False, ForEach.payGate = Nothing}]
   "PutCounters" -> do
     actions <- Node.arguments n >>= traverse Node.node
     fmap concat (traverse (counters context) actions)

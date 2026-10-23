@@ -1275,6 +1275,7 @@ ownCounts effect = case effect of
   Effect.Reroll -> []
   Effect.RerollStoredResults _ -> []
   Effect.ChooseCardName _ -> []
+  Effect.ChooseBasicLandType -> []
   Effect.FromOutsideTheGame _ -> []
   Effect.ExileThisSpell -> []
   -- Bolster's N is a Quantity like the Search's above, so its Counts are
@@ -1820,6 +1821,7 @@ effectNestedEffects effect = case effect of
   Effect.Reroll -> []
   Effect.RerollStoredResults _ -> []
   Effect.ChooseCardName _ -> []
+  Effect.ChooseBasicLandType -> []
   Effect.FromOutsideTheGame _ -> []
   Effect.ExileThisSpell -> []
   Effect.Bolster {} -> []
@@ -2360,6 +2362,7 @@ effectReplacements effect = case effect of
   Effect.Reroll -> []
   Effect.RerollStoredResults _ -> []
   Effect.ChooseCardName _ -> []
+  Effect.ChooseBasicLandType -> []
   Effect.FromOutsideTheGame _ -> []
   Effect.ExileThisSpell -> []
   Effect.Bolster _ -> []
@@ -2913,6 +2916,7 @@ effectMintedFaces effect = case effect of
   Effect.Reroll -> []
   Effect.RerollStoredResults _ -> []
   Effect.ChooseCardName _ -> []
+  Effect.ChooseBasicLandType -> []
   Effect.FromOutsideTheGame _ -> []
   Effect.ExileThisSpell -> []
   Effect.Bolster _ -> []
@@ -5922,6 +5926,7 @@ effectFilters effect = case effect of
   -- No candidate here is an object in the game either, the named card being one
   -- the reference has rather than one on the board.
   Effect.ChooseCardName (ChooseCardName.MkChooseCardName _ restriction) -> outsideTheGameFramed [restriction]
+  Effect.ChooseBasicLandType -> []
   -- THE one wish-framed position. CR 400.11c's filter is matched against a
   -- PRINTED FACE (Pawl.Engine.Projection.View.viewOfCard) rather than against an
   -- object any of the other framings' evaluators project, which is what makes

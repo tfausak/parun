@@ -1427,6 +1427,7 @@ effectNames asking onCard onAbility x = case x of
   Effect.NoteManaSpent -> mempty
   Effect.Proliferate -> mempty
   Effect.ChooseCardName chooseCardName -> chooseCardNameNames asking chooseCardName
+  Effect.ChooseBasicLandType -> mempty
   Effect.Bolster quantity -> quantityNames asking quantity
   Effect.Amass amass -> amassNames asking amass
   Effect.Blight blight -> blightNames asking blight

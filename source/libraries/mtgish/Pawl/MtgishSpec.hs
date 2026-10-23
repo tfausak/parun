@@ -38,6 +38,7 @@ import qualified Pawl.Types.EntryR as EntryR
 import qualified Pawl.Types.EntryRewrite as EntryRewrite
 import qualified Pawl.Types.Face as Face
 import qualified Pawl.Types.Filter as Filter
+import qualified Pawl.Types.ForEach as ForEach
 import qualified Pawl.Types.GrantedAbility as GrantedAbility
 import qualified Pawl.Types.Hybrid as Hybrid
 import qualified Pawl.Types.Keyword as Keyword
@@ -131,6 +132,13 @@ spec s = Spec.describe s "Pawl.Mtgish" $ do
   Spec.it s "reads regeneration as a shield on the source" $ do
     Spec.assertEq s (Right ()) (accepts drudgeSkeletons)
     Spec.assertEq s [Nothing] [matching | Effect.Replace r <- activatedEffects (translated drudgeSkeletons), Replace.duration r == Duration.UntilEndOfTurn, Replace.uses r == Uses.Once, ReplacementEffect.DestructionR (DestructionR.MkDestructionR matching DestructionRewrite.Regenerate) <- [Replace.effect r]]
+
+  -- CR 701.19a / 608.2h: "Regenerate enchanted creature" shields the host the
+  -- Aura has as the ability resolves, bound once by a loop, never re-read.
+  Spec.it s "reads regeneration of the enchanted creature as a shield on the bound host" $ do
+    Spec.assertEq s (Right ()) (accepts regeneration)
+    let regenerated = SlotName.MkSlotName (Text.pack "regenerated")
+    Spec.assertEq s [(ObjectRef.EachMatching Filter.IsHostOfSource, [Just (Filter.IsBound regenerated)])] [(ForEach.ref l, [matching | Effect.Replace r <- Foldable.toList (ForEach.body l), ReplacementEffect.DestructionR (DestructionR.MkDestructionR matching DestructionRewrite.Regenerate) <- [Replace.effect r]]) | Effect.ForEach l <- activatedEffects (translated regeneration), ForEach.slot l == regenerated]
 
   -- CR 614.1d: "This artifact enters tapped."
   Spec.it s "reads entering tapped as a replacement effect of the source" $ do
@@ -317,6 +325,13 @@ drudgeSkeletons :: (String, String)
 drudgeSkeletons =
   ( "{\"_OracleCard\":\"Card\",\"Name\":\"Drudge Skeletons\",\"Typeline\":{\"Supertypes\":[],\"Cardtypes\":[\"Creature\"],\"Subtypes\":[\"Skeleton\"]},\"ManaCost\":[{\"_ManaSymbol\":\"ManaCostGeneric\",\"args\":1},{\"_ManaSymbol\":\"ManaCostB\"}],\"Rules\":[{\"_Rule\":\"Activated\",\"args\":[{\"_Cost\":\"PayMana\",\"args\":[{\"_ManaSymbol\":\"ManaCostB\"}]},{\"_Actions\":\"ActionList\",\"args\":[{\"_Action\":\"RegeneratePermanent\",\"args\":{\"_Permanent\":\"ThisPermanent\"}}]}]}],\"CardPT\":{\"Power\":1,\"Toughness\":1}}",
     "{B}: Regenerate this creature. (The next time this creature would be destroyed this turn, instead tap it, remove it from combat, and heal all damage on it.)"
+  )
+
+-- | Regeneration's AST, and its Oracle text.
+regeneration :: (String, String)
+regeneration =
+  ( "{\"_OracleCard\":\"Card\",\"Name\":\"Regeneration\",\"Typeline\":{\"Supertypes\":[],\"Cardtypes\":[\"Enchantment\"],\"Subtypes\":[\"Aura\"]},\"ManaCost\":[{\"_ManaSymbol\":\"ManaCostGeneric\",\"args\":1},{\"_ManaSymbol\":\"ManaCostG\"}],\"Rules\":[{\"_Rule\":\"EnchantPermanent\",\"args\":{\"_Permanents\":\"IsCardtype\",\"args\":\"Creature\"}},{\"_Rule\":\"Activated\",\"args\":[{\"_Cost\":\"PayMana\",\"args\":[{\"_ManaSymbol\":\"ManaCostG\"}]},{\"_Actions\":\"ActionList\",\"args\":[{\"_Action\":\"RegeneratePermanent\",\"args\":{\"_Permanent\":\"HostPermanent\"}}]}]}]}",
+    "Enchant creature (Target a creature as you cast this. This card enters attached to that creature.)\n{G}: Regenerate enchanted creature. (The next time that creature would be destroyed this turn, instead tap it, remove it from combat, and heal all damage on it.)"
   )
 
 -- | Sarcomancy's AST, and its Oracle text.
