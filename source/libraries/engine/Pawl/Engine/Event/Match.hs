@@ -1660,10 +1660,91 @@ matchesTriggerGiven bindings board gs bearer you cond event = case cond of
   TriggerCondition.SelfRevealedForMiracle -> case event of
     GameEvent.Revealed (Revealed.MkRevealed _ oid (RevealCause.ForMiracle _) _) -> oid == bearer
     GameEvent.Revealed (Revealed.MkRevealed _ _ RevealCause.Ordinary _) -> False
+    GameEvent.Revealed (Revealed.MkRevealed _ _ (RevealCause.AsDrawnUnder _) _) -> False
     GameEvent.Revealed (Revealed.MkRevealed _ _ RevealCause.LeavingFaceDown _) -> False
     GameEvent.Revealed (Revealed.MkRevealed _ _ RevealCause.LeavingFaceDownComponent _) -> False
     GameEvent.Revealed (Revealed.MkRevealed _ _ RevealCause.FaceDownSpell _) -> False
     -- CR 702.94a: a miracle card is revealed, never merely looked at.
+    GameEvent.Looked {} -> False
+    GameEvent.Voted {} -> False
+    GameEvent.VotesRevealed {} -> False
+    GameEvent.Discarded {} -> False
+    GameEvent.Drew {} -> False
+    GameEvent.Moved {} -> False
+    GameEvent.DamageDealt _ -> False
+    GameEvent.StepBegan {} -> False
+    GameEvent.SpellCast {} -> False
+    GameEvent.SpellCopied _ -> False
+    GameEvent.DamagePrevented {} -> False
+    GameEvent.BecameMonarch _ -> False
+    GameEvent.TookInitiative _ -> False
+    GameEvent.AttackerDeclared {} -> False
+    GameEvent.BecameBlocking {} -> False
+    GameEvent.BlocksDeclared {} -> False
+    GameEvent.AttackerBlocked {} -> False
+    GameEvent.AttackerUnblocked _ -> False
+    GameEvent.SpellCountered _ -> False
+    GameEvent.AbilityCountered _ -> False
+    GameEvent.HalfUnlocked {} -> False
+    GameEvent.TurnedFaceUp _ -> False
+    GameEvent.PermanentActed _ -> False
+    GameEvent.Transformed {} -> False
+    GameEvent.BecameDesignated {} -> False
+    GameEvent.Mentored {} -> False
+    GameEvent.Exploited {} -> False
+    GameEvent.BecameCrewed _ -> False
+    GameEvent.Convoked _ -> False
+    GameEvent.Saddled _ -> False
+    GameEvent.Crewed _ -> False
+    GameEvent.PermanentSacrificed {} -> False
+    GameEvent.AbilityTriggered {} -> False
+    GameEvent.LoyaltyAbilityActivated _ -> False
+    GameEvent.LifeLost {} -> False
+    GameEvent.LifeGained {} -> False
+    GameEvent.CountersPut {} -> False
+    GameEvent.CountersRemoved {} -> False
+    GameEvent.ControlChanged {} -> False
+    GameEvent.VentureMarkerEntered {} -> False
+    GameEvent.BecameTarget {} -> False
+    GameEvent.BecameAttached {} -> False
+    GameEvent.BecameUnattached {} -> False
+    GameEvent.LeftTheGame _ -> False
+    GameEvent.Milled {} -> False
+    GameEvent.PlayerActed _ -> False
+    GameEvent.LandPlayed {} -> False
+    GameEvent.LostTheGame _ -> False
+    GameEvent.ManifestedDread {} -> False
+    GameEvent.DieResultSettled _ -> False
+    GameEvent.RolledToVisit _ -> False
+    GameEvent.PlanarDieRolled _ -> False
+    GameEvent.TurnedUpOffDeck _ -> False
+    GameEvent.ChaosEnsued -> False
+    GameEvent.ClassLevelSet _ -> False
+    GameEvent.Plotted _ -> False
+    GameEvent.BecameAttacked _ -> False
+    GameEvent.AttackersDeclared _ -> False
+    GameEvent.BecameTapped _ -> False
+    GameEvent.BecameUntapped _ -> False
+    GameEvent.TappedForMana _ -> False
+    GameEvent.ManaAdded _ -> False
+    GameEvent.ManaAbilityResolved _ -> False
+    GameEvent.CoinFlipped {} -> False
+    GameEvent.StickerPut _ -> False
+    GameEvent.ActivatedAbilityResolved _ -> False
+    GameEvent.TriggeredAbilityResolved _ -> False
+    GameEvent.CardArrived _ -> False
+  -- CR 607.2h: the reveal was the BEARER's own draw-time reveal, so another
+  -- object's (a second Rowen's) and an ordinary reveal of the same card fire
+  -- nothing; and the card matches the printed quality, read off the hand it
+  -- was revealed in (CR 701.20b moves nothing).
+  TriggerCondition.RevealedThisWay f -> case event of
+    GameEvent.Revealed (Revealed.MkRevealed _ card (RevealCause.AsDrawnUnder under) _) ->
+      under == bearer && maybe False (\view -> Filter.matches bearerContext view f) (Projection.viewWithLastKnown card gs card)
+    GameEvent.Revealed (Revealed.MkRevealed _ _ (RevealCause.ForMiracle _) _) -> False
+    GameEvent.Revealed (Revealed.MkRevealed _ _ RevealCause.Ordinary _) -> False
+    GameEvent.Revealed (Revealed.MkRevealed _ _ RevealCause.LeavingFaceDown _) -> False
+    GameEvent.Revealed (Revealed.MkRevealed _ _ RevealCause.LeavingFaceDownComponent _) -> False
+    GameEvent.Revealed (Revealed.MkRevealed _ _ RevealCause.FaceDownSpell _) -> False
     GameEvent.Looked {} -> False
     GameEvent.Voted {} -> False
     GameEvent.VotesRevealed {} -> False

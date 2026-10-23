@@ -2,6 +2,7 @@ module Pawl.Types.RevealCause where
 
 import qualified Pawl.Types.Cost as Cost
 import qualified Pawl.Types.Keyword as Keyword
+import qualified Pawl.Types.ObjectId as ObjectId
 
 -- | CR 701.20a: why a reveal happened. Carried by Pawl.Types.GameEvent's Revealed
 -- for Pawl.Types.DiscardCause's reason -- one logged reveal answers both of the
@@ -22,6 +23,11 @@ data RevealCause
     -- under the miracle ability with this cost, whose linked trigger alone it
     -- fires (CR 607.2h).
     ForMiracle (Cost.Cost Keyword.Keyword)
+  | -- | CR 603.11 / 607.2h: revealed from a hand as it was drawn, under the
+    -- draw-time reveal (PlayerEffect.RevealsFirstDraw) of this object, whose
+    -- linked triggers alone it fires (Rowen).
+    -- printed.
+    AsDrawnUnder ObjectId.ObjectId
   | -- | CR 708.9: a face-down permanent, revealed by its owner as it leaves the
     -- battlefield.
     LeavingFaceDown

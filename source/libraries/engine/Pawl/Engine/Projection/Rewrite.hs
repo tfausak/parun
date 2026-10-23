@@ -563,6 +563,7 @@ rewritePlayerEffect pairs effect = case effect of
   PlayerEffect.AdditionalSurveilCards _ -> effect
   PlayerEffect.CantGainLife -> effect
   PlayerEffect.CantLoseLife -> effect
+  PlayerEffect.RevealsFirstDraw _ -> effect
   PlayerEffect.Precluded _ -> effect
   PlayerEffect.Shows _ -> effect
 
@@ -2019,6 +2020,7 @@ rewriteTriggerCondition pairs condition = case condition of
   TriggerCondition.OpponentLostLifeDuringYourTurn -> condition
   TriggerCondition.SelfCycled -> condition
   TriggerCondition.SelfRevealedForMiracle -> condition
+  TriggerCondition.RevealedThisWay f -> TriggerCondition.RevealedThisWay (Filter.rewrite pairs f)
   TriggerCondition.SelfDiscarded -> condition
   TriggerCondition.SelfExiledForMadness -> condition
   TriggerCondition.SelfCast -> condition

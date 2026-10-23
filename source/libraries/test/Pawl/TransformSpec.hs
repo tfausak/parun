@@ -1670,7 +1670,7 @@ moreThanMeetsTheEyeSpec s registry = Spec.describe s "MoreThanMeetsTheEye" $ do
           Prompt.ChooseOfferedCastSpell _ _ options -> (fst (NonEmpty.head options), ratchetBack)
           Prompt.OfferedCast {} -> OptionalDecision.Exercises
           _ -> S.identityAnswer p
-        offered = CastOffer.MkCastOffer {CastOffer.transformed = False, CastOffer.withoutPayingManaCost = False, CastOffer.payingInstead = Nothing, CastOffer.spending = ManaSpending.AsProduced, CastOffer.restriction = Nothing, CastOffer.offeredBy = Nothing, CastOffer.faceDown = Nothing, CastOffer.payableFromSpent = False}
+        offered = CastOffer.MkCastOffer {CastOffer.transformed = False, CastOffer.withoutPayingManaCost = False, CastOffer.payingInstead = Nothing, CastOffer.spending = ManaSpending.AsProduced, CastOffer.restriction = Nothing, CastOffer.offeredBy = Nothing, CastOffer.faceDown = Nothing, CastOffer.payableFromSpent = False, CastOffer.reduction = 0}
         -- No restriction on either offer, so the context's source is immaterial
         -- here: what this group is about is which FACE a free offer reaches.
         under o = S.runPure wantingBack board (Resolve.offerCast Resolve.noSubgame (Filter.contextFor (Game.teams board) (Just S.alice) Nothing) (const Nothing) [oid] S.alice CastObligation.Optional PermissionVerb.Cast Nothing CastRepetition.Once False o)

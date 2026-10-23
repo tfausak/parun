@@ -100,6 +100,7 @@ codec =
           Arm.nullary "SelfAttacksUnblocked" TriggerCondition.SelfAttacksUnblocked,
           Arm.nullary "SelfCycled" TriggerCondition.SelfCycled,
           Arm.nullary "SelfRevealedForMiracle" TriggerCondition.SelfRevealedForMiracle,
+          Arm.payload "RevealedThisWay" filterCodec TriggerCondition.RevealedThisWay (\x -> case x of TriggerCondition.RevealedThisWay y -> Just y; _ -> Nothing),
           Arm.nullary "SelfExiledForMadness" TriggerCondition.SelfExiledForMadness,
           Arm.nullary "SelfDiscarded" TriggerCondition.SelfDiscarded,
           Arm.payload "PlayerDiscards" PlayerRelation.codec TriggerCondition.PlayerDiscards (\x -> case x of TriggerCondition.PlayerDiscards y -> Just y; _ -> Nothing),
@@ -245,6 +246,7 @@ tagOf x = case x of
   TriggerCondition.SelfAttacksUnblocked {} -> "SelfAttacksUnblocked"
   TriggerCondition.SelfCycled {} -> "SelfCycled"
   TriggerCondition.SelfRevealedForMiracle {} -> "SelfRevealedForMiracle"
+  TriggerCondition.RevealedThisWay {} -> "RevealedThisWay"
   TriggerCondition.SelfExiledForMadness {} -> "SelfExiledForMadness"
   TriggerCondition.SelfDiscarded {} -> "SelfDiscarded"
   TriggerCondition.PlayerDiscards {} -> "PlayerDiscards"

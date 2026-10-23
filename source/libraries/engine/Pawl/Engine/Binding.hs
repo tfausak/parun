@@ -710,6 +710,12 @@ tappedForTotalPower = SlotName.MkSlotName (Text.pack "thatTappedForTotalPower")
 -- SINGULAR: every printing of this cost reveals one card, so Binding.onlyOne
 -- answers it.
 --
+-- Also bound by Pawl.Engine.Event.Binding.eventBindings for CR 607.2h's "that
+-- card" -- the card a TriggerCondition.RevealedThisWay trigger's linked static
+-- revealed (God-Eternal Kefnet). That card CAN leave the hand before the trigger
+-- resolves, and Pawl.Engine.Resolve.Effect.castableCopy then reads its last
+-- known information (CR 608.2h).
+--
 -- Not a target (CR 115.10a), so the same CR 608.2b posture and the same "no card's
 -- targetSlots may name it" sweep as the slots above.
 revealedCard :: SlotName
