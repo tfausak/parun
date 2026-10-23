@@ -161,6 +161,7 @@ import qualified Pawl.Types.ManaCount as ManaCount
 import qualified Pawl.Types.ManaFilter as ManaFilter
 import qualified Pawl.Types.ManaRestriction as ManaRestriction
 import qualified Pawl.Types.ManaRider as ManaRider
+import qualified Pawl.Types.ManaSpecification as ManaSpecification
 import qualified Pawl.Types.ManaType as ManaType
 import qualified Pawl.Types.Meld as Meld
 import qualified Pawl.Types.Mill as Mill
@@ -861,8 +862,8 @@ rewriteEffect pairs effect = case effect of
   -- control" would be its producer; Harm's Way's ControlledBy names no word, so
   -- both are regression fences too. `whoRecipient` is a PlayerRelation and
   -- holds no word.
-  Effect.RedirectDamage (RedirectDamage.MkRedirectDamage duration kind amount from whatRecipient whoRecipient to chosenSource) ->
-    Effect.RedirectDamage (RedirectDamage.MkRedirectDamage (rewriteDuration pairs duration) kind (fmap (rewriteQuantity pairs) amount) (fmap (rewriteObjectRef pairs) from) (fmap (Filter.rewrite pairs) whatRecipient) whoRecipient (rewriteObjectRef pairs to) (fmap (Filter.rewrite pairs) chosenSource))
+  Effect.RedirectDamage (RedirectDamage.MkRedirectDamage duration kind amount from whatRecipient whoRecipient to chosenSource uses whatSource) ->
+    Effect.RedirectDamage (RedirectDamage.MkRedirectDamage (rewriteDuration pairs duration) kind (fmap (rewriteQuantity pairs) amount) (fmap (rewriteObjectRef pairs) from) (fmap (Filter.rewrite pairs) whatRecipient) whoRecipient (rewriteObjectRef pairs to) (fmap (Filter.rewrite pairs) chosenSource) uses (Filter.rewrite pairs whatSource))
   Effect.Counter (Counter.MkCounter ref mSlot mSources mInstead) -> Effect.Counter (Counter.MkCounter (rewriteObjectRef pairs ref) mSlot mSources (fmap (\destination -> destination {CounterDestination.only = fmap (Filter.rewrite pairs) (CounterDestination.only destination)}) mInstead))
   -- CR 612.1 through the KIND as well, where Filter's HasCounters arm rewrites
   -- the same one: CR 122.1b's keyword counter carries a keyword, and a word
@@ -1770,13 +1771,23 @@ rewriteCopyClause :: [(TextWord.TextWord, TextWord.TextWord)] -> CopyClause.Copy
 rewriteCopyClause pairs (CopyClause.MkCopyClause condition exceptions counters) =
   CopyClause.MkCopyClause (fmap (rewriteCondition pairs) condition) (fmap (rewriteCopyException pairs) exceptions) (fmap (rewriteWithCounters pairs) counters)
 
+-- CR 612.1 through one CR 208.2b option's printed words: its keywords' and its
+-- subtypes'.
+rewriteEntryOption :: [(TextWord.TextWord, TextWord.TextWord)] -> EntryOption.EntryOption -> EntryOption.EntryOption
+rewriteEntryOption pairs o =
+  o
+    { EntryOption.keywords = Set.map (Filter.rewriteKeyword pairs) (EntryOption.keywords o),
+      EntryOption.subtypes = Set.map (TextWord.Engine.subtypeAfter pairs) (EntryOption.subtypes o)
+    }
+
 -- CR 612.1 through what a CR 614.1c/614.1d entry replacement does. Exhaustive for
 -- rewriteReplacementEffect's reason.
 rewriteEntryRewrite :: [(TextWord.TextWord, TextWord.TextWord)] -> EntryRewrite.EntryRewrite (GrantedAbility.GrantedAbility Card.Type.Card) (Effect.Effect Card.Type.Card (GrantedAbility.GrantedAbility Card.Type.Card)) -> EntryRewrite.EntryRewrite (GrantedAbility.GrantedAbility Card.Type.Card) (Effect.Effect Card.Type.Card (GrantedAbility.GrantedAbility Card.Type.Card))
 rewriteEntryRewrite pairs rewrite = case rewrite of
   EntryRewrite.AsCopy c -> EntryRewrite.AsCopy (rewriteAsCopy pairs c)
-  -- CR 702.14a's word again, this time inside a keyword an option grants.
-  EntryRewrite.ChoiceOf os -> EntryRewrite.ChoiceOf (fmap (\o -> o {EntryOption.keywords = Set.map (Filter.rewriteKeyword pairs) (EntryOption.keywords o)}) os)
+  -- CR 702.14a's word again, this time inside a keyword an option grants, and
+  -- CR 205.3's inside a subtype one adds.
+  EntryRewrite.ChoiceOf os -> EntryRewrite.ChoiceOf (fmap (rewriteEntryOption pairs) os)
   -- The same word again, in an option a coin picks rather than a player. NO
   -- BOARD OBSERVES IT, and cannot: rewriteKeyword only ever changes a keyword
   -- that CARRIES a word (landwalk, typecycling, hexproof from, protection from),
@@ -1784,8 +1795,7 @@ rewriteEntryRewrite pairs rewrite = case rewrite of
   -- The arm is the rule (CR 612.1) rather than a proven behaviour -- an option
   -- granting islandwalk would be what proves it.
   EntryRewrite.ChoiceByCoinFlip f ->
-    let rewriteOption o = o {EntryOption.keywords = Set.map (Filter.rewriteKeyword pairs) (EntryOption.keywords o)}
-     in EntryRewrite.ChoiceByCoinFlip f {EntryFlip.heads = rewriteOption (EntryFlip.heads f), EntryFlip.tails = rewriteOption (EntryFlip.tails f)}
+    EntryRewrite.ChoiceByCoinFlip f {EntryFlip.heads = rewriteEntryOption pairs (EntryFlip.heads f), EntryFlip.tails = rewriteEntryOption pairs (EntryFlip.tails f)}
   -- CR 105.1's five colours, CR 305.6's five basic land types, CR 205.3m's
   -- creature types and CR 102.1's seats are the offers themselves, so none of
   -- these four prints a word the card chose.
@@ -2111,8 +2121,8 @@ rewriteTriggerCondition pairs condition = case condition of
   TriggerCondition.PermanentsBecomeTapped f -> TriggerCondition.PermanentsBecomeTapped (Filter.rewrite pairs f)
   TriggerCondition.SelfBecomesUntapped -> condition
   TriggerCondition.AttachedPermanentTappedForMana -> condition
-  TriggerCondition.PermanentTappedForMana payload -> TriggerCondition.PermanentTappedForMana payload {PermanentTappedForMana.filter = Filter.rewrite pairs (PermanentTappedForMana.filter payload)}
-  TriggerCondition.AbilityAddsMana payload -> TriggerCondition.AbilityAddsMana payload {AbilityAddsMana.source = Filter.rewrite pairs (AbilityAddsMana.source payload)}
+  TriggerCondition.PermanentTappedForMana payload -> TriggerCondition.PermanentTappedForMana payload {PermanentTappedForMana.filter = Filter.rewrite pairs (PermanentTappedForMana.filter payload), PermanentTappedForMana.mana = rewriteManaSpecification pairs (PermanentTappedForMana.mana payload)}
+  TriggerCondition.AbilityAddsMana payload -> TriggerCondition.AbilityAddsMana payload {AbilityAddsMana.source = Filter.rewrite pairs (AbilityAddsMana.source payload), AbilityAddsMana.mana = rewriteManaSpecification pairs (AbilityAddsMana.mana payload)}
   TriggerCondition.SelfManaAbilityResolves -> condition
   TriggerCondition.SelfExploits -> condition
   TriggerCondition.CreatureExploits (CreatureExploits.MkCreatureExploits exploiter exploited) -> TriggerCondition.CreatureExploits (CreatureExploits.MkCreatureExploits (Filter.rewrite pairs exploiter) (Filter.rewrite pairs exploited))
@@ -2170,9 +2180,9 @@ rewriteCondition pairs condition = case condition of
 --
 -- Exhaustive rather than a wildcard, for rewriteTriggerCondition's reason: a new
 -- arm carrying a Condition or a Filter must break this build. Only the board
--- condition holds a word -- every other arm names a phase, a turn, the combat
--- record, or a count of activations, and CR 612.1's swap finds nothing in one to
--- act on.
+-- condition and SpendOnly's printed colour hold a word -- every other arm names
+-- a phase, a turn, the combat record, or a count of activations, and CR 612.1's
+-- swap finds nothing in one to act on.
 rewriteRestriction :: [(TextWord.TextWord, TextWord.TextWord)] -> ActivationRestriction.ActivationRestriction -> ActivationRestriction.ActivationRestriction
 rewriteRestriction pairs restriction = case restriction of
   ActivationRestriction.OnlyIf condition -> ActivationRestriction.OnlyIf (rewriteCondition pairs condition)
@@ -2187,7 +2197,15 @@ rewriteRestriction pairs restriction = case restriction of
   ActivationRestriction.OnlyOnceEachTurn -> restriction
   ActivationRestriction.DuringDieRoll -> restriction
   ActivationRestriction.InstantSpeed -> restriction
-  ActivationRestriction.SpendOnly _ -> restriction
+  ActivationRestriction.SpendOnly specified -> ActivationRestriction.SpendOnly (rewriteManaSpecification pairs specified)
+
+-- CR 612.2 over a printed colour of mana (Crimson Hellkite's "Spend only red
+-- mana"); a regression fence, no test changing its text.
+rewriteManaSpecification :: [(TextWord.TextWord, TextWord.TextWord)] -> ManaSpecification.ManaSpecification -> ManaSpecification.ManaSpecification
+rewriteManaSpecification pairs specified = case specified of
+  ManaSpecification.AnyMana -> specified
+  ManaSpecification.ChosenColor -> specified
+  ManaSpecification.OfColor c -> ManaSpecification.OfColor (TextWord.Engine.colorAfter pairs c)
 
 -- CR 612.1 through a Duration, which Pawl.Types.Duration holds as the card
 -- prints it: a CR 611.2b "for as long as ..." clause is rules text like any

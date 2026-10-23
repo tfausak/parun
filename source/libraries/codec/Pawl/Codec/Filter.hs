@@ -2,6 +2,7 @@ module Pawl.Codec.Filter where
 
 import qualified Data.Typeable as Typeable
 import qualified Numeric.Natural as Natural
+import qualified Pawl.Codec.AbilityKind as AbilityKind
 import qualified Pawl.Codec.BlockStatus as BlockStatus
 import qualified Pawl.Codec.CardName as CardName
 import qualified Pawl.Codec.CardType as CardType
@@ -160,8 +161,7 @@ codec keywordCodec =
       Arm.nullary "HasCountersOfAnyKind" Filter.HasCountersOfAnyKind,
       Arm.payload "HasSticker" StickerKind.codec Filter.HasSticker (\x -> case x of Filter.HasSticker y -> Just y; _ -> Nothing),
       Arm.nullary "Stickered" Filter.Stickered,
-      Arm.nullary "HasNonManaActivatedAbility" Filter.HasNonManaActivatedAbility,
-      Arm.nullary "HasActivatedAbility" Filter.HasActivatedAbility,
+      Arm.optionalPayload "HasActivatedAbility" AbilityKind.codec Filter.HasActivatedAbility (\x -> case x of Filter.HasActivatedAbility y -> Just y; _ -> Nothing),
       Arm.payload "IsInZone" Zone.codec Filter.IsInZone (\x -> case x of Filter.IsInZone y -> Just y; _ -> Nothing),
       Arm.payload "WasCastFrom" Zone.codec Filter.WasCastFrom (\x -> case x of Filter.WasCastFrom y -> Just y; _ -> Nothing),
       Arm.payload "TagWasSpent" ProductionTag.codec Filter.TagWasSpent (\x -> case x of Filter.TagWasSpent y -> Just y; _ -> Nothing),
@@ -278,7 +278,6 @@ tagOf x = case x of
   Filter.HasCountersOfAnyKind {} -> "HasCountersOfAnyKind"
   Filter.HasSticker {} -> "HasSticker"
   Filter.Stickered {} -> "Stickered"
-  Filter.HasNonManaActivatedAbility {} -> "HasNonManaActivatedAbility"
   Filter.HasActivatedAbility {} -> "HasActivatedAbility"
   Filter.IsInZone {} -> "IsInZone"
   Filter.WasCastFrom {} -> "WasCastFrom"

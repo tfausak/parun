@@ -4,7 +4,8 @@ import qualified Pawl.Types.PlayerRef as PlayerRef
 
 -- | The payload of Pawl.Types.Effect's MoveMana arm (CR 106.13): the players
 -- `from` names lose all their unspent mana, and the players `to` names add the
--- mana lost this way.
+-- mana lost this way. With no `to` the mana is simply lost (CR 106.4) -- Mana
+-- Short's "that player loses all unspent mana".
 --
 -- WHOLE UNITS cross, which is how the rule's second sentence is kept: "which
 -- permanents, spells, and\/or abilities produced that mana are unchanged, as are
@@ -19,6 +20,6 @@ import qualified Pawl.Types.PlayerRef as PlayerRef
 -- the same units rather than as a doubling.
 data MoveMana = MkMoveMana
   { from :: PlayerRef.PlayerRef,
-    to :: PlayerRef.PlayerRef
+    to :: Maybe PlayerRef.PlayerRef
   }
   deriving (Eq, Ord, Show)

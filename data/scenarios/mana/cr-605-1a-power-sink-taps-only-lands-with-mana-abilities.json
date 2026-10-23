@@ -1,0 +1,42 @@
+{
+  "description": "CR 605.1a Power Sink taps only lands with mana abilities",
+  "note": "Alice floats {R} and casts Llanowar Elves; bob's Power Sink for X=1 goes unpaid, so the Elves are countered, her Mountain is tapped, her Evolving Wilds (no mana ability) is not, and her pool is empty.",
+  "board": {
+    "seats": [
+      {
+        "name": "alice",
+        "manaPool": "R",
+        "battlefield": [
+          { "card": "Forest", "label": "f1", "ready": true },
+          { "card": "Mountain", "label": "m1", "ready": true },
+          { "card": "Evolving Wilds", "label": "wilds", "ready": true }
+        ],
+        "hand": [{ "card": "Llanowar Elves", "label": "elves" }],
+        "library": [{ "card": "Island" }]
+      },
+      {
+        "name": "bob",
+        "battlefield": [
+          { "card": "Island", "label": "i1", "ready": true },
+          { "card": "Island", "label": "i2", "ready": true }
+        ],
+        "hand": [{ "card": "Power Sink", "label": "sink" }],
+        "library": [{ "card": "Island" }]
+      }
+    ],
+    "active": "alice",
+    "step": "PrecombatMain"
+  },
+  "timeline": [
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": { "Cast": { "object": "$elves", "mana": ["$f1", null] } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass" },
+    { "turn": 1, "step": "PrecombatMain", "player": "bob", "do": { "Cast": { "object": "$sink", "targets": ["Llanowar Elves"], "x": 1, "mana": ["$i1", "$i2"] } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "bob", "do": "Pass" },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass" },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": { "ChooseToPay": { "decision": { "type": "Declines" } } }, "source": "Power Sink" },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "check": { "Count": { "player": "alice", "zone": "Graveyard", "card": "Llanowar Elves", "count": 1 } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "check": { "Tapped": { "object": "$wilds", "tapped": false } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "check": { "Tapped": { "object": "$m1", "tapped": true } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "check": { "View": { "of": "ManaPool", "player": "alice", "is": [] } } }
+  ]
+}

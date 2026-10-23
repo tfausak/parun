@@ -791,7 +791,7 @@ effectObjectRefs effect = case effect of
   Effect.PreventNextDamageInstance (PreventNextDamageInstance.MkPreventNextDamageInstance _ ref _ _) -> [ref]
   -- CR 614.9's two sides, the damage's old recipient -- absent where the card
   -- describes it instead -- and its new one.
-  Effect.RedirectDamage (RedirectDamage.MkRedirectDamage _ _ _ from _ _ to _) -> Maybe.maybeToList from <> [to]
+  Effect.RedirectDamage (RedirectDamage.MkRedirectDamage _ _ _ from _ _ to _ _ _) -> Maybe.maybeToList from <> [to]
   Effect.Counter (Counter.MkCounter ref _ _ _) -> [ref]
   Effect.PutCounters (PutCounters.MkPutCounters _ _ ref) -> [ref]
   Effect.DistributeCounters (PutCounters.MkPutCounters _ _ ref) -> [ref]
@@ -958,7 +958,7 @@ effectPlayerRefs effect = case effect of
   Effect.AddMana (ManaAddition.MkManaAddition ref _ _ _ _ _ _) -> [ref]
   Effect.Firebend (ManaAddition.MkManaAddition ref _ _ _ _ _ _) -> [ref]
   Effect.ActivateManaAbilities (ActivateManaAbilities.MkActivateManaAbilities ref _) -> [ref]
-  Effect.MoveMana (MoveMana.MkMoveMana from to) -> [from, to]
+  Effect.MoveMana (MoveMana.MkMoveMana from to) -> from : Maybe.maybeToList to
   Effect.Search (Search.MkSearch searcher owner _ _ _ _ _ _ _ _ _ _ _) -> [searcher, owner]
   Effect.ExileAllGraveyards -> []
   Effect.RestartGame {} -> []
@@ -1408,14 +1408,14 @@ slotsOf effect = joinTwo (joinTwo (joinSlots (fmap objectRefSlots (effectObjectR
   Effect.PreventNextDamageInstance (PreventNextDamageInstance.MkPreventNextDamageInstance duration _ chosenSource rider) ->
     joinSlots [durationSlots duration, filterSlotsOf chosenSource, riderSlotsOf rider]
   -- CR 614.9's redirection reads what PreventNextDamage reads, minus a rider it
-  -- cannot carry: the recipient description rides the row, CR 609.7a's
-  -- chosen-source predicate is asked once here, and the counted amount is
-  -- evaluated once here too.
-  Effect.RedirectDamage (RedirectDamage.MkRedirectDamage duration _ amount _ whatRecipient _ _ chosenSource) ->
+  -- cannot carry: the recipient and source descriptions ride the row, CR
+  -- 609.7a's chosen-source predicate is asked once here, and the counted amount
+  -- is evaluated once here too.
+  Effect.RedirectDamage (RedirectDamage.MkRedirectDamage duration _ amount _ whatRecipient _ _ chosenSource _ whatSource) ->
     joinSlots
       [ durationSlots duration,
         joinSlots (fmap quantitySlots (Maybe.maybeToList amount)),
-        joinSlots (fmap filterSlotsOf (Maybe.maybeToList whatRecipient <> Maybe.maybeToList chosenSource))
+        joinSlots (fmap filterSlotsOf (Maybe.maybeToList whatRecipient <> Maybe.maybeToList chosenSource <> [whatSource]))
       ]
   -- The bound slot is a DEFINITION, not a read: see boundSlots below.
   Effect.Counter {} -> Map.empty
@@ -2206,7 +2206,7 @@ ownSlotsAreExhaustive effect = case effect of
     durationSlotsAreExhaustive duration && all slotsAreExhaustive rider
   Effect.PreventNextDamageInstance (PreventNextDamageInstance.MkPreventNextDamageInstance duration _ _ rider) ->
     durationSlotsAreExhaustive duration && all slotsAreExhaustive rider
-  Effect.RedirectDamage (RedirectDamage.MkRedirectDamage duration _ amount _ _ _ _ _) -> durationSlotsAreExhaustive duration && all Quantity.slotsAreExhaustive amount
+  Effect.RedirectDamage (RedirectDamage.MkRedirectDamage duration _ amount _ _ _ _ _ _ _) -> durationSlotsAreExhaustive duration && all Quantity.slotsAreExhaustive amount
   Effect.Counter {} -> True
   Effect.PutCounters (PutCounters.MkPutCounters _ quantity _) -> Quantity.slotsAreExhaustive quantity
   Effect.DistributeCounters (PutCounters.MkPutCounters _ quantity _) -> Quantity.slotsAreExhaustive quantity
@@ -2476,7 +2476,7 @@ readsX =
         Effect.PreventNextDamage (PreventNextDamage.MkPreventNextDamage _ _ _ _ _ _ quantity rider) -> Quantity.readsX quantity || readsX (Foldable.toList rider)
         Effect.PreventAllDamage (PreventAllDamage.MkPreventAllDamage _ _ _ _ _ _ _ _ rider) -> readsX (Foldable.toList rider)
         Effect.PreventNextDamageInstance (PreventNextDamageInstance.MkPreventNextDamageInstance _ _ _ rider) -> readsX (Foldable.toList rider)
-        Effect.RedirectDamage (RedirectDamage.MkRedirectDamage _ _ amount _ _ _ _ _) -> any Quantity.readsX amount
+        Effect.RedirectDamage (RedirectDamage.MkRedirectDamage _ _ amount _ _ _ _ _ _ _) -> any Quantity.readsX amount
         Effect.Counter {} -> False
         Effect.PutCounters (PutCounters.MkPutCounters _ quantity _) -> Quantity.readsX quantity
         Effect.DistributeCounters (PutCounters.MkPutCounters _ quantity _) -> Quantity.readsX quantity

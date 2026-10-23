@@ -1,0 +1,33 @@
+{
+  "description": "CR 614.3 Jade Monolith redirects only the next time its source deals damage",
+  "note": "Bob's double-striking Hearthfire Hobgoblin is blocked by alice's Craw Wurm; alice points Jade Monolith at the Wurm and names the Hobgoblin. Its first-strike 2 goes to alice; its regular 2 lands on the Wurm.",
+  "board": {
+    "seats": [
+      {
+        "name": "alice",
+        "battlefield": [
+          { "card": "Jade Monolith", "label": "monolith", "ready": true },
+          { "card": "Island", "label": "i1", "ready": true },
+          { "card": "Craw Wurm", "label": "wurm", "ready": true }
+        ],
+        "library": [{ "card": "Island" }]
+      },
+      {
+        "name": "bob",
+        "battlefield": [{ "card": "Hearthfire Hobgoblin", "label": "hob", "ready": true }],
+        "library": [{ "card": "Island" }]
+      }
+    ],
+    "active": "bob",
+    "step": "DeclareAttackers"
+  },
+  "timeline": [
+    { "turn": 1, "step": "DeclareAttackers", "player": "bob", "do": { "Attack": ["$hob"] } },
+    { "turn": 1, "step": "DeclareBlockers", "player": "alice", "do": { "Block": { "$wurm": ["$hob"] } } },
+    { "turn": 1, "step": "DeclareBlockers", "player": "alice", "do": { "Activate": { "object": "$monolith", "ability": 0, "targets": ["$wurm"], "mana": ["$i1"] } } },
+    { "turn": 1, "step": "DeclareBlockers", "player": "alice", "do": "Pass" },
+    { "turn": 1, "step": "DeclareBlockers", "player": "alice", "do": { "Answer": { "prompt": "ChooseDamageSource", "with": "$hob" } } },
+    { "turn": 1, "step": "EndOfCombat", "player": "bob", "check": { "Life": { "player": "alice", "life": 18 } } },
+    { "turn": 1, "step": "EndOfCombat", "player": "bob", "check": { "Damage": { "object": "$wurm", "damage": 2 } } }
+  ]
+}

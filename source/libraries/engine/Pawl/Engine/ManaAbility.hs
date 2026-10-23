@@ -7,8 +7,8 @@
 -- beside them, which the mana supply model asks of a mana ability's effects.
 --
 -- The ability-level half lives here rather than in Pawl.Engine.Mana because
--- Pawl.Engine.Projection needs it -- CR 605.1a's exclusion is half of
--- Filter.HasNonManaActivatedAbility, and Mana imports Projection, so the
+-- Pawl.Engine.Projection needs it -- CR 605.1a's classification is half of
+-- Filter.HasActivatedAbility, and Mana imports Projection, so the
 -- classification had to sit below both.
 --
 -- Here rather than in Pawl.Engine.Resolve so that Pawl.Engine.Mana need not
@@ -27,7 +27,9 @@ module Pawl.Engine.ManaAbility where
 import qualified Data.Foldable as Foldable
 import qualified Data.Map.Strict as Map
 import qualified Data.Maybe as Maybe
+import qualified Data.Set as Set
 import qualified Pawl.Engine.Modal as Modal
+import qualified Pawl.Types.AbilityKind as AbilityKind
 import qualified Pawl.Types.ActivatedAbility as ActivatedAbility
 import qualified Pawl.Types.Ante as Ante
 import qualified Pawl.Types.Card as Card.Type
@@ -70,8 +72,8 @@ import qualified Pawl.Types.ZonePair as ZonePair
 -- checked here). Read at three sites:
 -- Mana.manaRoutesOfGiven includes a mana ability as a source,
 -- Activatable.activatableGiven refuses to put one on the stack (CR 605.3b), and
--- Projection's view builders answer Filter.HasNonManaActivatedAbility with its
--- negation. What Action.legalActions offers instead is
+-- Projection's view builders answer Filter.HasActivatedAbility through
+-- abilityKinds above. What Action.legalActions offers instead is
 -- Action.ActivateManaAbility, one per Mana.manaSourcesGiven, which is CR 605.3a's
 -- priority window.
 --
@@ -104,6 +106,14 @@ isManaAbility ab =
         && Map.null (Modal.allTargetSlots (ActivatedAbility.modal ab))
         && not (any movesLibraryCard effects)
         && not (any costMovesLibraryCard (Cost.components (ActivatedAbility.cost ab)))
+
+-- CR 605.1a's kind of each ability on a roster, plus CR 305.6's intrinsic mana
+-- ability where `intrinsic` says the object has one, since no roster holds it:
+-- Filter.View's activatedAbilityKinds, filled by every view builder through
+-- this one function so that they cannot disagree about one object.
+abilityKinds :: Bool -> [ActivatedAbility.ActivatedAbility Card.Type.Card (GrantedAbility.GrantedAbility Card.Type.Card)] -> Set.Set AbilityKind.AbilityKind
+abilityKinds intrinsic roster =
+  Set.fromList ([AbilityKind.ManaAbility | intrinsic] <> fmap (\ab -> if isManaAbility ab then AbilityKind.ManaAbility else AbilityKind.NonManaAbility) roster)
 
 -- CR 605.1b: a TRIGGERED ability is a mana ability if it doesn't require a
 -- target, triggers from the activation or resolution of an activated mana

@@ -558,8 +558,7 @@ filterNames asking criterion = case criterion of
   Filter.HasCountersOfAnyKind -> mempty
   Filter.HasSticker _kind -> mempty
   Filter.Stickered -> mempty
-  Filter.HasNonManaActivatedAbility -> mempty
-  Filter.HasActivatedAbility -> mempty
+  Filter.HasActivatedAbility _ -> mempty
   Filter.IsInZone _zone -> mempty
   Filter.WasCastFrom _zone -> mempty
   Filter.TagWasSpent _tag -> mempty
@@ -1498,7 +1497,7 @@ entryFlipNames asking x = case x of
 
 entryOptionNames :: (Monoid r) => Asking r -> EntryOption.EntryOption -> r
 entryOptionNames asking x = case x of
-  EntryOption.MkEntryOption _power _toughness keywords -> foldMap (keywordNames asking) keywords
+  EntryOption.MkEntryOption _power _toughness keywords _subtypes -> foldMap (keywordNames asking) keywords
 
 entryPriceNames :: (Monoid r) => Asking r -> EntryPrice.EntryPrice -> r
 entryPriceNames asking x = case x of
@@ -2113,7 +2112,7 @@ moveCountersNames asking x = case x of
 
 moveManaNames :: (Monoid r) => Asking r -> MoveMana.MoveMana -> r
 moveManaNames asking x = case x of
-  MoveMana.MkMoveMana from to -> playerRefNames asking from <> playerRefNames asking to
+  MoveMana.MkMoveMana from to -> playerRefNames asking from <> foldMap (playerRefNames asking) to
 
 moveToZoneNames :: (Monoid r) => Asking r -> (ability -> r) -> MoveToZone.MoveToZone ability -> r
 moveToZoneNames asking onAbility x = case x of
@@ -2551,7 +2550,7 @@ recipientNames asking x = case x of
 
 redirectDamageNames :: (Monoid r) => Asking r -> RedirectDamage.RedirectDamage -> r
 redirectDamageNames asking x = case x of
-  RedirectDamage.MkRedirectDamage duration _kind amount from whatRecipient _whoRecipient to chosenSource -> durationNames asking duration <> foldMap (quantityNames asking) amount <> foldMap (objectRefNames asking) from <> foldMap (filterNames asking) whatRecipient <> objectRefNames asking to <> foldMap (filterNames asking) chosenSource
+  RedirectDamage.MkRedirectDamage duration _kind amount from whatRecipient _whoRecipient to chosenSource _uses whatSource -> durationNames asking duration <> foldMap (quantityNames asking) amount <> foldMap (objectRefNames asking) from <> foldMap (filterNames asking) whatRecipient <> objectRefNames asking to <> foldMap (filterNames asking) chosenSource <> filterNames asking whatSource
 
 reinforceNames :: (Monoid r) => Asking r -> (keyword -> r) -> Reinforce.Reinforce keyword -> r
 reinforceNames asking onKeyword x = case x of

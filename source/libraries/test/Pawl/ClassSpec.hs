@@ -390,13 +390,13 @@ ladderSpec s registry = Spec.describe s "Level bar activation" $ do
 --
 -- Synthetic Ability Audit is the reader -- "Creatures get +1/+0 for each permanent
 -- with an activated ability that isn't a mana ability", which is
--- Filter.HasNonManaActivatedAbility over the battlefield. Synthetic because no
+-- Filter.HasActivatedAbility (Just NonManaAbility) over the battlefield. Synthetic because no
 -- printing asks that question of an enchantment: Tsabo's Web and Ravager Wurm ask
 -- it of LANDS, Magewright's Stone of a creature, and Zirda, the Dawnwaker of the
 -- CARDS in a starting deck, which Pawl.Engine.Projection.View.viewOfCard answers
 -- off the printed face with no gate to apply, so both readings agree there. The
 -- Enigma Jewel's craft, "four or more nonlands with activated abilities", asks
--- Filter.HasActivatedAbility of a permanent, and is the real card that can
+-- Filter.HasActivatedAbility Nothing of a permanent, and is the real card that can
 -- replace this one.
 --
 -- bob owns the Piker so that Paladin Class's own level-2 section -- "Creatures you

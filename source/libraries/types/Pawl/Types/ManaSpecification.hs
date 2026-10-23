@@ -1,5 +1,7 @@
 module Pawl.Types.ManaSpecification where
 
+import qualified Pawl.Types.Color as Color
+
 -- | CR 106.12a's "or is tapped for mana of a specified type": which mana a tap
 -- has to have produced for the ability to trigger. The narrowing half of
 -- Pawl.Types.PermanentTappedForMana, beside its subject and its filter. Also
@@ -23,4 +25,7 @@ data ManaSpecification
     -- and for its reason: inventing one would be the engine making a player's
     -- choice.
     ChosenColor
-  deriving (Bounded, Enum, Eq, Ord, Show)
+  | -- | CR 106.1a: mana of this printed colour -- Crimson Hellkite's "Spend
+    -- only red mana on X".
+    OfColor Color.Color
+  deriving (Eq, Ord, Show)

@@ -46,6 +46,7 @@ import qualified Pawl.Registry as Registry
 import qualified Pawl.Scenario as Scenario
 import qualified Pawl.Spec as Spec
 import qualified Pawl.Support as S
+import qualified Pawl.Types.AbilityKind as AbilityKind
 import qualified Pawl.Types.AbilityName as AbilityName
 import qualified Pawl.Types.Action as Action.Type
 import qualified Pawl.Types.ActivatedAbility as ActivatedAbility
@@ -2495,7 +2496,7 @@ spec s registry = Spec.describe s "Pawl.Engine.Projection" $ do
   -- CR 604.2 gate reads. See ogreConversionNexus for the board.
   --
   -- This is the proving test for filterReads declaring that
-  -- HasNonManaActivatedAbility reads every aspect: with the row at Keywords
+  -- HasActivatedAbility reads every aspect: with the row at Keywords
   -- alone, movesSet screens the Conversion's {Types, Keywords} against the
   -- Nexus's {Subtypes}, finds them disjoint, and never asks changesAt -- so the
   -- Conversion applies first in CR 613.7 timestamp order against an Ogre that
@@ -3651,13 +3652,9 @@ spec s registry = Spec.describe s "Pawl.Engine.Projection" $ do
   -- keeps this from passing on a field hardwired True: it is a permanent with no
   -- activated ability at all, printed or intrinsic.
   --
-  -- A REGRESSION FENCE and not a proof of observable behaviour, per CLAUDE.md.
-  -- The only card in data/cards/ writing Filter.HasActivatedAbility is Zirda, the
-  -- Dawnwaker, whose CR 702.139a condition is evaluated only through viewOfCard
-  -- (Pawl.Engine.Companion.fulfilled), so no board in the pool can tell the other
-  -- two builders' answers apart yet. Mutating the shared reader out of
-  -- viewOfCharacteristics reddens the second assertion below and nothing else in
-  -- the suite.
+  -- Power Sink's scenario observes viewOfCharacteristics' answer at gameplay
+  -- level (its "lands with mana abilities" taps a Mountain); viewOfSnapshot's
+  -- is a REGRESSION FENCE, no card in data/cards/ asking it of a snapshot.
   Spec.it s "CR 305.6 / 602.1 a Mountain has an activated ability in every view builder" $ do
     mountain <- S.printingOf s registry "Mountain"
     traveler <- S.printingOf s registry "Doomed Traveler"
@@ -3667,19 +3664,18 @@ spec s registry = Spec.describe s "Pawl.Engine.Projection" $ do
           [] -> error "Pawl.ProjectionSpec: landsInPlay should place one Mountain"
         (travelerId, gs) = S.addPermanent traveler S.alice gs0
         snapshotView oid g = Count.viewOfSnapshot False Nothing Nothing False Map.empty Zone.Battlefield Zone.Battlefield Set.empty (Projection.project oid g)
-        asks view = Filter.matches (Filter.contextIn gs (Just S.alice) Nothing) view Filter.Type.HasActivatedAbility
+        asks view = Filter.matches (Filter.contextIn gs (Just S.alice) Nothing) view (Filter.Type.HasActivatedAbility Nothing)
     Spec.assertBool s (asks (Projection.viewOfCard (S.combinedFace mountain))) "viewOfCard: a Mountain card has one"
     Spec.assertBool s (asks (Projection.viewOfObject landId gs)) "viewOfCharacteristics: and so does the Mountain on the battlefield"
     Spec.assertBool s (asks (snapshotView landId gs)) "viewOfSnapshot: and so does a snapshot of it"
     Spec.assertBool s (not (asks (Projection.viewOfCard (S.combinedFace traveler)))) "viewOfCard: the Doomed Traveler has none"
     Spec.assertBool s (not (asks (Projection.viewOfObject travelerId gs))) "viewOfCharacteristics: nor on the battlefield"
     Spec.assertBool s (not (asks (snapshotView travelerId gs))) "viewOfSnapshot: nor in a snapshot"
-    -- CR 605.1a: the intrinsic ability IS a mana ability, so the sibling atom
-    -- answers False for the same Mountain in the same builders. Without this pair
-    -- the case above would pass just as well on a reading that dropped rule
-    -- 605.1a's exclusion from both fields.
-    Spec.assertBool s (not (Filter.nonManaActivatedAbility (Projection.viewOfObject landId gs))) "CR 605.1a excludes it from the sibling field"
-    Spec.assertBool s (not (Filter.nonManaActivatedAbility (snapshotView landId gs))) "CR 605.1a again, in the snapshot"
+    -- CR 605.1a: the intrinsic ability IS a mana ability, so the kinds hold
+    -- ManaAbility alone for the same Mountain in every builder.
+    Spec.assertEqWith s "CR 605.1a: viewOfCard's kind" (Filter.activatedAbilityKinds (Projection.viewOfCard (S.combinedFace mountain))) (Set.singleton AbilityKind.ManaAbility)
+    Spec.assertEqWith s "CR 605.1a: viewOfCharacteristics' kind" (Filter.activatedAbilityKinds (Projection.viewOfObject landId gs)) (Set.singleton AbilityKind.ManaAbility)
+    Spec.assertEqWith s "CR 605.1a again, in the snapshot" (Filter.activatedAbilityKinds (snapshotView landId gs)) (Set.singleton AbilityKind.ManaAbility)
 
   -- The same three builders under CR 613.1f: Humility strips the Dryad Arbor's
   -- CR 305.6 ability, and the two builders with a projection to read must say so
@@ -3696,7 +3692,7 @@ spec s registry = Spec.describe s "Pawl.Engine.Projection" $ do
         (arborId, gs1) = S.addPermanent arbor S.alice gs0
         gs = S.withHumility humility gs1
         snapshotView oid g = Count.viewOfSnapshot False Nothing Nothing False Map.empty Zone.Battlefield Zone.Battlefield Set.empty (Projection.project oid g)
-        asks view = Filter.matches (Filter.contextIn gs (Just S.alice) Nothing) view Filter.Type.HasActivatedAbility
+        asks view = Filter.matches (Filter.contextIn gs (Just S.alice) Nothing) view (Filter.Type.HasActivatedAbility Nothing)
     Spec.assertBool s (not (asks (Projection.viewOfObject arborId gs))) "viewOfCharacteristics: the ability is gone"
     Spec.assertBool s (not (asks (snapshotView arborId gs))) "viewOfSnapshot: and gone there too"
     Spec.assertBool s (asks (Projection.viewOfObject landId gs)) "viewOfCharacteristics: the Mountain is no creature and keeps its"
@@ -5129,7 +5125,7 @@ hostOfSourceSpec s registry = Spec.describe s "IsHostOfSource" $ do
       ((False, True), (True, True))
 
 -- CR 702.178a / 613.1: the "as long as" clause an ActivatedAbility carries, read
--- from INSIDE the layer fold by Filter.HasNonManaActivatedAbility.
+-- from INSIDE the layer fold by Filter.HasActivatedAbility.
 --
 -- Villainous Ogre ({2}{B} Creature -- Ogre Warrior 3/2, "This creature can't
 -- block." / "As long as you control a Demon, this creature has '{B}: Regenerate
@@ -5188,7 +5184,7 @@ conditionalAbilitySpec s registry = Spec.describe s "ConditionalActivatedAbility
         context = Filter.contextFor Teams.none (Just S.alice) (Just ogreId)
         onto bound =
           fmap
-            (\view -> Filter.matches context view Filter.Type.HasNonManaActivatedAbility)
+            (\view -> Filter.matches context view (Filter.Type.HasActivatedAbility (Just AbilityKind.NonManaAbility)))
             (Projection.viewUpTo bound cands gs ogreId)
     Spec.assertEqWith
       s
