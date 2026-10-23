@@ -1,0 +1,15 @@
+{
+  "description": "CR 702.3b / 611.2a whole card: Wall of Wonder gets +4/-4 until end of turn and can attack this turn as though it didn't have defender",
+  "note": "Alice pumps her 1/5 Wall to 5/1 at the beginning of combat and attacks bob for 5. On her next turn, unpumped, it can't attack, and her Grizzly Bears attack alone.",
+  "board": {"active": "alice", "step": "BeginningOfCombat", "seats": [{"name": "alice", "manaPool": "UUUU", "battlefield": [{"card": "Wall of Wonder", "label": "wall", "ready": true}, {"card": "Grizzly Bears", "label": "bears", "ready": true}], "library": [{"card": "Island"}, {"card": "Island"}, {"card": "Island"}]}, {"name": "bob", "library": [{"card": "Island"}, {"card": "Island"}, {"card": "Island"}]}]},
+  "timeline": [
+    {"turn": 1, "step": "BeginningOfCombat", "player": "alice", "do": {"Activate": {"object": "$wall"}}},
+    {"turn": 1, "step": "BeginningOfCombat", "player": "alice", "do": "Pass"},
+    {"turn": 1, "step": "BeginningOfCombat", "player": "alice", "check": {"PowerToughness": {"object": "$wall", "power": 5, "toughness": 1}}},
+    {"turn": 1, "step": "DeclareAttackers", "player": "alice", "do": {"Attack": ["$wall"]}},
+    {"turn": 1, "step": "EndOfCombat", "player": "alice", "check": {"Life": {"player": "bob", "life": 15}}},
+    {"turn": 3, "step": "DeclareAttackers", "player": "alice", "refuse": {"Attack": ["$wall"]}},
+    {"turn": 3, "step": "DeclareAttackers", "player": "alice", "do": {"Attack": ["$bears"]}},
+    {"turn": 3, "step": "EndOfCombat", "player": "alice", "check": {"Life": {"player": "bob", "life": 13}}}
+  ]
+}

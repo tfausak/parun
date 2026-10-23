@@ -1,0 +1,12 @@
+{
+  "description": "CR 508.3a whole card: Caltrops deals 1 damage to each creature that attacks, whoever controls it",
+  "note": "Bob controls Caltrops; alice attacks with Grizzly Bears and Hill Giant and keeps Gray Ogre home. Each attacker takes 1, the Ogre none.",
+  "board": {"active": "alice", "step": "BeginningOfCombat", "seats": [{"name": "alice", "battlefield": [{"card": "Grizzly Bears", "label": "bears", "ready": true}, {"card": "Hill Giant", "label": "giant", "ready": true}, {"card": "Gray Ogre", "label": "ogre", "ready": true}], "library": [{"card": "Island"}, {"card": "Island"}, {"card": "Island"}]}, {"name": "bob", "battlefield": [{"card": "Caltrops", "label": "caltrops"}], "library": [{"card": "Island"}, {"card": "Island"}, {"card": "Island"}]}]},
+  "timeline": [
+    {"turn": 1, "step": "DeclareAttackers", "player": "alice", "do": {"Attack": ["$bears", "$giant"]}},
+    {"turn": 1, "step": "DeclareAttackers", "player": "bob", "do": {"OrderTriggers": ["$caltrops", "$caltrops"]}},
+    {"turn": 1, "step": "DeclareBlockers", "player": "alice", "check": {"Damage": {"object": "$bears", "damage": 1}}},
+    {"turn": 1, "step": "DeclareBlockers", "player": "alice", "check": {"Damage": {"object": "$giant", "damage": 1}}},
+    {"turn": 1, "step": "DeclareBlockers", "player": "alice", "check": {"Damage": {"object": "$ogre", "damage": 0}}}
+  ]
+}

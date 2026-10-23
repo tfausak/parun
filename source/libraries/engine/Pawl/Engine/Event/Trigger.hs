@@ -611,6 +611,7 @@ looksBack condition = case condition of
   -- Nor is dealing damage: the host deals it from the battlefield.
   TriggerCondition.AttachedCreatureDealsDamage -> False
   TriggerCondition.PermanentsBecomeTapped _ -> False
+  TriggerCondition.PermanentBecomesTapped _ -> False
   -- Nor is becoming untapped: CR 701.26b leaves the permanent standing on
   -- the battlefield too, so the same live read is the right one.
   TriggerCondition.SelfBecomesUntapped -> False
@@ -899,6 +900,9 @@ batchScoped condition = case condition of
   -- tapping, however many it tapped -- a cost's taps, CR 508.1f's attackers, or
   -- one Effect.Tap -- so long as each of those sites brackets its loop.
   TriggerCondition.PermanentsBecomeTapped _ -> True
+  -- Thoughtleech's "whenever an Island ... becomes tapped" has no "one or
+  -- more", so each permanent a tapping event taps is its own occurrence.
+  TriggerCondition.PermanentBecomesTapped _ -> False
   -- The untap direction the same way, CR 502.3's simultaneous batch
   -- included: the condition is about the BEARER, so a batch that untaps a
   -- whole board still holds one occurrence of it.
@@ -2905,6 +2909,7 @@ zonesTriggeredFrom cond =
         TriggerCondition.AttachedCreatureBecomesTapped -> battlefield
         TriggerCondition.AttachedCreatureDealsDamage -> battlefield
         TriggerCondition.PermanentsBecomeTapped _ -> battlefield
+        TriggerCondition.PermanentBecomesTapped _ -> battlefield
         -- CR 110.5 makes tapped a permanent's status, so only a permanent can
         -- become untapped and only the battlefield can hold one.
         TriggerCondition.SelfBecomesUntapped -> battlefield
@@ -3444,6 +3449,7 @@ stateTriggersOn gs
             TriggerCondition.AttachedCreatureBecomesTapped -> False
             TriggerCondition.AttachedCreatureDealsDamage -> False
             TriggerCondition.PermanentsBecomeTapped _ -> False
+            TriggerCondition.PermanentBecomesTapped _ -> False
             -- CR 701.26b's untap is an EVENT for the identical reason,
             -- read off the bearer instead of its host.
             TriggerCondition.SelfBecomesUntapped -> False

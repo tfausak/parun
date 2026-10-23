@@ -1,0 +1,10 @@
+{
+  "description": "CR 701.20a / 701.20c whole card: Telepathy makes its controller's opponents play with their hands revealed",
+  "note": "Every player sees the cards in bob's and carol's hands; alice's own hand stays hers alone.",
+  "board": {"active": "alice", "step": "PrecombatMain", "seats": [{"name": "alice", "battlefield": [{"card": "Telepathy"}], "hand": [{"card": "Grizzly Bears", "label": "mine"}], "library": [{"card": "Island"}, {"card": "Island"}, {"card": "Island"}]}, {"name": "bob", "hand": [{"card": "Hill Giant", "label": "bobs"}], "library": [{"card": "Island"}, {"card": "Island"}, {"card": "Island"}]}, {"name": "carol", "hand": [{"card": "Craw Wurm", "label": "carols"}], "library": [{"card": "Island"}, {"card": "Island"}, {"card": "Island"}]}]},
+  "timeline": [
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "check": {"View": {"of": "Seers", "object": "$bobs", "is": ["alice", "bob", "carol"]}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "check": {"View": {"of": "Seers", "object": "$carols", "is": ["alice", "bob", "carol"]}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "check": {"View": {"of": "Seers", "object": "$mine", "is": ["alice"]}}}
+  ]
+}

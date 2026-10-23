@@ -2238,6 +2238,7 @@ representativeEvents cond =
         -- CR 120.1's event, the only one this condition admits.
         TriggerCondition.AttachedCreatureDealsDamage -> one (GameEvent.DamageDealt (DamageEvent.MkDamageEvent departed (Recipient.ToPlayer S.bob) 2 False False False 0 Nothing Nothing mempty False DamageKind.Noncombat))
         TriggerCondition.PermanentsBecomeTapped _ -> one (GameEvent.BecameTapped departed)
+        TriggerCondition.PermanentBecomesTapped _ -> one (GameEvent.BecameTapped departed)
         -- CR 701.26b's own event, and the only one this condition admits, on
         -- `departed`, which is not the bearer: the pair does not match, which
         -- pins the floor for a matching pair too, this arm binding nothing
@@ -2555,6 +2556,7 @@ everyTriggerCondition =
     TriggerCondition.AttachedCreatureBecomesTapped,
     TriggerCondition.AttachedCreatureDealsDamage,
     TriggerCondition.PermanentsBecomeTapped (Filter.Type.And []),
+    TriggerCondition.PermanentBecomesTapped (Filter.Type.And []),
     TriggerCondition.SelfBecomesUntapped,
     TriggerCondition.AttachedPermanentTappedForMana,
     -- ALL THREE relations, on the PermanentSacrificed rows' reasoning below:

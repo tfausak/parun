@@ -1,0 +1,12 @@
+{
+  "description": "CR 701.9a / 121.1 whole card: Tolarian Winds discards its controller's whole hand, then draws as many cards as were discarded",
+  "note": "Alice discards three cards and draws the top three of four, leaving the Forest on her library.",
+  "board": {"active": "alice", "step": "PrecombatMain", "seats": [{"name": "alice", "manaPool": "UU", "hand": [{"card": "Tolarian Winds", "label": "winds"}, {"card": "Swamp"}, {"card": "Swamp"}, {"card": "Swamp"}], "library": [{"card": "Island"}, {"card": "Island"}, {"card": "Island"}, {"card": "Forest"}]}, {"name": "bob", "library": [{"card": "Island"}, {"card": "Island"}, {"card": "Island"}]}]},
+  "timeline": [
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": {"Cast": {"object": "$winds"}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass"},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "check": {"Count": {"player": "alice", "zone": "Hand", "card": "Island", "count": 3}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "check": {"Count": {"player": "alice", "zone": "Graveyard", "card": "Swamp", "count": 3}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "check": {"Count": {"player": "alice", "zone": "Library", "card": "Forest", "count": 1}}}
+  ]
+}

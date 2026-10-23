@@ -1,0 +1,13 @@
+{
+  "description": "CR 106.12a / 603.2 whole card: Sanctimony lets its controller gain 1 life whenever an opponent taps a Mountain for mana",
+  "note": "Alice controls Sanctimony. Bob taps his Mountain to cast Lightning Bolt at her and she takes the 1 life; his Forest, tapped for nothing she watches, raises no prompt, nor does her own Mountain.",
+  "board": {"active": "bob", "step": "PrecombatMain", "seats": [{"name": "alice", "battlefield": [{"card": "Sanctimony"}, {"card": "Mountain", "label": "hers"}], "library": [{"card": "Island"}, {"card": "Island"}, {"card": "Island"}]}, {"name": "bob", "battlefield": [{"card": "Mountain", "label": "mountain"}, {"card": "Forest", "label": "forest"}], "hand": [{"card": "Lightning Bolt", "label": "bolt"}], "library": [{"card": "Island"}, {"card": "Island"}, {"card": "Island"}]}]},
+  "timeline": [
+    {"turn": 1, "step": "PrecombatMain", "player": "bob", "do": {"Take": {"action": "ActivateManaAbility $forest"}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "bob", "do": {"Cast": {"object": "$bolt", "targets": ["$alice"], "mana": ["$mountain"]}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "bob", "do": "Pass"},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": {"ChooseOptional": {"type": "Exercises"}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": {"Take": {"action": "ActivateManaAbility $hers"}}},
+    {"turn": 1, "step": "BeginningOfCombat", "player": "bob", "check": {"Life": {"player": "alice", "life": 18}}}
+  ]
+}

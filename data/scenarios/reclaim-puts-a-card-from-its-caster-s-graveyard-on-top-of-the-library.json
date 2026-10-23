@@ -1,0 +1,12 @@
+{
+  "description": "CR 115.1 whole card: Reclaim puts target card from its caster's graveyard on top of their library",
+  "note": "Bob's graveyard Craw Wurm is refused as a target; alice's Hill Giant goes on top of her three Islands, and her Grizzly Bears stay in her graveyard.",
+  "board": {"active": "alice", "step": "PrecombatMain", "seats": [{"name": "alice", "manaPool": "G", "hand": [{"card": "Reclaim", "label": "reclaim"}], "graveyard": [{"card": "Hill Giant", "label": "giant"}, {"card": "Grizzly Bears", "label": "bears"}], "library": [{"card": "Island", "label": "i1"}, {"card": "Island", "label": "i2"}, {"card": "Island", "label": "i3"}]}, {"name": "bob", "graveyard": [{"card": "Craw Wurm", "label": "wurm"}], "library": [{"card": "Island"}, {"card": "Island"}, {"card": "Island"}]}]},
+  "timeline": [
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "refuse": {"Cast": {"object": "$reclaim", "targets": ["$wurm"]}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": {"Cast": {"object": "$reclaim", "targets": ["$giant"]}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass"},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "check": {"View": {"of": "Zone", "player": "alice", "zone": "Library", "is": ["Hill Giant", "$i1", "$i2", "$i3"]}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "check": {"Count": {"player": "alice", "zone": "Graveyard", "card": "Grizzly Bears", "count": 1}}}
+  ]
+}

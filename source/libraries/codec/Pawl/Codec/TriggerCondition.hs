@@ -128,6 +128,7 @@ codec =
           Arm.nullary "AttachedCreatureBecomesTapped" TriggerCondition.AttachedCreatureBecomesTapped,
           Arm.nullary "AttachedCreatureDealsDamage" TriggerCondition.AttachedCreatureDealsDamage,
           Arm.payload "PermanentsBecomeTapped" filterCodec TriggerCondition.PermanentsBecomeTapped (\x -> case x of TriggerCondition.PermanentsBecomeTapped y -> Just y; _ -> Nothing),
+          Arm.payload "PermanentBecomesTapped" filterCodec TriggerCondition.PermanentBecomesTapped (\x -> case x of TriggerCondition.PermanentBecomesTapped y -> Just y; _ -> Nothing),
           Arm.nullary "SelfBecomesUntapped" TriggerCondition.SelfBecomesUntapped,
           Arm.nullary "AttachedPermanentTappedForMana" TriggerCondition.AttachedPermanentTappedForMana,
           Arm.payload "PermanentTappedForMana" PermanentTappedForMana.codec TriggerCondition.PermanentTappedForMana (\x -> case x of TriggerCondition.PermanentTappedForMana y -> Just y; _ -> Nothing),
@@ -276,6 +277,7 @@ tagOf x = case x of
   TriggerCondition.AttachedCreatureBecomesTapped {} -> "AttachedCreatureBecomesTapped"
   TriggerCondition.AttachedCreatureDealsDamage {} -> "AttachedCreatureDealsDamage"
   TriggerCondition.PermanentsBecomeTapped {} -> "PermanentsBecomeTapped"
+  TriggerCondition.PermanentBecomesTapped {} -> "PermanentBecomesTapped"
   TriggerCondition.SelfBecomesUntapped {} -> "SelfBecomesUntapped"
   TriggerCondition.AttachedPermanentTappedForMana {} -> "AttachedPermanentTappedForMana"
   TriggerCondition.PermanentTappedForMana {} -> "PermanentTappedForMana"

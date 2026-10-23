@@ -7,50 +7,7 @@ line) and running `pawl deck` on it: every unresolved name is reported.
 
 ## Expressible today
 
-These need no new capability, but `pawl translate` does not translate them yet.
-Each names the mtgish node the translator stops at, or what its rendering gets
-wrong. No missing Seventh Edition card's whole text is keywords, so
-`script/ingest` adds none of them.
-
-- Arcane Laboratory: `PlayerEffect:CantCastMoreThanNumberSpellsEachTurn`
-- Befoul: renders as nothing
-- Bellowing Fiend: `Trigger:WhenAPermanentDealsDamageToAPermanent`
-- Bereavement: `Player:ControllerOfDeadPermanent`
-- Blanchwood Armor: `StaticLayerEffect:AdjustPTForEach`
-- Bloodshot Cyclops: `GameNumber:PowerOfTheSacrificedCreature`
-- Caltrops: `Trigger:WhenACreatureAttacks`
-- Compost: `Trigger:WhenACardIsPutIntoAPlayersGraveyardFromAnywhere`
-- Corrupt: `GameNumber:TheAmountOfDamageDealtThisWay`
-- Crypt Rats: `Cost:PayManaX`
-- Darkest Hour: `StaticLayerEffect:SetColor`
-- Delusions of Mediocrity: `Trigger:WhenAPermanentLeavesTheBattlefield`
-- Dregs of Sorrow: `GameNumber:ValueX`
-- Engineered Plague: `ReplacementActionWouldEnter:ChooseACreatureType`
-- Force Spike: `Action:PlayerMayCost`
-- Grafted Skullcap: `Action:DiscardHand`
-- Granite Grip: `StaticLayerEffect:AdjustPTForEach`
-- Impatience: `Player:Trigger_ThatPlayer`
-- Intrepid Hero: `Permanents:PowerIs`
-- Mana Breach: `Action:PutAPermanentIntoItsOwnersHand`
-- Master Healer: `Action:CreateFuturePreventDamage`
-- Nature's Revolt: `StaticLayerEffect:SetPT`
-- Opposition: `Cost:TapAPermanent`
-- Ostracize: `Action:RevealHandAndPlayerChoosesACardToDiscard`
-- Reclaim: `Action:PutGraveyardCardOnTopOfLibrary`
-- Reprocess: `Action:SacrificeAnyNumberOfPermanents`
-- Rolling Stones: `PermanentRule:CanAttackAsThoughItDidntHaveDefender`
-- Sanctimony: `Trigger:WhenAPlayerTapsAPermanentForMana`
-- Seismic Assault: `Cost:DiscardACardOfType`
-- Spellbook: `Rule:PlayerEffect`
-- Steal Artifact: `StaticLayerEffect:SetController`
-- Tainted Aether: `Permanent:Trigger_ThatPermanent`
-- Telepathic Spies: `Action:LookAtPlayersHand`
-- Telepathy: `PlayerEffect:PlaysWithHandRevealed`
-- Thoughtleech: `Trigger:WhenAPermanentBecomesTapped`
-- Tolarian Winds: `Action:DiscardHand`
-- Vernal Bloom: `Trigger:WhenAPermanentIsTappedForMana`
-- Wall of Wonder: `Action:CreatePermanentRuleEffectUntil`
-- Yavimaya Enchantress: `StaticLayerEffect:AdjustPTForEach`
+Every expressible Seventh Edition card has been added to `data/cards/`.
 
 ## Needs a capability
 

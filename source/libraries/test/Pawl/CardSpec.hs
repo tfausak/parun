@@ -1055,6 +1055,7 @@ triggerConditionCounts triggerCondition = case triggerCondition of
   TriggerCondition.AttachedCreatureBecomesTapped -> []
   TriggerCondition.AttachedCreatureDealsDamage -> []
   TriggerCondition.PermanentsBecomeTapped _ -> []
+  TriggerCondition.PermanentBecomesTapped _ -> []
   TriggerCondition.SelfBecomesUntapped -> []
   TriggerCondition.AttachedPermanentTappedForMana -> []
   -- CR 106.12a's bystander reading carries a PlayerRelation and a Filter,
@@ -4504,6 +4505,7 @@ triggerConditionFilters triggerCondition = case triggerCondition of
   -- Deeproot Pilgrimage's "nontoken Merfolk you control" is card text, swept
   -- like PermanentsDie's.
   TriggerCondition.PermanentsBecomeTapped f -> unframed [f]
+  TriggerCondition.PermanentBecomesTapped f -> unframed [f]
   TriggerCondition.SelfBecomesUntapped -> []
   TriggerCondition.AttachedPermanentTappedForMana -> []
   TriggerCondition.SelfExploits -> []
@@ -4827,6 +4829,7 @@ triggerConditionSlots triggerCondition = case triggerCondition of
   TriggerCondition.AttachedCreatureBecomesTapped -> []
   TriggerCondition.AttachedCreatureDealsDamage -> []
   TriggerCondition.PermanentsBecomeTapped _ -> []
+  TriggerCondition.PermanentBecomesTapped _ -> []
   TriggerCondition.SelfBecomesUntapped -> []
   TriggerCondition.AttachedPermanentTappedForMana -> []
   TriggerCondition.PermanentTappedForMana {} -> []

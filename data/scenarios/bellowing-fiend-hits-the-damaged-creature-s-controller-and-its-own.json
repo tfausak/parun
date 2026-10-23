@@ -1,0 +1,14 @@
+{
+  "description": "CR 603.2 / 608.2h whole card: whenever Bellowing Fiend deals damage to a creature, it deals 3 damage to that creature's controller and 3 damage to its own controller",
+  "note": "Carol owns the Ornithopter but bob controls it and blocks the Fiend with it. The Ornithopter dies to the damage; bob, its controller as it last existed, takes 3, carol none, and alice 3.",
+  "board": {"active": "alice", "step": "BeginningOfCombat", "seats": [{"name": "alice", "battlefield": [{"card": "Bellowing Fiend", "label": "fiend", "ready": true}], "library": [{"card": "Island"}, {"card": "Island"}, {"card": "Island"}]}, {"name": "bob", "library": [{"card": "Island"}, {"card": "Island"}, {"card": "Island"}]}, {"name": "carol", "battlefield": [{"card": "Ornithopter", "label": "thopter", "controller": "bob", "ready": true}], "library": [{"card": "Island"}, {"card": "Island"}, {"card": "Island"}]}]},
+  "timeline": [
+    {"turn": 1, "step": "DeclareAttackers", "player": "alice", "do": {"Attack": ["$fiend"]}},
+    {"turn": 1, "step": "DeclareAttackers", "player": "alice", "source": "$fiend", "do": {"ChooseAttackTarget": "$bob"}},
+    {"turn": 1, "step": "DeclareBlockers", "player": "bob", "do": {"Block": {"$thopter": ["$fiend"]}}},
+    {"turn": 1, "step": "EndOfCombat", "player": "alice", "check": {"Count": {"player": "carol", "zone": "Graveyard", "card": "Ornithopter", "count": 1}}},
+    {"turn": 1, "step": "EndOfCombat", "player": "alice", "check": {"Life": {"player": "bob", "life": 17}}},
+    {"turn": 1, "step": "EndOfCombat", "player": "alice", "check": {"Life": {"player": "carol", "life": 20}}},
+    {"turn": 1, "step": "EndOfCombat", "player": "alice", "check": {"Life": {"player": "alice", "life": 17}}}
+  ]
+}
