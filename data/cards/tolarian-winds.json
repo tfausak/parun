@@ -1,0 +1,69 @@
+{
+  "faces": [
+    {
+      "manaCost": [
+        {
+          "type": "Generic",
+          "value": 1
+        },
+        {
+          "type": "OfType",
+          "value": {
+            "type": "Colored",
+            "value": {
+              "type": "Blue"
+            }
+          }
+        }
+      ],
+      "name": "Tolarian Winds",
+      "oracleText": "Discard all the cards in your hand, then draw that many cards.",
+      "spell": {
+        "modes": [
+          {
+            "clauses": [
+              {
+                "effects": [
+                  {
+                    "type": "Discard",
+                    "value": {
+                      "type": "These",
+                      "value": {
+                        "cards": {
+                          "type": "EachCardInYourHand"
+                        },
+                        "discarded": "discarded"
+                      }
+                    }
+                  },
+                  {
+                    "type": "Draw",
+                    "value": {
+                      "player": {
+                        "type": "Relative",
+                        "value": {
+                          "type": "You"
+                        }
+                      },
+                      "quantity": {
+                        "type": "BoundCount",
+                        "value": "discarded"
+                      }
+                    }
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      "typeLine": {
+        "types": [
+          {
+            "type": "Instant"
+          }
+        ]
+      }
+    }
+  ]
+}

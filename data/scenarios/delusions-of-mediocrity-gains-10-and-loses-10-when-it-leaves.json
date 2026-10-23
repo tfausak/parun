@@ -1,0 +1,15 @@
+{
+  "description": "CR 603.6a / 603.6c whole card: Delusions of Mediocrity gains its controller 10 life as it enters and loses them 10 when it leaves",
+  "note": "Alice casts it and goes to 30, then destroys it with her own Disenchant and goes back to 20.",
+  "board": {"active": "alice", "step": "PrecombatMain", "seats": [{"name": "alice", "manaPool": "UUUU", "battlefield": [{"card": "Plains", "label": "p1"}, {"card": "Plains", "label": "p2"}], "hand": [{"card": "Delusions of Mediocrity", "label": "delusions"}, {"card": "Disenchant", "label": "disenchant"}], "library": [{"card": "Island"}, {"card": "Island"}, {"card": "Island"}]}, {"name": "bob", "library": [{"card": "Island"}, {"card": "Island"}, {"card": "Island"}]}]},
+  "timeline": [
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": {"Cast": {"object": "$delusions", "mana": [null]}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass"},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass"},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "check": {"Life": {"player": "alice", "life": 30}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": {"Cast": {"object": "$disenchant", "targets": ["Delusions of Mediocrity"], "mana": ["$p1", "$p2"]}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass"},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass"},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "check": {"Life": {"player": "alice", "life": 20}}}
+  ]
+}

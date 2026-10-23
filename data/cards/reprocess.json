@@ -1,0 +1,114 @@
+{
+  "faces": [
+    {
+      "manaCost": [
+        {
+          "type": "Generic",
+          "value": 2
+        },
+        {
+          "type": "OfType",
+          "value": {
+            "type": "Colored",
+            "value": {
+              "type": "Black"
+            }
+          }
+        },
+        {
+          "type": "OfType",
+          "value": {
+            "type": "Colored",
+            "value": {
+              "type": "Black"
+            }
+          }
+        }
+      ],
+      "name": "Reprocess",
+      "oracleText": "Sacrifice any number of artifacts, creatures, and/or lands. Draw a card for each permanent sacrificed this way.",
+      "spell": {
+        "modes": [
+          {
+            "clauses": [
+              {
+                "effects": [
+                  {
+                    "type": "Sacrifice",
+                    "value": {
+                      "ref": {
+                        "type": "ChosenPermanents",
+                        "value": {
+                          "count": {
+                            "type": "UpTo"
+                          },
+                          "filter": {
+                            "type": "And",
+                            "value": [
+                              {
+                                "type": "Or",
+                                "value": [
+                                  {
+                                    "type": "HasCardType",
+                                    "value": {
+                                      "type": "Artifact"
+                                    }
+                                  },
+                                  {
+                                    "type": "HasCardType",
+                                    "value": {
+                                      "type": "Creature"
+                                    }
+                                  },
+                                  {
+                                    "type": "HasCardType",
+                                    "value": {
+                                      "type": "Land"
+                                    }
+                                  }
+                                ]
+                              },
+                              {
+                                "type": "ControlledBy",
+                                "value": {
+                                  "type": "You"
+                                }
+                              }
+                            ]
+                          }
+                        }
+                      },
+                      "sacrificed": "sacrificed"
+                    }
+                  },
+                  {
+                    "type": "Draw",
+                    "value": {
+                      "player": {
+                        "type": "Relative",
+                        "value": {
+                          "type": "You"
+                        }
+                      },
+                      "quantity": {
+                        "type": "InSlot",
+                        "value": "sacrificed"
+                      }
+                    }
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      "typeLine": {
+        "types": [
+          {
+            "type": "Sorcery"
+          }
+        ]
+      }
+    }
+  ]
+}

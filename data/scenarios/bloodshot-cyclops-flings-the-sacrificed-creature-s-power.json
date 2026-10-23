@@ -1,0 +1,12 @@
+{
+  "description": "CR 602.2 / 608.2h whole card: Bloodshot Cyclops taps and sacrifices a creature to deal damage equal to its power to any target",
+  "note": "Alice sacrifices her 3/3 Hill Giant rather than her 2/2 Grizzly Bears, so bob takes 3.",
+  "board": {"active": "alice", "step": "PrecombatMain", "seats": [{"name": "alice", "battlefield": [{"card": "Bloodshot Cyclops", "label": "cyclops", "ready": true}, {"card": "Hill Giant", "label": "giant"}, {"card": "Grizzly Bears", "label": "bears"}], "library": [{"card": "Island"}, {"card": "Island"}, {"card": "Island"}]}, {"name": "bob", "library": [{"card": "Island"}, {"card": "Island"}, {"card": "Island"}]}]},
+  "timeline": [
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": {"Activate": {"object": "$cyclops", "targets": ["$bob"], "costOrder": [0, 1]}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": {"Answer": {"prompt": "ChooseSacrifices", "with": ["$giant"]}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass"},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "check": {"Life": {"player": "bob", "life": 17}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "check": {"Count": {"player": "alice", "zone": "Battlefield", "card": "Grizzly Bears", "count": 1}}}
+  ]
+}

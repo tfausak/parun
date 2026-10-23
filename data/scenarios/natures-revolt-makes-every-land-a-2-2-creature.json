@@ -1,0 +1,12 @@
+{
+  "description": "CR 613.1d / 613.4b whole card: Nature's Revolt makes every land a 2/2 creature that is still a land",
+  "note": "Alice's Forest and bob's Island are both Creature Lands and 2/2; bob's Caltrops, not a land, is untouched.",
+  "board": {"active": "alice", "step": "PrecombatMain", "seats": [{"name": "alice", "battlefield": [{"card": "Nature's Revolt"}, {"card": "Forest", "label": "forest"}], "library": [{"card": "Island"}, {"card": "Island"}, {"card": "Island"}]}, {"name": "bob", "battlefield": [{"card": "Island", "label": "island"}, {"card": "Caltrops", "label": "caltrops"}], "library": [{"card": "Island"}, {"card": "Island"}, {"card": "Island"}]}]},
+  "timeline": [
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "check": {"Types": {"object": "$forest", "types": ["Creature", "Land"]}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "check": {"PowerToughness": {"object": "$forest", "power": 2, "toughness": 2}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "check": {"Types": {"object": "$island", "types": ["Creature", "Land"]}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "check": {"PowerToughness": {"object": "$island", "power": 2, "toughness": 2}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "check": {"Types": {"object": "$caltrops", "types": ["Artifact"]}}}
+  ]
+}

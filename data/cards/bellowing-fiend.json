@@ -1,0 +1,102 @@
+{
+  "faces": [
+    {
+      "keywords": [
+        {
+          "type": "Flying"
+        }
+      ],
+      "manaCost": [
+        {
+          "type": "Generic",
+          "value": 4
+        },
+        {
+          "type": "OfType",
+          "value": {
+            "type": "Colored",
+            "value": {
+              "type": "Black"
+            }
+          }
+        }
+      ],
+      "name": "Bellowing Fiend",
+      "oracleText": "Flying\nWhenever this creature deals damage to a creature, this creature deals 3 damage to that creature's controller and 3 damage to you.",
+      "power": {
+        "type": "Literal",
+        "value": 3
+      },
+      "toughness": {
+        "type": "Literal",
+        "value": 3
+      },
+      "triggeredAbilities": [
+        {
+          "condition": {
+            "type": "SelfDealsDamageToCreature"
+          },
+          "modal": {
+            "modes": [
+              {
+                "clauses": [
+                  {
+                    "effects": [
+                      {
+                        "type": "DealDamage",
+                        "value": {
+                          "parts": [
+                            {
+                              "quantity": {
+                                "type": "Literal",
+                                "value": 3
+                              },
+                              "ref": {
+                                "type": "Players",
+                                "value": {
+                                  "type": "ControllerOfBound",
+                                  "value": "became"
+                                }
+                              }
+                            },
+                            {
+                              "quantity": {
+                                "type": "Literal",
+                                "value": 3
+                              },
+                              "ref": {
+                                "type": "Players",
+                                "value": {
+                                  "type": "Relative",
+                                  "value": {
+                                    "type": "You"
+                                  }
+                                }
+                              }
+                            }
+                          ]
+                        }
+                      }
+                    ]
+                  }
+                ]
+              }
+            ]
+          }
+        }
+      ],
+      "typeLine": {
+        "subtypes": [
+          {
+            "type": "Spirit"
+          }
+        ],
+        "types": [
+          {
+            "type": "Creature"
+          }
+        ]
+      }
+    }
+  ]
+}

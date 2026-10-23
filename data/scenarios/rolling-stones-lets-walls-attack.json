@@ -1,0 +1,9 @@
+{
+  "description": "CR 702.3b whole card: Rolling Stones lets Wall creatures attack as though they didn't have defender",
+  "note": "Bob controls Rolling Stones, and it lets alice's Wall of Wonder attack too: bob takes 1.",
+  "board": {"active": "alice", "step": "BeginningOfCombat", "seats": [{"name": "alice", "battlefield": [{"card": "Wall of Wonder", "label": "wall", "ready": true}], "library": [{"card": "Island"}, {"card": "Island"}, {"card": "Island"}]}, {"name": "bob", "battlefield": [{"card": "Rolling Stones"}], "library": [{"card": "Island"}, {"card": "Island"}, {"card": "Island"}]}]},
+  "timeline": [
+    {"turn": 1, "step": "DeclareAttackers", "player": "alice", "do": {"Attack": ["$wall"]}},
+    {"turn": 1, "step": "EndOfCombat", "player": "alice", "check": {"Life": {"player": "bob", "life": 19}}}
+  ]
+}

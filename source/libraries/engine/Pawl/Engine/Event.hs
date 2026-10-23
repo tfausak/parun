@@ -10338,6 +10338,7 @@ controllerTurnScoped cond = case cond of
   TriggerCondition.AttachedCreatureBecomesTapped -> False
   TriggerCondition.AttachedCreatureDealsDamage -> False
   TriggerCondition.PermanentsBecomeTapped _ -> False
+  TriggerCondition.PermanentBecomesTapped _ -> False
   -- Nor CR 701.26b: CR 502.3's untap step is the active player's, but an
   -- Effect.Untap and CR 107.6's untap symbol reach any turn.
   TriggerCondition.SelfBecomesUntapped -> False

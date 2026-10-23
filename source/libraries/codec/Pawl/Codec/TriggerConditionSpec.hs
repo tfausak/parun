@@ -682,6 +682,13 @@ spec s = Spec.describe s "Pawl.Codec.TriggerCondition" $ do
       TriggerCondition.codec
       (TriggerCondition.PermanentsBecomeTapped (Filter.Not Filter.IsToken))
       " {\"type\":\"PermanentsBecomeTapped\",\"value\":{\"type\":\"Not\",\"value\":{\"type\":\"IsToken\"}}} "
+  -- The same tap read once per permanent; the tag is the whole difference.
+  Spec.it s "PermanentBecomesTapped round-trips with its Filter" $
+    Common.assertCodec
+      s
+      TriggerCondition.codec
+      (TriggerCondition.PermanentBecomesTapped (Filter.HasSubtype Subtype.Island))
+      " {\"type\":\"PermanentBecomesTapped\",\"value\":{\"type\":\"HasSubtype\",\"value\":{\"type\":\"Island\"}}} "
   -- CR 701.26b's untap read off the BEARER. Nullary for the arm above's reason,
   -- and the TAG is the whole difference between the two directions of one status.
   Spec.it s "SelfBecomesUntapped" $
