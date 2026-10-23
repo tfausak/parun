@@ -2612,7 +2612,7 @@ affectedChooserOf gs event = case event of
   ProposedEvent.WouldPlaneswalk pid _ -> Just pid
 
 -- CR 208.2b / 707.2: stamp a chosen entry shape into the object's copiable
--- snapshot. Power and toughness are SET; keywords are UNIONED into whatever is
+-- snapshot. Power and toughness are SET; keywords and subtypes are UNIONED into whatever is
 -- already there, which is what Primal Plasma's own Gatherer ruling requires -- a
 -- 1/6 with flying and defender is only reachable if the choice ADDS defender to
 -- a snapshot that already carries flying from the copy.
@@ -2637,7 +2637,9 @@ applyEntryOption oid option gs =
             -- The option's keywords are one card's printed text (CR 208.2b), so
             -- each arrives once; unionWith (+) adds them to whatever the copy
             -- snapshot already carries rather than absorbing a repeat.
-            PC.keywords = Map.unionWith (+) (PC.keywords base) (Map.fromSet (const 1) (EntryOption.keywords option))
+            PC.keywords = Map.unionWith (+) (PC.keywords base) (Map.fromSet (const 1) (EntryOption.keywords option)),
+            -- Primal Clay's "Wall ... in addition to its other types".
+            PC.subtypes = Set.union (PC.subtypes base) (EntryOption.subtypes option)
           }
       write o = o {Object.bindings = Binding.setCopy stamped (Object.bindings o)}
       -- A row following its source's host is not among them: what an

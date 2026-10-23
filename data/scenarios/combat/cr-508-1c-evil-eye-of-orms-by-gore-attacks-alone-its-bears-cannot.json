@@ -1,0 +1,32 @@
+{
+  "description": "CR 508.1c Evil Eye of Orms-by-Gore attacks alone, its Bears cannot",
+  "note": "Non-Eye creatures alice controls can't attack: her Grizzly Bears beside the Eye is refused, and the Eye attacks on its own. Bob's Bears are not hers and attack on his turn.",
+  "board": {
+    "seats": [
+      {
+        "name": "alice",
+        "battlefield": [
+          { "card": "Evil Eye of Orms-by-Gore", "label": "eye", "ready": true },
+          { "card": "Grizzly Bears", "label": "bears", "ready": true }
+        ],
+        "library": [{ "card": "Island" }, { "card": "Island" }]
+      },
+      {
+        "name": "bob",
+        "battlefield": [{ "card": "Grizzly Bears", "label": "bobs-bears", "ready": true }],
+        "library": [{ "card": "Island" }, { "card": "Island" }]
+      }
+    ],
+    "active": "alice",
+    "step": "PrecombatMain"
+  },
+  "timeline": [
+    { "turn": 1, "step": "DeclareAttackers", "player": "alice", "refuse": { "Attack": ["$eye", "$bears"] } },
+    { "turn": 1, "step": "DeclareAttackers", "player": "alice", "do": { "Attack": ["$eye"] } },
+    { "turn": 1, "step": "DeclareBlockers", "player": "bob", "do": { "Block": {} } },
+    { "turn": 1, "step": "PostcombatMain", "player": "alice", "check": { "Life": { "player": "bob", "life": 17 } } },
+    { "turn": 2, "step": "DeclareAttackers", "player": "bob", "do": { "Attack": ["$bobs-bears"] } },
+    { "turn": 2, "step": "DeclareBlockers", "player": "alice", "do": { "Block": {} } },
+    { "turn": 2, "step": "PostcombatMain", "player": "bob", "check": { "Life": { "player": "alice", "life": 18 } } }
+  ]
+}

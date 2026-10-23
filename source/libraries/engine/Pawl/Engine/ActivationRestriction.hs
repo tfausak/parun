@@ -392,6 +392,7 @@ spendableTypes :: ObjectId -> [ActivationRestriction.ActivationRestriction] -> G
 spendableTypes srcId restrictions gs =
   let named restriction = case restriction of
         ActivationRestriction.SpendOnly ManaSpecification.ChosenColor -> Just (Set.map ManaType.Colored (Maybe.fromMaybe Set.empty (Game.choiceWithLastKnown Chosen.Colors (Game.acquisitionOf srcId gs) srcId gs)))
+        ActivationRestriction.SpendOnly (ManaSpecification.OfColor color) -> Just (Set.singleton (ManaType.Colored color))
         ActivationRestriction.SpendOnly ManaSpecification.AnyMana -> Nothing
         -- The rest time or count an activation and say nothing of its mana.
         _ -> Nothing

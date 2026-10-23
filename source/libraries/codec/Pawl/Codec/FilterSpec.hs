@@ -6,6 +6,7 @@ import qualified Pawl.Codec.Keyword as Keyword
 import qualified Pawl.JsonCodec.Codec as Codec
 import qualified Pawl.JsonCodec.Common as Common
 import qualified Pawl.Spec as Spec
+import qualified Pawl.Types.AbilityKind as AbilityKind
 import qualified Pawl.Types.BlockStatus as BlockStatus
 import qualified Pawl.Types.BoundMeasure as BoundMeasure
 import qualified Pawl.Types.CardName as CardName
@@ -615,18 +616,18 @@ spec s = Spec.describe s "Pawl.Codec.Filter" $ do
       codec
       Filter.IsBlockedBySource
       " {\"type\":\"IsBlockedBySource\"} "
-  Spec.it s "HasNonManaActivatedAbility" $
-    Common.assertCodec
-      s
-      codec
-      Filter.HasNonManaActivatedAbility
-      " {\"type\":\"HasNonManaActivatedAbility\"} "
   Spec.it s "HasActivatedAbility" $
     Common.assertCodec
       s
       codec
-      Filter.HasActivatedAbility
+      (Filter.HasActivatedAbility Nothing)
       " {\"type\":\"HasActivatedAbility\"} "
+  Spec.it s "HasActivatedAbility NonManaAbility" $
+    Common.assertCodec
+      s
+      codec
+      (Filter.HasActivatedAbility (Just AbilityKind.NonManaAbility))
+      " {\"type\":\"HasActivatedAbility\",\"value\":{\"type\":\"NonManaAbility\"}} "
   Spec.it s "IsInZone Graveyard" $
     Common.assertCodec
       s

@@ -1,0 +1,37 @@
+{
+  "description": "CR 106.4 Mana Short taps bob's lands and empties his pool",
+  "note": "Bob floats {R}{R}; Mana Short taps every land he controls, Evolving Wilds included, and his pool is empty afterward with nothing added to alice's.",
+  "board": {
+    "seats": [
+      {
+        "name": "alice",
+        "battlefield": [
+          { "card": "Island", "label": "i1", "ready": true },
+          { "card": "Island", "label": "i2", "ready": true },
+          { "card": "Island", "label": "i3", "ready": true }
+        ],
+        "hand": [{ "card": "Mana Short", "label": "short" }],
+        "library": [{ "card": "Island" }]
+      },
+      {
+        "name": "bob",
+        "manaPool": "RR",
+        "battlefield": [
+          { "card": "Mountain", "label": "m1", "ready": true },
+          { "card": "Evolving Wilds", "label": "wilds", "ready": true }
+        ],
+        "library": [{ "card": "Island" }]
+      }
+    ],
+    "active": "alice",
+    "step": "PrecombatMain"
+  },
+  "timeline": [
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": { "Cast": { "object": "$short", "targets": ["$bob"], "mana": ["$i1", "$i2", "$i3"] } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass" },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "check": { "View": { "of": "ManaPool", "player": "bob", "is": [] } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "check": { "View": { "of": "ManaPool", "player": "alice", "is": [] } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "check": { "Tapped": { "object": "$m1", "tapped": true } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "check": { "Tapped": { "object": "$wilds", "tapped": true } } }
+  ]
+}

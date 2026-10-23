@@ -94,7 +94,7 @@ sicknessOkGiven pcs pid srcId ability =
 -- depending on objects having activated abilities sees it. That second question
 -- is asked of Pawl.Engine.Projection.abilitiesGiven -- which mints those
 -- abilities on the battlefield too, and is what Tsabo's Web reads through
--- Filter.HasNonManaActivatedAbility -- and this function then withholds them here
+-- Filter.HasActivatedAbility -- and this function then withholds them here
 -- through functionsIn.
 --
 -- This is the LONE-QUERY convenience wrapper: it precomputes nothing, so it

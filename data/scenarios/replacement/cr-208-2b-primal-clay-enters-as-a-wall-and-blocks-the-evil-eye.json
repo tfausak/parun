@@ -1,0 +1,40 @@
+{
+  "description": "CR 208.2b Primal Clay enters as a Wall and blocks the Evil Eye",
+  "note": "Alice picks the 1/6 Wall option; on bob's turn his Evil Eye of Orms-by-Gore, which can't be blocked except by Walls, is refused alice's Grizzly Bears as a blocker and is blocked by the Clay, so alice takes no damage.",
+  "board": {
+    "seats": [
+      {
+        "name": "alice",
+        "battlefield": [
+          { "card": "Island", "label": "i1", "ready": true },
+          { "card": "Island", "label": "i2", "ready": true },
+          { "card": "Island", "label": "i3", "ready": true },
+          { "card": "Island", "label": "i4", "ready": true },
+          { "card": "Grizzly Bears", "label": "bears", "ready": true }
+        ],
+        "hand": [{ "card": "Primal Clay", "label": "clay" }],
+        "library": [{ "card": "Island" }, { "card": "Island" }]
+      },
+      {
+        "name": "bob",
+        "battlefield": [{ "card": "Evil Eye of Orms-by-Gore", "label": "eye", "ready": true }],
+        "library": [{ "card": "Island" }, { "card": "Island" }]
+      }
+    ],
+    "active": "alice",
+    "step": "PrecombatMain"
+  },
+  "timeline": [
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": { "Answer": { "prompt": "ChooseEntryOption", "with": 2 } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": { "Cast": { "object": "$clay", "mana": ["$i1", "$i2", "$i3", "$i4"] } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass" },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "check": { "Subtypes": { "object": "Primal Clay", "subtypes": ["Shapeshifter", "Wall"] } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "check": { "PowerToughness": { "object": "Primal Clay", "power": 1, "toughness": 6 } } },
+    { "turn": 1, "step": "DeclareAttackers", "player": "alice", "do": { "Attack": [] } },
+    { "turn": 2, "step": "DeclareAttackers", "player": "bob", "do": { "Attack": ["$eye"] } },
+    { "turn": 2, "step": "DeclareBlockers", "player": "alice", "refuse": { "Block": { "$bears": ["$eye"] } } },
+    { "turn": 2, "step": "DeclareBlockers", "player": "alice", "do": { "Block": { "Primal Clay": ["$eye"] } } },
+    { "turn": 2, "step": "PostcombatMain", "player": "bob", "check": { "Life": { "player": "alice", "life": 20 } } },
+    { "turn": 2, "step": "PostcombatMain", "player": "bob", "check": { "Damage": { "object": "Primal Clay", "damage": 3 } } }
+  ]
+}

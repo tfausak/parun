@@ -303,18 +303,14 @@ viewOfCardLapsed lapsed face =
           -- builder reads (Keyword.activatedAbilitiesOf): the printed abilities
           -- and rule 702's, battlefield ones included -- a Vehicle card HAS crew
           -- (CR 702.122a). No text change reaches a printed face, and CR 804.2
-          -- gives its ability to a creature on the battlefield only.
-          Filter.nonManaActivatedAbility = not (all ManaAbility.isManaAbility roster),
-          -- CR 602.1 over the same roster, without CR 605.1a's exclusion --
-          -- Zirda, the Dawnwaker's companion condition is read here, since a card
-          -- outside the game has no object to project.
+          -- gives its ability to a creature on the battlefield only. Zirda, the
+          -- Dawnwaker's companion condition is read here, since a card outside
+          -- the game has no object to project.
           --
-          -- CR 305.6's intrinsic ability is the disjunct, through the reader every
-          -- view builder shares: a Mountain must answer the same here as it does
-          -- on the battlefield.
-          Filter.hasActivatedAbility =
-            not (null roster)
-              || Subtype.intrinsicManaAbility (TypeLine.types typeLine) (TypeLine.subtypes typeLine),
+          -- CR 305.6's intrinsic ability through the reader every view builder
+          -- shares: a Mountain must answer the same here as it does on the
+          -- battlefield.
+          Filter.activatedAbilityKinds = ManaAbility.abilityKinds (Subtype.intrinsicManaAbility (TypeLine.types typeLine) (TypeLine.subtypes typeLine)) roster,
           -- CR 702.184c reaches a permanent's CONTROLLER; this builder describes
           -- a printed FACE with no controller and no board to grant it one.
           Filter.grantsStationToughness = False
@@ -834,9 +830,6 @@ viewOfCharacteristics peers oid pc controller counters gs =
       -- characteristics (CR 109.3) written by layer 6. The whole list the object
       -- HAS, not the list it can activate here. LAZY -- see the field's own comment
       -- in Pawl.Engine.Filter.
-      Filter.nonManaActivatedAbility = not (all ManaAbility.isManaAbility (abilitiesFromCharacteristics peers pc oid gs)),
-      -- CR 602.1 off the same list, without CR 605.1a's exclusion. LAZY for its
-      -- neighbour's reason.
       --
       -- CR 305.6's intrinsic ability is a disjunct here and not a member of that
       -- list, because Count.abilitiesOf mints rule 702's abilities (and CR
@@ -845,13 +838,7 @@ viewOfCharacteristics peers oid pc controller counters gs =
       -- PROJECTION, so a land that lost its basic land type in layer 4 has lost
       -- the ability with it (CR 305.7) and one that lost all its abilities in
       -- layer 6 has too (CR 613.1f).
-      --
-      -- The neighbour above needs no such disjunct and is right without one: CR
-      -- 605.1a makes the intrinsic ability a mana ability, which that field
-      -- excludes.
-      Filter.hasActivatedAbility =
-        not (null (abilitiesFromCharacteristics peers pc oid gs))
-          || Subtype.intrinsicManaAbilityOf pc,
+      Filter.activatedAbilityKinds = ManaAbility.abilityKinds (Subtype.intrinsicManaAbilityOf pc) (abilitiesFromCharacteristics peers pc oid gs),
       -- CR 702.184c off the PROJECTION, applyModification's GrantsStationToughness
       -- arm being layer 6's only writer.
       Filter.grantsStationToughness = PC.grantsStationToughness pc

@@ -588,7 +588,7 @@ spec s registry = Spec.describe s "Pawl.Engine.Replacement" $ do
     pikerPrinting <- S.printingOf s registry "Goblin Piker"
     let (piker, g1) = S.addPermanent pikerPrinting S.alice (Setup.emptyGame S.bothPlayers)
         (ts, g2) = Game.freshTimestamp g1
-        onlyOption = EntryOption.MkEntryOption {EntryOption.power = 3, EntryOption.toughness = 3, EntryOption.keywords = Set.empty}
+        onlyOption = EntryOption.MkEntryOption {EntryOption.power = 3, EntryOption.toughness = 3, EntryOption.keywords = Set.empty, EntryOption.subtypes = Set.empty}
         active =
           ActiveReplacement.MkActiveReplacement
             { ActiveReplacement.effect = ReplacementEffect.EntryR (EntryR.MkEntryR Filter.Type.IsSource (EntryRewrite.ChoiceOf [onlyOption])),

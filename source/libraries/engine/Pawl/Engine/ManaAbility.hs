@@ -7,8 +7,8 @@
 -- beside them, which the mana supply model asks of a mana ability's effects.
 --
 -- The ability-level half lives here rather than in Pawl.Engine.Mana because
--- Pawl.Engine.Projection needs it -- CR 605.1a's exclusion is half of
--- Filter.HasNonManaActivatedAbility, and Mana imports Projection, so the
+-- Pawl.Engine.Projection needs it -- CR 605.1a's classification is half of
+-- Filter.HasActivatedAbility, and Mana imports Projection, so the
 -- classification had to sit below both.
 --
 -- Here rather than in Pawl.Engine.Resolve so that Pawl.Engine.Mana need not
@@ -27,7 +27,9 @@ module Pawl.Engine.ManaAbility where
 import qualified Data.Foldable as Foldable
 import qualified Data.Map.Strict as Map
 import qualified Data.Maybe as Maybe
+import qualified Data.Set as Set
 import qualified Pawl.Engine.Modal as Modal
+import qualified Pawl.Types.AbilityKind as AbilityKind
 import qualified Pawl.Types.ActivatedAbility as ActivatedAbility
 import qualified Pawl.Types.Ante as Ante
 import qualified Pawl.Types.Card as Card.Type
@@ -70,8 +72,8 @@ import qualified Pawl.Types.ZonePair as ZonePair
 -- checked here). Read at three sites:
 -- Mana.manaRoutesOfGiven includes a mana ability as a source,
 -- Activatable.activatableGiven refuses to put one on the stack (CR 605.3b), and
--- Projection's view builders answer Filter.HasNonManaActivatedAbility with its
--- negation. What Action.legalActions offers instead is
+-- Projection's view builders answer Filter.HasActivatedAbility through
+-- abilityKinds above. What Action.legalActions offers instead is
 -- Action.ActivateManaAbility, one per Mana.manaSourcesGiven, which is CR 605.3a's
 -- priority window.
 --
@@ -97,6 +99,14 @@ import qualified Pawl.Types.ZonePair as ZonePair
 -- a guard. Every clause here reads an ActivatedAbility's PRINTED effects out of
 -- the card, so no replacement effect is in scope to take into account, and the
 -- self-replacement ones the rule does admit are written into those effects.
+-- CR 605.1a's kind of each ability on a roster, plus CR 305.6's intrinsic mana
+-- ability where `intrinsic` says the object has one, since no roster holds it:
+-- Filter.View's activatedAbilityKinds, filled by every view builder through
+-- this one function so that they cannot disagree about one object.
+abilityKinds :: Bool -> [ActivatedAbility.ActivatedAbility Card.Type.Card (GrantedAbility.GrantedAbility Card.Type.Card)] -> Set.Set AbilityKind.AbilityKind
+abilityKinds intrinsic roster =
+  Set.fromList ([AbilityKind.ManaAbility | intrinsic] <> fmap (\ab -> if isManaAbility ab then AbilityKind.ManaAbility else AbilityKind.NonManaAbility) roster)
+
 isManaAbility :: ActivatedAbility.ActivatedAbility Card.Type.Card (GrantedAbility.GrantedAbility Card.Type.Card) -> Bool
 isManaAbility ab =
   let effects = Modal.allEffects (ActivatedAbility.modal ab)

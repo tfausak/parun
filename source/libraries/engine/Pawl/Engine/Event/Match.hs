@@ -10670,3 +10670,4 @@ producedSpecified gs bearer specified produced = case specified of
   ManaSpecification.AnyMana -> True
   ManaSpecification.ChosenColor ->
     any (\color -> Set.member (ManaType.Colored color) produced) (Maybe.fromMaybe Set.empty (Game.currentChoice Chosen.Colors bearer gs))
+  ManaSpecification.OfColor color -> Set.member (ManaType.Colored color) produced

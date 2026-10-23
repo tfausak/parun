@@ -1,0 +1,75 @@
+{
+  "faces": [
+    {
+      "activatedAbilities": [
+        {
+          "cost": {
+            "mana": [
+              {
+                "type": "Generic",
+                "value": 1
+              }
+            ]
+          },
+          "modal": {
+            "modes": [
+              {
+                "clauses": [
+                  {
+                    "effects": [
+                      {
+                        "type": "RedirectDamage",
+                        "value": {
+                          "chosenSource": {
+                            "type": "And",
+                            "value": []
+                          },
+                          "duration": {
+                            "type": "UntilEndOfTurn"
+                          },
+                          "from": {
+                            "type": "InSlot",
+                            "value": "target"
+                          },
+                          "to": {
+                            "type": "InSlot",
+                            "value": "you"
+                          },
+                          "uses": {
+                            "type": "Once"
+                          }
+                        }
+                      }
+                    ]
+                  }
+                ],
+                "targetSlots": {
+                  "target": {
+                    "pool": {
+                      "type": "Creatures"
+                    }
+                  }
+                }
+              }
+            ]
+          }
+        }
+      ],
+      "manaCost": [
+        {
+          "type": "Generic",
+          "value": 4
+        }
+      ],
+      "name": "Jade Monolith",
+      "oracleText": "{1}: The next time a source of your choice would deal damage to target creature this turn, that source deals that damage to you instead.",
+      "typeLine": {
+        "types": [
+          {
+            "type": "Artifact"
+          }
+        ]
+      }
+    }
+  ]
+}

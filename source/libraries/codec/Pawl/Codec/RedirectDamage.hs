@@ -9,10 +9,13 @@ import qualified Pawl.Codec.Keyword as Keyword
 import qualified Pawl.Codec.ObjectRef as ObjectRef
 import qualified Pawl.Codec.PlayerRelation as PlayerRelation
 import qualified Pawl.Codec.Quantity as Quantity
+import qualified Pawl.Codec.Uses as Uses
 import qualified Pawl.JsonCodec.Codec as Codec
 import qualified Pawl.JsonCodec.Common as Common
 import qualified Pawl.JsonCodec.Fields as Fields
+import qualified Pawl.Types.Filter as Filter
 import qualified Pawl.Types.RedirectDamage as RedirectDamage
+import qualified Pawl.Types.Uses as Uses.Type
 
 -- | A bare object keyed by the record's field names. Naming them is the point:
 -- 'RedirectDamage.from' and 'RedirectDamage.to' are both an ObjectRef, so a
@@ -21,7 +24,8 @@ import qualified Pawl.Types.RedirectDamage as RedirectDamage
 --
 -- CR 609.7a's chosen source is 'Fields.defaulted', as Pawl.Codec.PreventAllDamage
 -- writes the same field: a redirection naming no source (Turn the Tables) writes
--- exactly the keys it wrote before this field existed.
+-- exactly the keys it wrote before this field existed. So are CR 614.3's use
+-- count and CR 609.7b's described source, for the same reason.
 codec :: Codec.Codec RedirectDamage.RedirectDamage
 codec = Fields.object $ do
   duration <- Fields.required "duration" Duration.codec RedirectDamage.duration
@@ -32,6 +36,8 @@ codec = Fields.object $ do
   whoRecipient <- Fields.defaulted "whoRecipient" Nothing (Common.maybe PlayerRelation.codec) RedirectDamage.whoRecipient
   to <- Fields.required "to" ObjectRef.codec RedirectDamage.to
   chosenSource <- Fields.defaulted "chosenSource" Nothing (Common.maybe (Filter.codec Keyword.codec)) RedirectDamage.chosenSource
+  uses <- Fields.defaulted "uses" Uses.Type.Unlimited Uses.codec RedirectDamage.uses
+  whatSource <- Fields.defaulted "whatSource" (Filter.And []) (Filter.codec Keyword.codec) RedirectDamage.whatSource
   pure
     RedirectDamage.MkRedirectDamage
       { RedirectDamage.duration = duration,
@@ -41,5 +47,7 @@ codec = Fields.object $ do
         RedirectDamage.whatRecipient = whatRecipient,
         RedirectDamage.whoRecipient = whoRecipient,
         RedirectDamage.to = to,
-        RedirectDamage.chosenSource = chosenSource
+        RedirectDamage.chosenSource = chosenSource,
+        RedirectDamage.uses = uses,
+        RedirectDamage.whatSource = whatSource
       }

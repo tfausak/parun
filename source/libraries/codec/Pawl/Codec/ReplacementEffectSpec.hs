@@ -138,8 +138,8 @@ spec s =
                 ( EntryR.MkEntryR
                     Filter.IsSource
                     ( EntryRewrite.ChoiceOf
-                        [ EntryOption.MkEntryOption {EntryOption.power = 3, EntryOption.toughness = 3, EntryOption.keywords = Set.empty},
-                          EntryOption.MkEntryOption {EntryOption.power = 1, EntryOption.toughness = 6, EntryOption.keywords = Set.singleton Keyword.Defender}
+                        [ EntryOption.MkEntryOption {EntryOption.power = 3, EntryOption.toughness = 3, EntryOption.keywords = Set.empty, EntryOption.subtypes = Set.empty},
+                          EntryOption.MkEntryOption {EntryOption.power = 1, EntryOption.toughness = 6, EntryOption.keywords = Set.singleton Keyword.Defender, EntryOption.subtypes = Set.empty}
                         ]
                     )
                 )
