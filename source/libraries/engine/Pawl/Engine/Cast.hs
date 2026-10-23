@@ -405,8 +405,9 @@ targetable castFor pid oid name gs = case proposedFace oid name gs of
         fillableWhen chosen paid = Target.fillableModes Nothing (Just pid) Map.empty oid given (trimModalForCandidate castFor paid (Face.spell chosen)) gs
         -- CR 700.2e: castable when SOME player the caster could have choose
         -- has a selection to make, each reading the slots as that player's
-        -- "that player" bakes them. The bake is a REGRESSION FENCE: every
-        -- "that player" slot in the pool admits zero targets.
+        -- "that player" bakes them. The bake is a REGRESSION FENCE: Fatal
+        -- Lore's slot admits zero targets, so its unbaked reading is castable
+        -- too.
         possibleFor chooser =
           let chosen = chosenBy chooser face
            in Modal.selectionPossible (Set.unions (fmap (fillableWhen chosen) paidReadings)) (Modal.Type.selection (Face.spell face))
@@ -667,8 +668,8 @@ castAimable key announced x pid oid gs = case Game.faceOf oid gs of
         -- mutating creature spell aims at the creature it will merge with.
         enchant = Map.union (Card.enchantSlotMapGiven enchants) (Card.mutateSlotMapGiven mutating)
         -- CR 700.2e: the slots as castProposed reads them, baked to the mode
-        -- chooser it stamped before pricing anything. A REGRESSION FENCE: no
-        -- card pairs a mode chooser with a target-reading cost.
+        -- chooser it stamped before pricing anything. A REGRESSION FENCE:
+        -- Fatal Lore's cost reads no target, so nothing it prices reaches here.
         face = maybe printedFace (`chosenBy` printedFace) (Game.lookupObject oid gs >>= Map.lookup Binding.modeChooser . Binding.playerSlots . Object.bindings)
         -- CR 601.2c's alternative targets: the slots the cost being priced
         -- chooses. Once CR 601.2a's move is made, the board carries every
