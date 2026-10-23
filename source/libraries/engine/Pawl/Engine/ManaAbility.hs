@@ -99,14 +99,6 @@ import qualified Pawl.Types.ZonePair as ZonePair
 -- a guard. Every clause here reads an ActivatedAbility's PRINTED effects out of
 -- the card, so no replacement effect is in scope to take into account, and the
 -- self-replacement ones the rule does admit are written into those effects.
--- CR 605.1a's kind of each ability on a roster, plus CR 305.6's intrinsic mana
--- ability where `intrinsic` says the object has one, since no roster holds it:
--- Filter.View's activatedAbilityKinds, filled by every view builder through
--- this one function so that they cannot disagree about one object.
-abilityKinds :: Bool -> [ActivatedAbility.ActivatedAbility Card.Type.Card (GrantedAbility.GrantedAbility Card.Type.Card)] -> Set.Set AbilityKind.AbilityKind
-abilityKinds intrinsic roster =
-  Set.fromList ([AbilityKind.ManaAbility | intrinsic] <> fmap (\ab -> if isManaAbility ab then AbilityKind.ManaAbility else AbilityKind.NonManaAbility) roster)
-
 isManaAbility :: ActivatedAbility.ActivatedAbility Card.Type.Card (GrantedAbility.GrantedAbility Card.Type.Card) -> Bool
 isManaAbility ab =
   let effects = Modal.allEffects (ActivatedAbility.modal ab)
@@ -114,6 +106,14 @@ isManaAbility ab =
         && Map.null (Modal.allTargetSlots (ActivatedAbility.modal ab))
         && not (any movesLibraryCard effects)
         && not (any costMovesLibraryCard (Cost.components (ActivatedAbility.cost ab)))
+
+-- CR 605.1a's kind of each ability on a roster, plus CR 305.6's intrinsic mana
+-- ability where `intrinsic` says the object has one, since no roster holds it:
+-- Filter.View's activatedAbilityKinds, filled by every view builder through
+-- this one function so that they cannot disagree about one object.
+abilityKinds :: Bool -> [ActivatedAbility.ActivatedAbility Card.Type.Card (GrantedAbility.GrantedAbility Card.Type.Card)] -> Set.Set AbilityKind.AbilityKind
+abilityKinds intrinsic roster =
+  Set.fromList ([AbilityKind.ManaAbility | intrinsic] <> fmap (\ab -> if isManaAbility ab then AbilityKind.ManaAbility else AbilityKind.NonManaAbility) roster)
 
 -- CR 605.1b: a TRIGGERED ability is a mana ability if it doesn't require a
 -- target, triggers from the activation or resolution of an activated mana

@@ -25,6 +25,7 @@ data ManaSpecification
     -- and for its reason: inventing one would be the engine making a player's
     -- choice.
     ChosenColor
-  | -- | CR 106.1a: mana of this printed colour -- Crimson Hellkite's "Spend only red mana on X".
+  | -- | CR 106.1a: mana of this printed colour -- Crimson Hellkite's "Spend
+    -- only red mana on X".
     OfColor Color.Color
   deriving (Eq, Ord, Show)

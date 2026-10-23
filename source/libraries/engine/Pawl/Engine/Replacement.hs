@@ -2612,10 +2612,10 @@ affectedChooserOf gs event = case event of
   ProposedEvent.WouldPlaneswalk pid _ -> Just pid
 
 -- CR 208.2b / 707.2: stamp a chosen entry shape into the object's copiable
--- snapshot. Power and toughness are SET; keywords and subtypes are UNIONED into whatever is
--- already there, which is what Primal Plasma's own Gatherer ruling requires -- a
--- 1/6 with flying and defender is only reachable if the choice ADDS defender to
--- a snapshot that already carries flying from the copy.
+-- snapshot. Power and toughness are SET; keywords and subtypes are UNIONED into
+-- whatever is already there, which is what Primal Plasma's own Gatherer ruling
+-- requires -- a 1/6 with flying and defender is only reachable if the choice
+-- ADDS defender to a snapshot that already carries flying from the copy.
 --
 -- WHERE it is written follows layer 1a's reading: a stored copy row covering
 -- the object (Vesuvan Shapeshifter's copy, which can end) outranks the stamp, so
