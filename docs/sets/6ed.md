@@ -202,8 +202,6 @@ first.
 
 - #4491: Rowen. A draw-time reveal granted from the battlefield, linked to a
   trigger.
-- #5493: Forbidden Crypt. A draw replacement that returns a graveyard card, and
-  loses the game when it can't.
 - #5311: Juxtapose. "The greatest mana value among" outside an edict, then a
   swap of each player's pick.
 - #5310: Tariff. A payment priced at the mana cost of the creature a player

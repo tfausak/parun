@@ -10957,7 +10957,7 @@ enteredBeside oid gs = case Trigger.entryGroup oid gs of
       ]
 
 -- CR 614.1a: run the effects a replacement put in an event's place -- Kill-Suit
--- Cultist's destruction, Lich's Mirror's reset. Drains
+-- Cultist's destruction, Lich's Mirror's reset, Forbidden Crypt's loss. Drains
 -- GameState.pendingReplacementEffects, which Pawl.Engine.Event filled --
 -- runPreventionRiders above in every structural respect and for the same reason.
 -- Emptied before the effects run, so an effect whose own damage is replaced
@@ -10966,9 +10966,9 @@ enteredBeside oid gs = case Trigger.entryGroup oid gs of
 -- For damage, every caller runs it BEFORE runPreventionRiders and before the
 -- next state-based action check: the replaced event and the rest of its batch
 -- were simultaneous (CR 616.1), so what happens instead of it lands before CR
--- 704.5g reads the board. For a loss of the game, it runs after each resolved
--- instruction; a loss a state-based action check meets runs inside that check
--- instead (Sba.performStateBasedActions' `instead`, runDamageRewriteEffect).
+-- 704.5g reads the board. For a loss of the game or a draw, it runs after each
+-- resolved instruction and in every settle before priority; a loss a
+-- state-based action check meets runs inside that check instead (Sba.performStateBasedActions' `instead`, runDamageRewriteEffect).
 -- The callers GameState.pendingReplacementEffects lists keep it empty at every
 -- priority window.
 runReplacementEffects :: Game Result -> Game ()

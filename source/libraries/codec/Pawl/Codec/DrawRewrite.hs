@@ -14,7 +14,8 @@ codec =
       Arm.payload "FromOutsideTheGame" FromOutsideTheGame.codec DrawRewrite.FromOutsideTheGame (\x -> case x of DrawRewrite.FromOutsideTheGame y -> Just y; _ -> Nothing),
       Arm.payload "Dredge" Common.natural DrawRewrite.Dredge (\x -> case x of DrawRewrite.Dredge y -> Just y; _ -> Nothing),
       Arm.nullary "YouDraw" DrawRewrite.YouDraw,
-      Arm.payload "OthersMayPayLife" Common.natural DrawRewrite.OthersMayPayLife (\x -> case x of DrawRewrite.OthersMayPayLife y -> Just y; _ -> Nothing)
+      Arm.payload "OthersMayPayLife" Common.natural DrawRewrite.OthersMayPayLife (\x -> case x of DrawRewrite.OthersMayPayLife y -> Just y; _ -> Nothing),
+      Arm.nullary "FromGraveyardOrLose" DrawRewrite.FromGraveyardOrLose
     ]
 
 tagOf :: DrawRewrite.DrawRewrite -> String
@@ -24,3 +25,4 @@ tagOf x = case x of
   DrawRewrite.Dredge {} -> "Dredge"
   DrawRewrite.YouDraw {} -> "YouDraw"
   DrawRewrite.OthersMayPayLife {} -> "OthersMayPayLife"
+  DrawRewrite.FromGraveyardOrLose {} -> "FromGraveyardOrLose"

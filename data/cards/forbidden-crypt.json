@@ -1,0 +1,78 @@
+{
+  "faces": [
+    {
+      "manaCost": [
+        {
+          "type": "Generic",
+          "value": 3
+        },
+        {
+          "type": "OfType",
+          "value": {
+            "type": "Colored",
+            "value": {
+              "type": "Black"
+            }
+          }
+        },
+        {
+          "type": "OfType",
+          "value": {
+            "type": "Colored",
+            "value": {
+              "type": "Black"
+            }
+          }
+        }
+      ],
+      "name": "Forbidden Crypt",
+      "oracleText": "If you would draw a card, return a card from your graveyard to your hand instead. If you can't, you lose the game.\nIf a card would be put into your graveyard from anywhere, exile that card instead.",
+      "replacementEffects": [
+        {
+          "effect": {
+            "type": "DrawR",
+            "value": {
+              "rewrite": {
+                "type": "FromGraveyardOrLose"
+              },
+              "whose": {
+                "type": "You"
+              }
+            }
+          }
+        },
+        {
+          "effect": {
+            "type": "ZoneChangeR",
+            "value": {
+              "destination": {
+                "type": "Exile"
+              },
+              "matching": {
+                "whatObject": {
+                  "type": "Not",
+                  "value": {
+                    "type": "IsToken"
+                  }
+                },
+                "whenDestination": {
+                  "type": "Graveyard"
+                },
+                "whoseObject": {
+                  "type": "You"
+                }
+              }
+            }
+          }
+        }
+      ],
+      "typeLine": {
+        "types": [
+          {
+            "type": "Enchantment"
+          }
+        ]
+      }
+    }
+  ]
+}

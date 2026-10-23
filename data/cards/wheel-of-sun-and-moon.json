@@ -55,6 +55,12 @@
                 "type": "Library"
               },
               "matching": {
+                "whatObject": {
+                  "type": "Not",
+                  "value": {
+                    "type": "IsToken"
+                  }
+                },
                 "whenDestination": {
                   "type": "Graveyard"
                 },

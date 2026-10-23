@@ -1,0 +1,21 @@
+{
+  "description": "CR 614.11 Forbidden Crypt replaces alice's draw-step draw from an empty library, so CR 704.5b never sees an attempted draw",
+  "note": "Her library is empty and one card waits in her graveyard. The draw-step draw returns Hill Giant instead, and alice plays on.",
+  "board": {
+    "active": "alice",
+    "turn": 2,
+    "step": "Upkeep",
+    "seats": [
+      {
+        "name": "alice",
+        "battlefield": [{ "card": "Forbidden Crypt" }],
+        "graveyard": [{ "card": "Hill Giant" }]
+      },
+      { "name": "bob", "library": [{ "card": "Forest" }] }
+    ]
+  },
+  "timeline": [
+    { "turn": 2, "step": "PrecombatMain", "player": "alice", "check": { "Count": { "player": "alice", "zone": "Hand", "card": "Hill Giant", "count": 1 } } },
+    { "turn": 2, "step": "PrecombatMain", "player": "alice", "check": { "View": { "of": "Result", "is": null } } }
+  ]
+}

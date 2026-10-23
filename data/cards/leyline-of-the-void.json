@@ -54,6 +54,12 @@
                 "type": "Exile"
               },
               "matching": {
+                "whatObject": {
+                  "type": "Not",
+                  "value": {
+                    "type": "IsToken"
+                  }
+                },
                 "whenDestination": {
                   "type": "Graveyard"
                 },
