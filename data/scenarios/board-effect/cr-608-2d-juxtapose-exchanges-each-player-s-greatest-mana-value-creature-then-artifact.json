@@ -1,0 +1,55 @@
+{
+  "description": "CR 608.2d / 701.12b Juxtapose exchanges the creature and then the artifact each player controls with the greatest mana value, the tied player choosing",
+  "note": "Bob ties at mana value 5 and picks the Serra Angel, the second offered; his Wind Drake and Alice's Grizzly Bears and Braidwood Sextant are not their controllers' greatest. Carol's Craw Wurm and Crucible of Worlds outrank everything but are not Alice's or the target player's. Alice's greatest of each is unique, so she is never asked; each is placed after her lesser one, so a fallback to the first offered would pick wrong.",
+  "board": {
+    "active": "alice",
+    "step": "PrecombatMain",
+    "seats": [
+      {
+        "name": "alice",
+        "manaPool": "UUUU",
+        "library": [{ "card": "Island" }, { "card": "Island" }],
+        "hand": [{ "card": "Juxtapose", "label": "juxtapose" }],
+        "battlefield": [
+          { "card": "Grizzly Bears", "label": "a-bears" },
+          { "card": "Hill Giant", "label": "a-giant" },
+          { "card": "Braidwood Sextant", "label": "a-sextant" },
+          { "card": "Crawlspace", "label": "a-crawlspace" }
+        ]
+      },
+      {
+        "name": "bob",
+        "library": [{ "card": "Island" }, { "card": "Island" }],
+        "battlefield": [
+          { "card": "Air Elemental", "label": "b-air" },
+          { "card": "Serra Angel", "label": "b-angel" },
+          { "card": "Wind Drake", "label": "b-drake" },
+          { "card": "Crown of the Ages", "label": "b-crown" }
+        ]
+      },
+      {
+        "name": "carol",
+        "library": [{ "card": "Island" }, { "card": "Island" }],
+        "battlefield": [
+          { "card": "Craw Wurm", "label": "c-wurm" },
+          { "card": "Crucible of Worlds", "label": "c-crucible" }
+        ]
+      }
+    ]
+  },
+  "timeline": [
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": { "Cast": { "object": "$juxtapose", "targets": ["$bob"] } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass" },
+    { "turn": 1, "step": "PrecombatMain", "player": "bob", "do": { "Answer": { "prompt": "ChoosePermanent", "with": "$b-angel" } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "check": { "View": { "of": "Controller", "object": "$a-giant", "is": "bob" } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "check": { "View": { "of": "Controller", "object": "$b-angel", "is": "alice" } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "check": { "View": { "of": "Controller", "object": "$a-crawlspace", "is": "bob" } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "check": { "View": { "of": "Controller", "object": "$b-crown", "is": "alice" } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "check": { "View": { "of": "Controller", "object": "$b-air", "is": "bob" } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "check": { "View": { "of": "Controller", "object": "$b-drake", "is": "bob" } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "check": { "View": { "of": "Controller", "object": "$a-bears", "is": "alice" } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "check": { "View": { "of": "Controller", "object": "$a-sextant", "is": "alice" } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "check": { "View": { "of": "Controller", "object": "$c-wurm", "is": "carol" } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "check": { "View": { "of": "Controller", "object": "$c-crucible", "is": "carol" } } }
+  ]
+}

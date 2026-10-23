@@ -652,11 +652,13 @@ enclosingAmountOffends card = snd (enclosingAmountCounts card) /= 0
 otherCandidateTag :: Text.Text
 otherCandidateTag = Text.pack "OfEachOtherCandidate"
 
--- How many of those operands sit in an edict's own filter, and how many anywhere
--- else. Pawl.Engine.Replacement.sacrificeCandidates is the one filler of
--- Filter.Context.candidateMeasures, so the operand anywhere else is a silent
--- False. Counted off the encoding for amountedSlotAtoms' reason: the position is
--- the enclosing PlayerSacrifices, which no Framing names.
+-- How many of those operands sit in an edict's or a chosen permanent's own
+-- filter, and how many anywhere else. Filter.amongCandidates is the one filler
+-- of Filter.Context.candidateMeasures, called for an edict's pool and the
+-- battlefield's, so the operand anywhere else is a silent False. Counted off
+-- the encoding for amountedSlotAtoms' reason: the position is the enclosing
+-- PlayerSacrifices, ChoosePermanents or ChosenPermanents, which no Framing
+-- names.
 otherCandidateCounts :: Face.Face Card.Type.Card -> (Int, Int)
 otherCandidateCounts card =
   let encoded = Codec.encode (Face.Codec.codec Card.codec) card
@@ -665,13 +667,17 @@ otherCandidateCounts card =
         Value.Object o ->
           let pairs = Object.unwrap o
               keyed k = fmap Pair.value (filter (\pair -> String.unwrap (Pair.name pair) == Text.pack k) pairs)
-              isEdict = any (\v -> case v of Value.String t -> String.unwrap t == Text.pack "PlayerSacrifices"; _ -> False) (keyed "type")
-              filterOf v = case v of
-                Value.Object x -> [Pair.value pair | pair <- Object.unwrap x, String.unwrap (Pair.name pair) == Text.pack "filter"]
+              typed tag = any (\v -> case v of Value.String t -> String.unwrap t == Text.pack tag; _ -> False) (keyed "type")
+              field name v = case v of
+                Value.Object x -> [Pair.value pair | pair <- Object.unwrap x, String.unwrap (Pair.name pair) == Text.pack name]
                 _ -> []
-           in if isEdict
-                then sum (fmap (jsonAtoms otherCandidateTag) (concatMap filterOf (keyed "value")))
-                else sum (fmap (edicts . Pair.value) pairs)
+              positioned
+                | typed "PlayerSacrifices" || typed "ChosenPermanents" = Just (concatMap (field "filter") (keyed "value"))
+                | typed "ChoosePermanents" = Just (concatMap (field "filter") (concatMap (field "permanents") (keyed "value")))
+                | otherwise = Nothing
+           in case positioned of
+                Just filters -> sum (fmap (jsonAtoms otherCandidateTag) filters)
+                Nothing -> sum (fmap (edicts . Pair.value) pairs)
         Value.String _ -> 0
         Value.Null _ -> 0
         Value.Boolean _ -> 0
@@ -1960,29 +1966,39 @@ filterPositionLintSpec s registry = Spec.describe s "Lint" $ do
             }
     Spec.assertEqWith s "a planted atom in a reference pick naming no amount is an offence" (enclosingAmountCounts (conjuring Nothing)) (0, 1)
     Spec.assertEqWith s "and one naming an amount is not" (enclosingAmountCounts (conjuring (Just (Quantity.Type.Literal 4)))) (1, 0)
-  -- CR 608.2d's other-candidates operand is answerable only in an edict's own
-  -- filter. See otherCandidateCounts.
-  Spec.it s "CR 608.2d no card compares against other candidates outside an edict" $ do
+  -- CR 608.2d's other-candidates operand is answerable only in an edict's or a
+  -- chosen permanent's own filter. See otherCandidateCounts.
+  Spec.it s "CR 608.2d no card compares against other candidates outside an edict or a chosen permanent" $ do
     ps <- S.allPrintings s
     let offenders = filter (anyFace ((/= 0) . snd . otherCandidateCounts) . Printing.card) ps
-    Spec.assertEqWith s "the operand sits only in an edict's filter" (fmap (S.nameOf . Printing.card) offenders) []
-    -- NOT vacuous: these author it, and are accepted.
-    let authors =
-          [ "Break Under Pressure",
-            "Consumed by Greed",
-            "Crackling Doom",
-            "Extract a Confession",
-            "Flare of Malice",
-            "Myrkul's Edict",
-            "Professor Onyx",
-            "Riveteers Charm",
-            "Soul Shatter",
-            "The Dining Car",
-            "Witch-king, Bringer of Ruin"
+    Spec.assertEqWith s "the operand sits only in an edict's or a chosen permanent's filter" (fmap (S.nameOf . Printing.card) offenders) []
+    -- NOT vacuous: these author it, and are accepted -- each with how many.
+    -- Juxtapose writes two, one per ChoosePermanents.
+    let authors :: [(String, Int)]
+        authors =
+          [ ("Break Under Pressure", 1),
+            ("Consumed by Greed", 1),
+            ("Crackling Doom", 1),
+            ("Drop of Honey", 1),
+            ("Extract a Confession", 1),
+            ("Fall of the Impostor", 1),
+            ("Flare of Malice", 1),
+            ("Highcliff Felidar", 1),
+            ("Juxtapose", 2),
+            ("Myrkul's Edict", 1),
+            ("Penregon Besieged", 1),
+            ("Porphyry Nodes", 1),
+            ("Professor Onyx", 1),
+            ("Purging Scythe", 1),
+            ("Riveteers Charm", 1),
+            ("Soul Shatter", 1),
+            ("Summon: Valefor", 1),
+            ("The Dining Car", 1),
+            ("Witch-king, Bringer of Ruin", 1)
           ]
-    counted <- traverse (\name -> fmap (\p -> (name, otherCandidateCounts (S.combinedFace p))) (S.printingOf s registry name)) authors
-    Spec.assertEqWith s "each author's one operand is in its edict" counted (fmap (\name -> (name, (1, 0))) authors)
-    Spec.assertEqWith s "and they are the pool's only ones" (sum (fmap (uncurry (+) . otherCandidateCounts . S.combinedFace) ps)) (length authors)
+    counted <- traverse (\(name, _) -> fmap (\p -> (name, otherCandidateCounts (S.combinedFace p))) (S.printingOf s registry name)) authors
+    Spec.assertEqWith s "each author's operands are in its edict or chosen permanents" counted (fmap (\(name, n) -> (name, (n, 0))) authors)
+    Spec.assertEqWith s "and they are the pool's only ones" (sum (fmap (uncurry (+) . otherCandidateCounts . S.combinedFace) ps)) (sum (fmap snd authors))
     -- The rejected side: the same atom in a target slot's filter.
     piker <- S.printingOf s registry "Goblin Piker"
     let atom = Filter.Type.And [Filter.Type.HasCardType CardType.Creature, Filter.Type.Measures (Measures.MkMeasures Measure.Power Comparison.AtLeast (Operand.OfEachOtherCandidate Measure.Power))]

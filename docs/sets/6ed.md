@@ -104,8 +104,6 @@ none of them.
 Each group is tracked by its issue; its cards are added when it lands. Hardest
 first.
 
-- #5311: Juxtapose. "The greatest mana value among" outside an edict, then a
-  swap of each player's pick.
 - #5310: Tariff. A payment priced at the mana cost of the creature a player
   just picked.
 - #5405: Library of Lat-Nam. An opponent chooses the mode.
