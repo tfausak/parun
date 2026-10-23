@@ -10,6 +10,7 @@
 module Pawl.Oracle where
 
 import qualified Control.Monad as Monad
+import qualified Data.Containers.ListUtils as ListUtils
 import qualified Data.List.NonEmpty as NonEmpty
 import qualified Data.Map.Strict as Map
 import qualified Data.Maybe as Maybe
@@ -23,6 +24,7 @@ import qualified Pawl.Oracle.Keyword as Keyword
 import qualified Pawl.Oracle.Normalise as Normalise
 import qualified Pawl.Oracle.Prose as Prose
 import qualified Pawl.Oracle.Target as Target
+import qualified Pawl.Oracle.Trigger as Trigger
 import qualified Pawl.Types.ActivatedAbility as ActivatedAbility
 import qualified Pawl.Types.Activator as Activator
 import qualified Pawl.Types.Card as Card
@@ -33,7 +35,6 @@ import qualified Pawl.Types.CostComponent as CostComponent
 import qualified Pawl.Types.Face as Face
 import qualified Pawl.Types.Keyword as Keyword.Type
 import qualified Pawl.Types.Layout as Layout
-import qualified Pawl.Types.TriggerCondition as TriggerCondition
 import qualified Pawl.Types.TriggerLimit as TriggerLimit
 import qualified Pawl.Types.TriggeredAbility as TriggeredAbility
 import qualified Pawl.Types.TypeLine as TypeLine
@@ -105,7 +106,7 @@ without whole part = case (whole, part) of
 faceAbilities :: Face.Face Card.Card -> [[Text.Text]]
 faceAbilities face =
   let self = CardName.unwrap (Face.name face)
-      context = Target.MkContext self Map.empty (Keyword.keywordWord self) [Text.pack " "] Nothing
+      context = Target.MkContext self Map.empty (Keyword.keywordWord self) [Text.pack " "] Map.empty []
       rest = face {Face.keywords = Map.empty, Face.spell = Face.defaultSpell, Face.activatedAbilities = [], Face.triggeredAbilities = [], Face.staticAbilities = [], Face.enchant = [], Face.characteristicPT = Nothing}
       subtypes = TypeLine.subtypes (Face.typeLine face)
       unread = rest /= Face.Oracle.bare (Face.name face) (Face.oracleText face) (Face.manaCost face) (Face.colorIndicator face) (Face.typeLine face) (Face.power face) (Face.toughness face) Map.empty
@@ -122,26 +123,27 @@ faceAbilities face =
 
 -- | A triggered ability: "[When/Whenever/At] [trigger event], [effect]" (CR
 -- 603.1), the effect calling the source "it" once the event has named it
--- (Fire Imp), and the card it became in a graveyard "it" too (Undying
--- Beast). Only a trigger on its source entering or dying renders yet (CR
--- 603.6a). A creature "dies"; any other permanent "is put into a graveyard
--- from the battlefield", the same event (CR 700.4) in the words Oracle text
--- keeps for it (Chromatic Star). An intervening "if", a limit, a name, or a
--- trigger from another zone is not spelled out here.
+-- (Fire Imp), and with an intervening "if" clause between them (CR 603.4).
+-- A limit, a name, or a trigger from another zone is not spelled out here.
 triggered :: (Eq ability) => Target.Context -> Bool -> TriggeredAbility.TriggeredAbility Card.Card ability -> [Text.Text]
 triggered context creature t
-  | Maybe.isNothing (TriggeredAbility.intervening t),
-    Maybe.isNothing (TriggeredAbility.name t),
+  | Maybe.isNothing (TriggeredAbility.name t),
     TriggeredAbility.limit t == TriggerLimit.Unlimited,
-    Set.null (TriggeredAbility.functionsFrom t) = do
-      (event, became) <- case TriggeredAbility.condition t of
-        TriggerCondition.SelfEnters -> [(Text.pack " enters", Nothing)]
-        TriggerCondition.SelfDies
-          | creature -> [(Text.pack " dies", Just (Text.pack "it"))]
-          | otherwise -> [(Text.pack " is put into a graveyard from the battlefield", Just (Text.pack "it"))]
-        _ -> []
-      effect <- Effect.modal context {Target.self = Text.pack "it", Target.became = became} (TriggeredAbility.modal t)
-      [Text.pack "When " <> Target.self context <> event <> Text.pack ", " <> Prose.decapitalise effect]
+    Set.null (TriggeredAbility.functionsFrom t) = ListUtils.nubOrd $ do
+      e <- Trigger.event context creature (TriggeredAbility.condition t)
+      -- Free once the event has named the source: "it" (Fire Imp) or the
+      -- source's own name (Crimson Roc's "this creature").
+      named <- if Trigger.named e then [Text.pack "it", Target.self context] else [Target.self context]
+      let after = context {Target.self = named, Target.bound = Trigger.bound e, Target.owned = Trigger.owned e}
+      (word, gate) <- case TriggeredAbility.intervening t of
+        Nothing -> [(Text.empty, Text.empty)]
+        Just c -> do
+          condition <- Trigger.condition after c
+          word <- Trigger.hellbent condition
+          [(word, Text.pack ", if " <> condition)]
+      effect <- Effect.modal after (TriggeredAbility.modal t)
+      let named' = Text.isPrefixOf (Target.self after) effect && Target.self after /= Text.pack "it"
+      [word <> Trigger.opening e <> gate <> Text.pack ", " <> (if named' then effect else Prose.decapitalise effect)]
   | otherwise = []
 
 -- | An activated ability: "[Cost]: [Effect.]" (CR 602.1a). An ability whose

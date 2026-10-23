@@ -59,6 +59,8 @@ import qualified Pawl.Types.PutCounters as PutCounters
 import qualified Pawl.Types.Quantity as Quantity
 import qualified Pawl.Types.RandomCardInHand as RandomCardInHand
 import qualified Pawl.Types.Regenerability as Regenerability
+import qualified Pawl.Types.SacrificeEffect as SacrificeEffect
+import qualified Pawl.Types.Sacrificer as Sacrificer
 import qualified Pawl.Types.SlotCount as SlotCount
 import qualified Pawl.Types.SlotName as SlotName
 import qualified Pawl.Types.TapState as TapState
@@ -140,9 +142,48 @@ instructions context es = case es of
             (run, others) = span (maybe False alike . modifyTarget) rest
         p <- modified context m (Maybe.mapMaybe (fmap ModifyTarget.modification . modifyTarget) run)
         fmap (p :) (instructions context others)
+  e@(Effect.Destroy d) : rest
+    | Just _ <- destroyOf e -> do
+        let alike n = Destroy.regenerability n == Destroy.regenerability d
+            (run, others) = span (maybe False alike . destroyOf) rest
+        p <- destroyed context (d : Maybe.mapMaybe destroyOf run)
+        fmap (p :) (instructions context others)
   e : rest -> do
     p <- effect context e
     fmap (p :) (instructions context rest)
+
+-- | The instruction's destruction of the objects a reference names, if it is
+-- one.
+destroyOf :: Effect.Effect card ability -> Maybe Destroy.Destroy
+destroyOf e = case e of
+  Effect.Destroy d
+    | Maybe.isNothing (Destroy.slot d),
+      Maybe.isNothing (Destroy.buried d),
+      Maybe.isNothing (Destroy.permanents d) ->
+        Just d
+  _ -> Nothing
+
+-- | "Destroy [objects]" (CR 701.8a), the objects of consecutive instructions
+-- listed in one sentence: "destroy that creature and this creature" (Loyal
+-- Sentry). Free for two single objects, one of them the source: listed, or
+-- "both creatures" (Alaborn Zealot).
+destroyed :: Target.Context -> [Destroy.Destroy] -> [Predicate]
+destroyed context ds = do
+  refs <- traverse (Target.object context Target.All . Destroy.ref) ds
+  first <- take 1 ds
+  let many = length refs > 1 || any ((== Filter.Plural) . Target.number) refs
+      regenerate = case Destroy.regenerability first of
+        Regenerability.Regenerable -> []
+        Regenerability.CantBeRegenerated -> [Text.pack (if many then "They can't be regenerated." else "It can't be regenerated.")]
+      both = case fmap Target.wording refs of
+        [a, b]
+          | all ((== Filter.Singular) . Target.number) refs,
+            Just noun <- Text.stripPrefix (Text.pack "that ") a,
+            b == Target.self context ->
+              [Text.pack "both " <> Filter.pluralOf noun]
+        _ -> []
+  objects <- Prose.listing "and" (fmap Target.wording refs) : both
+  [MkPredicate Nothing (Text.pack "destroy " <> objects) regenerate (concatMap Target.mentions refs) Nothing False]
 
 -- | The instruction's continuous effect, if it is one.
 modifyTarget :: Effect.Effect card ability -> Maybe (ModifyTarget.ModifyTarget ability)
@@ -155,7 +196,12 @@ modifyTarget e = case e of
 -- objects for the same while.
 modified :: Target.Context -> ModifyTarget.ModifyTarget ability -> [Modification.Modification ability] -> [Predicate]
 modified context m more = do
-  who <- Target.object context Target.Affected (ModifyTarget.ref m)
+  -- Free for a description: the objects together (Trumpet Blast's
+  -- "attacking creatures get") or each of them (Zhang He, Wei General's
+  -- "each other creature you control gets").
+  who <- case ModifyTarget.ref m of
+    ref@(ObjectRef.EachMatching _) -> Target.object context Target.Affected ref <> fmap (\r -> r {Target.number = Filter.Singular}) (Target.object context Target.Each ref)
+    ref -> Target.object context Target.Affected ref
   let distributed = case ModifyTarget.ref m of
         ObjectRef.InSlot _ -> Target.number who == Filter.Plural
         _ -> False
@@ -264,17 +310,7 @@ effect context e = case e of
         n <- life a
         naming (Target.names a) (declarative context (LifeLoss.player l) (Text.pack "lose " <> n) (Text.pack "loses " <> n))
   Effect.Destroy d
-    | Maybe.isNothing (Destroy.slot d),
-      Maybe.isNothing (Destroy.buried d),
-      Maybe.isNothing (Destroy.permanents d) -> do
-        ref <- Target.object context Target.All (Destroy.ref d)
-        let pronoun = case Target.number ref of
-              Filter.Singular -> "It"
-              Filter.Plural -> "They"
-            regenerate = case Destroy.regenerability d of
-              Regenerability.Regenerable -> []
-              Regenerability.CantBeRegenerated -> [Text.pack (pronoun <> " can't be regenerated.")]
-        [MkPredicate Nothing (Text.pack "destroy " <> Target.wording ref) regenerate (Target.mentions ref) Nothing False]
+    | Just _ <- destroyOf e -> destroyed context [d]
   Effect.Counter c
     | Maybe.isNothing (Counter.slot c),
       Maybe.isNothing (Counter.sources c),
@@ -324,8 +360,11 @@ effect context e = case e of
       Target.ForEach n each' -> fmap (\put -> Text.pack "put " <> put <> on <> Text.pack " for each " <> each') (counters (Target.keyword context) (PutCounters.kind p) (Quantity.Literal n))
       Target.EqualTo equal -> fmap (\word -> Text.pack "put a number of " <> word <> Text.pack " counters" <> on <> Text.pack " equal to " <> equal) (counterWord (Target.keyword context) (PutCounters.kind p))
     MkPredicate Nothing phrase [] (Target.mentions ref <> Target.names a) Nothing False : supported context p
-  Effect.Tap r -> tapped context (Text.pack "tap ") r
-  Effect.Untap r -> tapped context (Text.pack "untap ") r
+  Effect.Tap r -> acted context (Text.pack "tap ") r
+  -- "Sacrifice this creature" (CR 701.21a): one object, which the
+  -- instruction's controller sacrifices. A sweep is not spelled out here.
+  Effect.Sacrifice (SacrificeEffect.MkSacrificeEffect r@(ObjectRef.InSlot _) Sacrificer.EffectController Nothing) -> acted context (Text.pack "sacrifice ") r
+  Effect.Untap r -> acted context (Text.pack "untap ") r
   Effect.Discard d -> discarded context d
   Effect.PreventNextDamage p
     | PreventNextDamage.duration p == Duration.UntilEndOfTurn,
@@ -355,10 +394,11 @@ moved context m
   | otherwise = do
       let ref = MoveToZone.ref m
           itself = case ref of
-            ObjectRef.InSlot s -> s == Target.selfSlot || s == Target.becameSlot
+            ObjectRef.InSlot s -> s == Target.selfSlot || Map.lookup s (Target.bound context) == Just (Target.self context)
             _ -> False
           graveyard
             | itself && MoveToZone.origin m == Just Zone.Graveyard = Just PlayerRelation.You
+            | ObjectRef.InSlot s <- ref, elem s (Target.owned context) = Just PlayerRelation.You
             | otherwise = graveyardOf context ref
           yours = graveyard == Just PlayerRelation.You
           riders = MoveToZone.riders m
@@ -474,9 +514,10 @@ supported context p = case PutCounters.ref p of
         [MkPredicate Nothing (Text.pack ("support " <> show n)) [] [s] Nothing False]
   _ -> []
 
--- | "Tap target creature", "Untap all creatures you control".
-tapped :: Target.Context -> Text.Text -> ObjectRef.ObjectRef -> [Predicate]
-tapped context word r = do
+-- | An instruction doing one thing to objects: "Tap target creature",
+-- "Untap all creatures you control", "Sacrifice this creature".
+acted :: Target.Context -> Text.Text -> ObjectRef.ObjectRef -> [Predicate]
+acted context word r = do
   ref <- Target.object context Target.All r
   [MkPredicate Nothing (word <> Target.wording ref) [] (Target.mentions ref) Nothing False]
 
