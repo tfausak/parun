@@ -1375,6 +1375,10 @@ setPreventedDamageSources oids = Map.insert preventedDamageSource (toRecipients 
 setBecameGroup :: Seq ObjectId -> Map SlotName Binding -> Map SlotName Binding
 setBecameGroup oids = Map.insert became (toObjects oids)
 
+-- Bind an object under the reserved tappedPermanent slot (CR 701.26a).
+setTappedPermanent :: ObjectId -> Map SlotName Binding -> Map SlotName Binding
+setTappedPermanent oid = Map.insert tappedPermanent (toObject oid)
+
 -- Bind an object under the reserved manaSource slot (CR 106.12a).
 setManaSource :: ObjectId -> Map SlotName Binding -> Map SlotName Binding
 setManaSource oid = Map.insert manaSource (toObject oid)

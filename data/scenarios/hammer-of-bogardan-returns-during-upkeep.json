@@ -1,0 +1,10 @@
+{
+  "description": "CR 602.5b / 113.6 whole card: Hammer of Bogardan returns from alice's graveyard to her hand during her upkeep",
+  "note": "Activated in alice's upkeep with five floating red, the Hammer is in her hand.",
+  "board": {"active": "alice", "step": "Upkeep", "seats": [{"name": "alice", "manaPool": "RRRRR", "graveyard": [{"card": "Hammer of Bogardan", "label": "hammer"}], "library": [{"card": "Island"}, {"card": "Island"}, {"card": "Island"}]}, {"name": "bob", "library": [{"card": "Island"}, {"card": "Island"}, {"card": "Island"}]}]},
+  "timeline": [
+    {"turn": 1, "step": "Upkeep", "player": "alice", "do": {"Activate": {"object": "$hammer", "ability": 0}}},
+    {"turn": 1, "step": "Upkeep", "player": "alice", "do": "Pass"},
+    {"turn": 1, "step": "Upkeep", "player": "alice", "check": {"Count": {"player": "alice", "zone": "Hand", "card": "Hammer of Bogardan", "count": 1}}}
+  ]
+}

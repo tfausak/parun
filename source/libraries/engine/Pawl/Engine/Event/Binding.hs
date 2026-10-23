@@ -921,20 +921,23 @@ eventBindingsOver board gs bearerBecame becameInGraveyard bearer you cond event 
   -- arm's use of the first argument.
   (TriggerCondition.AttachedCreatureDies, GameEvent.Moved (Moved.MkMoved zc _ _ _ _ _ _)) ->
     Binding.setDepartedPermanent (ZoneChange.departed zc) (maybe Map.empty (`Binding.setBecame` Map.empty) bearerBecame)
-  -- Nothing at all, stated rather than left to the fallthrough below: the
-  -- attachment link already names the permanent that became tapped, and CR 109.5
-  -- answers the Aura's "you" from Binding.triggerSource. There is no second
-  -- object for the payload to name.
-  (TriggerCondition.AttachedCreatureBecomesTapped, _) -> Map.empty
+  -- CR 701.26a's permanent, bound because the attachment link is NOT enough:
+  -- Blight's "destroy it" names the land that became tapped, which the Aura
+  -- leaving the battlefield before its trigger resolves does not change.
+  --
+  -- Unconditional given a match, AttachedPermanentTappedForMana's claim and for
+  -- its reason: matchesTrigger accepts only a GameEvent.BecameTapped whose
+  -- permanent IS the bearer's host.
+  (TriggerCondition.AttachedCreatureBecomesTapped, GameEvent.BecameTapped tapped) ->
+    Binding.setTappedPermanent tapped Map.empty
   -- Nothing: Deeproot Pilgrimage's payload names no tapped permanent, and one
   -- slot could not name a batch of them.
   (TriggerCondition.PermanentsBecomeTapped _, _) -> Map.empty
   -- Nothing either, and for a plainer reason: the permanent that became
   -- untapped IS the bearer, whom Binding.triggerSource already names.
   (TriggerCondition.SelfBecomesUntapped, _) -> Map.empty
-  -- CR 106.12a's permanent, bound because the attachment link is NOT enough
-  -- here where it is enough above: Wild Growth's "its controller" is the
-  -- enchanted land's controller, and PlayerRef.ControllerOfBound is how a card
+  -- CR 106.12a's permanent, bound for the AttachedCreatureBecomesTapped arm's
+  -- reason: Wild Growth's "its controller" is the enchanted land's controller, and PlayerRef.ControllerOfBound is how a card
   -- names it -- CR 109.5's "you" would answer the Aura's controller instead,
   -- which an Aura on an opponent's land makes a different seat.
   --
@@ -1921,10 +1924,9 @@ eventBindingSlots cond = case cond of
   -- the Aura's alone (data/cards/synthetic-widowed-blade.json, proved in
   -- Pawl.ZoneTriggerSpec) (#3153).
   TriggerCondition.AttachedCreatureDies -> Set.fromList [Binding.became, Binding.departedPermanent]
-  -- Empty, and for the opposite reason to the arm above: nothing MOVED, so there
-  -- is no arrival for a payload to find. The tapped permanent is still the one
-  -- Object.attachedTo names.
-  TriggerCondition.AttachedCreatureBecomesTapped -> Set.empty
+  -- The permanent that became tapped, which the arm above stamps for every
+  -- match: Blight destroys it and Psychic Venom reads its controller.
+  TriggerCondition.AttachedCreatureBecomesTapped -> Set.singleton Binding.tappedPermanent
   -- Empty, eventBindings' arm.
   TriggerCondition.PermanentsBecomeTapped _ -> Set.empty
   -- Empty for the arm above's reason once more: nothing moved, and the

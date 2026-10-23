@@ -143,7 +143,9 @@ triggered context creature t
           condition <- Trigger.condition after c
           word <- Trigger.abilityWord condition
           [(word, Text.pack ", if " <> condition)]
-      effect <- Effect.modal after (TriggeredAbility.modal t)
+      stated <- Effect.modal after (TriggeredAbility.modal t)
+      -- Free in a draw step's ability: the card is "an additional card".
+      effect <- stated : [Text.replace (Text.pack " a card") (Text.pack " an additional card") stated | Trigger.drawStep (TriggeredAbility.condition t)]
       let named' = Text.isPrefixOf (Target.self after) effect && Target.self after /= Text.pack "it"
       [word <> Trigger.opening e <> gate <> Text.pack ", " <> (if named' then effect else Prose.decapitalise effect)]
   | otherwise = []

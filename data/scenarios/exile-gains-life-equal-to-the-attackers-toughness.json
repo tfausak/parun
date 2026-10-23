@@ -1,0 +1,12 @@
+{
+  "description": "CR 506.4 / 608.2h whole card: Exile exiles a nonwhite attacker and alice gains life equal to its toughness",
+  "note": "Bob's Gray Ogre (2/2) and Hill Giant (3/3) attack; the Giant is exiled and alice gains 3, then takes 2: 21.",
+  "board": {"active": "bob", "step": "PrecombatMain", "seats": [{"name": "bob", "battlefield": [{"card": "Gray Ogre", "label": "ogre", "ready": true}, {"card": "Hill Giant", "label": "giant", "ready": true}], "library": [{"card": "Island"}, {"card": "Island"}, {"card": "Island"}]}, {"name": "alice", "battlefield": [{"card": "Plains", "label": "p1"}, {"card": "Plains", "label": "p2"}, {"card": "Plains", "label": "p3"}], "hand": [{"card": "Exile", "label": "exile"}], "library": [{"card": "Island"}, {"card": "Island"}, {"card": "Island"}]}]},
+  "timeline": [
+    {"turn": 1, "step": "DeclareAttackers", "player": "bob", "do": {"Attack": ["$ogre", "$giant"]}},
+    {"turn": 1, "step": "DeclareAttackers", "player": "alice", "do": {"Cast": {"object": "$exile", "targets": ["$giant"], "mana": ["$p1", "$p2", "$p3"]}}},
+    {"turn": 1, "step": "DeclareAttackers", "player": "alice", "do": "Pass"},
+    {"turn": 1, "step": "DeclareAttackers", "player": "alice", "check": {"Count": {"player": "bob", "zone": "Exile", "card": "Hill Giant", "count": 1}}},
+    {"turn": 1, "step": "PostcombatMain", "player": "bob", "check": {"Life": {"player": "alice", "life": 21}}}
+  ]
+}

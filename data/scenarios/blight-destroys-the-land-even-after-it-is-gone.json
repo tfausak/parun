@@ -1,0 +1,14 @@
+{
+  "description": "CR 701.26a / 603.7c whole card: Blight destroys the land it enchants when that land becomes tapped, even once Blight itself is gone",
+  "note": "Bob taps his enchanted Forest for mana and, with Blight's trigger on the stack, Disenchants Blight using that mana; the trigger still destroys the Forest. His Plains is untouched.",
+  "board": {"active": "bob", "step": "PrecombatMain", "seats": [{"name": "bob", "battlefield": [{"card": "Forest", "label": "forest"}, {"card": "Plains", "label": "plains"}], "hand": [{"card": "Disenchant", "label": "disenchant"}], "library": [{"card": "Island"}, {"card": "Island"}, {"card": "Island"}]}, {"name": "alice", "battlefield": [{"card": "Blight", "label": "blight", "attached": "forest"}], "library": [{"card": "Island"}, {"card": "Island"}, {"card": "Island"}]}]},
+  "timeline": [
+    {"turn": 1, "step": "PrecombatMain", "player": "bob", "do": {"Take": {"action": "ActivateManaAbility $forest"}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "bob", "do": {"Cast": {"object": "$disenchant", "targets": ["$blight"], "mana": ["$plains"]}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "bob", "do": "Pass"},
+    {"turn": 1, "step": "PrecombatMain", "player": "bob", "check": {"Count": {"player": "alice", "zone": "Graveyard", "card": "Blight", "count": 1}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "bob", "do": "Pass"},
+    {"turn": 1, "step": "PrecombatMain", "player": "bob", "check": {"Count": {"player": "bob", "zone": "Graveyard", "card": "Forest", "count": 1}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "bob", "check": {"Count": {"player": "bob", "zone": "Battlefield", "card": "Plains", "count": 1}}}
+  ]
+}

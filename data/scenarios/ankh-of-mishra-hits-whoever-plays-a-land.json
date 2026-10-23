@@ -1,0 +1,11 @@
+{
+  "description": "CR 603.6a whole card: Ankh of Mishra deals 2 damage to the controller of each land that enters",
+  "note": "Bob plays a Swamp and goes to 18; alice, who controls the Ankh, is untouched.",
+  "board": {"active": "bob", "step": "PrecombatMain", "seats": [{"name": "bob", "hand": [{"card": "Swamp", "label": "swamp"}], "library": [{"card": "Island"}, {"card": "Island"}, {"card": "Island"}]}, {"name": "alice", "battlefield": [{"card": "Ankh of Mishra"}], "library": [{"card": "Island"}, {"card": "Island"}, {"card": "Island"}]}]},
+  "timeline": [
+    {"turn": 1, "step": "PrecombatMain", "player": "bob", "do": {"PlayLand": "$swamp"}},
+    {"turn": 1, "step": "PrecombatMain", "player": "bob", "do": "Pass"},
+    {"turn": 1, "step": "PrecombatMain", "player": "bob", "check": {"Life": {"player": "bob", "life": 18}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "bob", "check": {"Life": {"player": "alice", "life": 20}}}
+  ]
+}

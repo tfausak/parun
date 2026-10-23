@@ -1,0 +1,11 @@
+{
+  "description": "CR 303.4 / 613.1b whole card: Conquer gives alice control of the land it enchants",
+  "note": "Bob's Forest, enchanted, comes under alice's control; his other Forest stays his.",
+  "board": {"active": "alice", "step": "PrecombatMain", "seats": [{"name": "alice", "manaPool": "RRRRR", "hand": [{"card": "Conquer", "label": "conquer"}], "library": [{"card": "Island"}, {"card": "Island"}, {"card": "Island"}]}, {"name": "bob", "battlefield": [{"card": "Forest", "label": "forest"}, {"card": "Forest", "label": "other"}], "library": [{"card": "Island"}, {"card": "Island"}, {"card": "Island"}]}]},
+  "timeline": [
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": {"Cast": {"object": "$conquer", "targets": ["$forest"]}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass"},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "check": {"View": {"of": "Controller", "object": "$forest", "is": "alice"}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "check": {"View": {"of": "Controller", "object": "$other", "is": "bob"}}}
+  ]
+}
