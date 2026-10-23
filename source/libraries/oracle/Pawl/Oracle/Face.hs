@@ -76,7 +76,7 @@ colorOrder cs =
 
 -- | A face with the given Oracle text, characteristics and keywords and nothing
 -- else. Every field is spelled out, so a field added to 'Face.Face' fails to
--- compile here rather than being silently ignored by 'Pawl.Oracle.faceText'.
+-- compile here rather than being silently ignored by 'Pawl.Oracle.faceAbilities'.
 bare ::
   CardName.CardName ->
   Maybe Text.Text ->

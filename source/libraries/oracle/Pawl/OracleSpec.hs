@@ -175,12 +175,31 @@ spec s = Spec.describe s "Pawl.Oracle" $ do
   -- Insurance) or keeps "you" before "and" (Bad Deal).
   Spec.it s "render leaves out a lone you and keeps one before and" $ do
     let divination = spell [clause [draw (PlayerRef.Relative PlayerRelation.You) 2]] []
-    Spec.assertEq s [Text.pack "Draw two cards."] (Oracle.renderings divination)
+    Spec.assertEq s [[Text.pack "Draw two cards."]] (Oracle.abilities divination)
     let craving = spell [clause [draw (PlayerRef.Relative PlayerRelation.You) 3, loseLife (PlayerRef.Relative PlayerRelation.You) 3]] []
     Spec.assertEq s (Just (Text.pack "You draw three cards and you lose 3 life.")) (Oracle.render craving)
-    Spec.assertEq s [Text.pack "You draw three cards and you lose 3 life.", Text.pack "You draw three cards and lose 3 life.", Text.pack "Draw three cards, then lose 3 life."] (Oracle.renderings craving)
+    Spec.assertEq s [[Text.pack "You draw three cards and you lose 3 life.", Text.pack "You draw three cards and lose 3 life.", Text.pack "Draw three cards, then lose 3 life."]] (Oracle.abilities craving)
     let insurance = spell [clause [loseLife (PlayerRef.InSlot target) 2, draw (PlayerRef.Relative PlayerRelation.You) 1]] [(target, TargetSlot.required Pool.Players Nothing)]
-    Spec.assertEq s [Text.pack "Target player loses 2 life. Draw a card.", Text.pack "Target player loses 2 life.\nDraw a card.", Text.pack "Target player loses 2 life. Then draw a card.", Text.pack "Target player loses 2 life and you draw a card."] (Oracle.renderings insurance)
+    Spec.assertEq s [[Text.pack "Target player loses 2 life. Draw a card.", Text.pack "Target player loses 2 life.\nDraw a card.", Text.pack "Target player loses 2 life. Then draw a card.", Text.pack "Target player loses 2 life and you draw a card."]] (Oracle.abilities insurance)
+
+  -- CR 113.2c / 113.3a: text pairs with a card's abilities as a multiset, each
+  -- ability in one of its own wordings, and a spell's instructions are one
+  -- ability even across paragraphs (Bargain).
+  Spec.it s "says matches each ability against its own wordings" $ do
+    let spark = CardName.MkCardName (Text.pack "Spark")
+        ring = activated (Cost.MkCost (Just (ManaCost.MkManaCost [])) [CostComponent.TapThis]) (addMana 1)
+        tomb = ring {ActivatedAbility.modal = payload [clause [addMana 1, damage [(you, 2)]]] []}
+        insurance = payload [clause [loseLife (PlayerRef.InSlot target) 2, draw (PlayerRef.Relative PlayerRelation.You) 1]] [(target, TargetSlot.required Pool.Players Nothing)]
+        both = withFace (\f -> f {Face.keywords = Map.fromList [(Keyword.Flying, 1), (Keyword.Vigilance, 1)], Face.activatedAbilities = [tomb], Face.spell = insurance})
+        rest = "Target player loses 2 life.\nDraw a card.\n{T}: Add {G}. Then Spark deals 2 damage to you.\n"
+    Spec.assertEq s [1, 1, 4, 2] (fmap length (Oracle.abilities both))
+    Spec.assertEq s (Just (Text.pack "Flying\nVigilance\nTarget player loses 2 life. Draw a card.\n{T}: Add {G}. Spark deals 2 damage to you.")) (Oracle.render both)
+    Spec.assertBool s (Oracle.says both spark (Text.pack (rest <> "Flying, vigilance"))) "every ability unsaid"
+    Spec.assertBool s (not (Oracle.says both spark (Text.pack (rest <> "Flying")))) "an ability left out said"
+    Spec.assertBool s (not (Oracle.says both spark (Text.pack (rest <> "Flying, vigilance, trample")))) "an ability added said"
+    let partly = withFace (\f -> f {Face.keywords = Map.singleton Keyword.Flying 1, Face.activatedAbilities = [tomb], Face.minimumX = 1})
+    Spec.assertEq s Nothing (Oracle.render partly)
+    Spec.assertBool s (not (Oracle.says partly spark (Text.pack "Flying\n{T}: Add {G}. Spark deals 2 damage to you."))) "a card not rendered in full said"
 
   -- A second instruction for the same player drops the subject; for another
   -- player it is joined by "and" (Vampiric Feast), starts a sentence (Soul
@@ -188,10 +207,10 @@ spec s = Spec.describe s "Pawl.Oracle" $ do
   -- paragraph (Bargain), as printings differ, "and" first.
   Spec.it s "render strings a clause's instructions together" $ do
     let sign = spell [clause [draw (PlayerRef.InSlot target) 2, loseLife (PlayerRef.InSlot target) 2]] [(target, TargetSlot.required Pool.Players Nothing)]
-    Spec.assertEq s [Text.pack "Target player draws two cards and loses 2 life.", Text.pack "Target player draws two cards, then loses 2 life."] (Oracle.renderings sign)
+    Spec.assertEq s [[Text.pack "Target player draws two cards and loses 2 life.", Text.pack "Target player draws two cards, then loses 2 life."]] (Oracle.abilities sign)
     let feast = spell [clause [damage [(target, 4)], gainLife 4]] [(target, TargetSlot.required Pool.AnyTarget Nothing)]
     Spec.assertEq s (Just (Text.pack "Spark deals 4 damage to any target and you gain 4 life.")) (Oracle.render feast)
-    Spec.assertEq s [Text.pack "Spark deals 4 damage to any target and you gain 4 life.", Text.pack "Spark deals 4 damage to any target. You gain 4 life.", Text.pack "Spark deals 4 damage to any target.\nYou gain 4 life.", Text.pack "Spark deals 4 damage to any target. Then you gain 4 life."] (Oracle.renderings feast)
+    Spec.assertEq s [[Text.pack "Spark deals 4 damage to any target and you gain 4 life.", Text.pack "Spark deals 4 damage to any target. You gain 4 life.", Text.pack "Spark deals 4 damage to any target.\nYou gain 4 life.", Text.pack "Spark deals 4 damage to any target. Then you gain 4 life."]] (Oracle.abilities feast)
 
   -- CR 601.2c: each target slot is announced once, so text naming a slot
   -- twice, or never, is not the mode's.
@@ -210,11 +229,11 @@ spec s = Spec.describe s "Pawl.Oracle" $ do
         sol = ring {ActivatedAbility.modal = payload [clause [addMana 1, addMana 1]] []}
     Spec.assertEq s (Just (Text.pack "{T}: Add {G}{G}.")) (Oracle.render (withFace (\f -> f {Face.activatedAbilities = [sol]})))
     let brothers = spell [clause [damage [(target, 1), (you, 1)]]] [(target, TargetSlot.required Pool.AnyTarget Nothing)]
-    Spec.assertEq s [Text.pack "Spark deals 1 damage to any target and 1 damage to you."] (Oracle.renderings brothers)
+    Spec.assertEq s [[Text.pack "Spark deals 1 damage to any target and 1 damage to you."]] (Oracle.abilities brothers)
     let tomb = ring {ActivatedAbility.modal = payload [clause [addMana 1, damage [(you, 2)]]] []}
-    Spec.assertEq s [Text.pack "{T}: Add {G}. Spark deals 2 damage to you.", Text.pack "{T}: Add {G}. Then Spark deals 2 damage to you."] (Oracle.renderings (withFace (\f -> f {Face.activatedAbilities = [tomb]})))
+    Spec.assertEq s [[Text.pack "{T}: Add {G}. Spark deals 2 damage to you.", Text.pack "{T}: Add {G}. Then Spark deals 2 damage to you."]] (Oracle.abilities (withFace (\f -> f {Face.activatedAbilities = [tomb]})))
     let earthquake = spell [clause [Effect.DealDamage (DealDamage.MkDealDamage (Seq.fromList [DamagePart.MkDamagePart (ObjectRef.EachMatching (Filter.HasCardType CardType.Creature)) (Quantity.Literal 2), DamagePart.MkDamagePart ObjectRef.EachPlayer (Quantity.Literal 2)]) Nothing Nothing)]] []
-    Spec.assertEq s [Text.pack "Spark deals 2 damage to each creature and each player."] (Oracle.renderings earthquake)
+    Spec.assertEq s [[Text.pack "Spark deals 2 damage to each creature and each player."]] (Oracle.abilities earthquake)
     let jagged = spell [clause [damage [(target, 3)]]] [(target, (TargetSlot.required Pool.Creatures Nothing) {TargetSlot.count = SlotCount.Printed (TargetCount.MkTargetCount 2 (Just 2))})]
     Spec.assertEq s (Just (Text.pack "Spark deals 3 damage to each of two target creatures.")) (Oracle.render jagged)
 
@@ -230,16 +249,16 @@ spec s = Spec.describe s "Pawl.Oracle" $ do
   -- graveyard from the battlefield" (Chromatic Star).
   Spec.it s "render prints a trigger on entering or dying" $ do
     let imp = triggered TriggerCondition.SelfEnters [clause [damage [(target, 2)]]] [(target, TargetSlot.required Pool.Creatures Nothing)]
-    Spec.assertEq s [Text.pack "When Spark enters, it deals 2 damage to target creature."] (Oracle.renderings (withFace (\f -> f {Face.triggeredAbilities = [imp]})))
+    Spec.assertEq s [[Text.pack "When Spark enters, it deals 2 damage to target creature."]] (Oracle.abilities (withFace (\f -> f {Face.triggeredAbilities = [imp]})))
     let star = triggered TriggerCondition.SelfDies [clause [draw (PlayerRef.Relative PlayerRelation.You) 1]] []
-    Spec.assertEq s [Text.pack "When Spark dies, draw a card."] (Oracle.renderings (withFace (\f -> (typed [CardType.Creature] [] f) {Face.triggeredAbilities = [star]})))
-    Spec.assertEq s [Text.pack "When Spark is put into a graveyard from the battlefield, draw a card."] (Oracle.renderings (withFace (\f -> (typed [CardType.Artifact] [] f) {Face.triggeredAbilities = [star]})))
+    Spec.assertEq s [[Text.pack "When Spark dies, draw a card."]] (Oracle.abilities (withFace (\f -> (typed [CardType.Creature] [] f) {Face.triggeredAbilities = [star]})))
+    Spec.assertEq s [[Text.pack "When Spark is put into a graveyard from the battlefield, draw a card."]] (Oracle.abilities (withFace (\f -> (typed [CardType.Artifact] [] f) {Face.triggeredAbilities = [star]})))
 
   -- An activated ability whose cost sacrifices its source calls it "it"
   -- (Mogg Mob).
   Spec.it s "render calls a sacrificed source it" $ do
     let mob = activated (Cost.MkCost (Just (ManaCost.MkManaCost [])) [CostComponent.SacrificeThis]) (damage [(you, 3)])
-    Spec.assertEq s [Text.pack "Sacrifice Spark: It deals 3 damage to you."] (Oracle.renderings (withFace (\f -> f {Face.activatedAbilities = [mob]})))
+    Spec.assertEq s [[Text.pack "Sacrifice Spark: It deals 3 damage to you."]] (Oracle.abilities (withFace (\f -> f {Face.activatedAbilities = [mob]})))
 
   -- CR 113.2c: a paragraph break starts another ability, so only a spell's
   -- instructions (one spell ability, CR 113.3a) may be broken across lines.
@@ -248,7 +267,7 @@ spec s = Spec.describe s "Pawl.Oracle" $ do
         apart = triggered TriggerCondition.SelfEnters [clause [damage [(target, 2)]], clause [gainLife 2]] slots
         together = triggered TriggerCondition.SelfEnters [clause [damage [(target, 2)], gainLife 2]] slots
     Monad.forM_ [apart, together] $ \t -> do
-      let rendered = Oracle.renderings (withFace (\f -> f {Face.triggeredAbilities = [t]}))
+      let rendered = concat (Oracle.abilities (withFace (\f -> f {Face.triggeredAbilities = [t]})))
       Spec.assertBool s (not (null rendered)) "no rendering"
       Spec.assertEq s [] (filter (Text.isInfixOf (Text.pack "\n")) rendered)
 
@@ -257,15 +276,15 @@ spec s = Spec.describe s "Pawl.Oracle" $ do
   -- Will), of card types "and" (Devastation).
   Spec.it s "render shares a line of protections and pluralises a disjunction" $ do
     let from c = Keyword.Protection (Protection.MkProtection (Filter.HasColor c) Nothing)
-    Spec.assertEq s [Text.pack "Protection from black and from red"] (Oracle.renderings (card Layout.Normal [[from Color.Black, from Color.Red]]))
+    Spec.assertEq s [[Text.pack "Protection from black and from red"]] (Oracle.abilities (card Layout.Normal [[from Color.Black, from Color.Red]]))
     let devastation = spell [clause [destroy (ObjectRef.EachMatching (Filter.Or [Filter.HasCardType CardType.Creature, Filter.HasCardType CardType.Land])) Regenerability.Regenerable]] []
     Spec.assertEq s (Just (Text.pack "Destroy all creatures and lands.")) (Oracle.render devastation)
     let colours = Filter.Or [Filter.HasColor Color.White, Filter.HasColor Color.Blue]
         ignite = spell [clause [destroy (ObjectRef.InSlot target) Regenerability.Regenerable]] [(target, (TargetSlot.required Pool.Creatures (Just colours)) {TargetSlot.count = SlotCount.Printed (TargetCount.MkTargetCount 2 (Just 2))})]
-    Spec.assertEq s [Text.pack "Destroy two target white and/or blue creatures."] (Oracle.renderings ignite)
+    Spec.assertEq s [[Text.pack "Destroy two target white and/or blue creatures."]] (Oracle.abilities ignite)
     let combatants = Filter.Or [Filter.IsAttacking, Filter.IsBlocking]
         fire = spell [clause [destroy (ObjectRef.InSlot target) Regenerability.Regenerable]] [(target, (TargetSlot.required Pool.Creatures (Just combatants)) {TargetSlot.count = SlotCount.Printed (TargetCount.MkTargetCount 2 (Just 2))})]
-    Spec.assertEq s [Text.pack "Destroy two target attacking or blocking creatures."] (Oracle.renderings fire)
+    Spec.assertEq s [[Text.pack "Destroy two target attacking or blocking creatures."]] (Oracle.abilities fire)
 
   -- CR 611.2a: a change to an object "until end of turn", the duration ending
   -- the sentence (Giant Growth) or opening it (Aspirant's Ascent), ending it
@@ -274,9 +293,9 @@ spec s = Spec.describe s "Pawl.Oracle" $ do
   Spec.it s "render prints a change to power and toughness and its duration" $ do
     let growth = spell [clause [modify (ObjectRef.InSlot target) Duration.UntilEndOfTurn (pt 3 3)]] [(target, TargetSlot.required Pool.Creatures Nothing)]
     Spec.assertEq s (Just (Text.pack "Target creature gets +3/+3 until end of turn.")) (Oracle.render growth)
-    Spec.assertEq s [Text.pack "Target creature gets +3/+3 until end of turn.", Text.pack "Until end of turn, target creature gets +3/+3."] (Oracle.renderings growth)
+    Spec.assertEq s [[Text.pack "Target creature gets +3/+3 until end of turn.", Text.pack "Until end of turn, target creature gets +3/+3."]] (Oracle.abilities growth)
     let horse = spell [clause [modify (ObjectRef.InSlot target) Duration.Indefinite (pt 2 2), modify (ObjectRef.InSlot target) Duration.Indefinite (Modification.GainKeyword Keyword.Horsemanship)]] [(target, TargetSlot.required Pool.Creatures Nothing)]
-    Spec.assertEq s [Text.pack "Target creature gets +2/+2 and gains horsemanship."] (Oracle.renderings horse)
+    Spec.assertEq s [[Text.pack "Target creature gets +2/+2 and gains horsemanship."]] (Oracle.abilities horse)
 
   -- A zero takes the other change's sign (Saltfield Recluse); several targets
   -- "each get" a change (Hearts on Fire) but "gain" a keyword (Wind Sail);
@@ -327,7 +346,7 @@ spec s = Spec.describe s "Pawl.Oracle" $ do
   Spec.it s "render prints a zone change by where it goes" $ do
     let creature = [(target, TargetSlot.required Pool.Creatures Nothing)]
         mine = [(target, graveyard PlayerRelation.You (Just (Filter.HasCardType CardType.Creature)))]
-        to zone slots = Oracle.renderings (spell [clause [Effect.MoveToZone (move (ObjectRef.InSlot target) zone)]] slots)
+        to zone slots = concat (Oracle.abilities (spell [clause [Effect.MoveToZone (move (ObjectRef.InSlot target) zone)]] slots))
     Spec.assertEq s [Text.pack "Return target creature to its owner's hand."] (to Zone.Hand creature)
     Spec.assertEq s [Text.pack "Return target creature card from your graveyard to your hand."] (to Zone.Hand mine)
     Spec.assertEq s [Text.pack "Exile target creature."] (to Zone.Exile creature)
@@ -335,8 +354,8 @@ spec s = Spec.describe s "Pawl.Oracle" $ do
     Spec.assertEq s [Text.pack "Return target creature card from your graveyard to the battlefield."] (to Zone.Battlefield mine)
     Spec.assertEq s [] (to Zone.Battlefield creature)
     let tapped = (move (ObjectRef.InSlot target) Zone.Battlefield) {MoveToZone.riders = EntryRiders.defaultValue {EntryRiders.tapped = TapState.Tapped}}
-    Spec.assertEq s [Text.pack "Return target creature card from your graveyard to the battlefield tapped."] (Oracle.renderings (spell [clause [Effect.MoveToZone tapped]] mine))
-    let placed placement = Oracle.renderings (spell [clause [Effect.MoveToZone (move (ObjectRef.InSlot target) Zone.Library) {MoveToZone.placement = placement}]] creature)
+    Spec.assertEq s [[Text.pack "Return target creature card from your graveyard to the battlefield tapped."]] (Oracle.abilities (spell [clause [Effect.MoveToZone tapped]] mine))
+    let placed placement = concat (Oracle.abilities (spell [clause [Effect.MoveToZone (move (ObjectRef.InSlot target) Zone.Library) {MoveToZone.placement = placement}]] creature))
     Spec.assertEq s [Text.pack "Put target creature on top of its owner's library."] (placed (LibraryPlacement.Stated LibraryPosition.Top))
     Spec.assertEq s [Text.pack "Put target creature into its owner's library second from the top."] (placed (LibraryPlacement.Beneath (Quantity.Literal 1)))
     let theirs = [(target, (graveyard PlayerRelation.Opponent Nothing) {TargetSlot.count = SlotCount.Printed (TargetCount.MkTargetCount 2 (Just 2)), TargetSlot.together = Just Together.InOneZone})]
@@ -352,7 +371,7 @@ spec s = Spec.describe s "Pawl.Oracle" $ do
   Spec.it s "render returns several objects to their owners' hands" $ do
     let evacuation = spell [clause [Effect.MoveToZone (move (ObjectRef.EachMatching (Filter.HasCardType CardType.Creature)) Zone.Hand)]] []
     Spec.assertEq s (Just (Text.pack "Return all creatures to their owners' hands.")) (Oracle.render evacuation)
-    Spec.assertEq s [Text.pack "Return all creatures to their owners' hands.", Text.pack "Return all creatures to their owner's hand.", Text.pack "Return each creature to its owner's hand."] (Oracle.renderings evacuation)
+    Spec.assertEq s [[Text.pack "Return all creatures to their owners' hands.", Text.pack "Return all creatures to their owner's hand.", Text.pack "Return each creature to its owner's hand."]] (Oracle.abilities evacuation)
 
   -- CR 400.7 / 603.10a: what a dying creature became is "it" after the event
   -- (Undying Beast); a card returns from your graveyard by name (Reassembling
@@ -399,10 +418,10 @@ spec s = Spec.describe s "Pawl.Oracle" $ do
   -- Preparations), so it renders first.
   Spec.it s "render prints support as the instruction or its name" $ do
     let instruction = counters CounterKind.PlusOnePlusOne 1 (ObjectRef.InSlot target)
-    Spec.assertEq s [Text.pack "Put a +1/+1 counter on each of up to two target creatures.", Text.pack "Support 2."] (Oracle.renderings (spell [clause [instruction]] [(target, upTo 2 Nothing)]))
+    Spec.assertEq s [[Text.pack "Put a +1/+1 counter on each of up to two target creatures.", Text.pack "Support 2."]] (Oracle.abilities (spell [clause [instruction]] [(target, upTo 2 Nothing)]))
     let ability slot = withFace (\f -> f {Face.activatedAbilities = [(activated (Cost.MkCost (Just (ManaCost.MkManaCost [green])) []) instruction) {ActivatedAbility.modal = payload [clause [instruction]] [(target, slot)]}]})
-    Spec.assertEq s [Text.pack "{G}: Put a +1/+1 counter on each of up to two other target creatures.", Text.pack "{G}: Support 2."] (Oracle.renderings (ability (upTo 2 (Just (Filter.Not Filter.IsSource)))))
-    Spec.assertEq s [Text.pack "{G}: Put a +1/+1 counter on each of up to two target creatures."] (Oracle.renderings (ability (upTo 2 Nothing)))
+    Spec.assertEq s [[Text.pack "{G}: Put a +1/+1 counter on each of up to two other target creatures.", Text.pack "{G}: Support 2."]] (Oracle.abilities (ability (upTo 2 (Just (Filter.Not Filter.IsSource)))))
+    Spec.assertEq s [[Text.pack "{G}: Put a +1/+1 counter on each of up to two target creatures."]] (Oracle.abilities (ability (upTo 2 Nothing)))
 
   -- CR 701.26a: tapping and untapping; "another target" for one other object.
   Spec.it s "render taps and untaps" $ do
@@ -420,7 +439,7 @@ spec s = Spec.describe s "Pawl.Oracle" $ do
     let random = Effect.Discard (Discard.These (TheseDiscard.MkTheseDiscard (ObjectRef.RandomCardInHand (RandomCardInHand.MkRandomCardInHand (PlayerRef.InSlot target) (Filter.And []) (Quantity.Literal 2))) Nothing))
     Spec.assertEq s (Just (Text.pack "Target player discards two cards at random.")) (Oracle.render (spell [clause [random]] player))
     let loot = spell [clause [draw (PlayerRef.Relative PlayerRelation.You) 1, discard (PlayerRef.Relative PlayerRelation.You) 1]] []
-    Spec.assertBool s (elem (Text.pack "Draw a card, then discard a card.") (Oracle.renderings loot)) "no \", then\""
+    Spec.assertBool s (elem (Text.pack "Draw a card, then discard a card.") (concat (Oracle.abilities loot))) "no \", then\""
 
   -- CR 615.7: a shield preventing the next damage this turn.
   Spec.it s "render prints a prevention shield" $ do
@@ -434,15 +453,15 @@ spec s = Spec.describe s "Pawl.Oracle" $ do
   -- the battlefield", and a factor reads before "for each" (Gerrard's Wisdom).
   Spec.it s "render counts objects for each or equal to their number" $ do
     let forests = countOf (Filter.HasSubtype Subtype.Forest) (onBattlefield (PlayerRef.Relative PlayerRelation.AnyPlayer))
-    Spec.assertEq s [Text.pack "You gain 1 life for each Forest on the battlefield.", Text.pack "You gain life equal to the number of Forests on the battlefield."] (Oracle.renderings (spell [clause [gainLifeBy forests]] []))
+    Spec.assertEq s [[Text.pack "You gain 1 life for each Forest on the battlefield.", Text.pack "You gain life equal to the number of Forests on the battlefield."]] (Oracle.abilities (spell [clause [gainLifeBy forests]] []))
     let hand = countOf (Filter.And []) (InZone.MkInZone Zone.Hand (PlayerRef.Relative PlayerRelation.You))
-    Spec.assertEq s [Text.pack "You gain 2 life for each card in your hand."] (Oracle.renderings (spell [clause [gainLifeBy (Quantity.Arithmetic (Arithmetic.Times (Times.MkTimes 2 hand)))]] []))
+    Spec.assertEq s [[Text.pack "You gain 2 life for each card in your hand."]] (Oracle.abilities (spell [clause [gainLifeBy (Quantity.Arithmetic (Arithmetic.Times (Times.MkTimes 2 hand)))]] []))
     let tapped = countOf (Filter.And [Filter.HasCardType CardType.Creature, Filter.IsTapped, Filter.ControlledByBound target]) (onBattlefield (PlayerRef.Relative PlayerRelation.AnyPlayer))
         opponent = [(target, TargetSlot.required Pool.Players (Just (Filter.IsPlayer PlayerRelation.Opponent)))]
-    Spec.assertEq s [Text.pack "Draw a card for each tapped creature target opponent controls.", Text.pack "Draw cards equal to the number of tapped creatures target opponent controls."] (Oracle.renderings (spell [clause [Effect.Draw (Draw.MkDraw (PlayerRef.Relative PlayerRelation.You) tapped Nothing)]] opponent))
+    Spec.assertEq s [[Text.pack "Draw a card for each tapped creature target opponent controls.", Text.pack "Draw cards equal to the number of tapped creatures target opponent controls."]] (Oracle.abilities (spell [clause [Effect.Draw (Draw.MkDraw (PlayerRef.Relative PlayerRelation.You) tapped Nothing)]] opponent))
     let swamps = countOf (Filter.And [Filter.HasSubtype Subtype.Swamp, Filter.ControlledBy PlayerRelation.You]) (onBattlefield (PlayerRef.Relative PlayerRelation.AnyPlayer))
         coffers = activated (Cost.MkCost (Just (ManaCost.MkManaCost [ManaSymbol.Generic 2])) [CostComponent.TapThis]) (Effect.AddMana (ManaAddition.MkManaAddition (PlayerRef.Relative PlayerRelation.You) (ManaProduction.OfType (ManaType.Colored Color.Black)) swamps ManaRetention.Ordinary Nothing Nothing Nothing))
-    Spec.assertEq s [Text.pack "{2}, {T}: Add {B} for each Swamp you control."] (Oracle.renderings (withFace (\f -> f {Face.activatedAbilities = [coffers]})))
+    Spec.assertEq s [[Text.pack "{2}, {T}: Add {B} for each Swamp you control."]] (Oracle.abilities (withFace (\f -> f {Face.activatedAbilities = [coffers]})))
     let theirs = countOf (Filter.HasCardType CardType.Creature) (InZone.MkInZone Zone.Graveyard PlayerRef.Candidate)
     Spec.assertEq s (Just (Text.pack "Each player draws a card for each creature card in their graveyard.")) (Oracle.render (spell [clause [Effect.Draw (Draw.MkDraw (PlayerRef.Relative PlayerRelation.AnyPlayer) theirs Nothing)]] []))
 
@@ -453,13 +472,13 @@ spec s = Spec.describe s "Pawl.Oracle" $ do
   Spec.it s "render deals damage equal to a number" $ do
     let mountains = countOf (Filter.And [Filter.HasSubtype Subtype.Mountain, Filter.ControlledBy PlayerRelation.You]) (onBattlefield (PlayerRef.Relative PlayerRelation.AnyPlayer))
         ambush = spell [clause [damageBy [(ObjectRef.InSlot target, mountains)]]] [(target, TargetSlot.required Pool.Creatures Nothing)]
-    Spec.assertEq s [Text.pack "Spark deals damage to target creature equal to the number of Mountains you control.", Text.pack "Spark deals damage equal to the number of Mountains you control to target creature."] (Oracle.renderings ambush)
+    Spec.assertEq s [[Text.pack "Spark deals damage to target creature equal to the number of Mountains you control.", Text.pack "Spark deals damage equal to the number of Mountains you control to target creature."]] (Oracle.abilities ambush)
     let theirs = countOf (Filter.And [Filter.HasCardType CardType.Land, Filter.ControlledByRecipient]) (onBattlefield (PlayerRef.Relative PlayerRelation.AnyPlayer))
     Spec.assertEq s (Just (Text.pack "Spark deals damage to each player equal to the number of lands they control.")) (Oracle.render (spell [clause [damageBy [(ObjectRef.EachPlayer, theirs)]]] []))
     let dealer = SlotName.MkSlotName (Text.pack "dealer")
         fire = Effect.DealDamage (DealDamage.MkDealDamage (Seq.singleton (DamagePart.MkDamagePart (ObjectRef.InSlot target) (powerOf dealer))) (Just dealer) Nothing)
         slots = [(dealer, TargetSlot.required Pool.Creatures (Just (Filter.ControlledBy PlayerRelation.You))), (target, TargetSlot.required Pool.AnyTarget Nothing)]
-    Spec.assertEq s [Text.pack "Target creature you control deals damage equal to its power to any target.", Text.pack "Target creature you control deals damage to any target equal to its power."] (Oracle.renderings (spell [clause [fire]] slots))
+    Spec.assertEq s [[Text.pack "Target creature you control deals damage equal to its power to any target.", Text.pack "Target creature you control deals damage to any target equal to its power."]] (Oracle.abilities (spell [clause [fire]] slots))
     let victim f = [(dealer, TargetSlot.required Pool.Creatures (Just (Filter.ControlledBy PlayerRelation.You))), (target, TargetSlot.required Pool.Creatures (Just f))]
     Spec.assertEq s (Just (Text.pack "Target creature you control deals damage equal to its power to another target creature.")) (Oracle.render (spell [clause [fire]] (victim (Filter.Not (Filter.IsBound dealer)))))
     Spec.assertEq s (Just (Text.pack "Target creature you control deals damage equal to its power to target creature you don't control.")) (Oracle.render (spell [clause [fire]] (victim (Filter.Not (Filter.ControlledBy PlayerRelation.You)))))
@@ -472,9 +491,9 @@ spec s = Spec.describe s "Pawl.Oracle" $ do
   Spec.it s "render reads a target's characteristic as its own" $ do
     let mine = [(target, TargetSlot.required Pool.Creatures (Just (Filter.ControlledBy PlayerRelation.You)))]
         majesty = spell [clause [Effect.Draw (Draw.MkDraw (PlayerRef.Relative PlayerRelation.You) (powerOf target) Nothing)]] mine
-    Spec.assertEq s [Text.pack "Draw cards equal to the power of target creature you control."] (Oracle.renderings majesty)
+    Spec.assertEq s [[Text.pack "Draw cards equal to the power of target creature you control."]] (Oracle.abilities majesty)
     let plowshares = spell [clause [Effect.MoveToZone (move (ObjectRef.InSlot target) Zone.Exile), Effect.GainLife (PlayerQuantity.MkPlayerQuantity (PlayerRef.ControllerOfBound target) (powerOf target))]] [(target, TargetSlot.required Pool.Creatures Nothing)]
-    Spec.assertBool s (elem (Text.pack "Exile target creature. Its controller gains life equal to its power.") (Oracle.renderings plowshares)) "no \"its power\""
+    Spec.assertBool s (elem (Text.pack "Exile target creature. Its controller gains life equal to its power.") (concat (Oracle.abilities plowshares))) "no \"its power\""
 
   -- CR 107.3: a change that counts reads "for each" (Empyrial Armor) or "+X"
   -- with what X is (Inner Calm, Outer Strength), "for each" first; a change by
@@ -504,12 +523,12 @@ spec s = Spec.describe s "Pawl.Oracle" $ do
     let hand = countOf (Filter.And []) (InZone.MkInZone Zone.Hand (PlayerRef.Relative PlayerRelation.You))
         snake = token "Snake Token" [Color.Green] [Subtype.Snake] 1 []
         swarm = Effect.Create (Create.MkCreate hand snake EntryRiders.defaultValue Nothing (PlayerRef.Relative PlayerRelation.You))
-    Spec.assertEq s [Text.pack "Create a 1/1 green Snake creature token for each card in your hand.", Text.pack "Create a number of 1/1 green Snake creature tokens equal to the number of cards in your hand."] (Oracle.renderings (spell [clause [swarm]] []))
+    Spec.assertEq s [[Text.pack "Create a 1/1 green Snake creature token for each card in your hand.", Text.pack "Create a number of 1/1 green Snake creature tokens equal to the number of cards in your hand."]] (Oracle.abilities (spell [clause [swarm]] []))
     let opponents = Quantity.Count (Count.MkCount (Scope.OverPlayers (PlayerRef.Relative PlayerRelation.Opponent)) (Filter.And []) Aggregation.Members)
         invasion = Effect.Create (Create.MkCreate opponents snake EntryRiders.defaultValue Nothing (PlayerRef.Relative PlayerRelation.You))
     Spec.assertBool s (Oracle.says (spell [clause [invasion]] []) (CardName.MkCardName (Text.pack "Spark")) (Text.pack "Create a number of 1/1 green Snake creature tokens equal to the number of opponents you have.")) "no \"opponents you have\""
     let ghoul = Effect.PutCounters (PutCounters.MkPutCounters CounterKind.PlusOnePlusOne hand (ObjectRef.InSlot (SlotName.MkSlotName (Text.pack "self"))))
-    Spec.assertEq s [Text.pack "Put a +1/+1 counter on Spark for each card in your hand.", Text.pack "Put a number of +1/+1 counters on Spark equal to the number of cards in your hand."] (Oracle.renderings (spell [clause [ghoul]] []))
+    Spec.assertEq s [[Text.pack "Put a +1/+1 counter on Spark for each card in your hand.", Text.pack "Put a number of +1/+1 counters on Spark equal to the number of cards in your hand."]] (Oracle.abilities (spell [clause [ghoul]] []))
 
 -- A count of the members of a zone matching the filter.
 countOf :: Filter.Filter Keyword.Keyword -> InZone.InZone -> Quantity.Quantity

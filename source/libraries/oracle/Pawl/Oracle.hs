@@ -1,5 +1,5 @@
 -- Oracle text a card file can be checked against (#9). Pawl.IngestSpec asserts
--- that each pool card 'renderings' answers for says what its faces'
+-- that each pool card 'render' answers for says what its faces'
 -- Face.oracleText says, modulo Pawl.Oracle.Normalise.normalise.
 --
 -- Rendering is compositional over the DSL, one module per type family, never
@@ -39,50 +39,86 @@ import qualified Pawl.Types.TriggeredAbility as TriggeredAbility
 import qualified Pawl.Types.TypeLine as TypeLine
 
 -- | The card's rules text in its current Oracle wording, or 'Nothing' for a
--- card some part of which is not rendered yet.
+-- card some part of which is not rendered yet: the head wording of each
+-- ability, one per line.
 render :: Card.Card -> Maybe Text.Text
-render = Maybe.listToMaybe . renderings
+render card = do
+  face <- single card
+  fmap (Text.intercalate (Text.pack "\n")) (traverse Maybe.listToMaybe (faceAbilities face))
 
--- | Every wording of the card's rules text Oracle uses, the current first;
--- empty for a card some part of which is not rendered yet. Only a single
--- normal face renders yet, and only the parts of it the fields below name:
--- its keywords, its enchant abilities (CR 702.5a), its static abilities (CR
--- 604), its characteristic-defining power and toughness (CR 604.3), its spell (CR 112), its activated abilities (CR 602) and its
--- triggered abilities (CR 603). A card with no rules text renders as no text,
--- which is what a vanilla creature and a basic land print (CR 305.6, CR
--- 207.2a).
-renderings :: Card.Card -> [Text.Text]
-renderings card = case Card.faces card of
-  face NonEmpty.:| [] | Card.layout card == Layout.Normal -> faceText face
-  _ -> []
+-- | The card's abilities, each with every wording of it Oracle uses, the
+-- current first, and none for an ability not rendered yet. An ability's
+-- wordings are its own, so the choices of one ability add to those of the
+-- next rather than multiplying with them. Only a single normal face is read
+-- yet: every ability of any other card is listed unrendered.
+abilities :: Card.Card -> [[Text.Text]]
+abilities card = case single card of
+  Just face -> faceAbilities face
+  Nothing -> concatMap (fmap (const []) . faceAbilities) (Card.faces card)
 
--- | Whether the text is one of the card's renderings, modulo
--- 'Normalise.normalise'.
+-- | The card's face, when it is the one normal face this renders: a card of
+-- any other layout is not rendered yet, even one whose faces hold nothing.
+single :: Card.Card -> Maybe (Face.Face Card.Card)
+single card = case Card.faces card of
+  face NonEmpty.:| [] | Card.layout card == Layout.Normal -> Just face
+  _ -> Nothing
+
+-- | Whether the text says what the card says: each of its abilities takes
+-- one of its wordings' pieces from the text's, modulo 'Normalise.normalise',
+-- and none is left over. A card some part of which is not rendered yet says
+-- nothing.
 says :: Card.Card -> CardName.CardName -> Text.Text -> Bool
-says card name text = elem (Normalise.normalise name text) (fmap (Normalise.normalise name) (renderings card))
+says card name text =
+  Maybe.isJust (render card) && any null (leftovers name text (abilities card))
 
--- | A face's rules text, one ability per line. The face with the fields
--- rendered here cleared must be 'Face.Oracle.bare', so a field nothing here
--- renders keeps the card unrendered rather than silently left out.
-faceText :: Face.Face Card.Card -> [Text.Text]
-faceText face = do
+-- | The text's pieces left over once each ability has taken the pieces of one
+-- of its wordings, one list per way they can. The face keeps no printed
+-- order, so abilities pair with the text as a multiset, as
+-- 'Normalise.normalise' sorts lines; a spell's instructions are one ability
+-- even across paragraphs (CR 113.3a), so its wording takes pieces from
+-- several lines.
+leftovers :: CardName.CardName -> Text.Text -> [[Text.Text]] -> [[Text.Text]]
+leftovers name text = Monad.foldM taken (Normalise.normalise name text)
+  where
+    taken pieces = Maybe.mapMaybe (without pieces . Normalise.normalise name)
+
+-- | The first sorted list less the second, or 'Nothing' when the second is
+-- not a sub-multiset of the first.
+without :: (Ord a) => [a] -> [a] -> Maybe [a]
+without whole part = case (whole, part) of
+  (_, []) -> Just whole
+  ([], _ : _) -> Nothing
+  (w : ws, p : ps) -> case compare w p of
+    LT -> fmap (w :) (without ws part)
+    EQ -> without ws ps
+    GT -> Nothing
+
+-- | A face's abilities, each with its wordings: its keywords, its enchant
+-- abilities (CR 702.5a), its characteristic-defining power and toughness
+-- (CR 604.3), its static abilities (CR 604), its spell (CR 112), its
+-- activated abilities (CR 602) and its triggered abilities (CR 603). A face
+-- with no rules text has no abilities, which is what a vanilla creature and a
+-- basic land print (CR 305.6, CR 207.2a). Whatever else the face holds is one
+-- more ability, never rendered: the face with the fields rendered here
+-- cleared must be 'Face.Oracle.bare', so a field nothing here renders keeps
+-- the card unrendered rather than silently left out.
+faceAbilities :: Face.Face Card.Card -> [[Text.Text]]
+faceAbilities face =
   let self = CardName.unwrap (Face.name face)
       context = Target.MkContext self Map.empty (Keyword.keywordWord self) [Text.pack " "] Nothing
       rest = face {Face.keywords = Map.empty, Face.spell = Face.defaultSpell, Face.activatedAbilities = [], Face.triggeredAbilities = [], Face.staticAbilities = [], Face.enchant = [], Face.characteristicPT = Nothing}
       subtypes = TypeLine.subtypes (Face.typeLine face)
-  Monad.guard (rest == Face.Oracle.bare (Face.name face) (Face.oracleText face) (Face.manaCost face) (Face.colorIndicator face) (Face.typeLine face) (Face.power face) (Face.toughness face) Map.empty)
-  keywords <- Keyword.lines self (Face.keywords face)
-  spell <-
-    if Face.spell face == Face.defaultSpell
-      then [[]]
-      else fmap pure (Effect.modal context {Target.breaks = [Text.pack " ", Text.pack "\n"]} (Face.spell face))
-  enchants <- traverse (Continuous.enchant context) (Face.enchant face)
-  let bestowed = any (\k -> case k of Keyword.Type.Bestow _ -> True; _ -> False) (Map.keys (Face.keywords face))
-  statics <- traverse (Continuous.static context (Continuous.attachedWord subtypes bestowed) (Face.enchant face)) (Face.staticAbilities face)
-  defined <- traverse (Continuous.defining context (Face.power face) (Face.toughness face)) (Maybe.maybeToList (Face.characteristicPT face))
-  abilities <- traverse (activated context) (Face.activatedAbilities face)
-  triggers <- traverse (triggered context (Set.member CardType.Creature (TypeLine.types (Face.typeLine face)))) (Face.triggeredAbilities face)
-  [Text.intercalate (Text.pack "\n") (keywords <> enchants <> defined <> statics <> spell <> abilities <> triggers)]
+      unread = rest /= Face.Oracle.bare (Face.name face) (Face.oracleText face) (Face.manaCost face) (Face.colorIndicator face) (Face.typeLine face) (Face.power face) (Face.toughness face) Map.empty
+      spell = [Effect.modal context {Target.breaks = [Text.pack " ", Text.pack "\n"]} (Face.spell face) | Face.spell face /= Face.defaultSpell]
+      bestowed = any (\k -> case k of Keyword.Type.Bestow _ -> True; _ -> False) (Map.keys (Face.keywords face))
+   in Keyword.abilities self (Face.keywords face)
+        <> fmap (Continuous.enchant context) (Face.enchant face)
+        <> fmap (Continuous.defining context (Face.power face) (Face.toughness face)) (Maybe.maybeToList (Face.characteristicPT face))
+        <> fmap (Continuous.static context (Continuous.attachedWord subtypes bestowed) (Face.enchant face)) (Face.staticAbilities face)
+        <> spell
+        <> fmap (activated context) (Face.activatedAbilities face)
+        <> fmap (triggered context (Set.member CardType.Creature (TypeLine.types (Face.typeLine face)))) (Face.triggeredAbilities face)
+        <> [[] | unread]
 
 -- | A triggered ability: "[When/Whenever/At] [trigger event], [effect]" (CR
 -- 603.1), the effect calling the source "it" once the event has named it
