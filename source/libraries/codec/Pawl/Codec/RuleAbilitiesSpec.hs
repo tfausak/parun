@@ -30,6 +30,7 @@ import qualified Pawl.Types.RequirementArity as RequirementArity
 import qualified Pawl.Types.RuleAbilities as RuleAbilities
 import qualified Pawl.Types.SacrificeRestriction as SacrificeRestriction
 import qualified Pawl.Types.Subtype as Subtype
+import qualified Pawl.Types.UntapHold as UntapHold
 import qualified Pawl.Types.UntapRestriction as UntapRestriction
 import qualified Pawl.Types.Zone as Zone
 
@@ -56,7 +57,7 @@ testRuleAbilities =
       RuleAbilities.crewRestrictions = [CrewRestriction.MkCrewRestriction Affected.Attached],
       RuleAbilities.entryRestrictions = [EntryRestriction.MkEntryRestriction Affected.Attached (Set.singleton Zone.Graveyard)],
       RuleAbilities.sacrificeRestrictions = [SacrificeRestriction.MkSacrificeRestriction Affected.Attached],
-      RuleAbilities.untapRestrictions = [UntapRestriction.MkUntapRestriction Affected.Attached]
+      RuleAbilities.untapRestrictions = [UntapRestriction.MkUntapRestriction Affected.Attached UntapHold.Forbidden]
     }
 
 testRuleAbilitiesJson :: String

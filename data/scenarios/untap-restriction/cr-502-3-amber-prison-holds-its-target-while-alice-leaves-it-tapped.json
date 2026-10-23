@@ -1,0 +1,42 @@
+{
+  "description": "CR 502.3 / 611.2b Amber Prison holds its target tapped for as long as alice leaves the Prison tapped",
+  "note": "Alice taps bob's Hill Giant with the Prison. On turn 3 she is asked which of her permanents she may leave tapped to untap, and keeps the Prison tapped while her Islands untap; bob's Giant then stays tapped through his turn 4 untap step. On turn 5 she untaps the Prison, which ends CR 611.2b's duration, and bob's turn 6 untap step untaps the Giant. Turn 3's answer is not the default, which untaps every permanent offered. On turn 7 the Prison is already untapped, so nothing is asked: an unscheduled prompt there would fail the scenario.",
+  "board": {
+    "seats": [
+      {
+        "name": "alice",
+        "battlefield": [
+          { "card": "Amber Prison", "label": "prison" },
+          { "card": "Island", "label": "island-1" },
+          { "card": "Island", "label": "island-2" },
+          { "card": "Island", "label": "island-3" },
+          { "card": "Island", "label": "island-4" }
+        ],
+        "library": [{ "card": "Island" }, { "card": "Island" }, { "card": "Island" }, { "card": "Island" }]
+      },
+      {
+        "name": "bob",
+        "battlefield": [{ "card": "Hill Giant", "label": "giant", "ready": true }],
+        "library": [{ "card": "Mountain" }, { "card": "Mountain" }, { "card": "Mountain" }, { "card": "Mountain" }]
+      }
+    ],
+    "active": "alice",
+    "step": "PrecombatMain"
+  },
+  "timeline": [
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "check": { "Tapped": { "object": "$giant", "tapped": false } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": { "Activate": { "object": "$prison", "ability": 0, "targets": ["$giant"], "mana": ["$island-1", "$island-2", "$island-3", "$island-4"] } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass" },
+    { "turn": 1, "step": "PostcombatMain", "player": "alice", "check": { "Tapped": { "object": "$giant", "tapped": true } } },
+    { "turn": 2, "step": "Upkeep", "player": "bob", "check": { "Tapped": { "object": "$giant", "tapped": true } } },
+    { "turn": 3, "step": "Untap", "player": "alice", "do": { "Answer": { "prompt": "ChooseAnyNumberToUntap", "with": [] } } },
+    { "turn": 3, "step": "Upkeep", "player": "alice", "check": { "Tapped": { "object": "$prison", "tapped": true } } },
+    { "turn": 3, "step": "Upkeep", "player": "alice", "check": { "Tapped": { "object": "$island-1", "tapped": false } } },
+    { "turn": 4, "step": "Upkeep", "player": "bob", "check": { "Tapped": { "object": "$giant", "tapped": true } } },
+    { "turn": 5, "step": "Untap", "player": "alice", "do": { "Answer": { "prompt": "ChooseAnyNumberToUntap", "with": ["$prison"] } } },
+    { "turn": 5, "step": "Upkeep", "player": "alice", "check": { "Tapped": { "object": "$prison", "tapped": false } } },
+    { "turn": 6, "step": "Upkeep", "player": "bob", "check": { "Tapped": { "object": "$giant", "tapped": false } } },
+    { "turn": 6, "step": "DeclareAttackers", "player": "bob", "do": { "Attack": [] } },
+    { "turn": 7, "step": "Upkeep", "player": "alice", "check": { "Tapped": { "object": "$prison", "tapped": false } } }
+  ]
+}

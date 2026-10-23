@@ -87,6 +87,7 @@ kindOf prompt = Text.pack $ case prompt of
     AnyNumberOf.ToDiscard -> "ChooseAnyNumberToDiscard"
     AnyNumberOf.ToCrank -> "ChooseAnyNumberToCrank"
     AnyNumberOf.IntoPile -> "ChooseAnyNumberIntoPile"
+    AnyNumberOf.ToUntap -> "ChooseAnyNumberToUntap"
   Prompt.ChooseDungeon {} -> "ChooseDungeon"
   Prompt.ChooseSticker {} -> "ChooseSticker"
   Prompt.ChooseStickerOrNone {} -> "ChooseStickerOrNone"

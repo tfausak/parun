@@ -62,7 +62,9 @@ data RuleAbilities = MkRuleAbilities
     -- (Garland, Royal Kidnapper).
     sacrificeRestrictions :: [SacrificeRestriction.SacrificeRestriction],
     -- | CR 502.3: "each land with an activated ability that isn't a mana ability
-    -- doesn't untap during its controller's untap step" (Tsabo's Web).
+    -- doesn't untap during its controller's untap step" (Tsabo's Web), and "you
+    -- may choose not to untap this artifact during your untap step" (Amber
+    -- Prison).
     untapRestrictions :: [UntapRestriction.UntapRestriction]
   }
   deriving (Eq, Ord, Show)

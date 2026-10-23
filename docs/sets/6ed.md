@@ -202,8 +202,6 @@ first.
 
 - #5491: Zur's Weirding. A draw replacement whose outcome the other players
   decide by paying life.
-- #5492: Amber Prison. A choice inside the untap step, which asks nobody today,
-  and a duration that ends when its source untaps.
 - #4491: Rowen. A draw-time reveal granted from the battlefield, linked to a
   trigger.
 - #5493: Forbidden Crypt. A draw replacement that returns a graveyard card, and
