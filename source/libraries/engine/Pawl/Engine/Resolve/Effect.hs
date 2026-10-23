@@ -131,6 +131,7 @@ import qualified Pawl.Types.Ballot as Ballot
 import qualified Pawl.Types.BallotChoice as BallotChoice
 import qualified Pawl.Types.BecameDesignated as BecameDesignated
 import qualified Pawl.Types.BecomeCopy as BecomeCopy
+import qualified Pawl.Types.Bid as Bid
 import qualified Pawl.Types.Binding as Binding.Type
 import qualified Pawl.Types.Blight as Blight.Type
 import qualified Pawl.Types.CandidateCost as CandidateCost
@@ -3754,6 +3755,7 @@ effectIsImpossible resolving source controller legal gs effect = case effect of
   -- naming-nobody case: nobody votes and nothing is bound, which CR 609.3
   -- carries out vacuously. A word vote's list is printed, so it cannot be empty.
   Effect.Vote {} -> False
+  Effect.Bid {} -> False
   Effect.TakeExtraTurn {} -> False
   Effect.ShuffleIntoLibrary {} -> False
   -- CR 608.2d / 407.4: the instruction names anteing players and not one named
@@ -7274,6 +7276,41 @@ applyOneEffect runSubgame resolving source controller legal chosen effect = case
         picks <- cast $ \voter -> ballotAmong voter (fmap BallotChoice.ForPlayer (candidatesFor voter))
         let tally = Map.fromList (fmap (\pid -> (pid, Natural.length (filter (== Just (BallotChoice.ForPlayer pid)) picks))) (concatMap candidatesFor voters))
         State.modify' (overHolderBindings resolving (Map.insert slot (Binding.toVotes tally)))
+  -- CR 608.2d: CR 109.5's "you" holds the opening bid, then each other seat in
+  -- turn order may top the high bid, round after round, until every seat but
+  -- the high bidder has declined to top it (Pain's Reward's ruling), so a seat
+  -- that passed may top a later bid. The bidders are the seats still playing
+  -- within the controller's range (CR 801.10), Vote's roster.
+  --
+  -- A bid is a number with no ceiling: Illicit Auction's ruling has the high
+  -- bidder LOSE that much life rather than pay it, so a bid past the bidder's
+  -- life total is legal. Through Prompt.ChooseNumber with the high bid as its
+  -- floor; an answer at or below it declines to top it.
+  --
+  -- Nothing on the board changes while the seats bid, so the roster and the
+  -- deciders are read off this one `gs`.
+  Effect.Bid (Bid.MkBid opening highBidSlot highBidderSlot) -> do
+    gs <- State.get
+    let viewOf = effectViewOf source legal gs
+        context = effectContext gs resolving controller source legal (slotBindings resolving gs)
+        start = maybe 0 Integer.toNaturalSaturating (Quantity.evaluateFor viewOf context gs resolving source opening)
+        bidders = filter (\pid -> List.elem pid (Players.table (Plane.rangePerspective source controller gs) gs)) (Game.turnOrderFrom controller gs)
+        -- The seats after `holder` in turn order, wrapping, `holder` left out.
+        after holder = case List.break (== holder) bidders of
+          (before, _ : rest) -> rest <> before
+          (before, []) -> before
+        -- `waiting` are the seats still to be asked since the last bid; the
+        -- bidding ends when none is left.
+        auction high holder waiting = case waiting of
+          [] -> pure (high, holder)
+          bidder : rest -> do
+            answer <- Game.choose (Prompt.ChooseNumber (Decide.deciderFor bidder gs) bidder resolving high Nothing)
+            if answer > high
+              then auction answer bidder (after bidder)
+              else auction high holder rest
+    (high, winner) <- auction start controller (after controller)
+    State.modify' (bindAmountSlot resolving source highBidSlot high)
+    State.modify' (bindPlayerSlot resolving highBidderSlot (Set.singleton winner))
   Effect.Create (Create.MkCreate quantity card entry mSlot creator) -> do
     gs <- State.get
     let viewOf = effectViewOf source legal gs
@@ -10241,7 +10278,7 @@ applyOneEffect runSubgame resolving source controller legal chosen effect = case
     asked <- askedChooser resolving source controller legal chooser
     Monad.forM_ asked $ \pid -> do
       gs <- State.get
-      answer <- Game.choose (Prompt.ChooseNumber (Decide.deciderFor pid gs) pid resolving upTo)
+      answer <- Game.choose (Prompt.ChooseNumber (Decide.deciderFor pid gs) pid resolving 0 upTo)
       State.modify' (bindAmountSlot resolving source slot (maybe answer (min answer) upTo))
   -- CR 701.26a: turn each named permanent sideways. The victims are enumerated
   -- ONCE (CR 608.2f) and off the board as it stands before any of them is tapped,

@@ -54,6 +54,7 @@ import qualified Pawl.Types.AttachedToBound as AttachedToBound
 import qualified Pawl.Types.AttackTargetRef as AttackTargetRef
 import qualified Pawl.Types.AttackingPlayers as AttackingPlayers
 import qualified Pawl.Types.BecomeCopy as BecomeCopy
+import qualified Pawl.Types.Bid as Bid
 import qualified Pawl.Types.Binding as Binding.Type
 import qualified Pawl.Types.Blight as Blight.Type
 import qualified Pawl.Types.Card as Card.Type
@@ -898,6 +899,7 @@ effectObjectRefs effect = case effect of
   Effect.Venture {} -> []
   Effect.PlayerSacrifices {} -> []
   Effect.Vote {} -> []
+  Effect.Bid {} -> []
   Effect.TakeExtraTurn {} -> []
   Effect.ShuffleIntoLibrary (ShuffleIntoLibrary.MkShuffleIntoLibrary _ refs _) -> NonEmpty.toList refs
   Effect.Ante (Ante.MkAnte _ ref _) -> [ref]
@@ -1127,6 +1129,8 @@ effectPlayerRefs effect = case effect of
   Effect.PlayerSacrifices (PlayerSacrifices.MkPlayerSacrifices players _ _) -> [players]
   -- CR 701.38a's specified player, the seat the vote starts with.
   Effect.Vote (Vote.MkVote starter _ _) -> [starter]
+  -- The bidders are every player, CR 109.5's "you" opening.
+  Effect.Bid {} -> []
   Effect.TakeExtraTurn takeExtraTurn -> [TakeExtraTurn.player takeExtraTurn]
   Effect.ShuffleIntoLibrary (ShuffleIntoLibrary.MkShuffleIntoLibrary named _ _) -> Maybe.maybeToList named
   Effect.Ante (Ante.MkAnte player _ _) -> [player]
@@ -1285,6 +1289,8 @@ slotsOf effect = joinTwo (joinTwo (joinSlots (fmap objectRefSlots (effectObjectR
     VoteChoices.Objects objects -> filterSlotsOf (VoteObjects.filter objects)
     VoteChoices.Words _ -> Map.empty
     VoteChoices.Players _ -> Map.empty
+  -- The opening bid is the read; the two slots are boundSlots' half.
+  Effect.Bid bid -> quantitySlots (Bid.opening bid)
   Effect.RestartGame _ -> Map.empty
   Effect.ControlPlayerNextTurn slot -> oneSlot slot
   Effect.ControlPlayerThisResolution (ControlPlayer.MkControlPlayer slot _) -> oneSlot slot
@@ -2120,6 +2126,7 @@ ownSlotsAreExhaustive effect = case effect of
   Effect.NoteManaSpent -> True
   Effect.PlayerSacrifices (PlayerSacrifices.MkPlayerSacrifices _ _ quantity) -> Quantity.slotsAreExhaustive quantity
   Effect.Vote {} -> True
+  Effect.Bid bid -> Quantity.slotsAreExhaustive (Bid.opening bid)
   Effect.RestartGame _ -> True
   Effect.ControlPlayerNextTurn _ -> True
   Effect.ControlPlayerThisResolution _ -> True
@@ -2407,6 +2414,7 @@ readsX =
         Effect.NoteManaSpent -> False
         Effect.PlayerSacrifices (PlayerSacrifices.MkPlayerSacrifices _ _ quantity) -> Quantity.readsX quantity
         Effect.Vote {} -> False
+        Effect.Bid bid -> Quantity.readsX (Bid.opening bid)
         Effect.RestartGame _ -> False
         Effect.ControlPlayerNextTurn _ -> False
         Effect.ControlPlayerThisResolution _ -> False
@@ -2692,6 +2700,8 @@ boundSlots effect = case effect of
     VoteChoices.Objects objects -> Set.singleton (VoteObjects.slot objects)
     VoteChoices.Words voteWords -> Set.fromList (NonEmpty.toList voteWords)
     VoteChoices.Players players -> Set.singleton (VotePlayers.slot players)
+  -- The high bid and the high bidder, for the instructions that act on them.
+  Effect.Bid (Bid.MkBid _ highBid highBidder) -> Set.fromList [highBid, highBidder]
   Effect.RestartGame _ -> Set.empty
   Effect.ControlPlayerNextTurn _ -> Set.empty
   Effect.ControlPlayerThisResolution _ -> Set.empty

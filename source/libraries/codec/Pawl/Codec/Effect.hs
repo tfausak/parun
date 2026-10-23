@@ -23,6 +23,7 @@ import qualified Pawl.Codec.AttachAll as AttachAll
 import qualified Pawl.Codec.AttachBound as AttachBound
 import qualified Pawl.Codec.AttachTarget as AttachTarget
 import qualified Pawl.Codec.BecomeCopy as BecomeCopy
+import qualified Pawl.Codec.Bid as Bid
 import qualified Pawl.Codec.Blight as Blight
 import qualified Pawl.Codec.CardName as CardName
 import qualified Pawl.Codec.CastOffer as CastOffer
@@ -173,6 +174,7 @@ codec cardCodec abilityCodec =
           Arm.nullary "NoteManaSpent" Effect.NoteManaSpent,
           Arm.payload "PlayerSacrifices" PlayerSacrifices.codec Effect.PlayerSacrifices (\x -> case x of Effect.PlayerSacrifices y -> Just y; _ -> Nothing),
           Arm.payload "Vote" Vote.codec Effect.Vote (\x -> case x of Effect.Vote y -> Just y; _ -> Nothing),
+          Arm.payload "Bid" Bid.codec Effect.Bid (\x -> case x of Effect.Bid y -> Just y; _ -> Nothing),
           Arm.optionalPayload "RestartGame" ObjectRef.codec Effect.RestartGame (\x -> case x of Effect.RestartGame y -> Just y; _ -> Nothing),
           Arm.payload "ControlPlayerNextTurn" SlotName.codec Effect.ControlPlayerNextTurn (\x -> case x of Effect.ControlPlayerNextTurn y -> Just y; _ -> Nothing),
           Arm.payload "ControlPlayerThisResolution" ControlPlayer.codec Effect.ControlPlayerThisResolution (\x -> case x of Effect.ControlPlayerThisResolution y -> Just y; _ -> Nothing),
@@ -350,6 +352,7 @@ tagOf x = case x of
   Effect.NoteManaSpent {} -> "NoteManaSpent"
   Effect.PlayerSacrifices {} -> "PlayerSacrifices"
   Effect.Vote {} -> "Vote"
+  Effect.Bid {} -> "Bid"
   Effect.RestartGame {} -> "RestartGame"
   Effect.ControlPlayerNextTurn {} -> "ControlPlayerNextTurn"
   Effect.ControlPlayerThisResolution {} -> "ControlPlayerThisResolution"

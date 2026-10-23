@@ -45,6 +45,7 @@ import qualified Pawl.Types.AttackPermission as AttackPermission
 import qualified Pawl.Types.AttackRequirement as AttackRequirement
 import qualified Pawl.Types.AttackTargetRef as AttackTargetRef
 import qualified Pawl.Types.BecomeCopy as BecomeCopy
+import qualified Pawl.Types.Bid as Bid
 import qualified Pawl.Types.Blight as Blight
 import qualified Pawl.Types.BlockPermission as BlockPermission
 import qualified Pawl.Types.BlockRequirement as BlockRequirement
@@ -669,6 +670,7 @@ rewriteEffect pairs effect = case effect of
   Effect.ExileHandThenDraw -> effect
   Effect.NoteManaSpent -> effect
   Effect.PlayerSacrifices (PlayerSacrifices.MkPlayerSacrifices players filter_ quantity) -> Effect.PlayerSacrifices (PlayerSacrifices.MkPlayerSacrifices players (Filter.rewrite pairs filter_) (rewriteQuantity pairs quantity))
+  Effect.Bid bid -> Effect.Bid bid {Bid.opening = rewriteQuantity pairs (Bid.opening bid)}
   Effect.Vote vote ->
     Effect.Vote $ case Vote.choices vote of
       VoteChoices.Objects objects -> vote {Vote.choices = VoteChoices.Objects objects {VoteObjects.filter = Filter.rewrite pairs (VoteObjects.filter objects)}}
