@@ -1,0 +1,70 @@
+{
+  "description": "CR 118.12a Tariff charges each player the mana cost of the creature they picked, colour included",
+  "note": "bob's Hill Giant and Giant Spider tie for greatest; he picks the Spider and pays {3}{G} with a Forest and three Plains, which could not pay the Giant's {3}{R}. carol's six Mountains cover the Craw Wurm's mana value but not its {4}{G}{G}, so she is offered nothing and loses it. alice declines and loses her Serra Angel. Each lower creature stands.",
+  "board": {
+    "seats": [
+      {
+        "name": "alice",
+        "battlefield": [
+          { "card": "Plains", "label": "ap1", "ready": true },
+          { "card": "Plains", "label": "ap2", "ready": true },
+          { "card": "Plains", "label": "ap3", "ready": true },
+          { "card": "Plains", "label": "ap4", "ready": true },
+          { "card": "Plains", "label": "ap5", "ready": true },
+          { "card": "Plains", "label": "ap6", "ready": true },
+          { "card": "Plains", "label": "ap7", "ready": true },
+          { "card": "Serra Angel", "ready": true },
+          { "card": "Savannah Lions", "ready": true }
+        ],
+        "hand": [
+          { "card": "Tariff", "label": "tariff" }
+        ]
+      },
+      {
+        "name": "bob",
+        "battlefield": [
+          { "card": "Hill Giant", "label": "giant", "ready": true },
+          { "card": "Giant Spider", "label": "spider", "ready": true },
+          { "card": "Grizzly Bears", "ready": true },
+          { "card": "Forest", "label": "forest", "ready": true },
+          { "card": "Plains", "label": "bp1", "ready": true },
+          { "card": "Plains", "label": "bp2", "ready": true },
+          { "card": "Plains", "label": "bp3", "ready": true }
+        ]
+      },
+      {
+        "name": "carol",
+        "battlefield": [
+          { "card": "Craw Wurm", "ready": true },
+          { "card": "Goblin Piker", "ready": true },
+          { "card": "Mountain", "label": "cm1", "ready": true },
+          { "card": "Mountain", "label": "cm2", "ready": true },
+          { "card": "Mountain", "label": "cm3", "ready": true },
+          { "card": "Mountain", "label": "cm4", "ready": true },
+          { "card": "Mountain", "label": "cm5", "ready": true },
+          { "card": "Mountain", "label": "cm6", "ready": true }
+        ]
+      }
+    ],
+    "active": "alice",
+    "step": "PrecombatMain"
+  },
+  "timeline": [
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": { "Cast": { "object": "$tariff", "mana": ["$ap1", "$ap2", null] } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass" },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": { "ChooseToPay": { "decision": { "type": "Declines" } } }, "source": "Tariff" },
+    { "turn": 1, "step": "PrecombatMain", "player": "bob", "do": { "Answer": { "prompt": "ChoosePermanent", "with": "$spider" } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "bob", "do": { "ChooseToPay": { "decision": { "type": "Pays" }, "mana": ["$forest", "$bp1", "$bp2", "$bp3"] } }, "source": "Tariff" },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "check": { "Count": { "player": "bob", "zone": "Battlefield", "card": "Giant Spider", "count": 1 } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "check": { "Count": { "player": "bob", "zone": "Battlefield", "card": "Hill Giant", "count": 1 } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "check": { "Count": { "player": "alice", "zone": "Graveyard", "card": "Serra Angel", "count": 1 } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "check": { "Count": { "player": "carol", "zone": "Graveyard", "card": "Craw Wurm", "count": 1 } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "check": { "Count": { "player": "alice", "zone": "Battlefield", "card": "Savannah Lions", "count": 1 } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "check": { "Count": { "player": "bob", "zone": "Battlefield", "card": "Grizzly Bears", "count": 1 } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "check": { "Count": { "player": "carol", "zone": "Battlefield", "card": "Goblin Piker", "count": 1 } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "check": { "Tapped": { "object": "$forest", "tapped": true } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "check": { "Tapped": { "object": "$bp3", "tapped": true } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "check": { "Tapped": { "object": "$cm1", "tapped": false } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "check": { "Count": { "player": "alice", "zone": "Graveyard", "card": "Tariff", "count": 1 } } }
+  ]
+}
