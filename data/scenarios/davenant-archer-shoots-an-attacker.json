@@ -1,0 +1,13 @@
+{
+  "description": "CR 602.2 whole card: D'Avenant Archer taps to deal 1 damage to target attacking or blocking creature",
+  "note": "Bob attacks with Savannah Lions and keeps his bears home: targeting the bears is refused, and the Lions die.",
+  "board": {"active": "bob", "step": "BeginningOfCombat", "seats": [{"name": "alice", "library": [{"card": "Island"}, {"card": "Island"}, {"card": "Island"}], "battlefield": [{"card": "D'Avenant Archer", "label": "archer", "ready": true}]}, {"name": "bob", "library": [{"card": "Island"}, {"card": "Island"}, {"card": "Island"}], "battlefield": [{"card": "Savannah Lions", "label": "lions", "ready": true}, {"card": "Grizzly Bears", "label": "bears", "ready": true}]}]},
+  "timeline": [
+    {"turn": 1, "step": "DeclareAttackers", "player": "bob", "do": {"Attack": ["$lions"]}},
+    {"turn": 1, "step": "DeclareAttackers", "player": "alice", "refuse": {"Activate": {"object": "$archer", "targets": ["$bears"]}}},
+    {"turn": 1, "step": "DeclareAttackers", "player": "alice", "do": {"Activate": {"object": "$archer", "targets": ["$lions"]}}},
+    {"turn": 1, "step": "DeclareAttackers", "player": "alice", "do": "Pass"},
+    {"turn": 1, "step": "DeclareAttackers", "player": "alice", "check": {"Count": {"player": "bob", "zone": "Battlefield", "card": "Savannah Lions", "count": 0}}},
+    {"turn": 1, "step": "EndOfCombat", "player": "alice", "check": {"Life": {"player": "alice", "life": 20}}}
+  ]
+}

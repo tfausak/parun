@@ -1,0 +1,10 @@
+{
+  "description": "CR 604.3 whole card: Maro's power and toughness are each the number of cards in its controller's hand",
+  "note": "Alice holds three cards to bob's five: Maro is 3/3, and 2/2 once she plays one of them.",
+  "board": {"active": "alice", "step": "PrecombatMain", "seats": [{"name": "alice", "library": [{"card": "Island"}, {"card": "Island"}, {"card": "Island"}], "battlefield": [{"card": "Maro", "label": "maro"}], "hand": [{"card": "Forest", "label": "land"}, {"card": "Island"}, {"card": "Island"}]}, {"name": "bob", "library": [{"card": "Island"}, {"card": "Island"}, {"card": "Island"}], "hand": [{"card": "Island"}, {"card": "Island"}, {"card": "Island"}, {"card": "Island"}, {"card": "Island"}]}]},
+  "timeline": [
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "check": {"PowerToughness": {"object": "$maro", "power": 3, "toughness": 3}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": {"PlayLand": "$land"}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "check": {"PowerToughness": {"object": "$maro", "power": 2, "toughness": 2}}}
+  ]
+}

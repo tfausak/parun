@@ -1,0 +1,14 @@
+{
+  "description": "CR 111.1 whole card: Icatian Town creates four 1/1 white Citizen creature tokens",
+  "note": "Four tokens, each 1/1 and white, under alice's control.",
+  "board": {"active": "alice", "step": "PrecombatMain", "seats": [{"name": "alice", "library": [{"card": "Island"}, {"card": "Island"}, {"card": "Island"}], "battlefield": [{"card": "Plains", "label": "p1"}, {"card": "Plains", "label": "p2"}, {"card": "Plains", "label": "p3"}, {"card": "Plains", "label": "p4"}, {"card": "Plains", "label": "p5"}, {"card": "Plains", "label": "p6"}], "hand": [{"card": "Icatian Town", "label": "town"}]}, {"name": "bob", "library": [{"card": "Island"}, {"card": "Island"}, {"card": "Island"}]}]},
+  "timeline": [
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": {"Cast": {"object": "$town", "mana": ["$p1", "$p2", "$p3", "$p4", "$p5", "$p6"]}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass"},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": {"OrderTimestamps": ["Citizen Token", "Citizen Token#2", "Citizen Token#3", "Citizen Token#4"]}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "check": {"Count": {"player": "alice", "zone": "Battlefield", "card": "Citizen Token", "count": 4}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "check": {"PowerToughness": {"object": "Citizen Token#4", "power": 1, "toughness": 1}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "check": {"View": {"of": "Colors", "object": "Citizen Token", "is": ["White"]}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "check": {"Subtypes": {"object": "Citizen Token#2", "subtypes": ["Citizen"]}}}
+  ]
+}

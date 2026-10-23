@@ -1,0 +1,13 @@
+{
+  "description": "CR 121.1 / 701.9a whole card: Jalum Tome pays {2} and taps to draw a card, then discard a card",
+  "note": "Alice draws the Hill Giant and discards the bears she already held.",
+  "board": {"active": "alice", "step": "PrecombatMain", "seats": [{"name": "alice", "library": [{"card": "Hill Giant"}, {"card": "Island"}, {"card": "Island"}], "battlefield": [{"card": "Jalum Tome", "label": "tome"}, {"card": "Island", "label": "i1"}, {"card": "Island", "label": "i2"}], "hand": [{"card": "Grizzly Bears", "label": "bears"}]}, {"name": "bob", "library": [{"card": "Island"}, {"card": "Island"}, {"card": "Island"}]}]},
+  "timeline": [
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": {"Activate": {"object": "$tome", "mana": ["$i1", "$i2"]}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass"},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": {"Answer": {"prompt": "ChooseDiscard", "with": ["$bears"]}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "check": {"Count": {"player": "alice", "zone": "Hand", "card": "Hill Giant", "count": 1}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "check": {"Count": {"player": "alice", "zone": "Graveyard", "card": "Grizzly Bears", "count": 1}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "check": {"Count": {"player": "alice", "zone": "Hand", "card": "Grizzly Bears", "count": 0}}}
+  ]
+}

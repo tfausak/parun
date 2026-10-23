@@ -24,6 +24,7 @@ import qualified Pawl.JsonCodec.Common as Common
 import qualified Pawl.JsonSchema.Define as Define
 import qualified Pawl.Mtgish as Mtgish
 import qualified Pawl.Oracle as Oracle
+import qualified Pawl.Oracle.Normalise as Normalise
 import qualified Pawl.Play.Command
 import qualified Pawl.Registry as Registry
 import qualified Pawl.Scenario as Scenario
@@ -155,7 +156,10 @@ oracle = do
 -- every accepted card is written to DIR instead, the pool's included. A name
 -- written @FILE stands for the names FILE lists, one a line. Each
 -- card rejected is named on stderr with why: the node kind not translated, or
--- what it renders as.
+-- what it renders as. A card's printed characteristics are CANDIDATES', not
+-- mtgish's ('Ingest.reprint'). Each card accepted is listed with its
+-- abilities, each marked new or named with a pool card that shares its
+-- wording.
 translate :: FilePath -> FilePath -> [String] -> IO ()
 translate mtgishPath candidatesPath options = do
   let go (o, c, names) rest = case rest of
@@ -169,26 +173,30 @@ translate mtgishPath candidatesPath options = do
         contents <- either (Left . Text.pack . show) Right (Encoding.decodeUtf8' bytes)
         fields <- Common.parse contents >>= Common.asObject
         known <- Common.field "texts" fields >>= Ingest.texts
+        records <- Common.field "cards" fields >>= Common.asArray
         printed <- case set of
           Nothing -> Right []
-          Just code -> Common.field "cards" fields >>= Common.asArray >>= fmap concat . traverse (inSet code)
-        pure (known, printed)
+          Just code -> fmap concat (traverse (inSet code) records)
+        named <- traverse (\record -> fmap (\name -> (name, Ingest.printed record)) (Common.asObject record >>= Common.field "name" >>= Common.asText)) records
+        pure (known, Map.fromList named, printed)
   case parsed of
     Left problem -> do
       TextIO.hPutStrLn IO.stderr (Text.pack (candidatesPath <> ": ") <> problem)
       Exit.exitFailure
-    Right (known, printed) -> do
+    Right (known, records, printed) -> do
       listed <- traverse (\name -> maybe (pure [name]) (fmap (filter (not . Text.null) . Text.lines) . readUtf8 . Text.unpack) (Text.stripPrefix (Text.pack "@") name)) requested
       let wanted = Set.fromList (concat listed <> printed)
       contents <- readUtf8 mtgishPath
       let asts = Map.fromListWith (<>) [(name, [line]) | line <- Text.lines contents, Just name <- [lineName line], Set.member name wanted]
       root <- Registry.defaultRoot
-      outcomes <- mapM (translateOne root out known asts) (Set.toList wanted)
+      pool <- fmap (Maybe.mapMaybe (either (const Nothing) Just . snd)) (Registry.loadRoot root)
+      outcomes <- mapM (translateOne root out known records asts) (Set.toList wanted)
       -- A node kind is its own reason; anything else, the words before its colon.
       let grouped reason = if Text.isPrefixOf (Text.pack "_") reason then reason else Text.takeWhile (/= ':') reason
           reasons = Map.fromListWith (+) [(grouped reason, 1 :: Int) | Left reason <- outcomes]
       putStrLn $ "translated: " <> show (length [() | Right _ <- outcomes])
-      mapM_ (\(kind, n) -> putStrLn ("  " <> kind <> ": " <> show n)) (Map.toList (Map.fromListWith (+) [(kind, 1 :: Int) | Right kind <- outcomes]))
+      mapM_ (\(kind, n) -> putStrLn ("  " <> kind <> ": " <> show n)) (Map.toList (Map.fromListWith (+) [(kind, 1 :: Int) | Right (kind, _) <- outcomes]))
+      mapM_ (TextIO.putStrLn . sharing pool) [card | Right (_, card) <- outcomes]
       putStrLn $ "rejected: " <> show (sum reasons)
       mapM_ (\(kind, n) -> TextIO.putStrLn (Text.pack "  " <> kind <> Text.pack (": " <> show n))) (List.sortOn (negate . snd) (Map.toList reasons))
   where
@@ -215,18 +223,37 @@ lineName line = do
   let (quoted, _) = Text.breakOn (Text.pack ",\"Typeline\"") rest
   either (const Nothing) Just (Common.parse quoted >>= Common.asText)
 
--- What became of one card: Right with what was done, or Left with why not.
-translateOne :: FilePath -> Maybe FilePath -> (Map.Map (Text.Text, Text.Text) Text.Text, Map.Map Text.Text Text.Text) -> Map.Map Text.Text [Text.Text] -> Text.Text -> IO (Either Text.Text String)
-translateOne root out known asts name = do
-  let result = case Map.findWithDefault [] name asts of
-        [line] -> Common.parse line >>= Mtgish.card >>= Mtgish.accepted . Ingest.stamp known
-        [] -> Left (Text.pack "not in mtgish")
+-- One line per ability of a translated card: whether another pool card has an
+-- ability its wording matches, modulo 'Normalise.normalise', and which. Cards
+-- sharing an ability's wording share its scenarios (CLAUDE.md), so an ability
+-- marked new is one that owes a scenario of its own.
+sharing :: [Card.Type.Card] -> Card.Type.Card -> Text.Text
+sharing pool card =
+  let name = nameOf card
+      line (key, wording) = case Set.toList (Set.delete name (Map.findWithDefault Set.empty key byWording)) of
+        [] -> Text.pack "  new: " <> wording
+        others -> Text.pack "  shared with " <> Text.intercalate (Text.pack ", ") (take 3 others) <> Text.pack ": " <> wording
+      byWording = Map.fromListWith Set.union [(key, Set.singleton (nameOf other)) | other <- pool, (key, _) <- wordings other]
+   in Text.unlines (name : fmap line (wordings card))
+  where
+    joined = CardName.join . fmap Face.name . Card.Type.faces
+    nameOf = CardName.unwrap . joined
+    wordings c = [(Normalise.normalise (joined c) wording, wording) | wording : _ <- Oracle.abilities c]
+
+-- What became of one card: Right with what was done and the card, or Left
+-- with why not.
+translateOne :: FilePath -> Maybe FilePath -> (Map.Map (Text.Text, Text.Text) Text.Text, Map.Map Text.Text Text.Text) -> Map.Map Text.Text (Either Text.Text (Face.Face Card.Type.Card, Maybe Text.Text, Maybe Text.Text)) -> Map.Map Text.Text [Text.Text] -> Text.Text -> IO (Either Text.Text (String, Card.Type.Card))
+translateOne root out known records asts name = do
+  let result = case (Map.findWithDefault [] name asts, Map.lookup name records) of
+        ([line], Just record) -> Common.parse line >>= Mtgish.card >>= \card -> record >>= Mtgish.accepted . Ingest.stamp known . flip Ingest.reprint card
+        ([_], Nothing) -> Left (Text.pack "not in CANDIDATES")
+        ([], _) -> Left (Text.pack "not in mtgish")
         _ -> Left (Text.pack "several mtgish cards")
   case result of
     Left reason -> do
       TextIO.hPutStrLn IO.stderr (name <> Text.pack ": " <> reason)
       pure (Left reason)
-    Right card -> case out of
+    Right card -> fmap (fmap (\done -> (done, card))) $ case out of
       Just dir -> Right "written" <$ writeCard (Registry.cardPath dir (Registry.filedAs card)) card
       Nothing -> do
         let file = Registry.cardPath root (Registry.filedAs card)

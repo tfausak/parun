@@ -1,0 +1,15 @@
+{
+  "description": "CR 503.1a whole card: Serenity destroys all artifacts and enchantments at the beginning of its controller's upkeep",
+  "note": "Bob's upkeep passes with everything standing; at alice's next upkeep every artifact and enchantment goes, Serenity too, and the bears stay.",
+  "board": {"active": "alice", "step": "EndStep", "seats": [{"name": "alice", "library": [{"card": "Island"}, {"card": "Island"}, {"card": "Island"}], "battlefield": [{"card": "Serenity", "label": "serenity"}, {"card": "Rod of Ruin", "label": "rod"}, {"card": "Grizzly Bears", "label": "bears"}]}, {"name": "bob", "library": [{"card": "Island"}, {"card": "Island"}, {"card": "Island"}], "battlefield": [{"card": "Bad Moon", "label": "moon"}, {"card": "Ornithopter", "label": "thopter"}]}]},
+  "timeline": [
+    {"turn": 2, "step": "DrawStep", "player": "bob", "check": {"Count": {"player": "bob", "zone": "Battlefield", "card": "Bad Moon", "count": 1}}},
+    {"turn": 2, "step": "DeclareAttackers", "player": "bob", "do": {"Attack": []}},
+    {"turn": 2, "step": "DrawStep", "player": "bob", "check": {"Count": {"player": "alice", "zone": "Battlefield", "card": "Serenity", "count": 1}}},
+    {"turn": 3, "step": "DrawStep", "player": "alice", "check": {"Count": {"player": "bob", "zone": "Battlefield", "card": "Bad Moon", "count": 0}}},
+    {"turn": 3, "step": "DrawStep", "player": "alice", "check": {"Count": {"player": "bob", "zone": "Battlefield", "card": "Ornithopter", "count": 0}}},
+    {"turn": 3, "step": "DrawStep", "player": "alice", "check": {"Count": {"player": "alice", "zone": "Battlefield", "card": "Rod of Ruin", "count": 0}}},
+    {"turn": 3, "step": "DrawStep", "player": "alice", "check": {"Count": {"player": "alice", "zone": "Battlefield", "card": "Serenity", "count": 0}}},
+    {"turn": 3, "step": "DrawStep", "player": "alice", "check": {"Count": {"player": "alice", "zone": "Battlefield", "card": "Grizzly Bears", "count": 1}}}
+  ]
+}

@@ -1,0 +1,14 @@
+{
+  "description": "CR 613.4c whole card: Goblin King gives other Goblins +1/+1 and mountainwalk, whoever controls them",
+  "note": "Alice's Raging Goblin and bob's Goblin Hero get both; the King gets neither, nor do the bears.",
+  "board": {"active": "alice", "step": "PrecombatMain", "seats": [{"name": "alice", "library": [{"card": "Island"}, {"card": "Island"}, {"card": "Island"}], "battlefield": [{"card": "Goblin King", "label": "king"}, {"card": "Raging Goblin", "label": "raging"}, {"card": "Grizzly Bears", "label": "bears"}]}, {"name": "bob", "library": [{"card": "Island"}, {"card": "Island"}, {"card": "Island"}], "battlefield": [{"card": "Goblin Hero", "label": "hero"}]}]},
+  "timeline": [
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "check": {"PowerToughness": {"object": "$raging", "power": 2, "toughness": 2}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "check": {"Keywords": {"object": "$raging", "keyword": {"type": "Landwalk", "value": {"type": "HasSubtype", "value": {"type": "Mountain"}}}, "count": 1}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "check": {"PowerToughness": {"object": "$hero", "power": 3, "toughness": 3}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "check": {"Keywords": {"object": "$hero", "keyword": {"type": "Landwalk", "value": {"type": "HasSubtype", "value": {"type": "Mountain"}}}, "count": 1}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "check": {"PowerToughness": {"object": "$king", "power": 2, "toughness": 2}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "check": {"Keywords": {"object": "$king", "keyword": {"type": "Landwalk", "value": {"type": "HasSubtype", "value": {"type": "Mountain"}}}, "count": 0}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "check": {"PowerToughness": {"object": "$bears", "power": 2, "toughness": 2}}}
+  ]
+}

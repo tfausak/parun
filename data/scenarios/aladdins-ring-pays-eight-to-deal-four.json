@@ -1,0 +1,12 @@
+{
+  "description": "CR 602.2 whole card: Aladdin's Ring pays {8} and taps to deal 4 damage to any target",
+  "note": "Nine Mountains: the ninth stays untapped, and bob goes to 16.",
+  "board": {"active": "alice", "step": "PrecombatMain", "seats": [{"name": "alice", "library": [{"card": "Island"}, {"card": "Island"}, {"card": "Island"}], "battlefield": [{"card": "Aladdin's Ring", "label": "ring"}, {"card": "Mountain", "label": "m1"}, {"card": "Mountain", "label": "m2"}, {"card": "Mountain", "label": "m3"}, {"card": "Mountain", "label": "m4"}, {"card": "Mountain", "label": "m5"}, {"card": "Mountain", "label": "m6"}, {"card": "Mountain", "label": "m7"}, {"card": "Mountain", "label": "m8"}, {"card": "Mountain", "label": "m9"}]}, {"name": "bob", "library": [{"card": "Island"}, {"card": "Island"}, {"card": "Island"}]}]},
+  "timeline": [
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": {"Activate": {"object": "$ring", "targets": ["$bob"], "mana": ["$m1", "$m2", "$m3", "$m4", "$m5", "$m6", "$m7", "$m8", null]}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass"},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "check": {"Life": {"player": "bob", "life": 16}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "check": {"Tapped": {"object": "$ring", "tapped": true}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "check": {"Tapped": {"object": "$m9", "tapped": false}}}
+  ]
+}

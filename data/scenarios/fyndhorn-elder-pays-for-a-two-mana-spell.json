@@ -1,0 +1,11 @@
+{
+  "description": "CR 106.4 whole card: Fyndhorn Elder taps for {G}{G}",
+  "note": "Grizzly Bears costs {1}{G} and the Elder is alice's only mana source.",
+  "board": {"active": "alice", "step": "PrecombatMain", "seats": [{"name": "alice", "library": [{"card": "Island"}, {"card": "Island"}, {"card": "Island"}], "battlefield": [{"card": "Fyndhorn Elder", "label": "elder", "ready": true}], "hand": [{"card": "Grizzly Bears", "label": "bears"}]}, {"name": "bob", "library": [{"card": "Island"}, {"card": "Island"}, {"card": "Island"}]}]},
+  "timeline": [
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": {"Cast": {"object": "$bears", "mana": ["$elder"]}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass"},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "check": {"Count": {"player": "alice", "zone": "Battlefield", "card": "Grizzly Bears", "count": 1}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "check": {"Tapped": {"object": "$elder", "tapped": true}}}
+  ]
+}
