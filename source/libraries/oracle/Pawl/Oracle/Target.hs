@@ -55,7 +55,11 @@ data Context = MkContext
     -- | The slots naming a card the instruction's controller is known to
     -- own: what the source became once put into "your graveyard" (CR 404.1),
     -- which returns to "your hand" (Zodiac Dragon).
-    owned :: [SlotName.SlotName]
+    owned :: [SlotName.SlotName],
+    -- | The objects an earlier instruction of the mode has named, which a
+    -- later one calls "it": "Put a +1/+1 counter on Silvar. It gains
+    -- indestructible until end of turn."
+    earlier :: [ObjectRef.ObjectRef]
   }
 
 -- | Words that name something, with the target slots they announce (each slot
@@ -246,6 +250,27 @@ zoneOf zone whose = do
 -- (Jagged Lightning), and two target lands are destroyed.
 object :: Context -> Determiner -> ObjectRef.ObjectRef -> [Reference]
 object context determiner ref = case ref of
+  _
+    | elem ref (earlier context) -> case ref of
+        ObjectRef.InSlot s
+          | s == selfSlot -> [MkReference (Text.pack "it") [] Filter.Singular]
+          | Just slot <- Map.lookup s (slots context),
+            fmap number (target context s) == [Filter.Singular] -> case (TargetSlot.pool slot, pooled slot) of
+              (Pool.Players, _) -> [MkReference (Text.pack "that player") [] Filter.Singular]
+              -- Free: "it" (Cryogenic Stasis) or "that creature" (Burning
+              -- Cloak).
+              (_, nouns@(_ : _)) -> MkReference (Text.pack "it") [] Filter.Singular : fmap (\noun -> MkReference (Text.pack "that " <> noun) [] Filter.Singular) nouns
+              -- A target that may be a player or an object named again is
+              -- not spelled out here.
+              _ -> []
+        -- Objects a continuous effect changes again: "They get an
+        -- additional +0/+2" (Rhystic Shield). Several objects named again
+        -- anywhere else are not spelled out here.
+        _
+          | determiner == Affected,
+            [MkReference _ _ Filter.Plural] <- object context {earlier = []} determiner ref ->
+              [MkReference (Text.pack "they") [] Filter.Plural]
+        _ -> []
   ObjectRef.InSlot s
     | s == selfSlot -> [MkReference (self context) [] Filter.Singular]
     | s == youSlot -> [MkReference (Text.pack "you") [] Filter.Singular]
@@ -303,6 +328,7 @@ player context ref = case ref of
   PlayerRef.Relative PlayerRelation.Opponent -> [(MkReference (Text.pack "each opponent") [] Filter.Plural, Third)]
   PlayerRef.Relative PlayerRelation.AnyPlayer -> [(MkReference (Text.pack "each player") [] Filter.Plural, Third)]
   PlayerRef.InSlot s
+    | s == youSlot -> [(MkReference (Text.pack "you") [] Filter.Singular, Second)]
     | Just word <- Map.lookup s (bound context) -> [(MkReference word [] Filter.Singular, Third)]
     | otherwise -> fmap (\r -> (r, Third)) (target context s)
   PlayerRef.OwnerOfBound _ -> [(MkReference (Text.pack "its owner") [] Filter.Singular, Third)]
@@ -341,6 +367,16 @@ among context s = case Map.lookup s (slots context) of
           SlotCount.Printed (TargetCount.MkTargetCount 0 Nothing) -> [Text.pack "any number of " <> many]
           _ -> []
         [(MkReference text [s] Filter.Plural, total)]
+  _ -> []
+
+-- | The noun a slot's pool names its objects by, which "that" names one of
+-- again: "that creature", "that permanent".
+pooled :: TargetSlot.TargetSlot -> [Text.Text]
+pooled slot = case TargetSlot.pool slot of
+  Pool.Creatures -> [Text.pack "creature"]
+  Pool.Permanents -> [Text.pack "permanent"]
+  Pool.Spells -> [Text.pack "spell"]
+  Pool.CardsInGraveyard _ -> [Text.pack "card"]
   _ -> []
 
 -- | A slot's head in both numbers, "target" included: ("target creature",
@@ -396,7 +432,9 @@ creature p =
 counted :: SlotCount.SlotCount -> Text.Text -> Text.Text -> [(Text.Text, Filter.Number)]
 counted c one many = case c of
   SlotCount.Printed (TargetCount.MkTargetCount 1 (Just 1)) -> [(one, Filter.Singular)]
-  SlotCount.Printed (TargetCount.MkTargetCount 0 (Just 1)) -> [(Text.pack "up to one " <> one, Filter.Singular)]
+  -- "up to one other target creature" (Sunpearl Kirin), as "other" reads
+  -- after a number.
+  SlotCount.Printed (TargetCount.MkTargetCount 0 (Just 1)) -> [(Text.pack "up to one " <> maybe one (Text.pack "other " <>) (Text.stripPrefix (Text.pack "another ") one), Filter.Singular)]
   SlotCount.Printed (TargetCount.MkTargetCount least (Just most))
     | least == most -> [(Prose.cardinal (toInteger most) <> Text.pack " " <> many, Filter.Plural)]
     | least == 0 -> [(Text.pack "up to " <> Prose.cardinal (toInteger most) <> Text.pack " " <> many, Filter.Plural)]
