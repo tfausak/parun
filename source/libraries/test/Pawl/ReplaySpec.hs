@@ -98,6 +98,7 @@ import qualified Pawl.Types.RollAdjustment as RollAdjustment
 import qualified Pawl.Types.Sacrifice as Sacrifice
 import qualified Pawl.Types.SearchPlace as SearchPlace
 import qualified Pawl.Types.SlotName as SlotName
+import qualified Pawl.Types.StackObjectKind as StackObjectKind
 import qualified Pawl.Types.StickerKind as StickerKind
 import qualified Pawl.Types.StickerRef as StickerRef
 import qualified Pawl.Types.Subtype as Subtype
@@ -2373,7 +2374,7 @@ replaySpec s registry =
           decider = Decide.deciderFor S.alice gs
       case Face.triggeredAbilities (S.combinedFace acPrinting) of
         [ability] -> do
-          let legal = Target.fillableModes Nothing Nothing Map.empty acId Map.empty (TriggeredAbility.modal ability) gs
+          let legal = Target.fillableModes StackObjectKind.TriggeredAbility Nothing Nothing Map.empty acId Map.empty (TriggeredAbility.modal ability) gs
               p = Prompt.ChooseModes decider S.alice acId legal (ModeSelection.ChooseExactly 1)
               answer = Seq.singleton (ModeIndex.MkModeIndex 2)
           Spec.assertEqWith s "legal modes are 0 and 2 (bounce self-excluded)" legal (Set.fromList [ModeIndex.MkModeIndex 0, ModeIndex.MkModeIndex 2])

@@ -79,9 +79,11 @@ import qualified Pawl.Types.ReplacementEffect as ReplacementEffect
 import qualified Pawl.Types.RequirementArity as RequirementArity
 import qualified Pawl.Types.SacrificeRestriction as SacrificeRestriction
 import qualified Pawl.Types.SpecialAction as SpecialAction
+import qualified Pawl.Types.StackObjectKind as StackObjectKind
 import qualified Pawl.Types.StaticAbility as StaticAbility
 import qualified Pawl.Types.Subtype as Subtype
 import qualified Pawl.Types.Supertype as Supertype
+import qualified Pawl.Types.TargetRestriction as TargetRestriction
 import qualified Pawl.Types.TargetSlot as TargetSlot
 import qualified Pawl.Types.Toughness as Toughness
 import qualified Pawl.Types.TriggerCondition as TriggerCondition
@@ -170,6 +172,7 @@ baseFace =
       Face.attachRestrictions = [],
       Face.counterRestrictions = [],
       Face.crewRestrictions = [],
+      Face.targetRestrictions = [],
       Face.attackPermissions = [],
       Face.activationProhibitions = [],
       Face.entryRestrictions = [],
@@ -241,6 +244,7 @@ minimalFace =
       Face.attachRestrictions = [],
       Face.counterRestrictions = [],
       Face.crewRestrictions = [],
+      Face.targetRestrictions = [],
       Face.attackPermissions = [],
       Face.activationProhibitions = [],
       Face.entryRestrictions = [],
@@ -429,6 +433,9 @@ spec s = Spec.describe s "Pawl.Codec.Face" $ do
     Spec.it s "crewRestrictions (CR 702.122d/101.2) defaults to the empty list" $ do
       v <- Common.assertJson s baseFaceJson
       Spec.assertEq s (Face.crewRestrictions <$> decodeFace v) (Right [])
+    Spec.it s "targetRestrictions (CR 115/101.2) defaults to the empty list" $ do
+      v <- Common.assertJson s baseFaceJson
+      Spec.assertEq s (Face.targetRestrictions <$> decodeFace v) (Right [])
     Spec.it s "attackPermissions (CR 702.3b) defaults to the empty list" $ do
       v <- Common.assertJson s baseFaceJson
       Spec.assertEq s (Face.attackPermissions <$> decodeFace v) (Right [])
@@ -573,6 +580,13 @@ spec s = Spec.describe s "Pawl.Codec.Face" $ do
         decodeFace
         baseFace {Face.crewRestrictions = [CrewRestriction.MkCrewRestriction Affected.Attached]}
         (init baseFaceJson <> ",\"crewRestrictions\":[{\"affected\":{\"type\":\"Attached\"}}]}")
+    Spec.it s "targetRestrictions" $
+      Common.assertJsonCodec
+        s
+        encodeFace
+        decodeFace
+        baseFace {Face.targetRestrictions = [TargetRestriction.MkTargetRestriction Affected.Attached StackObjectKind.Spell]}
+        (init baseFaceJson <> ",\"targetRestrictions\":[{\"affected\":{\"type\":\"Attached\"},\"kind\":{\"type\":\"Spell\"}}]}")
     Spec.it s "attackPermissions" $
       Common.assertJsonCodec
         s

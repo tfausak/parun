@@ -71,6 +71,7 @@ import qualified Pawl.Types.Recipient as Recipient
 import qualified Pawl.Types.Regenerability as Regenerability
 import qualified Pawl.Types.Response as Response
 import qualified Pawl.Types.Sickness as Sickness
+import qualified Pawl.Types.StackObjectKind as StackObjectKind
 import qualified Pawl.Types.StepBegan as StepBegan
 import qualified Pawl.Types.TapState as TapState
 import qualified Pawl.Types.Timestamp as Timestamp
@@ -1308,7 +1309,7 @@ exchangeLifeTotalsSpec s registry = Spec.describe s "ExchangeLifeTotals" $ do
     -- a candidate list nothing consumed proves nothing.
     let candidates = case Activatable.abilitiesFor mirrorId board of
           [ability] -> case Seq.lookup 0 (Modal.modes (ActivatedAbility.modal ability)) of
-            Just mode -> Map.elems (Target.legalSets Nothing (Just S.alice) False Map.empty mirrorId (Mode.targetSlots mode) board)
+            Just mode -> Map.elems (Target.legalSets StackObjectKind.ActivatedAbility Nothing (Just S.alice) False Map.empty mirrorId (Mode.targetSlots mode) board)
             Nothing -> []
           _ -> []
     Spec.assertEqWith s "both opponents are candidates, alice is not" candidates [Set.fromList [Recipient.ToPlayer S.bob, Recipient.ToPlayer S.carol]]

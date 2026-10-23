@@ -372,6 +372,7 @@ import qualified Pawl.Types.TapForMana as TapForMana
 import qualified Pawl.Types.TapForTotalPower as TapForTotalPower
 import qualified Pawl.Types.TapPermanents as TapPermanents
 import qualified Pawl.Types.TapState as TapState
+import qualified Pawl.Types.TargetRestriction as TargetRestriction
 import qualified Pawl.Types.TargetSlot as TargetSlot
 import qualified Pawl.Types.TheseDiscard as TheseDiscard
 import qualified Pawl.Types.TokenPattern as TokenPattern
@@ -447,6 +448,7 @@ vanillaFace name typeLine =
       Face.attachRestrictions = [],
       Face.counterRestrictions = [],
       Face.crewRestrictions = [],
+      Face.targetRestrictions = [],
       Face.attackPermissions = [],
       Face.activationProhibitions = [],
       Face.entryRestrictions = [],
@@ -2086,7 +2088,7 @@ cardCounts card =
     <> concatMap (concatMap conditionCounts . Maybe.maybeToList . CostReduction.condition) (Face.costReductions card)
     <> ruleAbilitiesCounts (Projection.ruleAbilitiesOfFace card)
 
--- Every Count reachable from the fourteen CR 613.11 rule-ability families, a
+-- Every Count reachable from the fifteen CR 613.11 rule-ability families, a
 -- printed face's (cardCounts) and a granted bundle's (modificationCounts) alike.
 ruleAbilitiesCounts :: RuleAbilities.RuleAbilities -> [Count.Type.Count Quantity.Type.Quantity]
 ruleAbilitiesCounts rules =
@@ -6302,7 +6304,7 @@ grantedTriggeredAbilities card =
     )
     (grantedModifications card)
 
--- Every Filter the fourteen CR 613.11 rule-ability families carry, a printed
+-- Every Filter the fifteen CR 613.11 rule-ability families carry, a printed
 -- face's (cardFilters) and a granted bundle's alike.
 ruleAbilitiesFilters :: RuleAbilities.RuleAbilities -> [(Framing, Filter.Type.Filter Keyword.Keyword)]
 ruleAbilitiesFilters rules =
@@ -6320,6 +6322,7 @@ ruleAbilitiesFilters rules =
         <> concatMap (unframed . affectedFilters . SacrificeRestriction.affected) (RuleAbilities.sacrificeRestrictions rules)
         <> concatMap (unframed . affectedFilters . UntapRestriction.affected) (RuleAbilities.untapRestrictions rules)
         <> concatMap (unframed . affectedFilters . CrewRestriction.affected) (RuleAbilities.crewRestrictions rules)
+        <> concatMap (unframed . affectedFilters . TargetRestriction.affected) (RuleAbilities.targetRestrictions rules)
         <> concatMap (unframed . affectedFilters . AttackPermission.affected) (RuleAbilities.attackPermissions rules)
         <> concatMap (unframed . attachRestrictionFilters) (RuleAbilities.attachRestrictions rules)
         <> concatMap (unframed . affectedFilters . EntryRestriction.affected) (RuleAbilities.entryRestrictions rules)
@@ -6581,6 +6584,7 @@ activatedAbilityFilters ability =
 --   * `combatRestrictions` (CR 508.1c / 509.1b), `sacrificeRestrictions` (CR
 --     701.21a / 101.2), `untapRestrictions` (CR 502.3 / 101.2),
 --     `crewRestrictions` (CR 702.122d / 101.2),
+--     `targetRestrictions` (CR 115 / 101.2),
 --     `attackPermissions` (CR 702.3b),
 --     `entryRestrictions` (CR 400.4a / 101.2),
 --     `counterRestrictions` (CR 122.6 / 101.2),

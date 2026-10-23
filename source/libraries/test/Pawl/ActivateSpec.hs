@@ -100,6 +100,7 @@ import qualified Pawl.Types.Regenerability as Regenerability
 import qualified Pawl.Types.ReturnPermanents as ReturnPermanents
 import qualified Pawl.Types.ScenarioFailure as ScenarioFailure
 import qualified Pawl.Types.Sickness as Sickness
+import qualified Pawl.Types.StackObjectKind as StackObjectKind
 import qualified Pawl.Types.Subtype as Subtype
 import qualified Pawl.Types.TapState as TapState
 import qualified Pawl.Types.TargetSlot as TargetSlot
@@ -2382,7 +2383,7 @@ textChangedTargetSpec s registry =
         Nothing -> []
         Just ability -> case Seq.lookup 0 (Modal.modes (ActivatedAbility.modal ability)) of
           Nothing -> []
-          Just mode -> fmap Set.toList (Map.elems (Target.legalSets Nothing (Just S.alice) False Map.empty elfId (Mode.targetSlots mode) gs))
+          Just mode -> fmap Set.toList (Map.elems (Target.legalSets StackObjectKind.ActivatedAbility Nothing (Just S.alice) False Map.empty elfId (Mode.targetSlots mode) gs))
       run hacked = do
         arborElf <- S.printingOf s registry "Arbor Elf"
         forest <- S.printingOf s registry "Forest"

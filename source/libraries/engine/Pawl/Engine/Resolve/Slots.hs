@@ -239,6 +239,7 @@ import Pawl.Types.SlotName (SlotName)
 import qualified Pawl.Types.SlotPerPlayer as SlotPerPlayer
 import qualified Pawl.Types.Source as Source
 import qualified Pawl.Types.SpeedDecrease as SpeedDecrease
+import qualified Pawl.Types.StackObjectKind as StackObjectKind
 import qualified Pawl.Types.TakeExtraTurn as TakeExtraTurn
 import qualified Pawl.Types.TargetChooser as TargetChooser
 import qualified Pawl.Types.TargetSlot as TargetSlot
@@ -3590,6 +3591,14 @@ conjureQuantities conjure =
     ConjureCards.Written {} -> []
     ConjureCards.Duplicate {} -> []
     ConjureCards.Reference from -> Maybe.maybeToList (FromReference.amount from)
+
+-- | CR 115.1's kind of the spell or ability `resolving` is, which CR 608.2b's
+-- re-check and CR 115.7's and CR 707.10c's re-choices hand the targeting
+-- funnel (Pawl.Engine.TargetRestriction reads it). Every caller holds an object
+-- it has just looked up on the stack, so the Spell an object of no kind gets is
+-- never answered.
+resolvingKind :: ObjectId -> GameState -> StackObjectKind.StackObjectKind
+resolvingKind resolving gs = Maybe.fromMaybe StackObjectKind.Spell (Game.stackObjectKind resolving gs)
 
 -- | CR 607.2a's name for the ability resolving as `resolving`: an activated
 -- ability's ActivatedAbility.name, which is how a linked reference names one of

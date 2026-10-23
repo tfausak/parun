@@ -206,6 +206,7 @@ import qualified Pawl.Types.RevealCause as RevealCause
 import qualified Pawl.Types.Revealed as Revealed
 import qualified Pawl.Types.RoomHalf as RoomHalf
 import qualified Pawl.Types.Sacrifice as Sacrifice
+import qualified Pawl.Types.StackObjectKind as StackObjectKind
 import qualified Pawl.Types.Subtype as Subtype
 import qualified Pawl.Types.TapState as TapState
 import qualified Pawl.Types.TargetCount as TargetCount
@@ -409,7 +410,7 @@ turnFaceDownSpec s registry = Spec.describe s "Turning face down" $ do
         Spec.assertEqWith
           s
           "CR 702.37e only the creature with a morph ability is a legal target"
-          (Target.legalRecipients (Just S.alice) spell theSlot gs)
+          (Target.legalRecipients StackObjectKind.Spell (Just S.alice) spell theSlot gs)
           (Set.singleton (Recipient.ToCreature morphling))
     -- THE BEFORE control: the Tracker really is its printed self to begin with,
     -- so every assertion below is about the resolution and not about the fixture.
@@ -1001,7 +1002,7 @@ listedSpec s registry = Spec.describe s "Listed characteristics" $ do
         Spec.assertEqWith
           s
           "CR 115.2 both creatures are legal targets, the face-down one included"
-          (Target.legalRecipients (Just S.alice) spell theSlot down)
+          (Target.legalRecipients StackObjectKind.Spell (Just S.alice) spell theSlot down)
           (Set.fromList [Recipient.ToCreature victim, Recipient.ToCreature bystander])
     -- THE CONTROL: the same cast off the same state against the face-UP Piker.
     let control = S.runPure (aimAtByFiltering bystander) down (Cast.castSpell S.manaPerformer S.alice spell (S.printingName cyber) Facing.FaceUp >> Stack.resolveTop)

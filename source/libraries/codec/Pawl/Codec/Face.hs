@@ -60,6 +60,7 @@ import qualified Pawl.Codec.SacrificeRestriction as SacrificeRestriction
 import qualified Pawl.Codec.SpecialAction as SpecialAction
 import qualified Pawl.Codec.StaticAbility as StaticAbility
 import qualified Pawl.Codec.Subtype as Subtype
+import qualified Pawl.Codec.TargetRestriction as TargetRestriction
 import qualified Pawl.Codec.TargetSlot as TargetSlot
 import qualified Pawl.Codec.Toughness as Toughness
 import qualified Pawl.Codec.TriggeredAbility as TriggeredAbility
@@ -149,6 +150,7 @@ codec cardCodec = Fields.objectWith (modeCostsInRange Monad.>=> chooserHasModes)
   sacrificeRestrictions <- Fields.defaulted "sacrificeRestrictions" [] (Common.list SacrificeRestriction.codec) Face.sacrificeRestrictions
   untapRestrictions <- Fields.defaulted "untapRestrictions" [] (Common.list UntapRestriction.codec) Face.untapRestrictions
   crewRestrictions <- Fields.defaulted "crewRestrictions" [] (Common.list CrewRestriction.codec) Face.crewRestrictions
+  targetRestrictions <- Fields.defaulted "targetRestrictions" [] (Common.list TargetRestriction.codec) Face.targetRestrictions
   attackPermissions <- Fields.defaulted "attackPermissions" [] (Common.list AttackPermission.codec) Face.attackPermissions
   attachRestrictions <- Fields.defaulted "attachRestrictions" [] (Common.list AttachRestriction.codec) Face.attachRestrictions
   counterRestrictions <- Fields.defaulted "counterRestrictions" [] (Common.list CounterRestriction.codec) Face.counterRestrictions
@@ -228,6 +230,7 @@ codec cardCodec = Fields.objectWith (modeCostsInRange Monad.>=> chooserHasModes)
         Face.sacrificeRestrictions = sacrificeRestrictions,
         Face.untapRestrictions = untapRestrictions,
         Face.crewRestrictions = crewRestrictions,
+        Face.targetRestrictions = targetRestrictions,
         Face.attackPermissions = attackPermissions,
         Face.attachRestrictions = attachRestrictions,
         Face.counterRestrictions = counterRestrictions,

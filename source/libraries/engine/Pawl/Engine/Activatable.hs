@@ -51,6 +51,7 @@ import Pawl.Types.PlayerId (PlayerId)
 import qualified Pawl.Types.ProjectedCharacteristics as PC
 import qualified Pawl.Types.Recipient as Recipient
 import Pawl.Types.SlotName (SlotName)
+import qualified Pawl.Types.StackObjectKind as StackObjectKind
 import qualified Pawl.Types.Zone as Zone
 
 -- CR 302.6: a creature's {T}-cost ability can't be activated while summoning
@@ -533,7 +534,7 @@ candidateSlotsGiven :: Maybe AbilityName.AbilityName -> Target.Pools -> PlayerId
 candidateSlotsGiven reader pools pid srcId modal fillable gs =
   let -- CR 601.2c's per-player copies, as the announcement will offer them. A
       -- REGRESSION FENCE: no card pairs a per-player slot with a target-reading cost.
-      slotsOf chosen = Target.announcedSlots pid srcId gs (Modal.modesTargetSlots chosen modal)
+      slotsOf chosen = Target.announcedSlots StackObjectKind.ActivatedAbility pid srcId gs (Modal.modesTargetSlots chosen modal)
       -- CR 601.2b's announcement has NOT been made at this point, which is what
       -- `unannounced` says: a slot's CR 202.3 computed bound reading the X states
       -- no bound here rather than an unmeetable one, so the gate is measured
@@ -542,7 +543,7 @@ candidateSlotsGiven reader pools pid srcId modal fillable gs =
       -- agree, which they must: one is the offer gate and the other is what
       -- affordableX measures the cost against, and a gate and an announcement may
       -- not disagree about what a cost is.
-      setsOf slots = Target.legalSetsGiven reader pools (Just pid) True Map.empty srcId slots gs
+      setsOf slots = Target.legalSetsGiven StackObjectKind.ActivatedAbility reader pools (Just pid) True Map.empty srcId slots gs
       -- Before CR 601.2b, so a count reading the X admits every count.
       aimableOf slots = let sets = setsOf slots in (Target.aimingRanges reader (Just pid) srcId Nothing slots sets gs, fmap recipientObjects sets)
    in fmap (aimableOf . slotsOf) (Modal.selections fillable (Modal.Type.selection modal))
@@ -633,7 +634,7 @@ activatableGiven :: Target.Pools -> [ObjectId] -> PlayerId -> ObjectId -> Activa
 activatableGiven pools sources pid srcId ability gs =
   let Snapshot.MkSnapshot pcs grants = Target.board pools
       modal = ActivatedAbility.modal ability
-      fillable = Target.fillableModesGiven (ActivatedAbility.name ability) pools (Just pid) Map.empty srcId Map.empty modal gs
+      fillable = Target.fillableModesGiven StackObjectKind.ActivatedAbility (ActivatedAbility.name ability) pools (Just pid) Map.empty srcId Map.empty modal gs
       -- CR 601.2c's targets do not exist at an offer, so the cost conjunct is
       -- handed the ones this activation could still name -- see
       -- aimingSomewhere. Shared with the mode conjunct's own `fillable` rather

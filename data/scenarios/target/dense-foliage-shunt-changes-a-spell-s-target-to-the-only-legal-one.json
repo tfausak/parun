@@ -1,0 +1,39 @@
+{
+  "description": "CR 115.7a / 101.2 under Dense Foliage, Shunt can change alice's Shock only to alice, not to her creature",
+  "note": "bob Shunts the Shock alice aimed at him. Her Goblin Piker is a creature and the Shock is a spell, so alice is the one other legal target and the change is made without a question; she takes 2.",
+  "board": {
+    "seats": [
+      {
+        "name": "alice",
+        "battlefield": [
+          { "card": "Mountain", "label": "m1", "ready": true },
+          { "card": "Goblin Piker", "label": "piker" }
+        ],
+        "hand": [{ "card": "Shock", "label": "shock" }],
+        "library": [{ "card": "Swamp" }]
+      },
+      {
+        "name": "bob",
+        "battlefield": [
+          { "card": "Dense Foliage" },
+          { "card": "Mountain", "label": "b1", "ready": true },
+          { "card": "Mountain", "label": "b2", "ready": true },
+          { "card": "Mountain", "label": "b3", "ready": true }
+        ],
+        "hand": [{ "card": "Shunt", "label": "shunt" }],
+        "library": [{ "card": "Swamp" }]
+      }
+    ],
+    "active": "alice",
+    "step": "PrecombatMain"
+  },
+  "timeline": [
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": { "Cast": { "object": "$shock", "targets": ["$bob"], "mana": ["$m1"] } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "bob", "do": { "Cast": { "object": "$shunt", "targets": ["Shock"], "mana": ["$b1", "$b2", "$b3"] } } }
+  ],
+  "final": [
+    { "Life": { "player": "alice", "life": 18 } },
+    { "Life": { "player": "bob", "life": 20 } },
+    { "Damage": { "object": "$piker", "damage": 0 } }
+  ]
+}
