@@ -1,0 +1,42 @@
+{
+  "description": "CR 608.2b Dense Foliage cast in response makes a spell's creature target illegal, and leaves an ability's alone",
+  "note": "alice aims Shock and then Prodigal Sorcerer's ability at bob's bear. bob flashes in Dense Foliage through Vedalken Orrery. The ability resolves and deals 1; Shock, whose only target is now illegal, does nothing, so the bear lives with 1 damage rather than dying to 3.",
+  "board": {
+    "seats": [
+      {
+        "name": "alice",
+        "battlefield": [
+          { "card": "Mountain", "label": "m1", "ready": true },
+          { "card": "Prodigal Sorcerer", "label": "sorcerer", "ready": true }
+        ],
+        "hand": [{ "card": "Shock", "label": "shock" }],
+        "library": [{ "card": "Swamp" }]
+      },
+      {
+        "name": "bob",
+        "battlefield": [
+          { "card": "Grizzly Bears", "label": "bear" },
+          { "card": "Vedalken Orrery" },
+          { "card": "Forest", "label": "f1", "ready": true },
+          { "card": "Forest", "label": "f2", "ready": true },
+          { "card": "Forest", "label": "f3", "ready": true }
+        ],
+        "hand": [{ "card": "Dense Foliage", "label": "foliage" }],
+        "library": [{ "card": "Swamp" }]
+      }
+    ],
+    "active": "alice",
+    "step": "PrecombatMain"
+  },
+  "timeline": [
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": { "Cast": { "object": "$shock", "targets": ["$bear"], "mana": ["$m1"] } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "alice", "do": { "Activate": { "object": "$sorcerer", "targets": ["$bear"] } } },
+    { "turn": 1, "step": "PrecombatMain", "player": "bob", "do": { "Cast": { "object": "$foliage", "mana": ["$f1", "$f2", "$f3"] } } }
+  ],
+  "final": [
+    { "Damage": { "object": "$bear", "damage": 1 } },
+    { "Life": { "player": "bob", "life": 20 } },
+    { "Count": { "player": "alice", "zone": "Graveyard", "card": "Shock", "count": 1 } },
+    { "Count": { "player": "bob", "zone": "Battlefield", "card": "Dense Foliage", "count": 1 } }
+  ]
+}

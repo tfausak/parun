@@ -99,6 +99,7 @@ import qualified Pawl.Types.Sickness as Sickness
 import qualified Pawl.Types.SlotName as SlotName
 import qualified Pawl.Types.Source as Source
 import qualified Pawl.Types.SpellWasCast as SpellWasCast
+import qualified Pawl.Types.StackObjectKind as StackObjectKind
 import qualified Pawl.Types.Staged as Staged
 import qualified Pawl.Types.Subtype as Subtype
 import qualified Pawl.Types.TapPermanents as TapPermanents
@@ -1983,7 +1984,7 @@ auraTargetSpec s registry = Spec.describe s "AuraTarget" $ do
     Spec.assertEqWith
       s
       "its legal set is the one creature"
-      (Target.legalSets Nothing Nothing False Map.empty spellId slots gs)
+      (Target.legalSets StackObjectKind.Spell Nothing Nothing False Map.empty spellId slots gs)
       (Map.singleton Card.enchantSlot (Set.singleton (Recipient.ToCreature creature)))
   -- CR 601.2c: a spell whose required target has no legal choice cannot be
   -- cast at all. Reading only Mode.targetSlots would call this castable and

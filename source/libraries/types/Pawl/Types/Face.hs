@@ -62,6 +62,7 @@ import qualified Pawl.Types.SacrificeRestriction as SacrificeRestriction
 import qualified Pawl.Types.SpecialAction as SpecialAction
 import qualified Pawl.Types.StaticAbility as StaticAbility
 import qualified Pawl.Types.Subtype as Subtype
+import qualified Pawl.Types.TargetRestriction as TargetRestriction
 import qualified Pawl.Types.TargetSlot as TargetSlot
 import qualified Pawl.Types.Toughness as Toughness
 import qualified Pawl.Types.TriggeredAbility as TriggeredAbility
@@ -546,6 +547,11 @@ data Face card = MkFace
     -- 702.122d forbids paying a COST, where CR 508.1c and CR 509.1b forbid a
     -- combat declaration, so nothing that reads one may read the other.
     crewRestrictions :: [CrewRestriction.CrewRestriction],
+    -- | CR 604.1/604.2 / 115 / 101.2: this face's printed TARGETING
+    -- PROHIBITIONS that are not keywords -- "creatures can't be the targets of
+    -- spells" (Dense Foliage); read by Pawl.Engine.TargetRestriction, rewritten
+    -- by no layer, for blockRequirements' CR 613.11 reason.
+    targetRestrictions :: [TargetRestriction.TargetRestriction],
     -- | CR 604.1/604.2 / 702.3b: this face's printed ATTACKING PERMISSIONS --
     -- "can attack as though it didn't have defender"; read by
     -- Pawl.Engine.AttackPermission, rewritten by no layer, for

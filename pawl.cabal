@@ -1377,6 +1377,8 @@ library codec
     Pawl.Codec.TargetChooserSpec
     Pawl.Codec.TargetCount
     Pawl.Codec.TargetCountSpec
+    Pawl.Codec.TargetRestriction
+    Pawl.Codec.TargetRestrictionSpec
     Pawl.Codec.TargetSlot
     Pawl.Codec.TargetSlotSpec
     Pawl.Codec.TeamId
@@ -1659,6 +1661,7 @@ library engine
     Pawl.Engine.Summoning
     Pawl.Engine.Suspend
     Pawl.Engine.Target
+    Pawl.Engine.TargetRestriction
     Pawl.Engine.TextWord
     Pawl.Engine.TimeTravel
     Pawl.Engine.Turn
@@ -2970,6 +2973,7 @@ library types
     Pawl.Types.TapState
     Pawl.Types.TargetChooser
     Pawl.Types.TargetCount
+    Pawl.Types.TargetRestriction
     Pawl.Types.TargetSlot
     Pawl.Types.TeamId
     Pawl.Types.Teams

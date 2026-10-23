@@ -53,6 +53,7 @@ import qualified Pawl.Types.Prompt as Prompt
 import qualified Pawl.Types.Recipient as Recipient
 import qualified Pawl.Types.Sickness as Sickness
 import qualified Pawl.Types.SlotName as SlotName
+import qualified Pawl.Types.StackObjectKind as StackObjectKind
 import qualified Pawl.Types.TapState as TapState
 import qualified Pawl.Types.TargetSlot as TargetSlot
 import qualified Pawl.Types.Zone as Zone
@@ -1116,7 +1117,7 @@ effectRemovalSpec s registry = Spec.describe s "EffectRemoval" $ do
       (Just ability, (gs, [attacker], _, mazeId)) -> do
         let atEnd = runToEndOfCombatWith (mazeAnswer mazeId ability attacker) gs
             quiet = runToEndOfCombat S.aggressiveAnswer gs
-            legal = fmap (\theSlot -> Target.legalRecipients Nothing S.noSource theSlot atEnd) (removalTargetSlot ability)
+            legal = fmap (\theSlot -> Target.legalRecipients StackObjectKind.Spell Nothing S.noSource theSlot atEnd) (removalTargetSlot ability)
         Spec.assertEqWith s "the leg really reached the end of combat step, where the record still reads live (CR 511.3)" (GameState.phase atEnd) (Phase.Combat CombatStep.EndOfCombat)
         Spec.assertEqWith s "the ability really was activated: its {T} component was paid" (tapStateOf mazeId atEnd) (Just TapState.Tapped)
         Spec.assertBool s (Map.notMember attacker (Combat.Type.attackers (GameState.combat atEnd))) "CR 506.4: the Piker stopped being an attacking creature"

@@ -402,7 +402,7 @@ targetable castFor pid oid name gs = case proposedFace oid name gs of
         -- asked per candidate (candidateFillable below); the MODES are still
         -- judged.
         given = Map.union (Card.enchantSlotMapGiven (Projection.enchantOf oid gs)) (Card.mutateSlotMapGiven (maybe False Object.mutating (Game.lookupObject oid gs)))
-        fillableWhen chosen paid = Target.fillableModes Nothing (Just pid) Map.empty oid given (trimModalForCandidate castFor paid (Face.spell chosen)) gs
+        fillableWhen chosen paid = Target.fillableModes StackObjectKind.Spell Nothing (Just pid) Map.empty oid given (trimModalForCandidate castFor paid (Face.spell chosen)) gs
         -- CR 700.2e: castable when SOME player the caster could have choose
         -- has a selection to make, each reading the slots as that player's
         -- "that player" bakes them. The bake is a REGRESSION FENCE: Fatal
@@ -689,8 +689,8 @@ castAimable key announced x pid oid gs = case Game.faceOf oid gs of
           | otherwise = [trimmed]
         -- CR 601.2c's per-player copies, as castProposed offers them. A REGRESSION
         -- FENCE: no card pairs a per-player slot with a target-reading cost.
-        slotsOf modal chosen = Target.announcedSlots pid oid gs (Card.modesTargetSlotsGiven enchants mutating chosen face {Face.spell = modal})
-        setsOf slots = Target.legalSets Nothing (Just pid) True Map.empty oid slots gs
+        slotsOf modal chosen = Target.announcedSlots StackObjectKind.Spell pid oid gs (Card.modesTargetSlotsGiven enchants mutating chosen face {Face.spell = modal})
+        setsOf slots = Target.legalSets StackObjectKind.Spell Nothing (Just pid) True Map.empty oid slots gs
         -- CR 601.2c's joint check, asked as `setsOf` asks: ahead of the X, so a
         -- bound reading it states none. The sets are measured slot by slot and
         -- let one object answer both of "target" and "another target";
@@ -698,7 +698,7 @@ castAimable key announced x pid oid gs = case Game.faceOf oid gs of
         -- Pawl.TargetSpec's Synthetic Borrowed Exhumation under Kopala that it
         -- reads neither an X nor a stand-in for the player slot.
         pools = Target.wholePools gs
-        coherent slots aiming = Target.jointlyCoherentGiven Nothing pools (Just pid) True Map.empty oid slots aiming gs
+        coherent slots aiming = Target.jointlyCoherentGiven StackObjectKind.Spell Nothing pools (Just pid) True Map.empty oid slots aiming gs
         -- Every aiming of one selection's slots, at the counts CR 601.2c admits
         -- for the X this gate is asking about (Target.aimingRanges). Where a slot
         -- is jointly judged, recipients the cost cannot tell apart may still
@@ -712,7 +712,7 @@ castAimable key announced x pid oid gs = case Game.faceOf oid gs of
         -- CR 700.2: the modes CR 601.2b announced, or every selection the printed
         -- instruction admits among the fillable modes -- a "choose two" spell
         -- (Ojutai's Command) aims across both.
-        selected modal = maybe (Modal.selections (Target.fillableModes Nothing (Just pid) Map.empty oid enchant modal gs) (Modal.Type.selection modal)) pure announced
+        selected modal = maybe (Modal.selections (Target.fillableModes StackObjectKind.Spell Nothing (Just pid) Map.empty oid enchant modal gs) (Modal.Type.selection modal)) pure announced
      in Set.toList (Set.fromList [aiming | modal <- readings, chosen <- selected modal, aiming <- aimingsOf (slotsOf modal chosen)])
 
 -- CR 601.2b: the greatest value of X this player could actually pay for, which is
@@ -872,7 +872,7 @@ entwineOffer spending pid oid candidates gs = case Game.faceOf oid gs of
   Just face -> do
     cost <- costTotal (Keyword.entwineCosts (Map.keysSet (Cost.spellKeywords pid oid gs)))
     let modal = Face.spell face
-        legal = Target.fillableModes Nothing (Just pid) Map.empty oid (Card.enchantSlotMap face) modal gs
+        legal = Target.fillableModes StackObjectKind.Spell Nothing (Just pid) Map.empty oid (Card.enchantSlotMap face) modal gs
     Monad.guard (Natural.length legal == Modal.modeCount modal)
     Monad.guard (any (\(extra, candidate) -> payableCost (Just (Seq.fromList (Set.toAscList legal))) extra spending pid oid gs (Cost.plus candidate cost)) candidates)
     pure cost
@@ -993,7 +993,7 @@ spliceOffer pid sid gs cid = do
   face <- Game.faceOf cid gs
   splicing <- List.find (\splicing -> PlayerEffect.matchesObjectFrom (PlayerEffect.liveSource (Just cid)) (Splice.onto splicing) sid gs) (Keyword.splices (Map.keysSet (Projection.keywordsOf cid gs)))
   let modal = Face.spell face
-      fillable = Target.fillableModes Nothing (Just pid) Map.empty sid Map.empty modal gs
+      fillable = Target.fillableModes StackObjectKind.Spell Nothing (Just pid) Map.empty sid Map.empty modal gs
       every = List.genericTake (Modal.modeCount modal) (fmap ModeIndex.MkModeIndex [0 ..])
   Monad.guard (all (`Set.member` fillable) every)
   pure (cid, Splice.cost splicing)
@@ -3104,7 +3104,7 @@ castProposed perform spending pid oid sid printedFace castFrom preparedFor keywo
       instances = Cost.spellKeywords pid sid gs
       keywords = Map.keysSet instances
       modal = Face.spell face
-      fillable m = Target.fillableModes Nothing (Just pid) Map.empty sid (Card.enchantSlotMap face) m gs
+      fillable m = Target.fillableModes StackObjectKind.Spell Nothing (Just pid) Map.empty sid (Card.enchantSlotMap face) m gs
       -- CR 700.2a asked one step before CR 601.2b's cost is announced, which is
       -- the order rule 601.2b fixes -- modes, then the cost. CR 702.96b's spell
       -- requires no targets, so a mode unfillable as printed is still choosable
@@ -3455,7 +3455,7 @@ castProposed perform spending pid oid sid printedFace castFrom preparedFor keywo
                       else
                         -- CR 702.47d: the spliced text's targets are chosen here
                         -- beside the spell's own.
-                        Target.announcedSlots pid sid bestowedGs $
+                        Target.announcedSlots StackObjectKind.Spell pid sid bestowedGs $
                           Map.union
                             (Card.modesTargetSlotsGiven (Projection.enchantOf sid bestowedGs) (maybe False Object.mutating (Game.lookupObject sid bestowedGs)) chosenModes faceForTargets)
                             (maybe Map.empty (`Game.splicedTargetSlots` bestowedGs) (Game.lookupObject sid bestowedGs))
@@ -3570,7 +3570,7 @@ castProposed perform spending pid oid sid printedFace castFrom preparedFor keywo
                   -- route the payer is entitled to. Pawl.ManaSymbolSpec's "CR
                   -- 601.2f Dismember under Hinata offers both mana routes" proves
                   -- it.
-                  let aimedSets = Target.legalSets Nothing (Just pid) False (Binding.fromChoices Map.empty mAmount Seq.empty) sid slots announcedBoard
+                  let aimedSets = Target.legalSets StackObjectKind.Spell Nothing (Just pid) False (Binding.fromChoices Map.empty mAmount Seq.empty) sid slots announcedBoard
                       gatheredFor targets = Cost.plusReductions chosenReductions (Cost.spellAdjustments targets pid sid announcedBoard)
                       gathered = gatheredFor Set.empty
                       -- Merged by value: aimings counting alike total alike. The
@@ -3624,9 +3624,9 @@ castProposed perform spending pid oid sid printedFace castFrom preparedFor keywo
                   -- "CR 601.2c the joint check re-derives a jointly judged slot
                   -- against the announced X" is what proves the two agree.
                   let seed = Binding.fromChoices Map.empty mAmount Seq.empty
-                      sets = Target.legalSets Nothing (Just pid) False seed sid slots bestowedGs
+                      sets = Target.legalSets StackObjectKind.Spell Nothing (Just pid) False seed sid slots bestowedGs
                   (chosen, drawn) <- Target.chooseTargets Nothing pid sid sid seed (Maybe.fromMaybe 0 mAmount) slots sets
-                  if not (Target.selectionLegal Nothing (Just pid) seed sid (Maybe.fromMaybe 0 mAmount) slots sets chosen bestowedGs)
+                  if not (Target.selectionLegal StackObjectKind.Spell Nothing (Just pid) seed sid (Maybe.fromMaybe 0 mAmount) slots sets chosen bestowedGs)
                     then reject
                     else do
                       -- CR 601.2d: the division among the targets just fixed.
