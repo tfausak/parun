@@ -939,7 +939,7 @@ controlPlayerNames asking x = case x of
 
 controlSidesNames :: (Monoid r) => Asking r -> ControlSides.ControlSides -> r
 controlSidesNames asking x = case x of
-  ControlSides.BetweenTargets slotName -> slotNames asking slotName
+  ControlSides.WithinSlot slotName -> slotNames asking slotName
   ControlSides.WithSource slotName -> slotNames asking slotName
   ControlSides.BetweenSlots (ControlSlots.MkControlSlots one two) -> slotNames asking one <> slotNames asking two
 

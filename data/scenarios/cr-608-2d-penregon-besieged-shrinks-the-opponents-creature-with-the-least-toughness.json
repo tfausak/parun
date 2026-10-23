@@ -1,0 +1,163 @@
+{
+  "description": "CR 608.2d Penregon Besieged perpetually gives -1/-1 to a creature with the least toughness among creatures its controller's opponents control",
+  "note": "Bob's Goblin Piker and Merfolk of the Pearl Trident and Carol's Llanowar Elves tie at toughness 1 and Alice picks the Merfolk, the second offered, which dies. Alice's own Suntail Hawk (toughness 1) is not an opponent's, and Bob's Grizzly Bears is not least.",
+  "board": {
+    "active": "alice",
+    "step": "PrecombatMain",
+    "seats": [
+      {
+        "name": "alice",
+        "library": [
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          }
+        ],
+        "battlefield": [
+          {
+            "card": "Penregon Besieged",
+            "label": "penregon"
+          },
+          {
+            "card": "Suntail Hawk",
+            "label": "a-hawk"
+          }
+        ]
+      },
+      {
+        "name": "bob",
+        "library": [
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          }
+        ],
+        "battlefield": [
+          {
+            "card": "Goblin Piker",
+            "label": "b-piker"
+          },
+          {
+            "card": "Merfolk of the Pearl Trident",
+            "label": "b-merfolk"
+          },
+          {
+            "card": "Grizzly Bears",
+            "label": "b-bears"
+          }
+        ]
+      },
+      {
+        "name": "carol",
+        "library": [
+          {
+            "card": "Island"
+          },
+          {
+            "card": "Island"
+          }
+        ],
+        "battlefield": [
+          {
+            "card": "Llanowar Elves",
+            "label": "c-elves"
+          }
+        ]
+      }
+    ]
+  },
+  "timeline": [
+    {
+      "turn": 1,
+      "step": "EndStep",
+      "player": "alice",
+      "do": {
+        "Answer": {
+          "prompt": "ChoosePermanent",
+          "with": "$b-merfolk"
+        }
+      }
+    },
+    {
+      "turn": 1,
+      "step": "EndStep",
+      "player": "alice",
+      "check": {
+        "Count": {
+          "player": "bob",
+          "zone": "Graveyard",
+          "card": "Merfolk of the Pearl Trident",
+          "count": 1
+        }
+      }
+    },
+    {
+      "turn": 1,
+      "step": "EndStep",
+      "player": "alice",
+      "check": {
+        "Count": {
+          "player": "bob",
+          "zone": "Battlefield",
+          "card": "Goblin Piker",
+          "count": 1
+        }
+      }
+    },
+    {
+      "turn": 1,
+      "step": "EndStep",
+      "player": "alice",
+      "check": {
+        "Count": {
+          "player": "carol",
+          "zone": "Battlefield",
+          "card": "Llanowar Elves",
+          "count": 1
+        }
+      }
+    },
+    {
+      "turn": 1,
+      "step": "EndStep",
+      "player": "alice",
+      "check": {
+        "Count": {
+          "player": "alice",
+          "zone": "Battlefield",
+          "card": "Suntail Hawk",
+          "count": 1
+        }
+      }
+    },
+    {
+      "turn": 1,
+      "step": "EndStep",
+      "player": "alice",
+      "check": {
+        "PowerToughness": {
+          "object": "$b-piker",
+          "power": 2,
+          "toughness": 1
+        }
+      }
+    },
+    {
+      "turn": 1,
+      "step": "EndStep",
+      "player": "alice",
+      "check": {
+        "Count": {
+          "player": "alice",
+          "zone": "Battlefield",
+          "card": "Penregon Besieged",
+          "count": 1
+        }
+      }
+    }
+  ]
+}

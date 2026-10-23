@@ -1657,17 +1657,21 @@ inertChoosers :: Effect.Effect Card.Type.Card (GrantedAbility.GrantedAbility Car
 inertChoosers effect =
   [ref | (allowed, ref) <- effectObjectRefs effect, Just question <- [questionOf ref], question `notElem` allowed]
 
--- An ObjectRef.AllOf written anywhere but a move's ref or a play grant's.
--- MoveToZone gathers it member by member (Pawl.Engine.Resolve.Effect's gather),
--- and GrantPlayFromExile reads its ref through Resolve.Slots.objectRefObjects,
--- whose AllOf arm is the union -- the scenario
--- cr-601-3-flameskull-played-land-closes-flameskull-s-own-cast proves it. The
--- other opcodes' one-ref reads (a sticker's candidates, a copy's archived
+-- An ObjectRef.AllOf written anywhere but a move's ref, a play grant's or a
+-- loop's. MoveToZone gathers it member by member (Pawl.Engine.Resolve.Effect's
+-- gather), and GrantPlayFromExile reads its ref through
+-- Resolve.Slots.objectRefObjects, whose AllOf arm is the union -- the scenario
+-- cr-601-3-flameskull-played-land-closes-flameskull-s-own-cast proves it.
+-- ForEach sweeps its members through Resolve.Effect.objectRefRecipients, whose
+-- AllOf arm is the union too -- Juxtapose's "you and target player", proved by
+-- the board-effect scenario cr-608-2d-juxtapose-exchanges-each-player-s-greatest-mana-value-creature-then-artifact.
+-- The other opcodes' one-ref reads (a sticker's candidates, a copy's archived
 -- source, a reveal's shower) would read the union as a single arm.
 strayAllOf :: Effect.Effect Card.Type.Card (GrantedAbility.GrantedAbility Card.Type.Card) -> Bool
 strayAllOf effect = case effect of
   Effect.MoveToZone {} -> False
   Effect.GrantPlayFromExile {} -> False
+  Effect.ForEach {} -> False
   _ -> any (holdsAllOf . snd) (effectObjectRefs effect)
   where
     holdsAllOf ref = case ref of
@@ -2262,8 +2266,8 @@ effectLintSpec s registry = Spec.describe s "Lint" $ do
           -- CR 122.8's read.
           Effect.PutCountersFrom (PutCountersFrom.MkPutCountersFrom from _ _) -> [from]
           Effect.RemoveCounters (RemoveCounters.MkRemoveCounters _ _ slot _) -> [slot]
-          -- CR 701.12b's WithSource and BetweenSlots: BetweenTargets takes both
-          -- permanents out of the one slot (CR 601.2c) and reads it whole.
+          -- CR 701.12b's WithSource and BetweenSlots: WithinSlot takes both
+          -- permanents out of the one slot and reads it whole.
           Effect.ExchangeControl (ControlSides.WithSource slot) -> [slot]
           Effect.ExchangeControl (ControlSides.BetweenSlots (ControlSlots.MkControlSlots one two)) -> [one, two]
           -- CR 122.5 names NO slot read singly: both its sides are ObjectRefs and
@@ -2619,7 +2623,7 @@ effectLintSpec s registry = Spec.describe s "Lint" $ do
     -- Exhume, Elvish Piper, Commune with the Gods and Merfolk Spy print them.
     Spec.assertBool s asks "the pool has a card asking a player to pick a card"
     Spec.assertEqWith s "a chosen card under an opcode that cannot ask (CR 608.2d)" (fmap (S.nameOf . Printing.card) offenders) []
-  Spec.it s "no AllOf outside a move or a play grant" $ do
+  Spec.it s "no AllOf outside a move, a play grant or a loop" $ do
     ps <- S.allPrintings s
     let offenders = filter (anyFace (any strayAllOf . cardAuthoredEffects) . Printing.card) ps
         moved = any (anyFace (any (any (isAllOf . snd) . effectObjectRefs) . cardAuthoredEffects) . Printing.card) ps
@@ -2706,8 +2710,8 @@ effectLintSpec s registry = Spec.describe s "Lint" $ do
     let exactlyTwo = ObjectRef.ChosenPermanents (ChosenPermanents.MkChosenPermanents anyCard (PlayerRef.Relative PlayerRelation.You) (HowMany.Exactly (Quantity.Type.Literal 2)))
     Spec.assertEqWith s "two exactly chosen permanents are allowed nowhere" (inert [moves exactlyTwo, Effect.Transform exactlyTwo, Effect.Untap exactlyTwo]) [True, True, True]
     -- Hanweir Battlements' "exile them": the source beside one chosen
-    -- permanent, fenced by its member's question, and refused outside a move or a
-    -- play grant by strayAllOf.
+    -- permanent, fenced by its member's question, and refused outside a move, a
+    -- play grant or a loop by strayAllOf.
     Spec.assertEqWith
       s
       "the source with one chosen permanent is allowed where one chosen permanent is"
@@ -2715,7 +2719,7 @@ effectLintSpec s registry = Spec.describe s "Lint" $ do
       [False, False, True, True]
     Spec.assertEqWith
       s
-      "AllOf is refused outside a move or a play grant"
+      "AllOf is refused outside a move, a play grant or a loop"
       (fmap strayAllOf [moves sourceAndOne, Effect.Transform sourceAndOne, Effect.Tap (ObjectRef.AllOf (ObjectRef.EachMatching anyCard NonEmpty.:| []))])
       [False, True, True]
     -- The at-random arm one zone over, allowed by a move alone -- Ghoulraiser's

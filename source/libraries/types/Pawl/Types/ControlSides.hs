@@ -15,10 +15,10 @@ import qualified Pawl.Types.SlotName as SlotName
 -- has nowhere to put, and the two sides of "two target creatures" come out of
 -- ONE instance of the word "target" (CR 601.2c).
 data ControlSides
-  = -- | Switcheroo's "exchange control of two target creatures": both sides come
-    -- out of the one slot, whose count is exactly two (CR 601.2c, which also
-    -- makes them distinct). The source is a side only if named as one.
-    BetweenTargets SlotName.SlotName
+  = -- | Both sides out of one slot naming exactly two permanents: Switcheroo's
+    -- "two target creatures" (CR 601.2c), or a group two choices bound
+    -- (Juxtapose's "the creature you each control", CR 608.2d).
+    WithinSlot SlotName.SlotName
   | -- | Avarice Totem's "exchange control of this artifact and target nonland
     -- permanent": CR 113.7's source object and the one permanent the slot names.
     WithSource SlotName.SlotName

@@ -1850,8 +1850,8 @@ spec s = Spec.describe s "Pawl.Codec.Effect" $ do
       s
       toJson
       fromJson
-      (Effect.ExchangeControl (ControlSides.BetweenTargets (SlotName.MkSlotName (Text.pack "creatures"))))
-      " {\"type\":\"ExchangeControl\",\"value\":{\"type\":\"BetweenTargets\",\"value\":\"creatures\"}} "
+      (Effect.ExchangeControl (ControlSides.WithinSlot (SlotName.MkSlotName (Text.pack "creatures"))))
+      " {\"type\":\"ExchangeControl\",\"value\":{\"type\":\"WithinSlot\",\"value\":\"creatures\"}} "
     Common.assertJsonCodec
       s
       toJson

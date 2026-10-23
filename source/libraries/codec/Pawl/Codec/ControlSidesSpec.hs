@@ -10,12 +10,12 @@ import qualified Pawl.Types.SlotName as SlotName
 
 spec :: (Monad m, Monad n) => Spec.Spec m n -> n ()
 spec s = Spec.describe s "Pawl.Codec.ControlSides" $ do
-  Spec.it s "BetweenTargets" $
+  Spec.it s "WithinSlot" $
     Common.assertCodec
       s
       ControlSides.codec
-      (ControlSides.BetweenTargets (SlotName.MkSlotName (Text.pack "creatures")))
-      " {\"type\":\"BetweenTargets\",\"value\":\"creatures\"} "
+      (ControlSides.WithinSlot (SlotName.MkSlotName (Text.pack "creatures")))
+      " {\"type\":\"WithinSlot\",\"value\":\"creatures\"} "
   Spec.it s "WithSource" $
     Common.assertCodec
       s

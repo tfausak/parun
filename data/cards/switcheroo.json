@@ -27,7 +27,7 @@
                   {
                     "type": "ExchangeControl",
                     "value": {
-                      "type": "BetweenTargets",
+                      "type": "WithinSlot",
                       "value": "creatures"
                     }
                   }

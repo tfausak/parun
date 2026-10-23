@@ -1689,15 +1689,11 @@ sacrificeCandidates :: Maybe PlayerId -> Map.Map SlotName.SlotName (Set Recipien
 sacrificeCandidates you slots pid source filter_ gs =
   let viewOf = Projection.viewsOf gs
       context = permanentContext gs you slots source
-      offeredAgainst pool oid = Filter.matches context {Filter.candidateMeasures = Just pool} (viewOf oid) filter_
       -- CR 608.2d: the OfEachOtherCandidate operand compares against the
-      -- permanents the edict would offer were it absent -- "the greatest power
-      -- among creatures that player controls" -- so the pool is gathered with
-      -- every such comparison holding, then narrowed by them. Before CR 101.2's
-      -- subtraction below: a creature that can't be sacrificed is still among
-      -- the creatures that player controls.
-      pooled = filter (offeredAgainst Map.empty) (Projection.controls pid gs)
-      matching = List.sort (filter (offeredAgainst (Map.fromList [(oid, Filter.measuresOf (viewOf oid)) | oid <- pooled])) pooled)
+      -- permanents the edict would offer were it absent (Filter.amongCandidates).
+      -- Before CR 101.2's subtraction below: a creature that can't be sacrificed
+      -- is still among the creatures that player controls.
+      matching = List.sort (Filter.amongCandidates context viewOf filter_ (Projection.controls pid gs))
       forbidden = SacrificeRestriction.cantBeSacrificed matching gs
    in filter (\oid -> not (Set.member oid forbidden)) matching
 
