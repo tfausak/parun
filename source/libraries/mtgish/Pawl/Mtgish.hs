@@ -239,8 +239,8 @@ natural n k = maybe (Node.untranslated n) Right (Integer.toNatural k)
 -- Rules ----------------------------------------------------------------------
 
 -- | The face with one more rule (CR 113): a keyword, a spell's instructions,
--- an activated, triggered or static ability, an enchant ability, or a
--- characteristic-defining power or toughness.
+-- an activated, triggered or static ability, its entering tapped, an enchant
+-- ability, or a characteristic-defining power or toughness.
 rule :: Face -> Node.Node -> Translated Face
 rule face n = case Node.tag n of
   "SpellActions" -> do
@@ -578,7 +578,7 @@ trigger n = case Node.tag n of
   "AtTheBeginningOfAPlayersDrawStep" -> step (Phase.Beginning BeginningStep.DrawStep)
   "AtTheBeginningOfAPlayersEndStep" -> step (Phase.Ending EndingStep.EndStep)
   "AtTheBeginningOfCombatDuringAPlayersTurn" -> step (Phase.Combat CombatStep.BeginningOfCombat)
-  -- CR 601.2i: the caster is the spell's controller (CR 110.2), which the
+  -- CR 601.2i: the caster is the spell's controller (CR 112.2), which the
   -- spell's filter names.
   "WhenAPlayerCastsASpell" -> do
     (who, what) <- pair n

@@ -89,7 +89,7 @@ spec s = Spec.describe s "Pawl.Mtgish" $ do
     Spec.assertEq s (Right ()) (accepts charcoalDiamond)
     Spec.assertEq s [ReplacementEffect.EntryR (EntryR.MkEntryR Filter.IsSource EntryRewrite.Tapped)] (fmap PrintedReplacement.effect (Face.replacementEffects (translated charcoalDiamond)))
 
-  -- CR 601.2i / 110.2: the caster of a spell is its controller, which a
+  -- CR 601.2i / 112.2: the caster of a spell is its controller, which a
   -- cast trigger's filter names; "a player" names none.
   Spec.it s "reads a cast trigger's caster as the spell's controller" $ do
     Spec.assertEq s (Right ()) (accepts verduranEnchantress)

@@ -760,7 +760,7 @@ spec s = Spec.describe s "Pawl.Oracle" $ do
     Spec.assertEq s Nothing (Oracle.render (withFace (\f -> f {Face.replacementEffects = [tapped {PrintedReplacement.condition = Just (Condition.Compares (Compares.MkCompares (Quantity.Literal 1) Comparison.AtLeast (Quantity.Literal 1)))}]})))
 
   -- CR 601.2i: a cast trigger names the caster as the controller the spell's
-  -- filter gives it (CR 110.2), and no controller as "a player".
+  -- filter gives it (CR 112.2), and no controller as "a player".
   Spec.it s "render prints a trigger on casting a spell" $ do
     let cast f = withFace (\g -> g {Face.triggeredAbilities = [triggered (TriggerCondition.SpellCast (SpellCast.MkSpellCast f TurnScope.EachTurn Nothing Nothing Nothing False)) [clause [gainLife 1]] []]})
     Spec.assertEq s (Just (Text.pack "Whenever a player casts a blue spell, you gain 1 life.")) (Oracle.render (cast (Filter.HasColor Color.Blue)))
