@@ -106,7 +106,7 @@ without whole part = case (whole, part) of
 faceAbilities :: Face.Face Card.Card -> [[Text.Text]]
 faceAbilities face =
   let self = CardName.unwrap (Face.name face)
-      context = Target.MkContext self Map.empty (Keyword.keywordWord self) [Text.pack " "] Map.empty []
+      context = Target.MkContext self Map.empty (Keyword.keywordWord self) [Text.pack " "] Map.empty [] []
       rest = face {Face.keywords = Map.empty, Face.spell = Face.defaultSpell, Face.activatedAbilities = [], Face.triggeredAbilities = [], Face.staticAbilities = [], Face.enchant = [], Face.characteristicPT = Nothing}
       subtypes = TypeLine.subtypes (Face.typeLine face)
       unread = rest /= Face.Oracle.bare (Face.name face) (Face.oracleText face) (Face.manaCost face) (Face.colorIndicator face) (Face.typeLine face) (Face.power face) (Face.toughness face) Map.empty
@@ -161,7 +161,7 @@ activated context a
     Maybe.isNothing (ActivatedAbility.condition a),
     Maybe.isNothing (ActivatedAbility.name a),
     Maybe.isNothing (ActivatedAbility.keyword a) = do
-      cost <- Cost.cost (Target.self context) (ActivatedAbility.cost a)
+      cost <- Cost.cost (Target.self context) (Target.keyword context) (ActivatedAbility.cost a)
       let sacrificed = elem CostComponent.SacrificeThis (Cost.Type.components (ActivatedAbility.cost a))
           after = if sacrificed then context {Target.self = Text.pack "it"} else context
       effect <- Effect.modal after (ActivatedAbility.modal a)

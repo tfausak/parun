@@ -24,8 +24,10 @@ import qualified Pawl.Types.Card as Card
 import qualified Pawl.Types.CardName as CardName
 import qualified Pawl.Types.CardType as CardType
 import qualified Pawl.Types.CharacteristicPT as CharacteristicPT
+import qualified Pawl.Types.ChooseBetween as ChooseBetween
 import qualified Pawl.Types.ChosenPermanents as ChosenPermanents
 import qualified Pawl.Types.Clause as Clause
+import qualified Pawl.Types.ClauseIndex as ClauseIndex
 import qualified Pawl.Types.Color as Color
 import qualified Pawl.Types.CombatStep as CombatStep
 import qualified Pawl.Types.Compares as Compares
@@ -33,6 +35,7 @@ import qualified Pawl.Types.Comparison as Comparison
 import qualified Pawl.Types.Condition as Condition
 import qualified Pawl.Types.Cost as Cost
 import qualified Pawl.Types.CostAmount as CostAmount
+import qualified Pawl.Types.CostChoice as CostChoice
 import qualified Pawl.Types.CostComponent as CostComponent
 import qualified Pawl.Types.Count as Count
 import qualified Pawl.Types.CountedDiscard as CountedDiscard
@@ -44,6 +47,7 @@ import qualified Pawl.Types.DamagePart as DamagePart
 import qualified Pawl.Types.DealDamage as DealDamage
 import qualified Pawl.Types.Destroy as Destroy
 import qualified Pawl.Types.Discard as Discard
+import qualified Pawl.Types.DiscardCards as DiscardCards
 import qualified Pawl.Types.Draw as Draw
 import qualified Pawl.Types.Duration as Duration
 import qualified Pawl.Types.Effect as Effect
@@ -53,8 +57,11 @@ import qualified Pawl.Types.Face as Face
 import qualified Pawl.Types.Filter as Filter
 import qualified Pawl.Types.GrantedAbility as GrantedAbility
 import qualified Pawl.Types.HowMany as HowMany
+import qualified Pawl.Types.IfTaken as IfTaken
 import qualified Pawl.Types.InZone as InZone
 import qualified Pawl.Types.Keyword as Keyword
+import qualified Pawl.Types.KeywordDesignator as KeywordDesignator
+import qualified Pawl.Types.KeywordFamily as KeywordFamily
 import qualified Pawl.Types.Layout as Layout
 import qualified Pawl.Types.LibraryPlacement as LibraryPlacement
 import qualified Pawl.Types.LibraryPosition as LibraryPosition
@@ -76,7 +83,11 @@ import qualified Pawl.Types.ModifyTarget as ModifyTarget
 import qualified Pawl.Types.MoveToZone as MoveToZone
 import qualified Pawl.Types.ObjectRef as ObjectRef
 import qualified Pawl.Types.Optionality as Optionality
+import qualified Pawl.Types.OrElse as OrElse
 import qualified Pawl.Types.OwnedZone as OwnedZone
+import qualified Pawl.Types.PayBranch as PayBranch
+import qualified Pawl.Types.PayGate as PayGate
+import qualified Pawl.Types.PayObligation as PayObligation
 import qualified Pawl.Types.Phase as Phase
 import qualified Pawl.Types.PlayerQuantity as PlayerQuantity
 import qualified Pawl.Types.PlayerRef as PlayerRef
@@ -90,6 +101,7 @@ import qualified Pawl.Types.PutCounters as PutCounters
 import qualified Pawl.Types.Quantity as Quantity
 import qualified Pawl.Types.RandomCardInHand as RandomCardInHand
 import qualified Pawl.Types.Regenerability as Regenerability
+import qualified Pawl.Types.Sacrifice as Sacrifice
 import qualified Pawl.Types.SacrificeEffect as SacrificeEffect
 import qualified Pawl.Types.Sacrificer as Sacrificer
 import qualified Pawl.Types.Scope as Scope
@@ -225,7 +237,8 @@ spec s = Spec.describe s "Pawl.Oracle" $ do
     Spec.assertEq s [[Text.pack "Spark deals 4 damage to any target and you gain 4 life.", Text.pack "Spark deals 4 damage to any target. You gain 4 life.", Text.pack "Spark deals 4 damage to any target.\nYou gain 4 life.", Text.pack "Spark deals 4 damage to any target. Then you gain 4 life."]] (Oracle.abilities feast)
 
   -- CR 601.2c: each target slot is announced once, so text naming a slot
-  -- twice, or never, is not the mode's.
+  -- twice, or never, is not the mode's; a later instruction names it again
+  -- only by a pronoun, which "any target" has none of.
   Spec.it s "render answers nothing for a mode naming a slot other than once" $ do
     let twice = spell [clause [damage [(target, 1)]], clause [damage [(target, 1)]]] [(target, TargetSlot.required Pool.AnyTarget Nothing)]
         never = spell [clause [gainLife 1]] [(target, TargetSlot.required Pool.AnyTarget Nothing)]
@@ -628,6 +641,112 @@ spec s = Spec.describe s "Pawl.Oracle" $ do
     Spec.assertBool s (Oracle.says (spell [clause [invasion]] []) (CardName.MkCardName (Text.pack "Spark")) (Text.pack "Create a number of 1/1 green Snake creature tokens equal to the number of opponents you have.")) "no \"opponents you have\""
     let ghoul = Effect.PutCounters (PutCounters.MkPutCounters CounterKind.PlusOnePlusOne hand (ObjectRef.InSlot (SlotName.MkSlotName (Text.pack "self"))))
     Spec.assertEq s [[Text.pack "Put a +1/+1 counter on Spark for each card in your hand.", Text.pack "Put a number of +1/+1 counters on Spark equal to the number of cards in your hand."]] (Oracle.abilities (spell [clause [ghoul]] []))
+
+  -- CR 118.12: a cost paid on resolution. "Unless" makes the instructions
+  -- the branch where it wasn't paid (CR 118.12a), whoever is offered it: the
+  -- controller of a spell a slot names, you, or any player. A cost may be
+  -- paid "for each" object counted (Rakshasa's Disdain).
+  Spec.it s "render prints a cost paid on resolution" $ do
+    let spellSlot = [(target, TargetSlot.required Pool.Spells Nothing)]
+        counter = Effect.Counter (Counter.MkCounter (ObjectRef.InSlot target) Nothing Nothing Nothing)
+        leak = spell [(clause [counter]) {Clause.payGate = Just (gate PayBranch.IfNotPaid (PlayerRef.ControllerOfBound target) (mana [ManaSymbol.Generic 3]))}] spellSlot
+    Spec.assertEq s (Just (Text.pack "Counter target spell unless its controller pays {3}.")) (Oracle.render leak)
+    let graveyardCards = countOf (Filter.And []) (InZone.MkInZone Zone.Graveyard (PlayerRef.Relative PlayerRelation.You))
+        disdain = spell [(clause [counter]) {Clause.payGate = Just ((gate PayBranch.IfNotPaid (PlayerRef.ControllerOfBound target) (mana [ManaSymbol.Generic 1])) {PayGate.perEach = Just graveyardCards})}] spellSlot
+    Spec.assertEq s (Just (Text.pack "Counter target spell unless its controller pays {1} for each card in your graveyard.")) (Oracle.render disdain)
+    let seer = triggered TriggerCondition.SelfDies [(clause [draw (PlayerRef.Relative PlayerRelation.You) 1]) {Clause.payGate = Just (gate PayBranch.IfPaid (PlayerRef.InSlot you) (mana [ManaSymbol.Generic 1, ManaSymbol.OfType (ManaType.Colored Color.Blue)]))}] []
+    Spec.assertEq s [[Text.pack "When Spark dies, you may pay {1}{U}. If you do, draw a card."]] (Oracle.abilities (withFace (\f -> (typed [CardType.Creature] [] f) {Face.triggeredAbilities = [seer]})))
+    let mountain = Cost.MkCost (Just (ManaCost.MkManaCost [])) [CostComponent.Sacrifice (Sacrifice.MkSacrifice (CostAmount.Fixed 1) (Filter.HasSubtype Subtype.Mountain))]
+        upkeep = TriggerCondition.StepBegins (StepBegins.MkStepBegins (Phase.Beginning BeginningStep.Upkeep) Nothing TurnScope.ControllersTurn)
+        lithophage = triggered upkeep [(clause [sacrifice]) {Clause.payGate = Just (gate PayBranch.IfNotPaid (PlayerRef.InSlot you) mountain)}] []
+    Spec.assertEq s (Just (Text.pack "At the beginning of your upkeep, sacrifice Spark unless you sacrifice a Mountain.")) (Oracle.render (withFace (\f -> f {Face.triggeredAbilities = [lithophage]})))
+    let shade = activated (mana [ManaSymbol.OfType (ManaType.Colored Color.Black)]) (modify (ObjectRef.InSlot self) Duration.UntilEndOfTurn (pt 1 1))
+        unlessAny = shade {ActivatedAbility.modal = payload [(clause [modify (ObjectRef.InSlot self) Duration.UntilEndOfTurn (pt 1 1)]) {Clause.payGate = Just (gate PayBranch.IfNonePaid (PlayerRef.Relative PlayerRelation.AnyPlayer) (mana [ManaSymbol.Generic 2]))}] []}
+    Spec.assertEq s (Just (Text.pack "{B}: Spark gets +1/+1 until end of turn unless any player pays {2}.")) (Oracle.render (withFace (\f -> f {Face.activatedAbilities = [unlessAny]})))
+    let blight = triggered TriggerCondition.SelfEnters [(clause [draw (PlayerRef.Relative PlayerRelation.You) 1]) {Clause.payGate = Just (gate PayBranch.IfPaid (PlayerRef.InSlot you) (Cost.MkCost (Just (ManaCost.MkManaCost [])) [CostComponent.Blight (CostAmount.Fixed 1)]))}] []
+    Spec.assertEq s (Just (Text.pack "When Spark enters, you may blight 1. If you do, draw a card.")) (Oracle.render (withFace (\f -> (typed [CardType.Enchantment] [] f) {Face.triggeredAbilities = [blight]})))
+    let goblin = activated (Cost.MkCost (Just (ManaCost.MkManaCost [])) [CostComponent.DiscardCards (DiscardCards.MkDiscardCards 2 (Filter.HasCardType CardType.Creature))]) (draw (PlayerRef.Relative PlayerRelation.You) 1)
+    Spec.assertEq s (Just (Text.pack "Discard two creature cards: Draw a card.")) (Oracle.render (withFace (\f -> f {Face.activatedAbilities = [goblin]})))
+
+  -- CR 608.2c / 608.2d: a clause hanging off the one before it reads with
+  -- it: "If you do" after a "may" (Tweeze), "unless you" before one
+  -- (Pillaging Horde), and a pair of which you choose one (Twiddle).
+  Spec.it s "render strings a clause with the one it hangs off" $ do
+    let mayDiscard = (clause [discard (PlayerRef.Relative PlayerRelation.You) 1]) {Clause.optionality = Optionality.Optional (PlayerRef.Relative PlayerRelation.You)}
+        ifDone = (clause [draw (PlayerRef.Relative PlayerRelation.You) 1]) {Clause.ifTaken = Just (IfTaken.AnyTaken (NonEmpty.singleton (ClauseIndex.MkClauseIndex 1)))}
+        tweeze = spell [clause [damage [(target, 3)]], mayDiscard, ifDone] [(target, TargetSlot.required Pool.AnyTarget Nothing)]
+    Spec.assertEq s (Just (Text.pack "Spark deals 3 damage to any target. You may discard a card. If you do, draw a card.")) (Oracle.render tweeze)
+    let notDone = (clause [sacrifice]) {Clause.ifTaken = Just (IfTaken.NoneTaken (NonEmpty.singleton (ClauseIndex.MkClauseIndex 0)))}
+        horde = triggered TriggerCondition.SelfEnters [mayDiscard, notDone] []
+    Spec.assertEq s [[Text.pack "When Spark enters, sacrifice it unless you discard a card.", Text.pack "When Spark enters, sacrifice Spark unless you discard a card."]] (Oracle.abilities (withFace (\f -> (typed [CardType.Creature] [] f) {Face.triggeredAbilities = [horde]})))
+    let either' i c = (clause [c]) {Clause.optionality = Optionality.Optional (PlayerRef.Relative PlayerRelation.You), Clause.orElse = Just (OrElse.MkOrElse (ClauseIndex.MkClauseIndex i) (PlayerRef.Relative PlayerRelation.You) False)}
+        twiddle = spell [either' 1 (Effect.Tap (ObjectRef.InSlot target)), either' 0 (Effect.Untap (ObjectRef.InSlot target))] [(target, TargetSlot.required Pool.Permanents Nothing)]
+    Spec.assertEq s (Just (Text.pack "You may tap or untap target permanent.")) (Oracle.render twiddle)
+
+  -- CR 700.2: modes as a bulleted list after the instruction to choose, each
+  -- mode one line; CR 700.2d lets a mode be chosen more than once. Modes that
+  -- each only add mana read as one choice of mana (Skyshroud Elf).
+  Spec.it s "render prints modes as a bulleted list" $ do
+    let chosen selection modes = withFace (\f -> f {Face.spell = Modal.MkModal (Seq.fromList modes) selection, Face.typeLine = TypeLine.MkTypeLine Set.empty (Set.singleton CardType.Instant) Set.empty})
+        destroying t = Mode.MkMode (Seq.singleton (clause [destroy (ObjectRef.InSlot target) Regenerability.Regenerable])) (Map.singleton target (TargetSlot.required Pool.Permanents (Just (Filter.HasCardType t))))
+        drawing = Mode.MkMode (Seq.singleton (clause [draw (PlayerRef.Relative PlayerRelation.You) 1])) Map.empty
+    Spec.assertEq s (Just (Text.pack "Choose one \8212\n\8226 Destroy target artifact.\n\8226 Draw a card.")) (Oracle.render (chosen (ModeSelection.ChooseExactly 1) [destroying CardType.Artifact, drawing]))
+    Spec.assertEq s (Just (Text.pack "Choose one or both \8212\n\8226 Destroy target artifact.\n\8226 Destroy target land.")) (Oracle.render (chosen (ModeSelection.ChooseBetween (ChooseBetween.MkChooseBetween 1 2)) [destroying CardType.Artifact, destroying CardType.Land]))
+    Spec.assertEq s (Just (Text.pack "Choose three. You may choose the same mode more than once.\n\8226 Destroy target land.\n\8226 Draw a card.")) (Oracle.render (chosen (ModeSelection.ChooseExactlyWithRepeats 3) [destroying CardType.Land, drawing]))
+    let three = [destroying CardType.Artifact, destroying CardType.Land, drawing]
+    Spec.assertEq s (Just (Text.pack "Choose two \8212\n\8226 Destroy target artifact.\n\8226 Destroy target land.\n\8226 Draw a card.")) (Oracle.render (chosen (ModeSelection.ChooseExactly 2) three))
+    Spec.assertEq s (Just (Text.pack "Choose one or more \8212\n\8226 Destroy target artifact.\n\8226 Destroy target land.\n\8226 Draw a card.")) (Oracle.render (chosen (ModeSelection.ChooseBetween (ChooseBetween.MkChooseBetween 1 3)) three))
+    let adding c = Mode.MkMode (Seq.singleton (clause [Effect.AddMana (ManaAddition.MkManaAddition (PlayerRef.Relative PlayerRelation.You) (ManaProduction.OfType (ManaType.Colored c)) (Quantity.Literal 1) ManaRetention.Ordinary Nothing Nothing Nothing)])) Map.empty
+        elf = ActivatedAbility.MkActivatedAbility (mana [ManaSymbol.Generic 1]) [] 0 Nothing (Modal.MkModal (Seq.fromList [adding Color.Red, adding Color.White]) (ModeSelection.ChooseExactly 1)) [] Activator.Controller Nothing Nothing Nothing
+    Spec.assertEq s (Just (Text.pack "{1}: Add {R} or {W}.")) (Oracle.render (withFace (\f -> f {Face.activatedAbilities = [elf]})))
+
+  -- CR 608.2c: three or more instructions read one or two at a time (Frantic
+  -- Search); an object an earlier instruction named is "it" (Silvar,
+  -- Devourer of the Free), a target free as "it" or "that creature"
+  -- (Cryogenic Stasis, Burning Cloak), and objects a change to power and
+  -- toughness reaches again get "an additional" one (Wild Might, Rhystic
+  -- Shield).
+  Spec.it s "render strings three instructions and names an object again" $ do
+    let lands = ObjectRef.ChosenPermanents (ChosenPermanents.MkChosenPermanents (Filter.HasCardType CardType.Land) (PlayerRef.Relative PlayerRelation.You) (HowMany.UpTo (Just (Quantity.Literal 3))))
+        search = spell [clause [draw (PlayerRef.Relative PlayerRelation.You) 2, discard (PlayerRef.Relative PlayerRelation.You) 2, Effect.Untap lands]] []
+    Spec.assertBool s (Oracle.says search spark (Text.pack "Draw two cards, then discard two cards. Untap up to three lands.")) "Frantic Search's wording unsaid"
+    let creature = [(target, TargetSlot.required Pool.Creatures Nothing)]
+        stasis = spell [clause [Effect.Tap (ObjectRef.InSlot target), counters CounterKind.Stun 1 (ObjectRef.InSlot target)]] creature
+    Spec.assertEq s (Just (Text.pack "Tap target creature and put a stun counter on it.")) (Oracle.render stasis)
+    let cloak = spell [clause [modify (ObjectRef.InSlot target) Duration.UntilEndOfTurn (pt 2 0)], clause [damage [(target, 2)]]] creature
+    Spec.assertEq s (Just (Text.pack "Target creature gets +2/+0 until end of turn. Spark deals 2 damage to it.")) (Oracle.render cloak)
+    Spec.assertBool s (Oracle.says cloak spark (Text.pack "Target creature gets +2/+0 until end of turn. Spark deals 2 damage to that creature.")) "that creature unsaid"
+    let silvar = activated (Cost.MkCost (Just (ManaCost.MkManaCost [])) [CostComponent.Sacrifice (Sacrifice.MkSacrifice (CostAmount.Fixed 1) (Filter.HasSubtype Subtype.Human))]) (counters CounterKind.PlusOnePlusOne 1 (ObjectRef.InSlot self))
+        indestructible = silvar {ActivatedAbility.modal = payload [clause [counters CounterKind.PlusOnePlusOne 1 (ObjectRef.InSlot self)], clause [modify (ObjectRef.InSlot self) Duration.UntilEndOfTurn (Modification.GainKeyword Keyword.Indestructible)]] []}
+    Spec.assertEq s (Just (Text.pack "Sacrifice a Human: Put a +1/+1 counter on Spark. It gains indestructible until end of turn.")) (Oracle.render (withFace (\f -> f {Face.activatedAbilities = [indestructible]})))
+    let mine = ObjectRef.EachMatching (Filter.And [Filter.HasCardType CardType.Creature, Filter.ControlledBy PlayerRelation.You])
+        shield = spell [clause [modify mine Duration.UntilEndOfTurn (pt 0 1)], clause [modify mine Duration.UntilEndOfTurn (pt 0 2)]] []
+    Spec.assertEq s (Just (Text.pack "Creatures you control get +0/+1 until end of turn. They get an additional +0/+2 until end of turn.")) (Oracle.render shield)
+    let might = spell [clause [modify (ObjectRef.InSlot target) Duration.UntilEndOfTurn (pt 1 1)], clause [modify (ObjectRef.InSlot target) Duration.UntilEndOfTurn (pt 4 4)]] creature
+    Spec.assertBool s (Oracle.says might spark (Text.pack "Target creature gets +1/+1 until end of turn. That creature gets an additional +4/+4 until end of turn.")) "an additional unsaid"
+
+  -- CR 608.2c: "If [condition], [instructions]." A spell's own condition
+  -- names it, which the instructions then call "it" (Jilt); an object named
+  -- already is "it" in the condition too (Sunpearl Kirin).
+  Spec.it s "render prints a condition a clause waits on" $ do
+    let kicked = Condition.Compares (Compares.MkCompares (Quantity.TimesPaid (KeywordDesignator.Printed KeywordFamily.Kicker)) Comparison.AtLeast (Quantity.Literal 1))
+        other = SlotName.MkSlotName (Text.pack "other")
+        jilt = spell [clause [Effect.MoveToZone (move (ObjectRef.InSlot target) Zone.Hand)], (clause [damage [(other, 2)]]) {Clause.condition = Just kicked}] [(target, TargetSlot.required Pool.Creatures Nothing), (other, TargetSlot.required Pool.Creatures (Just (Filter.Not (Filter.IsBound target))))]
+    Spec.assertEq s (Just (Text.pack "Return target creature to its owner's hand. If this spell was kicked, it deals 2 damage to another target creature.")) (Oracle.render jilt)
+    let prowled = Condition.Compares (Compares.MkCompares (Quantity.CastUsing (KeywordDesignator.OfFamily KeywordFamily.Prowl)) Comparison.AtLeast (Quantity.Literal 1))
+    Spec.assertEq s (Just (Text.pack "You gain 3 life. If this spell's prowl cost was paid, draw a card.")) (Oracle.render (spell [clause [gainLife 3], (clause [draw (PlayerRef.Relative PlayerRelation.You) 1]) {Clause.condition = Just prowled}] []))
+    let wasToken = Condition.Compares (Compares.MkCompares (Quantity.AgainstSlot (AgainstSlot.MkAgainstSlot target Quantity.WasToken)) Comparison.AtLeast (Quantity.Literal 1))
+        kirin = triggered TriggerCondition.SelfEnters [clause [Effect.MoveToZone (move (ObjectRef.InSlot target) Zone.Hand)], (clause [draw (PlayerRef.Relative PlayerRelation.You) 1]) {Clause.condition = Just wasToken}] [(target, upTo 1 (Just (Filter.Not Filter.IsSource)))]
+    Spec.assertEq s (Just (Text.pack "When Spark enters, return up to one other target creature to its owner's hand. If it was a token, draw a card.")) (Oracle.render (withFace (\f -> (typed [CardType.Creature] [] f) {Face.triggeredAbilities = [kirin]})))
+
+-- A cost paid on resolution, offered to the payer, of which the instructions
+-- are this branch.
+gate :: PayBranch.PayBranch -> PlayerRef.PlayerRef -> Cost.Cost Keyword.Keyword -> PayGate.PayGate
+gate branch payer cost = PayGate.MkPayGate payer (CostChoice.MkCostChoice (NonEmpty.singleton cost)) Nothing branch PayObligation.Optional Nothing Nothing
+
+-- A cost of these mana symbols alone.
+mana :: [ManaSymbol.ManaSymbol] -> Cost.Cost Keyword.Keyword
+mana symbols = Cost.MkCost (Just (ManaCost.MkManaCost symbols)) []
 
 -- A count of the members of a zone matching the filter.
 countOf :: Filter.Filter Keyword.Keyword -> InZone.InZone -> Quantity.Quantity
