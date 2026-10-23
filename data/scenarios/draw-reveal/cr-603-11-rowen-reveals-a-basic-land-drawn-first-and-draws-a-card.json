@@ -1,0 +1,22 @@
+{
+  "description": "CR 603.11 Rowen reveals a basic land drawn first and draws a card",
+  "note": "alice's draw step draws a Forest, revealed under Rowen, whose linked trigger draws the second Forest. That is her second draw of the turn, so it is not revealed and draws nothing, and the Hill Giant under it stays put.",
+  "board": {
+    "seats": [
+      {
+        "name": "alice",
+        "battlefield": [{ "card": "Rowen", "label": "rowen" }],
+        "library": [{ "card": "Forest" }, { "card": "Forest" }, { "card": "Hill Giant" }]
+      },
+      { "name": "bob", "library": [{ "card": "Island" }] }
+    ],
+    "active": "alice",
+    "turn": 2,
+    "step": "Upkeep"
+  },
+  "timeline": [
+    { "turn": 2, "step": "PrecombatMain", "player": "alice", "check": { "View": { "of": "Witnessed", "player": "bob", "is": ["Forest"] } } },
+    { "turn": 2, "step": "PrecombatMain", "player": "alice", "check": { "Count": { "player": "alice", "zone": "Hand", "card": "Forest", "count": 2 } } },
+    { "turn": 2, "step": "PrecombatMain", "player": "alice", "check": { "View": { "of": "Zone", "player": "alice", "zone": "Library", "is": ["Hill Giant"] } } }
+  ]
+}

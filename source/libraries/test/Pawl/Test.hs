@@ -577,6 +577,7 @@ import qualified Pawl.Codec.ReturnEndingSpec
 import qualified Pawl.Codec.ReturnPermanentsSpec
 import qualified Pawl.Codec.ReturnWatchSpec
 import qualified Pawl.Codec.RevealCauseSpec
+import qualified Pawl.Codec.RevealObligationSpec
 import qualified Pawl.Codec.RevealSpec
 import qualified Pawl.Codec.RevealWindowSpec
 import qualified Pawl.Codec.RevealedSpec
@@ -808,6 +809,7 @@ import qualified Pawl.MeldSpec
 import qualified Pawl.ModalDoubleFacedSpec
 import qualified Pawl.ModalSpec
 import qualified Pawl.MoveCounterSpec
+import qualified Pawl.MtgishSpec
 import qualified Pawl.MulliganSpec
 import qualified Pawl.MutateSpec
 import qualified Pawl.OmenSpec
@@ -1475,6 +1477,7 @@ spec s registry = do
   Pawl.Codec.ReturnPermanentsSpec.spec s
   Pawl.Codec.ReturnWatchSpec.spec s
   Pawl.Codec.RevealCauseSpec.spec s
+  Pawl.Codec.RevealObligationSpec.spec s
   Pawl.Codec.RevealedSpec.spec s
   Pawl.Codec.RevealSpec.spec s
   Pawl.Codec.RevealWindowSpec.spec s
@@ -1723,6 +1726,7 @@ spec s registry = do
   Pawl.MulliganSpec.spec s registry
   Pawl.MutateSpec.spec s registry
   Pawl.OmenSpec.spec s registry
+  Pawl.MtgishSpec.spec s
   Pawl.OracleSpec.spec s
   Pawl.OutsideTheGameSpec.spec s registry
   Pawl.PhasingSpec.spec s registry

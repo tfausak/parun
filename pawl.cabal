@@ -1226,6 +1226,8 @@ library codec
     Pawl.Codec.RevealCauseSpec
     Pawl.Codec.Revealed
     Pawl.Codec.RevealedSpec
+    Pawl.Codec.RevealObligation
+    Pawl.Codec.RevealObligationSpec
     Pawl.Codec.RevealSpec
     Pawl.Codec.RevealWindow
     Pawl.Codec.RevealWindowSpec
@@ -1687,6 +1689,7 @@ library executable
     pawl:json,
     pawl:json-codec,
     pawl:json-schema,
+    pawl:mtgish,
     pawl:oracle,
     pawl:play,
     pawl:registry,
@@ -1883,6 +1886,28 @@ library oracle
     Pawl.Oracle.Trigger
     Pawl.OracleSpec
 
+-- mtgish's typed card ASTs translated into card data, each translation held
+-- to its card's Oracle text through the oracle library's renderer (#5478).
+library mtgish
+  import: library
+  build-depends:
+    containers ^>=0.7,
+    pawl:extra,
+    pawl:json,
+    pawl:json-codec,
+    pawl:oracle,
+    pawl:registry,
+    pawl:spec,
+    pawl:types,
+    text ^>=2.1.3,
+
+  hs-source-dirs: source/libraries/mtgish
+  -- cabal-gild: discover source/libraries/mtgish
+  exposed-modules:
+    Pawl.Mtgish
+    Pawl.Mtgish.Node
+    Pawl.MtgishSpec
+
 -- The line protocol a client plays a game through: each seat's decisions as
 -- JSON lines out and answers back.
 library play
@@ -2012,6 +2037,7 @@ library test
     pawl:json-codec,
     pawl:json-pointer,
     pawl:json-schema,
+    pawl:mtgish,
     pawl:oracle,
     pawl:play,
     pawl:registry,
@@ -2857,6 +2883,7 @@ library types
     Pawl.Types.Reveal
     Pawl.Types.RevealCause
     Pawl.Types.Revealed
+    Pawl.Types.RevealObligation
     Pawl.Types.RevealWindow
     Pawl.Types.RollAdjustment
     Pawl.Types.RollDie
