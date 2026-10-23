@@ -1,0 +1,13 @@
+{
+  "description": "CR 602.2 whole card: Femeref Archers tap to deal 4 damage to target attacking creature with flying",
+  "note": "Bob attacks with Serra Angel and Savannah Lions: targeting the Lions, which don't fly, is refused, and the Angel dies.",
+  "board": {"active": "bob", "step": "BeginningOfCombat", "seats": [{"name": "alice", "library": [{"card": "Island"}, {"card": "Island"}, {"card": "Island"}], "battlefield": [{"card": "Femeref Archers", "label": "archers", "ready": true}]}, {"name": "bob", "library": [{"card": "Island"}, {"card": "Island"}, {"card": "Island"}], "battlefield": [{"card": "Serra Angel", "label": "angel", "ready": true}, {"card": "Savannah Lions", "label": "lions", "ready": true}]}]},
+  "timeline": [
+    {"turn": 1, "step": "DeclareAttackers", "player": "bob", "do": {"Attack": ["$angel", "$lions"]}},
+    {"turn": 1, "step": "DeclareAttackers", "player": "alice", "refuse": {"Activate": {"object": "$archers", "targets": ["$lions"]}}},
+    {"turn": 1, "step": "DeclareAttackers", "player": "alice", "do": {"Activate": {"object": "$archers", "targets": ["$angel"]}}},
+    {"turn": 1, "step": "DeclareAttackers", "player": "alice", "do": "Pass"},
+    {"turn": 1, "step": "DeclareAttackers", "player": "alice", "check": {"Count": {"player": "bob", "zone": "Battlefield", "card": "Serra Angel", "count": 0}}},
+    {"turn": 1, "step": "EndOfCombat", "player": "alice", "check": {"Life": {"player": "alice", "life": 18}}}
+  ]
+}

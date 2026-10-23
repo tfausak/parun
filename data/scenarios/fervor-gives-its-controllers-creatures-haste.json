@@ -1,0 +1,11 @@
+{
+  "description": "CR 702.10b whole card: Fervor gives the creatures its controller controls haste",
+  "note": "Alice's bears arrived this turn and attack anyway; bob's bears get no haste.",
+  "board": {"active": "alice", "step": "BeginningOfCombat", "seats": [{"name": "alice", "library": [{"card": "Island"}, {"card": "Island"}, {"card": "Island"}], "battlefield": [{"card": "Fervor", "label": "fervor"}, {"card": "Grizzly Bears", "label": "bears", "ready": false}]}, {"name": "bob", "library": [{"card": "Island"}, {"card": "Island"}, {"card": "Island"}], "battlefield": [{"card": "Grizzly Bears", "label": "their-bears"}]}]},
+  "timeline": [
+    {"turn": 1, "step": "BeginningOfCombat", "player": "alice", "check": {"Keywords": {"object": "$their-bears", "keyword": {"type": "Haste"}, "count": 0}}},
+    {"turn": 1, "step": "DeclareAttackers", "player": "alice", "do": {"Attack": ["$bears"]}},
+    {"turn": 1, "step": "DeclareBlockers", "player": "bob", "do": {"Block": {}}},
+    {"turn": 1, "step": "EndOfCombat", "player": "alice", "check": {"Life": {"player": "bob", "life": 18}}}
+  ]
+}

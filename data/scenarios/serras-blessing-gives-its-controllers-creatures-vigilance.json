@@ -1,0 +1,12 @@
+{
+  "description": "CR 702.20b whole card: Serra's Blessing gives the creatures its controller controls vigilance",
+  "note": "Alice's bears attack and stay untapped; bob's bears get no vigilance.",
+  "board": {"active": "alice", "step": "BeginningOfCombat", "seats": [{"name": "alice", "library": [{"card": "Island"}, {"card": "Island"}, {"card": "Island"}], "battlefield": [{"card": "Serra's Blessing", "label": "blessing"}, {"card": "Grizzly Bears", "label": "bears", "ready": true}]}, {"name": "bob", "library": [{"card": "Island"}, {"card": "Island"}, {"card": "Island"}], "battlefield": [{"card": "Grizzly Bears", "label": "their-bears"}]}]},
+  "timeline": [
+    {"turn": 1, "step": "BeginningOfCombat", "player": "alice", "check": {"Keywords": {"object": "$their-bears", "keyword": {"type": "Vigilance"}, "count": 0}}},
+    {"turn": 1, "step": "DeclareAttackers", "player": "alice", "do": {"Attack": ["$bears"]}},
+    {"turn": 1, "step": "DeclareBlockers", "player": "bob", "do": {"Block": {}}},
+    {"turn": 1, "step": "DeclareBlockers", "player": "alice", "check": {"Tapped": {"object": "$bears", "tapped": false}}},
+    {"turn": 1, "step": "EndOfCombat", "player": "alice", "check": {"Life": {"player": "bob", "life": 18}}}
+  ]
+}

@@ -1,0 +1,12 @@
+{
+  "description": "CR 613.4c whole card: Dread of Night gives every white creature -1/-1, its controller's too",
+  "note": "Bob's 2/1 Savannah Lions die to it, alice's own Serra Angel is 3/3, and the green bears stay 2/2.",
+  "board": {"active": "alice", "step": "PrecombatMain", "seats": [{"name": "alice", "library": [{"card": "Island"}, {"card": "Island"}, {"card": "Island"}], "battlefield": [{"card": "Serra Angel", "label": "angel"}, {"card": "Swamp", "label": "swamp"}], "hand": [{"card": "Dread of Night", "label": "dread"}]}, {"name": "bob", "library": [{"card": "Island"}, {"card": "Island"}, {"card": "Island"}], "battlefield": [{"card": "Savannah Lions", "label": "lions"}, {"card": "Grizzly Bears", "label": "bears"}]}]},
+  "timeline": [
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": {"Cast": {"object": "$dread", "mana": ["$swamp"]}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass"},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "check": {"Count": {"player": "bob", "zone": "Battlefield", "card": "Savannah Lions", "count": 0}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "check": {"PowerToughness": {"object": "$angel", "power": 3, "toughness": 3}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "check": {"PowerToughness": {"object": "$bears", "power": 2, "toughness": 2}}}
+  ]
+}

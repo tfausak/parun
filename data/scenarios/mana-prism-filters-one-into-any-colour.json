@@ -1,0 +1,13 @@
+{
+  "description": "CR 106.4 whole card: Mana Prism pays {1} and taps for one mana of any colour",
+  "note": "Alice's only white source is the Prism, its {1} paid by the Island, so Savannah Lions are cast only if it made white; the Swamp stays untapped.",
+  "board": {"active": "alice", "step": "PrecombatMain", "seats": [{"name": "alice", "library": [{"card": "Island"}, {"card": "Island"}, {"card": "Island"}], "battlefield": [{"card": "Mana Prism", "label": "prism"}, {"card": "Island", "label": "i1"}, {"card": "Swamp", "label": "s1"}], "hand": [{"card": "Savannah Lions", "label": "lions"}]}, {"name": "bob", "library": [{"card": "Island"}, {"card": "Island"}, {"card": "Island"}]}]},
+  "timeline": [
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": {"Cast": {"object": "$lions", "mana": ["$prism", "$i1", null, null], "yields": [[{"manaType": {"type": "Colored", "value": {"type": "White"}}, "tags": [{"type": "Artifact"}], "retention": {"type": "Ordinary"}, "restriction": null, "rider": null, "sourceChoices": null}]]}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass"},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "check": {"Count": {"player": "alice", "zone": "Battlefield", "card": "Savannah Lions", "count": 1}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "check": {"Tapped": {"object": "$i1", "tapped": true}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "check": {"Tapped": {"object": "$s1", "tapped": false}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "check": {"Tapped": {"object": "$prism", "tapped": true}}}
+  ]
+}

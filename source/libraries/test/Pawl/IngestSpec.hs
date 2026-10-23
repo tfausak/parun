@@ -26,6 +26,8 @@ import qualified Pawl.Types.CardName as CardName
 import qualified Pawl.Types.CardType as CardType
 import qualified Pawl.Types.Face as Face
 import qualified Pawl.Types.Keyword as Keyword.Type
+import qualified Pawl.Types.Power as Power
+import qualified Pawl.Types.Quantity as Quantity
 import qualified Pawl.Types.TypeLine as TypeLine
 
 spec :: (Monad n) => Spec.Spec IO n -> n ()
@@ -120,6 +122,23 @@ spec s = Spec.describe s "Pawl.Ingest" $ do
     case (Common.parse (Text.pack json) >>= Ingest.texts, replenish) of
       (Right known, Right (Just card)) -> Spec.assertEq s (Just (Text.pack own)) (Face.oracleText (NonEmpty.head (Card.faces (Ingest.stamp known (unstamped card)))))
       _ -> Spec.assertFailure s "Replenish: no texts or no card"
+
+  -- mtgish's AST for Dragon Engine predates its Dragon subtype; Maro's star
+  -- is the translation's to keep.
+  Spec.it s "reprint takes the printed characteristics from the record" $ do
+    registry <- Registry.defaultRoot >>= Registry.fileRegistry
+    Monad.forM_
+      [ ("Dragon Engine", "{\"name\":\"Dragon Engine\",\"manaCost\":\"{3}\",\"supertypes\":[],\"types\":[\"Artifact\",\"Creature\"],\"subtypes\":[\"Dragon\",\"Construct\"],\"power\":\"1\",\"toughness\":\"3\",\"text\":null}"),
+        ("Maro", "{\"name\":\"Maro\",\"manaCost\":\"{2}{G}{G}\",\"supertypes\":[],\"types\":[\"Creature\"],\"subtypes\":[\"Elemental\"],\"power\":\"*\",\"toughness\":\"*\",\"text\":null}")
+      ]
+      $ \(name, json) -> do
+        card <- Registry.named registry name
+        -- A star stays as the translation has it, so only a number is staled.
+        let staleNumber p = if p == Just (Power.MkPower Quantity.Star) then p else Just (Power.MkPower (Quantity.Literal 9))
+            stale c = c {Card.faces = fmap (\f -> f {Face.manaCost = Nothing, Face.typeLine = (Face.typeLine f) {TypeLine.subtypes = Set.empty}, Face.power = staleNumber (Face.power f)}) (Card.faces c)}
+        case (Common.parse (Text.pack json) >>= Ingest.printed, card) of
+          (Right record, Right (Just expected)) -> Spec.assertEqWith s name expected (Ingest.reprint record (stale expected))
+          _ -> Spec.assertFailure s (name <> ": no record or no card")
 
   Spec.it s "candidate leaves out a card it would have to guess at" $ do
     let reason json = Common.parse (Text.pack json) >>= Monad.void . Ingest.candidate

@@ -1,0 +1,11 @@
+{
+  "description": "CR 613.1f whole card: Fear gives the creature it enchants fear, and no other creature",
+  "note": "Alice enchants her bears; her Hill Giant stays bare.",
+  "board": {"active": "alice", "step": "PrecombatMain", "seats": [{"name": "alice", "library": [{"card": "Island"}, {"card": "Island"}, {"card": "Island"}], "battlefield": [{"card": "Grizzly Bears", "label": "bears"}, {"card": "Hill Giant", "label": "giant"}, {"card": "Swamp", "label": "s1"}, {"card": "Swamp", "label": "s2"}], "hand": [{"card": "Fear", "label": "fear"}]}, {"name": "bob", "library": [{"card": "Island"}, {"card": "Island"}, {"card": "Island"}]}]},
+  "timeline": [
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": {"Cast": {"object": "$fear", "targets": ["$bears"], "mana": ["$s1", "$s2"]}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass"},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "check": {"Keywords": {"object": "$bears", "keyword": {"type": "Fear"}, "count": 1}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "check": {"Keywords": {"object": "$giant", "keyword": {"type": "Fear"}, "count": 0}}}
+  ]
+}

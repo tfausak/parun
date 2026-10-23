@@ -1,0 +1,11 @@
+{
+  "description": "CR 611.2a whole card: Pradesh Gypsies pay {1}{G} and tap to give target creature -2/-0 until end of turn",
+  "note": "Bob's Hill Giant is 1/3.",
+  "board": {"active": "alice", "step": "PrecombatMain", "seats": [{"name": "alice", "library": [{"card": "Island"}, {"card": "Island"}, {"card": "Island"}], "battlefield": [{"card": "Pradesh Gypsies", "label": "gypsies", "ready": true}, {"card": "Forest", "label": "f1"}, {"card": "Forest", "label": "f2"}]}, {"name": "bob", "library": [{"card": "Island"}, {"card": "Island"}, {"card": "Island"}], "battlefield": [{"card": "Hill Giant", "label": "giant"}]}]},
+  "timeline": [
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": {"Activate": {"object": "$gypsies", "targets": ["$giant"], "mana": ["$f1", "$f2"]}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "do": "Pass"},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "check": {"PowerToughness": {"object": "$giant", "power": 1, "toughness": 3}}},
+    {"turn": 1, "step": "PrecombatMain", "player": "alice", "check": {"Tapped": {"object": "$gypsies", "tapped": true}}}
+  ]
+}

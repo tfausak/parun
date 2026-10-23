@@ -7,201 +7,133 @@ line) and running `pawl deck` on it: every unresolved name is reported.
 
 ## Expressible today
 
-These need no new capability. They are left for the mtgish translator (#5478)
-rather than written by hand; no Sixth Edition card's whole text is keywords, so
-`script/ingest` adds none of them.
+These need no new capability, but `pawl translate` does not translate them yet.
+Each names the mtgish node the translator stops at, or what its rendering gets
+wrong. No Sixth Edition card's whole text is keywords, so `script/ingest` adds
+none of them.
 
-- Abduction
-- Abyssal Hunter
-- Abyssal Specter
-- Adarkar Wastes
-- Aladdin's Ring
-- Anaba Shaman
-- Animate Wall
-- Ankh of Mishra
-- Ashen Powder
-- Balduvian Horde
-- Blight
-- Blighted Shaman
-- Bog Rats
-- Boomerang
-- Bottle of Suleiman
-- Browse
-- Brushland
-- Burrowing
-- Call of the Wild
-- Castle
-- Charcoal Diamond
-- Chill
-- Circle of Protection: Black
-- Circle of Protection: Blue
-- Circle of Protection: Green
-- Circle of Protection: Red
-- Circle of Protection: White
-- City of Brass
-- Conquer
-- Creeping Mold
-- Crusade
-- Crystal Rod
-- Crystal Vein
-- Cursed Totem
-- D'Avenant Archer
-- Daraja Griffin
-- Daring Apprentice
-- Derelor
-- Dingus Egg
-- Disrupting Scepter
-- Divine Transformation
-- Dragon Engine
-- Dragon Mask
-- Dread of Night
-- Dream Cache
-- Dwarven Ruins
-- Early Harvest
-- Ebon Stronghold
-- Elder Druid
-- Elven Riders
-- Enfeeblement
-- Enlightened Tutor
-- Ethereal Champion
-- Evil Eye of Orms-by-Gore
-- Exile
-- Fallen Angel
-- Fallow Earth
-- Fear
-- Feast of the Unicorn
-- Femeref Archers
-- Fervor
-- Fire Diamond
-- Firebreathing
-- Fit of Rage
-- Flying Carpet
-- Fog Elemental
-- Forget
-- Fountain of Youth
-- Fyndhorn Brownie
-- Fyndhorn Elder
-- Gaseous Form
-- Giant Strength
-- Glasses of Urza
-- Goblin Digging Team
-- Goblin Elite Infantry
-- Goblin King
-- Goblin Recruiter
-- Goblin Warrens
-- Gorilla Chieftain
-- Gravebane Zombie
-- Hammer of Bogardan
-- Harmattan Efreet
-- Havenwood Battleground
-- Healing Salve
-- Heavy Ballista
-- Hecatomb
-- Howl from Beyond
-- Howling Mine
-- Icatian Town
-- Infantry Veteran
-- Inferno
-- Insight
-- Iron Star
-- Ivory Cup
-- Jalum Tome
-- Jayemdae Tome
-- Jokulhaups
-- Karplusan Forest
-- Kjeldoran Dead
-- Lead Golem
-- Leshrac's Rite
-- Light of Day
-- Lightning Blast
-- Living Lands
-- Mana Prism
-- Manabarbs
-- Marble Diamond
-- Maro
-- Mesa Falcon
-- Millstone
-- Mind Warp
-- Mischievous Poltergeist
-- Moss Diamond
-- Necrosavant
-- Orcish Artillery
-- Order of the Sacred Torch
-- Painful Memories
-- Patagia Golem
-- Pearl Dragon
-- Pentagram of the Ages
-- Perish
-- Pestilence
-- Phantasmal Terrain
-- Phyrexian Vault
-- Pillage
-- Polymorph
-- Pradesh Gypsies
-- Psychic Venom
-- Radjan Spirit
-- Rag Man
-- Recall
-- Reckless Embermage
-- Regeneration
-- Resistance Fighter
-- River Boa
-- Ruins of Trokair
-- Sage Owl
-- Sea Monster
-- Sengir Autocrat
-- Serenity
-- Serra's Blessing
-- Shatter
-- Shatterstorm
-- Sibilant Spirit
-- Skull Catapult
-- Sky Diamond
-- Snake Basket
-- Soldevi Sage
-- Spell Blast
-- Spirit Link
-- Spitting Drake
-- Staunch Defenders
-- Storm Cauldron
-- Strands of Night
-- Stream of Life
-- Stromgald Cabal
-- Stupor
-- Sulfurous Springs
-- Svyelunite Temple
-- Teferi's Puzzle Box
-- The Hive
-- Thicket Basilisk
-- Throne of Bone
-- Tranquil Grove
-- Tranquility
-- Uktabi Orangutan
-- Uktabi Wildcats
-- Underground River
-- Unseen Walker
-- Unyaro Griffin
-- Verduran Enchantress
-- Vertigo
-- Vitalize
-- Volcanic Geyser
-- Waiting in the Weeds
-- Wall of Fire
-- Wand of Denial
-- Warmth
-- Warrior's Honor
-- Wooden Sphere
-- Worldly Tutor
-- Wyluli Wolf
-- Zombie Master
+- Abduction: `Permanent:HostPermanent`
+- Adarkar Wastes: `ManaProduce:Or`
+- Animate Wall: `Rule:PermanentRuleEffect`
+- Ankh of Mishra: `Permanent:Trigger_ThatPermanent`
+- Ashen Powder: `Action:PutGraveyardCardOntoBattlefield`
+- Balduvian Horde: `Action:MayCost`
+- Blight: `Trigger:WhenAPermanentBecomesTapped`
+- Blighted Shaman: `Cost:SacrificeAPermanent`
+- Bog Rats: `Rule:PermanentRuleEffect`
+- Bottle of Suleiman: `Action:FlipACoin_OnWinAndLose`
+- Browse: `Action:LookAtTheTopNumberCardsOfLibrary`
+- Brushland: `ManaProduce:Or`
+- Call of the Wild: `Action:RevealTopCardOfLibrary`
+- Charcoal Diamond: `Rule:AsPermanentEnters`
+- Chill: `Rule:EachPlayerEffect`
+- Circle of Protection: Black: `Action:ChooseADamageSource`
+- Circle of Protection: Blue: `Action:ChooseADamageSource`
+- Circle of Protection: Green: `Action:ChooseADamageSource`
+- Circle of Protection: Red: `Action:ChooseADamageSource`
+- Circle of Protection: White: `Action:ChooseADamageSource`
+- City of Brass: `Trigger:WhenAPermanentBecomesTapped`
+- Conquer: `StaticLayerEffect:SetController`
+- Crystal Rod: `Trigger:WhenAPlayerCastsASpell`
+- Cursed Totem: `Rule:ActivatedAbilityEffect`
+- Derelor: `Rule:PlayerEffect`
+- Dingus Egg: `Trigger:WhenAPermanentIsPutIntoAPlayersGraveyard`
+- Disrupting Scepter: `Rule:ActivatedWithModifiers`
+- Dragon Mask: `Action:CreateFutureTrigger`
+- Dream Cache: `Action:ChooseAnAction`
+- Dwarven Ruins: `Rule:AsPermanentEnters`
+- Early Harvest: `Action:UntapEachPermanent`
+- Ebon Stronghold: `Rule:AsPermanentEnters`
+- Elder Druid: `Action:TapOrUntapPermanent`
+- Elven Riders: `Rule:PermanentRuleEffect`
+- Enlightened Tutor: `Action:SearchLibrary`
+- Ethereal Champion: `Action:CreateFuturePreventDamage`
+- Evil Eye of Orms-by-Gore: `Rule:EachPermanentRuleEffect`
+- Exile: renders as one sentence, "attacking nonwhite"
+- Fallen Angel: `Cost:SacrificeAPermanent`
+- Fire Diamond: `Rule:AsPermanentEnters`
+- Firebreathing: `Permanent:HostPermanent`
+- Fog Elemental: `Action:CreateFutureTrigger`
+- Forget: `Action:PlayerActions`
+- Gaseous Form: `Rule:PreventDamage`
+- Glasses of Urza: `Action:LookAtPlayersHand`
+- Goblin Elite Infantry: renders "blocks or becomes blocked" as two triggers
+- Goblin Recruiter: `Action:SearchLibrary`
+- Goblin Warrens: `Cost:SacrificeNumberPermanents`
+- Gorilla Chieftain: `Action:RegeneratePermanent`
+- Gravebane Zombie: `Rule:ReplaceWouldPutIntoGraveyard`
+- Hammer of Bogardan: `Rule:FromGraveyard`
+- Havenwood Battleground: `Rule:AsPermanentEnters`
+- Healing Salve: `Action:CreateFuturePreventDamage`
+- Hecatomb: `Action:MayCost`
+- Howl from Beyond: `LayerEffect:AdjustPTX`
+- Howling Mine: `Condition:PermanentPassesFilter`
+- Insight: `Trigger:WhenAPlayerCastsASpell`
+- Iron Star: `Trigger:WhenAPlayerCastsASpell`
+- Ivory Cup: `Trigger:WhenAPlayerCastsASpell`
+- Karplusan Forest: `ManaProduce:Or`
+- Kjeldoran Dead: `Action:SacrificeAPermanent`
+- Lead Golem: `Action:PermanentDoesntUntapDuringControllersNextUntap`
+- Light of Day: `Rule:EachPermanentRuleEffect`
+- Living Lands: `StaticLayerEffect:SetPT`
+- Manabarbs: `Trigger:WhenAPlayerTapsAPermanentForMana`
+- Marble Diamond: `Rule:AsPermanentEnters`
+- Millstone: `Action:MillNumberCards`
+- Mind Warp: `Action:LookAtPlayersHandAndChooseNumCardsToDiscard`
+- Mischievous Poltergeist: `Action:RegeneratePermanent`
+- Moss Diamond: `Rule:AsPermanentEnters`
+- Necrosavant: `Rule:FromGraveyard`
+- Orcish Artillery: `Action:PermanentDealsMultipleDamage`
+- Painful Memories: `Action:LookAtPlayersHand`
+- Pentagram of the Ages: `Action:ChooseADamageSource`
+- Phantasmal Terrain: `Rule:AsPermanentEnters`
+- Phyrexian Vault: `Cost:SacrificeAPermanent`
+- Polymorph: `Action:RevealCardsFromTheTopOfLibraryUntilACardOfTypeIsRevealed`
+- Psychic Venom: `Trigger:WhenAPermanentBecomesTapped`
+- Radjan Spirit: `LayerEffect:LosesAbility`
+- Rag Man: `Rule:ActivatedWithModifiers`
+- Recall: `Action:ReturnNumberCardsFromPlayersGraveyardToHand`
+- Reckless Embermage: `Action:PermanentDealsMultipleDamage`
+- Regeneration: `Action:RegeneratePermanent`
+- Resistance Fighter: `Action:CreatePreventDamageUntil`
+- River Boa: `Action:RegeneratePermanent`
+- Ruins of Trokair: `Rule:AsPermanentEnters`
+- Sage Owl: `Action:LookAtTheTopNumberCardsOfLibrary`
+- Sea Monster: `Rule:PermanentRuleEffect`
+- Sengir Autocrat: `Trigger:WhenAPermanentLeavesTheBattlefield`
+- Sibilant Spirit: `Action:PlayerMayAction`
+- Skull Catapult: `Cost:SacrificeAPermanent`
+- Sky Diamond: `Rule:AsPermanentEnters`
+- Snake Basket: `Rule:ActivatedWithModifiers`
+- Soldevi Sage: `Cost:SacrificeNumberPermanents`
+- Spell Blast: `Spells:AnySpell`
+- Spirit Link: `Trigger:WhenAPermanentDealsDamage`
+- Spitting Drake: `Rule:ActivatedWithModifiers`
+- Storm Cauldron: `Rule:EachPlayerEffect`
+- Strands of Night: `Cost:SacrificeAPermanent`
+- Stupor: `Action:PlayerActions`
+- Sulfurous Springs: `ManaProduce:Or`
+- Svyelunite Temple: `Rule:AsPermanentEnters`
+- Teferi's Puzzle Box: `Action:PlayerActions`
+- The Hive: `CreatableToken:NamedTokenWithPT`
+- Thicket Basilisk: `Action:CreateFutureTrigger`
+- Throne of Bone: `Trigger:WhenAPlayerCastsASpell`
+- Uktabi Wildcats: `Cost:SacrificeAPermanent`
+- Underground River: `ManaProduce:Or`
+- Verduran Enchantress: `Trigger:WhenAPlayerCastsASpell`
+- Vertigo: `LayerEffect:LosesAbility`
+- Waiting in the Weeds: `Action:EachPlayerCreatesTokens`
+- Wand of Denial: `Action:LookAtTheTopCardOfPlayersLibrary`
+- Warmth: `Trigger:WhenAPlayerCastsASpell`
+- Wooden Sphere: `Trigger:WhenAPlayerCastsASpell`
+- Worldly Tutor: `Action:SearchLibrary`
+- Zombie Master: `Rule:Activated`
 
 ## Needs a capability
 
 Each group is tracked by its issue; its cards are added when it lands. Hardest
 first.
 
-- #4491: Rowen. A draw-time reveal granted from the battlefield, linked to a
-  trigger.
 - #5494: Doomsday. A search over two zones with no shuffle, then an exile of
   everything not found.
 - #5311: Juxtapose. "The greatest mana value among" outside an edict, then a
@@ -227,7 +159,5 @@ first.
 
 MTGJSON lists two 6ED decks, the preconstructed Deck A and Deck B. Neither is in
 `data/decks/` yet, since each holds cards the pool lacks, all of them
-expressible today: Call of the Wild, Creeping Mold, Enfeeblement, Gravebane
-Zombie, Healing Salve, Mischievous Poltergeist and Warrior's Honor (Deck A), and
-Boomerang, Castle, D'Avenant Archer, Fit of Rage, Lightning Blast, Mana Prism,
-Sibilant Spirit and Wall of Fire (Deck B).
+expressible today: Call of the Wild, Gravebane Zombie, Healing Salve and
+Mischievous Poltergeist (Deck A), and Sibilant Spirit (Deck B).
